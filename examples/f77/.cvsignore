@@ -1,0 +1,5 @@
+Makefile
+*.o
+fpi
+*ebug*
+*elease*

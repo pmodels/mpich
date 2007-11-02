@@ -1,0 +1,46 @@
+\begin{comment}
+This is the state machine for the pmi connect command.
+Graph [pmi connect],
+      [size="7.5, 10"]
+\end{comment}
+\begin{verbatim}
+State [connecting],[label="connecting"]
+	Event [connect]
+		Change_State([reading challenge string], [label="connect"])
+State [reading challenge string],[label="reading challenge string"]
+	Event [data read]
+		Change_State([writing challenge response])
+State [writing challenge response],[label="writing challenge response"]
+	Event [data written]
+		Change_State([reading connect result])
+State [reading connect result],[label="reading connect result"]
+	Event [data read]
+		if accept
+			Change_State([writing pmi session request],[label="accept"])
+		else reject
+			Change_State([closing],[label="reject"])
+State [writing pmi session request],[label="writing pmi session request"]
+	Event [data written]
+		Change_State([reading cmd header])
+State [reading and writing],[label="reading cmd header and writing cmd"]
+	Event [data read]
+		Change_State([reading cmd],[label="read"])
+	Event [data written]
+		Change_State([reading cmd header],[label="result written"])
+State [reading cmd header],[label="reading cmd header"]
+	Event [data read]
+		Change_State([reading cmd])
+State [reading cmd],[label="reading cmd"]
+	Event [data read]
+		Invoke_Action([handle cmd])
+Action [handle cmd],[label="handle cmd"]
+	Event [data]
+		if writing command
+			Change_State([reading and writing],[label="write" style=dotted])
+		else next command
+			Change_State([reading cmd header],[label="next" style=dotted])
+State [closing],[label="closing"]
+	Event [closed]
+		Change_State([done], [label="closed"])
+State [done],[label="done"]
+\end{verbatim}

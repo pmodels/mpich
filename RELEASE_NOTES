@@ -1,0 +1,134 @@
+-------------------------------------------------------------------------------
+		       Major Changes Impacting Usability
+-------------------------------------------------------------------------------
+
+- None expected 
+  (see the CHANGES file for a more extensive list of changes and new features)
+
+-------------------------------------------------------------------------------
+                              Known Deficiencies
+-------------------------------------------------------------------------------
+- The MPD process manager can only handle relatively small amounts of data on 
+  stdin and may also have problems if there is data on stdin that is not
+  consumed by the program.  
+
+- Only the ch3:sock and ch3:nemesis channels support thread safety.
+ 
+- The sock, sctp, and ssm channels are the only channels that implement dynamic 
+  process support (i.e., MPI_COMM_SPAWN, MPI_COMM_CONNECT, MPI_COMM_ACCEPT, 
+  etc.) under Unix.  All other channels will experience failures for tests 
+  exercising dynamic process functionality.  Under Windows, the sock, ssm, 
+  and sshm channels implement the dynamic process support.
+
+- The ssm channel uses special interprocess locks (often assembly) that may 
+  not work with some compilers or machine architectures. It works on
+  Linux with gcc, Intel, and Pathscale compilers on various Intel
+  architectures. It also works in Windows environments.
+
+- The MPI-IO implementation does not support filetypes that use the
+  MPI-2 functions MPI_Type_create_indexed_block or
+  MPI_Type_create_resized. You will need to use MPI_Type_indexed
+  instead of MPI_Type_create_indexed_block and, instead of
+  MPI_Type_create_resized, use MPI_Type_struct to explicity set MPI_LB
+  and MPI_UB. 
+
+- Support for the "external32" data representation is incomplete.  This affects
+  the MPI_PACK_EXTERNAL and MPI_UNPACK_EXTERNAL routines, as well the external
+  data representation capabilities of ROMIO.
+
+- The CH3 device does not presently support heterogeneous communication.  That
+  is to say that the processes involved in a job must use the same basic type
+  sizes and format.  The sizes and format are typically determined by the
+  processor architecture, although it may also be influenced by compiler
+  options.  This device does support the use of different executables (e.g.,
+  multiple-program-multiple-data, or MPMD, programming).
+
+- MPI_IRECV operations that are not explicitly completed before MPI_FINALIZE is
+  called may fail to complete before MPI_FINALIZE returns, and thus never
+  complete.  Furthermore, any matching send operations may erroneously fail.
+  By explicitly completed, we mean that the request associated with the
+  operation is completed by one of the MPI_TEST or MPI_WAIT routines.
+
+- The dllchan in the ch3 device is experimental and is very fragile.  For
+  example, you may encounter problems when configuring with --enable-g and 
+  --enable-g=log .  This is an "alpha test" of the dllchan; try it if you'd 
+  like, and let us know what does and does not work, but know that fixes will
+  probably wait for the next release.
+
+- C++ Binding:
+  
+  The MPI datatypes corresponding to Fortran datatypes are not available
+  (e.g., no MPI::DOUBLE_PRECISION).
+
+  The C++ binding does not implement a separate profiling interface, 
+  as allowed by the MPI-2 Standard (Section 10.1.10 Profiling).  
+
+  With the exception of the profiling interface, future releases of MPICH2 
+  will address these limitations of the C++ binding.
+
+- For passive target RMA, there is no asynchronous agent at the target
+  that will cause progress to occur. Progress occurs only when the user
+  calls an MPI function at the target (which could well be MPI_WIN_FREE).
+
+- --enable-sharedlibs=gcc does not work on Solaris because of difference
+  between the GNU ld program and the Solaris ld program
+
+- For the initial release, the sctp channel is fully supported for
+  FreeBSD and Mac OS X.  As of the time of this release, bugs in the
+  stack currently existed in the Linux kernel, and will hopefully soon be 
+  resolved. 
+
+  The sctp channel is known to currently not work under Solaris and Windows.
+
+  For Solaris, the SCTP API available in the kernel of standard
+  Solaris 10 is a subset of the standard API used by the sctp channel.
+  Cooperation with the Sun SCTP developers to support ch3:sctp under
+  Solaris for future releases is currently ongoing.  
+
+  For Windows, no known kernel-based SCTP stack for Windows currently
+  exists.
+
+  An alternative for Linux, FreeBSD, Mac OS X, Solaris and Windows is
+  the user-based SCTP stack available at 
+  http://www.sctp.de/sctp-download.html ; it is currently being
+  evaluated for use with a future MPICH2 release.
+  
+  
+-------------------------------------------------------------------------------
+			Issues for Developers
+-------------------------------------------------------------------------------
+
+- In order to handle the construction of intercommunicators in the dynamic
+  process case, the context id in MPID_Comm has been split into a receive 
+  and a send context id.  In the case of intracommunicators (e.g.,
+  MPI_COMM_WORLD), these two context id values are the same.  The send
+  context is still the context_id field in the MPID_Comm structure; 
+  the receive context is now recvcontext_id .  This makes the total number
+  of changes relatively small; only in a few places in the ADI3 code 
+  (primarily the MPID_Recv, MPID_Irecv, and persisistent receive request
+  routines) are changes needed.  
+
+- To enable the use of singleton init with more than one process, e.g., 
+  to allow starting two processes as singletons and then have them connect
+  using MPI_Comm_connect/MPI_Comm_accept, it was necessary to change the part
+  of the PMI wire prototcol that implemented the singleton init actions.
+
+- There are significant changes to the ch3 code base.  We expect further
+  changes in the next release, particularly to reduce latency and 
+  eliminate "copy and paste" code, in order to ease maintenance and tuning.
+
+-------------------------------------------------------------------------------
+                        Issues From Previous Releases (1.0.4)
+-------------------------------------------------------------------------------
+
+
+- MPE2, which is distributed as part of MPICH2, requires autoconf 2.52 or
+  higher.  By default, MPICH2 and MPE use the autoconf programs in one's path.
+  The environment variables AUTOCONF and AUTOHEADER can be set to specify
+  alternative commands for MPICH2.  Likewise, MPE_AUTOCONF and MPE_AUTOHEADER
+  can be set to specify alternative commands for MPE2.  Obviously, these
+  environment variables must be set before running "maint/updatefiles" or
+  "make dist".  In order to handle incompatibilities between different
+  minor versions of autoconf, we've selected autoconf 2.59 as the version
+  required for MPE2 and MPICH2.
+

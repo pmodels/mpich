@@ -1,0 +1,181 @@
+#! @PERL@
+# -*- Mode: perl; -*-
+# Tested with -w 10/28/05
+# 
+# Find the parse.sub routine.
+my $maintdir = "maint";
+my $rootdir  = ".";
+if ( ! -s "maint/parse.sub" ) {
+    my $program = $0;
+    $program =~ s/^.*[\/\\]//;
+    if (-s "$program/parse.sub") {
+	$maintdir = $program;
+	$rootdir  = $program;
+	$rootdir  =~ s/\/maint//g;
+	print "Rootdir = $rootdir\n" if $debug;
+    }
+}
+require "$maintdir/parse.sub";
+
+$debug = 0;
+$showfiles = 0;
+$quiet = 0;
+
+$textOutput = 1;
+$htmlOutput = 0;
+$htmlFullpage = 0;
+
+# Strict is used to control checking of error message strings.
+$gStrict = 0;
+if (defined($ENV{"DEBUG_STRICT"})) { $gStrict = 1; }
+
+# Check for special args
+@files = ();
+%skipFiles = ();
+foreach $arg (@ARGV) {
+    if ($arg =~ /^-showfiles/) { $showfiles = 1; }
+    elsif( $arg =~ /-debug/) { $debug = 1; }
+    elsif( $arg =~ /-quiet/) { $quiet = 1; }
+    elsif( $arg =~ /-html/)  { $textOutput = 0; 
+			       $htmlOutput = 1; $htmlFullpage = 1; }
+    elsif( $arg =~ /-skip=(.*)/) { $skipFiles{$1} = 1; }
+    else {
+	print "Adding $arg to files\n" if $debug;
+	if (-d $arg) {
+	    # Add all .c files from directory $arg to the list of files 
+	    # to process (this lets shorten the arg list)
+	    @files = (@files, &ExpandDir( $arg ));
+	}
+	else {
+	    $files[$#files+1] = $arg;
+	}
+    }
+}
+
+# Be nice to Windows
+$eol = "\r\n";
+if ($htmlOutput) {
+    if ($htmlFullpage) {
+	print STDOUT "<html><head><title>FIXME Items for MPICH2</title></head>$eol";
+	print STDOUT "<body bgcolor=\"ffffff\">$eol";
+    }
+    print STDOUT "<table><tr><th width=20%>File</th><th>FIXME Note</th></tr>$eol";
+}
+# Process the definitions
+foreach $file (@files) {
+    print "$file\n" if $showfiles;
+    &ProcessFile( $file );
+}
+if ($htmlOutput) {
+    print STDOUT "</table>$eol";
+    if ($htmlFullpage) {
+	print STDOUT "</body></html>$eol";
+    }
+}
+
+#-----------------------------------------------------------------------------
+# ROUTINES
+# ----------------------------------------------------------------------------
+
+# ==========================================================================
+# Call this for each file
+# This reads a C source or header file and adds does the following:
+#   adds any generic message short names encountered to the hash generic_msgs.
+#   adds any specific message short names encounter to the hash specific_msgs.
+#   adds the filename to the hash generic_loc{msg} as the value (: separated)
+#       and the same for hash specific_loc{msg}.
+#   The last two are used to provide better error reporting.
+#
+$filename = "";    # Make global so that other routines can echo filename
+$comment_line = "";
+sub ProcessFile
+{ 
+    # Leave filename global for AddTest
+    $filename = $_[0];
+    open (FD, "<$filename" ) || die "Could not open $filename\n";
+
+    while (<FD>) {
+	# Look for /* FIXME
+	while (/\/\*\s[Ff][Ii][Xx][Mm][Ee]/) {
+	    $comment_line = "";
+	    $_ = StripComments( FD, $_ );
+	    # Comment is in $comment_line
+	    $comment_line =~ s/\/\*\s*[Ff][Ii][Xx][Mm][Ee]:?\s*//;
+	    $comment_line =~ s/\s*\*\///;
+	    &PrintFIXME( $filename, $comment_line );
+	}
+    }		
+    close FD;
+}
+
+# Get all of the .c files from the named directory, including any subdirs
+sub ExpandDir {
+    my $dir = $_[0];
+    my @otherdirs = ();
+    my @files = ();
+    opendir DIR, "$dir";
+    while ($filename = readdir DIR) {
+	if ($filename =~ /^\./ || $filename eq "CVS") {
+	    next;
+	}
+	elsif (-d "$dir/$filename") {
+	    $otherdirs[$#otherdirs+1] = "$dir/$filename";
+	}
+	elsif ($filename =~ /(.*\.[chi])$/) {
+	    # Test for both Unix- and Windows-style directory separators
+	    if (!defined($skipFiles{"$dir/$filename"}) &&
+		!defined($skipFiles{"dir\\$filename"})) {
+		$files[$#files + 1] = "$dir/$filename";
+	    }
+	}
+    }
+    closedir DIR;
+    # (almost) tail recurse on otherdirs (we've closed the directory handle,
+    # so we don't need to worry about it anymore)
+    foreach $dir (@otherdirs) {
+	@files = (@files, &ExpandDir( $dir ) );
+    }
+    return @files;
+}
+
+sub PrintFIXME {
+    my ($filename, $comment_line ) = @_;
+    
+    # Some fixmes start with fixme - ; remove the - in that case.
+    $comment_line =~ s/^\s*[:-]\s*//;
+    if ($textOutput) {
+	print STDOUT $filename . ":";
+	foreach my $line (split(/\r?\n/,$comment_line)) {
+	    # Remote any leading blanks or *
+	    $line =~ s/^\s*//;
+	    $line =~ s/^\*\s?//g;
+	    print $line . "\n";
+	}
+    }
+    elsif ($htmlOutput) {
+	# HTMLify the line
+	if ($comment_line =~ /--AMP--/) {
+	    print STDERR "Comment line contains --AMP--\n";
+	}
+	else {
+	    $comment_line =~ s/&/--AMP--amp;/g;
+	    $comment_line =~ s/</--AMP--lt;/g;
+	    $comment_line =~ s/>/--AMP--gt;/g;
+	    $comment_line =~ s/--AMP--/&/g;
+	}
+	print STDOUT "<tr><td valign=\"top\">$filename</td><td>";
+	my $nl = "";
+	foreach my $line (split(/\r?\n/,$comment_line)) {
+	    # Remote any leading blanks or *
+	    $line =~ s/^\s*//;
+	    $line =~ s/^\*\s?//g;
+	    print $nl . $line;
+	    $nl = "<br>$eol";
+	}
+	print STDOUT "<br></td></tr>$eol"
+    }
+    else {
+	print STDERR "Unknown output form\n";
+	exit(1);
+    }
+}

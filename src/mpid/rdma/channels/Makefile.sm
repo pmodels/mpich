@@ -1,0 +1,5 @@
+# SUBDIRS_channel_name contains the list of all possible channel
+# implementations
+SUBDIRS_channel_name = ib gasnet
+SUBDIRS = @channel_name@ .
+

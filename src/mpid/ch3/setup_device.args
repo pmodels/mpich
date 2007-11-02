@@ -1,0 +1,10 @@
+if test -z "${device_args}" ; then
+    device_args="sock"
+fi
+channel_name=`echo ${device_args} | sed -e 's/:.*$//'`
+channel_args=`echo ${device_args} | sed -e 's/^[^:]*//' -e 's/^://'`
+
+#
+# reset DEVICE so that it (a) always includes the channel name, and (b) does not include channel options
+#
+DEVICE="${device_name}:${channel_name}"

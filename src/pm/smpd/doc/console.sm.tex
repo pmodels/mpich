@@ -1,0 +1,53 @@
+\begin{comment}
+This is the state machine for the smpd console session.
+Graph [smpd console session],
+      [size="7.5, 10"]
+\end{comment}
+\begin{verbatim}
+State [connecting smpd],[label="connecting smpd"]
+	Event [connect]
+		Change_State([reading challenge string])
+State [reading challenge string],[label="reading challenge string"]
+	Event [data read]
+		Change_State([writing challenge response])
+State [writing challenge response],[label="writing challenge response"]
+	Event [data written]
+		Change_State([reading connect result])
+State [reading connect result],[label="reading connect result"]
+	Event [data read]
+		if accept
+			Change_State([writing smpd session request], [label="accept"])
+		else reject
+			Change_State([closing], [label="reject"])
+State [writing smpd session request],[label="writing smpd session request"]
+	Event [data written]
+		Change_State([reading pwd request])
+State [reading pwd request],[label="reading pwd request"]
+	Event [data read]
+		if yes
+			Change_State([writing smpd password], [label="yes"])
+		else no
+			Change_State([writing session header], [label="no"])
+State [writing smpd password],[label="writing smpd password"]
+	Event [data written]
+		Change_State([reading smpd result])
+State [reading smpd result],[label="reading smpd result"]
+	Event [data read]
+		if accept
+			Change_State([writing session header], [label="accept"])
+		else reject
+			Change_State([closing], [label="reject"])
+State [writing session header],[label="writing session header"]
+	Event [data written]
+		Change_State([reading cmd header])
+State [reading cmd header],[label="reading cmd header"]
+	Event [data read]
+		Change_State([reading cmd])
+State [reading cmd],[label="reading cmd"]
+	Event [data read]
+		Change_State([reading cmd header])
+State [closing],[label="closing"]
+	Event [closed]
+		Change_State([done], [label="closed"])
+State [done],[label="done"]
+\end{verbatim}

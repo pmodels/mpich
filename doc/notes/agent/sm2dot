@@ -1,0 +1,150 @@
+#!/usr/bin/perl
+#
+# sm2dot
+#
+# Converts a state machine description file to a file readable by dot.  dot is
+# a program which creates printable directed graphs from a directed graph
+# description.
+#
+
+use strict;
+
+my ($filename);
+
+if ($#ARGV >= 0)
+{
+    $filename = $ARGV[0];
+}
+else
+{
+    $filename = "&STDIN";
+}
+
+if (!open(FILE, "<$filename"))
+{
+    print STDERR "\nERROR: unable to open $filename\n\n";
+    exit(1);
+}
+
+my (@sm, $sm);
+
+@sm = <FILE>;
+$sm = "\n" . join("", @sm) . "\n";
+
+my($re_keyword, $re_str, $re_params, $re);
+$re_keyword = "State|Event|State_Change|Change_State|Action|Invoke_Action";
+$re_str = "\\s*\\[[^\]]*\\]\\s*";
+$re_params = "((${re_str})?,)*(($re_str))";
+$re = "(^|\\n)\\s*($re_keyword)\\s*\\(?$re_params\\)?";
+
+my($keyword, @params_tmp, %nodes, @node_names, @edges, $cur_node, $tmp);
+
+while (($tmp, $keyword, @params_tmp) = ($sm =~ /$re/))
+{
+    my ($i, @params);
+
+    for ($i = 1; $i <= $#params_tmp; $i += 2)
+    {
+	if (defined($params_tmp[$i]))
+	{
+	    $params_tmp[$i] =~ s/^\s*\[\s*//;
+	    $params_tmp[$i] =~ s/\s*\]\s*//;
+	    $params_tmp[$i] =~ s/\s+/ /g;
+	    $params[$#params+1] = $params_tmp[$i];
+	}
+    }
+
+    if ($keyword eq "State_Change" || $keyword eq "Change_State" 
+	|| $keyword eq "Invoke_Action")
+    {
+	my($attrs);
+	$edges[$#edges+1] = join("\0", $cur_node, $params[0], 
+				 defined($params[1]) ? $params[1] : "");
+    }
+    elsif ($keyword eq "Event")
+    {
+	# this isn't being used at the moment...
+	# $cur_event = $params[0];
+    }
+    elsif ($keyword eq "State" || $keyword eq "Action")
+    {
+	$cur_node = $params[0];
+
+	my($opt_attrs, @attrs);
+	$opt_attrs = defined($params[1]) ? $params[1] : "";
+
+	if (!defined($nodes{$cur_node}))
+	{
+	    # print STDERR "OPT_ATTRS = \"$opt_attrs\"\n";
+	    if (!($opt_attrs =~ /shape\s*=/))
+	    {
+		$attrs[$#attrs+1] = ($keyword eq "State") 
+		    ? "shape=ellipse" : "shape=box";
+		# print STDERR "SETTING SHAPE = \"$attrs[$#attrs]\"\n";
+	    }
+	    if ($opt_attrs ne "")
+            {
+		$attrs[$#attrs+1] = $opt_attrs;
+	    }
+
+	    $nodes{$cur_node} = join(",", @attrs);
+	    $node_names[$#node_names+1] = $cur_node;
+	}
+	else
+	{
+	    print STDERR "Warning state $cur_node defined multiple times\n";
+	}
+    }
+
+    # print STDERR "DECL - $keyword", join("|","", @params, ""),"\n";
+
+    $sm = $';
+}
+
+close(FILE);
+
+
+my($edge, $from_node, $to_node, $error);
+
+$error = 0;
+foreach $edge (@edges)
+{
+    ($from_node, $to_node) = split("\0", $edge);
+    if (!defined($nodes{$from_node}))
+    {
+	print STDERR "Unable to find from node \"$from_node\"\n";
+	$error = 1;
+    }
+    if (!defined($nodes{$to_node}))
+    {
+	print STDERR "Unable to find to node \"$to_node\"\n";
+	$error = 1;
+    }
+}
+
+exit(1) if ($error != 0);
+
+print "digraph foo {\n";
+#print "graph [size=\"10,7.5\",orientation=landscape];\n";
+print "graph [size=\"7.5,10\"];\n";
+my($node,$attrs);
+
+foreach $node (@node_names)
+{
+    print "\"$node\"";
+    print (($nodes{$node} ne "") ? " [$nodes{$node}];\n" : ";\n");
+}
+
+
+my($edge, $from_node, $to_node, $attrs);
+
+foreach $edge (@edges)
+{
+    ($from_node, $to_node, $attrs) = split("\0", $edge);
+    print "\"$from_node\" -> \"$to_node\"";
+    print (($attrs ne "") ? " [$attrs];\n" : ";\n");
+}
+
+print "}\n";
+
+exit(0);

@@ -1,0 +1,35 @@
+\textwidth=6.0in
+\textheight=9.0in
+\hoffset=-0.5in
+\voffset=-1.0in
+\parskip=.1in
+\renewcommand{\floatpagefraction}{0.9}
+\newcommand{\mpich}{\texttt{MPICH}}
+\newcommand{\Mpich}{\texttt{MPICH}}
+% This should really use #1, but we want the text version in the Postscript
+% document
+\newcommand{\AURL}[2]{\url{#2}}
+\newcommand{\mpibug}{\AURL{mailto:mpich2-maint@mcs.anl.gov}{mpich2-maint@mcs.anl.gov}}
+%\newcommand{\mpich}{MPICH}
+%
+% Fix this using hyphenation?
+{\catcode`\/=\active\gdef/{\char`\/ \discretionary{}{}{}}}
+\def\makeslashbreak{\catcode`\/=\active}
+\def\note#1{\marginpar{#1}}
+\def\ttURL#1{\texttt{\url{#1}}}
+\def\urlname#1#2{\emph{#2}}
+% The following is needed for the acknowledgements contents entry
+%
+\let\DOESupport\DefaultSupport
+%
+% Version number
+\newcommand{\mpichversion}{1.0.3}
+%
+% File in the MPI install dir.  
+% However, we cannot just place this as a prefix to \file, 
+% since \file may surround the filename with `'.  Instead,
+% we use a special command that adds only the trailing '
+\def\eatnextfilelast#1{\texttt{#1}'\endgroup}
+\def\eatfilelast{\catcode`\_=\active\nocodespecials\eatnextfilelast}
+\def\filelast{\begingroup\eatfilelast}
+\newcommand{\mpifile}{`\texttt{/usr/local/mpich-\mpichversion/}\filelast}

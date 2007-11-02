@@ -1,0 +1,5 @@
+lib${MPILIBNAME}_a_SOURCES = smpd_pmi.c smpd_ipmi.c
+INCLUDES = -I../../include -I../../pm/smpd -I${master_top_srcdir}/src/include -I${master_top_srcdir}/src/pm/smpd
+
+distclean-local:
+	@-rm -f pmiconf.h

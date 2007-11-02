@@ -1,0 +1,17 @@
+INCLUDES = -I../../../include -I${master_top_srcdir}/src/include
+lib${MPILIBNAME}_a_SOURCES = \
+    ch3u_buffer.c ch3u_handle_recv_pkt.c ch3u_handle_recv_req.c \
+    ch3u_handle_send_req.c ch3u_recvq.c ch3u_request.c \
+    mpid_abort.c mpid_bsend_init.c mpid_cancel_recv.c \
+    mpid_cancel_send.c \
+    mpid_finalize.c mpid_getpname.c mpid_init.c mpid_iprobe.c \
+    mpid_irecv.c mpid_irsend.c mpid_isend.c mpid_issend.c mpid_probe.c \
+    mpid_recv.c mpid_recv_init.c mpid_rsend.c mpid_rsend_init.c \
+    mpid_send.c mpid_send_init.c mpid_ssend.c mpid_ssend_init.c \
+    mpid_startall.c mpid_vc.c mpid_win_fence.c mpid_put.c mpid_get.c \
+    mpid_accumulate.c mpidi_isend_self.c mpidi_printf.c mpid_win_complete.c \
+    mpid_win_wait.c mpid_win_post.c mpid_win_unlock.c mpid_win_create.c \
+    mpid_win_lock.c mpid_win_free.c \
+    mpid_close_port.c mpid_comm_accept.c mpid_comm_connect.c \
+    mpid_comm_disconnect.c mpid_comm_spawn_multiple.c mpid_open_port.c \
+    mpid_win_test.c

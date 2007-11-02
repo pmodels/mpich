@@ -1,0 +1,14 @@
+*.o
+*.lo
+Makefile
+Makefile.in
+*Debug*
+*Release*
+.deps
+*.bb
+*.bbg
+*.da
+.libs
+.libstamp*
+*.user
+.state-cache

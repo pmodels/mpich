@@ -1,0 +1,157 @@
+Single-threaded implementation of RMA for shared memory
+
+------------------------------------------------------------------------
+
+Basic Assumptions
+
+* All of the local windows associated with the specified window object
+  are located in and accessible through shared memory.
+
+* All processors involved in the communicator are homogeneous.
+
+* Only basic datatypes are supported.
+
+------------------------------------------------------------------------
+
+General Notes
+
+------------------------------------------------------------------------
+
+Data Structures
+
+------------------------------------------------------------------------
+
+MPID_shm_Win_create
+
+
+* If the shared memory is not cache coherent, the initialize the
+  preceding put flag
+
+  If the local window is located in non-cache coherent shared memory,
+  then we need to track put operations to the local window which
+  (might) have occurred since the last fence.  This tracking is
+  required so that cache lines associated with the local window can be
+  invalidated, ensuring that the local process sees the changes.
+
+  Q: Can puts happen before the first fence?  In other words, is an
+  exposure epoch implicitly opened as part of the window creation
+  process?
+
+* Initialize the inter-process (shared memory) mutex
+
+  Mutexes are required in order to ensure that accumulate operations
+  on any given element (basic datatype) in the local window are
+  atomic.
+
+  NOTE: multiple mutexes may be needed if the local window is broken
+  into multiple regions.  For details, see the discussion in
+  MPID_shm_Accumulate().
+
+------------------------------------------------------------------------
+
+MPID_shm_Win_fence
+
+* If the shared memory is not cache coherent, flush cache and/or write
+  buffer as necessary
+  
+  If the shared memrory is not cache coherent and stores were
+  performed to the local window, then (depending on the
+  architecture specifics and the RMA implementation) we might need
+  to perform the following operations.
+  
+  1) if system is using a write-back caching strategy, then flush
+  the cache
+  
+  2) flush the write buffer
+  
+  NOTE: It may be possible to defer these operations when
+  NOSUCCEED is also supplied.  It's currently unclear if this
+  would be beneficial.
+
+* barrier
+
+  We need a barrier to ensure that all remote puts and local stores to
+  the local window have completed so the results are available to
+  operations performed after the fence operation.  We also
+  need to ensure that any remote gets and local loads from the local
+  window are complete before any future remote puts or local stores
+  are allowed to affect the local window.
+  
+* If the shared memory is not cache coherent
+
+  * invlidate cache
+
+    If the shared memrory is not cache coherent and RMA puts were
+    performed to the local window, then (depending on the
+    architecture specifics and the RMA implementation) we might to
+    invalidate any cache lines associated with the shared memory
+    bound to this window.                        
+
+  * set (or clear) preceding put flag based on the assertions
+
+    NOTE: To reduce unncessary cache and write buffer flushes, the
+    barrier (above) could be replaced with an alltoall gather of the
+    operation occuring between node pairs.  Using this information, we
+    could eliminate flushes except when an operation actually affected
+    the local window.
+
+------------------------------------------------------------------------
+
+MPID_shm_Get
+
+* Copy data directly from the target buffer (located in shared memory)
+  to the origin buffer.
+
+------------------------------------------------------------------------
+
+MPID_shm_Put
+
+* Copy data directly from the the origin buffer to the target buffer
+  (located in shared memory).
+
+------------------------------------------------------------------------
+
+MPID_shm_Accumulate
+
+* Lock target local window
+
+  The standard says that operations on elements (basic datatypes) need
+  to be atomic, but the entire accumulate operation need not be atomic
+  with repsect to other accumulate operations.  The simple solution is
+  to lock the whole window when performing an operation; however this
+  ensures that operations are serialized which will seriously hurt
+  performance when multiple processes/threads are attempting to
+  accumulate data into a single window (or even a single large buffer
+  in that window).
+  
+  TODO: Develop an algorithm for performing the operations when the
+  local window is broken into multiple regions, with a mutex per
+  region.  Care must be taken to ensure that if an element spans two
+  regions, then the mutexes for both regions must be locked before the
+  operation is performed on that element.  Performing these lock
+  operations is likely to be somewhat expensive, so we will want a
+  tuneable parameter for specifying the minimum size of a region.
+  
+  Q: Do inter-process mutexes also ensure mutual exclusion for threads
+  within the same process?  If not, then we need to a acquire both a
+  thread and process locks.  We probably want to acquire the thread
+  lock first to minimize the contention at the process lock.
+
+* Perform requested accumulation
+
+  We need an algorithm for performing accumulations when the
+  datatype are non-contiguous.  Ideally, the two dataloops and the
+  accumulation operations could be processed without requiring any
+  extra copying, packing, or temporary buffers.
+
+  NOTE: While it may be possible to write a function to perform the
+  requested operations, it is likely that such functionality will need
+  to be inlined so that appropriate locking of local window regions
+  occurs as data is being processed.  Also, the dataloops will need to
+  be optimized so that it is not necessary to acquire a region's mutex
+  more than once per request.
+
+ * Unlock target local window
+
+------------------------------------------------------------------------
+

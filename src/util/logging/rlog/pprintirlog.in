@@ -1,0 +1,39 @@
+#! @PERL@
+#
+# This is a simple script to take an irlog file (one file per process) and
+# write it out in event (really state) start time order, with the
+# names of the corresponding events included in the output.  This is
+# an alpha-test version, but has been useful in identifying 
+# problems with the ch3 implementation (in terms of extra function
+# calls when runtime thread control is enabled).  
+#
+#
+# First, read the definitions 
+%idToState = ();
+while (<>) {
+    if (/RLOG_STATE\s+-\s+id:\s*(\d+),.*:\s*(\S+)/) {
+#	print "Id $1 to state $2\n";
+	$idToState{$1} = $2;
+    }
+    elsif (/RLOG_EVENT\s+-\s+\d+:(\d+),\s+start:\s*([\d\.]+),\s+end:\s*([\d\.]+),\s*(\d+)/) {
+	my $id = $1;
+	my $startTime = $2;
+	my $endTime = $3;
+	my $level = $4;
+	
+	$fullstart = $startTime;
+	$event{$fullstart} = "$id:$level:$endTime";
+    }
+    else {
+	print STDERR "Skipping $_";
+    }
+}
+
+# Now, sort numerically the start times
+foreach $start (sort(keys(%event))) {
+#    print "value is $event{$start}\n";
+    my ($id,$level,$endTime) = split(/:/,$event{$start});
+    $id =~ s/^0*//;
+    my $routine = $idToState{$id};
+    print "$start\t$endTime\t$level\t$routine\n";
+}

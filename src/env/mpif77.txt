@@ -1,0 +1,104 @@
+/*D
+    mpif77 - Compiles and links MPI programs written in Fortran 77
+
+    Description:
+    This command can be used to compile and link MPI programs written in
+    Fortran.  It provides the options and any special libraries that are
+    needed to compile and link MPI programs.  
+
+    It is important to use this command, particularly when linking programs, 
+    as it provides the necessary libraries.  
+
+    Command line arguments:
++  -show      - Show the commands that would be used without
+             runnning them
+.  -help      - Give short help
+.  -f77=name   - Use compiler 'name' instead of the default choice.  Use
+                this only if the compiler is compatible with the MPICH
+                library (see below)
+.  -config=name - Load a configuration file for a particular compiler.
+                This allows a single 'mpif77' command to be used with 
+                multiple compilers.
+.  -compile_info - Show the steps for compiling a program.  This option
+                can be used to see what options and include paths are
+		used by mpif77.
+.  -link_info - Show the steps for linking a program.  This optoin 
+                can be used to see what options and libraries are used by
+                mpif77.
+.  -profile=name - Use the MPI profiling given by name.  See below for
+                details
+.  -mpe=name  - Use an MPE profiling library.  The behavior is similar
+                to using '-profile=mpe_name.conf'.
+.  -echo      - Show exactly what this program is doing.
+                This option should normally not be used.
+-  others     - are passed to the compiler or linker.  For example, '-c'
+                causes files to be compiled, '-g' selects compilation with
+                debugging on most systems, and '-o name' causes linking 
+                with the output executable given the name 'name'.
+
+    Environment Variables:
+    The environment variables 'MPICH_F77' may be used
+    to select different Fortran compiler and linker.  Note that since
+    MPICH is built with a particular C and Fortran compiler, change the
+    compilers used can cause problems.  Use this only if you could intermix
+    code compiled with the different compilers.
+
+    Compatible Compilers:
+    The MPI library may be used with any compiler that uses the same 
+    lengths for basic data objects (such as 'long double') and that 
+    uses compatible run-time libraries.  On many systems, the various
+    compilers are compatible and may be used interchangably.  There are 
+    exceptions; if you use the 'MPICH_F77' environment variable or the 
+    '-f77=name' command-line argument to override the choice of compiler 
+    and encounter problems, try reconfiguring MPICH2 with the new compiler 
+    and installing MPICH2 in a separate location.  See the installation manual 
+    for more details.
+
+    Examples:
+To compile a single file 'foo.f', use
+.vb
+   mpif77 -c foo.f 
+.ve
+
+To link the output and make an executable, use
+.vb
+   mpif77 -o foo foo.o
+.ve
+Combining compilation and linking in a single command
+.vb
+   mpif77 -o foo foo.f
+.ve
+is a convenient way to build simple programs.
+
+ Selecting a Profiling Library:
+ The '-profile=name' argument allows you to specify an MPI profiling
+ library to be used.  'name' can have two forms\:
+
+.n A library in the same directory as the MPI library 
+.n The name of a profile configuration file
+.n
+ If 'name' is a library, then this library is included before the MPI 
+ library.  This allows the simple use of libraries that make use of the
+ MPI profiling interface and that are installed in the same directory as 
+ the MPI library.
+
+ If 'name.conf' is the name of a file in the sysconfdir directory, then this
+ is read and may define the following variables\:
++ PROFILE_PRELIB - Libraries (and paths) to include before the MPI library
+. PROFILE_POSTLIB - Libraries to include after the MPI library
+- PROFILE_INCPATHS - C preprocessor arguments for any include files
+ For example, to add '/usr/local/myprof/include' to the include path and
+ the library 'libmyprof.a' in '/usr/local/myprof/lib' to the link step, 
+ you could create the file 'myprof.conf' with the lines
+
+.vb
+    PROFILE_PRELIB="-L/usr/local/myprof/lib -lmyprof"
+    PROFILE_INCPATHS="-I/usr/local/myprof/include"
+.ve
+ and place it in the sysconfdir directory (this directory is set at
+ configure time when MPICH is built).  Then using the command-line 
+ argument '-profile=myprof' will cause these 
+ definitions to be added to the relevant compile commands.
+
+.seealso: mpicc, mpicxx, mpif90, mpiexec
+D*/

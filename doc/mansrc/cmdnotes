@@ -1,0 +1,20 @@
+The following name block provides the standard arguments for mpiexec.
+An mpiexec manpage may include this name to get the common arguments.
+
+/*N mpiexecstdargs
+
++ \-n num - number of processes
+. \-host hostname - name of a host (machine, system) on which to run
+. \-arch architecture_name - name of the computer architecture required
+  for this executable
+. \-wdir working_directory - The working directory to use when running the 
+  executable (set before the executable starts)
+. \-path pathlist - use this to find the executable
+. \-soft list - comma separated triplets specifying valid numbers of processes
+. \-file name - implementation-defined specification file
+- \-configfile name - file containing specifications of host/program, 
+   one per line, with # as a comment indicator, e.g., the usual
+   mpiexec input, but with ":" replaced with a newline.  That is,
+   the configfile contains lines with '-soft', '-n' etc.
+
+N*/

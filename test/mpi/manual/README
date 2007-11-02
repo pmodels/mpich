@@ -1,0 +1,22 @@
+This directory contains programs and tests that need to be run by
+a human being rather than a script.  Instructions on running each test
+are in the test file at the top.
+
+singjoin - A test of Comm_join, including a test of comm_join by singleton
+           processes
+
+testconnect - A test of Comm_connect and Comm_accept, with many processes.
+              Use the script manyconnect to run them, as in
+
+make testconnect
+./manyconnect
+
+dimsbalanced - A test of MPI_Dims_create; this checks that Dims_create 
+               produces well-balanced results.  Since there are no 
+               requirements on the "balance" of the output of Dims_create,
+               this is a test of the quality of implementation of the
+               default MPI_Dims_create when there is no underlying 
+               network topology.
+
+
+

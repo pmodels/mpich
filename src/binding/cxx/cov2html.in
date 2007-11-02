@@ -1,0 +1,278 @@
+#! /usr/bin/perl
+# -*- Mode:perl ; -*-
+#
+# This file converts a coverate data file, produced by the simple coverage
+# package, into an html file showing the covered and uncovered parts of the 
+# code.
+#
+# The format of the simple coverage package data is
+#  routine \t nargs \t #calls \t sourcefile \t first-line \t last-line \n
+# sorted by routine name and number of arguments.
+#
+# NOT YET WRITTEN
+# This program reads the data file; then takes each different source file
+# and creates a simple HTML version, using color to accent uncovered and
+# covered code
+#
+# First step:
+#    read file.  Save data as
+#    %SourceFiles{ name } => internal hash name
+#    %internalhashname{ firstline } => "lastline:routine:argcount:ncall"
+#
+# Then we can sort on the keys and the use that for "next line with covered"
+#
+# Reading the source code, we check each
+#     COVERAGE_BEGIN/END
+# for a corresponding entry in the data (in internalhashname).  Surround
+# the block with pale green or red if covered or uncovered.
+#    
+
+sub ReadCovData {
+    my $filename = $_[0];
+    my $srccnt = 0;
+
+    open FD, "<$filename" || die "Could not open coverage file $filename\n";
+
+    while (<FD>) {
+	chomp;
+	my ($routine,$argcnt,$callcnt,$srcfile,$firstline,$lastline) = 
+	    split(/\t/,$_);
+	if (!defined($SourceFiles{$srcfile})) {
+	    $srccnt++;
+	    $srchash = "srchash$srccnt";
+	    $SourceFiles{$srcfile} = $srchash;
+	}
+	else {
+	    $srchash = $SourceFiles{$srcfile};
+	}
+	$$srchash{$firstline} = "$lastline\t$routine\t$argcnt\t$callcnt";
+    }
+    close FD;
+}
+
+# For debugging
+sub DebugWriteCovData {
+    foreach my $srcfile (keys(%SourceFiles)) {
+	my $srchash = $SourceFiles{$srcfile};
+	print "srchash = $srchash\n";
+	foreach my $line (sort(keys(%$srchash))) {
+	    print "$line\t$$srchash{$line}\n";
+	}
+    }
+}
+
+# Read a source file and annotate it based on the information in the
+# srchash
+#
+# There are three states for the annoted file:
+#   nocode  - not within a coverage block
+#   incov   - within AND covered
+#   uncov   - within and NOT covered
+#
+%annotecolors = ( "nocode" => "white",
+		  "incov" => "lightgreen",
+		  "uncov" => "red",
+		  );
+
+# Save routine => file:line
+%coveredRoutines = ();
+%uncoveredRoutines = ();
+sub ReadAndAnnoteSrcfile {
+    my $srcfile = $_[0];
+    my $srchash = $_[1];   # *name* of the source hash
+    my $annotefile = $_[2];
+    my $linecount = 0;
+    my $state = "nocode", $newstate;
+    my $bgcolor, $newcolor;
+
+    $bgcolor = $annotecolors{$state};
+
+    open FD, "<$srcfile" || die "Cannot open source file $srcfile\n";
+    open OUTFD, ">$annotefile" || die "Cannot open annotation file $annotefile\n";
+    &WriteHTMLHeader( OUTFD, "Coverage file for $srcfile" );
+
+    print OUTFD "<TABLE WIDTH=100%><TR><TD BGCOLOR=$bgcolor><PRE>";
+
+    while (<FD>) {
+	$linecount ++;
+	if (/COVERAGE_START\(([^,]*),([^\)]*)\)/) {
+	    my $routine = $1;
+	    my $argcnt  = $2;
+	    my $rname = "$routine-$argcnt";
+	    if (defined($$srchash{$linecount})) {
+		$newstate = "incov";
+		$coveredRoutines{$rname}   = "$srcfile:$linecount";
+	    }
+	    else {
+		$newstate = "uncov";
+		$uncoveredRoutines{$rname} = "$srcfile:$linecount";
+	    }
+	}
+	elsif (/COVERAGE_END/) {
+	    $newstate = "nocode";
+	    print OUTFD &HTMLify( $_ );
+	}
+
+	if ($newstate eq $state) {
+	    print OUTFD &HTMLify( $_ );
+	}
+	else {
+	    # State transitions happen at either the beginning or the
+	    # If at the end, the line has already been output.
+	    print OUTFD "</PRE></TD></TR></TABLE>\n";
+	    $state = $newstate;
+	    $bgcolor = $annotecolors{$state};
+	    print OUTFD "<TABLE WIDTH=100%><TR><TD BGCOLOR=\"$bgcolor\"><PRE>";
+	    if ($newstate ne "nocode") {
+		print OUTFD &HTMLify( $_ );
+	    }
+	}
+    }
+    # Finish off the last table.
+    print OUTFD "</PRE></TD></TR></TABLE>\n";
+    
+    close FD;
+
+    &WriteHTMLTrailer( OUTFD );
+    close OUTFD;
+}
+
+# Summary report
+# TODO : compare the routines found to a master list of all routines.
+# generate a third list of unseen routines
+$maxcol = 4;
+sub CoverageSummary {
+    my ($filename) = @_;
+    my $col;
+    my %unseenRoutines = %allRoutines;
+
+    open FD, ">$filename" || die "Cannot open summary file $filename\n";
+
+    &WriteHTMLHeader( FD, "Coverage Summary" );
+
+    print FD "<h2>Covered routines</h2>\n";
+    print FD "<TABLE WIDTH=100%>";
+    $col = 1;
+    foreach $name (sort(keys(%coveredRoutines))) {
+	if ($col == 1) { print FD "<TR>"; }
+	my ($routine,$argcnt) = split(/-/,$name);
+	print FD "<TD>$routine</TD>";
+	if (defined($unseenRoutines{$routine})) {
+	    delete $unseenRoutines{$routine};
+	}
+	if ($col++ == $maxcol) {$col = 1; print FD "</TR>\n"; }
+    }
+    while ($col != 1) {
+	print FD "<TD></TD>";
+	if ($col++ == $maxcol) {$col = 1; print FD "</TR>\n"; }
+    }
+    print FD "</TABLE>\n";
+
+    print FD "<h2>Uncovered routines</h2>\n";
+    print FD "<TABLE WIDTH=100%>";
+    $col = 1;
+    foreach $name (sort(keys(%uncoveredRoutines))) {
+	if ($col == 1) { print FD "<TR>"; }
+	my ($routine,$argcnt) = split(/-/,$name);
+	my $where = $uncoveredRoutines{$name};
+	$where =~ s/.*\///;
+	print FD "<TD>$routine($where)</TD>";
+	if ($col++ == $maxcol) {$col = 1; print FD "</TR>\n"; }
+	if (defined($unseenRoutines{$routine})) {
+	    delete $unseenRoutines{$routine};
+	}
+    }
+    while ($col != 1) {
+	print FD "<TD></TD>";
+	if ($col++ == $maxcol) {$col = 1; print FD "</TR>\n"; }
+    }
+    print FD "</TABLE>\n";
+
+    print FD "<h2>Unseen routines</h2>\n";
+    print FD "<TABLE WIDTH=100%>";
+    $col = 1;
+    foreach $name (sort(keys(%unseenRoutines))) {
+	if ($col == 1) { print FD "<TR>"; }
+	my $routine = $name;
+	print FD "<TD>$routine</TD>";
+	if ($col++ == $maxcol) {$col = 1; print FD "</TR>\n"; }
+    }
+    while ($col != 1) {
+	print FD "<TD></TD>";
+	if ($col++ == $maxcol) {$col = 1; print FD "</TR>\n"; }
+    }
+    print FD "</TABLE>\n";
+
+    &WriteHTMLTrailer( FD );
+    close FD;
+}
+
+%coveredRoutines = ();
+%uncoveredRoutines = ();
+%allRoutines = ();   # Not yet used
+
+sub ReadAllList {
+    my $filename = $_[0];
+    open FD, "<$filename" || return 0;
+
+    while (<FD>) {
+	chomp;
+	s/\r//;
+	$allRoutines{$_} = 1;
+    }
+    close FD;
+}
+
+# --------------------------------------------------------------------------
+sub WriteHTMLHeader {
+    my ($FD,$title) = @_;
+
+    print $FD "<HTML>\n<HEAD>\n<TITLE>$title</TITLE></HEAD>\n";
+    print $FD "<BODY BGCOLOR=\"FFFFFF\">\n";
+}
+sub WriteHTMLTrailer {
+    my $FD = $_[0];
+
+    print $FD "</BODY>\n</HTML>\n";
+}
+# HTMLify
+# Take an input line and make it value HTML
+sub HTMLify {
+    my $line = $_[0];
+    $line =~ s/\&/--AMP--/g;
+    $line =~ s/>/&gt;/g;
+    $line =~ s/</&lt;/g;
+    $line =~ s/--AMP--/&amp;/g;
+    return $line;
+}
+# --------------------------------------------------------------------------
+#
+# Temp for testing
+&ReadAllList( "mpi.dat" );
+# Remove those deprecated MPI routines that are not in the C++ binding
+# FIXME: Check that C++ binding does not include these
+foreach my $oldname ("Type_ub", "Type_lb", "Attr_delete", "Attr_get", 
+		     "Attr_put", "Keyval_free", "Keyval_create", 
+		     "Errhandler_get", "Errhandler_set", 
+                     "Errhandler_create", "Address", "Type_struct", 
+                     "Type_extent", "Type_hvector", "Type_hindexed" ) {
+    delete $allRoutines{$oldname};
+}
+
+&ReadCovData( "cov.dat" );
+
+# Generate the output
+foreach $srcfile (keys(%SourceFiles)) {
+    my $srchash = $SourceFiles{$srcfile};
+    my $annotefile;
+
+    $annotefile = $srcfile;
+    # Still needed: A way to update the directory paths.  This
+    # simply removes -all- directories.  We may instead
+    # want a way to remove a prefix only
+    $annotefile =~ s/.*\///g;
+    $annotefile .= ".htm";
+    print "annote file = $annotefile\n";
+    &ReadAndAnnoteSrcfile( $srcfile, $srchash, $annotefile );
+}
+&CoverageSummary( "cov.sum.htm" );

@@ -1,0 +1,12 @@
+exe c:\Program Files\MPICH2\Examples\cpi.exe
+n 4
+wdir c:\temp
+hosts localhost
+cfg c:\temp\foo.job
+mpich1 c:\temp\oldjob.cfg
+env NAME=John AGE=32
+map H:\\myserver\myhome
+channel ssm
+log no
+extra 
+window yes

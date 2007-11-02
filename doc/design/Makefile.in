@@ -1,0 +1,27 @@
+ALL: all-redirect
+SHELL = @SHELL@
+VPATH = @srcdir@
+srcdir = @srcdir@
+.SUFFIXES: .pdf .dvi .tex
+
+.tex.dvi:
+	@if [ ! -s ../mpiman.sty ] ; then \
+	(cd .. && ln -s $(srcdir)/../mpiman.sty mpiman.sty) ; fi
+	-latex $< </dev/null >/dev/null 2>&1
+	-latex $< </dev/null >/dev/null 2>&1
+	-bibtex $* </dev/null
+	latex $<
+
+.dvi.pdf:
+	dvipdfm $*
+
+all-redirect: design.pdf
+
+clean:
+	-rm -f *.toc *.out *.dvi user.ps user.pdf *.aux *.blg *.bbl *.log
+
+mandoc:
+
+htmldoc:
+
+latexdoc: ALL

@@ -1,0 +1,11 @@
+Makefile
+.deps
+*.o
+*.bb
+*.bbg
+*.gcda
+*.gcno
+.libs
+.libstamp*
+*.lo
+.*-cache

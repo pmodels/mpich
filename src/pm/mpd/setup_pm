@@ -1,0 +1,3 @@
+# tell pmi/simple/configure that we need support for PMI_PORT
+NEED_PMIPORT=yes
+export NEED_PMIPORT

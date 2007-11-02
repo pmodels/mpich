@@ -1,0 +1,35 @@
+ALL: all-redirect
+SHELL = @SHELL@
+VPATH = @srcdir@
+srcdir = @srcdir@
+.SUFFIXES: .pdf .dvi .tex
+
+#
+# The rm before the link handles the case where the link exists, 
+# the file pointed at by the link does not exist (this can happen
+# when the source for VPATH builds is moved)
+.tex.dvi:
+	@if [ ! -s ../mpiman.sty ] ; then \
+	(cd .. && ln -s $(srcdir)/../mpiman.sty mpiman.sty) ; fi
+	@if test ! -s smpd_tree.eps ; then \
+	    rm -f smpd_tree.eps ; \
+	    ln -s $(srcdir)/smpd_tree.eps smpd_tree.eps ; \
+	fi
+	-latex $< </dev/null >/dev/null 2>&1
+	-latex $< </dev/null >/dev/null 2>&1
+	-bibtex $* </dev/null
+	latex $<
+
+.dvi.pdf:
+	dvipdfm $*
+
+all-redirect: smpd_pmi.pdf
+
+clean:
+	-rm -f *.toc *.out *.dvi user.ps user.pdf *.aux *.blg *.bbl *.log
+
+mandoc:
+
+htmldoc:
+
+latexdoc: ALL

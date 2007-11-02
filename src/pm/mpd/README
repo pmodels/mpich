@@ -1,0 +1,243 @@
+
+
+		   README for MPD 1.0.0 - May, 2005
+
+
+General
+-------
+
+MPD is a process management system for starting parallel jobs,
+especially MPICH jobs.  Before running a job (with mpiexec), the
+mpd daemons must be running on each host and connected into a ring.
+This README explains how to do that and also test and manage the daemons 
+after they have been started.
+
+You need to have Python version 2.2 or later installed to run the mpd.
+You can type
+
+    which python
+
+to make sure you have it installed, and 
+
+    python
+
+to find out what your version is.  The current version can be obtained
+from  www.python.org.
+
+Type 
+
+    mpdhelp
+
+for a list of mpd-related commands.  Each command can be run with the
+--help argument for usage information.
+
+
+How to use MPD
+--------------
+
+(Another version of these startup instructions can be found in the
+mpich2/README at the top level of the MPICH2 distribution.)
+
+You can start one mpd on the current host by running
+
+   mpd &
+
+This starts a ring of one mpd.  Other mpd's join the ring by being run
+with host and port arguments for the first mpd.  You can automate this
+process by using mpdboot.
+ 
+Make a file with machine names in it.  This file may or may not include the
+local machine.  It will be handy to use the default, which is ./mpd.hosts .
+
+donner% cat ./mpd.hosts
+donner.mcs.anl.gov
+foo.mcs.anl.gov
+shakey.mcs.anl.gov
+terra.mcs.anl.gov
+donner% 
+
+After mpich is built, the mpd commands are in mpich2/bin, or the bin
+subdirectory of the install directory if you have done an install.
+You should put this (bin) directory in your PATH 
+in your .cshrc or .bashrc, so that it will be picked up by the mpd's that
+are started remotely:
+
+Put in .cshrc:  setenv PATH /home/you/mpich2/bin:$PATH
+
+Put in .bashrc: export PATH=/home/you/mpich2/bin:$PATH
+
+To start some mpds, use mpdboot.  It uses the mpd.hosts file:
+
+donner% mpdboot -n 4 
+donner%
+
+This command starts a total of 4 daemons, one on the local machine and the
+rest on machines in the mpd.hosts file.  You can specify another file (-f) or
+another mpd command (-m).  The mpdboot command uses ssh to start the mpd on
+each machine in the mpd.hosts file.
+
+You can use mpdtrace to see where your mpd's are running:
+
+donner% mpdtrace
+donner
+foo
+shakey
+donner% 
+
+You can run something with mpiexec
+
+donner% mpiexec -np 2 hostname 
+donner.mcs.anl.gov
+foo.mcs.anl.gov
+donner%
+
+You can run an mpich2 job:
+
+donner% mpiexec -np 10 /home/lusk/hellow
+Hello world from process 0 of 10
+Hello world from process 1 of 10
+Hello world from process 2 of 10
+Hello world from process 3 of 10
+Hello world from process 4 of 10
+Hello world from process 5 of 10
+Hello world from process 6 of 10
+Hello world from process 7 of 10
+Hello world from process 9 of 10
+Hello world from process 8 of 10
+donner% 
+
+You can take down the daemons:
+
+donner% mpdallexit
+donner%
+
+If things go bad and daemons seem to be in a bad state, you can remove the
+Unix sockets on all the machines in mpd.hosts by doing a cleanup:
+
+donner% mpdcleanup
+
+
+Parallel Debugging
+----------------------------
+
+There are at least 3 methods by which you may do parallel debugging
+via mpd.
+
+1.  MPD provides support for the totalview debugger via the -tv option to
+mpiexec.  Of course you must have a licensed copy of totalview to use
+this option.  Also, you must have configured with --enable-totalview.
+
+2.  You can also start GUI debuggers such as ddd on each process that you
+    execute, e.g.:
+        mpiexec -n 2 ddd mypgm
+This option is really only useful for small numbers of processes 
+since you will create a window per process.
+
+3.  This release also contains some specific support for using gdb to
+debug parallel programs. It is an interactive option of mpiexec that
+starts each application under the control of gdb and also (initially)
+broadcasts each gdb command to all processes, merging identical output
+from multiple processes into a single, labelled line.  It also adds
+one extra command, the "z" command, which can be used to select a
+process or range of proccesses for input to be directed to.  With no
+arguments it reverts to broadcasting subsequent commands to all processes.
+This capability can be seen in the following transcript of a session with
+mpiexec debugging 10 processes.  After the breakpoint at line 30 and two
+single steps, process 0 is selected ("z 0") and stepped once separately,
+to synchronize it with the other processes just before the MPI_Bcast.
+Then all processes are selected again ("z") and the next "n" steps them
+all through the broadcast together.
+
+Example of running  mpiexec with -gdb:
+
+(magpie:52) % ./mpiexec.py -gdb -n 8 ~/mpich2/examples/cpi
+0-7:  (gdb) l 36
+0-7:  31	
+0-7:  32	    fprintf(stdout,"Process %d of %d is on %s\n",
+0-7:  33		    myid, numprocs, processor_name);
+0-7:  34	    fflush(stdout);
+0-7:  35	
+0-7:  36	    n = 10000;			/* default # of rectangles */
+0-7:  37	    if (myid == 0)
+0-7:  38		startwtime = MPI_Wtime();
+0-7:  39	
+0-7:  40	    MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+0-7:  (gdb) b 36
+0-7:  Breakpoint 2 at 0x80493ac: file cpi.c, line 36.
+0-7:  (gdb) r
+0-7:  Continuing.
+0:  Process 0 of 8 is on magpie
+1:  Process 1 of 8 is on magpie
+2:  Process 2 of 8 is on magpie
+3:  Process 3 of 8 is on magpie
+4:  Process 4 of 8 is on magpie
+5:  Process 5 of 8 is on magpie
+6:  Process 6 of 8 is on magpie
+7:  Process 7 of 8 is on magpie
+0-7:  
+1:  Breakpoint 2, main (argc=1, argv=0xbfffe914) at cpi.c:36
+2:  Breakpoint 2, main (argc=1, argv=0xbfffe894) at cpi.c:36
+3:  Breakpoint 2, main (argc=1, argv=0xbfffe814) at cpi.c:36
+4:  Breakpoint 2, main (argc=1, argv=0xbfffe794) at cpi.c:36
+5:  Breakpoint 2, main (argc=1, argv=0xbfffe714) at cpi.c:36
+6:  Breakpoint 2, main (argc=1, argv=0xbfffe694) at cpi.c:36
+7:  Breakpoint 2, main (argc=1, argv=0xbfffe614) at cpi.c:36
+0:  Breakpoint 2, main (argc=1, argv=0xbfffe994) at cpi.c:36
+0-7:  36	    n = 10000;			/* default # of rectangles */
+0-7:  (gdb) n
+0-7:  37	    if (myid == 0)
+0-7:  (gdb) n
+0:  38		startwtime = MPI_Wtime();
+1-7:  40	    MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+0-7:  (gdb) z 0
+0:  (gdb) n
+0:  40	    MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+0:  (gdb) z
+0-7:  (gdb) n
+0-7:  42	    h   = 1.0 / (double) n;
+0-7:  (gdb) n
+0-7:  43	    sum = 0.0;
+0-7:  (gdb) n
+0-7:  45	    for (i = myid + 1; i <= n; i += numprocs)
+0-7:  (gdb) n
+0-7:  47		x = h * ((double)i - 0.5);
+0-7:  (gdb) n
+0-7:  48		sum += f(x);
+0-7:  (gdb) n
+0-7:  45	    for (i = myid + 1; i <= n; i += numprocs)
+0-7:  (gdb) n
+0-7:  47		x = h * ((double)i - 0.5);
+0-7:  (gdb) n
+0-7:  48		sum += f(x);
+0-7:  (gdb) n
+0-7:  45	    for (i = myid + 1; i <= n; i += numprocs)
+0-7:  (gdb) n
+0-7:  47		x = h * ((double)i - 0.5);
+0-7:  (gdb) n
+0-7:  48		sum += f(x);
+0-7:  (gdb) n
+0-7:  45	    for (i = myid + 1; i <= n; i += numprocs)
+0-7:  (gdb) n
+0-7:  47		x = h * ((double)i - 0.5);
+0-7:  (gdb) n
+0-7:  48		sum += f(x);
+0-7:  (gdb) p sum
+0:  $1 = 11.999986210031736
+1:  $1 = 11.999984050040775
+2:  $1 = 11.999981650051732
+3:  $1 = 11.999979010064893
+4:  $1 = 11.999976130080572
+5:  $1 = 11.999973010099122
+6:  $1 = 11.999969650120912
+7:  $1 = 11.999966050146345
+0-7:  (gdb) c
+0-7:  Continuing.
+0:  pi is approximately 3.1415926544231247, Error is 0.0000000008333316
+1-7:  
+1-7:  Program exited normally.
+1-7:  (gdb) 0:  wall clock time = 50.726732
+0:  
+0:  Program exited normally.
+0:  (gdb) q
+0-7:  MPIGDB ENDING
+(magpie:53) % 

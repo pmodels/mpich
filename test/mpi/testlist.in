@@ -1,0 +1,22 @@
+# The next item ensures that the support routines are built first
+!util:all
+attr 
+#basic
+coll
+comm
+datatype
+errhan
+group
+info
+init
+pt2pt
+@rmadir@
+@spawndir@
+topo
+perf
+@iodir@
+@f77dir@
+@cxxdir@
+@f90dir@
+@errordir@
+@threadsdir@

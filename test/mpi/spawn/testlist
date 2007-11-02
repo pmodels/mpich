@@ -1,0 +1,28 @@
+namepub 2
+spawn1 1
+spawn2 1
+spawninfo1 1
+spawnminfo1 1
+spawnintra 1
+spawnintra 2
+spawnargv 1
+spawnmult2 2
+spaconacc 1
+spaconacc2 1
+selfconacc 2
+spaiccreate 2
+join 2
+disconnect_reconnect 3
+disconnect_reconnect2 3
+disconnect_reconnect3 3
+multiple_ports 3
+multiple_ports2 4
+disconnect 3
+disconnect2 3
+disconnect3 3
+# The concurrent_spawns test can overtax the process manager, so
+# we set a shorter time limit in case it hangs.
+# There's a problem with mpd that causes concurrent_spawns to cause problems
+# with mpd, leading to many runaway concurrent_spawn processes.  This 
+# test is being disabled until mpd is fixed.
+concurrent_spawns 1 timeLimit=30

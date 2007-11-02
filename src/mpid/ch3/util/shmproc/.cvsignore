@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+.deps
+.libs
+.libstamp*
+*.lo
+*.o
+.state-cache
+*.gcov
+*.gcda
+*.gcno

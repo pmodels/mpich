@@ -1,0 +1,6 @@
+Makefile.in
+Makefile
+argstest
+forktest
+*.exe
+*.exe.stackdump

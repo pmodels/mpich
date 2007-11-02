@@ -1,0 +1,24 @@
+#! /usr/bin/perl
+#
+require "maint/parse.sub";
+
+$debug = 1;
+while (<>) {
+    print "Input line $_" if $debug;
+    $remainder = StripComments( STDIN, $_ );
+    $remainder =~ s/[\r]*\n//;
+    while ($remainder ne "") {
+	($leader, $bal,$remainder) = &GetBalancedParen( STDIN, $remainder );
+	print "Leader is $leader\n";
+	print "Paren string is $bal\n";
+	print "Remainder is $remainder\n";
+	if ($bal ne "") {
+	    ($leader, $remainder, @args) = &GetSubArgs( STDIN, $bal );
+	    print "Number of args is 1+$#args\n" if $debug;
+	    foreach $arg (@args) {
+		print "arg $arg\n";
+	    }
+	    print "Remainder is $remainder\n";
+	}
+    }
+}

@@ -1,0 +1,85 @@
+Below is the current design for passive target RMA on top of CH3.
+
+We assume that there is some asychronous agent (thread) that
+periodically pokes the progress engine, i.e., periodically calls
+MPID_Progress_test(). We need to do a general poke of the progress
+engine because we don't know whether there will be passive target RMA
+or not and there may be other communication going on. 
+
+This thread is created only when MPI_Win_create is called and the user
+did not pass an info object with the key "no_locks" set to "true". (As
+an aside, I wish this was an assert instead of an info. An assert can
+be easily passed, whereas users are not likely to go through the
+trouble of creating an info object to say no_locks, even if they only
+plan to use fence.)
+
+Assuming that such a thread exists, passive target RMA is implemented
+in the CH3 channel as follows:
+
+On the source side, MPI_Win_lock and all the RMA operations after it
+are simply queued until MPI_Win_unlock is called (similar to what we
+do with fence and start/complete). At MPI_Win_unlock, a "lock" packet
+is sent over to the target, containing the lock type and the rank of
+the source. The source then waits for a "lock granted" reply from the
+target. (Singleton puts/gets are handled differently. See
+Optimization for Single Puts/Gets/Accs below.) 
+
+When the target receives a lock packet, it examines the current lock
+information for that window (described later below) and either grants
+the lock by sending a "lock granted" packet to the source or just
+queues up the lock request. 
+
+When the source receives a "lock granted" reply, it performs the RMA
+operations exactly as in the fence or start/complete case. The last
+RMA operation also releases the lock on the window at the target.
+No separate unlock packet needs to be sent.
+
+Note that RMA requests that the target receives (put, get, acc) are
+always satisfied, because they won't be sent in the first place unless
+the source has been authorized to send them.
+
+If none of the RMA operations is a get, the target must send an
+acknowledgement to the source when the last RMA operation has
+completed. If any one of the operations is a get, we reorder the
+operations and perform the get last. In this case, since the source
+must wait to receive the data, the acknowledgement is not needed
+assuming that data transfer is ordered. If data transfer is not
+ordered, an acknowledgement is needed even if the last operation is a
+get.
+
+The MPI_Win object needs the following lock info:
+   int current_lock_type;  /* no_lock, shared, exclusive */
+   int shared_lock_ref_cnt;  /* count of active shared locks */
+   a queue of unsatisfied lock requests;
+
+When a lock request arrives at the target, it looks at the incoming
+and existing lock types and takes the following action:
+
+Incoming           Existing             Action
+--------           --------             ------
+Shared             Exclusive            Queue it
+Shared             NoLock/Shared        Grant it
+Exclusive          NoLock               Grant it
+Exclusive          Exclusive/Shared     Queue it
+
+No change needs to be made to the existing code in the progress engine
+for handling put/get/accumulate, except that when the last RMA
+operation from a source is completed, grant the next queued lock
+request if there is one and change the lock_type if necessary. This
+can be done even if the sync model is fence or post/start because in
+that case there will be no lock request to grant. Therefore we don't
+need to know whether the current synch model is lock/unlock or not.
+
+
+Optimization for Single Puts, Gets, Accs
+----------------------------------------
+For the case where the lock/unlock is for a single short
+put/accumulate or get, we can send over the put data (or get info)
+along with the lock pkt. If the lock needs to be queued, it will be
+queued with this data or info. When the lock is granted, no "lock
+granted" reply needs to be sent. Instead the put data is simply copied
+or the get data is sent over. Except in the case of get operations,
+Win_unlock must block until it receives an acknowledgement from the
+target that the RMA operation has completed (for both shared and
+exclusive locks). 
+

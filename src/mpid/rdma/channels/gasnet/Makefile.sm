@@ -1,0 +1,9 @@
+#EXTRA_DIRS = ../../../common/sock
+SUBDIRS = src .
+
+distclean-local:
+	-rm -f include/mpidi_ch3i_gasnet_conf.h
+
+maintainer-clean-local:
+	-rm -f include/mpidi_ch3i_gasnet_conf.h.in
+

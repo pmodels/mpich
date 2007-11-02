@@ -1,0 +1,85 @@
+#! /usr/bin/perl
+#
+# 
+$routine_prefix = "MPI_";
+$routine_pattern = "[A-Z][a-z0-9_]*";
+%unimplemented = ( "Lookup_name" => 1, 
+		   "Comm_join" => 1,
+		   "Comm_get_parent" => 1,
+		   "Close_port" => 1,
+		   "Comm_accept" => 1,
+		   "Comm_connect" => 1,
+		   "Comm_spawn_multiple" => 1,
+		   "Win_set_attr" => 1, 
+		   "Type_delete_attr" => 1,
+		   "File_call_errhandler" => 1,
+		   "File_create_errhandler" => 1,
+		   "Type_create_subarray" => 1,
+		   "Win_get_name" => 1,
+		   "Pack_external" => 1,
+		   "File_get_errhandler" => 1,
+		  "Win_lock" => 1,
+		  "Win_unlock" => 1,
+		  "Win_create_keyval" => 1,
+		  "Type_get_attr" => 1,
+		  "Win_free_keyval" => 1,
+		  "Win_get_attr" => 1,
+		  "File_set_errhandler" => 1,
+		  "Comm_disconnect" => 1,
+		  "Pack_external_size" => 1,
+		  "Publish_name" => 1,
+		  "Type_create_indexed_block" => 1,
+		  "Win_set_name" => 1,
+		  "Status_c2f" => 1,
+		  "Type_create_darray" => 1,
+		  "Type_create_resized" => 1,
+		  "Type_free_keyval" => 1,
+		  "Unpublish_name" => 1,
+		  "Unpack_external" => 1,
+		  "Status_f2c" => 1,
+		  "Win_test" => 1,
+		  "Type_set_attr" => 1,
+		  "Win_delete_attr" => 1,
+		  "Type_create_keyval" => 1,
+		  "Open_port" => 1,
+		  "Type_count" => 1,
+		  );
+open( FD, "<src/include/mpi.h" ) || die "Could not open mpi.h";
+
+# Skip to prototypes
+while (<FD>) {
+    if ( /\/\*\s*Begin Prototypes/ ) { last; }
+}
+
+%routine_names = ();
+# Read each one
+while (<FD>) {
+    # Remove any comments
+    s/\/\*.*\*\///g;
+    print $_ if $debug;
+    if (/\/\*\s*End Prototypes/) { last; }
+    if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
+	$routine_name = $1;
+	
+	$args = $2;
+	while (! ($args =~ /;/)) {
+	    $args .= <FD>;
+	}
+	$routine_names{$1} = $args;
+    }	
+}
+close FD;
+#
+# Generate a simple test program with no prototypes
+open (OFD, ">tpmpi.c" ) || die "Cannot open tpmpi.c";
+
+print OFD "int main( int argc, char *argv[] )\n{\n";
+foreach $key (keys(%routine_names)) {
+    if (defined($unimplemented{$key})) { next; }
+    print OFD "    MPI_$key();\n";
+    print OFD "    PMPI_$key();\n";
+}
+print OFD "}\n";
+close OFD;
+
+

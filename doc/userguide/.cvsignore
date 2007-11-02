@@ -1,0 +1,13 @@
+*.log
+*.aux
+*.blg
+*.bbl
+*.dvi
+*.toc
+*.ind
+*.idx
+*.out
+Makefile
+user.pdf
+user
+faqsum.tex

@@ -1,0 +1,75 @@
+#
+# This file maps each MPI error class to a short name form.  
+# This is used to support MPI_Error_string when applied to one of the
+# MPI classes rather than to an error code created by MPIR_Err_create_code.
+# By mapping the MPI codes to short generic names, we ensure that the 
+# message strings for the defined MPI classes matches some message that
+# may be created by MPIR_Err_create_code.
+# 
+# The format of this file is 
+# mpi_err_xxx integer-value short-name
+# where "integer-value" is the same as in mpi.h (eventually, we should
+# generate this automatically).
+MPI_SUCCESS          0      **success
+# Communication argument parameters
+MPI_ERR_BUFFER       1      **buffer
+MPI_ERR_COUNT        2      **count
+MPI_ERR_TYPE         3      **dtype
+MPI_ERR_TAG          4      **tag
+MPI_ERR_COMM         5      **comm
+MPI_ERR_RANK         6      **rank
+MPI_ERR_ROOT         7      **root
+MPI_ERR_TRUNCATE    14      **truncate
+# MPI Objects (other than COMM) 
+MPI_ERR_GROUP        8      **group
+MPI_ERR_OP           9      **op
+MPI_ERR_REQUEST     19      **request
+# Special topology argument parameters 
+MPI_ERR_TOPOLOGY    10      **topology
+MPI_ERR_DIMS        11      **dims
+# All other arguments.  This is a class with many kinds 
+MPI_ERR_ARG         12      **arg
+# Other errors that are not simply an invalid argument
+MPI_ERR_OTHER       15      **other
+MPI_ERR_UNKNOWN     13      **unknown
+MPI_ERR_INTERN      16      **intern
+# Multiple completion has two special error classes 
+MPI_ERR_IN_STATUS   17      **instatus
+MPI_ERR_PENDING     18      **inpending
+# New MPI-2 Error classes 
+MPI_ERR_FILE        27      **file
+MPI_ERR_ACCESS      20      **fileaccess
+MPI_ERR_AMODE       21      **fileamode
+MPI_ERR_BAD_FILE    22      **filename
+MPI_ERR_FILE_EXISTS 25      **fileexist
+MPI_ERR_FILE_IN_USE 26      **fileinuse
+MPI_ERR_NO_SPACE    36      **filenospace
+MPI_ERR_NO_SUCH_FILE 37     **filenoexist
+MPI_ERR_IO          32      **io
+MPI_ERR_READ_ONLY   40      **filerdonly
+MPI_ERR_CONVERSION  23      **conversion
+MPI_ERR_DUP_DATAREP 24      **datarepused
+MPI_ERR_UNSUPPORTED_DATAREP   43  **datarepunsupported
+# MPI_ERR_INFO is NOT defined in the MPI-2 standard.  I believe that
+# this is an oversight 
+MPI_ERR_INFO        28      **info
+MPI_ERR_INFO_KEY    29      **infokey
+MPI_ERR_INFO_VALUE  30      **infoval
+MPI_ERR_INFO_NOKEY  31      **infonokey
+MPI_ERR_NAME        33      **nameservice
+MPI_ERR_NO_MEM      34      **allocmem
+MPI_ERR_NOT_SAME    35      **notsame
+MPI_ERR_PORT        38      **port
+MPI_ERR_QUOTA       39      **filequota
+MPI_ERR_SERVICE     41      **servicename
+MPI_ERR_SPAWN       42      **spawn
+MPI_ERR_UNSUPPORTED_OPERATION 44 **fileopunsupported
+MPI_ERR_WIN         45      **win
+MPI_ERR_BASE        46      **base
+MPI_ERR_LOCKTYPE    47      **locktype
+MPI_ERR_KEYVAL      48      **keyval
+MPI_ERR_RMA_CONFLICT 49     **rmaconflict
+MPI_ERR_RMA_SYNC    50      **rmasync
+MPI_ERR_SIZE        51      **rmasize
+MPI_ERR_DISP        52      **rmadisp
+MPI_ERR_ASSERT      53      **assert

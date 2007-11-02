@@ -1,0 +1,12 @@
+mpi_sources = accumulate.c alloc_mem.c free_mem.c get.c put.c \
+ win_complete.c win_create.c win_fence.c win_free.c win_get_group.c \
+ win_get_name.c win_lock.c win_post.c win_set_name.c win_start.c win_unlock.c \
+ win_wait.c win_test.c
+lib${MPILIBNAME}_a_SOURCES = $(mpi_sources) winutil.c
+profilelib_${MPILIBNAME} = ${PMPILIBNAME}
+profilelib_${MPILIBNAME}_SOURCES = ${mpi_sources}
+INCLUDES = -I../../include -I${top_srcdir}/src/include
+#
+doc_HTML_SOURCES = ${mpi_sources}
+doc_MAN_SOURCES = ${mpi_sources}
+doc_LATEX_SOURCES = ${mpi_sources}

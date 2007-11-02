@@ -1,0 +1,80 @@
+Virtual Connection State Machine
+
+State [Unbound]
+    Event [VC-Open]
+	Event_Enqueue_Head([VC-Open)])
+	State_Change([Bound, Unconnected])
+
+State [Bound, Unconnected]
+    Event [VC-Open]
+	/* An operation involved outgoing communcation was requested for this
+	 * virtual connection.  Before we can perform such a request, we need
+	 * to establish a real connection with the destination process.  We
+	 * also may need to initialize at least the receive side state machine
+	 * now so that any unexpected incoming packets arriving shortly after
+	 * connection establishment are properly handled.  We could intialize
+	 * send state machine, but it can't actually start sending until the
+	 * connection has been established.
+	 */
+
+        initialize send and recv state machines
+	initiate connection establishment
+
+        XXX - we need one or more method functions for performing the above
+	      stated tasks
+
+	State_Change([Connecting], [initiate connection])
+
+
+State [Connecting]
+    XXX - we an mechanism for signalling the success or failure of the
+	  connection establishment
+					     
+    Event [Success]
+        /*
+	 * Connection establishment was successful.  Now we need to sure the
+	 * send state machine gets started (or moved out a "connection
+	 * pending" state).
+	 */
+	 State_Change([Connected]);
+
+    Event [Error]
+	/*
+	 * Connection establishment failed.  Too bad...we assume that the
+	 * method has already worn itself out trying to make this connection
+	 * happen, so we are just going to admit failure and give up.
+	 */
+        State_Change([Failed]);
+
+
+State [Connected]
+    Event [VC-Close]
+	XXX - we need a way to make a close request
+
+	/*
+         * A connection close has been requested.  At the moment, we only
+         * envision this happening when communicator spanning multiple process
+         * groups is destroyed.  The requesting routine should ensure that all
+         * outstanding requests are satisfied or cancelled before making a
+         * close request.  Since the destruction of a communicator is a
+         * collective operation, meeting this requirement shouldn't be
+         * difficult.
+         */
+	close real connection
+	signal 
+	State_Change([Bound, Unconnected],[close connection])
+
+    Event [Error]
+	/*
+	 * The connection fell over.  At the moment, this is a permanent
+	 * failure.  Some additional states would need to be added here and
+	 * to the send and recv state machines in order to handle
+	 * connection re-establishment.
+	 */
+        State_Change([Failed]);
+
+
+State [Failed]
+    /*
+     * At the moment, virtual connection failures are permanent.
+     */

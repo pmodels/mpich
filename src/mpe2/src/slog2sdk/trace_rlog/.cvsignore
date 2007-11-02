@@ -1,0 +1,13 @@
+configure
+configure.lineno
+config.log
+config.status
+lib
+share
+autom4te.cache
+config.h.in
+Makefile
+trace_impl.h
+trace_impl.h.in
+trace_impl.h.in~
+libtool

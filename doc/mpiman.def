@@ -1,0 +1,11 @@
+hdef mpich 0 '<TT>MPICH</TT>'
+hdef Mpich 0 '<TT>MPICH</TT>'
+hdef mpibug 0 '<A HREF="mailto:mpich2-maint@mcs.anl.gov">mpich2-maint@mcs.anl.gov</A>'
+hdef url 1 '<A HREF="#1">#1</A>'
+hdef urlname 1 '<A HREF="#1">#1</A>'
+hdef mpifile 1 '<TT>/usr/local/mpich2-1.0.3/#1</TT>'
+nop begingroup 0
+nop endgroup 0
+name mpichversion 0 1.0.3
+nop scriptsize
+

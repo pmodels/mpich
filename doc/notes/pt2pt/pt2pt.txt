@@ -1,0 +1,262 @@
+pt2pt requirement
+
+- need to specify blocking vs. non-blocking for most routines
+
+
+------------------------------------------------------------------------
+
+MPI_Send_init(buf, count, datatype, dest, tag, comm, request, error)
+MPI_Bsend_init(buf, count, datatype, dest, tag, comm, request, error)
+MPI_Rsend_init(buf, count, datatype, dest, tag, comm, request, error)
+MPI_Ssend_init(buf, count, datatype, dest, tag, comm, request, error)
+MPI_Recv_init(buf, count , datatype, src, tag, com, request, error)
+{
+    request_p = MPIR_Request_alloc();
+
+    /* Fill in request structure based on parameters and type of operation */
+    request_p->buf = buf;
+    request_p->count = count;
+    request_p->datatype = datatype;
+    request_p->rank = dest/src;
+    request_p->tag = tag;
+    request_p->comm = comm;
+    request_p->type = persistent | <type>;
+
+    *request = MPIR_Request_handle(request_p);
+}
+
+
+MPI_Start(request, error)
+{
+    switch(request->type)
+    {
+        send:
+	    MPID_Isend(buf, count, datatype, dest, tag, comm, request_p,
+                       error);
+        bsend:
+            MPID_Ibsend(...)
+        rsend:
+            MPID_Irsend(...)
+        ssend:
+            MPID_Issend(...)
+        recv:
+            MPID_Irecv(...)
+    }
+}
+
+- persistent requests require copying parameters into the request structure.
+  should we always fill in a request and simply pass the request as the only
+  parameter?  this would eliminate optimizations on machines where large
+  numbers of parameters can be passed in registers, but the intel boxes will
+  just end up pushing the parameters on the stack anyway...
+
+- there is an optimization here that allows registered memory to be maintained
+  as registered in the persistent case.  to do this we will need to let the
+  method know that we do/do not want the memory unregistered.
+
+- need to store request type in request structure so that MPI_Start() can do
+  the right thing (tm).
+
+- we chose not to convert handles to structure pointers since the handles may
+  cointain quick access to common information avoiding pointer dereferences.
+  in some cases, an associated structure may not even exist.
+
+  the implication here is that many of the non-persistent MPI_Xsend routines
+  will do little work outside of calling an MPID function.  Perhaps we should
+  not have separate MPI functions in those cases but rather map the MPI
+  functions direct to the MPID functions (through the use of macros or weak
+  symbols).
+
+------------------------------------------------------------------------
+
+
+MPI_Send(buf, count, datatype, dest, tag, comm, error)
+MPI_Bsend(buf, count, datatype, dest, tag, comm, error)
+MPI_Rsend(buf, count, datatype, dest, tag, comm, error)
+MPI_Ssend(buf, count, datatype, dest, tag, comm, error)
+{
+  /* Map (comm,rank) handle to a virtual connection */
+  MPID_Comm_get_connection(comm, rank, &vc);
+
+  /* If virtual connection is not bound to a real connection, then perform
+     connection resolution. */
+
+  /* (atomically) If no other requests are queued on this connection, the send
+     as much data as possible.  If the entire message could not be sent
+     "immediately" then queue the request for later processing. (We need a
+     progress engine to ensure that later happens.  */
+  /* Build up a segement unless the datatype is "trivial" */
+
+
+  /* Wait until entire message is sent */
+}
+
+- heterogeneity should be handled by the method.  this allows methods which do
+  require conversions, such as shared memory, to be fully optimized.
+
+- who should setup the segment and convert the buffer (buf, count, datatype) to
+  one or more blocks of bytes?  should that be a layer above the method or
+  should it be the method itself?
+
+  a method may or may not need to use segments depending on its capabilities.
+
+  there should only be one implementation of the segment API which will be
+  called by all of the method implementations.
+
+- we noticed that the segment initialization code take a (comm,rank) pair which
+  will have to be dereferenced to a virtual connection in order to determine if
+  data conversion is required.  since we have already done the dereference, it
+  would be ideal if the segment took a ADI3 implementation (MPID) specific
+  connection type instead of a (comm,rank).  Making this parameter type
+  implementation specific implies that the segment interface is never called
+  from the MPI layer or that the ADI3 interface provided a means of converting
+  a (comm, rank) to a connection type.
+
+- David suggested that we might be able to use the xfer interface for
+  point-to-point messaging as well as for collective operations.
+
+  What should the xfer interface look like?
+
+  - David provided a write-up of the existing interface
+
+  - We questioned whether or not multiple receive blocks could be used to
+    receive a message sent from a single send block.  We decided that blocks
+    define envelopes which match, where a single block defines an envelope (and
+    payload) per destination and/or source.  So, a message sent to a particular
+    destination (from a single send block) must be received by a single receive
+    block.  In other words, the message cannot be broken across receive blocks.
+ 
+    - there is an asymmetry in the existing interface which allows multiple
+      destinations but prevents multiple sources.  the result of this is that
+      scattering operations can be naturally described, but aggregation
+      operations cannot.  we believe that there are important cases where
+      aggregation would benefit collective operations.
+
+    - to address this we believe that we should extend the interface to
+      implement a many-to-one, in addition to the existing one-to-many
+      interface.  we hope we don't need the many-to-many...
+
+    - perhaps we should call these scatter_init and gather_init (etc)?
+
+  - Nick proposed that the interface be split up such that sends requests were
+    separate from receive requests.  This implies that there would be a
+    xfer_send_init() and xfer_recv_init().  We later threw this out, as it
+    didn't make a whole lot of sense with forwards existing in the recv case.
+
+  - Brian wondered about aggregating sends into a single receive and whether
+    that could be used to reduce the overhead of message headers when
+    forwarding.  We think that this can be done below the xfer interface when
+    converting into a dataflow-like structure (?)
+
+- We think it may be necessary to describe dependencies, such as progress,
+  completion and buffer.  These dependencies as frighteningly close to
+  dataflow...
+
+- basically we see the xfer init...start calls as being converted into a set of
+  comm. agent requests and a dependency graph.  we see the dependencies as
+  being possibly stored in a tabular format, so that ranges of the incoming
+  stream can have different dependencies on them -- specifically this allows
+  for progress dependencies on a range basis, which we see as a requirement.
+  completion dependencies (of which there may be > 1) would be listed at the
+  end of this table
+
+  the table describes what depends on THIS request, rather than the other way
+  around.  this is tailored to a notification system rather than some sort of
+  search-for-ready approach (which would be a disaster).
+
+- for dependencies BETWEEN blocks, we propose waiting on the first block to
+  complete before starting the next block.  you can still create blocks ahead
+  of time if desired.  otherwise blocks may be processed in parallel
+
+- blocks follow the same envelope matching rules as posted mpi send/recvs
+  (commit time order).  this is the only "dependency" between blocks
+
+reminder: envelope = (context (communicator), source_rank, tag)
+
+QUESTION: what exactly are the semantics of a block?  Sends to the same
+destination are definitely ordered.  Sends to different desinations could
+proceed in parallel.  Should they?
+
+example:
+  init
+  rf(5)
+  rf(4)
+  r
+  start
+
+a transfer block defines 0 or 1 envelope/payloads for sources and 0 to N envelope/payloads for destinations, one per destination.
+
+
+
+- The communication agent will need to process these requests and data
+  dependencies.  We see the agent having queues of requests similar in nature
+  to the run queue within an operating system.  (We aren't really sure what
+  this means yet...)  Queues might consist of the active queue, the wait queue,
+  and the still-to-be-matched queue.
+
+  - the "try to send right away" code will look to see if there is anything in
+    the active queue for the vc, and if not just put it in run queue and call
+    the make progress function (whatever that is...)
+
+- adaptive polling done at the agent level, perhaps with method supplied
+  min/max/increments.  comm. agent must track outstanding requests (as
+  described above) in order to know WHAT to poll.  we must also take into
+  account that there might be incoming active message or error conditions, so
+  we should poll all methods (and all vcs) periodically.
+
+- We believe that a MPID_Request might simply contain enough information for
+  signalling that one or more CARs have completed.  This implies that a
+  MPID_Request might consist of a integer counter of outstanding CARs.  When
+  the counter reached zero, the request is complete.  David suggests making
+  CARs and MPID_Requests reside in the same physical structure so that in the
+  MPI_Send/Recv() case, two logical allocations (one for MPID_Request and CAR)
+  are combined into one.
+
+- operations within a block are prioritized by the order in which they are
+  added to the block.  operations may proceed in parallel so long as higher
+  priority operations are not slowed down by lesser priority operations.  a
+  valid implementation is to serialize the operations thus guaranteeing that
+  the current operation has all available resources at its desposal.
+
+MPI_Isend(buf, count, datatype, dest, tag, comm, request, error)
+MPI_Ibsend(buf, count, datatype, dest, tag, comm, request, error)
+MPI_Irsend(buf, count, datatype, dest, tag, comm, request, error)
+MPI_Issend(buf, count, datatype, dest, tag, comm, request, error)
+{
+    request_p = MPIR_Request_alloc();
+    MPID_IXsend(buf, count, datatype, dest, tag, comm, request_p, error);
+    *request = MPIR_Request_handle(request_p);
+}
+
+MPI_Recv()
+MPI_Irecv()
+
+- need to cover wild card receive!
+
+MPI_Sendrecv()
+{
+    /* KISS */
+    MPI_Isend()
+    MPI_Irecv()
+    MPI_Waitall()
+}
+
+
+MPID_Send(buf, count, datatype, dest, tag, comm, group, error)
+MPID_Isend(buf, count, datatype, dest, tag, comm, request, error)
+
+MPID_Bsend(buf, count, datatype, dest, tag, comm, error)
+MPID_Ibsend(buf, count, datatype, dest, tag, comm, request, error)
+
+MPID_Rsend(buf, count, datatype, dest, tag, comm, error)
+MPID_Irsend(buf, count, datatype, dest, tag, comm, request, error)
+
+MPID_Ssend(buf, count, datatype, dest, tag, comm, error)
+MPID_Issend(buf, count, datatype, dest, tag, comm, request, error)
+
+
+-----
+
+Items which make life more difficult:
+
+- 

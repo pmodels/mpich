@@ -1,0 +1,10 @@
+Makefile.in
+Makefile
+*.o
+baseattr
+attraints.h
+*ebug*
+*elease*
+*.vfproj
+*.gcda
+*.gcno

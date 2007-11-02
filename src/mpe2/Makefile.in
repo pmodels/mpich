@@ -1,0 +1,185 @@
+ALL: all
+
+MAKE   = @MAKE@
+SHELL  = @SHELL@
+MKDIR  = @MKDIR@
+RM     = @RM@
+CP     = @CPRP@
+
+top_srcdir        = @top_srcdir@
+srcdir            = @srcdir@
+
+# Build directories
+includebuild_dir  = @includebuild_dir@
+libbuild_dir      = @libbuild_dir@
+binbuild_dir      = @binbuild_dir@
+sbinbuild_dir     = @sbinbuild_dir@
+etcbuild_dir      = @etcbuild_dir@
+
+# Building Fortran to C interface
+MPE_BUILD_FORTRAN2C  = @MPE_BUILD_FORTRAN2C@
+# MPI implementation: used to turn on/off of certain feature
+MPI_IMPL             = @MPI_IMPL@
+# MPE header files that are needed by endusers
+MPE_HEADERS          = mpe.h mpe_misc.h mpe_callstack.h mpe_log.h mpe_graphics.h
+
+# The empty string, "", in PKGS is needed to avoid /bin/sh from complaining
+# when PKGS is really empty.
+PKGS = "" @subdirs@
+
+all-redirect: 
+all: build_include build_lib_bin
+
+#######  Building from the source
+build_include:
+	-@if [ -n "$(includebuild_dir)" ] ; then \
+	      if [ ! -d $(includebuild_dir) ] ; then \
+	          $(MKDIR) -p $(includebuild_dir) ; \
+	      fi ; \
+	      cd $(top_srcdir)/include && \
+	      for file in $(MPE_HEADERS) ; do \
+	          if [ ! -f $(includebuild_dir)/$$file ] ; then \
+	              if [ -f $$file ] ; then \
+	                  $(CP) $$file $(includebuild_dir) ; \
+	              else \
+	                  echo "/* This empty MPE header will be replaced by the correct header if the corresponding subpackage is configured successfully. */" > $(includebuild_dir)/$$file ; \
+	              fi ; \
+	          fi ; \
+	      done ; \
+	  fi
+
+build_lib_bin:
+	@for pkg in $(PKGS) ; do \
+	     if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
+	         echo ; echo "**** Making $$pkg ...." ; \
+	         ( cd $$pkg && $(MAKE) ) ; \
+                 sleep 1 ; \
+	     fi ; \
+	 done
+
+build_check:
+	@if [ -n "$(MPERUN)" ] ; then \
+	     ./sbin/mpecheckbuild -run="$(MPERUN)" ; \
+	 else \
+	     ./sbin/mpecheckbuild -run ; \
+	 fi ; \
+
+check : build_check
+
+FORCE_TARGET:
+
+########  Installing
+install: FORCE_TARGET
+	@if [ -n "$(PREFIX)" ] ; then \
+	     ./sbin/mpeinstall -prefix=$(PREFIX) -dmode="" ; \
+	 else \
+	     ./sbin/mpeinstall -dmode="" ; \
+	 fi
+
+installcheck:
+	@if [ -n "$(PREFIX)" ] ; then \
+	     ./sbin/mpecheckinstall -prefix=$(PREFIX) ; \
+	 else \
+	     ./sbin/mpecheckinstall ; \
+	 fi
+
+installcheck-all:
+	@if [ -n "$(PREFIX)" ] ; then \
+	     if [ -n "$(MPERUN)" ] ; then \
+	         ./sbin/mpecheckinstall -prefix=$(PREFIX) -run="$(MPERUN)" ; \
+	     else \
+	         ./sbin/mpecheckinstall -prefix=$(PREFIX) -run ; \
+	     fi ; \
+	 else \
+	     if [ -n "$(MPERUN)" ] ; then \
+	         ./sbin/mpecheckinstall -run="$(MPERUN)" ; \
+	     else \
+	         ./sbin/mpecheckinstall -run ; \
+	     fi ; \
+	 fi
+
+uninstall:
+	@./sbin/mpeuninstall
+
+########  Cleaning
+# when "$(top_srcdir)" = ".", it is a non-VPATH build.
+clean_include:
+	@-if [ -n "$(includebuild_dir)" -a "$(top_srcdir)" != "." \
+	       -a "$(includebuild_dir)" != "$(top_srcdir)/include" ] ; then \
+	      for file in $(MPE_HEADERS) ; do \
+	          $(RM) -f $(includebuild_dir)/$$file ; \
+	      done ; \
+	  fi
+
+clean_bin:
+	@-for file in $(binbuild_dir)/* ; do \
+	      suffix="`echo $$file|sed -e 's%\.% %'|awk '{print $$NF}' -`" ; \
+	      if [ "X$$suffix" != "Xin" ] ; then \
+	          $(RM) -f $$file ; \
+	      fi ; \
+	  done;
+
+clean_lib:
+	 -$(RM) -f $(libbuild_dir)/lib*
+	 -$(RM) -f $(libbuild_dir)/*.jar
+	 -$(RM) -f $(libbuild_dir)/*.o
+
+clean_etc:
+	 -$(RM) -f $(etcbuild_dir)/*.conf
+
+clean: clean_lib
+	@-for pkg in $(PKGS) ; do \
+	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
+	          ( cd $$pkg && $(MAKE) clean ) ; \
+	      fi ; \
+	  done
+	@-$(RM) -f work.pc work.pcl
+
+distclean-misc: clean_include clean_etc
+	@-$(RM) -f sbin/mpetestlink sbin/mpetestexec sbin/mpetestexeclog
+	@-$(RM) -f sbin/mpecheckinstall sbin/mpecheckbuild
+	@-$(RM) -f sbin/mpeinstall sbin/mpeuninstall
+	@-$(RM) -f Makefile
+	@-$(RM) -f mpe_conf.h
+	@-$(RM) -r f77tmpdir
+	@-$(RM) -f config.log config.status
+	@-$(RM) -rf autom4te*.cache
+
+distclean: clean_bin clean_lib distclean-misc
+	@-for pkg in $(PKGS) ; do \
+	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
+	          ( cd $$pkg && $(MAKE) distclean ) ; \
+	      fi ; \
+	  done
+
+maintainer-clean: clean_bin clean_lib distclean-misc
+	@-for pkg in $(PKGS) ; do \
+	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
+	          ( cd $$pkg && $(MAKE) maintainer-clean ) ; \
+	      fi ; \
+	  done
+	@-$(RM) -f mpe_conf.h.in
+
+owner-clean: clean_bin clean_lib distclean-misc
+	@-for pkg in $(PKGS) ; do \
+	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
+	          ( cd $$pkg && $(MAKE) owner-clean ) ; \
+	      fi ; \
+	  done
+	@-$(RM) -f mpe_conf.h.in
+	@-$(RM) -f configure
+
+configure: configure.in aclocal_core.m4 aclocal_f77.m4 aclocal_make.m4 \
+	aclocal_mpi.m4 aclocal.m4
+	autoheader
+	autoconf
+
+# Allow dependencies target
+dependencies:
+
+# Allow a coverage target
+coverage:
+
+# Allow a tags target
+tags: TAGS
+TAGS:

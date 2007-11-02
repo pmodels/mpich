@@ -1,0 +1,15 @@
+INCLUDES = -I../../../../../include -I${master_top_srcdir}/src/include
+socksources = \
+    ch3_finalize.c				\
+    ch3_init.c					\
+    ch3_isend.c					\
+    ch3_isendv.c				\
+    ch3_istartmsg.c				\
+    ch3_istartmsgv.c				\
+    ch3_progress.c
+
+lib${MPILIBNAME}_a_SOURCES = ${socksources}
+
+EXTRA_LIBS = libmpich2-ch3-sock.a
+libmpich2-ch3-sock_a_SOURCES = ${socksources}
+

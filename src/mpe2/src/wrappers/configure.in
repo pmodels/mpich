@@ -1,0 +1,1042 @@
+dnl Caching is usually WRONG for systems with cross-mounted file systems
+dnl (the cache file may correspond to a different system).  Since configure
+dnl is not on a performance-critical path, go for robustness over speed.
+dnl
+define([AC_CACHE_LOAD], )dnl
+define([AC_CACHE_SAVE], )dnl
+dnl
+dnl
+AC_INIT()
+AC_PREREQ(2.52)
+AC_CONFIG_HEADER(mpe_wrappers_conf.h)
+dnl
+echo "Configuring MPE Wrapper Libraries For MPI with $ac_configure_args"
+dnl
+dnl Set top_srcdir_abs to be the ABSOLUTE path to the home directory of MPE
+dnl top_srcdir is in relative path.
+if test "X$srcdir" != "X." -a -s $srcdir/src/log_mpi_core.c ; then
+    top_srcdir_abs=$srcdir
+else
+    PAC_GETWD( top_srcdir_abs, src/log_mpi_core.c )
+fi
+AC_SUBST(top_srcdir_abs)
+
+AC_ARG_ENABLE( echo,
+[--enable-echo                      - Turn on strong echoing.
+                                     The default is enable=no.],
+set -x )
+
+AC_ARG_ENABLE( softerror,
+[--enable-softerror                 - Turn on soft error, i.e. instead of
+                                     issuing MSG_ERROR, MSG_WARN + exit 0
+                                     are used.  The default is enable=no.],
+, enable_softerror=${mpe_enable_softerror:-no} )
+
+MAKE=${MAKE:-make}
+MPI_IMPL=${MPI_IMPL:-UserSupplied}
+MPE_BUILD_FORTRAN2C=${MPE_BUILD_FORTRAN2C:-no}
+CC=${CC:-cc}
+CLINKER=${CLINKER:-$CC}
+CFLAGS=${MPE_CFLAGS}
+MPI_CC=${MPI_CC:-${CC}}
+MPE_CLINKER=${MPE_CLINKER}
+F77=${F77:-f77}
+FLINKER=${FLINKER:-$F77}
+FFLAGS=${MPE_FFLAGS}
+MPI_F77=${MPI_F77:-${F77}}
+MPE_FLINKER=${MPE_FLINKER}
+FINC_PATH_LEADER=${FINC_PATH_LEADER:-"-I"}
+FLIB_PATH_LEADER=${FLIB_PATH_LEADER:-"-L"}
+MPI_INC=${MPI_INC}
+MPI_LIBS=${MPI_LIBS}
+
+MPE_LIBNAME=${MPE_LIBNAME:-mpe}
+PROF_LIBNAME="$MPE_LIBNAME"
+LOG_LIBNAME="l$MPE_LIBNAME"
+TRACE_LIBNAME="t$MPE_LIBNAME"
+F2CMPI_LIBNAME="${MPE_LIBNAME}_f2cmpi"
+
+PROF_LIBS="-l$PROF_LIBNAME"
+LOG_LIBS="-l$LOG_LIBNAME $PROF_LIBS"
+TRACE_LIBS="-l$TRACE_LIBNAME"
+F2CMPI_LIBS=""
+
+dnl Fixup for make
+PAC_MAKE_IS_GNUMAKE
+PAC_MAKE_IS_BSD44
+PAC_MAKE_IS_OSF
+PAC_MAKE_VPATH
+AC_SUBST(MAKE)
+ 
+dnl If we are relying on vpath and no vpath is set, then we must exit
+if test ! -s src/log_mpi_core.c -a -z "$VPATH" ; then
+    AC_MSG_ERROR( [No virtual MAKE path command found.
+	You may need to set your make command
+	The GNU make (sometimes available as gnumake) can be used.] )
+fi
+
+dnl CPRP is the version of cp that accepts -r and -p arguments.
+MKDIR=mkdir
+CPRP=cp
+RM=rm
+MV=mv
+AC_SUBST(MKDIR)
+AC_SUBST(CPRP)
+AC_SUBST(RM)
+AC_SUBST(MV)
+ 
+AC_ARG_WITH( mpiio,
+[--with-mpiio                       - Enable/Disable MPI-IO logging
+                                     in MPICHx build.  The default is yes.], ,
+with_mpiio=yes )
+
+AC_ARG_ENABLE( romio,
+[--enable-romio                     - Enable/Disable ROMIO MPI-IO logging
+                                     in MPICHx build.  The default is yes.],
+with_mpiio=$enableval,
+with_mpiio=yes )
+
+AC_ARG_ENABLE( checkMPI,
+[--enable-checkMPI                  - Turn on/off the linking test for the MPI
+                                     include files, MPI libraries and MPI_CC
+                                     compiler. The default is enable=yes.], ,
+enable_checkMPI=yes )
+
+AC_ARG_WITH( checkMPIO,
+[--enable-checkMPIO                 - Turn on/off the linking test for MPI-IO
+                                     routines in MPI implementation.
+                                     The default is enable=yes.], ,
+enable_checkMPIO=yes )
+
+dnl  Ideally, enable_f2cmpilib should be extracted from the
+dnl  CC/MPI_CC/MPI_INC/MPI_LIBS supplied by the user of MPE.
+dnl  enable_f2cmpilib is used to determine if libmpe_f2cmpi.a( mpe_proff.o )
+dnl  is needed for profiling of fortran MPI program
+dnl  withOUT a PMPICH type of profiling library.
+AC_ARG_ENABLE( f2cmpilib,
+[--enable-f2cmpilib                 - Indicates if this MPE build will make
+                                     its own Fortran to C MPI wrapper library.
+                                     The library is needed for profiling
+                                     Fortran program in Non-MPICH platform.
+                                     The default is enable=yes.], ,
+enable_f2cmpilib=yes )
+
+AC_ARG_WITH( f2cmpilibs,
+[--with-f2cmpilibs=F2CMPI_LIBS      - compiler's library flags for
+                                     Fortran to C MPI wrapper library.
+                                     Using this option disables building of
+                                     MPE's internal Fortran to C MPI library,
+                                     --disable-f2cmpilib.  The library is
+                                     needed for profiling MPI Fortran program.
+                                     e.g. "-lfmpich" when MPE is building with
+                                     MPICH.],
+F2CMPI_LIBS="$withval" ; enable_f2cmpilib=no )
+
+AC_ARG_ENABLE( safePMPI,
+[--enable-safePMPI                  - Turn on/off the safe PMPI invocation, ie.
+                                     Turn off logging before making PMPI call.
+                                     Turn on logging after PMPI call.  For
+                                     non-MPICH2 (standalone build), the default
+                                     is enable=yes for non-MPICH2 build.  For
+                                     MPICH2 build, the default is enable=no.], ,
+enable_safePMPI=yes )
+
+AC_ARG_ENABLE( debugcheck,
+[--enable-debugcheck                - Turn on/off the debugging & diagnostic
+                                     checking code in MPE code.
+                                     The default is enable=no.] )
+
+AC_ARG_ENABLE( broken-procnull,
+[--enable-broken-procnull           - Handle MPI implementations with buggy
+                                     handling of MPI_PROC_NULL.],
+procnull_broken=$enableval, procnull_broken=default )
+
+dnl Set the various build directories from their mpe_ prefixed env variables.
+dnl
+dnl includebuild_dir is for all user header files
+dnl libbuild_dir is used to build the libraries in before they are installed.
+dnl binbuild_dir is for the scripts/programs
+dnl sbinbuild_dir is for all system admin tools
+dnl etcbuild_dir is for all system admin configuration settings
+dnl
+rootbuild_dir=`pwd`
+for dir in include lib bin sbin etc ; do
+    dirname=${dir}build_dir
+    mpe_dirname=mpe_${dirname}
+    eval dirvalue=\$"$dirname"
+    eval $dirname=\$\{${mpe_dirname}\}
+done
+
+for dir in include lib bin sbin etc ; do
+    dirname=${dir}build_dir
+    eval dirvalue=\$"$dirname"
+    if test -n "$dirvalue" ; then
+        if test ! -d $dirvalue ; then
+            if mkdir -p $dirvalue ; then
+                :
+            else
+                PAC_MSG_ERROR( $enable_softerror,
+                               [Could not create directory $dirvalue] )
+            fi
+        fi
+    fi
+done
+
+AC_SUBST(includebuild_dir)
+AC_SUBST(libbuild_dir)
+AC_SUBST(binbuild_dir)
+AC_SUBST(sbinbuild_dir)
+AC_SUBST(etcbuild_dir)
+
+AC_PROG_CC
+AC_OBJEXT
+AC_EXEEXT
+dnl Check for broken handling of common symbols
+dnl PAC_PROG_C_BROKEN_COMMON
+AC_CHECK_PROG(AR, ar, ar, ;)
+AC_PROG_RANLIB
+
+dnl We need to check that this has worked.  The autoconf macro is broken
+AC_PROG_CPP
+if test "$CPP" = "/lib/cpp" -a ! -x /lib/cpp ; then
+   AC_MSG_ERROR( [configure could not find a working C preprocessor] )
+fi
+
+dnl  Invoking AC_CHECK_LIB before AC_PROG_CC makes AC_PROG_CC fail
+dnl  in autoconf 2.59
+DEBUG_LIBS=""
+if test "$enable_debugcheck" = "yes" ; then
+    AC_CHECK_LIB( efence, malloc, DEBUG_LIBS="-lefence" )
+fi
+AC_SUBST(DEBUG_LIBS)
+
+AC_HEADER_STDC
+AC_C_CONST
+
+dnl  Checking Headers
+AC_CHECK_HEADERS( stdio.h stdlib.h string.h )
+AC_CHECK_HEADER( stdarg.h,
+                 [AC_DEFINE( HAVE_STDARG_H, 1,
+                             [Define if stdarg.h is available] )
+                  havestdarg=1], , )
+
+AC_FUNC_ALLOCA
+
+dnl
+dnl  We need to build mpe with the shared library flags
+dnl  This should rely on the same approach used in the mpich configure,
+dnl  since just using TRY_LINK or TRY_COMPILE doesn't identify warning messages
+dnl  about "compiler flag unrecognized".
+dnl
+dnl  It isn't enough to check for stdarg.  Even gcc doesn't get it right;
+dnl  on some systems, the gcc version of stdio.h loads stdarg.h WITH THE WRONG
+dnl  OPTIONS (causing it to choose the OLD STYLE va_start etc).
+dnl 
+if test -n "$havestdarg" ; then
+    PAC_COMPILE_CHECK_FUNC(stdarg is correct,[
+#include <stdio.h>
+#include <stdarg.h>
+int func( int a, ... ){
+int b;
+va_list ap;
+va_start( ap, a );
+b = va_arg(ap, int);
+printf( "%d-%d\n", a, b );
+va_end(ap);
+fflush(stdout);
+return 0;
+}
+int main() { func( 1, 2 ); return 0;}],
+AC_DEFINE( USE_STDARG, 1, [Define is stdarg can be used] )
+)
+fi
+dnl
+AC_MSG_CHECKING( [if compiler accepts prototypes] )
+AC_TRY_COMPILE(, int f(double a);, have_proto=yes, have_proto=no)
+if test "$have_proto" = "yes" ; then
+    AC_DEFINE( HAVE_PROTOTYPES, 1,
+               [Define if the compiler supports simple prototyptes] )
+    AC_MSG_RESULT([yes])
+else
+    AC_MSG_RESULT([no])
+fi
+
+if test -z "$nonopt" ; then nonopt=NONE ; fi
+AC_CANONICAL_HOST
+case "$host" in
+    *irix*)
+dnl     FIXME: the test has a problem when LAM on irix is configured!
+        if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+            if test "$procnull_broken" = "default" ; then
+                procnull_broken=yes
+            fi
+        fi
+        ;;
+    *cray*)
+        if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
+            AC_MSG_CHECKING( [for Cray's FCD logical type] )
+            AC_LINK_IFELSE( [ AC_LANG_PROGRAM( [#include <fortran.h>], [
+                                int clogical, flogical;
+                                clogical = 1;
+                                flogical = _btol( clogical );
+                                clogical = _ltob( &flogical );
+                            ] ) ], [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+            if test "$mpe_link_ok" = "yes" ; then
+                AC_MSG_RESULT(yes)
+                AC_DEFINE( HAVE_CRAY_FCD_LOGICAL, 1,
+                           [Define if CRAY's FCD logical is found] )
+            else
+                AC_MSG_RESULT(no)
+            fi
+        fi
+        ;;
+esac
+if test "$procnull_broken" = "yes" ; then
+    AC_DEFINE( HAVE_MPI_STATUS_BROKEN_ON_PROC_NULL, 1,
+               [Define if MPI_PROCNULL not handled in MPI_Status] )
+fi
+
+
+if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
+    if test "$enable_f2cmpilib" = "yes" ; then
+        F2CMPI_LIBS="-l$F2CMPI_LIBNAME"
+    fi
+dnl  when --enable-f77 and --disable-f2cmpilib are selected,
+dnl  value supplied in --with-f2cmpilibs will be used.
+else
+dnl     If F2CMPI_LIBS="-lfmpich", disable building of libmpe_f2cmpi.a
+dnl     by setting F2CMPI_LIBS="".  Leave MPE_BUILD_FORTRAN2C=yes, so
+dnl     fortran link/run tests can be performed.
+    F2CMPI_LIBS=""
+fi
+
+dnl Check Safe PMPI invocations
+AC_MSG_CHECKING( [for safe PMPI invocations] )
+if test "$MPI_IMPL" = "MPICH" -o "$MPI_IMPL" = "MPICH2" ; then
+    enable_safePMPI=no
+fi
+if test "$enable_safePMPI" = "yes" ; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE( MAKE_SAFE_PMPI_CALL, 1, [Define if safe PMPI calls are made] )
+else
+    AC_MSG_RESULT(no)
+fi
+
+dnl Check if Thread-support level in MPI implementation
+if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+    if test "$enable_checkMPI" = "yes" ; then
+        AC_MSG_CHECKING( [for the C version of MPI_Init_thread] )
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                              [ int itmp; int thread_level ],
+                              [
+    itmp=MPI_Init_thread( NULL, NULL, MPI_THREAD_MULTIPLE, &thread_level )
+                              ],
+                              [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+        if test "$mpe_link_ok" = "yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_MSG_CHECKING( [for the C version of PMPI_Init_thread] )
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                                  [ int itmp; int thread_level],
+                                  [
+    itmp=PMPI_Init_thread( NULL, NULL, MPI_THREAD_MULTIPLE, &thread_level )
+                                  ],
+                                  [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+            if test "$mpe_link_ok" = "yes" ; then
+                AC_MSG_RESULT(yes)
+                AC_DEFINE(HAVE_MPI_INIT_THREAD, 1,
+                          [Define if MPI_Init_thread available])
+            else
+                AC_MSG_RESULT(no)
+            fi
+        else
+            AC_MSG_RESULT(no)
+        fi
+    fi
+else
+dnl MPICH2 has MPI_Init_thread().
+    if test "$MPI_IMPL" = "MPICH2" ; then
+        AC_DEFINE(HAVE_MPI_INIT_THREAD, 1,
+                  [Define if MPI_Init_thread available])
+    fi
+fi
+
+
+dnl Check MPI-IO
+if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+    if test "$enable_checkMPI" = "yes" -a "$enable_checkMPIO" = "yes" ; then
+        AC_MSG_CHECKING( [for the C version of MPI_File_open()] )
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                              [ int itmp; MPI_File fh ],
+                              [
+    itmp=MPI_File_open( MPI_COMM_WORLD, "mpiiotest",
+                        MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh )
+                              ],
+                              [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+        if test "$mpe_link_ok" = "yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_MSG_CHECKING( [for the C version of PMPI_File_open()] )
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                                  [ int itmp; MPI_File fh ],
+                                  [
+    itmp=PMPI_File_open( MPI_COMM_WORLD, "mpiiotest",
+                         MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh )
+                                  ],
+                                  [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+            if test "$mpe_link_ok" = "yes" ; then
+                AC_MSG_RESULT(yes)
+                AC_DEFINE( HAVE_MPI_IO, 1, [Define if MPI-IO available] )
+                AC_MSG_CHECKING( [for ROMIO's MPIO_Request] )
+                PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                                      [ MPIO_Request  io_request], ,
+                                      [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+                if test "$mpe_link_ok" = "yes" ; then
+                    AC_MSG_RESULT(yes)
+                else
+                    AC_MSG_RESULT(no)
+                    AC_DEFINE( HAVE_NO_MPIO_REQUEST, 1,
+                               [Define if no MPIO_Request] )
+                fi
+            else
+                AC_MSG_RESULT([no, assumed No MPI-IO routines])
+            fi
+        else
+            AC_MSG_RESULT([no, assumed No MPI-IO routines])
+        fi
+    fi
+else
+dnl When built with MPICHx, MPE configure observes --with-mpiio & --enable-romio
+dnl if test \( "$MPI_IMPL" = "MPICH" -o "$MPI_IMPL" = "MPICH2" \) \
+    if test "$with_mpiio" = "yes" ; then
+        AC_DEFINE( HAVE_MPI_IO, 1, [Define if MPI-IO available] )
+    fi
+fi
+
+dnl Check MPI-RMA
+if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+    if test "$enable_checkMPI" = "yes" ; then
+        AC_MSG_CHECKING( [for the C version of MPI_Win_create] )
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                              [ int itmp; MPI_Win win ],
+                              [
+    itmp=MPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win )
+                              ],
+                              [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+        if test "$mpe_link_ok" = "yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_MSG_CHECKING( [for the C version of PMPI_Win_create] )
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                                  [ int itmp; MPI_Win win ],
+                                  [
+    itmp=PMPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win )
+                                  ],
+                                  [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+            if test "$mpe_link_ok" = "yes" ; then
+                AC_MSG_RESULT(yes)
+                AC_DEFINE(HAVE_MPI_RMA, 1, [Define if MPI-RMA available])
+
+                dnl Start Test of MPI_Win_lock/unlock
+                AC_MSG_CHECKING([for the C version of MPI_Win_lock/unlock])
+                PAC_MPI_LINK_CC_FUNC($MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                                     [ int itmp; MPI_Win win ],
+                                     [
+    itmp=MPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win );
+    itmp=MPI_Win_lock( MPI_LOCK_EXCLUSIVE, 0, 0, win );
+    itmp=MPI_Win_unlock( 0, win )
+                                     ],
+                                     [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+                if test "$mpe_link_ok" = "yes" ; then
+                    AC_MSG_RESULT(yes)
+                    AC_MSG_CHECKING([for the C version of PMPI_Win_lock/unlock])
+                    PAC_MPI_LINK_CC_FUNC($MPI_CC, [$CFLAGS $MPI_INC],
+                                         $MPI_LIBS, ,
+                                         [ int itmp; MPI_Win win ],
+                                         [
+    itmp=PMPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win );
+    itmp=PMPI_Win_lock( MPI_LOCK_EXCLUSIVE, 0, 0, win );
+    itmp=PMPI_Win_unlock( 0, win )
+                                         ],
+                                         [ mpe_link_ok=yes ],
+                                         [ mpe_link_ok=no ] )
+                    if test "$mpe_link_ok" = "yes" ; then
+                        AC_MSG_RESULT(yes)
+                        AC_DEFINE(HAVE_MPI_RMA_LOCK, 1,
+                                  [Define if MPI_Win_lock/unlock are available])
+                    else
+                        AC_MSG_RESULT(no)
+                    fi
+                else
+                    AC_MSG_RESULT(no)
+                fi
+                dnl End Test of MPI_Win_lock/unlock
+
+                dnl Start Test of MPI_Win_test
+                AC_MSG_CHECKING([for the C version of MPI_Win_test])
+                PAC_MPI_LINK_CC_FUNC($MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                                     [ int itmp, flag; MPI_Win win ],
+                                     [
+    itmp=MPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win );
+    itmp=MPI_Win_test( win, &flag )
+                                     ],
+                                     [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+                if test "$mpe_link_ok" = "yes" ; then
+                    AC_MSG_RESULT(yes)
+                    AC_MSG_CHECKING([for the C version of PMPI_Win_test])
+                    PAC_MPI_LINK_CC_FUNC($MPI_CC, [$CFLAGS $MPI_INC],
+                                         $MPI_LIBS, ,
+                                         [ int itmp, flag; MPI_Win win ],
+                                         [
+    itmp=PMPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win );
+    itmp=PMPI_Win_test( win, &flag )
+                                         ],
+                                         [ mpe_link_ok=yes ],
+                                         [ mpe_link_ok=no ] )
+                    if test "$mpe_link_ok" = "yes" ; then
+                        AC_MSG_RESULT(yes)
+                        AC_DEFINE(HAVE_MPI_RMA_TEST, 1,
+                                  [Define if MPI_Win_test is available])
+                    else
+                        AC_MSG_RESULT(no)
+                    fi
+                else
+                    AC_MSG_RESULT(no)
+                fi
+                dnl End Test of MPI_Win_test
+ 
+            else
+                AC_MSG_RESULT([no, assumed No MPI-RMA routines])
+            fi
+        else
+            AC_MSG_RESULT([no, assumed No MPI-RMA routines])
+        fi 
+    fi
+else
+dnl if MPICH2, assume MPI-RMA is available.
+    if test "$MPI_IMPL" = "MPICH2" ; then
+        AC_DEFINE( HAVE_MPI_RMA, 1, [Define if MPI-RMA is available] )
+        AC_DEFINE( HAVE_MPI_RMA_LOCK, 1,
+                   [Define if MPI_Win_lock/unlock are available] )
+        AC_DEFINE(HAVE_MPI_RMA_TEST, 1,
+                   [Define if MPI_Win_test is available])
+    fi
+fi
+
+dnl Check MPI-2 communicator functions
+if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+    if test "$enable_checkMPI" = "yes" ; then
+        AC_MSG_CHECKING( [for the C version of MPI_Comm_connect/accept()] )
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                              [ MPI_Comm intercomm; char *port ],
+                              [
+    MPI_Comm_connect( port, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &intercomm );
+    MPI_Comm_accept( port, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &intercomm )
+                              ],
+                              [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+        if test "$mpe_link_ok" = "yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_MSG_CHECKING( [for the C version of PMPI_Comm_connect/accept()] )
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                                  [ MPI_Comm intercomm; char *port ],
+                                  [
+    PMPI_Comm_connect( port, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &intercomm );
+    PMPI_Comm_accept( port, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &intercomm )
+                                  ],
+                                  [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+            if test "$mpe_link_ok" = "yes" ; then
+                AC_MSG_RESULT(yes)
+                AC_DEFINE( HAVE_MPI_SPAWN, 1,
+                           [Define if MPI-SPAWN is available] )
+
+                dnl Start of Checking of MPI2 Naming Service
+                AC_MSG_CHECKING( [for the C version of MPI_Publish/Lookup_name()] )
+                PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                                      [ char *port ],
+                                      [
+    MPI_Publish_name( "mpe_port_name", MPI_INFO_NULL, port );
+    MPI_Lookup_name( "mpe_port_name", MPI_INFO_NULL, port );
+    MPI_Unpublish_name( "mpe_port_name", MPI_INFO_NULL, port );
+                                      ],
+                                      [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+                if test "$mpe_link_ok" = "yes" ; then
+                    AC_MSG_RESULT(yes)
+                    AC_MSG_CHECKING( [for the C version of PMPI_Publish/Lookup_name()] )
+                    PAC_MPI_LINK_CC_FUNC($MPI_CC, [$CFLAGS $MPI_INC],
+                                         $MPI_LIBS, ,
+                                         [ char *port ],
+                                         [
+    PMPI_Publish_name( "mpe_port_name", MPI_INFO_NULL, port );
+    PMPI_Lookup_name( "mpe_port_name", MPI_INFO_NULL, port );
+    PMPI_Unpublish_name( "mpe_port_name", MPI_INFO_NULL, port );
+                                         ],
+                                         [ mpe_link_ok=yes ],
+                                         [ mpe_link_ok=no ] )
+                    if test "$mpe_link_ok" = "yes" ; then
+                        AC_MSG_RESULT(yes)
+                        AC_DEFINE( HAVE_MPI_NAMING, 1,
+                                   [Define if MPI Naming Service is available] )
+                    else
+                        AC_MSG_RESULT(no)
+                    fi
+                else
+                    AC_MSG_RESULT(no)
+                fi
+                dnl End of Checking of MPI2 Naming Service
+            else
+                AC_MSG_RESULT(no)
+            fi
+        else
+            AC_MSG_RESULT(no)
+        fi
+    fi
+else
+dnl if MPICH2 assume all MPI-2 communicator functions are available.
+    if test "$MPI_IMPL" = "MPICH2" ; then
+        AC_DEFINE( HAVE_MPI_SPAWN, 1, [Define if MPI-SPAWN is available] )
+    fi
+fi
+
+dnl   Determine if MPI_STATUS_IGNORE exists
+if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+    AC_MSG_CHECKING( [for MPI_STATUS_IGNORE] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [
+              MPI_Status*     tmp_status;
+              tmp_status = MPI_STATUS_IGNORE;
+                          ], ,
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+else
+    # All known impls, including MPICH, support STATUS_IGNORE
+    # (The MPICH support may have a few bugs, but it is close enough
+    # for our needs)
+    mpe_link_ok=yes
+fi
+if test "$mpe_link_ok" = "yes" ; then
+    AC_DEFINE( HAVE_MPI_STATUS_IGNORE, 1,
+               [Define if MPI_STATUS_IGNORE available] )
+fi
+
+dnl   Determine if MPI_STATUSES_IGNORE exists
+if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+    AC_MSG_CHECKING( [for MPI_STATUSES_IGNORE] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [
+              MPI_Status*     tmp_status;
+              tmp_status = MPI_STATUSES_IGNORE;
+                          ], ,
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+else
+    # All known impls, including MPICH, support STATUS_IGNORE
+    # (The MPICH support may have a few bugs, but it is close enough
+    # for our needs)
+    mpe_link_ok=yes
+fi
+if test "$mpe_link_ok" = "yes" ; then
+    AC_DEFINE( HAVE_MPI_STATUSES_IGNORE, 1,
+               [Define if MPI_STATUSES_IGNORE available] )
+fi
+
+dnl This is temporary!  Eventually MPICH-2 will have its own f2c MPI wrappers.
+dnl When MPICH-2 has the wrappers ready, the following block should be removed
+if test "${F2CMPI_LIBS}" = "-l${F2CMPI_LIBNAME}" \
+     -a "$MPI_IMPL" = "MPICH2" ; then
+
+#   FIXME: MPICH2 include MPI_Fint, Need to fetch the value somehow.
+
+#   Obtain MPICH2's MPI_STATUS_SIZE from environmental variable
+    AC_MSG_CHECKING( [for the value of MPI_STATUS_SIZE] )
+    if test -n "$SIZEOF_MPI_STATUS" ; then
+        # FIXME: Get true value of MPI_Fint instead of 4
+        CROSS_MPI_STATUS_SIZE=`expr $SIZEOF_MPI_STATUS / 4`
+        MPI_STATUS_SIZE=$CROSS_MPI_STATUS_SIZE
+        AC_MSG_RESULT($MPI_STATUS_SIZE)
+        AC_DEFINE_UNQUOTED( MPI_STATUS_SIZE, $MPI_STATUS_SIZE,
+                            [Define as the size of MPI_STATUS_SIZE] )
+    else
+dnl     For MPICH2, when SIZEOF_MPI_STATUS is not defined, enable_f77=no.
+dnl     Set MPE_BUILD_FORTRAN2C=no and F2CMPI_LIBS="" so liblmpe.a
+dnl     won't be built and fortran link/run tests won't executed.
+dnl     If F2CMPI_LIBS="-lfmpich", disable building of libmpe_f2cmpi.a
+dnl     by setting F2CMPI_LIBS="".  Leave MPE_BUILD_FORTRAN2C=yes, so
+dnl     fortran link/run tests can be performed.
+        AC_MSG_RESULT("undefined -- disabling fortran features.")
+        MPE_BUILD_FORTRAN2C=no
+        F2CMPI_LIBS=""
+    fi
+
+#   MPICH2 after 1.0.2 release has MPI_F_STATUS_IGNORE, MPI_F_STATUSES_IGNORE
+    AC_DEFINE( HAVE_MPI_F_STATUS_IGNORE, 1,
+               [Define if MPI_F_STATUS_IGNORE available] )
+    AC_DEFINE( HAVE_MPI_F_STATUSES_IGNORE, 1,
+               [Define if MPI_F_STATUSES_IGNORE available] )
+
+#   MPICH2 has MPI_Comm_f2c()/c2f()
+    AC_DEFINE( HAVE_MPI_COMM_F2C, 1,
+               [Define if MPI_Comm_f2c and c2f available] )
+
+#   MPICH2 has MPI_Status_f2c()/c2f()
+    AC_DEFINE( HAVE_MPI_STATUS_F2C, 1,
+               [Define if MPI_Status_f2c and c2f available] )
+
+#   MPICH2 has MPI_TYPE_f2c()/c2f()
+    AC_DEFINE( HAVE_MPI_TYPE_F2C, 1,
+               [Define if MPI_Type_F2c and c2f available] )
+
+#   MPICH2 has MPI_Group_f2c()/c2f()
+    AC_DEFINE( HAVE_MPI_GROUP_F2C, 1,
+               [Define if MPI_Group_f2c and c2f available] )
+
+#   MPICH2 has MPI_Request_f2c()/c2f()
+    AC_DEFINE( HAVE_MPI_REQUEST_F2C, 1,
+               [Define if MPI_Request_f2c and c2f available] )
+
+#   MPICH2 has MPI_Op_f2c()/c2f()
+    AC_DEFINE( HAVE_MPI_OP_F2C, 1,
+               [Define if MPI_Op_f2c and c2f available] )
+
+#   MPICH2 has MPI_Errhandler_f2c()/c2f()
+    AC_DEFINE( HAVE_MPI_ERRHANDLER_F2C, 1,
+               [Define if MPI_Errhandler_f2c and c2f available] )
+
+#   Define MPICH2's Fortran TRUE/FALSE value
+    # FIXME: Use the values from the Fortran configure
+    true_val=1
+    AC_DEFINE_UNQUOTED( MPE_F77_TRUE_VALUE, $true_val,
+                        [Define as the value for Fortran logical true] )
+    false_val=0
+    AC_DEFINE_UNQUOTED( MPE_F77_FALSE_VALUE, $false_val,
+                        [Define as the value for Fortran logical false] )
+dnl  endif test "${F2CMPI_LIBS}" = "-l${F2CMPI_LIBNAME}" 
+dnl          -a "$MPI_IMPL" = "MPICH2" ; then
+fi
+
+
+dnl
+dnl  Test Non-MPICH platform's Fortran to C capability
+dnl
+if test "${F2CMPI_LIBS}" = "-l${F2CMPI_LIBNAME}" \
+     -a "$MPI_IMPL" != "MPICH2" ; then
+
+dnl Determine MPI_Fint
+dnl (same test done in graphics's configure.in)
+    AC_MSG_CHECKING( [for MPI_Fint] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [ MPI_Fint aa=1 ], ,
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    if test "$mpe_link_ok" = "yes" ; then
+        AC_MSG_RESULT(yes)
+        MPI_FINT_TYPE=MPI_Fint
+    else
+        AC_MSG_RESULT([no, assumed MPI_Fint to be int])
+        MPI_FINT_TYPE=int
+        AC_DEFINE( MPI_Fint, int, [Define MPI_Fint as int] )
+    fi
+
+dnl Determine if MPI_F_STATUS_IGNORE exists
+    AC_MSG_CHECKING( [for MPI_F_STATUS_IGNORE] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [
+              ${MPI_FINT_TYPE}  *f_status;
+              f_status = MPI_F_STATUS_IGNORE;
+                          ], ,
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+if test "$mpe_link_ok" = "yes" ; then
+    AC_DEFINE( HAVE_MPI_F_STATUS_IGNORE, 1,
+               [Define if MPI_F_STATUS_IGNORE available] )
+fi
+
+dnl Determine if MPI_F_STATUSES_IGNORE exists
+    AC_MSG_CHECKING( [for MPI_F_STATUSES_IGNORE] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [
+              ${MPI_FINT_TYPE}  *f_statuses;
+              f_statuses = MPI_F_STATUSES_IGNORE;
+                          ], ,
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+if test "$mpe_link_ok" = "yes" ; then
+    AC_DEFINE( HAVE_MPI_F_STATUSES_IGNORE, 1,
+               [Define if MPI_F_STATUSES_IGNORE available] )
+fi
+
+dnl Determmine if MPI_Comm_f2c() and MPI_Comm_c2f() are there
+dnl (same test done in graphics's configure.in)
+    AC_MSG_CHECKING( [for MPI_Comm_c2f() and MPI_Comm_f2c()] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [ MPI_Comm comm; ${MPI_FINT_TYPE} aa; ],
+                          [
+                          aa=MPI_Comm_c2f(comm) ;
+                          comm=MPI_Comm_f2c(aa) ;
+                          ],
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+    if test "$mpe_link_ok" = "yes" ; then
+        AC_DEFINE( HAVE_MPI_COMM_F2C, 1,
+                   [Define if MPI_Comm_f2c and c2f available] )
+    fi
+
+#   Determine MPI_STATUS_SIZE (this is the INTEGER status size for Fortran)
+    mpe_tmpfile=mpe_mpistatusvalue
+    AC_MSG_CHECKING( [for the value of MPI_STATUS_SIZE] )
+    if test "$cross_compiling" = "yes" -o "$cross_compiling" = 1 ; then
+        if test "X$CROSS_MPI_STATUS_SIZE" != "X" ; then
+            mpe_MPI_STATUS_SIZE="$CROSS_MPI_STATUS_SIZE"
+            AC_DEFINE_UNQUOTED( MPI_STATUS_SIZE, $mpe_MPI_STATUS_SIZE,
+                                [Define as the size of MPI_STATUS_SIZE] )
+            AC_MSG_RESULT( [${mpe_MPI_STATUS_SIZE}] )
+        else
+            PAC_MSG_ERROR( $enable_softerror,
+                           [Undefined CROSS_MPI_STATUS_SIZE! Exiting...] )
+        fi
+    else
+dnl    PAC_MPI_RUN_F77_PGM( $MPI_F77, [$FFLAGS $MPI_INC],
+dnl                         $F77, $FFLAGS, $LIBS, [
+dnl      program get_mpi_status_size
+dnl      include 'mpif.h'
+dnl      open(10, file="$mpe_tmpfile", status='unknown')
+dnl      rewind(10)
+dnl      write(10,*) MPI_STATUS_SIZE
+dnl      close(10)
+dnl      end
+dnl                         ], [ mpe_run_ok=yes ], [ mpe_run_ok=no ] )
+        PAC_MPI_RUN_CC_PGM( $MPI_CC, [$CFLAGS $MPI_INC],
+                            $CC, $CFLAGS, $LIBS, [
+#include <stdio.h>
+#include "mpi.h"
+main()
+{
+    FILE *mpe_file = fopen( "$mpe_tmpfile", "w" );
+    if ( ! mpe_file ) exit( 1 );
+    fprintf( mpe_file, "%d\n",
+             sizeof( MPI_Status )/sizeof( ${MPI_FINT_TYPE} ) );
+    fclose( mpe_file );
+    exit( 0 );
+}
+                            ], [ mpe_run_ok=yes ], [ mpe_run_ok=no ] )
+        if test "$mpe_run_ok" = "yes" ; then
+            mpe_MPI_STATUS_SIZE="`cat ${mpe_tmpfile} | sed -e 's/ //g'`"
+            AC_DEFINE_UNQUOTED( MPI_STATUS_SIZE, $mpe_MPI_STATUS_SIZE,
+                                [Define as the size of MPI_STATUS_SIZE] )
+            AC_MSG_RESULT( [${mpe_MPI_STATUS_SIZE}] )
+            rm -f ${mpe_tmpfile}
+        else
+            if test "X$CROSS_MPI_STATUS_SIZE" != "X" ; then
+                mpe_MPI_STATUS_SIZE="$CROSS_MPI_STATUS_SIZE"
+                AC_DEFINE_UNQUOTED( MPI_STATUS_SIZE, $mpe_MPI_STATUS_SIZE,
+                                    [Define as the size of MPI_STATUS_SIZE] )
+                AC_MSG_RESULT( [use supplied value: ${mpe_MPI_STATUS_SIZE}] )
+            else
+                PAC_MSG_ERROR( $enable_softerror, [could NOT determine!] )
+            fi
+        fi
+    fi
+
+#   Determmine if MPI_Status_f2c() and MPI_Status_c2f() are there
+    AC_MSG_CHECKING( [for MPI_Status_c2f() and MPI_Status_f2c()] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [[
+                          MPI_Status        c_status;
+                          ${MPI_FINT_TYPE}  f_status[ ${mpe_MPI_STATUS_SIZE} ];
+                          int ierr;
+                          ]],
+                          [
+                          ierr=MPI_Status_c2f( &c_status, f_status ) ;
+                          ierr=MPI_Status_f2c( f_status, &c_status ) ;
+                          ],
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+    if test "$mpe_link_ok" = "yes" ; then
+        AC_DEFINE( HAVE_MPI_STATUS_F2C, 1,
+                   [Define if MPI_Status_f2c and c2f available] )
+    fi
+
+#   Determmine if MPI_Type_f2c() and MPI_Type_c2f() are there
+    AC_MSG_CHECKING( [for MPI_Type_c2f() and MPI_Type_f2c()] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [ MPI_Datatype type; ${MPI_FINT_TYPE} aa; ],
+                          [ 
+                          aa=MPI_Type_c2f(type) ;
+                          type=MPI_Type_f2c(aa) ;
+                          ],
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+    if test "$mpe_link_ok" = "yes" ; then
+        AC_DEFINE( HAVE_MPI_TYPE_F2C, 1,
+                   [Define if MPI_Type_F2c and c2f available] )
+    fi
+
+#   Determmine if MPI_Group_f2c() and MPI_Group_c2f() are there
+    AC_MSG_CHECKING( [for MPI_Group_c2f() and MPI_Group_f2c()] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [ MPI_Group group; ${MPI_FINT_TYPE} aa; ],
+                          [ 
+                          aa=MPI_Group_c2f(group) ;
+                          group=MPI_Group_f2c(aa) ;
+                          ],
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+    if test "$mpe_link_ok" = "yes" ; then
+        AC_DEFINE( HAVE_MPI_GROUP_F2C, 1,
+                   [Define if MPI_Group_f2c and c2f available] )
+    fi
+
+#   Determmine if MPI_Request_f2c() and MPI_Request_c2f() are there
+    AC_MSG_CHECKING( [for MPI_Request_c2f() and MPI_Request_f2c()] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [ MPI_Request request; ${MPI_FINT_TYPE} aa; ],
+                          [ 
+                          aa=MPI_Request_c2f(request) ;
+                          request=MPI_Request_f2c(aa) ;
+                          ],
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+    if test "$mpe_link_ok" = "yes" ; then
+        AC_DEFINE( HAVE_MPI_REQUEST_F2C, 1,
+                   [Define if MPI_Request_f2c and c2f available] )
+    fi
+
+#   Determmine if MPI_Op_f2c() and MPI_Op_c2f() are there
+    AC_MSG_CHECKING( [for MPI_Op_c2f() and MPI_Op_f2c()] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [ MPI_Op op; ${MPI_FINT_TYPE} aa; ],
+                          [ 
+                          aa=MPI_Op_c2f(op) ;
+                          op=MPI_Op_f2c(aa) ;
+                          ],
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+    if test "$mpe_link_ok" = "yes" ; then
+        AC_DEFINE( HAVE_MPI_OP_F2C, 1,
+                   [Define if MPI_Op_f2c and c2f available] )
+    fi
+
+#   Determmine if MPI_Errhandler_f2c() and MPI_Errhandler_c2f() are there
+    AC_MSG_CHECKING( [for MPI_Errhandler_c2f() and MPI_Errhandler_f2c()] )
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                          [ MPI_Errhandler errhandler; ${MPI_FINT_TYPE} aa; ],
+                          [ 
+                          aa=MPI_Errhandler_c2f(errhandler) ;
+                          errhandler=MPI_Errhandler_f2c(aa) ;
+                          ],
+                          [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+    AC_MSG_RESULT($mpe_link_ok)
+    if test "$mpe_link_ok" = "yes" ; then
+        AC_DEFINE( HAVE_MPI_ERRHANDLER_F2C, 1,
+                   [Define if MPI_Errhandler_f2c and c2f available] )
+    fi
+
+
+#   Determine the Fortran logical values, .TRUE. & .FALSE. in MPI C program
+    if test "$cross_compiling" = "yes" -o "$cross_compiling" = 1 ; then
+        AC_MSG_CHECKING( [for the Fortran .TRUE. values in MPI C program] )
+        if test "X$CROSS_FORTRAN2C_TRUE" != "X" ; then
+            AC_DEFINE_UNQUOTED( MPE_F77_TRUE_VALUE, $CROSS_FORTRAN2C_TRUE,
+                                [Define as the value for Fortran logical true] )
+            AC_MSG_RESULT( [${CROSS_FORTRAN2C_TRUE}] )
+        else
+            PAC_MSG_ERROR( $enable_softerror,
+                           [Undefined CROSS_FORTRAN2C_TRUE! Exiting...] )
+        fi
+        AC_MSG_CHECKING( [for the Fortran .FALSE. values in MPI C program] )
+        if test "X$CROSS_FORTRAN2C_FALSE" != "X" ; then
+            AC_DEFINE_UNQUOTED( MPE_F77_FALSE_VALUE, $CROSS_FORTRAN2C_FALSE,
+                               [Define as the value for Fortran logical false] )
+            AC_MSG_RESULT( [${CROSS_FORTRAN2C_FALSE}] )
+        else
+            PAC_MSG_ERROR( $enable_softerror,
+                           [Undefined CROSS_FORTRAN2C_FALSE! Exiting...] )
+        fi
+    else
+        AC_MSG_CHECKING( [for the Fortran logical values in MPI C program] )
+        mpe_tmpfile=mpe_f77logicals
+        PAC_MPI_RUN_F77_FUNC_FROM_C( $F77, $FFLAGS,
+                                     $MPI_CC, [-I../.. $CFLAGS $MPI_INC],
+                                     $CC, [$CFLAGS], $LIBS, [
+      subroutine ftest( itrue, ifalse )
+      logical itrue, ifalse
+      itrue  = .TRUE.
+      ifalse = .FALSE.
+      return
+      end
+                                 ], [
+/* mpe_conf.h defines the needed F77_NAME_XXX, and is located in -I../.. */
+#include "mpe_conf.h"
+#ifdef F77_NAME_UPPER
+#define ftest_ FTEST
+#elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
+#define ftest_ ftest
+#endif
+#include <stdio.h>
+#include "mpi.h"
+int main()
+{
+    ${MPI_FINT_TYPE} itrue, ifalse;
+    FILE *mpe_file = fopen( "$mpe_tmpfile", "w" );
+    if ( ! mpe_file ) exit( 1 );
+    ftest_( &itrue, &ifalse );
+    fprintf( mpe_file, "%d %d\n", itrue, ifalse );
+    fclose( mpe_file );
+    exit( 0 );
+}
+                                     ],
+                                     [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+        if test "$mpe_run_ok" = "yes" ; then
+            mpe_f77logicals="`cat ${mpe_tmpfile}`"
+            true_val="`echo ${mpe_f77logicals} | sed -e 's/ .*//g'`"
+            false_val="`echo ${mpe_f77logicals} | sed -e 's/.*  *//g'`"
+            if test -n "$true_val" -a -n "$false_val" ; then
+                AC_DEFINE_UNQUOTED( MPE_F77_TRUE_VALUE, $true_val,
+                          [Define as the value for Fortran logical true] )
+                AC_DEFINE_UNQUOTED( MPE_F77_FALSE_VALUE, $false_val,
+                          [Define as the value for Fortran logical false] )
+                AC_MSG_RESULT( [True=$true_val and False=$false_val] )
+            else
+                PAC_MSG_ERROR( $enable_softerror, [could NOT determine!] )
+            fi
+            rm -f ${mpe_tmpfile}
+        else
+            if test "X$CROSS_FORTRAN2C_TRUE" != "X" \
+                 -a "X$CROSS_FORTRAN2C_FALSE" != "X" ; then
+                AC_DEFINE_UNQUOTED( MPE_F77_TRUE_VALUE, $CROSS_FORTRAN2C_TRUE,
+                          [Define as the value for Fortran logical true] )
+                AC_DEFINE_UNQUOTED( MPE_F77_FALSE_VALUE, $CROSS_FORTRAN2C_FALSE,
+                          [Define as the value for Fortran logical false] )
+                AC_MSG_RESULT( [use supplied values: True=$CROSS_FORTRAN2C_TRUE and False=$CROSS_FORTRAN2C_FALSE] )
+            else
+                PAC_MSG_ERROR( $enable_softerror, [could NOT determine!] )
+            fi
+        fi
+    fi
+
+dnl endif test "${F2CMPI_LIBS}" = "-l${F2CMPI_LIBNAME}"
+dnl         -a "$MPI_IMPL" != "MPICH2" ; then
+fi
+
+AC_SUBST(MPI_IMPL)
+AC_SUBST(MPE_BUILD_FORTRAN2C)
+AC_SUBST(CC)
+AC_SUBST(CLINKER)
+AC_SUBST(CFLAGS)
+AC_SUBST(MPI_CC)
+AC_SUBST(MPE_CLINKER)
+AC_SUBST(F77)
+AC_SUBST(FLINKER)
+AC_SUBST(FFLAGS)
+AC_SUBST(MPI_F77)
+AC_SUBST(MPE_FLINKER)
+AC_SUBST(FINC_PATH_LEADER)
+AC_SUBST(FLIB_PATH_LEADER)
+AC_SUBST(MPI_INC)
+AC_SUBST(MPI_LIBS)
+
+AC_SUBST(LOG_LIBNAME)
+AC_SUBST(TRACE_LIBNAME)
+AC_SUBST(F2CMPI_LIBNAME)
+AC_SUBST(PROF_LIBS)
+AC_SUBST(LOG_LIBS)
+AC_SUBST(TRACE_LIBS)
+AC_SUBST(F2CMPI_LIBS)
+
+AC_OUTPUT( Makefile src/Makefile test/Makefile \
+           etc/mpe_f77env.conf etc/mpe_mpilog.conf etc/mpe_mpitrace.conf )

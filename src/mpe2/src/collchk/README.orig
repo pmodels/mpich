@@ -1,0 +1,55 @@
+README File for cff_prof
+Created by Christopher F. Falzone <falzone@mcs.anl.gov>
+	   Rusty Lusk <lusk@mcs.anl.gov>
+	   Argonne National Laboratories
+
+------------------------------------------------------------------------------------
+Table of Contents
+1.  --------------------------------------------------  What is it?
+2.  --------------------------------------------------  How does it work?
+3.  --------------------------------------------------  How do I use it?
+4.  --------------------------------------------------  Sources.
+
+------------------------------------------------------------------------------------
+1. What is it?
+	This is a profiling library (see [1], [2]) designed to use with any MPI 
+	implementation.  The goal of this library is to validate collective call 
+	sematics.  Collective call semantics (argument correctness) has long been
+	an issue for new MPI programmers.  Errors are easy to make and hard to 
+	detect.  Often errors in semantics resault in deadlock, incorrect values, 
+	or worse!  The idea of this library is to intercept collective MPI calls 
+	and check for these kinds of errors and provide verbosity to what error
+	has been made.  This is to be done in a way that is protable, removeable,
+	and non-implentation-specific.
+
+------------------------------------------------------------------------------------
+2.  How does it work?
+	For every MPI call (i.e. MPI_Gather) there is an exact copy of the function
+	named PMPI (i.e. PMPI_Gather).  This allows the user to make his own 
+	MPI calls and call the PMPI call.  Allowing him to set up logging and so 
+	forth (see [1], [2]).  Using this idea I have created a library that can be
+	linked with any mpi program that intercepts the MPI calls, validates the 
+	semantics and makes the PMPI call with your supplied arguments or  prints 
+	an error message and calls the error handler.
+
+------------------------------------------------------------------------------------
+3.  How do I use it?
+	To use the profiling library with any mpi program all you have to do is link
+	the profile in with your programs object file at link time. (on my machine I 
+	use:
+		% mpicc myprog.c -c
+		% mpicc myprog.o -L/path/to/library -lcff_prof -o myprog
+	
+	it may be diferent on your specific machine. consult your compiler/linker's 
+	documentation).
+
+	When the library is no longer needed simply compile the program as you 
+	normally would.
+
+------------------------------------------------------------------------------------
+4.  Sources.
+	[1] - Marc Snir, et. al. (1999) "MPI --The Complete Reference. Volume 1, The
+		MPI Core. Second Edition." The MIT Press, Massachusets. pp 387-394.
+		
+	[2] - Willam Gropp, et. al. (1998) "MPI --The Complete Reference. Volume 2,
+		The MPI Extensions." The MIT Press, Massachusetts. pp 287-290.

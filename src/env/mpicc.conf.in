@@ -1,0 +1,27 @@
+#! /bin/sh
+#
+# This file contains configuration information for mpicc.  This is
+# essentially just the variable-initialization part of mpicc.
+# --------------------------------------------------------------------------
+# Set the default values of all variables.
+#
+# Directory locations: Fixed for any MPI implementation.
+# Set from the directory arguments to configure (e.g., --prefix=/usr/local)
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+sysconfdir=@sysconfdir@
+includedir=@includedir@
+libdir=@libdir@
+#
+# Default settings for compiler, flags, and libraries.
+# Determined by a combination of environment variables and tests within
+# configure (e.g., determining whehter -lsocket is needee)
+CC="@CC@"
+MPI_CFLAGS="@MPI_CFLAGS@"
+MPI_LDFLAGS="@MPI_LDFLAGS@"
+MPILIBNAME="@MPILIBNAME@"
+PMPILIBNAME="@PMPILIBNAME@"
+MPI_OTHERLIBS="@LIBS@"
+NEEDSPLIB="@NEEDSPLIB@"
+# MPIVERSION is the version of the MPICH2 library that mpicc is intended for
+MPIVERSION="@VERSION@"

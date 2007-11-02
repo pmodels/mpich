@@ -1,0 +1,3 @@
+This directory contains old code that was used to support unordered delivery
+of packets by the underlying transport layer.  This code is currently not used,
+and is provided only as an example of one approach for this problem.

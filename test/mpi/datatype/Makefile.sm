@@ -1,0 +1,107 @@
+LDADD = 
+INCLUDES = -I../include -I${srcdir}/../include
+smvar_do_sharedlibs = 0
+
+typename_SOURCES = typename.c
+typefree_SOURCES = typefree.c
+typefree_LDADD = ../util/mtest.o
+
+contents_SOURCES = contents.c
+
+struct-pack_SOURCES = struct-pack.c
+
+struct-empty-el_SOURCES = struct-empty-el.c
+
+simple-resized_SOURCES = simple-resized.c
+
+triangular-pack_SOURCES = triangular-pack.c
+
+get-elements-pairtype_SOURCES = get-elements-pairtype.c
+
+simple-commit_SOURCES = simple-commit.c
+
+simple-commit_SOURCES = simple-commit.c
+
+simple-size-extent_SOURCES = simple-size-extent.c
+
+slice-pack_SOURCES = slice-pack.c
+
+struct-no-real-types_SOURCES = struct-no-real-types.c
+
+slice-pack-external_SOURCES = slice-pack-external.c
+
+simple-pack_SOURCES = simple-pack.c
+
+contig-zero-count_SOURCES = contig-zero-count.c
+
+lots-of-types_SOURCES = lots-of-types.c
+lots-of-types_LDADD = ../util/mtest.o 
+
+simple-pack-external_SOURCES = simple-pack-external.c
+
+darray-pack_SOURCES = darray-pack.c
+
+subarray-pack_SOURCES = subarray-pack.c
+
+blockindexed-misc_SOURCES = blockindexed-misc.c
+
+indexed-misc_SOURCES = indexed-misc.c
+
+hindexed-zeros_SOURCES = hindexed-zeros.c
+
+blockindexed-zero-count_SOURCES = blockindexed-zero-count.c
+
+struct-zero-count_SOURCES = struct-zero-count.c
+
+transpose-pack_SOURCES = transpose-pack.c
+
+unusual-noncontigs_SOURCES = unusual-noncontigs.c
+
+pairtype-pack_SOURCES = pairtype-pack.c
+
+struct-ezhov_SOURCES = struct-ezhov.c
+
+pairtype-size-extent_SOURCES = pairtype-size-extent.c
+
+localpack_SOURCES = localpack.c
+
+lbub_SOURCES = lbub.c
+
+unpack_SOURCES = unpack.c
+unpack_LDADD = ../util/mtest.o
+
+zeroparms_SOURCES = zeroparms.c
+gaddress_SOURCES = gaddress.c
+gaddress_LDADD = ../util/mtest.o
+
+getpartelm_SOURCES = getpartelm.c
+getpartelm_LDADD = ../util/mtest.o
+
+tresized_SOURCES = tresized.c
+tresized_LDADD = ../util/mtest.o 
+
+tmatchsize_SOURCES = tmatchsize.c
+tmatchsize_LDADD = ../util/mtest.o 
+
+tresized2_SOURCES = tresized2.c
+tresized2_LDADD = ../util/mtest.o 
+
+tfree_SOURCES = tfree.c
+tfree_LDADD = ../util/mtest.o 
+
+sizedtypes_SOURCES = sizedtypes.c
+sizedtypes_LDADD = ../util/mtest.o
+
+contigstruct_SOURCES = contigstruct.c
+
+../util/mtest.o:
+	(cd ../util && $(MAKE) mtest.o )
+
+# A special testing target to simplify running just the datatype tests
+testing:
+	../runtests -srcdir=$(srcdir) -tests=testlist \
+		   -mpiexec=$(bindir)/mpiexec \
+		   -xmlfile=summary.xml
+
+clean-local:
+	-rm -f summary.xml

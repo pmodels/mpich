@@ -1,0 +1,7 @@
+Makefile
+*.dvi
+*.pdf
+*.log
+*.out
+*.toc
+MPI_*.tex

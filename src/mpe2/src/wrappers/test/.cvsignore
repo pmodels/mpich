@@ -1,0 +1,6 @@
+Makefile
+*.clog
+*.slog
+*.o
+cpilog
+fpilog

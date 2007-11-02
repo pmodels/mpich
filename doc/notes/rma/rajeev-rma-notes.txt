@@ -1,0 +1,271 @@
+/* THESE NOTES ARE OLD AND MAY NOT REFLECT THE CURRENT IMPLEMENTATION. */
+
+
+Main features
+-------------
+
+* Requests for one-sided operations are inserted in the same queue as
+send-recv operations. The progress function MPID_Make_progress is
+aware of and makes progress on one-sided as well as send-recv ops. 
+(Main rationale: (1) why not? (2) See the first example below.)
+
+* An asynchronous agent kicks in periodically. The agent could be a
+thread, process, or signal handler. The agent calls the general
+progress function MPID_Make_progress and therefore makes progres on
+everything. 
+ (Q: If the agent is a process, how does it access the request queue
+on the main MPI process?)
+
+If it's a process, it must be able to access the request queues as
+well as the memory buffers. The queues can be kept in shared memory,
+but not the user buffers for active target RMA. Therefore, the request
+object must have some flag that indicates if everything is in shared
+memory. If so, the agent can process it; otherwise it will have to
+skip it. 
+
+* Whether the epoch has been started on the target or not is checked
+at the target. The origin adds "requests" to the queue at the target
+in a nonblocking fashion.
+
+For methods that support one-sided communication, there must be a way
+for the source to determine if the epoch has begun on the target, so
+that it can directly access the remote buffer. It checks this by
+doing a remote read of the variable that indicates the status of the
+epoch. What about lock checks? Tricky. Either need atomic remote
+test-and-set operations or an agent on the remote side to grant locks.
+
+* Each window object maintains the state of the lock on the local
+window, that is, whether the window has been locked by any other
+process for passive target communication. The state has 3 values:
+no lock 
+(shared lock, ranks) - ranks of processes in win group that hold shared lock
+(exclusive lock, rank) - rank of process in win group that holds excl lock
+
+MPI_Win_lock and the following puts/gets are nonblocking. They all
+get sent to the request queue on the target. The lock is resolved at
+the target, and the operations for the process that is granted the
+lock are processed. Requests from other processes just remain in the
+queue until that process is given the lock.
+
+* Datatype packing, shipping, and caching is a separate topic to be addressed
+later. Currently we assume basic datatypes.
+
+* Need efficiency for lock-put-unlock or fence-put-fence type of 
+operations. Need to send one message instead of three.
+
+
+Rambling Notes
+--------------
+
+Active target operations can be performed without an asynchronous
+agent at the target because there will always be a synchronization
+call (MPI_Win_fence, MPI_Win_wait) at the target at which progress can
+be made. It is not sufficient, however, to cause progress only at
+synch. calls because the following code is valid (see Fig. 6.8 on
+pg. 142 of the standard):
+
+Process 0           Process 1
+---------           ---------
+start               post
+
+put
+
+complete            recv
+
+send                wait
+
+The recv must cause progress on the put, otherwise the code will
+deadlock. If the above code is valid, then one can also replace both send
+and recv with MPI_Barrier, and the resulting code should also not
+deadlock. 
+
+Passive target operations, on the other hand, do require an
+asynchronous agent at the target because there is no guarantee when an
+MPI function may otherwise be called at the target. (The NEC
+implementation, as reported in their SC00 paper, relies on an MPI call
+at the target, which is a mistake. They took that shortcut because
+theirs is a single-threaded implementation.)
+
+The asynchronous agent can cause progress (if we so choose) on active
+target RMA operations and even on send-recv operations. In fact, it is
+not clear whether the BSP model of disjoint computation and
+communication phases is the best at all times. That topic itself is a
+subject for a paper.
+
+It is unclear whether the asynchronous agent should be a thread,
+process, or a signal handler invoked in response to SIGIO or
+SIGALARM. There are cases where one would be better than the other
+two. So instead of selecting one method, we should support all three,
+and focus on specifying the "function" that gets called when the
+asynchronous agent somehow gets invoked. In other words, what would such a
+function do? Can it be just the usual "make progress"?
+
+A put or get cannot access remote memory unless the
+exposure epoch has started on the remote side. Need to be careful
+about this in the shared-memory case where remote memory resides in
+shared memory. Can't directly write to shared memory without checking
+whether epoch has begun on the remote side.
+
+
+MPID_Win_create()
+{
+   All-to-all communication to exchange each process's window size and
+   disp_unit. Also need to communicate if any of the windows 
+   is from memory allocated by MPI_Mem_alloc. All these needed for later
+   error checking. If the method supports direct one-sided operations,
+   we also need each process's window base address.
+
+   Note that if there are 8,000 processes, the window object on each
+   process will have 8,000 entries containing all this info. Not
+   scalable. Instead, we could avoid the all-to-all and request the
+   info from the target at the first RMA call. If we simply let the target
+   discover the error later on, error reporting is hard. And "Advice to
+   Implementers" says that a high quality impl. will check at put/get
+   time if the target memory address is correct.
+
+   Dup communicator
+}
+
+
+MPID_Put()
+{
+   Check correctness of target address
+   Check field of local window object to see if an epoch-starting
+   function was previously called. Else complain.
+   Fill in request object.
+   Add request to request queue for the corresponding method /* NEED
+   API */
+   Add request to a queue of outstanding requests for this epoch. This
+   is needed to check completion at the next synch. call.
+}
+
+Communication is not much different than for regular message
+passing. On the remote side, an unexpected message is one for which a
+fence or post has not been called on that window and it is active
+target communication. In such cases the message has to be buffered (if
+it is a short message). If it is a long message, the handshake should
+be delayed until the fence or post is called.
+
+
+MPID_Win_fence()
+{
+   If no preceding fence on this window or if MPI_MODE_NO_PRECEDE is
+   asserted, call MPID_Make_progress()
+   else {
+       /* this fence completes an epoch */
+       all-to-all communication to inform each process how many RMA
+       calls were made to that process in this epoch
+       /* can we do with barrier instead of all-to-all? */
+
+       call MPID_Make_Progress() until all RMA completed
+   }
+}
+
+MPID_Win_post()
+{
+   Mark local window to indicate that post has been
+   called and the group of processes for which RMA has been
+   enabled. No communication needed here.
+}
+
+MPID_Win_start()
+{
+   Mark local window to indicate that start has been
+   called and the group of processes for which RMA has been
+   enabled. No communication needed here. 
+}
+
+MPID_Win_complete()
+{
+   Effectively an MPI_Wait for all RMA calls that have been called by
+   this process since the last MPI_Win_start. Need to communicate with
+   MPI_Win_waits on other processes to inform them how many RMA calls
+   have taken place. 
+}
+
+MPID_Win_wait()
+{
+   Effectively an MPI_Wait for all RMA calls that have taken place on
+   this window as target since the last MPI_Win_post(). This process
+   doesn't know how many have happened. Need to be told by origin
+   processes when they reach complete(). Call MPID_Make_progress until
+   all RMAs are processed. Can't exit this function until all have completed. 
+}
+
+MPID_Win_test()
+{
+   Nonblocking version of MPI_Win_wait
+}
+
+
+We implement MPI_Win_lock as follows. A lock gets sent as a lock
+"request" to the target process. No response is needed. The lock
+request gets added to the request queue on the target. Lock requests
+from multiple processes may get queued. When the progress engine kicks
+in and encounters a lock request in the queue, it checks whether the
+requested lock can be granted (i.e. no other process holds a
+conflicting lock on the window). If the lock can be granted, the field
+in the window is updated and the request is deleted from the
+queue. No acknowledgement is sent to the requestor of the lock because
+it is a nonblocking lock and all locks must eventually be granted.
+
+RMA requests from other processes get added to the request queue on
+the target regardless of who has the lock or not. When the progress
+engine kicks in, it processes the requests in order. For each request,
+it checks the lock status of the window. If the window is not locked
+or the requesting process holds a shared or exclusive lock, it
+processes the request. It processes the request like it would process
+a send-recv. (For accumulate, it performs the arithmetic operation.) If
+the window is locked by some other process, it simply moves on to the
+next request in the queue. Eventually the window will be unlocked in
+response to an unlock request. In the next round through the request
+queue some other process will get access to the window.
+
+Since the lock is only a lock on the window at the target, there is no
+question of deadlock or starvation. The target grants locks in the
+order it encounters them in the queue. Even if there is a barrier
+between the lock and unlock, it should not be a problem because the
+processes are not blocked on the lock. 
+
+
+MPID_Win_lock()
+{
+  if it is a lock on a remote window
+       Fill in a lock request object.
+       Add request to request queue for the corresponding method
+       (i.e. send it to target)
+       No reply expected.
+       This function must not block.
+  end if
+  if it is a lock on a local window
+       Atomically check if lock can be acquired and acquire it
+       If it cannot
+            call MPID_Make_progress() and try to acquire the lock.
+            Repeat until lock is acquired
+       end if
+  end if
+}
+
+
+MPID_Win_unlock()
+{
+  if it is an unlock on a remote window
+       Call MPID_Make_progress() until all RMA operations on this
+       window for this epoch have completed (at least locally).
+       Fill in an unlock request object.
+       Add request to request queue for the corresponding method
+       (i.e., send it to the target)
+  end if 
+  if it is an unlock on the local window
+       change lock variable on window to unlocked
+  end if 
+}
+
+
+New Request types
+-----------------
+Put
+Get 
+Accumulate
+Lock
+Unlock

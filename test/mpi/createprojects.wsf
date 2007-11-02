@@ -1,0 +1,243 @@
+<package>
+<job id="createprojects">
+    <runtime>
+        <description>This script searches for testlist files and creates project files for each test</description>
+        <unnamed
+            name = "--force"
+            helpstring = "Force the creation of new files, overwriting the old"
+            required = "false"
+        />
+    </runtime>
+<script language="VBScript">
+
+Dim WshShell
+Set WshShell = CreateObject("WScript.Shell")
+Set f = WScript.CreateObject("Scripting.FileSystemObject")
+Set cur_folder = f.GetFolder(".")
+Set files = CreateObject("Scripting.Dictionary")
+Set dotdots = CreateObject("Scripting.Dictionary")
+num_files = 0
+project_template = ""
+project_cxx_template = ""
+project_f_template = ""
+project_list = ""
+config_list = ""
+bWin64 = False
+bForce = False
+path_to_remove = f.GetAbsolutePathName(".") + "\"
+
+' Process arguments
+argCount = WScript.Arguments.Count
+For arg = 0 To argCount - 1
+  argValue = WScript.Arguments(arg)
+  If argValue = "--win64" Then
+    bWin64 = True
+  ElseIf argValue = "--win32" Then
+    bWin64 = False
+  ElseIf argValue = "--force" Then
+    bForce = True
+  ElseIf argValue = "--force=yes" Then
+    bForce = True
+  ElseIf argValue = "--force=no" Then
+    bForce = False
+  ElseIf argValue = "--help" Then
+    WScript.Arguments.ShowUsage
+    WScript.Quit
+  End If
+Next
+
+' Set the Target arch specifics
+If bWin64 Then
+  platform_name = "x64"
+  keyword = "x64Proj"
+  target_header = "..\..\src\include\win64"
+  target_preprocessor_defn = "WIN64"
+  target_machine = "17"
+  target_env = "3"
+Else
+  platform_name = "Win32"
+  keyword = "Win32Proj"
+  target_header = "..\..\src\include\win32"
+  target_preprocessor_defn = "WIN32"
+  target_machine = "1"
+  target_env = ""
+End If
+
+' check if we are running cscript or wscript
+bEcho = false
+If InStr(1, LCase(WScript.FullName), "cscript") > 0 Then
+	bEcho = true
+End If
+Function cEcho(str)
+	If bEcho Then
+		WScript.Echo str
+	End If
+End Function
+
+' generate a uuid
+Function gen_uuid()
+	Set oExec = WshShell.Exec("uuidgen")
+	uuid = ""
+	Do While True
+		If Not oExec.StdOut.AtEndOfStream Then
+			uuid = uuid & oExec.StdOut.Read(1)
+		Else
+			Exit Do
+		End If
+		WScript.Sleep 1
+	Loop
+	Do While oExec.Status <> 1
+		WScript.Sleep 1
+	Loop
+	uuid = Replace(uuid, vbCrLf, "")
+	uuid = Replace(uuid, vbLf, "")
+	gen_uuid = UCase(uuid)
+End Function
+
+' find all the testlist files
+Function GetTestLists(folder, dotdot)
+	For Each sub_folder in folder.SubFolders
+		GetTestLists sub_folder, dotdot & "..\"
+	Next
+	For Each file in folder.Files
+		If file.Name = "testlist" Then
+			files.Add num_files, file.Path
+			dotdots.Add num_files, dotdot
+			num_files = num_files + 1
+		End If
+	Next
+End Function
+
+last_project = ""
+Function TestsToProjects(filename, dotdot)
+	Set fin = f.OpenTextFile(filename)
+	while not fin.AtEndOfStream
+		line = fin.ReadLine()
+		line = Trim(line)
+		twostrings = split(line, " ", -1, 1)
+		if not IsNull(twostrings) then
+			count = 0
+			for each s in twostrings
+				count = count + 1
+			next
+			if count > 1 then
+			  if last_project <> twostrings(0) then
+				' Create the project file
+				project_name = twostrings(0)
+				If Left(project_name, 1) = "#" Then
+					project_name = Right(project_name, Len(project_name) - 1)
+				End If
+			    If last_project <> project_name then
+				c_filename = Replace( filename, "testlist", project_name + ".c" )
+				cxx_filename = Replace( filename, "testlist", project_name + ".cxx" )
+				f_filename = Replace( filename, "testlist", project_name + ".f" )
+				cproj = f.FileExists( c_filename )
+				cxxproj = f.FileExists( cxx_filename )
+				fproj = f.FileExists( f_filename )
+				if cproj or cxxproj then
+					project_filename = Replace( filename, "testlist", project_name + ".vcproj" )
+				else
+					project_filename = Replace( filename, "testlist", project_name + ".vfproj" )
+				end if
+				project_relative_filename = Replace( project_filename, path_to_remove, "" )
+'				If f.FileExists( c_filename ) Or f.FileExists( cxx_filename ) Then
+				If cproj Or cxxproj Or fproj Then
+					last_project = project_name
+'					If bForce Or Not f.FileExists( project_filename ) Then
+						cEcho project_filename + vbCrLf
+						project_uuid = gen_uuid()
+						if cproj then
+							new_project = Replace(project_template, "PROJECTNAME", project_name)
+						end if
+						if cxxproj then
+							new_project = Replace(project_cxx_template, "PROJECTNAME", project_name)
+						end if
+						if fproj then
+							new_project = Replace(project_f_template, "PROJECTNAME", project_name)
+						end if
+						new_project = Replace(new_project, "UUID1", project_uuid)
+						new_project = Replace(new_project, "DOTDOTS", dotdot)
+						set fout = f.CreateTextFile(project_filename, True)
+						fout.Write( new_project )
+						fout.Close()
+'					Else
+'						' Get the project uuid from the project file
+'						set ftemp = f.OpenTextFile(project_filename)
+'						contents = ftemp.ReadAll()
+'						ftemp.Close()
+'						' find the uuid in the contents
+'					End If
+					' Add the project to the lists used to create the test solution file
+					if fproj then
+						solution_guid = "6989167D-11E4-40FE-8C1A-2192A86A7E90" ' The fortran project guid
+					else
+						solution_guid = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942" ' The C/C++ project guid
+					end if
+					project_list = project_list + "Project(""{" + solution_guid + "}"") = """ + project_name + """, """ + project_relative_filename + """, ""{" + project_uuid + "}""" + vbCrLf + "	ProjectSection(ProjectDependencies) = postProject" + vbCrLf + "	EndProjectSection" + vbCrLf + "EndProject" + vbCrLf
+					config_list = config_list + "		{" + project_uuid + "}.Debug.ActiveCfg = Debug|" + platform_name + vbCrLf + "		{" + project_uuid + "}.Debug.Build.0 = Debug|" + platform_name + vbCrLf + "		{" + project_uuid + "}.Release.ActiveCfg = Release|" + platform_name + vbCrLf + "		{" + project_uuid + "}.Release.Build.0 = Release|" + platform_name + vbCrLf
+				End If
+			    End If
+			  end if
+			end if
+		end if
+	wend
+	fin.Close()
+End Function
+
+' Add architecture specific details
+Function AddArchDetails(template)
+	template = Replace( template, "PLATFORM_NAME", platform_name )
+	template = Replace( template, "KEYWORD", keyword )
+	template = Replace( template, "TARGET_HEADER", target_header )
+	template = Replace( template, "TARGET_PREPROCESSOR_DEFN", target_preprocessor_defn )
+	template = Replace( template, "TARGET_MACHINE", target_machine )
+	template = Replace( template, "TARGET_ENV", target_env )
+	AddArchDetails = template
+End Function
+
+set fin = f.OpenTextFile("project.txt")
+project_template = fin.ReadAll()
+project_template = AddArchDetails(project_template)
+fin.Close()
+
+set fin = f.OpenTextFile("project_cxx.txt")
+project_cxx_template = fin.ReadAll()
+project_cxx_template = AddArchDetails(project_cxx_template)
+fin.Close()
+
+set fin = f.OpenTextFile("project_f.txt")
+project_f_template = fin.ReadAll()
+project_f_template = AddArchDetails(project_f_template)
+fin.Close()
+
+GetTestLists cur_folder, ""
+a = files.Items
+b = dotdots.Items
+If files.Count > 0 Then
+	' Create the project files
+	For i = 0 to files.Count - 1
+		TestsToProjects a(i), b(i)
+	Next
+	' Create the solution file
+	set fout = f.CreateTextFile("test.sln", True)
+	fout.WriteLine( "Microsoft Visual Studio Solution File, Format Version 9.00" )
+	fout.Write( project_list )
+	fout.WriteLine( "Global" )
+	fout.WriteLine( "	GlobalSection(SolutionConfiguration) = preSolution" )
+	fout.WriteLine( "		Debug = Debug" )
+	fout.WriteLine( "		Release = Release" )
+	fout.WriteLine( "	EndGlobalSection" )
+	fout.WriteLine( "	GlobalSection(ProjectConfiguration) = postSolution" )
+	fout.Write( config_list )
+	fout.WriteLine( "	EndGlobalSection" )
+	fout.WriteLine( "	GlobalSection(ExtensibilityGlobals) = postSolution" )
+	fout.WriteLine( "	EndGlobalSection" )
+	fout.WriteLine( "	GlobalSection(ExtensibilityAddIns) = postSolution" )
+	fout.WriteLine( "	EndGlobalSection" )
+	fout.WriteLine( "EndGlobal" )
+	fout.Close()
+End If
+
+</script>
+</job>
+</package>

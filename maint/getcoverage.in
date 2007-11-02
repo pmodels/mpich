@@ -1,0 +1,878 @@
+#! @PERL@ -w
+# -*- Mode: perl; -*-
+#
+# This script extracts information from files produced by gcov showing what
+# parts of each file have *not* been executed by the test programs.
+# 
+# Normally, this script should *not* be used directly; instead, use
+#     maint/createcoverage
+# The createcoverave script uses this (getcoverage) script to create the 
+# coverage information.
+# 
+# To create a coverage report using this script, use the following steps:
+#
+# configure --enable-coverage <other options>
+# make 
+# make install
+# make testing
+# < run other tests, such as the Intel, MPICH1, and C++ tests >
+# make coverage
+# maint/getcoverage src/mpi src/util > coverage.txt
+#
+# The script in mpich2-tests/getcoverage will perform all of these steps 
+# (this script is not yet included with the MPICH2 distribution)
+#
+# As an option, create HTML versions of the files with the uncovered code
+# highlighted with a different background color (e.g., pale red).  These
+# should be placed into the same directory structure as the original source
+# files, but with a different root ($annoteSrcDir)
+#
+# ToDo:
+# Another useful option for graphical output would be to keep track of the
+# percentage of covered lines and produce an "xdu"-style map of the 
+# coverage, with color indicating the fraction of coverage.
+#
+# The GNU tools sometimes incorrectly mark "break" statements within a 
+# case statement as not executed.  As break can also be used in a loop, where
+# it is an executable statement, we can't just ignore breaks, and we can't
+# determine which type the break is without parsing the program :(.
+#
+$includeFileInOutput = 0;
+$skipErrExits = 1;
+$outputUncovered = 1;
+@UnCalled = ();
+@TopFilenames = ();        # Array of files and directories provided on the
+                           # command line
+@CoveredFiles = ();        # Array of files that are ok
+# annoteSrcDir is where the annotation files are placed,
+# annoteBaseDir is the base file name that is stripped from the
+# file names
+$annoteSrcDir = "";
+$annoteWebPrefix = "";
+$indexfile = "";     # File to contain the index of files
+$annoteFiles = 0;
+$annoteBaseDir = "";
+%AnnoteFilesMap = ();   # Clear the list of files 
+%AnnoteMissed   = ();   # Clear the mapping of filenames to "missed;total" lines
+%AnnoteFilesToOrig = (); # Map from annoted file key to original name (used for
+                         # indexing into AnnoteMissed)
+$gDebug = 0;
+$gDebugDetail = 0;
+
+# The line leaders are used to provide a common set of expressions to match
+# the begining of a line.  This matches the output from the gcov tools.
+# There are two of these because the output from the tools associtated with
+# gcc version 2.x and 3.x are different.
+# We also permit an isolated open or close brace on the line (a non-executable
+# statement)
+$lineLeader2 = '^\s*[\{\}]?\s*';
+$lineLeader3 = '^\s*-:\s*\d+:\s*[\{\}]?\s*';
+#
+# This is the list of known block names.
+@BlockNames = ( "DEBUG", "ERROR HANDLING", "EXPERIMENTAL", "USEREXTENSION" );
+#
+# Keep track of coverage amounts
+$GrandTotal       = 0;
+$GrandTotalMissed = 0;
+
+# gfilename is used to hold the current open file for READING, so
+# that error messages can be more specific
+$gFilename = "";
+
+# ----------------------------------------------------------------------------
+for (@ARGV) {
+    if (/-webpages=(.*)/) {
+	# Create the coverage in default web pages for the device
+	# named as an argument (e.g., maint/getcoverage -webpages=ch3:sock)
+	my $device = $1;
+	my $weblocbase = "@abs_mpich2srcdir@/www/coverage";
+	my $webloc     = $weblocbase . "/$device";
+	$annoteSrcDir = $webloc;
+	$annoteFiles  = 1;
+	$annoteWebPrefix = "";
+	$indexdir = $webloc;
+	$indexfile = "$indexdir/index.htm";
+	$coveredindexfile = "$indexdir/covered.htm";
+	if (! -d $indexdir) { &MakeDirs( $indexfile ); }
+	next; 
+    }
+    elsif (/-annote=(.*)/) {
+	# Create an annotation of the source data in the specified root
+	# directory
+	$annoteSrcDir = $1;
+	$annoteFiles  = 1;
+	next;
+    }
+    elsif (/-annoteweb=(.*)/) {
+	# annoteweb gives the URL that matches the annoteSrcDir.
+	$annoteWebPrefix = $1;
+	next;
+    }
+    elsif (/-index=(.*)/) {
+	$indexfile = $1;
+	next;
+    }
+    elsif (/-indexdir=(.*)/) {
+	# This target sets the directory for the index file, along with
+	# the file that contains the names of the files that are 
+	# considered completely covered.
+	my $indexdir = $1;
+	$indexfile = "$indexdir/index.htm";
+	$coveredindexfile = "$indexdir/covered.htm";
+	if (! -d $indexdir) { &MakeDirs( $indexfile ); }
+	next;
+    }
+    elsif (/-debug/) { 
+    	$gDebug = 1;
+	next;
+    }
+
+    $TopFilenames[$#TopFilenames + 1] = $_;
+}
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+
+for my $filename (@TopFilenames) {
+    if (-d $filename) {
+	# Expand the directory into a list of files.  If there are 
+	# subdirectories, expand them too (e.g., get a list of 
+	# *every* file within the directory tree. 
+	@files = &ExpandDir( $filename );
+	foreach my $file (@files) {
+	    ($missed_lines,$total_lines) = &CountUncoveredLines( $file );
+	    $GrandTotal       += $total_lines;
+	    $GrandTotalMissed += $missed_lines;
+	    $AnnoteMissed{$file} = "$missed_lines;$total_lines";
+	    if ($missed_lines) {
+		print "$missed_lines line(s) not covered by tests in $file\n";
+		&WriteAnnoteFile( $file );
+	    }
+	    else {
+		print "All code covered by tests in $file\n";
+		$CoveredFiles[$#CoveredFiles+1] = $file;
+	    }
+	}
+    }
+    elsif (-s $filename) {
+	($missed_lines,$total_lines) = &CountUncoveredLines( $filename );
+	$GrandTotal       += $total_lines;
+	$GrandTotalMissed += $missed_lines;
+	$AnnoteMissed{$filename} = "$missed_lines;$total_lines";
+	print "$filename - $missed_lines missed lines\n" if $gDebug;
+	if ($missed_lines) {
+	    print "$missed_lines line(s) not covered by tests in $filename\n";
+	    &WriteAnnoteFile( $filename );
+	}
+	else {
+	    print "All code covered by tests in $filename\n";
+	    $CoveredFiles[$#CoveredFiles+1] = $filename;
+	}
+    }
+    else {
+	print "Cannot open $filename\n";
+    }
+}
+
+for $routine (@UnCalled) {
+    print STDERR "$routine never called\n";
+}
+
+if ($annoteFiles && $indexfile ne "") {
+    # Here is where we could process the list of files that were annotated
+    &WriteAnnoteFileMap( $indexfile );
+    if ($coveredindexfile ne "") {
+	WriteCoveredFileMap( $coveredindexfile );
+    }
+}
+
+# ----------------------------------------------------------------------------
+# Here begin the support routines
+# ----------------------------------------------------------------------------
+# Count the number of uncovered lines, and return that number.
+sub CountUncoveredLines {
+    my $filename = $_[0];
+    my $missed_lines = 0;
+    my $headerOutput = 0;
+    my $linecount    = 0;    # Line in the coverage file
+    my $fileline     = 0;    # Line in the original file
+    my $lastLineOut  = -1;
+    my ($lineincr, $filelineincr); # Used to update linecount,fileline
+    my $oldLine;
+    my $lastLine;
+
+    open( FD, "<$filename" ) || die "Could not open $filename\n";
+    $gFilename = $filename;   # Export filename for error reporting
+
+    # Note that linecount is relative to the foo.c.gcov file, not the
+    # original foo.c file.
+    # Gcc 3.x changed the output format (including a line number and
+    # a - for unexecuted lines, i.e.,
+    # ^\s*-:\s*\d+:original-text-line
+    
+L:  while (<FD>) {
+	$linecount++;
+	# Coverage messages appear to always begin in the first column.
+	if (/^\s/) { $fileline++; }
+	# Skip any error checking block
+	if (/^\s*#\s*ifdef\s+HAVE_ERROR_CHECKING/ ||
+	    /^\s*-:\s*\d+:\s*#\s*ifdef\s+HAVE_ERROR_CHECKING/) {
+	    while (<FD>) {
+		$linecount++;
+		if (/^\s/) { $fileline++; }
+		if (/^\s+#\s*endif/ || /^\s*#\s*els/ ||
+		    /^\s*-:\s*\d+:\s*#\s*endif/ || /^\s*-:\s*\d+:\s*#\s*els/) { 
+		    last; 
+		}
+	    }
+	    next;	       
+	}
+
+	# Skip any blocks marked as debugging or unavoidable error checking
+	# code 
+	foreach my $name (@BlockNames) {
+	    if (/$lineLeader2\/\*\s+--BEGIN $name--\s+\*\// ||
+		/$lineLeader3\/\*\s+--BEGIN $name--\s+\*\//) {
+		# It is usually an error to encounter a block begin 
+		# within another block.  The exception is the
+		# EXPERIMENTAL block, which may contain ERROR HANDLING blocks
+		my $allowNest = 0;
+		if ($name eq "EXPERIMENTAL") { $allowNest = 1; }
+		($lineincr,$filelineincr) = 
+		    &skipBlock( $name, $allowNest, $linecount );
+		$linecount += $lineincr;
+		$fileline += $filelineincr;
+		next L;
+	    }
+	}
+
+	# If requested, skip obvious error checking lines
+	if ($skipErrExits && 
+	    (/FUNC_EXIT.*STATE/ || /MPIR_Err_return_/ || 
+	     /MPIU_ERR_SET/ || /MPIU_ERR_POP/ || /goto\s+fn_fail/ ||
+	     /fn_fail:/ || /MPIR_Err_create_code/)) {
+	    next;
+	}
+
+	# Gcc 3.3 generates a different output form (!) with only
+	# 5 sharps instead of 6.  It does mark lines that are not 
+	# executable with a -, which is an improvement
+	if (/^\s*######?/) {
+	    # First, ignore a few odd markings by gcov
+	    if (/^\s*######?\s*\}\s*$/ || /^\s*######?\s*:\s*\d+:\s*\}\s*$/) {
+		# Ignore a closed brace
+		next;
+	    }
+
+	    $missed_lines++;
+		
+	    # The char\s+.* allows char or const char (or other 
+	    # things, but nothing else should use FCNAME).
+	    if (/static\s+char\s+.*FCNAME\[\]\s*=\s*\"(.*)\"/) {
+		# Add this to a list of functions never called.
+		$UnCalled[$#UnCalled + 1] = $1;
+	    }
+	    if ($outputUncovered) {
+		if (!$headerOutput) {
+		    print "\nUncovered lines in $filename\n";
+		    $headerOutput = 1;
+		}
+		if ($lastLineOut < $linecount - 2) {
+		    my $ll = $linecount - 2;
+		    print "$ll:\t$oldLine";
+		}
+		if ($lastLineOut < $linecount - 1) {
+		    my $ll = $linecount - 1;
+		    print "$ll:\t$lastLine";
+		}
+		print "$linecount:\t$_";
+		$lastLineOut = $linecount;
+	    }
+	}
+	if ($includeFileInOutput) {
+	    print $_;
+	}
+	$oldLine = $lastLine;
+	$lastLine = $_;
+    }
+    close (FD);
+    return ($missed_lines,$fileline);
+}
+
+# ----------------------------------------------------------------------------
+# Annotate a file by placing the uncovered lines in bgcolor
+# AnnotateUncoveredLines( coveragefile, bgcolor, filenhandle )
+#
+# This uses a state machine to move between the states of:
+#   init - beginning (top of file)
+#   unex - within unexecuted code
+#   exec - within executed code
+#   skip - within skipped code (code that we don't care whether it is
+#          executed).  Currently contains 3 sub states:
+#             errcheck         (error checking code)
+#             ERROR HANDLING   (error handling code)
+#             DEBUG            (debug code)
+#             EXPERIMENTAL     (experimental)
+#             USEREXTENSION    (code to enable user extensions)
+#          The uppercase names are the same as the @BlockNames.
+#          Currently, the skipcolors are all lightblue
+sub AnnotateUncoveredLines {
+    my $filename = $_[0];
+    my $bgcolor  = $_[1];
+    my %skipcolors = ( "errcheck" => "lightblue",
+		       "ERROR HANDLING" => "lightblue",
+		       "DEBUG" => "lightblue", 
+		       "EXPERIMENTAL" => "lightblue",
+		       "USEREXTENSION" => "lightyellow", 
+		       );
+    my $outfile  = $_[2];
+    my $curstate = "init";    # Current state
+    my $newstate;             # New state implied by the last line read
+    my $substate;             # Used for substates within a state (skip only)
+    my $newline  = "\r\n";
+
+    open( FD, "<$filename" ) || die "Could not open $filename\n";
+    $gFilename = $filename;
+
+    print $outfile "<TABLE>$newline";
+
+    # Note that linecount is relative to the foo.c.gcov file, not the
+    # original foo.c file.
+L2: while (<FD>) {
+	# Skip coverage messages (always start in the first column) 
+	if (! /^\s/) { next; }
+
+	# TODO:
+	# If there is neither a "######" nor a count in front of the
+	# line, and it is not a comment or blank space, it has
+	# the same state as currently in (e.g., it is probably a 
+	# continuation line).
+	# Determine what state this line is in
+	# (gcc 3.3 only outputs 5 sharps, earlier versions use 6)
+	# The format of the line also changed
+	if ($skipErrExits && 
+	    (/FUNC_EXIT.*STATE/ || /MPIR_Err_return_/ || 
+	     /MPIU_ERR_SET/ || /MPIU_ERR_POP/ || /goto\s+fn_fail/ ||
+            /fn_fail:/ || /MPIR_Err_create_code/)) {
+	    # If requested, skip obvious error checking lines
+	    $newstate = "skip";
+	    $substate = "errcheck";
+	}
+	elsif (/^\s*######?/) {
+	    $newstate = "unex";
+	}
+	elsif (/^\s*\d+\s/ ||
+	       /^\s*\d+:\s*\d+:/) {
+	    # Also had /^\s*-:\s*\d+:/, but this should really be "same state"
+	    # to avoid flipping in and out of a state.
+	    $newstate = "exec";
+	}
+	else {
+	    # Keep the same state...
+	    if ($curstate eq "init") {
+		$newstate = "exec";
+	    }
+	    else {
+		$newstate = $curstate;
+	    }
+	}
+
+	# Special cases for blocks that we skip (mark them as executed) 
+	if (/^\s*#\s*ifdef\s+HAVE_ERROR_CHECKING/ ||
+	    /^\s*-:\s*\d+:\s*#\s*ifdef\s+HAVE_ERROR_CHECKING/) {
+	    $newstate = "skip";
+	    $substate = "errcheck";
+	}
+	else {
+	    foreach my $name (@BlockNames) {
+		if (/$lineLeader2\/\*\s+--BEGIN $name--\s+\*\// ||
+		    /$lineLeader3\/\*\s+--BEGIN $name--\s+\*\//) {
+		    $newstate = "skip";
+		    $substate = $name;
+		    last;
+		}
+	    }
+	}
+
+	# If there is a change in state, generate the correct code
+	if ($newstate ne $curstate) {
+	    print STDERR "Newstate = $newstate\n" if $gDebugDetail;
+	    if ($curstate ne "init") {
+		# Finish off the current state
+		print $outfile "</PRE></TD></TR>$newline";
+	    }
+	    if ($newstate eq "exec")    { $bgcolor = "white"; } 
+	    elsif ($newstate eq "unex") { $bgcolor = "red"; }
+	    elsif ($newstate eq "skip") {
+		$bgcolor = $skipcolors{$substate};
+	    }
+	    else {
+		print STDERR "Internal error: unrecognized state $newstate\n";
+	    }
+	    print $outfile "<TR><TD BGCOLOR=\"$bgcolor\" WIDTH=100%><PRE>$newline";
+	}
+	$curstate = $newstate;
+	
+	# Add this line
+	print $outfile &HTMLify($_);
+
+	# Now, for the blocks that we skip, read them until we reach the
+	# end of the block
+	# Skip any error checking block
+	if (/^\s*#\s*ifdef\s+HAVE_ERROR_CHECKING/ ||
+	    /^\s*-:\s*\d+:\s*#\s*ifdef\s+HAVE_ERROR_CHECKING/) {
+	    my $sawend = 0;
+	    print STDERR "Skipping HAVE_ERROR_CHECKING\n" if $gDebugDetail; 
+	    while (<FD>) {
+		if (!/^\s/) { next; }
+	        print $outfile &HTMLify($_);
+		if (/^\s+#\s*endif/ || /^\s*#\s*els/ ||
+		    /^\s*-:\s*\d+:\s*#\s*endif/ || 
+		    /^\s*-:\s*\d+:\s*#\s*els/) { 
+		    $sawend = 1;
+		    last; 
+		}
+	    }
+	    if (!$sawend) {
+		print STDERR "File $gFilename ended in HAVE ERROR CHECKING block\n";
+	    }
+	    next;	       
+	}
+	# Skip any blocks marked as debugging or unavoidable error checking
+	# code 
+	foreach my $name (@BlockNames) {
+	    if (/$lineLeader2\/\*\s+--BEGIN $name--\s+\*\// ||
+		/$lineLeader3\/\*\s+--BEGIN $name--\s+\*\//) {
+		&skipBlockAndAnnotate( $outfile, $name );
+		next L2;	       
+	    }
+	}
+
+
+    }
+    close (FD);
+    print $outfile "</PRE></TD></TR>$newline</TABLE>$newline";
+}
+
+# Write the annotation file as a simple HTML file
+# (returns immediately if annotations are not requested)
+# To aid in navigating the annotation pages
+# 
+# WriteAnnoteFile( filename )
+# Also inserts the generated filename to the hash %AnnoteFilesMap
+# with key the base filename (e.g., foo.c) and the value the
+# full directory path (e.g., $annoteSrcDir/foo.c.htm)
+sub WriteAnnoteFile {
+    my $filename = $_[0];
+
+    print "Writing (if $annoteFiles) annotated file $filename\n" if $gDebug;
+    if ($annoteFiles) {
+	# Make a file name
+	my $basefile = $filename;
+	$basefile =~ s/\.gcov//;
+	$basefile =~ s/$annoteBaseDir//;
+	my $OUTFD = OUTFD;
+	my $rc = &MakeDirs( "$annoteSrcDir/$basefile" );
+	if ($rc == 0) {
+	    print STDERR "Could not create directories $annoteSrcDir/$basefile\n";
+	    return;
+	}
+	print STDERR "Opening $annoteSrcDir/$basefile.htm\n" if $gDebug;
+	$rc = open( $OUTFD, ">$annoteSrcDir/$basefile.htm" );
+	if ($rc != 0) {
+	    $AnnoteFilesMap{$basefile} = "$annoteSrcDir/$basefile.htm";
+	    $AnnoteFilesToOrig{$basefile} = $filename;
+	    print STDERR "Saving $filename as AnnoteFilesToOrig{$basefile}\n" if $gDebug;
+	    $newline = "\r\n";
+	    print $OUTFD "<HTML><HEAD>$newline" || die "writing header";
+	    print $OUTFD "<TITLE>Coverage for $filename</TITLE>$newline";
+	    print $OUTFD "</HEAD>$newline";
+	    print $OUTFD "<BODY BGCOLOR=\"FFFFFF\">$newline";
+	    &AnnotateUncoveredLines( $filename, "red", $OUTFD );
+	    print $OUTFD "</BODY></HTML>$newline";
+	    close( $OUTFD );
+	}
+	else {
+	    print STDERR "Cannot open $annoteSrcDir/$basefile\n";
+	}
+    }
+}
+
+#
+# TODO: Create a map of the annotated files by using AnnoteFilesMap
+# We need a better framework for this.  Perhaps a table with multiple
+# columns.  We could also arrange in groups by directory names
+#
+# WriteAnnoteFileMap( name-fo-file-to-write )
+sub WriteAnnoteFileMap {
+    my @names = sort(keys(%AnnoteFilesMap));
+    my $indexfile = $_[0];
+    #my $date = `date "+%Y-%m-%d-%H-%M"`;
+    my $date = `date`;
+
+    open (IFD, ">$indexfile" ) || die "Could not open $indexfile\n";
+
+    print IFD "<HTML><HEAD><TITLE>Index to coverage analysis</TITLE></HEAD>\n";
+    print IFD "<BODY BGCOLOR=\"FFFFFF\">\n";
+
+    # Create the heading
+    if ($GrandTotal > 0 && $GrandTotalMissed > 0) { 
+	print IFD "<H2>Summary of Coverage Testing</H2>\n";
+	print IFD "Of $GrandTotal lines in code, $GrandTotalMissed lines were not covered\n";
+	my $percent = (100 * $GrandTotalMissed) / $GrandTotal;
+	my $covered = 100 - $percent;
+	# convert to strings
+        $percent = sprintf( "%.2f", $percent );
+	$covered = sprintf( "%.2f", $covered );
+	print IFD "or $percent% missed ($covered% covered)\n";
+	my $date = `date "+%Y-%m-%d-%H-%M"`;
+	print IFD "<br>This index created on $date\n";
+	print IFD "<p>\n";
+	print IFD "The following files contained some code that was not executed.  Files in which all non-error-handling, non-debug code was executed are not shown\n"
+    }
+
+    my $col = 1;
+    my $maxcol = 4;
+    my $curprefix = "--NONE--";
+    for ($i=0; $i<=$#names; $i++) {
+	my $file = $names[$i];
+	my $target = $AnnoteFilesMap{$file};
+
+	# Clean up filename
+	$file =~ s/^\.\///;
+	if ($file =~ /(.*)\/([^\/]*)/) {
+	    $dirname  = $1;
+	    $basename = $2;
+	}
+	else {
+	    $dirname  = "";
+	    $basename = $file;
+	}
+
+	# Clean up target
+	if ($annoteWebPrefix ne "") {
+	    $target =~ s/$annoteSrcDir/$annoteWebPrefix/;
+	}
+	else {
+	    # make the reference relative
+	    $target =~ s/$annoteSrcDir\///;
+	}
+
+	# Compare dirname to curprefix; start a new table if
+	# necessary
+	if ($dirname ne $curprefix) {
+	    if ($curprefix ne "--NONE--") {
+		for (my $j=$col-1; $j<=$maxcol; $j++) {
+		    print IFD "<TD></TD>";
+		}
+		print IFD "</TR></TABLE>\n";
+	    }
+	    $curprefix = $dirname;
+	    print IFD "<H2>$dirname</H2>\n";
+	    print IFD "<TABLE WIDTH=100%>\n";
+	    $col = 1;
+	}
+	if ($col == 1) {
+	    print IFD "<TR WIDTH=100%>\n";
+	}
+	my $label = $basename;
+	my $origFileName = $AnnoteFilesToOrig{$names[$i]};
+	if (defined($AnnoteMissed{$origFileName})) {
+	    my ($missed,$total) = split(/;/,$AnnoteMissed{$origFileName});
+	    $label = "$label ($missed)";
+	}
+	# FIXME: 
+	# Allow relative rather than absolute targets
+	print IFD "<TD><A HREF=\"$target\">$label</A></TD>\n";
+	if ($col++ == $maxcol) {
+	    print IFD "</TR>\n";
+	    $col = 1;
+	}
+    }
+    # Flush the final table
+    if ($curprefix ne "--NONE--") {
+	# In case the page is empty
+	if ($col > 1) {
+	    for (my $i=$col-1; $i<=$maxcol; $i++) {
+		print IFD "<TD></TD>";
+	    }
+	    print IFD "</TR>\n";
+	}
+	print IFD "</TABLE>\n";
+    }
+
+    print IFD "<P><HR>\nGenerated on $date\n";
+    print IFD "</BODY></HTML>\n";
+    close IFD;
+}
+
+# -
+# ( $coveredindexfile );
+# This needs to be updated
+sub WriteCoveredFileMap {
+    my $filename = $_[0];
+    my $newline = "\r\n";
+
+    open ( IFD, ">$filename" ) || die "Cannot open $filename\n";
+
+    print IFD "<HTML><HEAD>$newline";
+    print IFD "<TITLE>List of fully covered files</TITLE>$newline";
+    print IFD "</HEAD>$newline";
+    print IFD "<BODY BGCOLOR=\"FFFFFF\">$newline";
+    @sortedfiles = sort ( @CoveredFiles );
+#     for (my $i = 0; $i <= $#sortedfiles; $i ++ ) {
+# 	my $file = $sortedfiles[$i];
+# 	print IFD "$file\n";
+#     }
+    # This both avoids calling OutputFileTable if the array is empty
+    # and keeps Perl from issuing a warning about sortedfiles having 
+    # only one use.
+    if ($#sortedfiles >= 0) {
+        &OutputFileTable( IFD, "sortedfiles", "" );
+    }
+    print IFD "</BODY></HTML>$newline";
+    close( IFD );
+}
+
+# -
+# Make all of the directories in filename (which may include a 
+# final file).  If it contains only directories, make sure that 
+# the name ends in a /
+sub MakeDirs {
+    my $filename = $_[0];
+    
+    my @subdirs = split(/\//, $filename );
+    print STDERR "Size of subdirs is $#subdirs\n" if $gDebugDetail;
+    my $curdir = $subdirs[0];
+    if ($curdir eq "") { $curdir = "/"; }
+    my $rc = 0;
+    for($i=1; $i<=$#subdirs; $i++) {
+	print STDERR "Making $curdir\n" if $gDebugDetail;
+	if (! -d $curdir) {
+	    $rc = mkdir $curdir;
+	    if (!$rc) { 
+		print STDERR "Could not make directory $curdir\n";
+		return $rc;
+	    }
+	}
+	if (! ($curdir =~ /\/$/)) { $curdir .= "/"; }
+	$curdir .= "$subdirs[$i]";
+    }
+    return 1;
+}
+# Get all of the .gcov files from the named directory, including any subdirs
+sub ExpandDir {
+    my $dir = $_[0];
+    my @otherdirs = ();
+    my @files = ();
+    opendir DIR, "$dir";
+    while ($filename = readdir DIR) {
+	if ($filename =~ /^\./ || $filename eq "CVS") {
+	    next;
+	}
+	elsif (-d "$dir/$filename") {
+	    $otherdirs[$#otherdirs+1] = "$dir/$filename";
+	}
+	elsif ($filename =~ /(.*\.gcov)$/) {
+	    $files[$#files + 1] = "$dir/$filename";
+	}
+    }
+    closedir DIR;
+    # (almost) tail recurse on otherdirs (we've closed the directory handle,
+    # so we don't need to worry about it anymore)
+    foreach $dir (@otherdirs) {
+	@files = (@files, &ExpandDir( $dir ) );
+    }
+    return @files;
+}
+
+# --------------------------------------------------------------------------
+# HTMLify
+# Take an input line and make it value HTML
+sub HTMLify {
+    my $line = $_[0];
+    $line =~ s/\&/--AMP--/g;
+    $line =~ s/>/&gt;/g;
+    $line =~ s/</&lt;/g;
+    $line =~ s/--AMP--/&amp;/g;
+    return $line;
+}
+
+#
+# Output a table of file names
+# OutputFileTable( FD, array-of-names, targethash )
+sub OutputFileTable {
+    my $IFD = $_[0];
+    my $arrayname = $_[1];
+    my $targethashname = $_[2];
+
+    my $col = 1;
+    my $maxcol = 4;
+    my $curprefix = "--NONE--";
+    for ($i=0; $i<=$#$arrayname; $i++) {
+	my $file = $$arrayname[$i];
+	my $target = "";
+	if ($targethashname ne "") {
+	    $target = $$targethashname{$file};
+	}
+
+	# Clean up filename
+	$file =~ s/^\.\///;
+	if ($file =~ /(.*)\/([^\/]*)/) {
+	    $dirname  = $1;
+	    $basename = $2;
+	}
+	else {
+	    $dirname  = "";
+	    $basename = $file;
+	}
+
+	# Clean up target
+	if (defined($target) && $target ne "") {
+	    if ($annoteWebPrefix ne "") {
+		$target =~ s/$annoteSrcDir/$annoteWebPrefix/;
+	    }
+	    else {
+		# make the reference relative
+		$target =~ s/$annoteSrcDir\///;
+	    }
+	}
+
+	# Compare dirname to curprefix; start a new table if
+	# necessary
+	if ($dirname ne $curprefix) {
+	    if ($curprefix ne "--NONE--") {
+		for (my $j=$col-1; $j<=$maxcol; $j++) {
+		    print $IFD "<TD></TD>";
+		}
+		print $IFD "</TR></TABLE>\n";
+	    }
+	    $curprefix = $dirname;
+	    print $IFD "<H2>$dirname</H2>\n";
+	    print $IFD "<TABLE WIDTH=100%>\n";
+	    $col = 1;
+	}
+	if ($col == 1) {
+	    print $IFD "<TR WIDTH=100%>\n";
+	}
+	my $label = $basename;
+#	my $origFileName = $AnnoteFilesToOrig{$names[$i]};
+	my $origFileName = $AnnoteFilesToOrig{$file};
+	if (defined($origFileName)) {
+            if (defined($AnnoteMissed{$origFileName})) {
+	        my ($missed,$total) = split(/;/,$AnnoteMissed{$origFileName});
+	        $label = "$label ($missed)";
+	    }
+	}
+	if ($target ne "") {
+	    print $IFD "<TD><A HREF=\"$target\">$label</A></TD>\n";
+	}
+	else {
+	    print $IFD "<TD>$label</TD>\n";
+	}
+	if ($col++ == $maxcol) {
+	    print $IFD "</TR>\n";
+	    $col = 1;
+	}
+    }
+    # Flush the final table
+    if ($curprefix ne "--NONE--") {
+	# In case the page is empty
+	if ($col > 1) {
+	    for (my $i=$col-1; $i<=$maxcol; $i++) {
+		print $IFD "<TD></TD>";
+	    }
+	    print $IFD "</TR>\n";
+	}
+	print $IFD "</TABLE>\n";
+    }
+}
+#
+# To generate a summary
+# cd mpich2/src 
+# ~/projects/mpich2/maint/getcoverage mpi/*/*.gcov mpi/romio/mpi-io/*.gcov \
+# mpi/romio/adio/ad_nfs/*.gcov mpi/romio/adio/ad_ufs/*.gcov \
+# util/info/*.gcov \
+# mpid/ch3/src/*.gcov mpid/ch3/channels/sock/src/*.gcov > coverage.txt
+
+# Now can use
+# maint/getcoverage src/mpi src/util/info >coveragebase.txt
+# maint/getcoverage src/mpid/ch3/src/*.gcov \
+#  src/mpid/ch3/channels/sock/src/*.gcov > coveragempid.txt
+
+#
+# Skip over a named block (while writing it to the annotation file)
+#   Usage:
+#     skipBlockAndAnnotate( outfd, blockname );
+#   e.g.,
+#     skipBlockAndAnnotate( $outfile, "DEBUG" );
+sub skipBlockAndAnnotate {
+    my ($outfile,$blockName) = @_;
+
+    my $sawend=0;
+    print STDERR "Skipping BEGIN $blockName\n" if $gDebugDetail; 
+    while (<FD>) {
+	if (/^\s/) { print $outfile &HTMLify($_); }
+	if (/^$lineLeader2\/\*\s+--END $blockName--\s+\*\// ||
+	    /^$lineLeader3\/\*\s+--END $blockName--\s+\*\//) {
+	    $sawend = 1;
+	    last; 
+	}
+    }
+    if (!$sawend) {
+	print STDERR "File $gFilename ended in --BEGIN $blockName-- block\n";
+    }
+}
+
+# Skip over a named block.  Return the number of lines skipped
+# Usage: 
+#     skipBlock( blockname, allowNested, linecount )
+# e.g.,
+#     skipBlock( "DEBUG", 0, linecount );
+sub skipBlock {
+    my ($blockName,$allowNested,$linecount) = @_;
+    my $fileline  = 0;
+    my $lineincr  = 0;
+
+    while (<FD>) {
+	$lineincr++;
+	if (/^\s/) { $fileline++; }
+	if (! $allowNested) {
+	    if (/^$lineLeader2\/\*\s+--BEGIN/ ||
+		/^$lineLeader3\/\*\s+--BEGIN/) {
+		my $cleanline = $_;
+		$cleanline =~ s/^\s*//;
+		chop $cleanline;
+		my $curlinecount = $linecount + $lineincr;
+		print STDERR "Possible missing END $blockName in $gFilename at $curlinecount; saw $cleanline\n";
+	    }
+	}
+# 	else {
+# 	    if (/^\s*\/\*\s*--\s*END\s+$blockName\s*--\s*\*\/\s*/ ||
+# 		/^\s*-:\s*\d+:\s*\/\*\s*--\s*END\s+$blockName\s*--\s*\*\/\s*/) {
+# 		# FIXME: Why is this a mangled line?  Should some of the \s* be
+# 		# \s+? (e.g., --\s+END)
+# 		my $curlinecount = $linecount + $lineincr;
+# 		print STDERR "Mangled line in $gFilename at $curlinecount: $_";
+# 		last; 
+# 	    }
+# 	}
+	if (/^$lineLeader2\/\*\s+--END $blockName--\s+\*\// ||
+	    /^$lineLeader3\/\*\s+--END $blockName--\s+\*\//) {
+	    last; 
+	}
+	# If we match the following but not the preceeding, there are extra 
+	# spaces in the comment
+	if (/^\s*\/\*\s*--\s*END\s+$blockName\s*--\s*\*\/\s*/ ||
+	    /^\s*-:\s*\d+:\s*\/\*\s*--\s*END\s+$blockName\s*--\s*\*\/\s*/) {
+	    my $curlinecount = $linecount + $lineincr;
+	    print STDERR "Mangled line in $gFilename at $curlinecount: $_";
+	    last; 
+	}
+    }
+    return ($lineincr,$fileline);
+}
+
+#
+# skipIfdefBlock 
+# (ToDo)

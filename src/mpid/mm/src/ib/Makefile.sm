@@ -1,0 +1,7 @@
+lib${MPILIBNAME}_a_SOURCES = ib_init.c ib_get_business_card.c \
+ ib_make_progress.c ib_post_read.c ib_post_write.c \
+ ib_can_connect.c ib_post_connect.c ib_reset_car.c \
+ ib_merge_unexpected_data.c ib_merge_with_unexpected.c \
+ ib_merge_with_posted.c ib_queue.c ib_setup_connections.c \
+ ibutil.c ib_write_aggressive.c ib_read.c
+INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

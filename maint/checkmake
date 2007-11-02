@@ -1,0 +1,44 @@
+#! /usr/bin/perl
+#
+# A simple check of the make output when developing
+
+$debug = 0;
+
+while (<>) {
+    if (/cd (\w*) \&\& make/) {
+	print "Dir $1\n";
+    }
+    if (/^gcc /) {
+	s/[\r\n]*$//;
+	while (/\\$/) {
+	    # Read continuation lines
+	    s/\\$//;
+	    $_ .= <>;
+	}
+      RESTART:$gccline = $_;
+	$filename = $gccline;
+	$filename =~ s/.*\s(\w*\.c)/\1/;
+	if ($filename eq $gccline) {
+	    # No file name was found, so reset to null
+	    $filename = "";
+	}
+	while (<>) {
+	    s/[\r\n]*$//;
+	    while (/\\$/) {
+		$nextline = <>;
+		$nextline =~ s/[\r\n]*//;
+		$_ .= $nextline;
+	    }
+	    print "Looking for |$filename|\n" if $debug;
+	    if ($filename ne "" && /^$filename/) {
+		print "$_\n";
+	    }	
+	    else { 
+		last;
+	    }
+	}	
+	if (/^gcc/) {
+	    goto RESTART;
+	}		       
+    }
+}

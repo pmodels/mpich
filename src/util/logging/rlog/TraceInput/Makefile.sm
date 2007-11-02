@@ -1,0 +1,5 @@
+libTraceInput_so_SOURCES = logformat_trace_InputLog.c trace_input.c ../rlogutil.c
+INCLUDES = -I../../../../include -I${master_top_srcdir}/src/include -I@java_home@/include -I@java_home@/include/@java_arch@
+#libTraceInput_so_LDADD = -shared
+CC_SHL=${CC}
+C_LINK_SHL=${CC} -shared

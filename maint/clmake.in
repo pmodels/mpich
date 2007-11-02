@@ -1,0 +1,188 @@
+#! @PERL@
+# -*- Mode: perl; -*-
+#
+# Set Defaults
+$debug = 0;
+$debugDir = 0;
+$gDebugOther = 0;
+# Define the known commands, along with known make noise (results of
+# echo)
+# We include /bin/rm and /bin/mv because some Makefile authors prefer
+# to get the full path for these routines
+@commands = ( "cc", "pgcc", "gcc", "icc", "acc", 
+              "rm", "mv", "ar", "ranlib", "perl", "for", 
+	      "/bin/rm", "/bin/mv", 
+	      "if", "make", "gnumake", "[A-Za-z0-9_\/\.-]*\/mpicc",
+	      "cleaning", "sleep", "date", "g77", "f77", "f90", "pgCC",
+	      "pgf77", "pgf90", "CC", "g95", "g\\+\\+", "c\\+\\+",
+	      "acc\\+\\+", "xlc", "xlf", "xlC", "xlf90", "gfortran", 
+	      "ifort", "ifc", 
+	      "true", "false", "/[A-Za-z0-9_\/\.-]*createshlib", 
+	      "/bin/sh\\s+[A-Za-z0-9_\/\.-]*libtool\\s+--mode=\\w+",
+	      "/bin/bash\\s+[A-Za-z0-9_\/\.-]*libtool\\s+--mode=\\w+",
+	      "/bin/sh\\s+[A-Za-z0-9_\/\.-]*libtool\\s+--finish",
+	      "/bin/bash\\s+[A-Za-z0-9_\/\.-]*libtool\\s+--finish",
+	      "[A-Za-z0-9_\/-]*\/icc",
+	      "[A-Za-z0-9_\/-]*\/install-sh",
+	      "/usr/bin/ar", "mkdir",
+	      "/usr/ucb/ld",
+	      "mpicc", "mpicxx",
+	      "compiling ROMIO in", 
+	      "Make completed",
+	      "echo", "cat",
+	      "\\(?cd",
+	      "\\(\\s*cd",
+	      "creating\s+lib.*",
+	      "cd\\s+\&\&\\s+make",
+	      "sed -e",
+	      "PATH=\"\\\$PATH.*\\sldconfig\\s",
+	      "building profiling interface in directory",
+	      "/usr/bin/install",
+	      "Copying Upshot",
+	      "Cleaning directory",
+	      "Making .*\.\.\.\.",        # mpe writes this
+	      "Making upshot", "\\s*\$", );
+
+# OtherNoise is an array of patterns that describe blocks of
+# text that we'd like to skip.  The initial use it to handle 
+# libtool install output.
+# The PG entries are work-arounds for bugs in the PG header files that have
+# small incompatibilities with the system header file /usr/include/unistd.h
+#
+@OtherNoise = ( 'Libraries have been installed in:<SEP>more information, such as the ld\(1\) and ld.so\(8\) manual pages.<SEP>20',
+		'^\s*-+\s*$<SEP><SEP>1', 
+		'^In directory:<SEP><SEP>1',
+		'^creating\s<SEP><SEP>1', 
+#		'^PGC-W-0114-More than one type.*/usr/include/unistd.h: 189<SEP>^PGC-W-0143-Useless typedef.*/usr/include/unistd.h: 189<SEP>2',
+#		'^PGC-W-0114-More than one type.*/usr/include/unistd.h: 243<SEP>^PGC-W-0143-Useless typedef.*/usr/include/unistd.h: 243<SEP>2',
+		'^PGC.*: compilation completed with warnings<SEP><SEP>1',
+# This next is a general version to handle all of these mistakes
+		'^PGC-W-0114-More than one type specified.*/usr/include<SEP>^PGC-W-0143-Useless typedef declaration \(no declarators present\).*/usr/include<SEP>2',
+		);
+# In the past, we also needed
+# WARNING 84.*not used for resolving any symbol
+# Info: File not optimized
+
+
+$trimCompileLine = 1;
+
+# Create the variables that keep track of state
+# dirstack keeps the directory name that gnumake and similar make
+# implementations echo as a directory is entered or exited (this can generate
+# a great deal of output noise that can obscure important data.  However, when
+# a problem *does* occur, this directory information is valuable.
+# dirprinted is a parallel array that indicates whether the corresponding
+# directory entry has been printed.
+@dirstack = ();
+@dirprinted = ();
+
+# Process arguments to select options
+
+# Read lines.  Categorize lines as commands and output.  This
+# script suppresses commands that generate no extra output.
+# The approach is to read a line and then read the next line.
+# While the line is a command and the next line is not, output the
+# line.
+#
+# We use eof() (see man perlfun) so that we can accept filenames on the
+# commandline.
+#
+$cmdline = "";
+T:
+while ($line = <>) {
+    if (eof()) { next; }
+
+    $line =~ s/\r//;    # remove returns from line (de DOSify)
+
+    # Read the next line, including handling any continuation lines
+    while ($line =~ /\\$/) {
+	print "Read continuation line (cmd) ... \n" if $debug;
+	$line .= <>;
+    }
+
+    # Check for noise
+    foreach my $pat (@OtherNoise) {
+	# maxlines is the maximum number of lines to match
+	my ($beginpat,$endpat,$maxlines) = split( '<SEP>', $pat );
+	print "Trying to match $beginpat\n" if $gDebugOther;
+	if ($line =~ /$beginpat/) {
+	    $maxlines --;
+	    print "Found match to $beginpat\n" if $gDebugOther;
+	    # Found the beginning.  Look for the end (if one requested)
+	    if ($endpat =~ /\S/) {
+		print "Trying to match endpat $endpat\n" if $gDebugOther;
+		while ($line = <>) {
+		    if (eof()) { last; }
+		    print "Trying to match to $line" if $gDebugOther;
+		    if ($line =~ /$endpat/) { last; }
+		    if ($maxlines-- <= 0) { 
+			print STDOUT "Failed to match $endpat; last line was $line";
+			last; 
+		    }
+		}
+	    }
+	    next T;
+	}
+    }
+    
+    # Is the line a command (including a directory change?)
+    # Check first for a directory change
+    if ($line =~ /^\s*make.* Entering directory \`([^\']*)\'/) {
+	my $dirname = $1;
+	$dirstack[$#dirstack+1] = $dirname;
+	$dirprinted[$#dirprinted+1] = 0;
+	print ">>entering $dirname\n" if $debugDir;
+	$cmdline = "";
+	next;
+    }
+    elsif ($line =~ /^\s*make.* Leaving directory \`([^\']*)\'/) {
+	# We should check that the directory names match
+	my $dirname = $1;
+	print ">>leaving $dirname\n" if $debugDir;
+	if ($dirname ne $dirstack[$#dirstack]) {
+	    print STDERR "Warning: leaving directory $dirname but expected to leave directory " . $dirstack[$#dirstack] . "\n";
+	}
+	$#dirstack--;
+	$#dirprinted--;
+	$cmdline = "";
+	next;
+    }
+    else {
+	$is_command = 0;
+	foreach $cmdname (@commands) {
+	    if ($line =~ /^\s*$cmdname[^\w]/) {
+		$is_command = 1;
+		$cmdline = $line;
+		last;
+	    }
+	}
+	if ($is_command) { next; }
+    }
+
+    # If we got to this point, the line was not a recognized command or
+    # ignorable output.  Output the line, including the command if this 
+    # is the first time.  We can then forget the command 
+    if ($#dirstack >= 0 && $dirprinted[$#dirstack] == 0) {
+	print "In directory: ". $dirstack[$#dirstack] . "\n";
+	$dirprinted[$#dirstack] = 1;
+    }
+    if ($cmdline ne "") { 
+	if ($trimCompileLine) {
+	    # Simplify the command line before printing
+	    $cmdline =~ s/-I\S*\s+//g;
+	    $cmdline =~ s/-ansi//g;
+	    $cmdline =~ s/-W\S*\s+//g;
+	    $cmdline =~ s/-DHAVE_CONFIG_H//g;
+	    $cmdline =~ s/-DGCC_WALL//g;
+	}
+	# We could print a newline here to separate commands
+	print $cmdline;
+	$cmdline = "";
+    }
+    print $line;
+}
+
+#
+# ToDo:
+# Handle lines containing just ----, e.g., patterns of the form
+# -*

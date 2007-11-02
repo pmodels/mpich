@@ -1,0 +1,106 @@
+Initialization
+
+* MPI_Win_create(base, size, disp_unit, info, comm, win)
+
+  * collectively creates a MPI Window from a set of local windows (zero or one
+    window for each process) residing within the set of processes defined by
+    the specified communicator
+  
+  * base, size - defines the region of memory which represents the local window
+    for the calling process
+
+    * if locks are to be used, the implementation may require that this region
+      of memory be allocated with MPI_Alloc_mem()
+  
+  * disp_unit - multiplier for displacements specified in the communication
+    routines
+  
+  * info - hints to the runtime about the expected usage pattern(s) of the
+    window
+  
+    * no_locks - states that MPI_Win_lock() and MPI_Win_unlock() will not be
+      used with this window
+  
+  * comm - communicator which represent the group of processes participating in
+    the window
+
+
+* MPI_Win_free(win)
+
+  * frees resources use by the window
+
+----------
+
+Communication operations (requests)
+
+* all communication operations are non-blocking
+
+* MPI_Put(origin_addr, origin_count, origin_datatype,
+          target_rank, target_disp, target_count, target_datatype, win)
+
+  * target buffer must not overlap with other communcation operations during
+    the same exposure epoch
+
+* MPI_Get(origin_addr, origin_count, origin_datatype,
+          target_rank, target_disp, target_count, target_datatype, win)
+
+  * target buffer must not overlap with other communcation operations during
+    the same exposure epoch
+
+* MPI_Accumulate(origin_addr, origin_count, origin_datatype,
+                 target_rank, target_disp, target_count, target_datatype,
+		 op, win)
+
+  * target buffer may overlap with other MPI_Accumulate() operations during the
+    same exposure epoch, but not with MPI_Put() or MPI_Get() operations
+
+  * operations with overlapping target buffers submitted in the same exposure
+    epoch must atomically update the data elements within the overlapping
+    region
+
+----------
+
+Synchronization
+
+* the synchronization operations define epochs
+
+  * exposure epoch - during an exposure epoch, a process' local window is made
+    accessible to one more other processes in the window group
+
+  * access epoch - during an access epoch, a process is able to submit
+    communication requests causing operation to be performed with respect to
+    one or more local windows (residing within processes that are part of the
+    window group).  these local window must already be exposed (either
+    explicitly/actively or implicitly/passively) by an exposure epoch.
+
+* Active target synchronization
+
+  * Fence
+
+    MPI_Win_fence(assert, win)
+
+    * causes all processes to open exposure and access epochs for all local
+      windows
+
+  * General
+
+    * Access epoch
+
+      MPI_Win_start(group, assert, win)
+      MPI_Win_complete(win)
+
+    * Exposure epoch
+
+      MPI_Win_Post(group, assert, win)
+      MPI_Win_wait(win)
+      MPI_Win_test(win)
+
+* Passive target synchronization
+
+  MPI_Win_lock(lock_type, rank, assert, win)
+  MPI_Win_unlock(rank, win)
+
+  * lock_type
+
+    MPI_LOCK_EXCLUSIVE
+    MPI_LOCK_SHARED

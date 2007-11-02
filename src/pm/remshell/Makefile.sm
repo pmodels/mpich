@@ -1,0 +1,33 @@
+mpiexec_SOURCES = mpiexec.c 
+mpiexec_LDADD = -L../util -lmpiexec -L../../../lib -L${master_top_srcdir}/lib -lmpich
+INCLUDES = -I../../include -I${master_top_srcdir}/src/include \
+    -I../../pmi/simple -I${master_top_srcdir}/src/pmi/simple \
+	-I${master_top_srcdir}/src/pm/util 
+install_BIN = mpiexec
+
+clean-local:
+	@-(cd ../util && $(MAKE) clean)
+distclean-local:
+	@-rm -f remshellconf.h
+
+# Use the mpich2-build-install target to include mpiexec in the build bin
+# directory (all pm's require these targets)
+mpich2-build-install: install
+mpich2-build-uninstall: uninstall
+
+# A special alternate installation target when using multiple process managers
+install-alt: mpiexec
+	$(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) mpiexec $(DESTDIR)${bindir}/mpiexec.remshell
+
+doc_sources = mpiexec.txt
+DOCDESTDIRS = html:www/www1,man:man/man1,latex:doc/refman
+docargs_ADD       = ${master_top_srcdir}/doc/mansrc/cmdnotes
+doc_HTML_SOURCES  = ${doc_sources}
+doc_MAN_SOURCES   = ${doc_sources}
+doc_LATEX_SOURCES = ${doc_sources}
+
+# We use a dummy dependency to ensure that we always go to the util
+# directory to see if anything needs to be done	
+../util/libmpiexec.a: dummy
+dummy:
+	cd ../util && $(MAKE)

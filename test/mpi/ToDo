@@ -1,0 +1,229 @@
+Tests to create or code to modify
+This list is based on the results of the coverage analysis.  Because of errors 
+in the GNU coverage code (it appears to lose data if two processes 
+simulateously update the same coverage data file), there may be some 
+items listed here that are already sufficiently tested.
+
+(completed tests moved below)
+
+6. Collective code:
+   a) mark off heterogeneous code so that it is not compiled for
+      homogeneous devices -- partially done
+   b) make sure that all algorithms are covered: short and long 
+      messages; differing numbers of processes, including non powers
+      of two.  May only need to further divide the Intel tests to 
+      include collective tests for varying numbers of processes.
+
+        opband types: logical (f77), unsigned, long, long_long, 
+		unsigned long, short, unsigned short, char, unsigned char,
+		byte
+	opbor types: int, unsigned, long, long long, unsigned long, short,
+		unsigned short, char, unsigned char, byte
+	opbxor types: int, unsigned, long, long long, unsigned long, short, 
+		unsigned short, char, unsigned char, byte
+	opland types: logical (f77), integer (f77)
+	oplor types: logical (f77), integer (f77)
+	oplxor types: int, unsigned, long, long long, unsigned long,
+		short, unsigned short, char, unsigned char, float, double,
+		long double, logical (f77), integer (f77)
+
+	opmax types: unsigned, long, long long, unsigned long, short, 
+		unsigned short, char, unsigned char, float, double, 
+		long double
+	opmaxloc types: (none tested?)
+	opmin types: (none tested?)
+	opminloc types: 2int, float_int, long_int, short_int, double_int,
+		longdouble_int, 2real (f77), 2double_precision (f77)
+
+	opprod types: long long, short, unsigned short, char, unsigned char, 
+		long double, double complex
+
+	opsum types: unsigned, long, long long, unsigned long, short, 
+		unsigned short, char, unsigned char, float, double,
+		long double, complex (f77), double complex (f77)
+
+	red_scat: differnt alg lengths
+
+	reduce: run with non powers of two, both odd and even values
+		run with root in various places, particularly with non
+		power of two nodes.
+	
+   d) Intercommunicator collective tests are needed.  These could be
+      implemented by using the non-collective definition code; e.g.,
+      the "trivial" implementation in terms of MPI_Send and MPI_Recv.
+      The tests should use intercomms with both the same and different
+      sized groups.
+	  Reduce_scatter
+	  Alltoallw
+   e) Tests for MPI_IN_PLACE are needed
+   f) Tests for sendcounts of 0 are needed, particularly in the xxxv functions
+      and in the allxxx functions (e.g., alltoallv for ghostpoint exchange)
+
+7. Set and get name for comm, predefined name MPI_COMM_PARENT.  
+   Also, test *ALL* datatype names.
+9. Check the use of error macros in intercomm create and merge; also
+   consider adding tests that would exercise this code.
+10. Datatype info routines: get address (use address test), get count
+    (for partial datatype; use example from MPI book), get elements 
+    (for partial datatype, done with pack and datatype)
+11. pack (see lines 184-208 in pack.c)
+12. status_set_elements - combine with get_elements to ensure that the 
+    correct values are set.
+13. create_hindexed, create_hvector, and create-struct.  These can use
+    the MPI-1 tests, with the data-types suitably updated.  Add these
+    to the Intel tests. - done for C.  Need to do Fortran (needs
+    Fortran address_kind type)
+15. type_extent - check lines 99/100 (in coverage file)
+16. type util - make sure that setup of builtins is performed.
+16a. Type free, get-extent, true_extent for derived types.  Make sure all
+    allocated space is freed
+17a Add tests for comm call errhandler
+18. comm set,get errhandler - use MPI-1 versions.  Also apply to win, file.
+    Also user-defined errhandlers.  Make sure references work correctly (e.g.,
+    if freed while still in communicator, or freed after communicator is 
+    freed).
+19. errutil.c - make sure MPIR_Err_preinit protected in error macros.
+	Test by compiling with error checking off, then check symbol
+	table of library
+20. (win set/get/call errhandler) - see 18
+22. Ensure group diff error checks are error macro protected
+24. group intersection error check ; group union error check
+26. ensure that attributes on comm self are freed in
+    the correct order by MPI_Finalize (see MPI-2 spec; comm_self is 
+    freed FIRST, then the order is undefined).  In particular, MPI_Finalized
+    returns false in the comm_self attribute delete functions.
+27. Add tests for finalized, initthread, ismain, querythread, version
+    -- all but finalized and ismain from another thread
+29. Add tests for generalized requests, including cancelling a generalized
+    request.
+30. Add tests for Request_free for regular send or receive requests.
+34. Topology tests:
+    graph-create - n == 0
+    topoutil - see line 92+; add test (dup communicator with topology)
+35. Ixsend to self.
+      If thread multiple, all MPI_Issend, MPI_Ssend to self, with no posted
+      receive when send initiated.
+38. Add tests for all RMA (get, put, accumulate, 
+    win_complete, win_test, win_lock, win_unlock, win_post, win_start,
+    win_wait)
+39. Add tests for dynamic processes
+    open_port, close_port, accept, connect, spawn, spawn multiple
+40. Add tests for all of MPI-IO not already covered.
+    (These may now be covered by the John May test)
+    These include the routines in the files (entire file if no notes on that
+    file):
+    open.c (a few lines, including if(!rank)ADIO_Set_shared_fp
+       filenames with filesystem, e.g., nfs:name
+       Open in APPEND mode
+    delete.c
+       filenames with filesystem
+    get_view.c (roughly lines 99ff, at Type_contiguous)
+    set_view.c (for MPI_DISPLACEMENT_CURRENT)
+    set_info.c
+    seek_sh.c (for MPI_SEEK_CUR)
+    read_sh/write_sh
+        atomicity && file system NOT NFS
+41. Delete/free attributes on datatypes, windows; Fortran versions (to 
+    get int instead of pointer-to-int)
+42. Keyval free (F90 and C++)
+43. Type create indexed block
+44. Type create resized
+
+Also, 
+Replace the calls to MPIR_Group_release in Finalize with
+MPIR_Process.group_release, and set the pointer to this routine when
+the group code is used.
+
+--- DONE ---
+1. Free keyvals, while in use in a communicator and while not in use
+2. User copy and delete functions on keyvals
+   a) Also check error return on attribute copy during comm dup.  This
+      should be a recoverable error.
+3. Check all 7 predefined attributes on comm world
+4. Set multiple attributes, in various orders (to ensure that all
+   branches of the insert-into-list of keyvals code are exercised).
+5. Perform attribute tests with comm, type, win (same code?)
+6. Collective tests:
+   b. Misc
+	opland types: long long, char, unsigned char, float, double, 
+		long double
+	oplor types: long long, char, unsigned char, float, double, 
+		long double
+	bcast: non contig input type (e.g., broadcast a vector).
+        bcast: long messages
+	alltoall: long messages are not covered
+   c) Need tests for Alltoallw, Exscan.
+   d. Intercomm collective
+        bcast
+	reduce
+	allreduce
+	allgather
+        Gatherv
+	Scatterv
+	Allgatherv
+	Alltoall
+	Alltoallv
+	Barrier
+7. Set and get name for comm, type, win.  Check predefined names.
+	
+8. dup an intercommunicator (context generation in commutil); 
+	also check the handling of attributes after the dup.
+   - dup done, still need to check attribute handling - done 
+8a) Get group of an intercommunicator
+14. type_dup.  Apply to both predefined and user defined types.
+    (Should be done; see fkeyvaltype)
+17. Add tests for add-error-class, code, string; -- done
+21. Ensure group compare unequal (line 142--145 in source) are tested;
+    this is for groups of the same size but with different processes -- done
+23. group incl with empty group as output (n == 0)
+25. groupdebug.c - use debug macro marker for debug routine (and do
+    not compile unless enable-g=something is set).
+28. bsendutil.c - construct tests to ensure that all branches are
+    tested.  For example, arrange for different completion orders for
+    entries added to the buffer (e.g., use send but then do the
+    receives in a particular order, and make the data large enough to
+    trigger rendezvous sending in the internal Isend).  - test added (need
+    to test against the coverage tests)
+31. request_get_status; can be tested as if MPI_Test, but does not free
+    the request (really a nondestructive MPI_Test) (also see 29.)
+32. For testall, testsome, waitall, and waitsome.  Add tests that
+    trigger the MPI_ERR_IN_STATUS, by using MPI_ERR_TRUNCATE for
+    receives. -- done for all four.
+33. Add tests for lookup/publish/unpublish.  use host:port values as
+    port name. -- done
+34. Topology tests:
+    cart-map - newrank undefined - done
+    cart-shift - displ == 0 - done
+    cart-sub - remove all dimensions - done
+    dims-create - see code FIXME (-done-maybe)
+    graph_map - newrank undefined - done
+    topotest - undefined - done
+36. Add tests for info delete, dup, getvaluelen.  Add enough tests to 
+    check insert at beginning, middle, end. -- all done
+37. Add tests for info set that replaces an existing value. -- done
+38. Add tests for all RMA (alloc mem, free mem, (get, put, accumulate)-
+    with win_fence, 
+    win_create, win_free, win_get_group, 
+    win_get_name, win_set_name, 
+40. Add tests for all of MPI-IO not already covered.
+    Most of these were be covered by the John May test.
+    These include the routines in the files (entire file if no notes on that
+    file):
+    get_posn_sh.c
+    iotest.c
+    iread_sh.c
+    iwrite_sh.c
+    open.c (a few lines, including if(!rank)ADIO_Set_shared_fp
+    rd_atallb.c
+    rd_atalle.c
+    read_at.c (at "convert count and offset to bytes")
+    read_ord.c
+    read_ordb.c
+    read_sh.c (for ADIO_ReadStrided)
+    seek.c (for MPI_SEEK_SET)
+    seek_sh.c (for MPI_SEEK_END)
+    wr_atallb.c
+    write_at.c (at "convert bufocount and offset to bytes")
+    write_ord.c
+    write_ordb.c
+    write_sh.c (ADIOI_WRITE_LOCK and UNLOCK; also ADIO_WriteStrided)

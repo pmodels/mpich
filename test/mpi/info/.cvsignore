@@ -1,0 +1,17 @@
+*.vcproj
+*.o
+*.bb
+*.bbg
+*.da
+*.gcov
+*.gcda
+*.gcno
+Makefile.in
+Makefile
+infodel
+infodup
+infoorder
+infovallen
+.deps
+*ebug
+*elease

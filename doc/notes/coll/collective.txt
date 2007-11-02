@@ -1,0 +1,269 @@
+MPI-2 : Communication
+
+/***** Point to point discussion that lead to collective communication ******/
+toonen/Projects/MPICH2-Design/pt2pt.txt
+Brian's notes from this file:
+
+- David suggested that we might be able to use the xfer interface for
+  point-to-point messaging as well as for collective operations.
+
+  What should the xfer interface look like?
+
+  - David provided a write-up of the existing interface
+
+  - We questioned whether or not multiple receive blocks could be used to
+    receive a message sent from a single send block.  We decided that blocks
+    define envelopes which match, where a single block defines an envelope (and
+    payload) per destination and/or source.  So, a message sent to a particular
+    destination (from a single send block) must be received by a single receive
+    block.  In other words, the message cannot be broken across receive blocks.
+ 
+    - there is an asymmetry in the existing interface which allows multiple
+      destinations but prevents multiple sources.  the result of this is that
+      scattering operations can be naturally described, but aggregation
+      operations cannot.  we believe that there are important cases where
+      aggregation would benefit collective operations.
+
+    - to address this we believe that we should extend the interface to
+      implement a many-to-one, in addition to the existing one-to-many
+      interface.  we hope we don't need the many-to-many...
+
+    - perhaps we should call these scatter_init and gather_init (etc)?
+
+  - Nick proposed that the interface be split up such that sends requests were
+    separate from receive requests.  This implies that there would be a
+    xfer_send_init() and xfer_recv_init().  We later threw this out, as it
+    didn't make a whole lot of sense with forwards existing in the recv case.
+
+  - Brian wondered about aggregating sends into a single receive and whether
+    that could be used to reduce the overhead of message headers when
+    forwarding.  We think that this can be done below the xfer interface when
+    converting into a dataflow-like structure (?)
+
+- We think it may be necessary to describe dependencies, such as progress,
+  completion and buffer.  These dependencies as frighteningly close to
+  dataflow...
+
+- basically we see the xfer init...start calls as being converted into a set of
+  comm. agent requests and a dependency graph.  we see the dependencies as
+  being possibly stored in a tabular format, so that ranges of the incoming
+  stream can have different dependencies on them -- specifically this allows
+  for progress dependencies on a range basis, which we see as a requirement.
+  completion dependencies (of which there may be > 1) would be listed at the
+  end of this table
+
+  the table describes what depends on THIS request, rather than the other way
+  around.  this is tailored to a notification system rather than some sort of
+  search-for-ready approach (which would be a disaster).
+
+- for dependencies BETWEEN blocks, we propose waiting on the first block to
+  complete before starting the next block.  you can still create blocks ahead
+  of time if desired.  otherwise blocks may be processed in parallel
+
+- blocks follow the same envelope matching rules as posted mpi send/recvs
+  (commit time order).  this is the only "dependency" between blocks
+
+reminder: envelope = (context (communicator), source_rank, tag)
+
+QUESTION: what exactly are the semantics of a block?  Sends to the same
+destination are definitely ordered.  Sends to different desinations could
+proceed in parallel.  Should they?
+
+example:
+  init
+  rf(5)
+  rf(4)
+  r
+  start
+
+a transfer block defines 0 or 1 envelope/payloads for sources and 0 to N envelope/payloads for destinations, one per destination.
+
+
+
+- The communication agent will need to process these requests and data
+  dependencies.  We see the agent having queues of requests similar in nature
+  to the run queue within an operating system.  (We aren't really sure what
+  this means yet...)  Queues might consist of the active queue, the wait queue,
+  and the still-to-be-matched queue.
+
+  - the "try to send right away" code will look to see if there is anything in
+    the active queue for the vc, and if not just put it in run queue and call
+    the make progress function (whatever that is...)
+
+- adaptive polling done at the agent level, perhaps with method supplied
+  min/max/increments.  comm. agent must track outstanding requests (as
+  described above) in order to know WHAT to poll.  we must also take into
+  account that there might be incoming active message or error conditions, so
+  we should poll all methods (and all vcs) periodically.
+
+- We believe that a MPID_Request might simply contain enough information for
+  signalling that one or more CARs have completed.  This implies that a
+  MPID_Request might consist of a integer counter of outstanding CARs.  When
+  the counter reached zero, the request is complete.  David suggests making
+  CARs and MPID_Requests reside in the same physical structure so that in the
+  MPI_Send/Recv() case, two logical allocations (one for MPID_Request and CAR)
+  are combined into one.
+
+- operations within a block are prioritized by the order in which they are
+  added to the block.  operations may proceed in parallel so long as higher
+  priority operations are not slowed down by lesser priority operations.  a
+  valid implementation is to serialize the operations thus guaranteeing that
+  the current operation has all available resources at its desposal.
+
+end of Brian's notes.
+
+/***** Collective communication ***********************************************/
+David's notes:
+
+CAR stands for communication agent request.  For buffer movement, it describes 
+operations that do not need to be or cannot be broken into smaller requests.
+
+int Initialize_car_table();
+int Finalize_car_table();
+
+
+- Operations to describe buffer flow:
+
+These can be used to describe collective and point to point operations.
+We may want to add operations for RMA
+
+Xfer_init is called first to acquire a request.  Then any number of Xfer_xx_op calls may
+be made to describe buffer flow.  Then Xfer_start is called to enqueue and start the
+operation.
+
+There is only one receiver so the source is placed in the init call to guarantee this.  
+It could be a parameter to recv_op and recv_forward_op but then we would have to detect errors.
+buf, count, and datatype describe an MPI buffer. 
+first and last are byte displacements into the MPI buffer as if it were a contiguous buffer.
+
+int Xfer_init(src, tag, comm, &request); 
+int Xfer_recv_op(request, buf, count, datatype, first, last); 
+int Xfer_send_op(request, buf, count, datatype, first, last, destination);
+int Xfer_recv_forward_op(request, buf, count, datatype, first, last, destination);
+int Xfer_forward_op(request, size, destination);
+int Xfer_start(request);
+
+
+------- David, Brian and Rob have not discussed the following section yet
+------- These are just some ideas that David thinks the agent needs to address
+
+- Operations performed on a virtual connection:
+
+Next retrieves a pointer from the method pointing to data available to be read.
+It can work for TCP, VIA and Shmem:
+ bsocket can return a pointer to its internal buffer.
+ VIA can return a pointer to the data portion of the current descriptor
+ Shmem can return a pointer into the shmem queue
+Consume tells the method that 'num' bytes have been read from the internal buffers 
+and they are not needed any more.
+Next and consume will not be appropriate for methods that cannot provide a pointer to 
+an internal buffer.  They will also be bad for methods that can read directly into a user buffer.
+
+int Next(VC, &buf, [IN/OUT] &len);
+int Nextv(VC, &iovec, [IN/OUT] &len);
+int Consume(VC, num);
+
+Reserve_read does not request a buffer until the first byte is ready to be read.
+int Reserve_read(VC, len, request);
+int Read(VC, buf, len, request);
+int Readv(VC, iovec, len, request);
+
+int Write(VC, buf, len, request);
+int Writev(VC, iovec, len, request);
+int Reserve_write(VC, &marker);
+
+Set_marker provides a buffer to the agent to be inserted where the marker was placed by a 
+previous Reserve_write call.
+What should this be changed to in order to allow pipelining?  
+We will want to insert the buffer even if it is not full and inform the agent as more data
+becomes available.
+int Set_marker(VC, buf, len, request, marker);
+int Set_markerv(VC, iovec, len, delete_flag, requests, marker);
+
+Get and release method specific buffers.  These functions allow the buffers for two VC's to
+be tied together.  This may allow for data from one VC to be read directly into the write buffer 
+of another VC.  If the VC does not have a buffer available it returns NULL.
+int Get_buffer(VC, &buf, &len);
+int Get_bufferv(VC, &iovec, [IN/OUT] &len);
+int Release_buffer(VC, buf);
+int Release_bufferv(VC, iovec, len);
+
+The queues must be locked so that multiple reads/reserve_reads or send/reserve_sends can be 
+inserted in blocks.
+int Lock_write(VC);
+int Lock_read(VC);
+int Unlock_write(VC);
+int Unlock_read(VC);
+
+There need to be progress functions for polling and blocking implementations.
+int Make_progress(VC);
+int Make_progress_blocking();
+
+int Init();
+int Finalize();
+int Connect(VC, rank, comm or BNR_Group, &request);
+
+-------- End of undiscussed section
+
+The xfer functions mentioned above are really a scatter interface.  They allow for one to many
+communication.  We should add a gather interface to allow for many to one.  But these two interfaces
+should be separate because many to many is too hard to implement and not necessary for any of our 
+collective algorithms.
+
+xfer_gather_init(dest, tag, comm, &req);
+xfer_gather_recv_op(req, buf, count, dtype, first, last, src);
+xfer_gather_recv_forward_op(req, buf, count, dtype, first, last, src);
+xfer_gather_forward_op(req, size);
+xfer_gather_send_op(req, buf, count, dtype, first, last);
+xfer_gather_start(req);
+
+xfer_scatter_init(src, tag, comm, &req);
+xfer_scatter_recv_op(req, buf, count, dtype, first, last);
+xfer_scatter_recv_forward_op(req, buf, count, dtype, first, last, dest);
+xfer_scatter_forward_op(req, size, dest);
+xfer_scatter_send_op(req, buf, count, dtype, first, last, dest);
+xfer_scatter_start(req);
+
+xfer_gather_init and xfer_scatter_init may be the same function
+xfer_gather_start and xfer_scatter_start may be the same function
+
+What is an xfer block? - A block is defined by an init call, followed by one or more
+xfer operations, and finally a start call.
+Priority in a block is defined by the order of operations issued in a block.
+Lower priority operations may make progress as long as they can be preempted
+by higher priority operations.
+
+Progress on blocks may occur in parallel.  Blocks are independent.
+
+dependencies:
+1) completion
+2) progress
+3) resource (buffer)
+
+Xfer blocks are used to create graphs of cars. Multiple cars within an xfer block 
+may be aggregated in the order issued.
+
+Add:
+xfer_scatter_recv_mop_forward_op
+xfer_gather_recv_mop_forward_op
+xfer_scatter_recv_mop_op
+xfer_gather_recv_mop_op
+
+mop = MPI operation
+Do not add xfer_gather/scatter_mop_send_op because it is not necessary at the 
+xfer level.
+
+These above xfer_mop functions generate cars like this:
+(recv_mop) - (send)
+(recv) - (mop_send)
+
+The mop_send exists at the car level, not the xfert level.
+
+xfer_gather/scatter_recv_forward_op generates these cars:
+(recv) - (send)
+
+recv_mop can be used for accumulate
+
+send_mop could cause remote operations to occur.  We will not use send_mop 
+currently.
+

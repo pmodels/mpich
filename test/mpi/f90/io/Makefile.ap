@@ -1,0 +1,12 @@
+$(srcdir)/ioharness.defn: $(srcdir)/../../f77/io/ioharness.defn
+	sed -e 's/filename="\(.*\)f.f\"/filename="\1f90.f90"/g' \
+	-e 's/include.*iooffset.*/integer (kind=MPI_OFFSET_KIND)offset/g' \
+	$(srcdir)/../../f77/io/ioharness.defn > $(srcdir)/ioharness.defn
+$(srcdir)/ioharness.tlt: $(srcdir)/../../f77/io/ioharness.tlt
+	sed -e 's/include.*mpif.*/use mpi/g' \
+	    -e 's/fheader/f90header/g' \
+	    -e 's/^C/!/g' \
+	    -e '/implicit *none/d' \
+	$(srcdir)/../../f77/io/ioharness.tlt > $(srcdir)/ioharness.tlt
+c2f902cio.c: $(srcdir)/../../f90/io/c2f902cio.c
+	cp $(srcdir)/../../f90/io/c2f902cio.c c2f902cio.c

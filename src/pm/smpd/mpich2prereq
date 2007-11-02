@@ -1,0 +1,12 @@
+#! /bin/sh
+# Check that we are using the smpd PMI implementation
+# (Selecting multiple PM's may require incompatible PMI implementations 
+# (e.g., MPD and SMPD).
+# The smpd PM requires the smpd PMI implementation
+if [ -z "$PM_REQUIRES_PMI" ] ; then
+    PM_REQUIRES_PMI=smpd
+elif [ "$PM_REQUIRES_PMI" != "smpd" ] ; then
+    echo "SMPD requires the smpd PMI implementation; $PM_REQUIRES_PMI has already been selected"
+    exit 1
+fi
+PMI_REQUIRES_READABLE_TOKENS=yes

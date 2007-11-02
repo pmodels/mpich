@@ -1,0 +1,206 @@
+mpiexec::main()
+{
+    MPI_Init();
+
+    BNR_Convert_args_to_info(argc, argv, infos);
+    
+    /* generate command lines */
+
+    /* pack job configuration information into MPI info structures */
+
+    /* use info parameter to tell spawn process group to notify mpiexec when
+    spawn group has reached MPI_Finalize().  this can be accomplished by
+    sending a message from one of the spawned processes to the mpiexec process
+    over the intercomm created during the spawn.  without this info parameter
+    mpiexec will return "immediately". */
+    
+    MPI_Comm_spawn_multiple(count, cmds, argvs, maxprocs, infos, 0,
+			    MPI_COMM_WORLD, &intercomm, errors);
+
+    /* communicate some things here */
+
+    /* wait for spawned job to finish ??? */
+
+    MPI_Finalize();
+}
+
+
+int MPI_Init()
+{
+    BNR_Init();
+
+    /* initialize methods, device, etc. */
+    
+    BNR_Get_my_DB_name(my_dbname);
+    BNR_Put(my_dbname, ..., ...);
+    BNR_Commit(my_dbname);
+
+    BNR_Barrier();
+    
+    /* Various initializations like datatypes, COMM_WORLD, etc. */
+
+    /* get parent_port_name from environment */
+    if (parent_port_name is defined)
+    {
+	MPI_Comm_connect(parent_port_name, info, 0, MPI_COMM_WORLD,
+			 &intercomm);
+    }
+    else
+    {
+	intercomm = MPI_COMM_NULL;
+    }
+}
+
+int MPI_Comm_Spawn_multiple(count, cmds, argvs, maxprocs, infos, root, comm,
+                            intercomm, errors)
+{
+    if (root)
+    {
+	port_info = NULL; /* ??? */
+	MPI_Open_port(port_info, port_name);
+
+	/* add port_name to all infos */
+
+	BNR_Spawn_multiple(count, cmds, argvs, maxprocs, infos, errors,
+			   &bnr_same_domain, &pg);
+	if (bnr_same_domain)
+	{
+	    MPI_Info_set(accept_info, "BNR_SAME_DOMAIN", "");
+	}
+    }
+
+    MPI_Comm_accept(port_name, accept_info, root, comm, intercomm);
+    
+}
+
+int MPI_Open_port(info, port_name)
+{
+    port_name = MM_get_port_name();  /* query_descriptor() ??? */
+}
+
+int MPI_Comm_accept(port_name, info, root, comm, intercomm)
+{
+    if (root)
+    {
+	conn = MM_accept(port_name);
+
+	MPI_Info_get(info, "BNR_SAME_DOMAIN", 0, NULL, &bnr_same_domain);
+
+	MM_send(conn, bnr_same_domain);
+	MM_send(conn, comm->size);
+	MM_recv(conn, remote_size);
+	
+	MPID_Intercomm_alloc(INTER, intercomm, comm->size, remote_size);
+	intercomm->local_VCTable = comm->VCTable;
+	intercomm->local_size = comm->size;
+	
+	SendCommVCTable(conn, comm->VCTable, comm->size);
+	if (!bnr_same_domain)
+	{
+	    SendDatabases(conn, comm);
+	}
+	
+	RecvCommVCTable(conn, intercomm->remote_VCTable,
+			intercomm->remote_size);
+	if (!bnr_same_domain)
+	{
+	    RecvDatabases(conn, dbmap);
+	    FixVCTable(dbmap, intercomm->remote_VCTable);
+	}
+
+	MPI_Bcast(remote_size, root, comm);
+	MPI_Bcast(intercomm->remote_VCTable, root, comm)
+    }
+    else
+    {
+        MPI_Bcast(remote_size, root, comm);
+	
+	MPID_Intercomm_alloc(INTER, intercomm, comm->size, remote_size);
+	intercomm->local_VCTable = comm->VCTable;
+	intercomm->local_size = comm->size;
+	
+	MPI_Bcast(intercomm->remote_VCTable, root, comm)
+    }
+}
+
+int MPI_Comm_connect(port_name, info, root, comm, intercomm)
+{
+    if (root)
+    {
+	conn = MM_connect(port_name);
+	
+	MM_recv(conn, bnr_same_domain);
+	MM_recv(conn, remote_size);
+	MM_send(conn, comm->size);
+
+	MPID_Intercomm_alloc(INTER, intercomm, comm->size, remote_size);
+	intercomm->local_VCTable = comm->VCTable;
+	intercomm->local_size = comm->size;
+	
+	RecvCommVCTable(conn, intercomm->remote_VCTable,
+			intercomm->remote_size);
+	if (!bnr_same_domain)
+	{
+	    RecvDatabases(conn, dbmap);
+	    FixVCTable(dbmap, intercomm->remote_VCTable);
+	}
+	
+	SendCommVCTable(conn, comm->VCTable, comm->size);
+	if (!bnr_same_domain)
+	{
+	    SendDatabases(conn, comm);
+	}
+	
+        MPI_Bcast(remote_size, root, comm);
+	MPI_Bcast(intercomm->remote_VCTable, root, comm)
+    }
+    else
+    {
+        MPI_Bcast(remote_size, root, comm);
+	
+	MPID_Intercomm_alloc(INTER, intercomm, comm->size, remote_size);
+	intercomm->local_VCTable = comm->VCTable;
+	intercomm->local_size = comm->size;
+	
+	MPI_Bcast(intercomm->remote_VCTable, root, comm)
+    }
+}
+
+SendDatabases([IN] conn, [IN] comm)
+{
+    MM_send(conn, Ndb)
+    foreach dbname (used in a vc in comm)
+    {
+        MM_send(conn, dbname);
+        done = BNR_Key_iter_first(dbname, key, val);
+        while (!done)
+        {
+            MM_send(conn, (key,val));
+            done = BNR_Key_iter_next(dbname, key, val);
+        }
+        MM_Send(conn, (dbdone));
+    }
+}
+
+RecvDatabases([IN] conn, [OUT] dbmap)
+{
+    MM_recv(conn, Ndb);
+    dbmap = malloc(Ndb * sizeof(int));
+    
+    for (i = 0; i < Ndb; i++)
+    {
+	MM_recv(conn, (remote_dbname));
+
+	BNR_Create_DB(dbname);
+	strcpy(dbmap[i], dbname);
+	
+	while(1)
+	{
+	    MM_recv(conn, (key, val));
+	    if (key == (dbdone)) break;
+	    BNR_Put(dbname, key, val);
+	}
+
+	BNR_Commit(dbname);
+    }
+}

@@ -1,0 +1,189 @@
+dnl Process this file with autoconf to produce a configure script.
+# Autoconf initialization:
+AC_INIT(mpdroot.h)
+AC_PREREQ(2.59)
+# Autoconf header:
+rm -f ${srcdir}/mpdconf.h mpdconf.h
+AC_CONFIG_HEADER(mpdconf.h)
+AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+#ifndef MPDCONF_H_INCLUDED
+#define MPDCONF_H_INCLUDED
+])
+AH_BOTTOM([#endif])
+
+dnl Process configure arguments
+AC_ARG_ENABLE(echo,
+   [--enable-echo - turn on echoing from within configure script],
+   set -x)
+CONFIGURE_ARGS="$*"
+if test -n "$CONFIGURE_ARGS" ; then 
+    echo "Configuring with args $CONFIGURE_ARGS"
+fi
+AC_SUBST(COPTIONS)
+dnl add --enable-strict and --enable-g
+
+AC_ARG_ENABLE(g, [--enable-g  - turn on debugging flags ] )
+if test "$enable_g" = "yes" -o "$enable_g" = "all" ; then
+    COPTIONS="${COPTIONS} -g"
+fi
+
+dnl Checks for programs.
+dnl Determine the executable and object file extensions.  These
+dnl are needed for some operations under cygwin
+AC_EXEEXT
+AC_OBJEXT
+# Checking for programs.
+AC_PROG_CC
+AC_PROG_MAKE_SET
+AC_PROG_LN_S
+# A quick check to ensure that install-sh has the execute bit set
+# (we've had some problems with that)
+if test -f install.sh -a ! -x install.sh ; then chmod +x install.sh ; fi
+AC_PROG_INSTALL
+
+MPD_AC_PROG_CHECK_INSTALL_WORKS
+
+if test "$installOk" = "no" ; then
+    # echo "RMB1: SETTING install"
+    INSTALL="${srcdir}/install.sh"
+fi
+echo Using INSTALL=$INSTALL
+
+AC_ARG_ENABLE(totalview,[--enable-totalview - turn on mpd-totalview support],,
+              enable_totalview=default )
+if test "$enable_totalview" = "no" ; then
+    DO_MTV="no"
+elif test "$enable_totalview" = "yes" ; then
+    DO_MTV="yes"
+else
+    AC_CHECK_PROG(TOTALVIEW, totalview, totalview)
+    if test -n "$TOTALVIEW" ; then
+        DO_MTV="yes"
+    fi
+fi
+AC_SUBST(DO_MTV)
+
+AC_ARG_WITH(python,
+            [--with-python=name - Specify a particular python to use for mpd],,
+            with_python="")
+PYTHON=$with_python
+# echo "GOT PYTHON", $PYTHON
+if test -z "$PYTHON" ; then  ## user did not give us a python; find one
+    dnl Find a Python
+    AC_CHECK_PROG(PY25, python2.5, python2.5)
+    AC_CHECK_PROG(PY24, python2.4, python2.4)
+    AC_CHECK_PROG(PY23, python2.3, python2.3)
+    AC_CHECK_PROG(PY22, python2.2, python2.2)
+    AC_CHECK_PROG(PY2,  python2, python2)
+    AC_CHECK_PROG(PY,   python, python)
+    if test -z "$PY25"  -a  \
+            -z "$PY24"  -a  \
+            -z "$PY23"  -a  \
+            -z "$PY22"  -a  \
+            -z "$PY2"   -a  \
+            -z "$PY" ; then
+        AC_MSG_WARN([Could not find a python executable in path: $PATH]) 
+    fi
+    dnl See if one of the pythons has the right modules
+    for pypgm in $PY25 $PY24 $PY23 $PY22 $PY2 $PY ; do \
+        AC_MSG_CHECKING([that $pypgm is a valid python version])
+        changequote(,)dnl
+        py_version=`$pypgm -c "import sys;print sys.version_info[0]"`
+        py_subversion=`$pypgm -c "import sys;print sys.version_info[1]"`
+        changequote([,])dnl
+        if test "$py_version" -gt "2" -o "$py_version" -ge "2" -a "$py_subversion" -ge "2" ; then
+            AC_MSG_RESULT(yes)
+        else
+            AC_MSG_RESULT(no)
+            continue
+        fi	       
+        
+        AC_MSG_CHECKING([that the cPickle module is available for $pypgm])
+        if $pypgm -c 'from cPickle import dumps'  >/dev/null 2>&1 ; then
+            AC_MSG_RESULT(yes)
+        else
+            AC_MSG_RESULT(no)
+            continue
+        fi
+        
+dnl        if test "$enable_totalview" = "yes" ; then
+dnl             AC_MSG_CHECKING([that $pypgm has development tools for totalview])
+dnl             has_python_sdk=no
+dnl             for python_homedir in /usr/lib64 /usr/lib32 /usr/lib ; do
+dnl                 if test -f $python_homedir/$pypgm/config/Makefile ; then
+dnl                     has_python_sdk=yes
+dnl                     break
+dnl                 fi
+dnl             done
+dnl             if test "$has_python_sdk" = "yes" ; then
+dnl                 AC_MSG_RESULT(yes)
+dnl             else
+dnl                 AC_MSG_RESULT(no)
+dnl                 continue
+dnl             fi
+dnl        fi
+
+        PYTHON="$pypgm"
+        break
+    done
+else  ### user-supplied with_python
+        dnl See if the user's python has the right modules
+	continue
+fi
+#
+if test -z "$PYTHON" ; then
+    AC_MSG_ERROR([Python required (version 2.2 or greater, with necessary modules)]) 
+fi
+
+CYGWIN_TEST=`uname -a | grep -i cygwin`
+if test -n "$CYGWIN_TEST" ; then
+    AC_MSG_CHECKING([that rebaseall is ok on this cygwin system])
+    echo
+    if ! $PYTHON -c 'from socket import socket ; from os import fork ; x = fork()'  >/dev/null 2>&1 ; then
+        AC_MSG_ERROR([*** fork may fail on this cygwin system; you may need to run rebaseall]) 
+    fi
+fi
+
+# echo "RMB PYTHON=" $PYTHON
+AC_SUBST(PYTHON)
+
+
+# In case clinker is not defined
+if test -z "$CLINKER" ; then 
+    CLINKER="$CC"
+    AC_SUBST(CLINKER)
+fi
+
+dnl Checks for libraries.
+# Searching libraries instead of checking
+AC_SEARCH_LIBS(socket, socket)
+
+dnl Checks for header files.
+# Checking headers
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+# sys/param.h for MAXHOSTNAMELEN
+AC_CHECK_HEADERS(fcntl.h strings.h sys/time.h unistd.h stdlib.h sys/param.h)
+
+dnl Checks for library functions.
+# Checking library functions
+AC_CHECK_FUNCS(putenv socket)
+
+AC_CHECK_FUNCS(snprintf)
+if test "$ac_cv_func_snprintf" = "yes" ; then
+     PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
+fi
+
+dnl Output:
+# Starting output
+MPD_HOME=`pwd`
+AC_SUBST(MPD_HOME)
+dnl
+dnl Dependency handling
+AC_SUBST(MAKE_DEPEND_C)
+# AC_OUTPUT_COMMANDS(chmod +x startdaemons)
+AC_OUTPUT(Makefile)

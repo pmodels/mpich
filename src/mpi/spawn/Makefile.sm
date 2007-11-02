@@ -1,0 +1,15 @@
+mpi_sources = comm_disconnect.c comm_get_parent.c comm_join.c \
+ comm_spawn.c comm_spawn_multiple.c \
+ lookup_name.c publish_name.c unpublish_name.c \
+ open_port.c close_port.c comm_connect.c comm_accept.c 
+
+HEADERS = namepub.h
+
+lib${MPILIBNAME}_a_SOURCES = $(mpi_sources) 
+ 
+profilelib_${MPILIBNAME} = ${PMPILIBNAME}
+INCLUDES = -I../../include -I${top_srcdir}/src/include
+#
+doc_HTML_SOURCES = ${mpi_sources}
+doc_MAN_SOURCES = ${mpi_sources}
+doc_LATEX_SOURCES = ${mpi_sources}

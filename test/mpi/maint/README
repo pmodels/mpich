@@ -1,0 +1,13 @@
+This readme describes the plan for generating tests automatically
+from the description in the structured comment, along with some 
+additional information.  
+
+For each source file:
+1. Find the structured comment (/*@)
+2. Find the "Input Parameters" entry and read the parameters (lines
+   starting with +, . and ending with -; single args use .
+3. Find the "Output Parameters" and match types as for input parameters
+4. For each input parameter, check the defined values (range) and
+   generate test calls.  E.g., for ravalude that should be non-negatiuve
+   integers, make a call with a negative value.
+5. Use template for the start/end of the test program

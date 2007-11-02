@@ -1,0 +1,5 @@
+lib${MPILIBNAME}_a_SOURCES = mm_choose_buffer.c mm_get_vc.c mm_vcutil.c \
+ mm_buffer_util.c mm_post_recv.c mm_post_send.c mm_cq_test.c mm_cq_wait.c \
+ mm_cq_enqueue.c mm_reset_cars.c mm_create_post_unex.c mm_enqueue_request_to_send.c \
+ mm_post_rndv_clear_to_send.c mm_post_rndv_data_send.c mm_make_progress.c
+INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

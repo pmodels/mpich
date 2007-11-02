@@ -1,0 +1,95 @@
+\textwidth=6.0in
+\textheight=9.0in
+\hoffset=-0.5in
+\voffset=-1.0in
+\parskip=.1in
+\renewcommand{\floatpagefraction}{0.9}
+\newcommand{\mpich}{\texttt{MPICH}}
+\newcommand{\Mpich}{\texttt{MPICH}}
+% This should really use #1, but we want the text version in the Postscript
+% document
+\newcommand{\AURL}[2]{\url{#2}}
+\newcommand{\mpibug}{\AURL{mailto:mpi-bugs@mcs.anl.gov}{mpi-bugs@mcs.anl.gov}}
+%\newcommand{\mpich}{MPICH}
+%
+% Fix this using hyphenation?
+{\catcode`\/=\active\gdef/{\char`\/ \discretionary{}{}{}}}
+\def\makeslashbreak{\catcode`\/=\active}
+%\def\makeslashbreak{\relax}
+%\def\URL{\begingroup\makeslashbreak\tt\gb\eatURL}
+%\def\eatURL#1{#1\endgroup}
+% This doesn't work because it is too late to recatcode /
+%\renewcommand{\URL}[1]{ {\gb\makeslashbreak\tt #1}}
+%
+% wfile is for files that are linked to a file in the URL version (?)
+% Or should we do that by mapref?
+\let\wfile=\code
+\def\note#1{\marginpar{#1}}
+%
+% Directory and definitions for help text
+\def\helpdir{/home/MPI/maint/help/src}
+\def\question{{\bf Q: }}
+\def\answer{\ifvmode\else\par\fi{\bf A: }}
+\def\ttURL#1{\texttt{\url{#1}}}
+\def\urlname#1#2{\emph{#2}}
+% The following is needed for the acknowledgements contents entry
+%
+\let\program=\code
+%
+\let\DOESupport\DefaultSupport
+%
+% Version number
+\newcommand{\mpichversion}{1.2.4}
+%
+% File in the MPI install dir.  
+% However, we cannot just place this as a prefix to \file, 
+% since \file may surround the filename with `'.  Instead,
+% we use a special command that adds only the trailing '
+\def\eatnextfilelast#1{\texttt{#1}'\endgroup}
+\def\eatfilelast{\catcode`\_=\active\nocodespecials\eatnextfilelast}
+\def\filelast{\begingroup\eatfilelast}
+\newcommand{\mpifile}{`\texttt{/usr/local/mpich-\mpichversion/}\filelast}
+%
+% Create the conditionals for building device and system specific versions
+%
+% Devices.  No _ or - or numbers
+\newif\ifchpiv
+\newif\ifchpivmpd
+\newif\ifglobusii
+\newif\ifchshmem
+\newif\ifchmpl
+\newif\ifcluster % For devices that support clusters 
+% All true by default
+\chpivtrue
+\chpivmpdtrue
+\chshmemtrue
+\globusiitrue
+\clustertrue
+\chmpltrue
+%
+\newcommand{\cleardevices}{\chpivfalse\chpivmpdfalse\globusiifalse\chshmemfalse\clusterfalse\chmplfalse}
+%
+% Systems
+\newif\iflinux
+\newif\ifhpux
+\newif\ifaix
+\newif\ifirix
+\newif\ifsolaris
+\newif\ifwindows
+\newif\ifothersys   % For others
+% All true by default
+\linuxtrue
+\hpuxtrue
+\aixtrue
+\irixtrue
+\solaristrue
+\windowstrue
+\othersystrue
+\newcommand{\clearsystems}{\linuxfalse\hpuxfalse\irixfalse\aixfalse\solarisfalse\windowsfalse\othersysfalse}
+%
+\newcommand{\deviceversion}{\relax}
+\newcommand{\devicedir}{.}
+%
+% Trouble levels
+\newif\iftroubleancient
+\troubleancientfalse

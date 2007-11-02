@@ -1,0 +1,41 @@
+SUBDIRS_otherlangs = f77 cxx f90
+SUBDIRS_threadsdir = threads
+SUBDIRS = util attr basic datatype coll comm errhan group info init pt2pt rma spawn topo io @otherlangs@ @threadsdir@ errors manual perf .
+
+testing:
+	./runtests -srcdir=$(srcdir) -tests=testlist \
+		   -mpiexec=@MPIEXEC@ \
+		   -xmlfile=summary.xml
+clean-local:
+	-rm -f summary.xml
+
+#
+# The following are used to provide a target that is used to create a 
+# distribution tarfile
+MPICVSHOME = @MPICVSHOME@
+PACKAGE    = mpi2test
+VERSION    = @VERSION@
+
+dist:
+	@version=${VERSION} ; \
+	prever=`echo ${VERSION} | sed -e 's/^[^-]*//'` ; \
+	if [ "$$prever" = "-CVS" ] ; then version=$${version}-`date "+%Y%m%d%H%M"` ; fi ; \
+	if [ -z "${TAG}" ] ; then tag=HEAD ; else tag=${TAG}; fi ; \
+	$(MAKE) version=$${version} tag=$${tag} doc=yes dist-with-version
+
+dist-with-version:
+	@if [ -z "$(version)" ] ; then \
+	    echo "Must invoke with make version=value tag=value dist-with-version" ;\
+	    exit 1 ; fi 
+	@if [ -z "$(tag)" ] ; then \
+	    echo "Must invoke with make version=value tag=value dist-with-version" ;\
+	    exit 1 ; fi 
+	@echo ""; echo "Cutting version ${version} of the MPICH2 distribution from tag ${tag}" ; echo ""
+	if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi 
+	rm -f cvsexp.log 
+	( cd tmpdir && cvs -d $(MPICVSHOME) export -r "${tag}" -d mpi2test mpich2-01/test/mpi >cvsexp.log 2>&1 ) || (echo "cvs export failed; see tmpdir/cvsexp.log" && exit 1 )
+	mv tmpdir/mpi2test tmpdir/${PACKAGE}-${version}
+	( cd tmpdir/${PACKAGE}-${version} && maint/updatefiles -distrib )
+	( cd tmpdir && tar cf ${PACKAGE}-${version}.tar ${PACKAGE}-${version} )
+	mv -f tmpdir/${PACKAGE}-${version}.tar . 
+	rm -rf tmpdir

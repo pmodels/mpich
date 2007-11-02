@@ -1,0 +1,3 @@
+# SUBDIRS_bindings are the names that @ bindings @ can take in SUBDIRS
+SUBDIRS_bindings = f77 cxx f90
+SUBDIRS = @bindings@ 

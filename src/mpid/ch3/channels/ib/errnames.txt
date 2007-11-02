@@ -1,0 +1,15 @@
+#
+# CH3:ib
+#
+**ibu_wait:ibu_wait failed
+**ibu_wait %d:ibu_wait failed (errno %d)
+**init_ibu:infiniband initialization failed
+**init_ibu_set:unable to create an infinband completion queue
+**ca_guids:unable to get the guids from the infiniband access layer
+**ca_guids %s:unable to get the infiniband guids - %s
+**get_guids:unable to get the guids for the infiniband channel adapter
+**noca:unable to find an active infiniband channel adapter
+**pd_alloc:unable to allocate a protection domain
+**pd_alloc %s:unable to allocate a protection domain - %s
+**finish_qp:unable to establish a queue pair connection
+**setup_connections:MPIDI_CH3I_Setup_connections failed

@@ -1,0 +1,17 @@
+Makefile.in
+Makefile
+simple
+sendrecv
+wtime
+netpipe
+patterns
+srtest
+self
+Debug*
+Release*
+*.plg
+adapt
+allmpi
+.deps
+Netpipe.out
+*.user

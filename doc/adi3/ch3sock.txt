@@ -1,0 +1,231 @@
+Thoughts on a replacement for the ch3 socket routines used in the
+ch3:sock and ch3:ssm channels.
+
+Overview
+========
+The current socket code (in src/mpid/common/sock) uses an interface
+that delivers events to the calling process.  This is a very general
+approach, and does allow the use of the socket code in very general
+(including places other than the mpid/ch3 code), but introduces a
+number of inefficiencies and complexities.  This is clearest when
+looking at the function call trace for an MPI_Recv.  There are large
+numbers of transistions between the socket code and the upper layers,
+as each access to a socket operation requires generating and packaging
+an event and then unpackaging the event in the calling code.  In
+addition, the current code treats reads and writes to the socket
+nearly identically, including queues for pending operations (needed
+for writes but not really needed for reads, since the order of
+operations for a read depends (at least for MPI) on the previous data
+read, not an outside selection of pending receive events.  This forces
+the code that receives the event to check whether it is a read or a
+write operation, which was known to the socket code.  This is an
+unnecessary loss of information across the event interface.
+
+An alternate approach is active messages.  Each incoming message
+triggers a routine that processes that message. In a pure active
+message approach, the message itself indicates the function to invoke,
+either by an index into a predefined table of functions or the address
+of the function.  An alternative that we should consider is to let the
+target process decide which function to invoke; as different messages
+arrive, each function can decide how to process the next message.
+
+Note that this approach, unlike the current event-based approach, is
+asymetric: reads and writes are handled very differently.  Pending
+write operations are simply written.  However, there are some
+important special cases for writing.  These include: the initial
+connection steps, where the actions on socket-can-write are more
+complex than just write-bytes, the handling of message streams, such
+as large, non-contiguous messages that must be sent by incrementally
+packing a buffer and discpatching it, disconnection operations, and
+errors on the socket (such as an unexpected disconnection).  This
+suggests that calling a function when writes complete or an error
+occurs may be a necessary feature.  Also note that the current
+MPID_Request structure now uses pointers to functions, rather than a
+enumerated list of states, to advance the handling of the request
+(such as acquiring the next block of data when sending a
+non-contiguous message).
+
+The Design
+==========
+
+The central data structure is a structure that contains the functions
+to be invoked on a particular fd, with separate entries for read and
+write. This might looks something like
+
+typedef struct _MPID_SockFDOp {
+     int fd;   /* Self reference */
+     int (*onRead)( int fd, void *data );
+     int (*onWrite)( int fd, void *data );
+     int (*onReadError)( int fd, void *data );
+     int (*onWriteError)( int fd, void *data );
+     void *onReadData, *onWriteData;
+     int  readState, writeState;
+     struct _MPID_SockPendingWrite *head, *tail;
+     /* could contain additional items, such as flow-control */
+     } MPID_SockFDOp;
+
+where "struct _MPID_SockPendingWrite" describes data that is waiting
+for a write to be enabled.
+
+The onRead an onWrite functions use the "void *data" argument to
+specify the destination or source buffers.  As an optimization, if
+there are pending writes, an value of "onWrite" of NULL could indicate
+the use of writev or write (as required by the pending write
+structure).  Pending writes are stored in the MPID_SockPendingWrite
+list, which has a head and a tail pointer (FIFO list).
+
+The "readState" and "writeState" are present incase it is valuable to
+encode a state (such as writes expected, or socket-closing) in this
+structure.  These may not be necessary as much of this information is
+present in the choice of read and write functions.  They are shown
+here to indicate that they should be considered.
+
+The onReadError and onWriteError functions allow handling of errors to
+be setup separately from the onRead and onWrite functions, which will
+help keep those functions simpler.
+
+Other requirements, such as reading a full MPI envelope before
+invoking the envelope processing can be managed by arranging for the
+onRead function to handle that.  Here's a sample implementation of
+ReadEnvelope:
+
+typedef struct _MPID_ReadEnvelope {
+    unsigned char packet[MPID_PACKET_CHARS];
+    int nread;   /* Initialized to zero */
+    int *(handlePacket)( void *pkt, int n )
+} MPID_ReadEnvelope;
+
+int ReadEnvelope( int fd, void *readData )
+{
+    MPID_ReadEnvelope *env = (MPID_ReadEnvelope *)readData;
+    int nleft = MPID_PACKET_CHARS - env->nread;
+    int rc = 0;
+
+    do {    
+        n = read( fd, env->packet + env->nread, nleft );
+    } while (n == -1 && errno == EINTR);
+
+    if (n > 0) {
+        n += env->nread;
+        if (n == MPID_PACKET_CHARS) {
+             /* This could also be a fixed function name */
+             rc = (env->handlePacket)( env->packet, n );
+	     env->nread = 0;
+        }
+        else {
+             env->nread = n;
+        }
+    }
+    else {
+        /* Handle error cases (including n == 0, which may not be a
+        real error but a flub by the OS. */
+    }
+    return rc;
+}
+
+(There are a number of optimizations possible in the above code, but
+they are probably overwhelmed by the cost of the read).
+
+When the next message must be an Envelope, then the onRead function is
+set to ReadEnvelope and ReadData is initialized to the
+MPID_ReadEnvelope structure with nread set to zero.  
+
+A listener socket (used to create new socket connections) then becomes
+just another case of a socket, but with different onRead and onWrite
+functions. 
+
+The above handles the actions taken when a read or write is possible
+on a socket.  How are the sockets checked to see if the functions
+should be invoked?
+
+Similar to the current code, where there are blocking and nonblocking
+waits for socket events, this active message version uses the
+following three routines:
+
+int MPID_SockWait( void )
+int MPID_SockWaitfor( int *cc )
+int MPID_SockTest( void )
+
+MPID_SockTest is just the nonblocking version of MPID_SockWait.  
+MPID_SockWaitfor is a version of SockWait that continues to wait until
+the indicated completion flag is set.  This allows the code to
+implement MPI_Wait and MPI_Waitall by passing the completion code of
+one of the requests to the wait operation.  In the case of Waitall,
+once that request is complete, it must check to see if all other
+requests are complete and if necessary, wait on some other request
+(one question for investigation is whether long lists of request in
+MPI_Waitall occur in important applications and whether having a
+WaitforArray version that takes an array of completion codes would be
+a benefit).
+
+Error Returns
+=============
+The socket codes should return MPI error codes.  The current code, in
+trying to be more general, introduced a complex mechanism for error
+code reporting that broke parts of the defined error reporting code
+and added unnecessary complexity to other parts of that code.  
+
+Some Questions for Discussion
+=============================
+There are a few variations that may be important, and that are not in
+the current design.  For example, on writes, it may be necessary to
+know if the data buffer being written is persistent or not.  That is,
+if the data will remain even if the write does not complete during
+this call.  That tells the onWrite routines whether it may need to
+make a copy of the data if it can't be sent immediately.  This also
+provides a hook for fault-tolerance - data is not viewed as "written"
+until it is acknowledged.  Thus, messages that are sent eagerly by
+blocking routines may need to be copied in this case, but ones that
+are sent with non-blocking routines will not need to be copied (since
+the implementation can wait for the acknowledgment in the MPI_Wait
+call).
+
+For example, the socket write call might be
+
+int MPID_Sock_write( MPID_SockFDOp *sockfd, const void *buf, int n, 
+    		     int isPersist )
+{
+    int nwritten;
+
+    if (!sockfd->head) {
+        do {
+            nwritten = write( sockfd->fd, buf, n );
+        } while (nwritten == -1 && errno == EINTR);
+ 
+        if (nwritten < n) {
+            if (isPersist) {
+                 /* Enqueue remaining data */
+            }
+            else {
+	         /* Enqueue remaining data, making a copy */
+            }
+        }
+    }
+    else {
+        /* enqueue at the tail of the list, checking isPersist */
+        ...
+    }
+}
+
+A similar MPID_Sock_Writev call provides the writev version of this.
+
+Another question is how well this fits into both the current thread
+safety code (one big lock) and a finer grain (one lock per socket)
+version.  This needs to be answered before going forward with the
+code.  In addition, how this fits into creating a thread-safe ch3:ssm
+(sockets plus shared memory) channel must be addressed.
+
+Next Steps
+==========
+This design should be discussed.  If there is agreement that it should
+go forward, the next thing to do is to add another level of detail to
+the design by fully specifying all of the interfaces and the data
+structures, and ensuring that those interfaces fit into the current
+ch3:sock implementation (that is, it is clear how to change
+ch3/channels/sock/src/*.c to make use of these routines).  Integration
+with the connection management code is critical at this point.  The
+next step after that are paper versions of the implemention, along the
+lines of the code samples in this document.  After that, coding can
+start in src/mpid/common/amsock (for active-messages-sockets).  Note
+that as routines in mpid/common, they provide services for an ADI3
+implementation, and can make use of any MPICH2 utility routines.

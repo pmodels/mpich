@@ -1,0 +1,56 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "smpd", "smpd.vcproj", "{73DC517A-212E-4C8C-8B13-D5CA120C7B5C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0703FA94-8B8C-49AC-BFCE-91F67B599E51} = {0703FA94-8B8C-49AC-BFCE-91F67B599E51}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mpiexec", "mpiexec.vcproj", "{EFAF72A2-7154-410B-9235-460444894A38}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0703FA94-8B8C-49AC-BFCE-91F67B599E51} = {0703FA94-8B8C-49AC-BFCE-91F67B599E51}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "smpd_util", "smpd_util.vcproj", "{0703FA94-8B8C-49AC-BFCE-91F67B599E51}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pmi", "..\..\pmi\smpd\pmi.vcproj", "{97B727A6-0F41-4E8E-A524-FC0F30D3AC8A}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		DebugStatic = DebugStatic
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{73DC517A-212E-4C8C-8B13-D5CA120C7B5C}.Debug.ActiveCfg = Debug|Win32
+		{73DC517A-212E-4C8C-8B13-D5CA120C7B5C}.Debug.Build.0 = Debug|Win32
+		{73DC517A-212E-4C8C-8B13-D5CA120C7B5C}.DebugStatic.ActiveCfg = DebugStatic|Win32
+		{73DC517A-212E-4C8C-8B13-D5CA120C7B5C}.DebugStatic.Build.0 = DebugStatic|Win32
+		{73DC517A-212E-4C8C-8B13-D5CA120C7B5C}.Release.ActiveCfg = Release|Win32
+		{73DC517A-212E-4C8C-8B13-D5CA120C7B5C}.Release.Build.0 = Release|Win32
+		{EFAF72A2-7154-410B-9235-460444894A38}.Debug.ActiveCfg = Debug|Win32
+		{EFAF72A2-7154-410B-9235-460444894A38}.Debug.Build.0 = Debug|Win32
+		{EFAF72A2-7154-410B-9235-460444894A38}.DebugStatic.ActiveCfg = DebugStatic|Win32
+		{EFAF72A2-7154-410B-9235-460444894A38}.DebugStatic.Build.0 = DebugStatic|Win32
+		{EFAF72A2-7154-410B-9235-460444894A38}.Release.ActiveCfg = Release|Win32
+		{EFAF72A2-7154-410B-9235-460444894A38}.Release.Build.0 = Release|Win32
+		{0703FA94-8B8C-49AC-BFCE-91F67B599E51}.Debug.ActiveCfg = Debug|Win32
+		{0703FA94-8B8C-49AC-BFCE-91F67B599E51}.Debug.Build.0 = Debug|Win32
+		{0703FA94-8B8C-49AC-BFCE-91F67B599E51}.DebugStatic.ActiveCfg = Debug|Win32
+		{0703FA94-8B8C-49AC-BFCE-91F67B599E51}.DebugStatic.Build.0 = Debug|Win32
+		{0703FA94-8B8C-49AC-BFCE-91F67B599E51}.Release.ActiveCfg = Release|Win32
+		{0703FA94-8B8C-49AC-BFCE-91F67B599E51}.Release.Build.0 = Release|Win32
+		{97B727A6-0F41-4E8E-A524-FC0F30D3AC8A}.Debug.ActiveCfg = Debug|Win32
+		{97B727A6-0F41-4E8E-A524-FC0F30D3AC8A}.Debug.Build.0 = Debug|Win32
+		{97B727A6-0F41-4E8E-A524-FC0F30D3AC8A}.DebugStatic.ActiveCfg = Debug|Win32
+		{97B727A6-0F41-4E8E-A524-FC0F30D3AC8A}.DebugStatic.Build.0 = Debug|Win32
+		{97B727A6-0F41-4E8E-A524-FC0F30D3AC8A}.Release.ActiveCfg = Release|Win32
+		{97B727A6-0F41-4E8E-A524-FC0F30D3AC8A}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

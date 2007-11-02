@@ -1,0 +1,8 @@
+Makefile.in
+Makefile
+*.o
+*ebug*
+*elease*
+*.vfproj
+*.gcda
+*.gcno

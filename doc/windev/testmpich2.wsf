@@ -1,0 +1,2472 @@
+<package>
+<job id="testmpich2">
+    <runtime>
+        <description>This script checks out mpich2 and builds it and the test suites </description>
+        <named
+            name = "buildonly"
+            helpstring = "build mpich2 and the test suites"
+            type = "simple"
+            required = "false"
+        />
+        <named
+			name = "buildbatch"
+			helpstring = "build mpich2, the test suites, and the batch files to run the tests"
+			type = "simple"
+			required = "false"
+		/>
+        <named
+            name = "testonly"
+            helpstring = "run the test suites"
+            type = "simple"
+            required = "false"
+        />
+        <named
+            name = "tag"
+            helpstring = "check out mpich2 using the version tag specified"
+            type = "string"
+            required = "false"
+        />
+        <named
+            name = "test"
+            helpstring = "build and run the tests specified: c++, mpich, intel, mpich2"
+            type = "string"
+            required = "false"
+        />
+        <named
+            name = "fortran"
+            helpstring = "build the fortran tests"
+            type = "boolean"
+            required = "false"
+        />
+		<named
+			name = "ch"
+			helpstring = "channel to build"
+			type = "string"
+			required = "false"
+		/>
+		<named
+			name = "remove-cvs-dirs"
+			helpstring = "delete the directories before checking them out"
+			type = "simple"
+			required = "false"
+		/>
+        <named
+            name = "mpich2"
+            helpstring = "path to mpich2"
+            type = "string"
+            required = "false"
+        />
+        <named
+            name = "mpich2i"
+            helpstring = "path to installed mpich2"
+            type = "string"
+            required = "false"
+        />
+        <named
+            name = "test_installed"
+            helpstring = "test the installed mpich2"
+            type = "simple"
+            required = "false"
+        />
+        <named
+            name = "make"
+            helpstring = "make mpich2 or use existing build"
+            type = "boolean"
+            required = "false"
+        />
+        <named
+            name = "configure"
+            helpstring = "configure mpich2 or use existing configuration"
+            type = "boolean"
+            required = "false"
+        />
+        <named
+            name = "mpich"
+            helpstring = "path to mpich test suite"
+            type = "string"
+            required = "false"
+        />
+        <named
+            name = "cpp"
+            helpstring = "path to c++ test suite"
+            type = "string"
+            required = "false"
+        />
+        <named
+            name = "intel"
+            helpstring = "path to intel test suite"
+            type = "string"
+            required = "false"
+        />
+        <named
+            name = "ssh-user"
+            helpstring = "user name to use with ssh commands"
+            type = "string"
+            required = "false"
+        />
+        <named
+            name = "ssh"
+            helpstring = "ssh command name - default = ssh"
+            type = "string"
+            required = "false"
+        />
+        <named
+			name = "cvs_host"
+			helpstring = "cvs host to use - cvs -d username@cvs_host:rootdir co mpich2allWithMPE"
+			type = "string"
+			required = "false"
+        />
+        <named
+            name = "noexecute"
+            helpstring = "generate batch files and don't execute any tests"
+            type = "simple"
+            required = "false"
+        />
+        <named
+            name = "vs05"
+            helpstring = "add compiler options for VS 2005 to minimize warnings"
+            type = "simple"
+            required = "false"
+        />
+        <named
+			name = "batch"
+			helpstring = "create batch files for each test suite"
+			type = "boolean"
+			required = "false"
+		/>
+		<named
+			name = "localonly"
+			helpstring = "add -localonly to the mpiexec command"
+			type = "simple"
+			required = "false"
+		/>
+		<named
+			name = "summarize"
+			helpstring = "create the summary directory by parsing the previously created tests.output files"
+			type = "simple"
+			required = "false"
+		/>
+		<named
+			name = "win64"
+			helpstring = "use the win64 include directory"
+			type = "simple"
+			required = "false"
+		/>
+    </runtime>
+<object id="f" progid="Scripting.FileSystemObject" />
+<object id="WshShell" progid="WScript.Shell" />
+<object id="WshNetwork" progid="WScript.Network" />
+<script language="VBScript">
+
+' global variables
+'Dim WshShell
+'Set WshShell = CreateObject("WScript.Shell")
+'Set WshNetwork = WScript.CreateObject("WScript.Network")
+set env = WshShell.Environment("PROCESS")
+'Set f = WScript.CreateObject("Scripting.FileSystemObject")
+Set root_folder = f.GetFolder(".")
+hostname = WshNetwork.ComputerName 
+rootdir = ""
+bTestMPICH = true
+bTestCPP = true
+bTestINTEL = true
+bTestMPICH2 = true
+bBuildOnly = false
+bTestOnly = false
+cvsTag = "HEAD"
+bCheckoutMPICH2 = true
+bConfigureMPICH2 = true
+bConfigureMPICH2Tests = true
+bMakeMPICH2 = true
+bCheckoutMPICH = true
+bCheckoutCPP = true
+bCheckoutINTEL = true
+pathMPICH2 = ""
+pathMPICH2Installed = ""
+pathMPICH = ""
+pathCPP = ""
+pathINTEL = ""
+username = env("USERNAME")
+mpich_outputdir = ""
+intel_rootdir = ""
+CC = "cl"
+CPP = "cl"
+FC = "ifort"
+CPPFLAGS = " /nologo /EHsc /W4 /DHAVE_MPI_CXX /DUSE_STDARG /DHAVE_WINDOWS_H /DHAVE_LONG_LONG_INT /DHAVE_LONG_DOUBLE /DHAVE_MPI_DARRAY_SUBARRAY"
+CFLAGS = " /nologo /W4 /DUSE_STDARG /DHAVE_WINDOWS_H /DHAVE_LONG_LONG_INT /DHAVE_LONG_DOUBLE /DHAVE_MPI_DARRAY_SUBARRAY /DMPICH_SKIP_MPICXX"
+'mpich2lib = "mpich2d.lib"
+mpich2lib = "mpi.lib"
+fmpich2lib = "fmpich2.lib"
+cppmpich2lib = "cxx.lib"
+bFortran = true
+bRemoveDirs = false
+cvs_host = "harley.mcs.anl.gov"
+cvs_root_dir = "/home/MPI/cvsMaster"
+temp_out_name = "tempout.txt"
+ssh_cmd = "ssh"
+scp_cmd = "scp"
+channel = ""
+mpiexec = "mpiexec"
+testdirname = "testmpich2"
+mpiexec_args = ""
+timeoutarg = " -timeout 180"
+bCommandsOnly = False
+commands_filename = "runcommands.bat"
+bBatch = False
+bSummarize = False
+bBatchFilesOnly = false
+bWin64 = false
+
+' er.xsl file contents required to display the summary.xml files
+erfilecontents = _
+"<?xml version='1.0' ?>" & vbCrLf & _
+"<!-- <xsl:stylesheet  xmlns:xsl=""http://www.w3.org/TR/WD-xsl""> -->" & vbCrLf & _
+"<xsl:stylesheet  xmlns:xsl=""http://www.w3.org/1999/XSL/Transform"" version=""1.0"">" & vbCrLf & _
+"<!-- <xsl:output method=""html""/>-->" & vbCrLf & _
+"<xsl:template match=""/"">" & vbCrLf & _
+"" & vbCrLf & _
+"<html>" & vbCrLf & _
+"<head>" & vbCrLf & _
+"<title>MPICH Error Report</title>" & vbCrLf & _
+"</head>" & vbCrLf & _
+"<body>" & vbCrLf & _
+"    <h1> Error Report </h1>" & vbCrLf & _
+"    <table border=""2"" bgcolor=""Green"">" & vbCrLf & _
+"    <xsl:apply-templates select=""MPITESTRESULTS""/>" & vbCrLf & _
+"    </table>" & vbCrLf & _
+"</body>" & vbCrLf & _
+"</html>" & vbCrLf & _
+"</xsl:template>" & vbCrLf & _
+"" & vbCrLf & _
+"<xsl:template match=""MPITESTRESULTS"">" & vbCrLf & _
+"    <xsl:apply-templates select=""DATE""/>" & vbCrLf & _
+"    <xsl:apply-templates select=""MPITEST""/>" & vbCrLf & _
+"</xsl:template>" & vbCrLf & _
+"" & vbCrLf & _
+"<xsl:template match=""DATE"">" & vbCrLf & _
+"    <tr><td bgcolor=""white"" colspan=""4"">Test run on  <xsl:value-of select="".""/></td></tr>" & vbCrLf & _
+"</xsl:template>" & vbCrLf & _
+"" & vbCrLf & _
+"<xsl:template match=""MPITEST"">" & vbCrLf & _
+"    <tr bgcolor=""white"">" & vbCrLf & _
+"    <td valign=""top"">" & vbCrLf & _
+"    <xsl:value-of select=""NAME""/>" & vbCrLf & _
+"    </td><td valign=""top"">" & vbCrLf & _
+"    <xsl:value-of select=""STATUS""/>" & vbCrLf & _
+"    </td><td WIDTH=""40%""><pre>" & vbCrLf & _
+"    <xsl:value-of select=""TESTDIFF""/>" & vbCrLf & _
+"    </pre>" & vbCrLf & _
+"    </td>" & vbCrLf & _
+"    <td valign=""top"">" & vbCrLf & _
+"    <pre>" & vbCrLf & _
+"    <xsl:value-of select=""TRACEBACK""/>" & vbCrLf & _
+"    </pre>" & vbCrLf & _
+"    </td>" & vbCrLf & _
+"    </tr>" & vbCrLf & _
+"</xsl:template>" & vbCrLf & _
+"" & vbCrLf & _
+"<xsl:template match=""TRACEBACK"">" & vbCrLf & _
+"    <a>" & vbCrLf & _
+"    <xsl:attribute name=""HREF"">" & vbCrLf & _
+"    <xsl:value-of select="".""/>" & vbCrLf & _
+"    </xsl:attribute>" & vbCrLf & _
+"    Traceback" & vbCrLf & _
+"    </a>" & vbCrLf & _
+"</xsl:template>" & vbCrLf & _
+"" & vbCrLf & _
+"" & vbCrLf & _
+"</xsl:stylesheet>" & vbCrLf
+
+
+' check if we are running cscript or wscript
+bEcho = false
+If InStr(1, LCase(WScript.FullName), "cscript") > 0 Then
+	bEcho = true
+End If
+Function cEcho(str)
+	If bEcho Then
+		On Error Resume Next
+		WScript.Echo str
+		if err <> 0 then
+			num_chars = Len(str) / 2
+			if num_chars > 4096 then
+				num_chars = 4096
+			end if
+			WScript.Echo Left(str, num_chars) & vbCrLf & "..." & vbCrLf
+			WScript.Echo Right(str, num_chars)
+		end if
+	End If
+End Function
+
+' parse the command line arguments
+
+if WScript.Arguments.Named.Exists("noexecute") then
+	bCommandsOnly = true
+	if WScript.Arguments.Named.Item("noexecute") <> "" then
+		commands_filename = WScript.Arguments.Named.Item("noexecute")
+	end if
+	set commands_file = f.CreateTextFile(commands_filename, true)
+end if
+
+if WScript.Arguments.Named.Exists("vs05") then
+	CPPFLAGS = CPPFLAGS & " /D_CRT_SECURE_NO_DEPRECATE"
+	CFLAGS = CFLAGS & " /D_CRT_SECURE_NO_DEPRECATE"
+end if
+
+if WScript.Arguments.Named.Exists("buildonly") then
+	bBuildOnly = true
+end if
+
+if WScript.Arguments.Named.Exists("buildbatch") then
+	bBatchFilesOnly = true
+	bBatch = true
+end if
+
+if WScript.Arguments.Named.Exists("testonly") then
+	bTestOnly = true
+end if
+
+if WScript.Arguments.Named.Exists("summarize") then
+	bSummarize = true
+	bBatch = true
+	bTestOnly = true
+end if
+
+if WScript.Arguments.Named.Exists("localonly") then
+	mpiexec_args = mpiexec_args & " -localonly"
+end if
+
+if WScript.Arguments.Named.Exists("batch") then
+	bBatch = WScript.Arguments.Named.Item("batch")
+end if
+
+if WScript.Arguments.Named.Exists("remove-cvs-dirs") then
+	bRemoveDirs = true
+end if
+
+if WScript.Arguments.Named.Exists("fortran") then
+	bFortran = WScript.Arguments.Named.Item("fortran")
+end if
+
+if WScript.Arguments.Named.Exists("tag") then
+	cvsTag = WScript.Arguments.Named.Item("tag")
+end if
+
+if WScript.Arguments.Named.Exists("ch") then
+	Select Case WScript.Arguments.Named.Item("ch")
+		Case "sock"
+		Case "ssm"
+			channel = "ch3ssmDebug"
+		Case "essm"
+			channel = "ch3essmDebug"
+		Case "shm"
+			channel = "ch3shmDebug"
+		Case "sshm"
+			channel = "ch3sshmDebug"
+		Case "ib"
+			channel = "ch3ibDebug"
+	End Select
+end if
+
+if WScript.Arguments.Named.Exists("mpich2") then
+	bCheckoutMPICH2 = false
+	bMakeMPICH2 = false
+	bConfigureMPICH2 = false
+	bConfigureMPICH2Tests = false
+	pathMPICH2 = WScript.Arguments.Named.Item("mpich2")
+	mpiexec = pathMPICH2 & "\bin\mpiexec.exe"
+end if
+
+if WScript.Arguments.Named.Exists("mpich2i") then
+	bMakeMPICH2 = false
+	bConfigureMPICH2 = false
+	pathMPICH2Installed = WScript.Arguments.Named.Item("mpich2i")
+	mpiexec = pathMPICH2Installed & "\bin\mpiexec.exe"
+end if
+
+if WScript.Arguments.Named.Exists("test_installed") then
+	bMakeMPICH2 = false
+	bConfigureMPICH2 = false
+	On Error Resume Next
+	pathMPICH2Installed = WshShell.RegRead("HKLM\Software\MPICH2\Path")
+	if err <> 0 then
+		cEcho "MPICH2 not installed on this machine."
+		WScript.Quit
+	end if
+	if Right(pathMPICH2Installed, 1) = "\" then
+		pathMPICH2Installed = Left(pathMPICH2Installed, Len(pathMPICH2Installed) - 1)
+	end if
+	mpiexec = """" & pathMPICH2Installed & "\bin\mpiexec.exe"""
+	cEcho "Testing installed mpich2: " & pathMPICH2Installed
+end if
+
+if WScript.Arguments.Named.Exists("make") then
+	bMakeMPICH2 = WScript.Arguments.Named.Item("make")
+end if
+
+if WScript.Arguments.Named.Exists("configure") then
+	bConfigureMPICH2 = WScript.Arguments.Named.Item("configure")
+end if
+
+if WScript.Arguments.Named.Exists("mpich") then
+	bCheckoutMPICH = false
+	pathMPICH = WScript.Arguments.Named.Item("mpich")
+end if
+
+if WScript.Arguments.Named.Exists("intel") then
+	bCheckoutINTEL = false
+	pathINTEL = WScript.Arguments.Named.Item("intel")
+end if
+
+if WScript.Arguments.Named.Exists("cpp") then
+	bCheckoutCPP = false
+	pathCPP = WScript.Arguments.Named.Item("cpp")
+end if
+
+if WScript.Arguments.Named.Exists("ssh_user") then
+	username = WScript.Arguments.Named.Item("ssh_user")
+end if
+
+if WScript.Arguments.Named.Exists("ssh-user") then
+	username = WScript.Arguments.Named.Item("ssh-user")
+end if
+
+if WScript.Arguments.Named.Exists("ssh") then
+	ssh_cmd = WScript.Arguments.Named.Item("ssh")
+end if
+
+if WScript.Arguments.Named.Exists("cvs_host") then
+	cvs_host = WScript.Arguments.Named.Item("cvs_host")
+end if
+
+if WScript.Arguments.Named.Exists("cvs-host") then
+	cvs_host = WScript.Arguments.Named.Item("cvs-host")
+end if
+
+if WScript.Arguments.Named.Exists("win64") then
+	bWin64 = true
+	mpich2lib = mpich2lib & " bufferoverflowU.lib"
+	fmpich2lib = fmpich2lib & " bufferoverflowU.lib"
+end if
+
+if WScript.Arguments.Named.Exists("test") then
+	tests = Split(WScript.Arguments.Named.Item("test"), ",")
+	bTestMPICH = false
+	bTestCPP = false
+	bTestINTEL = false
+	bTestMPICH2 = false
+	for each test in tests
+		Select Case test
+			Case "c++"
+				bTestCPP = true
+			Case "mpich"
+				bTestMPICH = true
+			Case "intel"
+				bTestINTEL = true
+			Case "mpich2"
+				bTestMPICH2 = true
+			Case Else
+				cEcho "unknown test: " & test
+		End Select
+	next
+end if
+
+' test the command line parsing
+'tests = ""
+'if bTestMPICH then
+'	tests = tests & "mpich "
+'end if
+'if bTestCPP then
+'	tests = tests & "c++ "
+'end if
+'if bTestINTEL then
+'	tests = tests & "intel "
+'end if
+'if bTestMPICH2 then
+'	tests = tests & "mpich2 "
+'end if
+'if bBuildOnly then
+'	cEcho "buildonly"
+'end if
+'if bTestOnly then
+'	cEcho "testonly"
+'end if
+'cEcho tests
+'cEcho "cvsTag = " & cvsTag
+'WScript.Quit
+
+' utility functions
+last_commands_dir = ""
+Function RunCommand(cmd_line)
+	if bCommandsOnly then
+		if WshShell.CurrentDirectory <> last_commands_dir then
+			commands_file.WriteLine("cd " & WshShell.CurrentDirectory)
+		end if
+		last_commands_dir = WshShell.CurrentDirectory
+		commands_file.WriteLine(cmd_line & " 2>&1")
+		RunCommand = ""
+	else
+		Set oExec = WshShell.Exec("cmd /C " & cmd_line & " 2>&1")
+		cmd_output = oExec.StdOut.ReadAll()
+		'cmd_output = cmd_output & oExec.StdErr.ReadAll()
+		RunCommand = cmd_output
+	end if
+End Function
+
+Function RunEchoCommand(cmd_line)
+	cEcho cmd_line
+	cmd_line = "cmd /C " & cmd_line & " 2>&1"
+	Set oExec = WshShell.Exec(cmd_line)
+	while not oExec.Stdout.AtEndOfStream
+		cEcho oExec.Stdout.ReadLine()
+	wend
+End Function
+
+Function RunEchoCommandError(cmd_line)
+	cEcho cmd_line
+	cmd_line = "cmd /C " & cmd_line & " 2>&1"
+	Set oExec = WshShell.Exec(cmd_line)
+	while not oExec.Stdout.AtEndOfStream
+		cEcho oExec.Stdout.ReadLine()
+	wend
+	RunEchoCommand = oExec.ExitCode
+End Function
+
+Function RunEchoCommandToFile(cmd_line, file)
+	cEcho cmd_line
+	cmd_line = "cmd /C " & cmd_line & " 2>&1"
+	Set oExec = WshShell.Exec(cmd_line)
+	while not oExec.Stdout.AtEndOfStream
+		line = oExec.Stdout.ReadLine()
+		cEcho line
+		file.Write(line)
+	wend
+	RunEchoCommandToFile = oExec.ExitCode
+End Function
+
+Function ReplaceBetweenTags(str, tag1, find_str, tag2, replace_str)
+	Dim index, left_str, right_str, start_index, end_index
+	index = InStr(str, find_str)
+	If index = 0 Then
+		'MsgBox find_str & " not found in: " & str
+		ReplaceBetweenTags = str
+		Exit Function
+	End If
+	left_str = Left(str, index)
+	right_str = Right(str, Len(str) - index)
+	start_index = InStrRev(left_str, tag1)
+	If start_index = 0 Then
+		'MsgBox tag1 & " not found in: " & left_str
+		ReplaceBetweenTags = str
+		Exit Function
+	End If
+	end_index = InStr(right_str, tag2)
+	If end_index = 0 Then
+		'MsgBox tag2 & " not found in: " & right_str
+		ReplaceBetweenTags = str
+		Exit Function
+	End If
+	end_index = end_index + index
+	ReplaceBetweenTags = Left(str, start_index-1) & replace_str & Right(str, Len(str) - end_index - Len(tag2) + 1)
+End Function
+
+Function ReplaceBetweenTagsAll(str, tag1, find_str, tag2, replace_str)
+	str2 = ReplaceBetweenTags(str, tag1, find_str, tag2, replace_str)
+	while str <> str2
+		str = str2
+		str2 = ReplaceBetweenTags(str, tag1, find_str, tag2, replace_str)
+	wend
+	ReplaceBetweenTagsAll = str
+End Function
+
+Function ParseFailed(str)
+	set rx = new RegExp
+	' remove the passed fields
+	rx.Global = True
+	rx.Pattern = "<MPITEST>.*" & vbCrLf & "<NAME>.*</NAME>.*" & vbCrLf & "<STATUS>pass</STATUS>.*" & vbCrLf & "</MPITEST>.*" & vbCrLf
+	str = rx.Replace(str, "")
+	' remove failures due to missing executables
+	str = ReplaceBetweenTagsAll(str, "<MPITEST>", "no executable, test skipped", "</MPITEST>" & vbCrLf, "")
+	ParseFailed = str
+End Function
+
+Function CountInstances(filename, str)
+	set fin = f.OpenTextFile(filename)
+	set rx = new RegExp
+	rx.Global = True
+	rx.Pattern = str
+	count = 0
+	if not fin.AtEndOfStream then
+		Set Matches = rx.Execute(fin.ReadAll())
+		For Each Match in Matches
+			count = count + 1
+		Next
+	end if
+	CountInstances = count
+End Function
+
+Function CheckOut(package)
+	Select Case package
+		Case "mpich2"
+			if bRemoveDirs and f.FolderExists("mpich2") then
+				f.DeleteFolder "mpich2", true
+			end if
+			co = "mpich2allWithMPE"
+		Case "mpich"
+			if bRemoveDirs and f.FolderExists("mpi1") then
+				f.DeleteFolder "mpi1", true
+			end if
+			co = "-d mpi1 mpich/examples/test"
+		Case "c++"
+			if bRemoveDirs and f.FolderExists("mpicxxtest") then
+				f.DeleteFolder "mpicxxtest", true
+			end if
+			co = "mpicxxtest"
+		Case "intel"
+			if bRemoveDirs and f.FolderExists("IntelMPITEST") then
+				f.DeleteFolder "IntelMPITEST", true
+			end if
+			co = "IntelMPITEST"
+		Case Else
+			if bRemoveDirs and f.FolderExists(package) then
+				f.DeleteFolder package, true
+			end if
+			co = package
+	End Select
+	cmd = "cvs -q -d :ext:" & username & "@" & cvs_host & ":" & cvs_root_dir & " co " & co
+	'cEcho cmd
+	env("CVS_RSH") = ssh_cmd
+	RunEchoCommand cmd
+	if package = "mpich" then
+		cEcho "changing into directory " & WshShell.CurrentDirectory & "\mpi1"
+		WshShell.CurrentDirectory = "mpi1"
+		cmd = "cvs -q co -d io romio/test"
+		'cEcho cmd
+		RunEchoCommand cmd
+		cEcho "changing into directory " & rootdir
+		WshShell.CurrentDirectory = rootdir
+	end if
+End Function
+
+num_files = 0
+Function internalFindFiles(ByRef files, folder, filename)
+	For Each sub_folder in folder.SubFolders
+		internalFindFiles files, sub_folder, filename
+	Next
+	For Each file in folder.Files
+		If file.Name = filename Then
+			files.Add num_files, file.Path
+			num_files = num_files + 1
+		End If
+	Next
+End Function
+Function FindFiles(ByRef files, folder, filename)
+	files.RemoveAll()
+	num_files = 0
+	internalFindFiles files, folder, filename
+End Function
+
+Function BuildMPICHTestList(filename, testlistfile)
+	Set fin = f.OpenTextFile(filename)
+	while not fin.AtEndOfStream
+		line = fin.ReadLine()
+		line = Trim(line)
+		' Find and parse the RunTest lines
+		if InStr(1, line, "RunTest") then
+			words = Split(line, " ", -1, 1)
+			if UBound(words) > 2 then
+				testlistfile.WriteLine(words(1) & " " & words(2))
+			end if
+		end if
+		' The romio tests don't use RunTest lines so find and parse lines with "$mpirun -np" in them.
+		if InStr(1, line, "$mpirun -np") > 0 and InStr(1, line, "FILENAME") > 0 then
+			words = Split(line, " ", -1, 1)
+			if UBound(words) > 3 then
+				if InStr(1, words(3), "./") then
+					testlistfile.WriteLine(Right(words(3), len(words(3))-2) & " " & words(2))
+				else
+					testlistfile.WriteLine(words(3) & " " & words(2))
+				end if
+			end if
+		end if
+	wend
+	fin.Close()
+End Function
+
+Function BuildMPICHMakefile(filename, outputfile)
+	Set fin = f.OpenTextFile(filename)
+	while not fin.AtEndOfStream
+		line = fin.ReadLine()
+		line = Trim(line)
+		' FIXME: Add code to handle the io\Makefile.in format
+		if InStr(1, line, " -o ", 1) > 0 and InStr(1, line, ".o", 1) > 0 then
+			if InStr(1, line, "FLINKER") then
+				bFort = true
+				ext = ".f"
+			else
+				bFort = false
+				ext = ".c"
+			end if
+			first = InStr(1, line, " -o ")
+			last = InStr(first+4, line, " ")
+			test = Mid(line, first + 4, last - first - 4)
+			test = Replace(test, "./", "")
+			if test <> "$*" then
+				if bFort then
+					cmd = FC & " /nologo -o " & test & ".exe"
+				else
+					cmd = CC & CFLAGS & " -o " & test & ".exe"
+				end if
+				words = Split(line, " ", -1, 1)
+				for each word in words
+					if instr(1, word, ".o") then
+						cmd = cmd & " " & Replace(filename, "Makefile.in", Replace(word, ".o", ext))
+					end if
+				next
+				if bFort then
+					cmd = cmd & " " & fmpich2lib '& " " & mpich2lib
+				else
+					cmd = cmd & " " & mpich2lib
+				end if
+				cEcho cmd
+				if not bFortran and bFort then
+					result = "not building fortran"
+				else
+					if f.FileExists(test & ".exe") then
+						f.DeleteFile(test & ".exe")
+					end if
+					'result = RunCommand(cmd)
+				end if
+				'cEcho result
+				outputfile.WriteLine(cmd)
+				'outputfile.Write(result)
+				stdoutfile = Replace(filename, "Makefile.in", test & ".std")
+				if f.FileExists(stdoutfile) then
+					f.CopyFile stdoutfile, mpich_outputdir, true
+				end if
+			end if
+		end if
+	wend
+	fin.Close()
+End Function
+
+Function BuildCPPMakefile(filename)
+	Set fin = f.OpenTextFile(filename)
+	Set buildout = f.CreateTextFile("build.out", True)
+	Set testlistout = f.CreateTextFile("testlist", True)
+	while not fin.AtEndOfStream
+		line = fin.ReadLine()
+		line = Trim(line)
+		if InStr(1, line, " -o ", 1) > 0 then
+			first = InStr(1, line, " -o ")
+			last = InStr(first+4, line, " ")
+			test = Mid(line, first + 4, last - first - 4)
+			test = Replace(test, "./", "")
+			' check to make sure we've matched a valid source file
+			if f.FileExists(Replace(filename, "Makefile.in", test & ".cc ")) then
+				cmd = CPP & CPPFLAGS & " /DTEST_ROUTINE=" & test & " /DTEST_NAME=\""" & test & "\"" -o " & test & ".exe "
+				cmd = cmd & "/Tp" & Replace(filename, "Makefile.in", test & ".cc ")
+				if test <> "range" then ' the range test provides its own main and conflicts with the suplementary source files
+					cmd = cmd & "/Tp" & Replace(filename, "Makefile.in", "cxxtest.cc ")
+					cmd = cmd & "/Tp" & Replace(filename, "Makefile.in", "initialized1.cc ")
+					cmd = cmd & "/Tp" & Replace(filename, "Makefile.in", "messages.cc ")
+					cmd = cmd & "/Tp" & Replace(filename, "Makefile.in", "stack.cc ")
+					cmd = cmd & "/Tp" & Replace(filename, "Makefile.in", "signal.cc ")
+				end if
+				cmd = cmd & cppmpich2lib & " " & mpich2lib
+				cEcho cmd
+				if f.FileExists(test & ".exe") then
+					f.DeleteFile(test & ".exe")
+				end if
+				result = RunCommand(cmd)
+				cEcho result
+				buildout.WriteLine(cmd)
+				buildout.Write(result)
+				if test = "range" then
+					testlistout.WriteLine(test & " 8")
+				else
+					if test <> "initialized1" then ' initialized1 is an invalid test so skip it
+						testlistout.WriteLine(test & " 4")
+					end if
+				end if
+			end if
+		end if
+	wend
+	fin.Close()
+	buildout.Close()
+	testlistout.Close()
+End Function
+
+Function BuildINTELTest(testdir, np, buildout, testlistout)
+	bCTest = false
+	bFortranTest = false
+	cmd = ""
+	test = Mid(testdir, InStrRev(testdir, "\")+1)
+	if f.FileExists(testdir & "\node.c") then
+		bCTest = true
+		cmd = CC & CFLAGS & " -o " & test & ".exe "
+	end if
+	if f.FileExists(testdir & "\node.f") then
+		bFortranTest = true
+		test = test & "f" ' add an f to the fortran tests to prevent name collisions with the c tests
+		cmd = FC & " /nologo /fpp -o " & test & ".exe "
+	end if
+	if bCTest then
+		cmd = cmd & "-I" & intel_rootdir & "\include "
+		for each file in f.GetFolder(testdir).Files
+			if Instr(file.Name, ".c") > 0 then
+				cmd = cmd & testdir & "\" & file.Name & " "
+			end if
+		next
+		cmd = cmd & intel_rootdir & "\lib\libmpitest.c " & mpich2lib
+	end if
+	if bFortranTest then
+		cmd = cmd & "-I" & intel_rootdir & "\include "
+		for each file in f.GetFolder(testdir).Files
+			if Instr(file.Name, ".f") > 0 or Instr(file.Name, ".F") > 0 then
+				cmd = cmd & testdir & "\" & file.Name & " "
+			end if
+		next
+		cmd = cmd & intel_rootdir & "\lib\libmpitestf.f " & fmpich2lib '& " " & mpich2lib
+	end if
+'	cEcho cmd
+'	if f.FileExists("node.obj") then
+'		f.DeleteFile("node.obj")
+'	end if
+	' If you don't delete the old object file you can link previous code when a build fails
+	buildout.WriteLine("del node.obj")
+
+	do_command = false
+	if bCTest then
+		do_command = true
+	end if
+	if bFortranTest then
+		' If this is a fortran test, let the global variable determine whether we compile it or not.
+		do_command = bFortran
+	end if
+	
+	if do_command then
+		' redirect the output to a file to prevent output buffer deadlock
+		cmd = cmd '& " > cmdout.txt"
+		if f.FileExists(test & ".exe") then
+			f.DeleteFile(test & ".exe")
+		end if
+'		result = RunCommand(cmd)
+'		if f.FileExists("cmdout.txt") then
+'			set outfile = f.OpenTextFile("cmdout.txt")
+'			if not outfile.AtEndOfStream then
+'				result = outfile.ReadAll()
+'			else
+'				result = ""
+'			end if
+'			outfile.Close()
+'			f.DeleteFile("cmdout.txt")
+'		end if
+	else
+'		result = "skipping build"
+		cmd = "REM skipping build"
+	end if
+
+'	cEcho result
+	buildout.WriteLine(cmd)
+'	buildout.Write(result)
+	testlistout.WriteLine(test & " " & np)
+End Function
+
+Function BuildMPICH2TestList(filename, srcdir, buildout)
+	cEcho "building testlist: " & filename
+	buildout.WriteLine("building testlist: " & filename)
+	set fin = f.OpenTextFile(filename)
+	while not fin.AtEndOfStream
+		twostrings = split(Trim(fin.ReadLine()), " ", -1, 1)
+		if not IsNull(twostrings) then
+			count = 0
+			for each s in twostrings
+				count = count + 1
+			next
+			if count > 1 then
+				test = twostrings(0)
+				basefilename = Replace(filename, "testlist", test)
+				bCTest = false
+				bFortranTest = false
+				bCppTest = false
+				cmd = ""
+				If f.FileExists(basefilename & ".c") Then
+					bCTest = true
+					cmd = CC & CFLAGS & " -o " & test & ".exe "
+					cmd = cmd & "-I" & srcdir & "\include " & basefilename & ".c "
+					cmd = cmd & srcdir & "\util\mtest.c " & mpich2lib & " ws2_32.lib" ' the join test needs the socket library
+				ElseIf f.FileExists(basefilename & ".f") Then
+					bFortranTest = true
+					cmd = FC & " /nologo /fpp -o " & test & ".exe "
+					cmd = cmd & "-I" & srcdir & "\include " & basefilename & ".f "
+					cmd = cmd & srcdir & "\f77\util\mtestf.f " & fmpich2lib '& " " & mpich2lib
+				ElseIf f.FileExists(basefilename & ".cxx") Then
+					bCppTest = true
+					cmd = CPP & CPPFLAGS & " -o " & test & ".exe "
+					cmd = cmd & "-I" & srcdir & "\include " & basefilename & ".cxx "
+					cmd = cmd & srcdir & "\cxx\util\mtest.cxx " & cppmpich2lib & " " & mpich2lib
+				Else
+					cmd = "no source file " & basefilename & ".c .f or .cxx"
+				End If
+
+				cEcho cmd
+				do_command = false
+				if bCTest then
+					do_command = true
+				end if
+				if bFortranTest then
+					' If this is a fortran test, let the global variable determine whether we compile it or not.
+					do_command = bFortran
+				end if
+				if bCppTest then
+					do_command = true
+				end if
+	
+				if do_command then
+					' redirect the output to a file to prevent output buffer deadlock
+					cmd = cmd '& " > cmdout.txt"
+					if f.FileExists(test & ".exe") then
+						f.DeleteFile(test & ".exe")
+					end if
+'					result = RunCommand(cmd)
+'					if f.FileExists("cmdout.txt") then
+'						set outfile = f.OpenTextFile("cmdout.txt")
+'						if not outfile.AtEndOfStream then
+'							result = outfile.ReadAll()
+'						else
+'							result = ""
+'						end if
+'						outfile.Close()
+'						f.DeleteFile("cmdout.txt")
+'					end if
+				else
+					cmd = "REM skipping build"
+				end if
+
+'				cEcho result
+				buildout.WriteLine(cmd)
+'				buildout.Write(result)
+			end if
+		end if
+	wend
+End Function
+
+Function ReplaceAts( str )
+	Dim regEx, Match, Matches
+	Set regEx = New RegExp
+	regEx.Pattern = "@.*@"
+	regEx.IgnoreCase = True
+	regEx.Global = True
+	Set Matches = regEx.Execute(str)
+	For Each Match in Matches
+		Select Case Match
+			Case "@F77_AINT@"
+				str = Replace(str, "@F77_AINT@", "INTEGER")
+			Case "@OPT_FCMDLINE@"
+				str = Replace(str, "@OPT_FCMDLINE@", "")
+			Case "@OPT_FREAL2@"
+				str = Replace(str, "@OPT_FREAL2@", "C ")
+			Case "@OPT_FREAL4@"
+				str = Replace(str, "@OPT_FREAL4@", "")
+			Case "@OPT_FREAL8@"
+				str = Replace(str, "@OPT_FREAL8@", "")
+			Case "@OPT_FDOUBLE_COMPLEX@"
+				str = Replace(str, "@OPT_FDOUBLE_COMPLEX@", "")
+			Case "@OPT_FINT1@"
+				str = Replace(str, "@OPT_FINT1@", "")
+			Case "@OPT_FINT2@"
+				str = Replace(str, "@OPT_FINT2@", "")
+			Case "@OPT_FINT4@"
+				str = Replace(str, "@OPT_FINT4@", "")
+		End Select
+	Next
+	ReplaceAts = str
+End Function
+
+Function CountTests(outdir)
+	Set fin = f.OpenTextFile(outdir & "testlist")
+	num_tests = 0
+	while not fin.AtEndOfStream
+		line = fin.ReadLine()
+		line = Trim(line)
+		twostrings = split(line, " ", -1, 1)
+		if not IsNull(twostrings) then
+			count = 0
+			for each s in twostrings
+				count = count + 1
+			next
+			if count = 2 then
+			 if Left(twostrings(0), 1) <> "#" then
+			  if Len(twostrings(1)) > 0 then
+				num_tests = num_tests + 1
+			  end if
+			 end if
+			end if
+		end if
+	wend
+	fin.Close()
+	CountTests = num_tests
+End Function
+
+Function BuildMPICHTestSuite(srcdir, builddir)
+	mpich_outputdir = f.GetAbsolutePathName(builddir) & "\"
+	if Not f.FolderExists(builddir) then
+		f.CreateFolder(builddir)
+	end if
+
+	set makefilein_files = CreateObject("Scripting.Dictionary")
+	set test_files = CreateObject("Scripting.Dictionary")
+	FindFiles makefilein_files, f.GetFolder(srcdir), "Makefile.in"
+	FindFiles test_files, f.GetFolder(srcdir), "runtests.in"
+
+	' move into the build directory
+	cEcho "changing into directory " & builddir
+	WshShell.CurrentDirectory = builddir
+
+	set buildout = f.CreateTextFile("build.bat", True)
+	a = makefilein_files.Items
+	If makefilein_files.Count > 0 Then
+		For i = 0 to makefilein_files.Count - 1
+			BuildMPICHMakefile a(i), buildout
+		Next
+	End If
+	buildout.Close()
+	RunCommand("build.bat 2>&1 | tee build.out")
+	' for some reason the mpich test suite copies longuser.exe to use in then -np 4 case
+	' rather than just making two entries in the runtests.in file
+	if f.FileExists(mpich_outputdir & "longuser.exe") then
+		f.CopyFile mpich_outputdir & "longuser.exe", mpich_outputdir & "longuser1.exe"
+	end if
+
+	set testlistout = f.CreateTextFile("testlist", True)
+	a = test_files.Items
+	if test_files.Count > 0 Then
+		for i = 0 to test_files.Count - 1
+			BuildMPICHTestList a(i), testlistout
+		next
+	end if
+	testlistout.Close()
+
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+Function RunMPICHTestSuite(outdir)
+	cEcho "changing into directory " & outdir
+	WshShell.CurrentDirectory = outdir
+	cur_test = 1
+	num_tests = CountTests(outdir)
+	set fcmds = f.CreateTextFile(outdir & "mpich_cmds.bat")
+	set fout = f.CreateTextFile(outdir & "summary.xml")
+	Set fin = f.OpenTextFile(outdir & "testlist")
+	if not f.FileExists("er.xsl") then
+		set erfile = f.CreateTextFile(outdir & "er.xsl")
+		erfile.Write(erfilecontents)
+		erfile.Close()
+	end if
+	fout.WriteLine("<?xml version='1.0' ?>")
+	fout.WriteLine("<?xml-stylesheet href=""er.xsl"" type=""text/xsl"" ?>")
+	fout.WriteLine("<MPITESTRESULTS>")
+	fout.WriteLine("<DATE>" & Date)
+	fout.WriteLine("</DATE>")
+	fout.WriteLine("<MPISOURCE></MPISOURCE>")
+	while not fin.AtEndOfStream
+		line = fin.ReadLine()
+		line = Trim(line)
+		twostrings = split(line, " ", -1, 1)
+		if not IsNull(twostrings) then
+			count = 0
+			for each s in twostrings
+				count = count + 1
+			next
+			if count = 2 then
+			 if Left(twostrings(0), 1) <> "#" then
+			  if Len(twostrings(1)) > 0 then
+				exe = outdir & twostrings(0) & ".exe"
+				cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+				cEcho "test " & cur_test & " of " & num_tests
+				cur_test = cur_test + 1
+			 	cEcho cmd
+				fout.WriteLine("<MPITEST>")
+				fout.WriteLine("<NAME>" & twostrings(0) & "</NAME>")
+				if f.FileExists(exe) then
+				    fcmds.WriteLine(cmd & " > " & twostrings(0) & "." & twostrings(1) & ".output")
+				    if bCommandsOnly then
+				        result = "not executing test"
+				        if WshShell.CurrentDirectory <> last_commands_dir then
+							commands_file.WriteLine("cd " & WshShell.CurrentDirectory)
+						end if
+						last_commands_dir = WshShell.CurrentDirectory
+				        commands_file.WriteLine(cmd & " 2>&1")
+				    else
+					    result = RunCommand(cmd)
+					end if
+				else
+					result = "no executable, test skipped"
+					num_skipped = num_skipped + 1
+				end if
+				cEcho result
+				if (Instr(result, " No Errors") or Instr(result, "No errors")) And len(result) < 14 Then
+					fout.WriteLine("<STATUS>pass</STATUS>")
+					num_passed = num_passed + 1
+				else
+					std = ""
+					altstd = ""
+					fstd = ""
+					stdfilename = outdir & twostrings(0) & ".std"
+					if f.FileExists(stdfilename) then
+						set stdfile = f.OpenTextFile(stdfilename, 1, false)
+						' std contains the file minus the first and last lines
+						' altstd contains the entire file
+						' fstd contains the same as std with one space added to the beginning of each line
+						std = stdfile.ReadLine()
+						altstd = std & vbCrLf
+						std = stdfile.ReadLine() & vbCrLf
+						altstd = altstd & std
+						fstd = " " & std
+						while not stdfile.AtEndOfStream
+							line = stdfile.ReadLine()
+							if not stdfile.AtEndOfStream then
+								std = std & line & vbCrLf
+								altstd = altstd & line & vbCrLf
+								fstd = fstd & " " & line & vbCrLf
+							else
+								altstd = altstd & line & vbCrLf
+							end if
+						wend
+						stdfile.Close()
+					end if
+					if (std <> "") and (result = std or result = altstd or result = fstd) then
+						fout.WriteLine("<STATUS>pass</STATUS>")
+						num_passed = num_passed + 1
+					else
+						if std <> "" then
+							cEcho "************* std ***************"
+			 				cEcho std
+			 				cEcho "************* != ****************"
+			 				cEcho result
+			 				cEcho "*********************************"
+						end if
+						fout.WriteLine("<STATUS>fail</STATUS>")
+						fout.WriteLine("<TESTDIFF>")
+						cmd = Replace(cmd, "&", "&amp;")
+						cmd = Replace(cmd, "<", "&lt;")
+						cmd = Replace(cmd, ">", "&gt;")
+						fout.WriteLine(cmd)
+						if std <> "" then
+							fout.WriteLine("************* std ***************")
+							std = Replace(std, "&", "&amp;")
+							std = Replace(std, "<", "&lt;")
+							std = Replace(std, ">", "&gt;")
+							fout.WriteLine(std)
+							fout.WriteLine("************* != ****************")
+						end if
+						result = Replace( result, "&", "&amp;" )
+						result = Replace( result, "<", "&lt;" )
+						result = Replace( result, ">", "&gt;" )
+						fout.WriteLine(result)
+						if std <> "" then
+							fout.WriteLine("*********************************")
+						end if
+						fout.WriteLine("</TESTDIFF>")
+						if f.FileExists(exe) then
+							num_failed = num_failed + 1
+						end if
+					end if
+				end if
+				fout.WriteLine("</MPITEST>")
+			  end if
+			 end if
+			end if
+		end if
+	wend
+	fin.Close()
+	fout.WriteLine("</MPITESTRESULTS>")
+	fout.Close()
+	fcmds.Close()
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+Function RunMPICHTestSuiteBatch(outdir)
+	cEcho "changing into directory " & outdir
+	WshShell.CurrentDirectory = outdir
+	cur_test = 1
+	num_tests = CountTests(outdir)
+
+	if not bSummarize then
+		' first pass generates the batch file
+		set fcmds = f.CreateTextFile(outdir & "mpich_cmds.bat")
+		Set fin = f.OpenTextFile(outdir & "testlist")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Trim(line)
+			twostrings = split(line, " ", -1, 1)
+			if not IsNull(twostrings) then
+				count = 0
+				for each s in twostrings
+					count = count + 1
+				next
+				if count = 2 then
+				 if Left(twostrings(0), 1) <> "#" then
+				  if Len(twostrings(1)) > 0 then
+					exe = outdir & twostrings(0) & ".exe"
+					cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+					fcmds.WriteLine("REM test " & cur_test & " of " & num_tests)
+					cur_test = cur_test + 1
+					if f.FileExists(exe) then
+					    fcmds.WriteLine(cmd & " 2>&1 | tee " & twostrings(0) & "." & twostrings(1) & ".output")
+					else
+						fcmds.WriteLine("REM no executable, test skipped")
+					end if
+				  end if
+				 end if
+				end if
+			end if
+		wend
+		fin.Close()
+		fcmds.Close()
+
+		' run the tests
+		if Not bCommandsOnly then
+			if not bBatchFilesOnly Then
+				RunEchoCommand(outdir & "mpich_cmds.bat")
+			end if
+		end if
+	end if
+
+	if not bBatchFilesOnly then
+		' second pass parses the output
+		set fout = f.CreateTextFile(outdir & "summary.xml")
+		if not f.FileExists("er.xsl") then
+			set erfile = f.CreateTextFile(outdir & "er.xsl")
+			erfile.Write(erfilecontents)
+			erfile.Close()
+		end if
+		fout.WriteLine("<?xml version='1.0' ?>")
+		fout.WriteLine("<?xml-stylesheet href=""er.xsl"" type=""text/xsl"" ?>")
+		fout.WriteLine("<MPITESTRESULTS>")
+		fout.WriteLine("<DATE>" & Date)
+		fout.WriteLine("</DATE>")
+		fout.WriteLine("<MPISOURCE></MPISOURCE>")
+		Set fin = f.OpenTextFile(outdir & "testlist")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Trim(line)
+			twostrings = split(line, " ", -1, 1)
+			if not IsNull(twostrings) then
+				count = 0
+				for each s in twostrings
+					count = count + 1
+				next
+				if count = 2 then
+				 if Left(twostrings(0), 1) <> "#" then
+				  if Len(twostrings(1)) > 0 then
+					exe = outdir & twostrings(0) & ".exe"
+					cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+					fout.WriteLine("<MPITEST>")
+					fout.WriteLine("<NAME>" & twostrings(0) & "</NAME>")
+					if f.FileExists(exe) then
+					    if bCommandsOnly then
+					        result = "not executing test"
+					        if WshShell.CurrentDirectory <> last_commands_dir then
+								commands_file.WriteLine("cd " & WshShell.CurrentDirectory)
+							end if
+							last_commands_dir = WshShell.CurrentDirectory
+					        commands_file.WriteLine(cmd & " 2>&1 | tee " & twostrings(0) & "." & twostrings(1) & ".output")
+					    else
+							if f.FileExists(twostrings(0) & "." & twostrings(1) & ".output") then
+								Set foutput = f.OpenTextFile(twostrings(0) & "." & twostrings(1) & ".output")
+								if not foutput.AtEndOfStream then
+									result = foutput.ReadAll()
+								else
+									result = ""
+								end if
+								foutput.Close()
+							else
+								result = ""
+							end if
+						end if
+					else
+						result = "no executable, test skipped"
+						num_skipped = num_skipped + 1
+					end if
+					if (Instr(result, " No Errors") or Instr(result, "No errors")) And len(result) < 14 Then
+						fout.WriteLine("<STATUS>pass</STATUS>")
+						num_passed = num_passed + 1
+					else
+						std = ""
+						altstd = ""
+						fstd = ""
+						stdfilename = outdir & twostrings(0) & ".std"
+						if f.FileExists(stdfilename) then
+							set stdfile = f.OpenTextFile(stdfilename, 1, false)
+							' std contains the file minus the first and last lines
+							' altstd contains the entire file
+							' fstd contains the same as std with one space added to the beginning of each line
+							std = stdfile.ReadLine()
+							altstd = std & vbCrLf
+							std = stdfile.ReadLine() & vbCrLf
+							altstd = altstd & std
+							fstd = " " & std
+							while not stdfile.AtEndOfStream
+								line = stdfile.ReadLine()
+								if not stdfile.AtEndOfStream then
+									std = std & line & vbCrLf
+									altstd = altstd & line & vbCrLf
+									fstd = fstd & " " & line & vbCrLf
+								else
+									altstd = altstd & line & vbCrLf
+								end if
+							wend
+							stdfile.Close()
+						end if
+						if (std <> "") and (result = std or result = altstd or result = fstd) then
+							fout.WriteLine("<STATUS>pass</STATUS>")
+							num_passed = num_passed + 1
+						else
+							if std <> "" then
+								cEcho "************* std ***************"
+				 				cEcho std
+				 				cEcho "************* != ****************"
+				 				cEcho result
+				 				cEcho "*********************************"
+							end if
+							fout.WriteLine("<STATUS>fail</STATUS>")
+							fout.WriteLine("<TESTDIFF>")
+							cmd = Replace(cmd, "&", "&amp;")
+							cmd = Replace(cmd, "<", "&lt;")
+							cmd = Replace(cmd, ">", "&gt;")
+							fout.WriteLine(cmd)
+							if std <> "" then
+								fout.WriteLine("************* std ***************")
+								std = Replace(std, "&", "&amp;")
+								std = Replace(std, "<", "&lt;")
+								std = Replace(std, ">", "&gt;")
+								fout.WriteLine(std)
+								fout.WriteLine("************* != ****************")
+							end if
+							result = Replace( result, "&", "&amp;" )
+							result = Replace( result, "<", "&lt;" )
+							result = Replace( result, ">", "&gt;" )
+							fout.WriteLine(result)
+							if std <> "" then
+								fout.WriteLine("*********************************")
+							end if
+							fout.WriteLine("</TESTDIFF>")
+							if f.FileExists(exe) then
+								num_failed = num_failed + 1
+							end if
+						end if
+					end if
+					fout.WriteLine("</MPITEST>")
+				  end if
+				 end if
+				end if
+			end if
+		wend
+		fin.Close()
+		fout.WriteLine("</MPITESTRESULTS>")
+		fout.Close()
+	end if
+
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+Function BuildCPPTestSuite(srcdir, builddir)
+	if not f.FileExists(srcdir & "\cxxtestconf.h") then
+		set fout = f.CreateTextFile(srcdir & "\cxxtestconf.h")
+		fout.WriteLine("#ifndef CXXTESTCONF_H")
+		fout.WriteLine("#define CXXTESTCONF_H")
+		fout.WriteLine("#define HAVE_EXCEPTIONS")
+		fout.WriteLine("#define HAVE_IOSTREAM")
+		fout.WriteLine("#define USE_XMLOUT")
+		fout.WriteLine("#endif")
+		fout.Close()
+	end if
+	if f.FileExists(srcdir & "\Makefile.in") then
+		filename = f.GetAbsolutePathName(srcdir & "\Makefile.in")
+		if Not f.FolderExists(builddir) then
+			f.CreateFolder(builddir)
+		end if
+		cEcho "changing into directory " & builddir
+		WshShell.CurrentDirectory = builddir
+		BuildCPPMakefile filename
+		' move back to the root directory
+		cEcho "changing into directory " & rootdir
+		WshShell.CurrentDirectory = rootdir
+	end if
+End Function
+
+Function RunCPPTestSuite(outdir)
+	cEcho "changing into directory " & outdir
+	WshShell.CurrentDirectory = outdir ' the c++ suite must be run from the output directory because the tests assume summary.xml is in the current directory
+	cur_test = 1
+	num_tests = CountTests(outdir)
+	set fcmds = f.CreateTextFile(outdir & "cpp_cmds.bat")
+	set fout = f.CreateTextFile(outdir & "summary.xml")
+	Set fin = f.OpenTextFile(outdir & "testlist")
+	if not f.FileExists("er.xsl") then
+		set erfile = f.CreateTextFile(outdir & "er.xsl")
+		erfile.Write(erfilecontents)
+		erfile.Close()
+	end if
+	fout.WriteLine("<?xml version='1.0' ?>")
+	fout.WriteLine("<?xml-stylesheet href=""er.xsl"" type=""text/xsl"" ?>")
+	fout.WriteLine("<MPITESTRESULTS>")
+	fout.WriteLine("<DATE>" & Date)
+	fout.WriteLine("</DATE>")
+	fout.WriteLine("<MPISOURCE></MPISOURCE>")
+	fout.Close()
+	while not fin.AtEndOfStream
+		line = fin.ReadLine()
+		line = Trim(line)
+		twostrings = split(line, " ", -1, 1)
+		if not IsNull(twostrings) then
+			count = 0
+			for each s in twostrings
+				count = count + 1
+			next
+			if count = 2 then
+			 if Left(twostrings(0), 1) <> "#" then
+			  if Len(twostrings(1)) > 0 then
+				exe = outdir & twostrings(0) & ".exe"
+				cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+				cEcho "test " & cur_test & " of " & num_tests
+				cur_test = cur_test + 1
+			 	cEcho cmd
+				if f.FileExists(exe) then
+				    fcmds.WriteLine(cmd & " > " & twostrings(0) & "." & twostrings(1) & ".output")
+				    if bCommandsOnly then
+				        result = "not executing test"
+				        if WshShell.CurrentDirectory <> last_commands_dir then
+							commands_file.WriteLine("cd " & WshShell.CurrentDirectory)
+						end if
+						last_commands_dir = WshShell.CurrentDirectory
+				        commands_file.WriteLine(cmd & " 2>&1")
+				    else
+					    result = RunCommand(cmd)
+					end if
+				else
+					result = "no executable, test skipped"
+					num_skipped = num_skipped + 1
+				end if
+				cEcho result
+			  end if
+			 end if
+			end if
+		end if
+	wend
+	fin.Close()
+	set fout = f.OpenTextFile(outdir & "summary.xml", 8, True)
+	fout.WriteLine("</MPITESTRESULTS>")
+	fout.Close()
+	fcmds.Close()
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+Function RunCPPTestSuiteBatch(outdir)
+	cEcho "changing into directory " & outdir
+	WshShell.CurrentDirectory = outdir ' the c++ suite must be run from the output directory because the tests assume summary.xml is in the current directory
+	cur_test = 1
+	num_tests = CountTests(outdir)
+
+	if not bSummarize then
+		' first pass creates the batch file
+		set fcmds = f.CreateTextFile(outdir & "cpp_cmds.bat")
+		Set fin = f.OpenTextFile(outdir & "testlist")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Trim(line)
+			twostrings = split(line, " ", -1, 1)
+			if not IsNull(twostrings) then
+				count = 0
+				for each s in twostrings
+					count = count + 1
+				next
+				if count = 2 then
+				 if Left(twostrings(0), 1) <> "#" then
+				  if Len(twostrings(1)) > 0 then
+					exe = outdir & twostrings(0) & ".exe"
+					cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+					fcmds.WriteLine("REM test " & cur_test & " of " & num_tests)
+					cur_test = cur_test + 1
+				 	'cEcho cmd
+					if f.FileExists(exe) then
+					    fcmds.WriteLine(cmd & " 2>&1 | tee " & twostrings(0) & "." & twostrings(1) & ".output")
+					    if bCommandsOnly then
+					        if WshShell.CurrentDirectory <> last_commands_dir then
+								commands_file.WriteLine("cd " & WshShell.CurrentDirectory)
+							end if
+							last_commands_dir = WshShell.CurrentDirectory
+					        commands_file.WriteLine(cmd & " 2>&1 | tee " & twostrings(0) & "." & twostrings(1) & ".output")
+						end if
+					else
+						fcmds.WriteLine("REM no executable, test skipped")
+						num_skipped = num_skipped + 1
+					end if
+				  end if
+				 end if
+				end if
+			end if
+		wend
+		fin.Close()
+		fcmds.Close()
+
+		' run the tests
+		if not bCommandsOnly then
+			if not bBatchFilesOnly then
+				if f.FileExists(outdir & "summary.xml") then
+					f.DeleteFile(outdir & "summary.xml")
+				end if
+				RunEchoCommand(outdir & "cpp_cmds.bat")
+			end if
+		end if
+	end if
+
+	if not bBatchFilesOnly then
+		' create summary2.xml from summary.xml with the correct header and footer
+		set fout = f.CreateTextFile(outdir & "summary2.xml")
+		if not f.FileExists("er.xsl") then
+			set erfile = f.CreateTextFile(outdir & "er.xsl")
+			erfile.Write(erfilecontents)
+			erfile.Close()
+		end if
+		fout.WriteLine("<?xml version='1.0' ?>")
+		fout.WriteLine("<?xml-stylesheet href=""er.xsl"" type=""text/xsl"" ?>")
+		fout.WriteLine("<MPITESTRESULTS>")
+		fout.WriteLine("<DATE>" & Date)
+		fout.WriteLine("</DATE>")
+		fout.WriteLine("<MPISOURCE></MPISOURCE>")
+		If f.FileExists(outdir & "summary.xml") Then
+			set fin = f.OpenTextFile(outdir & "summary.xml") ' summary.xml is created by the tests themselves
+			if not fin.AtEndOfStream then
+				fout.Write(fin.ReadAll())
+			end if
+		End If
+		fout.WriteLine("</MPITESTRESULTS>")
+		fout.Close()
+	end if
+
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+Function BuildINTELTestSuite(srcdir, builddir)
+	intel_rootdir = f.GetAbsolutePathName(srcdir)
+	if Not f.FolderExists(builddir) then
+		f.CreateFolder(builddir)
+	end if
+	cEcho "changing into directory " & builddir
+	WshShell.CurrentDirectory = builddir
+	set buildout = f.CreateTextFile("build.bat", True)
+	set testlistout = f.CreateTextFile("testlist", True)
+	' create foptions.h
+	if (not f.FileExists(intel_rootdir & "\include\foptions.h")) and f.FileExists(intel_rootdir & "\include\foptions.h.in") then
+		set fin = f.OpenTextFile(intel_rootdir & "\include\foptions.h.in")
+		set fout = f.CreateTextFile(intel_rootdir & "\include\foptions.h")
+		contents = fin.ReadAll()
+		contents = ReplaceAts(contents)
+		fout.Write(contents)
+		fin.Close()
+		fout.Close()
+	end if
+
+	' build the tests in each of the various testlists
+	if f.FileExists(intel_rootdir & "\Test\testlist2l") then
+		set fin = f.OpenTextFile(intel_rootdir & "\Test\testlist2l")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Replace(line, "/", "\")', 1, -1, 1)
+			BuildINTELTest intel_rootdir & "\Test\" & line, "2", buildout, testlistout
+		wend
+		fin.Close()
+	end if
+	if f.FileExists(intel_rootdir & "\Test\testlist2-2l") then
+		set fin = f.OpenTextFile(intel_rootdir & "\Test\testlist2-2l")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Replace(line, "/", "\")', 1, -1, 1)
+			BuildINTELTest intel_rootdir & "\Test\" & line, "2", buildout, testlistout
+		wend
+		fin.Close()
+	end if
+	if f.FileExists(intel_rootdir & "\Test\testlist4") then
+		set fin = f.OpenTextFile(intel_rootdir & "\Test\testlist4")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Replace(line, "/", "\")', 1, -1, 1)
+			BuildINTELTest intel_rootdir & "\Test\" & line, "4", buildout, testlistout
+		wend
+		fin.Close()
+	end if
+	if f.FileExists(intel_rootdir & "\Test\testlist4lg") then
+		set fin = f.OpenTextFile(intel_rootdir & "\Test\testlist4lg")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Replace(line, "/", "\")', 1, -1, 1)
+			BuildINTELTest intel_rootdir & "\Test\" & line, "4", buildout, testlistout
+		wend
+		fin.Close()
+	end if
+	if f.FileExists(intel_rootdir & "\Test\testlist6") then
+		set fin = f.OpenTextFile(intel_rootdir & "\Test\testlist6")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Replace(line, "/", "\")', 1, -1, 1)
+			BuildINTELTest intel_rootdir & "\Test\" & line, "6", buildout, testlistout
+		wend
+		fin.Close()
+	end if
+	buildout.Close()
+	testlistout.Close()
+	RunEchoCommand("build.bat 2>&1 | tee build.out")
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+Function RunINTELTestSuite(outdir)
+	cEcho "changing into directory " & outdir
+	WshShell.CurrentDirectory = outdir
+	cur_test = 1
+	num_tests = CountTests(outdir)
+	set fcmds = f.CreateTextFile(outdir & "intel_cmds.bat")
+	set fout = f.CreateTextFile(outdir & "summary.xml")
+	Set fin = f.OpenTextFile(outdir & "testlist")
+	if not f.FileExists("er.xsl") then
+		set erfile = f.CreateTextFile(outdir & "er.xsl")
+		erfile.Write(erfilecontents)
+		erfile.Close()
+	end if
+	fout.WriteLine("<?xml version='1.0' ?>")
+	fout.WriteLine("<?xml-stylesheet href=""er.xsl"" type=""text/xsl"" ?>")
+	fout.WriteLine("<MPITESTRESULTS>")
+	fout.WriteLine("<DATE>" & Date)
+	fout.WriteLine("</DATE>")
+	fout.WriteLine("<MPISOURCE></MPISOURCE>")
+	while not fin.AtEndOfStream
+		line = fin.ReadLine()
+		line = Trim(line)
+		twostrings = split(line, " ", -1, 1)
+		if not IsNull(twostrings) then
+			count = 0
+			for each s in twostrings
+				count = count + 1
+			next
+			if count = 2 then
+			 if Left(twostrings(0), 1) <> "#" then
+			  if Len(twostrings(1)) > 0 then
+				exe = outdir & twostrings(0) & ".exe"
+				cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+				cEcho "test " & cur_test & " of " & num_tests
+				cur_test = cur_test + 1
+			 	cEcho cmd
+				fout.WriteLine("<MPITEST>")
+				fout.WriteLine("<NAME>" & twostrings(0) & "</NAME>")
+				if f.FileExists(exe) then
+				    fcmds.WriteLine(cmd & " > " & twostrings(0) & "." & twostrings(1) & ".output")
+				    if bCommandsOnly then
+				        result = "not executing test"
+				        if WshShell.CurrentDirectory <> last_commands_dir then
+							commands_file.WriteLine("cd " & WshShell.CurrentDirectory)
+						end if
+						last_commands_dir = WshShell.CurrentDirectory
+				        commands_file.WriteLine(cmd & " 2>&1")
+				    else
+					    result = RunCommand(cmd)
+					end if
+				else
+					result = "no executable, test skipped"
+					num_skipped = num_skipped + 1
+				end if
+				cEcho result
+				if (Instr(result, "No errors") And len(result) < 14) or (Instr(result, "PASSED") > 0) Then
+					fout.WriteLine("<STATUS>pass</STATUS>")
+					num_passed = num_passed + 1
+				else
+					fout.WriteLine("<STATUS>fail</STATUS>")
+					fout.WriteLine("<TESTDIFF>")
+					result = cmd & vbCrLf & result
+					result = Replace( result, "&", "&amp;" )
+					result = Replace( result, "<", "&lt;" )
+					result = Replace( result, ">", "&gt;" )
+					fout.WriteLine(result)
+					fout.WriteLine("</TESTDIFF>")
+					if f.FileExists(exe) then
+						num_failed = num_failed + 1
+					end if
+				end if
+				fout.WriteLine("</MPITEST>")
+			  end if
+			 end if
+			end if
+		end if
+	wend
+	fin.Close()
+	fout.WriteLine("</MPITESTRESULTS>")
+	fout.Close()
+	fcmds.Close()
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+Function RunINTELTestSuiteBatch(outdir)
+	cEcho "changing into directory " & outdir
+	WshShell.CurrentDirectory = outdir
+	cur_test = 1
+	num_tests = CountTests(outdir)
+
+	if not bSummarize then
+		' first pass generates the commands
+		set fcmds = f.CreateTextFile(outdir & "intel_cmds.bat")
+		Set fin = f.OpenTextFile(outdir & "testlist")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Trim(line)
+			twostrings = split(line, " ", -1, 1)
+			if not IsNull(twostrings) then
+				count = 0
+				for each s in twostrings
+					count = count + 1
+				next
+				if count = 2 then
+				 if Left(twostrings(0), 1) <> "#" then
+				  if Len(twostrings(1)) > 0 then
+					exe = outdir & twostrings(0) & ".exe"
+					cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+					fcmds.WriteLine("REM test " & cur_test & " of " & num_tests)
+					cur_test = cur_test + 1
+					if f.FileExists(exe) then
+					    fcmds.WriteLine(cmd & " 2>&1 | tee " & twostrings(0) & "." & twostrings(1) & ".output")
+					    if bCommandsOnly then
+					        result = "not executing test"
+					        if WshShell.CurrentDirectory <> last_commands_dir then
+								commands_file.WriteLine("cd " & WshShell.CurrentDirectory)
+							end if
+							last_commands_dir = WshShell.CurrentDirectory
+					        commands_file.WriteLine(cmd & " 2>&1 | tee " & twostrings(0) & "." & twostrings(1) & ".output")
+						end if
+					else
+						fcmds.WriteLine("REM no executable, test skipped")
+					end if
+				  end if
+				 end if
+				end if
+			end if
+		wend
+		fin.Close()
+		fcmds.Close()
+
+		' run the tests
+		if not bCommandsOnly then
+			if not bBatchFilesOnly then
+				RunEchoCommand(outdir & "intel_cmds.bat")
+			end if
+		end if
+	end if
+
+	if not bBatchFilesOnly then
+		' second pass parses the output
+		set fout = f.CreateTextFile(outdir & "summary.xml")
+		if not f.FileExists("er.xsl") then
+			set erfile = f.CreateTextFile(outdir & "er.xsl")
+			erfile.Write(erfilecontents)
+			erfile.Close()
+		end if
+		fout.WriteLine("<?xml version='1.0' ?>")
+		fout.WriteLine("<?xml-stylesheet href=""er.xsl"" type=""text/xsl"" ?>")
+		fout.WriteLine("<MPITESTRESULTS>")
+		fout.WriteLine("<DATE>" & Date)
+		fout.WriteLine("</DATE>")
+		fout.WriteLine("<MPISOURCE></MPISOURCE>")
+		Set fin = f.OpenTextFile(outdir & "testlist")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Trim(line)
+			twostrings = split(line, " ", -1, 1)
+			if not IsNull(twostrings) then
+				count = 0
+				for each s in twostrings
+					count = count + 1
+				next
+				if count = 2 then
+				 if Left(twostrings(0), 1) <> "#" then
+				  if Len(twostrings(1)) > 0 then
+					exe = outdir & twostrings(0) & ".exe"
+					cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+					fout.WriteLine("<MPITEST>")
+					fout.WriteLine("<NAME>" & twostrings(0) & "</NAME>")
+					if f.FileExists(exe) then
+					    if bCommandsOnly then
+					        result = "not executing test"
+					    else
+							if f.FileExists(twostrings(0) & "." & twostrings(1) & ".output") then
+								Set foutput = f.OpenTextFile(twostrings(0) & "." & twostrings(1) & ".output")
+								if not foutput.AtEndOfStream then
+									result = foutput.ReadAll()
+								else
+									result = ""
+								end if
+								foutput.Close()
+							else
+								result = ""
+							end if
+						end if
+					else
+						result = "no executable, test skipped"
+						num_skipped = num_skipped + 1
+					end if
+					if (Instr(result, "No errors") And len(result) < 14) or (Instr(result, "PASSED") > 0) Then
+						fout.WriteLine("<STATUS>pass</STATUS>")
+						num_passed = num_passed + 1
+					else
+						fout.WriteLine("<STATUS>fail</STATUS>")
+						fout.WriteLine("<TESTDIFF>")
+						result = cmd & vbCrLf & result
+						result = Replace( result, "&", "&amp;" )
+						result = Replace( result, "<", "&lt;" )
+						result = Replace( result, ">", "&gt;" )
+						fout.WriteLine(result)
+						fout.WriteLine("</TESTDIFF>")
+						if f.FileExists(exe) then
+							num_failed = num_failed + 1
+						end if
+					end if
+					fout.WriteLine("</MPITEST>")
+				  end if
+				 end if
+				end if
+			end if
+		wend
+		fin.Close()
+		fout.WriteLine("</MPITESTRESULTS>")
+		fout.Close()
+	end if
+
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+'Function BuildMPICH2TestSuite(srcdir, builddir)
+'	cEcho "changing into directory " & srcdir
+'	WshShell.CurrentDirectory = srcdir
+'	RunEchoCommand "cscript createprojects.wsf"
+'	RunEchoCommand "devenv.com test.sln /build Debug"
+'	' move back to the root directory
+'	cEcho "changing into directory " & rootdir
+'	WshShell.CurrentDirectory = rootdir
+'End Function
+
+'Function RunMPICH2TestSuite(outdir)
+'	cEcho "changing into directory " & outdir
+'	WshShell.CurrentDirectory = outdir
+'	RunEchoCommand "cscript runtests.wsf /config:Debug"
+'	' move back to the root directory
+'	cEcho "changing into directory " & rootdir
+'	WshShell.CurrentDirectory = rootdir
+'End Function
+
+Function BuildMPICH2TestSuite(srcdir, builddir)
+	if Not f.FolderExists(builddir) then
+		f.CreateFolder(builddir)
+	end if
+
+	set testlists = CreateObject("Scripting.Dictionary")
+	FindFiles testlists, f.GetFolder(srcdir), "testlist"
+
+	' move into the build directory
+	cEcho "changing into directory " & builddir
+	WshShell.CurrentDirectory = builddir
+
+	set buildout = f.CreateTextFile("build.bat", True)
+	set testlistout = f.CreateTextFile("testlist", True)
+	a = testlists.Items
+	If testlists.Count > 0 Then
+		For i = 0 to testlists.Count - 1
+			BuildMPICH2TestList a(i), srcdir, buildout
+			' copy the testlist in to the master testlist
+			set fin = f.OpenTextFile(a(i))
+			contents = fin.ReadAll()
+			fin.Close()
+			testlistout.Write(contents)
+		Next
+	End If
+	buildout.Close()
+	testlistout.Close()
+	RunEchoCommand("build.bat 2>&1 | tee build.out")
+
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+Function RunMPICH2TestSuite(outdir)
+	cEcho "changing into directory " & outdir
+	WshShell.CurrentDirectory = outdir
+	cur_test = 1
+	num_tests = CountTests(outdir)
+	set fcmds = f.CreateTextFile(outdir & "mpich2_cmds.bat")
+	set fout = f.CreateTextFile(outdir & "summary.xml")
+	Set fin = f.OpenTextFile(outdir & "testlist")
+	if not f.FileExists("er.xsl") then
+		set erfile = f.CreateTextFile(outdir & "er.xsl")
+		erfile.Write(erfilecontents)
+		erfile.Close()
+	end if
+	fout.WriteLine("<?xml version='1.0' ?>")
+	fout.WriteLine("<?xml-stylesheet href=""er.xsl"" type=""text/xsl"" ?>")
+	fout.WriteLine("<MPITESTRESULTS>")
+	fout.WriteLine("<DATE>" & Date)
+	fout.WriteLine("</DATE>")
+	fout.WriteLine("<MPISOURCE></MPISOURCE>")
+	while not fin.AtEndOfStream
+		line = fin.ReadLine()
+		line = Trim(line)
+		twostrings = split(line, " ", -1, 1)
+		if not IsNull(twostrings) then
+			count = 0
+			for each s in twostrings
+				count = count + 1
+			next
+			if count = 2 then
+			 if Left(twostrings(0), 1) <> "#" then
+			  if Len(twostrings(1)) > 0 then
+				exe = outdir & twostrings(0) & ".exe"
+				cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+				cEcho "test " & cur_test & " of " & num_tests
+				cur_test = cur_test + 1
+			 	cEcho cmd
+				fout.WriteLine("<MPITEST>")
+				fout.WriteLine("<NAME>" & twostrings(0) & "</NAME>")
+				if f.FileExists(exe) then
+				    fcmds.WriteLine(cmd & " > " & twostrings(0) & "." & twostrings(1) & ".output")
+				    if bCommandsOnly then
+				        result = "not executing test"
+				        if WshShell.CurrentDirectory <> last_commands_dir then
+							commands_file.WriteLine("cd " & WshShell.CurrentDirectory)
+						end if
+						last_commands_dir = WshShell.CurrentDirectory
+				        commands_file.WriteLine(cmd & " 2>&1")
+				    else
+					    result = RunCommand(cmd)
+					end if
+				else
+					result = "no executable, test skipped"
+					num_skipped = num_skipped + 1
+				end if
+				cEcho result
+				if (Instr(result, "No Errors") And len(result) < 14) Then
+					fout.WriteLine("<STATUS>pass</STATUS>")
+					num_passed = num_passed + 1
+				else
+					fout.WriteLine("<STATUS>fail</STATUS>")
+					fout.WriteLine("<TESTDIFF>")
+					result = cmd & vbCrLf & result
+					result = Replace( result, "&", "&amp;" )
+					result = Replace( result, "<", "&lt;" )
+					result = Replace( result, ">", "&gt;" )
+					fout.WriteLine(result)
+					fout.WriteLine("</TESTDIFF>")
+					if f.FileExists(exe) then
+						num_failed = num_failed + 1
+					end if
+				end if
+				fout.WriteLine("</MPITEST>")
+			  end if
+			 end if
+			end if
+		end if
+	wend
+	fin.Close()
+	fout.WriteLine("</MPITESTRESULTS>")
+	fout.Close()
+	fcmds.Close()
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+Function RunMPICH2TestSuiteBatch(outdir)
+	cEcho "changing into directory " & outdir
+	WshShell.CurrentDirectory = outdir
+	cur_test = 1
+	num_tests = CountTests(outdir)
+
+	if not bSummarize then
+		' first pass generates the commands
+		set fcmds = f.CreateTextFile(outdir & "mpich2_cmds.bat")
+		Set fin = f.OpenTextFile(outdir & "testlist")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Trim(line)
+			twostrings = split(line, " ", -1, 1)
+			if not IsNull(twostrings) then
+				count = 0
+				for each s in twostrings
+					count = count + 1
+				next
+				if count = 2 then
+				 if Left(twostrings(0), 1) <> "#" then
+				  if Len(twostrings(1)) > 0 then
+					exe = outdir & twostrings(0) & ".exe"
+					cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+					fcmds.WriteLine("REM test " & cur_test & " of " & num_tests)
+					cur_test = cur_test + 1
+					if f.FileExists(exe) then
+					    fcmds.WriteLine(cmd & " 2>&1 | tee " & twostrings(0) & "." & twostrings(1) & ".output")
+					    if bCommandsOnly then
+					        result = "not executing test"
+					        if WshShell.CurrentDirectory <> last_commands_dir then
+								commands_file.WriteLine("cd " & WshShell.CurrentDirectory)
+							end if
+							last_commands_dir = WshShell.CurrentDirectory
+					        commands_file.WriteLine(cmd & " 2>&1 | tee " & twostrings(0) & "." & twostrings(1) & ".output")
+						end if
+					else
+						fcmds.WriteLine("REM no executable, test skipped")
+					end if
+				  end if
+				 end if
+				end if
+			end if
+		wend
+		fin.Close()
+		fcmds.Close()
+
+		' run the tests
+		if not bCommandsOnly then
+			if not bBatchFilesOnly then
+				RunEchoCommand(outdir & "mpich2_cmds.bat")
+			end if
+		end if
+	end if
+
+	if not bBatchFilesOnly then
+		' second pass parses the results
+		set fout = f.CreateTextFile(outdir & "summary.xml")
+		if not f.FileExists("er.xsl") then
+			set erfile = f.CreateTextFile(outdir & "er.xsl")
+			erfile.Write(erfilecontents)
+			erfile.Close()
+		end if
+		fout.WriteLine("<?xml version='1.0' ?>")
+		fout.WriteLine("<?xml-stylesheet href=""er.xsl"" type=""text/xsl"" ?>")
+		fout.WriteLine("<MPITESTRESULTS>")
+		fout.WriteLine("<DATE>" & Date)
+		fout.WriteLine("</DATE>")
+		fout.WriteLine("<MPISOURCE></MPISOURCE>")
+		Set fin = f.OpenTextFile(outdir & "testlist")
+		while not fin.AtEndOfStream
+			line = fin.ReadLine()
+			line = Trim(line)
+			twostrings = split(line, " ", -1, 1)
+			if not IsNull(twostrings) then
+				count = 0
+				for each s in twostrings
+					count = count + 1
+				next
+				if count = 2 then
+				 if Left(twostrings(0), 1) <> "#" then
+				  if Len(twostrings(1)) > 0 then
+					exe = outdir & twostrings(0) & ".exe"
+					cmd = mpiexec & mpiexec_args & timeoutarg & " -n " + twostrings(1) + " " + exe
+					fout.WriteLine("<MPITEST>")
+					fout.WriteLine("<NAME>" & twostrings(0) & "</NAME>")
+					if f.FileExists(exe) then
+					    if bCommandsOnly then
+					        result = "not executing test"
+					    else
+							if f.FileExists(twostrings(0) & "." & twostrings(1) & ".output") then
+								Set foutput = f.OpenTextFile(twostrings(0) & "." & twostrings(1) & ".output")
+								if not foutput.AtEndOfStream then
+									result = foutput.ReadAll()
+								else
+									result = ""
+								end if
+								foutput.Close()
+							else
+								result = ""
+							end if
+						end if
+					else
+						result = "no executable, test skipped"
+						num_skipped = num_skipped + 1
+					end if
+					if (Instr(result, "No Errors") And len(result) < 14) Then
+						fout.WriteLine("<STATUS>pass</STATUS>")
+						num_passed = num_passed + 1
+					else
+						fout.WriteLine("<STATUS>fail</STATUS>")
+						fout.WriteLine("<TESTDIFF>")
+						result = cmd & vbCrLf & result
+						result = Replace( result, "&", "&amp;" )
+						result = Replace( result, "<", "&lt;" )
+						result = Replace( result, ">", "&gt;" )
+						fout.WriteLine(result)
+						fout.WriteLine("</TESTDIFF>")
+						if f.FileExists(exe) then
+							num_failed = num_failed + 1
+						end if
+					end if
+					fout.WriteLine("</MPITEST>")
+				  end if
+				 end if
+				end if
+			end if
+		wend
+		fin.Close()
+		fout.WriteLine("</MPITESTRESULTS>")
+		fout.Close()
+	end if
+
+	' move back to the root directory
+	cEcho "changing into directory " & rootdir
+	WshShell.CurrentDirectory = rootdir
+End Function
+
+' main script code
+
+if Not f.FolderExists(testdirname) then
+	f.CreateFolder(testdirname)
+end if
+cEcho "changing into directory " & WshShell.CurrentDirectory & "\" & testdirname
+WshShell.CurrentDirectory = testdirname
+rootdir = root_folder.Path
+if Right(rootdir, 1) = "\" then
+	rootdir = rootdir & testdirname & "\"
+else
+	rootdir = rootdir & "\" & testdirname & "\"
+end if
+cEcho rootdir
+if Not f.FolderExists("summary") then
+	f.CreateFolder("summary")
+end if
+
+' check out and build code
+if not bTestOnly then
+
+	' set the INCLUDE and LIB environment variables to be used by the command line build tools
+	old_include = env("INCLUDE")
+	old_lib = env("LIB")
+	if pathMPICH2Installed <> "" then
+		' FIXME: mpitestconf.h needs to be copied to this include directory if the mpich2 test suite is to be run
+		env("INCLUDE") = old_include & ";" & pathMPICH2Installed & "\include"
+		env("LIB") = old_lib & ";" & pathMPICH2Installed & "\lib"
+	else
+		if pathMPICH2 = "" then
+			if bWin64 then
+				env("INCLUDE") = old_include & ";" & rootdir & "mpich2\src\include" & ";" & rootdir & "mpich2\src\include\win64"
+			else
+				env("INCLUDE") = old_include & ";" & rootdir & "mpich2\src\include" & ";" & rootdir & "mpich2\src\include\win32"
+			end if
+			env("LIB") = old_lib & ";" & rootdir & "mpich2\lib"
+		else
+			if bWin64 then
+				env("INCLUDE") = old_include & ";" & pathMPICH2 & "\src\include" & ";" & pathMPICH2 & "\src\include\win64"
+			else
+				env("INCLUDE") = old_include & ";" & pathMPICH2 & "\src\include" & ";" & pathMPICH2 & "\src\include\win32"
+			end if
+			env("LIB") = old_lib & ";" & pathMPICH2 & "\lib"
+		end if
+	end if
+
+	if bCheckoutMPICH2 then
+		' check out mpich2 locally
+		CheckOut("mpich2")
+		WshShell.CurrentDirectory = "mpich2"
+		' check out mpich2 remotely, run maint/updatefiles and tar up the .h.in files
+		set fout = f.CreateTextFile("sshcmds.txt")
+		fout.WriteLine( "cd /sandbox/" & username )
+		fout.WriteLine( "mkdir " & hostname & "dotintmp" )
+		fout.WriteLine( "cd " & hostname & "dotintmp" )
+		fout.WriteLine( "cvs -d " & cvs_root_dir & " export -r " & cvsTag & " mpich2allWithMPE" )
+		fout.WriteLine( "cd mpich2" )
+		fout.WriteLine( "maint/updatefiles" )
+		fout.WriteLine( "tar cvf dotin.tar `find . -name ""*.h.in""`" )
+		fout.WriteLine( "gzip dotin.tar" )
+		fout.WriteLine( "exit" )
+		fout.Close()
+		' FIXME : are two 2>&1 allowed?
+		cmd = ssh_cmd & " -l " & username & " " & cvs_host & " 2>&1 < sshcmds.txt"
+		'cEcho cmd
+		RunEchoCommand cmd
+		f.DeleteFile("sshcmds.txt")
+		' copy the .h.in tarball
+		RunEchoCommand scp_cmd & " " & username & "@" & cvs_host & ":/sandbox/" & username & "/" & hostname & "dotintmp/mpich2/dotin.tar.gz ."
+		' remove the remote temporary directory
+		RunEchoCommand ssh_cmd & " -l " & username & " " & cvs_host & " rm -rf /sandbox/" & username & "/" & hostname & "dotintmp"
+		' extract the .h.in files and delete the tarball
+		RunEchoCommand "tar xvfz dotin.tar.gz"
+		if f.FileExists("dotin.tar.gz") then
+			f.DeleteFile("dotin.tar.gz")
+		end if
+		WshShell.CurrentDirectory = rootdir
+	end if
+
+	if bConfigureMPICH2 then
+		if pathMPICH2 <> "" then
+			WshShell.CurrentDirectory = pathMPICH2
+		else
+			WshShell.CurrentDirectory = "mpich2"
+		end if
+		if bFortran then
+			RunEchoCommand "cscript winconfigure.wsf --cleancode"
+		else
+			RunEchoCommand "cscript winconfigure.wsf --remove-fortran --cleancode"
+		end if
+		WshShell.CurrentDirectory = rootdir
+	else
+		if bConfigureMPICH2Tests then
+			if pathMPICH2 <> "" then
+				WshShell.CurrentDirectory = pathMPICH2
+			else
+				WshShell.CurrentDirectory = "mpich2"
+			end if
+			RunEchoCommand "cscript winconfigure.wsf --testdir"
+			WshShell.CurrentDirectory = rootdir
+		end if
+	end if
+
+	if bMakeMPICH2 then
+		' stop a running smpd
+		smpd = ""
+		On Error resume next
+		smpd = WshShell.RegRead("HKLM\SOFTWARE\MPICH\SMPD\binary")
+		if Len(smpd) > 0 then
+			error = RunEchoCommandError(smpd & " -remove")
+		end if
+		' make the mpich2 libraries and dlls
+		if pathMPICH2 <> "" then
+			WshShell.CurrentDirectory = pathMPICH2
+		else
+			WshShell.CurrentDirectory = "mpich2"
+		end if
+		'error = RunEchoCommandError("devenv.com mpich2.sln /build ch3sockDebug")
+		'if error <> 0 then
+		'	WScript.Echo("Error building the sock channel")
+		'	WScript.Quit
+		'end if
+		'error = RunEchoCommandError("devenv.com mpich2.sln /project mpich2s /build ch3sockDebug")
+		'if error <> 0 then
+		'	WScript.Echo("Error building the sock channel static library")
+		'	WScript.Quit
+		'end if
+		error = RunEchoCommandError("devenv.com mpich2.sln /build ch3sockRelease")
+		if error <> 0 then
+			WScript.Echo("Error building the sock channel release target")
+			WScript.Quit
+		end if
+		error = RunEchoCommandError("devenv.com mpich2.sln /project mpich2s /build ch3sockRelease")
+		if error <> 0 then
+			WScript.Echo("Error building the sock channel release target static library")
+			WScript.Quit
+		end if
+		'error = RunEchoCommandError("devenv.com mpich2.sln /build Debug")
+		'if error <> 0 then
+		'	WScript.Echo("Error building the utilities and process manager")
+		'	WScript.Quit
+		'end if
+		error = RunEchoCommandError("devenv.com mpich2.sln /build Release")
+		if error <> 0 then
+			WScript.Echo("Error building the release target utilities and process manager")
+			WScript.Quit
+		end if
+		if bFortran then
+			'error = RunEchoCommandError("devenv.com mpich2.sln /build fortDebug")
+			'if error <> 0 then
+			'	WScript.Echo("Error building the fortran interface")
+			'	WScript.Quit
+			'end if
+			error = RunEchoCommandError("devenv.com mpich2.sln /build fortRelease")
+			if error <> 0 then
+				WScript.Echo("Error building the release target fortran interface")
+				WScript.Quit
+			end if
+			'error = RunEchoCommandError("devenv.com mpich2.sln /build gfortDebug")
+			'if error <> 0 then
+			'	WScript.Echo("Error building the cdecl fortran interface")
+			'	WScript.Quit
+			'end if
+			'error = RunEchoCommandError("devenv.com mpich2.sln /build gfortRelease")
+			'if error <> 0 then
+			'	WScript.Echo("Error building the release target cdecl fortran interface")
+			'	WScript.Quit
+			'end if
+			'error = RunEchoCommandError("devenv.com mpich2.sln /build sfortDebug")
+			'if error <> 0 then
+			'	WScript.Echo("Error building the stdcall fortran interface")
+			'	WScript.Quit
+			'end if
+			'error = RunEchoCommandError("devenv.com mpich2.sln /build sfortRelease")
+			'if error <> 0 then
+			'	WScript.Echo("Error building the release target stdcall fortran interface")
+			'	WScript.Quit
+			'end if
+		end if
+		'WshShell.CurrentDirectory = "maint"
+		'RunEchoCommand "makegcclibs.bat"
+		'WshShell.CurrentDirectory = ".."
+		'error = RunEchoCommandError("devenv.com examples\examples.sln /project cpi /build Release")
+		if channel <> "" then
+			error = RunEchoCommandError("devenv.com mpich2.sln /build " & channel)
+			if error <> 0 then
+				WScript.Echo("Error building the " & channel & " channel")
+				WScript.Quit
+			end if
+		end if
+		mpiexec = WshShell.CurrentDirectory & "\bin\mpiexec.exe"
+		' install the newly built smpd
+		error = RunEchoCommandError(WshShell.CurrentDirectory & "\bin\smpd.exe -install")
+		WshShell.CurrentDirectory = rootdir
+	end if
+
+	if bTestMPICH then
+		if bCheckoutMPICH then
+			CheckOut("mpich")
+		end if
+		BuildMPICHTestSuite "mpi1", "buildMPICH"
+	end if
+
+	if bTestCPP then
+		if bCheckoutCPP then
+			CheckOut("c++")
+		end if
+		BuildCPPTestSuite "mpicxxtest", "buildCPP"
+	end if
+
+	if bTestINTEL then
+		if bCheckoutINTEL then
+			CheckOut("intel")
+		end if
+		BuildINTELTestSuite "IntelMPITEST", "buildINTEL"
+	end if
+
+	if bTestMPICH2 then
+		'BuildMPICH2TestSuite "mpich2\test\mpi", ""
+		if pathMPICH2 = "" then
+			BuildMPICH2TestSuite rootdir & "mpich2\test\mpi", "buildMPICH2"
+		else
+			BuildMPICH2TestSuite pathMPICH2 & "\test\mpi", "buildMPICH2"
+		end if
+	end if
+
+end if
+
+' run test suites
+if not bBuildOnly then
+	if not bBatchFilesOnly then
+		if not f.FileExists(rootdir & "summary\er.xsl") then
+			set erfile = f.CreateTextFile(rootdir & "summary\er.xsl")
+			erfile.Write(erfilecontents)
+			erfile.Close()
+		end if
+		set webpage = f.CreateTextFile(rootdir & "summary\index.html", True)
+		webpage.WriteLine("<HTML>")
+		webpage.WriteLine("<BODY>")
+		webpage.WriteLine("<H2>Test suite summary page</H2>")
+		webpage.WriteLine("Date: " & Date() & "<BR>")
+		webpage.WriteLine("<TABLE>")
+	end if
+	if bTestMPICH then
+		if bBatch then
+			RunMPICHTestSuiteBatch(rootdir & "buildMPICH\")
+		else
+			RunMPICHTestSuite(rootdir & "buildMPICH\")
+		end if
+		if not bBatchFilesOnly then
+			f.CopyFile rootdir & "buildMPICH\summary.xml", rootdir & "summary\summary.mpich.xml", True
+			set fin = f.OpenTextFile(rootdir & "summary\summary.mpich.xml")
+			set fout = f.CreateTextFile(rootdir & "summary\summary.mpich.failed.xml", True)
+			fout.Write(ParseFailed(fin.ReadAll()))
+			fin.Close()
+			fout.Close()
+			mpich_failed = CountInstances(rootdir & "summary\summary.mpich.failed.xml", "<STATUS>fail</STATUS>")
+			mpich_passed = CountInstances(rootdir & "summary\summary.mpich.xml", "<STATUS>pass</STATUS>")
+			mpich_skipped = CountInstances(rootdir & "summary\summary.mpich.xml", "no executable, test skipped")
+			webpage.WriteLine("<TR><TD>MPICH</TD><TD>failed</TD><TD><A HREF=""summary.mpich.failed.xml"">" & mpich_failed & "</A></TD><TD>passed</TD><TD>" & mpich_passed & "</TD><TD>skipped</TD><TD>" & mpich_skipped & "</TD><TD><A HREF=""summary.mpich.xml"">summary.xml</A></TD>")
+		end if
+	end if
+	if bTestCPP then
+		if bBatch then
+			RunCPPTestSuiteBatch(rootdir & "buildCPP\")
+		else
+			RunCPPTestSuite(rootdir & "buildCPP\")
+		end if
+		if not bBatchFilesOnly then
+			f.CopyFile rootdir & "buildCPP\summary.xml", rootdir & "summary\summary.cpp.xml", True
+			set fin = f.OpenTextFile(rootdir & "summary\summary.cpp.xml")
+			set fout = f.CreateTextFile(rootdir & "summary\summary.cpp.failed.xml", True)
+			fout.Write(ParseFailed(fin.ReadAll()))
+			fin.Close()
+			fout.Close()
+			cpp_failed = CountInstances(rootdir & "summary\summary.cpp.failed.xml", "<STATUS>fail</STATUS>")
+			cpp_passed = CountInstances(rootdir & "summary\summary.cpp.xml", "<STATUS>pass</STATUS>")
+			cpp_skipped = CountInstances(rootdir & "summary\summary.cpp.xml", "no executable, test skipped")
+			webpage.WriteLine("<TR><TD>C++</TD><TD>failed</TD><TD><A HREF=""summary.cpp.failed.xml"">" & cpp_failed & "</A></TD><TD>passed</TD><TD>" & cpp_passed & "</TD><TD>skipped</TD><TD>" & cpp_skipped & "</TD><TD><A HREF=""summary.cpp.xml"">summary.xml</A></TD>")
+		end if
+	end if
+	if bTestINTEL then
+		if bBatch then
+			RunINTELTestSuiteBatch(rootdir & "buildINTEL\")
+		else
+			RunINTELTestSuite(rootdir & "buildINTEL\")
+		end if
+		if not bBatchFilesOnly then
+			f.CopyFile rootdir & "buildINTEL\summary.xml", rootdir & "summary\summary.intel.xml", True
+			set fin = f.OpenTextFile(rootdir & "summary\summary.intel.xml")
+			set fout = f.CreateTextFile(rootdir & "summary\summary.intel.failed.xml", True)
+			fout.Write(ParseFailed(fin.ReadAll()))
+			fin.Close()
+			fout.Close()
+			intel_failed = CountInstances(rootdir & "summary\summary.intel.failed.xml", "<STATUS>fail</STATUS>")
+			intel_passed = CountInstances(rootdir & "summary\summary.intel.xml", "<STATUS>pass</STATUS>")
+			intel_skipped = CountInstances(rootdir & "summary\summary.intel.xml", "no executable, test skipped")
+			webpage.WriteLine("<TR><TD>INTEL</TD><TD>failed</TD><TD><A HREF=""summary.intel.failed.xml"">" & intel_failed & "</A></TD><TD>passed</TD><TD>" & intel_passed & "</TD><TD>skipped</TD><TD>" & intel_skipped & "</TD><TD><A HREF=""summary.intel.xml"">summary.xml</A></TD>")
+		end if
+	end if
+	if bTestMPICH2 then
+		if bBatch then
+			'RunMPICH2TestSuiteBatch(rootdir & "mpich2\test\mpi")
+			RunMPICH2TestSuiteBatch(rootdir & "buildMPICH2\")
+		else
+			'RunMPICH2TestSuite(rootdir & "mpich2\test\mpi")
+			RunMPICH2TestSuite(rootdir & "buildMPICH2\")
+		end if
+		if not bBatchFilesOnly then
+			f.CopyFile rootdir & "buildMPICH2\summary.xml", rootdir & "summary\summary.mpich2.xml", True
+			set fin = f.OpenTextFile(rootdir & "summary\summary.mpich2.xml")
+			set fout = f.CreateTextFile(rootdir & "summary\summary.mpich2.failed.xml", True)
+			fout.Write(ParseFailed(fin.ReadAll()))
+			fin.Close()
+			fout.Close()
+			mpich2_failed = CountInstances(rootdir & "summary\summary.mpich2.failed.xml", "<STATUS>fail</STATUS>")
+			mpich2_passed = CountInstances(rootdir & "summary\summary.mpich2.xml", "<STATUS>pass</STATUS>")
+			mpich2_skipped = CountInstances(rootdir & "summary\summary.mpich2.xml", "no executable, test skipped")
+			webpage.WriteLine("<TR><TD>MPICH2</TD><TD>failed</TD><TD><A HREF=""summary.mpich2.failed.xml"">" & mpich2_failed & "</A></TD><TD>passed</TD><TD>" & mpich2_passed & "</TD><TD>skipped</TD><TD>" & mpich2_skipped & "</TD><TD><A HREF=""summary.mpich2.xml"">summary.xml</A></TD>")
+		end if
+	end if
+	if not bBatchFilesOnly then
+		webpage.WriteLine("</TABLE>")
+		webpage.WriteLine("</BODY>")
+		webpage.WriteLine("</HTML>")
+		webpage.Close()
+	end if
+	
+	' Send the results of the tests to the Nightly Build server.
+	' Insert code here ...
+end if
+
+</script>
+</job>
+</package>

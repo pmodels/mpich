@@ -1,0 +1,8 @@
+lib${MPILIBNAME}_a_SOURCES = socket_init.c socket_get_business_card.c \
+ socket_make_progress.c socket_cq_wait.c socket_post_read.c \
+ socket_post_write.c socket_can_connect.c socket_post_connect.c \
+ socket_car_queue.c socket_read.c socket_reset_car.c \
+ socket_write_aggressive.c socket_merge_unexpected_data.c \
+ socket_merge_with_unexpected.c socket_merge_with_posted.c \
+ sock_iocp.c sock_poll.c
+INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

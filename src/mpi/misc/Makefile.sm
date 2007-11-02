@@ -1,0 +1,8 @@
+mpi_sources = getpname.c pcontrol.c version.c
+lib${MPILIBNAME}_a_SOURCES = ${mpi_sources}
+INCLUDES = -I../../include -I${top_srcdir}/src/include
+profilelib_${MPILIBNAME} = ${PMPILIBNAME}
+#
+doc_HTML_SOURCES = ${mpi_sources}
+doc_MAN_SOURCES = ${mpi_sources}
+doc_LATEX_SOURCES = ${mpi_sources}

@@ -1,0 +1,11 @@
+noalias
+rerr
+bcastlength
+Makefile.in
+Makefile
+*.o
+*.vcproj
+Debug*
+Release*
+*.gcda
+*.gcno

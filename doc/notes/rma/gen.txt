@@ -1,0 +1,84 @@
+* Datatypes
+
+  * Caching
+
+    [traff00:mpi-impl] and [booth00:mpi-impl] discuss the need for
+    datatype caching by the target process when the target process
+    must be involved in the RMA operations (i.e., when the data cannot
+    be directly read and interpreted by the origin process)
+
+    Datatype caching can be either proactive or reactive.
+
+    In the proactive case, the origin process would track whether the
+    target process has a copy of the datatype and send the datatype to
+    target process when necessary.  This means that each datatype must
+    contain tracking information.  Unfortunately, because of dynamic
+    processes in MPI-2, something more complex than a simple bit
+    vector must be used to track processes already caching a datatype.
+    What is the correct, high-performance structure?
+
+    Alternatively, a reactive approach could be used.  In the reactive
+    approach, the origin process would assume that the target process
+    already knows about the datatype.  If that assumption is false,
+    the target process will request the datatype from the origin
+    process.  This simplifies the tracking on the origin, but does not
+    completely eliminate it.  It is necessary for the origin to
+    increase the reference count associated with the datatype until
+    the next synchronization point to ensure that the datatype is not
+    deleted before the target process has had sufficient opportunity
+    to request a copy of the datatype.
+
+    David, Rob, Nick and Brian vote for reactive caching.
+
+* RMA and multi-method access
+
+  [booth00:mpi-impl] discusses a multi-method RMA implementation,
+  allowing RMA operations between a pair of processes to use the
+  optimal access method
+
+* Flow control
+
+  Q: Do we need to implement flow control within the window subsystem
+  or is this handled for us by the RHC and message passing subsystems?
+
+* Epochs
+
+  Q: How do the three synchronization mechanisms play together?  What
+  is required in order to switch from one mechanism to another?  The
+  standard talks about this briefly, but I am still somewhat confused
+  about what happens when a transistions occurs from active (fence)
+  synchronization to scalable or passive synchronization.  It seems as
+  though active synchronization always has open access and exposure
+  epochs unless the assertion MPI_MODE_NOSUCCEED is specified.
+  However, no assertions are required for correct operation, so it
+  would appear that one can open a new access/exposure epoch while one
+  is already active.
+
+  * External synchronization are required to separate different synchronization
+    mechanisms
+
+* Overlapping Windows
+
+  Q: Do overlapping windows affect the implementation?  It does not
+  appear affect implementations that do not use separate local and
+  public buffers, but I haven't completely convinced myself that this
+  is true.
+
+* Need for mutex
+
+  can't implement fetch-and-increment without it using the current MPI RMA API
+
+* Progress for passive target
+
+  - threads
+
+  - alarm signal
+
+  - poll during MPI routines only (not so good)
+
+------------------------------------------------------------------------
+
+Optimizations
+
+* merge synchronization with RMA ops when sending messages
+

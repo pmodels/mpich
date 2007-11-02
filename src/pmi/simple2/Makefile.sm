@@ -1,0 +1,6 @@
+lib${MPILIBNAME}_a_SOURCES = simple2pmi.c
+HEADERS = simple2pmi.h
+INCLUDES = -I../../include -I${master_top_srcdir}/src/include
+
+distclean-local:
+	@-rm -f pmi2conf.h

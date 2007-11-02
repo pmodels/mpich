@@ -1,0 +1,29 @@
+!MS$FREEFORM
+! Microsoft Developer Studio generated include file.
+! Used by rimshot.rc
+!
+      integer, parameter :: IDD_ABOUTBOX                    = 100
+      integer, parameter :: IDR_MAINFRAME                   = 128
+      integer, parameter :: IDR_RIMSHOTYPE                  = 129
+      integer, parameter :: IDD_ZOOM_DLG                    = 130
+      integer, parameter :: IDD_OFFSET_DLG                  = 131
+      integer, parameter :: IDC_LEFT                        = 1000
+      integer, parameter :: IDC_RIGHT                       = 1001
+      integer, parameter :: IDC_LEFT_RIGHT_RADIO            = 1002
+      integer, parameter :: IDC_WIDTH_RADIO                 = 1003
+      integer, parameter :: IDC_WIDTH                       = 1004
+      integer, parameter :: IDC_PERPIXEL_RADIO              = 1005
+      integer, parameter :: IDC_ROW                         = 1005
+      integer, parameter :: IDC_PERPIXEL                    = 1006
+      integer, parameter :: IDC_OFFSET                      = 1006
+      integer, parameter :: IDC_GUI_BTN                     = 1007
+      integer, parameter :: ID_PREVIOUS                     = 32771
+      integer, parameter :: ID_NEXT                         = 32772
+      integer, parameter :: ID_ZOOM_IN                      = 32773
+      integer, parameter :: ID_ZOOM_OUT                     = 32774
+      integer, parameter :: ID_RESET_ZOOM                   = 32775
+      integer, parameter :: ID_ZOOM_TO                      = 32776
+      integer, parameter :: ID_TOGGLE_ARROWS                = 32777
+      integer, parameter :: ID_VIEW_UNIFORM                 = 32778
+      integer, parameter :: ID_VIEW_ZOOM                    = 32779
+      integer, parameter :: ID_VIEW_SLIDERANKOFFSET         = 32780

@@ -1,0 +1,6 @@
+# This is temporary until the tests have their own configure
+timers_SOURCES = timers.c
+timers_LDADD = -L../../../lib -lmpich
+timertest_SOURCES = timertest.c
+timertest_LDADD = -L../../../lib -lmpich
+INCLUDES = -I../../../src/include -I${top_srcdir}/src/include

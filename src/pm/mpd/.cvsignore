@@ -1,0 +1,16 @@
+pmitest0
+*.pyc
+*.gcov
+*.gcda
+*.gcno
+configure
+configure.lineno
+config.status
+config.log
+config.system
+mpdconf.h.in
+mpdconf.h
+Makefile
+mpdroot
+.deps
+autom4te.cache

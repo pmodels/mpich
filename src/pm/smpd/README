@@ -1,0 +1,126 @@
+
+
+			       README for SMPD
+
+			         David Ashton
+
+
+General
+-------
+
+SMPD is a process management system for starting parallel jobs,
+especially MPICH jobs.  Before running a job (with mpiexec), the
+smpd daemons must be running on each host.
+This README explains how to do that and also test and manage the daemons 
+after they have been started.
+
+
+How to use SMPD
+-------------------------
+
+You can start one smpd on the current host by running
+
+   smpd -s
+
+This starts an smpd.  Execute it on all the machines you want to participate in
+your pool.  Other smpd's join the pool automatically if you have a common 
+home directory.
+
+The default configuration file for smpd is ~/.smpd.  You can specify a different
+file using the -smpdfile <filename> option to smpd.  This file must exist and it
+must be read/writable only by the current user.  If you don't specify a file and
+the default does not exist, smpd will offer to create one for you and ask you for
+a secret word to put in it.
+
+The secret word is a passphrase for access to the smpd only.  Do not put your Unix password here.
+This passphrase must be the same for all smpd's.  If you have a common file system
+then they can share the same configuration file but if you have separate file systems,
+make sure you enter the same passphrase on each machine.
+
+The options you can put in the .smpd file are:
+phrase=<passphrase>
+hosts=<host1 host2 host3 ...>
+log=<yes or no>
+logfile=<path/filename>
+
+After mpich is built, the smpd commands are in mpich2/bin, or the bin
+subdirectory of the install directory if you have done an install.
+You should put this (bin) directory in your PATH 
+in your .cshrc or .bashrc:
+
+Put in .cshrc:  setenv PATH /home/you/mpich2/bin:$PATH
+
+Put in .bashrc: export PATH=/home/you/mpich2/bin:$PATH
+
+You can run something with mpiexec
+
+donner% mpiexec -n 2 hostname 
+donner.mcs.anl.gov
+foo.mcs.anl.gov
+donner%
+
+You can run an mpich2 job:
+
+donner% mpiexec -n 10 /home/ashton/hellow
+Hello world from process 0 of 10
+Hello world from process 1 of 10
+Hello world from process 2 of 10
+Hello world from process 3 of 10
+Hello world from process 4 of 10
+Hello world from process 5 of 10
+Hello world from process 6 of 10
+Hello world from process 7 of 10
+Hello world from process 9 of 10
+Hello world from process 8 of 10
+donner% 
+
+You can take down the daemons:
+
+donner% smpd -shutdown
+donner% smpd -shutdown foo.mcs.anl.gov
+
+Here is the usage information for all of the smpd commands:
+
+************************************************************
+
+The following smpd commands are available.  For usage, invoke "smpd -help".
+
+************************************************************ smpd
+
+usage: smpd [-port <portnum>] [-phrase <passphrase>] \ 
+           [-debug] [-noprompt] [-restart] [-shutdown] \ 
+           [-shutdown <hostname>] [-smpdfile <filename>]
+
+
+-port tells the smpd which port to listen on.  The default is 8675
+-phrase is used to specify a passphrase used to authenticate the connection with
+  an smpd
+-debug yields lots of output from the smpd.
+-noprompt prevents smpd from prompting for information if it is needed. Instead
+  it returns an error.
+-restart restarts the local smpd
+-restart <hostname> restarts the smpd on <hostname>
+-shutdown shutsdown the local smpd
+-shutdown <hostname> shuts down the smpd on <hostname>
+-smpdfile <filename> allows you to specify a configuration file other than the
+  default.
+
+The default file is named .smpd and must be present in the users home directory
+  with read and write access only for the user, and must contain at least
+  a line with phrase=<passphrase>
+
+************************************************************ mpiexec
+
+usage:
+mpiexec [ -default defaultArgs : ] argset : more_arg_sets : ...
+    where each argset contains some of:
+        -n <n> -host <h> -wdir <w> -path <p> cmd args 
+    note: cmd must be specfied for each argset; it can not be a default arg
+    -env KEY1 VALUE1 -env KEY2 VALUE2 ...
+    defaultArgs are passed to all processes unless overridden
+mpiexec -file filename  # where filename contains cmd-line arg-sets
+mpiexec [ -?   or  -help   or  -help2 ]
+sample executions:
+    mpiexec -n 1 pwd : -wdir /tmp pwd : printenv
+    mpiexec -default -n 2 -wdir /bin -env RMB3=e3 : pwd : printenv
+

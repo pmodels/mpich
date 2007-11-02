@@ -1,0 +1,2 @@
+SUBDIRS_method_subdirs = tcp shm via viardma sock ib
+SUBDIRS = common @method_subdirs@ progress xfer bsocket mm init spawn pt2pt request util packer unpacker rma .

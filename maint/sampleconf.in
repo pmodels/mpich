@@ -1,0 +1,51 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl aclocal_cache.m4, included by sowing/confdb/aclocal.m4, fixes 
+dnl bugs in autoconf caching.
+dnl
+dnl The file name here refers to a file in the source being configured
+AC_INIT(pick a local file)
+dnl
+dnl Definitions will be placed in this file rather than in the DEFS variable
+AC_CONFIG_HEADER(pick a headef file name)
+dnl
+dnl Set the directory that contains support scripts such as install-sh and
+dnl config.guess
+AC_CONFIG_AUX_DIR(refer to the confdb at the top of MPICH2)
+dnl
+dnl Use AC_ARG_ENABLE to look for --enable-feature and AC_ARG_WITH to look for
+dnl --with-capability
+dnl
+dnl Enable better caching control
+PAC_ARG_CACHING
+dnl
+AC_ARG_ENABLE(echo, 
+[--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
+dnl
+AC_ARG_ENABLE(strict,[--enable-strict - Turn on strict debugging with gcc],
+CFLAGS="$CFLAGS -O2 -Wall -Wstrict-prototypes -Wmissing-prototypes")
+dnl
+dnl
+PAC_ARG_SHAREDLIBS
+dnl The recommended order for items in a configure.in file is
+dnl     check for programs
+dnl     check for libraries
+dnl     check for header files
+dnl     check for typedefs
+dnl     check for structures
+dnl     check for compiler characteristics
+dnl     check for library functions
+dnl     check for system services
+dnl Here are some sample tests
+dnl
+dnl Find a C compiler (choose gcc first)
+dnl Here are some example calls.  See mpich/configure.in for others
+AC_PROG_CC
+AC_PATH_PROG(AR,ar)
+AC_PATH_PROG(RANLIB,ranlib)
+AC_PROG_INSTALL
+dnl
+dnl Generate the Makefiles from Makefile.in
+AC_OUTPUT(Makefile other files )
+
+PAC_SUBDIR_CACHE_CLEANUP

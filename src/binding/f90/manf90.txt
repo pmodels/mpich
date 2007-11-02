@@ -1,0 +1,40 @@
+This file contains man page information on special routines (such as
+MPI_SIZEOF) that exist only in F90, and on the F90 extended support)
+
+/*N FortranExtended
+
+ Extended Fortran Support:
+ 
+ This routine is part of the extended Fortran support, described in
+ Sections 10.2.4 and 10.2.5 in the MPI-2 Standard.  Full support for these
+ features `cannot` be efficiently implemented within the Fortran 90 
+ language and would require a nonportable interation with specific 
+ Fortran 90 compilers.  MPICH2 has chosen to offer many of the features
+ of the extended Fortran support, but there are limitations.  
+ For example, some routines may accept only scalars or one-dimensional 
+ arrays.  
+
+N*/
+
+/*D
+   MPI_SIZEOF - Return the size of a data item
+
+   Synopsis:
+   subroutine mpi_sizeof( var, size, ierr )
+   <type> var
+   integer size, ierr
+
+   Notes:
+   This routine returns the size of a basic element, in bytes, of the
+   item passed in the first argument.  
+
+   Implementation limitations:
+   MPICH only supports scalars and one-dimensional arrays for the 
+   first parameter.  Supporting higher-dimensional arrays greatly increases
+   the size of the library and the executable without adding any new 
+   functionality.  If you have a multi-dimensional array, simply pass any
+   element to 'MPI_SIZEOF'.
+
+.N FortranExtended
+
+D*/

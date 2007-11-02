@@ -1,0 +1,19 @@
+# mpi_sources includes only the routines that are MPI function entry points
+# The code for the MPI operations (e.g., MPI_SUM) is not included in 
+# mpi_sources
+mpi_sources = allreduce.c barrier.c op_create.c op_free.c \
+ bcast.c alltoall.c alltoallv.c reduce.c scatter.c \
+ gather.c scatterv.c gatherv.c scan.c exscan.c allgather.c allgatherv.c \
+ red_scat.c alltoallw.c 
+
+lib${MPILIBNAME}_a_SOURCES = $(mpi_sources) \
+ helper_fns.c opsum.c opmax.c opmin.c opband.c opbor.c opbxor.c \
+ opland.c oplor.c oplxor.c opprod.c opminloc.c opmaxloc.c
+
+INCLUDES = -I../../include -I${top_srcdir}/src/include -I${top_srcdir}/src/mpi/datatype
+profilelib_${MPILIBNAME} = ${PMPILIBNAME}
+profilelib_${MPILIBNAME}_SOURCES = ${mpi_sources}
+
+doc_HTML_SOURCES = ${mpi_sources}
+doc_MAN_SOURCES = ${mpi_sources}
+doc_LATEX_SOURCES = ${mpi_sources}

@@ -1,0 +1,21 @@
+F77INCLUDES = -I. 
+LDADD = ../util/mtestf.o 
+DEPADD = @MPILIBLOC@ ../util/mtestf.o
+smvar_do_sharedlibs = 0
+
+F77HEADERS = typeaints.h
+
+typenamef_SOURCES  = typenamef.f
+typesnamef_SOURCES = typesnamef.f
+typecntsf_SOURCES  = typecntsf.f
+typesubf_SOURCES   = typesubf.f
+typem2f_SOURCES    = typem2f.f
+gaddressf_SOURCES  = gaddressf.f
+packef_SOURCES     = packef.f
+
+testing:
+	../../runtests -srcdir=$(srcdir) -tests=testlist \
+			-mpiexec=$(bindir)/mpiexec \
+		   	-xmlfile=summary.xml
+../util/mtestf.o: 
+	(cd ../util && $(MAKE) mtestf.o)

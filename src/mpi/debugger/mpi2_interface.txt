@@ -1,0 +1,410 @@
+This file contains the current DRAFT description of the structures used 
+in the MPI2 debugger interface.  The author of this interface was
+Rob Faught <rtf@etnus.com>
+
+AN INTERFACE BETWEEN A DEBUGGER AND AN MPI IMPLEMENTATION
+(DRAFT)
+
+Jan 18 2007 RTF: The executable name has been added to several
+   structures. It is needed along with the pid and hostname to attach
+   to a process.
+Jan 18 2007 RTF: Pull the breakpoint out of the info type.
+Jan 22 2007 RTF: At Bill Gropp's request: Changed name of defines for
+   debugger_flags and mpi_flags to resp. MPI2DD_FLAGS_xxx and 
+MPI2DD_MPIFLAGS_xxx.
+
+Types
+_________________________________________________________
+
+
+MPI2DD_ADDR_T  is the type of an address on the target machine.
+
+MPI2DD_INT32_T is the type of a signed integer with a size of four
+               bytes on the target machine
+
+MPI2DD_UINT32_T is the type of an unsigned integer with a size of four
+               bytes on the target machine
+
+MPI2DD_BYTE_T is the type of an unsigned integer the size of one byte.
+
+
+
+
+Process Info
+_________________________________________________________
+
+
+extern "C" struct MPI2DD_INFO MPI2DD_info;
+
+This structure is defined in each rank process and starter. The symbol
+"MPI2DD_info" is associated with the address of this structure and
+must be visible to the attached debugger.
+
+
+struct MPI2DD_INFO {
+
+MPI2DD_BYTE_T magic[5]
+
+     magic[0] == 'M', magic[1] = 'P', magic[2] = 'I',
+     magic[3] = '2', magic[4] = 0x7f
+
+
+MPI2DD_BYTE_T version
+
+     A version number for this interface. This will be one(1) for all
+     instances defined by this document. It can only be changed by
+     general agreement of the formal or informal organization that
+     maintains this document and interface.
+
+MPI2DD_BYTE_T variant
+
+     A code that allows for small variations in layout of the
+     structures defined here or small changes in the standard
+     interaction of debugger and mpi application. This field should be
+     one(1) unless it is changed by general agreement between a
+     debugger and MPI implementation.
+
+MPI2DD_BYTE_T debug_state
+
+     This byte contains an indication of why a MPI2DD_Breakpoint was
+     triggered and is written by the MPI implementation before the
+     breakpoint function is called. It is not changed by the debugger.
+
+     #define MPI2DD_DEBUG_START                     1
+     #define MPI2DD_DEBUG_SPAWN                     2
+     #define MPI2DD_DEBUG_CONNECT                   3
+     #define MPI2DD_DEBUG_ACCEPT                    4
+     #define MPI2DD_DEBUG_JOIN                      5
+     #define MPI2DD_DEBUG_DIRECTORY_CHANGED         6
+     #define MPI2DD_DEBUG_METADIRECTORY_CHANGED     7
+     #define MPI2DD_DEBUG_ABORT                     8
+
+MPI2DD_UINT32_T debugger_flags
+
+     The bits in this field are initalized by the MPI implementation
+     and may be modified by the debugger.
+
+     #define MPI2DD_FLAG_GATE    0x01
+
+     This bit is initialized to zero by the MPI implementation and
+     set to one by the debugger after it has acquired a process. This
+     is used in some implementations to allow rank processes to run
+     out of MPI_Init. Implementations are not required to use this
+     method.
+
+     #define MPI2DD_FLAG_BEING_DEBUGGED    0x02
+
+     This bit is initialized to zero by the MPI implementation and set
+     to one by the debugger to tell the starter program the a debugger
+     is attached.
+
+     #define MPI2DD_FLAG_REQUEST_DIRECTORY_EVENTS 0x04
+
+     Set by the debugger if it would like to receive breakpoint events
+     when changes occur to a directory or metadirectory.
+
+
+MPI2DD_UINT32_T mpi_flags
+
+     The bits in this field are set by the MPI implementation and are
+     not modified by the debugger.
+
+     #define MPI2DD_MPIFLAG_I_AM_METADIR      0x01 Set if process is a 
+metadirectory
+     #define MPI2DD_MPIFLAG_I_AM_DIR          0x02 Set if process is a 
+directory
+     #define MPI2DD_MPIFLAG_I_AM_STARTER      0x04 Set if this is a 
+starter process
+     #define MPI2DD_MPIFLAG_FORCE_TO_MAIN     0x08 Set if this process 
+is acquired before running its main procedure.
+     #define MPI2DD_MPIFLAG_IGNORE_QUEUE      0x10 Set if message queue 
+debugging is not implemented.
+     #define MPI2DD_MPIFLAG_ACQUIRED_PRE_MAIN 0x20 Set if the rank 
+processes are attached before main.
+     #define MPI2DD_MPIFLAG_PARTIAL_ATTACH_OK 0x40 Set if job can be 
+started by continuing the initial process.
+
+
+MPI2DD_ADDR_T dll_name_32;
+
+     The address of an ascii null-terminated string containing the
+     pathname of the message queue debug library that is dynamically
+     loaded by the debugger. This library is used by debuggers that
+     are built as 32 bit executables. If there is no 32 bit message
+     queue debug library, this field is null;
+
+MPI2DD_ADDR_T dll_name_64;
+
+     The address of an ascii null-terminated string containing the
+     pathname of the message queue debug library that is dynamically
+     loaded by the debugger. This library is used by debuggers that
+     are built as 64 bit executables. If there is no 64 bit message
+     queue debug library, this field is null;
+
+MPI2DD_ADDR_T meta_host_name;
+
+     The address of an ascii null-terminated string containing the
+     address or name of the network node where a metadirectory process
+     is running.
+
+     The host_name is either a host name, or an IPv4 address in
+     standard dot notation, or an IPv6 address in colon (and possibly
+     dot) notation.  (See RFC 1884 for the description of IPv6
+     addresses.)
+
+     The debugger needs meta_pid and this field to locate a
+     metadirectory from an arbitrarily selected rank process.
+
+
+MPI2DD_ADDR_T meta_executable_name;
+
+     The address of an ascii null-terminated string containing the
+     path name of the metadirectory executable. The executable is
+     opened by the debugger to read symbol tables, so the path should
+     be accessible to the debugger.
+
+
+MPI2DD_ADDR_T abort_string
+
+     The address of an ascii null-terminated string that holds an
+     abort message that is shown to the user when the breakpoint at
+     MPIDD_info.breakpoint is triggered and the MPIDD_info.debug_state
+     is set to MPI2DD_DEBUG_ABORT. MPI implementations are not
+     required to implement this feature.
+
+
+MPI2DD_ADDR_T proctable;
+
+     This field is null except in directory processes. In a directory
+     process this field contains the address of an array of proctable
+     structures.
+
+MPI2DD_ADDR_T directory_table;
+
+     This field is null except in metadirectory processes. In a
+     metadirectory process this field contains the address of an array
+     of directory entry structures. Each directory entry in the array
+     allows the debugger to find one directory process. The process
+     that contains this info structure should not have an entry for
+     itself in its directory table. It is possible that the value of
+     this field is null in a metadirectory process, if the
+     metadirectory process is also a directory process and there are
+     no other directory processes.
+
+
+MPI2DD_ADDR_T metadirectory_table;
+
+     This field is null except in metadirectory processes. In a
+     metadirectory process this field contains the address of an array
+     of directory entry structures. Each directory entry in the array
+     allows the debugger to find one metadirectory process. The process
+     that contains this info structure should not have an entry for
+     itself in its metadirectory table. It is possible that the value of
+     this field is null in a metadirectory process, if there are no other
+     metadirectory processes in the application.
+
+
+MPI2DD_INT32_T proctable_size
+
+     If this is a directory process, this field contains a count of
+     the entries in the proctable, otherwise it is zero.
+
+
+MPI2DD_INT32_T directory_size
+
+     The number of entries in the array indicated by
+     directory_table;
+
+
+MPI2DD_INT32_T metadirectory_size
+
+     The number of entries in the array indicated by
+     MPI2DD_metadirectory_table;
+
+
+MPI2DD_INT32_T meta_pid;
+
+     The process id or task id of the metadirectory process on the node 
+given
+     by the meta_host_name field. On UNIX this will be a pid.
+
+MPI2DD_INT32_T padding[8];
+
+     Thirty-two bytes of padding. Reserved for future expansion and 
+vendor use.
+};
+
+
+
+Breakpoint address symbol
+_________________________________________________________
+
+
+void MPI2DD_breakpoint() { }
+
+     This function provides an address where the debugger can set a
+     breakpoint. It will be a routine that MPI calls at points of
+     interest. When the debugger gets the breakpoint trap, it can use
+     the MPI2DD_debug_state field to determine why the breakpoint was
+     triggered. (It was pulled out of the info structure because its
+     address may be needed before a process runs any instructions.)
+
+
+
+Proctable
+_________________________________________________________
+
+
+The new proctable will be read without first having to find its type
+in the debug information of the MPI executable. The order of fields is
+fixed. These structures are packed with no intervening padding bytes
+allowed. There will be a version field in the MPI2DD_INFO structure to
+indicate future changes to this structure. Each instance of a struct
+MPI2DD_PROCDESC has attributes to locate one rank process. Any process
+with a entries in its proctable is, by definition, a directory
+process.
+
+
+struct MPI2DD_PROCDESC {
+
+  MPI2DD_ADDR_T host_name;
+
+                        The address of an ascii null-terminated string
+                        containing the address or name of the network
+                        node where this process is running. More
+                        precisely, it is the IP address of the network
+                        node where a debugger server can be run to
+                        control this process.
+
+                        The host_name is either a host name, or an
+                        IPv4 address in standard dot notation, or an
+                        IPv6 address in colon (and possibly dot)
+                        notation.  (See RFC 1884 for the description
+                        of IPv6 addresses.)
+
+
+  MPI2DD_ADDR_T executable_name;
+
+                        The address of an ascii null-terminated string
+                        containing the path name of the
+                        executable. The executable is opened by the
+                        debugger to read symbol tables, so the path
+                        should be accessible to the debugger.
+
+
+  MPI2DD_ADDR_T spawn_desc;
+
+                        (new) There are two ways that processes are
+                        created in an MPI job. They are created by a
+                        starter program or they are spawned by an
+                        existing MPI group. This field is either the
+                        address of a MPI2DD_SPAWNDESC structure that has
+                        the context for the spawn, or null if this
+                        process is part of the MPI_COMM_WORLD created
+                        by a starter program. [To save space it is
+                        possible that this field could be moved to a
+                        separate table that is indexed by the
+                        comm_world_id field below.]
+
+  MPI2DD_ADDR_T comm_world_id;
+
+                        This field is the address of a ascii
+                        null-terminated string that identifies the
+                        MPI_COMM_WORLD associated with this rank
+                        process. It should distinguish this comm world
+                        from any other comm worlds spawned in this job
+                        and any job that this job join/connects to.
+
+  MPI2DD_INT32_T pid;
+
+                        The process id or task id of the rank process
+                        on the node given by the hostname field. On
+                        UNIX this will be a pid.
+
+  MPI2DD_INT32_T rank;
+
+                        (new) The rank of the process in the
+                        MPI_COMM_WORLD. [The table index can no longer
+                        be used as the rank indicator because the
+                        proctable for a job may be distributed across
+                        multiple directory nodes, processes may appear
+                        in more than one proctable, and it may be
+                        possible for a rank process to remove itself
+                        from its MPI_COMM_WORLD (?)].
+
+ };
+
+
+
+
+struct MPI2DD_SPAWNDESC {
+
+  MPI2DD_ADDR_T parent_comm_world_id;
+
+                        This field is the address of a ascii
+                        null-terminated string that identifies the
+                        MPI_COMM_WORLD associated with the parent_rank
+                        process. It should distinguish this comm world
+                        from any other comm worlds spawned in this job
+                        and any job that this job join/connects to.
+
+  MPI2DD_INT32_T parent_rank;
+
+                        Rank of the parent process.
+
+  MPI2DD_INT32_T sequence;
+
+                        The sequence of this spawn command among those
+                        rooted on the parent process. This should
+                        start at zero and increment by one for each
+                        spawn that is rooted at the parent_rank
+                        process.
+
+};
+
+
+
+
+Directory and MetaDirectory Tables
+_________________________________________________________
+
+A metadirectory process will have two tables that allow a debugger to
+find metadirectory processes and directory processes. A process should
+not be in its own metadirectory or directory tables. These tables both
+have the same format.
+
+In a simple job, where there are no other metadirectory processes and
+the metadirectory process is also the only directory process, these
+tables might both be empty.
+
+
+struct MPI2DD_DIRECTORYENTRY {
+
+MPI2DD_ADDR_T host_name;
+
+     The address of an ascii null-terminated string containing the
+     address or name of the network node where a directory or
+     metadirectory process is running.
+
+     The host_name is either a host name, or an IPv4 address in
+     standard dot notation, or an IPv6 address in colon (and possibly
+     dot) notation.  (See RFC 1884 for the description of IPv6
+     addresses.)
+
+
+MPI2DD_ADDR_T executable_name;
+
+     The address of an ascii null-terminated string containing the
+     path name of the directory or metadirectory executable. The
+     executable is opened by the debugger to read symbol tables, so
+     the path should be accessible to the debugger.
+
+
+MPI2DD_INT32_T pid;
+
+     The process id or task id of the directory or metadirectory
+     process on the node given by the host_name field. On UNIX this
+     will be a pid.
+
+};
+

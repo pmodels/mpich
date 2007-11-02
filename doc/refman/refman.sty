@@ -1,0 +1,97 @@
+% These are the definitions for the reference manual
+%
+% Things to change:
+% 1.  While within argument text, insure that left margins line up
+%     (currently, subsequent lines at extreme left margin)
+% *** DONE ***
+% 2.  Too much space after synopsis
+% 3.  Index the main page (add index commands to mantitle)
+% 4.  ``Notes'' needs to be a uniform distance after ``input parameters''
+% 5.  Tabs and spaces are ignored in lines beginning with ``$''
+% *** DONE *** (fixed by new doctext?)
+%
+% Set the sizes if in stand-alone mode
+\def\manpagesonly{
+\textheight=9in
+\textwidth=6.1in
+\oddsidemargin=.2in
+\topmargin=-.50in
+\hsize=\textwidth
+}
+%
+% If \mancontentstrue, add each manual page to the contents list
+\newif\ifmancontents
+\mancontentsfalse
+%
+% Handle # and _ in text
+\def\nopound{\catcode`\#=13}
+{\nopound\gdef#{{\tt \char`\#}}}
+\def\Makeusletter{\catcode`\_=11}
+%\catcode`\_=11
+% The above makes _ a ``letter''.  We need this incase the file name (because
+% of the routine name) contains an underscore.  To make it print as an
+% underscore, we need to make it a special
+{\catcode`\_=\active\gdef_{{\tt\char`\_}}}
+{\catcode`\_=\active\gdef\makeustext{\catcode`\_=\active\def_{{\tt\char`\_}}}}
+%
+% \mantitle{name}{level}{date}
+\def\pagerule{\hbox to \hsize{\leaders\hrule height 2pt \hfil}}
+%
+% Note that we really need a routine that takes #1 and \protect's it
+% when giving the output to \addcontentsline
+%
+\def\mantitle#1#2#3{\pagerule\nobreak\hbox to \hsize{{\bf #1}\hfil{\bf #1}}%
+\ifmancontents\addcontentsline{toc}{subsection}{#1}\fi
+\nobreak\pagerule\nobreak}
+%
+% \manname{name}
+%\def\manname#1{\section*{#1}}
+\def\manname#1{\noindent {\bf #1}}
+%
+% \location{filename}
+\def\location#1{\subsection*{Location}\file{#1}\par}
+%
+% \startarg{argname}{meaning}
+\def\startarg#1#2{\ifvmode\else\par\fi
+     \setbox\@tempboxa\hbox{\bf #1}%
+     \ifdim \the\wd\@tempboxa > 1in 
+     \hbox to \hsize{\vtop{\box\@tempboxa}\hss}
+     \hbox to \hsize{\hskip1in\vtop{\hsize = 5in \vtop{\noindent #2\par}\hfil}\hfil}
+     %\vspace{3pt}% This isn't correct, but something is needed here.
+     \else
+     \hbox to \hsize{\vtop{\hbox to 1in{\bf #1\hfil}}%
+                     \vtop{\hbox to 5in{%
+                        \hsize = 5in\vtop{\noindent #2\par}\hfil}}\hfill}%
+     \fi}
+%
+% \file{name}
+\def\file#1{{\tt #1}}
+%
+% \subhead{name}
+\def\subhead#1{\ifvmode\else\par\fi\vspace{5pt}\subsection*{#1}}
+%
+% \startmanpage
+{\catcode`\_\active\gdef\redefus{\gdef_{{\tt\char`\_}}}}
+\def\startmanpage{\begin{raggedright}\begingroup
+\catcode`\_=\active\redefus}
+
+% \endmanpage
+\def\endmanpage{\ifvmode\else\par\fi\endgroup\vspace{15pt}\end{raggedright}}
+%
+% \nextline
+\def\nextline{\ifvmode\else\hfill\hbox{}\linebreak\fi}
+%
+% Surround verbatim with these to get the proper effect (which is...?)
+\def\startvb{\relax}
+\def\endvb{\relax}
+%
+% Redefine \\ to be a paragraph break with the appropriate fill (should
+% change doctext to generate \nl instead)
+%\def\nl{\hfill\\}
+%
+% Allow a looser tolerance for paragraph formation
+\pretolerance=300
+\tolerance=500
+%
+% We really should make the manpage stuff an environment, and put all of the
+% changes into that group.

@@ -1,0 +1,12 @@
+INCLUDES = -I../../include -I${master_top_srcdir}/src/include \
+    -I../../pmi/simple -I${master_top_srcdir}/src/pmi/simple
+
+libmpiexec_a_SOURCES = cmnargs.c process.c ioloop.c pmiserv.c labelout.c \
+		     env.c newsession.c rm.c pmiport.o dbgiface.c
+
+OTHER_DIRS = test
+
+distclean-local:
+clean-local:
+	-rm -f libmpiexec.a
+

@@ -1,0 +1,15 @@
+config.h.in
+autom4te.cache
+config.log
+config.cache
+config.status
+configure
+configure.lineno
+simple.class
+simple.jar
+simple_swing.class
+simple_swing.jar
+Makefile
+old
+share
+src_2*

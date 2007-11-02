@@ -1,0 +1,11 @@
+This directory contains tests for commands that are included with MPICH2.
+These include tests of commands for compiling and linking MPI programs, 
+such as mpicc and mpif77, and for using mpiexec to run MPI programs.
+These tests cover both command-line options recommended by the MPI-Forum and
+options that are part of the common MPICH2 extensions for mpiexec.
+
+In addition, the program testout.c can be used to check the buffering of
+stdio.  As a quality of implementation issue, users expect programs run
+by mpiexec to preserve their buffering choice (or at least the appearence of
+it).  This program writes several lines of output with delays between each
+line; those delays should be observed when the program is run under mpiexec.

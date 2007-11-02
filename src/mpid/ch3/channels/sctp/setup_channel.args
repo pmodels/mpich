@@ -1,0 +1,17 @@
+
+eval _conf_array=($ac_configure_args) 
+
+for arg in "${_conf_array[@]}" ; do
+  case "$arg" in  
+    --with-sctp=* ) 
+      sctp_dir=`echo "$arg" | sed 's/--with-sctp=//'` 
+      ;;
+    --with-sctp-include=* ) 
+      sctp_include_dir=`echo "$arg" | sed 's/--with-sctp-include=//'` 
+      ;;
+    --with-sctp-lib=* ) 
+      sctp_lib_dir=`echo "$arg" | sed 's/--with-sctp-lib=//'` 
+      ;;
+  esac 
+done 
+

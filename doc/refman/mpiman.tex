@@ -1,0 +1,81 @@
+% 
+%   This is a latex file that generates a reference manual for the 
+%   Model MPI implementation
+%
+\documentclass{article}
+\usepackage[dvipdfm]{hyperref}
+\usepackage{refman}
+\usepackage{tpage}
+\textheight=9in
+\textwidth=6.1in
+\oddsidemargin=.2in
+\topmargin=-.50in
+
+% Include each routine in the contents page
+\mancontentstrue
+
+\begin{document}
+
+\markright{MPICH2 Reference Manual}
+
+
+\def\nopound{\catcode`\#=13}
+{\nopound\gdef#{{\tt \char`\#}}}
+%\catcode`\_=13
+%\def_{{\tt \char`\_}}
+\catcode`\_=11
+\def\code#1{{\tt #1}}
+
+\ANLTitle{MPICH2 Model MPI Implementation\\Reference Manual\\\ \\Draft}{\em 
+William Gropp\\
+Ewing Lusk
+Mathematics and Computer Science Division\\
+Argonne National Laboratory}{00}{\today}
+
+\clearpage
+
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+\pagestyle{headings}
+
+\section{Introduction}
+This document contains detailed documentation on the routines that are part of
+the MPICH model MPI implementation.
+As an alternative to this manual, the reader should consider using either the
+man pages (often installed in \file{/usr/local/mpi/man}) or the web pages
+(often installed in \file{/usr/local/mpi/www}).
+
+%As an alternate to this manual, the reader should consider using the
+%script \code{mpiman}; this is a script that uses \code{xman} to provide
+%a X11 Window System interface to the data in this manual.
+
+\section{MPI Commands}
+\input refcmd.tex
+
+\section{MPI routines}
+This section contains descriptions of each of the routines in the MPI
+standard, including both MPI-1 and MPI-2.
+
+In the description of the routine parameters, the following terms are
+used:
+\begin{description}
+\item[handle]An MPI object handle.  This is simply an object of the
+  specified type.
+\item[choice]Any type.  For example, this may be an 'int', 'double',
+  or structure type.  These are always passed with a pointer and in
+  the C and C++ bindings, a \code{void*} pointer is used.
+\end{description}
+Other terms, such as ``nonnegative integer,'' are self explanatory.
+
+\input refmpi.tex
+
+%\section{MPE routines}
+%\input ref4/ref.tex
+
+%\section{ADI routines}
+%\input ref5/ref.tex
+
+\end{document}

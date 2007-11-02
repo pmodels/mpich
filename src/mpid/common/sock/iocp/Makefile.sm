@@ -1,0 +1,3 @@
+INCLUDES = -I../../../../include -I${master_top_srcdir}/src/include
+lib${MPILIBNAME}_a_SOURCES = sock.c
+sock.o: sock.c mpidu_socki.h ../mpidu_sock.h

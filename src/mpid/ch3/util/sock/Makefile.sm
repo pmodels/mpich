@@ -1,0 +1,7 @@
+INCLUDES = -I../../../../include -I${master_top_srcdir}/src/include
+socksources =  ch3u_init_sock.c ch3u_connect_sock.c ch3u_getinterfaces.c
+lib${MPILIBNAME}_a_SOURCES = ${socksources}
+
+# Create a local library as an option
+EXTRA_LIBS = libmpich-sockutil.a
+libmpich-sockutil_a_SOURCES = ${socksources}

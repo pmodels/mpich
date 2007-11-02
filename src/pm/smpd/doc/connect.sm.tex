@@ -1,0 +1,197 @@
+\begin{comment}
+This is the state machine for the smpd connect command.
+Graph [smpd connect],
+      [size="7.5, 10"]
+\end{comment}
+\begin{verbatim}
+State [connecting],[label="connecting"]
+	Event [connect]
+		Change_State([reading challenge string], [label="connect"])
+State [reading challenge string],[label="reading challenge string"]
+	Event [data read]
+		Change_State([writing challenge response])
+State [writing challenge response],[label="writing challenge response"]
+	Event [data written]
+		Change_State([reading connect result])
+State [reading connect result],[label="reading connect result"]
+	Event [data read]
+		if accept
+			Invoke_Action([session type],[label="accept"])
+		else reject
+			Change_State([closing],[label="reject"])
+Action [session type],[label="session"]
+	if process
+		Change_State([writing process session request],[label="process"])
+	else smpd
+		Change_State([writing smpd session request],[label="smpd"])
+State [writing process session request],[label="writing process session request"]
+	Event [data written]
+		Change_State([reading cred request])
+State [reading cred request],[label="reading cred request"]
+	Event [data read]
+		if yes
+			Invoke_Action([have credentials],[label="yes/job"])
+		else no
+			Change_State([reading reconnect request], [label="no"])
+Action [have credentials],[label="have credentials"]
+	if have
+		Change_State([writing cred ack yes],[label="yes"])
+	if have sspi
+		Change_State([writing cred ack sspi],[label="sspi"])
+	if have sspi job key
+		Change_State([writing cred ack sspi job],[label="sspi_job"])
+	else don't have
+		Change_State([writing cred_request command],[label="no"])
+State [writing cred_request command],[label="writing cred_request command"]
+	Event [data written]
+		Change_State([handle result],[style=dotted])
+State [handle result]
+	Event [data read]
+		if success
+			Change_State([writing cred ack yes],[label="success"])
+		if fail
+			Change_State([writing cred ack no],[label="fail"])
+		if sspi
+			Change_State([writing cred ack sspi],[label="sspi"])
+		if sspi job
+			Change_State([writing cred ack sspi job],[label="sspi_job"])
+State [writing cred ack sspi]
+        Event [data written]
+                Change_State([writing sspi_init])
+State [writing cred ack sspi job]
+		Event [data written]
+				Change_State([writing sspi_init])
+State [writing sspi_init]
+        Event [data written]
+                Change_State([sspi_init result],[style=dotted])
+State [sspi_init result]
+        Event [data read]
+                Change_State([writing client sspi header])
+State [writing client sspi header],[label="writing client sspi header"]
+        Event [data written]
+                Change_State([writing client sspi buffer])
+State [writing client sspi buffer],[label="writing client sspi buffer"]
+        Event [data written]
+                Change_State([reading client sspi header])
+State [reading client sspi header],[label="reading client sspi header"]
+        Event [data read]
+                if sspi_iter
+                        Change_State([reading client sspi buffer],[label="sspi iter"])
+                else delegate
+                        Invoke_Action([delegate],[label="delegate"])
+Action [delegate],[label="delegate"]
+		Change_State([writing delegate request result],[label="yes/no/key/identify"])
+#        if delegate yes
+#                Change_State([writing delegate yes],[label="yes"])
+#        else delegate no
+#                Change_State([writing delegate no],[label="no"])
+#        else sspi key
+#				Change_State([writing job key],[label="key"])
+#		else sspi identify
+#				Change_State([writing identify],[label="identify"])
+State [reading client sspi buffer],[label="reading client sspi buffer"]
+        Event [data read]
+                Change_State([writing sspi_iter],[label="sspi_iter"])
+State [writing sspi_iter],[label="writing sspi_iter"]
+        Event [data written]
+                Change_State([sspi_iter result],[style=dotted])
+State [sspi_iter result],[label="sspi_iter result"]
+        Event [data read]
+				if more data
+						Change_State([writing client sspi header])
+				else
+						Change_State([reading client sspi header],[label="no data"])
+State [writing delegate request result],[label="writing delegate reqeuest result"]
+		Event [data written]
+				if job_key
+						Change_State([writing job key],[label="key"])
+				else
+						Change_State([reading impersonate result])
+#State [writing delegate yes],[label="writing delegate yes"]
+#        Event [data written]
+#                Change_State([reading impersonate result])
+#State [writing delegate no],[label="writing delegate no"]
+#        Event [data written]
+#                Change_State([reading impersonate result])
+State [writing job key],[label="writing job key"]
+		Event [data written]
+				Change_State([reading impersonate result])
+#State [writing identify],[label="writing identify"]
+#		Event [data written]
+#				Change_State([reading impersonate result])
+State [reading impersonate result],[label="reading impersonate result"]
+        Event [data read]
+                if process:success
+                        Change_State([reading reconnect request],[label="process:success"])
+                if smpd:success
+						Change_State([writing session header],[label="smpd:success"])
+                else fail
+                        Change_State([closing],[label="fail"])
+State [writing cred ack yes],[label="writing cred ack yes"]
+	Event [data written]
+		Change_State([writing account])
+State [writing cred ack no],[label="writing cred ack no"]
+	Event [data written]
+		Change_State([closing])
+State [writing account],[label="writing account"]
+	Event [data written]
+		Change_State([writing password])
+State [writing password],[label="writing password"]
+	Event [data written]
+		Change_State([reading password result])
+State [reading password result],[label="reading password result"]
+	Event [data read]
+		if accept
+			Change_State([reading reconnect request],[label="accept"])
+		else reject
+			Change_State([closing],[label="reject"])
+State [writing smpd session request],[label="writing smpd session request"]
+	Event [data written]
+		Change_State([reading pwd request])
+State [reading reconnect request],[label="reading reconnect request"]
+	Event [data read]
+		if yes
+			Change_State([closing],[label="yes"])
+			Change_State([reconnecting],[label="yes" style=dotted])
+		else no
+			Change_State([writing session header], [label="no"])
+State [reconnecting],[label="reconnecting"]
+	Event [connect]
+		Change_State([writing session header],[label="connect"])
+State [reading pwd request],[label="reading pwd request"]
+	Event [data read]
+		if yes
+			Change_State([writing smpd password], [label="yes"])
+		else no
+			Change_State([writing session header], [label="no"])
+		else sspi
+			Change_State([writing sspi_init], [label="sspi"])
+State [writing smpd password],[label="writing smpd password"]
+	Event [data written]
+		Change_State([reading smpd result])
+State [reading smpd result],[label="reading smpd result"]
+	Event [data read]
+		if accept
+			Change_State([writing session header], [label="accept"])
+		else reject
+			Change_State([closing], [label="reject"])
+State [writing session header],[label="writing session header"]
+	Event [data written]
+		Change_State([reading and writing],[label="post result cmd"])
+State [reading and writing],[label="reading cmd header and writing cmd"]
+	Event [data read]
+		Change_State([reading cmd],[label="read"])
+	Event [data written]
+		Change_State([reading cmd header],[label="result written"])
+State [reading cmd header],[label="reading cmd header"]
+	Event [data read]
+		Change_State([reading cmd])
+State [reading cmd],[label="reading cmd"]
+	Event [data read]
+		Invoke_Action([handle cmd])
+Action [handle cmd],[label="handle cmd"]
+State [closing],[label="closing"]
+	Event [closed]
+		Change_State([done], [label="closed"])
+State [done],[label="done"]
+\end{verbatim}

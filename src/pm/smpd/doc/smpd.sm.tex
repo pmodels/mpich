@@ -1,0 +1,157 @@
+\begin{comment}
+This is the state machine for the smpd listener process.
+Graph [smpd listener],
+      [size="7.5, 10"]
+\end{comment}
+\begin{verbatim}
+State [smpd listening],[label="smpd\nlistening"]
+	Event [accept]
+		Change_State([smpd listening], [label="accept"])
+		Change_State([writing challenge string], [label="new context" style=dotted])
+State [writing challenge string], [label="writing challenge string"]
+	Event [data written]
+		Change_State([reading challenge response])
+State [reading challenge response], [label="reading challenge response"]
+	Event [data read]
+		Change_State([writing connect result])
+State [writing connect result]
+	Event [data written]
+		if accepted
+			Change_State([reading session request], [label="accepted"])
+		else rejected
+			Change_State([closing], [label="rejected"])
+State [reading session request],[label="reading session request"]
+	Event [data read]
+		if process_cred
+			Change_State([writing cred/job request],[label="process"])
+		else if process_nocred
+			Change_State([writing nocred request],[label="process"])
+		else if smpd_pwd
+			Change_State([writing pwd request],[label="smpd"])
+		else if smpd_sspi
+			Change_State([writing sspi request],[label="smpd"])
+		else
+			Change_State([writing nopwd request],[label="smpd"])
+State [writing cred/job request],[label="writing cred/job request"]
+	Event [data written]
+		Change_State([reading cred ack])
+State [reading cred ack],[label="reading cred ack"]
+	Event [data read]
+		if yes
+			Change_State([reading account],[label="yes"])
+		else no
+			Change_State([closing],[label="no"])
+	        else sspi
+	                Change_State([reading sspi header],[label="sspi"])
+	        else sspi_job
+					Change_State([reading sspi header],[label="sspi_job"])
+State [reading sspi header],[label="reading sspi header"]
+        Event [data read]
+                Change_State([reading sspi buffer])
+State [reading sspi buffer],[label="reading sspi buffer"]
+        Event [data read]
+                if more date
+                        Change_State([writing sspi header],[label="more data"])
+                else done
+                        Change_State([writing delegate],[label="done"])
+State [writing sspi header],[label="writing sspi header"]
+        Event [data written]
+                Change_State([writing sspi buffer])
+State [writing sspi buffer],[label="writing sspi buffer"]
+        Event [data written]
+                Change_State([reading sspi header])
+State [writing delegate],[label="writing delegate"]
+        Event [data written]
+                Change_State([reading delegate request result])
+State [reading delegate request result],[label="reading delegate request result"]
+        Event [data read]
+                if impersonate
+                        Change_State([writing impersonate result],[label="yes/no/identify"])
+                else sspi job key
+						Change_State([reading job key],[label="key"])
+State [reading job key],[label="reading job key"]
+		Event [data read]
+				Change_State([writing impersonate result])
+State [writing impersonate result],[label="writing impersonate result"]
+        Event [data written]
+				if impersonate success
+						Change_State([writing reconnect request],[label="process:success"])
+				else smpd success
+						Change_State([reading session header],[label="smpd:success"])
+				else fail
+						Change_State([closing],[label="fail"])
+State [writing nocred request],[label="writing nocred request"]
+	Event [data written]
+		if win
+			Change_State([writing reconnect request],[label="win"])
+		else
+			Change_State([writing noreconnect request],[label="unix"])
+State [writing pwd request],[label="writing pwd request"]
+	Event [data written]
+		Change_State([reading smpd password])
+State [writing sspi request],[label="writing sspi request"]
+	Event [data written]
+		Change_State([reading sspi header])
+State [writing nopwd request],[label="writing nopwd request"]
+	Event [data written]
+		Change_State([reading session header])
+State [reading account],[label="reading account"]
+	Event [data read]
+		Change_State([reading password])
+State [reading smpd password],[label="reading smpd password"]
+	Event [data read]
+		if accepted
+			Change_State([writing session accept],[label="accept"])
+		else
+			Change_State([writing session reject],[label="reject"])
+State [reading password],[label="reading password"]
+	Event [data read]
+		if logon success
+			Change_State([writing password accept],[label="logon success"])
+		else logon fail
+			Change_State([writing password reject],[label="logon fail"])
+State [writing password accept],[label="writing password accept"]
+	Event [data written]
+		if win
+			Change_State([writing reconnect request],[label="win"])
+		else
+			Change_State([writing noreconnect request],[label="unix"])
+State [writing password reject],[label="writing password reject"]
+	Event [data written]
+		Change_State([closing])
+State [writing session accept],[label="writing session accept"]
+	Event [data written]
+		Change_State([reading session header])
+State [writing session reject],[label="writing session reject"]
+	Event [data written]
+		Change_State([closing])
+State [writing reconnect request],[label="writing reconnect request"]
+	Event [data written]
+		if new process
+			Change_State([mgr listening],[label="new process" style=dotted])
+		else
+			Change_State([closing])
+State [writing noreconnect request],[label="writing noreconnect request"]
+	Event [data written]
+		if forkee
+			Change_State([reading session header],[label="unix forkee"])
+		else
+			Change_State([closing],[label="unix forker"])
+State [mgr listening],[label="mgr listening"]
+	Event [accept]
+		Change_State([closing], [label="accept"])
+		Change_State([reading session header],[label="new context" style=dotted])
+State [reading session header],[label="reading session header"]
+	Event [data read]
+		Change_State([reading cmd header])
+State [reading cmd header],[label="reading cmd header"]
+	Event [data read]
+		Change_State([reading cmd])
+State [reading cmd],[label="reading cmd"]
+	Event [data read]
+		Change_State([reading cmd header])
+State [closing]
+	Event [close]
+		Change_State([done], [label="closed"])
+State [done]
+\end{verbatim}

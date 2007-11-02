@@ -1,0 +1,20 @@
+\input MPI.tex
+% Not all pm's provide info on mpiexec yet
+\newread\availtest
+\openin\availtest mpiexec.tex
+\ifeof\availtest
+\else
+\input mpiexec.tex
+\fi
+\closein\availtest
+
+\input mpicc.tex
+\input mpicxx.tex
+\input mpif77.tex
+
+\openin\availtest mpif90.tex
+\ifeof\availtest
+\else
+\input mpif90.tex
+\fi
+\closein\availtest

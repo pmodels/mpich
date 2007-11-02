@@ -1,0 +1,2 @@
+smvar_do_sharedlibs = 0
+wtimef90_SOURCES = wtimef90.f90

@@ -1,0 +1,52 @@
+Example MPI programs
+
+This directory contains some example MPI programs.  They are described below.
+Examples of MPI programs in Fortran 77, Fortran 90, and C++ are found in the
+directories f77, f90, and cxx respectively.
+
+cpi - A simple program to compute pi
+
+Optional programs
+These programs are not built by default, but may be built and run
+
+hellow - A simple "hello world" program
+icpi - An interactive version of cpi
+
+parent and child - A simple example of using MPI_Comm_spawn
+
+pmandel* - Programs to solve the Mandelbrot set
+
+Running the pmandel* programs
+-----------------------------
+ The programs pmandel* solve the Mandelbrot set. The input to the program
+ are the coordinates, scale etc for plotting the output of the program and the 
+ number of iterations to solve the set. The output is an image file (default is
+ pmandel.ppm) of the Portable Pixel Map format. Help on using the program can
+ be obtained by running the executable with "-help" parameter.
+
+ To run the pmandel* tests you can either run it in the interactive mode (-i option)
+ or run it in a non-interactive mode. In the interactive mode the output of the
+ program is saved as an image file (you can specify the name of the file using -out
+ option of the program). In the non-interactive mode you need a visualizer for the 
+ output (A Visualizer is available in Windows. Compile the project pman_vis for the
+ visualizer.). 
+ Non-interactive execution eg -- 
+	mpiexec -n 2 pmandel -i
+ (The program prompts for entering the coordinates, scales and no of iterations
+  and output is saved in pmandel.ppm file)
+
+ Interactive execution eg -- 
+	mpiexec -n 2 pmandel
+
+  (Now open the visualizer program, pman_vis.exe, created by compiling pmandel_vis
+   project in windows. Click on File -> Connect and select "TCP Socket Connect".
+   Leave the default settings and click connect. The visualizer program connects to
+   pmandel program and displays the output)  
+
+ pmandel* programs differ in the MPI functionalities used. For example,
+ pmandel_service.c uses MPI_Open_Port() to connect to the visualizer while pmandel.c
+ uses the sockets directly for the connection.  
+
+
+Others will be documented later.
+

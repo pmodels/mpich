@@ -1,0 +1,14 @@
+INCLUDES = -I../include
+doc_sources = mpicc.txt mpif77.txt mpicxx.txt mpif90.txt mpiexec.txt
+DOCDESTDIRS = html:www/www1,man:man/man1,latex:doc/refman
+doc_HTML_SOURCES  = ${doc_sources}
+doc_MAN_SOURCES   = ${doc_sources}
+doc_LATEX_SOURCES = ${doc_sources}
+
+mpich2version_SOURCES = mpich2version.c
+mpich2version_LDADD = ../../lib/lib@MPILIBNAME@.a
+
+install_BIN = mpicc mpich2version parkill
+install_ETC = mpicc.conf
+optinstall_BIN = mpicxx mpif77 mpif90
+optinstall_ETC = mpicxx.conf mpif77.conf mpif90.conf

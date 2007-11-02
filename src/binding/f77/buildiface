@@ -1,0 +1,3530 @@
+#! /usr/bin/perl -w
+#
+# This file builds candidate interface files from the descriptions in 
+# mpi.h
+#
+# Here are the steps:
+# 1) Find the prototypes in mpi.h.in (Look for *Begin Prototypes*)
+# 2) For each function, match the name and args:
+#    int MPI_xxxx( ... )
+# 3) Create a new file with the name lc(xxxx)f.c (lowercase of name), 
+#    containing 
+#    Copyright
+#    Profiling block indicator
+#    Fortran name version of function, with MPI objects replaced by 
+#    MPI_Fint etc. as appropriate
+#    
+#
+# Setup global variables
+%CtoFName = ();
+@ExtraRoutines = ();
+
+$buildfiles = 1;
+$build_prototypes = 1;
+$buildMakefile = 1;
+$prototype_header_file = "fproto.h";
+$build_io = 1;
+$print_line_len = 0;
+$write_mpif = 1;
+$is_MPI = 1;
+$do_profiling = 1;
+$routine_prefix = "MPI_";
+$routine_pattern = "[A-Z][a-z0-9_]*";
+$out_prefix="mpi_";
+$malloc = "MPIU_Malloc";
+$free   = "MPIU_Free";
+$header_file = "mpi_fortimpl.h";
+$debug = 0;
+$writeRoutineList = 0;   # Set to 1 to get a list of MPI routines
+
+@arg_addresses = ();
+#
+# Error return handling
+$errparmtype = "MPI_Fint *";
+$errparm = "MPI_Fint *ierr";
+$errparmlval = "*ierr";
+$errparmrval = "*ierr";
+$returnErrval = 0;
+$returnType   = "void";
+
+%altweak = ();    # Alternate weak declarations
+%altweakrtype = ();
+
+#feature variables
+$do_logical = 1;
+$do_weak    = 1;
+$do_subdecls = 1;
+$do_bufptr = 1;
+$prototype_file = "../../include/mpi.h.in";
+
+# Global hashes used for definitions and to record the locations of the
+# defintions.
+%mpidef = ();
+%mpidefFile = ();
+%mpiRoutinesFile = ();
+
+# Handle special initializations
+#
+# Notes on this string.  Some symbols need to be initialized at runtime.
+# These are typically the addresses of the "special" Fortran symbols, 
+# such as MPIR_F_MPI_BOTTOM.  Because MPI-2 requires that MPI_Init and 
+# MPI_Init_thread, called in *any* language, initalize MPI for *all*
+# languages, we can't depend on having the Fortran versions of MPI_Init or
+# MPI_Init_thread called before these values might be used in a Fortran
+# wrapper function.
+# We also cannot have the C version of MPI_Init and MPI_Init_thread call 
+# the initialization routine, because some Fortran compilers will require
+# special routines from that particular vendors Fortran runtime library for
+# any executable that uses routines that are compiled with the Fortran 
+# compiler, forcing user programs that are entirely C to link with the 
+# Fortran runtime.  Thus, we must check whether the values are initialized
+# before any use in any routine.
+$specialInitAdded = 0;
+$specialInitString = "\
+    if (MPIR_F_NeedInit){ mpirinitf_(); MPIR_F_NeedInit = 0; }";
+
+# Process arguments
+#
+# Args
+# -feature={logical,fint,subdecls,weak,bufptr}, separated by :, value given 
+# by =on or =off, eg
+# -feature=logical=on:fint=off
+# The feature names mean:
+#    logical - Fortran logicals are converted to/from C
+#    fint    - Fortran integers and C ints are different size (not implemented)
+#    subdecls - Declarations for PC-Fortran compilers added
+#    weak    - Use weak symbols 
+#    bufptr  - Check for MPI_BOTTOM as a special address.  This is
+#              not needed if a POINTER declaration is available.
+foreach $_ (@ARGV) {
+    if (/-noprototypes/) { $build_prototypes = 0; }
+    elsif (/-infile=(.*)/) {
+	# Special arg to help with debugging
+	$prototype_file = $1;
+	$write_mpif = 0;
+	$build_prototypes = 0;
+	$do_weak    = 0;
+    }
+    elsif (/-noromio/) { $build_io = 0; }
+    elsif (/-debug/) {
+	$debug = 1;
+    }
+    elsif (/-prefix=(.*)/) {
+	$routine_prefix = $1;
+	$is_MPI = 0;
+    }
+    elsif (/-pattern=(.*)/) {
+	$routine_pattern = $1;
+    }	
+    elsif (/-feature=(.*)/) {
+	foreach $feature (split(/:/,$1)) {
+	    print STDERR "Processing feature $feature\n" if $debug;
+	    # Feature values are foo=on,off
+	    ($name,$value) = split(/=/,$feature);
+	    if ($value eq "on") { $value = 1; } 
+	    elsif ($value eq "off") { $value = 0; }
+	    # Set the variable based on the string
+	    $varname = "do_$name";
+	    $$varname = $value;
+	}
+    }
+    elsif (/deffile=(.*)/) {
+	$definition_file = $1;
+	$is_MPI = 0;
+    }
+    else {
+	print STDERR "Unrecognized argument $_\n";
+    }
+}
+
+# Note that the code that looks up values strips blanks out of the type name
+# No blanks should be used in the key.
+%tof77 = ( 'MPI_Datatype' => 'MPI_Fint *',
+	   'MPI_Comm' => 'MPI_Fint *',
+#MPI_File must be handled specially, since ROMIO still uses pointers
+	   'MPI_File' => 'MPI_Fint *',
+	   'MPI_Win' => 'MPI_Fint *',
+	   'MPI_Request' => 'MPI_Fint *',
+	   'MPI_Group' => 'MPI_Fint *',
+	   'MPI_Op' => 'MPI_Fint *',
+	   'MPI_Info' => 'MPI_Fint *',
+	   'MPI_Errhandler' => 'MPI_Fint *',
+	   'MPI_Aint' => 'MPI_Fint *',   # Should be MPIR_FAint
+	   'MPI_Offset' => 'MPI_Offset *', # Should be MPIR_FOint
+	   'int' => 'MPI_Fint *',
+	   'int[]' => 'MPI_Fint',        # no * because we'll use array form
+	   'int[][3]' => 'MPI_Fint',     # no * because we'll use array form
+	   'MPI_Datatype*' => 'MPI_Fint *',
+	   'MPI_Datatype[]' => 'MPI_Fint', # no * because we'll use array form
+	   'MPI_Comm*' => 'MPI_Fint *',
+	   'MPI_File*' => 'MPI_Fint *',
+	   'MPI_Win*' => 'MPI_Fint *', 
+	   'MPI_Group*' => 'MPI_Fint *',
+	   'MPI_Request*' => 'MPI_Fint *',
+	   'MPI_Aint*' => 'MPI_Fint *',   # Should be MPIR_FAint
+	   'int *' => 'MPI_Fint *',
+	   'int*' => 'MPI_Fint *',         # Catch missing space
+	   'MPI_Op*' => 'MPI_Fint *',
+	   'MPI_Status*' => 'MPI_Fint *',
+	   'MPI_Info*' => 'MPI_Fint *',
+	   'MPI_Errhandler*' => 'MPI_Fint *',
+	   );
+
+# declarg is special parameters for certain routines
+%declarg = ( 'type_extent-2' => 'MPI_Fint *',
+	     'type_lb-2' => 'MPI_Fint *',
+	     'type_ub-2' => 'MPI_Fint *', 
+	     'type_struct-3' => 'MPI_Fint *',   # Really [], but * is easier
+             'type_hindexed-3' => 'MPI_Fint *', # As above
+             'type_hvector-3' => 'MPI_Fint *',
+	     # The following are MPI-2 routines with address args.
+	     # For these, the user must pass in the correct arguments
+	     'file_get_type_extent-3' => 'MPI_FAint *',
+	     'pack_external-6' => 'MPI_Aint *',        # Value in C call
+	     'pack_external-7' => 'MPI_Aint *',
+	     'pack_external_size-4' => 'MPI_Aint *',
+	     'type_create_hvector-3' => 'MPI_Aint *',  # Value in C call
+	     'type_create_hindexed-3' => 'MPI_Aint *',
+	     'type_create_struct-3' => 'MPI_Aint *',
+             'type_get_contents-6' => 'MPI_Aint *',
+	     'type_get_extent-2' => 'MPI_Aint *',
+	     'type_get_extent-3' => 'MPI_Aint *',
+	     'type_get_true_extent-2' => 'MPI_Aint *',
+	     'type_get_true_extent-3' => 'MPI_Aint *',
+	     'type_create_resized-2' => 'MPI_Aint *',  # Value in C call
+	     'type_create_resized-3' => 'MPI_Aint *',  # Value in C call
+	     'unpack_external-3' => 'MPI_Aint *',      # Value in C call
+	     'unpack_external-4' => 'MPI_Aint *',
+	     'win_create-2' => 'MPI_Aint *',
+	     'accumulate-5' => 'MPI_Aint *',
+	     'put-5' => 'MPI_Aint *',
+	     'get-5' => 'MPI_Aint *',
+	     'alloc_mem-1' => 'MPI_Aint *',
+	    );
+
+%argsneedcast = ( 'MPI_Request *' => '(MPI_Request *)(ARG)',
+		  'MPI_Status *'  => '(MPI_Status *)(ARG)',
+		  'MPI_File' => 'MPI_File_f2c(ARG)',
+		  'MPI_Comm' => '(MPI_Comm)(ARG)',
+		  'MPI_Comm *' => '(MPI_Comm *)(ARG)',
+                  'MPI_Datatype' => '(MPI_Datatype)(ARG)',
+                  'MPI_Datatype *' => '(MPI_Datatype *)(ARG)',
+		  'MPI_Info *' => '(MPI_Info *)(ARG)',
+		  'MPI_Info' => '(MPI_Info)(ARG)',
+		  'int [][3]' => '(int (*)[3])(ARG)'
+);
+
+##
+## For implementations other than MPICH2, we'll need to consider using
+## MPI_C2f_<name> and MPI_F2c_<name>, as in 
+## 'MPI_Info' => 'MPI_F2c_info(ARG)'
+##
+# name_map maps the filenames.  Most filenames are created automatically
+# from the routine name, but some names have too many characters (15, 
+# including the extension(.o) is a limit for ar in some systems).
+%name_map = ( 'add_error_class' => 'adderrclass',
+	      'add_error_code' => 'adderrcode',
+	      'add_error_string' => 'adderrstring',
+	      'buffer_attach' => 'bufattach',
+	      'buffer_detach' => 'bufdetach',
+	      'comm_call_errhandler' => 'commcallerr',
+	      'comm_create_errhandler' => 'commcreerr',
+	      'comm_create_keyval' => 'commnewkey',
+	      'comm_delete_attr' => 'commdelattr',
+	      'comm_disconnect' => 'commdisc',
+	      'comm_free_keyval' => 'commfreekey',
+	      'comm_get_errhandler' => 'commgeterr',
+	      'comm_get_name' => 'commgetnam',
+	      'comm_get_parent' => 'commparent',
+	      'comm_remote_group' => 'commrgroup',
+	      'comm_remote_size' => 'commrsize',
+	      'comm_set_errhandler' => 'commseterr',
+	      'comm_spawn_multiple' => 'spawnmult',
+	      'comm_test_inter' => 'commtestic',
+	      'errhandler_create' => 'errhcreate',
+	      'errhandler_free' => 'errhfree',
+	      'errhandler_get' => 'errhget',
+	      'errhandler_set' => 'errhset',
+	      'file_call_errhandler' => 'filecallerr',
+	      'file_create_errhandler' => 'filecreerr',
+	      'file_get_errhandler' => 'filegeterr',
+	      'file_set_errhandler' => 'fileseterr',
+	      'get_processor_name' => 'getpname',
+	      'graph_neighbors_count' => 'grfnbcount',
+	      'graph_neighbors' => 'grfnbrs',
+	      'grequest_complete' => 'greqcomplete',
+	      'grequest_start' => 'greqstart',
+	      'group_difference' => 'groupdiff',
+	      'group_intersection' => 'groupinter',
+	      'group_range_excl' => 'grouprexcl',
+	      'group_range_incl' => 'grouprincl',
+	      'group_translate_ranks' => 'grouptranks',
+	      'info_get_nkeys' => 'infognk',
+	      'info_get_nthkey' => 'infognthk',
+	      'info_get_valuelen' => 'infovallen',
+	      'intercomm_create' => 'iccreate',
+	      'intercomm_merge' => 'icmerge',
+	      'is_thread_main' => 'isthrmain',
+	      'pack_external_size' => 'packesize',
+	      'reduce_scatter' => 'redscat',
+	      'request_get_status' => 'reqgetstat',
+	      'sendrecv_replace' => 'sndrcvrpl',
+	      'status_set_cancelled' => 'statgetcl',
+	      'status_set_elements' => 'statsetel',
+	      'test_cancelled' => 'testcancel',
+	      'type_contiguous' => 'typecontig',
+	      'type_create_darray' => 'typedarray',
+	      'type_create_f90_integer' => 'typef90int',
+	      'type_create_f90_real' => 'typef90real',
+	      'type_create_f90_complex' => 'typef90cmplx',
+	      'type_create_hindexed' => 'typechind',
+	      'type_create_hvector' => 'typechvec',
+	      'type_create_indexed_block' => 'typecindb',
+	      'type_create_keyval' => 'typenewkey',
+	      'type_create_resized' => 'typecresize', 
+	      'type_create_struct' => 'typecstruct',
+	      'type_create_subarray' => 'typecsubarr',
+	      'type_delete_attr' => 'typedelattr',
+	      'type_free_keyval' => 'typefreekey',
+	      'type_get_contents' => 'typegetcnts',
+	      'type_get_envelope' => 'typegetenv',
+	      'type_get_extent' => 'typegetextent',  # there is already a type_extent
+	      'type_get_name' => 'typegname',
+	      'type_get_true_extent' => 'typegtext',
+	      'type_set_attr' => 'typesetattr',
+	      'type_set_name' => 'typesetname',
+	      'unpack_external' => 'unpackext',
+	      'unpublish_name' => 'unpubname',
+	      'win_call_errhandler' => 'wincallerr',
+	      'win_create_errhandler' => 'wincreerr',
+	      'win_create_keyval' => 'winnewkey',
+	      'win_delete_attr' => 'windelattr',
+	      'win_free_keyval' => 'winfreekey',
+	      'win_get_errhandler' => 'wingeterr',
+	      'win_set_errhandler' => 'winseterr',
+);
+
+#
+# Special routines have very different calling seqences in C and Fortran
+# or different behavior.
+# Init and Init thread have different arg lists (no argc, argv)
+# Pcontrol has no varargs
+# Address and Get_address require special integer types and
+# possibly handling for MPI_BOTTOM
+# Keyval routines require setting the language to Fortran (Attribute
+# routines are handled with the special argument processing)
+#
+# The Type_create_f90_xxx routines are only available as part of the
+# extended Fortran support, and are excluded from the f77 routines.
+%special_routines = ( 'Init' => 1, 'Init_thread' => 1, 'Pcontrol' => '1',
+		      'Address' => 1, 'Get_address' => 1,
+		      'Keyval_create' => 1, 'Status_f2c' => 1,
+		      'Status_c2f' => 1,
+		      'Type_create_f90_integer' => 1,
+		      'Type_create_f90_real' => 1,
+		      'Type_create_f90_complex' => 1,
+		      );
+# 
+# Note that wtime and wtick aren't found because they don't match the 
+# int MPI_xxx format.  They're handled directly by the special routine
+# code below
+
+#
+# Most routines can be processed automatically.  However, some
+# require some special processing.  For example, those routines with
+# LOGICAL arguments need some special handling.  To detect this, there
+# are two entries in a %special_args hash: the routine name, and the routine
+# name -arg#.  E.g., for MPI_Test, the hash has keys
+# "Test" and "Test-2".  The value for "Test-2" is "out:logical"; this 
+# indicates that the variable is an out variable with logical type.
+# Processing types (the second field after the :) are
+#    logical: convert to/from Fortran and C representations of logical
+#    index:   convert to/from Fortran (1-based) and C (0-based) origins
+#    array:   handle arrays of items that may have different lengths
+#             in C and Fortran because the integer types have 
+#             different sizes.  The term has an additional :expression,
+#             the third term give the array size.
+#    addnull: Add a null character to a *copy* of the input string,
+#             after trimming any blanks.
+#    blankpad: Add blanks and remove nulls.  Only used for out args;
+#             must use an allocated space to provide room for the null
+#             that the C routines may require
+#    bufptr:  Detect MPI_BOTTOM.  Note that a better alternative is to
+#             use MPI_Address and MPI_Get_address to make addresses
+#             relative to the Fortran MPI_BOTTOM.  The lines that
+#             define this are commented out below.
+#    addrint: Given the address of an int, provide the int.  Used
+#             for attr_put/set routines 
+#    attrint: Convert an attribute value to an int.
+#    addraint: Given the address of an address-sized int, provide the
+#             value of that item.  Used for the MPI-2 versions of the
+#             attribute caching routines
+#    bufaddr: Argument is *output* as a buffer address.  Discarded before
+#             passing to Fortran.
+# For MPI-2 routines that take MPI_Aints even in Fortran, we need a 
+# special mapping when the value is passed to c
+#    aintToVal: Given the address of an Aint, pass the value to the C routine
+# (This should really be done by not applying the Aint->int mapping
+# for MPI-2 routines.  But for now, this hack will work)
+%special_args = ( 
+#    'Allreduce' => '1:2', 'Allreduce-1' => 'in:bufptr',	
+#		 'Allreduce-2' => 'in:bufptr', 
+#    'Bcast' => '1', 'Bcast-1' => 'in:bufptr',		 
+#    'Gather' => '1:4', 'Gather-1' => 'in:bufptr', 'Gather-4' => 'in:bufptr',
+#    'Gatherv' => '1:4', 'Gatherv-1' => 'in:bufptr', 'Gatherv-4' => 'in:bufptr',
+#    'Scatter' => '1:4', 'Scatter-1' => 'in:bufptr', 'Scatter-4' => 'in:bufptr',
+#    'Scatterv' => '1:5', 'Scatterv-1' => 'in:bufptr', 'Scatterv-5' => 'in:bufptr',
+#    'Allgather' => '1:4', 'Allgather-1' => 'in:bufptr', 'Allgather-4' => 'in:bufptr',
+#    'Allgatherv' => '1:4', 'Allgatherv-1' => 'in:bufptr', 'Allgatherv-4' => 'in:bufptr',
+#    'Alltoall' => '1:4', 'Alltoall-1' => 'in:bufptr', 'Alltoall-4' => 'in:bufptr',
+#    'Alltoallv' => '1:5', 'Alltoallv-1' => 'in:bufptr', 'Alltoallv-5' => 'in:bufptr',
+#    'Reduce' => '1:2', 'Reduce-1' => 'in:bufptr', 'Reduce-2' => 'in:bufptr',
+#    'Reduce_scatter' => '1:2', 'Reduce_scatter-1' => 'in:bufptr', 
+#		  'Reduce_scatter-2' => 'in:bufptr',
+#    'Scan' => '1:2', 'Scan-1' => 'in:bufptr', 'Scan-2' => 'in:bufptr',
+#
+    'Gather' => '1', 'Gather-1' => 'in:inplace', 
+    'Gatherv' => '1', 'Gatherv-1' => 'in:inplace',
+    'Scatter' => '4', 'Scatter-4' => 'in:inplace',
+    'Scatterv' => '5', 'Scatterv-5' => 'in:inplace',
+    'Allgather' => '1', 'Allgather-1' => 'in:inplace',
+    'Allgatherv' => '1', 'Allgatherv-1' => 'in:inplace',
+    'Reduce' => '1', 'Reduce-1' => 'in:inplace',
+    'Allreduce' => '1', 'Allreduce-1' => 'in:inplace',
+    'Reduce_scatter' => '1', 'Reduce_scatter-1' => 'in:inplace',
+    'Scan' => '1', 'Scan-1' => 'in:inplace',
+
+  
+    'Add_error_string' => '2', 'Add_error_string-2' => 'in:addnull',
+    'Attr_put' => '3', 'Attr_put-3' => 'in:addrint',
+    'Attr_get' => '3:4', 'Attr_get-4' => 'out:logical', 
+		 'Attr_get-3' => 'out:attrint:4',
+    'Comm_set_attr' => '3', 'Comm_set_attr-3' => 'in:addraint', 
+    'Type_set_attr' => '3', 'Type_set_attr-3' => 'in:addraint',
+    'Win_set_attr' => '3', 'Win_set_attr-3' => 'in:addraint',
+    'Comm_get_attr' => '3:4', 'Comm_get_attr-4' => 'out:logical',
+		  'Comm_get_attr-3' => 'out:attraint:4',
+    'Type_get_attr' => '3:4', 'Type_get_attr-4' => 'out:logical',
+		  'Type_get_attr-3' => 'out:attraint:4',
+    'Win_get_attr' => '3:4', 'Win_get_attr-4' => 'out:logical',		   
+		  'Win_get_attr-3' => 'out:attraint:4',
+    'Buffer_detach' => '1', 'Buffer_detach-1' => 'out:bufaddr',		 
+    'Cart_create' => '4:5', 'Cart_create-4' => 'in:logical_array:*v2', 
+    'Cart_create-5' => 'in:logical', 
+    'Cart_get' => '4', 'Cart_get-4' => 'out:logical_array:*v2',
+    'Comm_accept' => '1', 'Comm_accept-1' => 'in:addnull',
+    'Comm_connect' => '1', 'Comm_connect-1' => 'in:addnull',
+    'Comm_get_name' => '2', 'Comm_get_name-2' => 'out:blankpad',
+    'Comm_set_name' => '2', 'Comm_set_name-2' => 'in:addnull',
+    'Comm_spawn' => '1:2:8', 'Comm_spawn-1' => 'in:addnull', 
+		 'Comm_spawn-2' => 'in:chararray',
+		  'Comm_spawn-8' => 'in:errcodesignore',
+    'Comm_test_inter' => '2', 'Comm_test_inter-2' => 'out:logical',
+    'Get_processor_name' => '1', 'Get_processor_name-1' => 'out:blankpad',
+    'Error_string' => '2', 'Error_string-2' => 'out:blankpad',
+    'Intercomm_merge' => '2', 'Intercomm_merge-2' => 'in:logical',
+    'Info_get' => '2:4:5', 'Info_get-2' => 'in:addnull',
+		  'Info_get-4' => 'out:blankpad',
+		  'Info_get-5' => 'out:logical',
+    'Info_set' => '2:3', 'Info_set-2' => 'in:addnullandtrim', 
+		  'Info_set-3' => 'in:addnullandtrim',
+    'Info_get_nthkey' => '3', 'Info_get_nthkey-3' => 'out:blankpad',
+    'Info_get_valuelen' => '2:4', 'Info_get_valuelen-2' => 'in:addnull',
+		  'Info_get_valuelen-4' => 'out:logical',
+    'Info_delete' => '2', 'Info_delete-2' => 'in:addnull',
+    'Lookup_name' => '1:3', 'Lookup_name-1' => 'in:addnull', 
+		  'Lookup_name-3' => 'out:blankpad',
+    'Open_port' => '2', 'Open_port-2' => 'out:blankpad',
+    'Close_port' => '1', 'Close_port-1' => 'in:addnull',
+    'Pack_external' => '1:6', 'Pack_external-1' => 'in:addnull',
+		  'Pack_external-6' => 'in:aintToVal',
+    'Pack_external_size' => '1', 'Pack_external_size-1' => 'in:addnull',
+    'Publish_name' => '1:3', 'Publish_name-1' => 'in:addnull',
+		  'Publish_name-3' => 'in:addnull',
+# comm spawn multiple needs slightly different routines
+    'Comm_spawn_multiple' => '2:3:9',
+		 'Comm_spawn_multiple-2' => 'in:chararray:*v1',
+		 'Comm_spawn_multiple-3' => 'in:chararray2:*v1',
+		  'Comm_spawn_multiple-9' => 'in:errcodesignore',
+    'Initialized' => '1', 'Initialized-1' => 'out:logical',
+    'Iprobe' => '4:5', 'Iprobe-4' => 'out:logical',
+		 'Iprobe-5' => 'in:status',
+    'Probe' => '4', 'Probe-4' => 'in:status',
+    'Recv' => '7', 'Recv-7' => 'in:status',
+    'Sendrecv' => '12', 'Sendrecv-12' => 'in:status',
+    'Sendrecv_replace' => '9', 'Sendrecv_replace-9' => 'in:status',
+#    'Send' => '1', 'Send-1' => 'in:bufptr',
+#    'Ssend' => '1', 'Ssend-1' => 'in:bufptr',
+#    'Rsend' => '1', 'Rsend-1' => 'in:bufptr',
+#    'Bsend' => '1', 'Bsend-1' => 'in:bufptr',
+#    'Isend' => '1', 'Isend-1' => 'in:bufptr',
+#    'Issend' => '1', 'Issend-1' => 'in:bufptr',
+#    'Irsend' => '1', 'Irsend-1' => 'in:bufptr',
+#    'Ibsend' => '1', 'Ibsend-1' => 'in:bufptr',
+#    'Irecv' => '1', 'Irecv-1' => 'in:bufptr',
+#    'Recv' => '1', 'Recv-1' => 'in:bufptr',		  
+#    'Send_init' => '1', 'Send_init-1' => 'in:bufptr',
+#    'Bsend_init' => '1', 'Bsend_init-1' => 'in:bufptr',
+#    'Ssend_init' => '1', 'Ssend_init-1' => 'in:bufptr',
+#    'Rsend_init' => '1', 'Rsend_init-1' => 'in:bufptr',
+#    'Recv_init' => '1', 'Recv_init-1' => 'in:bufptr',
+#    'Sendrecv' => '1:6', 'Sendrecv-1' => 'in:bufptr', 'Sendrecv-6' => 'in:bufptr',
+#    'Sendrecv_replace' => '1', 'Sendrecv_replace-1' => 'in:bufptr',
+    'Test_cancelled' => '2', 'Test_cancelled-2' => 'out:logical',
+    'Test' => '2:3', 'Test-2' => 'out:logical',
+		 'Test-3' => 'in:status',
+    'Testall' => '3:4', 'Testall-3' => 'out:logical', 
+		 'Testall-4' => 'in:status_array',
+    'Testany' => '3:4:5', 'Testany-4' => 'out:logical',
+		 'Testany-3' => 'out:index',
+		 'Testany-5' => 'in:status',
+    'Testsome' => '4:5', 'Testsome-4' => 'out:index_array:*v3',
+		 'Testsome-5' => 'in:status_array',
+    'Type_create_hvector' => 3, 'Type_create_hvector-3' => 'in:aintToVal',
+    'Type_create_resized' => '2:3', 
+		  'Type_create_resized-2' => 'in:aintToVal', 
+		  'Type_create_resized-3' => 'in:aintToVal',
+    'Type_get_name' => '2', 'Type_get_name-2' => 'out:blankpad',
+    'Type_set_name' => '2', 'Type_set_name-2' => 'in:addnull',
+    'Type_extent' => '2', 'Type_extent-2' => 'out:aintToInt',	      
+    'Type_lb' => '2', 'Type_lb-2' => 'out:aintToInt',	      
+    'Type_ub' => '2', 'Type_ub-2' => 'out:aintToInt',	      
+    'Type_struct' => '3', 'Type_struct-3' => 'in:intToAintArr:*v1',
+    'Type_hindexed' => '3', 'Type_hindexed-3' => 'in:intToAintArr:*v1',
+# also need
+    'Type_hvector' => '3', 'Type_hvector-3' => 'in:intToAint',
+    'Unpack_external' => '1:3', 'Unpack_external-1' => 'in:addnull',
+		  'Unpack_external-3' => 'in:aintToVal',
+    'Unpublish_name' => '1:3', 'Unpublish_name-1' => 'in:addnull',
+		  'Unpublish_name-3' => 'in:addnull',
+    'Win_create' => '2', 'Win_create-2' => 'in:aintToVal', 
+    'Accumulate' => '5', 'Accumulate-5' => 'in:aintToVal',
+    'Put' => '5', 'Put-5' => 'in:aintToVal', 
+    'Get' => '5', 'Get-5' => 'in:aintToVal',
+    'Alloc_mem' => '1', 'Alloc_mem-1' => 'in:aintToVal', 
+    'Win_get_name' => '2', 'Win_get_name-2' => 'out:blankpad',
+    'Win_set_name' => '2', 'Win_set_name-2' => 'in:addnull',		  
+    'Wait' => '2', 'Wait-2' => 'in:status',
+    'Waitall' => '3', 'Waitall-3' => 'in:status_array',		 
+    'Waitany' => '3:4', 'Waitany-3' => 'out:index',
+		 'Waitany-4' => 'in:status',
+    'Waitsome' => '4:5', 'Waitsome-4' => 'out:index_array:*v3',
+		 'Waitsome-5' => 'in:status_array',
+# File routines are separate
+    'File_open' => '2:5', 'File_open-2' => 'in:addnull',
+		 'File_open-5' => 'out:FileToFint',
+    'File_close' => '1', 'File_close-1', 'inout:FileToFint',
+    'File_delete' => '1', 'File_delete-1' => 'in:addnull',
+    'File_set_view' => '5', 'File_set_view-5' => 'in:addnull',
+    'File_get_view' => '5', 'File_get_view-5' => 'out:blankpad',
+    'File_set_atomicity' => '2', 'File_set_atomicity-2' => 'in:logical',
+    'File_get_atomicity' => '2', 'File_get_atomicity-2' => 'out:logical',
+    'Register_datarep' => '1:2:3', 'Register_datarep-1' => 'in:addnull',
+		  'Register_datarep-2' => 'in:checkdatarep',
+		  'Register_datarep-3' => 'in:checkdatarep',
+    );
+
+# 
+# These give special post processing after the MPI routine is called.  
+# The named routine is invoked with the argument number, e.g., 
+# &"setF90keyval"( FD,  1 );
+#
+%specialPost = (
+		'Type_create_keyval' => 3,
+		'Type_create_keyval-3' => 'setF90keyval',
+		'Comm_create_keyval' => 3,
+		'Comm_create_keyval-3' => 'setF90keyval',
+		'Win_create_keyval' => 3,
+		'Win_create_keyval-3' => 'setF90keyval', 
+		'Grequest_start' => 5,
+		'Grequest_start-5' => 'setF77greq',
+		);
+
+#
+# Load any definition file
+if ($definition_file) {
+    require $definition_file;
+}
+
+$arg_string = join( ' ', @ARGV );
+if ($build_prototypes) {
+    open( PROTOFD, ">$prototype_header_file.new" ) || die "Cannot open $prototype_header_file.new\n";
+    print PROTOFD "/* -*- Mode: C; c-basic-offset:4 ; -*- */\
+/*  \
+ *  (C) 2001 by Argonne National Laboratory.\
+ *      See COPYRIGHT in top-level directory.\
+ *\
+ * This file is automatically generated by buildiface $arg_string\
+ * DO NOT EDIT\
+ */\
+/* Prototypes for Fortran Interface Functions */
+\n";
+}
+
+%skipBlocks = ();
+&ReadAndProcessInterface( $prototype_file, 0 );
+
+# if doing MPI2, we also need to read the MPI-2 protottypes
+if ( -s "../../mpi/romio/include/mpio.h.in" && $build_io) { 
+    %skipBlocks = ( 'HAVE_MPI_DARRAY_SUBARRAY' => 1, 
+ 	 	    'HAVE_MPI_INFO' => 1,
+		    'MPICH2' => 1 );
+    &ReadAndProcessInterface( "../../mpi/romio/include/mpio.h.in", 1 );
+    %skipBlocks = ();
+}
+
+# Write a list of the routines that we've found.
+if ($writeRoutineList) {
+    open LFD, ">mpi.dat" || die "Cannot open mpi.dat\n";
+    foreach my $name (sort(keys(%mpi_routines))) {
+	print LFD "$name\n";
+    }
+    close LFD;
+}
+
+if ($is_MPI) {
+    # Build the special routines
+    &build_specials;
+}
+else {
+    for ($i=0; $i<=$#ExtraRoutines; $i++) {
+	$r = $ExtraRoutines[$i];
+	&$r;
+    }
+}
+
+if ($build_prototypes) {
+    close PROTOFD;
+    &ReplaceIfDifferent( $prototype_header_file, 
+			 $prototype_header_file . ".new" );
+}
+
+#
+# This block can be used to create the Makefile
+if ("$buildMakefile") {
+    open ( MAKEFD, ">Makefile.sm.new" ) || die "Cannot create Makefile.sm.new";
+    print MAKEFD "# DO NOT EDIT\n# This file created by buildiface $arg_string\n";
+
+    # Check to see if autoconf works.  Autoconf 2.13 has a bug in the Fortran 
+    # language support that will break this module.  Since some sites have 
+    # corrected the bug in autoconf 2.13, CheckAutoconf test for this bug.
+    if (&CheckAutoconf) {
+	# Autoconf does not work
+	# This isn't quite right, because any updates will be broken
+	# FIXME : but not sure how to do this.
+	;
+    }
+    else {
+	# just use the regular autoconf
+    ;
+}
+    
+    #print MAKEFD "smvar_debug = 1\n";
+    print MAKEFD "smvar_do_dependencies = ignore\n";
+    &print_line(  MAKEFD, "mpi_sources = ", 80, "\\\n\t", 8 );
+    for ($i=0; $i<=$#files; $i++) {
+	$name = $files[$i];
+	&print_line( MAKEFD, "$name ", 80, "\\\n\t", 8 );
+    }
+    &print_endline( MAKEFD );
+    print MAKEFD "MPIFLIBNAME = \@MPIFLIBNAME\@\n";
+    print MAKEFD "PMPIFLIBNAME = \@PMPIFLIBNAME\@\n";
+
+    # The definitions for the Fortran wrappers are special
+    &AddFwrapDefs;
+    print MAKEFD "\
+lib\${MPIFLIBNAME}_a_DIR = ROOTDIR/lib\
+lib\${MPIFLIBNAME}_a_SOURCES = \${mpi_sources} setbot.c setbotf.f\
+\
+HEADERS = fproto.h mpi_fortimpl.h\
+profilelib_\${MPIFLIBNAME} = \${PMPIFLIBNAME}\
+profilelib_\${MPIFLIBNAME}_SOURCES = \${mpi_sources}\
+INCLUDES = -I../../include -I\${master_top_srcdir}/src/include -I\${master_top_srcdir}/src/binding/f77 \
+maint-clean:\
+\trm -f \${mpi_sources} $prototype_header_file\n";
+
+    print MAKEFD "install_INCLUDE = mpif.h\n";
+
+    # Add the documentation
+    print MAKEFD "# Documentation sources
+doc_sources = mpif77.txt
+DOCDESTDIRS = html:www/www1,man:man/man1,latex:doc/refman
+doc_HTML_SOURCES  = \${doc_sources}
+doc_MAN_SOURCES   = \${doc_sources}
+doc_LATEX_SOURCES = \${doc_sources}
+";
+
+    # Since configure copies mpif.h to the include dir, we need to remove it
+    # in a distclean step.  Ditto for mpif77; add the generated files.
+    print MAKEFD "distclean-local:\n";
+    print MAKEFD "\trm -f mpif_bottom.h\n";
+    print MAKEFD "\trm -f ../../../src/include/mpif.h\n";
+    print MAKEFD "\trm -f ../../../bin/mpif77\n";
+
+    # Add the generated files to the maintainer clean target
+    print MAKEFD "maintainerclean-local:\n";
+    &print_line(  MAKEFD, "\trm -f ", 80, "\\\n\t", 8 );
+    for ($i=0; $i<=$#files; $i++) {
+	if ( (($i+1) % 20) == 0) {
+	    # Avoid having a line that is too long
+	    &print_endline( MAKEFD );
+	    &print_line( MAKEFD, "\trm -f ", 80, "\\n\t", 8 );
+	}
+	$name = $files[$i];
+	&print_line( MAKEFD, "$name ", 80, "\\\n\t", 8 );
+    }
+    &print_endline( MAKEFD );
+    print MAKEFD "\trm -f Makefile.sm\n";
+
+    # Add the definitions for compiling the members of the wrap file
+    &AddFwrapBuild;
+
+    close( MAKEFD );
+    &ReplaceIfDifferent( "Makefile.sm", "Makefile.sm.new" );
+}
+
+#
+# ------------------------------------------------------------------------
+# Procedures
+# print_line( FD, line, count, continue, continuelen )
+# Print line to FD; if line size > count, output continue string and
+# continue.  Use print_endline to finish a line
+sub print_line {
+    my $FD = $_[0];
+    my $line = $_[1];
+    my $count = $_[2];
+    my $continue = $_[3];
+    my $continue_len = $_[4];
+    
+    $linelen = length( $line );
+    #print "linelen = $linelen, print_line_len = $print_line_len\n";
+    if ($print_line_len + $linelen > $count) {
+	print $FD $continue;
+	$print_line_len = $continue_len;
+    }
+    print $FD $line;
+    $print_line_len += $linelen;
+}
+sub print_endline {
+    my $FD = $_[0];
+    print $FD "\n";
+    $print_line_len = 0;
+}
+
+# Print the header of the file, containing the definitions etc.
+sub print_header {
+    my $routine_name = $_[0];
+    my $lcname = $_[1];
+    my $args = $_[2];
+    my $extra = $_[3];
+ 
+    &print_copyright( );
+    if ($extra) {
+	print $OUTFD $extra;
+    }
+    &print_profiling_block( $routine_name, $lcname, $args );
+    &print_name_map_block( $routine_name, $lcname );
+
+    my $fn = "HelperFor" . $routine_name ;
+    if (defined(&$fn)) {
+	&$fn( $OUTFD );
+    }
+}
+
+sub print_copyright {
+    print $OUTFD "/* -*- Mode: C; c-basic-offset:4 ; -*- */\
+/*  \
+ *  (C) 2001 by Argonne National Laboratory.\
+ *      See COPYRIGHT in top-level directory.\
+ *\
+ * This file is automatically generated by buildiface $arg_string\
+ * DO NOT EDIT\
+ */\
+#include \"${header_file}\"\n\n";
+}
+
+#
+# Print the (ugly) profiling name definition block.
+# This is made more complex by the need, new with gcc 3.2, to 
+# generate an extern declaration of the routine *before* the pragma
+# 
+sub print_profiling_block {
+    my $routine_name = $_[0];
+    my $lcname = $_[1];
+    my $args   = $_[2];
+    my $ucname = uc($lcname);
+
+    if ($do_weak) {
+	# We do the multiple pragma only for the gcc-style names for now 
+        # This simplifies the generation of the names for the output;
+	# Later, we can add support for other name mappings.
+	print $OUTFD "\
+/* Begin MPI profiling block */\
+#if defined(USE_WEAK_SYMBOLS) && !defined(USE_ONLY_MPI_NAMES) \
+#if defined(HAVE_MULTIPLE_PRAGMA_WEAK) && defined(F77_NAME_LOWER_2USCORE)\n";
+        &print_weak_decl( $OUTFD, "MPI_$ucname", $args, $lcname ); 
+	&print_weak_decl( $OUTFD, "mpi_${lcname}__", $args, $lcname );
+	&print_weak_decl( $OUTFD, "mpi_${lcname}", $args, $lcname );
+	&print_weak_decl( $OUTFD, "mpi_${lcname}_", $args, $lcname );
+	&print_weak_decl( $OUTFD, "pmpi_${lcname}_", $args, $lcname );
+	print $OUTFD "\
+#pragma weak MPI_$ucname = pmpi_${lcname}__
+#pragma weak mpi_${lcname}__ = pmpi_${lcname}__
+#pragma weak mpi_${lcname}_ = pmpi_${lcname}__
+#pragma weak mpi_${lcname} = pmpi_${lcname}__
+#pragma weak pmpi_${lcname}_ = pmpi_${lcname}__\n\n";
+
+       print $OUTFD "\
+#elif defined(HAVE_PRAGMA_WEAK)\
+
+#if defined(F77_NAME_UPPER)\n";
+        &print_weak_decl( $OUTFD, "MPI_$ucname", $args, $lcname );
+        print $OUTFD "\
+#pragma weak MPI_$ucname = PMPI_$ucname\
+#elif defined(F77_NAME_LOWER_2USCORE)\n";
+        &print_weak_decl( $OUTFD, "mpi_${lcname}__", $args, $lcname );
+	print $OUTFD "\
+#pragma weak mpi_${lcname}__ = pmpi_${lcname}__\
+#elif !defined(F77_NAME_LOWER_USCORE)\n";
+        &print_weak_decl( $OUTFD, "mpi_$lcname", $args, $lcname );
+	print $OUTFD "\
+#pragma weak mpi_$lcname = pmpi_$lcname\
+#else\n";
+        &print_weak_decl( $OUTFD, "mpi_${lcname}_", $args, $lcname );
+	print $OUTFD "\
+#pragma weak mpi_${lcname}_ = pmpi_${lcname}_\
+#endif\
+\
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)\
+#if defined(F77_NAME_UPPER)\
+#pragma _HP_SECONDARY_DEF PMPI_$ucname  MPI_$ucname\
+#elif defined(F77_NAME_LOWER_2USCORE)\
+#pragma _HP_SECONDARY_DEF pmpi_${lcname}__  mpi_${lcname}__\
+#elif !defined(F77_NAME_LOWER_USCORE)\
+#pragma _HP_SECONDARY_DEF pmpi_$lcname  mpi_$lcname\
+#else\
+#pragma _HP_SECONDARY_DEF pmpi_${lcname}_  mpi_${lcname}_\
+#endif\
+\
+#elif defined(HAVE_PRAGMA_CRI_DUP)\
+#if defined(F77_NAME_UPPER)\
+#pragma _CRI duplicate MPI_$ucname as PMPI_$ucname\
+#elif defined(F77_NAME_LOWER_2USCORE)\
+#pragma _CRI duplicate mpi_${lcname}__ as pmpi_${lcname}__\
+#elif !defined(F77_NAME_LOWER_USCORE)\
+#pragma _CRI duplicate mpi_${lcname} as pmpi_${lcname}\
+#else\
+#pragma _CRI duplicate mpi_${lcname}_ as pmpi_${lcname}_\
+#endif\
+#endif /* HAVE_PRAGMA_WEAK */\
+#endif /* USE_WEAK_SYMBOLS */\
+/* End MPI profiling block */\n\n";
+
+    &AddFwrapWeakName( $lcname, $ucname );
+    }
+}
+
+#
+# Print the code that modifies the name
+# The function prototypes must be loaded *after* the name block so that the
+# name used in the function prototypes will match the one that is declared
+# in this file.
+sub print_name_map_block {
+    my $routine_name = $_[0];
+    my $lcname = $_[1];
+    my $ucname = uc($lcname);
+    
+    # This include the code to map names for the profiling interface,
+    # using the same macro as for the rest of the MPI code
+    $uc_out_prefix = uc($out_prefix);
+    if ($do_profiling) {
+	# Remove the leading MPI_ if the name has it.
+	if ($routine_name =~ /^MPI_/) {
+	    $routine_name =~ s/^MPI_//;
+	}
+	print $OUTFD "
+/* Map the name to the correct form */
+#ifndef MPICH_MPI_FROM_PMPI
+#ifdef F77_NAME_UPPER
+#define ${out_prefix}${lcname}_ PMPI_${ucname}
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define ${out_prefix}${lcname}_ pmpi_${lcname}__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define ${out_prefix}${lcname}_ pmpi_${lcname}
+#else
+#define ${out_prefix}${lcname}_ pmpi_${lcname}_
+#endif
+/* This defines the routine that we call, which must be the PMPI version
+   since we're renaming the Fortran entry as the pmpi version.  The MPI name
+   must be undefined first to prevent any conflicts with previous renamings,
+   such as those put in place by the globus device when it is building on
+   top of a vendor MPI. */
+#undef MPI_${routine_name}
+#define MPI_${routine_name} PMPI_${routine_name} 
+
+#else
+";
+    }
+    print $OUTFD "
+#ifdef F77_NAME_UPPER
+#define ${out_prefix}${lcname}_ ${uc_out_prefix}${ucname}
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define ${out_prefix}${lcname}_ ${out_prefix}${lcname}__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define ${out_prefix}${lcname}_ ${out_prefix}${lcname}
+/* Else leave name alone */
+#endif
+
+";
+    if ($do_profiling) {
+	print $OUTFD "
+#endif /* MPICH_MPI_FROM_PMPI */
+";
+    }
+    if ($build_prototypes) {
+	print $OUTFD "
+/* Prototypes for the Fortran interfaces */
+#include \"$prototype_header_file\"
+";
+    }
+}
+
+# Print the arguments for the routine DEFINITION.
+sub print_args { 
+    my @parms = split(/\s*,\s*/, $_[1] );
+    my $OUTFD = $_[0];
+    my $count = 1;
+    my $last_args = "";
+    my $prototype_only = $_[2];
+    my $routine = $_[3];
+
+    # Clear the @arg_addresses and $arg_qualifiers array.
+    $#arg_addresses = -1;
+    $#arg_qualifiers = -1;
+
+    # Special case: if the only parm is "void", remove it from the list
+    print STDERR "Nparms = $#parms, parms = " . join(',',@parms) . "\n" if $debug;
+    if ($#parms == 0 && $parms[0] eq "void") {
+	$#parms = -1;
+    }
+    # argsep is used to add a comma before every argument, except for the 
+    # first
+    $argsep = "";
+    print $OUTFD "( ";
+    foreach $parm (@parms) {
+	# Match type to replacement
+	print "parm = :$parm:\n" if $debug;
+	# Remove qualifiers from the parm
+	$arg_qualifiers[$count] = "";
+	if ($parm =~ /^const\s+/) {
+	    $parm =~ s/^const\s+//;
+	    $arg_qualifiers[$count] .= "const ";
+	}
+	if ($parm =~ /^restrict\s+/) {
+	    $parm =~ s/restrict\s+//;
+	    $arg_qualifiers[$count] .= "restrict ";
+	}
+	# Remove arg names from array types
+	if ($parm =~ /(\w+)\s+(\w+)\s*\[\]/) {
+	    # Assume that this is <type> <name>[]; convert to
+	    # <type>[]
+	    print "    Removing argname $2 from parm array $parm\n" if $debug;
+	    $parm = "$1" . "[]";
+	}
+	# Remove arg names from pointer types
+	elsif ($parm =~ /(.*\*)\s+(\w+)/) {
+	    print "    Removing argname $2 from parm pointer\n" if $debug;
+	    $parm = $1;
+	}
+	# Remove blanks from the parm
+	$parm =~ s/\s+//;
+	$arg_addresses[$count] = 0;
+
+	# This handles routines that have special declaration requirements
+	# for particular arguments
+	if (defined($declarg{"$routine-$count"})) {
+	    print "    Using declarg{$routine} for this parm\n" if $debug;
+	    $parm = $declarg{"$routine-$count"};
+	    if ($prototype_only) {
+		print $OUTFD "$argsep$parm";
+	    }
+	    else {
+		print $OUTFD "$argsep$parm v$count";
+	    }
+	}
+	elsif ($parm =~ /char\s*\*/) {
+	    # char's go out at char *v FORT_MIXED_LEN(d) 
+	    # and FORT_END_LEN(d) at the end
+	    # (even if an array, because at the Fortran level, it
+	    # is still a pointer to a character variable; the length
+	    # of each entry in the array is the "d" value).
+	    # FORT_END_LEN and FORT_MIXED_LEN contain the necessary comman
+	    # if they are prsent at all.
+	    print "    parm is a character string\n" if $debug;
+	    if ($prototype_only) {
+		print $OUTFD "${argsep}char * FORT_MIXED_LEN_DECL";
+		$last_args .= "FORT_END_LEN_DECL ";
+	    }
+	    else {
+		print $OUTFD "${argsep}char *v$count FORT_MIXED_LEN(d$count)";
+		$last_args .= "FORT_END_LEN(d$count) ";
+	    }
+	}
+	elsif ($parm =~/\[/) {
+	    # Argument type is array, so we need to 
+	    #  a) mark as containing a star
+	    #  b) place parameter correctly
+	    $star_count = 1;
+	    $arg_addresses[$count] = $star_count;
+	    # Split into raw type and []
+            # Use \S* instead of the equivalent [^\s]*.
+            # (\S is not-a-space)
+            # perl 5.8 is known to mishandle the latter, leading to
+	    # an empty basetype
+	    if ($parm =~ /\s*(\S*)\s*(\[\s*\])/) {
+		$basetype = $1;
+	    }
+	    else {
+		print STDERR "Internal error.  Could not find basetype\n";
+		print STDERR "This may be a bug in perl in the handling of certain expressions\n";
+	    }
+	    print "\tparm $parm is array of >$basetype<\n" if $debug;
+	    #$foundbrack = $2;
+	    if (defined($tof77{$parm})) {
+		# This is a special case; the full type is defined.
+		# This is used, for example, for int [][3] in the
+		# routines that specify a range.
+		print "Matched to full type $parm with replacement $tof77{$parm}\n" if $debug;
+		# We use the replacement type
+		$basetype = $tof77{$parm};
+		$star_count = 0;
+		$arg_addresses[$count] = $star_count;
+	    }
+	    elsif ($basetype eq "int") {
+		# Do nothing because the [] added to the arg below
+		# is all that is necessary.
+		$star_count = 0;
+		$arg_addresses[$count] = $star_count;
+	    }
+	    elsif (defined($tof77{"$basetype\[\]"})) {
+		# Use the code for handling array parameters if
+		# mapping code is provided.
+		print "Match to array type $basetype\[\]\n" if $debug;
+		$star_count = 0;
+		$arg_addresses[$count] = $star_count;
+		$basetype = $tof77{"$basetype\[\]"};
+	    }
+	    elsif (defined($tof77{$basetype})) {
+		# FIXME: This code (now commented out) is not correct
+		print STDERR "Using fall through for $basetype in $routine\n" if $debug;
+# 		if ($useOldCode eq "yes") {
+# 		$nstar_before = ($basetype =~ /\*/);
+# 		$basetype = $tof77{$basetype};
+# 		# The following fixes the case where the underlying type 
+# 		# is a simple int.
+# 		if ($basetype eq "int") {
+# 		    $arg_addresses[$count] = 0;
+# 		}
+# 		print "\tparm has defined type of $basetype\n" if $debug;
+# 		$nstar_after = ($basetype =~ /\*/);
+# 		if ($nstar_before != $nstar_after) {
+# 		    $star_count++;
+# 		}
+		# If we have an array, and a type mapping to fortran
+		# We want to simply pretend that all is well (like int
+		# above)
+		$star_count = 0;
+		$arg_addresses[$count] = $star_count;
+	    }
+	    if ($prototype_only) {
+		print $OUTFD "$argsep$basetype \[\]";
+	    }
+	    else {
+		print $OUTFD "$argsep$basetype v$count\[\]";
+	    }
+	}
+	else {
+	    $nstar_before = ($parm =~ /\*/);
+	    $nstar_after = $nstar_before;
+	    print "Nstar = $nstar_after\n" if $debug;
+	    if (defined($tof77{$parm})) {
+		$parm = $tof77{$parm};
+		$nstar_after = ($parm =~ /\*/);
+	    }
+	    $leadspace = "";
+	    if ($parm =~ /\w$/) {
+		$leadspace = " ";
+	    }
+	    if ($prototype_only) {
+		print $OUTFD "${argsep}${parm}";
+	    }
+	    else {
+		print $OUTFD "${argsep}${parm}${leadspace}v$count";
+	    }
+	    $star_count = 0;
+	    if ($nstar_before != $nstar_after) {
+		$star_count = 1;
+	    }
+	    $arg_addresses[$count] = $star_count;
+	}
+	$count++;
+	$argsep = ", ";
+    }
+    # Add the new error return code if necessary
+    $tmpargs= $errparm;
+    $tmpargs =~ s/\s*//g;
+    if ($tmpargs ne "") {
+	if ($prototype_only) {
+	    print $OUTFD "$argsep$errparmtype";
+	}
+	else {
+	    print $OUTFD "$argsep$errparm";
+	}
+    }
+    print $OUTFD " $last_args";
+    print $OUTFD ")";
+}
+
+# Print the arguments for the routine CALL.  
+# Handle the special arguments
+sub print_call_args {
+    my @parms = split(/\s*,\s*/, $_[0] );
+    my $count = 1;
+    my $first = 1;
+    print $OUTFD "( ";
+    # Special case: if the only parm is "void", remove it from the list
+    if ($#parms == 0 && $parms[0] eq "void") {
+	$#parms = -1;
+    }
+
+    foreach $parm (@parms) {
+	$parm =~ s/^const\s//;  # Remove const if present
+	# Remove variable name if present in an array arg
+	if ($parm =~ /(.*)\s+(\w+)\[\]/) {
+	    $parm = "$1 \[\]";
+	}
+	# Compress multiple spaces
+	$parm =~ s/\s\s/ /g;
+	if (!$first) { print $OUTFD ", "; } else { $first = 0; }
+
+	if (defined($special_args{"${routine_name}-$count"})) {
+	    # We must handle this argument specially
+	    &print_special_call_arg( $routine_name, $count );
+	}
+	else {
+	    # Convert to/from object type as required.  
+	    #print "TMP: parm = $arg_qualifiers[$count]$parm\n";
+	    $fullparm="$arg_qualifiers[$count]$parm";
+	    if (defined($argsneedcast{$fullparm})) {
+		$argval = "v$count";
+		if ($arg_addresses[$count] > 0) {
+		    $argval = "*$argval";
+		}
+		$callparm = $argsneedcast{$fullparm};
+		$callparm =~ s/ARG/$argval/;
+		print $OUTFD "$callparm";
+	    }
+	    else {
+		# Since MPICH objects are ints, we don't need to do 
+		# anything unless MPI_Fint and int are different.
+# print STDERR "XXX $count $#arg_addresses XXX\n";
+		if ($arg_addresses[$count] > 0) {
+		    print $OUTFD "*";
+		}
+		print $OUTFD "v$count";
+	    }
+	}
+	$count++;
+    }
+    print $OUTFD " );\n";
+}
+
+# Print the option function attribute; this supports GCC, particularly 
+# the __atribute__ ((weak)) option.  Unfortunately, the name must be
+# made into a string and inserted into the attribute list.
+sub print_attr {
+    my $OUTFD = $_[0];
+    my $name  = $_[1];
+    if ($do_weak) {
+	print $OUTFD " FUNC_ATTRIBUTES($name)";
+    }
+}
+
+#
+# We allow a routine to specify an alternate weak decl by name
+sub set_weak_decl {
+    my $name = $_[0];
+    my $decl = $_[1];
+    my $rtype = $_[2];
+    $name = lc($name);
+    $altweak{$name}      = $decl;
+    $altweakrtype{$name} = $rtype;
+}
+sub print_weak_decl {
+    my $OUTFD = $_[0];
+    my $name  = $_[1];
+    my $args  = $_[2];
+    my $lcname = $_[3];
+
+    my $basename = lc($name);
+    $basename =~ s/_*$//;
+    if (defined($altweak{$basename})) {
+	print $OUTFD "extern FORT_DLL_SPEC $altweakrtype{$basename} FORT_CALL $name($altweak{$basename});\n";
+    }
+    else {
+	print $OUTFD "extern FORT_DLL_SPEC $returnType FORT_CALL $name";
+	&print_args( $OUTFD, $args, 1, $lcname );
+	print $OUTFD ";\n";
+    }
+}
+#
+# --------------------------------------------------------------------------
+# Special processing
+#
+# Each parameter can be processed by a routine, with the suffix controlling
+# the routine invoked for each step.  Roughly, these are:
+# 
+# void foo( MPI_Fint *v1, etc )
+# {
+# /* Special declarations needed for the variables */
+# <name>_<direction>_decl( <argnum> )
+# /* Special processing need for in variables */
+# <name>_ftoc( <argnum> )
+# /* Call the function.  Replace special arguments with the output from */
+# <name>_<direction>_arg( <argnum> )
+# /* Special post call processing (for out variables) */
+# <name>_ctof( l$count, v$count ) /* local (C) variable name, fortran var name */
+# 
+# Special case: For parameters that are arrays, the size of the
+# array is in $Array_size.
+# 
+# 
+# --------------------------------------------------------------------------
+# Buffer pointers
+sub bufptr_ftoc {
+    my $count = $_[0];
+}
+sub bufptr_in_decl {
+    my $count = $_[0];
+}
+sub bufptr_in_arg {
+    my $count = $_[0];
+    if ($do_bufptr) {
+	print $OUTFD "MPIR_F_PTR(v$count)";
+    }
+    else {
+	print $OUTFD "v$count";
+    }
+}
+# bufptr_ctof( cvar, fvar )
+sub bufptr_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+}
+# --------------------------------------------------------------------------
+# MPI_IN_PLACE buffer pointers
+sub inplace_ftoc {
+    my $count = $_[0];
+    &specialInitStatement( $OUTFD );
+    print $OUTFD "    if (v$count == MPIR_F_MPI_IN_PLACE) v$count = MPI_IN_PLACE;\n";
+}
+sub inplace_in_decl {
+    my $count = $_[0];
+}
+sub inplace_in_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+# inplace_ctof( cvar, fvar )
+sub inplace_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+}
+# --------------------------------------------------------------------------
+# Logical variables
+sub logical_ftoc {
+    my $count = $_[0];
+    print $OUTFD "    l$count = MPIR_FROM_FLOG(*v$count);\n";
+}
+sub logical_in_decl {
+    my $count = $_[0];
+    if ($do_logical) {
+	print $OUTFD "    int l$count;\n";
+    }
+}
+sub logical_in_arg {
+    my $count = $_[0];
+    if ($do_logical) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "v$count";
+    }
+}
+# logical_ctof( cvar, fvar )
+sub logical_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    if ($do_logical) {
+	print $OUTFD "    *$outvar = MPIR_TO_FLOG($coutvar);\n";
+    }
+}
+sub logical_out_decl {
+    my $count = $_[0];
+    if ($do_logical) {
+	print $OUTFD "    int l$count;\n";
+    }
+}
+sub logical_out_arg {
+    my $count = $_[0];
+    if ($do_logical) {
+	print $OUTFD "\&l$count";
+    }
+    else {
+	print $OUTFD "v$count";
+    }
+}
+# --------------------------------------------------------------------------
+#
+# Logical variables, but for an array.  
+# Array args can use the global $Array_size and $Array_typedef if necessary
+sub logical_array_ftoc {
+    print $OUTFD "\
+    {int li; 
+     for (li=0; li<$Array_size; li++) {
+        l$count\[li\] = MPIR_FROM_FLOG(v$count\[li\]);
+     }
+    }
+";
+}
+sub logical_array_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    int *l$count = (int *)$malloc($Array_size * sizeof(int));\n";
+    $clean_up .= "    $free( l$count );\n";
+}
+sub logical_array_in_arg {
+    my $count = $_[0];
+    print $OUTFD "l$count";
+}
+
+sub logical_array_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    print $OUTFD "\
+    {int li;
+     for (li=0; li<$Array_size; li++) {
+        $outvar\[li\] = MPIR_TO_FLOG($outvar\[li\]);
+     }
+    }
+";
+}
+sub logical_array_out_decl {
+}
+sub logical_array_out_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+# --------------------------------------------------------------------------
+# 
+# Index variables.
+# Index variables are not optional, since the values of the variable
+# are changed.
+sub index_ftoc {
+    my $count = $_[0];
+}
+sub index_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    print $OUTFD "    *$outvar = (MPI_Fint)$coutvar;\n";
+    print $OUTFD "    if ($coutvar >= 0) *$outvar = *$outvar + 1;\n";
+}
+sub index_out_decl {
+    my $count = $_[0];
+    print $OUTFD "    int l$count;\n";
+}
+sub index_out_arg {
+    my $count = $_[0];
+    print $OUTFD " \&l$count";
+}
+#
+# Index variables, but for an array.  
+# Array args can use the global $Array_size and $Array_typedef if necessary
+sub index_array_ftoc {
+    my $count = $_[0];
+}
+sub index_array_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    print $OUTFD "\
+    {int li;
+     for (li=0; li<$Array_size; li++) {
+        if ($outvar\[li\] >= 0) $outvar\[li\] += 1;
+     }
+    }
+"
+}
+sub index_array_out_decl {
+}
+sub index_array_out_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+# --------------------------------------------------------------------------
+#
+# Address and attribute handling
+# Note that this construction can lead to compiler warnings on systems
+# where an address is larger than an MPI_Fint.  This is correct; these
+# routines are for the MPI-1 routines that use an MPI_Fint where the 
+# C code uses a void * (MPI_Aint in MPI-2).  
+# A possible extension is to provide an error warning (much as 
+# MPI_Address does) when the attribute value loses bits when assigned into
+# the MPI_Fint.
+#in:addrint
+#out:attrint:4
+sub addrint_ftoc {
+    my $count = $_[0];
+}
+sub addrint_in_decl {
+}
+sub addrint_in_arg {
+    my $count = $_[0];
+    print $OUTFD "(void *)(MPI_Aint)((int)*(int *)v$count)";
+}
+
+sub attrint_ctof {
+    my $fvar = $_[0];
+    my $cvar = $_[1];
+    my $flagarg = 4; # get from option
+    # The double cast of attr$cvar first to MPI_Aint and then to MPI_Fint
+    # keeps some compilers happy on 64-bit platforms
+    print $OUTFD "
+    if ((int)*ierr || !l$flagarg) {
+        *(MPI_Fint*)$cvar = 0;
+    }
+    else {
+        *(MPI_Fint*)$cvar = (MPI_Fint)(MPI_Aint)attr$cvar;
+    }\n";
+}
+
+sub attrint_out_decl {
+    my $count = $_[0];
+    print $OUTFD "    void *attrv$count;\n";
+}
+
+sub attrint_out_arg {
+    my $count = $_[0];
+    print $OUTFD "&attrv$count";
+}
+# --------------------------------------------------------------------------
+# Address and attribute handling
+# This version of attrint uses Aints instead of ints, and is appropriate
+# for the MPI-2 attribute caching functions
+#in:addraint
+#out:attraint:4
+sub addraint_ftoc {
+    my $count = $_[0];
+}
+sub addraint_in_decl {
+}
+sub addraint_in_arg {
+    my $count = $_[0];
+    print $OUTFD "(void *)(MPI_Aint)((MPI_Aint)*(MPI_Aint *)v$count)";
+}
+
+sub attraint_ctof {
+    my $fvar = $_[0];
+    my $cvar = $_[1];
+    my $flagarg = 4; # get from option
+    print $OUTFD "
+    if ((int)*ierr || !l$flagarg) {
+        *(MPI_Aint*)$cvar = 0;
+    }
+    else {
+        *(MPI_Aint*)$cvar = (MPI_Aint)attr$cvar;
+    }\n";
+}
+
+sub attraint_out_decl {
+    my $count = $_[0];
+    print $OUTFD "    void *attrv$count;\n";
+}
+
+sub attraint_out_arg {
+    my $count = $_[0];
+    print $OUTFD "&attrv$count";
+}
+# --------------------------------------------------------------------------
+#
+# Buffer Address output handling (Buffer_detach)
+#out:bufaddr
+sub bufaddr_ftoc {
+}
+sub bufaddr_out_decl {
+    my $count =$_[0];
+    print $OUTFD "    void *t$count = v$count;\n";
+}
+sub bufaddr_out_arg {
+    my $count = $_[0];
+    print $OUTFD "&t$count";
+}
+
+sub bufaddr_ctof {
+    my $fvar = $_[0];
+    my $cvar = $_[1];
+}
+# --------------------------------------------------------------------------
+# 
+# Handle MPI_STATUS_IGNORE and MPI_STATUSES_IGNORE
+sub status_ftoc {
+    my $count = $_[0];
+    # Cast MPI_STATUS_IGNORE back to an MPI_Fint (we'll re-cast it back
+    # to (MPI_Status *) in the call to the C version of the routine)
+    &specialInitStatement( $OUTFD );
+    print $OUTFD "\
+    if (v$count == MPI_F_STATUS_IGNORE) { v$count = (MPI_Fint*)MPI_STATUS_IGNORE; }\n";
+}
+sub status_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+}
+sub status_in_decl {
+    my $count = $_[0];
+}
+sub status_in_arg {
+    my $count = $_[0];
+    print $OUTFD "(MPI_Status *)v$count";
+}
+# --------------------------------------------------------------------------
+# 
+# Handle MPI_ERRCODES_IGNORE
+sub errcodesignore_ftoc {
+    my $count = $_[0];
+    &specialInitStatement( $OUTFD );
+    print $OUTFD "\
+    if (v$count == MPI_F_ERRCODES_IGNORE) { v$count = MPI_ERRCODES_IGNORE; }\n";
+}
+sub errcodesignore_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+}
+sub errcodesignore_in_decl {
+    my $count = $_[0];
+}
+sub errcodesignore_in_arg {
+    my $count = $_[0];
+    print $OUTFD "(int *)v$count";
+}
+# --------------------------------------------------------------------------
+#
+# Index variables, but for an array.  
+# Array args can use the global $Array_size and $Array_typedef if necessary
+sub status_array_ftoc {
+    my $count = $_[0];
+    &specialInitStatement( $OUTFD );
+    print $OUTFD "\
+    if (v$count == MPI_F_STATUSES_IGNORE) { v$count = (MPI_Fint *)MPI_STATUSES_IGNORE; }\n";
+}
+sub status_array_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+}
+sub status_array_in_decl {
+}
+sub status_array_in_arg {
+    my $count = $_[0];
+    print $OUTFD "(MPI_Status *)v$count";
+}
+# --------------------------------------------------------------------------
+# aintToint
+sub aintToInt_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    print $OUTFD "    *$outvar = (MPI_Fint)($coutvar);\n";
+}
+sub aintToInt_out_decl {
+    my $count = $_[0];
+    print $OUTFD "    MPI_Aint l$count;\n";
+}
+sub aintToInt_out_arg {
+    my $count = $_[0];
+    print $OUTFD "\&l$count";
+}
+# --------------------------------------------------------------------------
+# aintToVal - Convert address of Aint to value
+sub aintToVal_ftoc {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+}
+sub aintToVal_in_decl {
+    my $count = $_[0];
+}
+sub aintToVal_in_arg {
+    my $count = $_[0];
+    print $OUTFD "*v$count";
+}
+# ---------------------------------------------------------------------------
+# This is the routine that handles the post-call processing
+sub print_post_call {
+    my $routine_name = $_[0];
+    my $args = $_[1];
+    if (defined($special_args{$routine_name})) { 
+	# Erg.  Special processing
+	foreach $count (split(/:/,$special_args{$routine_name})) {
+	    $rule = $special_args{"${routine_name}-$count"};
+	    ($direction,$method,$Array_size) = split(/:/,$rule);
+	    print STDERR "$routine_name: dir = $direction, method = $method\n" if $debug;
+	    $processing_in_routine = "${method}_in_ctof";
+	    if ($direction eq "out" || $direction eq "inout") {
+		$processing_routine = "${method}_ctof";
+		&$processing_routine( "l$count", "v$count" );
+	    }
+	    elsif (defined(&$processing_in_routine)) {
+		# Invoke even for "in" args incase we need to free a temp
+		&$processing_in_routine( "l$count", "v$count" );
+	    }
+	    if ($clean_up ne "") {
+		print $OUTFD $clean_up;
+		$clean_up = "";
+	    }
+	}
+    }
+    
+    # Handle here any special post-only calls
+    if (defined($specialPost{$routine_name})) {
+	my $argnum = $specialPost{$routine_name};
+	my $postRoutine = $specialPost{"$routine_name-$argnum"};
+	&$postRoutine( $OUTFD, $argnum );
+    }
+}
+#
+# ---------------------------------------------------------------------------
+#
+# Blankpad strings
+# This is complicated by the fact that the Fortran strings do not contain
+# null terminators and the MPI definitions of string lengths, such as
+# MPI_MAX_PORT_NAME, are one smaller in Fortran than in C (see 4.12.9
+# in the MPI-2 specification).  Because of this, we need to allocate a 
+# temporary that is one longer on 
+sub blankpad_out_decl {
+    my $count = $_[0];
+    print $OUTFD "    char *p$count;\n";
+}
+sub blankpad_out_arg {
+    my $count = $_[0];
+    print $OUTFD "p$count";
+}
+sub blankpad_out_ftoc {
+    my $count = $_[0];
+
+    # Allocate space to hold the C version of the output
+    $strlen = "d$count";
+    print $OUTFD "    p$count = (char *)$malloc( $strlen + 1 );\n";
+}
+sub blankpad_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    
+    # find the null character.  Replace with blanks from there to the
+    # end of the string.  The declared lenght is given by a variable
+    # whose name is derived from outvar
+    $strlen = $outvar;
+    $strlen =~ s/^v/d/;
+    my $cvar = $outvar; 
+    $cvar =~ s/^v/p/;
+    print $OUTFD "\
+    {char *p = $outvar, *pc=$cvar;
+        while (*pc) {*p++ = *pc++;}
+        while ((p-$outvar) < $strlen) { *p++ = ' '; }
+    }
+";
+    $clean_up .= "    $free( $cvar );\n";
+}
+
+# ---------------------------------------------------------------------------
+# Add null to input strings
+# We must make a copy 
+sub addnull_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    char *p$count;\n";
+}
+sub addnull_in_arg {
+    my $count = $_[0];
+    print $OUTFD "p$count";
+}
+sub addnull_ftoc {
+    my $count = $_[0];
+    
+    # Working backwards from the length argument, find the first 
+    # nonblank character
+    # end of the string.  The declared length is given by a variable
+    # whose name is derived from outvar
+    $strlen = "v$count";
+    $strlen =~ s/^v/d/;
+    print $OUTFD "\
+    {char *p = v$count + $strlen - 1;
+     int  li;
+        while (*p == ' ' && p > v$count) p--;
+        p++;
+        p$count = (char *)$malloc( p-v$count + 1 );
+        for (li=0; li<(p-v$count); li++) { p$count\[li\] = v$count\[li\]; }
+        p$count\[li\] = 0; 
+    }
+";
+    $clean_up .= "    $free( p$count );\n";
+}
+# ----------------------------------------------------------------------------
+# Add null to input strings, also trim all LEADING and trailing blanks.
+# This is required by Info_set (but not explicitly for the other
+# routines).
+# We must make a copy 
+sub addnullandtrim_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    char *p$count;\n";
+}
+sub addnullandtrim_in_arg {
+    my $count = $_[0];
+    print $OUTFD "p$count";
+}
+sub addnullandtrim_ftoc {
+    my $count = $_[0];
+    
+    # Working backwards from the length argument, find the first 
+    # nonblank character
+    # end of the string.  The declared length is given by a variable
+    # whose name is derived from outvar
+    $strlen = "v$count";
+    $strlen =~ s/^v/d/;
+    print $OUTFD "\
+    {char *p = v$count + $strlen - 1;
+     char *pin = v$count;
+     int  li;
+        while (*p == ' ' && p > v$count) p--;
+        p++;
+        while (*pin == ' ' && pin < p) pin++;
+        p$count = (char *)$malloc( p-pin + 1 );
+        for (li=0; li<(p-pin); li++) { p$count\[li\] = pin\[li\]; }
+        p$count\[li\] = 0; 
+    }
+";
+    $clean_up .= "    $free( p$count );\n";
+}
+
+# ----------------------------------------------------------------------------
+# Add null to arrays of input strings
+# We must make a copy 
+# chararray is used ONLY in comm_spawn
+sub chararray_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    char **p$count;\n";
+    if (!$Array_size) { print $OUTFD "    char *pcpy$count;\n"; }
+    # pcpy<digit> is used for the case where the array length is not known
+    print $OUTFD "    int  asize$count=0;\n";
+}
+sub chararray_in_arg {
+    my $count = $_[0];
+    print $OUTFD "p$count";
+}
+sub chararray_ftoc {
+    my $count = $_[0];
+
+    # There is a special case - the input is MPI_ARGV_NULL.  We
+    # detect this by checking for a null string (all blanks).
+    # The initialization of MPI_ARGV_NULL is done in the special
+    #init setup
+    &specialInitStatement( $OUTFD );
+    # First, compute the number of elements.  In Fortran, a null
+    # string terminates the array.  The array is stored as 
+    # a two-dimensional field of fixed-length characters.
+    # Then copy the strings into the new storage, appending the
+    # null at the end
+    print $OUTFD "\
+    { int i;
+      char *ptmp;\n";
+    if ($Array_size) {
+	print $OUTFD "\
+      asize$count = $Array_size + 1;\n";
+    }
+    else {
+	print $OUTFD "\
+      /* Compute the size of the array by looking for an all-blank line */
+      pcpy$count = v$count;
+      for (asize$count=1; 1; asize$count++) {
+          char *pt = pcpy$count + d$count - 1;
+          while (*pt == ' ' && pt > pcpy$count) pt--;
+          if (*pt == ' ') break;
+          pcpy$count += d$count;
+      }\n";
+    }
+    print $OUTFD "\
+      p$count = (char **)$malloc( asize$count * sizeof(char *) );
+      ptmp    = (char *)$malloc( asize$count * (d$count + 1) );
+      for (i=0; i<asize$count-1; i++) {
+          char *p = v$count + i * d$count, *pin, *pdest;
+          int j;
+
+          pdest = ptmp + i * (d$count + 1);
+          p$count\[i\] = pdest;
+          /* Move to the end and work back */
+          pin = p + d$count - 1;
+          while (*pin == ' ' && pin > p) pin--;
+          /* Copy and then null terminate */
+          for (j=0; j<(pin-p)+1; j++) { pdest\[j\] = p\[j\]; }
+          pdest\[j\] = 0;
+          }
+    /* Null terminate the array */
+    p$count\[asize$count-1\] = 0;
+    }\n";
+    $clean_up .= "    $free( p$count\[0\] ); $free( p$count );\n";
+}
+
+# Add null to 2-dimensional arrays of input strings.  Used only 
+# by comm_spawn_multiple
+# FIXME : THIS CODE IS NOT CORRECT YET
+# Note the special handling of MPI_ARGVS_NULL
+sub chararray2_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    char ***p$count=0;\n";
+}
+sub chararray2_in_arg {
+    my $count = $_[0];
+    print $OUTFD "p$count";
+}
+sub chararray2_ftoc {
+    my $count = $_[0];
+
+    if ($Array_size eq "") {
+	print STDERR "A leading array size is required for 2-d Character arrays\n";
+	return 1;
+    }
+
+    # First, compute the number of elements.  In Fortran, a null
+    # string terminates the array.  The array is stored as 
+    # a two-dimensional field of fixed-length characters.
+    # Then copy the strings into the new storage, appending the
+    # null at the end
+    # Since this is a 2-d array, we always know the first dimension,
+    # the second dimension must be computed, this is asize$count.
+    # The first dimension is Array_size.
+    &specialInitStatement( $OUTFD );
+    print $OUTFD "\
+    /* Check for the special case of a the null args case. */
+    if (v$count == MPI_F_ARGVS_NULL) { v$count = (char *)MPI_ARGVS_NULL; } 
+    else { 
+        /* We must convert from the 2-dimensional Fortran array of
+           fixed length strings to a C variable-sized array (really an
+           array of pointers for each command of pointers to each 
+           argument, which is null terminated.*/\n";
+
+    # We must be careful.  A blank line is ALL blank, not just leading blank
+    # We must also be careful allocating the array, as C and Fortran 
+    # arrays are not the same.  In C, for a two dimensional array
+    # sized at run time, we must
+    # allocate an array of pointers to arrays.
+    #    p = (char ***) malloc( nrows * sizeof(char **) )
+    # where we are letting using p[nrows][colindex].  
+    # For MPI_Comm_spawn_multiple, each of these rows is for one command.
+    # Each p[k] is a pointer to an array of character strings.  
+    # For MPI_Comm_spawn_multiple, all we know is that in the 
+    # corresponding Fortran code, the two-dimensional character array
+    # contains an all-blank entry as the terminating element; the
+    # corresponding C array must have a null entry (pointer) in
+    # the corresponding position.  
+    # Thus, the C code must make several allocations:
+    #    p = nrows * sizeof(char **)
+    # for p[k], (ncols + 1) * sizeof(char *)
+    # for p[k][i], space for the ith input argument.
+    # To reduce the number of allocations, we allocate space for all
+    # elements on a row at one time.
+
+    # Purely local variables don't need $count
+    print $OUTFD "\
+      int k;
+
+      /* Allocate the array of pointers for the commands */
+      p$count = (char ***)$malloc( $Array_size * sizeof(char **) );
+
+      for (k=0; k<$Array_size; k++) {
+        /* For each command, find the number of command-line arguments.
+           They are terminated by an empty entry. */
+        /* Find the first entry in the Fortran array for this row */
+        char *p = v$count + k * d$count;
+        int arglen = 0, argcnt=0, i;
+        char **pargs, *pdata;
+        for (argcnt=0; 1; argcnt ++) {
+            char *pin = p + d$count - 1; /* Move to the end of the
+                                            current Fortran string */
+            while (*pin == ' ' && pin > p) pin--; /* Move backwards until
+                                                    we find a non-blank
+                                                    (Fortran is blank padded)*/
+            if (pin == p && *pin == ' ') {
+                /* found the terminating empty arg */
+                break;
+            }
+            /* Keep track of the amount of space needed */
+            arglen += (pin - p) + 2;   /* add 1 for the null */
+            /* Advance to the next entry in the array */
+            p += ($Array_size) * d$count;
+        }
+
+        /* argcnt is the number of provided arguments.  
+           Allocate the necessary elements and copy, null terminating copies */
+        pargs = (char **)$malloc( (argcnt+1)*sizeof(char *) );
+        pdata = (char *)$malloc( arglen );
+        p$count\[k\] = pargs;
+        pargs\[argcnt\] = 0;  /* Null terminate end */
+        /* Copy each argument to consequtive locations in pdata, 
+           and set the corresponding pointer entry */
+        p = v$count + k * d$count;
+        for (i=0; i<argcnt; i++) {
+            int j;
+            char *pin;
+            p$count\[k\]\[i\] = pdata;
+            /* Move to the end and work back */
+            pin = p + d$count - 1;
+            while (*pin == ' ' && pin > p) pin--;
+            /* Copy and then null terminate */
+            for (j=0; j<(pin-p)+1; j++) { *pdata++ = p\[j\]; }
+            *pdata++ = 0;
+            /* Advance to the next entry in the array */
+            p += ($Array_size) * d$count;
+        }
+	/* Set the terminator */
+        p3[k][i] = 0;
+       }
+    }\n";
+
+    $clean_up .= "    if (v$count != (char *)MPI_ARGVS_NULL) { 
+        int i; 
+        for (i=0; i <$Array_size; i++) {
+            $free( p$count\[i\]\[0\] );  /* Free space allocated to args */
+            $free( p$count\[i\] );       /* Free space allocated to arg array */
+        }
+        /* Free the array of arrays */
+        $free( p$count );
+    }\n";
+}
+
+# ---------------------------------------------------------------------------
+# Convert from an int array to an Aint array for routines taking an Aint as 
+# input
+sub intToAintArr_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    MPI_Aint *l$count;\n";
+}
+sub intToAintArr_ftoc {
+    my $count = $_[0];
+    print $OUTFD "
+#ifdef HAVE_AINT_LARGER_THAN_FINT
+    if ($Array_size > 0) {
+        int li;
+        l$count = (MPI_Aint *)$malloc( $Array_size * sizeof(MPI_Aint) );
+        for (li=0; li<$Array_size; li++) 
+            l$count\[li\] = v$count\[li\];
+    }
+    else l$count = 0;
+#else 
+    l$count = v$count;
+#endif\n";
+}
+sub intToAintArr_in_arg {
+    my $count = $_[0];
+    print $OUTFD "l$count";
+}
+# This routine is invoked even for the in case (to free the result)
+sub intToAintArr_in_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
+    print $OUTFD "
+#ifdef HAVE_AINT_LARGER_THAN_FINT
+    if ($lname) { $free($lname); }
+#endif\n";
+}
+# ---------------------------------------------------------------------------
+# Convert from an int to an Aint for routines taking an Aint as 
+# input
+sub intToAint_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    MPI_Aint l$count;\n";
+}
+sub intToAint_ftoc {
+    my $count = $_[0];
+    print $OUTFD "    l$count = (MPI_Aint)*v$count;\n";
+}
+sub intToAint_in_arg {
+    my $count = $_[0];
+    print $OUTFD "l$count";
+}
+
+# ---------------------------------------------------------------------------
+# Convert from an FILE to a fortran int
+# (output).  
+# -- temp
+sub FileToFint_inout_decl {
+    my $count = $_[0];
+    print $OUTFD "    MPI_File l$count = MPI_File_f2c(*v$count);\n";
+}
+sub FileToFint_inout_arg {
+    my $count = $_[0];
+    print $OUTFD "&l$count";
+}
+# -- end temp
+
+sub FileToFint_out_decl {
+    my $count = $_[0];
+    print $OUTFD "    MPI_File l$count;\n";
+}
+sub FileToFint_ctof {
+    my $lvar = $_[0];
+    my $gvar = $_[1];
+    print $OUTFD "    *$gvar = MPI_File_c2f($lvar);\n";
+}
+sub FileToFint_out_arg {
+    my $count = $_[0];
+    print $OUTFD "&l$count";
+}
+# ---------------------------------------------------------------------------
+# Check for the null datarep functions
+sub checkdatarep_in_decl {
+    my $count = $_[0];
+#     if ($count == 2) {
+# print $OUTFD "
+# #ifndef HAVE_MPI_CONVERSION_DEFN
+# #define HAVE_MPI_CONVERSION_DEFN
+# #ifdef F77_NAME_UPPER
+# #define mpi_conversion_fn_null_ MPI_CONVERSION_FN_NULL
+# #elif defined(F77_NAME_LOWER_2USCORE)
+# #define mpi_conversion_fn_null_ mpi_conversion_fn_null__
+# #elif !defined(F77_NAME_LOWER_USCORE)
+# #define mpi_conversion_fn_null_ mpi_conversion_fn_null
+# /* Else leave name alone */
+# #endif
+# /* Add the prototype so the routine knows what this is */
+# extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+# #endif
+# ";
+#     }
+}
+sub checkdatarep_in_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+sub checkdatarep_ftoc {
+    my $count = $_[0];
+
+    # Check to see if the pointer is the same as the null function
+    # We do something ugly here:  we exploit the fact that we know which is
+    # the first argument that needs this definition
+    print $OUTFD "\
+    if (v$count == (MPI_Datarep_conversion_function *)mpi_conversion_fn_null_){
+         v$count = 0;
+    }\n";
+}
+# ---------------------------------------------------------------------------
+# Special post processing for some routines
+sub setF90keyval {
+    my $FD = $_[0];
+    my $argnum = $_[1];
+
+    print $FD "\
+    if (*ierr == MPI_SUCCESS) {
+         MPIR_Keyval_set_fortran90( *v$argnum );
+    }\n";
+}
+sub setF77greq {
+    my $FD = $_[0];
+    my $argnum = $_[1];
+
+    print $FD "\
+    if (*ierr == MPI_SUCCESS) {
+         MPIR_Grequest_set_lang_f77( *v$argnum );
+    }\n";
+}
+
+
+# ---------------------------------------------------------------------------
+# This routine handles the special arguments in the *call*
+sub print_special_call_arg {
+    my $routine_name = $_[0];
+    my $count = $_[1];
+
+    $rule = $special_args{"${routine_name}-$count"};
+    ($direction,$method,$Array_size) = split(/:/,$rule);
+
+    $processing_routine = "${method}_${direction}_arg";
+    &$processing_routine( $count );
+}
+
+# This routine prints any declarations that are needed 
+sub print_special_decls {
+    my $routine_name = $_[0];
+
+    if ($returnErrval) {
+	print $OUTFD "    int $errparmrval;\n";
+    }
+    if (defined($special_args{$routine_name})) {
+	# First do the declarations
+	foreach $count (split(/:/,$special_args{$routine_name})) {
+	    $rule = $special_args{"${routine_name}-$count"};
+	    ($direction,$method,$Array_size) = split(/:/,$rule);
+	    # Sanity check: method and direction must be nonnull
+	    if ($method eq "" || $direction eq "") {
+		print STDERR "Error in special args for argument number $count of $routine_name\n";
+		last;
+	    }
+	    $processing_routine = "${method}_${direction}_decl";
+	    &$processing_routine( $count );
+	}
+    }
+    if (defined($special_args{$routine_name})) {
+	# Then do the precall steps
+	foreach $count (split(/:/,$special_args{$routine_name})) {
+	    $rule = $special_args{"${routine_name}-$count"};
+	    ($direction,$method,$Array_size) = split(/:/,$rule);
+	    if ($direction eq "in") {
+		$processing_routine = "${method}_ftoc";
+		&$processing_routine( $count );
+	    }
+	    else {
+		$processing_routine = "${method}_out_ftoc";
+		if (defined(&$processing_routine)) {
+		    &$processing_routine( $count );
+		}
+	    }
+	}
+    }
+}
+
+#
+# --------------------------------------------------------------------------
+# Create mpif.h.in from mpi.h
+#
+# Need to put this into a routine similar to the ReadInterface routine
+# in the c++ version.  This will allow us to read both mpi.h.in
+# and mpio.h.in (or other files)
+
+&ReadInterfaceForDefinitions( $prototype_file );
+if ( -s "../../mpi/romio/include/mpio.h.in" && $build_io) { 
+    %skipBlocks = ( 'HAVE_MPI_DARRAY_SUBARRAY' => 1, 
+		   'HAVE_MPI_INFO' => 1,
+		    'MPICH2' => 1 );
+    &ReadInterfaceForDefinitions( "../../mpi/romio/include/mpio.h.in" );
+    %skipBlocks = ();
+}
+#
+if ($write_mpif) {
+
+    $cchar = "C";
+    open ( MPIFFD, ">mpif.h.in.new" ) || die "Could not open mpif.h.in.new\n";
+
+    
+    # Now, write out the file
+    # This first line makes sure that other tools know that this is a
+    # Fortran file
+    print MPIFFD "$cchar      /* -*- Mode: Fortran; -*- */\n";
+    print MPIFFD "$cchar      \n";
+    print MPIFFD "$cchar      (C) 2001 by Argonne National Laboratory.\n";
+    print MPIFFD "$cchar      See COPYRIGHT in top-level directory.\n";
+    print MPIFFD "$cchar      \n";
+    print MPIFFD "$cchar      DO NOT EDIT\n";
+    print MPIFFD "$cchar      This file created by buildiface $arg_string\n";
+    print MPIFFD "$cchar      \n";
+    #
+    # Status elements
+    # FIXME: The offsets for the status elements are hardwired.  If they
+    # change in mpi.h.in, they need to change here as well.
+    print MPIFFD "       INTEGER MPI_SOURCE, MPI_TAG, MPI_ERROR\n";
+    print MPIFFD "       PARAMETER (MPI_SOURCE=3,MPI_TAG=4,MPI_ERROR=5)\n";
+    print MPIFFD "       INTEGER MPI_STATUS_SIZE\n";
+    print MPIFFD "       PARAMETER (MPI_STATUS_SIZE=\@MPI_STATUS_SIZE\@)\n";
+    # Temporary until configure handles these.  Define as arrays to keep
+    # Fortran compilers from complaining excessively.
+    print MPIFFD "       INTEGER MPI_STATUS_IGNORE(MPI_STATUS_SIZE)\n";
+    print MPIFFD "       INTEGER MPI_STATUSES_IGNORE(MPI_STATUS_SIZE,1)\n";
+    #
+    # Other special constants.  ERRCODES_IGNORE and ARGVS_NULL
+    # are both like STATUS(ES)_IGNORE
+    print MPIFFD "       INTEGER MPI_ERRCODES_IGNORE(1)\n";
+    print MPIFFD "       CHARACTER*1 MPI_ARGVS_NULL(1,1)\n";
+    # Unfortunately, we cannot parameter initialize this.  Further,
+    # there is no default initialization.  We could use a block data item...
+    # ARGV_NULL can actually be a single blank string, but it needs
+    # to be typed as a character array
+    print MPIFFD "       CHARACTER*1 MPI_ARGV_NULL(1)\n";
+
+    #
+    # Error Classes
+    print MPIFFD "       INTEGER MPI_SUCCESS\n";
+    print MPIFFD "       PARAMETER (MPI_SUCCESS=0)\n";
+    foreach $key (keys(%mpidef)) {
+	if ($key =~ /MPI_ERR_/) {
+	    &print_mpif_int( $key );
+	}
+    }
+    # Predefined error handlers
+    foreach $key (ERRORS_ARE_FATAL, ERRORS_RETURN) {
+	&print_mpif_int( "MPI_$key" );
+    }
+    # Compare operations
+    foreach $key (IDENT,CONGRUENT,SIMILAR,UNEQUAL) {
+	&print_mpif_int( "MPI_$key" );
+    }
+    # Collective operations
+    foreach $key (MAX, MIN, SUM, PROD, LAND, BAND, LOR, BOR, LXOR, BXOR, MINLOC, MAXLOC, REPLACE ) {
+	&print_mpif_int( "MPI_$key" );
+    }
+    # Objects
+    foreach $key ('COMM_WORLD', 'COMM_SELF', 'GROUP_EMPTY', 'COMM_NULL', 'WIN_NULL', 'FILE_NULL', 'GROUP_NULL', 'OP_NULL', 'DATATYPE_NULL', 'REQUEST_NULL', 'ERRHANDLER_NULL', 'INFO_NULL', ) {
+	&print_mpif_int( "MPI_$key" );
+    }
+    # Attributes
+    foreach $key (TAG_UB, HOST, IO, WTIME_IS_GLOBAL, UNIVERSE_SIZE, LASTUSEDCODE, APPNUM, WIN_BASE, WIN_SIZE, WIN_DISP_UNIT ) {
+	# Special cast:  The Fortran versions of these attributes have 
+	# value 1 greater than the C versions
+	$attrval = $mpidef{"MPI_$key"};
+	print "$key is $attrval\n" if $debug;
+	if ($attrval =~ /^0x/) { $attrval = hex $attrval; }
+	$attrval++;
+	$attrval = "0x" . sprintf "%x", $attrval;
+	print "$key is now $attrval\n" if $debug;
+	$mpidef{"MPI_$key"} = $attrval;
+	&print_mpif_int( "MPI_$key" );
+    } 
+    # String sizes
+    # See MPI-2 2.6.2 and 4.12.9; the constants for string lenghts are
+    # defined as one less than the C/C++ version
+
+    # Missing - max processor name!
+    # Handle max processor name here.
+    $mpidef{"MPI_MAX_PROCESSOR_NAME"} = "\@MPI_MAX_PROCESSOR_NAME\@";
+    # Other maximum values
+    foreach $key (MAX_ERROR_STRING, MAX_NAME_STRING, MAX_PORT_NAME, 
+		  MAX_OBJECT_NAME, MAX_INFO_KEY, MAX_INFO_VAL,
+		  MAX_PROCESSOR_NAME, MAX_DATAREP_STRING ) {
+	&print_mpif_int( "MPI_$key", -1 );
+    }
+    
+    # predefined constants
+    print MPIFFD "       INTEGER MPI_UNDEFINED, MPI_UNDEFINED_RANK\n";
+    print MPIFFD "       PARAMETER (MPI_UNDEFINED=$mpidef{'MPI_UNDEFINED'})\n";
+    # mpi_undefined_rank is defined as mpi-undefined
+    print MPIFFD "       PARAMETER (MPI_UNDEFINED_RANK=$mpidef{'MPI_UNDEFINED'})\n";
+    &print_mpif_int( "MPI_KEYVAL_INVALID" );
+    foreach $key ('BSEND_OVERHEAD', 'PROC_NULL', 'ANY_SOURCE', 'ANY_TAG', 'ROOT') {
+	&print_mpif_int( "MPI_$key" );
+    }
+    #
+    # Topology types
+    foreach $key (GRAPH, CART) {
+	&print_mpif_int( "MPI_$key" );
+    }
+    #
+    # version
+    &print_mpif_int( "MPI_VERSION" );
+    &print_mpif_int( "MPI_SUBVERSION" );
+
+    # Special RMA values
+    &print_mpif_int( "MPI_LOCK_EXCLUSIVE" );
+    &print_mpif_int( "MPI_LOCK_SHARED" );
+    #
+    # Datatypes
+    # These are determined and set at configure time
+    foreach $key (COMPLEX, DOUBLE_COMPLEX, LOGICAL, REAL, DOUBLE_PRECISION, INTEGER, '2INTEGER', '2COMPLEX', '2DOUBLE_PRECISION', '2REAL', '2DOUBLE_COMPLEX', CHARACTER) {
+	print MPIFFD "       INTEGER MPI_$key\n";
+	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_$key\@)\n";
+    }
+    # Value of MPI_BYTE from top level configure!
+    $mpidef{"MPI_BYTE"} = hex "0x4c00010d";
+    foreach $key (BYTE, UB, LB, PACKED) {
+	print MPIFFD "       INTEGER MPI_$key\n";
+        print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
+    }
+    #&print_mpif_int( "MPI_BYTE" );
+    #&print_mpif_int( "MPI_UB" );
+    #&print_mpif_int( "MPI_LB" );
+    #&print_mpif_int( "MPI_PACKED" );
+
+    # Optional types
+    # Warning: Should these use \@MPI_$key\@, since the 
+    # C-version must also compute these?
+    foreach $key (INTEGER1, INTEGER2, INTEGER4, INTEGER8, INTEGER16,
+		  REAL4, REAL8, REAL16, COMPLEX8, COMPLEX16, COMPLEX32) {
+	print MPIFFD "       INTEGER MPI_$key\n";
+	print MPIFFD "       PARAMETER (MPI_$key=\@F77_$key\@)\n";
+    }
+    #
+    # Fortran 90 types
+    print MPIFFD "       INTEGER MPI_ADDRESS_KIND, MPI_OFFSET_KIND\n";
+    print MPIFFD "       PARAMETER (MPI_ADDRESS_KIND=\@ADDRESS_KIND\@)\n";
+    print MPIFFD "       PARAMETER (MPI_OFFSET_KIND=\@OFFSET_KIND\@)\n";
+    # 
+    # Datatype combiners
+    foreach $key (NAMED, DUP, CONTIGUOUS, VECTOR, HVECTOR_INTEGER, HVECTOR, 
+                  INDEXED, HINDEXED_INTEGER, HINDEXED, INDEXED_BLOCK, 
+                  STRUCT_INTEGER, STRUCT, SUBARRAY, DARRAY, F90_REAL,
+                  F90_COMPLEX, F90_INTEGER, RESIZED) {
+	&print_mpif_int( "MPI_COMBINER_$key" );
+    }
+
+
+    # RMA Asserts
+    foreach $mode (NOCHECK, NOSTORE, NOPUT, NOPRECEDE, NOSUCCEED) {
+	&print_mpif_int( "MPI_MODE_$mode" );
+    }
+
+    # Thread values
+    foreach my $threadlevel (SINGLE, FUNNELED, SERIALIZED, MULTIPLE) {
+	&print_mpif_int( "MPI_THREAD_$threadlevel" );
+    }
+
+    # MPI-2 types: Files
+    if ($build_io) {
+	# Modes
+	foreach $mode (RDONLY, RDWR, WRONLY, DELETE_ON_CLOSE, UNIQUE_OPEN,
+		       CREATE, EXCL, APPEND, SEQUENTIAL) {
+	    &print_mpif_int( "MPI_MODE_$mode" );
+	}
+	# Seek
+	foreach $dir (SET, CUR, END) {
+	    &print_mpif_int( "MPI_SEEK_$dir" );
+	}
+	# Order
+	foreach $order (C, FORTRAN) {
+	    &print_mpif_int("MPI_ORDER_$order");
+	}
+	# direction
+	foreach $distrib (BLOCK, CYCLIC, NONE, DFLT_DARG) {
+	    &print_mpif_int("MPI_DISTRIBUTE_$distrib");
+	}
+	&print_mpif_int( "MPI_DISPLACEMENT_CURRENT", 0,
+			 "\@FORTRAN_MPI_OFFSET\@" );
+    }
+    # 
+    # Finally, the special symbols
+    print MPIFFD "       INTEGER MPI_BOTTOM, MPI_IN_PLACE\n";
+
+    # And the external names.  This are necessary to 
+    # ensure that these are passed as routines, not implicitly-defined 
+    # variables
+    print MPIFFD "       EXTERNAL MPI_DUP_FN, MPI_NULL_DELETE_FN, MPI_NULL_COPY_FN\n";
+    # Note that pmpi_wtime can cause problems with some Fortran compilers
+    # if the corresponding routines aren't available (even if not used)
+    print MPIFFD "       EXTERNAL MPI_WTIME, MPI_WTICK\n";
+    print MPIFFD "       EXTERNAL PMPI_WTIME, PMPI_WTICK\n";
+    # Add the external names for the MPI-2 attribute functions
+    print MPIFFD "       EXTERNAL MPI_COMM_DUP_FN, MPI_COMM_NULL_DELETE_FN\n";
+    print MPIFFD "       EXTERNAL MPI_COMM_NULL_COPY_FN\n";
+    print MPIFFD "       EXTERNAL MPI_WIN_DUP_FN, MPI_WIN_NULL_DELETE_FN\n";
+    print MPIFFD "       EXTERNAL MPI_WIN_NULL_COPY_FN\n";
+    print MPIFFD "       EXTERNAL MPI_TYPE_DUP_FN, MPI_TYPE_NULL_DELETE_FN\n";
+    print MPIFFD "       EXTERNAL MPI_TYPE_NULL_COPY_FN\n";
+    print MPIFFD "       EXTERNAL MPI_CONVERSION_FN_NULL\n";
+    # the time/tick functions
+    print MPIFFD "       DOUBLE PRECISION MPI_WTIME, MPI_WTICK\n";
+    print MPIFFD "       DOUBLE PRECISION PMPI_WTIME, PMPI_WTICK\n";
+    # We avoid adding the external declarations because some Fortran
+    # compilers then insist on linking with the routines, even if 
+    # they are not used.  Combined with systems that do not have weak
+    # symbols, and you can get some strange link failures.
+
+    # When building the Fortran interface for Microsoft Windows, there 
+    # are some additional compiler directives needed 
+    # This provides a hook for any DLL import directives.  We need to 
+    # make this a configure-time variable because some compilers (in 
+    # particular, a version of the Intel Fortran compiler for Linux)
+    # will read directives for other compilers and then flag as fatal
+    # errors directives that it does not support but does recognize.
+    print MPIFFD "\@DLLIMPORT\@\n";
+
+    # Add the common blocks for the special constants
+    # (Use two to avoid problems with continuations)
+    print MPIFFD "\
+       COMMON /MPIPRIV1/ MPI_BOTTOM, MPI_IN_PLACE, MPI_STATUS_IGNORE\n";
+    print MPIFFD "\
+       COMMON /MPIPRIV2/ MPI_STATUSES_IGNORE, MPI_ERRCODES_IGNORE\n";
+    print MPIFFD "       SAVE /MPIPRIV1/,/MPIPRIV2/\n";
+    # Add the common block for the character parameter ARGVS_NULL (Fortran
+    # requires character data in a different common block than 
+    # non-character data)
+    print MPIFFD "\
+       COMMON /MPIPRIVC/ MPI_ARGVS_NULL, MPI_ARGV_NULL
+       SAVE   /MPIPRIVC/\n";
+
+    close( MPIFFD );
+    &ReplaceIfDifferent( "mpif.h.in", "mpif.h.in.new" );
+} # if write_mpif
+
+#
+# Look through $args for parameter names (foo\s+name)
+# and remove them
+sub clean_args {
+    my $newargs = "";
+    my $comma = "";
+    for $parm (split(',',$args)) {
+	# Remove any leading or trailing spaces
+	$parm =~ s/^\s*//;
+	$parm =~ s/\s*$//;
+	# Handle parameters with parameter names
+	# First if handles "int foo", second handles "int *foo"
+	if ( ($parm =~ /^([A-Za-z0-9_]+)\s+[A-Za-z0-9_]+$/) ) {
+	    $parm = $1;
+	}
+	elsif ( ($parm =~ /([A-Za-z0-9_]+\s*\*)\s*[A-Za-z0-9_]+$/) ) {
+	    $parm = $1;
+	}
+	$newargs .= "$comma$parm";
+	$comma = ",";
+    }
+    print STDERR "$newargs\n" if $debug;
+    $args = $newargs;
+}
+
+# print_type_decl( $FD, $lcname )
+
+sub print_routine_type_decl {
+    my $OUTFD = $_[0];
+    my $lcname = $_[1];
+    # The name "FORT_DLL_SPEC" may be use to tell the compiler that
+    # 
+    if ($do_subdecls) {
+	print $OUTFD "FORT_DLL_SPEC $returnType FORT_CALL ";
+    }
+    else {
+	print $OUTFD "$returnType ";
+    }
+    print $OUTFD "${out_prefix}${lcname}_ ";
+}
+
+#
+# Build the special routines
+sub build_specials {
+    my $filename = "";
+    # The init routine contains some configure-time values.
+    # We may not want to do this if we are supporting multiple
+    # Fortran compilers with different values for Fortran .TRUE. and
+    # .FALSE., but to get started, this is easiest.
+    $OUTFD = "INITFFD";
+    $filename = "initf.c";
+    open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    &print_header( "MPI_Init", "init", "" );
+
+    &print_routine_type_decl( $OUTFD, "init" );
+    $args = "";
+    &print_args( $OUTFD, $args, 0, "init" );
+    # If an attribute can be added before the code, then do that here.
+    # Gcc only allows attributes on the prototypes, not the function
+    # definitions
+    print $OUTFD "{\n";
+    print $OUTFD "#ifndef F77_RUNTIME_VALUES
+    /* any compile/link time values go here */
+#else
+#   error \"Fortran values must be determined at configure time\"
+#endif
+";
+    # See the discussion on MPIR_F_NeedInit at the head of this file
+    print $OUTFD "    mpirinitf_(); MPIR_F_NeedInit = 0;\n";
+    print $OUTFD "    *ierr = MPI_Init( 0, 0 );\n";
+    # Still to do:
+    #   Initialize the Fortran versions of the predefined keyvals.
+    #   Find the value of MPI_BOTTOM.  
+    #     Call a Fortran routine that calls a C routine that is passed
+    #     MPI_BOTTOM from the common block.  
+    #     
+    print $OUTFD "}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "init", $args );
+
+    $OUTFD = "INITFFD";
+    $filename = "initthreadf.c";
+    open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "int, int *";
+    &print_header( "MPI_Init_thread", "init_thread", $args );
+
+    &print_routine_type_decl( $OUTFD, "init_thread" );
+    &print_args( $OUTFD, $args, 0, "init_thread" );
+    print $OUTFD "{\n";
+    # See the discussion on MPIR_F_NeedInit at the head of this file
+    print $OUTFD "    mpirinitf_(); MPIR_F_NeedInit = 0;\n";
+    print $OUTFD "    *ierr = MPI_Init_thread( 0, 0, *v1, v2 );\n";
+    print $OUTFD "}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "init_thread", $args );
+
+    # Functions used by the C init process, but that must be called 
+    # from C
+    $OUTFD = "FORTTOC";
+    $filename = "setbot.c";
+    open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    #setbot.c is not one of the mpi_sources files
+    #$files[$#files+1] = $filename;
+    &print_copyright;
+
+    print $OUTFD "
+#ifdef F77_NAME_UPPER
+#define mpirinitc_ MPIRINITC
+#define mpirinitc2_ MPIRINITC2
+#elif defined(F77_NAME_LOWER_2USCORE) || defined(F77_NAME_LOWER_USCORE)
+/* leave name alone */
+#else
+#define mpirinitc_ mpirinitc
+#define mpirinitc2_ mpirinitc2
+#endif
+/* These functions are called from Fortran so only need prototypes in 
+   this file.  Note that the last argument is a character array, so
+   we need to include the elements of the Fortran character \"dope vector\".
+*/
+FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *, void *, void *, void *, 
+                                         void *, void * FORT_MIXED_LEN_DECL 
+                                         FORT_END_LEN_DECL );
+FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char * FORT_MIXED_LEN_DECL 
+                                          FORT_END_LEN_DECL );
+";
+    # These are here rather than in initf.c to solve some link order 
+    # problems for Windows when separate libraries are used for the C and
+    # Fortran routines.
+    # Note that the global variables have values.  This is to work around
+    # a bug in some C environments (e.g., Mac OS/X) that don't load
+    # external symbols that don't have a value assigned at compile time 
+    # (so called common symbols)
+    print $OUTFD "
+#ifndef F77_USE_BOOLEAN_LITERALS
+#if defined(F77_RUNTIME_VALUES) || !defined(F77_TRUE_VALUE_SET)
+MPI_Fint MPIR_F_TRUE = 1, MPIR_F_FALSE = 0;
+#else
+const MPI_Fint MPIR_F_TRUE=F77_TRUE_VALUE;
+const MPI_Fint MPIR_F_FALSE=F77_FALSE_VALUE;
+#endif
+#endif
+";
+    # MPI-2, section 4.12.5, on the declaration of MPI_F_STATUS_IGNORE
+    # MPI_F_STATUSES_IGNORE as global variables in mpi.h (!)
+    print $OUTFD "
+#ifndef USE_POINTER_FOR_BOTTOM
+int  MPIR_F_NeedInit        = 1;
+void *MPIR_F_MPI_BOTTOM     = 0;
+void *MPIR_F_MPI_IN_PLACE   = 0;
+/* MPI_F_STATUS_IGNORE etc must be declared within mpi.h (MPI-2 standard 
+   requires this) */
+/* 
+void *MPI_F_STATUS_IGNORE   = 0;
+void *MPI_F_STATUSES_IGNORE = 0;
+*/
+int  *MPI_F_ERRCODES_IGNORE = 0;
+void *MPI_F_ARGVS_NULL      = 0;
+#endif
+\n";
+
+
+    print $OUTFD "
+FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *a, void *b, void *c, void *d, 
+                                         void *e, void *f FORT_MIXED_LEN(d1) 
+                                         FORT_END_LEN(d1) )
+{
+    MPIR_F_MPI_BOTTOM     = a;
+    MPIR_F_MPI_IN_PLACE   = b;
+    MPI_F_STATUS_IGNORE   = (MPI_Fint *)c;
+    MPI_F_STATUSES_IGNORE = (MPI_Fint *)d;
+    MPI_F_ERRCODES_IGNORE = (int *)e;
+    MPI_F_ARGVS_NULL      = f;
+}
+/* Initialize the Fortran ARGV_NULL to a blank.  Using this routine
+   avoids potential problems with string manipulation routines that
+   exist in the Fortran runtime but not in the C runtime libraries */
+FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1) 
+                                          FORT_END_LEN(d1) )
+{
+    *a = ' ';
+}
+";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    
+    $OUTFD = "PCONTROLFFD";
+    $filename = "pcontrolf.c";
+    open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "int";
+    &print_header( "MPI_Pcontrol", "pcontrol", $args );
+    &print_routine_type_decl( $OUTFD, "pcontrol" );
+    &print_args( $OUTFD, $args, 0, "pcontrol" );
+    #&print_attr;
+    print $OUTFD "{\n";
+    print $OUTFD "    *ierr = MPI_Pcontrol( (int)*v1 );\n";
+    print $OUTFD "}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "pcontrol", $args );
+
+    $OUTFD = "ADDRESSFFD";
+    $filename = "addressf.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "void *, int *";
+    &print_header( "MPI_Address", "address", $args );
+    # Add the definitions needed for error reporting
+    # (We could use mpiimpl.h, but mpierrs.h should be sufficient)
+    # mpierror.h references FILE *, so needs stdio.h
+    print $OUTFD "#include \"mpierrs.h\"\n"; 
+    print $OUTFD "#include <stdio.h>\n"; 
+    print $OUTFD "#include \"mpierror.h\"\n"; 
+    &print_routine_type_decl( $OUTFD, "address" );
+    &print_args( $OUTFD, $args, 0, "address" );
+    #&print_attr;
+    print $OUTFD "{
+    MPI_Aint a, b;
+    *ierr = MPI_Address( v1, &a );\n";
+    &specialInitStatement( $OUTFD );
+    print $OUTFD "\
+#ifdef USE_POINTER_FOR_BOTTOM
+    b = a;
+#else
+    b = a - (MPI_Aint) MPIR_F_MPI_BOTTOM;
+#endif
+    *v2 = (MPI_Fint)( b );
+#ifdef HAVE_AINT_LARGER_THAN_FINT
+    /* Check for truncation */
+    if ((MPI_Aint)*v2 - b != 0) {
+        *ierr = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
+			  \"MPI_Address\", __LINE__, MPI_ERR_ARG, \"**inttoosmall\", 0 );
+	(void)MPIR_Err_return_comm( 0, \"MPI_Address\",  *ierr );
+    }
+#endif
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "address", $args );
+
+    $OUTFD = "GETADDRESSFFD";
+    $filename = "getaddressf.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "void *, MPI_Aint *";
+    $saveAINT = $tof77{"MPI_Aint*"};
+    undef $tof77{"MPI_Aint*"};
+    &print_header( "MPI_Get_address", "get_address", $args );
+    # Add the definitions needed for error reporting
+    # (We could use mpiimpl.h, but mpierrs.h should be sufficient)
+    # mpierror.h references FILE *, so needs stdio.h
+    print $OUTFD "#include \"mpierrs.h\"\n"; 
+    print $OUTFD "#include <stdio.h>\n"; 
+    print $OUTFD "#include \"mpierror.h\"\n"; 
+    &print_routine_type_decl( $OUTFD, "get_address" );
+    &print_args( $OUTFD, $args, 0, "get_address" );
+    #&print_attr;
+    print $OUTFD "{
+    MPI_Aint a;
+    *ierr = MPI_Get_address( v1, &a );\n";
+    &specialInitStatement( $OUTFD );
+    print $OUTFD "\
+#ifndef USE_POINTER_FOR_BOTTOM
+    a = a - (MPI_Aint) MPIR_F_MPI_BOTTOM;
+#endif
+    *v2 =  a;
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "get_address", $args );
+    $tof77{"MPI_Aint*"} =  $saveAINT;
+
+    $OUTFD = "WTIMEFD";
+    $filename = "wtimef.c";
+    open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $returnType = "double";
+    &set_weak_decl( "MPI_Wtime", "void", "double" );
+    &set_weak_decl( "PMPI_Wtime", "void", "double" );
+    &print_header( "MPI_Wtime", "wtime", "" );
+    # mpichtimer.h is needed for the timer definitions
+    print $OUTFD "#include \"mpichconf.h\"\n";
+    print $OUTFD "#include \"mpichtimer.h\"\n";
+    &print_routine_type_decl( $OUTFD, "wtime" );
+    print $OUTFD "( void ) ";
+    #&print_attr;
+    print $OUTFD "{\n";
+    print $OUTFD "    double d; MPID_Time_t t;\n
+    MPID_Wtime( &t );
+    MPID_Wtime_todouble( &t, &d );
+    return d;\n";
+    print $OUTFD "}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+
+    if ($build_prototypes) {
+        print PROTOFD "extern ";
+        &print_routine_type_decl( PROTOFD, "wtime" );
+	print PROTOFD "( void )";
+	&print_attr( PROTOFD, "${out_prefix}wtime_" );
+        print PROTOFD ";\n";
+    }
+    $returnType = "void";
+
+    $OUTFD = "WTICKFD";
+    $filename = "wtickf.c";
+    open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $returnType = "double";
+    &set_weak_decl( "MPI_Wtick", "void", "double" );
+    &set_weak_decl( "PMPI_Wtick", "void", "double" );
+    &print_header( "MPI_Wtick", "wtick", "" );
+    # mpichtimer.h is needed for the timer definitions
+    print $OUTFD "#include \"mpichconf.h\"\n";
+    print $OUTFD "#include \"mpichtimer.h\"\n";
+    &print_routine_type_decl( $OUTFD, "wtick" );
+    print $OUTFD "( void ) ";
+    #&print_attr;
+    print $OUTFD "{\n";
+    print $OUTFD "    double d; 
+    d = MPID_Wtick( );
+    return d;\n";
+    print $OUTFD "}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    
+    if ($build_prototypes) {
+        print PROTOFD "extern ";
+        &print_routine_type_decl( PROTOFD, "wtick" );
+	print PROTOFD "( void )";
+	&print_attr( PROTOFD, "${out_prefix}wtick_" );
+        print PROTOFD ";\n";
+    }
+    $returnType = "void";
+
+    $OUTFD = "KEYVALCREATEF";
+    $filename = "keyval_createf.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "MPI_Copy_function , MPI_Delete_function , int *, void *";
+    &print_header( "MPI_Keyval_create", "keyval_create", $args );
+    print $OUTFD " 
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Comm_create_keyval
+#define MPI_Comm_create_keyval PMPI_Comm_create_keyval
+#endif
+";
+    &print_routine_type_decl( $OUTFD, "keyval_create" );
+    &print_args( $OUTFD, $args, 0, "keyval_create" );
+    #&print_attr;
+    print $OUTFD "{
+        *ierr = MPI_Comm_create_keyval( v1, v2, v3, v4 );
+        if (!*ierr) {
+            MPIR_Keyval_set_fortran( *v3 );
+        }
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "keyval_create", $args );
+
+    # Default attribute functions.  
+    # We must create separate functions since we cannot rely on
+    # using a preprocessor to alias the names.
+    # OPTION: we could use weak symbols where available to
+    # reduce the number of files.
+    $OUTFD = "DUPFN";
+    $filename = "dup_fnf.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "MPI_Fint, MPI_Fint *, void *, void **, void **, MPI_Fint *";
+    &print_header( "mpi_dup_fn", "dup_fn", $args );
+    &print_routine_type_decl( $OUTFD, "dup_fn" );
+    &print_args( $OUTFD, $args, 0, "dup_fn" );
+    #&print_attr;
+    print $OUTFD "{
+        *v5 = *v4;
+        *v6 = MPIR_TO_FLOG(1);
+        *ierr = MPI_SUCCESS;
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "dup_fn", $args );
+
+    $OUTFD = "NULLDELFN";
+    $filename = "null_del_fnf.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "MPI_Fint *, MPI_Fint *, void *, void *";
+    &print_header( "mpi_null_delete_fn", "null_delete_fn", $args );
+    &print_routine_type_decl( $OUTFD, "null_delete_fn" );
+    &print_args( $OUTFD, $args, 0, "null_delete_fn" );
+    #&print_attr;
+    print $OUTFD "{
+        *ierr = MPI_SUCCESS;
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "null_delete_fn", $args );
+
+    $OUTFD = "NULLCOPYFN";
+    $filename = "null_copy_fnf.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "MPI_Fint *, MPI_Fint *, void *, void *, void *, int *";
+    &print_header( "mpi_null_copy_fn", "null_copy_fn", $args );
+    &print_routine_type_decl( $OUTFD, "null_copy_fn" );
+    &print_args( $OUTFD, $args, 0, "null_copy_fn" );
+    print $OUTFD "{
+        *ierr = MPI_SUCCESS;
+        *v6 = MPIR_TO_FLOG(0);
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "null_copy_fn", $args );
+
+    &WriteAttrDefaults( "comm_" );
+    &WriteAttrDefaults( "win_" );
+    &WriteAttrDefaults( "type_" );
+
+    # Datarep conversion function
+    # This is a special case.  We need to define this function
+    # but it should never be called (we convert a reference to it
+    # to a reference to null, which is how the C version of this
+    # routine is defined.
+#
+# This is now part of the register_datarep function
+#    $OUTFD = "NULLCONVERSIONFN";
+#    $filename = "null_conv_fnf.c";
+#    $returnType = "int";
+#    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+#    $files[$#files+1] = $filename;
+#    $args = "void *, MPI_Fint *, MPI_Fint *, void *, MPI_Offset *, MPI_Aint *, MPI_Fint *";
+#    &print_header( "mpi_conversion_fn_null", "conversion_fn_null", $args,
+#	   "#ifdef MPI_CONVERSION_FN_NULL\n#undef MPI_CONVERSION_FN_NULL\n#endif\n" );
+#    &print_routine_type_decl( $OUTFD, "conversion_fn_null" );
+#    &print_args( $OUTFD, $args, 0, "conversion_fn_null" );
+#    # This is tricky; we don't want to call this function at all
+#    # FIXME    
+#    print $OUTFD "\n{\n   return MPI_SUCCESS;\n}\n";
+#    close ($OUTFD);
+#    &ReplaceIfDifferent( $filename, $filename . ".new" );
+#    &AddPrototype( "conversion_fn_null", $args );
+
+
+    # The status conversion functions.
+    # These are a little different because they are routines that
+    # are called from C.
+    # Also note that we must exclude them from the routines that
+    # are generated for Fortran.  These are here because they need to
+    # know how Fortran stores a status (e.g., if C and Fortran integers 
+    # are the same size).
+    $OUTFD = "STATUSF2C";
+    $filename = "statusf2c.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    print $OUTFD "
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ *
+ * This file is automatically generated by buildiface 
+ * DO NOT EDIT
+ */
+#include \"mpi_fortimpl.h\"
+/* mpierrs.h and mpierror.h for the error code creation */
+#include \"mpierrs.h\"
+#include <stdio.h> 
+#include \"mpierror.h\"
+
+/* -- Begin Profiling Symbol Block for routine MPI_Status_f2c */
+#if defined(USE_WEAK_SYMBOLS) && !defined(USE_ONLY_MPI_NAMES) 
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_Status_f2c = PMPI_Status_f2c
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_Status_f2c  MPI_Status_f2c
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_Status_f2c as PMPI_Status_f2c
+#endif
+#endif
+/* -- End Profiling Symbol Block */
+
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Status_f2c
+#define MPI_Status_f2c PMPI_Status_f2c
+#endif
+
+#undef FUNCNAME
+#define FUNCNAME MPI_Status_f2c
+
+int MPI_Status_f2c( MPI_Fint *f_status, MPI_Status *c_status )
+{
+    int mpi_errno = MPI_SUCCESS;
+    /* This code assumes that the ints are the same size */\n";
+    &specialInitStatement( $OUTFD );
+print $OUTFD "\    
+    if (f_status == MPI_F_STATUS_IGNORE) {
+	/* The call is erroneous (see 4.12.5 in MPI-2) */
+        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+		 \"MPI_Status_f2c\", __LINE__, MPI_ERR_OTHER, \"**notfstatignore\", 0 );
+	return MPIR_Err_return_comm( 0, \"MPI_Status_f2c\",  mpi_errno );
+    }
+    *c_status = *(MPI_Status *)	f_status;
+    return MPI_SUCCESS;  
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+
+    $OUTFD = "STATUSC2F";
+    $filename = "statusc2f.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    print $OUTFD "
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ *
+ * This file is automatically generated by buildiface 
+ * DO NOT EDIT
+ */
+#include \"mpi_fortimpl.h\"
+/* mpierrs.h and mpierror.h for the error code creation */
+#include \"mpierrs.h\"
+#include <stdio.h> 
+#include \"mpierror.h\"
+
+/* -- Begin Profiling Symbol Block for routine MPI_Status_c2f */
+#if defined(USE_WEAK_SYMBOLS) && !defined(USE_ONLY_MPI_NAMES) 
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_Status_c2f = PMPI_Status_c2f
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_Status_c2f MPI_Status_c2f
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_Status_c2f as PMPI_Status_c2f
+#endif
+#endif
+/* -- End Profiling Symbol Block */
+
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Status_c2f
+#define MPI_Status_c2f PMPI_Status_c2f
+#endif
+
+#undef FUNCNAME
+#define FUNCNAME MPI_Status_c2f
+
+int MPI_Status_c2f( MPI_Status *c_status, MPI_Fint *f_status )
+{
+    int mpi_errno = MPI_SUCCESS;
+    /* This code assumes that the ints are the same size */
+    if (c_status == MPI_STATUS_IGNORE ||
+	c_status == MPI_STATUSES_IGNORE) {
+	/* The call is erroneous (see 4.12.5 in MPI-2) */
+        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+		 \"MPI_Status_c2f\", __LINE__, MPI_ERR_OTHER, \"**notcstatignore\", 0 );
+	return MPIR_Err_return_comm( 0, \"MPI_Status_c2f\",  mpi_errno );
+    }
+    *(MPI_Status *)f_status = *c_status;
+    return MPI_SUCCESS;
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+
+}
+
+sub print_mpif_int {
+    my $key = $_[0];
+    my $value = $mpidef{$key};
+    my $valueOffset = $_[1];
+    my $inttype = $_[2];
+
+    # integertype lets use change the integer type of the 
+    # variable; e.g., to make it integer*8 or integer (kind=MPI_OFFSET_KIND).
+    # This is needed for MPI_DISPLACEMENT_CURRENT.
+    # Because this will need to be set by configure, if set, this 
+    # needs to be a configure variable.
+    my $integertype = "INTEGER";
+
+    if (defined($inttype)) {
+	$integertype = $inttype;
+    }
+    
+    if (!defined($value) || $value eq "") {
+	print STDERR "No value found for \"$key\"\n";
+	return 0;
+    }
+    # Remove any casts
+    print "Input value for $key = $value\n" if $debug;
+    if ($value =~ /\(MPI/) {
+	$value =~ s/\(MPI_[A-Za-z0-9]*\s*\)//;
+	print "cast removal: $value\n" if $debug;
+    }
+    # Remove any surrounding ()
+    if ($value =~ /\(\s*[-a-fx0-9]*\)/) {
+	$value =~ s/\(\s*([-a-fx0-9]*)\s*\)/$1/;
+	print "paren removal: $value\n" if $debug;
+    }
+    # Convert hex to decimal
+    if ($value =~ /^0x[a-f\d]*/) {
+	$value = hex $value;
+	print "hex conversion: $value\n" if $debug;
+    }
+    if (defined($valueOffset) && $valueOffset ne "0") { 
+	if ($value =~ /^-?\d+/) {
+	    $value += $valueOffset;
+	}
+	else {
+	    $value .= "$valueOffset";
+	}
+    }
+    print MPIFFD "       $integertype $key\n";
+    print MPIFFD "       PARAMETER ($key=$value)\n";
+}
+
+
+sub ReadAndProcessInterface {
+    my $prototype_file = $_[0];
+    my $protectMPIO = $_[1];      # Wrap MPI-IO routines in ifdefs MPI_MODE_RDONLY
+    my $linecount = 0;
+    my $newfilename = "";
+    my $filename = "";
+    open( FD, "<$prototype_file" ) || die "Cannot open $prototype_file\n";
+
+    # Skip to prototypes
+    while (<FD>) {
+	$linecount ++;
+	if ( /\/\*\s*Begin Prototypes/ ) { last; }
+    }
+
+    # Read each one
+    while (<FD>) {
+	$linecount ++;
+	print $_ if $debug;
+	# In some packages (not MPI but in Parallel netCDF) not all prototypes
+	# have Fortran equivalents.  The following lets us skip over them
+	if (/\/\*\s*Begin Skip Prototypes/) {
+	    while (<FD>) {
+		if (/\/\*\s*End Skip Prototypes/) { last; }
+	    }
+	}
+	if (/\/\*\s*End Prototypes/) { last; }
+
+	# We should also skip #ifndef xxx, for some xxx.  
+	if (/^#\s*ifndef\s+(\w*)/) {
+	    $ndefname = $1;
+	    if (defined($skipBlocks{$ndefname})) {
+		&SkipCPPIfdef( FD );
+	    }
+	}
+	# Remove any comments
+	s/\/\*.*\*\///g;
+
+	if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
+	    $routine_name = $1;
+	    $args = $2;
+	    while (! ($args =~ /;/)) {
+		$args .= <FD>;
+		$linecount++;
+	    }
+	    $args =~ s/\)\s*;//g;
+	    $args =~ s/[\r\n]*//g;
+	    # remove qualifiers from args
+### TEMP - REMEMBER const because we may need it later	    
+	    #$args =~ s/\s*const\s+//g;
+	    # Convert MPIO_Request to MPI_Request (temporary)
+#	    $args =~ s/MPIO_Request/MPI_Request/g;
+
+	    # Get the name of the Fortran routine (without the prefix).  
+	    # Normally, the name is just the lower-case version, but
+	    # some libraries (such as NetCDF) use "real" in Fortran
+	    # where C uses "float".
+	    $lcname = lc($routine_name);
+	    if (defined($CtoFName{$lcname})) {
+		$lcname = $CtoFName{$lcname};
+	    }
+	    # Eventually, we'll create a new file here.  
+	    # For C++, we may create similar files by looking up 
+	    # the corresponding routines.
+	    if (defined($special_routines{$routine_name})) {
+		print "Skiping $routine_name\n" if $debug;
+	    }
+	    else {
+		# Check for duplicates in the list of routines
+		if (defined($mpi_routines{$routine_name})) {
+		    my $found = "";
+		    if (defined($mpiRoutinesFile{$routine_name})) {
+			my $location = $mpiRoutinesFile{$routine_name};
+			$found = "previous prototoype found in $location\n";
+		    }
+		    print STDERR "Duplicate prototypes for $routine_name in $prototype_file:$linecount\n$found";
+		    next;
+		}
+		# Clear variables
+		&clean_args;
+		$mpi_routines{$routine_name} = $args;
+		$mpiRoutinesFile{$routine_name} = "$prototype_file:$linecount";
+
+		$clean_up = "";
+		if ($buildfiles) {
+		    if (defined($name_map{$lcname})) {
+			$filename = $name_map{$lcname} . "f.c";
+		    }
+		    else {
+			$filename = $lcname . "f.c";
+		    }
+		    $OUTFD = OUTPUTFILED;   # Needed for pre 5.6 versions of perl
+		    $newfilename = $filename . ".new";
+		    open ($OUTFD, ">$newfilename" ) || die "Cannot open $newfilename\n";
+		    # Add the name to the list of files"
+		    $files[$#files+1] = $filename;
+		}
+		else {
+		    $OUTFD = STDOUT;
+		}
+		&print_header( $routine_name, $lcname, $args );
+		if ($do_subdecls) {
+		    print $OUTFD "FORT_DLL_SPEC $returnType FORT_CALL ";
+		}
+		else {
+		    print $OUTFD "$returnType ";
+		}
+		print $OUTFD "${out_prefix}${lcname}_ ";
+		# Print args not only prints the arguments but fills the
+		# array @arg_addresses to indicate the number of dereference
+		# operations are needed to recover the original value (since
+		# all Fortran parameters are passed either by value-result or
+		# by reference, many value parameters in the C calls are 
+		# replaced by reference parameters in the Fortran interface.
+		print "Printing arguments for $routine_prefix${lcname}_\n" if $debug;
+		&print_args( $OUTFD, $args, 0, $lcname );
+
+		#&print_attr;
+		print $OUTFD "{\n";
+		&specialInitClear;
+		if ($protectMPIO) {
+		    print $OUTFD "#ifdef MPI_MODE_RDONLY\n";
+ 		}
+		&print_special_decls( $routine_name );
+		print $OUTFD "    $errparmlval = $routine_prefix$routine_name";
+		print "Printing call arguments for mpi_${lcname}_\n" if $debug;
+		&print_call_args( $args );
+		# Print any post call processing
+		&print_post_call( $routine_name, $args );
+		if ($protectMPIO) {
+		    print $OUTFD "#else\n$errparmlval = MPI_ERR_INTERN;\n#endif\n";
+ 		}
+		if ($returnErrval) {
+		    print $OUTFD "    return $errparmrval;\n";
+		}
+		print $OUTFD "}\n";
+		if ($buildfiles) {
+		    close ($OUTFD);
+		    &ReplaceIfDifferent( $filename, $newfilename );
+		}
+		if ($build_prototypes) {
+		    if ($do_subdecls) {
+			print PROTOFD "extern FORT_DLL_SPEC $returnType FORT_CALL ${out_prefix}${lcname}_ ";
+		    }
+		    else {
+			print PROTOFD "extern $returnType ${out_prefix}${lcname}_ ";
+		    }
+		    &print_args( PROTOFD, $args, 0, $lcname );
+		    &print_attr( PROTOFD, "${out_prefix}${lcname}_" );
+		    print PROTOFD ";\n";
+		}
+	    }
+	}
+    }
+}
+
+sub ReadInterfaceForDefinitions {
+    my $prototype_file = $_[0];
+    my $linecount = 0;
+
+    open ( MPIFD, "<$prototype_file" ) || die "Could not open $prototype_file\n";
+    #
+    # First, find the values that we need
+    while (<MPIFD>) {
+	$linecount++;
+	# Remove any comments
+	s/\/\*.*\*\///g;
+
+	# We should also skip #ifndef xxx, for some xxx.  
+	if (/^#\s*ifndef\s+(\w*)/) {
+	    $ndefname = $1;
+	    if (defined($skipBlocks{$ndefname})) {
+		&SkipCPPIfdef( MPIFD );
+	    }
+	}
+
+	# Use \S instead of [^\s].  See the comment above
+	if (/^\s*#\s*define\s+(MPI_[A-Za-z_0-9]*)\s+(\S+)(.*)/) {
+	    my $name      = $1;
+	    my $val       = $2;
+	    my $remainder = $3;
+	    print "Found definition of $name as $val\n" if $debug;
+	    # If the name has some lower case letters in it, we
+	    # need to skip it (e.g., for a define MPI_Comm_c2f...)
+	    if ($name =~ /[a-z]/) { next; }
+	    if (defined($mpidef{$name})) {
+		# We want to catch the case ((cast) value).  In
+		# The above definition, the space will break the
+		# value into the cast (actually, "((cast)").
+		$fullval = "$val $remainder";
+		if ($fullval =~ /\(\(([^\(\)]*)\)\s*([^\(\)]*)\s*\)/) {
+		    $val = "(($1)$2)";
+		}
+		if ($mpidef{$name} ne $val) {
+		    my $found = "";
+		    if (defined($mpidefFile{$name})) {
+			my $location = $mpidefFile{$name};
+			$found = " found in $location";
+		    }
+		    print STDERR "Attempting to redefine $name with a new value $val found in $prototype_file:$linecount,\nusing original value of $mpidef{$name}$found\n";
+		}
+	    }
+	    else {
+		$mpidef{$name} = $val;
+		$mpidefFile{$name} = "$prototype_file:$linecount";
+	    }
+	}
+	elsif (/typedef\s+enum\s+[A-Za-z0-9_]*\s*{\s*(.*)/) {
+	    # Allow a named type
+	    # Eat until we find the closing right brace
+	    $enum_line = $1;
+	    while (! ($enum_line =~ /}/)) { 
+	        $enum_line .= <MPIFD>; 
+                $linecount++;
+            }
+	    # Now process for names and values
+	    while ( ($enum_line =~ /\s*(MPI_[A-Z_0-9]*)\s*=\s*([a-fx0-9]*)(.*)/ ) ){
+		$mpidef{$1} = $2;
+		$mpidefFile{$1} = "$prototype_file:$linecount";
+		$enum_line = $3;
+		print "Defining $1 as $2\n" if $debug;
+	       }
+	       
+	   } 
+	elsif (/enum\s+([A-Za-z0-9_]*)\s*{\s*(.*)/) {
+	    # Allow a named type
+	    # Eat until we find the closing right brace
+	    my $enum_name = $1;
+	    my $enum_line = $2;
+	    while (! ($enum_line =~ /}/)) { 
+	        print "reading for $enum_name...\n" if $debug;
+	        my $newline = <MPIFD>;
+	        $newline =~ s/\r*\n//;
+	        $enum_line .= $newline;
+                $linecount++;
+            }
+	    # Now process for names and values
+	    while ( ($enum_line =~ /\s*(MPI_[A-Z_0-9]*)\s*=\s*([a-fx0-9]*)(.*)/ ) ){
+		my $name = $1;
+		my $val = $2;
+		my $remainder = $3;
+		$mpidef{$name} = $val;
+		$mpidefFile{$name} = "$prototype_file:$linecount";
+		$enum_line = $remainder;
+		print "Defining $name as $val\n" if $debug;
+	       }
+	       
+	   } 
+    }
+    close (MPIFD);
+}
+
+# ----------------------------------------------------------------------------
+# Check for a working autoconf
+#
+# Try the following first
+# in a new directory, create configure.in containing:
+# AC_INIT(configure.in)
+# AC_LANG_FORTRAN77
+# AC_TRY_COMPILE(,[integer a],a=1,a=0)
+# Then run autoconf
+# Then grep endEOF configure.  If found (status 0), then autoconf is
+# broken.
+#
+# CheckAutoconf - returns 0 if autoconf works, 1 if broken.
+sub CheckAutoconf {
+    if (! -d "tmp") {
+        mkdir "tmp", 0777 || die "Cannot create temporary directory\n";
+    }
+    open (ACFD, ">tmp/configure.in" ) || die "Cannot create test configure.in\n";
+    print ACFD "AC_INIT(configure.in)\nAC_LANG_FORTRAN77\n";
+    print ACFD "AC_TRY_COMPILE(,[integer a],a=1,a=0)\n";
+    close ACFD;
+
+    chdir 'tmp';
+    $rc = system "autoconf >/dev/null 2>&1 ";
+    $rc = system "grep endEOF configure >/dev/null 2>&1";
+    $rc = !$rc;
+    chdir "..";
+
+    system "rm -rf tmp";
+    return $rc;
+}
+#
+# ISSUES NOT YET HANDLED
+# ----------------------------------------------------------------------------
+# Fortran Integer conversion.
+# If C ints and Fortran integers are not the same size, we have to do
+# more.  In the case of arrays, we must make temporary copies.
+# In MPICH1, there is also code for the case where the sizes of 
+# the C and Fortran integers are not known.  Roughly, the code could look 
+# like
+# #ifdef SIZEOF_F77_INTEGER = SIZEOF_INT
+#   straight-forward code
+# #else
+# {
+#   code that converts arrays, calls routine, frees arrays
+# }
+# #endif
+#
+# There are several options for allocating the temporary arrays
+# For some, like cartesian dimension arrays, it is reasonable to 
+# use a predeclared array (and signal an error if too large)
+# For the others, use a predeclared array with a special case
+# for extra-large
+#
+# Scalars:
+# FintToint_in_decl: int *vi$count;
+# FintToint_in_arg: vi$count
+# FintToint_ftoc: vi$count = (int)v$count
+# similar for intToFint_out
+# For arrays,
+# FintTointArray_in_decl ...
+#
+# ----------------------------------------------------------------------------
+# Character buffer handling for choice arguments
+#  If Fortran passes character arrays as a pair of arguments (rather than
+# putting the second argument at the end of the arg list), then all of the
+# choice arg routines must check the *count* of the number of arguments, 
+# and then, if there are too many args, assume that the choice buffer
+# is a character.  Note that for Sendrecv, there is no unique
+# solution unless you know more about the MPI datatypes.
+# 
+# ----------------------------------------------------------------------------
+sub SkipCPPIfdef {
+    my $FD = $_[0];
+    my $depth = 1;
+
+    while (<$FD>) {
+	if (/^#\s*endif/) { 
+	    $depth--; 
+	    #print "Depth is now $depth\n";
+	}
+        elsif (/^#\s*if/) { 
+	    $depth++; 
+	    #print "Depth is now $depth\n";   
+	}
+	#print "Skipping $_";
+	if ($depth <= 0) { last; }
+    }
+    return 0;
+}
+# ---------------------------------------------------------------------------
+# Add a prototype for (functionname, arguments)
+sub AddPrototype {
+    my ($funcname,$args) = @_;
+    if ($build_prototypes) {
+        print PROTOFD "extern ";
+	&print_routine_type_decl( PROTOFD, "$funcname" );
+	&print_args( PROTOFD, $args, 1, "$funcname" );
+	&print_attr( PROTOFD, "${out_prefix}${funcname}_" );
+	print PROTOFD ";\n";
+    }
+}
+# ---------------------------------------------------------------------------
+# This function writes the attribute copy/delete/dup functions
+# with a particular prefix (and a null prefix is allowed)
+# WriteAttrDefaults( prefix )
+sub WriteAttrDefaults {
+    my $prefix =$_[0];
+    my $ucprefix = uc($prefix);
+    
+    my $filename = "dup_${prefix}fnf.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "MPI_Fint, MPI_Fint *, void *, void **, void **, MPI_Fint *";
+    &print_header( "mpi_${prefix}dup_fn", "${prefix}dup_fn", $args,
+	   "#ifdef MPI_${ucprefix}DUP_FN\n#undef MPI_${ucprefix}DUP_FN\n#endif\n" );
+    &print_routine_type_decl( $OUTFD, "${prefix}dup_fn" );
+    &print_args( $OUTFD, $args, 0, "${prefix}dup_fn" );
+    #&print_attr;
+    print $OUTFD "{
+        *v5 = *v4;
+        *v6 = MPIR_TO_FLOG(1);
+        *ierr = MPI_SUCCESS;
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "${prefix}dup_fn", $args );
+
+    $OUTFD = "NULLDELFN";
+    $filename = "null_${prefix}del_fnf.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "MPI_Fint *, MPI_Fint *, void *, void *";
+    &print_header( "mpi_${prefix}null_delete_fn", "${prefix}null_delete_fn", $args,
+	   "#ifdef MPI_${ucprefix}NULL_DELETE_FN\n#undef MPI_${ucprefix}NULL_DELETE_FN\n#endif\n" );
+    &print_routine_type_decl( $OUTFD, "${prefix}null_delete_fn" );
+    &print_args( $OUTFD, $args, 0, "${prefix}null_delete_fn" );
+    #&print_attr;
+    print $OUTFD "{
+        *ierr = MPI_SUCCESS;
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( "${prefix}null_delete_fn", $args );
+
+    $OUTFD = "NULLCOPYFN";
+    $filename = "null_${prefix}copy_fnf.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    $args = "MPI_Fint *, MPI_Fint *, void *, void *, void *, int *";
+    &print_header( "mpi_${prefix}null_copy_fn", "${prefix}null_copy_fn", $args,
+	   "#ifdef MPI_${ucprefix}NULL_COPY_FN\n#undef MPI_${ucprefix}NULL_COPY_FN\n#endif\n" );
+    &print_routine_type_decl( $OUTFD, "${prefix}null_copy_fn" );
+    &print_args( $OUTFD, $args, 0, "${prefix}null_copy_fn" );
+    print $OUTFD "{
+        *ierr = MPI_SUCCESS;
+        *v6 = MPIR_TO_FLOG(0);
+}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+
+    &AddPrototype( "${prefix}null_copy_fn", $args );
+}
+
+#
+# Replace old file with new file only if new file is different
+# Otherwise, remove new filename 
+sub ReplaceIfDifferent {
+    my ($oldfilename,$newfilename) = @_;
+    my $rc = 1;
+    if (-s $oldfilename) { 
+	$rc = system "cmp -s $newfilename $oldfilename";
+	$rc >>= 8;   # Shift right to get exit status
+    }
+    if ($rc != 0) {
+	# The files differ.  Replace the old file 
+	# with the new one
+	if (-s $oldfilename) {
+	    print STDERR "Replacing $oldfilename\n";
+	    unlink $oldfilename;
+	}
+	else {
+	    print STDERR "Creating $oldfilename\n";
+	}
+	rename $newfilename, $oldfilename || 
+	    die "Could not replace $oldfilename";
+    }
+    else {
+	unlink $newfilename;
+    }
+}
+# ------------------------------------------------------------------------
+# We wish to have the option of adding a special init call for some
+# variables.  This lets us ensure that MPI routines that need special
+# symbols (such as MPI_BOTTOM or MPI_IN_PLACE) can initialize them without
+# requiring any Fortran routines be called from the C verison of MPI_Init
+# (this can cause problems if the Fortran object file includes references
+# to compiler-specific symbols, making it difficult and inconvenient at
+# best to link C programs)
+# ------------------------------------------------------------------------
+sub specialInitClear {
+    $specialInitAdded = 0;
+}
+sub specialInitStatement {
+    my $FD = $_[0];
+    
+    if ($specialInitAdded) { return; }
+    if (length($specialInitString) > 0) {
+	print $FD $specialInitString . "\n";
+    }
+    $specialInitAdded = 1;
+}
+# ------------------------------------------------------------------------
+# Helper function entries.  Only one so far
+sub HelperForRegister_datarep {
+    my $OUTFD = $_[0]; 
+
+    print $OUTFD "\
+#ifdef F77_NAME_UPPER
+#define mpi_conversion_fn_null_ MPI_CONVERSION_FN_NULL
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define mpi_conversion_fn_null_ mpi_conversion_fn_null__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define mpi_conversion_fn_null_ mpi_conversion_fn_null
+/* Else leave name alone */
+#endif
+
+/* Add the prototype so the routine knows what this is */
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+
+
+#ifndef MPICH_MPI_FROM_PMPI
+/* This isn't a callable function */
+FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr ) {
+    return 0;
+}
+#endif\n";
+    
+}
+#
+# FWRAPLIB is a special case.  We want to compile all of the same files,
+# but with MPICH_MPI_FROM_PMPI defined, even (or especially) if weak symbols 
+# are defined.  
+#
+sub AddFwrapDefs {
+    &print_line(  MAKEFD, "wrap_objs = ", 80, "\\\n\t", 8 );
+    for ($i=0; $i<=$#files; $i++) {
+	$name = $files[$i];
+	# files contains only the "mpi" files, which is what
+	# we want
+	my $basename = $name;
+	$basename =~ s/\.c//;
+	&print_line( MAKEFD, "_w$basename.o ", 80, "\\\n\t", 8 );
+    }
+    &print_endline( MAKEFD );
+    # FWRAPNAME is the name of a library that contains ONLY the 
+    # Fortran wrappers
+    print MAKEFD "FWRAPNAME = \@FWRAPNAME\@\n";
+print MAKEFD "\
+lib\${FWRAPNAME}_a_DIR = ROOTDIR/lib\
+lib\${FWRAPNAME}_a_SOURCES = \${wrap_objs}\n";
+}
+
+sub AddFwrapBuild {
+    for ($i=0; $i<=$#files; $i++) {
+	$name = $files[$i];
+	# files contains only the "mpi" files, which is what
+	# we want
+	my $basename = $name;
+	$basename =~ s/\.c//;
+	# Some versions of make won't figure out the $< in this case,
+	# so we use the explicit version
+	print MAKEFD "_w$basename.o: $name\n";
+	print MAKEFD "\t\$(C_COMPILE) -o _w$basename.o -c -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES \$(srcdir)/$basename.c\n";
+	print MAKEFD "_w$basename.lo: $name\n";
+	print MAKEFD "\t\$(C_COMPILE_SHL) -o _sw$basename.o -c -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES \$(srcdir)/$basename.c\n";
+	print MAKEFD "\t\@mv -f _sw$basename.o _w$basename.lo\n";
+    }
+}
+
+# Allow multiple underscore versions of names
+# but without the PMPI versions (needed for the wrapper library)
+sub AddFwrapWeakName {
+    my ($lcname, $ucname) = @_;
+
+    print $OUTFD "
+/* These definitions are used only for generating the Fortran wrappers */
+#if defined(USE_WEAK_SYBMOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK) && \\
+    defined(USE_ONLY_MPI_NAMES)\n";
+    &print_weak_decl( $OUTFD, "MPI_$ucname", $args, $lcname ); 
+    &print_weak_decl( $OUTFD, "mpi_${lcname}__", $args, $lcname );
+    &print_weak_decl( $OUTFD, "mpi_${lcname}", $args, $lcname );
+    &print_weak_decl( $OUTFD, "mpi_${lcname}_", $args, $lcname );
+    print $OUTFD "\
+#pragma weak MPI_$ucname = mpi_${lcname}__
+#pragma weak mpi_${lcname}_ = mpi_${lcname}__
+#pragma weak mpi_${lcname} = mpi_${lcname}__
+#endif
+";
+}

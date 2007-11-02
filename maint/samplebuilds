@@ -1,0 +1,203 @@
+#! /bin/sh
+#
+# Configure and build the most common configurations.  Does not do 
+# extensive tests
+#
+# ----------------------------------------------------------------------------
+# Set defaults
+#
+do_tests=yes
+builddir=/sandbox/$LOGNAME/mpich2
+instdir=/sandbox/$LOGNAME/mpi2-inst
+srcdir=/home/MPI/testing/mpich2/mpich2
+# ----------------------------------------------------------------------------
+# Get arguments
+for arg in "$@" ; do
+    case $arg in 
+	-echo) set -x ;;
+	-local) 
+	# Do the testing in place.
+	builddir=`pwd`
+	instdir=`(cd .. && pwd)`"/mpi2-inst"
+	srcdir=`pwd`
+	;;
+	-notest)
+	do_tests=no
+	;;
+	*)
+	if [ -n "$arg" ] ; then
+	    echo "Unknown argument $arg"
+	    exit 1
+	fi
+	;;
+    esac
+done
+
+# ----------------------------------------------------------------------------
+# Validate arguments
+#
+if [ ! -d $srcdir ] ; then
+    if [ -d /homes/MPI/testing/mpich2/mpich2 ] ; then
+        srcdir=/homes/MPI/testing/mpich2/mpich2
+    else
+	echo "Cannot find source directory"
+	exit 1
+    fi
+fi
+#
+if cd $builddir ; then
+    :
+else
+    echo "Could not change directory to $builddir"
+    exit 1
+fi
+if [ ! -x $srcdir/configure ] ; then
+    echo "Cannot find configure in $srcdir"
+    exit 1
+fi
+#
+# ---------------------------------------------------------------------------
+# BuildMPICH uses the following global variables:
+#    testname    - string name for test
+#    config_args - arguments to pass to configure
+#    do_tests    - yes or no; controls tests
+#    srcdir,instdir - directories for source, installation
+#    use_mpd     - yes if mpd demon needs to be started.  The demon
+#                  will be terminated at the end of the tests
+# This uses XML-style tags to mark the various segments, but does not
+# filter the output from the individual steps for XML/SGML characters (e.g.,
+# the <,>,& characters aren't handled).
+# Note: we could filter through sed with
+# sed -e 's/>/-AMP-gt;/g' -e 's/</-AMP-lt;/g' -e 's/\&/-AMP-amp;/g' | \
+# sed -e 's/-AMP-/&/g'
+#
+BuildMPICH2 () {
+echo "<BUILDTEST NAME=\"$testname\">"
+echo "<CONFIG>"
+if $srcdir/configure --prefix=$instdir $config_args ; then
+    echo "</CONFIG>"
+    echo "<MAKE>"
+    # Remove any lingering libraries
+    rm -f lib/libmpich*.a lib/libpmpich*.a lib/libfmpich*.a 
+    rm -f lib/libmpich*.so lib/libpmpich*.so lib/libfmpich*.so
+    if make ; then
+        echo "</MAKE>"
+	echo "<MAKEINST>"
+	if make install ; then
+	    echo "</MAKEINST>"
+	    if [ "$do_tests" = "yes" ] ; then
+	        echo "<RUNTEST>"
+		if [ "$use_mpd" = "yes" ] ; then
+		    if [ -x $instdir/bin/mpd ] ; then
+			$instdir/bin/mpd -d
+		    else
+		        echo "Cannot find $instdir/bin/mpd!"
+		    fi
+		fi
+	        if make testing ; then
+		    echo "Tests completed in test/mpi/summary.xml"
+		    # Really should copy failures if any
+	        else
+		    echo "Tests failed ($testname)"
+	        fi
+		if [ "$use_mpd" = "yes" ] ; then
+		    if [ -x $instdir/bin/mpdallexit ] ; then
+		        $instdir/bin/mpdallexit
+		    else
+		        echo "Cannot file $instdir/bin/mpdallexit!"
+		    fi
+		fi
+	        echo "</RUNTEST>"
+	    fi
+	else
+	    rc=$?
+	    echo "Install failed ($testname)"
+	    echo "</MAKEINST STATUS=\"$rc\">"
+	fi
+    else 
+        rc = $?
+	echo "make failed ($testname)"
+	echo "</MAKE STATUS=\"$rc\">"
+    fi
+else
+    rc=$?
+    echo "Configure failed ($testname)"
+    echo "</CONFIG STATUS=\"$rc\">"
+fi
+echo "</BUILDTEST>"
+}
+# ---------------------------------------------------------------------------
+# Preamble
+echo "<MPICH2BUILD>"
+echo "<DATE>"
+date
+echo "</DATE>"
+# ---------------------------------------------------------------------------
+# Basic test
+testname="basic"
+config_args=""
+use_mpd=yes
+BuildMPICH2
+
+#
+# No Fortran or C++
+testname="no f77/c++"
+config_args="--disable-f77 --disable-cxx"
+use_mpd=yes
+BuildMPICH2
+
+#
+# No Weak symbols
+testname="no weak symbols"
+config_args="--disable-weak-symbols"
+use_mpd=yes
+BuildMPICH2
+
+#
+# --enable-fast
+testname="fast"
+config_args="--enable-fast"
+use_mpd=yes
+BuildMPICH2
+
+#
+# forker pm, strict
+testname="strict and forker"
+config_args="--enable-strict --with-pm=forker"
+use_mpd=no
+BuildMPICH2
+
+#
+# Build and link with a logging library
+testname="logging with lwlog"
+config_args="--with-logging=lwlog --with-pm=forker"
+use_mpd=no
+BuildMPICH2
+
+#
+# Build with memory checking
+testname="memory tests"
+config_args="--enable-g=all --enable-strict"
+use_mpd=yes
+BuildMPICH2
+
+#
+# Build with shared libraries
+testname="sharedlibs"
+config_args="--enable-sharedlibs=gcc"
+use_mpd=yes
+BuildMPICH2
+
+#
+# Build with PVFS if available
+# --with-romio=--with-file-system=ufs+nfs+testfs+pvfs
+# Tests could be run in /pvfs/pvfsstage/$LOGNAME on Chiba
+if [ -d /pvfs ] ; then
+    testname="pvfs"
+    config_args="--with-romio=--with-file-system=ufs+nfs+testfs+pvfs"
+    use_mpd=yes
+    BuildMPICH2
+fi
+# ---------------------------------------------------------------------------
+# Postamble
+echo "</MPICH2BUILD>"

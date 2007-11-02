@@ -1,0 +1,2 @@
+lib${MPILIBNAME}_a_SOURCES = block_allocator.c carutil.c mm_events.c mm_mpe_prof.c
+INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

@@ -1,0 +1,10 @@
+Makefile.sm
+Makefile
+Makefile.in
+testlist
+statusesf90.f90
+greqf90.f90
+greqf90
+statusesf90
+*.gcda
+*.gcno

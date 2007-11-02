@@ -1,0 +1,225 @@
+#! /usr/bin/perl
+#
+# File of useful routines use to process the MPI source files.  This is 
+# included by routines that process parameters and error messages, along with
+# tools to check for proper usage (such as system routines and preprocessor
+# tests).
+
+#
+# GetBalancedParen( FD, curline )
+# Returns a balanced parenthesis string, starting at curline.  Reads from FD
+# if necessary.  Skips any comments.
+# Returns the pair (leading, result, remainder)
+# Leading is anything before the opening paren.  If no opening paren in the
+# line, returns the current line as "leading"
+# Newlines are removed.
+sub GetBalancedParen {
+    my $paren_count = 1;
+    my $result = "";
+    my $count = 0;
+    my $leading = "";
+    my $maxcount = 200;
+    $FD = $_[0];
+    $curline = $_[1];
+    # Remove escaped newlines
+    $curline =~ s/\\$//;
+    
+    if ($curline =~ /^([^\(]*)\((.*)$/) {
+	$leading = $1;
+	$curline = $2;
+	$result  = "(";
+	print "Found open paren\n" if $debug;
+    }
+    else {
+	$leading = $curline;
+	return ($leading, "", "" );
+    }
+
+    while ($count < $maxcount && $paren_count > 0) {
+	if ($curline =~ /^([^\(\)]*\()(.*$)/) {
+	    # Found an opening paren
+	    $result .= $1;
+	    $curline = $2;
+	    $paren_count++;
+	    print "Found open paren\n" if $debug;
+	}
+        elsif ($curline =~ /^([^\(\)]*\))(.*$)/) {
+	    # Found a closing paren
+	    $result .= $1;
+	    $curline = $2;
+	    $paren_count--;
+	    print "Found close paren\n" if $debug;
+	}
+	else {
+	    # Need to read a new line
+	    $result .= $curline;
+	    $curline = <$FD>;
+	    $curline =~ s/[\r]*\n//;
+	    # Remove escaped newlines
+	    $curline =~ s/\\$//;
+	}
+	$count ++;
+    }
+    return ($leading, $result, $curline);
+}
+
+# Like get balanced paren, but for a string.  Simpler because it does not need
+# to handle balanced text.  
+sub GetString {
+    my $result = "";
+    my $count = 0;
+    my $leading = "";
+    my $maxcount = 200;
+    $FD = $_[0];
+    $curline = $_[1];
+    
+    if ($curline =~ /^([^\"]*)\"(.*)$/) {
+	$leading = $1;
+	$curline = $2;
+	$result  = "\"";
+	print "Found quote\n" if $debug;
+    }
+    else {
+	$leading = $curline;
+	return ($leading, "", "" );
+    }
+
+    while ($count < $maxcount) {
+	if ($curline =~ /^([^\"]*\\\")(.*$)/) {
+	    # Found an escaped quote
+	    $result .= $1;
+	    $curline = $2;
+	    print "Found escaped quote\n" if $debug;
+	}
+        elsif ($curline =~ /^([^\"]*\")(.*$)/) {
+	    # Found the closing quote
+	    $result .= $1;
+	    $curline = $2;
+	    print "Found closing quote\n" if $debug;
+	    last;
+	}
+	else {
+	    # Need to read a new line
+	    $result .= $curline;
+	    $curline = <$FD>;
+	    $curline =~ s/[\r]*\n//;
+	}
+	$count ++;
+    }
+    return ($leading, $result, $curline);
+}
+#
+# GetSubArgs( FD, curline ) returns an array of the arguments of a routine.
+# Specifically, it converts (a,b,c) into an array containing "a", "b", and "c".
+# The special feature of this is that any commas that are within balanced
+# parenthesis are included within their argument.
+# Actually returns
+#  (leader, remainder, (@args) )
+# in this order so the last values are always all of the args
+# so you don't need to know
+sub GetSubArgs {
+    my @args = ();
+    my $curline;
+    my ($outer, $leader, $remainder, $arg);
+
+    $FD = $_[0];
+    $curline = $_[1];
+    # Remove any embedded newlines
+    $curline =~ s/[\r\n]//g;
+
+    $curline =~ /^\(/ || die "No initial paren";
+    ($leader, $outer, $remainder ) = &GetBalancedParen( $FD, $curline );
+
+
+    # Strip off the first and last parens
+    # Because of the greedy algorithm, the \s before the closing paren
+    # won't be used.  To avoid problems with empty arguments, we remove
+    # those blanks separately
+    $outer =~ /^\s*\(\s*(.*)\s*\)\s*$/;
+    $outer = $1;
+    if ($outer =~ /(.*)\s+$/) { $outer = $1; }
+    print "Line to tokenize is $outer\n" if $debug;
+    $arg   = "";
+    while ($outer ne "") {
+	if ($outer =~ /^([^,\(\"]*)\s*,\s*(.*$)/) {
+	    # simple arg
+	    $arg .= $1;
+	    $args[$#args+1] = $arg;
+	    print "Found simple arg $arg (remainder $2)\n" if $debug;
+	    $outer = $2;
+	    $arg   = "";
+	}
+	elsif ($outer =~ /^([^,\"]*)\((.*$)/) { 
+	    # arg with ()
+	    ($startarg,$bal,$outer) = &GetBalancedParen( $FD, $outer );
+	    $arg = $arg . $startarg . $bal;
+	    # Rest of code will catch the rest
+	}
+        elsif ($outer =~ /^([^,\(]*)\"(.*$)/) {
+	    # arg with ""
+	    ($startarg,$string,$outer) = &GetString( $FD, $outer );
+	    print "string is $string\n" if $debug;
+	    $arg = $arg . $startarg . $string;
+	    # Rest of code will catch the rest
+	}
+	else {
+	    # no comma
+	    print "Adding |$outer| to arg $arg\n" if $debug;
+	    $arg .= $outer;
+	    $outer = "";
+	}
+    }
+    if ($arg ne "") {
+	$args[$#args+1] = $arg;
+    }
+    print "Number of args is 1+$#args\n" if $debug;
+    return ($leader, $remainder, @args );
+}
+
+# remainder = StripComments( FD, inputline )
+# removes comments from a line and returns the line.  Read more if necessary
+# Places the comment into $comment_line;
+# The external "cxx_header" adds // to the comments stripped
+
+# Set a default value for cxx_header
+if (!defined($cxx_header)) {
+    $cxx_header = 0;
+}
+
+sub StripComments {
+    my $FD = $_[0];
+    my $curline = $_[1];
+    my $remainder = "";
+    $comment_line = "";
+    if ($cxx_header == 1 && $curline =~ /(\/\/.*)/) {
+	$comment_line = $1;
+	$curline =~ s/\/\/.*//;
+	print "Removed C++ comment, now is $curline\n" if $debug;
+	return $curline;
+    }
+    while ($curline =~ /\/\*/) {
+	print "Curline = $curline\n" if $debug;
+	if ($curline =~ /(\/\*.*?\*\/)/s) {
+	    $comment_line = $1;
+	    $curline =~ s/\/\*.*?\*\///s;
+	    print "Removed comment, now is $curline\n" if $debug;
+	    # Keep looking for comments incase the line has multiple 
+	    # comments
+	}
+	else {
+	    # Keep collecting until we find the end of the comment
+	    if (eof($FD)) {
+		print STDOUT "Unterminated comment found$errsrc!\n";
+		my $line = $curline;
+		if ($line =~ /(.*)\n/) { $line = "$1"; }
+		print STDOUT "Comment begins with $line\n";
+		return $curline;
+	    }
+	    $curline .= <$FD>;
+	}
+    }
+    return $curline;
+}
+
+# Since this is a required package, indicate that we are successful.
+return 1;

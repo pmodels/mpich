@@ -1,0 +1,20 @@
+for arg in $ac_configure_args ; do
+  case $arg in 
+    --with-rdma=*)
+    rdma_name=`echo $arg | sed 's/--with-rdma=//'`
+    ;;
+  esac
+  case $arg in
+    --with-rdma-mode=*)
+    rdma_mode=`echo $arg | sed 's/--with-rdma-mode=//'`
+    ;;
+  esac
+done
+
+if test -z "$rdma_name" ; then
+  rdma_name=none
+fi
+
+if test -z "$rdma_mode" ; then
+  rdma_mode=get
+fi

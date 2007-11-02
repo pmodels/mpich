@@ -1,0 +1,79 @@
+AC_PREREQ(2.59)
+AC_INIT(configure.in)
+
+dnl This is not completely implemented yet.
+dnl AC_ARG_WITH(libatomic,
+dnl [--with-libatomic=name - Specify the location of the libatomic package],
+dnl with_libatomic=no)
+dnl
+dnl Set the directory that contains support scripts such as install-sh and
+dnl config.guess
+dnl
+AC_CONFIG_AUX_DIR(../../../../confdb)
+
+dnl
+dnl Definitions will be placed in this file rather than in the DEFS variable
+dnl
+AC_CONFIG_HEADER(mpid_locksconf.h)
+AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+#ifndef MPID_LOCKSCONF_H_INCLUDED
+#define MPID_LOCKSCONF_H_INCLUDED
+])
+AH_BOTTOM([#endif])
+
+
+echo "RUNNING CONFIGURE FOR LOCKS"
+
+dnl
+dnl First check that we have a clean build if we are doing a VPATH build
+PAC_VPATH_CHECK()
+
+PAC_PROG_MAKE
+AC_CHECK_PROGS(AR,ar)
+if test -z "$AR" ; then
+    AC_MSG_ERROR([The program ar is required for building MPICH2.  Make sure that your path includes ar])
+fi
+# Note that we set RANLIB to true if we don't find it (some systems neither
+# need it nor provide it)
+AC_CHECK_PROGS(RANLIB,ranlib,true)
+
+AC_CHECK_FUNCS( yield sched_yield usleep sleep select )
+AC_CHECK_FUNCS( mutex_init compare_and_swap )
+AC_CHECK_FUNCS( pthread_mutexattr_init pthread_mutexattr_setpshared )
+AC_CHECK_HEADERS( pthread.h sched.h )
+
+if test "$HAVE_SPARC_INLINE_PROCESS_LOCKS" = "yes" ; then
+    AC_DEFINE(HAVE_SPARC_INLINE_PROCESS_LOCKS, 1, [Use inline spin locks on SPARC architectures])
+    # The current code design adds a .il file to CFLAGS, which (a) doesn't 
+    # always reach all of the necessary files (I saw failures in ch3_progress.c
+    # where the inline file was not in the Makefile) and (a) adds the inline
+    # where it should not be, such as in mpicc.
+    CFLAGS="$CFLAGS $LOCKCFLAGS"
+dnl     AC_MSG_ERROR([Use of inline process locks is not supported.  Please volunteer to fix this code])
+fi
+
+# Add the MPICH2 include flags to CPPFLAGS.  
+CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
+
+AC_SUBST(AR)
+AC_SUBST(RANLIB)
+AC_SUBST(MPILIBNAME)
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
+AC_SUBST(CPPFLAGS)
+PAC_CC_SUBDIR_SHLIBS
+AC_SUBST(master_top_srcdir)
+dnl Etags
+AC_SUBST(ETAGS)
+AC_SUBST(ETAGSADD)
+export ETAGS
+export ETAGSADD
+dnl
+dnl Dependency handling
+AC_SUBST(MAKE_DEPEND_C)
+
+AC_OUTPUT(Makefile)

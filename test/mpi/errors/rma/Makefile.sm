@@ -1,0 +1,15 @@
+INCLUDES = -I../../include -I${top_srcdir}/include
+LDADD = ../../util/mtest.o 
+DEPADD = @MPILIBLOC@ ../../util/mtest.o
+smvar_do_sharedlibs = 0
+
+winerr_SOURCES = winerr.c
+winerr2_SOURCES = winerr2.c
+
+../../util/mtest.o: 
+	(cd ../../util && make mtest.o)
+
+testing:
+	../../runtests -srcdir=$(srcdir) -tests=testlist \
+			-mpiexec=$(bindir)/mpiexec \
+		   	-xmlfile=summary.xml

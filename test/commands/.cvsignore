@@ -1,0 +1,9 @@
+cmdtests
+Makefile.in
+Makefile
+*.gcda
+*.gcno
+stdintest
+stdintest2
+stdiotest
+checkenv1

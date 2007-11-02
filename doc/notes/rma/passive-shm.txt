@@ -1,0 +1,72 @@
+Implementation of passively synchronized RMA for shared memory
+machines
+
+------------------------------------------------------------------------
+
+Base Assumptions
+
+* All of the local windows are located in shared memory.
+
+* Only basic datatypes are supported for the target.
+
+------------------------------------------------------------------------
+
+General Notes
+
+
+------------------------------------------------------------------------
+
+Data Structures
+
+* MPID_Win
+
+  * struct MPIR_Win
+
+  * lwin_rwmutexes[np]
+
+  * region_mutexes[nregions]
+
+------------------------------------------------------------------------
+
+MPID_Win_lock
+
+* if MPI_MODE_NOCHECK is not set
+
+  * if lock_type is MPI_LOCK_SHARED, then acquire proc_rwmutexes[rank]
+    as a reader, otherwise acquire it as a writer
+
+    NOTE: the read-write mutex should be implemented fairly so that
+    writers are not starved by continual overlapping lock requests by
+    readers.
+
+* set process local state to indicate whether or not the rw-mutex is held
+
+* set process local state to indicate if the lock is shared or exclusive
+
+------------------------------------------------------------------------
+
+MPID_Win_unlock
+
+* release proc_rwmutex, if it is being held
+
+------------------------------------------------------------------------
+
+MPID_Accumulate
+
+NOTE: When the lock is shared, we can achieve more parallelism by
+dividing the local window into regions.  Each region would have a
+separate mutex to guarantee that all data elements with that region
+were processed atomically.  Ideally, dataloops would be optimized such
+that a region mutex would never be acquired more than once per
+accumulate operation.
+
+NOTE: For machines where intrinsic types must be aligned on boundaries
+of that types size, we can ensure that a type does not cross a region
+boundary by aligning the region boundaries at addresses divisible by
+the size of the largest type and forcing all regions to contain at
+least as many bytes as the largest type.  For all other machines,
+extra logic will be required to hold multiple mutexes when a type
+crosses a region boundary.
+
+NOTE: When the lock is exclusive, slicing up the local window and
+optimizing the dataloops to increase region locality is unnecessary.

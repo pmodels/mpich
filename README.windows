@@ -1,0 +1,40 @@
+BUILDING MPICH2 under Windows
+
+requirements:
+a) MS Development Environment 2003, C/C++ and Intel Fortran 8.0
+b) perl
+c) administrative privileges on your machines.
+
+Create the directories and files:
+1) unzip the package.
+2) cd into the mpich2 directory
+3) run winconfigure to generate mpi.h and other header files. (perl required)
+
+Build the libraries:
+4) open the mpich2 solution (mpich2.sln)
+5) do a solution build with the ch3sock configuration (ch3sockRelease or ch3sockDebug)
+6) build the ch3sockRelease or ch3sockDebug configuration of the static mpich2 project (mpich2s).
+7) build the fortRelease, fortDebug, gfortRelease, gfortDebug, sfortRelease or sfortDebug configuration of 
+the mpich2f project to get various Fortran bindings.
+7) do a solution build with the Release or Debug configuration to build mpiexec and smpd
+
+Optionally build different channel mpich2 dlls:
+8) build the channel of your choice:
+The mpich2 dlls can be built to use shared memory communication, tcp socket communication,
+or both.
+Select the ch3sockDebug or ch3sockRelease configurations to build the sockets only dlls.
+Select the ch3shmDebug or ch3shmRelease configurations to build the shmem only dlls.
+Select the ch3sshmDebug or ch3sshmRelease configurations to build the scalable shmem only dlls.
+Select the ch3ssmDebug or ch3ssmRelease configurations to build the sockets+shmem dlls.
+Select the ch3ibDebug or ch3ibRelease configurations to build the infiniband dlls.
+
+Install the launcher:
+9) copy smpd.exe to a local directory on all the nodes.
+10) Log on to each node as an administrator and execute "smpd.exe -install"
+
+Compile and run an MPI application:
+10) compile an mpi application.  Use mpi.h from mpich2\src\include\win32 and mpi.lib in mpich2\lib
+11) Place your executable along with the mpich2 dlls somewhere accessable to all the machines.
+12) Execute a job by running something like: mpiexec -n 3 myapp.exe
+
+Email bugs and error reports to mpich2-maint@mcs.anl.gov.

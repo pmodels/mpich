@@ -1,0 +1,388 @@
+**globus|badreqtype:globus|badreqtype
+**globus|badreqtype %d:globus|badreqtype -- %d
+**globus|bc_add_contact:globus|bc_add_contact
+**globus|bc_add_contact %s:globus|bc_add_contact -- %s
+**globus|bc_contact_not_found:the requested information was not found in the business card
+**globus|bc_contact_not_found %s:the requested information, %s, was not found in the business card
+**globus|bc_copy:globus|bc_copy
+**globus|bc_deserialize:globus|bc_deserialize
+**globus|bc_get_contact:globus|bc_get_contact
+**globus|bc_get_contact %s:globus|bc_get_contact -- %s
+**globus|bc_serialize:globus|bc_serialize
+**globus|cancel_completed_sreq:globus|cancel_completed_sreq
+**globus|cancel_completed_sreq %R %p:globus|cancel_completed_sreq -- %R %p
+**globus|cm_other|recv_any_source:globus|cm_other|recv_any_source
+**globus|cm_other|vc_recv_any_source:globus|cm_other|vc_recv_any_source
+**globus|cm_pe_test:globus|cm_pe_test
+**globus|cm_pe_test %s:globus|cm_pe_test -- %s
+**globus|cm_pe_wait:globus|cm_pe_wait
+**globus|cm_pe_wait %s:globus|cm_pe_wait -- %s
+**globus|cm_self|hostname:globus|cm_self|hostname
+**globus|cm_self|probedeadlock:globus|cm_self|probedeadlock
+**globus|cm_vmpi|cancel_ras:globus|cm_vmpi|cancel_ras
+**globus|cm_vmpi|cancel_ras %R:globus|cm_vmpi|cancel_ras -- %R
+**globus|cm_vmpi|dt_resize_bounds:globus|cm_vmpi|dt_resize_bounds
+**globus|cm_vmpi|dt_resize_bounds %D:globus|cm_vmpi|dt_resize_bounds -- %D
+**globus|cm_vmpi|iprobe_any_source:globus|cm_vmpi|iprobe_any_source
+**globus|cm_vmpi|localcomm:globus|cm_vmpi|localcomm
+**globus|cm_vmpi|localcomm %C %p:globus|cm_vmpi|localcomm -- %C %p
+**globus|cm_vmpi|pe_table_add_req:globus|cm_vmpi|pe_table_add_req
+**globus|cm_vmpi|pe_table_add_req %R %p:globus|cm_vmpi|pe_table_add_req -- %R %p
+**globus|cm_vmpi|progress_add_req:a error occurred while adding a vendor MPI request to the request tracking array
+**globus|cm_vmpi|progress_add_req %R %p:a error occurred while adding a vendor MPI request to the request tracking array: req_handle=%R, req_ptr=%p
+**globus|cm_vmpi|reg_ras:globus|cm_vmpi|reg_ras
+**globus|cm_vmpi|unreg_ras:globus|cm_vmpi|unreg_ras
+**globus|cm_vmpi|uuid_create:an error occurred while attempting to create a UUID
+**globus|cm_vmpi|uuid_create %s:an error occurred while attempting to create a UUID -- %s
+**globus|cm_vmpi|uuid_generate:globus|cm_vmpi|uuid_generate
+**globus|cm_vmpi|uuid_import:globus|cm_vmpi|uuid_import
+**globus|cm_vmpi|uuid_parse:globus|cm_vmpi|uuid_parse
+**globus|cm_xio_port_find_and_lock:globus|cm_xio_port_find_and_lock
+**globus|cm_xio_port_find_and_lock %s:globus|cm_xio_port_find_and_lock -- %s
+**globus|cm_xio|client_connect_port:globus|cm_xio|client_connect_port
+**globus|cm_xio|client_connect_port %s:globus|cm_xio|client_connect_port -- %s
+**globus|cm_xio|client_connect_proc:globus|cm_xio|client_connect_proc
+**globus|cm_xio|client_connect_proc %p:globus|cm_xio|client_connect_proc -- %p
+**globus|cm_xio|client_handle_create:attempt to create an XIO handle failed
+**globus|cm_xio|client_handle_create %p %s:globus|cm_xio|client_handle_create -- %p %s
+**globus|cm_xio|client_handle_create %s:attempt to create an XIO handle failed: %s
+**globus|cm_xio|client_handle_open:globus|cm_xio|client_handle_open
+**globus|cm_xio|client_handle_open %p %s %d %s:globus|cm_xio|client_handle_open -- %p %s %d %s
+**globus|cm_xio|client_handle_port_closing:globus|cm_xio|client_handle_port_closing
+**globus|cm_xio|client_handle_port_closing %p %s %s:globus|cm_xio|client_handle_port_closing -- %p %s %s
+**globus|cm_xio|client_handle_port_enq_failed:globus|cm_xio|client_handle_port_enq_failed
+**globus|cm_xio|client_handle_port_enq_failed %p %s %s:globus|cm_xio|client_handle_port_enq_failed -- %p %s %s
+**globus|cm_xio|client_handle_port_not_found:globus|cm_xio|client_handle_port_not_found
+**globus|cm_xio|client_handle_port_not_found %p %s %s:globus|cm_xio|client_handle_port_not_found -- %p %s %s
+**globus|cm_xio|client_handle_port_unexp_resp:globus|cm_xio|client_handle_port_unexp_resp
+**globus|cm_xio|client_handle_port_unexp_resp %p %s %s %d %s:globus|cm_xio|client_handle_port_unexp_resp -- %p %s %s %d %s
+**globus|cm_xio|client_handle_recv_magic:globus|cm_xio|client_handle_recv_magic
+**globus|cm_xio|client_handle_recv_magic %p %s %d %s:globus|cm_xio|client_handle_recv_magic -- %p %s %d %s
+**globus|cm_xio|client_handle_recv_open_port_resp:globus|cm_xio|client_handle_recv_open_port_resp
+**globus|cm_xio|client_handle_recv_open_port_resp %p %s %s %s:globus|cm_xio|client_handle_recv_open_port_resp -- %p %s %s %s
+**globus|cm_xio|client_handle_recv_open_proc_resp:globus|cm_xio|client_handle_recv_open_proc_resp
+**globus|cm_xio|client_handle_recv_open_proc_resp %p %s %d %s:globus|cm_xio|client_handle_recv_open_proc_resp -- %p %s %d %s
+**globus|cm_xio|client_handle_send_magic:globus|cm_xio|client_handle_send_magic
+**globus|cm_xio|client_handle_send_magic %p %s %d %s:globus|cm_xio|client_handle_send_magic -- %p %s %d %s
+**globus|cm_xio|client_handle_send_open_port_req:globus|cm_xio|client_handle_send_open_port_req
+**globus|cm_xio|client_handle_send_open_port_req %p %s %s %s:globus|cm_xio|client_handle_send_open_port_req -- %p %s %s %s
+**globus|cm_xio|client_handle_send_open_port_resp_ack:globus|cm_xio|client_handle_send_open_port_resp_ack
+**globus|cm_xio|client_handle_send_open_port_resp_ack %p %s %s:globus|cm_xio|client_handle_send_open_port_resp_ack -- %p %s %s
+**globus|cm_xio|client_handle_send_open_proc_req:globus|cm_xio|client_handle_send_open_proc_req
+**globus|cm_xio|client_handle_send_open_proc_req %p %s %d %s:globus|cm_xio|client_handle_send_open_proc_req -- %p %s %d %s
+**globus|cm_xio|client_magic_mismatch:globus|cm_xio|client_magic_mismatch
+**globus|cm_xio|client_magic_mismatch %p %s %d:globus|cm_xio|client_magic_mismatch -- %p %s %d
+**globus|cm_xio|client_port_vc_failed:globus|cm_xio|client_port_vc_failed
+**globus|cm_xio|client_port_vc_failed %s:globus|cm_xio|client_port_vc_failed -- %s
+**globus|cm_xio|client_reg_recv_magic:globus|cm_xio|client_reg_recv_magic
+**globus|cm_xio|client_reg_recv_magic %p:globus|cm_xio|client_reg_recv_magic -- %p
+**globus|cm_xio|client_reg_recv_open_port_resp:globus|cm_xio|client_reg_recv_open_port_resp
+**globus|cm_xio|client_reg_recv_open_port_resp %p %s %s:globus|cm_xio|client_reg_recv_open_port_resp -- %p %s %s
+**globus|cm_xio|client_reg_recv_open_proc_resp:globus|cm_xio|client_reg_recv_open_proc_resp
+**globus|cm_xio|client_reg_recv_open_proc_resp %p %s %d:globus|cm_xio|client_reg_recv_open_proc_resp -- %p %s %d
+**globus|cm_xio|client_reg_recv_open_resp:globus|cm_xio|client_reg_recv_open_resp
+**globus|cm_xio|client_reg_recv_open_resp %p:globus|cm_xio|client_reg_recv_open_resp -- %p
+**globus|cm_xio|client_reg_send_magic:globus|cm_xio|client_reg_send_magic
+**globus|cm_xio|client_reg_send_magic %p:globus|cm_xio|client_reg_send_magic -- %p
+**globus|cm_xio|client_reg_send_open_port_req:globus|cm_xio|client_reg_send_open_port_req
+**globus|cm_xio|client_reg_send_open_port_req %p %s %s:globus|cm_xio|client_reg_send_open_port_req -- %p %s %s
+**globus|cm_xio|client_reg_send_open_port_resp_ack:globus|cm_xio|client_reg_send_open_port_resp_ack
+**globus|cm_xio|client_reg_send_open_port_resp_ack %p %s:globus|cm_xio|client_reg_send_open_port_resp_ack -- %p %s
+**globus|cm_xio|client_reg_send_open_proc_req:globus|cm_xio|client_reg_send_open_proc_req
+**globus|cm_xio|client_reg_send_open_proc_req %p %s %d:globus|cm_xio|client_reg_send_open_proc_req -- %p %s %d
+**globus|cm_xio|disconnect_close_proc:globus|cm_xio|disconnect_close_proc
+**globus|cm_xio|disconnect_close_temp:globus|cm_xio|disconnect_close_temp
+**globus|cm_xio|disconnect_close_temp %p:globus|cm_xio|disconnect_close_temp -- %p
+**globus|cm_xio|disconnect_handle_send_close_msg:globus|cm_xio|disconnect_handle_send_close_msg
+**globus|cm_xio|disconnect_handle_send_close_msg %p %s:globus|cm_xio|disconnect_handle_send_close_msg -- %p %s
+**globus|cm_xio|disconnect_send_enq_close_msg:globus|cm_xio|disconnect_send_enq_close_msg
+**globus|cm_xio|disconnect_send_enq_close_msg %p:globus|cm_xio|disconnect_send_enq_close_msg -- %p
+**globus|cm_xio|disconnnect_handle_close_proc:globus|cm_xio|disconnnect_handle_close_proc
+**globus|cm_xio|disconnnect_handle_close_proc %p %s:globus|cm_xio|disconnnect_handle_close_proc -- %p %s
+**globus|cm_xio|module_finalize:an error occurred while shutting down the XIO communication module
+**globus|cm_xio|module_init:an error occurred while initializing the XIO communication module
+**globus|cm_xio|msg_handler:globus|cm_xio|msg_handler
+**globus|cm_xio|nets_init:globus|cm_xio|nets_init
+**globus|cm_xio|nets_init %p %s:globus|cm_xio|nets_init -- %p %s
+**globus|cm_xio|port_dequeue_vc:globus|cm_xio|port_dequeue_vc
+**globus|cm_xio|port_dequeue_vc %s:globus|cm_xio|port_dequeue_vc -- %s
+**globus|cm_xio|port_list_insert:globus|cm_xio|port_list_insert
+**globus|cm_xio|port_name_too_long:globus|cm_xio|port_name_too_long
+**globus|cm_xio|port_name_too_long %d %d:globus|cm_xio|port_name_too_long -- %d %d
+**globus|cm_xio|rcq_deq_test:globus|cm_xio|rcq_deq_test
+**globus|cm_xio|rcq_deq_wait:globus|cm_xio|rcq_deq_wait
+**globus|cm_xio|rcq_finalize:globus|cm_xio|rcq_finalize
+**globus|cm_xio|rcq_init:globus|cm_xio|rcq_init
+**globus|cm_xio|recv_handle_incoming_msg:globus|cm_xio|recv_handle_incoming_msg
+**globus|cm_xio|recv_handle_incoming_msg %s:globus|cm_xio|recv_handle_incoming_msg -- %s
+**globus|cm_xio|recv_handle_read_msg_data %s:globus|cm_xio|recv_handle_read_msg_data -- %s
+**globus|cm_xio|recv_handle_xio_read_msg_data:globus|cm_xio|recv_handle_xio_read_msg_data
+**globus|cm_xio|recv_next_msg:attempt to post a receive for the next incoming message failed
+**globus|cm_xio|recv_next_msg %p:globus|cm_xio|recv_next_msg -- %p
+**globus|cm_xio|reg_read_rreq:globus|cm_xio|reg_read_rreq
+**globus|cm_xio|reg_read_vc_msgbuf:globus|cm_xio|reg_read_vc_msgbuf
+**globus|cm_xio|reg_write_sreq:globus|cm_xio|reg_write_sreq
+**globus|cm_xio|req_recv_state:globus|cm_xio|req_recv_state
+**globus|cm_xio|req_recv_state %s:globus|cm_xio|req_recv_state -- %s
+**globus|cm_xio|seg_pack_iov:globus|cm_xio|seg_pack_iov
+**globus|cm_xio|send_enq_cancel_send_msg:a failure occurred while sending a cancel send message
+**globus|cm_xio|send_enq_cancel_send_resp_msg:a failure occurred while send a cancel send response message
+**globus|cm_xio|send_enq_isend:globus|cm_xio|send_enq_isend
+**globus|cm_xio|send_enq_rndv_cts_msg:globus|cm_xio|send_enq_rndv_cts_msg
+**globus|cm_xio|send_enq_rndv_data_msg:globus|cm_xio|send_enq_rndv_data_msg
+**globus|cm_xio|send_enq_sreq:globus|cm_xio|send_enq_sreq
+**globus|cm_xio|send_enq_sreq %p:globus|cm_xio|send_enq_sreq -- %p
+**globus|cm_xio|send_enq_ssend_ack_msg:globus|cm_xio|send_enq_ssend_ack_msg
+**globus|cm_xio|send_handle_msg_data:globus|cm_xio|send_handle_msg_data
+**globus|cm_xio|send_handle_write_contro_msg %s:globus|cm_xio|send_handle_write_contro_msg -- %s
+**globus|cm_xio|send_handle_write_control_msg:globus|cm_xio|send_handle_write_control_msg
+**globus|cm_xio|send_handle_write_msg_data %s:globus|cm_xio|send_handle_write_msg_data -- %s
+**globus|cm_xio|send_next_sreq:attempt to send the next request on the send queue failed
+**globus|cm_xio|send_next_sreq %p:globus|cm_xio|send_next_sreq -- %p
+**globus|cm_xio|send_open_port_req:globus|cm_xio|send_open_port_req
+**globus|cm_xio|send_open_port_req %p:globus|cm_xio|send_open_port_req -- %p
+**globus|cm_xio|send_open_proc_req:globus|cm_xio|send_open_proc_req
+**globus|cm_xio|send_open_proc_req %p:globus|cm_xio|send_open_proc_req -- %p
+**globus|cm_xio|server_create:globus|cm_xio|server_create
+**globus|cm_xio|server_create %s:globus|cm_xio|server_create -- %s
+**globus|cm_xio|server_get_cs:globus|cm_xio|server_get_cs
+**globus|cm_xio|server_get_cs %s:globus|cm_xio|server_get_cs -- %s
+**globus|cm_xio|server_handle_connection:globus|cm_xio|server_handle_connection
+**globus|cm_xio|server_handle_connection %s:globus|cm_xio|server_handle_connection -- %s
+**globus|cm_xio|server_handle_connection %s %s:globus|cm_xio|server_handle_connection -- %s %s
+**globus|cm_xio|server_handle_recv_open_port_req:globus|cm_xio|server_handle_recv_open_port_req
+**globus|cm_xio|server_handle_recv_open_port_req %p:globus|cm_xio|server_handle_recv_open_port_req -- %p
+**globus|cm_xio|server_handle_recv_open_proc_req:globus|cm_xio|server_handle_recv_open_proc_req
+**globus|cm_xio|server_handle_recv_open_proc_req %p:globus|cm_xio|server_handle_recv_open_proc_req -- %p
+**globus|cm_xio|server_listen:globus|cm_xio|server_listen
+**globus|cm_xio|server_listen %p:globus|cm_xio|server_listen -- %p
+**globus|cm_xio|server_listen %s %p:globus|cm_xio|server_listen -- %s %p
+**globus|cm_xio|server_multiple_failures:the XIO communication module encountered too many errors while accepting connections from the listener
+**globus|cm_xio|server_port_vc_failed:globus|cm_xio|server_port_vc_failed
+**globus|cm_xio|server_port_vc_failed %s:globus|cm_xio|server_port_vc_failed -- %s
+**globus|cm_xio|server_reg_recv_magic:globus|cm_xio|server_reg_recv_magic
+**globus|cm_xio|server_reg_recv_magic %p:globus|cm_xio|server_reg_recv_magic -- %p
+**globus|cm_xio|server_reg_recv_open_req:globus|cm_xio|server_reg_recv_open_req
+**globus|cm_xio|server_reg_recv_open_req %p:globus|cm_xio|server_reg_recv_open_req -- %p
+**globus|cm_xio|server_reg_send_magic:globus|cm_xio|server_reg_send_magic
+**globus|cm_xio|server_reg_send_magic %p:globus|cm_xio|server_reg_send_magic -- %p
+**globus|cm_xio|server_reg_send_open_proc_resp:globus|cm_xio|server_reg_send_open_proc_resp
+**globus|cm_xio|server_reg_send_open_proc_resp %p %s:globus|cm_xio|server_reg_send_open_proc_resp -- %p %s
+**globus|cm_xio|server_reg_send_open_resp:globus|cm_xio|server_reg_send_open_resp
+**globus|cm_xio|server_reg_send_open_resp %p %s:globus|cm_xio|server_reg_send_open_resp -- %p %s
+**globus|cm_xio|server_send_open_error_resp:globus|cm_xio|server_send_open_error_resp
+**globus|cm_xio|server_send_open_error_resp %p:globus|cm_xio|server_send_open_error_resp -- %p
+**globus|cm_xio|server_send_open_port_resp:globus|cm_xio|server_send_open_port_resp
+**globus|cm_xio|server_send_open_port_resp %s %p:globus|cm_xio|server_send_open_port_resp -- %s %p
+**globus|cm_xio|server_send_open_proc_resp_ack:globus|cm_xio|server_send_open_proc_resp_ack
+**globus|cm_xio|server_send_open_proc_resp_ack %p:globus|cm_xio|server_send_open_proc_resp_ack -- %p
+**globus|cm_xio|server_send_open_proc_resp_nak:globus|cm_xio|server_send_open_proc_resp_nak
+**globus|cm_xio|server_send_open_proc_resp_nak %p:globus|cm_xio|server_send_open_proc_resp_nak -- %p
+**globus|cm_xio|stream_req_init:globus|cm_xio|stream_req_init
+**globus|cm_xio|stream_rreq_init:globus|cm_xio|stream_rreq_init
+**globus|cm_xio|stream_rreq_unpack:globus|cm_xio|stream_rreq_unpack
+**globus|cm_xio|stream_rreq_unpack_vc_msgbuf:globus|cm_xio|stream_rreq_unpack_vc_msgbuf
+**globus|cm_xio|stream_sreq_init:globus|cm_xio|stream_sreq_init
+**globus|cm_xio|stream_sreq_pack:globus|cm_xio|stream_sreq_pack
+**globus|cm_xio|stream_trunc:globus|cm_xio|stream_trunc
+**globus|cm_xio|vc_connection:globus|cm_xio|vc_connection
+**globus|cm_xio|vc_connection %s %d %s:globus|cm_xio|vc_connection -- %s %d %s
+**globus|cm_xio|vc_corrupt:globus|cm_xio|vc_corrupt
+**globus|cm_xio|vc_corrupt %p:globus|cm_xio|vc_corrupt -- %p
+**globus|cm_xio|vc_uninit:globus|cm_xio|vc_uninit
+**globus|cm_xio|vc_uninit %p:globus|cm_xio|vc_uninit -- %p
+**globus|cm_xio|xio_attr_cntl:globus|cm_xio|xio_attr_cntl
+**globus|cm_xio|xio_attr_cntl %s %s:globus|cm_xio|xio_attr_cntl -- %s %s
+**globus|cm_xio|xio_attr_destroy:globus|cm_xio|xio_attr_destroy
+**globus|cm_xio|xio_attr_destroy %s:globus|cm_xio|xio_attr_destroy -- %s
+**globus|cm_xio|xio_attr_init:globus|cm_xio|xio_attr_init
+**globus|cm_xio|xio_attr_init %s:globus|cm_xio|xio_attr_init -- %s
+**globus|cm_xio|xio_close_server:globus|cm_xio|xio_close_server
+**globus|cm_xio|xio_close_server %s:globus|cm_xio|xio_close_server -- %s
+**globus|cm_xio|xio_driver_destroy_unload_transport %s %s:globus|cm_xio|xio_driver_destroy_unload_transport -- %s %s
+**globus|cm_xio|xio_driver_load_transform:globus|cm_xio|xio_driver_load_transform
+**globus|cm_xio|xio_driver_load_transform %s %s:globus|cm_xio|xio_driver_load_transform -- %s %s
+**globus|cm_xio|xio_driver_load_transport:globus|cm_xio|xio_driver_load_transport
+**globus|cm_xio|xio_driver_load_transport %s %s:globus|cm_xio|xio_driver_load_transport -- %s %s
+**globus|cm_xio|xio_driver_unload_transport:globus|cm_xio|xio_driver_unload_transport
+**globus|cm_xio|xio_read:globus|cm_xio|xio_read
+**globus|cm_xio|xio_read %p %s:globus|cm_xio|xio_read %p %s
+**globus|cm_xio|xio_reg_close:globus|cm_xio|xio_reg_close
+**globus|cm_xio|xio_reg_close %p %s:globus|cm_xio|xio_reg_close -- %p %s
+**globus|cm_xio|xio_reg_open:globus|cm_xio|xio_reg_open
+**globus|cm_xio|xio_reg_open %p %s:globus|cm_xio|xio_reg_open -- %p %s
+**globus|cm_xio|xio_reg_open %s:globus|cm_xio|xio_reg_open -- %s
+**globus|cm_xio|xio_reg_read:globus|cm_xio|xio_reg_read
+**globus|cm_xio|xio_reg_read %s:globus|cm_xio|xio_reg_read -- %s
+**globus|cm_xio|xio_reg_readv:globus|cm_xio|xio_reg_readv
+**globus|cm_xio|xio_reg_readv %s:globus|cm_xio|xio_reg_readv -- %s
+**globus|cm_xio|xio_reg_write:globus|cm_xio|xio_reg_write
+**globus|cm_xio|xio_reg_write %s:globus|cm_xio|xio_reg_write -- %s
+**globus|cm_xio|xio_reg_writev:globus|cm_xio|xio_reg_writev
+**globus|cm_xio|xio_reg_writev %s:globus|cm_xio|xio_reg_writev -- %s
+**globus|cm_xio|xio_server_reg_accept:globus|cm_xio|xio_server_reg_accept
+**globus|cm_xio|xio_server_reg_accept %s %s:globus|cm_xio|xio_server_reg_accept -- %s %s
+**globus|cm_xio|xio_stack_destroy:globus|cm_xio|xio_stack_destroy
+**globus|cm_xio|xio_stack_destroy %s:globus|cm_xio|xio_stack_destroy -- %s
+**globus|cm_xio|xio_stack_init:globus|cm_xio|xio_stack_init
+**globus|cm_xio|xio_stack_init %s:globus|cm_xio|xio_stack_init -- %s
+**globus|cm_xio|xio_stack_push_driver:globus|cm_xio|xio_stack_push_driver
+**globus|cm_xio|xio_stack_push_driver %s %s:globus|cm_xio|xio_stack_push_driver -- %s %s
+**globus|cm_xio|xio_write:globus|cm_xio|xio_write
+**globus|cm_xio|xio_write %p %s:globus|cm_xio|xio_write %p %s
+**globus|cm|add_contact_info:an error occurred while a communication method was adding its contact information to the business card
+**globus|cm|add_contact_info %s:an error occurred while the '%s' communication method was adding its contact information to the business card
+**globus|cm|construct_vc_contact_info:an error ocurred while a communication method was attempting to extract contact information
+**globus|cm|construct_vc_contact_info %s %s %d:an error ocurred while the '%s' communication method was attempting to extract contact information for process %s:%d
+**globus|cm|finalize:an error occurred while shutting down a communication method
+**globus|cm|finalize %s:an error occurred while shutting down the '%s' communication method
+**globus|cm|init:an error occured while initializing a communication method
+**globus|cm|init %s:an error occured while initializing the '%s' communication method
+**globus|cm|select_comm_method:an error ocurred while a communication method was deciding if it could handle communication for the specified process
+**globus|cm|select_comm_method %s %s %d:an error ocurred when the '%s' communication was deciding if it could handle communication for process %s:%d
+**globus|cm|select_comm_method_none:no suitable communication method was found
+**globus|cm|select_comm_method_none %s %d:no suitable communication method was found for process %s:%d
+**globus|comm_create_key:globus|comm_create_key
+**globus|comm_create_key %s:globus|comm_create_key -- %s
+**globus|comm_destroy_key:globus|comm_destroy_key
+**globus|comm_destroy_key %s:globus|comm_destroy_key -- %s
+**globus|comm_finalize:globus|comm_finalize
+**globus|comm_init:globus|comm_init
+**globus|comm_list_wait_empty:globus|comm_list_wait_empty
+**globus|comm_set_attr:globus|comm_set_attr
+**globus|comm_set_attr %s:globus|comm_set_attr -- %s
+**globus|cond_destroy:an error occurred while destroying a condition variable 
+**globus|cond_destroy %s:globus|cond_destroy -- %s
+**globus|cond_init:an error occurred while initializing a condition variable 
+**globus|cond_init %s:globus|cond_init -- %s
+**globus|connacc|bcast_vct_error_status:globus|connacc|bcast_vct_error_status
+**globus|connacc|bcast_vct_error_status %p:globus|connacc|bcast_vct_error_status -- %p
+**globus|connacc|bcast_vct_error_status_recvd:globus|connacc|bcast_vct_error_status_recvd
+**globus|connacc|bcast_vct_error_status_recvd %p:globus|connacc|bcast_vct_error_status_recvd -- %p
+**globus|connacc|bcast_vct_error_status_recvd %p %p %d:globus|connacc|bcast_vct_error_status_recvd -- %p %p %d
+**globus|connacc|bcast_vct_len:globus|connacc|bcast_vct_len
+**globus|connacc|bcast_vct_len %p:globus|connacc|bcast_vct_len -- %p
+**globus|connacc|bcast_vct_len %p %p %d:globus|connacc|bcast_vct_len -- %p %p %d
+**globus|connacc|bcast_vct_str:globus|connacc|bcast_vct_str
+**globus|connacc|bcast_vct_str %p %p %d:globus|connacc|bcast_vct_str -- %p %p %d
+**globus|connacc|close_port:globus|connacc|close_port
+**globus|connacc|close_port %s:globus|connacc|close_port -- %s
+**globus|connacc|ctxalloc:globus|connacc|ctxalloc
+**globus|connacc|ctxalloc %p:globus|connacc|ctxalloc -- %p
+**globus|connacc|open_port:globus|connacc|open_port
+**globus|connacc|open_port %p %p:globus|connacc|open_port -- %p %p
+**globus|connacc|port_accept:globus|connacc|port_accept
+**globus|connacc|port_accept %s %i %C:globus|connacc|port_accept -- %s %i %C
+**globus|connacc|port_connect:globus|connacc|port_connect
+**globus|connacc|port_connect %s %i %C:globus|connacc|port_connect -- %s %i %C
+**globus|connacc|port_vc_recv:globus|connacc|port_vc_recv
+**globus|connacc|port_vc_recv %p %p %d:globus|connacc|port_vc_recv -- %p %p %d
+**globus|connacc|port_vc_recv %p %p %s:globus|connacc|port_vc_recv -- %p %p %s
+**globus|connacc|port_vc_send:globus|connacc|port_vc_send
+**globus|connacc|port_vc_send %p:globus|connacc|port_vc_send -- %p
+**globus|connacc|port_vc_send %p %p %d:globus|connacc|port_vc_send -- %p %p %d
+**globus|connacc|port_vc_send %p %p %s:globus|connacc|port_vc_send -- %p %p %s
+**globus|connacc|vcrt_deserialize:globus|connacc|vcrt_deserialize
+**globus|connacc|vcrt_serialize:globus|connacc|vcrt_serialize
+**globus|connacc|vcrt_serialize %s %C %p:globus|connacc|vcrt_serialize -- %s %C %p
+**globus|datatype_bc_to_cmap:globus|datatype_bc_to_cmap
+**globus|datatype_cmap %s %d:globus|datatype_cmap -- %s %d
+**globus|datatype_cmap_to_bc:globus|datatype_cmap_to_bc
+**globus|disconnect_handle_close_temp:globus|disconnect_handle_close_temp
+**globus|disconnect_handle_close_temp %p %s:globus|disconnect_handle_close_temp -- %p %s
+**globus|failed:globus|failed
+**globus|fifo_enq:globus|fifo_enq
+**globus|get_vc_compatability:globus|get_vc_compatability
+**globus|get_vc_compatability %s:globus|get_vc_compatability -- %s
+**globus|inttostrconv:an error occurred while converting an integer to a string
+**globus|module_activate:attempt to activate a Globus module failed
+**globus|module_activate %s:attempt to activate the Globus %s module failed
+**globus|module_activate %s %s:globus|module_activate -- %s %s
+**globus|module_deactivate:attempt to deactivate a Globus module failed
+**globus|module_deactivate %s:attempt to deactivate the Globus %s module failed
+**globus|module_deactivate %s %s:globus|module_deactivate -- %s %s
+**globus|mutex_destroy:an error occurred while destroying a mutex
+**globus|mutex_destroy %s:globus|mutex_destroy -- %s
+**globus|mutex_init:an error occurred while initializing a mutex 
+**globus|mutex_init %s:globus|mutex_init -- %s
+**globus|pe_poke:globus|pe_poke
+**globus|pe_test:globus|pe_test
+**globus|pe_test %s:globus|pe_test -- %s
+**globus|pe_wait:globus|pe_wait
+**globus|pe_wait %s:globus|pe_wait -- %s
+**globus|pg_acquire_ref:globus|pg_acquire_ref
+**globus|pg_acquire_ref %s %d:globus|pg_acquire_ref -- %s %d
+**globus|pg_create:globus|pg_create
+**globus|pg_create %s %d:globus|pg_create -- %s %d
+**globus|pg|lpid_counter:globus|pg|lpid_counter
+**globus|pm_distribute_business_cards:an error occcurred while attempting to distribute business cards 
+**globus|pm_finalize:globus|pm_finalize
+**globus|pm_finalized:attempt to use the process manangement module after shutdown
+**globus|pm_get_app_num:globus|pm_get_app_num
+**globus|pm_get_gram_sj_contact:an error occurred while attempting to acquire the GRAM contact information for the subjob to which the current process belongs
+**globus|pm_get_sjrank:an error occurred while attempting to acquire the rank of this process within its subjob
+**globus|pm_get_sjsize:an error occurred while attempting to acquire  the size of the subjob to which this process belongs
+**globus|pm_get_topology:an error occurred while exchanging topology information
+**globus|pm_gk_insufficient_bc:globus|pm_gk_insufficient_bc
+**globus|pm_gk_insufficient_bc %d %d:globus|pm_gk_insufficient_bc -- %d %d
+**globus|pm_gk_intra_subjob_bcast:globus|pm_gk_intra_subjob_bcast
+**globus|pm_gk_intra_subjob_bcast %d %s:globus|pm_gk_intra_subjob_bcast -- %d %s
+**globus|pm_gk_intra_subjob_gather:globus|pm_gk_intra_subjob_gather
+**globus|pm_gk_intra_subjob_gather %d %s:globus|pm_gk_intra_subjob_gather -- %d %s
+**globus|pm_gk_intra_subjob_receive:globus|pm_gk_intra_subjob_receive
+**globus|pm_gk_intra_subjob_receive %s:globus|pm_gk_intra_subjob_receive -- %s
+**globus|pm_gk_intra_subjob_send:globus|pm_gk_intra_subjob_send
+**globus|pm_gk_intra_subjob_send %s:globus|pm_gk_intra_subjob_send -- %s
+**globus|pm_gk_malformed_app_num:globus|pm_gk_malformed_app_num
+**globus|pm_gk_malformed_app_num %s:globus|pm_gk_malformed_app_num -- %s
+**globus|pm_gk_no_app_num:the PM_GK_APP_NUM contact string was missing from the business card
+**globus|pm_gk_sj_index_atoi:globus|pm_gk_sj_index_atoi
+**globus|pm_gk_sj_index_atoi %s:globus|pm_gk_sj_index_atoi -- %s
+**globus|pm_init:an error occurred while initializing the process management module
+**globus|pm_no_exchange:globus|pm_no_exchange
+**globus|pm_no_module:globus|pm_no_module
+**globus|pm_not_init:attempt to use the process manangement module before initialization
+**globus|pm_pg_id_create:an error occurred while attempting to create a process group id
+**globus|pm_xchg:an error occurred while exchanging business cards with the other processes
+**globus|recvq_deq_posted_or_enq_unexp:globus|recvq_deq_posted_or_enq_unexp
+**globus|recvq_deq_posted_or_enq_unexp %d %d %d:globus|recvq_deq_posted_or_enq_unexp -- %d %d %d
+**globus|recvq_deq_unexp_or_enq_posted:globus|recvq_deq_unexp_or_enq_posted
+**globus|recvq_deq_unexp_or_enq_posted %d %d %d:globus|recvq_deq_unexp_or_enq_posted -- %d %d %d
+**globus|recvq_finalize:an error occurred while shutting down the receive queue module
+**globus|recvq_fuaes:globus|recvq_fuaes
+**globus|recvq_init:an error occurred while initializing the receive queue module
+**globus|recvq_unreg_ras:globus|recvq_unreg_ras
+**globus|request_get_ptr:globus|request_get_ptr
+**globus|request_get_ptr %R:globus|request_get_ptr -- %R
+**globus|server_handle_open_proc_resp_ack:globus|server_handle_open_proc_resp_ack
+**globus|server_handle_open_proc_resp_ack %p %s:globus|server_handle_open_proc_resp_ack -- %p %s
+**globus|strspace_extract_element:globus|strspace_extract_element
+**globus|strspace_extract_element %s %p:globus|strspace_extract_element -- %s %p
+**globus|strtointconv:globus|strtointconv
+**globus|strtointconv %s %s:globus|strtointconv -- %s %s
+**globus|tcp_buf_size_invalid:globus|tcp_buf_size_invalid
+**globus|tcp_buf_size_invalid %s:globus|tcp_buf_size_invalid -- %s
+**globus|tcp_buf_size_neg:globus|tcp_buf_size_neg
+**globus|tcp_buf_size_neg %s:globus|tcp_buf_size_neg -- %s
+**globus|tcp_buf_size_overflow:globus|tcp_buf_size_overflow
+**globus|tcp_buf_size_overflow %s:globus|tcp_buf_size_overflow -- %s
+**globus|topology_comm_construct:globus|topology_comm_construct
+**globus|topology_comm_destruct:globus|topology_comm_destruct
+**globus|topology_finalize:globus|topology_finalize
+**globus|topology_init:globus|topology_init
+**globus|vc_construct_contact_info:an error occurred while initializing the contact information contained within a VC
+**globus|vc_construct_contact_info %s %d:an error occurred while initializing the contact information contained within the VC associated with process %s:%d
+**globus|vc_destruct_contact_info:an error occurred while destroying contact information contained within a VC
+**globus|vc_destruct_contact_info %s %d:an error occurred while destroying contact information contained within the VC associated with process %s:%d
+**globus|vc_ptr_bad:globus|vc_ptr_bad
+**globus|vc_ptr_bad %p:globus|vc_ptr_bad -- %p
+**globus|vc_select_comm_method:a error occurred while attempting to select a suitable method for communicating with a process
+**globus|vc_select_comm_method %s %d:a error occurred while attempting to select a suitable method for communicating with process %s:%d
+**globus|vmpi_fn_failed:globus|vmpi_fn_failed
+**globus|vmpi_fn_failed %s %s:globus|vmpi_fn_failed -- %s %s
+**globus|vmpi_init:an error occurred while initializing the vendor MPI
+**globus|vmpi_pe_finalize:globus|vmpi_pe_finalize
+**globus|vmpi_pe_init:globus|vmpi_pe_init
+**globus|vmpi_pe_table_inc_size:globus|vmpi_pe_table_inc_size
+**globus|vmpi_req_failed:globus|vmpi_req_failed
+**globus|vmpi_req_failed %s:globus|vmpi_req_failed -- %s

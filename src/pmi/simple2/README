@@ -1,0 +1,115 @@
+This directory contains an experimental, version 2 PMI interface.  Both
+the client API and the wire protocol for this version are different than
+PMI version 1.  This version is not yet in use in MPICH2, and is 
+being developed to prototype the changes proposed.  In particular, this version
+adds support for better thread-safe behavior.
+
+Currently, the source files simply define the interfaces.  There is no 
+implementation yet.  The files have been added to the repository so that they
+can be reviewed by interested parties, particularly 3rd-parties that 
+will need to interface to this second-generation interface.
+
+A major issue that PMI verison 2 needs to address is thread-safety and
+responsiveness.  In particular, no thread that is waiting on a PMI call can 
+block other threads, even PMI_Spawn.  The design sketched out here
+addresses these issues as well as providing a relatively simple model
+for thread interaction.
+
+To allow multiple threads to share the PMI socket; we use the
+following model for mediating atomic access:
+
+enter-atomic
+   make use of socket
+   create operation with a completion flag "flag"
+
+   waitfor( &flag, atomic-ctx, wait-function, wait-ctx )
+
+   cleanup
+exit-atomic
+
+During the "waitfor" operation, other threads may enter this atomic
+section.
+
+Here is a sketch of the implementation of "waitfor" that makes use of 
+the Posix condition variable to block the threads that are waiting for
+a response.
+
+waitfor( ... )
+{
+  do {
+      if (atomic-ctx->wait-function-running) {
+          pthread_cond_wait( atomic-ctx->mutex, atomic-ctx->condvar );
+      }
+      else {
+         atomic-ctx->wait-function-running = 1;
+         pthread_mutex_unlock( atomic-ctx->mutex );
+         wait-function( flag_ptr, wait-ctx );
+         pthread_cond_signal( atomic-ctx->condvar )
+      }
+  } while (!*flag);
+  pthread_mutex_lock( atomic-ctx->mutex );
+}
+
+
+Here, the wait-function might look something like this:
+
+int wait-function( int *flag, void *socket_set )
+do {
+     poll( socket_set ... );
+     for each active fd
+          process fd (may complete some operations). 
+    } while (!*flag);
+}
+
+Note that in the single-threaded case, the waitfor routine turns into
+
+waitfor( ... )
+{
+  do {
+     wait-function( flag_ptr, wait-ctx );
+      }
+  } while (!*flag);
+}
+
+and the enter/exit atomic are no-ops.  This makes each of the
+implementation of each of the PMI routines essentially independent of
+the number of threads.  
+
+For example, the PMI_KVS_Get operation will look more like
+
+int PMI_KVS_Get( ... )
+{
+    enter-atomic
+        create operation, get opid
+        enqueue operation
+        write ( pmifd, "nnnnnncmd=get;opid=...;name=..." );
+        waitfor( &operation->flag, ... );
+        dequeue operation
+        extract response (e.g., the value and rc)
+        free operation
+    exit-atomic
+}
+
+In principle, once the operation is dequeued, we could exit the atomic
+section, but we may want to keep a pool of operations (instead of
+malloc'ing it each time), and then we'd need to re-aquire the critical
+section in order to free it (another option would be to allow one
+operation per thread and allocate it once; that would fit with the
+usage model but may not be worth the effort in this case).
+
+The above is sufficient for the needs of PMI.  One additional
+optimization is to avoid the mutex by first doing a test:
+
+test-function( test-ctx )
+if (!*flag) {
+   ... the usual code above, including the trailing mutex lock
+}
+
+An easy way to do this with the single wait function is to make the
+routine wait only if there is a non-null flag, i.e., 
+
+wait-function( NULL, wait-ctx )
+if (!*flag) {
+       ....
+}
+

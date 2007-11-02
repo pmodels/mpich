@@ -1,0 +1,11 @@
+Makefile.in
+Makefile
+configure
+configure.lineno
+config.*
+.deps
+autom4te*
+pmutilconf.h*
+.libstamp*
+*.gcda
+*.gcno

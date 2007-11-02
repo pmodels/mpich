@@ -1,0 +1,503 @@
+#! @PERL@ -w
+# -*- Mode: perl; -*-
+# This file contains the routines specific to extracting the states from 
+# the source files and writing them to the .states-cache files.  This
+# file is input into the "extractstrings" perl script that creates
+# cache files in directory trees
+#
+# Creates the following files:
+#    src/include/mpiallstates.h - an enum of all of the states used in the
+#                                 code
+#    src/util/logging/common/state_names.h - a header file that provides an
+#                                 array of structures that map state
+#                                 value (from the enum in
+#                                 mpiallstates.h) to string names (and
+#                                 optional display colors).
+#                                 Replaces describe_states.c in the
+#                                 older version.
+#
+# Also allows an exceptions list on a per-directory basis.  This file is
+# describe_estates.txt, and contains
+# statename routine-name [r g b]
+# where [r g b] are optional and provide the color values as bytes, e.g.,
+#    255 0 0 
+# is red
+#
+# FIXME: Add better error detection and reporting
+# In the previous genstates.in script, a different set of problems in
+# the source code was detected.  Those included:
+#   Using STATE_DECL without FUNC_ENTER/EXIT
+#   Using FUNC_ENTER after FUNC_ENTER without FUNC_EXIT first
+#   Using FUNC_ENTER after FUNC_EXIT without a STATE_DECL first
+#
+# Some uses of these macros do not permit lexical scope checks.  For
+# example, code that has multiple "return"s, each of which has its
+# own FUNC_EXIT, will defeat the check for FUNC_ENTER after FUNC_EXIT
+# without a STATE_DECL
+#
+# Defaults for this step.  These are globals variables that are used
+# by routines in the extractstrings script.
+# findStateDecl is the routine that is run to scan a file for information
+$scanFile = "findStateDecl";
+$cachefile = '.state-cache';
+$pattern = '\.[chi]$';
+$exceptionsFile = "estates.txt";
+
+# Load in the routines to extract strings from files
+$maintdir = "maint";
+require "$maintdir/extractstrings";
+
+# These are "states" that are internal to a function, but still 
+# use FUNC_ENTER/EXIT
+%exceptionState = ( # System Calls
+                    'MPID_STATE_READ'   => 'read', 
+                    'MPID_STATE_WRITE'  => 'write', 
+                    'MPID_STATE_READV'  => 'readv', 
+                    'MPID_STATE_WRITEV' => 'writev', 
+                    'MPID_STATE_MEMCPY' => 'memcpy',
+                    'MPID_STATE_memcpy' => 'memcpy',  # used in mpid/globus
+                    'MPID_STATE_MPIDU_SOCK_LISTEN',   # used in sock code
+                    'MPID_STATE_MPIDU_SOCK_ACCEPT',
+                    'MPID_STATE_POLL'   => 'poll',
+                    # MPICH2 internal implementation routines
+                    'MPID_STATE_UPDATE_REQUEST' => 'update_request',
+                    'MPID_STATE_CREATE_REQUEST' => 'create_request',
+                    'MPID_STATE_MPIDU_YIELD'       => 'MPIDU_Yield',
+                    'MPID_STATE_MPIDU_SLEEP_YIELD' => 'MPIDU_Sleep_yield',
+                    'MPID_STATE_GETQUEUEDCOMPLETIONSTATUS' => 
+                                         'GetQueuedCompletionStatus',
+                    'MPID_STATE_CH3_CA_COMPLETE' => 'CH3_CA_Complete',
+		    'MPID_STATE_VAPI_REGISTER_MR' => 'vapi_register_mr',
+		    'MPID_STATE_VAPI_DEREGISTER_MR' => 'vapi_deregister_mr',
+		    'MPID_STATE_VAPI_POST_SR' => 'vapi_post_sr',
+                  );
+
+# Set the default directories
+$dirs = "src/mpi src/mpid/ch3 src/mpid/globus src/mpid/common src/util src/pmi src/binding src/nameserv";
+# Add mm for debugging
+#$dirs .= " src/mpid/mm";
+
+# Check for options
+foreach (@ARGV) {
+    if (/-updateall/) { $gUpdateAll = 1; }
+    elsif (/-quiet/) {  $gVerbose = 0; }
+    elsif (/-verbose=(\d+)/) { $gVerbose = $1; }
+    elsif (/-verbose/) { $gVerbose = 1; }
+    elsif (/-xxx/) {
+        # gUpdateAll and scanFile are used in the extractstrings file.  To 
+        # keep perl -w happy, we provide another use of these two 
+        # symbols
+        print STDERR "gUpdateAll = $gUpdateAll, gVerbose = $gVerbose, and scanFile = $scanFile\n";
+    }
+    elsif (/-dirs=(.*)/) {
+        $dirs = $1;
+    }
+    else {
+        print STDERR "Unrecognized argument $_\n";
+    }
+}
+
+# First, update any cache files
+# This step reads each cache file and rescans any files more recent than 
+# their cached information are rescanned and the cachefiles are updated
+# Any file that needs to be updated is read with the routine given by
+# the variable "scanFile", which is "findStateDecl" in this script.
+foreach my $dir (split(/\s/,$dirs)) {
+    &processDirs( $dir, $cachefile, $pattern );
+}
+
+# Now, extract all of the info from the cachefiles into allInfo
+# This reads the cached information.  catState will also read any
+# per-directory (allInfo is global and is accessed by catState)
+%allInfo = ();
+foreach my $dir (split(/\s/,$dirs)) {
+    &processDirsAndAction( $dir, "catState", $cachefile );
+}
+
+# Make sure that there are no inconsistencies in the list by 
+# ensuring that all keys have the same descriptions.  Report on 
+# any problems
+&CheckAllInfo;
+
+# Finally, use allInfo to create the final description.
+# What we do first is to convert it from lines that hash to a location 
+# (which makes it easier to identify problems) to a hash that maps keys to 
+# values.  This gives us one more opportunity to detect duplicate or 
+# mismatched values
+%allKeys = ();
+%allKeysLoc = ();
+foreach my $key (keys(%allInfo)) {
+     # Split line into value
+     my $val = "";
+     my $origKey = $key;
+     if ($key =~ /(\S+)\s+(.*)/) {
+          $key = $1;
+          $val = $2;
+      }
+     if (defined($allKeys{$key})) {
+         my $valForKey = $allKeys{$key};
+	 if ($valForKey ne $val) {
+	     print STDERR "\nInconsistent values for keys:\n";
+	     print STDERR "In $allInfo{$origKey}, have\n";
+             print STDERR" $key -> $val\n";
+	     print STDERR "also to $key -> $valForKey\n";
+             print STDERR "seen in $allKeysLoc{$key} .\n";
+             print STDERR "Using $key -> $val\n";
+	 }
+     }
+     $allKeys{$key} = $val;
+     $allKeysLoc{$key} = $allInfo{$origKey};
+}
+#
+
+# # FIXME: Who uses this now
+# # This roughly reproduces the describe_states file
+# open DS, ">src/describe_states.txt" || die "Cannot open src/describe_states.txt";
+# foreach my $key (sort(keys(%allInfo))) {
+#     $key =~ s/\r?\n//;
+#     my $funcname = "";
+#     if ($key =~ /(\S+)\s+(\S+)/) {
+#         $key      = $1;
+#         $funcname = $2;
+#     }
+#     else {
+#        $funcname = $key;
+#        if ($key =~ /^(MPID[A-Z]*_STATE_)+(MPI[A-Z]*)_(\w)(\S+)/) {
+#   	    $funcname = "$2_$3" . lc($4);
+#        }
+#     }
+#     print DS "$key $funcname\n";
+# }
+# close DS;
+
+open DH, ">src/include/mpiallstates.h" || die "Cannot open src/include/mpiallstates.h";
+print DH "/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2005 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+/* DO NOT EDIT: AUTOMATICALLY GENERATED BY extractstates */
+#ifndef MPIALLSTATES_H_INCLUDED
+#define MPIALLSTATES_H_INCLUDED\n";
+# print the enum of states
+print DH "\nenum MPID_TIMER_STATE {\n";
+foreach my $key (sort(keys(%allKeys))) {
+    print DH "\t$key,\n";
+}
+print DH "\tMPID_NUM_TIMER_STATES };\n";
+print DH "#endif\n";
+close DH;
+
+
+# Create the description of the states
+# This roughly reproduces the describe_states.c file
+open DC, ">src/util/logging/common/state_names.h" || 
+    die "Cannot open new state_names.h file";
+
+# Print header
+# Note that we include only mpiallstates.h .  It is important not to
+# include mpiimpl.h, since this file may be used in code that wants to
+# be well modularized and not be entangled with the general MPICH2 
+# implementation header.
+print DC "/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2005 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+/* DO NOT EDIT: AUTOMATICALLY GENERATED BY extractstates */
+#ifndef STATE_NAMES_H_INCLUDED
+#define STATE_NAMES_H_INCLUDED
+#include \"mpiallstates.h\"
+/* STATES:SKIP */\n";
+
+# Change in definition:
+# We simply build an array of names and colors; the routine
+# that is called will generate a color if none is provided.
+print DC "typedef struct { 
+    int state; const char *funcname; const char *color; } MPIU_State_defs;
+static MPIU_State_defs mpich_states[] = {\n";
+foreach my $key (sort(keys(%allInfo))) {
+    $key =~ s/\r?\n//;
+    my $funcname = "";
+    my $color = "";
+    if ($key =~ /(\S+)\s+(\S+)\s+(\S.*\S+)\s*/) {
+        # This allows colors to be either a name or a tuple
+        $key      = $1;
+        $funcname = $2;
+        $color    = $3;
+    }
+    elsif ($key =~ /(\S+)\s+(\S+)/) {
+        $key = $1;
+        $funcname = $2;
+    }
+    else {
+        $funcname = $key;
+        if ($key =~ /^(MPID[A-Z]*_STATE_)+(MPI[A-Z]*)_(\w)(\S+)/) {
+	    $funcname = "$2_$3" . lc($4);
+        }
+    }
+    # Turn color into a quoted string or null 
+    if ($color ne "") { 
+        $color = "\"$color\"";
+    }
+    else {
+        $color = "(const char *)0";
+    }
+    print DC "    { $key, \"$funcname\", $color },\n";
+}
+print DC "    { -1, (const char *)0, (const char *)0 } };\n";
+print DC "#endif\n";
+close DC;
+
+# --------------------
+# Read a file and find the state definitions
+# This routine is invoked by the "ProcessFile" script in extractstates, 
+# which in turn is invoked by ProcessDir.  It returns a string
+# of newline-separated items which are simply the items that need to be
+# added to the cache file for a given directory, for this particular file.
+sub findStateDecl {
+    my $file = $_[0];
+    my $info = "";           # newline separate list of states in a file
+    my $linenum = 0;         # Keep track of location in file
+    my $curfuncname = "";
+    my $lastFuncname = "";   # Last funcname and state are used to help with
+    my $lastState    = "";   # routines that have multiple declaration
+                             # blocks protected by ifdefs (to avoid false
+                             # warnings about missing FUNCNAME definitions).
+    my %knownLines = ();     # Hash used to detect duplicate lines
+    my %knownStates = ();    # Hash used to detect known states, to avoid
+                             # adding additional lines of the for "state"
+                             # where "state name" has been already added 
+                             # (this can happen in places where there are 
+                             # multiple STATE_DECLS for a single FUNCNAME,
+                             # which is discouraged but allowed.
+    my $inDecls = 0;         # Keep track of whether we're still seeing
+                             # state declarations or not.
+    my $inComment = 0;
+    my $showWarnings = 1;    # Allow files to turn off warnings
+
+    open FD, "<$file" || die "Cannot open $file\n";
+    while (<FD>) {
+	$linenum++;
+	# This allows us to skip files that are, for example, generated
+	# from the states information (e.g., the describe_states.h file)
+	if (/\/\*\s+STATES:SKIP\s+\*\//) {
+	    last;
+	}
+	if (/\/\*\s+STATES:NO WARNINGS\s+\*\//) {
+	    $showWarnings = 0;
+	    next;
+	}
+	# Skip commented out definitions.  The complexity here handles
+	# multi-line comments
+	if ($inComment) {
+	    if (/.*\*\/(.*)/) {
+		$_ = 1;
+		$inComment = 0;
+	    }
+	    else {
+		$_ = "";
+	    }
+	}
+	else {
+	    $processed = "";
+	    while (/(.*)\/\*(.*)/) {
+		$processed .= $1;
+		$_ = $2;
+		if (/.*\*\/(.*)/) {
+		    $inComment = 0;
+		    $_ = $1;
+		}
+		else {
+		    $inComment = 1;
+		    $_ = "";
+		}
+	    }
+	    $_ = $processed . $_;
+	}
+	
+
+	if (/^\#\s*define\s+FUNCNAME\s+(\S*)/) {
+	    $curfuncname = $1;
+	    $lastState = "";
+	}
+	elsif (/STATE_DECL\((.*)\)/ && !/^\#\s*define\s/) {
+	    my $state = $1;
+	    my $candidateLine = "";
+	    $state =~ s/\s+//g;   # Remove blanks
+	    $candidateLine .= $state;
+	    # Check for special cases (mostly system calls embedded within
+	    # other routines that are not implemented by MPICH2.
+	    # In the long run, these should use a different macro instead
+	    # of MPIxxx_STATE_DECL
+	    if (!$inDecls) { $lastState = ""; }
+	    $inDecls = 1;
+	    if (defined($exceptionState{$state})) {
+		$candidateLine .= " " . $exceptionState{$state};
+		$lastState .= ":$state:";
+	    }
+	    else {
+		# Check for (a) this state is known, (b) that state
+		# has an associated name, and (c) curfuncname is null
+		if (defined($knownStates{$state}) && 
+		    $knownStates{$state} ne "" && $curfuncname eq "") {
+		    print "Skipping state definition $state because already set to $knownStates{$state}\n" if $gVerbose;
+		    # Skip this state
+		    next;
+		}
+
+  	        # Reload curfuncname if this is the same state as the last 
+		# state
+	        if ($curfuncname eq "" && $lastState eq ":$state:") {
+		    $curfuncname = $lastFuncname;
+	        }
+		if ($curfuncname ne "") {
+		    $candidateLine .= " $curfuncname";
+		}
+		else {
+		    print STDERR "Warning: no FUNCNAME defined for $state in $file\n" if $showWarnings;
+		}
+		$lastState    .= ":$state:";
+		if ($curfuncname ne "") {
+		    $lastFuncname = $curfuncname;
+		}
+		# Save this state and the associated function name
+		if (!defined($knownStates{$state})) {
+		    $knownStates{$state} = $curfuncname;
+		}
+
+		# Once we see the declaration of the state, set the
+		# state name to empty.  The source code must be organized
+		# so that the state declarations only appear once LEXICALLY
+		# in the code. 
+		if (! $showWarnings) {
+		    $curfuncname  = "";
+		}
+	    }
+	    if (!defined($knownLines{$candidateLine})) {
+		$info .= $candidateLine . "\n";
+		$knownLines{$candidateLine} = $linenum;
+	    }
+	}
+	elsif (/FUNC_ENTER\((.*)\)/ && !/^\#\s*define\s/) {
+	    # Match with current state
+	    my $state = $1;
+	    $inDecls = 0;
+	    if (! ($lastState =~ /:$state:/) &&
+		! defined($exceptionState{$state}) ) {
+		print STDERR "Warning: State in FUNC_ENTER($state) does not match STATE_DECL($lastState) in $file\n" if $showWarnings;
+	    }
+	}
+	elsif (/FUNC_EXIT\((.*)\)/ && !/^\#\s*define\s/) {
+	    # Match with current state
+	    my $state = $1;
+	    $inDecls = 0;
+	    if (! ($lastState =~ /:$state:/) && 
+		! defined($exceptionState{$state})) {
+		print STDERR "Warning: State in FUNC_EXIT($state) does not match STATE_DECL($lastState) in $file\n" if $showWarnings;
+	    }
+#	    else {
+#		# Remove this state from the defined states
+#		$lastState =~ s/:$state://;
+#	    }
+	}
+	
+    }
+    close FD;
+
+    return $info;
+}
+
+# Read the cache file and add the information to the hash allInfo
+# The key for allInfo is the specification line, the value is the location 
+# of the cache file where the value was found.
+# For entries from the exceptions file, the value is the location of the
+# exceptions file.
+sub catState {
+   my ($dir,$cachefile) = @_;
+   if (-s "$dir/$cachefile") {
+       my %f = &ReadCacheContents( $dir, $cachefile );
+       foreach my $key (keys(%f)) {
+	   foreach my $value (split/\n/,$f{$key}) {
+	       $allInfo{$value} = "$dir/$cachefile";
+	   }
+       }
+   }
+   if (-s "$dir/$exceptionsFile") {
+       print "Reading $dir/$exceptionsFile\n" if $gVerbose;
+       open CFD, "<$dir/$exceptionsFile" || 
+	   die "Could not open $dir/$exceptionsFile";
+       while (<CFD>) {
+	   s/#.*//;
+	   if (/^(\S+)\s+(\S+)\s*(.*)/) {
+	       # Found a conforming line. 
+	       my $key = $1;
+	       my $name = $2;
+	       my $color = $3;
+	       my $defaultKey = $1 . " " . $2;
+	       if (defined($allInfo{$defaultKey}) && $color ne "") {
+		   # Replace this entry
+		   delete $allInfo{$defaultKey};
+	       }
+	       $allInfo{$_} = "$dir/$exceptionsFile";
+	   }
+       }
+       close CFD;
+   }
+}
+
+# --------------------------------------------------------------------------
+# Make sure that there are no inconsistencies in the list by 
+# ensuring that all keys have the same descriptions.  Also
+# synthesize the function names here
+# Keys in allInfo are of the form "state [optional func]"
+# The value is the cache file in which the key was defined.
+# stateNames is used to keep track of all states, so that if the 
+# same state is defined in multiple cache files, but with different
+# values, we can detect the inconsistency.
+sub CheckAllInfo {
+    my %stateNames = ();
+    my %stateLoc   = ();
+    foreach my $key (sort(keys(%allInfo))) {
+	my $val = "";
+	my $color = "";
+	my $origkey = $key;
+	my $origval = "";
+	if ($key =~ /(\S+)\s+(.+)/) {
+	    $key = $1;
+	    $val = $2;
+	    $origval = $val;
+	}
+	elsif ($key =~ /\s/) {
+	    print STDERR "Key :$key: contains a blank, found in $allInfo{$origkey}\n";
+	}
+	
+	# If there is no value (no function name to go with the state,
+	# synthesize one
+	if ($val eq "") {
+	    $val = $key;
+	    if ($val =~ /^(MPID[A-Z]*_STATE_)+(MPI[A-Z]*)_(\w)(\S+)/) {
+		$val = "$2_$3" . lc($4);
+	    }
+	    print "Setting value for state $key to $val for entry found in $allInfo{$origkey}\n" if $gVerbose;
+	}
+
+	if (defined($stateNames{$key})) {
+	    if ($stateNames{$key} ne $val) {
+		# There are two possibilities: 
+		# One of the values is cached and the other is an exception
+		# value, in which case we reject the cached value
+		# The other possiblity is a conflict, which we report.
+		
+		print STDERR "\nInconsistent value for state of $key:\n";
+		print STDERR "Old : $stateNames{$key} in $stateLoc{$key}\n";
+		print STDERR "New : $val in $allInfo{$origkey}\n";
+	    }
+	}
+	else {
+	    $stateNames{$key} = $val;
+	    $stateLoc{$key}   = $allInfo{$origkey};
+	}
+    }
+}

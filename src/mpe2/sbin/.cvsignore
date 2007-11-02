@@ -1,0 +1,9 @@
+mpeinstall
+mpeuninstall
+mpeinstallcheck
+mpecheckbuild
+mpecheckinstall
+mpelinktest
+mpetestexec
+mpetestexeclog
+mpetestlink

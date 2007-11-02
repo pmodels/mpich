@@ -1,0 +1,336 @@
+#!@SHELL@
+
+error()
+{
+    echo ""
+    echo "ERROR: $2"
+    exit $1
+}
+
+usage()
+{
+    if test -n "$2" ; then
+	echo ""
+	echo "ERROR: $2"
+    fi
+    echo ""
+    echo "usage: $0 [-dump-rsl] [-env <var>] [-env <var>=<value>] [-n <nprocs>] <pgm> [args...]"
+    echo "       $0 --globus-rsl-file=<file>"
+    echo "       $0 --globus-xml-file=<file>"
+    exit $1
+}
+
+quote()
+{
+    IFS=""
+    params="$*"
+    params="'"`echo "$params" | sed -e "s/'/'"'"'"'"'"'"'/g"`"'"
+    echo $params
+}
+
+globus_args_quote()
+{
+    IFS=""
+    params="$*"
+    params='"'`echo "$params" | sed -e 's/\"/\"\"/g'`'"'
+    echo $params
+}
+
+P4_ENV_VARS=""
+env_lines=""
+add_env()
+{
+    P4_ENV_VARS="$P4_ENV_VARS $1"
+    env_lines="$env_lines
+        ($1 `globus_args_quote "$2"`)"
+}
+
+setting_lines=""
+add_setting()
+{
+    setting_lines="$setting_lines
+    $1"
+}
+
+rsl_file=""
+xml_file=""
+dump_rsl="no"
+nprocs=1
+softenv_file=${MPIEXEC_SOFTENV_FILE:=""}
+nargs=$#
+while test $# -gt 0 ; do
+    case "$1" in
+	-h | --help)
+	    usage 0
+	    ;;
+	-xml-file=* | --xml-file=* | -globus-xml=* | --globus-xml=* | -globus-xml-file=* | --globus-xml-file=* | \
+	    -xmlfile=* | --xmlfile=* | -globusxml=* | --globusxml=* | -globusxmlfile=* | --globusxmlfile=*)
+	    xml_option=`echo "$1" | sed -e 's/^\([^=]*\)=.*/\1/'`
+	    xml_file=`echo "$1" | sed -e 's/^[^=]*=//'`
+	    shift
+	    ;;
+	-rsl-file=* | --rsl-file=* | -globus-rsl=* | --globus-rsl=* | -globus-rsl-file=* | --globus-rsl-file=* | \
+	    -rslfile=* | --rslfile=* | -globusrsl=* | --globusrsl=* | -globusrslfile=* | --globusrslfile=*)
+	    rsl_option=`echo "$1" | sed -e 's/^\([^=]*\)=.*/\1/'`
+	    rsl_file=`echo "$1" | sed -e 's/^[^=]*=//'`
+	    shift
+	    ;;
+	-n | -np)
+	    nprocs=`echo $2 | sed 's/[^0-9]*//g'`
+	    shift 2
+	    ;;
+	-dump-rsl | --dump-rsl | -globus-dumprsl | --globus-dumprsl | -globus-dump-rsl | --globus-dump-rsl | \
+	    -dumprsl | --dumprsl | -globusdumprsl | --globusdumprsl)
+	    dump_rsl=true
+	    shift
+	    ;;
+	-env)
+	    env_var=`echo "$2" | sed -e '/=/! d' -e 's/^\([^=]*\)=.*/\1/'`
+	    if test -z "$env_var" ; then
+		MPIEXEC_ENV_VARS="$MPIEXEC_ENV_VARS $2"
+	    else
+		env_value=`echo "$2" | sed -e 's/^[^=]*=//'`
+		add_env "$env_var" "$env_value"
+	    fi
+	    shift 2
+	    ;;
+	-softenv)
+	    softenv_file=$2
+	    if test ! -f $HOME/$2 ; then
+		usage 1 'softenv file "'$HOME/$softenv_file'" not found'
+	    fi
+	    shift 2
+	    ;;
+	-machinefile|-resourcefile)
+	    res_file=$1
+	    shift
+	    ;;
+	-*)
+	    echo 
+	    usage 1 'unknown option "'$1'"'
+	    ;;
+	*)
+	    break
+	    ;;
+    esac
+done
+
+if test -z "$GLOBUS_LOCATION" ; then
+    error 1 "the environment variable GLOBUS_LOCATION is not set"
+fi
+
+if test ! -d "$GLOBUS_LOCATION" ; then
+    error 1 "the environment variable GLOBUS_LOCATION does not point at a valid directory"
+fi
+
+#
+# run job using the XML file supplied by the user
+#
+if test -n "$xml_file" ; then
+    if test $nargs -ne 1 ; then
+	usage 1 "$xml_option may not be used with any other options"
+    fi
+
+    if test ! -x "$GLOBUS_LOCATION/bin/globusrun-ws" ; then
+        error 1 "GLOBUS_LOCATION/bin/globusrun-ws does not exist"
+    fi
+
+    # XML job description  must set the environment variable MPIG_PM_MODULE to "ws"
+
+    $GLOBUS_LOCATION/bin/globusrun-ws -w -f $xml_file
+    exit $?
+fi
+
+#
+# run job using the RSL file supplied by the user
+#
+if test -n "$rsl_file" ; then
+    if test $nargs -ne 1 ; then
+	usage 1 "$rsloption may not be used with any other options"
+    fi
+
+    if test ! -x "$GLOBUS_LOCATION/bin/globusrun" ; then
+        error 1 "GLOBUS_LOCATION/bin/globusrun does not exist"
+    fi
+
+    # RSL job description must set the environment variable MPIG_PM_MODULE to "gk"
+
+    $GLOBUS_LOCATION/bin/globusrun -w -f $rsl_file
+    exit $?
+fi
+
+#
+# run job constructing an RSL file from the command line parameters
+#
+pgm="$1"
+shift
+
+if test "$dump_rsl" = "no" ; then
+    if test ! -f "$pgm" ; then
+        error 1 'program "'"$pgm"'" not found'
+    fi
+    
+    if test ! -x "$pgm" ; then
+        error 1 '"'"$pgm"'" is not executable'
+    fi
+    
+    if test -z "$MPIEXEC_GRAM_CONTACT" ; then
+        error 1 "the environment variable MPIEXEC_GRAM_CONTACT is not set"
+    fi
+    
+    if test -n "$softenv_file" ; then
+	soft-msc $softenv_file
+	. $HOME/$softenv_file.cache.sh
+    fi
+
+    if test ! -x "$GLOBUS_LOCATION/bin/globusrun" ; then
+        error 1 "GLOBUS_LOCATION/bin/globusrun does not exist"
+    fi
+fi
+
+rsl_file=.mpich2-globus-rsl.$$
+cur_path=`pwd`
+args=""
+for arg ; do
+    args="$args `globus_args_quote "$arg"`"
+done
+if test -n "$args" ; then
+     add_setting "(arguments=$args)"
+fi
+
+if test -n "$MPIEXEC_TIMEOUT" ; then
+    output=`test "$MPIEXEC_TIMEOUT" -gt 0 2>&1`
+    result=$?
+    if test -n "$output" ; then
+	error 1 "MPIEXEC_TIMEOUT must contain a positive integer"
+    fi
+    if test $result -ne 0 ; then
+	error "MPIEXEC_TIMEOUT must contain a positive integer"
+    fi
+    maxwalltime=`expr \( $MPIEXEC_TIMEOUT + 59 \) / 60`
+    add_setting "(maxwalltime=$maxwalltime)"
+    add_env "MPIG_TEST" "true"
+fi
+
+if test -n "$MPIEXEC_VMPI_MACHINE_FILE" ; then
+    add_env MACHINE_FILE "$MPIEXEC_VMPI_MACHINE_FILE"
+    add_env MPIEXEC_MACHINEFILE "$MPIEXEC_VMPI_MACHINE_FILE"
+fi
+
+if test "@MPIG_VMPI@" = "yes" ; then
+    add_setting "(jobtype=mpi)"
+else
+    add_setting "(jobtype=multiple)"
+fi
+
+if test -n "$MPIG_DEBUG_LEVELS" ; then
+    add_env "MPIG_DEBUG_LEVELS" "$MPIG_DEBUG_LEVELS"
+    if test -z "$MPIG_DEBUG_STDOUT" ; then 
+	file_basename="DEBUG-`basename $pgm`"
+	add_env "MPIG_DEBUG_FILE_BASENAME" "$file_basename"
+	if test -n "$MPIG_DEBUG_TIMED_LEVELS" ; then
+	    add_env "MPIG_DEBUG_TIMED_LEVELS" "$MPIG_DEBUG_TIMED_LEVELS"
+	fi
+    fi
+fi
+
+if test -n "$MPIEXEC_ENV_VARS" ; then
+    for env_var in $MPIEXEC_ENV_VARS ; do
+	if env | grep "^${env_var}=" 2>&1 >/dev/null ; then
+	    eval env_value=\${$env_var}
+            add_env "$env_var" "$env_value"
+        fi
+    done
+fi
+
+if test -n "$P4_ENV_VARS" ; then
+    add_env P4_ENV_VARS "$P4_ENV_VARS"
+fi
+
+echo "+" >$rsl_file
+
+clear_sj_settings()
+{
+    sj_setting_lines=""
+}
+
+add_sj_setting()
+{
+    sj_setting_lines="${sj_setting_lines}
+    $1"
+}
+
+nodes="${MPIEXEC_MAX_NODES:-$nprocs}"
+subjobs=${MPIEXEC_NUM_SUBJOBS:-1}
+sj_num=0
+sj_remaining=$subjobs
+nprocs_remaining=$nprocs
+nodes_remaining=$nodes
+while test $sj_remaining -gt 0 -a $nprocs_remaining -gt 0 ; do
+    clear_sj_settings
+    sj_nprocs=`expr \( $nprocs_remaining + $sj_remaining - 1 \) / $sj_remaining`
+    sj_nodes=`expr \( $nodes_remaining + $sj_remaining - 1 \) / $sj_remaining`
+    if test $sj_nprocs -le $sj_nodes -a -z "$MPIEXEC_HOST_TYPE" ; then
+	add_sj_setting "(count=$sj_nprocs)"
+	sj_nodes=$sj_nprocs
+    else
+        if test $sj_nodes -gt $sj_nprocs ; then
+            sj_nodes0=$sj_nprocs
+            sj_nprocs0=1
+            sj_nodes1=0
+            sj_nprocs1=0
+        else
+            sj_nodes0=`expr $sj_nprocs % $sj_nodes`
+	    if test $sj_nodes0 -eq 0 ; then
+		sj_nodes0=$sj_nodes
+	    fi
+            sj_nprocs0=`expr \( $sj_nprocs + $sj_nodes - 1 \) / $sj_nodes`
+            sj_nodes1=`expr $sj_nodes - $sj_nodes0`
+            sj_nprocs1=`expr $sj_nprocs / $sj_nodes`
+        fi
+	if test $sj_nodes1 = 0 ; then
+	    if test -n "$MPIEXEC_HOST_TYPE" ; then
+		add_sj_setting "(host_types=$MPIEXEC_HOST_TYPE)"
+	    fi
+	    add_sj_setting "(host_xcount=$sj_nodes0)"
+	    add_sj_setting "(xcount=$sj_nprocs0)"
+	else
+	    if test -n "$MPIEXEC_HOST_TYPE" ; then
+		add_sj_setting "(host_types=$MPIEXEC_HOST_TYPE $MPIEXEC_HOST_TYPE)"
+	    fi
+	    add_sj_setting "(host_xcount=$sj_nodes0 $sj_nodes1)"
+	    add_sj_setting "(xcount=$sj_nprocs0 $sj_nprocs1)"
+	fi
+
+	sj_nodes=`expr $sj_nodes0 + $sj_nodes1`
+	sj_nprocs=`expr $sj_nodes0 \* $sj_nprocs0 + $sj_nodes1 \* $sj_nprocs1`
+
+	add_sj_setting "(count=$sj_nprocs)"
+    fi
+    cat >>$rsl_file <<EOF
+(  &(resourceManagerContact="$MPIEXEC_GRAM_CONTACT")
+    (label="subjob $sj_num")
+    (environment=
+	(GLOBUS_DUROC_SUBJOB_INDEX $sj_num)$env_lines
+    )
+    (directory="$cur_path")
+    (executable="$pgm")$setting_lines$sj_setting_lines
+)
+EOF
+    sj_num=`expr $sj_num + 1`
+    sj_remaining=`expr $sj_remaining - 1`
+    nprocs_remaining=`expr $nprocs_remaining - $sj_nprocs`
+    nodes_remaining=`expr $nodes_remaining - $sj_nodes`
+done
+    
+if test "$dump_rsl" = "no" ; then
+    $GLOBUS_LOCATION/bin/globusrun -w -f $rsl_file
+    exit_status=$?
+else
+    cat $rsl_file
+    exit_status=0
+fi
+
+rm -f $rsl_file
+
+exit $exit_status

@@ -1,0 +1,587 @@
+\section{Error Checking}
+
+It would be useful to detect erroneous uses of the RMA interface by application
+codes.  It should be possible to detect all errors involving a single process
+at the origin.  Errors involving multiple processes, however, will undoubtably
+need to be detected at the target.  To aid in this detection at the target, one
+could either mark bytes in the local window to detect collisions or log each
+operation and compare their target buffers for overlaps.  In either case, one
+only needs to detect access collisions for the duration of an exposure epoch.
+This is complicated slightly by the ability of a shared lock being able to
+effectively join an exposure epoch already in progress.
+
+The logging technique would provide slightly more detail since the exact
+processes issuing the illegal operations would be known.  Logging has the
+disadvtange of potentially unbounded memory consumption.  Detecting overlaps in
+any two target buffers will also be computationally expensive.  For passive
+target synchronization, this extra computation will almost certainly change the
+relative timing between the processes and thus decreasing the chances of
+detecting an error.  For active target syncrhonization, the extra overhead of
+logging should not affect the ability to detect an error since the epochs are
+well defined.
+
+The byte marking technique should provide better performance over logging.
+And, while its memory consumption is bounded, that consumption is guaranteed to
+be a large fraction of the window.  For each byte in the window, we really need
+three bits, one for each of the possible operations (put, get, and accumulate).
+It might useful to keep a list of the processes that accessed the window so
+that the potential violators can be reported to the user.
+
+Ok.  We can do this with 2 bits actually, indicating what has occurred already:
+00 - nothing
+01 - put
+10 - get
+11 - accumulate
+
+Then you can test to see if future operations break the rules.
+
+proposal:
+- allow people to at compile time compile OUT additional debugging stuff with a
+  flag (in by default)
+- allow it to be turned on and off at runtime via env. variable or whatever
+
+----------
+
+\section{passive target accumulate, exclusive lock}
+
+you have an exclusive lock, you're doing a get on one set of things and
+an accumulate on another set of things.
+
+assume they are nonoverlapping datatypes.
+
+mpi_win_lock(exclusive, rank, assert, win)
+mpi_get(A,...)
+mpi_accumulate(B,...,sum)
+mpi_win_unlock()
+
+for cache coherent shared memory (only)
+---------------------------------------
+one option:
+  lock the appropriate window with interprocess_lock()
+  do the get
+  do the accumulate
+  interprocess_unlock()
+
+- if the regions of the window didn't overlap, it might be better to 
+  lock only the region(s) of interest.
+- if the window is local, then this is the option to use
+
+another option:
+  don't do anything much on win_lock
+  cache get
+  cache acc
+  interprocess_lock(), do get, do acc, unlock() as a result of win_unlock()
+
+reordering of cached access could maybe be a win...
+
+for remotely accessible memory (only)
+-------------------------------------
+there will be a lock on the remote system
+there will be some sort of agent
+
+one option:
+  agent lock request
+  do the get, either directly or through the agent
+  do the accumulate, again through the agent or directly
+  agent unlock request
+
+option two:
+   agent lock/start request, including some inefficient stuff
+   do direct accesses directly that are efficient
+   agent complete/unlock request
+
+option three:
+   single message that defines the entire access epoch, start to finish.
+
+these cover the majority of the issues
+
+side note:
+  if we have a numa system in some cases it might be more efficient to 
+  have the process local to the memory region pack data for a get into a
+  contiguous region, then the remote process can grab that instead of 
+  some set of discontiguous elements.  the same process could be used 
+  for puts or accumulates.
+  
+if we want to pipeline things, then we need to have something between 
+options two and three.  we want to be able to get overlap of computation
+(of buffer packing) and communication of rdma options.
+
+we can use the win info structure to help tune when we try to pipeline, when 
+we wait to pack at end, and so on.
+
+side note on lapi: 
+  things like lapi have atomic counters which we might be able to use
+  to avoid explicit unlock calls.  set to one when i'm done
+  
+  we might be able to use these same counters to perform locks, but that would
+  be a nasty polling problem i think.
+  
+  likewise we can use the same lapi stuff to have agents set values local to
+  the process performing operations in order to let it know that a set of
+  operations that make up an epoch (which they have previously described to the
+  agent) have been completed (and thus the process's unlock can complete)
+
+note:
+  there is more optimization that can occur here than what we have discussed so
+  far; in particular nonoverlapping exclusive locks don't HAVE to be serialized
+  like we have implied we would here.  we should think more about how we can
+  allow these things to continue simultaneously.
+
+----------
+
+\section{passive target accumulate, shared lock}
+
+you have an shared lock, you're doing a get on one set of things and
+an accumulate on another set of things.
+
+assume they are nonoverlapping datatypes.
+
+mpi_win_lock(shared, rank, assert, win)
+mpi_accumulate(B,...,sum)
+mpi_win_unlock()
+
+remember that you can call accumulate over and over, even to the same data
+element.  and others can be calling accumulate to that element as well.
+
+atomicity is maintained on the per-data-element basis only in the shared case.
+
+brian's implementation idea:
+- bust a window into a number of contiguous regions
+- allow locks on each one of these regions separately
+- in some cases there will be atomic operations supported by the processor, and
+  in those cases we might be able to avoid the lock.
+- always acquire locks in sequential order
+
+problems with implementation:
+- nasty strided datatypes which pass over the region and loop back would be 
+  really slow.
+  - for those you want to get all the locks ahead of time maybe - how do you
+    detect?  maybe nonmonotonically increasing -> ``bad datatype''?
+  - maybe cache incoming data and apply operations on elements in monotonically
+    increasing order?
+  - rather than this, maybe you reorganize both the source and destination 
+    datatypes so that the elements arrive in monotonically increasing order?
+    THIS IS A BETTER BUT SCARIER IDEA.
+    - this is an interesting problem of applying identical transformations on
+      the two separate data types
+    - worst case this could be done by breaking out a datatype into a huge 
+      struct; there should be a better/more efficient way.
+    - caching transformed datatypes?
+    - this could be done on portions of the datatypes as well to increase 
+      the granularity of operations with respect to the locking
+      
+it sounds like we're going to want to define the mechanism for locking at
+window create, or later if possible.
+
+the number of processes within the group on which a window is created should
+also be a factor when determining how to implement locking on the window.
+
+another possibility is locking on datatypes instead -- then we need functions
+which can look for overlaps between datatypes, which is kinda nasty...
+
+we don't need single writer/mult. reader because writes to elements that are
+being read is illegal.  likewise with put you don't have to lock, because it is
+illegal for someone to write to the same location twice in the same epoch.
+
+illegal operations will be detected by the bit code above.
+
+so really it's only the accumulate that causes locking issues.
+
+proposal:
+start at random offsets into the target datatype when processing.  i (rob)
+think that this is an interesting but problematic idea.  it's nondeterministic.
+each guy has to get a random number.  the idea though is to try to space out operations on the target to get better lock utilization.
+
+alternatively you could use the rank as a unique number.  divide the datatype
+by N, where N = # of guys in the window object.  each guy uses his rank to
+determine which block to start in.  there are all sorts of assumptions on the 
+nature of the datatype here.
+
+it will help with better utilizing locks on startup in some cases.
+
+you have an shared lock, you're doing a get on one set of things and
+an accumulate on another set of things.
+
+back to the example
+-------------------
+assume they are nonoverlapping datatypes.
+
+mpi_win_lock(shared, rank, assert, win)
+mpi_accumulate(B,...,sum)
+mpi_win_unlock()
+
+process asks for shared lock (exposure epoch) on remote process
+
+another example, looking at shmem combined with remote access
+-------------------------------------------------------------
+two pairs of processes on same nodes
+
+shared memory lock on single node allows one process to look directly into the
+window information so that he doesn't ahve to go through the agent of the other
+process on the local node.  that same lock will be used by the communication
+agent for a given process to ensure that things are kept sane in the off-node
+case; in other words, this lock is utilized by processes on the same node
+directly, but is also used by a single agent in the case of off-node access, in
+both cases to coordinate access to the local window information.  by ``direct
+access'' this may mean the process directly, or via that process's agent.
+
+implication/question:
+starting an exposure or access epoch will need support functions within the
+methods.  this would possibly be used as an alternative to going through the
+agent in order to have a fast path for these things.
+
+
+idea for assertion (valid for shared or exclusive):
+- NONOVERLAPPING
+  says that i guarantee that none of the operations in the epoch will overlap.
+  is this there already?  if we have this, we can avoid locking entirely,
+  relying on the user to have done the right thing (tm) :).
+
+post-wait/start-complete
+------------------------
+(target)                            (origin)
+post(group, assert, win)            start(group, assert, win)
+...                                 ...
+wait(win)                           complete(win)
+
+complete(win) - only ensures that all operations have been ``locally
+completed''; they might not have yet completed at the target.
+
+wait(win) - blocks on all complete()s, and completes all operations at the
+target before returning.
+
+start(group, assert, win) - can block until matching post(), but isn't required
+to.
+
+this is different from lock/unlock, which ensures that things are completed on
+the target.
+
+observation: there is an option passed via info on create that says no_locks;
+there will be no passive target stuff.  great!
+
+post(group, assert, win) - doesn't block.
+
+note: all the groups here don't have to be identical; processes wanting to
+perform operations on multiple windows will have the targets in their window,
+while the ones that are targets will have all the sources in their groups...I
+have explained this poorly...
+
+if a post() only contains one member, it is equivalent to a win lock exclusive.
+
+you can't have two outstanding post()s, as best we can tell, because you only
+wait() on the window.  you could have different post()s on different windows...
+
+so this approach is similar to the lock/unlock, only the post() doesn't HAVE
+to finish the operations on the target (or wait for them to finish).
+
+todo: we need to look at the overlapping window stuff and learn about the
+private/public views...
+
+approaches
+----------
+for little sets of messages, we can use a single message from the origin to
+move all the operations across.
+
+for large messages, we want to pipeline.
+
+david: if we treat them like MPI messages, we could just do sends/receives as
+necessary.  this keeps new concepts out of the CA code. otherwise we have this
+``multiple operations in one message'' concept.
+
+brian: people might find themselves doing the for loop of put()s instead of
+using a datatype.  so aggregation makes sense in this case.
+
+rob: those people are stupid and they should use datatypes.
+
+anyway, we don't know what the intention is.  we should try to help people
+if possible by using aggregation.
+
+aggregation approaches:
+- keep track of a size, and then cache to that size
+  - david points out this will make little things slow.  he wants to be
+    aggressive about performing operations locally in order to keep small 
+    things fast
+- keep a count?
+- dynamic optimization?  watch patterns on a window and try to cache only
+  when it seems like the right thing?
+
+examples:
+- for loop with little puts and computation between puts
+- vs. for loop with little puts and no computation
+
+in the first case you have the opportunity for making communication progress,
+while in the second case you want to wait and aggregate.
+
+i (rob) think we're going to want both an aggressive and a caching/combining
+mode, because there are situations where one or the other are obviously
+optimal.
+
+brian: we need to be able to support this ^^^ in our interface in order to be
+able to test and learn which of these modes really works.
+
+david: there's not really much coordination here, so doing optimal ordering is
+going to be tough.  BUT we do have the group on the target...but we'll never
+have as much as we do in the fence case.
+
+the accumulate is odd as usual.  if you're the only person in the target's
+group, then you don't have to do the element-wise locking/atomicity (or
+window-wise locking/unlocking depending on implementaiton).
+
+brian: it would be helpful for the origin to know if he needs to lock or not
+during accumulate operations.  this would allow him to know if he needs to lock
+or not.  this is particularly useful in the shmem scenario.
+- something in the window structure, stored in shared memory, could allow for
+  this optimization
+  
+otherwise the accumulate is basically the same as in the lock/unlock window
+op case (gets/puts, lock requests, etc.).
+
+fence
+-----
+Q: does win_create() fill in for the first fence, or do you need a first fence?
+A: you need the first fence (you have to in order to have created an exposure
+   epoch).
+   
+there are optimizations here that we can get from the BSP people (collecting
+and scheduling communication).
+
+assertions:
+no store - no local stores in previous epoch
+no put - no remote updates to local window in new epoch
+no precede- no local rma calls in previous epoch, collective assert only
+no succeed - no local rma calls in new epoch, collective assert only
+
+those last two are obviously useful for the first/last fence cases.  they are
+one way to know you're done with fences.  you can also do local load/stores in
+those epochs too...it's a way of saying ``i'm only doing local stuff for a
+moment''.
+
+Q: how does one cleanly switch between synchronization modes?  in particular
+how does one switch cleanly OUT of the fence mode?  I think we're just not
+reading the fence stuff carefully enough.
+A: ``fence starts an exposure epoch IF followed by another fence call and the
+local window is the target of RMA ops between fence calls''.  ``the call starts
+an access epoch IF it is followed by another fence call and by RMA
+communications calls issued between the two calls''.
+
+HA!  that's nasty.  So hitting a fence really doesn't tell us as much as we
+originally thought it did.  We need to figure out what we can do in the context
+of these goofy rules.
+
+bad example we think is legal
+-----------------------------
+(0)               (1)                 (2)                (3)
+fence             fence               fence              fence
+put(1)            put(0)              start(3)           post(2)
+                                      put(3)             put(2)
+                                      complete()         wait()
+fence             fence               fence              fence
+
+Is this legal?  The epochs are not created on 2 and 3, but not on 0 and 1 as
+a result of the fences.  We know the fences are collective, but is the creation
+of the epochs?
+
+even worse example
+------------------
+(0)               (1)                 (2)                (3)
+fence             fence               fence              fence
+put(1)            put(0)              start(3)           post(2)
+                                      put(3)             put(2)
+                                      complete()         wait()
+                                      barrier(2,3)       barrier(2,3)
+                                      put(3)             put(2)
+fence             fence               fence              fence
+
+What about that one?
+
+Bill: FIX THE TEXT! (meaning we should propose a clarification to the standard)
+
+goals:
+1) no mixed-mode stuff between fence and the others...
+
+approach:
+0) comb through chapter and see if something is already there.
+1) description of problem (our examples, building up w/ 2)
+2) we know this wasn't intended
+3) propose clarifications
+
+
+what next?
+----------
+david: looking this as a building-block sort of thing as we did with xfer.
+is there a way to approach this in the same way?
+
+the obvious blocks would be access and/or exposure epochs.
+
+exposure epochs can be thought of as having a reference count, with the wait()
+(or fence i guess) blocking until the refcount hits 0.
+
+Q: do we, in our code, to explicitly define epochs?  Is it harder to follow the
+rules with or without them?
+
+scenarios:
+- fence, how do you know who did ops/created epochs?
+- which is the right approach?
+- aggressive vs. combined?
+
+
+we are probably going to punt on detecting errors between overlapping windows
+at first.  later we could detect overlapping windows at create time and then do
+error checking for invalid operations between windows on the destination at the
+time the epochs are serviced (or whatever we call that)
+
+
+brainstorm:
+
+for non-aggregating case, a put creates a special car (including datatype etc.)
+which sends a special header across to the target.  the target understands how
+to receive these cars and will create a matching recv car to receive and store
+the data appropriately (after creating the datatype if necessary...this is
+still an unsolved problem).
+
+an accumulate can be performed in the same manner, with a recv_mop being
+created on the target instead of just a recv.
+
+we can use the counter decrement capability we have created for use with cars
+and requests in order to decrement counters in exposure epochs.  this will
+allow for easy waits on epochs.
+
+in the aggregating case, we would send a special header describing the
+aggregated operations across to the target.  the target parses this header and
+creates an appropriate car string.  the local side has already created the rest
+of the cars necessary to perform the data transfer as well, relying on
+completion dependencies on the local side to get the operations in the right
+order.
+
+we can serialize a datatype in a deterministic manner.
+
+datatype caching is done on a demand basis.  we've talked about this before.
+how does the need for retrieving a datatype fit into this special header scheme
+laid out above?
+
+For the heterogeneous case, the datatype definitions need to be expressed in
+terms of element offsets, not bytes offsets.  For example, if a indexed type is
+automatically converted and stored in terms of an hindexed type, the definition
+sent to a remote process (with different type sizes) will contain incorrect
+byte offsets for the remote machine.  We need to make sure to store the
+original element displacement/offsets in the vector etc. cases where this is
+how the datatype is originally defined, even if we use byte offsets locally.
+
+With reactive caching, we cannot allow the datatypes sent to the target process
+to be freed before the target has definitely completed operating with the
+datatype.  In the lock/unlock and fence cases, the local process implicitly
+knows that the target is done with the datatype when the unlock/fence returns.
+This leaves us with the start/complete case as the only problem case.
+
+This final case will be handled with a lazy ack based on access epochs in which
+the datatype was used.  In other words, the reference count on a datatype is
+incremented the first time the datatype is used by an RMA operation in an
+access epoch and the datatype is "logged" in the access epoch structure.  The
+access epoch structure also contains a flag stating whether a put or accumulate
+operation was requested during this access epoch.  After Win_complete() detects
+that all get operations have completed, if the flag is not set, it will
+decrements the reference counts of the logged datatypes and free the access
+epoch structure.  If the flag is set, the datatype reference counts may only be
+decremented once an explicit ackowledgement has been received from the target
+informing the origin that all operations requested by that access
+epoch have been completed.
+
+david proposes that rather than a single flag we would instead use a flag on
+each datatype.  this would allow us to free the datatypes only used for gets
+immediately, delaying only for the puts/accs.
+
+it's reasonable for the origin to force the send of the datatype when he knows
+that the target hasn't seen it yet.  we should consider this.
+
+we don't have to send basic types.  that's important to remember too.
+
+oops!  the fence isn't as well-behaved as we thought.  fence only implies local
+completion of the last epoch.  so we're going to have to keep up with things
+for fence as well.
+
+oops!  the lock/unlock isn't either :).  the public copy on the other side is
+assured to have been "updated", but that doesn't mean that you are necessarily
+done with the datatype.
+
+we could do lazy release consistency a la treadmarks, and it would give us
+performance advantages in some situations, but we aren't going to do that.
+
+we plan to have a single copy of our data.  thus our lock/unlock case will be
+ok, as there is no public/private copy issue.
+
+the fence will be implemented in a similar manner to a complete/wait on the
+previous epochs (access, exposure).  we have to ensure that we don't
+inadvertently create epochs that are empty.
+
+brian's notes mention using a counter per target in order which is exchanged at
+each fence.  this tells the target how many operations need to be completed
+before leaving the fence.  this works well in the eager case, but is probably
+overkill for the aggregated case, where you're going to pass all the operations
+over anyway.  this can also be done with N reductions; we might be able to work
+out an all-to-all reduce that does the right thing for this.
+
+there are a couple of asserts which will be useful for reducing communication
+here.  and we can do a little extra debugging checking based on these as well.
+
+we know we can leave the fence when we have completed the total number of
+operations counted in the reduction operation.
+
+aside: we could use mprotect() to detect local load/stores on a local window if
+we wanted to for debugging purposes.
+
+scenario: start/complete (sort of)
+----------------------------------
+
+we can get a context id from dup'ing the communicator at create time, or we can
+get a new context id based on the old communicator. generate_new_context_id()
+or something like that.  everyone participating in the win create must agree on
+the context_id.
+
+start must create an access epoch which can be matched to an exposure epoch on
+the other side.  we don't think we need to match anything special at start/post
+time in order to match epochs, but we aren't sure.
+
+our context ids can be used to match the AE to the appropriate window on the
+target.
+
+targets are going to have to track pending AEs until they hit a point where a
+post (or whatever) has occurred.  there will be situations where multiple AEs
+are queued for a single window, and we must handle this as well.  all tracking
+is associated with a local window.
+
+access epochs are just created on the fly by the target as placeholders for
+what is going on.  there doesn't have to be anything special about how these
+are identified.  some time prior to the origin locally completing an AE, an
+origin-assigned ID is passed to the target.  this ID is returned to the origin
+by the target when the AE has been completed on the target side.
+
+puts/gets/accs don't have to have an origin-assigned id or be matched with more
+than the context id and origin, under the assumption that there are no
+overtaking messages and only one active AE from an origin at one time.
+
+there is no valid case where one origin has more than one outstanding and
+active AE for the same target window.
+
+------------------------------------------------------------------------
+
+RMA requirements
+
+- we need the option of aggregating operations within an epoch
+
+Window object
+
+- states
+
+  - local
+
+  - public
+
+- exposure epoch tracking (for operation on the local window)
+
+  - need a queue for ordering exposure epochs and ensuring proper
+    shared/exclusive semantics for passive target case
+
+  - each epoch needs a queue for storing incoming operation requests associated
+    with the exposure epoch
+
+- access epoch tracking (per local window?)

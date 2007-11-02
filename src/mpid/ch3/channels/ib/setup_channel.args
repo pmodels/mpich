@@ -1,0 +1,58 @@
+for arg in $ac_configure_args ; do
+  narg=`expr x$arg : 'x'"'"'\(.*\)'"'"`
+  if test -n "$narg" ; then arg=$narg ; fi
+  case $arg in
+    --with-rdma)
+    channel_rndv=yes
+    ;;
+  esac
+  case $arg in
+    --with-rdma-mode=*)
+    rdma_mode=`echo $arg | sed 's/--with-rdma-mode=//'`
+    ;;
+  esac
+  case $arg in
+    --with-ib=*)
+    ibu_name=`echo $arg | sed 's/--with-ib=//'`
+    ;;
+  esac
+  case $arg in
+    --with-ib-path=*)
+    ibu_path=`echo $arg | sed 's/--with-ib-path=//'`
+    ;;
+  esac
+  case $arg in
+    --with-ib-path-include=*)
+    ibu_path_include=`echo $arg | sed 's/--with-ib-path-include=//'`
+    ;;
+  esac
+  case $arg in
+    --with-ib-path-lib=*)
+    ibu_path_lib=`echo $arg | sed 's/--with-ib-path-lib=//'`
+    ;;
+  esac
+done
+
+if test -z "$channel_rndv" ; then
+  channel_rndv=no
+fi
+
+if test -z "$rdma_mode" ; then
+  rdma_mode=put
+fi
+
+if test -z "$ibu_name" ; then
+  ibu_name=ibal
+fi
+
+if test "$ibu_name" = ibal -a -z "$ibu_path" ; then
+    ibu_path=/usr/sf-iba
+fi
+
+if test "$ibu_name" = vapi -a -z "$ibu_path" ; then
+    ibu_path=/usr/mellanox
+fi
+
+if test -z "$ibu_path_lib" ; then
+    ibu_path_lib=$ibu_path/lib
+fi

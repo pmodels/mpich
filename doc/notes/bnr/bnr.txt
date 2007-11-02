@@ -1,0 +1,170 @@
+BNR according to Rusty
+	
+"Classic Groups"
+
+- put/get/fence
+
+  - local to a group - in other words, each group has a separate context
+
+- creating groups
+
+  - Option 1
+
+    - use BNR groups to implement MPI groups
+  
+    - one MPI group for each MPI communicator
+  
+    - if 1-1 correspondence between MPI_Group and BNR_Group, then we need
+      split, merge, dup, etc.
+
+  - Option 2
+
+    - BNR groups are "big" - only created by spawn/merge
+
+
+A single process does the following:
+
+BNR_Open_group(&grp) - collective
+if (root)
+{
+    BNR_Spawn(grp, ...)
+    BNR_Spawn(grp, ...)
+    ...
+}
+BNR_Close_group(grp) - collective
+BNR_Get_rank(grp, &rank)
+BNR_Get_size(grp, &rank)
+
+
+------------------------------------------------------------------------
+
+Thoughts from David and Brian
+
+Process groups
+
+A process group represents a set of processes that BNR manages as a single
+entity.  That is to say that processes with a process group are started
+(spawned) together die (killed) together.  A process may only belong to a
+single process group for the entire duration of its life.  These processes are
+likely managed by an underlying process management system which also treats the
+set as a single entity, although that is certainly not a requirement.
+
+A process is uniquely identified by the process group it belongs to and its
+rank within that process group.
+
+BNR_Spawn - returns a process group
+
+BNR_Kill - kills a set of processes associated with a process group object
+
+BNR_Get_proc_id() - return
+
+BNR_Get_size() - returns the number of processes in the process group to which
+the calling process belongs
+
+BNR_Get_rank() - returns the rank of the calling process relative to within the
+process group
+
+BNR_Get_Parent()
+
+
+
+Database manipulation
+
+BNR_Put()
+
+BNR_Get()
+
+Database synchronization
+
+Synchronization groups...
+
+------------------------------------------------------------------------
+
+
+BNR is not thread-safe.  Thread-safety must be guaranteed by the calling
+program if the calling program uses threads.
+
+int BNR_Init(void)
+int BNR_Get_rank(int & rank)
+int BNR_Get_size(int & size)
+int BNR_Barrier()
+int BNR_Finalize(void)
+
+int BNR_DB_Get_my_name(char * dbname)
+
+int BNR_DB_Get_name_length_max()
+
+int BNR_DB_Create(char * dbname [OUT})
+
+int BNR_DB_Destroy(char * dbname [IN])
+
+int BNR_Put(char * dbname,
+            char key[BNR_MAX_KEY_LEN],
+            char value[BNR_MAX_VALUE_LEN]);
+
+int BNR_Commit(char * dbname) - block until all pending put operations from
+this process are complete.  this is a process local operation.
+
+int BNR_Get(char * dbname,
+            char * key,
+            char value[BNR_MAX_VALUE_LEN]);
+
+int BNR_DB_iter_first(char * dbname, char * key, char * val)
+
+int BNR_DB_iter_next(char * dbname, char * key, char * val)
+
+
+int BNR_Spawn_multiple(count, cmds, argvs, maxprocs, infos, errors,
+		       [OUT] pg, [OUT] bool_t same_domain);
+
+int BNR_Kill([IN] pg)
+
+- what should we do about report process and process group death?
+
+  - add callback function to spawn
+
+  - query process status (caller must manage timeout)
+
+- need to define error codes
+
+----
+
+Reference implementation
+
+int BNR_I_Spawn(cmd, argv, maxproc, info)
+
+information concerning the database to be used (such as a host:port and/or a
+dbname) should be passed through the info parameter.  it is up to the
+implementation of BNR_I_Spawn and BNR_Init to ensure that this information is
+exchanged.
+
+
+------------------------------------------------------------------------
+
+Thoughts about BNR Domains
+
+In our initial design, we said that a database would be local to a process
+group.  All process in the process group would be able to insert (put) or
+extract (get) information from the database.  If a member of the process group
+desired to share the information contained within one of its databases, it
+could extract the information using the iterator functions, and communicate the
+key-value pairs to a non-member using a mechanism external to BNR.  If the
+recipient of this information was also using BNR, it could create a new
+database using BNR and populate the database with the key-value pairs it
+received, thus making the information available to all members of its process
+group.
+
+Rusty pointed out that the recipient process group might very well be in the
+same database domain, and that extracting and communicating all of the data
+within a database would be unnecessary and costly.  We realized that if we
+associated a database to some notion of a domain rather than a particular
+process group then we might be able to avoid this potentially costly
+replication of information when process groups needed to exchange information.
+
+To make this practical, we restrict a process group to a single BNR domain.  A
+database is accessible to any process in the domain so long as that process
+knows the name of the database.
+
+BNR_Spawn_multiple may instantiate the set of requested processes in a domain
+outside of the one its calling process belongs to so long as the entire process
+group resides within a single domain.

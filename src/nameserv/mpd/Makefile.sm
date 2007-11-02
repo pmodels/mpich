@@ -1,0 +1,2 @@
+lib${MPILIBNAME}_a_SOURCES = mpd_nameserv.c
+INCLUDES = -I../../include -I${master_top_srcdir}/src/include -I${master_top_srcdir}/src/mpi/spawn

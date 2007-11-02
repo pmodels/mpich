@@ -1,0 +1,272 @@
+#! @PERL@
+use File::Find;
+
+%states = ();
+
+# Find all the source and header files and parse the states.
+find sub
+{
+	if ($File::Find::name =~ /\.[ich]$/)
+	{
+		%local_states = ();
+		$line_no = 1;
+		$previous_line_no = 1;
+		$filename = $File::Find::name;
+		#printf("opening $_\n");
+		open (F, "$_") or die "unable to open $_";
+		while (<F>)
+		{
+			chomp;
+			if (/STATE_DECL\((.+)\)/)
+			{
+				if (!/^#\s*define/)
+				{
+					if ($local_states{$1} eq "declared")
+					{
+						printf("$filename:$previous_line_no:$line_no\n");
+						printf("ERROR: no FUNC_ENTER/EXIT for declared state '$1'\n");
+					}
+#					if ($local_states{$1} eq "entered")
+#					{
+#						# This actually could be a nested state declaration of the same name.
+#						printf("$filename:$line_no\n");
+#						printf("ERROR: no FUNC_EXIT for state '$1'\n");
+#					}
+					#printf("state declared: $1\n");
+					if (/\s+\\\s*/)
+					{
+						# Assume that if the declared state is in a macro then it will be correctly entered and exited.
+						# Otherwise it is too hard to parse the file.
+						$local_states{$1} = "exited";
+					}
+					else
+					{
+						$local_states{$1} = "declared";
+					}
+					$previous_line_no = $line_no;
+				}
+			}
+			if (/FUNC_ENTER.*\((.+)\)/)
+			{
+				if ( (!/^#\s*define/) && (!/\s+\\\s*/) )
+				{
+					if ($local_states{$1} eq "declared")
+					{
+						#printf("state entered: '$1'\n");
+						$local_states{$1} = "entered";
+					}
+					else
+					{
+						if (!defined($local_states{$1}))
+						{
+							printf("$filename:$line_no\n");
+							printf("ERROR: FUNC_ENTER for undefined state '$1'\n");
+						}
+						if ($local_states{$1} eq "entered")
+						{
+							printf("$filename:$line_no\n");
+							printf("ERROR: FUNC_ENTER repeated for state '$1'\n");
+						}
+#						if ($local_states{$1} eq "exited")
+#						{
+#							printf("$filename:$line_no\n");
+#							printf("Warning: FUNC_ENTER after FUNC_EXIT for state '$1'\n");
+#						}
+					}
+				}
+			}
+			if (/FUNC_EXIT.*\((.+)\)/)
+			{
+				if ( (!/^#\s*define/) && (!/\s+\\\s*/) )
+				{
+					if (($local_states{$1} eq "entered") || ($local_states{$1} eq "exited"))
+					{
+						#printf("state exited: $1\n");
+						$local_states{$1} = "exited";
+					}
+					else
+					{
+						if (!defined($local_states{$1}))
+						{
+							printf("$filename:$line_no\n");
+							printf("ERROR: FUNC_EXIT for undefined state '$1'\n");
+						}
+						if ($local_states{$1} eq "declared")
+						{
+							printf("$filename:$line_no\n");
+							printf("ERROR: FUNC_EXIT without FUNC_ENTER for state '$1'\n");
+						}
+					}
+				}
+			}
+			$line_no = $line_no + 1;
+		}
+		close F;
+		foreach (keys(%local_states))
+		{
+			if ($local_states{$_} eq "declared")
+			{
+				printf("$filename:\n");
+				printf("ERROR: no FUNC_ENTER/EXIT for declared state $_\n");
+			}
+			else
+			{
+				if ($local_states{$_} eq "entered")
+				{
+					printf("$filename:\n");
+					printf("ERROR: FUNC_ENTER without FUNC_EXIT for state $_\n");
+				}
+				else
+				{
+					if (!($_ eq ""))
+					{
+						$states{$_} = "NULL";
+					}
+				}
+			}
+		}
+	}
+}, "src";
+
+@states = sort keys(%states);
+
+# Remove the MPID_STATE_ prefix
+foreach (@states)
+{
+	if ( !($_ eq "") )
+	{
+		/(MPID_STATE_)(.+)/;
+		$display_names{"$1$2"} = "$2";
+	}
+}
+
+# Find all the describe_states.txt files and parse them
+find sub
+{
+	if ($_ eq "describe_states.txt")
+	{
+		open F, $_;
+		$line_no = 1;
+		while (<F>)
+		{
+			chomp;
+			# Check for a line with a display name and a color
+			/\s*(\S+)(\s+)(\S+)(\s+)(\d+)(\s+)(\d+)(\s+)(\d+).*/;
+			if (defined($1) && defined($2) && defined($3) && defined($4) && defined($5) && defined($6) && defined($7) && defined($8) && defined($9))
+			{
+				if (!defined($states{$1}))
+				{
+					printf("Warning1: described state '$1' not used, consider removing it from $File::Find::name:$line_no\n");
+				}
+				$display_names{$1} = "$3";
+				$states{$1} = "\"$5 $7 $9\"";
+			}
+			else
+			{
+				# Check for a line with just a color
+				/\s*(\S+)(\s+)(\d+)(\s+)(\d+)(\s+)(\d+).*/;
+				if (defined($1) && defined($2) && defined($3) && defined($4) && defined($5) && defined($6) && defined($7))
+				{
+					if (!defined($states{$1}))
+					{
+						printf("Warning2: described state '$1' not used, consider removing it from $File::Find::name:$line_no\n");
+					}
+					$states{$1} = "\"$3 $5 $7\"";
+				}
+				else
+				{
+					# Check for a line with just a display name
+					/\s*(\S+)(\s+)(\S+).*/;
+					if (defined($1) && defined($2) && defined($3))
+					{
+						if (!defined($states{$1}))
+						{
+							printf("Warning3: described state '$1' not used, consider removing it from $File::Find::name:$line_no\n");
+						}
+						$display_names{$1} = "$3";
+					}
+				}
+			}
+			$line_no = $line_no + 1;
+		}
+		close F;
+	}
+}, "src";
+
+# FIXME: It would be better to assemble this from just the relevant 
+# modules, rather than all files.  A directory-based approach, such as
+# that from extractstrings, could be used.
+#
+open HFILE, ">src/include/mpiallstates.h"
+	or die "Unable to open src/include/mpiallstates.h";
+print HFILE "/* -*- Mode: C; c-basic-offset:4 ; -*- */\n";
+print HFILE "/*\n";
+print HFILE " *  (C) 2001 by Argonne National Laboratory.\n";
+print HFILE " *      See COPYRIGHT in top-level directory.\n";
+print HFILE " */\n";
+print HFILE "\n";
+print HFILE "/* automatically generated by maint/genstates */\n";
+print HFILE "\n";
+print HFILE "#ifndef MPIALLSTATES_H_INCLUDED\n";
+print HFILE "#define MPIALLSTATES_H_INCLUDED\n";
+print HFILE "\n";
+print HFILE "/* Insert all the states to be logged here */\n";
+print HFILE "\n";
+print HFILE "enum MPID_TIMER_STATE\n";
+print HFILE "{\n";
+foreach (@states)
+{
+	if ( !($_ eq "") )
+	{
+		print HFILE "$_,\n";
+	}
+}
+print HFILE "MPID_NUM_TIMER_STATES\n";
+print HFILE "};\n";
+print HFILE "\n";
+print HFILE "#endif\n";
+close HFILE;
+
+# FIXME: This is RLOG specific and should be placed in the appropriate 
+# RLOG directory, not common.  
+# FIXME: It would also make more sense for the RLOG_Describe_state routine
+# to perform the random color assignement when provided with an empty
+# or null color string, rather than including all of this code in what is
+# otherwise an RLOG-specific file.
+
+open F, ">src/util/logging/common/describe_states.c"
+	or die "Unable to open src/util/logging/common/describe_states.c";
+print F "/* -*- Mode: C; c-basic-offset:4 ; -*- */\n";
+print F "/*\n";
+print F " *  (C) 2001 by Argonne National Laboratory.\n";
+print F " *      See COPYRIGHT in top-level directory.\n";
+print F " */\n";
+print F "\n";
+print F "/* automatically generated by maint/genstates */\n";
+print F "\n";
+print F "#include \"mpiimpl.h\"\n";
+print F "\n";
+print F "/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build\n";
+print F "   the MPI routines */\n";
+print F "#ifndef MPICH_MPI_FROM_PMPI\n";
+print F "\n";
+print F "#ifdef HAVE_TIMING\n";
+print F "\n";
+print F "#if (USE_LOGGING == MPID_LOGGING_RLOG)\n";
+print F "\n";
+print F "int MPIR_Describe_timer_states()\n";
+print F "{\n";
+print F "\n";
+foreach (@states)
+{
+	if ( !($_ eq "") )
+	{
+		print F "    RLOG_DescribeState(g_pRLOG, $_, \"$display_names{$_}\", $states{$_});\n";
+	}
+}
+print F "    return 0;\n";
+print F "}\n";
+print F "\n";
+print F "#endif /* USE_LOGGING == MPID_LOGGING_RLOG */\n";
+print F "#endif /* HAVE_TIMING */\n";
+print F "#endif /* MPICH_MPI_FROM_PMPI */\n";

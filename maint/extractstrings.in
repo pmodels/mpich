@@ -1,0 +1,293 @@
+#! @PERL@ -w
+# -*- Mode: perl; -*-
+# 
+# This script is a replacement for several scripts that process source
+# files, extracting information from them.  This file provides a set 
+# of routines for processing files and maintaining a cache of the results.
+# It uses a more sophisticated
+# approach to avoid rescanning all files by keeping track of local changes
+# It does this on a directory-by-directory basis as a comprimise between
+# doing the minimal work but limiting the number and size of the "extra"
+# files.  In this case, for each directory, the following dot file is 
+# produced (with a <name> provided depending on use:
+#   .<name>-cache
+# This file contains lines of the form
+# <dir>
+# <file name="filename" info="date or md5 hash"/>
+# ...
+# </dir>
+# <data>
+# <fileinfo name="filename">
+# data for this file extracted from file
+# </fileinfo>
+# ...
+# </data>
+# The file has a separate directory to speed reading of the list of 
+# know files so that the comparisons for updates can be 
+# computed quickly.
+#
+# In addition, this allows us to create lists of information by
+# combining the directories in which we're interested, rather than
+# all of the directories.  This will also make it possible to 
+# update these tables at configure time with modules provided by other
+# developers.
+#
+# Algorithm:
+# For each directory (use readdir)
+#    Get a list of matching files (filename pattern supplied, default is
+#    *.[chi])
+#    if a cache file is found 
+#        read cache file directory
+#        compare with source files
+#            for each out-of-date or new file, extract information (see below)
+#            else mark file as unchanged
+#            check for deleted files
+#        if any changes
+#            read old cache file for info from unchanged files
+#            write new directory and data entries
+#    else
+#       for each file
+#            extract information
+#       write new directory and data entries
+#    (optional) if specified, call routine to process cache file contents
+#      (e.g., generate a derived file).
+#
+# Data structures
+# Within a directory
+#   fileInfo{filename} = extracted info
+#   filesUpdated[]     = array of file names that match critera
+#   fileInCache{filename} = comparison info
+#   
+# -------------------------------------------------------------------------
+$gDebug     = 0;
+# verbose of 1 gives the least amount of data, higher values give
+# increasing amount of detail. (0, of course, gives no detail)
+$gVerbose   = 0;
+$gUpdateAll = 0;
+# -------------------------------------------------------------------------
+# Return an array of regular files in the named directory
+sub GetFileNamesInDirectory {
+    my ($dir,$pattern) = @_;
+    my @filesFound = ();
+
+    opendir DIR, $dir || die "Could not open $dir\n";
+    while (my $file = readdir DIR) {
+	if (! -f "$dir/$file") { next; }
+	if ($file =~ /^\.$/ || $file =~ /^\.\.$/) { next; }
+	if ($file =~ /$pattern/) {
+	    $filesFound[$#filesFound+1] = $file;
+	}
+    }
+    closedir DIR;
+    return @filesFound;
+}
+# Return a hash of files and their comparison information
+sub ReadCacheDirectory {
+    my ($dir, $cachefile) = @_;
+    my %fileInCache = ();
+    my $found = 0;
+
+    if (! -f "$dir/$cachefile") { return %fileInCache; }
+    open CFD, "<$dir/$cachefile" || return %fileInCache;
+    # Look for directory
+    while (<CFD>) {
+	if (/<dir>/) { $found = 1; last; }
+    }
+    if ($found) {
+	while (<CFD>) {
+	    if (/<\/dir>/) { last; }
+	    if (/<file\s+name=\"([^\"]+)\"\s+info=\"([^\"]+)\"\s*\/>/) {
+		$fileInCache{$1} = $2;
+		print "Found file $1 in cache\n" if $gDebug;
+	    }
+	}
+    }
+    close CFD;
+
+    return %fileInCache;
+}
+# Return a hash of information from each, indexed by filename
+sub ReadCacheContents {
+    my ($dir, $cachefile) = @_;
+    my %fileInfo = ();
+    my $found = 0;
+    
+    if (! -f "$dir/$cachefile") { return %fileInfo; }
+    open CFD, "<$dir/$cachefile" || return %fileInfo;
+    # Look for data
+    while (<CFD>) {
+	if (/<data>/) { $found = 1; last; }
+    }
+    if ($found) {
+	while (<CFD>) {
+	    if (/<\/data>/) { last; }
+	    if (/<fileinfo\s+name=\"([^\"]+)\">/) {
+		my $filename = $1;
+		my $info = "";
+		while (<CFD>) {
+		    if (/<\/fileinfo>/) { last; }
+		    $info .= $_;
+		}
+		$fileInfo{$filename} = $info;
+	    }
+	}
+    }
+    close CFD;
+
+    return %fileInfo;
+}
+# Print the cache.  Pass fileInfo by reference (\%fileInfo)
+sub PrintCacheFile {
+    my ($dir,$cachefile,$fileInfo) = @_;
+
+    open CFD, ">$dir/$cachefile" || die "Could not open $dir/$cachefile\n";
+
+    print CFD "<dir>\n";
+    foreach my $file (keys(%$fileInfo)) {
+	my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime) = 
+	    stat "$dir/$file";
+	print CFD "<file name=\"$file\" info=\"$mtime\"/>\n";
+    }
+    print CFD "</dir>\n";
+    print CFD "<data>\n";
+    foreach my $file (keys(%$fileInfo)) {
+	print CFD "<fileinfo name=\"$file\">\n";
+	print CFD $$fileInfo{$file};
+	print CFD "</fileinfo>\n";
+    }
+    print CFD "</data>\n";
+    close CFD;
+}
+
+sub processFiles {
+    my ($dir,$cachefile,$pattern) = @_;
+
+    my @files = &GetFileNamesInDirectory( $dir, $pattern );
+    my %filesInCache = &ReadCacheDirectory( $dir, $cachefile );
+    
+    my @filesToScan = ();
+    my @filesDeleted = ();
+    my @filesUnchanged = ();
+    my %filesInDir = ();
+
+    print "Number of files matching pattern in $dir is $#files\n" if $gDebug;
+    for (my $i=0; $i <= $#files; $i++) {
+	$filesInDir{$files[$i]} = 1;
+    }
+    foreach my $file (keys(%filesInCache)) {
+	# Get info on file
+	if (-f "$dir/$file") {
+	    print "Found $file\n" if $gDebug;
+	    delete $filesInDir{$file};
+	    my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime) = 
+		stat "$dir/$file";
+	    if ($mtime > $filesInCache{$file} || $gUpdateAll) {
+		# File has been changed since last update
+		$filesToScan[$#filesToScan+1] = $file;
+	    }
+	    else {
+		$filesUnchanged[$#filesUnchanged+1] = $file;
+	    }
+	}
+	else {
+	    # This file has been deleted
+	    print "File $dir/$file has been deleted since the cache was created\n" if $gDebug;
+	    $filesDeleted[$#filesDeleted+1] = $file;
+	}
+    }
+    my @filesCreated = keys(%filesInDir);
+    
+    # Check for unchanged
+    if ($#filesCreated == -1 &&
+	$#filesDeleted == -1 &&
+	$#filesToScan  == -1) {
+	# Nothing to do, we can leave the cache file as is
+	print "Cache in $dir unchanged\n" if $gDebug || $gVerbose > 1;
+    }
+    else {
+	if ($gDebug || $gVerbose > 0) {
+	    # Give a detailed description
+	    my $sep = "";
+	    print "Changes in dir $dir: ";
+	    if ($#fileCreated >= 0) {
+		my $num = $#filesCreated + 1;
+		print "created = $num";
+		$sep = ", ";
+		}
+	    if ($#filesDeleted >= 0) {
+		my $num = $#filesDeleted + 1;
+		print "${sep}deleted = $num";
+		$sep = ", ";
+	    }
+	    if ($#filesToScan >= 0) {
+		my $num = $#filesToScan + 1;
+		print "${sep}changed = $num";
+	    }
+	    print "\n";
+	}
+	# We need to scan some files, adding their info to fileInfo
+	my %fileInfo = &ReadCacheContents( $dir, $cachefile );
+	for (my $i=0; $i<=$#filesDeleted; $i++) {
+	    delete $fileInfo{$filesDeleted[$i]};
+	}
+	foreach $file (@filesCreated,@filesToScan) {
+	    print "Scanning file $dir/$file\n" if $gDebug;
+	    $fileInfo{$file} = &$scanFile( "$dir/$file" );
+	}
+	&PrintCacheFile( $dir, $cachefile, \%fileInfo );
+    }
+}
+sub processDirs {
+    my ($dir, $cachefile, $pattern) = @_;
+
+    print "Processing $dir...\n" if $gDebug;
+    my @dirs = ();
+    # Find the directories
+    opendir DIR, "$dir" || die "Cannot open $dir\n";
+    while (my $file = readdir DIR) {
+	if (! -d "$dir/$file") { next; }
+	if ($file =~ /^\./) { next; }
+	if ($file =~ /^CVS/) { next; }
+	if ($file =~ /autom4te.cache/) { next; }
+	$dirs[$#dirs+1] = "$file";
+    }
+    closedir DIR;
+    
+    # For each of these, process it
+    for (my $i=0; $i<=$#dirs; $i++) {
+	my $ndir = "$dir/$dirs[$i]";
+	&processDirs( $ndir, $cachefile, $pattern );
+    }
+
+    # process the files in this directory
+    &processFiles( $dir, $cachefile, $pattern );
+}
+
+# This is a general routine to process directories
+sub processDirsAndAction {
+    my ($dir, $action, $actionData) = @_;
+
+    print "Processing $dir...\n" if $gDebug;
+    my @dirs = ();
+    # Find the directories
+    opendir DIR, "$dir" || die "Cannot open $dir\n";
+    while (my $file = readdir DIR) {
+	if (! -d "$dir/$file") { next; }
+	if ($file =~ /^\./) { next; }
+	if ($file =~ /^CVS/) { next; }
+	if ($file =~ /autom4te.cache/) { next; }
+	$dirs[$#dirs+1] = "$file";
+    }
+    closedir DIR;
+    
+    # For each of these, process it
+    for (my $i=0; $i<=$#dirs; $i++) {
+	my $ndir = "$dir/$dirs[$i]";
+	&processDirsAndAction( $ndir, $action, $actionData );
+    }
+
+    # process the files in this directory
+    &$action( $dir, $actionData );
+}
+
+1;

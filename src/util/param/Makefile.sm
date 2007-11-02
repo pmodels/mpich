@@ -1,0 +1,8 @@
+lib${MPILIBNAME}_a_SOURCES = param.c
+HEADERS = param.h
+INCLUDES = -I../../include -I${top_srcdir}/src/include
+
+EXTRA_PROGRAMS = testparam
+
+testparam_SOURCES = testparam.c param.c
+testparam_LDADD  = ../../../lib/lib${MPILIBNAME}.a

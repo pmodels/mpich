@@ -1,0 +1,316 @@
+#! @PERL@
+# -*- Mode: Perl; -*-
+#
+#  (C) 2004 by Argonne National Laboratory.
+#      See COPYRIGHT in top-level directory.
+#
+#
+# This file provides a way to merge a template file with a set of
+# code fragments.  This makes it simple to generate many related tests
+# from a single test harness, while ending up with relatively simple code
+# in case it is necessary to debug the code.
+# The template file uses an XML-like notation to mark off places for code.
+# Specifically, lines of the form
+#    <name/>
+# are replaced from a definition file.  The template is XML-like because
+# angle brackets and ampersands can be freely used as long as they don't
+# match the perl pattern <\w*\/> (which no valid C, C++, or Fortran code will)
+#
+# The file of definitions has the following form, also in an XML-like 
+# format (for simple parsing)
+#    <TESTDEFN filename="fname">
+#    <blockname>
+#      definition
+#    </blockname>
+#    ...
+#    </TESTDEFN>
+# where "blockname" is an arbitrary name (matching the perl expression \w*)
+# that matches the names in the template file.  
+# TESTDEFN is a required field
+#
+# Possible extensions:
+#    Common definitions for all files (allows a common template for
+#      multiple sets of merges)
+#    Allow the *template* to define some names (eg, <var>value</var>)
+#      that are replaced in the generated file.
+#    
+# ----------------------------------------------------------------------------
+# Global variables
+$debug = 0;
+
+$lang = "Fortran";   
+%knownLang = ( "Fortran" => 1, "C" => 1, "C++" => 1 );
+#$lang = "C";
+#$lang = "C++";
+
+# Definitions
+%Definitions = ();
+# Global definitions are for all files, and can contain standard comments,
+# initializations, and other data
+%GlobalDefinitions = ();
+# Read a definition file
+# ReadDefinition( filename )
+# Places the definitions into %Definitions{name} => content
+sub ReadDefinition {
+    my $DFD = $_[0];
+
+    while (<$DFD>) {
+	# Check for end-of-description
+	if (/<\/TESTDEFN>/) { last; }
+
+	# match definition name
+	if (/<(\w*)>/) {
+	    my $name = $1;
+	    my $defn = "";
+	    my $found = 0;
+	    while (<$DFD>) {
+		if (/<\/$name>/) { $found = 1; last; }
+		s/\r//g;   # Remove any extraneous characters
+		$defn .= $_;
+	    }
+	    # If we didn't close the definition, generate an error message
+	    if (! $found) {
+		print STDERR "Read to end-of-file while looking for </$name>\n";
+	    }
+	    $Definitions{$name} = $defn;
+	}
+	else {
+	    # Skip (blank space, comment, etc)
+	    next;
+	}
+    }
+    
+}
+
+# ReadGlobalDefinitions( filename )
+sub ReadGlobalDefinitions {
+    my $filename = $_[0];
+    # Save Definitions, if any
+    my %saveDefinitions = %Definitions;
+    # Reset Definitions to hold the current global set
+    %Definitions = %GlobalDefinitions;
+
+    my $DFD = "DFD";
+    open $DFD, "<$filename" || die "Could not open global definition file $filename\n";
+    print "Opening $filename..\n";
+    &ReadDefinition( $DFD );
+    close $DFD;
+    %GlobalDefinitions = %Definitions;
+    %Definitions = %saveDefinitions;
+    # Print the new definitions if requested.
+    if ($debug) {
+	foreach my $key (keys(%GlobalDefinitions)) {
+	    my $val = $GlobalDefinitions{$key};
+	    print "$key => $val\n";
+	}
+    }
+}
+
+# ---------------------------------------------------------------------------
+# MergeTemplate
+# Read a template and merge the output
+# MergeTemplate( template file, output file )
+# Preserve indentation
+sub MergeTemplate {
+    my $templateFilename = $_[0];
+    my $outputFilename   = $_[1];
+
+    open IFD, "<$templateFilename" || die "Cannot open $templateFilename\n";
+    open OFD, ">$outputFilename" || die "Cannot open $outputFilename\n";
+
+    while (<IFD>) {
+	s/\r//;
+	my $loopLimit = 20;
+	while (/(\s*)<(\w*)\/>/) {
+	    my $indent = $1;
+	    my $name = $2;
+	    $indent =~ s/\s*\n//g;
+	    if ($loopLimit-- <= 0) {
+		print STDERR "Exceeded loop limit while writing $outputFilename\n";
+		print STDERR "Searching for $name in $_";
+		last;
+	    }
+	    if (defined($Definitions{$name})) {
+		my $defn = $Definitions{$name};
+		my $newdefn = "";
+		# Add indentation to definition; substitute any defintions
+		foreach my $line (split(/\n/,$defn)) {
+		    print "Looking at |$line|\n" if $debug;
+		    $newdefn .= $indent . $line . "\n";
+		}
+		chop $newdefn;
+		print "Replacing <$name> with |$newdefn|\n" if $debug;
+		s/$indent<$name\/>/$newdefn/;   # Only do one at a time
+	    }
+	    elsif (defined($GlobalDefinitions{$name})) {
+		# local definitions can override any global definitions
+		my $defn = $GlobalDefinitions{$name};
+		my $newdefn = "";
+		# Add indentation to definition
+		foreach my $line (split(/\n/,$defn)) {
+		    $newdefn .= $indent . $line . "\n";
+		}
+		print "Replacing <$name> with |$newdefn|\n" if $debug;
+		chop $newdefn;
+		s/$indent<$name\/>/$newdefn/;   # Only do one at a time
+	    }
+	    else {
+		# Unknown name!
+		print STDERR "Unknown name $name in template file when creating $outputFilename!\n";
+		last;
+	    }
+	}
+	&printLine( OFD, $_ );
+    }
+    close OFD;
+    close IFD;
+}
+# ---------------------------------------------------------------------------
+# ReadAndMerge( description file, template file )
+sub ReadAndMerge {
+    my $filename = $_[0];
+    my $templateFile = $_[1];
+
+    $DFD = "DFD";
+    open $DFD, "<$filename" || die "Can not open $filename\n";
+    
+    while (<$DFD>) {
+	s/#.*//;            # Remove comments
+	# Read until a TESTDEFN line
+	if (/<TESTDEFN\s+filename=\"(.*)\">/) {
+	    my $outputFile = $1;
+	    %Definitions = ();
+	    # Read until </TESTDEFN>
+	    &ReadDefinition( $DFD );
+	    # Create the merged file
+	    &MergeTemplate( $templateFile, $outputFile );
+	}
+	elsif (/<LANG>([\w\+]*)<\/LANG>/) {
+	    # Special for language definition
+	    $lang = $1;
+	    if (!defined($knownLang{$lang})) {
+		print STDERR "Unknown language $lang\n"; 
+	    }
+	}
+	elsif (/<(\w*)>/) {
+	    my $name = $1;
+	    my $defn = "";
+	    # read this as a global definition
+	    while (<$DFD>) {
+		if (/<\/$name>/) { last; }
+		s/\r//;
+		$defn .= $_;
+	    }
+	    if (eof($DFD)) { print STDERR "found EOF before end of $name\n"; }
+	    $GlobalDefinitions{$name} = $defn;
+	}
+    }
+    close $DFD;
+
+}
+# --------------------------------------------------------------------------
+# Debug
+sub PrintDefinitions {
+    foreach my $name (keys(%Definitions)) {
+        print "<$name>\n";
+        my $defn = $Definitions{$name};
+        # Here we could consider doing replacement for embedded <name>...</name>,
+        # for things like arguments.
+        print $defn;
+        print "</$name>\n";
+    }
+}
+# --------------------------------------------------------------------------
+# printLine handles any continuation conventions
+# printLine ( FD, lines )
+# Note that a very simple approach works for Fortran because blanks
+ # are ignored.  However, we will try to make the code easier to read
+sub printLine {
+    my $OFD   = $_[0];
+    my $lines = $_[1];
+
+    # Make sure that we get the current conventions
+    if ($lang eq "Fortran") {
+	$maxPrintLine = 72;
+	$postLine     = "  &";
+	$preLine      = "     &";
+    }
+    elsif ($lang eq "C" || $lang eq "C++") {
+	$maxPrintLine = 180;
+	$postLine     = "";
+	$preLine      = "\t";
+    }
+    
+    foreach my $line (split(/\n/,$lines)) {
+	# Compute length
+	my $length = length($line);
+	while ($length > $maxPrintLine) {
+	    # For Fortran 90 and C/C++, lines must be
+	    # broken at whitespace.  Fortran 77 ignores whitespace,
+	    my $subline = substr $line, 0, $maxPrintLine;
+	    # Now, break subline at the last non-letter
+	    if ($subline =~ /(.*)([^\w]\S*)$/) {
+		$subline = $1;
+		$line    = $2 . $line;
+		# Add blanks to end of the subline to match what was stripped
+		# off
+		my $len = length($2);
+		for (my $i=0; $i < $len; $i++) { 
+		    $subline .= " ";
+		}
+	    }
+	    print $OFD $subline . $postLine . "\n";
+
+	    $line = substr $line, $maxPrintLine;
+	    $line = $preLine . $line;
+	    $length = length($line);
+	}
+        print $OFD $line . "\n";
+    }
+}
+# --------------------------------------------------------------------------
+# Process the file
+# Still to do:
+#   Allow multiple definition files, to allow for common definitions
+#   for such things as headers
+my $defnFile = "";
+my $tmplFile = "";
+my $posCount = 0;
+for (@ARGV) {
+    if (/-defn=(.*)/) {
+	my $extraFile = $1;
+	&ReadGlobalDefinitions( $extraFile );
+    }
+    elsif (/-lang=(.*)/) {
+	$lang = $1;
+	if (!defined($knownLang{$lang})) {
+	    print STDERR "Unknown language $lang\n";
+	    exit 1;
+	}
+    }
+    elsif (/^-/) {
+	print STDERR "Unrecognized argument $_\n";
+	exit 1;
+    }
+    else {
+	if ($posCount == 0) {
+	    $defnFile = $_;
+	}
+	elsif ($posCount == 1) {
+	    $tmplFile = $_;
+	}
+	else {
+	    print STDERR "Too many arguments ($_)\n";
+	    exit 1;
+	}
+	$posCount ++;
+    }
+}
+
+if ($defnFile eq "" || $tmplFile eq "") {
+    print STDERR "testmerge [ -defn=name ] defintion-file template-file \n";
+    exit 1;
+}
+
+&ReadAndMerge( $defnFile, $tmplFile );
+

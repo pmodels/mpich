@@ -1,0 +1,6 @@
+#! /bin/sh
+# Let the ch3 configure know which utility modules are needed for this channel
+# (in ch3/util/<directory>, in this case, ch3/util/sock)
+ch3subsystems="$ch3subsystems sock"
+needs_sock=yes
+

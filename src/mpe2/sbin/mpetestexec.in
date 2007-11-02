@@ -1,0 +1,46 @@
+#! @SHELL@
+
+# The script is designed to be invoked from a "Makefile",
+# notice the command "$MAKE $pgm" below.
+
+MAKE="@MAKE@"
+ECHO_N="@ECHO_N@"
+ECHO_C="@ECHO_C@"
+ECHO_T="@ECHO_T@"
+RM="@RM@"
+
+MPE_BINDIR=@binbuild_dir@
+
+execbasename=`basename $0`
+MPE_OUTFILE="mpe2_${execbasename}.txt"
+# If MPERUN is set by configure, it should have been doubly quoted.
+MPERUN_DEF=@MPERUN@
+MPERUN_DEF=${MPERUN_DEF:-"$MPE_BINDIR/mpiexec -n 4"}
+MPERUN=${MPERUN:-${MPERUN_DEF}}
+
+pgm=$1
+message=$2
+
+echo
+echo ${ECHO_N} "$message ${ECHO_C}"
+$RM -f $pgm
+$MAKE $pgm > $MPE_OUTFILE 2>&1
+if [ -x $pgm ] ; then
+    $RM -f $MPE_OUTFILE
+    echo "$MPERUN $pgm" > $MPE_OUTFILE
+    $MPERUN $pgm >> $MPE_OUTFILE 2>&1
+    mperun_rc=$?
+    if [ $mperun_rc != 0 ] ; then
+        echo "${ECHO_T}No."
+        echo "    The failed command is :"
+        cat $MPE_OUTFILE 
+    else
+        echo "${ECHO_T}Yes."
+    fi
+    $RM -f $pgm
+else
+    echo "${ECHO_T}No."
+    echo "    The failed command is :"
+    cat $MPE_OUTFILE 
+fi
+$RM -f $MPE_OUTFILE

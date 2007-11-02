@@ -1,0 +1,309 @@
+* run autoconf on Intel test suite and push changes to configure out to TG machines
+
+* fix mpig_cm_vmpi_unregister_recv_any_source(), etc. so that single-thread builds work again
+
+* export topology discover informtion to fortran applications
+
+* no need to add MPI_ANY_SOURCE requests to the recvq when the communicator only contains VMPI processes
+
+* no need to post MPI_ANY_SOURCE requests to VMPI when the communicator only contains non-VMPI processes
+
+* fix XIO CM so that pe_wait() does not block when mpig_pe_wait_can_block() is FALSE
+
+* add configure test to extract the vendor MPI_VERSION and MPI_SUBVERSION.  use this information to determine expected
+  functionality that cannot be determined by runtime configure tests.
+
+
+===================================================================================================================================
+						TO DO FOR FIRST OFFICIAL RELEASE
+===================================================================================================================================
+
+* Web service version of mpig_pm interface  [NICK: ???, BRT: ???]
+
+  - the interface to mpig_pm_get_app_num() has changed.  it now takes a business card so that the subjob id can be extracted for
+    any process.  the topology discovery code required this feature in order to determine if two processes are part of the same
+    "SAN" level (formerly called "HOST").
+
+  - integrate Nick's cancel code
+
+
+* finish mpig_pm implementation.  this involves updating mpig_pm modules to provide a vtable.  [BRT: 3 hours]
+
+
+* Vendor MPI  [6+ days]
+
+  * track communicators created at the top-level  [BRT: 4-6 hours]
+
+  * track data types  [NICK: ??? (work with Rob R.)]
+
+  * translate return codes (I think this is finished) [BRT: 15 minutes to check; 2 hours to implement/test if not]
+
+  * progress engine code
+
+    * VMPI request tracking  [BRT: 8-12 hours]
+
+    * integration with other CMs  [BRT & NICK: 8-16 hours]
+
+  *  handle MPI_ANY_SOURCE receives; requires some mods to mpig_recvq module  [BRT: 4-8 hours]
+
+  * completion of ADI3 routines  [BRT: 4 hours]
+
+  * Web services GT4 installation running on Nick's G5 for testing of multithread XIO and VMPI configuration  [NICK: ???]
+
+  - handle the case where the size of the vendor MPI's MPI_Aint differs from MPICH2's MPI_Aint (see below)
+
+  * ... I feel like I am forgetting something important ...
+
+
+* FIX CM_XIO progress engine code [12-16 hours]
+
+  * don't allow a req to be enqueued twice on the rcq!  this happens with send cancel.  can it happen any other time?
+
+  - don't return every time an unexpected message is received just so that MPI_Probe works
+  
+  - roll the RCQ and CM_XIO progress wait routines together so that multiple requests can be completed in a single call
+
+  o allow asynchronous errors to be return from through MPID_Progress_{wait,test,poke} [BRT: 2-3 additional hours]
+
+
+* commit top-level changes after getting approval [BRT & BILL G.: 2-4 hours]
+
+
+* Heterogenous data conversion [2-3 days]
+
+  * integrate Nick's segment module that uses globus_dc
+
+    * complete module?  [NICK: ???]
+
+    * create mapping of MPI Fortran types to C basic types  [BRT: 2-8 hours (depending on configure work required)]
+
+    * change mpig_cm_xio_data module to use Nick's code  [BRT: 30 minutes]
+
+  * handle communication and manipulation of MPI_PACKED data
+
+    * update XIO CM  [BRT: 2-3 hours]
+
+    * update VMPI CM ADI3 routines to detect and properly handle MPI_PACKED  [BRT: 1-2 hours]
+
+    * create path from top-level MPI_Pack(), etc. routines to device  [NICK: 2-3 hours??? (with Rob R.)
+
+
+*  cross platform testing (by hand; test suites can't handle heterogeneous platforms): [BRT & NICK: 1+ days]
+
+
+* adjust tunable parameters to more sane values (currently set to maximize code coverage during testing)  [BRT & NICK: 1 hour]
+
+
+* add real error text to errnames.txt  [BRT/NICK: 3 hours]
+
+
+- fix error reporting in XIO client-side connection establishment code (replace assert statement with real error messages)
+  [BRT: 12-16 hours]
+
+
+===================================================================================================================================
+				OUSTANDING ITEMS TO BE ADDRESSED AFTER THE FIRST OFFICIAL RELEASE
+===================================================================================================================================
+
+* MPI_Comm_connect/accept  [1-2 days (includes additional debugging time)]
+
+  * complete disconnect/reconnect code in mpig_cm_xio_conn.i
+
+  * fix GPID so that MPI_Intercomm_create/merge work with communicators containing processes outside of MPI_COMM_WORLD
+    [BRT: 8-10 hours (includes testing of CH3 device)]
+
+
+o full visual inspection of error handling code, and fill in missing cases (particularly in CM XIO)
+
+
+o add vendor MPI bypass for calling the vendor MPI directly for special predefined communicators
+
+
+o clean up wrapping debugging output lines
+
+
+o update MPIG compiler scripts.  the current ones result in a few oddities while configuring MPIG.  presently, these oddities
+  don't affect us because configure gives us what we need anyway, but that may not be true for all platforms.  here is one in
+  particular:
+
+  checking whether install breaks libraries... gcc: libconftest1.a: linker input file unused because linking not done
+  no
+
+
+o modify compiler scripts to the following quote function.  it _should_ work better than present handling in the case statement.
+
+      quote()
+      {
+          IFS=""
+          params="$*"
+          params="'`echo "$params" | sed -e "s/'/'"'"'"'"'"'"'/g"`'";
+          echo $params
+      }
+
+- add UDT support to the XIO communication module  [BRT & NICK: 4 hours]
+
+
+- add a mpiexec script that conforms to the MPI-2 and the expected MPICH2 extensions
+
+
+o singleton init.  does this even make sense for globus?  probably since a singleton process could the spawn other jobs and
+  connect to services.  this might be useful for portals, etc.
+
+
+o change module initialization errors to FATAL
+
+
+===================================================================================================================================
+							     Thoughts
+===================================================================================================================================
+
+- vendor MPI thoughts
+
+  - can we use VMPI_Testsome/Waitsome() in the progress engine when an MPI_ANY_SOURCE receive is not posted?  this would avoid
+    the potential race condition where MPI_Probe/Iprobe() return a message that is subsequently canceled by the sender.  the
+    presence of a posted MPI_ANY_SOURCE receive still requires us to use VMPI_Probe/Iprobe().  a more detailed discussion of that
+    is include below.
+
+    - MPI-2 PROBLEM: include a special wakeup request in the request list passed to VMPI_Testsome/Waitsome() so that the other
+      communication module that can asynchronously complete requests, such as the XIO CM, or the completion of a generalized
+      request, can call mpig_progress_signal_completion() and wake up a blocking VMPI_Waitsome().
+
+    - the array outstanding VMPI requests passed to VMPI_Testsome/Waitsome() can be sparse, although it is best to keep it as
+      dense as possible
+
+    - a second array should mirror the request array and contain the associated MPICH2 request handle or pointer to the MPICH2
+      request object
+
+  - when an MPI_ANY_SOURCE request is posted, we need a list of communicators to probe instead of (or in addition to?) an array
+    of requests to complete.  since only the receive queue code knows when a posted MPI_ANY_SOURCE receive is dequeued, it will
+    need to either maintain the communicator list or notify the VMPI CM when such requests are dequeued.  if it is the receive
+    queue code is to maintain the list, then an interface for extracting the list needs to be created, and that interface needs
+    to be thread safe.
+
+  - we should consider adding two receive queue routines for the handling of MPI_ANY_SOURCE requests.  the first routine would be
+    called after VMPI_Probe/Iprobe() returns a potential match.  this routine would acquire the request queue mutex and return
+    the matching request, leaving the request on the posted queue and the request queue locked.  assuming a matching request is
+    found in the posted queue (i.e., another CM hadn't recently satisfied the request or it had been canceled), then the sequence
+    VMPI_Irecv()/VMPI_Cancel()/VMPI_Wait() would then be called in an attempt to receive the message.  after the sequence of
+    calls completed, a second receive queue routine would be called that deleted the request from the receive queue
+    if-and-only-if the VMPI request was not canceled.  the routine would then unconditionally release the receive queue mutex.
+    (think of these routines as get-posted-locked and dequeue-posted-conditional)
+
+  - can we have the user call VMPI_*() when wanting to access vendor MPI routines directly?  if not, then the request handles
+    returned by the nonblocking communication routines will still need to be MPICH2 handles so that they may be waited up by the
+    MPICH2 MPI_Wait routine.  (The MPICH2 routines have no way of detecting a MPICH2 handle from a VMPI handle.)  If it is
+    acceptable to force the user to call VMPI_{Test,Wait}*() when waiting on requests created by vendor routines on a special
+    vendor-only communicator, then MPICH2 can largely be removed from the path.
+
+
+- what if each CM kept its own recvq, and one global recvq for MPI_ANY_SOURCE requests (Rob R.'s technique)?  a request would
+  be queue on the CM queue, unless an any source request was queue for that context.  in that case, that request, and all
+  future requests for that context, would be queued on the global recvq.  once the last any source request for a context was
+  complete, the global recvq would be drained of all entries with that context and added to the appropriate CM queue
+  (preserving the same ordering).  -- this technique may improve performance slightly, but my gut feeling says that the receive
+  queue contention is not that high.  it is probably best that we save this until later.
+
+- finish failed case in mpig_cm_xio_send_enq_sreq() to set the error code in the send request (what was this???)
+
+
+===================================================================================================================================
+							   MPICH2 Issues
+===================================================================================================================================
+
+- an mechanism is needed to allow the device to define the structure of a GPID.  see 'global process ids' email for the solution.
+
+  * BRT will create a prototype
+
+- an interface is needed to tracking the creation and freeing of communicators so that MPIG may duplicate the operations in the
+  vendor MPI.  what should the interface and semantics be?  allowing the return of error codes would be useful.
+
+  * use existing hooks with new parameter list (ROUTINE_NAME, old_comm, new_comm, &mpi_errno, STMT)
+
+- an interface is need for tracking creation and freeing of datatypes so that MPIG may duplicate the operations in the vendor
+  MPI.  what should the interface and semantics be?  allowing the return of error codes would be useful.
+
+  * NICK will talk to Rob R., but something similar to comm hooks
+
+- a mechanism for specifying the size of MPI_Aint so that it matches the size used by the vendor MPI.  alternatively, we may be
+  able to performs cast where appropriate, but this seems risky.  what if we renamed MPICH2's MPI_Aint to MPIG_Aint, and then let
+  the cast occur naturally in mpig_vmpi.c?
+
+
+===================================================================================================================================
+							   Globus Issues
+===================================================================================================================================
+
+- support for long double and fixed sized integers (ex: uint32_t) in the Globus data conversion module.  fixed type support isn't
+  critical since MPIG provides its own routines for conversion of fixed types, but it would be nicer if all data conversion were
+  provided by globus_dc.  this is something worth adding when support for long double is added, which is critical.
+
+
+===================================================================================================================================
+					     Discussion with Joe Link about XIO, etc.
+===================================================================================================================================
+
+- send and receive callbacks will occur before close callback
+
+- multiple sends and receives may NOT be posted at the same time
+
+- close can be called multiple times until close callback occurs
+
+- timeouts can be specified through attributes on the handle
+
+- iovec size is unlimited
+
+- globus_memory for memory pools (use for allocation in mpig_databuf, etc.)
+
+- use callback spaces
+
+  - globus callback space multiple
+
+  - set space as an attribute when initializing condition variables
+
+  - set space on for all XIO attributes
+
+- use globus_cond_timedwait() with vendor MPI; use a small timeout (1us?)
+
+- avoid linking against the vendor MPI when building an application/library against MPIG.  one option might be to build a library
+  for the vendor MPI interface functions, link it against the vendor MPI module, then strip the vendor symbols.  this might avoid
+  the need to rename the symbols in MPICH and the application.
+
+
+===================================================================================================================================
+						 Communication Method Selection
+===================================================================================================================================
+
+- methods of specificity:
+
+  - subjob to subjob
+
+    - MPI-1
+
+      - use environemnt variable in the RSL/XML job description to denote the communication method to be used when communicating
+        with an process in another subjob.  for example: MPIG_SUBJOB_COMM_METHOD="(1, TCP) (2, MOD-E), (3, UDT)".
+
+     - the method's vtable can be located by scanning the CM vtable array and comparing the name of each entry with that specified
+       by the user.
+
+     - the selection process can start with this CM.  should the CM be unable to perform the communcation between the processes,
+       the existing method of walking the order list of method would be attempted.
+
+    - MPI-2
+
+      - in general, when using MPI_Comm_connect/accept, the subjobs contained within the remote communicator can not be
+        determined until after MPI_Comm_connect/accept complete.  furthermore, the subjobs may be from different jobs (process
+        groups) and thus require the user to specify the subjob as a (job id, app num) tuple.
+
+      - attributes on the newly formed intercommunicator could be used to extract subjob identities associated with the remote
+        communicator; however, the binding of the communication method used by the local process to communicate with a process in
+        a particular subjob would need to be completed after the communicator was formed.  this may be complicated as it may
+        require completion of all oustanding sends and receives prior to making the switch, which could be complicated.
+
+      - if the (job id, app num) tuples were known ahead of time, and the processes in the local communicator had no previous
+        connections established with any of the processes in the remote communicator, then the MPI_Info object passed to
+        MPI_Comm_connect/accept could specify the desired method for each subjob.  this would permit the binding to occur during
+        the MPI_Comm_connect/accept, eliminating the need to handle a binding change and the need to complete communication on
+        one method before transferring to another method.
+
+      - in a simpler case, an MPI_Info setting could state that the default method to be used for any connection where a method
+        has not already been selected.

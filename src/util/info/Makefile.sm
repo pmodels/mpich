@@ -1,0 +1,12 @@
+mpi_sources = info_create.c info_delete.c \
+ info_dup.c info_free.c info_get.c info_getn.c info_getnth.c \
+ info_getvallen.c info_set.c
+HEADERS = mpiinfo.h
+lib${MPILIBNAME}_a_SOURCES = infoutil.c ${mpi_sources}
+INCLUDES = -I../../include -I${top_srcdir}/src/include
+profilelib_${MPILIBNAME} = ${PMPILIBNAME}
+profilelib_${MPILIBNAME}_SOURCES = ${mpi_sources}
+#
+doc_HTML_SOURCES  = ${mpi_sources}
+doc_MAN_SOURCES   = ${mpi_sources}
+doc_LATEX_SOURCES = ${mpi_sources}

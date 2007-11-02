@@ -1,0 +1,6 @@
+INCLUDES = -I../../../include -I${srcdir}/../../../include
+DEPADD = @MPILIBLOC@ 
+smvar_do_sharedlibs = 0
+
+fileerrretx_SOURCES   = fileerrretx.cxx
+

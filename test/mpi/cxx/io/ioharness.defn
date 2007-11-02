@@ -1,0 +1,1100 @@
+#
+#  (C) 2004 by Argonne National Laboratory.
+#      See COPYRIGHT in top-level directory.
+#
+# Definitions for various MPI I/O Read/write tests
+# This is the C++ version of the Fortran I/O tests.
+# We use MPI_SEEK_SET instead of MPI::SEEK_SET to avoid conflicts with the
+# stdio SEEK_SET
+<LANG>C++</LANG>
+# If we want a separate step to check the file as written different
+# from the read step, insert it here.
+<checkfile>
+</checkfile>
+#
+# Definitions for the check error blocks
+<checkErrStart>
+try {
+</checkErrStart>
+<checkErrEnd>
+} catch ( MPI::Exception e ) {
+    errs++;
+    if (errs <= MAX_ERRORS) {
+        MTestPrintError( e.Get_error_code() );
+    }
+}
+</checkErrEnd>
+
+<openfile>
+<checkErrStart/>
+fh = MPI::File::Open( comm, filename, MPI::MODE_RDWR + MPI::MODE_CREATE, MPI::INFO_NULL );
+<checkErrEnd/>
+// If the file open failed, skip the rest of this test
+if (fh == MPI::FILE_NULL) { continue; }
+</openfile>
+<closefile>
+<checkErrStart/>
+fh.Close();
+<checkErrEnd/>
+</closefile>
+<checkStatus>
+if (status.Get_count( MPI::INT ) != n) {
+    cout << "Wrong value from status; expected " << n << " but got " <<
+       status.Get_count( MPI::INT ) << "\n";
+}
+</checkStatus>
+<deletefile>
+comm.Barrier();
+if (comm.Get_rank() == 0) {
+    <checkErrStart/>
+    MPI::File::Delete( filename, MPI::INFO_NULL );
+    <checkErrEnd/>
+}
+comm.Barrier();
+</deletefile>
+
+# Common code to initialize the buffer for contiguous writes
+<setContigBuffer>
+for (i=0; i<n; i++) {
+    buf[i] = r*n + k*n*s + i;
+}
+</setContigBuffer>
+# This is for double buffered tests
+<setContigBuffer2>
+for (i=0; i<n; i++) {
+    buf2[i] = r*n + (k+1)*n*s + i;
+}
+</setContigBuffer2>
+
+<checkContigBuffer>
+for (i=0; i<n; i++) {
+    ans = r*n + k*n*s + i;
+    if (buf[i] !=  ans) {
+        errs++;
+        if (errs <= MAX_ERRORS) {
+	    cout << r << " buf[" << i << "] = " << buf[i] << " expected " <<
+			ans << "\n";
+        }
+    }
+}
+</checkContigBuffer>
+<clearContigBuffer>
+for (i=0; i<n; i++) {
+    buf[i] = - (r*n + k*n*s + i + 1);
+}
+</clearContigBuffer>
+<checkContigBuffer2>
+for (i=0; i<n; i++) {
+    if (buf2[i] != r*n + (k+1)*n*s + i) {
+        errs++;
+        if (errs <= MAX_ERRORS) {
+            cout << r << " buf2[" << i << "] = " << buf2[i] << "\n";
+        }
+    }
+}
+</checkContigBuffer2>
+<clearContigBuffer2>
+for (i=0; i<n; i++) {
+    buf2[i] = - (r*n + (k+1)*n*s + i+1);
+}
+</clearContigBuffer2>
+
+# Common offset computation, based on the block, rank, size
+<findOffset>
+offset = (r * n + k * n * s) * sizeof(int);
+</findOffset>
+
+# Set the view of the file for this process; suitable for
+# collective I/O and independent file I/O without seek
+<setcontigview>
+filetype = MPI::INT.Create_vector( b, n, n*s );
+offset = r * n * sizeof(int);
+fh.Set_view( offset, MPI::INT, filetype, "native", MPI::INFO_NULL );
+filetype.Free();
+</setcontigview>
+
+# -
+# These are used to synchronize the shared file pointer tests
+<setpartners>
+src  = ( r + s - 1 ) % s;
+dest = ( r + 1 ) % s;
+if (src == dest) {
+    src  = MPI::PROC_NULL;
+    dest = MPI::PROC_NULL;
+}
+</setpartners>
+<startpipe>
+if (r == s - 1) {
+    comm.Ssend( MPI::BOTTOM, 0, MPI::INT, dest, 0);
+}
+</startpipe>
+for (k=0; k<b; k++) {
+<recvtoken>    
+comm.Recv( MPI::BOTTOM, 0, MPI::INT, src, k );
+</recvtoken>
+<forwardtoken>
+if (r == s-1) {
+    comm.Ssend( MPI::BOTTOM, 0, MPI::INT, dest, k+1 );
+}
+else {
+    comm.Ssend( MPI::BOTTOM, 0, MPI::INT, dest, k);
+}
+</forwardtoken>
+<endpipe>
+if (r == 0) {
+    comm.Recv( MPI::BOTTOM, 0, MPI::INT, src, b );
+}
+</endpipe>
+# ----------------------------------------------------------------------------
+# This test uses the individual file pointers.
+# To reach the correct locations, we seek to the position
+<TESTDEFN filename="writex.cxx">
+<writefiledecl>
+MPI::Status status;
+int buf[MAX_BUFFER], ans;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Seek( offset, MPI_SEEK_SET );
+   <checkErrEnd/>
+   <checkErrStart/>
+   fh.Write( buf, n, MPI::INT, status );
+   <checkErrEnd/>
+   <checkStatus/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+    <clearContigBuffer/>
+    <findOffset/>
+    <checkErrStart/>
+    fh.Seek( offset, MPI_SEEK_SET );
+    <checkErrEnd/>
+    <checkErrStart/>
+    fh.Read( buf, n, MPI::INT, status );
+    <checkErrEnd/>
+    <checkStatus/>
+    <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+<TESTDEFN filename="writenosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], ans;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Seek( offset, MPI_SEEK_SET );
+   <checkErrEnd/>
+   <checkErrStart/>
+   fh.Write( buf, n, MPI::INT );
+   <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+    <clearContigBuffer/>
+    <findOffset/>
+    <checkErrStart/>
+    fh.Seek( offset, MPI_SEEK_SET );
+    <checkErrEnd/>
+    <checkErrStart/>
+    fh.Read( buf, n, MPI::INT );
+    <checkErrEnd/>
+    <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses independent I/O with thread-safe, individual file pointers
+<TESTDEFN filename="writeatx.cxx">
+<writefiledecl>
+MPI::Status status;
+int buf[MAX_BUFFER], ans;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Write_at( offset, buf, n, MPI::INT, status );
+   <checkErrEnd/>
+   <checkStatus/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+   <clearContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Read_at( offset, buf, n, MPI::INT, status );
+   <checkErrEnd/>
+   <checkStatus/>
+   <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+<TESTDEFN filename="writeatnosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], ans;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Write_at( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+   <clearContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Read_at( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+   <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses collective I/O with thread-safe, individual file pointers
+<TESTDEFN filename="writeatallx.cxx">
+<writefiledecl>
+MPI::Status status;
+int buf[MAX_BUFFER], ans ;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Write_at_all( offset, buf, n, MPI::INT, status );
+   <checkErrEnd/>
+   <checkStatus/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+   <clearContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Read_at_all( offset, buf, n, MPI::INT, status );
+   <checkErrEnd/>
+   <checkStatus/>
+   <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+<TESTDEFN filename="writeatallnosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], ans ;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Write_at_all( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+   <clearContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Read_at_all( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+   <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses collective I/O with thread-safe, individual file pointers
+<TESTDEFN filename="writeatallbex.cxx">
+<writefiledecl>
+MPI::Status status;
+int buf[MAX_BUFFER], ans;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Write_at_all_begin( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+   <checkErrStart/>
+   fh.Write_at_all_end( buf, status );
+   <checkErrEnd/>
+   <checkStatus/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+   <clearContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Read_at_all_begin( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+   <checkErrStart/>
+   fh.Read_at_all_end( buf, status );
+   <checkErrEnd/>
+   <checkStatus/>
+   <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+<TESTDEFN filename="writeatallbenosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], ans;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Write_at_all_begin( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+   <checkErrStart/>
+   fh.Write_at_all_end( buf );
+   <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+   <clearContigBuffer/>
+   <findOffset/>
+   <checkErrStart/>
+   fh.Read_at_all_begin( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+   <checkErrStart/>
+   fh.Read_at_all_end( buf );
+   <checkErrEnd/>
+   <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses nonblocking I/O with independent file pointers
+<TESTDEFN filename="iwriteatx.cxx">
+<writefiledecl>
+MPI::Status statuses[2];
+int buf[MAX_BUFFER], buf2[MAX_BUFFER], ans;
+MPI::Request req[2];
+int nreq;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k+=2) {
+   <setContigBuffer/>
+   <findOffset/>
+   nreq = 1;
+   <checkErrStart/>
+   req[0] = fh.Iwrite_at( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+   if (k+1 < b) {
+       offset = offset + (s * n) * sizeof(int);
+       <setContigBuffer2/>
+       nreq++;
+       <checkErrStart/>
+       req[1] = fh.Iwrite_at( offset, buf2, n, MPI::INT );
+       <checkErrEnd/>
+   }
+   <checkErrStart/>
+   MPI::Request::Waitall( nreq, req, statuses );
+   <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k+=2) {
+   <clearContigBuffer/>
+   <findOffset/>
+   nreq = 1;
+   <checkErrStart/>
+   req[0] = fh.Iread_at( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+   if (k+1 < b) {
+       offset = offset + (s * n) * sizeof(int);
+       <clearContigBuffer2/>
+       nreq++;
+       <checkErrStart/>
+       req[1] = fh.Iread_at( offset, buf2, n, MPI::INT );
+       <checkErrEnd/>
+   }
+   <checkErrStart/>
+   MPI::Request::Waitall( nreq, req, statuses );
+   <checkErrEnd/>
+   <checkContigBuffer/>
+   if (nreq == 2) {
+        <checkContigBuffer2/>
+   }
+}
+</readfile>
+</TESTDEFN>
+
+<TESTDEFN filename="iwriteatnosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], buf2[MAX_BUFFER], ans;
+MPI::Request req[2];
+int nreq;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k+=2) {
+   <setContigBuffer/>
+   <findOffset/>
+   nreq = 1;
+   <checkErrStart/>
+   req[0] = fh.Iwrite_at( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+   if (k+1 < b) {
+       offset = offset + (s * n) * sizeof(int);
+       <setContigBuffer2/>
+       nreq++;
+       <checkErrStart/>
+       req[1] = fh.Iwrite_at( offset, buf2, n, MPI::INT );
+       <checkErrEnd/>
+   }
+   <checkErrStart/>
+   MPI::Request::Waitall( nreq, req );
+   <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k+=2) {
+   <clearContigBuffer/>
+   <findOffset/>
+   nreq = 1;
+   <checkErrStart/>
+   req[0] = fh.Iread_at( offset, buf, n, MPI::INT );
+   <checkErrEnd/>
+   if (k+1 < b) {
+       offset = offset + (s * n) * sizeof(int);
+       <clearContigBuffer2/>
+       nreq++;
+       <checkErrStart/>
+       req[1] = fh.Iread_at( offset, buf2, n, MPI::INT );
+       <checkErrEnd/>
+   }
+   <checkErrStart/>
+   MPI::Request::Waitall( nreq, req );
+   <checkErrEnd/>
+   <checkContigBuffer/>
+   if (nreq == 2) {
+        <checkContigBuffer2/>
+   }
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses nonblocking I/O with independent file pointers and explicit
+# seeks
+<TESTDEFN filename="iwritex.cxx">
+<writefiledecl>
+MPI::Status statuses[2];
+int buf[MAX_BUFFER], buf2[MAX_BUFFER], ans;
+MPI::Request req[2]; 
+int nreq;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k+=2) {
+   <setContigBuffer/>
+   <findOffset/>
+   nreq = 1;
+   fh.Seek( offset, MPI_SEEK_SET );
+   <checkErrStart/>
+   req[0] = fh.Iwrite( buf, n, MPI::INT);
+   <checkErrEnd/>
+   if (k+1 <  b) {
+       offset = offset + (s * n) * sizeof(int);
+       fh.Seek( offset, MPI_SEEK_SET );
+       <setContigBuffer2/>
+       nreq++;
+       <checkErrStart/>
+       req[1] = fh.Iwrite( buf2, n, MPI::INT );
+       <checkErrEnd/>
+   }
+   <checkErrStart/>
+   MPI::Request::Waitall( nreq, req, statuses );
+   <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k+=2) {
+   <clearContigBuffer/>
+   <findOffset/>
+   nreq = 1;
+   fh.Seek( offset, MPI_SEEK_SET );
+   <checkErrStart/>
+   req[0] = fh.Iread( buf, n, MPI::INT );
+   <checkErrEnd/>
+   if (k+1 < b) {
+       offset = offset + (s * n) * sizeof(int);
+       fh.Seek( offset, MPI_SEEK_SET );
+       <clearContigBuffer2/>
+       nreq++;
+       <checkErrStart/>
+       req[1] = fh.Iread( buf2, n, MPI::INT );
+       <checkErrEnd/>
+   }
+   <checkErrStart/>
+   MPI::Request::Waitall( nreq, req, statuses );
+   <checkErrEnd/>
+   <checkContigBuffer/>
+   if (nreq == 2) {
+        <checkContigBuffer2/>
+   }
+}
+</readfile>
+</TESTDEFN>
+
+<TESTDEFN filename="iwritenosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], buf2[MAX_BUFFER], ans;
+MPI::Request req[2]; 
+int nreq;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k+=2) {
+   <setContigBuffer/>
+   <findOffset/>
+   nreq = 1;
+   fh.Seek( offset, MPI_SEEK_SET );
+   <checkErrStart/>
+   req[0] = fh.Iwrite( buf, n, MPI::INT);
+   <checkErrEnd/>
+   if (k+1 <  b) {
+       offset = offset + (s * n) * sizeof(int);
+       fh.Seek( offset, MPI_SEEK_SET );
+       <setContigBuffer2/>
+       nreq++;
+       <checkErrStart/>
+       req[1] = fh.Iwrite( buf2, n, MPI::INT );
+       <checkErrEnd/>
+   }
+   <checkErrStart/>
+   MPI::Request::Waitall( nreq, req );
+   <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k+=2) {
+   <clearContigBuffer/>
+   <findOffset/>
+   nreq = 1;
+   fh.Seek( offset, MPI_SEEK_SET );
+   <checkErrStart/>
+   req[0] = fh.Iread( buf, n, MPI::INT );
+   <checkErrEnd/>
+   if (k+1 < b) {
+       offset = offset + (s * n) * sizeof(int);
+       fh.Seek( offset, MPI_SEEK_SET );
+       <clearContigBuffer2/>
+       nreq++;
+       <checkErrStart/>
+       req[1] = fh.Iread( buf2, n, MPI::INT );
+       <checkErrEnd/>
+   }
+   <checkErrStart/>
+   MPI::Request::Waitall( nreq, req );
+   <checkErrEnd/>
+   <checkContigBuffer/>
+   if (nreq == 2) {
+        <checkContigBuffer2/>
+   }
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses nonblocking I/O with shared file pointers
+<TESTDEFN filename="iwriteshx.cxx">
+<writefiledecl>
+MPI::Status status;
+int buf[MAX_BUFFER], ans;
+int src, dest;
+MPI::Request req;
+</writefiledecl>
+<writefile>
+<setpartners/>
+<startpipe/>
+for (k=0; k<b; k++) {
+    <recvtoken/>    
+    <setContigBuffer/>
+    <checkErrStart/>
+    req = fh.Iwrite_shared( buf, n, MPI::INT );
+    <checkErrEnd/>
+    req.Wait( status );
+    <checkStatus/>
+    <forwardtoken/>
+}
+<endpipe/>
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<setpartners/>
+<startpipe/>
+for (k=0; k<b; k++) {
+    <recvtoken/>
+    <clearContigBuffer/>
+    <checkErrStart/>
+    req = fh.Iread_shared( buf, n, MPI::INT );
+    <checkErrEnd/>
+    req.Wait( status );
+    <checkStatus/>
+    <checkContigBuffer/>
+    <forwardtoken/>
+}
+<endpipe/>
+</readfile>
+</TESTDEFN>
+
+# This test uses nonblocking I/O with shared file pointers
+<TESTDEFN filename="iwriteshnosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], ans;
+int src, dest;
+MPI::Request req;
+</writefiledecl>
+<writefile>
+<setpartners/>
+<startpipe/>
+for (k=0; k<b; k++) {
+    <recvtoken/>    
+    <setContigBuffer/>
+    <checkErrStart/>
+    req = fh.Iwrite_shared( buf, n, MPI::INT );
+    <checkErrEnd/>
+    req.Wait( );
+    <forwardtoken/>
+}
+<endpipe/>
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<setpartners/>
+<startpipe/>
+for (k=0; k<b; k++) {
+    <recvtoken/>
+    <clearContigBuffer/>
+    <checkErrStart/>
+    req = fh.Iread_shared( buf, n, MPI::INT );
+    <checkErrEnd/>
+    req.Wait( );
+    <checkContigBuffer/>
+    <forwardtoken/>
+}
+<endpipe/>
+</readfile>
+</TESTDEFN>
+
+
+# This test uses collective I/O
+<TESTDEFN filename="writeallx.cxx">
+<writefiledecl>
+MPI::Status status;
+int buf[MAX_BUFFER], ans;
+MPI::Datatype filetype;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+<setcontigview/>
+for (k=0; k<b; k++) {
+     <setContigBuffer/>
+     <checkErrStart/>
+     fh.Write_all( buf, n, MPI::INT, status);
+     <checkErrEnd/>
+     <checkStatus/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<setcontigview/>
+for (k=0; k<b; k++) {
+    <clearContigBuffer/>
+    <checkErrStart/>
+    fh.Read_all( buf, n, MPI::INT, status);
+    <checkErrEnd/>
+    <checkStatus/>
+    <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses collective I/O
+<TESTDEFN filename="writeallnosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], ans;
+MPI::Datatype filetype;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+<setcontigview/>
+for (k=0; k<b; k++) {
+     <setContigBuffer/>
+     <checkErrStart/>
+     fh.Write_all( buf, n, MPI::INT);
+     <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<setcontigview/>
+for (k=0; k<b; k++) {
+    <clearContigBuffer/>
+    <checkErrStart/>
+    fh.Read_all( buf, n, MPI::INT);
+    <checkErrEnd/>
+    <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses split collective I/O
+<TESTDEFN filename="writeallbex.cxx">
+<writefiledecl>
+MPI::Status status;
+int buf[MAX_BUFFER], ans;
+MPI::Datatype filetype;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+<setcontigview/>
+for (k=0; k<b; k++) {
+     <setContigBuffer/>
+     <checkErrStart/>
+     fh.Write_all_begin( buf, n, MPI::INT );
+     <checkErrEnd/>
+     <checkErrStart/>
+     fh.Write_all_end( buf, status );
+     <checkErrEnd/>
+     <checkStatus/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<setcontigview/>
+for (k=0; k<b; k++) {
+    <clearContigBuffer/>
+    <checkErrStart/>
+    fh.Read_all_begin( buf, n, MPI::INT);
+    <checkErrEnd/>
+    <checkErrStart/>
+    fh.Read_all_end( buf, status);
+    <checkErrEnd/>
+    <checkStatus/>
+    <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses split collective I/O
+<TESTDEFN filename="writeallbenosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], ans;
+MPI::Datatype filetype;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+<setcontigview/>
+for (k=0; k<b; k++) {
+     <setContigBuffer/>
+     <checkErrStart/>
+     fh.Write_all_begin( buf, n, MPI::INT );
+     <checkErrEnd/>
+     <checkErrStart/>
+     fh.Write_all_end( buf );
+     <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<setcontigview/>
+for (k=0; k<b; k++) {
+    <clearContigBuffer/>
+    <checkErrStart/>
+    fh.Read_all_begin( buf, n, MPI::INT);
+    <checkErrEnd/>
+    <checkErrStart/>
+    fh.Read_all_end( buf );
+    <checkErrEnd/>
+    <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses the shared file pointers collectively.
+<TESTDEFN filename="writeordx.cxx">
+<writefiledecl>
+MPI::Status status;
+int buf[MAX_BUFFER], ans;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <checkErrStart/>
+   fh.Write_ordered( buf, n, MPI::INT, status);
+   <checkErrEnd/>
+   <checkStatus/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+    <clearContigBuffer/>
+    <checkErrStart/>
+    fh.Read_ordered( buf, n, MPI::INT, status);
+    <checkErrEnd/>
+    <checkStatus/>
+    <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+<TESTDEFN filename="writeordnosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], ans;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <checkErrStart/>
+   fh.Write_ordered( buf, n, MPI::INT );
+   <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+    <clearContigBuffer/>
+    <checkErrStart/>
+    fh.Read_ordered( buf, n, MPI::INT );
+    <checkErrEnd/>
+    <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses the shared file pointers with split collectives.
+<TESTDEFN filename="writeordbex.cxx">
+<writefiledecl>
+MPI::Status status;
+int buf[MAX_BUFFER], ans;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <checkErrStart/>
+   fh.Write_ordered_begin( buf, n, MPI::INT);
+   <checkErrEnd/>
+   <checkErrStart/>
+   fh.Write_ordered_end( buf, status);
+   <checkErrEnd/>
+   <checkStatus/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+    <clearContigBuffer/>
+    <checkErrStart/>
+    fh.Read_ordered_begin( buf, n, MPI::INT);
+    <checkErrEnd/>
+    <checkErrStart/>
+    fh.Read_ordered_end( buf, status);
+    <checkErrEnd/>
+    <checkStatus/>
+    <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+<TESTDEFN filename="writeordbenosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], ans;
+MPI::Offset offset;
+</writefiledecl>
+<writefile>
+for (k=0; k<b; k++) {
+   <setContigBuffer/>
+   <checkErrStart/>
+   fh.Write_ordered_begin( buf, n, MPI::INT);
+   <checkErrEnd/>
+   <checkErrStart/>
+   fh.Write_ordered_end( buf );
+   <checkErrEnd/>
+}
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+for (k=0; k<b; k++) {
+    <clearContigBuffer/>
+    <checkErrStart/>
+    fh.Read_ordered_begin( buf, n, MPI::INT);
+    <checkErrEnd/>
+    <checkErrStart/>
+    fh.Read_ordered_end( buf );
+    <checkErrEnd/>
+    <checkContigBuffer/>
+}
+</readfile>
+</TESTDEFN>
+
+# This test uses the shared file pointers independently.
+# We pass a token to control the oredering
+<TESTDEFN filename="writeshx.cxx">
+<writefiledecl>
+MPI::Status status;
+int buf[MAX_BUFFER], ans;
+int src, dest;
+</writefiledecl>
+<writefile>
+<setpartners/>
+<startpipe/>
+for (k=0; k<b; k++) {
+    <recvtoken/>
+    <setContigBuffer/>
+    <checkErrStart/>
+    fh.Write_shared( buf, n, MPI::INT, status);
+    <checkErrEnd/>
+    <checkStatus/>
+    <forwardtoken/>
+}
+<endpipe/>
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<setpartners/>
+<startpipe/>
+for (k=0; k<b; k++) {
+    <recvtoken/>
+    <clearContigBuffer/>
+    <checkErrStart/>
+    fh.Read_shared( buf, n, MPI::INT, status);
+    <checkErrEnd/>
+    <checkStatus/>
+    <checkContigBuffer/>
+    <forwardtoken/>
+}
+<endpipe/>
+</readfile>
+</TESTDEFN>
+
+<TESTDEFN filename="writeshnosx.cxx">
+<writefiledecl>
+int buf[MAX_BUFFER], ans;
+int src, dest;
+</writefiledecl>
+<writefile>
+<setpartners/>
+<startpipe/>
+for (k=0; k<b; k++) {
+    <recvtoken/>
+    <setContigBuffer/>
+    <checkErrStart/>
+    fh.Write_shared( buf, n, MPI::INT );
+    <checkErrEnd/>
+    <forwardtoken/>
+}
+<endpipe/>
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<setpartners/>
+<startpipe/>
+for (k=0; k<b; k++) {
+    <recvtoken/>
+    <clearContigBuffer/>
+    <checkErrStart/>
+    fh.Read_shared( buf, n, MPI::INT );
+    <checkErrEnd/>
+    <checkContigBuffer/>
+    <forwardtoken/>
+}
+<endpipe/>
+</readfile>
+</TESTDEFN>

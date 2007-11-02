@@ -1,0 +1,215 @@
+\documentclass{article}
+\usepackage{graphics}
+\usepackage{code}
+
+%hyperref - do not remove this comment
+
+\begin{document}
+\title{A Name Publishing Interface for MPICH2}
+\author{William Gropp}
+\maketitle
+
+\section{Introduction}
+
+MPI-2 defines a set of routines for exchanging data with other MPI
+programs.  The intent of these is to allow MPI applications to 
+exchange the data that is needed for the \code{port} argument in the
+\code{MPI_Comm_connect} and \code{MPI_Comm_accept} calls.  
+
+\section{The MPI Name Publishing Routines}
+MPI provides three routines to allow MPI applications to exchange the
+\emph{port names} that are used to connect two running MPI
+applications.  These routines are shown below in a modified C binding;
+\code{const} is used to indicate input arguments and array notation is
+used instead of pointer notation for character strings (this follows
+the MPICH2 coding recommendations).
+\begin{verbatim}
+MPI_Publish_name( const char service_name[], const MPI_Info info, 
+                  const char port_name[] )
+
+MPI_Unpublish_name( const char service_name[], 
+                    const MPI_Info info, 
+                    const char port_name[] )
+
+MPI_Lookup_name( const char service_name[], const MPI_Info info, 
+                 char port_name[MPI_MAX_PORT_NAME] )
+\end{verbatim}
+In these routines, the \code{port_name} is the name returned by
+\code{MPI_Open_port}.  
+The \code{service_name} is a name chosen by the
+applications as the name that all related applications will use to
+look up the \code{port_name}.
+The \code{info} argument is used to pass any necessary information to
+the name publishing system (the reason for this will become clear in
+Section~\ref{sec:sample-impls}). 
+
+\section{Why Another Interface?}
+An alternative to developing another interface is to extend the
+process management interface (PMI).  An advantage to this is that the
+MPI process already has a connection to the outside world, used by the
+PMI interface to implement the PMI put/get interface.  Thus, an
+extension to the PMI interface could support the name publishing
+routines (an extension is needed because the MPI name publishing
+routines are independent, not collective).
+
+To see why another interface is needed, consider the situation in
+Figure~\ref{fig:multiple-pm}.  In this Figure, two MPI programs, each
+started by a different process manager, wish to connect.  For example,
+one MPI job may be run on a batch system (the PBS job in this example)
+and one on an interactive visualization cluster (the MPD job).  
+
+\begin{figure}
+\centerline{\includegraphics{twopm.eps}}
+\caption{Two MPI applications using name publishing with two different
+process managers}\label{fig:multiple-pm}
+\end{figure}
+
+To implement this scenario, it is necessary to separate the name
+publishing interface from the process management interface.  
+Of course, in a scenario in which there are two MPI jobs using the
+same process manager, the process manager could provide the name
+service.  The proposed interface allows implementations use either a
+separate service or the process manager
+
+\section{A Proposed Interface}
+\label{sec:name-interface}
+
+The interface described here provides all the services necessary for
+implementing the MPI name servie routines.  In order to provide a hook
+for the name service implementation to initialize, there are separate
+initializating and finalize calls.  These can, for example, open a
+connection to a name service.  The initialization call returns a
+handle of type \code{MPID_NS_Handle} that is used in all of the other
+calls.  As in other MPI calls, the free routine takes a pointer to the
+handle so that the handle can be set to null when the free routine
+succeeds.  Each of these routines returns either \code{MPI_SUCCESS} or
+a valid MPI error code; implementations may either use the MPICH2
+error code mechanism or, for external packages, use the MPI-2 routines
+for adding error codes and classes.
+
+\begin{verbatim}
+int MPID_NS_Create( const MPID_Info *, MPID_NS_Handle * )
+int MPID_NS_Publish( MPID_NS_Handle, const MPID_Info *, 
+                     const char service_name[], const char port[] )
+int MPID_NS_Lookup( MPID_NS_Handle, const MPID_Info *,
+                    const char service_name[], char port[] )
+int MPID_NS_Unpublish( MPID_NS_Handle, const MPID_Info *, 
+                       const char service_name[] )
+int MPID_NS_Free( MPID_NS_Handle * )
+\end{verbatim}
+
+These calls make use of the \code{MPID_Info} pointer (a pointer to the
+info object passed into the MPI name publisher routines) to provide other
+information that the name service may require.
+Predefined \code{MPI_Info} keys and values for name service are:
+\begin{description}
+\item[\code{NAMEPUB\_CONTACT}]Value is a string providing contact
+  information for the name service.  This may be an IP address or
+  something else (see below).
+\item[\code{NAMEPUB\_CREDENTIAL}]Value is a string providing
+  credentials for accessing the name service.  The exact format is
+  specified by the name service.  See also \code{NAMEPUB_USER}.
+\item[\code{NAMEPUB\_EXPIRE}]Value is an integer, represented as a
+  string, that specifies an expiration time in seconds from the time
+  that a name is published.
+\item[\code{NAMEPUB\_IP}]Value is the IP address as a string, usually
+  in ``hostname:port'' format.  This is an alternative to
+  \code{NAMEPUB_CONTACT}. 
+\item[\code{NAMEPUB\_IP\_FROM\_ENV}]Value is the name of an environment
+  variable whose value has the same meaning as the \code{NAMEPUB_IP}
+  info key. 
+\item[\code{NAMEPUB\_REFCOUNT}]Value is an integer, represented as a
+  string, giving the number of times a value can
+  be looked up before being deleted from the name service.  Set only
+  on \code{MPI_Publish_name}.
+\item[\code{NAMEPUB\_USER}]Value is a string giving the user name.
+\end{description}
+Two of these info parameters make slight changes to the semantics of
+the name publishing routines by providing a way to cause names to
+expire without an explicit call to \code{MPI_UNPUBLISH_NAME}.
+However, the benefit of these in terms of ensuring that the name
+service does not become clogged with old names outweighs the MPI
+requirement that \code{MPI_Info} parameters make no changes to the
+semantics of the routines.  
+
+\section{A Few Possible Implementations}
+\label{sec:sample-impls}
+This section outlines three possible implementations.
+
+\subsection{LDAP}
+\label{sec:namepub-ldap}
+The Lightweight Directory Access Protocol (LDAP) \cite{ldap} is a
+standard for providing general name lookup services.  Open source
+implementations of LDAP are available; at many locations, an LDAP
+server may already be running.  The following sketches the routines
+from OpenLDAP that can be used to implement the name interface.
+
+\begin{description}
+\item[\code{MPID\_NS\_Create}]Use \code{ldap_open} to access the ldap server
+\item[\code{MPID\_NS\_Publish}]Use \code{ldap_add_s} to insert the name
+\item[\code{MPID\_NS\_Lookup}]Use \code{ldap_search_s}, \code{ldap_first_entry}, and
+  \code{ldap_get_values} to access the entry
+\item[\code{MPID\_NS\_Unpublish}]Use \code{ldap_modify_s} to remove the name
+\item[\code{MPID\_NS\_Free}]Use \code{ldap_unbind_s} and \code{ldap_memfree}
+\end{description}
+
+\subsection{MPD Process Manager}
+\label{sec:namepub-mpd}
+
+This name service works only for MPI jobs using the same MPD process
+manager.  However, within this restriction, an MPD name manager can
+exploit the internal communication used by other MPD services.
+Because of the non-collective semantics required by the name
+publishing operations, additional MPD routines must
+be defined.  For example, considering the following additional MPD
+routines:
+\begin{description}
+\item[\code{PMI\_PutIndep}]Put a key/value pair into the MPD system.
+  Associate a user id with the names so that keys are really
+  identified by a user,key pair.
+\item[\code{PMI\_GetIndep}]Get a key/value pair from the MPD system.
+\item[\code{PMI\_RmIndep}]Remove a key/value pair.
+\end{description}
+Values put into the system are removed when the job that inserted them
+exits.  Thus, there is no need for the expiration or reference count
+info values.  
+
+The implementation of the MPI name service calls in terms of these new
+\code{PMI} routines is straightforward:
+
+\begin{description}
+\item[\code{MPID\_NS\_Create}]No operation
+\item[\code{MPID\_NS\_Publish}]Call \code{PMI\_PutIndep}
+\item[\code{MPID\_NS\_Lookup}]Call \code{PMI\_GetIndep}
+\item[\code{MPID\_NS\_Unpublish}]Call \code{PMI\_RmIndep}
+\item[\code{MPID\_NS\_Free}]No operation
+\end{description}
+
+Note that these new PMI routines must be optional; we do not require
+that any process manager provides this service.
+
+\subsection{File}
+\label{sec:namepub-file}
+If all MPI processes share a single filesystem, a simple
+implementation of the name service can use the file system.  
+In this design, each value is placed into a separate file whose name
+include the key; this avoids
+any problems with concurrent updates to a single file.
+\begin{description}
+\item[\code{MPID\_NS\_Create}]Create a structure to hold the names of all files created.
+\item[\code{MPID\_NS\_Publish}]Create a file using a name containing the user, contact
+  string, and the key.  The text of the file is the value of the name.
+  Save the file name in the name service structure.  Protection is
+  provided by the file system.
+\item[\code{MPID\_NS\_Unpublish}]Unlink (remote) the file; remove the file name from
+  the name service structure.
+\item[\code{MPID\_NS\_Lookup}]For the filename using the same rule in publish and read
+  the file.
+\item[\code{MPID\_NS\_Free}]Remove all of the created files.
+\end{description}
+
+Some of the features, such as \code{NAMEPUB_EXPIRE}, are not supported
+by this interface.  The info key \code{NAMEPUB_CONTACT} can be used to
+specify the directory into which the files will be placed.
+
+\end{document}

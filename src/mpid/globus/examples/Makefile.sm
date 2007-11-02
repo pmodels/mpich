@@ -1,0 +1,19 @@
+# 
+# Globus device code:          Copyright 2005 Northern Illinois University
+# Borrowed MPICH-G2 code:      Copyright 2000 Argonne National Laboratory and Northern Illinois University
+# Borrowed MPICH2 device code: Copyright 2001 Argonne National Laboratory
+# 
+# XXX: INSERT POINTER TO OFFICIAL COPYRIGHT TEXT
+# 
+
+TOP_BUILD_DIR = @master_top_builddir@
+CC            = $(TOP_BUILD_DIR)/bin/mpicc
+CPPFLAGS      =
+DEFS          =
+INCLUDES      =
+LIBS          =
+DEPADD        = $(TOP_BUILD_DIR)/lib/lib${MPILIBNAME}.a
+
+report_colors_SOURCES = report_colors.c
+connacc_client_SOURCES = connacc_client.c
+connacc_server_SOURCES = connacc_server.c

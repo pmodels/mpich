@@ -1,0 +1,68 @@
+# These are unused error names, saved in case they're added again
+**abort:application called MPI_ABORT
+**allocmem %d %d:Unable to allocate %d memory for MPI_Alloc_mem; only %d available
+**argaddress:Address of location given to MPI_ADDRESS does not fix in a \
+Fortran integer
+**argaddress %ld:Address of location given to MPI_ADDRESS does not fix in a \
+Fortran integer (value is %ld)
+**argarray:Invalid value in array
+**argarray %s %d %d:Invalid value in %s[%d] = %d
+**argnamed:Invalid argument
+**argnamed %s %d:Invalid argument %s with value %d
+#
+# ch3:essm
+#
+**argstr_shmevent:shared memory event not found in the business card
+**event_create:unable to create an event
+**event_open:unable to open an event
+**event_reset:unable to reset an event
+**event_set:unable to set an event
+**event_wait:unable to wait on an event
+**postwrite:postwrite failed
+**postwrite %p %p:postwrite failed (%p %p)
+#
+**attrcopy:User defined attribute copy routine returned a non-zero return code
+**attrcopy %d:User defined attribute copy routine returned a non-zero return code %d
+**bad_conn:bad conn structure pointer
+**bad_conn %p %p:bad conn structure pointer (%p != %p)
+**badpacket:Received a packet of unknown type
+**badpacket %d:Received a packet of unknown type (%d)
+**bad_sock %d %d:bad sock (%d != %d)
+**base %d:Invalid base address %d
+**boot_attach:failed to attach to a bootstrap queue
+**boot_attach %s:failed to attach to a bootstrap queue - %s
+**bootqmsg %d %d:invalid bootstrap queue message size (%d bytes > %d)
+**bsendnobuf:No buffer to detach. 
+**bufalias %s %s:Buffer parameters %s and %s must not be aliased 
+**bufsize:Invalid buffer size
+**bufsize %d:Invalid buffer size (value is %d)
+**ca:invalid completion action
+**ca %d:invalid completion action (%d)
+**cancelperrecv:Cancellation of persistent receive requests is not supported
+**cancelpersend:Cancellation of persistent send requests is not supported
+**cancelsend:Cancellation of send requests is not supported
+# CH3:rdma
+**ch3_finalize:Channel finalization failed
+**ch3progress:Unable to make message passing progress
+**ch3progress %d:Channel progress engine failed on line %d
+**ch3_init:Channel init failed
+**ch3_send:send failed
+**read_progress:Unable to make read progress
+**handle_read:Unable to handle the read data
+**process_group:Process group initialization failed
+**rdma_finalize:Channel rdma finalization failed
+**rdma_init:Channel rdma initialization failed
+**poke:progress_poke failed
+**postpkt:Unable to post a read for the next packet header
+**write_progress:Write progress failed
+#
+**ch3|putpkt:UNIMPLEMENTED: unable to handling put packets
+**ch3|sock|addrinuse %d:[ch3:sock] tcp port %d already in use
+**ch3|sock|badbuscard:[ch3:sock] GetHostAndPort - Invalid business card
+**ch3|sock|badbuscard %s:[ch3:sock] GetHostAndPort - Invalid business card (%s)
+**ch3|sock|bizcard_cache:business card does not match the one in the cache
+**ch3|sock|bizcard_cache %s %s:business card in cache: %s, business card passed: %s
+**ch3|sock|connallocfailed:[ch3:sock] unable to allocate a connection structure
+**ch3|sock|connfailed %d %d:[ch3:sock] failed to connnect to remote process %d:%d
+**ch3|sock|hostlookup %s %d %s:[ch3:sock] failed to obtain host information for process %s:%d (%s)
+

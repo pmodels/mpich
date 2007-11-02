@@ -1,0 +1,40 @@
+sendrecv1 4
+sendrecv2 2
+sendrecv3 2
+sendflood 8 timeLimit=600
+sendself 1
+sendall 4
+eagerdt 2
+pingping 2
+bottom 2
+bsend1 1
+bsend2 1
+bsend3 1
+bsend4 1
+bsend5 4
+bsendalign 2
+bsendpending 2
+isendself 1
+bsendfrag 2
+errinstatts 2
+errinstatta 2
+errinstatws 2
+errinstatwa 2
+icsend 4
+rqstatus 2
+rqfreeb 4
+greq1 1
+probe-unexp 4
+probenull 1
+# For testing, scancel will run with 1 process as well
+scancel 2
+scancel2 2
+pscancel 2
+rcancel 2
+cancelrecv 2
+isendselfprobe 1
+# Inactive, persistent requests are not handled correctly in MPICH2 1.0.3
+# and earlier.
+inactivereq 1
+waittestnull 1
+waitany-null 1

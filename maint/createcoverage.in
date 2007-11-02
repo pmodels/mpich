@@ -1,0 +1,481 @@
+#! /bin/sh
+#
+# Get coverage information for mpich2
+#
+#set -x
+# The default approach is to prepare the coverage for this MPICH2 
+# distribution and to place the coverage web pages into a 
+# (mpich2src)/www/coverage
+srcdir=@abs_mpich2srcdir@
+tsuites=$srcdir/tests/mpi
+weblocbase=$srcdir/www/coverage
+weblocprefix=""
+blddir=/tmp/$LOGNAME/mpich2-cov
+mpiinstalldir=/tmp/$LOGNAME/mpich2-cinst
+
+# These are the settings used by the MPICH2 group internally to 
+# produce the coverage.  This points the tests at a directory that contains
+# five separate test suites.
+#
+#srcdir=/home/MPI/testing/mpich2/mpich2
+#tsuites=/home/MPI/testing/tsuites
+#weblocbase=/mcs/www/mpi/mpich2/todo/coverage
+#weblocprefix="http://www.mcs.anl.gov/mpi/mpich2/todo/coverage"
+#blddir=/sandbox/$LOGNAME/mpich2-cov
+#mpiinstalldir=/sandbox/$LOGNAME/mpich2-cinst
+
+logfile=""
+# set pm=mpd if mpd is available
+#pm=gforker
+pm=mpd
+# device and channel
+# (we'll also want this to be in the path)
+device="ch3:sock"
+
+test_intel=yes
+test_mpich2=yes
+test_mpich1=yes
+test_cxx=yes
+test_io=yes
+testNames="intel mpich1 mpich2 cxx io"
+build_mpich=yes
+alltest=yes
+update_web=yes
+quiet=no
+#
+# Process args to see if we are running only a subset of the steps, 
+# for example, to rerun a test suite
+for arg ; do 
+    # Extract option, if any
+    case $arg in 
+    *=*)
+    option=`echo A$arg | sed -e 's/^[^=]*=//'`
+    ;;
+    *)
+    option=""
+    ;;
+    esac
+
+    case $arg in 
+    -nobuild)
+    build_mpich=no
+    ;;
+
+    -quiet)
+    quiet=yes
+    ;;
+
+    -logfile=*)
+    logfile=$option
+    ;;
+
+    -srcdir=*)
+    srcdir=$option
+    ;;
+
+    -device=*)
+    device=$option
+    ;;
+
+    -pm=*)
+    pm=$option
+    ;; 
+
+    -test=*)
+    if [ $alltest = yes ] ; then
+        alltest=no
+	test_intel=no
+	test_mpich1=no
+	test_mpich2=no
+	test_io=no
+	test_cxx=no
+    fi
+    name=`echo A$arg | sed -e 's/A-test=//'`
+    eval test_$name=yes
+    ;;
+
+    -notest=*)
+    # Turn off just one test
+    alltest=no
+    name=`echo A$arg | sed -e 's/A-notest=//'`
+    eval test_$name=no
+    ;;
+    
+    -notest)
+    alltest=no
+    test_intel=no
+    test_mpich1=no
+    test_mpich2=no
+    test_io=no
+    test_cxx=no
+    ;;
+
+    -blddir=*)
+    blddir=`echo A$arg | sed -e 's/A-blddir=//'`
+    ;;
+
+    -noupdateweb)
+    update_web=no
+    ;;
+    -updateweb)
+    update_web=yes
+    ;;
+    -webdir)
+    weblocbase=$option
+    ;;
+
+    -help)
+    cat <<EOF
+createcoverage [ -srcdir=sourcedir ] [ -blddir=builddir ] 
+               [ -test=onetest ] [ -notest=skiptest ]
+               [ -device=device ] [ -nobuild ] [ -quiet ] [ -pm=pm ]
+               [ -[no]updateweb ] [ -webdir=webdir ]
+     sourcedir   - Directory containing the source  for MPICH2.
+                   Default is $srcdir
+     blddir      - Directory where the coverage tests should be built.
+                   Default is $blddir
+     onetest     - Run only this test suite.  Available tests are
+                   $testNames
+     skiptest    - Skip this test suite.
+     device      - Device to test.  Default is $device
+     pm          - Select the process manager.  Default is $pm
+     -updateweb  - Update the web page containing the single file listing
+                   at $weblocbase/$device/coverage.txt
+     webdir      - Directory into which to place the web pages.
+                   The default is $weblocbase 
+                   (the final directory is webdir/$device ).
+EOF
+    exit 1;
+    ;;
+
+    *)
+    echo "Argument $arg unrecognized"
+    ;;
+
+    esac
+done
+
+if [ "$pm" = "mpd" ] ; then
+    # Make sure that we have a .mpd.conf file
+    if [ ! -s $HOME/.mpd.conf ] ; then
+        echo "mpd requires a .mpd.conf file"
+        exit 1
+    fi
+fi
+
+# Move everthing into a device-specific directory
+webloc="$weblocbase/$device"
+if [ "$update_web" = yes ] ; then
+    if [ ! -d $webloc ] ; then mkdir -p $webloc ; fi
+fi
+#
+# Set the derived directories
+annotedir=$webloc
+if [ -n "$weblocprefix" ] ; then
+    # Only add device to the location if we are not using relative paths
+    # for the web pages
+    annotewebprefix="$weblocprefix/$device"
+fi
+annoteindex=$webloc/index.htm
+# Locations of the test directories
+mpich2srcdir=$srcdir/Test/mpi
+intelsrcdir=$tsuites/IntelMPITEST
+mpich1srcdir=$tsuites/mpich1test
+cxxsrcdir=$tsuites/mpicxxtest
+iosrcdir=$tsuites/Testmpio
+
+# For each of the tests selected, turn off those for which the 
+# test source directories are not available
+for test in $testNames ; do
+    eval t="test_$test"
+    eval tval=\$$t
+    if [ "$tval" = yes ] ; then
+        eval tloc=\$${test}srcdir
+        if [ ! -d "$tloc" ] ; then
+            echo "Turning off test $test because test source directory $tloc is not available"
+	    eval $t=no
+        fi
+    fi
+done
+
+# Compute the appropriate device directories
+# Base directories
+ch3shm="src/mpid/ch3/util/shm"
+ch3sock="src/mpid/common/sock/poll src/mpid/ch3/util/sock"
+case $device in
+    ch3:ssm)
+    devsrcdirs="src/mpid/ch3/channels/ssm/src src/mpid/ch3/src $ch3shm $ch3sock"
+    ;;
+    ch3:nemesis)
+    # FIXME: Add the other directories
+    devsrcdirs="src/mpid/ch3/channels/nemesis/src src/mpid/ch3/src src/mpid/ch3/channels/nemesis/nemesis/net_mod/tcp_module src/mpid/ch3/channels/nemesis/nemesis/src"
+    extra_opts="$extra_opts --enable-nemesis-dbg-localoddeven"
+    ;;
+    ch3|ch3:sock)
+    devsrcdirs="src/mpid/ch3/channels/sock/src src/mpid/ch3/src $ch3sock"
+    ;;
+    ch3:sshm)
+    devsrcdirs="src/mpid/ch3/channels/sshm/src src/mpid/ch3/src $ch3shm"
+    ;;
+    ch3:shm)
+    devsrcdirs="src/mpid/ch3/channels/shm/src src/mpid/ch3/src $ch3shm"
+    ;;
+    ch3*)
+    devsrcdirs="src/mpid/ch3/src"
+    ;;
+    *)
+    if [ -d "$srcdir/src/mpid/$device" ] ; then
+        devsrcdirs="src/mpid/$device"
+    fi
+    ;;
+esac
+
+# Set a timeout for mpiexec just in case
+MPIEXEC_TIMEOUT=180
+export MPIEXEC_TIMEOUT
+#
+# We use fd 6 to redirect output.  If we have selected "-quiet", this
+# sends stdout to /dev/null 
+if [ "$quiet" = yes ] ; then
+    exec 6>/dev/null
+elif [ -n "$logfile" ] ; then
+    exec 6>$logfile
+else
+    set -x
+    exec 6>&1
+fi
+
+if [ ! -d $blddir ] ; then
+    # Try to build it
+    mkdir $blddir
+fi
+if [ ! -d $blddir ] ; then
+    echo "$blddir does not exist" 
+    echo "Create it and rerun this script"
+    exit 1
+fi
+
+# Build with the coverage options
+if [ $build_mpich = yes ] ; then
+    echo "------ Build MPICH2 ------" >&6
+    cd $blddir
+    # Build without MPE for simplicity
+    $srcdir/configure --enable-coverage --with-pm=$pm --enable-romio \
+    		--with-device=$device \
+		  -prefix=$mpiinstalldir --without-mpe $extra_opts >&6 2>&6
+    rc=$?
+    if [ "$rc" != 0 ] ; then 
+	echo "$srcdir/configure failed with return code $rc"
+	exit 1
+    fi
+    make clean >&6 2>&6
+    # Make sure that we clean away any old results
+    find . -name '*.bb' -o -name '*.bbg' -o -name '*.da' -print | \
+	xargs @XARGS_NODATA_OPT@ rm -f
+    find . -name '*.gcov' -print | xargs @XARGS_NODATA_OPT@ rm -f
+    rm -f lib/*
+    make >&6 2>&6
+    rc=$?
+    if [ "$rc" != 0 ] ; then
+        echo "Make step failed with return code $rc"
+	exit 1
+    fi
+    echo "------ Install MPICH2 ------" >&6
+    make install >&6 2>&6
+    rc=$?
+    if [ "$rc" != 0 ] ; then
+	echo "Make install step failed with return code $rc"
+        exit 1
+    fi
+    echo "------ End of Install MPICH2 ------" >&6
+fi
+#
+# Run the tests
+if [ $test_mpich2 = yes ] ; then
+    # The mpich2 tests are easy
+    echo "------ Run MPICH2 Tests ------" >&6
+    if [ "$pm" = mpd ] ; then
+        # Start by running the mpd demon
+        ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
+    fi
+    cd $blddir
+    make testing >&6 2>&6
+    if [ "$pm" = mpd ] ; then
+        # Stop the mpd demon
+        ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
+    fi
+    echo "------ End Run MPICH2 Tests ------" >&6
+fi
+
+if [ ! -d $blddir/othertest ] ; then
+    mkdir $blddir/othertest
+fi
+for dir in intel cxx mpich1 Testmpio ; do
+    if [ ! -d $blddir/othertest/$dir ] ; then
+        mkdir $blddir/othertest/$dir 
+    fi
+done
+
+if [ $test_intel = yes ] ; then
+    echo "------ Run Intel Tests ------" >&6
+    # The intel tests aren't hard
+
+    if [ "$pm" = mpd ] ; then
+        # Start by running the mpd demon
+        ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
+    fi
+    cd $blddir/othertest/intel
+    $intelsrcdir/configure --enable-coverage \
+	--with-mpich2=$mpiinstalldir >&6 2>&6
+    make clean >&6 2>&6
+    make testing >&6 2>&6
+    if [ "$pm" = mpd ] ; then
+        # Stop the mpd demon
+        ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
+    fi
+    echo "------ End Run Intel Tests ------" >&6
+fi
+
+if [ $test_cxx = yes ] ; then
+    echo "------ Run C++ Tests ------" >&6
+    if [ "$pm" = mpd ] ; then
+        # Start by running the mpd demon
+        ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
+    fi
+    # Neither are the cxx test
+    # Build mpicxxtest --enable-coverage (still need to implement)
+    cd $blddir/othertest/cxx
+    $cxxsrcdir/configure --enable-coverage --with-mpich=$mpiinstalldir \
+	--enable-xml  >&6 2>&6
+    make clean >&6 2>&6
+    make testing >&6 2>&6
+    if [ "$pm" = mpd ] ; then
+        # Stop the mpd demon
+        ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
+    fi
+    echo "------ End Run C++ Tests ------" >&6
+fi
+
+if [ $test_io = yes ] ; then
+    echo "------ Run MPI-IO Tests ------" >&6
+    if [ "$pm" = mpd ] ; then
+        # Start by running the mpd demon
+        ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
+    fi
+    # These tests do not even have a configure or make!
+    cd $blddir/othertest/Testmpio
+    $mpiinstalldir/bin/mpicc -o testmpio $iosrcdir/testmpio.c >&6 2>&6
+    if [ ! -x testmpio ] ; then
+	echo "Unable to build MPI-IO test testmpio.  See log file $logfile for reason (build attempted in $blddir/othertest/Testmpio)"
+    else
+        if [ ! -d t1 ] ; then mkdir t1 ; fi
+        MPIO_USER_PATH=`pwd`/t1
+        export MPIO_USER_PATH
+        $mpiinstalldir/bin/mpiexec -n 4 ./testmpio 1 >&6 2>&6
+    fi
+    if [ "$pm" = mpd ] ; then
+        # Stop the mpd demon
+        ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
+    fi
+    echo "------ End Run MPI-IO Tests ------" >&6
+fi
+
+if [ $test_mpich1 = yes ] ; then
+    echo "------ Run MPICH-1 Tests ------" >&6
+    if [ "$pm" = mpd ] ; then
+        # Start by running the mpd demon
+        ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
+    fi
+    # Nor are the mpich1 tests
+    # Build mpich tests --enable-coverage
+    #   Need to provide a target that does not do the "runtest -check" step,
+    #   since there may be output about "Can't read output file foo.da"
+    cd $blddir/othertest/mpich1
+    MPIRUN=$mpiinstalldir/bin/mpiexec
+    export MPIRUN
+    MPITEST_IGNORE_RUNTEST=yes
+    export MPITEST_IGNORE_RUNTEST
+    $mpich1srcdir/configure --enable-coverage -cc=$mpiinstalldir/bin/mpicc \
+			-fc=$mpiinstalldir/bin/mpif77 --enable-io \
+			-mpilibname=mpich \
+			-prefix=$mpiinstalldir >&6 2>&6
+    make clean  >&6 2>&6
+    make testing >&6 2>&6
+    if [ "$pm" = mpd ] ; then
+        # Stop the mpd demon
+        ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
+    fi
+    echo "------ End Run MPICH-1 Tests ------" >&6
+fi
+
+# Now create the summary
+echo "------ Collect Coverage Information ------" >&6
+cd $blddir
+# Ignore the output from gcov
+make coverage >/dev/null 2>&1
+rc=$?
+if [ "$rc" != 0 ] ; then
+    echo "Make coverage step failed with return code $rc"
+fi
+#
+# The following list of directories gets the following:
+#  All of the top-level MPI routines (src/mpi and src/util/info)
+#  Support routines for nameservice using the file option (src/nameserv/file)
+#  Support routines for datatypes
+#  Basic implementation of the channel device.  This is included
+#  because some of the top-level MPI routines just push operations down
+#  to the device (e.g., MPI_Put).  src/mpid/ch3/src contains the "common"
+#  code for the channel devices, so it is reasonable to try for good
+#  coverage of this code as well.
+# annoteindex is not used with 
+rm -f coverage.txt
+if [ "$update_web" = yes ] ; then
+    # Clean out the old annotated files
+    if [ -d "$annotedir/src" ] ; then
+	(cd $annotedir/src && \
+	    find . -name '*.c.htm' -ctime +2 -print | \
+	    xargs @XARGS_NODATA_OPT@ rm -f )
+    fi
+    $srcdir/maint/getcoverage -annote=$annotedir \
+    -annoteweb=$annotewebprefix \
+    -indexdir=$annotedir \
+    src/mpi src/util/info src/nameserv/file \
+	src/mpid/common/datatype \
+        $devsrcdirs \
+        src/pmi/simple src/binding/f77 src/binding/cxx > coverage.txt
+else 
+    $srcdir/maint/getcoverage \
+    src/mpi src/util/info src/nameserv/file \
+	src/mpid/common/datatype \
+	$devsrcdirs \
+        src/pmi/simple src/binding/f77 src/binding/cxx > coverage.txt
+fi
+# The coverage data is in the build dir ($blddir).
+echo "------ End Collect Coverage Information ------" >&6
+if [ "$update_web" = yes ] ; then
+    if [ -d $webloc ] ; then 
+        rm -f $webloc/coverage.txt
+        cp coverage.txt $webloc/coverage.txt
+    else
+        echo "Unable to access $webloc to install coverage output"
+    fi
+    # Make the logfile available on the web page
+    if [ -n "$logfile" -a -s "$logfile" ] ; then
+	rm -f $webloc/cov-logfile.txt
+	cp $logfile $webloc/cov-logfile.txt
+    fi
+fi
+#
+# From mpich2 build directory:
+# make coverage >/dev/null 2>&1
+#   The above step creates the *.gcov files
+# maint/getcoverage.in src/mpi/*.gcov src/util/info/*.gcov \
+#   src/mpid/ch3/src/*.gcov src/mpid/ch3/channels/sock/src/*.gcov etc. \
+#    > coverage.txt
+#
+# The above generates a file that shows each missed executable line, along
+# with some context (the two lines preceding the missed line).
+#
+# It doesn't get all of the files; for example, it misses others in util
+# (e.g., util/mem), and it misses all of ROMIO because of the file 
+# structure of ROMIO (src/mpi/romio/{adio|mpi-io}/*.gcov).

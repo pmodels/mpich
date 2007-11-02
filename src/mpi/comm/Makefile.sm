@@ -1,0 +1,16 @@
+mpi_sources = comm_compare.c comm_create.c comm_dup.c comm_free.c \
+ comm_get_name.c comm_group.c \
+ comm_rank.c comm_size.c comm_remote_group.c comm_remote_size.c \
+ comm_set_name.c comm_split.c comm_test_inter.c \
+ intercomm_create.c intercomm_merge.c 
+
+HEADERS = mpicomm.h
+
+lib${MPILIBNAME}_a_SOURCES = $(mpi_sources) commutil.c
+profilelib_${MPILIBNAME} = ${PMPILIBNAME}
+profilelib_${MPILIBNAME}_SOURCES = ${mpi_sources}
+INCLUDES = -I../../include -I${top_srcdir}/src/include
+
+doc_HTML_SOURCES  = ${mpi_sources}
+doc_MAN_SOURCES   = ${mpi_sources}
+doc_LATEX_SOURCES = ${mpi_sources}

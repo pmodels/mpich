@@ -1,0 +1,416 @@
+<mpi2>
+# A.8.1 Miscellany
+void* MPI::Alloc_mem(MPI::Aint size, const MPI::Info& info) 
+static MPI::Errhandler MPI::Comm::Create_errhandler(MPI::Comm::Errhandler_fn* function) 
+MPI::Errhandler MPI::Comm::Get_errhandler() const 
+void MPI::Comm::Set_errhandler(const MPI::Errhandler& errhandler) 
+MPI::Datatype MPI::Datatype::Create_darray(int size, int rank, int ndims, const int array_of_gsizes[], const int array_of_distribs[], const int array_of_dargs[], const int array_of_psizes[], int order) const 
+MPI::Datatype MPI::Datatype::Create_hindexed(int count, const int array_of_blocklengths[], const MPI::Aint array_of_displacements[]) const 
+MPI::Datatype MPI::Datatype::Create_hvector(int count, int blocklength, MPI::Aint stride) const 
+MPI::Datatype MPI::Datatype::Create_indexed_block( int count, int blocklength, const int array_of_displacements[]) const 
+static MPI::Datatype MPI::Datatype::Create_struct(int count, const int array_of_blocklengths[], const MPI::Aint array_of_displacements[], const MPI::Datatype array_of_types[]) 
+MPI::Datatype MPI::Datatype::Create_subarray(int ndims, const int array_of_sizes[], const int array_of_subsizes[], const int array_of_starts[], int order) const 
+void MPI::Datatype::Get_extent(MPI::Aint& lb, MPI::Aint& extent) const 
+void MPI::Datatype::Get_true_extent(MPI::Aint& true_lb, MPI::Aint& true_extent) const 
+void MPI::Datatype::Pack_external(const char* datarep, const void* inbuf, int incount, void* outbuf, MPI::Aint outsize, MPI::Aint& position) const 
+MPI::Aint MPI::Datatype::Pack_external_size(const char* datarep, int incount) const 
+MPI::Datatype MPI::Datatype::Resized(const MPI::Aint lb, const MPI::Aint extent) const 
+void MPI::Datatype::Unpack_external(const char* datarep, const void* inbuf, MPI::Aint insize, MPI::Aint& position, void* outbuf, int outcount) const 
+static MPI::Errhandler MPI::File::Create_errhandler(MPI::File::Errhandler_fn* function) 
+MPI::Errhandler MPI::File::Get_errhandler() const 
+void MPI::File::Set_errhandler(const MPI::Errhandler& errhandler) 
+void MPI::Free_mem(void *base) 
+MPI::Aint MPI::Get_address(void* location) 
+static MPI::Info MPI::Info::Create() 
+void MPI::Info::Delete(const char* key) 
+MPI::Info MPI::Info::Dup() const 
+void MPI::Info::Free() 
+bool MPI::Info::Get(const char* key, int valuelen, char* value) const 
+int MPI::Info::Get_nkeys() const 
+void MPI::Info::Get_nthkey(int n, char* key) const 
+bool MPI::Info::Get_valuelen(const char* key, int& valuelen) const 
+void MPI::Info::Set(const char* key, const char* value) 
+bool MPI::Is_finalized() 
+bool MPI::Request::Get_status(MPI::Status& status) const 
+bool MPI::Request::Get_status() const 
+static MPI::Errhandler MPI::Win::Create_errhandler(MPI::Win::Errhandler_fn* function) 
+MPI::Errhandler MPI::Win::Get_errhandler() const 
+void MPI::Win::Set_errhandler(const MPI::Errhandler& errhandler) 
+# A.8.2 Process creation
+void MPI::Close_port(const char* port_name) 
+void MPI::Comm::Disconnect() 
+static MPI::Intercomm MPI::Comm::Get_parent() 
+static MPI::Intercomm MPI::Comm::Join(const int fd) 
+MPI::Intercomm MPI::Intracomm::Accept(const char* port_name, const MPI::Info& info, int root) const 
+MPI::Intercomm MPI::Intracomm::Connect(const char* port_name, const MPI::Info& info, int root) const 
+MPI::Intercomm MPI::Intracomm::Spawn(const char* command, const char* argv[], int maxprocs, const MPI::Info& info, int root) const 
+MPI::Intercomm MPI::Intracomm::Spawn(const char* command, const char* argv[], int maxprocs, const MPI::Info& info, int root, int array_of_errcodes[]) const 
+MPI::Intercomm MPI::Intracomm::Spawn_multiple(int count, const char* array_of_commands[], const char** array_of_argv[], const int array_of_maxprocs[], const MPI::Info array_of_info[], int root) 
+MPI::Intercomm MPI::Intracomm::Spawn_multiple(int count, const char* array_of_commands[], const char** array_of_argv[], const int array_of_maxprocs[], const MPI::Info array_of_info[], int root, int array_of_errcodes[]) 
+void MPI::Lookup_name(const char* service_name, const MPI::Info& info, char* port_name) 
+void MPI::Open_port(const MPI::Info& info, char* port_name) 
+void MPI::Publish_name(const char* service_name, const MPI::Info& info, const char* port_name) 
+void MPI::Unpublish_name(const char* service_name, const MPI::Info& info, const char* port_name) 
+# A.8.3 One sided
+void MPI::Win::Accumulate(const void* origin_addr, int origin_count, const MPI::Datatype& origin_datatype, int target_rank, MPI::Aint target_disp, int target_count, const MPI::Datatype& target_datatype, const MPI::Op& op) const 
+void MPI::Win::Complete() const 
+static MPI::Win MPI::Win::Create(const void* base, MPI::Aint size, int disp_unit, const MPI::Info& info, const MPI::Intracomm& comm) 
+void MPI::Win::Fence(int assert) const 
+void MPI::Win::Free() 
+void MPI::Win::Get(void *origin_addr, int origin_count, const MPI::Datatype& origin_datatype, int target_rank, MPI::Aint target_disp, int target_count, const MPI::Datatype& target_datatype) const 
+MPI::Group MPI::Win::Get_group() const 
+void MPI::Win::Lock(int lock_type, int rank, int assert) const 
+void MPI::Win::Post(const MPI::Group& group, int assert) const 
+void MPI::Win::Put(const void* origin_addr, int origin_count, const MPI::Datatype& origin_datatype, int target_rank, MPI::Aint target_disp, int target_count, const MPI::Datatype& target_datatype) const 
+void MPI::Win::Start(const MPI::Group& group, int assert) const 
+bool MPI::Win::Test() const 
+void MPI::Win::Unlock(int rank) const 
+void MPI::Win::Wait() const 
+# A 8.4 Extended collective
+oid MPI::Comm::Allgather(const void* sendbuf, int sendcount, const MPI::Datatype& sendtype, void* recvbuf, int recvcount, const MPI::Datatype& recvtype) const = 0 
+void MPI::Comm::Allgatherv(const void* sendbuf, int sendcount, const MPI::Datatype& sendtype, void* recvbuf, const int recvcounts[], const int displs[], const MPI::Datatype& recvtype) const = 0 
+void MPI::Comm::Allreduce(const void* sendbuf, void* recvbuf, int count, const MPI::Datatype& datatype, const MPI::Op& op) const = 0 
+void MPI::Comm::Alltoall(const void* sendbuf, int sendcount, const MPI::Datatype& sendtype, void* recvbuf, int recvcount, const MPI::Datatype& recvtype) const = 0 
+void MPI::Comm::Alltoallv(const void* sendbuf, const int sendcounts[], const int sdispls[], const MPI::Datatype& sendtype, void* recvbuf, const int recvcounts[], const int rdispls[], const MPI::Datatype& recvtype) const = 0 
+void MPI::Comm::Alltoallw(const void* sendbuf, const int sendcounts[], const int sdispls[], const MPI::Datatype sendtypes[], void* recvbuf, const int recvcounts[], const int rdispls[], const MPI::Datatype recvtypes[]) const = 0 
+void MPI::Comm::Barrier() const = 0 
+void MPI::Comm::Bcast(void* buffer, int count, const MPI::Datatype& datatype, int root) const = 0 
+void MPI::Comm::Gather(const void* sendbuf, int sendcount, const MPI::Datatype& sendtype, void* recvbuf, int recvcount, const MPI::Datatype& recvtype, int root) const = 0 
+void MPI::Comm::Gatherv(const void* sendbuf, int sendcount, const MPI::Datatype& sendtype, void* recvbuf, const int recvcounts[], const int displs[], const MPI::Datatype& recvtype, int root) const = 0 
+void MPI::Comm::Reduce(const void* sendbuf, void* recvbuf, int count, const MPI::Datatype& datatype, const MPI::Op& op, int root) const = 0 
+void MPI::Comm::Reduce_scatter(const void* sendbuf, void* recvbuf, int recvcounts[], const MPI::Datatype& datatype, const MPI::Op& op) const = 0 
+void MPI::Comm::Scatter(const void* sendbuf, int sendcount, const MPI::Datatype& sendtype, void* recvbuf, int recvcount, const MPI::Datatype& recvtype, int root) const = 0 
+void MPI::Comm::Scatterv(const void* sendbuf, const int sendcounts[], const int displs[], const MPI::Datatype& sendtype, void* recvbuf, int recvcount, const MPI::Datatype& recvtype, int root) const = 0 
+MPI::Intercomm MPI::Intercomm::Create(const Group& group) const 
+MPI::Intercomm MPI::Intercomm::Split(int color, int key) const 
+#MPI::Intracomm MPI::Intracomm::Create(const Group& group) const 
+void MPI::Intracomm::Exscan(const void* sendbuf, void* recvbuf, int count, const MPI::Datatype& datatype, const MPI::Op& op) const 
+#MPI::Intracomm MPI::Intracomm::Split(int color, int key) const 
+# A.8.5 External
+int MPI::Add_error_class() 
+int MPI::Add_error_code(int errorclass) 
+void MPI::Add_error_string(int errorcode, const char* string) 
+void MPI::Comm::Call_errhandler(int errorcode) const 
+static int MPI::Comm::Create_keyval(MPI::Comm::Copy_attr_function* comm_copy_attr_fn, MPI::Comm::Delete_attr_function* comm_delete_attr_fn, void* extra_state) 
+void MPI::Comm::Delete_attr(int comm_keyval) 
+static void MPI::Comm::Free_keyval(int& comm_keyval) 
+bool MPI::Comm::Get_attr(int comm_keyval, void* attribute_val) const 
+void MPI::Comm::Get_name(char* comm_name, int& resultlen) const 
+void MPI::Comm::Set_attr(int comm_keyval, const void* attribute_val) const 
+void MPI::Comm::Set_name(const char* comm_name) 
+static int MPI::Datatype::Create_keyval(MPI::Datatype::Copy_attr_function* type_copy_attr_fn, MPI::Datatype::Delete_attr_function* type_delete_attr_fn, void* extra_state) 
+void MPI::Datatype::Delete_attr(int type_keyval) 
+MPI::Datatype MPI::Datatype::Dup() const 
+static void MPI::Datatype::Free_keyval(int& type_keyval) 
+bool MPI::Datatype::Get_attr(int type_keyval, void* attribute_val) const 
+void MPI::Datatype::Get_contents(int max_integers, int max_addresses, int max_datatypes, int array_of_integers[], MPI::Aint array_of_addresses[], MPI::Datatype array_of_datatypes[]) const 
+void MPI::Datatype::Get_envelope(int& num_integers, int& num_addresses, int& num_datatypes, int& combiner) const 
+void MPI::Datatype::Get_name(char* type_name, int& resultlen) const 
+void MPI::Datatype::Set_attr(int type_keyval, const void* attribute_val) 
+void MPI::Datatype::Set_name(const char* type_name) 
+void MPI::File::Call_errhandler(int errorcode) const 
+void MPI::Grequest::Complete() 
+static MPI::Grequest MPI::Grequest::Start(const MPI::Grequest::Query_function query_fn, const MPI::Grequest::Free_function free_fn, const MPI::Grequest::Cancel_function cancel_fn, void *extra_state) 
+int MPI::Init_thread(int required) 
+int MPI::Init_thread(int& argc, char**& argv, int required) 
+bool MPI::Is_thread_main() 
+int MPI::Query_thread() 
+void MPI::Status::Set_cancelled(bool flag) 
+void MPI::Status::Set_elements(const MPI::Datatype& datatype, int count) 
+void MPI::Win::Call_errhandler(int errorcode) const 
+static int MPI::Win::Create_keyval(MPI::Win::Copy_attr_function* win_copy_attr_fn, MPI::Win::Delete_attr_function* win_delete_attr_fn, void* extra_state) 
+void MPI::Win::Delete_attr(int win_keyval) 
+static void MPI::Win::Free_keyval(int& win_keyval) 
+# Get_attr for Win had the wrong prototype in the 2.0 standard (see the errata)
+bool MPI::Win::Get_attr(int win_keyval, void* attribute_val) const 
+void MPI::Win::Get_name(char* win_name, int& resultlen) const 
+void MPI::Win::Set_attr(int win_keyval, const void* attribute_val) 
+void MPI::Win::Set_name(const char* win_name) 
+# A8.6 I/O
+void MPI::File::Close() 
+static void MPI::File::Delete(const char* filename, const MPI::Info& info) 
+int MPI::File::Get_amode() const 
+bool MPI::File::Get_atomicity() const 
+MPI::Offset MPI::File::Get_byte_offset(const MPI::Offset disp) const 
+MPI::Group MPI::File::Get_group() const 
+MPI::Info MPI::File::Get_info() const 
+MPI::Offset MPI::File::Get_position() const 
+MPI::Offset MPI::File::Get_position_shared() const 
+MPI::Offset MPI::File::Get_size() const 
+MPI::Aint MPI::File::Get_type_extent(const MPI::Datatype& datatype) const 
+void MPI::File::Get_view(MPI::Offset& disp, MPI::Datatype& etype, MPI::Datatype& filetype, char* datarep) const 
+MPI::Request MPI::File::Iread(void* buf, int count, const MPI::Datatype& datatype) 
+MPI::Request MPI::File::Iread_at(MPI::Offset offset, void* buf, int count, const MPI::Datatype& datatype) 
+MPI::Request MPI::File::Iread_shared(void* buf, int count, const MPI::Datatype& datatype) 
+MPI::Request MPI::File::Iwrite(const void* buf, int count, const MPI::Datatype& datatype) 
+MPI::Request MPI::File::Iwrite_at(MPI::Offset offset, const void* buf, int count, const MPI::Datatype& datatype) 
+MPI::Request MPI::File::Iwrite_shared(const void* buf, int count, const MPI::Datatype& datatype) 
+static MPI::File MPI::File::Open(const MPI::Intracomm& comm, const char* filename, int amode, const MPI::Info& info) 
+void MPI::File::Preallocate(MPI::Offset size) 
+void MPI::File::Read(void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Read(void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Read_all(void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Read_all(void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Read_all_begin(void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Read_all_end(void* buf, MPI::Status& status) 
+void MPI::File::Read_all_end(void* buf) 
+void MPI::File::Read_at(MPI::Offset offset, void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Read_at(MPI::Offset offset, void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Read_at_all(MPI::Offset offset, void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Read_at_all(MPI::Offset offset, void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Read_at_all_begin(MPI::Offset offset, void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Read_at_all_end(void* buf, MPI::Status& status) 
+void MPI::File::Read_at_all_end(void* buf) 
+void MPI::File::Read_ordered(void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Read_ordered(void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Read_ordered_begin(void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Read_ordered_end(void* buf, MPI::Status& status) 
+void MPI::File::Read_ordered_end(void* buf) 
+void MPI::File::Read_shared(void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Read_shared(void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Seek(MPI::Offset offset, int whence) 
+void MPI::File::Seek_shared(MPI::Offset offset, int whence) 
+void MPI::File::Set_atomicity(bool flag) 
+void MPI::File::Set_info(const MPI::Info& info) 
+void MPI::File::Set_size(MPI::Offset size) 
+void MPI::File::Set_view(MPI::Offset disp, const MPI::Datatype& etype, const MPI::Datatype& filetype, const char* datarep, const MPI::Info& info) 
+void MPI::File::Sync() 
+void MPI::File::Write(const void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Write(const void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Write_all(const void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Write_all(const void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Write_all_begin(const void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Write_all_end(const void* buf, MPI::Status& status) 
+void MPI::File::Write_all_end(const void* buf) 
+void MPI::File::Write_at(MPI::Offset offset, const void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Write_at(MPI::Offset offset, const void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Write_at_all(MPI::Offset offset, const void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Write_at_all(MPI::Offset offset, const void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Write_at_all_begin(MPI::Offset offset, const void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Write_at_all_end(const void* buf, MPI::Status& status) 
+void MPI::File::Write_at_all_end(const void* buf) 
+void MPI::File::Write_ordered(const void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Write_ordered(const void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Write_ordered_begin(const void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::File::Write_ordered_end(const void* buf, MPI::Status& status) 
+void MPI::File::Write_ordered_end(const void* buf) 
+void MPI::File::Write_shared(const void* buf, int count, const MPI::Datatype& datatype, MPI::Status& status) 
+void MPI::File::Write_shared(const void* buf, int count, const MPI::Datatype& datatype) 
+void MPI::Register_datarep(const char* datarep, MPI::Datarep_conversion_function* read_conversion_fn, MPI::Datarep_conversion_function* write_conversion_fn, MPI::Datarep_extent_function* dtype_file_extent_fn, void* extra_state) 
+# A8.7 Language bindings
+static MPI::Datatype MPI::Datatype::Create_f90_complex(int p, int r) 
+static MPI::Datatype MPI::Datatype::Create_f90_integer(int r) 
+static MPI::Datatype MPI::Datatype::Create_f90_real(int p, int r) 
+static MPI::Datatype MPI::Datatype::Match_size(int typeclass, int size) 
+
+# B.4 MPI-1 pt-2-pt
+<mpi1>
+void Comm::Send(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+void Comm::Recv(void* buf, int count, const Datatype& datatype, int source, int tag, Status& status) const 
+void Comm::Recv(void* buf, int count, const Datatype& datatype, int source, int tag) const 
+int Status::Get_count(const Datatype& datatype) const 
+void Comm::Bsend(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+void Comm::Ssend(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+void Comm::Rsend(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+
+void Attach_buffer(void* buffer, int size) 
+int Detach_buffer(void*& buffer) 
+
+
+Request Comm::Isend(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+Request Comm::Ibsend(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+Request Comm::Issend(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+Request Comm::Irsend(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+Request Comm::Irecv(void* buf, int count, const Datatype& datatype, int source, int tag) const 
+
+
+void Request::Wait(Status& status) 
+void Request::Wait() 
+bool Request::Test(Status& status) 
+bool Request::Test() 
+void Request::Free() 
+static int Request::Waitany(int count, Request array_of_requests[], Status& status) 
+static int Request::Waitany(int count, Request array_of_requests[]) 
+static bool Request::Testany(int count, Request array_of_requests[], int& index, Status& status) 
+static bool Request::Testany(int count, Request array_of_requests[], int& index) 
+static void Request::Waitall(int count, Request array_of_requests[], Status array_of_statuses[]) 
+static void Request::Waitall(int count, Request array_of_requests[]) 
+static bool Request::Testall(int count, Request array_of_requests[], Status array_of_statuses[]) 
+static bool Request::Testall(int count, Request array_of_requests[]) 
+static int Request::Waitsome(int incount, Request array_of_requests[], int array_of_indices[], Status array_of_statuses[]) 
+static int Request::Waitsome(int incount, Request array_of_requests[], int array_of_indices[]) 
+static int Request::Testsome(int incount, Request array_of_requests[], int array_of_indices[], Status array_of_statuses[]) 
+static int Request::Testsome(int incount, Request array_of_requests[], int array_of_indices[]) 
+
+
+bool Comm::Iprobe(int source, int tag, Status& status) const 
+bool Comm::Iprobe(int source, int tag) const 
+void Comm::Probe(int source, int tag, Status& status) const 
+void Comm::Probe(int source, int tag) const 
+
+
+void Request::Cancel() const 
+bool Status::Is_cancelled() const 
+
+
+Prequest Comm::Send_init(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+Prequest Comm::Bsend_init(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+Prequest Comm::Ssend_init(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+Prequest Comm::Rsend_init(const void* buf, int count, const Datatype& datatype, int dest, int tag) const 
+Prequest Comm::Recv_init(void* buf, int count, const Datatype& datatype, int source, int tag) const 
+void Prequest::Start() 
+static void Prequest::Startall(int count, Prequest array_of_requests[]) 
+
+
+void Comm::Sendrecv(const void *sendbuf, int sendcount, const Datatype& sendtype, int dest, int sendtag, void *recvbuf, int recvcount, const Datatype& recvtype, int source, int recvtag, Status& status) const 
+void Comm::Sendrecv(const void *sendbuf, int sendcount, const Datatype& sendtype, int dest, int sendtag, void *recvbuf, int recvcount, const Datatype& recvtype, int source, int recvtag) const 
+void Comm::Sendrecv_replace(void* buf, int count, const Datatype& datatype, int dest, int sendtag, int source, int recvtag, Status& status) const 
+void Comm::Sendrecv_replace(void* buf, int count, const Datatype& datatype, int dest, int sendtag, int source, int recvtag) const 
+
+
+Datatype Datatype::Create_contiguous(int count) const 
+Datatype Datatype::Create_vector(int count, int blocklength, int stride) const 
+
+
+Datatype Datatype::Create_indexed(int count, const int array_of_blocklengths[], const int array_of_displacements[]) const 
+
+
+
+int Datatype::Get_size() const 
+
+
+void Datatype::Commit() 
+void Datatype::Free() 
+int Status::Get_elements(const Datatype& datatype) const 
+void Datatype::Pack(const void* inbuf, int incount, void *outbuf, int outsize, int& position, const Comm &comm) const 
+void Datatype::Unpack(const void* inbuf, int insize, void *outbuf, int outcount, int& position, const Comm& comm) const 
+int Datatype::Pack_size(int incount, const Comm& comm) const 
+
+# B.5 MPI-1 Collective
+void Intracomm::Barrier() const 
+void Intracomm::Bcast(void* buffer, int count, const Datatype& datatype, int root) const 
+void Intracomm::Gather(const void* sendbuf, int sendcount, const Datatype& sendtype, void* recvbuf, int recvcount, const Datatype& recvtype, int root) const 
+void Intracomm::Gatherv(const void* sendbuf, int sendcount, const Datatype& sendtype, void* recvbuf, const int recvcounts[], const int displs[], const Datatype& recvtype, int root) const 
+void Intracomm::Scatter(const void* sendbuf, int sendcount, const Datatype& sendtype, void* recvbuf, int recvcount, const Datatype& recvtype, int root) const 
+void Intracomm::Scatterv(const void* sendbuf, const int sendcounts[], const int displs[], const Datatype& sendtype, void* recvbuf, int recvcount, const Datatype& recvtype, int root) const 
+void Intracomm::Allgather(const void* sendbuf, int sendcount, const Datatype& sendtype, void* recvbuf, int recvcount, const Datatype& recvtype) const 
+void Intracomm::Allgatherv(const void* sendbuf, int sendcount, const Datatype& sendtype, void* recvbuf, const int recvcounts[], const int displs[], const Datatype& recvtype) const 
+void Intracomm::Alltoall(const void* sendbuf, int sendcount, const Datatype& sendtype, void* recvbuf, int recvcount, const Datatype& recvtype) const 
+void Intracomm::Alltoallv(const void* sendbuf, const int sendcounts[], const int sdispls[], const Datatype& sendtype, void* recvbuf, const int recvcounts[], const int rdispls[], const Datatype& recvtype) const 
+void Intracomm::Reduce(const void* sendbuf, void* recvbuf, int count, const Datatype& datatype, const Op& op, int root) const 
+void Op::Init(User_function* function, bool commute) 
+void Op::Free() 
+void Intracomm::Allreduce(const void* sendbuf, void* recvbuf, int count, const Datatype& datatype, const Op& op) const 
+void Intracomm::Reduce_scatter(const void* sendbuf, void* recvbuf, int recvcounts[], const Datatype& datatype, const Op& op) const 
+void Intracomm::Scan(const void* sendbuf, void* recvbuf, int count, const Datatype& datatype, const Op& op) const 
+
+# B.6 MPI-1 Groups, Contexts, and Communicators
+int Group::Get_size() const 
+int Group::Get_rank() const 
+
+
+static void Group::Translate_ranks (const Group& group1, int n, const int ranks1[], const Group& group2, int ranks2[]) 
+static int Group::Compare(const Group& group1, const Group& group2) 
+
+
+
+Group Comm::Get_group() const 
+
+
+
+static Group Group::Union(const Group& group1, const Group& group2) 
+static Group Group::Intersect(const Group& group1, const Group& group2) 
+static Group Group::Difference(const Group& group1, const Group& group2) 
+
+
+
+Group Group::Incl(int n, const int ranks[]) const 
+Group Group::Excl(int n, const int ranks[]) const 
+Group Group::Range_incl(int n, const int ranges[][3]) const 
+Group Group::Range_excl(int n, const int ranges[][3]) const 
+void Group::Free() 
+int Comm::Get_size() const 
+int Comm::Get_rank() const 
+
+
+
+static int Comm::Compare(const Comm& comm1, const Comm& comm2) 
+
+
+
+
+Intracomm Intracomm::Dup() const 
+Intercomm Intercomm::Dup() const 
+Cartcomm Cartcomm::Dup() const 
+Graphcomm Graphcomm::Dup() const 
+Comm& Comm::Clone() const = 0 
+Intracomm& Intracomm::Clone() const 
+Intercomm& Intercomm::Clone() const 
+Cartcomm& Cartcomm::Clone() const 
+Graphcomm& Graphcomm::Clone() const 
+
+
+
+Intracomm Intracomm::Create(const Group& group) const 
+Intracomm Intracomm::Split(int color, int key) const 
+void Comm::Free() 
+
+
+bool Comm::Is_inter() const 
+int Intercomm::Get_remote_size() const 
+Group Intercomm::Get_remote_group() const 
+Intercomm Intracomm::Create_intercomm(int local_leader, const Comm& peer_comm, int remote_leader, int tag) const 
+
+
+Intracomm Intercomm::Merge(bool high) const 
+
+# B.7 MPI-1 Process topologies
+Cartcomm Intracomm::Create_cart(int ndims, const int dims[], const bool periods[], bool reorder) const 
+void Compute_dims(int nnodes, int ndims, int dims[]) 
+Graphcomm Intracomm::Create_graph(int nnodes, const int index[], const int edges[], bool reorder) const 
+int Comm::Get_topology() const 
+void Graphcomm::Get_dims(int nnodes[], int nedges[]) const 
+void Graphcomm::Get_topo(int maxindex, int maxedges, int index[], int edges[]) const 
+int Cartcomm::Get_dim() const 
+void Cartcomm::Get_topo(int maxdims, int dims[], bool periods[], int coords[]) const 
+int Cartcomm::Get_cart_rank(const int coords[]) const 
+void Cartcomm::Get_coords(int rank, int maxdims, int coords[]) const 
+int Graphcomm::Get_neighbors_count(int rank) const 
+void Graphcomm::Get_neighbors(int rank, int maxneighbors, int neighbors[]) const 
+void Cartcomm::Shift(int direction, int disp, int& rank_source, int& rank_dest) const 
+Cartcomm Cartcomm::Sub(const bool remain_dims[]) const 
+int Cartcomm::Map(int ndims, const int dims[], const bool periods[]) const 
+int Graphcomm::Map(int nnodes, const int index[], const int edges[]) const 
+
+# B.8 MPI-1 Environment
+void Get_processor_name(char* name, int& resultlen) 
+void Errhandler::Free() 
+void Get_error_string(int errorcode, char* name, int& resultlen) 
+int Get_error_class(int errorcode) 
+
+double Wtime() 
+double Wtick() 
+
+
+void Init(int& argc, char**& argv) 
+void Init() 
+void Finalize() 
+bool Is_initialized() 
+void Comm::Abort(int errorcode) 
+
+
+# B.9 MPI-1 Profiling
+void Pcontrol(const int level, ...) 
+
+# B.10 Status access
+
+int Status::Get_source() const 
+void Status::Set_source(int source) 
+int Status::Get_tag() const 
+void Status::Set_tag(int tag) 
+int Status::Get_error() const 
+void Status::Set_error(int error) 
+
+# B.11 MPI-1.2
+void Get_version(int& version, int& subversion)
+

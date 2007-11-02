@@ -1,0 +1,12 @@
+#SUBDIRS = TraceInput .
+lib${MPILIBNAME}_a_SOURCES = rlog.c rlogutil.c rlogtime.c irlogutil.c
+irlog2rlog_SOURCES = irlog2rlog.c
+irlog2rlog_LDADD = -L../../../../lib -L${master_top_srcdir}/lib -lmpich
+printirlog_SOURCES = printirlog.c
+printirlog_LDADD = -L../../../../lib -L${master_top_srcdir}/lib -lmpich
+printrlog_SOURCES = printrlog.c
+printrlog_LDADD = -L../../../../lib -L${master_top_srcdir}/lib -lmpich
+minalignrlog_SOURCES = minalignrlog.c
+minalignrlog_LDADD = -L../../../../lib -L${master_top_srcdir}/lib -lmpich
+INCLUDES = -I../../../include -I${master_top_srcdir}/src/include -I../../../mpi/timer -I../common -I${master_top_srcdir}/src/util/logging/common
+

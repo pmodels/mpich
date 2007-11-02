@@ -1,0 +1,7 @@
+Makefile.in
+Makefile
+testlist
+wtimef90
+*.o
+*.gcda
+*.gcno

@@ -1,0 +1,45 @@
+#
+# Sock:poll
+#
+**sock|poll|accept:accept failed to acquire a new socket
+**sock|poll|accept %d %s:accept failed to acquire a new socket (errno=%d:%s)
+**sock|poll|badbuf %d %d %d %s:the supplied buffer contains invalid memory (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|badhandle %d %d %d:sock contains an invalid file descriptor (set=%d,sock=%d,fd=%d)
+**sock|poll|badhandle %d %d %d %d:sock contains an invalid file descriptor (set=%d,sock=%d,fd=%d:%d)
+**sock|poll|bind:unable to bind socket to port
+**sock|poll|bind %d %d %s:unable to bind socket to port (port=%d,errno=%d:%s)
+**sock|poll|connclosed %d %d %d %s:connection closed by peer (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|connfailed %d %d %d %s:connection failure (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|connrefused %d %d %s:connection refused (set=%d,sock=%d,host=%s)
+**sock|poll|eqmalloc:MPIU_Malloc failed to allocate memory for an event queue structure
+**sock|poll|eqfail:fatal error: failed to enqueue an event; event was lost
+**sock|poll|eqfail %d %d %d:fatal error: failed to enqueue an event; event was lost (set=%d,sock=%d,op=%d)
+**sock|poll|getport %d %s:failed to obtain port number of listener (errno=%d:%s)
+**sock|poll|hostres %d %d %s:unable to resolve host name to an address (set=%d,sock=%d,host=%s)
+**sock|poll|listen:listen() failed
+**sock|poll|listen %d %s:listen() failed (errno=%d:%s)
+**sock|poll|nodelay:unable to set TCP no delay attribute on socket
+**sock|poll|nodelay %d %s:unable to set TCP no delay attribute on socket (errno=%d:%s)
+**sock|poll|nonblock:unable to set socket to nonblocking
+**sock|poll|nonblock %d %s:unable to set socket to nonblocking (errno=%d:%s)
+**sock|poll|oserror %d %s:unexpected operating system error (errno=%d:%s)
+**sock|poll|oserror %s %d %s:unexpected operating system error from %s (errno=%d:%s)
+**sock|poll|oserror %d %d %d %s:unexpected operating system error (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|oserror %s %d %d %d %s:unpected operating system error from %s (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|osnomem %d %d %d %s:operating system routine failed due to lack of memory (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|pipe:unable to allocate pipe to wakeup a blocking poll()
+**sock|poll|pipe %d %s:unable to allocate pipe to wakeup a blocking poll() (errno=%d:%s)
+**sock|poll|pipenonblock:unable to set wakeup pipe to nonblocking
+**sock|poll|pipenonblock %d %s:unable to set wakeup pipe to nonblocking (errno=%d:%s)
+**sock|poll|reuseaddr:unable to set reuseaddr attribute on socket
+**sock|poll|reuseaddr %d %s:unable to set reuseaddr attribute on socket (errno=%d:%s)
+**sock|poll|setrcvbufsz: unable to set the receive socket buffer size
+**sock|poll|setrcvbufsz %d %d %s: unable to set the receive socket buffer size (size=%d,errno=%d:%s)
+**sock|poll|setsndbufsz: unable to set the send socket buffer size
+**sock|poll|setsndbufsz %d %d %s: unable to set the send socket buffer size (size=%d,errno=%d:%s)
+**sock|poll|socket:unable to obtain new socket
+**sock|poll|socket %d %s:unable to obtain new socket (errno=%d:%s)
+**sock|poll|unhandledstate:encountered an unexpected state
+**sock|poll|unhandledstate %d:encountered an unexpected state (%d)
+**sock|poll|unhandledtype:encountered an unexpected sock type
+**sock|poll|unhandledtype %d:encountered an unexpected sock type (%d)

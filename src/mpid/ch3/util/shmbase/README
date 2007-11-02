@@ -1,0 +1,3 @@
+This directory contains base code for using shared memory to send and receive
+messages.  These are drawn from the code originally in the shm and ssm 
+channels, which was essentially identical.

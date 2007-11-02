@@ -1,0 +1,54 @@
+#! /usr/bin/perl -w
+#
+# This script extracts the text blocks from a source file and creates a
+# simple text block out of them.  
+# 
+# Initially, we will use this to create LaTeX blocks so that the ADI reference
+# manual can contain the comments from the example source files adi3.c and
+# adi3.h.  
+#
+$debug = 0;
+while (<>) {
+    if (/\/\*T([^ ]*)[ ]*\n/) {
+	$filename = $1;
+	print "Filename = |$filename|\n" if $debug; 
+	$filename =~ s/\s*//;
+	if ($filename ne "") {
+	    open( OUTFILE, ">$filename" ) || die "Could not open $filename\n";
+	    $OUTFILE = OUTFILE;
+	}
+	else {
+	    $OUTFILE = STDOUT;
+	}
+	# Process until we find the matching T*/
+        $_=<>;
+	if (/Section[ ]*[0-9:]*[ ]*(.*)/) {
+	    print $OUTFILE "\\section{$1}\n";
+	}
+	else {
+	    s/^ \*//;
+	    if (/[A-Za-z]:[ ]*$/) {
+		s/[ ]*(.*):/\\subsection{$1}/g;
+	    }
+	    s/^.vb/\\begin{verbatim}/g;
+	    s/^.ve/\\end{verbatim}/g;
+	    s/\'([^\']*)\'/]\texttt{$1}/g;
+	    s/\\:/:/g;
+	    print $OUTFILE $_;
+	}
+	while (<>) {
+	    if (/T\*\//) { last ; }
+	    s/^ \*//;
+	    if (/[A-Za-z]:[ ]*$/) {
+		s/[ ]*(.*):/\\subsection{$1}/g;
+	    }
+	    s/^.vb/\\begin{verbatim}/g;
+	    s/^.ve/\\end{verbatim}/g;
+	    s/\'([^\']*)\'/\\texttt{$1}/g;
+	    s/\`([^\`]*)\`/\\emph{$1}/g;
+	    s/\\:/:/g;
+	    print $OUTFILE $_;
+	}
+	if ($filename ne "") { close(OUTFILE); }
+    }
+}

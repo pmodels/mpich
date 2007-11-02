@@ -1,0 +1,93 @@
+MPI RMA implementation (device independent)
+
+------------------------------------------------------------------------
+
+Data structures
+
+* MPI_Win
+
+  An integer handle referring to a 'struct MPIR_Win'.
+
+  The handle is converted to a MPIR_Win struct using a page table
+  structure.
+
+  Q: Should any of the bits in the handle be reserved for other
+  purposes?
+
+* struct MPIR_Win
+
+  * comm - the communicator associated with this window.
+  
+    Q: Should this be a (MPI_Comm) or a (MPIR_Comm *)?
+  
+  * bases - array of bases addresses for the local windows (one per
+    process)
+  
+  * sizes - array of local window sizes (one per process)
+  
+  * displs - array of displacement units (one per process)
+
+  The following elements of the structure are extracted from other
+  (more complicated) structures for the purpose of improving access
+  time.
+
+  * rank
+  
+  * np
+  
+  * base
+  
+  * size
+  
+  * displ
+  
+------------------------------------------------------------------------
+
+MPI_Win_create
+
+  
+* Allocate a MPID_Win structure and fill in the device independent portion
+  (MPIR_Win).
+
+  * Create a copy of the communcator provided by the user so the
+    window has its own communcation context.
+  
+  Q: Which layer (MPI/ADI3) should manage (be responsible for
+  creating, destroying, etc.) the MPID_Win object?
+  
+  Q: Assuming the MPI layer managed the MPID_Win object, should
+  MPID_Win be allocated using an MPID function?  Would this buy us
+  anything?
+
+* Acquire information about all of the processes involved in this window.
+
+  * Get the window base address, size, and displacement unit from each
+    process
+
+  * If one more of those arrays contains the same value for all
+    processes, then set the appropriate MPID_WIN_CONST flag.  When one
+    of these flags is set, the local value can be used instead of
+    performing a lookup in the array.
+
+  NOTE: Acquiring the local window sizes and displacement units is not
+  strictly necessary for all implementations, but it allows some of the
+  error checking to be performed at the origin process.
+
+* Let the device finish the creation of the window
+
+------------------------------------------------------------------------
+
+MPI_Win_free
+
+* Q: do we need a reference count associated with the window object?
+  If so, is it an error if the count is not one (1) when
+  MPI_Win_free() is called?  Also, which layer is responsible for
+  functions that manipulate the count and any associated mutexes?
+  
+* Give the device a chance to cleanup any device specific resources
+  associated with the window
+
+* Free the various data structures and Destroy the communicator
+  associated with this window
+
+------------------------------------------------------------------------

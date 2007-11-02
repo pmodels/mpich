@@ -1,0 +1,218 @@
+#! /usr/bin/perl
+# Class mapping
+%ShortClassName = ( "Info" => "info",
+		    "Win" => "win",
+		    "Request" => "req",
+		    "Comm" => "comm",
+		    "Datatype" => "dtype",
+		    "Intercomm" => "inter",
+		    "Intracomm" => "intra",
+		    "Op" => "op",
+		    "File" => "file", 
+		    "Grequest" => "greq",
+		    "Errhandler" => "errh",
+		    "Status" => "st",
+		    "base" => "",
+		    "Prequest" => "preq",
+		    "Group" => "group",
+		    "Cartcomm" => "cart",
+		    "Graphcomm" => "graph",
+		    );
+%SkipRoutines = ( "Intracomm-Spawn" => 1, 
+		  "Intracomm-Spawn_multiple" => 1,
+		  "base-Init_thread" => 1,
+		  "base-Init" => 1,
+		  );
+# These functions are primarily from MPI-1, and follow a differnt rule.
+# ?? Should these have a place in the definition file instead of here?
+%FuncHasClassAtEnd = ( 
+		       "comm-Send" => 1,
+		       "comm-Ssend" => 1,
+		       "comm-Rsend" => 1,
+		       "comm-Bsend" => 1,
+		       "comm-Isend" => 1,
+		       "comm-Issend" => 1,
+		       "comm-Irsend" => 1,
+		       "comm-Ibsend" => 1,
+		       "comm-Irecv" => 1,
+		       "comm-Send_init" => 1,
+		       "comm-Bsend_init" => 1,
+		       "comm-Rsend_init" => 1,
+		       "comm-Ssend_init" => 1,
+		       "comm-Recv_init" => 1,
+		       "dtype-Create_contiguous" => 1,
+		       "dtype-Create_vector" => 1,
+		       "dtype-Create_indexed" => 1,
+		       "inter-Gather" => 1,
+		       "inter-Allgather" => 1,
+		       "inter-Scatter" => 1,
+		       "inter-Alltoall" => 1,
+		       "inter-Gatherv" => 1,
+		       "inter-Allgatherv" => 1,
+		       "inter-Scatterv" => 1,
+		       "inter-Alltoallv" => 1,
+		       "inter-Allreduce" => 1,
+		       "inter-Reduce" => 1,
+		       "inter-Bcast" => 1,
+		       "intra-Gather" => 1,
+		       "intra-Allgather" => 1,
+		       "intra-Scatter" => 1,
+		       "intra-Alltoall" => 1,
+		       "intra-Gatherv" => 1,
+		       "intra-Allgatherv" => 1,
+		       "intra-Scatterv" => 1,
+		       "intra-Alltoallv" => 1,
+		       "intra-Allreduce" => 1,
+		       "intra-Reduce" => 1,
+		       "intra-Scan" => 1,
+		       "intra-Exscan" => 1,
+		       "intra-Reduce_scatter" => 1,
+		       "intra-Bcast" => 1,
+		       
+		       );
+# Additional special cases
+#		       "comm-Recv" => 1,  (before status)
+#                      "comm-Sendrecv" , "comm->Sendrecv_replace"
+#                      "dtype-Pack", "dtype-Unpack",
+
+
+while (<>) {
+    s/#.*//g;
+    if (!/\S/) { next; }
+    if (/<(\w*)>/) {
+	print $_;
+	next;
+    }
+    
+    $isStatic = "";
+    $isConst  = "";
+    if (/static/) {
+	s/static\s*//;
+	$isStatic="static ";
+    }
+    s/MPI:://g;
+    if (/const\s*$/) {
+	s/const\s*$//;
+	$isConst = " const";
+    }
+    if (/([\w:]*)\s+(\w*)::(\w*)\((.*)\)/) {
+	$returnType = $1;
+	$class      = $2;
+	$routine    = $3;
+	$args       = $4;
+    }
+    elsif (/([\w:]*)\s+(\w*)\((.*)\)/) {
+	$returnType = $1;
+	$class      = "base";
+	$routine    = $2;
+	$args       = $3;
+    }
+    else {
+	print STDERR "Cannot categorize $_";
+    }
+    # Check for routines to skip because they are special
+    if (defined($SkipRoutines{"$class-$routine"})) { 
+	next;
+    }
+
+    $origArgs = $args;
+    # Check for a duplicate defnition with no Status
+    if (defined($KnownRoutines{"$class-$routine"})) {
+	$oldargs = $KnownRoutines{"$class-$routine"};
+	if ( ($oldargs =~ /Status/) && ! ($args =~ /Status/) ) {
+	    # Skip this entry (handled automatically by buildiface)
+	    next;
+	}
+	else {
+	    print STDERR "$class-$routine has multiple definitions\n";
+	    print STDERR "First:  $routine($oldargs)\n";
+	    print STDERR "Second: $routine($args)\n";
+	    next;
+	}
+    }
+    $KnownRoutines{"$class-$routine"} = $origArgs;
+
+    # Clean out the args
+    $cleanargs = "";
+    # remove the last ), and make it either a , or a blank.
+    # the rule in the following is that args end in a ,
+    $args =~ s/\)//;
+    if ($args =~ /\S/) { $args = $args . ","; }
+    # Split into single args to match entire argument
+    foreach $arg (split(/,/,$args)) {
+	$argConst = 0;
+	$arg =~ s/^\s*//;
+	$arg =~ s/\s*$//g;
+	if ($arg =~ /^const\s/) {
+	    $argConst = 1;
+	    $arg =~ s/^const\s*//g;
+	}
+	$arg =~ s/^int\s+\w*$//g;
+	$arg =~ s/^Aint\s+\w*$//g;
+	$arg =~ s/^int\s+\w*\s*\[\]\s*//g;
+	$arg =~ s/^Aint\s+\w*\s*\[\]\s*//g;
+	$arg =~ s/^int\s*&\s*\w*$/in:refint/g;
+	$arg =~ s/^Aint\s*&\s*\w*$//g;    # Hope that the automatic
+	                                  # handling of * -> & works
+	$arg =~ s/^Offset\s*&\s*\w*$//g;  # Ditto for offset
+	$arg =~ s/^Offset\s+\w*//g;
+	$arg =~ s/Prequest\s+\w*\[\]\s*/in:preqarray:1/;
+	$arg =~ s/Request\s+\w*\[\]\s*/in:reqarray:1/;
+	$arg =~ s/Status\s+\w*\[\]\s*/out:statusarray:1/;
+	$arg =~ s/bool\s+\w*\[\]\s*/in:boolarray:-2/;
+	$arg =~ s/^Status\s*&\s*\w*//g;   # Status handled by buildiface
+	$arg =~ s/void\s*\*\s*\w*//g;
+	$arg =~ s/char\s*\*\s*\w*//g;
+	$arg =~ s/Datatype\s+\w*\[\]/in:dtypearray:--count--/g;
+	$arg =~ s/^bool\s+\w*/in:bool/g;
+	$arg =~ s///g;
+	
+	if ($argConst) {
+	    if ($arg =~ /\s/) {
+		if ($arg =~ /(\w*)\s*&\s*\w*/) {
+		    $arg = "in:constref:$1";
+		}
+		else {
+		    if ($arg =~ /dtypearray/) {
+			$arg =~ s/dtypearray/dtypeconstarray/;
+		    }
+		    else {
+			$arg = "in:const-$arg";
+		    }
+		}
+	    }
+	    else {
+		$arg = "in:const";
+	    }
+	}
+	$cleanargs .= "$arg ,";
+    }
+    # ALL args are terminated by a ,.  Thus, 
+    # in the case of a single arg, there is a , 
+    # NO args is empty.
+    $args = $cleanargs;
+
+    # Most MPI functions have the class as the first arg:
+    if ($isStatic eq "" && $class ne "base") {
+	$fnchash = "$class-$routine";
+	if (defined($FuncHasClassAtEnd{$fnchash})) {
+	    $args .= ",";
+	}
+	else {
+	    $args = "," . $args;
+	}
+    }
+    
+    # Most MPI functions that return an object in a class do so at the end
+    if ($returnType ne "void" && $returnType ne "bool") {
+	$args .= "return,";
+    }
+    # Trim off the last comma
+    $args =~ s/,\s*$//;
+
+    if (!defined($ShortClassName{$class})) {
+	print STDERR "$class has no short name\n";
+    }
+    $sclass = $ShortClassName{$class};
+    print "$sclass-$routine $isStatic$returnType ($args)$isConst\n";
+}

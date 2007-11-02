@@ -1,0 +1,8 @@
+This directory contains some performance tests.  These are not 
+general performance tests; rather, they reflect our experience with
+particular performance articfacts that users (or ourselves) haver
+reported or experienced.  The tests include:
+
+sendrecvl - Send and receive (head to head) large messages.
+mattrans  - Matrix transpose example
+

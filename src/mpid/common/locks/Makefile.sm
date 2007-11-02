@@ -1,0 +1,7 @@
+lib${MPILIBNAME}_a_SOURCES = mpidu_process_locks.c
+HEADERS = mpidu_process_locks.h
+INCLUDES = -I${srcdir} -I../../../include -I${master_top_srcdir}/src/include
+
+# Create a local library as an option
+EXTRA_LIBS = libmpich2locks.a
+libmpich2locks_a_SOURCES = mpidu_process_locks.c

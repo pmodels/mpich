@@ -1,0 +1,53 @@
+#! /bin/sh
+#
+# This file contains configuration information for mpif77.  This is
+# essentially just the variable-initialization part of mpif77.
+# --------------------------------------------------------------------------
+# Set the default values of all variables.
+#
+# Directory locations: Fixed for any MPI implementation
+# Set from the directory arguments to configure (e.g., --prefix=/usr/local)
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+sysconfdir=@sysconfdir@
+includedir=@includedir@
+libdir=@libdir@
+#
+# Default settings for compiler, flags, and libraries
+# Determined by a combination of environment variables and tests within
+# configure (e.g., determining whehter -lsocket is needee)
+FC="@FC@"
+F77CPP="@F77CPP@"
+MPI_FFLAGS="@MPI_FFLAGS@"
+MPI_LDFLAGS="@MPI_LDFLAGS@"
+MPILIBNAME="@MPILIBNAME@"
+PMPILIBNAME="@PMPILIBNAME@"
+MPI_OTHERLIBS="@LIBS@"
+NEEDSPLIB="@NEEDSPLIB@"
+#
+# MPIVERSION is the version of the MPICH2 library that mpif77 is intended for
+MPIVERSION="@VERSION@"
+#
+# ----------------------------------------------------------------------------
+# We also keep track of properties of the compilation system.  These
+# are read by the top-level configure to initialize the Fortran types
+# within the mpi.h file.
+#
+# MPI Types for the Fortran types
+MPI_COMPLEX=@MPI_COMPLEX@
+MPI_DOUBLE_COMPLEX=@MPI_DOUBLE_COMPLEX@
+MPI_LOGICAL=@MPI_LOGICAL@
+MPI_REAL=@MPI_REAL@
+MPI_DOUBLE_PRECISION=@MPI_DOUBLE_PRECISION@
+MPI_INTEGER=@MPI_INTEGER@
+MPI_2INTEGER=@MPI_2INTEGER@
+MPI_2COMPLEX=@MPI_2COMPLEX@
+MPI_2DOUBLE_COMPLEX=@MPI_2DOUBLE_COMPLEX@
+MPI_2REAL=@MPI_2REAL@
+MPI_2DOUBLE_PRECISION=@MPI_2DOUBLE_PRECISION@
+MPI_CHARACTER=@MPI_CHARACTER@
+# C type corresponding to a Fortran INTEGER
+MPI_FINT=@MPI_FINT@
+#
+# Name mangling
+F77_NAME_MANGLE=@F77_NAME_MANGLE@

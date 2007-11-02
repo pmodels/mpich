@@ -1,0 +1,40 @@
+#! /bin/sh
+#
+# This file contains configuration information for mpicc.  This is
+# essentially just the variable-initialization part of mpif90.
+# --------------------------------------------------------------------------
+# Set the default values of all variables.
+#
+# Directory locations: Fixed for any MPI implementation.
+# Set from the directory arguments to configure (e.g., --prefix=/usr/local)
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+sysconfdir=@sysconfdir@
+includedir=@includedir@
+modincdir=@modincdir@
+libdir=@libdir@
+#
+# Default settings for compiler, flags, and libraries
+# Determined by a combination of environment variables and tests within
+# configure (e.g., determining whehter -lsocket is needee)
+F90="@F90@"
+F90CPP="@F90CPP@"
+# Fortran 90 Compiler characteristics
+F90INC="@F90INC@"
+# f90modinc specifies how to add a directory to the search path for modules.
+# Some compilers (Intel ifc version 5) do not support this concept, and 
+# instead need 
+# a specific list of files that contain module names and directories.
+# The F90MODINCSPEC is a more general approach that uses <dir> and <file>
+# for the directory and file respectively.
+F90MODINC="@F90MODINCFLAG@"
+F90MODINCSPEC="@F90MODINCSPEC@"
+F90EXT="@F90EXT@"
+MPI_F90FLAGS="@MPI_F90FLAGS@"
+MPI_LDFLAGS="@MPI_LDFLAGS@"
+MPILIBNAME="@MPILIBNAME@"
+PMPILIBNAME="@PMPILIBNAME@"
+MPI_OTHERLIBS="@LIBS@"
+NEEDSPLIB="@NEEDSPLIB@"
+# MPIVERSION is the version of the MPICH2 library that mpicc is intended for
+MPIVERSION="@VERSION@"

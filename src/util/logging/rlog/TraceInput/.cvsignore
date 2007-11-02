@@ -1,0 +1,15 @@
+Debug*
+Release*
+*.o
+*.bb
+*.bbg
+*.da
+*.gcov
+Makefile.in
+Makefile
+*.so
+*.lo
+*.la
+*.plg
+.deps
+*.user

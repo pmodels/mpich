@@ -1,0 +1,39 @@
+ALL: mpiman.pdf
+SHELL = /bin/sh
+
+INSTALL         = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA    = @INSTALL_DATA@
+prefix          = @prefix@
+docdir          = @docdir@
+srcdir = @srcdir@
+
+VPATH = .:@srcdir@
+
+MPIMANAUXFILES = refman.sty tpage.sty refcmd.tex refmpi.tex
+mpiman.dvi: mpiman.tex MPI_Wtime.tex
+	-rm -f mpiman.log mpiman.msg
+	for file in $(MPIMANAUXFILES) ; do \
+	    if [ ! -s $$file ] ; then \
+	       if [ -s $(srcdir)/$$file ] ; then \
+	            cp $(srcdir)/$$file . ; \
+               else \
+		    echo "Unable to find file $$file" ; \
+		    exit 1; \
+               fi ;\
+	    fi ; \
+	done
+	-latex $(srcdir)/mpiman < /dev/null 2>&1 >mpiman.msg
+	latex $(srcdir)/mpiman < /dev/null 2>&1 >mpiman.msg
+
+mpiman.pdf: mpiman.dvi
+	dvipdfm mpiman
+
+clean:
+	rm -f *.dvi *.log *.toc *.aux *.out
+distclean: clean
+
+#
+# Install these into the various FTP and WWW locations
+install: mpiman.pdf
+	$(INSTALL_DATA) mpiman.pdf ${docdir}

@@ -1,0 +1,1180 @@
+#! @PERL@
+# -*- Mode: perl; -*-
+# @configure_input@
+#
+# Configure and build mpich2 with some of the options
+#
+# Set default values
+$projects_dir = "/home/MPI/testing/tsuites";
+# alt is for systems that have /homes instead of /home
+$altprojects_dir = "/homes/MPI/testing/tsuites";
+if (! -d $projects_dir && -d $altprojects_dir ) {
+    $projects_dir = $altprojects_dir;
+}
+$srcdir  = "/home/MPI/testing/mpich2/mpich2";
+$logname = $ENV{"LOGNAME"};
+$tmpdir = "/sandbox/$logname";
+# rundir is the directory in which to run the tests.
+$rundir = "";
+$mpich1_dir = "$projects_dir/mpich1test";
+
+# By default, use random arguments for the tests
+$use_rand_args = 1;
+#
+$is_xml = 0;
+# Set the default compilers.  These can be overridden by setting the CC
+# and FC environment variables.
+$ccname = "gcc";
+$fcname = "f77";
+#
+# Set whether the C++ and Fortran bindings have been built.  
+$has_f77 = 1;
+$has_cxx = 1;
+#
+# Some process managers require separate startup and rundown steps.  The 
+# following variables are used to handle this
+$StartDemon = "";     # Name of routine to start demons
+$StopDemon  = "";     # Name of routine to stop demons
+$hasDemon   = 0;
+
+#
+# Set available options.  For enable and with, the values are
+# {with,enable}-name[;possiblevalues]*
+# We need a way to keep these consistent with the arguments recognized by
+# configure
+@enable_array = ( 
+		  'error-checking;no;runtime;all', 
+		  'error-messages;all;generic;class;none',
+		  'timer-type;linux86_cycle;gethrtime;clock_gettime;gettimeofday;linuxalpha_cycle',
+		  'timing;none;all;runtime;log;log_detailed',
+		  'g;none;all;handle;dbg;log;meminit',
+		  'fast',
+		  'f77',
+		  'f90',
+		  'cxx',
+		  'romio',
+		  'coverage',
+		  'strict',    #;posix
+		  'debuginfo', # Message queues
+		  'weak_symbols;no;yes',
+                  'threads;single;multiple',
+ 		  'dependencies',
+		  'nmpi-as-mpi',
+		  'runtimevalues',   # Fortran true/false
+);
+%chosenEnable = ();
+@with_array = (
+	       'logging;none;rlog',
+	       'pmi;simple;smpd',    #; uni no longer supported
+	       'pm;gforker;mpd', #;remshell
+	       'namepublisher;no;file;mpd', #;ldap:ldapserver',
+	       'device;ch3;ch3:shm;ch3:ssm;ch3:nemesis',
+);
+%chosenWith = ();
+@env_array = (
+#	      'CC;gcc;cc;pgcc;ecc;xlc',
+#	      'FC;f77;pgf77;efc;xlf',
+#	      'CXX;gcc;CC;pgCC;ecc;xlC',
+#             'CFLAGS;-g;-O',
+);	      
+
+# Also cross;sample-cross-files, but we need the files first
+# Also missing are levels of thread support.
+
+$n_enable  = $#enable_array + 1;
+$n_with    = $#with_array + 1;
+$n_env     = $#env_array + 1;
+$show      = 0;
+$debug     = 0;
+$echoSteps = 0;         # Set to one to echo each run program to stdout
+$report_signals = 1;    # Set to one to generate a message about signals
+                        # received by a program
+$max_count = 5;
+$OUTFD     = OUTFD;
+#
+# The following variable separate the various sections
+$TestStart = "-----------------------------------------------------------\n";
+$TestEnd   = "-----------------------------------------------------------\n";
+$TestDateStart = "Run on ";
+$TestDateEnd   = "\n";
+$TestHostStart = "Run on host ";
+$TestHostEnd   = "\n";
+$TestUserStart = "Run by ";
+$TestUserEnd   = "\n";
+$ConfigStart = " -- Begin Configure Step -- \n";
+$ConfigEnd   = " -- End   Configure Step -- \n";
+$MakeStart   = " -- Begin Make Step --\n";
+$MakeEnd     = " -- End   Make Step --\n";
+$GlobNameStart = " -- Begin Check of global names --\n";
+$GlobNameEnd   = " -- End   Check of global names --\n";
+$UsedNameStart = " -- Begin Check of used names --\n";
+$UsedNameEnd   = " -- End   Check of used names --\n";
+$MakeInstStart = " -- Begin Make Install Step --\n";
+$MakeInstEnd   = " -- End   Make Install Step --\n";
+$MakeInstcheckStart = " -- Begin Make Installcheck Step --\n";
+$MakeInstcheckEnd   = " -- End   Make Installcheck Step --\n";
+$RunTestStart  = " -- Begin Run Test Step --\n";
+$RunTestEnd    = " -- End   Run Test Step --\n";
+$SumStart = "";
+$SumEnd   = "";
+$SumConfigStart = "Config status = ";
+$SumConfigEnd   = "\n";
+$SumMakeStart = "Make status = ";
+$SumMakeEnd   = "\n";
+$SumGlobStart  = "Global name check status = ";
+$SumGlobEnd    = "\n";
+$SumInstStart = "Install status = ";
+$SumInstEnd   = "\n";
+$SumTestRunStart = "Test status = ";
+$SumTestRunEnd   = "\n";
+
+# Defaults
+$config_args = "";
+$with_args   = "";
+$enable_args = "";
+$env_args    = "";
+$outfile     = "";
+$builddir    = "";
+$instdir     = "";
+# Read the arguments
+foreach $_ (@ARGV) {
+    if (/-enable-n=(\d*)/) {
+	$n_enable = $1;
+    }
+    elsif (/-with-n=(\d*)/) {
+	$n_with = $1;
+    }
+    elsif (/-show/) {
+	$show = 1;
+    }
+    elsif (/-debug/) {
+	$debug = 1;
+    }
+    elsif (/-envopt=(.*)/) {
+	# Add a list of possible env values
+	$env_array[$#env_array+1] = $1;
+	$n_env    = $#env_array + 1;
+    }
+    elsif (/-srcdir=(.*)/) {
+	$srcdir  = $1;
+    }
+    elsif (/-instdir=(.*)/) {
+	$instdir = $1;
+    }
+    elsif (/-rundir=(.*)/) {
+	$rundir = $1;
+    }
+    elsif (/-maxcount=(.*)/) {
+	# max count.  Set to -1 for infinity
+	$max_count = $1;
+    }
+    elsif (/-maxtime=(.*)/) {
+	# max time in seconds
+	set_time_left( $1 );
+    }
+    elsif (/-tests=(.*)/) {
+	$tests = ":" . $1 . ":";
+    }
+    elsif (/-outfile=(.*)/) {
+	$outfile = $1;
+    }
+    elsif (/-tmpdir=(.*)/) {
+	$tmpdir = $1;
+    }
+    elsif (/-builddir=(.*)/) {
+	$builddir = $1;
+    }
+    elsif (/-xml/) {
+	&XMLStyle;
+	$is_xml = 1;
+    }
+    elsif (/-norand/) {
+	$use_rand_args = 0;
+    }
+    elsif (/-enable=(.*)/) {
+	$use_rand_args = 0;
+	$enable_args .= "$1 ";
+    }
+    elsif (/-with=(.*)/) {
+	$use_rand_args = 0;
+	$with_args .= "$1 ";
+    }
+    elsif (/-env=(.*)/) {
+	$use_rand_args = 0;
+	$envval=$1;
+	$envval =~ s/ /<SP>/g;
+	$env_args .= "--env-$envval ";
+    }
+    elsif (/-configarg=(.*)/) {
+	# Use this to add a special arg (such as -host) to the 
+	# configure call
+	$config_args .= "$1 ";
+    }
+    elsif (/-help/) {
+	print STDERR "\
+checkbuilds [ -enable-n=d ] [ -with-n=d ] [ -show ] [-envopt=name;value;... ]
+            [-srcdir=SRCDIR] [-instdir=INSTALLDIR] [-builddir=BUILDDIR]
+            [-maxcount=MAXCNT] [-maxtime=MAXTIME] 
+            [-norand ] [-enable=enable-args] [-with=with-args]
+            [-tmpdir=dir]
+        -enable-n=d sets the number of --enable options to try
+        -with=n=d set the number of --with options to try
+        -envopt=name;value;... adds an environment variable with possible
+                 values (quote the text so that the semicolons do not
+                 cause trouble)
+
+        -maxcount sets the number of builds to try
+        -maxtime sets the maximum length of time to run
+        Example:
+        checkbuilds -envopt=\"CC;gcc;pgcc;ecc\"\n";
+        exit(0);
+    }
+
+    else {
+	print STDERR "checkbuilds: Unrecognized argument $_\n";
+	exit(1);
+    }
+}
+
+#
+# Set directories that have not been chosen.
+if ($instdir eq "") {
+    $instdir = "$tmpdir/cb/mpi2-inst";
+}
+# Make the builddir compatible with the installation directory
+if ($builddir eq "") {
+    $builddir = "$tmpdir/cb/mpich2";
+}
+
+# ---------------------------------------------------------------------------
+
+#
+# ---------------------------------------------------------------------------
+# Run one instance of the configuration
+sub RunTest {
+    my $makepgm;
+
+    $rc = chdir $builddir;
+    if (!$rc) {
+	print STDERR "Cannot change to $builddir\n";
+	return;
+    }
+    # Clean the installation and build directories
+    # Even better would be to remove the installation directory alltogether,
+    # but we should only do that if explicitly requested (we could
+    # *require* an empty directory for the tests instead)
+    if (-d "$instdir/lib") {
+	system "rm -f $instdir/lib/libmpich*.* $instdir/lib/libfmpich*.*";
+	system "rm -f $instdir/lib/libmpe*.a";
+    }
+    if (-d "$instdir/bin") {
+	system "rm -f $instdir/bin/mpi* $instdir/bin/mpd*";
+    }
+    if (-d "$builddir/lib") {
+	system "rm -f $builddir/lib/libmpich*.* $builddir/lib/libfmpich*.*";
+	system "rm -f $builddir/lib/libmpe*.a";
+    }
+    # 
+    # Create the with and enable options
+    #$enable_args = "--enable-strict";  # Only if compiler is gcc
+    # Chosen *without* replacement.  If an option is chosen twice, 
+    # then there will be fewer options
+    %chosenWith = ();
+    %chosenEnable = ();
+    if ($use_rand_args) {
+	$enable_args = &RandArgs( $n_enable, "enable_array", "enable", "disable" );
+	$with_args   = &RandArgs ( $n_with, "with_array", "with", "without" );
+	
+	# To set the environment, use the same code to set things up,
+	# then process the env array to set the environment
+	$env_args    = &RandArgs( $n_env, "env_array", "env" );
+    }
+    foreach my $en (split(/\s+/,$enable_args)) {
+	if ($en =~ /--enable-([-A-Za-z0-9=]*)/) {
+	    my $name = $1;
+	    if ($name =~ /(.*)=(.*)/) {
+		$chosenEnable{$1} = $2;
+		$name = $1;
+	    }
+	    else {
+		$chosenEnable{$name} = "yes";
+	    }
+	    print STDERR "setting chosen enable of $name to $chosenEnable{$name}\n" if $debug;
+	}
+    }
+    foreach my $en (split(/\s+/,$with_args)) {
+	if ($en =~ /--with-([-A-Za-z0-9=]*)/) {
+	    my $name = $1;
+	    if ($name =~ /(.*)=(.*)/) {
+		$chosenWith{$1} = $2;
+		$name = $1;
+	    }
+	    else {
+		$chosenWith{$name} = "yes";
+	    }
+	    print STDERR "setting chosen with of $name to $chosenWith{$name}\n" if $debug;
+	}
+    }
+
+    $envset = "";
+    %saveENV = %ENV;
+    foreach $_ (split(/ /,$env_args)) {
+	if (/--env-([^=]*)=(.*)/) {
+	    $name  = $1;
+	    $value = $2;
+	    # Replace <SP> with blanks
+	    $value =~ s/<SP>/ /g;
+	    # Grrr <SP> is a bad choice, since <> are shell metacharacters.
+	    # Allow --SP-- as an alternative
+	    $value =~ s/--SP--/ /g;
+	    print "Env $name = $value\n" if $debug;
+	    # Since most of these so far are programs, we should check to 
+	    # see if they're available.  Instead, we'll make the user
+	    # specify the valid values (see -envopt above)
+	    $ENV{$name} = $value;
+	    $envset .= "$name = $value; ";
+	}
+    }
+
+    # Get the version of make to use
+    if (defined($ENV{"MAKE"})) {
+	$makepgm = $ENV{"MAKE"};
+    }
+    else {
+	$makepgm = "make";
+    }
+
+    # Check configure location
+    if ( ! (-x "$srcdir/configure") && (-x "./configure") ) {
+	$srcdir = ".";
+    }
+    $config_status    = "none";
+    $make_status      = "none";
+    $globcheck_status = "none";
+    # usedname is from the old test to check for which routines
+    # were loaded for the simplest MPI Hello World program.
+    #$usedname_status  = "none";
+    $install_status   = "none";
+    $installcheck_status = "none";
+    $test_status      = "none";
+    if ($show) {
+	print "Configure: $enable_args $with_args $config_args\n";
+	if ($envset ne "") {
+	    print "Environment = $envset\n";
+	}
+    }
+    else {
+#	$enable_args .= " --enable-echo";
+	print $OUTFD $TestStart;
+	my $host = `uname -n`;
+	print $OUTFD "$TestHostStart$host$TestHostEnd";
+	my $user = $ENV{"LOGNAME"};
+	print $OUTFD "$TestUserStart$user$TestUserEnd";
+	my $date = `date "+%Y-%m-%d-%H-%M"`;
+	print $OUTFD "$TestDateStart$date$TestDateEnd";
+	unlink "Makefile";
+	print $OUTFD $ConfigStart;
+	@config = split( /\s+/, "$srcdir/configure --prefix=$instdir $enable_args $with_args $config_args" );
+	print $OUTFD "Configure: " . join(" ", @config) . "\n";
+	if ($envset ne "") {
+	    print $OUTFD "Environment = $envset\n";
+	}
+	$rc = &RunProgram( @config );
+	$config_status = $rc;
+	if (! -s "Makefile" && $rc == 0) {
+	    $config_status = "No Makefile";
+	    $rc = 1;
+	}
+	print $OUTFD $ConfigEnd;
+	# print "rc = $rc\n";
+	if ($rc == 0) {
+	    print $OUTFD $MakeStart;
+	    # Remove mpd and smpd just in case (see below)
+	    unlink "bin/mpd";
+	    unlink "bin/smpd";
+	    $rc = &RunProgram( $makepgm );
+	    print $OUTFD $MakeEnd;
+	    $make_status = $rc;
+	    if ($rc == 0) {
+		# Only perform these steps if the make succeeded
+
+# Deleted this test because it is no longer a design goal for MPICH
+# that it have no nonconforming global symbols
+
+# Deleted this test because it is no longer a design goal for MPICH2
+# to have a minimum memory and routine footprint.
+
+		# Install the libraries
+		print $OUTFD $MakeInstStart;
+		# Clean the install directory
+		$install_status = &RunProgram( "$makepgm install" );
+		if ($install_status) {
+		    my $cwd = `pwd`;
+		    chomp $cwd;
+		    print $OUTFD "Current directory is $cwd\n";
+		}
+		print $OUTFD $MakeInstEnd;
+		if ($install_status == 0) {
+		    # FIXME: Get mpd status from the with args ...
+		    if (-x "bin/mpd") {
+			$hasDemon   = 1;
+			$StartDemon = "RunMPD";
+			$StopDemon  = "StopMPD";
+		    }
+		    elsif (-x "bin/smpd") {
+			$hasDemon   = 1;
+			$StartDemon = "RunSMPD";
+			$StopDemon  = "StopSMPD";
+			# FIXME: Remaining problem: smpd needs to be told what
+			# port to use on the mpiexec line
+		    }
+		    # Try the install check target
+		    print $OUTFD $MakeInstcheckStart;
+		    $installcheck_status = &RunProgram( "$makepgm installcheck" );
+		    print $OUTFD $MakeInstcheckEnd;
+		    # Run the tests
+		    $test_status = &RunTestSuites;
+		}
+	    }
+	}
+	print $OUTFD $TestEnd;
+    }
+    %ENV = %saveENV;
+
+    print $OUTFD $SumStart;
+    print $OUTFD $SumConfigStart;
+    print $OUTFD $config_status;
+    print $OUTFD $SumConfigEnd;
+    print $OUTFD $SumMakeStart;
+    print $OUTFD $make_status;
+    print $OUTFD $SumMakeEnd;
+    print $OUTFD $SumGlobStart;
+    print $OUTFD $globcheck_status;
+    print $OUTFD $SumGlobEnd;
+    print $OUTFD $SumInstStart;
+    print $OUTFD $install_status;
+    print $OUTFD $SumInstEnd;
+    print $OUTFD $SumTestRunStart;
+    print $OUTFD $test_status;
+    print $OUTFD $SumTestRunEnd;
+    print $OUTFD $SumEnd;
+}
+
+# ---------------------------------------------------------------------------
+# Chosen *without* replacement.  If an option is chosen twice, 
+# then there will be fewer options
+sub RandArgs { 
+    my ($n_choice, $array_name, $optname, $negoptname ) = @_;
+    my @chosen = ( );
+    my $args = "";
+    my $array_len = $#$array_name;
+    my $idx;
+
+    print "select $n_choice\n" if $debug;
+    for (my $i=0; $i<$n_choice; $i++) {
+	$idx = int( rand (1 + $array_len) );
+	print "Found $idx\n" if $debug;
+	if ($chosen[$idx]) { next; }
+	$chosen[$idx] = 1;
+	@args = split( /;/, $$array_name[$idx] );
+	print "Trying $$array_name[$idx]\n" if $debug;
+	$name = $args[0];
+	if ($#args == 0) {
+	    # Only the name is provided.  Choose one of three
+	    # choices:
+	    #    No option (skip this one)
+	    #    just --$optname-$name
+	    #    just --$negoptname-$name (if non-null)
+	    $idx = int ( rand ( 3 ) );
+	    if ($idx == 0) {
+		$args .= " --$optname-$name";
+	    }
+	    elsif ($idx == 1 && $negoptname ne "") {
+		$args .= " --$negoptname-$name";
+	    }
+	    else {
+		# skip
+		;
+	    }
+	}
+	else {
+	    $idx = 1 + int( rand $#args );
+	    $value = $args[$idx];
+	    if ($value ne "") {
+		$args .=  " --$optname-$name=$value";
+	    }
+	    else {
+		$args .= " --$optname-$name";
+	    }
+	}
+    }
+    return $args;
+}
+    
+# ---------------------------------------------------------------------------
+# Timer support.  Time_left returns 1 if time remains, 0 otherwise
+$final_time = -1;
+sub set_time_left {
+    my $delta_time = $_[0];
+    $final_time = time + $delta_time;
+}
+sub time_left {
+    if ($final_time eq "" || $final_time == -1) {     return 1; }
+    if (time > $final_time) { return 0; }
+    else                    { return 1; }
+}
+
+# ---------------------------------------------------------------------------
+# cb for check build
+#
+# Eventually, we'll need
+#   bootstep
+#   compiler names
+#   unbootstep
+# for each test.
+#
+sub RunTestSuites {
+    my $run_status = 0;
+    my $r_status = 0;
+    # Start by adding "notest" files to any optional tests
+    if (!$has_cxx) {
+	&SkipCxxTestSuite;
+    }
+    foreach my $testname (split(':',$tests)) {
+	if ($testname eq "") { next; }
+	print $OUTFD $RunTestStart;
+	if ($is_xml) { 
+	    print $OUTFD "<TESTNAME>$testname</TESTNAME>\n";
+	    print $OUTFD "<TESTOUT>\n";
+	    }
+	else {
+	    print $OUTFD "Running test $testname...\n";
+	}
+	# Eventually, we should store the test routines in a hash, 
+	# with the key the test name and the value the name of the 
+	# routine.  
+	if ($testname eq "mpich") {
+	    &RunMpichTestSuite;
+	}
+	elsif ($testname eq "intel") {
+	    &RunIntelTestSuite;
+	}
+	elsif ($testname eq "mpicxx" && $has_cxx) {
+	    &RunCxxTestSuite;
+	}
+	elsif ($testname eq "mpich2") {
+	    &RunMPICH2TestSuite;
+	}
+	else {
+	    print $OUTFD "checkbuilds: Unrecognized test $testname\n";
+	}
+	if ($is_xml) { 
+	    print $OUTFD "</TESTOUT>\n";
+	    }
+	print $OUTFD $RunTestEnd;
+	if ($run_status != 0) { 
+	    # If any test fails, record its status.
+	    $r_status = $run_status;
+	}
+    }
+    return $r_status;
+}
+# ---------------------------------------------------------------------------
+sub RunMpichTestSuite {
+    my $nargs;
+    $cwd = `pwd`;
+    chomp $cwd;
+    my @config;
+
+    if ($mpich_test_dir eq "") {
+	$mpich_test_dir = "$tmpdir/cb/mpitest";
+    }
+
+# Make sure that the tests run past a failure to build an
+# executable.  Without this, the summary doesn't include
+# any tests in the same directory that completed.
+    $ENV{"MPITEST_CONTINUE"} = "always";
+
+    $rc = chdir $mpich_test_dir;
+    if (!$rc) {
+	#print STDERR "Cannot change to $mpich_test_dir\n";
+	return;
+    }
+
+    # A special hack for the io part 
+    # If there is no link or io directory, create one and populate it
+    if (! -f "io/Mfile.in") {
+	if (-s "$mpich1_dir/io/Mfile.in") {
+	    if (! -d "io" && ! -l "io") { 
+		`mkdir "io"`;
+	    }
+	    `cp $mpich1_dir/io/*.in io`;
+	}
+	elsif (-s "$srcdir/src/mpi/romio/test/Mfile.in") {
+	    if (! -d "io" && ! -l "io") { 
+		`mkdir "io"`;
+	    }
+	    `cp $srcdir/src/mpi/romio/test/*.in io`;
+	}
+	# Else, we can't find the IO tests, so we don't create the io 
+	# directory
+    }
+
+    # Create the arguments for the configure step
+    $nargs = 0;
+    $config[$nargs++] = "$mpich1_dir/configure";
+    $config[$nargs++] = "--prefix=$instdir";
+    $config[$nargs++] = "-mpilibname=mpich";
+    if (defined($chosenEnable{"romio"})) {
+	$config[$nargs++] = "--enable-io";
+    }
+    # f77 is now the default, so we should run with the f77 tests
+    # unless we did not build f77
+    if (! $has_f77) {  # !defined($chosenEnable{"f77"}) 
+	$config[$nargs++] = "--disable-f77";
+    }
+
+# This isn't right, since these need to use the compilation 
+# scripts.  We'll approximate this by trying to use the
+# compilation scripts if they're found
+    if (defined($ENV{"CC"})) {
+	$ccname = $ENV{"CC"};
+    }
+    if (defined($ENV{"FC"})) {
+	$fcname = $ENV{"FC"};
+    }
+# Note that there are no quotes in the following because
+# they are not needed (no shell evaluation here)
+    if (-x "$instdir/bin/mpicc" ) {
+	$config[$nargs++] = "-cc=$instdir/bin/mpicc";
+    }
+    else {
+	$config[$nargs++] = "-cc=$ccname -I$instdir/include -L$instdir/lib";
+    }
+    if (-x "$instdir/bin/mpif77" ) {
+	$config[$nargs++] = "-fc=$instdir/bin/mpif77";
+    }
+    else {
+	$config[$nargs++] = "-fc=$fcname -I$instdir/include -L$instdir/lib";
+    }
+    # Add $config[$nargs++] = "--enable-coverage"; 
+    # if we build mpich2 with the coverage switch.
+
+    if (defined($ENV{"MAKE"})) {
+	$makepgm = $ENV{"MAKE"};
+	$config[$nargs++] = "-make=$makepgm";
+    }
+    else {
+	$makepgm = "make";
+    }
+    #$config[$nargs++] = "--enable-echo";
+    %saveENV = %ENV;
+    $ENV{MPIRUN} = "$instdir/bin/mpiexec";
+    # This timeout needs to be made uniform for all mpiruns
+    # 3 minutes is enough for some of our slower machines
+    $ENV{MPIEXEC_TIMEOUT} = "180";
+    $rc = &RunProgram( @config );
+    if ($rc == 0) {
+	if ($hasDemon) {
+	    &$StartDemon;
+	}
+	$rc = &RunProgram( "$makepgm testing" );
+	$test_status = $rc;
+	if ($run_status == 0 && $rc != 0) { $run_status = $rc; }
+	if ($hasDemon) {
+	    &$StopDemon;
+	}
+    }
+    else {
+	$run_status = $rc;
+	print $OUTFD "Configure step for test failed\n";
+	print $OUTFD "Could not execute " . join(" ", @config) . "\n";
+	print $OUTFD "Environment was\n";
+	foreach $key (keys(%ENV)) {
+	    my $line = "$key = $ENV{$key}";
+	    if ($is_xml) { $line = &XMLify( $line ); }
+	    print $OUTFD "$line\n";
+	}
+    }
+    %ENV = %saveENV;
+    chdir $cwd;
+}
+# ---------------------------------------------------------------------------
+sub SkipCxxTestSuite {
+    if ($mpicxx_test_dir eq "") {
+	$mpicxx_test_dir = "$tmpdir/cb/mpicxxtest";
+    }
+    `date > $mpicxx_test_dir/notest`;
+}
+sub RunCxxTestSuite {
+    my $nargs = 0;
+    $cwd = `pwd`;
+    chomp $cwd;
+    my @config;
+
+    if ($mpicxx_test_dir eq "") {
+	$mpicxx_test_dir = "$tmpdir/cb/mpicxxtest";
+    }
+    #
+    # First, check for the mpicxx program
+    if (! -x "$instdir/bin/mpicxx" || !defined($chosenEnable{"cxx"})) { 
+	# Probably built without C++ support
+	$run_status = 0;  
+	&SkipCxxTestSuite;
+	return;
+    }
+    $rc = chdir $mpicxx_test_dir;
+    if (!$rc) {
+	#print STDERR "Cannot change to $mpicxx_test_dir\n";
+	return;
+    }
+    # Remove any "notest" file
+    if (-s "notest") { unlink "notest"; }
+    $config[$nargs++] = "$projects_dir/mpicxxtest/configure";
+    $config[$nargs++] = "--with-mpich=$instdir";
+    $config[$nargs++] = "--enable-xml";
+    if (defined($ENV{"MAKE"})) {
+	$makepgm = $ENV{"MAKE"};
+    }
+    else {
+	$makepgm = "make";
+    }
+    %saveENV = %ENV;
+    # This timeout needs to be made uniform for all mpiruns
+    # 3 minutes is enough for some of our slower machines
+    $ENV{MPIEXEC_TIMEOUT} = "180";
+    $rc = &RunProgram( @config );
+    if ($rc == 0) {
+	if ($hasDemon) {
+	    &$StartDemon;
+	}
+	$rc = &RunProgram( "$makepgm run-tests" );
+	$test_status = $rc;
+	if ($run_status == 0 && $rc != 0) { $run_status = $rc; }
+	# This step converts the summary.xml file into a valid XML file
+	# by adding the appropriate header and footer
+	$rc = &RunProgram( "$makepgm get-summary" );
+	if ($hasDemon) {
+	    &$StopDemon;
+	}
+    }
+    else {
+	$run_status = $rc;
+	print $OUTFD "Configure step for test failed\n";
+	print $OUTFD "Could not execute " . join(" ", @config) . "\n";
+	print $OUTFD "Environment was\n";
+	foreach $key (keys(%ENV)) {
+	    my $line = "$key = $ENV{$key}";
+	    if ($is_xml) { $line = &XMLify( $line ); }
+	    print $OUTFD "$line\n";
+	}
+    }
+    %ENV = %saveENV;
+    chdir $cwd;
+}
+
+sub RunIntelTestSuite {
+    my $nargs = 0;
+    my $testname = "newtestl";
+    $cwd = `pwd`;
+    chomp $cwd;
+
+    my @config;
+
+    if ($intel_test_dir eq "") {
+	$intel_test_dir = "$tmpdir/cb/MPITEST";
+    }
+
+    $rc = chdir $intel_test_dir;
+    if (!$rc) {
+	#print STDERR "Cannot change to $intel_test_dir\n";
+	return;
+    }
+
+    # Switch to using the checked-in version of the Intel test
+    $config[$nargs++] = "$projects_dir/IntelMPITEST/configure";
+    $config[$nargs++] = "--with-mpich2=$instdir";
+    # The Absoft Fortran compiler fails some tests if MAX_RANKS
+    # (used to dimension some arrays) is too large.  Since the 
+    # default tests never use more than 6 processes, setting a 
+    # maximum of 16 is safe.
+    $config[$nargs++] = "--enable-maxprocs=16";
+    # f77 is now the default, so we should run with the f77 tests
+    # unless we did not build f77
+    if (!$has_f77) {       # defined($chosenEnable{"f77"})
+	# Only run the C tests if we did not build fortran
+	$config[$nargs++] = "--disable-f77";
+	$testname = "newtestl_c";
+    }
+    if (defined($ENV{"MAKE"})) {
+	$makepgm = $ENV{"MAKE"};
+    }
+    else {
+	$makepgm = "make";
+    }
+    %saveENV = %ENV;
+    # This timeout needs to be made uniform for all mpiruns
+    # 3 minutes is enough for some of our slower machines
+    $ENV{MPIEXEC_TIMEOUT} = "180";
+    $rc = &RunProgram( @config );
+    if ($rc == 0) {
+	if ($hasDemon) {
+	    &$StartDemon;
+	}
+	$rc = &RunProgram( "$makepgm $testname" );
+	$test_status = $rc;
+	if ($run_status == 0 && $rc != 0) { $run_status = $rc; }
+	if ($hasDemon) {
+	    &$StopDemon;
+	}
+	if ($test_status != 0) {
+	    # Try to figure out what went wrong.  
+	    if (-s "Test/test.results") { 
+		&CopyFileToOutput( "Test/test.results" );
+	    }
+	    if (! -s "lib/libmpitestf_mpich2.a" && 
+		-s "lib/makeflib.log") {
+		&CopyFileToOutput( "lib/makeflib.log" );
+	    }
+	    if (! -s "lib/libmpitest_mpich2.a" && 
+		-s "lib/makeclib.log") {
+		&CopyFileToOutput( "lib/makeclib.log" );
+	    }
+	    
+	}
+    }
+    else {
+	$run_status = $rc;
+	print $OUTFD "Configure step for test failed\n";
+	print $OUTFD "Could not execute " . join(" ", @config) . "\n";
+	print $OUTFD "Environment was\n";
+	foreach $key (keys(%ENV)) {
+	    my $line = "$key = $ENV{$key}";
+	    if ($is_xml) { $line = &XMLify( $line ); }
+	    print $OUTFD "$line\n";
+	}
+    }
+    %ENV = %saveENV;
+    chdir $cwd;
+}
+
+sub RunMPICH2TestSuite {
+    my $nargs = 0;
+    my $makepgm;
+
+    $cwd = `pwd`;
+    chomp $cwd;
+
+    # This must match the directory into which mpich2 was built for
+    # us to use the configure there.
+    if ($mpich2_test_dir eq "") {
+	$mpich2_test_dir = "$builddir/test/mpi";
+    }
+
+    $rc = chdir $mpich2_test_dir;
+    if (!$rc) {
+	#print STDERR "Cannot change to $mpich2_test_dir\n";
+	return;
+    }
+
+    # MPICH2 tests are already built, so no configure step required
+    %saveENV = %ENV;
+    #
+    # Make sure that there a no leftovers
+    # Get the version of make to use
+    if (defined($ENV{"MAKE"})) {
+	$makepgm = $ENV{"MAKE"};
+    }
+    else {
+	$makepgm = "make";
+    }
+    &RunProgram( "$makepgm clean" );
+
+    # This timeout needs to be made uniform for all mpiruns
+    # 3 minutes is enough for some of our slower machines
+    $ENV{MPIEXEC_TIMEOUT} = "180";
+    if ($hasDemon) {
+	&$StartDemon;
+    }
+    # The MPICH2 test suite has a program for running the tests
+    $rc = &RunProgram( "./runtests -mpiexec=$instdir/bin/mpiexec -srcdir=$srcdir/test/mpi -tests=testlist -xmlfile=summary.xml" );
+    $test_status = $rc;
+    if ($run_status == 0 && $rc != 0) { $run_status = $rc; }
+    if ($hasDemon) {
+	&$StopDemon;
+    }
+    %ENV = %saveENV;
+    chdir $cwd;
+}
+# ---------------------------------------------------------------------------
+# RunProgram LIST
+sub RunProgram {
+    my $signal_num = 0;
+
+    if ($echoSteps) {
+	my $cmd = join(' ',@_);
+	my $curdir = `pwd`;
+	chomp $curdir;
+	print STDOUT "Running $cmd in $curdir\n";
+    }
+
+    # perl does not correctly handle ">>foo 2>&1" redirection in system
+    # correctly (some stderr escapes to the prior stderr).  This
+    # code attempts to do the correct thing.
+    # By reopening stdout and stderr, we can ensure that all of the 
+    # output goes to the specified files.  Unfortunately, we can't
+    # force perl to correctly flush files without open/close, so
+    # we close the output file before the fork.  This guarantees that
+    # the data is flushed.  We reopen it after the fork (which is implicit
+    # in the open)
+    if ($outfile ne "") {
+	close $OUTFD;
+    }
+
+    # We now use a different approach that uses a open that creates a 
+    # fork and associates file handle (CFD for Child FD).
+    @args = @_;
+    $pid = open(CFD,"-|");
+    if ($pid == 0) {
+	# we're the child
+        open STDIN, '/dev/null';
+	# Do we want to allow an output filter, e.g., to convert the 
+	# output into well-formed XML?
+        open STDERR, ">>&STDOUT";
+        exec @args;
+	die "Could not exec program $args[0]\n";
+    }
+    else {
+	# Read from the child
+	if ($outfile ne "") {
+	    open( $OUTFD, ">>$outfile" ) || die "Could not reopen $outfile for appending\n";
+	}
+	while (<CFD>) {
+	    if ($is_xml) {
+		$_ = &XMLify( $_ );
+	    }
+	    print $OUTFD $_;
+	}
+	# Closing a pipe implicitly waits for the command on the other
+	# end to complete, and puts the exit status into $?
+	close CFD;
+	# end of read from the child
+	# Note that this status is usually shifted right by 8, so
+	# we check for that
+        $rc = $?;
+	$signal_num = $rc & 127;
+	if ($rc > 255) { $rc = $rc >> 8; }
+	if ($signal_num != 0 && $report_signals) {
+	    print OUTFD "Process exited with signal $signal_num\n";
+	}
+    }
+    if ($echoSteps) {
+	print STDOUT "Completed command with status $rc\n";
+    }
+    return $rc;
+}
+# ---------------------------------------------------------------------------
+#
+# We need a variation of this that will start MPDs on mulitple hosts.
+# 
+sub RunMPD {
+    # We need to background the mpd.
+    # If there is already an mpd running (for us), we want to stop it
+    my $mpdlocalsock = "/tmp/mpd2.console_". $ENV{"LOGNAME"};
+    my $rc = 0;
+    if (-S $mpdlocalsock) {
+	system "$instdir/bin/mpdallexit";
+        $rc = $? >> 8;
+        if ($rc != 0) {
+            print $OUTFD "Error running $instdir/bin/mpdallexit before starting MPD ($mpdlocalsock exists)\n";
+        }
+    }
+    #system "$instdir/bin/mpd -d";
+    # Try to background mpd
+    system "$instdir/bin/mpd &";
+    $rc = $? >> 8;
+    if ($rc != 0) {
+	print $OUTFD "Error running $instdir/bin/mpd -d\n";
+    }
+    else {
+	print $OUTFD "Started mpd in demon mode\n";
+    }
+    # Wait for the mpd to start
+    sleep 1;
+    return;
+}
+sub StopMPD {
+    my $mpdlocalsock = "/tmp/mpd2.console_". $ENV{"LOGNAME"};
+    if (-S $mpdlocalsock) {
+	system "$instdir/bin/mpdallexit";
+        my $rc = $? >> 8;
+        if ($rc != 0) {
+            print $OUTFD "Error running $instdir/bin/mpdallexit in StopMPD ($mpdlocalsock exists)\n";
+        }
+    }
+}
+# ---------------------------------------------------------------------------
+#
+# We need a variation of this that will start SMPDs on mulitple hosts.
+# 
+sub RunSMPD {
+    system "$instdir/bin/smpd -port 10101 -s";
+    # FIXME: Placeholder for correct environment variable for providing
+    # mpiexec with the smpd port that should be used.
+    $ENV{"MPIEXEC_SMPD_PORT"} = 10101;
+    # print errors instead of prompting for input
+    $ENV{"MPIEXEC_NOPROMPT"} = 1;
+    # use only the local host
+    $ENV{"SMPD_OPTION_NO_DYNAMIC_HOSTS"} = 1;
+    $rc = $? >> 8;
+    if ($rc != 0) {
+	print $OUTFD "Error running $instdir/bin/smpd -port 10101 -s\n";
+    }
+    else {
+	print $OUTFD "Started mpd in demon mode\n";
+    }
+    sleep 1;
+    return;
+}
+sub StopSMPD {
+    `$instdir/bin/smpd -port 10101 -shutdown`;
+}
+# ---------------------------------------------------------------------------
+#
+# Change output style
+sub XMLStyle {
+    $TestStart     = "<BUILDTEST>\n";
+    $TestEnd       = "</BUILDTEST>\n";
+    $TestDateStart = "<DATE>\n";
+    $TestDateEnd   = "</DATE>\n";
+    $TestHostStart = "<HOST>\n";
+    $TestHostEnd   = "</HOST>\n";
+    $TestUserStart = "<USER>\n";
+    $TestUserEnd   = "</USER>\n";
+    $ConfigStart   = "<CONFIG>\n";
+    $ConfigEnd     = "</CONFIG>\n";
+    $MakeStart     = "<MAKE>\n";
+    $MakeEnd       = "</MAKE>\n";
+    $GlobNameStart = "<GLOBNAME>\n";
+    $GlobNameEnd   = "</GLOBNAME>\n";
+    $UsedNameStart = "<USEDNAMES>\n";
+    $UsedNameEnd   = "</USEDNAMES>\n";
+    $MakeInstStart = "<MAKEINST>\n";
+    $MakeInstEnd   = "</MAKEINST>\n";
+    $MakeInstcheckStart = "<MAKEINSTCHECK>\n";
+    $MakeInstcheckEnd   = "</MAKEINSTCHECK>\n";
+    $RunTestStart  = "<RUNTEST>\n";
+    $RunTestEnd    = "</RUNTEST>\n";
+    $SumStart      = "<SUMMARY>\n";
+    $SumEnd        = "</SUMMARY>\n";
+    $SumConfigStart = "<STATUS NAME=\"configure\">";
+    $SumConfigEnd   = "</STATUS>\n";
+    $SumMakeStart  = "<STATUS NAME=\"make\">";
+    $SumMakeEnd    = "</STATUS>\n";
+    $SumGlobStart  = "<STATUS NAME=\"globname\">";
+    $SumGlobEnd    = "</STATUS>\n";
+    $SumInstStart  = "<STATUS NAME=\"install\">";
+    $SumInstEnd    = "</STATUS>\n";
+    $SumTestRunStart = "<STATUS NAME=\"test\">";
+    $SumTestRunEnd   = "</STATUS>\n";
+}
+# ---------------------------------------------------------------------------
+#
+# Other options
+# --enable-threads={single, multiple}
+# ---------------------------------------------------------------------------
+# Here's the real code to execute
+# ---------------------------------------------------------------------------
+
+if ($rundir ne "") { 
+    chdir $rundir || die "could not change directory to $rundir\n";
+}
+
+# Select the output file
+if ($outfile ne "") {
+    if (! ($outfile =~ /^\//) ) {
+	# Ensure that we have an absolute directory for the output file
+	my $curdir = `pwd`;
+	chop $curdir;
+	$outfile = "$curdir/$outfile";
+    }
+    open( $OUTFD, ">$outfile" ) || die "Could not open $outfile for writing\n";
+    # Setting autoflush is not enough to ensure that output is 
+    # correctly ordered when child processes also write to the file.
+    # All of the shells get this right but unfortunately perl does not.
+    #autoflush $OUTFD 1;
+    if ($is_xml) {
+	print $OUTFD "<?xml version='1.0' ?>\n";
+	print $OUTFD "<?xml-stylesheet href=\"build.xsl\" type=\"text/xsl\" ?>\n";
+	print $OUTFD "<MPICH2BUILD>\n";
+    }
+}
+else {
+    $OUTFD = STDOUT;
+}
+
+# ---------------------------------------------------------------------------
+#
+# There are several ways to run the tests.  They are
+#   For a fixed number of times
+#   For a fixed length of time
+for ($test_count = 0; 
+     ($max_count < 0 || $test_count < $max_count) && &time_left;
+     $test_count++) {
+    if ($is_xml) {
+    }
+    else {
+	print $OUTFD "\nRunning test $test_count\n\n";
+    }
+    &RunTest;
+}
+if ($is_xml) {
+    print $OUTFD "</MPICH2BUILD>\n";
+}
+close $OUTFD;
+
+sub CopyFileToOutput {
+    my $filename = $_[0];
+    my $linecount = 256;
+
+    if (open( TESTFD, "<$filename" )) {
+	print $OUTFD "First $linecount lines of $filename\n";
+	while (<TESTFD>) {
+	    if ($linecount <= 0) { last; }
+	    if ($is_xml) {
+		$_ = &XMLify( $_ );
+	    }
+	    print $OUTFD $_;
+	    $linecount --;
+	}
+	close (TESTFD);
+    }
+}
+
+sub XMLify {
+    my $line = $_[0];
+    my $itcount = 0;
+    # xml-ify the line by escaping the special characters
+    $line =~ s/</\*AMP\*lt;/g;
+    $line =~ s/>/\*AMP\*gt;/g;
+    $line =~ s/&/\*AMP\*amp;/g;
+    $line =~ s/\*AMP\*/&/g;
+
+    # Handle non-printing ascii characters (e.g., ones that emacs would
+    # print as \200).  XML may refuse to display non-printing characters
+    # BUG IN PERL: The negated POSIX character class does not work!
+    # It isn't clear whether ANY of the POSIX character classes work
+    # while ($line =~ /^([:print:]*)([:^print:])(.*)/s) {
+    # Instead, we use an explicit ASCII range, and include tab characters
+    while ($line =~ /^([ -~\t]*)([^ -~\t\n])(.*)/s) {
+        # Grr.  This doesn't work either.  The character conversion
+	# gets lost.  However, this is still better than including
+	# a nonprinting character in the output
+        $char = $2;
+	$hexversion = sprintf( "\\%03x", $char );
+	$line = $1 . $hexversion . $3;
+	if ($itcount++ > 100) { last; }
+    }
+
+    return $line;
+}

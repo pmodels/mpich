@@ -1,0 +1,5 @@
+smvar_do_sharedlibs = 0
+mtest.o: mtest.cxx
+all-local: mtest.o
+INCLUDES = -I../../../src/include -I${top_srcdir}/src/include -I../../include \
+	 -I${srcdir}/../../include

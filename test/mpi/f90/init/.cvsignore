@@ -1,0 +1,8 @@
+Makefile.sm
+Makefile.in
+Makefile
+testlist
+*.o
+baseenvf90.f90
+*.gcda
+*.gcno

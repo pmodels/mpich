@@ -1,0 +1,148 @@
+\documentclass{report}
+\usepackage[dvipdfm]{hyperref}
+
+\begin{document}
+
+\section{Major Concepts}
+
+\subsection{Process Groups}
+
+\subsection{Virtual Connections}
+Question: What is the difference between the state on a connection and
+on a virtual connection?
+
+Datastructures for virtual connections:
+\begin{description}
+\item[\texttt{MPIDI\_VC\_t]A virtual connection to another process.
+Virtual connections do not exist in isolation (except possibly during
+connection setup).  All virtual connections belong to one or more tables of
+connections.
+\item[\texttt{MPIDI\_VCR]A table of virtual connection requests.  
+\end{description}
+
+\subsubsection{Operations on Virtual Connections}
+MPID\_VCRT\_CopyTable( old\_commptr, new\_commptr ) - copies both the
+local and remote tables (the local is defined only for
+intercommunicators)
+
+still needed copy local to remote.
+
+Need get lpid for each rank in communicator.  Need local,remote group
+versions.
+
+Need to understand the reference counting mechanism on vcs.  It looks
+like dups of table don't change the ref count, but that the
+construction of a new table does change the vc ref count.  This needs
+to be hidden from the programmer.
+
+intercomm merge needs to sent vc in a new vcr from an old one, by
+rank.
+Perhaps MPID\_VCR\_CopyConn( old comm, old rank, old is local, 
+                             new comm, new rank, new is local )
+and a range
+        MPID\_VCR\_CopyConnRange( old comm, rank range (e.g., 0,n-1),
+	... )
+
+These routines would be needed in comm\_create, comm\_split, commutil,
+intecomm\_create, and intercomm\_merge.  They're really part of the
+MPID (ADI3) spec, since they're used in the top-level code
+
+\section{Interfaces Between the Channels and the CH3 Device}
+There are three types of interfaces between a channel and the CH3 device:
+\begin{enumerate}
+  \item Functions that the channel must implement.  These include
+  basic communication routines such as \texttt{MPIDI_CH3\_istartmsg}
+  and initialization routines such as \texttt{MPIDI_CH3_Init}.  
+
+  \item Functions that the channel may implement or that the CH3
+  device may implement.  For example, the routines for opening and
+  closing MPI ports (used to implement MPI_Open_port and
+  MPI_Close_port).  A structure containing pointers to the appropriate
+  functions are used for this case, with a standard block of code that
+  is used to check that the pointers have been initialized (allowing
+  for lazy initialization of features).
+
+  \item Macros that the channel may use to define simple operations.
+  Macros are used in two ways:
+  \begin{enumerate}
+    \item To define channel specific operations in performance
+    critical code.  This avoids the overhead of a function call.
+    \item To define optional ``hook'' functions that are called only
+    if the channel requires them.  
+  \end{enumerate}
+\end{enumerate}
+
+\subsection{Required Functions}
+--- here goes a description of the functions that must be implemented
+
+\subsection{Optional Functions}
+
+Optional functions are usually set by calling a channel-provided
+initialization routine the first time the optional functions may be
+needed.  A relatively simple example is in \file{src/mpid\_port.c}.  
+
+A typical file that makes use of optional function will have the
+following declarations near the top of the file:
+\begin{verbatim}
+static int setup<modulename> = 1;
+static MPIDI_CH3_<modulename> = { <default value > };
+...
+
+\end{verbatim}
+
+Within each function, there is a step to ensure that the
+initialization function has been called, typically something like this
+\begin{verbatim}
+    if (setupPortFunctions) {
+	MPIDI_CH3_PortFnsInit( MPIDI_PORTFNS_VERSION, &portFns );
+	setupPortFunctions = 0;
+    }
+\end{verbatim}
+
+At the point where the function is used, a comment is also provided to
+point to the default or to a typical implementation of the function:
+\begin{verbatim}
+    if (portFns.OpenPort) {
+         mpi_errno = (*portFns.OpenPort)( ... );
+    }
+\end{verbatim}
+
+\subsubsection{Advanced Features}
+-- this will discuss using an ifdef to suppress the definition of the
+   default functions when the smallest, cleanest code is required.
+
+\subsection{Macros}
+
+For functions that are optional and are provided to allow a channel to 
+modify the behavior of standard operations such as connect and accept.
+\begin{verbatim}
+#ifdef MPIDI_CH3_<featurename>
+   ... code to call standard routine
+#endif
+\end{verbatim}
+
+--- to do: Provide a complete list of the featurenames and the
+    functions that must be provided when those features are selected
+
+\begin{description}
+\item[\texttt{MPIDI\_CH3\_HAS\_CONN\_ACCEPT\_HOOK}]
+The channel provides three routines that are called when completing a
+connection.  See ch3u\_comm\_connect.c and ch3u\_comm\_accept.c for
+details.
+
+\item[\texttt{MPIDI\_CH3\_HAS\_NO\_DYNAMIC\_PROCESS}]
+The channel does not support the operations needed to implement the
+dynamic process chapter of the MPI-2 standard, including
+\texttt{MPI\_Comm\_spawn}, \texttt{MPI\_Comm\_connect}, and
+\texttt{MPI\_Comm\_accept}. 
+
+\item[\texttt{MPIDI\_DEV\_IMPLEMENTS\_KVS}]
+The device implements a ``KVS'' cache that is used to provide
+connection information for process groups other than the initial
+(\texttt{MPI\_COMM\_WORLD} process group.  This is only used if
+\texttt{MPIDI\_CHE\_HAS\_NO\_DYNAMIC\_PROCESS} is \emph{not} defined.
+FIXME: We should probably eliminate this in favor of
+\texttt{MPIDI\_CH3\_HAS\_NO\_DYNAMIC\_PROCESS}.
+
+\end{description}
+\end{document}

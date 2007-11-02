@@ -1,0 +1,22 @@
+Multi-threaded implementation of RMA for distributed shared memory
+
+
+MPID_Win_fence(assert,win)
+
+* Mark the window epoch as closed so that we can
+  detect attempts to perform unsynchronized RMA operations.
+
+  NOTE: In the case of multiple threads calling RMA operations,
+  closing the window epochs without waiting for other threads to
+  finish their RMA calls will likely result in a race condition if the
+  application is not properly synchronized.  This is really an
+  application error, so in the interest of high-performance, we make
+  no attempt to minimize the non-determinism.
+
+* Atomically move the remote handler call counters to a buffer and
+  zero the counters.  This ensures that the 
+------------------------------------------------------------------------
+
+
+
+

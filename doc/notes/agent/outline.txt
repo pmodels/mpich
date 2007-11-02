@@ -1,0 +1,158 @@
+* Definitions
+
+  - MPI buffer - count, datatype, memory pointer
+
+* Communication subsystem capabilities (requirements)
+
+  - general MPI messaging (MPI_*send() and MPI_*recv())
+
+    - sending messages
+
+      - if send-side MPI buffer is sufficiently contiguous, send data
+        directly from MPI buffer
+
+      - if RMA capabilities exist and MPI receive buffer is
+        sufficiently contiguous, write message data directly into MPI
+        receive buffer
+
+    - receiving messages
+
+      - match incoming messages with posted receives
+
+        - handle posting and matching of wildcard (source) receives
+
+      - special handling for already posted receives
+
+        - if MPI buffer is sufficiently contiguous, receive directly
+          into MPI buffer
+
+        - if user buffer is non-contiguous, unpack data as portions of
+          message data are received
+
+  - persistent MPI messaging (MPI_*_init())
+
+    - for some network interfaces, we should be able to perform
+      one-time initialization to eliminate unnecessary data copies
+      (manipulating the MPI buffer directly)
+
+  - collective operations
+
+    - send portions of a MPI buffer
+
+    - receive portions of a MPI buffer
+
+    - forward portions of an incoming message
+
+      Use pipelining instead of store and forward to increase network
+      utilization (and thus performance).
+
+      Potentially multicast the same portion to multiple remote
+      processes.  Nick's prototype shows this is a big win for TCP and
+      vMPI.  I suspect it is a big win in general.
+
+    - share buffers between methods to avoid copying data during forward
+      operations
+
+    - perform MPI computations (as defined by MPI_Reduce()) while
+      receiving/unpacking data
+
+      Computations may need to be performed at intermediate processes
+      (processes not receiving any of the results) which implies that
+      computations may need to be performed without the presence of a
+      user provided MPI buffer (or datatype).
+
+    - handle multiple simultaneous collective operations on the same
+      communicator (multi-threaded MPI)
+
+      We should be able to use the tag field and a rolling counter to
+      separate messages from independent collective operations.  This
+      would allow us to use the same matching mechanisms that we use
+      for general MPI messaging.
+
+  - remote memory operations
+
+    - aggregate operations (from the same exposure epoch?) into a
+      single communication
+
+    - perform MPI computations on remote memory
+
+    - match communicated operations with exposure epochs (either
+      explicit or implied)
+
+      Is context sufficient for this?  Do we need a tag to separate
+      independent access/exposure epochs?
+
+  - unreliable communication and QoS 
+
+    Theoretically, a MPI communicator could be tagged to allow
+    unrealiable delivery, QoS, etc.  We haven't thought much what
+    impact this has on our design, but we probably don't want to
+    prevent these capabilites.
+
+* Communication subsystem components
+
+  - virtual connnections
+
+    allows late binding to a communication device (method)
+
+    provides a function tables for all connection/communication
+    related interfaces
+
+  - progress engine
+
+  - matching incoming messages to posted requests
+
+  - message level flow control
+
+  - shared network buffer management
+
+  - network communication
+
+    - network flow control
+
+* Message level flow control
+
+  For simple messaging operations, message envelope meta-data must be
+  sent to the remote process immediately.  Failure to do so may cause
+  the remote process to block indefinitely awaiting a particular
+  message.  However, the method also needs to balance messaging
+  performance (sending the entire message immediately) with the memory
+  used by the remote process to buffer messages not already posted by
+  the remote process.
+
+  Messages are typically converted (by the method?) to one of three
+  types to obtain this balance: short, eager, and rendezvous.
+  Conversion to a particular message type may depend on the memory
+  availability of the remote process.
+
+  NOTE: Some communication interfaces such as vendor MPI will do this
+  automatically, which means we shouldn't force message level flow
+  control upon the method.
+
+* Method
+
+  - definition of a method
+
+    A method presents an interface which allows upper layers to convey
+    actions it wishes to the method perform in the context of a
+    virtual connection.  These actions consist of sending and
+    receiving messages, performing remote memory operations, and
+    providing data and buffers to other methods.
+
+  - flow control at the message level
+
+  - flow control at the network buffer (packet) level
+
+    Some methods need to worry about network buffer availability at
+    remote process.
+
+  - reliability
+
+    Under a default environemnt, MPI messages are inherently reliable
+    which means that some methods may need concern themselves with
+    acknowledgments and retransmission if the underlying network does
+    not guarantee reliability.
+
+
+  - matching incoming messages to requests
+

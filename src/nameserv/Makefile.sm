@@ -1,0 +1,3 @@
+SUBDIRS_nameserv_name = file mpd pmi
+SUBDIRS = @nameserv_name@  .
+OTHER_DIRS = test

@@ -1,0 +1,5 @@
+infloop_SOURCES     = infloop.c
+crashtest_SOURCES   = crashtest.c
+threads_SOURCES     = threads.c
+mpiexectest_SOURCES = mpiexectest.c
+exittest_SOURCES    = exittest.c

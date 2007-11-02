@@ -1,0 +1,16 @@
+INCLUDES = -I../include -I${srcdir}/../include
+DEPADD = @MPILIBLOC@
+smvar_do_sharedlibs = 0
+
+transp-datatype_SOURCES = transp-datatype.c
+non_zero_root_SOURCES = non_zero_root.c
+sendrecvl_SOURCES       = sendrecvl.c
+twovec_SOURCES          = twovec.c
+dtpack_SOURCES          = dtpack.c
+
+# A special testing target to simplify running just the performance tests
+testing:
+	../runtests -srcdir=$(srcdir) -tests=testlist \
+		   -mpiexec=$(bindir)/mpiexec \
+		   -xmlfile=summary.xml
+

@@ -1,0 +1,37 @@
+mpiexec_SOURCES = mpiexec.c 
+# Some C compilers won't take ../libfoo.a as a library, so we use
+# -Ldir -llib for each of the libraries instead.
+# Force the use of the static, not shared library for mpich and for mpiexec
+mpiexec_LDADD = ../util/libmpiexec.a ../../../lib/libmpich.a
+mpiexec_DEPADD = ../util/libmpiexec.a 
+INCLUDES = -I../../include -I${master_top_srcdir}/src/include \
+    -I../../pmi/simple -I${master_top_srcdir}/src/pmi/simple \
+	-I${master_top_srcdir}/src/pm/util 
+install_BIN = mpiexec
+
+clean-local:
+	@-(cd ../util && $(MAKE) clean)
+distclean-local:
+	@-rm -f forkerconf.h
+
+# Use the mpich2-build-install target to include mpiexec in the build bin
+# directory (all pm's require these targets)
+mpich2-build-install: install
+mpich2-build-uninstall: uninstall
+
+# A special alternate installation target when using multiple process managers
+install-alt: mpiexec
+	$(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) mpiexec $(DESTDIR)${bindir}/mpiexec.gforker
+
+doc_sources = mpiexec.txt
+DOCDESTDIRS = html:www/www1,man:man/man1,latex:doc/refman
+docargs_ADD       = ${master_top_srcdir}/doc/mansrc/cmdnotes
+doc_HTML_SOURCES  = ${doc_sources}
+doc_MAN_SOURCES   = ${doc_sources}
+doc_LATEX_SOURCES = ${doc_sources}
+
+# We use a dummy dependency to ensure that we always go to the util
+# directory to see if anything needs to be done	
+../util/libmpiexec.a: dummy
+dummy:
+	cd ../util && $(MAKE)

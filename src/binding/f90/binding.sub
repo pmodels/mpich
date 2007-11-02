@@ -1,0 +1,93 @@
+#! /usr/bin/perl
+#
+# This file contains common routines for reading a file of function prototypes
+# (such as mpi.h) and extracting the function prototypes.  
+
+# 
+# ReadInterface( filename, routineprefix, routinepattern, routinehash )
+# Read file filename, look for routines that have a given prefix and name
+# pattern, and insert that routine into routinehash with value the 
+# arguments of the routine.
+
+#$Finalized_args = "bool";
+
+sub ReadInterface {
+    my $prototype_file = $_[0];
+    my $routine_prefix = $_[1];
+    my $routine_pattern = $_[2];
+    my $routine_hash    = $_[3];
+    # $debug is a global variable
+    
+    open( FD, "<$prototype_file" ) || die "Cannot open $prototype_file\n";
+
+    # Skip to prototypes
+    while (<FD>) {
+	if ( /\/\*\s*Begin Prototypes/ ) { last; }
+    }
+
+    # Read each one
+    while (<FD>) {
+	# Remove any comments
+	s/\/\*.*\*\///g;
+	print $_ if $debug;
+	if (/\/\*\s*End Prototypes/) { last; }
+	if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
+	    $routine_name = $1;
+	    $args = $2;
+	    while (! ($args =~ /;/)) {
+		$args .= <FD>;
+	    }
+	    $args =~ s/\)\s*;//g;
+	    $args =~ s/[\r\n]*//g;
+	    # remove qualifiers from args
+	    $args =~ s/\s*const\s+//g;
+	    # Eventually, we'll create a new file here.  
+	    # For C++, we may create similar files by looking up 
+	    # the corresponding routines.
+	    # Check for duplicates in the list of routines
+	    if (defined($$routine_hash{$routine_name})) {
+		print STDERR "Duplicate prototypes for $routine_name\n";
+		next;
+	    }
+	    # Clear variables
+	    $args = &clean_args( $args );
+#	    # Handle special cases
+#	    my $testname = $routine_name . "_args";
+#	    if (defined($$testname)) {
+#		print "replacing args for $routine_name\n" if $gDebug;
+#		$args = $$testname;
+#	    }
+	    $$routine_hash{$routine_name} = $args;
+	}
+    }
+}
+
+#
+# Look through $args for parameter names (foo\s+name)
+# and remove them
+sub clean_args {
+    my $args = $_[0];
+    my $newargs = "";
+    my $comma = "";
+    for my $parm (split(',',$args)) {
+	# Remove any leading or trailing spaces
+	$parm =~ s/^\s*//;
+	$parm =~ s/\s*$//;
+	# Handle parameters with parameter names
+	# First if handles "int foo", second handles "int *foo"
+	if ( ($parm =~ /^([A-Za-z0-9_]+)\s+[A-Za-z0-9_]+$/) ) {
+	    $parm = $1;
+	}
+	elsif ( ($parm =~ /([A-Za-z0-9_]+\s*\*)\s*[A-Za-z0-9_]+$/) ) {
+	    $parm = $1;
+	}
+	$newargs .= "$comma$parm";
+	$comma = ",";
+    }
+    print STDERR "$newargs\n" if $debug;
+    $args = $newargs;
+    return $args;
+}
+
+# Since this is a required package, indicate that we are successful.
+return 1;

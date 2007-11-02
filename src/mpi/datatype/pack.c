@@ -1,0 +1,220 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "mpiimpl.h"
+
+/* -- Begin Profiling Symbol Block for routine MPI_Pack */
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_Pack = PMPI_Pack
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_Pack  MPI_Pack
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_Pack as PMPI_Pack
+#endif
+/* -- End Profiling Symbol Block */
+
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Pack
+#define MPI_Pack PMPI_Pack
+
+#endif
+
+#undef FUNCNAME
+#define FUNCNAME MPI_Pack
+
+/*@
+    MPI_Pack - Packs a datatype into contiguous memory
+
+   Arguments:
++  void *inbuf - input buffer
+.  int incount - input count
+.  MPI_Datatype datatype - datatype
+.  void *outbuf - output buffer
+.  int outcount - output count
+.  int *position - position
+-  MPI_Comm comm - communicator
+
+  Notes (from the specifications):
+
+  The input value of position is the first location in the output buffer to be
+  used for packing.  position is incremented by the size of the packed message,
+  and the output value of position is the first location in the output buffer
+  following the locations occupied by the packed message.  The comm argument is
+  the communicator that will be subsequently used for sending the packed
+  message.
+
+
+.N Fortran
+
+.N Errors
+.N MPI_SUCCESS
+@*/
+int MPI_Pack(void *inbuf,
+	     int incount,
+	     MPI_Datatype datatype,
+	     void *outbuf, 
+	     int outcount,
+	     int *position,
+	     MPI_Comm comm)
+{
+    static const char FCNAME[] = "MPI_Pack";
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Aint first, last;
+    MPID_Comm *comm_ptr = NULL;
+    MPID_Segment *segp;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_PACK);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+    
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_PACK);
+
+    /* Validate parameters, especially handles needing to be converted */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    MPIR_ERRTEST_COMM(comm, mpi_errno);
+            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+        }
+        MPID_END_ERROR_CHECKS;
+    }
+#   endif
+    
+    /* Convert MPI object handles to object pointers */
+    MPID_Comm_get_ptr(comm, comm_ptr);
+    
+    /* Validate parameters and objects (post conversion) */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    MPIR_ERRTEST_COUNT(incount,mpi_errno);
+	    MPIR_ERRTEST_COUNT(outcount,mpi_errno);
+	    /* NOTE: inbuf could be null (MPI_BOTTOM) */
+	    if (incount > 0) {
+		MPIR_ERRTEST_ARGNULL(outbuf, "output buffer", mpi_errno);
+	    }
+	    MPIR_ERRTEST_ARGNULL(position, "position", mpi_errno);
+            /* Validate comm_ptr */
+	    /* If comm_ptr is not valid, it will be reset to null */
+            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
+	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+	    if (mpi_errno == MPI_SUCCESS) {
+		if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+		    MPID_Datatype *datatype_ptr = NULL;
+
+		    MPID_Datatype_get_ptr(datatype, datatype_ptr);
+		    MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+		    MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+		}
+	    }
+	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+        }
+        MPID_END_ERROR_CHECKS;
+    }
+#   endif /* HAVE_ERROR_CHECKING */
+
+#ifdef HAVE_ERROR_CHECKING /* IMPLEMENTATION-SPECIFIC ERROR CHECKS */
+    {
+	int tmp_sz;
+
+	MPID_BEGIN_ERROR_CHECKS;
+	/* Verify that there is space in the buffer to pack the type */
+	MPID_Datatype_get_size_macro(datatype, tmp_sz);
+
+	if (tmp_sz * incount > outcount - *position) {
+	    if (*position < 0) {
+		MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_ARG,
+				     "**argposneg","**argposneg %d",
+				     *position)
+	    }
+	    else if (outcount < 0) {
+		MPIU_ERR_SETANDJUMP2(mpi_errno,MPI_ERR_ARG,"**argneg",
+				     "**argneg %s %d","outcount",outcount);
+	    }
+	    else if (incount < 0) {
+		MPIU_ERR_SETANDJUMP2(mpi_errno,MPI_ERR_ARG,"**argneg",
+				     "**argneg %s %d","incount",incount);
+	    }
+	    else {
+		MPIU_ERR_SETANDJUMP2(mpi_errno,MPI_ERR_ARG,"**argpackbuf",
+				     "**argpackbuf %d %d", tmp_sz * incount, 
+				     outcount - *position );
+	    }
+	}
+	MPID_END_ERROR_CHECKS;
+    }
+#endif /* HAVE_ERROR_CHECKING */
+    
+    /* ... body of routine ... */
+    if (incount == 0) {
+	goto fn_exit;
+    }
+    
+    /* TODO: CHECK RETURN VALUES?? */
+    /* TODO: SHOULD THIS ALL BE IN A MPID_PACK??? */
+    segp = MPID_Segment_alloc();
+    /* --BEGIN ERROR HANDLING-- */
+    if (segp == NULL)
+    {
+	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+					 MPIR_ERR_RECOVERABLE,
+					 FCNAME,
+					 __LINE__,
+					 MPI_ERR_OTHER,
+					 "**nomem",
+					 "**nomem %s",
+					 "MPID_Segment");
+	goto fn_fail;
+    }
+    /* --END ERROR HANDLING-- */
+    mpi_errno = MPID_Segment_init(inbuf, incount, datatype, segp, 0);
+    /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno != MPI_SUCCESS)
+    {
+	goto fn_fail;
+    }
+    /* --END ERROR HANDLING-- */
+
+    /* NOTE: the use of buffer values and positions in MPI_Pack and in
+     * MPID_Segment_pack are quite different.  See code or docs or something.
+     */
+    first = 0;
+    last  = SEGMENT_IGNORE_LAST;
+
+    MPID_Segment_pack(segp,
+		      first,
+		      &last,
+		      (void *) ((char *) outbuf + *position));
+
+    *position += (int) last;
+
+    MPID_Segment_free(segp);
+
+    /* ... end of body of routine ... */
+    
+  fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_PACK);
+    return mpi_errno;
+    
+  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+	mpi_errno = MPIR_Err_create_code(
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_pack",
+	    "**mpi_pack %p %d %D %p %d %p %C", inbuf, incount, datatype, outbuf, outcount, position, comm);
+    }
+#   endif
+    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}

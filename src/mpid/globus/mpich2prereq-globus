@@ -1,0 +1,496 @@
+MPIG_GRID_PKG_NAME="Globus"
+
+#
+# get configure options specific to Globus
+#
+mpig_enable_globus_duroc=default
+mpig_enable_globus_rendezvous=default
+mpig_enable_globus_usage=default
+mpig_enable_globus_xio=default
+
+for arg in ${ac_configure_args} ; do
+    arg=`echo ${arg} | sed -e 's/^'"'"'\(.*\)'"'"'$/\1/'`
+    case ${arg} in
+        --with-globus-flavor=*)
+        with_globus_flavor=`echo ${arg} | sed 's/^[^=]*=//'`
+        ;;
+        --disable-globus-duroc)
+        mpig_enable_globus_duroc=no
+        ;;
+        --enable-globus-duroc)
+        mpig_enable_globus_duroc=yes
+        ;;
+        --disable-globus-rendezvous)
+        mpig_enable_globus_rendezvous=no
+        ;;
+        --enable-globus-rendezvous)
+        mpig_enable_globus_rendezvous=yes
+        ;;
+        --disable-globus-usage)
+        mpig_enable_globus_usage=no
+        ;;
+        --enable-globus-usage)
+        mpig_enable_globus_usage=yes
+        ;;
+        --disable-globus-xio)
+        mpig_enable_globus_xio=no
+        ;;
+        --enable-globus-xio)
+        mpig_enable_globus_xio=yes
+        ;;
+        --enable-mpig-debugging)
+        mpig_enable_debugging=yes
+        ;;
+        --disable-mpig-debugging)
+        mpig_enable_debugging=no
+        ;;
+    esac
+done
+
+if test -z "${with_globus_flavor}" ; then
+    mpig_msg_error $LINENO "a flavor of Globus must be specified.  This is accomplished by adding the " \
+        "--with-globus-flavor=<FLAVOR> to the configure command line."
+fi
+
+#
+# verify that GLOBUS_LOCATION points at a valid installation of globus
+#
+if test -z "${GLOBUS_LOCATION}" ; then
+
+    mpig_msg_error $LINENO "the environment variable GLOBUS_LOCATION must be set before configuring MPICH2 with the " \
+        "${device_name} device."
+fi
+
+if test ! -d "${GLOBUS_LOCATION}" ; then
+    mpig_msg_error $LINENO "${GLOBUS_LOCATION} does not exist.  Please verify that the environment variable " \
+        "GLOBUS_LOCATION properly specifies the location of your Globus installation."
+fi
+
+MPIG_GMH_CMD="${GLOBUS_LOCATION}/bin/globus-makefile-header"
+if test ! -f "${MPIG_GMH_CMD}" ; then
+    mpig_msg_error $LINENO "${MPIG_GMH_CMD} does not exist.  Globus may not be installed correctly."
+fi
+
+if test ! -x "${MPIG_GMH_CMD}" ; then
+    mpig_msg_error $LINENO "${MPIG_GMH_CMD} is not executable.  Globus may not be installed correctly."
+fi
+
+#
+# create the makefile for extract settings from Globus
+#
+MPIG_GMH_PKGS="globus_common"
+HAVE_GLOBUS_COMMON_MODULE=yes
+export HAVE_GLOBUS_COMMON_MODULE
+
+if test "$mpig_enable_globus_duroc" != "no" ; then
+    MPIG_GMH_PKGS="$MPIG_GMH_PKGS globus_duroc_runtime globus_duroc_bootstrap"
+fi
+if test "$mpig_enable_globus_rendezvous" != "np" ; then
+    MPIG_GMH_PKGS="$MPIG_GMH_PKGS globus_rendezvous"
+fi
+if test "$mpig_enable_globus_usage" != "no" ; then
+    MPIG_GMH_PKGS="$MPIG_GMH_PKGS globus_usage"
+fi
+if test "$mpig_enable_globus_xio" != "no" ; then
+    MPIG_GMH_PKGS="$MPIG_GMH_PKGS globus_dc globus_xio"
+    HAVE_GLOBUS_DC_MODULE=yes
+    export HAVE_GLOBUS_DC_MODULE
+fi
+MPIG_GLOBUS_SETTINGS_MK=${MPIG_BUILD_DIR}/.globus-settings.mk
+MPIG_GLOBUS_SETTINGS_ERR=${MPIG_BUILD_DIR}/.globus-settings.err
+mpig_msg_check $LINENO "collecting information from Globus via globus-makefile-header"
+${MPIG_GMH_CMD} --flavor=${with_globus_flavor} ${MPIG_GMH_PKGS} >${MPIG_GLOBUS_SETTINGS_MK} 2>${MPIG_GLOBUS_SETTINGS_ERR}
+if test $? -ne 0 -o -s "${MPIG_GLOBUS_SETTINGS_ERR}" ; then
+    mpig_msg_result $LINENO "failed!"
+    mpig_msg_error_noexit $LINENO "information collection from Globus for flavor \"${with_globus_flavor}\" failed.  " \
+        "See config.log for more details."
+    mpig_msg_include_file $LINENO ${MPIG_GLOBUS_SETTINGS_ERR}
+    rm -f ${MPIG_GLOBUS_SETTINGS_MK} ${MPIG_GLOBUS_SETTINGS_ERR}
+    if test ! -d ${GLOBUS_LOCATION}/etc/globus_core ; then
+        mpig_msg_error $LINENO "MPIg requires the globus_core module which is not included in the binary distribution of " \
+            "Globus.  Please install globus_core using the globus_core may need to be installed using the source package."
+    fi
+    exit 1
+else
+    mpig_msg_result $LINENO "done"
+fi
+
+cat >>${MPIG_GLOBUS_SETTINGS_MK} <<EOF
+
+# Are the Globus libraries built for use with a vendor implementation of MPI?
+vmpi:
+	@mpi=\$(GLOBUS_MP); if test "\$\${mpi}" = "mpi" ; then echo "yes"; else echo "no"; fi
+
+# Are the Globus libraries multi-threaded?
+multi-threaded:
+	@thr=\$(GLOBUS_THREADS); if test "\$\${thr}" = "none" -o -z "\$\${thr}" ; then echo "no"; else echo "yes"; fi
+
+# Are the desired Globus modules installed for the selected flavor?
+duroc-installed:
+	@if test -n "\$(GLOBUS_DUROC_RUNTIME_VERSION)" ; then echo "yes"; else echo "no"; fi
+
+rendezvous-installed:
+	@if test -n "\$(GLOBUS_C_RENDEZVOUS_CLIENT_BINDINGS_VERSION)" ; then echo "yes"; else echo "no"; fi
+
+xio-installed:
+	@if test -n "\$(GLOBUS_XIO_VERSION)" ; then echo "yes"; else echo "no"; fi
+
+xio-installed-version:
+	@if test -n "\$(GLOBUS_XIO_VERSION)" ; then echo "\$(GLOBUS_XIO_VERSION)"; else echo "0.0"; fi
+
+usage-installed:
+	@if test -n "\$(GLOBUS_USAGE_VERSION)" ; then echo "yes"; else echo "no"; fi
+
+usage-installed-version:
+	@if test -n "\$(GLOBUS_USAGE_VERSION)" ; then echo "\$(GLOBUS_USAGE_VERSION)"; else echo "0.0"; fi
+
+# Are the Globus libraries built with debugging enabled?
+debug:
+	@dbg=\$(GLOBUS_DEBUG); if test "\$\${dbg}" = "yes" ; then echo "yes"; else echo "no"; fi
+
+# Libraries and linking flags
+ldflags:
+	@echo \$(GLOBUS_LDFLAGS)
+
+libs:
+	@echo \$(GLOBUS_PKG_LIBS) \$(GLOBUS_LIBS)
+
+# C compiler and flags
+cc:
+	@echo \$(GLOBUS_CC)
+
+cflags:
+	@echo \$(GLOBUS_CFLAGS) \$(GLOBUS_INCLUDES)
+
+# C++ compiler and flags
+cxx:
+	@echo \$(GLOBUS_CXX)
+
+cxxflags:
+	@echo \$(GLOBUS_CXXFLAGS) \$(GLOBUS_INCLUDES)
+
+# F77 compiler and flags
+f77:
+	@echo \$(GLOBUS_F77)
+
+f77flags:
+	@echo \$(GLOBUS_F77FLAGS) \$(GLOBUS_INCLUDES)
+
+# F90 compiler and flags
+f90:
+	@echo \$(GLOBUS_F90)
+
+f90flags:
+	@echo \$(GLOBUS_F90FLAGS) \$(GLOBUS_INCLUDES)
+EOF
+# sed -e "/@MPIG_GLOBUS_HEADER_MK@/r ${MPIG_GLOBUS_HEADER_MK}" -e 's-@MPIG_GLOBUS_HEADER_MK@--' \
+#     <${MPIG_GLOBUS_SETTINGS_MK_IN} >${MPIG_GLOBUS_SETTINGS_MK}
+#     rm -f ${MPIG_GLOBUS_HEADER_MK} ${MPIG_GLOBUS_HEADER_ERR}
+
+#
+# function to extract globus settings from the previously created makefile
+#
+MPIG_MAKE="${MAKE:-make} GLOBUS_FLAVOR_NAME=${with_globus_flavor}"
+mpig_get_globus_setting()
+{
+    eval $1="\"`${MPIG_MAKE} -f ${MPIG_GLOBUS_SETTINGS_MK} $2 | sed -e 's/^ *//' -e 's/ *$//'`\""
+    if test $? != 0 ; then
+        mpig_msg_error $LINENO "${MPIG_GLOBUS_SETTINGS_MK} does not contain the target \"$2\".  This is an internal " \
+            "error.  Please report this problem to mpi@globus.org."
+    fi
+    #eval echo "\"$1 ($2) set to \${$1}\""
+}
+
+#
+# determine if the globus XIO module is installed
+#
+mpig_msg_check $LINENO "checking if Globus XIO module is installed"
+if test "$mpig_enable_globus_xio" != "yes" ; then
+    mpig_get_globus_setting HAVE_GLOBUS_XIO_MODULE xio-installed
+    mpig_msg_result $LINENO "${HAVE_GLOBUS_XIO_MODULE}"
+
+    if test "$HAVE_GLOBUS_XIO_MODULE" != "yes" ; then
+        mpig_msg_error $LINENO "The Globus XIO module has not been installed for the specifed flavor " \
+        "${with_globus_flavor}.  This module is required.  Please install the XIO module or select a different flavor " \
+        "for which the module has already been installed."
+    fi
+    mpig_msg_check $LINENO "extracting Globus XIO module version"
+    mpig_get_globus_setting HAVE_GLOBUS_XIO_VERSION xio-installed-version
+    mpig_msg_result $LINENO "${HAVE_GLOBUS_XIO_VERSION}"
+    export HAVE_GLOBUS_XIO_VERSION
+    if test "$HAVE_GLOBUS_XIO_VERSION" == "0.0" ; then
+        mpig_msg_error $LINENO "The Globus XIO module version reported by Globus is invalid."
+    fi
+else
+    HAVE_GLOBUS_XIO_MODULE=no
+    mpig_msg_result $LINENO "diabled by user."
+fi
+export HAVE_GLOBUS_XIO_MODULE
+
+#
+# determine if the the globus usage module is installed
+#
+mpig_msg_check $LINENO "checking if Globus Usage module is installed"
+if test "$mpig_enable_globus_usage" != "yes" ; then
+    mpig_get_globus_setting HAVE_GLOBUS_USAGE_MODULE usage-installed
+    mpig_msg_result $LINENO "${HAVE_GLOBUS_USAGE_MODULE}"
+    if test "$HAVE_GLOBUS_USAGE_MODULE" = "yes" ; then
+        mpig_msg_check $LINENO "extracting Globus Usage module version"
+        mpig_get_globus_setting HAVE_GLOBUS_USAGE_VERSION usage-installed-version
+        mpig_msg_result $LINENO "${HAVE_GLOBUS_USAGE_VERSION}"
+        export HAVE_GLOBUS_USAGE_VERSION
+        if test "$HAVE_GLOBUS_USAGE_VERSION" == "0.0" ; then
+        mpig_msg_error $LINENO "The Globus Usage module version reported by Globus is invalid."
+        fi
+    fi
+else
+    HAVE_GLOBUS_USAGE_MODULE=no
+    mpig_msg_result $LINENO "diabled by user."
+fi
+export HAVE_GLOBUS_USAGE_MODULE
+
+mpig_msg_check $LINENO "checking if the Globus pre-WS job management modules are installed"
+if test "${mpig_enable_globus_duroc}" != "yes" ; then
+    mpig_get_globus_setting HAVE_GLOBUS_DUROC_MODULE duroc-installed
+    mpig_msg_result $LINENO "${HAVE_GLOBUS_DUROC_MODULE}"
+
+    #
+    # if the pre-WS process management module is included, then an alternative main() must also be used.  the alternative main()
+    # registers an atexit handler that finalizes the vendor MPI.  this is necessary because DUROC deactivates the modules it
+    # uses in an atexit handler and those modules call vendor MPI routines.
+    #
+    MPIG_VMPI_PREMAIN_LIBS_REQUIRED=yes
+    export MPIG_VMPI_PREMAIN_LIBS_REQUIRED
+else
+    HAVE_GLOBUS_DUROC_MODULE=no
+    mpig_msg_result $LINENO "diabled by user."
+fi
+export HAVE_GLOBUS_DUROC_MODULE
+
+mpig_msg_check $LINENO "checking if the Globus WS job management modules are installed"
+if test "$mpig_enable_globus_rendezvous" != "yes" ; then
+     mpig_get_globus_setting HAVE_GLOBUS_RENDEZVOUS_MODULE rendezvous-installed
+     mpig_msg_result $LINENO "${HAVE_GLOBUS_RENDEZVOUS_MODULE}"
+else
+    HAVE_GLOBUS_RENDEZVOUS_MODULE=no
+    mpig_msg_result $LINENO "diabled by user."
+fi
+export HAVE_GLOBUS_RENDEZVOUS_MODULE
+
+if test "$HAVE_GLOBUS_DUROC_MODULE" != "yes" -a "$mpig_enable_globus_duroc" != "yes" -a \
+        "$HAVE_GLOBUS_RENDEZVOUS_MODULE" != "yes" -a "$mpig_enable_globus_rendezvous" != "yes" ; then
+    mpig_msg_error $LINENO "The Globus DUROC Runtime module or the Globus Rendezvous Client C bindings module must be " \
+        "installed for MPIg to function.   Please install one of these modules for the specified flavor " \
+        "${with_globus_flavor} or select a different flavor for which one of these modules has already been installed."
+fi
+
+#
+# are the globus libraries multi-threaded?
+#
+mpig_msg_check $LINENO "checking if Globus is built with thread support"
+mpig_get_globus_setting HAVE_GLOBUS_THREADS multi-threaded
+mpig_msg_result $LINENO "${HAVE_GLOBUS_THREADS}"
+export HAVE_GLOBUS_THREADS
+if test "${HAVE_GLOBUS_THREADS}" = "yes" ; then
+    MPIG_THREADED=yes
+else
+    MPIG_THREADED=no
+fi
+MPIG_THREADS_PKG=globus
+
+#
+# are the globus libraries built with debugging enabled?  If so, enable MPIg's debugging capabilities.
+#
+mpig_msg_check $LINENO "checking if Globus is built with debugging enabled"
+mpig_get_globus_setting HAVE_GLOBUS_DEBUG debug
+mpig_msg_result $LINENO "${HAVE_GLOBUS_DEBUG}"
+export HAVE_GLOBUS_DEBUG
+if test "${HAVE_GLOBUS_DEBUG}" = "no" -a "${enable_fast}" = "default" ; then
+    enable_fast=yes
+    ac_configure_args="${ac_configure_args} --enable-fast"
+    mpig_msg_info $LINENO "debugging disabled.  adding --enable-fast option to remove error checking from MPI routines and " \
+        "disable detailed error reporting."
+    MPIG_DEBUG=no
+else
+    MPIG_DEBUG=yes
+fi
+if test "${mpig_enable_debugging}" = "yes" ; then
+    if test "${HAVE_GLOBUS_DEBUG}" = "no" ; then
+        mpig_msg_info $LINENO "MPIg debugging checks and logging explicitly enabled by the user"
+    fi
+    MPIG_DEBUG=yes
+elif test "${mpig_enable_debugging}" = "no" ; then
+    if test "${HAVE_GLOBUS_DEBUG}" = "yes" ; then
+        mpig_msg_info $LINENO "MPIg debugging checks and logging explicitly disabled by the user"
+    fi
+    MPIG_DEBUG=no
+fi
+
+#
+# are we using a vendor MPI flavor of globus?
+#
+mpig_msg_check $LINENO "checking if Globus is built for use with a vendor MPI"
+mpig_get_globus_setting HAVE_VMPI_SUPPORT vmpi
+mpig_msg_result $LINENO "${HAVE_VMPI_SUPPORT}"
+export HAVE_GLOBUS_SUPPORT
+if test "${HAVE_VMPI_SUPPORT}" = "yes" ; then
+    if test "${mpig_enable_vmpi}" = "no" ; then
+        mpig_msg_info $LINENO "Globus flavor supports vendor MPI, but vendor MPI functionality was explicitly disabled by " \
+            "the user"
+        MPIG_VMPI=no
+    else
+        MPIG_VMPI=yes
+    fi
+else
+    if test "${mpig_enable_vmpi}" = "no" ; then
+         mpig_msg_warn $LINENO "Globus flavor does not support vendor MPI functionality.  ignoring user's explicit request " \
+            "to enable vendor MPI support."
+    fi
+    MPIG_VMPI=no
+fi
+
+#
+# gather information about the libraries and linker flags
+#
+mpig_msg_check $LINENO "extacting library and linker flags from Globus"
+mpig_get_globus_setting MPIG_LDFLAGS ldflags
+mpig_get_globus_setting MPIG_LIBS libs
+MPIG_TEST_LDFLAGS=${MPIG_TEST_LDFLAGS:-${MPIG_LDFLAGS}}
+MPIG_TEST_LIBS=${MPIG_TEST_LIBS:-`echo "${MPIG_LDFLAGS}" | sed -e 's/-lglobus_][^ ]* *//g'`} # speed up testing
+mpig_msg_result $LINENO "done"
+if test -n "${LDFLAGS}" ; then
+    mpig_msg_info $LINENO "ignoring LDFLAGS environment variable.  using the value supplied by Globus."
+fi
+if test -n "${LIBS}" ; then
+    mpig_msg_info $LINENO "ignoring LIBS environment variable.  using the value supplied by Globus."
+fi
+
+#
+# gather C compiler and linker information
+#
+mpig_msg_check $LINENO "extacting C compiler information from Globus..."
+mpig_get_globus_setting MPIG_CC cc
+mpig_get_globus_setting MPIG_GLOBUS_CFLAGS cflags
+mpig_msg_result $LINENO "done"
+MPIG_GLOBUS_CFLAGS=`echo "${MPIG_GLOBUS_CFLAGS}" | sed -e 's/-Wall\( *\|$\)//g'`
+MPIG_CFLAGS=`echo "${MPIG_GLOBUS_CFLAGS}" | sed -e 's/-I[^ ]* *//g'`
+MPIG_CLD=${MPIG_CC}
+MPIG_BUILD_CC=${MPIG_CC}
+MPIG_BUILD_CFLAGS="${MPIG_GLOBUS_CFLAGS} ${CPPFLAGS}"
+MPIG_TEST_CC=${MPIG_CC}
+MPIG_TEST_CFLAGS="${MPIG_GLOBUS_CFLAGS} ${CPPFLAGS}"
+MPIG_TEST_CLD=${MPIG_TEST_CLD:-${MPIG_CLD}}
+
+if test -n "${CC}" ; then
+    mpig_msg_info $LINENO "ignoring CC environment variable.  using the value supplied by Globus."
+fi
+if test -n "${CFLAGS}" ; then
+    mpig_msg_info $LINENO "ignoring CFLAGS environment variable.  using the value supplied by Globus."
+fi
+
+#
+# gather C++ compiler and flags information
+#
+if test "${enable_cxx}" != "no" ; then
+    mpig_msg_check $LINENO "extacting C++ compiler information from Globus..."
+    mpig_get_globus_setting MPIG_CXX cxx
+    mpig_get_globus_setting MPIG_GLOBUS_CXXFLAGS cxxflags
+    mpig_msg_result $LINENO "done"
+    MPIG_GLOBUS_CXXFLAGS=`echo "${MPIG_GLOBUS_CXXFLAGS}" | sed -e 's/-Wall\( *\|$\)//g'`
+    MPIG_CXXFLAGS=`echo "${MPIG_GLOBUS_CXXFLAGS}" | sed -e 's/-I[^ ]* *//g'`
+    MPIG_CXXLD=${MPIG_CXX}
+    MPIG_BUILD_CXX=${MPIG_CXX}
+    MPIG_BUILD_CXXFLAGS="${MPIG_GLOBUS_CXXFLAGS} ${CPPFLAGS}"
+    MPIG_TEST_CXX=${MPIG_CXX}
+    MPIG_TEST_CXXFLAGS="${MPIG_GLOBUS_CXXFLAGS} ${CPPFLAGS}"
+    MPIG_TEST_CXXLD=${MPIG_TEST_CXXLD:-${MPIG_CXXLD}}
+
+    if test -n "${CXX}" ; then
+        mpig_msg_info $LINENO "ignoring CXX environment variable.  using the value supplied by Globus."
+    fi
+    if test -n "${CXXFLAGS}" ; then
+        mpig_msg_info $LINENO "ignoring CXXFLAGS environment variable.  using the value supplied by Globus."
+    fi
+
+    if test -z "${MPIG_CXX}" ; then
+        mpig_msg_info $LINENO "C++ compiler not defined by Globus.  Disabling C++ subsystem."
+        enable_cxx=no
+        ac_configure_args="${ac_configure_args} --disable-cxx"
+    fi
+else
+    mpig_msg_info $LINENO "C++ subsystem disabled.  Skipping extraction of C++ information from Globus."
+fi
+
+#
+# gather F77 compiler and flags information
+#
+if test "${enable_f77}" != "no" ; then
+    mpig_msg_check $LINENO "extacting F77 compiler information from Globus"
+    mpig_get_globus_setting MPIG_F77 f77
+    mpig_get_globus_setting MPIG_GLOBUS_F77FLAGS f77flags
+    mpig_msg_result $LINENO "done"
+    MPIG_F77FLAGS=`echo "${MPIG_GLOBUS_F77FLAGS}" | sed -e 's/-I[^ ]* *//g'`
+    MPIG_F77LD=${MPIG_F77}
+    MPIG_TEST_F77=${MPIG_F77}
+    MPIG_TEST_F77FLAGS="${MPIG_GLOBUS_F77FLAGS} ${CPPFLAGS}"
+    MPIG_TEST_F77LD=${MPIG_TEST_F77LD:-${MPIG_F77LD}}
+
+    if test -n "${FC}" ; then
+        mpig_msg_info $LINENO "ignoring FC environment variable.  using the value supplied by Globus."
+    fi
+    if test -n "${FCFLAGS}" ; then
+        mpig_msg_info $LINENO "ignoring FCFLAGS environment variable.  using the value supplied by Globus."
+    fi
+    if test -n "${F77}" ; then
+        mpig_msg_info $LINENO "ignoring F77 environment variable.  using the value supplied by Globus."
+    fi
+    if test -n "${F77FLAGS}" ; then
+        mpig_msg_info $LINENO "ignoring F77FLAGS environment variable.  using the value supplied by Globus."
+    fi
+
+    if test -z "${MPIG_F77}" ; then
+        mpig_msg_info $LINENO "F77 compiler not defined by Globus.  Disabling F77 subsystem."
+        enable_f77=no
+        ac_configure_args="${ac_configure_args} --disable-f77"
+    fi
+else
+    mpig_msg_info $LINENO "F77 subsystem disabled.  Skipping extraction of F77 information from Globus."
+fi
+
+#
+# gather F90 compiler and linker information
+#
+if test "${enable_f90}" != "no" ; then
+    mpig_msg_check $LINENO "extacting F90 compiler information from Globus"
+    mpig_get_globus_setting MPIG_F90 f90
+    mpig_get_globus_setting MPIG_GLOBUS_F90FLAGS f90flags
+    mpig_msg_result $LINENO "done"
+    MPIG_F90FLAGS=`echo "${MPIG_GLOBUS_F90FLAGS}" | sed -e 's/-I[^ ]* *//g'`
+    MPIG_F90LD=${MPIG_F90}
+    MPIG_TEST_F90=${MPIG_F90}
+    MPIG_TEST_F90FLAGS="${MPIG_F90FLAGS} ${CPPFLAGS}"
+    MPIG_TEST_F90LD=${MPIG_TEST_F90LD:-${MPIG_F90LD}}
+
+    if test -n "${F90}" ; then
+        mpig_msg_info $LINENO "ignoring F90 environment variable.  using the value supplied by Globus."
+    fi
+    if test -n "${F90FLAGS}" ; then
+        mpig_msg_info $LINENO "ignoring F90FLAGS environment variable.  using the value supplied by Globus."
+    fi
+
+    if test -z "${MPIG_F90}" ; then
+        mpig_msg_info $LINENO "F90 compiler not defined by Globus.  Disabling F90 subsystem."
+        enable_f90=no
+        ac_configure_args="${ac_configure_args} --disable-f90"
+    fi
+else
+    mpig_msg_info $LINENO "F90 subsystem disabled.  Skipping extraction of F90 information from Globus."
+fi
+
+#
+# store the format of the received message in the status so that the value of the count field can be evaluated int the context
+# the of the source data format
+#
+EXTRA_STATUS_DECL="${EXTRA_STATUS_DECL} int mpig_dc_format;"
+
+rm -f ${MPIG_GLOBUS_SETTINGS_MK}

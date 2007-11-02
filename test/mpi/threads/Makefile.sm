@@ -1,0 +1,11 @@
+SUBDIRS_otherlangs = f77 cxx
+SUBDIRS = util pt2pt comm
+#SUBDIRS = util attr basic datatype coll comm errhan group info init pt2pt rma spawn topo io @otherlangs@ .
+
+# A special testing target to simplify running just the thread tests
+testing:
+	../runtests -srcdir=$(srcdir) -tests=testlist \
+		   -mpiexec=$(bindir)/mpiexec \
+		   -xmlfile=summary.xml
+clean-local:
+	-rm -f summary.xml

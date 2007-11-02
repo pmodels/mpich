@@ -1,0 +1,13 @@
+Makefile
+Makefile.in
+*.o
+*.lo
+*.bb
+*.bbg
+*.da
+*.gcov
+*.gcda
+*.gcno
+.deps
+.libstamp*
+.state-cache

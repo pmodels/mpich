@@ -1,0 +1,936 @@
+#! /usr/bin/perl -w
+# binding.sub provides the routines for reading the prototype file
+# and extracting the function definitions.
+require "binding.sub";
+
+$arg_string = join( ' ', @ARGV );
+$prototype_file = "../../include/mpi.h.in";
+$gDebug = 0;
+%mpi_routines = ();
+%NeedConstants = ();   # constants needed for declaration, hased by routine
+
+#
+# parmc2f translates the C/C++ names to the Fortran 90 name.  %name% will
+# be replaced with the argument name in declarations.
+#
+# Some picky compilers want an interface description where Fortran 77
+# was happy with a simple EXTERNAL.  To handle this, the EXTERNAL
+# has a more elaborate form:
+#  INTERFACE %nl%SUBROUTINE %name%(<args>)%nl%<type decls>%nl%END SUBROUTINE%nl%END INTERFACE
+# where %nl% is newline/indent.  
+#
+%parmc2f = ( 'int' => 'INTEGER',
+	     'int[]' => 'INTEGER %name%(*)',
+	     'int[][3]' => 'INTEGER %name%(3,*)',
+	     'int*' => 'INTEGER',      # assume output scalar (see array
+	                               # replacement below)
+	     'bool' => 'LOGICAL',
+	     'bool[]' => 'LOGICAL %name%(*)',
+	     'MPI_Handler_function*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+	     'MPI_Win_errhandler_fn*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+	     'MPI_Comm_errhandler_fn*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+	     'MPI_File_errhandler_fn*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+	     # These other functions have <choice> (really void*) arguments
+	     # and so an interface spec is very hard to do in Fortran 90.
+	     'MPI_Comm_copy_attr_function*' => 'EXTERNAL',
+	     'MPI_Comm_delete_attr_function*' => 'EXTERNAL',
+	     'MPI_Type_copy_attr_function*' => 'EXTERNAL',
+	     'MPI_Type_delete_attr_function*' => 'EXTERNAL',
+	     'MPI_Win_copy_attr_function*' => 'EXTERNAL',
+	     'MPI_Win_delete_attr_function*' => 'EXTERNAL',
+	     'MPI_Copy_function*' => 'EXTERNAL',
+	     'MPI_Delete_function*' => 'EXTERNAL',
+	     'MPI_User_function*' => 'EXTERNAL',
+	     'MPI_Grequest_query_function*' => 'EXTERNAL',
+	     'MPI_Grequest_free_function*' => 'EXTERNAL',
+	     'MPI_Grequest_cancel_function*' => 'EXTERNAL',
+	     'MPI_Request' => 'INTEGER',
+	     'MPI_Request*' => 'INTEGER',
+	     'MPI_Request[]' => 'INTEGER %name%(*)',
+	     'MPI_Datatype' => 'INTEGER',
+	     'MPI_Datatype*' => 'INTEGER',
+	     'MPI_Datatype[]' => 'INTEGER %name%(*)',
+	     'MPI_Comm' => 'INTEGER',
+	     'MPI_Comm*' => 'INTEGER', # Never an array of comm
+	     'MPI_Group' => 'INTEGER',
+	     'MPI_Group*' => 'INTEGER', # Never an array of groups
+	     'MPI_Errhandler' => 'INTEGER',
+	     'MPI_Errhandler*' => 'INTEGER', # Never an array of errhandlers
+	     'MPI_Op' => 'INTEGER',
+	     'MPI_Op*' => 'INTEGER', # Never an array of ops
+	     'MPI_Status*' => 'INTEGER %name%(MPI_STATUS_SIZE)',
+	     'MPI_Status[]' => 'INTEGER %name%(MPI_STATUS_SIZE,*)',
+	     'MPI_Aint' => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
+	     'MPI_Aint*' => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
+	     'MPI_Aint[]' => 'INTEGER(KIND=MPI_ADDRESS_KIND) %name%(*)',
+	     'MPI_Info' => 'INTEGER',
+	     'MPI_Info*' => 'INTEGER', # Never an array of info
+	     'MPI_Info[]' => 'INTEGER %name%(*)',
+	     'char*' => 'CHARACTER (LEN=*)',
+	     'char*[]' => 'CHARACTER (LEN=*) %name%(*)',
+	     'char**[]' => 'CHARACTER (LEN=*) %name%(v0,*)',  #special case
+				# from Comm_Spawn_multiple
+	     'MPI_Win' => 'INTEGER',
+	     'MPI_Win*' => 'INTEGER', # Never an array of win
+	     'MPI_File' => 'INTEGER',
+	     'MPI_File*' => 'INTEGER', # Never an array of files
+	     );
+
+# special_args provides for handling of arguments that require special
+# features.  The keys are of the form 'Routine-count', with count the 
+# position of the argument, starting from one.
+%special_args = ( 'Testany-2' => 'MPI_Request[]',
+		  'Startall-2' => 'MPI_Request[]',
+		  'Testall-2' => 'MPI_Request[]',
+		  'Testall-4' => 'MPI_Status[]',
+		  'Testsome-2' => 'MPI_Request[]',
+		  'Testsome-4' => 'int[]',
+		  'Testsome-5' => 'MPI_Status[]',
+		  'Type_hindexed-2' => 'int[]',
+		  'Type_hindexed-3' => 'int[]',
+		  'Type_indexed-2' => 'int[]',
+		  'Type_indexed-3' => 'int[]',
+		  'Type_struct-2' => 'int[]',
+		  'Type_struct-3' => 'int[]',
+		  'Type_struct-4' => 'MPI_Datatype[]',
+		  'Waitall-2' => 'MPI_Request[]',
+		  'Waitall-3' => 'MPI_Status[]',
+		  'Waitany-2' => 'MPI_Request[]',
+		  'Waitsome-2' => 'MPI_Request[]',
+		  'Waitsome-4' => 'int[]',
+		  'Waitsome-5' => 'MPI_Status[]',
+		  'Group_excl-3' => 'int[]',
+		  'Group_incl-3' => 'int[]',
+		  'Group_translate_ranks-3' => 'int[]',
+		  'Group_translate_ranks-5' => 'int[]',
+		  'Cart_coords-4' => 'int[]',
+		  'Cart_create-3' => 'int[]',
+		  'Cart_create-4' => 'bool[]',
+		  'Cart_get-3' => 'int[]',
+		  'Cart_get-5' => 'int[]',
+		  'Cart_get-4' => 'bool[]',
+		  'Cart_map-3' => 'int[]',
+		  'Cart_map-4' => 'bool[]',
+		  'Cart_rank-2' => 'int[]',
+		  'Cart_sub-2' => 'bool[]',
+		  'Dims_create-3' => 'int[]',
+		  'Graph_create-3' => 'int[]',
+		  'Graph_create-4' => 'int[]',
+		  'Graph_create-5' => 'bool',
+		  'Graph_get-4' => 'int[]',
+		  'Graph_get-5' => 'int[]',
+		  'Graph_map-3' => 'int[]',
+		  'Graph_map-4' => 'int[]',
+		  'Graph_neighbors-4' => 'int[]',
+		  'Iprobe-4' => 'bool',
+		  'Test-2' => 'bool',
+		  'Testall-3' => 'bool',
+		  'Testany-4' => 'bool',
+		  'Test_cancelled-2' => 'bool',
+		  'Op_create-2' => 'bool',
+		  'Attr_get-4' => 'bool',
+		  'Comm_test_inter-2' => 'bool',
+		  'Intercomm_merge-2' => 'bool',
+		  'Cart_create-5' => 'bool',
+		  'Initialized-1' => 'bool',		
+		  'Finalized-1' => 'bool',
+		  'Group_range_excl-3' => 'int[][3]',
+		  'Group_range_incl-3' => 'int[][3]',
+		  'Info_get_valuelen-4' => 'bool',
+		  'Is_thread_main-1' => 'bool',
+		  'Type_create_subarray-2' => 'int[]',
+		  'Type_create_subarray-3' => 'int[]',
+		  'Type_create_subarray-4' => 'int[]',
+		  'Request_get_status-2' => 'bool',
+		  'Info_get-5' => 'bool',
+		  'Type_create_indexed_block-3' => 'int[]',
+		  'Type_create_darray-4' => 'int[]',
+		  'Type_create_darray-5' => 'int[]',
+		  'Type_create_darray-6' => 'int[]',
+		  'Type_create_darray-7' => 'int[]',
+		  'Type_create_struct-2' => 'int[]',
+		  'Type_create_struct-3' => 'MPI_Aint[]',
+		  'Win_test-2' => 'bool',
+		  'Type_create_hindexed-2' => 'int[]',
+		  'Type_create_hindexed-3' => 'MPI_Aint[]',
+		);
+
+# Some routines must be skipped (custom code is provided for them)
+%skip_routines = ( 'Init' => 1, 'Init_thread' => 1, 'Status_c2f' => 1,
+		   'Status_f2c' => 1, 'Pcontrol' => 1,
+		   );
+
+# Some routines *may* be skipped if we don't want to handle the possibility
+# of a scalar or vector argument
+# Still to do: Add the others (datatype creation, translate ranks, etc.)
+# For each of these, we need to know which arguments are the "scalar/vector"
+# The value of the hash gives us the answer, indexed from 1
+# (these are not correct yet).
+%scalarVectorRoutines = ( 'Startall' => '2-1', 'Testall' => '2-1:4-1', 
+			  'Testany' => '2-1',
+			  'Testsome' => '2-1:4-1:5-1', 
+			  'Waitall' => '2-1:3-1', 'Waitany' => '2-1',
+			  'Waitsome' => '2-1:4-1:5-1', 
+			  'Dims_create' => '3-2', 
+			  'Cart_rank' => '2', 'Cart_coords' => '4-3', 
+			  'Cart_get' => '3-2:4-2:5-2', 
+			  'Graph_neighbors' => '4-3', 
+			  'Cart_sub' => '2',
+			  'Cart_map' => '3-2:4-2',
+			  'Cart_create' => '3-2:4-2',
+			  'Graph_create' => '3:4',
+			  'Group_translate_ranks' => '3-2:5-2',
+
+    );
+
+# And we skip them byy default
+$buildScalarVector = 0;
+
+# Process any options
+foreach $_ (@ARGV) {
+    if (/-prototype=(.*)/) {
+	$prototype_file = $1;
+    }
+    elsif (/-sv/) {
+	# This obscure argument enables the creation of an interface that
+	# includes the routines that can accept a scalar or a vector
+	# (e.g., a single request or an array of requests) on a single 
+	# type (e.g., an integer).  By default, we leave these out.
+	$buildScalarVector = 1;
+    }
+    else {
+	print STDERR "Unrecognized argument $_\n";
+	exit 2;
+    }
+}
+
+#
+# Read the interface file (e.g., mpi.h.in) and file in the various 
+# data structures (they're in global variables)
+&ReadInterface( $prototype_file, "MPI_", "[A-Z][a-z_0-9]*", "mpi_routines" );
+
+#
+# For some MPI routines, we need to distinguish between arguments that are 
+# input arrays versus ones that are output scalars.  For those functions,
+# convert input (or output) arrays to [] format.  
+
+# ----------------------------------------------------------------------------
+#
+# Generate the module for the routines
+# First pass.  Ignore the issue of choice routines
+# Print header
+open (MPIFD, ">mpi.f90.new" ) || die "Could not open mpi.f90.new\n";
+
+# Was 
+#       USE MPI_CONSTANTS,                                               &
+#     &      BASE_MPI_WTIME => MPI_WTIME, BASE_MPI_WTICK => MPI_WTICK
+# but this caused problems with the pg compiler.  Need to understand and fix
+print MPIFD "       MODULE MPI
+!      This module was created by the script buildiface
+       USE MPI_CONSTANTS
+       USE MPI_SIZEOFS
+       USE MPI_BASE
+       END MODULE MPI\n";
+  
+close (MPIFD);
+&ReplaceIfDifferent( "mpi.f90", "mpi.f90.new" );
+
+# ----------------------------------------------------------------------------
+# This is the file for the routines that have no "choice" arguments.
+# An example of a choice argument is a "void *buf" input argument to 
+# MPI_Send, which allows any buffer address, both numeric and character.
+open ( MPIBASEFD, ">mpi_base.f90.new" ) || die "Could not open mpi_base.f90.new\n";
+print MPIBASEFD "       MODULE MPI_BASE
+       IMPLICIT NONE
+!      This module was created by the script buildiface
+       INTERFACE\n";
+
+foreach $routine (keys(%mpi_routines)) {
+    $ucname = uc($routine);
+    $args   = $mpi_routines{$routine};
+    @parms  = split(/,/, $args );
+
+    # Check for a routine to skip
+    if (defined($skip_routines{$routine})) {
+	next;
+    }
+
+    if (defined($scalarVectorRoutines{$routine})) {
+	# These require special processing in any case
+	next;
+    }
+
+    # Check for a void * argument (usually choice)
+    # As noted above, we don't include the routines with choice arguments
+    # in the base module.
+    if ($args =~ /void/) {
+	$mpi_choice_routines{$routine} = $args;
+	print "Skipping $routine because of void argument\n" if $gDebug;
+	next;
+    }
+    print MPIBASEFD "       SUBROUTINE MPI_$ucname(";
+    for ($i=0; $i<=$#parms; $i++) {
+	print MPIBASEFD "v$i,";
+    }
+    print MPIBASEFD "ierror)\n";
+    &PrintArgDecls( $routine, 0, "" );
+    print MPIBASEFD "       END SUBROUTINE MPI_$ucname\n\n";
+}
+
+# Add special routines (e.g., the ones with unusual arguments)
+
+print MPIBASEFD "
+        SUBROUTINE MPI_INIT(ierror)
+        INTEGER ierror
+        END SUBROUTINE MPI_INIT
+
+        SUBROUTINE MPI_INIT_THREAD(v0,v1,ierror)
+        INTEGER v0, v1, ierror
+        END SUBROUTINE MPI_INIT_THREAD
+
+        FUNCTION MPI_WTIME()
+            DOUBLE PRECISION MPI_WTIME
+        END FUNCTION MPI_WTIME
+!
+        FUNCTION MPI_WTICK()
+            DOUBLE PRECISION MPI_WTICK
+        END FUNCTION MPI_WTICK
+
+        FUNCTION PMPI_WTIME()
+            DOUBLE PRECISION PMPI_WTIME
+        END FUNCTION PMPI_WTIME
+!
+        FUNCTION PMPI_WTICK()
+            DOUBLE PRECISION PMPI_WTICK
+        END FUNCTION PMPI_WTICK
+
+        SUBROUTINE MPI_NULL_DELETE_FN(a,b,c,d,e)
+          INTEGER a,b,c,d,e
+        END SUBROUTINE MPI_NULL_DELETE_FN
+
+        SUBROUTINE MPI_DUP_FN(a,b,c,d,e,f,g)
+          INTEGER a,b,c,d,e,g
+          LOGICAL f
+        END SUBROUTINE MPI_DUP_FN
+
+        SUBROUTINE MPI_NULL_COPY_FN(a,b,c,d,e,f,g)
+          INTEGER a,b,c,d,e,g
+          LOGICAL f
+        END SUBROUTINE MPI_NULL_COPY_FN
+
+        SUBROUTINE MPI_COMM_NULL_DELETE_FN(a,b,c,d,e)
+          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+          INTEGER a,b,e
+          INTEGER (KIND=MPI_ADDRESS_KIND) c, d
+        END SUBROUTINE MPI_COMM_NULL_DELETE_FN
+
+        SUBROUTINE MPI_COMM_DUP_FN(a,b,c,d,e,f,g)
+          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+          INTEGER a,b,g
+          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
+          LOGICAL f
+        END SUBROUTINE MPI_COMM_DUP_FN
+
+        SUBROUTINE MPI_COMM_NULL_COPY_FN(a,b,c,d,e,f,g)
+          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+          INTEGER a,b,g
+          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
+          LOGICAL f
+        END SUBROUTINE MPI_COMM_NULL_COPY_FN
+
+        SUBROUTINE MPI_TYPE_NULL_DELETE_FN(a,b,c,d,e)
+          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+          INTEGER a,b,e
+          INTEGER (KIND=MPI_ADDRESS_KIND) c, d
+        END SUBROUTINE MPI_TYPE_NULL_DELETE_FN
+
+        SUBROUTINE MPI_TYPE_DUP_FN(a,b,c,d,e,f,g)
+          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+          INTEGER a,b,g
+          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
+          LOGICAL f
+        END SUBROUTINE MPI_TYPE_DUP_FN
+
+        SUBROUTINE MPI_TYPE_NULL_COPY_FN(a,b,c,d,e,f,g)
+          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+          INTEGER a,b,g
+          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
+          LOGICAL f
+        END SUBROUTINE MPI_TYPE_NULL_COPY_FN
+
+        SUBROUTINE MPI_WIN_NULL_DELETE_FN(a,b,c,d,e)
+          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+          INTEGER a,b,e
+          INTEGER (KIND=MPI_ADDRESS_KIND) c, d
+        END SUBROUTINE MPI_WIN_NULL_DELETE_FN
+
+        SUBROUTINE MPI_WIN_DUP_FN(a,b,c,d,e,f,g)
+          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+          INTEGER a,b,g
+          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
+          LOGICAL f
+        END SUBROUTINE MPI_WIN_DUP_FN
+
+        SUBROUTINE MPI_WIN_NULL_COPY_FN(a,b,c,d,e,f,g)
+          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+          INTEGER a,b,g
+          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
+          LOGICAL f
+        END SUBROUTINE MPI_WIN_NULL_COPY_FN
+
+";
+
+# Here's where we need to place the interface definitions for the functions
+# that take vector or scalar arguments (startall, testall/any/some, 
+# waitall/any/some, group_translate_ranks, etc.)
+# For each such routine, we need to generate two entries.  Here's the 
+# example for STARTALL:
+#     subroutine MPI_STARTALL_S(c,r,ierr)
+#     integer c,r,ierr
+#     external MPI_STARTALL
+#         call MPI_STARTALL(c,r,ierr)
+#     end subroutine MPI_STARTALL_S
+#     subroutine MPI_STARTALL_V(c,r,ierr)
+#     integer c,r(*),ierr
+#     external MPI_STARTALL
+#         call MPI_STARTALL(c,r,ierr)
+#     end subroutine MPI_STARTALL_V
+
+print MPIBASEFD "       END INTERFACE\n";
+
+if ($buildScalarVector) {
+    # Create the interface modules
+    foreach my $routine (keys(%scalarVectorRoutines)) {
+	$ucname = uc($routine);
+	print MPIBASEFD "       INTERFACE MPI_$ucname\n";
+        print MPIBASEFD "           MODULE PROCEDURE MPI_${ucname}_S\n";
+        print MPIBASEFD "           MODULE PROCEDURE MPI_${ucname}_V\n";
+	print MPIBASEFD "       END INTERFACE ! MPI_$ucname\n\n";
+        
+    }
+    print MPIBASEFD "\n        CONTAINS\n";
+    # This is much like the base name (interface) block code
+    foreach my $routine (keys(%scalarVectorRoutines)) {
+	$ucname = uc($routine);
+	$args   = $mpi_routines{$routine};
+	@parms  = split(/,/, $args );
+	$svArgs = $scalarVectorRoutines{$routine};
+	# The scalar version
+        print MPIBASEFD "       SUBROUTINE MPI_${ucname}_S(";
+        for ($i=0; $i<=$#parms; $i++) {
+	    print MPIBASEFD "v$i,";
+        }
+        print MPIBASEFD "ierror)\n";
+	&PrintArgDecls( $routine, 1, $svArgs );
+	print MPIBASEFD "       EXTERNAL MPI_${ucname}\n";
+	print MPIBASEFD "       call MPI_$ucname(";
+        for ($i=0; $i<=$#parms; $i++) {
+	    print MPIBASEFD "v$i,";
+        }
+	print MPIBASEFD "ierror)\n";
+
+	print MPIBASEFD "       END SUBROUTINE MPI_${ucname}_S\n\n";
+
+	# The vector version
+        print MPIBASEFD "       SUBROUTINE MPI_${ucname}_V(";
+        for ($i=0; $i<=$#parms; $i++) {
+	    print MPIBASEFD "v$i,";
+        }
+        print MPIBASEFD "ierror)\n";
+	&PrintArgDecls( $routine, 0, "" );
+	print MPIBASEFD "       EXTERNAL MPI_${ucname}\n";
+	print MPIBASEFD "       call MPI_$ucname(";
+        for ($i=0; $i<=$#parms; $i++) {
+	    print MPIBASEFD "v$i,";
+        }
+	print MPIBASEFD "ierror)\n";
+
+	print MPIBASEFD "       END SUBROUTINE MPI_${ucname}_V\n\n";
+
+    }
+}
+
+print MPIBASEFD "       END MODULE MPI_BASE\n";
+close MPIBASEFD;
+&ReplaceIfDifferent( "mpi_base.f90", "mpi_base.f90.new" );
+
+open ( MPIFD, ">mpi_constants.f90.new" ) || die "Cannot open mpi_constants.f90.new\n";
+print MPIFD "        MODULE MPI_CONSTANTS
+        IMPLICIT NONE
+        INCLUDE 'mpifnoext.h'
+        END MODULE MPI_CONSTANTS\n";
+close MPIFD;
+&ReplaceIfDifferent( "mpi_constants.f90", "mpi_constants.f90.new" );
+
+#
+# Generate the choice argument routines
+# FIXME: This file is not quite right.  Also note that it is 
+# *input* for yet another step, one that generates particular values 
+# for the types of the choice arguments.  We should consider using 
+# a different extension for this file, such as sed or in, so that 
+# it is clearly not a ready-to-use Fortran 90 input file.
+# In particular, it needs to be set up so that
+#   <typesize>
+#   <type>
+#   <dims>
+#   <type1>
+#   <dims1>
+# can all be substituted as necessary.  For example
+#   <typesize> => 4
+#   <type> => real
+#   <dims> => (*)
+#   <type1> => real
+#   <dims1> => (*)
+# For scalar arguments, <dims> should be empty.
+# Finally, the module name needs to be distinct for each choice of
+# <type>, <dims>, <type1>, and <dims1>
+open( MPIFD, ">mpi_t1.f90.new" ) || die "Cannot open mpi_t1.f90.new\n";
+print MPIFD "        MODULE MPI_t1_s
+        IMPLICIT NONE
+        PRIVATE\n";
+
+# Generate the interface specs
+foreach $routine (keys(%mpi_choice_routines)) {
+    $ucname = uc($routine);
+
+    print MPIFD "        PUBLIC :: MPI_$ucname\n";
+    print MPIFD "        INTERFACE MPI_$ucname\n";
+    print MPIFD "           MODULE PROCEDURE MPI_${ucname}_T\n";
+    print MPIFD "        END INTERFACE MPI_$ucname\n\n";
+}
+
+# MPI_Sizeof has its own module
+
+# For each choice routine, add the modules
+foreach $routine (keys(%mpi_choice_routines)) {
+    $ucname = uc($routine);
+    $args   = $mpi_routines{$routine};
+    @parms  = split(/,/, $args );
+
+    print MPIFD "        SUBROUTINE MPI_${ucname}_T(";
+    for ($i=0; $i<=$#parms; $i++) {
+	print MPIFD "v$i,";
+    }
+    print MPIFD "ierror)\n";
+
+    if (defined($NeedConstants{$routine})) {
+	print MPIFD "       USE MPI_CONSTANTS,ONLY:";
+	$sep = "";
+	foreach $name (split(/\s+/,$NeedConstants{$routine})) {
+	    print MPIFD "$sep$name";
+	    $sep = ", ";
+	}
+	print MPIFD "\n";
+    }
+
+    # print the arg decls ...
+    # convert %type% to the various types and %dims% to the dimensions,
+    # including scalar.
+    $nchoice = 0;
+    for ($i=0; $i<=$#parms; $i++) {
+	$parm = $parms[$i];
+	# Check for special args
+	$loc = $i+1;
+	if (defined($special_args{"$routine-$loc"})) {
+	    $parm = $special_args{"$routine-$loc"};
+	}
+
+	if ($parm =~ /void/) {
+	    # An alternative to this is to have a separate file for
+	    # routines with 2 choice arguments
+	    if ($nchoice == 0) {
+		print MPIFD "        <type> v$i<dims>\n";
+	    }
+	    else {
+		print MPIFD "        <type$nchoice> v$i<dims$nchoice>\n";
+	    }
+	    $nchoice ++;
+	}
+	else {
+	    # Map the C type to the Fortran type
+	    $cparm = $parm;
+	    $cparm =~ s/\s+//g;
+	    $fparm = $parmc2f{$cparm};
+	    if ($fparm eq "") {
+		print STDERR "$routine: No parm type for $cparm ($parm)\n";
+	    }
+	    if ($fparm =~ /%name%/) {
+		$fparm =~ s/%name%/v$i/;
+		# In the name case, convert any %nl% to newlines and spaces
+		$fparm =~ s/%nl%/\n       /g;
+		print MPIFD "        $fparm\n";
+	    }
+	    else {
+		print MPIFD "        $fparm v$i\n";
+	    }
+	}
+    }
+    print MPIFD "        INTEGER ierror\n";
+    print MPIFD "        EXTERNAL MPI_${ucname}\n";
+    print MPIFD "        CALL MPI_${ucname}(";
+    for ($i=0; $i<=$#parms; $i++) {
+	print MPIFD "v$i,";
+    }
+    print MPIFD "ierror)\n";
+    print MPIFD "        END SUBROUTINE MPI_${ucname}_T\n\n";
+}
+
+# The base sizeof's are handled separately now in their own file
+
+print MPIFD "        END MODULE MPI_t1_s\n";
+close MPIFD;
+&ReplaceIfDifferent( "mpi_t1.f90", "mpi_t1.f90.new" );
+
+# -----------------------------------------------------------------------------
+# This block can be used to create the Makefile
+open ( MAKEFD, ">Makefile.sm.new" ) || die "Cannot create Makefile.sm.new";
+print MAKEFD "# DO NOT EDIT\n# This file created by buildiface $arg_string\n";
+
+print MAKEFD "smvar_do_dependencies = ignore\n";
+#print MAKEFD "smvar_do_sharedlibs   = 0\n";
+print MAKEFD "smvar_makefile_configdir = ../../..\n";
+#print MAKEFD "smvar_debug=1\n";
+print MAKEFD "MOD              = \@F90MODEXT\@\n";
+print MAKEFD "MPIMOD           = \@MPIMODNAME\@\n";
+print MAKEFD "MPICONSTMOD      = \@MPICONSTMODNAME\@\n";
+print MAKEFD "MPISIZEOFMOD     = \@MPISIZEOFMODNAME\@\n";
+print MAKEFD "MPIBASEMOD       = \@MPIBASEMODNAME\@\n";
+print MAKEFD "F90INCFLAG       = \@F90INCFLAG\@\n";
+print MAKEFD "F90EXT           = \@F90EXT\@\n";
+print MAKEFD "F90_COMPILE_MODS = \$(F90_COMPILE)\n";
+print MAKEFD 
+"# We need to tell some compilers (e.g., Solaris f90) to look in the current 
+# directory when the source file is not in the working directory (i.e.,
+# in a VPATH build)
+F90INCLUDES = \@F90INCFLAG\@.
+
+";
+
+print MAKEFD "mpi_sources = create_f90_int.c create_f90_real.c \\\
+	create_f90_complex.c \\\
+        typef90cmplxf.c typef90realf.c typef90intf.c\n";
+
+# Add the C versions to the C library
+print MAKEFD "lib\${MPILIBNAME}_a_SOURCES = \${mpi_sources} create_f90_util.c \
+profilelib_\${MPILIBNAME}_SOURCES = \${mpi_sources}
+profilelib_\${MPILIBNAME} = p\${MPILIBNAME}\
+INCLUDES = -I../../include -I\${master_top_srcdir}/src/include\n";
+
+# Add the MPI module objects to the f90 library
+print MAKEFD "\
+lib\${MPILIBNAME}f90_a_NOSHARED
+lib\${MPILIBNAME}f90_a_SOURCES = mpi.o mpi_constants.o mpi_sizeofs.o mpi_base.o\n";
+
+print MAKEFD "all-preamble: \$(MPIMOD).\$(MOD)\n";
+
+print MAKEFD "\
+# The copy line in this step makes the F90 modules available to
+# the mpif90 script before an install takes place
+# The if handles the Intel F90 compiler, which has an unusual interface
+# (The mpimod.pcl file should contain only a local mpimod.pc name; if
+# it contains a file name in another directory and that file does not 
+# exist, the compiler may refuse to compile the file)
+#
+# FIXME: We may want to edit the mpif.h to convert Fortran77-specific
+# items (such as an integer*8 used for file offsets) into the 
+# corresponding Fortran 90 KIND type, to accomodate compilers that
+# reject non-standard features such as integer*8 (such as the Intel
+# Fortran compiler with -std95).
+# We need the MPI constants in a separate module for some of the
+# interface definitions (the ones that need MPI_ADDRESS_KIND or
+# MPI_OFFSET_KIND)
+";
+print MAKEFD "\
+\$(MPIMOD).\$(MOD): \$(MPICONSTMOD).\$(MOD) \$(MPISIZEOFMOD).\$(MOD) \\
+\t\t  \$(MPIBASEMOD).\$(MOD) \$(srcdir)/mpi.f90 mpifnoext.h\n";
+&createModSteps( '$(srcdir)/mpi.f90' );
+
+#print MAKEFD "\tcp mpi.\$(MOD) mpi_constants.\$(MOD) mpi_base.\$(MOD) mpi_sizeofs.\$(MOD) ../../../src/include\n";
+#
+# Some versions of the Intel f90 compiler require special files that 
+# describe which modules to load.
+#print MAKEFD "\t\@if [ -n \"\@F90_WORK_FILES_ARG\@\" ] ; then \\\
+#\t    cp work.pc ../../../src/include/mpimod.pc ; \\\
+#\t    echo \"mpimod.pc\" > mpimod.pcl ; \\\
+#\t    echo \"\${includedir}/mpimod.pc\" >> mpimod.pcl ;\\\
+#\t    cp mpimod.pcl ../../../src/include/mpimod.pcl ; \\\
+#\tfi\n";
+
+print MAKEFD "\$(MPICONSTMOD).\$(MOD): \$(srcdir)/mpi_constants.f90 mpifnoext.h\n";
+&createModSteps( '$(srcdir)/mpi_constants.f90' );
+
+print MAKEFD "\$(MPISIZEOFMOD).\$(MOD): mpi_sizeofs.f90 mpifnoext.h\n";
+&createModSteps( "mpi_sizeofs.f90" );
+
+print MAKEFD "\$(MPIBASEMOD).\$(MOD): \$(srcdir)/mpi_base.f90\n";
+&createModSteps( '$(srcdir)/mpi_base.f90' );
+
+print MAKEFD "\
+# We need a free-format version of mpif.h with no external commands
+mpifnoext.h: ../f77/mpif.h
+	rm -f mpifnoext.h
+	sed -e 's/^C/\\!/g' -e '/EXTERNAL/d' \\
+		-e '/DOUBLE PRECISION/d' ../f77/mpif.h > mpifnoext.h
+";
+print MAKEFD "
+# To ensure that f90 can be used before a make-install step, we copy
+# the library to the build directory (just like we do with the module files)
+all-postamble:
+	if [ -s lib\${MPILIBNAME}f90.a ] ; then \\
+	   cp -p lib\${MPILIBNAME}f90.a ../../../lib ; fi
+";
+
+print MAKEFD "clean-local:\n";
+print MAKEFD "\trm -f *.\$(MOD)\n";
+print MAKEFD "\trm -f mpimod.pcl mpimod.pc\n";
+
+print MAKEFD "maint-clean:\
+\trm -f \${mpi_sources} fproto.h\n";
+
+#print MAKEFD "install_BIN     = mpif90\n";
+#print MAKEFD "install_ETC     = mpif90.conf\n";
+print MAKEFD "install_INCLUDE = \$(MPIMOD).\$(MOD) \$(MPICONSTMOD).\$(MOD) \$(MPIBASEMOD).\$(MOD) \$(MPISIZEOFMOD).\$(MOD)\n";
+# These next two are special files needed by some versions of the Intel 
+# compilers
+print MAKEFD "optinstall_INCLUDE = mpimod.pcl mpimod.pc\n";
+print MAKEFD "install_LIB     = lib\${MPILIBNAME}f90.a\n";
+#print MAKEFD "optinstall_SHLIB= lib\${MPILIBNAME}f90.so\n";
+
+    # Add the documentation
+#doc_sources = mpif90.txt manf90.txt
+    print MAKEFD "# Documentation sources
+doc_sources =
+DOCDESTDIRS = html:www/www1,man:man/man1,latex:doc/refman
+doc_HTML_SOURCES  = \${doc_sources}
+doc_MAN_SOURCES   = \${doc_sources}
+doc_LATEX_SOURCES = \${doc_sources}
+";
+
+# ----------------------------------------------------------------------------
+# FIXME: Add the steps to handle the choice arguments.  They should be
+# selected by configure from a list of possible choices, with an 
+# enable switch used to bypass the checks.  In addition, we need a way to 
+# dynamically create subsets, given a list of routines and types/dimensions 
+# to include.  This allows users to build precisely tailored F90 modules.
+# ----------------------------------------------------------------------------
+
+# Since configure copies mpif90 to the bin dir, we need to remove it
+# in a distclean step.
+print MAKEFD "distclean-local:\n";
+print MAKEFD "\trm -f lib\${MPILIBNAME}f90.a\n";
+print MAKEFD "\trm -f ../../../bin/mpif90\n";
+print MAKEFD "\trm -f ../../../src/include/\$(MPIMOD).\$(MOD)\n";
+print MAKEFD "\trm -f ../../../src/include/\$(MPIBASEMOD).\$(MOD)\n";
+print MAKEFD "\trm -f ../../../src/include/\$(MPICONSTMOD).\$(MOD)\n";
+print MAKEFD "\trm -f ../../../src/include/\$(MPISIZEOFMOD).\$(MOD)\n";
+
+
+close( MAKEFD );
+&ReplaceIfDifferent( "Makefile.sm", "Makefile.sm.new" );
+#
+# Still to do
+# make sure that we fit within the Fortran line length rules
+# Look into alternatives for generating a zillion files
+# Handle routines with more than one choice argument
+#
+# ------------------------------------------------------------------------
+# Procedures
+# print_line( FD, line, count, continue, continuelen )
+# Print line to FD; if line size > count, output continue string and
+# continue.  Use print_endline to finish a line
+sub print_line {
+    my $FD = $_[0];
+    my $line = $_[1];
+    my $count = $_[2];
+    my $continue = $_[3];
+    my $continue_len = $_[4];
+    
+    $linelen = length( $line );
+    #print "linelen = $linelen, print_line_len = $print_line_len\n";
+    if ($print_line_len + $linelen > $count) {
+	print $FD $continue;
+	$print_line_len = $continue_len;
+    }
+    print $FD $line;
+    $print_line_len += $linelen;
+}
+sub print_endline {
+    my $FD = $_[0];
+    print $FD "\n";
+    $print_line_len = 0;
+}
+
+# This routine adds to the Makefile.sm the instructions to create
+# a module, handling the strange requirements of some Fortran 90 compilers.
+# Also handles the case where the 
+sub createModSteps {
+    my ($srcFile) = @_;
+    
+    # Get a version of the source file with $(F90EXT) instead of .f90
+    # as the extension
+    my $srcFileWithExt = $srcFile;
+    $srcFileWithExt =~ s/\.f90$/\.\$(F90EXT)/;
+
+print MAKEFD 
+"\t\@if [ -n \"\@F90_WORK_FILES_ARG\@\" ] ; then \\
+	    rm -f mpimod.pc mpimod.pcl ; \\
+	    echo \"mpimod.pc\" > mpimod.pcl ; \\
+	    echo \$(F90_COMPILE_MODS) \@F90_WORK_FILES_ARG\@ -c $srcFile ; \\
+	    \$(F90_COMPILE_MODS) \@F90_WORK_FILES_ARG\@ -c $srcFile ; \\
+	    cp mpimod.pc ../../../src/include/mpimod.pc ; \\
+	    cp mpimod.pcl ../../../src/include/mpimod.pcl ; \\
+	else \\
+	    if [ \"\$(F90EXT)\" != \"f90\" ] ; then \\
+	        ln -sf $srcFile $srcFileWithExt ; \\
+	    fi ; \\
+	    echo \$(F90_COMPILE_MODS) -c $srcFileWithExt ; \\
+	    \$(F90_COMPILE_MODS) -c $srcFileWithExt ; \\
+	    if [ \"\$(F90EXT)\" != \"f90\" ] ; then \\
+	        rm -f $srcFileWithExt ; \\
+	    fi ; \\
+	fi
+";
+}
+
+# Print the declarations for the given routine.  
+sub PrintArgDecls {
+    my ($routine,$svflag,$svArgs) = @_;
+
+    my $ucname = uc($routine);
+    my $args   = $mpi_routines{$routine};
+    my @parms  = split(/,/, $args );
+
+    # preload the svargs if requested.  This is used to decide whether 
+    # an array arg is output as a scalar or a vector
+    my %svargs = ();
+    if ($svflag) {
+	for my $val (split(/:/,$svArgs)) {
+	    my $loc = $val;
+	    my $count = "-1";
+	    if ($loc =~ /(\d+)-(\d+)/) {
+		$loc   = $1;
+		$count = $2;
+	    }
+	    $svargs{$loc} = $count;
+	}
+    }
+    # Determine if we need any constants (e.g., MPI_STATUS_SIZE, 
+    # MPI_OFFSET_KIND)
+    my %use_constants = ();
+    my $found_constants = 0;
+    for (my $i=0; $i<=$#parms; $i++) {
+	$parm = $parms[$i];
+	# Check for special args
+	$loc = $i+1;
+	if (defined($special_args{"$routine-$loc"})) {
+	    $parm = $special_args{"$routine-$loc"};
+	}
+	# Map the C type to the Fortran type
+	$cparm = $parm;
+	$cparm =~ s/\s+//g;
+	$fparm = $parmc2f{$cparm};
+	# Now, does this type contain an MPI constant?
+	if ($fparm =~ /(MPI_[A-Z_]*)/) {
+	    $use_constants{$1} = 1;
+	    $found_constants = 1;
+	}
+    }
+    if ($found_constants) {
+	print MPIBASEFD "       USE MPI_CONSTANTS,ONLY:";
+	$sep = "";
+	foreach $name (keys(%use_constants)) {
+	    print MPIBASEFD "$sep$name";
+	    $sep = ", ";
+	    $NeedConstants{$routine} .= "$name ";
+	}
+	print MPIBASEFD "\n";
+    }
+
+    # Output argument types
+    $lastParmType = "<none>";
+    for (my $i=0; $i<=$#parms; $i++) {
+	$parm = $parms[$i];
+	# Check for special args
+	$loc = $i+1;
+	if (defined($special_args{"$routine-$loc"})) {
+	    $parm = $special_args{"$routine-$loc"};
+	}
+	# Map the C type to the Fortran type
+	$cparm = $parm;
+	$cparm =~ s/\s+//g;
+	$fparm = $parmc2f{$cparm};
+	if ($fparm eq "") {
+	    print STDERR "$routine: No parm type for $cparm ($parm)\n";
+	}
+	# Split out the base type from the name
+	if ($fparm =~ /(\w+.*)\s+(%name\S.*)/) {
+	    $parmType = $1;
+	    $varName  = $2;
+	    if ($varName =~ /%name%/) {
+		$varName =~ s/%name%/v$i/;
+	    }
+	    $varName =~ s/%nl%/\n       /g;
+	    $parmType =~ s/%nl%/\n       /g;
+
+	    # Here's where we might change vector to scalar args
+	    if ($svflag) {
+		if (defined($svargs{$loc})) {
+		    # The value is the count arg for the array; later, we
+		    # can make use of that to improve the definitions
+		    if ($varName =~ /,\*/) {
+			$varName =~ s/,\*//;
+		    }
+		    elsif ($varName =~ /\(\*\)/) {
+			$varName =~ s/\(\*\)//;
+		    }
+		    else {
+			print STDERR "Failed to make arg $i in $routine a scalar\n";
+		    }
+		}
+	    }
+	}
+	else {
+	    $parmType = $fparm;
+	    $varName  = "v$i";
+	}
+	if ($parmType ne $lastParmType) {
+	    if ($lastParmType ne "<none>" ) { print MPIBASEFD "\n"; }
+	    print MPIBASEFD "       $parmType $varName";
+	    $lastParmType = $parmType;
+	}
+	else {
+	    print MPIBASEFD ", $varName";
+	}
+    }
+    if ($lastParmType ne "<none>" ) { print MPIBASEFD "\n"; }
+
+    print MPIBASEFD "       INTEGER ierror\n";
+}
+
+#
+# Replace old file with new file only if new file is different
+# Otherwise, remove new filename 
+sub ReplaceIfDifferent {
+    my ($oldfilename,$newfilename) = @_;
+    my $rc = 1;
+    if (-s $oldfilename) { 
+	$rc = system "cmp -s $newfilename $oldfilename";
+	$rc >>= 8;   # Shift right to get exit status
+    }
+    if ($rc != 0) {
+	# The files differ.  Replace the old file 
+	# with the new one
+	if (-s $oldfilename) {
+	    print STDERR "Replacing $oldfilename\n";
+	    unlink $oldfilename;
+	}
+	else {
+	    print STDERR "Creating $oldfilename\n";
+	}
+	rename $newfilename, $oldfilename || 
+	    die "Could not replace $oldfilename";
+    }
+    else {
+	unlink $newfilename;
+    }
+}

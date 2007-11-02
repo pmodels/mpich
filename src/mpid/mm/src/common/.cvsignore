@@ -1,0 +1,8 @@
+Makefile.in
+Makefile
+*.o
+*.bb
+*.bbg
+*.da
+*.gcov
+.deps

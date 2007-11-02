@@ -1,0 +1,7 @@
+Makefile.in
+Makefile
+sizeof
+*.o
+*.gcda
+*.gcno
+f77tof90

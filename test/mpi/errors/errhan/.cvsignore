@@ -1,0 +1,11 @@
+*.vcproj
+Makefile.in
+Makefile
+errstring
+errcode.c
+errcode
+adderr
+errring
+.deps
+*ebug
+*elease

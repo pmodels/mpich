@@ -1,0 +1,317 @@
+# This file was originally derived from a list of the C++ bindings
+# by using the perl script cxxtodecl.  However, that script cannot
+# handle every feature of the bindings, so the final changes 
+# were made by hand.
+<mpi2>
+-Alloc_mem  void* ( ,in:constref:Info ,return)
+dtype-Create_darray Datatype (, , ,in:const ,in:const ,in:const ,in:const , , ,return) const
+dtype-Create_hindexed Datatype (,in:const ,in:const , ,return) const
+dtype-Create_hvector Datatype (, , , ,return) const
+dtype-Create_indexed_block Datatype (, , in:const,,return) const
+dtype-Create_struct static Datatype ( ,in:const ,in:const ,in:const ,return)
+dtype-Create_subarray Datatype (, ,in:const ,in:const ,in:const , ,return) const
+dtype-Get_extent void (, , ) const
+dtype-Get_true_extent void (, , ) const
+dtype-Pack_external void (,in:const ,in:const , , , , ) const
+dtype-Pack_external_size Aint (,in:const , ,return) const
+dtype-Create_resized Datatype (,in:const ,in:const ,return) const
+dtype-Unpack_external void (,in:const ,in:const , , , , ) const
+# Errhandler creation requires special routines
+#file-Create_errhandler static Errhandler (File::Errhandler_fn* function ,return)
+file-Get_errhandler Errhandler (,return) const
+file-Set_errhandler void (,in:constref:Errhandler )
+-Free_mem void ( )
+-Get_address Aint ( ,return)
+info-Create static Info (return)
+info-Delete void (,in:const )
+info-Dup Info (,return) const
+info-Free void ()
+info-Get bool (,in:const , , ,return ) const
+info-Get_nkeys int (,return) const
+info-Get_nthkey void (, , ) const
+info-Get_valuelen bool (,in:const ,in:refint,return ) const
+info-Set void (,in:const ,in:const )
+-Is_finalized bool (return)
+req-Get_status bool (,return ) const
+# Errhandler creation requires special routines
+#win-Create_errhandler static Errhandler (Win::Errhandler_fn* function ,return)
+win-Get_errhandler Errhandler (,return) const
+win-Set_errhandler void (,in:constref:Errhandler )
+-Close_port void (in:const )
+comm-Disconnect void ()
+comm-Get_parent static Intercomm (return)
+comm-Join static Intercomm (in:const ,return)
+intra-Accept Intercomm (in:const ,in:constref:Info , ,,return) const
+intra-Connect Intercomm (in:const ,in:constref:Info , ,,return) const
+-Lookup_name void (in:const ,in:constref:Info , )
+-Open_port void (in:constref:Info , )
+-Publish_name void (in:const ,in:constref:Info ,in:const )
+-Unpublish_name void (in:const ,in:constref:Info ,in:const )
+win-Accumulate void (in:const , ,in:constref:Datatype , , , ,in:constref:Datatype ,in:constref:Op, ) const
+win-Complete void () const
+win-Create static Win (in:const , , ,in:constref:Info ,in:constref:Intracomm ,return)
+win-Fence void (, ) const
+win-Free void ()
+win-Get void ( , ,in:constref:Datatype , , , ,in:constref:Datatype, ) const
+win-Get_group Group (,return) const
+win-Lock void (, , , ) const
+win-Post void (in:constref:Group ,, ) const
+win-Put void (in:const , ,in:constref:Datatype , , , ,in:constref:Datatype, ) const
+win-Start void (in:constref:Group ,, ) const
+win-Test bool (,return) const
+win-Unlock void (, ) const
+win-Wait void () const
+comm-Allgather void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype, ) const
+comm-Allgatherv void (in:const , ,in:constref:Datatype , ,in:const ,in:const ,in:constref:Datatype, ) const
+comm-Allreduce void (in:const , , ,in:constref:Datatype ,in:constref:Op, ) const
+comm-Alltoall void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype, ) const
+comm-Alltoallv void (in:const ,in:const ,in:const ,in:constref:Datatype , ,in:const ,in:const ,in:constref:Datatype, ) const
+comm-Alltoallw void (in:const ,in:const ,in:const ,in:dtypearray:SIZE , ,in:const ,in:const ,in:dtypearray:SIZE, ) const
+comm-Barrier void () const
+comm-Bcast void (, ,in:constref:Datatype , , ) const
+comm-Gather void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype , ) const
+comm-Gatherv void (in:const , ,in:constref:Datatype , ,in:const ,in:const ,in:constref:Datatype , ) const
+comm-Reduce void (in:const , , ,in:constref:Datatype ,in:constref:Op , ) const
+comm-Reduce_scatter void (in:const , , ,in:constref:Datatype ,in:constref:Op, ) const
+comm-Scatter void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype , ) const
+comm-Scatterv void (in:const ,in:const ,in:const ,in:constref:Datatype , , ,in:constref:Datatype , ) const
+# FIXME: this entry confuses buildiface, which groups it with
+# inter-Create_intercomm (because of the class-Create -> Create_class rule
+# This needs a fix in GetCArgs, which finds the routine that matches
+# a name.
+#inter-Create Intercomm (,in:constref:Group ,return) const
+inter-Split Intercomm (, , ,return) const
+intra-Exscan void (in:const , , ,in:constref:Datatype ,in:constref:Op, ) const
+-Add_error_class int (return)
+-Add_error_code int ( ,return)
+-Add_error_string void ( ,in:const )
+comm-Call_errhandler void (, ) const
+#comm-Create_keyval static int (Comm::Copy_attr_function* comm_copy_attr_fn ,Comm::Delete_attr_function* comm_delete_attr_fn , ,return)
+comm-Delete_attr void (, )
+comm-Free_keyval static void (in:refint )
+comm-Get_attr bool (, , ,return ) const
+comm-Get_name void (, ,in:refint ) const
+comm-Set_attr void (, ,in:const ) 
+comm-Set_name void (,in:const )
+#dtype-Create_keyval static int (Datatype::Copy_attr_function* type_copy_attr_fn ,Datatype::Delete_attr_function* type_delete_attr_fn , ,return)
+dtype-Delete_attr void (, )
+dtype-Dup Datatype (,return) const
+dtype-Free_keyval static void (in:refint )
+dtype-Get_attr bool (, , ,return ) const
+dtype-Get_contents void (, , , , , ,out:dtypearray:4 ) const
+dtype-Get_envelope void (,in:refint ,in:refint ,in:refint ,in:refint ) const
+dtype-Get_name void (, ,in:refint ) const
+dtype-Set_attr void (, ,in:const )
+dtype-Set_name void (,in:const )
+file-Call_errhandler void (, ) const
+greq-Complete void ()
+# Grequest start requires special code
+#greq-Start static Grequest (in:const-Grequest::Query_function query_fn ,in:const-Grequest::Free_function free_fn ,in:const-Grequest::Cancel_function cancel_fn , ,return)
+-Is_thread_main bool (return)
+-Query_thread int (return)
+st-Set_cancelled void (,in:bool )
+st-Set_elements void (,in:constref:Datatype , )
+win-Call_errhandler void (, ) const
+#win-Create_keyval static int (Win::Copy_attr_function* win_copy_attr_fn ,Win::Delete_attr_function* win_delete_attr_fn , ,return)
+win-Delete_attr void (, )
+win-Free_keyval static void (in:refint )
+win-Get_attr bool (, , ,return ) const
+win-Get_name void (, ,in:refint ) const
+win-Set_attr void (, ,in:const )
+win-Set_name void (,in:const )
+file-Close void ()
+file-Delete static void (in:const ,in:constref:Info )
+file-Get_amode int (,return) const
+file-Get_atomicity bool (,return) const
+file-Get_byte_offset Offset (,in:const ,return) const
+file-Get_group Group (,return) const
+file-Get_info Info (,return) const
+file-Get_position Offset (,return) const
+file-Get_position_shared Offset (,return) const
+file-Get_size Offset (,return) const
+file-Get_type_extent Aint (,in:constref:Datatype ,return) const
+file-Get_view void (, ,out:reftype:Datatype ,out:reftype:Datatype , ) const
+file-Iread Request (, , ,in:constref:Datatype ,return)
+file-Iread_at Request (, , , ,in:constref:Datatype ,return)
+file-Iread_shared Request (, , ,in:constref:Datatype ,return)
+file-Iwrite Request (,in:const , ,in:constref:Datatype ,return)
+file-Iwrite_at Request (, ,in:const , ,in:constref:Datatype ,return)
+file-Iwrite_shared Request (,in:const , ,in:constref:Datatype ,return)
+file-Open static File (in:constref:Intracomm ,in:const , ,in:constref:Info ,return)
+file-Preallocate void (, )
+file-Read void (, , ,in:constref:Datatype , )
+file-Read_all void (, , ,in:constref:Datatype , )
+file-Read_all_begin void (, , ,in:constref:Datatype )
+file-Read_all_end void (, , )
+file-Read_at void (, , , ,in:constref:Datatype , )
+file-Read_at_all void (, , , ,in:constref:Datatype , )
+file-Read_at_all_begin void (, , , ,in:constref:Datatype )
+file-Read_at_all_end void (, , )
+file-Read_ordered void (, , ,in:constref:Datatype , )
+file-Read_ordered_begin void (, , ,in:constref:Datatype )
+file-Read_ordered_end void (, , )
+file-Read_shared void (, , ,in:constref:Datatype , )
+file-Seek void (, , )
+file-Seek_shared void (, , )
+file-Set_atomicity void (,in:bool )
+file-Set_info void (,in:constref:Info )
+file-Set_size void (, )
+file-Set_view void (, ,in:constref:Datatype ,in:constref:Datatype ,in:const ,in:constref:Info )
+file-Sync void ()
+file-Write void (,in:const , ,in:constref:Datatype , )
+file-Write_all void (,in:const , ,in:constref:Datatype , )
+file-Write_all_begin void (,in:const , ,in:constref:Datatype )
+file-Write_all_end void (,in:const , )
+file-Write_at void (, ,in:const , ,in:constref:Datatype , )
+file-Write_at_all void (, ,in:const , ,in:constref:Datatype , )
+file-Write_at_all_begin void (, ,in:const , ,in:constref:Datatype )
+file-Write_at_all_end void (,in:const , )
+file-Write_ordered void (,in:const , ,in:constref:Datatype , )
+file-Write_ordered_begin void (,in:const , ,in:constref:Datatype )
+file-Write_ordered_end void (,in:const , )
+file-Write_shared void (,in:const , ,in:constref:Datatype , )
+# Datarep not yet available
+#-Register_datarep void (in:const ,Datarep_conversion_function* read_conversion_fn ,Datarep_conversion_function* write_conversion_fn ,Datarep_extent_function* dtype_file_extent_fn , )
+#dtype-Create_f90_complex static Datatype ( , ,return)
+#dtype-Create_f90_integer static Datatype ( ,return)
+#dtype-Create_f90_real static Datatype ( , ,return)
+#dtype-Match_size static Datatype ( , ,return)
+<mpi1>
+# Errhandler creation requires special routines
+#comm-Create_errhandler static Errhandler (Comm::Errhandler_fn* function ,return)
+# Errhandlers are really in MPI2, but replace routines defined in mpi1
+comm-Get_errhandler Errhandler (,return) const
+comm-Set_errhandler void (,in:constref:Errhandler )
+#
+comm-Send void (in:const , ,in:constref:Datatype , , , ) const
+comm-Recv void ( , ,in:constref:Datatype , , , , ) const
+st-Get_count int (,in:constref:Datatype ,return) const
+comm-Bsend void (in:const , ,in:constref:Datatype , , , ) const
+comm-Ssend void (in:const , ,in:constref:Datatype , , , ) const
+comm-Rsend void (in:const , ,in:constref:Datatype , , , ) const
+-Attach_buffer void ( , )
+-Detach_buffer int ( out:ref:void* ,return)
+comm-Isend Request (in:const , ,in:constref:Datatype , , , ,return) const
+comm-Ibsend Request (in:const , ,in:constref:Datatype , , , ,return) const
+comm-Issend Request (in:const , ,in:constref:Datatype , , , ,return) const
+comm-Irsend Request (in:const , ,in:constref:Datatype , , , ,return) const
+comm-Irecv Request ( , ,in:constref:Datatype , , , ,return) const
+req-Wait void (, )
+req-Test bool (,return )
+req-Free void ()
+req-Waitany static int ( ,in:reqarray:1 ,return,)
+req-Testany static bool ( ,in:reqarray:1 ,in:refint ,return, )
+req-Waitall static void ( ,in:reqarray:1 ,out:statusarray:1 )
+req-Testall static bool ( ,in:reqarray:1 , return, out:statusarray:1 )
+req-Waitsome static int ( ,in:reqarray:1 , return,, out:statusarray:1)
+req-Testsome static int ( ,in:reqarray:1 ,return,, out:statusarray:1)
+comm-Iprobe bool (, , ,return, ) const
+comm-Probe void (, , , ) const
+req-Cancel void () const
+st-Is_cancelled bool (,return) const
+comm-Send_init Prequest (in:const , ,in:constref:Datatype , , , ,return) const
+comm-Bsend_init Prequest (in:const , ,in:constref:Datatype , , , ,return) const
+comm-Ssend_init Prequest (in:const , ,in:constref:Datatype , , , ,return) const
+comm-Rsend_init Prequest (in:const , ,in:constref:Datatype , , , ,return) const
+comm-Recv_init Prequest ( , ,in:constref:Datatype , , , ,return) const
+preq-Start void ()
+preq-Startall static void ( , in:preqarray:1 )
+comm-Sendrecv void (in:const , ,in:constref:Datatype , , , , ,in:constref:Datatype , , , , ) const
+comm-Sendrecv_replace void (, ,in:constref:Datatype , , , , , , ) const
+dtype-Create_contiguous Datatype (, ,return) const
+dtype-Create_vector Datatype (, , , ,return) const
+dtype-Create_indexed Datatype (,in:const ,in:const ,,return) const
+dtype-Get_size int (,return) const
+dtype-Commit void ()
+dtype-Free void ()
+st-Get_elements int (,in:constref:Datatype ,return) const
+dtype-Pack void (in:const, , , , , in:refint ,in:constref:Comm ) const
+# Note that unpack doesn't follow the standard rules for matching 
+# arguments to the C routine.
+#dtype-Unpack void (in:const, ,in:refint , , , ,in:constref:Comm ) const
+dtype-Pack_size int (, ,in:constref:Comm ,return) const
+#intra-Barrier void () const
+#intra-Bcast void (, ,in:constref:Datatype , ,) const
+#intra-Gather void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype , ) const
+#intra-Gatherv void (in:const , ,in:constref:Datatype , ,in:const ,in:const ,in:constref:Datatype , ) const
+#intra-Scatter void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype , ) const
+#intra-Scatterv void (in:const ,in:const ,in:const ,in:constref:Datatype , , ,in:constref:Datatype , ) const
+#intra-Allgather void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype ) const
+#intra-Allgatherv void (in:const , ,in:constref:Datatype , ,in:const ,in:const ,in:constref:Datatype ) const
+#intra-Alltoall void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype ) const
+#intra-Alltoallv void (in:const ,in:const ,in:const ,in:constref:Datatype , ,in:const ,in:const ,in:constref:Datatype ) const
+#intra-Reduce void (in:const , , ,in:constref:Datatype ,in:constref:Op , ) const
+# op-Init requires special handling
+#op-Init void (,User_function* function ,in:bool )
+op-Free void ()
+#intra-Allreduce void (in:const , , ,in:constref:Datatype ,in:constref:Op ) const
+#intra-Reduce_scatter void (in:const , , ,in:constref:Datatype ,in:constref:Op ) const
+intra-Scan void (in:const , , ,in:constref:Datatype ,in:constref:Op ) const
+group-Get_size int (,return) const
+group-Get_rank int (,return) const
+group-Translate_ranks static (in:constref:Group , ,in:const ,in:constref:Group , ,return)
+group-Compare static int (in:constref:Group ,in:constref:Group ,return)
+comm-Get_group Group (,return) const
+group-Union static Group (in:constref:Group ,in:constref:Group ,return)
+group-Intersect static Group (in:constref:Group ,in:constref:Group ,return)
+group-Difference static Group (in:constref:Group ,in:constref:Group ,return)
+group-Incl Group (, ,in:const ,return) const
+group-Excl Group (, ,in:const ,return) const
+group-Range_incl Group (, ,in:const ,return) const
+group-Range_excl Group (, ,in:const ,return) const
+group-Free void ()
+comm-Get_size int (,return) const
+comm-Get_rank int (,return) const
+comm-Compare static int (in:constref:Comm ,in:constref:Comm ,return)
+intra-Dup Intracomm (,return) const
+inter-Dup Intercomm (,return) const
+cart-Dup Cartcomm (,return) const
+graph-Dup Graphcomm (,return) const
+comm-Clone  (,return)
+intra-Clone  (,return) const
+inter-Clone  (,return) const
+cart-Clone  (,return) const
+graph-Clone  (,return) const
+intra-Create Intracomm (,in:constref:Group ,return) const
+intra-Split Intracomm (, , ,return) const
+comm-Free void ()
+comm-Is_inter bool (,return) const
+inter-Get_remote_size int (,return) const
+inter-Get_remote_group Group (,return) const
+intra-Create_intercomm Intercomm (, ,in:constref:Comm , , ,return) const
+inter-Merge Intracomm (,in:bool ,return) const
+intra-Create_cart Cartcomm (, ,in:const ,in:boolarray:2 ,in:bool ,return) const
+-Compute_dims void ( , , )
+intra-Create_graph Graphcomm (, ,in:const ,in:const ,in:bool ,return) const
+comm-Get_topology int (,return) const
+graph-Get_dims void (, , ) const
+graph-Get_topo void (, , , , ) const
+cart-Get_dim int (,return) const
+cart-Get_topo void (, , ,out:boolarray:2 , ) const
+cart-Get_cart_rank int (,in:const ,return) const
+cart-Get_coords void (, , , ) const
+graph-Get_neighbors_count int (, ,return) const
+graph-Get_neighbors void (, , , ) const
+cart-Shift void (, , ,in:refint ,in:refint ) const
+cart-Sub Cartcomm ( ,in:boolarray:-10 ,return) const
+cart-Map int (, ,in:const ,in:boolarray:2 ,return) const
+graph-Map int (, ,in:const ,in:const ,return) const
+-Get_processor_name void ( ,in:refint )
+errh-Free void ()
+-Get_error_string void ( , ,in:refint )
+-Get_error_class int ( ,return)
+# Wtime and tick are special
+#-Wtime double ()
+#-Wtick double ()
+-Finalize void ()
+-Is_initialized bool (return)
+comm-Abort void ( ) const
+-Pcontrol void (in:const ,... )
+# Status methods don't require routines and are handled specially
+#st-Get_source int (,return) const
+#st-Set_source void (, )
+#st-Get_tag int (,return) const
+#st-Set_tag void (, )
+#st-Get_error int (,return) const
+#st-Set_error void (, )
+-Get_version void (in:refint ,in:refint )

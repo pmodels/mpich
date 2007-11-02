@@ -1,0 +1,197 @@
+% Prototype Method Send State Machine
+% 
+% This state machine is targeted towards packet based systems such as VIA.
+% Some simplifications may be possible for stream based model like TCP.
+% 
+% Tasks for this state machine:
+% 
+% - send message at the head of the queue
+% 
+%   - message data source exists in two forms:
+% 
+%     - provided by user - potentially needing to be packed but guaranteed to be
+%       available when the CAR is enqueued
+% 
+%     - provided by associated recv CAR - may not be (completely) available
+%       until later (i.e., send could stall)
+% 
+% - track buffers provided by associated recv CAR
+% 
+% - provide buffers to associated recv CAR
+% 
+% - enforce flow control
+% 
+% 
+% This version of the state machine only handles sending from a user provided
+% buffer.  It needs to be expanded to include the forwarding cases.
+
+\begin{verbatim}
+State [Awaiting CAR],[label="Awaiting\nCAR"]
+    Event [CAR Available]
+        Invoke_Action([Decide Msg Type],
+                      [label="got CAR"])
+
+Action [Decide Msg Type]
+    // Note: An otherwise eager message may get converted to a
+    // rndv-RTS message if too many outstanding eager messages have already
+    // been sent to the receiving process.
+
+    if the type is eager
+        // TODO: we may want to convert it to rndv (rts and eventually data)
+
+    Invoke_Action([Check Buffers for Ctrl])
+
+Action [Check Buffers for Ctrl],
+       [label="Check Buffers\nfor Ctrl Pkt"]
+    // get buffers if we don't already have some
+    // always need a buffer for control information
+    if buffers are not available
+        Change_State([Awaiting Buffers for Ctrl],
+                     [label="no bufs"])
+    else
+        Invoke_Action([Check Flow for Ctrl],
+	              [label="bufs ok"])
+
+State [Awaiting Buffers for Ctrl],
+      [label="Awaiting Buffers\nfor Ctrl Pkt"]
+    Event [Buffers Available]
+        Invoke_Action([Check Flow for Ctrl],
+                      [label="bufs ok"])
+
+Action [Check Flow for Ctrl],
+       [label="Check Flow Control\nfor Ctrl Pkt"]
+    if flow restricted // all tensed up
+        Change_State([Awaiting Flow for Ctrl],
+                     [label="flow\nrestricted"])
+    else
+        Invoke_Action([Post Send Ctrl],
+                      [label="flow ok"])
+
+State [Awaiting Flow for Ctrl],
+      [label="Awaiting Flow\nfor Ctrl Pkt"]
+    Event [Flow Enabled]
+        Invoke_Action([Post Send Ctrl],
+                      [label="flow ok"])
+
+Action [Post Send Ctrl],
+       [label="Post Send\nfor Ctrl Pkt"]
+    type = OD.type
+    // pack meta-data into the packet buffer
+    // meta-data may include the envelope information (context, src rank,
+    // and tag) as well as the ready send bit
+    put type in packet buffer
+    if type is short or eager
+        put the envelope info and rsend bit in the packet buffer
+    else if type is rndv-rts message
+        put the envelope and LIBA(OD) into the packet buffer
+	OD.type = rndv-data
+    else if type is rndv-cts
+        put the two LIBAs in the packet buffer
+    else if type is rndv-data
+        put the LIBA in the packet buffer
+    else if type is flow control
+        // TODO
+    
+    // pack data from DD into packet buffer (as much as will fit) if we have
+    // any data to send
+    if type is short, eager, or rndv-data and a DD exists
+        if direct access flag is set
+            point network send descriptor at the user data (which is pinned)
+        else
+            pack data into the packet buffer (from the data descriptor)
+
+    post the send to the network device
+    if there are no data packets to send (i.e., short)
+        Invoke_Action([Signal CAR Completion],
+	              [label="msg complete"])
+    else if direct access flag is set
+        Invoke_Action([Check Flow for Data],
+                      [label="more data,\ndirect send"])
+    else
+        Invoke_Action([Check Buffers for Data],
+                      [label="more data,\nbuffered send"])
+    
+Action [Check Buffers for Data],
+       [label="Check Buffers\nfor Data Pkts"]
+    // try to get buffers if we need them
+    if buffers aren't available
+        Change_State([Awaiting Buffers for Data],
+		     [label="no bufs"])
+    else
+        Invoke_Action([Check Flow for Data],
+		      [label="bufs ok"])
+
+State [Awaiting Buffers for Data],
+      [label="Awaiting Buffers\nfor Data Pkts"]
+    Event [Buffers Available]
+        Invoke_Action([Check Flow for Data],
+                      [label="bufs ok"])
+
+Action [Check Flow for Data],
+       [label="Check Flow Control\nfor Data Pkts"]
+    if flow restricted
+        Change_State([Awaiting Flow for Data],
+                     [label="flow\nrestricted"])
+    else
+        Invoke_Action([Post Send Data],
+		      [label="flow ok"])
+
+State [Awaiting Flow for Data],
+      [label="Awaiting Flow Control\nfor Data Pkts"]
+    Event [Flow Enabled]
+        Invoke_Action([Post Send Data],
+                      [label="flow ok"])
+
+// TODO: Add buffer packing into flow
+
+Action [Post Send Data],
+       [label="Post Send\nfor Data Pkts"]
+    if direct access flag is set
+        point network send descriptor at the user data (which is pinned)
+    else
+        pack data into the packet buffer (from the data descriptor)
+    post the send to the network device
+    // Note: In the implementation, we may want to post multiple packets sends
+    // at one time, amortizing the cost of checking for buffers and checking
+    // flow control over a set of outgoing packets.  We are uncertain how
+    // packing multiple buffers then posting multiple sends will affect
+    // peformance, but clearly amortizing costs when sending straight out of
+    // the user buffer will be a win.
+
+    if there are more data packets to send
+        if we are sending directly from the user buffer
+            Invoke_Action([Check Flow for Data],
+                          [label="more data,\ndirect send"])
+        else
+            Invoke_Action([Check Buffers for Data],
+                          [label="more data,\nbuffered send"])
+    else
+        Invoke_Action([Signal CAR Completion],
+	              [label="msg complete"])
+    
+Action [Signal CAR Completion], [label="Check/Signal\nCAR Completion"]
+    if we did not send all data directly from the user buffer
+        reset (local) completion flag
+        if we send some of the data directly from the user buffer
+            lock CAR.mutex
+	        decrement CAR outstanding activities counter
+		if outstanding activity counter reaches zero
+                    set completion flag
+            unlock CAR.mutex
+        else // all data sent using packet buffers
+            set completion flag
+        if completion flag is set
+	    decrement completion counter associated with CAR
+        
+    Invoke_Action([Check Ready CAR])
+
+Action [Check Ready CAR],[label="Check for Ready\nSend CAR"]
+    if more CARs are on the send queue
+        Invoke_Action([Decide Msg Type],
+                      [label="ready CAR"])
+    else
+        Change_State([Awaiting CAR],
+                     [label="no more\nCARs"])
+   
+
+\end{verbatim}

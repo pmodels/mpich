@@ -1,0 +1,60 @@
+echo "RUNNING SETUP_CHANNEL FOR THE SHARED MEMORY CHANNEL"
+
+#
+# NOTE: This file is sourced from the setup_device with the current working
+# directory set to the top-level build directory.
+#
+
+#
+# Variables of interest...
+#
+# $with_device - device name and arguments
+# $device_name - name of the device
+# $device_args - contains name of channel select plus an channel args
+# $channel_name - name of the channel
+# $master_top_srcdir - top-level source directory
+# $master_top_builddir - top-level build directory
+# $ac_configure_args - all arguments passed to configure
+#
+
+file=${master_top_srcdir}/src/mpid/${device_name}/channels/shm/setup_channel.args
+if test -f ${file} ; then
+    . ${file}
+else
+    echo "Error: ${file} not found"
+    exit 1
+fi
+
+pathlist=""
+pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/include"
+pathlist="$pathlist src/mpid/common/locks"
+for path in $pathlist ; do
+    #CPPFLAGS="$CPPFLAGS -I`pwd`/${path}"
+    #CPPFLAGS="$CPPFLAGS -I${master_top_srcdir}/${path}"
+    MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
+done
+
+devsubsystems="$devsubsystems src/mpid/common/locks"
+
+CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS"
+
+if test "$rdma_name" = proc ; then
+    CPPFLAGS="$CPPFLAGS -DHAVE_SHARED_PROCESS_READ -DMPIDI_CH3_CHANNEL_RNDV"
+fi
+if test "$rdma_mode" = get ; then
+    CPPFLAGS="$CPPFLAGS -DUSE_SHM_RDMA_GET"
+fi
+
+dir=${master_top_srcdir}/src/mpid/common/locks
+if test ! -d $dir ; then
+    echo "ERROR: ${dir} does not exist"
+    exit 1
+fi
+file=${dir}/setup
+if test -f $file ; then
+    echo sourcing $file
+    . $file
+else 
+    echo "Cannot find $file , needed to build process locks"
+    exit 1
+fi

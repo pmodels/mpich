@@ -1,0 +1,116 @@
+AC_PREREQ(2.59)
+AC_INIT(configure.in)
+
+dnl
+dnl Set the directory that contains support scripts such as install-sh and
+dnl config.guess
+dnl
+AC_CONFIG_AUX_DIR(../../../../../confdb)
+
+dnl
+dnl Definitions will be placed in this file rather than in the DEFS variable
+dnl
+AC_CONFIG_HEADER(include/mpidi_ch3i_sctp_conf.h)
+
+echo "RUNNING CONFIGURE FOR THE SCTP CHANNEL"
+
+dnl
+dnl First check that we have a clean build if we are doing a VPATH build
+if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status ; then
+    AC_MSG_ERROR([You cannot do a VPATH build if the source directory has been
+    configured.  Run "make distclean" in $srcdir first.])
+fi
+
+PAC_PROG_MAKE
+
+dnl AC_CHECK_HEADER(net/if.h) fails on Solaris; extra header files needed
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <net/if.h>
+],,lac_cv_header_net_if_h=yes,lac_cv_header_net_if_h=no)
+
+echo "checking for net/if.h... $lac_cv_header_net_if_h"
+
+if test "$lac_cv_header_net_if_h" = "yes" ; then
+    AC_DEFINE(HAVE_NET_IF_H, 1, [Define if you have the <net/if.h> header file.])
+fi
+
+AC_CHECK_HEADERS(				\
+	netdb.h					\
+	sys/ioctl.h				\
+	sys/socket.h				\
+	sys/sockio.h				\
+	sys/types.h				\
+	errno.h)
+
+# netinet/in.h often requires sys/types.h first.  With AC 2.57, check_headers
+# does the right thing, which is to test whether the header is found 
+# by the compiler, but this can cause problems when the header needs 
+# other headers.  2.57 changes the syntax (!) of check_headers to allow 
+# additional headers.
+AC_CACHE_CHECK([for netinet/in.h],ac_cv_header_netinet_in_h,[
+AC_TRY_COMPILE([#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#include <netinet/in.h>],[int a=0;],
+    ac_cv_header_netinet_in_h=yes,
+    ac_cv_header_netinet_in_h=no)])
+if test "$ac_cv_header_netinet_in_h" = yes ; then
+    AC_DEFINE(HAVE_NETINET_IN_H,1,[Define if netinet/in.h exists])
+fi
+
+
+AC_ARG_WITH(sctp, [--with-sctp=path - specify path where sctp include directory and lib directory can be found],
+if test "${with_sctp}" != "yes" -a "${with_sctp}" != "no" ; then
+    LDFLAGS="$LDFLAGS -L${with_sctp}/lib"
+    CPPFLAGS="$CPPFLAGS -I${with_sctp}/include"
+fi,)
+AC_ARG_WITH(sctp-include, [--with-sctp-include=path - specify path to sctp include directory],
+if test "${with_sctp_include}" != "yes" -a "${with_sctp_include}" != "no" ; then
+    CPPFLAGS="$CPPFLAGS -I${with_sctp_include}"
+fi,)
+AC_ARG_WITH(sctp-lib, [--with-sctp-lib=path - specify path to sctp lib directory],
+if test "${with_sctp_lib}" != "yes" -a "${with_sctp_lib}" != "no" ; then
+    LDFLAGS="$LDFLAGS -L${with_sctp_lib}"
+fi,)
+
+AC_CHECK_HEADER([netinet/sctp.h], , [
+    AC_MSG_ERROR(['sctp.h not found.  Did you specify --with-sctp= or --with-sctp-include=?'])
+    ])
+AC_CHECK_LIB(sctp, sctp_recvmsg, , [
+    AC_MSG_ERROR(['sctp library not found.  Did you specify --with-sctp= or --with-sctp-lib=?'])
+    ])
+
+AC_SUBST(device_name)
+AC_SUBST(channel_name)
+
+AC_SUBST(AR)
+AC_SUBST(RANLIB)
+AC_SUBST(MPILIBNAME)
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
+AC_SUBST(CPPFLAGS)
+PAC_CC_SUBDIR_SHLIBS
+AC_SUBST(master_top_srcdir)
+# Master_top_builddir is imported from the top; use it for the "top"
+# (used for things like libtool)
+if test -z "$master_top_builddir" ; then
+    if test -s ../../../../../.mpich2 ; then
+        master_top_builddir=../../../../..
+    fi
+fi
+AC_SUBST(master_top_builddir)
+dnl
+dnl Dependency handling
+AC_SUBST(MAKE_DEPEND_C)
+dnl
+dnl Etags
+AC_SUBST(ETAGS)
+AC_SUBST(ETAGSADD)
+export ETAGS
+export ETAGSADD
+
+CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
+
+AC_OUTPUT(Makefile src/Makefile localdefs)

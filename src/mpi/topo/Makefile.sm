@@ -1,0 +1,15 @@
+mpi_sources = cart_coords.c cart_create.c cart_get.c \
+ cart_map.c cart_rank.c cart_shift.c cart_sub.c dims_create.c graph_get.c \
+ graph_map.c graph_nbr.c graphcreate.c graphdimsget.c graphnbrcnt.c \
+ cartdim_get.c topo_test.c
+
+HEADERS = topo.h
+
+lib${MPILIBNAME}_a_SOURCES = ${mpi_sources} topoutil.c
+INCLUDES = -I../../include -I${top_srcdir}/src/include
+profilelib_${MPILIBNAME} = ${PMPILIBNAME}
+profilelib_${MPILIBNAME}_SOURCES = ${mpi_sources}
+#
+doc_HTML_SOURCES  = ${mpi_sources}
+doc_MAN_SOURCES   = ${mpi_sources}
+doc_LATEX_SOURCES = ${mpi_sources}

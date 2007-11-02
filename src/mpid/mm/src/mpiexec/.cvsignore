@@ -1,0 +1,11 @@
+*.o
+*.bb
+*.bbg
+*.da
+*.gcov
+Makefile
+Makefile.in
+mpiexec.plg
+Debug
+Release
+.deps

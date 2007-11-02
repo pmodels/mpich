@@ -1,0 +1,123 @@
+#! /bin/sh
+#
+# This is a simple script that makes sure that checkbuilds can be 
+# created and then runs it
+# The cb suffix is for "check build"
+srcdir=/home/MPI/testing/mpich2/mpich2
+if [ ! -d $srcdir ] ; then
+    if [ -d /homes/MPI/testing/mpich2/mpich2 ] ; then
+        srcdir=/homes/MPI/testing/mpich2/mpich2
+    else
+        # We'll check for it later, after the args
+        srcdir=
+    fi
+fi
+outdir=/home/MPI/nightly
+if [ ! -d $outdir ] ; then
+    if [ -d /homes/MPI/nightly ] ; then
+        outdir=/homes/MPI/nightly
+    else
+        # We'll check for it later, after the args
+        outdir=
+    fi
+fi
+if [ -z "$tmpdir" ] ; then tmpdir=/sandbox/$LOGNAME ; fi
+if [ -z "$rundir" ] ; then rundir=$tmpdir/cb/mpich2 ; fi
+if [ -z "$mpichtestdir" ] ; then mpichtestdir=$tmpdir/cb/mpitest ; fi
+if [ -z "$mpicxxtestdir" ] ; then mpicxxtestdir=$tmpdir/cb/mpicxxtest ; fi
+if [ -z "$inteltestdir" ] ; then inteltestdir=$tmpdir/cb/MPITEST ; fi
+
+date=`date "+%Y-%m-%d"`
+# default outfile
+outfile=testbuild.xml
+tests="mpich:mpicxx:intel:mpich2"
+#
+# Option options to checkbuild
+other_opts=""
+# Keep track of which compilers are set
+ccset=no
+cxxset=no
+fcset=no
+f90set=no
+#
+# Get options
+for arg in "$@" ; do
+    argval=""
+    case $arg in 
+        -*=*) argval=`echo "$arg" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+    esac
+
+    case $arg in 
+    -outfile=*) outfile=$argval ;;
+    -outdir=*)  outdir=$argval ;;
+    -tests=*)   tests=$argval ;;
+    -echo) set -x ;;
+    *) other_opts="$other_opts '$arg'" 
+    envset=`echo A$arg | sed -e 's/A-env=\([A-Z]*\).*/\1/'`
+    if [ "$envset" != "$arg" ] ; then
+        case $envset in 
+	    CC) ccset=yes ;;
+	    FC) fcset=yes ;;
+	    CXX) cxxset=yes ;;
+	    F90) f90set=yes ;;
+	esac
+    fi
+    ;;
+    esac
+done
+
+# Construct the full outfile name from the dir and file
+outfile="$outdir/$outfile"
+if [ ! -d "$srcdir" ] ; then
+    echo "Could not find MPICH2 source dir"
+    exit 1
+fi
+if [ ! -d $rundir ] ; then 
+    # Assume that we have mkdir -p
+    mkdir -p $rundir
+fi
+if [ ! -d $outdir ] ; then 
+    # Assume that we have mkdir -p
+    mkdir -p $outdir
+fi
+if [ ! -d "$rundir/maint" ] ; then
+    mkdir "$rundir/maint"
+fi
+if [ ! -d $mpichtestdir ] ; then
+    mkdir $mpichtestdir
+fi
+if [ ! -d $mpicxxtestdir ] ; then
+    mkdir $mpicxxtestdir
+fi
+if [ ! -d $inteltestdir ] ; then
+    mkdir $inteltestdir
+fi
+# We don't need to build the mpich2testdir because it is part of the mpich2
+# distribution
+# Build the current version of checkbuilds
+(cd $rundir/maint && $srcdir/maint/configure 2>&1 >/dev/null)
+if [ ! -x $rundir/maint/checkbuilds ] ; then
+    echo "Could not build checkbuilds"
+    exit 1
+fi
+#
+#
+# -tests="mpich:mpicxx:intel"
+# Use -tests="mpich:mpicxx" to get a smaller list of tests.
+# Use eval to make sure that quoted arguments containing spaces are handled
+# correctly
+# Set the default values of the CC and FC environment variables
+#envargs='-envopt="CC;cc;gcc" -envopt="FC;f77;g77"'
+envargs=""
+if [ "$ccset" = no ] ; then
+    envargs='-envopt="CC;cc;gcc"'
+fi
+if [ "$fcset" = no ] ; then
+#    envargs="$envargs '-envopt="'"'"FC;f77;g77"'"'"'"
+    envargs="$envargs -envopt="'"'"FC;f77;g77"'"'
+fi
+#			  '-envopt="CC;cc;gcc"' '-envopt="FC;f77;g77"' 
+eval $rundir/maint/checkbuilds -rundir=$rundir \
+			$envargs \
+			  "-tests='""$tests""'" -tmpdir=$tmpdir \
+			  -xml -maxcount=1 -outfile=$outfile $other_opts

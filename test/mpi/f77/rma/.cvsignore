@@ -1,0 +1,9 @@
+Makefile.in
+Makefile
+*.o
+addsize.h
+*ebug*
+*elease*
+*.vfproj
+*.gcda
+*.gcno

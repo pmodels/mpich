@@ -1,0 +1,5 @@
+# For just these four states, we define specific colors
+MPID_STATE_MPI_IRECV MPI_Irecv 255 64 64
+MPID_STATE_MPI_ISEND MPI_Isend 64 64 255
+MPID_STATE_MPI_RECV MPI_Recv 255 0 0
+MPID_STATE_MPI_SEND MPI_Send 0 0 255

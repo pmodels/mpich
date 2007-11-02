@@ -1,0 +1,9 @@
+#EXTRA_DIRS = ../../../common/locks
+SUBDIRS = nemesis src 
+
+distclean-local:
+	-rm -f include/mpidi_ch3i_nemesis_conf.h
+
+maintainer-clean-local:
+	-rm -f include/mpidi_ch3i_nemesis_conf.h.in
+

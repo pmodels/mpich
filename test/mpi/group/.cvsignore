@@ -1,0 +1,15 @@
+*.vcproj
+Makefile.in
+Makefile
+errstring
+grouptest
+groupcreate
+grouptest2
+glpid
+groupnullincl
+gtranks
+.deps
+*ebug
+*elease
+*.gcda
+*.gcno

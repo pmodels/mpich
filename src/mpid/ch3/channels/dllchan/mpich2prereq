@@ -1,0 +1,4 @@
+#! /bin/sh
+if test "$enable_dynamiclibs" != yes ; then
+   enable_dynamiclibs=yes
+fi

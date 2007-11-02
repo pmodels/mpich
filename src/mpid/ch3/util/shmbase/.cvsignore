@@ -1,0 +1,15 @@
+Makefile.in
+Makefile
+configure
+autom4te.cache
+config.*
+mpidi_ch3shmbase_conf.h.in
+mpidi_ch3shmbase_conf.h
+.state-cache
+.deps
+*.lo
+*.o
+.state-cache
+*.gcov
+*.gcda
+*.gcno

@@ -1,0 +1,5 @@
+INCLUDES = -I. -I../../include -I${master_top_srcdir}/src/ch3/channels/nemesis/nemesis/include -I${master_top_srcdir}/src/include \
+           -I${top_builddir}/src/include
+lib${MPILIBNAME}_a_SOURCES = \
+  mx_module_finalize.c  mx_module_init.c  mx_module_poll.c      mx_module_send.c \
+  mx_module_getput.c    mx_module_lmt.c   mx_module_register.c  mx_module_test.c

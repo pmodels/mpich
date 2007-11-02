@@ -1,0 +1,10 @@
+Debug*
+Release*
+*.aps
+*.clw
+*.plg
+*.ncb
+*.suo
+.deps
+*.user
+.state-cache

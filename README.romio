@@ -1,0 +1,13 @@
+BUILDING ROMIO INTO MPICH2
+
+By default, ROMIO, an implementation of the I/O portion of MPI-2 will be
+built as a part of MPICH2.  The file systems to be built can be
+speicified by passing them in  a '+'-delimited list to the
+--with-file-system configure option.   for example:
+--with-file-system="pvfs+nfs+ufs"
+
+If you have installed version 2 of the PVFS file system, you can use the
+'--with-pvfs2=<prefix>' configure option to specify where libraries,
+headers, and utilities have been installed.  If you have added the pvfs
+utilities to your PATH, then ROMIO will detect this and build support
+for PVFS automatically.

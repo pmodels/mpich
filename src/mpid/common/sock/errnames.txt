@@ -1,0 +1,52 @@
+#
+# Sock
+#
+**sock|setalloc:unable to allocate a new sock set object
+**sock|sockalloc:unable to allocate a new sock object
+**sock|badbuf:the supplied buffer contains invalid memory
+**sock|badbuf %d %d:the supplied buffer contains invalid memory (set=%d,sock=%d)
+**sock|badhandle:sock contains an invalid handle
+**sock|badhdbuf:a memory fault occurred while accessing the host description string
+**sock|badhdmax:the length of the host description string must be non-negative
+**sock|badhdlen:host description string to small to store description
+**sock|badiovn:size of iov is invalid
+**sock|badiovn %d %d %d:size of iov is invalid (set=%d,sock=%d,iov_n=%d)
+**sock|badlen:bad length parameter(s)
+**sock|badlen %d %d %d %d:bad length parameter(s) (set=%d,sock=%d,min=%d,max=%d)
+**sock|badport:port number is out of range
+**sock|badport %d:port number is out of range (sock=%d)
+**sock|badsock:supplied sock is corrupt
+**sock|connclosed:connection closed by peer
+**sock|connclosed %d %d:connection closed by peer (set=%d,sock=%d)
+**sock|connfailed:connection failure
+**sock|connfailed %d %d:connection failure (set=%d,sock=%d)
+**sock|connrefused:connection refused
+**sock|close_cancel:operation cancelled because sock was closed locally
+**sock|close_cancel %d %d:operation cancelled because sock was closed locally (set=%d,sock=%d)
+**sock|closing:sock is in the process of being closed locally
+**sock|closing %d %d:sock is in the process of being closed locally (set=%d,sock=%d)
+**sock|closing_already:a close operation is already posted
+**sock|closing_already %d %d:a close operation is already post (set=%d,sock=%d)
+**sock|closed:sock has been closed locally
+**sock|getport:failed to obtain port number of the listener
+**sock|hostres:unable to resolve host name to an address
+**sock|listener_bad_sock:supplied sock is not a listener
+**sock|listener_bad_sock %d %d:supplied sock is not a listener (set=%d,sock=%d)
+**sock|listener_bad_state:supplied listener sock is in a bad state
+**sock|listener_bad_state %d %d %d:supplied listener sock is in a bad state (set=%d,sock=%d,state=%d)
+**sock|listener_read:read operation not allowed on a listener
+**sock|listener_read %d %d:read operation not allowed on a listener (set=%d,sock=%d)
+**sock|listener_write:write operation not allowed on a listener
+**sock|listener_write %d %d:write operation not allowed on a listener (set=%d,sock=%d)
+**sock|notconnected:sock is not connected
+**sock|notconnected %d %d:sock is not connected (set=%d,sock=%d)
+**sock|nosock:no new sock was available to accept
+**sock|oserror:unexpected operating system error
+**sock|osnomem:operating system routine failed due to lack of memory
+**sock|osnomem %d %d:operating system routine failed due to lack of memory (set=%d,sock=%d)
+**sock|osnomem %s %d %d:operating system routine %s failed due to lack of memory (set=%d,sock=%d)
+**sock|reads:attempt to perform multiple simultaneous reads
+**sock|reads %d %d:attempt to perform multiple simultaneous reads (set=%d,sock=%d)
+**sock|uninit:Sock library has not been initialized
+**sock|writes:attempt to perform multiple simultaneous writes
+**sock|writes %d %d:attempt to perform multiple simultaneous writes (set=%d,sock=%d)

@@ -1,0 +1,7 @@
+Makefile.in
+Makefile
+reorder
+Debug*
+Release*
+*.plg
+.deps

@@ -1,0 +1,13 @@
+dup 2
+dupic 4
+commname 4
+ic1 4
+icgroup 8
+icm 8
+icsplit 8
+iccreate 8
+ctxalloc 2
+ctxsplit 4
+cmfree 4
+cmsplit 4
+probe-intercomm 2

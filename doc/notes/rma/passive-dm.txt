@@ -1,0 +1,44 @@
+Implementation of passively synchronized RMA for distributed memory
+machines
+
+------------------------------------------------------------------------
+
+Base Assumptions
+
+* All of the local windows are located in process local (not shared or
+remotely accessible) memory.
+
+* Only basic datatypes are supported for the target.
+
+* Only active (fence) synchronization is supported.
+
+* The application is single threaded.
+
+* The MPI runtime system is single threaded.
+
+------------------------------------------------------------------------
+
+General Notes
+
+
+------------------------------------------------------------------------
+
+Data Structures
+
+* MPID_Win
+
+  * struct MPIR_Win
+
+------------------------------------------------------------------------
+
+MPID_Win_lock
+
+------------------------------------------------------------------------
+
+MPID_Win_unlock
+
+------------------------------------------------------------------------
+
+MPID_Accumulate
+
+

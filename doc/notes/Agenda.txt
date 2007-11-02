@@ -1,0 +1,19 @@
+* agent (bottom up)
+
+* pt2pt
+
+  - wildcard receives (and matching in general)
+
+* make progress
+
+* inter-method interface
+
+the next thing to do:
+- define CARs for the send and receive case
+- define an interface to the CA to satisfy these CARs
+- define an interface to the method(s) which can service these CARs or
+  whatever the agent passes down
+- work through a scenario using this whole layered design
+
+- rinse and repeat for a collective scenario
+

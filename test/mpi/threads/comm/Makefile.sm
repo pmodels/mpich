@@ -1,0 +1,15 @@
+INCLUDES = -I../../include -I${srcdir}/../../include
+LDADD = ../../util/mtest.o ../util/mtestthread.o
+ctxdup_LDADD = -lpthread 
+DEPADD = @MPILIBLOC@ ../../util/mtest.o ../util/mtestthread.o
+smvar_do_sharedlibs = 0
+
+# Use extra programs to list programs that should not be built by default.
+EXTRA_PROGRAMS       = 
+
+ctxdup_SOURCES  = ctxdup.c
+
+../../util/mtest.o:
+	(cd ../../util && $(MAKE) mtest.o)
+../util/mtestthread.o:
+	(cd ../util && $(MAKE) mtestthread.o)

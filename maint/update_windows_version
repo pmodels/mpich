@@ -1,0 +1,83 @@
+#! /usr/bin/perl
+
+$version = "";
+$filename = "mpich2i.vdproj";
+$verbose = false;
+
+# Create two new UUIDs
+chomp($product_uuid = `uuidgen`);
+chomp($package_uuid = `uuidgen`);
+#print "'" . $product_uuid . "'\n";
+#print "'" . $package_uuid . "'\n";
+
+# Parse the command line
+foreach $arg (@ARGV)
+{
+#	print "$arg\n";
+	if (substr($arg, 1, 5) eq "file:")
+	{
+		$filename = substr $arg, 6;
+#		print "file = '" . $filename . "'\n";
+	}
+	elsif (substr($arg, 1, 8) eq "version:")
+	{
+		$version = substr $arg, 9;
+#		print "version = '" . $version . "'\n";
+	}
+	elsif ($arg eq "-v" || $arg eq "/v")
+	{
+		$verbose = true;
+	}
+	else
+	{
+		$version = $arg;
+#		print "version = '" . $version . "'\n";
+	}
+}
+
+# Get the version if none is specified on the command line
+if ($version eq "")
+{
+	unless (open VERSION_FILE, "<Version")
+	{
+		die "Error: Cannot open Version file: $!";
+	}
+	$_ = <VERSION_FILE>;
+	s/\r//;
+	chomp;
+	$version = $_;
+	close VERSION_FILE;
+}
+
+#print "version = '$version'\n";
+#print "ProductCode = $product_uuid\n";
+#print "PackageCode = $package_uuid\n";
+
+unless (open PROJ, "<$filename")
+{
+	die "Error: Cannot open project file ($filename): $!";
+}
+unless (open PROJ_TMP, ">$filename.tmp")
+{
+	die "Error: Cannot open output file ($filename.tmp): $!";
+}
+
+while (<PROJ>)
+{
+	s/(ProductVersion" = "[\d]:).*"/\1$version"/;
+	s/(ProductCode.*{).*}/\1\U$product_uuid}/;
+	s/(PackageCode.*{).*}/\1\U$package_uuid}/;
+	print PROJ_TMP "$_";
+}
+close PROJ;
+close PROJ_TMP;
+unless (unlink "$filename")
+{
+	die "Error: Unable to delete the project file ($filename): $!";
+}
+unless (rename "$filename.tmp", "$filename")
+{
+	die "Error: Unable to rename '$filename.tmp' -> '$filename': $!";
+}
+
+print "Success\n";

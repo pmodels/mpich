@@ -1,0 +1,230 @@
+%
+% Title pages for ANL reports.  To allow for the inclusion of a graphics
+% figure, \ANLG may be defined
+\def\ANLG{\vskip 1.6 in minus 1in}
+\def\ANLEDITED{by}
+\newif\ifanltm
+\anltmfalse
+%\def\DefaultSupport{This work was supported in part by the Office of 
+%Scientific Computing, U.S. Department of Energy\ifanltm\else, under Contract W-31-109-Eng-38\fi}
+\def\DefaultSupport{This work was supported by the Mathematical, Information,
+and Computational Sciences Division subprogram of the
+Office of Computational and Technology Research, U.S. Department
+of Energy\ifanltm\else, under Contract W-31-109-Eng-38\fi}
+
+%
+% Titlepage style for Argonne reports (TechReport)
+% \ANLTitle{title}{Authors}{ReportNumber}{Date}
+%
+% This should really be done by putting together boxes of fixed height and
+% width.
+\long\def\ANLTitle#1#2#3#4{{\oddsidemargin 0pt \evensidemargin 0pt\relax
+\leftskip0in\rightskip0in\relax
+\voffset 0pt
+\topmargin 0pt
+\vbox to \vsize{%
+\vsize=\TMPageHeight
+\hsize=6.5in
+\textwidth=\hsize
+\setcounter{page}{0}
+\thispagestyle{empty}
+\vbox to \vsize{
+\vskip-1in\hbox to \hsize{\hskip -.5in\vbox{%
+{\advance\leftskip 4.0in
+\noindent
+Distribution Category: \\
+Mathematics and \\ 
+\null\nobreak\hspace{.25in} Computer Science (UC-405)
+\par
+}
+
+\begin{center}
+
+\vspace{.2in}
+{\large
+ARGONNE NATIONAL LABORATORY\\
+}
+9700 South Cass Avenue \\
+Argonne, IL 60439
+\end{center}
+
+\vspace{.06in}
+\begin{center}
+{\large\bf
+\vrule width 1.05in height .4pt\\
+ANL-#3 \\
+\vskip -8pt
+\vrule width 1.05in height .4pt\\
+}
+\end{center}
+\vskip .75 in
+\begin{center}
+{\Large\bf #1\par}
+\end{center}
+\vskip .1 in
+\begin{center}
+\ANLEDITED
+\end{center}
+\vskip .1in
+\begin{center}
+{\large #2\par}
+\end{center}
+\ANLG
+\centerline{#4}
+\vfill
+\begin{center}
+
+\parbox{4in}{
+{\small \DefaultSupport.}}
+\end{center}
+\hss}}\vss}}\vfill\eject}}
+%
+% Use these for positioning.  This is a box of 0 size
+\def\ZBox#1{\vbox to 0pt{\hbox to 0pt{#1\hss}\vss}}
+% This is the PREPrint title page
+% \ANLPreprintTitle{title}{Authors}{ReportNumber}{Date}
+% Report number includes the MCS-Pxxx-mmyy
+% Date should include Month, Year (January 1993)
+% Change titlehoffset to move page left/right
+\def\titlehoffset{0in}
+\long\def\ANLPreprintTitle#1#2#3#4{\vbox to \vsize{%
+%\vsize=9.5in
+\hbox to \hsize{%
+\hsize=7in
+\vbox to 9.5in{\vskip -1.0in\hskip\titlehoffset\hbox to 7in{\vbox{%
+\hoffset=-.4in
+\voffset=-1.3in
+\thispagestyle{empty}
+\null
+\ZBox{\hskip-.5in\vbox{\vskip .25in %
+\epsfxsize=6in\epsfbox{../adi3/anlpre.eps}}}
+\ZBox{\vbox{\vskip 8in\vbox to 1.5in{\begin{center}\Large\bf
+Mathematics and Computer Science Division\\Argonne National Laboratory
+\end{center}}}}
+\ZBox{\hskip 6in\vbox{\vskip 8.8in\epsfxsize=.8in\epsfbox{argonne.ps}}}
+\hfill{\Large\bf PREPRINT #3}
+
+%\vspace{.4in}
+\begin{center}
+\vbox to 2.0in{\vskip 0in plus .4in\hbox to \hsize{\hfill\vbox{\hbox to 4in{\hsize=4in
+\vbox{
+{\Large\bf #1}
+\vskip .2in minus .3in
+by
+\vskip .2in minus .3in
+{\large\em #2}\par}}}\hfill}
+\vskip 0in plus .6in
+}
+%\parbox{4in}{\begin{center}
+%{\Large\bf #1}\end{center}}
+%
+%\vspace{.3in}
+%
+%by
+%
+%\vspace{.3in}
+%
+%{\large\em #2}
+%
+\vspace{4in}
+
+\hoffset=-.4in
+{\large #4}
+\end{center}
+}\hss}\vss}\hss}\vss}
+\clearpage
+\setcounter{page}{1}
+}
+
+%
+% Our color postscript printer doesn't print on all (or even that much of the
+% paper).  If the output is for that printer, select \UseColorPrinter
+\def\TMPageHeight{8.5in}
+\def\UseColorPrinter{\gdef\TMPageHeight{8in}}
+%
+% Titlepage style for Argonne reports (TechMemo)
+% \ANLTMTitle{title}{Authors}{ReportNumber}{Date}
+%
+% This should really be done by putting together boxes of fixed height and
+% width.
+%
+% Default margins
+\def\titleleftmargin{0pt}
+\def\titletopmargin{0pt}
+\long\def\ANLTMTitle#1#2#3#4{{\leftskip0in\rightskip0in\relax
+%\oddsidemargin 0pt \evensidemargin 0pt\relax
+\oddsidemargin \titleleftmargin \evensidemargin \titleleftmargin\relax
+\voffset 0pt
+\topmargin \titletopmargin
+\vbox to \vsize{%
+\vsize=\TMPageHeight
+\hsize=6.5in
+\textwidth=\hsize
+\setcounter{page}{0}
+\thispagestyle{empty}
+\vbox to \vsize{
+\vskip-1in\hbox to \hsize{\hfill\Large ANL/MCS-TM-#3}
+\vskip 1.3in
+\vbox to 5.5in{\vskip 0pt plus 10pt
+\begin{center}
+{\Large\bf #1\par}
+\end{center}
+\vskip .1 in
+\begin{center}
+\ANLEDITED
+\end{center}
+\vskip .1in
+\begin{center}
+{\large #2}
+\end{center}
+\ANLG
+\vss
+}
+\vfill
+\ZBox{\epsfxsize=1.0in\epsfbox{argonne.ps}}
+\begin{flushright}
+\Large
+MATHEMATICS AND\\
+COMPUTER SCIENCE\\
+DIVISION
+\end{flushright}
+}\vss}\vfill\eject}}
+
+%
+% Preprint title page
+% Title page macros
+% generates an Argonne Preprint title page.
+% use
+%       \titlepagesupabst{title}{author}{report#}{support statement}
+%
+% title page with support and abstract
+% the abstract is the 5th argument.
+%
+% Format of a title page is
+%   5in x 6.5in for abst
+%   2in x 6.5in block containing title insert:  The title insert
+%       has the form
+%           title paragraph
+%           vfil
+%           author paragraph
+%           Research report #
+%           month, year
+%   vskip
+%   support (and footnote) paragraph.  Footnotes may not work
+% We are careful to turn off other formatting (head, foot lines,
+% raggedbottom, \hsize, advancing page number, ...)
+\long\def\ANLPPtitle#1#2#3#4{\null\medskip
+    \vbox{\hbox to \hsize{
+        \hss\vbox{%
+        \hsize 5.5truein
+        % title paragraph
+        \vbox{\raggedcenter{\noindent\setfnt(size=L)#1\par}}%
+        % skip
+        \bigskip 
+        % author paragraph
+        \vbox{\raggedcenter{\noindent\setfnt(size=l)#2\par}}}%
+        \hss}}%
+     \vskip1in
+     \centerline{\bf Abstract}
+     \vfootnote{}{\vbox{\hbox{\hskip-\parindent{#4}}}}%
+}

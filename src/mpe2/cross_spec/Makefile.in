@@ -1,0 +1,88 @@
+##### User configurable options #####
+
+top_srcdir           = @top_srcdir@
+
+CC                   = @CC@
+CLINKER              = @CLINKER@
+MPI_CC               = @MPI_CC@
+MPI_CLINKER          = $(MPI_CC)
+MPI_INC              = @MPI_INC@
+MPI_LIBS             = @MPI_LIBS@
+CFLAGS               = @CFLAGS@
+CC_INC               = -I. -I${top_srcdir}
+LDFLAGS              = @LDFLAGS@
+FLIBS                = @FLIBS@ @F77_OTHER_LIBS@
+
+MPE_BUILD_FORTRAN2C  = @MPE_BUILD_FORTRAN2C@
+F77                  = @F77@
+MPI_F77              = @MPI_F77@
+FFLAGS               = @FFLAGS@
+
+MPERUN               = @MPERUN@
+
+
+### End User configurable options ###
+
+SHELL                = @SHELL@
+MAKE                 = @MAKE@
+MV                   = @MV@
+RM                   = @RM@
+CP                   = @CPRP@
+
+@VPATH@
+
+srcdir        = @srcdir@
+
+CC_FLAGS      = $(CFLAGS) $(MPI_INC) $(MPE_COPTS) $(CC_INC)
+FC_FLAGS      = $(FFLAGS) $(MPI_INC) $(MPE_FOPTS)
+CC_LDFLAGS    = $(LDFLAGS) $(CFLAGS) $(MPE_LDOPTS)
+FC_LDFLAGS    = $(LDFLAGS) $(FFLAGS) $(MPE_LDOPTS)
+
+C_EXECS       = cross_cc@EXEEXT@
+F2C_EXECS     = cross_f2c@EXEEXT@
+
+.SUFFIXES: .c .f .@OBJEXT@ .p@OBJEXT@ @EXEEXT@
+
+.f.@OBJEXT@:
+	$(F77) $(FC_FLAGS) -c $<
+
+.c.@OBJEXT@:
+	$(CC) $(CC_FLAGS) -c $<
+
+.f.p@OBJEXT@:
+	$(MPI_F77) $(FC_FLAGS) -c $<
+	$(MV) $*.@OBJEXT@ $*.p@OBJEXT@
+
+.c.p@OBJEXT@:
+	$(MPI_CC) $(CC_FLAGS) -c $<
+	$(MV) $*.@OBJEXT@ $*.p@OBJEXT@
+
+default: $(C_EXECS)
+	@-if [ "$(MPE_BUILD_FORTRAN2C)" = "yes" ] ; then \
+	      $(MAKE) $(F2C_EXECS) ; \
+	  fi
+
+run:
+	@-echo "Running $(C_EXECS) to get C compiler features..."
+	@-$(MPERUN) $(C_EXECS)
+	@-if [ "$(MPE_BUILD_FORTRAN2C)" = "yes" ] ; then \
+	       echo "Running $(F2C_EXECS) to get Fortran to C features..." ; \
+	       $(MPERUN) $(F2C_EXECS) ; \
+	  fi
+	@-if [ -x ./cross_env ] ; then \
+	      echo "Setting C and Fortran Development variables..." ; \
+	      ./cross_env ; \
+	  fi
+	
+
+cross_cc@EXEEXT@: cross_cc.@OBJEXT@
+	$(CLINKER) $(CC_LDFLAGS) -o $@ cross_cc.@OBJEXT@
+
+cross_f2c@EXEEXT@: flogical.@OBJEXT@ cross_f2c.p@OBJEXT@
+	$(CP) -f cross_f2c.p@OBJEXT@ mpe2tmp.@OBJEXT@
+	$(MPI_CLINKER) $(CC_LDFLAGS) -o $@ mpe2tmp.@OBJEXT@ flogical.@OBJEXT@ \
+	               $(FLIBS)
+	@-$(RM) -f mpe2tmp.@OBJEXT@
+
+clean:
+	@-$(RM) -f *.@OBJEXT@ $(C_EXECS) $(F2C_EXECS) cross_spec.txt

@@ -1,0 +1,2 @@
+#lib${MPILIBNAME}_a_SOURCES = describe_states.c
+#INCLUDES = -I../../../include -I${master_top_srcdir}/src/include

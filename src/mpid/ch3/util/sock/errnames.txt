@@ -1,0 +1,50 @@
+#
+# CH3:sock errors
+#
+**ch3|sock|strdup:[ch3:sock] MPIU_Strdup failed
+**ch3|sock|connclose:[ch3:sock] active connection unexpectedly closed
+**ch3|sock|hostlookup:[ch3:sock] hostname lookup failed
+**ch3|sock|connrefused:[ch3:sock] connection refused
+**ch3|sock|connrefused %s %d %s:[ch3:sock] failed to connect to process %s:%d (%s)
+**ch3|sock|connterm:[ch3:sock] active connection unexpectedly terminated
+**ch3|sock|connfailed:[ch3:sock] failed to connnect to remote process
+**ch3|sock|connfailed %s %d:[ch3:sock] failed to connnect to remote process %s:%d
+**ch3|sock|badsock:[ch3:sock] internal error - bad sock
+**ch3|sock|failure:[ch3:sock] unknown failure
+**ch3|sock|failure %d:[ch3:sock] unknown failure, sock_errno=%d
+**ch3|sock|badpacket:[ch3:sock] received packet of unknow type
+**ch3|sock|badpacket %d:[ch3:sock] received packet of unknown type (%d)
+**ch3|sock|postread:attempt to post a read operation failed
+**ch3|sock|postread %p %p %p:attempt to post a read operation failed (rreq=%p,conn=%p,vc=%p)
+**ch3|sock|immedread:immediate read operation failed
+**ch3|sock|immedread %p %p %p:immediate read operation failed (rreq=%p,conn=%p,vc=%p)
+**ch3|sock|postwrite:attempt to post a write operation failed
+**ch3|sock|postwrite %p %p %p:attempt to post a write operation failed (sreq=%p,conn=%p,vc=%p)
+**ch3|sock|immedwrite:immediate write operation failed
+**ch3|sock|immedwrite %p %p %p:immediate write operation failed (rreq=%p,conn=%p,vc=%p)
+**ch3|sock|addrinuse:[ch3:sock] tcp port already in use
+**ch3|sock|post_write:[ch3:sock] posting a write failed
+**ch3|sock|progress_finalize:[ch3:sock] progress_finalize failed
+**ch3|sock|accept:[ch3:sock] accepting a new connection failed
+**ch3|sock|postconnect:[ch3:sock] post connect failed
+**ch3|sock|postconnect %d %d %s:[ch3:sock] rank %d unable to connect to rank %d using business card <%s>
+**ch3|sock|connalloc:[ch3:sock] unable to allocate an internal connection structure
+**ch3|sock|scopenresp:[ch3:sock] failed to handle open response packet
+**ch3|sock|openlsend:[ch3:sock] failed to handle open lsend packet
+**ch3|sock|open_lrecv_data:[ch3:sock] failed to handle open lrecv data packet
+**ch3|sock|scconnaccept:[ch3:sock] failed to handle connection accept packet
+**ch3|sock|badhost:[ch3:soc] invalid host description
+**ch3|sock|badhost %s %d %s:[ch3:sock] invalid host description, %s:%d (%s)
+**pglookup:unable to find the process group structure
+**pglookup %s:unable to find the process group structure with id <%s>
+**ch3|sock|handle_sock_event:an error occurred while handling an event returned by MPIDU_Sock_Wait()
+**ch3|sock|pgsize_cache:process group size does not match the one in the cache
+**ch3|sock|pgsize_cache %d %d:size in cache %d, size passed %d
+**ch3|sock|pgrank_cache:rank must be less than process group size in the cache
+**ch3|sock|pgrank_cache %d %d:pg size in cache %d, rank passed %d
+**ch3|sock|pg_limit:reached the limit of process groups for spawn/connect/accept
+**ch3|sock|pgsize:process group sizes don't match
+**ch3|sock|pgsize %d %d:existing pg size %d, matching pg size %d
+**ch3|sock|pgrank:rank must be less than process group size
+**ch3|sock|pgrank %d %d:pg size %d, rank passed %d
+**ch3|sock|pg_finalize:process group finalization failed

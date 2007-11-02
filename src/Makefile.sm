@@ -1,0 +1,8 @@
+SUBDIRS_mpe_dir = mpe2
+SUBDIRS = mpid mpi util nameserv binding env pkgconfig @mpe_dir@ pmi pm .
+# Add "include" to the directories used for creating the TAGS files
+TAGS_DIRS = include
+NOTSIMPLEMAKE_SUBDIRS = mpe2
+# We need to invoke the distclean target in the include directory
+distclean-local:
+	(cd include && $(MAKE) distclean)

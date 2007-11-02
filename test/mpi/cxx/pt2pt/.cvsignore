@@ -1,0 +1,6 @@
+Makefile.in
+Makefile
+bsend1cxx
+*.o
+*.gcda
+*.gcno

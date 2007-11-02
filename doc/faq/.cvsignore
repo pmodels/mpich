@@ -1,0 +1,9 @@
+faq.htm
+faq.tex
+*.pdf
+*.ps
+*.dvi
+*.txt
+*.log
+*.aux
+*.out

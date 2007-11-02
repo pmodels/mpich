@@ -1,0 +1,1087 @@
+# 
+# Globus device code:          Copyright 2005 Northern Illinois University
+# Borrowed MPICH-G2 code:      Copyright 2000 Argonne National Laboratory and Northern Illinois University
+# Borrowed MPICH2 device code: Copyright 2001 Argonne National Laboratory
+# 
+# XXX: INSERT POINTER TO OFFICIAL COPYRIGHT TEXT
+# 
+
+# FIXME: this script assumes the build and target platforms are the same.  cross compilation support needs to be added for
+# machines like IBM BG/L.
+
+#
+# NOTE: this file is sourced from the top-level configure script with the current working directory set to the top-level
+# build directory.
+#
+# variables of potential interest...
+#
+# $master_top_srcdir - top-level source directory
+# $master_top_builddir - top-level build directory
+# $device_name - name of the device as specified using the --with-device option 
+# $device_args - arguments added after the device (e.g. --with-device=<device-name>:arg1,arg2)
+# $with_device - device name and arguments
+# $ac_configure_args - all arguments passed to configure
+#
+
+#
+# mpig_mkdir_p()
+#
+# simulate "mkdir -p" since it is not available everywhere.  portions of this code were taken from confdb/aclocal.m4.
+#
+mpig_mkdir_p()
+{(
+    saveIFS="${IFS}"
+    IFS="/"
+    tmp_curdir=""
+    for tmp_subdir in $1 ; do
+        tmp_curdir="${tmp_curdir}${tmp_subdir}"
+        if test -n "${tmp_curdir}" -a ! -d "${tmp_curdir}" ; then
+            mkdir "${tmp_curdir}"
+        fi
+        tmp_curdir="${tmp_curdir}/"
+    done
+    IFS="${saveIFS}"
+)}
+
+#
+# functions to make message reporting easier, and make sure messages get copied into config.log
+#
+# NOTE: 'fold -s' could be used to format the output so that it's not one long line
+#
+# mpig_columns=`stty -a 2>/dev/null | grep columns | sed -e 's/.*columns \([0-9]*\).*/\1/'`
+# if test -z "mpig_columns" ; then
+#     mpig_columns=80
+# fi
+mpig_as_me="src/mpid/$device_name/mpich2prereq"
+
+mpig_msg_check()
+{
+    mpig_msg_lineno=$1
+    shift
+    echo "$mpig_as_me:$mpig_msg_lineno:" $* >&5
+    echo ${ECHO_N} ${*}"... ${ECHO_C}" >&6
+}
+
+mpig_msg_result()
+{
+    mpig_msg_lineno=$1
+    shift
+    echo "$mpig_as_me:$mpig_msg_lineno: result:" $* >&5
+    echo $* "${ECHO_T}" >&6
+}
+
+mpig_msg_info()
+{
+    mpig_msg_lineno=$1
+    shift
+    echo "$mpig_as_me:$mpig_msg_lineno: INFO:" $* >&5
+    echo "INFO:" $* >&6
+}
+
+mpig_msg_warn()
+{
+    mpig_msg_lineno=$1
+    shift
+    echo "$mpig_as_me:$mpig_msg_lineno: WARNING:" $* >&5
+    echo "$mpig_as_me:$mpig_msg_lineno: WARNING:" $* >&2
+}
+
+mpig_msg_error_noexit()
+{
+    mpig_msg_lineno=$1
+    shift
+
+    echo "" >&5
+    echo "$mpig_as_me:$mpig_msg_lineno: ERROR:" $* >&5
+    echo "" >&5
+
+    echo "" >&2
+    echo "$mpig_as_me:$mpig_msg_lineno: ERROR:" $* >&2
+    echo "" >&2
+}
+
+mpig_msg_error()
+{
+    mpig_msg_lineno=$1
+    shift
+
+    echo "" >&5
+    echo "$mpig_as_me:$mpig_msg_lineno: ERROR:" $* >&5
+    echo "" >&5
+
+    echo "" >&2
+    echo "$mpig_as_me:$mpig_msg_lineno: ERROR:" $* >&2
+    echo "" >&2
+
+    exit 1
+}
+
+mpig_msg_include_file()
+{
+    mpig_msg_lineno=$1
+    mpig_msg_file=$2
+    echo "$mpig_as_me:$mpig_msg_lineno: contents of file $mpig_msg_file" >&5
+    cat $mpig_msg_file >&5
+    echo "" >&5
+}
+
+mpig_msg_echo()
+{
+    mpig_msg_lineno=$1
+    shift
+    echo "$mpig_as_me:$mpig_msg_lineno: " $* >&5
+    echo $* >&6
+}
+
+mpig_msg_echo_log()
+{
+    mpig_msg_lineno=$1
+    shift
+    echo "$mpig_as_me:$mpig_msg_lineno: " $* >&5
+}
+
+mpig_msg_echo $LINENO ""
+mpig_msg_echo $LINENO `echo "start of mpich2prereq for the ${device_name} device" | tr '[a-z]' '[A-Z]'`
+
+#
+# set the base name for the libraries to "mpig"
+#
+MPILIBNAME="mpig"
+if test "$set_FWRAPNAME" != "yes" ; then
+    FWRAPNAME="f${MPILIBNAME}"
+fi
+
+#
+# get configure options specific to the device, but generic to the grid middleware being used
+#
+mpig_with_grid_pkg=default
+# mpig_enable_vmpi=default
+mpig_enable_debugging=default
+mpig_with_ccache=no
+mpig_with_insure_cc=no
+mpig_with_insure_cxx=no
+mpig_enable_gcc_strict=default
+MPIG_F77_SED=no
+
+for arg in ${ac_configure_args} ; do
+    arg=`echo ${arg} | sed -e 's/^'"'"'\(.*\)'"'"'$/\1/'`
+    case ${arg} in
+        --with-grid-middleware)
+	mpig_msg_error $LINENO "--with-grid-middleware=<name> requires the name of the Grid Middleware package to be used."
+	;;
+        --with-grid-middleware=)
+        mpig_with_grid_pkg=`echo ${arg} | sed 's/^[^=]*=//'`
+        ;;
+        --without-grid-middleware)
+        mpig_with_grid_pkg=none
+        ;;
+	# --enable-vmpi)
+	# mpig_enable_vmpi=yes
+	# ;;
+	# --disable-vmpi)
+	# mpig_enable_vmpi=no
+	# ;;
+        --enable-mpig-debugging)
+        mpig_enable_debugging=yes
+        ;;
+        --disable-mpig-debugging)
+        mpig_enable_debugging=no
+        ;;
+        --with-ccache)
+        mpig_with_ccache=yes
+        ;;
+        --without-ccache)
+        mpig_with_ccache=no
+        ;;
+        --with-insure|--with-insure=*)
+        mpig_with_insure_cc=`echo $arg | sed -e 's/--with-insure=\?\([^,]*\)\?,\?.*/\1/' -e 's/^ *$/gcc/'`
+        mpig_with_insure_cxx=`echo $arg | sed -e 's/[^,]*,\?//' -e 's/^ *$/g++/'`
+        ;;
+        --with-insure-cc|--with-insure-cc=*)
+        mpig_with_insure_cc=`echo $arg | sed -e 's/--with-insure-cc=\?//' -e 's/^ *$/gcc/'`
+        ;;
+        --with-insure-cxx|--with-insure-cxx=*)
+        mpig_with_insure_cxx=`echo $arg | sed -e 's/--with-insure-cxx=\?//' -e 's/^ *$/g++/'`
+        ;;
+        --without-insure-cc)
+        mpig_with_insure_cc=no
+        ;;
+        --without-insure-cxx)
+        mpig_with_insure_cxx=no
+        ;;
+        --without-insure)
+        mpig_with_insure_cc=no
+        mpig_with_insure_cxx=no
+        ;;
+        --enable-gcc-strict)
+        mpig_enable_gcc_strict=yes
+        ;;
+        --disable-gcc-strict)
+        mpig_enable_gcc_strict=no
+        ;;
+        # NOTE: doing sed replacement on f90 modules can cause problems.  we also believe that f77 programs may no longer require
+        # the sed replacement mechanism, and instead can rely on library link order.  for now, we are disabling sed substition.
+        # --with-f77-sed)
+        # MPIG_F77_SED=yes
+        # ;;
+    esac
+done
+
+# set globus as the default grid middleware if one is not explicitly specified
+if test "${mpig_with_grid_pkg}" = "default" ; then
+    mpig_with_grid_pkg=globus
+fi
+MPIG_USING_GRID_PKG=${mpig_with_grid_pkg}
+export MPIG_USING_GRID_PKG
+
+#
+# if application level threads are enabled, then they must be disabled and the user warned.
+#
+# FIXME: eventually we should support application level threads, but this requires either a vendor MPI that supported
+# MPI_THREAD_SERIALIZED or MPI_THREAD_MULTIPLE.  it would be possible to provide allow application level threads if the vendor
+# MPI supported MPI_THREAD_FUNNELED; however, all vendor MPI operation would need to be routed through request and completion
+# queues so that the MPI functions were called only by the main thread (the one that called MPI_Init_thread().
+#
+# NOTE: the standard states that if MPI_Init() is called, the it should be treated as MPI_Init_thread having been called with
+# MPI_THREAD_SINGLE.  At present, MPIg does not detect if MPI_Thread_init is available and thus always called MPI_Init().  As a
+# result, MPIg can only support MPI_THREAD_SINGLE.
+#
+mpig_msg_info $LINENO "application thread level support requested: $enable_threads"
+if test "$enable_threads" = "default" ; then
+    mpig_msg_info $LINENO "maximum application thread level support set to MPI_THREAD_SINGLE"
+elif test "$enable_threads" != "single" ; then
+    mpig_msg_warn $LINENO "application thread support beyond MPI_THREAD_SINGLE has been requested; however, MPIg presently" \
+        "does not support multithreaded applications.  The maximum thread level has been set to MPI_THREAD_SINGLE."
+fi
+MPID_MAX_THREAD_LEVEL=MPI_THREAD_SINGLE
+
+#
+# the process management system is built into the device, so we must tell MPICH2 not to build a process manager or an
+# implementation of the process management interface.
+#
+if test "${with_pmi}" != "no" -a "${with_pmi}" != "default" ; then
+    mpig_msg_warn $LINENO "the process management interface is not used by the ${device_name} device.  The ${with_pmi}" \
+	"implementation of PMI will not be built."
+fi
+if test "${with_pm}" != "no" -a "${with_pm}" != "default" ; then
+    mpig_msg_warn $LINENO "the process management system is built into the ${device_name} device.  The ${with_pm} process" \
+	"manager will not be built."
+fi
+with_pmi=no
+with_pm=no
+
+#
+# add include paths needed by the device
+#
+pathlist=""
+pathlist="${pathlist} src/mpid/${device_name}"
+pathlist="${pathlist} src/mpid/common/datatype"
+for path in ${pathlist} ; do
+    CPPFLAGS="${CPPFLAGS} -I${master_top_builddir}/${path}"
+    CPPFLAGS="${CPPFLAGS} -I${master_top_srcdir}/${path}"
+done
+
+#
+# create the device's build directory, if it doesn't already exist.  this is necessary for VPATH builds.
+#
+if test ! -d src/mpid/${device_name} ; then
+    mpig_mkdir_p src/mpid/${device_name}
+fi
+
+#
+# set variables to easily find the device in the source and build trees (may be the same)
+#
+MPIG_SOURCE_DIR=${master_top_srcdir}/src/mpid/${device_name}
+MPIG_BUILD_DIR=${master_top_builddir}/src/mpid/${device_name}
+export MPIG_SOURCE_DIR
+export MPIG_BUILD_DIR
+
+#
+# NOTE: when building MPIg with a vendor MPI, running the configure tests on some build systems is difficult or impossible
+# because the link phase inserts a special of the pre-application bootstrapping code (e.g., crt0) that only functions within the
+# parallel operating environment only found on the compute (target) nodes.  to alleviate the need to treat systems where the
+# build system would produce identical results as the target system as crossing compiling platforms, we provide a mechanism that
+# allows the configure tests to be run by replacing the vendor MPI linker with an equivalent non-vendor MPI linker.  to specify
+# the equivalent linkers, then environment variables MPIG_TEST_<LANG>LD need to be set to the equivalent non-vendor MPI
+# compilers, where <LANG> is C, CXX, F77, and F90.  This is most definitely a hack and may not work for all systems; however, for
+# some platforms, it provides a sufficient mechanism that is just as effective as specifying all of the cross compiling
+# information by hand without all of the pain.
+#
+
+#
+# if an additional mpich2prereq script exists for the grid middleware package to be used by the device, then include it.
+#
+# NOTE: this script may set the MPIG_TEST_<LANG>LD environment variables above should it have some mechanism for discovering an
+# equivalent set of non-vendor MPI compilers to be used for linking.
+#
+if test -s ${MPIG_SOURCE_DIR}/mpich2prereq-${mpig_with_grid_pkg} ; then
+    . ${MPIG_SOURCE_DIR}/mpich2prereq-${mpig_with_grid_pkg}
+fi
+
+#
+# compiler information should have been set by the grid middleware package script.  the typical compiler environment variables
+# are cleared here to prevent unintentional side effects within the top-level configure script and other configure scripts it
+# runs.  the variables must also be removed from the configure arguments variable to prevent the initial values from being
+# passed to lower-level configure scripts, effectively overriding our override of the compilers.  *sigh*  if you think this is
+# an ugly hack, you are correct.  suggestions for alternative techniques are most certainly welcome.
+#
+for var in LD LDFLAGS LIBS CC CFLAGS CXX CXXFLAGS FC FCFLAGS F77 F77FLAGS F90 F90FLAGS CPPFLAGS ; do
+    ac_configure_args=`echo "$ac_configure_args" | sed -e "s/'$var=[^']*' *//"`
+    eval unset $var
+done
+# echo "CONFIGURE ARGS: $ac_configure_args"
+
+CPPFLAGS="-DMPIG_BUILDING_MPICH2"
+
+#
+# adjust the compiler settings if Insure++ or ccache are enabled
+#
+if test "${mpig_with_insure_cc}" != "no" ; then
+    mpig_msg_info $LINENO "building C code with Insure++ (using ${mpig_with_insure_cc} as the compiler acronym)"
+    mpig_insure_cc=`echo $MPIG_CC | sed -e 's/^[ ]*//' -e 's/ .*$//'`
+    mpig_insure_ccopts=`echo $MPIG_CC | sed -e 's/^[ ]*[^ ]* \?//'`
+    MPIG_CC="insure -Zop ${MPIG_BUILD_DIR}/mpich2-grid-cc-insure-psrc ${mpig_insure_ccopts}"
+    MPIG_CLD="insure -Zop ${MPIG_BUILD_DIR}/mpich2-grid-cc-insure-psrc -Zsl ${mpig_insure_ccopts}"
+    MPIG_BUILD_CC="insure -Zop ${MPIG_BUILD_DIR}/mpich2-grid-cc-insure-psrc ${mpig_insure_ccopts}"
+    cat >${MPIG_BUILD_DIR}/mpich2-grid-cc-insure-psrc <<EOF 
+insure++.compiler ${mpig_insure_cc}
+insure++.compiler_acronym ${mpig_with_insure_cc}
+insure++.compile.report_file stderr
+EOF
+fi
+
+if test "${mpig_with_ccache}" = "yes" ; then
+    mpig_msg_info $LINENO "ccache enabled"
+    MPIG_BUILD_CC="ccache ${MPIG_BUILD_CC}"
+fi
+
+if test "${mpig_enable_gcc_strict}" = "yes" ; then
+    mpig_msg_info $LINENO "compiling with super strict options"
+    MPIG_CC="${MPIG_CC} -std=c99 -D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200605"
+    MPIG_BUILD_CC="${MPIG_BUILD_CC} -std=c99 -D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200605"
+    MPIG_TEST_CC="${MPIG_TEST_CC} -std=c99 -D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200605"
+
+    MPIG_BUILD_CFLAGS=`echo ${MPIG_BUILD_CFLAGS} | sed "s,-I${GLOBUS_LOCATION},-isystem ${GLOBUS_LOCATION},g"`
+    MPIG_BUILD_CFLAGS="${MPIG_BUILD_CFLAGS} -Wall -Wstrict-prototypes -Wmissing-prototypes -Wunused -Wshadow"
+    MPIG_BUILD_CFLAGS="${MPIG_BUILD_CFLAGS} -Wmissing-declarations -Wcast-align -Wno-long-long -Wpointer-arith"
+    MPIG_BUILD_CFLAGS="${MPIG_BUILD_CFLAGS} -Wconversion -Wsign-compare -Wwrite-strings"
+fi
+
+if test "${enable_cxx}" != "no" ; then
+    if test "${mpig_with_insure_cxx}" != "no" ; then
+        mpig_msg_info $LINENO "building C++ code with Insure++ (using ${mpig_with_insure_cxx} as the compiler acronym)"
+        mpig_insure_cxx=`echo $MPIG_CXX | sed -e 's/^[ ]*//' -e 's/ .*$//'`
+        mpig_insure_cxxopts=`echo $MPIG_CXX | sed -e 's/^[ ]*[^ ]* \?//'`
+        MPIG_CXX="insure -Zop ${MPIG_BUILD_DIR}/mpich2-grid-cxx-insure-psrc ${mpig_insure_cxxopts}"
+        MPIG_CXXLD="insure -Zop ${MPIG_BUILD_DIR}/mpich2-grid-cxx-insure-psrc -Zsl ${mpig_insure_cxxopts}"
+        MPIG_BUILD_CXX="insure -Zop ${MPIG_BUILD_DIR}/mpich2-grid-cxx-insure-psrc ${mpig_insure_cxxopts}"
+        cat >${MPIG_BUILD_DIR}/mpich2-grid-cxx-insure-psrc <<EOF 
+insure++.compiler ${mpig_insure_cxx}
+insure++.compiler_acronym ${mpig_with_insure_cxx}
+insure++.compile.report_file stderr
+EOF
+    fi
+
+    if test "${mpig_with_ccache}" = "yes" ; then
+        MPIG_BUILD_CXX="ccache ${MPIG_BUILD_CXX}"
+    fi
+fi
+
+#
+# if dependency generation is enabled, then make appropriate adjustments to the compiler settings
+#
+case "${enable_dependencies}" in
+    default)
+        enable_dependencies="no"
+        ;;
+    yes)
+        MPIG_MAKE_DEPEND_C="${MPIG_CC} -MM"
+        enable_dependencies="${MPIG_BUILD_DIR}/mpich2-grid-cc -MM"
+        ;;
+    no)
+        ;;
+    *)
+        MPIG_MAKE_DEPEND_C="${enable_dependencies}"
+        enable_dependencies="${MPIG_BUILD_DIR}/mpich2-grid-cc -MM"
+        ;;
+esac
+
+if test "${enable_dependencies}" != "no" ; then
+    mpig_msg_check $LINENO "checking that the compiler can produce dependency information"
+    cat >conftest-foo.h <<EOF
+#define FOO 1
+EOF
+    cat >conftest-bar.h <<EOF
+#define BAR 1
+EOF
+    cat >conftest.c <<EOF
+#include "conftest-foo.h"
+#include "conftest-bar.h"
+#include <stdio.h>
+int main(int argc, char ** argv)
+{
+    printf("FOO=%d BAR=%d\n", FOO, BAR);
+    return 0;
+}
+EOF
+    if ${MPIG_MAKE_DEPEND_C} -MT 'conftest1.o' -MT 'conftest2.o' conftest.c >conftest.out 2>conftest.err ; then
+        mpig_msg_result $LINENO "yes"
+    else
+        mpig_msg_result $LINENO "no!"
+        mpig_msg_include_file $LINENO conftest-foo.h
+        mpig_msg_include_file $LINENO conftest-bar.h
+        mpig_msg_include_file $LINENO conftest.c
+        mpig_msg_echo_log $LINENO "${MPIG_MAKE_DEPEND_C} -MT 'conftest1.o' -MT 'conftest2.o' conftest.c"
+        mpig_msg_include_file $LINENO conftest.err
+        mpig_msg_include_file $LINENO conftest.out
+        MPIG_MAKE_DEPEND_C="false"
+        enable_dependencies="no"
+    fi
+    rm -f conftest*
+fi
+
+#
+# create compiler scripts
+#
+sed -e "s!@GCC@!${MPIG_CC}!" \
+    -e "s!@GCFLAGS@!${MPIG_CFLAGS}!" \
+    -e "s!@GLD@!${MPIG_CLD}!" \
+    -e "s!@GLDFLAGS@!${MPIG_LDFLAGS}!" \
+    -e "s!@GLIBS@!${MPIG_LIBS}!" \
+    -e "s!@TCC@!${MPIG_TEST_CC}!" \
+    -e "s!@TCFLAGS@!${MPIG_TEST_CFLAGS}!" \
+    -e "s!@TLD@!${MPIG_TEST_CLD}!" \
+    -e "s!@TLDFLAGS@!${MPIG_TEST_LDFLAGS}!" \
+    -e "s!@TLIBS@!${MPIG_TEST_LIBS}!" \
+    -e "s!@BCC@!${MPIG_BUILD_CC}!" \
+    -e "s!@BCFLAGS@!${MPIG_BUILD_CFLAGS}!" \
+    -e "s!@MPIG_MAKE_DEPEND_C@!${MPIG_MAKE_DEPEND_C}!" \
+    ${MPIG_SOURCE_DIR}/mpich2-grid-cc.in >${MPIG_BUILD_DIR}/mpich2-grid-cc
+chmod +x ${MPIG_BUILD_DIR}/mpich2-grid-cc
+CC=${MPIG_BUILD_DIR}/mpich2-grid-cc
+export CC
+
+if test "${enable_cxx}" != "no" ; then
+    sed -e "s!@GCC@!${MPIG_CXX}!" \
+        -e "s!@GCFLAGS@!${MPIG_CXXFLAGS}!" \
+        -e "s!@GLD@!${MPIG_CXXLD}!" \
+        -e "s!@GLDFLAGS@!${MPIG_LDFLAGS}!" \
+        -e "s!@GLIBS@!${MPIG_LIBS}!" \
+        -e "s!@TCC@!${MPIG_TEST_CXX}!" \
+        -e "s!@TCFLAGS@!${MPIG_TEST_CXXFLAGS}!" \
+        -e "s!@TLD@!${MPIG_TEST_CXXLD}!" \
+        -e "s!@TLDFLAGS@!${MPIG_TEST_LDFLAGS}!" \
+        -e "s!@TLIBS@!${MPIG_TEST_LIBS}!" \
+        -e "s!@BCC@!${MPIG_BUILD_CXX}!" \
+        -e "s!@BCFLAGS@!${MPIG_CXXFLAGS}!" \
+        -e "s!@MPIG_MAKE_DEPEND_C@!${MPIG_MAKE_DEPEND_C}!" \
+        ${MPIG_SOURCE_DIR}/mpich2-grid-cc.in >${MPIG_BUILD_DIR}/mpich2-grid-cxx
+    chmod +x ${MPIG_BUILD_DIR}/mpich2-grid-cxx
+
+    CXX=${MPIG_BUILD_DIR}/mpich2-grid-cxx
+    export CXX
+fi
+
+if test "${enable_f77}" != "no" ; then
+    sed -e "s!@GFC@!${MPIG_F77}!" \
+        -e "s!@GFFLAGS@!${MPIG_F77FLAGS}!" \
+        -e "s!@GLD@!${MPIG_F77LD}!" \
+        -e "s!@GLDFLAGS@!${MPIG_LDFLAGS}!" \
+        -e "s!@GLIBS@!${MPIG_LIBS}!" \
+        -e "s!@TFC@!${MPIG_TEST_F77}!" \
+        -e "s!@TFFLAGS@!${MPIG_TEST_F77FLAGS}!" \
+        -e "s!@TLD@!${MPIG_TEST_F77LD}!" \
+        -e "s!@TLDFLAGS@!${MPIG_TEST_LDFLAGS}!" \
+        -e "s!@TLIBS@!${MPIG_TEST_LIBS}!" \
+        -e "s!@F77_SED@!${MPIG_F77_SED}!" \
+        ${MPIG_SOURCE_DIR}/mpich2-grid-fc.in >${MPIG_BUILD_DIR}/mpich2-grid-f77
+    chmod +x ${MPIG_BUILD_DIR}/mpich2-grid-f77
+
+    F77=${MPIG_BUILD_DIR}/mpich2-grid-f77
+    export F77
+fi
+
+if test "${enable_f90}" != "no" ; then
+    sed -e "s!@GFC@!${MPIG_F90}!" \
+        -e "s!@GFFLAGS@!${MPIG_F90FLAGS}!" \
+        -e "s!@GLD@!${MPIG_F90LD}!" \
+        -e "s!@GLDFLAGS@!${MPIG_LDFLAGS}!" \
+        -e "s!@GLIBS@!${MPIG_LIBS}!" \
+        -e "s!@TFC@!${MPIG_TEST_F90}!" \
+        -e "s!@TFFLAGS@!${MPIG_TEST_F90FLAGS}!" \
+        -e "s!@TLD@!${MPIG_TEST_F90LD}!" \
+        -e "s!@TLDFLAGS@!${MPIG_TEST_LDFLAGS}!" \
+        -e "s!@TLIBS@!${MPIG_TEST_LIBS}!" \
+        -e "s!@F77_SED@!${MPIG_F77_SED}!" \
+        ${MPIG_SOURCE_DIR}/mpich2-grid-fc.in >${MPIG_BUILD_DIR}/mpich2-grid-f90
+    chmod +x ${MPIG_BUILD_DIR}/mpich2-grid-f90
+
+    F90=${MPIG_BUILD_DIR}/mpich2-grid-f90
+    export F90
+fi
+
+#
+# if vendor MPI support has not been disabled, then check for availability
+#
+mpig_msg_check $LINENO "checking if a vendor MPI exists"
+cat >conftest.c <<EOF
+#include <mpi.h>
+int main(int argc, char ** argv)
+{
+    MPI_Init(&argc, &argv);
+    MPI_Finalize();
+    return 0;
+}
+EOF
+mpig_var=`echo HAVE_C_${mpig_type_name} | sed -e 's/\*/P/' | tr "[a-z] " "[A-Z]_"`
+if ${CC} -o conftest conftest.c >conftest.out 2>conftest.err; then
+    mpig_msg_result $LINENO "yes"
+	mpig_have_vmpi=yes
+else
+    mpig_msg_result $LINENO "no"
+    mpig_msg_include_file $LINENO conftest.c
+    mpig_msg_echo_log $LINENO "${CC} -o conftest conftest.c"
+    mpig_msg_include_file $LINENO conftest.err
+    mpig_msg_include_file $LINENO conftest.out
+	mpig_have_vmpi=no
+fi
+rm -f conftest*
+
+# if test "${mpig_have_vmpi}" = "no" -a \( "${HAVE_VMPI_SUPPORT}" = "yes" -o "${mpig_enable_vmpi}" = "yes" \) ; then
+#     mpig_msg_error $LINENO "vendor MPI previously enabled but is not functional.  please see ${MPIG_BUUILD_DIR}/config.log."
+# fi
+
+#
+# if vendor MPI is to be used or even exists, then we need to rename all of the publicly exposed symbols in MPICH2/MPIg.
+# furthermore, we need to rename the MPI/PMPI symbols in the application code to match the symbols defined during the compilation
+# of MPIg.  for C/C++, this renaming process can be accomplished with a set of cpp macros in a header file included by mpi.h;
+# however, fortran 77/90 can be more tricky.  in most cases, we can rely on order of the libraries supplied to the linker to
+# insure that the fortran application links against the routines in the MPIg library and not the routines supplied by the vendor
+# MPI library.  however, while writing MPICH-G2, we discovered at least one system refused to link when the same symbols were
+# defined by different two libraries.  because of this, we added a code to the fortran compiler scripts that ran the application
+# code through a sed script, renaming all of the MPI/PMPI calls.  since this substition process makes it harder for the
+# application programmer to debug their code, not to mention that it causes problem with fortran 90 programs, it is our hope that
+# this is no longer necessary.  we will readd the renaming of fortran symbols if necessary, but for now we only rename the C
+# symbols since those are the only ones we use in the vendor MPI.
+#
+if test "${mpig_have_vmpi}" = "yes" ; then
+    MPIG_VMPI=yes
+    MPIG_RENAME_SYMBOLS=yes
+else
+    MPIG_VMPI=no
+    MPIG_RENAME_SYMBOLS=no
+fi
+# if test "${mpig_have_vmpi}" = "yes" -a "${HAVE_VMPI_SUPPORT}" = "no" ; then
+#     mpig_msg_info $LINENO "vendor MPI detected but was previously report as not existing.  renaming MPIg symbols to avoid" \
+# 	"unexpected and potentially problematic name collisions."
+#     MPIG_VMPI=no
+#     MPIG_RENAME_SYMBOLS=yes
+# elif test "${mpig_have_vmpi}" = "yes" -a "${mpig_enable_vmpi}" = "no" ; then
+#     mpig_msg_info $LINENO "vendor MPI detected but explicitly disabled by user.  renaming MPIg symbols to avoid unexpected" \
+# 	"and potentially problematic name collisions."
+#     MPIG_VMPI=no
+#     MPIG_RENAME_SYMBOLS=yes
+# fi
+export MPIG_VMPI
+export MPIG_RENAME_SYMBOLS
+
+#
+# we can't use weak symbols when a vendor MPI is present because the symbols names in the pragma directives in the MPICH2 MPI
+# source files aren't affected by the name change definitions in mpiddefs.h.
+#
+if test "${MPIG_RENAME_SYMBOLS}" = "yes" ; then
+    mpig_msg_info $LINENO "use of weak symbols is not compatible with symbol renaming and has been disabled"
+    enable_weak_symbols=no
+    ac_configure_args="${ac_configure_args} --disable-weak-symbols"
+fi
+
+#
+# see if a C type is defined
+#
+# usage: mpig_check_c_type type
+#
+mpig_check_c_type()
+{
+    mpig_type=$1
+    if echo "${mpig_type}" | grep '^MPI_' >/dev/null 2>&1 ; then
+        mpig_type_name="V${mpig_type}"
+        mpig_include_mpi_h="#include <mpi.h>"
+    else
+        mpig_type_name="${mpig_type}"
+        mpig_include_mpi_h=""
+    fi
+    mpig_msg_check $LINENO "checking for C definition of ${mpig_type_name}"
+    cat >conftest.c <<EOF
+#include <stdio.h>
+${mpig_include_mpi_h}
+int main(int argc, char ** argv)
+{
+    printf("%d\n", sizeof(${mpig_type}));
+    return 0;
+}
+EOF
+    mpig_var=`echo HAVE_C_${mpig_type_name} | sed -e 's/\*/P/' | tr "[a-z] " "[A-Z]_"`
+    if ${CC} -c conftest.c >conftest.out 2>conftest.err; then
+        mpig_msg_result $LINENO "yes"
+        eval ${mpig_var}=yes
+    else
+        mpig_msg_result $LINENO "no"
+        mpig_msg_include_file $LINENO conftest.c
+        mpig_msg_echo_log $LINENO "${CC} -c conftest.c"
+        mpig_msg_include_file $LINENO conftest.err
+        mpig_msg_include_file $LINENO conftest.out
+        eval ${mpig_var}=no
+    fi
+    eval export ${mpig_var}
+    rm -f conftest*
+}
+
+#
+# see if a Fortran type is defined
+#
+# usage: mpig_check_f77_type type
+#
+mpig_check_f77_type()
+{
+    mpig_type=$1
+    if echo "${mpig_type}" | grep '^MPI_' >/dev/null 2>&1 ; then
+        mpig_type_name="V${mpig_type}"
+        mpig_include_mpi_h="#include <mpi.h>"
+    else
+        mpig_type_name="${mpig_type}"
+        mpig_include_mpi_h=""
+    fi
+    mpig_msg_check $LINENO "checking F77 for definition of ${mpig_type_name}"
+    cat >conftest.f <<EOF
+       program main
+       implicit none
+       include 'mpif.h'
+       print *, "$mpig_type=", $mpig_type
+       end
+EOF
+    # FIXME: output details to config.log
+    mpig_var=`echo HAVE_F77_${mpig_type_name} | sed -e 's/\*/P/' | tr "[a-z] " "[A-Z]_"`
+    if ${F77} -c conftest.f >conftest.out 2>conftest.err; then
+        mpig_msg_result $LINENO "yes"
+        eval ${mpig_var}=yes
+    else
+        mpig_msg_result $LINENO "no"
+        mpig_msg_include_file $LINENO conftest.f
+        mpig_msg_echo_log $LINENO "${F77} -c conftest.f"
+        mpig_msg_include_file $LINENO conftest.err
+        mpig_msg_include_file $LINENO conftest.out
+        eval ${mpig_var}=no
+    fi
+    eval export ${mpig_var}
+    rm -f conftest*
+}
+
+#
+# determine the size of a C type
+#
+# usage: mpig_get_c_type_size type
+#
+mpig_get_c_type_size()
+{
+    mpig_type=$1
+    if echo "${mpig_type}" | grep '^MPI_' >/dev/null 2>&1 ; then
+        mpig_type_name="V${mpig_type}"
+        mpig_include_mpi_h="#include <mpi.h>"
+    else
+        mpig_type_name="${mpig_type}"
+        mpig_include_mpi_h=""
+    fi
+    mpig_msg_check $LINENO "checking size of ${mpig_type_name}"
+    cat >conftest.c <<EOF
+#include <stdio.h>
+${mpig_include_mpi_h}
+int main(int argc, char ** argv)
+{
+    printf("%d\n", sizeof(${mpig_type}));
+    return 0;
+}
+EOF
+    if ${CC} -o conftest conftest.c >conftest.out 2>conftest.err; then
+        mpig_result=`./conftest`
+        if test $? -eq 0 ; then 
+            mpig_msg_result $LINENO "${mpig_result}"
+        else
+            mpig_msg_result $LINENO "execution failed!"
+            mpig_msg_include_file $LINENO conftest.c
+            mpig_msg_echo_log $LINENO "${CC} -o conftest conftest.c"
+            mpig_msg_include_file $LINENO conftest.err
+            mpig_msg_include_file $LINENO conftest.out
+            rm -f conftest*
+            mpig_msg_error $LINENO "Unable to execute program.  See config.log for more details."
+        fi
+    else
+        mpig_result=0
+        mpig_msg_result $LINENO "nonexistent type"
+        mpig_msg_include_file $LINENO conftest.c
+        mpig_msg_echo_log $LINENO "${CC} -o conftest conftest.c"
+        mpig_msg_include_file $LINENO conftest.err
+        mpig_msg_include_file $LINENO conftest.out
+    fi
+    rm -f conftest*
+    mpig_var=`echo "SIZEOF_${mpig_type_name}" | sed -e 's/\*/P/' | tr "[a-z] " "[A-Z]_"`
+    eval ${mpig_var}=${mpig_result}
+    eval export ${mpig_var}
+}
+
+#
+# get the memory alignment for a C type
+#
+# mpig_get_c_type_memalign type
+#
+mpig_get_c_type_memalign()
+{
+    mpig_align=0
+    mpig_type=$1
+    if echo "${mpig_type}" | grep '^MPI_' >/dev/null 2>&1 ; then
+        mpig_type_name="V${mpig_type}"
+        mpig_include_mpi_h="#include <mpi.h>"
+    else
+        mpig_type_name="${mpig_type}"
+        mpig_include_mpi_h=""
+    fi
+    mpig_msg_check $LINENO "checking memory alignment for ${mpig_type_name}"
+    for mpig_first_type in "char" "short" "int" "long" "long long" "float" "double" "long double" "void *" ; do
+        cat >conftest.c <<EOF
+#include <stdio.h>
+${mpig_include_mpi_h}
+int main(int argc, char ** argv)
+{
+    struct
+    {
+        $mpig_first_type foo;
+        $mpig_type bar;
+    } baz;
+    printf("%d\n", ((char *) &baz.bar) - ((char *) &baz.foo) - sizeof($mpig_first_type) + 1);
+    return 0;
+}
+EOF
+        if ${CC} -o conftest conftest.c >conftest.out 2>conftest.err; then
+            mpig_result=`./conftest`
+            if test $? -eq 0 ; then
+                if test $mpig_align -lt $mpig_result ; then
+                    mpig_align=$mpig_result
+                fi
+            else
+                mpig_msg_result $LINENO "execution failed!"
+                mpig_msg_include_file $LINENO conftest.c
+                mpig_msg_echo_log $LINENO "${CC} -o conftest conftest.c"
+                mpig_msg_include_file $LINENO conftest.err
+                mpig_msg_include_file $LINENO conftest.out
+                mpig_msg_error $LINENO "Unable to execute program.  See config.log for more details."
+                mpig_result=0
+            fi
+        else
+            mpig_result=0
+            mpig_msg_include_file $LINENO conftest.c
+            mpig_msg_echo_log $LINENO "${CC} -o conftest conftest.c"
+            mpig_msg_include_file $LINENO conftest.err
+            mpig_msg_include_file $LINENO conftest.out
+        fi
+        rm -f conftest*
+    done
+    mpig_var=`echo "MEMALIGN_${mpig_type_name}" | sed -e 's/\*/P/' | tr "[a-z] " "[A-Z]_"`
+    eval ${mpig_var}=${mpig_align}
+    eval export ${mpig_var}
+    if test $mpig_align -gt 0 ; then 
+        mpig_msg_result $LINENO "${mpig_align}"
+    else
+        mpig_msg_result $LINENO "nonexistent type"
+    fi
+}
+
+#
+# get a C structure that matches a vendor MPI type
+#
+# mpig_get_vmpi_type_struct vmpi_type
+#
+mpig_get_vmpi_type_struct()
+{
+    mpig_vmpi_type=$1
+    mpig_match_c_type=""
+    mpig_match_num=99999
+    mpig_match_remainder=99999
+    mpig_msg_check $LINENO "checking for C structure that is compatible with V${mpig_vmpi_type}"
+    mpig_vmpi_type_upname=`echo "V${mpig_vmpi_type}" | tr "[a-z] " "[A-Z]_"`
+    eval mpig_vmpi_align="\$MEMALIGN_${mpig_vmpi_type_upname}"
+    eval mpig_vmpi_size="\$SIZEOF_${mpig_vmpi_type_upname}"
+    for mpig_c_type in "char" "short" "int" "long" "long long" ; do
+        mpig_c_type_upname=`echo "$mpig_c_type" | sed -e 's/\*/P/' | tr "[a-z] " "[A-Z]_"`
+        eval mpig_c_align="\$MEMALIGN_${mpig_c_type_upname}"
+        eval mpig_c_size="\$SIZEOF_${mpig_c_type_upname}"
+        if test $mpig_c_align -eq 0 ; then
+            continue
+        fi
+        if test $mpig_c_align -ge $mpig_vmpi_align -a $mpig_c_size -le $mpig_vmpi_size ; then
+            mpig_num=`expr $mpig_vmpi_size / $mpig_c_size`
+            mpig_remainder=`expr $mpig_vmpi_size % $mpig_c_size`
+            if test -z "$mpig_match_c_type" -o \
+                \( $mpig_num -lt $mpig_match_num -a \( $mpig_remainder -eq 0 -o $mpig_match_remainder -ne 0 \) \) ; then
+                mpig_match_c_type=$mpig_c_type
+                mpig_match_num=$mpig_num
+                mpig_match_remainder=$mpig_remainder
+            fi
+        fi
+    done
+    if test -z "$mpig_match_c_type" ; then
+        mpig_msg_result $LINENO "no matching type!"
+        mpig_msg_error $LINENO "unable to find a C type that has the same alignment as V${mpig_vmpi_type}"
+    fi
+    mpig_var=`echo "${mpig_vmpi_type}" | sed -e 's/^MPI_/v/' | tr "[A-Z] " "[a-z]_"`
+
+    if test $mpig_match_remainder -eq 0 ; then
+        if test $mpig_match_num -eq 1 ; then 
+            mpig_result="${mpig_match_c_type}"
+            mpig_result_basic=yes
+        else
+            mpig_result="struct {${mpig_match_c_type} ${mpig_var}[${mpig_match_num}];}"
+            mpig_result_basic=no
+        fi
+    else
+        mpig_result="struct {${mpig_match_c_type} ${mpig_var}[${mpig_match_num}]; char extra[${mpig_match_remainder}];}"
+        mpig_result_basic=no
+    fi
+    mpig_var="TYPEOF_${mpig_vmpi_type_upname}"
+    eval ${mpig_var}="\"${mpig_result}\""
+    eval export ${mpig_var}
+    mpig_msg_result $LINENO "${mpig_result}"
+
+    mpig_var="TYPEOF_${mpig_vmpi_type_upname}_IS_BASIC"
+    eval ${mpig_var}="\"${mpig_result_basic}\""
+    eval export ${mpig_var}
+
+    mpig_msg_check $LINENO "verifying size of V${mpig_vmpi_type} structure is the same as the vendor type"
+    cat >conftest.c <<EOF
+#include <stdio.h>
+int main(int argc, char ** argv)
+{
+    ${mpig_result} a;
+    printf("%d\n", sizeof(a));
+    return 0;
+}
+EOF
+    if ${CC} -o conftest conftest.c >conftest.out 2>conftest.err ; then
+        mpig_c_size=`./conftest`
+        if test $mpig_c_size -eq $mpig_vmpi_size ; then
+            mpig_msg_result $LINENO "yes"
+        else
+            mpig_msg_result $LINENO "no! ($mpig_c_size != $mpig_vmpi_size)"
+            mpig_msg_include_file $LINENO conftest.c
+            mpig_msg_echo_log $LINENO "${CC} -o conftest conftest.c"
+            mpig_msg_include_file $LINENO conftest.err
+            mpig_msg_include_file $LINENO conftest.out
+            rm -f conftest*
+            mpig_msg_error $LINENO "C struct and vendor type ${mpig_vmpi_type} are not the same size!"
+        fi
+    else
+        mpig_msg_result $LINENO "execution failed!"
+        mpig_msg_include_file $LINENO conftest.c
+        mpig_msg_echo_log $LINENO "${CC} -o conftest conftest.c"
+        mpig_msg_include_file $LINENO conftest.err
+        mpig_msg_include_file $LINENO conftest.out
+        rm -f conftest*
+        mpig_msg_error $LINENO "Unable to execute program.  See config.log for more details."
+    fi
+    rm -f conftest*
+}
+
+#
+# when testing for architecure and operating systems features, we may need to use a different compiler options (or even a
+# different compiler).  setting MPIG_CONFIGURE_ACTIVE forces the compiler scripts to use these alternate settings.
+#
+MPIG_CONFIGURE_ACTIVE=yes
+export MPIG_CONFIGURE_ACTIVE
+
+#
+# determine the size and alignment of the basic C types
+#
+SIZEOF_UNKNOWN=0
+for mpig_type in "char" "short" "int" "long" "long long" ; do
+    mpig_get_c_type_size "$mpig_type"
+    mpig_type_name=`echo "${mpig_type}" | sed -e 's/\*/P/' | tr "[a-z] " "[A-Z]_"`
+    eval SIZEOF_UNSIGNED_${mpig_type_name}=\${SIZEOF_${mpig_type_name}}
+    eval export SIZEOF_UNSIGNED_${mpig_type_name}
+done
+for mpig_type in "float" "double" "long double" "void *" ; do
+    mpig_get_c_type_size "$mpig_type"
+done
+
+#
+# determine maximum sized type for memory alignment purposes.  the alignment information is used to construct properly aligned
+# buffers to prevent compiler alignment warnings and runtime faults.  it is also used below to construct the space required to 
+# store the vendor MPI status in the MPICH2 MPI_Status structure.  since that structure is created in the top-level configure
+# before the globus device localdefs file is run (which is generated by the globus device configure), the alighnment information
+# must be gathered here rather than in configure.
+#
+# TYPEOF_MPIG_ALIGNED_T=""
+# SIZEOF_MPIG_ALIGNED_T=0
+# # MEMALIGN_MPIG_ALIGNED_T=0
+# mpig_memalign_max=0
+# for mpig_type in "char" "short" "int" "long" "long long" "float" "double" "long double" "void *"; do
+#     mpig_get_c_type_memalign "$mpig_type"
+#     mpig_utype=`echo "${mpig_type}" | sed -e 's/\*/P/' | tr "[a-z] " "[A-Z]_"`
+#     eval mpig_memalign="\$MEMALIGN_${mpig_utype}"
+#     if test ${mpig_memalign} -gt ${mpig_memalign_max} ; then
+#         TYPEOF_MPIG_ALIGNED_T=${mpig_type}
+#         eval SIZEOF_MPIG_ALIGNED_T="\$SIZEOF_${mpig_utype}"
+#         # MEMALIGN_MPIG_ALIGNED_T=${mpig_memalign}
+#         mpig_memalign_max=${mpig_memalign}
+#     fi
+# done
+# echo "required memory alignment boundary is... ${mpig_memalign_max}"
+# echo "setting memory alignment type to... ${TYPEOF_MPIG_ALIGNED_T}"
+# # echo "setting size of memory alignment type to ${SIZEOF_MPIG_ALIGNED_T}"
+# export TYPEOF_MPIG_ALIGNED_T
+# export SIZEOF_MPIG_ALIGNED_T
+# # export MEMALIGN_MPIG_ALIGNED_T
+
+#
+# if the device is using a vendor implementation of MPI as one of its transport mechanisms, then we need to gather some information
+# and set some options.
+#
+if test "${MPIG_VMPI}" = "yes" ; then
+    mpig_msg_info $LINENO "enabling Vendor MPI option"
+
+    for mpig_type in "char" "short" "int" "long" "long long" ; do
+        mpig_get_c_type_memalign "$mpig_type"
+    done
+   
+    #
+    # determine the space needed for each of the MPI handles/types
+    #
+    mpig_get_c_type_size MPI_Comm
+    mpig_get_c_type_memalign MPI_Comm
+    mpig_get_vmpi_type_struct MPI_Comm
+
+    mpig_get_c_type_size MPI_Datatype
+    mpig_get_c_type_memalign MPI_Datatype
+    mpig_get_vmpi_type_struct MPI_Datatype
+
+    mpig_get_c_type_size MPI_Op
+    mpig_get_c_type_memalign MPI_Op
+    mpig_get_vmpi_type_struct MPI_Op
+
+    mpig_get_c_type_size MPI_Request
+    mpig_get_c_type_memalign MPI_Request
+    mpig_get_vmpi_type_struct MPI_Request
+
+    mpig_get_c_type_size MPI_Status
+    mpig_get_c_type_memalign MPI_Status
+    mpig_get_vmpi_type_struct MPI_Status
+    # EXTRA_STATUS_DECL="${EXTRA_STATUS_DECL} ${TYPEOF_VMPI_STATUS} mpig_vmpi_status;"
+
+    mpig_get_c_type_size MPI_Aint
+
+    #
+    # check for various type definitions in the vendor MPI language bindings
+    #
+    mpig_check_c_type MPI_LONG_LONG
+    mpig_check_c_type MPI_LONG_LONG_INT
+
+    #
+    # if the vendor's MPI doesn't support MPI_LONG_LONG or MPI_LONG_LONG_INT then we need to disable long long support
+    #
+    # XXX: in MPICH-G2, why did we need to disable ROMIO if MPI_LONG_LONG wasn't supported?
+    #
+    if test "${HAVE_C_VMPI_LONG_LONG}" = "no" -a "${HAVE_C_VMPI_LONG_LONG_INT}" = "no" ; then
+        mpig_msg_info $LINENO "The vendor MPI does not support MPI_LONG_LONG or MPI_LONG_LONG_INT.  Support for these types" \
+            "in MPIg has been disabled."
+        MPID_NO_LONG_LONG=yes
+        if test "$enable_romio" != "no" ; then
+            mpig_msg_warn $LINENO "ROMIO requires MPI_LONG_LONG. ROMIO has been disabled."
+            enable_romio=no
+            ac_configure_args="${ac_configure_args} --disable-romio"
+        fi
+    fi
+fi
+
+# force the top-level configure script to export needed variables to the device configure script
+MPIG_MPICH2_VERSION=${VERSION}
+export MPIG_MPICH2_VERSION
+export MPI_AINT
+export MPIU_SIZE_T
+
+#
+# FIXME: the globus data conversion library does not support long double.  we need to disable support for that type in MPICH2.
+#
+mpig_msg_info $LINENO "long double is not supported by Globus data conversion library.  Support for MPI_LONG_DOUBLE has" \
+    "been disabled."
+MPID_NO_LONG_DOUBLE=yes
+
+#
+# the symbol renaming file, mpiddefs.h, needs to handle a special case if ROMIO is not being built, so we detect that here and
+# pass the result on to configure through the MPIG_ROMIO_ENABLED environemnt variable
+#
+MPIG_ROMIO_ENABLED=no
+if test "$enable_romio" = "yes" ; then
+   if test -d $master_top_srcdir/src/mpi/romio ; then
+       MPIG_ROMIO_ENABLED=yes
+   fi
+fi
+export MPIG_ROMIO_ENABLED
+
+#
+# FIXME: add a default machines file if one does not exist
+#
+# if test ! -f ${binbuild_dir}/machines ; then
+#     echo "Creating a default machines file in ${binbuild_dir}.  This will"
+#     echo "allow testing of MPIg, but you will need to create a new"
+#     echo "file to exploit the full capabilities of MPIg.  Please see"
+#     echo "the documentation."
+#     host=`uname -n 2>&1`
+#     if [ -n "${host}" ] ; then
+#         echo "${host}" >> ${binbuild_dir}/machines
+#     fi
+# fi
+
+
+#
+# set flag for debugging output and checks if it wasn't set earlier, and then export it so that the device's configure script
+# can see it
+#
+if test -z "$MPIG_DEBUG" ; then
+    if test "${mpig_enable_debugging}" = "yes" ; then
+	MPIG_DEBUG=yes
+    else
+        MPIG_DEBUG=no
+    fi
+fi
+export MPIG_DEBUG
+    
+#
+# miscellaneous items to export to the device configure script
+#
+export MPIG_THREADED
+export MPIG_THREADS_PKG
+export MPIG_GRID_PKG_NAME
+
+#
+# miscellaneous settings to feedback to the top-level configure script
+#
+MPID_MAX_PROCESSOR_NAME=128
+MPID_NO_SPAWN=yes
+MPID_NO_RMA=yes
+MPID_NO_PM=yes
+MPID_NO_PMI=yes
+if test "${MPIG_VMPI}" = "yes" ; then
+    MPID_REQUIRES_FORTRAN_CMDARGS=yes
+fi
+# MPID_PM_NAMESERVER=device
+
+#
+# add the Globus to the list of directories in which to perform a "make install"
+#
+other_install_dirs="${other_install_dirs} src/mpid/${device_name}"
+
+#
+# include mpiddefs.h in mpi.h
+#
+mpig_msg_info $LINENO "adding include of device header file mpiddefs.h to mpi.h"
+INCLUDE_MPIDDEFS_H='#include "mpiddefs.h"'
+
+mpig_msg_echo $LINENO `echo "end of mpich2prereq for the ${device_name} device" | tr '[a-z]' '[A-Z]'`
+mpig_msg_echo $LINENO ""

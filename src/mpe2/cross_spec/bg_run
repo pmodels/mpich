@@ -1,0 +1,9 @@
+#! /bin/sh
+
+QUEUE=
+
+jobid=`cqsub $QUEUE -n 1 -t 5 ./cross_cc`
+cqwait $jobid
+jobid=`cqsub $QUEUE -n 1 -t 5 ./cross_f2c`
+cqwait $jobid
+./cross_env

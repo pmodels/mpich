@@ -1,0 +1,50 @@
+The MPE-2 has a top level configure.in and all the C source files are
+splitted into 4 subpackages, each has its own include and source directory
+and configure.  Because of this structure, the install and build include
+directory contains only relevant user .h files, i.e. mpe.h,
+mpe_log.h, mpe_logf.h, mpe_graphics.h, mpe_graphicsf.h and mpe_misc.h.
+(no more basex11.h, basex11.h...).  Some of the include files could be 
+empty if the corresponding subpackage is not built.
+
+mpe2/include : contains mpe.h, mpe_log.h, mpe_graphics.h and mpe_misc.h.
+               Note: mpe_log.h, mpe_graphics.h and mpe_misc.h in mpe2/include
+               are empty.  They will be updated with the real ones if
+               the corresponding packages are configured successfully.
+
+- The top level configure checks for F77 characteristics and stores them
+  in mpe2/mpe_conf.h and checks for the usability of MPI_CC and MPI_F77.
+  The 4 subpackages are src/misc, src/logging, src/wrappers and src/graphics.
+  Each subpackage checks for the features that it needs.
+
+  1) mpe2/src/misc: contains dbxerr.c.in and definition of MPE_Errors_xx,
+                    MPE_Seq_xxx(), MPE_xxxTags() and MPE_GetHostName().
+     mpe2/src/misc/include: contains mpe_misc.h.
+                            The header file will be pushed to mpe2/include
+                            if mpe2/src/misc is configured successfully.
+
+  2) mpe2/src/logging: contains CLOG-2 and MPE_Log_xxx() routines.
+     mpe2/src/logging/include: contains mpe_log.h, mpe_logf.h.
+                               The header files will be pushed to mpe2/include
+                               if mpe2/src/logging is configured successfully.
+ 
+  3) mpe2/src/wrappers: contains various MPI wrapper libraries,
+                        MPI logging library, liblmpe.a,
+                        MPI tracing library, libtmpe.a,
+                        MPI Fortran to C library, libmpe_f2cmpi.a.
+
+  4) mpe2/src/graphics: contains MPE X graphics routines and MPI animation
+                        library, libampe.a.  This subpackage is all X related.
+     mpe2/src/graphics/include: contains mpe_graphics.h, mpe_graphicsf.h
+                                The header files will be pushed to mpe2/include
+                                if mpe2/src/graphics is configured successfully.
+
+  only package mpe2/src/wrappers requires package mpe2/src/logging,
+  the others are pretty much independent from one another.
+
+  5) src/unused: contains MPE routines that has no user headers and have 
+                 never compiled into any MPE library since last MPE 
+                 reorganization done with release of mpich-1.2.1.
+                 Like MPE_Counter_xxx() functions and other MPE_Log_xxx()
+                 macros and functions that are not needed in src/logging.   
+                 None of the files in this directory is compiled into
+                 any MPE library.

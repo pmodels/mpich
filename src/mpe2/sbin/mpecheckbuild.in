@@ -1,0 +1,108 @@
+#! /bin/sh
+#
+# This script has to be built by configure.
+#
+# This is a script to install MPE Profiling Environment. It can be invoked with
+#
+#    make installcheck  ( if you used -prefix at configure time )
+#
+#    or,
+#
+#    make installcheck PREFIX=Path_to_the_installation_of_MPE
+#
+# in the top-level MPE __build__ directory which could be the same
+# or different from the source directory
+#
+
+MAKE="@MAKE@"
+
+# Location of sources
+# top_srcdir=@top_srcdir@
+top_srcdir=@top_srcdir_abs@       # in absolute path
+
+# Build locations
+includebuild_dir=@includebuild_dir@
+libbuild_dir=@libbuild_dir@
+binbuild_dir=@binbuild_dir@
+sbinbuild_dir=@sbinbuild_dir@
+
+# Assume PROF_LIBNAME=MPE_LIBNAME.
+PROF_LIBNAME=@MPE_LIBNAME@
+CPRP="@CPRP@"
+RM="@RM@"
+LN_S="@LN_S@"
+MPI_IMPL=@MPI_IMPL@
+MPE_BUILD_FORTRAN2C=@MPE_BUILD_FORTRAN2C@
+
+Show=eval
+prefix_override=0
+
+make_target=linktest
+make_mperun=
+
+for arg in "$@" ; do
+    case "$arg" in
+        -t)
+            Show=echo
+            ;;
+        -run)
+            make_target=runtest
+            ;;
+        -run=*)
+            make_target=runtest
+            # Added extra quotes '\"' and '\"' so -run= can accept blanks.
+            make_mperun="MPERUN=\"`echo $arg | sed -e 's/-run=//g'`\""
+            ;;
+        -echo)                    set -x ;;
+        -help|-u|-usage|-h)
+cat <<EOF
+Check MPE build at $libbuild_dir.
+-t                  - Try only; do NO actual checking.
+-run                - Do build runtests instead of linktests with
+                      MPERUN="$bindir/mpiexec -n 4".
+-run=<mpiexec_cmd>  - Do build runtests instead of linktests with
+                      MPERUN=<mpiexec_cmd>.
+EOF
+            exit 1
+            ;;
+        *)
+            # Silently skip empty arguments (these can occur on
+            # some systems and within some scripts; they are
+            # harmless)
+            if [ -n "$arg" ] ; then
+                echo "mpecheckbuild: Unrecognized argument $arg ."
+                exit 1
+            fi
+            ;;
+    esac
+done
+
+if [ "$SHELL_ECHO" = "on" ] ; then
+    set -x
+fi
+
+if [ ! -s $libbuild_dir/lib${PROF_LIBNAME}.a ] ; then
+    echo "Could not find $libbuild_dir/lib${PROF_LIBNAME}.a !"
+    echo "You must build MPE before checking the build!"
+    echo "Try to do a \"make\" first."
+    exit 1
+fi
+
+# Set up Examples directory for the MPE Logging programs
+logging_dirname="src/wrappers/test"
+graphics_dirname="src/graphics/contrib/test"
+collchk_dirname="src/collchk/test"
+for pkg in logging graphics collchk ; do
+    dirname=${pkg}_dirname
+    eval dirvalue=\$"$dirname"
+    if [ -f $libbuild_dir/../$dirvalue/Makefile ] ; then
+        echo "Running build $make_target for C $pkg program..."
+        $Show "( cd $libbuild_dir/../$dirvalue && \
+                 $MAKE ${make_target}_C $make_mperun )"
+        if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
+            echo "Running build $make_target for Fortran $pkg program..."
+            $Show "( cd $libbuild_dir/../$dirvalue && \
+                     $MAKE ${make_target}_F77 $make_mperun )"
+        fi
+    fi
+done

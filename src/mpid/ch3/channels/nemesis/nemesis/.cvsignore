@@ -1,0 +1,17 @@
+configure
+configure.lineno
+Makefile
+Makefile.in
+config.log
+config.status
+config.system
+localdefs
+*.o
+*.lo
+*.bb
+*.bbg
+*.da
+*.gcov
+*Debug*
+*Release*
+*.cache

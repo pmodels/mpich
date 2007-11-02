@@ -1,0 +1,10 @@
+if test -z "${sock_name}" ; then
+    sock_name=poll
+fi
+for arg in $ac_configure_args ; do
+    case $arg in 
+        -with-sock=* | --with-sock=*)
+	    sock_name=`echo $arg | sed 's/-*with-sock=//'`
+    esac
+done
+

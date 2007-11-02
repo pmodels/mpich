@@ -1,0 +1,19 @@
+----------------------------------------------------------------------
+
+Mellanox has contributed substantially to the code for the ib channel.
+To our original implementation based on the Infiniband send/receive 
+model, Mellanox added code to use the RDMA/poll model to reduce 
+latency, code to align buffers to cache line sizes, and code to handle 
+registration failures for large messages by falling back on the eager 
+message protocol.
+
+The code contributed by Mellanox does not appear verbatim, but has 
+been massaged and merged into the existing MPICH2 code.  We thank 
+Mellanox for their contributions, which have substantially improved 
+the performance of this channel.  Mellanox has made this contribution 
+available under the same conditions as we Make MPICH2 available (see 
+the COPYRIGHT file in the top-level directory: "Permission is hereby 
+granted to use, reproduce, prepare derivative works, and to 
+redistribute to others."
+
+-----------------------------------------------------------------------

@@ -1,0 +1,15 @@
+*.o
+*.lo
+*.la
+*.pf
+*.bb
+*.bbg
+*.da
+*.gcov
+tvtest
+qdemo
+Makefile
+Makefile.in
+.deps
+.libstamp*
+.*-cache

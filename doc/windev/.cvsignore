@@ -1,0 +1,12 @@
+*.log
+*.aux
+*.blg
+*.bbl
+*.dvi
+*.toc
+*.ind
+*.idx
+*.out
+Makefile
+windev.pdf
+config.options

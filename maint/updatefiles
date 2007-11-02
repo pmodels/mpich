@@ -1,0 +1,804 @@
+#! /bin/sh
+# 
+# (C) 2006 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+# Update all of the derived files
+# For best performance, execute this in the top-level directory.
+# There are some experimental features to allow it to be executed in
+# subdirectories
+#
+# Eventually, we want to allow this script to be executed anywhere in the
+# mpich tree.  This is not yet implemented.
+error_summary=""
+acVersion=unknown
+# confdbSrcDir is used for checkouts that were not able to checkout 
+# confdb because they're not members of the Unix group that includes that
+# directory.
+confdbSrcDir=/homes/MPI/testing/mpich2/mpich2/confdb
+#
+# finalStatus records whether there have been problems in updatefiles
+# 1 = warning, 3 = fatal, 2 = reserved for future use, 
+# 0 = no problems detected.
+finalStatus=0
+at_top=no
+if [ -d maint -a -s maint/simplemake.in ] ; then
+    at_top=yes
+fi
+#
+# Default choices
+# depend choices are dynamic, static, no
+do_depend=dynamic
+do_geterrmsgs=yes
+do_getparms=no
+do_bindings=yes
+do_f77=yes
+do_f77tof90=yes
+do_build_configure=yes
+do_genstates=yes
+do_makefiles=yes
+do_smpdversion=yes
+
+# Allow MAKE to be set from the environment
+MAKE=${MAKE-make}
+
+
+# List of steps that we will consider
+# (We do not include depend because the values for depend are not just yes/no)
+AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates makefiles smpdversion getparms"
+stepsCleared=no
+
+# Options for some steps
+autoconfdir=""
+#
+# Extract the arguments intended for updatefiles.  Any others are
+# given to simplemake.  
+temp_args=""
+for arg in "$@" ; do
+    case $arg in 
+    -echo)
+	set -x
+	;;
+	
+    -do=*)
+    opt=`echo A$arg | sed -e 's/A-do=//'`
+    # Handle some synonyms
+    case $opt in 
+	build-configure|configure) opt=build_configure ;;
+	makefile|Makefile|Makefiles) opt=makefiles;;
+    esac
+    var=do_$opt
+    # Check that this opt is known
+    eval oldval=\$"$var"
+    if [ -z "$oldval" ] ; then
+	echo "-do=$opt is unrecognized"
+	exit 1
+    else 
+        if [ $stepsCleared = no ] ; then
+	    for step in $AllSteps ; do
+	        var=do_$step
+	        eval $var=no
+	    done
+	    stepsCleared=yes
+        fi
+        var=do_$opt
+        eval $var=yes
+    fi
+    ;;
+
+    -with-genstates|--with-genstates)
+    do_genstates=yes
+    ;;
+    -without-genstates|--without-genstates)
+    do_genstates=no
+    ;;
+ 
+    -with-errmsgs|--with-errmsgs)
+    do_geterrmsgs=yes
+    ;;
+    -without-errmsgs|--without-errmsgs)
+    do_geterrmsgs=no
+    ;;
+
+    -with-bindings|--with-bindings)
+    do_bindings=yes
+    ;;
+    -without-bindings|--without-bindings)
+    do_bindings=no
+    ;;
+
+    -with-f77|--with-f77)
+    do_f77=yes
+    ;;
+    -without-f77|--without-f77)
+    do_f77=no
+    ;;
+
+    -with-autoconf=*|--with-autoconf=*)
+    # Select a location for a different autoconf
+    autoconfdir=`echo "A$arg" | sed -e 's/.*=//'`
+    ;;
+
+    -distrib)
+    do_depend=no
+    do_build_configure=no
+    temp_args="$temp_args $arg"
+    ;;
+
+    -help|--help|-usage|--usage)
+    cat <<EOF
+    updatefiles [ --with-autoconf=dir ] [ -do=stepname ]
+                [ args for simplemake ] 
+    Update the files in the MPICH2 build tree.  This file builds the 
+    configure files, creates the Makefile.in files (using the simplemake
+    program), extracts the error messages.
+
+    You can use --with-autoconf=dir to specify a directory that contains
+    an alternate autoconf and autoheader.  
+
+    Use -do=stepname to update only a single step.  For example, 
+    -do=build_configure only updates the configure scripts.  The available
+    steps are
+    $AllSteps
+EOF
+    exit
+    ;;
+    *)
+    temp_args="$temp_args $arg"
+    ;;
+    esac
+done
+# Reset the arguments.  Note that this doesn't handle arguments that contain
+# blanks.  I hope that we don't need those.
+set -- $temp_args
+#
+if [ $at_top = "no" ] ; then
+    echo "Must execute at top level directory for now"
+    exit 1
+fi
+#
+# Determine the autoconf to use.  If --with-autoconf was set, use 
+# autoconf and autoheader from that directory
+# This may also be needed for tools in the maint directory
+if [ -n "$autoconfdir" ] ; then
+    if [ -x $autoconfdir/autoconf -a -x $autoconfdir/autoheader ] ; then
+        autoconf=$autoconfdir/autoconf
+        autoheader=$autoconfdir/autoheader
+	# Simplemake looks in environment variables for the autoconf
+	# and autoheader to use
+	AUTOCONF=$autoconf
+	AUTOHEADER=$autoheader
+	export AUTOCONF
+	export AUTOHEADER
+    else
+        echo "Could not find executable autoconf and autoheader in $autoconfdir"
+	exit 1
+    fi
+else
+    autoconf=${AUTOCONF:-autoconf}
+    autoheader=${AUTOHEADER:-autoheader}
+fi
+#
+# Check that you have a working autoconf.  Autoconf 2.57 is not compatible with
+# previous versions of autoconf (!!), even 2.52 (!!!).  
+acVersion=ok
+if [ -d .tmp ] ; then rm -rf .tmp ; fi
+if [ -s .tmp ] ; then rm -f .tmp ; fi
+if [ ! -d .tmp ] ; then
+    mkdir .tmp 2>&1 >/dev/null
+fi
+# As of autoconf 2.59, the command line arguments changed (again)
+# We now require 2.59 everywhere, so we just double check
+# Somewhere between 2.12 and 2.58, -l changed to -B
+# Argh.  In autoconf 2.59, -B doesn't work.  You must use -I instead of -B (!!)
+# Find the configure version
+# acSubversion is the version number minus 2.  (we assume autoconf 2.xx)
+# -1 is used for unknown
+acSubversion=-1
+acIncDirFlag=-I
+for ver in 60 59 ; do
+    rm -f .tmp/configure.in .tmp/configure
+    cat >.tmp/configure.in <<EOF
+AC_PREREQ(2.$ver)
+EOF
+    if (cd .tmp && $autoconf >/dev/null 2>&1 ) ; then
+	acSubversion=$ver
+	break
+    fi
+done
+rm -f .tmp/configure.in .tmp/configure
+if [ "$acSubversion" -gt 0 ] ; then
+    acVersion="2.$acSubversion"
+    echo "You have autoconf version $acVersion."
+else
+    cat <<EOF
+You either do not have autoconf in your path or updatefiles was unable to 
+determine which version of autoconf you have.  You may be able to use
+     autoconf --version
+to see the version of autoconf (unfortunately, there is no standard 
+format for the version output and it changes between autoconf versions.
+In addition, some versions of autoconf choose among many versions and
+provide incorrect output).
+EOF
+	error_summary="$error_summary \
+No autoconf in path or unable to determine the version of autoconf."
+        acVersion="Unknown"
+fi
+rm -rf .tmp
+
+#
+# Create the bindings if necessary 
+if [ $do_bindings = "yes" ] ; then
+    build_f77=no
+    build_f90=no
+    build_cxx=no
+    if [ $do_f77 = "yes" ] ; then
+        if [ ! -s src/binding/f77/abortf.c ] ; then 
+	    build_f77=yes
+        elif find src/binding/f77 -name 'buildiface' -newer 'src/binding/f77/abortf.c' >/dev/null 2>&1 ; then
+	    build_f77=yes
+        fi
+        if [ ! -s src/binding/f90/mpi_base.f90 ] ; then
+ 	    build_f90=yes
+        elif find src/binding/f90 -name 'buildiface' -newer 'src/binding/f90/mpi_base.f90' >/dev/null 2>&1 ; then
+	    build_f90=yes
+        fi
+ 
+    fi
+
+    if [ $build_f77 = "yes" ] ; then
+	echo "Building Fortran 77 interface"
+	( cd src/binding/f77 && chmod a+x ./buildiface && ./buildiface )
+    fi
+    if [ $build_f90 = "yes" ] ; then
+	echo "Building Fortran 90 interface"
+	( cd src/binding/f90 && chmod a+x ./buildiface && ./buildiface )
+	( cd src/binding/f90 && ../f77/buildiface -infile=cf90t.h -deffile=cf90tdefs)
+    fi
+
+    if [ ! -s src/binding/cxx/mpicxx.h ] ; then 
+	build_cxx=yes
+    elif find src/binding/cxx -name 'buildiface' -newer 'src/binding/cxx/mpicxx.h' >/dev/null 2>&1 ; then
+	build_cxx=yes
+    fi
+    if [ $build_cxx = "yes" ] ; then
+	echo "Building C++ interface"
+	( cd src/binding/cxx && chmod a+x ./buildiface &&
+	  ./buildiface -nosep $otherarg )
+    fi
+fi
+#
+# Capture the error messages
+if [ $do_geterrmsgs = "yes" ] ; then
+    if [ ! -x maint/extracterrmsgs -a -s maint/extracterrmsgs ] ; then
+        # grrr.  CVS doesn't maintain permissions correctly across Windows/Unix
+        chmod a+x maint/extracterrmsgs
+    fi
+    if [ -x maint/extracterrmsgs ] ; then
+        echo "Extracting the error messages..."
+        rm -rf .tmp
+        rm -f .err
+	rm -f unusederr.txt
+        maint/extracterrmsgs -careful=unusederr.txt \
+	    -skip=src/util/multichannel/mpi.c `cat maint/errmsgdirs` > \
+	    .tmp 2>.err
+        # (error here is ok)
+        update_errdefs=yes
+        if [ -s .err ] ; then 
+            cat .err
+            rm -f .err2
+            grep -v "Warning:" .err > .err2
+            if [ -s .err2 ] ; then
+                echo "Because of errors in extracting error messages, the file"
+                echo "src/mpi/errhan/defmsg.h was not updated."
+	        error_summary="$error_summary \
+Error message files in src/mpi/errhan were not updated."
+                update_errdefs=no
+	        finalStatus=1
+   	        rm -f .tmp
+            fi
+            rm -f .err .err2
+        else
+            # Incase it exists but has zero size
+            rm -f .err
+        fi
+	if [ -s unusederr.txt ] ; then
+	    echo "There are unused error message texts in src/mpi/errhan/errnames.txt"
+	    echo "See the file unusederr.txt for the complete list"
+        fi
+        if [ -s .tmp -a "$update_errdefs" = "yes" ] ; then
+            mv .tmp src/mpi/errhan/defmsg.h
+        fi
+        if [ ! -s src/mpi/errhan/defmsg.h ] ; then
+            echo "Creating a dummy defmsg.h file"
+	    cat > src/mpi/errhan/defmsg.h <<EOF
+typedef struct { const unsigned int sentinal1; const char *short_name, *long_name; const unsigned int sentinal2; } msgpair;
+static const int generic_msgs_len = 0;
+static msgpair generic_err_msgs[] = { {0xacebad03, 0, "no error catalog", 0xcb0bfa11}, };
+static const int specific_msgs_len = 0;
+static msgpair specific_err_msgs[] = {  {0xacebad03,0,0,0xcb0bfa11}, };
+#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_NONE
+#define MPIR_MAX_ERROR_CLASS_INDEX 54
+static int class_to_index[] = {
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0 };
+#endif
+EOF
+        fi
+    fi
+fi  # do_geterrmsgs
+#
+# Build scripts such as simplemake if necessary
+made_simplemake=no
+run_configure=no
+# Later versions of autoconf put the autoconf version into the autom4te*.cache
+# name.
+# Later versions of autoconf (2.57+?) will silently ignore the command to 
+# rebuild the configure if it thinks that nothing has changed.  However,
+# it does not accurately decide this (e.g., if aclocal.m4 includes files 
+# that have changed, autoconf will ignore that and not regenerate the 
+# configure file).  The information that autoconf uses is saved in the
+# autom4te*.cache file; since this cache is not accurate, we delete it.
+if [ ! -x maint/configure ] ; then
+    (cd maint && $autoconf && rm -rf autom4te*.cache )
+elif find maint -name 'configure.in' -newer 'maint/configure' >/dev/null 2>&1 ; then
+    # The above relies on the Unix find command
+    (cd maint && $autoconf && rm -rf autom4te*.cache)
+fi
+if [ ! -x maint/simplemake -o ! -x maint/genstates ] ; then
+    run_configure=yes
+fi
+#
+# The following relies on the Unix find command
+if [ -s maint/simplemake ] ; then
+    if find maint -name 'simplemake.in' -newer 'maint/simplemake' >/dev/null 2>&1 ; then
+        run_configure=yes
+    fi
+else
+    run_configure=yes
+fi
+if [ -s maint/genstates ] ; then 
+    if find maint -name 'genstates.in' -newer 'maint/genstates' >/dev/null 2>&1 ; then
+        run_configure=yes
+    fi
+else
+    run_configure=yes
+fi
+
+if [ "$run_configure" = "yes" ] ; then
+    (cd maint && ./configure)
+    made_simplemake=yes
+fi
+
+#
+if [ ! -x maint/simplemake -a $do_makefiles = yes ] ; then
+    echo "Could not create simplemake"
+    echo "You can copy simplemake.in to simplemake, replacing @PERL@ with the"
+    echo "path to Perl (version5).  Make sure the resulting file has"
+    echo "execute permissions set."
+    exit 1
+fi
+
+# Run some of the simple codes
+#
+# if [ -x maint/genstates -a $do_genstates = "yes" ] ; then
+#     echo "Creating the enumeration of logging states into src/include/mpiallstates.h"
+#     maint/genstates
+# fi
+if [ -x maint/extractstates -a $do_genstates = "yes" ] ; then
+    echo "Creating the enumeration of logging states into src/include/mpiallstates.h"
+    maint/extractstates
+fi
+if [ -x maint/extractparms -a $do_getparms = "yes" ] ; then
+    maint/extractparms -outfile=parms.htm
+fi
+# Create and/or update the f90 tests
+if [ -x maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
+    echo "Create or update the Fortran 90 tests derived from the Fortran 77 tests"
+    for dir in test/mpi/f77/* ; do
+        if [ ! -d $dir ] ; then continue ; fi
+	leafDir=`basename $dir`
+        if [ ! -d test/mpi/f90/$leafDir ] ; then
+	    mkdir test/mpi/f90/$leafDir
+        fi
+        maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.sm Makefile.ap
+    done
+fi
+
+if [ $made_simplemake != "no" -a $do_makefiles = yes ] ; then
+    # Check that only the first three lines were changed:
+    rm -f .t1 .t2
+    sed -e 1,3d maint/simplemake.in > .t1
+    sed -e 1,3d maint/simplemake > .t2
+    if diff .t1 .t2 >/dev/null 2>&1 ; then
+        :
+    else
+        echo "Something is wrong with simplemake; configure may have"
+        echo "replaced variables that it should not have."
+        diff .t1 .t2
+        exit 1
+    fi
+    rm -f .t1 .t2
+fi
+#
+# Create the Makefile.in files
+# Make sure that these files exist so that the gcc dependency creation
+# can work
+rm_prepost=no
+if [ ! -s src/include/mpidpre.h ] ; then
+    rm_prepost=yes
+fi
+otherargs="$@"
+# If there is no mpi.h file (and other files, but testing on mpi.h should
+# be enough), don't generate the dependency information in the Makefiles
+# with the static dependency target.  The new default in simplemake is
+# dynamic dependency data
+# Currently, the dependency generation relies on using gcc, so we may 
+# want to test on that as well.
+# 
+# 
+if [ $do_depend = static -a ! -s src/include/mpi.h ] ; then
+    # Static dependencies require a mpi.h file
+    echo "Turning off static generation of dependencies because there is no mpi.h file"
+    do_depend=no
+fi
+if [ $do_depend = no ] ; then 
+    otherargs="$otherargs -nodepend"
+#else
+#    # The next two files may be needed to build the dependency lists
+#    touch src/include/mpidpre.h src/include/mpidpost.h
+fi
+# 
+# autoconf 2.57 drastically changed the command line arguments.
+# Up through 2.52, -l dir was the "localdir for searching"
+# By 2.57, -l was no longer accepted, and -B dir or --prepend-include=DIR
+# was used.  
+# To make things more exciting, the format of autoconf --version has
+# changed, making it very hard to automatically extract the version number
+# so that programs like this can work around poor software engineering, 
+# such as incompatible changes in a minor-numbered release.
+#
+# Just to make this even more interesting, the cygwin version of 
+# autoconf selects a version.  But the code to so this causes --version 
+# (and --help!) to fail unless there is a configure.in file in the current
+# directory.  
+if [ $do_makefiles = yes ] ; then
+    if maint/simplemake -common=maint/makedefs \
+        -docnamedefs='${master_top_srcdir}/maint/docnotes' \
+        -autoconf="$acIncDirFlag ROOTDIR/confdb" \
+        -libdir='${MPILIBNAME}'=ROOTDIR/lib $otherargs \
+        Makefile.sm ; then
+        :
+    else
+        echo "Simplemake step failed!"
+        exit 1
+    fi
+fi
+#
+# Create the configure files and run autoheader
+# Eventually, make this a test for find available.  Perhaps
+# find . -name configure.in > /dev/null 2>&1
+# The problem is that even though cygwin has find, the DOS find
+# is identified first.  We probably need a test for this case
+fixBackWhackCtrlMBug=no
+if [ $do_build_configure = yes ] ; then
+    find . -name 'configure.in' >/dev/null 2>&1
+    if [ $? = 0 ] ; then has_unix_find=yes ; else has_unix_find=no ; fi
+    # if [ $? = 0 ] ; then .. code with find
+    if [ "$has_unix_find" = "yes" -a "$do_build_configure" = "yes" ] ; then
+        # Before we try to rebuild any configure steps, make sure that 
+        # we have the necessary macro definitions
+        if [ ! -d confdb -o ! -s confdb/aclocal.m4 ] ; then
+	    # See if we can export a copy of confdb
+	    if [ -d $confdbSrcDir ] ; then
+                cp -rp $confdbSrcDir confdb
+                # Remove the CVS directories
+		if [ -d confdb/CVS ] ; then
+                    (cd confdb && find . -name CVS -print | xargs rm -rf)
+                fi
+            else
+		# Try to use scp
+                scp -rp shakey.mcs.anl.gov:$confdbSrcDir confdb
+		if [ -d confdb/CVS ] ; then
+		    (cd confdb && find . -name CVS -print | xargs rm -rf)
+                fi
+		if [ ! -d confdb ] ; then    
+                    echo "Directory `pwd`/confdb is missing and is required for rebuilding configure"
+  	            exit 1
+                fi
+            fi
+        elif [ -d confdb -a -d "$confdbSrcDir" -a ! -d confdb/CVS ] ; then
+            # This is a copy; get an up-to-date copy.  We only do 
+	    # this if there is an alternate source, in case this is
+	    # part of the distributed version and not local.
+            cp -rp $confdbSrcDir confdb
+            # Remove the CVS directories
+	    if [ -d confdb/CVS ] ; then
+                (cd confdb && find . -name CVS -print | xargs rm -rf)
+            fi
+        fi
+	# Check for out-of-date configures (the dependency handling
+	# isn't 100% accurate, so we use this step as an additional
+	# check)
+	if [ ! -s maint/conftimestamp ] ; then
+	    echo "Rebuilding all configure script because of missing confdbtimestamp"
+	    find . -name configure -print | grep -v maint/configure | xargs rm -f
+	    # If we don't delete the autom4te.cache files, bugs in 
+	    # autoconf may fail to correctly update configure
+	    # Gah. Some xargs don't accept -r, other break if there is no
+	    # input.  To avoid that, we do this in two steps: first the
+	    # find, then the rm (if there are any files)
+	    rm -f .atmp
+	    find . -name autom4te.cache > .atmp 2>/dev/null
+	    if [ -s .atmp ] ; then xargs rm -f < .atmp ; fi
+	    rm -f .atmp
+	    date > maint/conftimestamp
+	else
+	    # We can't us a status check here because find will always
+	    # report success, even if there are no newer files in confdb
+	    files=`find confdb -newer  maint/conftimestamp 2>&1` 
+	    if [ -n "$files" ] ; then
+		echo "Rebuilding all configure script because of changes in confdb"
+ 	        find . -name configure -print | grep -v maint/configure | xargs rm -f
+	        date > maint/conftimestamp
+	    fi
+	fi
+	#
+        for dir in `find . -name 'configure.in' -print` ; do
+            dir=`dirname $dir`
+  	    allowFailure=no
+	    builtConfigure=no
+  	    #echo $dir
+ 	    qmpe2dir=`echo $dir | sed -e 's%.*src/mpe2.*%FOUNDMPE2%'`
+	    if [ "$qmpe2dir" = "FOUNDMPE2" ] ; then
+	        # echo "Found MPE2 directory; skipping"
+	        # MPE2 has its own updatefiles script, which should 
+	        # be used instead of this one.
+	        continue
+            fi
+	    if [ -s $dir/Makefile.in ] ; then 
+                #echo "Found $dir/configure.in"
+	        #
+	        # Check for known problems
+                if [ $dir = "./src/mpi/romio" ] ; then
+		    echo "Creating configure in $dir"
+		    # Using an explicit acIncDirFlag will force
+		    # a consistent choice of autoconf
+		    # Only use autoheader if AC_CONFIG_HEADER is
+	 	    # present
+		    if grep AC_CONFIG_HEADER $dir/configure.in >/dev/null 2>&1 ; then
+		        (cd $dir && $autoheader $acIncDirFlag . )
+		    fi
+		    (cd $dir && \
+			$autoconf $acIncDirFlag . && rm -rf autom4te*.cache )
+	            if grep 'mpi2-other/info/Makefile \\' $dir/configure 2>&1 >/dev/null ; then 
+		        fixBackWhackCtrlMBug=yes
+                    fi
+	            # Add other tests here (sigh) as necessary
+	            if [ "$fixBackWhackCtrlMBug" = yes ] ; then
+		        rm -f c.tmp 
+		        sed -e '/"\\/d' -e 's/\\//g' $dir/configure > c.tmp
+		        rm -f $dir/configure
+		        mv c.tmp $dir/configure
+		        chmod a+x $dir/configure
+	            fi
+		    builtConfigure=yes
+	            continue
+	        elif [ $dir = "./src/mpe2" ] ; then
+		    # Use acIncDirFlag to ensure that a consistent
+		    # choice of autoconf is made by systems that 
+		    # support 2.1x and 2.57+
+		    echo "Creating configure in $dir"
+ 		    if grep AC_CONFIG_HEADER $dir/configure.in >/dev/null 2>&1 ; then
+		        (cd $dir && $autoheader $acIncDirFlag . )
+		    fi
+		    builtConfigure=yes
+		    (cd $dir && $autoconf $acIncDirFlag . && rm -rf autom4te*.cache)
+		    continue
+	        fi
+	        # First, check for a configure target in Makefile.in
+	        if grep 'configure:' $dir/Makefile.in >/dev/null 2>&1 ; then
+ 	            # The make -q checks whether the target is upto date first;
+	            # if it isn't, we remake it.
+		    rm -f $dir/mf.out 
+		    rm -f $dir/mf.newer
+		    date > $dir/mf.newer
+                    (cd $dir && rm -f mf.tmp ; \
+	            sed -e 's%@SHELL@%/bin/sh%' \
+		        -e "s%@srcdir@%.%g" \
+		        -e '/include .*alldeps/d' \
+		        -e '/@SET_MAKE@/d' Makefile.in > mf.tmp ;\
+		        if ${MAKE} -q -f mf.tmp configure >mf.out 2>&1 ; then \
+                    : ; else \
+	            echo "Found $dir/configure.in; executing make configure target" ; \
+	            ${MAKE} -f mf.tmp configure ; fi ; rm -f mf.tmp  \
+	            )
+		    # Newer versions of test support -nt, which is
+		    # filea newer-than fileb.  If this doesn't 
+		    # work on your platform, simply comment out this test
+		    # and set builtConfigure to true (or use find with
+		    # -newer if you want to replace the test)
+		    # Test for support of -nt
+		    rm -f .foo
+		    test $dir/configure -nt $dir/mf.newer 2>.foo
+		    # If .foo is empty, there was no error in test with -nt
+		    if [ ! -s ".foo" ] ; then
+		        if [ $dir/configure -nt $dir/mf.newer ] ; then
+			    builtConfigure=yes
+		        fi
+                    fi
+		    rm -f .foo
+		    #
+		    rm -f $dir/mf.newer
+		    if [ ! -x $dir/configure ] ; then
+		        echo "Error! Could not build configure in $dir with make configure"
+	                finalStatus=3
+	            elif grep PAC_ $dir/configure >/dev/null 2>&1 ; then
+			# If the user manually builds the configure without
+			# properly specifying the include path, then
+			# this code will detect the problem but will
+			# the message may be confusing since the make 
+			# step above will *not* have rebuilt the configure
+			# (once the user builds it manually, the make step
+			# will see the configure as newer than its 
+			# dependencies and not rebuild it).
+			mydir=$dir
+			if [ "$dir" = "." ] ; then
+			    mydir=`pwd`
+			fi
+			if [ "$buildConfigure" = "yes" ] ; then
+			    echo "Error! autoconf did not find local macro definitions for configure in $mydir"
+			    echo "Try removing configure in `pwd` and rerunning maint/updatefiles"
+			    echo "The following (at most 40 lines) local macros were not found:"
+			    grep PAC_ $dir/configure | head -40
+			    if [ -s $dir/mf.out ] ; then
+				echo "Output of make configure step was:"
+				cat mf.out
+			    fi
+			else 
+			    echo "Error! The file $mydir/configure contains local macro names (PAC_) and was not built by this "
+			    echo "updatefiles step.  Try removing $mydir/configure (but do not"
+			    echo "remove $mydir/configure.in) and rerun maint/updatefiles."
+			    if [ -s $dir/aclocal.m4 ] ; then
+				echo "Also, make sure that $mydir/aclocal.m4 is correct; only src/mpi/romio, "
+				echo "src/pm/mpd, and src/mpe2/... directories should have an aclocal.m4"
+				echo "file in the same directory with configure.in (others use the "
+				echo "aclocal.m4 in confdb)."
+			    fi
+			    echo "*Never* run autoconf or autoheader manually because many of the configure.in "
+			    echo "files require extra definitions from confdb/aclocal.m4 ."
+			fi
+		        finalStatus=3
+		    fi
+	  	    # Remove make output now that we no longer need it.
+		    rm -f $dir/mf.out
+                else 
+		    if [ -x $dir/makeconfigure ] ; then
+		        echo "Using makeconfigure in $dir"
+		        (cd $dir && ./makeconfigure )
+		    else
+		        # Check for old 1.7 configure files (in MPE, at least for
+		        # now)
+		        if egrep 'AC_ARG|AC_CHECK_FUNCS' $dir/configure.in >/dev/null 2>&1 ; then
+		            echo "Trying simple autoheader/autoconf in $dir"
+			    if grep AC_CONFIG_HEADER $dir/configure.in >/dev/null 2>&1 ; then
+		                (cd $dir && $autoheader $acIncDirFlag . )
+			    fi
+			    (cd $dir && $autoconf $acIncDirFlag . && rm -rf autom4te*.cache)
+		        else
+		            # Try autoconf-1.7; accepts failures gracefully
+		            echo "Trying simple autoconf using 1.7 in $dir"
+			    # Don't panic if we can't build this configure; it
+			    # is too old.
+			    allowFailure=yes
+			    (cd $dir && autoconf-1.7)
+		        fi
+		    fi
+                fi
+	        #
+                # Under cygwin, sometimes (?) configure ends up containing \^M
+	        # (that's <ctrl>-M).  We may need to add this sed step
+	        # sed -e '/"\"/d' -e 's/\//g'
+	        # (the first removes case statements on \^M, the second
+	        # removes the \^M from the ac_config_files statement
+	        fixBackWhackCtrlMBug=no
+	        if [ ! -s $dir/configure -a "$allowFailure" != yes ] ; then 
+		    echo "PANIC: Could not make configure from configure.in"
+		    echo "In directory $dir"
+		    exit 1
+	        elif [ -s $dir/configure ] ; then
+	            if grep 'src/Makefile \\ src' $dir/configure 2>&1 >/dev/null ; then 
+		        fixBackWhackCtrlMBug=yes
+	            elif grep 'src/Makefile \\ src' $dir/configure 2>&1 >/dev/null ; then 
+		        fixBackWhackCtrlMBug=yes
+	            elif grep 'attr/Makefile \\ util' $dir/configure 2>&1 >/dev/null ; then 
+		        fixBackWhackCtrlMBug=yes
+	            elif grep 'attr/Makefile \\' $dir/configure 2>&1 >/dev/null ; then 
+		        fixBackWhackCtrlMBug=yes
+	            elif grep 'mpi2-other/info/Makefile \\' $dir/configure 2>&1 >/dev/null ; then 
+		        fixBackWhackCtrlMBug=yes
+	            elif grep 'maint/testmerge \\' $dir/configure 2>&1 >/dev/null ; then 
+		        fixBackWhackCtrlMBug=yes
+                    fi
+ 	            # Add other tests here (sigh) as necessary
+	            if [ "$fixBackWhackCtrlMBug" = yes ] ; then
+		        rm -f c.tmp 
+  	  	        sed -e '/"\\/d' -e 's/\\//g' $dir/configure > c.tmp
+		        rm -f $dir/configure
+		        mv c.tmp $dir/configure
+		        chmod a+x $dir/configure
+	            fi
+                fi
+            fi
+        if [ ! -x $dir/configure -a "$allowFailure" != yes ] ; then
+            # Check for a few allowed exceptions
+            if [ "$dir" = "./src/pmi/winmpd" ] ; then
+	        continue
+            fi
+	    if [ -s $dir/Makefile.sm -a ! -s $dir/Makefile.in ] ; then
+		# This is an old directory that is no longer processed
+		# by simplemake; these are ignored
+		continue
+	    fi
+            echo "Could not build configure from configure.in in $dir"
+	    echo "Aborting updatefiles!"
+	    exit 1
+        fi
+        done
+    elif [ "$has_unix_find" = no ] ; then
+        echo "You need to install find (in findutils)"
+        exit 1
+    else 
+        echo "Skipping creation of configure files"
+    fi
+fi
+
+if [ -f src/mpe2/maint/updatefiles -a "$do_build_configure" = "yes" ] ; then
+    # If we have the mpe2 updatefiles, execute it from the mpe directory
+    (cd src/mpe2 && chmod a+x maint/updatefiles && maint/updatefiles )
+fi
+if [ $rm_prepost = yes ] ; then
+    rm -f src/include/mpidpre.h src/include/mpidpost.h
+fi
+if [ "$do_smpdversion" = yes ] ; then
+    echo "Creating src/pm/smpd/smpd_version.h"
+    smpdVersion=`cat maint/Version`
+    cat >src/pm/smpd/smpd_version.h <<EOF
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2005 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+#define SMPD_VERSION "$smpdVersion"
+EOF
+fi
+#
+# The following must be the last statements executed
+if [ -n "$error_summary" ] ; then
+    echo " "
+    echo "Problems encountered while running updatefiles."
+    echo "These may cause problems when configuring or building MPICH2."
+    echo "$error_summary"
+fi
+case $finalStatus in 
+   0) # all is well
+	;;
+   1) # warnings
+ 	;;
+   2) # reserved for future use
+	;;
+   3) # fatal, cannot continue
+	echo "updatefiles step failed!  Review the output and fix the problem"
+        echo "before continuing"
+        exit 1
+	;;	
+   *) # unknown
+	echo "Internal error in updatefiles; finalStatus=$finalStatus"
+	exit 1
+	;;
+esac
+

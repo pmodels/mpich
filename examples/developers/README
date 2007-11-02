@@ -1,0 +1,4 @@
+This directory contains programs that may be useful for developers.  These
+are not example programs; rather, they may be used to explore the 
+behavior of the MPI implemenation in some special cases.
+

@@ -1,0 +1,6 @@
+Makefile.in
+Makefile
+*.o
+*ebug*
+*elease*
+*.vfproj

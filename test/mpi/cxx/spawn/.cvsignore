@@ -1,0 +1,14 @@
+Makefile.in
+Makefile
+*.o
+*ebug*
+*elease*
+*.vcproj
+*.gcda
+*.gcno
+namepubx
+spawnintrax
+spawnintrax
+spawnargvx
+selfconaccx
+

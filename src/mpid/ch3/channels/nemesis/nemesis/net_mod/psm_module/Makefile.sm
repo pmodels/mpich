@@ -1,0 +1,5 @@
+INCLUDES = -I. -I../../include -I${master_top_srcdir}/src/ch3/channels/nemesis/nemesis/include -I${master_top_srcdir}/src/include \
+           -I${top_builddir}/src/include
+lib${MPILIBNAME}_a_SOURCES = \
+  psm_module_finalize.c  psm_module_init.c  psm_module_poll.c      psm_module_send.c \
+  psm_module_getput.c    psm_module_lmt.c   psm_module_register.c  psm_module_test.c

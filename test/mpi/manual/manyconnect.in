@@ -1,0 +1,78 @@
+#! /bin/sh
+file=`pwd`/test-port
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
+mpiexec="@bindir@/mpiexec"
+starter="$mpiexec -n 1"
+testpgm=testconnect
+
+rm -f $file
+
+# Default number of processes to start (the test is for large numbers
+# of processes; use "manyconnect 10" to start with fewer for debugging)
+nconn=100
+# To avoid problems with listner queues, we pause every blockstart
+# processes
+blockstart=10
+
+# Print help/usage information if requested
+if [ "$1" = "-help" -o "$1" = "-usage" ] ; then
+    echo "$0 [ -singleton ] [ nconn [ testprogram ] ]"
+    exit 0
+fi
+
+if [ "$1" = "-singleton" ] ; then
+    starter=eval
+    shift
+fi
+if [ -n "$1" ] ; then
+    nconn=$1
+    shift
+fi
+if [ -n "$1" ] ; then
+    if [ -x "$1" ] ; then
+	testpgm=$1
+    else 
+        echo "Expected to find an executable program; found $1"
+        exit 1
+    fi
+    shift
+fi
+
+# Make sure that the program is executable
+if [ ! -x "$testpgm" ] ; then
+    # Try to make it
+    echo "Making $testpgm"
+    make $testpgm 
+    if [ $? != 0 ] ; then
+	echo "Failure in make $testpgm"
+	exit 1
+    fi
+    if [ ! -x "$testpgm" ] ; then 
+        echo "The program $testpgm either does not exist or is not executable"
+        exit 1
+    fi
+fi
+
+# Start one and sleep to avoid problems with two processes opening the
+# test-port file for writing
+$starter ./$testpgm $file $nconn 1 &
+sleep 1
+nstarted=2
+blockcount=2
+while [ $nstarted -lt $nconn ] ; do
+    #echo "Starting $nstarted"
+    $starter ./$testpgm $file $nconn $nstarted &
+    echo "Started process $! (num $nstarted)"
+    nstarted=`expr $nstarted + 1`
+    blockcount=`expr $blockcount + 1`
+    if [ -n "$2" ] ; then
+         sleep $2
+    elif [ $blockcount -ge $blockstart ] ; then
+        blockcount=0
+        sleep 1
+    fi
+done
+#echo "Starting $nstarted"
+$starter ./$testpgm $file $nconn $nstarted
+wait

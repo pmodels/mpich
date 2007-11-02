@@ -1,0 +1,66 @@
+MPIG_LDFLAGS=${LDFLAGS}
+MPIG_LIBS=${LIBS}
+MPIG_TEST_LDFLAGS=${MPIG_TEST_LDFLAGS:-${MPIG_LDFLAGS}}
+MPIG_TEST_LIBS=${MPIG_TEST_LIBS:-${MPIG_LIBS}}
+
+if test -n "${CC}" ; then
+    MPIG_CC=${CC}
+    MPIG_CFLAGS=${MPIG_CFLAGS:-`echo "${CFLAGS}" | sed -e 's/-I[^ ]* *//g'`}
+    MPIG_CLD=${MPIG_CLD:-${CC}}
+    MPIG_BUILD_CC=${MPIG_BUILD_CC:-${CC}}
+    MPIG_BUILD_CFLAGS="${MPIG_BUILD_CFLAGS:-${CFLAGS}} ${CPPFLAGS}"
+    MPIG_TEST_CC=${MPIG_TEST_CC:-${CC}}
+    MPIG_TEST_CFLAGS="${MPIG_TEST_CFLAGS:-${MPIG_CFLAGS}} ${CPPFLAGS}"
+    MPIG_TEST_CLD=${MPIG_TEST_CLD:-${CC}}
+else
+    mpig_msg_error $LINENO "C compiler must be specified in the CC environment variable."
+fi
+
+if test "${enable_cxx}" != "no" ; then
+    if test -n "${CXX}" ; then
+        MPIG_CXX=${CXX}
+        MPIG_CXXFLAGS=${MPIG_CXXFLAGS:-`echo "${CXXFLAGS}" | sed -e 's/-I[^ ]* *//g'`}
+        MPIG_CXXLD=${MPIG_CXXLD:-${CXX}}
+        MPIG_BUILD_CXX=${MPIG_BUILD_CXX:-${CXX}}
+        MPIG_BUILD_CXXFLAGS="${MPIG_BUILD_CXXFLAGS:-${CXXFLAGS}} ${CPPFLAGS}"
+        MPIG_TEST_CXX=${MPIG_TEST_CXX:-${CXX}}
+        MPIG_TEST_CXXFLAGS="${MPIG_TEST_CXXFLAGS:-${MPIG_CXXFLAGS}} ${CPPFLAGS}"
+        MPIG_TEST_CXXLD=${MPIG_TEST_CXXLD:-${CXX}}
+    else
+        mpig_msg_info $LINENO "CXX compiler not specified.  Disabling CXX subsystem."
+        enable_cxx=no
+        ac_configure_args="${ac_configure_args} --disable-cxx"
+    fi
+fi
+
+if test "${enable_f77}" != "no" ; then
+    if test -n "${F77:=${FC}}" ; then
+        MPIG_F77=${F77}
+        MPIG_F77FLAGS=${MPIG_F77FLAGS:-`echo "${F77FLAGS:=${FCFLAGS}}" | sed -e 's/-I[^ ]* *//g'`}
+        MPIG_F77LD=${MPIG_F77LD:-${F77}}
+        MPIG_TEST_F77=${MPIG_TEST_F77:-${F77}}
+        MPIG_TEST_F77FLAGS="${MPIG_TEST_F77FLAGS:-${MPIG_F77FLAGS}} ${CPPFLAGS}"
+        MPIG_TEST_F77LD=${MPIG_TEST_F77LD:-${F77}}
+    else
+        mpig_msg_info $LINENO "F77 compiler not specified.  Disabling F77 subsystem."
+        enable_f77=no
+        ac_configure_args="${ac_configure_args} --disable-f77"
+    fi
+fi
+
+if test "${enable_f90}" != "no" ; then
+    if test -n "${F90}" ; then
+        MPIG_F90=${F90}
+        MPIG_F90FLAGS=${MPIG_F90FLAGS:-`echo "${F90FLAGS}" | sed -e 's/-I[^ ]* *//g'`}
+        MPIG_F90LD=${MPIG_F90LD:-${F90}}
+        MPIG_BUILD_F90=${MPIG_BUILD_F90:-${F90}}
+        MPIG_BUILD_F90FLAGS=${MPIG_BUILD_F90FLAGS:-${F90FLAGS}}
+        MPIG_TEST_F90=${MPIG_TEST_F90:-${F90}}
+        MPIG_TEST_F90FLAGS="${MPIG_TEST_F90FLAGS:-${MPIG_F90FLAGS}} ${CPPFLAGS}"
+        MPIG_TEST_F90LD=${MPIG_TEST_F90LD:-${F90}}
+    else
+        mpig_msg_info $LINENO "F90 compiler not specified.  Disabling F90 subsystem."
+        enable_f90=no
+        ac_configure_args="${ac_configure_args} --disable-f90"
+    fi
+fi

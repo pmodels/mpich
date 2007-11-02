@@ -1,0 +1,135 @@
+AC_PREREQ(2.59)
+AC_INIT(configure.in)
+
+dnl
+dnl Set the directory that contains support scripts such as install-sh and
+dnl config.guess
+dnl
+AC_CONFIG_AUX_DIR(../../../../../confdb)
+
+dnl
+dnl Definitions will be placed in this file rather than in the DEFS variable
+dnl
+AC_CONFIG_HEADER(include/mpidi_ch3i_ib_conf.h)
+AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+#ifndef MPIDI_CH3I_IB_CONF_H_INCLUDED
+#define MPIDI_CH3I_IB_CONF_H_INCLUDED
+])
+AH_BOTTOM([#endif])
+
+echo "RUNNING CONFIGURE FOR THE INFINIBAND CHANNEL"
+
+save_libs=$LIBS
+LIBS=
+
+dnl
+dnl First check that we have a clean build if we are doing a VPATH build
+PAC_VPATH_CHECK()
+
+file=${master_top_srcdir}/src/mpid/${device_name}/channels/ib/setup_channel.args
+if test -f ${file} ; then
+    . ${file}
+else
+    AC_MSG_ERROR([Setup file $file was not found])
+fi
+
+# FIXME:
+# *Never* unconditionally add libraries and paths to these variables.  
+# autoconf provides routines to check for these, USE THEM!
+# The following code includes examples for each library
+if test "$ibu_name" = ibal ; then
+    AC_DEFINE(USE_IB_IBAL,,[Define to use the SourceForge ibal interface])
+    save_LIBS=$LIBS
+    LIBS=""
+dnl    AC_SEARCH_LIBS(routine-in-library,libraryname)
+    AC_SEARCH_LIBS(unknown-routine-name,allib)
+    AC_SEARCH_LIBS(unknown-routine-name,complib)
+    AC_SEARCH_LIBS(pthread_create,pthread)
+    AC_SEARCH_LIBS(dlopen,dl)
+    IB_LIBS="$IB_LIBS $LIBS"
+    LIBS=$save_LIBS
+    dnlIB_LIBS="$IB_LIBS -lallib -lcomplib -lpthread -ldl"
+# FIXME:
+# It isn't reasonable to ask the user to fix this in configure.in, since
+# they may have trouble rebuilding configure (and the path needs to be
+# checked anyway).  Provide a better solution, such as a documented 
+# environment variable.
+# Note that the setup_channel scripts have the same problem.
+# As an example of how easy it is to be nicer to the user, I've included
+# an examble.
+    if test ! -d "/usr/sf-iba/iba/linuxuser/bin/x86/2.4.18-19.7.x/lib/free" ; then
+         AC_MSG_ERROR([Did not find the expected directory (/usr/sf-iba/iba/linuxuser/bin/x86/2.4.18-19.7.x/lib/free) that must contain the Ibfiniband libraries (see src/mpid/ch3/channels/ib/configure.in)])
+    fi
+    # This hard-coded path needs to be generated or specified by the user
+    IB_LDFLAGS="$IB_LDFLAGS -L/usr/sf-iba/iba/linuxuser/bin/x86/2.4.18-19.7.x/lib/free"
+elif test "$ibu_name" = vapi ; then
+    # FIXME: see /usr/mellanox/lib for one possible location for ibu_path_lib
+    libsFound=yes
+    saveLDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS -L$ibu_path_lib"
+    AC_SEARCH_LIBS(VAPI_bind_mw,vapi,,libFound=no)
+    AC_SEARCH_LIBS(mtl_strerror,mtl_common,,libFound=no)
+    AC_SEARCH_LIBS(MPGA_print_pkt,mpga,,libFound=no)
+    if test "$libFound" != "yes" ; then
+         AC_MSG_ERROR([Did not find the libraries required for the vapi version of the ib channel])
+    fi
+    LDFLAGS="$saveLDFLAGS"
+    AC_DEFINE(USE_IB_VAPI,,[Define to use the Mellanox vapi interface])
+    IB_LIBS="$IB_LIBS $LIBS -lmtl_common -lvapi -lmpga -lpthread"
+    IB_LDFLAGS="$IB_LDFLAGS -L$ibu_path_lib"
+else
+    AC_MSG_ERROR([Unknown IB name $ibu_name])
+fi
+
+PAC_PROG_MAKE
+
+AC_DEFINE(MPID_IBU_TYPE_UNIX,,[Define to use unix iovecs])
+
+AC_CHECK_HEADERS(				\
+    assert.h					\
+    malloc.h					\
+    errno.h					\
+    fcntl.h					\
+    netdb.h					\
+    netinet/in.h				\
+    netinet/tcp.h				\
+    stdlib.h					\
+    sys/param.h					\
+    sys/poll.h					\
+    sys/socket.h				\
+    sys/types.h					\
+    unistd.h)
+
+AC_SEARCH_LIBS(socket,socket)
+AC_SEARCH_LIBS(gethostbyname,nsl)
+
+LIBS=$save_libs
+AC_SUBST(IB_LIBS)
+
+dnl CPPFLAGS is set in setup_channel
+dnl IB_CPPFLAGS="$IB_CPPFLAGS -I/usr/mellanox/include -I/usr/mellanox/wrap"
+dnl AC_SUBST(IB_CPPFLAGS)
+
+AC_SUBST(IB_LDFLAGS)
+
+AC_SUBST(device_name)
+AC_SUBST(channel_name)
+
+AC_SUBST(AR)
+AC_SUBST(RANLIB)
+AC_SUBST(MPILIBNAME)
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
+AC_SUBST(CPPFLAGS)
+PAC_CC_SUBDIR_SHLIBS
+AC_SUBST(master_top_srcdir)
+AC_SUBST(master_top_builddir)
+dnl
+dnl Dependency handling
+AC_SUBST(MAKE_DEPEND_C)
+
+AC_OUTPUT(Makefile src/Makefile localdefs)

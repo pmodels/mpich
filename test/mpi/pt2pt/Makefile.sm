@@ -1,0 +1,56 @@
+INCLUDES = -I../include -I${srcdir}/../include
+LDADD = ../util/mtest.o
+DEPADD = @MPILIBLOC@ ../util/mtest.o
+smvar_do_sharedlibs = 0
+
+# Use extra programs to list programs that should not be built by default.
+EXTRA_PROGRAMS       = 
+
+bottom_SOURCES       = bottom.c
+bsend1_SOURCES       = bsend1.c
+bsend2_SOURCES       = bsend2.c
+bsend3_SOURCES       = bsend3.c
+bsend4_SOURCES       = bsend4.c
+bsend5_SOURCES       = bsend5.c
+bsendalign_SOURCES   = bsendalign.c
+cancelrecv_SOURCES   = cancelrecv.c
+isendself_SOURCES    = isendself.c
+sendself_SOURCES     = sendself.c
+eagerdt_SOURCES      = eagerdt.c
+isendselfprobe_SOURCES    = isendselfprobe.c
+bsendfrag_SOURCES    = bsendfrag.c
+bsendpending_SOURCES = bsendpending.c
+errinstatts_SOURCES  = errinstatts.c
+errinstatta_SOURCES  = errinstatta.c
+errinstatws_SOURCES  = errinstatws.c
+errinstatwa_SOURCES  = errinstatwa.c
+icsend_SOURCES       = icsend.c
+rqstatus_SOURCES     = rqstatus.c
+rqfreeb_SOURCES      = rqfreeb.c
+greq1_SOURCES        = greq1.c
+scancel_SOURCES      = scancel.c
+scancel2_SOURCES     = scancel2.c
+rcancel_SOURCES      = rcancel.c
+pscancel_SOURCES     = pscancel.c
+sendflood_SOURCES    = sendflood.c
+sendrecv1_SOURCES    = sendrecv1.c
+sendrecv2_SOURCES    = sendrecv2.c
+sendrecv3_SOURCES    = sendrecv3.c
+waitany-null_SOURCES = waitany-null.c
+pingping_SOURCES     = pingping.c
+probe-unexp_SOURCES  = probe-unexp.c
+probenull_SOURCES    = probenull.c
+inactivereq_SOURCES  = inactivereq.c
+waittestnull_SOURCES = waittestnull.c
+sendall_SOURCES      = sendall.c
+
+../util/mtest.o:
+	(cd ../util && $(MAKE) mtest.o)
+
+# A special testing target to simplify running just the pt2pt tests
+testing:
+	../runtests -srcdir=$(srcdir) -tests=testlist \
+		   -mpiexec=$(bindir)/mpiexec \
+		   -xmlfile=summary.xml
+clean-local:
+	-rm -f summary.xml

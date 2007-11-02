@@ -1,0 +1,118 @@
+Important issues with passive target accumulate
+
+* Simple accumulations should combine lock/unlock with operation when
+  latency is high
+
+* Separate accumulations into non-overlapping buffers (within the same
+  local window) should be processed with as much parallelism as
+  possible.
+
+  For single threaded MPI runtime systems, it is reasonable to
+  restrict such optimizations to accumulations issued from separate
+  processes since communications about multiple accumulations from a
+  single process are likely to be serialized by the networking device
+  anyway.
+
+  The trick to parallelizing multiple requests is identifying that
+  their target buffers do not overlap.  Detecting this seems extremely
+  difficult, however, an assertion at the time the lock is acquired
+  could be used to inform the runtime system that no overlapping
+  accumulations will be issued by other processes during this epoch.
+
+  * Two-sided
+
+    Unless multiple threads (and processors) are present on the target
+    system to process accumulation operations, serialization is
+    eminent, and the best optmization is to not have a ton of
+    multi-threading optimizations in the way slowing things down.  This
+    suggests that two implementations may be necessary: one using
+    threads and one that doesn't.
+
+    If multiple threads and processors are available on the target
+    system, then one might be able to use separate threads to process
+    accumulate requests from different processes.  Multiple thread
+    might also be useful to help overlap communication and computation
+    for a single request if that request is large enough.
+
+  * Remote memory
+
+    The same issues that apply for the two-sided case, apply here.
+    The only real difference is that we might use get/put to fill
+    buffers instead of send/recv.
+
+  * Shared memory
+
+  * Multi-method
+
+* Large accumulations into the same buffer should be pipelined to
+  achieve maximum parallelism.
+
+  If it is possible to detect that the same target buffer was being
+  used by a set of processes, and that no other overlapping target
+  buffers were simultaneously being operated upon, then mutexes can
+  be associated with areas of progress within that buffer rather
+  particular regions of the target's local window.  Defining the
+  areas of progress may happen naturally as a result of limited
+  buffer space necessitating the use of segments.  So, atomicity
+  would need to be guaranteed for the operations associated with a
+  particular segment associated with a buffer rather than a
+  particular region with the local window.  In practice, detecting
+  that the conditions have been met to ensure atomicity may prove
+  too difficult to obtain reasonable performance.
+
+  * Two-sided
+
+    If multiple threads are available to process multiple data
+    streams, then it should be possible to pipeline the processing.
+    It is critical, however, that the data be organized and sent in
+    such a way so as to maximize
+
+  * Remote memory
+
+  * Shared memory
+
+    For shared memory, this can be accomplished by dividing local
+    windows into regions and providing a separate mutex for each
+    region.
+
+  * Multi-method
+
+* Datatype caching
+
+  [traff00:mpi-impl] and [booth00:mpi-impl] discuss the need for
+  datatype caching by the target process when the target process
+  must be involved in the RMA operations (i.e., when the data cannot
+  be directly read and interpreted by the origin process)
+
+  Datatype caching can be either proactive or reactive.
+
+  In the proactive case, the origin process would track whether the
+  target process has a copy of the datatype and send the datatype to
+  target process when necessary.  This means that each datatype must
+  contain tracking information.  Unfortunately, because of dynamic
+  processes in MPI-2, something more complex than a simple bit
+  vector must be used to track processes already caching a datatype.
+  What is the correct, high-performance structure?
+
+  Alternatively, a reactive approach could be used.  In the reactive
+  approach, the origin process would assume that the target process
+  already knows about the datatype.  If that assumption is false, the
+  target process will request the datatype from the origin process.
+  This simplifies the tracking on the origin, but does not completely
+  eliminate it.  It is necessary for the origin to increase the
+  reference count associated with the datatype until the next
+  synchronization point to ensure that the datatype is not deleted
+  before the target process has had sufficient opportunity to request
+  a copy of the datatype.
+
+  * Two-sided
+
+  * Remote memory
+
+  * Shared memory
+
+    For shared memory, data type caching is unnecessary if the origin
+    process performs the work.  If the target is involved in the work,
+    necessary datatype information can be placed in shared memory.
+
+  * Multi-method

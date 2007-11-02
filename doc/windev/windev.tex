@@ -1,0 +1,1263 @@
+\documentclass[dvipdfm,11pt]{article}
+\usepackage[dvipdfm]{hyperref} % Upgraded url package
+\parskip=.1in
+
+% Formatting conventions for contributors
+% 
+% A quoting mechanism is needed to set off things like file names, command
+% names, code fragments, and other strings that would confuse the flow of
+% text if left undistinguished from preceding and following text.  In this
+% document we use the LaTeX macro '\texttt' to indicate such text in the
+% source, which normally produces, when used as in '\texttt{special text}',
+% the typewriter font.
+
+% It is particularly easy to use this convention if one is using emacs as
+% the editor and LaTeX mode within emacs for editing LaTeX documents.  In
+% such a case the key sequence ^C^F^T (hold down the control key and type
+% 'cft') produces '\texttt{}' with the cursor positioned between the
+% braces, ready for the special text to be typed.  The closing brace can
+% be skipped over by typing ^e (go to the end of the line) if entering
+% text or ^C-} to just move the cursor past the brace.
+
+% LaTeX mode is usually loaded automatically.  At Argonne, one way to 
+% get several useful emacs tools working for you automatically is to put
+% the following in your .emacs file.
+
+% (require 'tex-site)
+% (setq LaTeX-mode-hook '(lambda ()
+%          		 (auto-fill-mode 1)
+%          		 (flyspell-mode 1)
+%          		 (reftex-mode 1)
+% 			 (setq TeX-command "latex")))
+
+
+\begin{document}
+\markright{MPICH2 Windows Development Guide}
+\title{{\bf MPICH2 Windows Development Guide}\thanks{This work was supported by the
+    Mathematical, Information, and Computational Sciences Division
+    subprogram of the Office of Advanced Scientific Computing Research,
+    SciDAC Program, Office of Science, U.S. Department of Energy, under
+    Contract DE-AC02-06CH11357.}\\
+  Version 1.0.6\\
+  Mathematics and Computer Science Division\\
+  Argonne National Laboratory}
+
+\author{David Ashton\\
+Jayesh Krishna}
+
+\maketitle
+\cleardoublepage
+
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+\pagestyle{headings}
+
+\section{Introduction}
+\label{sec:intro}
+This manual describes how to set up a Windows machine to build and test MPICH2 on.
+
+\section{Build machine}
+\label{sec:machine}
+
+Build a Windows XP or Windows Server 2003 machine.  Place this machine in the MPICH domain
+and create a user in the domain with the same name as your MCS user name.  Use your MCS 
+password for this new account.  This isn't a requirement; you can create any username you
+want with any password you want and it doesn't have to be part of the MPICH domain.
+But it makes life a lot easier if you do.
+
+\section{Test machine}
+\label{sec:test_machine}
+
+Build a Windows XP or Windows Server 2003 machine on a 32bit CPU.
+Also build a Windows Server 2003 X64 machine to test the Win64 distribution.
+
+%Note: peta07 and peta08.mcs.anl.gov have Mellanox Infiniband cards in them for testing
+%the Infiniband channel under Windows.
+
+\section{Software}
+
+This section describes the software necessary to build MPICH2.
+
+\subsection{Packages}
+\label{sec:packages}
+
+To build MPICH2 you will need:
+\begin{enumerate}
+\item Microsoft Developer Studio .NET 2003
+\item Microsoft Platform SDK
+\item cygwin - full installation
+\item Intel Fortran compiler IA32
+\item Intel Fortran compiler EMT64
+%\item Mellanox 32bit and 64bit Infiniband libraries for VAPI and IBAL
+\item Java SDK
+\end{enumerate}
+
+Microsoft Developer Studio can be found on the CDs from an MSDN subscription.  The
+2003 version is needed to get a compiler that is up to date on standards compliance.  This
+is needed to compile the C++ interface and handle types like ``long long''.
+
+The Platform SDK can also be found on the MSDN CDs or downloaded from Microsoft.com.  The
+latest version as of the writing of this document was Platform SDK - Windows Server 2003 SP1.
+This package needs to be installed to get the Win64 compilers.
+
+The Intel Fortran compilers need to be installed after Developer Studio and the PSDK because
+they integrate themselves into those two products.  The regular IA32 compiler needs to be 
+installed and the EMT64 compiler needs to be installed.  They are two separate packages and 
+they require a license file to use.  The license file is for a single user on a single 
+machine.
+
+%The Mellanox Infiniband libraries are simply a package that needs to be unzipped.  They don't
+%need to be installed because the build machine won't have Infiniband hardware on it.  I put
+%the 32bit vapi package in \texttt{C:$\backslash$Mellanox} and the 64bit package in
+%\texttt{C:$\backslash$Mellanox64}.  The ibal package should go in 
+%\texttt{c:$\backslash$ibal} with both the 32bit and 64bit libraries in 
+%\texttt{c:$\backslash$ibal$\backslash$Install$\backslash$x86} and 
+%\texttt{c:$\backslash$ibal$\backslash$Install$\backslash$AMD64}.  If different pathes are 
+%chosen then the scripts and Visual Studio project files will need to be updated to reflect 
+%this change.
+
+cygwin needs to be installed to get cvs, perl and ssh.  MPICH2 can also be built completely
+under cygwin just like a Unix build so I install all of cygwin.  The latest cygwin packages
+are needed to build MPICH2 under cygwin and the MCS mirror site for cygwin does not contain
+the latest versions.  So I would select a download site other than the mcs mirror site during
+the cygwin install.  I also select to use the DOS file format during the install process for 
+cygwin.
+
+After installing cygwin, bring up a cygwin bash shell and generate some ssh keys.  I believe
+the command is: \texttt{ssh-keygen -t dsa}.  Then copy the public key generated to your
+mcs \texttt{/home/you/.ssh/authorized\_keys} file.  This will allow you to ssh from this machine
+to harley.mcs.anl.gov without typing a password.  This is important in order for the 
+automated scripts to run without user intervention.
+
+Assuming you installed cygwin to the default \texttt{c:$\backslash$cygwin} directory, add 
+\texttt{c:$\backslash$cygwin$\backslash$bin} to your path environment variable.  This is 
+required so the automated scripts can run tools like ssh and perl without specifying the 
+full path.
+
+The Java SDK needs to be installed so the logging library can be compiled. After installing
+the SDK set the JAVA\_HOME environment variable to point to the installation directory. 
+
+Run the following command from a command prompt to change the Windows script engine from
+GUI mode to console mode:
+\begin{verbatim}
+cscript //H:cscript
+\end{verbatim}
+
+\section{Building MPICH2}
+\label{sec:building}
+
+This section describes how to make various packages once you have a working build machine.
+
+\subsection{Developer Studio automated 32bit build}
+\label{sec:devstudiobuild}
+
+The easist way to build an MPICH2 distribution is to use the Developer Studio environment
+and the makewindist.bat script from the top level of the mpich2 source tree.  You can check
+out mpich2 from CVS or you can simply copy this batch file from the distribution.  The batch
+file knows how to check out mpich2 so it the only file required to make a distribution.
+
+The product GUIDs need to be changed when a new release is created.  To do this run 
+``\texttt{perl update\_windows\_version $<$new\_version$>$}''.  Run this script with mpich2/maint 
+as the current directory so the project files can be found.  Example:
+\begin{verbatim}
+perl update_windows_version 1.0.3
+\end{verbatim}
+
+Or you can modify the project files by hand.  Edit mpich2/maint/mpich2i.vdproj.  The ProductCode
+and PackageCode entries need to be changed to use new GUIDs.  Under Unix or Windows, uuidgen can 
+be used to generate a new GUID.  The ProductVersion entry needs to be changed to match the 
+version of MPICH2.
+
+Once the version and GUIDs have been updated, commit the changes to mpich2i.vdproj to CVS.
+
+Then you can build a distribution.
+
+Bring up a build command prompt by selecting Start$\to$Progams$\to$Microsoft Visual Studio 
+.NET 2003$\to$Visual Studio .NET Tools$\to$Visual Studio .NET 2003 Command Prompt.
+
+Change directories to wherever you want to create the distribution.  mpich2 will be checked 
+out under the current directory.  Run the makewindist batch file:
+
+\begin{verbatim}
+makewindist.bat --with-checkout
+\end{verbatim}
+
+Since there are no bugs in MPICH2 everything will work automatically.  The batch file does the
+following steps:
+\begin{enumerate}
+\item check out mpich2allWithMPE and change into the mpich2 directory
+\item ssh to harley.mcs.anl.gov and checkout mpich2.  Then run \texttt{maint/updatefiles} on
+harley, collect all the generated \texttt{.h.in} files and copy them back to the Windows
+machine.
+\item run ``\texttt{winconfigure.wsf --cleancode}'' to configure mpich2 for Windows and output
+all the generated files like mpi.h and the fortran interface files, etc.
+\item run the Developer Studio command line tool to build all the pieces of MPICH2.  This
+includes each of the channels - sock, ssm, shm, sshm, and the multi-threaded sock
+channel.  Two versions of each channel are built, the regular release build and the rlog
+profiled version.  The mpi wrapper channel selector dll is built and three Fortran interfaces
+are built, one for each set of common symbol types and calling conventions.  mpiexec and
+smpd are built along with the Windows GUI tools and the cygwin libraries.  (These are the cygwin
+link libraries to use the Windows native build of MPICH2, not a Unix-style build of MPICH2
+under cygwin.)
+\item package up everthing into \texttt{maint$\backslash$ReleaseMSI$\backslash$mpich2.msi}.
+\end{enumerate}
+
+When the batch file is finished you will be left with a mpich2.msi file that can be used to
+install MPICH2 on any Win32 machine.  This file can be re-named to match our release naming 
+conventions.
+
+\subsubsection{Automated build from the source distribution}
+If you don't have access to the CVS repository but you have the MPICH2 source
+distribution you can still use the makewindist batch file.  Follow these steps:
+\begin{enumerate}
+\item unzip/untar the source distribution
+\item bring up a Visual Studio Command Prompt
+\item cd into the mpich2xxx directory
+\item execute ``\texttt{winconfigure.wsf --cleancode}''
+\item execute ``\texttt{makewindist.bat --with-curdir}''
+\end{enumerate}
+
+\subsubsection{Building without Fortran}
+If you don't have a Fortran compiler you can use winconfigure.wsf to remove the
+Fortran projects.  Execute \texttt{winconfigure.wsf --remove-fortran --cleancode}
+Then you can build the projects without Fortran support.  If you want to use the
+\texttt{makewindist.bat} script you will need to remove the Fortran lines from
+it before executing it.
+
+\subsection{Platform SDK builds}
+\label{sec:psdk_build}
+
+The makefile in the \texttt{mpich2$\backslash$winbuild} directory builds a distribution based 
+on what compilers are specified in the environment so it can be used to compile any version of
+MPICH2.  The following targets can all be built with this mechanism:
+\begin{itemize}
+\item Win64 X64
+\item Win64 IA64
+\item Win32 x86
+\end{itemize}
+
+But first you need to have mpich2 checked out and configured before building.
+\begin{enumerate}
+\item bring up a command prompt and check out mpich2: 
+
+\texttt{cvs -d :ext:ashton@harley.mcs.anl.gov:/home/MPI/cvsMaster co mpich2allWithMPE}.  Replace ashton with your own username.
+\item cd into mpich2
+\item run \texttt{getdotin.bat}
+\item run \texttt{winconfigure.wsf --cleancode}
+\end{enumerate}
+
+To build the Win64 X64 distribution do the following:
+\begin{enumerate}
+\item Bring up a build command prompt from the PSDK.  It can be found here: Start$\to$Programs
+$\to$Microsoft Platform SDK for Windows Server 2003 SP1$\to$Open Build Environment Window$\to$
+Windows Server 2003 64-bit Build Environment$\to$Set Win Svr 2003 x64 Build Env (Retail)
+\item Run \texttt{$\backslash$Program Files$\backslash$Intel$\backslash$Fortran$\backslash$compiler80$\backslash$Ia32e$\backslash$Bin$\backslash$ifortvars.bat}
+\item cd into \texttt{mpich2$\backslash$winbuild}
+\item run \texttt{build.bat 2>\&1 | tee build.x64.out}
+\end{enumerate}
+
+To build the Win64 IA64 distribution do the following:
+\begin{enumerate}
+\item Bring up a build command prompt from the PSDK.  It can be found here: Start$\to$Programs
+$\to$Microsoft Platform SDK for Windows Server 2003 SP1$\to$Open Build Environment Window$\to$
+Windows Server 2003 64-bit Build Environment$\to$Set Win Svr 2003 IA64 Build Env (Retail)
+\item Run \texttt{$\backslash$Program Files$\backslash$Intel$\backslash$Fortran$\backslash$compiler80$\backslash$Itanium$\backslash$Bin$\backslash$ifortvars.bat}
+\item cd into \texttt{mpich2$\backslash$winbuild}
+\item run \texttt{build.bat 2>\&1 | tee build.ia64.out}
+\end{enumerate}
+
+To build the Win32 x86 distribution do the following:
+\begin{enumerate}
+\item Bring up a build command prompt from the PSDK.  It can be found here: Start$\to$Programs
+$\to$Microsoft Platform SDK for Windows Server 2003 SP1$\to$Open Build Environment Window$\to$
+Windows 2000 Build Environment$\to$Set Windows 2000 Build Environment (Retail)
+\item Run \texttt{$\backslash$Program Files$\backslash$Intel$\backslash$Fortran$\backslash$compiler80$\backslash$Ia32$\backslash$Bin$\backslash$ifortvars.bat}
+\item cd into \texttt{mpich2$\backslash$winbuild}
+\item run \texttt{build.bat 2>\&1 | tee build.x86.out}
+\end{enumerate}
+
+\section{Distributing MPICH2 builds}
+\label{sec:distribute}
+
+If you built an .msi file using the Developer Studio build process \ref{sec:devstudiobuild} then
+all you have to do is rename the \texttt{mpich2.msi} file to something appropriate like
+\texttt{mpich2-1.0.3-1-win32-ia32.msi}
+
+If you built using the Platform SDK build process \ref{sec:psdk_build} then the output files
+are left in their build locations and need to be collected and put in a zip file for
+distributing.  This process should be automated with a script.
+
+\section{Testing MPICH2}
+\label{sec:testing}
+
+Run the \texttt{testmpich2.wsf} script to checkout mpich2, build it, install it, checkout 
+the test suites, build them, run the test suites, and collect the results in a web page.
+
+\subsection{Testing from scratch}
+Explain the use of testmpich2.wsf.
+
+Run ``\texttt{testmpich2.wsf}'' without any parameters and it will create a \texttt{testmpich2}
+subdirectory and check out into that directory mpich2 and the test suites - c++, mpich, intel
+and mpich2.  It will then build mpich2 and all the tests from the test suites.  Then it will run
+the tests and place a summary in \texttt{testmpich2$\backslash$summary$\backslash$index.html}.
+
+\subsection{Testing a built mpich2 directory}
+Explain how to run \texttt{testmpich2.wsf} if you have the mpich2 source tree on a machine and you 
+have already built all of mpich2.
+
+Here is a sample batch file to test mpich2 that has already been built in c:$\backslash$mpich2:
+\begin{verbatim}
+testmpich2.wsf /mpich2:c:\mpich2 /make- /configure- /buildbatch
+pushd testmpich2\buildMPICH
+call mpich_cmds.bat
+popd
+pushd testmpich2\buildCPP
+call cpp_cmds.bat
+popd
+pushd testmpich2\buildINTEL
+call intel_cmds.bat
+popd
+pushd testmpich2\buildMPICH2
+call mpich2_cmds.bat
+popd
+testmpich2.wsf /mpich2:c:\mpich2 /make- /configure- /summarize
+\end{verbatim}
+
+\subsection{Testing an existing installation}
+Explain the use of testmpich2.wsf to test an existing installation, one that was installed
+with the .msi distribution.
+
+\section{Development issues}
+This section describes development issues that are particular to the Windows build.
+
+Whenever a .h.in file is created on the Unix side, winconfigure.wsf needs to be updated to
+create the .h file from the .h.in file.  Copy and paste an existing section in 
+winconfigure.wsf that already does this and rename the file names.
+
+When new definitions are added to the .h.in files these definitions, usually in the form HAVE\_FOO 
+or USE\_FOO, need to be added to the AddDefinitions function in winconfigure.wsf.  Simply add 
+new cases to the big case statement as needed.  winconfigure.wsf warns you of definitions that 
+are not in the case statement.
+
+Whenever a @FOO@ substitution is added on the Unix side, winconfigure.wsf needs to be updated
+to handle the substitution.  Find the ReplaceAts function in winconfigure.wsf and add the 
+substitution to the big case statement.  winconfigure.wsf warns you of new substitutions that
+have not been added to the case statement.
+
+\section{Runtime environment}
+
+This section describes the MPICH2 environment that is particular to Windows.
+
+\subsection{User credentials}
+mpiexec must have the user name and password to launch MPI applications in the context of
+that user.  This information can be stored in a secure encrypted manner for each user on a
+machine.  Run \texttt{mpiexec -register} to save your username and password.  Then mpiexec
+will not prompt you for this information.
+
+This is also true for a nightly build script.  The user context under which the script is 
+run must have saved credentials so mpiexec doesn't prompt for them.  So scripts won't hang,
+mpiexec provides a flag, \texttt{-noprompt}, that will cause mpiexec to print out errors in 
+cases when it normally would prompt for user input.  This can also be specified in the 
+environment with the variable MPIEXEC\_NOPROMPT.
+
+You can also save more than one set of user credentials.  Add the option \texttt{-user n}
+to the \texttt{-register}, \texttt{-remove}, \texttt{-validate}, and \texttt{mpiexec}
+commands to specify a saved user credential other than the default.  The parameter \texttt{n}
+is a non-zero positive number.  For example this will save credentials in slot 1:
+\begin{verbatim}
+mpiexec -register -user 1
+\end{verbatim}
+And this command will use the user 3 to launch a job:
+\begin{verbatim}
+mpiexec -user 3 -n 4 cpi.exe
+\end{verbatim}
+
+User credentials can also be specified in a file using the \texttt{-pwdfile filename}
+option to mpiexec.  Put the username on the first line of the file and the password
+on the second line.  If you choose this option you should make sure the file is
+only readable by the current user.
+
+\subsection{MPICH2 channel selection}
+MPICH2 for Windows comes with multiple complete implementations of MPI.  These are called
+channels and each build represents a different transport mechanism used to move MPI messages.
+The default channel uses sockets for communication.  There are two channels that use only
+shared memory.  There is a channel that uses both sockets and shared memory.  There is a
+channel that uses Infiniband.  And there is a thread-safe version of the sockets channel.
+
+The short names for the channels are: sock, shm, sshm, ssm, mt.
+
+These channels can be selected at runtime with an environment variable: MPICH2\_CHANNEL.
+The following is an example that uses the Infiniband channel instead of the default sockets
+channel:
+
+\begin{verbatim}
+mpiexec -env MPICH2_CHANNEL ib -n 4 myapp.exe
+or
+mpiexec -channel ib -n 4 myapp.exe
+\end{verbatim}
+
+If you specify \texttt{auto} for the channel then mpiexec will automatically choose a
+channel for you.
+\begin{verbatim}
+mpiexec -channel auto -n 4 myapp.exe
+\end{verbatim}
+The rules are:
+\begin{enumerate}
+\item If numprocs is less than 8 on one machine, use the shm channel
+\item If numprocs is greater than 7 on one machine, use the sshm channel
+\item If running on multiple machines, use the ssm channel.  This channel can be changed 
+using winconfigure.
+\end{enumerate}
+
+\subsection{MPI apps with GUI}
+Many users on Windows machines want to build GUI apps that are also MPI applications.  This is
+completely acceptable as long as the application follows the rules of MPI.  MPI\_Init must be
+called before any other MPI function and it needs to be called soon after each process starts.
+The processes must be started with mpiexec but they are not required to be console applications.
+
+The one catch is that MPI applications are hidden from view so any Windows that a user 
+application brings up will not be able to be seen.  mpiexec has an option to allow the MPI 
+processes on the local machine to be able to bring up GUIs.  Add -localroot to the mpiexec
+command to enable this capability.  But even with this option, all GUIs from processes on 
+remote machines will be hidden.
+
+So the only GUI application that MPICH2 cannot handle by default would be a video-wall type
+application.  But this can be done by running smpd.exe by hand on each machine instead of
+installing it as a service.  Log on to each machine and run ``\texttt{smpd.exe -stop}'' 
+to stop the service and then run ``\texttt{smpd.exe -d 0}'' to start up the smpd again.  
+As long as this process is running you will be able to run applications where every process 
+is allowed to bring up GUIs.
+
+\subsection{Security}
+MPICH2 can use Microsoft's SSPI interface to launch processes without using any user 
+passwords.  This is the most secure way to launch MPI jobs but it requires the machines to be 
+configured in a certain way.
+\begin{itemize}
+\item All machines must be part of a Windows domain.
+\item Each machine must have delegation enabled.
+\item Each user that will run jobs must be allowed to use delegation.
+\end{itemize}
+
+If the machines are set up this way then an administrator can set up MPICH2 for passwordless
+authentication.  On each node, a domain administrator needs to execute the following:
+``\texttt{smpd -register\_spn}''.
+
+Then a user can add the \texttt{-delegate} flag to their mpiexec commands and the job startup 
+will be done without any passwords.  Example:
+\begin{verbatim}
+mpiexec -delegate -n 3 cpi.exe
+\end{verbatim}
+
+With SSPI enabled you can also control access to nodes with job objects.
+
+First the nodes need to be set up so that only SSPI authentication is allowed.  An administrator
+can run the following on each node:
+\begin{enumerate}
+\item \texttt{smpd.exe -set sspi\_protect yes}
+\item \texttt{smpd.exe -set jobs\_only yes}
+\item \texttt{smpd.exe -restart}
+\end{enumerate}
+
+These settings mean that authentication must be done through SSPI and mpiexec commands will only be
+accepted for registered jobs.
+
+To register jobs an administrator or a scheduler running with administrator privileges can execute
+the following command:
+\begin{verbatim}
+mpiexec.exe -add_job <name> <domain\username> [-host <hostname>]
+\end{verbatim}
+This adds a job called ``name'' for the specified user on either the local or specified host.  Any
+name can be used but it must not collide with another job with the same name on the same host.  The
+command must be executed for each host that is to be allocated to the user.
+
+Then when the job has finished or the allotted time has expired for the user to use the nodes the 
+following command can be executed:
+\begin{verbatim}
+mpiexec.exe -remove_job <name> [-host <hostname>]
+\end{verbatim}
+This command removes the job from the local or specified host.  Any processes running on the host 
+under the specified job name will be terminated by this command.
+
+So \texttt{-add\_job} and \texttt{-remove\_job} can be used by a scheduler to create a window when a user is allowed to
+start jobs on a set of nodes.
+
+When the window is open the user can run jobs using the job name.  First the user must run:
+\begin{verbatim}
+mpiexec.exe -associate_job <name> [-host <hostname>]
+\end{verbatim}
+This will associate the user's token with the job object on the local or
+specified host.  This must be done for all of the hosts allocated to the user.  Then the user can issue
+mpiexec commands.  The mpiexec commands are of the usual format except they must contain one extra option -
+``\texttt{-job <name>}''.  This job name must match the job allocated by the \texttt{-add\_job} command.  So a typical command
+would look like this:
+\begin{verbatim}
+mpiexec.exe -job foo -machinefile hosts.txt -n 4 myapp.exe
+\end{verbatim}
+Multiple mpiexec commands can be issued until the \texttt{-remove\_job} command is issued.
+This allows the users to issue multiple 
+mpiexec commands and multiple MPI\_Comm\_spawn commands all using the same job name until the job is removed
+from the nodes.
+
+The rationale for the design where an adminstrator can create and destroy jobs but the user must first associate
+the job with his own token before running jobs is so that the administrator does not need to know the user's
+password.  In order for an administrator to do both the job allocation and association he would have to call
+LogonUser with the user name and password for each user that submits a job request.
+
+\subsection{Firewalls}
+Windows comes with a default firewall that is usually turned on by default.
+Firewalls block all TCP ports by default which renders MPICH2 applications inoperable
+because the default communication mechanism used by MPICH2 are sockets on arbitrary
+ports assigned by the operating system.  This can be solved in several ways:
+
+\begin{itemize}
+\item Turn off the firewall completely.
+\item  MPICH2 applications can be limited to a range of TCP ports using the 
+MPICH\_PORT\_RANGE environment variable.  If you set your firewall to allow the
+same port range then MPICH2 applications will run.
+\item Leave the Windows firewall on and allow exceptions for your MPICH2 applications.
+This can be done through the Security Center module of the Windows Control 
+Panel.  Click the Windows Firewall option in the Security Center to bring up
+the properties page and select the Exceptions tab.  Here you can add each 
+MPICH2 application to exempt.  Note that this exception includes the path to
+the executable so if you move the executable you will have to exempt the new
+location.  This solution obviously only will work for a small number of 
+applications since managing a large list would be difficult.  Make sure you add
+mpiexec.exe and the smpd.exe process manager to this exception list.
+\end{itemize}
+
+\subsection{MPIEXEC options}
+This section describes all the options to mpiexec.exe
+
+\begin{itemize}
+\item \texttt{-n x} or \texttt{-np x}
+Specify the number of processes to launch.
+\item \texttt{-localonly x} or \texttt{-localonly}
+Specify that the processes should only be launched on the local host.  This
+option can replace the \texttt{-n x} option or be used in conjunction with it
+when it is only a flag.
+\item \texttt{-machinefile filename}
+Use the specified file to get host names to launch processes on.  Hosts are 
+selected from this file in a round robin fashion.  One host is specified per
+line.  Extra options can be specified.  The number of desired processes to
+launch on a specific host can be specified with a colon followed by a number
+after the host name: \texttt{hostname:n}.  This is usefull for multi-CPU hosts.
+If you want to specify the interface that should be used for MPI communication
+to the host you can add the \texttt{-ifhn} flag.  Here is an example:
+\texttt{hostname:4 -ifhn 192.168.1.100}
+\item \texttt{-configfile filename}
+Use the specified job configuration file to launch the job.  Each line in the
+file represents a set of options just like you would enter them on the \texttt{mpiexec}
+command line.  The one difference is that there are no colons in the file.  The
+colons are replaced by new-lines.
+\item \texttt{-file filename}
+Use the specified implementation specific job configuration file.  For Windows
+this option is used to specify the old MPICH 1.2.5 configuration file format.
+This is useful for users who have existing configuration files and want to upgrade
+to MPICH2.
+\item \texttt{-host hostname}
+Specify that the processes should be launched on a specific host.
+\item \texttt{-hosts n host1 host2 host3 ...}
+Specify that the processes should be launched on a list of hosts.  This option
+replaces the \texttt{-n x} option.
+\item \texttt{-hosts n host1 m1 host2 m2 host3 m3 ...}
+Specify that the processes should be launched on a list of hosts and how many
+processes should be launched on each host.  The total number of processes 
+launched is m1 + m2 + m3 + ... mn.
+\item \texttt{-map drive:$\backslash$$\backslash$host$\backslash$share}
+Specify a network mapped drive to create on the hosts before launching the 
+processes.  The mapping will be removed when the processes exit.  This option
+can be specified multiple times.
+\item \texttt{-mapall}
+Specify that all network mapped drives created by the user executing mpiexec
+command will be created on hosts before launching the processes. The mappings
+will be removed when the processes exit. 
+\item \texttt{-dir drive:$\backslash$my$\backslash$working$\backslash$directory}
+Specify the working directory for the processes.
+\item \texttt{-wdir drive:$\backslash$my$\backslash$working$\backslash$directory}
+\texttt{-wdir} and \texttt{-dir} are synonyms.
+\item \texttt{-env variable value}
+Specify an environment variable and its value to set in the processes' environments.
+This option can be specified multiple times.
+\item \texttt{-genvlist a,b,c,d...}
+Specify a list of environment variables to taken from the environment local to mpiexec and propagated to the launched processes.
+\item \texttt{-logon}
+Prompt for user credentials to launch the job under.
+\item \texttt{-pwdfile filename}
+Specify a file to read the user name and password from.  The user name should be
+on the first line and the password on the second line.
+\item \texttt{-exitcodes}
+Specify that the exit code of each process should be printed to stdout as each
+processes exits.
+\item \texttt{-noprompt}
+Prevent mpiexec for prompting for information.  If user credentials are needed
+to launch the processes mpiexec usually prompts for this information but this
+flag causes an error to be printed out instead.
+\item \texttt{-priority class[:level]}
+Specify the priority class and optionally the thread priority of the processes
+to be launched.  The class can be 0,1,2,3, or 4 corresponding to idle, below,
+normal, above, and high.  The level can be 0,1,2,3,4, or 5 corresponding to
+idle, lowest, below, normal, above, highest.  The default is 2:3.
+\item \texttt{-localroot}
+Specify that the root process should be launched on the local machine directly
+from mpiexec bypassing the smpd process manager.  This is useful for applications
+that want to create windows from the root process that are visible to the interactive
+user.  The smpd process manager creates processes in a hidden service desktop
+where you cannot interact with any GUI.
+\item \texttt{-channel channel\_name}
+This option is only available under Windows and allows the user to select which
+channel implementation of MPICH2 to select at runtime.  The current channels
+supported are sock, mt, ssm, shm, and sshm.  These represent the sockets, 
+multi-threaded sockets, sockets plus shared memory, shared memory, and scalable
+shared memory channels.  The shared memory channels only work on one node.  
+The sockets, multi-threaded sockets, and sockets plus shared memory channels 
+work on multiple nodes.  There are also profiled versions of the channels that
+produce RLOG files for each process when selected.  They are named p, mtp, ssmp,
+shmp, and sshmp.  See the section on channel selection for additional information.
+\item \texttt{-log}
+This option is a short cut to selecting the MPE wrapper library to log the MPI
+application.  When the job finishes there will be a .clog2 file created that
+can be viewed in Jumpshot.
+\item \texttt{-l}
+This flag causes mpiexec to prefix output to stdout and stderr with the rank of
+the process that produced the output.  (This option is the lower-case L not the
+number one)
+\item \texttt{-port port}
+Specify the port where the smpd process manager is listening.
+\item \texttt{-p port}
+Short version of the \texttt{-port} option.
+\item \texttt{-smpdfile filename}
+Specify the location of the smpd configuration file.  The default is \texttt{\~/.smpd}.
+This is a Unix only option.  Under Windows the settings are stored in the Windows Registry.
+\item \texttt{-phrase passphrase}
+Specify the passphrase used to authenticate with the smpd process managers.
+\item \texttt{-path search\_path}
+Specify the search path used to locate executables.  Separate multiple paths with semicolons.
+The path can be mixed when using both Windows and Linux machines.  For example:
+\texttt{-path c:$\backslash$temp;/home/user} is a valid search path.
+\item \texttt{-register [-user n]}
+Encrypt a user name and password into the Windows registry so that it can be 
+automatically retrieved by mpiexec to launch processes with.  If you specify
+a user index then you can save more than one set of credentials.  The index
+should be a positive non-zero number and does not need to be consecutive.
+\item \texttt{-remove [-user n]}
+Remove the encrypted credential data from the Registry.  If multiple entries are
+saved then use the \texttt{-user} option to specify which entry to remove.
+\texttt{-user all} can be specified to delete all entries.
+\item \texttt{-validate [-user n] [-host hostname]}
+Validate that the saved credentials can be used to launch a process on the local
+or specified host.  If more that one credentials has been saved then the 
+\texttt{-user} option can be used to select which user credentials to use.
+\item \texttt{-user n}
+Specify which encrypted credentials to retrieve from the Registry.  The corresponding
+entry must have been previously saved using the \texttt{-register -user n} option.
+\item \texttt{-timeout seconds}
+Specify the maximum number of seconds the job is allowed to run.  At the end of
+the timeout period, if the job has not already exited then all processes will
+be killed.
+\item \texttt{-plaintext}
+Specify that user credentials should go over the wire un-encrypted.  This is
+required if both Linux and Windows machines are used in the same job because
+the Linux machines cannot encrypt and decrypt the data created by the Windows
+machines.
+\item \texttt{-delegate}
+Specify that you want to use passwordless SSPI delegation to launch processes.
+The machines must be configured to use SSPI as described in the section on 
+security.
+\item \texttt{-impersonate}
+Specify that you want to use passwordless SSPI impersonation to launch processes.
+This will create processes on the remote machines with limited access tokens.
+They wil not be able to open files on remote machines or access mapped network
+drives.
+\item \texttt{-add\_job job\_name domain$\backslash$user [-host hostname]}
+Create a job object on the local or specified host for the specified user.
+Administrator privileges are required to execute this command.
+\item \texttt{-remove\_job job\_name [-host hostname]}
+Remove a job object on the local or specified host.  Any processes running under
+this job will be terminated.  Administrator privileges are required to execute
+this command.
+\item \texttt{-associate\_job job\_name [-host hostname]}
+Associate the current user token with the specified job on the local or specified
+host.  The current user must match the user specifed by the \texttt{-add\_job job\_name username}
+command.
+\item \texttt{-job job\_name}
+Specify that the processes should be launched under the specifed job object.
+This can only be used after successful calls to \texttt{-add\_job} and \texttt{-associate\_job}.
+\item \texttt{-whoami}
+Print out the current user name in the format that mpiexec and smpd expect it to be.
+This is useful for users who use a screen name that is different from their user
+name.
+\item \texttt{-hide\_console}
+Detach from the console so that no command prompt window will appear and consequently
+not output will be seen.
+\item \texttt{-quiet\_abort}
+Use this flag to prevent extensive abort messages to appear.  Instead the job 
+will simply exit with minimal error output.
+\item \texttt{-rsh or -ssh}
+Use the remote shell command to execute the processes in the job instead of
+using the smpd process manager.  The default command is ``\texttt{ssh -x}'' no
+matter whether \texttt{-rsh} or \texttt{-ssh} is used.  If this is the only
+flag specified then an smpd process manager must be running on the local host
+where \texttt{mpiexec} is executed.  \texttt{mpiexec} contacts the local smpd process to start
+a PMI service required by the MPI job and then starts the processes using the 
+remote shell command.  On the target machines the application ``\texttt{env}''
+must be available since it is used to set the appropriate environment variables
+and then start the application.  The remote shell command can be changed using
+the environment variable MPIEXEC\_RSH.  Any command can be used that takes a 
+host name and then everything after that as the user command to be launched.
+\item \texttt{-nopm}
+This flag is used in conjunction with the \texttt{-rsh} flag.  With this flag
+specified there need not be any smpd process manager running on any of the nodes
+used in the job.  \texttt{mpiexec} provides the PMI interface and the remote
+shell command is used to start the processes.  Using these flags allows jobs to
+be started without any process managers running but the MPI-2 dynamic process
+functions like MPI\_Comm\_spawn are consequently not available.
+\item \texttt{-verbose}
+Output trace data for mpiexec.  Only useful for debugging.
+\item \texttt{-pmi\_server num\_processes or -pmiserver num\_processes}
+This option specified by itself connects to the local smpd process manager and
+starts a PMI service.  This service is used by MPICH2 processes to communicate
+connection information to each other.  This option is only good for a single
+MPICH2 job.  The input parameter is the number of processes in the job.
+\texttt{mpiexec} immediately outputs three lines of data.  The first line is the
+host name.  The second line is the port it is listening on and the third line
+is the name of the PMI KVS.  A process manager that can set environment variables
+and launch processes but does not implement the PMI service can use this option
+to start jobs.  Along with the other PMI environment variables the process 
+manager must set PMI\_HOST to the host name provided, PMI\_PORT to the port
+provided and PMI\_KVS and PMI\_DOMAIN to the KVS name provided.  It is the 
+responsibility of the process manager to set the other environment variables
+correctly like PMI\_RANK and PMI\_SIZE.  See the document on the smpd PMI implementation
+for a complete list of the environment variables.  When the job is finished the
+PMI server will exit.  This option can be executed in separate command simultaneously
+so that multiple jobs can be executed at the same time.
+\end{itemize}
+
+\subsection{SMPD process manager options}
+This section describes some of the options for the smpd process manager.
+
+smpd.exe runs as a service under Windows.  This is required so that it can start
+processes under multiple user credentials.  Only services have the privileges
+necessary to log on users and start processes for them.  Since this is a privileged
+operation administrator rights are required to install the smpd service.  This is
+what the default installer package does.
+
+But smpd can be run in other ways for debugging or single user use.
+
+If you have smpd.exe installed first execute \texttt{smpd.exe -stop} to stop the
+service.
+
+Then you can run it by hand for single user mode or for debugging.  The flag for
+debugging single user mode is \texttt{-d debug\_output\_level}.
+
+If you run it like this you will get full trace output:
+\begin{verbatim}
+smpd.exe -d
+\end{verbatim}
+
+If you run it like this you will get no output except for errors:
+\begin{verbatim}
+smpd.exe -d 0
+\end{verbatim}
+
+Here are all the options to smpd.exe:
+\begin{itemize}
+\item \texttt{-install or -regserver}
+Install the smpd service.  Requires administrator privileges.
+\item \texttt{-remove or -uninstall or -unregserver}
+Uninstall the smpd service.  Requires administrator privileges.
+\item \texttt{-start}
+Start the smpd service.  Requires administrator privileges.
+\item \texttt{-stop}
+Stop the smpd service.  Requires administrator privileges.
+\item \texttt{-restart}
+Stop and restart the smpd service.  Requires administrator privileges.
+\item \texttt{-register\_spn}
+Register the Service Prinicipal Name for the smpd service of the local machine
+on the domain controller.  Requires DOMAIN administrator privileges.  This is
+used in conjunction with passwordless SSPI authentication described in the
+section on security.
+\item \texttt{-remove\_spn}
+Remove the Service Prinicipal Name from the domain controller for the smpd service
+of the local machine.  Requires DOMAIN administrator privileges.
+\item \texttt{-traceon filename [hostA hostB ...]}
+Turn on the trace logging of the smpd service on the local or specified hosts
+and set the output to the specified file.  The file location must be available
+on the local drive of each of the hosts.  It cannot be located on a remote 
+machine.
+\item \texttt{-traceoff [hostA hostB ...]}
+Turn off the trace logging of the smpd service on the local or specified hosts.
+\item \texttt{-port n}
+Listen on the specified port number.  If this option is not specified then smpd
+listens on the default port (8676).
+\item \texttt{-anyport}
+Listen on any port assigned by the OS.  smpd immediately prints out the port that
+it has been assigned.
+\item \texttt{-phrase passphrase}
+Use the specified passphrase to authenticate connections to the smpd either by
+mpiexec or another smpd process.
+\item \texttt{-getphrase}
+Prompt the user to input the passphrase.  This is useful if you don't want to 
+specify the phrase on the command line.
+\item \texttt{-noprompt}
+Don't prompt the user for input.  If there is missing information, print an error
+and exit.
+\item \texttt{-set option value}
+Set the smpd option to the specified value.  For example, \texttt{smpd -set logfile c:$\backslash$temp$\backslash$smpd.log} will set the log file to the 
+specified file name.  \texttt{smpd -set log yes} will turn trace logging on and
+\texttt{smpd -set log no} will turn it off.
+\item \texttt{-get option}
+Print out the value of the specified smpd option.
+\item \texttt{-hosts}
+Print the hosts that mpiexec and this smpd will use to launch processes on.  
+If the list is empty then processes will be launched on the local host only.
+\item \texttt{-sethosts hostA hostB ...}
+Set the hosts option to a list of hosts that mpiexec and smpd will use to launch
+processes on.
+\item \texttt{-d [level] or -debug [level]}
+Start the smpd in debug or single user mode with the optionally specified amount
+of output.  For example, \texttt{smpd -d} will start the smpd will lots of trace
+output and \texttt{smpd -d 0} will start the smpd with no output except for errors.
+\item \texttt{-s}
+Only available on Unix systems.  This option starts the smpd in single user daemon
+mode for the current user.
+\item \texttt{-smpdfile filename}
+On Unix systems the smpd options are stored in a file that is readable only by
+the current user (chmod 600).  This file stores the same information that would
+be stored in the Windows registry like the port and passphrase.  The default
+file is named \texttt{\~/.smpd} if this option is not specified.
+\item \texttt{-shutdown}
+Shutdown a running smpd that was started by \texttt{smpd -s} or \texttt{smpd -d}.
+\item \texttt{-printprocs}
+On a Windows machine you can run \texttt{smpd -printprocs} and it will print out
+the processes started and stopped by smpd on the current host.  The format of the
+output is \texttt{+/-pid cmd}.  Plus means a process was started and minus means
+the process has exited.  The process id is specified next and then the rest of the line
+is the command that was launched.
+\item \texttt{-enum or -enumerate}
+Print the smpd options set on the local host.
+\item \texttt{-version}
+Print the smpd version and exit.
+\item \texttt{-status [-host hostname]}
+Print the status of the smpd on the local or specified host.
+\item \texttt{-help}
+Print a brief summary of the options to smpd.
+\end{itemize}
+
+\subsection{Debugging jobs by starting them manually}
+This section describes how to start a job by hand without the use of a process
+manager so the job can be stepped through with a debugger.
+
+You can launch an MPICH2 job by hand if you set the minimum required environment
+variables for each process and then start the processes yourself (or in a debugger).
+
+Here is a script that sets the environment variables so that a job can be started
+ on the local machine:
+The file is called \texttt{setmpi2.bat}
+\begin{verbatim}
+if ``%1'' == ``'' goto HELP
+if ``%2'' == ``'' goto HELP
+set PMI_ROOT_HOST=%COMPUTERNAME%
+set PMI_ROOT_PORT=9222
+set PMI_ROOT_LOCAL=1
+set PMI_RANK=%1
+set PMI_SIZE=%2
+set PMI_KVS=mpich2
+goto DONE
+:HELP
+REM usage: setmpi2 rank size
+:DONE
+\end{verbatim}
+
+For example, to debug a two process job bring up two separate command prompts.
+In the first prompt execute \texttt{setmpi2.bat 0 2} and in the second prompt
+execute \texttt{setmpi2.bat 1 2}.  Then run your application always starting
+the root process first.  The root process must call MPI\_Init before any of the
+other processes because it is the process that listens on the port specifed by
+the environment variable PMI\_ROOT\_PORT.  Simply execute \texttt{myapp.exe} from
+each command prompt to run your job.  Or better yet run each process in a debugger.
+If you have the Microsoft developer studio installed you can run the following
+from each command prompt: \texttt{devenv.exe myapp.exe}.  This will bring up a
+debugger for each process.  Then you can step through each process and debug it.
+Remember that the first process must call MPI\_Init before any of the rest of the
+processes do.  You can restart the processes at any time as long as you restart
+all of them.
+
+The script can be modified to launch on multiple hosts by changing the line:
+\begin{verbatim}
+set PMI_ROOT_HOST=%COMPUTERNAME%
+\end{verbatim}
+to set the variable to the hostname where the root process will be started instead
+of the local host name.
+
+The limitation of this method of starting processes is that MPI-2 spawning operations
+are not supported.  If your application calls MPI\_Comm\_spawn it will produce
+an error.
+
+\subsection{Environment variables}
+This section describes the environment variables used by MPICH2 and smpd.
+
+\begin{itemize}
+\item \texttt{MPICH\_ABORT\_ON\_ERROR}
+Call abort() when an error happens instead of returning an error and calling MPID\_Abort. useful for unix where calling abort() creates a core file.
+\item \texttt{MPICH\_PRINT\_ERROR\_STACK}
+Print the entire error stack when an error occurs (currently this is the default)
+\item \texttt{MPICH\_CHOP\_ERROR\_STACK}
+Split the error stack output at the character position specified.  A value of 79
+would cause carriage returns to be inserted after the 79th character.
+\item \texttt{MPICH\_WARNINGS}
+Print runtime warnings (unmatched messages at MPI\_Finalize, unreleased resources, etc)
+\item \texttt{MPICH\_SOCKET\_BUFFER\_SIZE}
+socket buffer size
+\item \texttt{MPICH\_SOCKET\_RBUFFER\_SIZE}
+socket receive buffer size
+\item \texttt{MPICH\_SOCKET\_SBUFFER\_SIZE}
+socket send buffer size
+\item \texttt{MPICH\_SOCKET\_NUM\_PREPOSTED\_ACCEPTS}
+number of accepts posted for MPIDU\_Sock\_listen
+\item \texttt{MPICH\_PORT\_RANGE}
+Range of ports to use for sockets: min..max or min,max
+\item \texttt{MPICH\_INTERFACE\_HOSTNAME}
+hostname to use to connect sockets
+\item \texttt{MPICH\_NETMASK}
+bitmask to select an ip subnet: ip/numbits, ie 192.0.0.0/8
+\item \texttt{MPIEXEC\_TIMEOUT}
+job timeout in seconds
+\item \texttt{MPIEXEC\_LOCALONLY}
+launch job processes on the local machine only
+\item \texttt{MPIEXEC\_NOPROMPT}
+Don't prompt for user input for missing information, print an error instead.
+\item \texttt{MPIEXEC\_SMPD\_PORT}
+Connect to smpd on the specified port.
+
+The following two only affect mpiexec for smpd if -rsh is on the command line:
+\item \texttt{MPIEXEC\_RSH}
+rsh command to use, default is ``ssh -x''
+\item \texttt{MPIEXEC\_RSH\_NO\_ESCAPE}
+create an rsh command compatible with cygwin's ssh
+\item \texttt{MPICH\_SPN}
+Service Principal Name used for passwordless authentication
+\item \texttt{SMPD\_DBG\_OUTPUT}
+Print debugging output
+\item \texttt{SMPD\_DBG\_LOG\_FILENAME}
+name of logfile to send output to
+\item \texttt{SMPD\_MAX\_LOG\_FILE\_SIZE}
+maximum number of bytes the logfile can grow to before it is truncated
+\item \texttt{MPICH\_DBG\_OUTPUT}
+stdout, memlog or file.  determines where debugging output goes
+\item \texttt{MPI\_DLL\_NAME}
+name of the dll that contains the MPI and PMPI interfaces
+\item \texttt{MPICH2\_CHANNEL}
+short name of the channel used to create the full name of the MPI dll (ie. ib becomes mpich2ib.dll)
+\item \texttt{MPI\_WRAP\_DLL\_NAME}
+name of the dll that contains only the MPI interface, not the PMPI interface
+\item \texttt{MPICH\_TRMEM\_INITZERO}
+used by the memory tracing package
+\item \texttt{MPICH\_TRMEM\_VALIDATE}
+used by the memory tracing package
+\item \texttt{MPITEST\_DEBUG}
+used by the test suite
+\item \texttt{MPITEST\_VERBOSE}
+used by the test suite
+\item \texttt{PATH}
+used by smpd to search for executables under Unix.
+\end{itemize}
+
+SMPD options specified on the command line can also be specified in the environment
+by prefixing \texttt{SMPD\_OPTION\_} to the option name and saving it as an
+environment variable.
+\begin{itemize}
+\item \texttt{SMPD\_OPTION\_app\_path}
+\item \texttt{SMPD\_OPTION\_logfile}
+\item \texttt{SMPD\_OPTION\_nocache}
+\item \texttt{SMPD\_OPTION\_phrase}
+\item \texttt{SMPD\_OPTION\_sspi\_protect}
+\item \texttt{SMPD\_OPTION\_max\_logfile\_size}
+\item \texttt{SMPD\_OPTION\_plaintext}
+\item \texttt{SMPD\_OPTION\_port}
+\item \texttt{SMPD\_OPTION\_timeout}
+\item \texttt{SMPD\_OPTION\_exitcodes}
+\item \texttt{SMPD\_OPTION\_priority}
+\item \texttt{SMPD\_OPTION\_localonly}
+\item \texttt{SMPD\_OPTION\_noprompt}
+\item \texttt{SMPD\_OPTION\_channel}
+\item \texttt{SMPD\_OPTION\_hosts}
+\item \texttt{SMPD\_OPTION\_delegate}
+\item \texttt{SMPD\_OPTION\_internode\_channel}
+\item \texttt{SMPD\_OPTION\_log}
+\item \texttt{SMPD\_OPTION\_no\_dynamic\_hosts}
+\end{itemize}
+
+Variables to control debugging output when enabled:
+\begin{itemize}
+\item \texttt{MPICH\_DBG}
+\item \texttt{MPICH\_DBG\_CLASS}
+\item \texttt{MPICH\_DBG\_FILENAME}
+\item \texttt{MPICH\_DBG\_LEVEL}
+\item \texttt{MPICH\_DBG\_OUTPUT}
+\item \texttt{MPICH\_DBG\_RANK}
+\item \texttt{MPICH\_DEBUG\_ITEM}
+\end{itemize}
+
+The following variables affect the MPE logging library:
+\begin{itemize}
+\item \texttt{MPE\_LOGFILE\_PREFIX}
+name of the clog file to create without the extension
+\item \texttt{MPE\_DELETE\_LOCALFILE}
+true,false - delete or not the local clog file
+\item \texttt{MPE\_LOG\_OVERHEAD}
+I think this one adds an event to the clog files representing the time it takes to write a clog buffer to disk
+\item \texttt{CLOG\_BLOCK\_SIZE}
+number of bytes in a clog block
+\item \texttt{CLOG\_BUFFERED\_BLOCKS}
+number of blocks
+\item \texttt{MPE\_CLOCKS\_SYNC}
+yes/no - synchronize clocks
+
+directories to store temporary files:
+\item \texttt{MPE\_TMPDIR}
+\item \texttt{TMPDIR}
+\item \texttt{TMP}
+\item \texttt{TEMP}
+\end{itemize}
+
+PMI environment variables created by smpd are described in the smpd documentation:
+\begin{itemize}
+\item \texttt{PMI\_DLL\_NAME}
+name of the PMI dll to load (replaces the default smpd functions)
+\item \texttt{PMI\_NAMEPUB\_KVS}
+name of the key-val-space where MPI service names are stored for MPI\_Lookup\_name()
+\item \texttt{PMI\_ROOT\_HOST}
+\item \texttt{PMI\_ROOT\_PORT}
+\item \texttt{PMI\_ROOT\_LOCAL}
+\item \texttt{PMI\_SPAWN}
+\item \texttt{PMI\_KVS}
+\item \texttt{PMI\_DOMAIN}
+\item \texttt{PMI\_RANK}
+\item \texttt{PMI\_SIZE}
+\item \texttt{PMI\_CLIQUE}
+\item \texttt{PMI\_APPNUM}
+\item \texttt{PMI\_SMPD\_ID}
+\item \texttt{PMI\_SMPD\_KEY}
+\item \texttt{PMI\_SMPD\_FD}
+\item \texttt{PMI\_HOST}
+\item \texttt{PMI\_PORT}
+\item \texttt{PMI\_APPNUM}
+\end{itemize}
+
+Used by the process managers other than smpd:
+\begin{itemize}
+\item \texttt{MPIEXEC\_DEBUG}
+\item \texttt{MPIEXEC\_MACHINES\_PATH}
+\item \texttt{MPIEXEC\_PORTRANGE}
+\item \texttt{MPIEXEC\_PREFIX\_STDERR}
+\item \texttt{MPIEXEC\_PREFIX\_STDOUT}
+\item \texttt{MPIEXEC\_REMSHELL}
+\item \texttt{MPIEXEC\_USE\_PORT}
+\end{itemize}
+
+\subsection{Compiling}
+This section describes how to set up a project to compile an MPICH2 application
+using MS Visual Studio 6.0 or MS Developer Studio .NET 2003.
+
+\subsubsection{Visual Studio 6.0}
+Visual C++ 6.0 cannot handle multiple functions with the same type signature 
+that only differ in their return type.  So you must define \texttt{HAVE\_NO\_VARIABLE\_RETURN\_TYPE\_SUPPORT}
+in your project.
+
+\begin{enumerate}
+\item Create a project and add your source files.
+
+\item Bring up the settings for the project by hitting Alt F7.  Select the Preprocessor
+Category from the C/C++ tab.  Enter \texttt{HAVE\_NO\_VARIABLE\_RETURN\_TYPE\_SUPPORT} into
+the Preprocessor box.  Enter \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$include}
+into the ``Additional include directories'' box.
+
+\item Select the Input Category from the Link tab.  Add \texttt{cxx.lib} and \texttt{mpi.lib} to
+the Object/library modules box.  Add \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$lib}
+to the ``Additional library path'' box.
+
+\item Compile your application.
+\end{enumerate}
+
+\subsubsection{Developer Studio .NET 2003}
+For Developer Studio .NET 2003 or newer you can use the example projects provided
+with the release as a guide to creating your own projects.
+
+\begin{enumerate}
+\item Create a project and add your source files.
+
+\item Bring up the properties dialog for your project by right clicking the project
+name and selecting Properties.
+
+\item Navigate to Configuration Properties::C/C++::General
+\item Add \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$include}
+to the ``Additional Include Directories'' box.
+
+\item Navigate to Configuration Properties::Linker::General
+\item Add \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$lib}
+to the ``Aditional Library Directories'' box.
+
+\item Navigate to Configuration Properties::Linker::Input
+\item Add \texttt{cxx.lib} and \texttt{mpi.lib} and \texttt{fmpich2.lib} to the ``Additional Dependencies'' box.  If your
+application is a C application then it only needs \texttt{mpi.lib}.  If it is a C++ application then it
+needs both \texttt{cxx.lib} and \texttt{mpi.lib}.  If it is a Fortran application then it only needs one of the \texttt{fmpich2[s,g].lib} libraries.
+The fortran library comes in three flavors \texttt{fmpich2.lib}, \texttt{fmpich2s.lib} and \texttt{fmpich2s.lib}.  \texttt{fmpich2.lib}
+contains all uppercase symbols and uses the C calling convention like this: \texttt{MPI\_INIT}.  \texttt{fmpich2s.lib}
+contains all uppercase symbols and uses the stdcall calling convention like this: \texttt{MPI\_INIT@4}.
+\texttt{fmpich2g.lib} contains all lowercase symbols with double underscores and the C calling convention
+like this: \texttt{mpi\_init\_\_}.  Add the library that matches your Fortran compiler.
+
+\item Compile your application.
+\end{enumerate}
+
+\subsection{Performance Analysis}
+MPICH2 includes the Multi-Processing Environment (MPE), which is a
+suite of performance analysis tools comprising profiling libraries,
+utility programs, a set of graphical tools, and a collective checking library. 
+
+The first set of tools to be used with user MPI programs is profiling libraries
+which provide a collection of routines that create log files.  These log files
+can be created manually by inserting MPE calls in the MPI program, or
+automatically by linking with the appropriate MPE libraries, or by combining
+the above two methods.  Currently, MPE offers the following four profiling
+libraries.
+
+\begin{enumerate}
+   \item Tracing Library: Traces all MPI calls.  Each MPI call is preceded by a
+      line that contains the rank in \texttt{MPI\_COMM\_WORLD} of the calling process,
+      and followed by another line indicating that the call has completed.
+      Most send and receive routines also indicate the values of count, tag,
+      and partner (destination for sends, source for receives).  Output is to
+      standard output.
+
+   \item Animation Libraries: A simple form of real-time program animation
+      that requires X window routines (Currently not available on windows).
+
+   \item Logging Libraries: The most useful and widely used profiling libraries
+      in MPE.  These libraries form the basis for generating log files from
+      user MPI programs.  Several different log file formats are
+      available in MPE.  The default log file format is CLOG2.  It is a low
+      overhead logging format, a simple collection of single timestamp events.
+      The old format ALOG, which is not being developed for years, is not
+      distributed here.  The powerful visualization format is SLOG-2, stands
+      for Scalable LOGfile format version II, which is a total redesign of the
+      original SLOG format.  SLOG-2 allows for much improved scalability for
+      visualization purpose. A CLOG2 file can be easily converted to
+      SLOG-2 file through the new SLOG-2 viewer, Jumpshot-4.
+
+   \item Collective and datatype checking library: An argument consistency
+      checking library for MPI collective calls.  It checks for datatype, root,
+      and various argument consistency in MPI collective calls (Currently not
+      available on Windows).
+\end{enumerate}
+
+The set of utility programs in MPE includes log format converter (e.g.
+clogTOslog2) and logfile viewer and convertor (e.g. Jumpshot).  These new 
+tools, clog2TOslog2 and Jumpshot (Jumpshot-4) replace old tools, clog2slog, 
+slog\_print and logviewer (i.e. Jumpshot-2 and Jumpshot-3).  
+
+\subsubsection{Tracing MPI calls using the MPIEXEC Wrapper}
+A developer can trace MPI calls by using the tracing functionality of the mpiexec
+wrapper (wmpiexec.exe). A step by step process is given below. 
+
+\begin{enumerate}
+	\item Launch the mpiexec wrapper application (wmpiexec.exe).
+	
+	\item After launching the mpiexec wrapper, select the application that you would
+			like to run and select the number of
+			processes. Now click on the ``more options''
+			checkbox to show the extended options for mpiexec.
+
+	\item Check the ``produce clog2 file'' checkbox so that the clog2 file is generated 
+			when the application is run.
+
+	\item Check ``run in an separate window'' checkbox to enable your program to run in
+			a separate window (for user interaction).
+
+	\item Run your application by clicking on the ``Execute'' button.
+	
+	\item Once the application exits, click on the ``Jumpshot'' button to launch Jumpshot 
+			(the logfile viewer). 
+
+	\item Open your logfile (the default name of the logfile is \texttt{<APPLICATION NAME>.clog2}) 
+			using Jumpshot. Jumpshot will ask for converting the logfile to slog2 format.
+			Click ``Convert'' button in Jumpshot to convert your logfile to slog2 format.
+
+	\item Now click on ``OK'' button in Jumpshot to view the logfile.
+\end{enumerate}
+
+\subsubsection{Tracing MPI calls from the command line}
+
+\begin{enumerate}
+	\item Run your application using the ``-log'' option to the mpiexec command. 
+
+	\item Launch Jumpshot using the java command. 
+(eg: \texttt{java -jar "c:$\backslash$Program Files$\backslash$MPICH2$\backslash$bin$\backslash$jumpshot.jar"})
+	\item Follow the steps mentioned in the previous section to convert the logfile to slog2
+			format and view the log.
+\end{enumerate}
+
+\subsubsection{Customizing logfiles}
+In addition to using the predefined MPE logging libraries to log all MPI
+calls, MPE logging calls can be inserted into the user's MPI program to define
+and log states.  These states are called user-defined states.  States may
+be nested, allowing one to define a state describing a user routine that
+contains several MPI calls, and display both the user-defined state and
+the MPI operations contained within it.
+
+The simplest way to insert user-defined states is as follows:
+\begin{enumerate}
+\item Get handles from MPE logging library. \texttt{MPE\_Log\_get\_state\_eventIDs}
+   must be used to get unique event IDs (MPE logging handles).
+   This is important if you are writing a library that uses
+   the MPE logging routines from the MPE system.
+   Hardwiring the eventIDs is considered a bad idea since it may cause
+   eventID confict and so the practice isn't supported. The older MPE library
+   provides \texttt{MPE\_Log\_get\_event\_number}, which is still being supported but
+   has been deprecated; users are strongly urged to use
+   \texttt{MPE\_Log\_get\_state\_eventIDs} instead.
+
+\item Set the logged state's characteristics. \texttt{MPE\_Describe\_state} sets the
+   name and color of the states.
+
+\item Log the events of the logged states. \texttt{MPE\_Log\_event} is called twice
+   to log the user-defined states.
+\end{enumerate}
+
+Below is a simple example that uses the three steps outlined above.
+
+\begin{verbatim}
+int eventID_begin, eventID_end;
+...
+MPE_Log_get_state_eventIDs( &eventID_begin, &eventID_end );
+...
+MPE_Describe_state( eventID_begin, eventID_end, "Multiplication", "red" );
+...
+MyAmult( Matrix m, Vector v )
+{
+    /* Log the start event along with the size of the matrix */
+    MPE_Log_event( eventID_begin, 0, NULL );
+    ... Amult code, including MPI calls ...
+    MPE_Log_event( eventID_end, 0, NULL );
+}
+\end{verbatim}
+
+The logfile generated by this code will have the MPI routines nested within
+the routine \texttt{MyAmult}.
+
+Besides user-defined state, MPE2 also provides support for user-defined
+events, which can be defined through use of \texttt{MPE\_Log\_get\_solo\_eventID}
+and \texttt{MPE\_Describe\_event}.  For more details, see cpilog.c.
+
+For undefined user-defined state (where the corresponding \texttt{MPE\_Describe\_state}
+has not been issued), the new Jumpshot (Jumpshot-4) may display the legend name as
+``UnknownType-INDEX'' where INDEX is the internal MPE category index.
+
+An example program, cpilog.c, is provided in the ``examples'' directory of your
+MPICH2 installation. This program can be used as a reference for customizing
+logfiles.
+
+\end{document}

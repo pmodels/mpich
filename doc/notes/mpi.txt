@@ -1,0 +1,372 @@
+MPI
+- spawn/attach
+- communicators
+- pt2pt requests
+- collective
+- RMA
+- error (handling, FT, reporting)
+
+MPID
+- messages
+  - tradition MPI message
+  - one-sided operations
+  - control?
+
+- streams
+- process management (via BNR)
+
+Communication Methods
+- TCP
+- VIA
+- Shared Memory
+- Loopback
+- IMPI
+
+===============================================================================
+
+MPI layer
+
+--------------------
+
+Operations
+
+- point-to-point
+  - requests
+  - datatypes
+  - communicators
+  - status
+  - errors
+
+- collective
+  - datatypes
+  - communicators
+  - errors
+
+- process management
+  - communicators
+  - info
+  - errors
+
+- RMA
+  - datatypes
+  - windows
+  - communicators
+  - groups
+  - epoch
+  - errors
+
+- I/O
+  - depends on
+    - files
+    - datatypes
+    - requests
+    - info
+    - status
+    - errors
+  * implemented via ROMIO
+    - dependent only on MPI functions
+    - future enhancements may use low-level interfaces
+
+- topology
+  - communicators
+  - errors
+  * can be implemented entirely at the MPI layer
+
+- generalized requests
+  - errors
+  * can be implemented entirely at the MPI layer
+
+--------------------
+
+Structures
+
+- requests
+- datatypes
+- communicators
+  - groups
+- groups
+  * are groups modified or augmented by low layers?
+- windows
+- files
+  * defined and implemented via ROMIO
+    - future enhancements may require access lower layers
+- status
+- errors
+- attributes
+  * can be defined and operations implemented entirely at the MPI layer
+  - communicator
+  - datatypes
+  - windows
+
+- info
+  * can be defined and operations implemented entirely at the MPI layer
+
+===============================================================================
+
+MPID
+
+--------------------
+
+Operations
+
+- point-to-point
+
+- collective operations
+
+- process management
+
+- RMA
+
+- generalized requests
+
+
+Structures
+
+
+--------------------
+
+Concepts
+
+- MPI buffer movement (moving buffers defined by an address, count and
+  datatype)
+
+- internal buffer management
+
+- Connection management
+
+  - virtual connection structures
+
+  - low-level connnection management (sockets, etc.) should be handled
+    entirely by the device and probably driven by a state machine
+
+
+===============================================================================
+
+Multi-method design
+
+--------------------
+
+Device-level objects
+
+- group
+
+  - data structures
+
+  - methods
+
+    - set_connection(group, rank, vc_ptr) - associate pointer to virtual
+      connection structure with a (group,rank)
+  
+    - get_connection(group, rank) - returns pointer to virtual connection
+      structure associated with (group,rank)
+
+- communicators
+
+  - data structures
+
+    - group
+
+  - methods
+
+    - set_connection(dcomm, rank, vc_ptr) - associate pointer to virtual
+      connection structure with a (dcomm,rank)
+  
+    - get_connection(dcomm, rank) - returns pointer to virtual connection
+      structure associated with (dcomm,rank)
+
+- virtual connections
+
+  - alloc() - returns a pointer to a virtual connection structure
+
+  - add_ref(vc) - increments the reference count (atomically)
+
+  - release() - decrements the reference count; if the reference count reaches
+    zero, the structure is freed
+
+  NOTE: It may be useful to be able to locate a virtual connection based on a
+  process group ID and rank, in part so we can detect when multiple virtual
+  connections might be formed between a pair of processes.
+
+  
+
+can connect/accept be called multiple times between a set of processes?
+
+--------------------
+
+Method-level functions
+
+Method descriptors are strings that are used to describe the capabilities of
+the methods.  These descriptors can then be used to determine if two processes
+miight be capable of "talking" using the method in question.  We say "might be
+capable" because in the case of a method like VIA, it may be impossible provide
+enough information in the descriptor to determine in two processes can talk.
+It may be necessary to simply attempt to form the connection.  This implies
+that binding to a particular protocol may need to be deferred until we are
+ready to form a real connection.  However, some methods, such as shared memory,
+can provide enough information and thus can be bound immediately.
+
+- query/get_descriptor()
+
+- match_descriptors()
+
+===============================================================================
+
+
+MPI_Init()
+
+- create basic datatypes
+
+  MPIR_Datatype_init()
+  {
+      foreach dt (all basic datatypes)
+      {
+          MPID_Datatype_init(dt, ...)
+      }
+  }
+
+
+- initialize device
+
+  - BNR initialization
+  
+    BNR_Init()
+    BNR_Get_group(&my_bnr_group)
+    BNR_Get_size(my_bnr_group, &size)
+    BNR_Get_rank(my_bnr_group, &rank)
+    BNR_Get_parent(&parent_bnr_group)
+    BNR_Merge(my_bnr_group, parent_bnr_group, &inter_bnr_group)
+  
+  - loop through methods
+
+    - initialize method
+  
+    - query for descriptor of method's capabilities
+  
+    Q: what about dymanicly loaded methods?  do they have to be initialized now
+    or can they be added later?
+  
+  - publish capabilities of all known methods
+
+  - initialize AQ, buffer management, etc.
+
+- establish MPI_COMM_WORLD
+
+  - create MPI_GROUP_WORLD (internal) from BNR my_group, etc.
+
+    stores BNR info in group structure
+    allocates virtual connection structures
+    initializes virtual connections to stubs
+
+  - create MPI_COMM_WORLD from MPI_GROUP_WORLD
+
+- establish inter-communicator with parent (if parent exists)
+  
+  - create inter_group from inter_bnr_group
+  
+  - create inter-communicator from inter_group
+  
+- create inter_group from inter_bnr_gorup
+
+- create inter-communicator from inter_group
+
+
+MPI_Spawn()
+{
+    BNR_Open_group(my_bnr_group, &new_bnr_group)
+    BNR_Spawn(remote_bnr_group, N, ..., func)
+    BNR_Close(remote_bnr_group)
+    BNR_Merge(my_bnr_group, remote_bnr_group, &inter_bnr_group);
+}
+
+
+
+
+need a BNR_Group_ID which is globally unique in order to implement MPI_Connect/Attach
+
+
+------------------------------------------------------------------------
+
+Structures that cross layers
+
+- many of the information structures that are passed through the layers contain
+  data sections from multiple layers
+
+- ne option is to include device (and method) include files in the MPICH layer
+  include file.  Rob and Brian feel this would be bad.
+
+- David suggests that the structure definitions be supplied by the device
+  header files and that method specific information be included in those
+  definition using unions.  Rob and Brian feel this is ugly (from a software
+  engineering standpoint).
+
+- Rob and Brian suggest having each layer define their own portion of the
+  structure.  The definitions of the higher layers are known to the lower
+  layers, but not vice versa.  To increase cache locality and reduce memory
+  allocation, the device (and methods) report the amount of space they need in
+  these structures so that the highest layer can allocate sufficient space.
+  pointer arithmatic, etc.
+
+Virtual connection
+
+- used by MM implementation to allow late binding to a method
+
+  this implies that the VC contains a pointer to either the function pointer
+  table for the method to which it is bound or the function pointer to table to
+  a set of functions that perform the binding to such a method
+
+- one-to-one correspondence between a virtual connection and a real connection
+
+- Contains
+  - state of binding
+  - method specific information
+  - function pointer table?
+
+----------
+
+Communicators
+- Contains
+  - communication group
+  - local group (inter-communicator only)
+  - send and receive context IDs - same for intra-communicator
+  - attributes
+  - reference count
+  - error handlers
+  - device specific information (needed for MPICH-G2)
+  
+----------
+
+Groups
+- Contains
+  - virtual connection table
+  - my rank
+  - reference count
+  - device specific information (???)
+
+----------
+
+Requests
+- probably allocated and partially initialized above ADI
+- initialization complete by device/method
+
+- Request contains
+  - Immutable after initialization
+    - type of request
+      - persistent request flag
+      - send, bsend, rsend, ssend, recv, generalized
+    - buffer
+    - count
+    - datatype
+    - rank (src or dest depending on type of request)
+    - tag
+    - comm
+----------
+
+Connection resolution
+
+- needs to talk to with BNR
+
+----------
+
+Communication agent
+
+

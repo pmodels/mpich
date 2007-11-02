@@ -1,0 +1,43 @@
+# All of these routines are internal
+mpi_sources = 
+
+# tvtest builds a main program that uses the routines in dll_mpich2 to 
+# access the internal structure of an MPICH2 program.  This is only a partial
+# test, but it allows a developer to check out the basic functioning of 
+# dll_mpich2.
+tvtest_SOURCES = tvtest.c dll_mpich2.c dbgstub.c
+tvtest_LDADD = -L../../../lib -lpmpich -lmpich 
+qdemo_SOURCES = qdemo.c
+EXTRA_PROGRAMS = tvtest qdemo
+
+lib${MPILIBNAME}_a_SOURCES = dbginit.c
+# There is no static debugger interface library
+libtvmpich2_so_SOURCES = dll_mpich2.c
+# Force a custom target
+./libtvmpich2.@SHLIB_EXT@: ./libtvmpich2.la
+	(cd . && $(CREATESHLIB) --mode=link -cc="@CC_SHL_DBG@" -clink="@C_LINK_SHL_DBG@" -o libtvmpich2.la  -rpath $(libdir) )
+
+INCLUDES = -I../../include -I${top_srcdir}/src/include
+profilelib_${MPILIBNAME} = ${PMPILIBNAME}
+profilelib_${MPILIBNAME}_SOURCES = ${mpi_sources}
+#
+# We need to make sure that dbginit is compiled with -g, so
+# we use an explicit target.  Note that there are no PMPI functions in
+# this directory)
+dbginit.o: $(srcdir)/dbginit.c
+	$(C_COMPILE) -g -c @PROFILE_DEF_MPI@ $<
+
+#
+# We require special steps to compile the debugger interface library.
+dll_mpich2.lo: $(srcdir)/dll_mpich2.c $(srcdir)/mpich2_dll_defs.h
+	@CC_SHL_DBG@ $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS) -g -c $(srcdir)/dll_mpich2.c -o _sdll_mpich2.o
+	@mv -f _sdll_mpich2.o dll_mpich2.lo
+#
+# We may want to add some documentation on using the various debugger
+# interfaces by adding the appropriate files to the doc lists
+doc_HTML_SOURCES = ${mpi_sources}
+doc_MAN_SOURCES = ${mpi_sources}
+doc_LATEX_SOURCES = ${mpi_sources}
+
+optinstall_SHLIB = libtvmpich2.@SHLIB_EXT@
+

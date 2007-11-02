@@ -1,0 +1,10 @@
+Makefile.sm
+infotestf90.f90
+infotest2f90.f90
+infotest
+*.o
+Makefile.in
+Makefile
+testlist
+*.gcda
+*.gcno

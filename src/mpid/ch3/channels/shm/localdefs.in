@@ -1,0 +1,3 @@
+#! /bin/sh
+# Add any libraries needed by the SHM channel
+LIBS="$LIBS @SHM_LIBS@"

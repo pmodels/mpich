@@ -1,0 +1,10 @@
+#! /bin/sh
+
+# Add any libraries needed by the SSM channel
+LIBS="$LIBS @SSM_LIBS@"
+
+# See if there are any definitions from the sock implementation
+if test -s src/mpid/common/sock/localdefs ; then
+    . src/mpid/common/sock/localdefs
+fi
+

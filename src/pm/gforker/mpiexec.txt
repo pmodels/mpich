@@ -1,0 +1,68 @@
+/*D
+    mpiexec - Run an MPI program
+
+   Synopsis:
+.vb
+    mpiexec args executable pgmargs [ : args executable pgmargs ... ]
+.ve
+   where 'args' are command line arguments for 'mpiexec' (see below), 
+   'executable' is the name of an executable MPI program, and 'pgmargs'
+   are command line arguments for the executable.  Multiple executables 
+   can be specified by using the colon notation (for MPMD - Multiple Program
+   Multiple Data applications).
+
+   Standard Parameters:
+
+.N mpiexecstdargs
+
+   Environment Variables:
+   The following environment variables affect the behavior of 'mpiexec'\:
++  MPIEXEC_UNIVERSE_SIZE - Sets the maximum number of processes to allow.
+.  MPIEXEC_TIMEOUT - Maximum running time in seconds.  'mpiexec' will
+   terminate MPI programs that take longer than the value specified by
+   'MPIEXEC_TIMEOUT'.  This version of 'mpiexec' (forker process manager)
+   sets a default timelimit of 3 minutes (180 seconds) since the forker
+   process manager is intended for debugging applications.
+.  MPIEXEC_PREFIX_DEFAULT - If this environment variable is set, output
+   to standard output is prefixed by the rank in 'MPI_COMM_WORLD' of the 
+   process and output to standard error is prefixed by the rank and the 
+   text '(err)'; both are followed by an angle bracket ('>').  If
+   this variable is not set, there is no prefix.
+.  MPIEXEC_PREFIX_STDOUT - Set the prefix for output from standard output.
+   This is a string containing text and (optionally) the expression '%d';
+   if '%d' is seen, it is replaced by the rank in 'MPI_COMM_WORLD' of the 
+   process.  If there is more than one 'MPI_COMM_WORLD'; for example, 
+   if 'MPI_Comm_spawn' is used, the expression '%w' is replaced with a
+   numeric `world number`, assigned by 'mpiexec'.  The expression '%%' 
+   produces a single percent character.
+.  MPIEXEC_PREFIX_STDERR - Like 'MPIEXEC_PREFIX_STDOUT', but for output from
+   standard error.
+.  MPIEXEC_STDIN_DEST - Sets the destination process for input from standard in,
+   by rank in the corresponding 'MPI_COMM_WORLD'.
+.  MPIEXEC_STDOUTBUF - Sets the buffering mode for standard output.  Valid
+   values are 'NONE' (no buffering), 'LINE' (buffering by lines), and
+   'BLOCK' (buffering by blocks of characters; the size of the block is
+   implementation defined).  The default is 'NONE'.
+-  MPIEXEC_STDERRBUF - Like 'MPIEXEC_STDOUTBUF', but for standard error.
+
+   Note that the 'MPIEXEC_PREFIX_xxx' and 'MPIEXEC_STDIN_DEST' variables
+   are not fully implemented.
+
+   Startup Environment:
+   All of the users environment variables are provided to each of the 
+   created processes.  This is not required by the MPI standard, but 
+   is often very convenient.  
+
+   Return Status:
+   'mpiexec' returns the maximum of the exit status values of all of the
+   processes created by 'mpiexec'.  
+
+   Notes:
+   A few additional enviroment variables are defined for the use of
+   developers and in debugging.  These are
+
+.  MPIEXEC_DEBUG - If set, 'mpiexec' will write additional information
+   about the steps that it is taking.
+
+
+D*/

@@ -1,0 +1,225 @@
+Single-threaded implementation of RMA for distributed memory
+
+------------------------------------------------------------------------
+
+Base Assumptions
+
+* All of the local windows are located in process local (not shared or
+remotely accessible) memory.
+
+* Only basic datatypes are supported for the target.
+
+* Only active (fence) synchronization is supported.
+
+* The application is single threaded.
+
+* The MPI runtime system is single threaded.
+
+------------------------------------------------------------------------
+
+General Notes
+
+* "Lessons Learned from Implmenenting BSP" by J. Hill and
+  D.B. Skillicorn suggests that we should not be performing RMA
+  operations as they are requested, but rather queue the entire set of
+  operations and perform the operations at the next synchronization
+  operation.
+
+------------------------------------------------------------------------
+
+Data Structures
+
+* MPID_Win
+
+  * struct MPIR_Win
+
+  * handles - an array of local window handles (one per process)
+
+    Q: Do we really need local window IDs?  We need to be able to map
+    remote handler calls back to a particular window, but we might be
+    able to do this using an attribute on a communicator.  Would an
+    attribute lookup be too slow?
+
+------------------------------------------------------------------------
+
+MPID_Win_fence
+
+* Since remote handler calls might be sent on another socket or
+  processed in another thread, no natural synchronization occurs
+  between RHCs and the collective operations.  Therefore, we need to
+  know how many RHCs we should expect so that we don't prematurely
+  return from the fence.  Likewise, we need to tell the other
+  processes how many RHCs we have made.
+
+* We need to block until such time that all incoming RHCs have been
+  handled and all local requests and flags have completed.
+  
+  Q: What is the right interface for this blocking operation?  The
+  operation should block, but it needs to guarantee that forward
+  progress is being made on both the incoming RHCs and locally posted
+  operations.  
+
+  NOTE: We either need to pass dwin to a function or declare/cast the
+  counters used in the while statement as volatile, otherwise the
+  compiler may not generate instructions to reload the counter values
+  before each iteration of the while loop.
+
+  Q: It would be useful if the MPID layer could increment a counter
+  (or call a non-blocking function) when the asynchronous request or
+  RHC completed.  This seems like a much more ideal interface than
+  requests and flags, at least for RMA.  Might something of this
+  nature be possible without putting undo burden on the device or
+  significantly complicating the ADI?
+
+* Wait for all other processes in the window to complete
+
+  Q: Should we perform a barrier here?  If we eliminate the barrier,
+  then all processes still waiting for operations to complete will
+  have to enqueue incoming requests from the next epoch until the
+  operations from the currrent epoch are complete.  Not performing the
+  barrier complicates the RMA operations, but the performance benefit
+  may be significant for some cases.  (What are they?  How common are
+  they?)
+
+------------------------------------------------------------------------
+
+MPID_Get
+
+* If the target and origin ranks are the same, then copy the data from
+  the target buffer to the origin buffer.
+
+* Otherwise, we are attempting to get data from a remote node
+
+  * Post an asynchronous receive for the data
+
+    NOTE: the tag must be unique for this epoch so as to ensure that
+    the soon-to-be incoming message is matched with this receive.
+
+    NOTE: the request needs be allocated from the window's active
+    requests object so that it can tracked.
+
+  * Issue a remote handler call requesting the data from the remote
+    process
+
+    NOTE: the local completion flag needs be allocated from the
+    window's active flags object so that it can tracked.
+
+------------------------------------------------------------------------
+
+MPIDI_Win_get_hdlr
+
+* Post an asynchronous send of the requested data to origin process
+
+* Increment the "number of RHCs processed" counter
+
+------------------------------------------------------------------------
+
+MPID_Put
+
+* If the target and origin ranks are the same, then copy the data from
+  the origin buffer to the target buffer.
+
+* Otherwise, if the source and target buffers are contiguous and data
+  conversion is not required
+
+  NOTE: What I would like to do here is use MPID_Put_contig, but that
+  would require that I communicate with the remote process in order to
+  agree on a flag.  It would be much better if the target completion
+  flag were a counter so that the counter could be prearranged and
+  used for all Put operations.
+
+* Otherwise, if the data is sufficiently small
+
+  * If the data is not contiguous, then pack the data into a temporary
+    buffer.
+
+    NOTE: This assumes that MPID_Pack() does not add a header to the
+    packed data.
+
+  * Issue a remote handler call (MPIDI_Win_put_eager_hdlr) requesting
+    the the data be written to the target's local window
+
+* Otherwise, the data is large enough to send in a separate message(s)
+
+  * Issue a remote handler call (MPIDI_Win_put_hdlr) letting the
+    target now that data is being sent that needs to be written into
+    the target's local window
+
+  * Post an asynchronous send of the origin buffer
+
+  Q: Instead of using MPI_Isend(), should we instead use segments and
+  multiple RHCs to send the data?  Would doing so imply that the RMA
+  subsystem now needs to do flow control?
+
+Q: Should we have yet another case, where a rendezvous occurs,
+guaranteeing that the target is able to post a receive before the send
+is issued?  This would allow us to use MPID_Irsend(), potentially
+eliminating an extra message.  Rather than having another case, should
+we use this technique anytime the data is larger than the eager
+message threshold?
+
+------------------------------------------------------------------------
+
+MPIDI_Win_put_eager_hdlr
+
+* Unpack the data into local window buffer, performing data conversion
+  if necessary
+
+  Q: How are the header and data obtained?  Depending on the interface
+  and the datatype, we should be able to read the header directly into
+  the window buffer.
+
+* Increment the "number of RHCs processed" counter
+
+------------------------------------------------------------------------
+
+MPIDI_Win_put_hdlr
+
+  * Post an asynchronous receive of data into the window buffer
+    defined in the RHC header
+
+    Q: What should we do if a communication failure occurs?  Is the
+    origin somehow notified of the failure?
+
+* Increment the "number of RHCs processed" counter
+
+------------------------------------------------------------------------
+
+MPI_Accumulate
+
+* If the target and origin ranks are the same, then copy the data from
+  the target memory region to the origin memory region.
+
+  NOTE: For now, we are assuming the application and the message agent
+  are single-threaded so we do not need to hold a mutex before
+  performing the operation.
+
+* Otherwise, if the data is sufficiently small:
+
+  * If the data is not contiguous, then pack the data into a temporary
+    buffer.
+
+    NOTE: This assumes that MPID_Pack() does not add a header to the
+    packed data.
+
+  * Issue a remote handler call (MPIDI_Win_acc_eager_hdlr) requesting
+    the the enclosed data be accumulated into target buffer using the
+    specified operation.
+
+* Otherwise, the data is large enough that it needs to be segmented.
+
+  Q: On the target side, we don't want to have to unpack the segment
+  into a temporary buffer first.  We would like to do the data
+  conversion and accumulation directly from the segment that will be
+  received.  Does this make it impossible to use the MPID_Segment API?
+
+------------------------------------------------------------------------
+
+MPIDI_Win_acc_eager_hdlr
+
+* Perform the requested operation, converting the data on the fly if
+  necessary
+
+* Increment the "number of RHCs processed" counter
+
+------------------------------------------------------------------------

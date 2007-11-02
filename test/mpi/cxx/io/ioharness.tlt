@@ -1,0 +1,96 @@
+<cxxheader/>
+
+#include "mpi.h"
+// We place stdio.h *after* mpi.h to avoid conflicts with SEEK_SET et al
+// (the name is #defined in stdio.h and used as an MPI constant
+// MPI::SEEK_SET in the C++ binding for MPI)
+#include <stdio.h>
+#include "mpitestconf.h"
+#ifdef HAVE_IOSTREAM
+// Not all C++ compilers have iostream instead of iostream.h
+#include <iostream>
+#ifdef HAVE_NAMESPACE_STD
+// Those that do need the std namespace; otherwise, a bare "cout"
+// is likely to fail to compile
+using namespace std;
+#endif
+#else
+#include <iostream.h>
+#endif
+#include <string.h>
+#include "mpitestcxx.h"
+
+#define MAX_FPARM 5
+#define MAX_BUFFER 65536
+#define MAX_FTYPE 3
+// We print no more than 10 errors.  To ensure a clean exit,
+// we normally continue until the end of the job (so that 
+// we can write out the standard No Errors or Found %d Errors message)
+#define MAX_ERRORS 10
+
+// This structure is used to determine how data is placed across the file
+typedef struct { int n, b; } fileparm;
+
+int main( int argc, char *argv[] )
+{
+    int errs = 0;
+    MPI::Intracomm comm;
+    MPI::File fh;
+    int ftype;
+    int itmp, fparm, n, b, i, k, r, s;
+    int wrank, wsize;
+    fileparm fparms[MAX_FPARM] = { 
+	1,4000,  4000,8,  4096,8,  64000,8,  65536,8 };
+    char filename[1024];
+    
+    <writefiledecl/>
+    <readfiledecl/>
+
+    MTest_Init();
+
+    wrank = MPI::COMM_WORLD.Get_rank();
+    wsize = MPI::COMM_WORLD.Get_size();
+
+    for (ftype=0; ftype<MAX_FTYPE; ftype++) {
+	strcpy( filename, "iotest.txt" );
+	switch (ftype) {
+	case 0:
+	    comm = MPI::COMM_WORLD;
+	    break;
+	case 1:
+	    comm = MPI::COMM_WORLD.Split( 0, wsize - wrank );
+	    break;
+	default:
+	    itmp = (wrank == 0) ? 0 : 1;
+	    comm = MPI::COMM_WORLD.Split( itmp, wrank );
+            if (wrank == 0) {
+		comm.Free();
+		continue;
+            }
+        }
+	s = comm.Get_size();
+	r = comm.Get_rank();
+	for (fparm=0; fparm<MAX_FPARM; fparm++) {
+	    n = fparms[fparm].n;
+	    b = fparms[fparm].b;
+	    // Try writing the file, then check it
+            <openfile/>
+            <writefile/>
+            <closefile/>
+            <checkfile/>
+	    // Now, open the same file for reading
+            <openfile/>
+            <readfile/>
+            <closefile/>
+            <deletefile/>
+        }
+
+        if (comm != MPI::COMM_WORLD) {
+	    comm.Free();
+	}
+    }
+
+    MTest_Finalize( errs );
+    MPI::Finalize( );
+    return 0;
+}

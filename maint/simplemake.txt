@@ -1,0 +1,280 @@
+Simplemake
+
+Simplemake is a a program that writes Makefile.in files for use with
+autoconf (configure).  Simplemake is an alternative to automake that
+provides different facilities.
+
+This README is organized as follows:  First, an example, showing a simple
+simplemake input file.  Next, a list of the commands that simplemake
+understands, followed by a more detailed description of these commands.
+Next is a brief description of the command line options to simplemake.
+Finally, a comparision with Automake and a rationale for simplemake.
+
+This documentation is incomplete.  This is a placeholder for items as
+they are added.
+
+Example
+--------
+Here is a Makefile.sm that builds a library and a program by default, and
+defines a target for program that is not built by default:
+
+---------------
+libMylib_a_SOURCES = util.c mysrc.c
+hellow_SOURCES = hellow.c
+hellow_LDADD = -L. -lMylib
+goodbye_SOURCES = goodbye.c
+EXTRA_PROGRAMS = goodbye
+---------------
+The resulting Makefile.in looks like
+---------------
+# This Makefile.in created by simplemake.  Do not edit
+
+all: all-redirect
+
+shell       = @SHELL@
+AR          = @AR@
+RANLIB      = @RANLIB@
+srcdir      = @srcdir@
+DEFS        = @DEFS@ -I. -I${srcdir}
+INCLUDES    = 
+LIBS        = @LIBS@
+CC          = @CC@
+CFLAGS      = @CFLAGS@
+C_COMPILE   = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS)
+C_LINK      = $(CC)
+
+VPATH = .:${srcdir}
+.SUFFIXES:
+.SUFFIXES: .o .c 
+.c.o:
+	$(C_COMPILE) -c $<
+clean:
+	-rm -f *.o ${srcdir}/*.o *~ goodbye hellow
+distclean: clean
+maintainerclean:
+	-rm -f Makefile.in
+
+all-redirect: libMylib.a hellow
+libMylib.a: util.o mysrc.o 
+	${AR} cr libMylib.a $?
+	${RANLIB} libMylib.a
+goodbye: goodbye.o 
+	$(C_LINK) -o goodbye goodbye.o    ${LIBS}
+hellow: hellow.o 
+	$(C_LINK) -o hellow hellow.o   -L. -lMylib ${LIBS}
+# Dependencies
+SOURCES =  util.c mysrc.c hellow.c goodbye.c
+TAGS:${HEADERS} ${SOURCES}
+	etags -o /TAGS --append ${HEADERS} ${SOURCES}
+---------------
+Note that this builds the targets in the order in which they are encountered
+in the source file, and that targets for common operations such as 'clean' 
+are created automatically.
+
+Makefile.sm Rules
+-----------------
+lib<name>_a_SOURCES = source file names for library <name>
+lib<name>_a_DIR     = directory in which lib<name> will exist
+lib<name>_so_SOURCES = source file names for library <name> for libraries that
+                       are *only* built as shared libraries
+lib<name>_so_DIR     = directory in which lib<name> will exist, for these
+		       shared libraries
+lib<name>_a_NOSHARED = This library should not be built as a shared library,
+                       even if shared libraries are desired
+<name>_SOURCES      = source file names for program <name>
+<name>_LDADD        = additional files and flags used for 
+                      linking program <name>.  Libraries are added to
+		      the dependency list as if they are local, if a 
+		      -L<path> string is present.  If external libraries
+		      are also needed (e.g., -lm), mark these with
+		      the EXTERNAL_LIBS variable
+LDADD               = names of LD options to add to all programs
+<name>_DEPADD       = Additional dependencies for a program (e.g., libraries)
+DEPADD              = Additional dependencies for *all* programs
+
+SUBDIRS             = names of subsidiary directories
+EXTRA_DIRS          = names of other directories needed.  These should
+                      use either relative path from the current directory
+                      or a path that uses the master_top_srcdir variable.
+OTHER_DIRS          = names of other directories *provided* but not used
+                      by all tools.  This is used for directories that
+                      contain subdirectories refered to by EXTRA_DIRS
+EXTRA_PROGRAMS      = names of programs that should *not* be built by default
+INSTALL_<type>      = names of files to install when "make install" is
+                      invoked.  <type> is a directory type, such as BIN, LIB,
+                      or INCLUDE.
+OPTINSTALL_<type>   = Like INSTALL_<type>, but for files that are optional.
+<name>-local        = Local addition to a target in the Makefile.  For example,
+		      to add to the list of files in the clean target, include
+			 clean-local:
+				commands to execute
+                      in Makefile.sm.  These steps are run before any of
+		      the other steps, but after any prerequisits on the
+		      target
+<name>-preamble     = Like the <name>-local, but used as the first
+		      prerequisite for <name>, ensuring that it happens first.
+<name>-postable     = Like <name>-local, but run as the last step.
+doc_<type>_SOURCES  = Source files for building documentation using doctext.
+                      Type may be MAN, HTML, or LATEX.
+doc_<type>_DIR      = Installation directory for documentation (some 
+                      documentation formats require directory names
+profilelib_<oldname> = <newname>
+                    - Create a profile version of <oldname> with name 
+                      <newname>
+EXTERNAL_LIBS        = Names of libraries that are external to this
+                       package and that should not be included in dependency
+		       lists for programs.  For example, if -lm is a 
+		       library in a <name>_LDADD list, add m to 
+		       EXTERNAL_LIBS
+INSTALL_SUBDIRS      = Names of directories that have their own install
+		       targets.  The names may contain either configure 
+		       or make variables (e.g., either @foo@ or $(foo)).
+
+Other lines are copied as provided.  Variables (e.g., name = ...) are placed
+before other targets.  
+
+Proposed but not yet implemented rules:
+doc_<type>_FLAGS    = Flags to pass doctext when building <type>.
+                      (We also need a way to make a common rule of this type
+                      for all files.  Perhaps a DOC_<TYPE>_FLAGS make variable?
+
+configure_LOC       = Directory containing the controlling configure
+configure_DEPEND    = list of files in this directory (without the .in)
+                      that are created by configure
+
+Details
+-------
+SUBDIRS:
+The variables SUBDIRS instructs simplemake which subdirectories to
+process.  Normally, this is a list of directories, but in some cases,
+some of the directory names may be created by configure.  That is,
+they are of the form @name@.  Simplemake can handle these variables if
+the simplemake input file contains 
+
+SUBDIRS_name = names of directories
+for each @name@ that appears in a SUBDIRS list.  For example,
+
+SUBDIRS_device_name = mm tcp shmem
+SUBDIRS = util @device_name@ .
+
+Profile libs targets:
+These are not yet complete.  We need to set these up so that generation
+of the profile libs is controlled by autoconf detecting weak symbols.
+One possible approach is a special target for no-weak-symbols.  Then the
+profiling library targets are added to the no_weak_symbols target, and
+no_weak_symbols is added to all-redirect as @NO_WEAK_SYMS@ (but only if
+profiling libs are detected).  Thus, most simple make files and configure
+files don't need to worry about this.
+
+Implicit Rules:
+Simplemake recognizes rules for building object files (.o) and programs 
+from source files in C, C++, Fortran, Fortran 90, and assembler.
+
+Maintenance Targets:
+These are targets included for use by the developer of the package.  They 
+include targets to rebuild files created by simplemake or by autoheader
+and autoconf.  These are created in part by reading the configure.in file.
+simplemake read the AC_CONFIG_HEADER and AC_OUTPUT commands.  If the AC_OUTPUT
+command includes a shell variable, the possible values of that shell variable
+can be provided to simplemake by assigning a literal string to the variable name with _VALUE postpended.  E.g., if AC_OUTPUT references $otherfiles, and $otherfiles might have the values "foo/Makefile" and "bar/Makefile", then include
+
+    otherfiles_VALUE="foo/Makefile bar/Makefile"
+
+(WARNING: the xxx_VALUE feature is untested)
+
+Commandline Options to Simplemake
+---------------------------------
+ -nocomments
+    Do not include comments in the generated Makefile.in
+ -v
+    Verbose output from simplemake; sometimes useful for debugging
+ -libdir=name=dir
+    Has the effect of libname_a_DIR=dir in each Makefile.sm file.  Dir may
+    contain the special value ROOTDIR; this will cause each directory to refer
+    to a relative path.  For example
+
+        simplemake -libdir=mpich2=ROOTDIR/lib
+ -common=filename
+    Include the contents of filename in every generated Makefile
+ -autoconf=string
+    For Makefile.in's that include targets to rebuild configure, include 
+    'string' as arguments to autoconf.  The special symbol ROOTDIR 
+    (see -libdir) can be used here.
+ -include=list
+    Add list to the include paths used in compiling programs
+ -distrib
+    Build versions of the Makefile.in's that are suitable for distribution.
+    This removes some of the maintenance targets
+ -shared
+    (not implemented)
+    Build shared libraries
+ -vpath=yes
+    Use @VPATH@ from configure instead of the common VPATH format
+ -depend
+    Use gcc (if available) to create dependencies for C files.
+ -nodepend
+    Do not attempt to generate dependencies.
+
+Environment Variables
+---------------------
+
+Special Directory Names
+-----------------------
+topsrc_dir - directory containing the configure responsible for this Makefile
+master_topsrc_dir - directory containing the master (top level) configure.
+
+Differences with Automake
+-------------------------
+1.  Targets may use make variables.  For example,
+
+MPI_sources = foo.c bar.c
+libmpich_SOURCES = ${MPI_sources}
+
+simplemake expands the ${MPI_sources} when creating the target dependencies
+for libmpich. 
+
+2.  Generated Makefiles are cleaner.  simplemake only generates the targets
+that it needs.  Make is inscrutable enough as it is without a lot of wierd
+targets and variables (a Makefile debugger would be a gift to humanity).
+
+3. Easier configuration for different source types.  simplemake associates
+a set of rules and definitions with various suffixes; overridding these by
+changing the corresponding entries in the Perl hashes is easy (and can 
+be done thought a commandline argument to simplemake (not yet implemented).
+
+4. Simplemake is very limited in comparison with automake.  As yet, there is
+no automatic support for shared libraries.
+
+5. Target libraries can be in other directories.  A special feature allows
+the path to the directory to be computed relative to the Makefile.sm location.
+
+6. Directories in SUBDIRS don't have to have Makefile.sm files.  This allows
+you to include a package that has a separate build structure.
+
+Suggestions and Plans for Future Versions
+-----------------------------------------
+1. For the derived targets, allow -preamble and -postamble.  For example,
+   if the Makefile.sm contains
+   all-postable:
+       @echo "Make completed"
+   then the all target (actually, all-redirect) would become
+   all-redirect: ...
+       ...
+       ${MAKE} all-postamble
+
+   This should work for all targets, not just "all".  A preamble is added
+   as a dependency; e.g., 
+   all-redirect: all-preamble ...
+
+   Currently, only the all target is supported.
+
+2. The targets to regenerate files need to understand the scoping of the
+   configure calls, since the project may contain configure files within the 
+   tree.  
+
+ToDo Notes:
+
+We should reorganize simplemake along the lines of the sm experiment
+in buildsys (more formallized langauge for the Makefile.sm, use of 
+loadable modules to provide customization).
+   
