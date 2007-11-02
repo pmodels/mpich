@@ -1,7 +1,0 @@
-timertest
-*.o
-*.bb
-*.bbg
-*.da
-*.gcov
-.deps

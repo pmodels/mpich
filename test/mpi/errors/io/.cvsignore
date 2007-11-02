@@ -1,9 +1,0 @@
-fileerrret
-Makefile.in
-Makefile
-*.o
-*.vcproj
-Debug*
-Release*
-*.gcda
-*.gcno

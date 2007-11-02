@@ -1,8 +1,0 @@
-*.vcproj
-Makefile.in
-Makefile
-.deps
-*ebug
-*elease
-*.gcda
-*.gcno

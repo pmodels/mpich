@@ -1,8 +1,0 @@
-*.o
-Makefile.in
-Makefile
-*ebug*
-*elease*
-*.vcproj
-*.gcda
-*.gcno
