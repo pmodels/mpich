@@ -712,7 +712,6 @@ static int state_tc_c_cnting_handler(pollfd_t *const plfd, sockconn_t *const sc)
     int mpi_errno = MPI_SUCCESS;
     MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t stat;
    
-    MPIDI_FUNC_ENTER(FUNCNAME);
     stat = MPID_nem_newtcp_module_check_sock_status(plfd);
 
     if (stat == MPID_NEM_NEWTCP_MODULE_SOCK_CONNECTED) {
@@ -737,7 +736,6 @@ static int state_tc_c_cnting_handler(pollfd_t *const plfd, sockconn_t *const sc)
         */
     }
  fn_exit:
-    MPIDI_FUNC_EXIT(FUNCNAME);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
@@ -753,7 +751,6 @@ static int state_tc_c_cntd_handler(pollfd_t *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_FUNC_ENTER(FUNCNAME);
     MPIU_Assert(is_valid_state(sc));
 
     if (sc->pending_event == EVENT_DISCONNECT || found_better_sc(sc, NULL)) {
@@ -781,7 +778,6 @@ static int state_tc_c_cntd_handler(pollfd_t *const plfd, sockconn_t *const sc)
         /* Remain in the same state */
     }
  fn_exit:
-    MPIDI_FUNC_EXIT(FUNCNAME);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
@@ -839,7 +835,6 @@ static int state_l_cntd_handler(pollfd_t *const plfd, sockconn_t *const sc)
     int mpi_errno = MPI_SUCCESS;
     MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t stat;
 
-    MPIDI_FUNC_ENTER(FUNCNAME);
     stat = MPID_nem_newtcp_module_check_sock_status(plfd);
     if (stat == MPID_NEM_NEWTCP_MODULE_SOCK_ERROR_EOF) {
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_l_cntd_handler() 1: changing to "
@@ -863,7 +858,6 @@ static int state_l_cntd_handler(pollfd_t *const plfd, sockconn_t *const sc)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(FUNCNAME);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
@@ -904,7 +898,6 @@ static int state_l_rankrcvd_handler(pollfd_t *const plfd, sockconn_t *const sc)
     sockconn_t *fnd_sc;
     int snd_nak = FALSE;
 
-    MPIDI_FUNC_ENTER(FUNCNAME);
     stat = MPID_nem_newtcp_module_check_sock_status(plfd);
     if (stat == MPID_NEM_NEWTCP_MODULE_SOCK_ERROR_EOF) {
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_l_rankrcvd_handler() 1: changing to "
@@ -935,7 +928,6 @@ static int state_l_rankrcvd_handler(pollfd_t *const plfd, sockconn_t *const sc)
         }
     }
  fn_exit:
-    MPIDI_FUNC_EXIT(FUNCNAME);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
