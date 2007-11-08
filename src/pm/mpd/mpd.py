@@ -274,7 +274,7 @@ class MPD(object):
                     break
                 if self.conSock:
                     msgToSend = { 'cmd' : 'restarting_mpd' }
-                    self.conSock,msgToSend.send_dict_msg(msgToSend)
+                    self.conSock.msgToSend.send_dict_msg(msgToSend)
                     self.streamHandler.del_handler(self.conSock)
                     self.conSock.close()
                     self.conSock = 0
