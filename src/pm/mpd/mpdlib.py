@@ -219,7 +219,7 @@ def mpd_sockpair():
                 if errinfo[0] == EISCONN:
                     break
                 if errinfo[0] == ECONNREFUSED and connAttempts < 10:
-                    mpd_print(mpd_debug_level,"Retrying on connection refused")
+                    mpd_print(mpd_dbg_level,"Retrying on connection refused")
                     connAttempts += 1
                     sleep(random())
                 elif errinfo[0] != EINTR:
@@ -286,7 +286,7 @@ def mpd_get_my_username():
     if pwd_module_available:
         username = pwd.getpwuid(os.getuid())[0]    # favor this over env
     elif os.environ.has_key('USER'):
-        username = environ['USER']
+        username = os.environ['USER']
     elif os.environ.has_key('USERNAME'):
         username = os.environ['USERNAME']
     else:
@@ -482,7 +482,7 @@ class MPDSock(object):
                     elif mpd_signum == signal.SIGCLD:
                         mpd_print_tb(1,"mishandling sigchild in recv_dict_msg, errinfo=:%s" % (errinfo) )
                     else:
-                        mpd_print_tf(1,"Unhandled EINTR: errinfo=%s" % (errinfo) )
+                        mpd_print_tb(1,"Unhandled EINTR: errinfo=%s" % (errinfo) )
                 else:
                     mpd_print(1, '%s: select error: %s' % (mpd_my_id,os.strerror(errinfo[0])))
             except KeyboardInterrupt, errinfo:
