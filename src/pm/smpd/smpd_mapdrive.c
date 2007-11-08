@@ -229,7 +229,7 @@ void smpd_finalize_drive_maps()
     smpd_enter_fn(FCNAME);
     while (g_pDriveList)
     {
-	snprintf(temp, MAX_PATH+2, "%c:%s", g_pDriveList->pszDrive, g_pDriveList->pszShare);
+	snprintf(temp, MAX_PATH+2, "%c:%s", g_pDriveList->pszDrive[0], g_pDriveList->pszShare);
 	if (!UnmapDrive(temp, err_msg, 256))
 	    break;
     }
@@ -621,6 +621,10 @@ static SMPD_BOOL UnmapDrive(char *pszDrive, char *pszError, int maxerrlength)
 	    break;
 	}
 	p = p->pNext;
+    }
+
+	if(p == NULL){
+        return SMPD_FALSE;
     }
 
     if (p->bUnmap)
