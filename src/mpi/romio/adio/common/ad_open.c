@@ -75,6 +75,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     fd->hints->ranklist = NULL;
     fd->hints->initialized = 0;
     fd->info = MPI_INFO_NULL;
+    ADIOI_process_system_hints(info);
     ADIO_SetInfo(fd, info, &err);
 
      /* deferred open: 

@@ -404,6 +404,33 @@ If ROMIO doesn't understand a hint, or if the value is invalid, the hint
 will be ignored. The values of hints being used by ROMIO for a file
 can be obtained at any time via {\tt MPI\_File\_get\_info}.
 
+\subsubsection{Systemwide Hints}
+\label{sec:system_hints}
+
+A site administrator with knowledge of the storage and networking capabilities
+of a machine might be able to come up with a set of hint values that work
+better for that machine than the ROMIO default values.  As an extention to the
+standard, ROMIO will consult a ``hints file''.  This file provides an
+additional mechanism for setting MPI-IO hints, albeit in a ROMIO-specific
+manner.  The hints file contains a list of hints and their values.  ROMIO will
+use these initial hint settings, though programs are free to override any of
+them.
+
+The format of the hints file is a list of hints and their values, one per line.
+A # character in the first collumn indicates a comment, and ROMIO will ignore
+the entire line.  Here's an example:
+
+\begin{verbatim}
+# this is a comment describing the following setting
+cb_nodes 32
+# these nodes happen to have the best connection to storage
+cb_config_list n01,n11,n21,n31,n41
+\end{verbatim}
+
+ROMIO will look for these hints in the file \texttt{/etc/romio-hints}.  A user
+can set the environment variable \texttt{ROMIO\_HINTS} to the name of a file
+which ROMIO will use instead.   
+
 \subsection{Using ROMIO on NFS}
 
 It is worth first mentioning that in no way do we encourage the use
