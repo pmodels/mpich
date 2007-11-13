@@ -7,7 +7,7 @@ int main( int argc, char *argv[] )
     char     processor_name[MPI_MAX_PROCESSOR_NAME];
     int      err, errcodes[256], rank, num_procs;
     int      namelen;
-    char     str[10];
+    char     str[10] = "none";
 
     MPI_Init( &argc, &argv );
 
@@ -17,16 +17,15 @@ int main( int argc, char *argv[] )
 
     err = MPI_Comm_spawn( "comm2_spawn_child", MPI_ARGV_NULL, num_procs,
                           MPI_INFO_NULL, 0, MPI_COMM_WORLD,
-                          &intercomm, errcodes);
+                          &intercomm, errcodes );
     if ( err != MPI_SUCCESS )
-        printf("Error in MPI_Comm_spawn\n");
+        printf( "Error in MPI_Comm_spawn\n" );
 
+    MPI_Send( "Hello", 6, MPI_CHAR, rank, 101, intercomm );
+    MPI_Recv( str, 4, MPI_CHAR, rank, 102, intercomm, MPI_STATUS_IGNORE );
 
-    MPI_Send( "bye", 4, MPI_CHAR, rank, 0, intercomm );
-    MPI_Recv( str, 3, MPI_CHAR, rank, 0, intercomm, MPI_STATUS_IGNORE );
-
-    printf( "Parent %d on %s received from child: %s\n",
-            rank, processor_name, str);
+    printf( "Parent %d on %s received from child: %s.\n",
+            rank, processor_name, str );
     fflush( stdout );
 
     MPI_Finalize();
