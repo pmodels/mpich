@@ -269,9 +269,9 @@ void CLOG_Merger_save_rec( CLOG_Merger_t *merger, const CLOG_Rec_Header_t *hdr )
         sorted_hdr->rectype    = CLOG_REC_ENDBLOCK;
 
         if ( merger->parent_world_rank != CLOG_RANK_NULL ) {
-            PMPI_Send( sorted_blk->head, merger->block_size, 
-                       CLOG_DATAUNIT_MPI_TYPE, merger->parent_world_rank,
-                       CLOG_MERGE_LOGBUFTYPE, MPI_COMM_WORLD );
+            PMPI_Ssend( sorted_blk->head, merger->block_size, 
+                        CLOG_DATAUNIT_MPI_TYPE, merger->parent_world_rank,
+                        CLOG_MERGE_LOGBUFTYPE, MPI_COMM_WORLD );
         }
         else { /* if parent_world_rank does not exist, must be the root */
             CLOG_Merger_flush( merger );
@@ -485,9 +485,9 @@ void CLOG_Merger_last_flush( CLOG_Merger_t *merger )
     sorted_hdr->rectype    = CLOG_REC_ENDLOG;
 
     if ( merger->parent_world_rank != CLOG_RANK_NULL ) {
-        PMPI_Send( sorted_blk->head, merger->block_size,
-                   CLOG_DATAUNIT_MPI_TYPE, merger->parent_world_rank,
-                   CLOG_MERGE_LOGBUFTYPE, MPI_COMM_WORLD );
+        PMPI_Ssend( sorted_blk->head, merger->block_size,
+                    CLOG_DATAUNIT_MPI_TYPE, merger->parent_world_rank,
+                    CLOG_MERGE_LOGBUFTYPE, MPI_COMM_WORLD );
     }
     else { /* if parent_world_rank does not exist, must be the root */
         CLOG_Merger_flush( merger );
