@@ -360,7 +360,7 @@ int MPI_File_open( MPI_Comm  comm,char * filename,int  amode,MPI_Info  info,MPI_
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(comm)
+  MPE_LOG_STATE_END(comm,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -393,7 +393,7 @@ int MPI_File_close( MPI_File * fh  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -426,7 +426,7 @@ int MPI_File_delete( char * filename,MPI_Info  info  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -459,7 +459,7 @@ int MPI_File_set_size( MPI_File  fh,MPI_Offset  size  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -492,7 +492,7 @@ int MPI_File_preallocate( MPI_File  fh,MPI_Offset  size  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -525,7 +525,7 @@ int MPI_File_get_size( MPI_File  fh,MPI_Offset * size  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -558,7 +558,7 @@ int MPI_File_get_group( MPI_File  fh,MPI_Group * group  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -591,7 +591,7 @@ int MPI_File_get_amode( MPI_File  fh,int * amode  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -624,7 +624,7 @@ int MPI_File_set_info( MPI_File  fh,MPI_Info  info  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -657,7 +657,7 @@ int MPI_File_get_info( MPI_File  fh,MPI_Info * info_used  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -690,7 +690,7 @@ int MPI_File_set_view( MPI_File  fh,MPI_Offset  disp,MPI_Datatype  etype,MPI_Dat
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -723,7 +723,7 @@ int MPI_File_get_view( MPI_File  fh,MPI_Offset * disp,MPI_Datatype * etype,MPI_D
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -756,7 +756,7 @@ int MPI_File_read_at( MPI_File  fh,MPI_Offset  offset,void * buf,int  count,MPI_
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -789,7 +789,7 @@ int MPI_File_read_at_all( MPI_File  fh,MPI_Offset  offset,void * buf,int  count,
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -822,7 +822,7 @@ int MPI_File_write_at( MPI_File  fh,MPI_Offset  offset,void * buf,int  count,MPI
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -855,7 +855,7 @@ int MPI_File_write_at_all( MPI_File  fh,MPI_Offset  offset,void * buf,int  count
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -888,7 +888,7 @@ int MPI_File_iread_at( MPI_File  fh,MPI_Offset  offset,void * buf,int  count,MPI
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -921,7 +921,7 @@ int MPI_File_iwrite_at( MPI_File  fh,MPI_Offset  offset,void * buf,int  count,MP
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -954,7 +954,7 @@ int MPI_File_read( MPI_File  fh,void * buf,int  count,MPI_Datatype  datatype,MPI
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -987,7 +987,7 @@ int MPI_File_read_all( MPI_File  fh,void * buf,int  count,MPI_Datatype  datatype
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1020,7 +1020,7 @@ int MPI_File_write( MPI_File  fh,void * buf,int  count,MPI_Datatype  datatype,MP
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1053,7 +1053,7 @@ int MPI_File_write_all( MPI_File  fh,void * buf,int  count,MPI_Datatype  datatyp
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1086,7 +1086,7 @@ int MPI_File_iread( MPI_File  fh,void * buf,int  count,MPI_Datatype  datatype,MP
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1119,7 +1119,7 @@ int MPI_File_iwrite( MPI_File  fh,void * buf,int  count,MPI_Datatype  datatype,M
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1152,7 +1152,7 @@ int MPI_File_seek( MPI_File  fh,MPI_Offset  offset,int  whence  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1185,7 +1185,7 @@ int MPI_File_get_position( MPI_File  fh,MPI_Offset * offset  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1218,7 +1218,7 @@ int MPI_File_get_byte_offset( MPI_File  fh,MPI_Offset  offset,MPI_Offset * disp 
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1251,7 +1251,7 @@ int MPI_File_read_shared( MPI_File  fh,void * buf,int  count,MPI_Datatype  datat
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1284,7 +1284,7 @@ int MPI_File_write_shared( MPI_File  fh,void * buf,int  count,MPI_Datatype  data
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1317,7 +1317,7 @@ int MPI_File_iread_shared( MPI_File  fh,void * buf,int  count,MPI_Datatype  data
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1350,7 +1350,7 @@ int MPI_File_iwrite_shared( MPI_File  fh,void * buf,int  count,MPI_Datatype  dat
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1383,7 +1383,7 @@ int MPI_File_read_ordered( MPI_File  fh,void * buf,int  count,MPI_Datatype  data
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1416,7 +1416,7 @@ int MPI_File_write_ordered( MPI_File  fh,void * buf,int  count,MPI_Datatype  dat
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1449,7 +1449,7 @@ int MPI_File_seek_shared( MPI_File  fh,MPI_Offset  offset,int  whence  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1482,7 +1482,7 @@ int MPI_File_get_position_shared( MPI_File  fh,MPI_Offset * offset  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1515,7 +1515,7 @@ int MPI_File_read_at_all_begin( MPI_File  fh,MPI_Offset  offset,void * buf,int  
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1548,7 +1548,7 @@ int MPI_File_read_at_all_end( MPI_File  fh,void * buf,MPI_Status * status  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1581,7 +1581,7 @@ int MPI_File_write_at_all_begin( MPI_File  fh,MPI_Offset  offset,void * buf,int 
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1614,7 +1614,7 @@ int MPI_File_write_at_all_end( MPI_File  fh,void * buf,MPI_Status * status  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1647,7 +1647,7 @@ int MPI_File_read_all_begin( MPI_File  fh,void * buf,int  count,MPI_Datatype  da
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1680,7 +1680,7 @@ int MPI_File_read_all_end( MPI_File  fh,void * buf,MPI_Status * status  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1713,7 +1713,7 @@ int MPI_File_write_all_begin( MPI_File  fh,void * buf,int  count,MPI_Datatype  d
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1746,7 +1746,7 @@ int MPI_File_write_all_end( MPI_File  fh,void * buf,MPI_Status * status  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1779,7 +1779,7 @@ int MPI_File_read_ordered_begin( MPI_File  fh,void * buf,int  count,MPI_Datatype
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1812,7 +1812,7 @@ int MPI_File_read_ordered_end( MPI_File  fh,void * buf,MPI_Status * status  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1845,7 +1845,7 @@ int MPI_File_write_ordered_begin( MPI_File  fh,void * buf,int  count,MPI_Datatyp
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1878,7 +1878,7 @@ int MPI_File_write_ordered_end( MPI_File  fh,void * buf,MPI_Status * status  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1911,7 +1911,7 @@ int MPI_File_get_type_extent( MPI_File  fh,MPI_Datatype  datatype,MPI_Aint * ext
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1944,7 +1944,7 @@ int MPI_File_set_atomicity( MPI_File  fh,int  flag  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -1977,7 +1977,7 @@ int MPI_File_get_atomicity( MPI_File  fh,int * flag  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -2010,7 +2010,7 @@ int MPI_File_sync( MPI_File  fh  )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;

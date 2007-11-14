@@ -155,7 +155,7 @@ int MPI_Accumulate( void *origin_addr, int origin_count,
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -188,7 +188,7 @@ int MPI_Alloc_mem( MPI_Aint size, MPI_Info info, void *baseptr )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -221,7 +221,7 @@ int MPI_Free_mem( void *base )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -260,7 +260,7 @@ int MPI_Get( void *origin_addr, int origin_count,
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -299,7 +299,7 @@ int MPI_Put( void *origin_addr, int origin_count,
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -332,7 +332,7 @@ int MPI_Win_complete( MPI_Win win )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -366,7 +366,7 @@ int MPI_Win_create( void *base, MPI_Aint size, int disp_unit,
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(comm)
+  MPE_LOG_STATE_END(comm,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -399,7 +399,7 @@ int MPI_Win_fence( int assert, MPI_Win win )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -432,7 +432,7 @@ int MPI_Win_free( MPI_Win *win )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -465,7 +465,7 @@ int MPI_Win_get_group( MPI_Win win, MPI_Group *group )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -498,7 +498,7 @@ int MPI_Win_get_name( MPI_Win win, char *win_name, int *resultlen )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -532,7 +532,7 @@ int MPI_Win_lock( int lock_type, int rank, int assert, MPI_Win win )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -566,7 +566,7 @@ int MPI_Win_post( MPI_Group group, int assert, MPI_Win win )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -599,7 +599,7 @@ int MPI_Win_set_name( MPI_Win win, char *win_name )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -632,7 +632,7 @@ int MPI_Win_start( MPI_Group group, int assert, MPI_Win win )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -666,7 +666,7 @@ int MPI_Win_test( MPI_Win win, int *flag )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -701,7 +701,7 @@ int MPI_Win_unlock( int rank, MPI_Win win )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
@@ -735,7 +735,7 @@ int MPI_Win_wait( MPI_Win win )
 #endif
 
   MPE_LOG_THREAD_LOCK
-  MPE_LOG_STATE_END(MPE_COMM_NULL)
+  MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
   MPE_LOG_THREAD_UNLOCK
 
   return returnVal;
