@@ -111,11 +111,11 @@ void CLOG_Local_finalize( CLOG_Stream_t *stream )
     syncer = stream->syncer;
     if ( syncer->world_rank == 0 ) {
         if ( syncer->is_ok_to_sync == CLOG_BOOL_TRUE ) {
-            printf( "Enabling the %s clock synchronization...\n",
-                    CLOG_Sync_print_type( syncer ) );
+            fprintf( stderr, "Enabling the %s clock synchronization...\n",
+                             CLOG_Sync_print_type( syncer ) );
         }
         else
-            printf( "Disabling the clock synchronization...\n" );
+            fprintf( stderr, "Disabling the clock synchronization...\n" );
     }
 
     buffer  = stream->buffer;
