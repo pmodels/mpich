@@ -48,7 +48,7 @@ static int buf_size(int fd) {
 static int bind_from_file(char* fName, int sockfd, int port) {
   int rc = MPI_SUCCESS;
   FILE* fptr = NULL;
-  char emName[10];
+  char emName[100];
   char emIP[16];
   char hostName[100];
   struct sockaddr_in addr;
