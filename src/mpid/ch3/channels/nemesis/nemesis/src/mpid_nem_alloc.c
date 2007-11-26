@@ -148,6 +148,9 @@ int MPID_nem_seg_destroy()
 int MPID_nem_seg_alloc( MPID_nem_seg_ptr_t memory, MPID_nem_seg_info_ptr_t seg, int size)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_NEM_SEG_ALLOC);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_NEM_SEG_ALLOC);
     
     MPIU_Assert( memory->size_left >= size );
   
@@ -159,6 +162,7 @@ int MPID_nem_seg_alloc( MPID_nem_seg_ptr_t memory, MPID_nem_seg_info_ptr_t seg, 
    
     MPIU_Assert( (MPI_Aint)(memory->current_addr) <=  (MPI_Aint) (memory->max_addr) );   
 
+    MPIDI_FUNC_EXIT(MPID_STATE_NEM_SEG_ALLOC);
     return mpi_errno;
 }
 
