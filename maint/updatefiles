@@ -496,29 +496,29 @@ if [ $do_build_configure = yes ] ; then
 	    # See if we can export a copy of confdb
 	    if [ -d $confdbSrcDir ] ; then
                 cp -rp $confdbSrcDir confdb
-                # Remove the CVS directories
-		if [ -d confdb/CVS ] ; then
-                    (cd confdb && find . -name CVS -print | xargs rm -rf)
+                # Remove the .svn directories
+		if [ -d confdb/.svn ] ; then
+                    (cd confdb && find . -name .svn -print | xargs rm -rf)
                 fi
             else
 		# Try to use scp
                 scp -rp shakey.mcs.anl.gov:$confdbSrcDir confdb
-		if [ -d confdb/CVS ] ; then
-		    (cd confdb && find . -name CVS -print | xargs rm -rf)
+		if [ -d confdb/.svn ] ; then
+		    (cd confdb && find . -name .svn -print | xargs rm -rf)
                 fi
 		if [ ! -d confdb ] ; then    
                     echo "Directory `pwd`/confdb is missing and is required for rebuilding configure"
   	            exit 1
                 fi
             fi
-        elif [ -d confdb -a -d "$confdbSrcDir" -a ! -d confdb/CVS ] ; then
+        elif [ -d confdb -a -d "$confdbSrcDir" -a ! -d confdb/.svn ] ; then
             # This is a copy; get an up-to-date copy.  We only do 
 	    # this if there is an alternate source, in case this is
 	    # part of the distributed version and not local.
             cp -rp $confdbSrcDir confdb
-            # Remove the CVS directories
-	    if [ -d confdb/CVS ] ; then
-                (cd confdb && find . -name CVS -print | xargs rm -rf)
+            # Remove the .svn directories
+	    if [ -d confdb/.svn ] ; then
+                (cd confdb && find . -name .svn -print | xargs rm -rf)
             fi
         fi
 	# Check for out-of-date configures (the dependency handling
