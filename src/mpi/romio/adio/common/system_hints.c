@@ -111,7 +111,7 @@ void ADIOI_process_system_hints(MPI_Info info)
 	return;
     }
     file_to_info(hintfd, info);
-
+    close(fd);
 }
 
 /* debug function: a routine I want in the library to make my life easier when
