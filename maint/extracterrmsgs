@@ -783,7 +783,7 @@ sub ExpandDir {
     my @files = ();
     opendir DIR, "$dir";
     while ($filename = readdir DIR) {
-	if ($filename =~ /^\./ || $filename eq "CVS") {
+	if ($filename =~ /^\./ || $filename eq ".svn") {
 	    next;
 	}
 	elsif (-d "$dir/$filename") {

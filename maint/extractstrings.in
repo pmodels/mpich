@@ -247,7 +247,7 @@ sub processDirs {
     while (my $file = readdir DIR) {
 	if (! -d "$dir/$file") { next; }
 	if ($file =~ /^\./) { next; }
-	if ($file =~ /^CVS/) { next; }
+	if ($file =~ /^.svn/) { next; }
 	if ($file =~ /autom4te.cache/) { next; }
 	$dirs[$#dirs+1] = "$file";
     }
@@ -274,7 +274,7 @@ sub processDirsAndAction {
     while (my $file = readdir DIR) {
 	if (! -d "$dir/$file") { next; }
 	if ($file =~ /^\./) { next; }
-	if ($file =~ /^CVS/) { next; }
+	if ($file =~ /^.svn/) { next; }
 	if ($file =~ /autom4te.cache/) { next; }
 	$dirs[$#dirs+1] = "$file";
     }
