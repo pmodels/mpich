@@ -343,7 +343,7 @@ int MPIDI_CH3U_VC_WaitForClose( void )
     }
     MPID_Progress_end(&progress_state);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_VC_WAITFORCLOSE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_VC_WAITFORCLOSE);
     return mpi_errno;
 }
 
