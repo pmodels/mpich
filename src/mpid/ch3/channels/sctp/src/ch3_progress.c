@@ -1082,10 +1082,25 @@ static int MPIDU_Sctp_init(void) {
 	}
 
         
+        /* see if Nagle value is specified */
+        
+	no_nagle = 1;
+	env = getenv("MPICH_SCTP_NAGLE_ON");
+	if (env)
+	{
+	    int tmp;
+	    
+	    /* FIXME: atoi doesn't detect errors (e.g., non-digits) */
+	    tmp = atoi(env);
+	    if (tmp > 0)
+	    {
+                no_nagle = 0;
+	    }
+	}
+
         /* Create a socket */
         
         /* set up parameters for the SCTP socket */
-	no_nagle = 1;
 	port = 0;
 	bzero(&evnts, sizeof(evnts));
 	evnts.sctp_data_io_event=1;
