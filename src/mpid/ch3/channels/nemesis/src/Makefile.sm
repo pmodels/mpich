@@ -1,4 +1,5 @@
 INCLUDES = -I../../../../../include -I${master_top_srcdir}/src/include
+
 lib${MPILIBNAME}_a_SOURCES = \
     ch3_finalize.c ch3_init.c ch3_isend.c ch3_isendv.c ch3_istartmsg.c \
     ch3_istartmsgv.c ch3_progress.c ch3i_errno.c ch3_comm_spawn.c ch3_abort.c ch3i_comm.c \
