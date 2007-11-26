@@ -4840,13 +4840,34 @@ for type in int long long_long short ; do
     eval len=\$ac_cv_sizeof_$type
     if test "$len" = "$ac_cv_sizeof_void_p" ; then
         MPI_AINT=`echo $type | sed -e 's/_/ /'`
-	# Make the sizeof AINT available to other configures
-	MPI_SIZEOF_AINT=$len
-	export MPI_SIZEOF_AINT
+        # Make the sizeof AINT available to other configures
+        MPI_SIZEOF_AINT=$len
+        export MPI_SIZEOF_AINT
+        case $type in
+            int)
+                MPI_AINT_FMT_DEC_SPEC="%d"
+                MPI_AINT_FMT_HEX_SPEC="%x"
+                ;;
+            long)
+                MPI_AINT_FMT_DEC_SPEC="%ld"
+                MPI_AINT_FMT_HEX_SPEC="%lx"
+                ;;
+            long_long)
+                MPI_AINT_FMT_DEC_SPEC="%lld"
+                MPI_AINT_FMT_HEX_SPEC="%llx"
+                ;;
+            short)
+                MPI_AINT_FMT_DEC_SPEC="%hd"
+                MPI_AINT_FMT_HEX_SPEC="%hx"
+                ;;
+        esac
+        export MPI_AINT_FMT_DEC_SPEC MPI_AINT_FMT_HEX_SPEC
         break
     fi
 done
 AC_SUBST(MPI_AINT)
+AC_SUBST(MPI_AINT_FMT_DEC_SPEC)
+AC_SUBST(MPI_AINT_FMT_HEX_SPEC)
 
 # If sizeof(mpi_aint) = sizeof(int), set this value
 if test "$ac_cv_sizeof_int" = "$ac_cv_sizeof_void_p" ; then

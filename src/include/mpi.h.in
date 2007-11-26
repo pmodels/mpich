@@ -301,6 +301,9 @@ typedef int MPI_Info;
 /* Definitions that are determined by configure. */
 typedef @MPI_AINT@ MPI_Aint;
 typedef @MPI_FINT@ MPI_Fint;
+#define MPI_AINT_FMT_DEC_SPEC "@MPI_AINT_FMT_DEC_SPEC@"
+#define MPI_AINT_FMT_HEX_SPEC "@MPI_AINT_FMT_HEX_SPEC@"
+
 /* Let ROMIO know that MPI_Offset is already defined */
 #define HAVE_MPI_OFFSET
 /* MPI_OFFSET_TYPEDEF is set in configure and is 

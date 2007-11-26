@@ -310,9 +310,14 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
     blocks_left = *blocks_p;
 
     MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,
-	     "\t[vector to vec: do=%d, dp=%x, len=%d, ind=%d, ct=%d, blksz=%d, str=%d, blks=%d]\n",
+             "\t[vector to vec: do=%d"
+             ", dp=" MPI_AINT_FMT_HEX_SPEC
+             ", len=%d, ind=%d, ct=%d, blksz=%d"
+             ", str=" MPI_AINT_FMT_DEC_SPEC
+             ", blks=" MPI_AINT_FMT_DEC_SPEC
+             "]\n",
 		    (unsigned) rel_off,
-		    (unsigned) (MPI_Aint)bufp,
+		    (MPI_Aint)bufp,
 		    paramp->u.pack_vector.length,
 		    paramp->u.pack_vector.index,
 		    count,
