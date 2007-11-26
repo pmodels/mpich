@@ -4,6 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "create_f90_util.h"
 #include "mpiimpl.h"
 
 /* The MPI standard requires that the datatypes that are returned from
