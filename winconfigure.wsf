@@ -1455,7 +1455,9 @@ If f.FileExists("src\mpi\romio\adio\include\romioconf.h.in") Then
 	fout.WriteLine("#ifndef FORTRANDOUBLEUNDERSCORE")
 	fout.WriteLine("#define FORTRANCAPS")
 	fout.WriteLine("#endif")
+	fout.WriteLine("#define HAVE_IO_H 1")
 	fout.WriteLine("#define snprintf _snprintf")
+    fout.WriteLine("#define strtok_r strtok_s")
 	Call WriteFooter(fout)
 	fout.Close()
 
@@ -1547,6 +1549,9 @@ Else
 	fout.WriteLine("")
 	fout.WriteLine("#define restrict")
 	fout.WriteLine("")
+	fout.WriteLine("#define HAVE_IO_H 1")
+	fout.WriteLine("#define snprintf _snprintf")
+    fout.WriteLine("#define strtok_r strtok_s")
 	fout.WriteLine("#endif")
 
 	fout.Close()

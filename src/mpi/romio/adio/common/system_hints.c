@@ -27,6 +27,9 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef HAVE_IO_H
+#include <io.h>
+#endif
 
 #ifndef PATH_MAX
 #define PATH_MAX 65535
@@ -43,10 +46,11 @@
 
 static int find_file(void)
 {
-    int fd;
+    int fd=-1;
     char * hintfile;
     
     hintfile = getenv(ROMIO_HINT_ENV_VAR);
+    if(hintfile)
     fd = open(hintfile, O_RDONLY);
     if (fd < 0 )
 	fd = open(ROMIO_HINT_DEFAULT_CFG, O_RDONLY);
