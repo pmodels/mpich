@@ -176,25 +176,28 @@ int PREPEND_PREFIX(Segment_init)(const DLOOP_Buffer buf,
     /* DLOOP_Stackelm_offset assumes correct orig_count, curcount, loop_p */
     elmp->curoffset   = /* elmp->orig_offset + */ DLOOP_Stackelm_offset(elmp);
 
-    /* get pointer to next dataloop */
-    switch (dlp->kind & DLOOP_KIND_MASK) {
-	case DLOOP_KIND_CONTIG:
-	case DLOOP_KIND_VECTOR:
-	case DLOOP_KIND_BLOCKINDEXED:
-	case DLOOP_KIND_INDEXED:
-	    dlp = dlp->loop_params.cm_t.dataloop;
-	    break;
-	case DLOOP_KIND_STRUCT:
-	    dlp = dlp->loop_params.s_t.dataloop_array[0];
-	    break;
-	default:
-	    /* --BEGIN ERROR HANDLING-- */
-	    DLOOP_Assert(0);
-	    break;
-	    /* --END ERROR HANDLING-- */
-    }
+    i = 1;
+    while(!(dlp->kind & DLOOP_FINAL_MASK))
+    {
+        /* get pointer to next dataloop */
+        switch (dlp->kind & DLOOP_KIND_MASK)
+        {
+            case DLOOP_KIND_CONTIG:
+            case DLOOP_KIND_VECTOR:
+            case DLOOP_KIND_BLOCKINDEXED:
+            case DLOOP_KIND_INDEXED:
+                dlp = dlp->loop_params.cm_t.dataloop;
+                break;
+            case DLOOP_KIND_STRUCT:
+                dlp = dlp->loop_params.s_t.dataloop_array[0];
+                break;
+            default:
+                /* --BEGIN ERROR HANDLING-- */
+                DLOOP_Assert(0);
+                break;
+                /* --END ERROR HANDLING-- */
+        }
 
-    for (i=1; i < depth; i++) {
 	/* loop_p, orig_count, orig_block, and curcount are all filled by us now.
 	 * the rest are filled in at processing time.
 	 */
@@ -202,29 +205,8 @@ int PREPEND_PREFIX(Segment_init)(const DLOOP_Buffer buf,
 
 	DLOOP_Stackelm_load(elmp, dlp, branch_detected);
 	branch_detected = elmp->may_require_reloading;
+        i++;
 
-	if (i < depth-1) {
-	    DLOOP_Assert(!(dlp->kind & DLOOP_FINAL_MASK));
-
-	    switch (dlp->kind & DLOOP_KIND_MASK) {
-		case DLOOP_KIND_CONTIG:
-		case DLOOP_KIND_VECTOR:
-		case DLOOP_KIND_BLOCKINDEXED:
-		case DLOOP_KIND_INDEXED:
-		    dlp = dlp->loop_params.cm_t.dataloop;
-		    break;
-		case DLOOP_KIND_STRUCT:
-		    dlp = dlp->loop_params.s_t.dataloop_array[0];
-		    break;
-		default:
-		    /* --BEGIN ERROR HANDLING-- */
-		    DLOOP_Assert(0);
-		    break;
-		    /* --END ERROR HANDLING-- */
-	    }
-
-	}
-	else DLOOP_Assert(dlp->kind & DLOOP_FINAL_MASK);
     }
 
     segp->valid_sp = depth-1;
