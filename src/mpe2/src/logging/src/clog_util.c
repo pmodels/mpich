@@ -62,6 +62,33 @@ void CLOG_Util_abort( int errorcode )
     PMPI_Abort( MPI_COMM_WORLD, errorcode );
 }
 
+CLOG_BOOL_T CLOG_Util_getenvbool( char *env_var, CLOG_BOOL_T default_value )
+{
+    char *env_val;
+
+    env_val = (char *) getenv( env_var );
+    if ( env_val != NULL ) {
+        if (    strcmp( env_val, "true" ) == 0
+             || strcmp( env_val, "TRUE" ) == 0
+             || strcmp( env_val, "yes" ) == 0
+             || strcmp( env_val, "YES" ) == 0 )
+            return CLOG_BOOL_TRUE;
+        else if (    strcmp( env_val, "false" ) == 0
+                  || strcmp( env_val, "FALSE" ) == 0
+                  || strcmp( env_val, "no" ) == 0
+                  || strcmp( env_val, "NO" ) == 0 )
+            return CLOG_BOOL_FALSE;
+        else {
+            fprintf( stderr, __FILE__":CLOG_Util_getenvbool() - \n"
+                             "\t""Environment variable %s has invalid boolean "
+                             "value %s and will be set to %d.\n",
+                             env_var, env_val, default_value );
+            fflush( stderr );
+        }
+    }
+    return default_value;
+}
+
 /*
    tmp_pathname[] is assumed to be of size CLOG_PATH_STRLEN
 */
@@ -71,6 +98,7 @@ void CLOG_Util_set_tmpfilename( char *tmp_pathname )
     char    tmpdirname_ref[ CLOG_PATH_STRLEN ] = "";
     char    tmpdirname[ CLOG_PATH_STRLEN ] = "";
     char    tmpfilename[ CLOG_PATH_STRLEN ] = "";
+    int     same_tmpdir_as_root;
     int     my_rank;
     int     ierr;
 #if defined( HAVE_MKSTEMP )
@@ -85,6 +113,17 @@ void CLOG_Util_set_tmpfilename( char *tmp_pathname )
     }
 
     PMPI_Comm_rank( MPI_COMM_WORLD, &my_rank );
+
+    same_tmpdir_as_root = CLOG_Util_getenvbool( "MPE_SAME_TMPDIR",
+                                                CLOG_BOOL_TRUE );
+    /*  Let everyone in MPI_COMM_WORLD know what root has */
+    ierr = PMPI_Bcast( &same_tmpdir_as_root, 1, MPI_INT, 0, MPI_COMM_WORLD );
+    if ( ierr != MPI_SUCCESS ) {
+        fprintf( stderr, __FILE__":CLOG_Util_get_tmpfilename_init() - \n"
+                         "\t""PMPI_Bcast(same_tmpdir_as_root) fails\n" );
+        fflush( stderr );
+        PMPI_Abort( MPI_COMM_WORLD, 1 );
+    }
 
     /* MPE_TMPDIR takes precedence over TMPDIR */
     env_tmpdir = (char *) getenv( "MPE_TMPDIR" );
@@ -113,13 +152,13 @@ void CLOG_Util_set_tmpfilename( char *tmp_pathname )
                        0, MPI_COMM_WORLD );
     if ( ierr != MPI_SUCCESS ) {
         fprintf( stderr, __FILE__":CLOG_Util_get_tmpfilename_init() - \n"
-                         "\t""PMPI_Bcast() fails\n" );
+                         "\t""PMPI_Bcast(tmpdirname_ref) fails\n" );
         fflush( stderr );
         PMPI_Abort( MPI_COMM_WORLD, 1 );
     }
                                                                                 
-    /*  Use TMPDIR if set in children processes  */
-    if ( env_tmpdir != NULL )
+    /*  Use TMPDIR if set in child processes & allowed by MPE_SAME_TMPDIR */
+    if ( env_tmpdir != NULL && same_tmpdir_as_root == CLOG_BOOL_FALSE )
         strcpy( tmpdirname, env_tmpdir );
     else
         strcpy( tmpdirname, tmpdirname_ref );
@@ -134,23 +173,55 @@ void CLOG_Util_set_tmpfilename( char *tmp_pathname )
                                                                                 
     /*  Set the local tmp filename then tmp_pathname */
     strcpy( tmp_pathname, tmpdirname );
+    /*
     sprintf( tmpfilename, "/"CLOG_FILE_TYPE"_taskID=%04d_XXXXXX", my_rank );
     strcat( tmp_pathname, tmpfilename );
-                                                                                
-    /*  Make the filename unique ( optional ) */
-#if defined( HAVE_MKSTEMP )
-    /*
-        Delete the file created by mkstemp().
-        The file will be OPENed later if necessary
     */
-    tmp_fd = mkstemp( tmp_pathname );
-    if ( tmp_fd != -1 ) {
-        close( tmp_fd );
-        unlink( tmp_pathname );
-    }
+    strcat( tmp_pathname, "/"CLOG_FILE_TYPE"_XXXXXX" );
+                                                                                
+    if ( same_tmpdir_as_root == CLOG_BOOL_TRUE ) {
+        if ( my_rank == 0 ) {
+#if defined( HAVE_MKSTEMP )
+            /* Delete mkstemp()'s returned file. Open it later if necessary. */
+            tmp_fd = mkstemp( tmp_pathname );
+            if ( tmp_fd != -1 ) {
+                close( tmp_fd );
+                unlink( tmp_pathname );
+            }
 #else
-    mktemp( tmp_pathname );
+            mktemp( tmp_pathname );
 #endif
+        }
+        ierr = PMPI_Bcast( tmp_pathname, CLOG_PATH_STRLEN, MPI_CHAR,
+                           0, MPI_COMM_WORLD );
+        if ( ierr != MPI_SUCCESS ) {
+            fprintf( stderr, __FILE__":CLOG_Util_get_tmpfilename_init() - \n"
+                             "\t""PMPI_Bcast(tmp_pathname) fails\n" );
+            fflush( stderr );
+            PMPI_Abort( MPI_COMM_WORLD, 1 );
+        }
+    }
+    else {
+#if defined( HAVE_MKSTEMP )
+/*
+    mkstemp() causes scalability problem if 16K processes of mkstemp()
+    were more or less simultaneouly invoked on the same filesystem,
+    on BGW or BG/P
+*/
+        /* Delete mkstemp()'s returned file. Open it later if necessary. */
+        tmp_fd = mkstemp( tmp_pathname );
+        if ( tmp_fd != -1 ) {
+            close( tmp_fd );
+            unlink( tmp_pathname );
+        }
+#else
+        mktemp( tmp_pathname );
+#endif
+    }
+
+    /* Append comm_world's rank as part of the tmp_filename */
+    sprintf( tmpfilename, "_taskID=%06d", my_rank );
+    strcat( tmp_pathname, tmpfilename );
 }
 
 /*
