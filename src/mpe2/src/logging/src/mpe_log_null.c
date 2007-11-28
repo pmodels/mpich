@@ -53,6 +53,12 @@ int MPE_Describe_event( int event, const char *name, const char *color )
 int MPE_Log_get_event_number( void )
 { return -99999; }
 
+int MPE_Log_get_solo_eventID( int *eventdef_eventID )
+{ return -99999; }
+
+int MPE_Log_get_state_eventIDs( int *statedef_startID, int *statedef_finalID )
+{ return -99999; }
+
 int MPE_Log_comm_send( MPI_Comm comm, int local_thread,
                        int receiver, int tag, int size )
 { return MPE_LOG_OK; }
