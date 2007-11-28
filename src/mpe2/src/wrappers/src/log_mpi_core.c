@@ -3561,11 +3561,12 @@ int  MPI_Finalize( )
 
 #if defined( MAKE_PROCNAME_FILE )
     MPI_Status       status;
-    FILE            *procname_file;
-    char             procname_file_str[LOGFILENAME_STRLEN];
-    char             processor_name[MPI_MAX_PROCESSOR_NAME];
+    FILE            *procname_file = NULL;
+    char             procname_file_str[LOGFILENAME_STRLEN] = {0};
+    char             processor_name[MPI_MAX_PROCESSOR_NAME] = {0};
     int              namelen;
     int              world_size;
+    int              isOK2procname;
 #endif
 
     MPE_LOG_SWITCH_DECL
@@ -3597,7 +3598,7 @@ int  MPI_Finalize( )
     PMPI_Reduce( event_count, event_total, MPE_MAX_KNOWN_EVENTS,
                  MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
 
-    if (procid_0 == 0) {
+    if ( procid_0 == 0 ) {
         fprintf( stderr, "Writing logfile....\n" );
         for ( idx = 0; idx < MPE_MAX_KNOWN_STATES; idx++ ) {
             if (state_total[idx] > 0) {
@@ -3626,6 +3627,7 @@ int  MPI_Finalize( )
     if ( procid_0 == 0 ) {
         fprintf( stderr, "Finished writing logfile %s.\n",
                  MPE_Log_merged_logfilename() );
+        fflush( stderr );
     }
 
     /* Recover all of the allocated requests */
@@ -3633,28 +3635,56 @@ int  MPI_Finalize( )
     
 #if defined( MAKE_PROCNAME_FILE )
 #define PROCNAME_TAG 1099
-    PMPI_Get_processor_name( processor_name, &namelen );
-    PMPI_Comm_size( MPI_COMM_WORLD, &world_size );
+    PMPI_Barrier( MPI_COMM_WORLD );
+    /* Initialize the flag to create a procname file to false */
+    isOK2procname = 0;
     if ( procid_0 == 0 ) {
-        fprintf( stderr, "Writing MPI_processor_name file....\n" );
         strncpy( procname_file_str, MPE_Log_merged_logfilename(),
                  LOGFILENAME_STRLEN );
         strcat( procname_file_str, ".pnm" );
         procname_file = fopen( procname_file_str, "w" );
-        fprintf( procname_file, "Rank %d : %s\n", procid_0, processor_name );
-        for ( idx = 1; idx < world_size; idx++ ) {
-            PMPI_Recv( processor_name, LOGFILENAME_STRLEN, MPI_CHAR,
-                       idx, PROCNAME_TAG, MPI_COMM_WORLD, &status );
-            fprintf( procname_file, "Rank %d : %s\n", idx, processor_name );
+        if ( procname_file != NULL ) {
+            /* If fopen() returns OK, set flag to true */
+            isOK2procname = 1;
+            fprintf( stderr, "Writing MPI_processor_name file....\n" );
+            fflush( stderr );
         }
-        fflush( procname_file );
-        fclose( procname_file );
-        fprintf( stderr, "Finished writing processor name file %s.\n",
-                 procname_file_str );
+        else {
+            fprintf( stderr, "Failed to open %s!\n", procname_file_str );
+            fflush( stderr );
+        }
     }
-    else {
-        PMPI_Send( processor_name, LOGFILENAME_STRLEN, MPI_CHAR,
-                   0, PROCNAME_TAG, MPI_COMM_WORLD );
+    /* If the procname file is created OK, let everybody know */
+    PMPI_Bcast( &isOK2procname, 1, MPI_INT, 0, MPI_COMM_WORLD );
+    fprintf( stdout, "isOK2procname = %d\n", isOK2procname );
+    fflush( stdout );
+
+    if ( isOK2procname ) {
+        PMPI_Get_processor_name( processor_name, &namelen );
+        PMPI_Comm_size( MPI_COMM_WORLD, &world_size );
+        if ( procid_0 == 0 ) {
+            idx = procid_0;
+            fprintf( procname_file, "Rank %d : %s\n", idx, processor_name );
+            for ( idx = 1; idx < world_size; idx++ ) {
+                PMPI_Recv( processor_name, LOGFILENAME_STRLEN, MPI_CHAR,
+                           idx, PROCNAME_TAG, MPI_COMM_WORLD, &status );
+                fprintf( stdout, "recving procname from %d\n", idx );
+                fflush( stdout );
+                fprintf( procname_file, "Rank %d : %s\n", idx, processor_name );
+            }
+            fflush( procname_file );
+            fclose( procname_file );
+            fprintf( stderr, "Finished writing processor name file %s.\n",
+                     procname_file_str );
+            fflush( stderr );
+            
+        }
+        else {
+            PMPI_Send( processor_name, LOGFILENAME_STRLEN, MPI_CHAR,
+                       0, PROCNAME_TAG, MPI_COMM_WORLD );
+            fprintf( stdout, "sending procname to 0\n" );
+            fflush( stdout );
+        }
     }
 #endif
 
