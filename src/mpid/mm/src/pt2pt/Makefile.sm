@@ -1,3 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = mpid_isend.c mpid_irecv.c mpid_recv.c mpid_send.c \
- mpid_bsend_init.c mpid_startall.c
-INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

@@ -1,2 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = mpid_get.c mpid_accumulate.c mpid_win_fence.c mpid_put.c
-INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

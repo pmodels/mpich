@@ -1,5 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = tcp_init.c tcp_get_business_card.c tcp_make_progress.c tcp_cq_wait.c \
- tcp_post_read.c tcp_post_write.c tcp_can_connect.c tcp_post_connect.c tcp_car_queue.c \
- tcp_read.c tcp_write.c tcp_reset_car.c tcp_write_aggressive.c tcp_merge_unexpected_data.c \
- tcp_merge_with_unexpected.c tcp_merge_with_posted.c
-INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

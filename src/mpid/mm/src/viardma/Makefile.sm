@@ -1,3 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = via_rdma_init.c via_rdma_get_business_card.c via_rdma_make_progress.c \
- via_rdma_can_connect.c via_rdma_post_connect.c via_rdma_post_read.c via_rdma_post_write.c
-INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

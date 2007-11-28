@@ -1,3 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = unpacker_init.c unpacker_make_progress.c unpacker_reset_car.c \
- unpacker_car_queue.c unpacker_post_read.c unpacker_post_write.c
-INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

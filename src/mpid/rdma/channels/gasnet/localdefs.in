@@ -1,7 +1,0 @@
-#! /bin/sh
-
-# See if there are any definitions from the sock implementation
-if test -s src/mpid/common/sock/localdefs ; then
-    . src/mpid/common/sock/localdefs
-fi
-

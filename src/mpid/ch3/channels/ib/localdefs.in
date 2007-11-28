@@ -1,5 +1,0 @@
-#! /bin/sh
-# Add any libraries needed by the INFINIBAND channel
-LIBS="$LIBS @IB_LIBS@"
-#CPPFLAGS="$CPPFLAGS @IB_CPPFLAGS@"
-LDFLAGS="$LDFLAGS @IB_LDFLAGS@"

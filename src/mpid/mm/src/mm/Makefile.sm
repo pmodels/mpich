@@ -1,3 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = mm_accept.c mm_close.c mm_close_port.c mm_connect.c \
- mm_open_port.c mm_recv.c mm_send.c
-INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

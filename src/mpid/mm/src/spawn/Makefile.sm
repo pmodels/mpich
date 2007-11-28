@@ -1,4 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = mpid_close_port.c mpid_comm_accept.c \
-       mpid_comm_connect.c \
-       mpid_comm_disconnect.c mpid_comm_spawn_multiple.c mpid_open_port.c
-INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include

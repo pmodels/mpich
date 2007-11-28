@@ -1,3 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = shm_init.c shm_memory.c shm_get_business_card.c shm_make_progress.c \
- shm_can_connect.c shm_post_connect.c shm_post_read.c shm_post_write.c
-INCLUDES = -I../../include -I${top_srcdir}/include -I../../../../include -I${master_top_srcdir}/src/include
