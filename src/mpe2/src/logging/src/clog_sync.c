@@ -61,7 +61,6 @@ void CLOG_Sync_free( CLOG_Sync_t **sync_handle )
 
 void CLOG_Sync_init( CLOG_Sync_t *sync )
 {
-    char         *env_forced_sync;
     char         *env_sync_agrm;
     char         *env_sync_freq;
     int           local_is_ok_to_sync;
@@ -71,23 +70,9 @@ void CLOG_Sync_init( CLOG_Sync_t *sync )
     else
         local_is_ok_to_sync = CLOG_BOOL_TRUE;
 
-    env_forced_sync = (char *) getenv( "MPE_CLOCKS_SYNC" );
-    if ( env_forced_sync != NULL ) {
-        if (    strcmp( env_forced_sync, "true" ) == 0
-             || strcmp( env_forced_sync, "TRUE" ) == 0
-             || strcmp( env_forced_sync, "yes" ) == 0
-             || strcmp( env_forced_sync, "YES" ) == 0 )
-            local_is_ok_to_sync = CLOG_BOOL_TRUE;
-        else if (    strcmp( env_forced_sync, "false" ) == 0
-                  || strcmp( env_forced_sync, "FALSE" ) == 0
-                  || strcmp( env_forced_sync, "no" ) == 0
-                  || strcmp( env_forced_sync, "NO" ) == 0 )
-            local_is_ok_to_sync = CLOG_BOOL_FALSE;
-        /*
-        else
-            Use What MPI_WTIME_IS_GLOBAL said.
-        */
-    }
+    /* If MPE_CLOCKS_SYNC is not set, use the value of MPI_WTIME_IS_GLOBAL  */
+    local_is_ok_to_sync = CLOG_Util_getenvbool( "MPE_CLOCKS_SYNC",
+                                                local_is_ok_to_sync );
     PMPI_Allreduce( &local_is_ok_to_sync, &(sync->is_ok_to_sync),
                     1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 

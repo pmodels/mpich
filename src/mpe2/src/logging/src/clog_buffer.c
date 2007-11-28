@@ -111,27 +111,13 @@ void CLOG_Buffer_free( CLOG_Buffer_t **buffer_handle )
 
 void CLOG_Buffer_env_init( CLOG_Buffer_t *buffer )
 {
-    char          *env_delete_localfile;
-    char          *env_log_overhead;
     int            ierr;
 
-    env_delete_localfile = (char *) getenv( "MPE_DELETE_LOCALFILE" );
-    if ( env_delete_localfile != NULL ) {
-        if (    strcmp( env_delete_localfile, "false" ) == 0
-             || strcmp( env_delete_localfile, "FALSE" ) == 0
-             || strcmp( env_delete_localfile, "no" ) == 0
-             || strcmp( env_delete_localfile, "NO" ) == 0 )
-            buffer->delete_localfile = CLOG_BOOL_FALSE;
-    }
+    buffer->delete_localfile = CLOG_Util_getenvbool( "MPE_DELETE_LOCALFILE",
+                                                     CLOG_BOOL_TRUE );
 
-    env_log_overhead     = (char *) getenv( "MPE_LOG_OVERHEAD" );
-    if ( env_log_overhead != NULL ) {
-        if (    strcmp( env_log_overhead, "false" ) == 0
-             || strcmp( env_log_overhead, "FALSE" ) == 0
-             || strcmp( env_log_overhead, "no" ) == 0
-             || strcmp( env_log_overhead, "NO" ) == 0 )
-            buffer->log_overhead = CLOG_BOOL_FALSE;
-    }
+    buffer->log_overhead = CLOG_Util_getenvbool( "MPE_LOG_OVERHEAD",
+                                                 CLOG_BOOL_TRUE );
 
     /*  Let everyone in MPI_COMM_WORLD know what root has */
     ierr = PMPI_Bcast( &(buffer->delete_localfile), 1, MPI_INT,
