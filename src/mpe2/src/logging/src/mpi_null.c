@@ -300,6 +300,14 @@ int PMPI_Comm_test_inter( MPI_Comm comm, int *flag )
     return MPI_SUCCESS;
 }
 
+int PMPI_Ssend( void *buf, int count, MPI_Datatype datatype, int dest,
+                int tag, MPI_Comm comm )
+{
+    fprintf( stderr, __FILE__":PMPI_Ssend() should not be invoked!" );
+    ZMPI_PRINTSTACK();
+    return MPI_SUCCESS;
+}
+
 int PMPI_Send( void *buf, int count, MPI_Datatype datatype, int dest,
                int tag, MPI_Comm comm )
 {
