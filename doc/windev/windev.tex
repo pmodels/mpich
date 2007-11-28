@@ -119,7 +119,7 @@ machine.
 %chosen then the scripts and Visual Studio project files will need to be updated to reflect 
 %this change.
 
-cygwin needs to be installed to get cvs, perl and ssh.  MPICH2 can also be built completely
+cygwin needs to be installed to get svn, perl and ssh.  MPICH2 can also be built completely
 under cygwin just like a Unix build so I install all of cygwin.  The latest cygwin packages
 are needed to build MPICH2 under cygwin and the MCS mirror site for cygwin does not contain
 the latest versions.  So I would select a download site other than the mcs mirror site during
@@ -156,7 +156,7 @@ This section describes how to make various packages once you have a working buil
 
 The easist way to build an MPICH2 distribution is to use the Developer Studio environment
 and the makewindist.bat script from the top level of the mpich2 source tree.  You can check
-out mpich2 from CVS or you can simply copy this batch file from the distribution.  The batch
+out mpich2 from SVN or you can simply copy this batch file from the distribution.  The batch
 file knows how to check out mpich2 so it the only file required to make a distribution.
 
 The product GUIDs need to be changed when a new release is created.  To do this run 
@@ -171,7 +171,7 @@ and PackageCode entries need to be changed to use new GUIDs.  Under Unix or Wind
 be used to generate a new GUID.  The ProductVersion entry needs to be changed to match the 
 version of MPICH2.
 
-Once the version and GUIDs have been updated, commit the changes to mpich2i.vdproj to CVS.
+Once the version and GUIDs have been updated, commit the changes to mpich2i.vdproj to SVN.
 
 Then you can build a distribution.
 
@@ -210,7 +210,7 @@ install MPICH2 on any Win32 machine.  This file can be re-named to match our rel
 conventions.
 
 \subsubsection{Automated build from the source distribution}
-If you don't have access to the CVS repository but you have the MPICH2 source
+If you don't have access to the SVN repository but you have the MPICH2 source
 distribution you can still use the makewindist batch file.  Follow these steps:
 \begin{enumerate}
 \item unzip/untar the source distribution
@@ -243,7 +243,7 @@ But first you need to have mpich2 checked out and configured before building.
 \begin{enumerate}
 \item bring up a command prompt and check out mpich2: 
 
-\texttt{cvs -d :ext:ashton@harley.mcs.anl.gov:/home/MPI/cvsMaster co mpich2allWithMPE}.  Replace ashton with your own username.
+\texttt{svn checkout https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk mpich2}.
 \item cd into mpich2
 \item run \texttt{getdotin.bat}
 \item run \texttt{winconfigure.wsf --cleancode}

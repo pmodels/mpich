@@ -843,16 +843,16 @@ dnl the location of the source of the MPI implementation into the XML
 dnl summary file
 AC_SUBST(MPI_SOURCE)
 
-# Get the location of the CVS repository, if present
-    # We can use this test (for CVS/Root) for creating maintainer targets
+# Get the location of the SVN repository, if present
+    # We can use this test for creating maintainer targets
     # as well, and tests for maintainer-required software, such as 
     # doctext
-if test -s CVS/Root ; then
-    MPICVSHOME=`cat CVS/Root`
-elif test -s "$srcdir/CVS/Root" ; then
-    MPICVSHOME=`cat $srcdir/CVS/Root`
+if test -d .svn ; then
+    MPISVNHOME=`svn info . | sed -n "/Repository Root: /s/Repository Root: //p"`
+elif test -d "$srcdir/.svn" ; then
+    MPISVNHOME=`svn info $srcdir | sed -n "/Repository Root: /s/Repository Root: //p"`
 fi
-AC_SUBST(MPICVSHOME)
+AC_SUBST(MPISVNHOME)
 
 dnl
 dnl Etags

@@ -223,7 +223,7 @@ fi
 #
 # Recursive directory install that installs or replaces files
 # (file replacement of replace=1) but excluding directories,
-# CVS/, old/ and tex/.
+# .svn/, old/ and tex/.
 # $1 is the src directory, $2 is dest directory, $3 is $MODE or $XMODE
 InstallDirRecur() {
 if [ -n "$1" -a -n "$2" ] ; then
@@ -240,7 +240,7 @@ if [ -n "$1" -a -n "$2" ] ; then
         done
         for dir in * ; do
             if [ -d $dir \
-                 -a "$dir" != "CVS" -a "$dir" != "old" \
+                 -a "$dir" != ".svn" -a "$dir" != "old" \
                  -a "$dir" != "tex" \
                ] ; then
                 InstallDirRecur $dir $2/$dir $3

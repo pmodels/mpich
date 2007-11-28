@@ -1034,15 +1034,6 @@ if test "$enable_romio" = "yes" ; then
        PAC_HAVE_ROMIO
    else
        AC_MSG_WARN([ROMIO src directory is not available])
-       # Check for local developers
-       if test -d /home/MPI/cvsMaster/romio -o -d /homes/MPI/cvsMaster/romio ; then
-           AC_MSG_WARN([You need to check ROMIO out with 
-          cd $use_top_srcdir/src/mpi
-          cvs -d /home/MPI/cvsMaster checkout romio
-	  followed by
-	  cd ../.. && maint/updatefiles
-          ])
-       fi
    fi
 fi
 #
@@ -5493,16 +5484,16 @@ AC_SUBST(MPI_LDFLAGS)
 MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
 AC_SUBST(MPIU_DLL_SPEC_DEF)
 
-# Get the location of the CVS repository, if present
-    # We can use this test (for CVS/Root) for creating maintainer targets
+# Get the location of the SVN repository, if present
+    # We can use this test for creating maintainer targets
     # as well, and tests for maintainer-required software, such as 
     # doctext
-if test -s CVS/Root ; then
-    MPICVSHOME=`cat CVS/Root`
-elif test -s "$srcdir/CVS/Root" ; then
-    MPICVSHOME=`cat $srcdir/CVS/Root`
+if test -d .svn ; then
+    MPISVNHOME=`svn info . | sed -n "/Repository Root: /s/Repository Root: //p"`
+elif test -d "$srcdir/.svn" ; then
+    MPISVNHOME=`svn info $srcdir | sed -n "/Repository Root: /s/Repository Root: //p"`
 fi
-AC_SUBST(MPICVSHOME)
+AC_SUBST(MPISVNHOME)
 
 dnl We can include external packages at configure/build time by 
 dnl adding them to EXTERNAL_SRC_DIRS.

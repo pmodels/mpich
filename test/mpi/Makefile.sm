@@ -12,14 +12,14 @@ clean-local:
 #
 # The following are used to provide a target that is used to create a 
 # distribution tarfile
-MPICVSHOME = @MPICVSHOME@
+MPISVNHOME = @MPISVNHOME@
 PACKAGE    = mpi2test
 VERSION    = @VERSION@
 
 dist:
 	@version=${VERSION} ; \
 	prever=`echo ${VERSION} | sed -e 's/^[^-]*//'` ; \
-	if [ "$$prever" = "-CVS" ] ; then version=$${version}-`date "+%Y%m%d%H%M"` ; fi ; \
+	if [ "$$prever" = "-SVN" ] ; then version=$${version}-`date "+%Y%m%d%H%M"` ; fi ; \
 	if [ -z "${TAG}" ] ; then tag=HEAD ; else tag=${TAG}; fi ; \
 	$(MAKE) version=$${version} tag=$${tag} doc=yes dist-with-version
 
@@ -32,8 +32,8 @@ dist-with-version:
 	    exit 1 ; fi 
 	@echo ""; echo "Cutting version ${version} of the MPICH2 distribution from tag ${tag}" ; echo ""
 	if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi 
-	rm -f cvsexp.log 
-	( cd tmpdir && cvs -d $(MPICVSHOME) export -r "${tag}" -d mpi2test mpich2-01/test/mpi >cvsexp.log 2>&1 ) || (echo "cvs export failed; see tmpdir/cvsexp.log" && exit 1 )
+	rm -f svnexp.log 
+	( cd tmpdir && svn export $(MPISVNHOME)/mpich2/tags/release/${tag} mpich2 > svnexp.log 2>&1 ) || (echo "svn export failed; see tmpdir/svnexp.log" && exit 1 )
 	mv tmpdir/mpi2test tmpdir/${PACKAGE}-${version}
 	( cd tmpdir/${PACKAGE}-${version} && maint/updatefiles -distrib )
 	( cd tmpdir && tar cf ${PACKAGE}-${version}.tar ${PACKAGE}-${version} )

@@ -1057,8 +1057,8 @@ tests are run on an occasional basis.
 
 % \begin{small}
 % \begin{verbatim}
-% 1) checkout the Intel test suite (cvs co IntelMPITEST) (outside users
-%    should access the most recent version of the test suite from the
+% 1) checkout the Intel test suite (svn co https://svn.mcs.anl.gov/repos/mpi/test_suites/intel/trunk IntelMPITEST) (outside users
+%    can access the most recent version of the test suite from the
 %    test suite web page).
 
 % 2) create a testing directory separate from the IntelMPITEST source
@@ -1117,12 +1117,13 @@ tests are run on an occasional basis.
 \section{Benchmarking}
 \label{sec:benchmarking}
 
-There are many benchmarking programs for MPI implementations.  Three that we
-use are \texttt{mpptest} (\url{http://www.mcs.anl.gov/mpi/mpptest}),
-\texttt{netpipe} (\url{http://www.scl.ameslab.gov/netpipe}), and
-\texttt{SkaMPI} (\url{http://liinwww.ira.uka.de/~skampi}).  Each of these has
-different strengths and weaknesses and reveals different properties of the MPI
-implementation.  
+There are many benchmarking programs for MPI implementations.  Three
+that we use are \texttt{mpptest}
+(\url{http://www.mcs.anl.gov/mpi/mpptest}), \texttt{netpipe}
+(\url{http://www.scl.ameslab.gov/netpipe}), and \texttt{SkaMPI}
+(\url{http://liinwww.ira.uka.de/~skampi}).  Each of these has
+different strengths and weaknesses and reveals different properties of
+the MPI implementation.
 
 In addition, the
 MPICH2 test suite contains a few programs to test for performance artifacts in

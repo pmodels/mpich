@@ -95,11 +95,11 @@ PACKAGE = mpich2
 # version on the configure output and to match the common practice of
 # current autoconfs
 VERSION = @VERSION@
-MPICVSHOME = @MPICVSHOME@
+MPISVNHOME = @MPISVNHOME@
 #
 # Build a distribution tarfile
 #  Extract into a temporary directory
-#     cvs update output into cvsexp.log to reduce the volume of noise
+#     svn update output into svnexp.log to reduce the volume of noise
 #     in the output
 #  Rename the directory
 #  Run updatefiles with distribution options
@@ -107,7 +107,7 @@ MPICVSHOME = @MPICVSHOME@
 dist: dist-check
 	@version=${VERSION} ; \
 	prever=`echo ${VERSION} | sed -e 's/^[^-]*//'` ; \
-	if [ "$$prever" = "-CVS" ] ; then version=$${version}-`date "+%Y%m%d%H%M"` ; fi ; \
+	if [ "$$prever" = "-SVN" ] ; then version=$${version}-`date "+%Y%m%d%H%M"` ; fi ; \
 	if [ -z "${TAG}" ] ; then tag=HEAD ; else tag=${TAG}; fi ; \
 	$(MAKE) version=$${version} tag=$${tag} doc=yes dist-with-version
 
@@ -136,8 +136,8 @@ dist-with-version:
 	    exit 1 ; fi 
 	@echo ""; echo "Cutting version ${version} of the MPICH2 distribution from tag ${tag}" ; echo ""
 	if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi 
-	rm -f cvsexp.log 
-	( cd tmpdir && cvs -d $(MPICVSHOME) export -r "${tag}" mpich2allWithMPE >cvsexp.log 2>&1 ) || (echo "cvs export failed; see tmpdir/cvsexp.log" && exit 1 )
+	rm -f svnexp.log 
+	( cd tmpdir && svn export $(MPISVNHOME)/mpich2/tags/release/${tag} mpich2 > svnexp.log 2>&1 ) || (echo "svn export failed; see tmpdir/svnexp.log" && exit 1 )
 	( cd tmpdir/mpich2 && sed -e "s/^VERSION = .*/VERSION = ${version}/" Makefile.sm >.tmp && mv .tmp Makefile.sm )
 	echo "${version}" >tmpdir/mpich2/maint/Version
 	mv tmpdir/mpich2 tmpdir/${PACKAGE}-${version}
@@ -191,7 +191,7 @@ dist-with-version:
 	    ( cd tmpdir/${PACKAGE}-${version}/src/mpe2/maint && ${MAKE} -f Makefile4man ) ; \
 	fi
 	( cd tmpdir/${PACKAGE}-${version} && maint/updatefiles -distrib )
-	( cd tmpdir/${PACKAGE}-${version} && find . -name 'CVS' -print | \
+	( cd tmpdir/${PACKAGE}-${version} && find . -name 'SVN' -print | \
 	    xargs @XARGS_NODATA_OPT@ rm -rf )
 	( cd tmpdir && tar cf ${PACKAGE}-${version}.tar ${PACKAGE}-${version} )
 	mv -f tmpdir/${PACKAGE}-${version}.tar . 
