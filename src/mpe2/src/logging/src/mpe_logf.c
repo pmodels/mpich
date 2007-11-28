@@ -117,8 +117,9 @@ int  d;
     p = (char *)malloc( d + 1 );
     if (!p) {
         fprintf( stderr,
-                 "MPE Fortran to C wrapper: malloc() fails! Aborting..." );
-        CLOG_Util_abort( 1 );
+                 "MPE Fort2C: malloc() failed! mpe_tmp_cpy returns NULL!..." );
+        fflush( stderr );
+        return NULL;
     }
     strncpy( p, s, d );
     p[d] = 0;
