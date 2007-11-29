@@ -312,6 +312,44 @@ if [ $mode = link ] ; then
 
 elif [ $mode = install ] ; then
     :
+elif [ $mode = uninstall ] ; then
+    # This uninstall mode takes slightly different arguments compared to
+    # libtool.  libtool takes a delete command and the file to be deleted,
+    # whereas this script takes the same args as the install mode in order to
+    # simplify logic.  This should be simple enough to fix in simplemake if we
+    # ever do switch over to libtool instead of this script.
+
+    # See if the destBaseName is included in the altnames.  If so,
+    # use the realName to form the destlibname instead
+    foundName=no
+    if [ -n "$altNames" -a -n "$destBaseName" ] ; then
+        for alt in $altNames ; do
+            if [ "$destBaseName" = "$alt" ] ; then
+                foundName=yes
+                break
+            fi
+        done
+    fi
+    if [ -z "$destlibname" -o $foundName = yes ] ; then
+        destlibname="$destdir/$realName"
+    fi
+    if [ -z "$destdir" ] ; then
+        echo "The destination directory was not set."
+        exit 1
+    fi
+    $Show cd $destdir
+    $Show rm -f $destlibname
+    if [ "$libtype" = "cygwin-gcc" ] ; then
+        # We must also install the import library
+        # Eventually, we might want to install the .dll and the .a 
+        # into different directories
+        $Show rm -f $destdir/$srclibbase.a
+    fi
+    if [ -n "$altNames" ] ; then
+        for alt in $altNames ; do
+            ( cd $destdir && $Show rm -f $alt )
+        done
+    fi
 else 
     echo "Unknown mode $mode"
     exit 1

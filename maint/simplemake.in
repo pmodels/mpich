@@ -357,6 +357,9 @@ $top_builddir_name =         "top_builddir    = \@master_top_builddir\@";
 		     'DOC'     => '$(INSTALL_DATA)',
 		     'ETC'     => '$(INSTALL_DATA)',
 		    );
+%uninstall_methods = ( 'SHLIB'   => '$(CREATESHLIB) --mode=uninstall',
+                       'DLLLIB'  => '$(CREATESHLIB) --mode=uninstall',
+                     );
 # These give the directories that autoconf will require for the 
 %required_dirs = ( 'libdir'      => 'exec_prefix prefix',
 		   'bindir'      => 'exec_prefix prefix',
@@ -3757,7 +3760,16 @@ sub TargetInstall {
 	foreach $file (split(/\s+/,$install_files{$kind})) {
 	    $destfile = $file;
 	    $destfile =~ s/.*\///;
-	    print FD "\t-rm -f \${DESTDIR}\${$dir}/$destfile$newline";
+            if (defined($uninstall_methods{$kind})) {
+                # This branch subtly different from the else branch below because it also passes the
+                # $file as the first argument.  Strictly speaking, this is not compatible with using
+                # libtool directly, so if we ever replace createshlib then we should rework this
+                # uninstall target just a bit. [goodell@mcs 2007-11-28]
+                print FD "\t$uninstall_methods{$kind} $file \${DESTDIR}\${$dir}/$destfile$newline";
+            }
+            else {
+                print FD "\t-rm -f \${DESTDIR}\${$dir}/$destfile$newline";
+            }
 	}
     }
     foreach $kind (keys(%optinstall_files)) {
@@ -3765,7 +3777,16 @@ sub TargetInstall {
 	foreach $file (split(/\s+/,$optinstall_files{$kind})) {
 	    $destfile = $file;
 	    $destfile =~ s/.*\///;
-	    print FD "\t-rm -f \${DESTDIR}\${$dir}/$destfile$newline";
+            if (defined($uninstall_methods{$kind})) {
+                # This branch subtly different from the else branch below because it also passes the
+                # $file as the first argument.  Strictly speaking, this is not compatible with using
+                # libtool directly, so if we ever replace createshlib then we should rework this
+                # uninstall target just a bit. [goodell@mcs 2007-11-28]
+                print FD "\t$uninstall_methods{$kind} $file \${DESTDIR}\${$dir}/$destfile$newline";
+            }
+            else {
+                print FD "\t-rm -f \${DESTDIR}\${$dir}/$destfile$newline";
+            }
 	}
     }
     # Handle uninstalls controlled by subdirs
