@@ -1,5 +1,5 @@
 # SUBDIRS_device_name are the names that @ devicename @ can take in SUBDIRS
-SUBDIRS_device_name = mm ch3 rdma globus
+SUBDIRS_device_name = ch3 globus
 SUBDIRS = @device_name@ common .
 # Remove PMPILIBNAME from the common make variables for the mpid
 # directories
