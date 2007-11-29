@@ -1,6 +1,9 @@
 IF "%1" == "" GOTO HELP
 IF "%1" == "--help" GOTO HELP
-IF "%CVS_HOST%" == "" set CVS_HOST=shakey.mcs.anl.gov
+REM ### SVN_HOST = SVN URL for extracting source code
+REM ### UNIX_HOST = Host used for running scripts remotely
+IF "%SVN_HOST%" == "" set SVN_HOST=https://svn.mcs.anl.gov
+IF "%UNIX_HOST%" == "" set UNIX_HOST=shakey.mcs.anl.gov
 GOTO AFTERHELP
 :HELP
 REM
@@ -46,10 +49,10 @@ GOTO AFTERCHECKOUT
 :CHECKOUT
 set CVS_RSH=ssh
 IF "%2" == "" GOTO CHECKOUT_HEAD
-cvs -d :ext:%USERNAME%@%CVS_HOST%:/home/MPI/cvsMaster export -r %2 mpich2allWithMPE
+svn --username %USERNAME% export -r %2 %SVN_HOST%/repos/mpi/mpich2/trunk mpich2
 GOTO AFTER_CHECKOUT_HEAD
 :CHECKOUT_HEAD
-cvs -d :ext:%USERNAME%@%CVS_HOST%:/home/MPI/cvsMaster export -r HEAD mpich2allWithMPE
+svn --username %USERNAME% export -r HEAD %SVN_HOST%/repos/mpi/mpich2/trunk mpich2
 :AFTER_CHECKOUT_HEAD
 if %errorlevel% NEQ 0 goto CVSERROR
 pushd mpich2
@@ -58,16 +61,14 @@ GOTO CONFIGURE
 IF "%1" == "--with-configure" GOTO CONFIGURE
 GOTO AFTERCONFIGURE
 :CONFIGURE
-REM bash -c "echo cd `pwd` && echo maint/updatefiles" > bashcmds.txt
-REM bash --login < bashcmds.txt
 echo cd /sandbox/%USERNAME% > sshcmds.txt
 echo mkdir dotintmp >> sshcmds.txt
 echo cd dotintmp >> sshcmds.txt
 if "%2" == "" GOTO EXPORT_HEAD
-echo cvs -d /home/MPI/cvsMaster export -r %2 mpich2allWithMPE >> sshcmds.txt
+echo svn export -r %2 %SVN_HOST%/repos/mpi/mpich2/trunk mpich2 >> sshcmds.txt
 GOTO AFTER_EXPORT_HEAD
 :EXPORT_HEAD
-echo cvs -d /home/MPI/cvsMaster export -r HEAD mpich2allWithMPE >> sshcmds.txt
+echo svn export -r HEAD %SVN_HOST%/repos/mpi/mpich2/trunk mpich2 >> sshcmds.txt
 :AFTER_EXPORT_HEAD
 echo cd mpich2 >> sshcmds.txt
 echo maint/updatefiles >> sshcmds.txt
@@ -75,9 +76,9 @@ echo tar cvf dotin.tar `find . -name "*.h.in"` >> sshcmds.txt
 echo gzip dotin.tar >> sshcmds.txt
 echo exit >> sshcmds.txt
 dos2unix sshcmds.txt
-ssh -l %USERNAME% %CVS_HOST% < sshcmds.txt
-scp %USERNAME%@%CVS_HOST%:/sandbox/%USERNAME%/dotintmp/mpich2/dotin.tar.gz .
-ssh -l %USERNAME% %CVS_HOST% rm -rf /sandbox/%USERNAME%/dotintmp
+ssh -l %USERNAME% %UNIX_HOST% < sshcmds.txt
+scp %USERNAME%@%UNIX_HOST%:/sandbox/%USERNAME%/dotintmp/mpich2/dotin.tar.gz .
+ssh -l %USERNAME% %UNIX_HOST% rm -rf /sandbox/%USERNAME%/dotintmp
 del sshcmds.txt
 tar xvfz dotin.tar.gz
 del dotin.tar.gz
