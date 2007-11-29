@@ -1,8 +1,0 @@
-INCLUDES = -I../../src/include -I${top_srcdir}/src/include
-LDADD = -L../../lib
-DEPADD = ../../lib/lib${MPILIBNAME}.a
-LIBS += @EXAMPLE_LIBS@
-# LIBS includes -lmpich and other libraries (e.g., -lpmpich if
-# weak symbols are not supported)
-mpiexec_SOURCES = mpiexec.c mpiexec_args.c
-#mpiexec_LDADD = -lm
