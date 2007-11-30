@@ -1,7 +1,7 @@
                       MPE (Multi-Processing Environment)
                       ----------------------------------
 
-                          Version 2.4.5. August, 2007
+                          Version 2.4.6. December, 2007
 
                     Mathematics and Computer Science Division
                            Argonne National Laboratory
@@ -264,6 +264,20 @@ MPE_TMPDIR: MPE_TMPDIR takes precedence over TMPDIR.  It specifies a
 
              Note : The final merged logfile will be written back to the 
                     file system where process 0 is.
+
+MPE_SAME_TMPDIR: The boolean value determines whether MPE_TMPDIR will be
+                 the same across the whole MPI_COMM_WORLD. By default,
+                 MPE_SAME_TMPDIR is set to true and only rank 0's MPE_TMPDIR
+                 will be broadcasted to every process. There is scalability
+                 implication on whether MPE_SAME_TMPDIR is true.  When
+                 MPE_SAME_TMPDIR=false, MPE_TMPDIR could be set differently
+                 on different processes and hence mkstemp() will be called
+                 once on each process to create temporary filename.  Calling
+                 mkstemp() on the same filesystem, e.g. $HOME, for each process
+                 is not scalable, i.e. the shared filesystem may be hanging.
+                 MPE_SAME_TMPDIR=false is provided for cases that MPE_TMPDIR
+                 has to be set differently on different process but it is
+                 in general not scalable when MPI_COMM_WORLD's size >> 1K.
 
 MPE_DELETE_LOCALFILE:  The boolean value determines whether to delete the
                        temporary local clog2 file.  When this flag is
