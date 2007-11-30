@@ -843,6 +843,8 @@ int MPE_Log_comm_event( MPI_Comm comm, int local_thread,
     return MPE_Log_commIDs_event( commIDs, local_thread, event, bytebuf );
 }
 
+
+#include "mpe_log_thread.h"
 /*@
     MPE_Log_event - Log an event in MPI_COMM_WORLD.
 
@@ -860,7 +862,15 @@ int MPE_Log_comm_event( MPI_Comm comm, int local_thread,
 @*/
 int MPE_Log_event( int event, int data, const char *bytebuf )
 {
-    return MPE_Log_commIDs_event( CLOG_CommSet->IDs4world, 0, event, bytebuf );
+    MPE_LOG_THREAD_DECL
+    int ierr;
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
+    ierr = MPE_Log_commIDs_event( CLOG_CommSet->IDs4world, THREADID, 
+                                  event, bytebuf );
+    MPE_LOG_THREAD_UNLOCK
+    return ierr;
 }
 
 /*@
@@ -929,7 +939,7 @@ void MPE_Log_thread_sync( int local_thread_count )
 }
 
 /* Declare clog_merged_filename same as CLOG_Merger_t.out_filename */
-static char clog_merged_filename[ CLOG_PATH_STRLEN ] = "0";
+static char clog_merged_filename[ CLOG_PATH_STRLEN ] = {0};
 
 /*@
     MPE_Finish_log - Send log to master, who writes it out
