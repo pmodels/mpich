@@ -3656,8 +3656,6 @@ int  MPI_Finalize( )
     }
     /* If the procname file is created OK, let everybody know */
     PMPI_Bcast( &isOK2procname, 1, MPI_INT, 0, MPI_COMM_WORLD );
-    fprintf( stdout, "isOK2procname = %d\n", isOK2procname );
-    fflush( stdout );
 
     if ( isOK2procname ) {
         PMPI_Get_processor_name( processor_name, &namelen );
@@ -3666,10 +3664,14 @@ int  MPI_Finalize( )
             idx = procid_0;
             fprintf( procname_file, "Rank %d : %s\n", idx, processor_name );
             for ( idx = 1; idx < world_size; idx++ ) {
-                PMPI_Recv( processor_name, LOGFILENAME_STRLEN, MPI_CHAR,
+                /*
+                MPI_Recv( &namelen, 1, MPI_INT,
+                          idx, PROCNAME_TAG, MPI_COMM_WORLD, &status );
+                MPI_Recv( processor_name, namelen, MPI_CHAR,
                            idx, PROCNAME_TAG, MPI_COMM_WORLD, &status );
-                fprintf( stdout, "recving procname from %d\n", idx );
-                fflush( stdout );
+                */
+                PMPI_Recv( processor_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
+                           idx, PROCNAME_TAG, MPI_COMM_WORLD, &status );
                 fprintf( procname_file, "Rank %d : %s\n", idx, processor_name );
             }
             fflush( procname_file );
@@ -3680,12 +3682,17 @@ int  MPI_Finalize( )
             
         }
         else {
-            PMPI_Send( processor_name, LOGFILENAME_STRLEN, MPI_CHAR,
+            /*
+            namelen += 1; // include the terminating NULL 
+            MPI_Send( &namelen, 1, MPI_INT, 0, PROCNAME_TAG, MPI_COMM_WORLD );
+            MPI_Send( processor_name, namelen, MPI_CHAR,
                        0, PROCNAME_TAG, MPI_COMM_WORLD );
-            fprintf( stdout, "sending procname to 0\n" );
-            fflush( stdout );
+            */
+            PMPI_Send( processor_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
+                       0, PROCNAME_TAG, MPI_COMM_WORLD );
         }
     }
+    PMPI_Barrier( MPI_COMM_WORLD );
 #endif
 
     MPE_LOG_THREAD_UNLOCK
