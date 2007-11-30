@@ -52,7 +52,7 @@
 
       call MPI_Comm_rank( MPI_COMM_WORLD, myid, ierr )
       call MPI_Comm_size( MPI_COMM_WORLD, numprocs, ierr )
-      print *, "Process ", myid, " of ", numprocs, " is alive"
+      write(6,*) "Process ", myid, " of ", numprocs, " is alive"
 
 ! Demonstrate the use of MPE_Log_state_eventIDs() and MPE_Log_solo_eventID()
 ! which replace the deprecated function MPE_Log_get_event_number.    
@@ -134,6 +134,7 @@
           endif
 
       enddo
+      call flush(6)
 
       call MPI_Finalize( ierr )
 
