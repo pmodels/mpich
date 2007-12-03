@@ -190,8 +190,12 @@ buildfiles_channel = "sock"
 '
 MPI_MAX_PROCESSOR_NAME = "128"
 MPI_AINT64               = "__int64"
+MPI_AINT64_FMT_DEC_SPEC  = "%I64d"
+MPI_AINT64_FMT_HEX_SPEC  = "%I64x"
 BSEND_OVERHEAD64         = "95"
 MPI_AINT32               = "int"
+MPI_AINT32_FMT_DEC_SPEC  = "%d"
+MPI_AINT32_FMT_HEX_SPEC  = "%x"
 BSEND_OVERHEAD32         = "59"
 MPI_FINT               = "int"
 'MPI_OFFSET             = "long long"
@@ -2206,6 +2210,18 @@ Function ReplaceAts( str, use_f77, b64 )
 					str = Replace(str, "@MPI_AINT@", MPI_AINT64)
 				else
 					str = Replace(str, "@MPI_AINT@", MPI_AINT32)
+				end if
+			Case "@MPI_AINT_FMT_DEC_SPEC@"
+				if b64 then
+					str = Replace(str, "@MPI_AINT_FMT_DEC_SPEC@", MPI_AINT64_FMT_DEC_SPEC)
+				else
+					str = Replace(str, "@MPI_AINT_FMT_DEC_SPEC@", MPI_AINT32_FMT_DEC_SPEC)
+				end if
+			Case "@MPI_AINT_FMT_HEX_SPEC@"
+				if b64 then
+					str = Replace(str, "@MPI_AINT_FMT_HEX_SPEC@", MPI_AINT64_FMT_HEX_SPEC)
+				else
+					str = Replace(str, "@MPI_AINT_FMT_HEX_SPEC@", MPI_AINT32_FMT_HEX_SPEC)
 				end if
 			Case "@MPI_FINT@"
 				str = Replace(str, "@MPI_FINT@", MPI_FINT)
