@@ -143,7 +143,11 @@
           endif
 
       enddo
-      call flush(6)
+!     - Only GNU fortran does not flush stdout, so calling flush() is 
+!       absolutely needed with GNU compiler to get all stdout messages.
+!     - XLF needs flush_() instead of flush() otherwise needs -qextname=flush
+!     - Pathscale fortran compiler needs -intrinsic=G77{or PGI}.
+!     call flush(6)
 
 #if defined( NO_MPI_LOGGING )
       ierr = MPE_FINISH_LOG( "nfpilog_pack" )
