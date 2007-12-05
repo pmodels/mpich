@@ -23,6 +23,8 @@
 #define USE_QUERYPERFORMANCECOUNTER 6
 #define USE_WIN86_CYCLE 7
 #define USE_GCC_IA64_CYCLE 8
+/* The value "USE_DEVICE" means that the ADI device provides the timer */
+#define USE_DEVICE 9
 #define MPICH_TIMER_KIND @MPICH_TIMER_KIND@
 
 #if MPICH_TIMER_KIND == USE_GETHRTIME 
