@@ -153,6 +153,10 @@ iotest@EXEEXT@: iotest.@OBJEXT@
 	$(MPE_CLINKER)mpilog $(CC_LDFLAGS) -o $@ $? $(DEBUG_LIBS) -lm
 #	$(MPI_CLINKER) $(CC_LDFLAGS) -o $@ $? $(LOG_LIBS) $(DEBUG_LIBS) -lm
 
+openmp_mpilog@EXEEXT@: openmp_mpilog.@OBJEXT@
+	$(MPE_FLINKER)mpilog $(FC_LDFLAGS) -o $@ $? $(DEBUG_LIBS) -lm
+#	$(MPI_FLINKER) $(FC_LDFLAGS) -o $@ $? $(LOG_FLIBS) $(DEBUG_LIBS) -lm
+
 comm1_isr@EXEEXT@: comm1_isr.@OBJEXT@
 	$(MPE_CLINKER)mpilog $(CC_LDFLAGS) -o $@ $? $(DEBUG_LIBS) -lm
 #	$(MPI_CLINKER) $(CC_LDFLAGS) -o $@ $? $(LOG_LIBS) $(DEBUG_LIBS) -lm
