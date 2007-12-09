@@ -196,7 +196,7 @@ dist-with-version:
 	    ( cd tmpdir/${PACKAGE}-${version}/src/mpe2/maint && ${MAKE} -f Makefile4man ) ; \
 	fi
 	( cd tmpdir/${PACKAGE}-${version} && maint/updatefiles -distrib )
-	( cd tmpdir/${PACKAGE}-${version} && find . -name 'SVN' -print | \
+	( cd tmpdir/${PACKAGE}-${version} && find . -name '.svn' -print | \
 	    xargs @XARGS_NODATA_OPT@ rm -rf )
 	( cd tmpdir && tar cf ${PACKAGE}-${version}.tar ${PACKAGE}-${version} )
 	mv -f tmpdir/${PACKAGE}-${version}.tar . 
