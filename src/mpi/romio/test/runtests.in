@@ -181,6 +181,16 @@ $mpirun -np 4 ./async -fname $FILENAME
 CleanExe async
 #
 OutTime
+testfiles="$testfiles async-multi.out"
+\rm -f async-multi.out
+MakeExe async-multiple
+\rm -f $FILENAME*
+echo '**** Testing async-multiple.c ****'
+$mpirun -np 4 ./async-multiple -fname $FILENAME
+# CheckOutput async-multiple
+CleanExe async-multiple
+#
+OutTime
 if [ $subset_only -eq 0 ] ; then 
 	testfiles="$testfiles atomicity.out"
 	\rm -f atomicity.out
