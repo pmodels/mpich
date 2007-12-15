@@ -224,7 +224,8 @@ int MPIR_Gather (
 
 			if (nbytes < MPIR_GATHER_VSMALL_MSG)
 			    offset = mask * nbytes;
-			else offset = 0;
+			else
+			    offset = (mask - 1) * nbytes;
 			mpi_errno = MPIC_Recv(((char *)tmp_buf + offset),
 					      recvblks * nbytes, MPI_BYTE, src,
 					      MPIR_GATHER_TAG, comm,
@@ -250,17 +251,11 @@ int MPIR_Gather (
 					  MPIR_GATHER_TAG, comm);
 		}
 		else {
-		    int offset;
-
-		    if (nbytes < MPIR_GATHER_VSMALL_MSG)
-			offset = nbytes;
-		    else offset = 0;
-
 		    blocks[0] = sendcnt;
 		    struct_displs[0] = (MPI_Aint) sendbuf;
 		    types[0] = sendtype;
 		    blocks[1] = curr_cnt - nbytes;
-		    struct_displs[1] = (MPI_Aint) ((char*) tmp_buf + offset);
+		    struct_displs[1] = (MPI_Aint) tmp_buf;
 		    types[1] = MPI_BYTE;
 
 		    NMPI_Type_create_struct(2, blocks, struct_displs, types, &tmp_type);
