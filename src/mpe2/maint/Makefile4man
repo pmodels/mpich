@@ -1,7 +1,8 @@
 #  Output Directory
 
-MAN_DIR  = ../man/man4
-HTML_DIR = ../html/www4
+EXTNUM   = 4
+MAN_DIR  = ../man/man$(EXTNUM)
+HTML_DIR = ../html/www$(EXTNUM)
 
 #  Input Directory
 
@@ -31,7 +32,7 @@ all:	man html
 man:	FORCE 
 	if [ ! -d $(MAN_DIR) ] ; then \
 		mkdir -p $(MAN_DIR) ; fi
-	$(DOCTEXT) -mpath $(MAN_DIR) $(DOC_OPT) \
+	$(DOCTEXT) -mpath $(MAN_DIR) $(DOC_OPT) -ext $(EXTNUM) \
 	                  $(REAL_TXT) $(REAL_SRC) $(REAL_TPL)
 FORCE:
 
@@ -44,4 +45,4 @@ html:	FORCE
 FORCE:
 
 clean:
-	rm -f $(MAN_DIR)/*.3 $(HTML_DIR)/*.html $(HTML_DIR)/*.cit
+	rm -f $(MAN_DIR)/*.$(EXTNUM) $(HTML_DIR)/*.html $(HTML_DIR)/*.cit
