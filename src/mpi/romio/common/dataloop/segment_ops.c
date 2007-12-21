@@ -174,7 +174,7 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 	{
 	    MPIDI_COPY_FROM_VEC(cbufp, paramp->streambuf, stride,
 				int64_t, blksz, whole_count);
-	    MPIDI_COPY_FROM_VEC(paramp->streambuf, cbufp, 0,
+	    MPIDI_COPY_FROM_VEC(cbufp, paramp->streambuf, 0,
 				int64_t, blocks_left, 1);
 	}
 	else if (el_size == 4
