@@ -4851,6 +4851,11 @@ for type in int long long_long short ; do
                 MPI_AINT_FMT_DEC_SPEC="%hd"
                 MPI_AINT_FMT_HEX_SPEC="%hx"
                 ;;
+            *)
+                AC_MSG_WARN([unable to determine format specifiers for MPI_Aint, defaulting to int])
+                MPI_AINT_FMT_DEC_SPEC="%d"
+                MPI_AINT_FMT_HEX_SPEC="%x"
+            ;;
         esac
         export MPI_AINT_FMT_DEC_SPEC MPI_AINT_FMT_HEX_SPEC
         break
