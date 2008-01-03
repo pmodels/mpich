@@ -243,12 +243,51 @@ we want to run multiple processes job in the "installcheck-all".
                              --host=powerpc-unknown-linux-gnu                 \
                              --build=powerpc-pc-linux-gnu                     \
                              --with-cross-spec=<build_spec_dir>/cross_spec.txt\
+                             --disable-safePMPI                               \
                              --disable-misc --disable-graphics                \
                              --disable-sample --disable-rlog
     make
     make install
     make installcheck
 
+
+    instructions for SiCortex (SC5812)
+    -------------------------------------
+
+    On the i686 linux cross-compiling frontend (bblogin)
+
+    **** Cross-Spec build ****
+    mkdir <build_spec_dir>
+    cd <build_spec_dir>
+    <mpe2_src_dir>/cross_spec/configure                                      \ 
+                              CC="scpathcc -n32"                             \
+                              F77="scpathf95 -fno-second-underscore -n32"    \
+                              MPI_CC="scmpicc --pathscale -n32"              \
+                              MPI_F77="scmpif90 -fno-second-underscore -n32" \
+                              LIBS=-lpthread                                 \
+                              --host=mips64el-gentoo-linux-gnu               \
+                              --build=x86_64_linux        
+    make
+
+    The above build is for n32 binary.  For 64-bit binary, replace -n32 by -64.
+    Now log onto sicortex's login node (fd-login)
+    to launch programs with srun to get the cross_spec.txt
+
+    srun -n 1 cross_cc
+    srun -n 1 cross_f2c
+    srun -n 1 cross_env
+
+    **** MPE2 build ****
+    mkdir <build_mpe2_for_backend>
+    cd <build_mpe2_for_backend>
+    <mpe2_src_dir>/configure --prefix=<mpe2_install_dir>                      \
+                             --host=mips64el-gentoo-linux-gnu                 \
+                             --build=x86-linux-gnu_linux                      \
+                             --with-cross-spec=<build_spec_dir>/cross_spec.txt\
+                             --disable-safePMPI
+    make
+    make install
+    make installcheck
 
 
     instructions for Cray X1E (Phoenix)
