@@ -736,6 +736,7 @@ int MPIDI_CH3_PktPrint_EagerSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 #endif
 }
 
+#if defined(USE_EAGER_SHORT)
 int MPIDI_CH3_PktPrint_EagerShortSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
     int datalen;
@@ -759,6 +760,7 @@ int MPIDI_CH3_PktPrint_EagerShortSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 	MPIU_DBG_PRINTF((" data ......... %s\n", databytes));
     }
 }
+#endif /* defined(USE_EAGER_SHORT) */
 
 int MPIDI_CH3_PktPrint_ReadySend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {

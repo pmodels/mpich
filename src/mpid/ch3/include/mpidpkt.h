@@ -6,6 +6,12 @@
 
 #ifndef HAVE_MPIDPKT_H
 #define HAVE_MPIDPKT_H
+
+/* Enable the use of data within the message packet for small messages */
+#define USE_EAGER_SHORT
+#define MPIDI_EAGER_SHORT_INTS 4
+#define MPIDI_EAGER_SHORT_SIZE 16
+
 /*
  * MPIDI_CH3_Pkt_type_t
  *
@@ -13,7 +19,9 @@
 typedef enum MPIDI_CH3_Pkt_type
 {
     MPIDI_CH3_PKT_EAGER_SEND = 0,
+#if defined(USE_EAGER_SHORT)
     MPIDI_CH3_PKT_EAGERSHORT_SEND,
+#endif /* defined(USE_EAGER_SHORT) */
     MPIDI_CH3_PKT_EAGER_SYNC_SEND,    /* FIXME: no sync eager */
     MPIDI_CH3_PKT_EAGER_SYNC_ACK,
     MPIDI_CH3_PKT_READY_SEND,
@@ -61,10 +69,8 @@ MPIDI_CH3_Pkt_send_t;
 typedef MPIDI_CH3_Pkt_send_t MPIDI_CH3_Pkt_eager_send_t;
 typedef MPIDI_CH3_Pkt_send_t MPIDI_CH3_Pkt_eager_sync_send_t;
 typedef MPIDI_CH3_Pkt_send_t MPIDI_CH3_Pkt_ready_send_t;
-/* Enable the use of data within the message packet for small messages */
-#define USE_EAGER_SHORT
-#define MPIDI_EAGER_SHORT_INTS 4
-#define MPIDI_EAGER_SHORT_SIZE 16
+
+#if defined(USE_EAGER_SHORT)
 typedef struct MPIDI_CH3_Pkt_eagershort_send
 {
     MPIDI_CH3_Pkt_type_t type;  /* XXX - uint8_t to conserve space ??? */
@@ -76,6 +82,7 @@ typedef struct MPIDI_CH3_Pkt_eagershort_send
     int  data[MPIDI_EAGER_SHORT_INTS];    /* FIXME: Experimental for now */
 }
 MPIDI_CH3_Pkt_eagershort_send_t;
+#endif /* defined(USE_EAGER_SHORT) */
 
 typedef struct MPIDI_CH3_Pkt_eager_sync_ack
 {
@@ -249,7 +256,9 @@ typedef union MPIDI_CH3_Pkt
 {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_eager_send_t eager_send;
+#if defined(USE_EAGER_SHORT)
     MPIDI_CH3_Pkt_eagershort_send_t eagershort_send;
+#endif /* defined(USE_EAGER_SHORT) */
     MPIDI_CH3_Pkt_eager_sync_send_t eager_sync_send;
     MPIDI_CH3_Pkt_eager_sync_ack_t eager_sync_ack;
     MPIDI_CH3_Pkt_eager_send_t ready_send;
