@@ -11,8 +11,7 @@ Here are the instructions for setting up the mpich2 development environment on a
 
     Bring up a command prompt.
     (replace "yourname" with your MCS login name):
-    set CVS_RSH=ssh
-    cvs -d :ext:yourname@shakey.mcs.anl.gov:/home/MPI/cvsMaster checkout mpich2all
+    svn co https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk mpich2
 
 2) Generate *.h.in
 
