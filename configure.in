@@ -121,12 +121,14 @@ dnl conf file will not be consistent.
 dnl define([AC_PACKAGE_STRING],[MPICH2 1.0.6])
 dnl AC_INIT(mpich2,1.0.6,mpich2-maint@mcs.anl.gov,mpich2-1.0.6)
 dnl Use the oldstyle AC_INIT instead
+
 AC_INIT(src/include/mpichconf.h.in)
+
 # Try to find the version
 if test -s "$srcdir/maint/Version" ; then
     VERSION="`cat $srcdir/maint/Version`"
 else
-    VERSION="1.0.6"
+    AC_MSG_ERROR([Version information not found. Configuration aborted.])
 fi
 if test -s "$srcdir/maint/ReleaseDate" ; then
     RELEASE_DATE="`cat $srcdir/maint/ReleaseDate`"
