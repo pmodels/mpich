@@ -23,7 +23,6 @@
 
 extern const char MPIR_Version_string[];
 extern const char MPIR_Version_date[];
-extern const char MPIR_Version_patch_string[];
 extern const char MPIR_Version_configure[];
 extern const char MPIR_Version_device[];
 extern const char MPIR_Version_CC[];
@@ -110,9 +109,6 @@ int main( int argc, char *argv[] )
 	printf( "MPICH2 CXX: \t%s\n", MPIR_Version_CXX );
 	printf( "MPICH2 F77: \t%s\n", MPIR_Version_F77 );
 	printf( "MPICH2 F90: \t%s\n", MPIR_Version_F90 );
-    }
-    if (flags[Patches]) {
-	printf( "MPICH2 Patch level: \t %s\n", MPIR_Version_patch_string );
     }
 
     return 0;

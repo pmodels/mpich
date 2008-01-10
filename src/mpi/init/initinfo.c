@@ -15,7 +15,6 @@
 */
 const char MPIR_Version_string[]       = MPICH2_VERSION;
 const char MPIR_Version_date[]         = MPICH2_VERSION_DATE;
-const char MPIR_Version_patch_string[] = MPICH2_PATCH_STRING;
 const char MPIR_Version_configure[]    = MPICH2_CONFIGURE_ARGS_CLEAN;
 const char MPIR_Version_device[]       = MPICH2_DEVICE;
 const char MPIR_Version_CC[]           = MPICH2_COMPILER_CC;

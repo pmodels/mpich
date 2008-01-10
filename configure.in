@@ -124,12 +124,10 @@ dnl Use the oldstyle AC_INIT instead
 
 AC_INIT(src/include/mpichconf.h.in)
 
-# Try to find the version
-if test -s "$srcdir/maint/Version" ; then
-    VERSION="`cat $srcdir/maint/Version`"
-else
-    AC_MSG_ERROR([Version information not found. Configuration aborted.])
-fi
+CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
+AC_SUBST(CONFIGURE_ARGS_CLEAN)
+
+# Try to find the release date
 if test -s "$srcdir/maint/ReleaseDate" ; then
     RELEASE_DATE="`cat $srcdir/maint/ReleaseDate`"
 else
@@ -137,23 +135,56 @@ else
 fi
 AC_SUBST(RELEASE_DATE)
 
-CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
-AC_SUBST(CONFIGURE_ARGS_CLEAN)
-# Produce a numeric version assuming that the version is of the form
-# x.yy.zz, prefixing zeros for single digit verison numbers
-changequote(<<,>>)
-V1=`expr $VERSION : '\([0-9]*\)\..*'`
-V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)\..*'`
-V3=`expr $VERSION : '[0-9]*\.[0-9]*\.\([0-9]*\)'`
-changequote([,])
+# Try to find the version
+if test -s "$srcdir/maint/Version" ; then
+    VERSION="`cat $srcdir/maint/Version`"
+else
+    AC_MSG_ERROR([Version information not found. Configuration aborted.])
+fi
+
+# Produce a numeric version assuming the following format:
+# Version: [MAJ].[MIN].[REV][EXT][EXT_NUMBER]
+# Example: 1.0.7rc1 has
+#          MAJ = 1
+#          MIN = 0
+#          REV = 7
+#          EXT = rc
+#          EXT_NUMBER = 1
 #
+# Converting to numeric version will convert EXT to a format number:
+#          ALPHA (a) = 0
+#          BETA (b)  = 1
+#          RC (rc)   = 2
+#          PATCH (p) = 3
+# Regular releases are treated as patch 0
+#
+# Numeric version will have 1 digit for MAJ, 2 digits for MIN,
+# 2 digits for REV, 1 digit for EXT and 1 digit for EXT_NUMBER.
+changequote(<<,>>)
+V1=`expr $VERSION : '\([0-9]*\)\.[0-9]*\.[0-9]*[a-zA-Z]*[0-9]*'`
+V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)\.[0-9]*[a-zA-Z]*[0-9]*'`
+V3=`expr $VERSION : '[0-9]*\.[0-9]*\.\([0-9]*\)[a-zA-Z]*[0-9]*'`
+V4=`expr $VERSION : '[0-9]*\.[0-9]*\.[0-9]*\([a-zA-Z]*\)[0-9]*'`
+V5=`expr $VERSION : '[0-9]*\.[0-9]*\.[0-9]*[a-zA-Z]*\([0-9]*\)'`
+changequote([,])
+
 if test "$V2" -lt 9 ; then V2=0$V2 ; fi
 if test "$V3" -lt 9 ; then V3=0$V3 ; fi
-NUMVERSION=$V1$V2$V3
+if test "$V4" = "a" ; then
+    V4=0
+elif test "$V4" = "b" ; then
+    V4=1
+elif test "$V4" = "rc" ; then
+    V4=2
+elif test "$V4" = "" ; then
+    V4=3
+    V5=0
+elif test "$V4" = "p" ; then
+    V4=3
+fi
+
+NUMVERSION=$V1$V2$V3$V4$V5
 AC_SUBST(NUMVERSION)
-dnl if test "$VERSION" != "$PACKAGE_VERSION" ; then
-dnl     AC_MSG_WARN([PACKAGE_VERSION = $PACKAGE_VERSION but VERSION = $VERSION])
-dnl fi
 AC_SUBST(VERSION)
 
 #
