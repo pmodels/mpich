@@ -417,6 +417,17 @@ or
 
 on the configure command line.
 
+For the best performance, the "nemesis" channel should be picked
+unless one of the following cases is true:
+
+ * The target platform is not an Intel 32-bit or Intel/AMD 64-bit
+(x86_64) machine.
+
+ * The target operating systems is not Linux.
+
+ * Dynamic processes (part of the MPI-2 standard) are needed.
+
+
 A new channel supports the dynamic loading of other channels.  To use this
 channel, configure with
 
