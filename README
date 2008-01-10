@@ -399,15 +399,17 @@ specified explicitly by putting
 
   --with-device=ch3:sock
 
-on the configure command line.  The ch3 device has two other channels
-which are rigorously tested: "shm" (shared memory) for use on SMPs (all
-communication goes through shared memory instead of over TCP sockets)
-and "ssm" (sockets and shared memory) for use on clusters of SMPs
-(communication between processes on the same machine goes through shared
-memory; communication between processes on different machines goes over
-sockets).  Configure these by putting
+on the configure command line.  The ch3 device has three other
+channels which are rigorously tested: "nemesis" for high-performance
+communication on shared memory as well as different network stacks
+(tcp, ib, sctp and myrinet), "shm" (shared memory) for use on SMPs
+(all communication goes through shared memory instead of over TCP
+sockets) and "ssm" (sockets and shared memory) for use on clusters of
+SMPs (communication between processes on the same machine goes through
+shared memory; communication between processes on different machines
+goes over sockets).  Configure these by putting
 
-  --with-device=ch3:shm
+  --with-device=ch3:nemesis
 
 or 
 
@@ -420,10 +422,10 @@ channel, configure with
 
   --with-device=ch3:dllchan:sock,shm,ssm 
 
-(This provides the sock, shm, and ssm channels as options, with sock being 
-the default.)  In addition, you must specify the shared library type; under
-Linux and when using gcc (or compilers that mimic gcc for shared-library 
-construction) add
+(This provides the sock, shm, and ssm channels as options, with sock
+being the default.)  In addition, you must specify the shared library
+type; under Linux and when using gcc (or compilers that mimic gcc for
+shared-library construction) add
 
    --enable-sharedlibs=gcc
 
@@ -431,11 +433,11 @@ On Mac OSX, use
 
    --enable-sharedlibs=gcc-osx
 
-This is an experimental channel in the 1.0.6 release.  To select a channel
-other than the default channel, set the environment variable MPICH_CH3CHANNEL
-to the channel name (i.e., sock, shm, or ssm).  If the process manager is
-gforker, you can also use a commandline option to mpiexec; specify
--channel=name, as in
+This is an experimental channel in the current release.  To select a
+channel other than the default channel, set the environment variable
+MPICH_CH3CHANNEL to the channel name (i.e., sock, shm, or ssm).  If
+the process manager is gforker, you can also use a commandline option
+to mpiexec; specify -channel=name, as in
 
     mpiexec -n 4 -channel=shm a.out
 
@@ -451,11 +453,6 @@ The sshm (scalable shared memory) channel is not supported for
 RMA optimizations (the immediate method as opposed to the deferred
 method used in other channels for implementing the synchronization in
 MPI-2 one-sided communication). 
-
-The InfiniBand (ib) channel has not been kept up to date in a long time
-and hence we have not included it in this release. If you need to use
-MPI on InfiniBand, we recommend using MVAPICH2 or MVAPICH from Ohio
-State Univ.   http://nowlab.cse.ohio-state.edu/projects/mpi-iba/
 
 The Nemesis channel is a new low-latency channel that uses shared
 memory for intra-node communication and various networks for
