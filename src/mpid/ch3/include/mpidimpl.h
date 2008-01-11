@@ -1429,6 +1429,7 @@ void MPIDI_CH3_FreeParentPort( void );
   PMI interface.
 E*/
 int MPIDI_CH3_Abort(int exit_code, char * error_msg);
+void MPIDI_Exit(int);
 
 /* FIXME: Move these prototypes into header files in the appropriate 
    util directories  */

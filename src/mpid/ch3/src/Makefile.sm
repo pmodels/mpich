@@ -37,6 +37,7 @@ lib${MPILIBNAME}_a_SOURCES =	\
     mpid_startall.c		\
     mpid_vc.c			\
     mpid_rma.c			\
+    mpidi_exit.c                \
     mpidi_isend_self.c		\
     mpidi_pg.c			\
     mpidi_printf.c		@MPID_THREAD_SOURCES@

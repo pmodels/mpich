@@ -338,7 +338,7 @@ int PMI_Finalize( )
 int PMI_Abort(int exit_code, const char error_msg[])
 {
     PMIU_printf(1, "aborting job:\n%s\n", error_msg);
-    exit(exit_code);
+    MPIDI_Exit(exit_code);
     return -1;
 }
 

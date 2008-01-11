@@ -24,7 +24,7 @@ int MPIDI_CH3_Abort(int exit_code, char *error_msg)
     MPIU_Error_printf("%s", error_msg);
     fflush(stderr);
 
-    exit (exit_code);
+    MPIDI_Exit(exit_code);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ABORT);
     return MPI_ERR_INTERN;
