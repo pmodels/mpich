@@ -34,6 +34,11 @@ PAC_LOAD_BASE_CACHE
 export sock_name
 AC_SUBST(sock_name)
 
+# Adding this prevents the pesky "(strerror() not found)" problem, which can be very frustrating in
+# the sock code, the most likely to receive an error code from the system.  This is yet another
+# example of the shakey build system for the src/mpid/common directories. [goodell@ 2008-01-10]
+AC_CHECK_FUNCS(strerror)
+
 PAC_PROG_MAKE
 AC_CHECK_PROGS(AR,ar)
 if test -z "$AR" ; then
