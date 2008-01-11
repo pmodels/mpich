@@ -168,8 +168,8 @@ V4=`expr $VERSION : '[0-9]*\.[0-9]*\.[0-9]*\([a-zA-Z]*\)[0-9]*'`
 V5=`expr $VERSION : '[0-9]*\.[0-9]*\.[0-9]*[a-zA-Z]*\([0-9]*\)'`
 changequote([,])
 
-if test "$V2" -lt 9 ; then V2=0$V2 ; fi
-if test "$V3" -lt 9 ; then V3=0$V3 ; fi
+if test "$V2" -le 9 ; then V2=0$V2 ; fi
+if test "$V3" -le 9 ; then V3=0$V3 ; fi
 if test "$V4" = "a" ; then
     V4=0
 elif test "$V4" = "b" ; then
@@ -182,6 +182,7 @@ elif test "$V4" = "" ; then
 elif test "$V4" = "p" ; then
     V4=3
 fi
+if test "$V5" -le 9 ; then V5=0$V5 ; fi
 
 NUMVERSION=$V1$V2$V3$V4$V5
 AC_SUBST(NUMVERSION)
