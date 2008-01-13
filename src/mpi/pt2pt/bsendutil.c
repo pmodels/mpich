@@ -247,6 +247,7 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
 		      BsendKind_t kind, MPID_Request **request )
 {
     BsendData_t *p;
+    BsendMsg_t *msg;
     int packsize, mpi_errno, pass;
     MPIU_THREADPRIV_DECL;
 
@@ -281,17 +282,19 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
 	    MPIU_DBG_MSG_FMT(BSEND,TYPICAL,(MPIU_DBG_FDEST,
                      "found buffer of size %d with address %p",packsize,p));
 	    /* Found a segment */
+
+	    msg = &p->msg;
 	    
 	    /* Pack the data into the buffer */
 	    /* We may want to optimize for the special case of
 	       either primative or contiguous types, and just
 	       use memcpy and the provided datatype */
-	    p->msg.count = 0;
-	    (void)NMPI_Pack( buf, count, dtype, p->msg.msgbuf, packsize, 
-			     &p->msg.count, comm_ptr->handle );
+	    msg->count = 0;
+	    (void)NMPI_Pack( buf, count, dtype, msg->msgbuf, packsize, 
+			     &msg->count, comm_ptr->handle );
 	    /* Try to send the message.  We must use MPID_Isend
 	       because this call must not block */
-	    mpi_errno = MPID_Isend(p->msg.msgbuf, p->msg.count, MPI_PACKED, 
+	    mpi_errno = MPID_Isend(msg->msgbuf, msg->count, MPI_PACKED, 
 				   dest, tag, comm_ptr,
 				   MPID_CONTEXT_INTRA_PT2PT, &p->request );
 	    if (p->request) {
