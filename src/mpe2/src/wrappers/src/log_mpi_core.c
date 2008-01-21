@@ -859,6 +859,11 @@ void MPE_Init_mpi_core( void )
     state->name = "MPI_Gather";
     state->format = NULL;
 
+    state = &states[MPE_GATHERV_ID];
+    state->kind_mask = MPE_KIND_COLL;
+    state->name = "MPI_Gatherv";
+    state->format = NULL;
+
     state = &states[MPE_OP_CREATE_ID];
     state->kind_mask = MPE_KIND_ENV;
     state->name = "MPI_Op_create";
