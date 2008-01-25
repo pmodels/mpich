@@ -87,7 +87,7 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code,
 #endif
 
     /* ch3_abort should not return but if it does, exit here */
-    MPIDI_Exit(exit_code);
+    MPIU_Exit(exit_code);
     
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_ABORT);
     return MPI_ERR_INTERN;

@@ -4,13 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpidimpl.h"
+#include "mpiimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Exit
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-void MPIDI_Exit(int exit_code)
+void MPIU_Exit(int exit_code)
 {
 #ifdef HAVE_WINDOWS_H
     /* exit can hang if libc fflushes output while in/out/err buffers are locked.  ExitProcess does not hang. */
