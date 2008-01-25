@@ -135,6 +135,7 @@ typedef struct MPIDI_CH3I_VC
     volatile struct MPID_nem_copy_buf *lmt_copy_buf;
     char *lmt_copy_buf_handle;
     int lmt_buf_num;
+    MPIDI_msg_sz_t lmt_surfeit;
     struct {struct MPID_nem_lmt_shm_wait_element *head, *tail;} lmt_queue;
     struct MPID_nem_lmt_shm_wait_element *lmt_active_lmt;
     int lmt_enqueued; /* FIXME: used for debugging */
