@@ -313,6 +313,15 @@ if [ $subset_only -eq 0 ] ; then
 	CleanExe shared_fp
 	#
 	OutTime
+	testfiles="$testfiles ordered_fp.out"
+	\rm -f ordered_fp.out
+	MakeExe ordered_fp
+	\rm -f $FILENAME*
+	echo '**** Testing ordered_fp.c ****'
+	$mpirun -np 4 ./ordered_fp -fname $FILENAME
+	CleanExe ordered_fp
+	#
+	OutTime
 fi
 testfiles="$testfiles split_coll.out"
 \rm -f split_coll.out
