@@ -635,6 +635,12 @@ Performance Options:
  --enable-timing=no - Turns off just the collection of internal timing
                  information
 
+ --enable-ndebug - Turns on NDEBUG, which disables asserts. This is a
+		subset of the optimizations provided by enable-fast,
+		but is useful in environments where the user wishes
+		to retain the debug symbols, e.g., this can be combined
+		with the --enable-g option.
+
 MPI Features:
 
   --enable-romio - Build the ROMIO implementation of MPI-IO.  This is
