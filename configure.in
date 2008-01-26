@@ -297,6 +297,15 @@ AC_ARG_ENABLE(fast,
 [--enable-fast - pick the appropriate options for fast execution.  This
                 turns off error checking and timing collection],,
 enable_fast=no)
+
+AC_ARG_ENABLE(ndebug,
+[--enable-ndebug - Set NDEBUG and disable asserts],enable_ndebug=$enableval,
+enable_ndebug=no)
+
+if test "$enable_ndebug" = "yes" ; then
+    AC_DEFINE(NDEBUG,1,[Define to suppress assertions])
+fi
+
 dnl
 dnl We enable f77 and f90 if we can find compilers for them.
 dnl In addition, we check whether f77 and f90 can work together.
