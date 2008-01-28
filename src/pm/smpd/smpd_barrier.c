@@ -135,8 +135,8 @@ int smpd_handle_barrier_command(smpd_context_t *context)
 		/* zero out to help catch access after free errors */
 		memset(iter->in_array, 0, sizeof(smpd_barrier_in_t) * iter->count);
 		memset(iter, 0, sizeof(smpd_barrier_node_t));
-		free(iter->in_array);
-		free(iter);
+		MPIU_Free(iter->in_array);
+		MPIU_Free(iter);
 	    }
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_SUCCESS;
@@ -148,7 +148,7 @@ int smpd_handle_barrier_command(smpd_context_t *context)
 
     /* this is the first guy in so create a new barrier structure and add it to the list */
     smpd_dbg_printf("initializing barrier(%s): in=1 size=%d\n", name, count);
-    iter = (smpd_barrier_node_t*)malloc(sizeof(smpd_barrier_node_t));
+    iter = (smpd_barrier_node_t*)MPIU_Malloc(sizeof(smpd_barrier_node_t));
     if (iter == NULL)
     {
 	smpd_err_printf("unable to allocate a barrier node.\n");
@@ -158,10 +158,10 @@ int smpd_handle_barrier_command(smpd_context_t *context)
     strcpy(iter->name, name);
     iter->count = count;
     iter->in = 1;
-    iter->in_array = (smpd_barrier_in_t*)malloc(count * sizeof(smpd_barrier_in_t));
+    iter->in_array = (smpd_barrier_in_t*)MPIU_Malloc(count * sizeof(smpd_barrier_in_t));
     if (iter->in_array == NULL)
     {
-	free(iter);
+	MPIU_Free(iter);
 	smpd_err_printf("unable to allocate a barrier in array of size %d\n", count);
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;

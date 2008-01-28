@@ -27,7 +27,7 @@ static int root_port;
 static int FmtEnvVarsForSSH(char *bEnv, char *fmtEnv, int fmtEnvLen)
 {
     char name[SMPD_MAX_ENV_LENGTH], equals[3], value[SMPD_MAX_ENV_LENGTH];
-    int curLen = -1;
+    int curLen = 0, totLen = 0;
 
     smpd_enter_fn(FCNAME);
     if(fmtEnv && bEnv){
@@ -50,12 +50,13 @@ static int FmtEnvVarsForSSH(char *bEnv, char *fmtEnv, int fmtEnvLen)
 	     break;
 	 MPIU_Snprintf(fmtEnv, fmtEnvLen, " \"%s=%s\"", name, value);
 	 curLen = strlen(fmtEnv);
+	 totLen += curLen;
 	 fmtEnv += curLen;
-	 fmtEnvLen = SMPD_MAX_ENV_LENGTH - curLen;
+	 fmtEnvLen -= curLen;
      }
     }
     smpd_exit_fn(FCNAME);
-    return curLen;
+    return totLen;
 }
 
 static int setup_stdin_redirection(smpd_process_t *process, MPIDU_Sock_set_t set)
@@ -355,7 +356,7 @@ int mpiexec_rsh()
 	}
     }
 
-    processes = (smpd_process_t**)malloc(sizeof(smpd_process_t*) * smpd_process.launch_list->nproc);
+    processes = (smpd_process_t**)MPIU_Malloc(sizeof(smpd_process_t*) * smpd_process.launch_list->nproc);
     if (processes == NULL)
     {
 	smpd_err_printf("unable to allocate process array.\n");
@@ -464,12 +465,12 @@ int mpiexec_rsh()
 	    int curLen = 0;
 	    MPIU_Snprintf(pExe, SMPD_MAX_EXE_LENGTH, "%s %s env", ssh_cmd, launch_node_ptr->hostname);
 	    curLen = strlen(process->exe);
-	    pExe += curLen;
+	    pExe = process->exe + curLen;
             if(FmtEnvVarsForSSH(launch_node_ptr->env, fmtEnv, fmtEnvLen)){
                 /* Add user specified env vars */
                 MPIU_Snprintf(pExe, SMPD_MAX_EXE_LENGTH - curLen, "%s", fmtEnv);
 		curLen = strlen(process->exe);
-		pExe += curLen;
+		pExe = process->exe + curLen;
 	    }
 	    MPIU_Snprintf(pExe, SMPD_MAX_EXE_LENGTH - curLen, " \"PMI_RANK=%d\" \"PMI_SIZE=%d\" \"PMI_KVS=%s\" \"PMI_ROOT_HOST=%s\" \"PMI_ROOT_PORT=%d\" \"PMI_ROOT_LOCAL=0\" \"PMI_APPNUM=%d\" \"%s\"",
 		launch_node_ptr->iproc, launch_node_ptr->nproc, smpd_process.kvs_name, root_host, root_port, launch_node_ptr->appnum, exe);

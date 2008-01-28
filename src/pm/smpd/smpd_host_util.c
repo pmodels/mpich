@@ -44,7 +44,7 @@ int smpd_parse_map_string(const char *str, smpd_map_drive_node_t **list)
     cur_pos = str;
     while (cur_pos[0] != '\0' && cur_pos[1] == ':')
     {
-	map_node = (smpd_map_drive_node_t*)malloc(sizeof(smpd_map_drive_node_t));
+	map_node = (smpd_map_drive_node_t*)MPIU_Malloc(sizeof(smpd_map_drive_node_t));
 	if (map_node == NULL)
 	{
 	    smpd_err_printf("Error: malloc failed to allocate map structure.\n");
@@ -61,7 +61,7 @@ int smpd_parse_map_string(const char *str, smpd_map_drive_node_t **list)
 	    /* buffer overrun check */
 	    if (iter == &map_node->share[SMPD_MAX_EXE_LENGTH])
 	    {
-		free(map_node);
+		MPIU_Free(map_node);
 		smpd_exit_fn(FCNAME);
 		return SMPD_FAIL;
 	    }
@@ -412,7 +412,7 @@ SMPD_BOOL smpd_parse_machine_file(char *file_name)
 	    {
 		nproc = 1;
 	    }
-	    node = (smpd_host_node_t*)malloc(sizeof(smpd_host_node_t));
+	    node = (smpd_host_node_t*)MPIU_Malloc(sizeof(smpd_host_node_t));
 	    if (node == NULL)
 	    {
 		smpd_err_printf("unable to allocate memory to parse the machinefile\n");
@@ -520,7 +520,7 @@ int smpd_parse_hosts_string(const char *host_str)
 	    {
 		nproc = 1;
 	    }
-	    node = (smpd_host_node_t*)malloc(sizeof(smpd_host_node_t));
+	    node = (smpd_host_node_t*)MPIU_Malloc(sizeof(smpd_host_node_t));
 	    if (node == NULL)
 	    {
 		smpd_err_printf("unable to allocate memory to parse the hosts string <%s>\n", host_str);
@@ -594,12 +594,12 @@ int smpd_get_host_id(char *host, int *id_ptr)
     /* allocate a new node */
     if (node != NULL)
     {
-	node->next = (smpd_host_node_t *)malloc(sizeof(smpd_host_node_t));
+	node->next = (smpd_host_node_t *)MPIU_Malloc(sizeof(smpd_host_node_t));
 	node = node->next;
     }
     else
     {
-	node = (smpd_host_node_t *)malloc(sizeof(smpd_host_node_t));
+	node = (smpd_host_node_t *)MPIU_Malloc(sizeof(smpd_host_node_t));
 	smpd_process.host_list = node;
     }
     if (node == NULL)
@@ -683,7 +683,7 @@ int smpd_get_next_host(smpd_host_node_t **host_node_pptr, smpd_launch_node_t *la
     if (host_node_ptr->nproc == 0)
     {
 	(*host_node_pptr) = (*host_node_pptr)->next;
-	free(host_node_ptr);
+	MPIU_Free(host_node_ptr);
 	host_node_ptr = *host_node_pptr;
 	if (host_node_ptr == NULL)
 	{
@@ -705,7 +705,7 @@ int smpd_get_next_host(smpd_host_node_t **host_node_pptr, smpd_launch_node_t *la
     if (host_node_ptr->nproc == 0)
     {
 	(*host_node_pptr) = (*host_node_pptr)->next;
-	free(host_node_ptr);
+	MPIU_Free(host_node_ptr);
     }
 
     smpd_exit_fn(FCNAME);

@@ -217,15 +217,15 @@ int smpd_handle_stdin_command(smpd_context_t *context)
 	    {
 		if (piter->stdin_write_list != NULL)
 		{
-		    node = (smpd_stdin_write_node_t*)malloc(sizeof(smpd_stdin_write_node_t));
+		    node = (smpd_stdin_write_node_t*)MPIU_Malloc(sizeof(smpd_stdin_write_node_t));
 		    if (node == NULL)
 			smpd_write(piter->in->sock, data, num_decoded);
 		    else
 		    {
-			node->buffer = (char*)malloc(num_decoded);
+			node->buffer = (char*)MPIU_Malloc(num_decoded);
 			if (node->buffer == NULL)
 			{
-			    free(node);
+			    MPIU_Free(node);
 			    smpd_write(piter->in->sock, data, num_decoded);
 			}
 			else
@@ -255,15 +255,15 @@ int smpd_handle_stdin_command(smpd_context_t *context)
 			if (num_written != num_decoded)
 			{
 			    /* If not all the data is written, copy it to a temp buffer and post a write for the remaining data */
-			    node = (smpd_stdin_write_node_t*)malloc(sizeof(smpd_stdin_write_node_t));
+			    node = (smpd_stdin_write_node_t*)MPIU_Malloc(sizeof(smpd_stdin_write_node_t));
 			    if (node == NULL)
 				smpd_write(piter->in->sock, &data[num_written], num_decoded-num_written);
 			    else
 			    {
-				node->buffer = (char*)malloc(num_decoded-num_written);
+				node->buffer = (char*)MPIU_Malloc(num_decoded-num_written);
 				if (node->buffer == NULL)
 				{
-				    free(node);
+				    MPIU_Free(node);
 				    smpd_write(piter->in->sock, &data[num_written], num_decoded-num_written);
 				}
 				else
@@ -535,7 +535,7 @@ static int create_process_group(int nproc, char *kvs_name, smpd_process_group_t 
     smpd_enter_fn(FCNAME);
 
     /* initialize a new process group structure */
-    pg = (smpd_process_group_t*)malloc(sizeof(smpd_process_group_t));
+    pg = (smpd_process_group_t*)MPIU_Malloc(sizeof(smpd_process_group_t));
     if (pg == NULL)
     {
 	smpd_err_printf("unable to allocate memory for a process group structure.\n");
@@ -547,7 +547,7 @@ static int create_process_group(int nproc, char *kvs_name, smpd_process_group_t 
     pg->any_noinit_process_exited = SMPD_FALSE;
     strncpy(pg->kvs, kvs_name, SMPD_MAX_DBS_NAME_LEN);
     pg->num_procs = nproc;
-    pg->processes = (smpd_exit_process_t*)malloc(nproc * sizeof(smpd_exit_process_t));
+    pg->processes = (smpd_exit_process_t*)MPIU_Malloc(nproc * sizeof(smpd_exit_process_t));
     if (pg->processes == NULL)
     {
 	smpd_err_printf("unable to allocate an array of %d process exit structures.\n", nproc);
@@ -1345,12 +1345,12 @@ int smpd_handle_result(smpd_context_t *context)
 			MPIU_Str_get_int_arg(context->read_cmd.cmd, "data_length", &orig_context->sspi_context->buffer_length);
 			if (orig_context->sspi_context->buffer != NULL)
 			{
-			    free(orig_context->sspi_context->buffer);
+			    MPIU_Free(orig_context->sspi_context->buffer);
 			    orig_context->sspi_context->buffer = NULL;
 			}
 			if (orig_context->sspi_context->buffer_length > 0)
 			{
-			    orig_context->sspi_context->buffer = malloc(orig_context->sspi_context->buffer_length);
+			    orig_context->sspi_context->buffer = MPIU_Malloc(orig_context->sspi_context->buffer_length);
 			    if (orig_context->sspi_context->buffer == NULL)
 			    {
 				smpd_err_printf("unable to allocate %d bytes for an sspi buffer\n", orig_context->sspi_context->buffer_length);
@@ -1405,12 +1405,12 @@ int smpd_handle_result(smpd_context_t *context)
 			MPIU_Str_get_int_arg(context->read_cmd.cmd, "data_length", &orig_context->sspi_context->buffer_length);
 			if (orig_context->sspi_context->buffer != NULL)
 			{
-			    free(orig_context->sspi_context->buffer);
+			    MPIU_Free(orig_context->sspi_context->buffer);
 			    orig_context->sspi_context->buffer = NULL;
 			}
 			if (orig_context->sspi_context->buffer_length > 0)
 			{
-			    orig_context->sspi_context->buffer = malloc(orig_context->sspi_context->buffer_length);
+			    orig_context->sspi_context->buffer = MPIU_Malloc(orig_context->sspi_context->buffer_length);
 			    if (orig_context->sspi_context->buffer == NULL)
 			    {
 				smpd_err_printf("unable to allocate %d bytes for an sspi buffer\n", orig_context->sspi_context->buffer_length);
@@ -2064,7 +2064,7 @@ int smpd_handle_launch_command(smpd_context_t *context)
     if (nmaps > 0)
     {
 	/* make a linked list out of one big array */
-	process->map_list = (smpd_map_drive_node_t *)malloc(sizeof(smpd_map_drive_node_t) * nmaps);
+	process->map_list = (smpd_map_drive_node_t *)MPIU_Malloc(sizeof(smpd_map_drive_node_t) * nmaps);
     }
     for (i=0; i<nmaps; i++)
     {
@@ -2615,7 +2615,7 @@ int smpd_handle_connect_command(smpd_context_t *context)
 	return SMPD_FAIL;
     }
     dest->state = SMPD_CONNECTING;
-    dest->connect_to = (smpd_host_node_t*)malloc(sizeof(smpd_host_node_t));
+    dest->connect_to = (smpd_host_node_t*)MPIU_Malloc(sizeof(smpd_host_node_t));
     if (dest->connect_to == NULL)
     {
 	smpd_err_printf("unable to allocate a host node structure.\n");

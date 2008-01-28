@@ -1208,8 +1208,8 @@ int smpd_state_smpd_writing_data_to_stdin(smpd_context_t *context, MPIDU_Sock_ev
     }
 
     smpd_dbg_printf("wrote %d bytes to stdin of rank %d\n", node->length, context->process->rank);
-    free(node->buffer);
-    free(node);
+    MPIU_Free(node->buffer);
+    MPIU_Free(node);
 
     context->process->stdin_write_list = context->process->stdin_write_list->next;
     if (context->process->stdin_write_list != NULL)
@@ -2856,9 +2856,9 @@ int smpd_state_reading_sspi_header(smpd_context_t *context, MPIDU_Sock_event_t *
     }
     if (context->sspi_context->buffer != NULL)
     {
-	free(context->sspi_context->buffer);
+	MPIU_Free(context->sspi_context->buffer);
     }
-    context->sspi_context->buffer = malloc(context->sspi_context->buffer_length);
+    context->sspi_context->buffer = MPIU_Malloc(context->sspi_context->buffer_length);
     if (context->sspi_context->buffer == NULL)
     {
 	/* FIXME: Add code to cleanup sspi structures */
@@ -3173,9 +3173,9 @@ int smpd_state_reading_client_sspi_header(smpd_context_t *context, MPIDU_Sock_ev
 	}
 	if (context->sspi_context->buffer != NULL)
 	{
-	    free(context->sspi_context->buffer);
+	    MPIU_Free(context->sspi_context->buffer);
 	}
-	context->sspi_context->buffer = malloc(context->sspi_context->buffer_length);
+	context->sspi_context->buffer = MPIU_Malloc(context->sspi_context->buffer_length);
 	if (context->sspi_context->buffer == NULL)
 	{
 	    /* FIXME: Add code to cleanup sspi structures */
@@ -3319,7 +3319,7 @@ int smpd_state_reading_client_sspi_buffer(smpd_context_t *context, MPIDU_Sock_ev
 	return result;
     }
     encoded_max_length = context->sspi_context->buffer_length * 2 + 10;
-    encoded = (char*)malloc(encoded_max_length);
+    encoded = (char*)MPIU_Malloc(encoded_max_length);
     if (encoded == NULL)
     {
 	smpd_err_printf("unable to allocate a buffer to encode the sspi buffer.\n");
@@ -3340,7 +3340,7 @@ int smpd_state_reading_client_sspi_buffer(smpd_context_t *context, MPIDU_Sock_ev
 	return result;
     }
     result = smpd_add_command_arg(cmd_ptr, "data", encoded);
-    free(encoded);
+    MPIU_Free(encoded);
     if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to add the data parameter to the sspi_iter command for host %s\n", context->connect_to->host);
@@ -3999,7 +3999,7 @@ int smpd_state_writing_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
 
     if (context->sspi_context->out_buffer != NULL)
     {
-	free(context->sspi_context->out_buffer);
+	MPIU_Free(context->sspi_context->out_buffer);
 	context->sspi_context->out_buffer = NULL;
 	context->sspi_context->out_buffer_length = 0;
     }

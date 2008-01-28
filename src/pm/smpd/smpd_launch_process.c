@@ -2383,7 +2383,7 @@ int smpd_kill_all_processes(void)
 	if (count > 0)
 	{
 	    smpd_pwait_t *wait_array;
-	    wait_array = (smpd_pwait_t*)malloc(sizeof(smpd_pwait_t) * count);
+	    wait_array = (smpd_pwait_t*)MPIU_Malloc(sizeof(smpd_pwait_t) * count);
 	    for (i=0, iter = smpd_process.process_list; i<count; i++)
 	    {
 		wait_array[i] = iter->wait;

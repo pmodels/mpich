@@ -128,7 +128,7 @@ static HostNode* ParseLineIntoHostNode(char * line)
     /* If there is anything left on the line, consider it a host name */
     if (strlen(pChar) > 0)
     {
-	node = (HostNode*)malloc(sizeof(HostNode));
+	node = (HostNode*)MPIU_Malloc(sizeof(HostNode));
 	node->nSMPProcs = 1;
 	node->next = NULL;
 	node->exe[0] = '\0';
@@ -284,13 +284,13 @@ static void cleanup()
     {
 	map = g_pDriveMapList;
 	g_pDriveMapList = g_pDriveMapList->pNext;
-	free(map);
+	MPIU_Free(map);
     }
     while (g_pHosts)
     {
 	node = g_pHosts;
 	g_pHosts = g_pHosts->next;
-	free(node);
+	MPIU_Free(node);
     }
     smpd_exit_fn(FCNAME);
 }
@@ -397,7 +397,7 @@ int mp_parse_mpich1_configfile(char *filename, char *configfilename, int length)
 			    pszMap++;
 			if (*pszMap != '\0' && strlen(pszMap) > 6 && pszMap[1] == ':')
 			{
-			    MapDriveNode *pNode = (MapDriveNode*)malloc(sizeof(MapDriveNode));
+			    MapDriveNode *pNode = (MapDriveNode*)MPIU_Malloc(sizeof(MapDriveNode));
 			    pNode->cDrive = pszMap[0];
 			    strcpy(pNode->pszShare, &pszMap[2]);
 			    pNode->pNext = g_pDriveMapList;

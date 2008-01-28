@@ -256,7 +256,7 @@ int smpd_parse_command_args(int *argcp, char **argvp[])
 	    {
 		iter = data;
 		data = data->next;
-		free(iter);
+		MPIU_Free(iter);
 	    }
 	}
 	smpd_exit(0);

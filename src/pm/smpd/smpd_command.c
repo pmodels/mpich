@@ -291,7 +291,7 @@ int smpd_create_command(char *cmd, int src, int dest, int want_reply, smpd_comma
 
     smpd_enter_fn(FCNAME);
 
-    cmd_ptr = (smpd_command_t*)malloc(sizeof(smpd_command_t));
+    cmd_ptr = (smpd_command_t*)MPIU_Malloc(sizeof(smpd_command_t));
     if (cmd_ptr == NULL)
     {
 	smpd_err_printf("unable to allocate memory for a command.\n");
@@ -364,7 +364,7 @@ int smpd_create_command_copy(smpd_command_t *src_ptr, smpd_command_t **cmd_pptr)
 
     smpd_enter_fn(FCNAME);
 
-    cmd_ptr = (smpd_command_t*)malloc(sizeof(smpd_command_t));
+    cmd_ptr = (smpd_command_t*)MPIU_Malloc(sizeof(smpd_command_t));
     if (cmd_ptr == NULL)
     {
 	smpd_err_printf("unable to allocate memory for a command.\n");
@@ -396,7 +396,7 @@ int smpd_free_command(smpd_command_t *cmd_ptr)
 	/* erase the contents to help track down use of freed structures */
 	smpd_init_command(cmd_ptr);
 	cmd_ptr->freed = SMPD_FREE_COOKIE;
-	free(cmd_ptr); /* unfortunately, free probably erases the data making the cookie check ineffective */
+	MPIU_Free(cmd_ptr); /* unfortunately, free probably erases the data making the cookie check ineffective */
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -410,7 +410,7 @@ int smpd_create_context(smpd_context_type_t type, MPIDU_Sock_set_t set, MPIDU_So
     smpd_context_t *context;
     
     smpd_enter_fn(FCNAME);
-    context = (smpd_context_t*)malloc(sizeof(smpd_context_t));
+    context = (smpd_context_t*)MPIU_Malloc(sizeof(smpd_context_t));
     if (context == NULL)
     {
 	smpd_exit_fn(FCNAME);
@@ -421,7 +421,7 @@ int smpd_create_context(smpd_context_type_t type, MPIDU_Sock_set_t set, MPIDU_So
     if (result != SMPD_SUCCESS)
     {
 	*context_pptr = NULL;
-	free(context);
+	MPIU_Free(context);
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
@@ -544,7 +544,7 @@ int smpd_free_context(smpd_context_t *context)
 	citer->next = free_list;
 	free_list = citer;
 #else
-	free(context);
+	MPIU_Free(context);
 #endif
     }
     smpd_exit_fn(FCNAME);

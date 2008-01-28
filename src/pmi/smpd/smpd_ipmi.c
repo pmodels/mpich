@@ -257,7 +257,7 @@ static int parse_clique(const char *str_orig)
 
     /* count clique */
     count = 0;
-    str = strdup(str_orig);
+    str = MPIU_Strdup(str_orig);
     if (str == NULL)
 	return PMI_FAIL;
     token = strtok(str, ",");
@@ -280,23 +280,23 @@ static int parse_clique(const char *str_orig)
 	    else
 	    {
 		pmi_err_printf("unexpected clique token: '%s'\n", token);
-		free(str);
+		MPIU_Free(str);
 		return PMI_FAIL;
 	    }
 	}
 	token = strtok(NULL, ",");
     }
-    free(str);
+    MPIU_Free(str);
 
     /* allocate array */
-    pmi_process.clique_ranks = (int*)malloc(count * sizeof(int));
+    pmi_process.clique_ranks = (int*)MPIU_Malloc(count * sizeof(int));
     if (pmi_process.clique_ranks == NULL)
 	return PMI_FAIL;
     pmi_process.clique_size = count;
     
     /* populate array */
     count = 0;
-    str = strdup(str_orig);
+    str = MPIU_Strdup(str_orig);
     if (str == NULL)
 	return PMI_FAIL;
     token = strtok(str, ",");
@@ -326,13 +326,13 @@ static int parse_clique(const char *str_orig)
 	    else
 	    {
 		pmi_err_printf("unexpected clique token: '%s'\n", token);
-		free(str);
+		MPIU_Free(str);
 		return PMI_FAIL;
 	    }
 	}
 	token = strtok(NULL, ",");
     }
-    free(str);
+    MPIU_Free(str);
 
     /*
     printf("clique: %d [", pmi_process.iproc);
@@ -1836,7 +1836,7 @@ int iPMI_Spawn_multiple(int count,
 #endif
 
     /* create a copy of the sizes so we can change the values locally */
-    info_keyval_sizes = (int*)malloc(count * sizeof(int));
+    info_keyval_sizes = (int*)MPIU_Malloc(count * sizeof(int));
     if (info_keyval_sizes == NULL)
     {
 	pmi_err_printf("unable to allocate an array of kevval sizes.\n");
@@ -2036,7 +2036,7 @@ int iPMI_Spawn_multiple(int count,
 	}
     }
 
-    free(info_keyval_sizes);
+    MPIU_Free(info_keyval_sizes);
 
     /* add the pre-put keyvals */
     result = smpd_add_command_int_arg(cmd_ptr, "npreput", preput_keyval_size);
@@ -2491,7 +2491,7 @@ static int root_smpd(void *p)
 
     /* Set up the process group */
     /* initialize a new process group structure */
-    pg = (smpd_process_group_t*)malloc(sizeof(smpd_process_group_t));
+    pg = (smpd_process_group_t*)MPIU_Malloc(sizeof(smpd_process_group_t));
     if (pg == NULL)
     {
 	pmi_err_printf("unable to allocate memory for a process group structure.\n");
@@ -2502,7 +2502,7 @@ static int root_smpd(void *p)
     pg->any_noinit_process_exited = SMPD_FALSE;
     strncpy(pg->kvs, smpd_process.kvs_name, SMPD_MAX_DBS_NAME_LEN);
     pg->num_procs = pmi_process.nproc;
-    pg->processes = (smpd_exit_process_t*)malloc(pmi_process.nproc * sizeof(smpd_exit_process_t));
+    pg->processes = (smpd_exit_process_t*)MPIU_Malloc(pmi_process.nproc * sizeof(smpd_exit_process_t));
     if (pg->processes == NULL)
     {
 	pmi_err_printf("unable to allocate an array of %d process exit structures.\n", pmi_process.nproc);

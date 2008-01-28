@@ -339,7 +339,7 @@ int smpd_create_process_struct(int rank, smpd_process_t **process_ptr)
 
     smpd_enter_fn(FCNAME);
 
-    p = (smpd_process_t*)malloc(sizeof(smpd_process_t));
+    p = (smpd_process_t*)MPIU_Malloc(sizeof(smpd_process_t));
     if (p == NULL)
     {
 	*process_ptr = NULL;
@@ -361,7 +361,7 @@ int smpd_create_process_struct(int rank, smpd_process_t **process_ptr)
     result = smpd_create_context(SMPD_CONTEXT_STDIN, smpd_process.set, MPIDU_SOCK_INVALID_SOCK, -1, &p->in);
     if (result != SMPD_SUCCESS)
     {
-	free(p);
+	MPIU_Free(p);
 	*process_ptr = NULL;
 	smpd_err_printf("unable to create stdin context.\n");
 	smpd_exit_fn(FCNAME);
@@ -370,7 +370,7 @@ int smpd_create_process_struct(int rank, smpd_process_t **process_ptr)
     result = smpd_create_context(SMPD_CONTEXT_STDOUT, smpd_process.set, MPIDU_SOCK_INVALID_SOCK, -1, &p->out);
     if (result != SMPD_SUCCESS)
     {
-	free(p);
+	MPIU_Free(p);
 	*process_ptr = NULL;
 	smpd_err_printf("unable to create stdout context.\n");
 	smpd_exit_fn(FCNAME);
@@ -379,7 +379,7 @@ int smpd_create_process_struct(int rank, smpd_process_t **process_ptr)
     result = smpd_create_context(SMPD_CONTEXT_STDERR, smpd_process.set, MPIDU_SOCK_INVALID_SOCK, -1, &p->err);
     if (result != SMPD_SUCCESS)
     {
-	free(p);
+	MPIU_Free(p);
 	*process_ptr = NULL;
 	smpd_err_printf("unable to create stderr context.\n");
 	smpd_exit_fn(FCNAME);
@@ -388,7 +388,7 @@ int smpd_create_process_struct(int rank, smpd_process_t **process_ptr)
     result = smpd_create_context(SMPD_CONTEXT_PMI, smpd_process.set, MPIDU_SOCK_INVALID_SOCK, -1, &p->pmi);
     if (result != SMPD_SUCCESS)
     {
-	free(p);
+	MPIU_Free(p);
 	*process_ptr = NULL;
 	smpd_err_printf("unable to create pmi context.\n");
 	smpd_exit_fn(FCNAME);
@@ -515,7 +515,7 @@ int smpd_free_process_struct(smpd_process_t *process)
     process->pid = -1;
     process->rank = -1;
     process->next = NULL;
-    free(process);
+    MPIU_Free(process);
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
 }

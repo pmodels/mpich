@@ -88,9 +88,9 @@ int smpd_dbs_finalize()
 	    {
 		pElement = pNode->pData;
 		pNode->pData = pNode->pData->pNext;
-		free(pElement);
+		MPIU_Free(pElement);
 	    }
-	    free(pNode);
+	    MPIU_Free(pNode);
 
 	    pNode = pNext;
 	}
@@ -128,12 +128,12 @@ int smpd_dbs_create(char *name)
     {
 	while (pNode->pNext)
 	    pNode = pNode->pNext;
-	pNode->pNext = (smpd_database_node_t*)malloc(sizeof(smpd_database_node_t));
+	pNode->pNext = (smpd_database_node_t*)MPIU_Malloc(sizeof(smpd_database_node_t));
 	pNode = pNode->pNext;
     }
     else
     {
-	smpd_process.pDatabase = (smpd_database_node_t*)malloc(sizeof(smpd_database_node_t));
+	smpd_process.pDatabase = (smpd_database_node_t*)MPIU_Malloc(sizeof(smpd_database_node_t));
 	pNode = smpd_process.pDatabase;
     }
     pNode->pNext = NULL;
@@ -219,12 +219,12 @@ int smpd_dbs_create_name_in(char *name)
     {
 	while (pNode->pNext)
 	    pNode = pNode->pNext;
-	pNode->pNext = (smpd_database_node_t*)malloc(sizeof(smpd_database_node_t));
+	pNode->pNext = (smpd_database_node_t*)MPIU_Malloc(sizeof(smpd_database_node_t));
 	pNode = pNode->pNext;
     }
     else
     {
-	smpd_process.pDatabase = (smpd_database_node_t*)malloc(sizeof(smpd_database_node_t));
+	smpd_process.pDatabase = (smpd_database_node_t*)MPIU_Malloc(sizeof(smpd_database_node_t));
 	pNode = smpd_process.pDatabase;
     }
     pNode->pNext = NULL;
@@ -323,7 +323,7 @@ int smpd_dbs_put(const char *name, const char *key, const char *value)
 		}
 		pElement = pElement->pNext;
 	    }
-	    pElement = (smpd_database_element_t*)malloc(sizeof(smpd_database_element_t));
+	    pElement = (smpd_database_element_t*)MPIU_Malloc(sizeof(smpd_database_element_t));
 	    pElement->pNext = pNode->pData;
 	    strcpy(pElement->pszKey, key);
 	    strcpy(pElement->pszValue, value);
@@ -372,7 +372,7 @@ int smpd_dbs_delete(const char *name, const char *key)
 			pElementTrailer->pNext = pElement->pNext;
 		    else
 			pNode->pData = pElement->pNext;
-		    free(pElement);
+		    MPIU_Free(pElement);
 #ifdef USE_WIN_MUTEX_PROTECT
 		    ReleaseMutex(smpd_process.hDBSMutex);
 #endif
@@ -421,13 +421,13 @@ int smpd_dbs_destroy(const char *name)
 	    {
 		pElement = pNode->pData;
 		pNode->pData = pNode->pData->pNext;
-		free(pElement);
+		MPIU_Free(pElement);
 	    }
 	    if (pNodeTrailer == pNode)
 		smpd_process.pDatabase = smpd_process.pDatabase->pNext;
 	    else
 		pNodeTrailer->pNext = pNode->pNext;
-	    free(pNode);
+	    MPIU_Free(pNode);
 #ifdef USE_WIN_MUTEX_PROTECT
 	    ReleaseMutex(smpd_process.hDBSMutex);
 #endif

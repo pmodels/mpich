@@ -145,13 +145,13 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	smpd_err_printf("unable to get the nkeyvals parameter from the spawn command '%s'.\n", cmd->cmd);
 	goto spawn_failed;
     }
-    maxprocs = (int*)malloc(ncmds * sizeof(int));
+    maxprocs = (int*)MPIU_Malloc(ncmds * sizeof(int));
     if (maxprocs == NULL)
     {
 	smpd_err_printf("unable to allocate the maxprocs array.\n");
 	goto spawn_failed;
     }
-    nkeyvals = (int*)malloc(ncmds * sizeof(int));
+    nkeyvals = (int*)MPIU_Malloc(ncmds * sizeof(int));
     if (nkeyvals == NULL)
     {
 	smpd_err_printf("unable to allocate the nkeyvals array.\n");
@@ -211,15 +211,15 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	    /* free the last round of infos */
 	    for (j=0; j<nkeyvals[i-1]; j++)
 	    {
-		free(info[j].key);
-		free(info[j].val);
+		MPIU_Free(info[j].key);
+		MPIU_Free(info[j].val);
 	    }
-	    free(info);
+	    MPIU_Free(info);
 	}
 	/* allocate some new infos */
 	if (nkeyvals[i] > 0)
 	{
-	    info = (PMI_keyval_t*)malloc(nkeyvals[i] * sizeof(PMI_keyval_t));
+	    info = (PMI_keyval_t*)MPIU_Malloc(nkeyvals[i] * sizeof(PMI_keyval_t));
 	    if (info == NULL)
 	    {
 		smpd_err_printf("unable to allocate memory for the info keyvals (cmd %d, num_infos %d).\n", i, nkeyvals[i]);
@@ -265,8 +265,8 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 		    smpd_err_printf("unable to parse the key from the %dth keyval pair in the %dth keyvals string.\n", j, i);
 		    goto spawn_failed;
 		}
-		info[j].key = strdup(key_temp);
-		info[j].val = strdup(val_temp);
+		info[j].key = MPIU_Strdup(key_temp);
+		info[j].val = MPIU_Strdup(val_temp);
 	    }
 	}
 	/* get the current command */
@@ -350,7 +350,7 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	    if (strcmp(info[j].key, "env") == 0)
 	    {
 		char *token;
-		char *env_str = strdup(info[j].val);
+		char *env_str = MPIU_Strdup(info[j].val);
 
 		/* This simplistic parsing code assumes that environment variables do not have spaces in them
 		 * and that the variable name does not have the equals character in it.
@@ -364,7 +364,7 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 		while (token)
 		{
 		    char *env_key, *env_val;
-		    env_key = strdup(token);
+		    env_key = MPIU_Strdup(token);
 		    if (env_key == NULL)
 		    {
 			goto spawn_failed;
@@ -391,10 +391,10 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 			    env_wrap_dll_specified = SMPD_TRUE;
 			}
 		    }
-		    free(env_key);
+		    MPIU_Free(env_key);
 		    token = strtok(NULL, " ");
 		}
-		free(env_str);
+		MPIU_Free(env_str);
 	    }
 	    /* log */
 	    if (strcmp(info[j].key, "log") == 0)
@@ -520,7 +520,7 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	{
 	    if (launch_list == NULL)
 	    {
-		launch_list = (smpd_launch_node_t*)malloc(sizeof(smpd_launch_node_t));
+		launch_list = (smpd_launch_node_t*)MPIU_Malloc(sizeof(smpd_launch_node_t));
 		launch_iter = launch_list;
 		if (launch_iter)
 		{
@@ -529,7 +529,7 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	    }
 	    else
 	    {
-		launch_iter->next = (smpd_launch_node_t*)malloc(sizeof(smpd_launch_node_t));
+		launch_iter->next = (smpd_launch_node_t*)MPIU_Malloc(sizeof(smpd_launch_node_t));
 		if (launch_iter->next)
 		{
 		    launch_iter->next->prev = launch_iter;
@@ -590,19 +590,19 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	/* free the last round of infos */
 	for (j=0; j<nkeyvals[i-1]; j++)
 	{
-	    free(info[j].key);
-	    free(info[j].val);
+	    MPIU_Free(info[j].key);
+	    MPIU_Free(info[j].val);
 	}
-	free(info);
+	MPIU_Free(info);
     }
     info = NULL;
 
     /* create a spawn context to save parameters, state, etc. */
     if (context->spawn_context != NULL)
     {
-	free(context->spawn_context);
+	MPIU_Free(context->spawn_context);
     }
-    context->spawn_context = (smpd_spawn_context_t*)malloc(sizeof(smpd_spawn_context_t));
+    context->spawn_context = (smpd_spawn_context_t*)MPIU_Malloc(sizeof(smpd_spawn_context_t));
     if (context->spawn_context == NULL)
     {
 	smpd_err_printf("unable to create a spawn context.\n");
@@ -628,8 +628,8 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	smpd_err_printf("unablet to get the preput parameter from the spawn command '%s'.\n", cmd->cmd);
 	goto spawn_failed;
     }
-    free(maxprocs);
-    free(nkeyvals);
+    MPIU_Free(maxprocs);
+    MPIU_Free(nkeyvals);
 
 
     /* do the spawn stuff */
@@ -983,7 +983,7 @@ int smpd_delayed_spawn_enqueue(smpd_context_t *context)
 
     smpd_enter_fn(FCNAME);
 
-    node = (smpd_delayed_spawn_node_t*)malloc(sizeof(smpd_delayed_spawn_node_t));
+    node = (smpd_delayed_spawn_node_t*)MPIU_Malloc(sizeof(smpd_delayed_spawn_node_t));
     if (node == NULL)
     {
 	smpd_exit_fn(FCNAME);
@@ -1025,7 +1025,7 @@ int smpd_delayed_spawn_dequeue(smpd_context_t **context_pptr)
 	(*context_pptr)->read_cmd = smpd_process.delayed_spawn_queue->cmd;
 	node = smpd_process.delayed_spawn_queue;
 	smpd_process.delayed_spawn_queue = smpd_process.delayed_spawn_queue->next;
-	free(node);
+	MPIU_Free(node);
     }
     else
     {

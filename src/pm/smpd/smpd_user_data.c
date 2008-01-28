@@ -141,7 +141,7 @@ static smpd_data_t * smpd_parse_smpd_file()
 	}
 	if (len > 0)
 	{
-	    buffer = (char*)malloc(len+1);
+	    buffer = (char*)MPIU_Malloc(len+1);
 	    if (buffer == NULL)
 	    {
 		smpd_err_printf("Unable to allocate a buffer of length %d, malloc failed.\n", len+1);
@@ -178,7 +178,7 @@ static smpd_data_t * smpd_parse_smpd_file()
 		    /*smpd_dbg_printf("parsed <%s> <%s> <%s>\n", name, equal_str, data);*/
 		    if (result == MPIU_STR_SUCCESS)
 		    {
-			node = (smpd_data_t*)malloc(sizeof(smpd_data_t));
+			node = (smpd_data_t*)MPIU_Malloc(sizeof(smpd_data_t));
 			if (node == NULL)
 			{
 			    smpd_err_printf("Unable to allocate a smpd_data_t node, malloc failed.\n");
@@ -196,7 +196,7 @@ static smpd_data_t * smpd_parse_smpd_file()
 	    {
 		printf("Unable to read the contents of %s.\n", smpd_process.smpd_filename);
 	    }
-	    free(buffer);
+	    MPIU_Free(buffer);
 	}
 	fclose(fin);
     }
@@ -434,7 +434,7 @@ int smpd_delete_smpd_data(const char *key)
 		list = list->next;
 	    }
 	    found = 1;
-	    free(node);
+	    MPIU_Free(node);
 	    break;
 	}
 	if (trailer != node)
@@ -464,7 +464,7 @@ int smpd_delete_smpd_data(const char *key)
 		}
 		node = list;
 		list = list->next;
-		free(node);
+		MPIU_Free(node);
 	    }
 	    fclose(fout);
 	    smpd_exit_fn(FCNAME);
@@ -475,7 +475,7 @@ int smpd_delete_smpd_data(const char *key)
     {
 	node = list;
 	list = list->next;
-	free(node);
+	MPIU_Free(node);
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -632,7 +632,7 @@ int smpd_set_smpd_data(const char *key, const char *value)
 		fprintf(fout, "%s\n", buffer);
 	    }
 	}
-	free(node);
+	MPIU_Free(node);
     }
     if (!found && fout)
     {
@@ -794,7 +794,7 @@ static SMPD_BOOL smpd_get_smpd_data_from_environment(const char *key, char *valu
 
     /* Check to see if the option has been set in the environment */
     length = strlen(key) + strlen(SMPD_ENV_OPTION_PREFIX) + 1;
-    env_option = (char*)malloc(length * sizeof(char));
+    env_option = (char*)MPIU_Malloc(length * sizeof(char));
     if (env_option != NULL)
     {
 	strcpy(env_option, SMPD_ENV_OPTION_PREFIX);
@@ -807,7 +807,7 @@ static SMPD_BOOL smpd_get_smpd_data_from_environment(const char *key, char *valu
 	}
 	*env = '\0';
 	env = getenv(env_option);
-	free(env_option);
+	MPIU_Free(env_option);
 	if (env != NULL)
 	{
 	    if ((int)strlen(env) < value_len)
@@ -908,7 +908,7 @@ int smpd_get_smpd_data(const char *key, char *value, int value_len)
 		smpd_dbg_printf("smpd data: %s=%s\n", key, value);
 		found = 1;
 	    }
-	    free(node);
+	    MPIU_Free(node);
 	}
 	if (found)
 	{
