@@ -21,19 +21,16 @@ extern pthread_key_t    MPE_ThreadStm_key;
 extern MPE_ThreadID_t   MPE_Thread_count;
 
 #define MPE_LOG_THREAD_DECL \
-    MPE_ThreadStm_t *thdstm = NULL; \
-    int              thd_fn_rc;
+    MPE_ThreadStm_t *thdstm = NULL;
 
 #define MPE_LOG_THREAD_LOCK  \
-    thd_fn_rc = pthread_mutex_lock( &MPE_Thread_mutex ); \
-    if ( thd_fn_rc != 0 ) { \
+    if ( pthread_mutex_lock( &MPE_Thread_mutex ) != 0 ) { \
         perror( "MPE_LOG_THREAD: pthread_mutex_lock() fails!\n" ); \
         pthread_exit( NULL ); \
     }
 
 #define MPE_LOG_THREAD_UNLOCK \
-    thd_fn_rc = pthread_mutex_unlock( &MPE_Thread_mutex ); \
-    if ( thd_fn_rc != 0 ) { \
+    if ( pthread_mutex_unlock( &MPE_Thread_mutex ) != 0 ) { \
         perror( "MPE_LOG_THREAD: pthread_mutex_unlock() fails!\n" ); \
         pthread_exit( NULL ); \
     }
@@ -44,8 +41,7 @@ extern MPE_ThreadID_t   MPE_Thread_count;
     thdstm  = (MPE_ThreadStm_t *) malloc( sizeof(MPE_ThreadStm_t) ); \
     thdstm->thdID     = MPE_Thread_count ; \
     thdstm->is_log_on = 1; \
-    thd_fn_rc  = pthread_setspecific( MPE_ThreadStm_key, thdstm ); \
-    if ( thd_fn_rc != 0 ) { \
+    if ( pthread_setspecific( MPE_ThreadStm_key, thdstm ) != 0 ) { \
         perror( "MPE_LOG_THREAD: pthread_setspecific() fails!\n" ); \
         pthread_exit( NULL ); \
     } \
