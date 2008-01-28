@@ -37,11 +37,6 @@ void USER_Init_log( void )
     int         idx;
     int         myrank;
 
-    MPE_LOG_THREAD_DECL
-
-    MPE_LOG_THREAD_LOCK
-    MPE_LOG_THREADSTM_GET
-
     /* Define each state's legend name and color */
     state = &user_states[ USER_SENDRECV_ID ];
     state->name   = "USER_SendRecv";
@@ -58,33 +53,23 @@ void USER_Init_log( void )
         MPE_Log_get_state_eventIDs( &(state->start_evtID),
                                     &(state->final_evtID) );
         if ( myrank == 0 ) {
-            MPE_Describe_comm_state( MPI_COMM_WORLD, THREADID,
+            MPE_Describe_comm_state( MPI_COMM_WORLD,
                                      state->start_evtID, state->final_evtID,
                                      state->name, state->color, NULL );
         }
     }
-
-    MPE_LOG_THREAD_UNLOCK
 }
 
 /* Define macro to do communicator-thread user-defined logging */
-
 #define USER_LOG_STATE_DECL          \
-    const CLOG_CommIDs_t  *commIDs;  \
           USER_State      *state;
 
 #define USER_LOG_STATE_BEGIN(name,comm) \
-    MPE_LOG_THREAD_LOCK \
-    MPE_LOG_THREADSTM_GET \
-    commIDs = CLOG_CommSet_get_IDs( CLOG_CommSet, comm ); \
     state   = &user_states[ name ]; \
-    MPE_Log_commIDs_event( commIDs, THREADID, state->start_evtID, NULL ); \
-    MPE_LOG_THREAD_UNLOCK
+    MPE_Log_comm_event( comm, state->start_evtID, NULL );
 
 #define USER_LOG_STATE_END \
-    MPE_LOG_THREAD_LOCK \
-    MPE_Log_commIDs_event( commIDs, THREADID, state->final_evtID, NULL ); \
-    MPE_LOG_THREAD_UNLOCK
+    MPE_Log_comm_event( comm, state->final_evtID, NULL );
 
 
 /*
@@ -100,7 +85,6 @@ void *thd_sendrecv( void *comm_ptr )
 
     /* Declare variables for user-defined communicator-thread logging */
     USER_LOG_STATE_DECL
-    MPE_LOG_THREAD_DECL
 
     comm = *(MPI_Comm *) comm_ptr;
 
