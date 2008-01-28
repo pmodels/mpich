@@ -19,6 +19,7 @@
 #endif
 
 #include "mpe_log.h"
+#include "mpe_log_thread.h"
 
 #if !defined( CLOG_NOMPI )
 #include "mpi.h"                /* Needed for PMPI routines */
@@ -58,11 +59,14 @@ MPEU_DLL_SPEC       CLOG_CommSet_t *CLOG_CommSet           = NULL;
     It is a collective call over 'MPI_COMM_WORLD'.
     MPE_Init_log() & MPE_Finish_log() are NOT needed when liblmpe.a is linked
     because MPI_Init() would have called MPE_Init_log() already.
-    liblmpe.a will be included in the final executable if it is linked with
-    either "mpicc -mpe=mpilog" or "mpecc -mpilog"
+    liblmpe.a will be included in the link path if either "mpicc -mpe=mpilog"
+    or "mpecc -mpilog" is used in the link step.
 
     Returns:
     Always return MPE_LOG_OK.
+
+    This function is NOT threadsafe.
+    It is expected to be called on the master thread only.
 
 .seealso: MPE_Finish_log()
 @*/
@@ -117,29 +121,44 @@ int MPE_Init_log( void )
         MPE_Log_hasBeenInit = 1;        /* set MPE_Log as being initialized */
         MPE_Log_hasBeenClosed = 0;
     }
-    MPE_Start_log();
+
+    /* Invoke non-threadsafe version of MPE_Start_log() */
+    CLOG_Buffer->status = CLOG_INIT_AND_ON;
+
     return MPE_LOG_OK;
 }
 
 /*@
     MPE_Start_log - Start the logging of events.
+
+    This function is threadsafe.
 @*/
 int MPE_Start_log( void )
 {
+    MPE_LOG_THREAD_LOCK
+
     if (!MPE_Log_hasBeenInit)
         return MPE_LOG_NOT_INITIALIZED;
     CLOG_Buffer->status = CLOG_INIT_AND_ON;
+
+    MPE_LOG_THREAD_UNLOCK
     return MPE_LOG_OK;
 }
 
 /*@
     MPE_Stop_log - Stop the logging of events
+
+    This function is threadsafe.
 @*/
 int MPE_Stop_log( void )
 {
+    MPE_LOG_THREAD_LOCK
+
     if (!MPE_Log_hasBeenInit)
         return MPE_LOG_NOT_INITIALIZED;
     CLOG_Buffer->status = CLOG_INIT_AND_OFF;
+
+    MPE_LOG_THREAD_UNLOCK
     return MPE_LOG_OK;
 }
 
@@ -152,6 +171,8 @@ int MPE_Stop_log( void )
   1 if MPE_Init_log() has been called
     but MPE_Finish_log() has not been called,
   and 2 otherwise.
+
+    This function is threadsafe.
 @*/
 int MPE_Initialized_logging( void )
 {
@@ -159,7 +180,9 @@ int MPE_Initialized_logging( void )
 }
 
 /*
-   The is to log CLOG intracommunicator event.
+   The is to log CLOG intracommunicator event (Internal MPE routine)
+
+   This function is NOT threadsafe.
 */
 int MPE_Log_commIDs_intracomm( const CLOG_CommIDs_t *commIDs, int local_thread,
                                int comm_etype,
@@ -174,6 +197,11 @@ int MPE_Log_commIDs_intracomm( const CLOG_CommIDs_t *commIDs, int local_thread,
 }
 
 
+/*
+   The is to log CLOG Null communicator event (Internal MPE routine)
+
+   This function is NOT threadsafe.
+*/
 int MPE_Log_commIDs_nullcomm( const CLOG_CommIDs_t *commIDs, int local_thread,
                               int comm_etype )
 {
@@ -183,6 +211,11 @@ int MPE_Log_commIDs_nullcomm( const CLOG_CommIDs_t *commIDs, int local_thread,
     return MPE_LOG_OK;
 }
 
+/*
+   The is to log CLOG intercommunicator event (Internal MPE routine)
+
+   This function is NOT threadsafe.
+*/
 int MPE_Log_commIDs_intercomm( const CLOG_CommIDs_t *commIDs, int local_thread,
                                int comm_etype,
                                const CLOG_CommIDs_t *intercommIDs )
@@ -248,11 +281,11 @@ N*/
 /*@
     MPE_Describe_comm_state - Describe attributes of a state
                               with byte informational data
-                              in a specified MPI_Comm.
+                              in a specified MPI_Comm and on
+                              the thread that the function is invoked.
 
     Input Parameters:
 + comm          - MPI_Comm where this process is part of.
-. local_thread  - local thread ID where the state is being defined.
 . state_startID - event number for the starting of the state.
 . state_finalID - event number for the ending of the state.
 . name          - name of the state,
@@ -273,11 +306,13 @@ N*/
     States are added to a logfile by calling 'MPE_Log_comm_event()'
     for the start and end event numbers.
 
+   This function is threadsafe.
+
 .N MPE_LOG_BYTE_FORMAT
 
 .seealso: MPE_Log_get_state_eventIDs()
 @*/
-int MPE_Describe_comm_state( MPI_Comm comm, int local_thread,
+int MPE_Describe_comm_state( MPI_Comm comm,
                              int state_startID, int state_finalID,
                              const char *name, const char *color,
                              const char *format )
@@ -285,14 +320,21 @@ int MPE_Describe_comm_state( MPI_Comm comm, int local_thread,
     const CLOG_CommIDs_t *commIDs;
           int             stateID;
 
+    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
+
     if (!MPE_Log_hasBeenInit)
         return MPE_LOG_NOT_INITIALIZED;
 
     commIDs  = CLOG_CommSet_get_IDs( CLOG_CommSet, comm );
     stateID  = CLOG_Get_user_stateID( CLOG_Stream );
-    CLOG_Buffer_save_statedef( CLOG_Buffer, commIDs, local_thread,
+    CLOG_Buffer_save_statedef( CLOG_Buffer, commIDs, THREADID,
                                stateID, state_startID, state_finalID,
                                color, name, format );
+
+    MPE_LOG_THREAD_UNLOCK
 
     return MPE_LOG_OK;
 }
@@ -327,22 +369,26 @@ int MPE_Describe_comm_state( MPI_Comm comm, int local_thread,
 
 .N MPE_LOG_BYTE_FORMAT
 
+   This function is threadsafe.
+
 .seealso: MPE_Log_get_state_eventIDs().
 @*/
 int MPE_Describe_info_state( int state_startID, int state_finalID,
                              const char *name, const char *color,
                              const char *format )
 {
-    return MPE_Describe_comm_state( MPI_COMM_WORLD, 0,
+    return MPE_Describe_comm_state( MPI_COMM_WORLD,
                                     state_startID, state_finalID,
                                     name, color, format );
 }
 
 /*
-    This is an MPE internal function to describe MPI states.
+    This is a MPE internal function to describe MPI states.
     It is not meant for user application.
     stateID should be fetched from CLOG_Get_known_stateID()
     i.e, MPE_Log_get_known_stateID()
+
+    This function is NOT threadsafe
 */
 int MPE_Describe_known_state( const CLOG_CommIDs_t *commIDs, int local_thread,
                               int stateID, int state_startID, int state_finalID,
@@ -392,12 +438,14 @@ int MPE_Describe_known_state( const CLOG_CommIDs_t *commIDs, int local_thread,
     for backward compatibility purpose.  Users are urged to
     use 'MPE_Describe_comm_state()' and 'MPE_Log_comm_event()' instead.
 
+    This function is threadsafe.
+
 .seealso: MPE_Log_get_state_eventIDs(), MPE_Describe_comm_state()
 @*/
 int MPE_Describe_state( int state_startID, int state_finalID,
                         const char *name, const char *color )
 {
-    return MPE_Describe_comm_state( MPI_COMM_WORLD, 0,
+    return MPE_Describe_comm_state( MPI_COMM_WORLD,
                                     state_startID, state_finalID,
                                     name, color, NULL );
 }
@@ -406,11 +454,11 @@ int MPE_Describe_state( int state_startID, int state_finalID,
 /*@
     MPE_Describe_comm_event - Describe the attributes of an event
                               with byte informational data in
-                              a specified MPI_Comm.
+                              a specified MPI_Comm and on
+                              the thread that the function is invoked.
 
     Input Parameters:
 + comm         - MPI_Comm where this process is part of.
-. local_thread - local thread ID where the event is being defined.
 . eventID      - event number for the event.
 . name         - name of the event,
                  the maximum length of the NULL-terminated string is,
@@ -430,21 +478,29 @@ int MPE_Describe_state( int state_startID, int state_finalID,
 
 .N MPE_LOG_BYTE_FORMAT
 
+    This function is threadsafe
+
 .seealso: MPE_Log_get_solo_eventID()
 @*/
-int MPE_Describe_comm_event( MPI_Comm comm, int local_thread,
-                             int eventID,
+int MPE_Describe_comm_event( MPI_Comm comm, int eventID,
                              const char *name, const char *color,
                              const char *format )
 {
     const CLOG_CommIDs_t *commIDs;
 
+    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
+
     if (!MPE_Log_hasBeenInit)
         return MPE_LOG_NOT_INITIALIZED;
 
     commIDs  = CLOG_CommSet_get_IDs( CLOG_CommSet, comm );
-    CLOG_Buffer_save_eventdef( CLOG_Buffer, commIDs, local_thread,
+    CLOG_Buffer_save_eventdef( CLOG_Buffer, commIDs, THREADID,
                                eventID, color, name, format );
+
+    MPE_LOG_THREAD_UNLOCK
 
     return MPE_LOG_OK;
 }
@@ -476,21 +532,25 @@ int MPE_Describe_comm_event( MPI_Comm comm, int local_thread,
 
 .N MPE_LOG_BYTE_FORMAT
 
+    This function is threadsafe
+
 .seealso: MPE_Log_get_solo_eventID(), MPE_Describe_comm_event() 
 @*/
 int MPE_Describe_info_event( int eventID,
                              const char *name, const char *color,
                              const char *format )
 {
-    return MPE_Describe_comm_event( MPI_COMM_WORLD, 0,
+    return MPE_Describe_comm_event( MPI_COMM_WORLD,
                                     eventID, name, color, format );
 }
 
 /*
-    This is an MPE internal function to describe MPI events.
+    This is a MPE internal function to describe MPI events.
     It is not meant for user application.
     eventID should be fetched from CLOG_Get_known_solo_eventID()
     i.e, MPE_Log_get_known_solo_eventID()
+
+    This function is NOT threadsafe
 */
 int MPE_Describe_known_event( const CLOG_CommIDs_t *commIDs, int local_thread,
                               int eventID,
@@ -525,12 +585,14 @@ int MPE_Describe_known_event( const CLOG_CommIDs_t *commIDs, int local_thread,
     for backward compatibility purpose.  Users are urged to
     use 'MPE_Describe_comm_event' instead.
 
+    This function is threadsafe.
+
 .seealso: MPE_Log_get_solo_eventID(), MPE_Describe_comm_event()
 @*/
 int MPE_Describe_event( int eventID,
                         const char *name, const char *color )
 {
-    return MPE_Describe_comm_event( MPI_COMM_WORLD, 0,
+    return MPE_Describe_comm_event( MPI_COMM_WORLD,
                                     eventID, name, color, NULL );
 }
 
@@ -548,10 +610,19 @@ int MPE_Describe_event( int eventID,
   *** The function is deprecated, its use is strongly discouraged.
       The function has been replaced by
    MPE_Log_get_state_eventIDs() and MPE_Log_get_event_eventID(). ***
+
+  This function is threadsafe.
 @*/
 int MPE_Log_get_event_number( void )
 {
-    return CLOG_Get_user_eventID( CLOG_Stream );
+    int  evtID;
+
+    MPE_LOG_THREAD_LOCK
+
+    evtID = CLOG_Get_user_eventID( CLOG_Stream );
+
+    MPE_LOG_THREAD_UNLOCK
+    return evtID;
 }
 
 /*@
@@ -567,12 +638,18 @@ int MPE_Log_get_event_number( void )
   This routine is provided to ensure that users are 
   using unique event numbers.  It relies on all packages using this
   routine.
+
+  This function is threadsafe.
 @*/
 int MPE_Log_get_state_eventIDs( int *statedef_startID,
                                 int *statedef_finalID )
 {
+    MPE_LOG_THREAD_LOCK
+
     *statedef_startID = CLOG_Get_user_eventID( CLOG_Stream );
     *statedef_finalID = CLOG_Get_user_eventID( CLOG_Stream );
+
+    MPE_LOG_THREAD_UNLOCK
     return MPE_LOG_OK;
 }
 
@@ -588,16 +665,24 @@ int MPE_Log_get_state_eventIDs( int *statedef_startID,
   This routine is provided to ensure that users are 
   using unique event numbers.  It relies on all packages using this
   routine.
+
+  This function is threadsafe.
 @*/
 int MPE_Log_get_solo_eventID( int *eventdef_eventID )
 {
+    MPE_LOG_THREAD_LOCK
+
     *eventdef_eventID = CLOG_Get_user_solo_eventID( CLOG_Stream );
+
+    MPE_LOG_THREAD_UNLOCK
     return MPE_LOG_OK;
 }
 
 /*
-    This is an MPE internal function in defining MPE_state[] evtID components.
+    This is a MPE internal function in defining MPE_state[] evtID components.
     It is not meant for user application.
+
+    This function is NOT threadsafe
 */
 int MPE_Log_get_known_eventID( void )
 {
@@ -605,8 +690,10 @@ int MPE_Log_get_known_eventID( void )
 }
 
 /*
-    This is an MPE internal function in defining MPE_Event[] evtID components.
+    This is a MPE internal function in defining MPE_Event[] evtID components.
     It is not meant for user application.
+
+    This function is NOT threadsafe
 */
 int MPE_Log_get_known_solo_eventID( void )
 {
@@ -614,7 +701,7 @@ int MPE_Log_get_known_solo_eventID( void )
 }
 
 /*
-    This is an MPE internal function in defining MPE_state[] stateID component.
+    This is a MPE internal function in defining MPE_state[] stateID component.
     It is not meant for user application.
 */
 int MPE_Log_get_known_stateID( void )
@@ -622,6 +709,12 @@ int MPE_Log_get_known_stateID( void )
     return CLOG_Get_known_stateID( CLOG_Stream );
 }
 
+/*
+    This is a MPE internal function in defining MPI logging wrappers.
+    It is not meant for user application.
+
+    This function is NOT threadsafe
+*/
 int MPE_Log_commIDs_send( const CLOG_CommIDs_t *commIDs, int local_thread,
                           int other_party, int tag, int size )
 {
@@ -633,41 +726,68 @@ int MPE_Log_commIDs_send( const CLOG_CommIDs_t *commIDs, int local_thread,
 
 /*@
     MPE_Log_comm_send - Log the send event of a message within
-                        a specified MPI_Comm.
+                        a specified MPI_Comm (on the calling thread
+                        where the send event takes place).
 
     Input Parameters:
 + comm          - MPI_Comm where this process is part of.
-. local_thread  - local thread ID where the send event takes place.
 . other_party   - the rank of the other party, i.e. receive event's rank.
 . tag           - message tag ID.
 - size          - message size in byte.
 
+    This function is threadsafe.
 @*/
-int MPE_Log_comm_send( MPI_Comm comm, int local_thread,
-                       int other_party, int tag, int size )
+int MPE_Log_comm_send( MPI_Comm comm, int other_party, int tag, int size )
 {
     const CLOG_CommIDs_t *commIDs;
+          int             ierr;
+
+    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
 
     commIDs  = CLOG_CommSet_get_IDs( CLOG_CommSet, comm );
-    return MPE_Log_commIDs_send( commIDs, local_thread,
+    ierr = MPE_Log_commIDs_send( commIDs, THREADID,
                                  other_party, tag, size );
+
+    MPE_LOG_THREAD_UNLOCK
+    return ierr;
 }
 
 /*@
     MPE_Log_send - Log the send event of a message within MPI_COMM_WORLD.
+                   (on the calling thread where send event takes place)
 
     Input Parameters:
 + other_party   - the rank of the other party, i.e. receive event's rank.
 . tag           - message tag ID.
 - size          - message size in byte.
 
+    This function is threadsafe.
 @*/
 int MPE_Log_send( int other_party, int tag, int size )
 {
-    return MPE_Log_commIDs_send( CLOG_CommSet->IDs4world, 0,
+    int   ierr;
+
+    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
+
+    ierr = MPE_Log_commIDs_send( CLOG_CommSet->IDs4world, THREADID,
                                  other_party, tag, size );
+
+    MPE_LOG_THREAD_UNLOCK
+    return ierr;
 }
 
+/*
+    This is a MPE internal function in defining MPI logging wrappers.
+    It is not meant for user application.
+
+    This function is NOT threadsafe
+*/
 int MPE_Log_commIDs_receive( const CLOG_CommIDs_t *commIDs, int local_thread,
                              int other_party, int tag, int size )
 {
@@ -679,37 +799,60 @@ int MPE_Log_commIDs_receive( const CLOG_CommIDs_t *commIDs, int local_thread,
 
 /*@
     MPE_Log_comm_receive - log the receive event of a message within
-                           a specified MPI_Comm.
+                           a specified MPI_Comm (on the calling thread
+                           where receive event takes place)
 
     Input Parameters:
 + comm          - MPI_Comm where this process is part of.
-. local_thread  - local thread ID where the receive event takes place.
 . other_party   - the rank of the other party, i.e. send event's rank.
 . tag           - message tag ID.
 - size          - message size in byte.
+
+    This function is threadsafe.
 @*/
-int MPE_Log_comm_receive( MPI_Comm comm, int local_thread,
-                          int other_party, int tag, int size )
+int MPE_Log_comm_receive( MPI_Comm comm, int other_party, int tag, int size )
 {
     const CLOG_CommIDs_t *commIDs;
+          int             ierr;
+
+    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
 
     commIDs  = CLOG_CommSet_get_IDs( CLOG_CommSet, comm );
-    return MPE_Log_commIDs_receive( commIDs, local_thread,
+    ierr = MPE_Log_commIDs_receive( commIDs, THREADID,
                                     other_party, tag, size );
+
+    MPE_LOG_THREAD_UNLOCK
+    return ierr;
 }
 
 /*@
     MPE_Log_receive - log the receive event of a message within MPI_COMM_WORLD.
+                      (on the calling thread where send event takes place)
 
     Input Parameters:
 + other_party   -  the rank of the other party, i.e. send event's rank.
 . tag           -  message tag ID.
 - size          -  message size in byte.
+
+    This function is threadsafe.
 @*/
 int MPE_Log_receive( int other_party, int tag, int size )
 {
-    return MPE_Log_commIDs_receive( CLOG_CommSet->IDs4world, 0,
+    int   ierr;
+
+    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
+
+    ierr = MPE_Log_commIDs_receive( CLOG_CommSet->IDs4world, THREADID,
                                     other_party, tag, size );
+
+    MPE_LOG_THREAD_UNLOCK
+    return ierr;
 }
 
 /*@
@@ -807,6 +950,12 @@ int MPE_Log_pack( MPE_LOG_BYTES bytebuf, int *position,
     return MPE_LOG_PACK_FAIL;
 }
 
+/*
+    This is a MPE internal function in defining MPI logging wrappers.
+    It is not meant for user application.
+
+    This function is NOT threadsafe
+*/
 int MPE_Log_commIDs_event( const CLOG_CommIDs_t *commIDs, int local_thread,
                            int event, const char *bytebuf )
 {
@@ -821,10 +970,10 @@ int MPE_Log_commIDs_event( const CLOG_CommIDs_t *commIDs, int local_thread,
 
 /*@
     MPE_Log_comm_event - Log an event in a specified MPI_Comm.
+                         (on the calling thread where the event takes place)
 
     Input Parameters:
 + comm          - MPI_Comm where this process is part of.
-. local_thread  - local thread ID where the receive event takes place.
 . event         - event number.
 - bytebuf       - optional byte informational array.  In C, bytebuf should be
                   set to NULL when no extra byte informational data.  In
@@ -833,18 +982,27 @@ int MPE_Log_commIDs_event( const CLOG_CommIDs_t *commIDs, int local_thread,
 
     Returns:
     alway returns MPE_LOG_OK
+
+    This function is threadsafe.
 @*/
-int MPE_Log_comm_event( MPI_Comm comm, int local_thread,
-                        int event, const char *bytebuf )
+int MPE_Log_comm_event( MPI_Comm comm, int event, const char *bytebuf )
 {
     const CLOG_CommIDs_t *commIDs;
+          int             ierr;
+
+    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
 
     commIDs  = CLOG_CommSet_get_IDs( CLOG_CommSet, comm );
-    return MPE_Log_commIDs_event( commIDs, local_thread, event, bytebuf );
+    ierr = MPE_Log_commIDs_event( commIDs, THREADID, event, bytebuf );
+
+    MPE_LOG_THREAD_UNLOCK
+    return ierr;
 }
 
 
-#include "mpe_log_thread.h"
 /*@
     MPE_Log_event - Log an event in MPI_COMM_WORLD.
 
@@ -859,16 +1017,21 @@ int MPE_Log_comm_event( MPI_Comm comm, int local_thread,
 
     Returns:
     alway returns MPE_LOG_OK
+
+    This function is threadsafe.
+
 @*/
 int MPE_Log_event( int event, int data, const char *bytebuf )
 {
-    MPE_LOG_THREAD_DECL
     int ierr;
+    MPE_LOG_THREAD_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
+
     ierr = MPE_Log_commIDs_event( CLOG_CommSet->IDs4world, THREADID, 
                                   event, bytebuf );
+
     MPE_LOG_THREAD_UNLOCK
     return ierr;
 }
@@ -881,11 +1044,20 @@ int MPE_Log_event( int event, int data, const char *bytebuf )
 
     Returns:
     alway returns MPE_LOG_OK
+
+    This function is threadsafe.
 @*/
 int MPE_Log_bare_event( int event )
 {
-    CLOG_Buffer_save_bareevt( CLOG_Buffer, CLOG_CommSet->IDs4world, 0,
+    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
+
+    CLOG_Buffer_save_bareevt( CLOG_Buffer, CLOG_CommSet->IDs4world, THREADID,
                               event );
+
+    MPE_LOG_THREAD_UNLOCK
     return MPE_LOG_OK;
 }
 
@@ -899,11 +1071,20 @@ int MPE_Log_bare_event( int event )
 
     Returns:
     alway returns MPE_LOG_OK
+
+    This function is threadsafe.
 @*/
 int MPE_Log_info_event( int event, const char *bytebuf )
 {
-    CLOG_Buffer_save_cargoevt( CLOG_Buffer, CLOG_CommSet->IDs4world, 0,
+    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
+
+    CLOG_Buffer_save_cargoevt( CLOG_Buffer, CLOG_CommSet->IDs4world, THREADID,
                                event, bytebuf );
+
+    MPE_LOG_THREAD_UNLOCK
     return MPE_LOG_OK;
 }
 
@@ -914,11 +1095,18 @@ int MPE_Log_info_event( int event, const char *bytebuf )
 
     Returns:
     alway returns MPE_LOG_OK
+
+    This function is threadsafe.
 @*/
 int MPE_Log_sync_clocks( void )
 {
     CLOG_Sync_t  *clog_syncer;
     CLOG_Time_t   local_timediff;
+
+    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_GET
+    MPE_LOG_THREAD_LOCK
 
     clog_syncer = CLOG_Stream->syncer;
     if ( clog_syncer->is_ok_to_sync == CLOG_BOOL_TRUE ) {
@@ -926,10 +1114,18 @@ int MPE_Log_sync_clocks( void )
         CLOG_Buffer_set_timeshift( CLOG_Buffer, local_timediff,
                                    CLOG_BOOL_TRUE );
     }
+
+    MPE_LOG_THREAD_UNLOCK
     return MPE_LOG_OK;
 }
 
 
+/*
+    This is a MPE internal function.
+    It is not meant for user application.
+
+    This function is NOT threadsafe
+*/
 void MPE_Log_thread_sync( int local_thread_count )
 {
      int max_thread_count;
@@ -953,6 +1149,8 @@ static char clog_merged_filename[ CLOG_PATH_STRLEN ] = {0};
     This routine outputs the logfile in CLOG2 format, i.e.
     a collective call over 'MPI_COMM_WORLD'.
 
+    This function is NOT threadsafe.
+    It is expected to be called on the master thread only.
 @*/
 int MPE_Finish_log( const char *filename )
 {
@@ -964,9 +1162,10 @@ int MPE_Finish_log( const char *filename )
     if ( MPE_Log_hasBeenClosed == 0 ) {
         CLOG_Local_finalize( CLOG_Stream );
         /*
-           Call MPE_Stop_log() before CLOG_Close() which nullifies CLOG_Stream
+           Invoke non-threadsafe version of MPE_Stop_log()
+           before CLOG_Close() which nullifies CLOG_Stream.
         */
-        MPE_Stop_log();
+        CLOG_Buffer->status = CLOG_INIT_AND_OFF;
 
         /* Even every process reads MPE_LOGFILE_PREFIX, only rank=0 needs it */
         env_logfile_prefix = (char *) getenv( "MPE_LOGFILE_PREFIX" );
