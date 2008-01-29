@@ -336,6 +336,11 @@ MPE_LOG_OVERHEAD: The boolean value determines to log MPE/CLOG2's internal
                   of CLOG_Buffer_write2disk state can be altered by changing
                   CLOG_BLOCK_SIZE and/or CLOG_BUFFERED_BLOCKS.
 
+MPE_LOG_RANK2PROCNAME: The boolean value determines if a .clog2.pnm file
+                       that contains the MPI_COMM_WORLD rank to processor
+                       name determined by MPI_Get_processor_name().  The
+                       default is No.
+
 MPE_WRAPPERS_ADD_LDFLAGS: The variable tells MPE wrappers, mpecc/mpefc
                           (includes mpich2's mpicc and friends), to use
                           LDFLAGS added by MPE, e.g. -Wl,--export-dynamic.
