@@ -28,6 +28,7 @@
 #endif
 #include <netdb.h>
 #include <errno.h>
+#include <stdio.h>
 
 
 /* FIXME: What do these mean?  Why is 32 a good size (e.g., is it because
