@@ -320,7 +320,7 @@ int MPE_Describe_comm_state( MPI_Comm comm,
     const CLOG_CommIDs_t *commIDs;
           int             stateID;
 
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
@@ -488,7 +488,7 @@ int MPE_Describe_comm_event( MPI_Comm comm, int eventID,
 {
     const CLOG_CommIDs_t *commIDs;
 
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
@@ -742,7 +742,7 @@ int MPE_Log_comm_send( MPI_Comm comm, int other_party, int tag, int size )
     const CLOG_CommIDs_t *commIDs;
           int             ierr;
 
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
@@ -770,7 +770,7 @@ int MPE_Log_send( int other_party, int tag, int size )
 {
     int   ierr;
 
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
@@ -815,7 +815,7 @@ int MPE_Log_comm_receive( MPI_Comm comm, int other_party, int tag, int size )
     const CLOG_CommIDs_t *commIDs;
           int             ierr;
 
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
@@ -843,7 +843,7 @@ int MPE_Log_receive( int other_party, int tag, int size )
 {
     int   ierr;
 
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
@@ -990,7 +990,7 @@ int MPE_Log_comm_event( MPI_Comm comm, int event, const char *bytebuf )
     const CLOG_CommIDs_t *commIDs;
           int             ierr;
 
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
@@ -1024,7 +1024,8 @@ int MPE_Log_comm_event( MPI_Comm comm, int event, const char *bytebuf )
 int MPE_Log_event( int event, int data, const char *bytebuf )
 {
     int ierr;
-    MPE_LOG_THREAD_DECL
+
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
@@ -1049,7 +1050,7 @@ int MPE_Log_event( int event, int data, const char *bytebuf )
 @*/
 int MPE_Log_bare_event( int event )
 {
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
@@ -1076,7 +1077,7 @@ int MPE_Log_bare_event( int event )
 @*/
 int MPE_Log_info_event( int event, const char *bytebuf )
 {
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
@@ -1103,9 +1104,6 @@ int MPE_Log_sync_clocks( void )
     CLOG_Sync_t  *clog_syncer;
     CLOG_Time_t   local_timediff;
 
-    MPE_LOG_THREAD_DECL
-
-    MPE_LOG_THREADSTM_GET
     MPE_LOG_THREAD_LOCK
 
     clog_syncer = CLOG_Stream->syncer;
