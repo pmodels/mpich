@@ -18,7 +18,8 @@
 
 #include "mpe_callstack.h"
 
-#define MPE_ThreadID_t  int
+#define MPE_ThreadID_t      int
+#define MPE_THREADID_NULL  -9999
 
 #define MPE_LOG_THREAD_PRINTSTACK() \
         do { \
@@ -39,7 +40,7 @@
 */
 pthread_mutex_t  MPE_Thread_mutex;
 pthread_key_t    MPE_ThreadStm_key;
-MPE_ThreadID_t   MPE_Thread_count = 0;
+MPE_ThreadID_t   MPE_Thread_count = MPE_THREADID_NULL;
 
 void MPE_ThreadStm_free( void *thdstm );
 void MPE_ThreadStm_free( void *thdstm )
@@ -53,19 +54,25 @@ void MPE_ThreadStm_free( void *thdstm )
 void MPE_Log_thread_init( void );
 void MPE_Log_thread_init( void )
 {
-    int   thd_fn_rc;
-    MPE_Thread_count = 0;
-    thd_fn_rc = pthread_mutex_init( &MPE_Thread_mutex, NULL );
-    if ( thd_fn_rc != 0 ) {
-        perror( "pthread_mutex_init() fails!" );
-        MPE_LOG_THREAD_PRINTSTACK();
-        pthread_exit( NULL );
-    }
-    thd_fn_rc = pthread_key_create( &MPE_ThreadStm_key, MPE_ThreadStm_free );
-    if ( thd_fn_rc != 0 ) {
-        perror( "pthread_key_create() fails!" );
-        MPE_LOG_THREAD_PRINTSTACK();
-        pthread_exit( NULL );
+    int   ierr;
+    /*
+         Check if MPE_Thread_count == MPE_THREADID_NULL to protect
+         the initialization routines from invoking more than once.
+    */
+    if ( MPE_Thread_count == MPE_THREADID_NULL ) {
+        MPE_Thread_count = 0;
+        ierr = pthread_mutex_init( &MPE_Thread_mutex, NULL );
+        if ( ierr != 0 ) {
+            perror( "pthread_mutex_init() fails!" );
+            MPE_LOG_THREAD_PRINTSTACK();
+            pthread_exit( NULL );
+        }
+        ierr = pthread_key_create( &MPE_ThreadStm_key, MPE_ThreadStm_free );
+        if ( ierr != 0 ) {
+            perror( "pthread_key_create() fails!" );
+            MPE_LOG_THREAD_PRINTSTACK();
+            pthread_exit( NULL );
+        }
     }
 }
 
