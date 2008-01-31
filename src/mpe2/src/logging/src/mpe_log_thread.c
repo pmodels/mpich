@@ -16,7 +16,17 @@
 
 #if defined( HAVE_LIBPTHREAD )
 
+#include "mpe_callstack.h"
+
 #define MPE_ThreadID_t  int
+
+#define MPE_LOG_THREAD_PRINTSTACK() \
+        do { \
+            MPE_CallStack_t  cstk; \
+            MPE_CallStack_init( &cstk ); \
+            MPE_CallStack_fancyprint( &cstk, 2, \
+                                      "\t", 1, MPE_CALLSTACK_UNLIMITED ); \
+        } while (0)
 
 /* MPE coarse-grained lock support mechanism */
 /*
@@ -48,11 +58,13 @@ void MPE_Log_thread_init( void )
     thd_fn_rc = pthread_mutex_init( &MPE_Thread_mutex, NULL );
     if ( thd_fn_rc != 0 ) {
         perror( "pthread_mutex_init() fails!" );
+        MPE_LOG_THREAD_PRINTSTACK();
         pthread_exit( NULL );
     }
     thd_fn_rc = pthread_key_create( &MPE_ThreadStm_key, MPE_ThreadStm_free );
     if ( thd_fn_rc != 0 ) {
         perror( "pthread_key_create() fails!" );
+        MPE_LOG_THREAD_PRINTSTACK();
         pthread_exit( NULL );
     }
 }

@@ -14,24 +14,35 @@ typedef struct {
 
 #if defined( HAVE_PTHREAD_IN_MPI )
 #include <pthread.h>
+#include "mpe_callstack.h"
+
+#define MPE_LOG_THREAD_PRINTSTACK() \
+        do { \
+            MPE_CallStack_t  cstk; \
+            MPE_CallStack_init( &cstk ); \
+            MPE_CallStack_fancyprint( &cstk, 2, \
+                                      "\t", 1, MPE_CALLSTACK_UNLIMITED ); \
+        } while (0)
 
 /* MPE coarse-grained lock support mechanism */
 extern pthread_mutex_t  MPE_Thread_mutex;
 extern pthread_key_t    MPE_ThreadStm_key;
 extern MPE_ThreadID_t   MPE_Thread_count;
 
-#define MPE_LOG_THREAD_DECL \
+#define MPE_LOG_THREADSTM_DECL \
     MPE_ThreadStm_t *thdstm = NULL;
 
 #define MPE_LOG_THREAD_LOCK  \
     if ( pthread_mutex_lock( &MPE_Thread_mutex ) != 0 ) { \
         perror( "MPE_LOG_THREAD: pthread_mutex_lock() fails!\n" ); \
+        MPE_LOG_THREAD_PRINTSTACK(); \
         pthread_exit( NULL ); \
     }
 
 #define MPE_LOG_THREAD_UNLOCK \
     if ( pthread_mutex_unlock( &MPE_Thread_mutex ) != 0 ) { \
         perror( "MPE_LOG_THREAD: pthread_mutex_unlock() fails!\n" ); \
+        MPE_LOG_THREAD_PRINTSTACK(); \
         pthread_exit( NULL ); \
     }
 
@@ -43,6 +54,7 @@ extern MPE_ThreadID_t   MPE_Thread_count;
     thdstm->is_log_on = 1; \
     if ( pthread_setspecific( MPE_ThreadStm_key, thdstm ) != 0 ) { \
         perror( "MPE_LOG_THREAD: pthread_setspecific() fails!\n" ); \
+        MPE_LOG_THREAD_PRINTSTACK(); \
         pthread_exit( NULL ); \
     } \
     MPE_Thread_count++; \
