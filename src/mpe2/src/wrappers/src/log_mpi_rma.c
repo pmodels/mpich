@@ -129,7 +129,7 @@ int MPI_Accumulate( void *origin_addr, int origin_count,
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Accumulate - prototyping replacement for MPI_Accumulate
@@ -165,7 +165,7 @@ int MPI_Alloc_mem( MPI_Aint size, MPI_Info info, void *baseptr )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Alloc_mem - prototyping replacement for MPI_Alloc_mem
@@ -198,7 +198,7 @@ int MPI_Free_mem( void *base )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Free_mem - prototyping replacement for MPI_Free_mem
@@ -234,7 +234,7 @@ int MPI_Get( void *origin_addr, int origin_count,
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Get - prototyping replacement for MPI_Get
@@ -273,7 +273,7 @@ int MPI_Put( void *origin_addr, int origin_count,
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Put - prototyping replacement for MPI_Put
@@ -309,7 +309,7 @@ int MPI_Win_complete( MPI_Win win )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_complete - prototyping replacement for MPI_Win_complete
@@ -343,7 +343,7 @@ int MPI_Win_create( void *base, MPI_Aint size, int disp_unit,
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_create - prototyping replacement for MPI_Win_create
@@ -376,7 +376,7 @@ int MPI_Win_fence( int assert, MPI_Win win )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_fence - prototyping replacement for MPI_Win_fence
@@ -409,7 +409,7 @@ int MPI_Win_free( MPI_Win *win )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_free - prototyping replacement for MPI_Win_free
@@ -442,7 +442,7 @@ int MPI_Win_get_group( MPI_Win win, MPI_Group *group )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_get_group - prototyping replacement for MPI_Win_get_group
@@ -475,7 +475,7 @@ int MPI_Win_get_name( MPI_Win win, char *win_name, int *resultlen )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_get_name - prototyping replacement for MPI_Win_get_name
@@ -509,7 +509,7 @@ int MPI_Win_lock( int lock_type, int rank, int assert, MPI_Win win )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_lock - prototyping replacement for MPI_Win_lock
@@ -543,7 +543,7 @@ int MPI_Win_post( MPI_Group group, int assert, MPI_Win win )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_post - prototyping replacement for MPI_Win_post
@@ -576,7 +576,7 @@ int MPI_Win_set_name( MPI_Win win, char *win_name )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_set_name - prototyping replacement for MPI_Win_set_name
@@ -609,7 +609,7 @@ int MPI_Win_start( MPI_Group group, int assert, MPI_Win win )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_start - prototyping replacement for MPI_Win_start
@@ -643,7 +643,7 @@ int MPI_Win_test( MPI_Win win, int *flag )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_test - prototyping replacement for MPI_Win_test
@@ -678,7 +678,7 @@ int MPI_Win_unlock( int rank, MPI_Win win )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_unlock - prototyping replacement for MPI_Win_unlock
@@ -712,7 +712,7 @@ int MPI_Win_wait( MPI_Win win )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
       MPI_Win_wait - prototyping replacement for MPI_Win_wait

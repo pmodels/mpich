@@ -1554,7 +1554,7 @@ MPI_Comm comm;
 {
   int       returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Allgather - prototyping replacement for MPI_Allgather
@@ -1594,7 +1594,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 /*
     MPI_Allgatherv - prototyping replacement for MPI_Allgatherv
     Log the beginning and ending of the time spent in MPI_Allgatherv calls.
@@ -1633,7 +1633,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Allreduce - prototyping replacement for MPI_Allreduce
@@ -1673,7 +1673,7 @@ MPI_Comm comm;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
   MPE_LOG_BYTEBUF_DECL
   int  comm_size, type_sz, msg_sz;
@@ -1729,7 +1729,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
   MPE_LOG_BYTEBUF_DECL
   int  idx, comm_size, type_sz, msg_sz;
@@ -1781,7 +1781,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Barrier - prototyping replacement for MPI_Barrier
@@ -1819,7 +1819,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Bcast - prototyping replacement for MPI_Bcast
@@ -1860,7 +1860,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Gather - prototyping replacement for MPI_Gather
@@ -1902,7 +1902,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Gatherv - prototyping replacement for MPI_Gatherv
@@ -1939,7 +1939,7 @@ MPI_Op * op;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Op_create - prototyping replacement for MPI_Op_create
@@ -1973,7 +1973,7 @@ MPI_Op * op;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Op_free - prototyping replacement for MPI_Op_free
@@ -2012,7 +2012,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Reduce_scatter - prototyping replacement for MPI_Reduce_scatter
@@ -2053,7 +2053,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Reduce - prototyping replacement for MPI_Reduce
@@ -2092,7 +2092,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Scan - prototyping replacement for MPI_Scan
@@ -2133,7 +2133,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Scatter - prototyping replacement for MPI_Scatter
@@ -2177,7 +2177,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Scatterv - prototyping replacement for MPI_Scatterv
@@ -2213,7 +2213,7 @@ int keyval;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Attr_delete - prototyping replacement for MPI_Attr_delete
@@ -2250,7 +2250,7 @@ int * flag;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Attr_get - prototyping replacement for MPI_Attr_get
@@ -2286,7 +2286,7 @@ void * attr_value;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Attr_put - prototyping replacement for MPI_Attr_put
@@ -2322,7 +2322,7 @@ int * result;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_compare - prototyping replacement for MPI_Comm_compare
@@ -2359,7 +2359,7 @@ MPI_Comm * comm_out;
   int   returnVal;
   MPE_LOG_STATE_DECL
   MPE_LOG_COMM_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_create - prototyping replacement for MPI_Comm_create
@@ -2397,7 +2397,7 @@ MPI_Comm * comm_out;
   int   returnVal;
   MPE_LOG_STATE_DECL
   MPE_LOG_COMM_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_dup - prototyping replacement for MPI_Comm_dup
@@ -2434,7 +2434,7 @@ MPI_Comm * comm;
   int   returnVal;
   MPE_LOG_STATE_DECL
   MPE_LOG_COMM_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_free - prototyping replacement for MPI_Comm_free
@@ -2473,7 +2473,7 @@ MPI_Group * group;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_group - prototyping replacement for MPI_Comm_group
@@ -2508,7 +2508,7 @@ int * rank;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_rank - prototyping replacement for MPI_Comm_rank
@@ -2543,7 +2543,7 @@ MPI_Group * group;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_remote_group - prototyping replacement for MPI_Comm_remote_group
@@ -2578,7 +2578,7 @@ int * size;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_remote_size - prototyping replacement for MPI_Comm_remote_size
@@ -2613,7 +2613,7 @@ int * size;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_size - prototyping replacement for MPI_Comm_size
@@ -2651,7 +2651,7 @@ MPI_Comm * comm_out;
   int   returnVal;
   MPE_LOG_STATE_DECL
   MPE_LOG_COMM_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_split - prototyping replacement for MPI_Comm_split
@@ -2688,7 +2688,7 @@ int * flag;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Comm_test_inter - prototyping replacement for MPI_Comm_test_inter
@@ -2724,7 +2724,7 @@ int * result;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_compare - prototyping replacement for MPI_Group_compare
@@ -2760,7 +2760,7 @@ MPI_Group * group_out;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_difference - prototyping replacement for MPI_Group_difference
@@ -2797,7 +2797,7 @@ MPI_Group * newgroup;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_excl - prototyping replacement for MPI_Group_excl
@@ -2831,7 +2831,7 @@ MPI_Group * group;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_free - prototyping replacement for MPI_Group_free
@@ -2868,7 +2868,7 @@ MPI_Group * group_out;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_incl - prototyping replacement for MPI_Group_incl
@@ -2904,7 +2904,7 @@ MPI_Group * group_out;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_intersection - prototyping replacement for MPI_Group_intersection
@@ -2939,7 +2939,7 @@ int * rank;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_rank - prototyping replacement for MPI_Group_rank
@@ -2976,7 +2976,7 @@ MPI_Group * newgroup;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_range_excl - prototyping replacement for MPI_Group_range_excl
@@ -3013,7 +3013,7 @@ MPI_Group * newgroup;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_range_incl - prototyping replacement for MPI_Group_range_incl
@@ -3048,7 +3048,7 @@ int * size;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_size - prototyping replacement for MPI_Group_size
@@ -3086,7 +3086,7 @@ int * ranks_b;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_translate_ranks - prototyping replacement for MPI_Group_translate_ranks
@@ -3123,7 +3123,7 @@ MPI_Group * group_out;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Group_union - prototyping replacement for MPI_Group_union
@@ -3163,7 +3163,7 @@ MPI_Comm * comm_out;
   int   returnVal;
   MPE_LOG_STATE_DECL
   MPE_LOG_COMM_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Intercomm_create - prototyping replacement for MPI_Intercomm_create
@@ -3204,7 +3204,7 @@ MPI_Comm * comm_out;
   int   returnVal;
   MPE_LOG_STATE_DECL
   MPE_LOG_COMM_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Intercomm_merge - prototyping replacement for MPI_Intercomm_merge
@@ -3243,7 +3243,7 @@ void * extra_state;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Keyval_create - prototyping replacement for MPI_Keyval_create
@@ -3277,7 +3277,7 @@ int * keyval;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Keyval_free - prototyping replacement for MPI_Keyval_free
@@ -3312,7 +3312,7 @@ int errorcode;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Abort - prototyping replacement for MPI_Abort
@@ -3348,7 +3348,7 @@ int * errorclass;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Error_class - prototyping replacement for MPI_Error_class
@@ -3383,7 +3383,7 @@ MPI_Errhandler * errhandler;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Errhandler_create - prototyping replacement for MPI_Errhandler_create
@@ -3417,7 +3417,7 @@ MPI_Errhandler * errhandler;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Errhandler_free - prototyping replacement for MPI_Errhandler_free
@@ -3452,7 +3452,7 @@ MPI_Errhandler * errhandler;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Errhandler_get - prototyping replacement for MPI_Errhandler_get
@@ -3488,7 +3488,7 @@ int * resultlen;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Error_string - prototyping replacement for MPI_Error_string
@@ -3523,7 +3523,7 @@ MPI_Errhandler errhandler;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Errhandler_set - prototyping replacement for MPI_Errhandler_set
@@ -3604,7 +3604,7 @@ int  MPI_Finalize( )
 
     MPE_LOG_SWITCH_DECL
     MPE_LOG_SOLO_EVENT_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Finalize - prototyping replacement for MPI_Finalize
@@ -3755,7 +3755,7 @@ int * resultlen;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Get_processor_name - prototyping replacement for MPI_Get_processor_name
@@ -3796,7 +3796,7 @@ char  ***argv;
 
     MPE_LOG_SWITCH_DECL
     MPE_LOG_SOLO_EVENT_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREAD_INIT
     MPE_LOG_THREADSTM_GET
@@ -3850,7 +3850,7 @@ int    *provided;
 
     MPE_LOG_SWITCH_DECL
     MPE_LOG_SOLO_EVENT_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
     MPE_LOG_THREAD_INIT
     MPE_LOG_THREADSTM_GET
@@ -3905,7 +3905,7 @@ int * flag;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
   MPE_LOG_THREADSTM_GET
   MPE_LOG_THREAD_LOCK
@@ -3939,7 +3939,7 @@ double  MPI_Wtick(  )
 {
   double  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Wtick - prototyping replacement for MPI_Wtick
@@ -3972,7 +3972,7 @@ double  MPI_Wtime(  )
 {
   double  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Wtime - prototyping replacement for MPI_Wtime
@@ -4008,7 +4008,7 @@ MPI_Aint * address;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Address - prototyping replacement for MPI_Address
@@ -4048,7 +4048,7 @@ MPI_Comm comm;
   int  returnVal;
   int  size;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Bsend - prototyping replacement for MPI_Bsend
@@ -4091,7 +4091,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Bsend_init - prototyping replacement for MPI_Bsend_init
@@ -4129,7 +4129,7 @@ int size;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Buffer_attach - prototyping replacement for MPI_Buffer_attach
@@ -4164,7 +4164,7 @@ int * size;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Buffer_detach - prototyping replacement for MPI_Buffer_detach
@@ -4198,7 +4198,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Cancel - prototyping replacement for MPI_Cancel
@@ -4234,7 +4234,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Request_free - prototyping replacement for MPI_Request_free
@@ -4276,7 +4276,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Recv_init - prototyping replacement for MPI_Recv_init
@@ -4322,7 +4322,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Send_init - prototyping replacement for MPI_Send_init
@@ -4361,7 +4361,7 @@ int * elements;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Get_elements - prototyping replacement for MPI_Get_elements
@@ -4397,7 +4397,7 @@ int * count;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Get_count - prototyping replacement for MPI_Get_count
@@ -4437,7 +4437,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Ibsend - prototyping replacement for MPI_Ibsend
@@ -4477,7 +4477,7 @@ MPI_Status * status;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 #ifdef HAVE_MPI_STATUS_IGNORE
   MPI_Status    tmp_status;
@@ -4533,7 +4533,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Irecv - prototyping replacement for MPI_Irecv
@@ -4577,7 +4577,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Irsend - prototyping replacement for MPI_Irsend
@@ -4620,7 +4620,7 @@ MPI_Request * request;
   int  returnVal;
   int  size;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Isend - prototyping replacement for MPI_Isend
@@ -4666,7 +4666,7 @@ MPI_Request * request;
   int  returnVal;
   int  size;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Issend - prototyping replacement for MPI_Issend
@@ -4711,7 +4711,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Pack - prototyping replacement for MPI_Pack
@@ -4749,7 +4749,7 @@ int * size;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Pack_size - prototyping replacement for MPI_Pack_size
@@ -4786,7 +4786,7 @@ MPI_Status * status;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 #ifdef HAVE_MPI_STATUS_IGNORE
   MPI_Status    tmp_status;
@@ -4842,7 +4842,7 @@ MPI_Status * status;
 {
   int  returnVal, acount;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 #ifdef HAVE_MPI_STATUS_IGNORE
   MPI_Status    tmp_status;
@@ -4903,7 +4903,7 @@ MPI_Comm comm;
   int  returnVal;
   int  size;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Rsend - prototyping replacement for MPI_Rsend
@@ -4946,7 +4946,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Rsend_init - prototyping replacement for MPI_Rsend_init
@@ -4989,7 +4989,7 @@ MPI_Comm comm;
   int  returnVal;
   int  size;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Send - prototyping replacement for MPI_Send
@@ -5040,7 +5040,7 @@ MPI_Status * status;
   int  returnVal;
   int  acount, sendsize;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 #ifdef HAVE_MPI_STATUS_IGNORE
   MPI_Status    tmp_status;
@@ -5108,7 +5108,7 @@ MPI_Status * status;
   int  returnVal;
   int  acount, sendsize;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 #ifdef HAVE_MPI_STATUS_IGNORE
   MPI_Status    tmp_status;
@@ -5170,7 +5170,7 @@ MPI_Comm comm;
 {
   int  returnVal, size;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Ssend - prototyping replacement for MPI_Ssend
@@ -5213,7 +5213,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Ssend_init - prototyping replacement for MPI_Ssend_init
@@ -5249,7 +5249,7 @@ MPI_Request * request;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Start - prototyping replacement for MPI_Start
@@ -5287,7 +5287,7 @@ MPI_Request * array_of_requests;
   int  returnVal;
   int  i;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Startall - prototyping replacement for MPI_Startall
@@ -5327,7 +5327,7 @@ MPI_Status * status;
     int   returnVal;
     MPI_Request lreq = *request;
     MPE_LOG_STATE_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Test - prototyping replacement for MPI_Test
@@ -5374,7 +5374,7 @@ MPI_Status * array_of_statuses;
     int  returnVal;
     int  i;
     MPE_LOG_STATE_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Testall - prototyping replacement for MPI_Testall
@@ -5452,7 +5452,7 @@ MPI_Status * status;
     int  returnVal;
     int i;
     MPE_LOG_STATE_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Testany - prototyping replacement for MPI_Testany
@@ -5509,7 +5509,7 @@ int * flag;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Test_cancelled - prototyping replacement for MPI_Test_cancelled
@@ -5549,7 +5549,7 @@ MPI_Status * array_of_statuses;
     int  returnVal;
     int  i;
     MPE_LOG_STATE_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Testsome - prototyping replacement for MPI_Testsome
@@ -5625,7 +5625,7 @@ MPI_Datatype * datatype;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_commit - prototyping replacement for MPI_Type_commit
@@ -5661,7 +5661,7 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_contiguous - prototyping replacement for MPI_Type_contiguous
@@ -5696,7 +5696,7 @@ MPI_Aint * extent;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_extent - prototyping replacement for MPI_Type_extent
@@ -5730,7 +5730,7 @@ MPI_Datatype * datatype;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_free - prototyping replacement for MPI_Type_free
@@ -5768,7 +5768,7 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_hindexed - prototyping replacement for MPI_Type_hindexed
@@ -5807,7 +5807,7 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_hvector - prototyping replacement for MPI_Type_hvector
@@ -5845,7 +5845,7 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_indexed - prototyping replacement for MPI_Type_indexed
@@ -5880,7 +5880,7 @@ MPI_Aint * displacement;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_lb - prototyping replacement for MPI_Type_lb
@@ -5915,7 +5915,7 @@ int          * size;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_size - prototyping replacement for MPI_Type_size
@@ -5953,7 +5953,7 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_struct - prototyping replacement for MPI_Type_struct
@@ -5988,7 +5988,7 @@ MPI_Aint * displacement;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_ub - prototyping replacement for MPI_Type_ub
@@ -6026,7 +6026,7 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Type_vector - prototyping replacement for MPI_Type_vector
@@ -6066,7 +6066,7 @@ MPI_Comm comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Unpack - prototyping replacement for MPI_Unpack
@@ -6103,7 +6103,7 @@ MPI_Status * status;
     int          returnVal;
     MPI_Request  lreq = *request;
     MPE_LOG_STATE_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Wait - prototyping replacement for MPI_Wait
@@ -6148,7 +6148,7 @@ MPI_Status * array_of_statuses;
     int  returnVal;
     int  i;
     MPE_LOG_STATE_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Waitall - prototyping replacement for MPI_Waitall
@@ -6225,7 +6225,7 @@ MPI_Status * status;
     int  returnVal;
     int  i;
     MPE_LOG_STATE_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Waitany - prototyping replacement for MPI_Waitany
@@ -6295,7 +6295,7 @@ MPI_Status * array_of_statuses;
     int  returnVal;
     int  i;
     MPE_LOG_STATE_DECL
-    MPE_LOG_THREAD_DECL
+    MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Waitsome - prototyping replacement for MPI_Waitsome
@@ -6374,7 +6374,7 @@ int * coords;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Cart_coords - prototyping replacement for MPI_Cart_coords
@@ -6414,7 +6414,7 @@ MPI_Comm * comm_cart;
   int   returnVal;
   MPE_LOG_STATE_DECL
   MPE_LOG_COMM_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Cart_create - prototyping replacement for MPI_Cart_create
@@ -6455,7 +6455,7 @@ int * coords;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Cart_get - prototyping replacement for MPI_Cart_get
@@ -6493,7 +6493,7 @@ int * newrank;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Cart_map - prototyping replacement for MPI_Cart_map
@@ -6529,7 +6529,7 @@ int * rank;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Cart_rank - prototyping replacement for MPI_Cart_rank
@@ -6567,7 +6567,7 @@ int * dest;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Cart_shift - prototyping replacement for MPI_Cart_shift
@@ -6604,7 +6604,7 @@ MPI_Comm * comm_new;
   int   returnVal;
   MPE_LOG_STATE_DECL
   MPE_LOG_COMM_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Cart_sub - prototyping replacement for MPI_Cart_sub
@@ -6641,7 +6641,7 @@ int * ndims;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Cartdim_get - prototyping replacement for MPI_Cartdim_get
@@ -6677,7 +6677,7 @@ int * dims;
 {
   int  returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Dims_create - prototyping replacement for MPI_Dims_create
@@ -6717,7 +6717,7 @@ MPI_Comm * comm_graph;
   int   returnVal;
   MPE_LOG_STATE_DECL
   MPE_LOG_COMM_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Graph_create - prototyping replacement for MPI_Graph_create
@@ -6758,7 +6758,7 @@ int * edges;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Graph_get - prototyping replacement for MPI_Graph_get
@@ -6796,7 +6796,7 @@ int * newrank;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Graph_map - prototyping replacement for MPI_Graph_map
@@ -6833,7 +6833,7 @@ int * neighbors;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Graph_neighbors - prototyping replacement for MPI_Graph_neighbors
@@ -6869,7 +6869,7 @@ int * nneighbors;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Graph_neighbors_count - prototyping replacement for MPI_Graph_neighbors_count
@@ -6905,7 +6905,7 @@ int * nedges;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Graphdims_get - prototyping replacement for MPI_Graphdims_get
@@ -6940,7 +6940,7 @@ int * top_type;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_THREAD_DECL
+  MPE_LOG_THREADSTM_DECL
 
 /*
     MPI_Topo_test - prototyping replacement for MPI_Topo_test
