@@ -66,12 +66,15 @@ MPEU_DLL_SPEC       CLOG_CommSet_t *CLOG_CommSet           = NULL;
     Always return MPE_LOG_OK.
 
     This function is NOT threadsafe.
-    It is expected to be called on the master thread only.
+    MPE_Init_log() is expected to be called on only 1 thread in each
+    process.  This thread will be labelled as main thread. 
 
 .seealso: MPE_Finish_log()
 @*/
 int MPE_Init_log( void )
 {
+    MPE_LOG_THREADSTM_DECL
+
 #if !defined( CLOG_NOMPI )
     int           flag;
     PMPI_Initialized(&flag);
@@ -90,15 +93,20 @@ int MPE_Init_log( void )
     PMPI_Init( NULL, NULL );
 #endif
 
+    MPE_LOG_THREAD_INIT
+    MPE_LOG_THREADSTM_GET
+
+    MPE_LOG_THREAD_LOCK
+
     if (!MPE_Log_hasBeenInit || MPE_Log_hasBeenClosed) {
         CLOG_Stream     = CLOG_Open();
         CLOG_Local_init( CLOG_Stream, NULL );
         CLOG_Buffer     = CLOG_Stream->buffer;
         CLOG_CommSet    = CLOG_Buffer->commset;
-        MPE_Log_commIDs_intracomm( CLOG_CommSet->IDs4world, 0,
+        MPE_Log_commIDs_intracomm( CLOG_CommSet->IDs4world, THREADID,
                                    CLOG_COMM_WORLD_CREATE,
                                    CLOG_CommSet->IDs4world );
-        MPE_Log_commIDs_intracomm( CLOG_CommSet->IDs4world, 0,
+        MPE_Log_commIDs_intracomm( CLOG_CommSet->IDs4world, THREADID,
                                    CLOG_COMM_SELF_CREATE,
                                    CLOG_CommSet->IDs4self );
 #if !defined( CLOG_NOMPI )
@@ -107,13 +115,16 @@ int MPE_Init_log( void )
            if real MPI(i.e. non serial-MPI) is used or not.
         */
         if ( CLOG_Buffer->world_rank == 0 ) {
-            CLOG_Buffer_save_constdef( CLOG_Buffer, CLOG_CommSet->IDs4world, 0,
+            CLOG_Buffer_save_constdef( CLOG_Buffer,
+                                       CLOG_CommSet->IDs4world, THREADID,
                                        CLOG_EVT_CONST,
                                        MPI_PROC_NULL, "MPI_PROC_NULL" );
-            CLOG_Buffer_save_constdef( CLOG_Buffer, CLOG_CommSet->IDs4world, 0,
+            CLOG_Buffer_save_constdef( CLOG_Buffer,
+                                       CLOG_CommSet->IDs4world, THREADID,
                                        CLOG_EVT_CONST,
                                        MPI_ANY_SOURCE, "MPI_ANY_SOURCE" );
-            CLOG_Buffer_save_constdef( CLOG_Buffer, CLOG_CommSet->IDs4world, 0,
+            CLOG_Buffer_save_constdef( CLOG_Buffer,
+                                       CLOG_CommSet->IDs4world, THREADID,
                                        CLOG_EVT_CONST,
                                        MPI_ANY_TAG, "MPI_ANY_TAG" );
         }
@@ -125,6 +136,7 @@ int MPE_Init_log( void )
     /* Invoke non-threadsafe version of MPE_Start_log() */
     CLOG_Buffer->status = CLOG_INIT_AND_ON;
 
+    MPE_LOG_THREAD_UNLOCK
     return MPE_LOG_OK;
 }
 
@@ -1148,7 +1160,8 @@ static char clog_merged_filename[ CLOG_PATH_STRLEN ] = {0};
     a collective call over 'MPI_COMM_WORLD'.
 
     This function is NOT threadsafe.
-    It is expected to be called on the master thread only.
+    MPE_Finish_log() is expected to be called on the main thread which
+    initializes MPE logging through MPE_Init_log().
 @*/
 int MPE_Finish_log( const char *filename )
 {
@@ -1156,6 +1169,9 @@ int MPE_Finish_log( const char *filename )
    The environment variable MPE_LOG_FORMAT is NOT read
 */
     char         *env_logfile_prefix;
+
+    MPE_LOG_THREAD_LOCK
+    MPE_LOG_THREAD_FINALIZE
 
     if ( MPE_Log_hasBeenClosed == 0 ) {
         CLOG_Local_finalize( CLOG_Stream );
@@ -1190,6 +1206,7 @@ int MPE_Finish_log( const char *filename )
 
         MPE_Log_hasBeenClosed = 1;
     }
+    MPE_LOG_THREAD_UNLOCK
 
 #if defined( CLOG_NOMPI )
     /* Finalize the serial-MPI implementation */
