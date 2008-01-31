@@ -77,7 +77,7 @@ void MPE_Log_thread_init( void );
 #else
 
 /* When there is no thread support, thdID has to be a constant, i.e. 0 */
-#define MPE_LOG_THREAD_DECL
+#define MPE_LOG_THREADSTM_DECL
 
 /* Define everything else to NULL */
 #define MPE_LOG_THREAD_LOCK
