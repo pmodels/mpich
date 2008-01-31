@@ -3616,9 +3616,16 @@ int  MPI_Finalize( )
     is_thisfn_logged  = 1;
     MPE_LOG_SOLO_EVENT( CLOG_CommSet->IDs4world, THREADID, MPE_COMM_FINALIZE_ID )
 
+    /*
+       To guard again erroneous implementation of PMPI_Finalize which
+       make MPI_ calls, e.g. BG/L, from calling MPE_Log_events
+       i.e. writing to the CLOG's stream when it is already closed in
+       MPE_Finish_log(), turn the trace off explicitly.
+    */
 #if defined( MAKE_SAFE_PMPI_CALL )
     MPE_LOG_OFF
 #endif
+
     /* set the total number of state calls by any processor */
     for ( idx = 0; idx < MPE_MAX_KNOWN_STATES; idx++ ) 
         state_count[idx] = states[idx].n_calls;
@@ -3654,8 +3661,8 @@ int  MPI_Finalize( )
             }
         }
     }
+    MPE_LOG_THREAD_UNLOCK
 
-    MPE_LOG_THREAD_FINALIZE
     MPE_Finish_log( logFileName_0 );
     if ( procid_0 == 0 ) {
         fprintf( stderr, "Finished writing logfile %s.\n",
@@ -3663,8 +3670,10 @@ int  MPI_Finalize( )
         fflush( stderr );
     }
 
+    MPE_LOG_THREAD_LOCK
     /* Recover all of the allocated requests */
     rq_end( requests_avail_0 );
+    MPE_LOG_THREAD_UNLOCK
     
 #if defined( MAKE_PROCNAME_FILE )
     /* assuming MPE_LOG_RANK2PROCNAME is false if not defined */
@@ -3736,15 +3745,7 @@ int  MPI_Finalize( )
     }  /* endof if ( isGO4procname ) */
 #endif
 
-    MPE_LOG_THREAD_UNLOCK
-
-    /*
-       To guard again erroneous implementation of PMPI_Finalize which
-       make MPI_ calls, e.g. BG/L, from calling MPE_Log_events
-       i.e. writing to the CLOG's stream when it is already closed in
-       MPE_Finish_log(), turn the trace off explicitly.
-    */
-    returnVal = PMPI_Finalize(  );
+    returnVal = PMPI_Finalize();
 
     return returnVal;
 }
@@ -3798,6 +3799,7 @@ char  ***argv;
     MPE_LOG_SOLO_EVENT_DECL
     MPE_LOG_THREADSTM_DECL
 
+    /* Initialize the THREADSTM to validate MPE_LOG_{ON/OFF} and THREADID. */
     MPE_LOG_THREAD_INIT
     MPE_LOG_THREADSTM_GET
 
@@ -3808,13 +3810,14 @@ char  ***argv;
 
     returnVal = PMPI_Init( argc, argv );
 
-    MPE_LOG_THREAD_LOCK
     MPE_Init_log();
     PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+
 #if defined( MAKE_SAFE_PMPI_CALL )
     MPE_LOG_ON
 #endif
 
+    MPE_LOG_THREAD_LOCK
     /* Initialize the _selected_ MPI and MPE logging internal states */
     MPE_Init_states_events();
 
@@ -3852,6 +3855,7 @@ int    *provided;
     MPE_LOG_SOLO_EVENT_DECL
     MPE_LOG_THREADSTM_DECL
 
+    /* Initialize the THREADSTM to validate MPE_LOG_{ON/OFF} and THREADID. */
     MPE_LOG_THREAD_INIT
     MPE_LOG_THREADSTM_GET
 
@@ -3862,13 +3866,14 @@ int    *provided;
 
     returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
-    MPE_LOG_THREAD_LOCK
     MPE_Init_log();
     PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+
 #if defined( MAKE_SAFE_PMPI_CALL )
     MPE_LOG_ON
 #endif
 
+    MPE_LOG_THREAD_LOCK
     /* Initialize the _selected_ MPI and MPE logging internal states */
     MPE_Init_states_events();
 
