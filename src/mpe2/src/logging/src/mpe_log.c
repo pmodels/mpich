@@ -62,12 +62,12 @@ MPEU_DLL_SPEC       CLOG_CommSet_t *CLOG_CommSet           = NULL;
     liblmpe.a will be included in the link path if either "mpicc -mpe=mpilog"
     or "mpecc -mpilog" is used in the link step.
 
+    This function is threadsafe, but
+    MPE_Init_log() is expected to be called on only one thread in each
+    process.  This thread will be labelled as main thread. 
+
     Returns:
     Always return MPE_LOG_OK.
-
-    This function is NOT threadsafe.
-    MPE_Init_log() is expected to be called on only 1 thread in each
-    process.  This thread will be labelled as main thread. 
 
 .seealso: MPE_Finish_log()
 @*/
@@ -143,6 +143,7 @@ int MPE_Init_log( void )
 /*@
     MPE_Start_log - Start the logging of events.
 
+    Notes:
     This function is threadsafe.
 @*/
 int MPE_Start_log( void )
@@ -160,6 +161,7 @@ int MPE_Start_log( void )
 /*@
     MPE_Stop_log - Stop the logging of events
 
+    Notes:
     This function is threadsafe.
 @*/
 int MPE_Stop_log( void )
@@ -178,13 +180,14 @@ int MPE_Stop_log( void )
   MPE_Initialized_logging - Indicate whether MPE_Init_log()
                             or MPE_Finish_log() have been called.
 
+    Notes:
+    This function is threadsafe.
+
   Returns:
   0 if MPE_Init_log() has not been called,
   1 if MPE_Init_log() has been called
     but MPE_Finish_log() has not been called,
   and 2 otherwise.
-
-    This function is threadsafe.
 @*/
 int MPE_Initialized_logging( void )
 {
@@ -318,7 +321,7 @@ N*/
     States are added to a logfile by calling 'MPE_Log_comm_event()'
     for the start and end event numbers.
 
-   This function is threadsafe.
+    This function is threadsafe.
 
 .N MPE_LOG_BYTE_FORMAT
 
@@ -379,9 +382,9 @@ int MPE_Describe_comm_state( MPI_Comm comm,
     for backward compatibility purpose.  Users are urged to
     use 'MPE_Describe_comm_state' and 'MPE_Log_comm_event()' instead.
 
-.N MPE_LOG_BYTE_FORMAT
+    This function is threadsafe.
 
-   This function is threadsafe.
+.N MPE_LOG_BYTE_FORMAT
 
 .seealso: MPE_Log_get_state_eventIDs().
 @*/
@@ -400,7 +403,7 @@ int MPE_Describe_info_state( int state_startID, int state_finalID,
     stateID should be fetched from CLOG_Get_known_stateID()
     i.e, MPE_Log_get_known_stateID()
 
-    This function is NOT threadsafe
+    This function is NOT threadsafe.
 */
 int MPE_Describe_known_state( const CLOG_CommIDs_t *commIDs, int local_thread,
                               int stateID, int state_startID, int state_finalID,
@@ -488,9 +491,9 @@ int MPE_Describe_state( int state_startID, int state_finalID,
     Notes:
     Adds a event definition to the logfile.
 
-.N MPE_LOG_BYTE_FORMAT
+    This function is threadsafe.
 
-    This function is threadsafe
+.N MPE_LOG_BYTE_FORMAT
 
 .seealso: MPE_Log_get_solo_eventID()
 @*/
@@ -542,9 +545,9 @@ int MPE_Describe_comm_event( MPI_Comm comm, int eventID,
     for backward compatibility purpose.  Users are urged to
     use 'MPE_Describe_comm_event' instead.
 
-.N MPE_LOG_BYTE_FORMAT
+    This function is threadsafe.
 
-    This function is threadsafe
+.N MPE_LOG_BYTE_FORMAT
 
 .seealso: MPE_Log_get_solo_eventID(), MPE_Describe_comm_event() 
 @*/
@@ -562,7 +565,7 @@ int MPE_Describe_info_event( int eventID,
     eventID should be fetched from CLOG_Get_known_solo_eventID()
     i.e, MPE_Log_get_known_solo_eventID()
 
-    This function is NOT threadsafe
+    This function is NOT threadsafe.
 */
 int MPE_Describe_known_event( const CLOG_CommIDs_t *commIDs, int local_thread,
                               int eventID,
@@ -694,7 +697,7 @@ int MPE_Log_get_solo_eventID( int *eventdef_eventID )
     This is a MPE internal function in defining MPE_state[] evtID components.
     It is not meant for user application.
 
-    This function is NOT threadsafe
+    This function is NOT threadsafe.
 */
 int MPE_Log_get_known_eventID( void )
 {
@@ -705,7 +708,7 @@ int MPE_Log_get_known_eventID( void )
     This is a MPE internal function in defining MPE_Event[] evtID components.
     It is not meant for user application.
 
-    This function is NOT threadsafe
+    This function is NOT threadsafe.
 */
 int MPE_Log_get_known_solo_eventID( void )
 {
@@ -725,7 +728,7 @@ int MPE_Log_get_known_stateID( void )
     This is a MPE internal function in defining MPI logging wrappers.
     It is not meant for user application.
 
-    This function is NOT threadsafe
+    This function is NOT threadsafe.
 */
 int MPE_Log_commIDs_send( const CLOG_CommIDs_t *commIDs, int local_thread,
                           int other_party, int tag, int size )
@@ -747,6 +750,7 @@ int MPE_Log_commIDs_send( const CLOG_CommIDs_t *commIDs, int local_thread,
 . tag           - message tag ID.
 - size          - message size in byte.
 
+    Notes:
     This function is threadsafe.
 @*/
 int MPE_Log_comm_send( MPI_Comm comm, int other_party, int tag, int size )
@@ -776,6 +780,7 @@ int MPE_Log_comm_send( MPI_Comm comm, int other_party, int tag, int size )
 . tag           - message tag ID.
 - size          - message size in byte.
 
+    Notes:
     This function is threadsafe.
 @*/
 int MPE_Log_send( int other_party, int tag, int size )
@@ -798,7 +803,7 @@ int MPE_Log_send( int other_party, int tag, int size )
     This is a MPE internal function in defining MPI logging wrappers.
     It is not meant for user application.
 
-    This function is NOT threadsafe
+    This function is NOT threadsafe.
 */
 int MPE_Log_commIDs_receive( const CLOG_CommIDs_t *commIDs, int local_thread,
                              int other_party, int tag, int size )
@@ -820,6 +825,7 @@ int MPE_Log_commIDs_receive( const CLOG_CommIDs_t *commIDs, int local_thread,
 . tag           - message tag ID.
 - size          - message size in byte.
 
+    Notes:
     This function is threadsafe.
 @*/
 int MPE_Log_comm_receive( MPI_Comm comm, int other_party, int tag, int size )
@@ -849,6 +855,7 @@ int MPE_Log_comm_receive( MPI_Comm comm, int other_party, int tag, int size )
 . tag           -  message tag ID.
 - size          -  message size in byte.
 
+    Notes:
     This function is threadsafe.
 @*/
 int MPE_Log_receive( int other_party, int tag, int size )
@@ -966,7 +973,7 @@ int MPE_Log_pack( MPE_LOG_BYTES bytebuf, int *position,
     This is a MPE internal function in defining MPI logging wrappers.
     It is not meant for user application.
 
-    This function is NOT threadsafe
+    This function is NOT threadsafe.
 */
 int MPE_Log_commIDs_event( const CLOG_CommIDs_t *commIDs, int local_thread,
                            int event, const char *bytebuf )
@@ -992,10 +999,11 @@ int MPE_Log_commIDs_event( const CLOG_CommIDs_t *commIDs, int local_thread,
                   Fortran, an zero-length string "", or a single blank string
                   " ", is equivalent to NULL in C.
 
+    Notes:
+    This function is threadsafe.
+
     Returns:
     alway returns MPE_LOG_OK
-
-    This function is threadsafe.
 @*/
 int MPE_Log_comm_event( MPI_Comm comm, int event, const char *bytebuf )
 {
@@ -1027,10 +1035,11 @@ int MPE_Log_comm_event( MPI_Comm comm, int event, const char *bytebuf )
               an zero-length string "", or a single blank string " ",
               is equivalent to NULL in C.
 
+    Notes:
+    This function is threadsafe.
+
     Returns:
     alway returns MPE_LOG_OK
-
-    This function is threadsafe.
 
 @*/
 int MPE_Log_event( int event, int data, const char *bytebuf )
@@ -1055,10 +1064,11 @@ int MPE_Log_event( int event, int data, const char *bytebuf )
     Input Parameters:
 .   event   - event number.
 
+    Notes:
+    This function is threadsafe.
+
     Returns:
     alway returns MPE_LOG_OK
-
-    This function is threadsafe.
 @*/
 int MPE_Log_bare_event( int event )
 {
@@ -1082,10 +1092,11 @@ int MPE_Log_bare_event( int event )
 -   bytebuf - byte informational array.  If no byte inforamtional array,
               use MPE_Log_bare_event() instead.
 
+    Notes:
+    This function is threadsafe.
+
     Returns:
     alway returns MPE_LOG_OK
-
-    This function is threadsafe.
 @*/
 int MPE_Log_info_event( int event, const char *bytebuf )
 {
@@ -1106,10 +1117,11 @@ int MPE_Log_info_event( int event, const char *bytebuf )
                           minimize the effect of time drift.  It is like a 
                           longer version of MPI_Comm_barrier( MPI_COMM_WORLD );
 
+    Notes:
+    This function is threadsafe.
+
     Returns:
     alway returns MPE_LOG_OK
-
-    This function is threadsafe.
 @*/
 int MPE_Log_sync_clocks( void )
 {
@@ -1134,7 +1146,7 @@ int MPE_Log_sync_clocks( void )
     This is a MPE internal function.
     It is not meant for user application.
 
-    This function is NOT threadsafe
+    This function is NOT threadsafe.
 */
 void MPE_Log_thread_sync( int local_thread_count )
 {
@@ -1159,9 +1171,14 @@ static char clog_merged_filename[ CLOG_PATH_STRLEN ] = {0};
     This routine outputs the logfile in CLOG2 format, i.e.
     a collective call over 'MPI_COMM_WORLD'.
 
-    This function is NOT threadsafe.
-    MPE_Finish_log() is expected to be called on the main thread which
-    initializes MPE logging through MPE_Init_log().
+    This function is threadsafe, but
+    MPE_Finish_log() is expected to be called only on the main thread
+    which initializes MPE logging through MPE_Init_log().
+
+    Returns:
+    Always return MPE_LOG_OK.
+
+.seealso: MPE_Init_log()
 @*/
 int MPE_Finish_log( const char *filename )
 {
