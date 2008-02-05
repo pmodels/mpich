@@ -307,7 +307,14 @@ def handle_mpd_output(fd,fd2idx,hostsAndInfo):
     global myHost, fullDirName, rshCmd, user, mpdCmd, debug, verbose
     idx = fd2idx[fd]
     host = hostsAndInfo[idx]['host']
-    port = fd.readline().strip()
+    # port = fd.readline().strip()
+    port = 'no_port'
+    for line in fd.readlines():    # handle output from shells that echo stuff
+        line = line.strip()
+        splitLine = line.split('=')
+        if splitLine[0] == 'mpd_port':
+            port = splitLine[1]
+            break
     if debug:
         print "debug: mpd on %s  on port %s" % (host,port)
     if port.isdigit():

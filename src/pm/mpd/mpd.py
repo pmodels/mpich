@@ -187,7 +187,8 @@ class MPD(object):
             sys.exit(-1)
         os.close(0)
         if self.parmdb['MPD_ECHO_PORT_FLAG']:    # do this before becoming a daemon
-            print self.parmdb['MPD_LISTEN_PORT']
+            # print self.parmdb['MPD_LISTEN_PORT']
+            print "mpd_port=%d" % self.parmdb['MPD_LISTEN_PORT']
             sys.stdout.flush()
             ##### NEXT 2 for debugging
             ## print >>sys.stderr, self.parmdb['MPD_LISTEN_PORT']
