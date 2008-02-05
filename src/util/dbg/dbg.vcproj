@@ -1748,6 +1748,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\exit.c"
+				>
+			</File>
+			<File
 				RelativePath="..\msgs\msgprint.c"
 				>
 			</File>
