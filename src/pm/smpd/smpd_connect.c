@@ -595,6 +595,10 @@ int smpd_init_process(void)
     smpd_process.hBombDiffuseEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     smpd_process.hLaunchProcessMutex = CreateMutex(NULL, FALSE, NULL);
 #else
+    /* Setting the smpd_filename to default filename is done in smpd_get_smpd_data()
+     * Avoid duplicating the effort
+     */ 
+	/*
     homedir = getenv("HOME");
     if(homedir != NULL){
         strcpy(smpd_process.smpd_filename, homedir);
@@ -609,7 +613,7 @@ int smpd_init_process(void)
     {
 	if (s.st_mode & 00077)
 	{
-	    /*printf("smpd file, %s, cannot be readable by anyone other than the current user, please set the permissions accordingly (0600).\n", smpd_process.smpd_filename);*/
+	    printf("smpd file, %s, cannot be readable by anyone other than the current user, please set the permissions accordingly (0600).\n", smpd_process.smpd_filename);
 	    smpd_process.smpd_filename[0] = '\0';
 	}
     }
@@ -617,9 +621,12 @@ int smpd_init_process(void)
     {
 	smpd_process.smpd_filename[0] = '\0';
     }
+	*/
 #endif
-
-    smpd_get_smpd_data("phrase", smpd_process.passphrase, SMPD_PASSPHRASE_MAX_LENGTH);
+	smpd_process.smpd_filename[0] = '\0';
+	smpd_process.passphrase[0] = '\0';
+    /* smpd_init_process() should not try to get the passphrase. Just initialize the values */
+    /* smpd_get_smpd_data("phrase", smpd_process.passphrase, SMPD_PASSPHRASE_MAX_LENGTH); */
 
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;

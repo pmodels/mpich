@@ -741,7 +741,7 @@ int mp_parse_command_args(int *argcp, char **argvp[])
      */
 
     /* Get a list of hosts from a file or the registry to be used with the -n,-np options */
-    smpd_get_default_hosts();
+    smpd_get_default_hosts(); 
 
     cur_rank = 0;
     gdrive_map_list = NULL;

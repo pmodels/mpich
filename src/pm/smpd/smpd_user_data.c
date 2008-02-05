@@ -297,7 +297,6 @@ SMPD_BOOL smpd_option_on(const char *option)
 	    return SMPD_TRUE;
 	}
     }
-
     smpd_exit_fn(FCNAME);
     return SMPD_FALSE;
 }
