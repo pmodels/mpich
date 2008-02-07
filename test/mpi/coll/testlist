@@ -18,7 +18,7 @@ bcasttest 10
 bcast2 4
 # More that 8 processes are required to get bcast to switch to the long
 # msg algorithm (see coll definitions in mpiimpl.h)
-bcast2 10
+bcast2 10 timeLimit=420
 bcast3 10 timeLimit=420
 coll2 5
 coll3 5
