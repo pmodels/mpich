@@ -394,7 +394,6 @@ int
 get_local_procs (int global_rank, int num_global, int *num_local_p, int **local_procs_p, int *local_rank_p, int *num_nodes_p, int **node_ids_p)
 {
 #if defined (ENABLED_NO_LOCAL)
-#warning shared-memory communication disabled
     /* used for debugging only */
     /* return an array as if there are no other processes on this processor */
     int mpi_errno = MPI_SUCCESS;
@@ -422,7 +421,7 @@ get_local_procs (int global_rank, int num_global, int *num_local_p, int **local_
     /* --END ERROR HANDLING-- */
 
 #elif 0 /* PMI_Get_clique_(size)|(ranks) don't work with mpd */
-#warning PMI_Get_clique doesnt work with mpd
+#error PMI_Get_clique doesnt work with mpd
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
     int *lrank_p;
