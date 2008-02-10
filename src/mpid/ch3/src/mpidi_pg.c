@@ -46,13 +46,15 @@ int MPIDI_PG_Init(int *argc_p, char ***argv_p,
     if (argc_p && argv_p) {
 	int argc = *argc_p, i;
 	char **argv = *argv_p;
-	for (i=1; i<=argc && argv[i]; i++) {
+        /* applied patch from Juha Jeronen, req #3920 */
+	for (i=1; i<argc && argv[i]; i++) {
 	    if (strcmp( "-mpichd-dbg-pg", argv[i] ) == 0) {
 		int j;
 		verbose = 1;
-		for (j=i; j<=argc && argv[i]; j++) {
+		for (j=i; j<argc-1; j++) {
 		    argv[j] = argv[j+1];
 		}
+		argv[argc-1] = NULL;
 		*argc_p = argc - 1;
 		break;
 	    }
