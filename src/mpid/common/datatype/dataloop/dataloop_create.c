@@ -111,6 +111,10 @@ void PREPEND_PREFIX(Dataloop_create)(MPI_Datatype type,
 	    DLOOP_Handle_set_loopsize_macro(types[0], old_dlsz, flag);
 	    DLOOP_Handle_set_loopdepth_macro(types[0], old_dldepth, flag);
 	}
+	else {
+	    DLOOP_Handle_get_loopsize_macro(types[0], old_dlsz, flag);
+	    DLOOP_Handle_get_loopdepth_macro(types[0], old_dldepth, flag);
+	}
     }
        
     switch(combiner)
