@@ -50,7 +50,7 @@
 	*(int *)(err_ptr_) = err__;                                     \
     }                                                                   \
 }
-#else
+#else /* MPICH_DEBUG_MUTEX */
 #define MPE_Thread_mutex_create(mutex_ptr_, err_ptr_)                   \
 {                                                                       \
     int err__;                                                          \
@@ -94,23 +94,23 @@
 	*(int *)(err_ptr_) = err__;                             \
     }                                                           \
 }
-#else
-#define MPE_Thread_mutex_lock(mutex_ptr_, err_ptr_)                                     \
-{                                                                                       \
-    int err__;                                                                          \
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Enter MPE_Thread_mutex");                              \
-    err__ = pthread_mutex_lock(mutex_ptr_);                                             \
-    if (err__)                                                                          \
-    {                                                                                   \
+#else /* MPICH_DEBUG_MUTEX */
+#define MPE_Thread_mutex_lock(mutex_ptr_, err_ptr_)             \
+{                                                               \
+    int err__;                                                  \
+    MPIU_DBG_MSG(THREAD,TYPICAL,"Enter MPE_Thread_mutex");      \
+    err__ = pthread_mutex_lock(mutex_ptr_);                     \
+    if (err__)                                                  \
+    {                                                           \
         MPIU_DBG_MSG_S(THREAD,TYPICAL,"  mutex lock error: %s", strerror(err__));       \
         MPIU_Internal_sys_error_printf("pthread_mutex_lock", err__,                     \
                                        "    %s:%d\n", __FILE__, __LINE__);              \
-    }                                                                                   \
-    if ((err_ptr_) != NULL)                                                             \
-    {                                                                                   \
-	/* FIXME: convert error to an MPE_THREAD_ERR value */                           \
-	*(int *)(err_ptr_) = err__;                                                     \
-    }                                                                                   \
+    }                                                          \
+    if ((err_ptr_) != NULL)                                    \
+    {                                                          \
+	/* FIXME: convert error to an MPE_THREAD_ERR value */  \
+	*(int *)(err_ptr_) = err__;                            \
+    }                                                          \
 }
 #endif
 
@@ -127,58 +127,58 @@
 	*(int *)(err_ptr_) = err__;                             \
     }                                                           \
 }
-#else
-#define MPE_Thread_mutex_unlock(mutex_ptr_, err_ptr_)                                   \
-{                                                                                       \
-    int err__;                                                                          \
-                                                                                        \
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Exiting MPE_Thread_mutex");                            \
-    err__ = pthread_mutex_unlock(mutex_ptr_);                                           \
-    if (err__)                                                                          \
-    {                                                                                   \
+#else /* MPICH_DEBUG_MUTEX */
+#define MPE_Thread_mutex_unlock(mutex_ptr_, err_ptr_)           \
+{                                                               \
+    int err__;                                                  \
+                                                                \
+    MPIU_DBG_MSG(THREAD,TYPICAL,"Exiting MPE_Thread_mutex");    \
+    err__ = pthread_mutex_unlock(mutex_ptr_);                   \
+    if (err__)                                                  \
+    {                                                           \
         MPIU_DBG_MSG_S(THREAD,TYPICAL,"  mutex unlock error: %s", strerror(err__));     \
         MPIU_Internal_sys_error_printf("pthread_mutex_unlock", err__,                   \
                                        "    %s:%d\n", __FILE__, __LINE__);              \
-    }                                                                                   \
-    if ((err_ptr_) != NULL)                                                             \
-    {                                                                                   \
-	/* FIXME: convert error to an MPE_THREAD_ERR value */                           \
-	*(int *)(err_ptr_) = err__;                                                     \
-    }                                                                                   \
+    }                                                           \
+    if ((err_ptr_) != NULL)                                     \
+    {                                                           \
+	/* FIXME: convert error to an MPE_THREAD_ERR value */   \
+	*(int *)(err_ptr_) = err__;                             \
+    }                                                           \
 }
 #endif
 
 #ifndef MPICH_DEBUG_MUTEX
-#define MPE_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)               \
-{                                                                               \
-    int err__;                                                                  \
-                                                                                \
-    err__ = pthread_mutex_trylock(mutex_ptr_);                                  \
-    *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                                 \
-    if ((err_ptr_) != NULL)                                                     \
-    {                                                                           \
+#define MPE_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)    \
+{                                                                    \
+    int err__;                                                       \
+                                                                     \
+    err__ = pthread_mutex_trylock(mutex_ptr_);                       \
+    *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                      \
+    if ((err_ptr_) != NULL)                                          \
+    {                                                                \
 	*(int *)(err_ptr_) = (err__ == EBUSY) : MPE_THREAD_SUCCESS ? err__;     \
-	/* FIXME: convert error to an MPE_THREAD_ERR value */                   \
-    }                                                                           \
+	/* FIXME: convert error to an MPE_THREAD_ERR value */        \
+    }                                                                \
 }
-#else
-#define MPE_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)                       \
-{                                                                                       \
-    int err__;                                                                          \
-                                                                                        \
-    err__ = pthread_mutex_trylock(mutex_ptr_);                                          \
-    if (err__ && err__ != EBUSY)                                                        \
-    {                                                                                   \
+#else /* MPICH_DEBUG_MUTEX */
+#define MPE_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)    \
+{                                                                    \
+    int err__;                                                       \
+                                                                     \
+    err__ = pthread_mutex_trylock(mutex_ptr_);                       \
+    if (err__ && err__ != EBUSY)                                     \
+    {                                                                \
         MPIU_DBG_MSG_S(THREAD,TYPICAL,"  mutex trylock error: %s", strerror(err__));    \
         MPIU_Internal_sys_error_printf("pthread_mutex_trylock", err__,                  \
                                        "    %s:%d\n", __FILE__, __LINE__);              \
-    }                                                                                   \
-    *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                                         \
-    if ((err_ptr_) != NULL)                                                             \
-    {                                                                                   \
-	*(int *)(err_ptr_) = (err__ == EBUSY) : MPE_THREAD_SUCCESS ? err__;             \
-	/* FIXME: convert error to an MPE_THREAD_ERR value */                           \
-    }                                                                                   \
+    }                                                                \
+    *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                      \
+    if ((err_ptr_) != NULL)                                          \
+    {                                                                \
+	*(int *)(err_ptr_) = (err__ == EBUSY) : MPE_THREAD_SUCCESS ? err__; \
+	/* FIXME: convert error to an MPE_THREAD_ERR value */        \
+    }                                                                \
 }
 #endif
 
