@@ -10,6 +10,15 @@ $gDebug = 0;
 %NeedConstants = ();   # constants needed for declaration, hased by routine
 
 #
+# ToDo: Fortran 90 allows some additional checks not possible in Fortran 77.
+# For example, the size of an array may be queried.  This could be particularly
+# useful for the ARGV argument in SPAWN, which in Fortran requires a blank
+# line to terminate the ARGV.  Even without that, the Fortran 90 wrappers
+# could check for the required blank entry, and report an error if it was
+# missing.
+#
+
+#
 # parmc2f translates the C/C++ names to the Fortran 90 name.  %name% will
 # be replaced with the argument name in declarations.
 #
@@ -500,6 +509,8 @@ foreach $routine (keys(%mpi_choice_routines)) {
 }
 
 # MPI_Sizeof has its own module
+
+    print MPIFD "        CONTAINS\n\n";
 
 # For each choice routine, add the modules
 foreach $routine (keys(%mpi_choice_routines)) {
