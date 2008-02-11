@@ -178,6 +178,7 @@ int main( int argc, char *argv[], char *envp[] )
     PMIServInit(myspawn,&s);
     s.pmiinfo.pWorld = &pUniv.worlds[0];
     PMISetupNewGroup( pUniv.worlds[0].nProcess, 0 );
+    /* PMISetupNewGroup will create a kvs space */
     MPIE_ForwardCommonSignals();
     MPIE_IgnoreSigPipe();
     
@@ -288,6 +289,29 @@ int mypreamble( void *data, ProcessState *pState )
        we are using a port, and use the PMI_PORT and ID instead */
     if (usePort) pState->initWithEnv = 0;
     
+    /* Add clique information */
+    {
+	int i, size = pState->app->nProcess;
+	char digits[10], ranks[1024];
+	char key[256];
+	
+	/* Create the string of ranks.  These are ranks in comm_world */
+	ranks[0] = 0;
+	for (i=0; i<size; i++) {
+	    MPIU_Snprintf( digits, sizeof(digits), "%d,", i );
+	    MPIU_Strnapp( ranks, digits, sizeof(ranks) );
+	}
+	/* Remove the trailing comma */
+	if (size > 0) 
+	    ranks[strlen(ranks)-1] = 0;
+	/* Add this to the predefined keys */
+	MPIU_Snprintf( key, sizeof(key), "pmiPrivateLocalRanks_%d", 
+		       pState->wRank );
+	/* printf( "%s = %s\n", key, ranks ); */
+	
+	pmix_preput( key, ranks );
+    }
+
     return 0;
 }
 /* Close one side of each pipe pair and replace stdout/err with the pipes */
