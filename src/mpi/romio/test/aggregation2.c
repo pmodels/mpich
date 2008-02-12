@@ -30,7 +30,7 @@ int main(int argc, char ** argv)
     MPI_Offset off=0;
     MPI_Status status;
     int errcode;
-    int i, rank, errs, toterrs, buffer[BUFSIZE], buf2[BUFSIZE];
+    int i, rank, errs=0, toterrs, buffer[BUFSIZE], buf2[BUFSIZE];
 
     MPI_Init(&argc, &argv);
 
