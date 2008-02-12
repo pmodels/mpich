@@ -41,7 +41,7 @@ int MPIDI_CH3U_Handle_recv_rndv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 				    MPID_Request ** rreqp, int *foundp)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *rreq;
+    MPID_Request *rreq = NULL;
     MPIDI_CH3_Pkt_rndv_req_to_send_t * rts_pkt = &pkt->rndv_req_to_send;
 
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&rts_pkt->match, foundp);
@@ -148,7 +148,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIDI_msg_sz_t userbuf_sz;
-    MPID_Datatype * dt_ptr;
+    MPID_Datatype * dt_ptr = NULL;
     MPIDI_msg_sz_t data_sz;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECEIVE_DATA_FOUND);
@@ -333,7 +333,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIDI_msg_sz_t userbuf_sz;
-    MPID_Datatype * dt_ptr;
+    MPID_Datatype * dt_ptr = NULL;
     MPIDI_msg_sz_t data_sz;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_POST_DATA_RECEIVE_FOUND);
@@ -499,7 +499,7 @@ int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t *vc, MPI_Win source_win_handle)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_lock_granted_t *lock_granted_pkt = &upkt.lock_granted;
-    MPID_Request *req;
+    MPID_Request *req = NULL;
     int mpi_errno;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEND_LOCK_GRANTED_PKT);
     
@@ -552,11 +552,11 @@ int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 			      MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_put_t * put_pkt = &pkt->put;
-    MPID_Request *req;
+    MPID_Request *req = NULL;
     int predefined;
     int type_size;
-    int complete;
-    char *data_buf;
+    int complete = 0;
+    char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_PUT);
@@ -714,11 +714,11 @@ int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 			      MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_get_t * get_pkt = &pkt->get;
-    MPID_Request *req;
+    MPID_Request *req = NULL;
     MPID_IOV iov[MPID_IOV_LIMIT];
     int predefined;
     int complete;
-    char *data_buf;
+    char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
     int type_size;
@@ -840,7 +840,7 @@ int MPIDI_CH3_PktHandler_GetResp( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIDI_CH3_Pkt_get_resp_t * get_resp_pkt = &pkt->get_resp;
     MPID_Request *req;
     int complete;
-    char *data_buf;
+    char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
     int type_size;
@@ -896,10 +896,10 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIDI_CH3_Pkt_accum_t * accum_pkt = &pkt->accum;
     MPID_Request *req;
     MPI_Aint true_lb, true_extent, extent;
-    void *tmp_buf;
+    void *tmp_buf = NULL;
     int predefined;
     int complete;
-    char *data_buf;
+    char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
     int type_size;
@@ -1052,7 +1052,7 @@ int MPIDI_CH3_PktHandler_Lock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 			       MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_lock_t * lock_pkt = &pkt->lock;
-    MPID_Win *win_ptr;
+    MPID_Win *win_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCK);
     
@@ -1116,7 +1116,7 @@ int MPIDI_CH3_PktHandler_LockGranted( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 				      MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_lock_granted_t * lock_granted_pkt = &pkt->lock_granted;
-    MPID_Win *win_ptr;
+    MPID_Win *win_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKGRANTED);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKGRANTED);
@@ -1144,7 +1144,7 @@ int MPIDI_CH3_PktHandler_PtRMADone( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 				    MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_pt_rma_done_t * pt_rma_done_pkt = &pkt->pt_rma_done;
-    MPID_Win *win_ptr;
+    MPID_Win *win_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_PTRMADONE);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_PTRMADONE);
@@ -1173,11 +1173,11 @@ int MPIDI_CH3_PktHandler_LockPutUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 {
     MPIDI_CH3_Pkt_lock_put_unlock_t * lock_put_unlock_pkt = 
 	&pkt->lock_put_unlock;
-    MPID_Win *win_ptr;
-    MPID_Request *req;
+    MPID_Win *win_ptr = NULL;
+    MPID_Request *req = NULL;
     int type_size;
     int complete;
-    char *data_buf;
+    char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKPUTUNLOCK);
@@ -1315,7 +1315,7 @@ int MPIDI_CH3_PktHandler_LockGetUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 {
     MPIDI_CH3_Pkt_lock_get_unlock_t * lock_get_unlock_pkt = 
 	&pkt->lock_get_unlock;
-    MPID_Win *win_ptr;
+    MPID_Win *win_ptr = NULL;
     int type_size;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKGETUNLOCK);
@@ -1426,12 +1426,12 @@ int MPIDI_CH3_PktHandler_LockAccumUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 {
     MPIDI_CH3_Pkt_lock_accum_unlock_t * lock_accum_unlock_pkt = 
 	&pkt->lock_accum_unlock;
-    MPID_Request *req;
-    MPID_Win *win_ptr;
-    MPIDI_Win_lock_queue *curr_ptr, *prev_ptr, *new_ptr;
+    MPID_Request *req = NULL;
+    MPID_Win *win_ptr = NULL;
+    MPIDI_Win_lock_queue *curr_ptr = NULL, *prev_ptr = NULL, *new_ptr = NULL;
     int type_size;
     int complete;
-    char *data_buf;
+    char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKACCUMUNLOCK);
