@@ -1562,6 +1562,30 @@ Else
 
 End If
 
+'   Convert mpif.h - F77 header to F90 header
+Function ConvertF77HeaderToF90(headerFileName)
+	set fs = CreateObject("Scripting.FileSystemObject")
+	set headerFileObj = fs.OpenTextFile(headerFileName)
+	tmpFileName = fs.GetTempName()
+	set tmpFileObj = fs.CreateTextFile(tmpFileName, true)
+	Do Until headerFileObj.AtEndOfStream = True
+		contents = headerFileObj.ReadLine()
+		posCommentChar = InStr(1, contents, "C", 1)
+		If posCommentChar = 1 Then
+			contents = Replace(contents, "C", "!", 1, 1, 1)
+		End If
+		tmpFileObj.WriteLine(contents)
+	Loop
+	headerFileObj.Close()
+	tmpFileObj.Close()
+
+	set headerFileObj = fs.GetFile(headerFileName)
+	set tmpFileObj = fs.GetFile(tmpFileName)
+	headerFileObj.Delete(True)
+	tmpFileObj.Move(headerFileName)
+	ConvertF77HeaderToF90 = True
+End Function 
+
 Function BuildIFaces()
 
 	Dim WshShell
@@ -1703,6 +1727,8 @@ Function BuildIFaces()
 			fout.Write(contents)
 			fin.Close()
 			fout.Close()
+			' Assume all windows fortran compilers are F90 compilers
+			retVal = ConvertF77HeaderToF90("src\include\win32\mpif.h")
 
 			set fin = f.OpenTextFile("src\binding\f77\mpif.h.in")
 			cEcho "Creating src\include\win64\mpif.h"
@@ -1712,6 +1738,8 @@ Function BuildIFaces()
 			fout.Write(contents)
 			fin.Close()
 			fout.Close()
+			' Assume all windows fortran compilers are F90 compilers
+			retVal = ConvertF77HeaderToF90("src\include\win64\mpif.h")
 
 		Else
 	
@@ -1760,6 +1788,71 @@ Function BuildIFaces()
 			WshShell.CurrentDirectory = "src\binding\f90"
 			cEcho WshShell.CurrentDirectory & ">perl buildiface"
 			WshShell.Run "perl buildiface", 0, true
+
+			' Generate mpifnoext.h
+			' - Remove EXTERNAL, DOUBLE PRECISION from mpif.h
+			' - Change comment style in mpif.h from "C ..." to "! ..."
+			cEcho "Creating src\include\win32\mpifnoext.h"
+			set fs = CreateObject("Scripting.FileSystemObject")
+			set fout = fs.CreateTextFile("..\..\include\win32\mpifnoext.h")
+			set fin = fs.OpenTextFile("..\..\include\win32\mpif.h")
+			Do Until fin.AtEndOfStream = True
+				contents = fin.ReadLine()
+				posExternal = InStr(1, contents, "EXTERNAL", 1)
+				posDoubleP = InStr(1, contents, "DOUBLE PRECISION", 1)
+				posCommentChar = InStr(1, contents, "C", 1)
+				If posCommentChar = 1 Then
+					contents = Replace(contents, "C", "!", 1, 1, 1)
+				End If
+				If (posExternal < 1) And (posDoubleP < 1) Then
+					fout.WriteLine(contents)
+				End If
+			Loop
+			fin.Close()
+			fout.Close()
+			cEcho "Creating src\include\win64\mpifnoext.h"
+			set fout = fs.CreateTextFile("..\..\include\win64\mpifnoext.h")
+			set fin = fs.OpenTextFile("..\..\include\win64\mpif.h")
+			Do Until fin.AtEndOfStream = True
+				contents = fin.ReadLine()
+				posExternal = InStr(1, contents, "EXTERNAL", 1)
+				posDoubleP = InStr(1, contents, "DOUBLE PRECISION", 1)
+				posCommentChar = InStr(1, contents, "C", 1)
+				If posCommentChar = 1 Then
+					contents = Replace(contents, "C", "!", 1, 1, 1)
+				End If
+				If (posExternal < 1) And (posDoubleP < 1) Then
+					fout.WriteLine(contents)
+				End If
+			Loop
+			fin.Close()
+			fout.Close()
+
+			' Create mpi_sizeofs.f90 in arch dependent dirs
+			If Not fs.FolderExists("win32") Then
+				fs.CreateFolder("win32")
+			End If
+			cEcho "Creating src\binding\f90\win32\mpi_sizeofs.f90"
+			set fout = fs.CreateTextFile("win32\mpi_sizeofs.f90" , True)
+			set fin  = fs.OpenTextFile("mpi_sizeofs.f90.in")
+			contents = fin.ReadAll()
+			contents = ReplaceAts(contents, false, false)
+			fout.Write(contents)
+			fin.Close()
+			fout.Close()
+
+			If Not fs.FolderExists("win64") Then
+				fs.CreateFolder("win64")
+			End If
+			cEcho "Creating src\binding\f90\win64\mpi_sizeofs.f90"
+			set fout = fs.CreateTextFile("win64\mpi_sizeofs.f90", True)
+			set fin  = fs.OpenTextFile("mpi_sizeofs.f90.in")
+			contents = fin.ReadAll()
+			contents = ReplaceAts(contents, false, true)
+			fout.Write(contents)
+			fin.Close()
+			fout.Close()
+			
 			WshShell.CurrentDirectory = "..\..\.."
 
 		End If
@@ -1775,6 +1868,7 @@ Function BuildIFaces()
 End Function
 
 BuildIFaces()
+
 
 '
 ' Generate defmsg.h
@@ -2025,7 +2119,7 @@ End Function
 Function ReplaceAts( str, use_f77, b64 )
 	Dim regEx, Match, Matches
 	Set regEx = New RegExp
-	regEx.Pattern = "@.*@"
+	regEx.Pattern = "@.[0-9a-z_]*@"
 	regEx.IgnoreCase = True
 	regEx.Global = True
 	Set Matches = regEx.Execute(str)
@@ -2335,6 +2429,33 @@ Function ReplaceAts( str, use_f77, b64 )
 				Else
 					str = Replace(str, "@F77_MPI_OFFSET@", "INTEGER (KIND=8)")
 				End If
+			' FIXME: The size of int,... could depend on compiler options
+			Case "@SIZEOF_F90_INTEGER@"
+				If b64 then
+					str = Replace(str, "@SIZEOF_F90_INTEGER@", "4")
+				Else
+					str = Replace(str, "@SIZEOF_F90_INTEGER@", "4")
+				End If
+			Case "@SIZEOF_F90_REAL@"
+				If b64 then
+					str = Replace(str, "@SIZEOF_F90_REAL@", "4")
+				Else
+					str = Replace(str, "@SIZEOF_F90_REAL@", "4")
+				End If
+			Case "@SIZEOF_F90_CHARACTER@"
+				If b64 then
+					str = Replace(str, "@SIZEOF_F90_CHARACTER@", "1")
+				Else
+					str = Replace(str, "@SIZEOF_F90_CHARACTER@", "1")
+				End If
+			Case "@SIZEOF_F90_DOUBLE_PRECISION@"
+				If b64 then
+					str = Replace(str, "@SIZEOF_F90_DOUBLE_PRECISION@", "8")
+				Else
+					str = Replace(str, "@SIZEOF_F90_DOUBLE_PRECISION@", "8")
+				End If
+			Case "@REQD@"
+				str = Replace(str, "@REQD@", "")
 			Case "@PCONTROL_LIST@"
 				'str = Replace(str, "@PCONTROL_LIST@", "")
 			Case "@configure_input@"
@@ -2406,20 +2527,24 @@ Function ReplaceAts( str, use_f77, b64 )
 				str = Replace(str, "@RELEASE_DATE@", Date)
 			Case "@DEVICE@"
 				str = Replace(str, "@DEVICE@", "ch3")
-			Case "@CC@ @CFLAGS@"
+			Case "@CC@"
 				str = Replace(str, "@CC@", "cl.exe")
+			Case "@CFLAGS@"
 				' FIXME: Not the complete list of CFLAGS --- only some listed
 				str = Replace(str, "@CFLAGS@", "/O2 /Ob1 /Oi /Oy /W4")
-			Case "@CXX@ @CXXFLAGS@"
+			Case "@CXX@"
 				str = Replace(str, "@CXX@", "cl.exe")
+			Case "@CXXFLAGS@" 
 				' FIXME: Not the complete list of CXXFLAGS --- only some listed
 				str = Replace(str, "@CXXFLAGS@", "/O2 /Ob1 /Oi /Oy /W4")
-			Case "@F77@ @FFLAGS@"
+			Case "@F77@"
 				str = Replace(str, "@F77@", "ifort.exe")
+			Case "@FFLAGS@"
 				' FIXME: Not the complete list of FFLAGS --- only some listed
 				str = Replace(str, "@FFLAGS@", "/names:lowercase /iface:cref /assume:underscore")
-			Case "@F90@ @F90FLAGS@"
+			Case "@F90@"
 				str = Replace(str, "@F90@", "ifort.exe")
+			Case "@F90FLAGS@"
 				' FIXME: Not the complete list of F90FLAGS --- only some listed
 				str = Replace(str, "@F90FLAGS@", "/names:lowercase /iface:cref /assume:underscore")
 			Case "@VERSION@"

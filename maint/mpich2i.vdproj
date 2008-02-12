@@ -27,6 +27,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_0A5A5F75E9D442D0B99DD69E73C81A2F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_10F26AAAC99242F4A41413F62D7547E8"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -64,6 +70,12 @@
         "Entry"
         {
         "MsmKey" = "8:_27F7CCB2625E46C08666EC84E633644F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_2AD8F51EFBF14D28AF727048C158A703"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -153,7 +165,19 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_6E248FED6ACF4D82867D8F75CEBD3DE5"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_6E91E6F8EA2941A9B4FEEB6980A36BAB"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_76CE0DD9E83A4807AC2FB89A6A95B0DA"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -419,24 +443,6 @@
         {
         "MsmKey" = "8:_FD7F219280EB4E04BDD2A8663B0261B6"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1EE41EF56BA143788490913B5A71E9C8"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_C63BA0B9501E409EB78C7834178927F3"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_60D2EF188B7448598D171ECA07E6E2DE"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -863,6 +869,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0A5A5F75E9D442D0B99DD69E73C81A2F"
+            {
+            "SourcePath" = "8:..\\src\\include\\win32\\mpi.mod"
+            "TargetName" = "8:mpi.mod"
+            "Tag" = "8:"
+            "Folder" = "8:_2FD87C1387F843A5BF89B818287DC235"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_10F26AAAC99242F4A41413F62D7547E8"
             {
             "SourcePath" = "8:..\\lib\\libmpicxx.a"
@@ -995,6 +1021,26 @@
             "TargetName" = "8:mpe.lib"
             "Tag" = "8:"
             "Folder" = "8:_B167421D29EE4EAFA108A852DB65BD75"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2AD8F51EFBF14D28AF727048C158A703"
+            {
+            "SourcePath" = "8:..\\src\\include\\win32\\mpi_sizeofs.mod"
+            "TargetName" = "8:mpi_sizeofs.mod"
+            "Tag" = "8:"
+            "Folder" = "8:_2FD87C1387F843A5BF89B818287DC235"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1295,10 +1341,50 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6E248FED6ACF4D82867D8F75CEBD3DE5"
+            {
+            "SourcePath" = "8:..\\src\\include\\win32\\mpi_constants.mod"
+            "TargetName" = "8:mpi_constants.mod"
+            "Tag" = "8:"
+            "Folder" = "8:_2FD87C1387F843A5BF89B818287DC235"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6E91E6F8EA2941A9B4FEEB6980A36BAB"
             {
             "SourcePath" = "8:..\\src\\mpe2\\src\\logging\\include\\clog_inttypes.h"
             "TargetName" = "8:clog_inttypes.h"
+            "Tag" = "8:"
+            "Folder" = "8:_2FD87C1387F843A5BF89B818287DC235"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_76CE0DD9E83A4807AC2FB89A6A95B0DA"
+            {
+            "SourcePath" = "8:..\\src\\include\\win32\\mpi_base.mod"
+            "TargetName" = "8:mpi_base.mod"
             "Tag" = "8:"
             "Folder" = "8:_2FD87C1387F843A5BF89B818287DC235"
             "Condition" = "8:"
