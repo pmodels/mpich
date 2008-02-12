@@ -151,6 +151,7 @@ int main(int argc, char* argv[])
     smpd_process.mpiexec_argv0 = argv[0];
 
     /* initialize */
+    putenv("PMI_SMPD_FD=0");
     result = PMPI_Init(&argc, &argv);
     SMPD_CS_ENTER();
     if (result != MPI_SUCCESS)

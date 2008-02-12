@@ -1385,6 +1385,7 @@ int MPIDU_Sock_post_close(MPIDU_Sock_t sock)
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_POST_CLOSE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SOCK_POST_CLOSE);
+
     if (!g_init_called)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_INIT, "**sock_init", 0);
@@ -2432,7 +2433,6 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
 #               error selected multi-threaded implementation is not supported
 #           endif
 #endif
-
 	    /*MPIDI_FUNC_EXIT(MPID_STATE_GETQUEUEDCOMPLETIONSTATUS);*/ /* Maybe the logging will reset the last error? */
 	    mpi_errno = GetLastError();
 	    /*t2 = PMPI_Wtime();*/

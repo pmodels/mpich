@@ -173,6 +173,9 @@ typedef int SMPD_BOOL;
 #define SMPD_DEFAULT_PRIORITY_CLASS         2
 #define SMPD_DEFAULT_PRIORITY               3
 
+#define SMPD_SINGLETON_MAX_KVS_NAME_LEN     100
+#define SMPD_SINGLETON_MAX_HOST_NAME_LEN    100
+
 #define SMPD_UNREFERENCED_ARG(a) a
 
 #ifdef HAVE_WINDOWS_H
@@ -183,6 +186,8 @@ typedef int SMPD_BOOL;
 #define smpd_get_last_error() errno
 #endif
 
+#define SMPD_ERR_SETPRINTANDJUMP(msg, errcode) {smpd_err_printf("%s", msg); retval = errcode; goto fn_fail; }
+#define SMPD_MAX_ERR_MSG_LENGTH 100
 typedef enum smpd_state_t
 {
     SMPD_IDLE,
@@ -194,6 +199,11 @@ typedef enum smpd_state_t
     SMPD_MGR_LISTENING,
     SMPD_PMI_LISTENING,
     SMPD_PMI_SERVER_LISTENING,
+    SMPD_SINGLETON_CLIENT_LISTENING,
+    SMPD_SINGLETON_MPIEXEC_CONNECTING,
+    SMPD_SINGLETON_READING_PMI_INFO,
+    SMPD_SINGLETON_WRITING_PMI_INFO,
+    SMPD_SINGLETON_DONE,
     SMPD_MPIEXEC_CONNECTING_TREE,
     SMPD_MPIEXEC_CONNECTING_SMPD,
     SMPD_CONNECTING_RPMI,
@@ -288,6 +298,8 @@ typedef enum smpd_context_type_t
     SMPD_CONTEXT_PMI,
     SMPD_CONTEXT_TIMEOUT,
     SMPD_CONTEXT_MPIEXEC_ABORT,
+    SMPD_CONTEXT_SINGLETON_INIT_CLIENT,
+    SMPD_CONTEXT_SINGLETON_INIT_MPIEXEC,
     SMPD_CONTEXT_UNDETERMINED,
     SMPD_CONTEXT_FREED
 } smpd_context_type_t;
@@ -417,6 +429,11 @@ typedef struct smpd_context_t
     char encrypted_password[SMPD_MAX_PASSWORD_LENGTH];
     char smpd_pwd[SMPD_MAX_PASSWORD_LENGTH];
     char session_header[SMPD_MAX_SESSION_HEADER_LENGTH];
+    /* FIXME: Remove this */
+    char singleton_init_kvsname[SMPD_SINGLETON_MAX_KVS_NAME_LEN];
+    char singleton_init_hostname[SMPD_SINGLETON_MAX_HOST_NAME_LEN];
+    int singleton_init_pm_port;
+    /* FIXME: Remove this */
     int connect_return_id, connect_return_tag;
     struct smpd_process_t *process;
     char sspi_header[SMPD_SSPI_HEADER_LENGTH];
@@ -446,7 +463,7 @@ typedef struct smpd_process_t
 {
     int id;
     int num_valid_contexts;
-    smpd_context_t *in, *out, *err, *pmi;
+    smpd_context_t *in, *out, *err, *pmi, *p_singleton_context;
     int context_refcount;
     int pid;
     char exe[SMPD_MAX_EXE_LENGTH];
@@ -464,6 +481,7 @@ typedef struct smpd_process_t
     smpd_stdin_write_node_t *stdin_write_list;
     int spawned;
     SMPD_BOOL local_process;
+    SMPD_BOOL is_singleton_client;
     smpd_map_drive_node_t *map_list;
     int appnum;
     struct smpd_process_t *next;
@@ -628,6 +646,9 @@ typedef struct smpd_global_t
 #endif
     int do_console;
     int port;
+    SMPD_BOOL is_singleton_client;
+    /* Port to connect back to a singleton process */
+    int singleton_client_port;
     char console_host[SMPD_MAX_HOST_LENGTH];
     smpd_host_node_t *host_list;
     smpd_launch_node_t *launch_list;

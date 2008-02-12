@@ -108,6 +108,8 @@ char * smpd_get_context_str(smpd_context_t *context)
 	return "child";
     case SMPD_CONTEXT_LISTENER:
 	return "listener";
+    case SMPD_CONTEXT_PMI_LISTENER:
+    return "PMI_LISTENER";
     case SMPD_CONTEXT_SMPD:
 	return "smpd";
     case SMPD_CONTEXT_PMI:
@@ -115,7 +117,11 @@ char * smpd_get_context_str(smpd_context_t *context)
     case SMPD_CONTEXT_TIMEOUT:
 	return "timeout";
     case SMPD_CONTEXT_MPIEXEC_ABORT:
-	return "SMPD_CONTEXT_MPIEXEC_ABORT";
+	return "MPIEXEC_ABORT";
+    case SMPD_CONTEXT_SINGLETON_INIT_CLIENT:
+    return "SINGLETON_INIT_CLIENT";
+    case SMPD_CONTEXT_SINGLETON_INIT_MPIEXEC:
+    return "SINGLETON_INIT_MPIEXEC";
     case SMPD_CONTEXT_UNDETERMINED:
 	return "undetermined";
     case SMPD_CONTEXT_FREED:

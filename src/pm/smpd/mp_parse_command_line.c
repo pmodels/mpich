@@ -581,12 +581,18 @@ int mp_parse_command_args(int *argcp, char **argvp[])
 	return SMPD_FAIL;
     }
 
-    if (*argcp == 3)
+    if (*argcp >= 3)
     {
 	if ((strcmp((*argvp)[1], "-pmiserver") == 0) || (strcmp((*argvp)[1], "-pmi_server") == 0))
 	{
 	    char host[100];
 	    int id;
+
+	    if (smpd_get_opt(argcp, argvp, "-verbose"))
+	    {
+		smpd_process.verbose = SMPD_TRUE;
+		smpd_process.dbg_state |= SMPD_DBG_STATE_ERROUT | SMPD_DBG_STATE_STDOUT | SMPD_DBG_STATE_TRACE;
+	    }
 
 	    smpd_process.nproc = atoi((*argvp)[2]);
 	    if (smpd_process.nproc < 1)
@@ -603,6 +609,15 @@ int mp_parse_command_args(int *argcp, char **argvp[])
 		smpd_err_printf("unable to get a id for host %s\n", host);
 		return SMPD_FAIL;
 	    }
+
+        if (*argcp == 5){
+    	    smpd_process.singleton_client_port = atoi((*argvp)[4]);
+            if(smpd_process.singleton_client_port < 1){
+                smpd_err_printf("Invalid singleton client port = %d\n",
+                                    smpd_process.singleton_client_port);
+                return SMPD_FAIL;
+            }
+        }
 
 	    /* Return without creating any launch_nodes.  This will result in an mpiexec connected to the local smpd
 	     * and no processes launched.

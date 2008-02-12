@@ -551,6 +551,11 @@ const char * smpd_get_state_string(smpd_state_t state)
     case SMPD_SMPD_LISTENING:                  result = "SMPD_SMPD_LISTENING";                  break;
     case SMPD_MGR_LISTENING:                   result = "SMPD_MGR_LISTENING";                   break;
     case SMPD_PMI_LISTENING: 	               result = "SMPD_PMI_LISTENING";                   break;
+    case SMPD_SINGLETON_CLIENT_LISTENING:      result = "SMPD_SINGLETON_CLIENT_LISTENING";      break;
+    case SMPD_SINGLETON_MPIEXEC_CONNECTING:    result = "SMPD_SINGLETON_MPIEXEC_CONNECTING";    break;
+    case SMPD_SINGLETON_READING_PMI_INFO:      result = "SMPD_SINGLETON_READING_PMI_INFO";      break;
+    case SMPD_SINGLETON_WRITING_PMI_INFO:      result = "SMPD_SINGLETON_WRITING_PMI_INFO";      break;
+    case SMPD_SINGLETON_DONE:                  result = "SMPD_SINGLETON_DONE";                  break;
     case SMPD_PMI_SERVER_LISTENING:            result = "SMPD_PMI_SERVER_LISTENING";            break;
     case SMPD_READING_SESSION_REQUEST:         result = "SMPD_READING_SESSION_REQUEST";         break;
     case SMPD_WRITING_SMPD_SESSION_REQUEST:    result = "SMPD_WRITING_SMPD_SESSION_REQUEST";    break;
@@ -1777,7 +1782,57 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
     cmd_ptr = context->write_list;
     context->write_list = context->write_list->next;
     smpd_dbg_printf("command written to %s: \"%s\"\n", smpd_get_context_str(context), cmd_ptr->cmd);
-    if (strcmp(cmd_ptr->cmd_str, "closed") == 0)
+    if (strcmp(cmd_ptr->cmd_str, "singinit_info") == 0){
+        /* Written singinit_info ... nothing more to be done... close the socket */
+        context->state = SMPD_SINGLETON_DONE;
+        smpd_free_command(cmd_ptr);
+        result = MPIDU_Sock_post_close(context->sock);
+        if(result != MPI_SUCCESS){
+            smpd_err_printf("MPIDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
+            smpd_exit_fn(FCNAME);
+            return SMPD_FAIL;
+        }
+        smpd_exit_fn(FCNAME);
+        return SMPD_SUCCESS;
+    }
+    else if(strcmp(cmd_ptr->cmd_str, "die") == 0){
+        /* Sent 'die' command to singleton client. Now close pmi */
+        smpd_free_command(cmd_ptr);
+        if(context->process){
+        if(context->process->pmi){
+            smpd_dbg_printf("Closing pmi ...\n");
+            result = MPIDU_Sock_post_close(context->process->pmi->sock);
+            if(result != MPI_SUCCESS){
+                smpd_err_printf("Unable to post close on pmi sock\n");
+            }
+        }
+        }
+        smpd_exit_fn(FCNAME);
+        return SMPD_SUCCESS;
+    }
+    else if(strcmp(cmd_ptr->cmd_str, "abort_job") == 0){
+        if(smpd_process.is_singleton_client){
+            /* In the case of a singleton client PM will not be able to "kill" it
+            * - so post a read for 'die' cmd
+            */
+            result = smpd_post_read_command(context);
+            if(result != SMPD_SUCCESS){
+                smpd_err_printf("Unable to post a read for 'die' command\n");
+                if(context->process){
+                if(context->process->pmi){
+                    smpd_dbg_printf("Closing pmi ...\n");
+                    result = MPIDU_Sock_post_close(context->process->pmi->sock);
+                    if(result != MPI_SUCCESS){
+                        smpd_err_printf("Unable to post close on pmi sock\n");
+                    }
+                }
+                }
+                smpd_exit_fn(FCNAME);
+                return SMPD_SUCCESS;
+            }
+        }
+    }
+    else if (strcmp(cmd_ptr->cmd_str, "closed") == 0)
     {
 	smpd_dbg_printf("closed command written, posting close of the sock.\n");
 	smpd_dbg_printf("MPIDU_Sock_post_close(%d)\n", MPIDU_Sock_get_sock_id(context->sock));
@@ -6157,6 +6212,113 @@ int smpd_state_reading_mpiexec_abort(smpd_context_t *context, MPIDU_Sock_event_t
 }
 
 #undef FCNAME
+#define FCNAME "smpd_state_singleton_mpiexec_connecting" 
+int smpd_state_singleton_mpiexec_connecting(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr){
+    int result;
+    smpd_command_t *cmd_ptr=NULL;
+    smpd_enter_fn(FCNAME);
+    result = smpd_create_command("singinit_info", smpd_process.id, 1, SMPD_FALSE, &cmd_ptr);
+    if(result == SMPD_SUCCESS){
+        result = smpd_add_command_arg(cmd_ptr, "kvsname", context->singleton_init_kvsname);
+    }
+    if(result == SMPD_SUCCESS){
+        result = smpd_add_command_arg(cmd_ptr, "host", context->singleton_init_hostname);
+    }
+    if(result == SMPD_SUCCESS){
+        result = smpd_add_command_int_arg(cmd_ptr, "port", context->singleton_init_pm_port);
+    }
+    if(result == SMPD_SUCCESS){
+        result = smpd_post_write_command(context, cmd_ptr);
+    }
+    context->state = SMPD_SINGLETON_DONE;
+
+    if(result != SMPD_SUCCESS){
+        context->state = SMPD_DONE;
+        smpd_err_printf("smpd_create_command/smpd_add_command failed\n");
+        if(cmd_ptr != NULL){
+            smpd_free_command(cmd_ptr);
+        }
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+    smpd_exit_fn(FCNAME);
+    return SMPD_SUCCESS;
+}
+
+#undef FCNAME
+#define FCNAME "smpd_state_singleton_client_listening"
+int smpd_state_singleton_client_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr, MPIDU_Sock_set_t set){
+    int result;
+    MPIDU_Sock_t new_sock;
+    smpd_context_t *p_singleton_connected_context;
+
+    smpd_enter_fn(FCNAME);
+    /* Accept connection */
+    result = MPIDU_Sock_accept(context->sock, set, NULL, &new_sock);
+    if(result != MPI_SUCCESS){
+        context->state = SMPD_DONE;
+        smpd_err_printf("MPIDU_Sock_accept failed, error = %s\n", get_sock_error_string(result));
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+    context->state = SMPD_SINGLETON_DONE;
+
+    /* Close the listen sock and free its context */
+    result = MPIDU_Sock_post_close(context->sock);
+    if(result != MPI_SUCCESS){
+        context->state = SMPD_DONE;
+        smpd_err_printf("MPIDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+    /* Create new context for the accepted connection - btw mpiexec & singleton init client */
+    result = smpd_create_context(SMPD_CONTEXT_SINGLETON_INIT_CLIENT, set, new_sock, -1, 
+                                    &p_singleton_connected_context);
+    if(result != SMPD_SUCCESS){
+        smpd_err_printf("smpd_create_context failed, error = %d\n", result);
+        context->state = SMPD_DONE;
+        /*
+        result = MPIDU_Sock_post_close(new_sock);
+        if(result != MPI_SUCCESS){
+            smpd_err_printf("MPIDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
+        }
+        */
+        /* Let state machine handle close and destroy the context */
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+
+    result = MPIDU_Sock_set_user_ptr(new_sock, p_singleton_connected_context);
+    if(result != MPI_SUCCESS){
+        smpd_err_printf("MPIDU_Sock_set_user_ptr failed, error = %d\n", result);
+        p_singleton_connected_context->state = SMPD_DONE;
+        context->state = SMPD_DONE;
+        /* Let state machine handle close and destroy the context */
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+    
+    /* Wait for cmd containing the values */
+    p_singleton_connected_context->state = context->state;
+
+	result = smpd_post_read_command(p_singleton_connected_context);
+    if(result != SMPD_SUCCESS){
+        smpd_err_printf("smpd_post_read_command failed, error = %d\n", result);
+        context->state = SMPD_DONE;
+        result = MPIDU_Sock_post_close(p_singleton_connected_context->sock);
+        if(result != MPI_SUCCESS){
+            smpd_err_printf("MPIDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
+        }
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+
+    /* The current context will be cleanedup by the state machine -- Close is posted for the listening sock*/
+    smpd_exit_fn(FCNAME);
+    return SMPD_SUCCESS;
+}
+
+#undef FCNAME
 #define FCNAME "smpd_handle_op_read"
 int smpd_handle_op_read(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
 {
@@ -6417,6 +6579,9 @@ int smpd_handle_op_accept(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr
     case SMPD_PMI_SERVER_LISTENING:
 	result = smpd_state_pmi_server_listening(context, event_ptr, set);
 	break;
+    case SMPD_SINGLETON_CLIENT_LISTENING:
+    result = smpd_state_singleton_client_listening(context, event_ptr, set);
+    break;
     default:
 	smpd_err_printf("sock_op_accept returned while context is in state: %s\n",
 	    smpd_get_state_string(context->state));
@@ -6499,7 +6664,7 @@ int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	    result = SMPD_FAIL;
 	    break;
 	}
-	/*
+	/* 
 	smpd_dbg_printf("connect succeeded, posting read of the next pmi command\n");
 	context->read_state = SMPD_READING_CMD_HEADER;
 	result = MPIDU_Sock_post_read(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
@@ -6514,6 +6679,13 @@ int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	context->write_state = SMPD_IDLE;
 	result = SMPD_DBS_RETURN;
 	break;
+    case SMPD_SINGLETON_MPIEXEC_CONNECTING:
+        result = smpd_state_singleton_mpiexec_connecting(context, event_ptr);
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("smpd_state_singleton_mpiexec_connecting failed, error = %d\n", result);
+            result = SMPD_FAIL;
+        }
+    break;
     default:
 	if (event_ptr->error != MPI_SUCCESS)
 	{
@@ -6552,9 +6724,13 @@ int smpd_handle_op_close(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
 	smpd_process.listener_context = NULL;
 	break;
     case SMPD_DONE:
-	smpd_free_context(context);
-	smpd_exit_fn(FCNAME);
-	return SMPD_EXIT;
+	    smpd_free_context(context);
+	    smpd_exit_fn(FCNAME);
+	    return SMPD_EXIT;
+    case SMPD_SINGLETON_DONE:
+        smpd_free_context(context);
+        smpd_exit_fn(FCNAME);
+        return SMPD_SUCCESS;
     case SMPD_RESTARTING:
 	smpd_restart();
 	break;
@@ -6826,6 +7002,7 @@ int smpd_handle_op_close(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
 	{
 	    smpd_dbg_printf("Unaffiliated %s context closing.\n", smpd_get_context_str(context));
 	}
+
 	if (context == smpd_process.left_context)
 	    smpd_process.left_context = NULL;
 	if (context == smpd_process.right_context)
@@ -7180,7 +7357,7 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 	    }
 	    break;
 	case MPIDU_SOCK_OP_CLOSE:
-	    smpd_dbg_printf("SOCK_OP_CLOSE\n");
+	    smpd_dbg_printf("SOCK_OP_CLOSE\n"); fflush(stdout);
 	    if (event.error != MPI_SUCCESS)
 		smpd_err_printf("error closing the %s context socket: %s\n", smpd_get_context_str(context), get_sock_error_string(event.error));
 	    result = smpd_handle_op_close(context, &event);

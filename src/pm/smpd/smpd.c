@@ -48,6 +48,7 @@ int main(int argc, char* argv[])
     smpd_enter_fn(FCNAME);
 
     /* initialization */
+    putenv("PMI_SMPD_FD=0");
     result = PMPI_Init(&argc, &argv);
     SMPD_CS_ENTER();
     if (result != MPI_SUCCESS)

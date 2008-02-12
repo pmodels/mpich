@@ -81,6 +81,8 @@ smpd_global_t smpd_process =
 #endif
       SMPD_FALSE,       /* do_console             */
       SMPD_LISTENER_PORT, /* smpd port            */
+      SMPD_FALSE,       /* Is singleton client ? */
+      -1,               /* Port to connect back to a singleton client*/
       "",               /* console_host           */
       NULL,             /* host_list              */
       NULL,             /* launch_list            */
@@ -670,6 +672,9 @@ int smpd_init_context(smpd_context_t *context, smpd_context_type_t type, MPIDU_S
     context->pwd_request[0] = '\0';
     context->session[0] = '\0';
     context->session_header[0] = '\0';
+    context->singleton_init_hostname[0] = '\0';
+    context->singleton_init_kvsname[0] = '\0';
+    context->singleton_init_pm_port = -1;
     context->smpd_pwd[0] = '\0';
 #ifdef HAVE_WINDOWS_H
     context->wait.hProcess = NULL;

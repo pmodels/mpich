@@ -23,23 +23,35 @@
 
 /* Include mpitestconf to determine if we can use h_addr or need h_addr_list */
 #include "mpitestconf.h"
-
 #include <stdio.h>
-#include <string.h>
-#include <strings.h>
 #include <stdlib.h>
+#include <string.h>
+#ifndef HAVE_WINDOWS_H
+#include <strings.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#else
+#include <windows.h>
+#endif
 #include <mpi.h>
+
+#ifndef HAVE_WINDOWS_H
+    #define SOCKET_FD_TYPE int
+    #define INVALID_SOCKET_FD -1
+#else
+    #define SOCKET_FD_TYPE  SOCKET
+    #define INVALID_SOCKET_FD INVALID_SOCKET
+    #define bcopy(s1, s2, n)    memmove(s2, s1, n)
+#endif
 
 
 int parse_args(int argc, char ** argv);
 void usage(char * name);
-int server_routine(int portnum);
-int client_routine(int portnum);
+SOCKET_FD_TYPE server_routine(int portnum);
+SOCKET_FD_TYPE client_routine(int portnum);
 
 
 int is_server=0;
@@ -47,13 +59,14 @@ int is_client=0;
 int opt_port=0;
 
 /* open a socket, establish a connection with a client, and return the fd */
-int server_routine(int portnum)
+SOCKET_FD_TYPE server_routine(int portnum)
 {
-	int listenfd, peer_fd, ret, peer_addr_size;
+	SOCKET_FD_TYPE listenfd, peer_fd;
+    int ret, peer_addr_size;
 	struct sockaddr_in server_addr, peer_addr;
 
 	listenfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (listenfd < 0) {
+	if (listenfd == INVALID_SOCKET_FD) {
 		perror("server socket");
 		return -1;
 	}
@@ -77,16 +90,16 @@ int server_routine(int portnum)
 }
 
 /* open a socket, establish a connection with a server, and return the fd */
-int client_routine(int portnum)
+SOCKET_FD_TYPE client_routine(int portnum)
 {
-	int sockfd;
+	SOCKET_FD_TYPE sockfd;
 	struct sockaddr_in server_addr;
 	struct hostent *server_ent;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 	int hostnamelen;
 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0) {
+	if (sockfd == INVALID_SOCKET_FD) {
 		perror("client socket");
 		return -1;
 	}
@@ -123,11 +136,29 @@ void usage(char * name)
 	fprintf(stderr, "usage: %s [-s|-c] -p <PORT>\n", name);
 	fprintf(stderr, "      specify one and only one of -s or -c\n");
 	fprintf(stderr, "      port is mandatory\n");
-	exit (-1);
 }
+
+#ifdef HAVE_WINDOWS_H
+static int get_option(int argc, char **argv, int arg_cnt){
+    if(argv == NULL){
+        return -1;        
+    }
+    if(*argv == NULL){
+        return -1;
+    }
+    if(arg_cnt < 0 || arg_cnt >= argc){
+        return -1;
+    }
+    if(strlen(argv[arg_cnt]) < 2){
+        return -1;
+    }
+    return(*(argv[arg_cnt]+1));
+}
+#endif
 
 int parse_args(int argc, char ** argv)
 {
+#ifndef HAVE_WINDOWS_H
 	int c;
 	extern char* optarg;
 	while ( (c = getopt(argc, argv, "csp:")) != -1 ) {
@@ -145,23 +176,55 @@ int parse_args(int argc, char ** argv)
 			case ':':
 			default:
 				usage(argv[0]);
+				return -1;
 		}
 	}
 	if ( (is_client == 0 ) && (is_server == 0)) {
 		usage(argv[0]);
+		return -1;
 	}
 	if (opt_port == 0) {
 		usage(argv[0]);
+		return -1;
 	}
 	return 0;
+#else
+    int arg_cnt=1;
+    int c;
+    while((c = get_option(argc, argv, arg_cnt++)) > 0){
+        switch(c){
+        case 's':
+                    is_server = 1;
+                    break;
+        case 'c':
+                    is_client = 1;
+                    break;
+        case 'p':
+                    opt_port = atoi(argv[arg_cnt++]);
+                    break;
+        default:
+                    usage(argv[0]);
+                    return -1;
+        }
+    }
+	if ( (is_client == 0 ) && (is_server == 0)) {
+		usage(argv[0]);
+        return -1;
+	}
+	if (opt_port == 0) {
+		usage(argv[0]);
+        return -1;
+	}
+    return 0;
+#endif
 }
 
 
 int main (int argc, char ** argv)
 {
-	int rank, size, fd=-1;
+	int rank, size;
+    SOCKET_FD_TYPE fd = INVALID_SOCKET_FD;
 	MPI_Comm intercomm, intracomm;
-
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size( MPI_COMM_WORLD, &size );
@@ -169,7 +232,10 @@ int main (int argc, char ** argv)
 	    fprintf( stderr, "This test requires that only one process be in each comm_world\n" );
 	    MPI_Abort( MPI_COMM_WORLD, 1 );
 	}
-	parse_args(argc, argv);
+	if(parse_args(argc, argv) == -1){
+        fprintf(stderr, "Unable to parse the command line arguments\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
 
 	if (is_server)  {
 		fd = server_routine(opt_port);
@@ -178,7 +244,7 @@ int main (int argc, char ** argv)
 		fd = client_routine(opt_port);
 	}
 
-	if (fd < 0) {
+	if (fd == INVALID_SOCKET_FD) {
 		return -1;
 	}
 

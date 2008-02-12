@@ -20,9 +20,27 @@ static int root_smpd(void *p);
 #define PMI_MAX_KEY_LEN          256
 #define PMI_MAX_VALUE_LEN        8192
 #define PMI_MAX_KVS_NAME_LENGTH  100
+#define PMI_MAX_HOST_NAME_LENGTH 100
+#define PMI_MAX_STR_VAL_LENGTH   100
 
+#ifdef HAVE_WINDOWS_H
+    #define PMII_PROCESS_HANDLE_TYPE    HANDLE
+    #define PMII_PROCESS_INVALID_HANDLE    NULL
+#else
+    #define PMII_PROCESS_HANDLE_TYPE    int
+    #define PMII_PROCESS_INVALID_HANDLE    -1
+#endif
+
+typedef enum {PMI_UNINITIALIZED,
+                PMI_SINGLETON_INIT_BUT_NO_PM,
+                PMI_SINGLETON_INIT_WITH_PM, 
+                PMI_INITIALIZED,
+                PMI_FINALIZED} PMIState;
+
+/*
 #define PMI_INITIALIZED 0
 #define PMI_FINALIZED   1
+*/
 
 #define PMI_TRUE        1
 #define PMI_FALSE       0
@@ -45,16 +63,17 @@ typedef struct pmi_process_t
     MPIDU_Sock_set_t set;
     int iproc;
     int nproc;
-    int init_finalized;
+    PMIState init_finalized;
     int smpd_id;
     MPIDU_SOCK_NATIVE_FD smpd_fd;
     int smpd_key;
     smpd_context_t *context;
     int clique_size;
     int *clique_ranks;
-    char host[100];
+    char host[PMI_MAX_HOST_NAME_LENGTH];
     int port;
     int appnum;
+    PMII_PROCESS_HANDLE_TYPE singleton_mpiexec_fd;
 } pmi_process_t;
 
 /* global variables */
@@ -76,7 +95,7 @@ static pmi_process_t pmi_process =
     MPIDU_SOCK_INVALID_SET,   /* set            */
     -1,                  /* iproc          */
     -1,                  /* nproc          */
-    PMI_FINALIZED,       /* init_finalized */
+    PMI_UNINITIALIZED,       /* init_finalized */
     -1,                  /* smpd_id        */
     0,                   /* smpd_fd        */
     0,                   /* smpd_key       */
@@ -85,7 +104,8 @@ static pmi_process_t pmi_process =
     NULL,                /* clique_ranks   */
     "",                  /* host           */
     -1,                  /* port           */
-    0                    /* appnum         */
+    0,                    /* appnum         */
+    PMII_PROCESS_INVALID_HANDLE /* singleton mpiexec proc handle/pid */
 };
 
 static int silence = 0;
@@ -207,6 +227,35 @@ static int pmi_create_post_command(const char *command, const char *name, const 
 	smpd_get_context_str(pmi_process.context), MPIDU_Sock_getid(pmi_process.context->sock), cmd_ptr->cmd);
     fflush(stdout);
     */
+    /* If proc_info command add the proc_info args */
+    if(strcmp(command, "proc_info") == 0){
+        /* FIXME - Send the actual exe name */
+        result = smpd_add_command_arg(cmd_ptr, "c", "singleton_client");
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("Unable to add executable name to 'proc_info' cmd\n");
+        }
+        result = smpd_add_command_int_arg(cmd_ptr, "i", pmi_process.iproc);
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("Unable to add rank to 'proc_info' cmd\n");        
+        }
+        result = smpd_add_command_int_arg(cmd_ptr, "n", pmi_process.nproc);
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("Unable to add nprocs to 'proc_info' cmd\n");
+        }
+        result = smpd_add_command_int_arg(cmd_ptr, "s", smpd_process.is_singleton_client ? 1 : 0);
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("Unable to add 'is_singleton_client' to 'proc_info' cmd\n");
+        }
+#ifndef HAVE_WINDOWS_H
+        /* For non-windows systems send the PID in 'proc_info' */
+        /* FIXME: Can we send a pid_t as an int ? */
+        result = smpd_add_command_int_arg(cmd_ptr, "p", getpid());
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("Unable to add PID to 'proc_info' cmd \n");
+        }
+#endif
+    }
+
     result = smpd_post_write_command(pmi_process.context, cmd_ptr);
     if (result != SMPD_SUCCESS)
     {
@@ -232,6 +281,287 @@ static int pmi_create_post_command(const char *command, const char *name, const 
 	return PMI_FAIL;
     }
     return PMI_SUCCESS;
+}
+
+static int uPMI_ConnectToHost(char *host, int port, smpd_state_t state)
+{
+    int result;
+    char error_msg[MPI_MAX_ERROR_STRING];
+    int len;
+
+    /*printf("posting a connect to %s:%d\n", host, port);fflush(stdout);*/
+    result = smpd_create_context(SMPD_CONTEXT_PMI, pmi_process.set, MPIDU_SOCK_INVALID_SOCK/*pmi_process.sock*/, smpd_process.id, &pmi_process.context);
+    if (result != SMPD_SUCCESS)
+    {
+	pmi_err_printf("PMI_ConnectToHost failed: unable to create a context to connect to %s:%d with.\n", host, port);
+	return PMI_FAIL;
+    }
+
+    result = MPIDU_Sock_post_connect(pmi_process.set, pmi_process.context, host, port, &pmi_process.sock);
+    if (result != MPI_SUCCESS)
+    {
+	printf("MPIDU_Sock_post_connect failed.\n");fflush(stdout);
+	len = MPI_MAX_ERROR_STRING;
+	PMPI_Error_string(result, error_msg, &len);
+	pmi_err_printf("PMI_ConnectToHost failed: unable to post a connect to %s:%d, error: %s\n", host, port, error_msg);
+	printf("uPMI_ConnectToHost returning PMI_FAIL\n");fflush(stdout);
+	return PMI_FAIL;
+    }
+
+    pmi_process.context->sock = pmi_process.sock;
+    pmi_process.context->state = state;
+
+    result = smpd_enter_at_state(pmi_process.set, state);
+    if (result != MPI_SUCCESS)
+    {
+	pmi_mpi_err_printf(result, "PMI_ConnectToHost failed: unable to connect to %s:%d.\n", host, port);
+	return PMI_FAIL;
+    }
+
+    if (state == SMPD_CONNECTING_RPMI)
+    {
+	/* remote pmi processes receive their smpd_key when they connect to the smpd pmi server */
+	pmi_process.smpd_key = atoi(pmi_process.context->session);
+    }
+
+    return SMPD_SUCCESS;
+}
+
+/* Launch an instance of mpiexec which will connect to SMPD and start a PMI service.
+ * This instance of mpiexec will connect back using the portNo specified in the "-port" option
+ * and provide info about the new PMI service.
+ */
+static PMII_PROCESS_HANDLE_TYPE launch_mpiexec_process(int portNo){
+#ifdef HAVE_WINDOWS_H
+#define PMII_MAX_MPIEXEC_CMD_STR_LENGTH 100
+    char progName[PMII_MAX_MPIEXEC_CMD_STR_LENGTH];
+    STARTUPINFO sInfo;
+    PROCESS_INFORMATION pInfo = { 0 };
+    ZeroMemory(&sInfo, sizeof(sInfo));
+    sInfo.cb = sizeof(sInfo);
+    ZeroMemory(&pInfo, sizeof(pInfo));
+    snprintf(progName, PMII_MAX_MPIEXEC_CMD_STR_LENGTH, 
+                "mpiexec -pmiserver 1 -port %d", portNo);
+    if(!CreateProcess(NULL, progName, NULL, NULL, TRUE, 
+                        NORMAL_PRIORITY_CLASS, NULL, NULL, &sInfo, &pInfo)){
+        pmi_err_printf("Error creating mpiexec process...%d\n", GetLastError());
+        return PMII_PROCESS_INVALID_HANDLE;
+    }
+    return pInfo.hProcess;
+#else
+#define PMII_MPIEXEC_CMDLINE_ARGV_SIZE 6
+    int pid, rc;
+    char *mpiexecArgv[PMII_MPIEXEC_CMDLINE_ARGV_SIZE];
+	char port[16];
+    pid = fork();
+    if(pid < 0){
+        pmi_err_printf("Error creating mpiexec process...\n");
+        return PMII_PROCESS_INVALID_HANDLE;
+    }
+    else if(pid == 0){
+		MPIU_Snprintf(port, sizeof(port), "%d", portNo);
+        mpiexecArgv[0] = "mpiexec";
+        mpiexecArgv[1] = "-pmiserver";
+        mpiexecArgv[2] = "1";
+        mpiexecArgv[3] = "-port";
+        mpiexecArgv[4] = port;
+        mpiexecArgv[5] = NULL;
+        rc = execvp(mpiexecArgv[0], mpiexecArgv);
+        pmi_err_printf("Error Singinit execv'ing mpiexec failed\n");
+        return PMII_PROCESS_INVALID_HANDLE;
+    }
+    else{
+        return pid;
+    }
+#endif
+}
+
+#define PMII_ERR_SETPRINTANDJUMP(msg, errcode) { pmi_err_printf("%s", msg); retval = errcode; goto fn_fail; }
+#define PMII_MAX_ERR_MSG_LENGTH     100
+
+static int PMIi_InitSingleton(void ){
+    MPIDU_Sock_set_t singleton_client_set;
+    MPIDU_Sock_t singleton_client_sock;
+    smpd_context_t *p_singleton_context=NULL;
+    char err_msg[PMII_MAX_ERR_MSG_LENGTH];
+    int singleton_client_lport;
+    int result, retval = PMI_SUCCESS;
+    char rank_str[PMI_MAX_STR_VAL_LENGTH], size_str[PMI_MAX_STR_VAL_LENGTH];
+    char str[PMI_MAX_STR_VAL_LENGTH];
+
+    /* Enable singleton_init state machine tracing */
+    /*
+    smpd_process.verbose = SMPD_TRUE;
+	smpd_process.dbg_state |= SMPD_DBG_STATE_ERROUT | SMPD_DBG_STATE_STDOUT | SMPD_DBG_STATE_TRACE;
+    */
+    
+    result = MPIDU_Sock_init();
+    if (result != MPI_SUCCESS){
+        MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "MPIDU_Sock_init failed,\nsock error: %s\n", get_sock_error_string(result));
+	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
+    }
+
+    result = MPIDU_Sock_create_set(&singleton_client_set);
+    if(result != MPI_SUCCESS){
+        MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "MPIDU_Sock_create_set failed: unable to create a sock set, error: %d\n", result);
+	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
+    }
+
+    /* Assign an ephemeral port */
+    singleton_client_lport = 0;
+    result = MPIDU_Sock_listen(singleton_client_set, NULL, &singleton_client_lport, &singleton_client_sock);
+    if (result != MPI_SUCCESS){
+        MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "MPIDU_Sock_listen failed,\nsock error: %s\n", get_sock_error_string(result));
+	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
+    }
+
+    result = smpd_create_context(SMPD_CONTEXT_SINGLETON_INIT_CLIENT, singleton_client_set, singleton_client_sock,
+                                     -1, &p_singleton_context);
+    if (result != SMPD_SUCCESS){
+        MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "smpd_create_context failed, error = %d\n", result);
+	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
+    }
+
+    result = MPIDU_Sock_set_user_ptr(singleton_client_sock, p_singleton_context);
+    if (result != MPI_SUCCESS){
+        MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "MPIDU_Sock_set_user_ptr failed,\nsock error: %s\n", get_sock_error_string(result));
+	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
+    }
+
+    p_singleton_context->state = SMPD_SINGLETON_CLIENT_LISTENING;
+
+    /* Create an instance of mpiexec that will connect back and give us information about the PM to connect to */
+    pmi_process.singleton_mpiexec_fd = launch_mpiexec_process(singleton_client_lport);
+    if(pmi_process.singleton_mpiexec_fd == PMII_PROCESS_INVALID_HANDLE){
+        result = -1;
+        MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "launchMpiexecProcess failed\n");
+	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
+    }
+
+    /* SMPD state machine will accept connection from mpiexec & get information about the PM */
+    result = smpd_enter_at_state(singleton_client_set, SMPD_SINGLETON_CLIENT_LISTENING);
+    if (result != SMPD_SUCCESS) {
+        MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "smpd state machine failed, error = %d\n", result);
+	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
+    }
+
+    /* SMPD state machine has set the PMI info for smpd_process */
+    /* Now we have PMI_KVS, PMI_HOST and PMI_PORT info */
+	if ((smpd_process.port > 0) && 
+        (strlen(smpd_process.host) > 0) &&
+        (strlen(smpd_process.kvs_name) > 0)){
+        strncpy(pmi_process.kvs_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
+        strncpy(pmi_process.domain_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
+        strncpy(smpd_process.domain_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
+        strncpy(pmi_process.host, smpd_process.host, PMI_MAX_HOST_NAME_LENGTH);
+        strncpy(pmi_process.root_host, smpd_process.host, PMI_MAX_HOST_NAME_LENGTH);
+        pmi_process.root_port = smpd_process.port;
+        pmi_process.port = smpd_process.port;
+        /*
+        printf("Received:\nkvs_name = %s\nhost = %s\nport = %d\n",
+                pmi_process.kvs_name, pmi_process.host, pmi_process.port); fflush(stdout);
+        */
+
+        smpd_process.id = 1;
+        pmi_process.smpd_id = 1;
+        pmi_process.rpmi = PMI_TRUE;
+        pmi_process.iproc = 0;
+        pmi_process.nproc = 1;
+        smpd_process.nproc = 1;
+
+        smpd_process.is_singleton_client = SMPD_TRUE;
+		/* Get passphrase for PM */
+		result = smpd_get_smpd_data("phrase", smpd_process.passphrase, SMPD_PASSPHRASE_MAX_LENGTH);
+		if(result != SMPD_SUCCESS){
+			PMII_ERR_SETPRINTANDJUMP("Unable to obtain the smpd passphrase\n", result);
+		}
+
+        result = MPIDU_Sock_create_set(&pmi_process.set);
+	    if (result != MPI_SUCCESS){
+            MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "MPIDU_Sock_create_set failed: unable to create a sock set, error: %d\n", result);
+    	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
+		}
+
+        /* Connect to PM */
+		result = uPMI_ConnectToHost(pmi_process.root_host, pmi_process.root_port, SMPD_CONNECTING_RPMI);
+		if (result != SMPD_SUCCESS){ 
+            MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "uPMI_ConnectToHost failed: error: %s\n", result);
+    	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
+		}
+
+        /* FIXME: Reduce size of rank_str & size_str */
+        MPIU_Snprintf(rank_str, PMI_MAX_STR_VAL_LENGTH, "%d", pmi_process.iproc);
+        MPIU_Snprintf(size_str, PMI_MAX_STR_VAL_LENGTH, "%d", pmi_process.nproc);
+
+        result = pmi_create_post_command("init", pmi_process.kvs_name, rank_str, size_str);
+        if (result != PMI_SUCCESS){
+	        pmi_err_printf("PMIi_InitSingleton failed: unable to create an init command.\n");
+	        return PMI_FAIL;
+        }
+
+        /* parse the result of the command */
+        if (MPIU_Str_get_string_arg(pmi_process.context->read_cmd.cmd, "result", str, PMI_MAX_STR_VAL_LENGTH)
+             != MPIU_STR_SUCCESS){
+        	pmi_err_printf("PMIi_InitSingleton failed: no result string in the 'init' result command.\n");
+	        return PMI_FAIL;
+        }
+
+        if (strncmp(str, SMPD_SUCCESS_STR, PMI_MAX_STR_VAL_LENGTH)){
+	        pmi_err_printf("PMIi_InitSingleton failed: %s\n", str);
+	        return PMI_FAIL;
+        }
+
+        /* Send info about the process to PM */
+        result = pmi_create_post_command("proc_info", pmi_process.kvs_name, rank_str, size_str);
+        if (result != PMI_SUCCESS){
+	        pmi_err_printf("PMIi_InitSingleton failed: unable to create a 'proc_info' command.\n");
+	        return PMI_FAIL;
+        }
+
+        /* parse the result of the command */
+        if (MPIU_Str_get_string_arg(pmi_process.context->read_cmd.cmd, "result", str, PMI_MAX_STR_VAL_LENGTH)
+             != MPIU_STR_SUCCESS){
+        	pmi_err_printf("PMIi_InitSingleton failed: no result string in the 'proc_info' result command.\n");
+	        return PMI_FAIL;
+        }
+
+        if (strncmp(str, SMPD_SUCCESS_STR, PMI_MAX_STR_VAL_LENGTH)){
+	        pmi_err_printf("PMIi_InitSingleton failed: %s\n", str);
+	        return PMI_FAIL;
+        }
+
+        pmi_process.init_finalized = PMI_INITIALIZED;
+    }
+	else{
+        MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, 
+            "No mechanism specified for connecting to the process manager - host %s or port %d provided.\n", 
+            pmi_process.host, pmi_process.port);
+	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
+	}
+
+fn_exit:
+    if(singleton_client_set){
+        result = MPIDU_Sock_destroy_set(singleton_client_set);
+        if(result != MPI_SUCCESS){
+            pmi_err_printf("MPIDU_Sock_destroy_set failed: unable to destroy a sock set, error: %d\n", result);
+        }
+    }
+    result = MPIDU_Sock_finalize();
+    if (result != MPI_SUCCESS)
+    {
+    	pmi_err_printf("MPIDU_Sock_finalize failed,\nsock error: %s\n", get_sock_error_string(result));
+    }
+    /* Make sure we return the error code set within the funcn */
+    return retval;
+fn_fail:
+    /* FIXME : Make sure the newly created mpiexec process is also killed in the case of an error */
+    if(p_singleton_context){
+        result = smpd_free_context(p_singleton_context);
+        if(result != SMPD_SUCCESS){
+            pmi_err_printf("smpd_free_context failed, error = %d\n", result);
+        }
+    }
+    goto fn_exit;
 }
 
 int iPMI_Initialized(PMI_BOOL *initialized)
@@ -346,49 +676,6 @@ static int parse_clique(const char *str_orig)
     return PMI_SUCCESS;
 }
 
-static int uPMI_ConnectToHost(char *host, int port, smpd_state_t state)
-{
-    int result;
-    char error_msg[MPI_MAX_ERROR_STRING];
-    int len;
-
-    /*printf("posting a connect to %s:%d\n", host, port);fflush(stdout);*/
-    result = smpd_create_context(SMPD_CONTEXT_PMI, pmi_process.set, MPIDU_SOCK_INVALID_SOCK/*pmi_process.sock*/, smpd_process.id, &pmi_process.context);
-    if (result != SMPD_SUCCESS)
-    {
-	pmi_err_printf("PMI_ConnectToHost failed: unable to create a context to connect to %s:%d with.\n", host, port);
-	return PMI_FAIL;
-    }
-
-    result = MPIDU_Sock_post_connect(pmi_process.set, pmi_process.context, host, port, &pmi_process.sock);
-    if (result != MPI_SUCCESS)
-    {
-	printf("MPIDU_Sock_post_connect failed.\n");fflush(stdout);
-	len = MPI_MAX_ERROR_STRING;
-	PMPI_Error_string(result, error_msg, &len);
-	pmi_err_printf("PMI_ConnectToHost failed: unable to post a connect to %s:%d, error: %s\n", host, port, error_msg);
-	printf("uPMI_ConnectToHost returning PMI_FAIL\n");fflush(stdout);
-	return PMI_FAIL;
-    }
-
-    pmi_process.context->sock = pmi_process.sock;
-    pmi_process.context->state = state;
-
-    result = smpd_enter_at_state(pmi_process.set, state);
-    if (result != MPI_SUCCESS)
-    {
-	pmi_mpi_err_printf(result, "PMI_ConnectToHost failed: unable to connect to %s:%d.\n", host, port);
-	return PMI_FAIL;
-    }
-
-    if (state == SMPD_CONNECTING_RPMI)
-    {
-	/* remote pmi processes receive their smpd_key when they connect to the smpd pmi server */
-	pmi_process.smpd_key = atoi(pmi_process.context->session);
-    }
-
-    return SMPD_SUCCESS;
-}
 
 static int rPMI_Init(int *spawned)
 {
@@ -618,9 +905,20 @@ static int rPMI_Finalize()
     if (pmi_process.init_finalized == PMI_FINALIZED)
 	return PMI_SUCCESS;
 
+    if(pmi_process.init_finalized < PMI_INITIALIZED)
+    return PMI_SUCCESS;
+
     if (pmi_process.local_kvs)
     {
 	smpd_dbs_finalize();
+    if(pmi_process.singleton_mpiexec_fd != PMII_PROCESS_INVALID_HANDLE){
+#ifdef HAVE_WINDOWS_H
+        WaitForSingleObject(pmi_process.singleton_mpiexec_fd, INFINITE);
+#else
+        waitpid(pmi_process.singleton_mpiexec_fd, &status, WUNTRACED);
+#endif	
+    }
+
 	result = MPIDU_Sock_finalize();
 	pmi_process.init_finalized = PMI_FINALIZED;
 	return PMI_SUCCESS;
@@ -674,8 +972,14 @@ static int rPMI_Finalize()
     {
 #ifdef HAVE_WINDOWS_H
 	WaitForSingleObject(pmi_process.hRootThread, INFINITE);
+    if(pmi_process.singleton_mpiexec_fd != PMII_PROCESS_INVALID_HANDLE){
+        WaitForSingleObject(pmi_process.singleton_mpiexec_fd, INFINITE);
+    }
 #else
 	waitpid(pmi_process.root_pid, &status, WUNTRACED);
+    if(pmi_process.singleton_mpiexec_fd != PMII_PROCESS_INVALID_HANDLE){
+        waitpid(pmi_process.singleton_mpiexec_fd, &status, WUNTRACED);
+    }
 #endif
     }
 
@@ -700,8 +1004,15 @@ int iPMI_Init(int *spawned)
     char rank_str[100], size_str[100];
     char str[1024];
 
-    if (spawned == NULL)
+    if (spawned == NULL){
 	return PMI_ERR_INVALID_ARG;
+    }
+
+    /* Enable smpd state machine tracing */
+    /*
+    smpd_process.verbose = SMPD_TRUE;
+	smpd_process.dbg_state |= SMPD_DBG_STATE_ERROUT | SMPD_DBG_STATE_STDOUT | SMPD_DBG_STATE_TRACE;
+    */
 
     /* don't allow pmi_init to be called more than once */
     if (pmi_process.init_finalized == PMI_INITIALIZED)
@@ -750,6 +1061,33 @@ int iPMI_Init(int *spawned)
     else
     {
 	pmi_process.appnum = 0;
+    }
+
+    /* Determine If singleton */
+    p = getenv("PMI_SMPD_FD");
+    if( p == NULL){
+        p = getenv("PMI_HOST");
+        if( p == NULL){
+            p = getenv("PMI_KVS");
+            if(p == NULL){
+            /* Assume singleton. Setup the PMI service when required i.e., later */
+            pmi_process.init_finalized = PMI_SINGLETON_INIT_BUT_NO_PM;
+            /* Rank = 0 & Nprocs = 1 initialized by default above */
+            return PMI_SUCCESS;
+            }
+        }
+    }
+    else{
+        /* decode PMI_SMPD_FD */
+#ifdef HAVE_WINDOWS_H
+	    pmi_process.smpd_fd = smpd_decode_handle(p);
+#else
+	    pmi_process.smpd_fd = (MPIDU_SOCK_NATIVE_FD)atoi(p);
+#endif
+        if(pmi_process.smpd_fd <= 0){
+            pmi_process.smpd_fd = 0;
+            putenv("PMI_SMPD_FD=");
+        }
     }
 
     p = getenv("PMI_KVS");
@@ -810,10 +1148,9 @@ int iPMI_Init(int *spawned)
     }
 
     p = getenv("PMI_SMPD_ID");
-    if (p != NULL)
-    {
-	pmi_process.smpd_id = atoi(p);
-	smpd_process.id = pmi_process.smpd_id;
+    if (p != NULL){
+        pmi_process.smpd_id = atoi(p);
+	    smpd_process.id = pmi_process.smpd_id;
     }
 
     p = getenv("PMI_SMPD_KEY");
@@ -825,38 +1162,33 @@ int iPMI_Init(int *spawned)
     p = getenv("PMI_SMPD_FD");
     if (p != NULL)
     {
-	result = MPIDU_Sock_create_set(&pmi_process.set);
-	if (result != MPI_SUCCESS)
-	{
+	    result = MPIDU_Sock_create_set(&pmi_process.set);
+	    if (result != MPI_SUCCESS)
+	    {
 	    pmi_err_printf("PMI_Init failed: unable to create a sock set, error:\n%s\n",
 		get_sock_error_string(result));
 	    return PMI_FAIL;
-	}
-
-#ifdef HAVE_WINDOWS_H
-	pmi_process.smpd_fd = smpd_decode_handle(p);
-#else
-	pmi_process.smpd_fd = (MPIDU_SOCK_NATIVE_FD)atoi(p);
-#endif
-	result = MPIDU_Sock_native_to_sock(pmi_process.set, pmi_process.smpd_fd, NULL, &pmi_process.sock);
-	if (result != MPI_SUCCESS)
-	{
+	    }
+        /* pmi_process.smpd_fd is decoded when checking for Singleton Init */
+	    result = MPIDU_Sock_native_to_sock(pmi_process.set, pmi_process.smpd_fd, NULL, &pmi_process.sock);
+	    if (result != MPI_SUCCESS)
+	    {
 	    pmi_err_printf("MPIDU_Sock_native_to_sock failed, error %s\n", get_sock_error_string(result));
 	    return PMI_FAIL;
-	}
-	result = smpd_create_context(SMPD_CONTEXT_PMI, pmi_process.set, pmi_process.sock, pmi_process.smpd_id, &pmi_process.context);
-	if (result != SMPD_SUCCESS)
-	{
+	    }
+	    result = smpd_create_context(SMPD_CONTEXT_PMI, pmi_process.set, pmi_process.sock, pmi_process.smpd_id, &pmi_process.context);
+	    if (result != SMPD_SUCCESS)
+	    {
 	    pmi_err_printf("unable to create a pmi context.\n");
 	    return PMI_FAIL;
-	}
+	    }
     }
     else
     {
 	p = getenv("PMI_HOST");
 	if (p != NULL)
 	{
-	    strncpy(pmi_process.host, p, 100);
+	    strncpy(pmi_process.host, p, PMI_MAX_HOST_NAME_LENGTH);
 	    p = getenv("PMI_PORT");
 	    if (p != NULL)
 	    {
@@ -884,6 +1216,9 @@ int iPMI_Init(int *spawned)
 	}
 	else
 	{
+        /* SINGLETON: Assume singleton here and initialize to SINGLETON_INIT_BUT_NO_PM 
+         * Also set PMI_KVS & PMI_DOMAIN after this step...
+         */
 	    pmi_err_printf("No mechanism specified for connecting to the process manager.\n");
 	    return PMI_FAIL;
 	}
@@ -894,7 +1229,6 @@ int iPMI_Init(int *spawned)
     {
 	parse_clique(p);
     }
-
     /*
     printf("PMI_RANK=%s PMI_SIZE=%s PMI_KVS=%s PMI_SMPD_ID=%s PMI_SMPD_FD=%s PMI_SMPD_KEY=%s\n PMI_SPAWN=%s",
 	getenv("PMI_RANK"), getenv("PMI_SIZE"), getenv("PMI_KVS"), getenv("PMI_SMPD_ID"),
@@ -958,15 +1292,13 @@ int iPMI_Finalize()
     if (pmi_process.init_finalized == PMI_FINALIZED)
 	return PMI_SUCCESS;
 
-    /*
-    printf("PMI_Finalize called.\n");
-    fflush(stdout);
-    */
-
     if (pmi_process.rpmi)
     {
 	return rPMI_Finalize();
     }
+
+    if(pmi_process.init_finalized < PMI_INITIALIZED)
+    return PMI_SUCCESS;
 
     if (pmi_process.local_kvs)
     {
@@ -1079,6 +1411,8 @@ int iPMI_Abort(int exit_code, const char error_msg[])
 	return PMI_FAIL;
 #endif
     }
+    if(pmi_process.init_finalized < PMI_INITIALIZED)
+        return PMI_FAIL;
 
     result = smpd_create_command("abort_job", pmi_process.smpd_id, 0, SMPD_FALSE, &cmd_ptr);
     if (result != SMPD_SUCCESS)
@@ -1140,6 +1474,17 @@ int iPMI_Abort(int exit_code, const char error_msg[])
 	pmi_err_printf("the state machine logic failed to handle the abort command.\n");
 	return PMI_FAIL;
     }
+
+    if(pmi_process.iproc == 0 && 
+        pmi_process.singleton_mpiexec_fd != PMII_PROCESS_INVALID_HANDLE){
+		int status;
+#ifdef HAVE_WINDOWS_H
+        WaitForSingleObject(pmi_process.singleton_mpiexec_fd, INFINITE);
+#else
+        waitpid(pmi_process.singleton_mpiexec_fd, &status, WUNTRACED);
+#endif
+    }
+
 #ifdef HAVE_WINDOWS_H
     /* ExitProcess(exit_code); */
     TerminateProcess(GetCurrentProcess(), exit_code);
@@ -1177,6 +1522,11 @@ int iPMI_Get_universe_size(int *size)
 {
     if (pmi_process.init_finalized == PMI_FINALIZED)
 	return PMI_ERR_INIT;
+    if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
+        if(PMIi_InitSingleton() != PMI_SUCCESS){
+            return PMI_ERR_INIT;
+        }
+    }
     if (size == NULL)
 	return PMI_ERR_INVALID_ARG;
 
@@ -1238,6 +1588,11 @@ int iPMI_Get_clique_ranks( int ranks[], int length )
 
 int iPMI_Get_id( char id_str[], int length )
 {
+    if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
+        if(PMIi_InitSingleton() != PMI_SUCCESS){
+            return PMI_ERR_INIT;
+        }
+    }
     return iPMI_KVS_Get_my_name(id_str, length);
 }
 
@@ -1255,6 +1610,11 @@ int iPMI_Get_kvs_domain_id(char id_str[], int length)
     if (length < PMI_MAX_KVS_NAME_LENGTH)
 	return PMI_ERR_INVALID_LENGTH;
 
+    if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
+        if(PMIi_InitSingleton() != PMI_SUCCESS){
+            return PMI_ERR_INIT;
+        }
+    }
     strncpy(id_str, pmi_process.domain_name, length);
 
     return PMI_SUCCESS;
@@ -1310,6 +1670,12 @@ int iPMI_KVS_Get_my_name(char kvsname[], int length)
     if (length < PMI_MAX_KVS_NAME_LENGTH)
 	return PMI_ERR_INVALID_LENGTH;
 
+    if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
+        if(PMIi_InitSingleton() != PMI_SUCCESS){
+            return PMI_ERR_INIT;
+        }
+    }
+
     strncpy(kvsname, pmi_process.kvs_name, length);
 
     /*
@@ -1360,6 +1726,12 @@ int iPMI_KVS_Create(char kvsname[], int length)
 	return PMI_ERR_INVALID_ARG;
     if (length < PMI_MAX_KVS_NAME_LENGTH)
 	return PMI_ERR_INVALID_LENGTH;
+
+    if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
+        if(PMIi_InitSingleton() != PMI_SUCCESS){
+            return PMI_ERR_INIT;
+        }
+    }
 
     if (pmi_process.local_kvs)
     {
@@ -1505,6 +1877,7 @@ int iPMI_KVS_Get(const char kvsname[], const char key[], char value[], int lengt
 
     if (pmi_process.init_finalized == PMI_FINALIZED)
 	return PMI_ERR_INIT;
+
     if (kvsname == NULL)
 	return PMI_ERR_INVALID_ARG;
     if (key == NULL)
@@ -1703,6 +2076,12 @@ int iPMI_Spawn_multiple(int count,
 
     if (pmi_process.init_finalized == PMI_FINALIZED)
 	return PMI_ERR_INIT;
+    if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
+        if(PMIi_InitSingleton() != PMI_SUCCESS){
+            return PMI_ERR_INIT;
+        }
+    }
+
     if (count < 1 || cmds == NULL || maxprocs == NULL || preput_keyval_size < 0)
 	return PMI_ERR_INVALID_ARG;
 

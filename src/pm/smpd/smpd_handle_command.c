@@ -20,6 +20,38 @@ static int smpd_do_abort_job(char *name, int rank, char *error_str, int exit_cod
 static int create_process_group(int nproc, char *kvs_name, smpd_process_group_t **pg_pptr);
 static int get_name_key_value(char *str, char *name, char *key, char *value);
 
+
+/* FIXME: smpd_get_hostname() does the same thing */
+#undef FCNAME
+#define FCNAME "get_hostname"
+static int get_hostname(char *host, int hostlen){
+    int retval = SMPD_SUCCESS;
+#ifdef HAVE_WINDOWS_H	
+    DWORD len = hostlen;
+#endif	
+    smpd_enter_fn(FCNAME);
+    if(host == NULL){
+        smpd_err_printf("host == NULL\n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;        
+    }
+#ifdef HAVE_WINDOWS_H
+    if(!GetComputerNameEx(ComputerNameDnsFullyQualified, host, &len)){
+        smpd_err_printf("GetComputerNameEx failed, error = %d\n", GetLastError());
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+#else
+    if(gethostname(host, hostlen)){
+        smpd_err_printf("gethostname failed, error = %d\n", errno);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+#endif    
+    smpd_exit_fn(FCNAME);
+    return SMPD_SUCCESS;
+}
+
 #undef FCNAME
 #define FCNAME "smpd_do_abort_job"
 static int smpd_do_abort_job(char *name, int rank, char *error_str, int exit_code)
@@ -1152,10 +1184,64 @@ int smpd_handle_result(smpd_context_t *context)
 		{
 		    MPIU_Str_get_string_arg(context->read_cmd.cmd, "host_description", host_description, 256);
 		    MPIU_Str_get_int_arg(context->read_cmd.cmd, "listener_port", &listener_port);
-		    printf("%s\n%d\n%s\n", host_description, listener_port, smpd_process.kvs_name);
+            /* SINGLETON: If no port to connect back print this information else connect to the port 
+             * and execute the SINGLETON INIT protocol 
+             */
+            if(smpd_process.singleton_client_port > 0){
+                smpd_context_t *p_singleton_mpiexec_context;
+                char connect_to_host[SMPD_SINGLETON_MAX_HOST_NAME_LEN];
+                /* Create a context */
+                result = smpd_create_context(SMPD_CONTEXT_SINGLETON_INIT_MPIEXEC, context->set, 
+                                            MPIDU_SOCK_INVALID_SOCK, -1, &p_singleton_mpiexec_context);
+                if(result != SMPD_SUCCESS){
+                    context->state = SMPD_DONE;
+                    smpd_err_printf("smpd_create_context failed, error = %d\n", result);
+                    return SMPD_FAIL;
+                }
+
+                p_singleton_mpiexec_context->state = SMPD_SINGLETON_MPIEXEC_CONNECTING;
+                p_singleton_mpiexec_context->singleton_init_pm_port = listener_port;
+                strncpy(p_singleton_mpiexec_context->singleton_init_hostname, host_description, 
+                        SMPD_SINGLETON_MAX_HOST_NAME_LEN);
+                strncpy(p_singleton_mpiexec_context->singleton_init_kvsname, smpd_process.kvs_name,
+                        SMPD_SINGLETON_MAX_KVS_NAME_LEN);
+                /* Post a connect */
+                /* FIXME : mismatch btw size of connect_to->host and max host name len */
+                result = get_hostname(connect_to_host, SMPD_SINGLETON_MAX_HOST_NAME_LEN);
+                if(result != SMPD_SUCCESS){
+                    context->state = SMPD_DONE;
+                    smpd_err_printf("gethostname failed, error = %d\n", result);
+                    result = smpd_free_context(p_singleton_mpiexec_context);
+                    if(result != SMPD_SUCCESS){ 
+                        smpd_err_printf("smpd_free_context failed, error = %d\n", result);
+                    }
+                    return SMPD_FAIL;
+                }
+                result = MPIDU_Sock_post_connect(context->set, p_singleton_mpiexec_context,
+                                                    connect_to_host,
+                                                    smpd_process.singleton_client_port,
+                                                    &p_singleton_mpiexec_context->sock);
+                if(result != MPI_SUCCESS){
+                    context->state = SMPD_DONE;
+                    smpd_err_printf("MPIDU_Sock_post_connect failed, error = %s\n", get_sock_error_string(result));
+                    result = smpd_free_context(p_singleton_mpiexec_context);
+                    if(result != SMPD_SUCCESS){ 
+                        smpd_err_printf("smpd_free_context failed, error = %d\n", result);
+                    }
+                    return SMPD_FAIL;
+                }
+                ret_val = SMPD_SUCCESS;
+            }
+            else{
+		        printf("%s\n%d\n%s\n", host_description, listener_port, smpd_process.kvs_name);
+            }
 		    /*printf("%s %d %s\n", smpd_process.host_list->host, smpd_process.port, smpd_process.kvs_name);*/
 		    fflush(stdout);
 		}
+        else if (strcmp(iter->cmd_str, "proc_info") == 0){
+            smpd_dbg_printf("%s command result = %s\n", iter->cmd_str, str);
+            ret_val = SMPD_DBS_RETURN;
+        }
 		else if (strcmp(iter->cmd_str, "spawn") == 0)
 		{
 		    smpd_dbg_printf("%s command result = %s\n", iter->cmd_str, str);
@@ -2008,6 +2094,99 @@ invalid_dbs_command:
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
+    smpd_exit_fn(FCNAME);
+    return SMPD_SUCCESS;
+}
+
+#undef FCNAME
+#define FCNAME "smpd_handle_die_command"
+int smpd_handle_die_command(smpd_context_t *context){
+    int result;
+    smpd_enter_fn(FCNAME);
+    context->state = SMPD_DONE;
+    result = MPIDU_Sock_post_close(context->sock);
+    if(result != MPI_SUCCESS){
+        smpd_err_printf("Unable to post a close after 'die' on a singleton client, error = %s\n",
+                    get_sock_error_string(result));
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+    smpd_exit_fn(FCNAME);
+    return SMPD_CLOSE;
+}
+
+#undef FCNAME
+#define FCNAME "smpd_handle_proc_info_command"
+int smpd_handle_proc_info_command(smpd_context_t *context){
+    int result;
+    smpd_command_t *cmd, *temp_cmd;
+    char ctx_key[100];
+    smpd_enter_fn(FCNAME);
+    cmd = &context->read_cmd;
+    /* Prepare a reply cmd */
+    /* prepare the result command */
+    result = smpd_create_command("result", smpd_process.id, cmd->src, SMPD_FALSE, &temp_cmd);
+    if (result != SMPD_SUCCESS){
+	    smpd_err_printf("unable to create a result command for the 'proc_info' command '%s'.\n", cmd->cmd);
+	    smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+    /* add the command tag for result matching */
+    result = smpd_add_command_int_arg(temp_cmd, "cmd_tag", cmd->tag);
+    if (result != SMPD_SUCCESS){
+	    smpd_err_printf("unable to add the tag to the result command for 'proc_info' command '%s'.\n", cmd->cmd);
+	    smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+    result = smpd_add_command_arg(temp_cmd, "cmd_orig", cmd->cmd_str);
+    if (result != SMPD_SUCCESS){
+	    smpd_err_printf("unable to add cmd_orig to the result command for a %s command\n", cmd->cmd_str);
+    	smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+    /* copy the ctx_key for pmi control channel lookup */
+    if (MPIU_Str_get_string_arg(cmd->cmd, "ctx_key", ctx_key, 100) != MPIU_STR_SUCCESS){
+	    smpd_err_printf("no ctx_key in the 'proc_info' command: '%s'\n", cmd->cmd);
+	    smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+    result = smpd_add_command_arg(temp_cmd, "ctx_key", ctx_key);
+    if (result != SMPD_SUCCESS){
+	    smpd_err_printf("unable to add the ctx_key to the result command for 'proc_info' command '%s'.\n", cmd->cmd);
+	    smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+
+    /* Get the process info */
+    MPIU_Str_get_string_arg(cmd->cmd, "c", context->process->exe, SMPD_MAX_EXE_LENGTH);
+    MPIU_Str_get_int_arg(cmd->cmd, "i", &context->process->rank);
+    MPIU_Str_get_int_arg(cmd->cmd, "n", &context->process->nproc);
+    if(MPIU_Str_get_int_arg(cmd->cmd, "s", &result) == MPIU_STR_SUCCESS){
+        context->process->is_singleton_client = result ? SMPD_TRUE : SMPD_FALSE;    
+    }
+    /* For unix systems - get the PID. On windows a handle to a process has to be explicitly duplicated with
+     * appropriate rights 
+     */
+#ifndef HAVE_WINDOWS_H
+    MPIU_Str_get_int_arg(cmd->cmd, "p", &(context->process->wait));
+#endif
+    /* send the reply */
+
+    smpd_dbg_printf("sending reply to 'proc_info' command '%s'.\n", cmd->cmd);
+    result = smpd_add_command_arg(temp_cmd, "result", SMPD_SUCCESS_STR);
+    if (result != SMPD_SUCCESS){
+	    smpd_err_printf("unable to add the result string to the result command for 'proc_info' command '%s'.\n", cmd->cmd);
+    	smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+    smpd_dbg_printf("sending result command to %s context: \"%s\"\n", smpd_get_context_str(context), temp_cmd->cmd);
+    result = smpd_post_write_command(context, temp_cmd);
+    if (result != SMPD_SUCCESS){
+	    smpd_err_printf("unable to post a write of the result command to the context: cmd '%s', dbs cmd '%s'", temp_cmd->cmd, cmd->cmd);
+	    smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
 }
@@ -5170,7 +5349,7 @@ int smpd_handle_suspend_command(smpd_context_t *context)
 #define FCNAME "smpd_handle_kill_command"
 int smpd_handle_kill_command(smpd_context_t *context)
 {
-    smpd_command_t *cmd;
+    smpd_command_t *cmd, *temp_cmd;
     char ctx_key[100];
     int process_id;
     smpd_context_t *pmi_context;
@@ -5222,11 +5401,57 @@ int smpd_handle_kill_command(smpd_context_t *context)
     }
     
     result = smpd_kill_process(pmi_context->process, exit_code);
-    if (result != SMPD_SUCCESS)
-    {
-	smpd_err_printf("unable to kill process.\n");
-	smpd_exit_fn(FCNAME);
-	return SMPD_SUCCESS;
+    if (result != SMPD_SUCCESS){
+	    smpd_err_printf("unable to kill process.\n");
+        pmi_context->state = SMPD_CLOSING;
+        if(pmi_context->process->in){
+            smpd_dbg_printf("Closing stdin ...\n");
+            result = MPIDU_Sock_post_close(pmi_context->process->in->sock);
+            if(result != MPI_SUCCESS){
+                smpd_err_printf("Unable to post close on stdin sock\n");
+            }
+        }
+        if(pmi_context->process->out){
+            smpd_dbg_printf("Closing stdout ...\n");
+            result = MPIDU_Sock_post_close(pmi_context->process->out->sock);
+            if(result != MPI_SUCCESS){
+                smpd_err_printf("Unable to post close on stdout sock\n");
+            }
+        }
+        if(pmi_context->process->err){
+            smpd_dbg_printf("Closing stderr ...\n");
+            result = MPIDU_Sock_post_close(pmi_context->process->err->sock);
+            if(result != MPI_SUCCESS){
+                smpd_err_printf("Unable to post close on stderr sock\n");
+            }
+        }
+        if(!(pmi_context->process->is_singleton_client)){
+            if(pmi_context->process->pmi){
+                smpd_dbg_printf("Closing pmi ...\n");
+                result = MPIDU_Sock_post_close(pmi_context->process->pmi->sock);
+                if(result != MPI_SUCCESS){
+                    smpd_err_printf("Unable to post close on pmi sock\n");
+                }
+            }
+        }
+        else{
+            /* Send the "die" command to the process */
+            smpd_command_t *temp_cmd;
+            result = smpd_create_command("die", smpd_process.id, pmi_context->process->id, SMPD_FALSE, &temp_cmd);
+            if(result != SMPD_SUCCESS){
+                smpd_err_printf("Unable to create 'die' command for singleton client \n");
+                smpd_exit_fn(FCNAME);
+                return SMPD_FAIL;
+            }
+            result = smpd_post_write_command(pmi_context, temp_cmd);
+            if(result != SMPD_SUCCESS){
+                smpd_err_printf("Unable to post 'die' command for singleton client \n");
+                smpd_exit_fn(FCNAME);
+                return SMPD_FAIL;
+            }
+        }
+    	smpd_exit_fn(FCNAME);
+	    return SMPD_SUCCESS;
     }
 
     smpd_exit_fn(FCNAME);
@@ -5882,6 +6107,46 @@ int smpd_handle__command(smpd_context_t *context)
 #endif
 
 #undef FCNAME
+#define FCNAME "smpd_handle_singinit_info_command"
+int smpd_handle_singinit_info_command(smpd_context_t *context){
+    int result;
+    smpd_command_t *cmd;
+
+    smpd_enter_fn(FCNAME);
+    cmd = &context->read_cmd;
+
+    if (MPIU_Str_get_string_arg(cmd->cmd, "kvsname", smpd_process.kvs_name, 
+            SMPD_SINGLETON_MAX_KVS_NAME_LEN) != MPIU_STR_SUCCESS){
+	    smpd_err_printf("singinit_info command missing kvsname\n");
+	    smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+
+    if (MPIU_Str_get_string_arg(cmd->cmd, "host", smpd_process.host, 
+            SMPD_SINGLETON_MAX_HOST_NAME_LEN) != MPIU_STR_SUCCESS){
+        smpd_err_printf("singinit_info command missing hostname\n");
+	    smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+
+    if (MPIU_Str_get_int_arg(cmd->cmd, "port", &smpd_process.port) 
+            != MPIU_STR_SUCCESS){
+        smpd_err_printf("singinit_info command missing pm port number\n");
+	    smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+
+    context->state = SMPD_DONE;
+    result = MPIDU_Sock_post_close(context->sock);
+    if( result != MPI_SUCCESS){
+        smpd_err_printf("MPIDU_Sock_post_close failed , error = %s\n", get_sock_error_string(result));
+    }
+
+    smpd_exit_fn(FCNAME);
+    return SMPD_CLOSE;
+}
+
+#undef FCNAME
 #define FCNAME "smpd_handle_command"
 int smpd_handle_command(smpd_context_t *context)
 {
@@ -5904,6 +6169,18 @@ int smpd_handle_command(smpd_context_t *context)
 
     /* set the command state to handled */
     context->read_cmd.state = SMPD_CMD_HANDLED;
+
+    /* FIXME: Assign the appropriate src/dst for singinit/die */
+    if (strcmp(cmd->cmd_str, "singinit_info") == 0){
+        result = smpd_handle_singinit_info_command(context);
+        smpd_exit_fn(FCNAME);
+        return result;
+    }
+    if(strcmp(cmd->cmd_str, "die") == 0){
+        result = smpd_handle_die_command(context);
+        smpd_exit_fn(FCNAME);
+        return result;
+    }
 
     result = smpd_command_destination(cmd->dest, &dest);
     if (result != SMPD_SUCCESS)
@@ -6012,6 +6289,11 @@ int smpd_handle_command(smpd_context_t *context)
 	    smpd_exit_fn(FCNAME);
 	    return result;
 	}
+    else if (strcmp(cmd->cmd_str, "proc_info") == 0){
+        result = smpd_handle_proc_info_command(context);
+        smpd_exit_fn(FCNAME);
+        return result;
+    }
 	else if (strcmp(cmd->cmd_str, "connect") == 0)
 	{
 	    result = smpd_handle_connect_command(context);
