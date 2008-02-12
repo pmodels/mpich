@@ -378,7 +378,7 @@ int PMI_Get_clique_ranks( int ranks[], int length )
     }
     else 
 	ranks[0] = PMI_rank;
-    return ranks[0];
+    return PMI_SUCCESS;
 #else
     if ( length < 1 )
 	return PMI_ERR_INVALID_ARG;
