@@ -367,7 +367,7 @@ int MPIDU_Sock_listen(struct MPIDU_Sock_set * sock_set, void * user_ptr,
     if (rc == -1)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_FAIL,
-					 "**sock|poll|bind", "**sock|poll|bind %d %d %s", port, errno, MPIU_Strerror(errno));
+					 "**sock|poll|bind", "**sock|poll|bind %d %d %s", *port, errno, MPIU_Strerror(errno));
 	goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
