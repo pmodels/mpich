@@ -22,7 +22,7 @@ installations.
 - SCTP: Added MPICH_SCTP_NAGLE_ON support.
 
 - MPE: Updated MPE logging API so that it is thread-safe (through global
-mutex). Updated all related documentation, e.g. manpages.
+mutex). Updated all related documentation, e.g. man pages.
 
 - MPE: Added infrastructure to piggyback argument data to MPI states.
 
