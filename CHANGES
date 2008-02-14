@@ -13,7 +13,7 @@ independently.
 - OVERALL: make uninstall works cleanly now, except for MPD
 installations.
 
-- ROMIO: Support to take hints from environment variables.
+- ROMIO: Support to take hints from a config file
 
 - SMPD: Singleton Init support.
 
@@ -21,8 +21,8 @@ installations.
 
 - SCTP: Added MPICH_SCTP_NAGLE_ON support.
 
-- MPE: Updated MPE logging API so it is thread-safe (through global
-mutex) and all related documentation, e.g. manpages.
+- MPE: Updated MPE logging API so that it is thread-safe (through global
+mutex). Updated all related documentation, e.g. manpages.
 
 - MPE: Added infrastructure to piggyback argument data to MPI states.
 
