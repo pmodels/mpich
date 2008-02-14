@@ -382,8 +382,14 @@ ProcessState *MPIE_FindProcessByPid( pid_t pid )
 		   from within the signal handler */
 		return 0;
 	    }
-	    for (i=0; i<app->nProcess; i++) {
-		if (pState[i].pid == pid) return &pState[i];
+
+	    /* It is possible for pState to be uninitialized if not all apps
+	       have been started yet via MPIE_ForkProcesses and we are called
+	       from handle_sigchild. */
+	    if (pState) {
+		for (i=0; i<app->nProcess; i++) {
+		    if (pState[i].pid == pid) return &pState[i];
+		}
 	    }
 	    app = app->nextApp;
 	}
