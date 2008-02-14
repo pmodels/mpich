@@ -347,15 +347,15 @@ configured by adding arguments to the configure step.
 Compiler Optimization Levels
 ============================
 
-By default, from version 1.0.7rc1 onwards the MPICH2 library is built
-with the -O2 optimization level if it is available. The mpicc and
-other scripts that are used to compile applications do not include any
-optimization flag by default. If you want to build the MPICH2 library
-with a specific optimization level, set the environment variable
-CFLAGS to that level before running configure. If you do not want this
-CFLAGS value to be included in the mpicc script, set the environment
-variable MPI_CFLAGS to MPI_FLAGS_EMPTY. For example, to build a
-"production" MPICH2 in a GNU environment, you may want to do:
+By default, the MPICH2 library is built with the -O2 optimization
+level if it is available. The mpicc and other scripts that are used to
+compile applications do not include any optimization flag by
+default. If you want to build the MPICH2 library with a specific
+optimization level, set the environment variable CFLAGS to that level
+before running configure. If you do not want this CFLAGS value to be
+included in the mpicc script, set the environment variable MPI_CFLAGS
+to MPI_FLAGS_EMPTY. For example, to build a "production" MPICH2 in a
+GNU environment, you may want to do:
      setenv CFLAGS -O3
      setenv MPI_CFLAGS MPI_FLAGS_EMPTY
 before running configure. This will cause the MPICH2 library to be
@@ -459,11 +459,11 @@ and does not work.  The next release will have a more robust,
 ready-for-production, version of this channel.
 
 
-The sshm (scalable shared memory) channel is not supported for
-1.0.7rc1. The code has been retained to provide an example of some MPI-2
-RMA optimizations (the immediate method as opposed to the deferred
-method used in other channels for implementing the synchronization in
-MPI-2 one-sided communication). 
+The sshm (scalable shared memory) channel is currently not
+supported. The code has been retained to provide an example of some
+MPI-2 RMA optimizations (the immediate method as opposed to the
+deferred method used in other channels for implementing the
+synchronization in MPI-2 one-sided communication).
 
 The Nemesis channel is a new low-latency channel that uses shared
 memory for intra-node communication and various networks for
