@@ -504,7 +504,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
     }
 
     for (i=0; i<nprocs; i++) count[i] = recv_size[i] = 0;
-    for (m=ntimes; m<max_ntimes; m++) 
+    for (m=ntimes; m<max_ntimes; m++) {
 	/* nothing to recv, but check for send. */
 	ADIOI_W_Exchange_data(fd, buf, write_buf, flat_buf, offset_list, 
                             len_list, send_size, recv_size, off, size, count, 
@@ -516,6 +516,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                             curr_to_proc, done_to_proc, &hole, m, 
                             buftype_extent, buf_idx, error_code); 
         if (*error_code != MPI_SUCCESS) return;
+    }
 
     if (ntimes) ADIOI_Free(write_buf);
     ADIOI_Free(curr_offlen_ptr);
