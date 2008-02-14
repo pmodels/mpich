@@ -2,9 +2,34 @@
                                Changes in 1.0.7
 ===============================================================================
 
-- MPE changes:
-  * Updated MPE logging API so it is thread-safe (through global mutex)
-    and all related documentation, e.g. manpages.
+- PMI: Added support to use PMI Clique functionality for process
+managers that support it.
+
+- OVERALL: Added datatype free hooks to be used by devices
+independently.
+
+- OVERALL: Added device-specific timer support.
+
+- OVERALL: make uninstall works cleanly now, except for MPD
+installations.
+
+- ROMIO: Support to take hints from environment variables.
+
+- SMPD: Singleton Init support.
+
+- WINDOWS: Fortran 90 support added.
+
+- SCTP: Added MPICH_SCTP_NAGLE_ON support.
+
+- MPE: Updated MPE logging API so it is thread-safe (through global
+mutex) and all related documentation, e.g. manpages.
+
+- MPE: Added infrastructure to piggyback argument data to MPI states.
+
+- Many other bug fixes, memory leak fixes and code cleanup. A full
+list of changes is available using:
+  svn log -r100:444 https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk
+
 
 ===============================================================================
 			       Changes in 1.0.6
