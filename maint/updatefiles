@@ -12,11 +12,7 @@
 # mpich tree.  This is not yet implemented.
 error_summary=""
 acVersion=unknown
-# confdbSrcDir is used for checkouts that were not able to checkout 
-# confdb because they're not members of the Unix group that includes that
-# directory.
-confdbSrcDir=/homes/MPI/testing/mpich2/mpich2/confdb
-#
+
 # finalStatus records whether there have been problems in updatefiles
 # 1 = warning, 3 = fatal, 2 = reserved for future use, 
 # 0 = no problems detected.
@@ -490,37 +486,6 @@ if [ $do_build_configure = yes ] ; then
     if [ $? = 0 ] ; then has_unix_find=yes ; else has_unix_find=no ; fi
     # if [ $? = 0 ] ; then .. code with find
     if [ "$has_unix_find" = "yes" -a "$do_build_configure" = "yes" ] ; then
-        # Before we try to rebuild any configure steps, make sure that 
-        # we have the necessary macro definitions
-        if [ ! -d confdb -o ! -s confdb/aclocal.m4 ] ; then
-	    # See if we can export a copy of confdb
-	    if [ -d $confdbSrcDir ] ; then
-                cp -rp $confdbSrcDir confdb
-                # Remove the .svn directories
-		if [ -d confdb/.svn ] ; then
-                    (cd confdb && find . -name .svn -print | xargs rm -rf)
-                fi
-            else
-		# Try to use scp
-                scp -rp shakey.mcs.anl.gov:$confdbSrcDir confdb
-		if [ -d confdb/.svn ] ; then
-		    (cd confdb && find . -name .svn -print | xargs rm -rf)
-                fi
-		if [ ! -d confdb ] ; then    
-                    echo "Directory `pwd`/confdb is missing and is required for rebuilding configure"
-  	            exit 1
-                fi
-            fi
-        elif [ -d confdb -a -d "$confdbSrcDir" -a ! -d confdb/.svn ] ; then
-            # This is a copy; get an up-to-date copy.  We only do 
-	    # this if there is an alternate source, in case this is
-	    # part of the distributed version and not local.
-            cp -rp $confdbSrcDir confdb
-            # Remove the .svn directories
-	    if [ -d confdb/.svn ] ; then
-                (cd confdb && find . -name .svn -print | xargs rm -rf)
-            fi
-        fi
 	# Check for out-of-date configures (the dependency handling
 	# isn't 100% accurate, so we use this step as an additional
 	# check)
