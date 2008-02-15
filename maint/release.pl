@@ -37,6 +37,10 @@ sub run_cmd()
 
     $cmd = "$cmd" . " 2>&1 | tee -a $logfile > /dev/null";
     system("$cmd");
+    if ($?) {
+	print "\n\tERROR: Failure executing command: $cmd\n\n";
+	exit;
+    }
 }
 
 sub debug()
