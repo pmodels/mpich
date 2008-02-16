@@ -30,7 +30,7 @@ mutex). Updated all related documentation, e.g. man pages.
 
 - Many other bug fixes, memory leak fixes and code cleanup. A full
 list of changes is available using:
-  svn log -r100:444 https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk
+  svn log -r100:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/branches/release/MPICH2_1_0_7
 
 
 ===============================================================================
