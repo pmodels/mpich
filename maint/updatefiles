@@ -741,6 +741,10 @@ if [ "$do_smpdversion" = yes ] ; then
 #define SMPD_VERSION "$smpdVersion"
 EOF
 fi
+
+VERSION=`cat maint/Version`
+cat README.in | sed -e "s/@VERSION@/${VERSION}/g" > README
+
 #
 # The following must be the last statements executed
 if [ -n "$error_summary" ] ; then
