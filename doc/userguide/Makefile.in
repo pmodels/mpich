@@ -1,43 +1,34 @@
 ALL: all-redirect
 SHELL = @SHELL@
-VPATH = @srcdir@
 srcdir = @srcdir@
+VERSION = @VERSION@
 .SUFFIXES: .pdf .ps .dvi .tex
 
 # Set these to the location of the web and ftp locations for the documents
 WEBDIR = /mcs/www/mpi/mpich2/docs
 FTPDIR = /home/ftp/pub/mpi/mpich2
 
+user.tex: $(srcdir)/user.tex.in
+	cat $(srcdir)/user.tex.in | sed -e "s/__VERSION__/${VERSION}/g" > user.tex
+
+faqsum.tex: $(srcdir)/../faq/faq.txt $(srcdir)/../faq/faqbuild
+	mydir=`pwd` && (cd $(srcdir)/../faq && ./faqbuild -elatex=subsection -outfile=$$mydir/faqsum.tex)
+
 # The tests on files that use -s really need to also check for a valid
 # link.  However, the -h test is not available in all shells,
 # so we allow the ln to fail without exiting make (the -f option for
 # ln is also non-standard, so we can't use that either)
-user.dvi: user.tex faqsum.tex $(srcdir)/user.bib
-	@-if [ ! -s ../mpiman.sty ] ; then \
-	(cd .. && ln -s $(srcdir)/../mpiman.sty mpiman.sty) ; fi
-	@if [ ! -s user.bib ] ; then \
-	 ln -s $(srcdir)/user.bib user.bib ; fi
-	@if [ ! -s user.tex ] ; then ln -sf $(srcdir)/user.tex ; fi
-	@if [ ! -s faqsum.tex ] ; then ln -sf $(srcdir)/faqsum.tex ; fi
+user.bib: $(srcdir)/user.bib
+	@if [ ! -s user.bib ] ; then ln -s $(srcdir)/user.bib user.bib ; fi
+
+user.dvi: user.tex faqsum.tex user.bib
 	-latex user.tex
 	-bibtex user 
 	-latex user.tex
 	latex  user.tex
 
-.tex.dvi:
-	@-if [ ! -s ../mpiman.sty ] ; then \
-	(cd .. && ln -s $(srcdir)/../mpiman.sty mpiman.sty) ; fi
-	@if [ ! -s user.bib ] ; then \
-	 ln -s $(srcdir)/user.bib user.bib ; fi
-	-latex $< 
-	-bibtex $* 
-	-latex $< 
-	latex $<
-
-.dvi.pdf:
-	dvipdfm $*
-.dvi.ps:
-	dvips $*
+user.pdf: user.dvi
+	dvipdfm user.dvi
 
 # Use latex2html to create the HTML version.  There are several 
 # steps needed to workaround features of latex2html
@@ -47,21 +38,12 @@ user.dvi: user.tex faqsum.tex $(srcdir)/user.bib
 #    directory that contains the source file), so we copy the source
 #    file.  If more source files are added, this step will need to 
 #    be changed
-user.tex: $(srcdir)/user.tex
-	@if cmp -s user.tex $(srcdir)/user.tex ; then : ; else \
-	cp $(srcdir)/user.tex user.tex ; fi
+user.aux: user.tex faqsum.tex
+	latex user.tex
 
-user.aux: user.tex $(srcdir)/user.tex faqsum.tex
-	latex $(srcdir)/user.tex
-user/user.html: user.aux $(srcdir)/user.tex $(srcdir)/user.bib faqsum.tex
-	@if [ ! -s user.tex -a -s $(srcdir)/user.tex ] ; then cp $(srcdir)/user.tex . ; \
-	elif cmp -s user.tex $(srcdir)/user.tex ; then : ; else cp $(srcdir)/user.tex . ; fi
+user/user.html: user.aux user.tex user.bib faqsum.tex
 	latex2html user.tex
 
-faqsum.tex: $(srcdir)/../faq/faq.txt $(srcdir)/../faq/faqbuild
-	mydir=`pwd` && (cd $(srcdir)/../faq && ./faqbuild -elatex=subsection -outfile=$$mydir/faqsum.tex)
-
-#
 # Here are some thoughts on using tohtml
 #	tohtml -debugfile -default -dosnl -gaudy \
 #              -basedef $(srcdir)/../mpiman.def $(srcdir)/user.tex
@@ -77,10 +59,9 @@ htmldoc:
 latexdoc: ALL
 
 clean:
-	-rm -f *.toc *.out *.dvi user.ps user.pdf *.aux *.blg *.bbl *.log
+	-rm -f *.toc *.out *.dvi user.pdf *.aux *.blg *.bbl *.log
 
 distclean: clean
-	-rm -f code.sty
 
 install: user.pdf user/user.html
 	@if [ -z "$(WEBDIR)" ] ; then echo "No WEBDIR set" ; exit 1 ; fi

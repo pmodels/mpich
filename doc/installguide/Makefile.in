@@ -1,6 +1,5 @@
 ALL: all-redirect
 SHELL = @SHELL@
-VPATH = @srcdir@
 srcdir = @srcdir@
 
 .SUFFIXES: .pdf .dvi .tex
@@ -9,24 +8,16 @@ srcdir = @srcdir@
 WEBDIR = /mcs/www/mpi/mpich2/docs
 FTPDIR = /home/ftp/pub/mpi/mpich2
 
+install.tex: $(srcdir)/install.tex.in
+	cat $(srcdir)/install.tex.in | sed -e "s/__VERSION__/${VERSION}/g" > install.tex
 
-# The tests on files that use -s really need to also check for a valid
-# link.  However, the -h test is not available in all shells,
-# so we allow the ln to fail without exiting make (the -f option for
-# ln is also non-standard, so we can't use that either)
-.tex.dvi:
-	@if [ ! -s ../mpiman.sty ] ; then \
-	(cd .. && ln -s $(srcdir)/../mpiman.sty mpiman.sty) ; fi
-	-latex $< 
-	-bibtex $* 
-	-latex $< 
-	latex $< 
+install.dvi: install.tex
+	-latex install.tex
+	-latex install.tex
+	latex  install.tex
 
-.dvi.pdf:
-	dvipdfm $*
-
-.dvi.ps:
-	dvips $*
+install.pdf: install.dvi
+	dvipdfm install.dvi
 
 # Use latex2html to create the HTML version.  There are several 
 # steps needed to workaround features of latex2html
@@ -36,21 +27,12 @@ FTPDIR = /home/ftp/pub/mpi/mpich2
 #    directory that contains the source file), so we copy the source
 #    file.  If more source files are added, this step will need to 
 #    be changed
-install.tex: $(srcdir)/install.tex
-	@if cmp -s install.tex $(srcdir)/install.tex ; then : ; else \
-	cp $(srcdir)/install.tex install.tex ; fi
+install.aux: install.tex
+	latex install.tex
 
-install.aux: $(srcdir)/install.tex
-	latex $(srcdir)/install.tex
-install/install.html: install.aux install.tex $(srcdir)/install.tex
-	@if [ ! -s install.tex -a -s $(srcdir)/install.tex ] ; then \
-	     cp $(srcdir)/install.tex . ; \
-	elif cmp -s install.tex $(srcdir)/install.tex ; then : ; else \
-	     cp $(srcdir)/install.tex . ; \
-	fi
+install/install.html: install.aux install.tex
 	latex2html install.tex
 
-#
 # Here are some thoughts on using tohtml
 #	tohtml -debugfile -default -dosnl -gaudy \
 #              -basedef $(srcdir)/../mpiman.def $(srcdir)/install.tex

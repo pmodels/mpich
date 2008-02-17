@@ -42,7 +42,7 @@
     Office of Advanced Scientific Computing Research, SciDAC Program,
     Office of Science, U.S. Department of Energy, under Contract
     DE-AC02-06CH11357.}\\
-Version 1.0.7rc1\\
+Version __VERSION__\\
 Mathematics and Computer Science Division\\
 Argonne National Laboratory}
 
@@ -53,6 +53,7 @@ Pavan Balaji\\
 Darius Buntinas\\
 Ralph Butler\\
 Anthony Chan\\
+David Goodell\\
 Jayesh Krishna\\
 Guillaume Mercier\\
 Rob Ross\\
