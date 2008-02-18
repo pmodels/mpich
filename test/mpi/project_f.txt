@@ -23,8 +23,8 @@
 				<Tool Name="VFPreLinkEventTool"/></Configuration></Configurations>
 	<Files>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath="PROJECTNAME.f"/>
-		<File RelativePath="..\util\mtestf.f"/></Filter>
+		<File RelativePath="PROJECTNAME.FORTFILEEXTN"/>
+		<File RelativePath="..\util\mtestFORTFILEEXTN.FORTFILEEXTN"/></Filter>
 		<Filter Name="Header Files" Filter="fi;fd"/>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/></Files>
 	<Globals/></VisualStudioProject>
