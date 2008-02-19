@@ -5,6 +5,8 @@
 - PMI: Added support to use PMI Clique functionality for process
 managers that support it.
 
+- OVERALL: Support for STI Cell Broadband Engine
+
 - OVERALL: Added datatype free hooks to be used by devices
 independently.
 
