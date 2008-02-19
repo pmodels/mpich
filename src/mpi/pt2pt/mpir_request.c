@@ -552,3 +552,72 @@ fn_exit:
     return mpi_error;
 }
 
+/* MPIR_Grequest_wait: Waits until all generalized requests have
+   completed.  This routine groups grequests by class and calls the
+   wait_fn on the whole class. */
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Grequest_waitall
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIR_Grequest_waitall(int count, 
+                          MPID_Request **request_ptrs, 
+                          MPI_Status array_of_statuses[] )
+{
+    MPIX_Grequest_wait_function *wait_fn = NULL;
+    void ** state_ptrs;
+    int i, n_greq;
+    int mpi_error = MPI_SUCCESS;
+    MPIX_Grequest_class curr_class;
+    MPIU_CHKLMEM_DECL(1);
+
+    MPIU_CHKLMEM_MALLOC(state_ptrs, void *, sizeof(void*)*count, mpi_error, "state_ptrs");
+    
+    /* loop over all requests, group greqs with the same class and
+       call wait_fn on the groups.  (Only consecutive greqs with the
+       same class are being grouped) */
+    n_greq = 0;
+    for (i = 0; i < count; ++i)
+    {
+        /* skip over requests we're not interested in */
+        if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 ||  request_ptrs[i]->kind != MPID_UREQUEST)
+            continue;
+
+        if (n_greq == 0 || request_ptrs[i]->greq_class == curr_class)
+        {
+            /* if this is the first grequest of a group, or if it's the
+               same class as the last one, add its state to the list  */
+            curr_class = request_ptrs[i]->greq_class;
+            wait_fn = request_ptrs[i]->wait_fn;
+            state_ptrs[n_greq] = request_ptrs[i]->grequest_extra_state;
+            ++n_greq;
+        }
+        else
+        {
+            /* greq with a new class: wait on the list of greqs we've
+               created, then start a new list*/
+            mpi_error = (wait_fn)(n_greq, state_ptrs, 0, NULL);
+            if (mpi_error) MPIU_ERR_POP(mpi_error);
+
+            curr_class = request_ptrs[i]->greq_class;
+            wait_fn = request_ptrs[i]->wait_fn;
+            state_ptrs[0] = request_ptrs[i]->grequest_extra_state;
+            n_greq = 1;
+        }
+    }
+    
+    if (n_greq)
+    {
+        /* wait on the last group of greqs */
+        mpi_error = (wait_fn)(n_greq, state_ptrs, 0, NULL);
+        if (mpi_error) MPIU_ERR_POP(mpi_error);
+
+    }
+
+ fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    return mpi_error;
+ fn_fail:
+    goto fn_exit;
+}
+
