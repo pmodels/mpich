@@ -49,6 +49,11 @@ extern struct ADIOI_Fns_struct ADIO_SFS_operations;
 /* prototypes are in adio/ad_sfs/ad_sfs.h */
 #endif
 
+#ifdef ROMIO_LUSTRE
+extern struct ADIOI_Fns_struct ADIO_LUSTRE_operations;
+/* prototypes are in adio/ad_lustre/ad_lustre.h */
+#endif
+
 #ifdef ROMIO_NTFS
 extern struct ADIOI_Fns_struct ADIO_NTFS_operations;
 /* prototypes are in adio/ad_ntfs/ad_ntfs.h */

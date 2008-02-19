@@ -93,7 +93,7 @@ MPIO_REQ_REAL_POBJECTS="_iotest.o _iowait.o _iowaitall.o _iowaitany.o _iotestall
 #
 have_aio=no
 #
-known_filesystems="nfs ufs pfs pvfs pvfs2 testfs xfs panfs gridftp"
+known_filesystems="nfs ufs pfs pvfs pvfs2 testfs xfs panfs gridftp lustre"
 known_mpi_impls="mpich2_mpi mpich_mpi sgi_mpi hp_mpi cray_mpi lam_mpi"
 #
 # Defaults
@@ -1101,6 +1101,9 @@ fi
 if test -n "$file_system_testfs"; then
     AC_DEFINE(ROMIO_TESTFS,1,[Define for ROMIO with TESTFS])
 fi
+if test -n "$file_system_lustre"; then
+    AC_DEFINE(ROMIO_LUSTRE,1,[Define for ROMIO with LUSTRE])
+fi
 
 if test -n "$file_system_xfs"; then
     AC_DEFINE(ROMIO_XFS,1,[Define for ROMIO with XFS])
@@ -2105,6 +2108,7 @@ AC_OUTPUT(Makefile localdefs mpi-io/Makefile mpi2-other/info/Makefile \
 		   adio/ad_testfs/Makefile adio/ad_pvfs/Makefile \
 		   adio/ad_pvfs2/Makefile \
 		   adio/ad_gridftp/Makefile \
+  		   adio/ad_lustre/Makefile \
                    mpi-io/fortran/Makefile mpi2-other/info/fortran/Makefile \
                    mpi2-other/array/fortran/Makefile test/fmisc.f \
                    test/fcoll_test.f test/pfcoll_test.f test/fperf.f \

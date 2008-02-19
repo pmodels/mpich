@@ -317,6 +317,15 @@ static void ADIO_FileSysType_fncall(char *filename, int *fstype, int *error_code
     }
 # endif
 
+/*#if defined(LINUX) && defined(ROMIO_LUSTRE)*/
+#ifdef ROMIO_LUSTRE
+#define LL_SUPER_MAGIC 0x0BD00BD0
+    if (fsbuf.f_type == LL_SUPER_MAGIC) {
+	*fstype = ADIO_LUSTRE;
+	return;
+    }
+# endif
+
 # ifdef PAN_KERNEL_FS_CLIENT_SUPER_MAGIC
     if (fsbuf.f_type == PAN_KERNEL_FS_CLIENT_SUPER_MAGIC) {
 	*fstype = ADIO_PANFS;
@@ -466,6 +475,11 @@ static void ADIO_FileSysType_prefix(char *filename, int *fstype, int *error_code
 		    || !strncmp(filename, "gsiftp:", 7))
     {
 	*fstype = ADIO_GRIDFTP;
+    }
+    else if (!strncmp(filename, "lustre:", 7) 
+	     || !strncmp(filename, "LUSTRE:", 7))
+    {
+	*fstype = ADIO_LUSTRE;
     }
     else {
 #ifdef ROMIO_NTFS
@@ -679,6 +693,14 @@ void ADIO_ResolveFileType(MPI_Comm comm, char *filename, int *fstype,
 	return;
 #else
 	*ops = &ADIO_GRIDFTP_operations;
+#endif
+    }
+    if (file_system == ADIO_LUSTRE) {
+#ifndef ROMIO_LUSTRE 
+	*error_code = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname, __LINE__, MPI_ERR_IO, "**iofstypeunsupported", 0);
+	return;
+#else
+	*ops = &ADIO_LUSTRE_operations;
 #endif
     }
     *error_code = MPI_SUCCESS;
