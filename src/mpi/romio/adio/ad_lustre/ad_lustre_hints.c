@@ -25,7 +25,7 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	MPI_Info_set(fd->info, "direct_read", "false");
 	MPI_Info_set(fd->info, "direct_write", "false");
 	fd->direct_read = fd->direct_write = 0;
-	fd->lustre_ignore_locks= 0;
+	fd->hints->fs_hints.lustre.ignore_locks= 0;
 	
 	/* has user specified striping or server buffering parameters 
            and do they have the same value on all processes? */
@@ -65,7 +65,7 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 		    || (getenv("LUSTRE_IGNORE_LOCKS") &&
 		    atoi(getenv("LUSTRE_IGNORE_LOCKS")) !=0)){
 		MPI_Info_set(fd->info, "ignore_locks", "true");
-		fd->lustre_ignore_locks= 1;
+		fd->hints->fs_hints.lustre.ignore_locks= 1;
 	    }
 	}
 
@@ -144,7 +144,7 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     if (ADIOI_Direct_read) fd->direct_read = 1;
     if (ADIOI_Direct_write) fd->direct_write = 1;
 
-    if (fd->lustre_ignore_locks) {
+    if (fd->hints->fs_hints.lustre.ignore_locks) {
 	/* no data sieving for writes with lockless IO */
        	MPI_Info_get(fd->info, "ind_wr_buffer_size", MPI_MAX_INFO_VAL,
 		     value, &flag);
