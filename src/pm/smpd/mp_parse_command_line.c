@@ -1115,6 +1115,46 @@ configfile_loop:
 #endif
 		num_args_to_strip = 3;
 	    }
+	    else if (strcmp(&(*argvp)[1][1], "envlist") == 0){
+            char *str, *token, *value;
+		    if (argc < 4){
+		        printf("Error: no environment variable after -envlist option\n");
+		        smpd_exit_fn(FCNAME);
+		        return SMPD_FAIL;
+		    }
+		    str = MPIU_Strdup((*argvp)[2]);
+		    if (str == NULL){
+		        printf("Error: unable to allocate memory for copying envlist - '%s'\n", (*argvp)[2]);
+		        smpd_exit_fn(FCNAME);
+		        return SMPD_FAIL;
+		    }
+		    token = strtok(str, ",");
+		    while (token){
+		        value = getenv(token);
+		        if (value != NULL){
+			        env_node = (smpd_env_node_t*)MPIU_Malloc(sizeof(smpd_env_node_t));
+			        if (env_node == NULL){
+			            printf("Error: malloc failed to allocate structure to hold an environment variable.\n");
+			            smpd_exit_fn(FCNAME);
+			            return SMPD_FAIL;
+			        }
+			        strncpy(env_node->name, token, SMPD_MAX_NAME_LENGTH);
+			        strncpy(env_node->value, value, SMPD_MAX_VALUE_LENGTH);
+			        env_node->next = env_list;
+			        env_list = env_node;
+		        }
+                else{
+                    printf("Error: Cannot obtain value of env variable : %s\n", token);
+                }
+		        token = strtok(NULL, ",");
+		    }
+		    MPIU_Free(str);
+		    num_args_to_strip = 2;
+        }
+	    else if (strcmp(&(*argvp)[1][1], "envnone") == 0){
+            printf("-envnone option is not implemented\n");
+            num_args_to_strip = 1;
+        }
 	    else if (strcmp(&(*argvp)[1][1], "genv") == 0)
 	    {
 		if (argc < 4)
@@ -1155,10 +1195,12 @@ configfile_loop:
 	    else if (strcmp(&(*argvp)[1][1], "genvall") == 0)
 	    {
 		printf("-genvall option not implemented\n");
+        num_args_to_strip = 1;
 	    }
 	    else if (strcmp(&(*argvp)[1][1], "genvnone") == 0)
 	    {
 		printf("-genvnone option not implemented\n");
+        num_args_to_strip = 1;
 	    }
 	    else if (strcmp(&(*argvp)[1][1], "genvlist") == 0)
 	    {
@@ -1898,11 +1940,9 @@ configfile_loop:
 	exe[strlen(exe)-1] = '\0';
 	smpd_dbg_printf("handling executable:\n%s\n", exe);
 
-	if (nproc == 0)
-	{
-	    smpd_err_printf("missing num_proc flag: -n, -np, -hosts, or -localonly.\n");
-	    smpd_exit_fn(FCNAME);
-	    return SMPD_FAIL;
+	if (nproc == 0){
+    /* By default assume "mpiexec foo" => "mpiexec -n 1 foo" */
+        nproc = 1;
 	}
 	if (ghost_list != NULL && host_list == NULL && use_machine_file != SMPD_TRUE)
 	{
