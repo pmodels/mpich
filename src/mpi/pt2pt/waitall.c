@@ -81,6 +81,8 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     int active_flag;
     int rc;
     int mpi_errno = MPI_SUCCESS;
+    int n_greqs;
+    const int ignoring_statuses = (array_of_statuses == MPI_STATUSES_IGNORE);
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WAITALL);
 
@@ -123,6 +125,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
 	MPIU_CHKLMEM_MALLOC(request_ptrs, MPID_Request **, count * sizeof(MPID_Request *), mpi_errno, "request pointers");
     }
 
+    n_greqs = 0;
     n_completed = 0;
     for (i = 0; i < count; i++)
     {
@@ -143,7 +146,9 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
 		}
 		MPID_END_ERROR_CHECKS;
 	    }
-#           endif	    
+#           endif
+            if (request_ptrs[i]->kind == MPID_UREQUEST)
+                ++n_greqs;
 	}
 	else
 	{
@@ -161,10 +166,13 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     
     MPID_Progress_start(&progress_state);
 
-    /* first complete all generalized requests */
-    mpi_errno = MPIR_Grequest_waitall(count, request_ptrs, array_of_statuses);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
+    /* first, complete any generalized requests */
+    if (n_greqs)
+    {
+        mpi_errno = MPIR_Grequest_waitall(count, request_ptrs, array_of_statuses);
+        if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    }
+    
     for (i = 0; i < count; i++)
     {
         if (request_ptrs[i] == NULL) continue;
@@ -186,18 +194,19 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
         }
 
         /* complete the request and check the status */
-        status_ptr = (array_of_statuses != MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
+        status_ptr = (ignoring_statuses) ? MPI_STATUS_IGNORE : &array_of_statuses[i];
         rc = MPIR_Request_complete(&array_of_requests[i], request_ptrs[i], status_ptr, &active_flag);
         if (rc == MPI_SUCCESS) 
         { 
             request_ptrs[i] = NULL;
-            array_of_statuses[i].MPI_ERROR = MPI_SUCCESS;
+            if (!ignoring_statuses)
+                status_ptr->MPI_ERROR = MPI_SUCCESS;
         }
         else
         {
             /* req completed with an error */
             mpi_errno = MPI_ERR_IN_STATUS;
-            if (status_ptr != MPI_STATUS_IGNORE)
+            if (!ignoring_statuses)
             {
                 /* set the error code for this request */
                 status_ptr->MPI_ERROR = rc;
@@ -205,20 +214,19 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
                 /* set the error codes for the rest of the uncompleted requests to PENDING */
                 for (j = i+1; j < count; ++j)
                 {
-                    if (request_ptrs[i] == NULL)
-		    {
-			array_of_statuses[i].MPI_ERROR = MPI_SUCCESS;
-		    }
-		    else
-		    {
-			if (array_of_requests[i] != MPI_REQUEST_NULL)
-			{ 
-			    array_of_statuses[i].MPI_ERROR = MPI_ERR_PENDING;
-			}
-
-                    }
+                    if (!ignoring_statuses)
+                    {
+                        if (request_ptrs[j] == NULL)
+                        {
+                            /* either the user specified MPI_REQUEST_NULL, or this is a completed greq */
+                            array_of_statuses[j].MPI_ERROR = MPI_SUCCESS;
+                        }
+                        else
+                        {
+                            array_of_statuses[j].MPI_ERROR = MPI_ERR_PENDING;
+                        }
+                    }                    
                 }
-                
             }
             break;
         }		    
