@@ -894,11 +894,11 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 				     MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_accum_t * accum_pkt = &pkt->accum;
-    MPID_Request *req;
+    MPID_Request *req = NULL;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
     int predefined;
-    int complete;
+    int complete = 0;
     char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
