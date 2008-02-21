@@ -52,9 +52,6 @@ struct ADIOI_Hints_struct {
 	    struct {
 		    int debugmask;
 	    } pvfs2;
-	    struct {
-		    int ignore_locks;
-	    } lustre;
     } fs_hints;
 
 };

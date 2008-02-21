@@ -77,16 +77,6 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 	} else {
 	    perror("cannot open file with O_Direct");
 	    fd->direct_write = fd->direct_read = 0;
-	    fd->lustre_ignore_locks = 0;
-	}
-    }
-
-    if ((fd->direct_write || fd->direct_read) && 
-	fd->fd_direct != -1 && fd->lustre_ignore_locks) { 
-	int lustre_ioctl_flags = LL_FILE_IGNORE_LOCK; 
-	if (ioctl(fd->fd_direct, LL_IOC_SETFLAGS, &lustre_ioctl_flags) == -1) {
-	    perror("cannot set ignore locks in ioctl");
-	    fd->lustre_ignore_locks = 0;
 	}
     }
 
