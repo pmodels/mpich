@@ -415,6 +415,28 @@ static void ADIO_FileSysType_fncall(char *filename, int *fstype, int *error_code
 #endif
 }
 
+/* all proceeses opening, creating, or deleting a file end up invoking several
+ * stat system calls (unless a fs prefix is given).  Cary out this file system
+ * detection in a more scalable way by having rank 0 stat the file and broadcast the result (fs type and error code) to the other mpi processes */
+
+static void ADIO_FileSysType_fncall_scalable(MPI_Comm comm, char *filename, int * file_system, int * error_code)
+{
+    int rank, error;
+    int buf[2];
+    MPI_Comm_rank(comm, &rank);
+
+    if (rank == 0) {
+	ADIO_FileSysType_fncall(filename, file_system, error_code);
+	buf[0] = *file_system;
+	buf[1] = *error_code;
+    }
+    MPI_Bcast(buf, 2, MPI_INT, 0, comm);
+    *file_system = buf[0];
+    *error_code = buf[1];
+}
+
+
+
 /*
   ADIO_FileSysType_prefix - determines file system type for a file using 
   a prefix on the file name.  upper layer should have already determined
@@ -524,31 +546,58 @@ void ADIO_ResolveFileType(MPI_Comm comm, char *filename, int *fstype,
     file_system = -1;
     tmp = strchr(filename, ':');
     if (!tmp) {
+	int have_nfs_enabled=0;
 	*error_code = MPI_SUCCESS;
 	/* no prefix; use system-dependent function call to determine type */
-	ADIO_FileSysType_fncall(filename, &file_system, &myerrcode);
-	if (myerrcode != MPI_SUCCESS) {
-	    *error_code = myerrcode;
-	}
+	/* Optimization: we can reduce the 'storm of stats' that result from
+	 * thousands of mpi processes determinig file type this way.  Let us
+	 * have just one process stat the file and broadcast the result to
+	 * everyone else.  
+	 * - Note that we will not catch cases like
+	 * http://www.mcs.anl.gov/web-mail-archive/lists/mpich-discuss/2007/08/msg00042.html
+	 * where file systems are not mounted or available on other processes,
+	 * but we'll catch those a few functions later in ADIO_Open 
+	 * - Note that if we have NFS enabled, we might have a situation where,
+	 *   for example, /home/user/data.out is UFS on one process but NFS on
+	 *   others, so we won't perform this optimization if NFS is enabled.
+	 * - Another point: error codes and file system types are broadcast to
+	 *   all members of the communicator, so we get to skip the allreduce
+	 *   steps*/
 
-	/* the check for file system type will hang if any process got
-	 * an error in ADIO_FileSysType_fncall.  Processes encountering
-	 * an error will return early, before the collective file system
-	 * type check below.  This case could happen if a full path
-	 * exists on one node but not on others, and no prefix like ufs:
-	 * was provided.  see discussion at
-	 * http://www.mcs.anl.gov/web-mail-archive/lists/mpich-discuss/2007/08/msg00042.html 
-	 */
-
-	MPI_Allreduce(error_code, &max_code, 1, MPI_INT, MPI_MAX, comm);
-	if (max_code != MPI_SUCCESS)  {
-		*error_code = max_code;
+#ifdef ROMIO_NFS
+	have_nfs_enabled=1;
+#endif
+	if (!have_nfs_enabled) {
+	    ADIO_FileSysType_fncall_scalable(comm, filename, &file_system, &myerrcode);
+	    if (myerrcode != MPI_SUCCESS) {
+		*error_code = myerrcode;
 		return;
-	}
+	    }
+	} else {
+	    ADIO_FileSysType_fncall(filename, &file_system, &myerrcode);
+	    if (myerrcode != MPI_SUCCESS) {
+		*error_code = myerrcode;
 
-	/* ensure that everyone came up with the same file system type */
-	MPI_Allreduce(&file_system, &min_code, 1, MPI_INT, MPI_MIN, comm);
-	if (min_code == ADIO_NFS) file_system = ADIO_NFS;
+		/* the check for file system type will hang if any process got
+		 * an error in ADIO_FileSysType_fncall.  Processes encountering
+		 * an error will return early, before the collective file
+		 * system type check below.  This case could happen if a full
+		 * path exists on one node but not on others, and no prefix
+		 * like ufs: was provided.  see discussion at
+		 * http://www.mcs.anl.gov/web-mail-archive/lists/mpich-discuss/2007/08/msg00042.html 
+	         */
+
+	        MPI_Allreduce(error_code, &max_code, 1, MPI_INT, MPI_MAX, comm);
+		if (max_code != MPI_SUCCESS)  {
+		    *error_code = max_code;
+		    return;
+		} 
+		/* ensure everyone came up with the same file system type */
+		MPI_Allreduce(&file_system, &min_code, 1, MPI_INT, 
+			MPI_MIN, comm);
+		if (min_code == ADIO_NFS) file_system = ADIO_NFS;
+	    }
+	}
 
     }
     else {
@@ -707,3 +756,6 @@ void ADIO_ResolveFileType(MPI_Comm comm, char *filename, int *fstype,
     *fstype = file_system;
     return;
 }
+/* 
+ * vim: ts=8 sts=4 sw=4 noexpandtab 
+ */
