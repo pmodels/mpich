@@ -36,7 +36,7 @@ static int get_addr_port_from_bc (const char *business_card, struct in_addr *add
 static int GetIPInterface( MPIDU_Sock_ifaddr_t *, int * );
 
 #define MPIDI_CH3I_PORT_KEY "port"
-#define MPIDI_CH3I_ADDR_KEY "addr"
+#define MPIDI_CH3I_HOST_DESCRIPTION_KEY "description"
 #define MPIDI_CH3I_IFNAME_KEY "ifname"
 
 #undef FUNCNAME
@@ -224,7 +224,7 @@ int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int 
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
     
-    mpi_errno = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_ADDR_KEY, ifname);
+    mpi_errno = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_HOST_DESCRIPTION_KEY, ifname);
     if (mpi_errno != MPIU_STR_SUCCESS)
     {
         if (mpi_errno == MPIU_STR_NOMEM)
@@ -369,19 +369,21 @@ static int get_addr_port_from_bc (const char *business_card, struct in_addr *add
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
-    char ipaddr_str[INET_ADDRSTRLEN];
+    char desc_str[256];
     char ifname[256];
     MPIDI_STATE_DECL(MPID_STATE_GET_ADDR_PORT_FROM_BC);
 
     MPIDI_FUNC_ENTER(MPID_STATE_GET_ADDR_PORT_FROM_BC);
     
     /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
-    ret = MPIU_Str_get_string_arg (business_card, MPIDI_CH3I_ADDR_KEY, ipaddr_str, INET_ADDRSTRLEN);
+    /* desc_str is only used for debugging
+    ret = MPIU_Str_get_string_arg (business_card, MPIDI_CH3I_HOST_DESCRIPTION_KEY, desc_str, sizeof(desc_str));
     MPIU_ERR_CHKANDJUMP (ret != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+    */
 
     mpi_errno = MPIU_Str_get_int_arg (business_card, MPIDI_CH3I_PORT_KEY, (int *)port);
     MPIU_ERR_CHKANDJUMP (mpi_errno != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingport");
-    /*     fprintf(stdout, "get_addr_port_from_bc buscard=%s  addr=%s port=%d\n",business_card, ipaddr_str, *port); fflush(stdout); */
+    /*     fprintf(stdout, "get_addr_port_from_bc buscard=%s  desc=%s port=%d\n",business_card, desc_str, *port); fflush(stdout); */
 
     ret = MPIU_Str_get_string_arg(business_card, MPIDI_CH3I_IFNAME_KEY, ifname, sizeof(ifname));
     MPIU_ERR_CHKANDJUMP (ret != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingifname");
