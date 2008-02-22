@@ -22,6 +22,7 @@
 #ifdef HAVE_SYS_AIO_H
 #include <sys/aio.h>
 #endif
+#include <time.h>
 
 #include "../../mpi-io/mpioimpl.h"
 #include "../../mpi-io/mpioprof.h"
@@ -225,6 +226,8 @@ int ADIOI_GEN_aio_wait_fn(int count, void ** array_of_states,
 	int err, errcode=MPI_SUCCESS;
 	int nr_complete=0;
 	double starttime;
+	struct timespec aio_timer;
+	struct timespec *aio_timer_p = NULL;
 
 	ADIOI_AIO_Request **aio_reqlist;
 	int i;
@@ -234,7 +237,11 @@ int ADIOI_GEN_aio_wait_fn(int count, void ** array_of_states,
 	cblist = (const struct aiocb**) ADIOI_Calloc(count, sizeof(struct aiocb*));
 
 	starttime = MPI_Wtime();
-
+	if (timeout >0) {
+	    aio_timer.tv_sec = (time_t)timeout;
+	    aio_timer.tv_nsec = timeout - aio_timer.tv_sec;
+	    aio_timer_p = &aio_timer;
+	}
 	for (i=0; i< count; i++)
 	{
 		cblist[i] = aio_reqlist[i]->aiocbp;
@@ -242,7 +249,7 @@ int ADIOI_GEN_aio_wait_fn(int count, void ** array_of_states,
 
 	while(nr_complete < count) {
 	    do {
-		err = aio_suspend(cblist, count, NULL);
+		err = aio_suspend(cblist, count, aio_timer_p);
 	    } while (err < 0 && errno == EINTR);
 	    if (err == 0) 
 	    { /* run through the list of requests, and mark all the completed
