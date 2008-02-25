@@ -266,9 +266,9 @@ else
     mpilibs="-l${MPILIBNAME}f90 -l$MPILIBNAME"
 fi
 #
-# Concatenate the user flags with the ones needed by MPI
-F90FLAGS="$F90FLAGS $MPI_F90FLAGS"
-LDFLAGS="$LDFLAGS $MPI_LDFLAGS"
+# Init with the ones needed by MPI
+F90FLAGS="$MPI_F90FLAGS"
+LDFLAGS="$MPI_LDFLAGS"
 #
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then

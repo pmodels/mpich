@@ -187,9 +187,9 @@ if [ "$MPICXXLIBNAME" != "$MPILIBNAME" ] ; then
     cxxlibs="-l$MPICXXLIBNAME"
 fi
 #
-# Concatenate the user flags with the ones needed by MPI
-CXXFLAGS="$CXXFLAGS $MPI_CXXFLAGS"
-LDFLAGS="$LDFLAGS $MPI_LDFLAGS"
+# Init with the ones needed by MPI
+CXXFLAGS="$MPI_CXXFLAGS"
+LDFLAGS="$MPI_LDFLAGS"
 #
 #
 # Handle the case of a profile switch
