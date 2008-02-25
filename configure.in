@@ -1379,6 +1379,8 @@ EOF
    fi
    rm -f pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out
    rm -f conftest*
+else
+   MPI_DEFAULT_COPTS=""
 fi
 
 # Check whether shared libraries are enabled.  We need to know this
@@ -1511,6 +1513,8 @@ EOF
         rm -f pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out
         rm -f conftest*
     fi
+else
+    MPI_DEFAULT_FOPTS=""
 fi
 
 #
@@ -1642,6 +1646,8 @@ EOF
         rm -f pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out
         rm -f conftest*
     fi
+else
+    MPI_DEFAULT_F90OPTS=""
 fi
 
 # ----------------------------------------------------------------------------
@@ -2301,6 +2307,8 @@ EOF
         rm -f pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out
         rm -f conftest*
     fi
+else
+    MPI_DEFAULT_CXXOPTS=""
 fi
 
 # Copy the mpicxx.h file to the main include directory
