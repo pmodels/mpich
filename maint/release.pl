@@ -9,13 +9,14 @@ use Getopt::Long;
 my $arg = 0;
 my $source = "";
 my $version = "";
+my $pack = "";
 my $root = $ENV{PWD};
 
 my $logfile = "release.log";
 
 sub usage
 {
-    print "Usage: $0 [--source source] [version]\n";
+    print "Usage: $0 [--source source] {--package package} [version]\n";
     exit;
 }
 
@@ -48,8 +49,154 @@ sub debug
     print "$line";
 }
 
+sub create_docs
+{
+    my $pack = shift;
+
+    if ($pack eq "romio") {
+	chdir("romio/doc");
+	run_cmd("make");
+	run_cmd("rm -f users-guide.blg users-guide.toc users-guide.aux users-guide.bbl users-guide.log users-guide.dvi");
+    }
+    elsif ($pack eq "mpe") {
+	chdir("mpe2/maint");
+	run_cmd("make -f Makefile4man");
+    }
+}
+
+sub create_mpich2
+{
+    # Check out the appropriate source
+    debug("===> Checking out SVN source... ");
+    run_cmd("rm -rf mpich2-${version}");
+    run_cmd("svn export -q ${source} mpich2-${version}");
+    debug("done\n");
+
+    # Remove packages that are not being released
+    debug("===> Removing packages that are not being released... ");
+    chdir("${root}/mpich2-${version}");
+    run_cmd("rm -rf src/mpid/globus doc/notes src/pm/mpd/Zeroconf.py src/mpid/ch3/channels/gasnet src/mpid/ch3/channels/sshm src/pmi/simple2");
+
+    chdir("${root}/mpich2-${version}/src/mpid/ch3/channels/nemesis/nemesis/net_mod");
+    my @nem_modules = qw(newtcp sctp ib psm);
+    run_cmd("rm -rf ".join(' ', map({$_ . "_module/*"} @nem_modules)));
+    for my $module (@nem_modules) {
+	# system to avoid problems with shell redirect in run_cmd
+	system(qq(echo "# Stub Makefile" > ${module}_module/Makefile.sm));
+    }
+    debug("done\n");
+
+    # Create configure
+    debug("===> Creating configure in the main package... ");
+    chdir("${root}/mpich2-${version}");
+    run_cmd("./maint/updatefiles");
+    debug("done\n");
+
+    # Remove unnecessary files
+    debug("===> Removing unnecessary files in the main package... ");
+    chdir("${root}/mpich2-${version}");
+    run_cmd("rm -rf README.in maint/config.log maint/config.status unusederr.txt autom4te.cache src/mpe2/src/slog2sdk/doc/jumpshot-4/tex");
+    debug("done\n");
+
+    # Get docs
+    debug("===> Creating secondary package for the docs... ");
+    chdir("${root}");
+    run_cmd("cp -a mpich2-${version} mpich2-${version}-tmp");
+    debug("done\n");
+
+    debug("===> Configuring and making the secondary package... ");
+    chdir("${root}/mpich2-${version}-tmp");
+    run_cmd("./maint/updatefiles");
+    run_cmd("./configure --without-mpe --disable-f90 --disable-f77 --disable-cxx");
+    run_cmd("(make mandoc && make htmldoc && make latexdoc)");
+    debug("done\n");
+
+    debug("===> Copying docs over... ");
+    chdir("${root}/mpich2-${version}-tmp");
+    run_cmd("cp -a man ${root}/mpich2-${version}");
+    run_cmd("cp -a www ${root}/mpich2-${version}");
+    run_cmd("cp -a doc/userguide/user.pdf ${root}/mpich2-${version}/doc/userguide");
+    run_cmd("cp -a doc/installguide/install.pdf ${root}/mpich2-${version}/doc/installguide");
+    run_cmd("cp -a doc/smpd/smpd_pmi.pdf ${root}/mpich2-${version}/doc/smpd");
+    run_cmd("cp -a doc/logging/logging.pdf ${root}/mpich2-${version}/doc/logging");
+    run_cmd("cp -a doc/windev/windev.pdf ${root}/mpich2-${version}/doc/windev");
+    run_cmd("cp -a src/mpi/romio/doc/users-guide.pdf ${root}/mpich2-${version}/src/mpi/romio/doc");
+    chdir("${root}");
+    run_cmd("rm -rf mpich2-${version}-tmp");
+    debug("done\n");
+
+    debug("===> Create ROMIO docs... ");
+    chdir("${root}/mpich2-${version}/src/mpi");
+    create_docs("romio");
+    debug("done\n");
+
+    debug( "===> Create MPE docs... ");
+    chdir("${root}/mpich2-${version}/src");
+    create_docs("mpe");
+    debug("done\n");
+
+    # Create the tarball
+    debug("===> Creating the final tarball... ");
+    chdir("${root}");
+    run_cmd("tar -czvf mpich2-${version}.tgz mpich2-${version}");
+    debug("done\n");
+}
+
+sub create_romio
+{
+    # Check out the appropriate source
+    debug("===> Checking out SVN source... ");
+    run_cmd("rm -rf romio-${version} romio");
+    run_cmd("svn export -q ${source}/src/mpi/romio");
+    debug("done\n");
+
+    debug("===> Creating configure... ");
+    chdir("${root}/romio");
+    run_cmd("autoreconf");
+    debug("done\n");
+
+    debug("===> Create ROMIO docs... ");
+    chdir("${root}");
+    create_docs("romio");
+    debug("done\n");
+
+    # Create the tarball
+    debug("===> Creating the final tarball... ");
+    chdir("${root}");
+    run_cmd("mv romio romio-${version}");
+    run_cmd("tar -czvf romio-${version}.tgz romio-${version}");
+    debug("done\n");
+}
+
+sub create_mpe
+{
+    # Check out the appropriate source
+    debug("===> Checking out SVN source... ");
+    run_cmd("rm -rf mpe2-${version} mpe2");
+    run_cmd("svn export -q ${source}/src/mpe2");
+    debug("done\n");
+
+    debug("===> Creating configure... ");
+    chdir("${root}/mpe2");
+#     run_cmd("autoreconf");
+    debug("done\n");
+
+    debug("===> Create MPE docs... ");
+    chdir("${root}");
+    create_docs("mpe");
+    debug("done\n");
+
+    # Create the tarball
+    debug("===> Creating the final tarball... ");
+    chdir("${root}");
+    run_cmd("mv mpe2 mpe2-${version}");
+    run_cmd("tar -czvf mpe2-${version}.tgz mpe2-${version}");
+    debug("done\n");
+}
+
 GetOptions(
     "source=s" => \$source,
+    "package:s"  => \$pack,
     "help"     => \&usage,
 ) or die "unable to parse options, stopped";
 
@@ -58,6 +205,10 @@ if (scalar(@ARGV) != 1) {
 }
 
 $version = $ARGV[0];
+
+if (!$pack) {
+    $pack = "mpich2";
+}
 
 if (!$source || !$version) {
     usage();
@@ -76,79 +227,15 @@ if ("$current_ver" ne "$version\n") {
 
 system("rm -f ${root}/$logfile");
 
-# Check out the appropriate source
-debug("===> Checking out SVN source... ");
-run_cmd("rm -rf mpich2-${version}");
-run_cmd("svn export -q ${source} mpich2-${version}");
-debug("done\n");
-
-# Remove packages that are not being released
-debug("===> Removing packages that are not being released... ");
-chdir("${root}/mpich2-${version}");
-run_cmd("rm -rf src/mpid/globus doc/notes src/pm/mpd/Zeroconf.py src/mpid/ch3/channels/gasnet src/mpid/ch3/channels/sshm src/pmi/simple2");
-
-chdir("${root}/mpich2-${version}/src/mpid/ch3/channels/nemesis/nemesis/net_mod");
-my @nem_modules = qw(newtcp sctp ib psm);
-run_cmd("rm -rf ".join(' ', map({$_ . "_module/*"} @nem_modules)));
-for my $module (@nem_modules) {
-    # system to avoid problems with shell redirect in run_cmd
-    system(qq(echo "# Stub Makefile" > ${module}_module/Makefile.sm));
+if ($pack eq "mpich2") {
+    create_mpich2();
 }
-debug("done\n");
-
-# Create configure
-debug("===> Creating configure in the main package... ");
-chdir("${root}/mpich2-${version}");
-run_cmd("./maint/updatefiles");
-debug("done\n");
-
-# Remove unnecessary files
-debug("===> Removing unnecessary files in the main package... ");
-chdir("${root}/mpich2-${version}");
-run_cmd("rm -rf README.in maint/config.log maint/config.status unusederr.txt autom4te.cache src/mpe2/src/slog2sdk/doc/jumpshot-4/tex");
-debug("done\n");
-
-# Get docs
-debug("===> Creating secondary package for the docs... ");
-chdir("${root}");
-run_cmd("cp -a mpich2-${version} mpich2-${version}-tmp");
-debug("done\n");
-
-debug("===> Configuring and making the secondary package... ");
-chdir("${root}/mpich2-${version}-tmp");
-run_cmd("./maint/updatefiles");
-run_cmd("./configure --without-mpe --disable-f90 --disable-f77 --disable-cxx");
-run_cmd("(make mandoc && make htmldoc && make latexdoc)");
-debug("done\n");
-
-debug("===> Create ROMIO docs... ");
-chdir("${root}/mpich2-${version}-tmp/src/mpi/romio/doc");
-run_cmd("make");
-debug("done\n");
-
-debug("===> Copying docs over... ");
-chdir("${root}/mpich2-${version}-tmp");
-run_cmd("cp -a man ${root}/mpich2-${version}");
-run_cmd("cp -a www ${root}/mpich2-${version}");
-run_cmd("cp -a doc/userguide/user.pdf ${root}/mpich2-${version}/doc/userguide");
-run_cmd("cp -a doc/installguide/install.pdf ${root}/mpich2-${version}/doc/installguide");
-run_cmd("cp -a doc/smpd/smpd_pmi.pdf ${root}/mpich2-${version}/doc/smpd");
-run_cmd("cp -a doc/logging/logging.pdf ${root}/mpich2-${version}/doc/logging");
-run_cmd("cp -a doc/windev/windev.pdf ${root}/mpich2-${version}/doc/windev");
-run_cmd("cp -a src/mpi/romio/doc/users-guide.pdf ${root}/mpich2-${version}/src/mpi/romio/doc");
-chdir("${root}");
-run_cmd("rm -rf mpich2-${version}-tmp");
-debug("done\n");
-
-debug( "===> Create MPE docs... ");
-chdir("${root}/mpich2-${version}/src/mpe2/maint");
-run_cmd("make -f Makefile4man");
-debug("done\n");
-
-
-# Create the tarball
-debug("===> Creating the final tarball... ");
-chdir("${root}");
-run_cmd("tar -czvf mpich2-${version}.tgz mpich2-${version}");
-debug("done\n");
-
+elsif ($pack eq "romio") {
+    create_romio();
+}
+elsif ($pack eq "mpe") {
+    create_mpe();
+}
+else {
+    die "Unknown package: $pack";
+}
