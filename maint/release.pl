@@ -181,7 +181,7 @@ sub create_mpe
 
     debug("===> Creating configure... ");
     chdir("${root}/mpe2");
-#     run_cmd("autoreconf");
+    run_cmd("maint/updatefiles");
     debug("done\n");
 
     debug("===> Creating MPE docs... ");
@@ -244,7 +244,7 @@ elsif ($pack eq "mpe") {
 elsif ($pack eq "all") {
     create_mpich2();
     create_romio();
-    create_mpe();
+#     create_mpe();
 }
 else {
     die "Unknown package: $pack";
