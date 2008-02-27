@@ -36,7 +36,9 @@ sub run_cmd
 {
     my $cmd = shift;
 
-    system("$cmd >> $root/$logfile 2>&1");
+    # FIXME: Allow for verbose output; just have to remove the
+    # redirection to /dev/null
+    system("$cmd 2>&1 | tee -a $root/$logfile > /dev/null");
     if ($?) {
         die "unable to execute ($cmd), \$?=$?.  Stopped";
     }
@@ -67,7 +69,7 @@ sub create_docs
 sub create_mpich2
 {
     # Check out the appropriate source
-    debug("===> Checking out SVN source... ");
+    debug("===> Checking out mpich2 SVN source... ");
     run_cmd("rm -rf mpich2-${version}");
     run_cmd("svn export -q ${source} mpich2-${version}");
     debug("done\n");
@@ -120,32 +122,32 @@ sub create_mpich2
     run_cmd("cp -a doc/smpd/smpd_pmi.pdf ${root}/mpich2-${version}/doc/smpd");
     run_cmd("cp -a doc/logging/logging.pdf ${root}/mpich2-${version}/doc/logging");
     run_cmd("cp -a doc/windev/windev.pdf ${root}/mpich2-${version}/doc/windev");
-    run_cmd("cp -a src/mpi/romio/doc/users-guide.pdf ${root}/mpich2-${version}/src/mpi/romio/doc");
     chdir("${root}");
     run_cmd("rm -rf mpich2-${version}-tmp");
     debug("done\n");
 
-    debug("===> Create ROMIO docs... ");
+    debug("===> Creating ROMIO docs... ");
     chdir("${root}/mpich2-${version}/src/mpi");
     create_docs("romio");
     debug("done\n");
 
-    debug( "===> Create MPE docs... ");
+    debug( "===> Creating MPE docs... ");
     chdir("${root}/mpich2-${version}/src");
     create_docs("mpe");
     debug("done\n");
 
     # Create the tarball
-    debug("===> Creating the final tarball... ");
+    debug("===> Creating the final mpich2 tarball... ");
     chdir("${root}");
     run_cmd("tar -czvf mpich2-${version}.tgz mpich2-${version}");
-    debug("done\n");
+    run_cmd("rm -rf mpich2-${version}");
+    debug("done\n\n");
 }
 
 sub create_romio
 {
     # Check out the appropriate source
-    debug("===> Checking out SVN source... ");
+    debug("===> Checking out romio SVN source... ");
     run_cmd("rm -rf romio-${version} romio");
     run_cmd("svn export -q ${source}/src/mpi/romio");
     debug("done\n");
@@ -155,23 +157,24 @@ sub create_romio
     run_cmd("autoreconf");
     debug("done\n");
 
-    debug("===> Create ROMIO docs... ");
+    debug("===> Creating ROMIO docs... ");
     chdir("${root}");
     create_docs("romio");
     debug("done\n");
 
     # Create the tarball
-    debug("===> Creating the final tarball... ");
+    debug("===> Creating the final romio tarball... ");
     chdir("${root}");
     run_cmd("mv romio romio-${version}");
     run_cmd("tar -czvf romio-${version}.tgz romio-${version}");
-    debug("done\n");
+    run_cmd("rm -rf romio-${version}");
+    debug("done\n\n");
 }
 
 sub create_mpe
 {
     # Check out the appropriate source
-    debug("===> Checking out SVN source... ");
+    debug("===> Checking out mpe2 SVN source... ");
     run_cmd("rm -rf mpe2-${version} mpe2");
     run_cmd("svn export -q ${source}/src/mpe2");
     debug("done\n");
@@ -181,17 +184,18 @@ sub create_mpe
 #     run_cmd("autoreconf");
     debug("done\n");
 
-    debug("===> Create MPE docs... ");
+    debug("===> Creating MPE docs... ");
     chdir("${root}");
     create_docs("mpe");
     debug("done\n");
 
     # Create the tarball
-    debug("===> Creating the final tarball... ");
+    debug("===> Creating the final mpe2 tarball... ");
     chdir("${root}");
     run_cmd("mv mpe2 mpe2-${version}");
     run_cmd("tar -czvf mpe2-${version}.tgz mpe2-${version}");
-    debug("done\n");
+    run_cmd("rm -rf mpe2-${version}");
+    debug("done\n\n");
 }
 
 GetOptions(
@@ -218,6 +222,7 @@ check_package("doctext");
 check_package("svn");
 check_package("latex");
 check_package("autoconf");
+debug "\n";
 
 my $current_ver = `svn cat ${source}/maint/Version`;
 
@@ -234,6 +239,11 @@ elsif ($pack eq "romio") {
     create_romio();
 }
 elsif ($pack eq "mpe") {
+    create_mpe();
+}
+elsif ($pack eq "all") {
+    create_mpich2();
+    create_romio();
     create_mpe();
 }
 else {
