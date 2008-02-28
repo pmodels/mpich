@@ -184,6 +184,10 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
 	    }
 	    else {
 		local_high = 1;
+
+		/* req#3930: The merge algorithm will deadlock if the gpids are inadvertently the
+		   same due to implementation bugs in the MPID_GPID_Get() function */
+		MPIU_Assert( !(ingpid[0] == outgpid[0] && ingpid[1] == outgpid[1]) );
 	    }
 	}
     }

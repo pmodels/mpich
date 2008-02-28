@@ -483,19 +483,31 @@ fn_fail:
 #include <ctype.h>
 #endif
 
-/*
- * Convert a process group id into a number.  We use a simple process that
- * simple combines all of the characters in the id.  If the PM uses similar
- * names containing an incrementing count, then this number should be
- * distinct.  It would really be best if the PM could give us this value.
+/* Convert a process group id into a number.  This is a hash-based approach,
+ * which has the potential for some collisions.  This is an alternative to the
+ * previous approach that caused req#3930, which was to sum up the values of the
+ * characters.  The summing approach worked OK when the id's were all similar
+ * but with an incrementing prefix or suffix, but terrible for a 32 hex-character
+ * UUID type of id.
+ *
+ * FIXME It would really be best if the PM could give us this value.
  */
 void MPIDI_PG_IdToNum( MPIDI_PG_t *pg, int *id )
 {
     const char *p = (const char *)pg->id;
     int pgid = 0;
 
-    while (*p) { pgid += *p++ - ' '; pgid &= 0x7ffffff; }
-    *id = pgid;
+    while (*p) {
+        pgid += *p++;
+        pgid += (pgid << 10);
+        pgid ^= (pgid >> 6);
+    }
+    pgid += (pgid << 3);
+    pgid ^= (pgid >> 11);
+    pgid += (pgid << 15);
+
+    /* restrict to 31 bits */
+    *id = (pgid & 0x7fffffff);
 }
 #else
 /* FIXME: This is a temporary hack for devices that do not define
