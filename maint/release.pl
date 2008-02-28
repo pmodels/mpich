@@ -181,7 +181,7 @@ sub create_mpe
 
     debug("===> Creating configure... ");
     chdir("${root}/mpe2");
-    run_cmd("maint/updatefiles");
+    run_cmd("./maint/updatefiles");
     debug("done\n");
 
     debug("===> Creating MPE docs... ");
