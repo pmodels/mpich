@@ -10,7 +10,7 @@
 typedef struct recv_buffer
 {
     struct recv_buffer *next;
-    packet_t pkt;
+    volatile packet_t pkt;
 } recv_buffer_t;
 
 static recv_buffer_t *recv_buffers;
@@ -94,7 +94,7 @@ inline int MPID_nem_gm_module_recv()
     e = gm_receive (MPID_nem_module_gm_port);
     while (gm_ntoh_u8 (e->recv.type) != GM_NO_RECV_EVENT)
     {
-        packet_t *pkt;
+        volatile packet_t *pkt;
         int msg_len;
         
 	switch (gm_ntoh_u8 (e->recv.type))
@@ -112,21 +112,21 @@ inline int MPID_nem_gm_module_recv()
 	    DO_PAPI (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues5));
 	    DO_PAPI (PAPI_reset (PAPI_EventSet));
 
-            pkt = (packet_t *)gm_ntohp(e->recv.message);
+            pkt = (volatile packet_t *)gm_ntohp(e->recv.message);
             msg_len = gm_ntoh_u32(e->recv.length) - PKT_HEADER_LEN;
             MPIDI_PG_Get_vc (MPIDI_Process.my_pg, pkt->source_id, &vc);
 
             mpi_errno = MPID_nem_handle_pkt(vc, (char *)pkt->buf, msg_len);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             
-            RECVBUF_S_PUSH(PKT_TO_RECVBUF((packet_t *)gm_ntohp(e->recv.buffer)));
+            RECVBUF_S_PUSH(PKT_TO_RECVBUF((volatile packet_t *)gm_ntohp(e->recv.buffer)));
             ++num_recv_tokens;
 
 	    DO_PAPI (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues7));
             break;
 	case GM_PEER_RECV_EVENT:
 	case GM_RECV_EVENT:
-            pkt = (packet_t *)gm_ntohp(e->recv.buffer);
+            pkt = (volatile packet_t *)gm_ntohp(e->recv.buffer);
             msg_len = gm_ntoh_u32(e->recv.length) - PKT_HEADER_LEN;
             MPIDI_PG_Get_vc (MPIDI_Process.my_pg, pkt->source_id, &vc);
             

@@ -52,9 +52,9 @@ int MPID_nem_gm_module_do_get (void *target_p, void *source_p, int len, int node
 /* gm module packet */
 #define PKT_HEADER_LEN (sizeof(packet_t) - SENDPKT_DATALEN)
 #define SENDPKT_DATALEN (64*1024)
-typedef volatile struct packet
+typedef struct packet
 {
-    int source_id;
+    MPI_Aint source_id;
     char buf[SENDPKT_DATALEN];
 } packet_t;
 

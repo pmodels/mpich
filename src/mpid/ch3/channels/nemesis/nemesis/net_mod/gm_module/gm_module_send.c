@@ -12,11 +12,7 @@ typedef struct sendbuf
     int node_id;
     int port_id;
     MPIDI_msg_sz_t datalen;
-    struct 
-    {
-        int source_id;
-        char buf[SENDPKT_DATALEN];
-    } pkt;
+    packet_t pkt;
 } sendbuf_t;
 
 static struct {sendbuf_t *top;} sendbuf_stack;
@@ -237,7 +233,7 @@ int MPID_nem_send_from_queue()
 {
     int mpi_errno = MPI_SUCCESS;
     char *dataptr;
-    int datalen;
+    MPIDI_msg_sz_t datalen;
     int complete;  
 
     while (active_send || !SEND_Q_EMPTY())
@@ -349,7 +345,7 @@ int MPID_nem_gm_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz
                                 MPID_Request **sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int dataleft = data_sz;
+    MPIDI_msg_sz_t dataleft = data_sz;
     char *dataptr = (char *)data;
     MPID_Request * sreq = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_GM_ISTARTCONTIGMSG);
@@ -428,7 +424,7 @@ int MPID_nem_gm_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI
                             void *data, MPIDI_msg_sz_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    int dataleft = data_sz;
+    MPIDI_msg_sz_t dataleft = data_sz;
     char *dataptr = (char *)data;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_GM_ISENDCONTIGMSG);
 
