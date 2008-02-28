@@ -895,6 +895,7 @@ class MPD(object):
                                       'jobid' : jobid,
                                       'username' : self.activeJobs[jobid][manPid]['username'],
                                       'host' : self.myHost,
+                                      'ifhn' : self.myIfhn,
                                       'clipid' : str(self.activeJobs[jobid][manPid]['clipid']),
                                       'sid' : str(manPid),  # may chg to actual sid later
                                       'pgm' : self.activeJobs[jobid][manPid]['pgm'],
