@@ -5,19 +5,21 @@ srcdir = @srcdir@
 
 .SUFFIXES: .pdf .dvi .tex
 
+@VPATH@
+
+LATEX      = export TEXINPUTS=".:$(srcdir):" ; latex
+BIBTEX     = export BIBINPUTS=".:$(srcdir):" ; bibtex
+DVIPDFM    = export TEXINPUTS=".:$(srcdir):" ; dvipdfm
+LATEX2HTML = latex2html
+
 .tex.dvi:
-	@if [ ! -s ../mpiman.sty ] ; then \
-	(cd .. && ln -s $(srcdir)/../mpiman.sty mpiman.sty) ; fi
-	-latex $< </dev/null >/dev/null 2>&1
-	-bibtex $* </dev/null
-	-latex $< </dev/null >/dev/null 2>&1
-	latex $< 
+	-$(LATEX) $< </dev/null >/dev/null 2>&1
+	-$(BIBTEX) $* </dev/null
+	-$(LATEX) $< </dev/null >/dev/null 2>&1
+	$(LATEX) $< 
 
 .dvi.pdf:
-	dvipdfm $*
-
-.dvi.ps:
-	dvips $*
+	$(DVIPDFM) $*
 
 all-redirect: windev.pdf
 

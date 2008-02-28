@@ -8,16 +8,23 @@ srcdir = @srcdir@
 WEBDIR = /mcs/www/mpi/mpich2/docs
 FTPDIR = /home/ftp/pub/mpi/mpich2
 
+@VPATH@
+
+LATEX      = export TEXINPUTS=".:$(srcdir):" ; latex
+BIBTEX     = export BIBINPUTS=".:$(srcdir):" ; bibtex
+DVIPDFM    = export TEXINPUTS=".:$(srcdir):" ; dvipdfm
+LATEX2HTML = latex2html
+
 install.tex: $(srcdir)/install.tex.in
 	cat $(srcdir)/install.tex.in | sed -e "s/__VERSION__/${VERSION}/g" > install.tex
 
 install.dvi: install.tex
-	-latex install.tex
-	-latex install.tex
-	latex  install.tex
+	-$(LATEX) install.tex
+	-$(LATEX) install.tex
+	$(LATEX)  install.tex
 
 install.pdf: install.dvi
-	dvipdfm install.dvi
+	$(DVIPDFM) install.dvi
 
 # Use latex2html to create the HTML version.  There are several 
 # steps needed to workaround features of latex2html
@@ -28,10 +35,10 @@ install.pdf: install.dvi
 #    file.  If more source files are added, this step will need to 
 #    be changed
 install.aux: install.tex
-	latex install.tex
+	$(LATEX) install.tex
 
 install/install.html: install.aux install.tex
-	latex2html install.tex
+	$(LATEX2HTML) install.tex
 
 # Here are some thoughts on using tohtml
 #	tohtml -debugfile -default -dosnl -gaudy \

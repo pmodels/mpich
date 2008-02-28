@@ -8,27 +8,27 @@ VERSION = @VERSION@
 WEBDIR = /mcs/www/mpi/mpich2/docs
 FTPDIR = /home/ftp/pub/mpi/mpich2
 
+@VPATH@
+
+LATEX      = export TEXINPUTS=".:$(srcdir):" ; latex
+BIBTEX     = export BIBINPUTS=".:$(srcdir):" ; bibtex
+DVIPDFM    = export TEXINPUTS=".:$(srcdir):" ; dvipdfm
+LATEX2HTML = latex2html
+
 user.tex: $(srcdir)/user.tex.in
 	cat $(srcdir)/user.tex.in | sed -e "s/__VERSION__/${VERSION}/g" > user.tex
 
 faqsum.tex: $(srcdir)/../faq/faq.txt $(srcdir)/../faq/faqbuild
 	mydir=`pwd` && (cd $(srcdir)/../faq && ./faqbuild -elatex=subsection -outfile=$$mydir/faqsum.tex)
 
-# The tests on files that use -s really need to also check for a valid
-# link.  However, the -h test is not available in all shells,
-# so we allow the ln to fail without exiting make (the -f option for
-# ln is also non-standard, so we can't use that either)
-user.bib: $(srcdir)/user.bib
-	@if [ ! -s user.bib ] ; then ln -s $(srcdir)/user.bib user.bib ; fi
-
 user.dvi: user.tex faqsum.tex user.bib
-	-latex user.tex
-	-bibtex user 
-	-latex user.tex
-	latex  user.tex
+	-$(LATEX) user.tex
+	-$(BIBTEX) user 
+	-$(LATEX) user.tex
+	$(LATEX)  user.tex
 
 user.pdf: user.dvi
-	dvipdfm user.dvi
+	$(DVIPDFM) user.dvi
 
 # Use latex2html to create the HTML version.  There are several 
 # steps needed to workaround features of latex2html
@@ -39,10 +39,10 @@ user.pdf: user.dvi
 #    file.  If more source files are added, this step will need to 
 #    be changed
 user.aux: user.tex faqsum.tex
-	latex user.tex
+	$(LATEX) user.tex
 
 user/user.html: user.aux user.tex user.bib faqsum.tex
-	latex2html user.tex
+	$(LATEX2HTML) user.tex
 
 # Here are some thoughts on using tohtml
 #	tohtml -debugfile -default -dosnl -gaudy \
