@@ -395,12 +395,6 @@ static int PMIi_InitSingleton(void ){
 	smpd_process.dbg_state |= SMPD_DBG_STATE_ERROUT | SMPD_DBG_STATE_STDOUT | SMPD_DBG_STATE_TRACE;
     */
     
-    result = MPIDU_Sock_init();
-    if (result != MPI_SUCCESS){
-        MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "MPIDU_Sock_init failed,\nsock error: %s\n", get_sock_error_string(result));
-	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
-    }
-
     result = MPIDU_Sock_create_set(&singleton_client_set);
     if(result != MPI_SUCCESS){
         MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "MPIDU_Sock_create_set failed: unable to create a sock set, error: %d\n", result);
@@ -545,11 +539,6 @@ fn_exit:
         if(result != MPI_SUCCESS){
             pmi_err_printf("MPIDU_Sock_destroy_set failed: unable to destroy a sock set, error: %d\n", result);
         }
-    }
-    result = MPIDU_Sock_finalize();
-    if (result != MPI_SUCCESS)
-    {
-    	pmi_err_printf("MPIDU_Sock_finalize failed,\nsock error: %s\n", get_sock_error_string(result));
     }
     /* Make sure we return the error code set within the funcn */
     return retval;
