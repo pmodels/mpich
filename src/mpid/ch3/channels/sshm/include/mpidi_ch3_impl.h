@@ -329,10 +329,6 @@ int MPIDI_CH3I_SHM_post_readv(MPIDI_VC_t *vc, MPID_IOV *iov, int n, int (*read_p
 int MPIDI_CH3I_SHM_read(MPIDI_VC_t * vc, void *buf, int len, int *num_bytes_ptr);
 int MPIDI_CH3I_SHM_write(MPIDI_VC_t *vc, void *buf, int len, int *num_bytes_ptr);
 int MPIDI_CH3I_SHM_writev(MPIDI_VC_t *vc, MPID_IOV *iov, int n, int *num_bytes_ptr);
-#ifdef MPIDI_CH3_CHANNEL_RNDV
-int MPIDI_CH3I_SHM_rdma_readv(MPIDI_VC_t *vc, MPID_Request *rreq);
-int MPIDI_CH3I_SHM_rdma_writev(MPIDI_VC_t *vc, MPID_Request *sreq);
-#endif
 void MPIDI_CH3I_SHM_Remove_vc_references(MPIDI_VC_t *vc);
 void MPIDI_CH3I_SHM_Add_to_reader_list(MPIDI_VC_t *vc);
 void MPIDI_CH3I_SHM_Add_to_writer_list(MPIDI_VC_t *vc);

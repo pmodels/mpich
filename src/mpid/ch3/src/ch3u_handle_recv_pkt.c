@@ -32,49 +32,6 @@
     MPIDI_Request_set_msg_type((rreq_), (msg_type_));		\
 }
 
-#ifdef MPIDI_CH3_CHANNEL_RNDV
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Handle_recv_rndv_pkt
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Handle_recv_rndv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, 
-				    MPID_Request ** rreqp, int *foundp)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPID_Request *rreq = NULL;
-    MPIDI_CH3_Pkt_rndv_req_to_send_t * rts_pkt = &pkt->rndv_req_to_send;
-
-    rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&rts_pkt->match, foundp);
-    if (rreq == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomemreq");
-    }
-
-    set_request_info(rreq, rts_pkt, MPIDI_REQUEST_RNDV_MSG);
-
-    if (!*foundp)
-    {
-	MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"unexpected request allocated");
-
-	/*
-	 * An MPID_Probe() may be waiting for the request we just inserted, 
-	 * so we need to tell the progress engine to exit.
-	 *
-	 * FIXME: This will cause MPID_Progress_wait() to return to the MPI 
-	 * layer each time an unexpected RTS packet is
-	 * received.  MPID_Probe() should atomically increment a counter and 
-	 * MPIDI_CH3_Progress_signal_completion()
-	 * should only be called if that counter is greater than zero.
-	 */
-	MPIDI_CH3_Progress_signal_completion();
-    }
-
-    /* return the request */
-    *rreqp = rreq;
-
- fn_fail:
-    return mpi_errno;
-}
-#endif
 
 /*
  * MPIDI_CH3U_Handle_recv_pkt()

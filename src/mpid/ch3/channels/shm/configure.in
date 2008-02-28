@@ -73,7 +73,6 @@ rm -f conftest*
 
 dnl AC_DEFINE(USE_PROCESS_LOCKS,,[Define to use process locks])
 dnl AC_DEFINE(HAVE_SHARED_PROCESS_READ,,[Define to use /proc directory for shared process reads])
-dnl AC_DEFINE(MPIDI_CH3_CHANNEL_RNDV,,[Define to use rdma channel functions])
 dnl AC_DEFINE(USE_RDMA_GET,,[Define to use rdma get mechanisms])
 
 AC_CHECK_FUNCS( sysconf sysctl shmget shmat shmdt shmctl mmap )

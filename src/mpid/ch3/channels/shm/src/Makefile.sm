@@ -8,9 +8,7 @@ shmsources = \
  ch3_istartmsgv.c \
  ch3_progress.c \
  shm_memory.c \
- ch3_open_port.c \
- ch3_istartrndvmsg.c \
- ch3_istartrndvtransfer.c
+ ch3_open_port.c
 
 lib${MPILIBNAME}_a_SOURCES = ${shmsources}
 
