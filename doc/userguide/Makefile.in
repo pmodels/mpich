@@ -15,8 +15,9 @@ BIBTEX     = export BIBINPUTS=".:$(srcdir):" ; bibtex
 DVIPDFM    = export TEXINPUTS=".:$(srcdir):" ; dvipdfm
 LATEX2HTML = latex2html
 
-user.tex: $(srcdir)/user.tex.in
-	cat $(srcdir)/user.tex.in | sed -e "s/__VERSION__/${VERSION}/g" > user.tex
+# Update the %VERSION% in user.tex with current version string.
+user.tex: user.tex.vin
+	sed -e "s/%VERSION%/${VERSION}/g" $? > $@
 
 faqsum.tex: $(srcdir)/../faq/faq.txt $(srcdir)/../faq/faqbuild
 	mydir=`pwd` && (cd $(srcdir)/../faq && ./faqbuild -elatex=subsection -outfile=$$mydir/faqsum.tex)

@@ -742,8 +742,9 @@ if [ "$do_smpdversion" = yes ] ; then
 EOF
 fi
 
+echo "Updating README's version ID."
 VERSION=`cat maint/Version`
-cat README.in | sed -e "s/@VERSION@/${VERSION}/g" > README
+sed -e "s/%VERSION%/${VERSION}/g" README.vin > README
 
 #
 # The following must be the last statements executed
