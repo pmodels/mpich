@@ -148,6 +148,7 @@ for arg in "$@" ; do
     -v)
     # Pass this argument to the compiler as well.
     echo "mpif77 for $MPIVERSION"
+    linking=no
     ;;
     -profile=*)
     # Pass the name of a profiling configuration.  As
