@@ -437,7 +437,7 @@ static int DLOOP_Segment_blkidx_count_block(DLOOP_Offset *blocks_p,
     size = el_size * blksz;
     new_blk_count = count;
 
-    if (paramp->count > 0 && rel_off == paramp->last_loc)
+    if (paramp->count > 0 && ((rel_off + offsetarray[0]) == paramp->last_loc))
     {
 	/* first block sits at end of last block */
 	new_blk_count--;
@@ -478,7 +478,7 @@ static int DLOOP_Segment_index_count_block(DLOOP_Offset *blocks_p,
     DLOOP_Handle_get_size_macro(el_type, el_size);
     new_blk_count = count;
 
-    if (paramp->count > 0 && rel_off == paramp->last_loc)
+    if (paramp->count > 0 && ((rel_off + offsetarray[0]) == paramp->last_loc))
     {
 	/* first block sits at end of last block */
 	new_blk_count--;
@@ -530,8 +530,8 @@ void PREPEND_PREFIX(Segment_count_contig_blocks)(DLOOP_Segment *segp,
 				       lastp,
 				       DLOOP_Segment_contig_count_block,
 				       DLOOP_Segment_vector_count_block,
-				       NULL, /* DLOOP_Segment_blkidx_count_block */
-				       NULL, /* DLOOP_Segment_index_count_block */
+				       DLOOP_Segment_blkidx_count_block,
+				       DLOOP_Segment_index_count_block,
 				       NULL, /* size fn */
 				       (void *) &params);
 
