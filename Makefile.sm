@@ -95,7 +95,6 @@ PACKAGE = mpich2
 # version on the configure output and to match the common practice of
 # current autoconfs
 VERSION = @VERSION@
-MPISVNHOME = @MPISVNHOME@
 
 # We skip the mpid/mm directories because mm is no longer active
 # mpe2 is an outside project and is tested against the default
