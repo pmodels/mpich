@@ -755,7 +755,7 @@ static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
 	    paramp->blklens[last_idx] += size;
 	}
 	else {
-	    paramp->disps[last_idx+1]   = (MPI_Aint) ((char *) bufp + rel_off);
+	    paramp->disps[last_idx+1]   = (MPI_Aint) ((char *) bufp + rel_off + offsetarray[last_idx+1]);
 	    paramp->blklens[last_idx+1] = size;
 	    paramp->index++;
 	}
@@ -833,7 +833,7 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	    paramp->blklens[last_idx] += size;
 	}
 	else {
-	    paramp->disps[last_idx+1]   = (MPI_Aint) ((char *) bufp + rel_off);
+	    paramp->disps[last_idx+1]   = (MPI_Aint) ((char *) bufp + rel_off + offsetarray[last_idx+1]);
 	    paramp->blklens[last_idx+1] = size;
 	    paramp->index++;
 	}
@@ -889,8 +889,8 @@ void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
 				       lastp, 
 				       DLOOP_Segment_contig_mpi_flatten, 
 				       DLOOP_Segment_vector_mpi_flatten,
-				       NULL, /* DLOOP_Segment_blkidx_mpi_flatten */
-				       NULL, /* DLOOP_Segment_index_mpi_flatten */
+				       DLOOP_Segment_blkidx_mpi_flatten,
+				       DLOOP_Segment_index_mpi_flatten,
 				       NULL,
 				       &params);
 
