@@ -15,6 +15,7 @@ static int verbose = 0;
 int builtin_float_test(void);
 int vector_of_vectors_test(void);
 int optimizable_vector_of_basics_test(void);
+int struct_of_basics_test(void);
 
 /* helper functions */
 int parse_args(int argc, char **argv);
@@ -32,18 +33,23 @@ int main(int argc, char **argv)
 
     /* perform some tests */
     err = builtin_float_test();
-    if (err && verbose) fprintf(stderr, "%d errors in builtin float test.\n", 
+    if (err && verbose) fprintf(stderr, "%d errors in builtin float test.\n",
 				err);
     errs += err;
 
     err = vector_of_vectors_test();
-    if (err && verbose) fprintf(stderr, 
+    if (err && verbose) fprintf(stderr,
 				"%d errors in vector of vectors test.\n", err);
     errs += err;
 
     err = optimizable_vector_of_basics_test();
-    if (err && verbose) fprintf(stderr, 
+    if (err && verbose) fprintf(stderr,
 				"%d errors in vector of basics test.\n", err);
+    errs += err;
+
+    err = struct_of_basics_test();
+    if (err && verbose) fprintf(stderr, 
+				"%d errors in struct of basics test.\n", err);
     errs += err;
 
     /* print message and exit */
@@ -129,7 +135,7 @@ int vector_of_vectors_test(void)
     }
 
     MPI_Type_commit(&outer_vector);
-/*     MPI_Type_size(outer_vector, &sizeoftype); */
+
     MPI_Pack_external_size("external32", 1, outer_vector, &sizeoftype);
     if (sizeoftype != 4*4) {
 	errs++;
@@ -155,17 +161,6 @@ int vector_of_vectors_test(void)
 			     (int) position, (int) sizeoftype);
     }
 
-#if 0
-    /* NOTE: THESE TESTS AREN'T VALID; MAKE ASSUMPTIONS ABOUT PACKING METHOD */
-    for (i=0; i < 4; i++) {
-	if (((int *)buf)[i] != i+1) {
-	    errs++;
-	    if (verbose) fprintf(stderr, "buf[%d] = %d; should be %d\n",
-				 i, ((int *)buf)[i], i+1);
-	}
-    }
-#endif
-    
     memset(array, 0, 9*sizeof(int));
     position = 0;
     err = MPI_Unpack_external("external32",
@@ -249,7 +244,6 @@ int optimizable_vector_of_basics_test(void)
 
     MPI_Type_commit(&parent_type);
 
-/*     MPI_Type_size(parent_type, &sizeoftype); */
     MPI_Pack_external_size("external32", 1, parent_type, &sizeoftype);
 
 
@@ -275,17 +269,6 @@ int optimizable_vector_of_basics_test(void)
 	if (verbose) fprintf(stderr, "position = %d; should be %d (pack)\n",
 			     (int) position, (int) sizeoftype);
     }
-
-#if 0
-    /* NOTE: THESE TESTS AREN'T VALID; MAKE ASSUMPTIONS ABOUT PACKING METHOD */
-    for (i=0; i < 20; i++) {
-	if (((int *)buf)[i] != i) {
-	    errs++;
-	    if (verbose) fprintf(stderr, "buf[%d] = %d; should be %d\n",
-				 i, ((int *)buf)[i], i);
-	}
-    }
-#endif
 
     memset(array, 0, 20 * sizeof(int));
     position = 0;
@@ -316,6 +299,106 @@ int optimizable_vector_of_basics_test(void)
     return errs;
 }
 
+/* struct_of_basics_test()
+ *
+ * Builds a struct of ints.  Count is 10, all blocksizes are 2, all
+ * strides are 2*sizeofint, so this is equivalent to a contig of 20.
+ *
+ * Returns the number of errors encountered.
+ */
+int struct_of_basics_test(void)
+{
+    MPI_Datatype parent_type;
+    int array[20] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+		      16, 17, 18, 19 };
+    char *buf;
+    int i;
+    MPI_Aint sizeofint, sizeoftype, position;
+    int blocks[10];
+    MPI_Aint indices[10];
+    MPI_Datatype types[10];
+
+    int err, errs = 0;
+
+    MPI_Pack_external_size("external32", 1, MPI_INT, &sizeofint);
+
+    if (sizeofint != 4) {
+	errs++;
+	if (verbose) fprintf(stderr, 
+			     "size of external32 MPI_INT = %d; should be %d\n",
+			     (int) sizeofint, 4);
+    }
+
+    for (i = 0; i < 10; i++) {
+	blocks[i] = 2;
+	indices[i] = 2 * sizeofint;
+	/* This will cause MPICH2 to consider this as a blockindex. We
+	 * need different types here. */
+	types[i] = MPI_INT;
+    }
+
+    /* set up type */
+    err = MPI_Type_struct(10,
+			  blocks,
+			  indices,
+			  types,
+			  &parent_type);
+
+    MPI_Type_commit(&parent_type);
+
+    MPI_Pack_external_size("external32", 1, parent_type, &sizeoftype);
+
+    if (sizeoftype != 20 * sizeofint) {
+	errs++;
+	if (verbose) fprintf(stderr, "size of vector = %d; should be %d\n",
+			     (int) sizeoftype, (int) (20 * sizeofint));
+    }
+
+    buf = (char *) malloc(sizeoftype);
+
+    position = 0;
+    err = MPI_Pack_external("external32",
+			    array,
+			    1,
+			    parent_type,
+			    buf,
+			    sizeoftype,
+			    &position);
+
+    if (position != sizeoftype) {
+	errs++;
+	if (verbose) fprintf(stderr, "position = %d; should be %d (pack)\n",
+			     (int) position, (int) sizeoftype);
+    }
+
+    memset(array, 0, 20 * sizeof(int));
+    position = 0;
+    err = MPI_Unpack_external("external32",
+			      buf,
+			      sizeoftype,
+			      &position,
+			      array,
+			      1,
+			      parent_type);
+
+    if (position != sizeoftype) {
+	errs++;
+	if (verbose) fprintf(stderr, 
+			     "position = %ld; should be %ld (unpack)\n",
+			     (long) position, (long) sizeoftype);
+    }
+
+    for (i=0; i < 20; i++) {
+	if (array[i] != i) {
+	    errs++;
+	    if (verbose) fprintf(stderr, "array[%d] = %d; should be %d\n",
+				 i, array[i], i);
+	}
+    }
+
+    MPI_Type_free(&parent_type);
+    return errs;
+}
 
 int parse_args(int argc, char **argv)
 {
