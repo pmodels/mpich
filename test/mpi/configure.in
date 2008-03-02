@@ -843,17 +843,6 @@ dnl the location of the source of the MPI implementation into the XML
 dnl summary file
 AC_SUBST(MPI_SOURCE)
 
-# Get the location of the SVN repository, if present
-    # We can use this test for creating maintainer targets
-    # as well, and tests for maintainer-required software, such as 
-    # doctext
-if test -d .svn ; then
-    MPISVNHOME=`svn info . | sed -n "/Repository Root: /s/Repository Root: //p"`
-elif test -d "$srcdir/.svn" ; then
-    MPISVNHOME=`svn info $srcdir | sed -n "/Repository Root: /s/Repository Root: //p"`
-fi
-AC_SUBST(MPISVNHOME)
-
 dnl
 dnl Etags
 AC_CHECK_PROGS(ETAGS,etags,true)

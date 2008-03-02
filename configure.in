@@ -5540,17 +5540,6 @@ AC_SUBST(MPI_LDFLAGS)
 MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
 AC_SUBST(MPIU_DLL_SPEC_DEF)
 
-# Get the location of the SVN repository, if present
-    # We can use this test for creating maintainer targets
-    # as well, and tests for maintainer-required software, such as 
-    # doctext
-if test -d .svn ; then
-    MPISVNHOME=`svn info . | sed -n "/Repository Root: /s/Repository Root: //p"`
-elif test -d "$srcdir/.svn" ; then
-    MPISVNHOME=`svn info $srcdir | sed -n "/Repository Root: /s/Repository Root: //p"`
-fi
-AC_SUBST(MPISVNHOME)
-
 dnl We can include external packages at configure/build time by 
 dnl adding them to EXTERNAL_SRC_DIRS.
 AC_SUBST(EXTERNAL_SRC_DIRS)
