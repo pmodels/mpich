@@ -2715,23 +2715,20 @@ End Function
 Sub AddDefinitions( fout, filename, b64 )
 	If f.FileExists( filename ) Then
 		Set f2 = f.OpenTextFile( filename )
-		Dim regEx, Match, Matches
+		Dim regEx, Match, Matches, define, comment, macroname
 		Set regEx = New RegExp
 		contents = f2.ReadAll()
-		regEx.Pattern = "/\*.*\*/[\r\n]*#undef.*[\r\n]*"
+        regEx.Pattern = "/\*([^\*]|\*(?!/))*\*/[\r\n]*#undef(\b).+[\r\n]*"
 		regEx.IgnoreCase = True
 		regEx.Global = True
 		Set Matches = regEx.Execute(contents)
 		For Each Match in Matches
-			comment = RegExpFind("/\*.*\*/", Match.Value)
+			comment = RegExpFind("/\*(.|[\r\n])*\*/", Match.Value)
 			define = RegExpFind("#undef.*", Match.Value)
-			define = Mid(define, 8)
-			define = Replace(define, vbNewLine, " ")
-			define = Replace(define, vbCr, " ")
-			define = Replace(define, vbLf, " ")
-			define = Trim(define)
+			macroname = RegExpFind("(\s).+", define)
+			macroname = RegExpFind("(\S)+", macroname)
 			fout.WriteLine(comment)
-			Select Case define
+			Select Case macroname
 				Case "HAVE_INT16_T"
 					fout.WriteLine("/* #undef HAVE_INT16_T */")
 				Case "HAVE_INT32_T"
@@ -3591,13 +3588,11 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#undef HAVE_SYS_SYSCTL_H")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
-					'unhandled_definitions = unhandled_definitions & define & vbNewLine
-					'unhandled_definitions_count = unhandled_definitions_count + 1
-					If appendUniqueString(unhandled_definitions, define) Then
+					If appendUniqueString(unhandled_definitions, macroname) Then
 						unhandled_definitions_count = unhandled_definitions_count + 1
 					End If
 					unhandled_definitions_instances = unhandled_definitions_instances + 1
-					fout.WriteLine("/* unknown definition: " & define & " */")
+					fout.WriteLine("/* unknown definition: " & macroname & " */")
 			End Select
 			fout.WriteLine("")
 		Next
