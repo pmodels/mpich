@@ -22,6 +22,7 @@ extern MPID_nem_queue_ptr_t MPID_nem_newtcp_module_free_queue;
 extern MPID_nem_queue_ptr_t MPID_nem_process_recv_queue;
 extern MPID_nem_queue_ptr_t MPID_nem_process_free_queue;
 extern int MPID_nem_newtcp_module_listen_fd;
+extern pollfd_t *g_plfd_tbl;
 
 #define MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED 0
 #define MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED 1
@@ -104,8 +105,8 @@ int MPID_nem_newtcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
 /* VC list macros */
 #define VC_L_EMPTY(q) GENERIC_L_EMPTY (q)
 #define VC_L_HEAD(q) GENERIC_L_HEAD (q)
-#define SET_PLFD(ep) VC_FIELD(ep, sc)->g_plfd_tbl[VC_FIELD(ep, sc)->index].events |= POLLOUT
-#define UNSET_PLFD(ep) VC_FIELD(ep, sc)->g_plfd_tbl[VC_FIELD(ep, sc)->index].events &= ~POLLOUT
+#define SET_PLFD(ep)   g_plfd_tbl[VC_FIELD(ep, sc)->index].events |= POLLOUT
+#define UNSET_PLFD(ep) g_plfd_tbl[VC_FIELD(ep, sc)->index].events &= ~POLLOUT
 
 /* stack macros */
 #define S_EMPTY(s) GENERIC_S_EMPTY (s)

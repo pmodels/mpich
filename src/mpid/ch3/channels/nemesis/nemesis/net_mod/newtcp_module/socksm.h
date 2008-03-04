@@ -102,7 +102,7 @@ extern const char *const CONN_STATE_STR[];
     (_sc)->state.cstate = _state; \
     (_sc)->handler = sc_state_info[_state].sc_state_handler; \
     g_plfd_tbl[(_sc)->index].events = sc_state_info[_state].sc_state_plfd_events; \
-} while(0);
+} while(0)
 
 
 struct MPID_nem_new_tcp_module_sockconn;
@@ -115,6 +115,10 @@ typedef int (*handler_func_t) (pollfd_t *const plfd, sockconn_t *const conn);
 struct MPID_nem_new_tcp_module_sockconn{
     int fd;
     int index;
+
+    /* Used to prevent the usage of uninitialized pg info.  is_same_pg, pg_rank,
+     * and pg_id are _ONLY VALID_ if this (pg_is_set) is true */
+    int pg_is_set;   
     int is_same_pg;  /* TRUE/FALSE -  */
 /*     FIXME: see whether this can be removed, by using only pg_id = NULL or non-NULL */
 /*      NULL = if same_pg and valid pointer if different pgs. */
@@ -129,9 +133,6 @@ struct MPID_nem_new_tcp_module_sockconn{
     /* Conn_type_t conn_type;  Probably useful for debugging/analyzing purposes. */
     handler_func_t handler;
     sockconn_event_t pending_event;
-
-    sockconn_t *g_sc_tbl;
-    pollfd_t *g_plfd_tbl;
 };
 
 typedef enum MPIDI_nem_newtcp_module_pkt_type {

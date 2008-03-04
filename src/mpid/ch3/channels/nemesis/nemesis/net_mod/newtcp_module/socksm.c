@@ -36,8 +36,6 @@ static struct {
     short sc_state_plfd_events;
 } sc_state_info[CONN_STATE_SIZE];
 
-static int is_valid_state (sockconn_t *sc);
-
 #define IS_WRITEABLE(plfd)                      \
     (plfd->revents & POLLOUT) ? 1 : 0
 
@@ -50,24 +48,27 @@ static int is_valid_state (sockconn_t *sc);
 #define IS_SAME_PGID(id1, id2) \
     (strcmp(id1, id2) == 0)
 
+/* Will evaluate to false if either one of these sc's does not have valid pg data */
 #define IS_SAME_CONNECTION(sc1, sc2)                                    \
-    (sc1->pg_rank == sc2->pg_rank &&                                    \
+    (sc1->pg_is_set && sc2->pg_is_set &&                                \
+     sc1->pg_rank == sc2->pg_rank &&                                    \
      ((sc1->is_same_pg && sc2->is_same_pg) ||                           \
       (!sc1->is_same_pg && !sc2->is_same_pg &&                          \
-       IS_SAME_PGID(sc1->pg_id, sc2->pg_id) == 0)))
+       IS_SAME_PGID(sc1->pg_id, sc2->pg_id))))
 
 #define INIT_SC_ENTRY(sc, ind)                  \
-    {                                           \
+    do {                                        \
         sc->fd = CONN_INVALID_FD;               \
         sc->index = ind;                        \
         sc->vc = NULL;                          \
-    }
+        sc->pg_is_set = FALSE;                  \
+    } while (0)
 
 #define INIT_POLLFD_ENTRY(plfd)                               \
-    {                                                         \
+    do {                                                      \
         plfd->fd = CONN_INVALID_FD;                           \
         plfd->events = POLLIN;                                \
-    }
+    } while (0)
 
 /*
 #define DBG_PRINT_CSTATE_ENTER(sc)                                      \
@@ -113,8 +114,15 @@ static int alloc_sc_plfd_tbls (void)
                          mpi_errno, "connection table");
     MPIU_CHKPMEM_MALLOC (g_plfd_tbl, pollfd_t *, g_tbl_capacity * sizeof(pollfd_t), 
                          mpi_errno, "pollfd table");
+#if defined(MPICH_DEBUG_MEMINIT)
+    /* We initialize the arrays in order to eliminate spurious valgrind errors
+       that occur when poll(2) returns 0.  See valgrind bugzilla#158425 and
+       remove this code if the fix ever gets into a release of valgrind.
+       [goodell@ 2007-02-25] */
+    memset(g_plfd_tbl, 0, g_tbl_capacity * sizeof(pollfd_t));
+#endif
+
     for (i = 0; i < g_tbl_capacity; i++) {
-        
         INIT_SC_ENTRY(((sockconn_t *)&g_sc_tbl[i]), i);
         INIT_POLLFD_ENTRY(((pollfd_t *)&g_plfd_tbl[i]));
     }
@@ -123,9 +131,11 @@ static int alloc_sc_plfd_tbls (void)
     mpi_errno = find_free_entry(&index);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
 
-    g_sc_tbl[index].fd = g_plfd_tbl[index].fd = g_lstn_plfd.fd;
-    g_plfd_tbl[index].events = POLLIN;
-    g_sc_tbl[index].handler = g_lstn_sc.handler;
+    MPIU_Assert(0 == index); /* assumed in other parts of this file */
+    MPID_NEM_MEMCPY (&g_sc_tbl[index], &g_lstn_sc, sizeof(g_lstn_sc));
+    MPID_NEM_MEMCPY (&g_plfd_tbl[index], &g_lstn_plfd, sizeof(g_lstn_plfd));
+    MPIU_Assert(g_plfd_tbl[index].fd == g_sc_tbl[index].fd);
+    MPIU_Assert(g_plfd_tbl[index].events == POLLIN);
 
  fn_exit:
     return mpi_errno;
@@ -198,7 +208,11 @@ static int expand_sc_plfd_tbls (void)
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "expand_sc_plfd_tbls af g_sc_tbl[0].fd=%d", g_sc_tbl[0].fd));
     for (i = 0; i < g_tbl_capacity; ++i)
     {
-        MPIU_Assert(g_sc_tbl[i].state.cstate != CONN_STATE_TS_COMMRDY || VC_FIELD(g_sc_tbl[i].vc, sc) == &g_sc_tbl[i])
+        /* The state is only valid if the FD is valid.  The VC field is only
+           valid if the state is valid and COMMRDY. */
+        MPIU_Assert(g_plfd_tbl[i].fd == CONN_INVALID_FD ||
+                    g_sc_tbl[i].state.cstate != CONN_STATE_TS_COMMRDY ||
+                    VC_FIELD(g_sc_tbl[i].vc, sc) == &g_sc_tbl[i]);
     }
     
     
@@ -244,6 +258,8 @@ static int find_free_entry(int *index)
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
     }
+
+    MPIU_Assert(g_tbl_capacity > g_tbl_size);
     *index = g_tbl_size;
     ++g_tbl_size;
 
@@ -252,56 +268,6 @@ static int find_free_entry(int *index)
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
-}
-
-
-/*
-  Note: if a new state is added for validating, remeber to call this function within
-  debug assert in the corresponding state handler function.
- */
-#undef FUNCNAME
-#define FUNCNAME is_valid_state
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int is_valid_state (sockconn_t *sc)
-{
-    int i, found = FALSE;
-
-    for(i = 0; i < g_tbl_size && !found; i++)
-    {
-        sockconn_t *iter_sc = &g_sc_tbl[i];
-        MPID_nem_newtcp_module_Conn_State_t istate = iter_sc->state.cstate;
-
-        if (iter_sc != sc && iter_sc->fd != CONN_INVALID_FD 
-            && IS_SAME_CONNECTION(iter_sc, sc))
-        {
-            switch (sc->state.cstate)
-            {
-            case CONN_STATE_TC_C_CNTD:
-                if (istate == CONN_STATE_TC_C_CNTING ||
-                    istate == CONN_STATE_TC_C_CNTD ||
-                    istate == CONN_STATE_TC_C_RANKSENT)
-                    found = TRUE;
-                break;
-            case CONN_STATE_TC_C_RANKSENT:
-                if (istate == CONN_STATE_TC_C_CNTING ||
-                    istate == CONN_STATE_TC_C_CNTD ||
-                    istate == CONN_STATE_TC_C_RANKSENT ||
-                    istate == CONN_STATE_TS_D_DCNTING ||
-                    istate == CONN_STATE_TS_D_REQSENT)
-                    found = TRUE;
-                break;
-            default:
-                /* FIXME: need to handle error condition better */
-                MPIU_Assert (0);
-                break;
-            }
-        }      
-    }
-
-    /*     if found, then the state of the connection is not valid. A bug in the state */
-    /*     machine code. */
-    return !found;
 }
 
 /* Note:
@@ -562,9 +528,6 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
         mpi_errno = MPID_nem_newtcp_module_set_sockopts(sc->fd);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-        sc->g_sc_tbl = g_sc_tbl;
-        sc->g_plfd_tbl = g_plfd_tbl;
-
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "connecting to 0x%08X:%d", sock_addr->sin_addr.s_addr, sock_addr->sin_port));
         rc = connect(sc->fd, (SA*)sock_addr, sizeof(*sock_addr)); 
         /* connect should not be called with CHECK_EINTR macro */
@@ -751,8 +714,6 @@ static int state_tc_c_cntd_handler(pollfd_t *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(is_valid_state(sc));
-
     if (sc->pending_event == EVENT_DISCONNECT || found_better_sc(sc, NULL)) {
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_tc_c_cntd_handler(): changing to "
               "quiescent"));
@@ -793,7 +754,6 @@ static int state_c_ranksent_handler(pollfd_t *const plfd, sockconn_t *const sc)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_nem_newtcp_module_pkt_type_t pkt_type;
 
-    MPIU_Assert(is_valid_state(sc));
     if (IS_READABLE(plfd)) {
         mpi_errno = recv_cmd_pkt(sc->fd, &pkt_type);
         if (mpi_errno != MPI_SUCCESS) {
@@ -1162,11 +1122,15 @@ int MPID_nem_newtcp_module_connpoll()
 {
     int mpi_errno = MPI_SUCCESS, n, i;
 
-    CHECK_EINTR(n, poll(g_plfd_tbl, g_tbl_size, 0));
+    /* num_polled is needed b/c the call to it_sc->handler() can change the
+       size of the table, which leads to iterating over invalid revents. */
+    int num_polled = g_tbl_size;
+
+    CHECK_EINTR(n, poll(g_plfd_tbl, num_polled, 0));
     MPIU_ERR_CHKANDJUMP1 (n == -1, mpi_errno, MPI_ERR_OTHER, 
                           "**poll", "**poll %s", strerror (errno));
     /* MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "some sc fd poll event")); */
-    for(i = 0; i < g_tbl_size; i++)
+    for(i = 0; i < num_polled; i++)
     {
         pollfd_t *it_plfd = &g_plfd_tbl[i];
         sockconn_t *it_sc = &g_sc_tbl[i];
@@ -1178,7 +1142,6 @@ int MPID_nem_newtcp_module_connpoll()
             MPIU_Assert ((it_plfd->revents & POLLERR) == 0);
             MPIU_Assert ((it_plfd->revents & POLLNVAL) == 0);
             
-
             mpi_errno = it_sc->handler(it_plfd, it_sc);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno); 
             /* @san The above line results in error propagated to above layers that causes
@@ -1262,9 +1225,6 @@ int MPID_nem_newtcp_module_state_listening_handler(pollfd_t *const unused_1, soc
             sc->fd = plfd->fd = connfd;
             sc->pg_rank = CONN_INVALID_RANK;
             CHANGE_STATE(sc, CONN_STATE_TA_C_CNTD);
-
-            sc->g_sc_tbl = g_sc_tbl;
-            sc->g_plfd_tbl = g_plfd_tbl;
 
             MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "accept success, added to table, connfd=%d", connfd));        
         }
