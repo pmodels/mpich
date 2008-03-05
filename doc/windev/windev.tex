@@ -532,80 +532,16 @@ mpiexec.exe and the smpd.exe process manager to this exception list.
 This section describes all the options to mpiexec.exe
 
 \begin{itemize}
-\item \texttt{-n x} or \texttt{-np x}
-Specify the number of processes to launch.
-\item \texttt{-localonly x} or \texttt{-localonly}
-Specify that the processes should only be launched on the local host.  This
-option can replace the \texttt{-n x} option or be used in conjunction with it
-when it is only a flag.
-\item \texttt{-machinefile filename}
-Use the specified file to get host names to launch processes on.  Hosts are 
-selected from this file in a round robin fashion.  One host is specified per
-line.  Extra options can be specified.  The number of desired processes to
-launch on a specific host can be specified with a colon followed by a number
-after the host name: \texttt{hostname:n}.  This is usefull for multi-CPU hosts.
-If you want to specify the interface that should be used for MPI communication
-to the host you can add the \texttt{-ifhn} flag.  Here is an example:
-\texttt{hostname:4 -ifhn 192.168.1.100}
-\item \texttt{-configfile filename}
-Use the specified job configuration file to launch the job.  Each line in the
-file represents a set of options just like you would enter them on the \texttt{mpiexec}
-command line.  The one difference is that there are no colons in the file.  The
-colons are replaced by new-lines.
-\item \texttt{-file filename}
-Use the specified implementation specific job configuration file.  For Windows
-this option is used to specify the old MPICH 1.2.5 configuration file format.
-This is useful for users who have existing configuration files and want to upgrade
-to MPICH2.
-\item \texttt{-host hostname}
-Specify that the processes should be launched on a specific host.
-\item \texttt{-hosts n host1 host2 host3 ...}
-Specify that the processes should be launched on a list of hosts.  This option
-replaces the \texttt{-n x} option.
-\item \texttt{-hosts n host1 m1 host2 m2 host3 m3 ...}
-Specify that the processes should be launched on a list of hosts and how many
-processes should be launched on each host.  The total number of processes 
-launched is m1 + m2 + m3 + ... mn.
-\item \texttt{-map drive:$\backslash$$\backslash$host$\backslash$share}
-Specify a network mapped drive to create on the hosts before launching the 
-processes.  The mapping will be removed when the processes exit.  This option
-can be specified multiple times.
-\item \texttt{-mapall}
-Specify that all network mapped drives created by the user executing mpiexec
-command will be created on hosts before launching the processes. The mappings
-will be removed when the processes exit. 
-\item \texttt{-dir drive:$\backslash$my$\backslash$working$\backslash$directory}
-Specify the working directory for the processes.
-\item \texttt{-wdir drive:$\backslash$my$\backslash$working$\backslash$directory}
-\texttt{-wdir} and \texttt{-dir} are synonyms.
-\item \texttt{-env variable value}
-Specify an environment variable and its value to set in the processes' environments.
-This option can be specified multiple times.
-\item \texttt{-genvlist a,b,c,d...}
-Specify a list of environment variables to taken from the environment local to mpiexec and propagated to the launched processes.
-\item \texttt{-logon}
-Prompt for user credentials to launch the job under.
-\item \texttt{-pwdfile filename}
-Specify a file to read the user name and password from.  The user name should be
-on the first line and the password on the second line.
-\item \texttt{-exitcodes}
-Specify that the exit code of each process should be printed to stdout as each
-processes exits.
-\item \texttt{-noprompt}
-Prevent mpiexec for prompting for information.  If user credentials are needed
-to launch the processes mpiexec usually prompts for this information but this
-flag causes an error to be printed out instead.
-\item \texttt{-priority class[:level]}
-Specify the priority class and optionally the thread priority of the processes
-to be launched.  The class can be 0,1,2,3, or 4 corresponding to idle, below,
-normal, above, and high.  The level can be 0,1,2,3,4, or 5 corresponding to
-idle, lowest, below, normal, above, highest.  The default is 2:3.
-\item \texttt{-localroot}
-Specify that the root process should be launched on the local machine directly
-from mpiexec bypassing the smpd process manager.  This is useful for applications
-that want to create windows from the root process that are visible to the interactive
-user.  The smpd process manager creates processes in a hidden service desktop
-where you cannot interact with any GUI.
+
+\item \texttt{-add\_job job\_name domain$\backslash$user [-host hostname]}
+Create a job object on the local or specified host for the specified user.
+Administrator privileges are required to execute this command.
+
+\item \texttt{-associate\_job job\_name [-host hostname]}
+Associate the current user token with the specified job on the local or specified
+host.  The current user must match the user specifed by the \texttt{-add\_job job\_name username}
+command.
+
 \item \texttt{-channel channel\_name}
 This option is only available under Windows and allows the user to select which
 channel implementation of MPICH2 to select at runtime.  The current channels
@@ -616,97 +552,112 @@ The sockets, multi-threaded sockets, and sockets plus shared memory channels
 work on multiple nodes.  There are also profiled versions of the channels that
 produce RLOG files for each process when selected.  They are named p, mtp, ssmp,
 shmp, and sshmp.  See the section on channel selection for additional information.
-\item \texttt{-log}
-This option is a short cut to selecting the MPE wrapper library to log the MPI
-application.  When the job finishes there will be a .clog2 file created that
-can be viewed in Jumpshot.
-\item \texttt{-l}
-This flag causes mpiexec to prefix output to stdout and stderr with the rank of
-the process that produced the output.  (This option is the lower-case L not the
-number one)
-\item \texttt{-port port}
-Specify the port where the smpd process manager is listening.
-\item \texttt{-p port}
-Short version of the \texttt{-port} option.
-\item \texttt{-smpdfile filename}
-Specify the location of the smpd configuration file.  The default is \texttt{\~/.smpd}.
-This is a Unix only option.  Under Windows the settings are stored in the Windows Registry.
-\item \texttt{-phrase passphrase}
-Specify the passphrase used to authenticate with the smpd process managers.
-\item \texttt{-path search\_path}
-Specify the search path used to locate executables.  Separate multiple paths with semicolons.
-The path can be mixed when using both Windows and Linux machines.  For example:
-\texttt{-path c:$\backslash$temp;/home/user} is a valid search path.
-\item \texttt{-register [-user n]}
-Encrypt a user name and password into the Windows registry so that it can be 
-automatically retrieved by mpiexec to launch processes with.  If you specify
-a user index then you can save more than one set of credentials.  The index
-should be a positive non-zero number and does not need to be consecutive.
-\item \texttt{-remove [-user n]}
-Remove the encrypted credential data from the Registry.  If multiple entries are
-saved then use the \texttt{-user} option to specify which entry to remove.
-\texttt{-user all} can be specified to delete all entries.
-\item \texttt{-validate [-user n] [-host hostname]}
-Validate that the saved credentials can be used to launch a process on the local
-or specified host.  If more that one credentials has been saved then the 
-\texttt{-user} option can be used to select which user credentials to use.
-\item \texttt{-user n}
-Specify which encrypted credentials to retrieve from the Registry.  The corresponding
-entry must have been previously saved using the \texttt{-register -user n} option.
-\item \texttt{-timeout seconds}
-Specify the maximum number of seconds the job is allowed to run.  At the end of
-the timeout period, if the job has not already exited then all processes will
-be killed.
-\item \texttt{-plaintext}
-Specify that user credentials should go over the wire un-encrypted.  This is
-required if both Linux and Windows machines are used in the same job because
-the Linux machines cannot encrypt and decrypt the data created by the Windows
-machines.
+
+\item \texttt{-configfile filename}
+Use the specified job configuration file to launch the job.  Each line in the
+file represents a set of options just like you would enter them on the \texttt{mpiexec}
+command line.  The one difference is that there are no colons in the file.  The
+colons are replaced by new-lines.
+
 \item \texttt{-delegate}
 Specify that you want to use passwordless SSPI delegation to launch processes.
 The machines must be configured to use SSPI as described in the section on 
 security.
+
+\item \texttt{-dir drive:$\backslash$my$\backslash$working$\backslash$directory}
+Specify the working directory for the processes.
+
+\item \texttt{-env variable value}
+Specify an environment variable and its value to set in the processes' environments.
+This option can be specified multiple times.
+
+\item \texttt{-exitcodes}
+Specify that the exit code of each process should be printed to stdout as each
+processes exits.
+
+\item \texttt{-file filename}
+Use the specified implementation specific job configuration file.  For Windows
+this option is used to specify the old MPICH 1.2.5 configuration file format.
+This is useful for users who have existing configuration files and want to upgrade
+to MPICH2.
+
+\item \texttt{-genvlist a,b,c,d...}
+Specify a list of environment variables to taken from the environment local to mpiexec and propagated to the launched processes.
+
+\item \texttt{-hide\_console}
+Detach from the console so that no command prompt window will appear and consequently
+not output will be seen.
+
+\item \texttt{-host hostname}
+Specify that the processes should be launched on a specific host.
+
+\item \texttt{-hosts n host1 host2 host3 ...}
+Specify that the processes should be launched on a list of hosts.  This option
+replaces the \texttt{-n x} option.
+
+\item \texttt{-hosts n host1 m1 host2 m2 host3 m3 ...}
+Specify that the processes should be launched on a list of hosts and how many
+processes should be launched on each host.  The total number of processes 
+launched is m1 + m2 + m3 + ... mn.
+
 \item \texttt{-impersonate}
 Specify that you want to use passwordless SSPI impersonation to launch processes.
 This will create processes on the remote machines with limited access tokens.
 They wil not be able to open files on remote machines or access mapped network
 drives.
-\item \texttt{-add\_job job\_name domain$\backslash$user [-host hostname]}
-Create a job object on the local or specified host for the specified user.
-Administrator privileges are required to execute this command.
-\item \texttt{-remove\_job job\_name [-host hostname]}
-Remove a job object on the local or specified host.  Any processes running under
-this job will be terminated.  Administrator privileges are required to execute
-this command.
-\item \texttt{-associate\_job job\_name [-host hostname]}
-Associate the current user token with the specified job on the local or specified
-host.  The current user must match the user specifed by the \texttt{-add\_job job\_name username}
-command.
+
 \item \texttt{-job job\_name}
 Specify that the processes should be launched under the specifed job object.
 This can only be used after successful calls to \texttt{-add\_job} and \texttt{-associate\_job}.
-\item \texttt{-whoami}
-Print out the current user name in the format that mpiexec and smpd expect it to be.
-This is useful for users who use a screen name that is different from their user
-name.
-\item \texttt{-hide\_console}
-Detach from the console so that no command prompt window will appear and consequently
-not output will be seen.
-\item \texttt{-quiet\_abort}
-Use this flag to prevent extensive abort messages to appear.  Instead the job 
-will simply exit with minimal error output.
-\item \texttt{-rsh or -ssh}
-Use the remote shell command to execute the processes in the job instead of
-using the smpd process manager.  The default command is ``\texttt{ssh -x}'' no
-matter whether \texttt{-rsh} or \texttt{-ssh} is used.  If this is the only
-flag specified then an smpd process manager must be running on the local host
-where \texttt{mpiexec} is executed.  \texttt{mpiexec} contacts the local smpd process to start
-a PMI service required by the MPI job and then starts the processes using the 
-remote shell command.  On the target machines the application ``\texttt{env}''
-must be available since it is used to set the appropriate environment variables
-and then start the application.  The remote shell command can be changed using
-the environment variable MPIEXEC\_RSH.  Any command can be used that takes a 
-host name and then everything after that as the user command to be launched.
+
+\item \texttt{-l}
+This flag causes mpiexec to prefix output to stdout and stderr with the rank of
+the process that produced the output.  (This option is the lower-case L not the
+number one)
+
+\item \texttt{-localonly x} or \texttt{-localonly}
+Specify that the processes should only be launched on the local host.  This
+option can replace the \texttt{-n x} option or be used in conjunction with it
+when it is only a flag.
+
+\item \texttt{-localroot}
+Specify that the root process should be launched on the local machine directly
+from mpiexec bypassing the smpd process manager.  This is useful for applications
+that want to create windows from the root process that are visible to the interactive
+user.  The smpd process manager creates processes in a hidden service desktop
+where you cannot interact with any GUI.
+
+\item \texttt{-log}
+This option is a short cut to selecting the MPE wrapper library to log the MPI
+application.  When the job finishes there will be a .clog2 file created that
+can be viewed in Jumpshot.
+
+\item \texttt{-logon}
+Prompt for user credentials to launch the job under.
+
+\item \texttt{-machinefile filename}
+Use the specified file to get host names to launch processes on.  Hosts are 
+selected from this file in a round robin fashion.  One host is specified per
+line.  Extra options can be specified.  The number of desired processes to
+launch on a specific host can be specified with a colon followed by a number
+after the host name: \texttt{hostname:n}.  This is usefull for multi-CPU hosts.
+If you want to specify the interface that should be used for MPI communication
+to the host you can add the \texttt{-ifhn} flag.  Here is an example:
+\texttt{hostname:4 -ifhn 192.168.1.100}
+
+\item \texttt{-map drive:$\backslash$$\backslash$host$\backslash$share}
+Specify a network mapped drive to create on the hosts before launching the 
+processes.  The mapping will be removed when the processes exit.  This option
+can be specified multiple times.
+
+\item \texttt{-mapall}
+Specify that all network mapped drives created by the user executing mpiexec
+command will be created on hosts before launching the processes. The mappings
+will be removed when the processes exit. 
+
+\item \texttt{-n x} or \texttt{-np x}
+Specify the number of processes to launch.
+
 \item \texttt{-nopm}
 This flag is used in conjunction with the \texttt{-rsh} flag.  With this flag
 specified there need not be any smpd process manager running on any of the nodes
@@ -714,8 +665,29 @@ used in the job.  \texttt{mpiexec} provides the PMI interface and the remote
 shell command is used to start the processes.  Using these flags allows jobs to
 be started without any process managers running but the MPI-2 dynamic process
 functions like MPI\_Comm\_spawn are consequently not available.
-\item \texttt{-verbose}
-Output trace data for mpiexec.  Only useful for debugging.
+
+\item \texttt{-noprompt}
+Prevent mpiexec for prompting for information.  If user credentials are needed
+to launch the processes mpiexec usually prompts for this information but this
+flag causes an error to be printed out instead.
+
+\item \texttt{-p port}
+Short version of the \texttt{-port} option.
+
+\item \texttt{-path search\_path}
+Specify the search path used to locate executables.  Separate multiple paths with semicolons.
+The path can be mixed when using both Windows and Linux machines.  For example:
+\texttt{-path c:$\backslash$temp;/home/user} is a valid search path.
+
+\item \texttt{-phrase passphrase}
+Specify the passphrase used to authenticate with the smpd process managers.
+
+\item \texttt{-plaintext}
+Specify that user credentials should go over the wire un-encrypted.  This is
+required if both Linux and Windows machines are used in the same job because
+the Linux machines cannot encrypt and decrypt the data created by the Windows
+machines.
+
 \item \texttt{-pmi\_server num\_processes or -pmiserver num\_processes}
 This option specified by itself connects to the local smpd process manager and
 starts a PMI service.  This service is used by MPICH2 processes to communicate
@@ -733,6 +705,82 @@ correctly like PMI\_RANK and PMI\_SIZE.  See the document on the smpd PMI implem
 for a complete list of the environment variables.  When the job is finished the
 PMI server will exit.  This option can be executed in separate command simultaneously
 so that multiple jobs can be executed at the same time.
+
+\item \texttt{-port port}
+Specify the port where the smpd process manager is listening.
+
+\item \texttt{-priority class[:level]}
+Specify the priority class and optionally the thread priority of the processes
+to be launched.  The class can be 0,1,2,3, or 4 corresponding to idle, below,
+normal, above, and high.  The level can be 0,1,2,3,4, or 5 corresponding to
+idle, lowest, below, normal, above, highest.  The default is 2:3.
+
+\item \texttt{-pwdfile filename}
+Specify a file to read the user name and password from.  The user name should be
+on the first line and the password on the second line.
+
+\item \texttt{-quiet\_abort}
+Use this flag to prevent extensive abort messages to appear.  Instead the job 
+will simply exit with minimal error output.
+
+\item \texttt{-register [-user n]}
+Encrypt a user name and password into the Windows registry so that it can be 
+automatically retrieved by mpiexec to launch processes with.  If you specify
+a user index then you can save more than one set of credentials.  The index
+should be a positive non-zero number and does not need to be consecutive.
+
+\item \texttt{-remove [-user n]}
+Remove the encrypted credential data from the Registry.  If multiple entries are
+saved then use the \texttt{-user} option to specify which entry to remove.
+\texttt{-user all} can be specified to delete all entries.
+
+\item \texttt{-remove\_job job\_name [-host hostname]}
+Remove a job object on the local or specified host.  Any processes running under
+this job will be terminated.  Administrator privileges are required to execute
+this command.
+
+\item \texttt{-rsh or -ssh}
+Use the remote shell command to execute the processes in the job instead of
+using the smpd process manager.  The default command is ``\texttt{ssh -x}'' no
+matter whether \texttt{-rsh} or \texttt{-ssh} is used.  If this is the only
+flag specified then an smpd process manager must be running on the local host
+where \texttt{mpiexec} is executed.  \texttt{mpiexec} contacts the local smpd process to start
+a PMI service required by the MPI job and then starts the processes using the 
+remote shell command.  On the target machines the application ``\texttt{env}''
+must be available since it is used to set the appropriate environment variables
+and then start the application.  The remote shell command can be changed using
+the environment variable MPIEXEC\_RSH.  Any command can be used that takes a 
+host name and then everything after that as the user command to be launched.
+
+\item \texttt{-smpdfile filename}
+Specify the location of the smpd configuration file.  The default is \texttt{\~/.smpd}.
+This is a Unix only option.  Under Windows the settings are stored in the Windows Registry.
+
+\item \texttt{-timeout seconds}
+Specify the maximum number of seconds the job is allowed to run.  At the end of
+the timeout period, if the job has not already exited then all processes will
+be killed.
+
+\item \texttt{-user n}
+Specify which encrypted credentials to retrieve from the Registry.  The corresponding
+entry must have been previously saved using the \texttt{-register -user n} option.
+
+\item \texttt{-validate [-user n] [-host hostname]}
+Validate that the saved credentials can be used to launch a process on the local
+or specified host.  If more that one credentials has been saved then the 
+\texttt{-user} option can be used to select which user credentials to use.
+
+\item \texttt{-verbose}
+Output trace data for mpiexec.  Only useful for debugging.
+
+\item \texttt{-wdir drive:$\backslash$my$\backslash$working$\backslash$directory}
+\texttt{-wdir} and \texttt{-dir} are synonyms.
+
+\item \texttt{-whoami}
+Print out the current user name in the format that mpiexec and smpd expect it to be.
+This is useful for users who use a screen name that is different from their user
+name.
+
 \end{itemize}
 
 \subsection{SMPD process manager options}
