@@ -207,3 +207,96 @@ if test "$ac_cv_cxx_namespace_std" = yes; then
   AC_DEFINE(HAVE_NAMESPACE_STD,,[define if the compiler implements namespace std])
 fi
 ])
+dnl
+dnl
+dnl
+dnl/*D
+dnl PAC_CXX_CHECK_COMPILER_OPTION - Check that a C++ compiler option is
+dnl accepted without warning messages
+dnl
+dnl Synopsis:
+dnl PAC_CXX_CHECK_COMPILER_OPTION(optionname,action-if-ok,action-if-fail)
+dnl
+dnl Output Effects:
+dnl
+dnl If no actions are specified, a working value is added to 'CXXOPTIONS'
+dnl
+dnl Notes:
+dnl This is now careful to check that the output is different, since 
+dnl some compilers are noisy.
+dnl 
+dnl We are extra careful to prototype the functions in case compiler options
+dnl that complain about poor code are in effect.
+dnl
+dnl Because this is a long script, we have ensured that you can pass a 
+dnl variable containing the option name as the first argument.
+dnl D*/
+AC_DEFUN(PAC_CXX_CHECK_COMPILER_OPTION,[
+AC_MSG_CHECKING([whether C++ compiler accepts option $1])
+save_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$1 $CXXFLAGS"
+rm -f conftest.out
+echo 'int foo(void);int foo(void){return 0;}' > conftest2.cpp
+echo 'int main(void);int main(void){return 0;}' > conftest.cpp
+if ${CXX-g++} $save_CXXFLAGS $CPPFLAGS -o conftest conftest.cpp $LDFLAGS >conftest.bas 2>&1 ; then
+   if ${CXX-g++} $CXXFLAGS $CPPFLAGS -o conftest conftest.cpp $LDFLAGS >conftest.out 2>&1 ; then
+      if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
+         AC_MSG_RESULT(yes)
+         AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled without $1])       
+         rm -f conftest.out
+         rm -f conftest.bas
+         if ${CXX-g++} -c $save_CXXFLAGS $CPPFLAGS conftest2.cpp >conftest2.out 2>&1 ; then
+            if ${CXX-g++} $CXXFLAGS $CPPFLAGS -o conftest conftest2.o conftest.cpp $LDFLAGS >conftest.bas 2>&1 ; then
+               if ${CXX-g++} $CXXFLAGS $CPPFLAGS -o conftest conftest2.o conftest.cpp $LDFLAGS >conftest.out 2>&1 ; then
+                  if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
+	             AC_MSG_RESULT(yes)	  
+		     CXXFLAGS="$save_CXXFLAGS"
+                     ifelse($2,,CXXOPTIONS="$CXXOPTIONS $1",$2)
+                  elif test -s conftest.out ; then
+	             cat conftest.out >&AC_FD_CC
+	             AC_MSG_RESULT(no)
+                     CXXFLAGS="$save_CXXFLAGS"
+	             $3
+                  else
+                     AC_MSG_RESULT(no)
+                     CXXFLAGS="$save_CXXFLAGS"
+	             $3
+                  fi  
+               else
+	          if test -s conftest.out ; then
+	             cat conftest.out >&AC_FD_CC
+	          fi
+                  AC_MSG_RESULT(no)
+                  CXXFLAGS="$save_CXXFLAGS"
+                  $3
+               fi
+	    else
+               # Could not link with the option!
+               AC_MSG_RESULT(no)
+            fi
+         else
+            if test -s conftest2.out ; then
+               cat conftest2.out >&AC_FD_CC
+            fi
+	    AC_MSG_RESULT(no)
+            CXXFLAGS="$save_CXXFLAGS"
+	    $3
+         fi
+      else
+         cat conftest.out >&AC_FD_CC
+         AC_MSG_RESULT(no)
+         $3
+         CXXFLAGS="$save_CXXFLAGS"         
+      fi
+   else
+      AC_MSG_RESULT(no)
+      $3
+      if test -s conftest.out ; then cat conftest.out >&AC_FD_CC ; fi    
+      CXXFLAGS="$save_CXXFLAGS"
+   fi
+else
+    # Could not compile without the option!
+    AC_MSG_RESULT(no)
+fi
+rm -f conftest*
+])
