@@ -344,22 +344,30 @@ in the mpich2 directory.  The alternatives described below are
 configured by adding arguments to the configure step.
 
 
-Compiler Optimization Levels
-============================
+Compiler Flags
+==============
 
-By default, the MPICH2 library is built with the -O2 optimization
-level if it is available. The mpicc and other scripts that are used to
-compile applications do not include any optimization flag by
-default. If you want to build the MPICH2 library with a specific
-optimization level, set the environment variable CFLAGS to that level
-before running configure. If you do not want this CFLAGS value to be
-included in the mpicc script, set the environment variable MPI_CFLAGS
-to MPI_FLAGS_EMPTY. For example, to build a "production" MPICH2 in a
-GNU environment, you may want to do:
-     setenv CFLAGS -O3
-     setenv MPI_CFLAGS MPI_FLAGS_EMPTY
-before running configure. This will cause the MPICH2 library to be
-built with -O3, but -O3 will not be included in the mpicc script.
+MPICH2 uses two sets of flags: CFLAGS (and family -- CXXFLAGS, FFLAGS,
+F90FLAGS) and MPICH2LIB_CFLAGS (and family) for compilation; LDFLAGS
+and MPICH2LIB_LDFLAGS for linking. All these flags can be set through
+environment variables during configure.
+
+Both CFLAGS and MPICH2LIB_CFLAGS affect the compilation of the MPICH2
+library. However, only CFLAGS is appended to mpicc.
+
+By default, MPICH2LIB_CFLAGS are set to -O2. If the user specifies any
+other flags, they are appended to this default flag. The default flag
+can be disabled with the configure option
+"--disable-default-optimization". CFLAGS is empty by default.
+
+For example, to build a "production" MPICH2 in a GNU environment, you
+may want to do:
+
+     setenv MPICH2LIB_CFLAGS -O3
+     ./configure --disable-default-optimization
+
+This will cause the MPICH2 library to be built with -O3, and -O3 will
+not be included in the mpicc script.
 
 
 Alternative Process Managers
@@ -502,7 +510,7 @@ TCP.
   If you're using gcc, you can do this by adding 
     LD_LIBRARY_PATH=/path/to/lib 
   and
-    MPI_LDFLAGS="-Wl,-rpath -Wl,/path/to/lib"
+    LDFLAGS="-Wl,-rpath -Wl,/path/to/lib"
   as arguments to configure.
 
   Using the --enable-fast configure option significantly improves
@@ -574,13 +582,14 @@ SCTP stack specific instructions:
   For Solaris, SCTP comes with the default Solaris 10 kernel; the lib
   and include in /usr, so nothing needs to be specified for --with-sctp
   since /usr is often in the default search path.  In order to compile
-  under Solaris, CFLAGS must have -DMPICH_SCTP_CONCATENATES_IOVS set
-  when running MPICH2's configure script.
+  under Solaris, MPICH2LIB_CFLAGS must have
+  -DMPICH_SCTP_CONCATENATES_IOVS set when running MPICH2's configure
+  script.
 
-MPICH2 v1.0.5 was the initial release of the SCTP channel, so feedback is
-definitely still welcomed.  All MPI features except multithreading are 
-supported.  Some performance optimizations could surely exist for this 
-channel and will be investigated for future releases.
+MPICH2 v1.0.5 was the initial release of the SCTP channel, so feedback
+is definitely still welcomed. All MPI features except multithreading
+are supported. Some performance optimizations could surely exist for
+this channel and will be investigated for future releases.
 
 
 VPATH Builds
