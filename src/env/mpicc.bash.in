@@ -11,14 +11,12 @@
 #    includedir, libdir - Directories containing an *installed* mpich2
 #    prefix, execprefix - Often used to define includedir and libdir
 #    CC                 - C compiler
-#    MPI_CFLAGS         - Any special flags needed to compile 
-#    MPI_LDFLAGS        - Any special flags needed to link
+#    WRAPPER_CFLAGS        - Any special flags needed to compile 
+#    WRAPPER_LDFLAGS       - Any special flags needed to link
 #    MPILIBNAME         - Name of the MPI library
 #    MPI_OTHERLIBS      - Other libraries needed in order to link 
 #    
 # We assume that (a) the C compiler can both compile and link programs
-# We use MPI_xxx so that the user may continue to use CFLAGS, LIBS, etc
-# to modify the behavior of the compiler and linker.
 #
 # Handling of command-line options:
 #   This is a little tricky because some options may contain blanks.
@@ -41,8 +39,8 @@ libdir=@libdir@
 # configure (e.g., determining whehter -lsocket is needee)
 CC="@CC@"
 C_LINKPATH_SHL="@C_LINKPATH_SHL@"
-MPI_CFLAGS="@MPI_CFLAGS@"
-MPI_LDFLAGS="@MPI_LDFLAGS@"
+WRAPPER_CFLAGS="@WRAPPER_CFLAGS@"
+WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
 MPI_OTHERLIBS="@LIBS@"
@@ -181,8 +179,8 @@ else
 fi
 #
 # Init with the ones needed by MPI
-CFLAGS="$MPI_CFLAGS"
-LDFLAGS="$MPI_LDFLAGS"
+CFLAGS="$WRAPPER_CFLAGS"
+LDFLAGS="$WRAPPER_LDFLAGS"
 #
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then

@@ -11,16 +11,14 @@
 #    includedir, libdir - Directories containing an *installed* mpich2
 #    prefix, execprefix - Often used to define includedir and libdir
 #    FC                 - Fortran 77 compiler
-#    MPI_FFLAGS         - Any special flags needed to compile 
-#    MPI_LDFLAGS        - Any special flags needed to link
+#    WRAPPER_FFLAGS        - Any special flags needed to compile 
+#    WRAPPER_LDFLAGS       - Any special flags needed to link
 #    MPILIBNAME         - Name of the MPI library
 #    MPI_OTHERLIBS      - Other libraries needed in order to link 
 #    F77_OTHER_LIBS     - Yet more libraries, needed just with F77
 #    
 #    
 # We assume that (a) the C compiler can both compile and link programs
-# We use MPI_xxx so that the user may continue to use CFLAGS, LIBS, etc
-# to modify the behavior of the compiler and linker.
 #
 # Handling of command-line options:
 #   This is a little tricky because some options may contain blanks.
@@ -44,8 +42,8 @@ libdir=@libdir@
 FC="@FC@"
 FC_LINKPATH_SHL="@FC_LINKPATH_SHL@"
 F77CPP="@F77CPP@"
-MPI_FFLAGS="@MPI_FFLAGS@"
-MPI_LDFLAGS="@MPI_LDFLAGS@"
+WRAPPER_FFLAGS="@WRAPPER_FFLAGS@"
+WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
 MPI_OTHERLIBS="@LIBS@ @F77_OTHER_LIBS@"
@@ -256,8 +254,8 @@ else
 fi
 #
 # Init with the ones needed by MPI
-FFLAGS="$MPI_FFLAGS"
-LDFLAGS="$MPI_LDFLAGS"
+FFLAGS="$WRAPPER_FFLAGS"
+LDFLAGS="$WRAPPER_LDFLAGS"
 #
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then

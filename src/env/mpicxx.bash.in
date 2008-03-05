@@ -11,15 +11,13 @@
 #    includedir, libdir - Directories containing an *installed* mpich2
 #    prefix, execprefix - Often used to define includedir and libdir
 #    CXX                - C compiler
-#    MPI_CXXFLAGS       - Any special flags needed to compile 
-#    MPI_LDFLAGS        - Any special flags needed to link
+#    WRAPPER_CXXFLAGS      - Any special flags needed to compile 
+#    WRAPPER_LDFLAGS       - Any special flags needed to link
 #    MPILIBNAME         - Name of the MPI library
 #    MPICXXLIBNAME      - Name of the C++ binding part of the MPI library
 #    MPI_OTHERLIBS      - Other libraries needed in order to link 
 #    
 # We assume that (a) the C++ compiler can both compile and link programs
-# We use MPI_xxx so that the user may continue to use CXXFLAGS, LIBS, etc
-# to modify the behavior of the compiler and linker.
 #
 # Handling of command-line options:
 #   This is a little tricky because some options may contain blanks.
@@ -39,8 +37,8 @@ libdir=@libdir@
 # Default settings for compiler, flags, and libraries
 CXX="@CXX@"
 CXX_LINKPATH_SHL="@CXX_LINKPATH_SHL@"
-MPI_CXXFLAGS="@MPI_CXXFLAGS@"
-MPI_LDFLAGS="@MPI_LDFLAGS@"
+WRAPPER_CXXFLAGS="@WRAPPER_CXXFLAGS@"
+WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
 MPICXXLIBNAME="@MPICXXLIBNAME@"
@@ -189,8 +187,8 @@ if [ "$MPICXXLIBNAME" != "$MPILIBNAME" ] ; then
 fi
 #
 # Init with the ones needed by MPI
-CXXFLAGS="$MPI_CXXFLAGS"
-LDFLAGS="$MPI_LDFLAGS"
+CXXFLAGS="$WRAPPER_CXXFLAGS"
+LDFLAGS="$WRAPPER_LDFLAGS"
 #
 #
 # Handle the case of a profile switch
