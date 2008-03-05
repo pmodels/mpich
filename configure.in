@@ -985,6 +985,9 @@ for option in $enable_g ; do
 	perform_nesttesting=yes
 	perform_dbglog=yes
 	CFLAGS="$CFLAGS -g"
+	CXXFLAGS="$CXXFLAGS -g"
+	FFLAGS="$FFLAGS -g"
+	F90FLAGS="$F90FLAGS -g"
 	perform_meminit=yes
 	perform_dbgmutex=yes
 	;;
