@@ -61,13 +61,13 @@ AC_MSG_CHECKING([whether C compiler accepts option $1])
 save_CFLAGS="$CFLAGS"
 CFLAGS="$1 $CFLAGS"
 rm -f conftest.out
-echo 'int try(void);int try(void){return 0;}' > conftest2.c
+echo 'int foo(void);int foo(void){return 0;}' > conftest2.c
 echo 'int main(void);int main(void){return 0;}' > conftest.c
 if ${CC-cc} $save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
    if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.out 2>&1 ; then
       if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
          AC_MSG_RESULT(yes)
-         AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled  without $1])       
+         AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled without $1])       
          rm -f conftest.out
          rm -f conftest.bas
          if ${CC-cc} -c $save_CFLAGS $CPPFLAGS conftest2.c >conftest2.out 2>&1 ; then
@@ -101,7 +101,7 @@ if ${CC-cc} $save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas
             fi
          else
             if test -s conftest2.out ; then
-               cat conftest.out >&AC_FD_CC
+               cat conftest2.out >&AC_FD_CC
             fi
 	    AC_MSG_RESULT(no)
             CFLAGS="$save_CFLAGS"
