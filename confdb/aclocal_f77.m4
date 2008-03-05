@@ -516,7 +516,7 @@ if AC_TRY_EVAL(ac_fscompilelink) && test -x conftest ; then
    if AC_TRY_EVAL(ac_fscompilelink2) && test -x conftest ; then
       if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
          AC_MSG_RESULT(yes)
-         AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled  without $1])       
+         AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled without $1])       
          rm -f conftest2.out
          rm -f conftest.bas
 	 ac_fscompile3='${F77-f77} -c $save_FFLAGS conftest2.f >conftest2.out 2>&1'
@@ -556,14 +556,14 @@ else
     cat conftest.f >&AC_FD_CC
     cat conftest.bas >&AC_FD_CC
 fi
+FFLAGS="$save_FFLAGS"
 if test "$ac_result" = "yes" ; then
      AC_MSG_RESULT(yes)	  
-     ifelse([$2],,FOPTIONS="$FOPTIONS $1",$2)
+     ifelse($2,,FOPTIONS="$FOPTIONS $1",$2)
 else
      AC_MSG_RESULT(no)
      $3
 fi
-FFLAGS="$save_FFLAGS"
 rm -f conftest*
 ])
 dnl
