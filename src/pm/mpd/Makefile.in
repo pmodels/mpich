@@ -157,8 +157,48 @@ mpich2-build-install: mpich2-mpdroot install
 	fi
 	rm -f mpich2-mpdroot
 
+uninstall: mpich2-build-uninstall
 mpich2-build-uninstall:
-	rm -f $(DESTDIR)${bindir}/mpdroot
+	-rm -f $(DESTDIR)${bindir}/mpdroot
+	-rm -f $(DESTDIR)${bindir}/Zeroconf.py
+	-rm -f $(DESTDIR)${bindir}/mpd
+	-rm -f $(DESTDIR)${bindir}/mpd.py
+	-rm -f $(DESTDIR)${bindir}/mpdallexit
+	-rm -f $(DESTDIR)${bindir}/mpdallexit.py
+	-rm -f $(DESTDIR)${bindir}/mpdboot
+	-rm -f $(DESTDIR)${bindir}/mpdboot.py
+	-rm -f $(DESTDIR)${bindir}/mpdcheck
+	-rm -f $(DESTDIR)${bindir}/mpdcheck.py
+	-rm -f $(DESTDIR)${bindir}/mpdchkpyver.py
+	-rm -f $(DESTDIR)${bindir}/mpdcleanup
+	-rm -f $(DESTDIR)${bindir}/mpdcleanup.py
+	-rm -f $(DESTDIR)${bindir}/mpdexit
+	-rm -f $(DESTDIR)${bindir}/mpdexit.py
+	-rm -f $(DESTDIR)${bindir}/mpdgdbdrv.py
+	-rm -f $(DESTDIR)${bindir}/mpdhelp
+	-rm -f $(DESTDIR)${bindir}/mpdhelp.py
+	-rm -f $(DESTDIR)${bindir}/mpdkilljob
+	-rm -f $(DESTDIR)${bindir}/mpdkilljob.py
+	-rm -f $(DESTDIR)${bindir}/mpdlib.py
+	-rm -f $(DESTDIR)${bindir}/mpdlib.pyc
+	-rm -f $(DESTDIR)${bindir}/mpdlistjobs
+	-rm -f $(DESTDIR)${bindir}/mpdlistjobs.py
+	-rm -f $(DESTDIR)${bindir}/mpdman.py
+	-rm -f $(DESTDIR)${bindir}/mpdman.pyc
+	-rm -f $(DESTDIR)${bindir}/mpdringtest
+	-rm -f $(DESTDIR)${bindir}/mpdringtest.py
+	-rm -f $(DESTDIR)${bindir}/mpdrun
+	-rm -f $(DESTDIR)${bindir}/mpdrun.py
+	-rm -f $(DESTDIR)${bindir}/mpdsigjob
+	-rm -f $(DESTDIR)${bindir}/mpdsigjob.py
+	-rm -f $(DESTDIR)${bindir}/mpdtrace
+	-rm -f $(DESTDIR)${bindir}/mpdtrace.py
+	-rm -f $(DESTDIR)${bindir}/mpecc.in
+	-rm -f $(DESTDIR)${bindir}/mpefc.in
+	-rm -f $(DESTDIR)${bindir}/mpiexec
+	-rm -f $(DESTDIR)${bindir}/mpiexec.py
+	-rm -f $(DESTDIR)${bindir}/mpirun
+	-rm -f $(DESTDIR)${bindir}/mpirun.py
 
 mpich2-mpdroot: mpich2-mpdroot.o
 	$(C_LINK) -o mpich2-mpdroot mpich2-mpdroot.o $(LIBS)
