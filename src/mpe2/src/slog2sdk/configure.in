@@ -348,7 +348,8 @@ AC_SUBST(sharebuild_dir)
 # Copying $srcdir/logfiles to sharebuild_dir
 if test -d $srcdir/logfiles ; then
     echo "creating sample logfiles from source"
-    $CPRP -pr $srcdir/logfiles $sharebuild_dir
+    $CPRP -pr $srcdir/logfiles/*.clog* $sharebuild_dir
+    $CPRP -pr $srcdir/logfiles/*.slog* $sharebuild_dir
 fi
 
 AC_SUBST(sbinbuild_dir)
