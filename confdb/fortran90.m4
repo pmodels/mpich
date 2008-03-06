@@ -1439,6 +1439,8 @@ else
     cat conftest.$ac_f90ext >&AC_FD_CC
     cat conftest.bas >&AC_FD_CC
 fi
+# Restore F90FLAGS before 2nd/3rd argument commands are executed,
+# # as 2nd/3rd argument command could be modifying F90FLAGS.
 F90FLAGS="$save_F90FLAGS"
 if test "$ac_result" = "yes" ; then
      AC_MSG_RESULT(yes)	  

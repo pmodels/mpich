@@ -435,6 +435,8 @@ else
     cat conftest.f >&AC_FD_CC
     cat conftest.bas >&AC_FD_CC
 fi
+# Restore FFLAGS before 2nd/3rd argument commands are executed,
+# # as 2nd/3rd argument command could be modifying FFLAGS.
 FFLAGS="$save_FFLAGS"
 if test "$ac_result" = "yes" ; then
      AC_MSG_RESULT(yes)	  
