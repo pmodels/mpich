@@ -395,6 +395,13 @@ you want to create all the processes on the same machine.  gforker is
 also useful for debugging, where running all the processes on a single
 machine is often convenient.
 
+slurm
+-----
+SLURM is an external process manager not distributed with
+MPICH2. However, we provide configure options that allow integration
+with SLURM. To enable this support, use "--with-pmi=slurm
+--with-pm=no" option with configure.
+
 
 Alternative Channels and Devices
 ================================

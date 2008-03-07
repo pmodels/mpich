@@ -2,8 +2,11 @@
                                Changes in 1.0.7
 ===============================================================================
 
-- PMI: Added support to use PMI Clique functionality for process
+- PM/PMI: Added support to use PMI Clique functionality for process
 managers that support it.
+
+- PM/PMI: Added SLURM support to configure to make it transparent to
+users.
 
 - OVERALL: Support for STI Cell Broadband Engine
 
