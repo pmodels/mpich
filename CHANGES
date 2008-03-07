@@ -15,8 +15,7 @@ independently.
 
 - OVERALL: Added device-specific timer support.
 
-- OVERALL: make uninstall works cleanly now, except for MPD
-installations.
+- OVERALL: make uninstall works cleanly now.
 
 - ROMIO: Support to take hints from a config file
 
