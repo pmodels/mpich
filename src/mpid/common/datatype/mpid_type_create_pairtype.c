@@ -157,7 +157,7 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
 #ifdef HAVE_MAX_LONG_DOUBLE_FP_ALIGNMENT
 	    new_dtp->alignsize       = MPIR_MIN(new_dtp->alignsize,
 					HAVE_MAX_LONG_DOUBLE_FP_ALIGNMENT);
-#else
+#elif defined(HAVE_MAX_FP_ALIGNMENT)
 	    new_dtp->alignsize       = MPIR_MIN(new_dtp->alignsize,
 						HAVE_MAX_FP_ALIGNMENT);
 #endif
