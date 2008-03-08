@@ -298,14 +298,6 @@ AC_ARG_ENABLE(fast,
                 turns off error checking and timing collection],,
 enable_fast=no)
 
-AC_ARG_ENABLE(ndebug,
-[--enable-ndebug - Set NDEBUG and disable asserts],enable_ndebug=$enableval,
-enable_ndebug=no)
-
-if test "$enable_ndebug" = "yes" ; then
-    AC_DEFINE(NDEBUG,1,[Define to suppress assertions])
-fi
-
 dnl
 dnl We enable f77 and f90 if we can find compilers for them.
 dnl In addition, we check whether f77 and f90 can work together.
@@ -979,6 +971,9 @@ for option in $enable_g ; do
 	;;
 	mutex)
 	perform_dbgmutex=yes
+	;;
+	ndebug)
+	AC_DEFINE(NDEBUG,1,[Define to suppress assertions])
 	;;
 	all|yes)
 	perform_memtracing=yes
@@ -5190,25 +5185,6 @@ for subsys in $devsubsystems $subsystems ; do
         ac_sub_configure_args="$ac_sub_configure_args $ac_arg" 
 	;;
 
-dnl
-dnl Don't try this because it can fail for environment variables that
-dnl contain quotes (particularly single quotes).  Rather than try to handle
-dnl all of these cases, we just leave off the cache file
-dnl	changequote(<<,>>)    
-dnl        *=*) 
-dnl        ac_envvar=`expr "x$ac_arg" : 'x\([^=]*\)='`
-dnl	# Recompute the name
-dnl	if test -n "$ac_envvar" ; then
-dnl 	    eval ac_envval=\$"$ac_envvar"
-dnl  	    if test -n "$ac_envval" ; then
-dnl	        ac_narg="$ac_envvar=""'"$ac_envval""'"
-dnl	        ac_sub_configure_args="$ac_sub_configure_args '$ac_narg'"
-dnl            fi
-dnl	else 
-dnl	    ac_sub_configure_args="$ac_sub_configure_args $ac_arg"
-dnl        fi
-dnl    ;;
-dnl
 dnl Here's the problem.  If the user sets a few of the special variables
 dnl such as CPPFLAGS, those original settings will override the
 dnl updated values.  Here's an attempt at a fix
@@ -5223,24 +5199,17 @@ dnl updated values.  Here's an attempt at a fix
 
 	# add in the correct prefix argument
         ac_sub_configure_args="--prefix=$prefix $ac_sub_configure_args"
-dnl	# If there is a cache file, try to use it
-dnl	if test -n "$cache_file" ; then
-dnl	   case $cache_file in 
-dnl	       [\\/]* | ?:[\\/]* ) ac_sub_cache_file=$cache_file ;;
-dnl	       *) # Relative path.
-dnl	       	ac_sub_cache_file=$ac_top_builddir$cache_file ;;
-dnl	   esac
-dnl	   ac_sub_configure_args="--cache-file=$ac_sub_cache_file $ac_sub_configure_args"
-dnl        elif test -n "$pac_cache_file" ; then
-dnl	    # pac_cache_file is a temporary file
-dnl 	    ac_sub_configure_args="--cache-file=$pac_cache_file $ac_sub_configure_args"
-dnl	fi
-dnl	changequote([,])	
 
 	# Create the directories if necessary
         PAC_MKDIRS($subsys)
 	# We use eval to handle quotes around the arguments added by
 	# autoconf when saving the args
+
+	dnl Copy current CFLAGS, FFLAGS, etc., into
+	dnl MPICH2_INTERNAL_CFLAGS, etc., and export them to the
+	dnl sub-configures. If the sub-configures want, they can replace their
+	dnl CFLAGS with the current CFLAGS through this variable.
+	PAC_MPICH2_INIT()
         if (cd $subsys && eval $use_top_srcdir/$subsys/configure $ac_sub_configure_args ) ; then
 	    :
 	else 
@@ -5667,6 +5636,8 @@ AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h f
 # CPPFLAGS
 CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 
+dnl Place holder macro for finalize
+PAC_MPICH2_FINALIZE()
 
 dnl
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig

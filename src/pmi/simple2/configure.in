@@ -6,7 +6,15 @@ dnl
 dnl The file name here refers to a file in the source being configured
 AC_PREREQ(2.59)
 AC_INIT(simple2pmi.c)
-dnl
+
+dnl The MPICH2 top-level configure adds a bunch of flags to the
+dnl user-defined CFLAGS by processing different configure command-line
+dnl arguments (--enable-g, --enable-default-optimization). These updated
+dnl flags are passed down as a separate flag. Here, we don't care about
+dnl the user-defined flags, but rather this updated flags, so we just
+dnl overwrite CFLAGS with them.
+PAC_SUBCONFIG_INIT()
+
 dnl Definitions will be placed in this file rather than in the DEFS variable
 AC_CONFIG_HEADER(pmi2conf.h)
 AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
@@ -139,7 +147,9 @@ PAC_UPDATE_BASE_CACHE
 AC_OUTPUT_COMMANDS([if test ! -d .deps ; then mkdir .deps ; fi 
 if test ! -f .deps/alldeps ; then touch .deps/alldeps ; fi])
 
-AC_OUTPUT(Makefile localdefs)
+dnl Place holder macro for finalization
+PAC_SUBCONFIG_FINALIZE()
 
+AC_OUTPUT(Makefile localdefs)
 
 PAC_SUBDIR_CACHE_CLEANUP

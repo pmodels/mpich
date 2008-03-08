@@ -97,8 +97,11 @@ maintainer-clean: distclean
 	rm -f configure mpdconf.h.in
 	rm -rf autom4te.cache
 
-configure: configure.in
-	./makeconfigure
+${srcdir}/configure: ${srcdir}/configure.in
+	@rm -rf autom4te*.cache
+	(cd ${srcdir} && autoheader -I ../../../confdb && \
+	autoconf -I \
+	../../../confdb )
 
 Makefile: ${srcdir}/Makefile.in config.status
 	./config.status
