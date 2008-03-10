@@ -1,11 +1,6 @@
-/* begin_generated_IBM_copyright_prolog                             */
-/*                                                                  */
 /* ---------------------------------------------------------------- */
 /* (C)Copyright IBM Corp.  2007, 2008                               */
-/* IBM CPL License                                                  */
 /* ---------------------------------------------------------------- */
-/*                                                                  */
-/* end_generated_IBM_copyright_prolog                               */
 /**
  * \file ad_bgl_pset.c
  * \brief Definition of functions associated to structs ADIOI_BGL_ProcInfo_t and ADIOI_BGL_ConfInfo_t 
