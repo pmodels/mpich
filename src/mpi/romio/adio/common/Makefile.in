@@ -10,7 +10,7 @@ SHLIBNAME   = @SHLIBNAME@
 INCLUDE_DIR = -I@MPI_INCLUDE_DIR@ -I${srcdir}/../include -I../include \
 	-I../../include -I${srcdir}/../../../../../src/include \
 	-I../../../../../src/include
-CFLAGS      = @CPPFLAGS@ @CFLAGS@ $(INCLUDE_DIR)
+CFLAGS      = @CPPFLAGS@ @CFLAGS@ $(INCLUDE_DIR) 
 
 top_builddir  = @master_topbuild_dir@
 LIBTOOL       = @LIBTOOL@
@@ -28,7 +28,7 @@ AD_OBJECTS = ad_close.o ad_init.o ad_end.o ad_open.o flatten.o \
       ad_write_str_naive.o ad_resize.o ad_read.o ad_write.o ad_iread.o \
       ad_iwrite.o ad_done.o ad_wait.o adi_close.o ad_prealloc.o ad_fcntl.o \
       ad_iread_fake.o ad_iwrite_fake.o ad_done_fake.o ad_wait_fake.o \
-      ad_subarray.o ad_darray.o strfns.o greq_fns.o system_hints.o
+      ad_subarray.o ad_darray.o strfns.o greq_fns.o system_hints.o ad_write_nolock.o
 
 all: $(LIBNAME)
 	@if [ "@ENABLE_SHLIB@" != "none" ] ; then \
