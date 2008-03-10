@@ -1,0 +1,3 @@
+SUBDIRS= .
+INCLUDES = -I${master_top_srcdir}/src/include -I${top_builddir}/src/include
+lib${MPILIBNAME}_a_SOURCES = mpid_buffer.c mpid_recvq.c mpid_request.c mpid_statistics.c

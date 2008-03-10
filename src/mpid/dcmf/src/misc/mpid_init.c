@@ -1,0 +1,208 @@
+/*  (C)Copyright IBM Corp.  2007, 2008  */
+/**
+ * \file src/misc/mpid_init.c
+ * \brief Normal job startup code
+ */
+#include "mpidimpl.h"
+#include "pmi.h"
+#include <limits.h>
+
+MPIDI_Protocol_t MPIDI_Protocols;
+MPIDI_Process_t  MPIDI_Process;
+DCMF_Hardware_t  mpid_hw;
+
+
+/**
+ * \brief Initialize MPICH2 at ADI level.
+ * \param[in,out] argc Unused
+ * \param[in,out] argv Unused
+ * \param[in]     requested The thread model requested by the user.
+ * \param[out]    provided  The thread model provided to user.  This will be the same as requested, except in VNM.  This behavior is handled by DCMF_Messager_configure()
+ * \param[out]    has_args  Set to TRUE
+ * \param[out]    has_env   Set to TRUE
+ * \return MPI_SUCCESS
+ */
+int MPID_Init(int * argc,
+              char *** argv,
+              int requested,
+              int * provided,
+              int * has_args,
+              int * has_env)
+{
+  int pg_rank, pg_size, i, rc;
+  int tempthread;
+  MPIDI_VC * vc_table = NULL;
+  MPID_Comm * comm;
+
+  /* ------------------------- */
+  /* initialize the statistics */
+  /* ------------------------- */
+  MPIDI_Statistics_init();
+
+  /* ------------------------- */
+  /* initialize request queues */
+  /* ------------------------- */
+  MPIDI_Recvq_init();
+
+  /* ----------------------------------- */
+  /* Read the ENV vars to setup defaults */
+  /* ----------------------------------- */
+  MPIDI_Env_setup();
+
+
+  /* ----------------------------- */
+  /* Initialize messager           */
+  /* ----------------------------- */
+  DCMF_Messager_initialize();
+  DCMF_Collective_initialize();
+  DCMF_Hardware(&mpid_hw);
+
+  /* ---------------------------------- */
+  /* Register eager point-to-point send */
+  /* ---------------------------------- */
+  DCMF_Send_Configuration_t default_config =
+    {
+      DCMF_DEFAULT_SEND_PROTOCOL,
+      (DCMF_RecvSendShort) MPIDI_BG2S_RecvShortCB,
+      NULL,
+      (DCMF_RecvSend)      MPIDI_BG2S_RecvCB,
+      NULL,
+    };
+  DCMF_Send_register (&MPIDI_Protocols.send, &default_config);
+
+  /* ---------------------------------- */
+  /* Register rzv point-to-point rts    */
+  /* ---------------------------------- */
+  default_config.cb_recv_short = (DCMF_RecvSendShort) MPIDI_BG2S_RecvRzvCB;
+  default_config.cb_recv       = (DCMF_RecvSend)      NULL;
+  DCMF_Send_register (&MPIDI_Protocols.rzv, &default_config);
+
+  /* --------------------------- */
+  /* Register point-to-point get */
+  /* --------------------------- */
+  DCMF_Get_Configuration_t get_config = { DCMF_DEFAULT_GET_PROTOCOL };
+  DCMF_Get_register (&MPIDI_Protocols.get, &get_config);
+
+  /* ---------------------------------- */
+  /* Register control send              */
+  /* ---------------------------------- */
+  DCMF_Control_Configuration_t control_config =
+    {
+      DCMF_DEFAULT_CONTROL_PROTOCOL,
+      (DCMF_RecvControl) MPIDI_BG2S_ControlCB, NULL
+    };
+  DCMF_Control_register (&MPIDI_Protocols.control, &control_config);
+
+  /* ---------------------------------- */
+  /* Register the collectives           */
+  /* ---------------------------------- */
+  MPIDI_Coll_register();
+
+  /* ------------------------------------------------------ */
+  /* Set process attributes.                                */
+  /* ------------------------------------------------------ */
+  MPIR_Process.attrs.tag_ub = INT_MAX;
+  MPIR_Process.attrs.wtime_is_global = 1;
+  if (MPIDI_Process.optimized.topology)
+    MPIR_Process.dimsCreate = MPID_Dims_create;
+
+
+  /* ---------------------------------------- */
+  /*  Get my rank and the process size        */
+  /* ---------------------------------------- */
+  pg_rank = DCMF_Messager_rank();
+  pg_size = DCMF_Messager_size();
+
+  /* ------------------------------------ */
+  /*  Initialize Virtual Connection table */
+  /* ------------------------------------ */
+
+  vc_table = MPIU_Malloc(sizeof(MPIDI_VC) * pg_size); /* !!! */
+  MPID_assert(vc_table != NULL);
+
+  for (i = 0; i < pg_size; i++)
+    {
+      vc_table[i].ref_count = 0;
+      vc_table[i].lpid = i;
+    }
+
+
+  /* -------------------------------- */
+  /* Initialize MPI_COMM_WORLD object */
+  /* -------------------------------- */
+
+  comm = MPIR_Process.comm_world;
+  comm->rank = pg_rank;
+  comm->remote_size = comm->local_size = pg_size;
+  rc = MPID_VCRT_Create(comm->remote_size, &comm->vcrt);
+  MPID_assert(rc == MPI_SUCCESS);
+  rc = MPID_VCRT_Get_ptr(comm->vcrt, &comm->vcr);
+  MPID_assert(rc == MPI_SUCCESS);
+  for (i=0; i<pg_size; i++)
+    {
+      vc_table[i].ref_count++;
+      comm->vcr[i] = &vc_table[i];
+    }
+
+   /* comm_create for MPI_COMM_WORLD needs this information to ensure no
+    * barriers are done in dual mode with multithreading
+    * We don't get the thread_provided updated until AFTER MPID_Init is
+    * finished so we need to know the requested thread level in comm_create
+    */
+   tempthread = MPIR_ThreadInfo.thread_provided;
+   MPIR_ThreadInfo.thread_provided = requested;
+   MPIDI_Comm_create(comm);
+   MPIR_ThreadInfo.thread_provided = tempthread;
+
+  /* ------------------------------- */
+  /* Initialize MPI_COMM_SELF object */
+  /* ------------------------------- */
+
+  comm = MPIR_Process.comm_self;
+  comm->rank = 0;
+  comm->remote_size = comm->local_size = 1;
+  rc = MPID_VCRT_Create(comm->remote_size, &comm->vcrt);
+  MPID_assert(rc == MPI_SUCCESS);
+  rc = MPID_VCRT_Get_ptr(comm->vcrt, &comm->vcr);
+  MPID_assert(rc == MPI_SUCCESS);
+  vc_table[pg_rank].ref_count++;
+  comm->vcr[0] = &vc_table[pg_rank];
+
+  /* ------------------------------- */
+  /* Initialize timer data           */
+  /* ------------------------------- */
+  MPID_Wtime_init();
+
+  /* ------------------------------- */
+  *has_args = TRUE;
+  *has_env = TRUE;
+
+
+  {
+    DCMF_Configure_t dcmf_config;
+    memset(&dcmf_config, 0x00, sizeof(DCMF_Configure_t));
+
+    // When interrupts are on, must use MPI_THREAD_MULTIPLE
+    // so locking is done to interlock between the main
+    // thread and the interrupt handler thread.
+    if ( MPIDI_Process.use_interrupts )
+      dcmf_config.interrupts   = DCMF_INTERRUPTS_ON;
+    else
+      dcmf_config.interrupts   = DCMF_INTERRUPTS_OFF;
+
+    // Attempt to set the same thread level as requestd
+    dcmf_config.thread_level = requested;
+
+    // Get the actual values back
+    DCMF_Messager_configure(&dcmf_config, &dcmf_config);
+    *provided = dcmf_config.thread_level;
+  }
+
+  return MPI_SUCCESS;
+}
+
+
+int MPID_InitCompleted(void)
+{
+  return MPI_SUCCESS;
+}

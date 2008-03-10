@@ -1,0 +1,11 @@
+SUBDIRS= .
+INCLUDES = -I${master_top_srcdir}/src/include -I${top_builddir}/src/include
+lib${MPILIBNAME}_a_SOURCES = mpid_topo.c \
+                             mpid_cart_map.c \
+                             mpid_dims_create.c \
+                             mpidi_cart_map_1d_snake.c \
+                             mpidi_cart_map_nofold.c \
+                             mpidi_cart_map_fold.c \
+                             mpidi_physical_cart.c \
+                             mpidi_virtual_cart.c \
+                             mpidi_dims_create.c
