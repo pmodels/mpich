@@ -7,6 +7,22 @@ dnl config.guess
 dnl
 AC_CONFIG_AUX_DIR(../../../../../confdb)
 
+dnl The MPICH2 top-level configure adds a bunch of flags to the
+dnl user-defined CFLAGS by processing different configure command-line
+dnl arguments (--enable-g, --enable-default-optimization). These updated
+dnl flags are passed down as a separate flag. Here, we don't care about
+dnl the user-defined flags, but rather this updated flags, so we just
+dnl overwrite CFLAGS with them.
+PAC_SUBCONFIG_INIT()
+
+dnl The MPICH2 top-level configure adds a bunch of flags to the
+dnl user-defined CFLAGS by processing different configure command-line
+dnl arguments (--enable-g, --enable-default-optimization). These updated
+dnl flags are passed down as a separate flag. Here, we don't care about
+dnl the user-defined flags, but rather this updated flags, so we just
+dnl overwrite CFLAGS with them.
+PAC_SUBCONFIG_INIT()
+
 AC_ARG_ENABLE(sock-debug,[--enable-sock-debug - Turn on tests of the socket data structures],,enable_sock_debug=no)
 
 dnl
@@ -206,6 +222,9 @@ PAC_UPDATE_BASE_CACHE
 # which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
 # CPPFLAGS
 CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
+
+dnl Place holder macro for finalization
+PAC_SUBCONFIG_FINALIZE()
 
 dnl Add a step to create the dependencies directory if it is not present
 AC_OUTPUT_COMMANDS([if grep 'dependencies:' Makefile >/dev/null 2>&1 ; then
