@@ -15,14 +15,6 @@ dnl the user-defined flags, but rather this updated flags, so we just
 dnl overwrite CFLAGS with them.
 PAC_SUBCONFIG_INIT()
 
-dnl The MPICH2 top-level configure adds a bunch of flags to the
-dnl user-defined CFLAGS by processing different configure command-line
-dnl arguments (--enable-g, --enable-default-optimization). These updated
-dnl flags are passed down as a separate flag. Here, we don't care about
-dnl the user-defined flags, but rather this updated flags, so we just
-dnl overwrite CFLAGS with them.
-PAC_SUBCONFIG_INIT()
-
 AC_ARG_ENABLE(sock-debug,[--enable-sock-debug - Turn on tests of the socket data structures],,enable_sock_debug=no)
 
 dnl
