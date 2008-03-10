@@ -578,7 +578,10 @@ if test "$enable_fast" = "yes" ; then
 #
 #   enable_g=no
 #
-    AC_DEFINE(NDEBUG,1,[Define to suppress assertions])
+    CFLAGS="$CFLAGS -DNDEBUG"
+    CXXFLAGS="$CXXFLAGS -DNDEBUG"
+    FFLAGS="$FFLAGS -DNDEBUG"
+    F90FLAGS="$F90FLAGS -DNDEBUG"
 fi
 
 # error-checking
@@ -973,7 +976,10 @@ for option in $enable_g ; do
 	perform_dbgmutex=yes
 	;;
 	ndebug)
-	AC_DEFINE(NDEBUG,1,[Define to suppress assertions])
+	CFLAGS="$CFLAGS -DNDEBUG"
+	CXXFLAGS="$CXXFLAGS -DNDEBUG"
+	FFLAGS="$FFLAGS -DNDEBUG"
+	F90FLAGS="$F90FLAGS -DNDEBUG"
 	;;
 	all|yes)
 	perform_memtracing=yes
