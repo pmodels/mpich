@@ -326,7 +326,7 @@ fi
 #
 C_DEBUG_FLAG="-g"
 F77_DEBUG_FLAG="-g"
-C_OPT_FLAG=${CFLAGS:-"-O"}
+# C_OPT_FLAG=${CFLAGS:-"-O"}
 # MPICH1 uses OPTFLAGS and OPTFLAGSC to specify separate optimization
 # flags for the C compiler (this is better that adding it to the
 # undifferentiated CFLAGS, at least on input).
