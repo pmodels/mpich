@@ -94,6 +94,17 @@ static char *debugger=0;
 static char **baseargs=0;
 static int  nbaseargs=0;
 
+#if !defined(MPI_rs6000) && !defined(MPI_solaris) && \
+    !defined(MPI_IRIX) && !defined(MPI_freebsd) && \
+    !defined(MPI_LINUX)
+#if defined( NEEDS_KILL_DECL )
+#if defined( HAVE_SYS_TYPES_H )
+#include <sys/types.h>
+#endif
+int kill(pid_t pid, int sig);
+#endif
+#endif
+
 void MPE_Start_debugger( )
 {
 int child, i;
