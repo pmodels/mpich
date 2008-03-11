@@ -7,7 +7,7 @@ MPE_ETCDIR=@etcbuild_dir@
 MPI_CC="@MPI_CC@"
 MPI_CLINKER=$MPI_CC
 
-MPI_INC="@MPI_INC@"
+MPI_CFLAGS="@MPI_CFLAGS@"
 MPI_LIBS="@MPI_LIBS@"
 CFLAGS="@CFLAGS@"
 
@@ -104,15 +104,17 @@ else
     echo "mpecc: **** No profiling option is specifed!"
 fi
 
-C_INCS="$PROFILE_INCPATHS $MPI_INC"
-CC_FLAGS="$CFLAGS $C_INCS $MPE_COPTS"
-CC_LDFLAGS="$LDFLAGS $CFLAGS $C_INCS $MPE_LDOPTS"
+# MPE include path, x_INCS, goes in front of MPI include path, MPI_xFLAGS,
+# in case MPI include path is in MPI_xFLAGS containing old MPE include path.
+C_INCS="$PROFILE_INCPATHS $MPI_CFLAGS"
+MPICC_FLAGS="$C_INCS $MPE_COPTS"
+MPICC_LDFLAGS="$LDFLAGS $C_INCS $MPE_LDOPTS"
 
 if [ "$linking" = yes ] ; then
-    $Show $MPI_CLINKER $CC_LDFLAGS $allargs $PROFILE_PRELIB $MPI_LIBS $PROFILE_POSTLIB
+    $Show $MPI_CLINKER $MPICC_LDFLAGS $allargs $PROFILE_PRELIB $MPI_LIBS $PROFILE_POSTLIB
     rc=$?
 else
-    $Show $MPI_CC $CC_FLAGS $allargs
+    $Show $MPI_CC $MPICC_FLAGS $allargs
     rc=$?
 fi
 
