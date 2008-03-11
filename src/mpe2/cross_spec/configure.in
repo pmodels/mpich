@@ -133,11 +133,23 @@ AC_ARG_WITH( mpilibs,
                                      e.g. -L/pkgs/MPI/lib -lpmpich -lmpich.],
 MPI_LIBS="$withval" )
 
-AC_ARG_VAR( MPI_CC, [C compiler to compile MPI program and to create parallel executable, e.g. mpcc for IBM MPI, or mpicc from MPICHx or LAM-MPI.] )
-AC_ARG_VAR( MPI_F77, [F77 compiler to compile MPI program and to create parallel executable, e.g. mpxlf for IBM MPI, or mpif77 from MPICHx or LAM-MPI.] )
-AC_ARG_VAR( MPI_INC, [MPI compiler's include flags prefixed with -I.  It specifies where mpi.h and mpif.h are located, e.g. -I/pkgs/MPI/include.] )
 AC_ARG_VAR( MPI_LIBS, [MPI compiler's library flags prefixed with -L for the library path and prefixed with -l for the name of the MPI libraries. It specifies the location of the MPI libraries. e.g. -L/pkgs/MPI/lib -lpmpich -lmpich.] )
+
+AC_ARG_VAR( MPI_CC, [C compiler to compile MPI program and to create parallel executable, e.g. mpcc for IBM MPI, or mpicc from MPICHx, Open-MPI, or LAM-MPI.] )
+AC_ARG_VAR( MPI_F77, [Fortran compiler to compile MPI program and to create parallel executable, e.g. mpxlf for IBM MPI, or mpif77 from MPICHx, Open-MPI, or LAM-MPI.] )
+AC_ARG_VAR( MPI_INC, [MPI compiler's include path prefixed with -I.  It specifies where mpi.h and mpif.h are located, e.g. -I/pkgs/MPI/include. This flag will be added to MPI_CFLAGS and MPI_FFLAGS, i.e. the MPI include path can be explicitly set in MPI_CFLAGS and MPI_FFLAGS without setting MPI_INC.] )
+AC_ARG_VAR( MPI_CFLAGS, [MPI C compiler flags to compile MPI program.] )
+AC_ARG_VAR( MPI_FFLAGS, [MPI Fortran compiler flags to compile MPI Fortran program.] )
+AC_ARG_VAR( MPI_LIBS, [MPI compiler library flags which specifies the location of the MPI libraries.  The flags contains library path prefixed with -L and MPI library name prefixed with -l, e.g. -L/opt/MPI/lib -lpmpich -lmpich.] )
+dnl AC_ARG_VAR( MPI_LDFLAGS, [MPI linker flags used with MPI_CC or MPI_F77 during linking.] )
+
 AC_ARG_VAR( MPERUN, [MPI application launch command for the test programs created by this package.  This variable is necessary only if user needs a special command to launch MPI testing application to run in the backend compute nodes.] )
+
+# Preppend MPI_INC to MPI_CFLAGS/MPI_FFLAGS
+if test "x$MPI_INC" != "x" ; then
+    MPI_CFLAGS="$MPI_INC $MPI_CFLAGS"
+    MPI_FFLAGS="$MPI_INC $MPI_FFLAGS"
+fi
 
 AC_PROG_CC
 AC_OBJEXT
@@ -166,7 +178,7 @@ if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
 fi
 
 AC_MSG_CHECKING( [for the linkage of the supplied MPI C definitions] )
-PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, , , ,
+PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, , , ,
                       [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
 if test "$mpe_link_ok" = "yes" ; then
     AC_MSG_RESULT(yes)
@@ -179,7 +191,7 @@ fi
 
 if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
     AC_MSG_CHECKING( [for the linkage of the supplied MPI F77 definitions] )
-    PAC_MPI_LINK_F77_FUNC( $MPI_F77, [$FFLAGS $MPI_INC], $MPI_LIBS, [
+    PAC_MPI_LINK_F77_FUNC( $MPI_F77, [$MPI_FFLAGS], $MPI_LIBS, [
         integer mytid
         integer ierr
     ], [
@@ -228,7 +240,7 @@ if test -n "$F77" -a "$MPE_BUILD_FORTRAN2C" = "yes" ; then
 dnl Determine MPI_Fint
 dnl (same test done in graphics's configure.in)
     AC_MSG_CHECKING( [for MPI_Fint] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Fint aa=1 ], ,
                           [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
     if test "$mpe_link_ok" = "yes" ; then
@@ -252,7 +264,8 @@ AC_SUBST(F77)
 AC_SUBST(FLINKER)
 AC_SUBST(MPI_F77)
 AC_SUBST(MPE_FLINKER)
-AC_SUBST(MPI_INC)
+AC_SUBST(MPI_CFLAGS)
+AC_SUBST(MPI_FFLAGS)
 AC_SUBST(MPI_LIBS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(MPERUN)
