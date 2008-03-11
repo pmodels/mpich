@@ -423,11 +423,17 @@ dnl
 # before any of these flags are being modified by configure tests.
 #
 # WRAPPER_xFLAGS are used by mpicc and friends.
+# Don't modify WRAPPER_xFLAGS
 WRAPPER_CFLAGS=$CFLAGS
 WRAPPER_CXXFLAGS=$CXXFLAGS
 WRAPPER_FFLAGS=$FFLAGS
 WRAPPER_F90FLAGS=$F90FLAGS
 WRAPPER_LDFLAGS=$LDFLAGS
+export WRAPPER_CFLAGS
+export WRAPPER_CXXFLAGS
+export WRAPPER_FFLAGS
+export WRAPPER_F90FLAGS
+export WRAPPER_LDFLAGS
 
 # -----------------------------------------------------------------------------
 # First check that we have a clean build if we are doing a VPATH build
@@ -936,6 +942,14 @@ if test "$thread_pkg_required" = "no" ; then
 fi
 export MPE_THREAD_DEFAULT
 
+# MPICH2_EXTRA_xFLAGS contains MPICH2LIB_xFLAGS and 
+# all the extra compiler flags added by MPICH2.
+# Initial all MPICH2_EXTRA_xFLAGS to empty string.
+MPICH2_EXTRA_CFLAGS=""
+MPICH2_EXTRA_CXXFLAGS=""
+MPICH2_EXTRA_FFLAGS=""
+MPICH2_EXTRA_F90FLAGS=""
+
 # enable-g
 # strip off multiple options, separated by commas
 save_IFS="$IFS"
@@ -947,6 +961,10 @@ for option in $enable_g ; do
 	CXXFLAGS="$CXXFLAGS -g"
 	FFLAGS="$FFLAGS -g"
 	F90FLAGS="$F90FLAGS -g"
+	MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -g"
+	MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -g"
+	MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -g"
+	MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -g"
 	;;
         no|none)
 	;;
@@ -980,6 +998,10 @@ for option in $enable_g ; do
 	CXXFLAGS="$CXXFLAGS -DNDEBUG"
 	FFLAGS="$FFLAGS -DNDEBUG"
 	F90FLAGS="$F90FLAGS -DNDEBUG"
+	MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -DNDEBUG"
+	MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -DNDEBUG"
+	MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -DNDEBUG"
+	MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -DNDEBUG"
 	;;
 	all|yes)
 	perform_memtracing=yes
@@ -989,6 +1011,10 @@ for option in $enable_g ; do
 	CXXFLAGS="$CXXFLAGS -g"
 	FFLAGS="$FFLAGS -g"
 	F90FLAGS="$F90FLAGS -g"
+	MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -g"
+	MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -g"
+	MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -g"
+	MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -g"
 	perform_meminit=yes
 	perform_dbgmutex=yes
 	;;
@@ -1379,8 +1405,10 @@ if test "$default_optimization" = "yes" ; then
     MPICH2LIB_CFLAGS="$MPICH2LIB_CFLAGS $MPI_DEFAULT_COPTS"
 fi
 if test -n "$MPICH2LIB_CFLAGS" ; then
-    PAC_C_CHECK_COMPILER_OPTION( [$MPICH2LIB_CFLAGS],
-                                 [CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"] )
+    PAC_C_CHECK_COMPILER_OPTION( [$MPICH2LIB_CFLAGS], [
+        CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
+        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $MPICH2LIB_CFLAGS"
+                               ] )
 fi
 
 # Check whether shared libraries are enabled.  We need to know this
@@ -1405,6 +1433,9 @@ AC_SUBST(CREATESHLIB)
 # Set CFLAGS for enable strict if necessary.  Do this *first* because
 # it may influence the output of the other tests
 PAC_CC_STRICT
+if test -n "$pac_cc_strict_flags" ; then
+    MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $pac_cc_strict_flags"
+fi
 # Check for support for weak symbols.  If not found, set NO_WEAK_SYM
 # to the Make target name understood by simplemake.
 # Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
@@ -1492,8 +1523,10 @@ if test "$enable_f77" = yes ; then
         MPICH2LIB_FFLAGS="$MPICH2LIB_FFLAGS $MPI_DEFAULT_FOPTS"
     fi
     if test -n "$MPICH2LIB_FFLAGS" ; then
-        PAC_F77_CHECK_COMPILER_OPTION( [$MPICH2LIB_FFLAGS],
-                                       [FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"] )
+        PAC_F77_CHECK_COMPILER_OPTION( [$MPICH2LIB_FFLAGS], [
+            FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
+            MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS $MPICH2LIB_FFLAGS"
+                                     ] )
     fi
 fi
 
@@ -1875,8 +1908,10 @@ if test "$enable_f90" = "yes" ; then
         MPICH2LIB_F90FLAGS="$MPICH2LIB_F90FLAGS $MPI_DEFAULT_F90OPTS"
     fi
     if test -n "$MPICH2LIB_F90FLAGS" ; then
-        PAC_F90_CHECK_COMPILER_OPTION( [$MPICH2LIB_F90FLAGS],
-                                       [F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"] )
+        PAC_F90_CHECK_COMPILER_OPTION( [$MPICH2LIB_F90FLAGS], [
+            F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"
+            MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS $MPICH2LIB_F90FLAGS"
+                                     ] )
     fi
 
     #
@@ -2244,10 +2279,17 @@ if test "$enable_cxx" = yes; then
         MPICH2LIB_CXXFLAGS="$MPICH2LIB_CXXFLAGS $MPI_DEFAULT_CXXOPTS"
     fi
     if test -n "$MPICH2LIB_CXXFLAGS" ; then
-        PAC_CXX_CHECK_COMPILER_OPTION( [$MPICH2LIB_CXXFLAGS],
-                                       [CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"] )
+        PAC_CXX_CHECK_COMPILER_OPTION( [$MPICH2LIB_CXXFLAGS], [
+            CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
+            MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS $MPICH2LIB_CXXFLAGS"
+                                     ] )
     fi
 fi
+
+export MPICH2_EXTRA_CFLAGS
+export MPICH2_EXTRA_CXXFLAGS
+export MPICH2_EXTRA_FFLAGS
+export MPICH2_EXTRA_F90FLAGS
 
 # Copy the mpicxx.h file to the main include directory
 AC_OUTPUT_COMMANDS([if test $enable_cxx = yes ; then 
@@ -5616,12 +5658,12 @@ AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
 # MPICH2 libraries, only $CFLAGS will be used in the MPI compiler
 # wrapper script.
 #
-AC_ARG_VAR( MPICH2LIB_CFLAGS, [extra CFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpicc script(Only standard CFLAGS will be used in the mpicc script).] )
-AC_ARG_VAR( MPICH2LIB_CXXFLAGS, [extra CXXFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpicxx script(Only standard CXXFLAGS will be used in the mpicxx script).] )
-AC_ARG_VAR( MPICH2LIB_FFLAGS, [extra FFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpif77 script(Only standard FFLAGS will be used in the mpif77 script).] )
-AC_ARG_VAR( MPICH2LIB_F90FLAGS, [extra F90FLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpif90 script(Only standard F90FLAGS will be used in the mpif90 script).] )
+AC_ARG_VAR( MPICH2LIB_CFLAGS, [extra CFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpicc script(Only standard CFLAGS will be used in the mpicc script).  CFLAGS and MPICH2LIB_CFLAGS are non-overlapping] )
+AC_ARG_VAR( MPICH2LIB_CXXFLAGS, [extra CXXFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpicxx script(Only standard CXXFLAGS will be used in the mpicxx script).  CXXFLAGS and MPICH2LIB_CXXFLAGS are non-overlapping.] )
+AC_ARG_VAR( MPICH2LIB_FFLAGS, [extra FFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpif77 script(Only standard FFLAGS will be used in the mpif77 script).  FFLAGS and MPICH2LIB_FFLAGS are non-overlapping.] )
+AC_ARG_VAR( MPICH2LIB_F90FLAGS, [extra F90FLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpif90 script(Only standard F90FLAGS will be used in the mpif90 script).  F90FLAGS and MPICH2LIB_F90FLAGS are non-overlapping.] )
 
-# AC_ARG_VAR( MPICH2LIB_LDFLAGS, [extra LDFLAGS used in building MPICH2 libraries, this flags won't be used in any of mpiXXX script.] )
+# AC_ARG_VAR( MPICH2LIB_LDFLAGS, [extra LDFLAGS used in building MPICH2 libraries, this flags won't be used in any of mpiXXX script.  LDFLAGS and MPICH2LIB_LDFLAGS are non-overlapping.] )
 
 # For the examples, we want to use the scripts to encourage users
 # to use them and to make them work more robustly with shared libraries
