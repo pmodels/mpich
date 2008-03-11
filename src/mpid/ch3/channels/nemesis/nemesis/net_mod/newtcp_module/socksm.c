@@ -191,8 +191,15 @@ static int expand_sc_plfd_tbls (void)
        are updated here after the expand. */
     for (i = 1; i < g_tbl_capacity; i++)   /* i=0 = listening socket fd won't have a VC pointer */
     {
-        if (g_sc_tbl[i].vc && VC_FIELD(g_sc_tbl[i].vc, sc))
+        /* It's important to only make the assignment if the sc address in the
+           vc matches the old sc address, otherwise we can corrupt the vc's
+           state in certain head-to-head situations. */
+        if (g_sc_tbl[i].vc &&
+            VC_FIELD(g_sc_tbl[i].vc, sc) &&
+            VC_FIELD(g_sc_tbl[i].vc, sc) == &g_sc_tbl[i])
+        {
             VC_FIELD(g_sc_tbl[i].vc, sc) = &new_sc_tbl[i];
+        }
     }
 
     MPIU_Free(g_sc_tbl);
@@ -208,6 +215,7 @@ static int expand_sc_plfd_tbls (void)
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "expand_sc_plfd_tbls af g_sc_tbl[0].fd=%d", g_sc_tbl[0].fd));
     for (i = 0; i < g_tbl_capacity; ++i)
     {
+        sockconn_t *dbg_sc = g_sc_tbl[i].vc ? VC_FIELD(g_sc_tbl[i].vc, sc) : (sockconn_t*)(-1);
         /* The state is only valid if the FD is valid.  The VC field is only
            valid if the state is valid and COMMRDY. */
         MPIU_Assert(MPID_nem_newtcp_module_plfd_tbl[i].fd == CONN_INVALID_FD ||
@@ -408,8 +416,9 @@ static int recv_id_info(sockconn_t *const sc)
                           "**read", "**read %s", strerror (errno)); /* FIXME-Z1 */
     if (pg_id_len == 0) {
         sc->is_same_pg = TRUE;
-        MPID_nem_newtcp_module_get_vc_from_conninfo (MPIDI_Process.my_pg->id, 
-                                                     sc->pg_rank,&sc->vc);
+        mpi_errno = MPID_nem_newtcp_module_get_vc_from_conninfo (MPIDI_Process.my_pg->id, 
+                                                                 sc->pg_rank,&sc->vc);
+        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
         sc->pg_id = NULL;
     }
     else {
@@ -417,6 +426,7 @@ static int recv_id_info(sockconn_t *const sc)
         MPID_nem_newtcp_module_get_vc_from_conninfo (pg_id, sc->pg_rank, &sc->vc);
         sc->pg_id = sc->vc->pg->id;
     }
+    sc->pg_is_set = TRUE;
 
  fn_exit:
     MPIU_CHKPMEM_REAP();
@@ -552,6 +562,7 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
             sc->is_same_pg = FALSE;
             sc->pg_id = vc->pg->id;
         }
+        sc->pg_is_set = TRUE;
         sc->vc = vc;
         VC_FIELD(vc, sc) = sc;
         sc->pending_event = 0; /* clear pending events */
@@ -570,7 +581,7 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
                 if (send_cmd_pkt(sc->fd, MPIDI_NEM_NEWTCP_MODULE_PKT_DISC_NAK) 
                     == MPI_SUCCESS) {
                     CHANGE_STATE(sc, CONN_STATE_TS_COMMRDY);
-                    sc->pending_event = 0;
+                sc->pending_event = 0;
                     VC_FIELD(sc->vc, sc) = sc;
                     MPID_nem_newtcp_module_conn_est (vc);
                 }
@@ -1016,8 +1027,9 @@ static int state_d_quiescent_handler(pollfd_t *const plfd, sockconn_t *const sc)
     if (sc->vc && VC_FIELD(sc->vc, sc) == sc) /* this vc may be connecting/accepting with another sc e.g., this sc lost the tie-breaker */
     {
         ((MPIDI_CH3I_VC *)sc->vc->channel_private)->state = MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED;
-        if (sc->pending_event != EVENT_CONNECT)
+        if (sc->pending_event != EVENT_CONNECT) {
             VC_FIELD(sc->vc, sc) = NULL;
+        }
     }
     if (sc->vc && VC_FIELD(sc->vc, sc) == sc && sc->pending_event == EVENT_CONNECT)
         MPID_nem_newtcp_module_connect(sc->vc);
