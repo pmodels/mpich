@@ -5464,14 +5464,7 @@ else
     MPI_MAX_PROCESSOR_NAME=$MPID_MAX_PROCESSOR_NAME
 fi
 AC_SUBST(MPI_MAX_PROCESSOR_NAME)
-# -----------------------------------------------------------------------------
-# Set the libraries to use in building programs
-if test "$NEEDSPLIB" = "yes" ; then
-    EXAMPLE_LIBS="-l$PMPILIBNAME -l$MPILIBNAME $LIBS"
-else
-    EXAMPLE_LIBS="-l$MPILIBNAME $LIBS"
-fi
-AC_SUBST(EXAMPLE_LIBS)
+
 # default settings for compiler and linker flags 
 # Note:
 #   The WRAPPER_CFLAGS must not contain *all* of the CFLAGS, just the 
