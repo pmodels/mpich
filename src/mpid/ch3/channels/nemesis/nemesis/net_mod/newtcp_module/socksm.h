@@ -101,7 +101,7 @@ extern const char *const CONN_STATE_STR[];
 #define CHANGE_STATE(_sc, _state) do { \
     (_sc)->state.cstate = _state; \
     (_sc)->handler = sc_state_info[_state].sc_state_handler; \
-    g_plfd_tbl[(_sc)->index].events = sc_state_info[_state].sc_state_plfd_events; \
+    MPID_nem_newtcp_module_plfd_tbl[(_sc)->index].events = sc_state_info[_state].sc_state_plfd_events; \
 } while(0)
 
 

@@ -48,10 +48,6 @@ struct MPID_Request *MPIDI_CH3I_sendq_head[CH3_NUM_QUEUES] = {0};
 struct MPID_Request *MPIDI_CH3I_sendq_tail[CH3_NUM_QUEUES] = {0};
 struct MPID_Request *MPIDI_CH3I_active_send[CH3_NUM_QUEUES] = {0};
 
-#include <poll.h>
-extern int g_tbl_size; /* DARIUS */
-extern struct pollfd *g_plfd_tbl; /* DARIUS */
-
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Progress
 #undef FCNAME

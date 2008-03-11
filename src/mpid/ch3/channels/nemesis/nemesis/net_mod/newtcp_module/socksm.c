@@ -21,12 +21,12 @@ struct {
     freenode_t *head, *tail;
 } freeq = {NULL, NULL};
 
-int g_tbl_size = 0; //DARIUS
+static int g_tbl_size = 0;
 static int g_tbl_capacity = CONN_PLFD_TBL_INIT_SIZE;
 static int g_tbl_grow_size = CONN_PLFD_TBL_GROW_SIZE;
 
 static sockconn_t *g_sc_tbl = NULL;
-pollfd_t *g_plfd_tbl = NULL; //DARIUS
+pollfd_t *MPID_nem_newtcp_module_plfd_tbl = NULL;
 
 sockconn_t g_lstn_sc;
 pollfd_t g_lstn_plfd;
@@ -108,23 +108,23 @@ static int alloc_sc_plfd_tbls (void)
     MPIU_CHKPMEM_DECL (2);
 
     MPIU_Assert(g_sc_tbl == NULL);
-    MPIU_Assert(g_plfd_tbl == NULL);
+    MPIU_Assert(MPID_nem_newtcp_module_plfd_tbl == NULL);
 
     MPIU_CHKPMEM_MALLOC (g_sc_tbl, sockconn_t *, g_tbl_capacity * sizeof(sockconn_t), 
                          mpi_errno, "connection table");
-    MPIU_CHKPMEM_MALLOC (g_plfd_tbl, pollfd_t *, g_tbl_capacity * sizeof(pollfd_t), 
+    MPIU_CHKPMEM_MALLOC (MPID_nem_newtcp_module_plfd_tbl, pollfd_t *, g_tbl_capacity * sizeof(pollfd_t), 
                          mpi_errno, "pollfd table");
 #if defined(MPICH_DEBUG_MEMINIT)
     /* We initialize the arrays in order to eliminate spurious valgrind errors
        that occur when poll(2) returns 0.  See valgrind bugzilla#158425 and
        remove this code if the fix ever gets into a release of valgrind.
        [goodell@ 2007-02-25] */
-    memset(g_plfd_tbl, 0, g_tbl_capacity * sizeof(pollfd_t));
+    memset(MPID_nem_newtcp_module_plfd_tbl, 0, g_tbl_capacity * sizeof(pollfd_t));
 #endif
 
     for (i = 0; i < g_tbl_capacity; i++) {
         INIT_SC_ENTRY(((sockconn_t *)&g_sc_tbl[i]), i);
-        INIT_POLLFD_ENTRY(((pollfd_t *)&g_plfd_tbl[i]));
+        INIT_POLLFD_ENTRY(((pollfd_t *)&MPID_nem_newtcp_module_plfd_tbl[i]));
     }
     MPIU_CHKPMEM_COMMIT();
 
@@ -133,9 +133,9 @@ static int alloc_sc_plfd_tbls (void)
 
     MPIU_Assert(0 == index); /* assumed in other parts of this file */
     MPID_NEM_MEMCPY (&g_sc_tbl[index], &g_lstn_sc, sizeof(g_lstn_sc));
-    MPID_NEM_MEMCPY (&g_plfd_tbl[index], &g_lstn_plfd, sizeof(g_lstn_plfd));
-    MPIU_Assert(g_plfd_tbl[index].fd == g_sc_tbl[index].fd);
-    MPIU_Assert(g_plfd_tbl[index].events == POLLIN);
+    MPID_NEM_MEMCPY (&MPID_nem_newtcp_module_plfd_tbl[index], &g_lstn_plfd, sizeof(g_lstn_plfd));
+    MPIU_Assert(MPID_nem_newtcp_module_plfd_tbl[index].fd == g_sc_tbl[index].fd);
+    MPIU_Assert(MPID_nem_newtcp_module_plfd_tbl[index].events == POLLIN);
 
  fn_exit:
     return mpi_errno;
@@ -154,7 +154,7 @@ static int free_sc_plfd_tbls (void)
     int mpi_errno = MPI_SUCCESS;
 
     MPIU_Free(g_sc_tbl);
-    MPIU_Free(g_plfd_tbl);
+    MPIU_Free(MPID_nem_newtcp_module_plfd_tbl);
     return mpi_errno;
 }
 
@@ -185,7 +185,7 @@ static int expand_sc_plfd_tbls (void)
                          mpi_errno, "expanded pollfd table");
 
     MPID_NEM_MEMCPY (new_sc_tbl, g_sc_tbl, g_tbl_capacity * sizeof(sockconn_t));
-    MPID_NEM_MEMCPY (new_plfd_tbl, g_plfd_tbl, g_tbl_capacity * sizeof(pollfd_t));
+    MPID_NEM_MEMCPY (new_plfd_tbl, MPID_nem_newtcp_module_plfd_tbl, g_tbl_capacity * sizeof(pollfd_t));
 
     /* VCs have pointers to entries in the sc table.  These
        are updated here after the expand. */
@@ -196,12 +196,12 @@ static int expand_sc_plfd_tbls (void)
     }
 
     MPIU_Free(g_sc_tbl);
-    MPIU_Free(g_plfd_tbl);
+    MPIU_Free(MPID_nem_newtcp_module_plfd_tbl);
     g_sc_tbl = new_sc_tbl;
-    g_plfd_tbl = new_plfd_tbl;
+    MPID_nem_newtcp_module_plfd_tbl = new_plfd_tbl;
     for (i = g_tbl_capacity; i < new_capacity; i++) {
         INIT_SC_ENTRY(((sockconn_t *)&g_sc_tbl[i]), i);
-        INIT_POLLFD_ENTRY(((pollfd_t *)&g_plfd_tbl[i]));
+        INIT_POLLFD_ENTRY(((pollfd_t *)&MPID_nem_newtcp_module_plfd_tbl[i]));
     }
     g_tbl_capacity = new_capacity;
 
@@ -210,7 +210,7 @@ static int expand_sc_plfd_tbls (void)
     {
         /* The state is only valid if the FD is valid.  The VC field is only
            valid if the state is valid and COMMRDY. */
-        MPIU_Assert(g_plfd_tbl[i].fd == CONN_INVALID_FD ||
+        MPIU_Assert(MPID_nem_newtcp_module_plfd_tbl[i].fd == CONN_INVALID_FD ||
                     g_sc_tbl[i].state.cstate != CONN_STATE_TS_COMMRDY ||
                     VC_FIELD(g_sc_tbl[i].vc, sc) == &g_sc_tbl[i]);
     }
@@ -517,7 +517,7 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
         
         sc = &g_sc_tbl[index];
-        plfd = &g_plfd_tbl[index];        
+        plfd = &MPID_nem_newtcp_module_plfd_tbl[index];        
 
         sock_addr = &(VC_FIELD(vc, sock_id));
 
@@ -1088,7 +1088,7 @@ int MPID_nem_newtcp_module_connection_progress (MPIDI_VC_t *vc)
     if (sc == NULL)
         goto fn_exit;
 
-    plfd = &g_plfd_tbl[sc->index];
+    plfd = &MPID_nem_newtcp_module_plfd_tbl[sc->index];
 
     CHECK_EINTR(n, poll(plfd, 1, 0));
     MPIU_ERR_CHKANDJUMP1 (n == -1, mpi_errno, MPI_ERR_OTHER, 
@@ -1126,13 +1126,13 @@ int MPID_nem_newtcp_module_connpoll()
        size of the table, which leads to iterating over invalid revents. */
     int num_polled = g_tbl_size;
 
-    CHECK_EINTR(n, poll(g_plfd_tbl, num_polled, 0));
+    CHECK_EINTR(n, poll(MPID_nem_newtcp_module_plfd_tbl, num_polled, 0));
     MPIU_ERR_CHKANDJUMP1 (n == -1, mpi_errno, MPI_ERR_OTHER, 
                           "**poll", "**poll %s", strerror (errno));
     /* MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "some sc fd poll event")); */
     for(i = 0; i < num_polled; i++)
     {
-        pollfd_t *it_plfd = &g_plfd_tbl[i];
+        pollfd_t *it_plfd = &MPID_nem_newtcp_module_plfd_tbl[i];
         sockconn_t *it_sc = &g_sc_tbl[i];
 
         if (it_plfd->fd != CONN_INVALID_FD && it_plfd->revents != 0)
@@ -1199,7 +1199,7 @@ int MPID_nem_newtcp_module_state_listening_handler(pollfd_t *const unused_1, soc
 
     while (1) {
         l_sc = &g_sc_tbl[0];  /* N3 Important */
-        l_plfd = &g_plfd_tbl[0];
+        l_plfd = &MPID_nem_newtcp_module_plfd_tbl[0];
         len = sizeof(SA_IN);
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "before accept"));
         if ((connfd = accept(l_sc->fd, (SA *) &rmt_addr, &len)) < 0) {
@@ -1220,7 +1220,7 @@ int MPID_nem_newtcp_module_state_listening_handler(pollfd_t *const unused_1, soc
             mpi_errno = find_free_entry(&index);
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);        
             sc = &g_sc_tbl[index];
-            plfd = &g_plfd_tbl[index];
+            plfd = &MPID_nem_newtcp_module_plfd_tbl[index];
             
             sc->fd = plfd->fd = connfd;
             sc->pg_rank = CONN_INVALID_RANK;
