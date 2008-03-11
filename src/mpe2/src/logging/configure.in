@@ -81,7 +81,7 @@ CC=${CC:-cc}
 CLINKER=${CLINKER:-$CC}
 CFLAGS=${MPE_CFLAGS}
 MPI_CC=${MPI_CC:-${CC}}
-MPI_INC=${MPI_INC}
+MPI_CFLAGS=${MPI_CFLAGS}
 MPI_LIBS=${MPI_LIBS}
 
 MPE_LIBNAME=${MPE_LIBNAME:-mpe}
@@ -426,7 +426,7 @@ AC_CHECK_HEADERS( fcntl.h,
 dnl   Determine if PMPI_Comm_create_keyval exists
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     AC_MSG_CHECKING( [for PMPI_Comm_create_keyval()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ int comm_keyval ], [
                           PMPI_Comm_create_keyval( MPI_COMM_NULL_COPY_FN,
                                                    MPI_COMM_NULL_DELETE_FN,
@@ -450,7 +450,7 @@ fi
 dnl   Determine if PMPI_Comm_free_keyval exists
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     AC_MSG_CHECKING( [for PMPI_Comm_free_keyval()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ int comm_keyval ], [
                           PMPI_Comm_free_keyval( &comm_keyval )
                           ],
@@ -472,7 +472,7 @@ fi
 dnl   Determine if PMPI_Comm_set_attr exists
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     AC_MSG_CHECKING( [for PMPI_Comm_set_attr()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ int comm_keyval ], [
                           PMPI_Comm_set_attr( MPI_COMM_WORLD, comm_keyval,
                                               (void *)5 )
@@ -495,7 +495,7 @@ fi
 dnl   Determine if PMPI_Comm_get_attr exists
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     AC_MSG_CHECKING( [for PMPI_Comm_get_attr()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ int comm_keyval, comm_val, istatus ], [
                           PMPI_Comm_get_attr( MPI_COMM_WORLD, comm_keyval,
                                               &comm_val, &istatus )
@@ -537,7 +537,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
         AC_MSG_CHECKING( [for pthread_mutex_lock/unlock in MPI] )
 dnl     Check MPI_CC/MPI_LIBS without -lpthread can resolve pthread symbols,
 dnl     no need to add -lpthread during linking.
-        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC],
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS],
                               [$MPI_LIBS],
                               [#include <pthread.h>],
                               [ pthread_mutex_t pthd_mutex ],
@@ -553,7 +553,7 @@ dnl     no need to add -lpthread during linking.
         else
 dnl         Check MPI_CC/MPI_LIBS with -lpthread can resolve pthread symbols,
 dnl         If so, add -lpthread during linking.
-            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC],
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS],
                                   [$MPI_LIBS -lpthread],
                                   [#include <pthread.h>],
                                   [ pthread_mutex_t pthd_mutex ],
@@ -592,7 +592,7 @@ AC_SUBST(CC)
 AC_SUBST(CLINKER)
 AC_SUBST(CFLAGS)
 AC_SUBST(MPI_CC)
-AC_SUBST(MPI_INC)
+AC_SUBST(MPI_CFLAGS)
 AC_SUBST(MPI_LIBS)
 AC_SUBST(PROF_LIBNAME)
 

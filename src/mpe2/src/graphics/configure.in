@@ -48,7 +48,8 @@ MPI_F77=${MPI_F77:-${F77}}
 MPE_FLINKER=${MPE_FLINKER}
 FINC_PATH_LEADER=${FINC_PATH_LEADER:-"-I"}
 FLIB_PATH_LEADER=${FLIB_PATH_LEADER:-"-L"}
-MPI_INC=${MPI_INC}
+MPI_CFLAGS=${MPI_CFLAGS}
+MPI_FFLAGS=${MPI_FFLAGS}
 MPI_LIBS=${MPI_LIBS}
 
 MPE_LIBNAME=${MPE_LIBNAME:-mpe}
@@ -193,7 +194,7 @@ if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
 #   Determine MPI_Fint
     if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
         AC_MSG_CHECKING( [for MPI_Fint] )
-        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                               [ MPI_Fint aa=1 ], ,
                               [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
         AC_MSG_RESULT($mpe_link_ok)
@@ -212,7 +213,7 @@ if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
 #   Determmine if MPI_Comm_f2c() and MPI_Comm_c2f() are there
     if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
         AC_MSG_CHECKING( [for MPI_Comm_c2f() and MPI_Comm_f2c()] )
-        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, , [
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, , [
                               MPI_Comm comm; ${MPI_FINT_TYPE} aa;
                               ], [
                               aa=MPI_Comm_c2f(comm) ;
@@ -244,7 +245,8 @@ AC_SUBST(MPI_F77)
 AC_SUBST(MPE_FLINKER)
 AC_SUBST(FINC_PATH_LEADER)
 AC_SUBST(FLIB_PATH_LEADER)
-AC_SUBST(MPI_INC)
+AC_SUBST(MPI_CFLAGS)
+AC_SUBST(MPI_FFLAGS)
 AC_SUBST(MPI_LIBS)
 
 AC_SUBST(X_INC)

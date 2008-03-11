@@ -15,12 +15,11 @@ AR                   = @AR@
 ARFLAGS              = cr
 RANLIB               = @RANLIB@
 MAKE                 = @MAKE@
-MPI_INC              = @MPI_INC@
+MPI_CFLAGS           = @MPI_CFLAGS@
 MPI_LIBS             = @MPI_LIBS@
 INCLUDE_DIR          = -I.. -I${top_srcdir}/include \
                        -I${includebuild_dir} \
-                       -I../../.. -I${top_srcdir}/../../include \
-                       $(MPI_INC)
+                       -I../../.. -I${top_srcdir}/../../include
 PROF_LIBNAME         = @PROF_LIBNAME@
 CFLAGS               = @CFLAGS@
 MPE_LIBDIR           = @libbuild_dir@
@@ -52,8 +51,12 @@ srcdir           = @srcdir@
 
 EXECS            = ${binbuild_dir}/check_callstack@EXEEXT@
 
-CC_FLAGS         = $(CFLAGS) $(INCLUDE_DIR) $(MPE_COPTS)
+CC_FLAGS         = $(INCLUDE_DIR) $(CFLAGS) $(MPE_COPTS)
 CC_LDFLAGS       = $(LDFLAGS) $(CFLAGS) $(MPE_LDOPTS)
+# MPE include path, x_INCS, goes in front of MPI include path, MPI_xFLAGS,
+# in case MPI include path is in MPI_xFLAGS containing old MPE include path.
+MPICC_FLAGS      = $(INCLUDE_DIR) $(MPI_CFLAGS) $(MPE_COPTS)
+MPICC_LDFLAGS    = $(LDFLAGS) $(MPI_CFLAGS) $(MPE_LDOPTS)
 
 MPE_CSOURCES     = iterator.c fancyprint.c
 MPE_P_COBJECTS   = $(MPE_CSOURCES:.c=.p@OBJEXT@)
@@ -62,7 +65,7 @@ MPE_N_COBJECTS   = $(MPE_CSOURCES:.c=.n@OBJEXT@)
 .SUFFIXES: .c .@OBJEXT@ .p@OBJEXT@ .n@OBJEXT@ .a @EXEEXT@
 
 .c.p@OBJEXT@:
-	$(MPI_CC) $(CC_FLAGS) -c $<
+	$(MPI_CC) $(MPICC_FLAGS) -c $<
 	$(MV) $*.@OBJEXT@ $*.p@OBJEXT@
 
 .c.n@OBJEXT@:

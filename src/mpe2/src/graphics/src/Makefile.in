@@ -16,12 +16,12 @@ ARFLAGS              = cr
 RANLIB               = @RANLIB@
 MAKE                 = @MAKE@
 DEBUG_LIBS           = @DEBUG_LIBS@
-MPI_INC              = @MPI_INC@
+MPI_CFLAGS           = @MPI_CFLAGS@
 MPI_LIBS             = @MPI_LIBS@
 INCLUDE_DIR          = -I.. -I${top_srcdir}/include \
                        -I${includebuild_dir} \
                        -I../../.. -I${top_srcdir}/../../include \
-                       @X_INC@ $(MPI_INC)
+                       @X_INC@
 PROF_LIBNAME         = @PROF_LIBNAME@
 ANIM_LIBNAME         = @ANIM_LIBNAME@
 CFLAGS               = @CFLAGS@
@@ -52,10 +52,14 @@ srcdir           = @srcdir@
 
 EXECS            =
 
-# GETNAME_DEFS are needed by mpehname.c
-CC_FLAGS         = $(CFLAGS) $(INCLUDE_DIR) $(MPE_COPTS)
+# MPE include path, x_INCS, goes in front of MPI include path, MPI_xFLAGS,
+# in case MPI include path is in MPI_xFLAGS containing old MPE include path.
+CC_FLAGS         = $(INCLUDE_DIR) $(CFLAGS) $(MPE_COPTS)
 CC_LDFLAGS       = $(LDFLAGS) $(CFLAGS) $(MPE_LDOPTS)
+MPICC_FLAGS      = $(INCLUDE_DIR) $(MPI_CFLAGS) $(MPE_COPTS)
+MPICC_LDFLAGS    = $(LDFLAGS) $(MPI_CFLAGS) $(MPE_LDOPTS)
 
+# GETNAME_DEFS are needed by mpehname.c
 MPE_CSOURCES     = mpe_graphics.c xcolor.c xframe.c xinit.c xwmap.c \
                    xmouse.c xkey.c
 MPE_P_COBJECTS   = $(MPE_CSOURCES:.c=.p@OBJEXT@)
@@ -75,7 +79,7 @@ MPE_SHLWOBJECTS  = $(MPE_WOBJECTS:.@OBJEXT@=.lo)
 .SUFFIXES: .c .@OBJEXT@ .p@OBJEXT@ .n@OBJEXT@ .lo .a @EXEEXT@
 
 .c.p@OBJEXT@:
-	$(MPI_CC) $(CC_FLAGS) -c $<
+	$(MPI_CC) $(MPICC_FLAGS) -c $<
 	$(MV) $*.@OBJEXT@ $*.p@OBJEXT@
 
 .c.n@OBJEXT@:
