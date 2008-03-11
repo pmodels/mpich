@@ -54,6 +54,7 @@ Pavan Balaji\\
 Darius Buntinas\\
 Ralph Butler\\
 Anthony Chan\\
+Dave Goodell\\
 Jayesh Krishna\\
 Guillaume Mercier\\
 Rob Ross\\
@@ -481,22 +482,33 @@ installed MPICH2 and run an MPI example.
 
 
 \subsection{Compiler Optimization Levels}
-By default, the MPICH2 library is built with the -O2 optimization
-level if it is available. The mpicc and other scripts that are used to
-compile applications do not include any optimization flag by
-default. If you want to build the MPICH2 library with a specific
-optimization level, set the environment variable \texttt{CFLAGS} to
-that level before running configure. If you do not want this
-\texttt{CFLAGS} value to be included in the mpicc script, set the
-environment variable \texttt{MPI\_CFLAGS} to
-\texttt{MPI\_FLAGS\_EMPTY}. For example, to build a ``production''
-MPICH2 in a GNU environment, you may want to do:
+
+MPICH2 uses two sets of flags: \texttt{CFLAGS} (and family --
+\texttt{CXXFLAGS}, \texttt{FFLAGS}, \texttt{F90FLAGS}) and
+\texttt{MPICH2LIB_CFLAGS} (and family) for compilation;
+\texttt{LDFLAGS} and \texttt{MPICH2LIB_LDFLAGS} for linking. All these
+flags can be set through environment variables during configure.
+
+Both \texttt{CFLAGS} and \texttt{MPICH2LIB_CFLAGS} affect the
+compilation of the MPICH2 library. However, only \texttt{CFLAGS} is
+appended to mpicc.
+
+By default, \texttt{MPICH2LIB_CFLAGS} are set to -O2. If the user
+specifies any other flags, they are appended to this default flag. The
+default flag can be disabled with the configure option
+\texttt{--disable-default-optimization}. \texttt{CFLAGS} is empty by
+default.
+
+For example, to build a {\em production} MPICH2 in a GNU environment,
+you may want to do:
+
 \begin{verbatim}
-     setenv CFLAGS -O3
-     setenv MPI_CFLAGS MPI_FLAGS_EMPTY
+     setenv MPICH2LIB_CFLAGS -O3
+     ./configure --disable-default-optimization
 \end{verbatim}
-before running configure. This will cause the MPICH2 library to be
-built with -O3, but -O3 will not be included in the mpicc script.
+
+This will cause the MPICH2 library to be built with -O3, and -O3 will
+not be included in the mpicc script.
 
 
 \subsection{Common Non-Default Configuration Options}
