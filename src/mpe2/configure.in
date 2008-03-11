@@ -259,41 +259,49 @@ dnl
 dnl  Unknown MPI implmentation, i.e. User defined MPI_LIBS and MPI_INC
 dnl
 AC_ARG_WITH( mpicc,
-[--with-mpicc=MPI_CC                - C compiler used to compile MPI program
-                                     and to create parallel executable,
-                                     e.g. mpcc for IBM MPI, or mpicc from
-                                     MPICHx or LAM-MPI.],
+[--with-mpicc=MPI_CC                - C compiler for MPI program,
+                                     e.g. mpixlc_r for BG/P MPI, or
+                                     mpicc from MPICHx, Open-MPI, or LAM-MPI.
+                                     Setting --with-mpicc to MPI wrapper
+                                     means no need to set --with-mpiinc
+                                     and --with-mpilibs.],
 MPI_CC="$withval" )
  
 AC_ARG_WITH( mpif77,
-[--with-mpif77=MPI_F77              - F77 compiler used to compile MPI program
-                                     and to create parallel executable,
-                                     e.g. mpxlf for IBM MPI, or mpif77 from
-                                     MPICHx or LAM-MPI.],
+[--with-mpif77=MPI_F77              - Fortran compiler for MPI program,
+                                     e.g. mpixlf77_r for BG/P MPI, or
+                                     mpif77 from MPICHx, Open-MPI, or LAM-MPI.
+                                     Setting --with-mpif77 to MPI wrapper
+                                     means no need to set --with-mpiinc
+                                     and --with-mpilibs.],
 MPI_F77="$withval" )
  
 AC_ARG_WITH( mpiinc,
-[--with-mpiinc=MPI_INC              - MPI compiler's include flags prefixed
-                                     with -I.  It specifies where mpi.h and
-                                     mpif.h are located,
-                                     e.g. -I/pkgs/MPI/include.],
+[--with-mpiinc=MPI_INC              - MPI include path prefixed with -I.
+                                     It specifies MPI header files location,
+                                     where mpi.h and mpif.h are located,
+                                     e.g. -I/pkgs/MPI/include. This flag will
+                                     be added to MPI_CFLAGS and MPI_FFLAGS,
+                                     i.e. the MPI include path can be
+                                     explicitly set in MPI_CFLAGS and
+                                     MPI_FFLAGS without setting --with-mpiinc.],
 MPI_INC="$withval" )
  
 AC_ARG_WITH( mpilibs,
-[--with-mpilibs=MPI_LIBS            - MPI compiler's library flags prefixed
-                                     with -L for the library path and prefixed
-                                     with -l for the name of the MPI libraries.
+[--with-mpilibs=MPI_LIBS            - MPI library flags with -L and -l.
                                      It specifies the location of the MPI
-                                     libraries. 
-                                     e.g. -L/pkgs/MPI/lib -lpmpich -lmpich.],
+                                     libraries.  The flags contains library
+                                     path prefixed with -L and MPI libraries
+                                     name prefixed with -l,
+                                     e.g. -L/opt/MPI/lib -lpmpich -lmpich.],
 MPI_LIBS="$withval" )
 
-AC_ARG_VAR( MPI_CC, [C compiler to compile MPI program and to create parallel executable, e.g. mpcc for IBM MPI, or mpicc from MPICHx, Open-MPI, or LAM-MPI.] )
-AC_ARG_VAR( MPI_F77, [Fortran compiler to compile MPI program and to create parallel executable, e.g. mpxlf for IBM MPI, or mpif77 from MPICHx, Open-MPI, or LAM-MPI.] )
-AC_ARG_VAR( MPI_INC, [MPI compiler's include path prefixed with -I.  It specifies where mpi.h and mpif.h are located, e.g. -I/pkgs/MPI/include. This flag will be added to MPI_CFLAGS and MPI_FFLAGS, i.e. the MPI include path can be explicitly set in MPI_CFLAGS and MPI_FFLAGS without setting MPI_INC.] )
+AC_ARG_VAR( MPI_CC, [C compiler for MPI program, e.g. mpixlc_r for BG/P MPI, or mpicc from MPICHx, Open-MPI, or LAM-MPI.  Setting MPI_CC to MPI wrapper means no need to set MPI_INC and MPI_LIBS.] )
+AC_ARG_VAR( MPI_F77, [Fortran compiler for MPI program, e.g. mpixlf77_r for BG/P MPI, or mpif77 from MPICHx, Open-MPI, or LAM-MPI.  Setting MPI_F77 to MPI wrapper means no need to set MPI_INC and MPI_LIBS.] )
+AC_ARG_VAR( MPI_INC, [MPI include path prefixed with -I.  It specifies MPI header files location, where mpi.h and mpif.h are located, e.g. -I/pkgs/MPI/include. This flag will be added to MPI_CFLAGS and MPI_FFLAGS, i.e. the MPI include path can be explicitly set in MPI_CFLAGS and MPI_FFLAGS without setting MPI_INC.] )
 AC_ARG_VAR( MPI_CFLAGS, [MPI C compiler flags to compile MPI program.] )
 AC_ARG_VAR( MPI_FFLAGS, [MPI Fortran compiler flags to compile MPI Fortran program.] )
-AC_ARG_VAR( MPI_LIBS, [MPI compiler library flags which specifies the location of the MPI libraries.  The flags contains library path prefixed with -L and MPI library name prefixed with -l, e.g. -L/opt/MPI/lib -lpmpich -lmpich.] )
+AC_ARG_VAR( MPI_LIBS, [MPI library flags with -L and -l. It specifies the location of the MPI libraries.  The flags contains library path prefixed with -L and MPI libraries name prefixed with -l, e.g. -L/opt/MPI/lib -lpmpich -lmpich.] )
 dnl AC_ARG_VAR( MPI_LDFLAGS, [MPI linker flags used with MPI_CC or MPI_F77 during linking.] )
 AC_ARG_VAR( MPERUN, [MPI application launch command.  This variable is necessary only if user wants to run "make check", "make installcheck-all" or "$sbindir/mpecheckinstall -run" when the default MPERUN value, "$bindir/mpiexec -n 4", is not correct.] )
 

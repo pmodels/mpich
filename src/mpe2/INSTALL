@@ -1,7 +1,7 @@
                       MPE (Multi-Processing Environment)
                       ----------------------------------
 
-                          Version 2.4.5. August, 2007
+                          Version 2.4.6. March, 2008
 
                     Mathematics and Computer Science Division
                            Argonne National Laboratory
@@ -22,29 +22,37 @@ II. a)  Configuration Model
 
 MPE is designed to be used as an extension to an existing MPI implementation,
 so its configuration model assumes a general MPI development environment.  
-Here are the some of the variables that MPE configure reads, some are read 
-as environment variables and some are read from the command line arguments 
-to configure.
+Here are the major variables that MPE configure reads, all can be read 
+through environment variables or as variables as part of configure command.
+Some has --enable-xxx counterparts that can be read through configure command.
 
 CC          : C compiler used to create serial executable,
-              e.g. xlc for IBM MPI.
-MPI_CC      : C compiler used to compile MPI program and to create parallel 
-              executable,
-              e.g. mpcc for IBM MPI, or mpicc for MPICH.
-CFLAGS      : compiler flags for CC and MPI_CC.
+              e.g. xlc on BG/P MPI.
+CFLAGS      : compiler flags for CC.
 
-F77         : F77 compiler used to create serial executable,
-              e.g. xlf for IBM MPI.
-MPI_F77     : F77 compiler used to compile MPI program and to create parallel
-              executable,
-              e.g. mpxlf for IBM MPI, or mpif77 for MPICH.
-FFLAGS      : compiler flags for F77 and MPI_F77.
+MPI_CC      : C compiler for MPI program, e.g. mpixlc_r for BG/P MPI,
+              or mpicc from MPICHx, Open-MPI, or LAM-MPI.  Setting MPI_CC
+              to MPI wrapper means no need to set MPI_INC and MPI_LIBS. 
+MPI_CFLAGS  : MPI C compiler flags to compile MPI program.
 
-MPI_INC     : compiler's include flag (with prefix "-I") for MPI_CC/MPI_F77, 
-              e.g. "-I/usr/include" for mpi.h on IRIX64.
-MPI_LIBS    : compiler's library flag (with prefix "-L" for library path and
-              prefix "-l" for each library name) needed by MPI_CC/MPI_F77,
-              e.g. "-L/usr/lib -lmpi" for libmpi.a on IRIX64.
+F77         : Fortran compiler used to create serial executable,
+              e.g. xlf on BG/P MPI.
+FFLAGS      : compiler flags for F77.
+
+MPI_F77     : Fortran compiler for MPI program, e.g. mpixlf77_r for BG/P MPI,
+              or mpif77 from MPICHx, Open-MPI, or LAM-MPI. Setting MPI_F77 to
+              MPI wrapper means no need to set MPI_INC and MPI_LIBS.
+MPI_FFLAGS  : MPI Fortran compiler flags to compile MPI Fortran program.
+
+MPI_INC     : MPI include path prefixed with -I. It specifies MPI header files
+              location, where mpi.h and mpif.h are located, e.g.
+              -I/pkgs/MPI/include. This flag will be added to MPI_CFLAGS and
+              MPI_FFLAGS, i.e. the MPI include path can be explicitly set in
+              MPI_CFLAGS and MPI_FFLAGS without setting MPI_INC. 
+MPI_LIBS    : MPI library flags with -L and -l. It specifies the location of
+              the MPI libraries. The flags contains library path prefixed with
+              -L and MPI libraries name prefixed with -l, e.g. -L/opt/MPI/lib
+              -lpmpich -lmpich.
 F2CMPI_LIBS : compiler's library flag for Fortran to C MPI profiling wrapper
               library, e.g. "-lfmpich" when MPI_CC=mpicc & MPI_F77=mpif77
               for MPICH.
@@ -59,11 +67,11 @@ MPERUN      : MPI application launch command. This variable is necessary only
               invoking "make check", "make installcheck-all" or
               "$sbindir/mpecheckinstall -run".
 
-Among above listed variables, CC, MPI_CC, F77 and MPI_F77 are usually set
-by the corresponding environment variables.  The rest can be set through 
-command line arguments to configure.  In some MPI implementations, like 
-HP-UX's, MPI_CC and MPI_F77 are reserved for use by the MPI implementation,
-use the configure options to set MPI_CC and MPI_F77 instead.
+It is recommended that user set these variables through configure command,
+e.g mpe2/configure CC=xlc_r F77=xlf_r MPI_CC=mpixlc_r MPI_F77=mpixlf77_r.
+In some MPI implementations, like HP-UX's, MPI_CC and MPI_F77 may have
+been reserved for use by the MPI implementation, use the configure options,
+--enable-xxx, to set MPI_CC and MPI_F77 instead.
 
 For those who require Cross-Compilation support, please refer to the
 INSTALL.cross file.
