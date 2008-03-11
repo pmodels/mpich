@@ -14,6 +14,11 @@ if test -n "$CONFIGURE_ARGS" ; then
     echo "Configuring with args $CONFIGURE_ARGS"
 fi
 
+if test "$FROM_MPICH2" = "yes" ; then
+    CFLAGS="$MPICH2_INTERNAL_CFLAGS"
+    FFLAGS="$MPICH2_INTERNAL_FFLAGS"
+fi
+
 AC_CONFIG_HEADER(adio/include/romioconf.h)
 
 dnl
