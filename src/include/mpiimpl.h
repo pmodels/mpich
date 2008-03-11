@@ -88,7 +88,6 @@
 #include "mpitypedefs.h"
 
 #include "mpiimplthread.h"
-#include "mpiatomic.h"
 /* #include "mpiu_monitors.h" */
 
 #include "mpiutil.h"

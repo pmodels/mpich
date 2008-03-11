@@ -9,6 +9,9 @@
 #include "mpishared.h"
 #include "mpid_locksconf.h"
 
+/* XXX DJG TODO eliminate any atomic operations assembly in here and convert it
+   to using the MPIDU_Atomic_* functions. */
+
 /* This is used to quote a name in a definition (see FUNCNAME/FCNAME below) */
 #ifndef MPIDI_QUOTE
 #define MPIDI_QUOTE(A) MPIDI_QUOTE2(A)
