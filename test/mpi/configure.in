@@ -123,6 +123,14 @@ if test "$enable_threads" = "multiple" ; then
     threadsdir="threads"
 fi
 
+# If it is building with MPICH2, set xFLAGS to null, as mpiXX contains xFLAGS.
+if test "$FROM_MPICH2" = "yes" ; then
+    CFLAGS=""
+    CXXFLAGS=""
+    FFLAGS=""
+    F90FLAGS=""
+fi
+
 PAC_LOAD_BASE_CACHE
 
 PAC_VPATH_CHECK()
