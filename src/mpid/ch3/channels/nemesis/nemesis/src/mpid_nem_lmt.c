@@ -154,13 +154,13 @@ int MPID_nem_lmt_RndvRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_PKT_RTS_HANDLER);
     MPID_Request * rreq;
     int found;
     MPID_nem_pkt_lmt_rts_t * const rts_pkt = (MPID_nem_pkt_lmt_rts_t *)pkt;
     char *data_buf;
     MPIDI_msg_sz_t data_len;
     MPIU_CHKPMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_PKT_RTS_HANDLER);
         
     MPIDI_FUNC_ENTER(MPID_STATE_PKT_RTS_HANDLER);
 
