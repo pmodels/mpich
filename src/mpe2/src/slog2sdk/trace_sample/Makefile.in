@@ -21,10 +21,10 @@ clean:
 
 rmprog:
 	@-for file in bin/* sbin/* ; do \
-	      suffix="`echo $$file|sed -e 's%\.% %'|awk '{print $$NF}' -`" ; \
-	      if [ "X$$suffix" != "Xin" ] ; then \
-	          $(RM) $$file ; \
-	      fi ; \
+	      case "$$file" in \
+	          *.in) ;; \
+	          *) $(RM) -f $$file ;; \
+	      esac ; \
 	  done
 
 distclean: rmprog
