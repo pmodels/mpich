@@ -268,7 +268,7 @@ fi
 # Copying $srcdir/logfiles to sharebuild_dir
 if test -d $srcdir/logfiles ; then
     echo "creating sample logfiles from source"
-    $CPRP -pr $srcdir/logfiles $sharebuild_dir
+    $CPRP -pr $srcdir/logfiles/*.rlog $sharebuild_dir
 fi
 
 AC_SUBST(libbuild_dir)
