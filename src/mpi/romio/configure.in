@@ -1063,7 +1063,7 @@ FILE_SYSTEM="testfs $FILE_SYSTEM"
 # - don't do any of this if --with-file-system was given and did not include
 #   'pvfs2': i.e. don't surprise the user with pvfs support.
 
-AC_PATH_PROG(PVFS2_CONFIG, pvfs2-config, notfound, [$PATH:${with_pvfs2}/bin])
+AC_PATH_PROG(PVFS2_CONFIG, pvfs2-config, notfound, [${with_pvfs2}/bin:$PATH])
 if test $PVFS2_CONFIG != "notfound" ; then
 	if test -n "${with_pvfs2}" -o -n "${file_system_pvfs2}" ; then
 		# the user either told us where pvfs is or asked for it in
