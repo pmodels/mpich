@@ -531,8 +531,8 @@ static void ADIO_FileSysType_prefix(char *filename, int *fstype, int *error_code
     else if (!strncmp(filename, "bgl:", 4) || !strncmp(filename, "BGL:", 4)) {
 	*fstype = ADIO_BGL;
     }
-    else if (!strncmp(filename, "bglockless:", 4) || 
-	    !strncmp(filename, "BGLOCKLESS:", 4)) {
+    else if (!strncmp(filename, "bglockless:", 11) || 
+	    !strncmp(filename, "BGLOCKLESS:", 11)) {
 	*fstype = ADIO_BGLOCKLESS;
     }
     else {
