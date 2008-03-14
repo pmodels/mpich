@@ -582,12 +582,7 @@ if test "$enable_fast" = "yes" ; then
 # overhead, but also wish to use meminit to eliminate initialization
 # warnings from valgrind.
 #
-#   enable_g=no
-#
-    CFLAGS="$CFLAGS -DNDEBUG"
-    CXXFLAGS="$CXXFLAGS -DNDEBUG"
-    FFLAGS="$FFLAGS -DNDEBUG"
-    F90FLAGS="$F90FLAGS -DNDEBUG"
+    enable_append_g=yes
 fi
 
 # error-checking
@@ -957,14 +952,7 @@ IFS=","
 for option in $enable_g ; do
     case "$option" in 
         debug|dbg)
-	CFLAGS="$CFLAGS -g"
-	CXXFLAGS="$CXXFLAGS -g"
-	FFLAGS="$FFLAGS -g"
-	F90FLAGS="$F90FLAGS -g"
-	MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -g"
-	MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -g"
-	MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -g"
-	MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -g"
+        enable_append_g=yes
 	;;
         no|none)
 	;;
@@ -994,27 +982,13 @@ for option in $enable_g ; do
 	perform_dbgmutex=yes
 	;;
 	ndebug)
-	CFLAGS="$CFLAGS -DNDEBUG"
-	CXXFLAGS="$CXXFLAGS -DNDEBUG"
-	FFLAGS="$FFLAGS -DNDEBUG"
-	F90FLAGS="$F90FLAGS -DNDEBUG"
-	MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -DNDEBUG"
-	MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -DNDEBUG"
-	MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -DNDEBUG"
-	MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -DNDEBUG"
+	enable_append_ndebug=yes
 	;;
 	all|yes)
 	perform_memtracing=yes
 	perform_nesttesting=yes
 	perform_dbglog=yes
-	CFLAGS="$CFLAGS -g"
-	CXXFLAGS="$CXXFLAGS -g"
-	FFLAGS="$FFLAGS -g"
-	F90FLAGS="$F90FLAGS -g"
-	MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -g"
-	MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -g"
-	MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -g"
-	MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -g"
+	enable_append_g=yes
 	perform_meminit=yes
 	perform_dbgmutex=yes
 	;;
@@ -1024,6 +998,27 @@ for option in $enable_g ; do
     esac
 done
 IFS="$save_IFS"
+
+if test "$enable_append_g" = "yes" ; then
+    CFLAGS="$CFLAGS -g"
+    CXXFLAGS="$CXXFLAGS -g"
+    FFLAGS="$FFLAGS -g"
+    F90FLAGS="$F90FLAGS -g"
+    MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -g"
+    MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -g"
+    MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -g"
+    MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -g"
+fi
+if test "$enable_append_ndebug" = "yes" ; then
+    CFLAGS="$CFLAGS -DNDEBUG"
+    CXXFLAGS="$CXXFLAGS -DNDEBUG"
+    FFLAGS="$FFLAGS -DNDEBUG"
+    F90FLAGS="$F90FLAGS -DNDEBUG"
+    MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -DNDEBUG"
+    MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -DNDEBUG"
+    MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -DNDEBUG"
+    MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -DNDEBUG"
+fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
 fi
