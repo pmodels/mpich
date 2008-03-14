@@ -2,13 +2,16 @@
                                Changes in 1.0.7
 ===============================================================================
 
-- PM/PMI: Added support to use PMI Clique functionality for process
-managers that support it.
+- OVERALL: Initial ROMIO device for BlueGene/P (the ADI device is also
+added by is not configurable at this time).
 
-- PM/PMI: Added SLURM support to configure to make it transparent to
-users.
+- OVERALL: Major clean up for the propagation of user-defined and
+other MPICH2 flags throughout the code.
 
-- OVERALL: Support for STI Cell Broadband Engine
+- OVERALL: Optimizations for datatype flattening code to significantly
+reduce the number of function calls required for symmetric datatypes.
+
+- OVERALL: Support for STI Cell Broadband Engine.
 
 - OVERALL: Added datatype free hooks to be used by devices
 independently.
@@ -21,7 +24,13 @@ independently.
 
 - ROMIO: more tests and bug fixes for nonblocking I/O
 
-- SMPD: Singleton Init support.
+- PM/PMI: Added support to use PMI Clique functionality for process
+managers that support it.
+
+- PM/PMI: Added SLURM support to configure to make it transparent to
+users.
+
+- PM/PMI: SMPD Singleton Init support.
 
 - WINDOWS: Fortran 90 support added.
 
@@ -31,6 +40,8 @@ independently.
 mutex). Updated all related documentation, e.g. man pages.
 
 - MPE: Added infrastructure to piggyback argument data to MPI states.
+
+- DOCS: Documentation creation now works correctly for VPATH builds.
 
 - Many other bug fixes, memory leak fixes and code cleanup. A full
 list of changes is available using:
