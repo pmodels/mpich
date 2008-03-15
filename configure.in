@@ -274,8 +274,8 @@ collected by the MPICH implementation.  level may be
 The default is none.],,enable_timing=default)
 dnl
 AC_ARG_ENABLE(g,
-[--enable-g=options - Control the level of debugging support in the MPICH
-implementation.  options is a list of comma separated names including
+[--enable-g=option - Control the level of debugging support in the MPICH
+implementation.  option is a list of comma separated names including
     none     - No debugging
     mem      - Memory usage tracing
     handle   - Trace handle operations
@@ -294,8 +294,8 @@ dnl  Not yet supported])
 dnl
 dnl --enable-fast
 AC_ARG_ENABLE(fast,
-[--enable-fast=options - Control the level of fast execution in the MPICH
-implementation.   options is a lits of comma separated names including 
+[--enable-fast=option - Control the level of fast execution in the MPICH
+implementation.   option is a list of comma separated names including 
     defopt   - Default compiler optimization -O2 for all language bindings.
                when neither --enable-fast nor --disable-fast is specified.
     basic    - No error checking, no error messages, no timing collection.
@@ -642,7 +642,7 @@ if test "$enable_fast_basic" = "yes" ; then
 # overhead, but also wish to use meminit to eliminate initialization
 # warnings from valgrind.
 #
-    enable_append_ndebug=yes
+#    enable_append_ndebug=yes
 fi
 
 # error-checking
