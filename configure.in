@@ -298,11 +298,13 @@ AC_ARG_ENABLE(fast,
 implementation.   option is a list of comma separated names including 
     defopt   - Default compiler optimization -O2 for all language bindings.
                when neither --enable-fast nor --disable-fast is specified.
-    basic    - No error checking, no error messages, no timing collection.
+    nochkmsg - No error checking and no error messages, i.e.
+               --disable-error-checking and --disable-error-messages.
+    notiming - No timing collection, i.e. --disable-timing.
     ndebug   - Appends -DNDEBUG to CFLAGS.
-    all|yes  - "defopt", "basic" and "ndebug" options are enabled,
+    all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
                when --enable-fast is specified without any option.
-    O<n>     - Appends standard optimization flags, -O<n>, to
+    O<n>     - Appends default optimization flags, -O<n>, to
                CFLAGS, FFLAGS, CXXFLAGS, F90FLAGS.
     none     - None of above options, i.e. --disable-fast.
 ],,enable_fast=defopt)
@@ -586,23 +588,36 @@ IFS=","
 for option in $enable_fast ; do
     case "$option" in
         defopt)
-        enable_default_opt=yes
+        enable_default_optimize=yes
         ;;
-        basic)
-        enable_fast_basic=yes
+        nochkmsg)
+        enable_fast_nochkmsg=yes
+        ;;
+        notiming)
+        enable_timing=no
         ;;
         ndebug)
         enable_append_ndebug=yes
         ;;
+#
+# [BRT] removed the reseting of enable_g so that --with-enable=dbg,meminit
+# can be specified with -enable-fast.  This change was largely made for the
+# PETSc folks who want to use --enable-fast to eliminate parameter checking
+# overhead, but also wish to use meminit to eliminate initialization
+# warnings from valgrind.
+#
         all|yes)
-        enable_fast_basic=yes
+        enable_default_optimize=yes
+        enable_fast_nochkmsg=yes
+        # Disable timing/logging stuffs
+        enable_timing=no
         enable_append_ndebug=yes
-        enable_default_opt=yes
         ;;
         O*)
+        # Allows O<n> where <n> can be [0-9] or ' '.
         opt_flags=`echo $option | sed -e 's%\(O[0-9] \)%\1%g'`
         if test -n "$opt_flags" ; then
-            enable_default_opt=yes
+            enable_default_optimize=yes
             MPI_DEFAULT_COPTS="-$option"
             MPI_DEFAULT_CXXOPTS="-$option"
             MPI_DEFAULT_FOPTS="-$option"
@@ -612,8 +627,10 @@ for option in $enable_fast ; do
         fi
         ;;
         none|no)
-        enable_default_opt=no
-        enable_fast_basic=no
+        enable_default_optimize=no
+        enable_fast_nochkmsg=no
+        # Reset timing/logging stuffs to when --enable-timing isn't specified.
+        enable_timing=default
         enable_append_ndebug=no
         ;;
         *)
@@ -626,22 +643,13 @@ IFS="$save_IFS"
 # ----------------------------------------------------------------------------
 # Process any enable or with values
 # We must do enable-fast first, because it changes the other enable values
-if test "$enable_fast_basic" = "yes" ; then
+if test "$enable_fast_nochkmsg" = "yes" ; then
     enable_error_checking=no
     enable_error_messages=no
-    enable_timing=no
     # Export a variable that will allow the test suite to detect that
     # MPICH has no error testing
     MPICH_FAST=yes
     export MPICH_FAST
-#
-# [BRT] removed the reseting of enable_g so that --with-enable=dbg,meminit
-# can be specified with -enable-fast.  This change was largely made for the
-# PETSc folks who want to use --enable-fast to eliminate parameter checking
-# overhead, but also wish to use meminit to eliminate initialization
-# warnings from valgrind.
-#
-#    enable_append_ndebug=yes
 fi
 
 # error-checking
@@ -1446,7 +1454,7 @@ if test -z "$saveCFLAGS" -a -n "$CFLAGS" ; then
 fi
 
 # Check if $MPICH2LIB_CFLAGS is valid with $CC
-if test "$enable_default_opt" = "yes" ; then
+if test "$enable_default_optimize" = "yes" ; then
     MPICH2LIB_CFLAGS="$MPICH2LIB_CFLAGS $MPI_DEFAULT_COPTS"
 fi
 if test -n "$MPICH2LIB_CFLAGS" ; then
@@ -1563,7 +1571,7 @@ fi
 
 # Check if $MPICH2LIB_FFLAGS is valid with $F77
 if test "$enable_f77" = yes ; then
-    if test "$enable_default_opt" = "yes" ; then
+    if test "$enable_default_optimize" = "yes" ; then
         MPICH2LIB_FFLAGS="$MPICH2LIB_FFLAGS $MPI_DEFAULT_FOPTS"
     fi
     if test -n "$MPICH2LIB_FFLAGS" ; then
@@ -1947,7 +1955,7 @@ if test "$enable_f90" = "yes" ; then
     AC_SUBST(F90EXT)
 
     # Check if $MPICH2LIB_F90FLAGS works with $F90
-    if test "$enable_default_opt" = "yes" ; then
+    if test "$enable_default_optimize" = "yes" ; then
         MPICH2LIB_F90FLAGS="$MPICH2LIB_F90FLAGS $MPI_DEFAULT_F90OPTS"
     fi
     if test -n "$MPICH2LIB_F90FLAGS" ; then
@@ -2317,7 +2325,7 @@ int main() {
 fi
 
 if test "$enable_cxx" = yes; then
-    if test "$enable_default_opt" = "yes" ; then
+    if test "$enable_default_optimize" = "yes" ; then
         MPICH2LIB_CXXFLAGS="$MPICH2LIB_CXXFLAGS $MPI_DEFAULT_CXXOPTS"
     fi
     if test -n "$MPICH2LIB_CXXFLAGS" ; then
