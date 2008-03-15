@@ -299,7 +299,6 @@ implementation.   option is a list of comma separated names including
     defopt   - Default compiler optimization -O2 for all language bindings.
                when neither --enable-fast nor --disable-fast is specified.
     basic    - No error checking, no error messages, no timing collection.
-               and default compiler optimization -O2 for all language bindings.
     ndebug   - Appends -DNDEBUG to CFLAGS.
     all|yes  - "defopt", "basic" and "ndebug" options are enabled,
                when --enable-fast is specified without any option.
@@ -612,7 +611,7 @@ for option in $enable_fast ; do
             AC_MSG_WARN([Unknown value $option for --enable-fast])
         fi
         ;;
-        none)
+        none|no)
         enable_default_opt=no
         enable_fast_basic=no
         enable_append_ndebug=no
