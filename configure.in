@@ -1453,17 +1453,6 @@ if test -z "$saveCFLAGS" -a -n "$CFLAGS" ; then
     CFLAGS=$saveCFLAGS
 fi
 
-# Check if $MPICH2LIB_CFLAGS is valid with $CC
-if test "$enable_default_optimize" = "yes" ; then
-    MPICH2LIB_CFLAGS="$MPICH2LIB_CFLAGS $MPI_DEFAULT_COPTS"
-fi
-if test -n "$MPICH2LIB_CFLAGS" ; then
-    PAC_C_CHECK_COMPILER_OPTION( [$MPICH2LIB_CFLAGS], [
-        CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
-        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $MPICH2LIB_CFLAGS"
-                               ] )
-fi
-
 # Check whether shared libraries are enabled.  We need to know this
 # before we start chosing the Fortran, Fortran 90, and C++ compilers
 ENABLE_SHLIB=$enable_sharedlibs
@@ -1489,6 +1478,27 @@ PAC_CC_STRICT
 if test -n "$pac_cc_strict_flags" ; then
     MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $pac_cc_strict_flags"
 fi
+
+# Check if $MPI_DEFAULT_COPTS is valid with $CC
+if test "$enable_default_optimize" = "yes" \
+     -a -n "$MPI_DEFAULT_COPTS" ; then
+    PAC_C_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_COPTS], [
+        CFLAGS="$CFLAGS $MPI_DEFAULT_COPTS"
+        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $MPI_DEFAULT_COPTS"
+                               ] )
+fi
+# Up till here, MPICH2_EXTRA_CFLAGS contains only flags added by MPICH2.
+# Check with "grep -n MPICH2_EXTRA_CFLAGS configure.in"
+# Remove duplicated flags from MPICH2_EXTRA_CFLAGS.
+PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_CFLAGS])
+# Check if $MPICH2LIB_CFLAGS is valid with $CC
+if test -n "$MPICH2LIB_CFLAGS" ; then
+    PAC_C_CHECK_COMPILER_OPTION( [$MPICH2LIB_CFLAGS], [
+        CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
+        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $MPICH2LIB_CFLAGS"
+                               ] )
+fi
+
 # Check for support for weak symbols.  If not found, set NO_WEAK_SYM
 # to the Make target name understood by simplemake.
 # Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
@@ -1569,11 +1579,20 @@ elif test "$enable_f77" = "yes" ; then
     FFLAGS=$saveFFLAGS
 fi
 
-# Check if $MPICH2LIB_FFLAGS is valid with $F77
 if test "$enable_f77" = yes ; then
-    if test "$enable_default_optimize" = "yes" ; then
-        MPICH2LIB_FFLAGS="$MPICH2LIB_FFLAGS $MPI_DEFAULT_FOPTS"
+    # Check if $MPI_DEFAULT_FOPTS is valid with $F77
+    if test "$enable_default_optimize" = "yes" \
+         -a -n "$MPI_DEFAULT_FOPTS" ; then
+        PAC_F77_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_FOPTS], [
+            FFLAGS="$FFLAGS $MPI_DEFAULT_FOPTS"
+            MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS $MPI_DEFAULT_FOPTS"
+                                     ] )
     fi
+    # Up till here, MPICH2_EXTRA_FFLAGS contains only flags added by MPICH2.
+    # Check with "grep -n MPICH2_EXTRA_FFLAGS configure.in"
+    # Remove duplicated flags from MPICH2_EXTRA_FFLAGS.
+    PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_FFLAGS])
+    # Check if $MPICH2LIB_FFLAGS is valid with $F77
     if test -n "$MPICH2LIB_FFLAGS" ; then
         PAC_F77_CHECK_COMPILER_OPTION( [$MPICH2LIB_FFLAGS], [
             FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
@@ -1954,10 +1973,19 @@ if test "$enable_f90" = "yes" ; then
     F90EXT=$pac_cv_f90_ext
     AC_SUBST(F90EXT)
 
-    # Check if $MPICH2LIB_F90FLAGS works with $F90
-    if test "$enable_default_optimize" = "yes" ; then
-        MPICH2LIB_F90FLAGS="$MPICH2LIB_F90FLAGS $MPI_DEFAULT_F90OPTS"
+    # Check if $MPI_DEFAULT_F90OPTS is valid with $F90
+    if test "$enable_default_optimize" = "yes" \
+         -a -n "$MPI_DEFAULT_F90OPTS" ; then
+        PAC_F90_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_F90OPTS], [
+            F90FLAGS="$F90FLAGS $MPI_DEFAULT_F90OPTS"
+            MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS $MPI_DEFAULT_F90OPTS"
+                                     ] )
     fi
+    # Up till here, MPICH2_EXTRA_F90FLAGS contains only flags added by MPICH2.
+    # Check with "grep -n MPICH2_EXTRA_F90FLAGS configure.in"
+    # Remove duplicated flags from MPICH2_EXTRA_F90FLAGS.
+    PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_F90FLAGS])
+    # Check if $MPICH2LIB_F90FLAGS works with $F90
     if test -n "$MPICH2LIB_F90FLAGS" ; then
         PAC_F90_CHECK_COMPILER_OPTION( [$MPICH2LIB_F90FLAGS], [
             F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"
@@ -2325,9 +2353,19 @@ int main() {
 fi
 
 if test "$enable_cxx" = yes; then
-    if test "$enable_default_optimize" = "yes" ; then
-        MPICH2LIB_CXXFLAGS="$MPICH2LIB_CXXFLAGS $MPI_DEFAULT_CXXOPTS"
+    # Check if $MPI_DEFAULT_CXXOPTS is valid with $CXX
+    if test "$enable_default_optimize" = "yes" \
+         -a -n "$MPI_DEFAULT_CXXOPTS" ; then
+        PAC_CXX_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_CXXOPTS], [
+            CXXFLAGS="$CXXFLAGS $MPI_DEFAULT_CXXOPTS"
+            MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS $MPI_DEFAULT_CXXOPTS"
+                                     ] )
     fi
+    # Up till here, MPICH2_EXTRA_CXXFLAGS contains only flags added by MPICH2.
+    # Check with "grep -n MPICH2_EXTRA_CXXFLAGS configure.in"
+    # Remove duplicated flags from MPICH2_EXTRA_CXXFLAGS.
+    PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_CXXFLAGS])
+    # Check if $MPICH2LIB_CXXFLAGS is valid with $CXX
     if test -n "$MPICH2LIB_CXXFLAGS" ; then
         PAC_CXX_CHECK_COMPILER_OPTION( [$MPICH2LIB_CXXFLAGS], [
             CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
