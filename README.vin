@@ -74,15 +74,15 @@ later, in the section "Alternative configurations".
       tar xf mpich2.tar
       cd mpich2-%VERSION%
 
-3.  Choose an installation directory (the default is /usr/local/bin):
-
-      mkdir /home/you/mpich2-install
-
+3.  Choose an installation directory (the default is /usr/local/bin),
+    /home/you/mpich2-install which is assumed to non-existent or empty.
     It will be most convenient if this directory is shared by all of the
     machines where you intend to run processes.  If not, you will have
     to duplicate it on the other machines after installation.
 
-4.  Configure MPICH2, specifying the installation directory:
+4.  Configure MPICH2 (The steps described here are called inpath-build,
+    we recommend user to do vpath build if possible), specifying the
+    installation directory:
 
     for csh and tcsh:
 
@@ -347,27 +347,38 @@ configured by adding arguments to the configure step.
 Compiler Flags
 ==============
 
-MPICH2 uses two sets of flags: CFLAGS (and family -- CXXFLAGS, FFLAGS,
-F90FLAGS) and MPICH2LIB_CFLAGS (and family) for compilation; LDFLAGS
-and MPICH2LIB_LDFLAGS for linking. All these flags can be set through
-environment variables during configure.
+MPICH2 can be configured with two sets of compiler flags:
+CFLAGS, CXXFLAGS, FFLAGS, F90FLAGS (abbreviated as xFLAGS) and
+MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS, MPICH2LIB_FFLAGS, MPICH2LIB_F90FLAGS
+(abbreviated as MPICH2LIB_xFLAGS) for compilation;
+LDFLAGS and MPICH2LIB_LDFLAGS for linking. All these flags can be set
+as part of configure command or through environment variables.
+(CPPFLAGS stands for C preprocessor flags, which should NOT be set)
 
-Both CFLAGS and MPICH2LIB_CFLAGS affect the compilation of the MPICH2
-library. However, only CFLAGS is appended to mpicc.
+Both xFLAGS and MPICH2LIB_xFLAGS affect the compilation of the MPICH2
+libraries. However, only xFLAGS is appended to MPI wrapper scripts, mpicc
+and friends.
 
-By default, MPICH2LIB_CFLAGS are set to -O2. If the user specifies any
-other flags, they are appended to this default flag. The default flag
-can be disabled with the configure option
-"--disable-default-optimization". CFLAGS is empty by default.
+MPICH2 libraries are built with default compiler optimization, -O2,
+which can be modified by --enable-fast configure option.  For instance,
+--disable-fast disables the default optimization option.
+--enable-fast=O<n> sets default compiler optimization as -O<n>.
+For more details of --enable-fast, see the output of "configure --help".
+Any other complicated optimization flags for MPICH2 libraries have
+to be set throught MPICH2LIB_xFLAGS.  CFLAGS and friends
+are empty by default.
 
-For example, to build a "production" MPICH2 in a GNU environment, you
-may want to do:
+For example, to build a "production" MPICH2 environment with -O3 for all
+language bindings, one can simply do
 
-     setenv MPICH2LIB_CFLAGS -O3
-     ./configure --disable-default-optimization
+  ./configure --enable-fast=O3
 
-This will cause the MPICH2 library to be built with -O3, and -O3 will
-not be included in the mpicc script.
+or
+
+  ./configure --disable-fast MPICH2LIB_CFLAGS=-O3 MPICH2LIB_FFLAGS=-O3 MPICH2LIB_CXXFLAGS=-O3 MPICH2LIB_F90FLAGS=-O3
+
+This will cause the MPICH2 libraries to be built with -O3, and -O3 will
+not be included in the mpicc and other MPI wrapper script.
 
 
 Alternative Process Managers

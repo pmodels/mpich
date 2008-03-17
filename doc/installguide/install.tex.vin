@@ -483,32 +483,47 @@ installed MPICH2 and run an MPI example.
 
 \subsection{Compiler Optimization Levels}
 
-MPICH2 uses two sets of flags: \texttt{CFLAGS} (and family --
-\texttt{CXXFLAGS}, \texttt{FFLAGS}, \texttt{F90FLAGS}) and
-\texttt{MPICH2LIB_CFLAGS} (and family) for compilation;
-\texttt{LDFLAGS} and \texttt{MPICH2LIB_LDFLAGS} for linking. All these
-flags can be set through environment variables during configure.
+MPICH2 can be configured with two sets of compiler flags:
+\texttt{CFLAGS}, \texttt{CXXFLAGS}, \texttt{FFLAGS}, \texttt{F90FLAGS}
+(abbreviated as \texttt{xFLAGS}) and \texttt{MPICH2LIB\_CFLAGS},
+\texttt{MPICH2LIB\_CXXFLAGS}, \texttt{MPICH2LIB\_FFLAGS},
+\texttt{MPICH2LIB\_F90FLAGS} (abbreviated as \texttt{MPICH2LIB\_xFLAGS})
+for compilation; \texttt{LDFLAGS} and \texttt{MPICH2LIB\_LDFLAGS} for linking.
+All these flags can be set as part of configure command or 
+through environment variables.
+(\texttt{CPPFLAGS} stands for C preprocessor flags, which should NOT be set)
 
-Both \texttt{CFLAGS} and \texttt{MPICH2LIB_CFLAGS} affect the
-compilation of the MPICH2 library. However, only \texttt{CFLAGS} is
-appended to mpicc.
+Both \texttt{xFLAGS} and \texttt{MPICH2LIB\_xFLAGS} affect the compilation
+of the MPICH2 libraries. However, only \texttt{xFLAGS} is appended to 
+MPI wrapper scripts, \texttt{mpicc} and friends.
 
-By default, \texttt{MPICH2LIB_CFLAGS} are set to -O2. If the user
-specifies any other flags, they are appended to this default flag. The
-default flag can be disabled with the configure option
-\texttt{--disable-default-optimization}. \texttt{CFLAGS} is empty by
-default.
+MPICH2 libraries are built with default compiler optimization, -O2,
+which can be modified by --enable-fast configure option.  For instance,
+--disable-fast disables the default optimization option.
+--enable-fast=O<n> sets default compiler optimization as -O<n>.
+For more details of --enable-fast, see the output of "configure --help".
+Any other complicated optimization flags for MPICH2 libraries have
+to be set throught \texttt{MPICH2LIB\_xFLAGS}.  \texttt{CFLAGS} and friends
+are empty by default.
 
-For example, to build a {\em production} MPICH2 in a GNU environment,
-you may want to do:
+For example, to build a "production" MPICH2 environment with -O3 for all
+language bindings, one can simply do
 
 \begin{verbatim}
-     setenv MPICH2LIB_CFLAGS -O3
-     ./configure --disable-default-optimization
+  ./configure --enable-fast=O3
 \end{verbatim}
 
-This will cause the MPICH2 library to be built with -O3, and -O3 will
-not be included in the mpicc script.
+or
+
+\begin{verbatim}
+  ./configure --disable-fast MPICH2LIB_CFLAGS=-O3 \
+                             MPICH2LIB_FFLAGS=-O3 \
+                             MPICH2LIB_CXXFLAGS=-O3 \
+                             MPICH2LIB_F90FLAGS=-O3
+\end{verbatim}
+
+This will cause the MPICH2 libraries to be built with -O3, and -O3 will
+not be included in the mpicc and other MPI wrapper script.
 
 
 \subsection{Common Non-Default Configuration Options}
