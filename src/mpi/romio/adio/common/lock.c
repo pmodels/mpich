@@ -133,10 +133,7 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
           fd,
           ((cmd == F_GETLK   )? "F_GETLK" :
           ((cmd == F_SETLK   )? "F_SETLK" :
-          ((cmd == F_SETLKW  )? "F_SETLKW" :
-          ((cmd == F_GETLK64 )? "F_GETLK64" :
-          ((cmd == F_SETLK64 )? "F_SETLK64" :
-          ((cmd == F_SETLKW64)? "F_SETLKW64" : "UNEXPECTED")))))),
+          ((cmd == F_SETLKW  )? "F_SETLKW" : "UNEXPECTED"))),
           cmd, 
           ((type == F_RDLCK   )? "F_RDLCK" :
           ((type == F_WRLCK   )? "F_WRLCK" :
