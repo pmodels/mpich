@@ -263,7 +263,8 @@ void ADIOI_BGL_ReadStridedColl(ADIO_File fd, void *buf, int count,
     else
     ADIOI_Calc_file_domains(st_offsets, end_offsets, nprocs,
 			    nprocs_for_coll, &min_st_offset,
-			    &fd_start, &fd_end, &fd_size);
+			    &fd_start, &fd_end, 
+			    fd->hints->min_fdomain_size, &fd_size);
 
 #if BGL_PROFILE 
     BGLMPIO_T_CIO_SET_GET( 0, r, 0, 1, 1, BGLMPIO_CIO_MYREQ, BGLMPIO_CIO_FD_PART )

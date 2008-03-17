@@ -42,6 +42,7 @@ struct ADIOI_Hints_struct {
     int ind_rd_buffer_size;
     int ind_wr_buffer_size;
     int deferred_open;
+    int min_fdomain_size;
     char *cb_config_list;
     int *ranklist;
     union {
@@ -381,7 +382,8 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
 			     *end_offsets, int nprocs, int nprocs_for_coll,
 			     ADIO_Offset *min_st_offset_ptr,
 			     ADIO_Offset **fd_start_ptr, ADIO_Offset 
-			     **fd_end_ptr, ADIO_Offset *fd_size_ptr);
+			     **fd_end_ptr, int min_fd_size, 
+			     ADIO_Offset *fd_size_ptr);
 int ADIOI_Calc_aggregator(ADIO_File fd,
                                  ADIO_Offset off,
                                  ADIO_Offset min_off,

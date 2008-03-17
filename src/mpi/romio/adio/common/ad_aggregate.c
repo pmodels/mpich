@@ -119,15 +119,12 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
 			     *end_offsets, int nprocs, int nprocs_for_coll,
 			     ADIO_Offset *min_st_offset_ptr,
 			     ADIO_Offset **fd_start_ptr, ADIO_Offset 
-			     **fd_end_ptr, ADIO_Offset *fd_size_ptr)
+			     **fd_end_ptr, int min_fd_size, 
+			     ADIO_Offset *fd_size_ptr)
 {
 /* Divide the I/O workload among "nprocs_for_coll" processes. This is
    done by (logically) dividing the file into file domains (FDs); each
    process may directly access only its own file domain. */
-
-	/* XXX: one idea: tweak the file domains so that no fd is smaller than
-	 * a threshold (one presumably well-suited to a file system).  We don't
-	 * do that, but this routine would be the place for it */
 
     ADIO_Offset min_st_offset, max_end_offset, *fd_start, *fd_end, fd_size;
     int i;
@@ -155,6 +152,14 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
     fd_size = ((max_end_offset - min_st_offset + 1) + nprocs_for_coll -
 	       1)/nprocs_for_coll; 
     /* ceiling division as in HPF block distribution */
+
+    /* Tweak the file domains so that no fd is smaller than a threshold.  We
+     * have to strike a balance between efficency and parallelism: somewhere
+     * between 10k processes sending 32-byte requests and one process sending a
+     * 320k request is a (system-dependent) sweet spot */
+
+    if (fd_size < min_fd_size)
+	fd_size = min_fd_size;
 
     *fd_start_ptr = (ADIO_Offset *)
 	ADIOI_Malloc(nprocs_for_coll*sizeof(ADIO_Offset)); 
