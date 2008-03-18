@@ -21,22 +21,19 @@
 
 /* extern node_t *nodes; */
 
-#define PACKET_SIZE (gm_min_size_for_length(sizeof(packet_t)))
+#define PACKET_SIZE (gm_min_size_for_length (MPID_NEM_MAX_PACKET_LEN))
 
 extern int MPID_nem_module_gm_num_send_tokens;
 
 extern struct gm_port *MPID_nem_module_gm_port;
 
+extern MPID_nem_queue_ptr_t MPID_nem_process_free_queue;
+
 int MPID_nem_gm_module_recv_poll();
 inline int MPID_nem_gm_module_recv();
-int MPID_nem_send_from_queue();
+inline int MPID_nem_send_from_queue();
 
 int MPID_nem_gm_module_recv_init();
-int MPID_nem_gm_module_send_init();
-int MPID_nem_gm_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
-                                MPID_Request **sreq_ptr);;
-int MPID_nem_gm_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
-                            void *data, MPIDI_msg_sz_t data_sz);;
 
 int MPID_nem_gm_module_lmt_init();
 int MPID_nem_gm_module_lmt_finalize();

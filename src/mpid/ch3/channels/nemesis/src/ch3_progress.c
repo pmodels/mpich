@@ -13,7 +13,6 @@
 #endif
 #include "pmi.h"
 
-extern int MPID_nem_lmt_shm_pending; /* defined in mpid_nem_lmt_shm.c */
 
 #define PKTARRAY_SIZE (MPIDI_NEM_PKT_END+1)
 static MPIDI_CH3_PktHandler_Fcn *pktArray[PKTARRAY_SIZE];
@@ -539,7 +538,9 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
             while (n_iov && buflen >= iov->MPID_IOV_LEN)
             {
                 int iov_len = iov->MPID_IOV_LEN;
+		MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "        %d\n", iov_len);
                 MPID_NEM_MEMCPY (iov->MPID_IOV_BUF, buf, iov_len);
+
                 buflen -= iov_len;
                 buf    += iov_len;
                 --n_iov;
@@ -550,6 +551,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
             {
                 if (buflen > 0)
                 {
+		    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "        %d\n", buflen);
                     MPID_NEM_MEMCPY (iov->MPID_IOV_BUF, buf, buflen);
                     iov->MPID_IOV_BUF = (void *)((char *)iov->MPID_IOV_BUF + buflen);
                     iov->MPID_IOV_LEN -= buflen;
@@ -559,6 +561,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
                 rreq->dev.iov_offset = iov - rreq->dev.iov;
                 rreq->dev.iov_count = n_iov;
                 vc_ch->recv_active = rreq;
+		MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        remaining: %d bytes + %d iov entries\n", iov->MPID_IOV_LEN, n_iov - rreq->dev.iov_offset - 1));
             }
             else
             {				       

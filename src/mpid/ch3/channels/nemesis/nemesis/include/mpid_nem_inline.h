@@ -19,6 +19,7 @@
 
 #include "my_papi_defs.h"
 
+extern int MPID_nem_lmt_shm_pending;
 extern MPID_nem_cell_ptr_t MPID_nem_prefetched_cell;
 
 MPID_NEM_INLINE_DECL int MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again);
@@ -234,6 +235,9 @@ MPID_nem_mpich2_sendv (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, int *agai
     MPIDI_msg_sz_t payload_len;    
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_SENDV);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_SENDV);
 
     MPIU_Assert (*n_iov > 0 && (*iov)->iov_len > 0);
     
@@ -330,6 +334,7 @@ MPID_nem_mpich2_sendv (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, int *agai
     *again = 1;
     goto fn_exit;
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_SENDV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -350,6 +355,9 @@ MPID_nem_mpich2_sendv_header (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, in
     MPIDI_msg_sz_t payload_len;    
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_SENDV_HEADER);
+    
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_SENDV_HEADER);
 
 #ifdef ENABLED_CHECKPOINTING
     if (MPID_nem_ckpt_sending_markers)
@@ -515,6 +523,7 @@ MPID_nem_mpich2_sendv_header (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, in
     *again = 1;
     goto fn_exit;
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_SENDV_HEADER);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -1089,9 +1098,10 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 	    mpi_errno = MPID_nem_network_poll (MPID_NEM_POLL_IN);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-            if (completions != MPIDI_CH3I_progress_completion_count)
+            if (completions != MPIDI_CH3I_progress_completion_count || MPID_nem_lmt_shm_pending || MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]
+                || MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE))
             {
-                *cell = 0;
+                *cell = NULL;
                 *in_fbox = 0;
                 goto exit_l;
             }
