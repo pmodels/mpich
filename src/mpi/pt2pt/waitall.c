@@ -169,14 +169,19 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     /* first, complete any generalized requests */
     if (n_greqs)
     {
-        mpi_errno = MPIR_Grequest_waitall(count, request_ptrs, array_of_statuses);
+        mpi_errno = MPIR_Grequest_waitall(count, request_ptrs);
         if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     }
     
     for (i = 0; i < count; i++)
     {
-        if (request_ptrs[i] == NULL) continue;
-
+        if (request_ptrs[i] == NULL)
+        {
+            if (!ignoring_statuses)
+                array_of_statuses[i].MPI_ERROR = MPI_SUCCESS;
+            continue;
+        }
+        
         /* wait for ith request to complete */
         while (*request_ptrs[i]->cc_ptr != 0)
         {

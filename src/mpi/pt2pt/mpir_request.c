@@ -560,9 +560,7 @@ fn_exit:
 #define FUNCNAME MPIR_Grequest_waitall
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIR_Grequest_waitall(int count, 
-                          MPID_Request **request_ptrs, 
-                          MPI_Status array_of_statuses[] )
+int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
 {
     MPIX_Grequest_wait_function *wait_fn = NULL;
     void ** state_ptrs;

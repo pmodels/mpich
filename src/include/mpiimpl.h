@@ -2249,7 +2249,7 @@ int MPIR_Grequest_free(MPID_Request * request_ptr);
  * for generalized requests */
 int MPIR_Grequest_progress_poke(int count, MPID_Request **request_ptrs, 
 		MPI_Status array_of_statuses[] );
-int MPIR_Grequest_waitall(int count, MPID_Request **request_ptrs, MPI_Status array_of_statuses[] );
+int MPIR_Grequest_waitall(int count, MPID_Request * const *  request_ptrs);
 
 /* ------------------------------------------------------------------------- */
 /* Prototypes for language-specific routines, such as routines to set
