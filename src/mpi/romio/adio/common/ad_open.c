@@ -30,6 +30,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     int orig_amode_excl, orig_amode_wronly, err, rank, procs;
     static char myname[] = "ADIO_OPEN";
     int  max_error_code;
+    MPI_Info dupinfo;
     MPI_Comm aggregator_comm = MPI_COMM_NULL; /* just for deferred opens */
 
     *error_code = MPI_SUCCESS;
@@ -77,8 +78,19 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     fd->hints->ranklist = NULL;
     fd->hints->initialized = 0;
     fd->info = MPI_INFO_NULL;
-    ADIOI_process_system_hints(info);
-    ADIO_SetInfo(fd, info, &err);
+
+    if (info == MPI_INFO_NULL) 
+	*error_code = MPI_Info_create(&dupinfo);
+    else
+	*error_code = MPI_Info_dup(info, &dupinfo);
+    if (*error_code != MPI_SUCCESS)
+	goto fn_exit;
+
+    ADIOI_process_system_hints(dupinfo);
+    ADIO_SetInfo(fd, dupinfo, &err);
+    *error_code = MPI_Info_free(&dupinfo);
+    if (*error_code != MPI_SUCCESS)
+	goto fn_exit;
 
      /* deferred open: 
      * we can only do this optimization if 'fd->hints->deferred_open' is set
