@@ -1,4 +1,4 @@
 # Other_dirs have Makefile.in built
-OTHER_DIRS = locks sock
+OTHER_DIRS = sock
 # Subdirs are *always* built
-SUBDIRS = datatype .
+SUBDIRS = locks datatype .

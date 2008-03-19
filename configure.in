@@ -880,6 +880,12 @@ if test "$MPID_NO_SPAWN" = yes ; then
     AC_MSG_WARN([The device $with_device does not support MPI dynamic process routines])   
 fi
 
+
+# ----------------------------------------------------------------------------
+# atomic operations
+# ----------------------------------------------------------------------------
+subsystems="$subsystems src/mpid/common/locks"
+
 # ----------------------------------------------------------------------------
 # Threads
 # ----------------------------------------------------------------------------
@@ -5823,7 +5829,6 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
           src/mpid/common/Makefile \
           src/mpid/common/datatype/Makefile \
           src/mpid/common/datatype/dataloop/Makefile \
-          src/mpid/common/locks/Makefile \
           src/pm/Makefile \
           src/pmi/Makefile \
 	  src/nameserv/Makefile \
