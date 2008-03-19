@@ -6,8 +6,6 @@
 #include "mpidu_process_locks.h"
 #include "mpidimpl.h"
 
-#ifdef USE_PROCESS_LOCKS
-
 #include <errno.h>
 #include <string.h> 
 
@@ -340,4 +338,3 @@ void MPIDU_Process_lock_busy_wait( MPIDU_Process_lock_t *lock )
 
 #endif /* #ifndef USE_BUSY_LOCKS */
 #endif /* defined(USE_INLINE_LOCKS) */
-#endif /* USE_PROCESS_LOCKS */
