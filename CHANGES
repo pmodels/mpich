@@ -3,13 +3,10 @@
 ===============================================================================
 
 - OVERALL: Initial ROMIO device for BlueGene/P (the ADI device is also
-added by is not configurable at this time).
+added but is not configurable at this time).
 
 - OVERALL: Major clean up for the propagation of user-defined and
 other MPICH2 flags throughout the code.
-
-- OVERALL: Optimizations for datatype flattening code to significantly
-reduce the number of function calls required for symmetric datatypes.
 
 - OVERALL: Support for STI Cell Broadband Engine.
 
@@ -36,8 +33,8 @@ users.
 
 - SCTP: Added MPICH_SCTP_NAGLE_ON support.
 
-- MPE: Updated MPE logging API so that it is thread-safe (through global
-mutex). Updated all related documentation, e.g. man pages.
+- MPE: Updated MPE logging API so that it is thread-safe (through
+global mutex).
 
 - MPE: Added infrastructure to piggyback argument data to MPI states.
 
