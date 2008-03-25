@@ -571,6 +571,16 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
 
     MPIU_CHKLMEM_MALLOC(state_ptrs, void *, sizeof(void*)*count, mpi_error, "state_ptrs");
     
+        /* DISABLED CODE: The greq wait_fn function returns when ANY
+           of the requests completes, rather than all.  Also, once a
+           greq has completed, you can't call wait on it again.  So in
+           order to implement wait-all, we would need to rebuild the
+           state_ptrs array every time wait_fn completed.  This would
+           then be an O(n^2) algorithm.
+
+           Until a waitall_fn is added for greqs, we'll call wait on
+           each greq individually. */
+#if 0
     /* loop over all requests, group greqs with the same class and
        call wait_fn on the groups.  (Only consecutive greqs with the
        same class are being grouped) */
@@ -580,7 +590,7 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
         /* skip over requests we're not interested in */
         if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 ||  request_ptrs[i]->kind != MPID_UREQUEST)
             continue;
-
+        
         if (n_greq == 0 || request_ptrs[i]->greq_class == curr_class)
         {
             /* if this is the first grequest of a group, or if it's the
@@ -611,6 +621,17 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
         if (mpi_error) MPIU_ERR_POP(mpi_error);
 
     }
+#else
+    for (i = 0; i < count; ++i)
+    {
+        /* skip over requests we're not interested in */
+        if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 ||  request_ptrs[i]->kind != MPID_UREQUEST)
+            continue;
+        mpi_error = (wait_fn)(1, &request_ptrs[i]->grequest_extra_state, 0, NULL);
+        if (mpi_error) MPIU_ERR_POP(mpi_error);
+    }
+    
+#endif
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
