@@ -34,8 +34,10 @@ void ADIOI_BGL_Close(ADIO_File fd, int *error_code)
 #endif
 
 /*  FPRINTF(stderr,"%s(%d):'%s'. Free %#X\n",myname,__LINE__,fd->filename,(int)fd->fs_ptr);*/
-  ADIOI_Free(fd->fs_ptr);
-  fd->fs_ptr = NULL;
+  if (fd->fs_ptr != NULL) {
+	  ADIOI_Free(fd->fs_ptr);
+	  fd->fs_ptr = NULL;
+  }
   fd->fd_sys    = -1;
   fd->fd_direct = -1;
 
