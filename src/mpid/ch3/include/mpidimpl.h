@@ -13,6 +13,8 @@
 #if !defined(MPICH_MPIDIMPL_H_INCLUDED)
 #define MPICH_MPIDIMPL_H_INCLUDED
 
+#include "mpichconf.h"
+
 #if defined(HAVE_ASSERT_H)
 #include <assert.h>
 #endif
