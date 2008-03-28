@@ -89,7 +89,7 @@
 #define MPID_MPI_PT2PT_FUNC_EXIT_BOTH(a)      MPIDU_PT2PT_FUNC_EXIT(a)
 #endif
 
-#if defined(HAVE_TIMING) && (HAVE_TIMING == MPID_TIMING_KIND_LOG_DETAILED)
+#if defined(HAVE_TIMING) && (HAVE_TIMING == MPID_TIMING_KIND_LOG_DETAILED || HAVE_TIMING == MPID_TIMING_KIND_ALL)
 
 /* device layer definitions */
 #define MPIDI_STATE_DECL(a)                MPIDU_STATE_DECL(a)
@@ -154,7 +154,7 @@
 #define MPIDI_FINALIZE_FUNC_ENTER(a)
 #define MPIDI_FINALIZE_FUNC_EXIT(a)
 
-#endif /* (HAVE_TIMING == MPID_TIMING_KIND_LOG_DETAILED) */
+#endif /* (HAVE_TIMING == MPID_TIMING_KIND_LOG_DETAILED || HAVE_TIMING == MPID_TIMING_KIND_ALL) */
 
 /* prototype the initialization/finalization functions */
 int MPIU_Timer_init(int rank, int size);

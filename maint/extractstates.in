@@ -73,7 +73,7 @@ require "$maintdir/extractstrings";
                   );
 
 # Set the default directories
-$dirs = "src/mpi src/mpid/ch3 src/mpid/globus src/mpid/common src/util src/pmi src/binding src/nameserv";
+$dirs = "src/include src/mpi src/mpid/ch3 src/mpid/globus src/mpid/common src/util src/pmi src/binding src/nameserv";
 # Add mm for debugging
 #$dirs .= " src/mpid/mm";
 
