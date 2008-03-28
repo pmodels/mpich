@@ -8,6 +8,7 @@
 #define MPIMEM_H_INCLUDED
 
 /* Make sure that we have the definitions for the malloc routines and size_t */
+#include <stdio.h>
 #include <stdlib.h>
 /* strdup is often declared in string.h, so if we plan to redefine strdup, 
    we need to include string first.  That is done below, only in the
