@@ -270,7 +270,7 @@ if test -n "$PATH" ; then
     dnl 3rd argument, TEST-ACTION, may contain code in modifying IFS
     jac_PATH=`echo $PATH | sed 's/:/ /g'`
     for dir in ${jac_PATH} ; do
-        if test -d $dir -a -x "$dir/$2" ; then
+        if test -d "$dir" -a -x "$dir/$2" ; then
             $1="$dir/$2"
             # Not all releases work.  Try a simple program
             if test -n "[$]$1" ; then
@@ -579,8 +579,10 @@ AC_DEFUN(JAC_CHECK_CYGPATH, [
 AC_MSG_CHECKING([for cygpath])
 jac_hasProg=no
 IFS="${IFS=   }"; pac_saved_ifs="$IFS"; IFS=":"
+dnl need to "" $path_elem because PATH may contains ...::...,
+dnl hence $path_elem could be empty
 for path_elem in $PATH ; do
-    if test -d $path_elem -a -x "$path_elem/cygpath" ; then
+    if test -d "$path_elem" -a -x "$path_elem/cygpath" ; then
         jac_hasProg=yes
         break
     fi
