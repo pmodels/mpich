@@ -594,9 +594,9 @@ MPID_nem_vc_init (MPIDI_VC_t *vc, const char *business_card)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
     MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL (MPID_STATE_MPID_NEM_VC_INIT);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_VC_INIT);
 
-    MPIDI_FUNC_ENTER (MPID_STATE_MPID_NEM_VC_INIT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_VC_INIT);
     vc_ch->send_seqno = 0;
 
     vc_ch->pending_pkt_len = 0;
@@ -688,7 +688,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc, const char *business_card)
     
      MPIU_CHKPMEM_COMMIT();
 fn_exit:
-    MPIDI_FUNC_EXIT (MPID_STATE_MPID_NEM_VC_INIT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_VC_INIT);
     return mpi_errno;
  fn_fail:
     MPIU_CHKPMEM_REAP();
@@ -704,9 +704,9 @@ MPID_nem_vc_destroy(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
-    MPIDI_STATE_DECL (MPID_STATE_MPID_NEM_VC_DESTROY);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_VC_DESTROY);
 
-    MPIDI_FUNC_ENTER (MPID_STATE_MPID_NEM_VC_DESTROY);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_VC_DESTROY);
 
     MPIU_Free(vc_ch->pending_pkt);
 
@@ -714,7 +714,7 @@ MPID_nem_vc_destroy(MPIDI_VC_t *vc)
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     fn_exit:
-    MPIDI_FUNC_EXIT (MPID_STATE_MPID_NEM_VC_DESTROY);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_VC_DESTROY);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
