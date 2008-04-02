@@ -886,8 +886,17 @@ has. So, if n0 has two processors, it is listed as {\texttt n0:2}.
 
 One way to convert the node file to the MPD format is as follows:
 
-{\texttt sort \$PBS\_NODEFILE $|$ uniq -C $|$ awk '\{ printf("\%s:\%s",
-  \$2, \$1); \}' $>$ mpd.nodes}
+\noindent {\texttt sort \$PBS\_NODEFILE $|$ uniq -C $|$ awk '\{
+  printf("\%s:\%s", \$2, \$1); \}' $>$ mpd.nodes}
+
+Once the PBS node file is converted, MPD can be normally started
+within the PBS job script using mpdboot and torn down using
+mpdallexit.
+
+\noindent{\texttt mpdboot -f mpd.hosts -n [NUM\_NODES\_REQUESTED]}\\
+\noindent{\texttt mpiexec -n [NUM\_PROCESSES] ./my\_test\_program}\\
+\noindent{\texttt mpdallexit}
+
 
 \subsubsection{OSC mpiexec}
 \label{sec:osc_mpiexec}
