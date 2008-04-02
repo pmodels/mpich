@@ -217,8 +217,8 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, int *dims, int *periods,
 	    MPIR_ERRTEST_ARGNULL( dims, "dims", mpi_errno );
 	    MPIR_ERRTEST_ARGNULL( periods, "periods", mpi_errno );
 	    MPIR_ERRTEST_ARGNULL( comm_cart, "comm_cart", mpi_errno );
-	    if (ndims <= 0) {
-		/* Must have a positive number of dimensions */
+	    if (ndims < 0) {
+		/* Must have a non-negative number of dimensions */
 		mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
 			  MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_DIMS,
 						  "**dims",  "**dims %d", 0 );
