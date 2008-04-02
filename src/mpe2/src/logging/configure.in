@@ -26,7 +26,7 @@ AH_BOTTOM([
 
 #else
 
-#if defined(_LARGEFILE64_SOURCE)
+#if defined(HAVE_O_LARGEFILE)
 
 #if defined(HAVE_O_BINARY)
 #define OPEN( a, b, c )    open( a, b | O_LARGEFILE | O_BINARY, c )
@@ -42,7 +42,7 @@ AH_BOTTOM([
 #define OPEN( a, b, c )    open( a, b, c )
 #endif    /* HAVE_O_BINARY */
 
-#endif    /* _LARGEFILE64_SOURCE */
+#endif    /* HAVE_O_LARGEFILE */
 
 #endif    /* HAVE_WINDOWS_H */
 
@@ -201,7 +201,7 @@ else
     AC_C_BIGENDIAN
 fi
 
-AC_CHECK_HEADERS(stdio.h stdlib.h string.h unistd.h sys/time.h sys/types.h sys/bitypes.h)
+AC_CHECK_HEADERS(stdio.h stdlib.h string.h unistd.h sys/time.h sys/types.h sys/bitypes.h sys/stat.h fcntl.h)
 
 
 dnl
@@ -399,29 +399,69 @@ dnl         AC_MSG_RESULT(none)
 dnl     )
 dnl )
 AC_SYS_LARGEFILE
-AC_MSG_CHECKING( [whether _LARGEFILE64_SOURCE is needed] )
-if test "$ac_cv_sys_file_offset_bits" != no \
-     -o "$ac_cv_sys_large_files" != no ; then
-    AC_DEFINE( _LARGEFILE64_SOURCE, 1,
-               [Define if 64-bit file address support in 32-bit OS.] )
+if test "$enable_largefile" != no ; then
+    AC_MSG_CHECKING( [for O_LARGEFILE for open()] )
+    AC_COMPILE_IFELSE( AC_LANG_PROGRAM( [
+#if defined( HAVE_SYS_TYPES_H )
+#include <sys/types.h>
+#endif
+#if defined( HAVE_SYS_STAT_H )
+#include <sys/stat.h>
+#endif
+#if defined( HAVE_FCNTL_H )
+#include <fcntl.h>
+#endif
+                     ], [
+    int fd;
+    fd = open( "tmpfile", O_CREAT | O_LARGEFILE, 0644 );   
+                     ] ), [
+    AC_DEFINE( HAVE_O_LARGEFILE, 1,
+              [Define to 1 if O_LARGEFILE flag for open() exists.] )
     AC_MSG_RESULT(yes)
-else
-    AC_MSG_RESULT(no)
-fi
-
-AC_CHECK_HEADERS( fcntl.h,
-    AC_MSG_CHECKING( [for O_BINARY for open()] )
-    AC_TRY_LINK( [
-        #include <fcntl.h>
+    ], [
+        AC_COMPILE_IFELSE( AC_LANG_PROGRAM( [
+#define _LARGEFILE64_SOURCE
+#if defined( HAVE_SYS_TYPES_H )
+#include <sys/types.h>
+#endif
+#if defined( HAVE_SYS_STAT_H )
+#include <sys/stat.h>
+#endif
+#if defined( HAVE_FCNTL_H )
+#include <fcntl.h>
+#endif
+                         ], [
+    int fd;
+    fd = open( "tmpfile", O_CREAT | O_LARGEFILE, 0644 );   
+                         ] ), [
+            AC_DEFINE( HAVE_O_LARGEFILE, 1,
+                       [Define to 1 if O_LARGEFILE flag for open() exists.] )
+            AC_DEFINE( _LARGEFILE64_SOURCE, 1,
+                       [Define if 64-bit file address support in 32-bit OS.] )
+            AC_MSG_RESULT( [needs _LARGEFILE64_SOURCE] )
         ], [
-        open( "tmpfile", O_CREAT | O_BINARY );
-        ],
-        AC_DEFINE( HAVE_O_BINARY, 1,
-                   [Define to 1 if O_BINARY flag for open() exists.] )
-        AC_MSG_RESULT(yes),
-        AC_MSG_RESULT(no)
-    )
-)
+            AC_MSG_RESULT(no)
+        ] )
+    ] )
+fi
+        dnl end of AC_COMPILE_IFELSE with O_LARGEFILE
+    dnl end of AC_COMPILE_IFELSE with O_LARGEFILE and _LARGEFILE64_SOURCE
+
+AC_MSG_CHECKING( [for O_BINARY for open()] )
+AC_LINK_IFELSE( AC_LANG_PROGRAM( [
+#if defined( HAVE_FCNTL_H )
+#include <fcntl.h>
+#endif
+              ], [
+    int fd;
+    fd = open( "tmpfile", O_CREAT | O_BINARY, 0644 );
+              ] ), [
+    AC_DEFINE( HAVE_O_BINARY, 1,
+               [Define to 1 if O_BINARY flag for open() exists.] )
+    AC_MSG_RESULT(yes)
+    ], [
+    AC_MSG_RESULT(no)
+] )
 
 dnl   Determine if PMPI_Comm_create_keyval exists
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
