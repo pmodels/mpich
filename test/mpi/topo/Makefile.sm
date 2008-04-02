@@ -4,6 +4,7 @@ DEPADD = @MPILIBLOC@ ../util/mtest.o
 smvar_do_sharedlibs = 0
 
 cartmap1_SOURCES = cartmap1.c
+cartzero_SOURCES = cartzero.c
 cartshift1_SOURCES = cartshift1.c
 cartsuball_SOURCES = cartsuball.c
 cartcreates_SOURCES = cartcreates.c
