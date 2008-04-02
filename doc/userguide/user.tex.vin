@@ -866,6 +866,38 @@ same machine name multiple times if necessary.
 For more complex needs or for faster startup, we recommend the use of the
 \texttt{mpd} process manager.
 
+\subsection{Using MPICH2 with SLURM and PBS}
+\label{sec:external_pm}
+
+MPICH2 can be used in both SLURM and PBS environments. If configured
+with SLURM, use the {\texttt srun} job launching utility provided by
+SLURM. For PBS, MPICH2 jobs can be launched in two ways: (i) using MPD
+or (ii) using the OSC mpiexec.
+
+\subsubsection{MPD in the PBS environment}
+\label{sec:pbs2mpd}
+
+PBS specifies the machines allocated to a particular job in the file
+{\texttt \$PBS\_NODEFILE}. But the format used by PBS is different from
+that of MPD. Specifically, PBS lists each node on a single line; if a
+node (n0) has two processors, it is listed twice. MPD on the other
+hand uses an identifier (ncpus) to describe how many processors a node
+has. So, if n0 has two processors, it is listed as {\texttt n0:2}.
+
+One way to convert the node file to the MPD format is as follows:
+
+{\texttt sort \$PBS\_NODEFILE $|$ uniq -C $|$ awk '\{ printf("\%s:\%s",
+  \$2, \$1); \}' $>$ mpd.nodes}
+
+\subsubsection{OSC mpiexec}
+\label{sec:osc_mpiexec}
+
+Pete Wyckoff from the Ohio Supercomputer Center provides a alternate
+utility called OSC mpiexec to launch MPICH2 jobs on PBS systems
+without using MPD. More information about this can be found here:
+http://www.osc.edu/~pw/mpiexec
+
+
 \section{Managing the Process Management Environment}
 \label{sec:managing-pme}
 
