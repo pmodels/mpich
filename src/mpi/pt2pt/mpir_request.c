@@ -627,7 +627,7 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
         /* skip over requests we're not interested in */
         if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 ||  request_ptrs[i]->kind != MPID_UREQUEST)
             continue;
-        mpi_error = (wait_fn)(1, &request_ptrs[i]->grequest_extra_state, 0, NULL);
+        mpi_error = (request_ptrs[i]->wait_fn)(1, &request_ptrs[i]->grequest_extra_state, 0, NULL);
         if (mpi_error) MPIU_ERR_POP(mpi_error);
     }
     
