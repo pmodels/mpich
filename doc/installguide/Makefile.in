@@ -1,6 +1,7 @@
 ALL: all-redirect
 SHELL = @SHELL@
 srcdir = @srcdir@
+VERSION = @VERSION@
 
 .SUFFIXES: .pdf .dvi .tex
 
