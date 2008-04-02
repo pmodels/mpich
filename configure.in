@@ -159,7 +159,7 @@ fi
 # Regular releases are treated as patch 0
 #
 # Numeric version will have 1 digit for MAJ, 2 digits for MIN,
-# 2 digits for REV, 1 digit for EXT and 1 digit for EXT_NUMBER.
+# 2 digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER.
 changequote(<<,>>)
 V1=`expr $VERSION : '\([0-9]*\)\.[0-9]*\.[0-9]*[a-zA-Z]*[0-9]*'`
 V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)\.[0-9]*[a-zA-Z]*[0-9]*'`

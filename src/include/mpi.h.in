@@ -246,10 +246,31 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 #define MPICH_NAME     2
 #define MPICH2         1
 #define MPICH_HAS_C2F  1
-    /* MPICH2_VERSION is the version string */
-    /* MPICH2_NUMVERSION is the numeric version that can be used in 
-       numeric comparisons, such as MPICH2_NUMVERSION < 10005
-       This is 1.xx.xx */
+
+
+/* MPICH2_VERSION is the version string. MPICH2_NUMVERSION is the
+ * numeric version that can be used in numeric comparisons.
+ *
+ * MPICH2_VERSION uses the following format:
+ * Version: [MAJ].[MIN].[REV][EXT][EXT_NUMBER]
+ * Example: 1.0.7rc1 has
+ *          MAJ = 1
+ *          MIN = 0
+ *          REV = 7
+ *          EXT = rc
+ *          EXT_NUMBER = 1
+ *
+ * MPICH2_NUMVERSION will convert EXT to a format number:
+ *          ALPHA (a) = 0
+ *          BETA (b)  = 1
+ *          RC (rc)   = 2
+ *          PATCH (p) = 3
+ * Regular releases are treated as patch 0
+ *
+ * Numeric version will have 1 digit for MAJ, 2 digits for MIN, 2
+ * digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER. So,
+ * 1.0.7rc1 will have the numeric version 10007201.
+ */
 #define MPICH2_VERSION "@VERSION@"
 #define MPICH2_NUMVERSION @NUMVERSION@
 
