@@ -2,6 +2,7 @@ coll
 comm
 group
 pt2pt
+datatype
 topo
 @rmadir@
 @spawndir@

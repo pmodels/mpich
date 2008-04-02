@@ -3,4 +3,5 @@ DEPADD = @MPILIBLOC@
 smvar_do_sharedlibs = 0
 
 errsetx_SOURCES   = errsetx.cxx
+throwtest_SOURCES = throwtest.cxx
 
