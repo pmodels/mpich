@@ -396,6 +396,34 @@ may not be able to use MPI_STATUS(ES)_IGNORE with OpenMPI+MPE.
 See http://www.open-mpi.org/community/lists/users/2005/11/0380.php
 
 
+For prebuilt version of MPICH-1: Since old MPICH-1 comes with an older version
+of MPE.  The MPI wrappers that come with MPICH-1 searches old MPE headers
+and link with old MPE libraries first.  To avoid using incompatible MPE
+headers and libraries, MPE2 should be built with native compilers used in
+MPI wrappers (i.e. setting CC and F77 but NOT MPI_CC and MPI_F77) and use
+MPI_INC to specify MPI include path and MPI_LIBS to specify the MPI libraries.
+e.g. on NCSA's Turing Mac cluster, configuing MPE2 for mpich-gm (which is
+based on mpich-1.2.6):
+
+    ${MPE_SRC_DIR}/configure CC=cc F77="xlf90 -qnocommon -qextname -qfixed=72" \
+                             MPI_INC=-I/turing/software/mpich-gm/include       \
+                             MPI_LIBS="-Wl,-multiply_defined,suppress          \
+                                       -Wl,-u,_gmpi_macosx_malloc_hack         \
+                                       -L/turing/software/mpich-gm/lib         \
+                                       -lpmpich -lmpich -lpmpich -lmpich       \
+                                       -L/turing/software/lib -lgm -lpthread"  \
+                             --disable-safePMPI                                \
+                             --prefix=<MPE_INSTALL_DIR>
+    make
+    make install
+    make installcheck
+    make installcheck-all MPERUN="/turing/software/mpich-gm/bin/mpirun -n 4" 
+
+MPE2 is careful in arranging its include files and libraries flags
+during compilation, i.e. MPE2's include path is always searched before MPI's
+and MPE's library path comes before MPI's, so to avoid conflicting headers
+and libraries from older MPE installation.
+ 
 For prebuilt version of MPICH-1.1.2 or MPICH-1.2.0, e.g. donner, do
 
     setenv MPI_CC ${MPICH_INSTALL_DIR}/bin/mpicc
