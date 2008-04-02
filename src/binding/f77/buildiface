@@ -2305,7 +2305,10 @@ if ($write_mpif) {
                   F90_COMPLEX, F90_INTEGER, RESIZED) {
 	&print_mpif_int( "MPI_COMBINER_$key" );
     }
-
+    # Typeclasses
+    foreach $key (REAL, INTEGER, COMPLEX) {
+	&print_mpif_int( "MPI_TYPECLASS_$key" );
+    }
 
     # RMA Asserts
     foreach $mode (NOCHECK, NOSTORE, NOPUT, NOPRECEDE, NOSUCCEED) {
@@ -2360,6 +2363,13 @@ if ($write_mpif) {
     print MPIFFD "       EXTERNAL MPI_TYPE_NULL_COPY_FN\n";
     print MPIFFD "       EXTERNAL MPI_CONVERSION_FN_NULL\n";
     # the time/tick functions
+    # Special option.  Some compilers (particularly IBM's xl compilers)
+    # allow the user to change the definition of the datatypes, such as
+    # making real 8 bytes and double precision 16.  To allow mpif.h
+    # to be used with such compilers, those compilers allow the
+    # use of the non-standard real*8 to force exactly 8 bytes.
+    # Do we want to make this a configure time value or a 
+    # build-time value?
     print MPIFFD "       DOUBLE PRECISION MPI_WTIME, MPI_WTICK\n";
     print MPIFFD "       DOUBLE PRECISION PMPI_WTIME, PMPI_WTICK\n";
     # We avoid adding the external declarations because some Fortran
