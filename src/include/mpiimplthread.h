@@ -130,6 +130,11 @@ void MPIR_CleanupThreadStorage( void *a );
 }
 /* FIXME: Figure out what we want to do for the nest count on 
    these routines, so as to avoid extra function calls */
+/* 
+ * The Nest value must *not* be changed by MPID_CS_ENTER or MPID_CS_EXIT.
+ * It is the obligation of the implementation of the MPI routines to 
+ * use MPIR_Nest_incr and MPIR_Nest_decr before invoking other MPI routines
+ */
 #define MPID_CS_ENTER()						\
 {								\
     MPIU_THREADPRIV_DECL;                                       \
