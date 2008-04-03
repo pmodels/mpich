@@ -27,7 +27,7 @@
 #include "psm_module.h"
 #else
 #warning ">>>>>>>>>>>>>>>> WRONG NET MODULE SELECTION"
-#endif 
+#endif
 
 MPID_nem_net_module_init_t              MPID_nem_net_module_init              = 0;
 MPID_nem_net_module_finalize_t          MPID_nem_net_module_finalize          = 0;
@@ -61,7 +61,10 @@ int
 MPID_nem_net_init( void)
 {
     int mpi_errno = MPI_SUCCESS;
-    
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NET_INIT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NET_INIT);
+
 #if(MPID_NEM_NET_MODULE == MPID_NEM_ERROR_MODULE)
 #error Error in definition of MPID_NEM_*_MODULE macros
 #elif (MPID_NEM_NET_MODULE == MPID_NEM_GM_MODULE)
@@ -71,7 +74,7 @@ MPID_nem_net_init( void)
 #elif (MPID_NEM_NET_MODULE == MPID_NEM_MX_MODULE)
   {
       assign_functions (mx);
-  }   
+  }
 #elif (MPID_NEM_NET_MODULE == MPID_NEM_TCP_MODULE)
   {
       assign_functions (tcp);
@@ -79,7 +82,7 @@ MPID_nem_net_init( void)
 #elif (MPID_NEM_NET_MODULE == MPID_NEM_ELAN_MODULE)
   {
       assign_functions (elan);
-  }   
+  }
 #elif (MPID_NEM_NET_MODULE == MPID_NEM_NEWTCP_MODULE)
   {
       assign_functions (newtcp);
@@ -91,17 +94,19 @@ MPID_nem_net_init( void)
 #elif (MPID_NEM_NET_MODULE == MPID_NEM_SCTP_MODULE)
   {
       assign_functions (sctp);
-  } 
+  }
 #elif (MPID_NEM_NET_MODULE == MPID_NEM_IB_MODULE)
   {
       assign_functions (ib);
-  } 
+  }
 #elif (MPID_NEM_NET_MODULE == MPID_NEM_PSM_MODULE)
   {
       assign_functions (psm);
-  }   
+  }
 #else
 #warning ">>>>>>>>>>>>>>>> WRONG NET MODULE INITIALIZATION"
-#endif 
+#endif
+
+  MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NET_INIT);
   return mpi_errno;
 }

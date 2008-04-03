@@ -180,14 +180,14 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_co
 
     /* send CTS with handle for copy buffer */
     MPID_nem_lmt_send_CTS(vc, req, vc_ch->lmt_copy_buf_handle, (int)strlen(vc_ch->lmt_copy_buf_handle) + 1);
-    
+
     queue_initially_empty = LMT_SHM_Q_EMPTY(vc_ch->lmt_queue) && vc_ch->lmt_active_lmt == NULL;
 
     MPIU_CHKPMEM_MALLOC (e, MPID_nem_lmt_shm_wait_element_t *, sizeof (MPID_nem_lmt_shm_wait_element_t), mpi_errno, "lmt wait queue element");
     e->progress = lmt_shm_recv_progress;
     e->req = req;
     LMT_SHM_Q_ENQUEUE(&vc_ch->lmt_queue, e); /* MT: not thread safe */
-        
+
     /* make progress on that vc */
     mpi_errno = lmt_shm_progress_vc(vc, &done);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -199,17 +199,17 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_co
     {
         /* lmt send didn't finish, enqueue it to be completed later */
         lmt_shm_prog_element_t *pe;
-            
+
         MPIU_CHKPMEM_MALLOC (pe, lmt_shm_prog_element_t *, sizeof (lmt_shm_prog_element_t), mpi_errno, "lmt progress queue element");
         pe->vc = vc;
         LMT_SHM_L_ADD(pe);
         MPID_nem_lmt_shm_pending = TRUE;
         MPIU_Assert(!vc_ch->lmt_enqueued);
         vc_ch->lmt_enqueued = TRUE;
-    }    
+    }
 
     MPIU_Assert(LMT_SHM_Q_EMPTY(vc_ch->lmt_queue) || !LMT_SHM_L_EMPTY());
-    
+
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_SHM_START_RECV);
@@ -268,7 +268,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
     e->progress = lmt_shm_send_progress;
     e->req = req;
     LMT_SHM_Q_ENQUEUE(&vc_ch->lmt_queue, e); /* MT: not thread safe */
-    
+
     /* make progress on that vc */
     mpi_errno = lmt_shm_progress_vc(vc, &done);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -280,7 +280,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
     {
         /* lmt send didn't finish, enqueue it to be completed later */
         lmt_shm_prog_element_t *pe;
-            
+
         MPIU_CHKPMEM_MALLOC (pe, lmt_shm_prog_element_t *, sizeof (lmt_shm_prog_element_t), mpi_errno, "lmt progress queue element");
         pe->vc = vc;
         LMT_SHM_L_ADD(pe);
@@ -290,7 +290,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
    }
 
     MPIU_Assert(LMT_SHM_Q_EMPTY(vc_ch->lmt_queue) || !LMT_SHM_L_EMPTY());
-    
+
 
     MPIU_CHKPMEM_COMMIT();
  fn_return:
@@ -342,7 +342,7 @@ static int get_next_req(MPIDI_VC_t *vc)
         /* copy buf is owned by the remote side */
         /* remote side chooses next transfer */
         int i = 0;
-        
+
         MPID_NEM_READ_BARRIER();
         while (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL)
         {
@@ -352,11 +352,11 @@ static int get_next_req(MPIDI_VC_t *vc)
                 i = 0;
             }
             ++i;
-        }    
+        }
 
         MPID_NEM_READ_BARRIER();
         LMT_SHM_Q_SEARCH_REMOVE(&vc_ch->lmt_queue, copy_buf->owner_info.val.remote_req_id, &vc_ch->lmt_active_lmt);
-        
+
         if (vc_ch->lmt_active_lmt == NULL)
             /* request not found  */
             goto fn_exit;
@@ -375,7 +375,7 @@ static int get_next_req(MPIDI_VC_t *vc)
                  vc_ch->lmt_copy_buf->owner_info.val.remote_req_id == vc_ch->lmt_active_lmt->req->ch.lmt_req_id) ||
                 (vc_ch->lmt_copy_buf->owner_info.val.rank == vc->pg_rank &&
                  vc_ch->lmt_copy_buf->owner_info.val.remote_req_id == vc_ch->lmt_active_lmt->req->handle));
-    
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_GET_NEXT_REQ);
     return mpi_errno;
@@ -410,15 +410,15 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                 (vc_ch->lmt_copy_buf->owner_info.val.rank == vc->pg_rank &&
                  vc_ch->lmt_copy_buf->owner_info.val.remote_req_id == vc_ch->lmt_active_lmt->req->handle));
 
-    copy_buf->sender_present.val = TRUE;    
+    copy_buf->sender_present.val = TRUE;
 
     MPIU_Assert(req == vc_ch->lmt_active_lmt->req);
 /*     MPIU_Assert(MPIDI_Request_get_type(req) == MPIDI_REQUEST_TYPE_SEND); */
-    
+
     data_sz = req->ch.lmt_data_sz;
     buf_num = vc_ch->lmt_buf_num;
     first = req->dev.segment_first;
-    
+
     do
     {
         int i;
@@ -443,7 +443,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                     goto fn_exit;
                 }
             }
-                
+
             ++i;
         }
 
@@ -466,8 +466,8 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     while (last < data_sz);
 
     *done = TRUE;
-    MPIDI_CH3U_Request_complete(req);   
-       
+    MPIDI_CH3U_Request_complete(req);
+
  fn_exit:
     copy_buf->sender_present.val = FALSE;
     MPIDI_FUNC_EXIT(MPID_STATE_LMT_SHM_SEND_PROGRESS);
@@ -539,7 +539,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                     goto fn_exit;
                 }
             }
-                
+
             ++i;
         }
 
@@ -566,11 +566,11 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
         {
             /* we have leftover data in the buffer that we couldn't copy out */
             char *surfeit_ptr;
-            
+
             surfeit_ptr = (char *)src_buf + last - first;
             surfeit = expected_last - last;
 
-            if (buf_num == NUM_BUFS-1) 
+            if (buf_num == NUM_BUFS-1)
             {
                 /* if we're wrapping back to buf 0, then we can copy it directly */
                 memcpy(((char *)copy_buf->buf[0]) - surfeit, surfeit_ptr, surfeit);
@@ -593,11 +593,11 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
             MPID_NEM_READ_WRITE_BARRIER();
             copy_buf->len[buf_num].val = 0;	
         }
-        
+
         first = last;
         buf_num = (buf_num+1) % NUM_BUFS;
     }
-    while (last < data_sz); 
+    while (last < data_sz);
 
     for (i = 0; i < NUM_BUFS; ++i)
         copy_buf->len[i].val = 0;
@@ -608,7 +608,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
     *done = TRUE;
     MPIDI_CH3U_Request_complete(req);
-    
+
  fn_exit:
     copy_buf->receiver_present.val = FALSE;
     MPIDI_FUNC_EXIT(MPID_STATE_LMT_SHM_RECV_PROGRESS);
@@ -621,6 +621,11 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV cookie)
 {
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_HANDLE_COOKIE);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_SHM_HANDLE_COOKIE);
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_SHM_HANDLE_COOKIE);
     return MPI_SUCCESS;
 }
 
@@ -630,6 +635,11 @@ int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV c
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_done_send(MPIDI_VC_t *vc, MPID_Request *req)
 {
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_DONE_SEND);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_SHM_DONE_SEND);
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_SHM_DONE_SEND);
     return MPI_SUCCESS;
 }
 
@@ -639,6 +649,11 @@ int MPID_nem_lmt_shm_done_send(MPIDI_VC_t *vc, MPID_Request *req)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_done_recv(MPIDI_VC_t *vc, MPID_Request *req)
 {
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_DONE_RECV);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_SHM_DONE_RECV);
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_SHM_DONE_RECV);
     return MPI_SUCCESS;
 }
 
@@ -662,14 +677,14 @@ static inline int lmt_shm_progress_vc(MPIDI_VC_t *vc, int *done)
     {
         mpi_errno = get_next_req(vc);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        
+
         if (vc_ch->lmt_active_lmt == NULL)
         {
             /* couldn't find an appropriate request, try again later */
             goto fn_exit;
         }
     }
-        
+
     we = vc_ch->lmt_active_lmt;
     mpi_errno = we->progress(vc, we->req, &done_req);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -678,11 +693,11 @@ static inline int lmt_shm_progress_vc(MPIDI_VC_t *vc, int *done)
     {
         MPIU_Free(vc_ch->lmt_active_lmt);
         vc_ch->lmt_active_lmt = NULL;
-        
+
         if (LMT_SHM_Q_EMPTY(vc_ch->lmt_queue))
-            *done = TRUE;    
+            *done = TRUE;
     }
-    
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_LMT_SHM_PROGRESS_VC);
     return mpi_errno;
@@ -710,7 +725,7 @@ int MPID_nem_lmt_shm_progress()
 
         mpi_errno = lmt_shm_progress_vc(pe->vc, &done);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        
+
         if (done)
         {
             lmt_shm_prog_element_t *f;
@@ -775,7 +790,7 @@ static int MPID_nem_attach_shm_region(volatile MPID_nem_copy_buf_t **buf_p, cons
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_ATTACH_SHM_REGION);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_ATTACH_SHM_REGION);
-    
+
     if(*buf_p)
     {
         /* we're already attached */

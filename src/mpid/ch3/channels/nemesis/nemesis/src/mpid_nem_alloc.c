@@ -27,20 +27,23 @@ int MPID_nem_seg_create(MPID_nem_seg_ptr_t memory, int size, int num_local, int 
     char *kvs_name;
     char *handle = 0;
     MPIU_CHKPMEM_DECL (1);
-    
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_SEG_CREATE);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_SEG_CREATE);
+
     /* if there is only one process on this processor, don't use shared memory */
     if (num_local == 1)
     {
         char *addr;
-        
+
         MPIU_CHKPMEM_MALLOC (addr, char *, size + MPID_NEM_CACHE_LINE_LEN, mpi_errno, "segment");
-        
+
         memory->base_addr = addr;
         memory->max_size     = size;
         memory->current_addr = (char *)(((MPI_Aint)addr + (MPI_Aint)MPID_NEM_CACHE_LINE_LEN-1) & (~((MPI_Aint)MPID_NEM_CACHE_LINE_LEN-1)));
         memory->max_addr     = (char *)(memory->current_addr) + memory->max_size;
         memory->size_left    = memory->max_size;
-        memory->symmetrical  = 0 ;   
+        memory->symmetrical  = 0 ;
 
         /* we still need to calls to barrier */
 	pmi_errno = PMI_Barrier();
@@ -51,12 +54,12 @@ int MPID_nem_seg_create(MPID_nem_seg_ptr_t memory, int size, int num_local, int 
         MPIU_CHKPMEM_COMMIT();
         goto fn_exit;
     }
- 
+
     mpi_errno = MPIDI_PG_GetConnKVSname (&kvs_name);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    
+
     memory->max_size = size;
-    
+
     if (local_rank == 0)
     {
         mpi_errno = MPID_nem_allocate_shared_memory (&memory->base_addr, memory->max_size, &handle);
@@ -89,24 +92,25 @@ int MPID_nem_seg_create(MPID_nem_seg_ptr_t memory, int size, int num_local, int 
 
 	mpi_errno = MPID_nem_attach_shared_memory (&memory->base_addr, memory->max_size, handle);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    }    
-    
+    }
+
     pmi_errno = PMI_Barrier();
     MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
-    
+
     if (local_rank == 0)
     {
         mpi_errno = MPID_nem_remove_shared_memory (handle);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
         MPIU_Free (handle);
     }
-    
+
     memory->current_addr = memory->base_addr;
     memory->max_addr     = (char *)(memory->base_addr) + memory->max_size;
     memory->size_left    = memory->max_size;
-    memory->symmetrical  = 0 ;   
+    memory->symmetrical  = 0 ;
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_SEG_CREATE);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -124,6 +128,9 @@ int MPID_nem_seg_create(MPID_nem_seg_ptr_t memory, int size, int num_local, int 
 int MPID_nem_seg_destroy()
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_SEG_DESTROY);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_SEG_DESTROY);
 
     if (MPID_nem_mem_region.num_local == 1)
         MPIU_Free(MPID_nem_mem_region.memory.base_addr);
@@ -132,8 +139,9 @@ int MPID_nem_seg_destroy()
         mpi_errno = MPID_nem_detach_shared_memory (MPID_nem_mem_region.memory.base_addr, MPID_nem_mem_region.memory.max_size);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
-    
+
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_SEG_DESTROY);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -151,16 +159,16 @@ int MPID_nem_seg_alloc( MPID_nem_seg_ptr_t memory, MPID_nem_seg_info_ptr_t seg, 
     MPIDI_STATE_DECL(MPID_STATE_NEM_SEG_ALLOC);
 
     MPIDI_FUNC_ENTER(MPID_STATE_NEM_SEG_ALLOC);
-    
+
     MPIU_Assert( memory->size_left >= size );
-  
+
     seg->addr = memory->current_addr;
     seg->size = size ;
-   
+
     memory->size_left    -= size;
     memory->current_addr  = (char *)(memory->current_addr) + size;
-   
-    MPIU_Assert( (MPI_Aint)(memory->current_addr) <=  (MPI_Aint) (memory->max_addr) );   
+
+    MPIU_Assert( (MPI_Aint)(memory->current_addr) <=  (MPI_Aint) (memory->max_addr) );
 
     MPIDI_FUNC_EXIT(MPID_STATE_NEM_SEG_ALLOC);
     return mpi_errno;
@@ -177,7 +185,10 @@ int MPID_nem_check_alloc (int num_processes)
     int rank    = MPID_nem_mem_region.local_rank;
     int address = 0;
     int base, found, index;
-    
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_CHECK_ALLOC);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CHECK_ALLOC);
+
     pmi_errno = PMI_Barrier();
     MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
 
@@ -191,27 +202,27 @@ int MPID_nem_check_alloc (int num_processes)
 
     base  = ((int *)MPID_nem_mem_region.memory.current_addr)[rank];
     found = 1 ;
-    for (index = 0 ; index < num_processes ; index ++) 
-      {	   
+    for (index = 0 ; index < num_processes ; index ++)
+      {
 	if (index != rank )
-	  {		  
+	  {
 	    if( (base - (MPID_nem_addr_t)(((int *)(MPID_nem_mem_region.memory.current_addr))[index])) == 0)
-	      {		       
+	      {
 		found++;
-	      }		  
-	  }	     
+	      }
+	  }
       }
     pmi_errno = PMI_Barrier();
     MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
 
     if (found == num_processes)
-      {	     
+      {
 	/*fprintf(stderr,"[%i] ===  Symmetrical Alloc ...  \n",rank);	 */
 	MPID_nem_mem_region.memory.symmetrical = 1;
 	MPID_nem_asymm_base_addr = NULL;
       }	
-    else 
-      {	     
+    else
+      {
 	/*fprintf(stderr,"[%i] ===  ASymmetrical Alloc !!!  \n",rank);	 */
 	MPID_nem_mem_region.memory.symmetrical = 0;
 	MPID_nem_asymm_base_addr = MPID_nem_mem_region.memory.base_addr;
@@ -219,8 +230,9 @@ int MPID_nem_check_alloc (int num_processes)
         MPIU_ERR_SETFATALANDJUMP1 (mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "queues are not symmetrically allocated as expected");
 #endif
       }
-    
+
  fn_exit:
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CHECK_ALLOC);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -250,7 +262,10 @@ MPID_nem_allocate_shared_memory (char **buf_p, const int length, char *handle[])
     void *buf;
     struct shmid_ds ds;
     MPIU_CHKPMEM_DECL(1);
-    
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_ALLOCATE_SHARED_MEMORY);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_ALLOCATE_SHARED_MEMORY);
+
     do
     {
         ++key;
@@ -264,12 +279,13 @@ MPID_nem_allocate_shared_memory (char **buf_p, const int length, char *handle[])
     MPIU_ERR_CHKANDJUMP2 ((MPI_Aint)buf == -1, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem", "**alloc_shar_mem %s %s", "shmat", strerror (errno));
 
     *buf_p = buf;
-    
+
     MPIU_CHKPMEM_MALLOC (*handle, char *, MAX_INT_STR_LEN, mpi_errno, "shared memory handle");
     MPIU_Snprintf (*handle, MAX_INT_STR_LEN, "%d", shmid);
 
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_ALLOCATE_SHARED_MEMORY);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -293,17 +309,21 @@ MPID_nem_attach_shared_memory (char **buf_p, const int length, const char handle
     int shmid;
     struct shmid_ds ds;
     char *endptr;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_ATTACH_SHARED_MEMORY);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_ATTACH_SHARED_MEMORY);
 
     shmid = strtoll (handle, &endptr, 10);
     MPIU_ERR_CHKANDJUMP2 (endptr == handle || *endptr != '\0', mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem", "**attach_shar_mem %s %s", "strtoll", strerror (errno));
-    
+
     buf = 0;
     buf = shmat (shmid, buf, 0);
     MPIU_ERR_CHKANDJUMP2 ((MPI_Aint)buf == -1, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem", "**attach_shar_mem %s %s", "shmat", strerror (errno));
-    
+
     *buf_p = buf;
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_ATTACH_SHARED_MEMORY);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -325,6 +345,9 @@ MPID_nem_remove_shared_memory (const char const handle[])
     int ret;
     int shmid;
     struct shmid_ds ds;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_REMOVE_SHARED_MEMORY);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_REMOVE_SHARED_MEMORY);
 
     shmid = atoi (handle);
 
@@ -332,6 +355,7 @@ MPID_nem_remove_shared_memory (const char const handle[])
     MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem", "**remove_shar_mem %s %s", "shmctl", strerror (errno));
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_REMOVE_SHARED_MEMORY);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -350,6 +374,9 @@ MPID_nem_detach_shared_memory (const char *buf_p, const int length)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DETACH_SHARED_MEMORY);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DETACH_SHARED_MEMORY);
 
     ret = shmdt (buf_p);
     /* I'm ignoring the return code here to work around an bug with
@@ -357,6 +384,7 @@ MPID_nem_detach_shared_memory (const char *buf_p, const int length)
     /* MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**detach_shar_mem", "**detach_shar_mem %s %s", "shmdt", strerror (errno));*/
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DETACH_SHARED_MEMORY);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -383,7 +411,9 @@ MPID_nem_allocate_shared_memory (char **buf_p, const int length, char *handle[])
     const char dev_fname[] = "/dev/shm/nemesis_shar_tmpXXXXXX";
     const char tmp_fname[] = "/tmp/nemesis_shar_tmpXXXXXX";
     MPIU_CHKPMEM_DECL(2);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_ALLOCATE_SHARED_MEMORY);
 
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_ALLOCATE_SHARED_MEMORY);
 
     /* create a file */
     /* use /dev/shm if it's there, otherwise put file in /tmp */
@@ -421,9 +451,10 @@ MPID_nem_allocate_shared_memory (char **buf_p, const int length, char *handle[])
     }
     while (ret == -1 && errno == EINTR);
     MPIU_ERR_CHKANDSTMT2 (ret == -1, mpi_errno, MPI_ERR_OTHER, goto fn_close_fail, "**alloc_shar_mem", "**alloc_shar_mem %s %s", "close", strerror (errno));
-    
+
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_ALLOCATE_SHARED_MEMORY);
     return mpi_errno;
  fn_close_fail:
     close (fd);
@@ -442,15 +473,18 @@ MPID_nem_allocate_shared_memory (char **buf_p, const int length, char *handle[])
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_attach_shared_memory (char **buf_p, const int length, const char handle[])    
+MPID_nem_attach_shared_memory (char **buf_p, const int length, const char handle[])
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
     int fd;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_ATTACH_SHARED_MEMORY);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_ATTACH_SHARED_MEMORY);
 
     fd = open (handle, O_RDWR);
     MPIU_ERR_CHKANDJUMP2 (fd == -1, mpi_errno, MPI_ERR_OTHER,  "**attach_shar_mem", "**attach_shar_mem %s %s", "open", strerror (errno));
-    
+
      /* mmap the file */
     *buf_p = mmap (NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     MPIU_ERR_CHKANDSTMT2 (*buf_p == MAP_FAILED, mpi_errno, MPI_ERR_OTHER, goto fn_close_fail, "**attach_shar_mem", "**attach_shar_mem %s %s", "open", strerror (errno));
@@ -462,8 +496,9 @@ MPID_nem_attach_shared_memory (char **buf_p, const int length, const char handle
     }
     while (ret == -1 && errno == EINTR);
     MPIU_ERR_CHKANDSTMT2 (ret == -1, mpi_errno, MPI_ERR_OTHER, goto fn_close_fail, "**attach_shar_mem", "**attach_shar_mem %s %s", "close", strerror (errno));
-    
+
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_ATTACH_SHARED_MEMORY);
     return mpi_errno;
  fn_close_fail:
     close (fd);
@@ -474,7 +509,7 @@ MPID_nem_attach_shared_memory (char **buf_p, const int length, const char handle
     /* --END ERROR HANDLING-- */
 }
 
-/* MPID_nem_remove_shared_memory removes the OS descriptor associated with the 
+/* MPID_nem_remove_shared_memory removes the OS descriptor associated with the
    handle.  Once all processes detatch from the region
    the OS resource will be destroyed. */
 #undef FUNCNAME
@@ -486,17 +521,21 @@ MPID_nem_remove_shared_memory (const char handle[])
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_REMOVE_SHARED_MEMORY);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_REMOVE_SHARED_MEMORY);
 
     ret = unlink (handle);
     MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER,  "**remove_shar_mem", "**remove_shar_mem %s %s", "unlink", strerror (errno));
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_REMOVE_SHARED_MEMORY);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
-/* MPID_nem_detach_shared_memory detaches the shared memory region from this 
+/* MPID_nem_detach_shared_memory detaches the shared memory region from this
    process */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_detach_shared_memory
@@ -507,11 +546,15 @@ MPID_nem_detach_shared_memory (const char *buf_p, const int length)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DETACH_SHARED_MEMORY);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DETACH_SHARED_MEMORY);
 
     ret = munmap ((void *)buf_p, length);
     MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER,  "**detach_shar_mem", "**detach_shar_mem %s %s", "munmap", strerror (errno));
-    
+
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DETACH_SHARED_MEMORY);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

@@ -28,7 +28,6 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
-    
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSG);
@@ -72,7 +71,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
     return mpi_errno;
  fn_fail:
     goto fn_exit;
-    
+
  enqueue_it:
     {
 	MPID_Request * sreq = NULL;

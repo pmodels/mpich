@@ -32,9 +32,12 @@ int MPID_nem_tcp_module_lmt_pre_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_IO
     MPI_Aint dt_true_lb;
     MPID_Datatype * dt_ptr;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_PRE_SEND);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_PRE_SEND);
 
     MPIDI_Datatype_get_info (req->dev.user_count, req->dev.datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    
+
     mpi_errno = create_s_cookie (data_sz, &vc_ch->net.tcp.lmt_cookie, &len);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
@@ -42,6 +45,7 @@ int MPID_nem_tcp_module_lmt_pre_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_IO
     cookie->MPID_IOV_LEN = len;
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_PRE_SEND);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -62,10 +66,13 @@ int MPID_nem_tcp_module_lmt_pre_recv (MPIDI_VC_t *vc, MPID_Request *req, MPID_IO
     MPI_Aint dt_true_lb;
     MPID_Datatype * dt_ptr;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
-    
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_PRE_RECV);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_PRE_RECV);
+
     mpi_errno = read_s_cookie (s_cookie, &vc_ch->net.tcp.lmt_s_len);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    
+
     memset (&saddr, sizeof(saddr), 0);
 
     if (!vc_ch->net.tcp.lmt_connected)
@@ -79,7 +86,7 @@ int MPID_nem_tcp_module_lmt_pre_recv (MPIDI_VC_t *vc, MPID_Request *req, MPID_IO
         saddr.sin_family      = AF_INET;
         saddr.sin_addr.s_addr = htonl (INADDR_ANY);
         saddr.sin_port        = htons (0);
-    
+
         ret = bind (vc_ch->net.tcp.lmt_desc, (struct sockaddr *)&saddr, sizeof (saddr));
         MPIU_ERR_CHKANDJUMP3 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind", "**sock|poll|bind %d %d %s", ntohs (saddr.sin_port), errno, strerror (errno));
 
@@ -88,22 +95,23 @@ int MPID_nem_tcp_module_lmt_pre_recv (MPIDI_VC_t *vc, MPID_Request *req, MPID_IO
         MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", strerror (errno), errno);
 
         set_sockopts (vc_ch->net.tcp.lmt_desc);
-        
-        ret = listen (vc_ch->net.tcp.lmt_desc, SOMAXCONN);	      
-        MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", errno, strerror (errno));  
+
+        ret = listen (vc_ch->net.tcp.lmt_desc, SOMAXCONN);
+        MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", errno, strerror (errno));
     }
 
     MPIDI_Datatype_get_info (req->dev.user_count, req->dev.datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    
+
     mpi_errno = create_r_cookie (MPID_nem_hostname, ntohs (saddr.sin_port), data_sz, &vc_ch->net.tcp.lmt_cookie, &len);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     r_cookie->MPID_IOV_BUF = vc_ch->net.tcp.lmt_cookie;
     r_cookie->MPID_IOV_LEN = len;
-    
+
     *send_cts = 1;
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_PRE_RECV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -128,17 +136,20 @@ int MPID_nem_tcp_module_lmt_start_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_
     int r_port;
     char *r_hostname;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_START_SEND);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_START_SEND);
 
     mpi_errno = read_r_cookie (r_cookie, &r_hostname, &r_port, &r_len);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     free_cookie (vc_ch->net.tcp.lmt_cookie);
-    
+
     if (!vc_ch->net.tcp.lmt_connected)
     {
         struct sockaddr_in saddr;
         struct hostent *hp;
-        
+
         vc_ch->net.tcp.lmt_desc = socket (AF_INET, SOCK_STREAM, 0);
         MPIU_ERR_CHKANDJUMP2 (vc_ch->net.tcp.lmt_desc == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", strerror (errno), errno);
 
@@ -169,13 +180,13 @@ int MPID_nem_tcp_module_lmt_start_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_
         s_len = data_sz;
         data_sz = r_len;
  	req->status.MPI_ERROR = MPIU_ERR_SET2 (mpi_errno, MPI_ERR_TRUNCATE, "**truncate", "**truncate %d %d", s_len, r_len);
-    }    
+    }
 
     MPID_Segment_init (req->dev.user_buf, req->dev.user_count, req->dev.datatype, &req->dev.segment, 0);
     req->dev.segment_first = 0;
     req->dev.segment_size = data_sz;
     req->dev.iov_count = MPID_IOV_LIMIT;
-    req->dev.iov_offset = 0;        
+    req->dev.iov_offset = 0;
     last = data_sz;
 
     do
@@ -197,7 +208,7 @@ int MPID_nem_tcp_module_lmt_start_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_
                     l = CHUNK;
                 else
                     l = left_to_send;
-                
+
                 do
                     nb = write (vc_ch->net.tcp.lmt_desc, buf, l);
                 while (nb == -1 && errno == EINTR);
@@ -210,13 +221,13 @@ int MPID_nem_tcp_module_lmt_start_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_
             MPIDI_CH3U_Request_complete (req);
             goto fn_exit;
         }
-#endif     
-        
+#endif
+
         do
             nb = writev (vc_ch->net.tcp.lmt_desc, &req->dev.iov[iov_offset], req->dev.iov_count - iov_offset);
         while (nb == -1 && errno == EINTR);
         MPIU_ERR_CHKANDJUMP (nb == -1, mpi_errno, MPI_ERR_OTHER, "**sock_writev");
-        
+
         left_to_send -= nb;
         while (left_to_send)
         { /* send rest of iov */
@@ -227,7 +238,7 @@ int MPID_nem_tcp_module_lmt_start_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_
             }
             req->dev.iov[iov_offset].MPID_IOV_BUF = (char *)req->dev.iov[iov_offset].MPID_IOV_BUF + nb;
             req->dev.iov[iov_offset].MPID_IOV_LEN -= nb;
-            
+
             do
                 nb = writev (vc_ch->net.tcp.lmt_desc, &req->dev.iov[iov_offset], req->dev.iov_count - iov_offset);
             while (nb == -1 && errno == EINTR);
@@ -236,10 +247,11 @@ int MPID_nem_tcp_module_lmt_start_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_
         }
     }
     while (last < data_sz);
-    
+
     MPIDI_CH3U_Request_complete (req);
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_START_SEND);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -261,9 +273,12 @@ int MPID_nem_tcp_module_lmt_start_recv (MPIDI_VC_t *vc, MPID_Request *req)
     int nb;
     int r_len;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_START_RECV);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_START_RECV);
 
     free_cookie (vc_ch->net.tcp.lmt_cookie);
-        
+
     if (!vc_ch->net.tcp.lmt_connected)
     {
         int len;
@@ -305,19 +320,19 @@ int MPID_nem_tcp_module_lmt_start_recv (MPIDI_VC_t *vc, MPID_Request *req)
     req->dev.segment_first = 0;
     req->dev.segment_size = data_sz;
     req->dev.iov_count = MPID_IOV_LIMIT;
-    req->dev.iov_offset = 0;        
+    req->dev.iov_offset = 0;
     last = data_sz;
 
     do
     {
         int iov_offset;
         int left_to_recv;
-        
+
         MPID_Segment_unpack_vector (&req->dev.segment, req->dev.segment_first, &last, req->dev.iov, &req->dev.iov_count);
 
         left_to_recv = last - req->dev.segment_first;
         iov_offset = 0;
-        
+
 #ifdef TESTING_CHUNKING
         {
             char *buf = req->dev.iov[0].MPID_IOV_BUF;
@@ -328,7 +343,7 @@ int MPID_nem_tcp_module_lmt_start_recv (MPIDI_VC_t *vc, MPID_Request *req)
                     l = CHUNK;
                 else
                     l = left_to_recv;
-                
+
                 do
                     nb = read (vc_ch->net.tcp.lmt_desc, buf, l);
                 while (nb == -1 && errno == EINTR);
@@ -341,13 +356,13 @@ int MPID_nem_tcp_module_lmt_start_recv (MPIDI_VC_t *vc, MPID_Request *req)
             goto fn_exit;
         }
 #endif
-      
+
         do
             nb = readv (vc_ch->net.tcp.lmt_desc, &req->dev.iov[iov_offset], req->dev.iov_count - iov_offset);
         while (nb == -1 && errno == EINTR);
         MPIU_ERR_CHKANDJUMP2 (nb == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", strerror (errno), errno);
         MPIU_ERR_CHKANDJUMP (nb == 0, mpi_errno, MPI_ERR_OTHER, "**fail");
-        
+
         left_to_recv -= nb;
         while (left_to_recv)
         { /* recv rest of iov */
@@ -358,7 +373,7 @@ int MPID_nem_tcp_module_lmt_start_recv (MPIDI_VC_t *vc, MPID_Request *req)
             }
             req->dev.iov[iov_offset].MPID_IOV_BUF = (char *)req->dev.iov[iov_offset].MPID_IOV_BUF + nb;
             req->dev.iov[iov_offset].MPID_IOV_LEN -= nb;
-            
+
             do
                 nb = readv (vc_ch->net.tcp.lmt_desc, &req->dev.iov[iov_offset], req->dev.iov_count - iov_offset);
             while (nb == -1 && errno == EINTR);
@@ -368,10 +383,11 @@ int MPID_nem_tcp_module_lmt_start_recv (MPIDI_VC_t *vc, MPID_Request *req)
         }
     }
     while (last < data_sz);
-    
+
     MPIDI_CH3U_Request_complete (req);
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_START_RECV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -384,8 +400,12 @@ int MPID_nem_tcp_module_lmt_start_recv (MPIDI_VC_t *vc, MPID_Request *req)
 int MPID_nem_tcp_module_lmt_post_send (MPIDI_VC_t *vc, MPID_Request *req)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_POST_SEND);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_POST_SEND);
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_POST_SEND);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -398,8 +418,12 @@ int MPID_nem_tcp_module_lmt_post_send (MPIDI_VC_t *vc, MPID_Request *req)
 int MPID_nem_tcp_module_lmt_post_recv (MPIDI_VC_t *vc, MPID_Request *req)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_POST_RECV);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_POST_RECV);
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_POST_RECV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -413,11 +437,11 @@ static int create_s_cookie (int data_sz, char **cookie, int *len)
 {
     int mpi_errno = MPI_SUCCESS;
     int *int_cookie;
-    
+
     int_cookie = MPIU_Malloc (sizeof (data_sz));
     MPIU_ERR_CHKANDJUMP (int_cookie == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
     *int_cookie = data_sz;
-    
+
     *cookie = (char *)int_cookie;
     *len = sizeof (data_sz);
 
@@ -466,14 +490,14 @@ static int create_r_cookie (char *hostname, int port, int data_sz, char **cookie
     hostname_len = strnlen (hostname, MAX_HOSTNAME_LEN) + 1;
 
     cookie_len = sizeof (r_cookie_t) - 1 + hostname_len;
-    
+
     c = MPIU_Malloc (cookie_len);
     MPIU_ERR_CHKANDJUMP (c == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     c->port = port;
     c->data_sz = data_sz;
     MPIU_Strncpy (c->hostname, hostname, hostname_len);
-    
+
     *cookie = (char *)c;
     *len = sizeof (r_cookie_t) - 1 + hostname_len;
 
@@ -523,7 +547,7 @@ static int set_sockopts (int fd)
     int mpi_errno = MPI_SUCCESS;
     int option;
     int ret;
-    
+
     option = 0;
     ret = setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, &option, sizeof(int));
     MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", strerror (errno), errno);

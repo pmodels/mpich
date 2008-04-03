@@ -83,10 +83,10 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         mpi_errno = sreq->dev.OnDataAvail(vc, sreq, &complete);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIU_Assert(complete); /* all data has been sent, we should always complete */
-        
+
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.segment_size));
     }
-    
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
     return mpi_errno;

@@ -9,7 +9,7 @@
 int MPID_nem_alt_tcp_module_poll (MPID_nem_poll_dir_t in_or_out);
 
 /* #define TRACE */
-  
+
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_module_poll_send
 #undef FCNAME
@@ -26,7 +26,10 @@ MPID_nem_tcp_module_poll_send( void )
     int                  index;
     int                  grank;
     node_t              *nodes     = MPID_nem_tcp_internal_vars.nodes;
-   
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_POLL_SEND);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_POLL_SEND);
+
     /* first, handle pending sends */
     if  (MPID_nem_tcp_internal_vars.n_pending_send > 0)
     {
@@ -34,21 +37,21 @@ MPID_nem_tcp_module_poll_send( void )
 	{
             grank = MPID_nem_mem_region.ext_ranks[index];
             if((grank != MPID_nem_mem_region.rank ) && (!MPID_nem_tcp_internal_queue_empty (nodes[grank].internal_recv_queue)))
-	    {	     
-#ifdef TRACE 
+	    {
+#ifdef TRACE
                 fprintf(stderr,"[%i] -- TCP RETRY SEND for %i ... \n",MPID_nem_mem_region.rank,grank);
                 /*MPID_nem_dump_queue( nodes[grank].internal_recv_queue ); */
-#endif		  	  
+#endif
                 pkt  = (MPID_nem_pkt_t *)MPID_NEM_CELL_TO_PACKET ( nodes[grank].internal_recv_queue.head ); /* cast away volatile */
                 dest = pkt->mpich2.dest;
                 len  = (MPID_NEM_PACKET_OPT_LEN(pkt)) - nodes[dest].left2write;
-	      
+
                 do
                 {
                     offset = write(nodes[dest].desc,(char *)pkt + nodes[dest].left2write, len);
                 }
                 while (offset == -1 && errno == EINTR);
-#ifdef TRACE 
+#ifdef TRACE
                 fprintf(stderr,"[%i] -- TCP RETRY SEND for %i/offset %i/remaining %i \n/pkt len : %i/curr offset : %i \n",
                         MPID_nem_mem_region.rank,
                         grank,
@@ -56,29 +59,29 @@ MPID_nem_tcp_module_poll_send( void )
                         len,
                         MPID_NEM_PACKET_OPT_LEN(pkt),
                         nodes[dest].left2write);
-#endif		  	  
+#endif
                 if(offset != -1)
 		{
                     nodes[dest].left2write += offset;
-		  
+
                     if(nodes[dest].left2write == (MPID_NEM_PACKET_OPT_LEN(pkt)))
-		    {		 
-#ifdef TRACE 
+		    {
+#ifdef TRACE
                         fprintf(stderr,"[%i] -- TCP SEND : sent PARTIAL MSG 2 %i len, [%i total/%i payload]\n",
                                 MPID_nem_mem_region.rank,
                                 offset,
                                 nodes[dest].left2write,
                                 pkt->mpich2.datalen);
-#endif		  
-		      
+#endif
+
                         nodes[dest].left2write = 0;
                         MPID_nem_tcp_internal_queue_dequeue (&nodes[dest].internal_recv_queue, &cell);
-                        MPID_nem_queue_enqueue (MPID_nem_process_free_queue, cell); 
+                        MPID_nem_queue_enqueue (MPID_nem_process_free_queue, cell);
                         MPID_nem_tcp_internal_vars.n_pending_send--;
                         MPID_nem_tcp_internal_vars.n_pending_sends[dest]--;
 		    }
 		}
-                else 
+                else
 		{
 
                     /* write() returned an error */
@@ -89,6 +92,7 @@ MPID_nem_tcp_module_poll_send( void )
     }
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_POLL_SEND);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -107,27 +111,30 @@ MPID_nem_tcp_module_poll_recv( void )
     int                  ret          = 0;
     int                  index;
     int                  grank;
-    int                  outstanding2 = 0 ;   
+    int                  outstanding2 = 0 ;
     int                  offset;
     MPID_nem_pkt_t      *pkt          = NULL;
     struct timeval       time;
     node_t              *nodes        = MPID_nem_tcp_internal_vars.nodes ;
-   
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_POLL_RECV);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_POLL_RECV);
+
     time.tv_sec  = 0;
     time.tv_usec = 0;
     ret = select (MPID_nem_tcp_internal_vars.max_fd, &read_set, NULL, NULL, &time);
     MPIU_ERR_CHKANDJUMP1 (ret == -1 && errno != EINTR, mpi_errno, MPI_ERR_OTHER, "**select", "**select %s", strerror (errno));
 
     if (ret == -1) goto fn_exit;
-    
-#ifdef TRACE    
+
+#ifdef TRACE
     if(ret)
 	fprintf(stderr,
 		"[%i] -- RECV TCP select with ret : %i \n",
 		MPID_nem_mem_region.rank,
 		ret);
 #endif
-    
+
     while( (ret > 0) || (MPID_nem_tcp_internal_vars.outstanding > 0))
     {
 	for(index = 0 ; index < MPID_nem_mem_region.ext_procs ; index++)
@@ -142,11 +149,11 @@ MPID_nem_tcp_module_poll_recv( void )
 
 #ifdef TRACE
 		fprintf(stderr,"[%i] -- RECV TCP READ : desc is %i (index %i)\n",
-			MPID_nem_mem_region.rank, 
+			MPID_nem_mem_region.rank,
 			nodes[grank].desc,
 			index);
 		/*MPID_nem_dump_queue( nodes[grank].internal_free_queue );*/
-#endif	    
+#endif
 
             main_routine :
                 /* handle pending recvs */
@@ -155,7 +162,7 @@ MPID_nem_tcp_module_poll_recv( void )
                     pkt = (MPID_nem_pkt_t *)MPID_NEM_CELL_TO_PACKET (nodes[grank].internal_free_queue.head); /* cast away volatile */
                     if ((nodes[grank].left2read_head > 0) && (nodes[grank].left2read == 0))
                     {
-                        do 
+                        do
                         {
                             offset = read(nodes[grank].desc,
                                           (char *)pkt + nodes[grank].left2read_head,
@@ -166,16 +173,16 @@ MPID_nem_tcp_module_poll_recv( void )
                         {
                             nodes[grank].left2read_head += offset;
                             if(nodes[grank].left2read_head == MPID_NEM_OPT_HEAD_LEN)
-                            {	      
+                            {
                                 nodes[grank].left2read_head = 0;
                                 if (pkt->mpich2.datalen > MPID_NEM_OPT_SIZE)
                                 {
-                                    nodes[grank].left2read = pkt->mpich2.datalen - MPID_NEM_OPT_SIZE; 
-                                    do 
+                                    nodes[grank].left2read = pkt->mpich2.datalen - MPID_NEM_OPT_SIZE;
+                                    do
                                     {
                                         offset =  read(nodes[grank].desc,
                                                        (pkt->mpich2.payload + MPID_NEM_OPT_SIZE),
-                                                       nodes[grank].left2read);				  
+                                                       nodes[grank].left2read);
                                     }
                                     while (offset == -1 && errno == EINTR);
 
@@ -185,7 +192,7 @@ MPID_nem_tcp_module_poll_recv( void )
                                         if (nodes[grank].left2read == 0)
                                         {
                                             MPID_nem_tcp_internal_queue_dequeue (&nodes[grank].internal_free_queue, &cell);
-                                            MPID_nem_queue_enqueue (MPID_nem_process_recv_queue, cell);	      
+                                            MPID_nem_queue_enqueue (MPID_nem_process_recv_queue, cell);
                                             MPID_nem_tcp_internal_vars.n_pending_recv--;
                                         }
                                     }
@@ -203,11 +210,11 @@ MPID_nem_tcp_module_poll_recv( void )
                                 {
                                     nodes[grank].left2read = 0;
                                     MPID_nem_tcp_internal_queue_dequeue (&nodes[grank].internal_free_queue, &cell);
-                                    MPID_nem_queue_enqueue (MPID_nem_process_recv_queue, cell);	      
+                                    MPID_nem_queue_enqueue (MPID_nem_process_recv_queue, cell);
                                     MPID_nem_tcp_internal_vars.n_pending_recv--;
                                     continue;
                                 }
-                                
+
                             }
 #ifdef TRACE
                             else
@@ -217,28 +224,28 @@ MPID_nem_tcp_module_poll_recv( void )
 #endif
                         }
                         else
-                        { 
+                        {
                             if(errno != EAGAIN)
                             {
                                 /* read() returned an error */
                                 MPIU_ERR_SETANDJUMP1 (mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror (errno));
-                            }                            
-                        }		      
+                            }
+                        }
                     }
                     else if (nodes[grank].left2read > 0)
                     {
-                        do 
+                        do
                         {
                             offset = read(nodes[grank].desc,
-                                          (char *)&(pkt->mpich2.payload) + (pkt->mpich2.datalen - nodes[grank].left2read),    
+                                          (char *)&(pkt->mpich2.payload) + (pkt->mpich2.datalen - nodes[grank].left2read),
                                           nodes[grank].left2read);
                         }
                         while (offset == -1 && errno == EINTR);
 
                         if (offset != -1)
                         {
-                            nodes[grank].left2read -= offset;			  
-#ifdef TRACE 
+                            nodes[grank].left2read -= offset;
+#ifdef TRACE
                             {
                                 int index;
                                 fprintf(stderr,
@@ -256,12 +263,12 @@ MPID_nem_tcp_module_poll_recv( void )
                             {
                                 nodes[grank].left2read_head = 0;
                                 MPID_nem_tcp_internal_queue_dequeue (&nodes[grank].internal_free_queue, &cell);
-                                MPID_nem_queue_enqueue (MPID_nem_process_recv_queue, cell);	      
-                                MPID_nem_tcp_internal_vars.n_pending_recv--;					  
+                                MPID_nem_queue_enqueue (MPID_nem_process_recv_queue, cell);
+                                MPID_nem_tcp_internal_vars.n_pending_recv--;
                             }
                         }
                         else
-                        { 
+                        {
                             if (errno != EAGAIN)
                             {
                                 /* read() returned an error */
@@ -276,14 +283,14 @@ MPID_nem_tcp_module_poll_recv( void )
                     if (!MPID_nem_queue_empty(MPID_nem_module_tcp_free_queue))
                     {
                         MPID_nem_queue_dequeue (MPID_nem_module_tcp_free_queue, &cell);
-                        do 
+                        do
                         {
                             offset = read (nodes[grank].desc,
                                            (MPID_nem_pkt_mpich2_t *)&(cell->pkt.mpich2), /* cast away volatile */
                                            MPID_NEM_OPT_HEAD_LEN);
                         }
                         while (offset == -1 && errno == EINTR);
-#ifdef TRACE 			     
+#ifdef TRACE
                         {				
                             int index ;
                             for(index = 0 ; index < ((cell->pkt.mpich2.datalen)/sizeof(int)); index ++)
@@ -291,28 +298,28 @@ MPID_nem_tcp_module_poll_recv( void )
                                 fprintf(stderr,"[%i] --- Got cell[%i] : %i\n",MPID_nem_mem_region.rank,index,((int *)&(cell->pkt.mpich2))[index] );
                             }
                         }
-#endif 
-			   
+#endif
+
                         if (offset != -1)
                         {
-                            nodes[grank].left2read_head += offset;		    
+                            nodes[grank].left2read_head += offset;
                             if (nodes[grank].left2read_head != 0)
                             {
                                 if (nodes[grank].left2read_head < MPID_NEM_OPT_HEAD_LEN)
                                 {
-#ifdef TRACE 
+#ifdef TRACE
                                     fprintf(stderr,"[%i] -- RECV TCP READ : got PARTIAL header [%i bytes/ %i total] \n",
                                             MPID_nem_mem_region.rank,
-                                            offset, 
+                                            offset,
                                             MPID_NEM_OPT_HEAD_LEN);
 #endif
 										
                                     if (strncmp( (char *)((MPID_nem_pkt_mpich2_t *)&(cell->pkt.mpich2)),TCP_END_STRING,strlen(TCP_END_STRING)) == 0)
                                     {
-#ifdef TRACE 
+#ifdef TRACE
                                         fprintf(stderr,"[%i] -- RECV TCP READ : got TERM MSG (PARTIAL) : %s \n",
                                                 MPID_nem_mem_region.rank,(char *)((MPID_nem_pkt_mpich2_t *)&(cell->pkt.mpich2)));
-#endif 
+#endif
                                         --MPID_nem_tcp_internal_vars.nb_procs;
                                         MPID_nem_queue_enqueue (MPID_nem_module_tcp_free_queue, cell);
                                         goto end;
@@ -330,7 +337,7 @@ MPID_nem_tcp_module_poll_recv( void )
                                         int index;
                                         fprintf(stderr,"[%i] -- RECV TCP READ : got FULL header [%i bytes/ %i total] [src %i -- dest %i -- dlen %i -- seqno %i]\n",
                                                 MPID_nem_mem_region.rank,
-                                                offset, 
+                                                offset,
                                                 MPID_NEM_OPT_HEAD_LEN,
                                                 cell->pkt.mpich2.source,
                                                 cell->pkt.mpich2.dest,
@@ -341,10 +348,10 @@ MPID_nem_tcp_module_poll_recv( void )
 					
                                     if (strncmp( (char *)((MPID_nem_pkt_mpich2_t *)&(cell->pkt.mpich2)),TCP_END_STRING,strlen(TCP_END_STRING)) == 0)
                                     {
-#ifdef TRACE 
+#ifdef TRACE
                                         fprintf(stderr,"[%i] -- RECV TCP READ : got TERM MSG (FULL) : %s, cell @ %p \n",
                                                 MPID_nem_mem_region.rank,(char *)((MPID_nem_pkt_mpich2_t *)&(cell->pkt.mpich2)),cell);
-#endif 
+#endif
                                         --MPID_nem_tcp_internal_vars.nb_procs;
                                         MPID_nem_queue_enqueue (MPID_nem_module_tcp_free_queue, cell);
                                         goto end;
@@ -353,15 +360,15 @@ MPID_nem_tcp_module_poll_recv( void )
                                     if ( (cell->pkt.mpich2.datalen) > (MPID_NEM_OPT_SIZE) )
                                     {
                                         nodes[grank].left2read = ((cell->pkt.mpich2.datalen) - (MPID_NEM_OPT_SIZE));
-                                    }				       
+                                    }
                                     else
-                                    {					    
+                                    {
                                         nodes[grank].left2read = 0;
                                     }
 					
                                     if (nodes[grank].left2read != 0)
                                     {
-                                        do 
+                                        do
                                         {
                                             offset = read(nodes[grank].desc,
                                                           ((char *)&(cell->pkt.mpich2) + (MPID_NEM_OPT_HEAD_LEN)),
@@ -371,7 +378,7 @@ MPID_nem_tcp_module_poll_recv( void )
 
                                         if (offset != -1)
                                         {
-#ifdef TRACE 
+#ifdef TRACE
                                             {
                                                 int index;
                                                 fprintf(stderr,"[%i] -- RECV TCP READ : got  [%i bytes/ %i total] \n",
@@ -379,20 +386,20 @@ MPID_nem_tcp_module_poll_recv( void )
                                                         offset,
                                                         nodes[grank].left2read);
                                             }
-#endif				    			    
+#endif
                                             nodes[grank].left2read_head = 0;
                                             nodes[grank].left2read     -= offset;
                                             if (nodes[grank].left2read == 0)
                                             {
-                                                MPID_nem_queue_enqueue (MPID_nem_process_recv_queue, cell);	      
+                                                MPID_nem_queue_enqueue (MPID_nem_process_recv_queue, cell);
                                             }
-                                            else				     
+                                            else
                                             {
                                                 MPID_nem_tcp_internal_queue_enqueue (&nodes[grank].internal_free_queue, cell);
                                                 MPID_nem_tcp_internal_vars.n_pending_recv++;
                                             }
                                         }
-                                        else 
+                                        else
                                         {
                                             if (errno == EAGAIN)
                                             {
@@ -424,7 +431,7 @@ MPID_nem_tcp_module_poll_recv( void )
 #endif		
                             }
                         }
-                        else 
+                        else
                         {
                             if (errno == EAGAIN)
                             {
@@ -447,10 +454,10 @@ MPID_nem_tcp_module_poll_recv( void )
 	    }
 	    else
             {
-#ifdef TRACE       
+#ifdef TRACE
 		fprintf(stderr,"[%i] -- RECV TCP READ NO desc (%i) (index %i) \n",
 			MPID_nem_mem_region.rank, nodes[index].desc,grank);
-#endif	   
+#endif
 		if (nodes[grank].toread > 0 )
                 {
 		    nodes[grank].toread--;
@@ -464,6 +471,7 @@ MPID_nem_tcp_module_poll_recv( void )
     outstanding2 = 0;
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_POLL_RECV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -477,7 +485,10 @@ int
 MPID_nem_alt_tcp_module_poll (MPID_nem_poll_dir_t in_or_out)
 {
     int mpi_errno = MPI_SUCCESS;
-    
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_ALT_TCP_MODULE_POLL);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_ALT_TCP_MODULE_POLL);
+
     if(MPID_nem_tcp_internal_vars.poll_freq >= 0)
     {
         if (in_or_out == MPID_NEM_POLL_OUT)
@@ -490,8 +501,8 @@ MPID_nem_alt_tcp_module_poll (MPID_nem_poll_dir_t in_or_out)
 	        {
 		    mpi_errno = MPID_nem_tcp_module_poll_recv();
                     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-                } 
-		else if (--(MPID_nem_tcp_internal_vars.poll_freq) == 0) 
+                }
+		else if (--(MPID_nem_tcp_internal_vars.poll_freq) == 0)
 		{
 		    mpi_errno = MPID_nem_tcp_module_poll_recv();
                     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -507,7 +518,7 @@ MPID_nem_alt_tcp_module_poll (MPID_nem_poll_dir_t in_or_out)
                 MPID_nem_tcp_internal_vars.poll_freq = MPID_nem_tcp_internal_vars.old_poll_freq;
 	    }
 	}
-	else 
+	else
 	{
 	    if( MPID_nem_tcp_internal_vars.n_pending_recv > 0 )
 	    {
@@ -518,7 +529,7 @@ MPID_nem_alt_tcp_module_poll (MPID_nem_poll_dir_t in_or_out)
                     mpi_errno = MPID_nem_tcp_module_poll_send();
                     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
                 }
-                else if (--(MPID_nem_tcp_internal_vars.poll_freq) == 0) 
+                else if (--(MPID_nem_tcp_internal_vars.poll_freq) == 0)
                 {
                     mpi_errno = MPID_nem_tcp_module_poll_send();
                     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -536,6 +547,7 @@ MPID_nem_alt_tcp_module_poll (MPID_nem_poll_dir_t in_or_out)
 	}
     }
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_ALT_TCP_MODULE_POLL);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -549,7 +561,10 @@ int
 MPID_nem_tcp_module_poll (MPID_nem_poll_dir_t in_or_out)
 {
     int mpi_errno = MPI_SUCCESS;
-    
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_POLL);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_POLL);
+
     if (MPID_nem_tcp_internal_vars.poll_freq >= 0)
     {
         if (in_or_out == MPID_NEM_POLL_OUT)
@@ -559,7 +574,7 @@ MPID_nem_tcp_module_poll (MPID_nem_poll_dir_t in_or_out)
 	    mpi_errno = MPID_nem_tcp_module_poll_recv();
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
         }
-	else 
+	else
 	{
             mpi_errno = MPID_nem_tcp_module_poll_recv();
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -567,11 +582,10 @@ MPID_nem_tcp_module_poll (MPID_nem_poll_dir_t in_or_out)
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 	}
     }
-    
+
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_POLL);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-
-
