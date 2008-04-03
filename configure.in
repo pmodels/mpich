@@ -1885,6 +1885,12 @@ if test "$has_exclaim" = "yes" ; then
 else
     cp src/binding/f77/mpif.h src/include
 fi
+if test "$has_fort_real8" = "yes" ; then
+    sed -e 's/DOUBLE PRECISION/REAL*8/g' src/include/mpif.h > src/include/mpif.h.new
+    mv src/include/mpif.h.new src/include/mpif.h
+    cp src/include/mpif.h src/binding/f77/mpif.h
+fi
+
 if test ! -d bin  ; then mkdir bin ; fi 
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
    -e 's%libdir=.*%libdir='$libbuild_dir% src/env/mpif77 > bin/mpif77 ;
@@ -1894,6 +1900,7 @@ else
 fi],
 enable_f77=$enable_f77
 has_exclaim=$has_exclaim
+has_fort_real8=$pac_cv_fort_real8
 includebuild_dir=$includebuild_dir
 libbuild_dir=$libbuild_dir
 bashWorks=$bashWorks)
@@ -2298,10 +2305,10 @@ public:
     esac
     # GNU changed the calling conventions between minor releases (!!!)
     # This is too hard to detect, but we should be able to detect
-    # the version mismatch
+    # the version mismatch.
     GNU_VERSION=0
     GNU_MINORVERSION=0
-    if test "$ac_compiler_gnu" = "yes" ; then
+    if test "$cross_compiling" = "no" -a "$ac_compiler_gnu" = "yes" ; then
          ac_vals=""
 	 AC_MSG_CHECKING([for GNU g++ version])
          AC_TRY_RUN([#include <stdio.h>
@@ -4177,11 +4184,6 @@ EOF
     AC_SUBST(DLLIMPORT)
 
     # FIXME:
-    # Eventually, need to add 
-    # SIZEOF_F90_INTEGER
-    # SIZEOF_F90_REAL
-    # SIZEOF_F90_CHARACTER
-    # SIZEOF_F90_DOUBLE_PRECISION
     # We also need to include
     # SIZEOF_F90_MPI_OFFSET
     # SIZEOF_F90_MPI_AINT
@@ -4226,7 +4228,24 @@ EOF
         REQD="!"
     fi
     AC_SUBST(REQD)
-
+    # Is integer*1 supported, and is it a different size than integer?
+    REQI1="!"
+    if test "$pac_cv_fort_integer1" = yes -a "$SIZEOF_F90_INTEGER" != 1 ; then
+        REQI1=
+    fi
+    AC_SUBST(REQI1)
+    # Is integer*2 supported, and is it a different size than integer?
+    REQI2="!"
+    if test "$pac_cv_fort_integer2" = yes -a "$SIZEOF_F90_INTEGER" != 2 ; then
+        REQI2=
+    fi
+    AC_SUBST(REQI2)
+    # Is integer*8 supported, and is it a different size than integer?
+    REQI8="!"
+    if test "$pac_cv_fort_integer8" = yes -a "$SIZEOF_F90_INTEGER" != 8 ; then
+        REQI8=
+    fi
+    AC_SUBST(REQI8)
     # 
 
     AC_LANG_C

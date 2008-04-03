@@ -677,11 +677,14 @@ print MAKEFD "\$(MPIBASEMOD).\$(MOD): \$(srcdir)/mpi_base.f90\n";
 &createModSteps( '$(srcdir)/mpi_base.f90' );
 
 print MAKEFD "\
-# We need a free-format version of mpif.h with no external commands
+# We need a free-format version of mpif.h with no external commands,
+# including no wtime/wtick (removing MPI_WTICK also removes MPI_WTIME, 
+# but leave MPI_WTIME_IS_GLOBAL).
 mpifnoext.h: ../f77/mpif.h
 	rm -f mpifnoext.h
 	sed -e 's/^C/\\!/g' -e '/EXTERNAL/d' \\
-		-e '/DOUBLE PRECISION/d' ../f77/mpif.h > mpifnoext.h
+		-e '/DOUBLE PRECISION/d' \\
+		-e '/MPI_WTICK/d' ../f77/mpif.h > mpifnoext.h
 ";
 print MAKEFD "
 # To ensure that f90 can be used before a make-install step, we copy

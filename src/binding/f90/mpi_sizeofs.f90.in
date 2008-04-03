@@ -18,6 +18,9 @@
      &           MPI_SIZEOF_IV, MPI_SIZEOF_RV,                         &
      &           MPI_SIZEOF_LV, MPI_SIZEOF_CHV, MPI_SIZEOF_CXV
 @REQD@           MODULE PROCEDURE MPI_SIZEOF_D, MPI_SIZEOF_DV
+@REQI1@          MODULE PROCEDURE MPI_SIZEOF_I1, MPI_SIZEOF_I1V
+@REQI2@          MODULE PROCEDURE MPI_SIZEOF_I2, MPI_SIZEOF_I2V
+@REQI8@          MODULE PROCEDURE MPI_SIZEOF_I8, MPI_SIZEOF_I8V
        END INTERFACE ! MPI_SIZEOF
 !
        CONTAINS
@@ -113,6 +116,49 @@
        SIZE = 2*@SIZEOF_F90_REAL@
        IERROR = 0
        END SUBROUTINE MPI_SIZEOF_CXV
+!
+! Support for the optional Integer*8 type
+! Note that we may want to replace this with code that handles
+! MPI_OFFSET_KIND or MPI_ADDRESS_KIND integers
+@REQI8@       SUBROUTINE MPI_SIZEOF_I8( X, SIZE, IERROR )
+@REQI8@       INTEGER*8 X
+@REQI8@       INTEGER SIZE, IERROR
+@REQI8@       SIZE = 8
+@REQI8@       IERROR = 0
+@REQI8@       END SUBROUTINE MPI_SIZEOF_I8
+@REQI8@       SUBROUTINE MPI_SIZEOF_I8V( X, SIZE, IERROR )
+@REQI8@       INTEGER*8 X(*)
+@REQI8@       INTEGER SIZE, IERROR
+@REQI8@       SIZE = 8
+@REQI8@       IERROR = 0
+@REQI8@       END SUBROUTINE MPI_SIZEOF_I8V
+!
+@REQI1@       SUBROUTINE MPI_SIZEOF_I1( X, SIZE, IERROR )
+@REQI1@       INTEGER*1 X
+@REQI1@       INTEGER SIZE, IERROR
+@REQI1@       SIZE = 1
+@REQI1@       IERROR = 0
+@REQI1@       END SUBROUTINE MPI_SIZEOF_I1
+@REQI1@       SUBROUTINE MPI_SIZEOF_I1V( X, SIZE, IERROR )
+@REQI1@       INTEGER*1 X(*)
+@REQI1@       INTEGER SIZE, IERROR
+@REQI1@       SIZE = 1
+@REQI1@       IERROR = 0
+@REQI1@       END SUBROUTINE MPI_SIZEOF_I1V
+!
+@REQI2@       SUBROUTINE MPI_SIZEOF_I2( X, SIZE, IERROR )
+@REQI2@       INTEGER*2 X
+@REQI2@       INTEGER SIZE, IERROR
+@REQI2@       SIZE = 2
+@REQI2@       IERROR = 0
+@REQI2@       END SUBROUTINE MPI_SIZEOF_I2
+@REQI2@       SUBROUTINE MPI_SIZEOF_I2V( X, SIZE, IERROR )
+@REQI2@       INTEGER*2 X(*)
+@REQI2@       INTEGER SIZE, IERROR
+@REQI2@       SIZE = 2
+@REQI2@       IERROR = 0
+@REQI2@       END SUBROUTINE MPI_SIZEOF_I2V
+! 
 !
 ! We don't include double complex.  If we did, we'd need to include the
 ! same hack as for real and double above if the compiler has been forced
