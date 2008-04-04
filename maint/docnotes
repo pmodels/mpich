@@ -88,6 +88,11 @@ All MPI objects (e.g., 'MPI_Datatype', 'MPI_Comm') are of type 'INTEGER'
 in Fortran.  
 N*/
 
+Try this as an alias
+/*N fortran
+.N Fortran
+N*/
+
 /*N FortranStatus
  The 'status' argument must be declared as an array of size 'MPI_STATUS_SIZE',
  as in 'integer status(MPI_STATUS_SIZE)'.
