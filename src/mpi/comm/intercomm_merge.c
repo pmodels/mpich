@@ -53,7 +53,7 @@ Notes:
 .N Fortran
 
 Algorithm:
-.Es
+.Eb
 .i Allocate contexts 
 .i Local and remote group leaders swap high values
 .i Determine the high value.
