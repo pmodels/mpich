@@ -1070,7 +1070,8 @@ End Function
 ' Regular releases are treated as patch 0
 '
 ' Numeric version will have 1 digit for MAJ, 2 digits for MIN,
-' 2 digits for REV, 1 digit for EXT and 1 digit for EXT_NUMBER.
+' 2 digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER.
+' eg: 1.0.7rc2 = 10007202
 
 Function GetMPICH2NumVersion(ver)
 	Dim verTokenArray, numVer, majorVer, minorVer, revNum, ext, extNum, tmpStr
@@ -1168,15 +1169,19 @@ Function GetMPICH2NumVersion(ver)
 '		There has to be an extension number
 		if(matchesCollection.Count = 2) then
 			extNum = matchesCollection(1)
-			if Len(extNum) = 1 then
+			if (Len(extNum) > 0) And (Len(extNum) < 2) then
 				if Not IsIntString(extNum) then
 					WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
 					WScript.Echo "Extension number : " & extNum & " is not an int"
 					Exit Function
+				else
+					if(extNum <= 9) then
+						extNum = "0" & Right(extNum, 1)
+					end if
 				end if
 			else
 				WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
-				WScript.Echo "Extension number no in range [0-9]"
+				WScript.Echo "Extension number no in range [0-99]"
 				Exit Function
 			end if 
 		else
