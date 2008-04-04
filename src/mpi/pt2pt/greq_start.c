@@ -80,7 +80,7 @@ Output Parameter:
  the Intel MPI test suite made use of non-zero values to indicate failure, 
  and expected these values to be returned by the 'MPI_Comm_dup' when the 
  attribute routines encountered an error.  Such error values may not be valid 
- MPI error codes or classes.  Because of this, it is the user's responsibility
+ MPI error codes or classes.  Because of this, it is the user''s responsibility
  to either use valid MPI error codes in return from the attribute callbacks,
  if those error codes are to be returned by a generalized request callback,
  or to detect and convert those error codes to valid MPI error codes (recall
