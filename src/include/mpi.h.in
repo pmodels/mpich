@@ -274,6 +274,14 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 #define MPICH2_VERSION "@VERSION@"
 #define MPICH2_NUMVERSION @NUMVERSION@
 
+#define MPICH2_RELEASE_TYPE_ALPHA  0
+#define MPICH2_RELEASE_TYPE_BETA   1
+#define MPICH2_RELEASE_TYPE_RC     2
+#define MPICH2_RELEASE_TYPE_PATCH  3
+
+#define MPICH2_CALC_VERSION(MAJOR, MINOR, REVISION, TYPE, PATCH) \
+  ((MAJOR * 10000000) + (MINOR * 100000) + (REVISION * 1000) + (TYPE * 100) + (PATCH))
+
 /* for the datatype decoders */
 enum MPI_COMBINER_ENUM {
     MPI_COMBINER_NAMED            = 1,
