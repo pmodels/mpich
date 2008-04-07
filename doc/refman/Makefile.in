@@ -18,6 +18,11 @@ LATEX2HTML = latex2html
 MPIMANAUXFILES = refman.sty tpage.sty refcmd.tex refmpi.tex
 mpiman.dvi: mpiman.tex MPI_Wtime.tex
 	-rm -f mpiman.log mpiman.msg
+	-$(LATEX) $(srcdir)/mpiman < /dev/null 2>&1 >mpiman.msg
+	$(LATEX) $(srcdir)/mpiman < /dev/null 2>&1 >mpiman.msg
+
+# Note that some make programs will not allow comments in the commands for 
+# targets
 # 	for file in $(MPIMANAUXFILES) ; do \
 # 	    if [ ! -s $$file ] ; then \
 # 	       if [ -s $(srcdir)/$$file ] ; then \
@@ -28,8 +33,6 @@ mpiman.dvi: mpiman.tex MPI_Wtime.tex
 #                fi ;\
 # 	    fi ; \
 # 	done
-	-$(LATEX) $(srcdir)/mpiman < /dev/null 2>&1 >mpiman.msg
-	$(LATEX) $(srcdir)/mpiman < /dev/null 2>&1 >mpiman.msg
 
 mpiman.pdf: mpiman.dvi
 	$(DVIPDFM) mpiman
