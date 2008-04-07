@@ -70,7 +70,7 @@ static int verify_type(char *filename, MPI_Datatype type,
 	CHECK( MPI_File_read_at_all(fh, expected_extent/sizeof(int)+rank, 
 		&compare, 1, MPI_INT, &status));
     } else {
-	CHECK( MPI_File_read_at_all(fh, expected_extent/sizeof(int)+rank, 
+	CHECK( MPI_File_read_at(fh, expected_extent/sizeof(int)+rank, 
 		&compare, 1, MPI_INT, &status));
     }
 
@@ -183,7 +183,6 @@ int main(int argc, char **argv)
     MPI_Type_commit(&subarray6G);
 
     /* assume command line arguments make it out to all processes */
-
     ret = testtype(argv[1], indexed1G, (int64_t)1024*1024*1024);
 
     ret = testtype(argv[1], indexed3G, (int64_t)1024*1024*1024*3);
@@ -194,7 +193,7 @@ int main(int argc, char **argv)
 
     ret = testtype(argv[1], subarray3G, (int64_t)1024*1024*1024*3);
 
-    ret = testtype(argv[1], subarray6G, (int64_t)1024*1024*1024*3);
+    ret = testtype(argv[1], subarray6G, (int64_t)1024*1024*1024*6);
 
     if(!ret && !rank) fprintf(stderr, "  No Errors\n");
     
