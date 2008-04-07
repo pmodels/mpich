@@ -34,6 +34,10 @@ static int MPIDU_Socki_handle_connect(struct pollfd * const pollfd,
  * the poll array.  Under normal conditions, the fatal error should result in 
  * the termination of the process; but, if that
  * doesn't happen, we try to leave the implementation in a somewhat sane state.
+ *
+ * In the multithreaded case, only one routine at a time may call this routine
+ * To permit progress by other threads, it will release any global lock or
+ * coarse-grain critical section.
  */
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_wait
