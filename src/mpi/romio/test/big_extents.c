@@ -39,8 +39,9 @@ static void typestats(MPI_Datatype type)
 static int verify_type(char *filename, MPI_Datatype type, 
 	int64_t expected_extent, int do_coll)
 {
-    int rank, tsize;
+    int rank, canary, tsize;
     int compare=-1;
+    int errs=0, toterrs=0;
     MPI_Status status;
     MPI_File fh;
 
@@ -53,11 +54,13 @@ static int verify_type(char *filename, MPI_Datatype type,
 
     MPI_Type_size(type, &tsize);
 
+    canary=rank+1000000;
+
     /* skip over first instance of type */
     if (do_coll) {
-	CHECK( MPI_File_write_at_all(fh, tsize, &rank, 1, MPI_INT, &status));
+	CHECK( MPI_File_write_at_all(fh, tsize, &canary, 1, MPI_INT, &status));
     } else {
-	CHECK( MPI_File_write_at(fh, tsize, &rank, 1, MPI_INT, &status));
+	CHECK( MPI_File_write_at(fh, tsize, &canary, 1, MPI_INT, &status));
     }
 
     CHECK( MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, "native", 
@@ -71,16 +74,20 @@ static int verify_type(char *filename, MPI_Datatype type,
 		&compare, 1, MPI_INT, &status));
     }
 
+    if (compare != canary)
+	errs=1;
+    MPI_Allreduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
     MPI_File_close(&fh);
 
-    if (compare != rank) {
-	printf("got %d expected %d\n", compare, rank);
+    if (toterrs) {
+	printf("%d: got %d expected %d\n", rank, compare, canary);
 	/* keep file if there's an error */
     } else {
-	MPI_File_delete(filename, MPI_INFO_NULL);
+	if (rank == 0) MPI_File_delete(filename, MPI_INFO_NULL);
     }
 	
-    return (compare != rank);
+    return (toterrs);
 
 }
 
@@ -97,14 +104,14 @@ static int testtype(char *filename, MPI_Datatype type, int64_t expected_extent)
 	errs++;
 	fprintf(stderr, "type %d failed indep\n", type);
     } else 
-	printf("indep: OK ");
+	if (!rank) printf("indep: OK ");
 
     ret = verify_type(filename, type, expected_extent, collective); 
     if (ret) {
 	errs++;
-	fprintf(stderr, "type %d failed indep\n", type);
+	fprintf(stderr, "type %d failed collective\n", type);
     } else
-	printf("coll: OK\n");
+	if (!rank) printf("coll: OK\n");
 
     return errs;
 }
@@ -177,6 +184,7 @@ int main(int argc, char **argv)
 
     /* assume command line arguments make it out to all processes */
 
+#if 0
     ret = testtype(argv[1], indexed1G, (int64_t)1024*1024*1024);
 
     ret = testtype(argv[1], indexed3G, (int64_t)1024*1024*1024*3);
@@ -185,6 +193,7 @@ int main(int argc, char **argv)
 
     ret = testtype(argv[1], subarray1G, (int64_t)1024*1024*1024);
 
+#endif
     ret = testtype(argv[1], subarray3G, (int64_t)1024*1024*1024*3);
 
     ret = testtype(argv[1], subarray6G, (int64_t)1024*1024*1024*3);
@@ -192,7 +201,7 @@ int main(int argc, char **argv)
     if(!ret && !rank) fprintf(stderr, "  No Errors\n");
     
     MPI_Finalize();
-    return 0;
+    return (-ret);
 
 }
 /* 
