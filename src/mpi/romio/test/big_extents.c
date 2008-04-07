@@ -184,7 +184,6 @@ int main(int argc, char **argv)
 
     /* assume command line arguments make it out to all processes */
 
-#if 0
     ret = testtype(argv[1], indexed1G, (int64_t)1024*1024*1024);
 
     ret = testtype(argv[1], indexed3G, (int64_t)1024*1024*1024*3);
@@ -193,7 +192,6 @@ int main(int argc, char **argv)
 
     ret = testtype(argv[1], subarray1G, (int64_t)1024*1024*1024);
 
-#endif
     ret = testtype(argv[1], subarray3G, (int64_t)1024*1024*1024*3);
 
     ret = testtype(argv[1], subarray6G, (int64_t)1024*1024*1024*3);
