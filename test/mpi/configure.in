@@ -945,7 +945,6 @@ AC_OUTPUT(maint/testmerge \
 	  errors/comm/Makefile \
 	  errors/group/Makefile \
 	  errors/pt2pt/Makefile \
-	  errors/datatype/Makefile \
 	  errors/rma/Makefile \
 	  errors/spawn/Makefile \
 	  errors/topo/Makefile \
