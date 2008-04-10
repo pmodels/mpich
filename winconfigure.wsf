@@ -2607,8 +2607,18 @@ Function ReplaceAts( str, use_f77, b64 )
 				Else
 					str = Replace(str, "@SIZEOF_F90_DOUBLE_PRECISION@", "8")
 				End If
+			' REQD = (Real EQuals Double precision) ? "!" : ""
 			Case "@REQD@"
 				str = Replace(str, "@REQD@", "")
+			' REQI1 = (Real EQuals Integer*1) ? "!" : ""
+			Case "@REQI1@"
+				str = Replace(str, "@REQI1@", "")
+			' REQI2 = (Real EQuals Integer*2) ? "!" : ""
+			Case "@REQI2@"
+				str = Replace(str, "@REQI2@", "")
+			' REQI8 = (Real EQuals Integer*8) ? "!" : ""
+			Case "@REQI8@"
+				str = Replace(str, "@REQI8@", "")
 			Case "@PCONTROL_LIST@"
 				'str = Replace(str, "@PCONTROL_LIST@", "")
 			Case "@configure_input@"
