@@ -834,13 +834,13 @@ void MPE_Init_mpi_core( void )
     state->kind_mask = MPE_KIND_COLL;
     state->name = "MPI_Alltoall";
     state->color = "DarkViolet";
-    state->format = "send_msg_sz/proc=%d, recv_msg_sz/proc=%d.";
+    state->format = "send_msg_sz/p=%d, recv_msg_sz/p=%d.";
 
     state = &states[MPE_ALLTOALLV_ID];
     state->kind_mask = MPE_KIND_COLL;
     state->name = "MPI_Alltoallv";
     state->color = "DarkViolet";
-    state->format = "send_msg_sz/proc=%d, recv_msg_sz/proc=%d.";
+    state->format = "send_msg_sz/p=%d, recv_msg_sz/p=%d.";
 
     state = &states[MPE_BARRIER_ID];
     state->kind_mask = MPE_KIND_COLL;
