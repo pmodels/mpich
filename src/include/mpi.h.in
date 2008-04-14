@@ -210,7 +210,9 @@ typedef void (MPI_Win_errhandler_fn)(MPI_Win *, int *, ...);
    in 22-25), index in the low bits */
 #define MPI_ERRORS_ARE_FATAL ((MPI_Errhandler)0x54000000)
 #define MPI_ERRORS_RETURN    ((MPI_Errhandler)0x54000001)
-      /* #define MPIR_ERRORS_WARN     ((MPI_Errhandler)0x54000002) */
+/* MPI_ERRORS_THROW_EXCEPTIONS is not part of the MPI standard, it is here to
+   facilitate the c++ binding which has MPI::ERRORS_THROW_EXCEPTIONS. */
+#define MPI_ERRORS_THROW_EXCEPTIONS ((MPI_Errhandler)0x54000002)
 typedef int MPI_Errhandler;
 
 /* Make the C names for the dup function mixed case.
