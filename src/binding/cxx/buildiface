@@ -2361,13 +2361,15 @@ void Win::Call_errhandler( int errorcode ) const
     MPIX_CALL( MPI_Win_call_errhandler( (MPI_Win) the_real_win, errorcode ));
 }
 
+#ifdef MPI_MODE_RDONLY
 void File::Call_errhandler( int errorcode ) const
 {
-    if (Get_errhandler() == MPI_ERRORS_THROW_EXCEPTIONS) {
+    if (Get_errhandler() == ERRORS_THROW_EXCEPTIONS) {
         throw Exception(errorcode); // throw by value, catch by reference
     }
     MPIX_CALL( MPI_File_call_errhandler( (MPI_File) the_real_file, errorcode ));
 }
+#endif // IO
 
 \n";
 
