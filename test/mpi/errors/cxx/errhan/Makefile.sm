@@ -2,6 +2,7 @@ INCLUDES = -I../../../include -I${srcdir}/../../../include
 DEPADD = @MPILIBLOC@ 
 smvar_do_sharedlibs = 0
 
+errgetx_SOURCES   = errgetx.cxx
 errsetx_SOURCES   = errsetx.cxx
 throwtest_SOURCES = throwtest.cxx
 

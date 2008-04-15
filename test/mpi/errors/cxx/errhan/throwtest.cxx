@@ -83,6 +83,9 @@ int main( int argc, char *argv[] )
         std::cout << " Found " << errs << " errors" << std::endl;
     }
 
+    win.Free();
+    file.Close();
+
     MPI::Finalize();
 
     return 0;
