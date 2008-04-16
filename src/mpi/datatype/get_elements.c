@@ -34,7 +34,8 @@ PMPI_LOCAL int MPIR_Type_get_elements(int *bytes_p,
 #undef MPI_Get_elements
 #define MPI_Get_elements PMPI_Get_elements
 
-/* NOTE: I think that this is in here so that we don't get two copies of it
+/* Note that all helper routines must be within the MPICH_MPI_FROM_PMPI 
+ * ifdef so that we don't get two copies of the helper routines
  * in the case where we don't have weak symbols.
  */
 
@@ -52,7 +53,7 @@ PMPI_LOCAL int MPIR_Type_get_elements(int *bytes_p,
  *
  * Assumptions:
  * - the type passed to this function must be a basic *or* a pairtype
- *   (which aren't 
+ *   (which aren't basic types)
  * - the count is not zero (otherwise we can't tell between a "no more
  *   complete types" case and a "zero count" case)
  *
@@ -156,7 +157,8 @@ PMPI_LOCAL int MPIR_Type_get_basic_type_elements(int *bytes_p,
  * up by the types.
  *
  * This is called from MPI_Get_elements() when it sees a type with multiple
- * element types (datatype_ptr->element_sz = -1).  This function calls itself too.
+ * element types (datatype_ptr->element_sz = -1).  This function calls 
+ * itself too.
  */
 PMPI_LOCAL int MPIR_Type_get_elements(int *bytes_p,
 				      int count,
@@ -194,12 +196,24 @@ PMPI_LOCAL int MPIR_Type_get_elements(int *bytes_p,
 	/* Establish locations of arrays; perhaps this should be a fn. call or
          * this fn. should be an MPID one?
 	 */
+	/* FIXME: Check datatype_ptr->contents valid */
+	/*if (!datatype_ptr->contents) ;*/
 	types = (MPI_Datatype *) (((char *) datatype_ptr->contents) +
 				  sizeof(MPID_Datatype_contents));
+	/* FIXME: Check types valid */
+	/*if (!datatype_ptr->contents->nr_types) ; */
 	ints  = (int *) (((char *) types) +
 			 datatype_ptr->contents->nr_types * sizeof(MPI_Datatype));
+	/* FIXME: Check ints valid */
+	/* if (!datatype_ptr->contents->nr_ints) ; */
 	aints = (MPI_Aint *) (((char *) ints) +
 			      datatype_ptr->contents->nr_ints * sizeof(int));
+
+	/* FIXME: Check aints valid */
+	/* if (!aints) ; */
+
+	/* Check for missing values for any of the types, int, or aint, 
+	   or the datatype_ptr->contents */
 
 	switch (datatype_ptr->contents->combiner) {
 	    case MPI_COMBINER_NAMED:
@@ -286,12 +300,15 @@ PMPI_LOCAL int MPIR_Type_get_elements(int *bytes_p,
 #define FCNAME "MPI_Get_elements"
 
 /*@
-   MPI_Get_elements - get_elements
+  MPI_Get_elements - Returns the number of basic elements
+                     in a datatype
 
-   Arguments:
-+  MPI_Status *status - status
-.  MPI_Datatype datatype - datatype
--  int *elements - elements
+Input Parameters:
++ status - return status of receive operation (Status) 
+- datatype - datatype used by receive operation (handle) 
+
+Output Parameter:
+. count - number of received basic elements (integer) 
 
    Notes:
 
@@ -427,8 +444,3 @@ int MPI_Get_elements(MPI_Status *status, MPI_Datatype datatype, int *elements)
 #   endif
     /* --END ERROR HANDLING-- */
 }
-
-
-
-
-
