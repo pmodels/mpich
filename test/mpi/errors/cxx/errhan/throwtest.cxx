@@ -57,6 +57,7 @@ int main( int argc, char *argv[] )
     MPI::Init();
 
     const unsigned int rank = MPI::COMM_WORLD.Get_rank();
+    const unsigned int size = MPI::COMM_WORLD.Get_size();
 
     int errorClass = MPI::Add_error_class();
     int errorCode = MPI::Add_error_code(errorClass);
@@ -74,6 +75,49 @@ int main( int argc, char *argv[] )
         errs += testCallErrhandler(MPI::COMM_WORLD, errorClass, errorCode, errorString);
         errs += testCallErrhandler(win,             errorClass, errorCode, errorString);
         errs += testCallErrhandler(file,            errorClass, errorCode, errorString);
+
+        // induce actual errors and make sure that they throw
+        try {
+            char buf[10];
+            MPI::COMM_WORLD.Send(&buf, 1, MPI::CHAR, size+1, 1);
+            std::cout << "illegal Send did not throw" << std::endl;
+            errs++;
+        }
+        catch (MPI::Exception &ex) {
+            // expected
+        }
+        catch (...) {
+            std::cout << "Caught Unknown Exception" << std::endl;
+            errs++;
+        }
+
+        try {
+            char buf[10];
+            win.Get(&buf, 0, MPI::CHAR, size+1, 0, 0, MPI::CHAR);
+            std::cout << "illegal Get did not throw" << std::endl;
+            errs++;
+        }
+        catch (MPI::Exception &ex) {
+            // expected
+        }
+        catch (...) {
+            std::cout << "Caught Unknown Exception" << std::endl;
+            errs++;
+        }
+
+        try {
+            int buf[10];
+            file.Write_at(-2, &buf, 1, MPI::INT);
+            std::cout << "illegal Send did not throw" << std::endl;
+            errs++;
+        }
+        catch (MPI::Exception &ex) {
+            // expected
+        }
+        catch (...) {
+            std::cout << "Caught Unknown Exception" << std::endl;
+            errs++;
+        }
     }
 
     if (errs == 0) {
