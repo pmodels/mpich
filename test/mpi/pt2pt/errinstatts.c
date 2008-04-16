@@ -18,7 +18,7 @@ int main( int argc, char *argv[] )
     MPI_Request r[2];
     MPI_Status  s[2];
     int         indices[2], outcount;
-    int errval;
+    int errval, errclass;
     int b1[20], b2[20], rank, size, src, dest, i, j;
 
     MTest_Init( &argc, &argv );
@@ -57,7 +57,8 @@ int main( int argc, char *argv[] )
 	    s[i].MPI_ERROR = -1;
 	}
 	errval = MPI_Testsome( 2, r, &outcount, indices, s );
-	if (errval != MPI_ERR_IN_STATUS) {
+	MPI_Error_class( errval, &errclass );
+	if (errclass != MPI_ERR_IN_STATUS) {
 	    errs++;
 	    printf( "Did not get ERR_IN_STATUS in Testsome (outcount = %d)\n",
 		    outcount );
