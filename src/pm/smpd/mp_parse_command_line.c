@@ -594,6 +594,10 @@ int mp_parse_command_args(int *argcp, char **argvp[])
 		smpd_process.dbg_state |= SMPD_DBG_STATE_ERROUT | SMPD_DBG_STATE_STDOUT | SMPD_DBG_STATE_TRACE;
 	    }
 
+        if(smpd_get_opt(argcp, argvp, "-hide_console")){
+            FreeConsole();
+        }
+
 	    smpd_process.nproc = atoi((*argvp)[2]);
 	    if (smpd_process.nproc < 1)
 	    {
@@ -610,7 +614,7 @@ int mp_parse_command_args(int *argcp, char **argvp[])
 		return SMPD_FAIL;
 	    }
 
-        if (*argcp == 5){
+        if (*argcp >= 5){
     	    smpd_process.singleton_client_port = atoi((*argvp)[4]);
             if(smpd_process.singleton_client_port < 1){
                 smpd_err_printf("Invalid singleton client port = %d\n",

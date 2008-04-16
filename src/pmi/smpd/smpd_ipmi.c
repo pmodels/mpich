@@ -341,9 +341,9 @@ static PMII_PROCESS_HANDLE_TYPE launch_mpiexec_process(int portNo){
     sInfo.cb = sizeof(sInfo);
     ZeroMemory(&pInfo, sizeof(pInfo));
     snprintf(progName, PMII_MAX_MPIEXEC_CMD_STR_LENGTH, 
-                "mpiexec -pmiserver 1 -port %d", portNo);
+                "mpiexec -pmiserver 1 -port %d -hide_console", portNo);
     if(!CreateProcess(NULL, progName, NULL, NULL, TRUE, 
-                        NORMAL_PRIORITY_CLASS, NULL, NULL, &sInfo, &pInfo)){
+                        NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW, NULL, NULL, &sInfo, &pInfo)){
         pmi_err_printf("Error creating mpiexec process...%d\n", GetLastError());
         return PMII_PROCESS_INVALID_HANDLE;
     }
