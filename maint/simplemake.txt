@@ -81,6 +81,8 @@ lib<name>_so_DIR     = directory in which lib<name> will exist, for these
 		       shared libraries
 lib<name>_a_NOSHARED = This library should not be built as a shared library,
                        even if shared libraries are desired
+lib<name>_a_LIBADD   = Additional library objects to include in the named library
+
 <name>_SOURCES      = source file names for program <name>
 <name>_LDADD        = additional files and flags used for 
                       linking program <name>.  Libraries are added to

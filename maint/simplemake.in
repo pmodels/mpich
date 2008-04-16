@@ -107,17 +107,37 @@ $quietLine = "@";       # set to "" to make the clean targets echo commands
 $doc_heading = "MPI";
 #%doc_extra   = ();  # for kinds html, man, latex
 #
-$fixup_for_timestamps = 1; # make is broken
+# Set to 1 if make doesn't handle time stamps properly (some makes, including
+# some versions of gnumake, improperly and inconsistently 
+# handle comparisons of less than a second 
 $fixup_for_timestamps = 0;
-# FIXME:
+# Set a default sleepTime.
+$sleepTime = 1;
+$useSleepFast = 1;
 # The sleep amount should be parameterized.  One developer at IBM 
 # needed 10 seconds, not 1, because of the variation in file system times
-# between the local machine and the file server.  Perhaps something like
-# \@INTERDIR_SLEEP\@ or 
-# if [ -z "$(INTERDIR_SLEEP)" ] ; then INTERDIR_SLEEP=1 ; fi ; sleep $(INTERDIR_SLEEP)
-$SleepSlow = "sleep 1";
+# between the local machine and the file server. The environment
+# variable INTERDIR_SLEEP , for inter-directory sleep, sets both the
+# time and selects the use of slow sleep
+
+if (defined($ENV{'INTERDIR_SLEEP'})) {
+    $sleepTime = $ENV{'INTERDIR_SLEEP'};
+    $useSleepFast = 0;
+    $fixup_for_timestamps = 1; 
+}
+
+$SleepSlow = "sleep $sleepTime";
 $SleepFast = "perl -e \'\$\$now=time;\$\$now-=10;utime \$\$now, \$\$now, \"LIB\";\'";
-$Sleep = $SleepFast;
+
+# Set the default (it can be overridden by the command line)
+if ($useSleepFast) {
+    $Sleep = $SleepFast;
+} 
+else {
+    $Sleep = $SleepSlow;
+}
+
+
 #
 # Output File end-of-line character
 $newline = "\n";
@@ -452,6 +472,18 @@ foreach $_ (@ARGV) {
 	$maint_perf_targets = 0;
 	$do_docs = 0;
 	# Use the robust sleep, not the fast perl version
+	$useSleepFast = 0;
+	$Sleep = $SleepSlow;
+	# FIXME: Sleep code only used if fixup set to 1
+	#$fixup_for_timestamps = 1; # make is broken
+    }
+    elsif (/-interdirsleep/) {
+	$useSleepFast = 0;
+	$fixup_for_timestamps = 1;
+	if (/-interdirsleep=(\d*)/) {
+	    $sleepTime = $1;
+	    $SleepSlow = "sleep $sleepTime";
+	}
 	$Sleep = $SleepSlow;
     }
     elsif (/-perftargets/) {
@@ -536,6 +568,7 @@ foreach $_ (@ARGV) {
 	&ProcessFile ( $_ );
     }
 }
+
 
 # If there is no argument and the default filename, then process it
 print "found file = $foundFile\n" if $debug;
@@ -914,6 +947,18 @@ sub ReadMfile {
 	elsif (/^DEPADD\s*=\s*(.*)\s*$/) {
 	    $depadd_all = $1;
 	}
+        elsif (/^lib([@\${}\(\)\w-]*)_a_LIBADD\s*=\s*(.*)\s*$/) {
+	    # This mimics the automake LIBADD target - objects in the 
+	    # named libraries will be added to the target library
+	    # in the library build target
+	    $lib_addobjects{$1} = $2;
+	}
+        elsif (/^lib([@\${}\(\)\w-]*)_la_LIBADD\s*=\s*(.*)\s*$/) {
+	    # This mimics the automake LIBADD target - objects in the 
+	    # named libraries will be added to the target library
+	    # in the library build target
+	    $libla_addobjects{$1} = $2;
+	}
 	elsif (/^([\w-]+)\s*=\s*(.*)\s*$/) {
 	    $other_vars .= "$origline";
 	    # Save all variable names
@@ -1227,11 +1272,16 @@ sub DefaultVariables {
 	if (defined($extdef{$extkey})) {
 	    foreach $line (split(/\n/,$extdef{$extkey})) {
 		# Check for an override
-		if ($line =~ /^(\w+)\s*=/) {
+		if ($line =~ /^(\w+)(\s*)=(.*)/) {
 		    my $var = $1;
+		    my $spacing = $2;
+		    my $value = $3;
 		    if (defined($makevars{$var})) { 
 			print "Using override definition of $var\n" if $debug;
 			next; 
+		    }
+		    if (defined($PrependVar{$var})) {
+			$line = "$var$spacing= " . $PrependVar{$var} . " $value";
 		    }
 		}
 		print FD "$line$newline";
@@ -1687,6 +1737,8 @@ sub ClearVars {
     %programs = ();
     %pgm_ldadd = ();
     $ldadd_all = "";
+    %lib_addobjects = ();
+    %libla_addobjects = ();
     %pgm_depadd = ();
     $depadd_all = "";
 
@@ -2730,6 +2782,9 @@ sub TargetLibraries {
 
 	&LibraryTimestampPrefix( $lib, $libloc );
 	&LibraryBuild( $lib, $libloc, $sourcefiles, "a", "o" );
+	if (defined($lib_addobjects{$lib})) {
+	    &LibraryAddObjects( $lib, $libloc );
+	}
         if ($ranliblib) { 
 	    print FD "\t\${RANLIB} ${libloc}lib$lib.a$newline"; 
 	}
@@ -2738,6 +2793,38 @@ sub TargetLibraries {
     }
 }
 
+# Add objects from a given library.  This version just handles standard
+# libraries (.a), not libtool libraries (.la).
+sub LibraryAddObjects {
+    my ($lib, $libloc) = @_;
+
+    print FD "\tmkdir .libtmp$newline";
+    print FD "\trm -f .libtmp/*$newline";
+    foreach $objlib (split(/\s+/,$lib_addobjects{$lib})) {
+	# If the added library is not an absolute path and is local,
+	# add ../
+	if ($objlib =~ /^lib/) { $objlib = "../$objlib"; }
+	print FD "\t(cd .libtmp \&\& \${AR} x $objlib)$newline";
+    }
+    print FD "\t\${AR} cru lib${lib}.a .libtmp/*$newline";
+    print FD "\trm -rf .libtmp$newline";
+}
+
+# This is a stub for supporting libtool archives
+sub LibraryLAAddObjects {
+    my ($lib, $libloc) = @_;
+
+    print FD "\tmkdir .libtmp$newline";
+    print FD "\trm -f .libtmp/*$newline";
+    foreach $objlib (split(/\s+/,$libla_addobjects{$lib})) {
+	# If the added library is not an absolute path and is local,
+	# add ../
+	if ($objlib =~ /^lib/) { $objlib = "../$objlib"; }
+	print FD "\t(cd .libtmp \&\& \${LIBTOOL} \${AR} x $objlib)$newline";
+    }
+    print FD "\t\${LIBTOOL} \${AR} cru lib${lib}.a .libtmp/*$newline";
+    print FD "\trm -rf .libtmp$newline";
+}
 #
 # Fix for problems with timestamps.  If the file is not local (not
 # obviously in the current directory), then apply one of the fixes
@@ -3273,8 +3360,16 @@ sub TargetTags {
         }
         elsif ($root_tags) {
 	    print FD "\${HEADERFILES} \${SOURCEFILES}$newline";
-	    $rpath = $rootdirpath;
-	    $rpath =~ s/\/$//;
+	    if (defined($rootdirpath)) {
+		$rpath = $rootdirpath;
+		$rpath =~ s/\/$//;
+	    }
+	    else {
+		# Use current directory
+		# Question: in this case, should we leave out the tags 
+		# target?
+		$rpath = ".";
+	    }
 	    # For vpath builds, make the root path point to the
 	    # VPATH root.
 	    
@@ -3855,6 +3950,10 @@ simplemake [ -nocomments ] [ -am ] [ -libdir=NAME=DIR ] [ -include=LIST ]\
                        Makefile.in)\
     -debug           - Turn on debugging output\
     -dos             - Use DOS-style newlines on output files\
+    -interdirsleep   - Use a sleep between directory builds to handle problems\
+                       with file systems that are not time-synchronized\
+                       with the build node.  -interdirsleep=nn specifies\
+                       an nn second sleep.\
     -help            - This output\
     \n";
     print STDERR "\
@@ -4249,6 +4348,8 @@ sub GetPathToParent {
     }
     else {
 	print STDERR "Path to parent is unknown in GetPathToParent\n";
+	# Set a default
+	$path_child = ".";
     }
     $path_child =~ s/[^\/\.]*\//..\//g;
     return $path_child;
