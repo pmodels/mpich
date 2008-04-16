@@ -111,6 +111,17 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 	goto fn_exit;
     }
 
+    /* Check for the special case of errors-throw-exception.  In this case
+       return the error code; the C++ wrapper will cause an exception to
+       be thrown.
+       */
+#ifdef HAVE_CXX_BINDING
+    if (comm_ptr->errhandler->handle == MPIR_ERRORS_THROW_EXCEPTIONS) {
+	mpi_errno = errorcode;
+	goto fn_exit;
+    }
+#endif
+
     /* The user error handler may make calls to MPI routines, so the nesting
      * counter must be incremented before the handler is called */
     MPIR_Nest_incr();

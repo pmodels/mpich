@@ -70,6 +70,16 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
     /* ... body of routine ...  */
     
     MPIR_ROMIO_Get_file_errhand( fh, &eh );
+    /* Check for the special case of errors-throw-exception.  In this case
+       return the error code; the C++ wrapper will cause an exception to
+       be thrown.
+       */
+#ifdef HAVE_CXX_BINDING
+    if (eh == MPIR_ERRORS_THROW_EXCEPTIONS) {
+	mpi_errno = errorcode;
+	goto fn_exit;
+    }
+#endif
     if (!eh) {
 	MPID_Errhandler_get_ptr( MPI_ERRORS_RETURN, e );
     }
@@ -119,7 +129,7 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 #endif
     /* ... end of body of routine ... */
 
-#if 0
+#ifdef HAVE_CXX_BINDING
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);

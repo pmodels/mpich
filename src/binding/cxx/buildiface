@@ -1733,7 +1733,7 @@ extern Datatype TWOINTEGER;
 	print $OUTFD "const Errhandler ERRORS_ARE_FATAL(MPI_ERRORS_ARE_FATAL);\n";
 	# Errors_return is not quite right for errors-throw-exceptions,
 	# but it is close.
-	print $OUTFD "const Errhandler ERRORS_THROW_EXCEPTIONS(MPI_ERRORS_THROW_EXCEPTIONS);\n";
+	print $OUTFD "const Errhandler ERRORS_THROW_EXCEPTIONS(MPIR_ERRORS_THROW_EXCEPTIONS);\n";
     }
     else {
 	print $OUTFD "extern const Errhandler ERRORS_RETURN;\n";
