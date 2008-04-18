@@ -86,8 +86,8 @@ if __name__ == '__main__':    # so I can be imported by pydoc
     mpd_print(0000, "LINE5=|%s|" % (gdb_line.rstrip()))
     write(gdb_sin_fileno,'echo hi1\n')
     gdb_line = gdb_sout_serr.readline() 
-    mpd_print(0000, "LINE6=|%s|" % (gdb_line.rstrip()))
-    gdb_line = ''
+    # mpd_print(0000, "LINE6=|%s|" % (gdb_line.rstrip()))
+    # gdb_line = ''
     while not gdb_line.startswith('hi1'):
         gdb_line = gdb_sout_serr.readline() 
         mpd_print(0000, "LINEx=|%s|" % (gdb_line.rstrip()))
