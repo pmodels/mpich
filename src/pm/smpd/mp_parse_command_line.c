@@ -595,7 +595,9 @@ int mp_parse_command_args(int *argcp, char **argvp[])
 	    }
 
         if(smpd_get_opt(argcp, argvp, "-hide_console")){
+#ifdef HAVE_WINDOWS_H		
             FreeConsole();
+#endif
         }
 
 	    smpd_process.nproc = atoi((*argvp)[2]);
