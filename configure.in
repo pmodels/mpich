@@ -4716,7 +4716,11 @@ fi
 #  --enable-timer-type=name argument and selects the timer based on 
 # both that field and what configure is able to determine is available.
 # The file src/include/mpichtimer.h is also created.
-
+# Note that at least the handling of the "device" option must come *after* 
+# the setup_device script is loaded so that the device can set the appropriate
+# fields.  For now, we've split this so that there is an update to the timer
+# after the setup_device script is loaded, but we should consider moving
+# this entire block.
 # ----------------------------------------------------------------------------
 # Default type for timer stamp.
 MPID_TIMER_TYPE=long
@@ -5059,6 +5063,15 @@ if test -f $devicedir/setup_device ; then
     echo sourcing $devicedir/setup_device
     . $devicedir/setup_device
 fi
+# See if we need to update the timer type
+if test "$timer_type" = "device" ; then
+    # The device selected should export the datatype for the timer
+    # in MPID_DEVICE_TIMER_TYPE if something other than long is needed
+    if test -n "$MPID_DEVICE_TIMER_TYPE" ; then 
+       MPID_TIMER_TYPE=$MPID_DEVICE_TIMER_TYPE
+    fi
+fi
+
 dnl Configure any subdirectories.  Note that config.status will *not* 
 dnl reexecute these!
 dnl Export any important variables first:
