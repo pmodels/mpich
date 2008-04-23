@@ -4,6 +4,7 @@ DEPADD = @MPILIBLOC@ ../../util/mtest.o
 smvar_do_sharedlibs = 0
 
 cfree_SOURCES    = cfree.c
+manysplit_SOURCES = manysplit.c
 userdup_SOURCES  = userdup.c
 
 ../../util/mtest.o:
