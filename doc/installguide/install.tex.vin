@@ -895,7 +895,7 @@ started with \texttt{mpiexec} without any particular host specification,
 the processes are started on the ring of hosts one at a time, in
 round-robin fashion until all the processes have been started.  Thus, if
 you start a four-process job on a ring of two machines, hosta and hostb,
-then you will find ranks 0 and 2 on hosta and ranks 1 and 4  on hostb.
+then you will find ranks 0 and 2 on hosta and ranks 1 and 3  on hostb.
 This might not be what you want, especially if the machines are SMP's
 and you would like to have consecutive ranks on the same machine as much
 as possible.  If you tell the \texttt{mpd} how many cpus it has to work
