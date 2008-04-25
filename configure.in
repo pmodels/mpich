@@ -3059,10 +3059,15 @@ fi
 # Get the size of the C types for encoding in the basic datatypes and for
 # the specific-sized integers
 AC_CHECK_SIZEOF(char,$CROSS_SIZEOF_CHAR)
+AC_CHECK_SIZEOF(unsigned char,$CROSS_SIZEOF_UCHAR)
 AC_CHECK_SIZEOF(short,$CROSS_SIZEOF_SHORT)
+AC_CHECK_SIZEOF(unsigned short,$CROSS_SIZEOF_USHORT)
 AC_CHECK_SIZEOF(int,$CROSS_SIZEOF_INT)
+AC_CHECK_SIZEOF(unsigned int,$CROSS_SIZEOF_UINT)
 AC_CHECK_SIZEOF(long,$CROSS_SIZEOF_LONG)
+AC_CHECK_SIZEOF(unsigned long,$CROSS_SIZEOF_ULONG)
 AC_CHECK_SIZEOF(long long,$CROSS_SIZEOF_LONG_LONG)
+AC_CHECK_SIZEOF(unsigned long long,$CROSS_SIZEOF_ULONG_LONG)
 AC_CHECK_SIZEOF(float,$CROSS_SIZEOF_FLOAT)
 AC_CHECK_SIZEOF(double,$CROSS_SIZEOF_DOUBLE)
 AC_CHECK_SIZEOF(long double,$CROSS_SIZEOF_LONG_DOUBLE)
@@ -3178,6 +3183,141 @@ if test "$pac_cv_int64_t" = "no" ; then
 else
     AC_DEFINE(HAVE_INT64_T,1,[Define if int64_t is supported by the C compiler])
 fi
+
+# A C99 compliant compiler should have inttypes.h for fixed-size int types
+AC_CHECK_HEADER(inttypes.h)
+
+# Check for availability of uint8_t, uint16_t, uint32_t, uint64_t
+if test "$ac_cv_header_inttypes.h" = "yes" ; then
+	AC_CACHE_CHECK([for uint8_t],pac_cv_uint8_t,[
+	AC_TRY_COMPILE([#include <inttypes.h>],
+	[uint8_t a=0;],
+	pac_cv_uint8_t=yes,pac_cv_uint8_t=no)])
+	AC_CACHE_CHECK([for uint16_t],pac_cv_uint16_t,[
+	AC_TRY_COMPILE([#include <inttypes.h>],
+	[uint16_t a=0;],
+	pac_cv_uint16_t=yes,pac_cv_uint16_t=no)])
+	AC_CACHE_CHECK([for uint32_t],pac_cv_uint32_t,[
+	AC_TRY_COMPILE([#include <inttypes.h>],
+	[uint32_t a=0;],
+	pac_cv_uint32_t=yes,pac_cv_uint32_t=no)])
+	AC_CACHE_CHECK([for uint64_t],pac_cv_uint64_t,[
+	AC_TRY_COMPILE([#include <inttypes.h>],
+	[uint64_t a=0;],
+	pac_cv_uint64_t=yes,pac_cv_uint64_t=no)])
+else
+	AC_CACHE_CHECK([for uint8_t],pac_cv_uint8_t,[
+	AC_TRY_COMPILE([#include <sys/types.h>
+	$use_bitypes
+	],[uint8_t a=0;],
+	pac_cv_uint8_t=yes,pac_cv_uint8_t=no)])
+	AC_CACHE_CHECK([for uint16_t],pac_cv_uint16_t,[
+	AC_TRY_COMPILE([#include <sys/types.h>
+	$use_bitypes
+	],[uint16_t a=0;],
+	pac_cv_uint16_t=yes,pac_cv_uint16_t=no)])
+	AC_CACHE_CHECK([for uint32_t],pac_cv_uint32_t,[
+	AC_TRY_COMPILE([#include <sys/types.h>
+	$use_bitypes
+	],[uint32_t a=0;],
+	pac_cv_uint32_t=yes,pac_cv_uint32_t=no)])
+	AC_CACHE_CHECK([for uint64_t],pac_cv_uint64_t,[
+	AC_TRY_COMPILE([#include <sys/types.h>
+	$use_bitypes
+	],[uint64_t a=0;],
+	pac_cv_uint64_t=yes,pac_cv_uint64_t=no)])
+fi
+
+# Fallback types for uint8_t
+if test "$pac_cv_uint8_t" = "no" ; then
+	# Check if u_int8_t is available
+	AC_CACHE_CHECK([for u_int8_t],pac_cv_u_int8_t,[
+	AC_TRY_COMPILE([#include <sys/types.h>
+	$use_bitypes
+	],[u_int8_t a=0;],
+	pac_cv_u_int8_t=yes,pac_cv_u_int8_t=no)])
+	if test "$pac_cv_u_int8_t" = "yes" ; then
+		UINT8_T="u_int8_t"
+    elif test "$ac_cv_sizeof_unsigned_char" = 1 ; then 
+        UINT8_T="unsigned char"
+    else
+        # No good option - Non-compliant C compilers?
+        UINT8_T="unsigned int"
+    fi
+    AC_SUBST(UINT8_T)
+    AC_DEFINE_UNQUOTED(MPIU_UINT8_T,$UINT8_T,[Define for the 8 bit unsigned integer type])
+else
+    AC_DEFINE(HAVE_UINT8_T,1,[Define if uint8_t is supported by the C compiler])
+fi
+
+# Fallback types for uint16_t
+if test "$pac_cv_uint16_t" = "no" ; then
+# Check if u_int16_t is available
+	AC_CACHE_CHECK([for u_int16_t],pac_cv_u_int16_t,[
+	AC_TRY_COMPILE([#include <sys/types.h>
+	$use_bitypes
+	],[u_int16_t a=0;],
+	pac_cv_u_int16_t=yes,pac_cv_u_int16_t=no)])
+	if test "$pac_cv_u_int16_t" = "yes" ; then
+		UINT16_T="u_int16_t"
+    elif test "$ac_cv_sizeof_unsigned_short" = 2 ; then 
+        UINT16_T="unsigned short"
+    else
+        # No good option
+        UINT16_T="unsigned int"
+    fi
+    AC_SUBST(UINT16_T)
+    AC_DEFINE_UNQUOTED(MPIU_UINT16_T,$UINT16_T,[Define for the 16 bit unsigned integer type])
+else
+    AC_DEFINE(HAVE_UINT16_T,1,[Define if uint16_t is supported by the C compiler])
+fi
+
+# Fallback types for uint32_t
+if test "$pac_cv_uint32_t" = "no" ; then
+# Check if u_int32_t is available
+	AC_CACHE_CHECK([for u_int32_t],pac_cv_u_int32_t,[
+	AC_TRY_COMPILE([#include <sys/types.h>
+	$use_bitypes
+	],[u_int32_t a=0;],
+	pac_cv_u_int32_t=yes,pac_cv_u_int32_t=no)])
+	if test "$pac_cv_u_int32_t" = "yes" ; then
+		UINT32_T="u_int32_t"
+    elif test "$ac_cv_sizeof_unsigned_int" = 4 ; then 
+        UINT32_T="unsigned int"
+    else
+        # No good option
+        UINT32_T="unsigned int"
+    fi
+    AC_SUBST(UINT32_T)
+    AC_DEFINE_UNQUOTED(MPIU_UINT32_T,$UINT32_T,[Define for the 32 bit unsigned integer type])
+else
+    AC_DEFINE(HAVE_UINT32_T,1,[Define if uint32_t is supported by the C compiler])
+fi
+
+# Fallback types for uint64_t
+if test "$pac_cv_uint64_t" = "no" ; then
+# Check if u_int64_t is available
+	AC_CACHE_CHECK([for u_int64_t],pac_cv_u_int64_t,[
+	AC_TRY_COMPILE([#include <sys/types.h>
+	$use_bitypes
+	],[u_int64_t a=0;],
+	pac_cv_u_int64_t=yes,pac_cv_u_int64_t=no)])
+	if test "$pac_cv_u_int64_t" = "yes" ; then
+		UINT64_T="u_int64_t"
+    elif test "$ac_cv_sizeof_unsigned_long" = 8 ; then 
+        UINT64_T="unsigned long"
+    elif test "$ac_cv_sizeof_unsigned_long_long" = 8 ; then 
+        UINT64_T="unsigned long long"
+    else
+        # No good option
+        UINT64_T="unsigned int"
+    fi
+    AC_SUBST(UINT64_T)
+    AC_DEFINE_UNQUOTED(MPIU_UINT64_T,$UINT64_T,[Define for the 64 bit unsigned integer type])
+else
+    AC_DEFINE(HAVE_UINT64_T,1,[Define if uint64_t is supported by the C compiler])
+fi
+
 # Generate a hex version of the size of each type
 for type in short int long long_long float double long_double wchar_t \
     float_int double_int long_int short_int 2_int long_double_int ; do

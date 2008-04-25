@@ -2995,12 +2995,22 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define MPICH_ERROR_MSG_LEVEL MPICH_ERROR_MSG_ALL")
 				Case "MPICH_INFODLL_LOC"
 					fout.WriteLine("/* #undef MPICH_INFODLL_LOC */")
+				Case "MPIU_INT8_T"
+					fout.WriteLine("#define MPIU_INT8_T __int8")
 				Case "MPIU_INT16_T"
 					fout.WriteLine("#define MPIU_INT16_T __int16")
 				Case "MPIU_INT32_T"
 					fout.WriteLine("#define MPIU_INT32_T __int32")
 				Case "MPIU_INT64_T"
 					fout.WriteLine("#define MPIU_INT64_T __int64")
+				Case "MPIU_UINT8_T"
+					fout.WriteLine("#define MPIU_UINT8_T unsigned __int8")
+				Case "MPIU_UINT16_T"
+					fout.WriteLine("#define MPIU_UINT16_T unsigned __int16")
+				Case "MPIU_UINT32_T"
+					fout.WriteLine("#define MPIU_UINT32_T unsigned __int32")
+				Case "MPIU_UINT64_T"
+					fout.WriteLine("#define MPIU_UINT64_T unsigned __int64")
 				Case "MPIU_SIZE_T"
 					fout.WriteLine("#define MPIU_SIZE_T unsigned int")
 				Case "NDEBUG"
