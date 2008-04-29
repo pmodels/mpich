@@ -154,7 +154,10 @@ for arg in "$@" ; do
     -v)
     # Pass this argument to the compiler as well.
     echo "mpif90 for $MPIVERSION"
-    verbose=yes
+    # if there is only 1 argument, it must be -v.
+    if [ "$#" -eq "1" ] ; then
+        linking=no
+    fi
     ;;
     -profile=*)
     # Pass the name of a profiling configuration.  As
@@ -228,18 +231,6 @@ for arg in "$@" ; do
     # Some versions of bash do not accept ((argno++))
     argno=`expr $argno + 1`
 done
-
-if [ "$verbose" = yes ] ; then
-    # get total number of command line arguments.
-    tot_arg_count=0
-    for arg in "$@" ; do
-        tot_arg_count=`expr $tot_arg_count + 1`
-    done
-    # Check if there is any argument besides -v.
-    if [ $tot_arg_count -eq 1 ] ; then
-        linking=no
-    fi
-fi
 
 # -----------------------------------------------------------------------
 # Derived variables.  These are assembled from variables set from the
