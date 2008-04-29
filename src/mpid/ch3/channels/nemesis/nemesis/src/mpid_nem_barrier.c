@@ -17,12 +17,18 @@ static int barrier_init = 0;
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_barrier_init (MPID_nem_barrier_t *barrier_region)
 {
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER_INIT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_BARRIER_INIT);
+
     MPID_nem_mem_region.barrier = barrier_region;
     MPID_nem_mem_region.barrier->val = 0;
     MPID_nem_mem_region.barrier->wait = 0;
     sense = 0;
     barrier_init = 1;
     MPID_NEM_WRITE_BARRIER();
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_BARRIER_INIT);
     return MPI_SUCCESS;
 }
 
@@ -34,8 +40,12 @@ int MPID_nem_barrier_init (MPID_nem_barrier_t *barrier_region)
 int MPID_nem_barrier (int num_processes, int rank)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_BARRIER);
+
     MPIU_ERR_CHKANDJUMP1 (!barrier_init, mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "barrier not initialized");
-    
+
     if (MPID_NEM_FETCH_AND_INC (&MPID_nem_mem_region.barrier->val) == MPID_nem_mem_region.num_local - 1)
     {
 	MPID_nem_mem_region.barrier->val = 0;
@@ -51,5 +61,6 @@ int MPID_nem_barrier (int num_processes, int rank)
     sense = 1 - sense;
 
  fn_fail:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_BARRIER);
     return mpi_errno;
 }

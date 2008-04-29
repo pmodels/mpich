@@ -13,6 +13,8 @@
 #if !defined(MPICH_MPIDIMPL_H_INCLUDED)
 #define MPICH_MPIDIMPL_H_INCLUDED
 
+#include "mpichconf.h"
+
 #if defined(HAVE_ASSERT_H)
 #include <assert.h>
 #endif
@@ -1270,77 +1272,6 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc);
    MPID_Comm_connect and accept */
 int MPIDI_CH3_Connect_to_root(const char *, MPIDI_VC_t **);
 
-/* BEGIN EXPERIMENTAL BLOCK */
-
-/* The following functions enable RDMA capabilities in the CH3 device.
- * These functions may change in future releases.
- * There usage is protected in the code by #ifdef MPIDI_CH3_CHANNEL_RNDV
- */
-
-/*@
-  MPIDI_CH3U_Handle_recv_rndv_pkt - This function is used by RDMA enabled 
-  channels to handle a rts packet.
-
-  Input Parameters:
-+ vc - virtual connection over which the packet was received
-- pkt - pointer to the CH3 packet
-
-  Output Parameters:
-+ rreqp - request pointer
-- foundp - found
-
-  Return value:
-  An mpi error code.
-
-  Notes:
-  This is the handler function to be called when the channel receives a rndv 
-  rts packet.
-  After this function is called the channel is returned a request and a found
-  flag.  The channel may set any channel
-  specific fields in the request at this time.  Then the channel should call 
-  MPIDI_CH3U_Post_data_receive() and 
-  MPIDI_CH3_iStartRndvTransfer() if the found flag is set.
-@*/
-int MPIDI_CH3U_Handle_recv_rndv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, 
-				    MPID_Request ** rreqp, int *foundp);
-
-/*@
-  MPIDI_CH3_iStartRndvMsg - This function is used to initiate a rendezvous
-  send.
-
-  NOTE: An "rts packet" is provided which must be passed to
-  handle_recv_rndv_pkt on the remote side.  The first iov is also provided
-  so the channel can register buffers, etc., if neccessary.
-
-  Input Parameters:
-+ vc - virtual connection over which the rendezvous will be performed
-. sreq - pointer to the send request object
-- rts_pkt - CH3 packet to be delivered to CH3 on remote side
-
-  Return value:
-  An mpi error code.
-
-  IMPLEMENTORS:
-@*/
-int MPIDI_CH3_iStartRndvMsg (MPIDI_VC_t * vc, MPID_Request * sreq, 
-			     MPIDI_CH3_Pkt_t * rts_pkt);
-
-/*@
-  MPIDI_CH3_iStartRndvTransfer - This function is used to indicate that a 
-  previous
-  rendezvous rts has been matched and data transfer can commence.
-
-  Input Parameters:
-+ vc - virtual connection over which the rendezvous will be performed
-- rreq - pointer to the receive request object
-
-  Return value:
-  An mpi error code.
-
-  IMPLEMENTORS:
-@*/
-int MPIDI_CH3_iStartRndvTransfer (MPIDI_VC_t * vc, MPID_Request * rreq);
-/* END EXPERIMENTAL BLOCK */
 
 /*
  * Channel utility prototypes

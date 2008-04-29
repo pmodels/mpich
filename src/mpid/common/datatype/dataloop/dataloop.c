@@ -589,7 +589,7 @@ PREPEND_PREFIX(Dataloop_stream_size)(struct DLOOP_Dataloop *dl_p,
             tmp_sz = 0;
             for (i = 0; i < dl_p->loop_params.s_t.count; i++)
             {
-                ret += dl_p->loop_params.s_t.blocksize_array[i] *
+                tmp_sz += dl_p->loop_params.s_t.blocksize_array[i] *
                     PREPEND_PREFIX(Dataloop_stream_size)(dl_p->loop_params.s_t.dataloop_array[i], sizefn);
             }
             return tmp_sz * tmp_ct;

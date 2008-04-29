@@ -1070,7 +1070,8 @@ End Function
 ' Regular releases are treated as patch 0
 '
 ' Numeric version will have 1 digit for MAJ, 2 digits for MIN,
-' 2 digits for REV, 1 digit for EXT and 1 digit for EXT_NUMBER.
+' 2 digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER.
+' eg: 1.0.7rc2 = 10007202
 
 Function GetMPICH2NumVersion(ver)
 	Dim verTokenArray, numVer, majorVer, minorVer, revNum, ext, extNum, tmpStr
@@ -1168,15 +1169,19 @@ Function GetMPICH2NumVersion(ver)
 '		There has to be an extension number
 		if(matchesCollection.Count = 2) then
 			extNum = matchesCollection(1)
-			if Len(extNum) = 1 then
+			if (Len(extNum) > 0) And (Len(extNum) < 2) then
 				if Not IsIntString(extNum) then
 					WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
 					WScript.Echo "Extension number : " & extNum & " is not an int"
 					Exit Function
+				else
+					if(extNum <= 9) then
+						extNum = "0" & Right(extNum, 1)
+					end if
 				end if
 			else
 				WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
-				WScript.Echo "Extension number no in range [0-9]"
+				WScript.Echo "Extension number no in range [0-99]"
 				Exit Function
 			end if 
 		else
@@ -2715,23 +2720,20 @@ End Function
 Sub AddDefinitions( fout, filename, b64 )
 	If f.FileExists( filename ) Then
 		Set f2 = f.OpenTextFile( filename )
-		Dim regEx, Match, Matches
+		Dim regEx, Match, Matches, define, comment, macroname
 		Set regEx = New RegExp
 		contents = f2.ReadAll()
-		regEx.Pattern = "/\*.*\*/[\r\n]*#undef.*[\r\n]*"
+        regEx.Pattern = "/\*([^\*]|\*(?!/))*\*/[\r\n]*#undef(\b).+[\r\n]*"
 		regEx.IgnoreCase = True
 		regEx.Global = True
 		Set Matches = regEx.Execute(contents)
 		For Each Match in Matches
-			comment = RegExpFind("/\*.*\*/", Match.Value)
+			comment = RegExpFind("/\*(.|[\r\n])*\*/", Match.Value)
 			define = RegExpFind("#undef.*", Match.Value)
-			define = Mid(define, 8)
-			define = Replace(define, vbNewLine, " ")
-			define = Replace(define, vbCr, " ")
-			define = Replace(define, vbLf, " ")
-			define = Trim(define)
+			macroname = RegExpFind("(\s).+", define)
+			macroname = RegExpFind("(\S)+", macroname)
 			fout.WriteLine(comment)
-			Select Case define
+			Select Case macroname
 				Case "HAVE_INT16_T"
 					fout.WriteLine("/* #undef HAVE_INT16_T */")
 				Case "HAVE_INT32_T"
@@ -3591,13 +3593,11 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#undef HAVE_SYS_SYSCTL_H")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
-					'unhandled_definitions = unhandled_definitions & define & vbNewLine
-					'unhandled_definitions_count = unhandled_definitions_count + 1
-					If appendUniqueString(unhandled_definitions, define) Then
+					If appendUniqueString(unhandled_definitions, macroname) Then
 						unhandled_definitions_count = unhandled_definitions_count + 1
 					End If
 					unhandled_definitions_instances = unhandled_definitions_instances + 1
-					fout.WriteLine("/* unknown definition: " & define & " */")
+					fout.WriteLine("/* unknown definition: " & macroname & " */")
 			End Select
 			fout.WriteLine("")
 		Next
@@ -3869,7 +3869,6 @@ If f.FileExists("src\mpid\ch3\channels\shm\include\mpidi_ch3i_shm_conf.h.in") Th
 	Call AddDefinitions(fout, "src\mpid\ch3\channels\shm\include\mpidi_ch3i_shm_conf.h.in", false)
 	fout.WriteLine("#define USE_BUSY_LOCKS")
 	fout.WriteLine("#define HAVE_SHARED_PROCESS_READ")
-	fout.WriteLine("/* #define MPIDI_CH3_CHANNEL_RNDV */")
 	fout.WriteLine("#define USE_RDMA_GET")
 	fout.WriteLine("#define USE_SHM_RDMA_GET")
 	Call WriteFooter(fout)
@@ -3880,7 +3879,6 @@ If f.FileExists("src\mpid\ch3\channels\shm\include\mpidi_ch3i_shm_conf.h.in") Th
 	Call AddDefinitions(fout, "src\mpid\ch3\channels\shm\include\mpidi_ch3i_shm_conf.h.in", true)
 	fout.WriteLine("#define USE_BUSY_LOCKS")
 	fout.WriteLine("#define HAVE_SHARED_PROCESS_READ")
-	fout.WriteLine("/* #define MPIDI_CH3_CHANNEL_RNDV */")
 	fout.WriteLine("#define USE_RDMA_GET")
 	fout.WriteLine("#define USE_SHM_RDMA_GET")
 	Call WriteFooter(fout)
@@ -3919,7 +3917,6 @@ If f.FileExists("src\mpid\ch3\channels\ssm\include\mpidi_ch3i_ssm_conf.h.in") Th
 	Call AddDefinitions(fout, "src\mpid\ch3\channels\ssm\include\mpidi_ch3i_ssm_conf.h.in", false)
 	fout.WriteLine("#define USE_PERSISTENT_SHARED_MEMORY")
 	fout.WriteLine("#define HAVE_SHARED_PROCESS_READ")
-	fout.WriteLine("/* #define MPIDI_CH3_CHANNEL_RNDV */")
 	fout.WriteLine("#define USE_RDMA_GET")
 	fout.WriteLine("#define USE_SHM_RDMA_GET")
 	Call WriteFooter(fout)
@@ -3930,7 +3927,6 @@ If f.FileExists("src\mpid\ch3\channels\ssm\include\mpidi_ch3i_ssm_conf.h.in") Th
 	Call AddDefinitions(fout, "src\mpid\ch3\channels\ssm\include\mpidi_ch3i_ssm_conf.h.in", true)
 	fout.WriteLine("#define USE_PERSISTENT_SHARED_MEMORY")
 	fout.WriteLine("#define HAVE_SHARED_PROCESS_READ")
-	fout.WriteLine("/* #define MPIDI_CH3_CHANNEL_RNDV */")
 	fout.WriteLine("#define USE_RDMA_GET")
 	fout.WriteLine("#define USE_SHM_RDMA_GET")
 	Call WriteFooter(fout)
@@ -3970,7 +3966,6 @@ If f.FileExists("src\mpid\ch3\channels\sshm\include\mpidi_ch3i_sshm_conf.h.in") 
 	fout.WriteLine("#define HAVE_MASM_AND_X86")
 	fout.WriteLine("#define USE_PERSISTENT_SHARED_MEMORY")
 	fout.WriteLine("#define HAVE_SHARED_PROCESS_READ")
-	fout.WriteLine("#define MPIDI_CH3_CHANNEL_RNDV")
 	fout.WriteLine("#define USE_RDMA_GET")
 	fout.WriteLine("#define USE_SHM_RDMA_GET")
 	Call WriteFooter(fout)
@@ -3982,7 +3977,6 @@ If f.FileExists("src\mpid\ch3\channels\sshm\include\mpidi_ch3i_sshm_conf.h.in") 
 	fout.WriteLine("#define HAVE_MASM_AND_X86")
 	fout.WriteLine("#define USE_PERSISTENT_SHARED_MEMORY")
 	fout.WriteLine("#define HAVE_SHARED_PROCESS_READ")
-	fout.WriteLine("#define MPIDI_CH3_CHANNEL_RNDV")
 	fout.WriteLine("#define USE_RDMA_GET")
 	fout.WriteLine("#define USE_SHM_RDMA_GET")
 	Call WriteFooter(fout)
@@ -4002,11 +3996,6 @@ If f.FileExists("src\mpid\ch3\channels\ib\include\mpidi_ch3i_ib_conf.h.in") Then
 	fout.WriteLine("#define MPID_IBU_TYPE_WINDOWS")
 	fout.WriteLine("#define __WIN__")
 	fout.WriteLine("#define __i386__")
-	If bUseIbRDMA Then
-		fout.WriteLine("#define MPIDI_CH3_CHANNEL_RNDV")
-	Else
-		fout.WriteLine("/*#define MPIDI_CH3_CHANNEL_RNDV*/")
-	End If
 	If bUsePinCache Then
 		fout.WriteLine("/*#define USE_NO_PIN_CACHE*/")
 	else
@@ -4026,11 +4015,6 @@ If f.FileExists("src\mpid\ch3\channels\ib\include\mpidi_ch3i_ib_conf.h.in") Then
 		fout.WriteLine("#define __x86_64__")
 	else
 		fout.WriteLine("#define __ia64__")
-	End If
-	If bUseIbRDMA Then
-		fout.WriteLine("#define MPIDI_CH3_CHANNEL_RNDV")
-	Else
-		fout.WriteLine("/*#define MPIDI_CH3_CHANNEL_RNDV*/")
 	End If
 	If bUsePinCache Then
 		fout.WriteLine("/*#define USE_NO_PIN_CACHE*/")

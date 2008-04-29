@@ -169,7 +169,7 @@ def mpiexec():
 	        usage()
             configFile = open(sys.argv[2],'r',0)
             configLines = configFile.readlines()
-            configLines = [ x.strip() + ' : '  for x in configLines if x[0] != '#' ]
+            configLines = [ x.strip() + ' : '  for x in configLines if x[0] != '#' and x.strip() != '' ]
             tempargv = []
             for line in configLines:
                 line = 'mpddummyarg ' + line  # gets pitched in shells that can't handle --

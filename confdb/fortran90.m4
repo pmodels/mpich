@@ -1354,3 +1354,100 @@ if test "$pac_cv_prog_f90_and_c_stdio_libs" != none -a \
     F90_OTHER_LIBS="$F90_OTHER_LIBS $pac_cv_prog_f90_and_c_stdio_libs"    
 fi
 ])
+dnl
+dnl/*D
+dnl PAC_F90_CHECK_COMPILER_OPTION - Check that a F90 compiler option is
+dnl accepted without warning messages
+dnl
+dnl Synopsis:
+dnl PAC_F90_CHECK_COMPILER_OPTION(optionname,action-if-ok,action-if-fail)
+dnl
+dnl Output Effects:
+dnl
+dnl If no actions are specified, a working value is added to 'F90OPTIONS'
+dnl
+dnl Notes:
+dnl This is now careful to check that the output is different, since 
+dnl some compilers are noisy.
+dnl 
+dnl We are extra careful to prototype the functions in case compiler options
+dnl that complain about poor code are in effect.
+dnl
+dnl Because this is a long script, we have ensured that you can pass a 
+dnl variable containing the option name as the first argument.
+dnl D*/
+AC_DEFUN(PAC_F90_CHECK_COMPILER_OPTION,[
+AC_MSG_CHECKING([whether Fortran 90 compiler accepts option $1])
+ac_result="no"
+save_F90FLAGS="$F90FLAGS"
+F90FLAGS="$1 $F90FLAGS"
+rm -f conftest.out
+cat >conftest2.$ac_f90ext <<EOF
+        subroutine try()
+        end
+EOF
+cat >conftest.$ac_f90ext <<EOF
+        program main
+        end
+EOF
+dnl It is important to use the AC_TRY_EVAL in case F90 is not a single word
+dnl but is something like "f90 -64" (where the switch has changed the
+dnl compiler)
+ac_fscompilelink='${F90-f90} $save_F90FLAGS -o conftest conftest.$ac_f90ext $LDFLAGS >conftest.bas 2>&1'
+ac_fscompilelink2='${F90-f90} $F90FLAGS -o conftest conftest.$ac_f90ext $LDFLAGS >conftest.out 2>&1'
+if AC_TRY_EVAL(ac_fscompilelink) && test -x conftest ; then
+   if AC_TRY_EVAL(ac_fscompilelink2) && test -x conftest ; then
+      if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
+         AC_MSG_RESULT(yes)
+         AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled without $1])       
+         rm -f conftest2.out
+         rm -f conftest.bas
+	 ac_fscompile3='${F90-f90} -c $save_F90FLAGS conftest2.$ac_f90ext >conftest2.out 2>&1'
+	 ac_fscompilelink4='${F90-f90} $F90FLAGS -o conftest conftest2.o conftest.$ac_f90ext $LDFLAGS >conftest.bas 2>&1'
+         if AC_TRY_EVAL(ac_fscompile3) && test -s conftest2.o ; then
+            if AC_TRY_EVAL(ac_fscompilelink4) && test -x conftest ; then
+               if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
+	          ac_result="yes"
+	       else 
+		  echo "configure: Compiler output differed in two cases" >&AC_FD_CC
+                  diff -b conftest.out conftest.bas >&AC_FD_CC
+	       fi
+	    else
+	       echo "configure: failed program was:" >&AC_FD_CC
+	       cat conftest.$ac_f90ext >&AC_FD_CC
+	    fi
+	  else
+	    echo "configure: failed program was:" >&AC_FD_CC
+	    cat conftest2.$ac_f90ext >&AC_FD_CC
+	  fi
+      else
+	# diff
+        echo "configure: Compiler output differed in two cases" >&AC_FD_CC
+        diff -b conftest.out conftest.bas >&AC_FD_CC
+      fi
+   else
+      # try_eval(fscompilelink2)
+      echo "configure: failed program was:" >&AC_FD_CC
+      cat conftest.$ac_f90ext >&AC_FD_CC
+   fi
+   if test "$ac_result" != "yes" -a -s conftest.out ; then
+	cat conftest.out >&AC_FD_CC
+   fi
+else
+    # Could not compile without the option!
+    echo "configure: Could not compile program" >&AC_FD_CC
+    cat conftest.$ac_f90ext >&AC_FD_CC
+    cat conftest.bas >&AC_FD_CC
+fi
+# Restore F90FLAGS before 2nd/3rd argument commands are executed,
+# # as 2nd/3rd argument command could be modifying F90FLAGS.
+F90FLAGS="$save_F90FLAGS"
+if test "$ac_result" = "yes" ; then
+     AC_MSG_RESULT(yes)	  
+     ifelse($2,,F90OPTIONS="$F90OPTIONS $1",$2)
+else
+     AC_MSG_RESULT(no)
+     $3
+fi
+rm -f conftest*
+])

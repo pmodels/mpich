@@ -301,6 +301,8 @@ void ADIOI_Get_position(ADIO_File fd, ADIO_Offset *offset);
 void ADIOI_Get_eof_offset(ADIO_File fd, ADIO_Offset *eof_offset);
 void ADIOI_Get_byte_offset(ADIO_File fd, ADIO_Offset offset,
 			   ADIO_Offset *disp);
+void ADIOI_process_system_hints(MPI_Info info);
+
 
 void ADIOI_GEN_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
 		     int *error_code);
@@ -354,6 +356,10 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
                        ADIO_Offset offset, ADIO_Status *status, int
                        *error_code);
 void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, void *buf, int count,
+                       MPI_Datatype datatype, int file_ptr_type,
+                       ADIO_Offset offset, ADIO_Status *status, int
+                       *error_code);
+void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, void *buf, int count,
                        MPI_Datatype datatype, int file_ptr_type,
                        ADIO_Offset offset, ADIO_Status *status, int
                        *error_code);

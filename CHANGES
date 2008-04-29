@@ -2,35 +2,47 @@
                                Changes in 1.0.7
 ===============================================================================
 
-- PMI: Added support to use PMI Clique functionality for process
-managers that support it.
+- OVERALL: Initial ROMIO device for BlueGene/P (the ADI device is also
+added but is not configurable at this time).
+
+- OVERALL: Major clean up for the propagation of user-defined and
+other MPICH2 flags throughout the code.
+
+- OVERALL: Support for STI Cell Broadband Engine.
 
 - OVERALL: Added datatype free hooks to be used by devices
 independently.
 
 - OVERALL: Added device-specific timer support.
 
-- OVERALL: make uninstall works cleanly now, except for MPD
-installations.
+- OVERALL: make uninstall works cleanly now.
 
 - ROMIO: Support to take hints from a config file
 
 - ROMIO: more tests and bug fixes for nonblocking I/O
 
-- SMPD: Singleton Init support.
+- PM/PMI: Added support to use PMI Clique functionality for process
+managers that support it.
+
+- PM/PMI: Added SLURM support to configure to make it transparent to
+users.
+
+- PM/PMI: SMPD Singleton Init support.
 
 - WINDOWS: Fortran 90 support added.
 
 - SCTP: Added MPICH_SCTP_NAGLE_ON support.
 
-- MPE: Updated MPE logging API so that it is thread-safe (through global
-mutex). Updated all related documentation, e.g. man pages.
+- MPE: Updated MPE logging API so that it is thread-safe (through
+global mutex).
 
 - MPE: Added infrastructure to piggyback argument data to MPI states.
 
+- DOCS: Documentation creation now works correctly for VPATH builds.
+
 - Many other bug fixes, memory leak fixes and code cleanup. A full
 list of changes is available using:
-  svn log -r100:444 https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk
+  svn log -r100:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/branches/release/MPICH2_1_0_7
 
 
 ===============================================================================

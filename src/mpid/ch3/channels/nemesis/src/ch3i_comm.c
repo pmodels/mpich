@@ -65,20 +65,20 @@ static int find_local_and_external (MPID_Comm *comm, int *local_size_p, int *loc
        add the first process we find from each node.  nodes[] is an
        array where we keep track of whether we have already added that
        node to the list. */
-    
+
     MPIU_CHKPMEM_MALLOC (external_ranks, int *, sizeof(int) * MPID_nem_mem_region.num_nodes, mpi_errno, "external_ranks");
     MPIU_CHKPMEM_MALLOC (local_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "local_ranks");
     MPIU_CHKLMEM_MALLOC (nodes, int *, sizeof(int) * MPID_nem_mem_region.num_nodes, mpi_errno, "nodes");
-    
+
     for (i = 0; i < MPID_nem_mem_region.num_nodes; ++i)
         nodes[i] = 0;
-    
+
     external_size = 0;
     my_node_id = ((MPIDI_CH3I_VC *)comm->vcr[comm->rank]->channel_private)->node_id;
     local_size = 0;
     local_rank = -1;
     external_rank = -1;
-    
+
     for (i = 0; i < comm->remote_size; ++i)
     {
         node_id = ((MPIDI_CH3I_VC *)comm->vcr[i]->channel_private)->node_id;
@@ -103,7 +103,7 @@ static int find_local_and_external (MPID_Comm *comm, int *local_size_p, int *loc
             ++local_size;
         }
     }
-    
+
     *local_size_p = local_size;
     *local_rank_p = local_rank;
     *local_ranks_p =  MPIU_Realloc (local_ranks, sizeof(int) * local_size);
@@ -113,7 +113,7 @@ static int find_local_and_external (MPID_Comm *comm, int *local_size_p, int *loc
     *external_rank_p = external_rank;
     *external_ranks_p = MPIU_Realloc (external_ranks, sizeof(int) * external_size);
     MPIU_ERR_CHKANDJUMP (*external_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
-    
+
     MPIU_CHKPMEM_COMMIT();
 
  fn_exit:
@@ -132,7 +132,9 @@ static int find_local_and_external (MPID_Comm *comm, int *local_size_p, int *loc
 int MPIDI_CH3I_comm_create (MPID_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
 
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
     comm->ch.barrier_vars = NULL;
 
     mpi_errno = find_local_and_external (comm, &comm->ch.local_size, &comm->ch.local_rank, &comm->ch.local_ranks,
@@ -140,8 +142,9 @@ int MPIDI_CH3I_comm_create (MPID_Comm *comm)
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     comm->coll_fns = &collective_functions;
-    
+
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -154,7 +157,9 @@ int MPIDI_CH3I_comm_create (MPID_Comm *comm)
 int MPIDI_CH3I_comm_destroy (MPID_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
 
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
     if (comm->ch.barrier_vars && MPID_NEM_FETCH_AND_DEC (&comm->ch.barrier_vars->usage_cnt) == 1)
     {
 	MPID_NEM_WRITE_BARRIER();
@@ -164,7 +169,8 @@ int MPIDI_CH3I_comm_destroy (MPID_Comm *comm)
         MPIU_Free (comm->ch.local_ranks);
     if (comm->ch.external_size)
         MPIU_Free (comm->ch.external_ranks);
-    
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
     return mpi_errno;
 }
 
@@ -177,7 +183,7 @@ static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars)
     int mpi_errno = MPI_SUCCESS;
     int i;
     int c;
-    
+
     for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i)
     {
 	c = MPID_NEM_CAS_INT (&MPID_nem_mem_region.barrier_vars[i].context_id, NULL_CONTEXT_ID, comm->context_id);
@@ -191,7 +197,7 @@ static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars)
     }
 
     *vars = NULL;
-    
+
  fn_exit:
     return mpi_errno;
 }
@@ -249,15 +255,15 @@ static int barrier (MPID_Comm *comm_ptr)
         /* there are only external processes -- do msg barrier only */
         mpi_errno = msg_barrier (comm_ptr, comm_ptr->ch.external_rank, external_size, comm_ptr->ch.external_ranks);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-        
+
         goto fn_exit;
     }
-    
+
     if (comm_ptr->ch.barrier_vars == NULL)
     {
         mpi_errno = alloc_barrier_vars (comm_ptr, &comm_ptr->ch.barrier_vars);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-            
+
         if (comm_ptr->ch.barrier_vars == NULL)
         {
             /* no barrier_vars left -- revert to safe but inefficient
@@ -281,11 +287,11 @@ static int barrier (MPID_Comm *comm_ptr)
 
             mpi_errno = msg_barrier (comm_ptr, comm_ptr->ch.local_rank, local_size, comm_ptr->ch.local_ranks);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-                
+
             goto fn_exit;
         }
-    }   
-    
+    }
+
     barrier_vars = comm_ptr->ch.barrier_vars;
 
     if (external_size == 1)
@@ -314,13 +320,13 @@ static int barrier (MPID_Comm *comm_ptr)
     }
 
     /* there are both local and external processes */
-    
+
     if (comm_ptr->ch.local_rank == 0)
     {
         /* do barrier between local and external */
         int external_rank = comm_ptr->ch.external_rank;
         int *external_ranks = comm_ptr->ch.external_ranks;
-        
+
         /* wait for local procs to reach barrier */
         if (local_size > 1)
             while (barrier_vars->sig0 == 0)
@@ -329,7 +335,7 @@ static int barrier (MPID_Comm *comm_ptr)
         /* now do a barrier with external processes */
         mpi_errno = msg_barrier (comm_ptr, external_rank, external_size, external_ranks);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-        
+
         /* reset ctr and release local procs */
         if (local_size > 1)
         {
@@ -376,7 +382,9 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER_VARS_INIT);
 
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_BARRIER_VARS_INIT);
     if (MPID_nem_mem_region.local_rank == 0)
         for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i)
         {
@@ -387,6 +395,7 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
             barrier_region[i].sig = 0;
         }
 
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_BARRIER_VARS_INIT);
     return mpi_errno;
 }
 
@@ -397,9 +406,13 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
 int MPID_nem_coll_barrier_init ()
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_COLL_BARRIER_INIT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_COLL_BARRIER_INIT);
 
 /*     mpi_errno = MPIDI_CH3I_comm_create (MPIR_Process.comm_world); */
 /*     if (mpi_errno) MPIU_ERR_POP (mpi_errno); */
-    
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_COLL_BARRIER_INIT);
     return mpi_errno;
 }

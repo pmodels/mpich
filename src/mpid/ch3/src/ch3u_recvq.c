@@ -151,6 +151,8 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
  * MPIDI_CH3U_Recvq_FDU()
  *
  * Find a request in the unexpected queue and dequeue it; otherwise return NULL.
+ *
+ * This routine is used only in the case of send_cancel
  */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Recvq_FDU
@@ -172,7 +174,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
     matching_cur_rreq = NULL;
     prev_rreq = NULL;
 
-    /* FIXME: Why doesn't this exit after it finds the first match? */
+    /* Note that since this routine is used only in the case of send_cancel,
+       there can be only one match if at all. */
     cur_rreq = recvq_unexpected_head;
     while(cur_rreq != NULL) {
 	if (cur_rreq->dev.sender_req_id == sreq_id && 

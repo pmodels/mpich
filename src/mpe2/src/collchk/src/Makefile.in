@@ -16,12 +16,12 @@ AR                   = @AR@
 ARFLAGS              = cr
 RANLIB               = @RANLIB@
 MAKE                 = @MAKE@
-MPI_INC              = @MPI_INC@
+MPI_CFLAGS           = @MPI_CFLAGS@
+MPI_FFLAGS           = @MPI_FFLAGS@
 MPI_LIBS             = @MPI_LIBS@
 INCLUDE_DIR          = -I.. -I${top_srcdir}/include \
                        -I${includebuild_dir} \
-                       -I../../.. -I${top_srcdir}/../../include \
-                       $(MPI_INC)
+                       -I../../.. -I${top_srcdir}/../../include
 COLLCHK_LIBNAME      = @COLLCHK_LIBNAME@
 CFLAGS               = @CFLAGS@
 MPE_LIBDIR           = @libbuild_dir@
@@ -58,8 +58,12 @@ srcdir           = @srcdir@
 EXECS            =
 
 # GETNAME_DEFS are needed by mpehname.c
-CC_FLAGS         = $(CFLAGS) $(INCLUDE_DIR) $(MPE_COPTS)
+CC_FLAGS         = $(INCLUDE_DIR) $(CFLAGS) $(MPE_COPTS)
 CC_LDFLAGS       = $(LDFLAGS) $(CFLAGS) $(MPE_LDOPTS)
+# MPE include path, x_INCS, goes in front of MPI include path, MPI_xFLAGS,
+# in case MPI include path is in MPI_xFLAGS containing old MPE include path.
+MPICC_FLAGS      = $(INCLUDE_DIR) $(MPI_CFLAGS) $(MPE_COPTS)
+MPICC_LDFLAGS    = $(LDFLAGS) $(MPI_CFLAGS) $(MPE_LDOPTS)
 
 
 UTIL_SRC     = begin.c err_han.c is_init.c \
@@ -106,7 +110,7 @@ MPI_RMA_OBJ  = $(MPI_RMA_SRC:.c=.@OBJEXT@)
 .SUFFIXES: .c .@OBJEXT@ .lo .a @EXEEXT@
 
 .c.@OBJEXT@:
-	$(MPI_CC) $(CC_FLAGS) -c $<
+	$(MPI_CC) $(MPICC_FLAGS) -c $<
 
 default:
 	$(MAKE) ${libbuild_dir}/lib$(COLLCHK_LIBNAME).a

@@ -1,5 +1,4 @@
 INCLUDES = -I../../../../../include -I${master_top_srcdir}/src/include
-win_sources = ch3_istartrndvmsg.c ch3_istartrndvtransfer.c
 ssmsources = \
  ch3_finalize.c              \
  ch3_init.c                  \

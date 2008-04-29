@@ -25,7 +25,7 @@
 /* NOTE - The completion action associated with a request created by CH3_iStartMsgv() is alway null (onDataAvail = 0).  This
    implies that CH3_iStartMsgv() can only be used when the entire message can be described by a single iovec of size
    MPID_IOV_LIMIT. */
-    
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_iStartMsgv
 #undef FCNAME
@@ -84,7 +84,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPID_IOV *iov, int n_iov, MPID_Request
                 int i;
                 for (i = 0; i < n_iov; ++i)
                     total += iov[i].MPID_IOV_LEN;
-                    
+
                 MPIU_DBG_MSG_D (CH3_CHANNEL, VERBOSE, "   + len=%d ", total);
             });
 	mpi_errno = MPID_nem_mpich2_sendv_header (&remaining_iov, &remaining_n_iov, vc, &again);
@@ -167,9 +167,9 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPID_IOV *iov, int n_iov, MPID_Request
 	sreq->ch.vc = vc;
 	MPIDI_CH3I_SendQ_enqueue (sreq, CH3_NORMAL_QUEUE);
     }
-    
+
     *sreq_ptr = sreq;
-    
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
     return mpi_errno;

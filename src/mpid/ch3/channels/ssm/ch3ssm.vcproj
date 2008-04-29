@@ -968,14 +968,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\ch3_istartrndvmsg.c"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ch3_istartrndvtransfer.c"
-				>
-			</File>
-			<File
 				RelativePath="src\ch3_progress.c"
 				>
 				<FileConfiguration

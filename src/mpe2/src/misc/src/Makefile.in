@@ -15,11 +15,10 @@ AR                   = @AR@
 ARFLAGS              = cr
 RANLIB               = @RANLIB@
 MAKE                 = @MAKE@
-MPI_INC              = @MPI_INC@
+MPI_CFLAGS           = @MPI_CFLAGS@
 MPI_LIBS             = @MPI_LIBS@
 INCLUDE_DIR          = -I.. -I${top_srcdir}/include \
-                       -I../../.. -I${top_srcdir}/../../include \
-                       $(MPI_INC)
+                       -I../../.. -I${top_srcdir}/../../include
 PROF_LIBNAME         = @PROF_LIBNAME@
 CFLAGS               = @CFLAGS@
 MPE_LIBDIR           = @libbuild_dir@
@@ -52,8 +51,12 @@ srcdir           = @srcdir@
 EXECS            = dbxtest@EXEEXT@ dbxtest2@EXEEXT@
 
 # GETNAME_DEFS are needed by mpehname.c
-CC_FLAGS         = $(CFLAGS) $(INCLUDE_DIR) $(MPE_COPTS)
+CC_FLAGS         = $(INCLUDE_DIR) $(CFLAGS) $(MPE_COPTS)
 CC_LDFLAGS       = $(LDFLAGS) $(CFLAGS) $(MPE_LDOPTS)
+# MPE include path, x_INCS, goes in front of MPI include path, MPI_xFLAGS,
+# in case MPI include path is in MPI_xFLAGS containing old MPE include path.
+MPICC_FLAGS      = $(INCLUDE_DIR) $(MPI_CFLAGS) $(MPE_COPTS)
+MPICC_LDFLAGS    = $(LDFLAGS) $(MPI_CFLAGS) $(MPE_LDOPTS)
 
 MPE_CSOURCES     = decomp.c mpe_seq.c dbxerr.c getgrank.c \
                    examine.c privtags.c mpehname.c mpe_io.c
@@ -75,7 +78,7 @@ MPE_SHLWOBJECTS  = $(MPE_WOBJECTS:.@OBJEXT@=.lo)
 .SUFFIXES: .c .@OBJEXT@ .p@OBJEXT@ .n@OBJEXT@ .lo .a @EXEEXT@
 
 .c.p@OBJEXT@:
-	$(MPI_CC) $(CC_FLAGS) -c $<
+	$(MPI_CC) $(MPICC_FLAGS) -c $<
 	$(MV) $*.@OBJEXT@ $*.p@OBJEXT@
 
 .c.n@OBJEXT@:
@@ -134,13 +137,13 @@ ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a: $(MPE_N_XOBJECTS)
 
 dbxtest@EXEEXT@: dbxtest.p@OBJEXT@ ${libbuild_dir}/lib$(PROF_LIBNAME).a
 	$(CP) -f dbxtest.p@OBJEXT@ mpe2tmp.@OBJEXT@
-	$(MPI_CLINKER) $(CC_LDFLAGS) -o $@ mpe2tmp.@OBJEXT@ \
+	$(MPI_CLINKER) $(MPICC_LDFLAGS) -o $@ mpe2tmp.@OBJEXT@ \
 	               -L${libbuild_dir} -l$(PROF_LIBNAME) $(MPI_LIBS) 
 	@-$(RM) -f mpe2tmp.@OBJEXT@
 
 dbxtest2@EXEEXT@: dbxtest2.p@OBJEXT@ 
 	$(CP) -f dbxtest2.p@OBJEXT@ mpe2tmp.@OBJEXT@
-	$(MPI_CLINKER) $(CC_LDFLAGS) -o $@ mpe2tmp.@OBJEXT@ \
+	$(MPI_CLINKER) $(MPICC_LDFLAGS) -o $@ mpe2tmp.@OBJEXT@ \
 	               $(LIB_PATH) 
 	@-$(RM) -f mpe2tmp.@OBJEXT@
 

@@ -1,0 +1,73 @@
+AC_INIT(configure.in)
+
+dnl
+dnl Set the directory that contains support scripts such as install-sh and
+dnl config.guess
+dnl
+AC_CONFIG_AUX_DIR(../../../confdb)
+
+dnl
+dnl Definitions will be placed in this file rather than in the DEFS variable
+dnl
+AC_CONFIG_HEADER(include/mpid_config.h)
+
+echo "RUNNING CONFIGURE FOR DCMF DEVICE"
+
+dnl
+dnl First check that we have a clean build if we are doing a VPATH build
+if test "`cd $srcdir && pwd`" != "`pwd`" && \
+   test -f $srcdir/config.status ; then
+    AC_MSG_ERROR([You cannot do a VPATH build if the source directory has been
+    configured.  Run "make distclean" in $srcdir first.])
+fi
+
+PAC_ARG_CACHING
+AC_CACHE_LOAD
+PAC_PROG_MAKE
+
+
+ASSERT_LEVEL=2
+AC_ARG_WITH(assert-level,
+  AS_HELP_STRING([--with-assert-level={0 1 2}],[set build assert-level (default: 2)]),
+  [ ASSERT_LEVEL=$withval ])
+AC_SUBST(ASSERT_LEVEL)
+AC_DEFINE_UNQUOTED([ASSERT_LEVEL], $ASSERT_LEVEL, [Which messager is being used])
+
+
+#
+# bring in the default implementation of the MPID_Thread package
+#
+MPID_THREAD_SRCDIR="../common/thread"
+builtin(include,../common/thread/mpid_thread.m4)
+
+
+AC_SUBST(AR)
+AC_SUBST(RANLIB)
+AC_SUBST(MPILIBNAME)
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(CC_SHL)
+AC_SUBST(C_LINK_SHL)
+AC_SUBST(master_top_srcdir)
+AC_SUBST(master_top_builddir)
+AC_SUBST(MAKE_DEPEND_C)
+AC_SUBST(ENABLE_SHLIB)
+AC_SUBST(MKDIR_P)
+
+INSTALL="/usr/bin/install -c"
+INSTALL_PROGRAM="${INSTALL}"
+INSTALL_DATA="${INSTALL} -m 644"
+AC_SUBST(INSTALL)
+AC_SUBST(INSTALL_DATA)
+AC_SUBST(INSTALL_PROGRAM)
+
+
+FILE=`cd $srcdir && find -name Makefile.in | perl -pe 's,^\./,,;s/\.in$//'`
+AC_OUTPUT(
+localdefs
+$MPID_THREAD_OUTPUT_FILES
+$FILE
+)
+
+PAC_SUBDIR_CACHE_CLEANUP

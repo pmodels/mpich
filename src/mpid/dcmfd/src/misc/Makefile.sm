@@ -1,0 +1,16 @@
+SUBDIRS= .
+INCLUDES = -I${master_top_srcdir}/src/include -I${top_builddir}/src/include
+lib${MPILIBNAME}_a_SOURCES = mpid_abort.c \
+			     mpid_comm_spawn.c \
+			     mpid_init.c \
+			     mpid_finalize.c \
+			     mpid_get_universe_size.c \
+			     mpid_probe.c \
+			     mpid_iprobe.c \
+			     mpid_progress.c \
+			     mpid_alloc_mem.c \
+			     mpid_free_mem.c \
+			     mpid_getpname.c \
+			     mpid_vc.c \
+			     mpid_time.c \
+			     mpix.c

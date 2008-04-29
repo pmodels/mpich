@@ -61,13 +61,13 @@ AC_MSG_CHECKING([whether C compiler accepts option $1])
 save_CFLAGS="$CFLAGS"
 CFLAGS="$1 $CFLAGS"
 rm -f conftest.out
-echo 'int try(void);int try(void){return 0;}' > conftest2.c
+echo 'int foo(void);int foo(void){return 0;}' > conftest2.c
 echo 'int main(void);int main(void){return 0;}' > conftest.c
 if ${CC-cc} $save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
    if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.out 2>&1 ; then
       if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
          AC_MSG_RESULT(yes)
-         AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled  without $1])       
+         AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled without $1])       
          rm -f conftest.out
          rm -f conftest.bas
          if ${CC-cc} -c $save_CFLAGS $CPPFLAGS conftest2.c >conftest2.out 2>&1 ; then
@@ -101,7 +101,7 @@ if ${CC-cc} $save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas
             fi
          else
             if test -s conftest2.out ; then
-               cat conftest.out >&AC_FD_CC
+               cat conftest2.out >&AC_FD_CC
             fi
 	    AC_MSG_RESULT(no)
             CFLAGS="$save_CFLAGS"
@@ -1053,6 +1053,7 @@ export enable_strict_done
 ])
 dnl
 dnl Use the value of enable-strict to update CFLAGS
+dnl pac_cc_strict_flags contains the strict flags.
 dnl
 dnl -std=c89 is used to select the C89 version of the ANSI/ISO C standard.
 dnl As of this writing, many C compilers still accepted only this version,
@@ -1071,13 +1072,15 @@ if test "$enable_strict_done" != "yes" ; then
     if test -z "CC" ; then
         AC_CHECK_PROGS(CC,gcc)
     fi
+    pac_cc_strict_flags=""
     case "$enable_strict" in 
-	yes)
+        yes)
         enable_strict_done="yes"
         if test "$ac_cv_prog_gcc" = "yes" ; then 
-            CFLAGS="${CFLAGS} -Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL"
-	    AC_MSG_RESULT([Adding strict check arguments to CFLAGS])
-	    AC_MSG_CHECKING([whether we can add -std=c89])
+            pac_cc_strict_flags="-Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL"
+            CFLAGS="$CFLAGS $pac_cc_strict_flags"
+            AC_MSG_RESULT([Adding strict check arguments to CFLAGS])
+            AC_MSG_CHECKING([whether we can add -std=c89])
             # See if we can add -std=c89
             savCFLAGS=$CFLAGS
             CFLAGS="$CFLAGS -std=c89"
@@ -1087,16 +1090,19 @@ if test "$enable_strict_done" != "yes" ; then
             AC_MSG_RESULT($stdc_ok)
             if test "$stdc_ok" != yes ; then
                 CFLAGS="$savCFLAGS"
+            else
+                pac_cc_strict_flags="$pac_cc_strict_flags -std=c89"
             fi
-	else 
-	    AC_MSG_WARN([enable strict supported only for gcc])
-    	fi
- 	;;	
-	all)
+        else 
+            AC_MSG_WARN([enable strict supported only for gcc])
+        fi
+        ;;
+        all)
         enable_strict_done="yes"
         if test "$ac_cv_prog_gcc" = "yes" ; then 
-            CFLAGS="${CFLAGS} -Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wunused-parameter -Wunused-value -Wno-long-long"
-	    AC_MSG_CHECKING([whether we can add -std=c89])
+            pac_cc_strict_flags="-Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wunused-parameter -Wunused-value -Wno-long-long"
+            CFLAGS="$CFLAGS $pac_cc_strict_flags"
+            AC_MSG_CHECKING([whether we can add -std=c89])
             # See if we can add -std=c89
             savCFLAGS=$CFLAGS
             CFLAGS="$CFLAGS -std=c89"
@@ -1106,39 +1112,21 @@ if test "$enable_strict_done" != "yes" ; then
             AC_MSG_RESULT($stdc_ok)
             if test "$stdc_ok" != yes ; then
                 CFLAGS="$savCFLAGS"
+            else
+                pac_cc_strict_flags="$pac_cc_strict_flags -std=c89"
             fi
-	else 
-	    AC_MSG_WARN([enable strict supported only for gcc])
-    	fi
-	;;
+        else 
+            AC_MSG_WARN([enable strict supported only for gcc])
+        fi
+        ;;
 
-	posix)
-	enable_strict_done="yes"
-        if test "$ac_cv_prog_gcc" = "yes" ; then 
-            CFLAGS="${CFLAGS} -Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -D_POSIX_C_SOURCE=199506L"
-	    AC_MSG_RESULT([Adding strict check arguments (POSIX flavor) to CFLAGS])
-	    AC_MSG_CHECKING([whether we can add -std=c89])
-            # See if we can add -std=c89
-            savCFLAGS=$CFLAGS
-            CFLAGS="$CFLAGS -std=c89"
-            AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[int a;])],
-                  stdc_ok=yes,
-                  stdc_ok=no)
-            AC_MSG_RESULT($stdc_ok)
-            if test "$stdc_ok" != yes ; then
-                CFLAGS="$savCFLAGS"
-            fi
-	else 
-	    AC_MSG_WARN([enable strict supported only for gcc])
-    	fi
- 	;;	
-	
-	noopt)
+        posix)
         enable_strict_done="yes"
         if test "$ac_cv_prog_gcc" = "yes" ; then 
-            CFLAGS="${CFLAGS} -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL"
-	    AC_MSG_RESULT([Adding strict check arguments to CFLAGS])
-	    AC_MSG_CHECKING([whether we can add -std=c89])
+            pac_cc_strict_flags="-Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -D_POSIX_C_SOURCE=199506L"
+            CFLAGS="$CFLAGS $pac_cc_strict_flags"
+            AC_MSG_RESULT([Adding strict check arguments (POSIX flavor) to CFLAGS])
+            AC_MSG_CHECKING([whether we can add -std=c89])
             # See if we can add -std=c89
             savCFLAGS=$CFLAGS
             CFLAGS="$CFLAGS -std=c89"
@@ -1148,21 +1136,47 @@ if test "$enable_strict_done" != "yes" ; then
             AC_MSG_RESULT($stdc_ok)
             if test "$stdc_ok" != yes ; then
                 CFLAGS="$savCFLAGS"
+            else
+                pac_cc_strict_flags="$pac_cc_strict_flags -std=c89"
             fi
-	else 
-	    AC_MSG_WARN([enable strict supported only for gcc])
-    	fi
-	;;
-	no)
-	# Accept and ignore this value
-	:
-	;;
-	*)
-	if test -n "$enable_strict" ; then
-  	    AC_MSG_WARN([Unrecognized value for enable-strict:$enable_strict])
-	fi
-	;;
-    esac	
+        else 
+            AC_MSG_WARN([enable strict supported only for gcc])
+        fi
+        ;;
+        
+        noopt)
+        enable_strict_done="yes"
+        if test "$ac_cv_prog_gcc" = "yes" ; then 
+            pac_cc_strict_flags="-Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL"
+            CFLAGS="$CFLAGS $pac_cc_strict_flags"
+            AC_MSG_RESULT([Adding strict check arguments to CFLAGS])
+            AC_MSG_CHECKING([whether we can add -std=c89])
+            # See if we can add -std=c89
+            savCFLAGS=$CFLAGS
+            CFLAGS="$CFLAGS -std=c89"
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[int a;])],
+                  stdc_ok=yes,
+                  stdc_ok=no)
+            AC_MSG_RESULT($stdc_ok)
+            if test "$stdc_ok" != yes ; then
+                CFLAGS="$savCFLAGS"
+            else
+                pac_cc_strict_flags="$pac_cc_strict_flags -std=c89"
+            fi
+        else 
+            AC_MSG_WARN([enable strict supported only for gcc])
+        fi
+        ;;
+        no)
+        # Accept and ignore this value
+        :
+        ;;
+        *)
+        if test -n "$enable_strict" ; then
+            AC_MSG_WARN([Unrecognized value for enable-strict:$enable_strict])
+        fi
+        ;;
+    esac
 fi
 ])
 dnl/*D

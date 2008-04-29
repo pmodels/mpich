@@ -22,6 +22,7 @@
 #ifdef HAVE_SYS_AIO_H
 #include <sys/aio.h>
 #endif
+#include <time.h>
 
 #include "../../mpi-io/mpioimpl.h"
 #include "../../mpi-io/mpioprof.h"
@@ -223,6 +224,10 @@ int ADIOI_GEN_aio_wait_fn(int count, void ** array_of_states,
 {
 	const struct aiocb **cblist;
 	int err, errcode=MPI_SUCCESS;
+	int nr_complete=0;
+	double starttime;
+	struct timespec aio_timer;
+	struct timespec *aio_timer_p = NULL;
 
 	ADIOI_AIO_Request **aio_reqlist;
 	int i;
@@ -231,39 +236,54 @@ int ADIOI_GEN_aio_wait_fn(int count, void ** array_of_states,
 
 	cblist = (const struct aiocb**) ADIOI_Calloc(count, sizeof(struct aiocb*));
 
+	starttime = MPI_Wtime();
+	if (timeout >0) {
+	    aio_timer.tv_sec = (time_t)timeout;
+	    aio_timer.tv_nsec = timeout - aio_timer.tv_sec;
+	    aio_timer_p = &aio_timer;
+	}
 	for (i=0; i< count; i++)
 	{
 		cblist[i] = aio_reqlist[i]->aiocbp;
 	}
 
-	do {
-	    err = aio_suspend(cblist, count, NULL);
-	} while (err < 0 && errno == EINTR);
-	if (err == 0) 
-	{ /* run through the list of requests, and mark all the completed ones
-	     as done */
+	while(nr_complete < count) {
+	    do {
+		err = aio_suspend(cblist, count, aio_timer_p);
+	    } while (err < 0 && errno == EINTR);
+	    if (err == 0) 
+	    { /* run through the list of requests, and mark all the completed
+		 ones as done */
 		for (i=0; i< count; i++)
 		{
 		    /* aio_error returns an ERRNO value */
+		    if (aio_reqlist[i]->aiocbp == NULL) 
+			continue;
 		    errno = aio_error(aio_reqlist[i]->aiocbp);
 		    if (errno == 0) {
-		    	int n = aio_return(aio_reqlist[i]->aiocbp);
+			int n = aio_return(aio_reqlist[i]->aiocbp);
 			aio_reqlist[i]->nbytes = n;
 			MPIR_Nest_incr();
 			errcode = MPI_Grequest_complete(aio_reqlist[i]->req);
 			if (errcode != MPI_SUCCESS) {
-				errcode = MPIO_Err_create_code(MPI_SUCCESS,
-						MPIR_ERR_RECOVERABLE,
-						"ADIOI_GEN_aio_wait_fn", 
-						__LINE__, MPI_ERR_IO, 
-						"**mpi_grequest_complete", 
-						0);
+			    errcode = MPIO_Err_create_code(MPI_SUCCESS,
+				    MPIR_ERR_RECOVERABLE,
+				    "ADIOI_GEN_aio_wait_fn", 
+				    __LINE__, MPI_ERR_IO, 
+				    "**mpi_grequest_complete", 0);
 			}
 			MPIR_Nest_decr();
+			ADIOI_Free(aio_reqlist[i]->aiocbp);
+			aio_reqlist[i]->aiocbp = NULL;
+			cblist[i] = NULL;
+			nr_complete++;
 		    } 
 		    /* TODO: need to handle error conditions somehow*/
 		}
-	} /* TODO: also need to handle errors here  */
+	    } /* TODO: also need to handle errors here  */
+	    if ( (timeout > 0) && (timeout < (MPI_Wtime() - starttime) ))
+		break;
+	}
 
 	if (cblist != NULL) ADIOI_Free(cblist);
         return errcode;
@@ -295,9 +315,13 @@ int ADIOI_GEN_aio_free_fn(void *extra_state)
 	ADIOI_AIO_Request *aio_req;
 	aio_req = (ADIOI_AIO_Request*)extra_state;
 
-	ADIOI_Free(aio_req->aiocbp);
+	if (aio_req->aiocbp != NULL)
+		ADIOI_Free(aio_req->aiocbp);
 	ADIOI_Free(aio_req);
 
 	return MPI_SUCCESS;
 }
 #endif /* working AIO */
+/* 
+ * vim: ts=8 sts=4 sw=4 noexpandtab 
+ */

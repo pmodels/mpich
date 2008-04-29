@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define COUNT 65536
+#define COUNT (200)
 #undef TIMING
 
 void handle_error(int errcode, char *str);
@@ -26,7 +26,8 @@ void handle_error(int errcode, char *str)
 
 int main(int argc, char **argv)
 {
-    int *buf, i, rank, nprocs, len, sum, global_sum;
+    int *buf, i, rank, nprocs, len, sum;
+    int global_sum;
     int errs=0, toterrs, errcode;
     char *filename;
     MPI_File fh;

@@ -1,6 +1,14 @@
 AC_PREREQ(2.59)
 AC_INIT(configure.in)
 
+dnl The MPICH2 top-level configure adds a bunch of flags to the
+dnl user-defined CFLAGS by processing different configure command-line
+dnl arguments (--enable-g, --enable-default-optimization). These updated
+dnl flags are passed down as a separate flag. Here, we don't care about
+dnl the user-defined flags, but rather this updated flags, so we just
+dnl overwrite CFLAGS with them.
+PAC_SUBCONFIG_INIT()
+
 dnl This is not completely implemented yet.
 dnl AC_ARG_WITH(libatomic,
 dnl [--with-libatomic=name - Specify the location of the libatomic package],
@@ -75,5 +83,8 @@ export ETAGSADD
 dnl
 dnl Dependency handling
 AC_SUBST(MAKE_DEPEND_C)
+
+dnl Place holder macro for finalization
+PAC_SUBCONFIG_FINALIZE()
 
 AC_OUTPUT(Makefile)

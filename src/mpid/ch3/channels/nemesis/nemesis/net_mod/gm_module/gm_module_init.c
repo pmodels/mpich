@@ -19,6 +19,8 @@ int MPID_nem_module_gm_num_send_tokens = 0;
 
 struct gm_port *MPID_nem_module_gm_port = 0;
 
+MPID_nem_queue_ptr_t MPID_nem_process_free_queue = NULL;
+
 #define FREE_SEND_QUEUE_ELEMENTS MPID_NEM_NUM_CELLS
 MPID_nem_gm_module_send_queue_head_t MPID_nem_gm_module_send_queue = {0};
 MPID_nem_gm_module_send_queue_t *MPID_nem_gm_module_send_free_queue = 0;
@@ -122,18 +124,21 @@ MPID_nem_gm_module_init (MPID_nem_queue_ptr_t proc_recv_queue,
     MPIU_Assert(sizeof(MPID_nem_gm_module_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
 
     my_pg_rank = pg_rank;
-    
+
     mpi_errno = init_gm(&board_id, &port_id, unique_id);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_nem_gm_module_get_business_card(pg_rank, bc_val_p, val_max_sz_p);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+    MPID_nem_process_free_queue = proc_free_queue;
+
+    status = gm_register_memory (MPID_nem_module_gm_port, (void *)proc_elements, sizeof (MPID_nem_cell_t) * num_proc_elements);
+    MPIU_ERR_CHKANDJUMP1 (status != GM_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gm_regmem", "**gm_regmem %d", status);
+
     MPID_nem_module_gm_num_send_tokens = gm_num_send_tokens(MPID_nem_module_gm_port);
 
     mpi_errno = MPID_nem_gm_module_recv_init();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPID_nem_gm_module_send_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     MPID_nem_gm_module_send_queue.head = NULL;
@@ -154,7 +159,6 @@ MPID_nem_gm_module_init (MPID_nem_queue_ptr_t proc_recv_queue,
     mpi_errno = MPID_nem_gm_module_lmt_init();
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    /* we're not using the free_queue anymore FIXME: DARIUS take all references out of interface */
     *module_free_queue = NULL;
 
  fn_exit:
@@ -246,14 +250,10 @@ MPID_nem_gm_module_connect_to_root (const char *business_card, MPIDI_VC_t *new_v
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
 MPID_nem_gm_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
-{
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+{    
     int mpi_errno = MPI_SUCCESS;
     int ret;
 
-    vc_ch->iStartContigMsg  = MPID_nem_gm_iStartContigMsg;
-    vc_ch->iSendContig      = MPID_nem_gm_iSendContig;
-    vc->sendNoncontig_fn    = MPID_nem_gm_SendNoncontig;
     VC_FIELD(vc, source_id) = my_pg_rank; /* FIXME: this is only valid for processes in COMM_WORLD */
 
     mpi_errno = MPID_nem_gm_module_get_port_unique_from_bc (business_card, &VC_FIELD(vc, gm_port_id), VC_FIELD(vc, gm_unique_id));
@@ -279,10 +279,10 @@ MPID_nem_gm_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
 int MPID_nem_gm_module_vc_destroy(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;   
-   fn_exit:   
-       return mpi_errno;
-   fn_fail:
-       goto fn_exit;
+ fn_exit:   
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME

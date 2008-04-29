@@ -424,7 +424,7 @@ foreach $_ (@ARGV) {
     'Error_string' => '2', 'Error_string-2' => 'out:blankpad',
     'Intercomm_merge' => '2', 'Intercomm_merge-2' => 'in:logical',
     'Info_get' => '2:4:5', 'Info_get-2' => 'in:addnull',
-		  'Info_get-4' => 'out:blankpad',
+		  'Info_get-4' => 'out:blankpadonflag:l5',
 		  'Info_get-5' => 'out:logical',
     'Info_set' => '2:3', 'Info_set-2' => 'in:addnullandtrim', 
 		  'Info_set-3' => 'in:addnullandtrim',
@@ -1639,6 +1639,47 @@ sub blankpad_ctof {
 ";
     $clean_up .= "    $free( $cvar );\n";
 }
+#
+# Blankpad strings if a flag is true (for info_get, perhaps others?)
+# This is complicated by the fact that the Fortran strings do not contain
+# null terminators and the MPI definitions of string lengths, such as
+# MPI_MAX_PORT_NAME, are one smaller in Fortran than in C (see 4.12.9
+# in the MPI-2 specification).  Because of this, we need to allocate a 
+# temporary that is one longer on 
+sub blankpadonflag_out_decl {
+    my $count = $_[0];
+    print $OUTFD "    char *p$count;\n";
+}
+sub blankpadonflag_out_arg {
+    my $count = $_[0];
+    print $OUTFD "p$count";
+}
+sub blankpadonflag_out_ftoc {
+    my $count = $_[0];
+
+    # Allocate space to hold the C version of the output
+    $strlen = "d$count";
+    print $OUTFD "    p$count = (char *)$malloc( $strlen + 1 );\n";
+}
+sub blankpadonflag_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    
+    # find the null character.  Replace with blanks from there to the
+    # end of the string.  The declared lenght is given by a variable
+    # whose name is derived from outvar
+    $strlen = $outvar;
+    $strlen =~ s/^v/d/;
+    my $cvar = $outvar; 
+    $cvar =~ s/^v/p/;
+    print $OUTFD "\
+    if ($Array_size) {char *p = $outvar, *pc=$cvar;
+        while (*pc) {*p++ = *pc++;}
+        while ((p-$outvar) < $strlen) { *p++ = ' '; }
+    }
+";
+    $clean_up .= "    $free( $cvar );\n";
+}
 
 # ---------------------------------------------------------------------------
 # Add null to input strings
@@ -2264,7 +2305,10 @@ if ($write_mpif) {
                   F90_COMPLEX, F90_INTEGER, RESIZED) {
 	&print_mpif_int( "MPI_COMBINER_$key" );
     }
-
+    # Typeclasses
+    foreach $key (REAL, INTEGER, COMPLEX) {
+	&print_mpif_int( "MPI_TYPECLASS_$key" );
+    }
 
     # RMA Asserts
     foreach $mode (NOCHECK, NOSTORE, NOPUT, NOPRECEDE, NOSUCCEED) {
@@ -2319,6 +2363,13 @@ if ($write_mpif) {
     print MPIFFD "       EXTERNAL MPI_TYPE_NULL_COPY_FN\n";
     print MPIFFD "       EXTERNAL MPI_CONVERSION_FN_NULL\n";
     # the time/tick functions
+    # Special option.  Some compilers (particularly IBM's xl compilers)
+    # allow the user to change the definition of the datatypes, such as
+    # making real 8 bytes and double precision 16.  To allow mpif.h
+    # to be used with such compilers, those compilers allow the
+    # use of the non-standard real*8 to force exactly 8 bytes.
+    # Do we want to make this a configure time value or a 
+    # build-time value?
     print MPIFFD "       DOUBLE PRECISION MPI_WTIME, MPI_WTICK\n";
     print MPIFFD "       DOUBLE PRECISION PMPI_WTIME, PMPI_WTICK\n";
     # We avoid adding the external declarations because some Fortran

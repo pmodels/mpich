@@ -9,6 +9,8 @@ builtin(include,aclocal_atomic.m4)
 builtin(include,aclocal_cross.m4)
 builtin(include,aclocal_cxx.m4)
 builtin(include,aclocal_f77.m4)
+builtin(include,aclocal_util.m4)
+builtin(include,aclocal_subcfg.m4)
 dnl If we're using 2.52, include new support for F90
 dnl If we're using 2.13, use the old version
 dnl If we're using 2.57, we're in trouble.  

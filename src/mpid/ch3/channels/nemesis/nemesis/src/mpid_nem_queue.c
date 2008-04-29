@@ -9,10 +9,20 @@
 
 #define USE_MPICH2
 
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_cell_init
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 inline void MPID_nem_cell_init( MPID_nem_cell_ptr_t cell)
 {
-    MPID_NEM_SET_REL_NULL (cell->next);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_CELL_INIT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CELL_INIT);
+
+    MPID_NEM_SET_REL_NULL(cell->next);
     memset ((void *)&cell->pkt, 0, sizeof (MPID_nem_pkt_header_t));
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CELL_INIT);
 }
 
 /* inline void MPID_nem_rel_cell_init( MPID_nem_cell_ptr_t cell) */
@@ -23,32 +33,38 @@ inline void MPID_nem_cell_init( MPID_nem_cell_ptr_t cell)
 /* } */
 
 /* --BEGIN ERROR HANDLING-- */
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_dump_cell_mpich
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 inline void MPID_nem_dump_cell_mpich ( MPID_nem_cell_ptr_t cell, int master)
 {
     MPID_nem_pkt_mpich2_t *mpkt     = (MPID_nem_pkt_mpich2_t *)&(cell->pkt.mpich2); /* cast away volatile */
     int              *cell_buf = (int *)(mpkt->payload);
     int               mark;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DUMP_CELL_MPICH);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DUMP_CELL_MPICH);
 
     if (master)
 	mark = 111;
-    else 
+    else
 	mark = 777;
 
-  
     fprintf(stdout,"Cell[%i  @ %p (rel %p), next @ %p (rel %p)]\n ",
 	    mark,
 	    cell,
-	    MPID_NEM_ABS_TO_REL (cell).p, 
+	    MPID_NEM_ABS_TO_REL (cell).p,
 	    MPID_NEM_REL_TO_ABS (cell->next),
 	    cell->next.p );
-  
+
     fprintf(stdout,"%i  [Source:%i] [dest : %i] [dlen : %i] [seqno : %i]\n",
 	    mark,
 	    mpkt->source,
 	    mpkt->dest,
-	    mpkt->datalen, 
-	    mpkt->seqno);	       
-  
+	    mpkt->datalen,
+	    mpkt->seqno);
+
     if (cell_buf[0] == 0)
     {
 	fprintf(stdout,"%i [type: MPIDI_CH3_PKT_EAGER_SEND ] [tag : %i] [dsz : %i]\n",
@@ -75,23 +91,33 @@ inline void MPID_nem_dump_cell_mpich ( MPID_nem_cell_ptr_t cell, int master)
     else
 	fprintf(stdout,"%i [type:%i]\n", mark, cell_buf[0] );
 
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DUMP_CELL_MPICH);
 }
 /* --END ERROR HANDLING-- */
 
 /* --BEGIN ERROR HANDLING-- */
 /*inline */
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_dump_cell_mpich2__
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 void MPID_nem_dump_cell_mpich2__ ( MPID_nem_cell_ptr_t cell, int master, char *file, int line)
 {
     int mark;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DUMP_CELL_MPICH2__);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DUMP_CELL_MPICH2__);
 
     if (master)
         mark = 111;
     else
         mark = 777;
- 
+
     fprintf(stderr,"%i called from file %s at line %i \n",mark,file,line);
 
-    MPID_nem_dump_cell_mpich(cell,master); 
+    MPID_nem_dump_cell_mpich(cell,master);
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DUMP_CELL_MPICH2__);
 }
 /* --END ERROR HANDLING-- */
 
@@ -103,10 +129,19 @@ void MPID_nem_dump_cell_mpich2__ ( MPID_nem_cell_ptr_t cell, int master, char *f
 /*     qhead->tail    = MPID_NEM_REL_NULL; */
 /* } */
 
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_queue_init
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 inline void MPID_nem_queue_init (MPID_nem_queue_ptr_t qhead )
 {
-  MPID_NEM_SET_REL_NULL (qhead->head);
-  MPID_NEM_SET_REL_NULL (qhead->my_head);
-  MPID_NEM_SET_REL_NULL (qhead->tail);
-}
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
 
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_QUEUE_INIT);
+
+    MPID_NEM_SET_REL_NULL (qhead->head);
+    MPID_NEM_SET_REL_NULL (qhead->my_head);
+    MPID_NEM_SET_REL_NULL (qhead->tail);
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
+}

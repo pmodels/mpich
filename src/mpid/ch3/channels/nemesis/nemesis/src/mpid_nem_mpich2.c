@@ -47,6 +47,9 @@ MPID_nem_mpich2_init (int ckpt_restart)
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPIU_CHKPMEM_DECL (2);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_INIT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_INIT);
 
     /*     printf ("sizeof (MPID_nem_cell_t) == %u\n", sizeof (MPID_nem_cell_t)); */
     /*     printf ("&MPID_nem_mem_region.mailboxes.in[0]->mpich2 = %p\n", &MPID_nem_mem_region.mailboxes.in[0]->mpich2); */
@@ -56,7 +59,7 @@ MPID_nem_mpich2_init (int ckpt_restart)
     /*     printf ("OFFSETPF (MPID_nem_fbox_mpich2_t, cell) = %u\n", MPID_NEM_OFFSETOF(MPID_nem_fbox_mpich2_t, cell)); */
 
     MPID_nem_prefetched_cell = NULL;
-    
+
     if (!ckpt_restart)
     {
         MPIU_CHKPMEM_MALLOC (MPID_nem_recv_seqno, unsigned short *, sizeof(*MPID_nem_recv_seqno) * MPID_nem_mem_region.num_procs, mpi_errno, "recv seqno");
@@ -65,10 +68,10 @@ MPID_nem_mpich2_init (int ckpt_restart)
 	{
 	    MPID_nem_recv_seqno[i] = 0;
 	}
-    
+
 	/* set up fbox queue */
         MPIU_CHKPMEM_MALLOC (MPID_nem_fboxq_elem_list, MPID_nem_fboxq_elem_t *, MPID_nem_mem_region.num_local * sizeof(MPID_nem_fboxq_elem_t), mpi_errno, "fastbox element list");
-    
+
 	for (i = 0; i < MPID_nem_mem_region.num_local; ++i)
 	{
 	    MPID_nem_fboxq_elem_list[i].usage = 0;
@@ -98,9 +101,10 @@ MPID_nem_mpich2_init (int ckpt_restart)
 	MPID_nem_curr_fbox_all_poll = &MPID_nem_fboxq_elem_list[0];
 	MPID_nem_fboxq_elem_list_last = &MPID_nem_fboxq_elem_list[MPID_nem_mem_region.num_local - 1];
     }
-    
+
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_INIT);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -122,7 +126,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPID_IOV *iov, in
     MPID_Request *sreq = *sreq_ptr;
     MPID_IOV *data_iov = &iov[1]; /* iov of just the data, not the header */
     int data_n_iov = n_iov - 1;
-    
+
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_SEND_IOV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_SEND_IOV);
@@ -140,7 +144,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPID_IOV *iov, in
     data_sz = 0;
     for (i = 0; i < data_n_iov; ++i)
         data_sz += data_iov[i].MPID_IOV_LEN;
-    
+
 
     if (!MPIDI_Request_get_srbuf_flag(sreq))
     {
@@ -149,7 +153,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPID_IOV *iov, in
         if (sreq->dev.tmpbuf_sz == 0)
         {
             MPIU_DBG_MSG(CH3_CHANNEL,TYPICAL,"SRBuf allocation failure");
-            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, 
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
                                              FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
             sreq->status.MPI_ERROR = mpi_errno;
             goto fn_exit;
@@ -194,10 +198,10 @@ MPID_nem_mpich2_send_ckpt_marker (unsigned short wave, MPIDI_VC_t *vc, int *try_
     int my_rank;
 
     my_rank = MPID_nem_mem_region.rank;
-    
+
 #ifdef PREFETCH_CELL
     el = MPID_nem_prefetched_cell;
-    
+
     if (!el)
     {
 	if (MPID_nem_queue_empty (MPID_nem_mem_region.my_freeQ))
@@ -205,7 +209,7 @@ MPID_nem_mpich2_send_ckpt_marker (unsigned short wave, MPIDI_VC_t *vc, int *try_
 	MPID_nem_queue_dequeue (MPID_nem_mem_region.my_freeQ, &el);
     }
 #else /*PREFETCH_CELL    */
-    if (MPID_nem_queue_empty (MPID_nem_mem_region.my_freeQ)) 
+    if (MPID_nem_queue_empty (MPID_nem_mem_region.my_freeQ))
         goto return_again;
 
     MPID_nem_queue_dequeue (MPID_nem_mem_region.my_freeQ, &el);

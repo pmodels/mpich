@@ -131,9 +131,11 @@ Function TestsToProjects(filename, dotdot)
 				c_filename = Replace( filename, "testlist", project_name + ".c" )
 				cxx_filename = Replace( filename, "testlist", project_name + ".cxx" )
 				f_filename = Replace( filename, "testlist", project_name + ".f" )
+				f90_filename = Replace( filename, "testlist", project_name + ".f90" )
 				cproj = f.FileExists( c_filename )
 				cxxproj = f.FileExists( cxx_filename )
 				fproj = f.FileExists( f_filename )
+				f90proj = f.FileExists( f90_filename )
 				if cproj or cxxproj then
 					project_filename = Replace( filename, "testlist", project_name + ".vcproj" )
 				else
@@ -141,7 +143,7 @@ Function TestsToProjects(filename, dotdot)
 				end if
 				project_relative_filename = Replace( project_filename, path_to_remove, "" )
 '				If f.FileExists( c_filename ) Or f.FileExists( cxx_filename ) Then
-				If cproj Or cxxproj Or fproj Then
+				If cproj Or cxxproj Or fproj Or f90proj Then
 					last_project = project_name
 '					If bForce Or Not f.FileExists( project_filename ) Then
 						cEcho project_filename + vbCrLf
@@ -152,8 +154,13 @@ Function TestsToProjects(filename, dotdot)
 						if cxxproj then
 							new_project = Replace(project_cxx_template, "PROJECTNAME", project_name)
 						end if
-						if fproj then
+						if fproj Or f90proj then
 							new_project = Replace(project_f_template, "PROJECTNAME", project_name)
+							if fproj then
+								new_project = Replace(new_project, "FORTFILEEXTN", "f")
+							else
+								new_project = Replace(new_project, "FORTFILEEXTN", "f90")
+							end if
 						end if
 						new_project = Replace(new_project, "UUID1", project_uuid)
 						new_project = Replace(new_project, "DOTDOTS", dotdot)
@@ -168,7 +175,7 @@ Function TestsToProjects(filename, dotdot)
 '						' find the uuid in the contents
 '					End If
 					' Add the project to the lists used to create the test solution file
-					if fproj then
+					if fproj Or f90proj then
 						solution_guid = "6989167D-11E4-40FE-8C1A-2192A86A7E90" ' The fortran project guid
 					else
 						solution_guid = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942" ' The C/C++ project guid

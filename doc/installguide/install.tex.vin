@@ -1,0 +1,1820 @@
+\documentclass[dvipdfm,11pt]{article}
+\usepackage[dvipdfm]{hyperref} % Upgraded url package
+\parskip=.1in
+
+% Formatting conventions for contributors
+% 
+% A quoting mechanism is needed to set off things like file names, command
+% names, code fragments, and other strings that would confuse the flow of
+% text if left undistinguished from preceding and following text.  In this
+% document we use the LaTeX macro '\texttt' to indicate such text in the
+% source, which normally produces, when used as in '\texttt{special text}',
+% the typewriter font.
+
+% It is particularly easy to use this convention if one is using emacs as
+% the editor and LaTeX mode within emacs for editing LaTeX documents.  In
+% such a case the key sequence ^C^F^T (hold down the control key and type
+% 'cft') produces '\texttt{}' with the cursor positioned between the
+% braces, ready for the special text to be typed.  The closing brace can
+% be skipped over by typing ^e (go to the end of the line) if entering
+% text or ^C-} to just move the cursor past the brace.
+
+% LaTeX mode is usually loaded automatically.  At Argonne, one way to 
+% get several useful emacs tools working for you automatically is to put
+% the following in your .emacs file.
+
+% (require 'tex-site)
+% (setq LaTeX-mode-hook '(lambda ()
+%                        (auto-fill-mode 1)
+%                        (flyspell-mode 1)
+%                        (reftex-mode 1)
+%                        (setq TeX-command "latex")))
+
+%
+% When updating the version number of MPICH2, make sure that you change *all*
+% instances of the version.  Search for mpich2- and check each match.  Some
+% are within a verbatim statement and will need to be changed for each update.
+%
+
+\begin{document}
+\markright{MPICH2 Installer's Guide}
+\title{{\bf MPICH2 Installer's Guide}\thanks{This work was supported by the
+    Mathematical, Information, and Computational Sciences Division
+    subprogram of the Office of Advanced Scientific Computing Research,
+    SciDAC Program, Office of Science, U.S. Department of Energy, under
+    Contract DE-AC02-06CH11357.}\\
+  Version %VERSION%\\
+  Mathematics and Computer Science Division\\
+  Argonne National Laboratory}
+
+\author{William Gropp\\
+Ewing Lusk\\
+David Ashton\\
+Pavan Balaji\\
+Darius Buntinas\\
+Ralph Butler\\
+Anthony Chan\\
+Dave Goodell\\
+Jayesh Krishna\\
+Guillaume Mercier\\
+Rob Ross\\
+Rajeev Thakur\\
+Brian Toonen}
+
+\maketitle
+\cleardoublepage
+
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+\pagestyle{headings}
+
+%% Here is a basic outline for the document.   (Bill's original outline)
+
+%% 0. Quick start with ``best practices''.  Each step has a reference to
+%% more detailed information later in the document.
+%% 1. Acquiring and unpacking.  Using a ``fast'' directory location and
+%%    VPATH
+%% 1a. Reporting problems
+%% 2. Choosing a device (defer a detailed discussion of each until later)
+%% 3. configure, make, and install.  Always use --prefix 
+%% show only basic options for configure
+%%    3a. Optional include of device-specific information
+%%    3b. Optional include of pm-specific information
+%%    3c. Optional ``fast'' version
+%%    3d. Shared libraries
+%% 4. Testing and benchmarking
+%% 4a. make testing
+%% 4b. Getting, building, and using mpptest and netpipe
+%% 5. Special options
+%% 6. Troubleshooting
+%% Appendix:
+%% A. Summary of configure options (particularly the enable and with options)
+
+
+\section{Introduction}
+\label{sec:intro}
+This manual describes how to obtain and install MPICH2, the MPI-2
+implementation from Argonne National Laboratory.  (Of course, if you are
+reading this, chances are good that you have already obtained it and
+found this document, among others, in its \texttt{doc} subdirectory.)
+This \emph{Guide} will explain how to install MPICH so that you and others can use it to
+run MPI applications.  Some particular features are different
+if you have system administration privileges (can become ``root'' on a
+Unix system), and these are explained here.  It is not necessary to have
+such privileges to build and install MPICH2.  In the event of problems,
+send mail to \texttt{mpich2-maint@mcs.anl.gov}.  Once MPICH2 is
+installed, details on how to run MPI jobs are covered in the \emph{MPICH2
+User's Guide}, found in this same \texttt{doc} subdirectory.
+
+MPICH2 has many options.  We will first go through a recommended,
+``standard'' installation in a step-by-step fashion, and later describe
+alternative possibilities. 
+
+
+\section{Quick Start}
+\label{sec:quick}
+
+In this section we describe a ``default'' set of installation steps.  It
+uses the default set of configuration options, which builds the \texttt{sock}
+communication device and the \texttt{MPD} process manager, for 
+languages C, C++, Fortran-77, and Fortran-90 (if those compilers exist),
+ with compilers chosen automatically from the user's environment,
+without tracing and debugging options.  It uses the \texttt{VPATH}
+feature of \texttt{make}, so that the build process can take place on
+a local disk for speed.
+
+\subsection{Prerequisites}
+\label{sec:prerequisites}
+
+For the default installation, you will need:
+\begin{enumerate}
+\item A copy of the distribution, \texttt{mpich2.tar.gz}.
+\item A C compiler.
+\item A Fortran-77, Fortran-90, and/or C++ compiler if you wish to write
+  MPI programs in any of these languages.
+\item Python 2.2 or later version, for building the default process
+  management system, MPD.
+  Most systems have
+  Python pre-installed, but you can get it free from
+  \texttt{www.python.org}.  You may assume it is there unless the
+  \texttt{configure} step below complains.
+\item Any one of a number of Unix operating systems, such as IA32-Linux.
+  MPICH2 is most extensively tested on Linux;  there remain some
+  difficulties on systems to which we do not currently have access.  Our
+  \texttt{configure} script attempts to adapt MPICH2 to new systems. 
+\end{enumerate}
+Configure will check for these prerequisites and try to work around
+deficiencies if possible.  (If you don't have Fortran, you will
+still be able to use MPICH2, just not with Fortran applications.)
+
+
+\subsection{From A Standing Start to Running an MPI Program}
+\label{sec:steps}
+Here are the steps from obtaining MPICH2 through running your own
+parallel program on multiple machines.
+
+\begin{enumerate}
+\item 
+Unpack the tar file.
+\begin{verbatim}
+    tar xfz mpich2.tar.gz
+\end{verbatim}
+If your tar doesn't accept the z option, use
+\begin{verbatim}
+    gunzip -c mpich2.tar.gz | tar xf -
+\end{verbatim}
+Let us assume that the directory where you do this is
+\texttt{/home/you/libraries}.  It will now contain a subdirectory named
+\texttt{mpich2-%VERSION%}.
+
+\item
+Choose an installation directory (the default is \texttt{/usr/local/bin)}:
+\begin{verbatim}
+    mkdir /home/you/mpich2-install
+\end{verbatim}
+It will be most convenient if this directory is shared by all of the
+machines where you intend to run processes.  If not, you will have
+to duplicate it on the other machines after installation.  Actually, if
+you leave out this step, the next step will create the directory for you.
+
+\item
+Choose a build directory.  Building will proceed \emph{much} faster if
+your build directory is on a file system local to the machine on which
+the configuration and compilation steps are executed.  It is preferable
+that this also be separate from the source directory, so that the
+source directories remain
+clean and can be reused to build other copies on other machines.
+\begin{verbatim}
+    mkdir /tmp/you/mpich2-%VERSION%
+\end{verbatim}
+
+\item
+Choose any configure options.  See
+Section~\ref{sec:important-configure-options} for a description of the most
+important options to consider.  
+
+\item
+Configure MPICH2, specifying the installation directory, and running
+the \texttt{configure} script in the source directory:
+\begin{verbatim}
+    cd  /tmp/you/mpich2-%VERSION%
+    /home/you/libraries/mpich2-%VERSION%/configure \
+            -prefix=/home/you/mpich2-install |& tee configure.log
+\end{verbatim}
+where the \texttt{$\backslash$} means that this is really one line.  (On
+\texttt{sh} and its derivatives, use \verb+2>&1 | tee configure.log+
+instead of \verb+|& tee configure.log+).  Other configure options are
+described below.  Check the \texttt{configure.log} file to make sure
+everything went well.  Problems should be self-explanatory, but if not,
+send \texttt{configure.log} to \texttt{mpich2-maint@mcs.anl.gov}.
+The file \texttt{config.log} is created by \texttt{configure} and
+contains a record of the tests that \texttt{configure} performed.  It
+is normal for some tests recorded in \texttt{config.log} to fail.  
+
+\item
+Build MPICH2:
+\begin{verbatim}
+    make |& tee make.log
+\end{verbatim}
+This step should succeed if there were no problems with the preceding
+step.  Check \texttt{make.log}.  If there were problems, send
+\texttt{configure.log} and \texttt{make.log} to
+\texttt{mpich2-maint@mcs.anl.gov}.
+
+\item
+Install the MPICH2 commands:
+\begin{verbatim}
+    make install |& tee install.log
+\end{verbatim}
+This step collects all required executables and scripts in the \texttt{bin}
+subdirectory of the directory specified by the prefix argument to
+configure. 
+
+\item
+Add the \texttt{bin} subdirectory of the installation directory to your path:
+\begin{verbatim}
+    setenv PATH /home/you/mpich2-install/bin:$PATH
+\end{verbatim}
+for \texttt{csh} and \texttt{tcsh}, or 
+\begin{verbatim}
+    export PATH=/home/you/mpich2-install/bin:$PATH
+\end{verbatim}
+for \texttt{bash} and \texttt{sh}.  Check that everything is in order at
+this point by doing
+\begin{verbatim}
+    which mpd
+    which mpicc
+    which mpiexec
+    which mpirun
+\end{verbatim}
+All should refer to the commands in the \texttt{bin} subdirectory of your
+install directory.  It is at this point that you will need to
+duplicate this directory on your other machines if it is not
+in a shared file system such as NFS.
+
+\item
+MPICH2, unlike MPICH, uses an external process manager for scalable
+startup of large MPI jobs.  The default process manager is called
+MPD, which is a ring of daemons on the machines where you will run
+your MPI programs.  In the next few steps, you will get this ring up
+and tested.
+The instructions given here will probably be enough to get you started.
+If not, you should refer to Appendix~\ref{app:mpd} for troubleshooting help.
+More details on interacting with MPD can be found by running
+\texttt{mpdhelp} or any mpd command with the \texttt{--help} option, or by
+viewing the README file in \texttt{mpich2/src/pm/mpd}.  The information
+provided includes how to list running jobs, kill, suspend, or otherwise
+signal them, and how to use the \texttt{gdb} debugger via special
+arguments to \texttt{mpiexec}.
+
+For security reasons, MPD looks in your home directory for a file named
+\texttt{.mpd.conf} containing the line
+\begin{verbatim}
+    secretword=<secretword>
+\end{verbatim}
+where \verb+<secretword>+ is a string known only to yourself.  {\em It should
+not be your normal Unix password.}  Make this file readable and writable
+only by you:
+\begin{verbatim}
+    cd $HOME
+    touch .mpd.conf
+    chmod 600 .mpd.conf
+\end{verbatim}
+Then use an editor to place a line like:
+\begin{verbatim}
+  secretword=mr45-j9z
+\end{verbatim}
+into the file.
+(Of course use a different secret word than \verb+mr45-j9z+.)
+
+\item
+The first sanity check consists of bringing up a ring of one MPD on
+the local machine, testing one MPD command, and bringing the ``ring''
+down. 
+\begin{verbatim}
+    mpd & 
+    mpdtrace
+    mpdallexit
+\end{verbatim}
+The output of \texttt{mpdtrace} should be the hostname of the machine you are
+running on.  The \texttt{mpdallexit} causes the mpd daemon to exit.
+If you encounter problems, you should check Appendix~\ref{app:mpd} on
+troubleshooting MPD. 
+
+\item
+The next sanity check is to run a non-MPI program using the daemon.
+\begin{verbatim}
+    mpd & 
+    mpiexec -n 1 /bin/hostname
+    mpdallexit
+\end{verbatim}
+This should print the name of the machine you are running on.  If not,
+you should check Appendix~\ref{app:mpd} on
+troubleshooting MPD.
+
+\item
+Now we will bring up a ring of \texttt{mpd}'s on a set of machines.  Create
+a file consisting of a list of machine names, one per line.  Name this
+file \texttt{mpd.hosts}.  These hostnames will be used as targets for
+\texttt{ssh} or \texttt{rsh}, so include full domain names if necessary.  Check that you
+can reach these machines with \texttt{ssh} or \texttt{rsh} without
+entering a password.  You can test by doing
+\begin{verbatim}
+    ssh othermachine date
+\end{verbatim}
+or
+\begin{verbatim}
+    rsh othermachine date
+\end{verbatim}
+If you cannot get this to work without entering a password, you will
+need to configure \texttt{ssh} or \texttt{rsh} so that this can be done,
+or else use the workaround for \texttt{mpdboot} in the next step.
+
+\item
+Start the daemons on (some of) the hosts in the file \texttt{mpd.hosts}.
+\begin{verbatim}
+  mpdboot -n <number to start> -f mpd.hosts
+\end{verbatim}
+The number to start can be less than 1 + number of hosts in the
+file, but cannot be greater than 1 + the number of hosts in the
+file.  One \texttt{mpd} is always started on the machine where
+\texttt{mpdboot} is 
+run, and is counted in the number to start, whether or not it occurs
+in the file.  By default, \texttt{mpdboot} will only start one \texttt{mpd} per
+machine even if the machine name appears in the hosts file multiple times.
+The \texttt{-1} option can be used to override this behavior, but there is typically
+no reason for a user to need multiple mpds on a single host.
+The \texttt{-1} option (that's the digit one, not the letter el) exists mostly
+to support internal testing. 
+The \texttt{--help} option explains these as well as other useful
+options.  In particular, if your cluster has multiprocessor nodes, you
+might want to use the \texttt{--ncpus} argument described in 
+Section~\ref{sec:mpd-on-smps}.
+
+Check to see if all the hosts you listed in \texttt{mpd.hosts} are in the output
+of 
+\begin{verbatim}
+    mpdtrace
+\end{verbatim}
+and if so move on to the next step.
+
+There is a workaround if you cannot get \texttt{mpdboot} to work because of 
+difficulties with \texttt{ssh} or \texttt{rsh} setup.  You can start the
+daemons ``by 
+hand'' as follows:
+\begin{verbatim}
+   mpd &            # starts the local daemon
+   mpdtrace -l      # makes the local daemon print its host
+                    # and port in the form <host>_<port>
+\end{verbatim}
+Then log into each of the other machines, put the \texttt{install/bin}
+directory in your path, and do:
+\begin{verbatim}
+   mpd -h <hostname> -p <port> &
+\end{verbatim}
+where the hostname and port belong to the original mpd that you
+started.  From each machine, after starting the mpd, you can do 
+\begin{verbatim}
+   mpdtrace
+\end{verbatim}
+to see which machines are in the ring so far.  More details on
+\texttt{mpdboot} and other options for starting the mpd's are in
+\texttt{mpich2-%VERSION%/src/pm/mpd/README}.
+
+{\em In case of persistent difficulties getting the ring of mpd's up
+and running on the machines you want, please see
+Appendix~\ref{app:mpd}.  There we discuss the mpd's in more detail and
+describe how you can use the \texttt{mpdcheck} utility to diagnose
+problems with the networking configuration of your systems.}
+
+
+\item
+Test the ring you have just created:
+\begin{verbatim}
+    mpdtrace
+\end{verbatim}
+The output should consist of the hosts where MPD daemons are now
+running.  You can see how long it takes a message to circle this
+ring with 
+\begin{verbatim}
+    mpdringtest
+\end{verbatim}
+That was quick.  You can see how long it takes a message to go
+around many times by giving mpdringtest an argument:
+\begin{verbatim}
+    mpdringtest 100
+    mpdringtest 1000
+\end{verbatim}
+
+\item
+Test that the ring can run a multiprocess job:
+\begin{verbatim}
+    mpiexec -n <number> hostname
+\end{verbatim}
+The number of processes need not match the number of hosts in the
+ring;  if there are more, they will wrap around.  You can see the
+effect of this by getting rank labels on the stdout:
+\begin{verbatim}
+    mpiexec -l -n 30 hostname
+\end{verbatim}
+You probably didn't have to give the full pathname of the hostname
+command because it is in your path.  If not, use the full pathname:
+\begin{verbatim}
+    mpiexec -l -n 30 /bin/hostname
+\end{verbatim}
+
+\item
+Now we will run an MPI job, using the \texttt{mpiexec} command as specified
+in the MPI-2 standard.  
+
+% There are some examples in the install
+% directory, which you have already put in your path, as well as in
+% the directory \texttt{mpich2-%VERSION%/examples}.  
+% One of them is the classic \texttt{cpi}
+% example, which computes the value of $\pi$ by numerical integration in
+% parallel.   
+As part of the build process for MPICH2, a simple program to compute the value
+of $\pi$ by numerical integration is created in the
+\texttt{mpich2-%VERSION%/examples} directory.  If the current directory is the top
+level MPICH2 build directory, then you can run this program with
+\begin{verbatim}
+    mpiexec -n 5 examples/cpi
+\end{verbatim}
+The number of processes need not match the number of hosts.
+The \texttt{cpi} example will tell you which hosts it is running on.
+By default, the processes are launched one after the other on the hosts
+in the mpd ring, so it is not necessary to specify hosts when running a
+job with \texttt{mpiexec}.
+
+There are many options for \texttt{mpiexec}, by which multiple executables
+can be run, hosts can be specified (as long as they are in the mpd
+ring), separate command-line arguments and environment variables can
+be passed to different processes, and working directories and search
+paths for executables can be specified.  Do
+\begin{verbatim}
+    mpiexec --help
+\end{verbatim}
+for details. A typical example is:
+\begin{verbatim}
+    mpiexec -n 1 master : -n 19 slave
+\end{verbatim}
+or
+\begin{verbatim}
+    mpiexec -n 1 -host mymachine master : -n 19 slave
+\end{verbatim}
+to ensure that the process with rank 0 runs on your workstation.
+
+The arguments between `:'s in this syntax are called ``argument sets,''
+since they apply to a set of processes.  More argments are described in
+the \textit{User's Guide}.
+
+The \texttt{mpirun} command from the original MPICH is still available,
+although it does not support as many options as \texttt{mpiexec}.  You might
+want to use it in the case where you do not have the XML parser
+required for the use of \texttt{mpiexec}.
+\end{enumerate}
+
+If you have completed all of the above steps, you have successfully
+installed MPICH2 and run an MPI example.  
+
+
+\subsection{Compiler Optimization Levels}
+
+MPICH2 can be configured with two sets of compiler flags:
+\texttt{CFLAGS}, \texttt{CXXFLAGS}, \texttt{FFLAGS}, \texttt{F90FLAGS}
+(abbreviated as \texttt{xFLAGS}) and \texttt{MPICH2LIB\_CFLAGS},
+\texttt{MPICH2LIB\_CXXFLAGS}, \texttt{MPICH2LIB\_FFLAGS},
+\texttt{MPICH2LIB\_F90FLAGS} (abbreviated as \texttt{MPICH2LIB\_xFLAGS})
+for compilation; \texttt{LDFLAGS} and \texttt{MPICH2LIB\_LDFLAGS} for linking.
+All these flags can be set as part of configure command or 
+through environment variables.
+(\texttt{CPPFLAGS} stands for C preprocessor flags, which should NOT be set)
+
+Both \texttt{xFLAGS} and \texttt{MPICH2LIB\_xFLAGS} affect the compilation
+of the MPICH2 libraries. However, only \texttt{xFLAGS} is appended to 
+MPI wrapper scripts, \texttt{mpicc} and friends.
+
+MPICH2 libraries are built with default compiler optimization, -O2,
+which can be modified by --enable-fast configure option.  For instance,
+--disable-fast disables the default optimization option.
+--enable-fast=O<n> sets default compiler optimization as -O<n>.
+For more details of --enable-fast, see the output of "configure --help".
+Any other complicated optimization flags for MPICH2 libraries have
+to be set throught \texttt{MPICH2LIB\_xFLAGS}.  \texttt{CFLAGS} and friends
+are empty by default.
+
+For example, to build a "production" MPICH2 environment with -O3 for all
+language bindings, one can simply do
+
+\begin{verbatim}
+  ./configure --enable-fast=O3
+\end{verbatim}
+
+or
+
+\begin{verbatim}
+  ./configure --disable-fast MPICH2LIB_CFLAGS=-O3 \
+                             MPICH2LIB_FFLAGS=-O3 \
+                             MPICH2LIB_CXXFLAGS=-O3 \
+                             MPICH2LIB_F90FLAGS=-O3
+\end{verbatim}
+
+This will cause the MPICH2 libraries to be built with -O3, and -O3 will
+not be included in the mpicc and other MPI wrapper script.
+
+
+\subsection{Common Non-Default Configuration Options}
+\label{sec:non-default}
+
+A list of \texttt{configure} options is found in
+Section~\ref{configure-options}.  Here we comment on some of them.  
+% FIXME: This section needs much more work.
+
+\subsubsection{The Most Important Configure Options}
+\label{sec:important-configure-options}
+\begin{description}
+\item[--prefix]Set the installation directories for MPICH2.  
+\item[--enable-debuginfo]Provide access to the message queues for
+  debuggers such as Totalview.
+\item[--enable-g]Build MPICH2 with various debugging options.  This is
+  of interest primarily to MPICH2 developers.  The options
+\begin{verbatim}
+  --enable-g=dbg,mem,log
+\end{verbatim}
+ are recommended in that case.
+\item[--enable-fast]Configure MPICH2 for fastest performance at the
+  expense of error reporting and other program development aids.  This
+  is recommended only for getting the best performance out of proven
+  production applications, and for benchmarking.
+\item[--enable-sharedlibs]Build MPICH2 with shared libraries. 
+  For example, 
+\begin{description}
+\item[\texttt{--enable-sharedlibs=gcc}]for standard gcc on Linux  
+\item[\texttt{--enable-sharedlibs=osx-gcc}]for Mac OS X or
+\item[\texttt{--enable-sharedlibs=solaris-cc}]for cc on Solaris
+\end{description}
+\item[--with-pm]Select the process manager.  The default is
+  \texttt{mpd}; also useful is \texttt{gforker}.  You can build with
+  both process managers by specifying
+\begin{verbatim}
+  --with-pm=mpd:gforker
+\end{verbatim}
+\item[--without-mpe]Configure MPICH2 without the MPE package of
+  program development tools (including the Jumpshot performance viewer)
+\item[--with-java]Set the location of Java installation.  This option
+is necessary only if the default Java installation in your PATH does
+not contain a valid Java installation for Jumpshot, e.g.
+\begin{verbatim}
+  --with-java=/opt/jdk1.6.0
+\end{verbatim}
+\end{description}
+
+
+\subsubsection{Using the Absoft Fortran compilers with MPICH2}
+\label{sec:absoft}
+
+For best results, it is important to force the Absoft Fortran compilers to 
+make all routine names monocase.  In addition, if lower case is chosen 
+(this will match common use by many programs), you must also tell the the 
+Absoft compiles to append an underscore to global names in order to access 
+routines such as \texttt{getarg} (\texttt{getarg} is not used by MPICH2 but is
+used in some 
+of the tests and is often used in application programs).  We recommend 
+configuring MPICH2 with the following options
+\begin{verbatim}
+
+setenv F77 f77
+setenv FFLAGS "-f -N15"
+setenv F90FLAGS "-YALL_NAMES=LCS -YEXT_SFX=_"
+
+./configure ....
+
+\end{verbatim}
+
+
+
+
+\subsection{Shared Libraries}
+\label{sec:shared-libraries}
+
+Shared libraries are currently only supported for gcc on Linux and
+Mac OS X and for cc on Solaris. To have shared libraries created when
+MPICH2 is built, specify the following when MPICH2 is configured:
+\begin{verbatim}
+    configure --enable-sharedlibs=gcc         (on Linux)
+    configure --enable-sharedlibs=osx-gcc     (on Mac OS X)
+    configure --enable-sharedlibs=solaris-cc  (on Solaris)
+\end{verbatim}
+
+
+
+
+\subsection{What to Tell the Users}
+\label{sec:telling}
+
+Now that MPICH2 has been installed, the users have to be informed of how
+to use it.  Part of this is covered in the \emph{User's Guide}.  Other
+things users need to know are covered here.  (For example, whether they need to
+run their own mpd rings or use a system-wide one run by root.)
+
+
+\section{Migrating from MPICH1}
+\label{sec:migrating}
+
+MPICH2 is an all-new rewrite of MPICH1.  Although the basic steps for
+installation have remained the same (\texttt{configure}, \texttt{make},
+\texttt{make install}), a number of things have changed.  In this
+section we attempt to point out what you may be used to in MPICH1 that
+are now different in MPICH2.
+
+\subsection{Configure Options}
+\label{sec:configure-options}
+
+The arguments to \texttt{configure} are different in MPICH1 and MPICH2;
+the \texttt{Installer's Guide} discusses \texttt{configure}.  In
+particular, the newer \texttt{configure} in MPICH2 does not support the
+\verb+-cc=<compiler-name>+ (or \texttt{-fc}, \texttt{-c++}, or
+\texttt{-f90}) options.  Instead, many of the items that could be
+specified in the command line to configure in MPICH1 must now be set by
+defining an environment variable.  E.g., while MPICH1 allowed
+\begin{verbatim}
+    ./configure -cc=pgcc
+\end{verbatim}
+MPICH2 requires
+\begin{verbatim}
+    setenv CC pgcc
+\end{verbatim}
+(or \verb+export CC=pgcc+ for \texttt{ksh} or \verb+CC=pgcc ; export CC+
+for strict \texttt{sh}) before \texttt{./configure}.  Basically, every
+option to the MPICH-1 configure that does not start with
+\texttt{--enable} or \texttt{--with} is not available as a configure
+option in MPICH2.  Instead, environment variables must be used.  This is
+consistent (and required) for use of version 2 GNU \texttt{autoconf}.
+
+\subsection{Other Differences}
+Other differences between MPICH1 and MPICH2 include the handling of
+process managers and the choice of communication device.
+
+For example, the new mpd has a new format and slightly different
+semantics for the \texttt{-machinefile} option.  Assume that you type this
+data into a file named \texttt{machfile}:
+\begin{verbatim}
+    bp400:2
+    bp401:2
+    bp402:2
+    bp403:2
+\end{verbatim}
+
+If you then run a parallel job with this machinefile, you would expect
+ranks 0 and 1 to run on bp400 because it says to run 2 processes there
+before going on to bp401.  Ranks 2 and 3 would run on bp401, and rank
+4 on bp402, e.g.:
+
+\begin{verbatim}
+    mpiexec -l -machinefile machfile -n 5 hostname
+\end{verbatim}
+
+produces:
+\begin{verbatim}
+    0: bp400
+    1: bp400
+    2: bp401
+    3: bp401
+    4: bp402
+\end{verbatim}
+
+\section{Choosing the Communication Device}
+\label{sec:choose-device}
+
+MPICH2 is designed to be build with many different communication devices,
+allowing an implementation to be tuned for different communication fabrics.  A
+simple communication device, known as ``ch3'' (for the third version of the
+``channel'' interface) is provided with MPICH2 and is the default choice.
+
+The ch3 device itself supports a variety of communication methods.  These are
+specified by providing the name of the method after a colon in the
+\texttt{--with-device} configure option.  For example,
+\texttt{--with-device=ch3:ssm} selects the socket plus shared memory method.
+The supported methods include:
+
+\begin{description}
+\item[ch3:sock]This is the default communication method.  It uses sockets for
+  all communications between processes. It supports
+  \texttt{MPI\_THREAD\_MULTIPLE} and other levels of thread safety.
+\item[ch3:ssm]This method uses sockets between nodes and shared memory within
+a node.
+\item[ch3:shm]This method only uses shared memory and only works within a
+single SMP.  It does not support the MPI dynamic process routines such as
+\texttt{MPI\_Comm\_spawn}. 
+% \item[ch3:sshm]This method is a scalable version of a shared-memory method and
+% only works within a single SMP.
+\item[ch3:nemesis]This method is our new, high performance method.  It
+supports sockets, shared memory, and Myrinet-GM at present. It supports
+  \texttt{MPI\_THREAD\_MULTIPLE} and other levels of thread safety. It does not
+support the MPI dynamic process routines in this release, but will support
+them in a future release.
+\end{description}
+
+Most installations should use either the \texttt{ch3:ssm} or \texttt{ch3:sock}
+methods.  If you need multi-threaded MPI, you must use \texttt{ch3:sock} in
+this release.  If you have a cluster of SMPs and do not need a multi-threaded
+MPI, then select \texttt{ch3:ssm}.  If you are interested in trying out our
+highest-performance device, and need neither threads nor the dynamic process
+routines from MPI, then you can use \texttt{ch3:nemesis}.
+
+%
+% Add any configure options that are specific to each method here.  Also
+% any environment variables that might apply (e.g., MPICH_INTERFACE_HOSTNAME 
+% or MPICH_PORT_RANGE.
+%
+%\subsection{Special Features of Each Communication Device}
+%\subsubsection{ch3:shm}
+%\subsubsection{ch3:nemesis}
+
+\section{Installing and Managing Process Managers}
+\label{sec:process-managers}
+MPICH2 has been designed to work with multiple process managers; that
+is, although you can start MPICH2 jobs with \texttt{mpiexec}, there are
+different mechanisms by which your processes are started.  An interface
+(called PMI) isolates the MPICH2 library code from the process manager.
+Currently three process managers are distributed with MPICH2
+\begin{description}
+\item[mpd] This is the default, and the one that is described
+  in~Section~\ref{sec:steps}.  It consists of a ring of daemons.
+\item[smpd] This one can be used for both Linux and Windows.  It is the
+  only process manager that supports the Windows version of MPICH2.
+\item[gforker] This is a simple process manager that creates all
+  processes on a single machine.  It is useful for both debugging and on
+  shared memory multiprocessors.
+\end{description}
+
+\subsection{mpd}
+\label{sec:mpd}
+
+\subsubsection{Configuring mpd}
+\label{sec:configuring-mpd}
+
+The \texttt{mpd} process manager can be explicitly chosen at configure
+time by adding
+\begin{verbatim}
+    --with-pm=mpd
+\end{verbatim}
+to the \texttt{configure} argments.  This is not necessary, since
+\texttt{mpd} is the default.
+
+
+\subsubsection{System Requirements}
+\label{sec:mpd-requirements}
+
+\texttt{mpd} consists of a number of components written in Python.
+The \texttt{configure} script should automatically find a version of
+python in your \texttt{PATH} that has all the features needed to run
+\texttt{mpd}.  If for some reason you need to pick a specific version of
+Python for \texttt{mpd} to use, you can do so by adding
+\begin{verbatim}
+    --with-python=<fullpathname of python interpreter>
+\end{verbatim}
+to your \texttt{configure} arguments.  If your system doesn't have Python,
+you can get the latest version from \texttt{http://www.python.org}.
+Most Linux distributions include a moderately current version of Python.
+MPD requires release 2.2 or later.
+
+The \texttt{mpd} process manager supports the use of the TotalView
+parallel debugger from Etnus.  If \texttt{totalview} is in your
+\texttt{PATH} when MPICH2 is configured, then an interface module will
+be automatically compiled, linked, and installed so that you can use
+TotalView to debug MPICH jobs (See the \texttt{User's Guide} under
+``Debugging''.  You can also explicitly enable or disable this
+capability with \texttt{--enable-totalview} or
+\texttt{--disable-totalview} as arguments to \texttt{configure}.
+
+\subsubsection{Using mpd}
+\label{sec:using-mpd}
+
+In Section~\ref{sec:steps} you installed the mpd ring.  Several commands
+can be used to use, test, and manage this ring.  You can find out about
+them by running \texttt{mpdhelp}, whose output looks like this:
+
+\begin{small}
+\begin{verbatim}
+The following mpd commands are available.  For usage of any specific one,
+invoke it with the single argument --help .
+
+mpd           start an mpd daemon
+mpdtrace      show all mpd's in ring
+mpdboot       start a ring of daemons all at once
+mpdringtest   test how long it takes for a message to circle the ring 
+mpdallexit    take down all daemons in ring
+mpdcleanup    repair local Unix socket if ring crashed badly
+mpdlistjobs   list processes of jobs (-a or --all: all jobs for all users)
+mpdkilljob    kill all processes of a single job
+mpdsigjob     deliver a specific signal to the application processes of a job
+mpiexec       start a parallel job
+
+Each command can be invoked with the --help argument, which prints usage
+information for the command without running it.
+\end{verbatim}
+\end{small}
+So for example, to see a complete list of the possible arguments for
+\texttt{mpdboot}, you would run
+\begin{verbatim}
+    mpdboot --help
+\end{verbatim}
+
+
+\subsubsection{Options for \texttt{mpd}}
+
+\begin{description}
+\item[--help] causes mpd to print a list and description of all options
+\end{description}
+
+In addition to the cmd-line options, mpd will also check for presence of
+the environment variable \texttt{MPICH\_PORT\_RANGE} (note MPICH instead of MPD)
+and use only the ports in that range for listening sockets.  The range
+is separated by a colon, e.g., 2000:8000.
+
+
+\subsubsection{Running MPD on multi-homed systems}
+\label{sec:mpd-multi-homed}
+
+If you plan to use one or more multi-homed systems, it is of course useful if
+the default hostname is associated with the interface that mpd will need
+to use for communications.  If not however, you can cause mpd to use a
+specific interface by using the \texttt{--ifhn} (interface-hostname) option, e.g.:
+\begin{verbatim}
+    n1%  mpd --ifhn=192.168.1.1 &
+\end{verbatim}
+
+If you then run mpiexec on n1 connecting to that mpd, the mpiexec will
+use the same ifhn for communications with remote processes that connect
+back to it.  mpiexec will also accept a -ifhn option (mpiexec --help)
+in the unlikely event that you wish it to use a separate interface from
+the mpd.
+
+mpdboot can also designate the ifhn to be used by both the local and remote
+mpds which it starts, e.g.:
+\begin{verbatim}
+    n1%  mpdboot --totalnum=3 --ifhn=192.168.1.1 
+\end{verbatim}
+where mpd.hosts contains:
+\begin{verbatim}
+  n2 ifhn=192.168.1.2
+  n3 ifhn=192.168.1.3
+\end{verbatim}
+will start one mpd locally, one on n2 and one on n3.  Each will use the
+respectively designated ifhn.
+
+
+\subsubsection{Running MPD as Root}
+\label{sec:mpd-root}
+
+MPD can run as root to support multiple users simultaneously.  To do this,
+it easiest to simply do the ``make install'' in the mpd sub-directory as
+root.  This will cause the \texttt{mpdroot} program to be installed in
+the bin directory with setuid-root permissions.  Individual users then
+have the option of starting and using their own mpd rings, or they can run
+with a ring started by root.  To use root's ring, they must use an option
+named \texttt{MPD\_USE\_ROOT\_MPD}.  This option may either be set as an environment
+variable or they can set it in their own .mpd.conf file, e.g.:
+\begin{verbatim}
+    MPD_USE_ROOT_MPD=1
+\end{verbatim}
+When root starts the mpds in the ring, the procedure is the same as for a regular
+user except that root's configuration file is in \texttt{/etc/mpd.conf} (note that
+there is no leading dot in the file name).
+
+
+\subsubsection{Running MPD on SMP's}
+\label{sec:mpd-on-smps}
+
+Typically one starts one \texttt{mpd} on each host.  When a job is
+started with \texttt{mpiexec} without any particular host specification,
+the processes are started on the ring of hosts one at a time, in
+round-robin fashion until all the processes have been started.  Thus, if
+you start a four-process job on a ring of two machines, hosta and hostb,
+then you will find ranks 0 and 2 on hosta and ranks 1 and 4  on hostb.
+This might not be what you want, especially if the machines are SMP's
+and you would like to have consecutive ranks on the same machine as much
+as possible.  If you tell the \texttt{mpd} how many cpus it has to work
+with by using the \texttt{--ncpus} argument, as in 
+\begin{verbatim}
+    mpd --ncpus=2
+\end{verbatim}
+then the number of processes started the first time the startup message
+circles the ring will be determined by this argument.  That is, in the
+above four-process example, ranks 0 and 1 will be on hosta and ranks 2
+and 3 will be on hostb.  This effect only occurs the first time around
+the ring.  That is if you start a six-process job on this ring (two
+mpd's, each started with \texttt{--ncpus=2}) you will get processes 0,
+1, and 4 on hosta and 2, 3, and 5 on hostb.  This is for load-balancing
+purposes.  (It is assumed that you do not want 0, 1, 4, and 5 on hosta
+and only 2 and 3 on hostb; if that is what you \emph{do} want, you can
+control process placement explicitly on the \texttt{mpiexec} command, as
+described in the \textit{User's Guide}.
+
+
+\subsubsection{Security Issues in MPD}
+\label{sec:mpd-security}
+
+Since the \texttt{mpd} process manager allows the remote execution of
+processes, it needs to incorporate security features that prevent
+inappropriate or malicious process creation by someone without
+permission to do so.  In this section we describe how \texttt{mpd} deals
+with a number of security issues.
+
+The first issue is the starting of the \texttt{mpd} processes
+themselves.  This is done either by the user logging into each machine
+starting each \texttt{mpd} process ``by hand,'' or else by using the
+\texttt{mpdboot} program.  \texttt{mpdboot} uses \texttt{ssh} by
+default, although the less secure \texttt{rsh} can be used if the user
+chooses.
+
+The next issue occurs when a single new \texttt{mpd} joins a ring of
+existing \texttt{mpd}'s.  This occurs during \texttt{mpdboot}, or can
+occur later if the user wishes to expand an existing ring.  In this
+situation a ``challenge-response'' protocol is followed.  A user must
+have the same \texttt{secretword} set in his \texttt{.mpd.conf} file on
+each machine.  This file must be readable only by the user starting the
+\texttt{mpd}; otherwise the \texttt{mpd} will refuse to read it.  When
+\texttt{mpd} A wishes to join an existing ring by connecting to
+\texttt{mpd} B, which is already in the ring, at the port B is listening
+on, the following sequence of events occurs:
+\begin{enumerate}
+\item B temporarily accepts the connection.
+\item B seeds the random number generator with the high-resolution part
+  of the time of day, generates a random number, and sends it to A.
+\item A concatenates the random number with the value of secretword in
+  \texttt{.mpd.conf}, encrypts it with md5, and sends the encrypted
+  result to B.
+\item Meanwhile, B encrypts the (same) random number concatenated with
+  its value of \texttt{secretword}.
+\item When B receives the encrypted value from A, it compares the
+  encrypted value with its own.
+\item If the values match, A is allowed to join the ring; otherwise the
+  connection is closed.
+\end{enumerate}
+Note that the secret word is never sent over the connection in the clear,
+and the use of the time of day means that there will be no repeating
+pattern of challenges to be observed.  
+
+The third issue concerns how \texttt{mpiexec} connects to the local
+\texttt{mpd}.  This is done through a Unix socket in \texttt{/tmp} rather than
+through an INET socket.  Thus security is preserved through the security
+of the file system.
+
+Once connections are established, the messages that are sent over them
+are not encrypted.  However, no security information is sent over these
+connections. 
+
+\subsection{SMPD}
+\label{sec:smpd}
+
+\subsubsection{Configuration}
+\label{sec:smpd_configure}
+
+You may add the following configure options, 
+\texttt{--with-pm=smpd}, 
+to build and install the smpd process manager. The process manager, smpd, 
+will be installed to the bin sub-directory of the installation directory 
+of your choice specified by the \texttt{--prefix} option.
+
+smpd process managers run on each node as stand-alone daemons and need to
+be running on all nodes that will participate in MPI jobs.  smpd process 
+managers are not connected to each other and rely on a known port to 
+communicate with each other.  Note: If you want multiple users to use the 
+same nodes they must each configure their smpds to use a unique port per 
+user. 
+
+smpd uses a configuration file to store settings.  The default location is 
+\verb+~/.smpd+.  This file must not be readable by anyone other than 
+the owner and contains at least one required option - the access passphrase.
+This is stored in the configuration file as \texttt{phrase=<phrase>}. Access 
+to running smpds is authenticated using this passphrase and it must 
+not be your user password.
+
+\subsubsection{Usage and administration}
+\label{sec:smpd_usage}
+
+Users will start the smpd daemons before launching mpi jobs.  To get an 
+smpd running on a node, execute 
+\begin{verbatim}
+    smpd -s
+\end{verbatim}
+Executing this for the first time will prompt the user to create a 
+\verb+~/.smpd+ configuration file and passphrase if one does not 
+already exist.
+
+Then users can use \texttt{mpiexec} to launch MPI jobs.
+
+All options to \texttt{smpd}:
+
+\begin{description}
+\item[\texttt{smpd -s}]\mbox{}\\
+Start the smpd service/daemon for the current user.  You can add 
+\texttt{-p <port>} to specify the port to listen on.  All smpds must use
+the same port and if you don't use the default then you will have to
+add \texttt{-p <port>} to mpiexec or add the \texttt{port=<port>} to the 
+\texttt{.smpd} configuration file.
+
+\item[\texttt{smpd -r}]\mbox{}\\
+Start the smpd service/daemon in root/multi-user mode.  This is not yet
+implemented.
+
+\item[\texttt{smpd -shutdown [host]}]\mbox{}\\
+Shutdown the smpd on the local host or specified host.  Warning: this will
+cause the smpd to exit and no mpiexec or smpd commands can be issued to the
+host until smpd is started again.
+
+%\item[\texttt{smpd -start}]\mbox{}\\
+%Start the Windows smpd service on the local host.
+%
+%\item[\texttt{smpd -stop}]\mbox{}\\
+%Stop the Windows smpd on the local host.
+%
+%\item[\texttt{smpd -console [host]}]\mbox{}\\
+%Connect to a specific smpd to issue console commands.  The currently 
+%supported commands are: %get, set, delete, stat, status, shutdown and validate.
+%\begin{enumerate}
+%\item[\texttt{get <var>}]\mbox{}
+%\item[\texttt{set <var>=<value>}]\mbox{}
+%\item[\texttt{delete <var>}]\mbox{}
+%\item[\texttt{status}]\mbox{}
+%\item[\texttt{stat <var>}]\mbox{}
+%\item[\texttt{shutdown}]\mbox{}
+%\item[\texttt{validate}]\mbox{}
+%\end{enumerate}
+
+\end{description}
+
+\subsection{gforker}
+\label{sec:forker}
+\texttt{gforker} is a simple process manager that runs all processes on
+a single node; it's version of \texttt{mpiexec} uses the system
+\texttt{fork} and \texttt{exec} calls to create the new processes.
+To configure with the \texttt{gforker} process manager, use
+\begin{verbatim}
+    configure --with-pm=gforker ...
+\end{verbatim}
+
+\section{Testing}
+\label{sec:testing}
+Once MPICH2 has been installed, you can test it by running some of the example
+programs in the \texttt{examples} directory.  A more thorough test can be run
+with the command \texttt{make testing}.  This will produce a summary on
+standard output, along with an XML version of the test results in 
+\texttt{mpich2/test/mpi}. In addition, running \texttt{make testing} from the
+top-level (\texttt{mpich2}) directory will run tests of the commands, such as
+\texttt{mpicc} and \texttt{mpiexec}, that are included with MPICH2.
+
+Other MPI test suites are available from
+\url{http://www.mcs.anl.gov/mpi/mpi-test/tsuite.html}.  As part of the MPICH2
+development, we run the MPICH1, MPICH2, C++, and Intel test suites every night
+and post the results on
+\url{http://www.mcs.anl.gov/mpi/mpich1/micronotes/mpich2-status/}.  Other
+tests are run on an occasional basis.  
+
+% \subsection{Using the Intel Test Suite}
+% \label{sec:intel}
+
+% These instructions are local to our test environment at Argonne.
+
+% How to run a select set of tests from the Intel test suite:
+
+% \begin{small}
+% \begin{verbatim}
+% 1) checkout the Intel test suite (svn co https://svn.mcs.anl.gov/repos/mpi/test_suites/intel/trunk IntelMPITEST) (outside users
+%    can access the most recent version of the test suite from the
+%    test suite web page).
+
+% 2) create a testing directory separate from the IntelMPITEST source
+% directory
+
+% 3) cd into that testing directory
+
+% 4) make sure the process manager (e.g., mpd) is running
+
+% 5) run "<ITS_SRC_DIR>/configure --with-mpich2=<MPICH2_INSTALL_DIR>", where
+% <ITS_SRC_DIR> is the path to the directory Intel test suite source (e.g.,
+% /home/toonen/Projects/MPI-Tests/IntelMPITEST) and <MPICH2_INSTALL_DIR> is
+% the directory containing your MPICH2 installation
+
+% 6) mkdir Test; cd Test
+
+% 7) find tests in <ITS_SRC_DIR>/{c,fortran} that you are interested in
+% running and place the test names in a file.  For example:
+
+% % ( cd /home/toonen/Projects/MPI-Tests/IntelMPITEST/Test ; \
+%     find {c,fortran} -name 'node.*' -print | grep 'MPI_Test' 
+%     | sed -e 's-/node\..*$--' ) |& tee testlist
+% Test/c/nonblocking/functional/MPI_Test
+% Test/c/nonblocking/functional/MPI_Testall
+% Test/c/nonblocking/functional/MPI_Testany
+% Test/c/nonblocking/functional/MPI_Testsome
+% Test/c/persist_request/functional/MPI_Test_p
+% Test/c/persist_request/functional/MPI_Testall_p
+% Test/c/persist_request/functional/MPI_Testany_p
+% Test/c/persist_request/functional/MPI_Testsome_p
+% Test/c/probe_cancel/functional/MPI_Test_cancelled_false
+% Test/fortran/nonblocking/functional/MPI_Test
+% Test/fortran/nonblocking/functional/MPI_Testall
+% Test/fortran/nonblocking/functional/MPI_Testany
+% Test/fortran/nonblocking/functional/MPI_Testsome
+% Test/fortran/persist_request/functional/MPI_Test_p
+% Test/fortran/persist_request/functional/MPI_Testall_p
+% Test/fortran/persist_request/functional/MPI_Testany_p
+% Test/fortran/persist_request/functional/MPI_Testsome_p
+% Test/fortran/probe_cancel/functional/MPI_Test_cancelled_false
+% %
+
+% 8) run the tests using ../bin/mtest:
+
+% % ../bin/mtest -testlist testlist -np 6 |& tee mtest.log
+% %
+
+% NOTE: some programs hang if less they are run with less than 6 processes.
+
+% 9) examine the summary.xml file.  look for '<STATUS>fail</STATUS>' to see if
+% any failures occurred.  (search for '>fail<' works as well)
+
+% \end{verbatim}
+% \end{small}
+
+\section{Benchmarking}
+\label{sec:benchmarking}
+
+There are many benchmarking programs for MPI implementations.  Three
+that we use are \texttt{mpptest}
+(\url{http://www.mcs.anl.gov/mpi/mpptest}), \texttt{netpipe}
+(\url{http://www.scl.ameslab.gov/netpipe}), and \texttt{SkaMPI}
+(\url{http://liinwww.ira.uka.de/~skampi}).  Each of these has
+different strengths and weaknesses and reveals different properties of
+the MPI implementation.
+
+In addition, the
+MPICH2 test suite contains a few programs to test for performance artifacts in
+the directory \texttt{test/mpi/perf}.  An example of a performance artifact is
+markedly different performance for the same operation when performed in two
+different ways.  For example, using an MPI datatype for a non-contiguous
+transfer should not be much slower than packing the data into a contiguous
+buffer, sending it as a contiguous buffer, and then unpacking it into the
+destination buffer.  An example of this from the MPI-1 standard illustrates
+the use of MPI datatypes to transpose a matrix ``on the fly,'' and one test in
+\texttt{test/mpi/perf} checks that the MPI implementation performs well in
+this case.
+
+\section{MPE}
+\label{sec:mpe}
+
+MPICH2 comes with the same MPE (Multi-Processing Environment) tools that are
+included with MPICH1.  These include several trace libraries for recording the
+execution of MPI programs and the Jumpshot and SLOG tools for performance
+visualization.  The MPE tools are built and installed by default and should be
+available without requiring any additional steps.  The installation of MPE
+is documented in \texttt{mpich2/src/mpe2/INSTALL} and the usage of MPE is
+documented in \texttt{mpich2/src/mpe2/README} and MPICH2 user's guide.
+
+\section{Windows Version}
+\label{sec:windows}
+
+\subsection{Binary distribution}
+\label{sec:winbin}
+
+The Windows binary distribution uses the Microsoft Installer.  Download and 
+execute \texttt{mpich2-1.x.xxx.msi} to install the binary distribution.  The default 
+installation path is \texttt{C:$\backslash$Program Files$\backslash$MPICH2}. 
+You must have administrator privileges to install
+\texttt{mpich2-1.x.xxx.msi}.  The installer  
+installs a Windows service to launch MPICH applications and only administrators
+may install services.  This process manager is called smpd.exe.  Access to 
+the process manager is passphrase protected.  The installer asks for this 
+passphrase.  Do not use your user password.  The same passphrase must be 
+installed on all nodes that will participate in a single MPI job.
+
+Under the installation directory are three sub-directories: \texttt{include},
+ \texttt{bin}, and \texttt{lib}.  The \texttt{include} and \texttt{lib} 
+directories contain the header files and libraries necessary to compile MPI 
+applications.  The \texttt{bin} directory contains the process manager, 
+\texttt{smpd.exe}, and the the MPI job launcher, \texttt{mpiexec.exe}.  The
+dlls that implement MPICH2 are copied to the Windows system32 directory.
+
+You can install MPICH in unattended mode by executing 
+\begin{verbatim}
+    msiexec /q /I mpich2-1.x.xxx.msi
+\end{verbatim}
+
+The smpd process manager for Windows runs as a service that can launch jobs 
+for multiple users.  It does not need to be started like the unix version 
+does.  The service is automatically started when it is installed and when 
+the machine reboots.  smpd for Windows has additional options:
+\begin{description}
+\item[\texttt{smpd -start}]\mbox{}\\
+Start the Windows \texttt{smpd} service.
+\item[\texttt{smpd -stop}]\mbox{}\\
+Stop the Windows \texttt{smpd} service.
+\item[\texttt{smpd -install}]\mbox{}\\
+Install the \texttt{smpd} service.
+\item[\texttt{smpd -remove}]\mbox{}\\
+Remove the \texttt{smpd} service.
+\item[\texttt{smpd -register\_spn}]\mbox{}\\
+Register the Service Principal Name with the domain controller.
+This command enables passwordless authentication using kerberos.  It must be 
+run on each node individualy by a domain administrator.
+\end{description}
+
+\subsection{Source distribution}
+\label{sec:winsrc}
+
+In order to build MPICH2 from the source distribution under Windows, 
+you must have MS Developer Studio .NET 2003 or later, perl and optionally 
+Intel Fortran 8 or later.
+
+\begin{itemize}
+\item
+Download \texttt{mpich2-1.x.y.tar.gz} and unzip it.
+\item
+Bring up a Visual Studio Command prompt with the compiler environment 
+variables set.
+\item
+Run \texttt{winconfigure.wsf}. If you don't have a Fortran compiler add the 
+\texttt{--remove-fortran} option to \texttt{winconfigure} to remove all the Fortran 
+projects and dependencies.  Execute \texttt{winconfigure.wsf /?} to see all
+available options.
+\item 
+    open \texttt{mpich2$\backslash$mpich2.sln}
+%\item
+%    build the \texttt{ch3sockDebug mpich2} solution
+%\item
+%    build the \texttt{ch3sockDebug mpich2s} project
+\item
+    build the ch3sockRelease mpich2 solution
+\item
+    build the ch3sockRelease mpich2s project
+%\item
+%    build the Debug mpich2 solution
+\item
+    build the Release mpich2 solution
+%\item
+%    build the fortDebug mpich2 solution
+\item
+    build the fortRelease mpich2 solution
+%\item
+%    build the gfortDebug mpich2 solution
+\item
+    build the gfortRelease mpich2 solution
+%\item
+%    build the sfortDebug mpich2 solution
+\item
+    build the sfortRelease mpich2 solution
+\item
+    build the channel of your choice.  The options are \texttt{sock},
+    \texttt{shm}, and \texttt{ssm}.   
+The shm channel is for small numbers of processes that will run on a single 
+machine using shared memory.  The shm channel should not be used for more 
+than about 8 processes.  The \texttt{ssm} (sock shared memory) channel is for
+    clusters  
+of smp nodes.  This channel should not be used if you plan to over-subscribe 
+the CPU's.  If you plan on launching more processes than you have processors 
+you should use the default \texttt{sock} channel.  The \texttt{ssm} channel 
+uses a polling progress engine that can perform poorly when multiple processes 
+compete for individual processors.  
+
+\end{itemize}
+
+\subsection{\texttt{cygwin}}
+\label{sec:cygwin}
+
+MPICH2 can also be built under \texttt{cygwin} using the source
+distribution and the Unix commands described in previous sections.  This
+will not build the same libraries as described in this section.  It will 
+build a ``Unix'' distribution that runs under \texttt{cygwin}.
+
+\section{All Configure Options}
+\label{configure-options}
+Here is a list of all the configure options currently recognized by the
+top-level configure.  It is the MPICH-specific part of the output of 
+\begin{verbatim}
+    configure --help
+\end{verbatim}
+Not all of these options may be fully supported yet.  
+% This snapshot of configure --help output was taken on Nov 3, 2005.  It
+% needs to be updated frequently (or automatically) and in the long run
+% to be replaced by real documentation.
+
+\begin{small}
+\begin{verbatim}
+Optional Features:
+  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+--enable-cache  - Turn on configure caching
+--enable-echo  - Turn on strong echoing. The default is enable=no.
+--enable-strict - Turn on strict debugging with gcc
+--enable-coverage - Turn on coverage analysis using gcc and gcov
+--enable-error-checking=level - Control the amount of error checking.
+level may be
+    no        - no error checking
+    runtime   - error checking controllable at runtime through environment
+                variables
+    all       - error checking always enabled
+--enable-error-messages=level - Control the amount of detail in error
+  messages.  Level may be
+    all       - Maximum amount of information
+    generic   - Only generic messages (no information about the specific
+                instance)
+    class     - One message per MPI error class
+    none      - No messages
+--enable-timing=level - Control the amount of timing information
+collected by the MPICH implementation.  level may be
+    none    - Collect no data
+    all     - Collect lots of data
+    runtime - Runtime control of data collected
+The default is none.
+--enable-g=option - Control the level of debugging support in the MPICH
+implementation.  option may be a list of common separated names including
+    none     - No debugging
+    mem      - Memory usage tracing
+    handle   - Trace handle operations
+    dbg      - Add compiler -g flags
+    log      - Enable debug event logging
+    meminit  - Preinitialize memory associated structures and unions to
+               eliminate access warnings from programs like valgrind
+    all      - All of the above choices
+--enable-fast - pick the appropriate options for fast execution.  This
+                turns off error checking and timing collection
+--enable-f77 - Enable Fortran 77 bindings
+--enable-f90 - Enable Fortran 90 bindings
+--enable-cxx - Enable C++ bindings
+--enable-romio - Enable ROMIO MPI I/O implementation
+--enable-debuginfo - Enable support for debuggers
+--enable-nmpi-as-mpi - Use MPI rather than PMPI routines for MPI routines,
+ such as the collectives, that may be implemented in terms of other MPI
+ routines
+--enable-mpe - Build the MPE (MPI Parallel Environment) routines
+--enable-threads=level - Control the level of thread support in the
+MPICH implementation.  The following levels are supported.
+    single - No threads (MPI_THREAD_SINGLE)
+    funneled - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
+    serialized - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
+    multiple(:impl) - Fully multi-threaded (MPI_THREAD_MULTIPLE)
+The following implementations are supported.
+    global_mutex - a single global lock guards access to all MPI functions.
+The default implementation is global_mutex.
+For the ch3:sock channel, a separate build is no longer needed for thread-multiple.
+It is compiled by default and is selectable at run time with MPI_Init_thread.
+If MPI_Init_thread is not called, the default is funneled .
+For other channels, the --enable-threads option is not supported currently, and
+the default is funneled.
+--enable-weak-symbols - Use weak symbols to implement PMPI routines (default)
+--enable-sharedlibs=kind - Enable shared libraries.  kind may be
+    gcc     - Standard gcc and GNU ld options for creating shared libraries
+    osx-gcc - Special options for gcc needed only on OS/X
+    solaris-cc - Solaris native (SPARC) compilers for 32 bit systems
+    cygwin-gcc - Special options for gcc needed only for cygwin
+    none    - same as --disable-sharedlibs
+Only gcc, osx-gcc, and solaris-cc are currently supported
+
+--enable-dependencies - Generate dependencies for sourcefiles.  This
+            requires that the Makefile.in files are also created
+            to support dependencies (see maint/updatefiles)
+--enable-timer-type=name - Select the timer to use
+for MPI_Wtime and internal timestamps.  name may be one of
+    gethrtime - Solaris timer (Solaris systems only)
+    clock_gettime   - Posix timer (where available)
+    gettimeofday - Most Unix systems
+    linux86_cycle - Linux x86; returns cycle counts, not time in seconds
+    linuxalpha_cycle - Like linux86_cycle, but for Linux Alpha
+    gcc_ia64_cycle - IPF ar.itc timer
+
+--enable-base-cache - Enable the use of a simple cache for the subsidieary
+                       configure scripts.
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+--with-device=name - Specify the communication device for MPICH.
+--with-pmi=name - Specify the pmi interface for MPICH.
+--with-pm=name - Specify the process manager for MPICH.
+      Multiple process managers may be specified as long as they all use
+      the same pmi interface by separating them with colons.  The
+      mpiexec for the first named process manager will be installed.
+      Example: --with-pm=forker:mpd:remshell builds the three process
+      managers forker, mpd, and remshell; only the mpiexec from forker
+      is installed into the bin directory.
+--with-logging=name - Specify the logging library for MPICH.
+--with-mpe - Build the MPE (MPI Parallel Environment) routines
+--with-htmldir=dir - Specify the directory for html documentation
+--with-docdir=dir - Specify the directory for documentation
+--with-cross=file - Specify the values of variables that configure cannot
+determine in a cross-compilation environment
+--with-namepublisher=name - Choose the system that will support
+                             MPI_PUBLISH_NAME and MPI_LOOKUP_NAME.  Options
+                             include
+                               no (no service available)
+                               mpd
+                               file:directory (optional directory)
+
+--with-fwrapname=name  - Specify name of library containing Fortran interface
+routines
+--with-thread-package=package - Thread package to use.  Supported thread
+packages include:
+    posix or pthreads - POSIX threads
+    solaris - Solaris threads (Solaris OS only)
+    none - no threads
+If the option is not specified, the default package is ${MPE_THREAD_DEFAULT}.
+If the option is specified, but a package is not given, then the default
+is posix.
+\end{verbatim}
+\end{small}
+
+\paragraph{Notes on the configure options.}
+The \texttt{--with-htmldir} and \texttt{--with-docdir} options specify the 
+directories into which the documentation will be installed by \texttt{make
+  install}. 
+
+\appendix
+
+
+\section{Troubleshooting MPDs}
+\label{app:mpd}
+
+
+
+\subsection{Getting Started with mpd}
+\label{sec:getting-started}
+
+\texttt{mpd} stands for multi-purpose daemon.  We sometimes use the term
+mpd to refer to the combination of the mpd daemon and its helper programs
+that collectively form a process management system for executing parallel
+jobs, including mpich jobs.  The mpd daemon must run on each host where
+you wish to execute parallel programs.  The mpd daemons form a ring to
+facilitate rapid process startup.  Even a single mpd on a single host
+forms a loop.  Therefore, each host must be configured in such a way
+that the mpds can connect to each other and pass messages via sockets.
+
+It can be rather tricky to configure one or more hosts in such a way
+that they adequately support client-server applications like mpd.
+In particular, each host must not only know its own name, but must
+identify itself correctly to other hosts when necessary.  Further, certain
+information must be readily accessible to each host.  For example, each
+host must be able to map another host's name to its IP address.  In this
+section, we will walk slowly through a series of steps that will help
+to ensure success in running mpds on a single host or on a large cluster.
+
+If you can \texttt{ssh} from each machine to \emph{itself}, and from
+each machine to each other machine in your set (and back), then you
+probably have an adequate environment for mpd.  However, there may
+still be problems.  For example, if you are blocking all ports except
+the ports used by ssh/sshd, then mpd will still fail to operate correctly.
+
+To begin using mpd, the sequence of steps that we recommend is this:
+\begin{enumerate}
+    \item get one mpd working alone on a first test node
+    \item get one mpd working alone on a second test node
+    \item get two new mpds to work together on the two test nodes
+    \item boot two new mpds on the two test nodes via mpdboot
+\end{enumerate}
+
+\subsubsection{Following the steps}
+
+\begin{enumerate}
+\item Install mpich2, and thus mpd.
+
+\item Make sure the mpich2 bin directory is in your path.
+Below, we will refer to it as \texttt{MPDDIR}.
+
+\item Kill old mpd processes.
+If you are coming to this guide from elsewhere, e.g. a Quick Start guide
+for mpich2, because you encountered mpd problems, you should make sure
+that all mpd processes are terminated on the hosts where you have been
+testing.  \texttt{mpdallexit} may assist in this, but probably not if
+you were having problems.  You may need to use the Unix \texttt{kill}
+command to terminate the processes.
+
+\item Run a first mpd (alone on a first node).
+As mentioned above, mpd uses client-server communications to perform
+its work.  So, before running an mpd, let's run a simpler program
+(\texttt{mpdcheck}) to verify that these communications are likely to be
+successful.  Even on hosts where communications are well supported,
+sometimes there are problems associated with hostname resolution, etc.
+So, it is worth the effort to proceed a bit slowly.  Below, we assume
+that you have installed mpd and have it in your path.
+
+Select a test node, let's call it \texttt{n1}.  Login to n1.
+
+First, we will run mpdcheck as a server and a client.  To run it as a
+server, get into a window with a command-line and run this:
+\begin{verbatim}
+    n1 $  mpdcheck -s
+\end{verbatim}
+It will print something like this:
+\begin{verbatim}
+    server listening at INADDR_ANY on: n1 1234
+\end{verbatim}
+
+Now, run the client side (in another window if convenient) and see
+if it can find the server and communicate.  Be sure to use the \emph{same}
+hostname and portnumber printed by the server (above: n1 1234):
+\begin{verbatim}
+    n1 $  mpdcheck -c n1 1234
+\end{verbatim}
+
+If all goes well, the server will print something like:
+\begin{verbatim}
+    server has conn on
+        <socket._socketobject object at 0x40200f2c>
+            from ('192.168.1.1', 1234)
+    server successfully recvd msg from client:
+        hello_from_client_to_server
+\end{verbatim}
+and the client will print:
+\begin{verbatim}
+    client successfully recvd ack from server:
+        ack_from_server_to_client
+\end{verbatim}
+
+If the experiment failed, you have some network or machine configuration
+problem which will also be a problem later when you try to use mpd.
+Even if the experiment succeeded, but the hostname printed by the server
+was \emph{localhost}, then you will probably have problems later if you
+try to use mpd on n1 in conjunction with other hosts.  In either case,
+skip to Section~\ref{sec:debug-host-net-config} ``Debugging host/network
+configuration problems.'' 
+
+If the experiment succeeded, then you should be ready to try mpd on
+this one host. To start an mpd, you will use the mpd command.  To run
+parallel programs, you will use the mpiexec program.  All mpd commands
+accept the -h or --help arguments, e.g.:
+\begin{verbatim}
+    n1 $  mpd --help 
+    n1 $  mpiexec --help
+\end{verbatim}
+
+Try a few tests:
+\begin{verbatim}
+    n1 $  mpd &
+    n1 $  mpiexec -n 1 /bin/hostname
+    n1 $  mpiexec -l -n 4 /bin/hostname
+    n1 $  mpiexec -n 2 PATH_TO_MPICH2_EXAMPLES/cpi
+\end{verbatim}
+where \texttt{PATH\_TO\_MPICH2\_EXAMPLES} is the path to the
+\texttt{mpich2-1.0.3/examples} directory.
+
+To terminate the mpd:
+\begin{verbatim}
+    n1 $  mpdallexit
+\end{verbatim}
+
+
+\item Run a second mpd (alone on a second node).
+To verify that things are fine on a second host (say \emph{n2}), login
+to n2 and perform the same set of tests that you did on n1.  Make sure
+that you use mpdallexit to terminate the mpd so you will be ready for
+further tests.
+
+
+\item Run a ring of two mpds on two hosts.
+Before running a ring of mpds on n1 and n2, we will again use mpdcheck,
+but this time between the two machines.  We do this because the two nodes
+may have trouble locating each other or communicating between them and
+it is easier to check this out with the smaller program.
+
+First, we will make sure that a server on n1 can service a client from n2.
+On n1:
+\begin{verbatim}
+    n1 $  mpdcheck -s
+\end{verbatim}
+which will print a hostname (hopefully n1) and a portnumber (say 3333 here).
+On n2:
+\begin{verbatim}
+    n2 $  mpdcheck -c n1 3333
+\end{verbatim}
+
+If this experiment fails, skip to Section~\ref{sec:debug-host-net-config}
+``Debugging host/network configuration problems''.
+
+Second, we will make sure that a server on n2 can service a client from n1.
+On n2:
+\begin{verbatim}
+    n2 $  mpdcheck -s
+\end{verbatim}
+which will print a hostname (hopefully n2) and a portnumber (say 7777 here).
+On n2:
+\begin{verbatim}
+    n2 $  mpdcheck -c n2 7777
+\end{verbatim}
+
+If this experiment fails, skip to Section~\ref{sec:debug-host-net-config}
+``Debugging host/network configuration problems''.
+
+If all went well, we are ready to try a pair of mpds on n1 and n2.
+First, make sure that all mpds have terminated on both n1 and n2.  Use
+mpdallexit or simply kill them with:
+\begin{verbatim}
+kill -9 PID_OF_MPD
+\end{verbatim}
+where you have obtained the \texttt{PID\_OF\_MPD} by some means such as the \texttt{ps} command.
+
+On n1:
+\begin{verbatim}
+    n1 $  mpd &
+    n1 $  mpdtrace -l
+\end{verbatim}
+This will print a list of machines in the ring, in this case just n1.
+The output will be something like:
+\begin{verbatim}
+    n1_6789 (192.168.1.1)
+\end{verbatim}
+The 6789 is the port that the mpd is listeneing on for connections from other
+mpds wishing to enter the ring.  We will use that port in a moment to get an mpd
+from n2 into the ring.  The value in parentheses should be the IP address of n1.
+
+On n2:
+\begin{verbatim}
+    n2 $  mpd -h n1 -p 6789 &
+\end{verbatim}
+where 6789 is the listening port on n1 (from mpdtrace above).
+Now try:
+\begin{verbatim}
+    n2 $  mpdtrace -l
+\end{verbatim}
+You should see both mpds in the ring.
+
+To run some programs in parallel:
+\begin{verbatim}
+    n1 $  mpiexec -n 2 /bin/hostname
+    n1 $  mpiexec -n 4 /bin/hostname
+    n1 $  mpiexec -l -n 4 /bin/hostname
+    n1 $  mpiexec -l -n 4 PATH_TO_MPICH2_EXAMPLES/cpi
+\end{verbatim}
+where \texttt{PATH\_TO\_MPICH2\_EXAMPLES} is the path to the
+\texttt{mpich2-%VERSION%/examples} directory.
+
+To bring down the ring of mpds:
+\begin{verbatim}
+    n1 $  mpdallexit
+\end{verbatim}
+
+
+\item Boot a ring of two mpds via mpdboot.
+Please be aware that mpdboot uses ssh by default to start remote mpds.
+It will expect that you can run ssh from n1 to n2 (and from n2 to n1)
+without entering a password.
+
+First, make sure that you terminate the mpd processes from any prior
+tests.
+
+On n1, create a file named \texttt{mpd.hosts} containing the name of n2:
+\begin{verbatim}
+n2
+\end{verbatim}
+
+Then, on n1 run:
+\begin{verbatim}
+    n1 $  mpdboot -n 2
+    n1 $  mpdtrace -l
+    n1 $  mpiexec -l -n 2 /bin/hostname
+\end{verbatim}
+The mpdboot command should read the mpd.hosts file created above and
+run an mpd on each of the two machines.  The mpdtrace and mpiexec show
+the ring up and functional.
+Options that may be useful are:
+\begin{itemize}
+    \item \texttt{--help} use this one for extra details on all options
+    \item \texttt{-v} (verbose)
+    \item \texttt{--chkup} tries to verify that the hosts are up before starting mpds
+    \item \texttt{--chkuponly }only performs the verify step, then ends
+\end{itemize}
+
+To bring the ring down:
+\begin{verbatim}
+    n1 $  mpdallexit
+\end{verbatim}
+
+If mpdboot works on the two machines n1 and n2, it will probably work on
+your others as well.  But, there could be configuration problems using a
+new machine on which you have not yet tested mpd.  An easy way to check,
+is to gradually add them to mpd.hosts and try an mpdboot with a -n arg
+that uses them all each time.  Use mpdallexit after each test.
+
+\end{enumerate}
+
+
+\subsection{Debugging host/network configuration problems}
+\label{sec:debug-host-net-config}
+
+We use mpdcheck as our first attempt to debug host or network
+configuration problems.  If you run:
+\begin{verbatim}
+    n1 $  mpdcheck --help
+\end{verbatim}
+you should receive a fairly long help message describing a wide variety
+of arguments which can be supplied to mpdcheck to help you debug.
+
+The first thing to try is to simply login to a node, say n1 and run:
+\begin{verbatim}
+    n1 $  mpdcheck
+\end{verbatim}
+mpdcheck will produce no output here if it finds no problems.
+If mpdcheck does find potenital problems, it will print them with *** at
+the beginning of the line.  You can cause mpdcheck to be verbose by using
+the -v option, e.g.:
+\begin{verbatim}
+    n1 $  mpdcheck -v
+\end{verbatim}
+Also, if mpdcheck offers comments about how you might repair certain problems,
+you can get a longer version of those messages by using the -l option, e.g.:
+\begin{verbatim}
+    n1 $  mpdcheck -l
+\end{verbatim}
+
+If you run mpdcheck on each node and find no problems, you may still wish to
+use it further to debug issues between two nodes.  For example, you might
+login to n1 and create file named mpd.hosts which contains the name of another
+node which is having trouble communicating with n1, e.g. n2.
+Then, you may want to run:
+\begin{verbatim}
+    n1 $  mpdcheck -f mpd.hosts
+\end{verbatim}
+This test will see if n1 is having trouble discovering information about
+n2.  If not, you wish to try:
+\begin{verbatim}
+    n1 $  mpdcheck -f mpd.hosts -ssh
+\end{verbatim}
+This will also try to test ssh support between n1 and n2.
+
+If these 2 experiments go OK, you should probably try them again but
+this time logged into n2 and trying to connect back to n1.  Do not 
+forget to change the contents of mpd.hosts to contain the name of n1.
+
+If none of these get you past the problems, you may need to ask for help.
+If so, it will probably useful to run mpdcheck once more on each of the
+nodes which are of concern:
+\begin{verbatim}
+    n1 $  mpdcheck -pc
+    n2 $  mpdcheck -pc
+\end{verbatim}
+These will produce quite a bit of output which may be useful in determining
+the problem.  The -pc option does not really try to offer any comemnts about
+what may be wrong.  It merely prints potentially useful debugging info.
+
+
+\subsection{Firewalls, etc.}
+
+If the output from any of mpdcheck, mpd, or mpdboot leads you to believe
+that one or more of your hosts are having trouble communicating due to
+firewall issues, we can offer a few simple suggestions.  If the problems
+are due to an ``enterprise'' firewall computer, then we can only point you
+to your local network admin for assistance.
+
+In other cases, there are a few quick things that you can try to see if
+there some common protections in place which may be causing your problems.
+
+First, you might see if iptables is active.  You will probably need to
+be root to do this:
+\begin{verbatim}
+    n1 #  iptables -L
+\end{verbatim}
+This will show a set of 3 current iptables chains being applied for each
+of INPUT, FORWARD, and OUTPUT.  If the chains are non-empty, then you may
+have something blocked.  This could be a result of a software firewall 
+package you are running (e.g. shorewall) or some home-grown set of chains.
+If you are unfamiliar with iptables, you will need to get local help to 
+decipher the rules and determine if any of them may be affecting you.  There
+are options such as -F to iptables that will disable the chains, but that is
+dangerous of course if you require them for protection.
+
+Next, you might see if any tcp-wrappers are active.  You may need to be 
+root to do this:
+\begin{verbatim}
+    n1 #  cat /etc/hosts.deny /etc/hosts.allow
+\end{verbatim}
+If there are any uncommented lines, they likely designate any (or ALL)
+daemons which have their tcp communications blocked.  This can be
+particularly problematic for mpdboot which uses ssh (and thus the ssh
+daemon, sshd).
+
+Next, you might wish to see if you have available ephemeral ports:
+\begin{verbatim}
+    n1 $  cat /proc/sys/net/ipv4/ip_local_port_range
+\end{verbatim}
+This should print a range something like:
+\begin{verbatim}
+    32768   61000
+\end{verbatim}
+
+\end{document}
+
+%
+% Comments on subclassing the document
+% We can use \ifdevname ... \fi and \ifpmname ... \fi, as in
+% \ifdevchiii .. \fi and \ifpmmpd ... \fi
+% (these will still need to be defined)
+% There should also be a way to select ``all'' in such a way that the
+% document can still flow well, such as
+% \ifdevall ... \else \ifdevchiii \else \ifdevmm \fi \fi \fi
+
+
+
+

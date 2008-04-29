@@ -6,7 +6,8 @@ CFLAGS="@CFLAGS@"
 F77="@F77@"
 MPI_F77="@MPI_F77@"
 FFLAGS="@FFLAGS@"
-MPI_INC="@MPI_INC@"
+MPI_CFLAGS="@MPI_CFLAGS@"
+MPI_FFLAGS="@MPI_FFLAGS@"
 MPI_LIBS="@MPI_LIBS@"
 LDFLAGS="@LDFLAGS@"
 AR="@AR@"
@@ -20,7 +21,7 @@ else
     echo "# C and Fortran development tool variables..." > $cross_spec_file
 fi
 
-for var in CC MPI_CC CFLAGS F77 MPI_F77 FFLAGS MPI_INC MPI_LIBS LDFLAGS AR RANLIB ; do
+for var in CC MPI_CC CFLAGS F77 MPI_F77 FFLAGS MPI_CFLAGS MPI_FFLAGS MPI_LIBS LDFLAGS AR RANLIB ; do
     eval value=\$"$var"
     if [ "X$value" != "X" ] ; then
         echo "$var=\"$value\"" >> $cross_spec_file

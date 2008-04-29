@@ -1,0 +1,39 @@
+echo "****** RUNNING SETUP_DEVICE FOR THE DCMF DEVICE ******"
+echo "* CC=${CC}"
+echo "* configure args=${ac_configure_args}"
+echo "* MSGLAYER_LIB=${MSGLAYER_LIB}"
+echo "* device_args=${device_args}"
+echo "******************************************************"
+
+#
+# NOTE: This file is sourced from the top-level configure script with the
+# current working directory set to the top-level build directory.
+#
+master_top_builddir="`pwd`"
+
+#
+# Variables of interest...
+#
+# $master_top_srcdir - top-level source directory
+# $device_name - ought to be bgl
+# $device_args - contains name of channel select plus an channel args
+# $with_device - device name and arguments
+# $ac_configure_args - all arguments passed to configure
+#
+
+pathlist=""
+pathlist="$pathlist src/mpid/${device_name}/include"
+pathlist="$pathlist src/mpid/common/datatype"
+pathlist="$pathlist src/mpid/common/locks"
+
+for path in $pathlist ; do
+    CPPFLAGS="${CPPFLAGS} -I${master_top_builddir}/${path}"
+    CPPFLAGS="${CPPFLAGS} -I${master_top_srcdir}/${path}"
+done
+
+CPPFLAGS="${CPPFLAGS} ${MSGLAYER_INCLUDE}"
+LIBS="${LIBS} ${MSGLAYER_LIB}"
+
+echo "******************************************************"
+echo "CPPFLAGS=${CPPFLAGS}"
+echo "******************************************************"

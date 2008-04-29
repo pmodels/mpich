@@ -101,6 +101,19 @@ C flag to false
             errs = errs + 1
             print *, 'Found unexpected key ', keys(i)
          endif
+         myvalue = 'A test'
+         call mpi_info_get( i2, keys(i), MPI_MAX_INFO_VAL, 
+     &                      myvalue, flag, ierr )
+         if (flag) then
+            errs = errs + 1
+            print *, 'Found unexpected key in MPI_Info_get ', keys(i)
+         else 
+            if (myvalue .ne. 'A test') then
+               errs = errs + 1
+               print *, 'Returned value overwritten, is now ', myvalue
+            endif
+         endif
+         
       enddo
       do i=3,6
          call mpi_info_get( i2, keys(i), MPI_MAX_INFO_VAL, 

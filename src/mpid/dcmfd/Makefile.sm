@@ -1,0 +1,11 @@
+install_INCLUDE = ${srcdir}/include/mpix.h
+SUBDIRS = src .
+
+distclean-local:
+	-rm -f include/mpidi_bg_conf.h
+
+maintainerclean-local:
+	-rm -f include/mpidi_bg_conf.h.in
+
+echomaxprocname:
+	@echo 131070

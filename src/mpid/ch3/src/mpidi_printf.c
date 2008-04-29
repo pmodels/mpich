@@ -219,32 +219,6 @@ void MPIDI_DBG_Print_packet(MPIDI_CH3_Pkt_t *pkt)
 		MPIU_DBG_PRINTF((" FLOW_CNTRL_UPDATE\n"));
 		break;
 
-		/* FIXME: Move these into the correct location (where is that?) */
-#ifdef MPIDI_CH3_CHANNEL_RNDV
-	    case MPIDI_CH3_PKT_RTS_IOV:
-		MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_RTS_IOV\n"));
-		MPIU_DBG_PRINTF((" sreq ......... 0x%08X\n", pkt->rts_iov.sreq));
-		MPIU_DBG_PRINTF((" iov_len ...... %d\n", pkt->rts_iov.iov_len));
-		break;
-	    case MPIDI_CH3_PKT_CTS_IOV:
-		MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_CTS_IOV\n"));
-		MPIU_DBG_PRINTF((" sreq ......... 0x%08X\n", pkt->cts_iov.sreq));
-		MPIU_DBG_PRINTF((" rreq ......... 0x%08X\n", pkt->cts_iov.rreq));
-		MPIU_DBG_PRINTF((" iov_len ...... %d\n", pkt->cts_iov.iov_len));
-		break;
-	    case MPIDI_CH3_PKT_RELOAD:
-		MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_RELOAD\n"));
-		MPIU_DBG_PRINTF((" send_recv .... %d\n", pkt->reload.send_recv));
-		MPIU_DBG_PRINTF((" sreq ......... 0x%08X\n", pkt->reload.sreq));
-		MPIU_DBG_PRINTF((" rreq ......... 0x%08X\n", pkt->reload.rreq));
-		break;
-	    case MPIDI_CH3_PKT_IOV:
-		MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_IOV\n"));
-		MPIU_DBG_PRINTF((" req .......... 0x%08X\n", pkt->iov.req));
-		MPIU_DBG_PRINTF((" send_recv .... %d\n", pkt->iov.send_recv));
-		MPIU_DBG_PRINTF((" iov_len ...... %d\n", pkt->iov.iov_len));
-		break;
-#endif
 	    case MPIDI_CH3_PKT_CLOSE:
 		MPIDI_CH3_PktPrint_Close( stdout, pkt );
 		break;
@@ -450,35 +424,6 @@ const char *MPIDI_Pkt_GetDescString( MPIDI_CH3_Pkt_t *pkt )
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
 		       "FLOW_CNTL_UPDATE" );
 	break;
-#ifdef MPIDI_CH3_CHANNEL_RNDV
-    case MPIDI_CH3_PKT_RTS_IOV:
-	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
-		       "RTS_IOV - sreq=0x%08X, len=%d", 
-		       pkt->rts_iov.sreq, 
-		       pkt->rts_iov.iov_len );
-	break;
-    case MPIDI_CH3_PKT_CTS_IOV:
-	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
-		       "CTS_IOV - sreq=0x%08X, rreq=0x%08X, len=%d", 
-		       pkt->cts_iov.sreq,
-		       pkt->cts_iov.rreq,
-		       pkt->cts_iov.iov_len );
-	break;
-    case MPIDI_CH3_PKT_RELOAD:
-	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
-		       "RELOAD  - sreq=0x%08X, rreq=0x%08X, sendrecv=%d", 
-		       pkt->reload.sreq,
-		       pkt->reload.rreq,
-		       pkt->reload.send_recv );
-	break;
-    case MPIDI_CH3_PKT_IOV:
-	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
-		       "IOV - req=%d, sendrecv=%d, len=%d",
-		       pkt->iov.req,
-		       pkt->iov.send_recv,
-		       pkt->iov.iov_len );
-	break;
-#endif
     case MPIDI_CH3_PKT_CLOSE:
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
 		       "CLOSE ack=%d", 

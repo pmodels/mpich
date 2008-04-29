@@ -3,6 +3,15 @@ dnl This configure is used ONLY to determine the Fortran 90 features
 dnl that are needed to implement the create_type_xxx routines.
 AC_INIT(Makefile.in)
 AC_PREREQ(2.59)
+
+dnl The MPICH2 top-level configure adds a bunch of flags to the
+dnl user-defined CFLAGS by processing different configure command-line
+dnl arguments (--enable-g, --enable-default-optimization). These updated
+dnl flags are passed down as a separate flag. Here, we don't care about
+dnl the user-defined flags, but rather this updated flags, so we just
+dnl overwrite CFLAGS with them.
+PAC_SUBCONFIG_INIT()
+
 AC_CONFIG_AUX_DIR(../../../confdb)
 dnl
 PAC_ARG_CACHING
@@ -343,5 +352,8 @@ if test -z "$F90_LIBDIR_LEADER" ; then
     F90_LIBDIR_LEADER="-L"
 fi
 AC_SUBST(F90_LIBDIR_LEADER)
+
+dnl Place holder macro for finalization
+PAC_SUBCONFIG_FINALIZE()
 
 AC_OUTPUT(mpif90model.h)

@@ -1,7 +1,0 @@
-#! /bin/sh
-# runs autoheader and autoconf with local macros
-# Use AUTOCONF and AUTOHEADER to override the defaults
-AUTOCONF=${AUTOCONF:-autoconf}
-AUTOHEADER=${AUTOHEADER:-autoheader}
-$AUTOHEADER
-$AUTOCONF

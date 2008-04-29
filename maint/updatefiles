@@ -741,6 +741,11 @@ if [ "$do_smpdversion" = yes ] ; then
 #define SMPD_VERSION "$smpdVersion"
 EOF
 fi
+
+echo "Updating README's version ID."
+VERSION=`cat maint/Version`
+sed -e "s/%VERSION%/${VERSION}/g" README.vin > README
+
 #
 # The following must be the last statements executed
 if [ -n "$error_summary" ] ; then

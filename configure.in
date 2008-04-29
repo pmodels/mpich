@@ -159,7 +159,7 @@ fi
 # Regular releases are treated as patch 0
 #
 # Numeric version will have 1 digit for MAJ, 2 digits for MIN,
-# 2 digits for REV, 1 digit for EXT and 1 digit for EXT_NUMBER.
+# 2 digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER.
 changequote(<<,>>)
 V1=`expr $VERSION : '\([0-9]*\)\.[0-9]*\.[0-9]*[a-zA-Z]*[0-9]*'`
 V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)\.[0-9]*[a-zA-Z]*[0-9]*'`
@@ -275,11 +275,11 @@ The default is none.],,enable_timing=default)
 dnl
 AC_ARG_ENABLE(g,
 [--enable-g=option - Control the level of debugging support in the MPICH
-implementation.  option may be a list of common separated names including
+implementation.  option is a list of comma separated names including
     none     - No debugging
     mem      - Memory usage tracing
     handle   - Trace handle operations
-    dbg      - Add compiler -g flags
+    dbg      - Add compiler flag, -g, to CFLAGS, CXXFLAGS FFLAGS and F90FLAGS.
     log      - Enable debug event logging
     meminit  - Preinitialize memory associated structures and unions to
                eliminate access warnings from programs like valgrind
@@ -294,17 +294,20 @@ dnl  Not yet supported])
 dnl
 dnl --enable-fast
 AC_ARG_ENABLE(fast,
-[--enable-fast - pick the appropriate options for fast execution.  This
-                turns off error checking and timing collection],,
-enable_fast=no)
-
-AC_ARG_ENABLE(ndebug,
-[--enable-ndebug - Set NDEBUG and disable asserts],enable_ndebug=$enableval,
-enable_ndebug=no)
-
-if test "$enable_ndebug" = "yes" ; then
-    AC_DEFINE(NDEBUG,1,[Define to suppress assertions])
-fi
+[--enable-fast=option - Control the level of fast execution in the MPICH
+implementation.   option is a list of comma separated names including 
+    defopt   - Default compiler optimization -O2 for all language bindings.
+               when neither --enable-fast nor --disable-fast is specified.
+    nochkmsg - No error checking and no error messages, i.e.
+               --disable-error-checking and --disable-error-messages.
+    notiming - No timing collection, i.e. --disable-timing.
+    ndebug   - Appends -DNDEBUG to CFLAGS.
+    all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
+               when --enable-fast is specified without any option.
+    O<n>     - Appends default optimization flags, -O<n>, to
+               CFLAGS, FFLAGS, CXXFLAGS, F90FLAGS.
+    none     - None of above options, i.e. --disable-fast.
+],,enable_fast=defopt)
 
 dnl
 dnl We enable f77 and f90 if we can find compilers for them.
@@ -426,6 +429,23 @@ AC_ARG_WITH(fwrapname,
 routines],[FWRAPNAME=$withval;set_FWRAPNAME="yes"],FWRAPNAME=fmpich)
 AC_SUBST(FWRAPNAME)
 dnl
+#
+# Save a copy of CFLAGS, CXXFLAGS, FFLAGS, F90FLAGS, LDFLAGS as WRAPPER_*
+# before any of these flags are being modified by configure tests.
+#
+# WRAPPER_xFLAGS are used by mpicc and friends.
+# Don't modify WRAPPER_xFLAGS
+WRAPPER_CFLAGS=$CFLAGS
+WRAPPER_CXXFLAGS=$CXXFLAGS
+WRAPPER_FFLAGS=$FFLAGS
+WRAPPER_F90FLAGS=$F90FLAGS
+WRAPPER_LDFLAGS=$LDFLAGS
+export WRAPPER_CFLAGS
+export WRAPPER_CXXFLAGS
+export WRAPPER_FFLAGS
+export WRAPPER_F90FLAGS
+export WRAPPER_LDFLAGS
+
 # -----------------------------------------------------------------------------
 # First check that we have a clean build if we are doing a VPATH build
 PAC_VPATH_CHECK(src/include/mpi.h src/env/mpicc src/env/mpicc.conf,lib)
@@ -555,17 +575,30 @@ AC_SUBST(MPICXXLIBNAME)
 # We'll set FORTRAN_BINDING to 1 if we support Fortran 
 FORTRAN_BINDING=0
 
-# ----------------------------------------------------------------------------
-# Process any enable or with values
-# We must do enable-fast first, because it changes the other enable values
-if test "$enable_fast" = "yes" ; then
-    enable_error_checking=no
-    enable_error_messages=no
-    enable_timing=no
-    # Export a variable that will allow the test suite to detect that
-    # MPICH has no error testing
-    MPICH_FAST=yes
-    export MPICH_FAST
+# Set up default compiler optimization
+MPI_DEFAULT_COPTS="-O2"
+MPI_DEFAULT_CXXOPTS="-O2"
+MPI_DEFAULT_FOPTS="-O2"
+MPI_DEFAULT_F90OPTS="-O2"
+
+# enable-fast
+# strip off multiple options, separated by commas
+save_IFS="$IFS"
+IFS=","
+for option in $enable_fast ; do
+    case "$option" in
+        defopt)
+        enable_default_optimize=yes
+        ;;
+        nochkmsg)
+        enable_fast_nochkmsg=yes
+        ;;
+        notiming)
+        enable_timing=no
+        ;;
+        ndebug)
+        enable_append_ndebug=yes
+        ;;
 #
 # [BRT] removed the reseting of enable_g so that --with-enable=dbg,meminit
 # can be specified with -enable-fast.  This change was largely made for the
@@ -573,9 +606,50 @@ if test "$enable_fast" = "yes" ; then
 # overhead, but also wish to use meminit to eliminate initialization
 # warnings from valgrind.
 #
-#   enable_g=no
-#
-    AC_DEFINE(NDEBUG,1,[Define to suppress assertions])
+        all|yes)
+        enable_default_optimize=yes
+        enable_fast_nochkmsg=yes
+        # Disable timing/logging stuffs
+        enable_timing=no
+        enable_append_ndebug=yes
+        ;;
+        O*)
+        # Allows O<n> where <n> can be [0-9] or ' '.
+        opt_flags=`echo $option | sed -e 's%\(O[0-9] \)%\1%g'`
+        if test -n "$opt_flags" ; then
+            enable_default_optimize=yes
+            MPI_DEFAULT_COPTS="-$option"
+            MPI_DEFAULT_CXXOPTS="-$option"
+            MPI_DEFAULT_FOPTS="-$option"
+            MPI_DEFAULT_F90OPTS="-$option"
+        else
+            AC_MSG_WARN([Unknown value $option for --enable-fast])
+        fi
+        ;;
+        none|no)
+        enable_default_optimize=no
+        enable_fast_nochkmsg=no
+        # Reset timing/logging stuffs to when --enable-timing isn't specified.
+        enable_timing=default
+        enable_append_ndebug=no
+        ;;
+        *)
+        AC_MSG_WARN([Unknown value $option for --enable-fast])
+        ;;
+    esac
+done
+IFS="$save_IFS"
+
+# ----------------------------------------------------------------------------
+# Process any enable or with values
+# We must do enable-fast first, because it changes the other enable values
+if test "$enable_fast_nochkmsg" = "yes" ; then
+    enable_error_checking=no
+    enable_error_messages=no
+    # Export a variable that will allow the test suite to detect that
+    # MPICH has no error testing
+    MPICH_FAST=yes
+    export MPICH_FAST
 fi
 
 # error-checking
@@ -937,7 +1011,7 @@ IFS=","
 for option in $enable_g ; do
     case "$option" in 
         debug|dbg)
-	CFLAGS="$CFLAGS -g"
+        enable_append_g=yes
 	;;
         no|none)
 	;;
@@ -970,7 +1044,7 @@ for option in $enable_g ; do
 	perform_memtracing=yes
 	perform_nesttesting=yes
 	perform_dbglog=yes
-	CFLAGS="$CFLAGS -g"
+	enable_append_g=yes
 	perform_meminit=yes
 	perform_dbgmutex=yes
 	;;
@@ -980,6 +1054,35 @@ for option in $enable_g ; do
     esac
 done
 IFS="$save_IFS"
+
+# MPICH2_EXTRA_xFLAGS contains MPICH2LIB_xFLAGS and 
+# all the extra compiler flags added by MPICH2.
+# Initial all MPICH2_EXTRA_xFLAGS to empty string.
+MPICH2_EXTRA_CFLAGS=""
+MPICH2_EXTRA_CXXFLAGS=""
+MPICH2_EXTRA_FFLAGS=""
+MPICH2_EXTRA_F90FLAGS=""
+
+if test "$enable_append_g" = "yes" ; then
+    CFLAGS="$CFLAGS -g"
+    CXXFLAGS="$CXXFLAGS -g"
+    FFLAGS="$FFLAGS -g"
+    F90FLAGS="$F90FLAGS -g"
+    MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -g"
+    MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -g"
+    MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -g"
+    MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -g"
+fi
+if test "$enable_append_ndebug" = "yes" ; then
+    CFLAGS="$CFLAGS -DNDEBUG"
+    CXXFLAGS="$CXXFLAGS -DNDEBUG"
+    FFLAGS="$FFLAGS -DNDEBUG"
+    F90FLAGS="$F90FLAGS -DNDEBUG"
+    MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -DNDEBUG"
+    MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -DNDEBUG"
+    MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -DNDEBUG"
+    MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -DNDEBUG"
+fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
 fi
@@ -1305,9 +1408,6 @@ fi
 AC_SUBST(mpe_dir)
 AC_SUBST(other_install_dirs)
 
-AC_ARG_ENABLE(compiler-optimizations, [--enable-compiler-optimizations -- Turn on compiler optimizations by default],
-compiler_optimizations=$enableval,compiler_optimizations=yes)
-
 dnl
 dnl The recommended order for items in a configure.in file is
 dnl     check for programs
@@ -1353,34 +1453,6 @@ if test -z "$saveCFLAGS" -a -n "$CFLAGS" ; then
     CFLAGS=$saveCFLAGS
 fi
 
-MPI_DEFAULT_COPTS="-O2"
-if test "$compiler_optimizations" == "yes"; then
-   AC_MSG_CHECKING([whether $CC accepts default optimizations])
-   rm -f conftest.c
-   cat > conftest.c <<EOF
-#include <stdio.h>
-int main() { return 0; }
-EOF
-   pac_tmp_compile_stderr_opt="$CC $CFLAGS ${MPI_DEFAULT_COPTS} -o conftest conftest.c 2> pac_tmp_compile_stderr_opt.out > /dev/null"
-   AC_TRY_EVAL(pac_tmp_compile_stderr_opt)
-   pac_tmp_compile_stderr="$CC $CFLAGS -o conftest conftest.c 2> pac_tmp_compile_stderr.out > /dev/null"
-   AC_TRY_EVAL(pac_tmp_compile_stderr)
-   pac_tmp_compile_stdout_opt="$CC $CFLAGS ${MPI_DEFAULT_COPTS} -o conftest conftest.c 2> /dev/null > pac_tmp_compile_stdout_opt.out"
-   AC_TRY_EVAL(pac_tmp_compile_stdout_opt)
-   pac_tmp_compile_stdout="$CC $CFLAGS -o conftest conftest.c 2> /dev/null > pac_tmp_compile_stdout.out"
-   AC_TRY_EVAL(pac_tmp_compile_stdout)
-   if test "`diff pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out`" != "" -o \
-	   "`diff pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out`" != "" ; then
-	   AC_MSG_RESULT(no)
-	   AC_MSG_WARN([Compiler does not accept default optimizations])
-	   MPI_DEFAULT_COPTS=""
-   else
-	   AC_MSG_RESULT(yes)
-   fi
-   rm -f pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out
-   rm -f conftest*
-fi
-
 # Check whether shared libraries are enabled.  We need to know this
 # before we start chosing the Fortran, Fortran 90, and C++ compilers
 ENABLE_SHLIB=$enable_sharedlibs
@@ -1403,6 +1475,30 @@ AC_SUBST(CREATESHLIB)
 # Set CFLAGS for enable strict if necessary.  Do this *first* because
 # it may influence the output of the other tests
 PAC_CC_STRICT
+if test -n "$pac_cc_strict_flags" ; then
+    MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $pac_cc_strict_flags"
+fi
+
+# Check if $MPI_DEFAULT_COPTS is valid with $CC
+if test "$enable_default_optimize" = "yes" \
+     -a -n "$MPI_DEFAULT_COPTS" ; then
+    PAC_C_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_COPTS], [
+        CFLAGS="$CFLAGS $MPI_DEFAULT_COPTS"
+        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $MPI_DEFAULT_COPTS"
+                               ] )
+fi
+# Up till here, MPICH2_EXTRA_CFLAGS contains only flags added by MPICH2.
+# Check with "grep -n MPICH2_EXTRA_CFLAGS configure.in"
+# Remove duplicated flags from MPICH2_EXTRA_CFLAGS.
+PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_CFLAGS])
+# Check if $MPICH2LIB_CFLAGS is valid with $CC
+if test -n "$MPICH2LIB_CFLAGS" ; then
+    PAC_C_CHECK_COMPILER_OPTION( [$MPICH2LIB_CFLAGS], [
+        CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
+        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $MPICH2LIB_CFLAGS"
+                               ] )
+fi
+
 # Check for support for weak symbols.  If not found, set NO_WEAK_SYM
 # to the Make target name understood by simplemake.
 # Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
@@ -1483,33 +1579,25 @@ elif test "$enable_f77" = "yes" ; then
     FFLAGS=$saveFFLAGS
 fi
 
-MPI_DEFAULT_FOPTS="-O2"
 if test "$enable_f77" = yes ; then
-    if test "$compiler_optimizations" == "yes"; then
-        AC_MSG_CHECKING([whether $F77 accepts default optimizations])
-            rm -f conftest.f
-            cat > conftest.f <<EOF
-program main
-end
-EOF
-        pac_tmp_compile_stderr_opt="$F77 $FFLAGS ${MPI_DEFAULT_FOPTS} -o conftest conftest.f 2> pac_tmp_compile_stderr_opt.out > /dev/null"
-        AC_TRY_EVAL(pac_tmp_compile_stderr_opt)
-        pac_tmp_compile_stderr="$F77 $FFLAGS -o conftest conftest.f 2> pac_tmp_compile_stderr.out > /dev/null"
-        AC_TRY_EVAL(pac_tmp_compile_stderr)
-        pac_tmp_compile_stdout_opt="$F77 $FFLAGS ${MPI_DEFAULT_FOPTS} -o conftest conftest.f 2> /dev/null > pac_tmp_compile_stdout_opt.out"
-        AC_TRY_EVAL(pac_tmp_compile_stdout_opt)
-        pac_tmp_compile_stdout="$F77 $FFLAGS -o conftest conftest.f 2> /dev/null > pac_tmp_compile_stdout.out"
-        AC_TRY_EVAL(pac_tmp_compile_stdout)
-        if test "`diff pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out`" != "" -o \
-		"`diff pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out`" != "" ; then
-            AC_MSG_RESULT(no)
-	    AC_MSG_WARN([Compiler does not accept default optimizations])
-	    MPI_DEFAULT_FOPTS=""
-        else
-            AC_MSG_RESULT(yes)
-        fi
-        rm -f pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out
-        rm -f conftest*
+    # Check if $MPI_DEFAULT_FOPTS is valid with $F77
+    if test "$enable_default_optimize" = "yes" \
+         -a -n "$MPI_DEFAULT_FOPTS" ; then
+        PAC_F77_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_FOPTS], [
+            FFLAGS="$FFLAGS $MPI_DEFAULT_FOPTS"
+            MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS $MPI_DEFAULT_FOPTS"
+                                     ] )
+    fi
+    # Up till here, MPICH2_EXTRA_FFLAGS contains only flags added by MPICH2.
+    # Check with "grep -n MPICH2_EXTRA_FFLAGS configure.in"
+    # Remove duplicated flags from MPICH2_EXTRA_FFLAGS.
+    PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_FFLAGS])
+    # Check if $MPICH2LIB_FFLAGS is valid with $F77
+    if test -n "$MPICH2LIB_FFLAGS" ; then
+        PAC_F77_CHECK_COMPILER_OPTION( [$MPICH2LIB_FFLAGS], [
+            FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
+            MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS $MPICH2LIB_FFLAGS"
+                                     ] )
     fi
 fi
 
@@ -1612,36 +1700,6 @@ if test "$enable_f90" = "yes" -a "$enable_f77" != "yes" ; then
    AC_MSG_WARN([Fortran 90 support requires compatible Fortran 77 support.  To force the use of the Fortran 90 compiler for Fortran 77, set the environment variable F77 to the name of the Fortran 90 compiler.])
    # We should probably do the compatibility test as well
    enable_f77=yes
-fi
-
-MPI_DEFAULT_F90OPTS="-O2"
-if test "$enable_f90" = yes ; then
-    if test "$compiler_optimizations" == "yes"; then
-        AC_MSG_CHECKING([whether $F90 accepts default optimizations])
-            rm -f conftest.f
-            cat > conftest.f <<EOF
-program main
-end
-EOF
-        pac_tmp_compile_stderr_opt="$F90 $F90FLAGS ${MPI_DEFAULT_F90OPTS} -o conftest conftest.f 2> pac_tmp_compile_stderr_opt.out > /dev/null"
-        AC_TRY_EVAL(pac_tmp_compile_stderr_opt)
-        pac_tmp_compile_stderr="$F90 $F90FLAGS -o conftest conftest.f 2> pac_tmp_compile_stderr.out > /dev/null"
-        AC_TRY_EVAL(pac_tmp_compile_stderr)
-        pac_tmp_compile_stdout_opt="$F90 $F90FLAGS ${MPI_DEFAULT_F90OPTS} -o conftest conftest.f 2> /dev/null > pac_tmp_compile_stdout_opt.out"
-        AC_TRY_EVAL(pac_tmp_compile_stdout_opt)
-        pac_tmp_compile_stdout="$F90 $F90FLAGS -o conftest conftest.f 2> /dev/null > pac_tmp_compile_stdout.out"
-        AC_TRY_EVAL(pac_tmp_compile_stdout)
-        if test "`diff pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out`" != "" -o \
-		"`diff pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out`" != "" ; then
-            AC_MSG_RESULT(no)
-	    AC_MSG_WARN([Compiler does not accept default optimizations])
-	    MPI_DEFAULT_F90OPTS=""
-        else
-            AC_MSG_RESULT(yes)
-        fi
-        rm -f pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out
-        rm -f conftest*
-    fi
 fi
 
 # ----------------------------------------------------------------------------
@@ -1914,6 +1972,27 @@ if test "$enable_f90" = "yes" ; then
     PAC_F90_EXT
     F90EXT=$pac_cv_f90_ext
     AC_SUBST(F90EXT)
+
+    # Check if $MPI_DEFAULT_F90OPTS is valid with $F90
+    if test "$enable_default_optimize" = "yes" \
+         -a -n "$MPI_DEFAULT_F90OPTS" ; then
+        PAC_F90_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_F90OPTS], [
+            F90FLAGS="$F90FLAGS $MPI_DEFAULT_F90OPTS"
+            MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS $MPI_DEFAULT_F90OPTS"
+                                     ] )
+    fi
+    # Up till here, MPICH2_EXTRA_F90FLAGS contains only flags added by MPICH2.
+    # Check with "grep -n MPICH2_EXTRA_F90FLAGS configure.in"
+    # Remove duplicated flags from MPICH2_EXTRA_F90FLAGS.
+    PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_F90FLAGS])
+    # Check if $MPICH2LIB_F90FLAGS works with $F90
+    if test -n "$MPICH2LIB_F90FLAGS" ; then
+        PAC_F90_CHECK_COMPILER_OPTION( [$MPICH2LIB_F90FLAGS], [
+            F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"
+            MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS $MPICH2LIB_F90FLAGS"
+                                     ] )
+    fi
+
     #
     # Most systems allow the Fortran compiler to process .F and .F90 files
     # using the C preprocessor.  However, some systems either do not
@@ -2273,35 +2352,32 @@ int main() {
 
 fi
 
-MPI_DEFAULT_CXXOPTS="-O2"
 if test "$enable_cxx" = yes; then
-    if test "$compiler_optimizations" == "yes"; then
-        AC_MSG_CHECKING([whether $CXX accepts default optimizations])
-            rm -f conftest.cpp
-            cat > conftest.cpp <<EOF
-#include <iostream>
-int main() { return 0; }
-EOF
-        pac_tmp_compile_stderr_opt="$CXX $CXXFLAGS ${MPI_DEFAULT_CXXOPTS} -o conftest conftest.cpp 2> pac_tmp_compile_stderr_opt.out > /dev/null"
-        AC_TRY_EVAL(pac_tmp_compile_stderr_opt)
-        pac_tmp_compile_stderr="$CXX $CXXFLAGS -o conftest conftest.cpp 2> pac_tmp_compile_stderr.out > /dev/null"
-        AC_TRY_EVAL(pac_tmp_compile_stderr)
-        pac_tmp_compile_stdout_opt="$CXX $CXXFLAGS ${MPI_DEFAULT_CXXOPTS} -o conftest conftest.cpp 2> /dev/null > pac_tmp_compile_stdout_opt.out"
-        AC_TRY_EVAL(pac_tmp_compile_stdout_opt)
-        pac_tmp_compile_stdout="$CXX $CXXFLAGS -o conftest conftest.cpp 2> /dev/null > pac_tmp_compile_stdout.out"
-        AC_TRY_EVAL(pac_tmp_compile_stdout)
-        if test "`diff pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out`" != "" -o \
-		"`diff pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out`" != "" ; then
-            AC_MSG_RESULT(no)
-	    AC_MSG_WARN([Compiler does not accept default optimizations])
-	    MPI_DEFAULT_CXXOPTS=""
-        else
-            AC_MSG_RESULT(yes)
-        fi
-        rm -f pac_tmp_compile_stderr_opt.out pac_tmp_compile_stderr.out pac_tmp_compile_stdout_opt.out pac_tmp_compile_stdout.out
-        rm -f conftest*
+    # Check if $MPI_DEFAULT_CXXOPTS is valid with $CXX
+    if test "$enable_default_optimize" = "yes" \
+         -a -n "$MPI_DEFAULT_CXXOPTS" ; then
+        PAC_CXX_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_CXXOPTS], [
+            CXXFLAGS="$CXXFLAGS $MPI_DEFAULT_CXXOPTS"
+            MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS $MPI_DEFAULT_CXXOPTS"
+                                     ] )
+    fi
+    # Up till here, MPICH2_EXTRA_CXXFLAGS contains only flags added by MPICH2.
+    # Check with "grep -n MPICH2_EXTRA_CXXFLAGS configure.in"
+    # Remove duplicated flags from MPICH2_EXTRA_CXXFLAGS.
+    PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_CXXFLAGS])
+    # Check if $MPICH2LIB_CXXFLAGS is valid with $CXX
+    if test -n "$MPICH2LIB_CXXFLAGS" ; then
+        PAC_CXX_CHECK_COMPILER_OPTION( [$MPICH2LIB_CXXFLAGS], [
+            CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
+            MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS $MPICH2LIB_CXXFLAGS"
+                                     ] )
     fi
 fi
+
+export MPICH2_EXTRA_CFLAGS
+export MPICH2_EXTRA_CXXFLAGS
+export MPICH2_EXTRA_FFLAGS
+export MPICH2_EXTRA_F90FLAGS
 
 # Copy the mpicxx.h file to the main include directory
 AC_OUTPUT_COMMANDS([if test $enable_cxx = yes ; then 
@@ -2413,7 +2489,7 @@ AC_SUBST(XARGS_NODATA_OPT)
 # This autoconf macro checks for this.
 
 # Note that if an option is added to CFLAGS, that option MUST NOT appear
-# in MPI_CFLAGS (i.e., the options used in mpicc)
+# in WRAPPER_CFLAGS (i.e., the options used in mpicc)
 
 # Also note that it should not be necessary to use this option - it 
 # is almost always possible to avoid "common" symbols, and this approach
@@ -4446,12 +4522,14 @@ fi
 if test "$enable_coverage" = "yes" ; then
     if test "$ac_cv_prog_gcc" = "yes" ; then
         CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
+        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -fprofile-arcs -ftest-coverage"
     else
         AC_MSG_WARN([--enable-coverage only supported for GCC])
     fi
     if test "$enable_cxx" = "yes" ; then
         if test "$ac_cv_cxx_compiler_gnu" = "yes" ; then
             CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage"
+            MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -fprofile-arcs -ftest-coverage"
         else
             AC_MSG_WARN([--enable-coverage only supported for GCC])
         fi
@@ -4461,15 +4539,17 @@ if test "$enable_coverage" = "yes" ; then
     if test "$enable_f77" = yes ; then
         if test "$ac_cv_f77_compiler_gnu" = "yes" ; then
              FFLAGS="$FFLAGS -fprofile-arcs -ftest-coverage"
+             MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -fprofile-arcs -ftest-coverage"
         else
-	     AC_MSG_WARN([--enable-coverage only supported for G77/GFORTRAN])
+            AC_MSG_WARN([--enable-coverage only supported for G77/GFORTRAN])
         fi
     fi
     if test "$enable_f90" = yes ; then
         if test "$ac_cv_f90_compiler_gnu" = "yes" ; then
              F90FLAGS="$F90FLAGS -fprofile-arcs -ftest-coverage"
+             MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -fprofile-arcs -ftest-coverage"
         else
-	     AC_MSG_WARN([--enable-coverage only supported for GFORTRAN])
+            AC_MSG_WARN([--enable-coverage only supported for GFORTRAN])
         fi
     fi
     # Test for the routines that we need to use to ensure that the
@@ -4486,7 +4566,7 @@ AC_HEADER_STDC
 # Grrr.  OS/X fails the test for sys/uio.h because uio *requires* sys/types.h
 # to compile.  Thus, we'll make that a separate test
 # stddef.h is sometimes needed for types like wchar_t
-AC_CHECK_HEADERS(stdlib.h stdarg.h sys/types.h inttypes.h limits.h stddef.h errno.h sys/socket.h sys/time.h unistd.h endian.h)
+AC_CHECK_HEADERS(stdlib.h stdarg.h sys/types.h inttypes.h limits.h stddef.h errno.h sys/socket.h sys/time.h unistd.h endian.h assert.h)
 AC_CACHE_CHECK([for sys/uio.h],ac_cv_header_sys_uio_h,[
 AC_TRY_COMPILE([
 #include <sys/types.h>
@@ -5106,10 +5186,10 @@ export MPICH2_THREAD_PACKAGE
 AC_CHECK_FUNCS(sched_yield yield usleep sleep select)
 
 #
-# THR_LDFLAGS are added to the MPI_LDFLAGS (used to link user MPI programs)
+# THR_LDFLAGS are added to the WRAPPER_LDFLAGS (used to link user MPI programs)
 # THR_CFLAGS should be used only to compile the MPI library, not to compile
 # user programs.  We cannot set CFLAGS to THR_CFLAGS because we will
-# use CFLAGS to set MPI_CFLAGS at the end of this configure step.
+# use CFLAGS to set WRAPPER_CFLAGS at the end of this configure step.
 # FIXME: We need to propagate THR_CFLAGS
 if test "$with_thread_package" != "none" ; then
     if $CC -V 2>&1 | grep -i "sun workshop" 2>&1 >/dev/null ; then
@@ -5245,25 +5325,6 @@ for subsys in $devsubsystems $subsystems ; do
         ac_sub_configure_args="$ac_sub_configure_args $ac_arg" 
 	;;
 
-dnl
-dnl Don't try this because it can fail for environment variables that
-dnl contain quotes (particularly single quotes).  Rather than try to handle
-dnl all of these cases, we just leave off the cache file
-dnl	changequote(<<,>>)    
-dnl        *=*) 
-dnl        ac_envvar=`expr "x$ac_arg" : 'x\([^=]*\)='`
-dnl	# Recompute the name
-dnl	if test -n "$ac_envvar" ; then
-dnl 	    eval ac_envval=\$"$ac_envvar"
-dnl  	    if test -n "$ac_envval" ; then
-dnl	        ac_narg="$ac_envvar=""'"$ac_envval""'"
-dnl	        ac_sub_configure_args="$ac_sub_configure_args '$ac_narg'"
-dnl            fi
-dnl	else 
-dnl	    ac_sub_configure_args="$ac_sub_configure_args $ac_arg"
-dnl        fi
-dnl    ;;
-dnl
 dnl Here's the problem.  If the user sets a few of the special variables
 dnl such as CPPFLAGS, those original settings will override the
 dnl updated values.  Here's an attempt at a fix
@@ -5278,24 +5339,17 @@ dnl updated values.  Here's an attempt at a fix
 
 	# add in the correct prefix argument
         ac_sub_configure_args="--prefix=$prefix $ac_sub_configure_args"
-dnl	# If there is a cache file, try to use it
-dnl	if test -n "$cache_file" ; then
-dnl	   case $cache_file in 
-dnl	       [\\/]* | ?:[\\/]* ) ac_sub_cache_file=$cache_file ;;
-dnl	       *) # Relative path.
-dnl	       	ac_sub_cache_file=$ac_top_builddir$cache_file ;;
-dnl	   esac
-dnl	   ac_sub_configure_args="--cache-file=$ac_sub_cache_file $ac_sub_configure_args"
-dnl        elif test -n "$pac_cache_file" ; then
-dnl	    # pac_cache_file is a temporary file
-dnl 	    ac_sub_configure_args="--cache-file=$pac_cache_file $ac_sub_configure_args"
-dnl	fi
-dnl	changequote([,])	
 
 	# Create the directories if necessary
         PAC_MKDIRS($subsys)
 	# We use eval to handle quotes around the arguments added by
 	# autoconf when saving the args
+
+	dnl Copy current CFLAGS, FFLAGS, etc., into
+	dnl MPICH2_INTERNAL_CFLAGS, etc., and export them to the
+	dnl sub-configures. If the sub-configures want, they can replace their
+	dnl CFLAGS with the current CFLAGS through this variable.
+	PAC_MPICH2_INIT()
         if (cd $subsys && eval $use_top_srcdir/$subsys/configure $ac_sub_configure_args ) ; then
 	    :
 	else 
@@ -5502,46 +5556,28 @@ else
     MPI_MAX_PROCESSOR_NAME=$MPID_MAX_PROCESSOR_NAME
 fi
 AC_SUBST(MPI_MAX_PROCESSOR_NAME)
-# -----------------------------------------------------------------------------
-# Set the libraries to use in building programs
-if test "$NEEDSPLIB" = "yes" ; then
-    EXAMPLE_LIBS="-l$PMPILIBNAME -l$MPILIBNAME $LIBS"
-else
-    EXAMPLE_LIBS="-l$MPILIBNAME $LIBS"
-fi
-AC_SUBST(EXAMPLE_LIBS)
+
 # default settings for compiler and linker flags 
 # Note:
-#   The MPI_CFLAGS must not contain *all* of the CFLAGS, just the 
+#   The WRAPPER_CFLAGS must not contain *all* of the CFLAGS, just the 
 #   flags needed to compile with the mpi.h header.  Normally, no flags
 #   should be required to compile MPI programs (otherwise, users that choose
 #   not to use the compile scripts will submit bug reports).
-#   For now, we try using no extra Flags.  (Never, ever set MPI_CFLAGS to 
+#   For now, we try using no extra Flags.  (Never, ever set WRAPPER_CFLAGS to 
 #   $CFLAGS)
 #
-# Unlike MPI_CFLAGS, the linker flags will always be needed to ensure that 
+# Unlike WRAPPER_CFLAGS, the linker flags will always be needed to ensure that 
 # all of the required libraries are present.
-MPI_LDFLAGS="$MPI_LDFLAGS $LDFLAGS $THR_LDFLAGS"
-AC_SUBST(MPI_CFLAGS)
-AC_SUBST(MPI_FFLAGS)
-AC_SUBST(MPI_CXXFLAGS)
-AC_SUBST(MPI_F90FLAGS)
-AC_SUBST(MPI_LDFLAGS)
+WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS $LDFLAGS $THR_LDFLAGS"
+AC_SUBST(WRAPPER_CFLAGS)
+AC_SUBST(WRAPPER_CXXFLAGS)
+AC_SUBST(WRAPPER_FFLAGS)
+AC_SUBST(WRAPPER_F90FLAGS)
+AC_SUBST(WRAPPER_LDFLAGS)
 #
 # Add a definition that is used to help support Windows DLLs (used in mpi.h.in)
 MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
 AC_SUBST(MPIU_DLL_SPEC_DEF)
-
-# Get the location of the SVN repository, if present
-    # We can use this test for creating maintainer targets
-    # as well, and tests for maintainer-required software, such as 
-    # doctext
-if test -d .svn ; then
-    MPISVNHOME=`svn info . | sed -n "/Repository Root: /s/Repository Root: //p"`
-elif test -d "$srcdir/.svn" ; then
-    MPISVNHOME=`svn info $srcdir | sed -n "/Repository Root: /s/Repository Root: //p"`
-fi
-AC_SUBST(MPISVNHOME)
 
 dnl We can include external packages at configure/build time by 
 dnl adding them to EXTERNAL_SRC_DIRS.
@@ -5700,46 +5736,19 @@ AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
 # MPICH must be placed in the "usual" places, e.g. CFLAGS (the values
 # are captured during the [AC_INIT] step).
 #
-# Normally, the flags used in 1 and 2 will be the same.  If, for some
-# reason, the user needs different flags in the compilation scripts,
-# they can override the choice in CFLAGS etc. by setting MPI_CFLAGS.
+# Normally, the flags used in 1 and 2 will be the same.  If the user needs
+# different flags in the building MPICH2 libraries than those in the
+# compilation scripts, they can set CFLAGS and MPICH2LIB_CFLAGS during
+# configure, where $CFLAGS + $MPICH2LIB_CFLAGS will be used to build
+# MPICH2 libraries, only $CFLAGS will be used in the MPI compiler
+# wrapper script.
 #
-AC_ARG_VAR( MPI_CFLAGS, [CFLAGS to be added to mpicc; assign this to MPI_FLAGS_EMPTY for no CFLAGS] )
-if test "$MPI_CFLAGS" = "MPI_FLAGS_EMPTY" ; then
-   MPI_CFLAGS=""
-elif test -z "$MPI_CFLAGS" -a -n "$CFLAGS" ; then
-    MPI_CFLAGS="$CFLAGS"
-fi
-CFLAGS="$CFLAGS $MPI_DEFAULT_COPTS"
+AC_ARG_VAR( MPICH2LIB_CFLAGS, [extra CFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpicc script(Only standard CFLAGS will be used in the mpicc script).  CFLAGS and MPICH2LIB_CFLAGS are non-overlapping] )
+AC_ARG_VAR( MPICH2LIB_CXXFLAGS, [extra CXXFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpicxx script(Only standard CXXFLAGS will be used in the mpicxx script).  CXXFLAGS and MPICH2LIB_CXXFLAGS are non-overlapping.] )
+AC_ARG_VAR( MPICH2LIB_FFLAGS, [extra FFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpif77 script(Only standard FFLAGS will be used in the mpif77 script).  FFLAGS and MPICH2LIB_FFLAGS are non-overlapping.] )
+AC_ARG_VAR( MPICH2LIB_F90FLAGS, [extra F90FLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpif90 script(Only standard F90FLAGS will be used in the mpif90 script).  F90FLAGS and MPICH2LIB_F90FLAGS are non-overlapping.] )
 
-AC_ARG_VAR( MPI_CXXFLAGS, [CXXFLAGS to be added to mpicc; assign this to MPI_FLAGS_EMPTY for no CXXFLAGS] )
-if test "MPI_CXXFLAGS" = "MPI_FLAGS_EMPTY" ; then
-   MPI_CXXFLAGS=""
-elif test -z "$MPI_CXXFLAGS" -a -n "$CXXFLAGS" ; then
-    MPI_CXXFLAGS="$CXXFLAGS"
-fi
-CXXFLAGS="$CXXFLAGS $MPI_DEFAULT_CXXOPTS"
-
-AC_ARG_VAR( MPI_FFLAGS, [FFLAGS to be added to mpicc; assign this to MPI_FLAGS_EMPTY for no FFLAGS] )
-if test "MPI_FFLAGS" = "MPI_FLAGS_EMPTY" ; then
-   MPI_FFLAGS=""
-elif test -z "$MPI_FFLAGS" -a -n "$FFLAGS" ; then
-    MPI_FFLAGS="$FFLAGS"
-fi
-FFLAGS="$FFLAGS $MPI_DEFAULT_FOPTS"
-
-AC_ARG_VAR( MPI_F90FLAGS, [F90FLAGS to be added to mpicc; assign this to MPI_FLAGS_EMPTY for no F90FLAGS] )
-if test "MPI_F90FLAGS" = "MPI_FLAGS_EMPTY" ; then
-   MPI_F90FLAGS=""
-elif test -z "$MPI_F90FLAGS" -a -n "$F90FLAGS" ; then
-    MPI_F90FLAGS="$F90FLAGS"
-fi
-F90FLAGS="$F90FLAGS $MPI_DEFAULT_F90OPTS"
-
-export MPI_CFLAGS
-export MPI_FFLAGS
-export MPI_CXXFLAGS
-export MPI_F90FLAGS
+# AC_ARG_VAR( MPICH2LIB_LDFLAGS, [extra LDFLAGS used in building MPICH2 libraries, this flags won't be used in any of mpiXXX script.  LDFLAGS and MPICH2LIB_LDFLAGS are non-overlapping.] )
 
 # For the examples, we want to use the scripts to encourage users
 # to use them and to make them work more robustly with shared libraries
@@ -5760,6 +5769,8 @@ AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h f
 # CPPFLAGS
 CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 
+dnl Place holder macro for finalize
+PAC_MPICH2_FINALIZE()
 
 dnl
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig

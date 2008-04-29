@@ -113,11 +113,11 @@ clean_include:
 
 clean_bin:
 	@-for file in $(binbuild_dir)/* ; do \
-	      suffix="`echo $$file|sed -e 's%\.% %'|awk '{print $$NF}' -`" ; \
-	      if [ "X$$suffix" != "Xin" ] ; then \
-	          $(RM) -f $$file ; \
-	      fi ; \
-	  done;
+	      case "$$file" in \
+	          *.in) ;; \
+	          *) $(RM) -f $$file ;; \
+	      esac ; \
+	  done
 
 clean_lib:
 	 -$(RM) -f $(libbuild_dir)/lib*

@@ -47,7 +47,8 @@ MPI_F77=${MPI_F77:-${F77}}
 MPE_FLINKER=${MPE_FLINKER}
 FINC_PATH_LEADER=${FINC_PATH_LEADER:-"-I"}
 FLIB_PATH_LEADER=${FLIB_PATH_LEADER:-"-L"}
-MPI_INC=${MPI_INC}
+MPI_CFLAGS=${MPI_CFLAGS}
+MPI_FFLAGS=${MPI_FFLAGS}
 MPI_LIBS=${MPI_LIBS}
 
 MPE_LIBNAME=${MPE_LIBNAME:-mpe}
@@ -109,7 +110,7 @@ AC_ARG_WITH( checkMPIO,
 enable_checkMPIO=yes )
 
 dnl  Ideally, enable_f2cmpilib should be extracted from the
-dnl  CC/MPI_CC/MPI_INC/MPI_LIBS supplied by the user of MPE.
+dnl  CC/MPI_CC/MPI_CFLAGS/MPI_LIBS supplied by the user of MPE.
 dnl  enable_f2cmpilib is used to determine if libmpe_f2cmpi.a( mpe_proff.o )
 dnl  is needed for profiling of fortran MPI program
 dnl  withOUT a PMPICH type of profiling library.
@@ -326,7 +327,7 @@ dnl Check if Thread-support level in MPI implementation
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     if test "$enable_checkMPI" = "yes" ; then
         AC_MSG_CHECKING( [for the C version of MPI_Init_thread] )
-        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                               [ int itmp; int thread_level ],
                               [
     itmp=MPI_Init_thread( NULL, NULL, MPI_THREAD_MULTIPLE, &thread_level )
@@ -335,7 +336,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
         if test "$mpe_link_ok" = "yes" ; then
             AC_MSG_RESULT(yes)
             AC_MSG_CHECKING( [for the C version of PMPI_Init_thread] )
-            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                   [ int itmp; int thread_level],
                                   [
     itmp=PMPI_Init_thread( NULL, NULL, MPI_THREAD_MULTIPLE, &thread_level )
@@ -365,7 +366,7 @@ dnl Check MPI-IO
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     if test "$enable_checkMPI" = "yes" -a "$enable_checkMPIO" = "yes" ; then
         AC_MSG_CHECKING( [for the C version of MPI_File_open()] )
-        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                               [ int itmp; MPI_File fh ],
                               [
     itmp=MPI_File_open( MPI_COMM_WORLD, "mpiiotest",
@@ -375,7 +376,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
         if test "$mpe_link_ok" = "yes" ; then
             AC_MSG_RESULT(yes)
             AC_MSG_CHECKING( [for the C version of PMPI_File_open()] )
-            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                   [ int itmp; MPI_File fh ],
                                   [
     itmp=PMPI_File_open( MPI_COMM_WORLD, "mpiiotest",
@@ -386,7 +387,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
                 AC_MSG_RESULT(yes)
                 AC_DEFINE( HAVE_MPI_IO, 1, [Define if MPI-IO available] )
                 AC_MSG_CHECKING( [for ROMIO's MPIO_Request] )
-                PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                       [ MPIO_Request  io_request], ,
                                       [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
                 if test "$mpe_link_ok" = "yes" ; then
@@ -415,7 +416,7 @@ dnl Check MPI-RMA
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     if test "$enable_checkMPI" = "yes" ; then
         AC_MSG_CHECKING( [for the C version of MPI_Win_create] )
-        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                               [ int itmp; MPI_Win win ],
                               [
     itmp=MPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win )
@@ -424,7 +425,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
         if test "$mpe_link_ok" = "yes" ; then
             AC_MSG_RESULT(yes)
             AC_MSG_CHECKING( [for the C version of PMPI_Win_create] )
-            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                   [ int itmp; MPI_Win win ],
                                   [
     itmp=PMPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win )
@@ -436,7 +437,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
 
                 dnl Start Test of MPI_Win_lock/unlock
                 AC_MSG_CHECKING([for the C version of MPI_Win_lock/unlock])
-                PAC_MPI_LINK_CC_FUNC($MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                PAC_MPI_LINK_CC_FUNC($MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                      [ int itmp; MPI_Win win ],
                                      [
     itmp=MPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win );
@@ -447,8 +448,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
                 if test "$mpe_link_ok" = "yes" ; then
                     AC_MSG_RESULT(yes)
                     AC_MSG_CHECKING([for the C version of PMPI_Win_lock/unlock])
-                    PAC_MPI_LINK_CC_FUNC($MPI_CC, [$CFLAGS $MPI_INC],
-                                         $MPI_LIBS, ,
+                    PAC_MPI_LINK_CC_FUNC($MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                          [ int itmp; MPI_Win win ],
                                          [
     itmp=PMPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win );
@@ -471,7 +471,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
 
                 dnl Start Test of MPI_Win_test
                 AC_MSG_CHECKING([for the C version of MPI_Win_test])
-                PAC_MPI_LINK_CC_FUNC($MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                PAC_MPI_LINK_CC_FUNC($MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                      [ int itmp, flag; MPI_Win win ],
                                      [
     itmp=MPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win );
@@ -481,8 +481,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
                 if test "$mpe_link_ok" = "yes" ; then
                     AC_MSG_RESULT(yes)
                     AC_MSG_CHECKING([for the C version of PMPI_Win_test])
-                    PAC_MPI_LINK_CC_FUNC($MPI_CC, [$CFLAGS $MPI_INC],
-                                         $MPI_LIBS, ,
+                    PAC_MPI_LINK_CC_FUNC($MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                          [ int itmp, flag; MPI_Win win ],
                                          [
     itmp=PMPI_Win_create( NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win );
@@ -524,7 +523,7 @@ dnl Check MPI-2 communicator functions
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     if test "$enable_checkMPI" = "yes" ; then
         AC_MSG_CHECKING( [for the C version of MPI_Comm_connect/accept()] )
-        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                               [ MPI_Comm intercomm; char *port ],
                               [
     MPI_Comm_connect( port, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &intercomm );
@@ -534,7 +533,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
         if test "$mpe_link_ok" = "yes" ; then
             AC_MSG_RESULT(yes)
             AC_MSG_CHECKING( [for the C version of PMPI_Comm_connect/accept()] )
-            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                   [ MPI_Comm intercomm; char *port ],
                                   [
     PMPI_Comm_connect( port, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &intercomm );
@@ -548,7 +547,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
 
                 dnl Start of Checking of MPI2 Naming Service
                 AC_MSG_CHECKING( [for the C version of MPI_Publish/Lookup_name()] )
-                PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+                PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                       [ char *port ],
                                       [
     MPI_Publish_name( "mpe_port_name", MPI_INFO_NULL, port );
@@ -559,8 +558,7 @@ if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
                 if test "$mpe_link_ok" = "yes" ; then
                     AC_MSG_RESULT(yes)
                     AC_MSG_CHECKING( [for the C version of PMPI_Publish/Lookup_name()] )
-                    PAC_MPI_LINK_CC_FUNC($MPI_CC, [$CFLAGS $MPI_INC],
-                                         $MPI_LIBS, ,
+                    PAC_MPI_LINK_CC_FUNC($MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                                          [ char *port ],
                                          [
     PMPI_Publish_name( "mpe_port_name", MPI_INFO_NULL, port );
@@ -597,7 +595,7 @@ fi
 dnl   Determine if MPI_STATUS_IGNORE exists
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     AC_MSG_CHECKING( [for MPI_STATUS_IGNORE] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [
               MPI_Status*     tmp_status;
               tmp_status = MPI_STATUS_IGNORE;
@@ -618,7 +616,7 @@ fi
 dnl   Determine if MPI_STATUSES_IGNORE exists
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     AC_MSG_CHECKING( [for MPI_STATUSES_IGNORE] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [
               MPI_Status*     tmp_status;
               tmp_status = MPI_STATUSES_IGNORE;
@@ -720,7 +718,7 @@ if test "${F2CMPI_LIBS}" = "-l${F2CMPI_LIBNAME}" \
 dnl Determine MPI_Fint
 dnl (same test done in graphics's configure.in)
     AC_MSG_CHECKING( [for MPI_Fint] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Fint aa=1 ], ,
                           [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
     if test "$mpe_link_ok" = "yes" ; then
@@ -734,7 +732,7 @@ dnl (same test done in graphics's configure.in)
 
 dnl Determine if MPI_F_STATUS_IGNORE exists
     AC_MSG_CHECKING( [for MPI_F_STATUS_IGNORE] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [
               ${MPI_FINT_TYPE}  *f_status;
               f_status = MPI_F_STATUS_IGNORE;
@@ -748,7 +746,7 @@ fi
 
 dnl Determine if MPI_F_STATUSES_IGNORE exists
     AC_MSG_CHECKING( [for MPI_F_STATUSES_IGNORE] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [
               ${MPI_FINT_TYPE}  *f_statuses;
               f_statuses = MPI_F_STATUSES_IGNORE;
@@ -763,7 +761,7 @@ fi
 dnl Determmine if MPI_Comm_f2c() and MPI_Comm_c2f() are there
 dnl (same test done in graphics's configure.in)
     AC_MSG_CHECKING( [for MPI_Comm_c2f() and MPI_Comm_f2c()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Comm comm; ${MPI_FINT_TYPE} aa; ],
                           [
                           aa=MPI_Comm_c2f(comm) ;
@@ -790,7 +788,7 @@ dnl (same test done in graphics's configure.in)
                            [Undefined CROSS_MPI_STATUS_SIZE! Exiting...] )
         fi
     else
-dnl    PAC_MPI_RUN_F77_PGM( $MPI_F77, [$FFLAGS $MPI_INC],
+dnl    PAC_MPI_RUN_F77_PGM( $MPI_F77, [$MPI_FFLAGS],
 dnl                         $F77, $FFLAGS, $LIBS, [
 dnl      program get_mpi_status_size
 dnl      include 'mpif.h'
@@ -800,7 +798,7 @@ dnl      write(10,*) MPI_STATUS_SIZE
 dnl      close(10)
 dnl      end
 dnl                         ], [ mpe_run_ok=yes ], [ mpe_run_ok=no ] )
-        PAC_MPI_RUN_CC_PGM( $MPI_CC, [$CFLAGS $MPI_INC],
+        PAC_MPI_RUN_CC_PGM( $MPI_CC, [$MPI_CFLAGS],
                             $CC, $CFLAGS, $LIBS, [
 #include <stdio.h>
 #include "mpi.h"
@@ -834,7 +832,7 @@ main()
 
 #   Determmine if MPI_Status_f2c() and MPI_Status_c2f() are there
     AC_MSG_CHECKING( [for MPI_Status_c2f() and MPI_Status_f2c()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [[
                           MPI_Status        c_status;
                           ${MPI_FINT_TYPE}  f_status[ ${mpe_MPI_STATUS_SIZE} ];
@@ -853,7 +851,7 @@ main()
 
 #   Determmine if MPI_Type_f2c() and MPI_Type_c2f() are there
     AC_MSG_CHECKING( [for MPI_Type_c2f() and MPI_Type_f2c()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Datatype type; ${MPI_FINT_TYPE} aa; ],
                           [ 
                           aa=MPI_Type_c2f(type) ;
@@ -868,7 +866,7 @@ main()
 
 #   Determmine if MPI_Group_f2c() and MPI_Group_c2f() are there
     AC_MSG_CHECKING( [for MPI_Group_c2f() and MPI_Group_f2c()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Group group; ${MPI_FINT_TYPE} aa; ],
                           [ 
                           aa=MPI_Group_c2f(group) ;
@@ -883,7 +881,7 @@ main()
 
 #   Determmine if MPI_Request_f2c() and MPI_Request_c2f() are there
     AC_MSG_CHECKING( [for MPI_Request_c2f() and MPI_Request_f2c()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Request request; ${MPI_FINT_TYPE} aa; ],
                           [ 
                           aa=MPI_Request_c2f(request) ;
@@ -898,7 +896,7 @@ main()
 
 #   Determmine if MPI_Op_f2c() and MPI_Op_c2f() are there
     AC_MSG_CHECKING( [for MPI_Op_c2f() and MPI_Op_f2c()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Op op; ${MPI_FINT_TYPE} aa; ],
                           [ 
                           aa=MPI_Op_c2f(op) ;
@@ -913,7 +911,7 @@ main()
 
 #   Determmine if MPI_Errhandler_f2c() and MPI_Errhandler_c2f() are there
     AC_MSG_CHECKING( [for MPI_Errhandler_c2f() and MPI_Errhandler_f2c()] )
-    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$CFLAGS $MPI_INC], $MPI_LIBS, ,
+    PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Errhandler errhandler; ${MPI_FINT_TYPE} aa; ],
                           [ 
                           aa=MPI_Errhandler_c2f(errhandler) ;
@@ -951,7 +949,7 @@ main()
         AC_MSG_CHECKING( [for the Fortran logical values in MPI C program] )
         mpe_tmpfile=mpe_f77logicals
         PAC_MPI_RUN_F77_FUNC_FROM_C( $F77, $FFLAGS,
-                                     $MPI_CC, [-I../.. $CFLAGS $MPI_INC],
+                                     $MPI_CC, [-I../.. $MPI_CFLAGS],
                                      $CC, [$CFLAGS], $LIBS, [
       subroutine ftest( itrue, ifalse )
       logical itrue, ifalse
@@ -1027,7 +1025,8 @@ AC_SUBST(MPI_F77)
 AC_SUBST(MPE_FLINKER)
 AC_SUBST(FINC_PATH_LEADER)
 AC_SUBST(FLIB_PATH_LEADER)
-AC_SUBST(MPI_INC)
+AC_SUBST(MPI_CFLAGS)
+AC_SUBST(MPI_FFLAGS)
 AC_SUBST(MPI_LIBS)
 
 AC_SUBST(LOG_LIBNAME)

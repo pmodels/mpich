@@ -14,6 +14,13 @@ if test -n "$CONFIGURE_ARGS" ; then
     echo "Configuring with args $CONFIGURE_ARGS"
 fi
 
+if test "$FROM_MPICH2" = "yes" ; then
+    CFLAGS="$MPICH2_INTERNAL_CFLAGS"
+    CXXFLAGS="$MPICH2_INTERNAL_CXXFLAGS"
+    FFLAGS="$MPICH2_INTERNAL_FFLAGS"
+    F90FLAGS="$MPICH2_INTERNAL_F90FLAGS"
+fi
+
 AC_CONFIG_HEADER(adio/include/romioconf.h)
 
 dnl
@@ -93,7 +100,7 @@ MPIO_REQ_REAL_POBJECTS="_iotest.o _iowait.o _iowaitall.o _iowaitany.o _iotestall
 #
 have_aio=no
 #
-known_filesystems="nfs ufs pfs pvfs pvfs2 testfs xfs panfs gridftp"
+known_filesystems="nfs ufs pfs pvfs pvfs2 testfs xfs panfs gridftp lustre bgl bglockless"
 known_mpi_impls="mpich2_mpi mpich_mpi sgi_mpi hp_mpi cray_mpi lam_mpi"
 #
 # Defaults
@@ -326,7 +333,7 @@ fi
 #
 C_DEBUG_FLAG="-g"
 F77_DEBUG_FLAG="-g"
-C_OPT_FLAG=${CFLAGS:-"-O"}
+# C_OPT_FLAG=${CFLAGS:-"-O"}
 # MPICH1 uses OPTFLAGS and OPTFLAGSC to specify separate optimization
 # flags for the C compiler (this is better that adding it to the
 # undifferentiated CFLAGS, at least on input).
@@ -413,6 +420,7 @@ case $ARCH in
 esac
 
 AC_PROG_CC
+
 if test "$NOF77" != 1 ; then
     # Grrr.   The autoconf test for F77 will abort the configure
     # if no compiler is found.  We'd prefer to simply turn off
@@ -427,7 +435,6 @@ if test $DEBUG = "yes" ; then
 else 
     CFLAGS="$CFLAGS $C_OPT_FLAG"
 fi
-
 # ---------------------------------------------------------------------------
 # Here go the rest of the tests
 # ---------------------------------------------------------------------------
@@ -1053,14 +1060,20 @@ FILE_SYSTEM="testfs $FILE_SYSTEM"
 # - if we can find 'pvfs2-config' in our path, we can use it to set CFLAGS,
 #   LIBS, and LDFLAGS accordingly
 # - as a fallback, use CFLAGS, LIBS, and LDFLAGS passed in by the user
+# - don't do any of this if --with-file-system was given and did not include
+#   'pvfs2': i.e. don't surprise the user with pvfs support.
 
-AC_PATH_PROG(PVFS2_CONFIG, pvfs2-config, notfound, [$PATH:${with_pvfs2}/bin])
+AC_PATH_PROG(PVFS2_CONFIG, pvfs2-config, notfound, [${with_pvfs2}/bin:$PATH])
 if test $PVFS2_CONFIG != "notfound" ; then
-	CFLAGS="$CFLAGS $( $PVFS2_CONFIG --cflags)"
-	LIBS="$LIBS $( $PVFS2_CONFIG --libs)"
-	ROMIO_LIBLIST="$ROMIO_LIBLIST $LIBS"
-	FILE_SYSTEM="pvfs2 $FILE_SYSTEM"
-	file_system_pvfs2=1
+	if test -n "${with_pvfs2}" -o -n "${file_system_pvfs2}" ; then
+		# the user either told us where pvfs is or asked for it in
+		# --with-file-system (or both)
+		CFLAGS="$CFLAGS $( $PVFS2_CONFIG --cflags)"
+		LIBS="$LIBS $( $PVFS2_CONFIG --libs)"
+		ROMIO_LIBLIST="$ROMIO_LIBLIST $LIBS"
+		FILE_SYSTEM="pvfs2 $FILE_SYSTEM"
+		file_system_pvfs2=1
+	fi
 fi
 
 if test "$PVFS2_CONFIG" = "notfound" -a -n "$with_pvfs2" ; then
@@ -1087,6 +1100,15 @@ fi
 if test -n "$file_system_ufs"; then
     AC_DEFINE(ROMIO_UFS,1,[Define for ROMIO with UFS])
 fi
+if test -n "$file_system_bgl"; then	
+    AC_DEFINE(ROMIO_BGL,1,[Define for ROMIO with BGL])
+fi
+if test -n "$file_system_bglockless"; then
+    if test x"$file_system_bgl" = x ; then
+	    AC_MSG_ERROR("bglockless requested without bgl")
+    fi
+    AC_DEFINE(ROMIO_BGLOCKLESS,1,[Define for lock-free ROMIO with BGL])
+fi
 if test -n "$file_system_hfs"; then
     AC_DEFINE(ROMIO_HFS,1,[Define for ROMIO with HFS])
 fi
@@ -1100,6 +1122,9 @@ fi
 
 if test -n "$file_system_testfs"; then
     AC_DEFINE(ROMIO_TESTFS,1,[Define for ROMIO with TESTFS])
+fi
+if test -n "$file_system_lustre"; then
+    AC_DEFINE(ROMIO_LUSTRE,1,[Define for ROMIO with LUSTRE])
 fi
 
 if test -n "$file_system_xfs"; then
@@ -1218,6 +1243,10 @@ if test -n "$file_system_gridftp"; then
 	AC_DEFINE(ROMIO_GRIDFTP, 1, [Define for ROMIO with gridftp])
 fi
 
+if test -n "$file_system_bgl"; then
+    SYSDEP_INC=-I${prefix}/include
+else
+    SYSDEP_INC=
 #
 # Check for presence and characteristics of async. I/O calls if
 # not disabled.
@@ -1353,8 +1382,8 @@ if test "$have_aio_h" = "yes" -o "$have_sys_aio_h" = "yes" -o "x$disable_aio" = 
 	AC_MSG_RESULT(yes),
 	aio_runs=no
 	AC_MSG_RESULT(no),
-	aio_runs=unknown
-	AC_MSG_RESULT(unknown)
+	aio_runs=no
+	AC_MSG_RESULT(no: aio routines disabled when cross compiling)
     )
     if test "$aio_runs" != "no" ; then
 	AC_DEFINE(ROMIO_HAVE_WORKING_AIO, 1, Define if AIO calls seem to work)
@@ -1394,8 +1423,8 @@ if test "$have_aio_h" = "yes" -o "$have_sys_aio_h" = "yes" -o "x$disable_aio" = 
 	AC_MSG_RESULT(yes),
 	aio_two_arg_write=no 
 	AC_MSG_RESULT(no),
-	aio_two_arg_write=unknown
-	AC_MSG_RESULT(unknown)
+	aio_two_arg_write=no
+	AC_MSG_RESULT(no: cannot test when cross-compiling)
     )
 
     if test "$aio_two_arg_write" != "no" -a "$aio_runs" != "yes" ; then
@@ -1426,8 +1455,8 @@ if test "$have_aio_h" = "yes" -o "$have_sys_aio_h" = "yes" -o "x$disable_aio" = 
 	AC_MSG_RESULT(yes),
 	aio_two_arg_suspend=no 
 	AC_MSG_RESULT(no),
-	aio_two_arg_suspend=unknown
-	AC_MSG_RESULT(unknown)
+	aio_two_arg_suspend=no
+	AC_MSG_RESULT(no: cannot test when cross compiling)
     )
 
     if test "$aio_two_arg_suspend" != "no" -a "$aio_runs" != "yes" ; then
@@ -1553,6 +1582,7 @@ if test "$have_aio_h" = "yes" -o "$have_sys_aio_h" = "yes" -o "x$disable_aio" = 
 	AC_MSG_RESULT(no)
     )
 	
+fi
 fi
 # End of aio-related tests
 
@@ -1987,6 +2017,23 @@ else
    F77MPIOINC="include 'mpiof.h'"
 fi
 
+AC_CHECK_HEADERS(unistd.h,
+        AC_MSG_CHECKING([for large file defines])
+        AC_TRY_COMPILE([
+                #include <unistd.h>
+                ], [
+                #ifndef _LFS64_LARGEFILE
+                #error no largefile defines
+                #endif
+                ],
+                CFLAGS="${CFLAGS} -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
+                AC_MSG_RESULT(yes),
+                AC_MSG_RESULT(none) )
+        )
+
+echo "setting SYSDEP_INC to $SYSDEP_INC"
+AC_SUBST(SYSDEP_INC)
+
 PAC_C_RESTRICT
 PAC_C_GNU_ATTRIBUTE
 
@@ -2099,12 +2146,15 @@ AC_OUTPUT(Makefile localdefs mpi-io/Makefile mpi2-other/info/Makefile \
 		   test/runtests util/romioinstall include/mpio.h \
 		   include/mpiof.h \
 		   adio/ad_nfs/Makefile adio/ad_ufs/Makefile \
+		   adio/ad_bgl/Makefile \
+		   adio/ad_bglockless/Makefile \
 		   adio/ad_panfs/Makefile \
 		   adio/ad_xfs/Makefile \
 		   adio/ad_sfs/Makefile adio/ad_pfs/Makefile \
 		   adio/ad_testfs/Makefile adio/ad_pvfs/Makefile \
 		   adio/ad_pvfs2/Makefile \
 		   adio/ad_gridftp/Makefile \
+  		   adio/ad_lustre/Makefile \
                    mpi-io/fortran/Makefile mpi2-other/info/fortran/Makefile \
                    mpi2-other/array/fortran/Makefile test/fmisc.f \
                    test/fcoll_test.f test/pfcoll_test.f test/fperf.f \

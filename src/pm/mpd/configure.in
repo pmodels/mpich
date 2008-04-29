@@ -2,6 +2,15 @@ dnl Process this file with autoconf to produce a configure script.
 # Autoconf initialization:
 AC_INIT(mpdroot.h)
 AC_PREREQ(2.59)
+
+dnl The MPICH2 top-level configure adds a bunch of flags to the
+dnl user-defined CFLAGS by processing different configure command-line
+dnl arguments (--enable-g, --enable-default-optimization). These updated
+dnl flags are passed down as a separate flag. Here, we don't care about
+dnl the user-defined flags, but rather this updated flags, so we just
+dnl overwrite CFLAGS with them.
+PAC_SUBCONFIG_INIT()
+
 # Autoconf header:
 rm -f ${srcdir}/mpdconf.h mpdconf.h
 AC_CONFIG_HEADER(mpdconf.h)
@@ -15,6 +24,10 @@ AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 ])
 AH_BOTTOM([#endif])
 
+dnl Set the directory that contains support scripts such as install-sh and
+dnl config.guess
+AC_CONFIG_AUX_DIR(../../../confdb)
+
 dnl Process configure arguments
 AC_ARG_ENABLE(echo,
    [--enable-echo - turn on echoing from within configure script],
@@ -24,12 +37,6 @@ if test -n "$CONFIGURE_ARGS" ; then
     echo "Configuring with args $CONFIGURE_ARGS"
 fi
 AC_SUBST(COPTIONS)
-dnl add --enable-strict and --enable-g
-
-AC_ARG_ENABLE(g, [--enable-g  - turn on debugging flags ] )
-if test "$enable_g" = "yes" -o "$enable_g" = "all" ; then
-    COPTIONS="${COPTIONS} -g"
-fi
 
 dnl Checks for programs.
 dnl Determine the executable and object file extensions.  These
@@ -185,5 +192,9 @@ AC_SUBST(MPD_HOME)
 dnl
 dnl Dependency handling
 AC_SUBST(MAKE_DEPEND_C)
+
+dnl Place holder macro for finalization
+PAC_SUBCONFIG_FINALIZE()
+
 # AC_OUTPUT_COMMANDS(chmod +x startdaemons)
 AC_OUTPUT(Makefile)

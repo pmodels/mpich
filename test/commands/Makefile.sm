@@ -24,7 +24,7 @@ MPIF77 = $(bindir)/mpif77
 	$(MPICXX) -c $<
 
 testing:
-	./cmdtests
+#	./cmdtests
 
 clean-local:
 	-rm -f err.txt out.log out.txt stdintest stdintest2 sdtiotest a.out

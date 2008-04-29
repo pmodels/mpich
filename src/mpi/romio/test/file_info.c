@@ -153,6 +153,7 @@ int main(int argc, char **argv)
 	    if (verbose) fprintf(stderr, "unexpected key %s (not counted as an error)\n", key);
 	}
     }
+    MPI_Info_free(&info_used);
 
     MPI_File_close(&fh);
     

@@ -437,7 +437,7 @@ static int DLOOP_Segment_blkidx_count_block(DLOOP_Offset *blocks_p,
     size = el_size * blksz;
     new_blk_count = count;
 
-    if (paramp->count > 0 && rel_off == paramp->last_loc)
+    if (paramp->count > 0 && ((rel_off + offsetarray[0]) == paramp->last_loc))
     {
 	/* first block sits at end of last block */
 	new_blk_count--;
@@ -478,7 +478,7 @@ static int DLOOP_Segment_index_count_block(DLOOP_Offset *blocks_p,
     DLOOP_Handle_get_size_macro(el_type, el_size);
     new_blk_count = count;
 
-    if (paramp->count > 0 && rel_off == paramp->last_loc)
+    if (paramp->count > 0 && ((rel_off + offsetarray[0]) == paramp->last_loc))
     {
 	/* first block sits at end of last block */
 	new_blk_count--;
@@ -521,6 +521,10 @@ void PREPEND_PREFIX(Segment_count_contig_blocks)(DLOOP_Segment *segp,
     params.count    = 0;
     params.last_loc = 0;
 
+    /* FIXME: The blkidx and index functions are not used since they
+     * optimize the count by coalescing contiguous segments, while
+     * functions using the count do not optimize in the same way
+     * (e.g., flatten code) */
     PREPEND_PREFIX(Segment_manipulate)(segp,
 				       first,
 				       lastp,
@@ -633,18 +637,83 @@ static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
     DLOOP_Handle_get_size_macro(el_type, el_size);
     blocks_left = *blocks_p;
 
-#if 0
-    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,
-	     "\t[vector to vec: do=%d, dp=%x, len=%d, ind=%d, ct=%d, blksz=%d, str=%d, blks=%d]\n",
-		    (unsigned) rel_off,
-		    (unsigned) (MPI_Aint)bufp,
-		    paramp->u.pack_vector.length,
-		    paramp->u.pack_vector.index,
-		    count,
-		    blksz,
-		    stride,
-		    (int) *blocks_p));
+    for (i=0; i < count && blocks_left > 0; i++) {
+	int last_idx;
+	char *last_end = NULL;
+
+	if (blocks_left > blksz) {
+	    size = blksz * (int) el_size;
+	    blocks_left -= blksz;
+	}
+	else {
+	    /* last pass */
+	    size = blocks_left * (int) el_size;
+	    blocks_left = 0;
+	}
+
+	last_idx = paramp->index - 1;
+	if (last_idx >= 0) {
+	    last_end = ((char *) paramp->disps[last_idx]) +
+		paramp->blklens[last_idx];
+	}
+
+	if ((last_idx == paramp->length-1) &&
+	    (last_end != ((char *) bufp + rel_off)))
+	{
+	    /* we have used up all our entries, and this one doesn't fit on
+	     * the end of the last one.
+	     */
+	    *blocks_p -= (blocks_left + (size / (int) el_size));
+#ifdef MPID_SP_VERBOSE
+	    MPIU_dbg_printf("\t[vector to vec exiting (1): next ind = %d, %d blocks processed.\n",
+			    paramp->u.pack_vector.index,
+			    (int) *blocks_p);
 #endif
+	    return 1;
+	}
+	else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off)))
+	{
+	    /* add this size to the last vector rather than using up new one */
+	    paramp->blklens[last_idx] += size;
+	}
+	else {
+	    paramp->disps[last_idx+1]   = (MPI_Aint) ((char *) bufp + rel_off);
+	    paramp->blklens[last_idx+1] = size;
+	    paramp->index++;
+	}
+
+	rel_off += stride;
+    }
+
+#ifdef MPID_SP_VERBOSE
+    MPIU_dbg_printf("\t[vector to vec exiting (2): next ind = %d, %d blocks processed.\n",
+		    paramp->u.pack_vector.index,
+		    (int) *blocks_p);
+#endif
+
+    /* if we get here then we processed ALL the blocks; don't need to update
+     * blocks_p
+     */
+
+    DLOOP_Assert(blocks_left == 0);
+    return 0;
+}
+
+static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
+                                            DLOOP_Count count,
+                                            DLOOP_Count blksz,
+                                            DLOOP_Offset *offsetarray,
+                                            DLOOP_Type el_type,
+                                            DLOOP_Offset rel_off,
+                                            void *bufp, /* unused */
+                                            void *v_paramp)
+{
+    int i, size, blocks_left;
+    DLOOP_Offset el_size;
+    struct PREPEND_PREFIX(mpi_flatten_params) *paramp = v_paramp;
+
+    DLOOP_Handle_get_size_macro(el_type, el_size);
+    blocks_left = *blocks_p;
 
     for (i=0; i < count && blocks_left > 0; i++) {
 	int last_idx;
@@ -673,9 +742,6 @@ static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 	     * the end of the last one.
 	     */
 	    *blocks_p -= (blocks_left + (size / (int) el_size));
-#if 0
-	    paramp->u.pack_vector.index++;
-#endif
 #ifdef MPID_SP_VERBOSE
 	    MPIU_dbg_printf("\t[vector to vec exiting (1): next ind = %d, %d blocks processed.\n",
 			    paramp->u.pack_vector.index,
@@ -689,12 +755,90 @@ static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 	    paramp->blklens[last_idx] += size;
 	}
 	else {
-	    paramp->disps[last_idx+1]   = (MPI_Aint) ((char *) bufp + rel_off);
+	    paramp->disps[last_idx+1]   = (MPI_Aint) ((char *) bufp + rel_off + offsetarray[last_idx+1]);
 	    paramp->blklens[last_idx+1] = size;
 	    paramp->index++;
 	}
 
-	rel_off += stride;
+	rel_off += offsetarray[i];
+    }
+
+#ifdef MPID_SP_VERBOSE
+    MPIU_dbg_printf("\t[vector to vec exiting (2): next ind = %d, %d blocks processed.\n",
+		    paramp->u.pack_vector.index,
+		    (int) *blocks_p);
+#endif
+
+    /* if we get here then we processed ALL the blocks; don't need to update
+     * blocks_p
+     */
+
+    DLOOP_Assert(blocks_left == 0);
+    return 0;
+}
+
+static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
+					   DLOOP_Count count,
+					   DLOOP_Count *blockarray,
+					   DLOOP_Offset *offsetarray,
+					   DLOOP_Type el_type,
+					   DLOOP_Offset rel_off,
+					   void *bufp, /* unused */
+					   void *v_paramp)
+{
+    int i, size, blocks_left;
+    DLOOP_Offset el_size;
+    struct PREPEND_PREFIX(mpi_flatten_params) *paramp = v_paramp;
+
+    DLOOP_Handle_get_size_macro(el_type, el_size);
+    blocks_left = *blocks_p;
+
+    for (i=0; i < count && blocks_left > 0; i++) {
+	int last_idx;
+	char *last_end = NULL;
+
+	if (blocks_left > blockarray[i]) {
+	    size = blockarray[i] * (int) el_size;
+	    blocks_left -= blockarray[i];
+	}
+	else {
+	    /* last pass */
+	    size = blocks_left * (int) el_size;
+	    blocks_left = 0;
+	}
+
+	last_idx = paramp->index - 1;
+	if (last_idx >= 0) {
+	    last_end = ((char *) paramp->disps[last_idx]) +
+		paramp->blklens[last_idx];
+	}
+
+	if ((last_idx == paramp->length-1) &&
+	    (last_end != ((char *) bufp + rel_off)))
+	{
+	    /* we have used up all our entries, and this one doesn't fit on
+	     * the end of the last one.
+	     */
+	    *blocks_p -= (blocks_left + (size / (int) el_size));
+#ifdef MPID_SP_VERBOSE
+	    MPIU_dbg_printf("\t[vector to vec exiting (1): next ind = %d, %d blocks processed.\n",
+			    paramp->u.pack_vector.index,
+			    (int) *blocks_p);
+#endif
+	    return 1;
+	}
+	else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off)))
+	{
+	    /* add this size to the last vector rather than using up new one */
+	    paramp->blklens[last_idx] += size;
+	}
+	else {
+	    paramp->disps[last_idx+1]   = (MPI_Aint) ((char *) bufp + rel_off + offsetarray[last_idx+1]);
+	    paramp->blklens[last_idx+1] = size;
+	    paramp->index++;
+	}
+
+	rel_off += offsetarray[i];
     }
 
 #ifdef MPID_SP_VERBOSE
@@ -745,8 +889,8 @@ void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
 				       lastp, 
 				       DLOOP_Segment_contig_mpi_flatten, 
 				       DLOOP_Segment_vector_mpi_flatten,
-				       NULL, /* blkidx fn */
-				       NULL, /* index fn */
+				       NULL, /* DLOOP_Segment_blkidx_mpi_flatten, */
+				       NULL, /* DLOOP_Segment_index_mpi_flatten, */
 				       NULL,
 				       &params);
 

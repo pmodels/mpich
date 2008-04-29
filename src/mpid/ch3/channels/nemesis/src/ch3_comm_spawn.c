@@ -6,13 +6,13 @@
 
 #include "mpid_nem_impl.h"
 #include "pmi.h"
- 
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Comm_spawn_multiple
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_Comm_spawn_multiple(int count, char **commands, 
-                                  char ***argvs, int *maxprocs, 
+int MPIDI_CH3_Comm_spawn_multiple(int count, char **commands,
+                                  char ***argvs, int *maxprocs,
                                   MPID_Info **info_ptrs, int root,
                                   MPID_Comm *comm_ptr, MPID_Comm
                                   **intercomm, int *errcodes)
@@ -90,9 +90,14 @@ int MPIDI_CH3_Get_business_card (int myRank, char *value, int length)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
-    
+    MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
+
+    MPIDI_FUNC_ENTER(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
+
     ret = MPID_nem_get_business_card (myRank, value, length);
     if (ret != 0)
 	mpi_errno =  MPIR_Err_create_code (MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_INTERN, "**intern", 0);
+
+    MPIDI_FUNC_EXIT(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
     return mpi_errno;
 }

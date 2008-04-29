@@ -1,0 +1,6 @@
+#! /bin/sh
+# Add any libraries or paths needed by slurm
+LIBS="@SLURM_LIBS@ $LIBS"
+LDFLAGS="@SLURM_LDFLAGS@ $LDFLAGS"
+CPPFLAGS="@SLURM_CPPFLAGS@ $CPPFLAGS"
+

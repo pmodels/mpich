@@ -14,7 +14,7 @@
 int MPIDI_CH3_Abort(int exit_code, char *error_msg)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ABORT);
-    
+
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ABORT);
 
     PMI_Abort(exit_code, error_msg);

@@ -19,7 +19,6 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
-    
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISEND);
@@ -51,7 +50,7 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
 	else
 	{
             int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
-            
+
             reqFn = sreq->dev.OnDataAvail;
             if (!reqFn)
             {
@@ -89,7 +88,7 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
     sreq->ch.noncontig = FALSE;
     sreq->ch.vc = vc;
     MPIDI_CH3I_SendQ_enqueue (sreq, CH3_NORMAL_QUEUE);
-    
+
     goto fn_exit;
 }
 

@@ -35,7 +35,7 @@
 #define PATH_MAX 65535
 #endif
 
-/* #define SYSHINT_DEBUG 1 */
+/*#define SYSHINT_DEBUG 1  */
 
 #define ROMIO_HINT_DEFAULT_CFG "/etc/romio-hints"
 #define ROMIO_HINT_ENV_VAR "ROMIO_HINTS"
@@ -78,17 +78,26 @@ static int file_to_info(int fd, MPI_Info info)
 
     /* assumption: config files will be small (less than 1MB) */
     fstat(fd, &statbuf);
-    buffer = (char *)malloc(statbuf.st_size);
+    /* add 1 to size to make room for NULL termination */
+    buffer = (char *)calloc(statbuf.st_size + 1, sizeof (char));
     if (buffer == NULL) return -1;
 
     ret = read(fd, buffer, statbuf.st_size);
     if (ret < 0) return -1;
     token = strtok_r(buffer, "\n", &pos1);
     do {
-	if ( (key = strtok_r(token, " \t", &pos2)) == NULL) continue;
-	if (token[0] == '#') continue;
-	if ( (val = strtok_r(NULL, " \t", &pos2))  == NULL) continue;
-	if ( (garbage = strtok_r(NULL, " \t", &pos2)) != NULL) continue;
+	if ( (key = strtok_r(token, " \t", &pos2)) == NULL) 
+	    /* malformed line: found no items */
+	    continue;
+	if (token[0] == '#') 
+	    /* ignore '#'-delimited comments */
+	    continue;
+	if ( (val = strtok_r(NULL, " \t", &pos2))  == NULL) 
+	    /* malformed line: found key without value */
+	    continue;
+	if ( (garbage = strtok_r(NULL, " \t", &pos2)) != NULL) 
+	    /* malformed line: more than two items */
+	    continue;
 	    
 #ifdef SYSHINT_DEBUG
 	printf("found: key=%s val=%s\n", key, val);

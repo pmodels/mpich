@@ -10,7 +10,6 @@
 #include <netinet/in.h>
 
 /*#define MPID_USE_SEQUENCE_NUMBERS*/
-/*#define MPIDI_CH3_CHANNEL_RNDV*/
 /*#define HAVE_CH3_PRE_INIT*/
 /* #define MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS */
 #define MPIDI_DEV_IMPLEMENTS_KVS

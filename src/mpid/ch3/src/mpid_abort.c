@@ -104,6 +104,16 @@ static int MPIDI_CH3I_PMI_Abort(int exit_code, const char *error_msg)
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PMI_ABORT);
 
+    /* Dumping the error message in MPICH2 and passing the same
+     * message to the PM as well. This might cause duplicate messages,
+     * but it is better to have two messages than none. Note that the
+     * PM is in a better position to throw the message (e.g., in case
+     * where the stdout/stderr pipes from MPICH2 to the PM are
+     * broken), but not all PMs might display respect the message
+     * (this problem was noticed with SLURM). */
+    MPIU_Error_printf("%s", error_msg);
+    fflush(stderr);
+
     /* FIXME: What is the scope for PMI_Abort?  Shouldn't it be one or more
        process groups?  Shouldn't abort of a communicator abort either the
        process groups of the communicator or only the current process?
@@ -112,14 +122,6 @@ static int MPIDI_CH3I_PMI_Abort(int exit_code, const char *error_msg)
     PMI_Abort(exit_code, error_msg);
 
     /* if abort returns for some reason, exit here */
-
-    /* FIXME: Why is the message only printed if PMI_Abort fails to return?
-       The simple_pmi.c implementation of PMI_Abort performs an exit; even a 
-       more sophisticated version is likely to cause this process to exit 
-       before it can do much more */
-       
-    MPIU_Error_printf("%s", error_msg);
-    fflush(stderr);
     exit(exit_code);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PMI_ABORT);

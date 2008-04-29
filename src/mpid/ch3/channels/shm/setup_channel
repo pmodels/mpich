@@ -39,7 +39,7 @@ devsubsystems="$devsubsystems src/mpid/common/locks"
 CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS"
 
 if test "$rdma_name" = proc ; then
-    CPPFLAGS="$CPPFLAGS -DHAVE_SHARED_PROCESS_READ -DMPIDI_CH3_CHANNEL_RNDV"
+    CPPFLAGS="$CPPFLAGS -DHAVE_SHARED_PROCESS_READ"
 fi
 if test "$rdma_mode" = get ; then
     CPPFLAGS="$CPPFLAGS -DUSE_SHM_RDMA_GET"

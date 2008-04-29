@@ -40,7 +40,7 @@ CC=${CC:-cc}
 CLINKER=${CLINKER:-$CC}
 CFLAGS=${MPE_CFLAGS}
 MPI_CC=${MPI_CC:-$CC}
-MPI_INC=${MPI_INC}
+MPI_CFLAGS=${MPI_CFLAGS}
 MPI_LIBS=${MPI_LIBS}
 
 MPE_LIBNAME=${MPE_LIBNAME:-mpe}
@@ -90,27 +90,33 @@ AC_CANONICAL_HOST
 case "$host" in
    *alpha*)
         CFLAGS="$CFLAGS -DDBX_IS_OSF"
+        MPI_CFLAGS="$MPI_CFLAGS -DDBX_IS_OSF"
         host=alpha
         ;;
    *rs6000*)
         host=rs6000
         CFLAGS="$CFLAGS -DMPI_rs6000"
+        MPI_CFLAGS="$MPI_CFLAGS -DMPI_rs6000"
         ;;
    *solaris*)
         host=solaris
         CFLAGS="$CFLAGS -DMPI_solaris"
+        MPI_CFLAGS="$MPI_CFLAGS -DMPI_solaris"
         ;;
     *linux*)
         host=linux
         CFLAGS="$CFLAGS -DMPI_LINUX"
+        MPI_CFLAGS="$MPI_CFLAGS -DMPI_LINUX"
         ;;
     *sun4*)
         host=sun4
         CFLAGS="$CFLAGS -DMPI_sun4"
+        MPI_CFLAGS="$MPI_CFLAGS -DMPI_sun4"
         ;;
     mips-sgi-irix*)
         host=irix
         CFLAGS="$CFLAGS -DMPI_IRIX"
+        MPI_CFLAGS="$MPI_CFLAGS -DMPI_IRIX"
         ;;
 esac
 
@@ -197,7 +203,7 @@ AC_CHECK_FUNC( gethostbyname,
                havegethostbyname=1 )
 
 dnl  Checking Headers
-AC_CHECK_HEADERS( unistd.h stdlib.h string.h netdb.h sys/systeminfo.h )
+AC_CHECK_HEADERS( unistd.h stdlib.h string.h netdb.h sys/systeminfo.h sys/types.h)
 
 dnl
 AC_MSG_CHECKING([for sighandler_t])
@@ -208,6 +214,13 @@ if test "$has_sighandler_t" = "yes" ; then
     AC_DEFINE( HAVE_SIGHANDLER_T, 1, [Define if sighandler_t available] )
 fi
 
+dnl kill() may have been missing in headerfile,
+dnl e.g. gcc -ansi removes kill()'s prototype.
+AC_CHECK_FUNCS(kill)
+if test "$ac_cv_func_kill" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <signal.h>],kill)
+fi
+
 AC_SUBST(MPI_IMPL)
 AC_SUBST(MPE_BUILD_FORTRAN2C)
 AC_SUBST(MPEDBG)
@@ -215,7 +228,7 @@ AC_SUBST(CC)
 AC_SUBST(CLINKER)
 AC_SUBST(CFLAGS)
 AC_SUBST(MPI_CC)
-AC_SUBST(MPI_INC)
+AC_SUBST(MPI_CFLAGS)
 AC_SUBST(MPI_LIBS)
 AC_SUBST(PROF_LIBNAME)
 

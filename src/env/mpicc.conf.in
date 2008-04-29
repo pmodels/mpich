@@ -17,8 +17,8 @@ libdir=@libdir@
 # Determined by a combination of environment variables and tests within
 # configure (e.g., determining whehter -lsocket is needee)
 CC="@CC@"
-MPI_CFLAGS="@MPI_CFLAGS@"
-MPI_LDFLAGS="@MPI_LDFLAGS@"
+WRAPPER_CFLAGS="@WRAPPER_CFLAGS@"
+WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
 MPI_OTHERLIBS="@LIBS@"

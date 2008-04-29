@@ -15,7 +15,7 @@ DIRS        = mpi-io adio/common @GLUE_DIR@
 MPIO_DIRS   = mpi-io
 EXTRA_SRC_DIRS = @EXTRA_SRC_DIRS@
 FILE_SYS_DIRS = @FILE_SYS_DIRS@
-ALL_DIRS    = mpi-io mpi-io/fortran mpi2-other/info mpi2-other/info/fortran mpi2-other/array mpi2-other/array/fortran adio/common adio/ad_pfs adio/ad_piofs adio/ad_nfs adio/ad_ufs adio/ad_xfs adio/ad_hfs adio/ad_sfs adio/ad_testfs adio/ad_pvfs adio/ad_pvfs2 adio/ad_panfs adio/ad_gridftp test mpi-io/glue/default mpi-io/glue/mpich1 mpi-io/glue/mpich2
+ALL_DIRS    = mpi-io mpi-io/fortran mpi2-other/info mpi2-other/info/fortran mpi2-other/array mpi2-other/array/fortran adio/common adio/ad_pfs adio/ad_piofs adio/ad_nfs adio/ad_ufs adio/ad_xfs adio/ad_hfs adio/ad_sfs adio/ad_testfs adio/ad_pvfs adio/ad_pvfs2 adio/ad_panfs adio/ad_gridftp adio/ad_lustre adio/ad_bgl adio/ad_bglockless test mpi-io/glue/default mpi-io/glue/mpich1 mpi-io/glue/mpich2
 SHELL       = /bin/sh
 
 @VPATH@

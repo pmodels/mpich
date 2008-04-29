@@ -4,16 +4,21 @@ VPATH = @srcdir@
 srcdir = @srcdir@
 .SUFFIXES: .pdf .dvi .tex
 
+@VPATH@
+
+LATEX      = export TEXINPUTS=".:$(srcdir):" ; latex
+BIBTEX     = export BIBINPUTS=".:$(srcdir):" ; bibtex
+DVIPDFM    = export TEXINPUTS=".:$(srcdir):" ; dvipdfm
+LATEX2HTML = latex2html
+
 .tex.dvi:
-	@if [ ! -s ../mpiman.sty ] ; then \
-	(cd .. && ln -s $(srcdir)/../mpiman.sty mpiman.sty) ; fi
-	-latex $< </dev/null >/dev/null 2>&1
-	-latex $< </dev/null >/dev/null 2>&1
-	-bibtex $* </dev/null
-	latex $<
+	-$(LATEX) $< </dev/null >/dev/null 2>&1
+	-$(LATEX) $< </dev/null >/dev/null 2>&1
+	-$(BIBTEX) $* </dev/null
+	$(LATEX) $<
 
 .dvi.pdf:
-	dvipdfm $*
+	$(DVIPDFM) $*
 
 all-redirect: design.pdf
 
