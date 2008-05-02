@@ -4233,6 +4233,8 @@ sub ReadAutoconf {
 	    $line = "";
 	    # Remove any M4 dnl line
 	    s/\sdnl\s.*//;
+	    # Later versions of Autoconf do not require explicit continuation
+	    # so we also read until we find the closing paren
 	    while (/\\\s*$/) {
 		s/\r?\n$//; # Removes eol on both Unix and Windows
 		chop($_); # remove the backslash
@@ -4247,8 +4249,22 @@ sub ReadAutoconf {
                                  # AC_OUTPUT(files...,[command]),
                                  # where the final ) may not be on this line
 	    #print $line;
+	    # If there's no closing paren yet, keep reading
+	    while (! ($line =~ /\)/)) {
+		$_ = <FDCONF>;
+		s/\r?\n$//; # Removes eol on both Unix and Windows
+		$line .= $_ . " ";
+		# Remove any M4 dnl line
+		s/\sdnl\s.*//;
+	    }
+	    #print "ac_output line = $line\n";
 	    $line =~ /^\s*AC_OUTPUT\((.*)\)\s*$/;
 	    $files = $1;
+	    if (! defined($files) ) {
+		print STDERR "Unable to find file names in AC_OUTPUT\n";
+		$files = "";
+	    }
+	    #print "files for ac_output = $files\n";
 	    @autoconf_files = split(/\s+/,$files);
 	    # Create a hash by directory
 	    # FIXME: Should curdir be blank by default?
