@@ -680,9 +680,12 @@ print MAKEFD "\
 # We need a free-format version of mpif.h with no external commands,
 # including no wtime/wtick (removing MPI_WTICK also removes MPI_WTIME, 
 # but leave MPI_WTIME_IS_GLOBAL).
+# Also allow REAL*8 or DOUBLE PRECISION for the MPI_WTIME/MPI_WTICK 
+# declarations
 mpifnoext.h: ../f77/mpif.h
 	rm -f mpifnoext.h
 	sed -e 's/^C/\\!/g' -e '/EXTERNAL/d' \\
+                -e '/REAL\\*8/d' \\
 		-e '/DOUBLE PRECISION/d' \\
 		-e '/MPI_WTICK/d' ../f77/mpif.h > mpifnoext.h
 ";
