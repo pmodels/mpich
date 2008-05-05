@@ -1,3 +1,8 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2007 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
@@ -39,6 +44,10 @@ int main(int argc, char* argv[])
   }
   for (i=0; i<=maxcomm; i++) {
     MPI_Comm_free( &comm[i] );
+  }
+  /* If we complete, there are no errors */
+  if (rank == 0) {
+      printf( " No Errors\n" );
   }
   MPI_Finalize();
   return 0;
