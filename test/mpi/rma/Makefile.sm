@@ -51,6 +51,9 @@ baseattrwin_SOURCES = baseattrwin.c
 
 nullpscw_SOURCES = nullpscw.c
 
+mixedsync_SOURCES = mixedsync.c
+selfrma_SOURCES   = selfrma.c
+
 ../util/mtest.o:
 	(cd ../util && $(MAKE) )
 
