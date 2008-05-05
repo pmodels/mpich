@@ -6,7 +6,7 @@ mpi_sources =
 # test, but it allows a developer to check out the basic functioning of 
 # dll_mpich2.
 tvtest_SOURCES = tvtest.c dll_mpich2.c dbgstub.c
-tvtest_LDADD = -L../../../lib -lpmpich -lmpich 
+tvtest_LDADD = -L../../../lib -l$(PMPILIBNAME) -l$(MPILIBNAME) 
 qdemo_SOURCES = qdemo.c
 EXTRA_PROGRAMS = tvtest qdemo
 
