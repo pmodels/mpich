@@ -4240,8 +4240,11 @@ sub ReadAutoconf {
 		chop($_); # remove the backslash
 		$line .= $_;
 		$_ = <FDCONF>;
+		die "unexpected EOF in configure.in, aborting" unless defined $_;
 		# Remove any M4 dnl line
 		s/\sdnl\s.*//;
+		# Remove any shell comment line
+		s/\s#.*//;
 	    }
 	    $line .= $_; 
 	    $line =~ s/\r?\n$//; # Removes eol on both Unix and Windows
@@ -4252,10 +4255,13 @@ sub ReadAutoconf {
 	    # If there's no closing paren yet, keep reading
 	    while (! ($line =~ /\)/)) {
 		$_ = <FDCONF>;
+		die "unexpected EOF in configure.in, aborting" unless defined $_;
 		s/\r?\n$//; # Removes eol on both Unix and Windows
-		$line .= $_ . " ";
 		# Remove any M4 dnl line
 		s/\sdnl\s.*//;
+		# Remove any shell comment line
+		s/\s#.*//;
+		$line .= $_ . " ";
 	    }
 	    #print "ac_output line = $line\n";
 	    $line =~ /^\s*AC_OUTPUT\((.*)\)\s*$/;
