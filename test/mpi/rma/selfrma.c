@@ -29,7 +29,9 @@ int main( int argc, char *argv[] )
     MPI_Comm_size( comm, &size );
 
     /* Allocate and initialize sbuf */
-    sbuf = (int *)malloc( scount * sizeof(int) );
+    scount = 1000;
+    count  = 1000;
+    sbuf   = (int *)malloc( scount * sizeof(int) );
     if (!sbuf) {
 	fprintf( stderr, "Could not allocate send buffer f size %d\n", 
 		 scount );
