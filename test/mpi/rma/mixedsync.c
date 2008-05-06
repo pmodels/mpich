@@ -21,7 +21,7 @@ void delay( double time )
 int main( int argc, char *argv[] )
 {
     int      errs = 0, err;
-    int      crank, csize, source, dest;
+    int      crank, csize, source, dest, loop;
     int      *buf0, *buf1, *buf2, count0, count1, count2, count, i;
     MPI_Comm comm;
     MPI_Win  win;
@@ -63,40 +63,48 @@ int main( int argc, char *argv[] )
     dest   = 0;
     source = 1;
 
-    /* Perform several communication operations, mixing synchronization
-       types.  Use multiple communication to avoid the single-operation
-       optimization that may be present. */
-    MPI_Barrier( comm );
-    if (crank == source) {
-	MPI_Win_lock( MPI_LOCK_EXCLUSIVE, dest, 0, win );
-	MPI_Put( buf0, count0, MPI_INT, dest, 0, count0, MPI_INT, win );
-	MPI_Put( buf1, count1, MPI_INT, dest, count0, count1, MPI_INT, win );
-	MPI_Put( buf2, count2, MPI_INT, dest, count0+count1, count2, MPI_INT, win );
-	MPI_Win_unlock( dest, win );
-    }
-    else if (crank == dest) {
-	/* Just delay a bit */
-	delay( 0.0001 );
-    }
-    MPI_Win_fence( 0, win );
-    if (crank == source) {
-	MPI_Put( buf0, count0, MPI_INT, dest, 1, count0, MPI_INT, win );
-	MPI_Put( buf1, count1, MPI_INT, dest, 1+count0, count1, MPI_INT, win );
-	MPI_Put( buf2, count2, MPI_INT, dest, 1+count0+count1, count2, MPI_INT, win );
-    }
-    MPI_Win_fence( 0, win );
+    for (loop=0; loop<2; loop++) {
+	/* Perform several communication operations, mixing synchronization
+	   types.  Use multiple communication to avoid the single-operation
+	   optimization that may be present. */
+	MPI_Barrier( comm );
+	if (crank == source) {
+	    MPI_Win_lock( MPI_LOCK_EXCLUSIVE, dest, 0, win );
+	    MPI_Put( buf0, count0, MPI_INT, dest, 0, count0, MPI_INT, win );
+	    MPI_Put( buf1, count1, MPI_INT, dest, count0, count1, MPI_INT, 
+		     win );
+	    MPI_Put( buf2, count2, MPI_INT, dest, count0+count1, count2, 
+		     MPI_INT, win );
+	    MPI_Win_unlock( dest, win );
+	}
+	else if (crank == dest) {
+	    /* Just delay a bit */
+	    delay( 0.0001 );
+	}
+	MPI_Win_fence( 0, win );
+	if (crank == source) {
+	    MPI_Put( buf0, count0, MPI_INT, dest, 1, count0, MPI_INT, win );
+	    MPI_Put( buf1, count1, MPI_INT, dest, 1+count0, count1, MPI_INT, 
+		     win );
+	    MPI_Put( buf2, count2, MPI_INT, dest, 1+count0+count1, count2, 
+		     MPI_INT, win );
+	}
+	MPI_Win_fence( 0, win );
 
-    /* Check results */
-    if (crank == dest) {
-	for (i=0; i<count0+count1+count2; i++) {
-	    if (winbuf[1+i] != i) {
-		errs++;
-		if (errs < 10) {
-		    fprintf( stderr, "winbuf[%d] = %d, expected %d\n",
-			     1+i, winbuf[1+i], i ); fflush(stderr);
+	/* Check results */
+	if (crank == dest) {
+	    for (i=0; i<count0+count1+count2; i++) {
+		if (winbuf[1+i] != i) {
+		    errs++;
+		    if (errs < 10) {
+			fprintf( stderr, "winbuf[%d] = %d, expected %d\n",
+				 1+i, winbuf[1+i], i ); fflush(stderr);
+		    }
 		}
 	    }
 	}
+	
+	/* End of test loop */
     }
 
     MPI_Win_free( &win );
@@ -104,5 +112,6 @@ int main( int argc, char *argv[] )
 
     MTest_Finalize( errs );
 
+    MPI_Finalize();
     return 0;
 }
