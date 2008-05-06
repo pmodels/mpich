@@ -101,6 +101,7 @@ int main( int argc, char *argv[] )
     MPI_Win_free( &win );
     MPI_Free_mem( winbuf );
     free( sbuf );
+    MPI_Type_free( &vectype );
 
     MTest_Finalize( errs );
 
