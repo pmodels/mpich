@@ -22,7 +22,7 @@ int main( int argc, char *argv[] )
 {
     int      errs = 0, err;
     int      crank, csize, source, dest, loop;
-    int      *buf0, *buf1, *buf2, count0, count1, count2, count, i;
+    int      *buf0, *buf1, *buf2, *inbuf2, count0, count1, count2, count, i;
     MPI_Comm comm;
     MPI_Win  win;
     int      *winbuf;
@@ -38,10 +38,11 @@ int main( int argc, char *argv[] )
     count = count0 + count1 + count2 + 2;
     
     /* Allocate and initialize the local buffers */
-    buf0 = (int *)malloc( count0 * sizeof(int) );
-    buf1 = (int *)malloc( count1 * sizeof(int) );
-    buf2 = (int *)malloc( count2 * sizeof(int) );
-    if (!buf0 || !buf1 || !buf2) {
+    buf0   = (int *)malloc( count0 * sizeof(int) );
+    buf1   = (int *)malloc( count1 * sizeof(int) );
+    buf2   = (int *)malloc( count2 * sizeof(int) );
+    inbuf2 = (int *)malloc( count2 * sizeof(int) );
+    if (!buf0 || !buf1 || !buf2 || !inbuf2) {
 	fprintf( stderr, "Unable to allocated buf0-2\n" );
 	MPI_Abort( MPI_COMM_WORLD, 1 );
     }
@@ -67,12 +68,68 @@ int main( int argc, char *argv[] )
 	/* Perform several communication operations, mixing synchronization
 	   types.  Use multiple communication to avoid the single-operation
 	   optimization that may be present. */
+	MTestPrintfMsg( 3, "Begining loop %d of mixed sync put operations\n", 
+			loop );	
 	MPI_Barrier( comm );
 	if (crank == source) {
+	    MTestPrintfMsg( 3, "About to perform exclusive lock\n" );
 	    MPI_Win_lock( MPI_LOCK_EXCLUSIVE, dest, 0, win );
 	    MPI_Put( buf0, count0, MPI_INT, dest, 0, count0, MPI_INT, win );
 	    MPI_Put( buf1, count1, MPI_INT, dest, count0, count1, MPI_INT, 
 		     win );
+	    MPI_Put( buf2, count2, MPI_INT, dest, count0+count1, count2, 
+		     MPI_INT, win );
+	    MPI_Win_unlock( dest, win );
+	    MTestPrintfMsg( 3, "Released exclusive lock\n" );
+	}
+	else if (crank == dest) {
+	    /* Just delay a bit */
+	    delay( 0.0001 );
+	}
+	MTestPrintfMsg( 3, "About to start fence\n" );
+	MPI_Win_fence( 0, win );
+	if (crank == source) {
+	    MPI_Put( buf0, count0, MPI_INT, dest, 1, count0, MPI_INT, win );
+	    MPI_Put( buf1, count1, MPI_INT, dest, 1+count0, count1, MPI_INT, 
+		     win );
+	    MPI_Put( buf2, count2, MPI_INT, dest, 1+count0+count1, count2, 
+		     MPI_INT, win );
+	}
+	MPI_Win_fence( 0, win );
+	MTestPrintfMsg( 3, "Finished with fence sync\n" );
+
+	/* Check results */
+	if (crank == dest) {
+	    for (i=0; i<count0+count1+count2; i++) {
+		if (winbuf[1+i] != i) {
+		    errs++;
+		    if (errs < 10) {
+			fprintf( stderr, "winbuf[%d] = %d, expected %d\n",
+				 1+i, winbuf[1+i], i ); fflush(stderr);
+		    }
+		}
+	    }
+	}
+	
+	/* End of test loop */
+    }
+
+    MPI_Barrier( MPI_COMM_WORLD );
+    /* Use mixed put and accumulate */
+    for (loop=0; loop<2; loop++) {
+	/* Perform several communication operations, mixing synchronization
+	   types.  Use multiple communication to avoid the single-operation
+	   optimization that may be present. */
+	MTestPrintfMsg( 3, "Begining loop %d of mixed sync put/acc operations\n", 
+			loop );	
+	memset( winbuf, 0, count*sizeof(int) );
+	MPI_Barrier( comm );
+	if (crank == source) {
+	    MPI_Win_lock( MPI_LOCK_EXCLUSIVE, dest, 0, win );
+	    MPI_Accumulate( buf0, count0, MPI_INT, dest, 0, count0, MPI_INT, 
+			    MPI_SUM, win );
+	    MPI_Accumulate( buf1, count1, MPI_INT, dest, count0, count1, 
+			    MPI_INT, MPI_SUM, win );
 	    MPI_Put( buf2, count2, MPI_INT, dest, count0+count1, count2, 
 		     MPI_INT, win );
 	    MPI_Win_unlock( dest, win );
@@ -83,9 +140,10 @@ int main( int argc, char *argv[] )
 	}
 	MPI_Win_fence( 0, win );
 	if (crank == source) {
-	    MPI_Put( buf0, count0, MPI_INT, dest, 1, count0, MPI_INT, win );
-	    MPI_Put( buf1, count1, MPI_INT, dest, 1+count0, count1, MPI_INT, 
-		     win );
+	    MPI_Accumulate( buf0, count0, MPI_INT, dest, 1, count0, MPI_INT, 
+			    MPI_REPLACE, win );
+	    MPI_Accumulate( buf1, count1, MPI_INT, dest, 1+count0, count1, 
+			    MPI_INT, MPI_REPLACE, win );
 	    MPI_Put( buf2, count2, MPI_INT, dest, 1+count0+count1, count2, 
 		     MPI_INT, win );
 	}
@@ -107,8 +165,64 @@ int main( int argc, char *argv[] )
 	/* End of test loop */
     }
 
+    /* Use mixed accumulate and get */
+    for (loop=0; loop<2; loop++) {
+	/* Perform several communication operations, mixing synchronization
+	   types.  Use multiple communication to avoid the single-operation
+	   optimization that may be present. */
+	MTestPrintfMsg( 3, "Begining loop %d of mixed sync put/get/acc operations\n", 
+			loop );	
+	MPI_Barrier( comm );
+	if (crank == source) {
+	    MPI_Win_lock( MPI_LOCK_EXCLUSIVE, dest, 0, win );
+	    MPI_Accumulate( buf0, count0, MPI_INT, dest, 0, count0, MPI_INT, 
+			    MPI_REPLACE, win );
+	    MPI_Put( buf1, count1, MPI_INT, dest, count0, count1, MPI_INT, 
+		     win );
+	    MPI_Get( inbuf2, count2, MPI_INT, dest, count0+count1, count2, 
+		     MPI_INT, win );
+	    MPI_Win_unlock( dest, win );
+	}
+	else if (crank == dest) {
+	    /* Just delay a bit */
+	    delay( 0.0001 );
+	}
+	MPI_Win_fence( 0, win );
+	if (crank == source) {
+	    MPI_Accumulate( buf0, count0, MPI_INT, dest, 1, count0, MPI_INT, 
+			    MPI_REPLACE, win );
+	    MPI_Put( buf1, count1, MPI_INT, dest, 1+count0, count1, MPI_INT, 
+		     win );
+	    MPI_Get( inbuf2, count2, MPI_INT, dest, 1+count0+count1, count2, 
+		     MPI_INT, win );
+	}
+	MPI_Win_fence( 0, win );
+
+	/* Check results */
+	if (crank == dest) {
+	    /* Do the put/accumulate parts */
+	    for (i=0; i<count0+count1; i++) {
+		if (winbuf[1+i] != i) {
+		    errs++;
+		    if (errs < 10) {
+			fprintf( stderr, "winbuf[%d] = %d, expected %d\n",
+				 1+i, winbuf[1+i], i ); fflush(stderr);
+		    }
+		}
+	    }
+	}
+	
+	/* End of test loop */
+    }
+
+    MTestPrintfMsg( 3, "Freeing the window\n" );
+    MPI_Barrier( comm );
     MPI_Win_free( &win );
     MPI_Free_mem( winbuf );
+    free( buf0 );
+    free( buf1 );
+    free( buf2 );
+    free( inbuf2 );
 
     MTest_Finalize( errs );
 
