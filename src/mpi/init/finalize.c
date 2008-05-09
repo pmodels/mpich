@@ -237,8 +237,24 @@ int MPI_Finalize( void )
     /* If performing coverage analysis, make each process sleep for
        rank * 100 ms, to give time for the coverage tool to write out
        any files.  It would be better if the coverage tool and runtime 
-       was more careful about */
-    usleep( rank * 100000 );
+       was more careful about file updates, though the lack of OS support
+       for atomic file updates makes this harder. */
+    /* 
+       On some systems, a 0.1 second delay appears to be too short for 
+       the file system.  This code allows the use of the environment
+       variable MPICH_FINALDELAY, which is the delay in milliseconds.
+       It must be an integer value.
+     */
+    {
+	int microseconds = 100000;
+	char *delayStr = getenv( "MPICH_FINALDELAY" );
+	if (delayStr) {
+	    /* Because this is a maintainer item, we won't check for 
+	       errors in the delayStr */
+	    microseconds = 1000 * atoi( delayStr );
+	}
+	usleep( rank * microseconds );
+    }
 #endif
 
     /* ... end of body of routine ... */
