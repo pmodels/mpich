@@ -29,10 +29,12 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
 
     /* Check to see if we need to setup channel-specific functions
        for handling the RMA operations */
+    /* --BEGIN OPTIONALINIT-- */
     if (setupRMAFunctions) {
 	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
 	setupRMAFunctions = 0;
     }
+    /* --END OPTIONALINIT-- */
 
     /* The default for this function is MPIDI_Win_create.
        A channel may define its own function and set it in the 
@@ -41,9 +43,10 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
        the function pointer to NULL */
 
     /* We pass the RMAFns function table to this function because a channel may 
-       want to reset it to the default if it finds that it cannot optimize for this 
-       set of windows. The sshm channel does this if windows are not allocated in 
-       shared memory. */
+       want to reset it to the default if it finds that it cannot
+       optimize for this   
+       set of windows. The sshm channel does this if windows are not
+       allocated in shared memory. */
        
     if (RMAFns.Win_create) {
 	mpi_errno = RMAFns.Win_create(base, size, disp_unit, info, comm_ptr, 
@@ -72,13 +75,20 @@ int MPID_Win_free(MPID_Win **win_ptr)
    MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_FREE);
         
    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FREE);
-        
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Win_free.
        A channel may define its own function and set it in the 
@@ -115,12 +125,19 @@ int MPID_Put(void *origin_addr, int origin_count, MPI_Datatype
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_PUT);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Put.
        A channel may define its own function and set it in the 
@@ -130,8 +147,8 @@ int MPID_Put(void *origin_addr, int origin_count, MPI_Datatype
 
     if (RMAFns.Put) {
 	mpi_errno = RMAFns.Put(origin_addr, origin_count, origin_datatype, 
-			       target_rank, target_disp, target_count, target_datatype,
-			       win_ptr);
+			       target_rank, target_disp, target_count, 
+			       target_datatype, win_ptr);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIU_ERR_POP(mpi_errno);
 	}
@@ -160,12 +177,19 @@ int MPID_Get(void *origin_addr, int origin_count, MPI_Datatype
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_GET);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Get.
        A channel may define its own function and set it in the 
@@ -206,12 +230,19 @@ int MPID_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_ACCUMULATE);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Accumulate.
        A channel may define its own function and set it in the 
@@ -248,12 +279,19 @@ int MPID_Win_fence(int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FENCE);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Win_fence.
        A channel may define its own function and set it in the 
@@ -288,12 +326,19 @@ int MPID_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_POST);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Win_post.
        A channel may define its own function and set it in the 
@@ -328,12 +373,19 @@ int MPID_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_START);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Win_start.
        A channel may define its own function and set it in the 
@@ -368,12 +420,19 @@ int MPID_Win_complete(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_COMPLETE);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Win_complete.
        A channel may define its own function and set it in the 
@@ -408,12 +467,19 @@ int MPID_Win_wait(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_WAIT);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Win_wait.
        A channel may define its own function and set it in the 
@@ -448,12 +514,19 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_LOCK);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Win_lock.
        A channel may define its own function and set it in the 
@@ -488,12 +561,19 @@ int MPID_Win_unlock(int dest, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_UNLOCK);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Win_unlock.
        A channel may define its own function and set it in the 
@@ -530,10 +610,12 @@ void *MPID_Alloc_mem( size_t size, MPID_Info *info_ptr )
 
     /* Check to see if we need to setup channel-specific functions
        for handling the RMA operations */
+    /* --BEGIN OPTIONALINIT-- */
     if (setupRMAFunctions) {
 	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
 	setupRMAFunctions = 0;
     }
+    /* --END OPTIONALINIT-- */
 
     /* The default for this function is MPIDI_Alloc_mem.
        A channel may define its own function and set it in the 
@@ -561,12 +643,19 @@ int MPID_Free_mem( void *ptr )
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_FREE_MEM);
 
-    /* Check to see if we need to setup channel-specific functions
-       for handling the RMA operations */
-    if (setupRMAFunctions) {
-	MPIU_CALL(MPIDI_CH3,RMAFnsInit( &RMAFns ));
-	setupRMAFunctions = 0;
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**memnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
+#   endif /* HAVE_ERROR_CHECKING */
 
     /* The default for this function is MPIDI_Free_mem.
        A channel may define its own function and set it in the 
@@ -589,7 +678,7 @@ int MPID_Free_mem( void *ptr )
     return mpi_errno;
 }
 
-
+/* FIXME: The test function needs to be settable by the RMA support */
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_test
 #undef FCNAME
@@ -602,17 +691,28 @@ int MPID_Win_test(MPID_Win *win_ptr, int *flag)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_TEST);
 
-    mpi_errno = MPID_Progress_test();
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPI_SUCCESS)
+   /* If we call this function but setup has not been called, 
+      the program is in error */
+#   ifdef HAVE_ERROR_CHECKING
     {
-        MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_TEST);
-        return mpi_errno;
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    if (setupRMAFunctions) {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnotinit");
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
     }
-    /* --END ERROR HANDLING-- */
+#   endif /* HAVE_ERROR_CHECKING */
+
+    mpi_errno = MPID_Progress_test();
+    if (mpi_errno != MPI_SUCCESS) {
+	MPIU_ERR_POP(mpi_errno);
+    }
 
     *flag = (win_ptr->my_counter) ? 0 : 1;
 
+ fn_fail:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_TEST);
     return mpi_errno;
 }
