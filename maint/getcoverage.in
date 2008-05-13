@@ -68,8 +68,22 @@ $gDebugDetail = 0;
 $lineLeader2 = '^\s*[\{\}]?\s*';
 $lineLeader3 = '^\s*-:\s*\d+:\s*[\{\}]?\s*';
 #
-# This is the list of known block names.
-@BlockNames = ( "DEBUG", "ERROR HANDLING", "EXPERIMENTAL", "USEREXTENSION" );
+# This is the list of known block names.  They represent several types of
+# code for which it may be desirable not to count in coverage analysis.
+#  Code that normally should not be executed:
+#    DEBUG - Code for debugging
+#    EXPERIMENTAL - Experimental code that will normally not be executed
+#  Code that may be executed, but for which it is difficult to write 
+#  coverage tests
+#    USEREXTENSION - Code that provides for user extensions, particularly 
+#         through places where user-provided functions may be called
+#    OPTIONALINIT - Code that provides for lazy initialization of 
+#         datastructures, particularly function tables.  
+#  Code that is executed only with erroneous input (e.g., user errors) or
+#  exceptional events (e.g., socket unexpectedly closes).
+#    ERROR HANDLING - Code for handling or reporting errors
+@BlockNames = ( "DEBUG", "ERROR HANDLING", "EXPERIMENTAL", "USEREXTENSION",
+    "OPTIONALINIT" );
 #
 # Keep track of coverage amounts
 $GrandTotal       = 0;
