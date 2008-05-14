@@ -1,8 +1,8 @@
 
 # JAVA_HOME = /pkgs/lang/java/jdk117_v3
 # JAVA_HOME = /pkgs/lang/java/jdk1.3.1
-# JAVA_HOME = /pkgs/lang/java/j2sdk1.4.2
-JAVA_HOME = /soft/com/packages/j2sdk1.4.2_04
+JAVA_HOME = /pkgs/lang/java/j2sdk1.4.2
+# JAVA_HOME = /soft/com/packages/j2sdk1.4.2_04
 SHELL     = /bin/sh
 JC        = $(JAVA_HOME)/bin/javac
 JVM       = $(JAVA_HOME)/bin/java
@@ -10,7 +10,7 @@ JFLAGS    =
 JAR       = $(JAVA_HOME)/bin/jar
 RM        = rm -f
 
-JSRC      = simple.java simple_swing.java
+JSRC      = simple.java simple_swing.java awt_color.java
 JCLS      = $(JSRC:.java=.class)
 JJAR      = $(JCLS:.class=.jar)
 
