@@ -190,6 +190,27 @@ dnl
             fi
         fi
 dnl
+        if test "$jac_java_working" = "yes" ; then
+            AC_MSG_CHECKING([if $JVM runs non-GUI tool])
+            JAC_TRY_RUNJAR([$JVM], [$JVMFLAGS],
+                           [ac_javatest/awt_color.jar],
+                           [jac_java_working=yes], [jac_java_working=no])
+            if test "$jac_java_working" = "no" ; then
+                JAC_TRY_RUNJAR([$JVM], [$JVMFLAGS -Djava.awt.headless=true],
+                               [ac_javatest/awt_color.jar],
+                               [jac_java_working=yes], [jac_java_working=no])
+                if test "$jac_java_working" = "yes" ; then
+                    AC_MSG_RESULT([-Djava.awt.headless=true])
+                    NONGUI_JVMFLAGS="-Djava.awt.headless=true"
+                else
+                    AC_MSG_RESULT(no)
+                fi
+            else
+                AC_MSG_RESULT(yes)
+            fi
+        fi
+        AC_SUBST(NONGUI_JVMFLAGS)
+dnl
         if test "$jac_java_working" = "yes" \
              -a "$enable_swingcheck" = "yes" ; then
             AC_MSG_CHECKING([if $JVM runs simple Swing class])
