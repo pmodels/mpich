@@ -68,7 +68,7 @@ int main( int argc, char *argv[] )
 	/* Perform several communication operations, mixing synchronization
 	   types.  Use multiple communication to avoid the single-operation
 	   optimization that may be present. */
-	MTestPrintfMsg( 3, "Begining loop %d of mixed sync put operations\n", 
+	MTestPrintfMsg( 3, "Beginning loop %d of mixed sync put operations\n", 
 			loop );	
 	MPI_Barrier( comm );
 	if (crank == source) {
