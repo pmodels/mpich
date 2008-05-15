@@ -721,14 +721,9 @@ static int do_accumulate_op(MPID_Request *rreq)
     MPIR_Nest_incr();
     mpi_errno = NMPI_Type_get_true_extent(rreq->dev.datatype, &true_lb, &true_extent);
     MPIR_Nest_decr();
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno) 
-    {
-	mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-	MPIDI_FUNC_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
-	return mpi_errno;
+    if (mpi_errno) {
+	MPIU_ERR_POP(mpi_errno);
     }
-    /* --END ERROR HANDLING-- */
     
     MPIU_Free((char *) rreq->dev.user_buf + true_lb);
 
