@@ -1269,6 +1269,10 @@ void MTestPrintErrorMsg( const char msg[], int errcode )
     fflush( stdout );
 }
 /* ------------------------------------------------------------------------ */
+/* 
+ If verbose output is selected and the level is at least that of the
+ value of the verbose flag, then perform printf( format, ... );
+ */
 void MTestPrintfMsg( int level, const char format[], ... )
 {
     va_list list;
