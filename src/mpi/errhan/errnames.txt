@@ -787,6 +787,12 @@ with MPI_Alloc_mem.
 **winget_oob:source pointer for win_get is out of bounds
 **winserialize:serializing win object
 **windeserialize:deserializing win object
+**winnotinit: Attempt to use an MPI RMA function that requires an MPI Window \
+ object before creating any MPI Window object
+**winnoprogress: Detected an error while in progress wait for RMA messages
+**winInvalidOp: Invalid RMA operation
+**winRMAmessage: RMA message operation failed
+**winRMArequest: RMA message operation failed; request returned error
 **open %s:open failed - %s
 **setenv:setenv failed
 **mx_close_endpoint: mx_close_endpoint failed

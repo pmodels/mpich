@@ -17,6 +17,8 @@
 #include <sys/bitypes.h>
 #endif
 
+/* */
+/*
 #ifndef HAVE_UINT8_T 
 #ifdef MPIU_UINT8_T
 typedef MPIU_UINT8_T uint8_t;
@@ -56,24 +58,31 @@ typedef MPIU_UINT32_T uint32_t;
 #error 'Configure did not find a 32-bit unsigned integer type'
 #endif
 #endif
-
+*/
+/*
 #ifndef HAVE_INT64_T
 #ifdef MPIU_INT64_T
 typedef MPIU_INT64_T int64_t;
 #else
+*/
 /* Don't define a 64 bit integer type if we didn't find one, but 
    allow the code to compile as long as we don't need that type */
+/*
 #endif
 #endif
-
+*/
+/*
 #ifndef HAVE_UINT64_T
 #ifdef MPIU_UINT64_T
 typedef MPIU_UINT64_T uint64_t;
 #else
+*/
 /* Don't define a 64 bit unsigned integer type if we didn't find one, 
    allow the code to compile as long as we don't need the type */
+/*
 #endif
 #endif
+*/
 
 #ifdef HAVE_WINDOWS_H
 #include <winsock2.h>

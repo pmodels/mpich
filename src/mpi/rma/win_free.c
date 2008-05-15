@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "rma.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Win_free */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -80,6 +81,7 @@ int MPI_Win_free(MPI_Win *win)
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
 	    /* If win_ptr is not valid, it will be reset to null */
+
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -100,7 +102,7 @@ int MPI_Win_free(MPI_Win *win)
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     
-    mpi_errno = MPID_Win_free(&win_ptr);
+    mpi_errno = MPIU_RMA_CALL(win_ptr,Win_free(&win_ptr));
     *win = MPI_WIN_NULL;
 
     /* ... end of body of routine ... */

@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "rma.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Free_mem */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -44,9 +45,7 @@
 @*/
 int MPI_Free_mem(void *base)
 {
-#if 0
     static const char FCNAME[] = "MPI_Free_mem";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_FREE_MEM);
 
@@ -56,21 +55,16 @@ int MPI_Free_mem(void *base)
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_FREE_MEM);
 
     /* ... body of routine ...  */
-    
     mpi_errno = MPID_Free_mem(base);
+    if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */
 
-#if 0    
   fn_exit:
-#endif    
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FREE_MEM);
     MPIU_THREAD_SINGLE_CS_EXIT("rma");
     return mpi_errno;
 
-    /* There should never be any fn_fail case; this suppresses warnings from
-       compilers that object to unused labels */
-#if 0 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_CHECKING
@@ -79,8 +73,9 @@ int MPI_Free_mem(void *base)
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_free_mem", "**mpi_free_mem %p", base);
     }
 #   endif
+    /* MPI_Free_mem must invoke the error handler on MPI_COMM_WORLD if there
+       is an error */
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
     /* --END ERROR HANDLING-- */
-#endif
 }

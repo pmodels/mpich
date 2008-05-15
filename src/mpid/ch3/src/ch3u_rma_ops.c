@@ -16,8 +16,7 @@
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
-		     MPID_Comm *comm_ptr, MPID_Win **win_ptr, 
-		     MPIDI_RMAFns *RMAFns)
+		     MPID_Comm *comm_ptr, MPID_Win **win_ptr )
 {
     int mpi_errno=MPI_SUCCESS, i, comm_size, rank;
     MPI_Aint *tmp_buf;
@@ -160,9 +159,7 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
 	    if (mpi_errno != MPI_SUCCESS)
 	    {
 		MPID_Progress_end(&progress_state);
-		mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                                     "**fail", "**fail %s", "making progress on the rma messages failed");
-		goto fn_exit;
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
 	    }
 	    /* --END ERROR HANDLING-- */
 	}
@@ -184,10 +181,9 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     MPIU_CHKLMEM_FREEALL();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FREE);
     return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
+
  fn_fail:
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 

@@ -7,6 +7,7 @@
 
 #include "mpiimpl.h"
 
+#include "rma.h"
 /* -- Begin Profiling Symbol Block for routine MPI_Put */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Put = PMPI_Put
@@ -134,9 +135,10 @@ int MPI_Put(void *origin_addr, int origin_count, MPI_Datatype
     
     if (target_rank == MPI_PROC_NULL) goto fn_exit;
 
-    mpi_errno = MPID_Put(origin_addr, origin_count, origin_datatype,
-                         target_rank, target_disp, target_count,
-                         target_datatype, win_ptr);
+    mpi_errno = MPIU_RMA_CALL(win_ptr,
+			      Put(origin_addr, origin_count, origin_datatype,
+				  target_rank, target_disp, target_count,
+				  target_datatype, win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

@@ -287,4 +287,7 @@ MPID_REQUEST_DECL
 /* Tell initthread to prepare a private comm_world */
 #define MPID_NEEDS_ICOMM_WORLD
 
+/* Tell the RMA code to use a table of RMA functions provided by the 
+   ADI */
+#define USE_MPID_RMA_TABLE
 #endif /* !defined(MPICH_MPIDPRE_H_INCLUDED) */

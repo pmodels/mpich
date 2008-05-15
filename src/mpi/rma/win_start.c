@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "rma.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Win_start */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -99,6 +100,7 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
             if (mpi_errno) goto fn_fail;
 
             MPID_Group_valid_ptr(group_ptr, mpi_errno);
+
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -107,7 +109,7 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Win_start(group_ptr, assert, win_ptr);
+    mpi_errno = MPIU_RMA_CALL(win_ptr,Win_start(group_ptr, assert, win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "rma.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Accumulate */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -127,7 +128,7 @@ int MPI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 
 	    MPID_Comm_get_ptr(win_ptr->comm, comm_ptr);
 	    MPIR_ERRTEST_SEND_RANK(comm_ptr, target_rank, mpi_errno);
-	    
+
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -138,9 +139,10 @@ int MPI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
     
     if (target_rank == MPI_PROC_NULL) goto fn_exit;
 
-    mpi_errno = MPID_Accumulate(origin_addr, origin_count, origin_datatype,
-                                target_rank, target_disp, target_count,
-                                target_datatype, op, win_ptr);
+    mpi_errno = MPIU_RMA_CALL(win_ptr,Accumulate(origin_addr, origin_count, 
+					 origin_datatype,
+					 target_rank, target_disp, target_count,
+					 target_datatype, op, win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

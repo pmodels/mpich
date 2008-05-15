@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "rma.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Win_test */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -95,7 +96,7 @@ int MPI_Win_test(MPI_Win win, int *flag)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPID_Win_test(win_ptr, flag);
+    mpi_errno = MPIU_RMA_CALL(win_ptr,Win_test(win_ptr, flag));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
  
     /* ... end of body of routine ... */

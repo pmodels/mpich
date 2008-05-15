@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "rma.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Get */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -134,9 +135,10 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype
     
     if (target_rank == MPI_PROC_NULL) goto fn_exit;
 
-    mpi_errno = MPID_Get(origin_addr, origin_count, origin_datatype,
-                         target_rank, target_disp, target_count,
-                         target_datatype, win_ptr);
+    mpi_errno = MPIU_RMA_CALL(win_ptr,
+			      Get(origin_addr, origin_count, origin_datatype,
+				  target_rank, target_disp, target_count,
+				  target_datatype, win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

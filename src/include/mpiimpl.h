@@ -62,6 +62,16 @@
 #define PMPI_LOCAL 
 #endif
 
+/* Fix for universal endianess added in autoconf 2.62 */
+#ifdef WORDS_UNIVERSAL_ENDIAN
+#if defined(__BIG_ENDIAN__)
+#elif defined(__LITTLE_ENDIAN__)
+#define WORDS_LITTLEENDIAN
+#else
+#error 'Universal endianess defined without __BIG_ENDIAN__ or __LITTLE_ENDIAN__'
+#endif
+#endif
+
 /* Include some basic (and easily shared) definitions */
 #include "mpibase.h"
 
@@ -1426,6 +1436,36 @@ MPID_Progress_state;
 /* ------------------------------------------------------------------------- */
 
 /* Windows */
+#ifdef USE_MPID_RMA_TABLE
+struct MPID_Win;
+typedef struct MPIRI_RMA_Ops {
+    int (*Win_free)(struct MPID_Win **);
+    int (*Put)(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, 
+		struct MPID_Win *);
+    int (*Get)(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, 
+		struct MPID_Win *);
+    int (*Accumulate)(void *, int, MPI_Datatype, int, MPI_Aint, int, 
+		       MPI_Datatype, MPI_Op, struct MPID_Win *);
+    int (*Win_fence)(int, struct MPID_Win *);
+    int (*Win_post)(MPID_Group *, int, struct MPID_Win *);
+    int (*Win_start)(MPID_Group *, int, struct MPID_Win *);
+    int (*Win_complete)(struct MPID_Win *);
+    int (*Win_wait)(struct MPID_Win *);
+    int (*Win_test)(struct MPID_Win *, int *);
+    int (*Win_lock)(int, int, int, struct MPID_Win *);
+    int (*Win_unlock)(int, struct MPID_Win *);
+} MPIRI_RMAFns;
+#define MPIRI_RMAFNS_VERSION 2
+/* Note that the memory allocation/free routines do not take a window, 
+   so they must be initialized separately, and are a per-run, not per-window
+   object.  If the device can manage different kinds of memory allocations,
+   these routines must internally provide that flexibility. */
+/* 
+    void *(*Alloc_mem)(size_t, MPID_Info *);
+    int (*Free_mem)(void *);
+*/
+#endif
+
 /*S
   MPID_Win - Description of the Window Object data structure.
 
@@ -1483,6 +1523,10 @@ typedef struct MPID_Win {
     HANDLE passive_target_thread_id;
 #endif
 #endif
+    /* */
+#ifdef USE_MPID_RMA_TABLE
+    MPIRI_RMAFns RMAFns;
+#endif    
     /* These are COPIES of the values so that addresses to them
        can be returned as attributes.  They are initialized by the
        MPI_Win_get_attr function */
@@ -1498,6 +1542,7 @@ typedef struct MPID_Win {
 extern MPIU_Object_alloc_t MPID_Win_mem;
 /* Preallocated win objects */
 extern MPID_Win MPID_Win_direct[];
+
 
 /* ------------------------------------------------------------------------- */
 /* also in mpirma.h ?*/

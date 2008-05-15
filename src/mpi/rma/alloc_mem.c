@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "rma.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Alloc_mem */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -84,7 +85,6 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
     MPID_Info_get_ptr( info, info_ptr );
 
     ap = MPID_Alloc_mem(size, info_ptr);

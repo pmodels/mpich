@@ -90,7 +90,8 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
         {
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
-	    /* If win_ptr is not value, it will be reset to null */
+	    /* If win_ptr is not valid, it will be reset to null */
+
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

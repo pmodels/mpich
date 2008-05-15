@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "rma.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Win_unlock */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -88,6 +89,7 @@ int MPI_Win_unlock(int rank, MPI_Win win)
 
             MPID_Comm_get_ptr( win_ptr->comm, comm_ptr );
             MPIR_ERRTEST_SEND_RANK(comm_ptr, rank, mpi_errno);
+
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -96,7 +98,7 @@ int MPI_Win_unlock(int rank, MPI_Win win)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPID_Win_unlock(rank, win_ptr);
+    mpi_errno = MPIU_RMA_CALL(win_ptr,Win_unlock(rank, win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

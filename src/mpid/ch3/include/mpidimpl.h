@@ -974,7 +974,7 @@ int MPIDI_CH3_RMAFnsInit( MPIDI_RMAFns * );
 #define MPID_LOCK_NONE 0
 
 int MPIDI_Win_create(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,
-                    MPID_Win **, MPIDI_RMAFns *);
+                    MPID_Win ** );
 int MPIDI_Win_fence(int, MPID_Win *);
 int MPIDI_Put(void *, int, MPI_Datatype, int, MPI_Aint, int,
             MPI_Datatype, MPID_Win *); 
@@ -984,6 +984,7 @@ int MPIDI_Accumulate(void *, int, MPI_Datatype, int, MPI_Aint, int,
 		   MPI_Datatype,  MPI_Op, MPID_Win *);
 int MPIDI_Win_free(MPID_Win **); 
 int MPIDI_Win_wait(MPID_Win *win_ptr);
+int MPIDI_Win_test(MPID_Win *win_ptr, int *);
 int MPIDI_Win_complete(MPID_Win *win_ptr);
 int MPIDI_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr);
 int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr);
