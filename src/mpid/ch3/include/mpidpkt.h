@@ -15,7 +15,10 @@
 /*
  * MPIDI_CH3_Pkt_type_t
  *
+ * Predefined packet types.  This simplifies some of the code.
  */
+/* FIXME: Having predefined names makes it harder to add new message types,
+   such as different RMA types. */
 typedef enum MPIDI_CH3_Pkt_type
 {
     MPIDI_CH3_PKT_EAGER_SEND = 0,
@@ -30,7 +33,7 @@ typedef enum MPIDI_CH3_Pkt_type
     MPIDI_CH3_PKT_RNDV_SEND,          /* FIXME: should be stream put */
     MPIDI_CH3_PKT_CANCEL_SEND_REQ,
     MPIDI_CH3_PKT_CANCEL_SEND_RESP,
-    MPIDI_CH3_PKT_PUT,
+    MPIDI_CH3_PKT_PUT,                /* RMA Packets begin here */
     MPIDI_CH3_PKT_GET,
     MPIDI_CH3_PKT_GET_RESP,
     MPIDI_CH3_PKT_ACCUMULATE,
@@ -40,6 +43,7 @@ typedef enum MPIDI_CH3_Pkt_type
     MPIDI_CH3_PKT_LOCK_PUT_UNLOCK, /* optimization for single puts */
     MPIDI_CH3_PKT_LOCK_GET_UNLOCK, /* optimization for single gets */
     MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK, /* optimization for single accumulates */
+                                     /* RMA Packets end here */
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,  /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
     MPIDI_CH3_PKT_END_CH3
