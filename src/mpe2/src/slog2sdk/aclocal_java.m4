@@ -155,7 +155,6 @@ if test -z "$subdir" ; then
     fi
 fi
 #
-AC_MSG_CHECKING([for $2 in known locations])
 reverse_dirs=""
 for dir in \
     /usr \
@@ -209,6 +208,7 @@ for dir in \
     fi
 done
 dnl
+is_prog_found=no
 for dir in $reverse_dirs ; do
     if test -d $dir ; then
         case "$dir" in
@@ -227,18 +227,16 @@ dnl         *java* | *jdk* | *j2sdk* | *Frameworks* )
                 ;;
         esac
 dnl
-        # Not all releases work.  Try a simple program
+        # Not all releases work.Try tests defined in the 3rd argument
         if test -n "[$]$1" ; then
+            AC_MSG_CHECKING([for $2 in user's PATH])
             AC_MSG_RESULT([found [$]$1])
-            ifelse([$3],, break, [
-                AC_MSG_CHECKING([if [$]$1 works])
+            is_prog_found=yes
+            ifelse([$3],, [$1="" ; break], [
                 $3
                 if test "$jac_prog_working" = "yes" ; then
-                    AC_MSG_RESULT(yes)
                     break
                 else
-                    AC_MSG_RESULT(no)
-                    AC_MSG_CHECKING([for working $2 in known locations])
                     $1=""
                 fi
             ])
@@ -246,7 +244,8 @@ dnl
 dnl
     fi
 done
-if test -z "[$]$1" ; then
+if test -z "[$]$1" -a "$is_prog_found" != "yes" ; then
+    AC_MSG_CHECKING([for $2 in user's PATH])
     AC_MSG_RESULT(not found)
 fi
 ])dnl
@@ -263,40 +262,72 @@ dnl                         if TRUE,  it must return jac_prog_working=yes
 dnl                         if FALSE, it must return jac_prog_working=no
 dnl
 AC_DEFUN([JAC_FIND_PROG_IN_PATH], [
-AC_MSG_CHECKING([for $2 in user's PATH])
 if test -n "$PATH" ; then
     $1=""
+    is_prog_found=no
     dnl It is safer to create jac_PATH than modify IFS, because the potential
     dnl 3rd argument, TEST-ACTION, may contain code in modifying IFS
     jac_PATH=`echo $PATH | sed 's/:/ /g'`
     for dir in ${jac_PATH} ; do
         if test -d "$dir" -a -x "$dir/$2" ; then
             $1="$dir/$2"
-            # Not all releases work.  Try a simple program
+            # Not all releases work.Try tests defined in the 3rd argument
             if test -n "[$]$1" ; then
+                AC_MSG_CHECKING([for $2 in user's PATH])
                 AC_MSG_RESULT([found [$]$1])
-                ifelse([$3],, break, [
-                    AC_MSG_CHECKING([if [$]$1 works])
+                is_prog_found=yes
+                ifelse([$3],, [$1="" ; break], [
                     $3
                     if test "$jac_prog_working" = "yes" ; then
-                        AC_MSG_RESULT(yes)
                         break
                     else
-                        AC_MSG_RESULT(no)
-                        AC_MSG_CHECKING([for working $2 in user's PATH])
                         $1=""
                     fi
                 ])
             fi
         fi
     done
-fi
-if test -z "[$]$1" ; then
-    AC_MSG_RESULT(not found)
+    if test -z "[$]$1" -a "$is_prog_found" != "yes" ; then
+        AC_MSG_CHECKING([for $2 in user's PATH])
+        AC_MSG_RESULT(not found)
+    fi
 fi
 ])dnl
 dnl
-dnl JAC_PATH_PROG - locate Java program in user's $PATH then known locations
+dnl JAC_CHECK_USER_PROG - check Java program in user supplied code,
+dnl                       i.e. $JRE_TOPDIR/bin
+dnl
+dnl PROG_VAR              - returned variable name of PROG-TO-CHECK-FOR
+dnl PROG-TO-CHECK-FOR     - java program to check for, e.g. javac or java
+dnl TEST-ACTION-IF-FOUND  - testing program for PROG-TO-CHECK-FOR.
+dnl                         if TRUE,  it must return jac_prog_working=yes
+dnl                         if FALSE, it must return jac_prog_working=no
+dnl
+AC_DEFUN([JAC_CHECK_USER_PROG], [
+if test "x$JRE_TOPDIR" != "x" ; then
+    $1="$JRE_TOPDIR/bin/$2"
+    is_prog_found=no
+    if test -n "[$]$1" -a -x "[$]$1" ; then
+        AC_MSG_CHECKING([for user supplied $2])
+        AC_MSG_RESULT([found [$]$1])
+        is_prog_found=yes
+        ifelse([$3],,,[
+            $3
+            if test "$jac_prog_working" != "yes" ; then
+                $1=""
+            fi
+        ])
+    fi
+    if test -z "[$]$1" -a "$is_prog_found" != "yes" ; then
+        AC_MSG_CHECKING([for user supplied $2])
+        AC_MSG_RESULT(not found)
+    fi
+fi
+])dnl
+dnl
+dnl
+dnl JAC_PATH_PROG - locate Java program in user's supplied path,
+dnl                 user's $PATH and then the known locations.
 dnl
 dnl JAC_PATH_PROG( PROG_VAR, PROG-TO-CHECK-FOR [, CHECKING-ACTION-IF-FOUND] )
 dnl
@@ -308,9 +339,15 @@ dnl                         if FALSE, it must return jac_prog_working=no
 dnl
 AC_DEFUN([JAC_PATH_PROG], [
 ifelse([$3],,
-    [JAC_FIND_PROG_IN_PATH($1, $2)],
-    [JAC_FIND_PROG_IN_PATH($1, $2, [$3])]
+    [JAC_CHECK_USER_PROG($1, $2)],
+    [JAC_CHECK_USER_PROG($1, $2, [$3])]
 )
+if test "x[$]$1" = "x" ; then
+    ifelse([$3],,
+        [JAC_FIND_PROG_IN_PATH($1, $2)],
+        [JAC_FIND_PROG_IN_PATH($1, $2, [$3])]
+    )
+fi
 if test "x[$]$1" = "x" ; then
     ifelse([$3],,
         [JAC_FIND_PROG_IN_KNOWNS($1, $2)],
@@ -409,18 +446,20 @@ dnl -I/usr/include/linux dnl won't be accepted.
 
 if test "$is_jni_working" = "no" ; then
     JAC_PATH_PROG(jac_JH, javah, [
-        AC_MSG_RESULT([unknown!])
+dnl
         changequote(,)dnl
         jac_JDK_TOPDIR="`echo $jac_JH | sed -e 's%\(.*\)/[^/]*/[^/]*$%\1%'`"
         changequote([,])dnl
         AC_MSG_CHECKING([if $jac_JDK_TOPDIR exists])
         if test "X$jac_JDK_TOPDIR" != "X" -a -d "$jac_JDK_TOPDIR" ; then
+            AC_MSG_RESULT(yes)
             jac_jni_working=yes
         else
+            AC_MSG_RESULT(no)
             jac_jni_working=no
         fi
+dnl
         if test "$jac_jni_working" = "yes" ; then
-            AC_MSG_RESULT(yes)
             AC_MSG_CHECKING([for <jni.h> include flag])
             jac_JDK_INCDIR="$jac_JDK_TOPDIR/include"
             if test -d "$jac_JDK_INCDIR" -a -f "$jac_JDK_INCDIR/jni.h" ; then
@@ -438,13 +477,15 @@ dnl             these 2 lines handle blackdown's JDK 117_v3
 dnl             elif test -d "$jac_JDK_INCDIR/genunix" ; then
 dnl                 jac_JNI_INC="$jac_JNI_INC -I$jac_JDK_INCDIR/genunix"
                 fi
+                AC_MSG_RESULT([found $jac_JNI_INC])
                 jac_jni_working=yes
             else
+                AC_MSG_RESULT(no)
                 jac_jni_working=no
             fi
         fi
+dnl
         if test "$jac_jni_working" = "yes" ; then
-            AC_MSG_RESULT([found $jac_JNI_INC])
             AC_MSG_CHECKING([for <jni.h> usability])
             jac_save_CPPFLAGS="$CPPFLAGS"
             CPPFLAGS="$jac_save_CPPFLAGS $jac_JNI_INC"
@@ -469,9 +510,11 @@ dnl -I/usr/include/linux dnl won't be accepted.
             $1="$jac_JNI_INC"
             ifelse($2,, :, [$2="$jac_JDK_TOPDIR"])
             jac_prog_working=yes
+            AC_MSG_RESULT(yes)
         else
             $1=""
             jac_prog_working=no
+            AC_MSG_RESULT(no)
         fi
     ])
 fi
