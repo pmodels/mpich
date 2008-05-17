@@ -505,16 +505,15 @@ dnl -I/usr/include/linux dnl won't be accepted.
     jobject  obj;
                            ], [jac_jni_working=yes], [jac_jni_working=no])
             CPPFLAGS="$jac_save_CPPFLAGS"
+            AC_MSG_RESULT([$jac_jni_working])
         fi
         if test "$jac_jni_working" = "yes" ; then
             $1="$jac_JNI_INC"
             ifelse($2,, :, [$2="$jac_JDK_TOPDIR"])
             jac_prog_working=yes
-            AC_MSG_RESULT(yes)
         else
             $1=""
             jac_prog_working=no
-            AC_MSG_RESULT(no)
         fi
     ])
 fi
