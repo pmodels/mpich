@@ -155,16 +155,11 @@ else
 
     JAC_CHECK_CLASSPATH
     is_jvm_working=no
-    if test "x$JRE_TOPDIR" != "x" ; then
-        JVM="$JRE_TOPDIR/bin/$pac_JVM"
-        AC_MSG_CHECKING([if $JVM exists])
-        if test -x "$JVM" ; then
-            AC_MSG_RESULT(yes)
-            jac_java_working=yes
-        else
-            AC_MSG_RESULT(no)
-            jac_java_working=no
-        fi
+#
+dnl JVM="$JRE_TOPDIR/bin/$pac_JVM" is used in JAC_PATH_PROG
+    JAC_PATH_PROG(JVM, $pac_JVM, [
+dnl Initialize the checking flag.
+        jac_java_working=yes
 dnl
         if test "$jac_java_working" = "yes" ; then
             AC_MSG_CHECKING([if $JVM runs simple java class])
@@ -209,7 +204,6 @@ dnl
                 AC_MSG_RESULT(yes)
             fi
         fi
-        AC_SUBST(NONGUI_JVMFLAGS)
 dnl
         if test "$jac_java_working" = "yes" \
              -a "$enable_swingcheck" = "yes" ; then
@@ -238,53 +232,18 @@ dnl
         fi
 dnl
         if test "$jac_java_working" = "yes" ; then
-            is_jvm_working=yes
+            jac_prog_working=yes
         else
-            is_jvm_working=no
+            jac_prog_working=no
         fi
+    ])
+    AC_SUBST(NONGUI_JVMFLAGS)
+#   If JVM still hasn't been found, we need to abort!
+    if test "x$JVM" = "x" ; then
+        PAC_MSG_ERROR($enable_softerror,
+                      [No Java Virtual Machine can be found anywhere!])
     fi
-#
-    if test "$is_jvm_working" = "no" ; then
-        JAC_PATH_PROG(JVM, $pac_JVM, [
-            JAC_TRY_RUN([$JVM], [$JVMFLAGS],
-                        [ac_javatest/simple.class],
-                        [jac_java_working=yes], [jac_java_working=no])
-            if test "$jac_java_working" = "yes" ; then
-                AC_MSG_RESULT(yes)
-                AC_MSG_CHECKING([if $JVM runs simple jar file])
-                JAC_TRY_RUNJAR([$JVM], [$JVMFLAGS],
-                               [ac_javatest/simple.jar],
-                               [jac_java_working=yes], [jac_java_working=no])
-            fi
-            if test "$jac_java_working" = "yes" \
-                 -a "$enable_swingcheck" = "yes" ; then
-                AC_MSG_RESULT(yes)
-                AC_MSG_CHECKING([if $JVM runs simple Swing class])
-                JAC_TRY_RUN([$JVM], [$JVMFLAGS],
-                            [ac_javatest/simple_swing.class],
-                            [jac_java_working=yes], [jac_java_working=no])
-            fi
-            if test "$jac_java_working" = "yes" \
-                 -a "$enable_swingcheck" = "yes" ; then
-                AC_MSG_RESULT(yes)
-                AC_MSG_CHECKING([if $JVM runs simple Swing jar file])
-                JAC_TRY_RUNJAR([$JVM], [$JVMFLAGS],
-                               [ac_javatest/simple_swing.jar],
-                               [jac_java_working=yes], [jac_java_working=no])
-            fi
-            if test "$jac_java_working" = "yes" ; then
-                jac_prog_working=yes
-            else
-                jac_prog_working=no
-            fi
-        ])
-#       If JVM still hasn't been found, we need to abort!
-        if test "x$JVM" = "x" ; then
-            PAC_MSG_ERROR($enable_softerror,
-                          [No Java Virtual Machine can be found anywhere!])
-        fi
-        is_jvm_working=yes
-    fi
+    is_jvm_working=yes
 fi
 
 # CHECK the version of Java used 
