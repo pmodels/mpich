@@ -2744,12 +2744,30 @@ Sub AddDefinitions( fout, filename, b64 )
 			macroname = RegExpFind("(\S)+", macroname)
 			fout.WriteLine(comment)
 			Select Case macroname
+				Case "HAVE_INT8_T"
+					fout.WriteLine("/* #undef HAVE_INT8_T */")
 				Case "HAVE_INT16_T"
 					fout.WriteLine("/* #undef HAVE_INT16_T */")
 				Case "HAVE_INT32_T"
 					fout.WriteLine("/* #undef HAVE_INT32_T */")
 				Case "HAVE_INT64_T"
 					fout.WriteLine("/* #undef HAVE_INT64_T */")
+				Case "int8_t"
+					fout.WriteLine("#define int8_t __int8")
+				Case "int16_t"
+					fout.WriteLine("#define int16_t __int16")
+				Case "int32_t"
+					fout.WriteLine("#define int32_t __int32")
+				Case "int64_t"
+					fout.WriteLine("#define int64_t __int64")
+				Case "uint8_t"
+					fout.WriteLine("#define uint8_t unsigned __int8")
+				Case "uint16_t"
+					fout.WriteLine("#define uint16_t unsigned __int16")
+				Case "uint32_t"
+					fout.WriteLine("#define uint32_t unsigned __int32")
+				Case "uint64_t"
+					fout.WriteLine("#define uint64_t unsigned __int64")
 				Case "const"
 					fout.WriteLine("/* #undef const */")
 				Case "inline"

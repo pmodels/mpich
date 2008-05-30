@@ -131,6 +131,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				LinkLibraryDependencies="false"
 				OutputFile="..\..\..\lib\cxx.lib"
 			/>
 			<Tool

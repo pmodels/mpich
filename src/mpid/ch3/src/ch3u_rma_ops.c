@@ -29,7 +29,6 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
 
     /* FIXME: There should be no unreferenced args */
     MPIU_UNREFERENCED_ARG(info);
-    MPIU_UNREFERENCED_ARG(RMAFns);
 
     MPIU_THREADPRIV_GET;
 
