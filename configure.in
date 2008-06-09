@@ -6151,6 +6151,7 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
 	  test/commands/cmdtests \
 	  test/mpid/Makefile \
 	  test/mpid/ch3/Makefile \
+	  test/util/timer/Makefile \
 	  examples/Makefile \
 	  examples/f77/Makefile \
 	  examples/f90/Makefile \
