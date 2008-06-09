@@ -744,8 +744,10 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Bcast != NULL)
     {
+	/* --BEGIN USEREXTENSION-- */
 	mpi_errno = comm_ptr->coll_fns->Bcast(buffer, count,
                                               datatype, root, comm_ptr);
+	/* --END USEREXTENSION-- */
     }
     else
     {
