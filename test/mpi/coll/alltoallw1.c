@@ -27,7 +27,7 @@ void Transpose(float *localA, float *localB, int M, int N,
 /* transpose MxN matrix A that is block distributed on  
    processes of comm onto block distributed matrix B  */
 {
-  int i, j, extent, myrank, p, *scounts, *rcounts, n[2], m[2];
+  int i, j, extent, myrank, p, n[2], m[2];
   int lasti, lastj;
   int sendcounts[MAX_SIZE], recvcounts[MAX_SIZE];
   int *sdispls, *rdispls;
@@ -41,9 +41,7 @@ void Transpose(float *localA, float *localB, int M, int N,
   extent = sizeof(float);
 
   /* allocate arrays */
-  scounts = (int *)malloc(p*sizeof(int));
   sdispls = (int *)malloc(p*sizeof(int));
-  rcounts = (int *)malloc(p*sizeof(MPI_Aint));
   rdispls = (int *)malloc(p*sizeof(int));
   sendtypes = (MPI_Datatype *)malloc(p*sizeof(MPI_Datatype));
   recvtypes = (MPI_Datatype *)malloc(p*sizeof(MPI_Datatype));
