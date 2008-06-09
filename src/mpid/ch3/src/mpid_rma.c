@@ -6,22 +6,6 @@
 
 #include "mpidimpl.h"
 
-/* This was probably added by Brad. Leaving it here for now. Needs to be fixed 
-   according to the FIXME below. */
-/* FIXME: It would be better to install this as an abort and a finalize 
-   handler, ranter than expecting all routines to call this.  It
-   can be installed on first use of alloc_mem */
-#undef FUNCNAME
-#define FUNCNAME MPID_Cleanup_mem
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-void MPID_Cleanup_mem()
-{
-#if defined(MPIDI_CH3_IMPLEMENTS_CLEANUP_MEM)
-    MPIDI_CH3_Cleanup_mem();
-#endif
-}
-
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_create
 #undef FCNAME

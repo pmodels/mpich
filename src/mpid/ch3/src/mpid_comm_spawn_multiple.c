@@ -52,9 +52,6 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 					  array_of_info_ptrs,
 					  root, comm_ptr, intercomm, 
 					  array_of_errcodes);
-    if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SET(mpi_errno,MPI_ERR_OTHER, "**fail");
-    }
 #   else
     MPIU_ERR_SET1(mpi_errno,MPI_ERR_OTHER, "**notimpl",
 		  "**notimpl %s", FCNAME);
