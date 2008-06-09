@@ -41,7 +41,7 @@ int main( int argc, char *argv[] )
 
 		MPI_Type_extent( recvtype.datatype, &extent );
 		MPI_Win_create( recvtype.buf, recvtype.count * extent, 
-				extent, MPI_INFO_NULL, comm, &win );
+				(int)extent, MPI_INFO_NULL, comm, &win );
 		MPI_Win_fence( 0, win );
 		if (rank == source) {
 		    sendtype.InitBuf( &sendtype );

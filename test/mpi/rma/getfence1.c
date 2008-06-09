@@ -42,7 +42,7 @@ int main( int argc, char *argv[] )
 
 		MPI_Type_extent( sendtype.datatype, &extent );
 		MPI_Win_create( sendtype.buf, sendtype.count * extent, 
-				extent, MPI_INFO_NULL, comm, &win );
+				(int)extent, MPI_INFO_NULL, comm, &win );
 		MPI_Win_fence( 0, win );
 		if (rank == source) {
 		    /* The source does not need to do anything besides the
