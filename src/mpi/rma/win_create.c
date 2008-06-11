@@ -24,11 +24,6 @@
 #undef MPI_Win_create
 #define MPI_Win_create PMPI_Win_create
 
-#ifdef USE_MPID_RMA_TABLE
-/* This is the home of the RMA function table */
-MPIRI_RMAFns MPIR_RMA_Fns = {1,0};
-#endif
-
 #endif
 
 #undef FUNCNAME
