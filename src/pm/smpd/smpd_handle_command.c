@@ -932,9 +932,16 @@ int smpd_handle_result(smpd_context_t *context)
 		    smpd_process.nproc_launched++;
 		    if (strcmp(str, SMPD_SUCCESS_STR) == 0)
 		    {
+            char wMsg[256];
 			MPIU_Str_get_string_arg(context->read_cmd.cmd, "pg_id", pg_id, SMPD_MAX_DBS_NAME_LEN);
 			MPIU_Str_get_int_arg(context->read_cmd.cmd, "pg_rank", &pg_rank);
 			MPIU_Str_get_string_arg(context->read_cmd.cmd, "pg_ctx", pg_ctx, 100);
+            result = MPIU_Str_get_string_arg(context->read_cmd.cmd, "warning", wMsg, 256);
+            if(result == SMPD_SUCCESS){
+                smpd_err_printf("*********** Warning ************\n");
+                smpd_err_printf("%s\n", wMsg);
+                smpd_err_printf("*********** Warning ************\n");
+            }
 			pg = smpd_process.pg_list;
 			while (pg)
 			{
@@ -1084,6 +1091,7 @@ int smpd_handle_result(smpd_context_t *context)
 		    {
 			/* FIXME: We shouldn't abort if a process fails to launch as part of a spawn command */
 			smpd_process.nproc_exited++;
+            smpd_process.mpiexec_exit_code = -1;
 			if (MPIU_Str_get_string_arg(context->read_cmd.cmd, "error", err_msg, SMPD_MAX_ERROR_LEN) == MPIU_STR_SUCCESS)
 			{
 			    smpd_err_printf("launch failed: %s\n", err_msg);
@@ -2191,12 +2199,16 @@ int smpd_handle_proc_info_command(smpd_context_t *context){
     return SMPD_SUCCESS;
 }
 
+#define SMPD_LAUNCH_WARNING_MSG_LEN 256
 #undef FCNAME
 #define FCNAME "smpd_handle_launch_command"
 int smpd_handle_launch_command(smpd_context_t *context)
 {
     int result;
     char err_msg[256];
+    char wMsg[SMPD_LAUNCH_WARNING_MSG_LEN];
+    char *pWMsg = wMsg;
+    int wMsgCurLen = SMPD_LAUNCH_WARNING_MSG_LEN;
     int iproc;
     int i, nmaps;
     char drive_arg_str[20];
@@ -2206,6 +2218,7 @@ int smpd_handle_launch_command(smpd_context_t *context)
     int priority_class = SMPD_DEFAULT_PRIORITY_CLASS, priority_thread = SMPD_DEFAULT_PRIORITY;
 
     smpd_enter_fn(FCNAME);
+    wMsg[0] = '\0';
 
     cmd = &context->read_cmd;
 
@@ -2262,13 +2275,27 @@ int smpd_handle_launch_command(smpd_context_t *context)
 #ifdef HAVE_WINDOWS_H
 	    /* map the drive */
 	    /* FIXME: username and password needed to map a drive */
-	    result = smpd_map_user_drives(share, NULL, NULL, err_msg, 256);
+	    result = smpd_map_user_drives(share, NULL, NULL, pWMsg, wMsgCurLen);
 	    if (result != SMPD_TRUE)
 	    {
-		smpd_err_printf("mapping drive failed: input string - %s, error - %s\n", share, err_msg);
+        int wMsgAddedLen=0;
+		smpd_err_printf("mapping drive failed: input string - %s, error - %s\n", share, pWMsg);
+	    process->map_list[i].drive = '\0';
+	    process->map_list[i].share[0] = '\0';
+        wMsgAddedLen = strlen(pWMsg);
+        pWMsg += wMsgAddedLen;
+        wMsgCurLen -= wMsgAddedLen;
+        if(wMsgCurLen <= 1){
+            /* Circular buffer */
+            pWMsg = wMsg;
+            wMsgCurLen = SMPD_LAUNCH_WARNING_MSG_LEN;
+        }
+        /* Don't abort if we fail to map a drive */
+        /*
 		smpd_free_process_struct(process);
 		smpd_exit_fn(FCNAME);
 		return SMPD_FAIL;
+        */
 	    }
 #endif
 	}
@@ -2402,6 +2429,14 @@ int smpd_handle_launch_command(smpd_context_t *context)
 	smpd_err_printf("unable to add the pg_ctx field to the result command in response to launch command: '%s'\n", cmd->cmd);
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
+    }
+    
+    if(wMsgCurLen < SMPD_LAUNCH_WARNING_MSG_LEN){
+        result = smpd_add_command_arg(temp_cmd, "warning", wMsg);
+        if(result != SMPD_SUCCESS){
+            /* Don't abort if we cannot add the warning message... */
+            smpd_err_printf("unable to add warning message to the result command in response to launch command '%s'\n", cmd->cmd);
+        }
     }
 
     /* send the result back */

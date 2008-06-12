@@ -270,8 +270,8 @@ static SMPD_BOOL ParseDriveShareAccountPassword(char *str, char *pszDrive, char 
 }
 
 #ifdef HAVE_WINDOWS_H
-/* There can be atmost 26 logical drives -- currently limiting to 10*/
-#define SMPD_LOGICALDRVNUM_MAX      10
+/* There can be atmost 26 logical drives -- currently limiting to 20*/
+#define SMPD_LOGICALDRVNUM_MAX      20
 /* Each drive letter occupies 3 TCHARs -- "A:\" */
 #define SMPD_LOGICALDRVLEN_MAX      3
 /* Each drive string is of the form "%s0x0" - 1 delim */
@@ -282,7 +282,7 @@ static SMPD_BOOL ParseDriveShareAccountPassword(char *str, char *pszDrive, char 
     (SMPD_LOGICALDRVSTR_NODELIM_MAX + SMPD_LOGICALDRVDELIM_MAX * SMPD_LOGICALDRVNUM_MAX * sizeof(TCHAR))
 /* Each map string is of the form "%s%s;" - 1 delims */
 #define SMPD_MAPLISTDELIM_MAX       1
-/* Network drv name \\compname\share -- is currently limited to 50 TCHARS */
+/* Network drv name \\compname\share -- is currently limited to 100 TCHARS */
 #define SMPD_MAPNETWORKDRVSTR_MAX   100
 /* Map list item = "%s%s;" - A:\\compname\share; */
 #define SMPD_MAPLISTITEM_MAX    \
@@ -294,44 +294,51 @@ static SMPD_BOOL ParseDriveShareAccountPassword(char *str, char *pszDrive, char 
 #define FCNAME "smpd_get_network_drives"
 int smpd_get_network_drives(char *pMapList, int mapListLen){
     DWORD retVal, mapNetworkDrvLen;
+    int mapListCurLen = 0;
     UINT drvType;
     LPTSTR pDrv, pNetDrv;
     /* TODO : Allocate these large arrays in heap */
     TCHAR logicalDrvs[SMPD_LOGICALDRVSTR_MAX], mapNetworkDrv[SMPD_MAPNETWORKDRVSTR_MAX];
     smpd_enter_fn(FCNAME);
-    if(mapListLen > SMPD_MAPLISTSTR_MAX){
-   		printf("Error: Not enough mem for mapping network drive\n");
+    if(mapListLen <= SMPD_MAPLISTSTR_MAX){
+        mapListCurLen = mapListLen;
+    }
+    else{
+   		smpd_err_printf("Error: Not enough mem for mapping network drive\n");
 		smpd_exit_fn(FCNAME);
         return SMPD_FAIL;
     }
-    if(retVal = GetLogicalDriveStrings(SMPD_LOGICALDRVSTR_NODELIM_MAX, logicalDrvs)){
+    if(retVal = GetLogicalDriveStrings(SMPD_LOGICALDRVSTR_MAX, logicalDrvs)){
         /* logicalDrvs = "A:\[0x0]C:\[0x0]X:\[0x0][0x0]" */
         pDrv = logicalDrvs;
         while(*pDrv){
             drvType = GetDriveType(pDrv);
             pNetDrv = pDrv;
             /* Increment pDrv before any changes to the contents */
-            pDrv += (_tcslen(pDrv) + 1);
+            pDrv += (_tcslen(pDrv) + sizeof(TCHAR));
             switch(drvType){
             /* Network mapped drive */
             case DRIVE_REMOTE:
                 /* Convert "A:\[0x0]" to "A:[0x0][0x0]" */  
-                pNetDrv[_tcslen(pNetDrv) - 1] = '\0';
+                pNetDrv[_tcslen(pNetDrv) - sizeof(TCHAR)] = _T('\0');
                 mapNetworkDrvLen=SMPD_MAPNETWORKDRVSTR_MAX;
                 if((retVal  = WNetGetConnection(pNetDrv, mapNetworkDrv, &mapNetworkDrvLen)) 
                             == NO_ERROR){
-                    if(mapNetworkDrvLen <= SMPD_MAPNETWORKDRVSTR_MAX){
-                        MPIU_Snprintf(pMapList, SMPD_MAPLISTITEM_MAX,
+                    if((mapNetworkDrvLen <= SMPD_MAPNETWORKDRVSTR_MAX) 
+                            && (mapListCurLen >= SMPD_MAPLISTITEM_MAX)){
+                        int len=0;    
+                        len = MPIU_Snprintf(pMapList, SMPD_MAPLISTITEM_MAX,
                         "%s%s;",pNetDrv, mapNetworkDrv);
-                        pMapList += _tcslen(pMapList);
+                        pMapList += len;
+                        mapListCurLen -= len;
                     }else{
-                   	printf("Error:  Not enough space for %s = WNetGetConnection(%s, ...) failed\n",
+                   	smpd_err_printf("Error: Not enough space for copying result (%s) of WNetGetConnection(%s, ...)\n",
                                         mapNetworkDrv, pNetDrv);
 	    	            smpd_exit_fn(FCNAME);
                         return SMPD_FAIL;
                     }
                 }else{
-               	    printf("Error: WNetGetConnection(%s, ...) failed\n", pNetDrv);
+               	    smpd_err_printf("Error: WNetGetConnection(%s, ...) failed\n", pNetDrv);
 		            smpd_exit_fn(FCNAME);
                     return SMPD_FAIL;
                 }
@@ -341,7 +348,7 @@ int smpd_get_network_drives(char *pMapList, int mapListLen){
             }
         }
     }else{
-   		printf("Error: Could not access mapped drives\n");
+   		smpd_err_printf("Error: Could not access mapped drives, GetLogicalDriveStrings() failed (errcode=%d)\n", retVal);
 		smpd_exit_fn(FCNAME);
         return SMPD_FAIL;
     }
@@ -360,6 +367,7 @@ SMPD_BOOL smpd_map_user_drives(char *pszMap, char *pszAccount, char *pszPassword
     char ipszPassword[SMPD_MAX_PASSWORD_LENGTH];
     char *token;
     char *temp = strdup(pszMap);
+    SMPD_BOOL retVal = SMPD_TRUE;
 
     smpd_enter_fn(FCNAME);
 
@@ -378,20 +386,26 @@ SMPD_BOOL smpd_map_user_drives(char *pszMap, char *pszAccount, char *pszPassword
 	    {
 		if (!MapDrive(pszDrive, pszShare, ipszAccount, ipszPassword, pszError, maxerrlength))
 		{
-		    free(temp);
 		    smpd_err_printf("MapUserDrives: MapDrive(%s, %s, %s, ... ) failed, %s\n", pszDrive, pszShare, ipszAccount, pszError);
+            retVal = SMPD_FALSE;
+            /*    
+		    free(temp);
 		    smpd_exit_fn(FCNAME);
 		    return SMPD_FALSE;
+            */
 		}
 	    }
 	    else
 	    {
 		if (!MapDrive(pszDrive, pszShare, pszAccount, pszPassword, pszError, maxerrlength))
 		{
-		    free(temp);
 		    smpd_err_printf("MapUserDrives: MapDrive(%s, %s, %s, ... ) failed, %s\n", pszDrive, pszShare, pszAccount, pszError);
+            retVal = SMPD_FALSE;
+            /*
+		    free(temp);
 		    smpd_exit_fn(FCNAME);
 		    return SMPD_FALSE;
+            */
 		}
 	    }
 	}
@@ -400,7 +414,7 @@ SMPD_BOOL smpd_map_user_drives(char *pszMap, char *pszAccount, char *pszPassword
     free(temp);
 
     smpd_exit_fn(FCNAME);
-    return SMPD_TRUE;
+    return retVal;
 }
 
 #undef FCNAME
@@ -454,7 +468,7 @@ static SMPD_BOOL MapDrive(char *pszDrive, char *pszShare, char *pszAccount, char
 
     if (pszDrive == NULL)
     {
-	strcpy(pszError, "Invalid drive string");
+	MPIU_Strncpy(pszError, "Invalid drive string\n", maxerrlength);
 	return SMPD_FALSE;
     }
     pszDriveLetter[0] = pszDrive[0];
@@ -471,7 +485,7 @@ static SMPD_BOOL MapDrive(char *pszDrive, char *pszShare, char *pszAccount, char
     {
 	if (bMatched)
 	    return SMPD_TRUE;
-	sprintf(pszError, "Drive %s already mapped.", pszDrive);
+	snprintf(pszError, maxerrlength,"Drive %s already mapped.\n", pszDrive);
 	smpd_err_printf("MapDrive failed, drive is already mapped\n");
 	return SMPD_FALSE;
     }
@@ -493,11 +507,12 @@ static SMPD_BOOL MapDrive(char *pszDrive, char *pszShare, char *pszAccount, char
 	DriveMapStruct *p = allocate_DriveMapStruct();
 	if (p == NULL)
 	{
+        MPIU_Strncpy(pszError, "unable to allocate a drive map structure.\n", maxerrlength);
 	    smpd_err_printf("unable to allocate a drive map structure.\n");
 	    return SMPD_FALSE;
 	}
 	strcpy(p->pszDrive, pszDriveLetter);
-	strncpy(p->pszShare, pszShare, MAX_PATH);
+	MPIU_Strncpy(p->pszShare, pszShare, MAX_PATH);
 	p->pNext = g_pDriveList;
 	g_pDriveList = p;
 	return SMPD_TRUE;
@@ -506,14 +521,14 @@ static SMPD_BOOL MapDrive(char *pszDrive, char *pszShare, char *pszAccount, char
     switch (dwResult)
     {
     case ERROR_ACCESS_DENIED:
-	strcpy(pszError, "Access to the network resource was denied.");
+	snprintf(pszError, maxerrlength, "Access to the network resource (%s) was denied.\n", pszShare);
 	break;
     case ERROR_ALREADY_ASSIGNED:
 	if (MatchesExistingMapping(pszDriveLetter, pszShare))
 	{
 	    DriveMapStruct *p = allocate_DriveMapStruct();
 	    strcpy(p->pszDrive, pszDriveLetter);
-	    strncpy(p->pszShare, pszShare, MAX_PATH);
+	    MPIU_Strncpy(p->pszShare, pszShare, MAX_PATH);
 	    p->bUnmap = SMPD_FALSE; /* don't unmap this drive since it was mapped outside mpd */
 	    p->pNext = g_pDriveList;
 	    g_pDriveList = p;
@@ -521,39 +536,39 @@ static SMPD_BOOL MapDrive(char *pszDrive, char *pszShare, char *pszAccount, char
 	}
 	else
 	{
-	    sprintf(pszError, "The local device '%s' is already connected to a network resource.", pszDriveLetter);
+	    snprintf(pszError, maxerrlength, "The local device '%s' is already connected to a network resource.\n", pszDriveLetter);
 	}
 	break;
     case ERROR_BAD_DEV_TYPE:
-	strcpy(pszError, "The type of local device and the type of network resource do not match.");
+	snprintf(pszError, maxerrlength, "The type of local device and the type of network resource (%s) do not match.\n", pszShare);
 	break;
     case ERROR_BAD_DEVICE:
-	sprintf(pszError, "The value '%s' is invalid.", pszDriveLetter);
+	snprintf(pszError, maxerrlength, "The value '%s' is invalid.", pszDriveLetter);
 	break;
     case ERROR_BAD_NET_NAME:
-	sprintf(pszError, "The value '%s' is not acceptable to any network resource provider because the resource name is invalid, or because the named resource cannot be located.", pszShare);
+	snprintf(pszError, maxerrlength,"The value '%s' is not acceptable to any network resource provider because the resource name is invalid, or because the named resource cannot be located.", pszShare);
 	break;
     case ERROR_BAD_PROFILE:
-	strcpy(pszError, "The user profile is in an incorrect format.");
+	snprintf(pszError, maxerrlength, "Unable to map %s. The user profile is in an incorrect format.\n", pszShare);
 	break;
     case ERROR_BAD_PROVIDER:
-	strcpy(pszError, "The value specified by the lpProvider member does not match any provider.");
+    snprintf(pszError, maxerrlength, "Unable to map %s. The value specified by the lpProvider member does not match any provider.\n", pszShare);
 	break;
     case ERROR_BUSY:
-	strcpy(pszError, "The router or provider is busy, possibly initializing. The caller should retry.");
+    snprintf(pszError, maxerrlength, "Unable to map %s. The router or provider is busy, possibly initializing. The caller should retry.\n", pszShare);
 	break;
     case ERROR_CANCELLED:
-	strcpy(pszError, "The attempt to make the connection was canceled by the user through a dialog box from one of the network resource providers, or by a called resource.");
+    snprintf(pszError, maxerrlength, "Unable to map %s. The attempt to make the connection was canceled by the user through a dialog box from one of the network resource providers, or by a called resource.\n", pszShare);
 	break;
     case ERROR_CANNOT_OPEN_PROFILE:
-	strcpy(pszError, "The system is unable to open the user profile to process persistent connections.");
+    snprintf(pszError, maxerrlength, "Unable to map %s. The system is unable to open the user profile to process persistent connections.\n", pszShare);
 	break;
     case ERROR_DEVICE_ALREADY_REMEMBERED:
 	if (MatchesExistingMapping(pszDriveLetter, pszShare))
 	{
 	    DriveMapStruct *p = allocate_DriveMapStruct();
 	    strcpy(p->pszDrive, pszDriveLetter);
-	    strncpy(p->pszShare, pszShare, MAX_PATH);
+	    MPIU_Strncpy(p->pszShare, pszShare, MAX_PATH);
 	    p->bUnmap = SMPD_FALSE; /* don't unmap this drive since it was mapped outside mpd */
 	    p->pNext = g_pDriveList;
 	    g_pDriveList = p;
@@ -561,31 +576,31 @@ static SMPD_BOOL MapDrive(char *pszDrive, char *pszShare, char *pszAccount, char
 	}
 	else
 	{
-	    sprintf(pszError, "An entry for the device '%s' is already in the user profile.", pszDriveLetter);
+	    snprintf(pszError, maxerrlength,"An entry for the device '%s' is already in the user profile.\n", pszDriveLetter);
 	}
 	break;
     case ERROR_EXTENDED_ERROR:
 	if (WNetGetLastError(&dwResult, pszName, 1024, pszProvider, 256) == NO_ERROR)
 	{
-	    sprintf(pszError, "'%s' returned this error: %d, %s", pszProvider, dwResult, pszName);
+	    snprintf(pszError, maxerrlength,"'%s' returned this error: %d, %s", pszProvider, dwResult, pszName);
 	}
 	else
 	{
-	    strcpy(pszError, "A network-specific error occurred.");
+	    snprintf(pszError, maxerrlength, "Unable to map %s. A network-specific error occurred.\n", pszShare);
 	}
 	break;
     case ERROR_INVALID_PASSWORD:
-	strcpy(pszError, "The specified password is invalid.");
+    snprintf(pszError, maxerrlength, "Unable to map %s. The specified password is invalid.\n", pszShare);
 	break;
     case ERROR_NO_NET_OR_BAD_PATH:
-	strcpy(pszError, "The operation could not be completed, either because a network component is not started, or because the specified resource name is not recognized.");
+    snprintf(pszError, maxerrlength, "Unable to map %s. The operation could not be completed, either because a network component is not started, or because the specified resource name is not recognized.\n", pszShare);
 	break;
     case ERROR_NO_NETWORK:
-	strcpy(pszError, "The network is unavailable.");
+    snprintf(pszError, maxerrlength, "Unable to map %s. The network is unavailable.\n", pszShare);
 	break;
     default:
 	smpd_translate_win_error(dwResult, pszError, maxerrlength, NULL);
-	smpd_err_printf("MapDrive: unknown error %d\n", dwResult);
+    snprintf(pszError, maxerrlength, "Unable to map %s. (error %d)\n", pszShare, dwResult);
 	break;
     }
 

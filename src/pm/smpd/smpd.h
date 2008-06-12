@@ -9,6 +9,7 @@
 #ifdef HAVE_WINDOWS_H
 #include <winsock2.h>
 #include <windows.h>
+#include <tchar.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <io.h>
