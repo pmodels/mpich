@@ -22,6 +22,7 @@ mpiexec [global args] [local args] executable [args]
       -m                           # merge output lines (default with gdb)
       -a                           # means assign this alias to the job
       -ecfn                        # output_xml_exit_codes_filename
+      -recvtimeout <integer_val>   # timeout for recvs to fail (e.g. from mpd daemon)
       -g<local arg name>           # global version of local arg (below)
     and local args may be
       -n <n> or -np <n>            # number of processes to start
@@ -71,14 +72,12 @@ try:
 except:
     pwd_module_available = 0
 
-global parmdb, nextRange, appnum
+global parmdb, nextRange, appnum, recvTimeout
 global numDoneWithIO, myExitStatus, sigOccurred, outXmlDoc, outECs
-
-recvTimeout = 20  # const
 
 
 def mpiexec():
-    global parmdb, nextRange, appnum
+    global parmdb, nextRange, appnum, recvTimeout
     global numDoneWithIO, myExitStatus, sigOccurred, outXmlDoc, outECs
 
     import sys  # for sys.excepthook on next line
@@ -118,6 +117,7 @@ def mpiexec():
                         'MPIEXEC_TIMEOUT'             :  0,
                         'MPIEXEC_HOST_LIST'           :  [],
                         'MPIEXEC_HOST_CHECK'          :  0,
+                        'MPIEXEC_RECV_TIMEOUT'        :  20,
                       }
     for (k,v) in parmsToOverride.items():
         parmdb[('thispgm',k)] = v
@@ -214,6 +214,8 @@ def mpiexec():
     outECs = ''
     outECFile = None
     sigOccurred = 0
+
+    recvTimeout = int(parmdb['MPIEXEC_RECV_TIMEOUT'])
 
     listenSock = MPDListenSock('',0,name='socket_to_listen_for_man')
     listenPort = listenSock.getsockname()[1]
@@ -540,7 +542,7 @@ def collect_args(args,localArgSets):
     validGlobalArgs = { '-l' : 0, '-usize' : 1, '-gdb' : 0, '-bnr' : 0,
                         '-tv' : 0, '-tvsu' : 0,
                         '-ifhn' : 1, '-machinefile' : 1, '-s' : 1, '-1' : 0,
-                        '-a' : 1, '-m' : 0, '-ecfn' : 1,
+                        '-a' : 1, '-m' : 0, '-ecfn' : 1, '-recvtimeout' : 1,
                         '-gn' : 1, '-gnp' : 1, '-ghost' : 1, '-gpath' : 1, '-gwdir' : 1,
 			'-gsoft' : 1, '-garch' : 1, '-gexec' : 1, '-gumask' : 1,
 			'-genvall' : 0, '-genv' : 2, '-genvnone' : 0,
@@ -624,6 +626,13 @@ def collect_args(args,localArgSets):
                 print 'argument to %s must be numeric' % (garg)
                 usage()
             argidx += 2
+        elif garg == '-recvtimeout':
+            if args[argidx+1].isdigit():
+                parmdb[('cmdline','MPIEXEC_RECV_TIMEOUT')] = int(args[argidx+1])
+            else:
+                print 'argument to %s must be numeric' % (garg)
+                usage()
+            argidx += 2
         elif garg == '-gdb':
             parmdb[('cmdline','MPIEXEC_GDB')] = 1
             argidx += 1
@@ -679,7 +688,7 @@ def collect_args(args,localArgSets):
         argidx += 1
 
 def handle_local_argset(argset,machineFileInfo,msgToMPD):
-    global parmdb, nextRange, appnum
+    global parmdb, nextRange, appnum, recvTimeout
     validLocalArgs  = { '-n' : 1, '-np' : 1, '-host' : 1, '-path' : 1, '-wdir' : 1,
                         '-soft' : 1, '-arch' : 1, '-umask' : 1,
 			'-envall' : 0, '-env' : 2, '-envnone' : 0, '-envlist' : 1 }
@@ -1368,6 +1377,7 @@ def get_parms_from_xml_file(msgToMPD):
             sys.exit(-1)
         
 def get_vals_for_attach(parmdb,conSock,msgToMPD):
+    global recvTimeout
     sjobid = parmdb['-gdba'].split('@')    # jobnum and originating host
     msgToSend = { 'cmd' : 'mpdlistjobs' }
     conSock.send_dict_msg(msgToSend)
