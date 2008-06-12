@@ -1,5 +1,5 @@
 SUBDIRS_otherlangs = f77 cxx
-SUBDIRS = util pt2pt comm
+SUBDIRS = util pt2pt comm spawn
 #SUBDIRS = util attr basic datatype coll comm errhan group info init pt2pt rma spawn topo io @otherlangs@ .
 
 # A special testing target to simplify running just the thread tests
