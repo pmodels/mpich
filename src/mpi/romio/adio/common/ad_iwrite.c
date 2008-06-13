@@ -289,6 +289,19 @@ int ADIOI_GEN_aio_wait_fn(int count, void ** array_of_states,
         return errcode;
 }
 
+int ADIOI_GEN_aio_free_fn(void *extra_state)
+{
+	ADIOI_AIO_Request *aio_req;
+	aio_req = (ADIOI_AIO_Request*)extra_state;
+
+	if (aio_req->aiocbp != NULL)
+		ADIOI_Free(aio_req->aiocbp);
+	ADIOI_Free(aio_req);
+
+	return MPI_SUCCESS;
+}
+#endif /* working AIO */
+
 int ADIOI_GEN_aio_query_fn(void *extra_state, MPI_Status *status) 
 {
 	ADIOI_AIO_Request *aio_req;
@@ -309,19 +322,6 @@ int ADIOI_GEN_aio_query_fn(void *extra_state, MPI_Status *status)
 	/* this generalized request never fails */ 
 	return MPI_SUCCESS; 
 }
-
-int ADIOI_GEN_aio_free_fn(void *extra_state)
-{
-	ADIOI_AIO_Request *aio_req;
-	aio_req = (ADIOI_AIO_Request*)extra_state;
-
-	if (aio_req->aiocbp != NULL)
-		ADIOI_Free(aio_req->aiocbp);
-	ADIOI_Free(aio_req);
-
-	return MPI_SUCCESS;
-}
-#endif /* working AIO */
 /* 
  * vim: ts=8 sts=4 sw=4 noexpandtab 
  */
