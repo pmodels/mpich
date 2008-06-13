@@ -618,26 +618,26 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         }
     ADIOI_Free(tmp_len);
 
-/* check if there are any holes */
+    /* Wei-keng Liao: check holes, if yes, must do read-modify-write */
+
+    /* holes can be in three places.  'middle' is what you'd expect: the
+     * processes are operating on noncontigous data.  But holes can also show
+     * up at the beginning or end of the file domain (see John Bent ROMIO REQ
+     * #835). Missing these holes would result in us writing more data than
+     * recieved by everyone else. */
+
     *hole = 0;
-    for (i=0; i<sum-1; i++)
-	if (srt_off[i]+srt_len[i] < srt_off[i+1]) {
-	    *hole = 1;
-	    break;
-	}
-    /* In some cases (see John Bent ROMIO REQ # 835), an odd interaction
-     * between aggregation, nominally contiguous regions, and cb_buffer_size
-     * should be handled with a read-modify-write (otherwise we will write out
-     * more data than we receive from everyone else (inclusive), so override
-     * hole detection
-     */
-    if (*hole == 0) {
-        sum_recv=0;
-        for (i=0; i<nprocs; i++) {
-	   sum_recv += recv_size[i];
-	   sum_recv += partial_recv[i];
+    if (off != srt_off[0]) /* hole at the front */
+        *hole = 1;
+    else { /* coalesce the sorted offset-length pairs */
+        for (i=1; i<sum; i++) {
+            if (srt_off[i] <= srt_off[0] + srt_len[0])
+                srt_len[0] = srt_off[i] + srt_len[i] - srt_off[0];
+            else
+                break;
         }
-        if (size > sum_recv) *hole = 1;
+        if (i < sum || size != srt_len[0]) /* hole in middle or end */
+            *hole = 1;
     }
 
     ADIOI_Free(srt_off);
