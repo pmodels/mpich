@@ -19,6 +19,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     MPI_Info info;
     char *value;
     int flag, intval, tmp_val, nprocs=0, nprocs_is_valid = 0, len;
+    int ok_to_override_cb_nodes=0;
     static char myname[] = "ADIOI_GEN_SETINFO";
 
     if (fd->info == MPI_INFO_NULL) MPI_Info_create(&(fd->info));
@@ -85,6 +86,12 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	fd->hints->min_fdomain_size = 0;
 
 	fd->hints->initialized = 1;
+
+	/* ADIO_Open sets up collective buffering arrays.  If we are in this
+	 * path from say set_file_view, then we've don't want to adjust the
+	 * array: we'll get a segfault during collective i/o.  We only want to
+	 * look at the users cb_nodes if it's open time  */
+	ok_to_override_cb_nodes = 1;
 
     }
 
@@ -255,33 +262,38 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	    /* otherwise ignore */
 	}
 
-	MPI_Info_get(users_info, "cb_nodes", MPI_MAX_INFO_VAL, 
-		     value, &flag);
-	if (flag && ((intval=atoi(value)) > 0)) {
-	    tmp_val = intval;
+	if (ok_to_override_cb_nodes) {
+		/* MPI_File_open path sets up some data structrues that don't
+		 * get resized in the MPI_File_set_view path, so ignore
+		 * cb_nodes in the set_view case */
+	    MPI_Info_get(users_info, "cb_nodes", MPI_MAX_INFO_VAL, 
+	  	     value, &flag);
+	    if (flag && ((intval=atoi(value)) > 0)) {
+	        tmp_val = intval;
 
-	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
-	    /* --BEGIN ERROR HANDLING-- */
-	    if (tmp_val != intval) {
+	        MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
+	       /* --BEGIN ERROR HANDLING-- */
+	       if (tmp_val != intval) {
 		    MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
 						       "cb_nodes",
 						       error_code);
 		    return;
-	    }
-	    /* --END ERROR HANDLING-- */
+	       }
+	       /* --END ERROR HANDLING-- */
 
-	    if (!nprocs_is_valid) {
-		/* if hints were already initialized, we might not
-		 * have already gotten this?
-		 */
-		MPI_Comm_size(fd->comm, &nprocs);
-		nprocs_is_valid = 1;
-	    }
-	    if (intval <= nprocs) {
-		MPI_Info_set(info, "cb_nodes", value);
-		fd->hints->cb_nodes = intval;
-	    }
-	}
+	       if (!nprocs_is_valid) {
+		   /* if hints were already initialized, we might not
+		    * have already gotten this?
+		    */
+		   MPI_Comm_size(fd->comm, &nprocs);
+		   nprocs_is_valid = 1;
+	       }
+	       if (intval <= nprocs) {
+		   MPI_Info_set(info, "cb_nodes", value);
+		   fd->hints->cb_nodes = intval;
+	       }
+	   }
+	} /* if (ok_to_override_cb_nodes) */
 
 	MPI_Info_get(users_info, "ind_wr_buffer_size", MPI_MAX_INFO_VAL, 
 		     value, &flag);
