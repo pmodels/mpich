@@ -274,7 +274,7 @@ $mpirun -np 4 ./noncontig_coll2 -fname $FILENAME
 # CheckOutput noncontig_coll2
 CleanExe noncontig_coll2
 echo '**** Testing aggregation1 ****'
-$mpirun -np 4 ./aggregation1 -h -fname $FILENAME
+$mpirun -np 4 ./aggregation1 -h -f $FILENAME
 # CheckOutput aggregation1
 CleanExe aggregation1
 echo '**** Testing aggregation2 ****'
