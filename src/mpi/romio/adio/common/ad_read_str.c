@@ -55,7 +55,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
     ADIO_Offset userbuf_off;
     ADIO_Offset off, req_off, disp, end_offset=0, readbuf_off, start_off;
     char *readbuf, *tmp_buf, *value;
-    int flag, st_frd_size, st_n_filetypes, readbuf_len;
+    int st_frd_size, st_n_filetypes, readbuf_len;
     int new_brd_size, new_frd_size, info_flag, max_bufsize;
     ADIO_Status status1;
 
@@ -151,25 +151,23 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	disp = fd->disp;
 
 	if (file_ptr_type == ADIO_INDIVIDUAL) {
-	    offset = fd->fp_ind; /* in bytes */
-	    n_filetypes = -1;
-	    flag = 0;
-	    while (!flag) {
-                n_filetypes++;
-		for (i=0; i<flat_file->count; i++) {
-		    if (disp + flat_file->indices[i] + 
-                        (ADIO_Offset) n_filetypes*filetype_extent + flat_file->blocklens[i] 
-                            >= offset) {
-			st_index = i;
-			frd_size = (int) (disp + flat_file->indices[i] + 
-			        (ADIO_Offset) n_filetypes*filetype_extent
-			         + flat_file->blocklens[i] - offset);
-			flag = 1;
-			break;
-		    }
-		}
-	    }
-	}
+	    /* wei-keng reworked type processing to be a bit more efficient */
+            offset = fd->fp_ind - disp; /* in bytes */
+            n_filetypes = offset / filetype_extent;  /* no. filetypes */
+            offset %= filetype_extent;   /* local offset in a filetype */
+
+	    /* Wei-keng Liao: find contiguous block where offset is located */
+
+            for (i=0; i<flat_file->count; i++) /*bin. search would be better */
+                if (flat_file->indices[i] <= offset &&
+                    offset < flat_file->indices[i] + flat_file->blocklens[i])
+                    break;
+            st_index = i;  /* starting index in flat_file->indices[] */
+            /* wkliao: frd_size is length from offset to end of block i */
+            frd_size = (int) (flat_file->indices[i] + flat_file->blocklens[i]
+                              - offset);
+            offset = fd->fp_ind; /* in bytes */
+        }
 	else {
 	    n_etypes_in_filetype = filetype_size/etype_size;
 	    n_filetypes = (int) (offset / n_etypes_in_filetype);
@@ -189,10 +187,19 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	    }
 
 	    /* abs. offset in bytes in the file */
-	    offset = disp + (ADIO_Offset) n_filetypes*filetype_extent + abs_off_in_filetype;
+	    offset = disp + (ADIO_Offset) n_filetypes*filetype_extent + 
+		    abs_off_in_filetype;
 	}
 
         start_off = offset;
+
+        /* Wei-keng Liao: read request within single flat_file contig block */
+	/* e.g. with subarray types that actually describe the whole array */
+        if (buftype_is_contig && bufsize <= frd_size) {
+            ADIO_ReadContig(fd, buf, bufsize, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
+                             offset, status, error_code);
+            return;
+        }
 
        /* Calculate end_offset, the last byte-offset that will be accessed.
          e.g., if start_offset=0 and 100 bytes to be read, end_offset=99*/

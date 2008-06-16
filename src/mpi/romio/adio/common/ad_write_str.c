@@ -220,25 +220,21 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
 	disp = fd->disp;
 
 	if (file_ptr_type == ADIO_INDIVIDUAL) {
-	    offset = fd->fp_ind; /* in bytes */
-	    n_filetypes = -1;
-	    flag = 0;
-	    while (!flag) {
-                n_filetypes++;
-		for (i=0; i<flat_file->count; i++) {
-		    if (disp + flat_file->indices[i] + 
-                        (ADIO_Offset) n_filetypes*filetype_extent + flat_file->blocklens[i] 
-                            >= offset) {
-			st_index = i;
-			fwr_size = (int) (disp + flat_file->indices[i] + 
-			        (ADIO_Offset) n_filetypes*filetype_extent
-			         + flat_file->blocklens[i] - offset);
-			flag = 1;
-			break;
-		    }
-		}
-	    }
-	}
+            offset = fd->fp_ind - disp; /* in bytes */
+            n_filetypes = offset / filetype_extent;  /* no. filetypes */
+            offset %= filetype_extent;   /* local offset in a filetype */
+
+            /* Wei-keng Liao: find contiguous block where offset is located */
+            for (i=0; i<flat_file->count; i++)  /*bin. search would be better */
+                if (flat_file->indices[i] <= offset &&
+                    offset < flat_file->indices[i] + flat_file->blocklens[i])
+                    break;
+            st_index = i;  /* starting index in flat_file->indices[] */
+            /* wkliao: fwr_size is length from offset to end of block i */
+            fwr_size = (int) (flat_file->indices[i] + flat_file->blocklens[i]
+                              - offset);
+            offset = fd->fp_ind; /* in bytes */
+        }
 	else {
 	    n_etypes_in_filetype = filetype_size/etype_size;
 	    n_filetypes = (int) (offset / n_etypes_in_filetype);
@@ -258,10 +254,20 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
 	    }
 
 	    /* abs. offset in bytes in the file */
-	    offset = disp + (ADIO_Offset) n_filetypes*filetype_extent + abs_off_in_filetype;
+	    offset = disp + (ADIO_Offset) n_filetypes*filetype_extent + 
+		    abs_off_in_filetype;
 	}
 
 	start_off = offset;
+
+        /* Wei-keng Liao:write request is within single flat_file contig block*/
+	/* this could happen, for example, with subarray types that are
+	 * actually fairly contiguous */
+        if (buftype_is_contig && bufsize <= fwr_size) {
+            ADIO_WriteContig(fd, buf, bufsize, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
+                             offset, status, error_code);
+            return;
+        }
 
        /* Calculate end_offset, the last byte-offset that will be accessed.
          e.g., if start_offset=0 and 100 bytes to be write, end_offset=99*/
