@@ -295,14 +295,19 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
 {
     DLOOP_Count i, cur_idx = 0;
 
-    out_blklen_array[0] = (DLOOP_Count) in_blklen_array[0];
+    /* Skip any initial zero-length blocks */
+    for (i = 0; i < count; ++i)
+        if ((DLOOP_Count) in_blklen_array[i])
+            break;
+
+    out_blklen_array[0] = (DLOOP_Count) in_blklen_array[i];
 
     if (!dispinbytes)
     {
 	out_disp_array[0] = (DLOOP_Offset)
-	    ((int *) in_disp_array)[0] * old_extent;
+	    ((int *) in_disp_array)[i] * old_extent;
 	
-	for (i = 1; i < count; i++)
+	for (++i; i < count; ++i)
 	{
 	    if (in_blklen_array[i] == 0)
 	    {
@@ -327,9 +332,9 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
     }
     else /* input displacements already in bytes */
     {
-	out_disp_array[0] = (DLOOP_Offset) ((MPI_Aint *) in_disp_array)[0];
+	out_disp_array[0] = (DLOOP_Offset) ((MPI_Aint *) in_disp_array)[i];
 	
-	for (i = 1; i < count; i++)
+	for (++i; i < count; ++i)
 	{
 	    if (in_blklen_array[i] == 0)
 	    {
@@ -372,58 +377,68 @@ static DLOOP_Count DLOOP_Type_indexed_count_contig(DLOOP_Count count,
 						   DLOOP_Offset old_extent)
 {
     DLOOP_Count i, contig_count = 1;
-    DLOOP_Count cur_blklen = (DLOOP_Count) blocklength_array[0];
+    DLOOP_Count cur_blklen;
 
-    if (!dispinbytes)
+    if (count)
     {
-	DLOOP_Offset cur_tdisp =
-	    (DLOOP_Offset) ((int *) displacement_array)[0];
+        /* Skip any initial zero-length blocks */
+        for (i = 0; i < count; ++i)
+            if ((DLOOP_Count) blocklength_array[i])
+                break;
+        
+        cur_blklen = (DLOOP_Count) blocklength_array[i];
 	
-	for (i = 1; i < count; i++)
-	{
-	    if (blocklength_array[i] == 0)
-	    {
-		continue;
-	    }
-	    else if (cur_tdisp + cur_blklen ==
-		     (DLOOP_Offset) ((int *) displacement_array)[i])
-	    {
-		/* adjacent to current block; add to block */
-		cur_blklen += (DLOOP_Count) blocklength_array[i];
-	    }
-	    else
-	    {
-		cur_tdisp  = (DLOOP_Offset) ((int *) displacement_array)[i];
-		cur_blklen = (DLOOP_Count) blocklength_array[i];
-		contig_count++;
-	    }
-	}
-    }
-    else
-    {
-	DLOOP_Offset cur_bdisp =
-	    (DLOOP_Offset) ((MPI_Aint *) displacement_array)[0];
+        if (!dispinbytes)
+        {
+            DLOOP_Offset cur_tdisp =
+                (DLOOP_Offset) ((int *) displacement_array)[i];
+            
+            for (++i; i < count; ++i)
+            {
+                if (blocklength_array[i] == 0)
+                {
+                    continue;
+                }
+                else if (cur_tdisp + cur_blklen ==
+                         (DLOOP_Offset) ((int *) displacement_array)[i])
+                {
+                    /* adjacent to current block; add to block */
+                    cur_blklen += (DLOOP_Count) blocklength_array[i];
+                }
+                else
+                {
+                    cur_tdisp  = (DLOOP_Offset) ((int *) displacement_array)[i];
+                    cur_blklen = (DLOOP_Count) blocklength_array[i];
+                    contig_count++;
+                }
+            }
+        }
+        else
+        {
+            DLOOP_Offset cur_bdisp =
+                (DLOOP_Offset) ((MPI_Aint *) displacement_array)[i];
 	
-	for (i = 1; i < count; i++)
-	{
-	    if (blocklength_array[i] == 0)
-	    {
-		continue;
-	    }
-	    else if (cur_bdisp + cur_blklen * old_extent ==
-		     (DLOOP_Offset) ((MPI_Aint *) displacement_array)[i])
-	    {
-		/* adjacent to current block; add to block */
-		cur_blklen += (DLOOP_Count) blocklength_array[i];
-	    }
-	    else
-	    {
-		cur_bdisp  =
-		    (DLOOP_Offset) ((MPI_Aint *) displacement_array)[i];
-		cur_blklen = (DLOOP_Count) blocklength_array[i];
-		contig_count++;
-	    }
-	}
+            for (++i; i < count; ++i)
+            {
+                if (blocklength_array[i] == 0)
+                {
+                    continue;
+                }
+                else if (cur_bdisp + cur_blklen * old_extent ==
+                         (DLOOP_Offset) ((MPI_Aint *) displacement_array)[i])
+                {
+                    /* adjacent to current block; add to block */
+                    cur_blklen += (DLOOP_Count) blocklength_array[i];
+                }
+                else
+                {
+                    cur_bdisp  =
+                        (DLOOP_Offset) ((MPI_Aint *) displacement_array)[i];
+                    cur_blklen = (DLOOP_Count) blocklength_array[i];
+                    contig_count++;
+                }
+            }
+        }
     }
     return contig_count;
 }
