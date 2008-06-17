@@ -70,7 +70,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &procs);
 /* create and initialize info object */
-    fd->hints = (ADIOI_Hints *)ADIOI_Malloc(sizeof(struct ADIOI_Hints_struct));
+    fd->hints = (ADIOI_Hints *)ADIOI_Calloc(1, sizeof(struct ADIOI_Hints_struct));
     if (fd->hints == NULL) {
 	/* NEED TO HANDLE ENOMEM ERRORS */
     }
