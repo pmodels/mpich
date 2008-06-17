@@ -384,7 +384,7 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
 			     ADIO_Offset **fd_start_ptr, ADIO_Offset 
 			     **fd_end_ptr, int min_fd_size, 
 			     ADIO_Offset *fd_size_ptr,
-			     int striping_factor, int striping_unit);
+			     int striping_unit);
 int ADIOI_Calc_aggregator(ADIO_File fd,
                                  ADIO_Offset off,
                                  ADIO_Offset min_off,

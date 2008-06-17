@@ -89,8 +89,7 @@ int ADIOI_Calc_aggregator(ADIO_File fd,
     /* get an index into our array of aggregators */
     rank_index = (int) ((off - min_off + fd_size)/ fd_size - 1);
 
-    if (fd->hints->striping_factor > 0 &&
-        fd->hints->striping_unit   > 0) {
+    if (fd->hints->striping_unit > 0) {
         /* wkliao: implementation for file domain alignment
            fd_start[] and fd_end[] have been aligned with file lock
 	   boundaries when returned from ADIOI_Calc_file_domains() so cannot
@@ -134,7 +133,7 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
 			     ADIO_Offset **fd_start_ptr, ADIO_Offset 
 			     **fd_end_ptr, int min_fd_size, 
 			     ADIO_Offset *fd_size_ptr,
-			     int striping_factor, int striping_unit)
+			     int striping_unit)
 {
 /* Divide the I/O workload among "nprocs_for_coll" processes. This is
    done by (logically) dividing the file into file domains (FDs); each
@@ -186,7 +185,7 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
     /* Wei-keng Liao: implementation for fild domain alignment to nearest file
      * lock boundary (as specified by striping_unit hint).  Could also
      * experiment with other alignment strategies here */
-    if (striping_factor > 0 && striping_unit > 0) {
+    if (striping_unit > 0) {
         ADIO_Offset end_off;
         int         rem_front, rem_back;
 
