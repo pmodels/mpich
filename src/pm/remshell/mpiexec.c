@@ -276,6 +276,8 @@ int mypostfork( void *predata, void *data, ProcessState *pState )
 	snprintf( rankStr, sizeof(rankStr)-1, "%d", pState->id );
 	rankStr[12-1] = 0;
 	curarg = 0;
+        newargs[curarg++] = strdup( "-Y" );
+
 	newargs[curarg++] = pState->hostname;
 	curarg += AddEnvSetToCmdLine( "PMI_PORT", s->pmiinfo.portName, 
 				      newargs + curarg );
@@ -480,11 +482,11 @@ static int AddEnvSetToCmdLine( const char *envName, const char *envValue,
     if (useCSHFormat == -1) {
 	char *shell = getenv( "SHELL" ), *sname;
 	if (shell) {
-	    printf( "Shell is %s\n", shell );
+/* 	    printf( "Shell is %s\n", shell ); */
 	    sname = strrchr( shell, '/' );
 	    if (!sname) sname = shell;
 	    else sname++;
-	    printf( "Sname is %s\n", sname );
+/* 	    printf( "Sname is %s\n", sname ); */
 	    if (strcmp( sname, "bash" ) == 0 || strcmp( sname, "sh" ) ||
 		strcmp( sname, "ash" ) == 0) useCSHFormat = 0;
 	    else 
