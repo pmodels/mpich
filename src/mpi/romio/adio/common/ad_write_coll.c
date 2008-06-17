@@ -157,7 +157,9 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, void *buf, int count,
     ADIOI_Calc_file_domains(st_offsets, end_offsets, nprocs,
 			    nprocs_for_coll, &min_st_offset,
 			    &fd_start, &fd_end, 
-			    fd->hints->min_fdomain_size, &fd_size);   
+			    fd->hints->min_fdomain_size, &fd_size, 
+			    fd->hints->striping_factor, 
+			    fd->hints->striping_unit);   
 
 
 /* calculate what portions of the access requests of this process are
@@ -559,7 +561,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
     MPI_Request *requests, *send_req;
     MPI_Datatype *recv_types;
     MPI_Status *statuses, status;
-    int *srt_len, sum, sum_recv;
+    int *srt_len, sum;
     ADIO_Offset *srt_off;
     static char myname[] = "ADIOI_W_EXCHANGE_DATA";
 

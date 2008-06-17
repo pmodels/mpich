@@ -171,7 +171,9 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
     ADIOI_Calc_file_domains(st_offsets, end_offsets, nprocs,
 			    nprocs_for_coll, &min_st_offset,
 			    &fd_start, &fd_end, 
-			    fd->hints->min_fdomain_size, &fd_size);
+			    fd->hints->min_fdomain_size, &fd_size,
+			    fd->hints->striping_factor,
+			    fd->hints->striping_unit);
 
     /* calculate where the portions of the access requests of this process 
      * are located in terms of the file domains.  this could be on the same

@@ -89,11 +89,24 @@ int ADIOI_Calc_aggregator(ADIO_File fd,
     /* get an index into our array of aggregators */
     rank_index = (int) ((off - min_off + fd_size)/ fd_size - 1);
 
+    if (fd->hints->striping_factor > 0 &&
+        fd->hints->striping_unit   > 0) {
+        /* wkliao: implementation for file domain alignment
+           fd_start[] and fd_end[] have been aligned with file lock
+	   boundaries when returned from ADIOI_Calc_file_domains() so cannot
+	   just use simple arithmatic as above */
+        rank_index = 0;
+        while (off > fd_end[rank_index]) rank_index++;
+    }
+
     /* we index into fd_end with rank_index, and fd_end was allocated to be no
      * bigger than fd->hins->cb_nodes.   If we ever violate that, we're
      * overrunning arrays.  Obviously, we should never ever hit this abort */
-    if (rank_index >= fd->hints->cb_nodes)
-	    MPI_Abort(MPI_COMM_WORLD, 1);
+    if (rank_index >= fd->hints->cb_nodes || rank_index < 0) {
+        FPRINTF(stderr, "Error in ADIOI_Calc_aggregator(): rank_index(%d) >= fd->hints->cb_nodes (%d) fd_size=%lld off=%lld\n",
+			rank_index,fd->hints->cb_nodes,fd_size,off);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
 
     /* remember here that even in Rajeev's original code it was the case that
      * different aggregators could end up with different amounts of data to
@@ -120,7 +133,8 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
 			     ADIO_Offset *min_st_offset_ptr,
 			     ADIO_Offset **fd_start_ptr, ADIO_Offset 
 			     **fd_end_ptr, int min_fd_size, 
-			     ADIO_Offset *fd_size_ptr)
+			     ADIO_Offset *fd_size_ptr,
+			     int striping_factor, int striping_unit)
 {
 /* Divide the I/O workload among "nprocs_for_coll" processes. This is
    done by (logically) dividing the file into file domains (FDs); each
@@ -169,12 +183,46 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
     fd_start = *fd_start_ptr;
     fd_end = *fd_end_ptr;
 
-    fd_start[0] = min_st_offset;
-    fd_end[0] = min_st_offset + fd_size - 1;
+    /* Wei-keng Liao: implementation for fild domain alignment to nearest file
+     * lock boundary (as specified by striping_unit hint).  Could also
+     * experiment with other alignment strategies here */
+    if (striping_factor > 0 && striping_unit > 0) {
+        ADIO_Offset end_off;
+        int         rem_front, rem_back;
 
-    for (i=1; i<nprocs_for_coll; i++) {
-	fd_start[i] = fd_end[i-1] + 1;
-	fd_end[i] = fd_start[i] + fd_size - 1;
+        /* align fd_end[0] to the nearest file lock boundary */
+        fd_start[0] = min_st_offset;
+        end_off     = fd_start[0] + fd_size;
+        rem_front   = end_off % striping_unit;
+        rem_back    = striping_unit - rem_front;
+        if (rem_front < rem_back) 
+		end_off -= rem_front;
+        else                      
+		end_off += rem_back;
+        fd_end[0] = end_off - 1;
+    
+        /* align fd_end[i] to the nearest file lock boundary */
+        for (i=1; i<nprocs_for_coll; i++) {
+            fd_start[i] = fd_end[i-1] + 1;
+            end_off     = min_st_offset + fd_size * (i+1);
+            rem_front   = end_off % striping_unit;
+            rem_back    = striping_unit - rem_front;
+            if (rem_front < rem_back) 
+		    end_off -= rem_front;
+            else                      
+		    end_off += rem_back;
+            fd_end[i] = end_off - 1;
+        }
+        fd_end[nprocs_for_coll-1] = max_end_offset;
+    }
+    else { /* no hints set: do things the 'old' way */
+        fd_start[0] = min_st_offset;
+        fd_end[0] = min_st_offset + fd_size - 1;
+
+        for (i=1; i<nprocs_for_coll; i++) {
+            fd_start[i] = fd_end[i-1] + 1;
+            fd_end[i] = fd_start[i] + fd_size - 1;
+        }
     }
 
 /* take care of cases in which the total file access range is not
