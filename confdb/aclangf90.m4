@@ -194,7 +194,7 @@ AC_ARG_VAR([F90FLAGS], [Fortran 90 compiler flags])dnl
 _AC_ARG_VAR_LDFLAGS()dnl
 AC_CHECK_TOOLS(F90,
       [m4_default([$1],
-                  [f95 f90 pgf90 ifort epcf90 fort xlf95 xlf90 xlf lf95 pathf90 g95 gfortran ifc efc])])
+                  [f95 f90 pgf90 ifort epcf90 fort xlf95 xlf90 xlf lf95 pathf95 pathf90 g95 gfortran ifc efc])])
 
 # Once we find the compiler, confirm the extension 
 AC_MSG_CHECKING([that $ac_ext works as the extension for Fortran 90 program])

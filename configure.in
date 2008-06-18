@@ -2205,7 +2205,7 @@ if test "$enable_cxx" = "default" ; then
     # not *link* C++ object files unless there is at least one C++ source
     # file present on the command that performs the linking.  icpc is the
     # Intel C++ compiler that both compiles and links C++ programs)
-    AC_CHECK_PROGS(CXX,$CCC c++ g++ gcc CC cxx cc++ cl pgCC xlC icpc)
+    AC_CHECK_PROGS(CXX,$CCC c++ g++ gcc CC cxx cc++ cl pgCC xlC icpc pathCC)
     if test -n "$CXX" ; then
         enable_cxx=yes
     fi
