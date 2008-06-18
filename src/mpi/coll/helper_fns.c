@@ -274,5 +274,5 @@ int MPIC_Wait(MPID_Request * request_ptr)
 
  fn_fail:
     MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_WAIT);
-    return MPI_SUCCESS;
+    return mpi_errno;
 }
