@@ -145,12 +145,10 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect )
 	    MPIDI_VC_t * const vc = vcrt->vcr_table[i];
 	    
 	    MPIDI_VC_release_ref(vc, &in_use);
-	    /* The rule for disconnect that we use is that if
-	       MPI_Comm_disconnect removes the last reference to this
-	       VC, we fully remove the VC.  This is not quite what the
-	       MPI standard says, but this is sufficient to give the 
-	       expected behavior for most user programs that
-	       use MPI_Comm_disconnect */
+
+            /* Dynamic connections start with a refcount of 2 instead of 1.
+             * That way we can distinguish between an MPI_Free and an
+             * MPI_Comm_disconnect. */
 	    if (isDisconnect && vc->ref_count == 1) {
 		MPIDI_VC_release_ref(vc, &in_use);
 	    }
@@ -170,8 +168,7 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect )
 		}
 		
 		/* FIXME: the correct test is ACTIVE or REMOTE_CLOSE */
-		if (vc->state != MPIDI_VC_STATE_INACTIVE) {
-		    /* printf( "Sending close to vc[%d]\n", i ); */
+		if (vc->state != MPIDI_VC_STATE_INACTIVE) { 
 		    MPIDI_CH3U_VC_SendClose( vc, i );
 		}
 		else
@@ -186,16 +183,18 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect )
                             "vc=%p: not sending a close to %d, vc in state %s",
 			     vc, i, MPIDI_VC_GetStateString(vc->state)));
 		}
-		mpi_errno = MPIU_CALL(MPIDI_CH3,VC_Destroy(vc));
-		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+                /* NOTE: we used to * MPIU_CALL(MPIDI_CH3,VC_Destroy(&(pg->vct[i])))
+                   here but that is incorrect.  According to the standard, it's
+                   entirely possible (likely even) that this VC might still be
+                   connected.  VCs are now destroyed when the PG that "owns"
+                   them is destroyed (see MPIDI_PG_Destroy). [goodell@ 2008-06-13] */
 	    }
 	}
 
 	MPIU_Free(vcrt);
     }
 
-    /* Commented out blocks that are not needed unless MPIU_ERR_POP is 
-       used above */
  fn_exit:    
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCRT_RELEASE);
     return mpi_errno;
@@ -254,11 +253,12 @@ int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr)
      as part of the initial connect/accept action, so in that case,
      ignore the pg ref count update */
     if (orig_vcr->ref_count == 0 && orig_vcr->pg) {
-	MPIU_Object_set_ref( orig_vcr, 2 );
+	MPIDI_VC_add_ref( orig_vcr );
+	MPIDI_VC_add_ref( orig_vcr );
 	MPIDI_PG_add_ref( orig_vcr->pg );
     }
     else {
-	MPIU_Object_add_ref(orig_vcr);
+	MPIDI_VC_add_ref(orig_vcr);
     }
     MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
          "Incr VCR %p ref count to %d",orig_vcr,orig_vcr->ref_count));

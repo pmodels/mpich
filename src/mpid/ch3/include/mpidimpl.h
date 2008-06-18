@@ -593,6 +593,9 @@ typedef struct MPIDI_VC
 
     /* Local process ID */
     int lpid;
+
+    /* port name tag */ 
+    int port_name_tag; /* added to handle dynamic process mgmt */
     
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
     /* Sequence number of the next packet to be sent */
@@ -666,7 +669,6 @@ int MPIDI_VC_Init( MPIDI_VC_t *, MPIDI_PG_t *, int );
 #else
 #   define MPIDI_VC_Init_seqnum_recv(vc_);
 #endif
-
 
 
 #define MPIDI_VC_add_ref( _vc )                                 \
@@ -796,11 +798,12 @@ int MPIDI_PrintConnStrToFile( FILE *fd, const char *file, int line,
    msg.
 
 */
-#define MPIU_DBG_VCSTATECHANGE(_vc,_newstate) \
+#define MPIU_DBG_VCSTATECHANGE(_vc,_newstate) do { \
      MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST, \
      "vc=%p: Setting state (vc) from %s to %s, vcchstate is %s", \
                  _vc, MPIDI_VC_GetStateString((_vc)->state), \
-                 #_newstate, MPIU_CALL(MPIDI_CH3,VC_GetStateString( (_vc) ))) )
+                 #_newstate, MPIU_CALL(MPIDI_CH3,VC_GetStateString( (_vc) ))) );\
+} while (0)
 
 #define MPIU_DBG_VCCHSTATECHANGE(_vc,_newstate) \
      MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST, \

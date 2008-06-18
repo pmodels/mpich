@@ -196,7 +196,7 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
     pg->connInfoToString   = 0;
     pg->connInfoFromString = 0;
     pg->freeConnInfo       = 0;
-    
+
     for (p = 0; p < vct_sz; p++)
     {
 	/* Initialize device fields in the VC object */
@@ -254,6 +254,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 {
     MPIDI_PG_t * pg_prev;
     MPIDI_PG_t * pg_cur;
+    int i;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_PG_DESTROY);
 
@@ -281,6 +282,16 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 		fprintf( stdout, "Destroying process group %s\n", 
 			 (char *)pg->id ); fflush(stdout);
 	    }
+
+            for (i = 0; i < pg->size; ++i) {
+                /* This used to be handled in MPID_VCRT_Release, but that was
+                   not the right place to do this.  The VC should only be freed
+                   when the PG that it belongs to is freed, not just when the
+                   VC's refcount drops to zero. [goodell@ 2008-06-13] */
+                mpi_errno = MPIU_CALL(MPIDI_CH3,VC_Destroy(&(pg->vct[i])));
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            }
+
 	    MPIDI_PG_Destroy_fn(pg);
 	    MPIU_Free(pg->vct);
 	    if (pg->connData) {
@@ -308,6 +319,8 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_PG_DESTROY);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -621,6 +634,8 @@ static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
     goto fn_exit;
 }
 
+/* *slen is the length of the string, including the null terminator.  So if the
+   resulting string is |foo\0bar\0|, then *slen == 8. */
 static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
 {
     char *string = 0;
@@ -642,7 +657,7 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
     string[len++] = 0;
     
     /* Add the size of the pg */
-    MPIU_Snprintf( &string[len], curSlen, "%d", pg->size );
+    MPIU_Snprintf( &string[len], curSlen - len, "%d", pg->size );
     while (string[len]) len++;
     len++;
 
@@ -677,8 +692,8 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
 	/* Check that this will fix in the remaining space */
 	if (len + vallen + 1 >= curSlen) {
 	    char *nstring = 0;
-	    nstring = MPIU_Realloc( string, 
-				   curSlen + (pg->size - i) * (vallen + 1 ));
+            curSlen += (pg->size - i) * (vallen + 1 );
+	    nstring = MPIU_Realloc( string, curSlen);
 	    if (!nstring) {
 		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	    }
@@ -689,6 +704,8 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
 	    string[len++] = buf[j];
 	}
     }
+
+    MPIU_Assert(len <= curSlen);
 
     *buf_p = string;
     *slen  = len;
@@ -791,14 +808,17 @@ static int getConnInfo( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 }
 static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
 {
-    char *string = 0, *str, *pg_id;
+    char *str = NULL, *pg_id;
     int  i, len=0;
     
     MPIDI_ConnInfo *connInfo = (MPIDI_ConnInfo *)pg->connData;
 
     /* Create this from the string array */
-    string = (char *)MPIU_Malloc( connInfo->toStringLen );
-    str = string;
+    str = (char *)MPIU_Malloc( connInfo->toStringLen );
+
+#if defined(MPICH_DEBUG_MEMINIT)
+    memset(str, 0, connInfo->toStringLen);
+#endif
 
     pg_id = pg->id;
     /* FIXME: This is a hack, and it doesn't even work */
@@ -806,6 +826,7 @@ static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
 	  "connToString: pg id is", (char *)pg_id );*/
     /* This is intended to cause a process to transition from a singleton
        to a non-singleton. */
+    /* XXX DJG TODO figure out what this little bit is all about. */
     if (strstr( pg_id, "singinit_kvs" ) == pg_id) {
 	PMI_Get_id( pg->id, 256 );
     }
@@ -830,7 +851,7 @@ static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
 			    __LINE__, MPI_ERR_INTERN, "**intern", NULL);
     }
 
-    *buf_p = string;
+    *buf_p = str;
     *slen = len;
 
     return MPI_SUCCESS;

@@ -33,7 +33,7 @@ typedef struct pg_node {
 			      (see pg_translation) */
     char *pg_id;
     char *str;             /* String describing connection info for pg */
-    int   lenStr;          /* Length of this string */
+    int   lenStr;          /* Length of this string (including the null terminator(s)) */
     struct pg_node *next;
 } pg_node;
 
@@ -208,6 +208,9 @@ static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
 
     *comm_pptr = tmp_comm;
     *vc_pptr = new_vc;
+
+    MPIU_DBG_MSG_FMT(CH3_CONNECT,VERBOSE,(MPIU_DBG_FDEST,
+		  "new_vc=%p", new_vc));
 
 fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CREATE_INTER_ROOT_COMMUNICATOR_ACCEPT);
@@ -772,7 +775,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 	    }
 	    
 	    pg_str  = pg_list->str;
-	    len     = pg_list->lenStr + 1;
+	    len     = pg_list->lenStr;
 	    pg_list = pg_list->next;
 	}
 	NMPI_Bcast( &len, 1, MPI_INT, root, comm_p->handle );
@@ -834,7 +837,7 @@ static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p,
 
     while (pg_list != NULL) {
 	pg_iter = pg_list;
-	i = pg_iter->lenStr + 1;
+	i = pg_iter->lenStr;
 	/*printf("connect:sending 1 int: %d\n", i);fflush(stdout);*/
 	mpi_errno = MPIC_Send(&i, 1, MPI_INT, 0, sendtag++, tmp_comm->handle);
 	*sendtag_p = sendtag;

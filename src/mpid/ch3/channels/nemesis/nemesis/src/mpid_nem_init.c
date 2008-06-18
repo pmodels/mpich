@@ -29,9 +29,9 @@ char *MPID_nem_asymm_base_addr = 0;
 static int get_local_procs (int rank, int num_procs, int *num_local, int **local_procs, int *local_rank, int *num_nodes, int **node_ids);
 
 int
-MPID_nem_init (int rank, MPIDI_PG_t *pg_p)
+MPID_nem_init (int rank, MPIDI_PG_t *pg_p, int has_parent)
 {
-    return  _MPID_nem_init (rank, pg_p, 0);
+    return  _MPID_nem_init (rank, pg_p, 0, has_parent);
 }
 
 #undef FUNCNAME
@@ -39,7 +39,7 @@ MPID_nem_init (int rank, MPIDI_PG_t *pg_p)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-_MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart)
+_MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, int has_parent)
 {
     int    mpi_errno       = MPI_SUCCESS;
     int    pmi_errno;
@@ -85,6 +85,12 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart)
     mpi_errno = get_local_procs (pg_rank, num_procs, &num_local, &local_procs, &local_rank, &num_nodes, &node_ids);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
+    /* XXX DJG this looks like some sort of ugly hack */
+    /* We incr num_procs to account for the parent, but we need to ensure that
+     * get_local_procs is aware of this possibility.  I doubt it currently is. */
+    if (has_parent) {
+        num_procs++; // sson1 ***** FIXME
+    }
 
 #ifdef MEM_REGION_IN_HEAP
     MPIU_CHKPMEM_MALLOC (MPID_nem_mem_region_ptr, MPID_nem_mem_region_t *, sizeof(MPID_nem_mem_region_t), mpi_errno, "mem_region");
@@ -589,7 +595,7 @@ get_local_procs_nolocal(int global_rank, int num_global, int *num_local_p, int *
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_vc_init (MPIDI_VC_t *vc, const char *business_card)
+MPID_nem_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
@@ -666,8 +672,9 @@ MPID_nem_vc_init (MPIDI_VC_t *vc, const char *business_card)
         vc_ch->iStartContigMsg = NULL;
         vc_ch->iSendContig     = NULL;
 
-        mpi_errno = MPID_nem_net_module_vc_init (vc, business_card);
-	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        /*mpi_errno = MPID_nem_net_module_vc_init (vc, business_card);*/
+        mpi_errno = MPID_nem_net_module_vc_init (vc);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 /* FIXME: DARIUS -- enable this assert once these functions are implemented */
 /*         /\* iStartContigMsg iSendContig and sendNoncontig_fn must */
@@ -686,7 +693,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc, const char *business_card)
        to NULL */
     vc_ch->sendq_head = NULL;
 
-     MPIU_CHKPMEM_COMMIT();
+    MPIU_CHKPMEM_COMMIT();
 fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_VC_INIT);
     return mpi_errno;

@@ -20,7 +20,7 @@ typedef int (* MPID_nem_net_module_poll_t) (MPID_nem_poll_dir_t in_or_out);
 typedef int (* MPID_nem_net_module_send_t) (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen);
 typedef int (* MPID_nem_net_module_get_business_card_t) (int my_rank, char **bc_val_p, int *val_max_sz_p);
 typedef int (* MPID_nem_net_module_connect_to_root_t) (const char *business_card, MPIDI_VC_t *new_vc);
-typedef int (* MPID_nem_net_module_vc_init_t) (MPIDI_VC_t *vc, const char *business_card);
+typedef int (* MPID_nem_net_module_vc_init_t) (MPIDI_VC_t *vc);
 typedef int (* MPID_nem_net_module_vc_destroy_t) (MPIDI_VC_t *vc);
 typedef int (* MPID_nem_net_module_vc_terminate_t) (MPIDI_VC_t *vc);
 

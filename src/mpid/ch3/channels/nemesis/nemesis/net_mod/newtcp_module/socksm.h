@@ -23,7 +23,7 @@ enum CONSTS {
     CONN_PLFD_TBL_GROW_SIZE = 10,
     CONN_INVALID_FD = -1,
     CONN_INVALID_RANK = -1,
-    NEGOMSG_DATA_LEN = 4, /* Length of data during negotiatiion message exchanges. */
+    NEGOMSG_DATA_LEN = 4, /* Length of data during negotiation message exchanges. */
     SLEEP_INTERVAL = 1500,
     PROGSM_TIMES = 20
 };
@@ -60,8 +60,10 @@ typedef enum {
     M_(CONN_STATE_TC_C_CNTING),                 \
     M_(CONN_STATE_TC_C_CNTD),                   \
     M_(CONN_STATE_TC_C_RANKSENT),               \
+    M_(CONN_STATE_TC_C_TMPVCSENT),               \
     M_(CONN_STATE_TA_C_CNTD),                   \
     M_(CONN_STATE_TA_C_RANKRCVD),               \
+    M_(CONN_STATE_TA_C_TMPVCRCVD),               \
     M_(CONN_STATE_TS_COMMRDY),                  \
     M_(CONN_STATE_TS_D_DCNTING),                \
     M_(CONN_STATE_TS_D_REQSENT),                \
@@ -99,6 +101,7 @@ extern const char *const CONN_STATE_STR[];
 
 
 #define CHANGE_STATE(_sc, _state) do { \
+    int _old_state = _state; \
     (_sc)->state.cstate = _state; \
     (_sc)->handler = sc_state_info[_state].sc_state_handler; \
     MPID_nem_newtcp_module_plfd_tbl[(_sc)->index].events = sc_state_info[_state].sc_state_plfd_events; \
@@ -120,8 +123,8 @@ struct MPID_nem_new_tcp_module_sockconn{
      * and pg_id are _ONLY VALID_ if this (pg_is_set) is true */
     int pg_is_set;   
     int is_same_pg;  /* TRUE/FALSE -  */
-/*     FIXME: see whether this can be removed, by using only pg_id = NULL or non-NULL */
-/*      NULL = if same_pg and valid pointer if different pgs. */
+    int is_tmpvc;
+    int port_name_tag; /* This should be used when is_tmpvc == TRUE */
 
     int pg_rank; /*  rank and id cached here to avoid chasing pointers in vc and vc->pg */
     char *pg_id; /*  MUST be used only if is_same_pg == FALSE */
@@ -141,7 +144,10 @@ typedef enum MPIDI_nem_newtcp_module_pkt_type {
     MPIDI_NEM_NEWTCP_MODULE_PKT_ID_NAK,
     MPIDI_NEM_NEWTCP_MODULE_PKT_DISC_REQ,
     MPIDI_NEM_NEWTCP_MODULE_PKT_DISC_ACK,
-    MPIDI_NEM_NEWTCP_MODULE_PKT_DISC_NAK
+    MPIDI_NEM_NEWTCP_MODULE_PKT_DISC_NAK,
+    MPIDI_NEM_NEWTCP_MODULE_PKT_TMPVC_INFO, 
+    MPIDI_NEM_NEWTCP_MODULE_PKT_TMPVC_ACK,
+    MPIDI_NEM_NEWTCP_MODULE_PKT_TMPVC_NAK
 } MPIDI_nem_newtcp_module_pkt_type_t;
     
 typedef struct MPIDI_nem_newtcp_module_header {
@@ -158,6 +164,11 @@ typedef struct MPIDI_nem_newtcp_module_idinfo {
 /*      in the future), datalen of header itself is enough to find the offset of pg_id      */
 /*      in the packet to be sent. */
 } MPIDI_nem_newtcp_module_idinfo_t;
+
+/* FIXME: bc actually contains port_name info */
+typedef struct MPIDI_nem_newtcp_module_portinfo {
+    int port_name_tag;
+} MPIDI_nem_newtcp_module_portinfo_t;
 
 
 #define MPID_nem_newtcp_module_vc_is_connected(vc) (VC_FIELD(vc, sc) && VC_FIELD(vc, sc)->state.cstate == CONN_STATE_TS_COMMRDY)

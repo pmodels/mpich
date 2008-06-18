@@ -77,6 +77,7 @@ int MPIDU_CH3U_GetSockInterfaceAddr( int myRank, char *ifname, int maxIfname,
 
     /* Check for the name supplied through an environment variable */
     ifname_string = getenv("MPICH_INTERFACE_HOSTNAME");
+
     if (!ifname_string) {
 	/* See if there is a per-process name for the interfaces (e.g.,
 	   the process manager only delievers the same values for the 

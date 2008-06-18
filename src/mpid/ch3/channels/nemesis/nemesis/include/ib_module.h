@@ -35,8 +35,7 @@ int MPID_nem_ib_module_ckpt_shutdown (void);
 int MPID_nem_ib_module_connect_to_root (const char *business_card, 
         MPIDI_VC_t *new_vc);
 
-int MPID_nem_ib_module_vc_init (MPIDI_VC_t *vc, 
-        const char *business_card);
+int MPID_nem_ib_module_vc_init (MPIDI_VC_t *vc);
 
 int MPID_nem_ib_module_vc_destroy(MPIDI_VC_t *vc);
 

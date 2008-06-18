@@ -237,6 +237,7 @@ static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
     len = MPI_MAX_PORT_NAME;
     mpi_errno = MPIU_Str_add_int_arg(&port_name, &len, 
 			MPIDI_CH3I_PORT_NAME_TAG_KEY, port_name_tag++);
+
     /* FIXME: MPIU_xxx routines should return regular mpi error codes */
     if (mpi_errno != MPIU_STR_SUCCESS) {
 	mpi_errno = MPI_SUCCESS;
@@ -252,6 +253,7 @@ static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
        may not use shared memory).  We may need a channel-specific 
        function to create an exportable connection string.  */
     mpi_errno = MPIU_CALL(MPIDI_CH3,Get_business_card(myRank, port_name, len));
+    MPIU_DBG_MSG_FMT(CH3, VERBOSE, (MPIU_DBG_FDEST, "port_name = %s", port_name));
 
 fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_OPEN_PORT);
@@ -268,7 +270,9 @@ int MPIDI_GetTagFromPort( const char *port_name, int *port_name_tag )
 {
     int mpi_errno;
 
-    mpi_errno = MPIU_Str_get_int_arg(port_name, MPIDI_CH3I_PORT_NAME_TAG_KEY, 
+    // XXX DJG why is this "port" instead of "tag"?
+    //mpi_errno = MPIU_Str_get_int_arg(port_name, MPIDI_CH3I_PORT_NAME_TAG_KEY, 
+    mpi_errno = MPIU_Str_get_int_arg(port_name, "port", 
 				     port_name_tag);
     if (mpi_errno != MPIU_STR_SUCCESS)
     {

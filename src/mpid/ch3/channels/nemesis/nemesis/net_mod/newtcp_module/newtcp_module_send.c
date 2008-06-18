@@ -189,7 +189,7 @@ int MPID_nem_newtcp_module_send_finalize()
 }
 
 /* MPID_nem_newtcp_module_conn_est -- this function is called when the
-   connection is finally extablished to send any pending sends */
+   connection is finally established to send any pending sends */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newtcp_module_conn_est
 #undef FCNAME
@@ -197,8 +197,6 @@ int MPID_nem_newtcp_module_send_finalize()
 int MPID_nem_newtcp_module_conn_est (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-
-/*     printf ("*** connected *** %d\n", VC_FIELD(vc, sc)->fd); //DARIUS */
 
     if (!SENDQ_EMPTY (VC_FIELD(vc, send_queue)))
     {
@@ -222,6 +220,7 @@ int MPID_nem_newtcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
     int mpi_errno = MPI_SUCCESS;
     MPID_Request * sreq = NULL;
     MPIDI_msg_sz_t offset = 0;
+    sockconn_t *sc = VC_FIELD(vc, sc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_ISTARTCONTIGMSG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_ISTARTCONTIGMSG);
@@ -241,7 +240,7 @@ int MPID_nem_newtcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
             iov[1].MPID_IOV_BUF = data;
             iov[1].MPID_IOV_LEN = data_sz;
         
-            CHECK_EINTR(offset, writev(VC_FIELD(vc, sc)->fd, iov, 2));
+            CHECK_EINTR(offset, writev(sc->fd, iov, 2));
             MPIU_ERR_CHKANDJUMP(offset == 0, mpi_errno, MPI_ERR_OTHER, "**sock_closed");
             if (offset == -1)
             {
@@ -332,6 +331,7 @@ int MPID_nem_newtcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t offset = 0;
+    sockconn_t *sc = VC_FIELD(vc, sc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_ISENDCONTIGMSG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_ISENDCONTIGMSG);
@@ -352,7 +352,7 @@ int MPID_nem_newtcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
             iov[1].MPID_IOV_BUF = data;
             iov[1].MPID_IOV_LEN = data_sz;
         
-            CHECK_EINTR(offset, writev(VC_FIELD(vc, sc)->fd, iov, 2));
+            CHECK_EINTR(offset, writev(sc->fd, iov, 2));
             MPIU_ERR_CHKANDJUMP(offset == 0, mpi_errno, MPI_ERR_OTHER, "**sock_closed");
             if (offset == -1)
             {

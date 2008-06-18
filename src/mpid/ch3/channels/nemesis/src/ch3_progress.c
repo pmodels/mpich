@@ -1818,6 +1818,8 @@ int MPIDI_CH3I_Posted_recv_enqueued (MPID_Request *rreq)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
 
+    return mpi_errno; /* XXX DJG why are we just returning? */
+
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
     /* don't enqueue for anysource */
     if (rreq->dev.match.rank < 0)
@@ -1847,6 +1849,8 @@ int MPIDI_CH3I_Posted_recv_dequeued (MPID_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
+
+    return mpi_errno; /* XXX DJG why are we just returning? */
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
     if (rreq->dev.match.rank < 0)

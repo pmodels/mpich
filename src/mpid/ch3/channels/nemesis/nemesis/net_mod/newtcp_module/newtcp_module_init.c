@@ -27,12 +27,12 @@ MPID_nem_queue_ptr_t MPID_nem_process_recv_queue = 0;
 MPID_nem_queue_ptr_t MPID_nem_process_free_queue = 0;
 extern sockconn_t g_lstn_sc;
 extern pollfd_t g_lstn_plfd;
+extern pollfd_t *MPID_nem_newtcp_module_plfd_tbl;
 
 static MPID_nem_queue_t _free_queue;
 
 static int dbg_ifname = 0;
 
-static int get_addr_port_from_bc (const char *business_card, struct in_addr *addr, in_port_t *port);
 static int GetIPInterface( MPIDU_Sock_ifaddr_t *, int * );
 
 #define MPIDI_CH3I_PORT_KEY "port"
@@ -100,6 +100,7 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     MPID_nem_newtcp_module_send_init();
     MPID_nem_newtcp_module_poll_init();
 
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_INIT);
 /*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
@@ -150,6 +151,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 	MPIU_Snprintf( namebuf, sizeof(namebuf), 
 		       "MPICH_INTERFACE_HOSTNAME_R%d", myRank );
 	ifname_string = getenv( namebuf );
+
 	if (dbg_ifname && ifname_string) {
 	    fprintf( stdout, "Found interface name %s from %s\n", 
 		    ifname_string, namebuf );
@@ -241,7 +243,7 @@ int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int 
     ret = getsockname (g_lstn_sc.fd, (struct sockaddr *)&sock_id, &len);
     MPIU_ERR_CHKANDJUMP1 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**getsockname", "**getsockname %s", strerror (errno));
 
-    mpi_errno = MPIU_Str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, sock_id.sin_port);
+    mpi_errno = MPIU_Str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, ntohs(sock_id.sin_port));
     if (mpi_errno != MPIU_STR_SUCCESS)
     {
         if (mpi_errno == MPIU_STR_NOMEM)
@@ -294,19 +296,38 @@ int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int 
 int MPID_nem_newtcp_module_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
+    int port_name_tag;
+    struct in_addr addr;
+    int ret;
+    in_port_t port;
+    
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT_TO_ROOT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT_TO_ROOT);
-    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**notimpl", 0);
+
+    /* vc is already allocated before reaching this point */
+
+    mpi_errno = MPID_nem_newtcp_module_get_addr_port_from_bc(business_card, &addr, &(VC_FIELD(new_vc, sock_id).sin_port));
+    VC_FIELD(new_vc, sock_id).sin_addr.s_addr = addr.s_addr;
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    new_vc->port_name_tag = ntohs(VC_FIELD(new_vc, sock_id).sin_port);
+    MPID_nem_newtcp_module_connect(new_vc); 
+
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT_TO_ROOT);
     return mpi_errno;
+
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newtcp_module_vc_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
+//int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
+int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     struct in_addr addr;
@@ -323,17 +344,12 @@ int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
     vc_ch->iSendContig        = MPID_nem_newtcp_iSendContig;
     memset(&VC_FIELD(vc, sock_id), 0, sizeof(VC_FIELD(vc, sock_id)));
     VC_FIELD(vc, sock_id).sin_family = AF_INET;
-    
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);    
-    mpi_errno = get_addr_port_from_bc (business_card, &addr, &(VC_FIELD(vc, sock_id).sin_port));
-    VC_FIELD(vc, sock_id).sin_addr.s_addr = addr.s_addr;
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     vc_ch->next = NULL;
     vc_ch->prev = NULL;
     VC_FIELD(vc, sc) = NULL;
     VC_FIELD(vc, send_queue).head = VC_FIELD(vc, send_queue).tail = NULL;
-    
+
  fn_exit:
     /*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
@@ -350,9 +366,17 @@ int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_newtcp_module_vc_destroy(MPIDI_VC_t *vc)
 {
-    int mpi_errno = MPI_SUCCESS;   
+    int mpi_errno = MPI_SUCCESS;
 
-    /* free any resources associated with this VC here */
+    /* currently do nothing */
+    pollfd_t *plfd;
+    sockconn_t *sc;
+
+    sc = VC_FIELD(vc, sc);
+    if (sc == NULL)
+        goto fn_exit;
+
+    plfd = &MPID_nem_newtcp_module_plfd_tbl[sc->index]; 
 
  fn_exit:   
        return mpi_errno;
@@ -361,19 +385,25 @@ int MPID_nem_newtcp_module_vc_destroy(MPIDI_VC_t *vc)
 }
 
 
+/* 
+   FIXME: this is the same function as in socksm.c 
+   This should be removed and use only one function eventually.
+*/
+   
 #undef FUNCNAME
-#define FUNCNAME get_addr_port_from_bc
+#define FUNCNAME MPID_nem_newtcp_module_get_addr_port_from_bc
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int get_addr_port_from_bc (const char *business_card, struct in_addr *addr, in_port_t *port)
+int MPID_nem_newtcp_module_get_addr_port_from_bc(const char *business_card, struct in_addr *addr, in_port_t *port)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
+    int port_int;
     char desc_str[256];
     char ifname[256];
-    MPIDI_STATE_DECL(MPID_STATE_GET_ADDR_PORT_FROM_BC);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_ADDR_PORT_FROM_BC);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_GET_ADDR_PORT_FROM_BC);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_ADDR_PORT_FROM_BC);
     
     /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
     /* desc_str is only used for debugging
@@ -381,20 +411,23 @@ static int get_addr_port_from_bc (const char *business_card, struct in_addr *add
     MPIU_ERR_CHKANDJUMP (ret != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
     */
 
-    mpi_errno = MPIU_Str_get_int_arg (business_card, MPIDI_CH3I_PORT_KEY, (int *)port);
+    /* sizeof(in_port_t) != sizeof(int) on most platforms, so we need to use
+     * port_int as the arg to MPIU_Str_get_int_arg. */
+    mpi_errno = MPIU_Str_get_int_arg (business_card, MPIDI_CH3I_PORT_KEY, &port_int);
     MPIU_ERR_CHKANDJUMP (mpi_errno != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingport");
-    /*     fprintf(stdout, "get_addr_port_from_bc buscard=%s  desc=%s port=%d\n",business_card, desc_str, *port); fflush(stdout); */
+    MPIU_Assert((port_int >> (8*sizeof(*port))) == 0); /* ensure port_int isn't too large for *port */
+    *port = htons((in_port_t)port_int);
 
     ret = MPIU_Str_get_string_arg(business_card, MPIDI_CH3I_IFNAME_KEY, ifname, sizeof(ifname));
     MPIU_ERR_CHKANDJUMP (ret != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingifname");
-	
+
     ret = inet_pton (AF_INET, (const char *)ifname, addr);
     MPIU_ERR_CHKANDJUMP(ret == 0, mpi_errno,MPI_ERR_OTHER,"**ifnameinvalid");
     MPIU_ERR_CHKANDJUMP(ret < 0, mpi_errno, MPI_ERR_OTHER, "**afinetinvalid");
     
  fn_exit:
 /*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
-    MPIDI_FUNC_EXIT(MPID_STATE_GET_ADDR_PORT_FROM_BC);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_ADDR_PORT_FROM_BC);
     return mpi_errno;
  fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
@@ -457,13 +490,26 @@ int MPID_nem_newtcp_module_bind (int sockfd)
     goto fn_exit;
 }
 
+
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newtcp_module_vc_terminate
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_newtcp_module_vc_terminate (MPIDI_VC_t *vc)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, rc;
+    sockconn_t *sc;
+
+    MPIDI_FUNC_ENTER(FUNCNAME);
+
+    mpi_errno = MPID_nem_newtcp_module_cleanup(vc);
+    
+ fn_exit:
+    MPIDI_FUNC_EXIT(FUNCNAME);
+    return mpi_errno;
+ fn_fail:
+    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
+    goto fn_exit;
 }
 
 
