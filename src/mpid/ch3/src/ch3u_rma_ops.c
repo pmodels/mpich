@@ -501,36 +501,45 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 					   target_count, target_datatype);  
 		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	    }
-	    
-	    segp = MPID_Segment_alloc();
-	    MPIU_ERR_CHKANDJUMP((!segp), mpi_errno, MPI_ERR_OTHER, "**nomem"); 
-	    MPID_Segment_init(NULL, target_count, target_datatype, segp, 0);
-	    first = 0;
-	    last  = SEGMENT_IGNORE_LAST;
-	    
-	    MPID_Datatype_get_ptr(target_datatype, dtp);
-	    vec_len = dtp->n_contig_blocks * target_count + 1; 
-	    /* +1 needed because Rob says so */
-	    MPIU_CHKLMEM_MALLOC(dloop_vec, DLOOP_VECTOR *, 
-				vec_len * sizeof(DLOOP_VECTOR), 
-				mpi_errno, "dloop vector");
-	    
-	    MPID_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
-	    
-	    source_buf = (tmp_buf != NULL) ? tmp_buf : origin_addr;
-	    target_buf = (char *) win_ptr->base + 
-		win_ptr->disp_unit * target_disp;
-	    type = dtp->eltype;
-	    type_size = MPID_Datatype_get_basic_size(type);
-	    for (i=0; i<vec_len; i++)
-	    {
-		count = (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size;
-		(*uop)((char *)source_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-		       (char *)target_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-		       &count, &type);
+
+	    if (target_predefined) { 
+		/* target predefined type, origin derived datatype */
+
+		(*uop)(tmp_buf, (char *) win_ptr->base + win_ptr->disp_unit *
+		   target_disp, &target_count, &target_datatype);
 	    }
+	    else {
 	    
-	    MPID_Segment_free(segp);
+		segp = MPID_Segment_alloc();
+		MPIU_ERR_CHKANDJUMP((!segp), mpi_errno, MPI_ERR_OTHER, "**nomem"); 
+		MPID_Segment_init(NULL, target_count, target_datatype, segp, 0);
+		first = 0;
+		last  = SEGMENT_IGNORE_LAST;
+		
+		MPID_Datatype_get_ptr(target_datatype, dtp);
+		vec_len = dtp->n_contig_blocks * target_count + 1; 
+		/* +1 needed because Rob says so */
+		MPIU_CHKLMEM_MALLOC(dloop_vec, DLOOP_VECTOR *, 
+				    vec_len * sizeof(DLOOP_VECTOR), 
+				    mpi_errno, "dloop vector");
+		
+		MPID_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
+		
+		source_buf = (tmp_buf != NULL) ? tmp_buf : origin_addr;
+		target_buf = (char *) win_ptr->base + 
+		    win_ptr->disp_unit * target_disp;
+		type = dtp->eltype;
+		type_size = MPID_Datatype_get_basic_size(type);
+		for (i=0; i<vec_len; i++)
+		{
+		    count = (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size;
+		    (*uop)((char *)source_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
+			   (char *)target_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
+			   &count, &type);
+		}
+		
+		MPID_Segment_free(segp);
+	    }
 	}
     }
     else
