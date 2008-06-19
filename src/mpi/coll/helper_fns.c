@@ -254,6 +254,8 @@ int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
 #define FCNAME "MPIC_Wait"
 int MPIC_Wait(MPID_Request * request_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIDI_STATE_DECL(MPID_STATE_MPIC_WAIT);
 
     MPIDI_PT2PT_FUNC_ENTER(MPID_STATE_MPIC_WAIT);
@@ -264,8 +266,6 @@ int MPIC_Wait(MPID_Request * request_ptr)
 	MPID_Progress_start(&progress_state);
 	while((*(request_ptr)->cc_ptr) != 0)
 	{
-	    int mpi_errno;
-    
 	    mpi_errno = MPID_Progress_wait(&progress_state);
 	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	}
