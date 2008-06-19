@@ -262,6 +262,22 @@ CXX_COMPILE_SHL = $(CXX_SHL) $(DEFS) $(INCLUDES) $(CXXFLAGS) $(CPPFLAGS)',
 	    'cpp:lo' => 'CXX_SHL         = @CXX_SHL@
 CXX_COMPILE_SHL = $(CXX_SHL) $(DEFS) $(INCLUDES) $(CXXFLAGS) $(CPPFLAGS)',
 	   );
+
+%extstring = ( 'c:o'    => '  CC              $<',
+	       'c:'     => '  CC              $<',
+	       'f:o'    => '  FC              $<',
+	       'cxx:o'  => '  CXX             $<',
+	       'cpp:o'  => '  CXX             $<',
+	       'cs:o'   => '  CS              $<',
+	       's:o'    => '  AS              $<',
+	       'f90:o'  => '  F90             $<',
+	       'c:lo'   => '  CC              $<',
+	       'f:lo'   => '  FC              $<',
+	       'f90:lo' => '  F90             $<',
+	       'cxx:lo' => '  CXX             $<',
+	       'cpp:lo' => '  CPP             $<',
+    );
+
 #
 # Rules to build programs (.o:)
 # 
@@ -1390,12 +1406,28 @@ sub DefaultRules {
 	if ($found_profilelib) {
 	    # Use a special rule when building the non-profile-lib version
 	    $extkey = "$ext:o";
-	    print FD "\t$extrules_with_profile{$extkey}$newline";
+	    # COMMAND PRINTING
+	    if (defined($extstring{$extkey})) {
+		print FD "\t\@echo \"$extstring{$extkey}\"$newline";
+		print FD "\t\@\$(VERBOSE_MAKE_CMD) $extrules_with_profile{$extkey}$newline";
+		print FD "\t\@$extrules_with_profile{$extkey}$newline";
+	    }
+	    else {
+		print FD "\t$extrules_with_profile{$extkey}$newline";
+	    }	    
 	}
 	else {
 	    $extkey = "$ext:o";
 	    if (defined($extrules{$extkey})) {
-		print FD "\t$extrules{$extkey}$newline";
+		# COMMAND PRINTING
+		if (defined($extstring{$extkey})) {
+		    print FD "\t\@echo \"$extstring{$extkey}\"$newline";
+		    print FD "\t\@\$(VERBOSE_MAKE_CMD) $extrules{$extkey}$newline";
+		    print FD "\t\@$extrules{$extkey}$newline";
+		}
+		else {
+		    print FD "\t$extrules{$extkey}$newline";
+		}
 	    }
 	    else {
 		print FD $newline;
@@ -1405,7 +1437,15 @@ sub DefaultRules {
 	    $extkey = "$ext:lo";
 	    print FD ".$ext.lo:$newline";
 	    if (defined($extrules{$extkey})) {
-		print FD "\t$extrules{$extkey}$newline";
+		# COMMAND PRINTING
+		if (defined($extstring{$extkey})) {
+		    print FD "\t\@echo \"$extstring{$extkey}\"$newline";
+		    print FD "\t\@\$(VERBOSE_MAKE_CMD) $extrules{$extkey}$newline";
+		    print FD "\t\@$extrules{$extkey}$newline";
+		}
+		else {
+		    print FD "\t$extrules{$extkey}$newline";
+		}
 	    }
 	}
 	# For maintainers, make it easy to create the asm versions
@@ -1430,7 +1470,15 @@ sub DefaultRules {
 	# when desired.
 	if (defined($extrules{$extkey})) {
 	    print FD ".$extkey$newline";
-	    print FD "\t$extrules{$extkey}$newline";
+	    # COMMAND PRINTING
+	    if (defined($extstring{$extkey})) {
+		print FD "\t\@echo \"$extstring{$extkey}\"$newline";
+		print FD "\t\@\$(VERBOSE_MAKE_CMD) $extrules{$extkey}$newline";
+		print FD "\t\@$extrules{$extkey}$newline";
+	    }
+	    else {
+		print FD "\t$extrules{$extkey}$newline";
+	    }
 	}
     }
     
@@ -2759,6 +2807,9 @@ sub LibraryBuild {
 	if ($dolib_member) {
 	    &print_make_line( FD, "${libloc}lib$libname.$libext($obj): $obj" );
 	    &print_make_endline( FD );
+	    # COMMAND PRINTING
+	    print FD "\t\@echo \"  AR              ${libloc}lib$libname.$libext\"$newline";
+	    print FD "\t\@\$(VERBOSE_MAKE_CMD) \${AR} cr ${libloc}lib$libname.$libext \$?$newline";
 	    print FD "\t\${AR} cr ${libloc}lib$libname.$libext \$?$newline";
 	}
 	else {
@@ -2769,7 +2820,9 @@ sub LibraryBuild {
     }
     if (!$dolib_member) {
         &print_make_endline( FD );
-        print FD "\t\${AR} cr ${libloc}lib$libname.$libext \$?$newline";
+        print FD "\t\@echo \"  AR              ${libloc}lib$libname.$libext \$?\"$newline";
+        print FD "\t\@\$(VERBOSE_MAKE_CMD) \${AR} cr ${libloc}lib$libname.$libext \$?$newline";
+        print FD "\t\@\${AR} cr ${libloc}lib$libname.$libext \$?$newline";
     }
 }
 
@@ -2927,9 +2980,15 @@ sub TargetProfileLibraries {
 	&print_make_endline( FD );
 	if ($found_source_files) {
 	    # Add these files as objects to the archive
-	    print FD "\t\${AR} cr ${libloc}lib$proflib_name.a \$?$newline";
+	    # COMMAND PRINTING
+	    print FD "\t\@echo \"  AR              ${libloc}lib$proflib_name.a\"$newline";
+	    print FD "\t@\$(VERBOSE_MAKE_CMD) \${AR} cr ${libloc}lib$proflib_name.a \$?$newline";
+	    print FD "\t@\${AR} cr ${libloc}lib$proflib_name.a \$?$newline";
 	    if ($ranliblib) { 
-		print FD "\t\${RANLIB} ${libloc}lib$proflib_name.a$newline"; 
+		# COMMAND PRINTING
+		print FD "\t\@echo \"  RANLIB          lib$proflib_name.a\"$newline";
+		print FD "\t@\$(VERBOSE_MAKE_CMD) \${RANLIB} ${libloc}lib$proflib_name.a$newline"; 
+		print FD "\t@\${RANLIB} ${libloc}lib$proflib_name.a$newline"; 
 	    }
 	    # To handle timestamp problems with recursive makes, 
 	    # add a delay
@@ -2965,7 +3024,10 @@ sub TargetProfileLibraries {
 	    &print_make_endline( FD );
 	    if ($found_source_files) {
 		# Add these files as objects to the archive
-		print FD "\t\${AR} cr ${libloc}lib$proflib_name.la \$?$newline";
+		# COMMAND PRINTING
+		print FD "\t\@echo \"  AR              \$?\"$newline";
+		print FD "\t\@\$(VERBOSE_MAKE_CMD) \${AR} cr ${libloc}lib$proflib_name.la$newline";
+		print FD "\t\@\${AR} cr ${libloc}lib$proflib_name.la$newline";
 		# To handle timestamp problems with recursive makes, 
 		# add a delay
 		&LibraryTimestampFix( $proflib_name.".la", $libloc );
@@ -2988,7 +3050,10 @@ sub TargetProfileLibraries {
 	    # Note that many makes won't replace $< in an implicit rule,
 	    # so we explicitly list the source file
 	    print FD "$obj: $sourcefile$newline";
-	    print FD "\t\$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj$newline";
+	    # COMMAND PRINTING
+	    print FD "\t\@echo \"  CC              \${srcdir}/$sourcefile\"$newline";
+	    print FD "\t\@\$(VERBOSE_MAKE_CMD) \$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj$newline";
+	    print FD "\t\@\$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj$newline";
 	    if ($do_sharedlibs) {
 		$obj =~ s/\.o/.lo/;
 	        print FD "$obj: $sourcefile$newline";
