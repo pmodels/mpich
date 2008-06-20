@@ -270,8 +270,8 @@ int MPIDI_GetTagFromPort( const char *port_name, int *port_name_tag )
 {
     int mpi_errno;
 
-    // XXX DJG why is this "port" instead of "tag"?
-    //mpi_errno = MPIU_Str_get_int_arg(port_name, MPIDI_CH3I_PORT_NAME_TAG_KEY, 
+    /* XXX DJG why is this "port" instead of "tag"?
+    mpi_errno = MPIU_Str_get_int_arg(port_name, MPIDI_CH3I_PORT_NAME_TAG_KEY,  */
     mpi_errno = MPIU_Str_get_int_arg(port_name, "port", 
 				     port_name_tag);
     if (mpi_errno != MPIU_STR_SUCCESS)
