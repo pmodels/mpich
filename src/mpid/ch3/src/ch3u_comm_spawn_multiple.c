@@ -207,6 +207,9 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     if (errcodes != MPI_ERRCODES_IGNORE) {
         mpi_errno = NMPI_Bcast(&should_accept, 1, MPI_INT, root, comm_ptr->handle);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        mpi_errno = NMPI_Bcast(&total_num_processes, 1, MPI_INT, root, comm_ptr->handle);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         
         mpi_errno = NMPI_Bcast(errcodes, total_num_processes, MPI_INT, root, comm_ptr->handle);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);

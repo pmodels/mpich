@@ -11,19 +11,14 @@
 
 #define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
 
-/* This test checks to make sure that two MPI_Comm_connects to two different 
- * MPI ports
- * match their corresponding MPI_Comm_accepts.  The root process opens two 
- * MPI ports and
- * sends the first port to process 1 and the second to process 2.  Then the
- *  root process
- * accepts a connection from the second port followed by the first port.  
- * Processes 1 and
- * 2 both connect back to the root but process 2 first sleeps for three 
- * seconds to give
- * process 1 time to attempt to connect to the root.  The root should wait 
- * until
- * process 2 connects before accepting the connection from process 1.
+/* This test checks to make sure that two MPI_Comm_connects to two different MPI
+ * ports match their corresponding MPI_Comm_accepts.  The root process opens two
+ * MPI ports and sends the first port to process 1 and the second to process 2.
+ * Then the root process accepts a connection from the second port followed by
+ * the first port.  Processes 1 and 2 both connect back to the root but process
+ * 2 first sleeps for three seconds to give process 1 time to attempt to connect
+ * to the root.  The root should wait until process 2 connects before accepting
+ * the connection from process 1.
  */
 
 int main( int argc, char *argv[] )
