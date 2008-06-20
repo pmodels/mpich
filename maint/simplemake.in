@@ -1408,8 +1408,11 @@ sub DefaultRules {
 	    $extkey = "$ext:o";
 	    # COMMAND PRINTING
 	    if (defined($extstring{$extkey})) {
-		print FD "\t\@echo \"$extstring{$extkey}\"$newline";
-		print FD "\t\@\$(VERBOSE_MAKE_CMD) $extrules_with_profile{$extkey}$newline";
+		print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+		print FD "\t  echo \"$extstring{$extkey}\" ; \\$newline";
+		print FD "\telse \\$newline";
+		print FD "\t  echo $extrules_with_profile{$extkey} ; \\$newline";
+		print FD "\tfi$newline";
 		print FD "\t\@$extrules_with_profile{$extkey}$newline";
 	    }
 	    else {
@@ -1421,8 +1424,11 @@ sub DefaultRules {
 	    if (defined($extrules{$extkey})) {
 		# COMMAND PRINTING
 		if (defined($extstring{$extkey})) {
-		    print FD "\t\@echo \"$extstring{$extkey}\"$newline";
-		    print FD "\t\@\$(VERBOSE_MAKE_CMD) $extrules{$extkey}$newline";
+		    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+		    print FD "\t  echo \"$extstring{$extkey}\" ; \\$newline";
+		    print FD "\telse \\$newline";
+		    print FD "\t  echo $extrules{$extkey} ; \\$newline";
+		    print FD "\tfi$newline";
 		    print FD "\t\@$extrules{$extkey}$newline";
 		}
 		else {
@@ -1439,8 +1445,15 @@ sub DefaultRules {
 	    if (defined($extrules{$extkey})) {
 		# COMMAND PRINTING
 		if (defined($extstring{$extkey})) {
-		    print FD "\t\@echo \"$extstring{$extkey}\"$newline";
-		    print FD "\t\@\$(VERBOSE_MAKE_CMD) $extrules{$extkey}$newline";
+		    # the lo rules have newlines in them, so we need to escape them,
+		    # as well as remove any @ prefixes
+		    my $escaped_rule = $extrules{$extkey};
+		    $escaped_rule =~ s/$newline(\t+)\@*/ ; \\$newline$1/g;
+		    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+		    print FD "\t  echo \"$extstring{$extkey}\" ; \\$newline";
+		    print FD "\telse \\$newline";
+		    print FD "\t  echo $escaped_rule ; \\$newline";
+		    print FD "\tfi$newline";
 		    print FD "\t\@$extrules{$extkey}$newline";
 		}
 		else {
@@ -1472,8 +1485,11 @@ sub DefaultRules {
 	    print FD ".$extkey$newline";
 	    # COMMAND PRINTING
 	    if (defined($extstring{$extkey})) {
-		print FD "\t\@echo \"$extstring{$extkey}\"$newline";
-		print FD "\t\@\$(VERBOSE_MAKE_CMD) $extrules{$extkey}$newline";
+		print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+		print FD "\t  echo \"$extstring{$extkey}\" ; \\$newline";
+		print FD "\telse \\$newline";
+		print FD "\t  echo $extrules{$extkey} ; \\$newline";
+		print FD "\tfi$newline";
 		print FD "\t\@$extrules{$extkey}$newline";
 	    }
 	    else {
@@ -2808,8 +2824,11 @@ sub LibraryBuild {
 	    &print_make_line( FD, "${libloc}lib$libname.$libext($obj): $obj" );
 	    &print_make_endline( FD );
 	    # COMMAND PRINTING
-	    print FD "\t\@echo \"  AR              ${libloc}lib$libname.$libext\"$newline";
-	    print FD "\t\@\$(VERBOSE_MAKE_CMD) \${AR} cr ${libloc}lib$libname.$libext \$?$newline";
+	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+	    print FD "\t  echo \"  AR              ${libloc}lib$libname.$libext\" ; \\$newline";
+	    print FD "\telse \\$newline";
+	    print FD "\t  echo \${AR} cr ${libloc}lib$libname.$libext \$? ; \\$newline";
+	    print FD "\tfi$newline";
 	    print FD "\t\${AR} cr ${libloc}lib$libname.$libext \$?$newline";
 	}
 	else {
@@ -2820,8 +2839,11 @@ sub LibraryBuild {
     }
     if (!$dolib_member) {
         &print_make_endline( FD );
-        print FD "\t\@echo \"  AR              ${libloc}lib$libname.$libext \$?\"$newline";
-        print FD "\t\@\$(VERBOSE_MAKE_CMD) \${AR} cr ${libloc}lib$libname.$libext \$?$newline";
+	print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+	print FD "\t  echo \"  AR              ${libloc}lib$libname.$libext \$?\" ; \\$newline";
+	print FD "\telse \\$newline";
+	print FD "\t  echo \${AR} cr ${libloc}lib$libname.$libext \$? ; \\$newline";
+	print FD "\tfi$newline";
         print FD "\t\@\${AR} cr ${libloc}lib$libname.$libext \$?$newline";
     }
 }
@@ -2981,14 +3003,20 @@ sub TargetProfileLibraries {
 	if ($found_source_files) {
 	    # Add these files as objects to the archive
 	    # COMMAND PRINTING
-	    print FD "\t\@echo \"  AR              ${libloc}lib$proflib_name.a\"$newline";
-	    print FD "\t@\$(VERBOSE_MAKE_CMD) \${AR} cr ${libloc}lib$proflib_name.a \$?$newline";
-	    print FD "\t@\${AR} cr ${libloc}lib$proflib_name.a \$?$newline";
+	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+	    print FD "\t  echo \"  AR              ${libloc}lib$proflib_name.a\" ; \\$newline";
+	    print FD "\telse \\$newline";
+	    print FD "\t  echo \${AR} cr ${libloc}lib$proflib_name.a \$? ; \\$newline";
+	    print FD "\tfi$newline";
+	    print FD "\t\@\${AR} cr ${libloc}lib$proflib_name.a \$?$newline";
 	    if ($ranliblib) { 
 		# COMMAND PRINTING
-		print FD "\t\@echo \"  RANLIB          lib$proflib_name.a\"$newline";
-		print FD "\t@\$(VERBOSE_MAKE_CMD) \${RANLIB} ${libloc}lib$proflib_name.a$newline"; 
-		print FD "\t@\${RANLIB} ${libloc}lib$proflib_name.a$newline"; 
+		print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+		print FD "\t  echo \"  RANLIB          lib$proflib_name.a\" ; \\$newline";
+		print FD "\telse \\$newline";
+		print FD "\t  echo \${RANLIB} ${libloc}lib$proflib_name.a ; \\$newline"; 
+		print FD "\tfi$newline";
+		print FD "\t\@\${RANLIB} ${libloc}lib$proflib_name.a$newline"; 
 	    }
 	    # To handle timestamp problems with recursive makes, 
 	    # add a delay
@@ -3025,8 +3053,11 @@ sub TargetProfileLibraries {
 	    if ($found_source_files) {
 		# Add these files as objects to the archive
 		# COMMAND PRINTING
-		print FD "\t\@echo \"  AR              \$?\"$newline";
-		print FD "\t\@\$(VERBOSE_MAKE_CMD) \${AR} cr ${libloc}lib$proflib_name.la$newline";
+		print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+		print FD "\t  echo \"  AR              \$?\" ; \\$newline";
+		print FD "\telse \\$newline";
+		print FD "\t  echo \${AR} cr ${libloc}lib$proflib_name.la ; \\$newline";
+		print FD "\tfi$newline";
 		print FD "\t\@\${AR} cr ${libloc}lib$proflib_name.la$newline";
 		# To handle timestamp problems with recursive makes, 
 		# add a delay
@@ -3051,8 +3082,11 @@ sub TargetProfileLibraries {
 	    # so we explicitly list the source file
 	    print FD "$obj: $sourcefile$newline";
 	    # COMMAND PRINTING
-	    print FD "\t\@echo \"  CC              \${srcdir}/$sourcefile\"$newline";
-	    print FD "\t\@\$(VERBOSE_MAKE_CMD) \$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj$newline";
+	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+	    print FD "\t  echo \"  CC              \${srcdir}/$sourcefile\" ; \\$newline";
+	    print FD "\telse \\$newline";
+	    print FD "\t  echo \$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj ; \\$newline";
+	    print FD "\tfi$newline";
 	    print FD "\t\@\$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj$newline";
 	    if ($do_sharedlibs) {
 		$obj =~ s/\.o/.lo/;
