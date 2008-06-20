@@ -199,8 +199,13 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
             ADIO_ReadContig(fd, buf, bufsize, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                              offset, status, error_code);
 	    if (file_ptr_type == ADIO_INDIVIDUAL) fd->fp_ind = offset + bufsize;
+	    fd->fp_sys_posn = -1;   /* set it to null. */ 
+#ifdef HAVE_STATUS_SET_BYTES
+	    MPIR_Status_set_bytes(status, datatype, bufsize);
+#endif 
+	    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
             return;
-        }
+	}
 
        /* Calculate end_offset, the last byte-offset that will be accessed.
          e.g., if start_offset=0 and 100 bytes to be read, end_offset=99*/
