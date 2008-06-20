@@ -198,6 +198,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
         if (buftype_is_contig && bufsize <= frd_size) {
             ADIO_ReadContig(fd, buf, bufsize, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                              offset, status, error_code);
+	    if (file_ptr_type == ADIO_INDIVIDUAL) fd->fp_ind = offset + bufsize;
             return;
         }
 

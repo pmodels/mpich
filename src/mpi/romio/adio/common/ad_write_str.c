@@ -126,7 +126,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
     ADIO_Offset userbuf_off;
     ADIO_Offset off, req_off, disp, end_offset=0, writebuf_off, start_off;
     char *writebuf;
-    int flag, st_fwr_size, st_n_filetypes, writebuf_len, write_sz;
+    int st_fwr_size, st_n_filetypes, writebuf_len, write_sz;
     ADIO_Status status1;
     int new_bwr_size, new_fwr_size, max_bufsize;
     static char myname[] = "ADIOI_GEN_WriteStrided";
@@ -266,6 +266,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
         if (buftype_is_contig && bufsize <= fwr_size) {
             ADIO_WriteContig(fd, buf, bufsize, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                              offset, status, error_code);
+	    if (file_ptr_type == ADIO_INDIVIDUAL) fd->fp_ind = offset + bufsize;
             return;
         }
 
