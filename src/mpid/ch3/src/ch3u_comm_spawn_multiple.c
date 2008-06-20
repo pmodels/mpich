@@ -110,7 +110,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     int *info_keyval_sizes=0, i, mpi_errno=MPI_SUCCESS;
     PMI_keyval_t **info_keyval_vectors=0, preput_keyval_vector;
     int *pmi_errcodes = 0, pmi_errno;
-    int total_num_processes;
+    int total_num_processes, should_accept = 1;
     MPIU_THREADPRIV_DECL;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
@@ -194,20 +194,30 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	    for (i=0; i<total_num_processes; i++) {
 		/* FIXME: translate the pmi error codes here */
 		errcodes[i] = pmi_errcodes[i];
+                /* We want to accept if any of the spawns succeeded.
+                   Alternatively, this is the same as we want to NOT accept if
+                   all of them failed.  should_accept = NAND(e_0, ..., e_n)
+                   Remember, success equals false (0). */
+                should_accept = should_accept && errcodes[i];
 	    }
+            should_accept = !should_accept; /* the `N' in NAND */
 	}
     }
 
-    mpi_errno = MPID_Comm_accept(port_name, NULL, root, comm_ptr, intercomm); 
-    if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+    if (errcodes != MPI_ERRCODES_IGNORE) {
+        mpi_errno = NMPI_Bcast(&should_accept, 1, MPI_INT, root, comm_ptr->handle);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        
+        mpi_errno = NMPI_Bcast(errcodes, total_num_processes, MPI_INT, root, comm_ptr->handle);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
-    if (errcodes) { /* If the application used MPI_ERRCODES_IGNORE */
-	mpi_errno = NMPI_Bcast(errcodes, count, MPI_INT, root, comm_ptr->handle);
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
-	}
+    if (should_accept) {
+        mpi_errno = MPID_Comm_accept(port_name, NULL, root, comm_ptr, intercomm); 
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    else {
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**pmi_spawn_multiple");
     }
 
  fn_exit:

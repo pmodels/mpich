@@ -706,14 +706,19 @@ int PMI_Spawn_multiple(int count,
                        const PMI_keyval_t preput_keyval_vector[],
                        int errors[])
 {
-    int  i,rc,argcnt,spawncnt;
+    int  i,rc,argcnt,spawncnt,total_num_processes,num_errcodes_found;
     char buf[PMIU_MAXLINE], tempbuf[PMIU_MAXLINE], cmd[PMIU_MAXLINE];
+    char *lead, *lag;
 
     /* Connect to the PM if we haven't already */
     if (PMIi_InitIfSingleton() != 0) return -1;
 
+    total_num_processes = 0;
+
     for (spawncnt=0; spawncnt < count; spawncnt++)
     {
+        total_num_processes += maxprocs[spawncnt];
+
         rc = MPIU_Snprintf(buf, PMIU_MAXLINE, 
 			   "mcmd=spawn\nnprocs=%d\nexecname=%s\n",
 			   maxprocs[spawncnt], cmds[spawncnt] );
@@ -848,6 +853,28 @@ int PMI_Spawn_multiple(int count,
 	    return( -1 );
 	}
     }
+    
+    PMIU_Assert(errors != NULL);
+    if (PMIU_getval( "errcodes", tempbuf, PMIU_MAXLINE )) {
+        num_errcodes_found = 0;
+        lag = &tempbuf[0];
+        do {
+            lead = strchr(lag, ',');
+            if (lead) *lead = '\0';
+            errors[num_errcodes_found++] = atoi(lag);
+            lag = lead + 1; /* move past the null char */
+            PMIU_Assert(num_errcodes_found <= total_num_processes);
+        } while (lead != NULL);
+        PMIU_Assert(num_errcodes_found == total_num_processes);
+    }
+    else {
+        /* gforker doesn't return errcodes, so we'll just pretend that means
+           that it was going to send all `0's. */
+        for (i = 0; i < total_num_processes; ++i) {
+            errors[i] = 0;
+        }
+    }
+
     return( 0 );
 }
 
