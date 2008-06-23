@@ -271,7 +271,6 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
 #ifdef HAVE_STATUS_SET_BYTES
 	    MPIR_Status_set_bytes(status, datatype, bufsize);
 #endif 
-	    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
             return;
         }
 
