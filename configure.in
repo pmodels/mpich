@@ -1135,6 +1135,10 @@ if test "$enable_debuginfo" = "yes" ; then
     # Note: if libdir contains exec_prefix, handle the fact that the
     # default exec_prefix is NONE, which (much later in configure)
     # gets turned into the value of prefix
+    ##ENVVAR: MPICH_DEBUGLIBNAME - Set this environment variable to 
+    ## override the default name of the debugger support library.
+    ## The default name is libtvmpich2.so .
+    ##ENVVAR END:
     if test -z "$MPICH_DEBUGLIBNAME" ; then
         DEBUGLIBNAME=libtvmpich2.so
     else
@@ -1897,7 +1901,7 @@ fi
 dnl By modifying mpif.h to use ! for comments, it can work with many f90 
 dnl compilers without creating a separate version.  
 dnl Note that this is run AFTER the AC_OUTPUT actions
-AC_OUTPUT_COMMANDS([if test $enable_f77 = yes ; then 
+AC_OUTPUT_COMMANDS([if test "$enable_f77" = yes ; then 
 if test "$bashWorks" = yes ; then cp -f src/env/mpif77.bash src/env/mpif77 ; fi
 chmod a+x src/env/mpif77
 if test "$has_exclaim" = "yes" ; then
@@ -1911,6 +1915,18 @@ if test "$has_fort_real8" = "yes" ; then
     mv src/include/mpif.h.new src/include/mpif.h
     cp src/include/mpif.h src/binding/f77/mpif.h
 fi
+# Save a copy of the original mpi_base.f90 file
+if test "$enable_f90" = "yes" ; then
+  if test ! -f "$master_top_srcdir/src/binding/f90/mpi_base.f90.orig" ; then
+    cp $master_top_srcdir/src/binding/f90/mpi_base.f90 $master_top_srcdir/src/binding/f90/mpi_base.f90.orig
+  fi
+  if test "$has_fort90_real8" = "yes" ; then
+    sed -e 's/DOUBLE PRECISION/REAL*8/g' $master_top_srcdir/src/binding/f90/mpi_base.f90 > $master_top_srcdir/src/binding/f90/mpi_base.f90.new
+    mv $master_top_srcdir/binding/f90/mpi_base.f90.new $master_top_srcdir/binding/f90/mpi_base.f90
+  else
+    cp $master_top_srcdir/binding/f90/mpi_base.f90.orig $master_top_srcdir/binding/f90/mpi_base.f90
+  fi
+fi
 
 if test ! -d bin  ; then mkdir bin ; fi 
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
@@ -1919,9 +1935,12 @@ chmod a+x bin/mpif77
 else
     rm -f src/env/mpif77 src/env/mpif77.conf
 fi],
+master_top_srcdir=$master_top_srcdir
 enable_f77=$enable_f77
+enable_f90=$enable_f90
 has_exclaim=$has_exclaim
 has_fort_real8=$pac_cv_fort_real8
+has_fort90_real8=$pac_cv_fort90_real8
 includebuild_dir=$includebuild_dir
 libbuild_dir=$libbuild_dir
 bashWorks=$bashWorks)
@@ -4369,6 +4388,10 @@ EOF
 	        OFFSET_KIND=$simpleintkind
             fi
         fi
+        AC_CACHE_CHECK([whether real*8 is supported in Fortran 90],pac_cv_fort90_real8,[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*8 a])],
+            pac_cv_fort90_real8=yes,
+            pac_cv_fort90_real8=no)])
         PAC_LANG_POP_COMPILERS 
     fi
     # Make sure that address kind and offset kind have values.
@@ -4670,7 +4693,11 @@ int main( int argc, char *argv[] ){
 ],pac_cv_mpi_bsend_overhead=`cat conftestval`,pac_cv_mpi_bsend_overhead=-1,pac_cv_mpi_bsend_overhead=-1)
 ])
 if test "$pac_cv_mpi_bsend_overhead" -le 0 ; then
-    pac_cv_mpi_bsend_overhead=$bsend_overheaddefault
+    if test -n "$bsend_overheaddefault" ; then
+        pac_cv_mpi_bsend_overhead=$bsend_overheaddefault
+    else
+        AC_MSG_ERROR([Unable to determine the size of BSEND_OVERHEAD])
+    fi
 fi
 BSEND_OVERHEAD=$pac_cv_mpi_bsend_overhead
 export BSEND_OVERHEAD
@@ -5243,10 +5270,19 @@ AC_SUBST(MPICH_TIMER_KIND)
 # Setup other replaceable values
 AC_SUBST(MPILIBNAME)
 AC_SUBST(PMPILIBNAME)
+# Note that aint_size must be used instead of void_p where the desired check
+# is on the size of MPI_Aint
+aint_size=$ac_cv_sizeof_void_p
+if test "$with_aint_size" -gt 0 ; then
+   aint_size=$with_aint_size
+   if test "$aint_size" !="$ac_cv_sizeof_void_p" ; then
+        AC_MSG_RESULT([Overriding MPI_Aint to be $aint_size bytes])
+   fi
+fi
 MPI_AINT=int
 for type in int long long_long short ; do
     eval len=\$ac_cv_sizeof_$type
-    if test "$len" = "$ac_cv_sizeof_void_p" ; then
+    if test "$len" = "$aint_size" ; then
         MPI_AINT=`echo $type | sed -e 's/_/ /'`
         # Make the sizeof AINT available to other configures
         MPI_SIZEOF_AINT=$len
@@ -5283,15 +5319,26 @@ AC_SUBST(MPI_AINT_FMT_DEC_SPEC)
 AC_SUBST(MPI_AINT_FMT_HEX_SPEC)
 
 # If sizeof(mpi_aint) = sizeof(int), set this value
-if test "$ac_cv_sizeof_int" = "$ac_cv_sizeof_void_p" ; then
-    AC_DEFINE(SIZEOF_INT_IS_AINT,1,[define if sizeof(int) = sizeof(void*)])
+if test "$ac_cv_sizeof_int" = "$aint_size" ; then
+    AC_DEFINE(SIZEOF_INT_IS_AINT,1,[define if sizeof(int) = sizeof(MPI_Aint)])
 fi
+
+# Find a pointer-sized int
+for type in int long long_long short ; do
+    eval len=\$ac_cv_sizeof_$type
+    if test "$len" = "$ac_cv_sizeof_void_p" ; then
+        MPIR_PINT=`echo $type | sed -e 's/_/ /'`
+        break
+    fi
+done
+AC_DEFINE_UNQUOTED(MPIR_Pint,$MPIR_PINT,[MPIR_PINT is a pointer-sized integer])
+AC_DEFINE_UNQUOTED(MPIR_Upint,unsigned $MPIR_PINT,[MPIR_PUINT is an unsigned pointer-sized integer])
 #
 # define MPIU_Size_t - used to express the size of objects
 # This is used in src/include/mpitypedefs.h to define MPIU_SIZE_T, 
 # and is used in various parts of ch3 and mpid/common/sock.  
 # This is used to handle the potential problem that a message is 
-# too long to fit within an int.  However, we may still need to make
+# too long to fit with an int.  However, we may still need to make
 # some more adjustments in the code (this may not be used everywhere
 # that it is needed).
 #
