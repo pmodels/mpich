@@ -6,6 +6,47 @@
 
 #include "mpido_coll.h"
 
+int MPIDI_IsTreeOp(MPI_Op op, MPI_Datatype datatype)
+{
+   int rc=0;
+   switch(op)
+   {
+      case MPI_SUM:
+      case MPI_MAX:
+      case MPI_MIN:
+      case MPI_BAND:
+      case MPI_BOR:
+      case MPI_BXOR:
+      case MPI_MAXLOC:
+      case MPI_MINLOC:
+         rc = 1;
+         break;
+      default:
+         return 0;
+   }
+   switch(datatype)
+   {
+      case MPI_FLOAT:
+         if(op==MPI_MAX || op == MPI_MIN)
+            return 1;
+         else 
+            return 0;
+         break;
+      case MPI_LONG_DOUBLE:
+      case MPI_UNSIGNED_CHAR:
+      case MPI_BYTE:
+      case MPI_CHAR:
+      case MPI_SIGNED_CHAR:
+      case MPI_CHARACTER:
+      case MPI_DOUBLE_COMPLEX:
+      case MPI_COMPLEX:
+      default:
+         return 0;
+   }
+   return rc;
+}
+
+
 int MPIDI_ConvertMPItoDCMF(MPI_Op op, DCMF_Op *dcmf_op,
                            MPI_Datatype datatype, DCMF_Dt *dcmf_dt)
 {

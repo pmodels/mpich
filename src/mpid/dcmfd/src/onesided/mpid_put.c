@@ -118,11 +118,14 @@ int MPID_Put(void *origin_addr, int origin_count,
                 MPIDI_msg_sz_t t_data_sz;
                 MPID_Segment segment;
                 mpid_dt_info dti;
-                int i, j, last, sent = 0;
+                int i, j, sent = 0;
+		DLOOP_Offset last;
                 char *b, *s, *buf;
                 MPIDU_Onesided_info_t *info;
                 int lpid;
                 DCQuad xtra = {0};
+		struct mpid_put_cb_data *put;
+		DCMF_Memregion_t *bufmr;
 
                 lpid = MPIDU_world_rank(win_ptr, target_rank);
                 MPIDI_Datatype_get_info(target_count, target_datatype,
@@ -132,18 +135,32 @@ int MPID_Put(void *origin_addr, int origin_count,
                 if (dt_contig) {
                         buf = origin_addr;
                         cb_send.function = done_rqc_cb;
+			bufmr = &win_ptr->_dev.coll_info[rank].mem_region;
+			s = (char *)((char *)origin_addr -
+				(char *)win_ptr->base +
+				(char *)win_ptr->_dev.coll_info[rank].base_addr);
                 } else {
-                        MPIDU_MALLOC(buf, char, data_sz + sizeof(int), mpi_errno, "MPID_Put");
+                        MPIDU_MALLOC(buf, char, data_sz +
+				sizeof(struct mpid_put_cb_data),
+				mpi_errno, "MPID_Put");
                         if (buf == NULL) {
                                 MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,
                                         "Unable to allocate "
                                         "non-contiguous buffer");
                         }
-                        refp = (int *)buf;
-                        xtra.w1 = (unsigned)refp;
-                        xtra.w2 = (unsigned)buf;
+                        put = (struct mpid_put_cb_data *)buf;
+                        buf += sizeof(struct mpid_put_cb_data);
+                        refp = &put->ref;
+                        xtra.w1 = (unsigned)put;
+                        xtra.w2 = (unsigned)put; // buf to free
                         cb_send.function = done_reffree_rqc_cb;
-                        buf += sizeof(int);
+			void * mrcfg_base  = buf;
+			size_t mrcfg_bytes = data_sz;
+			(void)DCMF_Memregion_create(&put->memreg, &mrcfg_bytes, mrcfg_bytes, mrcfg_base, 0);
+			// check errors?
+			bufmr = &put->memreg;
+			s = (char *)(buf - (char *)mrcfg_base);
+			put->flag = 1; // we have a memregion
                         *refp = 0;
                         mpi_errno = MPID_Segment_init(origin_addr,
                                         origin_count,
@@ -153,22 +170,43 @@ int MPID_Put(void *origin_addr, int origin_count,
                         MPID_Segment_pack(&segment, 0, &last, buf);
                         MPID_assert_debug(last == data_sz);
                 }
+#ifdef USE_DCMF_PUT
+#else /* ! USE_DCMF_PUT */
+		size_t mrcfg_bytes;
+		void * mrcfg_base;
+		DCMF_Memregion_query(&win_ptr->_dev.coll_info[target_rank].mem_region, &mrcfg_bytes, &mrcfg_base);
+#endif /* ! USE_DCMF_PUT */
                 xtra.w0 = (unsigned)&win_ptr->_dev.my_rma_pends;
                 if (t_dt_contig) {
+                        b = win_ptr->_dev.coll_info[target_rank].base_addr +
+                                win_ptr->_dev.coll_info[target_rank].disp_unit * target_disp;
+#ifdef USE_DCMF_PUT
+                        reqp = MPIDU_get_req(&xtra, NULL);
+#else /* ! USE_DCMF_PUT */
                         reqp = MPIDU_get_req(&xtra, &info);
                 	info->mpid_info_w0 = MPID_MSGTYPE_PUT;
                 	info->mpid_info_w1 = win_ptr->_dev.coll_info[target_rank].win_handle;
                 	info->mpid_info_w2 = rank;
-                        info->mpid_info_w3 = (unsigned)win_ptr->_dev.coll_info[target_rank].base_addr +
-                                win_ptr->_dev.coll_info[target_rank].disp_unit * target_disp;
+                        info->mpid_info_w3 = (unsigned)((unsigned)mrcfg_base + b);
+#endif /* ! USE_DCMF_PUT */
                         cb_send.clientdata = reqp;
                         ++win_ptr->_dev.my_rma_pends;
                         if (refp) { ++*refp; }
                         ++sent;
+#ifdef USE_DCMF_PUT
+			mpi_errno = DCMF_Put(&bg1s_pt_proto, reqp,
+				cb_send, win_ptr->_dev.my_cstcy, lpid,
+				t_data_sz,
+				bufmr,
+				&win_ptr->_dev.coll_info[target_rank].mem_region,
+				(size_t)s,
+				(size_t)b);
+#else /* ! USE_DCMF_PUT */
                         mpi_errno = DCMF_Send(&bg1s_sn_proto, reqp,
                                 cb_send, win_ptr->_dev.my_cstcy, lpid,
                                 t_data_sz, buf,
                                 info->info, 2);
+#endif /* ! USE_DCMF_PUT */
                         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
                         ++win_ptr->_dev.coll_info[target_rank].rma_sends;
                 } else {
@@ -180,25 +218,46 @@ int MPID_Put(void *origin_addr, int origin_count,
                         b = win_ptr->_dev.coll_info[target_rank].base_addr +
                                 win_ptr->_dev.coll_info[target_rank].disp_unit *
                                 target_disp;
-                        s = buf;
+#ifdef USE_DCMF_PUT
+			// 's' already set
+#else /* ! USE_DCMF_PUT */
+			s = buf;
+			b += (unsigned)mrcfg_base;
+#endif /* ! USE_DCMF_PUT */
                         if (refp) *refp = target_count * dti.map_len;
                         for (j = 0; j < target_count; ++j) {
                                 for (i = 0; i < dti.map_len; i++) {
 					MPIDU_Progress_spin(win_ptr->_dev.my_rma_pends >
 						MPIDI_Process.rma_pending);
+#ifdef USE_DCMF_PUT
+                                        reqp = MPIDU_get_req(&xtra, NULL);
+                                        cb_send.clientdata = reqp;
+                                        ++win_ptr->_dev.my_rma_pends;
+                                        ++sent;
+					mpi_errno = DCMF_Put(&bg1s_pt_proto, reqp,
+						cb_send, win_ptr->_dev.my_cstcy, lpid,
+						dti.map[i].len,
+						bufmr,
+						&win_ptr->_dev.coll_info[target_rank].mem_region,
+						(unsigned)s,
+						(unsigned)b + dti.map[i].off);
+#else /* ! USE_DCMF_PUT */
                                         reqp = MPIDU_get_req(&xtra, &info);
                 			info->mpid_info_w0 = MPID_MSGTYPE_PUT;
                 			info->mpid_info_w1 = win_ptr->_dev.coll_info[target_rank].win_handle;
                 			info->mpid_info_w2 = rank;
-                                        info->mpid_info_w3 = (unsigned)b + dti.map[i].off;
+                                        info->mpid_info_w3 = (unsigned)b +
+						dti.map[i].off;
                                         cb_send.clientdata = reqp;
                                         ++win_ptr->_dev.my_rma_pends;
                                         ++sent;
                                         mpi_errno = DCMF_Send(&bg1s_sn_proto,
                                                 reqp, cb_send,
                                                 win_ptr->_dev.my_cstcy, lpid,
-                                                dti.map[i].len, s,
+                                                dti.map[i].len,
+						s,
                                                 info->info, 2);
+#endif /* ! USE_DCMF_PUT */
                                         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
                                         ++win_ptr->_dev.coll_info[target_rank].rma_sends;
                                         s += dti.map[i].len;
@@ -206,6 +265,29 @@ int MPID_Put(void *origin_addr, int origin_count,
                                 b += dti.dtp->extent;
                         }
                 }
+#ifdef USE_DCMF_PUT
+		if (sent) {
+			/*
+			 * inform target how many messages we sent.
+			 * this serves as a completion notification
+			 * since the consistency is MATCH.
+			 */
+                        xtra.w1 = 0;
+                        xtra.w2 = 0;
+			reqp = MPIDU_get_req(&xtra, &info);
+                	info->mpid_info_w0 = MPID_MSGTYPE_PUT;
+                	info->mpid_info_w1 = win_ptr->_dev.coll_info[target_rank].win_handle;
+                	info->mpid_info_w2 = rank;
+                	info->mpid_info_w3 = sent;
+			cb_send.function = done_rqc_cb;
+			cb_send.clientdata = reqp;
+			++win_ptr->_dev.my_rma_pends;
+                        mpi_errno = DCMF_Send(&bg1s_sn_proto, reqp,
+                                cb_send, win_ptr->_dev.my_cstcy, lpid,
+                                0, NULL,
+                                info->info, 2);
+		}
+#endif /* USE_DCMF_PUT */
                 /* TBD: someday this will be done elsewhere */
                 MPIDU_Progress_spin(win_ptr->_dev.my_rma_pends > 0);
                 if (sent == 0 && xtra.w2) {

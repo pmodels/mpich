@@ -494,13 +494,13 @@ static void MPIDU_add_unlk(MPID_Win *win, int rank, const MPIDU_Onesided_ctl_t *
  * \param[in] lpid	lpid of originator of RMA operation
  * \return nothing
  */
-void rma_recvs_cb(MPID_Win *win, int orig, int lpid) {
-        ++win->_dev.my_rma_recvs;
+void rma_recvs_cb(MPID_Win *win, int orig, int lpid, int count) {
+        win->_dev.my_rma_recvs += count;
         if (!MPID_LOCK_IS_FREE(win)) {
                 struct mpid_unlk_entry *ep;
                 MPIDU_Onesided_ctl_t ctl;
 
-                ++win->_dev.coll_info[orig].rma_sends;
+                win->_dev.coll_info[orig].rma_sends += count;
                 ep = MPIDU_locate_unlk(win, orig, &ctl);
                 if (ep) {
                         unlk_cb(&ctl, lpid);

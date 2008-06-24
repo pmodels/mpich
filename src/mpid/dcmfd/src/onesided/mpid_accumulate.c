@@ -114,7 +114,7 @@ void target_accumulate(MPIDU_Onesided_info_t *mi,
         MPID_assert_debug(win != NULL);
         local_accumulate(win, (char *)mi->mpid_info_w3, src,
                 mi->mpid_info_w2, mi->mpid_info_w4, mi->mpid_info_w5, mi->mpid_info_w6);
-        rma_recvs_cb(win, mi->mpid_info_w2, lpid);
+        rma_recvs_cb(win, mi->mpid_info_w2, lpid, 1);
 }
 
 /**
@@ -339,18 +339,21 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
         } else {
                 MPID_Segment segment;
                 DLOOP_Offset last = data_sz;
+		struct mpid_put_cb_data *put;
 
-                MPIDU_MALLOC(buf, char, data_sz + sizeof(int), mpi_errno, "MPID_Accumulate");
+                MPIDU_MALLOC(buf, char, data_sz + sizeof(struct mpid_put_cb_data), mpi_errno, "MPID_Accumulate");
                 if (buf == NULL) {
                         MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,
                                 "Unable to allocate non-"
                                 "contiguous buffer");
                 }
-                refp = (int *)buf;
-                xtra.w1 = (unsigned)refp;
-                xtra.w2 = (unsigned)buf;
+                put = (struct mpid_put_cb_data *)buf;
+                buf += sizeof(struct mpid_put_cb_data);
+                refp = &put->ref;
+                xtra.w1 = (unsigned)put;
+                xtra.w2 = (unsigned)put; // buf to free
+		put->flag = 0; // no memory region
                 cb_send.function = done_reffree_rqc_cb;
-                buf += sizeof(int);
                 *refp = 0;
                 mpi_errno = MPID_Segment_init(origin_addr, origin_count,
                         origin_datatype, &segment, 0);
@@ -360,6 +363,11 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
         }
         dd = win_ptr->_dev.coll_info[target_rank].base_addr +
                 win_ptr->_dev.coll_info[target_rank].disp_unit * target_disp;
+	size_t mrcfg_bytes;
+	void * mrcfg_base;
+	DCMF_Memregion_query(&win_ptr->_dev.coll_info[target_rank].mem_region,
+			&mrcfg_bytes, &mrcfg_base);
+	dd += (unsigned)mrcfg_base;
         if (DATATYPE_PREDEFINED(target_datatype)) {
                 if (target_rank == rank) { /* local accumulate */
                         local_accumulate(win_ptr, dd, buf, lpid,

@@ -32,6 +32,13 @@ static struct MPIDID_Recvq_t
   struct MPID_Request * unexpected_tail;  /**< \brief The Tail of the Unexpected queue */
 } recvq;
 
+#ifdef HAVE_DEBUGGER_SUPPORT
+struct MPID_Request ** const MPID_Recvq_posted_head_ptr =
+					&recvq.posted_head;
+struct MPID_Request ** const MPID_Recvq_unexpected_head_ptr =
+					&recvq.unexpected_head;
+#endif /* HAVE_DEBUGGER_SUPPORT */
+
 
 /**
  * \brief Set up the request queues
@@ -78,9 +85,9 @@ MPID_Request * MPIDI_Recvq_FU(int source, int tag, int context_id)
 #ifdef USE_STATISTICS
                 ++search_length;
 #endif
-                if ( (rreq->dcmf.msginfo.msginfo.MPIctxt == context_id) &&
-                     (rreq->dcmf.msginfo.msginfo.MPIrank == source    ) &&
-                     (rreq->dcmf.msginfo.msginfo.MPItag  == tag       )
+                if ( (MPID_Request_getMatchCtxt(rreq) == context_id) &&
+                     (MPID_Request_getMatchRank(rreq) == source    ) &&
+                     (MPID_Request_getMatchTag(rreq)  == tag       )
                    )
                 {
                     MPID_Request_add_ref(rreq);
@@ -128,9 +135,9 @@ MPID_Request * MPIDI_Recvq_FU(int source, int tag, int context_id)
 #ifdef USE_STATISTICS
                 ++search_length;
 #endif
-                if ( (  rreq->dcmf.msginfo.msginfo.MPIctxt              == match.context_id) &&
-                     ( (rreq->dcmf.msginfo.msginfo.MPIrank & mask.rank) == match.rank      ) &&
-                     ( (rreq->dcmf.msginfo.msginfo.MPItag  & mask.tag ) == match.tag       )
+                if ( (  MPID_Request_getMatchCtxt(rreq)              == match.context_id) &&
+                     ( (MPID_Request_getMatchRank(rreq) & mask.rank) == match.rank      ) &&
+                     ( (MPID_Request_getMatchTag(rreq)  & mask.tag ) == match.tag       )
                    )
                 {
                     MPID_Request_add_ref(rreq);
@@ -180,10 +187,10 @@ MPID_Request * MPIDI_Recvq_FDURSTC (MPID_Request * req, int source, int tag, int
 #ifdef USE_STATISTICS
         ++search_length;
 #endif
-        if (cur_rreq->dcmf.msginfo.msginfo.req     == req        &&
-            cur_rreq->dcmf.msginfo.msginfo.MPIctxt == context_id &&
-            cur_rreq->dcmf.msginfo.msginfo.MPIrank == source     &&
-            cur_rreq->dcmf.msginfo.msginfo.MPItag  == tag)
+        if (MPID_Request_getPeerRequest(cur_rreq) == req        &&
+            MPID_Request_getMatchCtxt(cur_rreq)   == context_id &&
+            MPID_Request_getMatchRank(cur_rreq)   == source     &&
+            MPID_Request_getMatchTag(cur_rreq)    == tag)
           {
             matching_prev_rreq = prev_rreq;
             matching_cur_rreq  = cur_rreq;
@@ -250,7 +257,7 @@ MPID_Request * MPIDI_Recvq_FDUR (MPID_Request * req)
 #ifdef USE_STATISTICS
         ++search_length;
 #endif
-        if (cur_rreq->dcmf.msginfo.msginfo.req == req)
+        if (MPID_Request_getPeerRequest(cur_rreq) == req)
           {
             matching_prev_rreq = prev_rreq;
             matching_cur_rreq  = cur_rreq;
@@ -319,9 +326,9 @@ MPID_Request * MPIDI_Recvq_FDU_or_AEP(int source, int tag, int context_id, int *
 #ifdef USE_STATISTICS
                 ++search_length;
 #endif
-                if ( (rreq->dcmf.msginfo.msginfo.MPIctxt == context_id) &&
-                     (rreq->dcmf.msginfo.msginfo.MPIrank == source    ) &&
-                     (rreq->dcmf.msginfo.msginfo.MPItag  == tag       )
+                if ( (MPID_Request_getMatchCtxt(rreq) == context_id) &&
+                     (MPID_Request_getMatchRank(rreq) == source    ) &&
+                     (MPID_Request_getMatchTag(rreq)  == tag       )
                    )
                 {
                     if (prev_rreq != NULL)
@@ -379,9 +386,9 @@ MPID_Request * MPIDI_Recvq_FDU_or_AEP(int source, int tag, int context_id, int *
 #ifdef USE_STATISTICS
                 ++search_length;
 #endif
-                if ( (  rreq->dcmf.msginfo.msginfo.MPIctxt              == match.context_id) &&
-                     ( (rreq->dcmf.msginfo.msginfo.MPIrank & mask.rank) == match.rank      ) &&
-                     ( (rreq->dcmf.msginfo.msginfo.MPItag  & mask.tag ) == match.tag       )
+                if ( (  MPID_Request_getMatchCtxt(rreq)              == match.context_id) &&
+                     ( (MPID_Request_getMatchRank(rreq) & mask.rank) == match.rank      ) &&
+                     ( (MPID_Request_getMatchTag(rreq)  & mask.tag ) == match.tag       )
                    )
                 {
                     if (prev_rreq != NULL)
@@ -413,9 +420,9 @@ MPID_Request * MPIDI_Recvq_FDU_or_AEP(int source, int tag, int context_id, int *
         {
             MPIU_Object_set_ref(rreq, 2);
             rreq->kind = MPID_REQUEST_RECV;
-            rreq->dcmf.msginfo.msginfo.MPItag = tag;
-            rreq->dcmf.msginfo.msginfo.MPIrank = source;
-            rreq->dcmf.msginfo.msginfo.MPIctxt = context_id;
+            MPID_Request_getMatchTag(rreq)  = tag;
+            MPID_Request_getMatchRank(rreq) = source;
+            MPID_Request_getMatchCtxt(rreq) = context_id;
             rreq->dcmf.next = NULL;
 
             if (recvq.posted_tail != NULL)
@@ -524,9 +531,9 @@ MPID_Request * MPIDI_Recvq_FDP_or_AEU(int source, int tag, int context_id, int *
 #ifdef USE_STATISTICS
             ++search_length;
 #endif
-            if ( (rreq->dcmf.msginfo.msginfo.MPIctxt == context_id) &&
-                 (rreq->dcmf.msginfo.msginfo.MPIrank == source || rreq->dcmf.msginfo.msginfo.MPIrank == MPI_ANY_SOURCE) &&
-                 (rreq->dcmf.msginfo.msginfo.MPItag  == tag    || rreq->dcmf.msginfo.msginfo.MPItag  == MPI_ANY_TAG)
+            if ( (MPID_Request_getMatchCtxt(rreq) == context_id) &&
+                 (MPID_Request_getMatchRank(rreq) == source || MPID_Request_getMatchRank(rreq) == MPI_ANY_SOURCE) &&
+                 (MPID_Request_getMatchTag(rreq)  == tag    || MPID_Request_getMatchTag(rreq)  == MPI_ANY_TAG)
                )
             {
                 if (prev_rreq != NULL)
@@ -605,9 +612,9 @@ void MPIDI_Recvq_DumpQueues (int verbose)
       if(verbose >= 2)
         fprintf (stderr, "P %d: MPItag=%d MPIrank=%d ctxt=%d cc=%d count=%d\n",
                  i++,
-                 rreq->dcmf.msginfo.msginfo.MPItag,
-                 rreq->dcmf.msginfo.msginfo.MPIrank,
-                 rreq->dcmf.msginfo.msginfo.MPIctxt,
+                 MPID_Request_getMatchTag(rreq),
+                 MPID_Request_getMatchRank(rreq),
+                 MPID_Request_getMatchCtxt(rreq),
                  rreq->cc,
                  rreq->dcmf.userbufcount
                  );
@@ -629,9 +636,9 @@ void MPIDI_Recvq_DumpQueues (int verbose)
       if(verbose >= 2)
         fprintf (stderr, "UE %d: MPItag=%d MPIrank=%d ctxt=%d cc=%d uebuf=%p uebuflen=%u\n",
                  i++,
-                 rreq->dcmf.msginfo.msginfo.MPItag,
-                 rreq->dcmf.msginfo.msginfo.MPIrank,
-                 rreq->dcmf.msginfo.msginfo.MPIctxt,
+                 MPID_Request_getMatchTag(rreq),
+                 MPID_Request_getMatchRank(rreq),
+                 MPID_Request_getMatchCtxt(rreq),
                  *rreq->cc_ptr,
                  rreq->dcmf.uebuf,
                  rreq->dcmf.uebuflen);

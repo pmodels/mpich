@@ -29,6 +29,8 @@ char *msgtypes[] = {
 
 /** \brief DCMF Protocol object for DCMF_Send() calls */
 DCMF_Protocol_t bg1s_sn_proto;
+/** \brief DCMF Protocol object for DCMF_Put() calls */
+DCMF_Protocol_t bg1s_pt_proto;
 /** \brief DCMF Protocol object for DCMF_Get() calls */
 DCMF_Protocol_t bg1s_gt_proto;
 /** \brief DCMF Protocol object for DCMF_Control() calls */
@@ -76,7 +78,8 @@ unsigned mpid_my_lpid = -1;
  * \param[out] dti	Pointer to datatype info struct
  */
 void make_dt_map_vec(MPI_Datatype dt, mpid_dt_info *dti) {
-        int nb, last;
+        int nb;
+	DLOOP_Offset last;
         MPID_Segment seg;
         MPID_Type_map *mv;
         DLOOP_VECTOR *iv;
@@ -1193,6 +1196,7 @@ void done_getfree_rqc_cb(void *v) {
 		MPID_Segment_unpack(&segment, 0, &last, get->buf);
 		MPID_assert_debug(last == get->len);
 		MPID_Datatype_release(get->dtp);
+		DCMF_Memregion_destroy((DCMF_Memregion_t *)&get->memreg);
                 if (xtra.w2) { MPIDU_FREE(xtra.w2, e, "xtra.w2"); }
                 if (xtra.w3) { MPIDU_FREE(xtra.w3, e, "xtra.w3"); }
         }
@@ -1220,16 +1224,19 @@ void done_getfree_rqc_cb(void *v) {
  * \ref rqcache_design
  */
 void done_reffree_rqc_cb(void *v) {
-        volatile unsigned *pending, *ref;
+        volatile unsigned *pending;
+	volatile struct mpid_put_cb_data *put;
         DCQuad xtra;
 
         MPIDU_free_req((DCMF_Request_t *)v, &xtra);
         pending = (volatile unsigned *)xtra.w0;
-        ref = (volatile unsigned *)xtra.w1;
+        put = (volatile struct mpid_put_cb_data *)xtra.w1;
         if (pending) {
                 --(*pending);
         }
-        if (ref == NULL || --(*ref) == 0) {
+	MPID_assert_debug(put != NULL);
+        if (--put->ref == 0) {
+		if (put->flag) DCMF_Memregion_destroy((DCMF_Memregion_t *)&put->memreg);
                 if (xtra.w2) { MPIDU_FREE(xtra.w2, e, "xtra.w2"); }
                 if (xtra.w3) { MPIDU_FREE(xtra.w3, e, "xtra.w3"); }
         }
@@ -1289,7 +1296,7 @@ void rma_rqc_cb(void *v) {
         MPIDU_free_req((DCMF_Request_t *)v, &xtra);
         MPID_Win_get_ptr((MPI_Win)xtra.w1, win);
         MPID_assert_debug(win != NULL);
-        rma_recvs_cb(win, xtra.w2, xtra.w3);
+        rma_recvs_cb(win, xtra.w2, xtra.w3, 1);
 }
 
 /**
@@ -1524,15 +1531,20 @@ void recv_sm_cb(void *cd, const DCQuad *_mi, unsigned ct, unsigned or,
         /* The following all use msginfo as DCQuad[2] */
         case MPID_MSGTYPE_PUT:
                 MPID_assert_debug(ct == 2);
-                MPID_assert_debug(sl != 0);
                 MPID_Win_get_ptr((MPI_Win)mi->mpid_info_w1, win);
                 MPID_assert_debug(win != NULL);
                 MPIDU_assert_PUTOK(win);
                 if (win->_dev.epoch_assert & MPI_MODE_NOPUT) {
                         /** \todo exact error handling */
                 }
+#ifdef USE_DCMF_PUT
+		/* In this case, the message is a completion notification */
+                rma_recvs_cb(win, mi->mpid_info_w2, or, mi->mpid_info_w3);
+#else /* ! USE_DCMF_PUT */
+                MPID_assert_debug(sl != 0);
                 memcpy((char *)mi->mpid_info_w3, sb, sl);
-                rma_recvs_cb(win, mi->mpid_info_w2, or);
+                rma_recvs_cb(win, mi->mpid_info_w2, or, 1);
+#endif /* ! USE_DCMF_PUT */
                 break;
         case MPID_MSGTYPE_DT_MAP:
                 MPID_assert_debug(ct == 2);
@@ -1629,6 +1641,9 @@ DCMF_Request_t *recv_cb(void *cd, const DCQuad *_mi, unsigned ct,
         switch (_mi[0].w0) {
         /* The following all use msginfo as DCQuad[2] */
         case MPID_MSGTYPE_PUT:
+#ifdef USE_DCMF_PUT
+		MPID_abort();
+#else /* ! USE_DCMF_PUT */
                 MPID_assert_debug(ct == 2);
                 MPID_Win_get_ptr((MPI_Win)mi->mpid_info_w1, win);
                 MPID_assert_debug(win != NULL);
@@ -1652,6 +1667,7 @@ DCMF_Request_t *recv_cb(void *cd, const DCQuad *_mi, unsigned ct,
                 cb->clientdata = req;
                 cb->function = rma_rqc_cb;
                 return req;
+#endif /* ! USE_DCMF_PUT */
         case MPID_MSGTYPE_DT_MAP:
                 MPID_assert_debug(ct == 2);
                 *rb = MPID_Prepare_rem_dt(mi);

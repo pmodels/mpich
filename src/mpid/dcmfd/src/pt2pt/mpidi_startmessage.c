@@ -11,16 +11,17 @@
 /* ----------------------------------------------------------------------- */
 
 static inline int
-MPIDI_DCMF_Send(MPID_Request  * sreq,
-                char          * sndbuf,
-                unsigned        sndlen)
+MPIDI_DCMF_Send_rsm(MPID_Request  * sreq,
+                    char          * sndbuf,
+                    unsigned        sndlen)
 {
-  int rc;
+  int rc = DCMF_ERROR;
   DCMF_Callback_t cb_done;
-  MPIDI_DCMF_MsgInfo * msginfo = &sreq->dcmf.msginfo;
-  MPID_assert((((unsigned) msginfo )&0x0F)==0);
-  MPID_assert((((unsigned) sreq    )&0x0f)==0);
+  MPIDI_DCMF_MsgInfo * msginfo = &sreq->dcmf.envelope.envelope.msginfo;
 
+  /* Always use the short protocol when sndlen is zero.
+   * Use the short/eager protocol when sndlen is less than the eager limit.
+   */
   if ( sndlen==0 || sndlen<MPIDI_Process.eager_limit)
     {
       cb_done.function   = (void (*)(void *))MPIDI_DCMF_SendDoneCB;
@@ -34,57 +35,97 @@ MPIDI_DCMF_Send(MPID_Request  * sreq,
                       sndlen,
                       sndbuf,
                       msginfo->quad,
-                      1);
+                      DCQuad_sizeof(MPIDI_DCMF_MsgInfo));
     }
+  /* Use the optimized rendezvous protocol when sndlen is equal to or
+   * larger than the eager_limit, but less than the optrzv_limit.
+   */
+  else if ( sndlen < MPIDI_Process.optrzv_limit )
+    {
+      cb_done.function   = (void (*)(void *))MPIDI_DCMF_SendDoneCB;
+      cb_done.clientdata = sreq;
+
+      rc = DCMF_Send (&MPIDI_Protocols.mrzv,
+                      &sreq->dcmf.msg,
+                      cb_done,
+                      DCMF_MATCH_CONSISTENCY,
+                      MPID_Request_getPeerRank(sreq),
+                      sndlen,
+                      sndbuf,
+                      msginfo->quad,
+                      DCQuad_sizeof(MPIDI_DCMF_MsgInfo));
+    }
+  /* Otherwise, use the default rendezvous protocol (glue implementation
+   * that guarantees no unexpected data.
+   */
   else
     {
-      MPIDI_DCMF_RzvEnvelope rzv_envelope;
-
       /* Set the isRzv bit in the SEND request. This is important for      */
       /* canceling requests.                                               */
-      sreq->dcmf.msginfo.msginfo.isRzv = 1;
+      MPID_Request_setRzv(sreq, 1);
 
       /* The rendezvous information, such as the origin/local/sender       */
       /* node's send buffer and the number of bytes the origin node wishes */
       /* to send, is sent as the payload of the request-to-send (RTS)      */
       /* message.                                                          */
-      MPIDI_DCMF_RzvInfo * rzvinfo = &sreq->dcmf.rzvinfo;
-      rzvinfo->sndbuf        = sndbuf;
-      rzvinfo->sndlen        = sndlen;
+      size_t bytes;
+      if (DCMF_SUCCESS == DCMF_Memregion_create(&sreq->dcmf.envelope.envelope.memregion, &bytes, sndlen, sndbuf, 0))
+      {
+        sreq->dcmf.envelope.envelope.offset = 0;
+        sreq->dcmf.envelope.envelope.length = sndlen;
 
-      MPID_assert_debug(sizeof(MPIDI_DCMF_RzvEnvelope) == 32);
-      memcpy(&rzv_envelope.msginfo, &sreq->dcmf.msginfo, sizeof(MPIDI_DCMF_MsgInfo));
-      memcpy(&rzv_envelope.rzvinfo, &sreq->dcmf.rzvinfo, sizeof(MPIDI_DCMF_RzvInfo));
+        /* Do not specify a callback function to be invoked when the RTS     */
+        /* message has been sent. The MPI_Send is completed only when the    */
+        /* target/remote/receiver node has completed a DCMF_Get from the     */
+        /* origin node and has then sent a rendezvous acknowledgement (ACK)  */
+        /* to the origin node to signify the end of the transfer.  When the  */
+        /* ACK message is received by the origin node the same callback      */
+        /* function is used to complete the MPI_Send as the non-rendezvous   */
+        /* case below.                                                       */
+        cb_done.function   = NULL;
+        cb_done.clientdata = NULL;
 
-      /* Do not specify a callback function to be invoked when the RTS     */
-      /* message has been sent. The MPI_Send is completed only when the    */
-      /* target/remote/receiver node has completed a DCMF_Get from the     */
-      /* origin node and has then sent a rendezvous acknowledgement (ACK)  */
-      /* to the origin node to signify the end of the transfer.  When the  */
-      /* ACK message is received by the origin node the same callback      */
-      /* function is used to complete the MPI_Send as the non-rendezvous   */
-      /* case below.                                                       */
-      cb_done.function   = NULL;
-      cb_done.clientdata = NULL;
-
-      rc = DCMF_Send (&MPIDI_Protocols.rzv,
-                      &sreq->dcmf.msg,
-                      cb_done,
-                      DCMF_MATCH_CONSISTENCY,
-                      MPID_Request_getPeerRank(sreq),
-                      0,
-                      NULL,
-                      rzv_envelope.quad,
-                      2);
+        rc = DCMF_Send (&MPIDI_Protocols.rzv,
+                        &sreq->dcmf.msg,
+                        cb_done,
+                        DCMF_MATCH_CONSISTENCY,
+                        MPID_Request_getPeerRank(sreq),
+                        0,
+                        NULL,
+                        sreq->dcmf.envelope.quad,
+                        DCQuad_sizeof(MPIDI_DCMF_MsgEnvelope));
+      }
     }
 
   MPID_assert(rc == DCMF_SUCCESS);
   return rc;
 }
 
-/* ----------------------------------------------------------------------- */
-/*   Start a message send.                                                 */
-/* ----------------------------------------------------------------------- */
+static inline int
+MPIDI_DCMF_Send_ssm(MPID_Request  * sreq,
+                    char          * sndbuf,
+                    unsigned        sndlen)
+{
+  return SSM_ABORT();
+}
+
+
+static inline int
+MPIDI_DCMF_Send(MPID_Request  * sreq,
+                char          * sndbuf,
+                unsigned        sndlen)
+{
+  if (MPIDI_Process.use_ssm)
+    return MPIDI_DCMF_Send_ssm(sreq, sndbuf, sndlen);
+  else
+    return MPIDI_DCMF_Send_rsm(sreq, sndbuf, sndlen);
+}
+
+
+/*
+ * \brief Central function for all sends.
+ * \param [in,out] sreq Structure containing all relevant info about the message.
+ */
 
 void
 MPIDI_DCMF_StartMsg (MPID_Request  * sreq)

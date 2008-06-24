@@ -6,6 +6,14 @@ dnl config.guess
 dnl
 AC_CONFIG_AUX_DIR(../../../confdb)
 
+dnl The MPICH2 top-level configure adds a bunch of flags to the
+dnl user-defined CFLAGS by processing different configure command-line
+dnl arguments (--enable-g, --enable-default-optimization). These updated
+dnl flags are passed down as a separate flag. Here, we don't care about
+dnl the user-defined flags, but rather this updated flags, so we just
+dnl overwrite CFLAGS with them.
+PAC_SUBCONFIG_INIT()
+
 dnl
 dnl Definitions will be placed in this file rather than in the DEFS variable
 dnl
@@ -13,17 +21,18 @@ AC_CONFIG_HEADER(include/mpid_config.h)
 
 echo "RUNNING CONFIGURE FOR DCMF DEVICE"
 
-dnl
-dnl First check that we have a clean build if we are doing a VPATH build
-if test "`cd $srcdir && pwd`" != "`pwd`" && \
-   test -f $srcdir/config.status ; then
-    AC_MSG_ERROR([You cannot do a VPATH build if the source directory has been
-    configured.  Run "make distclean" in $srcdir first.])
-fi
+# First check that we have a clean build if we are doing a VPATH build
+PAC_VPATH_CHECK()
 
-PAC_ARG_CACHING
-AC_CACHE_LOAD
-PAC_PROG_MAKE
+# -----------------------------------------------------------------------------
+# experiment with creating a cache file.  Load if it exists
+#if test -n "$CONF_BASE_CACHEFILE" -a -s "$CONF_BASE_CACHEFILE" ; then
+#    echo "Loading base cachefile $CONF_BASE_CACHEFILE"
+#    . $CONF_BASE_CACHEFILE
+#    export CONF_BASE_CACHEFILE
+#fi
+PAC_LOAD_BASE_CACHE
+# -----------------------------------------------------------------------------
 
 
 ASSERT_LEVEL=2
@@ -40,6 +49,8 @@ AC_DEFINE_UNQUOTED([ASSERT_LEVEL], $ASSERT_LEVEL, [Which messager is being used]
 MPID_THREAD_SRCDIR="../common/thread"
 builtin(include,../common/thread/mpid_thread.m4)
 
+
+PAC_PROG_MAKE
 
 AC_SUBST(AR)
 AC_SUBST(RANLIB)
@@ -62,6 +73,15 @@ AC_SUBST(INSTALL)
 AC_SUBST(INSTALL_DATA)
 AC_SUBST(INSTALL_PROGRAM)
 
+AC_CHECK_PROGS(ETAGS,etags,true)
+AC_SUBST(ETAGS)
+AC_SUBST(ETAGSADD)
+LIBTOOL=false
+AC_SUBST(LIBTOOL)
+
+
+dnl Place holder macro for finalization
+PAC_SUBCONFIG_FINALIZE()
 
 FILE=`cd $srcdir && find -name Makefile.in | perl -pe 's,^\./,,;s/\.in$//'`
 AC_OUTPUT(

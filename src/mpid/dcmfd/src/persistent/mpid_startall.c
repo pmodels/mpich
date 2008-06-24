@@ -19,11 +19,10 @@ int MPID_Startall(int count, MPID_Request * requests[])
             rc = MPID_Irecv(preq->dcmf.userbuf,
                             preq->dcmf.userbufcount,
                             preq->dcmf.datatype,
-                            preq->dcmf.msginfo.msginfo.MPIrank,
-                            preq->dcmf.msginfo.msginfo.MPItag,
+                            MPID_Request_getMatchRank(preq),
+                            MPID_Request_getMatchTag(preq),
                             preq->comm,
-                            preq->dcmf.msginfo.msginfo.MPIctxt -
-                            preq->comm->recvcontext_id,
+                            MPID_Request_getMatchCtxt(preq) - preq->comm->recvcontext_id,
                             &preq->partner_request);
             break;
           }
@@ -32,11 +31,10 @@ int MPID_Startall(int count, MPID_Request * requests[])
             rc = MPID_Isend(preq->dcmf.userbuf,
                             preq->dcmf.userbufcount,
                             preq->dcmf.datatype,
-                            preq->dcmf.msginfo.msginfo.MPIrank,
-                            preq->dcmf.msginfo.msginfo.MPItag,
+                            MPID_Request_getMatchRank(preq),
+                            MPID_Request_getMatchTag(preq),
                             preq->comm,
-                            preq->dcmf.msginfo.msginfo.MPIctxt -
-                            preq->comm->context_id,
+                            MPID_Request_getMatchCtxt(preq) - preq->comm->context_id,
                             &preq->partner_request);
             break;
           }
@@ -45,11 +43,10 @@ int MPID_Startall(int count, MPID_Request * requests[])
             rc = MPID_Irsend(preq->dcmf.userbuf,
                              preq->dcmf.userbufcount,
                              preq->dcmf.datatype,
-                             preq->dcmf.msginfo.msginfo.MPIrank,
-                             preq->dcmf.msginfo.msginfo.MPItag,
+                             MPID_Request_getMatchRank(preq),
+                             MPID_Request_getMatchTag(preq),
                              preq->comm,
-                             preq->dcmf.msginfo.msginfo.MPIctxt -
-                             preq->comm->context_id,
+                             MPID_Request_getMatchCtxt(preq) - preq->comm->context_id,
                              &preq->partner_request);
             break;
           }
@@ -58,11 +55,10 @@ int MPID_Startall(int count, MPID_Request * requests[])
             rc = MPID_Issend(preq->dcmf.userbuf,
                              preq->dcmf.userbufcount,
                              preq->dcmf.datatype,
-                             preq->dcmf.msginfo.msginfo.MPIrank,
-                             preq->dcmf.msginfo.msginfo.MPItag,
+                             MPID_Request_getMatchRank(preq),
+                             MPID_Request_getMatchTag(preq),
                              preq->comm,
-                             preq->dcmf.msginfo.msginfo.MPIctxt -
-                             preq->comm->context_id,
+                             MPID_Request_getMatchCtxt(preq) - preq->comm->context_id,
                              &preq->partner_request);
             break;
           }
@@ -79,8 +75,8 @@ int MPID_Startall(int count, MPID_Request * requests[])
                 rc = MPIR_Bsend_isend(preq->dcmf.userbuf,
                                       preq->dcmf.userbufcount,
                                       preq->dcmf.datatype,
-                                      preq->dcmf.msginfo.msginfo.MPIrank,
-                                      preq->dcmf.msginfo.msginfo.MPItag,
+                                      MPID_Request_getMatchRank(preq),
+                                      MPID_Request_getMatchTag(preq),
                                       preq->comm,
                                       BSEND_INIT,
                                       &preq->partner_request);

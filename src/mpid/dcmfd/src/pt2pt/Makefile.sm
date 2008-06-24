@@ -3,6 +3,7 @@ INCLUDES = -I${master_top_srcdir}/src/include -I${top_builddir}/src/include
 lib${MPILIBNAME}_a_SOURCES =                    \
 			mpidi_isend_self.c      \
 			mpid_irecv.c            \
+			mpidi_irecv.c           \
 			mpid_irsend.c           \
 			mpid_isend.c            \
 			mpid_issend.c           \
@@ -15,6 +16,7 @@ lib${MPILIBNAME}_a_SOURCES =                    \
 			mpidi_callback.c        \
 			mpidi_callback_rzv.c    \
 			mpidi_callback_short.c  \
+			mpidi_callback_ssm.c    \
 			mpidi_control.c         \
 			mpidi_startmessage.c    \
 			mpidi_rendezvous.c      \

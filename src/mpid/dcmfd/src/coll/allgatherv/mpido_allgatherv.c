@@ -8,6 +8,18 @@
 
 #pragma weak PMPIDO_Allgatherv = MPIDO_Allgatherv
 
+/* \brief Callback for async bcast. MPIDO_Bcast call wouldn't be appropriate
+ * here, so we just use call DCMF_AsyncBroadcast directly
+ */
+
+static void async_done (void *clientdata)
+{
+   volatile unsigned *work_left = (unsigned *)clientdata;
+   (*work_left)--;
+   MPID_Progress_signal();
+   return;
+}
+
 
 /* ****************************************************************** */
 /**
@@ -66,6 +78,106 @@ int MPIDO_Allgatherv_Allreduce(void *sendbuf,
                           comm_ptr);
 }
 
+
+int MPIDO_Allgatherv_Async_bcast(void *sendbuf,
+                                 int sendcount,
+                                 MPI_Datatype sendtype,
+                                 void *recvbuf,
+                                 int *recvcounts,
+                                 int *displs,
+                                 MPI_Datatype recvtype,
+                                 MPID_Comm *comm_ptr,
+                                 DCMF_CollectiveProtocol_t *protocol)
+{
+   int i, j, max_size, left_over;
+   int dt_contig, data_sz;
+   MPID_Datatype *dt_ptr;
+   MPI_Aint extent, dt_true_lb;
+   volatile unsigned active = 0;
+   
+   int numrequests = MPIDI_CollectiveProtocols.numrequests;
+   DCMF_CollectiveRequest_t *requests;
+   DCMF_Callback_t callback = {async_done, (void *)&active};
+   
+   void *destbuf;
+   
+   MPID_Datatype_get_extent_macro(recvtype, extent);
+   MPIDI_Datatype_get_info(1,
+   recvtype,
+   dt_contig,
+   data_sz,
+   dt_ptr,
+   dt_true_lb);
+      
+   MPID_Ensure_Aint_fits_in_pointer (
+   (MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+   displs[comm_ptr->rank] * extent));
+   
+   if(sendbuf != MPI_IN_PLACE)
+   {
+      MPIR_Localcopy(sendbuf,
+      sendcount,
+      sendtype,
+      recvbuf + displs[comm_ptr->rank] * extent,
+      recvcounts[comm_ptr->rank],
+      recvtype);
+   }
+   
+   requests = (DCMF_CollectiveRequest_t *)malloc(numrequests *
+   sizeof(DCMF_CollectiveRequest_t));
+   
+   max_size = ((int)comm_ptr->local_size/numrequests)*numrequests;
+   left_over = comm_ptr->local_size - max_size;
+   
+   for(i=0;i<max_size ;i+=numrequests)
+   {
+      active = numrequests;
+      for(j=0;j<numrequests;j++)
+      {
+         destbuf = recvbuf + displs[i+j] * extent;
+         if(recvcounts[i+j])
+            DCMF_AsyncBroadcast(protocol,
+                                &requests[j],
+                                callback,
+                                DCMF_MATCH_CONSISTENCY,
+                                &comm_ptr->dcmf.geometry,
+                                comm_ptr->vcr[i+j]->lpid,
+                                destbuf,
+                                data_sz * recvcounts[i+j]);
+         else 
+            active--;
+      }
+      MPID_PROGRESS_WAIT_WHILE(active);
+   }
+
+   if(left_over)
+   {
+      active = left_over;
+      for(i=0;i<left_over;i++)
+      {
+         destbuf = recvbuf + displs[max_size + i] * extent;
+         if(recvcounts[max_size+i])
+            DCMF_AsyncBroadcast(protocol,
+                                &requests[i],
+                                callback,
+                                DCMF_MATCH_CONSISTENCY,
+                                &comm_ptr->dcmf.geometry,
+                                comm_ptr->vcr[max_size+i]->lpid,
+                                destbuf,
+                                data_sz * recvcounts[max_size+i]);
+         else
+            active--;
+      }
+      MPID_PROGRESS_WAIT_WHILE(active);
+   }
+
+   free(requests);
+
+   return MPI_SUCCESS;
+
+}
+
+
 /* ****************************************************************** */
 /**
 * \brief Use (tree/rect) MPIDO_Bcast() to do a fast Allgatherv operation
@@ -88,6 +200,12 @@ int MPIDO_Allgatherv_Bcast(void *sendbuf,
    int i;
    MPI_Aint extent;
    MPID_Datatype_get_extent_macro(recvtype, extent);
+   /* This isn't technically big enough, but we don't want to
+    * add an assert inside the loop */
+   MPID_Ensure_Aint_fits_in_pointer (
+      (MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf + 
+         displs[comm_ptr->rank] * extent));
+
    if (sendbuf != MPI_IN_PLACE)
    {
       void *destbuffer = recvbuf + displs[comm_ptr->rank] * extent;
@@ -201,13 +319,14 @@ MPIDO_Allgatherv(void *sendbuf,
    MPI_Aint recv_true_lb  = 0;
    size_t   send_size     = 0;
    size_t   recv_size     = 0;
-   MPIDO_Coll_config config = {1,1,1};
+   MPIDO_Coll_config config = {1,1,1,1};
 
    int      result        = MPI_SUCCESS;
    if(MPIDI_CollectiveProtocols.optallgatherv &&
       (MPIDI_CollectiveProtocols.allgatherv.useallreduce ||
        MPIDI_CollectiveProtocols.allgatherv.usebcast ||
-       MPIDI_CollectiveProtocols.allgatherv.usealltoallv) == 0)
+       MPIDI_CollectiveProtocols.allgatherv.usealltoallv ||
+       MPIDI_CollectiveProtocols.allgatherv.useasyncbcast) == 0)
    {
       return MPIR_Allgatherv(sendbuf,
                              sendcount,
@@ -228,12 +347,16 @@ MPIDO_Allgatherv(void *sendbuf,
 
 
    if (sendbuf != MPI_IN_PLACE)
+   {
       MPIDI_Datatype_get_info(sendcount,
                               sendtype,
                               config.send_contig,
                               send_size,
                               dt_null,
                               send_true_lb);
+      MPID_Ensure_Aint_fits_in_pointer(
+            (MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf + send_true_lb));
+   }
 
    int buffer_sum = 0;
    {
@@ -252,12 +375,16 @@ MPIDO_Allgatherv(void *sendbuf,
    }
    buffer_sum *= recv_size;
 
+   config.largecount = (sendcount > 65536);
+
    MPIDO_Allreduce(MPI_IN_PLACE,
                    &config,
-                   3,
+                   4,
                    MPI_INT,
                    MPI_BAND,
                    comm_ptr);
+   MPID_Ensure_Aint_fits_in_pointer(
+         (MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf + recv_true_lb + buffer_sum));
 
    /* determine which protocol to use */
    /* 1) Tree allreduce
@@ -287,8 +414,26 @@ MPIDO_Allgatherv(void *sendbuf,
                      MPIDI_CollectiveProtocols.allgatherv.usealltoallv &&
                      config.recv_contig && config.send_contig;
 
+   /* 4) async bcast
+    *    a) need an async bcast protocol
+    *    b) contiguous datatypes
+    *    c) user must be ok with it
+    */
+   char asyncbinom = MPIDI_CollectiveProtocols.allgatherv.useasyncbcast &&
+                     MPIDI_CollectiveProtocols.broadcast.useasyncbinom &&
+                     config.recv_contig && config.send_contig &&
+                     DCMF_Geometry_analyze(&comm_ptr->dcmf.geometry,
+                        &MPIDI_CollectiveProtocols.broadcast.binomial);
+
+   char asyncrect = MPIDI_CollectiveProtocols.allgatherv.useasyncbcast &&
+                    MPIDI_CollectiveProtocols.broadcast.useasyncrect &&
+                    config.recv_contig && config.send_contig &&
+                    DCMF_Geometry_analyze(&comm_ptr->dcmf.geometry,
+                        &MPIDI_CollectiveProtocols.broadcast.rectangle);
+
+
 #warning assume same cutoff for allgather
-   if(treereduce && treebcast && sendcount > 65536)
+   if(treereduce && treebcast && config.largecount)
    {
 //      if(comm_ptr->rank ==0 )fprintf(stderr,"sendcount: %d, calling bcast\n", sendcount);
          result = MPIDO_Allgatherv_Bcast(sendbuf,
@@ -300,7 +445,7 @@ MPIDO_Allgatherv(void *sendbuf,
                                          recvtype,
                                          comm_ptr);
                                          }
-   else if(treereduce && treebcast && sendcount <= 65536)
+   else if(treereduce && treebcast && !config.largecount)
    {
 //      if(comm_ptr->rank ==0 )fprintf(stderr,"sendcount: %d, calling allreduce\n", sendcount);
          result = MPIDO_Allgatherv_Allreduce(sendbuf,
@@ -316,7 +461,7 @@ MPIDO_Allgatherv(void *sendbuf,
                                              send_size,
                                              recv_size,
                                              buffer_sum);
-                                             }
+   }
    else if(treereduce)
    {
 //      if(comm_ptr->rank ==0 )fprintf(stderr,"sendcount: %d, only tree allreduce\n", sendcount);
@@ -346,7 +491,33 @@ MPIDO_Allgatherv(void *sendbuf,
                                          displs,
                                          recvtype,
                                          comm_ptr);
-                                       }
+   }
+   else if(asyncrect)
+   {
+      result = MPIDO_Allgatherv_Async_bcast(sendbuf,
+                                            sendcount,
+                                            sendtype,
+                                            recvbuf,
+                                            recvcounts,
+                                            displs,
+                                            recvtype,
+                                            comm_ptr,
+               &MPIDI_CollectiveProtocols.broadcast.async_rectangle);
+   }
+
+   else if(asyncbinom)
+   {
+      result = MPIDO_Allgatherv_Async_bcast(sendbuf,
+                                            sendcount,
+                                            sendtype,
+                                            recvbuf,
+                                            recvcounts,
+                                            displs,
+                                            recvtype,
+                                            comm_ptr,
+               &MPIDI_CollectiveProtocols.broadcast.async_binomial);
+   }
+
    else if(usealltoall)
          result = MPIDO_Allgatherv_Alltoall(sendbuf,
                                             sendcount,

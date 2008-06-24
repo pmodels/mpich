@@ -3,6 +3,7 @@
  * \file src/onesided/mpid_onesided.h
  * \brief MPI-DCMF Common declarations and definitions for RMA
  */
+#define USE_DCMF_PUT
 
 #include "mpidimpl.h"
 
@@ -85,6 +86,8 @@ extern char *msgtypes[];
 
 /** \brief DCMF Protocol object for DCMF_Send() calls */
 extern DCMF_Protocol_t bg1s_sn_proto;
+/** \brief DCMF Protocol object for DCMF_Put() calls */
+extern DCMF_Protocol_t bg1s_pt_proto;
 /** \brief DCMF Protocol object for DCMF_Get() calls */
 extern DCMF_Protocol_t bg1s_gt_proto;
 /** \brief DCMF Protocol object for DCMF_Control() calls */
@@ -107,6 +110,22 @@ struct mpid_get_cb_data {
 	int count;		/**< origin count */
 	int len;		/**< computed length of get */
 	char *buf;		/**< temp buffer of packed data */
+	int _pad[2];		/**< preserve alignment */
+	DCMF_Memregion_t memreg;/**< memory region for temp buffer */
+};
+
+/**
+ * \brief struct used by MPID_Put to delay freeing of resources
+ *
+ * Active only when the origin datatype is non-contiguous.
+ * Reference count is used to determine when the last chunk of
+ * data is completed, rest of struct is used to free.
+ */
+struct mpid_put_cb_data {
+	int ref;		/**< reference counter */
+	int flag;		/**< flags - curr only memregion */
+	int _pad[2];		/**< preserve alignment */
+	DCMF_Memregion_t memreg;/**< memory region for temp buffer */
 };
 
 /** \brief datatype map entry - adjacent fields with same datatype are combined
@@ -908,7 +927,7 @@ void free_rqc_cb(void *v);
  * \param[in] lpid	lpid of originator of RMA operation
  * \return nothing
  */
-void rma_recvs_cb(MPID_Win *win, int orig, int lpid);
+void rma_recvs_cb(MPID_Win *win, int orig, int lpid, int count);
 
 /**
  * \brief Generic request cache callback for RMA op completion

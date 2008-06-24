@@ -31,9 +31,9 @@ unsigned MPIX_Comm_torus2rank (MPI_Comm comm,
   else
     {
       MPI_Group group_a, worldgroup;
-      MPI_Comm_group (comm, &group_a);
-      MPI_Comm_group (MPI_COMM_WORLD, &worldgroup);
-      MPI_Group_translate_ranks (worldgroup, 1, &worldrank, group_a, &rank);
+      PMPI_Comm_group (comm, &group_a);
+      PMPI_Comm_group (MPI_COMM_WORLD, &worldgroup);
+      PMPI_Group_translate_ranks (worldgroup, 1, &worldrank, group_a, &rank);
     }
   return rank;
 }
@@ -61,9 +61,9 @@ void MPIX_Comm_rank2torus(MPI_Comm comm,
   else
     {
       MPI_Group group_a, worldgroup;
-      MPI_Comm_group (comm, &group_a);
-      MPI_Comm_group (MPI_COMM_WORLD, &worldgroup);
-      MPI_Group_translate_ranks (group_a, 1, (int*)&rank, worldgroup, &worldrank);
+      PMPI_Comm_group (comm, &group_a);
+      PMPI_Comm_group (MPI_COMM_WORLD, &worldgroup);
+      PMPI_Group_translate_ranks (group_a, 1, (int*)&rank, worldgroup, &worldrank);
     }
   MPIX_rank2torus (worldrank, x, y, z, t);
 }
@@ -99,8 +99,8 @@ int MPIX_Cart_comm_create(MPI_Comm *cart_comm)
 
 
   *cart_comm = MPI_COMM_NULL;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numprocs);
   DCMF_Hardware(&pers);
 
 
@@ -124,7 +124,7 @@ int MPIX_Cart_comm_create(MPI_Comm *cart_comm)
   coords[0] = pers.tCoord;
 
 
-  result = MPI_Cart_create(
+  result = PMPI_Cart_create(
     MPI_COMM_WORLD,
     4,
     dims,
@@ -135,8 +135,8 @@ int MPIX_Cart_comm_create(MPI_Comm *cart_comm)
   if (result != MPI_SUCCESS) return result;
 
 
-  MPI_Comm_rank(*cart_comm, &new_rank);
-  MPI_Cart_get (*cart_comm, 4, new_dims, new_wrap, new_coords);
+  PMPI_Comm_rank(*cart_comm, &new_rank);
+  PMPI_Cart_get (*cart_comm, 4, new_dims, new_wrap, new_coords);
 
   CMP_4(dims,   new_dims);
   CMP_4(wrap,   new_wrap);
@@ -157,7 +157,7 @@ int MPIX_Pset_same_comm_create(MPI_Comm *pset_comm)
   /*  The key implies the new rank  */
   key   = pers.rankInPset*pers.tSize + pers.tCoord;
 
-  return MPI_Comm_split(MPI_COMM_WORLD, color, key, pset_comm);
+  return PMPI_Comm_split(MPI_COMM_WORLD, color, key, pset_comm);
 }
 
 #pragma weak PMI_Pset_diff_comm_create = MPIX_Pset_diff_comm_create
@@ -172,5 +172,5 @@ int MPIX_Pset_diff_comm_create(MPI_Comm *pset_comm)
   /*  All items of the same color are grouped in the same communicator  */
   color = pers.rankInPset*pers.tSize + pers.tCoord;
 
-  return MPI_Comm_split(MPI_COMM_WORLD, color, key, pset_comm);
+  return PMPI_Comm_split(MPI_COMM_WORLD, color, key, pset_comm);
 }

@@ -18,7 +18,22 @@
 
 /* include message layer stuff */
 #include <dcmf.h>
+#include <dcmf_globalcollectives.h>
 #include <dcmf_collectives.h>
+
+/* verify that the version of the installed dcmf library is compatible */
+#if (DCMF_VERSION_RELEASE == 0)
+  #if (DCMF_VERSION_MAJOR == 1)
+    #if (DCMF_VERSION_MINOR < 0)
+      #error Incompatible dcmf minor version
+    #endif
+  #else
+    #error Incompatible dcmf major version
+  #endif
+#else
+  #error Incompatible dcmf release version
+#endif
+
 
 #include "mpid_dataloop.h"
 
@@ -167,6 +182,17 @@ typedef enum
 MPIDI_DCMF_REQUEST_STATE;
 
 
+/** \brief Request completion actions */
+typedef enum
+  {
+    MPIDI_DCMF_CA_ERROR = 0,                         /* Should never see this        */
+    MPIDI_DCMF_CA_COMPLETE = 1,                      /* The request is now complete  */
+    MPIDI_DCMF_CA_UNPACK_UEBUF_AND_COMPLETE,         /* Unpack uebuf, then complete  */
+    MPIDI_DCMF_CA_UNPACK_UEBUF_AND_COMPLETE_NOFREE,  /* Unpack uebuf, then complete. do not free uebuf  */
+  }
+MPIDI_DCMF_CA;
+
+
 /**
  * \brief MPIDI_Message_match contains enough information to match an
  * MPI message.
@@ -184,66 +210,49 @@ MPIDI_Message_match;
  * \brief Message Info (has to be exactly 128 bits long) and associated data types
  * \note sizeof(MPIDI_DCMF_MsgInfo) == 16
  */
-typedef  struct
+struct MPIDI_DCMF_MsgInfo_t
   {
     void     * req;         /**< peer's request pointer */
     unsigned   MPItag;      /**< match tag              */
     unsigned   MPIrank;     /**< match rank             */
-    unsigned   MPIctxt:16;  /**< match context          */
+    uint16_t   MPIctxt;     /**< match context          */
 
-    unsigned   type:8;      /**< message type           */
-    unsigned   isSelf:1;    /**< message sent to self   */
-    unsigned   isSync:1;    /**< set for sync sends     */
+    uint16_t   type:8;      /**< message type           */
+    uint16_t   isSelf:1;    /**< message sent to self   */
+    uint16_t   isSync:1;    /**< set for sync sends     */
 
-    unsigned   isRzv:1;     /**< use pt2pt rendezvous   */
+    uint16_t   isRzv:1;     /**< use pt2pt rendezvous   */
 
     /* These are not currently in use : */
-    unsigned   isResend:1;    /**< Unused: this message is a re-send */
-    unsigned   isSending:1;   /**< Unused: message is currently being sent */
-    unsigned   extra_flags:3; /**< Unused */
-  } MPIDI_DCMF_MsgInfo_t;
+    uint16_t   isResend:1;    /**< Unused: this message is a re-send */
+    uint16_t   isSending:1;   /**< Unused: message is currently being sent */
+    uint16_t   extra_flags:3; /**< Unused */
+};
+
 typedef union MPIDI_DCMF_MsgInfo
 {
-  DCQuad quad[1];
-  MPIDI_DCMF_MsgInfo_t msginfo;
+  struct MPIDI_DCMF_MsgInfo_t msginfo;
+  DCQuad quad[DCQuad_sizeof(struct MPIDI_DCMF_MsgInfo_t)];
 }
 MPIDI_DCMF_MsgInfo;
-
-/** \brief Rendezvous information for flow-control of unexpected messages. */
-typedef struct MPIDI_DCMF_RzvInfo
-{
-  void            * sndbuf;
-  unsigned          sndlen;
-}
-MPIDI_DCMF_RzvInfo;
-
-/** \brief Request completion actions */
-typedef enum
-  {
-    MPIDI_DCMF_CA_ERROR = 0,                         /* Should never see this        */
-    MPIDI_DCMF_CA_COMPLETE = 1,                      /* The request is now complete  */
-    MPIDI_DCMF_CA_UNPACK_UEBUF_AND_COMPLETE,         /* Unpack uebuf, then complete  */
-    MPIDI_DCMF_CA_UNPACK_UEBUF_AND_COMPLETE_NOFREE,  /* Unpack uebuf, then complete. do not free uebuf  */
-    MPIDI_DCMF_CA_DISCARD_UEBUF_AND_COMPLETE,        /* Discard uebuf, then complete */
-  }
-MPIDI_DCMF_CA;
-
 
 /** \brief Full Rendezvous msg info to be set as two quads of unexpected data. */
 typedef union
 {
-  struct
+  struct MPIDI_DCMF_MsgEnvelope_t
   {
     MPIDI_DCMF_MsgInfo msginfo;
-    MPIDI_DCMF_RzvInfo rzvinfo;
-  };
-  DCQuad quad[2];
-} MPIDI_DCMF_RzvEnvelope;
+    DCMF_Memregion_t   memregion;
+    size_t             offset;
+    unsigned           length;
+  } envelope;
+  DCQuad quad[DCQuad_sizeof(struct MPIDI_DCMF_MsgEnvelope_t)];
+} MPIDI_DCMF_MsgEnvelope;
 
 /** \brief This defines the portion of MPID_Request that is specific to the DCMF Device */
 struct MPIDI_DCMF_Request
 {
-  MPIDI_DCMF_MsgInfo        msginfo;      /**< Match info and type/flags  */
+  MPIDI_DCMF_MsgEnvelope    envelope;
   unsigned                  peerrank;     /**< The other guy's rank       */
 
   MPIDI_DCMF_CA ca;                       /**< Completion action          */
@@ -261,7 +270,7 @@ struct MPIDI_DCMF_Request
 
   DCMF_Request_t            msg;          /**< The message layer request  */
 
-  MPIDI_DCMF_RzvInfo        rzvinfo;      /**< Rendezvous msg information */
+  DCMF_Memregion_t          memregion;    /**< Rendezvous rcv memregion   */
 
   struct MPID_Request     * next;         /**< Link to next req. in queue */
 };
@@ -286,11 +295,15 @@ struct MPIDI_DCMF_Comm
    unsigned *rcvcounters;
    unsigned char allreducetree; /**< Comm specific tree flags */
    unsigned char allreducepipelinedtree; /**< Comm specific tree flags */
+   unsigned char allreducepipelinedtree_dput; /**< Comm specific tree flags */
    unsigned char reducetree;
    unsigned char allreduceccmitree;
    unsigned char reduceccmitree;
    unsigned char bcasttree;
    unsigned char alltoalls;
+   unsigned      bcastiter;   /* async broadcast is only used every 32
+			       * steps to prevent too many unexpected
+			       * messages */
 };
 /** \brief This defines the portion of MPID_Comm that is specific to the DCMF Device */
 #define MPID_DEV_COMM_DECL      struct MPIDI_DCMF_Comm dcmf;
@@ -322,6 +335,7 @@ struct MPID_Win_coll_info {
   int disp_unit;        /**< Node's exposure window displacement units            */
   MPI_Win win_handle;   /**< Node's exposure window handle (local to target node) */
   int rma_sends;        /**< Count of RMA operations that target node             */
+  DCMF_Memregion_t mem_region; /**< Memory region descriptor for each node */
 };
 
 /* assert sizeof(struct MPID_Win_coll_info) == 16 */

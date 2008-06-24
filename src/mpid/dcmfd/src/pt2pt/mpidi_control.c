@@ -38,7 +38,7 @@ static inline int MPIDI_DCMF_CtrlSend(MPIDI_DCMF_MsgInfo * control, unsigned pee
 int MPIDI_DCMF_postSyncAck(MPID_Request * req)
 {
   unsigned peerrank         =  req->dcmf.peerrank;
-  MPIDI_DCMF_MsgInfo * info = &req->dcmf.msginfo;
+  MPIDI_DCMF_MsgInfo * info = &req->dcmf.envelope.envelope.msginfo;
   info->msginfo.type = MPIDI_DCMF_REQUEST_TYPE_SSEND_ACKNOWLEDGE;
   return MPIDI_DCMF_CtrlSend(info, peerrank);
 }
@@ -61,6 +61,12 @@ static inline void MPIDI_DCMF_procSyncAck(MPIDI_DCMF_MsgInfo *info, unsigned pee
 }
 
 
+void MPIDI_DCMF_postCancelReq_free(void* p)
+{
+  MPID_assert_debug(p != NULL);
+  MPIU_Free(p);
+}
+
 
 /**
  * \brief Cancel an MPI_Send()
@@ -72,15 +78,34 @@ static inline void MPIDI_DCMF_procSyncAck(MPIDI_DCMF_MsgInfo *info, unsigned pee
 int MPIDI_DCMF_postCancelReq(MPID_Request * req)
 {
   MPID_assert(req != NULL);
+  struct cancel_t {
+    MPIDI_DCMF_MsgInfo msginfo;
+    DCMF_Request_t     msg;
+  };
 
-  MPIDI_DCMF_MsgInfo control;
-  control.msginfo.MPItag  = req->dcmf.msginfo.msginfo.MPItag;
-  control.msginfo.MPIrank = req->dcmf.msginfo.msginfo.MPIrank;
-  control.msginfo.MPIctxt = req->dcmf.msginfo.msginfo.MPIctxt;
-  control.msginfo.type    = MPIDI_DCMF_REQUEST_TYPE_CANCEL_REQUEST;
-  control.msginfo.req     = req;
+  struct cancel_t * cancel = MPIU_Malloc(sizeof(struct cancel_t));
+  MPID_assert(cancel != NULL);
+  DCMF_Callback_t cb_done = {
+    function   : MPIDI_DCMF_postCancelReq_free,
+    clientdata : cancel,
+  };
 
-  return MPIDI_DCMF_CtrlSend(&control, MPID_Request_getPeerRank(req));
+  cancel->msginfo.msginfo.MPItag  = MPID_Request_getMatchTag(req);
+  cancel->msginfo.msginfo.MPIrank = MPID_Request_getMatchRank(req);
+  cancel->msginfo.msginfo.MPIctxt = MPID_Request_getMatchCtxt(req);
+  cancel->msginfo.msginfo.type    = MPIDI_DCMF_REQUEST_TYPE_CANCEL_REQUEST;
+  cancel->msginfo.msginfo.req     = req;
+
+  return DCMF_Send(&MPIDI_Protocols.send,
+                   &cancel->msg,
+                   cb_done,
+                   DCMF_MATCH_CONSISTENCY,
+                   MPID_Request_getPeerRank(req),
+                   0,
+                   NULL,
+                   cancel->msginfo.quad,
+                   DCQuad_sizeof(MPIDI_DCMF_MsgInfo));
+  return 0;
 }
 
 /**
@@ -89,25 +114,23 @@ int MPIDI_DCMF_postCancelReq(MPID_Request * req)
  * \param[in] info The contents of the control message as a MPIDI_DCMF_MsgInfo struct
  * \param[in] peer The rank of the node sending the data
  */
-static inline void MPIDI_DCMF_procCancelReq(MPIDI_DCMF_MsgInfo *info, unsigned peer)
+void MPIDI_DCMF_procCancelReq(const MPIDI_DCMF_MsgInfo *info, unsigned peer)
 {
   MPIDI_DCMF_REQUEST_TYPE  type;
   MPIDI_DCMF_MsgInfo       ackinfo;
   MPID_Request            *sreq       = NULL;
-  MPID_Comm               *comm_world = NULL;
 
   assert(info != NULL);
   assert(info->msginfo.req != NULL);
 
-  MPID_Comm_get_ptr(MPI_COMM_WORLD, comm_world );
   sreq=MPIDI_Recvq_FDURSTC(info->msginfo.req,
                            info->msginfo.MPIrank,
                            info->msginfo.MPItag,
                            info->msginfo.MPIctxt);
   if(sreq)
     {
-      sreq->status.cancelled = TRUE;
-      sreq->dcmf.ca = MPIDI_DCMF_CA_DISCARD_UEBUF_AND_COMPLETE;
+      if (sreq->dcmf.uebuf) {MPIU_Free(sreq->dcmf.uebuf); sreq->dcmf.uebuf = NULL;}
+      MPID_Request_release(sreq);
       type = MPIDI_DCMF_REQUEST_TYPE_CANCEL_ACKNOWLEDGE;
     }
   else
@@ -134,7 +157,13 @@ static inline void MPIDI_DCMF_procCanelAck(MPIDI_DCMF_MsgInfo *info, unsigned pe
   if(info->msginfo.type == MPIDI_DCMF_REQUEST_TYPE_CANCEL_ACKNOWLEDGE)
     infoRequest->status.cancelled = TRUE;
   else if(info->msginfo.type == MPIDI_DCMF_REQUEST_TYPE_CANCEL_NOT_ACKNOWLEDGE)
-    ;
+    {
+      int inuse;
+      infoRequest->dcmf.cancel_pending = FALSE;
+      MPIU_Object_release_ref(infoRequest, &inuse);
+      MPID_Request_decrement_cc(infoRequest, &inuse);
+      return;
+    }
   else
     MPID_abort();
 
@@ -151,7 +180,7 @@ static inline void MPIDI_DCMF_procCanelAck(MPIDI_DCMF_MsgInfo *info, unsigned pe
   else if (info->msginfo.type == MPIDI_DCMF_REQUEST_TYPE_CANCEL_ACKNOWLEDGE)
     {
       infoRequest->dcmf.state=MPIDI_DCMF_REQUEST_DONE_CANCELLED;
-      if (infoRequest->dcmf.msginfo.msginfo.isRzv)
+      if (MPID_Request_isRzv(infoRequest))
         {
           /*
            * Rendezvous Sends wait until a rzv ack is received to complete the
@@ -162,8 +191,6 @@ static inline void MPIDI_DCMF_procCanelAck(MPIDI_DCMF_MsgInfo *info, unsigned pe
           MPIDI_DCMF_SendDoneCB(infoRequest);
         }
     }
-
-  return;
 }
 
 
@@ -198,9 +225,6 @@ void MPIDI_BG2S_ControlCB(void *clientdata, const DCMF_Control_t * p, unsigned p
     {
     case MPIDI_DCMF_REQUEST_TYPE_SSEND_ACKNOWLEDGE:
       MPIDI_DCMF_procSyncAck(info, peer);
-      break;
-    case MPIDI_DCMF_REQUEST_TYPE_CANCEL_REQUEST:
-      MPIDI_DCMF_procCancelReq(info, peer);
       break;
     case MPIDI_DCMF_REQUEST_TYPE_CANCEL_ACKNOWLEDGE:
     case MPIDI_DCMF_REQUEST_TYPE_CANCEL_NOT_ACKNOWLEDGE:

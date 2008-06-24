@@ -99,12 +99,6 @@ void MPIDI_DCMF_RecvDoneCB (MPID_Request * rreq)
         MPID_Request_complete(rreq);
         break;
       }
-    case MPIDI_DCMF_CA_DISCARD_UEBUF_AND_COMPLETE:
-      {
-        MPIU_Object_set_ref  (rreq, 0);
-        MPID_Request_destroy (rreq);
-        break;
-      }
     default:
       {
         MPID_Abort(NULL, MPI_ERR_OTHER, -1, "Internal: unknown CA");
@@ -131,13 +125,13 @@ void MPIDI_DCMF_RecvRzvDoneCB (MPID_Request * rreq)
   MPID_assert(rreq != NULL);
 
   /* Is it neccesary to save the original value of the 'type' field ?? */
-  unsigned original_value = rreq->dcmf.msginfo.msginfo.type;
-  rreq->dcmf.msginfo.msginfo.type = MPIDI_DCMF_REQUEST_TYPE_RENDEZVOUS_ACKNOWLEDGE;
+  unsigned original_value = MPID_Request_getType(rreq);
+  MPID_Request_setType(rreq, MPIDI_DCMF_REQUEST_TYPE_RENDEZVOUS_ACKNOWLEDGE);
   DCMF_Control (&MPIDI_Protocols.control,
                 DCMF_MATCH_CONSISTENCY,
                 rreq->dcmf.peerrank,
-                rreq->dcmf.msginfo.quad);
-  rreq->dcmf.msginfo.msginfo.type = original_value;
+                rreq->dcmf.envelope.envelope.msginfo.quad);
+  MPID_Request_setType(rreq, original_value);
 
   MPIDI_DCMF_RecvDoneCB (rreq);
 }

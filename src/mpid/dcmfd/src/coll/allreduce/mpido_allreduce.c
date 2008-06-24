@@ -54,30 +54,72 @@ static int tree_global_allreduce(void * sendbuf,
 }
 
 static int tree_pipelined_allreduce(void * sendbuf,
-                                    void * recvbuf,
-                                    int count,
-                                    DCMF_Dt dcmf_dt,
-                                    DCMF_Op dcmf_op,
-                                    DCMF_Geometry_t * geometry)
+				    void * recvbuf,
+				    int count,
+				    DCMF_Dt dcmf_dt,
+				    DCMF_Op dcmf_op,
+				    DCMF_Geometry_t * geometry)
 {
    int rc;
+   unsigned local_alignment = 0;
+   volatile int global_alignment = 0;
    DCMF_CollectiveRequest_t request;
    volatile unsigned active = 1;
    DCMF_Callback_t callback = { cb_done, (void *) &active };
-   rc = DCMF_Allreduce(&MPIDI_CollectiveProtocols.allreduce.pipelinedtree,
-                       &request,
-                       callback,
-                       DCMF_MATCH_CONSISTENCY,
-                       geometry,
-                       sendbuf,
-                       recvbuf,
-                       count,
-                       dcmf_dt,
-                       dcmf_op);
-   MPID_PROGRESS_WAIT_WHILE(active);
+   DCMF_CollectiveProtocol_t *protocol = &(MPIDI_CollectiveProtocols.allreduce.pipelinedtree);
+
+   /* Short messages use the unaligned optimizations */
+   if (count < 1024) {
+     rc = DCMF_Allreduce(protocol,
+			 &request,
+			 callback,
+			 DCMF_MATCH_CONSISTENCY,
+			 geometry,
+			 sendbuf,
+			 recvbuf,
+			 count,
+			 dcmf_dt,
+			 dcmf_op);
+     MPID_PROGRESS_WAIT_WHILE(active);
+   }
+   else {
+     /*First we need to verify alignment */
+     local_alignment  = ( (((unsigned)sendbuf & 0x0f)==0) && (((unsigned)recvbuf & 0x0f)==0) );
+     global_alignment = 0;
+
+     /* Avoid the worst case in ccmi where two different protocols
+	alternate on the same communicator, resulting in temporary
+	buffers being freed and re-allocated. The fix would be to keep
+	the allreducestate persistent across allreduce calls that
+	different protocols.  - SK 04/04/08 */
+     tree_global_allreduce((char *)&local_alignment,
+			   (char *)&global_alignment,
+			   1,
+			   DCMF_UNSIGNED_INT,
+			   DCMF_LAND,
+			   geometry);
+
+     if (global_alignment) { /*src and dst buffers are globally aligned*/
+       protocol = &MPIDI_CollectiveProtocols.allreduce.pipelinedtree_dput;
+     }
+
+     active = 1;
+     rc = DCMF_Allreduce(protocol,
+			 &request,
+			 callback,
+			 DCMF_MATCH_CONSISTENCY,
+			 geometry,
+			 sendbuf,
+			 recvbuf,
+			 count,
+			 dcmf_dt,
+			 dcmf_op);
+     MPID_PROGRESS_WAIT_WHILE(active);
+   }
 
    return rc;
 }
+
 
 static int tree_allreduce(void * sendbuf,
                           void * recvbuf,
@@ -205,7 +247,7 @@ int MPIDO_Allreduce(
    unsigned treeavail, rectavail, binomavail, rectringavail;
 
    MPID_Datatype *dt_ptr;
-   MPI_Aint dt_true_lb;
+   MPI_Aint dt_true_lb=0;
 
 
    DCMF_Dt dcmf_dt = DCMF_UNDEFINED_DT;
@@ -268,6 +310,8 @@ int MPIDO_Allreduce(
                 DCMF_Geometry_analyze(&comm_ptr->dcmf.geometry,
                      &MPIDI_CollectiveProtocols.allreduce.binomial);
 
+   if(sendbuf == MPI_IN_PLACE)
+      binomavail = 0; /* temporary bug workaround */
 
 
 //   assert(comm_ptr->comm_kind != MPID_INTRACOMM);
@@ -278,6 +322,10 @@ int MPIDO_Allreduce(
                            dt_extent,
                            dt_ptr,
                            dt_true_lb);
+
+   MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+                                   dt_true_lb);
+   recvbuf = ((char *)recvbuf + dt_true_lb);
 
 
    /* return conditions */
@@ -298,11 +346,14 @@ int MPIDO_Allreduce(
     * until then just pick rectangle then binomial based on availability*/
    unsigned usingbinom=1 && binomavail;
    unsigned usingrect=1 && rectavail;
-   unsigned usingrectring=1 && rectringavail;
+   unsigned usingrectring=(rectringavail && count > 16384);
 
 
    if(sendbuf != MPI_IN_PLACE)
    {
+      MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+                                       dt_true_lb);
+      sendbuf = ((char *)sendbuf + dt_true_lb);
      //      int err =
      //         MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
      //      if (err) return err;
@@ -310,7 +361,18 @@ int MPIDO_Allreduce(
    else
      sendbuf = recvbuf;
 
-   if(usingrect)
+   if(usingrectring)
+   {
+//         fprintf(stderr,"rectring allreduce, count: %d, dt: %d, op: %d, send: 0x%x, recv: 0x%x\n", count, dcmf_dt, dcmf_op, sendbuf, recvbuf);
+      rc = rectring_allreduce(sendbuf,
+                          recvbuf,
+                          count,
+                          dcmf_dt,
+                          dcmf_op,
+                          &comm_ptr->dcmf.geometry);
+   }
+
+   else if(usingrect)
    {
 //         fprintf(stderr,"rect allreduce, count: %d, dt: %d, op: %d, send: 0x%x, recv: 0x%x\n", count, dcmf_dt, dcmf_op, sendbuf, recvbuf);
       rc = rect_allreduce(sendbuf,
@@ -329,16 +391,6 @@ int MPIDO_Allreduce(
                            dcmf_dt,
                            dcmf_op,
                            &comm_ptr->dcmf.geometry);
-   }
-   else if(usingrectring)
-   {
-//         fprintf(stderr,"rectring allreduce, count: %d, dt: %d, op: %d, send: 0x%x, recv: 0x%x\n", count, dcmf_dt, dcmf_op, sendbuf, recvbuf);
-      rc = rectring_allreduce(sendbuf,
-                          recvbuf,
-                          count,
-                          dcmf_dt,
-                          dcmf_op,
-                          &comm_ptr->dcmf.geometry);
    }
 
    return rc;

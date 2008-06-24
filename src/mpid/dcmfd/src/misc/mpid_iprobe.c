@@ -5,7 +5,8 @@
  */
 #include "mpidimpl.h"
 
-int MPID_Iprobe(int source,
+static inline int
+MPID_Iprobe_rsm(int source,
                 int tag,
                 MPID_Comm * comm,
                 int context_offset,
@@ -37,4 +38,31 @@ int MPID_Iprobe(int source,
       *flag = FALSE;
     }
   return MPI_SUCCESS;
+}
+
+
+static inline int
+MPID_Iprobe_ssm(int source,
+                int tag,
+                MPID_Comm * comm,
+                int context_offset,
+                int *flag,
+                MPI_Status * status)
+{
+  return SSM_ABORT();
+}
+
+
+int
+MPID_Iprobe(int source,
+            int tag,
+            MPID_Comm * comm,
+            int context_offset,
+            int *flag,
+            MPI_Status * status)
+{
+  if (MPIDI_Process.use_ssm)
+    return MPID_Iprobe_ssm(source, tag, comm, context_offset, flag, status);
+  else
+    return MPID_Iprobe_rsm(source, tag, comm, context_offset, flag, status);
 }

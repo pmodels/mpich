@@ -33,7 +33,7 @@ inline void MPIDI_DCMF_RendezvousTransfer (MPID_Request * rreq)
   /* -------------------------------------- */
   /* test for truncated message.            */
   /* -------------------------------------- */
-  if (rreq->dcmf.rzvinfo.sndlen > dt_size)
+  if (rreq->dcmf.envelope.envelope.length > dt_size)
     {
       rcvlen = dt_size;
       rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
@@ -41,7 +41,7 @@ inline void MPIDI_DCMF_RendezvousTransfer (MPID_Request * rreq)
     }
   else
     {
-      rcvlen = rreq->dcmf.rzvinfo.sndlen;
+      rcvlen = rreq->dcmf.envelope.envelope.length;
     }
 
   /* -------------------------------------- */
@@ -87,13 +87,19 @@ inline void MPIDI_DCMF_RendezvousTransfer (MPID_Request * rreq)
   /* ---------------------------------------------------------------- */
   /* Get the data from the origin node.                               */
   /* ---------------------------------------------------------------- */
-  DCMF_Callback_t cb = { (void (*)(void *))MPIDI_DCMF_RecvRzvDoneCB, (void *) rreq };
+  DCMF_Callback_t cb = { (void (*)(void *))MPIDI_DCMF_RecvRzvDoneCB, (void *)rreq };
+
+  size_t bytes;
+  DCMF_Memregion_create(&rreq->dcmf.memregion, &bytes, rcvlen, rcvbuf, 0);
+
   DCMF_Get (&MPIDI_Protocols.get,
             (DCMF_Request_t *) &rreq->dcmf.msg,
             cb,
             DCMF_MATCH_CONSISTENCY,
             MPID_Request_getPeerRank(rreq),
             rcvlen,
-            rcvbuf,
-            rreq->dcmf.rzvinfo.sndbuf);
+            &rreq->dcmf.envelope.envelope.memregion, // data src memregion (from rzv send node)
+            &rreq->dcmf.memregion,                   // data dst memregion (on   rzv recv node)
+            rreq->dcmf.envelope.envelope.offset,
+            0);
 }

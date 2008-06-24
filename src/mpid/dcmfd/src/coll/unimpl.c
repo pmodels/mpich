@@ -11,21 +11,6 @@
  * these functions 
  */
 
-#pragma weak PMPIDO_Gather = MPIDO_Gather
-int MPIDO_Gather(void *sendbuf,
-                 int sendcount,
-                 MPI_Datatype sendtype,
-                 void *recvbuf,
-                 int recvcount,
-                 MPI_Datatype recvtype,
-                 int root,
-                 MPID_Comm * comm_ptr)
-{
-   return MPIR_Gather(sendbuf, sendcount, sendtype,
-                      recvbuf, recvcount, recvtype,
-                      root, comm_ptr);
-}
-
 #pragma weak PMPIDO_Gatherv = MPIDO_Gatherv
 int MPIDO_Gatherv(void *sendbuf,
                   int sendcount,
@@ -40,49 +25,6 @@ int MPIDO_Gatherv(void *sendbuf,
    return MPIR_Gatherv(sendbuf, sendcount, sendtype,
                        recvbuf, recvcounts, displs, recvtype,
                        root, comm_ptr);
-}
-
-#pragma weak PMPIDO_Scatter = MPIDO_Scatter
-int MPIDO_Scatter(void *sendbuf,
-                  int sendcount,
-                  MPI_Datatype sendtype,
-                  void *recvbuf,
-                  int recvcount,
-                  MPI_Datatype recvtype,
-                  int root,
-                  MPID_Comm * comm_ptr)
-{
-   return MPIR_Scatter(sendbuf, sendcount, sendtype,
-                       recvbuf, recvcount, recvtype,
-                       root, comm_ptr);
-}
-
-#pragma weak PMPIDO_Scatterv = MPIDO_Scatterv
-int MPIDO_Scatterv(void *sendbuf,
-                   int *sendcounts,
-                   int *displs,
-                   MPI_Datatype sendtype,
-                   void *recvbuf,
-                   int recvcount,
-                   MPI_Datatype recvtype,
-                   int root,
-                   MPID_Comm * comm_ptr)
-{
-   return MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,
-                        recvbuf, recvcount, recvtype,
-                        root, comm_ptr);
-}
-
-#pragma weak PMPIDO_Reduce_scatter = MPIDO_Reduce_scatter
-int MPIDO_Reduce_scatter(void *sendbuf,
-                         void *recvbuf,
-                         int *recvcounts,
-                         MPI_Datatype datatype,
-                         MPI_Op op,
-                         MPID_Comm * comm_ptr)
-{
-   return MPIR_Reduce_scatter(sendbuf, recvbuf, recvcounts, datatype,
-                              op, comm_ptr);
 }
 
 #pragma weak PMPIDO_Scan = MPIDO_Scan

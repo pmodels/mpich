@@ -12,6 +12,8 @@
 #ifndef MPICH_DCMF_MPIDIMPL_H_INCLUDED
 #define MPICH_DCMF_MPIDIMPL_H_INCLUDED
 
+int SSM_ABORT();
+
 /* ****************************************************************
  * Asserts are divided into three levels:
  * 1. abort  - Always active and always issues assert(0).
@@ -58,31 +60,37 @@
 /**
  * \brief MPI Process descriptor
  *
- * This structure contains the request queues for message tracking
+ * This structure contains global configuration flags.
  */
 
 typedef struct
 {
   struct
   {
-    unsigned topology;
-    unsigned collectives;
+    unsigned topology;           /**< Enable optimized topology functions.   */
+    unsigned collectives;        /**< Enable optimized collective functions. */
   }
   optimized;
   unsigned eager_limit;
-  unsigned verbose        :  8;
-  unsigned statistics     :  8;  /**< Flag to show the current level of stats collection */
-  unsigned use_interrupts :  1;
-/*unsigned unused_flags   : 15; */
-  unsigned rma_pending;
+  unsigned optrzv_limit;
+  unsigned verbose        :  8;  /**< The current level of verbosity for end-of-job stats. */
+  unsigned statistics     :  8;  /**< The current level of stats collection.               */
+  unsigned use_interrupts :  1;  /**< Should interrupts be turned on.                      */
+  unsigned use_ssm        :  1;  /**< Enable Sender-Side-Matching of messages.             */
+  unsigned rma_pending    :  1;
+/*unsigned unused_flags   : 13; */
 }      MPIDI_Process_t;
 extern MPIDI_Process_t MPIDI_Process;
 
 typedef struct
 {
   DCMF_Protocol_t send;
+  DCMF_Protocol_t mrzv;
   DCMF_Protocol_t rzv;
   DCMF_Protocol_t get;
+  DCMF_Protocol_t ssm_put;
+  DCMF_Protocol_t ssm_cts;
+  DCMF_Protocol_t ssm_ack;
   DCMF_Protocol_t protocol;
   DCMF_Protocol_t control;
   DCMF_Protocol_t globalbarrier;
@@ -104,11 +112,11 @@ typedef struct
    } barrier;
    unsigned char optbarrier; /* do we have an optimized barrier? */
 
-   /* Optimized local barrier protocols and usage flags  (not used directly by MPICH 
+   /* Optimized local barrier protocols and usage flags  (not used directly by MPICH
     * but stored in the geometry) */
    struct
    {
-      DCMF_CollectiveProtocol_t lockbox; 
+      DCMF_CollectiveProtocol_t lockbox;
       unsigned char uselockbox;
       DCMF_CollectiveProtocol_t binomial;
       unsigned char usebinom;
@@ -120,9 +128,13 @@ typedef struct
       DCMF_CollectiveProtocol_t tree;
       unsigned char usetree;
       DCMF_CollectiveProtocol_t rectangle;
+      DCMF_CollectiveProtocol_t async_rectangle;
       unsigned char userect;
       DCMF_CollectiveProtocol_t binomial;
+      DCMF_CollectiveProtocol_t async_binomial;
       unsigned char usebinom;
+      unsigned char useasyncbinom;
+      unsigned char useasyncrect;
    } broadcast;
    unsigned char optbroadcast;
 
@@ -144,7 +156,7 @@ typedef struct
    {
       unsigned char usetorus;
    } alltoallw;
-      
+
 
    /* Optimized allgather usage flag */
    struct
@@ -152,6 +164,7 @@ typedef struct
       unsigned char useallreduce;
       unsigned char usebcast;
       unsigned char usealltoallv;
+      unsigned char useasyncbcast;
    } allgather;
    unsigned char optallgather;
 
@@ -161,24 +174,54 @@ typedef struct
       unsigned char useallreduce;
       unsigned char usebcast;
       unsigned char usealltoallv;
+      unsigned char useasyncbcast;
    } allgatherv;
    unsigned char optallgatherv;
+
+   /* Optimized scatter usage flag */
+   struct
+   {
+      unsigned char usebcast;
+   } scatter;
+   unsigned char optscatter;
+
+   /* Optimized scatterv usage flag */
+   struct
+   {
+      unsigned char usealltoallv;
+   } scatterv;
+   unsigned char optscatterv;
+
+   /* Optimized reduce_scatter usage flag */
+   struct
+   {
+      unsigned char usereducescatter;
+   } reduce_scatter;
+   unsigned char optreducescatter;
+
+   struct
+   {
+      unsigned char usereduce;
+   } gather;
+   unsigned char optgather;
+
 
    /* Optimized allreduce protocols and usage flags */
    struct
    {
       unsigned char reusestorage;
-      DCMF_CollectiveProtocol_t pipelinedtree;
-      unsigned char usepipelinedtree;
-      DCMF_CollectiveProtocol_t tree;
       unsigned char usetree;
       unsigned char useccmitree;
-      DCMF_CollectiveProtocol_t rectangle;
+      unsigned char usepipelinedtree;
       unsigned char userect;
-      DCMF_CollectiveProtocol_t rectanglering;
       unsigned char userectring;
-      DCMF_CollectiveProtocol_t binomial;
       unsigned char usebinom;
+      DCMF_CollectiveProtocol_t tree __attribute__((__aligned__(16)));
+      DCMF_CollectiveProtocol_t pipelinedtree;
+      DCMF_CollectiveProtocol_t pipelinedtree_dput;
+      DCMF_CollectiveProtocol_t rectangle;
+      DCMF_CollectiveProtocol_t rectanglering;
+      DCMF_CollectiveProtocol_t binomial;
    } allreduce;
    unsigned char optallreduce;
 
@@ -197,6 +240,8 @@ typedef struct
       unsigned char usebinom;
    } reduce;
    unsigned char optreduce;
+
+   unsigned numrequests;
 
 }      MPIDI_CollectiveProtocol_t;
 extern MPIDI_CollectiveProtocol_t MPIDI_CollectiveProtocols;
@@ -332,30 +377,30 @@ void           MPID_Request_set_completed (MPID_Request *req);
   MPIU_Object_add_ref(_req);                                            \
 }
 
-#define MPID_Request_setCA(_req, _ca)        { (_req)->dcmf.ca                     = (_ca); }
-#define MPID_Request_setPeerRank(_req,_r)    { (_req)->dcmf.peerrank               = (_r);  }
-#define MPID_Request_setPeerRequest(_req,_r) { (_req)->dcmf.msginfo.msginfo.req    = (_r);  }
-#define MPID_Request_setType(_req,_t)        { (_req)->dcmf.msginfo.msginfo.type   = (_t);  }
-#define MPID_Request_setSelf(_req,_t)        { (_req)->dcmf.msginfo.msginfo.isSelf = (_t);  }
-#define MPID_Request_setSync(_req,_t)        { (_req)->dcmf.msginfo.msginfo.isSync = (_t);  }
-#define MPID_Request_setRzv(_req,_t)         { (_req)->dcmf.msginfo.msginfo.isRzv  = (_t);  }
-#define MPID_Request_setMatch(_req,_tag,_rank,_ctxtid)  \
-{                                                       \
-  (_req)->dcmf.msginfo.msginfo.MPItag=(_tag);           \
-  (_req)->dcmf.msginfo.msginfo.MPIrank=(_rank);         \
-  (_req)->dcmf.msginfo.msginfo.MPIctxt=(_ctxtid);       \
+#define MPID_Request_setCA(_req, _ca)        { (_req)->dcmf.ca                     = (_ca);                   }
+#define MPID_Request_setPeerRank(_req,_r)    { (_req)->dcmf.peerrank               = (_r);                    }
+#define MPID_Request_setPeerRequest(_req,_r) { (_req)->dcmf.envelope.envelope.msginfo.msginfo.req    = (_r);  }
+#define MPID_Request_setType(_req,_t)        { (_req)->dcmf.envelope.envelope.msginfo.msginfo.type   = (_t);  }
+#define MPID_Request_setSelf(_req,_t)        { (_req)->dcmf.envelope.envelope.msginfo.msginfo.isSelf = (_t);  }
+#define MPID_Request_setSync(_req,_t)        { (_req)->dcmf.envelope.envelope.msginfo.msginfo.isSync = (_t);  }
+#define MPID_Request_setRzv(_req,_t)         { (_req)->dcmf.envelope.envelope.msginfo.msginfo.isRzv  = (_t);  }
+#define MPID_Request_setMatch(_req,_tag,_rank,_ctxtid)                  \
+{                                                                       \
+  (_req)->dcmf.envelope.envelope.msginfo.msginfo.MPItag=(_tag);         \
+  (_req)->dcmf.envelope.envelope.msginfo.msginfo.MPIrank=(_rank);       \
+  (_req)->dcmf.envelope.envelope.msginfo.msginfo.MPIctxt=(_ctxtid);     \
 }
 
-#define MPID_Request_getCA(_req)          ( (_req)->dcmf.ca                      )
-#define MPID_Request_getType(_req)        ( (_req)->dcmf.msginfo.msginfo.type    )
-#define MPID_Request_isSelf(_req)         ( (_req)->dcmf.msginfo.msginfo.isSelf  )
-#define MPID_Request_isSync(_req)         ( (_req)->dcmf.msginfo.msginfo.isSync  )
-#define MPID_Request_isRzv(_req)          ( (_req)->dcmf.msginfo.msginfo.isRzv   )
-#define MPID_Request_getMatchTag(_req)    ( (_req)->dcmf.msginfo.msginfo.MPItag  )
-#define MPID_Request_getMatchRank(_req)   ( (_req)->dcmf.msginfo.msginfo.MPIrank )
-#define MPID_Request_getMatchCtxt(_req)   ( (_req)->dcmf.msginfo.msginfo.MPIctxt )
-#define MPID_Request_getPeerRank(_req)    ( (_req)->dcmf.peerrank                )
-#define MPID_Request_getPeerRequest(_req) ( (_req)->dcmf.msginfo.msginfo.req     )
+#define MPID_Request_getCA(_req)          ( (_req)->dcmf.ca                                        )
+#define MPID_Request_getType(_req)        ( (_req)->dcmf.envelope.envelope.msginfo.msginfo.type    )
+#define MPID_Request_isSelf(_req)         ( (_req)->dcmf.envelope.envelope.msginfo.msginfo.isSelf  )
+#define MPID_Request_isSync(_req)         ( (_req)->dcmf.envelope.envelope.msginfo.msginfo.isSync  )
+#define MPID_Request_isRzv(_req)          ( (_req)->dcmf.envelope.envelope.msginfo.msginfo.isRzv   )
+#define MPID_Request_getMatchTag(_req)    ( (_req)->dcmf.envelope.envelope.msginfo.msginfo.MPItag  )
+#define MPID_Request_getMatchRank(_req)   ( (_req)->dcmf.envelope.envelope.msginfo.msginfo.MPIrank )
+#define MPID_Request_getMatchCtxt(_req)   ( (_req)->dcmf.envelope.envelope.msginfo.msginfo.MPIctxt )
+#define MPID_Request_getPeerRequest(_req) ( (_req)->dcmf.envelope.envelope.msginfo.msginfo.req     )
+#define MPID_Request_getPeerRank(_req)    ( (_req)->dcmf.peerrank                                  )
 /**\}*/
 
 
@@ -376,25 +421,44 @@ DCMF_Request_t * MPIDI_BG2S_RecvCB(void                     * clientdata,
                                    unsigned                 * rcvlen,
                                    char                    ** rcvbuf,
                                    DCMF_Callback_t    * const cb_info);
-
 void MPIDI_BG2S_RecvShortCB(void                     * clientdata,
                             const MPIDI_DCMF_MsgInfo * msginfo,
                             unsigned                   count,
                             unsigned                   senderrank,
                             const char               * sndbuf,
                             unsigned                   sndlen);
-
 void MPIDI_BG2S_RecvRzvCB(void                         * clientdata,
-                          const MPIDI_DCMF_RzvEnvelope * rzv_envelope,
+                          const MPIDI_DCMF_MsgEnvelope * rzv_envelope,
                           unsigned                       count,
                           unsigned                       senderrank,
                           const char                   * sndbuf,
                           unsigned                       sndlen);
-
+void MPIDI_BG2S_SsmCtsCB(void                     * clientdata,
+                         const MPIDI_DCMF_MsgInfo * msginfo,
+                         unsigned                   count,
+                         unsigned                   senderrank,
+                         const char               * sndbuf,
+                         unsigned                   sndlen);
+void MPIDI_BG2S_SsmAckCB(void                     * clientdata,
+                         const MPIDI_DCMF_MsgInfo * msginfo,
+                         unsigned                   count,
+                         unsigned                   senderrank,
+                         const char               * sndbuf,
+                         unsigned                   sndlen);
 void MPIDI_DCMF_SendDoneCB    (MPID_Request * sreq);
 void MPIDI_DCMF_RecvDoneCB    (MPID_Request * rreq);
 void MPIDI_DCMF_RecvRzvDoneCB (MPID_Request * rreq);
 void MPIDI_DCMF_StartMsg      (MPID_Request * sreq);
+int  MPIDI_Irecv(void          * buf,
+                 int             count,
+                 MPI_Datatype    datatype,
+                 int             rank,
+                 int             tag,
+                 MPID_Comm     * comm,
+                 int             context_offset,
+                 MPI_Status    * status,
+                 MPID_Request ** request,
+                 char          * func);
 /** \} */
 
 
@@ -402,6 +466,7 @@ void MPIDI_DCMF_StartMsg      (MPID_Request * sreq);
 int  MPIDI_DCMF_postSyncAck  (MPID_Request * req);
 /** \brief Cancel an MPI_Send(). */
 int  MPIDI_DCMF_postCancelReq(MPID_Request * req);
+void MPIDI_DCMF_procCancelReq(const MPIDI_DCMF_MsgInfo *info, unsigned peer);
 /** \brief This is the general PT2PT control message call-back */
 void MPIDI_BG2S_ControlCB    (void * clientdata, const DCMF_Control_t * p, unsigned peer);
 /**

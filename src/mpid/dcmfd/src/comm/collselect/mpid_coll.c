@@ -71,6 +71,18 @@ static inline int BROADCAST_REGISTER(DCMF_Broadcast_Protocol proto,
    return DCMF_Broadcast_register(proto_ptr, config);
 }
 
+
+static inline int ASYNC_BROADCAST_REGISTER(DCMF_AsyncBroadcast_Protocol proto,
+					   DCMF_CollectiveProtocol_t *proto_ptr,
+					   DCMF_AsyncBroadcast_Configuration_t *config)
+{
+   config->protocol = proto;
+   config->isBuffered = 1;
+   config->cb_geometry = getGeometryRequest;
+   return DCMF_AsyncBroadcast_register(proto_ptr, config);
+}
+
+
 static inline int ALLREDUCE_REGISTER(DCMF_Allreduce_Protocol proto,
                               DCMF_CollectiveProtocol_t *proto_ptr,
                               DCMF_Allreduce_Configuration_t *config)
@@ -102,6 +114,7 @@ void MPIDI_Coll_register(void)
 {
    DCMF_Barrier_Configuration_t   barrier_config;
    DCMF_Broadcast_Configuration_t broadcast_config;
+   DCMF_AsyncBroadcast_Configuration_t a_broadcast_config;
    DCMF_Allreduce_Configuration_t allreduce_config;
    DCMF_Alltoallv_Configuration_t alltoallv_config;
    DCMF_Reduce_Configuration_t    reduce_config;
@@ -232,8 +245,12 @@ void MPIDI_Coll_register(void)
 
    if(BROADCAST_REGISTER(DCMF_TORUS_RECTANGLE_BROADCAST_PROTOCOL,
                       &MPIDI_CollectiveProtocols.broadcast.rectangle,
-                      &broadcast_config) != DCMF_SUCCESS)
+			 &broadcast_config) != DCMF_SUCCESS)     
       MPIDI_CollectiveProtocols.broadcast.userect = 0;
+   
+   ASYNC_BROADCAST_REGISTER(DCMF_TORUS_ASYNCBROADCAST_RECTANGLE_PROTOCOL,
+			    &MPIDI_CollectiveProtocols.broadcast.async_rectangle,
+			    &a_broadcast_config);     
 
 //   BROADCAST_REGISTER(DCMF_TORUS_RECT_BCAST_3COLOR_PROTOCOL,
 //                     &MPIDI_CollectiveProtocols.broadcast.rectangle.threecolor,
@@ -244,6 +261,9 @@ void MPIDI_Coll_register(void)
                       &broadcast_config) != DCMF_SUCCESS)
       MPIDI_CollectiveProtocols.broadcast.usebinom = 0;
 
+   ASYNC_BROADCAST_REGISTER(DCMF_TORUS_ASYNCBROADCAST_BINOMIAL_PROTOCOL,
+			    &MPIDI_CollectiveProtocols.broadcast.async_binomial,
+			    &a_broadcast_config);       
 
    /* Register allreduce protocols */
    if(MPIDI_CollectiveProtocols.allreduce.usetree ||
@@ -258,9 +278,12 @@ void MPIDI_Coll_register(void)
       }
    }
 
-   if(ALLREDUCE_REGISTER(DCMF_TREE_PIPELINED_ALLREDUCE_PROTOCOL,
-                      &MPIDI_CollectiveProtocols.allreduce.pipelinedtree,
-                      &allreduce_config) != DCMF_SUCCESS)
+   if( (ALLREDUCE_REGISTER(DCMF_TREE_PIPELINED_ALLREDUCE_PROTOCOL,
+			   &MPIDI_CollectiveProtocols.allreduce.pipelinedtree,
+			   &allreduce_config) != DCMF_SUCCESS) ||
+       (ALLREDUCE_REGISTER(DCMF_TREE_DPUT_PIPELINED_ALLREDUCE_PROTOCOL,
+			   &MPIDI_CollectiveProtocols.allreduce.pipelinedtree_dput,
+			   &allreduce_config) != DCMF_SUCCESS) )
       MPIDI_CollectiveProtocols.allreduce.usepipelinedtree = 0;
 
    if(ALLREDUCE_REGISTER(DCMF_TORUS_RECTANGLE_ALLREDUCE_PROTOCOL,
@@ -345,6 +368,7 @@ void MPIDI_Coll_Comm_create (MPID_Comm *comm)
    comm->dcmf.reduceccmitree = 1;
    comm->dcmf.bcasttree = 1; 
    comm->dcmf.alltoalls = 1;
+   comm->dcmf.bcastiter = 0;
 
   /* ****************************************** */
   /* Allocate space for the collective pointers */

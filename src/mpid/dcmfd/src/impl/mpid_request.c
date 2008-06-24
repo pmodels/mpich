@@ -49,18 +49,27 @@ MPID_Request * MPID_Request_create()
   req->status.cancelled  = FALSE;
   req->comm              = NULL;
 
-  memset(&(req->dcmf),0x00,sizeof(struct MPIDI_DCMF_Request));
-  /* The above memset takes care of clearing the following fields,  */
-  /* and more:                                                      */
-  /*   req->dcmf.userbuf       = NULL;                              */
-  /*   req->dcmf.uebuf         = NULL;                              */
-  /*   req->dcmf.datatype_ptr  = NULL;                              */
-  /*   req->dcmf.cancel_pending= FALSE;                             */
-  /*   MPID_Request_setSelf   (req,0);   /\* not a self request *\/ */
-  /*   MPID_Request_setSync   (req,0);   /\* not a sync request *\/ */
-  req->dcmf.state         = MPIDI_DCMF_INITIALIZED;
-  MPID_Request_setCA     (req, MPIDI_DCMF_CA_COMPLETE);
-  MPID_Request_setType   (req, MPIDI_DCMF_REQUEST_TYPE_RECV);
+  struct MPIDI_DCMF_Request* dcmf = &req->dcmf;
+  if (DCQuad_sizeof(MPIDI_DCMF_MsgInfo) == 1)
+    {
+      DCQuad* q = dcmf->envelope.envelope.msginfo.quad;
+      q->w0 = 0;
+      q->w1 = 0;
+      q->w2 = 0;
+      q->w3 = 0;
+    }
+  else
+    memset(&dcmf->envelope.envelope.msginfo, 0x00, sizeof(MPIDI_DCMF_MsgInfo));
+
+  dcmf->envelope.envelope.offset = 0;
+  dcmf->envelope.envelope.length = 0;
+  dcmf->userbuf                  = NULL;
+  dcmf->uebuf                    = NULL;
+  dcmf->datatype_ptr             = NULL;
+  dcmf->cancel_pending           = FALSE;
+  dcmf->state                    = MPIDI_DCMF_INITIALIZED;
+  MPID_Request_setCA  (req, MPIDI_DCMF_CA_COMPLETE);
+  MPID_Request_setType(req, MPIDI_DCMF_REQUEST_TYPE_RECV);
 
   return req;
 }
@@ -68,8 +77,6 @@ MPID_Request * MPID_Request_create()
 MPID_Request * MPID_SendRequest_create()
 {
   MPID_Request *sreq = MPID_Request_create();
-  MPID_Request_setType(sreq, MPIDI_DCMF_REQUEST_TYPE_SEND);
-  MPID_Request_setPeerRequest(sreq, sreq);
   MPIU_Object_set_ref(sreq, 2);
   return sreq;
 }
@@ -85,22 +92,16 @@ void MPID_Request_destroy(MPID_Request * req)
 
   if (req->comm)              MPIR_Comm_release(req->comm, 0);
   if (req->dcmf.datatype_ptr) MPID_Datatype_release(req->dcmf.datatype_ptr);
-/*   MPID_assert(req->dcmf.uebuf == NULL); */
 
   MPIU_Handle_obj_free(&MPID_Request_mem, req);
-}
-
-void MPID_Request_release_ref(MPID_Request * req, int * ref_count)
-{
-  MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);
-  MPIU_Object_release_ref(req, ref_count);
-  MPID_assert(req->ref_count >= 0);
 }
 
 void MPID_Request_release (MPID_Request *req)
 {
   int ref_count;
-  MPID_Request_release_ref(req, &ref_count);
+  MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);
+  MPIU_Object_release_ref(req, &ref_count);
+  MPID_assert(req->ref_count >= 0);
   if (ref_count == 0) MPID_Request_destroy(req);
 }
 

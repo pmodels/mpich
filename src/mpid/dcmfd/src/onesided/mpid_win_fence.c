@@ -106,7 +106,7 @@ int MPID_Win_fence(int assert, MPID_Win *win_ptr)
                 if (mpi_errno) {
 char buf[MPI_MAX_ERROR_STRING];
 int buf_len;
-MPI_Error_string(mpi_errno, buf, &buf_len);
+PMPI_Error_string(mpi_errno, buf, &buf_len);
 if (1) fprintf(stderr, "%d: MPID_Win_fence failed NMPI_Allreduce: %s\n", mpid_my_lpid, buf);
 MPIU_ERR_POP(mpi_errno); }
                 MPIDU_Progress_spin(win_ptr->_dev.my_get_pends > 0 ||

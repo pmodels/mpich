@@ -9,21 +9,21 @@
  * \brief The callback for a new RZV RTS
  * \note  Because this is a short message, the data is already received
  * \param[in]  clientdata   Unused
- * \param[in]  rzv_envelope The 16-byte msginfo struct
+ * \param[in]  envelope     The 16-byte msginfo struct
  * \param[in]  count        The number of msginfo quads (1)
  * \param[in]  senderrank   The sender's rank
  * \param[in]  sndlen       The length of the incoming data
  * \param[in]  sndbuf       Where the data is stored
  */
 void MPIDI_BG2S_RecvRzvCB(void                         * clientdata,
-                          const MPIDI_DCMF_RzvEnvelope * rzv_envelope,
+                          const MPIDI_DCMF_MsgEnvelope * envelope,
                           unsigned                       count,
                           unsigned                       senderrank,
                           const char                   * sndbuf,
                           unsigned                       sndlen)
 {
   MPID_Request * rreq = NULL;
-  MPIDI_DCMF_MsgInfo * msginfo = (MPIDI_DCMF_MsgInfo *)&rzv_envelope->msginfo;
+  MPIDI_DCMF_MsgInfo * msginfo = (MPIDI_DCMF_MsgInfo *)&envelope->envelope.msginfo;
   int found;
 
 
@@ -75,10 +75,12 @@ void MPIDI_BG2S_RecvRzvCB(void                         * clientdata,
   /* node calls a receive function and the data is         */
   /* retreived from the origin node.                       */
   /* ----------------------------------------------------- */
-  MPIDI_DCMF_RzvInfo * rzvinfo = (MPIDI_DCMF_RzvInfo *)&rzv_envelope->rzvinfo;
-  rreq->status.count = rzvinfo->sndlen;
-  rreq->dcmf.rzvinfo.sndlen = rzvinfo->sndlen;
-  rreq->dcmf.rzvinfo.sndbuf = rzvinfo->sndbuf;
+  rreq->status.count = envelope->envelope.length;
+  rreq->dcmf.envelope.envelope.length = envelope->envelope.length;
+  rreq->dcmf.envelope.envelope.offset = envelope->envelope.offset;
+  memcpy(&rreq->dcmf.envelope.envelope.memregion,
+	 &envelope->envelope.memregion,
+	 sizeof(DCMF_Memregion_t));
 
   /* ----------------------------------------- */
   /* figure out target buffer for request data */

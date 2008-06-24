@@ -5,7 +5,8 @@
  */
 #include "mpidimpl.h"
 
-int MPID_Cancel_send(MPID_Request * sreq)
+static inline int
+MPID_Cancel_send_rsm(MPID_Request * sreq)
 {
   int flag;
   MPID_assert(sreq != NULL);
@@ -51,4 +52,21 @@ int MPID_Cancel_send(MPID_Request * sreq)
 
       return MPI_SUCCESS;
     }
+}
+
+
+static inline int
+MPID_Cancel_send_ssm(MPID_Request * sreq)
+{
+  return SSM_ABORT();
+}
+
+
+int
+MPID_Cancel_send(MPID_Request * sreq)
+{
+  if (MPIDI_Process.use_ssm)
+    return MPID_Cancel_send_ssm(sreq);
+  else
+    return MPID_Cancel_send_rsm(sreq);
 }

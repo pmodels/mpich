@@ -54,7 +54,30 @@ if (DCMF_TREE_SMP_SHORTCUT) {
    return rc;
 }
 
-static int binom_bcast(void * buffer,
+static int async_binom_bcast(void * buffer,
+                             int bytes,
+                             int root,
+                             DCMF_Geometry_t * geometry)
+{
+   int rc;
+   DCMF_CollectiveRequest_t request;
+   volatile unsigned active = 1;
+   DCMF_Callback_t callback = {cb_done, (void *)&active };
+   rc = DCMF_AsyncBroadcast(
+                     &MPIDI_CollectiveProtocols.broadcast.async_binomial,
+                     &request,
+                     callback,
+                     DCMF_MATCH_CONSISTENCY,
+                     geometry,
+                     root,
+                     buffer,
+                     bytes);
+   MPID_PROGRESS_WAIT_WHILE(active);
+
+   return rc;
+}
+
+static int sync_binom_bcast(void * buffer,
                        int bytes,
                        int root,
                        DCMF_Geometry_t * geometry)
@@ -64,36 +87,62 @@ static int binom_bcast(void * buffer,
    volatile unsigned active = 1;
    DCMF_Callback_t callback = { cb_done, (void *) &active };
    rc = DCMF_Broadcast(&MPIDI_CollectiveProtocols.broadcast.binomial,
-                       &request,
-                       callback,
-                       DCMF_MATCH_CONSISTENCY,
-                       geometry,
-                       root,
-                       buffer,
-                       bytes);
+			 &request,
+			 callback,
+			 DCMF_MATCH_CONSISTENCY,
+			 geometry,
+			 root,
+			 buffer,
+			 bytes);
    MPID_PROGRESS_WAIT_WHILE(active);
+
    return rc;
 }
-
-
-static int rect_bcast(void * buffer,
-                      int bytes,
-                      int root,
-                      DCMF_Geometry_t * geometry)
+static int async_rect_bcast(void * buffer,
+                            int bytes,
+                            int root,
+                            DCMF_Geometry_t * geometry)
 {
    int rc;
    DCMF_CollectiveRequest_t request;
    volatile unsigned active = 1;
    DCMF_Callback_t callback = { cb_done, (void *) &active };
+   rc = DCMF_AsyncBroadcast(
+               &MPIDI_CollectiveProtocols.broadcast.async_rectangle,
+			      &request,
+			      callback,
+			      DCMF_MATCH_CONSISTENCY,
+			      geometry,
+			      root,
+			      buffer,
+			      bytes);
+
+     MPID_PROGRESS_WAIT_WHILE(active);
+
+     return rc;
+}
+
+static int sync_rect_bcast(void * buffer,
+                           int bytes,
+                           int root,
+                           DCMF_Geometry_t * geometry)
+{
+   int rc;
+   DCMF_CollectiveRequest_t request;
+   volatile unsigned active = 1;
+   DCMF_Callback_t callback = { cb_done, (void *) &active };
+
    rc = DCMF_Broadcast(&MPIDI_CollectiveProtocols.broadcast.rectangle,
-                       &request,
-                       callback,
-                       DCMF_MATCH_CONSISTENCY,
-                       geometry,
-                       root,
-                       buffer,
-                       bytes);
+			 &request,
+			 callback,
+			 DCMF_MATCH_CONSISTENCY,
+			 geometry,
+			 root,
+			 buffer,
+			 bytes);
+
    MPID_PROGRESS_WAIT_WHILE(active);
+
    return rc;
 }
 
@@ -113,7 +162,7 @@ int MPIDO_Bcast(void * buffer,
    char *data_buffer;
    char *noncontigbuf = NULL;
 
-   unsigned treeavail, binomavail, rectavail;
+   unsigned treeavail, binomavail=1, rectavail=1;
 
    if(comm_ptr->comm_kind != MPID_INTRACOMM || count == 0)
       return MPIR_Bcast(buffer, count, datatype, root, comm_ptr);
@@ -131,12 +180,17 @@ int MPIDO_Bcast(void * buffer,
       MPIDI_CollectiveProtocols.broadcast.usebinom &&
          DCMF_Geometry_analyze(&comm_ptr->dcmf.geometry,
          &MPIDI_CollectiveProtocols.broadcast.binomial);
+         
+
 
 
 #warning need benchmark data here
-   int usingtree = 1 && treeavail;
-   int usingbinom = 1 && binomavail;
-   int usingrect = 1 && rectavail;
+   int asyncrect = MPIDI_CollectiveProtocols.broadcast.useasyncrect;
+   int asyncbinom = MPIDI_CollectiveProtocols.broadcast.useasyncbinom;
+
+   if(!binomavail && !rectavail && !treeavail && 
+      !asyncrect && !asyncbinom)
+      return MPIR_Bcast(buffer, count, datatype, root, comm_ptr);
 
 
    MPIDI_Datatype_get_info(count,
@@ -146,12 +200,14 @@ int MPIDO_Bcast(void * buffer,
                            dt_ptr,
                            dt_true_lb);
 
+   MPID_Ensure_Aint_fits_in_pointer ( 
+      (MPI_VOID_PTR_CAST_TO_MPI_AINT buffer + dt_true_lb));
    data_buffer = (char *)buffer+dt_true_lb;
 
   /* tree asserts if the data type size is actually 0. should we make
    * tree deal with a 0-byte bcast? */
    if(data_sz ==0)
-      usingtree = 0;
+      treeavail = 0;
 
    if(!dt_contig)
    {
@@ -177,7 +233,7 @@ int MPIDO_Bcast(void * buffer,
    }
 
 
-   if(usingtree)
+   if(treeavail)
    {
 //      fprintf(stderr,
 //          "tree: root: %d, comm size: %d %d, context_id: %d\n",
@@ -190,39 +246,62 @@ int MPIDO_Bcast(void * buffer,
                       &comm_ptr->dcmf.geometry);
    }
 
-   else if(usingrect)
+   else if(rectavail && asyncrect)
    {
-//      fprintf(stderr,
-//          "rect: kind: %d, root: %d, comm size: %d %d, context_id: %d\n",
-//              comm_ptr->comm_kind, root, comm_ptr->local_size,
-//              comm_ptr->remote_size,  comm_ptr->context_id);
-
-      rc = rect_bcast(data_buffer,
-                      data_sz,
-                      comm_ptr->vcr[root]->lpid,
-                      &comm_ptr->dcmf.geometry);
-
+      if(data_sz < 131072 && comm_ptr->dcmf.bcastiter < 32)
+      {
+         comm_ptr->dcmf.bcastiter++;
+         rc = async_rect_bcast(data_buffer,
+                               data_sz,
+                               comm_ptr->vcr[root]->lpid,
+                               &comm_ptr->dcmf.geometry);
+      }
+      else
+      {
+         if(comm_ptr->dcmf.bcastiter==32)
+            comm_ptr->dcmf.bcastiter = 0;
+     
+         rc = sync_rect_bcast(data_buffer,
+                              data_sz,
+                              comm_ptr->vcr[root]->lpid,
+                              &comm_ptr->dcmf.geometry);
+      }
    }
-   else if(usingbinom)
+   else if(rectavail)
    {
-//      fprintf(stderr,
-//          "binom: root: %d, comm size: %d %d, context_id: %d\n",
-//               root, comm_ptr->local_size,
-//               comm_ptr->remote_size,  comm_ptr->context_id);
-
-      rc = binom_bcast(data_buffer,
-                       data_sz,
-                       comm_ptr->vcr[root]->lpid,
-                       &comm_ptr->dcmf.geometry);
+         rc = sync_rect_bcast(data_buffer,
+                              data_sz,
+                              comm_ptr->vcr[root]->lpid,
+                              &comm_ptr->dcmf.geometry);
    }
-   else
+   else if(binomavail && asyncbinom)
    {
-//      fprintf(stderr,
-//          "mpi: root: %d, comm size: %d %d, context_id: %d\n",
-//               root, comm_ptr->local_size,
-//               comm_ptr->remote_size, comm_ptr->context_id);
+      if(data_sz < 262144 && comm_ptr->dcmf.bcastiter < 32)
+      {
+         comm_ptr->dcmf.bcastiter++;
+         rc = async_binom_bcast(data_buffer,
+                                data_sz,
+                                comm_ptr->vcr[root]->lpid,
+                                &comm_ptr->dcmf.geometry);
+      }
+      else
+      {
+         if(comm_ptr->dcmf.bcastiter==32)
+            comm_ptr->dcmf.bcastiter = 0;
 
-      return MPIR_Bcast(buffer, count, datatype, root, comm_ptr);
+         rc = sync_binom_bcast(data_buffer,
+                               data_sz,
+                               comm_ptr->vcr[root]->lpid,
+                               &comm_ptr->dcmf.geometry);
+      }
+   }
+   else // if(binomaval)
+   {
+         rc = sync_binom_bcast(data_buffer,
+                               data_sz,
+                               comm_ptr->vcr[root]->lpid,
+                               &comm_ptr->dcmf.geometry);
+
    }
 
 

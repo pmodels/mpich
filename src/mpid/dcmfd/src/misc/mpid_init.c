@@ -4,7 +4,6 @@
  * \brief Normal job startup code
  */
 #include "mpidimpl.h"
-#include "pmi.h"
 #include <limits.h>
 
 MPIDI_Protocol_t MPIDI_Protocols;
@@ -29,10 +28,11 @@ int MPID_Init(int * argc,
               int * has_args,
               int * has_env)
 {
-  int pg_rank, pg_size, i, rc;
+  int rank, size, i, rc;
   int tempthread;
   MPIDI_VC * vc_table = NULL;
   MPID_Comm * comm;
+  DCMF_Result dcmf_rc;
 
   /* ------------------------- */
   /* initialize the statistics */
@@ -57,25 +57,63 @@ int MPID_Init(int * argc,
   DCMF_Collective_initialize();
   DCMF_Hardware(&mpid_hw);
 
-  /* ---------------------------------- */
-  /* Register eager point-to-point send */
-  /* ---------------------------------- */
-  DCMF_Send_Configuration_t default_config =
+  if (MPIDI_Process.use_ssm)
     {
-      DCMF_DEFAULT_SEND_PROTOCOL,
-      (DCMF_RecvSendShort) MPIDI_BG2S_RecvShortCB,
-      NULL,
-      (DCMF_RecvSend)      MPIDI_BG2S_RecvCB,
-      NULL,
-    };
-  DCMF_Send_register (&MPIDI_Protocols.send, &default_config);
+      DCMF_Put_Configuration_t ssm_put_config = { DCMF_DEFAULT_PUT_PROTOCOL };
+      DCMF_Put_register (&MPIDI_Protocols.ssm_put, &ssm_put_config);
+      DCMF_Send_Configuration_t ssm_msg_config =
+        {
+          DCMF_DEFAULT_SEND_PROTOCOL,
+          NULL,
+          NULL,
+          NULL,
+          NULL,
+        };
+      ssm_msg_config.cb_recv_short = (DCMF_RecvSendShort) MPIDI_BG2S_SsmCtsCB;
+      DCMF_Send_register (&MPIDI_Protocols.ssm_cts, &ssm_msg_config);
+      ssm_msg_config.cb_recv_short = (DCMF_RecvSendShort) MPIDI_BG2S_SsmAckCB;
+      DCMF_Send_register (&MPIDI_Protocols.ssm_ack, &ssm_msg_config);
+    }
+  else
+    {
+      /* ---------------------------------- */
+      /* Register eager point-to-point send */
+      /* ---------------------------------- */
+      DCMF_Send_Configuration_t default_config =
+	{
+	  DCMF_DEFAULT_SEND_PROTOCOL,
+	  (DCMF_RecvSendShort) MPIDI_BG2S_RecvShortCB,
+	  NULL,
+	  (DCMF_RecvSend)      MPIDI_BG2S_RecvCB,
+	  NULL,
+	};
+      DCMF_Send_register (&MPIDI_Protocols.send, &default_config);
 
-  /* ---------------------------------- */
-  /* Register rzv point-to-point rts    */
-  /* ---------------------------------- */
-  default_config.cb_recv_short = (DCMF_RecvSendShort) MPIDI_BG2S_RecvRzvCB;
-  default_config.cb_recv       = (DCMF_RecvSend)      NULL;
-  DCMF_Send_register (&MPIDI_Protocols.rzv, &default_config);
+      /* ---------------------------------- */
+      /* Register msg layer point-to-point send */
+      /* ---------------------------------- */
+      DCMF_Send_Configuration_t rzv_config =
+	{
+	  DCMF_RZV_SEND_PROTOCOL,
+	  (DCMF_RecvSendShort) MPIDI_BG2S_RecvShortCB,
+	  NULL,
+	  (DCMF_RecvSend)      MPIDI_BG2S_RecvCB,
+	  NULL,
+	};
+      dcmf_rc = DCMF_Send_register (&MPIDI_Protocols.mrzv, &rzv_config);
+      /* If msg layer send failed to register (likely unimplemented),
+       * set the limit to zero so it won't be used.
+       */
+      if ( dcmf_rc != DCMF_SUCCESS )
+	MPIDI_Process.optrzv_limit = 0;
+
+      /* ---------------------------------- */
+      /* Register rzv point-to-point rts    */
+      /* ---------------------------------- */
+      default_config.cb_recv_short = (DCMF_RecvSendShort) MPIDI_BG2S_RecvRzvCB;
+      default_config.cb_recv       = (DCMF_RecvSend)      NULL;
+      DCMF_Send_register (&MPIDI_Protocols.rzv, &default_config);
+    }
 
   /* --------------------------- */
   /* Register point-to-point get */
@@ -110,17 +148,17 @@ int MPID_Init(int * argc,
   /* ---------------------------------------- */
   /*  Get my rank and the process size        */
   /* ---------------------------------------- */
-  pg_rank = DCMF_Messager_rank();
-  pg_size = DCMF_Messager_size();
+  rank = DCMF_Messager_rank();
+  size = DCMF_Messager_size();
 
   /* ------------------------------------ */
   /*  Initialize Virtual Connection table */
   /* ------------------------------------ */
 
-  vc_table = MPIU_Malloc(sizeof(MPIDI_VC) * pg_size); /* !!! */
+  vc_table = MPIU_Malloc(sizeof(MPIDI_VC) * size); /* !!! */
   MPID_assert(vc_table != NULL);
 
-  for (i = 0; i < pg_size; i++)
+  for (i = 0; i < size; i++)
     {
       vc_table[i].ref_count = 0;
       vc_table[i].lpid = i;
@@ -132,13 +170,13 @@ int MPID_Init(int * argc,
   /* -------------------------------- */
 
   comm = MPIR_Process.comm_world;
-  comm->rank = pg_rank;
-  comm->remote_size = comm->local_size = pg_size;
+  comm->rank = rank;
+  comm->remote_size = comm->local_size = size;
   rc = MPID_VCRT_Create(comm->remote_size, &comm->vcrt);
   MPID_assert(rc == MPI_SUCCESS);
   rc = MPID_VCRT_Get_ptr(comm->vcrt, &comm->vcr);
   MPID_assert(rc == MPI_SUCCESS);
-  for (i=0; i<pg_size; i++)
+  for (i=0; i<size; i++)
     {
       vc_table[i].ref_count++;
       comm->vcr[i] = &vc_table[i];
@@ -165,8 +203,8 @@ int MPID_Init(int * argc,
   MPID_assert(rc == MPI_SUCCESS);
   rc = MPID_VCRT_Get_ptr(comm->vcrt, &comm->vcr);
   MPID_assert(rc == MPI_SUCCESS);
-  vc_table[pg_rank].ref_count++;
-  comm->vcr[0] = &vc_table[pg_rank];
+  vc_table[rank].ref_count++;
+  comm->vcr[0] = &vc_table[rank];
 
   /* ------------------------------- */
   /* Initialize timer data           */
@@ -175,7 +213,7 @@ int MPID_Init(int * argc,
 
   /* ------------------------------- */
   *has_args = TRUE;
-  *has_env = TRUE;
+  *has_env  = TRUE;
 
 
   {
@@ -202,7 +240,19 @@ int MPID_Init(int * argc,
 }
 
 
+/*
+ * \brief This is called by MPI to let us know that MPI_Init is done.
+ * We don't care.
+ */
 int MPID_InitCompleted(void)
 {
   return MPI_SUCCESS;
+}
+
+
+int SSM_ABORT()
+{
+  fprintf(stderr, "Sender-side-matching is not yet supported\n");
+  exit(1);
+  return 1;
 }

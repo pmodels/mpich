@@ -123,7 +123,6 @@ int MPIDI_Dims_create_work( int nnodes, int ndims, int *dims )
     int notdone = 1;
     MPIDI_PhysicalCart *phy_cart;
     MPIDI_VirtualCart  *vir_cart;
-    int periods[4] = {0,0,0,0};
     MPID_Comm *comm_ptr = MPIR_Process.comm_world;
     int set_cnt, node_cnt, empty_dim, i;
 

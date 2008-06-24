@@ -7,7 +7,7 @@
 #include "mpidimpl.h"
 
 #ifdef USE_STATISTICS
-#warning Statistic are ON
+#warning Statistics are ON
 
 MPIDI_Statistics_t MPIDI_Statistics;
 

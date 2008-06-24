@@ -88,6 +88,11 @@ MPIDO_Alltoallw(void *sendbuf,
       MPIDI_Datatype_get_info(1, recvtypes[i], rcv_contig, trcvlen[i],
                            dt_null, rdt_true_lb);
 
+      MPID_Ensure_Aint_fits_in_pointer(
+         MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf + sdt_true_lb);
+      MPID_Ensure_Aint_fits_in_pointer( 
+         MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf + rdt_true_lb);
+
 
       if(!comm_ptr->dcmf.alltoalls ||
          !snd_contig ||

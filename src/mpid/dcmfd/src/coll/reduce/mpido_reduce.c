@@ -183,7 +183,7 @@ int MPIDO_Reduce(void * sendbuf,
    unsigned treeavail, rectavail, binomavail, rectringavail;
 
    MPID_Datatype *dt_ptr;
-   MPI_Aint dt_true_lb;
+   MPI_Aint dt_true_lb=0;
 
    DCMF_Dt dcmf_dt = DCMF_UNDEFINED_DT;
    DCMF_Op dcmf_op = DCMF_UNDEFINED_OP;
@@ -237,6 +237,8 @@ int MPIDO_Reduce(void * sendbuf,
                 DCMF_Geometry_analyze(&comm_ptr->dcmf.geometry,
                      &MPIDI_CollectiveProtocols.reduce.binomial);
 
+   if(sendbuf == MPI_IN_PLACE)
+      binomavail = 0; /* temporary bug workaround */
 
 
    MPIDI_Datatype_get_info(count,
@@ -265,11 +267,17 @@ int MPIDO_Reduce(void * sendbuf,
     * until then just pick rectangle then binomial based on availability*/
    unsigned usingbinom=1 && binomavail;
    unsigned usingrect=1 && rectavail;
-   unsigned usingrectring=1 && rectringavail;
+   unsigned usingrectring=(rectringavail && count > 16384);
 
+   MPID_Ensure_Aint_fits_in_pointer( MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf + 
+                                    dt_true_lb);
+   recvbuf = (char *)recvbuf + dt_true_lb;
 
    if(sendbuf != MPI_IN_PLACE)
    {
+      MPID_Ensure_Aint_fits_in_pointer (MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+                                        dt_true_lb);
+      sendbuf = (char *)sendbuf + dt_true_lb;
      //      int err =
      //         MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
      //      if (err) return err;
@@ -277,7 +285,19 @@ int MPIDO_Reduce(void * sendbuf,
    else
      sendbuf = recvbuf;
 
-   if(usingrect)
+   if(usingrectring)
+   {
+//      fprintf(stderr,"rectring reduce count: %d, dt: %d, op: %d, send: 0x%x, recv: 0x%x\n", count, dcmf_dt, dcmf_op, sendbuf, recvbuf);
+      rc = rectring_reduce(sendbuf,
+                       recvbuf,
+                       count,
+                       dcmf_dt,
+                       dcmf_op,
+                       comm_ptr->vcr[root]->lpid,
+                       &comm_ptr->dcmf.geometry);
+   }
+
+   else if(usingrect)
    {
 //      fprintf(stderr,"rect reduce count: %d, dt: %d, op: %d, send: 0x%x, recv: 0x%x\n", count, dcmf_dt, dcmf_op, sendbuf, recvbuf);
       rc = rect_reduce(sendbuf,
@@ -298,17 +318,6 @@ int MPIDO_Reduce(void * sendbuf,
                         dcmf_op,
                         comm_ptr->vcr[root]->lpid,
                         &comm_ptr->dcmf.geometry);
-   }
-   else if(usingrectring)
-   {
-//      fprintf(stderr,"rectring reduce count: %d, dt: %d, op: %d, send: 0x%x, recv: 0x%x\n", count, dcmf_dt, dcmf_op, sendbuf, recvbuf);
-      rc = rectring_reduce(sendbuf,
-                       recvbuf,
-                       count,
-                       dcmf_dt,
-                       dcmf_op,
-                       comm_ptr->vcr[root]->lpid,
-                       &comm_ptr->dcmf.geometry);
    }
 
    return rc;

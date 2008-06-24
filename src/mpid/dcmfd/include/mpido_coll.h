@@ -15,6 +15,7 @@ typedef struct {
   int send_contig;
   int recv_contig;
   int recv_continuous;
+  int largecount;
 } MPIDO_Coll_config;
 
 /* Helpers */
@@ -25,6 +26,7 @@ int MPIDI_ConvertMPItoDCMF(MPI_Op op,
                            MPI_Datatype datatype,
                            DCMF_Dt *dcmf_dt);
 
+int MPIDI_IsTreeOp(MPI_Op op, MPI_Datatype datatype);
 
 /* Alltoall */
 int MPIDO_Alltoall(void *sendbuf,
@@ -67,6 +69,13 @@ int MPIDO_Bcast(void * buffer,
                 MPI_Datatype datatype,
                 int root,
                 MPID_Comm * comm_ptr);
+
+int MPIDO_AsyncBcast(void * buffer,
+                int count,
+                MPI_Datatype datatype,
+                int root,
+                MPID_Comm * comm_ptr,
+                int num_outstanding);
 
 /* allreduce */
 int MPIDO_Allreduce(void * sendbuf,

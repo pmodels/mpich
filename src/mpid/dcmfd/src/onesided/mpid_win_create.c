@@ -40,6 +40,18 @@ static void mpid_send_init(void) {
 }
 
 /**
+ * \brief One-time initialization of puts
+ *
+ * \return nothing
+ */
+static void mpid_put_init(void) {
+        DCMF_Put_Configuration_t put_cfg =
+                { DCMF_DEFAULT_PUT_PROTOCOL };
+
+        DCMF_Put_register(&bg1s_pt_proto, &put_cfg);
+}
+
+/**
  * \brief One-time initialization of gets
  *
  * \return nothing
@@ -83,6 +95,7 @@ static void mpid_init(void) {
         mpid_send_init();
         mpid_ctl_init();
         mpid_get_init();
+        mpid_put_init();
         /*
          * need typemap { (int,12), (int,28), ... }
          *
@@ -91,9 +104,10 @@ static void mpid_init(void) {
          *	[2] => &(*win_ptr)->coll_info[2].rma_sends,
          *	...
          */
-        MPI_Type_contiguous(4, MPI_INT, &Coll_info_rma_dt);
-        MPI_Type_commit(&Coll_info_rma_dt);
-        MPI_Op_create(sum_coll_info, 0, &Coll_info_rma_op);
+        PMPI_Type_contiguous(sizeof(struct MPID_Win_coll_info) / sizeof(int),
+				MPI_INT, &Coll_info_rma_dt);
+        PMPI_Type_commit(&Coll_info_rma_dt);
+        PMPI_Op_create(sum_coll_info, 0, &Coll_info_rma_op);
 }
 
 /// \cond NOT_REAL_CODE
@@ -178,10 +192,18 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit,
                 comm_size * sizeof(struct MPID_Win_coll_info),
                 mpi_errno, "win->_dev.coll_info");
         /* FIXME: This needs to be fixed for heterogeneous systems */
-        win->_dev.coll_info[rank].base_addr = base;
-        win->_dev.coll_info[rank].disp_unit = (MPI_Aint) disp_unit;
-        win->_dev.coll_info[rank].win_handle = (MPI_Aint) win->handle;
+        win->_dev.coll_info[rank].disp_unit = disp_unit;
+        win->_dev.coll_info[rank].win_handle = win->handle;
         win->_dev.coll_info[rank].rma_sends = 0; /* Allgather zeros these */
+	// DCMF_assert_debug(sizeof(DCMF_Memregion_t) == sizeof(void *));
+	size_t mem_cfg_bytes = size;
+	void * mem_cfg_base = base;
+	DCMF_Result err = DCMF_Memregion_create(
+			&win->_dev.coll_info[rank].mem_region,
+			&mem_cfg_bytes, mem_cfg_bytes, mem_cfg_base, 0);
+        if (err) { MPIU_ERR_POP(err); }
+	// 'base_addr' is now an offset for the buf in memregion
+	win->_dev.coll_info[rank].base_addr = (char *)((char *)base - (char *)mem_cfg_base);
 
         mpi_errno = NMPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                         win->_dev.coll_info,
@@ -237,6 +259,9 @@ int MPID_Win_free(MPID_Win **win_ptr)
          * previous while loop  and barrier will not exit until all waiters have
          * been granted the lock.
          */
+        int rank = win->_dev.comm_ptr->rank;
+	(void) DCMF_Memregion_destroy(
+			&win->_dev.coll_info[rank].mem_region);
         NMPI_Comm_free(&win->comm);
         MPIDU_FREE(win->_dev.coll_info, mpi_errno, "win->_dev.coll_info");
         mpidu_free_lock(win);

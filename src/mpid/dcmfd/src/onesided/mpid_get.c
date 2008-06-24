@@ -115,6 +115,9 @@ int MPID_Get(void *origin_addr, int origin_count,
                 int i, j, get_len;
 		int *refp = NULL;
                 char *b, *s, *t, *buf;
+		DCMF_Memregion_t *bufmr;
+		size_t mrcfg_bytes;
+		void * mrcfg_base;
                 int lpid;
                 DCQuad xtra = {0};
 
@@ -129,9 +132,15 @@ int MPID_Get(void *origin_addr, int origin_count,
                 if (dt_contig) {
                         buf = origin_addr;
                         cb_send.function = done_rqc_cb;
+			bufmr = &win_ptr->_dev.coll_info[rank].mem_region;
+			s = (char *)((char *)origin_addr -
+				(char *)win_ptr->base +
+				win_ptr->_dev.coll_info[rank].base_addr);
                 } else {
 			struct mpid_get_cb_data *get;
-                        MPIDU_MALLOC(buf, char, get_len + sizeof(struct mpid_get_cb_data), mpi_errno, "MPID_Get");
+                        MPIDU_MALLOC(buf, char, get_len +
+				sizeof(struct mpid_get_cb_data),
+				mpi_errno, "MPID_Get");
                         if (buf == NULL) {
                                 MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,
                                         "Unable to allocate non-"
@@ -140,6 +149,12 @@ int MPID_Get(void *origin_addr, int origin_count,
 			MPID_Datatype_add_ref(dtp);
 			get = (struct mpid_get_cb_data *)buf;
 			buf += sizeof(struct mpid_get_cb_data);
+			mrcfg_base = buf;
+			mrcfg_bytes = get_len;
+			(void)DCMF_Memregion_create(&get->memreg, &mrcfg_bytes, mrcfg_bytes, mrcfg_base, 0);
+			// check errors?
+			bufmr = &get->memreg;
+			s = (char *)(buf - (unsigned)mrcfg_base);
 			get->ref = 0;
 			refp = &get->ref;
 			get->dtp = dtp;
@@ -152,16 +167,19 @@ int MPID_Get(void *origin_addr, int origin_count,
                         cb_send.function = done_getfree_rqc_cb;
                 }
                 if (t_dt_contig) {
-                        t = win_ptr->_dev.coll_info[target_rank].base_addr +
-                                win_ptr->_dev.coll_info[target_rank].disp_unit * target_disp;
                         reqp = MPIDU_get_req(&xtra, NULL);
                         cb_send.clientdata = reqp;
                         ++win_ptr->_dev.my_get_pends;
 			if (refp) ++(*refp);
+                        t = win_ptr->_dev.coll_info[target_rank].base_addr +
+                                win_ptr->_dev.coll_info[target_rank].disp_unit * target_disp;
                         mpi_errno = DCMF_Get(&bg1s_gt_proto, reqp,
                                 cb_send, win_ptr->_dev.my_cstcy, lpid,
                                 t_data_sz,
-                                buf, t);
+				&win_ptr->_dev.coll_info[target_rank].mem_region,
+				bufmr,
+				(size_t)t,
+				(size_t)s);
                         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
                 } else {
                         /* force map to get built but don't assume
@@ -171,7 +189,7 @@ int MPID_Get(void *origin_addr, int origin_count,
                         b = win_ptr->_dev.coll_info[target_rank].base_addr +
                                 win_ptr->_dev.coll_info[target_rank].disp_unit *
                                 target_disp;
-                        s = buf;
+			// 's' already set
 			if (refp) *refp = target_count * dti.map_len;
                         for (j = 0; j < target_count; ++j) {
                                 for (i = 0; i < dti.map_len; i++) {
@@ -184,7 +202,11 @@ int MPID_Get(void *origin_addr, int origin_count,
                                         mpi_errno = DCMF_Get(&bg1s_gt_proto,
                                                 reqp, cb_send,
                                                 win_ptr->_dev.my_cstcy, lpid,
-                                                dti.map[i].len, s, t);
+                                                dti.map[i].len,
+						&win_ptr->_dev.coll_info[target_rank].mem_region,
+						bufmr,
+						(size_t)t, 
+						(size_t)s);
                                         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
                                         s += dti.map[i].len;
                                 }
