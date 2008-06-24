@@ -10,6 +10,10 @@ understands, followed by a more detailed description of these commands.
 Next is a brief description of the command line options to simplemake.
 Finally, a comparision with Automake and a rationale for simplemake.
 
+Simplemake also has basic extensibility feature, allowing new actions to be
+defined without modifying the simplemake script itself.  See "Extending 
+Simplemake" below.
+
 This documentation is incomplete.  This is a placeholder for items as
 they are added.
 
@@ -82,7 +86,8 @@ lib<name>_so_DIR     = directory in which lib<name> will exist, for these
 lib<name>_a_NOSHARED = This library should not be built as a shared library,
                        even if shared libraries are desired
 lib<name>_a_LIBADD   = Additional library objects to include in the named library
-
+lib<name>_la_LIBADD  = Additional library object to include in the named shared 
+                       library.
 <name>_SOURCES      = source file names for program <name>
 <name>_LDADD        = additional files and flags used for 
                       linking program <name>.  Libraries are added to
@@ -225,6 +230,35 @@ Special Directory Names
 topsrc_dir - directory containing the configure responsible for this Makefile
 master_topsrc_dir - directory containing the master (top level) configure.
 
+Extending Simplemake
+--------------------
+Simplemake may be extending by adding an "Action" to the array @KnownActions.
+Simplemake will look for lines in the Makefile.sm of the form
+
+<text>_<ACTIONNAME> = <value> 
+
+For example, the LIBADD action is implemented in this way, allowing Makefile.sm
+to include 
+
+libname_LIBADD = librarynames
+
+At various points, simplemake will call functions that are of the form
+
+<operation><actionname>( args )
+
+For example, 
+
+ClearLIBADD
+
+is called before a new Makefile.sm is read as part of the step that clears 
+variables.
+
+Other actions are detailed in the simplemake code.
+
+Currently, this feature is under development.  More operations are needed; if
+you need something, please ask for it.
+
+
 Differences with Automake
 -------------------------
 1.  Targets may use make variables.  For example,
@@ -252,6 +286,9 @@ the path to the directory to be computed relative to the Makefile.sm location.
 
 6. Directories in SUBDIRS don't have to have Makefile.sm files.  This allows
 you to include a package that has a separate build structure.
+
+7. Simplemake has an extensibility mechanism, allowing customization of the
+Makefile.sm language.
 
 Suggestions and Plans for Future Versions
 -----------------------------------------

@@ -8,6 +8,7 @@ $abs_mpich2srcdir = "@abs_mpich2srcdir@";
 #
 # Set some defaults
 $includedir = ".";
+$skipAction = 0;
 $makefilebase = "Makefile.base";
 $ranliblib    = 1;
 $useinclude = 0;     # set to 1 to make the Makefiles refer to a single
@@ -452,6 +453,25 @@ $distcleanfiles = "";
                          # simplemake dirs
 
 # ---------------------------------------------------------------------------
+# Global variables that describe extensions
+#   Each extension has a name, related to the command-field in the
+#   Makefile.sm, and must be added to this array
+@KnownActions = ();
+# Load any extension definitions, in this order
+&SMReadDefnFiles( "maint/smlib" );
+# If we're not in the root of the source directory, then 
+# also read that directory.  We can use stat to check the inode numbers of the
+# directories; if they are the same, the directories are the same.
+@d1 = stat( "maint/smlib" );
+@d2 = stat( "$abs_mpich2srcdir/maint/smlib" );
+if ($d1[1] != $d2[1]) {
+    &SMReadDefnFiles( "$abs_mpich2srcdir/maint/smlib" );
+}
+if (defined($ENV{"SMDIR"})) {
+    &SMReadDefnFiles( $ENV{"SMDIR"} );
+}
+&SMReadDefnFiles( "." );
+# ---------------------------------------------------------------------------
 @keepargs = ();    # Used to recreate simplemake invocation for make target
 $foundFile = "no";
 foreach $_ (@ARGV) {
@@ -649,6 +669,35 @@ sub ReadMfile {
 	    print STDERR "File $curdir$Mfile contains a comment line beginning with a tab\nat line $linecount.  Some make programs will fail if this comment is part\nof a command script in a target\n";
 	}
 
+	# Look for commands that are defined by extensions.  These are
+	# of the form
+	#    name_COMMAND
+	# where COMMAND is all uppercase.  "name" may itself be of the form
+        #    name_subcommand
+        # an example is
+        #   libfoo_la_SOURCES
+        # where the command is SOURCES and the subcommand is la
+	# We allow the names to include make variables and autoconf 
+	# variables
+	if (/^([@\${}\(\)\w-]+)_([A-Z]+)\s*=(.*)/) {
+	    my $name    = $1;
+	    my $command = $2;
+	    my $value   = $3;
+	    # See if this is a known extension command
+	    my $fcnName = "Action" . $command;
+	    if (defined(&$fcnName)) {
+		# This is an extension.  Invoke its function
+		print "Executing $fcnName for $_\n" if $debug;
+		$skipAction = 0;
+		&$fcnName( $_ );
+		$origline = "";
+		# skip the processing of this line for the default commands
+		if (!defined($skipAction) || $skipAction == 1) {
+		    next;
+		}
+	    }
+	}
+
         # Look for reserved forms:
         #lib([\w-]*)_SOURCES = names
         #lib([\w-]*)_DIR = name
@@ -662,7 +711,7 @@ sub ReadMfile {
 	#.SUFFIXES:value
 	# Using the _a_ in the library lines is necessary to distinguish
 	# between libraries and programs that start with lib...
-        if (/^lib([@\${}\(\)\w-]*)_a_SOURCES\s*=\s*(.*)$/) {
+        if (/^lib([@\${}\(\)\w-]+)_a_SOURCES\s*=\s*(.*)$/) {
             $libname   = $1;
             $libsource = $2;
             $libraries{ $libname } = $libsource;
@@ -696,7 +745,7 @@ sub ReadMfile {
 	# In some cases, there is a library that should only be built as
 	# a non-shared library (e.g., built with Fortran)
         elsif (/^lib([@\${}\(\)\w-]*)_a_NOSHARED\s*$/) {
-	    print "Adding $1 as not-shared\n";
+	    print "Adding $1 as not-shared\n" if $debug;
 	    $libNotShared{$1} = 1;
 	}
 	# Using the _so_ in the library lines is necessary to distinguish
@@ -739,7 +788,7 @@ sub ReadMfile {
 	    # to modify a library in a different directory
 	    # Add a trailing / because this way we can unconditionally
 	    # specify the library directory
-	    print "Setting libdir{$1} to $2/\n";
+	    print "Setting libdir{$1} to $2/\n" if $debug;
             $libdir{$1}  = "$2/";
         }
 	elsif (/^install_local_DIR\s*=\s*(.*)\s*$/) {
@@ -963,18 +1012,6 @@ sub ReadMfile {
 	elsif (/^DEPADD\s*=\s*(.*)\s*$/) {
 	    $depadd_all = $1;
 	}
-        elsif (/^lib([@\${}\(\)\w-]*)_a_LIBADD\s*=\s*(.*)\s*$/) {
-	    # This mimics the automake LIBADD target - objects in the 
-	    # named libraries will be added to the target library
-	    # in the library build target
-	    $lib_addobjects{$1} = $2;
-	}
-        elsif (/^lib([@\${}\(\)\w-]*)_la_LIBADD\s*=\s*(.*)\s*$/) {
-	    # This mimics the automake LIBADD target - objects in the 
-	    # named libraries will be added to the target library
-	    # in the library build target
-	    $libla_addobjects{$1} = $2;
-	}
 	elsif (/^([\w-]+)\s*=\s*(.*)\s*$/) {
 	    $other_vars .= "$origline";
 	    # Save all variable names
@@ -1057,7 +1094,8 @@ sub WriteMfile {
 
         &DefaultRules;
     }
-    
+
+    &SMInvokeAction( "OutputHeader" );
 
     # Generate the all-redirect: target (libraries, programs, and 
     # anything specified by all-local)
@@ -1072,7 +1110,7 @@ sub WriteMfile {
 	    &CreateOptInstallSHLibs( 'SHLIB' );
 	}
 	if (defined($optinstall_files{'DLLLIB'})) {
-	    print STDOUT "DLLLIB target in $curdir\n";
+	    print STDOUT "DLLLIB target in $curdir\n" if $debug;
 	    &CreateOptInstallSHLibs( 'DLLLIB' );
 	}
     }
@@ -1801,8 +1839,6 @@ sub ClearVars {
     %programs = ();
     %pgm_ldadd = ();
     $ldadd_all = "";
-    %lib_addobjects = ();
-    %libla_addobjects = ();
     %pgm_depadd = ();
     $depadd_all = "";
 
@@ -1849,6 +1885,10 @@ sub ClearVars {
     # every file.
     #$configure_has_config_headers = "no";
     %simplemake_vars = ();
+
+    # For any extensions, clear their global variables.
+    &SMInvokeAction( "Clear" );
+
 }	
 
 #
@@ -2383,7 +2423,7 @@ sub TargetAll {
 	    print FD "\tfi\n";
 	}
 	if (defined($optinstall_files{'DLLLIB'})) {
-	    print STDOUT "in optinstall_files dlllib\n";
+	    #print STDOUT "in optinstall_files dlllib\n";
 	    # Conditionally create the dynamically loadable shared libraries.
 	    print FD "\t\@if [ \"\@BUILD_DLLS\@\" = \"yes\" ] ; then \\\n";
 	    foreach $libspec (split(/\s+/,$optinstall_files{'DLLLIB'})) {
@@ -2639,6 +2679,9 @@ sub TargetClean {
 	}
     }
 
+    # For any extensions, handle the clean actions
+    &SMInvokeAction( "OutputClean", FD );
+
     # Finally, execute make clean in any subdirs
     &RecursiveOp( "clean" );
 
@@ -2695,6 +2738,10 @@ sub TargetClean {
 	    print FD "\t-${quietLine}rm -f $otherfiles$newline";
 	}
     }
+    
+    # For any extensions, handle the clean actions
+    &SMInvokeAction( "OutputDistClean", FD );
+
     # Another difficulty are the optional directories.  For example,
     # a SUBDIRS = foo \@bar\@ 
     # line (without the \, included since the simplemake.in file is
@@ -2720,6 +2767,10 @@ sub TargetClean {
 	}
 	print FD " distclean-xxx remove-genmakefiles";
 	print FD "$newline";
+
+	# For any extensions, handle the clean actions
+	&SMInvokeAction( "OutputMaintainerClean", FD );
+
 	&RecursiveOp( "maintainer-clean" );
 	# Remove the file that simplemake creates
 	$otherMakefiles .= " $output_name";
@@ -2837,6 +2888,7 @@ sub LibraryBuild {
 	    }
 	}
     }
+    &SMInvokeAction( "OutputLibDependencies", $lib, $libloc, $memext );
     if (!$dolib_member) {
         &print_make_endline( FD );
 	print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
@@ -2857,9 +2909,8 @@ sub TargetLibraries {
 
 	&LibraryTimestampPrefix( $lib, $libloc );
 	&LibraryBuild( $lib, $libloc, $sourcefiles, "a", "o" );
-	if (defined($lib_addobjects{$lib})) {
-	    &LibraryAddObjects( $lib, $libloc );
-	}
+	# Add any additional actions for this library.
+	&SMInvokeAction( "OutputLib", $lib, $libloc );
         if ($ranliblib) { 
 	    print FD "\t\${RANLIB} ${libloc}lib$lib.a$newline"; 
 	}
@@ -2868,38 +2919,6 @@ sub TargetLibraries {
     }
 }
 
-# Add objects from a given library.  This version just handles standard
-# libraries (.a), not libtool libraries (.la).
-sub LibraryAddObjects {
-    my ($lib, $libloc) = @_;
-
-    print FD "\tmkdir .libtmp$newline";
-    print FD "\trm -f .libtmp/*$newline";
-    foreach $objlib (split(/\s+/,$lib_addobjects{$lib})) {
-	# If the added library is not an absolute path and is local,
-	# add ../
-	if ($objlib =~ /^lib/) { $objlib = "../$objlib"; }
-	print FD "\t(cd .libtmp \&\& \${AR} x $objlib)$newline";
-    }
-    print FD "\t\${AR} cru lib${lib}.a .libtmp/*$newline";
-    print FD "\trm -rf .libtmp$newline";
-}
-
-# This is a stub for supporting libtool archives
-sub LibraryLAAddObjects {
-    my ($lib, $libloc) = @_;
-
-    print FD "\tmkdir .libtmp$newline";
-    print FD "\trm -f .libtmp/*$newline";
-    foreach $objlib (split(/\s+/,$libla_addobjects{$lib})) {
-	# If the added library is not an absolute path and is local,
-	# add ../
-	if ($objlib =~ /^lib/) { $objlib = "../$objlib"; }
-	print FD "\t(cd .libtmp \&\& \${LIBTOOL} \${AR} x $objlib)$newline";
-    }
-    print FD "\t\${LIBTOOL} \${AR} cru lib${lib}.a .libtmp/*$newline";
-    print FD "\trm -rf .libtmp$newline";
-}
 #
 # Fix for problems with timestamps.  If the file is not local (not
 # obviously in the current directory), then apply one of the fixes
@@ -3158,7 +3177,7 @@ sub TargetSharedLibraries {
     my $libraries = $_[0];
 
     foreach $lib (keys(%$libraries)) {
-	# Skip the libraries that have no shared counter part
+	# Skip the libraries that have no shared counterpart
 	if (defined($libNotShared{$lib})) { 
 	    #print "Skipping $lib\n"; 
 	    next; 
@@ -3169,6 +3188,7 @@ sub TargetSharedLibraries {
 	&LibraryBuild( $lib, $libloc, $sourcefiles, "la", "lo" );
 	# no ranlib step here because we can't "link" the shared library
 	# until all members are added.
+	&SMInvokeAction( "OutputShLib", $lib, $libloc );
 	&LibraryTimestampFix( $lib.".la", $libloc )
     }
 }
@@ -3955,10 +3975,12 @@ sub TargetInstall {
 	    $destfile = $file;
 	    $destfile =~ s/.*\///;
             if (defined($uninstall_methods{$kind})) {
-                # This branch subtly different from the else branch below because it also passes the
-                # $file as the first argument.  Strictly speaking, this is not compatible with using
-                # libtool directly, so if we ever replace createshlib then we should rework this
-                # uninstall target just a bit. [goodell@mcs 2007-11-28]
+                # This branch is subtly different from the else branch below 
+		# because it also passes the $file as the first argument.  
+		# Strictly speaking, this is not compatible with using
+                # libtool directly, so if we ever replace createshlib then 
+		# we should rework this uninstall target 
+		# just a bit. [goodell@mcs 2007-11-28]
                 print FD "\t-$uninstall_methods{$kind} $file \${DESTDIR}\${$dir}/$destfile$newline";
             }
             else {
@@ -3972,10 +3994,12 @@ sub TargetInstall {
 	    $destfile = $file;
 	    $destfile =~ s/.*\///;
             if (defined($uninstall_methods{$kind})) {
-                # This branch subtly different from the else branch below because it also passes the
-                # $file as the first argument.  Strictly speaking, this is not compatible with using
-                # libtool directly, so if we ever replace createshlib then we should rework this
-                # uninstall target just a bit. [goodell@mcs 2007-11-28]
+                # This branch is subtly different from the else branch below 
+		# because it also passes the $file as the first argument.  
+		# Strictly speaking, this is not compatible with using
+                # libtool directly, so if we ever replace createshlib then 
+		# we should rework this uninstall target just a 
+		# bit. [goodell@mcs 2007-11-28]
                 print FD "\t-$uninstall_methods{$kind} $file \${DESTDIR}\${$dir}/$destfile$newline";
             }
             else {
@@ -4879,6 +4903,60 @@ sub CreateOptInstallSHLibs {
 		print "Building sharedlib library $baselibname (from $libname) in $libdir as part of optinstall\n" if $gDebugWhy;
 		&TargetSharedLibraryFinal( $libsrc, $libname, $libdir );
 	    }
+	}
+    }
+}
+
+# ---------------------------------------------------------------------------
+# These routines support the handling of extensions to simplemake.
+# There are several kinds of extensions.
+# One of the simplest is for new commands.  In this case, extensions are added 
+# by defining an "action"; this is associated with
+#  "Command"
+# Such an extension is placed into a file with extension .smlib;
+# it must add the action to known commands and 
+# provide the function
+#    Action<commandname>
+# In addition, the following may be defined:
+#    Clear<commandname>           - Called to clear variables between reading 
+#                                   Makefile.sm
+#    Output<commandname>          - Call to add output to the generated file
+#    OutputHeader<commandname>    - Call to add output to the header in the
+#                                   generated file
+#    OutputLib<commandname>       - Call to add output for a particular library
+#    OutputLibDependencies<commandname> - Add dependencies to the make 
+#                                   target for the specified library
+#    OutputClean<commandname>     - Call to add output for the clean target
+#    OutputDistClean<commandname> - Call to add output for the distclean target
+#    OutputMaintainerClean<commandname> - Call to add output for the 
+#                                   maintainerclean target
+#    
+# These routines may also update variables used by simplemake.  
+# 
+# SMReadDefnFiles( directory ) - include all files with extension .smlib
+# from the specified directory.
+sub SMReadDefnFiles {
+    my $dir = $_[0];
+    my $DIR = "SMDIR";
+
+    opendir ($DIR, "$dir" ) or return;
+    while ($file = readdir($DIR)) {
+	if ($file =~ /\.smlib$/) {
+	    require "$dir/$file";
+	}
+    }
+    closedir( $DIR );
+}
+# Invoke a function, defined as <name><module>, for all known functions, 
+# The argument is the name of the action.  All of the argument are passed
+# to the function (including the first, its own name)
+sub SMInvokeAction {
+    my $name = $_[0];
+    foreach my $module (@KnownActions) {
+	my $function = "${name}${module}";
+	if (defined(&$function)) {
+	    print "Invoking $function\n" if $debug;
+	    &$function ( @_ );
 	}
     }
 }

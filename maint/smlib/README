@@ -1,0 +1,2 @@
+This directory contains modules that extend simplemake by adding to or extending
+the commands recognized in the Makefile.sm files.  
