@@ -1376,6 +1376,11 @@ sub index_array_out_arg {
 # where an address is larger than an MPI_Fint.  This is correct; these
 # routines are for the MPI-1 routines that use an MPI_Fint where the 
 # C code uses a void * (MPI_Aint in MPI-2).  
+# Instead of using MPI_Aint, we use MPIR_Pint.  This allows the MPI 
+# implementation to set MPI_Aint to be *larger* than a pointer-sized-int,
+# which is needed (as a temporary workaround) on systems like Blue Gene, which 
+# have 4 byte pointers but file systems that need 8 byte datatypes (not just 
+# offsets).
 # A possible extension is to provide an error warning (much as 
 # MPI_Address does) when the attribute value loses bits when assigned into
 # the MPI_Fint.
@@ -1388,21 +1393,21 @@ sub addrint_in_decl {
 }
 sub addrint_in_arg {
     my $count = $_[0];
-    print $OUTFD "(void *)(MPI_Aint)((int)*(int *)v$count)";
+    print $OUTFD "(void *)(MPIR_Pint)((int)*(int *)v$count)";
 }
 
 sub attrint_ctof {
     my $fvar = $_[0];
     my $cvar = $_[1];
     my $flagarg = 4; # get from option
-    # The double cast of attr$cvar first to MPI_Aint and then to MPI_Fint
+    # The double cast of attr$cvar first to MPIR_Pint and then to MPI_Fint
     # keeps some compilers happy on 64-bit platforms
     print $OUTFD "
     if ((int)*ierr || !l$flagarg) {
         *(MPI_Fint*)$cvar = 0;
     }
     else {
-        *(MPI_Fint*)$cvar = (MPI_Fint)(MPI_Aint)attr$cvar;
+        *(MPI_Fint*)$cvar = (MPI_Fint)(MPIR_Pint)attr$cvar;
     }\n";
 }
 
@@ -2632,7 +2637,7 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1)
 #ifdef USE_POINTER_FOR_BOTTOM
     b = a;
 #else
-    b = a - (MPI_Aint) MPIR_F_MPI_BOTTOM;
+    b = a - (MPIR_Pint) MPIR_F_MPI_BOTTOM;
 #endif
     *v2 = (MPI_Fint)( b );
 #ifdef HAVE_AINT_LARGER_THAN_FINT
@@ -2671,7 +2676,7 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1)
     &specialInitStatement( $OUTFD );
     print $OUTFD "\
 #ifndef USE_POINTER_FOR_BOTTOM
-    a = a - (MPI_Aint) MPIR_F_MPI_BOTTOM;
+    a = a - (MPIR_Pint) MPIR_F_MPI_BOTTOM;
 #endif
     *v2 =  a;
 }\n";
