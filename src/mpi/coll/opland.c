@@ -89,6 +89,13 @@ void MPIR_LAND (
             a[i] = MPIR_LLAND(a[i],b[i]);
         break;
     }
+    case MPI_SIGNED_CHAR: {
+        signed char * restrict a = (signed char *)inoutvec; 
+        signed char * restrict b = (signed char *)invec;
+        for ( i=0; i<len; i++ )
+            a[i] = MPIR_LLAND(a[i],b[i]);
+        break;
+    }
     case MPI_UNSIGNED_CHAR: {
         unsigned char * restrict a = (unsigned char *)inoutvec; 
         unsigned char * restrict b = (unsigned char *)invec;
@@ -248,6 +255,7 @@ int MPIR_LAND_check_dtype ( MPI_Datatype type )
 #ifdef HAVE_FORTRAN_BINDING
     case MPI_CHARACTER: 
 #endif
+    case MPI_SIGNED_CHAR: 
     case MPI_UNSIGNED_CHAR: 
     case MPI_FLOAT: 
 #ifdef HAVE_FORTRAN_BINDING
