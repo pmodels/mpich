@@ -311,7 +311,8 @@ int MPID_nem_newtcp_module_connect_to_root (const char *business_card, MPIDI_VC_
     VC_FIELD(new_vc, sock_id).sin_addr.s_addr = addr.s_addr;
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    new_vc->port_name_tag = ntohs(VC_FIELD(new_vc, sock_id).sin_port);
+    mpi_errno = MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPID_nem_newtcp_module_connect(new_vc); 
 
  fn_exit:

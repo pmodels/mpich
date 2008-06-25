@@ -124,7 +124,6 @@ struct MPID_nem_new_tcp_module_sockconn{
     int pg_is_set;   
     int is_same_pg;  /* TRUE/FALSE -  */
     int is_tmpvc;
-    int port_name_tag; /* This should be used when is_tmpvc == TRUE */
 
     int pg_rank; /*  rank and id cached here to avoid chasing pointers in vc and vc->pg */
     char *pg_id; /*  MUST be used only if is_same_pg == FALSE */

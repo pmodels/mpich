@@ -447,65 +447,6 @@ static int send_tmpvc_info(const sockconn_t *const sc)
     goto fn_exit;    
 }
 
-
-#undef FUNCNAME
-#define FUNCNAME recv_id_info
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int recv_id_info(sockconn_t *const sc)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_nem_newtcp_module_header_t hdr;
-    int pg_id_len = 0, nread, iov_cnt = 1;
-    int hdr_len = sizeof(MPIDI_nem_newtcp_module_header_t);
-    struct iovec iov[2];
-    char *pg_id = NULL;
-    MPIU_CHKPMEM_DECL (1);
-
-    CHECK_EINTR (nread, read(sc->fd, &hdr, hdr_len));
-    MPIU_ERR_CHKANDJUMP1 (nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER,
-                          "**read", "**read %s", strerror (errno));
-    MPIU_ERR_CHKANDJUMP1 (nread != hdr_len, mpi_errno, MPI_ERR_OTHER,
-                          "**read", "**read %s", strerror (errno));  /* FIXME-Z1 */
-    MPIU_Assert(hdr.pkt_type == MPIDI_NEM_NEWTCP_MODULE_PKT_ID_INFO);
-    MPIU_Assert(hdr.datalen != 0);
-    
-    iov[0].iov_base = (void *) &(sc->pg_rank);
-    iov[0].iov_len = sizeof(sc->pg_rank);
-    pg_id_len = hdr.datalen - sizeof(MPIDI_nem_newtcp_module_idinfo_t);
-    if (pg_id_len != 0) {
-        MPIU_CHKPMEM_MALLOC (pg_id, char *, pg_id_len, mpi_errno, "sockconn pg_id");
-        iov[1].iov_base = (void *)pg_id;
-        iov[1].iov_len = pg_id_len;
-        ++iov_cnt;
-    } 
-    CHECK_EINTR (nread, readv(sc->fd, iov, iov_cnt));
-    MPIU_ERR_CHKANDJUMP1 (nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER,
-                          "**read", "**read %s", strerror (errno));
-    MPIU_ERR_CHKANDJUMP1 (nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER,
-                          "**read", "**read %s", strerror (errno)); /* FIXME-Z1 */
-    if (pg_id_len == 0) {
-        sc->is_same_pg = TRUE;
-        mpi_errno = MPID_nem_newtcp_module_get_vc_from_conninfo (MPIDI_Process.my_pg->id, 
-                                                                 sc->pg_rank,&sc->vc);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-        sc->pg_id = NULL;
-    }
-    else {
-        sc->is_same_pg = FALSE;
-        MPID_nem_newtcp_module_get_vc_from_conninfo (pg_id, sc->pg_rank, &sc->vc);
-        sc->pg_id = sc->vc->pg->id;
-    }
-    sc->pg_is_set = TRUE;
-
- fn_exit:
-    MPIU_CHKPMEM_REAP();
-    return mpi_errno;
- fn_fail:
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
-    goto fn_exit;
-}
-
 #undef FUNCNAME
 #define FUNCNAME recv_id_or_tmpvc_info
 #undef FCNAME
@@ -568,52 +509,52 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc)
 	MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PKT_ID_INFO: sc->fd=%d, sc->vc=%p, sc=%p", sc->fd, sc->vc, sc));
     }
     else if (hdr.pkt_type == MPIDI_NEM_NEWTCP_MODULE_PKT_TMPVC_INFO) {
-	MPIDI_VC_t *vc;
-	struct in_addr addr;
+        MPIDI_VC_t *vc;
+        struct in_addr addr;
 
-	MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "PKT_TMPVC_INFO: sc->fd=%d", sc->fd));
-	iov[0].iov_base = (void *) &(sc->port_name_tag);
-	iov[0].iov_len = sizeof(sc->port_name_tag);
+        MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "PKT_TMPVC_INFO: sc->fd=%d", sc->fd));
+        /* create a new VC */
+        vc = (MPIDI_VC_t *)MPIU_Malloc(sizeof(MPIDI_VC_t));
+        /* --BEGIN ERROR HANDLING-- */
+        if (vc == NULL) {
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", NULL);
+            goto fn_fail;
+        }
+        /* --END ERROR HANDLING */
 
-	CHECK_EINTR (nread, readv(sc->fd, iov, iov_cnt));
+        /* XXX DJG FIXME why is this created here?  Is this the right call to create
+           the VC?  Shouldn't we have to call up to an upper layer? */
+        MPIDI_VC_Init(vc, NULL, 0);     
+        MPID_nem_newtcp_module_vc_init(vc); /* make sure that we need to call this */
+        ((MPIDI_CH3I_VC *)vc->channel_private)->state = MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED; /* FIXME: is it needed ? */
+        sc->vc = vc; 
 
-	MPIU_ERR_CHKANDJUMP1 (nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER,
-			      "**read", "**read %s", strerror (errno));
-	
-	MPIU_ERR_CHKANDJUMP1 (nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER,
-			      "**read", "**read %s", strerror (errno)); /* FIXME-Z1 */
-	sc->is_same_pg == FALSE; // sure
-	sc->pg_id = NULL; // not sure
-	sc->is_tmpvc = TRUE;
-	/* create a new VC */
-	vc = (MPIDI_VC_t *)MPIU_Malloc(sizeof(MPIDI_VC_t));
-	/* --BEGIN ERROR HANDLING-- */
-	if (vc == NULL) {
-	    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", NULL);
-	    goto fn_fail;
-	}
-	/* --END ERROR HANDLING */
+        VC_FIELD(vc, sc) = sc;
 
-	MPIDI_VC_Init(vc, NULL, 0);	
-	MPID_nem_newtcp_module_vc_init(vc); /* make sure that we need to call this */
-	((MPIDI_CH3I_VC *)vc->channel_private)->state = MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED; /* FIXME: is it needed ? */
-	sc->vc = vc; 
+        /* get the port's tag from the packet and stash it in the VC */
+        iov[0].iov_base = (void *) &(sc->vc->port_name_tag);
+        iov[0].iov_len = sizeof(sc->vc->port_name_tag);
 
-        /* I don't think that this assignment is correct, it is likely playing a
-         * role in the test/mpi/spawn/disconnect_reconnect* test failures.
-         * However, leaving this in fixes more tests than it breaks, so I'll
-         * leave it in for now.  [goodell@ 2008-06-16] */
-	VC_FIELD(vc, sc) = sc;
-	
-	MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "enqueuing on acceptq vc=%p, sc->fd=%d, tag=%d", vc, sc->fd, sc->port_name_tag));
-	MPIDI_CH3I_Acceptq_enqueue(vc, sc->port_name_tag);
+        CHECK_EINTR (nread, readv(sc->fd, iov, iov_cnt));
+
+        MPIU_ERR_CHKANDJUMP1 (nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER,
+                              "**read", "**read %s", strerror (errno));
+        
+        MPIU_ERR_CHKANDJUMP1 (nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER,
+                              "**read", "**read %s", strerror (errno)); /* FIXME-Z1 */
+        sc->is_same_pg == FALSE;
+        sc->pg_id = NULL;
+        sc->is_tmpvc = TRUE;
+
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "enqueuing on acceptq vc=%p, sc->fd=%d, tag=%d", vc, sc->fd, sc->vc->port_name_tag));
+        MPIDI_CH3I_Acceptq_enqueue(vc, sc->vc->port_name_tag);
 
         /* these two lines were commented out in the code that I cleaned up, but
          * things aren't working quite right yet in this part of the code.  So
          * I'm leaving these as a reminder of some things to play with in the
          * future.  [goodell@ 2008-06-16] */
-	//MPID_nem_newtcp_module_connpoll(); /* FIXME: to make sure that the sc->state is commrdy */
-	//MPIDI_CH3_Progress_signal_completion(); /* FIXME: why this doesn't work? */
+        //MPID_nem_newtcp_module_connpoll(); /* FIXME: to make sure that the sc->state is commrdy */
+        //MPIDI_CH3_Progress_signal_completion(); /* FIXME: why this doesn't work? */
     }
 
  fn_exit:
@@ -1192,6 +1133,8 @@ static int state_l_cntd_handler(pollfd_t *const plfd, sockconn_t *const sc)
             MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_l_cntd_handler() 2: changing to "
                "quiescent"));
             CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
+
+            MPIU_ERR_POP(mpi_errno);
         }
     }
     else {
@@ -1713,21 +1656,20 @@ int MPID_nem_newtcp_module_connpoll()
         pollfd_t *it_plfd = &MPID_nem_newtcp_module_plfd_tbl[i];
         sockconn_t *it_sc = &g_sc_tbl[i];
 
-	if (it_plfd->fd != CONN_INVALID_FD && it_plfd->revents != 0)
+        if (it_plfd->fd != CONN_INVALID_FD && it_plfd->revents != 0)
         {
-          /* FIXME@san  Uncomment and test */
-            MPIU_Assert ((it_sc->state.cstate == CONN_STATE_TS_D_QUIESCENT) || ((it_plfd->revents & POLLHUP) == 0));
+            /* We could check for POLLHUP here, but HUP/HUP+EOF is not erroneous
+             * on many platforms, including modern Linux. */
             MPIU_Assert ((it_plfd->revents & POLLERR) == 0);
             MPIU_Assert ((it_sc->state.cstate == CONN_STATE_TS_D_QUIESCENT) || ((it_plfd->revents & POLLNVAL) == 0));
             
             mpi_errno = it_sc->handler(it_plfd, it_sc);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno); 
-        } /* end if */
-    } /* end for */
+        }
+    }
     
  fn_exit:
-    return mpi_errno;   /* @san Always return success ok?? */
-    /* return MPI_SUCCESS; */
+    return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
@@ -1800,12 +1742,11 @@ int MPID_nem_newtcp_module_state_listening_handler(pollfd_t *const unused_1, soc
             
             sc->fd = plfd->fd = connfd;
             sc->pg_rank = CONN_INVALID_RANK;
-            sc->port_name_tag = ntohs(rmt_addr.sin_port);
             sc->is_tmpvc = 0;
 
             CHANGE_STATE(sc, CONN_STATE_TA_C_CNTD);
 
-            MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "accept success, added to table, connfd=%d, port=%d, vc=%p, sc=%p", connfd, sc->port_name_tag, sc->vc, sc)); /* sc->vc should be NULL at this point */
+            MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "accept success, added to table, connfd=%d, port=%d, vc=%p, sc=%p", connfd, sc->vc->port_name_tag, sc->vc, sc)); /* sc->vc should be NULL at this point */
         }
     }
 
@@ -1815,22 +1756,6 @@ int MPID_nem_newtcp_module_state_listening_handler(pollfd_t *const unused_1, soc
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
-
-/* FIXME-Danger Delete later. */
-#undef FUNCNAME
-#define FUNCNAME f
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int f (void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
- fn_exit:
-    return mpi_errno;
- fn_fail:    
-    goto fn_exit;
-}
-
 
 /*** General FIXME and "ThinkAboutIt" Questions 
 
