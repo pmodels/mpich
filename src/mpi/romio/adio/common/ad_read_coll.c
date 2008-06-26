@@ -269,7 +269,7 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
     int n_filetypes, etype_in_filetype;
     ADIO_Offset abs_off_in_filetype=0;
     int bufsize, sum, n_etypes_in_filetype, size_in_filetype;
-    int contig_access_count, *len_list, flag, filetype_is_contig;
+    int contig_access_count, *len_list, filetype_is_contig;
     MPI_Aint filetype_extent, filetype_lb;
     ADIOI_Flatlist_node *flat_file;
     ADIO_Offset *offset_list, off, end_offset=0, disp;
@@ -330,26 +330,29 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 	disp = fd->disp;
 
 	if (file_ptr_type == ADIO_INDIVIDUAL) {
-	    offset = fd->fp_ind; /* in bytes */
-	    n_filetypes = -1;
-	    flag = 0;
-	    while (!flag) {
-		n_filetypes++;
-		for (i=0; i<flat_file->count; i++) {
-		    if (disp + flat_file->indices[i] + 
-			(ADIO_Offset) n_filetypes*filetype_extent + 
-			flat_file->blocklens[i] >= offset) 
-		    {
-			st_index = i;
-			frd_size = (int) (disp + flat_file->indices[i] + 
-			    (ADIO_Offset) n_filetypes*filetype_extent
-			        + flat_file->blocklens[i] - offset);
-			flag = 1;
+           /* wei-keng reworked type processing to be a bit more efficient */
+             offset = fd->fp_ind - disp; /* in bytes */
+             n_filetypes = offset / filetype_extent;  /* no. filetypes */
+             offset %= filetype_extent;   /* local offset in a filetype */
+ 
+           /* Wei-keng Liao: find contiguous block where offset is located */
+ 
+             for (i=0; i<flat_file->count; i++){/*bin. search would be better */
+		ADIO_Offset rem_len = offset - flat_file->indices[i];
+		if (rem_len >= 0) {
+		    /* skip over zero length blocklens */
+		    if (rem_len == flat_file->blocklens[i])
+		        offset = flat_file->indices[i+1];
+		    else if (rem_len < flat_file->blocklens[i]) {
+		        /* frd_size is from offset to the end of block i */
+			frd_size = flat_file->blocklens[i] - rem_len;
 			break;
 		    }
 		}
 	    }
-	}
+            st_index = i;  /* starting index in flat_file->indices[] */
+            offset += disp + (ADIO_Offset)n_filetypes*filetype_extent; /*bytes*/
+        }
 	else {
 	    n_etypes_in_filetype = filetype_size/etype_size;
 	    n_filetypes = (int) (offset / n_etypes_in_filetype);
