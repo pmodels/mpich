@@ -5,6 +5,10 @@
 $debug = 0;
 $debugDir = 0;
 $gDebugOther = 0;
+
+$summaryOutput = 0;
+$terseOutput = 1;
+$rootSrcDir = "";
 # Define the known commands, along with known make noise (results of
 # echo)
 # We include /bin/rm and /bin/mv because some Makefile authors prefer
@@ -30,6 +34,7 @@ $gDebugOther = 0;
 	      "compiling ROMIO in", 
 	      "Make completed",
 	      "echo", "cat",
+	      "CC", "AR", "RANLIB", "LIBTOOL", "MV", "CP", # "terse" make versions
 	      "\\(?cd",
 	      "\\(\\s*cd",
 	      "creating\s+lib.*",
@@ -77,7 +82,18 @@ $trimCompileLine = 1;
 @dirprinted = ();
 
 # Process arguments to select options
-
+foreach $_ (@ARGV) {
+    if (/^--?debug/) { $debug = 1; }
+    elsif (/^--?showdir/) { $debugDir = 1; }
+    elsif (/^--?summary/) { $summaryOutput = 1; }
+    elsif (/^-/) {
+	print STDERR "Unrecognized argument $_\n";
+	print STDERR "clmake [ -debug ] [ -showdir ] [ -summary ]\n";
+	exit(1);
+    }
+    else { last; }
+    shift @ARGV;
+}
 # Read lines.  Categorize lines as commands and output.  This
 # script suppresses commands that generate no extra output.
 # The approach is to read a line and then read the next line.
@@ -156,7 +172,28 @@ while ($line = <>) {
 		last;
 	    }
 	}
-	if ($is_command) { next; }
+	if ($is_command) { 
+	    if ($summaryOutput) {
+		# FIXME: Summarize the command
+		if ($terseOutput) {
+		    if ($rootSrcDir eq "") {
+			if ($line =~ /\s(\/\S+\/src\/)/) {
+			    $rootSrcDir = $1;
+			    print "rootSrcDir = $rootSrcDir\n";
+			}
+		    }
+		    else {
+			$line =~ s/$rootSrcDir//g;
+		    }
+		    # Compiler options to remove
+		    $line =~ s/-I\S+\s+//g;
+		    $line =~ s/-W\S+\s+//g;
+		    $line =~ s/-D\S+\s+//g;
+		}
+		print $line;
+	    }
+	    next; 
+	}
     }
 
     # If we got to this point, the line was not a recognized command or
