@@ -1431,7 +1431,7 @@ static int PMIUBufferedReadLine( PMIProcess *pentry, char *buf, int maxlen )
     return curlen-1;
 }
 
-pmix_preput( const char *key, const char *val )
+void pmix_preput( const char *key, const char *val )
 {
     fPMIKVSAddPair( curPMIGroup->kvs, key, val );
 }

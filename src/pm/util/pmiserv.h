@@ -125,6 +125,10 @@ int MPIE_ConnectToPort( char *hostname, int portnum );
 
 int PMISetDebug( int );
 
+/* FIXME: This is a temporary declaration (non-conforming name).  Who added 
+   this, and why? */
+void pmix_preput( const char *, const char * );
+
 /* Should the following be an internal-only routine? */
 int PMIGetCommand( char *cmd, int cmdlen );
 
