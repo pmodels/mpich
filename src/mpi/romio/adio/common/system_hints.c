@@ -127,6 +127,41 @@ void ADIOI_process_system_hints(MPI_Info info)
     close(hintfd);
 }
 
+/* given 'info', incorporate any hints in 'sysinfo' that are not already set
+ * into 'new_info'.  Caller must free 'new_info' later. */
+void ADIOI_incorporate_system_hints(MPI_Info info, 
+	MPI_Info sysinfo, 
+	MPI_Info *new_info) 
+{
+    int i, nkeys_sysinfo, flag;
+    char  val[MPI_MAX_INFO_VAL], key[MPI_MAX_INFO_KEY];
+
+    if (sysinfo == MPI_INFO_NULL)
+	nkeys_sysinfo = 0;
+    else
+	MPI_Info_get_nkeys(sysinfo, &nkeys_sysinfo);
+
+    /* short-circuit: return immediately if no hints to process */
+    if (info == MPI_INFO_NULL && nkeys_sysinfo == 0)  {
+	*new_info = MPI_INFO_NULL;
+	return;
+    }
+
+    if (info == MPI_INFO_NULL) 
+	MPI_Info_create(new_info);
+    else
+	MPI_Info_dup(info, new_info);
+
+    for (i=0; i<nkeys_sysinfo; i++) {
+	MPI_Info_get_nthkey(sysinfo, i, key);
+	MPI_Info_get(info, key, MPI_MAX_INFO_VAL-1, val, &flag);
+	if (flag == 1) continue;
+	MPI_Info_set(*new_info, key, val);
+    }
+
+    return;
+}
+
 /* debug function: a routine I want in the library to make my life easier when
  * using a source debugger. please ignore any "defined but not used" warnings
  */

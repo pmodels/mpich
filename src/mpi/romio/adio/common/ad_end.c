@@ -48,6 +48,9 @@ void ADIO_End(int *error_code)
         datarep = datarep_next;
     }
 
+    if( ADIOI_syshints != MPI_INFO_NULL)
+	    MPI_Info_free(&ADIOI_syshints);
+
     *error_code = MPI_SUCCESS;
 }
 

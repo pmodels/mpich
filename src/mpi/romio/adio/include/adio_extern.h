@@ -23,3 +23,5 @@ extern int ADIOI_Direct_read, ADIOI_Direct_write;
 #endif
 
 extern MPI_Errhandler ADIOI_DFLT_ERR_HANDLER;
+
+extern MPI_Info ADIOI_syshints;

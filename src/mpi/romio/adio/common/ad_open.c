@@ -79,18 +79,13 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     fd->hints->initialized = 0;
     fd->info = MPI_INFO_NULL;
 
-    if (info == MPI_INFO_NULL) 
-	*error_code = MPI_Info_create(&dupinfo);
-    else
-	*error_code = MPI_Info_dup(info, &dupinfo);
-    if (*error_code != MPI_SUCCESS)
-	goto fn_exit;
-
-    ADIOI_process_system_hints(dupinfo);
+    ADIOI_incorporate_system_hints(info, ADIOI_syshints, &dupinfo);
     ADIO_SetInfo(fd, dupinfo, &err);
-    *error_code = MPI_Info_free(&dupinfo);
-    if (*error_code != MPI_SUCCESS)
-	goto fn_exit;
+    if (dupinfo != MPI_INFO_NULL) {
+	*error_code = MPI_Info_free(&dupinfo);
+	if (*error_code != MPI_SUCCESS)
+	    goto fn_exit;
+    }
 
      /* deferred open: 
      * we can only do this optimization if 'fd->hints->deferred_open' is set

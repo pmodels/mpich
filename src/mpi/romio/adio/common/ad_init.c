@@ -21,6 +21,8 @@ MPI_Info *MPIR_Infotable = NULL;
 int MPIR_Infotable_ptr = 0, MPIR_Infotable_max = 0;
 #endif
 
+MPI_Info ADIOI_syshints = MPI_INFO_NULL;
+
 #if defined(ROMIO_XFS) || defined(ROMIO_LUSTRE)
 int ADIOI_Direct_read = 0, ADIOI_Direct_write = 0;
 #endif
@@ -55,6 +57,11 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
 	ADIOI_Direct_write = 1;
     else ADIOI_Direct_write = 0;
 #endif
+
+    /* Assume system-wide hints won't change between runs: move hint processing
+     * from ADIO_Open to here */
+    MPI_Info_create(&ADIOI_syshints);
+    ADIOI_process_system_hints(ADIOI_syshints);
 
 #ifdef ADIOI_MPE_LOGGING
     {
