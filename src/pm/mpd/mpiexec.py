@@ -318,14 +318,14 @@ def mpiexec():
     # make sure to do this after nprocs has its value
     if recvTimeout == 20:  # still the default
         recvTimeoutMultiplier = 0.1
-        if os.environ.has_key('MV2_MPD_RECVTIMEOUT_MULTIPLIER'):
+        if os.environ.has_key('MPD_RECVTIMEOUT_MULTIPLIER'):
             try:
-                recvTimeoutMultiplier = int(os.environ ['MV2_MPD_RECVTIMEOUT_MULTIPLIER'])
+                recvTimeoutMultiplier = int(os.environ ['MPD_RECVTIMEOUT_MULTIPLIER'])
             except ValueError:
                 try:
-                    recvTimeoutMultiplier = float(os.environ ['MV2_MPD_RECVTIMEOUT_MULTIPLIER'])
+                    recvTimeoutMultiplier = float(os.environ ['MPD_RECVTIMEOUT_MULTIPLIER'])
                 except ValueError:
-                    print 'Invalid MV2_MPD_RECVTIMEOUT_MULTIPLIER. Value must be a number.'
+                    print 'Invalid MPD_RECVTIMEOUT_MULTIPLIER. Value must be a number.'
                     sys.exit(-1)
         recvTimeout = int(parmdb['nprocs']) * recvTimeoutMultiplier
 
