@@ -215,7 +215,7 @@ def mpiexec():
     outECFile = None
     sigOccurred = 0
 
-    recvTimeout = int(parmdb['MPIEXEC_RECV_TIMEOUT'])
+    recvTimeout = int(parmdb['MPIEXEC_RECV_TIMEOUT'])  # may be changed below
 
     listenSock = MPDListenSock('',0,name='socket_to_listen_for_man')
     listenPort = listenSock.getsockname()[1]
@@ -315,6 +315,19 @@ def mpiexec():
     linesPerRank = {}  # keep this a dict instead of a list
     for i in range(parmdb['nprocs']):
         linesPerRank[i] = []
+    # make sure to do this after nprocs has its value
+    if recvTimeout == 20:  # still the default
+        recvTimeoutMultiplier = 0.1
+        if os.environ.has_key('MV2_MPD_RECVTIMEOUT_MULTIPLIER'):
+            try:
+                recvTimeoutMultiplier = int(os.environ ['MV2_MPD_RECVTIMEOUT_MULTIPLIER'])
+            except ValueError:
+                try:
+                    recvTimeoutMultiplier = float(os.environ ['MV2_MPD_RECVTIMEOUT_MULTIPLIER'])
+                except ValueError:
+                    print 'Invalid MV2_MPD_RECVTIMEOUT_MULTIPLIER. Value must be a number.'
+                    sys.exit(-1)
+        recvTimeout = int(parmdb['nprocs']) * recvTimeoutMultiplier
 
     if parmdb['MPIEXEC_EXITCODES_FILENAME']:
         if parmdb['ecfn_format'] == 'xml':
