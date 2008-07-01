@@ -63,6 +63,7 @@ $rootSrcDir = "";
 		'^PGC.*: compilation completed with warnings<SEP><SEP>1',
 # This next is a general version to handle all of these mistakes
 		'^PGC-W-0114-More than one type specified.*/usr/include<SEP>^PGC-W-0143-Useless typedef declaration \(no declarators present\).*/usr/include<SEP>2',
+		'copying python',
 		);
 # In the past, we also needed
 # WARNING 84.*not used for resolving any symbol
