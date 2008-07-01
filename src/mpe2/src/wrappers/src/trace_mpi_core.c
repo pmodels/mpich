@@ -1897,6 +1897,12 @@ MPI_Status * status;
   sprintf( msg, "Starting MPI_Recv with count = %d, source = %d, tag = %d...", 
 	   count, source, tag );
   TRACE_PRINTF( msg );
+
+#ifdef HAVE_MPI_STATUS_IGNORE
+  MPI_Status    tmp_status;
+  if (status == MPI_STATUS_IGNORE)
+      status = &tmp_status;
+#endif
   
   returnVal = PMPI_Recv( buf, count, datatype, source, tag, comm, status );
 
