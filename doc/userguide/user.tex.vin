@@ -904,7 +904,7 @@ mpdallexit.
 Pete Wyckoff from the Ohio Supercomputer Center provides a alternate
 utility called OSC mpiexec to launch MPICH2 jobs on PBS systems
 without using MPD. More information about this can be found here:
-http://www.osc.edu/~pw/mpiexec
+http://www.osc.edu/$\sim$pw/mpiexec
 
 
 \section{Managing the Process Management Environment}
