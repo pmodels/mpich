@@ -302,8 +302,12 @@ const CLOG_CommIDs_t *CLOG_CommSet_add_intracomm( CLOG_CommSet_t *commset,
     intracommIDs->kind   = CLOG_COMM_KIND_INTRA;
 
     /* Set the input MPI_Comm's LID_key attribute with new local CommID's LID */
+    /*
+       Use CLOG_Pint, sizeof(CLOG_Pint) = sizeof(void *),
+       instead of MPI_Aint (MPI_Aint >= CLOG_Pint)
+    */
     PMPI_Comm_set_attr( intracomm, commset->LID_key,
-                        (void *) (MPI_Aint) intracommIDs->local_ID );
+                        (void *) (CLOG_Pint) intracommIDs->local_ID );
 
     /* Set the Comm field */
     intracommIDs->comm   = intracomm;
@@ -357,8 +361,12 @@ CLOG_CommSet_add_intercomm(       CLOG_CommSet_t *commset,
     intercommIDs->kind   = CLOG_COMM_KIND_INTER;
 
     /* Set the input MPI_Comm's LID_key attribute with new local CommID */
+    /*
+       Use CLOG_Pint, sizeof(CLOG_Pint) = sizeof(void *),
+       instead of MPI_Aint (MPI_Aint >= CLOG_Pint)
+    */
     PMPI_Comm_set_attr( intercomm, commset->LID_key,
-                        (void *) (MPI_Aint) intercommIDs->local_ID );
+                        (void *) (CLOG_Pint) intercommIDs->local_ID );
 
     /* Set the Comm field with the intercomm's info */
     intercommIDs->comm   = intercomm;
@@ -431,8 +439,8 @@ CLOG_CommSet_add_intercomm(       CLOG_CommSet_t *commset,
 */
 CLOG_CommLID_t CLOG_CommSet_get_LID( CLOG_CommSet_t *commset, MPI_Comm comm )
 {
-    MPI_Aint  ptrlen_value;
-    int       istatus;
+    CLOG_Pint  ptrlen_value;
+    int        istatus;
 
     PMPI_Comm_get_attr( comm, commset->LID_key, &ptrlen_value, &istatus );
     if ( !istatus ) {
@@ -447,8 +455,8 @@ CLOG_CommLID_t CLOG_CommSet_get_LID( CLOG_CommSet_t *commset, MPI_Comm comm )
 const CLOG_CommIDs_t* CLOG_CommSet_get_IDs( CLOG_CommSet_t *commset,
                                             MPI_Comm comm )
 {
-    MPI_Aint  ptrlen_value;
-    int       istatus;
+    CLOG_Pint  ptrlen_value;
+    int        istatus;
 
     PMPI_Comm_get_attr( comm, commset->LID_key, &ptrlen_value, &istatus );
     if ( !istatus ) {

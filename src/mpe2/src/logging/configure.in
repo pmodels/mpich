@@ -280,20 +280,22 @@ if test "X$mpe_c99_stdint_h" != "X" ; then
     fi
 fi
 
-dnl Set ZMPI_AINT for mpi_null.h
+dnl Since sizeof(MPI_Aint) >= sizeof(void *), cannot use MPI_Aint.
+dnl Define CLOG_Pint, where sizeof(CLOG_Pint) == sizeof(void *).
+dnl Define CLOG_Pint to be used by MPI_Comm_xxx_attr in clog_commset.c.
 AC_CHECK_SIZEOF( void *, $CROSS_SIZEOF_VOID_P )
-ZMPI_AINT=mpe_int64_t
+CLOG_PINT=mpe_int64_t
 AC_MSG_CHECKING( [for address-sized integer] )
 for bytelen in 8 16 32 64 ; do
     charlen=`expr $bytelen / 8`
     if test "$ac_cv_sizeof_void_p" = "$charlen" ; then
-        ZMPI_AINT=CLOG_int${bytelen}_t
-        ZMPI_SIZEOF_AINT=$charlen
+        CLOG_PINT=CLOG_int${bytelen}_t
+        CLOG_SIZEOF_PINT=$charlen
         break;
     fi
 done
-AC_MSG_RESULT([$ZMPI_AINT])
-AC_SUBST(ZMPI_AINT)
+AC_MSG_RESULT([$CLOG_PINT])
+AC_SUBST(CLOG_PINT)
 
 # If sizeof(mpi_aint) = sizeof(int), set this value
 if test "$ac_cv_sizeof_int" = "$ac_cv_sizeof_void_p" ; then

@@ -12,10 +12,6 @@
 extern "C" {
 #endif
 
-/* Define Address-Sized integer based on configure's result */
-#include "clog_inttypes.h"
-typedef @ZMPI_AINT@  MPI_Aint;
-
 #if !defined( _MPI_NULL_MPI_COMM )
 #define _MPI_NULL_MPI_COMM
 typedef int  MPI_Comm;

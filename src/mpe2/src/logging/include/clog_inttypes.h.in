@@ -17,6 +17,12 @@ typedef @mpe_int16_t@        CLOG_int16_t;
 typedef @mpe_int32_t@        CLOG_int32_t;
 typedef @mpe_int64_t@        CLOG_int64_t;
 
+/* 
+   Define address-sized integer for the use of MPI_Comm_xxx_attr
+   in clog2_commset.c.
+*/
+typedef @CLOG_PINT@          CLOG_Pint;
+
 #define i8fmt        @mpe_int8_fmt@
 #define i16fmt       @mpe_int16_fmt@
 #define i32fmt       @mpe_int32_fmt@
