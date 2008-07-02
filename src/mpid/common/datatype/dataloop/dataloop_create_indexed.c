@@ -54,6 +54,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
 {
     int err, is_builtin;
     int i, new_loop_sz, old_loop_depth, blksz;
+    DLOOP_Count first;
 
     DLOOP_Count old_type_count = 0, contig_count, count;
     DLOOP_Offset old_extent;
@@ -74,6 +75,12 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
 	return err;
     }
 
+    /* Skip any initial zero-length blocks */
+    for (first = 0; first < count; first++)
+        if ((DLOOP_Count) blocklength_array[first])
+            break;
+    
+
     is_builtin = (DLOOP_Handle_hasloop_macro(oldtype)) ? 0 : 1;
 
     if (is_builtin)
@@ -87,7 +94,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
 	DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth, flag);
     }
 
-    for (i=0; i < count; i++)
+    for (i=first; i < count; i++)
     {
 	old_type_count += (DLOOP_Count) blocklength_array[i];
     }
@@ -114,10 +121,10 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
      *
      * if contig_count == 1 and block starts at displacement 0,
      * store it as a contiguous rather than an indexed dataloop.
-     */
+     */    
     if ((contig_count == 1) &&
-	((!dispinbytes && ((int *) displacement_array)[0] == 0) ||
-	 (dispinbytes && ((MPI_Aint *) displacement_array)[0] == 0)))
+	((!dispinbytes && ((int *) displacement_array)[first] == 0) ||
+	 (dispinbytes && ((MPI_Aint *) displacement_array)[first] == 0)))
     {
 	err = PREPEND_PREFIX(Dataloop_create_contiguous)((int) old_type_count,
 							 oldtype,
@@ -138,7 +145,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
     {
 	err = PREPEND_PREFIX(Dataloop_create_blockindexed)(1,
 							   (int) old_type_count,
-							   displacement_array,
+							   &(((int *)displacement_array)[first]),
 							   dispinbytes,
 							   oldtype,
 							   dlp_p,
@@ -154,8 +161,8 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
      * if block length is the same for all blocks, store it as a
      * blockindexed rather than an indexed dataloop.
      */
-    blksz = blocklength_array[0];
-    for (i=1; i < count; i++)
+    blksz = blocklength_array[first];
+    for (i = first+1; i < count; i++)
     {
 	if (blocklength_array[i] != blksz)
 	{
@@ -163,11 +170,11 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
 	    break;
 	}
     }
-    if (blksz == blocklength_array[0])
+    if (blksz == blocklength_array[first])
     {
-	err = PREPEND_PREFIX(Dataloop_create_blockindexed)(icount,
+	err = PREPEND_PREFIX(Dataloop_create_blockindexed)(icount-first,
 							   blksz,
-							   displacement_array,
+							   &(((int *)displacement_array)[first]),
 							   dispinbytes,
 							   oldtype,
 							   dlp_p,
@@ -293,21 +300,21 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
 					  int dispinbytes,
 					  DLOOP_Offset old_extent)
 {
-    DLOOP_Count i, cur_idx = 0;
+    DLOOP_Count i, first, cur_idx = 0;
 
     /* Skip any initial zero-length blocks */
-    for (i = 0; i < count; ++i)
-        if ((DLOOP_Count) in_blklen_array[i])
+    for (first = 0; first < count; ++first)
+        if ((DLOOP_Count) in_blklen_array[first])
             break;
 
-    out_blklen_array[0] = (DLOOP_Count) in_blklen_array[i];
+    out_blklen_array[0] = (DLOOP_Count) in_blklen_array[first];
 
     if (!dispinbytes)
     {
 	out_disp_array[0] = (DLOOP_Offset)
 	    ((int *) in_disp_array)[i] * old_extent;
 	
-	for (++i; i < count; ++i)
+	for (i = first+1; i < count; ++i)
 	{
 	    if (in_blklen_array[i] == 0)
 	    {
@@ -334,7 +341,7 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
     {
 	out_disp_array[0] = (DLOOP_Offset) ((MPI_Aint *) in_disp_array)[i];
 	
-	for (++i; i < count; ++i)
+	for (i = first+1; i < count; ++i)
 	{
 	    if (in_blklen_array[i] == 0)
 	    {
@@ -377,23 +384,23 @@ static DLOOP_Count DLOOP_Type_indexed_count_contig(DLOOP_Count count,
 						   DLOOP_Offset old_extent)
 {
     DLOOP_Count i, contig_count = 1;
-    DLOOP_Count cur_blklen;
+    DLOOP_Count cur_blklen, first;
 
     if (count)
     {
         /* Skip any initial zero-length blocks */
-        for (i = 0; i < count; ++i)
-            if ((DLOOP_Count) blocklength_array[i])
+        for (first = 0; first < count; ++first)
+            if ((DLOOP_Count) blocklength_array[first])
                 break;
         
-        cur_blklen = (DLOOP_Count) blocklength_array[i];
+        cur_blklen = (DLOOP_Count) blocklength_array[first];
 	
         if (!dispinbytes)
         {
             DLOOP_Offset cur_tdisp =
-                (DLOOP_Offset) ((int *) displacement_array)[i];
+                (DLOOP_Offset) ((int *) displacement_array)[first];
             
-            for (++i; i < count; ++i)
+            for (i = first+1; i < count; ++i)
             {
                 if (blocklength_array[i] == 0)
                 {
@@ -416,9 +423,9 @@ static DLOOP_Count DLOOP_Type_indexed_count_contig(DLOOP_Count count,
         else
         {
             DLOOP_Offset cur_bdisp =
-                (DLOOP_Offset) ((MPI_Aint *) displacement_array)[i];
+                (DLOOP_Offset) ((MPI_Aint *) displacement_array)[first];
 	
-            for (++i; i < count; ++i)
+            for (i = first+1; i < count; ++i)
             {
                 if (blocklength_array[i] == 0)
                 {
