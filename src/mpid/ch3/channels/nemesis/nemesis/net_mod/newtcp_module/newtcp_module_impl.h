@@ -48,6 +48,11 @@ typedef struct
 /* accessor macro to private fields in VC */
 #define VC_FIELD(vc, field) (((MPID_nem_newtcp_module_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->field)
 
+#define ASSIGN_SC_TO_VC(vc_, sc_) \
+    do { \
+        VC_FIELD((vc_), sc) = (sc_); \
+    } while (0)
+
 
 /* functions */
 int MPID_nem_newtcp_module_send_init(void);

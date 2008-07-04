@@ -85,13 +85,6 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, int has_parent)
     mpi_errno = get_local_procs (pg_rank, num_procs, &num_local, &local_procs, &local_rank, &num_nodes, &node_ids);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    /* XXX DJG this looks like some sort of ugly hack */
-    /* We incr num_procs to account for the parent, but we need to ensure that
-     * get_local_procs is aware of this possibility.  I doubt it currently is. */
-    if (has_parent) {
-        num_procs++; // sson1 ***** FIXME
-    }
-
 #ifdef MEM_REGION_IN_HEAP
     MPIU_CHKPMEM_MALLOC (MPID_nem_mem_region_ptr, MPID_nem_mem_region_t *, sizeof(MPID_nem_mem_region_t), mpi_errno, "mem_region");
 #endif /* MEM_REGION_IN_HEAP */

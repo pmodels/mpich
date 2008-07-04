@@ -100,13 +100,34 @@ extern const char *const CONN_STATE_STR[];
 #undef M_
 
 
+#ifdef USE_DBG_LOGGING
+#define DBG_CHANGE_STATE(_sc, _state) do { \
+    const char *state_str = NULL; \
+    const char *old_state_str = NULL; \
+    if (MPIU_DBG_SELECTED(NEM_SOCK_DET,VERBOSE)) { \
+        if ((_sc)) { \
+            if ((_sc)->state.cstate >= CONN_STATE_TS_CLOSED && (_sc)->state.cstate < CONN_STATE_SIZE) \
+                old_state_str = CONN_STATE_STR[(_sc)->state.cstate]; \
+            else \
+                old_state_str = "out_of_range"; \
+            if (_state >= CONN_STATE_TS_CLOSED && _state < CONN_STATE_SIZE) \
+                state_str = CONN_STATE_STR[_state]; \
+            else \
+                state_str = "out_of_range"; \
+        } \
+        MPIU_DBG_OUT_FMT(NEM_SOCK_DET, (MPIU_DBG_FDEST, "CHANGE_STATE(_sc=%p, _state=%d (%s)) - old_state=%s", _sc, _state, state_str, old_state_str)); \
+    } \
+} while (0)
+#else
+#  define DBG_CHANGE_STATE(_sc, _state) do { /*nothing*/ } while (0)
+#endif
+
 #define CHANGE_STATE(_sc, _state) do { \
-    int _old_state = _state; \
-    (_sc)->state.cstate = _state; \
+    DBG_CHANGE_STATE(_sc, _state); \
+    (_sc)->state.cstate = (_state); \
     (_sc)->handler = sc_state_info[_state].sc_state_handler; \
     MPID_nem_newtcp_module_plfd_tbl[(_sc)->index].events = sc_state_info[_state].sc_state_plfd_events; \
 } while(0)
-
 
 struct MPID_nem_new_tcp_module_sockconn;
 typedef struct MPID_nem_new_tcp_module_sockconn sockconn_t;
@@ -122,7 +143,8 @@ struct MPID_nem_new_tcp_module_sockconn{
     /* Used to prevent the usage of uninitialized pg info.  is_same_pg, pg_rank,
      * and pg_id are _ONLY VALID_ if this (pg_is_set) is true */
     int pg_is_set;   
-    int is_same_pg;  /* TRUE/FALSE -  */
+    int is_same_pg; /* boolean, true if the process on the other end of this sc
+                       is in the same PG as us (this process) */
     int is_tmpvc;
 
     int pg_rank; /*  rank and id cached here to avoid chasing pointers in vc and vc->pg */

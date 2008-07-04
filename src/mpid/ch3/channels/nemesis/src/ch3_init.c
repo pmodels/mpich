@@ -152,12 +152,21 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3_VC_Destroy(MPIDI_VC_t *vc )
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_VC_DESTROY);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_VC_DESTROY);
 
+    /* no need to destroy vc to self, this corresponds to the optimization above
+     * in MPIDI_CH3_VC_Init */
+    if (vc->pg == MPIDI_CH3I_my_pg && vc->pg_rank == MPIDI_CH3I_my_rank)
+        goto fn_exit;
+
+    mpi_errno = MPID_nem_vc_destroy(vc);
+
+fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_VC_DESTROY);
-    return MPID_nem_vc_destroy(vc);
+    return mpi_errno;
 }
 
 /* MPIDI_CH3_Connect_to_root() create a new vc, and connect it to the process listening on port_name */

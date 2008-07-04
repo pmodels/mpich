@@ -276,7 +276,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	    vc->state = MPIDI_VC_STATE_REMOTE_CLOSE;
 	}
     }
-    else
+    else /* (close_pkt->ack == TRUE) */
     {
 	MPIU_DBG_MSG_D(CH3_DISCONNECT,TYPICAL,
                        "received close(TRUE) from %d, moving to CLOSE_ACKED.", 

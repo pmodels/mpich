@@ -348,7 +348,8 @@ int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
 
     vc_ch->next = NULL;
     vc_ch->prev = NULL;
-    VC_FIELD(vc, sc) = NULL;
+
+    ASSIGN_SC_TO_VC(vc, NULL);
     VC_FIELD(vc, send_queue).head = VC_FIELD(vc, send_queue).tail = NULL;
 
  fn_exit:

@@ -168,7 +168,10 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect )
 		}
 		
 		/* FIXME: the correct test is ACTIVE or REMOTE_CLOSE */
-		if (vc->state != MPIDI_VC_STATE_INACTIVE) { 
+		/*if (vc->state != MPIDI_VC_STATE_INACTIVE) { */
+		if (vc->state == MPIDI_VC_STATE_ACTIVE ||
+		    vc->state == MPIDI_VC_STATE_REMOTE_CLOSE)
+		{
 		    MPIDI_CH3U_VC_SendClose( vc, i );
 		}
 		else
