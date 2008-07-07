@@ -156,7 +156,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                     vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
 
                     /* invalid pkt data will result in unpredictable behavior */
-                    MPIU_Assert(pkt->type >= 0 && pkt->type < MPIDI_CH3_PKT_END_ALL);
+                    MPIU_Assert(pkt->type >= 0 && pkt->type < MPIDI_NEM_PKT_END);
 
                     mpi_errno = pktArray[pkt->type](vc, pkt, &buflen, &rreq);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -467,7 +467,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "received new message");
 
                 /* invalid pkt data will result in unpredictable behavior */
-                MPIU_Assert(pkt->type >= 0 && pkt->type < MPIDI_CH3_PKT_END_ALL);
+                MPIU_Assert(pkt->type >= 0 && pkt->type < MPIDI_NEM_PKT_END);
 
                 mpi_errno = pktArray[pkt->type](vc, pkt, &len, &rreq);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -515,7 +515,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
             buf    += copylen;
 
             /* invalid pkt data will result in unpredictable behavior */
-            MPIU_Assert(pkt->type >= 0 && pkt->type < MPIDI_CH3_PKT_END_ALL);
+            MPIU_Assert(pkt->type >= 0 && pkt->type < MPIDI_NEM_PKT_END);
 
             pktlen = sizeof(MPIDI_CH3_Pkt_t);
             mpi_errno = pktArray[pkt->type](vc, pkt, &pktlen, &rreq);
