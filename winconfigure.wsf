@@ -2675,6 +2675,12 @@ Function ReplaceAts( str, use_f77, b64 )
 				str = Replace(str, "@mpe_int32_fmt@", """%ld""")
 			Case "@mpe_int64_fmt@"
 				str = Replace(str, "@mpe_int64_fmt@", """%lld""")
+			Case "@CLOG_PINT@"
+				If b64 Then
+					str = Replace(str, "@CLOG_PINT@", "__int64")
+				Else
+					str = Replace(str, "@CLOG_PINT@", "__int32")
+				End If
 			Case "@PTHREAD_IN_MPI_DEF@"
 				str = Replace(str, "@PTHREAD_IN_MPI_DEF@", "#undef HAVE_PTHREAD_IN_MPI")
 			Case "@mpe_callstack_impl_type@"
@@ -2768,6 +2774,18 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define uint32_t unsigned __int32")
 				Case "uint64_t"
 					fout.WriteLine("#define uint64_t unsigned __int64")
+				Case "MPIR_Pint"
+					If b64 Then
+						fout.WriteLine("#define MPIR_Pint __int64")
+					Else
+						fout.WriteLine("#define MPIR_Pint __int32")
+					End If
+				Case "MPIR_Upint"
+					If b64 Then
+						fout.WriteLine("#define MPIR_Upint unsigned __int64")
+					Else
+						fout.WriteLine("#define MPIR_Upint unsigned __int32")
+					End If
 				Case "const"
 					fout.WriteLine("/* #undef const */")
 				Case "inline"
