@@ -1,5 +1,5 @@
 if test -z "${device_args}" ; then
-    device_args="sock"
+    device_args="nemesis"
 fi
 channel_name=`echo ${device_args} | sed -e 's/:.*$//'`
 channel_args=`echo ${device_args} | sed -e 's/^[^:]*//' -e 's/^://'`
