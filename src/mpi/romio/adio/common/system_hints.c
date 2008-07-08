@@ -104,7 +104,7 @@ static int file_to_info(int fd, MPI_Info info)
 #endif
 	/* don't actually care what the value is. only want to know if key
 	 * exists: we leave it alone if so*/
-	MPI_Info_get(info, key, 0, &dummy, &flag);
+	MPI_Info_get(info, key, 1, &dummy, &flag);
 	if (flag == 1) continue;
 	MPI_Info_set(info, key, val);
     } while ((token = strtok_r(NULL, "\n", &pos1)) != NULL);
