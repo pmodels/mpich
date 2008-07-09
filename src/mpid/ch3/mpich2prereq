@@ -10,7 +10,7 @@
 echo "Executing mpich2prereq in $devicedir with $device_args"
 channel_name=`echo ${device_args} | sed -e 's/:.*$//'`
 if test -z "$channel_name" ; then 
-    channel_name=sock
+    channel_name=nemesis
 fi
 if test -n "$channel_name" ; then
     if test -f "$devicedir/channels/$channel_name/mpich2prereq" ; then
