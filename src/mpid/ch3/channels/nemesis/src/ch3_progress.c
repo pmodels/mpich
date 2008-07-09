@@ -1827,6 +1827,11 @@ int MPIDI_CH3I_Posted_recv_enqueued (MPID_Request *rreq)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
 
+    /* FIXME XXX DJG we are currently skipping this optimization because the
+     * local check is invalid.  We need to figure out the correct local check
+     * and fix this function. */
+    return mpi_errno;
+
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
     /* don't enqueue for anysource */
     if (rreq->dev.match.rank < 0)
@@ -1856,6 +1861,11 @@ int MPIDI_CH3I_Posted_recv_dequeued (MPID_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
+
+    /* FIXME XXX DJG we are currently skipping this optimization because the
+     * local check is invalid.  We need to figure out the correct local check
+     * and fix this function. */
+    return mpi_errno;
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
     if (rreq->dev.match.rank < 0)
