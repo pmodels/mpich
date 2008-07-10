@@ -415,19 +415,14 @@ int MPID_nem_newtcp_module_get_addr_port_from_bc(const char *business_card, stru
 
     /* sizeof(in_port_t) != sizeof(int) on most platforms, so we need to use
      * port_int as the arg to MPIU_Str_get_int_arg. */
-    mpi_errno = MPIU_Str_get_int_arg (business_card, MPIDI_CH3I_PORT_KEY, &port_int);
-    /* MPIU_STR_FAIL is not a valid MPI error code so the error code routines
-       like to complain.  We just translate it into success to indicate the
-       bottom of the error stack. */
-    if (mpi_errno == MPIU_STR_FAIL)
-        mpi_errno = MPI_SUCCESS;
-    MPIU_ERR_CHKANDJUMP (mpi_errno != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingport");
+    ret = MPIU_Str_get_int_arg (business_card, MPIDI_CH3I_PORT_KEY, &port_int);
+    /* MPIU_STR_FAIL is not a valid MPI error code so we store the result in ret
+     * instead of mpi_errno. */
+    MPIU_ERR_CHKANDJUMP (ret != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingport");
     MPIU_Assert((port_int >> (8*sizeof(*port))) == 0); /* ensure port_int isn't too large for *port */
     *port = htons((in_port_t)port_int);
 
     ret = MPIU_Str_get_string_arg(business_card, MPIDI_CH3I_IFNAME_KEY, ifname, sizeof(ifname));
-    if (mpi_errno == MPIU_STR_FAIL) /* see MPIU_STR_FAIL comment above */
-        mpi_errno = MPI_SUCCESS;
     MPIU_ERR_CHKANDJUMP (ret != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingifname");
 
     ret = inet_pton (AF_INET, (const char *)ifname, addr);
