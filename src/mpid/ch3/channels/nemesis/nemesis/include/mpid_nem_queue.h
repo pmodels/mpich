@@ -35,7 +35,7 @@ int MPID_nem_network_poll (MPID_nem_poll_dir_t in_or_out);
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (volatile MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t val)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    ret.p = MPID_NEM_SWAP (&(ptr->p), val.p);
+    ret.p = MPIDU_Atomic_swap_char_ptr(&(ptr->p), val.p);
     return ret;
 }
 
@@ -43,7 +43,7 @@ static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (volatile MPID_nem_cell_
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_CAS_REL_NULL (volatile MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t oldv)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    ret.p = MPID_NEM_CAS (&(ptr->p), oldv.p, MPID_NEM_REL_NULL);
+    ret.p = MPIDU_Atomic_cas_char_ptr(&(ptr->p), oldv.p, MPID_NEM_REL_NULL);
     return ret;
 }
 

@@ -225,7 +225,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag, 
-					   int context_id, int * foundp)
+                                           int context_id, MPID_Comm *comm, void *user_buf,
+                                           int user_count, MPI_Datatype datatype, int * foundp)
 {
     int found;
     MPID_Request *rreq, *prev_rreq;
@@ -251,6 +252,11 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 		    if (rreq->dev.next == NULL) {
 			recvq_unexpected_tail = prev_rreq;
 		    }
+                    rreq->comm                 = comm;
+                    MPIR_Comm_add_ref(comm);
+                    rreq->dev.user_buf         = user_buf;
+                    rreq->dev.user_count       = user_count;
+                    rreq->dev.datatype         = datatype;
 		    found = TRUE;
 		    goto lock_exit;
 		} 
@@ -295,6 +301,11 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 		    if (rreq->dev.next == NULL) {
 			recvq_unexpected_tail = prev_rreq;
 		    }
+                    rreq->comm                 = comm;
+                    MPIR_Comm_add_ref(comm);
+                    rreq->dev.user_buf         = user_buf;
+                    rreq->dev.user_count       = user_count;
+                    rreq->dev.datatype         = datatype;
 		    found = TRUE;
 		    goto lock_exit;
 		}
@@ -315,6 +326,11 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 	rreq->dev.match.tag	   = tag;
 	rreq->dev.match.rank	   = source;
 	rreq->dev.match.context_id = context_id;
+        rreq->comm                 = comm;
+        MPIR_Comm_add_ref(comm);
+        rreq->dev.user_buf         = user_buf;
+        rreq->dev.user_count       = user_count;
+        rreq->dev.datatype         = datatype;
 	rreq->dev.next		   = NULL;
 	if (recvq_posted_tail != NULL) {
 	    recvq_posted_tail->dev.next = rreq;

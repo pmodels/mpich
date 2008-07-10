@@ -1282,7 +1282,9 @@ int MPIDI_CH3_Connect_to_root(const char *, MPIDI_VC_t **);
  */
 int MPIDI_CH3U_Recvq_FU(int, int, int, MPI_Status * );
 MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request, MPIDI_Message_match *);
-MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int, int, int, int * found);
+MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag, 
+                                          int context_id, MPID_Comm *comm, void *user_buf,
+                                           int user_count, MPI_Datatype datatype, int * foundp);
 int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq);
 MPID_Request * MPIDI_CH3U_Recvq_FDP(MPIDI_Message_match * match);
 MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match, 

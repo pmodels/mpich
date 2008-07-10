@@ -160,9 +160,9 @@ int MPIDI_CH3I_comm_destroy (MPID_Comm *comm)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
-    if (comm->ch.barrier_vars && MPID_NEM_FETCH_AND_DEC (&comm->ch.barrier_vars->usage_cnt) == 1)
+    if (comm->ch.barrier_vars && MPIDU_Atomic_fetch_and_decr(&comm->ch.barrier_vars->usage_cnt) == 1)
     {
-	MPID_NEM_WRITE_BARRIER();
+        MPIDU_Shm_write_barrier();
 	comm->ch.barrier_vars->context_id = NULL_CONTEXT_ID;
     }
     if (comm->ch.local_size)
@@ -186,12 +186,12 @@ static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars)
 
     for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i)
     {
-	c = MPID_NEM_CAS_INT (&MPID_nem_mem_region.barrier_vars[i].context_id, NULL_CONTEXT_ID, comm->context_id);
+	c = MPIDU_Atomic_cas_int(&MPID_nem_mem_region.barrier_vars[i].context_id, NULL_CONTEXT_ID, comm->context_id);
         if (c == NULL_CONTEXT_ID || c == comm->context_id)
         {
             *vars = &MPID_nem_mem_region.barrier_vars[i];
-	    MPID_NEM_WRITE_BARRIER();
-            MPID_NEM_ATOMIC_INC (&(*vars)->usage_cnt);
+	    MPIDU_Shm_write_barrier();
+            MPIDU_Atomic_incr(&(*vars)->usage_cnt);
             goto fn_exit;
         }
     }
@@ -301,13 +301,13 @@ static int barrier (MPID_Comm *comm_ptr)
         int sense;
 
         sense = barrier_vars->sig;
-	MPID_NEM_READ_BARRIER();
+        MPIDU_Shm_read_barrier();
 
-        prev = MPID_NEM_FETCH_AND_INC (&barrier_vars->cnt);
+        prev = MPIDU_Atomic_fetch_and_incr(&barrier_vars->cnt);
         if (prev == local_size - 1)
         {
             barrier_vars->cnt = 0;
-            MPID_NEM_WRITE_BARRIER();
+            MPIDU_Shm_write_barrier();
             barrier_vars->sig = 1 - sense;
         }
         else
@@ -341,7 +341,7 @@ static int barrier (MPID_Comm *comm_ptr)
         {
             barrier_vars->sig0 = 0;
             barrier_vars->cnt = 0;
-	    MPID_NEM_WRITE_BARRIER();
+	    MPIDU_Shm_write_barrier();
 	    barrier_vars->sig = 1 - barrier_vars->sig;
         }
     }
@@ -353,12 +353,12 @@ static int barrier (MPID_Comm *comm_ptr)
         int prev;
         int sense;
         sense = barrier_vars->sig;
-	MPID_NEM_READ_BARRIER();
+        MPIDU_Shm_read_barrier();
 
-        prev = MPID_NEM_FETCH_AND_INC (&barrier_vars->cnt);
+        prev = MPIDU_Atomic_fetch_and_incr(&barrier_vars->cnt);
         if (prev == local_size - 2)  /* - 2 because it's the value before we added 1 and we're not waiting for root */
 	{
-	    MPID_NEM_WRITE_BARRIER();
+	    MPIDU_Shm_write_barrier();
 	    barrier_vars->sig0 = 1;
 	}
 

@@ -14,6 +14,13 @@ int MPID_Recv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	      MPID_Comm * comm, int context_offset,
 	      MPI_Status * status, MPID_Request ** request)
 {
+    /* FIXME: in the common case, we want to simply complete the message
+       and make as few updates as possible.
+       Note in addition that this routine is used only by MPI_Recv (a
+       blocking routine; the intent of the interface (which returns 
+       a request) was to simplify the handling of the case where the
+       message was not found in the unexpected queue. */
+
     int mpi_errno = MPI_SUCCESS;
     MPID_Request * rreq;
     int found;
@@ -32,33 +39,11 @@ int MPID_Recv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	goto fn_exit;
     }
 
-    rreq = MPIDI_CH3U_Recvq_FDU_or_AEP(
-	rank, tag, comm->recvcontext_id + context_offset, &found);
+    rreq = MPIDI_CH3U_Recvq_FDU_or_AEP(rank, tag, comm->recvcontext_id + context_offset,
+                                       comm, buf, count, datatype, &found);
     if (rreq == NULL) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_NO_MEM, "**nomem");
     }
-
-    /* FIXME: in the common case, we want to simply complete the message
-       and make as few updates as possible.
-       Note in addition that this routine is used only by MPI_Recv (a
-       blocking routine; the intent of the interface (which returns 
-       a request) was to simplify the handling of the case where the
-       message was not found in the unexpected queue. */
-    /* FIXME: why do we add the ref count to comm?  The routine that
-       calls this is required to complete before returning, so
-       no valid user program can free the communicator while we
-       are within this routine, and no change to the ref count should 
-       be needed.  Ditto for remembering the datatype and user buffer
-       statistics (no request should need to be returned by
-       this routine if the message is already available) 
-       The reason appears to be that the delete-request code will
-       reduce the reference count on the comm in the request.
-    */
-    rreq->comm		 = comm;
-    MPIR_Comm_add_ref(comm);
-    rreq->dev.user_buf	 = buf;
-    rreq->dev.user_count = count;
-    rreq->dev.datatype	 = datatype;
 
     if (found)
     {

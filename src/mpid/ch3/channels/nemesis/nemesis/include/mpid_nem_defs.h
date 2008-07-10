@@ -86,6 +86,10 @@ typedef struct MPID_nem_seg_info
     char *addr; 
 } MPID_nem_seg_info_t, *MPID_nem_seg_info_ptr_t; 
 
+/* NOTE: MPID_NEM_IS_LOCAL should only be used when the process is known to be
+   in your comm_world (such as at init time).  This will generally not work for
+   dynamic processes.  Check vc_ch->is_local instead.  If that is true, then
+   it's safe to use MPID_NEM_LOCAL_RANK. */
 #define MPID_NEM_NON_LOCAL -1
 #define MPID_NEM_IS_LOCAL(grank) (MPID_nem_mem_region.local_ranks[grank] != MPID_NEM_NON_LOCAL)
 #define MPID_NEM_LOCAL_RANK(grank) (MPID_nem_mem_region.local_ranks[grank])

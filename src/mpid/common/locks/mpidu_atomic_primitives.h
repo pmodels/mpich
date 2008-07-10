@@ -103,6 +103,90 @@ MPI_Aint MPIDU_Atomic_swap_aint_emulated(volatile MPI_Aint *ptr, MPI_Aint val);
     _IS_EMULATED macros to determine if the routine they depend on is emulated
     and set their own _IS_EMULATED macro correspondingly.
 */
+
+/*
+   load-link/store-conditional (LL/SC) primitives.  These are put here near the
+   top because we will likely implement several of the other primitives in terms
+   of these two primitives.  These are slightly different than the other
+   primitives, since they are virtually impossible to emulate in a sensible
+   manner.  As such, calls to these functions on plaforms that do not support
+   them will result in an abort.
+*/
+static inline int MPIDU_Atomic_LL_int(volatile int *ptr)
+{
+#if defined(HAVE_GCC_AND_POWERPC_ASM)
+#  define ATOMIC_LL_SC_SUPPORTED
+    int val;
+    __asm__ __volatile__ ("lwarx %[val],0,%[ptr]"
+                          : [val] "=r" (val)
+                          : [ptr] "r" (ptr)
+                          : "cc");
+
+    return val;
+#else
+    MPIU_Assertp(0); /*can't emulate*/
+#endif
+}
+
+/* Returns non-zero if the store was successful, zero otherwise. */
+static inline int MPIDU_Atomic_SC_int(volatile int *ptr, int val)
+{
+#if defined(HAVE_GCC_AND_POWERPC_ASM)
+#  define ATOMIC_LL_SC_SUPPORTED
+    int ret;
+    __asm__ __volatile__ ("stwcx. %[val],0,%[ptr];\n"
+                          "beq 1f;\n"
+                          "li %[ret], 0;\n"
+                          "1: ;\n"
+                          : [ret] "=r" (ret)
+                          : [ptr] "r" (ptr), [val] "r" (val), "0" (ret)
+                          : "cc", "memory");
+    return ret;
+#else
+    MPIU_Assertp(0); /*can't emulate*/
+#endif
+}
+
+
+/*
+   Pointer versions of LL/SC.  For now we implement them in terms of the integer
+   versions with some casting.  If/when we encounter a platform with LL/SC and
+   differing word and pointer widths we can write separate versions.
+*/
+
+static inline int *MPIDU_Atomic_LL_int_ptr(volatile int **ptr)
+{
+#if defined(ATOMIC_LL_SC_SUPPORTED)
+    switch (sizeof(int *)) { /* should be optimized away */
+        case sizeof(int):
+            return MPIDU_Atomic_LL_int((int)ptr);
+            break;
+        default:
+            MPIU_Assertp(0); /* need to implement a separate ptr-sized version */
+            return NULL; /* placate the compiler */
+    }
+#else
+    MPIU_Assertp(0); /*can't emulate*/
+#endif
+}
+
+/* Returns non-zero if the store was successful, zero otherwise. */
+static inline int MPIDU_Atomic_SC_int_ptr(volatile int **ptr, int *val)
+{
+#if defined(ATOMIC_LL_SC_SUPPORTED)
+    switch (sizeof(int *)) { /* should be optimized away */
+        case sizeof(int):
+            return MPIDU_Atomic_SC_int((int *)ptr, (int)val);
+            break;
+        default:
+            MPIU_Assertp(0); /* need to implement a separate ptr-sized version */
+            return NULL; /* placate the compiler */
+    }
+#else
+    MPIU_Assertp(0); /*can't emulate*/
+#endif
+}
+
 static inline void MPIDU_Atomic_add(int *ptr, int val)
 {
 #if  defined(HAVE_GCC_AND_PENTIUM_ASM) || defined(HAVE_GCC_AND_X86_64_ASM)
@@ -118,7 +202,7 @@ static inline void MPIDU_Atomic_add(int *ptr, int val)
 }
 
 /* TODO expand this function to encompass non-intel platforms as well */
-static inline void *MPIDU_Atomic_cas_int_ptr(volatile int **ptr, int *oldv, int *newv)
+static inline int *MPIDU_Atomic_cas_int_ptr(int * volatile *ptr, int *oldv, int *newv)
 {
 /*#if defined(AO_HAVE_compare_and_swap)
     --------------------------------------------------------------------------
@@ -151,6 +235,12 @@ static inline void *MPIDU_Atomic_cas_int_ptr(volatile int **ptr, int *oldv, int 
                           : "=r"(prev), "=m"(*ptr)
                           : "rO"(oldv), "r"(ptr), "r"(newv));
     return prev;   
+#elif defined(ATOMIC_LL_SC_SUPPORTED)
+    void *prev;
+    do {
+        prev = MPIDU_Atomic_LL_int_ptr(ptr);
+    } while (prev == oldv && !MPIDU_Atomic_SC_int_ptr(ptr, newv));
+    return prev;
 #else /* "lock-op-unlock" fallback */
 #  define USE_ATOMIC_EMULATION
 #  define ATOMIC_CAS_INT_PTR_IS_EMULATED
@@ -166,12 +256,12 @@ static inline void *MPIDU_Atomic_cas_int_ptr(volatile int **ptr, int *oldv, int 
     casting then results in the compiler reordering your instructions and you
     end up with a bug.
 */
-static inline void *MPIDU_Atomic_cas_char_ptr(volatile char **ptr, char *oldv, char *newv)
+static inline char *MPIDU_Atomic_cas_char_ptr(char * volatile *ptr, char *oldv, char *newv)
 {
 #if defined(ATOMIC_CAS_INT_PTR_IS_EMULATED)
 #  define ATOMIC_CAS_CHAR_PTR_IS_EMULATED
 #endif
-    return MPIDU_Atomic_cas_int_ptr((volatile int **)ptr, (int *)oldv, (int *)newv);
+    return (char *)MPIDU_Atomic_cas_int_ptr((int * volatile *)ptr, (int *)oldv, (int *)newv);
 }
 
 /* TODO expand this function to encompass non-intel platforms as well */
@@ -216,6 +306,12 @@ static inline int MPIDU_Atomic_cas_int(volatile int *ptr, int oldv, int newv)
     }
     
     return prev;   
+#elif defined(ATOMIC_LL_SC_SUPPORTED)
+    void *prev;
+    do {
+        prev = MPIDU_Atomic_LL_int(ptr);
+    } while (prev == oldv && !MPIDU_Atomic_SC_int(ptr, newv));
+    return prev;
 #else /* "lock-op-unlock" fallback */
 #  define USE_ATOMIC_EMULATION
 #  define ATOMIC_CAS_INT_IS_EMULATED
@@ -321,7 +417,7 @@ static inline void MPIDU_Atomic_decr(volatile int *ptr)
 static inline int MPIDU_Atomic_decr_and_test(volatile int *ptr)
 {
 #if defined(HAVE_GCC_AND_PENTIUM_ASM) || defined(HAVE_GCC_AND_X86_64_ASM)
-    char result;
+    int result;
     switch(sizeof(*ptr))
     {
     case 4:
@@ -339,6 +435,13 @@ static inline int MPIDU_Atomic_decr_and_test(volatile int *ptr)
         MPIU_Assert(0);
     }
     return result;
+#elif defined(ATOMIC_LL_SC_SUPPORTED)
+    int tmp, result;
+    do {
+        tmp = MPIDU_Atomic_LL_int(ptr);
+        --tmp;
+    } while (!MPIDU_Atomic_SC_int(ptr, tmp));
+    return (0 == tmp);
 #else /* "lock-op-unlock" fallback */
 #  define USE_ATOMIC_EMULATION
 #  define ATOMIC_DECR_AND_TEST_IS_EMULATED
@@ -425,6 +528,14 @@ static inline void MPIDU_Atomic_incr(volatile int *ptr)
         MPIU_Assert(0);
     }
     return;
+#elif defined(ATOMIC_LL_SC_SUPPORTED)
+    /* we have LL/SC but not a native atomic incr, so we'll use LL/SC */
+    int tmp;
+    do {
+        tmp = MPIDU_Atomic_LL_int(ptr);
+        ++tmp;
+    } while (!MPIDU_Atomic_SC_int(ptr));
+    return;
 #elif !defined(ATOMIC_CAS_INT_IS_EMULATED)
     /* we have a native CAS but not a native atomic incr, so we'll use CAS */
     int oldv, newv;
@@ -440,7 +551,7 @@ static inline void MPIDU_Atomic_incr(volatile int *ptr)
 #endif
 }
 
-static inline int *MPIDU_Atomic_swap_int_ptr(volatile int **ptr, int *val)
+static inline int *MPIDU_Atomic_swap_int_ptr(int * volatile *ptr, int *val)
 {
 #ifdef HAVE_GCC_AND_PENTIUM_ASM
     __asm__ __volatile__ ("xchgl %0,%1"
@@ -469,12 +580,12 @@ static inline int *MPIDU_Atomic_swap_int_ptr(volatile int **ptr, int *val)
     Implemented via the (int**) version.  See the comment on _cas_char_ptr for
     info on why this is the way it is.
 */
-static inline char *MPIDU_Atomic_swap_char_ptr(volatile char **ptr, char *val)
+static inline char *MPIDU_Atomic_swap_char_ptr(char * volatile *ptr, char *val)
 {
 #if defined(ATOMIC_SWAP_INT_PTR_IS_EMULATED)
 #  define ATOMIC_SWAP_CHAR_PTR_IS_EMULATED
 #endif
-    return (char *)(MPIDU_Atomic_swap_int_ptr((volatile int **)ptr, (int *)val));
+    return (char *)(MPIDU_Atomic_swap_int_ptr((int * volatile *)ptr, (int *)val));
 }
 
 static inline int MPIDU_Atomic_swap_int(volatile int *ptr, int val)

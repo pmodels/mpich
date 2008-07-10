@@ -42,18 +42,12 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	goto fn_exit;
     }
 
-    rreq = MPIDI_CH3U_Recvq_FDU_or_AEP(
-	rank, tag, comm->recvcontext_id + context_offset, &found);
+    rreq = MPIDI_CH3U_Recvq_FDU_or_AEP(rank, tag, comm->recvcontext_id + context_offset,
+                                       comm, buf, count, datatype, &found);
     if (rreq == NULL)
     {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_NO_MEM, "**nomem");
     }
-
-    rreq->comm		 = comm;
-    MPIR_Comm_add_ref(comm);
-    rreq->dev.user_buf	 = buf;
-    rreq->dev.user_count = count;
-    rreq->dev.datatype	 = datatype;
 
     if (found)
     {

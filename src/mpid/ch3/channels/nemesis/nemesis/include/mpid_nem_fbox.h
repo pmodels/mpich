@@ -60,31 +60,39 @@ extern unsigned short        *MPID_nem_recv_seqno;
     *(_cell) = NULL;											\
 } while (0)
 #else
-#define poll_fboxes(_cell, do_found) do {									\
-    MPID_nem_fboxq_elem_t *orig_fboxq_elem;										\
-														\
-    if (MPID_nem_fboxq_head != NULL)											\
-    {														\
-	orig_fboxq_elem = MPID_nem_curr_fboxq_elem;									\
-	do													\
-	{													\
-	    MPID_nem_fbox_mpich2_t *fbox;											\
-														\
-	    fbox = MPID_nem_curr_fboxq_elem->fbox;									\
-	    if (fbox->flag.value == 1 && fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank])	\
-	    {													\
-                ++MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank];								\
-		*(_cell) = &fbox->cell;										\
-		do_found;											\
-	    }													\
-	    MPID_nem_curr_fboxq_elem = MPID_nem_curr_fboxq_elem->next;								\
-	    if (MPID_nem_curr_fboxq_elem == NULL)									\
-		MPID_nem_curr_fboxq_elem = MPID_nem_fboxq_head;									\
-	}													\
-	while (MPID_nem_curr_fboxq_elem != orig_fboxq_elem);								\
-    }														\
-    *(_cell) = NULL;												\
-} while (0)
+static inline int poll_fboxes(MPID_nem_cell_ptr_t *cell)
+{
+    MPID_nem_fboxq_elem_t *orig_fboxq_elem;
+    int found = FALSE;
+
+    if (MPID_nem_fboxq_head != NULL)
+    {
+        orig_fboxq_elem = MPID_nem_curr_fboxq_elem;
+        do
+        {
+            MPID_nem_fbox_mpich2_t *fbox;
+
+            fbox = MPID_nem_curr_fboxq_elem->fbox;
+            MPIU_Assert(fbox != NULL);
+            if (fbox->flag.value == 1 &&
+                fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank])
+            {
+                ++MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank];
+                *cell = &fbox->cell;
+                found = TRUE;
+                goto fn_exit;
+            }
+            MPID_nem_curr_fboxq_elem = MPID_nem_curr_fboxq_elem->next;
+            if (MPID_nem_curr_fboxq_elem == NULL)
+                MPID_nem_curr_fboxq_elem = MPID_nem_fboxq_head;
+        }
+        while (MPID_nem_curr_fboxq_elem != orig_fboxq_elem);
+    }
+    *cell = NULL;
+
+fn_exit:
+    return found;
+}
 #endif
      
 #define poll_all_fboxes(_cell, do_found) do {										\

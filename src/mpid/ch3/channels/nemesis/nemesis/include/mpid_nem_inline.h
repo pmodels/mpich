@@ -106,7 +106,7 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 		payload_32[9] = buf_32[9];
 	    }
 	    
-	    MPID_NEM_WRITE_BARRIER();
+	    MPIDU_Shm_write_barrier();
 	    pbox->flag.value = 1;
 
 	    MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent fbox ");
@@ -411,7 +411,7 @@ MPID_nem_mpich2_sendv_header (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, in
 		payload_32[9] = buf_32[9];
 	    }
 	    MPID_NEM_MEMCPY ((char *)pbox->cell.pkt.mpich2.payload +sizeof(MPIDI_CH3_Pkt_t), (*iov)[1].iov_base, (*iov)[1].iov_len);
-	    MPID_NEM_WRITE_BARRIER();
+	    MPIDU_Shm_write_barrier();
 	    pbox->flag.value = 1;
 	    *n_iov = 0;
 
@@ -602,7 +602,7 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
             MPID_Segment_pack(segment, *segment_first, &last, (char *)pbox->cell.pkt.mpich2.payload + sizeof(MPIDI_CH3_Pkt_t));
             MPIU_Assert(last == segment_size);
             
-	    MPID_NEM_WRITE_BARRIER();
+	    MPIDU_Shm_write_barrier();
 	    pbox->flag.value = 1;
 
             *segment_first = last;
@@ -795,7 +795,10 @@ MPID_nem_mpich2_dequeue_fastbox (int local_rank)
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_fboxq_elem_t *el;
 
+    MPIU_Assert(local_rank < MPID_nem_mem_region.num_local);
+
     el = &MPID_nem_fboxq_elem_list[local_rank];    
+    MPIU_Assert(el->fbox != NULL);
 
     MPIU_ERR_CHKANDJUMP (!el->usage, mpi_errno, MPI_ERR_OTHER, "**intern");
 
@@ -843,8 +846,11 @@ int MPID_nem_mpich2_enqueue_fastbox (int local_rank)
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_fboxq_elem_t *el;
 
+    MPIU_Assert(local_rank < MPID_nem_mem_region.num_local);
+
     el = &MPID_nem_fboxq_elem_list[local_rank];
-	
+    MPIU_Assert(el->fbox != NULL);
+
     if (el->usage)
     {
 	++el->usage;
@@ -920,7 +926,7 @@ MPID_nem_mpich2_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox)
 #endif
     
 #ifdef USE_FASTBOX
-    poll_fboxes (cell, goto fbox_l);
+    if (poll_fboxes(cell)) goto fbox_l;
 #endif/* USE_FASTBOX     */
 
     /* FIXME the ext_procs bit is an optimization for the all-local-procs case.
@@ -991,7 +997,7 @@ MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int tim
     int mpi_errno = MPI_SUCCESS;
     
 #ifdef USE_FASTBOX
-    poll_fboxes (cell, goto fbox_l);
+    if (poll_fboxes(cell)) goto fbox_l;
 #endif/* USE_FASTBOX     */
 
     /* FIXME the ext_procs bit is an optimization for the all-local-procs case.
@@ -1083,7 +1089,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
     
     
 #ifdef USE_FASTBOX
-    poll_fboxes (cell, goto fbox_l);
+    if (poll_fboxes(cell)) goto fbox_l;
 #endif /*USE_FASTBOX */
 
     /* FIXME the ext_procs bit is an optimization for the all-local-procs case.
@@ -1102,7 +1108,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 
 #ifdef USE_FASTBOX	
 	poll_all_fboxes (cell, goto fbox_l);
-	poll_fboxes (cell, goto fbox_l);
+        if (poll_fboxes(cell)) goto fbox_l;
 #endif /*USE_FASTBOX */
 
         /* FIXME the ext_procs bit is an optimization for the all-local-procs case.

@@ -26,7 +26,7 @@ int MPID_nem_barrier_init (MPID_nem_barrier_t *barrier_region)
     MPID_nem_mem_region.barrier->wait = 0;
     sense = 0;
     barrier_init = 1;
-    MPID_NEM_WRITE_BARRIER();
+    MPIDU_Shm_write_barrier();
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_BARRIER_INIT);
     return MPI_SUCCESS;
@@ -46,11 +46,11 @@ int MPID_nem_barrier (int num_processes, int rank)
 
     MPIU_ERR_CHKANDJUMP1 (!barrier_init, mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "barrier not initialized");
 
-    if (MPID_NEM_FETCH_AND_INC (&MPID_nem_mem_region.barrier->val) == MPID_nem_mem_region.num_local - 1)
+    if (MPIDU_Atomic_fetch_and_incr(&MPID_nem_mem_region.barrier->val) == MPID_nem_mem_region.num_local - 1)
     {
 	MPID_nem_mem_region.barrier->val = 0;
 	MPID_nem_mem_region.barrier->wait = 1 - sense;
-	MPID_NEM_WRITE_BARRIER();
+        MPIDU_Shm_write_barrier();
     }
     else
     {

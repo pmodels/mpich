@@ -75,17 +75,6 @@ static inline int MPIDU_Ref_release_and_test(volatile int *ptr)
     } while (oldv != MPIDU_Atomic_cas_int(ptr, oldv, newv));
     retval = (0 == newv);
     goto fn_exit;
-
-    /* sketch of an LL/SC impl
-#elif defined(ATOMIC_DECR_AND_TEST_IS_EMULATED) && defined(ATOMIC_LL_SC_SUPPORTED)
-    int val;
-    do {
-        val = LL(ptr);
-        --val;
-    } while (!SC(ptr, val));
-    retval = (0 == val);
-    goto fn_exit;
-    */
 #else
     retval = MPIDU_Atomic_decr_and_test(ptr);
     goto fn_exit;
