@@ -426,6 +426,8 @@ int MPID_nem_newtcp_module_get_addr_port_from_bc(const char *business_card, stru
     *port = htons((in_port_t)port_int);
 
     ret = MPIU_Str_get_string_arg(business_card, MPIDI_CH3I_IFNAME_KEY, ifname, sizeof(ifname));
+    if (mpi_errno == MPIU_STR_FAIL) /* see MPIU_STR_FAIL comment above */
+        mpi_errno = MPI_SUCCESS;
     MPIU_ERR_CHKANDJUMP (ret != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingifname");
 
     ret = inet_pton (AF_INET, (const char *)ifname, addr);
