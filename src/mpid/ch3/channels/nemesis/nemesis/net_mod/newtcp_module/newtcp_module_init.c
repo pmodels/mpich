@@ -416,6 +416,11 @@ int MPID_nem_newtcp_module_get_addr_port_from_bc(const char *business_card, stru
     /* sizeof(in_port_t) != sizeof(int) on most platforms, so we need to use
      * port_int as the arg to MPIU_Str_get_int_arg. */
     mpi_errno = MPIU_Str_get_int_arg (business_card, MPIDI_CH3I_PORT_KEY, &port_int);
+    /* MPIU_STR_FAIL is not a valid MPI error code so the error code routines
+       like to complain.  We just translate it into success to indicate the
+       bottom of the error stack. */
+    if (mpi_errno == MPIU_STR_FAIL)
+        mpi_errno = MPI_SUCCESS;
     MPIU_ERR_CHKANDJUMP (mpi_errno != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingport");
     MPIU_Assert((port_int >> (8*sizeof(*port))) == 0); /* ensure port_int isn't too large for *port */
     *port = htons((in_port_t)port_int);
