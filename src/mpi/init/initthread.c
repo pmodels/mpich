@@ -235,7 +235,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     MPIR_Process.icomm_world		    = MPID_Comm_builtin + 2;
     MPIR_Process.icomm_world->handle	    = MPIR_ICOMM_WORLD;
     MPIU_Object_set_ref( MPIR_Process.icomm_world, 1 );
-    MPIR_Process.icomm_world->context_id    = 8; /* XXX */
+    MPIR_Process.icomm_world->context_id    = 8; 
     MPIR_Process.icomm_world->recvcontext_id= 8;
     MPIR_Process.icomm_world->attributes    = NULL;
     MPIR_Process.icomm_world->local_group   = NULL;

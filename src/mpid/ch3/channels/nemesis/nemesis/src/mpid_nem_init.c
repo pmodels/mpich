@@ -619,6 +619,10 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->node_id = -1; /* we're not using shared memory, so assume we're on our own node */
     }
 
+    /* override rendezvous functions */
+    vc->rndvSend_fn = MPID_nem_lmt_RndvSend;
+    vc->rndvRecv_fn = MPID_nem_lmt_RndvRecv;
+
     if (vc_ch->is_local)
     {
 	vc_ch->fbox_out = &MPID_nem_mem_region.mailboxes.out[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich2;
@@ -676,10 +680,6 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 /*         MPIU_Assert(vc_ch->iStartContigMsg && vc_ch->iSendContig && vc->sendNoncontig_fn); */
 
     }
-
-    /* override rendezvous functions */
-    vc->rndvSend_fn           = MPID_nem_lmt_RndvSend;
-    vc->rndvRecv_fn           = MPID_nem_lmt_RndvRecv;
 
     /* FIXME: ch3 assumes there is a field called sendq_head in the ch
        portion of the vc.  This is unused in nemesis and should be set
