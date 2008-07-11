@@ -1450,6 +1450,12 @@ int MPIDI_CH3_Channel_close( void );
 #define MPIDI_CH3_Channel_close( )   MPI_SUCCESS
 #endif
 
+#if defined(MPIDI_CH3_USES_SOCK)
+int MPIDI_CH3_Handle_vc_close(MPIDI_VC_t *vc);
+#else
+#define MPIDI_CH3_Handle_vc_close(vc) MPI_SUCCESS
+#endif
+
 /*@
   MPIDI_CH3_Pre_init - Allows the channel to initialize before PMI_init is 
   called, and allows the

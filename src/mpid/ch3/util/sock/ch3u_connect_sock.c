@@ -653,6 +653,29 @@ int MPIDI_CH3_Sockconn_handle_connect_event( MPIDI_CH3I_Connection_t *conn,
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_Handle_vc_close
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_Handle_vc_close(MPIDI_VC_t *vc)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_CH3I_Connection_t *conn;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_HANDLE_VC_CLOSE);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_HANDLE_VC_CLOSE);
+
+    MPIU_Assert(vc);
+    conn = ((MPIDI_CH3I_VC *)vc->channel_private)->conn;
+    MPIU_Assert(conn);
+    /* zero out the vc so that _handle_close_event doesn't attempt to
+     * dereference a free'd VC ptr after the PG is destroyed */
+    conn->vc = NULL;
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_HANDLE_VC_CLOSE);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Sockconn_handle_close_event
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
@@ -662,7 +685,7 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_SOCKCONN_HANDLE_CLOSE_EVENT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SOCKCONN_HANDLE_CLOSE_EVENT);
-		
+
     /* If the conn pointer is NULL then the close was intentional */
     /* FIXME: What does the above comment mean? */
     if (conn != NULL) {
@@ -1019,6 +1042,10 @@ int MPIDI_CH3_Sockconn_handle_connwrite( MPIDI_CH3I_Connection_t * conn )
 	       conn == NULL to identify intentional close, which this 
 	       appears to be. */
 	    conn->state = CONN_STATE_CLOSING;
+
+            /* zero out the vc to prevent trouble in _handle_close_event */
+            conn->vc = NULL;
+
 	    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL,"Closing sock2 (Post_close)");
 	    mpi_errno = MPIDU_Sock_post_close(conn->sock);
 	    if (mpi_errno != MPI_SUCCESS) {

@@ -56,6 +56,9 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 		       not always */
 		    /* MPIU_Object_set_ref(vc, 0); ??? */
 
+                    mpi_errno = MPIDI_CH3_Handle_vc_close(vc);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
 		    /*
 		     * FIXME: The VC used in connect accept has a NULL 
 		     * process group
@@ -109,10 +112,12 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 	    break;
 	}
     }
-	
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_HANDLE_CONNECTION);
 
+fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_HANDLE_CONNECTION);
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
