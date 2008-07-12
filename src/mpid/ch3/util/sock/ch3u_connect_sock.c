@@ -666,10 +666,11 @@ int MPIDI_CH3_Handle_vc_close(MPIDI_VC_t *vc)
 
     MPIU_Assert(vc);
     conn = ((MPIDI_CH3I_VC *)vc->channel_private)->conn;
-    MPIU_Assert(conn);
-    /* zero out the vc so that _handle_close_event doesn't attempt to
-     * dereference a free'd VC ptr after the PG is destroyed */
-    conn->vc = NULL;
+    if (conn) {
+        /* zero out the vc so that _handle_close_event doesn't attempt to
+         * dereference a free'd VC ptr after the PG is destroyed */
+        conn->vc = NULL;
+    }
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_HANDLE_VC_CLOSE);
     return mpi_errno;
