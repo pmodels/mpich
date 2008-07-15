@@ -547,6 +547,8 @@ typedef struct smpd_database_node_t
     struct smpd_database_node_t *pNext;
 } smpd_database_node_t;
 
+typedef smpd_database_element_t * smpd_dbsIter_t;
+
 typedef struct smpd_barrier_in_t
 {
     smpd_context_t *context;

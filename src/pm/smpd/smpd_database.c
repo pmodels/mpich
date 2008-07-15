@@ -79,6 +79,10 @@ int smpd_dbs_finalize()
 	WaitForSingleObject(smpd_process.hDBSMutex, INFINITE);
 #endif
 
+    /* FIXME: Should this cleanup be done here ?
+     * This lets one forget to do a smpd_dbs_destroy() for 
+     * every smpd_dbs_create()
+     */
 	pNode = smpd_process.pDatabase;
 	while (pNode)
 	{
@@ -445,6 +449,79 @@ int smpd_dbs_destroy(const char *name)
     smpd_exit_fn(FCNAME);
     return SMPD_DBS_FAIL;
 }
+
+/* FIXME: Replace SMPD_DBS_SUCCESS/... error codes with 
+ * SMPD_SUCCESS/... 
+ */
+/* FIXME: Use routines below to replace dbs_first(), dbs_next()
+ * routines
+ */
+
+#undef FCNAME
+#define FCNAME "smpd_dbsIter_init"
+int smpd_dbsIter_init(const char *name, smpd_dbsIter_t *pIter){
+    smpd_database_node_t *pDBNode;
+    int nameLen = 0;
+    smpd_enter_fn(FCNAME);
+    if(!name || !pIter){
+        smpd_err_printf("Invalid args to smpd_dbsIter_init()\n");
+        return SMPD_DBS_FAIL;
+    }
+    nameLen = strlen(name);
+    pDBNode = smpd_process.pDatabase;
+    while(pDBNode){
+        if(strncmp(pDBNode->pszName, name, nameLen) == 0){
+            *pIter = pDBNode->pData;
+            return SMPD_DBS_SUCCESS;
+        }
+        pDBNode = pDBNode->pNext;
+    }
+    smpd_exit_fn(FCNAME);
+    return SMPD_DBS_FAIL;
+}
+
+/* FIXME: Go for a macro here ? */
+#undef FCNAME
+#define FCNAME "smpd_dbs_hasMoreKeys"
+SMPD_BOOL smpd_dbs_hasMoreKeys(smpd_dbsIter_t iter){
+    smpd_enter_fn(FCNAME);
+    if(iter){
+        smpd_exit_fn(FCNAME);
+        return SMPD_TRUE;
+    }
+    else{
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+}
+
+#undef FCNAME
+#define FCNAME "smpd_dbs_getNextKeyVal"
+int smpd_dbs_getNextKeyVal(smpd_dbsIter_t *pIter, char *key, char *value){
+    smpd_enter_fn(FCNAME);
+    if(!pIter || !(*pIter) || !key || !value){
+        /* FIXME: Desc error msgs ?*/
+        smpd_err_printf("Invalid args to smpd_dbs_getNextKeyVal()\n");
+        return SMPD_DBS_FAIL;
+    }
+    MPIU_Strncpy(key, (*pIter)->pszKey, SMPD_MAX_DBS_KEY_LEN);
+    MPIU_Strncpy(value, (*pIter)->pszValue, SMPD_MAX_DBS_VALUE_LEN);
+    (*pIter) = (*pIter)->pNext;
+    smpd_exit_fn(FCNAME);
+    return SMPD_DBS_SUCCESS;
+}
+
+#undef FCNAME
+#define FCNAME "smpd_dbsIter_finalize"
+int smpd_dbsIter_finalize(smpd_dbsIter_t *pIter){
+    smpd_enter_fn(FCNAME);
+    if(pIter){
+        *pIter = NULL;
+    }
+    smpd_exit_fn(FCNAME);
+    return SMPD_DBS_SUCCESS;
+}
+
 
 #undef FCNAME
 #define FCNAME "smpd_dbs_first"

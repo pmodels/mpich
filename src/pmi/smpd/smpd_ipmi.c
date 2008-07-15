@@ -74,6 +74,7 @@ typedef struct pmi_process_t
     int port;
     int appnum;
     PMII_PROCESS_HANDLE_TYPE singleton_mpiexec_fd;
+    char kvs_name_singleton_nopm[PMI_MAX_KVS_NAME_LENGTH];
 } pmi_process_t;
 
 /* global variables */
@@ -105,7 +106,8 @@ static pmi_process_t pmi_process =
     "",                  /* host           */
     -1,                  /* port           */
     0,                    /* appnum         */
-    PMII_PROCESS_INVALID_HANDLE /* singleton mpiexec proc handle/pid */
+    PMII_PROCESS_INVALID_HANDLE, /* singleton mpiexec proc handle/pid */
+    ""                      /* kvs_name of singleton proc with no PM */
 };
 
 static int silence = 0;
@@ -126,6 +128,24 @@ static int pmi_err_printf(char *str, ...)
 
     return n;
 }
+
+#ifdef PMII_DEBUG_
+static int pmi_dbg_printf(char *str, ...)
+{
+    int n=0;
+    va_list list;
+
+	printf("[%d] ", pmi_process.iproc);
+	va_start(list, str);
+	n = vprintf(str, list);
+	va_end(list);
+	fflush(stdout);
+
+    return n;
+}
+#else
+#   define pmi_dbg_printf(...)  1
+#endif
 
 static int pmi_mpi_err_printf(int mpi_errno, char *fmt, ... )
 {
@@ -327,6 +347,62 @@ static int uPMI_ConnectToHost(char *host, int port, smpd_state_t state)
     return SMPD_SUCCESS;
 }
 
+static int pmi_create_localKVS(void ){
+    /* Its ok to init here since we can only have one local db */
+	if (smpd_dbs_init() != SMPD_DBS_SUCCESS){
+	    pmi_err_printf("unable to initialize the local dbs engine.\n");
+	    return PMI_FAIL;
+	}
+
+	if (smpd_dbs_create(pmi_process.kvs_name) != SMPD_DBS_SUCCESS){
+	    pmi_err_printf("unable to create the process group kvs\n");
+	    return PMI_FAIL;
+	}
+    /* smpd_process.domain_name is created in smpd_dbs_init() */
+	MPIU_Strncpy(pmi_process.domain_name, smpd_process.domain_name, 
+        PMI_MAX_KVS_NAME_LENGTH);
+	pmi_process.local_kvs = PMI_TRUE;
+    return PMI_SUCCESS;
+}
+
+static int pmi_destroy_localKVS(void ){
+    /* Its ok to finalize here since we can only have one local db */
+    if(smpd_dbs_finalize() != SMPD_DBS_SUCCESS){
+        pmi_err_printf("unable to finalize the local dbs engine.\n");
+        return PMI_FAIL;
+    }
+    pmi_process.local_kvs = PMI_FALSE;
+    return PMI_SUCCESS;
+}
+
+/* FIXME : Currently only used for singleton init -- mostly only one
+ * pair of (key, val) . Inefficient for large number of (key,val)s
+ */
+
+static int pmi_rsync_localKVS(const char *localKVSName,
+        const char *remoteKVSName){
+    smpd_dbsIter_t localKVSIter;
+    char key[SMPD_MAX_DBS_KEY_LEN], value[SMPD_MAX_DBS_VALUE_LEN];
+    if(smpd_dbsIter_init(localKVSName, &localKVSIter) !=
+        SMPD_DBS_SUCCESS){
+        pmi_err_printf("Error initializing local KVS iterator\n");
+        return PMI_FAIL;
+    }
+    while(smpd_dbs_hasMoreKeys(localKVSIter)){
+        if(smpd_dbs_getNextKeyVal(&localKVSIter, key, value)
+            != SMPD_DBS_SUCCESS){
+            smpd_err_printf("Error reading key/val from localKVS\n");
+            return PMI_FAIL;
+        }
+        if(PMI_KVS_Put(remoteKVSName, key, value) != PMI_SUCCESS){
+            smpd_err_printf("Error syncing localKVS to remoteKVS\n");
+            return PMI_FAIL;
+        }
+    }
+    smpd_dbsIter_finalize(&localKVSIter);
+    return PMI_SUCCESS;
+}
+
 /* Launch an instance of mpiexec which will connect to SMPD and start a PMI service.
  * This instance of mpiexec will connect back using the portNo specified in the "-port" option
  * and provide info about the new PMI service.
@@ -345,6 +421,9 @@ static PMII_PROCESS_HANDLE_TYPE launch_mpiexec_process(int portNo){
     if(!CreateProcess(NULL, progName, NULL, NULL, TRUE, 
                         NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW, NULL, NULL, &sInfo, &pInfo)){
         pmi_err_printf("Error creating mpiexec process...%d\n", GetLastError());
+        pmi_err_printf("This singleton init program tried to access a feature which requires PM support\n");
+        pmi_err_printf("eg: spawn, universe_size etc\n");
+        pmi_err_printf("The program failed because mpiexec could not be located\n");
         return PMII_PROCESS_INVALID_HANDLE;
     }
     return pInfo.hProcess;
@@ -368,7 +447,10 @@ static PMII_PROCESS_HANDLE_TYPE launch_mpiexec_process(int portNo){
         mpiexecArgv[5] = NULL;
         rc = execvp(mpiexecArgv[0], mpiexecArgv);
         pmi_err_printf("Error Singinit execv'ing mpiexec failed\n");
-        return PMII_PROCESS_INVALID_HANDLE;
+        pmi_err_printf("This singleton init program tried to access a feature which requires PM support\n");
+        pmi_err_printf("eg: spawn, universe_size etc\n");
+        pmi_err_printf("The program failed because mpiexec could not be located\n");
+        exit(-1);
     }
     else{
         return pid;
@@ -394,7 +476,7 @@ static int PMIi_InitSingleton(void ){
     smpd_process.verbose = SMPD_TRUE;
 	smpd_process.dbg_state |= SMPD_DBG_STATE_ERROUT | SMPD_DBG_STATE_STDOUT | SMPD_DBG_STATE_TRACE;
     */
-    
+
     result = MPIDU_Sock_create_set(&singleton_client_set);
     if(result != MPI_SUCCESS){
         MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "MPIDU_Sock_create_set failed: unable to create a sock set, error: %d\n", result);
@@ -431,24 +513,26 @@ static int PMIi_InitSingleton(void ){
         MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "launchMpiexecProcess failed\n");
 	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
     }
-
+    /* FIXME: Switch to PMI v2 to recognize non-MPICH2 mpiexecs */
     /* SMPD state machine will accept connection from mpiexec & get information about the PM */
     result = smpd_enter_at_state(singleton_client_set, SMPD_SINGLETON_CLIENT_LISTENING);
     if (result != SMPD_SUCCESS) {
         MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "smpd state machine failed, error = %d\n", result);
 	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
     }
-
     /* SMPD state machine has set the PMI info for smpd_process */
     /* Now we have PMI_KVS, PMI_HOST and PMI_PORT info */
 	if ((smpd_process.port > 0) && 
         (strlen(smpd_process.host) > 0) &&
         (strlen(smpd_process.kvs_name) > 0)){
-        strncpy(pmi_process.kvs_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
-        strncpy(pmi_process.domain_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
-        strncpy(smpd_process.domain_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
-        strncpy(pmi_process.host, smpd_process.host, PMI_MAX_HOST_NAME_LENGTH);
-        strncpy(pmi_process.root_host, smpd_process.host, PMI_MAX_HOST_NAME_LENGTH);
+        /* Save the current local KVS name */
+        MPIU_Strncpy(pmi_process.kvs_name_singleton_nopm, pmi_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
+        /* Update the pmi process structs with the new remote KVS info */
+        MPIU_Strncpy(pmi_process.kvs_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
+        MPIU_Strncpy(pmi_process.domain_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
+        MPIU_Strncpy(smpd_process.domain_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
+        MPIU_Strncpy(pmi_process.host, smpd_process.host, PMI_MAX_HOST_NAME_LENGTH);
+        MPIU_Strncpy(pmi_process.root_host, smpd_process.host, PMI_MAX_HOST_NAME_LENGTH);
         pmi_process.root_port = smpd_process.port;
         pmi_process.port = smpd_process.port;
         /*
@@ -459,6 +543,7 @@ static int PMIi_InitSingleton(void ){
         smpd_process.id = 1;
         pmi_process.smpd_id = 1;
         pmi_process.rpmi = PMI_TRUE;
+        pmi_process.local_kvs = PMI_FALSE;
         pmi_process.iproc = 0;
         pmi_process.nproc = 1;
         smpd_process.nproc = 1;
@@ -508,7 +593,7 @@ static int PMIi_InitSingleton(void ){
         /* Send info about the process to PM */
         result = pmi_create_post_command("proc_info", pmi_process.kvs_name, rank_str, size_str);
         if (result != PMI_SUCCESS){
-	        pmi_err_printf("PMIi_InitSingleton failed: unable to create a 'proc_info' command.\n");
+	        pmi_dbg_printf("PMIi_InitSingleton failed: unable to create a 'proc_info' command.\n");
 	        return PMI_FAIL;
         }
 
@@ -525,6 +610,17 @@ static int PMIi_InitSingleton(void ){
         }
 
         pmi_process.init_finalized = PMI_INITIALIZED;
+        /* Sync old local KVS with new remote KVS */
+        if(pmi_rsync_localKVS(pmi_process.kvs_name_singleton_nopm, pmi_process.kvs_name)
+                != PMI_SUCCESS){
+            PMII_ERR_SETPRINTANDJUMP("Sync'ing local KVS in singleton proc to remote KVS in PM failed",
+                PMI_FAIL);
+        }
+
+        /* Remove local KVS */
+        if(pmi_destroy_localKVS() != PMI_SUCCESS){
+            PMII_ERR_SETPRINTANDJUMP("Error removing local KVS in singleton proc\n", PMI_FAIL);
+        }
     }
 	else{
         MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, 
@@ -544,6 +640,7 @@ fn_exit:
     return retval;
 fn_fail:
     /* FIXME : Make sure the newly created mpiexec process is also killed in the case of an error */
+	/* FIXME : On failure do we have a local KVS ? */
     if(p_singleton_context){
         result = smpd_free_context(p_singleton_context);
         if(result != SMPD_SUCCESS){
@@ -899,7 +996,9 @@ static int rPMI_Finalize()
 
     if (pmi_process.local_kvs)
     {
-	smpd_dbs_finalize();
+	if(pmi_destroy_localKVS() != PMI_SUCCESS){
+        pmi_dbg_printf("Failed to destroy local KVS\n");
+    }
     if(pmi_process.singleton_mpiexec_fd != PMII_PROCESS_INVALID_HANDLE){
 #ifdef HAVE_WINDOWS_H
         WaitForSingleObject(pmi_process.singleton_mpiexec_fd, INFINITE);
@@ -1057,12 +1156,26 @@ int iPMI_Init(int *spawned)
     if( p == NULL){
         p = getenv("PMI_HOST");
         if( p == NULL){
+            /* FIXME: Do we need a check for PMI_KVS to determine if 
+             * client is singleton ?
+             */
             p = getenv("PMI_KVS");
             if(p == NULL){
-            /* Assume singleton. Setup the PMI service when required i.e., later */
-            pmi_process.init_finalized = PMI_SINGLETON_INIT_BUT_NO_PM;
-            /* Rank = 0 & Nprocs = 1 initialized by default above */
-            return PMI_SUCCESS;
+                /* Assume singleton. 
+                * Setup the PMI service when required i.e., later 
+                */
+                pmi_process.init_finalized = 
+                    PMI_SINGLETON_INIT_BUT_NO_PM;
+                /* Rank & Nprocs initialized by default above*/
+                /* Create a local KVS which will be used until
+                    spawn(), universe_size, kvs_get() is called*/
+                if(pmi_create_localKVS() == PMI_SUCCESS){
+                    return PMI_SUCCESS;
+                }
+                else{
+                    pmi_err_printf("Unable to create local KVS\n");
+                    return PMI_FAIL;
+                }
             }
         }
     }
@@ -1074,6 +1187,10 @@ int iPMI_Init(int *spawned)
 	    pmi_process.smpd_fd = (MPIDU_SOCK_NATIVE_FD)atoi(p);
 #endif
         if(pmi_process.smpd_fd <= 0){
+            /* FIXME: hack - Is there a better way ? */
+            /* mpiexec sets smpd_fd<=0 to distinguish itself from
+             * a singleton MPI process
+             */
             pmi_process.smpd_fd = 0;
             putenv("PMI_SMPD_FD=");
         }
@@ -1086,22 +1203,15 @@ int iPMI_Init(int *spawned)
     }
     else
     {
-	pmi_process.local_kvs = PMI_TRUE;
-	result = smpd_dbs_init();
-	if (result != SMPD_SUCCESS)
-	{
-	    pmi_err_printf("unable to initialize the local dbs engine.\n");
-	    return PMI_FAIL;
-	}
-	result = smpd_dbs_create(pmi_process.kvs_name);
-	if (result != SMPD_SUCCESS)
-	{
-	    pmi_err_printf("unable to create the process group kvs\n");
-	    return PMI_FAIL;
-	}
-	strncpy(pmi_process.domain_name, smpd_process.domain_name, PMI_MAX_KVS_NAME_LENGTH);
-	pmi_process.init_finalized = PMI_INITIALIZED;
-	return PMI_SUCCESS;
+        /* mpiexec/smpd don't set PMI_KVS */
+        if(pmi_create_localKVS() == PMI_SUCCESS){
+	        pmi_process.init_finalized = PMI_INITIALIZED;
+	        return PMI_SUCCESS;
+        }
+        else{
+            pmi_err_printf("unable to create local KVS\n");
+            return PMI_FAIL;
+        }
     }
 
     p = getenv("PMI_DOMAIN");
@@ -1291,7 +1401,9 @@ int iPMI_Finalize()
 
     if (pmi_process.local_kvs)
     {
-	smpd_dbs_finalize();
+	if(pmi_destroy_localKVS() != PMI_SUCCESS){
+        pmi_dbg_printf("Failed to destroy local KVS\n");
+    }
 	result = MPIDU_Sock_finalize();
 	pmi_process.init_finalized = PMI_FINALIZED;
 	return PMI_SUCCESS;
@@ -1390,7 +1502,9 @@ int iPMI_Abort(int exit_code, const char error_msg[])
 	    }
 	}
 	fflush(stdout);
-	smpd_dbs_finalize();
+	if(pmi_destroy_localKVS() != PMI_SUCCESS){
+        pmi_dbg_printf("Failed to destroy local KVS\n");
+    }
 	pmi_process.init_finalized = PMI_FINALIZED;
 #ifdef HAVE_WINDOWS_H
 	/* ExitProcess(exit_code); */
@@ -1511,6 +1625,7 @@ int iPMI_Get_universe_size(int *size)
 {
     if (pmi_process.init_finalized == PMI_FINALIZED)
 	return PMI_ERR_INIT;
+    /* Singleton init */
     if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
         if(PMIi_InitSingleton() != PMI_SUCCESS){
             return PMI_ERR_INIT;
@@ -1577,11 +1692,6 @@ int iPMI_Get_clique_ranks( int ranks[], int length )
 
 int iPMI_Get_id( char id_str[], int length )
 {
-    if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
-        if(PMIi_InitSingleton() != PMI_SUCCESS){
-            return PMI_ERR_INIT;
-        }
-    }
     return iPMI_KVS_Get_my_name(id_str, length);
 }
 
@@ -1599,11 +1709,6 @@ int iPMI_Get_kvs_domain_id(char id_str[], int length)
     if (length < PMI_MAX_KVS_NAME_LENGTH)
 	return PMI_ERR_INVALID_LENGTH;
 
-    if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
-        if(PMIi_InitSingleton() != PMI_SUCCESS){
-            return PMI_ERR_INIT;
-        }
-    }
     strncpy(id_str, pmi_process.domain_name, length);
 
     return PMI_SUCCESS;
@@ -1658,12 +1763,6 @@ int iPMI_KVS_Get_my_name(char kvsname[], int length)
 	return PMI_ERR_INVALID_ARG;
     if (length < PMI_MAX_KVS_NAME_LENGTH)
 	return PMI_ERR_INVALID_LENGTH;
-
-    if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
-        if(PMIi_InitSingleton() != PMI_SUCCESS){
-            return PMI_ERR_INIT;
-        }
-    }
 
     strncpy(kvsname, pmi_process.kvs_name, length);
 
@@ -1772,6 +1871,20 @@ int iPMI_KVS_Destroy(const char kvsname[])
 	result = smpd_dbs_destroy(kvsname);
 	return (result == SMPD_SUCCESS) ? PMI_SUCCESS : PMI_FAIL;
     }
+    else{
+        /* FIXME: Test only for singleton init proc */
+        int len = 0;
+        if((len = strlen(kvsname)) > PMI_MAX_KVS_NAME_LENGTH){
+            return PMI_ERR_INVALID_LENGTH;
+        }
+        /* Is the destroy req for stale kvsname before
+         * singleton init ?
+         */
+        if(strncmp(kvsname, pmi_process.kvs_name_singleton_nopm, len)
+            == 0){
+            return PMI_SUCCESS;
+        }
+    }
 
     result = pmi_create_post_command("dbdestroy", kvsname, NULL, NULL);
     if (result != PMI_SUCCESS)
@@ -1799,6 +1912,7 @@ int iPMI_KVS_Put(const char kvsname[], const char key[], const char value[])
 {
     int result;
     char str[1024];
+    const char *kvsname_ = NULL;
 
     if (pmi_process.init_finalized == PMI_FINALIZED)
 	return PMI_ERR_INIT;
@@ -1809,18 +1923,32 @@ int iPMI_KVS_Put(const char kvsname[], const char key[], const char value[])
     if (value == NULL)
 	return PMI_ERR_INVALID_VAL;
 
+    kvsname_ = kvsname;
     /*printf("putting <%s><%s><%s>\n", kvsname, key, value);fflush(stdout);*/
 
     if (pmi_process.local_kvs)
     {
-	result = smpd_dbs_put(kvsname, key, value);
+	result = smpd_dbs_put(kvsname_, key, value);
 	return (result == SMPD_SUCCESS) ? PMI_SUCCESS : PMI_FAIL;
     }
+    else{
+        int len = 0;
+        if((len = strlen(kvsname)) > PMI_MAX_KVS_NAME_LENGTH){
+            return PMI_ERR_INVALID_LENGTH;
+        }
+        /* Update kvsname if the caller has the stale kvsname before
+         * singleton init
+         */
+        if(strncmp(kvsname, pmi_process.kvs_name_singleton_nopm, len)
+            == 0){
+            kvsname_ = pmi_process.kvs_name;
+        }
+    }
 
-    result = pmi_create_post_command("dbput", kvsname, key, value);
+    result = pmi_create_post_command("dbput", kvsname_, key, value);
     if (result != PMI_SUCCESS)
     {
-	pmi_err_printf("PMI_KVS_Put failed: unable to put '%s:%s:%s'\n", kvsname, key, value);
+	pmi_err_printf("PMI_KVS_Put failed: unable to put '%s:%s:%s'\n", kvsname_, key, value);
 	return PMI_FAIL;
     }
 
@@ -1863,6 +1991,7 @@ int iPMI_KVS_Get(const char kvsname[], const char key[], char value[], int lengt
 {
     int result;
     char str[1024];
+    const char *kvsname_ = NULL;
 
     if (pmi_process.init_finalized == PMI_FINALIZED)
 	return PMI_ERR_INIT;
@@ -1874,16 +2003,37 @@ int iPMI_KVS_Get(const char kvsname[], const char key[], char value[], int lengt
     if (value == NULL)
 	return PMI_ERR_INVALID_VAL;
 
+    kvsname_ = kvsname;
+
+    if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
+       if(PMIi_InitSingleton() != PMI_SUCCESS){
+            return PMI_ERR_INIT;
+        }
+     }
+
     if (pmi_process.local_kvs)
     {
-	result = smpd_dbs_get(kvsname, key, value);
+	result = smpd_dbs_get(kvsname_, key, value);
 	return (result == SMPD_SUCCESS) ? PMI_SUCCESS : PMI_FAIL;
     }
+    else{
+        int len = 0;
+        if((len = strlen(kvsname)) > PMI_MAX_KVS_NAME_LENGTH){
+            return PMI_ERR_INVALID_LENGTH;
+        }
+        /* Update kvsname if the caller has the stale kvsname before
+         * singleton init
+         */
+        if(strncmp(kvsname, pmi_process.kvs_name_singleton_nopm, len)
+            == 0){
+            kvsname_ = pmi_process.kvs_name;
+        }
+    }
 
-    result = pmi_create_post_command("dbget", kvsname, key, NULL);
+    result = pmi_create_post_command("dbget", kvsname_, key, NULL);
     if (result != PMI_SUCCESS)
     {
-	pmi_err_printf("PMI_KVS_Get failed: unable to get '%s:%s'\n", kvsname, key);
+	pmi_err_printf("PMI_KVS_Get failed: unable to get '%s:%s'\n", kvsname_, key);
 	return PMI_FAIL;
     }
 
@@ -1917,6 +2067,7 @@ int iPMI_KVS_Iter_first(const char kvsname[], char key[], int key_len, char valu
 {
     int result;
     char str[1024];
+    const char *kvsname_ = NULL;
 
     if (pmi_process.init_finalized == PMI_FINALIZED)
 	return PMI_ERR_INIT;
@@ -1931,16 +2082,30 @@ int iPMI_KVS_Iter_first(const char kvsname[], char key[], int key_len, char valu
     if (val_len < PMI_MAX_VALUE_LEN)
 	return PMI_ERR_INVALID_VAL_LENGTH;
 
+    kvsname_ = kvsname;
     if (pmi_process.local_kvs)
     {
-	result = smpd_dbs_first(kvsname, key, value);
+	result = smpd_dbs_first(kvsname_, key, value);
 	return (result == SMPD_SUCCESS) ? PMI_SUCCESS : PMI_FAIL;
     }
+    else{
+        int len = 0;
+        if((len = strlen(kvsname)) > PMI_MAX_KVS_NAME_LENGTH){
+            return PMI_ERR_INVALID_LENGTH;
+        }
+        /* Update kvsname if the caller has the stale kvsname before
+         * singleton init
+         */
+        if(strncmp(kvsname, pmi_process.kvs_name_singleton_nopm, len)
+            == 0){
+            kvsname_ = pmi_process.kvs_name;
+        }
+    }
 
-    result = pmi_create_post_command("dbfirst", kvsname, NULL, NULL);
+    result = pmi_create_post_command("dbfirst", kvsname_, NULL, NULL);
     if (result != PMI_SUCCESS)
     {
-	pmi_err_printf("PMI_KVS_Iter_first failed: unable to get the first key/value pair from '%s'\n", kvsname);
+	pmi_err_printf("PMI_KVS_Iter_first failed: unable to get the first key/value pair from '%s'\n", kvsname_);
 	return PMI_FAIL;
     }
 
@@ -1980,6 +2145,7 @@ int iPMI_KVS_Iter_next(const char kvsname[], char key[], int key_len, char value
 {
     int result;
     char str[1024];
+    const char *kvsname_ = NULL;
 
     if (pmi_process.init_finalized == PMI_FINALIZED)
 	return PMI_ERR_INIT;
@@ -1994,16 +2160,31 @@ int iPMI_KVS_Iter_next(const char kvsname[], char key[], int key_len, char value
     if (val_len < PMI_MAX_VALUE_LEN)
 	return PMI_ERR_INVALID_VAL_LENGTH;
 
+    kvsname_ = kvsname;
+
     if (pmi_process.local_kvs)
     {
-	result = smpd_dbs_next(kvsname, key, value);
+	result = smpd_dbs_next(kvsname_, key, value);
 	return (result == SMPD_SUCCESS) ? PMI_SUCCESS : PMI_FAIL;
     }
+    else{
+        int len = 0;
+        if((len = strlen(kvsname)) > PMI_MAX_KVS_NAME_LENGTH){
+            return PMI_ERR_INVALID_LENGTH;
+        }
+        /* Update kvsname if the caller has the stale kvsname before
+         * singleton init
+         */
+        if(strncmp(kvsname, pmi_process.kvs_name_singleton_nopm, len)
+            == 0){
+            kvsname_ = pmi_process.kvs_name;
+        }
+    }
 
-    result = pmi_create_post_command("dbnext", kvsname, NULL, NULL);
+    result = pmi_create_post_command("dbnext", kvsname_, NULL, NULL);
     if (result != PMI_SUCCESS)
     {
-	pmi_err_printf("PMI_KVS_Iter_next failed: unable to get the next key/value pair from '%s'\n", kvsname);
+	pmi_err_printf("PMI_KVS_Iter_next failed: unable to get the next key/value pair from '%s'\n", kvsname_);
 	return PMI_FAIL;
     }
 
