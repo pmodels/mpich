@@ -18,7 +18,7 @@ int main( int argc, char *argv[] )
     MPI_Request r[2];
     MPI_Status  s[2];
     int         indices[2], outcount;
-    int errval;
+    int errval, errclass;
     int b1[20], b2[20], rank, size, src, dest, i, j;
 
     MTest_Init( &argc, &argv );
@@ -47,17 +47,19 @@ int main( int argc, char *argv[] )
 	    printf( "Error returned from Irecv\n" );
 	}
 
-	errval = MPI_Barrier(comm);
+	/* synchronize */
+	errval = MPI_Recv(NULL, 0, MPI_INT, src, 10, comm, MPI_STATUS_IGNORE);
 	if (errval) {
 	    errs++;
 	    MTestPrintError( errval );
-	    printf( "Error returned from Barrier\n" );
+	    printf( "Error returned from Recv\n" );
 	}
 	for (i=0; i<2; i++) {
 	    s[i].MPI_ERROR = -1;
 	}
 	errval = MPI_Waitsome( 2, r, &outcount, indices, s );
-	if (errval != MPI_ERR_IN_STATUS) {
+	MPI_Error_class( errval, &errclass );
+	if (errclass != MPI_ERR_IN_STATUS) {
 	    errs++;
 	    printf( "Did not get ERR_IN_STATUS in Waitsome.  Got %d.\n", errval );
 	}
@@ -84,14 +86,13 @@ int main( int argc, char *argv[] )
 
     }
     else if (rank == src) {
-	/* Send messages, then barrier so that the wait does not start 
-	   until we are sure that the sends have begun */
+	/* Send test messages, then send another message so that the test does
+	   not start until we are sure that the sends have begun */
 	MPI_Send( b1, 10, MPI_INT, dest, 0, comm );
 	MPI_Send( b2, 11, MPI_INT, dest, 10, comm );
-	MPI_Barrier(comm);
-    }
-    else {
-	MPI_Barrier(comm);
+
+	/* synchronize */
+	MPI_Ssend( NULL, 0, MPI_INT, dest, 10, comm );
     }
 
     MTest_Finalize( errs );

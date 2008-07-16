@@ -47,11 +47,12 @@ int main( int argc, char *argv[] )
 	    printf( "Error returned from Irecv\n" );
 	}
 
-	errval = MPI_Barrier(comm);
+	/* synchronize */
+	errval = MPI_Recv(NULL, 0, MPI_INT, src, 10, comm, MPI_STATUS_IGNORE);
 	if (errval) {
 	    errs++;
 	    MTestPrintError( errval );
-	    printf( "Error returned from Barrier\n" );
+	    printf( "Error returned from Recv\n" );
 	}
 	for (i=0; i<2; i++) {
 	    s[i].MPI_ERROR = -1;
@@ -86,14 +87,13 @@ int main( int argc, char *argv[] )
 
     }
     else if (rank == src) {
-	/* Send messages, then barrier so that the test does not start 
-	   until we are sure that the sends have begun */
+	/* Send test messages, then send another message so that the test does
+	   not start until we are sure that the sends have begun */
 	MPI_Send( b1, 10, MPI_INT, dest, 0, comm );
 	MPI_Send( b2, 11, MPI_INT, dest, 10, comm );
-	MPI_Barrier(comm);
-    }
-    else {
-	MPI_Barrier(comm);
+
+	/* synchronize */
+	MPI_Ssend( NULL, 0, MPI_INT, dest, 10, comm );
     }
 
     MTest_Finalize( errs );
