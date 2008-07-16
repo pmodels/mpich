@@ -303,11 +303,9 @@ void TIMER_INIT()
     GET_TIME(&t1);
     GET_TIME(&t1);
 
-    //GetSystemTimeAsFileTime(&ft1);
     GetSystemTime(&st1);
     GET_TIME(&t1);
     Sleep(500);
-    //GetSystemTimeAsFileTime(&ft2);
     GetSystemTime(&st2);
     GET_TIME(&t2);
 

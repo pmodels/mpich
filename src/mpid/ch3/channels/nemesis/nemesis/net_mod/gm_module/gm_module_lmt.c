@@ -245,7 +245,7 @@ MPID_nem_gm_module_lmt_do_get (int node_id, int port_id, struct iovec **r_iov, i
 	if (len > 0)
 	{
 	    MPID_NEM_ATOMIC_INC (compl_ctr);
-	    //	    gm_get (MPID_nem_module_gm_port, (long)s_buf, r_buf, len, GM_LOW_PRIORITY, node_id, port_id, get_callback, compl_ctr);
+/*             gm_get (MPID_nem_module_gm_port, (long)s_buf, r_buf, len, GM_LOW_PRIORITY, node_id, port_id, get_callback, compl_ctr); */
 	    
 	    --MPID_nem_module_gm_num_send_tokens;
 	    

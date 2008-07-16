@@ -32,7 +32,7 @@ char PAPI_msgs[NEVENTS][PAPI_MAX_STR_LEN] = {"Number of Instructions          ",
                                              "Number of L2 Cache store misses "};
 
 int        PAPI_EventSet         = PAPI_NULL ;
-//long_long  PAPI_overhead_values[NEVENTS]  = { 240, 1040, /*0,*/ 6, 1, 0, 0 }; 
+/* long_long  PAPI_overhead_values[NEVENTS]  = { 240, 1040, /\*0,*\/ 6, 1, 0, 0 };  */
 
 long_long  PAPI_dummy_values[NEVENTS]  = {(long_long) 0 };
 long_long  PAPI_values[NEVENTS]  = {(long_long) 0 };
@@ -48,7 +48,7 @@ long_long  PAPI_values10[NEVENTS] = {(long_long) 0 };
 long_long  PAPI_values11[NEVENTS] = {(long_long) 0 };
 long_long  PAPI_values12[NEVENTS] = {(long_long) 0 };
 
-//double  PAPI_overhead_vvalues[NEVENTS] = {240.0, 1013.0, /*0.0,*/ 12.0, 1.0, 0.0, 0.0}; 
+/* double  PAPI_overhead_vvalues[NEVENTS] = {240.0, 1013.0, /\*0.0,*\/ 12.0, 1.0, 0.0, 0.0};  */
 double  PAPI_overhead_vvalues[NEVENTS] = {222.0, 960.0, /*0.0,*/ 5.0, 2.0, 0.0, 0.0};
 long_long  PAPI_vvalues1[2][NEVENTS];
 long_long  PAPI_vvalues2[2][NEVENTS];

@@ -118,7 +118,6 @@ int init_psm( MPIDI_PG_t *pg_p )
        ret = decode_buffer(get_val, (char*) MPID_nem_module_psm_uuid, sizeof(psm_uuid_t), &len);
        MPIU_ERR_CHKANDJUMP1 (ret != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**decode_buffer", "**decode_buffer %d", ret);
 
-       //printf("%d uuid = %s\n", MPID_nem_mem_region.rank, MPID_nem_module_psm_uuid); 
    }
 
 
@@ -244,7 +243,6 @@ MPID_nem_psm_module_init (MPID_nem_queue_ptr_t proc_recv_queue,
    if( MPID_nem_mem_region.ext_procs > 0)
    {
 	init_psm(pg_p);
-	//mpi_errno = MPID_nem_psm_module_get_business_card (pg_rank, bc_val_p, val_max_sz_p);
 	if (mpi_errno) MPIU_ERR_POP (mpi_errno);
    }
 
@@ -320,7 +318,6 @@ MPID_nem_psm_module_get_from_bc (const char *business_card, psm_epid_t *remote_e
 /* 	/\* FIXME: create a real error string for this *\/ */
 /* 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_hostd"); */
 /*    } */
-/*    //printf("%d Got remote endpoint id = %d\n",MPID_nem_mem_region.rank,  *remote_endpoint_id); */
       
    fn_exit:
      return mpi_errno;
@@ -443,9 +440,6 @@ int MPID_nem_psm_module_exchange_endpoints(void)
 /*         strncpy(uuid_val, MPID_nem_module_psm_uuid, size-1); */
 /*         uuid_val[size-1] = 0; */
 
-        //mpi_errno = MPIU_Str_add_binary_arg (&uuid_val, &len, MPIDI_CH3I_ENDPOINT_KEY,
-        //                                     (char *)MPID_nem_module_psm_uuid, sizeof(psm_uuid_t));
-
         ret = encode_buffer(uuid_val, len, (char*) MPID_nem_module_psm_uuid, sizeof(psm_uuid_t), &len);
         MPIU_ERR_CHKANDJUMP1 (ret != MPIU_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**encode_buffer", "**encode_buffer %d", ret);
         
@@ -481,7 +475,6 @@ int MPID_nem_psm_module_exchange_endpoints(void)
         
         pmi_errno = PMI_KVS_Commit (kvs_name);
         MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit", "**pmi_kvs_commit %d", pmi_errno);
-        //free(uuid_val);
     }
     
     pmi_errno = PMI_Barrier();
@@ -504,7 +497,6 @@ int MPID_nem_psm_module_exchange_endpoints(void)
 
          printf("%d uuid = %s\n", MPID_nem_mem_region.rank, MPID_nem_module_psm_uuid); 
         
-        // memcpy(MPID_nem_module_psm_uuid, get_val, size-1);
     }
 
 /*     for(index=0;index<16;index++) */

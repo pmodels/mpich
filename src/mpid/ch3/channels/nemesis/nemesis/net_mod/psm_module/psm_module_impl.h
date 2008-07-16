@@ -25,8 +25,6 @@
 /* #define MPID_NEM_CELL_LEN_PSM          (32*1024) */
 /* #define MPID_NEM_CELL_PAYLOAD_LEN_PSM  (MPID_NEM_CELL_LEN_PSM - sizeof(void *)) */
 
-//extern uint32_t               MPID_nem_module_psm_filter;
-
 #define MQ_TAG	       1ULL
 #define MQ_TAGSEL_ALL  0ULL
 #define MQ_FLAGS_NONE  0
@@ -135,4 +133,4 @@ extern MPID_nem_queue_ptr_t MPID_nem_module_psm_free_queue;
 extern MPID_nem_queue_ptr_t MPID_nem_process_recv_queue;
 extern MPID_nem_queue_ptr_t MPID_nem_process_free_queue;
 
-#endif //PSM_MODULE_IMPL_H
+#endif 

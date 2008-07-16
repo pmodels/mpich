@@ -53,7 +53,6 @@ gasnet_handlerentry_t MPIDI_CH3_gasnet_handler_table[] =
     { MPIDI_CH3_reload_IOV_reply_handler_id, MPIDI_CH3_reload_IOV_reply_handler }
 };
 
-//MPIDI_CH3I_Process_t MPIDI_CH3I_Process = { 0 };
 
 /* XXX - all calls to assert() need to be turned into real error checking and
    return meaningful errors */

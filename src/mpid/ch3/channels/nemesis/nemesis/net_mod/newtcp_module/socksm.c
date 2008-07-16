@@ -589,13 +589,6 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "enqueuing on acceptq vc=%p, sc->fd=%d, tag=%d", vc, sc->fd, sc->vc->port_name_tag));
         MPIDI_CH3I_Acceptq_enqueue(vc, sc->vc->port_name_tag);
-
-        /* these two lines were commented out in the code that I cleaned up, but
-         * things aren't working quite right yet in this part of the code.  So
-         * I'm leaving these as a reminder of some things to play with in the
-         * future.  [goodell@ 2008-06-16] */
-        //MPID_nem_newtcp_module_connpoll(); /* FIXME: to make sure that the sc->state is commrdy */
-        //MPIDI_CH3_Progress_signal_completion(); /* FIXME: why this doesn't work? */
     }
 
  fn_exit:
@@ -826,7 +819,6 @@ int MPID_nem_newtcp_module_connect(struct MPIDI_VC *const vc)
     if (index != -1) {
         if (sc->fd != CONN_INVALID_FD) {
             MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "MPID_nem_newtcp_module_connect(). closing fd = %d", sc->fd));
-	    fprintf(stderr, "%s: closing fd=%d\n", __FUNCTION__, sc->fd); // sson1
             close(sc->fd);
             sc->fd = CONN_INVALID_FD;
             plfd->fd = CONN_INVALID_FD;
@@ -932,10 +924,8 @@ int MPID_nem_newtcp_module_disconnect (struct MPIDI_VC *const vc)
 
 /*     FIXME check whether a (different/new) error has to be reported stating the VC is  */
 /*      already disconnected. */
-    //if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED)
     if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_VC_STATE_DISCONNECTED)
         goto fn_exit;
-    //else if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED) {
     else if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_VC_STATE_CONNECTED) {
         switch(sc->state.cstate) {
         case CONN_STATE_TC_C_CNTING:

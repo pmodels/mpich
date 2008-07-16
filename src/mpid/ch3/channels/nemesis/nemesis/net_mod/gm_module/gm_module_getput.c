@@ -23,7 +23,7 @@ getput_callback (struct gm_port *p, void *completion_ctr, gm_status_t status)
 int
 MPID_nem_gm_module_do_get (void *target_p, void *source_p, int len, int node_id, int port_id, int *completion_ctr)
 {
-    //    gm_get (MPID_nem_module_gm_port, (long)source_p, target_p, len, GM_LOW_PRIORITY, node_id, port_id, getput_callback, completion_ctr);
+/*     gm_get (MPID_nem_module_gm_port, (long)source_p, target_p, len, GM_LOW_PRIORITY, node_id, port_id, getput_callback, completion_ctr); */
     
     --MPID_nem_module_gm_num_send_tokens;
     return MPI_SUCCESS;
@@ -81,7 +81,7 @@ MPID_nem_gm_module_get (void *target_p, void *source_p, int len, MPIDI_VC_t *sou
 int
 MPID_nem_gm_module_do_put (void *target_p, void *source_p, int len, int node_id, int port_id, int *completion_ctr)
 {
-    //    gm_put (MPID_nem_module_gm_port, source_p, (long)target_p, len, GM_LOW_PRIORITY, node_id, port_id, getput_callback, completion_ctr);
+/*     gm_put (MPID_nem_module_gm_port, source_p, (long)target_p, len, GM_LOW_PRIORITY, node_id, port_id, getput_callback, completion_ctr); */
 
     --MPID_nem_module_gm_num_send_tokens;
     return MPI_SUCCESS;

@@ -18,7 +18,6 @@ MPID_nem_psm_module_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
 {
     MPID_nem_psm_cell_ptr_t cell_req;
     psm_mq_req_t            *request;   
-    //psm_segment_t         seg;   
     psm_error_t             ret;	   
     psm_mq_status_t         status;
     uint32_t                result;
@@ -47,9 +46,7 @@ MPID_nem_psm_module_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
                                  MPI_ERR_OTHER, "**psm_test", "**psm_test %s", psm_error_get_string (ret));
            
         ret = psm_mq_test(req, &status);
-	//ret = psm_mq_wait(req, &status);
-        
-	//MPIU_ERR_CHKANDJUMP1 (ret != PSM_OK, mpi_errno, MPI_ERR_OTHER, "**psm_wait", "**psm_wait %s", psm_error_get_string (ret));
+
 	if((ret == PSM_OK) && (*req == PSM_MQ_REQINVALID))
         {	
             MPID_nem_queue_enqueue (MPID_nem_process_free_queue, (MPID_nem_cell_ptr_t)status.context); 
@@ -71,10 +68,7 @@ MPID_nem_psm_module_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
         {	     
             request   = MPID_NEM_PSM_CELL_TO_REQUEST(cell_req);
             data_size = datalen + MPID_NEM_MPICH2_HEAD_LEN;
-            //strcpy(buf, (&cell)->pkt);
-            
-            //seg.segment_ptr    = (void *)(MPID_NEM_CELL_TO_PACKET (cell));	       	
-            //seg.segment_length = data_size ;  
+
 	    
             ret = psm_mq_isend(MPID_nem_module_psm_mq,
 			    MPID_nem_module_psm_endpoint_addrs[dest],
@@ -98,7 +92,6 @@ MPID_nem_psm_module_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
             {	
                 ret = psm_mq_test(request, &status);
 
-                //MPIU_ERR_CHKANDJUMP1 (ret != PSM_OK, mpi_errno, MPI_ERR_OTHER, "**psm_test", "**psm_test %s", psm_error_get_string (ret));
                 if((ret == PSM_OK) && (*request == PSM_MQ_REQINVALID))		    
                 {
                     cell_req->psm_request = *request;

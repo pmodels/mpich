@@ -327,7 +327,6 @@ int MPID_nem_newtcp_module_connect_to_root (const char *business_card, MPIDI_VC_
 #define FUNCNAME MPID_nem_newtcp_module_vc_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-//int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
 int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;

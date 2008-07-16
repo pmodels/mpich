@@ -280,7 +280,7 @@ int MPID_nem_send_from_queue()
                 if (!reqFn)
                 {
                     MPIDI_CH3U_Request_complete(active_send);
-                    //MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+/*                     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete"); */
                     active_send = NULL;
                 }
                 else

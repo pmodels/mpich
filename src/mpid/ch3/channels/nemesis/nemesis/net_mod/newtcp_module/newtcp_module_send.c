@@ -104,9 +104,6 @@ int send_queued (MPIDI_VC_t *vc)
         
         iov = &sreq->dev.iov[sreq->dev.iov_offset];
 
-/*         printf("sreq = %p sreq->dev.iov = %p iov = %p\n", sreq, sreq->dev.iov, iov); */
-/*         printf("iov[0].MPID_IOV_BUF = %p iov[0].MPID_IOV_LEN = %d iov_count = %d\n", iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN, sreq->dev.iov_count);//DARIUS */
-/*         printf("&iov[0].MPID_IOV_LEN = %p sreq->dev.iov_offset = %d\n", &iov[0].MPID_IOV_LEN, sreq->dev.iov_offset);//DARIUS */
         CHECK_EINTR(offset, writev(VC_FIELD(vc, sc)->fd, iov, sreq->dev.iov_count));
         MPIU_ERR_CHKANDJUMP(offset == 0, mpi_errno, MPI_ERR_OTHER, "**sock_closed");
         if (offset == -1)
@@ -183,8 +180,6 @@ int MPID_nem_newtcp_module_send_finalize()
         S_POP (&free_buffers, &e);
         MPIU_Free (e);
     }
-/*     printf ("  done\n");//DARIUS */
-
     return mpi_errno;
 }
 
@@ -278,9 +273,6 @@ int MPID_nem_newtcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
 
-/*     printf("&sreq->dev.pending_pkt = %p sizeof(MPIDI_CH3_PktGeneric_t) = %d\n", &sreq->dev.pending_pkt, sizeof(MPIDI_CH3_PktGeneric_t));//DARIUS */
-/*     printf("offset = %d\n", offset);//DARIUS */
-
     if (offset < sizeof(MPIDI_CH3_PktGeneric_t))
     {
         sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)hdr;
@@ -303,11 +295,6 @@ int MPID_nem_newtcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
     }
     
     MPIU_Assert(sreq->dev.iov_count >= 1 && sreq->dev.iov[0].MPID_IOV_LEN > 0);
-
-/*     printf("sreq = %p sreq->dev.iov = %p\n", sreq, sreq->dev.iov); */
-/*     printf("sreq->dev.iov[0].MPID_IOV_BUF = %p\n", sreq->dev.iov[0].MPID_IOV_BUF);//DARIUS */
-/*     printf("sreq->dev.iov[0].MPID_IOV_LEN = %d\n", sreq->dev.iov[0].MPID_IOV_LEN);//DARIUS */
-/*     printf("&sreq->dev.iov[0].MPID_IOV_LEN = %p\n", &sreq->dev.iov[0].MPID_IOV_LEN);//DARIUS */
 
     if (SENDQ_EMPTY(VC_FIELD(vc, send_queue)) && MPID_nem_newtcp_module_vc_is_connected(vc))
         SET_PLFD(vc);

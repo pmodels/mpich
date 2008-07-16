@@ -140,7 +140,6 @@ MPID_nem_newtcp_module_check_sock_status(const pollfd_t *const plfd)
     {
         rc = MPID_NEM_NEWTCP_MODULE_SOCK_ERROR_EOF;
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "POLLERR on socket"));
-	fprintf(stderr, "%s: POLLERR on socket (fd=%d)\n", __FUNCTION__, plfd->fd); // sson1
         goto fn_exit;
     }
     if (plfd->revents & POLLIN || plfd->revents & POLLOUT) 
@@ -152,7 +151,6 @@ MPID_nem_newtcp_module_check_sock_status(const pollfd_t *const plfd)
         if (getsockopt(plfd->fd, SOL_SOCKET, SO_ERROR, &error, &n) < 0 || error != 0) 
         {
             rc = MPID_NEM_NEWTCP_MODULE_SOCK_ERROR_EOF; /*  (N1) */
-	    fprintf(stderr, "%s: getsockopt failure. error=%d:%s, (fd=%d)\n", __FUNCTION__, error, strerror(error), plfd->fd); // sson1
             MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "getsockopt failure. error=%d:%s", error, strerror(error)));
             goto fn_exit;
         }

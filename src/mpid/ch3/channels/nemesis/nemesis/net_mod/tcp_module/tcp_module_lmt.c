@@ -14,9 +14,9 @@ static int read_r_cookie (MPID_IOV cookie, char **hostname, int *port, int *data
 static void free_cookie (void *c);
 static int set_sockopts (int fd);
 
-//#define TESTING_CHUNKING
+/*#define TESTING_CHUNKING*/
 #ifdef TESTING_CHUNKING
-#define CHUNK 6299651//(32*1024)
+#define CHUNK 6299651/*(32*1024)*/
 #endif
 
 #undef FUNCNAME
@@ -79,9 +79,6 @@ int MPID_nem_tcp_module_lmt_pre_recv (MPIDI_VC_t *vc, MPID_Request *req, MPID_IO
     {
         vc_ch->net.tcp.lmt_desc = socket (AF_INET, SOCK_STREAM, 0);
         MPIU_ERR_CHKANDJUMP2 (vc_ch->net.tcp.lmt_desc == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", strerror (errno), errno);
-
-        //        ret = fcntl (vc_ch->net.tcp.lmt_desc, F_SETFL, O_NONBLOCK);
-        //        MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", strerror (errno), errno);
 
         saddr.sin_family      = AF_INET;
         saddr.sin_addr.s_addr = htonl (INADDR_ANY);
@@ -152,9 +149,6 @@ int MPID_nem_tcp_module_lmt_start_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_
 
         vc_ch->net.tcp.lmt_desc = socket (AF_INET, SOCK_STREAM, 0);
         MPIU_ERR_CHKANDJUMP2 (vc_ch->net.tcp.lmt_desc == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", strerror (errno), errno);
-
-        //        ret = fcntl (vc_ch->net.tcp.lmt_desc, F_SETFL, O_NONBLOCK);
-        //        MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", strerror (errno), errno);
 
         hp = gethostbyname (r_hostname);
         MPIU_ERR_CHKANDJUMP2 (hp == NULL, mpi_errno, MPI_ERR_OTHER, "**gethostbyname", "**gethostbyname %s %d", hstrerror (h_errno), h_errno);
@@ -298,9 +292,6 @@ int MPID_nem_tcp_module_lmt_start_recv (MPIDI_VC_t *vc, MPID_Request *req)
         /* set lmt_desc to new connected fd */
         vc_ch->net.tcp.lmt_desc = connfd;
         vc_ch->net.tcp.lmt_connected = 1;
-
-        //        ret = fcntl (vc_ch->net.tcp.lmt_desc, F_SETFL, O_NONBLOCK);
-        //        MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", strerror (errno), errno);
     }
 
     MPIDI_Datatype_get_info (req->dev.user_count, req->dev.datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);

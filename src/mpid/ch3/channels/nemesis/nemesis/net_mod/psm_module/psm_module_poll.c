@@ -91,7 +91,6 @@ inline int
 MPID_nem_psm_module_recv()
 {
    int                 mpi_errno = MPI_SUCCESS;
-   //psm_segment_t        seg;
    psm_error_t         ret;
    psm_mq_status_t         status;
    uint32_t            result;
@@ -143,8 +142,6 @@ MPID_nem_psm_module_recv()
            request = MPID_NEM_PSM_CELL_TO_REQUEST(cell_req);		
 	   
            MPID_nem_queue_dequeue (MPID_nem_module_psm_free_queue, &cell);	    	     
-           //seg.segment_ptr    = (void *)(MPID_NEM_CELL_TO_PACKET (cell));
-           //seg.segment_length = MPID_NEM_CELL_PAYLOAD_LEN ;
 	   
            ret = psm_mq_irecv(MPID_nem_module_psm_mq, 
                            MQ_TAG,

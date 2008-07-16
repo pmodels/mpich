@@ -39,8 +39,4 @@ int  MPID_nem_psm_module_lmt_send_post (struct iovec cookie);
 int  MPID_nem_psm_module_lmt_recv_post (struct iovec cookie);
 
 
-//#define LMT_COMPLETE 0
-//#define LMT_FAILURE 1
-//#define LMT_AGAIN 2
-
 #endif
