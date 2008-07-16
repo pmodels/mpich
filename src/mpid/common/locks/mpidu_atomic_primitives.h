@@ -125,6 +125,7 @@ static inline int MPIDU_Atomic_LL_int(volatile int *ptr)
     return val;
 #else
     MPIU_Assertp(0); /*can't emulate*/
+    return 0;
 #endif
 }
 
@@ -144,6 +145,7 @@ static inline int MPIDU_Atomic_SC_int(volatile int *ptr, int val)
     return ret;
 #else
     MPIU_Assertp(0); /*can't emulate*/
+    return 0;
 #endif
 }
 
@@ -167,6 +169,7 @@ static inline int *MPIDU_Atomic_LL_int_ptr(volatile int **ptr)
     }
 #else
     MPIU_Assertp(0); /*can't emulate*/
+    return NULL;
 #endif
 }
 
@@ -184,6 +187,7 @@ static inline int MPIDU_Atomic_SC_int_ptr(volatile int **ptr, int *val)
     }
 #else
     MPIU_Assertp(0); /*can't emulate*/
+    return NULL;
 #endif
 }
 
