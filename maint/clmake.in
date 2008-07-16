@@ -87,6 +87,7 @@ foreach $_ (@ARGV) {
     if (/^--?debug/) { $debug = 1; }
     elsif (/^--?showdir/) { $debugDir = 1; }
     elsif (/^--?summary/) { $summaryOutput = 1; }
+    elsif (/^--?notrimcompileline/) { $trimCompileLine = 0; }
     elsif (/^-/) {
 	print STDERR "Unrecognized argument $_\n";
 	print STDERR "clmake [ -debug ] [ -showdir ] [ -summary ]\n";
