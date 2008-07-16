@@ -1,3 +1,8 @@
 proberank 1
 truncmsg1 2
 truncmsg2 2
+# multiple completion ests
+errinstatts 2
+errinstatta 2
+errinstatws 2
+errinstatwa 2

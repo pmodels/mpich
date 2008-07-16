@@ -16,10 +16,6 @@ bsendalign 2
 bsendpending 2
 isendself 1
 bsendfrag 2
-errinstatts 2
-errinstatta 2
-errinstatws 2
-errinstatwa 2
 icsend 4
 rqstatus 2
 rqfreeb 4

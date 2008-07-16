@@ -9,6 +9,10 @@ EXTRA_PROGRAMS       =
 proberank_SOURCES    = proberank.c
 truncmsg1_SOURCES    = truncmsg1.c
 truncmsg2_SOURCES    = truncmsg2.c
+errinstatts_SOURCES  = errinstatts.c
+errinstatta_SOURCES  = errinstatta.c
+errinstatws_SOURCES  = errinstatws.c
+errinstatwa_SOURCES  = errinstatwa.c
 
 ../../util/mtest.o:
 	(cd ../../util && $(MAKE) mtest.o)
