@@ -187,7 +187,7 @@ static inline int MPIDU_Atomic_SC_int_ptr(volatile int **ptr, int *val)
     }
 #else
     MPIU_Assertp(0); /*can't emulate*/
-    return NULL;
+    return 0;
 #endif
 }
 
