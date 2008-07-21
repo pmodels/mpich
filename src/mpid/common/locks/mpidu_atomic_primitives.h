@@ -611,6 +611,7 @@ static inline int MPIDU_Atomic_swap_int(volatile int *ptr, int val)
         default:
             /* int is not 64 or 32 bits  */
             MPIU_Assert(0);
+            return val; /* placate the compiler */
             break;
     }
 #elif defined(HAVE_GCC_AND_IA64_ASM)
@@ -645,6 +646,7 @@ static inline MPI_Aint MPIDU_Atomic_swap_aint(volatile MPI_Aint *ptr, MPI_Aint v
         default:
             /* int is not 64 or 32 bits  */
             MPIU_Assert(0);
+            return val; /* placate the compiler */
             break;
     }
 #elif defined(HAVE_GCC_AND_IA64_ASM)
