@@ -165,7 +165,7 @@ void ADIOI_incorporate_system_hints(MPI_Info info,
 /* debug function: a routine I want in the library to make my life easier when
  * using a source debugger. please ignore any "defined but not used" warnings
  */
-static void dump_keys(info) {
+static void dump_keys(MPI_Info info) {
     int i, nkeys, flag;
     char key[MPI_MAX_INFO_KEY];
     char value[MPI_MAX_INFO_VAL];
