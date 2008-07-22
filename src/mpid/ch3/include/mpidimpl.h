@@ -1286,7 +1286,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
                                           int context_id, MPID_Comm *comm, void *user_buf,
                                            int user_count, MPI_Datatype datatype, int * foundp);
 int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq);
-MPID_Request * MPIDI_CH3U_Recvq_FDP(MPIDI_Message_match * match);
+/* MPID_Request * MPIDI_CH3U_Recvq_FDP(MPIDI_Message_match * match); */
 MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match, 
 					   int * found);
 
