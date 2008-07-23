@@ -5535,6 +5535,16 @@ export MPICH2_THREAD_PACKAGE
 
 AC_CHECK_FUNCS(sched_yield yield usleep sleep select)
 
+# Check for the Linux functions for controlling processor affinity.
+# 
+AC_CHECK_FUNCS(sched_setaffinity sched_getaffinity)
+if test "$ac_cv_func_sched_setaffinity" = "yes" ; then
+    # Test for the cpu process set type
+    AC_CACHE_CHECK([whether cpu_set_t available],pac_cv_have_cpu_set_t,[
+    AC_TRY_COMPILE( [
+#include <sched.h>],[ cpu_set_t t; ],pac_cv_have_cpu_set_t=yes,pac_cv_have_cpu_set_t=no)])
+fi
+
 #
 # THR_LDFLAGS are added to the WRAPPER_LDFLAGS (used to link user MPI programs)
 # THR_CFLAGS should be used only to compile the MPI library, not to compile

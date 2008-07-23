@@ -290,6 +290,19 @@ else
 	fi
     fi
 fi
+#
+# Check for the Linux functions for controlling processor affinity.
+# 
+AC_CHECK_FUNCS(sched_setaffinity sched_getaffinity)
+if test "$ac_cv_func_sched_setaffinity" = "yes" ; then
+    # Test for the cpu process set type
+    AC_CACHE_CHECK([whether cpu_set_t available],pac_cv_have_cpu_set_t,[
+    AC_TRY_COMPILE( [
+#include <sched.h>],[ cpu_set_t t; ],pac_cv_have_cpu_set_t=yes,pac_cv_have_cpu_set_t=no)])
+    if test "$pac_cv_have_cpu_set_t" = yes ; then
+        AC_DEFINE(HAVE_CPU_SET_T,1,[Define if cpu_set_t is defined in sched.h])
+    fi
+fi
 
 dnl Setup other replaceable values
 MPILIBNAME=${MPILIBNAME:-"mpich"}

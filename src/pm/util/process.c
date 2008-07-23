@@ -1004,3 +1004,36 @@ int MPIE_SetupSingleton( ProcessUniverse *pUniv )
 
     return 0;
 }
+
+#if defined(HAVE_SCHED_SETAFFINITY) && defined(HAVE_CPU_SET_T)
+/* FIXME: This is an ugly hack to ensure that the macros to manipulate the
+ * cpu_set_t are defined - without these, you can't use the affinity routines
+ */
+#define __USE_GNU
+#include <sched.h>
+/*
+ * Set the processor affinity for the calling process.  Normally, this will
+ * be used in the "postfork" routine provided by the process manager, before
+ * the user's application is exec'ed.
+ */
+int MPIE_SetProcessorAffinity( int num )
+{
+    cpu_set_t cpuset;
+    int err;
+    
+    CPU_ZERO(&cpuset);
+    CPU_SET(num,&cpuset);
+    err = sched_setaffinity( 0, sizeof(cpu_set_t), &cpuset );
+    if (err < 0) {
+	/* Can check errno here for reasons */
+	return 1;
+    }
+
+    return 0;
+}
+#else
+int MPIE_SetProcessorAffinity( int num )
+{
+    return 1;
+}
+#endif
