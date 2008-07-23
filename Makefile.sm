@@ -65,6 +65,7 @@ cleanlibs:
 
 all-preamble:
 	@echo "Beginning make"
+	@echo "Using variables CC='@CC@' CFLAGS='@CFLAGS@' LDFLAGS='@LDFLAGS@' AR='@AR@' FC='@FC@' F90='@F90@' FFLAGS='@FFLAGS@' F90FLAGS='@F90FLAGS@' CXX='@CXX@'"
 
 # Add any final extras:
 #    1) Build the debugger interface if requested
