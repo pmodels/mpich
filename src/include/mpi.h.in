@@ -166,7 +166,6 @@ typedef int MPI_Op;
 /* These are only guesses; make sure you change them in mpif.h as well */
 #define MPI_MAX_PROCESSOR_NAME @MPI_MAX_PROCESSOR_NAME@
 #define MPI_MAX_ERROR_STRING  1024 
-#define MPI_MAX_NAME_STRING     63
 #define MPI_MAX_PORT_NAME      256
 #define MPI_MAX_OBJECT_NAME    128
 
