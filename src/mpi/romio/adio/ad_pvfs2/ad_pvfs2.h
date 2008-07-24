@@ -49,4 +49,12 @@ void ADIOI_PVFS2_AIO_contig(ADIO_File fd, void *buf, int count,
 			    MPI_Datatype datatype, int file_ptr_type,
 			    ADIO_Offset offset, MPI_Request *request,
 			    int flag, int *error_code);
+void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, void *buf, int count,
+		       MPI_Datatype datatype, int file_ptr_type,
+		       ADIO_Offset offset, ADIO_Status *status, int
+		       *error_code);
+void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, int count,
+		       MPI_Datatype datatype, int file_ptr_type,
+		       ADIO_Offset offset, ADIO_Status *status, int
+		       *error_code);
 #endif
