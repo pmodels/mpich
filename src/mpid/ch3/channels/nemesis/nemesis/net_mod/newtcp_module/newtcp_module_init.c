@@ -33,7 +33,9 @@ static MPID_nem_queue_t _free_queue;
 
 static int dbg_ifname = 0;
 
+#if 0
 static int GetIPInterface( MPIDU_Sock_ifaddr_t *, int * );
+#endif
 
 #define MPIDI_CH3I_PORT_KEY "port"
 #define MPIDI_CH3I_HOST_DESCRIPTION_KEY "description"
@@ -176,7 +178,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 	   directly from the available interfaces, if that is supported on
 	   this platform.  Otherwise, we'll drop into the next step that uses 
 	   the ifname */
-	mpi_errno = GetIPInterface( ifaddr, &ifaddrFound );
+	mpi_errno = MPIDI_GetIPInterface( ifaddr, &ifaddrFound );
     }
     else {
 	/* Copy this name into the output name */
@@ -503,12 +505,12 @@ int MPID_nem_newtcp_module_vc_terminate (MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS, rc;
     sockconn_t *sc;
 
-    MPIDI_FUNC_ENTER(FUNCNAME);
+    MPIDI_FUNC_ENTER(MPID_NEM_NEWTCP_MODULE_VC_TERMINATE);
 
     mpi_errno = MPID_nem_newtcp_module_cleanup(vc);
     
  fn_exit:
-    MPIDI_FUNC_EXIT(FUNCNAME);
+    MPIDI_FUNC_EXIT(MPID_NEM_NEWTCP_MODULE_VC_TERMINATE);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
@@ -516,10 +518,26 @@ int MPID_nem_newtcp_module_vc_terminate (MPIDI_VC_t *vc)
 }
 
 
+#if 0
 /* These includes are here because they're used just for getting the interface
  *   names
  */
 
+/* FIXME: This more-or-less duplicates the code in 
+   ch3/util/sock/ch3u_getintefaces.c , which is already more thoroughly 
+   tested and more portable than the code here.
+ */
+#ifdef USE_NOPOSIX_FOR_IFCONF
+/* This is a very special case.  Allow the use of some extensions for 
+   just the rest of this file so that we can get the ifconf structure */
+#undef _POSIX_C_SOURCE
+#endif
+
+#ifdef USE_SVIDSOURCE_FOR_IFCONF
+/* This is a very special case.  Allow the use of some extensions for just
+   the rest of this file so that we can get the ifconf structure */
+#define _SVID_SOURCE
+#endif
 
 #include <sys/types.h>
 
@@ -714,4 +732,5 @@ static int GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
     *found = 0;
     return 0;
 }
+#endif
 #endif
