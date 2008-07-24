@@ -118,6 +118,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     int has_args;
     int has_env;
     int thread_provided;
+    int rc;
     MPIU_THREADPRIV_DECL;
 
     /* FIXME: Move to os-dependent interface? */
@@ -263,9 +264,9 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     /* Call any and all MPID_Init type functions */
     /* FIXME: The call to err init should be within an ifdef
        HAVE_ ERROR_CHECKING block (as must all uses of Err_create_code) */
-    MPID_Wtime_init();
+    rc = MPID_Wtime_init();
 #ifdef USE_DBG_LOGGING
-    MPIU_DBG_PreInit( argc, argv );
+    MPIU_DBG_PreInit( argc, argv, rc );
 #endif
     MPIR_Err_init();
     MPIR_Datatype_init();

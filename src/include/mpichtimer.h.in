@@ -188,11 +188,16 @@ double MPID_Wtick( void );
   'MPI_Finalize' this routine should register a handler with 'MPI_Finalize'
   (see the MPICH Design Document).
   
+  Return Values:
+  0 on success.  -1 on Failure.  1 means that the timer may not be used
+  until after MPID_Init completes.  This allows the device to set up the
+  timer (first needed for Blue Gene support).
+
   Module:
   Timer
 
   @*/
-void MPID_Wtime_init(void);
+int MPID_Wtime_init(void);
 
 /* Inlined timers.  Note that any definition of one of the functions
    prototyped above in terms of a macro will simply cause the compiler
@@ -212,15 +217,15 @@ void MPID_Wtime_init(void);
    */
 
 #if MPICH_TIMER_KIND == USE_GETHRTIME 
-#define MPID_Wtime_init()
+#define MPID_Wtime_init() 0
 #define MPIDM_Wtime_todouble MPID_Wtime_todouble
 
 #elif MPICH_TIMER_KIND == USE_CLOCK_GETTIME
-#define MPID_Wtime_init()
+#define MPID_Wtime_init() 0
 #define MPIDM_Wtime_todouble MPID_Wtime_todouble
 
 #elif MPICH_TIMER_KIND == USE_GETTIMEOFDAY
-#define MPID_Wtime_init()
+#define MPID_Wtime_init() 0
 #define MPIDM_Wtime_todouble MPID_Wtime_todouble
 
 #elif MPICH_TIMER_KIND == USE_LINUX86_CYCLE
@@ -261,7 +266,7 @@ extern double MPID_Seconds_per_tick;
 #define MPIDM_Wtime_todouble(t, d) *d = (double)*t * MPID_Seconds_per_tick
 
 #elif MPICH_TIMER_KIND == USE_LINUXALPHA_CYCLE
-#define MPID_Wtime_init()
+#define MPID_Wtime_init() 0
 #define MPIDM_Wtime_todouble MPID_Wtime_todouble
 
 #elif MPICH_TIMER_KIND == USE_QUERYPERFORMANCECOUNTER

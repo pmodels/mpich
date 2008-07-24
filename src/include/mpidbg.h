@@ -105,6 +105,6 @@ extern int MPIU_DBG_MaxLevel;
 int MPIU_DBG_Outevent(const char *, int, int, int, const char *, ...) 
                                         ATTRIBUTE((format(printf,5,6)));
 int MPIU_DBG_Init( int *, char ***, int, int, int );
-int MPIU_DBG_PreInit( int *, char *** );
+int MPIU_DBG_PreInit( int *, char ***, int );
 
 #endif

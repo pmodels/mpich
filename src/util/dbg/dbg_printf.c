@@ -355,6 +355,7 @@ static char *defaultFilePattern = "dbg@W%w-@%d@T-%t@.log";
 static int worldNum  = 0;
 static int worldRank = -1;
 static int whichRank = -1;             /* all ranks */
+static int    resetTimeOrigin = 1;
 static double timeOrigin = 0.0;
 
 static int MPIU_DBG_Usage( const char *, const char * );
@@ -615,7 +616,7 @@ static int MPIU_DBG_ProcessEnv( void )
  * is not responsible for updating the environment and/or command-line
  * arguments. 
  */
-int MPIU_DBG_PreInit( int *argc_p, char ***argv_p )
+int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
 {
     MPID_Time_t t;
 
@@ -631,8 +632,11 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p )
 
     MPIU_DBG_ProcessArgs( argc_p, argv_p );
 
-    MPID_Wtime( &t );
-    MPID_Wtime_todouble( &t, &timeOrigin );
+    if (wtimeNotReady == 0) {
+	MPID_Wtime( &t );
+	MPID_Wtime_todouble( &t, &timeOrigin );
+	resetTimeOrigin = 0;
+    }
 
     mpiu_dbg_initialized = 1;
 
@@ -648,6 +652,13 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
        available) */
     if (mpiu_dbg_initialized == 2) return 0;
 
+    /* We may need to wait until the device is set up to initialize the timer */
+    if (resetTimeOrigin) {
+	MPID_Time_t t;
+	MPID_Wtime( &t );
+	MPID_Wtime_todouble( &t, &timeOrigin );
+	resetTimeOrigin = 0;
+    }
     /* Check to see if any debugging was selected.  The order of these
        tests is important, as they allow general defaults to be set,
        followed by more specific modifications. */
