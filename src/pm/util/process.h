@@ -186,4 +186,7 @@ int MPIE_ParseSoftspec( const char *, ProcessSoftSpec * );
 int MPIE_InitForDebugger( ProcessWorld * );
 int MPIE_FreeFromDebugger( void );
 
+/* Set the processor affinity to the processor with the given rank */
+int MPIE_SetProcessorAffinity( int, int );
+
 #endif

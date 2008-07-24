@@ -1005,24 +1005,36 @@ int MPIE_SetupSingleton( ProcessUniverse *pUniv )
     return 0;
 }
 
-#if defined(HAVE_SCHED_SETAFFINITY) && defined(HAVE_CPU_SET_T)
+#if defined(HAVE_SCHED_SETAFFINITY) && defined(HAVE_CPU_SET_T) && \
+    defined(HAVE_CPU_SET_MACROS)
 /* FIXME: This is an ugly hack to ensure that the macros to manipulate the
  * cpu_set_t are defined - without these, you can't use the affinity routines
  */
+#ifdef NEED___USE_GNU_FOR_CPU_SET
 #define __USE_GNU
+#endif
 #include <sched.h>
 /*
  * Set the processor affinity for the calling process.  Normally, this will
  * be used in the "postfork" routine provided by the process manager, before
  * the user's application is exec'ed.
+ *
+ * To work with multithreaded applications, the process can set the 
+ * affinity set to contain "size" processors, starting with the one 
+ * numbered "rank".  
+ *
+ * More complex affinity sets may be necessary, so we may want to 
+ * provide a second, more general routine (perhaps taking a cpu set mask).
  */
-int MPIE_SetProcessorAffinity( int num )
+int MPIE_SetProcessorAffinity( int rank, int size )
 {
     cpu_set_t cpuset;
-    int err;
+    int       i, err;
     
     CPU_ZERO(&cpuset);
-    CPU_SET(num,&cpuset);
+    for (i=0; i<size; i++) {
+	CPU_SET((num+i),&cpuset);
+    }
     err = sched_setaffinity( 0, sizeof(cpu_set_t), &cpuset );
     if (err < 0) {
 	/* Can check errno here for reasons */
@@ -1031,8 +1043,30 @@ int MPIE_SetProcessorAffinity( int num )
 
     return 0;
 }
+#elif defined(HAVE_BINDPROCESSOR)
+/* AIX processor affinity */
+#include <sys/processor.h>
+int MPIE_SetProcessorAffinity( int rank, int size )
+{
+    int pid;
+    pid = getpid();
+
+    err = bindprocessor( BINDPROCESS, pid, rank );
+    /* Use BINDTHREAD instead of BINDPROCESS to bind threads to processors -
+       in which case, the pid is a thread id */
+    if (err < 0) {
+	return 1;
+    }
+    return 0;
+}
+#elif defined(HAVE_OSX_THREAD_AFFINITY) && 0
+/* OSX only has affinity policies, and they don't fit this model well */
+int MPIE_SetProcessorAffinity( int rank, int size )
+{
+    return 1;
+}
 #else
-int MPIE_SetProcessorAffinity( int num )
+int MPIE_SetProcessorAffinity( int rank, int size )
 {
     return 1;
 }
