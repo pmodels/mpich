@@ -1030,7 +1030,8 @@ int MPIE_SetProcessorAffinity( int rank, int size )
 {
     cpu_set_t cpuset;
     int       i, err;
-    
+
+#if 0    
     CPU_ZERO(&cpuset);
     for (i=0; i<size; i++) {
 	CPU_SET((rank+i),&cpuset);
@@ -1040,6 +1041,7 @@ int MPIE_SetProcessorAffinity( int rank, int size )
 	/* Can check errno here for reasons */
 	return 1;
     }
+#endif
 
     return 0;
 }
