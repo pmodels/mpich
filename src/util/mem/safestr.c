@@ -15,7 +15,7 @@
  */
 
 /*
- * MPIU_Strncpy - Copy at most n character.  Stop once a null is reached.
+ * MPIU_Strncpy - Copy at most n characters.  Stop once a null is reached.
  *
  * This is different from strncpy, which null pads so that exactly
  * n characters are copied.  The strncpy behavior is correct for many 
