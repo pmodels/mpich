@@ -277,6 +277,11 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *index, int *edges,
 		    }
 		}
 	    }
+	    /* 
+	     * As of MPI 2.1, null edges are expressly permitted, so this 
+	     * test is no longer needed.
+	     */
+#if 0
 	    /* We could also check that no edge is from a node to itself.
 	       This gives us an excuse to run over the entire arrays. 
 	       This test could be combined with the above to make the code
@@ -297,6 +302,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *index, int *edges,
 		    }
 		}
 	    }
+#endif
 	    
             if (mpi_errno) goto fn_fail;
         }
