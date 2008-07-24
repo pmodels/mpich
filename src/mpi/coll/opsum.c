@@ -368,7 +368,7 @@ int MPIR_SUM_check_dtype ( MPI_Datatype type )
     case MPI_REAL16:
     case MPI_COMPLEX32:
 #endif
-#ifdef HAVE_CXX_BINDING:
+#ifdef HAVE_CXX_BINDING
     case MPIR_CXX_COMPLEX_VALUE:
     case MPIR_CXX_DOUBLE_COMPLEX_VALUE:
 #ifdef HAVE_LONG_DOUBLE
