@@ -480,6 +480,7 @@ int MPID_nem_newtcp_module_bind (int sockfd)
 int MPID_nem_newtcp_module_vc_terminate (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_NEM_NEWTCP_MODULE_VC_TERMINATE);
 
     MPIDI_FUNC_ENTER(MPID_NEM_NEWTCP_MODULE_VC_TERMINATE);
 
