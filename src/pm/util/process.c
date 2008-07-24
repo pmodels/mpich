@@ -1033,7 +1033,7 @@ int MPIE_SetProcessorAffinity( int rank, int size )
     
     CPU_ZERO(&cpuset);
     for (i=0; i<size; i++) {
-	CPU_SET((num+i),&cpuset);
+	CPU_SET((rank+i),&cpuset);
     }
     err = sched_setaffinity( 0, sizeof(cpu_set_t), &cpuset );
     if (err < 0) {
