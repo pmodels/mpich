@@ -389,4 +389,13 @@
 #define MPI_File_f2c PMPI_File_f2c
 #endif
 
+#undef MPI_Type_get_attr
+#define MPI_Type_get_attr PMPI_Type_get_attr
+#undef MPI_Type_set_attr
+#define MPI_Type_set_attr PMPI_Type_set_attr
+#undef MPI_Comm_set_attr
+#define MPI_Comm_set_attr PMPI_Comm_set_attr
+#undef MPI_Type_create_keyval
+#define MPI_Type_create_keyval PMPI_Type_create_keyval
+
 #endif
