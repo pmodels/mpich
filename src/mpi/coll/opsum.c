@@ -10,6 +10,11 @@
 /* 
  * In MPI-1, this operation is valid only for  C integer, Fortran integer,
  * floating point, and complex data items (4.9.2 Predefined reduce operations)
+ *
+ * In MPI-2, it is valid for more operations.  
+ * Of particular interest are the C++ operations that may not correspond
+ * to C or Fortran counterparts.  MPI::COMPLEX (C++ Complex) (and the long
+ * version) may fall into this category.
  */
 #define MPIR_LSUM(a,b) ((a)+(b))
 
@@ -22,7 +27,7 @@ void MPIR_SUM (
     static const char FCNAME[] = "MPIR_SUM";
     int i, len = *Len;
 
-#ifdef HAVE_FORTRAN_BINDING
+#if defined(HAVE_FORTRAN_BINDING) || defined(HAVE_CXX_BINDING)
     typedef struct { 
         float re;
         float im; 
@@ -32,6 +37,12 @@ void MPIR_SUM (
         double re;
         double im; 
     } d_complex;
+#endif
+#if defined(HAVE_LONG_DOUBLE) && defined(HAVE_CXX_BINDING)
+    typedef struct {
+	long double re;
+	long double im;
+    } ld_complex;
 #endif
 
     switch (*type) {
@@ -229,7 +240,7 @@ void MPIR_SUM (
     case MPI_COMPLEX8:
     case MPI_COMPLEX: {
         s_complex * restrict a = (s_complex *)inoutvec; 
-        s_complex * restrict b = (s_complex *)invec;
+        s_complex const * restrict b = (s_complex *)invec;
         for ( i=0; i<len; i++ ) {
             a[i].re = MPIR_LSUM(a[i].re ,b[i].re);
             a[i].im = MPIR_LSUM(a[i].im ,b[i].im);
@@ -239,7 +250,7 @@ void MPIR_SUM (
     case MPI_COMPLEX16:
     case MPI_DOUBLE_COMPLEX: {
         d_complex * restrict a = (d_complex *)inoutvec; 
-        d_complex * restrict b = (d_complex *)invec;
+        d_complex const * restrict b = (d_complex *)invec;
         for ( i=0; i<len; i++ ) {
             a[i].re = MPIR_LSUM(a[i].re ,b[i].re);
             a[i].im = MPIR_LSUM(a[i].im ,b[i].im);
@@ -247,7 +258,38 @@ void MPIR_SUM (
         break;
     }
 	/* FIXME: Need complex8, 16, and 32 */
-#endif
+#endif /* HAVE_FORTRAN_BINDING */
+#ifdef HAVE_CXX_BINDING
+    case MPIR_CXX_COMPLEX_VALUE: {
+        s_complex * restrict a = (s_complex *)inoutvec; 
+        s_complex const * restrict b = (s_complex *)invec;
+        for ( i=0; i<len; i++ ) {
+            a[i].re = MPIR_LSUM(a[i].re ,b[i].re);
+            a[i].im = MPIR_LSUM(a[i].im ,b[i].im);
+        }
+        break;
+    }
+    case MPIR_CXX_DOUBLE_COMPLEX_VALUE: {
+        d_complex * restrict a = (d_complex *)inoutvec; 
+        d_complex const * restrict b = (d_complex *)invec;
+        for ( i=0; i<len; i++ ) {
+            a[i].re = MPIR_LSUM(a[i].re ,b[i].re);
+            a[i].im = MPIR_LSUM(a[i].im ,b[i].im);
+        }
+        break;
+    }
+#ifdef HAVE_LONG_DOUBLE
+    case MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE: {
+        ld_complex * restrict a = (ld_complex *)inoutvec; 
+        ld_complex const * restrict b = (ld_complex *)invec;
+        for ( i=0; i<len; i++ ) {
+            a[i].re = MPIR_LSUM(a[i].re ,b[i].re);
+            a[i].im = MPIR_LSUM(a[i].im ,b[i].im);
+        }
+        break;
+    }
+#endif /* HAVE_LONG_DOUBLE */
+#endif /* HAVE_CXX_BINDING */
 	/* --BEGIN ERROR HANDLING-- */
     default: {
         MPICH_PerThread_t *p;
