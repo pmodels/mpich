@@ -10,6 +10,7 @@
 
 #include "../../../include/mpidi_ch3i_nemesis_conf.h"
 
+/* FIXME: This should use the standard debug/logging routines and macros */
 static int dbg_ifname = 0;
 
 /* FIXME: This more-or-less duplicates the code in 
