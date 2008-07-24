@@ -71,6 +71,7 @@ int MPID_nem_newtcp_module_get_conninfo(struct MPIDI_VC *vc, struct sockaddr_in 
 int MPID_nem_newtcp_module_get_vc_from_conninfo(char *pg_id, int pg_rank, struct MPIDI_VC **vc);
 int MPID_nem_newtcp_module_is_sock_connected(int fd);
 int MPID_nem_newtcp_module_disconnect(struct MPIDI_VC *const vc);
+int MPID_nem_newtcp_module_cleanup (struct MPIDI_VC *const vc);
 int MPID_nem_newtcp_module_state_listening_handler(pollfd_t *const l_plfd, sockconn_t *const l_sc);
 
 int MPID_nem_newtcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz);
@@ -123,5 +124,19 @@ int MPID_nem_newtcp_module_get_addr_port_from_bc(const char *business_card, stru
 #define S_PUSH(sp, ep) GENERIC_S_PUSH (sp, ep, next)
 #define S_PUSH_MULTIPLE(sp, ep0, ep1) GENERIC_S_PUSH_MULTIPLE (sp, ep0, ep1, next)
 #define S_POP(sp, ep) GENERIC_S_POP (sp, ep, next)
+
+/* interface utilities */
+/*S
+  MPIDU_Sock_ifaddr_t - Structure to hold an Internet address.
+
++ len - Length of the address.  4 for IPv4, 16 for IPv6.
+- ifaddr - Address bytes (as bytes, not characters)
+
+S*/
+typedef struct MPIDU_Sock_ifaddr_t {
+    int len, type;
+    unsigned char ifaddr[16];
+} MPIDU_Sock_ifaddr_t;
+int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found );
 
 #endif /* NEWTCP_MODULE_IMPL_H */

@@ -39,39 +39,32 @@ static int dbg_ifname = 0;
 #include <net/if.h>
 #endif
 #ifdef HAVE_SYS_SOCKIO_H
-/* Needed for SIOCGIFCONF */
+/* Needed for SIOCGIFCONF on various flavors of unix */
 #include <sys/sockio.h>
 #endif
-
-#if defined(SIOCGIFCONF) && defined(HAVE_STRUCT_IFCONF)
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#ifdef HAVE_SYS_IOCTL_H
+/* Needed for SIOCGIFCONF on linux */
 #include <sys/ioctl.h>
-#include <errno.h>
-
-/* FIXME: This should be shared with newtcp_module_init.c */
-/*S
-  MPIDU_Sock_ifaddr_t - Structure to hold an Internet address.
-
-+ len - Length of the address.  4 for IPv4, 16 for IPv6.
-- ifaddr - Address bytes (as bytes, not characters)
-
-S*/
-typedef struct MPIDU_Sock_ifaddr_t {
-    int len, type;
-    unsigned char ifaddr[16];
-} MPIDU_Sock_ifaddr_t;
-
+#endif
 
 /* We can only access the interfaces if we have a number of features.
    Test for these, otherwise define this routine to return false in the
    "found" variable */
+#if defined(SIOCGIFCONF) && defined(HAVE_STRUCT_IFCONF)
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
 
 #define NUM_IFREQS 10
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_GetIPInterface
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 {
-    char *buf_ptr, *ptr;
+    int mpi_errno = MPI_SUCCESS;
+    char *buf_ptr = NULL, *ptr;
     int buf_len, buf_len_prev;
     int fd;
     MPIDU_Sock_ifaddr_t myifaddr;
@@ -81,11 +74,14 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 #ifdef WORDS_BIGENDIAN
     unsigned int MSBlocalhost = 0x7f000001;
 #endif
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_GETIPINTERFACE);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_GETIPINTERFACE);
+    *found = 0;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
-	fprintf( stderr, "Unable to open an AF_INET socket\n" );
-	return 1;
+	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_create");
     }
 
     /* Use MSB localhost if necessary */
@@ -111,8 +107,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 
 	buf_ptr = (char *) MPIU_Malloc(buf_len);
 	if (buf_ptr == NULL) {
-	    fprintf( stderr, "Unable to allocate %d bytes\n", buf_len );
-	    return 1;
+	    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", buf_len);
 	}
 	
 	ifconf.ifc_buf = buf_ptr;
@@ -121,9 +116,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 	rc = ioctl(fd, SIOCGIFCONF, &ifconf);
 	if (rc < 0) {
 	    if (errno != EINVAL || buf_len_prev != 0) {
-		fprintf( stderr, "Error from ioctl = %d\n", errno );
-		perror(" Error is: ");
-		return 1;
+		MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIU_Strerror(errno));
 	    }
 	}
         else {
@@ -138,7 +131,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 	MPIU_Free(buf_ptr);
 	buf_len += NUM_IFREQS * sizeof(struct ifreq);
     }
-	
+
     /*
      * Now that we've got the interface information, we need to run through
      * the interfaces and check out the ip addresses.  If we find a
@@ -202,7 +195,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 	ptr += _SIZEOF_ADDR_IFREQ(*ifreq);
 #else
 	ptr += sizeof(struct ifreq);
-	
+
 #	if defined(AF_INET6)
 	{
 	    if (ifreq->ifr_addr.sa_family == AF_INET6)
@@ -214,27 +207,30 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 #endif
     }
 
-    MPIU_Free(buf_ptr);
-    close(fd);
-    
     /* If we found a unique address, use that */
     if (nfound == 1 || (nfound == 0 && foundLocalhost == 1)) {
 	*ifaddr = myifaddr;
 	*found  = 1;
     }
-    else {
-	*found  = 0;
-    }
 
-    return 0;
+fn_exit:
+    if (NULL != buf_ptr)
+        MPIU_Free(buf_ptr);
+    if (fd >= 0)
+        close(fd);
+    
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_GETIPINTERFACE);
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #else /* things needed to find the interfaces */
 
 /* In this case, just return false for interfaces found */
-static int GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
+int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 {
     *found = 0;
-    return 0;
+    return MPI_SUCCESS;
 }
 #endif

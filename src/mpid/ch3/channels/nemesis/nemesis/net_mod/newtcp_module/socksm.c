@@ -1162,8 +1162,8 @@ static int state_l_cntd_handler(pollfd_t *const plfd, sockconn_t *const sc)
     }
 
     if (IS_READABLE(plfd)) {
-        int result = recv_id_or_tmpvc_info(sc, &got_sc_eof);
-        if (result == MPI_SUCCESS) {
+        mpi_errno = recv_id_or_tmpvc_info(sc, &got_sc_eof);
+        if (mpi_errno == MPI_SUCCESS) {
             if (got_sc_eof) {
                 /* recv_id_or_tmpvc already moved the sc to QUIESCENT, just return */
                 goto fn_exit;

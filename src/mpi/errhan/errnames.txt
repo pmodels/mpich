@@ -752,6 +752,8 @@ with MPI_Alloc_mem.
 #
 # Nemesis
 #
+**ioctl:ioctl failed
+**ioctl %d %s:ioctl failed errno=%d - %s
 **shmdt:shmdt failed
 **shmdt %s:shmdt failed - %s
 **alloc_shar_mem:unable to allocate shared memory

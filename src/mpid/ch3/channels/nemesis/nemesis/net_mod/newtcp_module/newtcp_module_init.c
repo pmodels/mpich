@@ -9,19 +9,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-/*S
-  MPIDU_Sock_ifaddr_t - Structure to hold an Internet address.
-
-+ len - Length of the address.  4 for IPv4, 16 for IPv6.
-- ifaddr - Address bytes (as bytes, not characters)
-
-S*/
-typedef struct MPIDU_Sock_ifaddr_t {
-    int len, type;
-    unsigned char ifaddr[16];
-} MPIDU_Sock_ifaddr_t;
-
-
 MPID_nem_queue_ptr_t MPID_nem_newtcp_module_free_queue = 0;
 MPID_nem_queue_ptr_t MPID_nem_process_recv_queue = 0;
 MPID_nem_queue_ptr_t MPID_nem_process_free_queue = 0;
@@ -32,10 +19,6 @@ extern pollfd_t *MPID_nem_newtcp_module_plfd_tbl;
 static MPID_nem_queue_t _free_queue;
 
 static int dbg_ifname = 0;
-
-#if 0
-static int GetIPInterface( MPIDU_Sock_ifaddr_t *, int * );
-#endif
 
 #define MPIDI_CH3I_PORT_KEY "port"
 #define MPIDI_CH3I_HOST_DESCRIPTION_KEY "description"
@@ -63,7 +46,7 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     /* set up listener socket */
 /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
     g_lstn_plfd.fd = g_lstn_sc.fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    MPIU_ERR_CHKANDJUMP2 (g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", strerror (errno), errno);
+    MPIU_ERR_CHKANDJUMP2 (g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror (errno), errno);
 
     mpi_errno = MPID_nem_newtcp_module_set_sockopts (g_lstn_sc.fd);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -73,7 +56,7 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     ret = listen (g_lstn_sc.fd, SOMAXCONN);	      
-    MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", errno, strerror (errno));  
+    MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", errno, MPIU_Strerror (errno));  
     g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
     g_lstn_sc.handler = MPID_nem_newtcp_module_state_listening_handler;
 
@@ -243,7 +226,7 @@ int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int 
 
     len = sizeof(sock_id);
     ret = getsockname (g_lstn_sc.fd, (struct sockaddr *)&sock_id, &len);
-    MPIU_ERR_CHKANDJUMP1 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**getsockname", "**getsockname %s", strerror (errno));
+    MPIU_ERR_CHKANDJUMP1 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**getsockname", "**getsockname %s", MPIU_Strerror (errno));
 
     mpi_errno = MPIU_Str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, ntohs(sock_id.sin_port));
     if (mpi_errno != MPIU_STR_SUCCESS)
@@ -298,11 +281,7 @@ int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int 
 int MPID_nem_newtcp_module_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    int port_name_tag;
     struct in_addr addr;
-    int ret;
-    in_port_t port;
-    
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT_TO_ROOT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT_TO_ROOT);
@@ -332,13 +311,11 @@ int MPID_nem_newtcp_module_connect_to_root (const char *business_card, MPIDI_VC_
 int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct in_addr addr;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
 
-    /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
     vc_ch->state = MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED;
     
     vc->sendNoncontig_fn      = MPID_nem_newtcp_SendNoncontig;
@@ -354,13 +331,13 @@ int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
     VC_FIELD(vc, send_queue).head = VC_FIELD(vc, send_queue).tail = NULL;
 
  fn_exit:
-    /*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
     return mpi_errno;
+    /*
  fn_fail:
-    /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
+    */
 }
 
 #undef FUNCNAME
@@ -372,6 +349,7 @@ int MPID_nem_newtcp_module_vc_destroy(MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
 
     /* currently do nothing */
+#if 0
     pollfd_t *plfd;
     sockconn_t *sc;
 
@@ -380,11 +358,10 @@ int MPID_nem_newtcp_module_vc_destroy(MPIDI_VC_t *vc)
         goto fn_exit;
 
     plfd = &MPID_nem_newtcp_module_plfd_tbl[sc->index]; 
+#endif
 
- fn_exit:   
-       return mpi_errno;
- fn_fail:
-       goto fn_exit;
+fn_exit:   
+    return mpi_errno;
 }
 
 
@@ -402,7 +379,7 @@ int MPID_nem_newtcp_module_get_addr_port_from_bc(const char *business_card, stru
     int mpi_errno = MPI_SUCCESS;
     int ret;
     int port_int;
-    char desc_str[256];
+    /*char desc_str[256];*/
     char ifname[256];
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_ADDR_PORT_FROM_BC);
 
@@ -478,10 +455,10 @@ int MPID_nem_newtcp_module_bind (int sockfd)
             break;
         
         /* check for real error */
-        MPIU_ERR_CHKANDJUMP3 (errno != EADDRINUSE && errno != EADDRNOTAVAIL, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind", "**sock|poll|bind %d %d %s", port, errno, strerror (errno));
+        MPIU_ERR_CHKANDJUMP3 (errno != EADDRINUSE && errno != EADDRNOTAVAIL, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind", "**sock|poll|bind %d %d %s", port, errno, MPIU_Strerror (errno));
     }
     /* check if an available port was found */
-    MPIU_ERR_CHKANDJUMP3 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind", "**sock|poll|bind %d %d %s", port, errno, strerror (errno));
+    MPIU_ERR_CHKANDJUMP3 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind", "**sock|poll|bind %d %d %s", port, errno, MPIU_Strerror (errno));
 
  fn_exit:
 /*     if (ret == 0) */
@@ -502,12 +479,12 @@ int MPID_nem_newtcp_module_bind (int sockfd)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_newtcp_module_vc_terminate (MPIDI_VC_t *vc)
 {
-    int mpi_errno = MPI_SUCCESS, rc;
-    sockconn_t *sc;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIDI_FUNC_ENTER(MPID_NEM_NEWTCP_MODULE_VC_TERMINATE);
 
     mpi_errno = MPID_nem_newtcp_module_cleanup(vc);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_NEM_NEWTCP_MODULE_VC_TERMINATE);
@@ -517,220 +494,3 @@ int MPID_nem_newtcp_module_vc_terminate (MPIDI_VC_t *vc)
     goto fn_exit;
 }
 
-
-#if 0
-/* These includes are here because they're used just for getting the interface
- *   names
- */
-
-/* FIXME: This more-or-less duplicates the code in 
-   ch3/util/sock/ch3u_getintefaces.c , which is already more thoroughly 
-   tested and more portable than the code here.
- */
-#ifdef USE_NOPOSIX_FOR_IFCONF
-/* This is a very special case.  Allow the use of some extensions for 
-   just the rest of this file so that we can get the ifconf structure */
-#undef _POSIX_C_SOURCE
-#endif
-
-#ifdef USE_SVIDSOURCE_FOR_IFCONF
-/* This is a very special case.  Allow the use of some extensions for just
-   the rest of this file so that we can get the ifconf structure */
-#define _SVID_SOURCE
-#endif
-
-#include <sys/types.h>
-
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#ifdef HAVE_NET_IF_H
-#include <net/if.h>
-#endif
-#ifdef HAVE_SYS_SOCKIO_H
-/* Needed for SIOCGIFCONF */
-#include <sys/sockio.h>
-#endif
-
-#if defined(SIOCGIFCONF) && defined(HAVE_STRUCT_IFCONF)
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/ioctl.h>
-#include <errno.h>
-
-/* We can only access the interfaces if we have a number of features.
-   Test for these, otherwise define this routine to return false in the
-   "found" variable */
-
-#define NUM_IFREQS 10
-
-static int GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
-{
-    char *buf_ptr, *ptr;
-    int buf_len, buf_len_prev;
-    int fd;
-    MPIDU_Sock_ifaddr_t myifaddr;
-    int nfound = 0, foundLocalhost = 0;
-    /* We predefine the LSB and MSB localhost addresses */
-    unsigned int localhost = 0x0100007f;
-#ifdef WORDS_BIGENDIAN
-    unsigned int MSBlocalhost = 0x7f000001;
-#endif
-
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-	fprintf( stderr, "Unable to open an AF_INET socket\n" );
-	return 1;
-    }
-
-    /* Use MSB localhost if necessary */
-#ifdef WORDS_BIGENDIAN
-    localhost = MSBlocalhost;
-#endif
-    
-
-    /*
-     * Obtain the interface information from the operating system
-     *
-     * Note: much of this code is borrowed from W. Richard Stevens' book
-     * entitled "UNIX Network Programming", Volume 1, Second Edition.  See
-     * section 16.6 for details.
-     */
-    buf_len = NUM_IFREQS * sizeof(struct ifreq);
-    buf_len_prev = 0;
-
-    for(;;)
-    {
-	struct ifconf			ifconf;
-	int				rc;
-
-	buf_ptr = (char *) MPIU_Malloc(buf_len);
-	if (buf_ptr == NULL) {
-	    fprintf( stderr, "Unable to allocate %d bytes\n", buf_len );
-	    return 1;
-	}
-	
-	ifconf.ifc_buf = buf_ptr;
-	ifconf.ifc_len = buf_len;
-
-	rc = ioctl(fd, SIOCGIFCONF, &ifconf);
-	if (rc < 0) {
-	    if (errno != EINVAL || buf_len_prev != 0) {
-		fprintf( stderr, "Error from ioctl = %d\n", errno );
-		perror(" Error is: ");
-		return 1;
-	    }
-	}
-        else {
-	    if (ifconf.ifc_len == buf_len_prev) {
-		buf_len = ifconf.ifc_len;
-		break;
-	    }
-
-	    buf_len_prev = ifconf.ifc_len;
-	}
-	
-	MPIU_Free(buf_ptr);
-	buf_len += NUM_IFREQS * sizeof(struct ifreq);
-    }
-	
-    /*
-     * Now that we've got the interface information, we need to run through
-     * the interfaces and check out the ip addresses.  If we find a
-     * unique, non-lcoal host (127.0.0.1) address, return that, otherwise
-     * return nothing.
-     */
-    ptr = buf_ptr;
-
-    while(ptr < buf_ptr + buf_len) {
-	struct ifreq *			ifreq;
-
-	ifreq = (struct ifreq *) ptr;
-
-	if (dbg_ifname) {
-	    fprintf( stdout, "%10s\t", ifreq->ifr_name );
-	}
-	
-	if (ifreq->ifr_addr.sa_family == AF_INET) {
-	    struct in_addr		addr;
-
-	    addr = ((struct sockaddr_in *) &(ifreq->ifr_addr))->sin_addr;
-	    if (dbg_ifname) {
-		fprintf( stdout, "IPv4 address = %08x (%s)\n", addr.s_addr, 
-			 inet_ntoa( addr ) );
-	    }
-
-	    if (addr.s_addr == localhost && dbg_ifname) {
-		fprintf( stdout, "Found local host\n" );
-	    }
-	    /* Save localhost if we find it.  Let any new interface 
-	       overwrite localhost.  However, if we find more than 
-	       one non-localhost interface, then we'll choose none for the 
-	       interfaces */
-	    if (addr.s_addr == localhost) {
-		foundLocalhost = 1;
-		if (nfound == 0) {
-		    myifaddr.type = AF_INET;
-		    myifaddr.len  = 4;
-		    memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
-		}
-	    }
-	    else {
-		nfound++;
-		myifaddr.type = AF_INET;
-		myifaddr.len  = 4;
-		memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
-	    }
-	}
-	else {
-	    if (dbg_ifname) {
-		fprintf( stdout, "\n" );
-	    }
-	}
-
-	/*
-	 *  Increment pointer to the next ifreq; some adjustment may be
-	 *  required if the address is an IPv6 address
-	 */
-	/* This is needed for MAX OSX */
-#ifdef _SIZEOF_ADDR_IFREQ
-	ptr += _SIZEOF_ADDR_IFREQ(*ifreq);
-#else
-	ptr += sizeof(struct ifreq);
-	
-#	if defined(AF_INET6)
-	{
-	    if (ifreq->ifr_addr.sa_family == AF_INET6)
-	    {
-		ptr += sizeof(struct sockaddr_in6) - sizeof(struct sockaddr);
-	    }
-	}
-#	endif
-#endif
-    }
-
-    MPIU_Free(buf_ptr);
-    close(fd);
-    
-    /* If we found a unique address, use that */
-    if (nfound == 1 || (nfound == 0 && foundLocalhost == 1)) {
-	*ifaddr = myifaddr;
-	*found  = 1;
-    }
-    else {
-	*found  = 0;
-    }
-
-    return 0;
-}
-
-#else /* things needed to find the interfaces */
-
-/* In this case, just return false for interfaces found */
-static int GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
-{
-    *found = 0;
-    return 0;
-}
-#endif
-#endif
