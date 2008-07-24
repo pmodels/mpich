@@ -1,3 +1,8 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2008 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
 /*
  * This program was sent in as an example that did not perform as expected.
  * The program has a bug in that it is sending 3 characters but receiving

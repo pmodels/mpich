@@ -1,3 +1,6 @@
+c  (C) 2008 by Argonne National Laboratory.
+c      See COPYRIGHT in top-level directory.
+
       program main
 
       include 'mpif.h'

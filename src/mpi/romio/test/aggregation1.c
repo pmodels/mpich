@@ -1,3 +1,9 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2007 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
 /* Test case from John Bent (ROMIO req #835)
  * Aggregation code was not handling certain access patterns when collective
  * buffering forced */

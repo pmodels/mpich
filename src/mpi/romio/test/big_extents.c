@@ -1,4 +1,9 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2007 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
 /* a test to exercise very large extents: on most platforms with 32 bit
  * integers, we'd expect these tests to give unexpected values.  On platforms
  * with 64 bit integers, these tests will be fine.  On BlueGene we're not sure
