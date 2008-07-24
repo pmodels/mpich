@@ -11,7 +11,7 @@
 #include "mpif90model.h"
 #else
 /* Assume only 4 byte integers available */
-#define MPIR_F90_INTEGER_MODEL_MAP { 9, 4, 4 }
+#define MPIR_F90_INTEGER_MODEL_MAP { 9, 4, 4 },
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Type_create_f90_integer */
