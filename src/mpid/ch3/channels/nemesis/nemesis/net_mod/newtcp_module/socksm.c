@@ -27,8 +27,8 @@ static int g_tbl_grow_size = CONN_PLFD_TBL_GROW_SIZE;
 static sockconn_t *g_sc_tbl = NULL;
 pollfd_t *MPID_nem_newtcp_module_plfd_tbl = NULL;
 
-sockconn_t g_lstn_sc;
-pollfd_t g_lstn_plfd;
+sockconn_t MPID_nem_newtcp_module_g_lstn_sc = {0};
+pollfd_t MPID_nem_newtcp_module_g_lstn_plfd = {0};
 
 static struct {
     handler_func_t sc_state_handler;
@@ -134,8 +134,8 @@ static int alloc_sc_plfd_tbls (void)
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
 
     MPIU_Assert(0 == index); /* assumed in other parts of this file */
-    MPID_NEM_MEMCPY (&g_sc_tbl[index], &g_lstn_sc, sizeof(g_lstn_sc));
-    MPID_NEM_MEMCPY (&MPID_nem_newtcp_module_plfd_tbl[index], &g_lstn_plfd, sizeof(g_lstn_plfd));
+    MPID_NEM_MEMCPY (&g_sc_tbl[index], &MPID_nem_newtcp_module_g_lstn_sc, sizeof(MPID_nem_newtcp_module_g_lstn_sc));
+    MPID_NEM_MEMCPY (&MPID_nem_newtcp_module_plfd_tbl[index], &MPID_nem_newtcp_module_g_lstn_plfd, sizeof(MPID_nem_newtcp_module_g_lstn_plfd));
     MPIU_Assert(MPID_nem_newtcp_module_plfd_tbl[index].fd == g_sc_tbl[index].fd);
     MPIU_Assert(MPID_nem_newtcp_module_plfd_tbl[index].events == POLLIN);
 

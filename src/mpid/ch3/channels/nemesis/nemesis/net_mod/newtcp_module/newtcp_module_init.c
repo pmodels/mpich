@@ -12,8 +12,8 @@
 MPID_nem_queue_ptr_t MPID_nem_newtcp_module_free_queue = 0;
 MPID_nem_queue_ptr_t MPID_nem_process_recv_queue = 0;
 MPID_nem_queue_ptr_t MPID_nem_process_free_queue = 0;
-extern sockconn_t g_lstn_sc;
-extern pollfd_t g_lstn_plfd;
+extern sockconn_t MPID_nem_newtcp_module_g_lstn_sc;
+extern pollfd_t MPID_nem_newtcp_module_g_lstn_plfd;
 extern pollfd_t *MPID_nem_newtcp_module_plfd_tbl;
 
 static MPID_nem_queue_t _free_queue;
@@ -45,20 +45,20 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     
     /* set up listener socket */
 /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
-    g_lstn_plfd.fd = g_lstn_sc.fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    MPIU_ERR_CHKANDJUMP2 (g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror (errno), errno);
+    MPID_nem_newtcp_module_g_lstn_plfd.fd = MPID_nem_newtcp_module_g_lstn_sc.fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    MPIU_ERR_CHKANDJUMP2 (MPID_nem_newtcp_module_g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror (errno), errno);
 
-    mpi_errno = MPID_nem_newtcp_module_set_sockopts (g_lstn_sc.fd);
+    mpi_errno = MPID_nem_newtcp_module_set_sockopts (MPID_nem_newtcp_module_g_lstn_sc.fd);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    g_lstn_plfd.events = POLLIN;
-    mpi_errno = MPID_nem_newtcp_module_bind (g_lstn_sc.fd);
+    MPID_nem_newtcp_module_g_lstn_plfd.events = POLLIN;
+    mpi_errno = MPID_nem_newtcp_module_bind (MPID_nem_newtcp_module_g_lstn_sc.fd);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    ret = listen (g_lstn_sc.fd, SOMAXCONN);	      
+    ret = listen (MPID_nem_newtcp_module_g_lstn_sc.fd, SOMAXCONN);	      
     MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", errno, MPIU_Strerror (errno));  
-    g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
-    g_lstn_sc.handler = MPID_nem_newtcp_module_state_listening_handler;
+    MPID_nem_newtcp_module_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
+    MPID_nem_newtcp_module_g_lstn_sc.handler = MPID_nem_newtcp_module_state_listening_handler;
 
     /* create business card */
     mpi_errno = MPID_nem_newtcp_module_get_business_card (pg_rank, bc_val_p, val_max_sz_p);
@@ -225,7 +225,7 @@ int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int 
     }
 
     len = sizeof(sock_id);
-    ret = getsockname (g_lstn_sc.fd, (struct sockaddr *)&sock_id, &len);
+    ret = getsockname (MPID_nem_newtcp_module_g_lstn_sc.fd, (struct sockaddr *)&sock_id, &len);
     MPIU_ERR_CHKANDJUMP1 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**getsockname", "**getsockname %s", MPIU_Strerror (errno));
 
     mpi_errno = MPIU_Str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, ntohs(sock_id.sin_port));
