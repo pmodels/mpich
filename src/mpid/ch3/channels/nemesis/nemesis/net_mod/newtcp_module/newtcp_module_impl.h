@@ -61,6 +61,7 @@ int MPID_nem_newtcp_module_connect(struct MPIDI_VC *const vc);
 int MPID_nem_newtcp_module_connection_progress(MPIDI_VC_t *vc);
 int MPID_nem_newtcp_module_connpoll(void);
 int MPID_nem_newtcp_module_sm_init(void);
+int MPID_nem_newtcp_module_sm_finalize(void);
 int MPID_nem_newtcp_module_set_sockopts(int fd);
 MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t MPID_nem_newtcp_module_check_sock_status(const pollfd_t *const plfd);
 int MPID_nem_newtcp_module_poll_finalize(void);
@@ -73,6 +74,8 @@ int MPID_nem_newtcp_module_is_sock_connected(int fd);
 int MPID_nem_newtcp_module_disconnect(struct MPIDI_VC *const vc);
 int MPID_nem_newtcp_module_cleanup (struct MPIDI_VC *const vc);
 int MPID_nem_newtcp_module_state_listening_handler(pollfd_t *const l_plfd, sockconn_t *const l_sc);
+
+int MPID_nem_newtcp_module_send_queued(MPIDI_VC_t *vc);
 
 int MPID_nem_newtcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz);
 int MPID_nem_newtcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,

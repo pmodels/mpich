@@ -1183,9 +1183,11 @@ static int FreeNewVC( MPIDI_VC_t *new_vc )
 
     /* FIXME: remove this ifdef - method on connection? */
 #ifdef MPIDI_CH3_HAS_CONN_ACCEPT_HOOK
+    /* FIXME should this be an MPIU_CALL macro? */
     mpi_errno = MPIDI_CH3_Cleanup_after_connection( new_vc );
 #endif
 
+    MPIU_CALL(MPIDI_CH3,VC_Destroy(new_vc));
     MPIU_Free(new_vc);
 
  fn_fail:

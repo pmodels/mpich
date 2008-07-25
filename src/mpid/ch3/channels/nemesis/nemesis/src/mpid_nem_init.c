@@ -27,6 +27,7 @@ static int intcompar (const void *a, const void *b) { return *(int *)a - *(int *
 char *MPID_nem_asymm_base_addr = 0;
 
 static int get_local_procs (int rank, int num_procs, int *num_local, int **local_procs, int *local_rank, int *num_nodes, int **node_ids);
+static int get_local_procs_nolocal(int global_rank, int num_global, int *num_local_p, int **local_procs_p, int *local_rank_p, int *num_nodes_p, int **node_ids_p);
 
 int
 MPID_nem_init (int rank, MPIDI_PG_t *pg_p, int has_parent)
@@ -550,7 +551,7 @@ get_local_procs (int global_rank, int num_global, int *num_local_p, int **local_
 #define FUNCNAME get_local_procs_nolocal
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int
+static int
 get_local_procs_nolocal(int global_rank, int num_global, int *num_local_p, int **local_procs_p, int *local_rank_p, int *num_nodes_p, int **node_ids_p)
 {
     /* used for debugging only */

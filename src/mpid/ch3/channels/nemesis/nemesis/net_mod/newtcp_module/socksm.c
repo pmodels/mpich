@@ -443,7 +443,7 @@ static int send_tmpvc_info(const sockconn_t *const sc)
     MPIDI_nem_newtcp_module_portinfo_t port_info;
     MPIDI_nem_newtcp_module_header_t hdr;
     struct iovec iov[3];
-    int port_name_len = 0, offset, buf_size, iov_cnt = 2;
+    int offset, buf_size, iov_cnt = 2;
     MPIDI_STATE_DECL(MPID_STATE_SEND_TMPVC_INFO);
 
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_TMPVC_INFO);
@@ -497,6 +497,7 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
     char *pg_id = NULL;
 
     MPIU_CHKPMEM_DECL (1);
+    MPIU_CHKLMEM_DECL (1);
     MPIDI_STATE_DECL(MPID_STATE_RECV_ID_OR_TMPVC_INFO);
 
     MPIDI_FUNC_ENTER(MPID_STATE_RECV_ID_OR_TMPVC_INFO);
@@ -525,7 +526,7 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 	iov[0].iov_len = sizeof(sc->pg_rank);
 	pg_id_len = hdr.datalen - sizeof(MPIDI_nem_newtcp_module_idinfo_t);
 	if (pg_id_len != 0) {
-	    MPIU_CHKPMEM_MALLOC (pg_id, char *, pg_id_len, mpi_errno, "sockconn pg_id");
+	    MPIU_CHKLMEM_MALLOC (pg_id, char *, pg_id_len, mpi_errno, "sockconn pg_id");
 	    iov[1].iov_base = (void *)pg_id;
 	    iov[1].iov_len = pg_id_len;
 	    ++iov_cnt;
@@ -554,11 +555,10 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
     }
     else if (hdr.pkt_type == MPIDI_NEM_NEWTCP_MODULE_PKT_TMPVC_INFO) {
         MPIDI_VC_t *vc;
-        struct in_addr addr;
 
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "PKT_TMPVC_INFO: sc->fd=%d", sc->fd));
         /* create a new VC */
-        vc = (MPIDI_VC_t *)MPIU_Malloc(sizeof(MPIDI_VC_t));
+        MPIU_CHKPMEM_MALLOC (vc, MPIDI_VC_t *, sizeof(MPIDI_VC_t), mpi_errno, "real vc from tmp vc");
         /* --BEGIN ERROR HANDLING-- */
         if (vc == NULL) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", NULL);
@@ -591,11 +591,13 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
         MPIDI_CH3I_Acceptq_enqueue(vc, sc->vc->port_name_tag);
     }
 
+    MPIU_CHKPMEM_COMMIT();
  fn_exit:
+    MPIU_CHKLMEM_FREEALL();
     MPIDI_FUNC_EXIT(MPID_STATE_RECV_ID_OR_TMPVC_INFO);
-    MPIU_CHKPMEM_REAP();
     return mpi_errno;
  fn_fail:
+    MPIU_CHKPMEM_REAP();
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
@@ -847,6 +849,7 @@ int MPID_nem_newtcp_module_cleanup (struct MPIDI_VC *const vc)
     int mpi_errno = MPI_SUCCESS, rc;
     pollfd_t *plfd = NULL;
     freenode_t *node;
+    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CLEANUP);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CLEANUP);
@@ -878,8 +881,8 @@ int MPID_nem_newtcp_module_cleanup (struct MPIDI_VC *const vc)
         MPID_nem_newtcp_module_connect(sc->vc);
     }
     else {
-        node = MPIU_Malloc(sizeof(freenode_t));      
-        MPIU_ERR_CHKANDSTMT(node == NULL, mpi_errno, MPI_ERR_OTHER, goto fn_fail, "**nomem");
+        MPIU_CHKPMEM_MALLOC (node, freenode_t *, sizeof(freenode_t), mpi_errno, "free node");
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         node->index = sc->index;
         Q_ENQUEUE(&freeq, node);
     }
@@ -888,11 +891,12 @@ int MPID_nem_newtcp_module_cleanup (struct MPIDI_VC *const vc)
     sc->pending_event = 0; /* FIXME: is it necssary? */
     sc->is_tmpvc = 0; /* FIXME: is it necssary? */
     
+    MPIU_CHKPMEM_COMMIT();
  fn_exit:
-/*     MPID_nem_newtcp_module_connpoll(); FIXME-Imp should be called? */
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CLEANUP);
     return mpi_errno;
  fn_fail:
+    MPIU_CHKPMEM_REAP();
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
@@ -1481,7 +1485,7 @@ static int state_commrdy_handler(pollfd_t *const plfd, sockconn_t *const sc)
     }
     if (IS_WRITEABLE(plfd))
     {
-        mpi_errno = send_queued(sc->vc);
+        mpi_errno = MPID_nem_newtcp_module_send_queued(sc->vc);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
  fn_exit:
@@ -1675,8 +1679,17 @@ int MPID_nem_newtcp_module_sm_init()
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_newtcp_module_sm_finalize()
 {
-    MPIU_Free(MPID_nem_newtcp_module_plfd_tbl);
-    MPIU_Free(g_sc_tbl);
+    freenode_t *node;
+
+    /* walk the freeq and free all the elements */
+    while (!Q_EMPTY(freeq)) {
+        Q_DEQUEUE(&freeq, ((freenode_t **)&node)); 
+        MPIU_Free(node);
+    }
+
+    free_sc_plfd_tbls();
+
+    return MPI_SUCCESS;
 }
 
 #undef FUNCNAME

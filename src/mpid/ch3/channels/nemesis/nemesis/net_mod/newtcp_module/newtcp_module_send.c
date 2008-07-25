@@ -84,10 +84,10 @@ int MPID_nem_newtcp_module_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int d
 
 
 #undef FUNCNAME
-#define FUNCNAME send_queued
+#define FUNCNAME MPID_nem_newtcp_module_send_queued
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int send_queued (MPIDI_VC_t *vc)
+int MPID_nem_newtcp_module_send_queued (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq;
@@ -196,7 +196,7 @@ int MPID_nem_newtcp_module_conn_est (MPIDI_VC_t *vc)
     if (!SENDQ_EMPTY (VC_FIELD(vc, send_queue)))
     {
         SET_PLFD(vc);
-        mpi_errno = send_queued (vc);
+        mpi_errno = MPID_nem_newtcp_module_send_queued (vc);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
 

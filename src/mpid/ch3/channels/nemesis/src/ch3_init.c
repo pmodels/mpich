@@ -184,7 +184,8 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_CONNECT_TO_ROOT);
     MPIU_CHKPMEM_MALLOC (vc, MPIDI_VC_t *, sizeof(MPIDI_VC_t), mpi_errno, "vc");
     /* FIXME - where does this vc get freed?
-     * ANSWER (goodell@) - ch3u_port.c FreeNewVC */
+       ANSWER (goodell@) - ch3u_port.c FreeNewVC
+                           (but the VC_Destroy is in this file) */
 
     *new_vc = vc;
 
@@ -196,9 +197,6 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
 
     ((MPIDI_CH3I_VC *)vc->channel_private)->recv_active = NULL;
     vc->state = MPIDI_VC_STATE_ACTIVE;
-
-    mpi_errno = MPID_nem_vc_init (vc);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     mpi_errno = MPID_nem_connect_to_root (port_name, vc);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
