@@ -91,7 +91,7 @@ sub create_mpich2
     # Create configure
     debug("===> Creating configure in the main package... ");
     chdir("${root}/mpich2-${version}");
-    run_cmd("./maint/updatefiles");
+    run_cmd("./maint/updatefiles --with-autoconf=/homes/chan/autoconf/2.62/bin");
     debug("done\n");
 
     # Remove unnecessary files
@@ -108,7 +108,7 @@ sub create_mpich2
 
     debug("===> Configuring and making the secondary package... ");
     chdir("${root}/mpich2-${version}-tmp");
-    run_cmd("./maint/updatefiles");
+    run_cmd("./maint/updatefiles --with-autoconf=/homes/chan/autoconf/2.62/bin");
     run_cmd("./configure --without-mpe --disable-f90 --disable-f77 --disable-cxx");
     run_cmd("(make mandoc && make htmldoc && make latexdoc)");
     debug("done\n");
@@ -181,7 +181,7 @@ sub create_mpe
 
     debug("===> Creating configure... ");
     chdir("${root}/mpe2");
-    run_cmd("./maint/updatefiles");
+    run_cmd("./maint/updatefiles --with-autoconf=/homes/chan/autoconf/2.62/bin");
     debug("done\n");
 
     debug("===> Creating MPE docs... ");
