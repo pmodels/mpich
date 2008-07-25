@@ -1627,10 +1627,10 @@ static int state_d_quiescent_handler(pollfd_t *const plfd, sockconn_t *const sc)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_init_sm
+#define FUNCNAME MPID_nem_newtcp_module_sm_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_init_sm()
+int MPID_nem_newtcp_module_sm_init()
 {
     /* Set the appropriate handlers */
     sc_state_info[CONN_STATE_TC_C_CNTING].sc_state_handler = state_tc_c_cnting_handler;
@@ -1669,6 +1669,15 @@ int MPID_nem_newtcp_module_init_sm()
     return 0;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_newtcp_module_sm_finalize
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_newtcp_module_sm_finalize()
+{
+    MPIU_Free(MPID_nem_newtcp_module_plfd_tbl);
+    MPIU_Free(g_sc_tbl);
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newtcp_module_connection_progress

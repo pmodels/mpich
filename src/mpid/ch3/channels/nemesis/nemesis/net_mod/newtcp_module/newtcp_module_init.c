@@ -81,7 +81,7 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     *module_free_queue = MPID_nem_newtcp_module_free_queue;
 
 
-    MPID_nem_newtcp_module_init_sm();
+    MPID_nem_newtcp_module_sm_init();
     MPID_nem_newtcp_module_send_init();
     MPID_nem_newtcp_module_poll_init();
 

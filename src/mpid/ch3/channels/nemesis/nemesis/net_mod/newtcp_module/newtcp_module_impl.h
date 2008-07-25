@@ -60,7 +60,7 @@ int MPID_nem_newtcp_module_poll_init(void);
 int MPID_nem_newtcp_module_connect(struct MPIDI_VC *const vc);
 int MPID_nem_newtcp_module_connection_progress(MPIDI_VC_t *vc);
 int MPID_nem_newtcp_module_connpoll(void);
-int MPID_nem_newtcp_module_init_sm(void);
+int MPID_nem_newtcp_module_sm_init(void);
 int MPID_nem_newtcp_module_set_sockopts(int fd);
 MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t MPID_nem_newtcp_module_check_sock_status(const pollfd_t *const plfd);
 int MPID_nem_newtcp_module_poll_finalize(void);

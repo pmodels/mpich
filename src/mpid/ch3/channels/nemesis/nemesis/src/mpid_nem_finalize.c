@@ -22,6 +22,28 @@ int MPID_nem_finalize()
     /* this test is not the right one */
 /*     MPIU_Assert(MPID_nem_queue_empty( MPID_nem_mem_region.RecvQ[MPID_nem_mem_region.rank])); */
 
+    /* these are allocated in MPID_nem_mpich2_init, not MPID_nem_init */
+    MPIU_Free(MPID_nem_recv_seqno);
+    MPIU_Free(MPID_nem_fboxq_elem_list);
+
+    /* from MPID_nem_init */
+    MPIU_Free(MPID_nem_mem_region.FreeQ);
+    MPIU_Free(MPID_nem_mem_region.RecvQ);
+    MPIU_Free(MPID_nem_mem_region.local_ranks);
+    MPIU_Free(MPID_nem_mem_region.ext_ranks);
+    MPIU_Free(MPID_nem_mem_region.pid);
+    MPIU_Free(MPID_nem_mem_region.seg);
+    MPIU_Free(MPID_nem_mem_region.mailboxes.out);
+    MPIU_Free(MPID_nem_mem_region.mailboxes.in);
+
+    /* from get_local_procs */
+    MPIU_Free(MPID_nem_mem_region.node_ids);
+    MPIU_Free(MPID_nem_mem_region.local_procs);
+
+#ifdef MEM_REGION_IN_HEAP
+    MPIU_Free(MPID_nem_mem_region_ptr);
+#endif /* MEM_REGION_IN_HEAP */
+
     mpi_errno = MPID_nem_net_module_finalize();
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 

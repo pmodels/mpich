@@ -32,6 +32,7 @@ int MPID_nem_newtcp_module_poll_init()
 
 int MPID_nem_newtcp_module_poll_finalize()
 {
+    MPIU_Free(MPID_nem_newtcp_module_recv_buf);
     return MPI_SUCCESS;
 }
 
