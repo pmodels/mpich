@@ -30,6 +30,11 @@ pollfd_t *MPID_nem_newtcp_module_plfd_tbl = NULL;
 sockconn_t MPID_nem_newtcp_module_g_lstn_sc = {0};
 pollfd_t MPID_nem_newtcp_module_g_lstn_plfd = {0};
 
+/* We define this in order to trick the compiler into including information
+   about the MPID_nem_newtcp_module_vc_area type.  This is needed to easily
+   expand the VC_FIELD macro in a debugger. */
+static MPID_nem_newtcp_module_vc_area *dummy_vc_area = NULL;
+
 static struct {
     handler_func_t sc_state_handler;
     short sc_state_plfd_events;
