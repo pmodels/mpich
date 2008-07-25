@@ -80,7 +80,7 @@ sub create_mpich2
     run_cmd("rm -rf src/mpid/globus doc/notes src/pm/mpd/Zeroconf.py src/mpid/ch3/channels/gasnet src/mpid/ch3/channels/sshm src/pmi/simple2");
 
     chdir("${root}/mpich2-${version}/src/mpid/ch3/channels/nemesis/nemesis/net_mod");
-    my @nem_modules = qw(sctp ib psm);
+    my @nem_modules = qw(elan mx newgm sctp ib psm);
     run_cmd("rm -rf ".join(' ', map({$_ . "_module/*"} @nem_modules)));
     for my $module (@nem_modules) {
 	# system to avoid problems with shell redirect in run_cmd
