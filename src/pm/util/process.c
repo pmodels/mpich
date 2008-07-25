@@ -1005,8 +1005,10 @@ int MPIE_SetupSingleton( ProcessUniverse *pUniv )
     return 0;
 }
 
+/* There are still problems with this (see the portable process affinity project
+ * that the OpenMPI folks have done for some of the reasons why) */
 #if defined(HAVE_SCHED_SETAFFINITY) && defined(HAVE_CPU_SET_T) && \
-    defined(HAVE_CPU_SET_MACROS)
+    defined(HAVE_CPU_SET_MACROS) && 0
 /* FIXME: This is an ugly hack to ensure that the macros to manipulate the
  * cpu_set_t are defined - without these, you can't use the affinity routines
  */
@@ -1031,7 +1033,6 @@ int MPIE_SetProcessorAffinity( int rank, int size )
     cpu_set_t cpuset;
     int       i, err;
 
-#if 0    
     CPU_ZERO(&cpuset);
     for (i=0; i<size; i++) {
 	CPU_SET((rank+i),&cpuset);
@@ -1041,11 +1042,10 @@ int MPIE_SetProcessorAffinity( int rank, int size )
 	/* Can check errno here for reasons */
 	return 1;
     }
-#endif
 
     return 0;
 }
-#elif defined(HAVE_BINDPROCESSOR)
+#elif defined(HAVE_BINDPROCESSOR) && 0
 /* AIX processor affinity */
 #include <sys/processor.h>
 int MPIE_SetProcessorAffinity( int rank, int size )
@@ -1056,6 +1056,8 @@ int MPIE_SetProcessorAffinity( int rank, int size )
     err = bindprocessor( BINDPROCESS, pid, rank );
     /* Use BINDTHREAD instead of BINDPROCESS to bind threads to processors -
        in which case, the pid is a thread id */
+    /* FIXME: How do we bind the threads when we don't have direct access to 
+       them? */
     if (err < 0) {
 	return 1;
     }
