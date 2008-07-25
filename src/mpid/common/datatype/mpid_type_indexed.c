@@ -11,11 +11,6 @@
 
 #undef MPID_TYPE_ALLOC_DEBUG
 
-int MPIDI_Type_indexed_count_contig(int count,
-				    int *blocklength_array,
-				    void *displacement_array,
-				    int dispinbytes,
-				    MPI_Aint old_extent);
 
 /*@
   MPID_Type_indexed - create an indexed datatype
@@ -204,11 +199,11 @@ int MPID_Type_indexed(int count,
      * block, its size and extent are the same, and the old type
      * was also contiguous.
      */
-    contig_count = MPIDI_Type_indexed_count_contig(count,
-						   blocklength_array,
-						   displacement_array,
-						   dispinbytes,
-						   old_extent);
+    contig_count = MPID_Type_indexed_count_contig(count,
+                                                  blocklength_array,
+                                                  displacement_array,
+                                                  dispinbytes,
+                                                  old_extent);
     
     if ((contig_count == 1) && (new_dtp->size == new_dtp->extent))
     {
@@ -221,72 +216,5 @@ int MPID_Type_indexed(int count,
 
     *newtype = new_dtp->handle;
     return mpi_errno;
-}
-
-/* MPIDI_Type_indexed_count_contig()
- *
- * Determines the actual number of contiguous blocks represented by the
- * blocklength/displacement arrays.  This might be less than count (as
- * few as 1).
- *
- * Extent passed in is for the original type.
- */
-int MPIDI_Type_indexed_count_contig(int count,
-				    int *blocklength_array,
-				    void *displacement_array,
-				    int dispinbytes,
-				    MPI_Aint old_extent)
-{
-    int i, contig_count = 1;
-    int cur_blklen = blocklength_array[0];
-
-    if (!dispinbytes)
-    {
-	int cur_tdisp = ((int *) displacement_array)[0];
-	
-	for (i = 1; i < count; i++)
-	{
-	    if (blocklength_array[i] == 0)
-	    {
-		continue;
-	    }
-	    else if (cur_tdisp + cur_blklen == ((int *) displacement_array)[i])
-	    {
-		/* adjacent to current block; add to block */
-		cur_blklen += blocklength_array[i];
-	    }
-	    else
-	    {
-		cur_tdisp  = ((int *) displacement_array)[i];
-		cur_blklen = blocklength_array[i];
-		contig_count++;
-	    }
-	}
-    }
-    else
-    {
-	MPI_Aint cur_bdisp = ((MPI_Aint *) displacement_array)[0];
-	
-	for (i = 1; i < count; i++)
-	{
-	    if (blocklength_array[i] == 0)
-	    {
-		continue;
-	    }
-	    else if (cur_bdisp + cur_blklen * old_extent ==
-		     ((MPI_Aint *) displacement_array)[i])
-	    {
-		/* adjacent to current block; add to block */
-		cur_blklen += blocklength_array[i];
-	    }
-	    else
-	    {
-		cur_bdisp  = ((MPI_Aint *) displacement_array)[i];
-		cur_blklen = blocklength_array[i];
-		contig_count++;
-	    }
-	}
-    }
-    return contig_count;
 }
 

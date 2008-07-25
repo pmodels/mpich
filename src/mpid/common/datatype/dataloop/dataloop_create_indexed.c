@@ -9,12 +9,6 @@
 
 #include "./dataloop.h"
 
-static DLOOP_Count DLOOP_Type_indexed_count_contig(DLOOP_Count count,
-						   int *blocklength_array,
-						   void *displacement_array,
-						   int dispinbytes,
-						   DLOOP_Offset old_extent);
-
 static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
 					  DLOOP_Count contig_count,
 					  int *input_blocklength_array,
@@ -99,11 +93,11 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
 	old_type_count += (DLOOP_Count) blocklength_array[i];
     }
 
-    contig_count = DLOOP_Type_indexed_count_contig(count,
-						   blocklength_array,
-						   displacement_array,
-						   dispinbytes,
-						   old_extent);
+    contig_count = PREPEND_PREFIX(Type_indexed_count_contig)(count,
+                                                             blocklength_array,
+                                                             displacement_array,
+                                                             dispinbytes,
+                                                             old_extent);
 
     /* if contig_count is zero (no data), handle with contig code */
     if (contig_count == 0)
@@ -377,11 +371,11 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
  *
  * Extent passed in is for the original type.
  */
-static DLOOP_Count DLOOP_Type_indexed_count_contig(DLOOP_Count count,
-						   int *blocklength_array,
-						   void *displacement_array,
-						   int dispinbytes,
-						   DLOOP_Offset old_extent)
+DLOOP_Count PREPEND_PREFIX(Type_indexed_count_contig)(DLOOP_Count count,
+                                                      int *blocklength_array,
+                                                      void *displacement_array,
+                                                      int dispinbytes,
+                                                      DLOOP_Offset old_extent)
 {
     DLOOP_Count i, contig_count = 1;
     DLOOP_Count cur_blklen, first;

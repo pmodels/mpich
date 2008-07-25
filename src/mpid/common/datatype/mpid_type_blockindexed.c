@@ -11,12 +11,6 @@
 
 #undef MPID_TYPE_ALLOC_DEBUG
 
-int MPIDI_Type_blockindexed_count_contig(int count,
-					 int blklen,
-					 void *disp_array,
-					 int dispinbytes,
-					 MPI_Aint old_extent);
-
 /*@
   MPID_Type_blockindexed - create a block indexed datatype
  
@@ -177,11 +171,11 @@ int MPID_Type_blockindexed(int count,
      */
     if (old_is_contig && (new_dtp->size == new_dtp->extent))
     {
-	contig_count = MPIDI_Type_blockindexed_count_contig(count,
-							    blocklength,
-							    displacement_array,
-							    dispinbytes,
-							    old_extent);
+	contig_count = MPID_Type_blockindexed_count_contig(count,
+                                                           blocklength,
+                                                           displacement_array,
+                                                           dispinbytes,
+                                                           old_extent);
 	new_dtp->is_contig = (contig_count == 1) ? 1 : 0;
     }
     else
@@ -193,40 +187,4 @@ int MPID_Type_blockindexed(int count,
     return mpi_errno;
 }
 
-int MPIDI_Type_blockindexed_count_contig(int count,
-					 int blklen,
-					 void *disp_array,
-					 int dispinbytes,
-					 MPI_Aint old_extent)
-{
-    int i, contig_count = 1;
 
-    if (!dispinbytes)
-    {
-	int cur_tdisp = ((int *) disp_array)[0];
-
-	for (i=1; i < count; i++)
-	{
-	    if (cur_tdisp + blklen != ((int *) disp_array)[i])
-	    {
-		contig_count++;
-	    }
-	    cur_tdisp = ((int *) disp_array)[i];
-	}
-    }
-    else
-    {
-	int cur_bdisp = ((MPI_Aint *) disp_array)[0];
-
-	for (i=1; i < count; i++)
-	{
-	    if (cur_bdisp + blklen * old_extent !=
-		((MPI_Aint *) disp_array)[i])
-	    {
-		contig_count++;
-	    }
-	    cur_bdisp = ((MPI_Aint *) disp_array)[i];
-	}
-    }
-    return contig_count;
-}
