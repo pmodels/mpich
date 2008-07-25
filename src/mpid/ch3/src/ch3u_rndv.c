@@ -236,7 +236,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     else
     {
 	sreq->dev.segment_ptr = MPID_Segment_alloc( );
-	/* if (!sreq->dev.segment_ptr) { MPIU_ERR_POP(); } */
+        MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
 	MPID_Segment_init(sreq->dev.user_buf, sreq->dev.user_count, 
 			  sreq->dev.datatype, sreq->dev.segment_ptr, 0);
 	sreq->dev.segment_first = 0;

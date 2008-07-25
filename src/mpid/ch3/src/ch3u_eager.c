@@ -112,7 +112,8 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
                     "Eager");
 	    
     sreq->dev.segment_ptr = MPID_Segment_alloc( );
-    /* if (!sreq->dev.segment_ptr) { MPIU_ERR_POP(); } */
+    MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+
     MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
     sreq->dev.segment_first = 0;
     sreq->dev.segment_size = data_sz;
@@ -377,7 +378,8 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		/* FIXME: The MPICH2 tests do not exercise this branch */
 		/* printf( "Surprise!\n" ); fflush(stdout);*/
 		rreq->dev.segment_ptr = MPID_Segment_alloc( );
-		/* if (!rreq->dev.segment_ptr) { MPIU_ERR_POP(); } */
+                MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+
 		MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
 				  rreq->dev.datatype, rreq->dev.segment_ptr, 0);
 

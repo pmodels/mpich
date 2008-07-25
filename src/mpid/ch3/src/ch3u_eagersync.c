@@ -88,7 +88,8 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
 		       data_sz);
 	
 	sreq->dev.segment_ptr = MPID_Segment_alloc( );
-	/* if (!sreq->dev.segment_ptr) { MPIU_ERR_POP(); } */
+        MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+
 	MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
 	sreq->dev.segment_first = 0;
 	sreq->dev.segment_size = data_sz;
