@@ -49,6 +49,14 @@ typedef struct MPID_nem_lmt_shm_wait_element
 #define LMT_SHM_Q_DEQUEUE(qp, epp) GENERIC_Q_DEQUEUE(qp, epp, next)
 #define LMT_SHM_Q_SEARCH_REMOVE(qp, req_id, epp) GENERIC_Q_SEARCH_REMOVE(qp, _e->req->handle == (req_id), epp, \
                                                                          MPID_nem_lmt_shm_wait_element_t, next)
+/* #define LMT_SHM_Q_EMPTY(qp) GENERIC_Q_EMPTY(qp) */
+/* #define LMT_SHM_Q_HEAD(qp) GENERIC_Q_HEAD(qp) */
+/* #define LMT_SHM_Q_ENQUEUE(qp, ep) do{printf("ENQUEUE(%d) %p\n",__LINE__,ep->req);GENERIC_Q_ENQUEUE(qp, ep, next);} while(0) */
+/* #define LMT_SHM_Q_ENQUEUE_AT_HEAD(qp, ep) do{printf("ENQUEUE_AT_HEAD(%d) %p\n",__LINE__,ep->req);GENERIC_Q_ENQUEUE_AT_HEAD(qp, ep, next);} while(0) */
+/* #define LMT_SHM_Q_DEQUEUE(qp, epp) do{GENERIC_Q_DEQUEUE(qp, epp, next);if(*epp)printf("DEQUEUE(%d) %p\n",__LINE__,(*epp)?(*epp)->req:0);} while(0) */
+/* #define LMT_SHM_Q_SEARCH_REMOVE(qp, req_id, epp) do{GENERIC_Q_SEARCH_REMOVE(qp, _e->req->handle == (req_id), epp, \ */
+/*                                                                             MPID_nem_lmt_shm_wait_element_t, next);\ */
+/*                                                     if(*epp)printf("REMOVE(%d) %p\n",__LINE__,(*epp)?(*epp)->req:0);} while(0) */
 #define CHECK_Q(qp) do{\
     if (LMT_SHM_Q_EMPTY(*(qp))) break;\
     if (LMT_SHM_Q_HEAD(*(qp))->next == NULL && (qp)->head != (qp)->tail)\
@@ -258,6 +266,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
         mpi_errno = MPID_nem_attach_shm_region(&vc_ch->lmt_copy_buf, vc_ch->lmt_copy_buf_handle);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+        /* put the pending receive req back on the queue to try again later */
         LMT_SHM_Q_ENQUEUE_AT_HEAD(&vc_ch->lmt_queue, vc_ch->lmt_active_lmt); /* MT: not thread safe */
         vc_ch->lmt_active_lmt = NULL;
     }
@@ -363,11 +372,16 @@ static int get_next_req(MPIDI_VC_t *vc)
     }
 
     req = vc_ch->lmt_active_lmt->req;
-    req->dev.segment_ptr = MPID_Segment_alloc();
-    /* if (!req->dev.segment_ptr) { MPIU_ERR_POP(); } */
-
-    MPID_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype, req->dev.segment_ptr, 0);
-    req->dev.segment_first = 0;
+    if (req->dev.segment_ptr == NULL)
+    {
+        /* Check to see if we've already allocated a seg for this req.
+           This can happen if both sides allocated copy buffers, and
+           we decided to use the remote side's buffer. */
+        req->dev.segment_ptr = MPID_Segment_alloc();
+        MPIU_ERR_CHKANDJUMP1((req->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+        MPID_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype, req->dev.segment_ptr, 0);
+        req->dev.segment_first = 0;
+    }
     vc_ch->lmt_buf_num = 0;
     vc_ch->lmt_surfeit = 0;
 
@@ -379,6 +393,8 @@ static int get_next_req(MPIDI_VC_t *vc)
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_GET_NEXT_REQ);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /* The message is copied in a pipelined fashion.  There are NUM_BUFS
@@ -502,7 +518,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     MPIDI_STATE_DECL(MPID_STATE_LMT_SHM_RECV_PROGRESS);
 
     MPIDI_FUNC_ENTER(MPID_STATE_LMT_SHM_RECV_PROGRESS);
-
+    
     MPIU_Assert((vc_ch->lmt_copy_buf->owner_info.val.rank == MPIDI_Process.my_pg_rank &&
                  vc_ch->lmt_copy_buf->owner_info.val.remote_req_id == vc_ch->lmt_active_lmt->req->ch.lmt_req_id) ||
                 (vc_ch->lmt_copy_buf->owner_info.val.rank == vc->pg_rank &&
