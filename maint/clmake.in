@@ -14,10 +14,10 @@ $rootSrcDir = "";
 # We include /bin/rm and /bin/mv because some Makefile authors prefer
 # to get the full path for these routines
 @commands = ( "cc", "pgcc", "gcc", "icc", "acc", 
-              "rm", "mv", "ar", "ranlib", "perl", "for", 
-	      "/bin/rm", "/bin/mv", 
+              "rm", "mv", "cp", "ar", "ranlib", "perl", "for", 
+	      "/bin/rm", "/bin/mv", "/bin/cp",
 	      "if", "make", "gnumake", "[A-Za-z0-9_\/\.-]*\/mpicc",
-	      "cleaning", "sleep", "date", "g77", "f77", "f90", "pgCC",
+	      "cleaning", "sleep", "date", "g77", "f77", "f90", "f95", "pgCC",
 	      "pgf77", "pgf90", "CC", "g95", "g\\+\\+", "c\\+\\+",
 	      "acc\\+\\+", "xlc", "xlf", "xlC", "xlf90", "gfortran", 
 	      "ifort", "ifc", 
@@ -45,6 +45,7 @@ $rootSrcDir = "";
 	      "/usr/bin/install",
 	      "Copying Upshot",
 	      "Cleaning directory",
+	      "[*][*][*][*] Making .*\.\.\.\.",
 	      "Making .*\.\.\.\.",        # mpe writes this
 	      "Making upshot", "\\s*\$", );
 
