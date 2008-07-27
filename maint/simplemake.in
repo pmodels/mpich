@@ -164,6 +164,8 @@ $gDebugWhy = 0;             # Provide an explanation of why certain
                             # targets are created
 $gDebugSubdirVar = 0;       # Track changes to internal variables that 
                             # apply to a subdirectory
+$debugConfigHeaderDepend = 0;    # Print the config header targets added to
+                                 # makefile.in's
 # Allow us to set the debug variables from the environment:
 if (defined($ENV{"DEBUG"})) { $debug = 1; }
 if (defined($ENV{"DEBUG_DIRS"})) { $debug_dirs = 1; }
@@ -1595,7 +1597,14 @@ sub DefaultRules {
 	close (AFD);
 	#
 	print FD "$newline";
-	&print_make_longline( FD,  "\${srcdir}/configure: \${srcdir}/configure.in $autoconf_deps" );
+	$header_depend="";
+	if ($configure_has_config_headers ne "no") {
+	    $header_depend="\${srcdir}/$configure_has_config_headers ";
+	    if ($debugConfigHeaderDepend) {
+		print "Adding $header_depend to configure target\n";
+	    }
+	}
+	&print_make_longline( FD,  "$header_depend \${srcdir}/configure: \${srcdir}/configure.in $autoconf_deps" );
 	&print_make_setpos( 8 );
 	&FindWorkingAutoconf ;
 	# Use autoheader only if AC_CONFIG_HEADER is in the configure file
