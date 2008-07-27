@@ -66,6 +66,7 @@
 #define NMPI_Type_free MPI_Type_free
 #define NMPI_Type_size MPI_Type_size
 #define NMPI_Type_get_extent MPI_Type_get_extent
+#define NMPI_Cart_create MPI_Cart_create
 #define NMPI_Cart_rank MPI_Cart_rank
 #define NMPI_Cart_map  MPI_Cart_map
 #define NMPI_Graph_map  MPI_Graph_map
@@ -150,6 +151,7 @@
 #define NMPI_Type_free PMPI_Type_free
 #define NMPI_Type_size PMPI_Type_size
 #define NMPI_Type_get_extent PMPI_Type_get_extent
+#define NMPI_Cart_create PMPI_Cart_create
 #define NMPI_Cart_rank PMPI_Cart_rank
 #define NMPI_Cart_map  PMPI_Cart_map
 #define NMPI_Graph_map  PMPI_Graph_map

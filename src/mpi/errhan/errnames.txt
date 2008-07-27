@@ -42,6 +42,7 @@ also the value at index %d
 **topotoolarge:Topology size is greater than communicator size
 **topotoolarge %d %d:Topology size %d is larger than communicator size (%d)
 **notcarttopo:No Cartesian topology associated with this communicator
+**dimszero:Communicator associated with zero-dimensional cartesian topology
 **notgraphtopo:No Graph topology associated with this communicator
 **notopology:No topology associated with this communicator
 **dimsmany:Number of dimensions is too large 

@@ -429,6 +429,8 @@ int MPI_Dims_create(int nnodes, int ndims, int *dims)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_DIMS_CREATE);
+
+    if (ndims == 0) goto fn_exit;
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING

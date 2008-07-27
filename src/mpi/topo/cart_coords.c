@@ -89,8 +89,13 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int *coords)
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
 	    /* If comm_ptr is not valid, it will be reset to null */
-	    MPIR_ERRTEST_ARGNULL(coords,"coords",mpi_errno);
-            if (mpi_errno) goto fn_fail;
+	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+	    cart_ptr = MPIR_Topology_get( comm_ptr );
+	    if (cart_ptr->topo.cart.ndims) {
+		MPIR_ERRTEST_ARGNULL(coords,"coords",mpi_errno);
+		if (mpi_errno) goto fn_fail;
+	    }
 	    
 	    MPIR_ERRTEST_RANK(comm_ptr, rank, mpi_errno);
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;

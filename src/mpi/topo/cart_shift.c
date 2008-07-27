@@ -111,6 +111,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
     
     cart_ptr = MPIR_Topology_get( comm_ptr );
 
+    MPIU_ERR_CHKANDJUMP((cart_ptr->topo.cart.ndims == 0), mpi_errno, MPI_ERR_TOPOLOGY, "**dimszero");
     MPIU_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
     MPIU_ERR_CHKANDJUMP2((direction >= cart_ptr->topo.cart.ndims), mpi_errno, MPI_ERR_ARG, "**dimsmany",
 			 "**dimsmany %d %d", cart_ptr->topo.cart.ndims, direction);

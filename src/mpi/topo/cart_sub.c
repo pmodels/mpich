@@ -57,7 +57,7 @@ process (handle)
 int MPI_Cart_sub(MPI_Comm comm, int *remain_dims, MPI_Comm *comm_new)
 {
     static const char FCNAME[] = "MPI_Cart_sub";
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, all_false;
     int ndims, key, color, ndims_in_subcomm, nnodes_in_subcomm, i, j, rank;
     MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPIR_Topology *topo_ptr, *toponew_ptr;
@@ -110,78 +110,96 @@ int MPI_Cart_sub(MPI_Comm comm, int *remain_dims, MPI_Comm *comm_new)
     MPIU_ERR_CHKANDJUMP(topo_ptr->kind != MPI_CART,mpi_errno,MPI_ERR_TOPOLOGY,
 			"**notcarttopo");
 
-    /* Determine the number of remaining dimensions */
     ndims = topo_ptr->topo.cart.ndims;
-    ndims_in_subcomm = 0;
-    nnodes_in_subcomm = 1;
+
+    all_false = 1;  /* all entries in remain_dims are false */
     for (i=0; i<ndims; i++) {
 	if (remain_dims[i]) {
-	    ndims_in_subcomm ++;
-	    nnodes_in_subcomm *= topo_ptr->topo.cart.dims[i];
+	    /* any 1 is true, set flag to 0 and break */
+	    all_false = 0; 
+	    break;
 	}
     }
 
-    /* Split this communicator.  Do this even if there are no remaining
-       dimensions so that the topology information is attached */
-    key   = 0;
-    color = 0;
-    for (i=0; i<ndims; i++) {
-	if (remain_dims[i]) {
-	    key = (key * topo_ptr->topo.cart.dims[i]) + 
-		topo_ptr->topo.cart.position[i];
+    if (all_false) { 
+        /* ndims=0, or all entries in remain_dims are false.
+           MPI 2.1 says return a 0D Cartesian topology. */
+	mpi_errno = NMPI_Cart_create(comm, 0, NULL, NULL, 0, comm_new);
+	if (mpi_errno) goto fn_fail;
+    }
+
+    else {
+	/* Determine the number of remaining dimensions */
+	ndims_in_subcomm = 0;
+	nnodes_in_subcomm = 1;
+	for (i=0; i<ndims; i++) {
+	    if (remain_dims[i]) {
+		ndims_in_subcomm ++;
+		nnodes_in_subcomm *= topo_ptr->topo.cart.dims[i];
+	    }
+	}
+	
+	/* Split this communicator.  Do this even if there are no remaining
+	   dimensions so that the topology information is attached */
+	key   = 0;
+	color = 0;
+	for (i=0; i<ndims; i++) {
+	    if (remain_dims[i]) {
+		key = (key * topo_ptr->topo.cart.dims[i]) + 
+		    topo_ptr->topo.cart.position[i];
+	    }
+	    else {
+		color = (color * topo_ptr->topo.cart.dims[i]) + 
+		    topo_ptr->topo.cart.position[i];
+	    }
+	}
+	MPIR_Nest_incr();
+	mpi_errno = NMPI_Comm_split( comm, color, key, comm_new );
+	MPIR_Nest_decr();
+	if (mpi_errno) goto fn_fail;
+	
+	/* Save the topology of this new communicator */
+	MPIU_CHKPMEM_MALLOC(toponew_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
+			    mpi_errno,"toponew_ptr");
+	
+	toponew_ptr->kind		  = MPI_CART;
+	toponew_ptr->topo.cart.ndims  = ndims_in_subcomm;
+	toponew_ptr->topo.cart.nnodes = nnodes_in_subcomm;
+	if (ndims_in_subcomm) {
+	    MPIU_CHKPMEM_MALLOC(toponew_ptr->topo.cart.dims,int*,
+				ndims_in_subcomm*sizeof(int),mpi_errno,"cart.dims");
+	    MPIU_CHKPMEM_MALLOC(toponew_ptr->topo.cart.periodic,int*,
+				ndims_in_subcomm*sizeof(int),mpi_errno,"cart.periodic");
+	    MPIU_CHKPMEM_MALLOC(toponew_ptr->topo.cart.position,int*,
+				ndims_in_subcomm*sizeof(int),mpi_errno,"cart.position");
 	}
 	else {
-	    color = (color * topo_ptr->topo.cart.dims[i]) + 
-		topo_ptr->topo.cart.position[i];
+	    toponew_ptr->topo.cart.dims     = 0;
+	    toponew_ptr->topo.cart.periodic = 0;
+	    toponew_ptr->topo.cart.position = 0;
 	}
-    }
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Comm_split( comm, color, key, comm_new );
-    MPIR_Nest_decr();
-    if (mpi_errno) goto fn_fail;
-    
-    /* Save the topology of this new communicator */
-    MPIU_CHKPMEM_MALLOC(toponew_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
-			mpi_errno,"toponew_ptr");
 	
-    toponew_ptr->kind		  = MPI_CART;
-    toponew_ptr->topo.cart.ndims  = ndims_in_subcomm;
-    toponew_ptr->topo.cart.nnodes = nnodes_in_subcomm;
-    if (ndims_in_subcomm) {
-	MPIU_CHKPMEM_MALLOC(toponew_ptr->topo.cart.dims,int*,
-		    ndims_in_subcomm*sizeof(int),mpi_errno,"cart.dims");
-	MPIU_CHKPMEM_MALLOC(toponew_ptr->topo.cart.periodic,int*,
-		    ndims_in_subcomm*sizeof(int),mpi_errno,"cart.periodic");
-	MPIU_CHKPMEM_MALLOC(toponew_ptr->topo.cart.position,int*,
-		    ndims_in_subcomm*sizeof(int),mpi_errno,"cart.position");
-    }
-    else {
-	toponew_ptr->topo.cart.dims     = 0;
-	toponew_ptr->topo.cart.periodic = 0;
-	toponew_ptr->topo.cart.position = 0;
-    }
-
-    j = 0;
-    for (i=0; i<ndims; i++) {
-	if (remain_dims[i]) {
-	    toponew_ptr->topo.cart.dims[j] = topo_ptr->topo.cart.dims[i];
-	    toponew_ptr->topo.cart.periodic[j] = topo_ptr->topo.cart.periodic[i];
-	    j++;
+	j = 0;
+	for (i=0; i<ndims; i++) {
+	    if (remain_dims[i]) {
+		toponew_ptr->topo.cart.dims[j] = topo_ptr->topo.cart.dims[i];
+		toponew_ptr->topo.cart.periodic[j] = topo_ptr->topo.cart.periodic[i];
+		j++;
+	    }
 	}
-    }
+	
+	MPID_Comm_get_ptr( *comm_new, newcomm_ptr );
+	/* Compute the position of this process in the new communicator */
+	rank = newcomm_ptr->rank;
+	for (i=0; i<ndims_in_subcomm; i++) {
+	    nnodes_in_subcomm /= toponew_ptr->topo.cart.dims[i];
+	    toponew_ptr->topo.cart.position[i] = rank / nnodes_in_subcomm;
+	    rank = rank % nnodes_in_subcomm;
+	}
 
-    MPID_Comm_get_ptr( *comm_new, newcomm_ptr );
-    /* Compute the position of this process in the new communicator */
-    rank = newcomm_ptr->rank;
-    for (i=0; i<ndims_in_subcomm; i++) {
-	nnodes_in_subcomm /= toponew_ptr->topo.cart.dims[i];
-	toponew_ptr->topo.cart.position[i] = rank / nnodes_in_subcomm;
-	rank = rank % nnodes_in_subcomm;
+	mpi_errno = MPIR_Topology_put( newcomm_ptr, toponew_ptr );
+	if (mpi_errno) goto fn_fail;
     }
-
-    mpi_errno = MPIR_Topology_put( newcomm_ptr, toponew_ptr );
-    if (mpi_errno) goto fn_fail;
-    
     /* ... end of body of routine ... */
 
   fn_exit:
