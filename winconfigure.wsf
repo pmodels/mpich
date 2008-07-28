@@ -3021,6 +3021,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define HAVE_VSNPRINTF")
 				Case "HAVE_VSPRINTF"
 					fout.WriteLine("#define HAVE_VSPRINTF")
+				Case "HAVE_PVFS2_CREATE_WITHOUT_LAYOUT"
+					fout.WriteLine("/* #undef HAVE_PVFS2_CREATE_WITHOUT_LAYOUT */")
 				Case "MPICH_DEBUG_HANDLES"
 					fout.WriteLine("/* #undef HAVE_MPICH_DEBUG_HANDLES */")
 				Case "MPICH_DEBUG_INTERNAL"
@@ -3277,6 +3279,12 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef MPIR_INTEGER8_CTYPE */")
 				Case "MPIR_INTEGER16_CTYPE"
 					fout.WriteLine("/* #undef MPIR_INTEGER16_CTYPE */")
+				Case "MPIR_CXX_COMPLEX_VALUE"
+					fout.WriteLIne("#define MPIR_CXX_COMPLEX_VALUE "+ MPIR_CXX_COMPLEX)
+				Case "MPIR_CXX_DOUBLE_COMPLEX_VALUE"
+					fout.WriteLIne("#define MPIR_CXX_DOUBLE_COMPLEX_VALUE "+ MPIR_CXX_DOUBLE_COMPLEX)
+				Case "MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE"
+					fout.WriteLIne("#define MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE "+ MPIR_CXX_LONG_DOUBLE_COMPLEX)
 				Case "HAVE___VA_COPY"
 					fout.WriteLine("/* #undef HAVE___VA_COPY */")
 				Case "HAVE_IOSTREAM"
