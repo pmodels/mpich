@@ -94,6 +94,9 @@ sizedtypes_LDADD = ../util/mtest.o
 
 contigstruct_SOURCES = contigstruct.c
 
+zeroblks_SOURCES = zeroblks.c
+zeroblks_LDADD = ../util/mtest.o
+
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o )
 
