@@ -443,6 +443,8 @@ dnl
 dnl Dependency handling
 AC_SUBST(MAKE_DEPEND_C)
 
+AC_SUBST(ETAGS)
+
 # Add the MPICH2 include flags to CPPFLAGS.  See the discussion above about
 # which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
 # CPPFLAGS
