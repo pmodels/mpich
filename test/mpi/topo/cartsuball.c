@@ -12,7 +12,7 @@ int main( int argc, char *argv[] )
 {
     int errs = 0;
     int size, dims[2], periods[2], remain[2];
-    int result;
+    int result, rank;
     MPI_Comm comm, newcomm;
 
     MTest_Init( &argc, &argv );
@@ -27,16 +27,24 @@ int main( int argc, char *argv[] )
     remain[0] = 0;
     MPI_Cart_sub( comm, remain, &newcomm );
 
-    /* This should be congruent to MPI_COMM_SELF */
-    MPI_Comm_compare( MPI_COMM_SELF, newcomm, &result );
-    if (result != MPI_CONGRUENT) {
+    MPI_Comm_rank(comm, &rank);
+
+    if (rank == 0) {
+	/* This should be congruent to MPI_COMM_SELF */
+	MPI_Comm_compare( MPI_COMM_SELF, newcomm, &result );
+	if (result != MPI_CONGRUENT) {
+	    errs++;
+	    printf( "cart sub to size 0 did not give self\n" );
+	}
+	MPI_Comm_free( &newcomm );
+    }
+    else if (newcomm != MPI_COMM_NULL) {
 	errs++;
-	printf( "cart sub to size 0 did not give self\n" );
+	printf( "cart sub to size 0 did not give null\n" );
     }
 
     /* Free the new communicator so that storage leak tests will
        be happy */
-    MPI_Comm_free( &newcomm );
     MPI_Comm_free( &comm );
     
     MTest_Finalize( errs );
