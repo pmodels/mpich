@@ -174,7 +174,7 @@ void ADIOI_PVFS2_WriteStrided(ADIO_File fd, void *buf, int count,
     }
 
     /* Use classic list I/O if no hints given base case */
-    ret = ADIOI_PVFS2_OldWritedStrided(fd, buf, count, datatype,
+    ADIOI_PVFS2_OldWriteStrided(fd, buf, count, datatype,
 	    file_ptr_type, offset, status, error_code);
     return;
 }
