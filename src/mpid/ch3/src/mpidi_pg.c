@@ -364,28 +364,37 @@ int MPIDI_PG_Id_compare(void * id1, void *id2)
     return MPIDI_PG_Compare_ids_fn(id1, id2);
 }
 
+/* iter always points at the next element */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Get_next
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_PG_Get_next(MPIDI_PG_t ** pg_ptr)
+int MPIDI_PG_Get_next(MPIDI_PG_iterator *iter, MPIDI_PG_t ** pg_ptr)
 {
-    *pg_ptr = MPIDI_PG_iterator_next;
-    if (MPIDI_PG_iterator_next != NULL)
-    { 
-	MPIDI_PG_iterator_next = MPIDI_PG_iterator_next->next;
+    *pg_ptr = (*iter);
+    if ((*iter) != NULL) {
+        (*iter) = (*iter)->next;
     }
 
     return MPI_SUCCESS;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_PG_Iterate_reset
+#define FUNCNAME MPIDI_PG_Has_next
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_PG_Iterate_reset()
+int MPIDI_PG_Has_next(MPIDI_PG_iterator *iter)
 {
-    MPIDI_PG_iterator_next = MPIDI_PG_list;
+    return (*iter != NULL);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_PG_Get_iterator
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_PG_Get_iterator(MPIDI_PG_iterator *iter)
+{
+    *iter = MPIDI_PG_list;
     return MPI_SUCCESS;
 }
 

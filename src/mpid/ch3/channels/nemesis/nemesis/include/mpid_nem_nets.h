@@ -24,6 +24,8 @@ typedef int (* MPID_nem_net_module_vc_init_t) (MPIDI_VC_t *vc);
 typedef int (* MPID_nem_net_module_vc_destroy_t) (MPIDI_VC_t *vc);
 typedef int (* MPID_nem_net_module_vc_terminate_t) (MPIDI_VC_t *vc);
 
+typedef void (* MPID_nem_net_module_vc_dbg_print_sendq_t) (FILE *stream, MPIDI_VC_t *vc);
+
 extern MPID_nem_net_module_init_t MPID_nem_net_module_init;
 extern MPID_nem_net_module_finalize_t MPID_nem_net_module_finalize;
 extern MPID_nem_net_module_ckpt_shutdown_t MPID_nem_net_module_ckpt_shutdown;
@@ -34,6 +36,7 @@ extern MPID_nem_net_module_connect_to_root_t MPID_nem_net_module_connect_to_root
 extern MPID_nem_net_module_vc_init_t MPID_nem_net_module_vc_init;
 extern MPID_nem_net_module_vc_destroy_t MPID_nem_net_module_vc_destroy;
 extern MPID_nem_net_module_vc_terminate_t MPID_nem_net_module_vc_terminate;
+extern MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_print_sendq;
 
 int MPID_nem_net_init(void);
 

@@ -496,8 +496,15 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** ppg);
 int MPIDI_PG_Destroy(MPIDI_PG_t * pg);
 int MPIDI_PG_Find(void * id, MPIDI_PG_t ** pgp);
 int MPIDI_PG_Id_compare(void *id1, void *id2);
-int MPIDI_PG_Get_next(MPIDI_PG_t ** pgp);
-int MPIDI_PG_Iterate_reset(void);
+
+/* Always use the MPIDI_PG_iterator type, never its expansion.  Otherwise it
+   will be difficult to make any changes later. */
+typedef MPIDI_PG_t * MPIDI_PG_iterator;
+/* 'iter' is similar to 'saveptr' in strtok_r */
+int MPIDI_PG_Get_iterator(MPIDI_PG_iterator *iter);
+int MPIDI_PG_Has_next(MPIDI_PG_iterator *iter);
+int MPIDI_PG_Get_next(MPIDI_PG_iterator *iter, MPIDI_PG_t **pgp);
+
 /* FIXME: MPIDI_PG_Get_vc is a macro, not a routine */
 int MPIDI_PG_Get_vc(MPIDI_PG_t * pg, int rank, struct MPIDI_VC ** vc); 
 int MPIDI_PG_Close_VCs( void );

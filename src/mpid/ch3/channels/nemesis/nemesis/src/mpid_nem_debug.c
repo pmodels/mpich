@@ -26,4 +26,115 @@ void MPID_nem_dbg_dump_cell (volatile struct MPID_nem_cell *cell)
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
 }
+
+#define state_case(suffix)             \
+    case MPIDI_VC_STATE_##suffix:       \
+        return "MPIDI_VC_STATE_" #suffix; \
+        break
+
+static const char *vc_state_to_str(MPIDI_VC_State_t state)
+{
+    switch (state) {
+        state_case(INACTIVE);
+        state_case(ACTIVE);
+        state_case(LOCAL_CLOSE);
+        state_case(REMOTE_CLOSE);
+        state_case(CLOSE_ACKED);
+        default: return "(invalid state)"; break;
+    }
+}
+#undef state_case
+
+/* satisfy the compiler */
+void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc);
+
+/* This function can be called by a debugger to dump the sendq state of the
+   given vc to the given stream. */
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_dbg_print_all_sendq
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc)
+{
+    MPID_Request * sreq;
+    int i;
+    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+
+    fprintf(stream, "..VC ptr=%p pg_rank=%d state=%s:\n", vc, vc->pg_rank, vc_state_to_str(vc->state));
+    if (vc_ch->is_local) {
+        fprintf(stream, "....CH3_NORMAL_QUEUE active_send\n");
+        sreq = MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE];
+        if (sreq) {
+            fprintf(stream, "....    sreq=%p ctx=%#x rank=%d tag=%d\n", sreq,
+                            sreq->dev.match.context_id,
+                            sreq->dev.match.rank,
+                            sreq->dev.match.tag);
+        }
+
+        fprintf(stream, "....CH3_NORMAL_QUEUE queue (head-to-tail)\n");
+        sreq = MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE);
+        i = 0;
+        while (sreq != NULL) {
+            fprintf(stream, "....[%d] sreq=%p ctx=%#x rank=%d tag=%d\n", i, sreq,
+                            sreq->dev.match.context_id,
+                            sreq->dev.match.rank,
+                            sreq->dev.match.tag);
+            ++i;
+            sreq = sreq->dev.next;
+        }
+    }
+    else {
+        if (MPID_nem_net_module_vc_dbg_print_sendq != NULL) {
+            MPID_nem_net_module_vc_dbg_print_sendq(stream, vc);
+        }
+        else {
+            fprintf(stream, "..no MPID_nem_net_module_vc_dbg_print_sendq function available\n");
+        }
+    }
+}
+
+/* satisfy the compiler */
+void MPID_nem_dbg_print_all_sendq(FILE *stream);
+
+/* This function can be called by a debugger to dump the sendq state for all the
+   vcs for all the pgs to the given stream. */
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_dbg_print_all_sendq
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+void MPID_nem_dbg_print_all_sendq(FILE *stream)
+{
+    int i;
+    MPIDI_PG_t *pg;
+    MPIDI_VC_t *vc;
+    MPIDI_PG_iterator iter;
+
+    fprintf(stream, "========================================\n");
+    fprintf(stream, "MPI_COMM_WORLD  ctx=%#x rank=%d\n", MPIR_Process.comm_world->context_id, MPIR_Process.comm_world->rank);
+    fprintf(stream, "MPI_COMM_SELF   ctx=%#x\n", MPIR_Process.comm_self->context_id);
+    if (MPIR_Process.comm_parent) {
+        fprintf(stream, "MPI_COMM_PARENT ctx=%#x recvctx=%#x\n",
+                MPIR_Process.comm_self->context_id,
+                MPIR_Process.comm_parent->recvcontext_id);
+    }
+    else {
+        fprintf(stream, "MPI_COMM_PARENT (NULL)\n");
+    }
+
+    MPIDI_PG_Get_iterator(&iter);
+    while (MPIDI_PG_Has_next(&iter)) {
+        MPIDI_PG_Get_next(&iter, &pg);
+        fprintf(stream, "PG ptr=%p size=%d id=%s refcount=%d\n", pg, pg->size, (const char*)pg->id, pg->ref_count);
+        for (i = 0; i < MPIDI_PG_Get_size(pg); ++i) {
+            /* We would prefer to use "MPIDI_PG_Get_vc(pg, rank, &vc);"
+               but that macro has the side effect of changing the VC's state, which
+               we don't want to do. */
+            vc = &((pg)->vct[i]);
+            MPID_nem_dbg_print_vc_sendq(stream, vc);
+        }
+    }
+
+    fprintf(stream, "========================================\n");
+}
+
 /* --END ERROR HANDLING-- */

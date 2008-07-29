@@ -40,6 +40,10 @@ MPID_nem_net_module_vc_init_t           MPID_nem_net_module_vc_init           = 
 MPID_nem_net_module_vc_destroy_t        MPID_nem_net_module_vc_destroy        = 0;
 MPID_nem_net_module_vc_terminate_t      MPID_nem_net_module_vc_terminate      = 0;
 
+/* this should be assigned in netmod init, not by assign_functions, since not
+   all netmods will implement it */
+MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_print_sendq = 0;
+
 #define assign_functions(prefix) do {                                                           \
     MPID_nem_net_module_init              = MPID_nem_##prefix##_module_init;                    \
     MPID_nem_net_module_finalize          = MPID_nem_##prefix##_module_finalize;                \

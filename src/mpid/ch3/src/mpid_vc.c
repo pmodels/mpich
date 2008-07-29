@@ -363,11 +363,12 @@ int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] )
     int i, mpi_errno = MPI_SUCCESS;
     int pgid;
     MPIDI_PG_t *pg = 0;
+    MPIDI_PG_iterator iter;
 
     for (i=0; i<size; i++) {
-	MPIDI_PG_Iterate_reset();
+        MPIDI_PG_Get_iterator(&iter);
 	do {
-	    MPIDI_PG_Get_next( &pg );
+	    MPIDI_PG_Get_next( &iter, &pg );
 	    if (!pg) {
 		/* Internal error.  This gpid is unknown on this process */
 		printf("No matching pg foung for id = %d\n", pgid );
@@ -420,6 +421,7 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
 {
     MPID_Comm *commworld_ptr;
     int i;
+    MPIDI_PG_iterator iter;
 
     commworld_ptr = MPIR_Process.comm_world;
     /* Setup the communicator's vc table: remote group */
@@ -444,11 +446,11 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
 	    MPIDI_PG_t *pg = 0;
 	    int j;
 
-	    MPIDI_PG_Iterate_reset();
+	    MPIDI_PG_Get_iterator(&iter);
 	    /* Skip comm_world */
-	    MPIDI_PG_Get_next( &pg );
+	    MPIDI_PG_Get_next( &iter, &pg );
 	    do {
-		MPIDI_PG_Get_next( &pg );
+		MPIDI_PG_Get_next( &iter, &pg );
 		if (!pg) {
 		    return MPIR_Err_create_code( MPI_SUCCESS, 
 				     MPIR_ERR_RECOVERABLE,
@@ -505,11 +507,12 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
 {
     int i, allfound = 1, pgid, pgidWorld;
     MPIDI_PG_t *pg = 0;
+    MPIDI_PG_iterator iter;
 
     /* Get the pgid for CommWorld (always attached to the first process 
        group) */
-    MPIDI_PG_Iterate_reset();
-    MPIDI_PG_Get_next( &pg );
+    MPIDI_PG_Get_iterator(&iter);
+    MPIDI_PG_Get_next( &iter, &pg );
     MPIDI_PG_IdToNum( pg, &pgidWorld );
     
     /* Extract the unique process groups */
@@ -517,9 +520,9 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
 	if (gpids[0] != pgidWorld) {
 	    /* Add this gpid to the list of values to check */
 	    /* FIXME: For testing, we just test in place */
-	    MPIDI_PG_Iterate_reset();
+            MPIDI_PG_Get_iterator(&iter);
 	    do {
-		MPIDI_PG_Get_next( &pg );
+                MPIDI_PG_Get_next( &iter, &pg );
 		if (!pg) {
 		    /* We don't know this pgid */
 		    allfound = 0;

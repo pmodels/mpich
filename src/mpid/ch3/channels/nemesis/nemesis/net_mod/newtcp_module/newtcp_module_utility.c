@@ -189,3 +189,34 @@ int MPID_nem_newtcp_module_is_sock_connected(int fd)
  fn_exit:
     return rc;
 }
+
+
+/* --BEGIN ERROR HANDLING-- */
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_dbg_print_all_sendq
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+void MPID_nem_newtcp_module_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc)
+{
+    int i;
+    MPID_Request *sreq;
+    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+
+    fprintf(stream, "..   sc=%p fd=%d vc_ch->state=%d\n", VC_FIELD(vc, sc), (VC_FIELD(vc, sc) ? VC_FIELD(vc,sc)->fd : -1), vc_ch->state);
+
+    /* This function violates any abstraction in the queues, since there's no
+       good way to print them without inspecting the internals. */
+    sreq = VC_FIELD(vc, send_queue).head;
+    i = 0;
+    while (sreq)
+    {
+        fprintf(stream, "....[%d] sreq=%p ctx=%#x rank=%d tag=%d\n", i, sreq,
+                        sreq->dev.match.context_id,
+                        sreq->dev.match.rank,
+                        sreq->dev.match.tag);
+        ++i;
+        sreq = sreq->dev.next;
+    }
+}
+/* --END ERROR HANDLING-- */
+
