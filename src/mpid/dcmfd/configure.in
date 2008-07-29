@@ -83,31 +83,11 @@ AC_SUBST(LIBTOOL)
 dnl Place holder macro for finalization
 PAC_SUBCONFIG_FINALIZE()
 
-AC_OUTPUT(localdefs $MPID_THREAD_OUTPUT_FILES \
-	Makefile \
-	src/Makefile \
-	src/misc/Makefile \
-	src/comm/Makefile \
-	src/comm/collselect/Makefile \
-	src/comm/topo/Makefile \
-	src/onesided/Makefile \
-	src/pt2pt/Makefile \
-	src/coll/Makefile \
-	src/coll/gather/Makefile \
-	src/coll/reduce/Makefile \
-	src/coll/scatter/Makefile \
-	src/coll/alltoall/Makefile \
-	src/coll/allgather/Makefile \
-	src/coll/allreduce/Makefile \
-	src/coll/bcast/Makefile \
-	src/coll/reduce_scatter/Makefile \
-	src/coll/alltoallw/Makefile \
-	src/coll/scatterv/Makefile \
-	src/coll/alltoallv/Makefile \
-	src/coll/allgatherv/Makefile \
-	src/coll/barrier/Makefile \
-	src/impl/Makefile \
-	src/persistent/Makefile \
+FILE=`cd $srcdir && find -name Makefile.in | perl -pe 's,^\./,,;s/\.in$//'`
+AC_OUTPUT(
+localdefs
+$MPID_THREAD_OUTPUT_FILES
+$FILE
 )
 
 PAC_SUBDIR_CACHE_CLEANUP
