@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     int np = 3;
     MPI_Comm      parentcomm, intercomm;
     MPI_Status    status;
-    char port[MPI_MAX_PORT_NAME];
+    char port[MPI_MAX_PORT_NAME] = {0};
     int verbose = 0;
     int do_messages = 1;
     char *env;

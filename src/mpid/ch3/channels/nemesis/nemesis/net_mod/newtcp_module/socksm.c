@@ -77,31 +77,30 @@ static struct {
         (plfd)->events = POLLIN;                              \
     } while (0)
 
-/*
-#define DBG_PRINT_CSTATE_ENTER(sc)                                      \
-    {                                                                   \
-        printf("SM Enter:: rank=%d state=%s\n", sc->pg_rank,            \
-               CONN_STATE_STR[sc->state.cstate]);                       \
-    }
 
-#define DBG_PRINT_CSTATE_EXIT(sc)                                       \
-    {                                                                   \
-        printf("SM Exit:: rank=%d state=%s\n", sc->pg_rank,             \
-               CONN_STATE_STR[sc->state.cstate]);                       \
-    }
+/* --BEGIN ERROR HANDLING-- */
+/* This function can be called from a debugger to dump the contents of the
+   g_sc_tbl to the given stream.  If print_free_entries is true entries
+   0..g_tbl_capacity will be printed.  Otherwise, only 0..g_tbl_size will be
+   shown. */
+static void dbg_print_sc_tbl(FILE *stream, int print_free_entries)
+{
+    int i;
+    sockconn_t *sc;
 
-#define DBG_PRINT_LSTATE_ENTER(sc)                                      \
-    {                                                                   \
-        printf("LSM Enter::  state=%s\n",                               \
-               LISTEN_STATE_STR[sc->state.lstate]);                     \
+    fprintf(stream, "========================================\n");
+    for (i = 0; i < (print_free_entries ? g_tbl_capacity : g_tbl_size); ++i) {
+        sc = &g_sc_tbl[i];
+#define TF(_b) ((_b) ? "TRUE" : "FALSE")
+        fprintf(stream, "[%d] ptr=%p idx=%d fd=%d state=%s pnd_evt=%d\n",
+                i, sc, sc->index, sc->fd, CONN_STATE_TO_STRING(sc->state.cstate), sc->pending_event);
+        fprintf(stream, "....pg_is_set=%s is_same_pg=%s is_tmpvc=%s pg_rank=%d pg_id=%s\n",
+                TF(sc->pg_is_set), TF(sc->is_same_pg), TF(sc->is_tmpvc), sc->pg_rank, sc->pg_id);
+#undef TF
     }
-
-#define DBG_PRINT_LSTATE_EXIT(sc)                                       \
-    {                                                                   \
-        printf("LSM Exit:: state=%s\n",                                 \
-               LISTEN_STATE_STR[sc->state.lstate]);                     \
-    }
-*/
+    fprintf(stream, "========================================\n");
+}
+/* --END ERROR HANDLING-- */
 
 static int find_free_entry(int *index);
 
@@ -543,13 +542,15 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 			      "**read", "**read %s", strerror (errno)); /* FIXME-Z1 */
 	if (pg_id_len == 0) {
 	    sc->is_same_pg = TRUE;
-	    MPID_nem_newtcp_module_get_vc_from_conninfo (MPIDI_Process.my_pg->id, 
-							 sc->pg_rank, &sc->vc);
+            mpi_errno = MPID_nem_newtcp_module_get_vc_from_conninfo (MPIDI_Process.my_pg->id, 
+                                                                     sc->pg_rank, &sc->vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    sc->pg_id = NULL;
 	}
 	else {
 	    sc->is_same_pg = FALSE;
-	    MPID_nem_newtcp_module_get_vc_from_conninfo (pg_id, sc->pg_rank, &sc->vc);
+            mpi_errno = MPID_nem_newtcp_module_get_vc_from_conninfo (pg_id, sc->pg_rank, &sc->vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    sc->pg_id = sc->vc->pg->id;
 	}
 
@@ -711,7 +712,7 @@ int MPID_nem_newtcp_module_connect(struct MPIDI_VC *const vc)
         MPIU_Assert(VC_FIELD(vc, sc) == NULL);
         mpi_errno = find_free_entry(&index);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
-        
+
         sc = &g_sc_tbl[index];
         plfd = &MPID_nem_newtcp_module_plfd_tbl[index];        
 
@@ -1221,7 +1222,8 @@ static int do_i_win(sockconn_t *rmt_sc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_DO_I_WIN);
 
-    if (rmt_sc->pg_id == NULL) goto fn_exit;
+    MPIU_Assert(rmt_sc->pg_is_set);
+
     if (rmt_sc->is_same_pg) {
         if (MPIDI_Process.my_pg_rank > rmt_sc->pg_rank)
             win = TRUE;

@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     char *argv1[2] = { "connector", NULL };
     char *argv2[2] = { "acceptor", NULL };
     MPI_Comm comm_connector, comm_acceptor, comm_parent, comm;
-    char port[MPI_MAX_PORT_NAME];
+    char port[MPI_MAX_PORT_NAME] = {0};
     MPI_Status status;
     MPI_Info spawn_path = MPI_INFO_NULL;
     int i, num_loops = 100;

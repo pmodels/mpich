@@ -101,32 +101,29 @@ extern const char *const CONN_STATE_STR[];
 
 
 #ifdef USE_DBG_LOGGING
-#define DBG_CHANGE_STATE(_sc, _state) do { \
+#define CONN_STATE_TO_STRING(_cstate) \
+    (( (_cstate) >= CONN_STATE_TS_CLOSED && (_cstate) < CONN_STATE_SIZE ) ? CONN_STATE_STR[_cstate] : "out_of_range")
+
+#define DBG_CHANGE_STATE(_sc, _cstate) do { \
     const char *state_str = NULL; \
     const char *old_state_str = NULL; \
     if (MPIU_DBG_SELECTED(NEM_SOCK_DET,VERBOSE)) { \
         if ((_sc)) { \
-            if ((_sc)->state.cstate >= CONN_STATE_TS_CLOSED && (_sc)->state.cstate < CONN_STATE_SIZE) \
-                old_state_str = CONN_STATE_STR[(_sc)->state.cstate]; \
-            else \
-                old_state_str = "out_of_range"; \
-            if (_state >= CONN_STATE_TS_CLOSED && _state < CONN_STATE_SIZE) \
-                state_str = CONN_STATE_STR[_state]; \
-            else \
-                state_str = "out_of_range"; \
+            old_state_str = CONN_STATE_TO_STRING((_sc)->state.cstate); \
+            state_str     = CONN_STATE_TO_STRING(_cstate); \
         } \
-        MPIU_DBG_OUT_FMT(NEM_SOCK_DET, (MPIU_DBG_FDEST, "CHANGE_STATE(_sc=%p, _state=%d (%s)) - old_state=%s", _sc, _state, state_str, old_state_str)); \
+        MPIU_DBG_OUT_FMT(NEM_SOCK_DET, (MPIU_DBG_FDEST, "CHANGE_STATE(_sc=%p, _cstate=%d (%s)) - old_state=%s", _sc, _cstate, state_str, old_state_str)); \
     } \
 } while (0)
 #else
-#  define DBG_CHANGE_STATE(_sc, _state) do { /*nothing*/ } while (0)
+#  define DBG_CHANGE_STATE(_sc, _cstate) do { /*nothing*/ } while (0)
 #endif
 
-#define CHANGE_STATE(_sc, _state) do { \
-    DBG_CHANGE_STATE(_sc, _state); \
-    (_sc)->state.cstate = (_state); \
-    (_sc)->handler = sc_state_info[_state].sc_state_handler; \
-    MPID_nem_newtcp_module_plfd_tbl[(_sc)->index].events = sc_state_info[_state].sc_state_plfd_events; \
+#define CHANGE_STATE(_sc, _cstate) do { \
+    DBG_CHANGE_STATE(_sc, _cstate); \
+    (_sc)->state.cstate = (_cstate); \
+    (_sc)->handler = sc_state_info[_cstate].sc_state_handler; \
+    MPID_nem_newtcp_module_plfd_tbl[(_sc)->index].events = sc_state_info[_cstate].sc_state_plfd_events; \
 } while(0)
 
 struct MPID_nem_new_tcp_module_sockconn;
