@@ -109,6 +109,8 @@ int MPIDI_PG_Finalize(void)
 	if (pg->ref_count == 0 || 1) {
 	    if (pg == MPIDI_Process.my_pg)
 		MPIDI_Process.my_pg = NULL;
+
+	    pg->ref_count = 0; /* satisfy assertions in PG_Destroy */
 	    MPIDI_PG_Destroy(pg);
 	}
 	pg     = pgNext;
@@ -260,6 +262,8 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_PG_DESTROY);
 
+    MPIU_Assert(pg->ref_count == 0);
+
     pg_prev = NULL;
     pg_cur = MPIDI_PG_list;
     while(pg_cur != NULL)
@@ -276,14 +280,21 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
             else
                 pg_prev->next = pg->next;
 
-	    /* FIXME: This is a temp debugging print (and should use
-	       one of the standard debug macros instead */
-	    if (verbose) {
-		fprintf( stdout, "Destroying process group %s\n", 
-			 (char *)pg->id ); fflush(stdout);
-	    }
+            MPIU_DBG_MSG_FMT(CH3_DISCONNECT, VERBOSE, (MPIU_DBG_FDEST, "destroying pg=%p pg->id=%s", pg, pg->id));
 
             for (i = 0; i < pg->size; ++i) {
+                /* FIXME it would be good if we could make this assertion.
+                   Unfortunately, either:
+                   1) We're not being disciplined and some caller of this
+                      function doesn't bother to manage all the refcounts
+                      because he thinks he knows better.  Annoying, but not
+                      strictly a bug.
+                   2) There is a real bug lurking out there somewhere and we
+                      just haven't hit it in the tests yet.  */
+                /*MPIU_Assert(pg->vct[i].ref_count == 0);*/
+
+                MPIU_DBG_MSG_FMT(CH3_DISCONNECT, VERBOSE, (MPIU_DBG_FDEST, "about to free pg->vct=%p which contains vc=%p", pg->vct, &pg->vct[i]));
+
                 /* This used to be handled in MPID_VCRT_Release, but that was
                    not the right place to do this.  The VC should only be freed
                    when the PG that it belongs to is freed, not just when the

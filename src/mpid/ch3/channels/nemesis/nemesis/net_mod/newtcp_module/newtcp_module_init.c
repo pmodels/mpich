@@ -332,6 +332,8 @@ int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
     ASSIGN_SC_TO_VC(vc, NULL);
     VC_FIELD(vc, send_queue).head = VC_FIELD(vc, send_queue).tail = NULL;
 
+    VC_FIELD(vc, sc_ref_count) = 0;
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
     return mpi_errno;

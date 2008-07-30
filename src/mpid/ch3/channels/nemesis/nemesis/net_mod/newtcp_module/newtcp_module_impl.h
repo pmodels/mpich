@@ -43,6 +43,9 @@ typedef struct
         struct MPID_Request *head;
         struct MPID_Request *tail;
     } send_queue;
+
+    /* this is a count of how many sc objects refer to this vc */
+    int sc_ref_count;
 } MPID_nem_newtcp_module_vc_area;
 
 /* accessor macro to private fields in VC */
