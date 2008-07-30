@@ -32,6 +32,7 @@ int MPIDI_CH3U_Finalize_sshm(void)
     MPIDI_PG_t * pg;
     MPIDI_PG_t * pg_next;
     MPIDI_CH3I_PG *pgch;
+    MPIDI_PG_iterator iter;
     int inuse;
 
 #if 0
@@ -70,14 +71,14 @@ int MPIDI_CH3U_Finalize_sshm(void)
      * and free their member fields.
      */
 
-    MPIDI_PG_Iterate_reset();
-    MPIDI_PG_Get_next(&pg);
+    MPIDI_PG_Get_iterator(&iter);
+    MPIDI_PG_Get_next(&iter, &pg);
     /* This Get_next causes us to skip the process group associated with
        out MPI_COMM_WORLD.  */
-    MPIDI_PG_Get_next(&pg);
+    MPIDI_PG_Get_next(&iter, &pg);
     while(pg)
     {
-	MPIDI_PG_Get_next(&pg_next);
+	MPIDI_PG_Get_next(&iter, &pg_next);
         MPIDI_PG_release_ref(pg, &inuse);
         if (inuse == 0)
         {
