@@ -138,79 +138,79 @@ $builddir    = "";
 $instdir     = "";
 # Read the arguments
 foreach $_ (@ARGV) {
-    if (/-enable-n=(\d*)/) {
+    if (/--?enable-n=(\d*)/) {
 	$n_enable = $1;
     }
-    elsif (/-with-n=(\d*)/) {
+    elsif (/--?with-n=(\d*)/) {
 	$n_with = $1;
     }
-    elsif (/-show/) {
+    elsif (/--?show/) {
 	$show = 1;
     }
-    elsif (/-debug/) {
+    elsif (/--?debug/) {
 	$debug = 1;
     }
-    elsif (/-envopt=(.*)/) {
+    elsif (/--?envopt=(.*)/) {
 	# Add a list of possible env values
 	$env_array[$#env_array+1] = $1;
 	$n_env    = $#env_array + 1;
     }
-    elsif (/-srcdir=(.*)/) {
+    elsif (/--?srcdir=(.*)/) {
 	$srcdir  = $1;
     }
-    elsif (/-instdir=(.*)/) {
+    elsif (/--?instdir=(.*)/) {
 	$instdir = $1;
     }
-    elsif (/-rundir=(.*)/) {
+    elsif (/--?rundir=(.*)/) {
 	$rundir = $1;
     }
-    elsif (/-maxcount=(.*)/) {
+    elsif (/--?maxcount=(.*)/) {
 	# max count.  Set to -1 for infinity
 	$max_count = $1;
     }
-    elsif (/-maxtime=(.*)/) {
+    elsif (/--?maxtime=(.*)/) {
 	# max time in seconds
 	set_time_left( $1 );
     }
-    elsif (/-tests=(.*)/) {
+    elsif (/--?tests=(.*)/) {
 	$tests = ":" . $1 . ":";
     }
-    elsif (/-outfile=(.*)/) {
+    elsif (/--?outfile=(.*)/) {
 	$outfile = $1;
     }
-    elsif (/-tmpdir=(.*)/) {
+    elsif (/--?tmpdir=(.*)/) {
 	$tmpdir = $1;
     }
-    elsif (/-builddir=(.*)/) {
+    elsif (/--?builddir=(.*)/) {
 	$builddir = $1;
     }
-    elsif (/-xml/) {
+    elsif (/--?xml/) {
 	&XMLStyle;
 	$is_xml = 1;
     }
-    elsif (/-norand/) {
+    elsif (/--?norand/) {
 	$use_rand_args = 0;
     }
-    elsif (/-enable=(.*)/) {
+    elsif (/--?enable=(.*)/) {
 	$use_rand_args = 0;
 	$enable_args .= "$1 ";
     }
-    elsif (/-with=(.*)/) {
+    elsif (/--?with=(.*)/) {
 	$use_rand_args = 0;
 	$with_args .= "$1 ";
     }
-    elsif (/-env=(.*)/) {
+    elsif (/--?env=(.*)/) {
 	$use_rand_args = 0;
 	$envval=$1;
 	$envval =~ s/ /<SP>/g;
 	$env_args .= "--env-$envval ";
     }
-    elsif (/-configarg=(.*)/) {
+    elsif (/--?configarg=(.*)/) {
 	# Use this to add a special arg (such as -host) to the 
 	# configure call
 	$config_args .= "$1 ";
     }
-    elsif (/-help/) {
+    elsif (/--?help/) {
 	print STDERR "\
 checkbuilds [ -enable-n=d ] [ -with-n=d ] [ -show ] [-envopt=name;value;... ]
             [-srcdir=SRCDIR] [-instdir=INSTALLDIR] [-builddir=BUILDDIR]
