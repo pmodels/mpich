@@ -16,10 +16,16 @@ int MPID_nem_newtcp_module_finalize()
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
-    
-    MPID_nem_newtcp_module_poll_finalize();
-    MPID_nem_newtcp_module_send_finalize();
-    MPID_nem_newtcp_module_sm_finalize();
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_FINALIZE);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_FINALIZE);
+
+    mpi_errno = MPID_nem_newtcp_module_poll_finalize();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPID_nem_newtcp_module_send_finalize();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPID_nem_newtcp_module_sm_finalize();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
      
     if (MPID_nem_newtcp_module_g_lstn_sc.fd)
     {
@@ -28,6 +34,7 @@ int MPID_nem_newtcp_module_finalize()
     }
         
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_FINALIZE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
