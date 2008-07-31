@@ -287,12 +287,12 @@ int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
 {
+    int mpi_errno = MPI_SUCCESS;	
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIDI_msg_sz_t userbuf_sz;
     MPID_Datatype * dt_ptr = NULL;
     MPIDI_msg_sz_t data_sz;
-    int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_POST_DATA_RECEIVE_FOUND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_POST_DATA_RECEIVE_FOUND);
@@ -337,8 +337,6 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
     else {
 	/* user buffer is not contiguous or is too small to hold
 	   the entire message */
-	int mpi_errno;
-	
 	MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"IOV loaded for non-contiguous read");
 	rreq->dev.segment_ptr = MPID_Segment_alloc( );
         MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
@@ -353,9 +351,11 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
 	}
     }
 
-fn_fail:
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_POST_DATA_RECEIVE_FOUND);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
