@@ -6,8 +6,6 @@
 
 #include "newtcp_module_impl.h"
 
-extern sockconn_t MPID_nem_newtcp_module_g_lstn_sc;
-
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_module_finalize
 #undef FCNAME

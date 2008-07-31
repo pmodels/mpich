@@ -18,11 +18,9 @@
 #include "socksm.h"
 
 /* globals */
-extern MPID_nem_queue_ptr_t MPID_nem_newtcp_module_free_queue;
-extern MPID_nem_queue_ptr_t MPID_nem_process_recv_queue;
-extern MPID_nem_queue_ptr_t MPID_nem_process_free_queue;
-extern int MPID_nem_newtcp_module_listen_fd;
 extern pollfd_t *MPID_nem_newtcp_module_plfd_tbl;
+extern sockconn_t MPID_nem_newtcp_module_g_lstn_sc;
+extern pollfd_t MPID_nem_newtcp_module_g_lstn_plfd;
 
 extern char *MPID_nem_newtcp_module_recv_buf;
 #define MPID_NEM_NEWTCP_MODULE_RECV_MAX_PKT_LEN 1024

@@ -9,16 +9,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-MPID_nem_queue_ptr_t MPID_nem_newtcp_module_free_queue = 0;
-MPID_nem_queue_ptr_t MPID_nem_process_recv_queue = 0;
-MPID_nem_queue_ptr_t MPID_nem_process_free_queue = 0;
-extern sockconn_t MPID_nem_newtcp_module_g_lstn_sc;
-extern pollfd_t MPID_nem_newtcp_module_g_lstn_plfd;
-extern pollfd_t *MPID_nem_newtcp_module_plfd_tbl;
-
-static MPID_nem_queue_t _free_queue;
-
-static int dbg_ifname = 0;
+#define DBG_IFNAME 0
 
 #define MPIDI_CH3I_PORT_KEY "port"
 #define MPIDI_CH3I_HOST_DESCRIPTION_KEY "description"
@@ -35,7 +26,6 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
-    int i;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_INIT);
@@ -63,29 +53,17 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     MPID_nem_newtcp_module_g_lstn_sc.handler = MPID_nem_newtcp_module_state_listening_handler;
 
     /* create business card */
-    mpi_errno = MPID_nem_newtcp_module_get_business_card (pg_rank, bc_val_p, val_max_sz_p);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    mpi_errno = MPID_nem_newtcp_module_get_business_card(pg_rank, bc_val_p, val_max_sz_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    /* save references to queues */
-    MPID_nem_process_recv_queue = proc_recv_queue;
-    MPID_nem_process_free_queue = proc_free_queue;
+    *module_free_queue = NULL;
 
-    MPID_nem_newtcp_module_free_queue = &_free_queue;
-
-    /* set up network module queues */
-    MPID_nem_queue_init (MPID_nem_newtcp_module_free_queue);
-
-    for (i = 0; i < num_module_elements; ++i)
-    {
-        MPID_nem_queue_enqueue (MPID_nem_newtcp_module_free_queue, &module_elements[i]);
-    }
-
-    *module_free_queue = MPID_nem_newtcp_module_free_queue;
-
-
-    MPID_nem_newtcp_module_sm_init();
-    MPID_nem_newtcp_module_send_init();
-    MPID_nem_newtcp_module_poll_init();
+    mpi_errno = MPID_nem_newtcp_module_sm_init();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPID_nem_newtcp_module_send_init();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPID_nem_newtcp_module_poll_init();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 
  fn_exit:
@@ -139,13 +117,13 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 		       "MPICH_INTERFACE_HOSTNAME_R%d", myRank );
 	ifname_string = getenv( namebuf );
 
-	if (dbg_ifname && ifname_string) {
+	if (DBG_IFNAME && ifname_string) {
 	    fprintf( stdout, "Found interface name %s from %s\n", 
 		    ifname_string, namebuf );
 	    fflush( stdout );
 	}
     }
-    else if (dbg_ifname) {
+    else if (DBG_IFNAME) {
 	fprintf( stdout, 
 		 "Found interface name %s from MPICH_INTERFACE_HOSTNAME\n", 
 		 ifname_string );
@@ -334,14 +312,8 @@ int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
 
     VC_FIELD(vc, sc_ref_count) = 0;
 
- fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
     return mpi_errno;
-    /*
- fn_fail:
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
-    goto fn_exit;
-    */
 }
 
 #undef FUNCNAME
@@ -364,7 +336,6 @@ int MPID_nem_newtcp_module_vc_destroy(MPIDI_VC_t *vc)
     plfd = &MPID_nem_newtcp_module_plfd_tbl[sc->index]; 
 #endif
 
-fn_exit:   
     return mpi_errno;
 }
 
