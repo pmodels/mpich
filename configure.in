@@ -1922,9 +1922,9 @@ if test "$enable_f90" = "yes" ; then
   fi
   if test "$has_fort90_real8" = "yes" ; then
     sed -e 's/DOUBLE PRECISION/REAL*8/g' $master_top_srcdir/src/binding/f90/mpi_base.f90 > $master_top_srcdir/src/binding/f90/mpi_base.f90.new
-    mv $master_top_srcdir/binding/f90/mpi_base.f90.new $master_top_srcdir/binding/f90/mpi_base.f90
+    mv $master_top_srcdir/src/binding/f90/mpi_base.f90.new $master_top_srcdir/src/binding/f90/mpi_base.f90
   else
-    cp $master_top_srcdir/binding/f90/mpi_base.f90.orig $master_top_srcdir/binding/f90/mpi_base.f90
+    cp $master_top_srcdir/src/binding/f90/mpi_base.f90.orig $master_top_srcdir/src/binding/f90/mpi_base.f90
   fi
 fi
 
