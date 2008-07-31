@@ -13,6 +13,7 @@ i_noncontig_SOURCES = i_noncontig.c
 async_SOURCES = async.c
 async_any_SOURCES = async_any.c
 userioerr_SOURCES = userioerr.c
+resized_SOURCES = resized.c
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o)
