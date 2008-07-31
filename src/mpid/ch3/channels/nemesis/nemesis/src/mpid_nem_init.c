@@ -22,8 +22,6 @@ static MPID_nem_queue_ptr_t net_free_queue;
 #define MIN( a , b ) ((a) >  (b)) ? (b) : (a)
 #define MAX( a , b ) ((a) >= (b)) ? (a) : (b)
 
-static int intcompar (const void *a, const void *b) { return *(int *)a - *(int *)b; }
-
 char *MPID_nem_asymm_base_addr = 0;
 
 static int get_local_procs (int rank, int num_procs, int *num_local, int **local_procs, int *local_rank, int *num_nodes, int **node_ids);
