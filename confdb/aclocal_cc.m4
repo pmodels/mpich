@@ -981,6 +981,14 @@ dnl tests for unused variables or variables used before they are defined).
 dnl
 dnl If the value 'posix' is given to '--enable-strict', POSIX is selected
 dnl as the C dialect (including the definition for the POSIX level)
+dnl
+dnl If the value 'all' is given to '--enable-strict', use the "GNU" Unix
+dnl dialect.  This permits the use of stricter checking for declarations of
+dnl system functions (note that fsync is not defined in strict, non-real-time
+dnl POSIX).  This level includes
+dnl .vb
+dnl -Werror-implicit-function-declaration
+dnl .ve
 dnl 
 dnl This only works where 'gcc' is available.
 dnl In addition, it exports the variable 'enable_strict_done'. This
@@ -1020,11 +1028,17 @@ if test "$enable_strict_done" != "yes" ; then
 	    # Note that -Wall does not include all of the warnings that
 	    # the gcc documentation claims that it does; in particular,
 	    # the -Wunused-parameter option is *not* part of -Wall
-            COPTIONS="${COPTIONS} -Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wno-long-long -Wunused-parameter -Wunused-value -std=c89"
+	    # -Wextra (if available) adds some to -Wall (!)
+            COPTIONS="${COPTIONS} -Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value -std=c89"
         fi
 	;;
 
 	posix)
+	# fsync is a part of POSIX only in the real-time extensions, 
+	# apparently, so code that used include <unistd.h> and POSIX
+	# and expects fsync to be defined is in trouble.  Because of that
+	# we're not including the -W option to error if a function is
+	# not prototyped.
 	enable_strict_done="yes"
         if test "$CC" = "gcc" ; then
             COPTIONS="${COPTIONS} -Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -D_POSIX_C_SOURCE=199506L -std=c89"
@@ -1100,7 +1114,7 @@ if test "$enable_strict_done" != "yes" ; then
         all)
         enable_strict_done="yes"
         if test "$ac_cv_prog_gcc" = "yes" ; then 
-            pac_cc_strict_flags="-Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wunused-parameter -Wunused-value -Wno-long-long"
+            pac_cc_strict_flags="-Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wunused-parameter -Wunused-value -Wno-long-long -Werror-implicit-function-declaration"
             CFLAGS="$CFLAGS $pac_cc_strict_flags"
             AC_MSG_CHECKING([whether we can add -std=c89])
             # See if we can add -std=c89
@@ -1121,6 +1135,11 @@ if test "$enable_strict_done" != "yes" ; then
         ;;
 
         posix)
+	# fsync is a part of POSIX only in the real-time extensions, 
+	# apparently, so code that used include <unistd.h> and POSIX
+	# and expects fsync to be defined is in trouble.  Because of that
+	# we're not including the -W option to error if a function is
+	# not prototyped.
         enable_strict_done="yes"
         if test "$ac_cv_prog_gcc" = "yes" ; then 
             pac_cc_strict_flags="-Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -D_POSIX_C_SOURCE=199506L"
