@@ -10,15 +10,20 @@
 -------------------------------------------------------------------------------
 - The MPD process manager can only handle relatively small amounts of data on 
   stdin and may also have problems if there is data on stdin that is not
-  consumed by the program.  
+  consumed by the program. 
+
+- Using the nemesis channel, RMA operations will fail in certain cases
+  when transferring more than about 256K of data and a complicated
+  remote datatype.
 
 - Only the ch3:sock and ch3:nemesis channels support thread safety.
  
-- The sock, sctp, and ssm channels are the only channels that implement dynamic 
-  process support (i.e., MPI_COMM_SPAWN, MPI_COMM_CONNECT, MPI_COMM_ACCEPT, 
-  etc.) under Unix.  All other channels will experience failures for tests 
-  exercising dynamic process functionality.  Under Windows, the sock, ssm, 
-  and sshm channels implement the dynamic process support.
+- The sock, sctp, nemesis, and ssm channels are the only channels that
+  implement dynamic process support (i.e., MPI_COMM_SPAWN,
+  MPI_COMM_CONNECT, MPI_COMM_ACCEPT, etc.) under Unix.  All other
+  channels will experience failures for tests exercising dynamic
+  process functionality.  Under Windows, the sock, ssm, and sshm
+  channels implement the dynamic process support.
 
 - The ssm channel uses special interprocess locks (often assembly) that may 
   not work with some compilers or machine architectures. It works on
