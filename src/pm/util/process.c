@@ -16,6 +16,10 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#ifdef HAVE_STRING_H
+/* Often needed for strsignal */
+#include <string.h>
+#endif
 
 #include "pmutil.h"
 #include "ioloop.h"
