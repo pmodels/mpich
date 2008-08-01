@@ -116,6 +116,7 @@ extern const char *const CONN_STATE_STR[];
     } \
 } while (0)
 #else
+#  define CONN_STATE_TO_STRING(_cstate) "unavailable"
 #  define DBG_CHANGE_STATE(_sc, _cstate) do { /*nothing*/ } while (0)
 #endif
 
