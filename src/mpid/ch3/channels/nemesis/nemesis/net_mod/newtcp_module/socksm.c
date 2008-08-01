@@ -859,6 +859,9 @@ static int cleanup_sc(sockconn_t *sc)
     pollfd_t *plfd = NULL;
     freenode_t *node;
     MPIU_CHKPMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_CLEANUP_SC);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_CLEANUP_SC);
 
     if (sc == NULL)
         goto fn_exit;
@@ -903,7 +906,7 @@ static int cleanup_sc(sockconn_t *sc)
 
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CLEANUP);
+    MPIDI_FUNC_EXIT(MPID_STATE_CLEANUP_SC);
     return mpi_errno;
  fn_fail:
     MPIU_CHKPMEM_REAP();

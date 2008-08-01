@@ -672,6 +672,8 @@ int MPIDI_CH3_Handle_vc_close(MPIDI_VC_t *vc)
         conn->vc = NULL;
     }
 
+    ((MPIDI_CH3I_VC *)vc->channel_private)->conn = NULL;
+
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_HANDLE_VC_CLOSE);
     return mpi_errno;
 }
@@ -934,6 +936,9 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	    /* the other process is in the same comm_world; just compare the 
 	       ranks */
 	    if (MPIR_Process.comm_world->rank < pg_rank) {
+		MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
+                "vc=%p,conn=%p:Accept head-to-head connection (my process group), discarding vcch->conn=%p",vc,conn, vcch->conn));
+
 		/* accept connection */
 		MPIU_DBG_VCCHSTATECHANGE(vc,VC_STATE_CONNECTING);
 		vcch->state = MPIDI_CH3I_VC_STATE_CONNECTING;
@@ -956,6 +961,8 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	    /* the two processes are in different comm_worlds; compare their 
 	       unique pg_ids. */
 	    if (strcmp(MPIDI_Process.my_pg->id, pg->id) < 0) {
+		MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
+                "vc=%p,conn=%p:Accept head-to-head connection (two process groups), discarding vcch->conn=%p",vc,conn, vcch->conn));
 		/* accept connection */
 		MPIU_DBG_VCCHSTATECHANGE(vc,VC_STATE_CONNECTING);
 		vcch->state = MPIDI_CH3I_VC_STATE_CONNECTING;
