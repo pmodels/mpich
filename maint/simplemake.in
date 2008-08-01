@@ -334,6 +334,9 @@ $includedir_name =           "includedir      = \@includedir\@";
 $mandir_name =               "mandir          = \@mandir\@";
 $htmldir_name =              "htmldir         = \@htmldir\@";
 $docdir_name =               "docdir          = \@docdir\@";
+# datarootdir is new in autoconf 2.60, and is needed for other
+# dirs like mandir (much as prefix and execprefix are also needed)
+$datarootdir_name =          "datarootdir     = \@datarootdir\@";
 $sysconfdir_name =           "sysconfdir      = \@sysconfdir\@";
 $pkgconfigdir_name =         "pkgconfigdir    = \@libdir\@/pkgconfig";
 $builddir_name =             "builddir        = \@builddir\@";
@@ -357,6 +360,7 @@ $top_builddir_name =         "top_builddir    = \@master_top_builddir\@";
 	     'builddir'   => $builddir_name,
 	     'abs_builddir' => $abs_builddir_name,
 	     'mandir'     => $mandir_name,
+	     'datarootdir' => $datarootdir_name,
 	     'htmldir'    => $htmldir_name,
 	     'docdir'     => $docdir_name,
 	     'sysconfdir' => $sysconfdir_name,
@@ -402,9 +406,9 @@ $top_builddir_name =         "top_builddir    = \@master_top_builddir\@";
 # These give the directories that autoconf will require for the 
 %required_dirs = ( 'libdir'      => 'exec_prefix prefix',
 		   'bindir'      => 'exec_prefix prefix',
-		   'mandir'      => 'prefix',
-		   'htmldir'     => 'prefix',
-		   'docdir'      => 'prefix',
+		   'mandir'      => 'prefix datarootdir',
+		   'htmldir'     => 'prefix datarootdir',
+		   'docdir'      => 'prefix datarootdir',
 		   'includedir'  => 'prefix',
  		   'exec_prefix' => 'prefix',
 		   'sysconfdir'  => 'prefix',

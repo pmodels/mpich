@@ -4,6 +4,7 @@
 prefix    = @prefix@
 exec_prefix = @exec_prefix@
 bindir    = @bindir@
+datarootdir = @datarootdir@
 mandir    = @mandir@
 srcdir	  = @srcdir@
 SHELL	  = @SHELL@

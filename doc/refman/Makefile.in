@@ -5,14 +5,16 @@ INSTALL         = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA    = @INSTALL_DATA@
 prefix          = @prefix@
+datarootdir     = @datatrootdir@
 docdir          = @docdir@
-srcdir = @srcdir@
+srcdir          = @srcdir@
 
 @VPATH@
 
-LATEX      = export TEXINPUTS=".:$(srcdir):" ; latex
-BIBTEX     = export BIBINPUTS=".:$(srcdir):" ; bibtex
-DVIPDFM    = export TEXINPUTS=".:$(srcdir):" ; dvipdfm
+# Use Bourne shell syntax only (export a=b is not universally supported)
+LATEX      = TEXINPUTS=".:$(srcdir):" && export TEXINPUTS && latex
+BIBTEX     = BIBINPUTS=".:$(srcdir):" && export BIBINPUTS && bibtex
+DVIPDFM    = TEXINPUTS=".:$(srcdir):" && export TEXINPUTS && dvipdfm
 LATEX2HTML = latex2html
 
 MPIMANAUXFILES = refman.sty tpage.sty refcmd.tex refmpi.tex
