@@ -128,6 +128,8 @@ int MPID_nem_newtcp_module_send_queued (MPIDI_VC_t *vc)
             {
                 iov->MPID_IOV_BUF = (char *)iov->MPID_IOV_BUF + offset;
                 iov->MPID_IOV_LEN -= offset;
+                /* iov_count should be equal to the number of iov's remaining */
+                sreq->dev.iov_count -= ((iov - sreq->dev.iov) - sreq->dev.iov_offset);
                 sreq->dev.iov_offset = iov - sreq->dev.iov;
                 complete = 0;
                 break;
