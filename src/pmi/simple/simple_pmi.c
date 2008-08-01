@@ -44,6 +44,8 @@
 #if defined(HAVE_SYS_SOCKET_H)
 #include <sys/socket.h>
 #endif
+
+#include "mpibase.h"            /* Get ATTRIBUTE, some base functions */
 /* mpimem includes the definitions for MPIU_Snprintf, MPIU_Malloc, and 
    MPIU_Free */
 #include "mpimem.h"
@@ -542,7 +544,7 @@ int PMI_KVS_Put( const char kvsname[], const char key[], const char value[] )
     return err;
 }
 
-int PMI_KVS_Commit( const char kvsname[] )
+int PMI_KVS_Commit( const char kvsname[] ATTRIBUTE((unused)))
 {
     /* no-op in this implementation */
     return( 0 );
@@ -878,8 +880,10 @@ int PMI_Spawn_multiple(int count,
     return( 0 );
 }
 
-int PMI_Args_to_keyval(int *argcp, char *((*argvp)[]), PMI_keyval_t **keyvalp, 
-		       int *size)
+int PMI_Args_to_keyval(int *argcp ATTRIBUTE((unused)), 
+		       char *((*argvp)[]) ATTRIBUTE((unused)), 
+		       PMI_keyval_t **keyvalp ATTRIBUTE((unused)), 
+		       int *size ATTRIBUTE((unused)) )
 {
     return ( 0 );
 }
@@ -945,8 +949,8 @@ static int PMII_iter( const char *kvsname, const int idx, int *next_idx,
 	if ( rc == 0 ) {
 	    PMIU_getval( "nextidx", buf, PMIU_MAXLINE );
 	    *next_idx = atoi( buf );
-	    PMIU_getval( "key", key, PMI_keylen_max );
-	    PMIU_getval( "val", val, PMI_vallen_max );
+	    PMIU_getval( "key", key, key_len );
+	    PMIU_getval( "val", val, val_len );
 	    return( PMI_SUCCESS );
 	}
 	else {
