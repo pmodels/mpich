@@ -91,12 +91,6 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int *coords)
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-	    cart_ptr = MPIR_Topology_get( comm_ptr );
-	    if (cart_ptr->topo.cart.ndims) {
-		MPIR_ERRTEST_ARGNULL(coords,"coords",mpi_errno);
-		if (mpi_errno) goto fn_fail;
-	    }
-	    
 	    MPIR_ERRTEST_RANK(comm_ptr, rank, mpi_errno);
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
@@ -104,15 +98,26 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int *coords)
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
-    /* ... body of routine ...  */
-    
     cart_ptr = MPIR_Topology_get( comm_ptr );
 
-    MPIU_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
-    MPIU_ERR_CHKANDJUMP2((cart_ptr->topo.cart.ndims > maxdims), mpi_errno, MPI_ERR_ARG, "**dimsmany",
-			 "**dimsmany %d %d", cart_ptr->topo.cart.ndims, maxdims);
-
-
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    MPIU_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+	    MPIU_ERR_CHKANDJUMP2((cart_ptr->topo.cart.ndims > maxdims), mpi_errno, MPI_ERR_ARG, "**dimsmany",
+				 "**dimsmany %d %d", cart_ptr->topo.cart.ndims, maxdims);
+	    if (cart_ptr->topo.cart.ndims) {
+		MPIR_ERRTEST_ARGNULL(coords,"coords",mpi_errno);
+		if (mpi_errno) goto fn_fail;
+	    }
+        }
+        MPID_END_ERROR_CHECKS;
+    }
+#   endif /* HAVE_ERROR_CHECKING */
+	    
+    /* ... body of routine ...  */
+    
     /* Calculate coords */
     nnodes = cart_ptr->topo.cart.nnodes;
     for ( i=0; i < cart_ptr->topo.cart.ndims; i++ ) {
