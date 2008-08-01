@@ -2199,9 +2199,9 @@ main()
   $2 a;
   $3 b;
   FILE *f=fopen("conftestval", "w");
-  if (!f) exit(1);
-  fprintf(f, "%d\n", sizeof(a) + sizeof(b));
-  exit(0);
+  if (!f) return 1; /* avoid exit */
+  fprintf(f, "%d\n", (int)(sizeof(a) + sizeof(b)));
+  return 0;
 }],AC_CV_NAME=`cat conftestval`,AC_CV_NAME=0,ifelse([$4],,,AC_CV_NAME=$4))])
 if test "X$AC_CV_NAME" = "X" ; then
     # We have a problem.  The test returned a zero status, but no output,

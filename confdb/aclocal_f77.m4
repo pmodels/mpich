@@ -73,25 +73,25 @@ EOF
    save_LIBS="$LIBS"
    dnl FLIBS comes from AC_F77_LIBRARY_LDFLAGS
    LIBS="fconftestf.o $FLIBS $LIBS"
-   AC_TRY_LINK(,my_name();,pac_cv_prog_f77_name_mangle="lower")
+   AC_TRY_LINK([extern void my_name(int);],my_name(0);,pac_cv_prog_f77_name_mangle="lower")
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(,my_name_();,pac_cv_prog_f77_name_mangle="lower underscore")
+     AC_TRY_LINK([extern void my_name_(int);],my_name_(0);,pac_cv_prog_f77_name_mangle="lower underscore")
    fi
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(void __stdcall MY_NAME(int);,MY_NAME(0);,pac_cv_prog_f77_name_mangle="upper stdcall")
+     AC_TRY_LINK([void __stdcall MY_NAME(int);],MY_NAME(0);,pac_cv_prog_f77_name_mangle="upper stdcall")
    fi
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(,MY_NAME();,pac_cv_prog_f77_name_mangle="upper")
+     AC_TRY_LINK([extern void MY_NAME(int);],MY_NAME(0);,pac_cv_prog_f77_name_mangle="upper")
    fi
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(,my_name__();,
+     AC_TRY_LINK([extern void my_name__(int);],my_name__(0);,
        pac_cv_prog_f77_name_mangle="lower doubleunderscore")
    fi
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(,MY_name();,pac_cv_prog_f77_name_mangle="mixed")
+     AC_TRY_LINK([extern void MY_name(int);],MY_name(0);,pac_cv_prog_f77_name_mangle="mixed")
    fi
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(,MY_name_();,pac_cv_prog_f77_name_mangle="mixed underscore")
+     AC_TRY_LINK([extern void MY_name_(int);],MY_name_(0);,pac_cv_prog_f77_name_mangle="mixed underscore")
    fi
    LIBS="$save_LIBS"
    AC_LANG_RESTORE
@@ -1207,6 +1207,7 @@ if AC_TRY_EVAL(ac_fcompile) && test -s conftest.o ; then
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
 #define ftest_ ftest
 #endif
+extern void ftest_(void);
 ftest_();
 ], [link_worked=yes], [link_worked=no] )
     if test "$link_worked" = "no" ; then
@@ -1220,6 +1221,7 @@ ftest_();
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
 #define ftest_ ftest
 #endif
+extern void ftest_(void);
 ftest_();
 ], [link_worked=yes], [link_worked=no] )
             if test "$link_worked" = "yes" ; then 
@@ -1239,6 +1241,7 @@ ftest_();
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
 #define ftest_ ftest
 #endif
+extern void ftest_(void);
 ftest_();
 ], [link_worked=yes], [link_worked=no] )
             if test "$link_worked" = "yes" ; then 

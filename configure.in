@@ -1922,9 +1922,9 @@ if test "$enable_f90" = "yes" ; then
   fi
   if test "$has_fort90_real8" = "yes" ; then
     sed -e 's/DOUBLE PRECISION/REAL*8/g' $master_top_srcdir/src/binding/f90/mpi_base.f90 > $master_top_srcdir/src/binding/f90/mpi_base.f90.new
-    mv $master_top_srcdir/src/binding/f90/mpi_base.f90.new $master_top_srcdir/src/binding/f90/mpi_base.f90
+    mv -f $master_top_srcdir/src/binding/f90/mpi_base.f90.new $master_top_srcdir/src/binding/f90/mpi_base.f90
   else
-    cp $master_top_srcdir/src/binding/f90/mpi_base.f90.orig $master_top_srcdir/src/binding/f90/mpi_base.f90
+    cp -f $master_top_srcdir/src/binding/f90/mpi_base.f90.orig $master_top_srcdir/src/binding/f90/mpi_base.f90
   fi
 fi
 
@@ -2348,19 +2348,22 @@ public:
     # the version mismatch.  By default, we set the GNU version to 0.
     # In a cross-compiling environment, these can be set with environment
     # variables, either directly or through the standard "CROSS" variable.
-    if test -z "$GNU_VERSION" ; then
-        if test -n "$CROSS_GNU_VERSION" ; then 
-	     GNU_VERSION=$CROSS_GNU_VERSION
+    if test -z "$GNUCXX_VERSION" ; then
+        if test -n "$CROSS_GNUCXX_VERSION" ; then 
+	     GNUCXX_VERSION=$CROSS_GNUCXX_VERSION
         else
-             GNU_VERSION=0
-        fi
-	if test -n "$CROSS_GNU_MINORVERSION" ; then
-	     GNU_MINORVERSION=$CROSS_GNU_MINORVERSION
-       	else
-             GNU_MINORVERSION=0
+             GNUCXX_VERSION=0
         fi
     fi
-    if test "$cross_compiling" = "no" -a "$ac_compiler_gnu" = "yes" ; then
+    if test -z "$GNUCXX_MINORVERSION" ; then 
+	if test -n "$CROSS_GNUCXX_MINORVERSION" ; then
+	     GNUCXX_MINORVERSION=$CROSS_GNUCXX_MINORVERSION
+       	else
+             GNUCXX_MINORVERSION=0
+        fi
+    fi
+    if test "$cross_compiling" = "no" -a "$ac_compiler_gnu" = "yes" -a \
+       "$GNUCXX_VERSION" = 0 -a "$GNUCXX_MINORVERSION" = 0 ; then
          ac_vals=""
 	 AC_MSG_CHECKING([for GNU g++ version])
          AC_TRY_RUN([#include <stdio.h>
@@ -2381,14 +2384,14 @@ int main() {
              v=`echo "$ac_vals" | sed -e 's/v=\(.*\),.*/\1/'`
              m=`echo "$ac_vals" | sed -e 's/.*m=\(.*\)/\1/'`
              AC_MSG_RESULT([$v . $m])
-             GNUC_VERSION=$v
-             GNUC_MINORVERSION=$m
+             GNUCXX_VERSION=$v
+             GNUCXX_MINORVERSION=$m
          else
              AC_MSG_RESULT([unknown])
          fi 
-         AC_SUBST(GNUC_VERSION)
-         AC_SUBST(GNUC_MINORVERSION)
     fi    
+    AC_SUBST(GNUCXX_VERSION)
+    AC_SUBST(GNUCXX_MINORVERSION)
 
     bindings="$bindings cxx"
     bindings_dirs="$bindings_dirs src/binding/cxx"
@@ -4182,7 +4185,11 @@ if test "$enable_f77" = yes ; then
     default_status_size=`expr 5 \* $ac_cv_sizeof_int`
     AC_CACHE_CHECK([for size of MPI_Status],pac_cv_sizeof_mpi_status,[
     AC_TRY_RUN([
+#include "confdefs.h"
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 typedef struct { 
     int count;
     int cancelled;
@@ -4244,6 +4251,9 @@ dnl     fi
         cat >conftestc.c <<EOF
 #include <stdio.h>
 #include "confdefs.h"
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #ifdef F77_NAME_UPPER
 #define ftest_ FTEST
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
@@ -4592,6 +4602,13 @@ fi
 # get better performance.
 if test "$ac_cv_c_int64_t" != "no" -o -n "$INT64_T" ; then
     default_int64_t_alignment=${CROSS_INT64_T_ALIGNMENT:-"unknown"}
+    if test -z "$INT64_T" ; then
+         if test "$ac_cv_c_int64_t" = yes ; then
+	     INT64_T="int64_t"
+         else
+             INT64_T="$ac_cv_int64_t"
+         fi
+    fi
     # We use the type that we're going use for int64.
     AC_CACHE_CHECK([for alignment restrictions on $MYINT64_T],pac_cv_int64_t_alignment,[
     AC_TRY_RUN([
@@ -4599,19 +4616,19 @@ if test "$ac_cv_c_int64_t" != "no" -o -n "$INT64_T" ; then
 #include <stdlib.h>
 int main(int argc, char **argv )
 {
-    $ac_cv_c_int64_t *p1, v;
+    $INT64_T *p1, v;
     char    *buf_p = (char *)malloc( 64 ), *bp;
     bp = buf_p;
     /* Make bp aligned on 4, not 8 bytes */
     if (!( (long)bp & 0x7 ) ) bp += 4;
-    p1 = (int64_t *)bp;
+    p1 = ($INT64_T *)bp;
     v = -1;
     *p1 = v;
     if (!( (long)bp & 0x3 ) ) bp += 2;
-    p1 = (int64_t *)bp;
+    p1 = ($INT64_T *)bp;
     *p1 = 1;
     if (!( (long)bp & 0x1 ) ) bp += 1;
-    p1 = (int64_t *)bp;
+    p1 = ($INT64_T *)bp;
     *p1 = 1;
     return 0;
 }
@@ -4622,8 +4639,15 @@ int main(int argc, char **argv )
     fi
 fi
 
-if test "$pac_cv_int32_t" != "no" ; then
+if test "$ac_cv_int32_t" != "no" ; then
     default_int32_t_alignment=${CROSS_INT32_T_ALIGNMENT:-"unknown"}
+    if test -z "$INT32_T" ; then
+         if test "$ac_cv_c_int32_t" = yes ; then
+	     INT32_T="int32_t"
+         else
+             INT32_T="$ac_cv_int32_t"
+         fi
+    fi
     
     AC_CACHE_CHECK([for alignment restrictions on int32_t],pac_cv_int32_t_alignment,[
     AC_TRY_RUN([
@@ -4631,19 +4655,19 @@ if test "$pac_cv_int32_t" != "no" ; then
 #include <stdlib.h>
 int main(int argc, char **argv )
 {
-    $pac_cv_int32_t *p1, v;
+    $INT32_T *p1, v;
     char    *buf_p = (char *)malloc( 64 ), *bp;
     bp = buf_p;
     /* Make bp aligned on 4, not 8 bytes */
     if (!( (long)bp & 0x7 ) ) bp += 4;
-    p1 = (int32_t *)bp;
+    p1 = ($INT32_T *)bp;
     v = -1;
     *p1 = v;
     if (!( (long)bp & 0x3 ) ) bp += 2;
-    p1 = (int32_t *)bp;
+    p1 = ($INT32_T *)bp;
     *p1 = 1;
     if (!( (long)bp & 0x1 ) ) bp += 1;
-    p1 = (int32_t *)bp;
+    p1 = ($INT32_T *)bp;
     *p1 = 1;
     return 0;
 }
@@ -4671,7 +4695,11 @@ if test -n "$CROSS_BSEND_OVERHEAD" ; then
 fi
 AC_CACHE_CHECK([for size of MPI_BSEND_OVERHEAD],pac_cv_mpi_bsend_overhead,[
 AC_TRY_RUN([
+#include "confdefs.h"
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 /* BsendData describes a bsend request */
 typedef struct BsendData {
     int              size;             /* size that is available for data */
@@ -5823,7 +5851,11 @@ if test -n "$MPI_OFFSET_TYPE" ; then
         ac_cv_sizeof_MPI_Offset=unknown
         rm -f conftest*
         cat >> conftest.c <<EOF
+#include "confdefs.h"
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 int main( int argc, char **argv )
 {
     $MPI_OFFSET a;
