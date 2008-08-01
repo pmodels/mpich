@@ -35,6 +35,7 @@ MPIR_Topology *MPIR_Topology_get( MPID_Comm *comm_ptr )
     (void)NMPI_Comm_get_attr(comm_ptr->handle, MPIR_Topology_keyval,
 			     &topo_ptr, &flag );
     MPIR_Nest_decr();
+
     if (flag) return topo_ptr;
     return 0;
 }
