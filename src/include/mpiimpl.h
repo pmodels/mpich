@@ -94,12 +94,6 @@
 #define MPIDI_QUOTE2(A) #A
 #endif
 
-/* Include definitions from the device which must exist before items in this
-   file (mpiimpl.h) can be defined. */
-/* ------------------------------------------------------------------------- */
-#include "mpidpre.h"
-/* ------------------------------------------------------------------------- */
-
 /* 
    Include the implementation definitions (e.g., error reporting, thread
    portability)
@@ -112,6 +106,12 @@
 /* #include "mpiu_monitors.h" */
 
 #include "mpiutil.h"
+
+/* Include definitions from the device which must exist before items in this
+   file (mpiimpl.h) can be defined. */
+/* ------------------------------------------------------------------------- */
+#include "mpidpre.h"
+/* ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
 /* mpidebug.h */
