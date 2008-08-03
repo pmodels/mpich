@@ -1294,7 +1294,7 @@ extern MPID_Comm MPID_Comm_direct[];
    with the other comm routines (src/mpi/comm, in mpicomm.h).  However,
    to create a new communicator after a spawn or connect-accept operation, 
    the device may need to create a new contextid */
-int MPIR_Get_contextid( MPID_Comm * );
+int MPIR_Get_contextid( MPID_Comm *, int16_t *context_id );
 
 /* ------------------------------------------------------------------------- */
 

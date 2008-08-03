@@ -73,7 +73,8 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Comm *newcomm_ptr;
-    int  local_high, remote_high, i, j, new_size, new_context_id;
+    int  local_high, remote_high, i, j, new_size;
+    int16_t new_context_id;
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INTERCOMM_MERGE);
 
@@ -257,9 +258,9 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     /* printf( "About to get context id \n" ); fflush( stdout ); */
     /* In the multi-threaded case, MPIR_Get_contextid assumes that the
        calling routine already holds the single criticial section */
-    new_context_id = MPIR_Get_contextid( newcomm_ptr );
-    MPIU_ERR_CHKANDJUMP(new_context_id == 0,mpi_errno,MPI_ERR_OTHER,
-			"**toomanycomm" );
+    mpi_errno = MPIR_Get_contextid( newcomm_ptr, &new_context_id );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_Assert(new_context_id != 0);
 
     newcomm_ptr->context_id	= new_context_id;
     newcomm_ptr->recvcontext_id	= new_context_id;

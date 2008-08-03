@@ -226,7 +226,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Comm *peer_comm_ptr = NULL;
-    int final_context_id, recvcontext_id;
+    int16_t final_context_id, recvcontext_id;
     int remote_size, *remote_lpids=0, *remote_gpids=0, singlePG;
     int local_size, *local_gpids=0, *local_lpids=0;
     int comm_info[3];
@@ -444,10 +444,9 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 		  comm_ptr->local_size, comm_ptr->rank ));
     /* In the multi-threaded case, MPIR_Get_contextid assumes that the
        calling routine already holds the single criticial section */
-    recvcontext_id = MPIR_Get_contextid( comm_ptr );
-    if (recvcontext_id == 0) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**toomanycomm");
-    }
+    mpi_errno = MPIR_Get_contextid( comm_ptr, &recvcontext_id );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_Assert(recvcontext_id != 0);
     MPIU_DBG_MSG(COMM,VERBOSE,"Got contextid");
 
     /* Increment the nest count for everyone because all processes

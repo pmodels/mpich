@@ -353,10 +353,9 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     if (mpi_errno) {
 	MPIU_ERR_POP(mpi_errno);
     }
-    (*newcomm)->recvcontext_id = MPIR_Get_contextid( comm_ptr );
-    if ((*newcomm)->recvcontext_id == 0) {
-	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm" );
-    }
+    mpi_errno = MPIR_Get_contextid( comm_ptr, &(*newcomm)->recvcontext_id );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    /* FIXME why is this commented out? */
     /* (*newcomm)->context_id = (*newcomm)->recvcontext_id; */
 
     rank = comm_ptr->rank;
@@ -910,10 +909,9 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
     }
-    (*newcomm)->recvcontext_id = MPIR_Get_contextid( comm_ptr );
-    if ((*newcomm)->recvcontext_id == 0) {
-	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm" );
-    }
+    mpi_errno = MPIR_Get_contextid( comm_ptr, &(*newcomm)->recvcontext_id );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    /* FIXME why is this commented out? */
     /*    (*newcomm)->context_id = (*newcomm)->recvcontext_id; */
     
     rank = comm_ptr->rank;
