@@ -11,44 +11,48 @@
 #ifdef HAVE_ANY_INT64_T_ALIGNEMENT
 #define MPIR_ALIGN8_TEST(p1,p2)
 #else
-#define MPIR_ALIGN8_TEST(p1,p2) && ((((MPI_Aint)p1 | (MPI_Aint)p2) & 0x7) == 0)
+#define MPIR_ALIGN8_TEST(p1,p2) && (((MPI_VOID_PTR_CAST_TO_MPI_AINT p1 | MPI_VOID_PTR_CAST_TO_MPI_AINT p2) & 0x7) == 0)
 #endif
 
 #ifdef HAVE_ANY_INT32_T_ALIGNEMENT
 #define MPIR_ALIGN4_TEST(p1,p2)
 #else
-#define MPIR_ALIGN4_TEST(p1,p2) && ((((MPI_Aint)p1 | (MPI_Aint)p2) & 0x3) == 0)
+#define MPIR_ALIGN4_TEST(p1,p2) && (((MPI_VOID_PTR_CAST_TO_MPI_AINT p1 | MPI_VOID_PTR_CAST_TO_MPI_AINT p2) & 0x3) == 0)
 #endif
 
 #define MPIDI_COPY_FROM_VEC(src,dest,stride,type,nelms,count) \
 { \
     if (!nelms) { \
-        src = (char*) (src + (count * stride)); \
+        src = (char*) MPI_AINT_CAST_TO_VOID_PTR                        \
+                      ((MPI_VOID_PTR_CAST_TO_MPI_AINT (src)) +         \
+		       ((DLOOP_Offset) count * (DLOOP_Offset) stride)); \
     } \
     else if (stride % sizeof(type)) { \
         MPIDI_COPY_FROM_VEC_UNALIGNED(src,dest,stride,type,nelms,count); \
     } \
     else { \
-        MPIDI_COPY_FROM_VEC_ALIGNED(src,dest,stride/sizeof(type),type,nelms,count); \
+        MPIDI_COPY_FROM_VEC_ALIGNED(src,dest,stride/(DLOOP_Offset)sizeof(type),type,nelms,count); \
     } \
 }
 
 #define MPIDI_COPY_TO_VEC(src,dest,stride,type,nelms,count) \
 { \
     if (!nelms) { \
-        dest = (char*) (dest + (count * stride)); \
+        dest = (char*) MPI_AINT_CAST_TO_VOID_PTR                        \
+                       ((MPI_VOID_PTR_CAST_TO_MPI_AINT (dest)) +        \
+                        ((DLOOP_Offset) count * (DLOOP_Offset) stride)); \
     } \
-    else if (stride % sizeof(type)) { \
+    else if (stride % (DLOOP_Offset) sizeof(type)) { \
         MPIDI_COPY_TO_VEC_UNALIGNED(src,dest,stride,type,nelms,count); \
     } \
     else { \
-        MPIDI_COPY_TO_VEC_ALIGNED(src,dest,stride/sizeof(type),type,nelms,count); \
+        MPIDI_COPY_TO_VEC_ALIGNED(src,dest,stride/(DLOOP_Offset)sizeof(type),type,nelms,count); \
     } \
 }
 
 #define MPIDI_COPY_FROM_VEC_ALIGNED(src,dest,stride,type,nelms,count) \
 {								\
-    type * l_src = (type *)src, * l_dest = (type *)dest;	\
+    type * l_src = (type *) src, * l_dest = (type *) dest;	\
     type * tmp_src = l_src;                                     \
     register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
@@ -160,7 +164,7 @@
 
 #define MPIDI_COPY_FROM_VEC_UNALIGNED(src,dest,stride,type,nelms,count) \
 {								\
-    type * l_src = (type *)src, * l_dest = (type *)dest;	\
+    type * l_src = (type *) src, * l_dest = (type *) dest;	\
     type * tmp_src = l_src;                                     \
     register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
@@ -272,7 +276,7 @@
 
 #define MPIDI_COPY_TO_VEC_ALIGNED(src,dest,stride,type,nelms,count) \
 {								\
-    type * l_src = (type *)src, * l_dest = (type *)dest;	\
+    type * l_src = (type *) src, * l_dest = (type *) dest;	\
     type * tmp_dest = l_dest;                                   \
     register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
@@ -384,7 +388,7 @@
 
 #define MPIDI_COPY_TO_VEC_UNALIGNED(src,dest,stride,type,nelms,count) \
 {								\
-    type * l_src = (type *)src, * l_dest = (type *)dest;	\
+    type * l_src = (type *) src, * l_dest = (type *) dest;	\
     type * tmp_dest = l_dest;                                   \
     register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
@@ -496,7 +500,7 @@
 
 #endif /* VECCPY_H */
 
-/* 
+/*
  * Local variables:
  * c-indent-tabs-mode: nil
  * End:

@@ -94,7 +94,7 @@ int MPI_Attr_get(MPI_Comm comm, int keyval, void *attr_value, int *flag)
 	       should have been used.  We can test for this specific
 	       case.  Note that this code assumes sizeof(MPI_Aint) is 
 	       a power of 2. */
-	    if ((MPI_Aint)attr_value & (sizeof(MPI_Aint)-1)) {
+	    if ((MPIR_Pint)attr_value & (sizeof(MPIR_Pint)-1)) {
 		MPIU_ERR_SET(mpi_errno,MPI_ERR_ARG,"**attrnotptr");
 	    }
 #           endif

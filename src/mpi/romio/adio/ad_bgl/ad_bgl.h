@@ -28,8 +28,10 @@
 #include <aio.h>
 #endif
 
+#if 0 
 int ADIOI_BGL_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
 		  int wr, void *handle);
+#endif
 
 void ADIOI_BGL_Open(ADIO_File fd, int *error_code);
 

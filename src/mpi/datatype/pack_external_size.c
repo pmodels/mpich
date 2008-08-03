@@ -35,12 +35,12 @@
   space needed to pack a message using MPI_Pack_external.
 
    Input Parameters:
-+ datarep - data representation (string)  
-. incount - number of input data items (integer)  
-- datatype - datatype of each input data item (handle)  
++ datarep - data representation (string)
+. incount - number of input data items (integer)
+- datatype - datatype of each input data item (handle)
 
    Output Parameters:
-. size - output buffer size, in bytes (integer)  
+. size - output buffer size, in bytes (address integer)
 
 .N ThreadSafe
 
@@ -61,9 +61,9 @@ int MPI_Pack_external_size(char *datarep,
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_PACK_EXTERNAL_SIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_PACK_EXTERNAL_SIZE);
-    
+
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -77,17 +77,17 @@ int MPI_Pack_external_size(char *datarep,
         MPID_END_ERROR_CHECKS;
     }
 #   endif
-    
+
     /* Convert MPI object handles to object pointers */
     MPID_Datatype_get_ptr(datatype, datatype_ptr);
-    
+
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate datatype_ptr */
-            MPID_Datatype_valid_ptr( datatype_ptr, mpi_errno );
+            MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
 	    /* If datatype_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }
@@ -96,8 +96,8 @@ int MPI_Pack_external_size(char *datarep,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
-    
-    *size = incount * MPID_Datatype_size_external32(datatype);
+
+    *size = (MPI_Aint) incount * (MPI_Aint) MPID_Datatype_size_external32(datatype);
 
     /* ... end of body of routine ... */
 
@@ -112,12 +112,12 @@ int MPI_Pack_external_size(char *datarep,
   fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
 	    "**mpi_pack_external_size",
-	    "**mpi_pack_external_size %s %d %D %p", 
+	    "**mpi_pack_external_size %s %d %D %p",
 	    datarep, incount, datatype, size);
     }
-    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;
 #   endif
     /* --END ERROR HANDLING-- */

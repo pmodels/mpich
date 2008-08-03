@@ -58,7 +58,7 @@
 int MPI_Pack(void *inbuf,
 	     int incount,
 	     MPI_Datatype datatype,
-	     void *outbuf, 
+	     void *outbuf,
 	     int outcount,
 	     int *position,
 	     MPI_Comm comm)
@@ -71,7 +71,7 @@ int MPI_Pack(void *inbuf,
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_PACK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_PACK);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -85,10 +85,10 @@ int MPI_Pack(void *inbuf,
         MPID_END_ERROR_CHECKS;
     }
 #   endif
-    
+
     /* Convert MPI object handles to object pointers */
     MPID_Comm_get_ptr(comm, comm_ptr);
-    
+
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -146,19 +146,19 @@ int MPI_Pack(void *inbuf,
 	    }
 	    else {
 		MPIU_ERR_SETANDJUMP2(mpi_errno,MPI_ERR_ARG,"**argpackbuf",
-				     "**argpackbuf %d %d", tmp_sz * incount, 
-				     outcount - *position );
+				     "**argpackbuf %d %d", tmp_sz * incount,
+				     outcount - *position);
 	    }
 	}
 	MPID_END_ERROR_CHECKS;
     }
 #endif /* HAVE_ERROR_CHECKING */
-    
+
     /* ... body of routine ... */
     if (incount == 0) {
 	goto fn_exit;
     }
-    
+
     /* TODO: CHECK RETURN VALUES?? */
     /* TODO: SHOULD THIS ALL BE IN A MPID_PACK??? */
     segp = MPID_Segment_alloc();
@@ -190,21 +190,28 @@ int MPI_Pack(void *inbuf,
     first = 0;
     last  = SEGMENT_IGNORE_LAST;
 
+    /* Ensure that pointer increment fits in a pointer */
+    MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT outbuf) +
+				     (MPI_Aint) *position);
+
     MPID_Segment_pack(segp,
 		      first,
 		      &last,
 		      (void *) ((char *) outbuf + *position));
 
-    *position += (int) last;
+    /* Ensure that calculation fits into an int datatype. */
+    MPID_Ensure_Aint_fits_in_int((MPI_Aint)*position + last);
+
+    *position = (int)((MPI_Aint)*position + last);
 
     MPID_Segment_free(segp);
 
     /* ... end of body of routine ... */
-    
+
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_PACK);
     return mpi_errno;
-    
+
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_CHECKING
@@ -214,7 +221,7 @@ int MPI_Pack(void *inbuf,
 	    "**mpi_pack %p %d %D %p %d %p %C", inbuf, incount, datatype, outbuf, outcount, position, comm);
     }
 #   endif
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

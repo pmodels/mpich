@@ -55,6 +55,7 @@ void ADIOI_GEN_IwriteContig(ADIO_File fd, void *buf, int count,
 
     MPI_Type_size(datatype, &typesize);
     len = count * typesize;
+    ADIOI_Assert(len == (int)((ADIO_Offset)count * (ADIO_Offset)typesize)); /* the count is an int parm */
 
     if (file_ptr_type == ADIO_INDIVIDUAL) offset = fd->fp_ind;
     aio_errno = ADIOI_GEN_aio(fd, buf, len, offset, 1, request);
@@ -178,7 +179,7 @@ void ADIOI_GEN_IwriteStrided(ADIO_File fd, void *buf, int count,
 
     if (*error_code == MPI_SUCCESS) {
 	MPI_Type_size(datatype, &typesize);
-	nbytes = count * typesize;
+	nbytes = (MPI_Offset)count * (MPI_Offset)typesize;
     }
     MPIO_Completed_request_create(&fd, nbytes, error_code, request);
 }

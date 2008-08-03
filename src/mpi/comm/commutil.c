@@ -185,11 +185,11 @@ int MPIR_Setup_intercomm_localcomm( MPID_Comm *intercomm_ptr )
  * 
  * These assume that int is 32 bits; they should use uint_32 instead, 
  * and an MPI_UINT32 type (should be able to use MPI_INTEGER4)
+ *
+ * Both the threaded and non-threaded routines use the same mask of
+ * available context id values.
  */
-
-/* Both the threaded and non-threaded routines use the same mask of available
-   context id values. */
-#define MAX_CONTEXT_MASK 32
+#define MAX_CONTEXT_MASK 256
 static unsigned int context_mask[MAX_CONTEXT_MASK];
 static int initialize_context_mask = 1;
 
@@ -595,8 +595,8 @@ void MPIR_Free_contextid( int context_id )
 /*
  * Copy a communicator, including creating a new context and copying the
  * virtual connection tables and clearing the various fields.
- * Does *not* copy attributes.  If size is < the size of the (local group
- * in the ) input communicator, copy only the first size elements.  
+ * Does *not* copy attributes.  If size is < the size of the local group
+ * in the input communicator, copy only the first size elements.
  * If this process is not a member, return a null pointer in outcomm_ptr.
  * This is only supported in the case where the communicator is in 
  * Intracomm (not an Intercomm).  Note that this is all that is required
@@ -738,7 +738,6 @@ int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
     
     MPIR_Comm_release_ref( comm_ptr, &inuse );
     if (!inuse) {
-
 	/* Remove the attributes, executing the attribute delete routine.  
            Do this only if the attribute functions are defined. 
 	   This must be done first, because if freeing the attributes

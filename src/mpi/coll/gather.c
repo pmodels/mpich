@@ -96,7 +96,11 @@ int MPIR_Gather (
     relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
 
     if (rank == root) 
+    {
         MPID_Datatype_get_extent_macro(recvtype, extent);
+        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf+
+					 (extent*recvcnt*comm_size));
+    }
 
     if (is_homogeneous)
     {
@@ -252,10 +256,10 @@ int MPIR_Gather (
 		}
 		else {
 		    blocks[0] = sendcnt;
-		    struct_displs[0] = (MPI_Aint) sendbuf;
+		    struct_displs[0] = MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf;
 		    types[0] = sendtype;
 		    blocks[1] = curr_cnt - nbytes;
-		    struct_displs[1] = (MPI_Aint) tmp_buf;
+		    struct_displs[1] = MPI_VOID_PTR_CAST_TO_MPI_AINT tmp_buf;
 		    types[1] = MPI_BYTE;
 
 		    NMPI_Type_create_struct(2, blocks, struct_displs, types, &tmp_type);
@@ -492,6 +496,8 @@ int MPIR_Gather_inter (
 		/* --END ERROR HANDLING-- */
                 MPID_Datatype_get_extent_macro(sendtype, extent);
  
+		MPID_Ensure_Aint_fits_in_pointer(sendcnt*local_size*
+						 (MPIR_MAX(extent, true_extent)));
                 tmp_buf =
                     MPIU_Malloc(sendcnt*local_size*(MPIR_MAX(extent,true_extent)));  
 		/* --BEGIN ERROR HANDLING-- */
@@ -540,6 +546,9 @@ int MPIR_Gather_inter (
         if (root == MPI_ROOT)
 	{
             MPID_Datatype_get_extent_macro(recvtype, extent);
+            MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+					     (recvcnt*remote_size*extent));
+
             for (i=0; i<remote_size; i++)
 	    {
                 mpi_errno = MPIC_Recv(((char *)recvbuf+recvcnt*i*extent), 

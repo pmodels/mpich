@@ -84,7 +84,7 @@ static int MPID_Type_struct_alignsize(int count,
 #elif defined(HAVE_MAX_FP_ALIGNMENT)
 		    if (tmp_alignsize > HAVE_MAX_FP_ALIGNMENT)
 			tmp_alignsize = HAVE_MAX_FP_ALIGNMENT;
-#endif		    
+#endif
 #ifdef HAVE_DOUBLE_POS_ALIGNMENT
 		    /* sort of a hack, but so is this rule */
 		    if (oldtype_array[i] == MPI_DOUBLE &&
@@ -111,7 +111,7 @@ static int MPID_Type_struct_alignsize(int count,
 	}
 	else
 	{
-	    MPID_Datatype *dtp;	    
+	    MPID_Datatype *dtp;
 
 	    MPID_Datatype_get_ptr(oldtype_array[i], dtp);
 	    tmp_alignsize = dtp->alignsize;
@@ -128,7 +128,7 @@ static int MPID_Type_struct_alignsize(int count,
 
 /*@
   MPID_Type_struct - create a struct datatype
- 
+
   Input Parameters:
 + count - number of blocks in vector
 . blocklength_array - number of elements in each block
@@ -151,7 +151,8 @@ int MPID_Type_struct(int count,
     int i, old_are_contig = 1, definitely_not_contig = 0;
     int found_sticky_lb = 0, found_sticky_ub = 0, found_true_lb = 0,
 	found_true_ub = 0, found_el_type = 0;
-    int el_sz = 0, size = 0;
+    MPI_Aint el_sz = 0;
+    int size = 0;
     MPI_Datatype el_type = MPI_DATATYPE_NULL;
     MPI_Aint true_lb_disp = 0, true_ub_disp = 0, sticky_lb_disp = 0,
 	sticky_ub_disp = 0;
@@ -214,7 +215,7 @@ int MPID_Type_struct(int count,
 	int is_builtin =
 	    (HANDLE_GET_KIND(oldtype_array[i]) == HANDLE_KIND_BUILTIN);
 	MPI_Aint tmp_lb, tmp_ub, tmp_true_lb, tmp_true_ub;
-	int tmp_el_sz;
+	MPI_Aint tmp_el_sz;
 	MPI_Datatype tmp_el_type;
 	MPID_Datatype *old_dtp = NULL;
 
@@ -228,7 +229,7 @@ int MPID_Type_struct(int count,
 	    tmp_el_sz   = MPID_Datatype_get_basic_size(oldtype_array[i]);
 	    tmp_el_type = oldtype_array[i];
 
-	    MPID_DATATYPE_BLOCK_LB_UB(blocklength_array[i],
+	    MPID_DATATYPE_BLOCK_LB_UB((MPI_Aint)(blocklength_array[i]),
 				      displacement_array[i],
 				      0,
 				      tmp_el_sz,
@@ -246,10 +247,13 @@ int MPID_Type_struct(int count,
 	{
 	    MPID_Datatype_get_ptr(oldtype_array[i], old_dtp);
 
+	    /* Ensure that "element_size" fits into an int datatype. */
+	    MPID_Ensure_Aint_fits_in_int(old_dtp->element_size);
+
 	    tmp_el_sz   = old_dtp->element_size;
 	    tmp_el_type = old_dtp->eltype;
 
-	    MPID_DATATYPE_BLOCK_LB_UB(blocklength_array[i],
+	    MPID_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
 				      displacement_array[i],
 				      old_dtp->lb,
 				      old_dtp->ub,
@@ -301,7 +305,7 @@ int MPID_Type_struct(int count,
 	}
 
 	/* keep highest sticky ub */
-	if ((oldtype_array[i] == MPI_UB) || 
+	if ((oldtype_array[i] == MPI_UB) ||
 	    (!is_builtin && old_dtp->has_sticky_ub))
 	{
 	    if (!found_sticky_ub)
@@ -316,7 +320,7 @@ int MPID_Type_struct(int count,
 	}
 
 	/* keep lowest true lb and highest true ub
-	 * 
+	 *
 	 * note: checking for contiguity at the same time, to avoid
 	 *       yet another pass over the arrays
 	 */
@@ -376,11 +380,11 @@ int MPID_Type_struct(int count,
     {
 	/* account for padding */
 	MPI_Aint epsilon = (new_dtp->alignsize > 0) ?
-	    new_dtp->extent % new_dtp->alignsize : 0;
+	    new_dtp->extent % ((MPI_Aint)(new_dtp->alignsize)) : 0;
 
 	if (epsilon)
 	{
-	    new_dtp->ub    += (new_dtp->alignsize - epsilon);
+	    new_dtp->ub    += ((MPI_Aint)(new_dtp->alignsize) - epsilon);
 	    new_dtp->extent = new_dtp->ub - new_dtp->lb;
 	}
     }
@@ -391,8 +395,8 @@ int MPID_Type_struct(int count,
      * same, and the old type was also contiguous, and we didn't see
      * something noncontiguous based on true ub/ub.
      */
-    if ((new_dtp->size == new_dtp->extent) && old_are_contig &&
-	(! definitely_not_contig))
+    if (((MPI_Aint)(new_dtp->size) == new_dtp->extent) &&
+	old_are_contig && (! definitely_not_contig))
     {
 	new_dtp->is_contig = 1;
     }

@@ -917,6 +917,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
     MPI_Errhandler E;
     char *s;
     int t, i, d, mpi_errno=MPI_SUCCESS;
+    long long ll;
     void *p;
 
     fmt = MPIU_Strdup(fmt_orig);
@@ -956,6 +957,10 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	case (int)'d':
 	    d = va_arg(list, int);
 	    MPIU_Snprintf(str, maxlen, "%d", d);
+	    break;
+	case (int)'L':
+	    ll = va_arg(list, long long);
+	    MPIU_Snprintf(str, maxlen, "%lld", ll);
 	    break;
 	case (int)'i':
 	    i = va_arg(list, int);

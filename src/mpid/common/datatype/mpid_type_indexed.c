@@ -11,17 +11,17 @@
 
 #undef MPID_TYPE_ALLOC_DEBUG
 
-
 /*@
   MPID_Type_indexed - create an indexed datatype
- 
+
   Input Parameters:
 + count - number of blocks in type
 . blocklength_array - number of elements in each block
 . displacement_array - offsets of blocks from start of type (see next
   parameter for units)
-. dispinbytes - if nonzero, then displacements are in bytes, otherwise
-  they in terms of extent of oldtype
+. dispinbytes - if nonzero, then displacements are in bytes (the
+  displacement_array is an array of ints), otherwise they in terms of
+  extent of oldtype (the displacement_array is an array of MPI_Aints)
 - oldtype - type (using handle) of datatype on which new type is based
 
   Output Parameters:
@@ -96,16 +96,16 @@ int MPID_Type_indexed(int count,
 
 	old_lb        = 0;
 	old_true_lb   = 0;
-	old_ub        = el_sz;
-	old_true_ub   = el_sz;
-	old_extent    = el_sz;
+	old_ub        = (MPI_Aint) el_sz;
+	old_true_ub   = (MPI_Aint) el_sz;
+	old_extent    = (MPI_Aint) el_sz;
 	old_is_contig = 1;
 
 	new_dtp->has_sticky_ub = 0;
 	new_dtp->has_sticky_lb = 0;
 
 	new_dtp->alignsize    = el_sz; /* ??? */
-	new_dtp->element_size = el_sz;
+	new_dtp->element_size = (MPI_Aint) el_sz;
 	new_dtp->eltype       = el_type;
 
 	new_dtp->n_contig_blocks = count;
@@ -116,6 +116,10 @@ int MPID_Type_indexed(int count,
 	MPID_Datatype *old_dtp;
 
 	MPID_Datatype_get_ptr(oldtype, old_dtp);
+
+	/* Ensure that "element_size" fits into an int datatype. */
+	MPID_Ensure_Aint_fits_in_int(old_dtp->element_size);
+
 	el_sz   = old_dtp->element_size;
 	old_sz  = old_dtp->size;
 	el_ct   = old_dtp->n_elements;
@@ -130,7 +134,7 @@ int MPID_Type_indexed(int count,
 
 	new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
 	new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
-	new_dtp->element_size  = el_sz;
+	new_dtp->element_size  = (MPI_Aint) el_sz;
 	new_dtp->eltype        = el_type;
 
 	new_dtp->n_contig_blocks = old_dtp->n_contig_blocks * count;
@@ -149,7 +153,7 @@ int MPID_Type_indexed(int count,
     old_ct = blocklength_array[i];
     eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[i] :
 	(((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
-    
+
     MPID_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
 			      eff_disp,
 			      old_lb,
@@ -157,7 +161,7 @@ int MPID_Type_indexed(int count,
 			      old_extent,
 			      min_lb,
 			      max_ub);
-    
+
     /* determine min lb, max ub, and count of old types in remaining
      * nonzero size blocks
      */
@@ -172,7 +176,7 @@ int MPID_Type_indexed(int count,
 		(((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
 	
 	    /* calculate ub and lb for this block */
-	    MPID_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
+	    MPID_DATATYPE_BLOCK_LB_UB((MPI_Aint)(blocklength_array[i]),
 				      eff_disp,
 				      old_lb,
 				      old_ub,
@@ -184,28 +188,28 @@ int MPID_Type_indexed(int count,
 	    if (tmp_ub > max_ub) max_ub = tmp_ub;
 	}
     }
-    
+
     new_dtp->size = old_ct * old_sz;
-    
+
     new_dtp->lb      = min_lb;
     new_dtp->ub      = max_ub;
     new_dtp->true_lb = min_lb + (old_true_lb - old_lb);
     new_dtp->true_ub = max_ub + (old_true_ub - old_ub);
     new_dtp->extent  = max_ub - min_lb;
-    
+
     new_dtp->n_elements = old_ct * el_ct;
-    
+
     /* new type is only contig for N types if it's all one big
      * block, its size and extent are the same, and the old type
      * was also contiguous.
      */
     contig_count = MPID_Type_indexed_count_contig(count,
-                                                  blocklength_array,
-                                                  displacement_array,
-                                                  dispinbytes,
-                                                  old_extent);
-    
-    if ((contig_count == 1) && (new_dtp->size == new_dtp->extent))
+						  blocklength_array,
+						  displacement_array,
+						  dispinbytes,
+						  old_extent);
+
+    if ((contig_count == 1) && ((MPI_Aint) new_dtp->size == new_dtp->extent))
     {
 	new_dtp->is_contig = old_is_contig;
     }
@@ -217,4 +221,3 @@ int MPID_Type_indexed(int count,
     *newtype = new_dtp->handle;
     return mpi_errno;
 }
-

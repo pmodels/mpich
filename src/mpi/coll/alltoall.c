@@ -536,6 +536,10 @@ int MPIR_Alltoall_inter(
     
     /* Do the pairwise exchanges */
     max_size = MPIR_MAX(local_size, remote_size);
+    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+				     max_size*recvcount*recvtype_extent);
+    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+				     max_size*sendcount*sendtype_extent);
     for (i=0; i<max_size; i++) {
         src = (rank - i + max_size) % max_size;
         dst = (rank + i) % max_size;

@@ -140,6 +140,8 @@ int MPIR_Allgatherv (
 	    }
             /* --END ERROR HANDLING-- */
 
+            MPID_Ensure_Aint_fits_in_pointer(total_count *
+                           (MPIR_MAX(recvtype_true_extent, recvtype_extent)));
             tmp_buf = MPIU_Malloc(total_count*(MPIR_MAX(recvtype_true_extent,recvtype_extent)));
 	    /* --BEGIN ERROR HANDLING-- */
             if (!tmp_buf)
@@ -560,6 +562,8 @@ int MPIR_Allgatherv (
 	}
         /* --END ERROR HANDLING-- */
             
+        MPID_Ensure_Aint_fits_in_pointer(total_count *
+                        MPIR_MAX(recvtype_true_extent, recvtype_extent));
         recvbuf_extent = total_count *
             (MPIR_MAX(recvtype_true_extent, recvtype_extent));
 

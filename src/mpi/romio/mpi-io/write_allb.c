@@ -96,6 +96,7 @@ int MPIOI_File_write_all_begin(MPI_File mpi_fh,
     MPI_Type_size(datatype, &datatype_size);
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_INTEGRAL_ETYPE(fh, count, datatype_size, myname, error_code);
+    MPIO_CHECK_COUNT_SIZE(fh, count, datatype_size, myname, error_code);
     /* --END ERROR HANDLING-- */
 
     fh->split_datatype = datatype;

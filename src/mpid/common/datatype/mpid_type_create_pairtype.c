@@ -19,7 +19,9 @@
 	type_size   = sizeof(foo.a) + sizeof(foo.b);			\
 	type_extent = (MPI_Aint) sizeof(foo);				\
 	el_size = (sizeof(foo.a) == sizeof(foo.b)) ? (int) sizeof(foo.a) : -1; \
-	true_ub = ((char *) &foo.b - (char *) &foo.a) + (MPI_Aint) sizeof(foo.b); \
+	true_ub = (MPI_VOID_PTR_CAST_TO_MPI_AINT ((char *) &foo.b -     \
+                                                  (char *) &foo.a)) +   \
+                  (MPI_Aint) sizeof(foo.b);                             \
 	alignsize = MPIR_MAX(MPID_Datatype_get_basic_size(mt1_),	\
                              MPID_Datatype_get_basic_size(mt2_));	\
     }
@@ -64,8 +66,8 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
 			      MPID_Datatype *new_dtp)
 {
     int err, mpi_errno = MPI_SUCCESS;
-    int type_size, el_size, alignsize;
-    MPI_Aint type_extent, true_ub;
+    int type_size, alignsize;
+    MPI_Aint type_extent, true_ub, el_size;
 
     /* handle is filled in by MPIU_Handle_obj_alloc() */
     MPIU_Object_set_ref(new_dtp, 1);
@@ -126,9 +128,9 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
     new_dtp->ub              = type_extent; /* possible padding */
     new_dtp->extent          = type_extent;
     new_dtp->alignsize       = alignsize;
- 
+
    /* place maximum on alignment based on padding rules */
-    /* There are some really wierd rules for structure alignment; 
+    /* There are some really wierd rules for structure alignment;
        these capture the ones of which we are aware. */
     switch(type) {
 	case MPI_SHORT_INT:
@@ -163,9 +165,9 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
 #endif
 	    break;
     }
-				   
-    new_dtp->is_contig       = (type_size == type_extent) ? 1 : 0;
-    new_dtp->n_contig_blocks = (type_size == type_extent) ? 1 : 2;
+
+    new_dtp->is_contig       = (((MPI_Aint) type_size) == type_extent) ? 1 : 0;
+    new_dtp->n_contig_blocks = (((MPI_Aint) type_size) == type_extent) ? 1 : 2;
 
     /* fill in dataloops -- only case where we precreate dataloops
      *

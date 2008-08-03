@@ -33,8 +33,8 @@
 /* style: allow:calloc:1 sig:0 */
 /* style: allow:realloc:1 sig:0 */
 
-
 #define FPRINTF fprintf
+
 void *ADIOI_Malloc_fn(size_t size, int lineno, char *fname);
 void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, char *fname);
 void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, char *fname);
@@ -53,7 +53,6 @@ void *ADIOI_Malloc_fn(size_t size, int lineno, char *fname)
 	FPRINTF(stderr, "Out of memory in file %s, line %d\n", fname, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
-
     return new;
 }
 
@@ -67,7 +66,6 @@ void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, char *fname)
 	FPRINTF(stderr, "Out of memory in file %s, line %d\n", fname, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
-
     return new;
 }
 

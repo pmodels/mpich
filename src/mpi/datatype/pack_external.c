@@ -33,17 +33,17 @@
      external32 format
 
    Input Parameters:
-+ datarep - data representation (string)  
-. inbuf - input buffer start (choice)  
-. incount - number of input data items (integer)  
-. datatype - datatype of each input data item (handle)  
-- outsize - output buffer size, in bytes (integer)  
++ datarep - data representation (string)
+. inbuf - input buffer start (choice)
+. incount - number of input data items (integer)
+. datatype - datatype of each input data item (handle)
+- outcount - output buffer size, in bytes (address integer)
 
    Output Parameter:
-. outbuf - output buffer start (choice)  
+. outbuf - output buffer start (choice)
 
    Input/Output Parameter:
-. position - current position in buffer, in bytes (integer)  
+. position - current position in buffer, in bytes (address integer)
 
 .N ThreadSafe
 
@@ -71,7 +71,7 @@ int MPI_Pack_external(char *datarep,
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_PACK_EXTERNAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_PACK_EXTERNAL);
 
     /* Validate parameters and objects (post conversion) */
@@ -103,7 +103,7 @@ int MPI_Pack_external(char *datarep,
         MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
-    
+
     /* ... body of routine ... */
     if (incount == 0) {
 	goto fn_exit;
@@ -134,12 +134,15 @@ int MPI_Pack_external(char *datarep,
     first = 0;
     last  = SEGMENT_IGNORE_LAST;
 
+    /* Ensure that pointer increment fits in a pointer */
+    MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT outbuf) + *position);
+
     MPID_Segment_pack_external32(segp,
 				 first,
 				 &last,
 				 (void *)((char *) outbuf + *position));
 
-    *position += (int) last;
+    *position += last;
 
     MPID_Segment_free(segp);
 
@@ -148,7 +151,7 @@ int MPI_Pack_external(char *datarep,
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_PACK_EXTERNAL);
     return mpi_errno;
-    
+
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_CHECKING
@@ -158,7 +161,7 @@ int MPI_Pack_external(char *datarep,
 	    "**mpi_pack_external %s %p %d %D %p %d %p", datarep, inbuf, incount, datatype, outbuf, outcount, position);
     }
 #   endif
-    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

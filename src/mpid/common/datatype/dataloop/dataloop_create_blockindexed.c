@@ -291,7 +291,7 @@ DLOOP_Count PREPEND_PREFIX(Type_blockindexed_count_contig)(DLOOP_Count count,
 	{
 	    DLOOP_Offset next_tdisp = (DLOOP_Offset) ((int *) disp_array)[i];
 
-	    if (cur_tdisp + blklen != next_tdisp)
+	    if (cur_tdisp + (DLOOP_Offset) blklen != next_tdisp)
 	    {
 		contig_count++;
 	    }

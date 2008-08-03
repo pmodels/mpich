@@ -99,8 +99,7 @@ enum {
 typedef struct ADIOI_Fl_node {  
     MPI_Datatype type;
     int count;                   /* no. of contiguous blocks */
-    int *blocklens;              /* array of contiguous block lengths (bytes)*/
-    /* may need to make it ADIO_Offset *blocklens */
+    ADIO_Offset *blocklens;      /* array of contiguous block lengths (bytes)*/
     ADIO_Offset *indices;        /* array of byte offsets of each block */
     struct ADIOI_Fl_node *next;  /* pointer to next node */
 } ADIOI_Flatlist_node;
@@ -282,7 +281,9 @@ struct ADIOI_Fns_struct {
    as array of structures indexed by process number. */
 typedef struct {
     ADIO_Offset *offsets;   /* array of offsets */
-    int *lens;              /* array of lengths */
+    int *lens;              /* array of lengths */ 
+    /* consider aints or offsets for lens? Seems to be used as in-memory
+       buffer lengths, so it should be < 2G and ok as an int          */
     MPI_Aint *mem_ptrs;     /* array of pointers. used in the read/write
 			       phase to indicate where the data
 			       is stored in memory */
@@ -382,7 +383,7 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, void *buf, int count,
                        *error_code);
 void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 			    datatype, int file_ptr_type, ADIO_Offset 
-			    offset, ADIO_Offset **offset_list_ptr, int
+			    offset, ADIO_Offset **offset_list_ptr, ADIO_Offset
 			    **len_list_ptr, ADIO_Offset *start_offset_ptr,
 			    ADIO_Offset *end_offset_ptr, int
 			   *contig_access_count_ptr);
@@ -401,7 +402,7 @@ int ADIOI_Calc_aggregator(ADIO_File fd,
                                  ADIO_Offset *fd_start,
                                  ADIO_Offset *fd_end);
 void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, 
-			    int *len_list, int
+			    ADIO_Offset *len_list, int
 			    contig_access_count, ADIO_Offset 
 			    min_st_offset, ADIO_Offset *fd_start,
 			    ADIO_Offset *fd_end, ADIO_Offset fd_size,
@@ -657,5 +658,46 @@ int  ADIOI_MPE_postwrite_a;
 int  ADIOI_MPE_postwrite_b;
 #endif
 
+#if 1  /*todo fix dependency on mpich? */
+/* Assert that this MPI_Aint value can be cast to a ptr value without problem.*/
+/* Basic idea is the value should be unchanged after casting 
+   (no loss of (meaningful) high order bytes in 8 byte MPI_Aint 
+      to (possible) 4 byte ptr cast)                              */
+/* Should work even on 64bit or old 32bit configs                 */
+  /* Use MPID_Ensure_Aint_fits_in_pointer from mpiutil.h and 
+         MPI_AINT_CAST_TO_VOID_PTR from configure (mpi.h) */
+  #include "mpiimpl.h"
+
+  #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)(MPIR_Pint)
+  /* The next two casts are only used when you don't want sign extension
+     when casting a (possible 4 byte) aint to a (8 byte) long long or offset */
+  #define ADIOI_AINT_CAST_TO_LONG_LONG (long long)
+  #define ADIOI_AINT_CAST_TO_OFFSET ADIOI_AINT_CAST_TO_LONG_LONG
+
+  #define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) MPID_Ensure_Aint_fits_in_pointer(aint_value)
+  #define ADIOI_Assert MPIU_Assert
+#else
+  #include <assert.h>
+  #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)
+  #define ADIOI_AINT_CAST_TO_LONG_LONG (long long*)
+  #define ADIOI_AINT_CAST_TO_OFFSET ADIOI_AINT_CAST_TO_LONG_LONG
+  #define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) 
+  #define ADIOI_Assert assert
+#endif
+
+#ifdef USE_DBG_LOGGING    /*todo fix dependency on mpich?*/
+/* DBGT_FPRINTF terse level printing */
+#define DBGT_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FUNCTION__,__LINE__); \
+if (MPIU_DBG_SELECTED(ROMIO,TERSE)) fprintf
+/* DBG_FPRINTF default (typical level) printing */
+#define DBG_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FUNCTION__,__LINE__); \
+if (MPIU_DBG_SELECTED(ROMIO,TYPICAL)) fprintf
+/* DBGV_FPRINTF verbose level printing */
+#define DBGV_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FUNCTION__,__LINE__); \
+ if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf
+#else /* compile it out */
+#define DBG_FPRINTF if (0) fprintf
+#define DBGV_FPRINTF if (0) fprintf
+#endif
 #endif
 

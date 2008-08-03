@@ -171,6 +171,11 @@ int MPIR_Reduce_scatter (
     
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
+
+    /* total_count*extent eventually gets malloced. it isn't added to
+     * a user-passed in buffer */
+    MPID_Ensure_Aint_fits_in_pointer(total_count * MPIR_MAX(true_extent, extent));
+
     MPIR_Nest_incr();
 
     if ((is_commutative) && (nbytes < MPIR_REDSCAT_COMMUTATIVE_LONG_MSG)) {

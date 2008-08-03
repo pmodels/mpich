@@ -111,6 +111,10 @@ int MPI_Request_free(MPI_Request *request)
     switch (request_ptr->kind)
     {
 	case MPID_REQUEST_SEND:
+	{
+	    MPIR_SENDQ_FORGET(request_ptr);
+	    break;
+	}
 	case MPID_REQUEST_RECV:
 	{
 	    break;

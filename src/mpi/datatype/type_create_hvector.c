@@ -33,13 +33,13 @@
      in bytes
 
    Input Parameters:
-+ count - number of blocks (nonnegative integer) 
-. blocklength - number of elements in each block (nonnegative integer) 
-. stride - number of bytes between start of each block (integer) 
-- oldtype - old datatype (handle) 
++ count - number of blocks (nonnegative integer)
+. blocklength - number of elements in each block (nonnegative integer)
+. stride - number of bytes between start of each block (address integer)
+- oldtype - old datatype (handle)
 
    Output Parameter:
-. newtype - new datatype (handle) 
+. newtype - new datatype (handle)
 
 .N ThreadSafe
 
@@ -63,7 +63,7 @@ int MPI_Type_create_hvector(int count,
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_HVECTOR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIU_THREAD_SINGLE_CS_ENTER("datatype");
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_HVECTOR);
 
@@ -87,7 +87,7 @@ int MPI_Type_create_hvector(int count,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
-    
+
     mpi_errno = MPID_Type_vector(count,
 				 blocklength,
 				 stride,
@@ -111,7 +111,7 @@ int MPI_Type_create_hvector(int count,
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */
-    
+
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_HVECTOR);
     MPIU_THREAD_SINGLE_CS_EXIT("datatype");
@@ -128,7 +128,7 @@ int MPI_Type_create_hvector(int count,
 	    blocklength, stride, oldtype, newtype);
     }
 #   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

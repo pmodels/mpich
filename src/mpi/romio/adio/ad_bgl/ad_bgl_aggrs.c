@@ -1,5 +1,6 @@
 /* ---------------------------------------------------------------- */
 /* (C)Copyright IBM Corp.  2007, 2008                               */
+/* ---------------------------------------------------------------- */
 /**
  * \file ad_bgl_aggrs.c
  * \brief The externally used function from this file is is declared in ad_bgl_aggrs.h
@@ -16,6 +17,11 @@
 #include "ad_bgl.h"
 #include "ad_bgl_pset.h"
 #include "ad_bgl_aggrs.h"
+
+#ifdef USE_DBG_LOGGING
+  #define AGG_DEBUG 1
+#endif
+
 
 
 int aggrsInPsetSize=0;
@@ -219,8 +225,7 @@ ADIOI_BGL_compute_agg_ranklist_serial ( ADIO_File fd,
 					ADIOI_BGL_ProcInfo_t *all_procInfo,
 					int *aggrsInPset )
 {
-#   define DEBUG 0
-#   if DEBUG
+#   if AGG_DEBUG
     int i; 
 #   endif
     int naggs; 
@@ -229,9 +234,10 @@ ADIOI_BGL_compute_agg_ranklist_serial ( ADIO_File fd,
   /* compute the ranklist of IO aggregators and put into tmp_ranklist */
     tmp_ranklist = (int *) ADIOI_Malloc (confInfo->nProcs * sizeof(int));
 
-#   if DEBUG
-    for (i=0; i<confInfo->nProcs; i++) 
-    printf( "\tcpuid %1d, rank = %6d\n", all_procInfo[i].cpuid, all_procInfo[i].rank );
+#   if AGG_DEBUG
+    for (i=0; i<confInfo->nProcs; i++) {
+      DBG_FPRINTF(stderr, "\tcpuid %1d, rank = %6d\n", all_procInfo[i].cpuid, all_procInfo[i].rank );
+    }
 #   endif
 
     naggs = 
@@ -239,7 +245,7 @@ ADIOI_BGL_compute_agg_ranklist_serial ( ADIO_File fd,
 
 #   define VERIFY 0
 #   if VERIFY
-    printf( "\tconfInfo = %3d,%3d,%3d,%3d,%3d,%3d,%.4f; naggs = %d\n", 
+    DBG_FPRINTF(stderr, "\tconfInfo = %3d,%3d,%3d,%3d,%3d,%3d,%.4f; naggs = %d\n", 
 	    confInfo->PsetSize        ,
 	    confInfo->numPsets        ,
 	    confInfo->isVNM           ,
@@ -250,9 +256,10 @@ ADIOI_BGL_compute_agg_ranklist_serial ( ADIO_File fd,
 	    naggs );
 #   endif
 
-#   if DEBUG
-    for (i=0; i<naggs; i++) 
-    printf( "\taggr %-4d = %6d\n", i, tmp_ranklist[i] );
+#   if AGG_DEBUG
+    for (i=0; i<naggs; i++) {
+      DBG_FPRINTF(stderr, "\taggr %-4d = %6d\n", i, tmp_ranklist[i] );
+    }
 #   endif
 
   /* copy the ranklist of IO aggregators to fd->hints */
@@ -291,12 +298,15 @@ void ADIOI_BGL_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
 {
     ADIO_Offset min_st_offset, max_end_offset, *fd_start, *fd_end, *fd_size;
     int i, aggr;
+#   if AGG_DEBUG
     static char myname[] = "ADIOI_BGL_GPFS_Calc_file_domains";
+#   endif
     __blksize_t blksize = 1048576; /* default to 1M */
     if(fs_ptr && ((ADIOI_BGL_fs*)fs_ptr)->blksize) /* ignore null ptr or 0 blksize */
       blksize = ((ADIOI_BGL_fs*)fs_ptr)->blksize;
-/*    FPRINTF(stderr,"%s(%d): Blocksize=%ld\n",myname,__LINE__,blksize);*/
-
+#   if AGG_DEBUG
+    DBG_FPRINTF(stderr,"%s(%d): Blocksize=%ld\n",myname,__LINE__,blksize);
+#   endif
     /* find the range of all the requests */
     min_st_offset  = st_offsets [0];
     max_end_offset = end_offsets[0];
@@ -305,7 +315,7 @@ void ADIOI_BGL_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
         max_end_offset = ADIOI_MAX(max_end_offset, end_offsets[i]);
     }
 
-    // printf( "_calc_file_domains, min_st_offset, max_ = %qd, %qd\n", min_st_offset, max_end_offset );
+    // DBG_FPRINTF(stderr, "_calc_file_domains, min_st_offset, max_ = %qd, %qd\n", min_st_offset, max_end_offset );
 
     /* determine the "file domain (FD)" of each process, i.e., the portion of
        the file that will be "owned" by each process */
@@ -332,7 +342,8 @@ void ADIOI_BGL_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
         if (i < naggs_small) fd_size[i] = nb_cn_small     * blksize;
                         else fd_size[i] = (nb_cn_small+1) * blksize;
 
-/*     FPRINTF(stderr,"%s(%d): "
+#   if AGG_DEBUG
+     DBG_FPRINTF(stderr,"%s(%d): "
                    "gpfs_ub       %llu, "
                    "gpfs_lb       %llu, "
                    "gpfs_ub_rdoff %llu, "
@@ -354,7 +365,8 @@ void ADIOI_BGL_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
                    naggs_large  ,
                    naggs_small
                    );
-*/
+#   endif
+
     fd_size[0]       -= gpfs_lb_rdoff;
     fd_size[naggs-1] -= gpfs_ub_rdoff;
 
@@ -522,7 +534,7 @@ static int GPFS_BSIZE=1048576;
     }
 
      *
-    printf( "\t%6d : %12qd:%12qd, %12qd:%12qd:%12qd, %12qd:%12qd:%12qd\n", 
+    DBG_FPRINTF(stderr, "\t%6d : %12qd:%12qd, %12qd:%12qd:%12qd, %12qd:%12qd:%12qd\n", 
 	    naggs,
 	    min_st_offset,
 	    max_end_offset,
@@ -587,7 +599,7 @@ int ADIOI_BGL_Calc_aggregator(ADIO_File fd,
 	}
     }
 
-    // printf ("ADIOI_BGL_Calc_aggregator: rank_index = %d\n", rank_index );
+    // DBG_FPRINTF ("ADIOI_BGL_Calc_aggregator: rank_index = %d\n", rank_index );
 
     /* 
      * remember here that even in Rajeev's original code it was the case that
@@ -620,7 +632,7 @@ int ADIOI_BGL_Calc_aggregator(ADIO_File fd,
  * of this process are located in the file domains of various processes
  * (including this one)
  */
-void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list, 
+void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *len_list, 
 			   int contig_access_count, ADIO_Offset 
 			   min_st_offset, ADIO_Offset *fd_start,
 			   ADIO_Offset *fd_end, ADIO_Offset fd_size,
@@ -629,6 +641,8 @@ void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list
 			   int **count_my_req_per_proc_ptr,
 			   ADIOI_Access **my_req_ptr,
 			   int **buf_idx_ptr)
+/* Possibly reconsider if buf_idx's are ok as int's, or should they be aints/offsets? 
+   They are used as memory buffer indices so it seems like the 2G limit is in effect */
 {
     int *count_my_req_per_proc, count_my_req_procs, *buf_idx;
     int i, l, proc;
@@ -720,10 +734,14 @@ void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list
 				     fd_start, fd_end);
 
 	/* for each separate contiguous access from this process */
-	if (buf_idx[proc] == -1) buf_idx[proc] = (int) curr_idx;
+	if (buf_idx[proc] == -1)
+  {
+    ADIOI_Assert(curr_idx == (int) curr_idx);
+    buf_idx[proc] = (int) curr_idx;
+  }
 
 	l = my_req[proc].count;
-	curr_idx += (int) fd_len; /* NOTE: Why is curr_idx an int?  Fix? */
+	curr_idx += fd_len;
 
 	rem_len = len_list[i] - fd_len;
 
@@ -733,6 +751,7 @@ void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list
 	 * and the associated count. 
 	 */
 	my_req[proc].offsets[l] = off;
+  ADIOI_Assert(fd_len == (int) fd_len);
 	my_req[proc].lens[l] = (int) fd_len;
 	my_req[proc].count++;
 
@@ -742,13 +761,18 @@ void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list
 	    proc = ADIOI_BGL_Calc_aggregator(fd, off, min_st_offset, &fd_len, 
 					 fd_size, fd_start, fd_end);
 
-	    if (buf_idx[proc] == -1) buf_idx[proc] = (int) curr_idx;
+	    if (buf_idx[proc] == -1) 
+      {
+        ADIOI_Assert(curr_idx == (int) curr_idx);
+        buf_idx[proc] = (int) curr_idx;
+      }
 
 	    l = my_req[proc].count;
 	    curr_idx += fd_len;
 	    rem_len -= fd_len;
 
 	    my_req[proc].offsets[l] = off;
+      ADIOI_Assert(fd_len == (int) fd_len);
 	    my_req[proc].lens[l] = (int) fd_len;
 	    my_req[proc].count++;
 	}
@@ -757,19 +781,15 @@ void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list
 #ifdef AGG_DEBUG
     for (i=0; i<nprocs; i++) {
 	if (count_my_req_per_proc[i] > 0) {
-	    FPRINTF(stdout, "data needed from %d (count = %d):\n", i, 
+	    DBG_FPRINTF(stderr, "data needed from %d (count = %d):\n", i, 
 		    my_req[i].count);
 	    for (l=0; l < my_req[i].count; l++) {
-		FPRINTF(stdout, "   off[%d] = %Ld, len[%d] = %d\n", l,
+		DBG_FPRINTF(stderr, "   off[%d] = %lld, len[%d] = %d\n", l,
 			my_req[i].offsets[l], l, my_req[i].lens[l]);
 	    }
 	}
+	DBG_FPRINTF(stderr, "buf_idx[%d] = 0x%x\n", i, buf_idx[i]);
     }
-#if 0
-    for (i=0; i<nprocs; i++) {
-	FPRINTF(stdout, "buf_idx[%d] = 0x%x\n", i, buf_idx[i]);
-    }
-#endif
 #endif
 
     *count_my_req_procs_ptr = count_my_req_procs;
@@ -777,7 +797,7 @@ void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list
 }
 
 /*
- * ADIOI_Calc_others_req
+ * ADIOI_Calc_others_req (copied to bgl and switched to all to all for performance)
  *
  * param[in]  count_my_req_procs        Number of processes whose file domain my
  *                                        request touches.
@@ -866,9 +886,9 @@ void ADIOI_BGL_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	    others_req[i].lens = (int *)
 		ADIOI_Malloc(count_others_req_per_proc[i]*sizeof(int)); 
 
-	    if ( (unsigned)others_req[i].offsets < (unsigned)recvBufForOffsets )
+	    if ( (MPIR_Upint)others_req[i].offsets < (MPIR_Upint)recvBufForOffsets )
 		recvBufForOffsets = others_req[i].offsets;
-	    if ( (unsigned)others_req[i].lens < (unsigned)recvBufForLens )
+	    if ( (MPIR_Upint)others_req[i].lens < (MPIR_Upint)recvBufForLens )
 		recvBufForLens = others_req[i].lens;
 
 	    others_req[i].mem_ptrs = (MPI_Aint *)
@@ -883,6 +903,9 @@ void ADIOI_BGL_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	    others_req[i].lens    = NULL;
 	}
     }
+    /* If no recv buffer was allocated in the loop above, make it NULL */
+    if ( recvBufForOffsets == (void*)0xFFFFFFFF) recvBufForOffsets = NULL;
+    if ( recvBufForLens    == (void*)0xFFFFFFFF) recvBufForLens    = NULL;
     
     /* Now send the calculated offsets and lengths to respective processes */
 
@@ -894,13 +917,17 @@ void ADIOI_BGL_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     for (i=0; i<nprocs; i++)
     {
 	if ( (my_req[i].count) &&
-	     ((unsigned)my_req[i].offsets <= (unsigned)sendBufForOffsets) )
-	    sendBufForOffsets = my_req[i].offsets;
+	     ((MPIR_Upint)my_req[i].offsets <= (MPIR_Upint)sendBufForOffsets) )
+	  sendBufForOffsets = my_req[i].offsets;
 	   
 	if ( (my_req[i].count) &&
-	     ((unsigned)my_req[i].lens <= (unsigned)sendBufForLens) )
+	     ((MPIR_Upint)my_req[i].lens <= (MPIR_Upint)sendBufForLens) )
 	    sendBufForLens = my_req[i].lens;
     }
+
+    /* If no send buffer was found in the loop above, make it NULL */
+    if ( sendBufForOffsets == (void*)0xFFFFFFFF) sendBufForOffsets = NULL;
+    if ( sendBufForLens    == (void*)0xFFFFFFFF) sendBufForLens    = NULL;
 
     /* Calculate the displacements from the sendBufForOffsets/Lens */
     for (i=0; i<nprocs; i++)
@@ -910,16 +937,20 @@ void ADIOI_BGL_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	if ( scounts[i] == 0 )
 	    sdispls[i] = 0;
 	else
-	    sdispls[i] = ( (unsigned)my_req[i].offsets - 
-			   (unsigned)sendBufForOffsets ) / sizeof(ADIO_Offset);
+  	  sdispls[i] =  (int)
+	                ( ( (MPIR_Upint)my_req[i].offsets - 
+			   (MPIR_Upint)sendBufForOffsets ) / 
+			  (MPIR_Upint)sizeof(ADIO_Offset) );
 
 	// Receive these offsets from process i.
 	rcounts[i] = count_others_req_per_proc[i];
 	if ( rcounts[i] == 0 )
 	    rdispls[i] = 0;
 	else
-	    rdispls[i] = ( (unsigned)others_req[i].offsets - 
-			   (unsigned)recvBufForOffsets ) / sizeof(ADIO_Offset);
+	    rdispls[i] = (int)
+	                 ( ( (MPIR_Upint)others_req[i].offsets - 
+			     (MPIR_Upint)recvBufForOffsets ) / 
+			   (MPIR_Upint)sizeof(ADIO_Offset) );
     }
 
     /* Exchange the offsets */
@@ -940,16 +971,20 @@ void ADIOI_BGL_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	if ( scounts[i] == 0 )
 	    sdispls[i] = 0;
 	else
-	    sdispls[i] = ( (unsigned)my_req[i].lens - 
-			   (unsigned)sendBufForLens ) / sizeof(int);
+	  sdispls[i] = (int)
+	               ( ( (MPIR_Upint)my_req[i].lens - 
+			   (MPIR_Upint)sendBufForLens ) / 
+			 (MPIR_Upint) sizeof(int) );
 	
 	// Receive these offsets from process i.
 	rcounts[i] = count_others_req_per_proc[i];
 	if ( rcounts[i] == 0 )
 	    rdispls[i] = 0;
 	else
-	    rdispls[i] = ( (unsigned)others_req[i].lens - 
-			   (unsigned)recvBufForLens ) / sizeof(int);
+	    rdispls[i] = (int)
+	                 ( ( (MPIR_Upint)others_req[i].lens - 
+			     (MPIR_Upint)recvBufForLens ) / 
+			   (MPIR_Upint) sizeof(int) );
     }
 
     /* Exchange the lengths */

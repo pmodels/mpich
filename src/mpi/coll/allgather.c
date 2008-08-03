@@ -106,6 +106,10 @@ int MPIR_Allgather (
     MPID_Datatype_get_extent_macro( recvtype, recvtype_extent );
     MPID_Datatype_get_size_macro( recvtype, type_size );
 
+    /* This is the largest offset we add to recvbuf */
+    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+				     (comm_size * recvcount * recvtype_extent));
+
     /* check if comm_size is a power of two */
     pof2 = 1;
     while (pof2 < comm_size)
@@ -626,6 +630,7 @@ int MPIR_Allgather_inter (
         MPID_Datatype_get_extent_macro( sendtype, send_extent );
         extent = MPIR_MAX(send_extent, true_extent);
 
+	MPID_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
         tmp_buf = MPIU_Malloc(extent*sendcount*local_size);
         if (!tmp_buf) {
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");

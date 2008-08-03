@@ -58,7 +58,7 @@ int MPI_Type_hvector(int count,
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_HVECTOR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIU_THREAD_SINGLE_CS_ENTER("datatype");
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_HVECTOR);
 
@@ -85,7 +85,7 @@ int MPI_Type_hvector(int count,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPID_Type_vector(count,
 				 blocklen,
 				 (MPI_Aint) stride,
@@ -123,8 +123,7 @@ int MPI_Type_hvector(int count,
 	    "**mpi_type_hvector %d %d %d %D %p", count, blocklen, stride, old_type, newtype_p);
     }
 #   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

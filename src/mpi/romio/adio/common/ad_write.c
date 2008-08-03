@@ -16,11 +16,13 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, void *buf, int count,
 			   ADIO_Offset offset, ADIO_Status *status,
 			   int *error_code)
 {
-    int err = -1, datatype_size, len;
+    int err = -1, datatype_size;
+    ADIO_Offset len;
     static char myname[] = "ADIOI_GEN_WRITECONTIG";
 
     MPI_Type_size(datatype, &datatype_size);
-    len = datatype_size * count;
+    len = (ADIO_Offset)datatype_size * (ADIO_Offset)count;
+    ADIOI_Assert(len == (unsigned int) len); /* read takes an unsigned int parm */
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
 	offset = fd->fp_ind;
@@ -50,7 +52,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, void *buf, int count,
 #ifdef ADIOI_MPE_LOGGING
     MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
-    err = write(fd->fd_sys, buf, len);
+    err = write(fd->fd_sys, buf, (unsigned int)len);
 #ifdef ADIOI_MPE_LOGGING
     MPE_Log_event( ADIOI_MPE_write_b, 0, NULL );
 #endif

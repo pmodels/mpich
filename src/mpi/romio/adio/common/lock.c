@@ -93,7 +93,7 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 	     ADIO_Offset len) 
 {
-    int err, error_code;
+    int err, error_code, err_count = 0;
     struct flock lock;
 
     if (len == 0) return MPI_SUCCESS;
@@ -123,7 +123,31 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
     errno = 0;
     do {
 	err = fcntl(fd, cmd, &lock);
-    } while (err && (errno == EINTR));
+#ifdef USE_DBG_LOGGING
+/*      if (MPIU_DBG_SELECTED(ROMIO,TERSE)) */
+      {
+        if (err && ((errno == EINTR) || (errno == EINPROGRESS)))
+        {
+          if((err_count < 5) || (err_count > 9995))
+          {
+            fprintf(stderr, "File locking failed in ADIOI_Set_lock(fd %#X,cmd %s/%#X,type %s/%#X,whence %#X) with return value %#X and errno %#X.  Retry (%d).\n",                    
+                    fd,
+                    ((cmd == F_GETLK   )? "F_GETLK" :
+                    ((cmd == F_SETLK   )? "F_SETLK" :
+                    ((cmd == F_SETLKW  )? "F_SETLKW" : "UNEXPECTED")))),
+                    cmd, 
+                    ((type == F_RDLCK   )? "F_RDLCK" :
+                    ((type == F_WRLCK   )? "F_WRLCK" :
+                    ((type == F_UNLCK   )? "F_UNLOCK" : "UNEXPECTED"))),
+                    type, 
+                    whence, err, errno, err_count);
+          perror("ADIOI_Set_lock:");
+          fprintf(stderr,"ADIOI_Set_lock:offset %#llx, length %#llx\n",(unsigned long long)offset, (unsigned long long)len);
+          }
+        }
+      }
+#endif
+    } while (err && ((errno == EINTR) || ((errno == EINPROGRESS) && (++err_count < 10000))));
 
     if (err && (errno != EBADF)) {
 	/* FIXME: This should use the error message system, 

@@ -160,8 +160,7 @@ static void *MPIU_Handle_indirect_init( void *(**indirect)[],
     /* Create the table */
     if (!*indirect) {
 	/* printf( "Creating indirect table\n" ); */
-	*indirect = (void *)MPIU_Calloc( indirect_max_size, 
-					      sizeof(void *) );
+	*indirect = (void *)MPIU_Calloc(indirect_max_size, sizeof(void *));
 	if (!*indirect) {
 	    return 0;
 	}
@@ -312,8 +311,8 @@ void *MPIU_Handle_obj_alloc(MPIU_Object_alloc_t *objmem)
     }
 
     MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
-				     "Allocating handle %x (0x%08x)\n",
-				     (unsigned) (MPI_Aint)ptr, ptr->handle));
+				     "Allocating handle %p (0x%08x)\n",
+				     ptr, ptr->handle));
 
 #ifdef USE_MEMORY_TRACING
     /* We set the object to an invalid pattern.  This is similar to 

@@ -96,6 +96,7 @@ int MPIOI_File_read_all_begin(MPI_File mpi_fh,
 	error_code = MPIO_Err_return_file(fh, error_code);
 	goto fn_exit;
     }
+    MPIO_CHECK_COUNT_SIZE(fh, count, datatype_size, myname, error_code);
     /* --END ERROR HANDLING-- */
 
     fh->split_coll_count = 1;

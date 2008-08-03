@@ -33,6 +33,17 @@ if (count < 0) {						\
     goto fn_exit;                                               \
 }
 
+#define MPIO_CHECK_COUNT_SIZE(fh, count, datatype_size, myname, error_code)         \
+if (count*datatype_size != (ADIO_Offset)(unsigned)count*(ADIO_Offset)(unsigned)datatype_size) {	\
+    error_code = MPIO_Err_create_code(MPI_SUCCESS,		\
+				      MPIR_ERR_RECOVERABLE,	\
+				      myname, __LINE__,		\
+				      MPI_ERR_ARG, 		\
+				      "**iobadcount", 0);	\
+    error_code = MPIO_Err_return_file(fh, error_code);		\
+    goto fn_exit;                                               \
+}
+
 #define MPIO_CHECK_DATATYPE(fh, datatype, myname, error_code)   \
 if (datatype == MPI_DATATYPE_NULL) {				\
     error_code = MPIO_Err_create_code(MPI_SUCCESS,		\

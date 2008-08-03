@@ -679,19 +679,32 @@ static int get_max_procs(int cb_nodes)
  *
  * Returns a token of types defined at top of this file.
  */
+#ifdef ROMIO_BGL
+/* On BlueGene, the ',' character shows up in get_processor_name, so we have to
+ * use a different delimiter */
+#define COLON ':'
+#define COMMA ';'
+#define DELIMS ":;"
+#else 
+/* these tokens work for every other platform */
+#define COLON ':'
+#define COMMA ','
+#define DELIMS ":,"
+#endif
+
 static int cb_config_list_lex(void)
 {
     int slen;
 
     if (*token_ptr == '\0') return AGG_EOS;
 
-    slen = (int)strcspn(token_ptr, ":,");
+    slen = (int)strcspn(token_ptr, DELIMS);
 
-    if (*token_ptr == ':') {
+    if (*token_ptr == COLON) {
 	token_ptr++;
 	return AGG_COLON;
     }
-    if (*token_ptr == ',') {
+    if (*token_ptr == COMMA) {
 	token_ptr++;
 	return AGG_COMMA;
     }

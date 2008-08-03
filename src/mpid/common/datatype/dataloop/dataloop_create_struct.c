@@ -194,7 +194,7 @@ int PREPEND_PREFIX(Dataloop_create_struct)(int count,
      * struct, treat it as an indexed type.
      *
      * notes:
-     * 
+     *
      * this will apply to a single type with an LB/UB, as those
      * are handled elsewhere.
      *
@@ -271,12 +271,12 @@ int PREPEND_PREFIX(Dataloop_create_struct)(int count,
 	    old_loop_sz += tmp_loop_sz;
 	}
     }
-    
+
     /* general case below: 2 or more distinct types that are either
      * basics or derived, and for which we want to preserve the types
      * themselves.
      */
-    
+
     if (nr_basics > 0)
     {
 	/* basics introduce an extra level of depth, so if our new depth
@@ -347,7 +347,7 @@ int PREPEND_PREFIX(Dataloop_create_struct)(int count,
 							     &dummy_sz,
 							     &dummy_depth,
 							     flag);
-	    
+
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (err) {
 		/* TODO: FREE ALLOCATED RESOURCES */
@@ -523,7 +523,7 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(
 						  dlsz_p,
 						  dldepth_p,
 						  flag);
-    
+
     DLOOP_Free(tmp_blklens);
     DLOOP_Free(tmp_disps);
 
@@ -622,12 +622,12 @@ static int DLOOP_Dataloop_create_flattened_struct(int count,
 	 */
 	if (oldtypes[i] != MPI_UB && oldtypes[i] != MPI_LB && blklens[i] != 0)
 	{
-	    PREPEND_PREFIX(Segment_init)((char *) disps[i],
+	    PREPEND_PREFIX(Segment_init)((char *) MPI_AINT_CAST_TO_VOID_PTR disps[i],
 					 (DLOOP_Count) blklens[i],
 					 oldtypes[i],
 					 segp,
 					 0 /* homogeneous */);
-	    
+
 	    last_ind = nr_blks - first_ind;
 	    bytes = SEGMENT_IGNORE_LAST;
 	    PREPEND_PREFIX(Segment_mpi_flatten)(segp,
@@ -646,7 +646,7 @@ static int DLOOP_Dataloop_create_flattened_struct(int count,
 	MPIU_DBG_OUT(DATATYPE,"--- start of flattened type ---");
         for (i=0; i < nr_blks; i++) {
 	MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,
-				   "a[%d] = (%d, %d)\n", i,
+				   "a[%d] = (%d, " MPI_AINT_FMT_DEC_SPEC ")\n", i,
 				   tmp_blklens[i], tmp_disps[i]));
 	}
 	MPIU_DBG_OUT(DATATYPE,"--- end of flattened type ---");
@@ -664,7 +664,7 @@ static int DLOOP_Dataloop_create_flattened_struct(int count,
 						  dlsz_p,
 						  dldepth_p,
 						  flag);
-    
+
     DLOOP_Free(tmp_blklens);
     DLOOP_Free(tmp_disps);
 

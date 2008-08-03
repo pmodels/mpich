@@ -32,6 +32,12 @@
    do not want mpi.h to depend on any other files or configure flags */
 #include "mpichconf.h"
 
+/* Adding the 32-bit compute/64-bit I/O related type-casts in here as
+ * they are not a part of the MPI standard yet. */
+#define MPI_AINT_CAST_TO_VOID_PTR (void *)(MPIR_Pint)
+#define MPI_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(MPIR_Upint)
+#define MPI_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(MPIR_Pint)
+
 #ifdef STDC_HEADERS
 #include <stdlib.h>
 #include <stdarg.h>
@@ -88,6 +94,11 @@
 #define MPIDI_QUOTE2(A) #A
 #endif
 
+/* Include definitions from the device which must exist before items in this
+   file (mpiimpl.h) can be defined. */
+/* ------------------------------------------------------------------------- */
+#include "mpidpre.h"
+/* ------------------------------------------------------------------------- */
 
 /* 
    Include the implementation definitions (e.g., error reporting, thread
@@ -101,13 +112,6 @@
 /* #include "mpiu_monitors.h" */
 
 #include "mpiutil.h"
-
-/* Include definitions from the device which must exist before items in this
-   file (mpiimpl.h) can be defined. */
-/* ------------------------------------------------------------------------- */
-#include "mpidpre.h"
-/* ------------------------------------------------------------------------- */
-
 
 /* ------------------------------------------------------------------------- */
 /* mpidebug.h */
@@ -1370,6 +1374,7 @@ typedef struct MPID_Request {
     MPID_DEV_REQUEST_DECL
 #endif
 } MPID_Request;
+
 extern MPIU_Object_alloc_t MPID_Request_mem;
 /* Preallocated request objects */
 extern MPID_Request MPID_Request_direct[];

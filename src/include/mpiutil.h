@@ -79,4 +79,32 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
     }								\
 }
 
+/*
+ * Ensure an MPI_Aint value fits into a signed int.
+ * Useful for detecting overflow when MPI_Aint is larger than an int.
+ *
+ * \param[in]  aint  Variable of type MPI_Aint
+ */
+#define MPID_Ensure_Aint_fits_in_int(aint) \
+  MPIU_Assert((aint) == (MPI_Aint)(int)(aint));
+
+/*
+ * Ensure an MPI_Aint value fits into an unsigned int.
+ * Useful for detecting overflow when MPI_Aint is larger than an 
+ * unsigned int.
+ *
+ * \param[in]  aint  Variable of type MPI_Aint
+ */
+#define MPID_Ensure_Aint_fits_in_uint(aint) \
+  MPIU_Assert((aint) == (MPI_Aint)(unsigned int)(aint));
+
+/*
+ * Ensure an MPI_Aint value fits into a pointer.
+ * Useful for detecting overflow when MPI_Aint is larger than a pointer.
+ *
+ * \param[in]  aint  Variable of type MPI_Aint
+ */
+#define MPID_Ensure_Aint_fits_in_pointer(aint) \
+  MPIU_Assert((aint) == (MPI_Aint)(MPIR_Upint) MPI_AINT_CAST_TO_VOID_PTR(aint));
+
 #endif /* !defined(MPIUTIL_H_INCLUDED) */

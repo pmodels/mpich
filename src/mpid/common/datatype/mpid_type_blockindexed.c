@@ -13,7 +13,7 @@
 
 /*@
   MPID_Type_blockindexed - create a block indexed datatype
- 
+
   Input Parameters:
 + count - number of blocks in type
 . blocklength - number of elements in each block
@@ -80,7 +80,7 @@ int MPID_Type_blockindexed(int count,
 
     if (is_builtin)
     {
-	el_sz   = MPID_Datatype_get_basic_size(oldtype);
+	el_sz   = (MPI_Aint) MPID_Datatype_get_basic_size(oldtype);
 	el_type = oldtype;
 
 	old_lb        = 0;
@@ -90,7 +90,8 @@ int MPID_Type_blockindexed(int count,
 	old_extent    = el_sz;
 	old_is_contig = 1;
 
-	new_dtp->size          = count * blocklength * el_sz;
+	new_dtp->size          = (MPI_Aint) count *
+	                         (MPI_Aint) blocklength * el_sz;
 	new_dtp->has_sticky_lb = 0;
 	new_dtp->has_sticky_ub = 0;
 
@@ -117,7 +118,9 @@ int MPID_Type_blockindexed(int count,
 	old_extent    = old_dtp->extent;
 	old_is_contig = old_dtp->is_contig;
 
-	new_dtp->size           = count * blocklength * old_dtp->size;
+	new_dtp->size           = (MPI_Aint) count *
+	                          (MPI_Aint) blocklength *
+	                          (MPI_Aint) old_dtp->size;
 	new_dtp->has_sticky_lb  = old_dtp->has_sticky_lb;
 	new_dtp->has_sticky_ub  = old_dtp->has_sticky_ub;
 
@@ -128,7 +131,7 @@ int MPID_Type_blockindexed(int count,
 
 	new_dtp->n_contig_blocks = count * old_dtp->n_contig_blocks;
     }
-    
+
     /* priming for loop */
     eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[0] :
 	(((MPI_Aint) ((int *) displacement_array)[0]) * old_extent);
@@ -169,13 +172,13 @@ int MPID_Type_blockindexed(int count,
      * its size and extent are the same, and the old type was also
      * contiguous.
      */
-    if (old_is_contig && (new_dtp->size == new_dtp->extent))
+    if (old_is_contig && ((MPI_Aint) new_dtp->size == new_dtp->extent))
     {
 	contig_count = MPID_Type_blockindexed_count_contig(count,
-                                                           blocklength,
-                                                           displacement_array,
-                                                           dispinbytes,
-                                                           old_extent);
+							   blocklength,
+							   displacement_array,
+							   dispinbytes,
+							   old_extent);
 	new_dtp->is_contig = (contig_count == 1) ? 1 : 0;
     }
     else
@@ -186,5 +189,3 @@ int MPID_Type_blockindexed(int count,
     *newtype = new_dtp->handle;
     return mpi_errno;
 }
-
-

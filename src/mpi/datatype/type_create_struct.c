@@ -29,19 +29,19 @@
 #define FUNCNAME MPI_Type_create_struct
 
 /*@
-   MPI_Type_create_struct - Create an MPI datatype from a general set of 
+   MPI_Type_create_struct - Create an MPI datatype from a general set of
    datatypes, displacements, and block sizes
 
    Input Parameters:
-+ count - number of blocks (integer) --- also number of entries in arrays 
-  array_of_types, array_of_displacements and array_of_blocklengths 
-. array_of_blocklength - number of elements in each block (array of integer) 
-. array_of_displacements - byte displacement of each block (array of integer) 
-- array_of_types - type of elements in each block (array of handles to 
-  datatype objects) 
++ count - number of blocks (integer) --- also number of entries in arrays
+  array_of_types, array_of_displacements and array_of_blocklengths
+. array_of_blocklength - number of elements in each block (array of integer)
+. array_of_displacements - byte displacement of each block (array of address integer)
+- array_of_types - type of elements in each block (array of handles to
+  datatype objects)
 
    Output Parameter:
-. newtype - new datatype (handle) 
+. newtype - new datatype (handle)
 
 .N ThreadSafe
 
@@ -66,7 +66,7 @@ int MPI_Type_create_struct(int count,
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_STRUCT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIU_THREAD_SINGLE_CS_ENTER("datatype");
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_STRUCT);
 
@@ -80,7 +80,7 @@ int MPI_Type_create_struct(int count,
 	    MPIR_ERRTEST_COUNT(count,mpi_errno);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-	    if (count > 0) { 
+	    if (count > 0) {
 		MPIR_ERRTEST_ARGNULL(array_of_blocklengths, "blocklens", mpi_errno);
 		MPIR_ERRTEST_ARGNULL(array_of_displacements, "indices", mpi_errno);
 		MPIR_ERRTEST_ARGNULL(array_of_types, "types", mpi_errno);
@@ -105,7 +105,7 @@ int MPI_Type_create_struct(int count,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
-    
+
     mpi_errno = MPID_Type_struct(count,
 				 array_of_blocklengths,
 				 array_of_displacements,
@@ -138,7 +138,7 @@ int MPI_Type_create_struct(int count,
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */
-    
+
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_STRUCT);
@@ -155,7 +155,7 @@ int MPI_Type_create_struct(int count,
 	    array_of_types, newtype);
     }
 #   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

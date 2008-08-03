@@ -133,6 +133,11 @@ int MPIR_Scan (
 
     MPID_Datatype_get_extent_macro(datatype, extent);
     partial_scan = MPIU_Malloc(count*(MPIR_MAX(extent,true_extent)));
+
+    /* This eventually gets malloc()ed as a temp buffer, not added to
+     * any user buffers */
+    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+
     /* --BEGIN ERROR HANDLING-- */
     if (!partial_scan) {
         mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );

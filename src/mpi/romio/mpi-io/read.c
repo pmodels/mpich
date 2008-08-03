@@ -96,6 +96,11 @@ int MPIOI_File_read(MPI_File mpi_fh,
     /* --END ERROR HANDLING-- */
 
     MPI_Type_size(datatype, &datatype_size);
+
+    /* --BEGIN ERROR HANDLING-- */
+    MPIO_CHECK_COUNT_SIZE(fh, count, datatype_size, myname, error_code);
+    /* --END ERROR HANDLING-- */
+
     if (count*datatype_size == 0)
     {
 #ifdef HAVE_STATUS_SET_BYTES

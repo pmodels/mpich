@@ -246,7 +246,7 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
  * of this process are located in the file domains of various processes
  * (including this one)
  */
-void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list, 
+void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *len_list, 
 		       int contig_access_count, ADIO_Offset 
 		       min_st_offset, ADIO_Offset *fd_start,
 		       ADIO_Offset *fd_end, ADIO_Offset fd_size,
@@ -255,6 +255,8 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list,
 		       int **count_my_req_per_proc_ptr,
 		       ADIOI_Access **my_req_ptr,
 		       int **buf_idx_ptr)
+/* Possibly reconsider if buf_idx's are ok as int's, or should they be aints/offsets? 
+   They are used as memory buffer indices so it seems like the 2G limit is in effect */
 {
     int *count_my_req_per_proc, count_my_req_procs, *buf_idx;
     int i, l, proc;
@@ -345,10 +347,14 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list,
 				     fd_start, fd_end);
 
 	/* for each separate contiguous access from this process */
-	if (buf_idx[proc] == -1) buf_idx[proc] = (int) curr_idx;
+	if (buf_idx[proc] == -1) 
+  {
+    ADIOI_Assert(curr_idx == (int) curr_idx);
+    buf_idx[proc] = (int) curr_idx;
+  }
 
 	l = my_req[proc].count;
-	curr_idx += (int) fd_len; /* NOTE: Why is curr_idx an int?  Fix? */
+	curr_idx += fd_len; 
 
 	rem_len = len_list[i] - fd_len;
 
@@ -358,6 +364,7 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list,
 	 * and the associated count. 
 	 */
 	my_req[proc].offsets[l] = off;
+  ADIOI_Assert(fd_len == (int) fd_len);
 	my_req[proc].lens[l] = (int) fd_len;
 	my_req[proc].count++;
 
@@ -367,13 +374,18 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list,
 	    proc = ADIOI_Calc_aggregator(fd, off, min_st_offset, &fd_len, 
 					 fd_size, fd_start, fd_end);
 
-	    if (buf_idx[proc] == -1) buf_idx[proc] = (int) curr_idx;
+	    if (buf_idx[proc] == -1) 
+      {
+        ADIOI_Assert(curr_idx == (int) curr_idx);
+        buf_idx[proc] = (int) curr_idx;
+      }
 
 	    l = my_req[proc].count;
 	    curr_idx += fd_len;
 	    rem_len -= fd_len;
 
 	    my_req[proc].offsets[l] = off;
+      ADIOI_Assert(fd_len == (int) fd_len);
 	    my_req[proc].lens[l] = (int) fd_len;
 	    my_req[proc].count++;
 	}
@@ -388,13 +400,9 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, int *len_list,
 		FPRINTF(stdout, "   off[%d] = %lld, len[%d] = %d\n", l,
 			my_req[i].offsets[l], l, my_req[i].lens[l]);
 	    }
+	FPRINTF(stdout, "buf_idx[%d] = 0x%x\n", i, buf_idx[i]);
 	}
     }
-#if 0
-    for (i=0; i<nprocs; i++) {
-	FPRINTF(stdout, "buf_idx[%d] = 0x%x\n", i, buf_idx[i]);
-    }
-#endif
 #endif
 
     *count_my_req_procs_ptr = count_my_req_procs;

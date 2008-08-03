@@ -1,5 +1,6 @@
 /* ---------------------------------------------------------------- */
 /* (C)Copyright IBM Corp.  2007, 2008                               */
+/* ---------------------------------------------------------------- */
 /**
  * \file ad_bgl_aggrs.h
  * \brief ???
@@ -60,7 +61,7 @@
 
     /* overriding ADIOI_Calc_my_req for the default implementation is specific for 
        static file domain partitioning */
-    void ADIOI_BGL_Calc_my_req ( ADIO_File fd, ADIO_Offset *offset_list, int *len_list,
+    void ADIOI_BGL_Calc_my_req ( ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *len_list,
 				 int contig_access_count, ADIO_Offset
 				 min_st_offset, ADIO_Offset *fd_start,
 				 ADIO_Offset *fd_end, ADIO_Offset fd_size,

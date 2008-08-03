@@ -73,6 +73,13 @@ int MPIR_Scatterv (
         
         comm_size = comm_ptr->local_size;
         MPID_Datatype_get_extent_macro(sendtype, extent);
+        /* We need a check to ensure extent will fit in a
+         * pointer. That needs extent * (max count) but we can't get
+         * that without looping over the input data. This is at least
+         * a minimal sanity check. Maybe add a global var since we do
+         * loop over sendcount[] in MPI_Scatterv before calling
+         * this? */
+        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
 
         /* We could use Isend here, but since the receivers need to execute
            a simple Recv, it may not make much difference in performance, 

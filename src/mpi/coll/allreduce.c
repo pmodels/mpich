@@ -190,6 +190,7 @@ int MPIR_Allreduce (
 	MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
         MPID_Datatype_get_extent_macro(datatype, extent);
 
+        MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
         MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
 	
         /* adjust for potential negative lower bound in datatype */

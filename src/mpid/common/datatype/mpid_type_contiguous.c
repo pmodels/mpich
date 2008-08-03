@@ -13,7 +13,7 @@
 
 /*@
   MPID_Type_contiguous - create a contiguous datatype
- 
+
   Input Parameters:
 + count - number of elements in the contiguous block
 - oldtype - type (using handle) of datatype on which vector is based
@@ -64,7 +64,7 @@ int MPID_Type_contiguous(int count,
     new_dtp->hetero_dloop       = NULL;
     new_dtp->hetero_dloop_size  = -1;
     new_dtp->hetero_dloop_depth = -1;
-    
+
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 
     if (is_builtin)
@@ -101,7 +101,7 @@ int MPID_Type_contiguous(int count,
 	new_dtp->has_sticky_ub  = old_dtp->has_sticky_ub;
 	new_dtp->has_sticky_lb  = old_dtp->has_sticky_lb;
 
-	MPID_DATATYPE_CONTIG_LB_UB(count,
+	MPID_DATATYPE_CONTIG_LB_UB((MPI_Aint) count,
 				   old_dtp->lb,
 				   old_dtp->ub,
 				   old_dtp->extent,
@@ -125,7 +125,7 @@ int MPID_Type_contiguous(int count,
 
     *newtype = new_dtp->handle;
 
-    MPIU_DBG_MSG_P(DATATYPE,VERBOSE,"contig type %x created.", 
+    MPIU_DBG_MSG_P(DATATYPE,VERBOSE,"contig type %x created.",
 		   new_dtp->handle);
 
     return mpi_errno;

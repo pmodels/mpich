@@ -11,7 +11,7 @@
     {									\
 	struct { ut1_ a; ut2_ b; } foo;					\
 	disps[0] = 0;							\
-	disps[1] = (MPI_Aint) ((char *) &foo.b - (char *) &foo.a);	\
+	disps[1] = MPI_VOID_PTR_CAST_TO_MPI_AINT ((char *) &foo.b - (char *) &foo.a);	\
 	types[0] = mt1_;						\
 	types[1] = mt2_;						\
     }

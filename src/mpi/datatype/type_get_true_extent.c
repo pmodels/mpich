@@ -31,15 +31,15 @@
 #define FCNAME "MPI_Type_get_true_extent"
 
 /*@
-   MPI_Type_get_true_extent - Get the true lower bound and extent for a 
+   MPI_Type_get_true_extent - Get the true lower bound and extent for a
      datatype
 
    Input Parameter:
-. datatype - datatype to get information on (handle) 
+. datatype - datatype to get information on (handle)
 
    Output Parameters:
-+ true_lb - true lower bound of datatype (integer) 
-- true_extent - true size of datatype (integer) 
++ true_lb - true lower bound of datatype (address integer)
+- true_extent - true size of datatype (address integer)
 
 .N SignalSafe
 
@@ -50,7 +50,7 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint *true_lb, 
+int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint *true_lb,
 			     MPI_Aint *true_extent)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -58,9 +58,9 @@ int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint *true_lb,
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_GET_TRUE_EXTENT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_GET_TRUE_EXTENT);
-    
+
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -72,17 +72,17 @@ int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint *true_lb,
         MPID_END_ERROR_CHECKS;
     }
 #   endif
-    
+
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr( datatype, datatype_ptr );
-    
+    MPID_Datatype_get_ptr(datatype, datatype_ptr);
+
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate datatype_ptr */
-            MPID_Datatype_valid_ptr( datatype_ptr, mpi_errno );
+            MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -90,7 +90,7 @@ int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint *true_lb,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
 	*true_lb     = 0;
 	*true_extent = MPID_Datatype_get_basic_size(datatype);
@@ -113,12 +113,12 @@ int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint *true_lb,
   fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpi_type_get_true_extent", 
-	    "**mpi_type_get_true_extent %D %p %p", 
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+	    "**mpi_type_get_true_extent",
+	    "**mpi_type_get_true_extent %D %p %p",
 	    datatype, true_lb, true_extent);
     }
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
 #   endif
     /* --END ERROR HANDLING-- */

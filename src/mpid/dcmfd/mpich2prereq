@@ -8,7 +8,7 @@
 # Get the channel from the device_args, and invoke any channel prereq
 echo "Executing mpich2prereq in $devicedir with $device_args"
 if test -z "$device_args" ; then
-    device_args=none
+    device_args=BGP
 fi
 
 if test "$device_args" = "BGP" ; then
