@@ -56,8 +56,8 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
     static const char FCNAME[] = "MPI_Comm_create";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int i, j, n, *mapping = 0, *remote_mapping = 0, remote_size = -1;
-    int16_t new_context_id;
+    int i, j, n, *mapping = 0, *remote_mapping = 0, remote_size = -1, 
+	new_context_id;
     MPID_Comm *newcomm_ptr;
     MPID_Group *group_ptr;
     MPIU_CHKLMEM_DECL(3);
@@ -125,14 +125,13 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
 	if (!comm_ptr->local_comm) {
 	    MPIR_Setup_intercomm_localcomm( comm_ptr );
 	}
-        mpi_errno = MPIR_Get_contextid( comm_ptr->local_comm, &new_context_id );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	new_context_id = MPIR_Get_contextid( comm_ptr->local_comm );
     }
     else {
-        mpi_errno = MPIR_Get_contextid( comm_ptr, &new_context_id );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	new_context_id = MPIR_Get_contextid( comm_ptr );
     }
-    MPIU_Assert(new_context_id != 0);
+    MPIU_ERR_CHKANDJUMP(new_context_id == 0, mpi_errno, MPI_ERR_OTHER, 
+			"**toomanycomm" );
 
     /* Make sure that the processes for this group are contained within
        the input communicator.  Also identify the mapping from the ranks of 

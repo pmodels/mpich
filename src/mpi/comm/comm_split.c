@@ -103,7 +103,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
     int       rank, size, remote_size, i, new_size, new_remote_size, 
 	first_entry = 0, first_remote_entry = 0,
 	*last_ptr;
-    int16_t   new_context_id, remote_context_id;
+    int       new_context_id, remote_context_id;
     MPIU_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(4);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT);
@@ -254,9 +254,9 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
        context id to the pool */
     /* In the multi-threaded case, MPIR_Get_contextid assumes that the
        calling routine already holds the single criticial section */
-    mpi_errno = MPIR_Get_contextid( local_comm_ptr, &new_context_id );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_Assert(new_context_id != 0);
+    new_context_id = MPIR_Get_contextid( local_comm_ptr );
+    MPIU_ERR_CHKANDJUMP(new_context_id == 0, mpi_errno, MPI_ERR_OTHER, 
+			"**toomanycomm" );
 
     /* In the intercomm case, we need to exchange the context ids */
     if (comm_ptr->comm_kind == MPID_INTERCOMM) {

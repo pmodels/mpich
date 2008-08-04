@@ -8,6 +8,6 @@
 /* The MPIR_Get_contextid routine is in mpiimpl.h so that the device 
    may use it */
 /* int MPIR_Get_contextid( MPID_Comm * ); */
-int MPIR_Get_intercomm_contextid( MPID_Comm *, int16_t *, int16_t * );
+int MPIR_Get_intercomm_contextid( MPID_Comm *, int *, int * );
 void MPIR_Free_contextid( int );
 
