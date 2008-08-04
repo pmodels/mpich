@@ -1003,7 +1003,7 @@ with MPI_Alloc_mem.
 **mpi_type_vector:MPI_Type_vector failed
 **mpi_type_vector %d %d %d %D %p:MPI_Type_vector(count=%d, blocklength=%d, stride=%d, %D, new_type_p=%p) failed
 **mpi_type_hvector:MPI_Type_hvector failed
-**mpi_type_hvector %d %d %L %D %p:MPI_Type_hvector(count=%d, blocklen=%d, stride=%L, %D, new_type_p=%p) failed
+**mpi_type_hvector %d %d %d %D %p:MPI_Type_hvector(count=%d, blocklen=%d, stride=%d, %D, new_type_p=%p) failed
 **mpi_type_indexed:MPI_Type_indexed failed
 **mpi_type_indexed %d %p %p %D %p:MPI_Type_indexed(count=%d, blocklens=%p, indices=%p, %D, new_type_p=%p) failed
 **mpi_type_hindexed:MPI_Type_hindexed failed
@@ -1206,15 +1206,15 @@ with MPI_Alloc_mem.
 **mpi_unpublish_name:MPI_Unpublish_name failed
 **mpi_unpublish_name %s %I %s:MPI_Unpublish_name(service=\"%s\", %I, port=\"%s\") failed
 **mpi_accumulate:MPI_Accumulate failed
-**mpi_accumulate %p %d %D %d %L %d %D %O %W:MPI_Accumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %O, %W) failed
+**mpi_accumulate %p %d %D %d %d %d %D %O %W:MPI_Accumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W) failed
 **mpi_get:MPI_Get failed
-**mpi_get %p %d %D %d %L %d %D %W:MPI_Get(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %W) failed
+**mpi_get %p %d %D %d %d %d %D %W:MPI_Get(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W) failed
 **mpi_put:MPI_Put failed
-**mpi_put %p %d %D %d %L %d %D %W:MPI_Put(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %W) failed
+**mpi_put %p %d %D %d %d %d %D %W:MPI_Put(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W) failed
 **mpi_win_complete:MPI_Win_complete failed
 **mpi_win_complete %W:MPI_Win_complete(%W) failed
 **mpi_win_create:MPI_Win_create failed
-**mpi_win_create %p %L %d %I %C %p:MPI_Win_create(base=%p, size=%L, disp_unit=%d, %I, %C, win=%p) failed
+**mpi_win_create %p %d %d %I %C %p:MPI_Win_create(base=%p, size=%d, disp_unit=%d, %I, %C, win=%p) failed
 **mpi_win_fence:MPI_Win_fence failed
 **mpi_win_fence %A %W:MPI_Win_fence(%A, %W) failed
 **mpi_win_free:MPI_Win_free failed
@@ -1316,7 +1316,7 @@ with MPI_Alloc_mem.
 **mpi_win_set_name:MPI_Win_set_name failed
 **mpi_win_set_name %W %s:MPI_Win_set_name(%W, win_name=%s) failed
 **mpi_alloc_mem:MPI_Alloc_mem failed
-**mpi_alloc_mem %L %I %p:MPI_Alloc_mem(size=%L, %I, baseptr=%p) failed
+**mpi_alloc_mem %d %I %p:MPI_Alloc_mem(size=%d, %I, baseptr=%p) failed
 **mpi_comm_create_errhandler:MPI_Comm_create_errhandler failed
 **mpi_comm_create_errhandler %p %p:MPI_Comm_create_errhandler(function=%p, errhandler=%p) failed
 **mpi_comm_get_errhandler:MPI_Comm_get_errhandler failed
@@ -1354,7 +1354,7 @@ with MPI_Alloc_mem.
 **mpi_info_set:MPI_Info_set failed
 **mpi_info_set %I %s %s:MPI_Info_set(%I, key=%s, value=%s) failed
 **mpi_pack_external:MPI_Pack_external failed
-**mpi_pack_external %s %p %d %D %p %L %p:MPI_Pack_external(datarep=%s, inbuf=%p, incount=%d, %D, outbuf=%p, outcount=%L, position=%p) failed
+**mpi_pack_external %s %p %d %D %p %d %p:MPI_Pack_external(datarep=%s, inbuf=%p, incount=%d, %D, outbuf=%p, outcount=%d, position=%p) failed
 **mpi_pack_external_size:MPI_Pack_external_size failed
 **mpi_pack_external_size %s %d %D %p:MPI_Pack_external_size(datarep=%s, incount=%d, %D, size=%p) failed
 **mpi_request_get_status:MPI_Request_get_status failed
@@ -1368,7 +1368,7 @@ with MPI_Alloc_mem.
 **mpi_type_create_hindexed:MPI_Type_create_hindexed failed
 **mpi_type_create_hindexed %d %p %p %D %p:MPI_Type_create_hindexed(count=%d, array_of_blocklengths=%p, array_of_displacements=%p, %D, newtype=%p) failed
 **mpi_type_create_hvector:MPI_Type_create_hvector failed
-**mpi_type_create_hvector %d %d %L %D %p:MPI_Type_create_hvector(count=%d, blocklength=%d, stride=%L, %D, newtype=%p) failed
+**mpi_type_create_hvector %d %d %d %D %p:MPI_Type_create_hvector(count=%d, blocklength=%d, stride=%d, %D, newtype=%p) failed
 **mpi_type_create_indexed_block:MPI_Type_create_indexed_block failed
 **mpi_type_create_indexed_block %d %d %p %D %p:MPI_Type_create_indexed_block(count=%d, blocklength=%d, array_of_displacements=%p, %D, newtype=%p) failed
 **mpi_type_create_resized:MPI_Type_create_resized failed
@@ -1383,7 +1383,7 @@ with MPI_Alloc_mem.
 **mpi_type_get_true_extent %D %p %p:MPI_Type_get_true_extent(%D, lb=%p, true_extent=%p) failed
 **mpi_type_test:MPI_Type_test failed
 **mpi_unpack_external:MPI_Unpack_external failed
-**mpi_unpack_external %s %p %L %p %p %d %D:MPI_Unpack_external(datarep=%s, inbuf=%p, insize=%L, position=%p, outbuf=%p, outcount=%d, %D) failed
+**mpi_unpack_external %s %p %d %p %p %d %D:MPI_Unpack_external(datarep=%s, inbuf=%p, insize=%d, position=%p, outbuf=%p, outcount=%d, %D) failed
 **mpi_win_create_errhandler:MPI_Win_create_errhandler failed
 **mpi_win_create_errhandler %p %p:MPI_Win_create_errhandler(function=%p, errhandler=%p) failed
 **mpi_win_get_errhandler:MPI_Win_get_errhandler failed
