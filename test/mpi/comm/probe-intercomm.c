@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "mpitest.h"
 
 static char MTEST_Descrip[] = "Test MPI_Probe() for an intercomm";
