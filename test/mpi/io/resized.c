@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 	fprintf(stderr, "newbuf[0] is %d, should be 10,\n newbuf[1] is %d, should be 55,\n newbuf[2] is %d, should be 55,\n newbuf[3] is %d, should be 20\n", newbuf[0], newbuf[1], newbuf[2], newbuf[3]);
     }
 
-/*    MPI_File_close(&fh); */
+    MPI_File_close(&fh);
 
     MPI_Type_free(&newtype);
     free(filename);
