@@ -651,6 +651,60 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 	}
  	break;
 
+    case MPI_COMBINER_RESIZED: 
+    #ifdef FLATTEN_DEBUG 
+    DBG_FPRINTF(stderr,"ADIOI_Flatten:: MPI_COMBINER_RESIZED\n");
+    #endif
+
+    /* This is done similar to a type_struct with an lb, datatype, ub */
+
+    /* handle the Lb */
+	j = *curr_index;
+	flat->indices[j] = st_offset + adds[0];
+	flat->blocklens[j] = 0;
+
+        #ifdef FLATTEN_DEBUG 
+        DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#X] %#llX, flat->blocklens[%#X] %#llX\n",0,adds[0],j, flat->indices[j], j, flat->blocklens[j]);
+        #endif
+
+	(*curr_index)++;
+
+	/* handle the datatype */
+
+	MPI_Type_get_envelope(types[0], &old_nints, &old_nadds,
+			      &old_ntypes, &old_combiner); 
+	ADIOI_Datatype_iscontig(types[0], &old_is_contig);
+
+	if ((old_combiner != MPI_COMBINER_NAMED) && (!old_is_contig)) {
+	    ADIOI_Flatten(types[0], flat, st_offset+adds[0], curr_index);
+	}
+	else {
+            /* current type is basic or contiguous */
+	    j = *curr_index;
+	    flat->indices[j] = st_offset;
+	    MPI_Type_size(types[0], (int*)&old_size);
+	    flat->blocklens[j] = old_size;
+
+            #ifdef FLATTEN_DEBUG 
+	    DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#X] %#llX, flat->blocklens[%#X] %#llX\n",0,adds[0],j, flat->indices[j], j, flat->blocklens[j]);
+            #endif
+
+	    (*curr_index)++;
+	}
+
+	/* take care of the extent as a UB */
+	j = *curr_index;
+	flat->indices[j] = st_offset + adds[0] + adds[1];
+	flat->blocklens[j] = 0;
+
+        #ifdef FLATTEN_DEBUG 
+        DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#X] %#llX, flat->blocklens[%#X] %#llX\n",1,adds[1],j, flat->indices[j], j, flat->blocklens[j]);
+        #endif
+
+	(*curr_index)++;
+
+ 	break;
+
     default:
 	/* TODO: FIXME (requires changing prototypes to return errors...) */
 	DBG_FPRINTF(stderr, "Error: Unsupported datatype passed to ADIOI_Flatten\n");
@@ -919,6 +973,29 @@ int ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, int *curr_index)
 	    }
 	}
 	break;
+
+    case MPI_COMBINER_RESIZED: 
+	/* treat it as a struct with lb, type, ub */
+
+	/* add 2 for lb and ub */
+	(*curr_index) += 2;
+	count += 2;
+
+	/* add for datatype */ 
+	MPI_Type_get_envelope(types[0], &old_nints, &old_nadds,
+                                  &old_ntypes, &old_combiner); 
+	ADIOI_Datatype_iscontig(types[0], &old_is_contig);
+
+	if ((old_combiner != MPI_COMBINER_NAMED) && (!old_is_contig)) {
+	    count += ADIOI_Count_contiguous_blocks(types[0], curr_index);
+	}
+	else {
+        /* basic or contiguous type */
+	    count++;
+	    (*curr_index)++;
+	}
+	break;
+
     default:
 	/* TODO: FIXME */
 	DBG_FPRINTF(stderr, "Error: Unsupported datatype passed to ADIOI_Count_contiguous_blocks, combiner = %d\n", combiner);
