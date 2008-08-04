@@ -79,7 +79,7 @@ static int file_to_info(int fd, MPI_Info info)
     /* assumption: config files will be small (less than 1MB) */
     fstat(fd, &statbuf);
     /* add 1 to size to make room for NULL termination */
-    buffer = (char *)MPIU_Calloc(statbuf.st_size + 1, sizeof (char));
+    buffer = (char *)ADIOI_Calloc(statbuf.st_size + 1, sizeof (char));
     if (buffer == NULL) return -1;
 
     ret = read(fd, buffer, statbuf.st_size);
@@ -108,7 +108,7 @@ static int file_to_info(int fd, MPI_Info info)
 	if (flag == 1) continue;
 	MPI_Info_set(info, key, val);
     } while ((token = strtok_r(NULL, "\n", &pos1)) != NULL);
-    MPIU_Free(buffer);
+    ADIOI_Free(buffer);
     return 0;
 }
 
