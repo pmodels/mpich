@@ -692,8 +692,9 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
     /* Set the sizes and ranks */
     newcomm_ptr->rank        = comm_ptr->rank;
     if (comm_ptr->comm_kind == MPID_INTERCOMM) {
-	newcomm_ptr->local_size  = comm_ptr->local_size;
-	newcomm_ptr->remote_size = comm_ptr->remote_size;
+	newcomm_ptr->local_size   = comm_ptr->local_size;
+	newcomm_ptr->remote_size  = comm_ptr->remote_size;
+	newcomm_ptr->is_low_group = comm_ptr->is_low_group;
     }
     else {
 	newcomm_ptr->local_size  = size;
