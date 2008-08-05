@@ -50,6 +50,8 @@ int main(int argc, char **argv)
 	strcpy(filename, *argv);
     }
 
+    MPI_File_delete(filename, MPI_INFO_NULL);
+
     /* create a resized type comprising an integer with an lb at 0 and extent = 3*sizeof(int) */
     lb = sizeof(int);
     extent = 3*sizeof(int);
@@ -88,7 +90,7 @@ int main(int argc, char **argv)
     MPI_File_get_size(fh, &size);
     if (size != 4*sizeof(int)) {
 	errs++;
-	fprintf(stderr, "file size is %d, should be %d\n", size, 4*sizeof(int));
+	fprintf(stderr, "file size is %lld, should be %d\n", size, 4*sizeof(int));
     }
 
     for (i=0; i<4; i++) newbuf[i] = 100;
