@@ -22,7 +22,7 @@ static inline int right(int i) {
 
 int create_heap(heap_t *heap, int size) {
     heap->size = size;
-    heap->nodes = (heap_node_t *) calloc (size, sizeof(heap_node_t));
+    heap->nodes = (heap_node_t *) ADIOI_Calloc (size, sizeof(heap_node_t));
     if (heap->nodes == NULL)
 	return 1;
     else
@@ -30,7 +30,7 @@ int create_heap(heap_t *heap, int size) {
 }
 
 void free_heap(heap_t *heap) {
-    free (heap->nodes);
+    ADIOI_Free(heap->nodes);
 }
 
 void build_heap(heap_t *heap) {

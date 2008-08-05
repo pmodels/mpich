@@ -236,21 +236,21 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
     /* Allocate space for the arrays necessary for 
      * MPI_Type_get_contents */
 
-    if ((arr_int = malloc(sizeof(int)*num_int)) == NULL)
+    if ((arr_int = ADIOI_Malloc(sizeof(int)*num_int)) == NULL)
     {
 	fprintf(stderr, "Failed to allocate array_int\n");
 	return -1;
     }
-    if ((arr_addr = malloc(sizeof(int)*num_addr)) == NULL)
+    if ((arr_addr = ADIOI_Malloc(sizeof(int)*num_addr)) == NULL)
     {
-	free(arr_int);
+	ADIOI_Free(arr_int);
 	fprintf(stderr, "Failed to allocate array_addr\n");
 	return -1;
     }
-    if ((arr_dtype = malloc(sizeof(MPI_Datatype)*num_dtype)) == NULL)
+    if ((arr_dtype = ADIOI_Malloc(sizeof(MPI_Datatype)*num_dtype)) == NULL)
     {
-	free(arr_int);
-	free(arr_addr);
+	ADIOI_Free(arr_int);
+	ADIOI_Free(arr_addr);
 	fprintf(stderr, "Failed to allocate array_dtypes\n");
 	return -1;
     }
@@ -268,7 +268,7 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
 
     if (combiner != MPI_COMBINER_STRUCT)
     {
-	if ((old_pvfs_dtype = malloc(sizeof(PVFS_Request))) == NULL)
+	if ((old_pvfs_dtype = ADIOI_Malloc(sizeof(PVFS_Request))) == NULL)
 	    fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 		    "Failed to allocate PVFS_Request\n");
 	switch (combiner)
@@ -296,8 +296,8 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
 		 * a PVFS_size buffer */
 	    case MPI_COMBINER_INDEXED:
 		leaf = convert_mpi_pvfs2_dtype(&arr_dtype[0], old_pvfs_dtype);
-		if ((pvfs_arr_disp = malloc(arr_int[0]*sizeof(PVFS_size))) 
-		    == 0)
+		if ((pvfs_arr_disp = 
+			    ADIOI_Malloc(arr_int[0]*sizeof(PVFS_size))) == 0)
 		{
 		    fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			    "Failed to allocate pvfs_arr_disp\n");
@@ -310,12 +310,12 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
 		ret = PVFS_Request_indexed(arr_int[0], &arr_int[1], 
 				     pvfs_arr_disp,
 				     *old_pvfs_dtype, pvfs_dtype);
-		free(pvfs_arr_disp);
+		ADIOI_Free(pvfs_arr_disp);
 		break;
 	    case MPI_COMBINER_HINDEXED:
 		leaf = convert_mpi_pvfs2_dtype(&arr_dtype[0], old_pvfs_dtype);
-		if ((pvfs_arr_disp = malloc(arr_int[0]*sizeof(PVFS_size))) 
-		    == 0)
+		if ((pvfs_arr_disp = 
+			    ADIOI_Malloc(arr_int[0]*sizeof(PVFS_size))) == 0)
 		{
 		    fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			    "Failed to allocate pvfs_arr_disp\n");
@@ -328,7 +328,7 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
 		ret = PVFS_Request_hindexed(arr_int[0], &arr_int[1], 
 				      (int64_t *)&arr_addr[0],
 				      *old_pvfs_dtype, pvfs_dtype);
-		free(pvfs_arr_disp);		
+		ADIOI_Free(pvfs_arr_disp);		
 		break;
 	    case MPI_COMBINER_DUP:
                 leaf = convert_mpi_pvfs2_dtype(&arr_dtype[0], old_pvfs_dtype);
@@ -338,47 +338,47 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
                 break;
 	    case MPI_COMBINER_INDEXED_BLOCK:
 		/* No native PVFS2 support for this operation currently */
-		free(old_pvfs_dtype);
+		ADIOI_Free(old_pvfs_dtype);
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			"INDEXED_BLOCK is unsupported\n"); 
 		break;
 	    case MPI_COMBINER_HINDEXED_INTEGER:
-		free(old_pvfs_dtype);
+		ADIOI_Free(old_pvfs_dtype);
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			"HINDEXED_INTEGER is unsupported\n"); 
 		break;
 	    case MPI_COMBINER_STRUCT_INTEGER:
-		free(old_pvfs_dtype);
+		ADIOI_Free(old_pvfs_dtype);
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			"STRUCT_INTEGER is unsupported\n"); 
 		break;
 	    case MPI_COMBINER_SUBARRAY:
-		free(old_pvfs_dtype);
+		ADIOI_Free(old_pvfs_dtype);
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			"SUBARRAY is unsupported\n"); 
 		break;
 	    case MPI_COMBINER_DARRAY:
-		free(old_pvfs_dtype);
+		ADIOI_Free(old_pvfs_dtype);
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			"DARRAY is unsupported\n"); 
 		break;
 	    case MPI_COMBINER_F90_REAL:
-		free(old_pvfs_dtype);
+		ADIOI_Free(old_pvfs_dtype);
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			"F90_REAL is unsupported\n"); 
 		break;
 	    case MPI_COMBINER_F90_COMPLEX:
-		free(old_pvfs_dtype);
+		ADIOI_Free(old_pvfs_dtype);
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			"F90_COMPLEX is unsupported\n"); 
 		break;
 	    case MPI_COMBINER_F90_INTEGER:
-		free(old_pvfs_dtype);
+		ADIOI_Free(old_pvfs_dtype);
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			"F90_INTEGER is unsupported\n"); 
 		break;
 	    case MPI_COMBINER_RESIZED:
-		free(old_pvfs_dtype);
+		ADIOI_Free(old_pvfs_dtype);
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			"RESIZED is unsupported\n"); 
 		break;
@@ -403,12 +403,12 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
 	if (leaf != 1 && combiner != MPI_COMBINER_DUP)
 	    MPI_Type_free(&arr_dtype[0]);
 
-	free(arr_int);
-	free(arr_addr);
-	free(arr_dtype);
+	ADIOI_Free(arr_int);
+	ADIOI_Free(arr_addr);
+	ADIOI_Free(arr_dtype);
 
 	PVFS_Request_free(old_pvfs_dtype);
-	free(old_pvfs_dtype);
+	ADIOI_Free(old_pvfs_dtype);
 	
 	return ret;
     }
@@ -441,7 +441,7 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
 	    MPI_Type_get_extent(*mpi_dtype, &mpi_lb, &mpi_extent);
 	    pvfs_lb = mpi_lb;
 	    pvfs_extent = mpi_extent;
-	    if ((pvfs_arr_len = malloc(arr_count*sizeof(int))) 
+	    if ((pvfs_arr_len = ADIOI_Malloc(arr_count*sizeof(int))) 
 		== NULL)
 	    {
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
@@ -451,11 +451,11 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
 	}
 
 	if ((old_pvfs_dtype_arr
-	     = malloc(arr_count*sizeof(PVFS_Request))) == NULL)
+	     = ADIOI_Malloc(arr_count*sizeof(PVFS_Request))) == NULL)
 	    fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 		    "Failed to allocate PVFS_Requests\n");
 
-	if ((pvfs_arr_disp = malloc(arr_count*sizeof(PVFS_size))) 
+	if ((pvfs_arr_disp = ADIOI_Malloc(arr_count*sizeof(PVFS_size))) 
 	    == NULL)
 	{
 	    fprintf(stderr, "convert_mpi_pvfs2_dtype: "
@@ -488,7 +488,7 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
 	if (has_lb_ub)
 	{
 	    PVFS_Request *tmp_pvfs_dtype = NULL;
-	    if ((tmp_pvfs_dtype = malloc(sizeof(PVFS_Request))) == NULL)
+	    if ((tmp_pvfs_dtype = ADIOI_Malloc(sizeof(PVFS_Request))) == NULL)
 		fprintf(stderr, "convert_mpi_pvfs2_dtype: "
 			"Failed to allocate PVFS_Request\n");
 	    
@@ -526,7 +526,7 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
 		fprintf(stderr, "Error in PVFS_Request_resize\n");
 
 	    PVFS_Request_free(tmp_pvfs_dtype);
-	    free(tmp_pvfs_dtype);
+	    ADIOI_Free(tmp_pvfs_dtype);
 	}
 	else /* No MPI_LB or MPI_UB datatypes */
 	{
@@ -554,13 +554,13 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
 #endif 
 	}
 
-	free(arr_int);
-	free(arr_addr);
-	free(arr_dtype);
+	ADIOI_Free(arr_int);
+	ADIOI_Free(arr_addr);
+	ADIOI_Free(arr_dtype);
 
-	free(old_pvfs_dtype_arr);
-	free(pvfs_arr_disp);
-	free(pvfs_arr_len);
+	ADIOI_Free(old_pvfs_dtype_arr);
+	ADIOI_Free(pvfs_arr_disp);
+	ADIOI_Free(pvfs_arr_len);
 
 	return ret;
     }
