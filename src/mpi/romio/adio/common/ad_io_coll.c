@@ -51,7 +51,7 @@ void ADIOI_IOStridedColl (ADIO_File fd, void *buf, int count, int rdwr,
     int interleave_count = 0, i, nprocs, myrank, nprocs_for_coll;
     int cb_enable;
     ADIO_Offset bufsize;
-    MPI_Aint bufextent;
+    MPI_Aint extent, bufextent;
     int size;
     int agg_rank;
 
@@ -194,8 +194,8 @@ void ADIOI_IOStridedColl (ADIO_File fd, void *buf, int count, int rdwr,
 	return;
     }
 
-    MPI_Type_extent(datatype, &size);
-    bufextent = size * count;
+    MPI_Type_extent(datatype, &extent);
+    bufextent = extent * count;
     MPI_Type_size(datatype, &size);
     bufsize = size * count;
 
@@ -885,7 +885,8 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, int count,
     int user_ind_rd_buffer_size;
     int f_is_contig, m_is_contig;
     int user_ds_read, user_ds_write;
-    int f_extent, f_size;
+    MPI_Aint f_extent;
+    int f_size;
     int f_ds_percent; /* size/extent */
 
 #ifdef AGGREGATION_PROFILE
