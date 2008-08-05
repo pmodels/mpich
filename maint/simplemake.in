@@ -39,6 +39,9 @@ $gSubdirSMVarsSeen = "";      # Set to contain the names of variables in
                               # a subdirectory
 @subdirsSMVars = ();          # Stack used with gSubdirSMVarsSeen
 
+$smrootdir = "";              # Location of simplemake - this will override 
+                              # the automatic setting if used.
+
 # makeBlockSep is used to deliniate blocks of code in the generated makefile
 # to enhance readability
 $makeBlockSep = 
@@ -468,9 +471,10 @@ $distcleanfiles = "";
 # If we're not in the root of the source directory, then 
 # also read that directory.  We can use stat to check the inode numbers of the
 # directories; if they are the same, the directories are the same.
+# (Only read if there is a local maint/smlib directory)
 @d1 = stat( "maint/smlib" );
 @d2 = stat( "$abs_mpich2srcdir/maint/smlib" );
-if ($d1[1] != $d2[1]) {
+if ( (! -d "maint/smlib") || $d1[1] != $d2[1]) {
     &SMReadDefnFiles( "$abs_mpich2srcdir/maint/smlib" );
 }
 if (defined($ENV{"SMDIR"})) {
@@ -488,6 +492,13 @@ foreach $_ (@ARGV) {
     elsif (/-libdir=([^=]*)=(.*)$/) {
 	print "libdir{$1} = $2$newline" if (!$quiet);
 	$libdir{$1}  = "$2/";
+	# Replace with an easier-to-preserve version
+	# FIXME: Replace a single $ with double $$ in $1?
+	my $lname = $1;
+	my $rname = $2;
+	# Replace a single $ with a double $ in lname *only*
+	$lname =~ s/\$/\$\$/;
+	$keepargs[$#keepargs] = "-libdir=\'$lname=$rname\'";
     }
     elsif (/-common=(.*)$/) {
 	$filename = $1;
@@ -499,7 +510,7 @@ foreach $_ (@ARGV) {
 	close(CD);
 	# Replace this argument with an updated version
 	if ($filename =~ /^[^\/]/) {
-  	    $keepargs[$#keepargs] = "-common=$curpwd/$filename";
+  	    $keepargs[$#keepargs] = "-common=\${master_top_srcdir}/$filename";
 	}
     }
     elsif (/-autoconf=(.*)$/) {
@@ -600,6 +611,7 @@ foreach $_ (@ARGV) {
     elsif (/-docheading=(.$)/) { $doc_heading = $1; }
     elsif (/-docdestdir=(.*)/) { $globaldocdir = $1; }	   
     elsif (/-docnamedefs=(.*)/) { $doc_namedefs = $1; }	   
+    elsif (/-smroot=(.*)/) { $smrootdir = $1; $smdir = $1; }
     elsif (/-help/) {
 	&printHelp;
 	exit 0;
@@ -1650,7 +1662,8 @@ sub DefaultRules {
 	    if ($curarg =~ /^-smvar_doc_attop=0/) { next; }
 	    # Must handle $ specially
 	    $tmparg = $curarg;
-	    $tmparg =~ s/\$/\\\$\$/;
+#	    # FIXME: Should this be s/../g (change all instances)?
+#	    $tmparg =~ s/\$/\\\$\$/;
 	    if ($tmparg =~ /\s/) {
 		print FD "\t\"$tmparg\" \\$newline";
 	    }
@@ -1930,6 +1943,10 @@ sub ExpandMakeVars {
 	    $processed .= $before;
 	    $line = $makevars{$mvar} . $after;
 	}
+#	elsif (defined($dirdefs{$mvar})) {
+#	    $processed .= $before;
+#	    $line = $dirdefs{$mvar} . $after;
+#	}
 	else {
 	    $processed .= $before . "\$$lb$mvar$rb";
 	    $line      = $after;
@@ -4090,6 +4107,7 @@ simplemake [ -nocomments ] [ -am ] [ -libdir=NAME=DIR ] [ -include=LIST ]\
                        with file systems that are not time-synchronized\
                        with the build node.  -interdirsleep=nn specifies\
                        an nn second sleep.\
+    -smroot=dir      - Location of simplemake (absolute location)\
     -help            - This output\
     \n";
     print STDERR "\

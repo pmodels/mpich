@@ -466,7 +466,8 @@ if [ $do_makefiles = yes ] ; then
     if maint/simplemake -common=maint/makedefs \
         -docnamedefs='${master_top_srcdir}/maint/docnotes' \
         -autoconf="$acIncDirFlag ROOTDIR/confdb" \
-        -libdir='${MPILIBNAME}'=ROOTDIR/lib $otherargs \
+        -libdir='${MPILIBNAME}'=ROOTDIR/lib \
+	-smroot='${master_top_srcdir}/maint' $otherargs \
         Makefile.sm ; then
         :
     else
