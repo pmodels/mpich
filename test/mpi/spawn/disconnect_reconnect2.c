@@ -79,15 +79,13 @@ int main(int argc, char *argv[])
 	MPI_Info_set( spawn_path, "path", "." );
 
 	IF_VERBOSE(("spawn connector.\n"));
-	/*error = MPI_Comm_spawn("disconnect_reconnect2", argv1, numprocs, spawn_path, 0, */
-	error = MPI_Comm_spawn("./dr2.sh", argv1, numprocs, spawn_path, 0, 
+	error = MPI_Comm_spawn("disconnect_reconnect2", argv1, numprocs, spawn_path, 0, 
 			       MPI_COMM_WORLD, &comm_connector, 
 			       MPI_ERRCODES_IGNORE);
 	check_error(error, "MPI_Comm_spawn");
 
 	IF_VERBOSE(("spawn acceptor.\n"));
-	/*error = MPI_Comm_spawn("disconnect_reconnect2", argv2, numprocs, spawn_path, 0, */
-	error = MPI_Comm_spawn("./dr2.sh", argv2, numprocs, spawn_path, 0,
+	error = MPI_Comm_spawn("disconnect_reconnect2", argv2, numprocs, spawn_path, 0, 
 			       MPI_COMM_WORLD, &comm_acceptor, 
 			       MPI_ERRCODES_IGNORE);
 	check_error(error, "MPI_Comm_spawn");
