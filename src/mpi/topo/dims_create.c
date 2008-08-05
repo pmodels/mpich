@@ -455,9 +455,7 @@ int MPI_Dims_create(int nnodes, int ndims, int *dims)
     }
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIMS_CREATE);
     return mpi_errno;
 
