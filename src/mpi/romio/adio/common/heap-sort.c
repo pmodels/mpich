@@ -1,3 +1,10 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/* 
+ *
+ *   Copyright (C) 2008 University of Chicago. 
+ *   See COPYRIGHT notice in top-level directory.
+ */
+
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
