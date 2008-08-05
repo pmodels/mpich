@@ -7,6 +7,10 @@
 #include "adio.h"
 #include "adio_extern.h"
 
+#ifdef AGGREGATION_PROFILE
+#include "mpe.h"
+#endif
+
 #undef AGG_DEBUG
 
 /* This file contains four functions:
@@ -142,6 +146,10 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
     ADIO_Offset min_st_offset, max_end_offset, *fd_start, *fd_end, fd_size;
     int i;
 
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5004, 0, NULL);
+#endif
+
 #ifdef AGG_DEBUG
     FPRINTF(stderr, "ADIOI_Calc_file_domains: %d aggregator(s)\n", 
 	    nprocs_for_coll);
@@ -239,6 +247,10 @@ void ADIOI_Calc_file_domains(ADIO_Offset *st_offsets, ADIO_Offset
 
     *fd_size_ptr = fd_size;
     *min_st_offset_ptr = min_st_offset;
+
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5005, 0, NULL);
+#endif
 }
 
 
@@ -262,6 +274,10 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *len_
     int i, l, proc;
     ADIO_Offset fd_len, rem_len, curr_idx, off;
     ADIOI_Access *my_req;
+
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5024, 0, NULL);
+#endif
 
     *count_my_req_per_proc_ptr = (int *) ADIOI_Calloc(nprocs,sizeof(int)); 
     count_my_req_per_proc = *count_my_req_per_proc_ptr;
@@ -407,6 +423,9 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *len_
 
     *count_my_req_procs_ptr = count_my_req_procs;
     *buf_idx_ptr = buf_idx;
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5025, 0, NULL);
+#endif
 }
 
 
@@ -433,7 +452,9 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     ADIOI_Access *others_req;
 
 /* first find out how much to send/recv and from/to whom */
-
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5026, 0, NULL);
+#endif
     count_others_req_per_proc = (int *) ADIOI_Malloc(nprocs*sizeof(int));
 
     MPI_Alltoall(count_my_req_per_proc, 1, MPI_INT,
@@ -497,4 +518,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     ADIOI_Free(count_others_req_per_proc);
 
     *count_others_req_procs_ptr = count_others_req_procs;
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5027, 0, NULL);
+#endif
 }

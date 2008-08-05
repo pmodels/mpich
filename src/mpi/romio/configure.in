@@ -2143,7 +2143,8 @@ AC_OUTPUT_COMMANDS([chmod 755 util/romioinstall test/runtests])
 AC_OUTPUT(Makefile localdefs mpi-io/Makefile mpi2-other/info/Makefile \
 		   mpi2-other/array/Makefile adio/common/Makefile \
 		   test/Makefile test/misc.c test/large_file.c \
-		   test/runtests util/romioinstall include/mpio.h \
+		   test/runtests test-internal/Makefile util/romioinstall \
+                   include/mpio.h \
 		   include/mpiof.h \
 		   adio/ad_nfs/Makefile adio/ad_ufs/Makefile \
 		   adio/ad_bgl/Makefile \

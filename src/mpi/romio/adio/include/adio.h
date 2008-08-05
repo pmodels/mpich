@@ -213,6 +213,7 @@ typedef struct ADIOI_FileD {
     MPI_Comm comm;           /* communicator indicating who called open */
     MPI_Comm agg_comm;      /* deferred open: aggregators who called open */
     int is_open;	    /* deferred open: 0: not open yet 1: is open */
+    int is_agg;              /* bool: if I am an aggregator */
     char *filename;          
     int file_system;         /* type of file system */
     int access_mode;         /* Access mode (sequential, append, etc.) */
@@ -238,6 +239,11 @@ typedef struct ADIOI_FileD {
     int fortran_handle;     /* handle for Fortran interface if needed */
     MPI_Errhandler err_handler;
     void *fs_ptr;            /* file-system specific information */
+
+    /* Two phase collective I/O support */
+    ADIO_Offset *file_realm_st_offs; /* file realm starting offsets */
+    MPI_Datatype *file_realm_types;  /* file realm datatypes */
+    int my_cb_nodes_index; /* my index into cb_config_list. -1 if N/A */
 } ADIOI_FileD;
 
 typedef struct ADIOI_FileD *ADIO_File;

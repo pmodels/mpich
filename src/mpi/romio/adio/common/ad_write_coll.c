@@ -8,6 +8,10 @@
 #include "adio.h"
 #include "adio_extern.h"
 
+#ifdef AGGREGATION_PROFILE
+#include "mpe.h"
+#endif
+
 /* prototypes of functions used for collective writes only. */
 static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                          datatype, int nprocs, int myrank,
@@ -52,6 +56,11 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, void *buf, int count,
                        ADIO_Offset offset, ADIO_Status *status, int
                        *error_code)
 {
+    if (fd->hints->cb_pfr != ADIOI_HINT_DISABLE) { 
+	ADIOI_IOStridedColl (fd, buf, count, ADIOI_WRITE, datatype, 
+			file_ptr_type, offset, status, error_code);
+	return;
+    }
 /* Uses a generalized version of the extended two-phase method described
    in "An Extended Two-Phase Method for Accessing Sections of 
    Out-of-Core Arrays", Rajeev Thakur and Alok Choudhary,
@@ -228,6 +237,9 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, void *buf, int count,
 #ifdef ADIOI_MPE_LOGGING
     MPE_Log_event( ADIOI_MPE_postwrite_b, 0, NULL );
 #endif
+#ifdef AGGREGATION_PROFILE
+	MPE_Log_event (5012, 0, NULL);
+#endif
 
     if ( (old_error != MPI_SUCCESS) && (old_error != MPI_ERR_IO) )
 	    *error_code = old_error;
@@ -267,6 +279,9 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, void *buf, int count,
 #endif
 
     fd->fp_sys_posn = -1;   /* set it to null. */
+#ifdef AGGREGATION_PROFILE
+	MPE_Log_event (5013, 0, NULL);
+#endif
 }
 
 
@@ -694,6 +709,9 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 /* post sends. if buftype_is_contig, data can be directly sent from
    user buf at location given by buf_idx. else use send_buf. */
 
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5032, 0, NULL);
+#endif
     if (buftype_is_contig) {
 	j = 0;
 	for (i=0; i < nprocs; i++) 
@@ -768,6 +786,9 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         MPI_Waitall(nprocs_send+nprocs_recv, requests, statuses);
 #endif
 
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5033, 0, NULL);
+#endif
     ADIOI_Free(statuses);
     ADIOI_Free(requests);
     if (!buftype_is_contig && nprocs_send) {

@@ -1,0 +1,47 @@
+CC = @TEST_CC@
+F77 = @TEST_F77@
+INCLUDE_DIR = @ROMIO_INCLUDE@
+# because := is not universally avalible, we have to play games to use the
+# user-specificed LDFLAGS and OUR_LIBS env. variables (if set)
+OUR_LIBS = @TEST_LIBNAME@ @MPI_LIB@ @ROMIO_LIBLIST@ ${LDFLAGS} ${LIBS}
+USER_CFLAGS = @CPPFLAGS@ @USER_CFLAGS@ $(INCLUDE_DIR)
+USER_FFLAGS = @CPPFLAGS@ @USER_FFLAGS@ $(INCLUDE_DIR)
+CTESTS = file_realms_test io_bounds_test heap_test
+FTESTS =  
+srcdir=@srcdir@
+
+@VPATH@
+
+
+all: c-test
+
+c-test: $(CTESTS)
+
+default: all
+
+.c.o:
+	$(CC) $(USER_CFLAGS) -c $<
+
+.f.o:
+	$(F77) $(USER_FFLAGS) -c $<
+
+.o:
+	$(CC) $(USER_CFLAGS) -o  $@ $< $(OUR_LIBS)
+
+clean: 
+	rm -f .P* PI* *.o 
+	rm -f $(CTESTS) $(FTESTS)
+	@-rm -f work.pc work.pcl
+
+file_realms_test: file_realms_test.o
+
+io_bounds_test: io_bounds_test.o
+
+heap_test: heap_test.o
+#
+# The Fortran tests must be built with the Fortran linker
+#testing: 
+#	-./runtests $(TESTARGS)
+
+cleanall:
+	-@rm -f .P* PI*

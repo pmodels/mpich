@@ -10,6 +10,9 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef AGGREGATION_PROFILE
+#include "mpe.h"
+#endif
 
 void ADIOI_GEN_WriteContig(ADIO_File fd, void *buf, int count, 
 			   MPI_Datatype datatype, int file_ptr_type,
@@ -19,6 +22,10 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, void *buf, int count,
     int err = -1, datatype_size;
     ADIO_Offset len;
     static char myname[] = "ADIOI_GEN_WRITECONTIG";
+
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5036, 0, NULL);
+#endif
 
     MPI_Type_size(datatype, &datatype_size);
     len = (ADIO_Offset)datatype_size * (ADIO_Offset)count;
@@ -79,4 +86,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, void *buf, int count,
 #endif
 
     *error_code = MPI_SUCCESS;
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5037, 0, NULL);
+#endif
 }

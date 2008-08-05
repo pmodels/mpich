@@ -11,6 +11,9 @@
 #ifdef USE_DBG_LOGGING
   #define RDCOLL_DEBUG 1
 #endif
+#ifdef AGGREGATION_PROFILE
+#include "mpe.h"
+#endif
 
 /* prototypes of functions used for collective reads only. */
 static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
@@ -54,6 +57,12 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			       ADIO_Offset offset, ADIO_Status *status, int
 			       *error_code)
 {
+    if (fd->hints->cb_pfr != ADIOI_HINT_DISABLE) {
+        ADIOI_IOStridedColl (fd, buf, count, ADIOI_READ, datatype, 
+			file_ptr_type, offset, status, error_code);
+        return;
+    }
+
 /* Uses a generalized version of the extended two-phase method described
    in "An Extended Two-Phase Method for Accessing Sections of 
    Out-of-Core Arrays", Rajeev Thakur and Alok Choudhary,
@@ -90,11 +99,11 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
 
     /* only check for interleaving if cb_read isn't disabled */
     if (fd->hints->cb_read != ADIOI_HINT_DISABLE) {
-	/* For this process's request, calculate the list of offsets and
-	   lengths in the file and determine the start and end offsets. */
+    /* For this process's request, calculate the list of offsets and
+       lengths in the file and determine the start and end offsets. */
 
-	/* Note: end_offset points to the last byte-offset that will be accessed.
-	   e.g., if start_offset=0 and 100 bytes to be read, end_offset=99*/
+    /* Note: end_offset points to the last byte-offset that will be accessed.
+       e.g., if start_offset=0 and 100 bytes to be read, end_offset=99*/
 
 	ADIOI_Calc_my_off_len(fd, count, datatype, file_ptr_type, offset,
 			      &offset_list, &len_list, &start_offset,
@@ -102,14 +111,14 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
     
 #ifdef RDCOLL_DEBUG
     for (i=0; i<contig_access_count; i++) {
-	      DBG_FPRINTF(stderr, "rank %d  off %lld  len %lld\n", myrank, offset_list[i], 
-	      len_list[i]);
+	      DBG_FPRINTF(stderr, "rank %d  off %lld  len %lld\n", 
+			      myrank, offset_list[i], len_list[i]);
 	      }
 #endif
 
 	/* each process communicates its start and end offsets to other 
-	   processes. The result is an array each of start and end offsets stored
-	   in order of process rank. */ 
+	   processes. The result is an array each of start and end offsets
+	   stored in order of process rank. */ 
     
 	st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
 	end_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
@@ -286,6 +295,10 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
     MPI_Aint filetype_extent, filetype_lb;
     ADIOI_Flatlist_node *flat_file;
     ADIO_Offset *offset_list, off, end_offset=0, disp;
+
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5028, 0, NULL);
+#endif
     
 /* For this process's request, calculate the list of offsets and
    lengths in the file and determine the start and end offsets. */
@@ -472,6 +485,9 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 	*contig_access_count_ptr = contig_access_count;
 	 *end_offset_ptr = end_offset;
     }
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5029, 0, NULL);
+#endif
 }
 
 static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
@@ -787,6 +803,10 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 /* post recvs. if buftype_is_contig, data can be directly recd. into
    user buf at location given by buf_idx. else use recv_buf. */
 
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5032, 0, NULL);
+#endif
+
     if (buftype_is_contig) {
 	j = 0;
 	for (i=0; i < nprocs; i++) 
@@ -876,6 +896,9 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 	    if (recv_size[i]) ADIOI_Free(recv_buf[i]);
 	ADIOI_Free(recv_buf);
     }
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5033, 0, NULL);
+#endif
 }
 
 #define ADIOI_BUF_INCR \

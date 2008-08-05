@@ -64,6 +64,28 @@ void ADIO_Close(ADIO_File fd, int *error_code)
     if (fd->hints && fd->hints->ranklist) ADIOI_Free(fd->hints->ranklist);
     if (fd->hints && fd->hints->cb_config_list) ADIOI_Free(fd->hints->cb_config_list);
     if (fd->hints) ADIOI_Free(fd->hints);
+
+    /* Persistent File Realms */
+    if (fd->hints->cb_pfr == ADIOI_HINT_ENABLE) {
+	/* AAR, FSIZE, and User provided uniform File realms */
+	if (1) {
+	    ADIOI_Delete_flattened (fd->file_realm_types[0]);
+	    MPI_Type_free (&fd->file_realm_types[0]);
+	}
+	else {
+	    for (i=0; i<fd->hints->cb_nodes; i++) {
+		ADIOI_Datatype_iscontig(fd->file_realm_types[i], &is_contig);
+		if (!is_contig)
+		    ADIOI_Delete_flattened(fd->file_realm_types[i]);
+		MPI_Type_free (&fd->file_realm_types[i]);
+	    }
+	}
+	ADIOI_Free(fd->file_realm_st_offs);
+	ADIOI_Free(fd->file_realm_types);
+    }
+
+
+
     MPI_Comm_free(&(fd->comm));
     /* deferred open: if we created an aggregator communicator, free it */
     if (fd->agg_comm != MPI_COMM_NULL) {

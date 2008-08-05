@@ -62,7 +62,29 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	/* hint indicating that no indep. I/O will be performed on this file */
 	MPI_Info_set(info, "romio_no_indep_rw", "false");
 	fd->hints->no_indep_rw = 0;
-	 /* deferred_open derrived from no_indep_rw and cb_{read,write} */
+
+	/* hint instructing the use of persistent file realms */
+	MPI_Info_set(info, "romio_cb_pfr", "disable");
+	fd->hints->cb_pfr = ADIOI_HINT_DISABLE;
+	
+	/* hint guiding the assignment of persistent file realms */
+	MPI_Info_set(info, "romio_cb_fr_types", "aar");
+	fd->hints->cb_fr_type = ADIOI_FR_AAR;
+
+	/* hint to align file realms with a certain byte value */
+	MPI_Info_set(info, "romio_cb_fr_alignment", "1");
+	fd->hints->cb_fr_alignment = 1;
+
+	/* hint to set a threshold percentage for a datatype's size/extent at
+	 * which data sieving should be done in collective I/O */
+	MPI_Info_set(info, "romio_cb_ds_threshold", "0");
+	fd->hints->cb_ds_threshold = 0;
+
+	/* hint to switch between point-to-point or all-to-all for two-phase */
+	MPI_Info_set(info, "romio_cb_alltoall", "automatic");
+	fd->hints->cb_alltoall = ADIOI_HINT_AUTO;
+
+	 /* deferred_open derived from no_indep_rw and cb_{read,write} */
 	fd->hints->deferred_open = 0;
 
 	/* buffer size for data sieving in independent reads */
@@ -116,11 +138,85 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	    fd->hints->cb_buffer_size = intval;
 
 	}
+	/* aligning file realms to certain sizes (e.g. stripe sizes)
+	 * may benefit I/O performance */
+	MPI_Info_get(users_info, "romio_cb_fr_alignment", MPI_MAX_INFO_VAL, 
+		     value, &flag);
+	if (flag && ((intval=atoi(value)) > 0)) {
+	    tmp_val = intval;
+
+	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
+	    /* --BEGIN ERROR HANDLING-- */
+	    if (tmp_val != intval) {
+		MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
+						   "romio_cb_fr_alignment",
+						   error_code);
+		return;
+	    }
+	    /* --END ERROR HANDLING-- */
+
+	    MPI_Info_set(info, "romio_cb_fr_alignment", value);
+	    fd->hints->cb_fr_alignment = intval;
+
+	}
+
+	/* for collective I/O, try to be smarter about when to do data sieving
+	 * using a specific threshold for the datatype size/extent
+	 * (percentage 0-100%) */
+	MPI_Info_get(users_info, "romio_cb_ds_threshold", MPI_MAX_INFO_VAL, 
+		     value, &flag);
+	if (flag && ((intval=atoi(value)) > 0)) {
+	    tmp_val = intval;
+
+	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
+	    /* --BEGIN ERROR HANDLING-- */
+	    if (tmp_val != intval) {
+		MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
+						   "romio_cb_ds_threshold",
+						   error_code);
+		return;
+	    }
+	    /* --END ERROR HANDLING-- */
+
+	    MPI_Info_set(info, "romio_cb_ds_threshold", value);
+	    fd->hints->cb_ds_threshold = intval;
+
+	}
+	MPI_Info_get(users_info, "romio_cb_alltoall", MPI_MAX_INFO_VAL, value,
+		     &flag);
+	if (flag) {
+	    if (!strcmp(value, "enable") || !strcmp(value, "ENABLE")) {
+		MPI_Info_set(info, "romio_cb_alltoall", value);
+		fd->hints->cb_read = ADIOI_HINT_ENABLE;
+	    }
+	    else if (!strcmp(value, "disable") || !strcmp(value, "DISABLE")) {
+		MPI_Info_set(info, "romio_cb_alltoall", value);
+		fd->hints->cb_read = ADIOI_HINT_DISABLE;
+	    }
+	    else if (!strcmp(value, "automatic") || !strcmp(value, "AUTOMATIC"))
+	    {
+		MPI_Info_set(info, "romio_cb_alltoall", value);
+		fd->hints->cb_read = ADIOI_HINT_AUTO;
+	    }
+
+	    tmp_val = fd->hints->cb_alltoall;
+
+	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
+	    /* --BEGIN ERROR HANDLING-- */
+	    if (tmp_val != fd->hints->cb_alltoall) {
+		MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
+						   "romio_cb_alltoall",
+						   error_code);
+		return;
+	    }
+	    /* --END ERROR HANDLING-- */
+	}
 
 	/* new hints for enabling/disabling coll. buffering on
 	 * reads/writes
 	 */
-	MPI_Info_get(users_info, "romio_cb_read", MPI_MAX_INFO_VAL, value, &flag);
+	MPI_Info_get(users_info, "romio_cb_read", MPI_MAX_INFO_VAL, value,
+		     &flag);
 	if (flag) {
 	    if (!strcmp(value, "enable") || !strcmp(value, "ENABLE")) {
 		MPI_Info_set(info, "romio_cb_read", value);
@@ -184,6 +280,61 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 		return;
 	    }
 	    /* --END ERROR HANDLING-- */
+	}
+
+	/* enable/disable persistent file realms for collective I/O */
+	/* may want to check for no_indep_rdwr hint as well */
+	MPI_Info_get(users_info, "romio_cb_pfr", MPI_MAX_INFO_VAL, value,
+		     &flag);
+	if (flag) {
+	    if (!strcmp(value, "enable") || !strcmp(value, "ENABLE")) {
+		MPI_Info_set(info, "romio_cb_pfr", value);
+		fd->hints->cb_pfr = ADIOI_HINT_ENABLE;
+	    }
+	    else if (!strcmp(value, "disable") || !strcmp(value, "DISABLE")) {
+		MPI_Info_set(info, "romio_cb_pfr", value);
+		fd->hints->cb_pfr = ADIOI_HINT_DISABLE;
+	    }
+	    else if (!strcmp(value, "automatic") || !strcmp(value, "AUTOMATIC"))
+	    {
+		MPI_Info_set(info, "romio_cb_pfr", value);
+		fd->hints->cb_pfr = ADIOI_HINT_AUTO;
+	    }
+
+	    tmp_val = fd->hints->cb_pfr;
+
+	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
+	    /* --BEGIN ERROR HANDLING-- */
+	    if (tmp_val != fd->hints->cb_pfr) {
+		MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
+						   "romio_cb_pfr",
+						   error_code);
+		return;
+	    }
+	    /* --END ERROR HANDLING-- */
+	}
+
+	/* file realm assignment types ADIOI_FR_AAR(0),
+	 ADIOI_FR_FSZ(-1), ADIOI_FR_USR_REALMS(-2), all others specify
+	 a regular fr size in bytes. probably not the best way... */
+	MPI_Info_get(users_info, "romio_cb_fr_type", MPI_MAX_INFO_VAL, 
+		     value, &flag);
+	if (flag && ((intval=atoi(value)) >= -2)) {
+	    tmp_val = intval;
+
+	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
+	    /* --BEGIN ERROR HANDLING-- */
+	    if (tmp_val != intval) {
+		MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
+						   "romio_cb_fr_type",
+						   error_code);
+		return;
+	    }
+	    /* --END ERROR HANDLING-- */
+
+	    MPI_Info_set(info, "romio_cb_fr_type", value);
+	    fd->hints->cb_fr_type = intval;
+
 	}
 
 	/* new hint for specifying no indep. read/write will be performed */
