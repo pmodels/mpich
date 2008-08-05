@@ -30,13 +30,6 @@
   Linux with gcc, Intel, and Pathscale compilers on various Intel
   architectures. It also works in Windows environments.
 
-- The MPI-IO implementation does not support filetypes that use the
-  MPI-2 functions MPI_Type_create_indexed_block or
-  MPI_Type_create_resized. You will need to use MPI_Type_indexed
-  instead of MPI_Type_create_indexed_block and, instead of
-  MPI_Type_create_resized, use MPI_Type_struct to explicity set MPI_LB
-  and MPI_UB. 
-
 - Support for the "external32" data representation is incomplete.  This affects
   the MPI_PACK_EXTERNAL and MPI_UNPACK_EXTERNAL routines, as well the external
   data representation capabilities of ROMIO.
