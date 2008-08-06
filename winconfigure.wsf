@@ -2645,6 +2645,10 @@ Function ReplaceAts( str, use_f77, b64 )
 				str = Replace(str, "@GNUC_VERSION@", "0")
 			Case "@GNUC_MINORVERSION@"
 				str = Replace(str, "@GNUC_MINORVERSION@", "0")
+			Case "@GNUCXX_VERSION@"
+				str = Replace(str, "@GNUCXX_VERSION@", "0")
+			Case "@GNUCXX_MINORVERSION@"
+				str = Replace(str, "@GNUCXX_MINORVERSION@", "0")
 			Case "@MPIR_CXX_BOOL@"
 				str = Replace(str, "@MPIR_CXX_BOOL@", MPIR_CXX_BOOL)
 			Case "@MPIR_CXX_COMPLEX@"
