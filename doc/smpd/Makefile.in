@@ -5,9 +5,9 @@ srcdir = @srcdir@
 
 @VPATH@
 
-LATEX      = export TEXINPUTS=".:$(srcdir):" ; latex
-BIBTEX     = export BIBINPUTS=".:$(srcdir):" ; bibtex
-DVIPDFM    = export TEXINPUTS=".:$(srcdir):" ; dvipdfm
+LATEX      = export TEXINPUTS=".:$(srcdir):$(srcdir)/../pmi:" ; latex
+BIBTEX     = export BIBINPUTS=".:$(srcdir):$(srcdir)/../pmi:" ; bibtex
+DVIPDFM    = export TEXINPUTS=".:$(srcdir):$(srcdir)/../pmi:" ; dvipdfm
 LATEX2HTML = latex2html
 
 smpd_pmi.dvi: smpd_pmi.tex smpd_tree.eps
