@@ -197,8 +197,9 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
     }
     
     if (sreq != NULL) {
+	/* There is still another reference being held by the channel.  It
+	   will not be released until the pkt is actually sent. */
 	MPID_Request_release(sreq);
-	/* printf( "Panic on send close ack\n" ); fflush(stdout); */
     }
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
@@ -233,8 +234,9 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	
 	if (resp_sreq != NULL)
 	{
+	    /* There is still another reference being held by the channel.  It
+	       will not be released until the pkt is actually sent. */
 	    MPID_Request_release(resp_sreq);
-	    /*printf( "Panic on send close\n" ); fflush(stdout);*/
 	}
     }
     

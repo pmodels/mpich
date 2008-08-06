@@ -134,6 +134,7 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
         goto fn_exit;
 
     ((MPIDI_CH3I_VC *)vc->channel_private)->recv_active = NULL;
+    MPIU_DBG_VCSTATECHANGE(vc,VC_STATE_ACTIVE);
     vc->state = MPIDI_VC_STATE_ACTIVE;
 
     mpi_errno = MPID_nem_vc_init (vc);
@@ -197,6 +198,7 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
     /* init channel portion of vc */
     MPIU_ERR_CHKANDJUMP (!nemesis_initialized, mpi_errno, MPI_ERR_OTHER, "**intern");
     ((MPIDI_CH3I_VC *)vc->channel_private)->recv_active = NULL;
+    MPIU_DBG_VCSTATECHANGE(vc,VC_STATE_ACTIVE);
     vc->state = MPIDI_VC_STATE_ACTIVE;
 
     *new_vc = vc; /* we now have a valid, disconnected, temp VC */

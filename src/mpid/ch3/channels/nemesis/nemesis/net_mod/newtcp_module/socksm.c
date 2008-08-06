@@ -377,6 +377,27 @@ fn_exit:
     return found;
 }
 
+
+#undef FUNCNAME
+#define FUNCNAME vc_is_in_shutdown
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int vc_is_in_shutdown(MPIDI_VC_t *vc)
+{
+    int retval = FALSE;
+    MPIU_Assert(vc != NULL);
+    if (vc->state == MPIDI_VC_STATE_REMOTE_CLOSE ||
+        vc->state == MPIDI_VC_STATE_CLOSE_ACKED ||
+        vc->state == MPIDI_VC_STATE_LOCAL_CLOSE ||
+        vc->state == MPIDI_VC_STATE_INACTIVE)
+    {
+        retval = TRUE;
+    }
+
+    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "vc_is_in_shutdown(%p)=%s", vc, (retval ? "TRUE" : "FALSE")));
+    return retval;
+}
+
 #undef FUNCNAME
 #define FUNCNAME send_id_info
 #undef FCNAME
@@ -669,12 +690,15 @@ static int recv_cmd_pkt(int fd, MPIDI_nem_newtcp_module_pkt_type_t *pkt_type)
     int mpi_errno = MPI_SUCCESS, nread;
     MPIDI_nem_newtcp_module_header_t pkt;
     int pkt_len = sizeof(MPIDI_nem_newtcp_module_header_t);
+    MPIDI_STATE_DECL(MPID_STATE_RECV_CMD_PKT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_RECV_CMD_PKT);
 
     CHECK_EINTR (nread, read(fd, &pkt, pkt_len));
     MPIU_ERR_CHKANDJUMP1 (nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER,
                           "**read", "**read %s", strerror (errno));
-    MPIU_ERR_CHKANDJUMP1 (nread != pkt_len, mpi_errno, MPI_ERR_OTHER,
-                          "**read", "**read %s", strerror (errno)); /* FIXME-Z1 */
+    MPIU_ERR_CHKANDJUMP2 (nread != pkt_len, mpi_errno, MPI_ERR_OTHER,
+                          "**read", "**read %d %s", nread, strerror (errno)); /* FIXME-Z1 */
     MPIU_Assert(pkt.datalen == 0);
     MPIU_Assert(pkt.pkt_type == MPIDI_NEM_NEWTCP_MODULE_PKT_ID_ACK ||
                 pkt.pkt_type == MPIDI_NEM_NEWTCP_MODULE_PKT_ID_NAK ||
@@ -685,6 +709,7 @@ static int recv_cmd_pkt(int fd, MPIDI_nem_newtcp_module_pkt_type_t *pkt_type)
                 pkt.pkt_type == MPIDI_NEM_NEWTCP_MODULE_PKT_DISC_NAK);
     *pkt_type = pkt.pkt_type;
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_RECV_CMD_PKT);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
@@ -915,6 +940,9 @@ static int cleanup_sc(sockconn_t *sc)
 }
 
 /* this function is called when vc->state becomes CLOSE_ACKED */
+/* FIXME XXX DJG do we need to do anything here to ensure that the final
+   close(TRUE) packet has made it into a writev call?  The code might have a
+   race for queued messages. */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newtcp_module_cleanup
 #undef FCNAME
@@ -928,9 +956,10 @@ int MPID_nem_newtcp_module_cleanup (struct MPIDI_VC *const vc)
 
     MPIU_Assert(vc->state == MPIDI_VC_STATE_CLOSE_ACKED);
 
-    /* always cleanup the sc associated with the vc */
-    mpi_errno = cleanup_sc(VC_FIELD(vc, sc));
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (VC_FIELD(vc, sc) != NULL) {
+        mpi_errno = cleanup_sc(VC_FIELD(vc, sc));
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
 
     i = 0;
     while (VC_FIELD(vc, sc_ref_count) > 0 && i < g_tbl_size) {
@@ -1139,6 +1168,9 @@ static int state_c_ranksent_handler(pollfd_t *const plfd, sockconn_t *const sc)
             MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_c_ranksent_handler() 1: changing to "
               "quiescent.. "));
             CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
+            if (vc_is_in_shutdown(sc->vc)) {
+                mpi_errno = MPI_SUCCESS;
+            }
         }
         else {
             MPIU_Assert(pkt_type == MPIDI_NEM_NEWTCP_MODULE_PKT_ID_ACK ||
@@ -1177,6 +1209,8 @@ static int state_c_tmpvcsent_handler(pollfd_t *const plfd, sockconn_t *const sc)
         mpi_errno = recv_cmd_pkt(sc->fd, &pkt_type);
         if (mpi_errno != MPI_SUCCESS) {
             CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
+            /* no head-to-head issues to deal with, if we failed to recv the
+               packet then there really was a problem */
         }
         else {
             MPIU_Assert(pkt_type == MPIDI_NEM_NEWTCP_MODULE_PKT_TMPVC_ACK ||
@@ -1408,11 +1442,7 @@ static int MPID_nem_newtcp_module_recv_handler (struct pollfd *pfd, sockconn_t *
                 /* sc->vc->sc will be NULL if sc->vc->state == _INACTIVE */
                 MPIU_Assert(VC_FIELD(sc->vc, sc) == NULL || VC_FIELD(sc->vc, sc) == sc);
 
-                if (sc->vc->state == MPIDI_VC_STATE_REMOTE_CLOSE ||
-                    sc->vc->state == MPIDI_VC_STATE_CLOSE_ACKED ||
-                    /* FIXME XXX DJG is LOCAL_CLOSE valid here? [goodell@] */
-                    sc->vc->state == MPIDI_VC_STATE_LOCAL_CLOSE ||
-                    sc->vc->state == MPIDI_VC_STATE_INACTIVE)
+                if (vc_is_in_shutdown(sc->vc))
                 {
                     /* there's currently no hook for CH3 to tell nemesis/newtcp
                        that we are in the middle of a disconnection dance.  So
@@ -1688,7 +1718,7 @@ int MPID_nem_newtcp_module_sm_init()
     sc_state_info[CONN_STATE_TC_C_CNTING].sc_state_plfd_events = POLLOUT | POLLIN;
     sc_state_info[CONN_STATE_TC_C_CNTD].sc_state_plfd_events = POLLOUT | POLLIN;
     sc_state_info[CONN_STATE_TC_C_RANKSENT].sc_state_plfd_events = POLLIN;
-    sc_state_info[CONN_STATE_TC_C_TMPVCSENT].sc_state_plfd_events = POLLOUT | POLLIN;
+    sc_state_info[CONN_STATE_TC_C_TMPVCSENT].sc_state_plfd_events = POLLIN;
     sc_state_info[CONN_STATE_TA_C_CNTD].sc_state_plfd_events = POLLIN;
     sc_state_info[CONN_STATE_TA_C_RANKRCVD].sc_state_plfd_events = POLLOUT | POLLIN;
     sc_state_info[CONN_STATE_TA_C_TMPVCRCVD].sc_state_plfd_events = POLLOUT | POLLIN;

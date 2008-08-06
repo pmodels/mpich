@@ -98,6 +98,8 @@ int MPID_nem_newtcp_module_send_queued (MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_SEND_QUEUED);
 
+    MPIU_Assert(vc != NULL);
+
     if (SENDQ_EMPTY(VC_FIELD(vc, send_queue)))
 	goto fn_exit;
 

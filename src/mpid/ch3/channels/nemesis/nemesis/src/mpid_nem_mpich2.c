@@ -104,7 +104,7 @@ MPID_nem_mpich2_init (int ckpt_restart)
 
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_INIT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_INIT);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */

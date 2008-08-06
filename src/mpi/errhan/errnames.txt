@@ -794,6 +794,7 @@ with MPI_Alloc_mem.
 **select %s:select failed - %s
 **read:read from socket failed
 **read %s:read from socket failed - %s
+**read %d %s:read from socket failed - nread=%d %s
 **winput_oob:target pointer for win_put is out of bounds
 **winget_oob:source pointer for win_get is out of bounds
 **winserialize:serializing win object
