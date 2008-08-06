@@ -102,16 +102,19 @@
 /* FIXME: ... to do ... */
 #include "mpitypedefs.h"
 
+/* Include definitions from the device which must exist before items in this
+   file (mpiimpl.h) can be defined. mpidpre.h must be included before any
+   files that allow the device to override or extend any terms; this includes
+   mpiimplthread.h and mpiutil.h */
+/* ------------------------------------------------------------------------- */
+#include "mpidpre.h"
+/* ------------------------------------------------------------------------- */
+
 #include "mpiimplthread.h"
 /* #include "mpiu_monitors.h" */
 
 #include "mpiutil.h"
 
-/* Include definitions from the device which must exist before items in this
-   file (mpiimpl.h) can be defined. */
-/* ------------------------------------------------------------------------- */
-#include "mpidpre.h"
-/* ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
 /* mpidebug.h */
