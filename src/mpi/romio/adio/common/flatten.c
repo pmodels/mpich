@@ -97,7 +97,7 @@ void ADIOI_Flatten_datatype(MPI_Datatype datatype)
     ADIOI_Optimize_flattened(flat);
 #endif
 /* debug */
-#if FLATTEN_DEBUG
+#ifdef FLATTEN_DEBUG
     {
 	int i;
 	for (i=0; i<flat->count; i++) 

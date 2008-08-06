@@ -57,12 +57,6 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			       ADIO_Offset offset, ADIO_Status *status, int
 			       *error_code)
 {
-    if (fd->hints->cb_pfr != ADIOI_HINT_DISABLE) {
-        ADIOI_IOStridedColl (fd, buf, count, ADIOI_READ, datatype, 
-			file_ptr_type, offset, status, error_code);
-        return;
-    }
-
 /* Uses a generalized version of the extended two-phase method described
    in "An Extended Two-Phase Method for Accessing Sections of 
    Out-of-Core Arrays", Rajeev Thakur and Alok Choudhary,
@@ -89,6 +83,13 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
 #ifdef HAVE_STATUS_SET_BYTES
     int bufsize, size;
 #endif
+
+    if (fd->hints->cb_pfr != ADIOI_HINT_DISABLE) {
+        ADIOI_IOStridedColl (fd, buf, count, ADIOI_READ, datatype, 
+			file_ptr_type, offset, status, error_code);
+        return;
+    }
+
 
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);

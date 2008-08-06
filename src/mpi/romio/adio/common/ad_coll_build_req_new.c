@@ -1416,7 +1416,7 @@ int ADIOI_Build_client_req(ADIO_File fd,
 {
     MPI_Aint *agg_disp_arr = NULL;
     int *agg_blk_arr = NULL;
-    ADIO_Offset st_reg = 0, act_reg_sz = 0, tmp_reg_sz = 0;;
+    ADIO_Offset st_reg = 0, act_reg_sz = 0, tmp_reg_sz = 0;
     ADIO_Offset cur_off = -1, cur_reg_max_len = -1;
     ADIO_Offset agg_mem_st_reg = 0, agg_mem_act_reg_sz = 0;
     int agg_ol_ct = 0, agg_ol_cur_ct = 0;
