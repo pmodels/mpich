@@ -3677,7 +3677,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\mpi\romio\adio\common\ad_aggregate_new.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mpi\romio\adio\common\ad_close.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\romio\adio\common\ad_coll_build_req_new.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\romio\adio\common\ad_coll_exch_new.c"
 				>
 			</File>
 			<File
@@ -3994,6 +4006,10 @@
 			</File>
 			<File
 				RelativePath=".\src\mpi\romio\adio\common\ad_init.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\romio\adio\common\ad_io_coll.c"
 				>
 			</File>
 			<File
@@ -5246,6 +5262,10 @@
 			</File>
 			<File
 				RelativePath=".\src\util\mem\handlemem.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\romio\adio\common\heap-sort.c"
 				>
 			</File>
 			<File

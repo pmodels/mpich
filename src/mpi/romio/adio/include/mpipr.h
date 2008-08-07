@@ -24,6 +24,8 @@
 #define MPI_Alltoall PMPI_Alltoall
 #undef MPI_Alltoallv
 #define MPI_Alltoallv PMPI_Alltoallv
+#undef MPI_Alltoallw
+#define MPI_Alltoallw PMPI_Alltoallw
 #undef MPI_Attr_delete
 #define MPI_Attr_delete PMPI_Attr_delete
 #undef MPI_Attr_get
