@@ -419,23 +419,22 @@ Alternative Channels and Devices
 
 The communication mechanisms in MPICH2 are called "devices", paired with
 specific "channels".  The most thoroughly tested device is the "ch3"
-device.  The default configuration chooses the "sock" channel in the ch3
+device.  The default configuration chooses the "nemesis" channel in the ch3
 device (all communication goes over TCP sockets), which would be
 specified explicitly by putting
 
-  --with-device=ch3:sock
+  --with-device=ch3:nemesis
 
 on the configure command line.  The ch3 device has three other
-channels which are rigorously tested: "nemesis" for high-performance
-communication on shared memory as well as different network stacks
-(tcp, ib, sctp and myrinet), "shm" (shared memory) for use on SMPs
-(all communication goes through shared memory instead of over TCP
-sockets) and "ssm" (sockets and shared memory) for use on clusters of
-SMPs (communication between processes on the same machine goes through
-shared memory; communication between processes on different machines
-goes over sockets).  Configure these by putting
+channels which are rigorously tested: "sock" which is the traditional
+TCP sockets based communication channel, "shm" (shared memory) for use
+on SMPs (all communication goes through shared memory instead of over
+TCP sockets) and "ssm" (sockets and shared memory) for use on clusters
+of SMPs (communication between processes on the same machine goes
+through shared memory; communication between processes on different
+machines goes over sockets).  Configure these by putting
 
-  --with-device=ch3:nemesis
+  --with-device=ch3:sock
 
 or 
 
@@ -450,8 +449,6 @@ unless one of the following cases is true:
 (x86_64) machine.
 
  * The target operating systems is not Linux.
-
- * Dynamic processes (part of the MPI-2 standard) are needed.
 
 
 A new channel supports the dynamic loading of other channels.  To use this
@@ -484,20 +481,18 @@ If you want to try this experimental channel, please let us know what does
 and does not work.  The next release will have a more robust, 
 ready-for-production, version of this channel.
 
-
 The sshm (scalable shared memory) channel is currently not
 supported. The code has been retained to provide an example of some
 MPI-2 RMA optimizations (the immediate method as opposed to the
 deferred method used in other channels for implementing the
 synchronization in MPI-2 one-sided communication).
 
-The Nemesis channel is a new low-latency channel that uses shared
-memory for intra-node communication and various networks for
-inter-node communication.  It currently supports TCP, GM, MX and
-Qsnet/Elan networks.  Other networks will be supported in the future.
-The Nemesis channel may be selected using the
---with-device=ch3:nemesis configure option.  The default network is
-TCP.
+The Nemesis channel is a low-latency channel that uses shared memory
+for intra-node communication and various networks for inter-node
+communication.  It currently supports TCP, GM, MX and Qsnet/Elan
+networks.  Other networks will be supported in the future.  The
+Nemesis channel may be selected using the --with-device=ch3:nemesis
+configure option.  The default network is TCP.
 
   To use the GM network, use the --with-device=ch3:nemesis:gm
   configure option.  If the GM include files and libraries are not in
@@ -543,11 +538,6 @@ TCP.
   that System V shared memory has limits on the size of shared memory
   segments so using this for Nemesis may limit the number of processes
   that can be started on a single node.
-
-Nemesis is still a work in progress. Dynamic processes and
-connect/accept are not yet implemented.  Performance in some areas is
-still suboptimal.
-
 
 The SCTP channel is a new channel using the Stream Control
 Transmission Protocol.  SCTP is a new transport protocol available on
@@ -604,10 +594,9 @@ SCTP stack specific instructions:
   -DMPICH_SCTP_CONCATENATES_IOVS set when running MPICH2's configure
   script.
 
-MPICH2 v1.0.5 was the initial release of the SCTP channel, so feedback
-is definitely still welcomed. All MPI features except multithreading
-are supported. Some performance optimizations could surely exist for
-this channel and will be investigated for future releases.
+In the SCTP channel, all MPI features except multithreading are
+supported. Some performance optimizations could surely exist for this
+channel and will be investigated for future releases.
 
 
 VPATH Builds
@@ -780,13 +769,13 @@ from the target.
 
 The dynamic process management routines (MPI_Comm_spawn,
 MPI_Comm_Connect, and MPI_Comm_Accept, and their relations) are
-supported, but only for the sock and ssm channels. 
+supported, but only for the nemesis, sock and ssm channels.
 
 The "singleton init" feature, whereby a process not started by mpiexec
-can become an MPI process, is supported under the mpd process manager.
+can become an MPI process, is supported under the mpd and smpd process
+managers.
 
 Some routines, such as the intercommunicator extensions to the
 collective routines, have not been extensively tested.
 
 Only the sock and nemesis channels support MPI_THREAD_MULTIPLE. 
-
