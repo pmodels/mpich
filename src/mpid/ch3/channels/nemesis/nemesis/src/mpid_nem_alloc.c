@@ -232,7 +232,7 @@ int MPID_nem_check_alloc (int num_processes)
       }
 
  fn_exit:
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CHECK_ALLOC);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CHECK_ALLOC);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

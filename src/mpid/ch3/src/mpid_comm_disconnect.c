@@ -50,12 +50,17 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
     /* FIXME: Describe what more might be required */
     /* MPIU_PG_Printall( stdout ); */
     mpi_errno = MPIR_Comm_release(comm_ptr,1);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     /* If any of the VCs were released by this Comm_release, wait
      for those close operations to complete */
-    MPIDI_CH3U_VC_WaitForClose();
+    mpi_errno = MPIDI_CH3U_VC_WaitForClose();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     /* MPIU_PG_Printall( stdout ); */
 
 
+fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_COMM_DISCONNECT);
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }

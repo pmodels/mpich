@@ -88,6 +88,9 @@ int MPIR_Bcast (
   MPI_Comm comm;
   MPID_Datatype *dtp;
   MPI_Aint true_extent, true_lb;
+  MPID_MPI_STATE_DECL(MPID_STATE_MPIR_BCAST);
+  
+  MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_BCAST);
 
   if (count == 0) return MPI_SUCCESS;
 
@@ -559,6 +562,8 @@ int MPIR_Bcast (
   /* check if multiple threads are calling this collective function */
   MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
+  MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_BCAST);
+
   return mpi_errno;
  fn_fail:
   goto fn_exit;
@@ -583,6 +588,9 @@ int MPIR_Bcast_inter (
     MPI_Status status;
     MPID_Comm *newcomm_ptr = NULL;
     MPI_Comm comm;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_BCAST_INTER);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_BCAST_INTER);
 
     comm = comm_ptr->handle;
 
@@ -645,6 +653,8 @@ int MPIR_Bcast_inter (
 	}
 	/* --END ERROR HANDLING-- */
     }
+
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_BCAST_INTER);
     
     return mpi_errno;
 }

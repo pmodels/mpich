@@ -413,8 +413,8 @@ static int send_id_info(const sockconn_t *const sc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_ID_INFO);
 
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "my->pg_rank=%d, sc->pg_rank=%d"
-                                             , MPIDI_Process.my_pg_rank, sc->pg_rank));
+    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "my_pg->id=%s my_pg->rank=%d, sc->pg_rank=%d sc->is_same_pg=%s",
+                                             MPIDI_Process.my_pg->id, MPIDI_Process.my_pg_rank, sc->pg_rank, (sc->is_same_pg ? "TRUE" : "FALSE")));
     if (!sc->is_same_pg)
         pg_id_len = strlen(MPIDI_Process.my_pg->id) + 1; 
 
@@ -1363,7 +1363,7 @@ static int state_l_rankrcvd_handler(pollfd_t *const plfd, sockconn_t *const sc)
             if (send_cmd_pkt(sc->fd, MPIDI_NEM_NEWTCP_MODULE_PKT_ID_ACK) == MPI_SUCCESS) {
                 CHANGE_STATE(sc, CONN_STATE_TS_COMMRDY);
                 ASSIGN_SC_TO_VC(sc->vc, sc);
-		MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "connection established: sc=%p, sc->vc=%p, sc->fd=%d", sc, sc->vc, sc->fd));
+		MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "connection established: sc=%p, sc->vc=%p, sc->fd=%d, is_same_pg=%s, pg_rank=%d", sc, sc->vc, sc->fd, (sc->is_same_pg ? "TRUE" : "FALSE"), sc->pg_rank));
                 MPID_nem_newtcp_module_conn_est (sc->vc);
             }
         }

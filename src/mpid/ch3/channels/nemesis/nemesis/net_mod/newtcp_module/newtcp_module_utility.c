@@ -36,6 +36,11 @@ int MPID_nem_newtcp_module_get_vc_from_conninfo (char *pg_id, int pg_rank, struc
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_PG_t *pg;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_VC_FROM_CONNINFO);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_VC_FROM_CONNINFO);
+
+    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "pg_id=%s pg_rank=%d", pg_id, pg_rank));
     
     mpi_errno = MPIDI_PG_Find (pg_id, &pg);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -46,6 +51,7 @@ int MPID_nem_newtcp_module_get_vc_from_conninfo (char *pg_id, int pg_rank, struc
     MPIDI_PG_Get_vc (pg, pg_rank, vc);
     
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_VC_FROM_CONNINFO);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

@@ -52,6 +52,7 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
 	if (!(a_))							\
 	{								\
 	    MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", __FILE__, __LINE__, MPIU_QUOTE(a_));	\
+            MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST, "Assertion failed in file %s at line %d: %s\n", __FILE__, __LINE__, MPIU_QUOTE(a_)));	\
             MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);			\
 	}								\
     }
@@ -75,6 +76,7 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
     if (!(a_))							\
     {								\
         MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", __FILE__, __LINE__, MPIU_QUOTE(a_));	\
+        MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST, "Assertion failed in file %s at line %d: %s\n", __FILE__, __LINE__, MPIU_QUOTE(a_)));	\
         MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);			\
     }								\
 }
