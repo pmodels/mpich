@@ -63,7 +63,6 @@ void ADIO_Close(ADIO_File fd, int *error_code)
 
     if (fd->hints && fd->hints->ranklist) ADIOI_Free(fd->hints->ranklist);
     if (fd->hints && fd->hints->cb_config_list) ADIOI_Free(fd->hints->cb_config_list);
-    if (fd->hints) ADIOI_Free(fd->hints);
 
     /* Persistent File Realms */
     if (fd->hints->cb_pfr == ADIOI_HINT_ENABLE) {
@@ -83,6 +82,7 @@ void ADIO_Close(ADIO_File fd, int *error_code)
 	ADIOI_Free(fd->file_realm_st_offs);
 	ADIOI_Free(fd->file_realm_types);
     }
+    if (fd->hints) ADIOI_Free(fd->hints);
 
 
 
