@@ -174,6 +174,17 @@ int main(int argc, char **argv)
 	    }
 #endif
 	}
+	/* don't care about the defaults for these keys */
+	else if (!strcmp("romio_cb_pfr", key)) {
+	}
+	else if (!strcmp("romio_cb_fr_types", key)) {
+	}
+	else if (!strcmp("romio_cb_fr_alignment", key)) {
+	}
+	else if (!strcmp("romio_cb_ds_threshold", key)) {
+	}
+	else if (!strcmp("romio_cb_alltoall", key)) {
+	}
 	else {
 	    if (verbose) fprintf(stderr, "unexpected key %s (not counted as an error)\n", key);
 	}
@@ -345,6 +356,42 @@ int main(int argc, char **argv)
 	    }
 #endif
 	}
+	else if (!strcmp("romio_cb_pfr", key)) {
+   	    if(strcmp("disable", value)) {
+		errs++;
+		if (verbose) fprintf(stderr, "romio_cb_pfr is set to %s; should be %s\n",
+				     value, "automatic");
+	    }
+	}
+	else if (!strcmp("romio_cb_fr_types", key)) {
+   	    if(strcmp("aar", value)) {
+		errs++;
+		if (verbose) fprintf(stderr, "romio_cb_fr_types is set to %s; should be %s\n",
+				     value, "aar");
+	    }
+	}
+	else if (!strcmp("romio_cb_fr_alignment", key)) {
+   	    if(strcmp("1", value)) {
+		errs++;
+		if (verbose) fprintf(stderr, "romio_cb_fr_alignment is set to %s; should be %s\n",
+				     value, "1");
+	    }
+	}
+	else if (!strcmp("romio_cb_ds_threshold", key)) {
+   	    if(strcmp("0", value)) {
+		errs++;
+		if (verbose) fprintf(stderr, "romio_cb_ds_threshold is set to %s; should be %s\n",
+				     value, "0");
+	    }
+	}
+	else if (!strcmp("romio_cb_alltoall", key)) {
+   	    if(strcmp("automatic", value)) {
+		errs++;
+		if (verbose) fprintf(stderr, "romio_cb_alltoall is set to %s; should be %s\n",
+				     value, "automatic");
+	    }
+	}
+
 	else {
 	    if (verbose) fprintf(stderr, "unexpected key %s (not counted as an error)\n", key);
 	}
