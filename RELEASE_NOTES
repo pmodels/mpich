@@ -8,6 +8,12 @@
 -------------------------------------------------------------------------------
                               Known Deficiencies
 -------------------------------------------------------------------------------
+
+- The default ch3:nemesis channel does not work on Solaris. Instead, use the
+  ch3:sock channel if running on multiple machines or the ch3:shm
+  channel if running on a single machine (configure with
+  --with-device=ch3:sock or --with-device=ch3:shm). 
+
 - The MPD process manager can only handle relatively small amounts of data on 
   stdin and may also have problems if there is data on stdin that is not
   consumed by the program. 
