@@ -7,14 +7,15 @@
 - OVERALL: Nemesis is now the default configuration channel with a
   completely new TCP communication module.
 
-- OVERALL: Support for BlueGene/P through the DCMF library.
+- OVERALL: Support for BlueGene/P through the DCMF library (thanks to IBM for the patch).
 
 - OVERALL: Added dynamic processes support for Nemesis.
 
 - OVERALL: Added automatic as well as statically runtime configurable
   receive timeout variation for MPD (thanks to OSU for the patch).
 
-- ROMIO: Added support for MPI_Type_create_resized datatypes in ROMIO.
+- ROMIO: Added support for MPI_Type_create_resized and MPI_Type_create_indexed_block 
+  datatypes in ROMIO.
 
 - Many other bug fixes, memory leak fixes and code cleanup. A full
 list of changes is available using:
