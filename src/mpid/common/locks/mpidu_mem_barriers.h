@@ -24,14 +24,10 @@
 #  define MPIDU_Shm_read_barrier() __asm__ __volatile__  ("mf" ::: "memory" )
 #  define MPIDU_Shm_read_write_barrier() __asm__ __volatile__  ("mf" ::: "memory" )
 #else
-   /* FIXME need to remove #warning, since it's not standard C.  However, we
-      can't just replace this with #error because all non-intel platforms will
-      stop compiling.  Saying nothing is also bad, since we're likely to see
-      corruption and other strange bugs. [goodell@ 2008-03-11] */
-#  warning No memory barrier definition present, defaulting to nop barriers
-#  define MPIDU_Shm_write_barrier()
-#  define MPIDU_Shm_read_barrier()
-#  define MPIDU_Shm_read_write_barrier()
+/* FIXME this should probably be a configure/winconfigure test instead. */
+#  define MPIDU_Shm_write_barrier()      MPID_Abort(MPIR_Process.comm_self, MPI_ERR_OTHER, 1, "memory barriers not implemented on this platform")
+#  define MPIDU_Shm_read_barrier()       MPID_Abort(MPIR_Process.comm_self, MPI_ERR_OTHER, 1, "memory barriers not implemented on this platform")
+#  define MPIDU_Shm_read_write_barrier() MPID_Abort(MPIR_Process.comm_self, MPI_ERR_OTHER, 1, "memory barriers not implemented on this platform")
 #endif
 
 #endif /* defined(MPIDU_MEM_BARRIERS_H_INCLUDED) */
