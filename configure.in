@@ -161,15 +161,14 @@ fi
 # Numeric version will have 1 digit for MAJ, 2 digits for MIN,
 # 2 digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER.
 changequote(<<,>>)
-V1=`expr $VERSION : '\([0-9]*\)\.[0-9]*[\.]*[0-9]*[a-zA-Z]*[0-9]*'`
-V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)[\.]*[0-9]*[a-zA-Z]*[0-9]*'`
-V3=`expr $VERSION : '[0-9]*\.[0-9]*[\.]*\([0-9]*\)[a-zA-Z]*[0-9]*'`
-V4=`expr $VERSION : '[0-9]*\.[0-9]*[\.]*[0-9]*\([a-zA-Z]*\)[0-9]*'`
-V5=`expr $VERSION : '[0-9]*\.[0-9]*[\.]*[0-9]*[a-zA-Z]*\([0-9]*\)'`
+V1=`expr $VERSION : '\([0-9]*\)\.[0-9]*\.[0-9]*[a-zA-Z]*[0-9]*'`
+V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)\.[0-9]*[a-zA-Z]*[0-9]*'`
+V3=`expr $VERSION : '[0-9]*\.[0-9]*\.\([0-9]*\)[a-zA-Z]*[0-9]*'`
+V4=`expr $VERSION : '[0-9]*\.[0-9]*\.[0-9]*\([a-zA-Z]*\)[0-9]*'`
+V5=`expr $VERSION : '[0-9]*\.[0-9]*\.[0-9]*[a-zA-Z]*\([0-9]*\)'`
 changequote([,])
 
 if test "$V2" -le 9 ; then V2=0$V2 ; fi
-if test "$V3" = "" ; then V3=0; fi
 if test "$V3" -le 9 ; then V3=0$V3 ; fi
 if test "$V4" = "a" ; then
     V4=0
