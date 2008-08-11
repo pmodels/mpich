@@ -334,9 +334,9 @@ Alternatives
 ============
 
 The above steps utilized the MPICH2 defaults, which included choosing
-TCP for communication (the "sock" channel) and the MPD process manager.
-Other alternatives are available.  You can find out about configuration
-alternatives with
+TCP and shared memory for communication (via the "nemesis" channel) and
+the MPD process manager.  Other alternatives are available.  You can
+find out about configuration alternatives with
 
    ./configure --help
 
