@@ -701,29 +701,26 @@ specified by providing the name of the method after a colon in the
 The supported methods include:
 
 \begin{description}
-\item[ch3:sock]This is the default communication method.  It uses sockets for
-  all communications between processes. It supports
-  \texttt{MPI\_THREAD\_MULTIPLE} and other levels of thread safety.
-\item[ch3:ssm]This method uses sockets between nodes and shared memory within
-a node.
-\item[ch3:shm]This method only uses shared memory and only works within a
-single SMP.  It does not support the MPI dynamic process routines such as
-\texttt{MPI\_Comm\_spawn}. 
-% \item[ch3:sshm]This method is a scalable version of a shared-memory method and
-% only works within a single SMP.
-\item[ch3:nemesis]This method is our new, high performance method.  It
-supports sockets, shared memory, and Myrinet-GM at present. It supports
-  \texttt{MPI\_THREAD\_MULTIPLE} and other levels of thread safety. It does not
-support the MPI dynamic process routines in this release, but will support
-them in a future release.
+\item[ch3:nemesis]This method is our new, high performance method. It
+  has been made the default communication channel starting the 1.1
+  release of MPICH2. It supports sockets, shared memory, and
+  Myrinet-GM at present. It supports \texttt{MPI\_THREAD\_MULTIPLE}
+  and other levels of thread safety.
+\item[ch3:sock]This is the traditional communication method in MPICH2.
+  It uses sockets for all communications between processes. It
+  supports \texttt{MPI\_THREAD\_MULTIPLE} and other levels of thread
+  safety.
+\item[ch3:ssm]This method uses sockets between nodes and shared memory
+  within a node.
+\item[ch3:shm]This method only uses shared memory and only works
+  within a single SMP.  It does not support the MPI dynamic process
+  routines such as \texttt{MPI\_Comm\_spawn}.
 \end{description}
 
-Most installations should use either the \texttt{ch3:ssm} or \texttt{ch3:sock}
-methods.  If you need multi-threaded MPI, you must use \texttt{ch3:sock} in
-this release.  If you have a cluster of SMPs and do not need a multi-threaded
-MPI, then select \texttt{ch3:ssm}.  If you are interested in trying out our
-highest-performance device, and need neither threads nor the dynamic process
-routines from MPI, then you can use \texttt{ch3:nemesis}.
+Most installations should use \texttt{ch3:nemesis} for best
+performance. For platforms that are not supported by nemesis (e.g.,
+Solaris), the \texttt{ch3:sock} method is suggested.
+
 
 %
 % Add any configure options that are specific to each method here.  Also
