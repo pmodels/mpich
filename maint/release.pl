@@ -139,7 +139,7 @@ sub create_mpich2
     # Create the tarball
     debug("===> Creating the final mpich2 tarball... ");
     chdir("${root}");
-    run_cmd("tar -czvf mpich2-${version}.tgz mpich2-${version}");
+    run_cmd("tar -czvf mpich2-${version}.tar.gz mpich2-${version}");
     run_cmd("rm -rf mpich2-${version}");
     debug("done\n\n");
 }
@@ -166,7 +166,7 @@ sub create_romio
     debug("===> Creating the final romio tarball... ");
     chdir("${root}");
     run_cmd("mv romio romio-${version}");
-    run_cmd("tar -czvf romio-${version}.tgz romio-${version}");
+    run_cmd("tar -czvf romio-${version}.tar.gz romio-${version}");
     run_cmd("rm -rf romio-${version}");
     debug("done\n\n");
 }
@@ -193,7 +193,7 @@ sub create_mpe
     debug("===> Creating the final mpe2 tarball... ");
     chdir("${root}");
     run_cmd("mv mpe2 mpe2-${version}");
-    run_cmd("tar -czvf mpe2-${version}.tgz mpe2-${version}");
+    run_cmd("tar -czvf mpe2-${version}.tar.gz mpe2-${version}");
     run_cmd("rm -rf mpe2-${version}");
     debug("done\n\n");
 }
