@@ -99,11 +99,20 @@
   the user-based SCTP stack available at 
   http://www.sctp.de/sctp-download.html ; it is currently being
   evaluated for use with a future MPICH2 release.
+
+- the installed man/, www/ and doc/ are not under share/, which is recommended
+  by autoconf 2.6x.  This will be fixed in the formal 1.1 release.
+
+- MPICH2LIB_F90FLAGS should be default to -O2.  But it isn't the case in
+  the 1.1a1 release.
   
   
 -------------------------------------------------------------------------------
 			Issues for Developers
 -------------------------------------------------------------------------------
+
+- MPICH2 is switched to autoconf-2.62.  So any older autoconf won't work
+  with the top-level MPICH2 configure.in.
 
 - In order to handle the construction of intercommunicators in the dynamic
   process case, the context id in MPID_Comm has been split into a receive 
@@ -123,6 +132,7 @@
 - There are significant changes to the ch3 code base.  We expect further
   changes in the next release, particularly to reduce latency and 
   eliminate "copy and paste" code, in order to ease maintenance and tuning.
+
 
 -------------------------------------------------------------------------------
                         Issues From Previous Releases (1.0.4)
