@@ -19,7 +19,7 @@
 
 - Many other bug fixes, memory leak fixes and code cleanup. A full
 list of changes is available using:
-  svn log -r813:1290 https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk
+  svn log -r813:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.1a1
 
 
 ===============================================================================
