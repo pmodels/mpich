@@ -1041,7 +1041,7 @@ if test "$enable_strict_done" != "yes" ; then
 	# not prototyped.
 	enable_strict_done="yes"
         if test "$CC" = "gcc" ; then
-            COPTIONS="${COPTIONS} -Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value -std=c89 -Wundef -Wpointer-arith -Wbad-function-cast -D_POSIX_C_SOURCE=199506L"
+            COPTIONS="${COPTIONS} -Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -D_POSIX_C_SOURCE=199506L -std=c89"
     	fi
  	;;	
 	

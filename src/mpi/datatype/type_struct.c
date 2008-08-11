@@ -111,8 +111,7 @@ int MPI_Type_struct(int count,
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_STRUCT);
 
     /* Validate parameters, especially handles needing to be converted */
-/*#   ifdef HAVE_ERROR_CHECKING*/
-#   if 1
+#   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
