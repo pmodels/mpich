@@ -1802,7 +1802,7 @@ int MPIDI_CH3_Connection_terminate (MPIDI_VC_t * vc)
     if (((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
         mpi_errno = MPID_nem_vc_terminate(vc);
     else
-        mpi_errno = MPID_nem_net_module_vc_terminate(vc);
+        mpi_errno = MPID_nem_netmod_func->vc_terminate(vc);
     if(mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIDI_CH3U_Handle_connection (vc, MPIDI_VC_EVENT_TERMINATED);

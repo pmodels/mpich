@@ -6,6 +6,19 @@
 
 #include "tcp_module_impl.h"
 
+MPID_nem_netmod_funcs_t MPIDI_nem_tcp_module_funcs = {
+    MPID_nem_tcp_module_init,
+    MPID_nem_tcp_module_finalize,
+    MPID_nem_tcp_module_ckpt_shutdown,
+    MPID_nem_tcp_module_poll,
+    MPID_nem_tcp_module_send,
+    MPID_nem_tcp_module_get_business_card,
+    MPID_nem_tcp_module_connect_to_root,
+    MPID_nem_tcp_module_vc_init,
+    MPID_nem_tcp_module_vc_destroy,
+    MPID_nem_tcp_module_vc_terminate
+};
+
 static int getSockInterfaceAddr( int myRank, char *ifname, int maxIfname);
 /* We set dbg_ifname to 1 to help debug the choice of interface name
    used when determining which interface to advertise to other
@@ -442,7 +455,7 @@ MPID_nem_tcp_module_connect_to_root (const char *business_card, MPIDI_VC_t *new_
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_tcp_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
+MPID_nem_tcp_module_vc_init(MPIDI_VC_t *vc)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_VC_INIT);
 

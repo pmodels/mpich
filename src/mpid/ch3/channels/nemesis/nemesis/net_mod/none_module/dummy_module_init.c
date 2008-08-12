@@ -6,6 +6,20 @@
 
 #include <dummy_module.h>
 
+MPID_nem_netmod_funcs_t MPIDI_nem_dummy_module_funcs = {
+    MPID_nem_dummy_module_init,
+    MPID_nem_dummy_module_finalize,
+    MPID_nem_dummy_module_ckpt_shutdown,
+    MPID_nem_dummy_module_poll,
+    MPID_nem_dummy_module_send,
+    MPID_nem_dummy_module_get_business_card,
+    MPID_nem_dummy_module_connect_to_root,
+    MPID_nem_dummy_module_vc_init,
+    MPID_nem_dummy_module_vc_destroy,
+    MPID_nem_dummy_module_vc_terminate
+};
+
+
 int
 MPID_nem_dummy_module_init (MPID_nem_queue_ptr_t proc_recv_queue, 
 		   MPID_nem_queue_ptr_t proc_free_queue, 

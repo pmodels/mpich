@@ -44,7 +44,7 @@ int MPID_nem_finalize()
     MPIU_Free(MPID_nem_mem_region_ptr);
 #endif /* MEM_REGION_IN_HEAP */
 
-    mpi_errno = MPID_nem_net_module_finalize();
+    mpi_errno = MPID_nem_netmod_func->finalize();
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     /* free the shared memory segment */
@@ -75,7 +75,7 @@ int MPID_nem_ckpt_shutdown()
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CKPT_SHUTDOWN);
 
-    MPID_nem_net_module_ckpt_shutdown();
+    MPID_nem_netmod_func->ckpt_shutdown();
     munmap (MPID_nem_mem_region.memory.base_addr, MPID_nem_mem_region.memory.max_size);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CKPT_SHUTDOWN);

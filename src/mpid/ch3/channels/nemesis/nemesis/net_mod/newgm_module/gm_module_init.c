@@ -6,6 +6,20 @@
 
 #include "gm_module_impl.h"
 
+MPID_nem_netmod_funcs_t MPIDI_nem_newgm_module_funcs = {
+    MPID_nem_gm_module_init,
+    MPID_nem_gm_module_finalize,
+    MPID_nem_gm_module_ckpt_shutdown,
+    MPID_nem_gm_module_poll,
+    MPID_nem_gm_module_send,
+    MPID_nem_gm_module_get_business_card,
+    MPID_nem_gm_module_connect_to_root,
+    MPID_nem_gm_module_vc_init,
+    MPID_nem_gm_module_vc_destroy,
+    MPID_nem_gm_module_vc_terminate
+};
+
+
 #define MAX_GM_BOARDS 16
 #define UNIQUE_ID_LEN 6
 #define MPIDI_CH3I_PORT_KEY "port"

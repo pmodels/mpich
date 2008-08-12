@@ -1,0 +1,14 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2006 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "mpid_nem_impl.h"
+
+/* forward declaration of funcs structs defined in network modules */
+extern MPID_nem_netmod_funcs_t @nemesis_nets_func_decl@;
+
+int MPID_nem_num_netmods = @nemesis_nets_array_sz@;
+MPID_nem_netmod_funcs_t *MPID_nem_netmod_funcs[@nemesis_nets_array_sz@] = { @nemesis_nets_func_array@ };
+char MPID_nem_netmod_strings[@nemesis_nets_array_sz@][MPID_NEM_MAX_NETMOD_STRING_LEN] = { @nemesis_nets_strings@ };

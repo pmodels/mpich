@@ -433,10 +433,10 @@ MPID_nem_mpich2_register_memory (void *buf, int len)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_REGISTER_MEMORY);
 
-    if (MPID_NEM_NET_MODULE == MPID_NEM_GM_MODULE)
-    {
-	/*return MPID_nem_gm_module_register_mem (buf, len);*/
-    }
+/*     if (MPID_NEM_NET_MODULE == MPID_NEM_GM_MODULE) */
+/*     { */
+/* 	/\*return MPID_nem_gm_module_register_mem (buf, len);*\/ */
+/*     } */
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_REGISTER_MEMORY);
     return mpi_errno;
@@ -454,10 +454,10 @@ MPID_nem_mpich2_deregister_memory (void *buf, int len)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_DEREGISTER_MEMORY);
 
-    if (MPID_NEM_NET_MODULE == MPID_NEM_GM_MODULE)
-    {
-	/*return MPID_nem_gm_module_deregister_mem (buf, len);*/
-    }
+/*     if (MPID_NEM_NET_MODULE == MPID_NEM_GM_MODULE) */
+/*     { */
+/* 	/\*return MPID_nem_gm_module_deregister_mem (buf, len);*\/ */
+/*     } */
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_DEREGISTER_MEMORY);
     return mpi_errno;

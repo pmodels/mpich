@@ -259,23 +259,21 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, int has_parent)
     /* Recv Q init only*/
     MPID_nem_queue_init (MPID_nem_mem_region.RecvQ[pg_rank]);
 
-    /* Initialize generic net module pointers */
-    mpi_errno = MPID_nem_net_init();
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
     /* network init */
-    if (MPID_NEM_NET_MODULE != MPID_NEM_NO_MODULE)
+    if (MPID_nem_num_netmods)
     {
-	mpi_errno = MPID_nem_net_module_init (MPID_nem_mem_region.RecvQ[pg_rank],
-                                              MPID_nem_mem_region.FreeQ[pg_rank],
-                                              MPID_nem_mem_region.Elements,
-                                              MPID_NEM_NUM_CELLS,
-                                              MPID_nem_mem_region.net_elements,
-                                              MPID_NEM_NUM_CELLS,
-                                              &net_free_queue,
-                                              ckpt_restart, pg_p, pg_rank,
-                                              &bc_val, &val_max_remaining);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        mpi_errno = MPID_nem_choose_netmod();
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	mpi_errno = MPID_nem_netmod_func->init(MPID_nem_mem_region.RecvQ[pg_rank],
+                                               MPID_nem_mem_region.FreeQ[pg_rank],
+                                               MPID_nem_mem_region.Elements,
+                                               MPID_NEM_NUM_CELLS,
+                                               MPID_nem_mem_region.net_elements,
+                                               MPID_NEM_NUM_CELLS,
+                                               &net_free_queue,
+                                               ckpt_restart, pg_p, pg_rank,
+                                               &bc_val, &val_max_remaining);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else
     {
@@ -668,9 +666,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->iStartContigMsg = NULL;
         vc_ch->iSendContig     = NULL;
 
-        /*mpi_errno = MPID_nem_net_module_vc_init (vc, business_card);*/
-        mpi_errno = MPID_nem_net_module_vc_init (vc);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        mpi_errno = MPID_nem_netmod_func->vc_init (vc);
+	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 /* FIXME: DARIUS -- enable this assert once these functions are implemented */
 /*         /\* iStartContigMsg iSendContig and sendNoncontig_fn must */
@@ -709,7 +706,7 @@ MPID_nem_vc_destroy(MPIDI_VC_t *vc)
 
     MPIU_Free(vc_ch->pending_pkt);
 
-    mpi_errno = MPID_nem_net_module_vc_destroy(vc);
+    mpi_errno = MPID_nem_netmod_func->vc_destroy(vc);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     fn_exit:
@@ -722,10 +719,10 @@ MPID_nem_vc_destroy(MPIDI_VC_t *vc)
 int
 MPID_nem_get_business_card (int my_rank, char *value, int length)
 {
-    return MPID_nem_net_module_get_business_card (my_rank, &value, &length);
+    return MPID_nem_netmod_func->get_business_card (my_rank, &value, &length);
 }
 
 int MPID_nem_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
-    return MPID_nem_net_module_connect_to_root (business_card, new_vc);
+    return MPID_nem_netmod_func->connect_to_root (business_card, new_vc);
 }

@@ -6,6 +6,20 @@
 
 #include "gm_module_impl.h"
 
+MPID_nem_netmod_funcs_t MPIDI_nem_gm_module_funcs = {
+    MPID_nem_gm_module_init,
+    MPID_nem_gm_module_finalize,
+    MPID_nem_gm_module_ckpt_shutdown,
+    MPID_nem_gm_module_poll,
+    MPID_nem_gm_module_send,
+    MPID_nem_gm_module_get_business_card,
+    MPID_nem_gm_module_connect_to_root,
+    MPID_nem_gm_module_vc_init,
+    MPID_nem_gm_module_vc_destroy,
+    MPID_nem_gm_module_vc_terminate
+};
+
+
 #define MAX_GM_BOARDS 16
 #define UNIQUE_ID_LEN 6
 #define MPIDI_CH3I_PORT_KEY "port"
@@ -249,10 +263,14 @@ MPID_nem_gm_module_connect_to_root (const char *business_card, MPIDI_VC_t *new_v
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_gm_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
+MPID_nem_gm_module_vc_init(MPIDI_VC_t *vc)
 {    
     int mpi_errno = MPI_SUCCESS;
     int ret;
+    char *business_card;
+    
+    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, MPID_NEM_MAX_KEY_VAL_LEN, vc->pg);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     VC_FIELD(vc, source_id) = my_pg_rank; /* FIXME: this is only valid for processes in COMM_WORLD */
 

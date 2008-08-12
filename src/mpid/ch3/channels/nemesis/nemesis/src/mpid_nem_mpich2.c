@@ -230,7 +230,7 @@ MPID_nem_mpich2_send_ckpt_marker (unsigned short wave, MPIDI_VC_t *vc, int *try_
     }
     else
     {
-        MPID_nem_net_module_send (vc, el, el->pkt.ckpt.datalen);
+        MPID_nem_netmod_func->send (vc, el, el->pkt.ckpt.datalen);
     }
 
 

@@ -925,6 +925,8 @@ with MPI_Alloc_mem.
 **psm_wait:psm_wait failed
 **psm_wait %s:psm_wait failed (%s)
 
+**invalid_netmod:Invalid netmod specified
+**invalid_netmod %s:Invalid netmod specified (%s)
 
 #
 # mpi functions

@@ -11,6 +11,19 @@
 
 #define DBG_IFNAME 0
 
+MPID_nem_netmod_funcs_t MPIDI_nem_newtcp_module_funcs = {
+    MPID_nem_newtcp_module_init,
+    MPID_nem_newtcp_module_finalize,
+    MPID_nem_newtcp_module_ckpt_shutdown,
+    MPID_nem_newtcp_module_poll,
+    MPID_nem_newtcp_module_send,
+    MPID_nem_newtcp_module_get_business_card,
+    MPID_nem_newtcp_module_connect_to_root,
+    MPID_nem_newtcp_module_vc_init,
+    MPID_nem_newtcp_module_vc_destroy,
+    MPID_nem_newtcp_module_vc_terminate
+};
+
 #define MPIDI_CH3I_PORT_KEY "port"
 #define MPIDI_CH3I_HOST_DESCRIPTION_KEY "description"
 #define MPIDI_CH3I_IFNAME_KEY "ifname"
@@ -34,7 +47,7 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
 
     /* first make sure that our private fields in the vc fit into the area provided  */
     MPIU_Assert(sizeof(MPID_nem_newtcp_module_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
-    
+
     /* set up listener socket */
 /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
     MPID_nem_newtcp_module_g_lstn_plfd.fd = MPID_nem_newtcp_module_g_lstn_sc.fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);

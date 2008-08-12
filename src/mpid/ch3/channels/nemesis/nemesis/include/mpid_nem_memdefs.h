@@ -197,25 +197,7 @@ static inline void *nt_memcpy (volatile void *dst, volatile void *src, size_t le
     return orig_dst;
 }
 
-/* temporary fix for MX */
-#ifndef MPID_NEM_NET_MODULE
-#error MPID_NEM_NET_MODULE undefined
-#endif
-#ifndef MPID_NEM_DEFS_H
-#error mpid_nem_defs.h must be included with this file
-#endif
-
-#if  !defined (MPID_NEM_NO_MODULE)
-#error MPID_NEM_*_MODULEs are not defined!  Check for loop in include dependencies.
-#endif
-#if(MPID_NEM_NET_MODULE == MPID_NEM_ERROR_MODULE)
-#error Error in definition of MPID_NEM_*_MODULE macros
-#elif (MPID_NEM_NET_MODULE == MPID_NEM_MX_MODULE)
-#warning ">>> Memcpy crossover changed for MX !"
-#define MPID_NEM_MEMCPY_CROSSOVER (31*1024)
-#else 
 #define MPID_NEM_MEMCPY_CROSSOVER (63*1024)
-#endif
 
 #define MPID_NEM_MEMCPY(a,b,c)  ((((c)) >= MPID_NEM_MEMCPY_CROSSOVER)	\
                                  ? nt_memcpy (a, b, c)			\

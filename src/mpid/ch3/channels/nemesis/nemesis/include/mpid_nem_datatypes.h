@@ -22,34 +22,8 @@
 
 #define MPID_NEM_OFFSETOF(struc, field) ((int)(&((struc *)0)->field))
 #define MPID_NEM_CACHE_LINE_LEN 64
-#if (MPID_NEM_NET_MODULE == MPID_NEM_IB_MODULE)
-#define MPID_NEM_NUM_CELLS      128
-#else
-#define MPID_NEM_NUM_CELLS      64 
-#endif
-
-#ifndef MPID_NEM_NET_MODULE
-#error MPID_NEM_NET_MODULE undefined
-#endif
-#ifndef MPID_NEM_DEFS_H
-#error mpid_nem_defs.h must be included with this file
-#endif
-
-#if  !defined (MPID_NEM_NO_MODULE)
-#error MPID_NEM_*_MODULEs are not defined!  Check for loop in include dependencies.
-#endif
-
-#if(MPID_NEM_NET_MODULE == MPID_NEM_ERROR_MODULE)
-#error Error in definition of MPID_NEM_*_MODULE macros
-#elif (MPID_NEM_NET_MODULE == MPID_NEM_MX_MODULE)
-#define MPID_NEM_CELL_LEN           (32*1024)
-#elif (MPID_NEM_NET_MODULE == MPID_NEM_ELAN_MODULE)
-#define MPID_NEM_CELL_LEN            (2*1024)
-#elif (MPID_NEM_NET_MODULE == MPID_NEM_IB_MODULE)
-#define MPID_NEM_CELL_LEN            (6*1024)
-#else
-#define MPID_NEM_CELL_LEN           (64*1024)
-#endif 
+#define MPID_NEM_NUM_CELLS      64
+#define MPID_NEM_CELL_LEN       (64*1024)
 
 /*
    The layout of the cell looks like this:

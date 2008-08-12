@@ -13,6 +13,20 @@
 #include "ib_module_priv.h"
 #include "ib_module_impl.h"
 
+MPID_nem_netmod_funcs_t MPIDI_nem_ib_module_funcs = {
+    MPID_nem_ib_module_init,
+    MPID_nem_ib_module_finalize,
+    MPID_nem_ib_module_ckpt_shutdown,
+    MPID_nem_ib_module_poll,
+    MPID_nem_ib_module_send,
+    MPID_nem_ib_module_get_business_card,
+    MPID_nem_ib_module_connect_to_root,
+    MPID_nem_ib_module_vc_init,
+    MPID_nem_ib_module_vc_destroy,
+    MPID_nem_ib_module_vc_terminate
+};
+
+
 MPID_nem_ib_ctxt_ptr_t  MPID_nem_ib_ctxt_ptr = NULL;
 MPID_nem_ib_cm_ctxt_ptr_t MPID_nem_ib_cm_ctxt_ptr = NULL;
 

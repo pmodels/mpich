@@ -9,6 +9,20 @@
 #include "mx_module_impl.h"
 #include "mx_module.h"
 
+MPID_nem_netmod_funcs_t MPIDI_nem_mx_module_funcs = {
+    MPID_nem_mx_module_init,
+    MPID_nem_mx_module_finalize,
+    MPID_nem_mx_module_ckpt_shutdown,
+    MPID_nem_mx_module_poll,
+    MPID_nem_mx_module_send,
+    MPID_nem_mx_module_get_business_card,
+    MPID_nem_mx_module_connect_to_root,
+    MPID_nem_mx_module_vc_init,
+    MPID_nem_mx_module_vc_destroy,
+    MPID_nem_mx_module_vc_terminate
+};
+
+
 #define MPIDI_CH3I_ENDPOINT_KEY "endpoint_id"
 #define MPIDI_CH3I_NIC_KEY      "nic_id"
 

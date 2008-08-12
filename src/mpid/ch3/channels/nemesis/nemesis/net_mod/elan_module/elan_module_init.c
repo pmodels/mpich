@@ -13,6 +13,19 @@
 #include "elan_module_impl.h"
 #include "elan_module.h"
 
+MPID_nem_netmod_funcs_t MPIDI_nem_elan_module_funcs = {
+    MPID_nem_elan_module_init,
+    MPID_nem_elan_module_finalize,
+    MPID_nem_elan_module_ckpt_shutdown,
+    MPID_nem_elan_module_poll,
+    MPID_nem_elan_module_send,
+    MPID_nem_elan_module_get_business_card,
+    MPID_nem_elan_module_connect_to_root,
+    MPID_nem_elan_module_vc_init,
+    MPID_nem_elan_module_vc_destroy,
+    MPID_nem_elan_module_vc_terminate
+};
+
 
 #define MPID_NEM_ELAN_ALLOC_SIZE         16 
 #define MPIDI_CH3I_QUEUE_PTR_KEY         "q_ptr_val"
