@@ -203,7 +203,7 @@ get_callback (struct gm_port *p, void *completion_ctr, gm_status_t status)
 
     ++MPID_nem_module_gm_num_send_tokens;
 
-    MPID_NEM_ATOMIC_DEC ((int *)completion_ctr);
+    MPIDU_Atomic_decr ((int *)completion_ctr);
 }
 
 
@@ -244,7 +244,7 @@ MPID_nem_gm_module_lmt_do_get (int node_id, int port_id, struct iovec **r_iov, i
 	    len = r_len;
 	if (len > 0)
 	{
-	    MPID_NEM_ATOMIC_INC (compl_ctr);
+	    MPIDU_Atomic_incr(compl_ctr);
 /*             gm_get (MPID_nem_module_gm_port, (long)s_buf, r_buf, len, GM_LOW_PRIORITY, node_id, port_id, get_callback, compl_ctr); */
 	    
 	    --MPID_nem_module_gm_num_send_tokens;
