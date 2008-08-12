@@ -402,3 +402,18 @@ int MPIU_GetEnvBool( const char *envName, int *val )
     }
     return 0;
 }
+
+int MPIU_GetEnvStr( const char *envName, const char **val )
+{
+    const char *val_ptr;
+
+    val_ptr = getenv( envName );
+
+    if (val_ptr)
+    {
+        *val = val_ptr;
+        return 1;
+    }
+
+    return 0;
+}
