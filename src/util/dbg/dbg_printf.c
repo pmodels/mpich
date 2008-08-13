@@ -23,6 +23,9 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 
 /* Temporary.  sig values will change */
 /* style: allow:vprintf:3 sig:0 */
@@ -838,6 +841,19 @@ static int MPIU_DBG_OpenFile( void )
 		    *pDest = 0;
 		    MPIU_Strnapp( filename, worldNumAsChar, MAXPATHLEN );
 		    pDest += strlen(worldNumAsChar);
+		}
+		else if (*p == 'p') {
+                    /* Appends the pid of the proceess to the file name. */
+                    char pidAsChar[20];
+#if defined(HAVE_GETPID)
+                    pid_t pid = getpid();
+#else
+                    int pid = -1;
+#endif
+                    MPIU_Snprintf( pidAsChar, sizeof(pidAsChar), "%d", (int)pid );
+                    *pDest = 0;
+                    MPIU_Strnapp( filename, pidAsChar, MAXPATHLEN );
+                    pDest += strlen(pidAsChar);
 		}
 		else {
 		    *pDest++ = '%';

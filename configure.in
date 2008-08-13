@@ -5566,7 +5566,7 @@ esac
 # such as MPE, will know what's used in MPICH2
 export MPICH2_THREAD_PACKAGE
 
-AC_CHECK_FUNCS(sched_yield yield usleep sleep select)
+AC_CHECK_FUNCS(sched_yield yield usleep sleep select getpid)
 
 # Check for the Linux functions for controlling processor affinity.
 # LINUX: sched_setaffinity
