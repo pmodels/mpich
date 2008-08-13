@@ -8,6 +8,7 @@
 #include "strings.h"
 
 MPID_nem_netmod_funcs_t *MPID_nem_netmod_func;
+int MPID_nem_netmod_id;
 
 MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_print_sendq = 0;
 
@@ -28,6 +29,7 @@ int MPID_nem_choose_netmod(void)
     {
         /* netmod not specified, using the default */
         MPID_nem_netmod_func = MPID_nem_netmod_funcs[0];
+        MPID_nem_netmod_id = i;
         goto fn_exit;
     }
 
@@ -36,6 +38,7 @@ int MPID_nem_choose_netmod(void)
         if (!strncasecmp(val, MPID_nem_netmod_strings[i], MPID_NEM_MAX_NETMOD_STRING_LEN))
         {
             MPID_nem_netmod_func = MPID_nem_netmod_funcs[i];
+            MPID_nem_netmod_id = i;
             goto fn_exit;
         }
     }

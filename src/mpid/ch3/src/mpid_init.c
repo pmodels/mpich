@@ -82,6 +82,17 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     if (mpi_errno) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
+    
+    /* FIXME: Why are pg_size and pg_rank handled differently? */
+    pg_size = MPIDI_PG_Get_size(pg);
+    MPIDI_Process.my_pg = pg;  /* brad : this is rework for shared memories 
+				* because they need this set earlier
+                                * for getting the business card
+                                */
+    MPIDI_Process.my_pg_rank = pg_rank;
+    /* FIXME: Why do we add a ref to pg here? */
+    MPIDI_PG_add_ref(pg);
+
 
     /*
      * Let the channel perform any necessary initialization
@@ -93,16 +104,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
-
-    /* FIXME: Why are pg_size and pg_rank handled differently? */
-    pg_size = MPIDI_PG_Get_size(pg);
-    MPIDI_Process.my_pg = pg;  /* brad : this is rework for shared memories 
-				* because they need this set earlier
-                                * for getting the business card
-                                */
-    MPIDI_Process.my_pg_rank = pg_rank;
-    /* FIXME: Why do we add a ref to pg here? */
-    MPIDI_PG_add_ref(pg);
 
     /*
      * Initialize the MPI_COMM_WORLD object

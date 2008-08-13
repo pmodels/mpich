@@ -648,6 +648,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_enqueued        = FALSE;
 
         vc->eager_max_msg_sz = MPID_NEM_MPICH2_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t);
+
+        MPIU_DBG_MSG(VC, VERBOSE, "vc using shared memory");
     }
     else
     {
@@ -666,7 +668,11 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->iStartContigMsg = NULL;
         vc_ch->iSendContig     = NULL;
 
-        mpi_errno = MPID_nem_netmod_func->vc_init (vc);
+        MPIU_DBG_MSG_FMT(VC, VERBOSE, (MPIU_DBG_FDEST, "vc using %s netmod for rank %d pg %s",
+                                       MPID_nem_netmod_strings[MPID_nem_netmod_id], vc->pg_rank,
+                                       (vc->pg == MPIDI_Process.my_pg ? "my_pg" : (char *)vc->pg->id)));
+        
+        mpi_errno = MPID_nem_netmod_func->vc_init(vc);
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 /* FIXME: DARIUS -- enable this assert once these functions are implemented */

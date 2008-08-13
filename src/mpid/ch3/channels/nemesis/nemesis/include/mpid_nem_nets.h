@@ -46,6 +46,7 @@ extern MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_prin
 extern MPID_nem_netmod_funcs_t *MPID_nem_netmod_funcs[];
 /* netmod functions for the netmod being used */
 extern MPID_nem_netmod_funcs_t *MPID_nem_netmod_func;
+extern int MPID_nem_netmod_id;
 extern int MPID_nem_num_netmods;
 #define MPID_NEM_MAX_NETMOD_STRING_LEN 64
 extern char MPID_nem_netmod_strings[][MPID_NEM_MAX_NETMOD_STRING_LEN];
