@@ -1360,6 +1360,15 @@ static int state_l_rankrcvd_handler(pollfd_t *const plfd, sockconn_t *const sc)
             }
         }
         else {
+            /* The following line is _crucial_ to correct operation.  We need to
+             * ensure that all head-to-head resolution has completed before we
+             * move to COMMRDY and send any pending messages.  If we don't this
+             * connection could shut down before the other connection has a
+             * chance to finish the connect protocol.  That can lead to all
+             * kinds of badness, including zombie connections, segfaults, and
+             * accessing PG/VC info that is no longer present. */
+            if (VC_FIELD(sc->vc, sc_ref_count) > 1) goto fn_exit;
+
             if (send_cmd_pkt(sc->fd, MPIDI_NEM_NEWTCP_MODULE_PKT_ID_ACK) == MPI_SUCCESS) {
                 CHANGE_STATE(sc, CONN_STATE_TS_COMMRDY);
                 ASSIGN_SC_TO_VC(sc->vc, sc);
