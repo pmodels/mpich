@@ -342,7 +342,6 @@ int MPIDI_CH3U_VC_WaitForClose( void )
 	mpi_errno = MPID_Progress_wait(&progress_state);
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPID_Progress_end(&progress_state);
 	    MPIU_ERR_SET(mpi_errno,MPI_ERR_OTHER,"**ch3|close_progress");
 	    break;
 	}
