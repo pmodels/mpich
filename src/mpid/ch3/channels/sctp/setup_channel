@@ -35,14 +35,13 @@ fi
 
 # include sctp
 if test -n "$sctp_dir" ; then
-  CPPFLAGS="$CPPFLAGS -I${sctp_dir}/include"
+  MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${sctp_dir}/include"
   LDFLAGS="$LDFLAGS -L${sctp_dir}/lib"
 fi
 if test -n "$sctp_include_dir" ; then
-  CPPFLAGS="$CPPFLAGS -I${sctp_include_dir}"
+  MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${sctp_include_dir}"
 fi
 if test -n "$sctp_lib_dir" ; then
   LDFLAGS="$LDFLAGS -L${sctp_lib_dir}"
 fi
-LIBS="$LIBS -lsctp"
 

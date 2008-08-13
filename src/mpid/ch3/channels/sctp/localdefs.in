@@ -1,4 +1,6 @@
 #! /bin/sh
+LIBS="$LIBS @LIBS@"
+LDFLAGS="$LDFLAGS @LDFLAGS@"
 
 # See if there are any definitions from the sock implementation
 #if test -s src/mpid/common/sock/localdefs ; then

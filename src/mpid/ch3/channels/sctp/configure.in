@@ -19,6 +19,15 @@ dnl
 dnl Definitions will be placed in this file rather than in the DEFS variable
 dnl
 AC_CONFIG_HEADER(include/mpidi_ch3i_sctp_conf.h)
+AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+#ifndef MPIDI_CH3I_NEMESIS_CONF_H_INCLUDED
+#define MPIDI_CH3I_NEMESIS_CONF_H_INCLUDED
+])
+AH_BOTTOM([#endif])
 
 echo "RUNNING CONFIGURE FOR THE SCTP CHANNEL"
 
@@ -51,6 +60,8 @@ AC_CHECK_HEADERS(				\
 	sys/sockio.h				\
 	sys/types.h				\
 	errno.h)
+
+AC_CHECK_TYPE(caddr_t, char*)
 
 # netinet/in.h often requires sys/types.h first.  With AC 2.57, check_headers
 # does the right thing, which is to test whether the header is found 
