@@ -25,6 +25,25 @@
 char *off_type_name[MAX_OFF_TYPE] = {"TEMP_OFFSETS",
 				     "REAL_OFFSETS"};
 
+/* Simple function to return the size of the view_state. */
+static inline ADIO_Offset view_state_get_cur_sz(view_state *tmp_view_state_p,
+                                                int op_type)
+{
+    flatten_state *tmp_state_p = NULL;
+    switch(op_type)
+    {   
+        case TEMP_OFF:
+            tmp_state_p = &(tmp_view_state_p->tmp_state);
+            break;
+        case REAL_OFF:
+            tmp_state_p = &(tmp_view_state_p->cur_state);
+            break;
+        default:
+            fprintf(stderr, "op_type invalid\n");
+    }
+    return tmp_state_p->cur_sz;
+}
+
 /* Simple function to return the len of the next piece of the view_state. */
 static inline ADIO_Offset view_state_get_next_len(view_state *tmp_view_state_p,
 						  int op_type)
