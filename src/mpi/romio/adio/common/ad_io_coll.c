@@ -1175,13 +1175,5 @@ void post_client_comm (ADIO_File fd, int rw_type, int agg_rank, void *buf,
     }
 }
 
-int ADIOI_Build_client_reqs(ADIO_File fd, 
-			    int nprocs,
-			    view_state *my_mem_view_state_arr,
-			    view_state *agg_file_view_state_arr,
-			    ADIO_Offset *agg_comm_sz_arr,
-			    MPI_Datatype *agg_comm_dtype_arr)
-{
-	fprintf(stderr, "STUB: calling unimplemented function\n");
-}
+
 

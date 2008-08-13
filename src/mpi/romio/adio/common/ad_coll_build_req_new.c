@@ -859,6 +859,355 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
     return 0;
 }
 
+/* All sizes from all aggregators are gathered on the clients, which
+ * then call this function, which will generate the comm datatypes for
+ * each aggregator (agg_comm_dtype_arr) in the upcoming
+ * MPI_Alltoallw() */
+int ADIOI_Build_client_reqs(ADIO_File fd, 
+			    int nprocs,
+			    view_state *my_mem_view_state_arr,
+			    view_state *agg_file_view_state_arr,
+			    ADIO_Offset *agg_comm_sz_arr,
+			    MPI_Datatype *agg_comm_dtype_arr)
+{
+    MPI_Aint **agg_disp_arr = NULL;
+    int **agg_blk_arr = NULL;
+    view_state *tmp_mem_state_p = NULL, *tmp_file_state_p = NULL;
+    ADIO_Offset total_agg_comm_sz = 0, cur_total_agg_comm_sz = 0;
+    ADIO_Offset st_reg = 0, act_reg_sz = 0, tmp_reg_sz = 0;;
+    ADIO_Offset cur_off = -1, cur_reg_max_len = -1;
+    ADIO_Offset tmp_cur_off = -1, tmp_cur_reg_max_len = -1;
+    ADIO_Offset agg_mem_st_reg = 0, agg_mem_act_reg_sz = 0;
+    ADIO_Offset *fr_st_off_arr = fd->file_realm_st_offs;
+    ADIO_Offset *agg_comm_cur_sz_arr = NULL;
+    MPI_Datatype *fr_type_arr = fd->file_realm_types;
+    int cb_node_ct = fd->hints->cb_nodes;
+    int *agg_ol_ct_arr = NULL;
+    int *agg_ol_cur_ct_arr = NULL;
+    int agg_fr_idx = -1, tmp_agg_fr_idx = -1;
+    int cur_off_proc = -1;
+    int i = 0, j = 0;
+    int agg_next_off_idx = -1;
+    /* Used for coalescing ol pairs next to each other. */
+    ADIO_Offset *agg_mem_next_off_arr = NULL;
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5018, 0, NULL);
+#endif
+
+#ifdef DEBUG
+    fprintf(stderr, "ADIOI_Build_client_reqs:(agg,size_req)=");
+    for (i = 0; i < nprocs; i++)
+    {
+	int tmp_agg_idx = ADIOI_Agg_idx(i, fd);
+        if (tmp_agg_idx >= 0)
+        {
+	    fprintf(stderr, "(%d,%Ld)", i, agg_comm_sz_arr[i]);
+	    if (i != fd->hints->cb_nodes - 1)
+		fprintf(stderr, ",");
+	}
+	fprintf(stderr, "\n");
+    }
+#endif
+    
+    if ((agg_mem_next_off_arr = (ADIO_Offset *) ADIOI_Malloc(
+	     nprocs*sizeof(ADIO_Offset))) == NULL)
+    {
+	fprintf(stderr, "ADIOI_Build_client_reqs: malloc agg_mem_next_off_arr"
+		"failed\n");
+	return -1;
+    }
+
+    if ((agg_comm_cur_sz_arr = (ADIO_Offset *) 
+	 ADIOI_Malloc(nprocs*sizeof(ADIO_Offset))) == NULL)
+    {
+	fprintf(stderr, "ADIOI_Build_client_reqs: malloc agg_comm_cur_sz_arr"
+		" failed\n");
+	return -1;
+    }
+    if ((agg_ol_ct_arr = (int *) ADIOI_Calloc(nprocs, sizeof(int)))
+	== NULL)
+    {
+	fprintf(stderr, "ADIOI_Build_client_reqs: "
+		"malloc agg_ol_ct_arr failed\n");
+	return -1;
+    }
+    if ((agg_ol_cur_ct_arr = (int *) ADIOI_Calloc(nprocs, sizeof(int)))
+	== NULL)
+    {
+	fprintf(stderr, "ADIOI_Build_client_reqs: "
+		"malloc agg_ol_cur_ct_arr failed\n");
+	return -1;
+    }
+
+    for (i = 0; i < nprocs; i++)
+    {
+	if (agg_comm_sz_arr[i] > 0)
+	    total_agg_comm_sz += agg_comm_sz_arr[i];
+    }
+    
+    /* On the first pass see how many offset-length pairs are
+     * necessary for each aggregator.  Then allocate the correct
+     * amount of offset-length pairs for handling each aggregator's
+     * particular data size.  On the last pass, we actually create the
+     * offset-length pairs. */
+    for (i = 0; i < MAX_OFF_TYPE; i++)
+    {
+	cur_total_agg_comm_sz = 0;
+	memset(agg_comm_cur_sz_arr, 0, nprocs*sizeof(ADIO_Offset));
+	memset(agg_mem_next_off_arr, -1, nprocs*sizeof(ADIO_Offset));
+	while (total_agg_comm_sz > cur_total_agg_comm_sz)
+	{
+	    /* Look for the next aggregator offset among all the
+	     * aggregators and their respective file realms. */
+	    cur_off = -1;
+	    for (j = 0; j < nprocs; j++)
+	    {
+		tmp_agg_fr_idx = ADIOI_Agg_idx(j, fd);
+		assert(tmp_agg_fr_idx < cb_node_ct);
+		
+		/* If this process is not an aggregator or we have
+		 * finished all the bytes for this aggregator, move
+		 * along. */
+		if (tmp_agg_fr_idx < 0 || 
+		    agg_comm_cur_sz_arr[j] == agg_comm_sz_arr[j])
+		{
+		    continue;
+		}
+
+		find_next_off(fd,
+			      &(agg_file_view_state_arr[j]),
+			      fr_st_off_arr[tmp_agg_fr_idx],
+			      &(fr_type_arr[tmp_agg_fr_idx]),
+			      i,
+			      &tmp_cur_off,
+			      &tmp_cur_reg_max_len);
+		if (tmp_cur_off == -1)
+		    continue;	       
+
+		if ((cur_off == -1) || 
+		    (cur_off > tmp_cur_off))
+		{
+		    agg_fr_idx = tmp_agg_fr_idx;
+		    cur_off_proc = j;
+		    cur_off = tmp_cur_off;
+		    cur_reg_max_len = tmp_cur_reg_max_len;
+		}
+	    }
+
+	    assert(cur_off_proc != -1);
+	    
+	    /* Add up to the end of the file realm or as many bytes
+	     * are left for this particular aggregator in the client's
+	     * filetype */
+	    if (cur_reg_max_len > agg_comm_sz_arr[cur_off_proc] - 
+		agg_comm_cur_sz_arr[cur_off_proc])
+	    {
+		cur_reg_max_len = agg_comm_sz_arr[cur_off_proc] - 
+		    agg_comm_cur_sz_arr[cur_off_proc];
+	    }
+	    assert(cur_reg_max_len > 0);
+	    
+	    view_state_add_region(
+		cur_reg_max_len,
+		&(agg_file_view_state_arr[cur_off_proc]),
+		&st_reg, &act_reg_sz, i);
+	    
+#ifdef DEBUG2
+	    fprintf(stderr, "ADIOI_Build_client_reqs: %s File region"
+		    " (proc=%d,off=%Ld,sz=%Ld)\n",
+		    off_type_name[i], cur_off_proc,
+		    cur_off, act_reg_sz);
+#endif
+
+	    /* Before translating the file regions to memory regions,
+	     * we first must advance to the proper point in the
+	     * mem_view_state for this aggregator to match the
+	     * file_view_state. */
+	    tmp_file_state_p = &(agg_file_view_state_arr[cur_off_proc]);
+	    tmp_mem_state_p = &(my_mem_view_state_arr[cur_off_proc]);
+	    assert(view_state_get_cur_sz(tmp_file_state_p, i) - act_reg_sz >=
+		   view_state_get_cur_sz(tmp_mem_state_p, i));
+	    while (view_state_get_cur_sz(tmp_file_state_p, i) - act_reg_sz != 
+		   view_state_get_cur_sz(tmp_mem_state_p, i))
+	    {
+		ADIO_Offset fill_st_reg = -1, fill_reg_sz = -1;
+		view_state_add_region(
+		    view_state_get_cur_sz(tmp_file_state_p, i) - act_reg_sz -
+		    view_state_get_cur_sz(tmp_mem_state_p, i),
+		    tmp_mem_state_p,
+		    &fill_st_reg,
+		    &fill_reg_sz, i);
+	    }
+	    
+	    /* Based on how large the act_reg_sz 1. Figure out how
+	     * many memory offset-length pairs are necessary. 2. Set
+	     * the offset-length pairs. */
+	    tmp_reg_sz = 0;
+	    while (tmp_reg_sz != act_reg_sz)
+	    {
+		view_state_add_region(
+		    act_reg_sz - tmp_reg_sz,
+		    tmp_mem_state_p,
+		    &agg_mem_st_reg, &agg_mem_act_reg_sz, 
+		    i);
+		tmp_reg_sz += agg_mem_act_reg_sz;
+
+#ifdef DEBUG2
+		fprintf(stderr, "ADIOI_Build_client_reqs: Mem region %s"
+			"(proc=%d,off=%Ld,sz=%Ld)\n",
+			off_type_name[i], cur_off_proc,
+			agg_mem_st_reg, agg_mem_act_reg_sz);
+#endif
+		agg_comm_cur_sz_arr[cur_off_proc] += agg_mem_act_reg_sz;
+		cur_total_agg_comm_sz += agg_mem_act_reg_sz;	    
+		switch(i)
+		{
+		    case TEMP_OFF:
+			/* Increment the ol list count a particular
+			 * aggregator if next region is not adjacent
+			 * to the previous region. */
+			if (agg_mem_next_off_arr[cur_off_proc] != 
+			    agg_mem_st_reg)
+			{
+			    agg_ol_ct_arr[cur_off_proc]++;
+			}
+			agg_mem_next_off_arr[cur_off_proc] = 
+			    agg_mem_st_reg + agg_mem_act_reg_sz;
+			break;
+		    case REAL_OFF:
+			/* Set the ol list for the memtypes that will
+			 * map to each aggregator, coaslescing if
+			 * possible. */
+			agg_next_off_idx = agg_ol_cur_ct_arr[cur_off_proc];
+			if (agg_mem_next_off_arr[cur_off_proc] != 
+			    agg_mem_st_reg)
+			{
+			    agg_disp_arr[cur_off_proc][agg_next_off_idx] = 
+				agg_mem_st_reg;
+			    agg_blk_arr[cur_off_proc][agg_next_off_idx] = 
+				agg_mem_act_reg_sz;
+			    (agg_ol_cur_ct_arr[cur_off_proc])++;
+			}
+			else
+			{
+			    agg_blk_arr[cur_off_proc][agg_next_off_idx - 1]
+				+= agg_mem_act_reg_sz;
+			}
+			agg_mem_next_off_arr[cur_off_proc] = 
+			    agg_mem_st_reg + agg_mem_act_reg_sz;
+			break;
+		    default:
+			fprintf(stderr, "ADIOI_Build_client_reqs: "
+				"Impossible type\n");
+		}
+	    }
+	}
+	
+	/* On the first pass, allocate the memory structures for
+	 * creating the MPI_hindexed type. */
+	if (i == TEMP_OFF)
+	{	    
+	    /* Allocate offset-length pairs for creating hindexed
+	     * MPI_Datatypes for each aggregator */
+	    if ((agg_disp_arr = (MPI_Aint **) 
+		 ADIOI_Malloc(nprocs*sizeof(MPI_Aint *))) == NULL)
+	    {
+		fprintf(stderr, 
+			"ADIOI_Build_client_reqs: malloc agg_disp_arr failed\n");
+		return -1;
+	    }
+	    if ((agg_blk_arr = (int **) ADIOI_Malloc(nprocs*sizeof(int *))) 
+		== NULL)
+	    {
+		ADIOI_Free(agg_disp_arr);
+		fprintf(stderr, 
+			"ADIOI_Build_client_reqs: malloc agg_blk_arr failed\n");
+		return -1;
+	    }    
+	    for (j = 0; j < nprocs; j++)
+	    {
+		if ((agg_disp_arr[j] = (MPI_Aint *) 
+		     ADIOI_Malloc(agg_ol_ct_arr[j]*sizeof(MPI_Aint))) == NULL)
+		{
+		    fprintf(stderr, "ADIOI_Build_client_reqs: malloc "
+			    "agg_disp_arr[%d] failed\n", j);
+		    return -1;
+		}
+		if ((agg_blk_arr[j] = (int *) 
+		     ADIOI_Malloc(agg_ol_ct_arr[j]*sizeof(int))) == NULL)
+		{
+		    ADIOI_Free(agg_disp_arr[j]);
+		    fprintf(stderr, "ADIOI_Build_client_reqs: malloc "
+			    "agg_blk_arr[%d] failed\n", j);
+		    return -1;
+		}
+	    }
+	}
+    }
+
+#ifdef DEBUG
+    fprintf(stderr, "ADIOI_Build_client_reqs:(agg,cur_ol_count=ol_count)=");
+    for (i = 0; i < nprocs; i++)
+    {
+	int tmp_agg_idx = ADIOI_Agg_idx(i, fd);
+	if (tmp_agg_idx >= 0)
+	{
+	    fprintf(stderr, "(%d,%d=%d)", i, agg_ol_cur_ct_arr[i],
+		    agg_ol_ct_arr[i]);
+	    assert(agg_ol_ct_arr[i] == agg_ol_cur_ct_arr[i]);
+	    if (tmp_agg_idx != fd->hints->cb_nodes - 1)
+		fprintf(stderr, ",");
+	}
+    }
+    fprintf(stderr, "\n");
+#endif
+
+#ifdef DEBUG2
+    for (i = 0; i < nprocs; i++)
+    {
+	if (agg_ol_ct_arr[i] > 0)
+	{
+	    fprintf(stderr, "ADIOI_Build_client_reqs: p %d (off,len) = ", i);
+	    for (j = 0; j < agg_ol_ct_arr[i]; j++)
+	    {
+		fprintf(stderr, "[%d](%d,%d) ", j,
+			agg_disp_arr[i][j],
+			agg_blk_arr[i][j]);
+	    }
+	    fprintf(stderr, "\n");
+	}
+    }
+#endif
+
+    /* Create all the aggregator MPI_Datatypes */
+    for (i = 0; i < nprocs; i++)
+    {
+	if (agg_comm_sz_arr[i] > 0)
+	{
+	    MPI_Type_hindexed(agg_ol_ct_arr[i], agg_blk_arr[i],
+                              agg_disp_arr[i], MPI_BYTE,
+                              &(agg_comm_dtype_arr[i]));
+            MPI_Type_commit(&(agg_comm_dtype_arr[i]));
+	}
+	else
+	{
+	    agg_comm_dtype_arr[i] = MPI_BYTE;
+	}
+	ADIOI_Free(agg_blk_arr[i]);
+	ADIOI_Free(agg_disp_arr[i]);
+    }
+    ADIOI_Free(agg_blk_arr);
+    ADIOI_Free(agg_disp_arr);
+
+    ADIOI_Free(agg_mem_next_off_arr);
+    ADIOI_Free(agg_comm_cur_sz_arr);
+    ADIOI_Free(agg_ol_ct_arr);
+    ADIOI_Free(agg_ol_cur_ct_arr);
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5019, 0, NULL);
+#endif    
+    return 0;
+}
 /* ADIOI_Build_client_pre_req allows a client to calculate the memtype
  * offset-length pairs up (up to a limit - max_pre_req_sz or max
  * ol_ct). It basically allows ADIOI_Build_client_req to do less work.
@@ -1712,3 +2061,5 @@ int ADIOI_Build_client_req(ADIO_File fd,
 #endif    
     return 0;
 }
+
+
