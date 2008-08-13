@@ -13,18 +13,21 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_SendNoncontig
+#define FUNCNAME MPIDI_CH3_SendNoncontig_iov
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-/* MPIDI_CH3_SendNoncontig - Sends a message by loading an
+/* MPIDI_CH3_SendNoncontig_iov - Sends a message by loading an
    IOV and calling iSendv.  The caller must initialize
    sreq->dev.segment as well as segment_first and segment_size. */
-int MPIDI_CH3_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq,
-			     void *header, MPIDI_msg_sz_t hdr_sz )
+int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
+                                 void *header, MPIDI_msg_sz_t hdr_sz )
 {
     int mpi_errno = MPI_SUCCESS;
     int iov_n;
     MPID_IOV iov[MPID_IOV_LIMIT];
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
 
     iov[0].MPID_IOV_BUF = header;
     iov[0].MPID_IOV_LEN = hdr_sz;
@@ -66,6 +69,7 @@ int MPIDI_CH3_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq,
 
 
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -119,7 +123,7 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
     sreq->dev.segment_size = data_sz;
 	    
     mpi_errno = vc->sendNoncontig_fn(vc, sreq, eager_pkt, 
-					  sizeof(MPIDI_CH3_Pkt_eager_send_t));
+                                     sizeof(MPIDI_CH3_Pkt_eager_send_t));
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:

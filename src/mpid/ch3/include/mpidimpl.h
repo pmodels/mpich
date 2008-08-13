@@ -1673,8 +1673,8 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **, const void *, int,
 				      int, int, MPID_Comm *, int );
 int MPIDI_CH3_EagerSyncZero(MPID_Request **, int, int, MPID_Comm *, int );
 
-int MPIDI_CH3_SendNoncontig( struct MPIDI_VC *vc, struct MPID_Request *sreq,
-			     void *header, MPIDI_msg_sz_t hdr_sz );
+int MPIDI_CH3_SendNoncontig_iov( struct MPIDI_VC *vc, struct MPID_Request *sreq,
+                                 void *header, MPIDI_msg_sz_t hdr_sz );
 
 /* Routines to ack packets, called in the receive routines when a 
    message is matched */

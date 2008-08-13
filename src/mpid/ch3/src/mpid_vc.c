@@ -680,7 +680,7 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
     vc->rndvSend_fn           = MPIDI_CH3_RndvSend;
     vc->rndvRecv_fn           = MPIDI_CH3_RecvRndv;
     vc->eager_max_msg_sz      = MPIDI_CH3_EAGER_MAX_MSG_SIZE;
-    vc->sendNoncontig_fn      = MPIDI_CH3_SendNoncontig;
+    vc->sendNoncontig_fn      = MPIDI_CH3_SendNoncontig_iov;
     MPIU_CALL(MPIDI_CH3,VC_Init( vc ));
     MPIU_DBG_PrintVCState(vc);
 
