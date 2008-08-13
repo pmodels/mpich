@@ -31,8 +31,6 @@ enum {
 
 
 int MPIDI_CH3I_Progress(MPID_Progress_state *progress_state, int blocking);
-MPID_Request *MPIDI_CH3_Progress_poke_with_matching(int,int,MPID_Comm *comm,int,int *,void *,int, MPI_Datatype, MPI_Status *);
-MPID_Request *MPIDI_CH3_Progress_ipoke_with_matching(int,int,MPID_Comm *comm,int,int *,void *,int, MPI_Datatype, MPI_Status *);
 #define MPIDI_CH3_Progress_test() MPIDI_CH3I_Progress(NULL, FALSE)
 #define MPIDI_CH3_Progress_wait(progress_state) MPIDI_CH3I_Progress(progress_state, TRUE)
 #define MPIDI_CH3_Progress_poke() MPIDI_CH3I_Progress(NULL, FALSE)

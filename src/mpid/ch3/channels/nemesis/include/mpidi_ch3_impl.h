@@ -72,15 +72,6 @@ int MPID_nem_lmt_shm_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
 
 int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen);
 
-/* #define BYPASS_PROGRESS */
-
-/* short MPIDI_CH3I_Listener_get_port(void); */
-/* int MPIDI_CH3I_VC_post_connect(MPIDI_VC_t *); */
-/* int MPIDI_CH3I_VC_post_read(MPIDI_VC_t *, MPID_Request *); */
-/* int MPIDI_CH3I_VC_post_write(MPIDI_VC_t *, MPID_Request *); */
-/* int MPIDI_CH3I_sock_errno_to_mpi_errno(char * fcname, int sock_errno); */
-/* int MPIDI_CH3I_Get_business_card(char *value, int length); */
-
 struct MPIDI_VC;
 struct MPID_Request;
 struct MPID_nem_copy_buf;
