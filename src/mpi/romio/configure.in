@@ -100,7 +100,7 @@ MPIO_REQ_REAL_POBJECTS="_iotest.o _iowait.o _iowaitall.o _iowaitany.o _iotestall
 #
 have_aio=no
 #
-known_filesystems="nfs ufs pfs pvfs pvfs2 testfs xfs panfs gridftp lustre bgl bglockless"
+known_filesystems="nfs ufs pfs pvfs pvfs2 testfs xfs panfs gridftp lustre bgl bglockless zoidfs"
 known_mpi_impls="mpich2_mpi mpich_mpi sgi_mpi hp_mpi cray_mpi lam_mpi"
 #
 # Defaults
@@ -1209,6 +1209,13 @@ fi
 
 
 
+if test -n "$file_system_zoidfs"; then
+	AC_CHECK_HEADERS(zoidfs.h,
+		AC_DEFINE(ROMIO_ZOIDFS,1,[Define for ROMIO with ZoidFD]),
+		AC_MSG_ERROR([ZoidFS support requested but cannot find zoidfs.h header file])
+	)
+fi
+
 #
 # Verify presence of pvfs2.h
 #
@@ -1921,7 +1928,8 @@ elif test $FROM_MPICH2 = yes ; then
    # Turn off the building of the Fortran interface and the Info routines
    EXTRA_DIRS=""
    AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if status_set_bytes available])
-   DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST"
+   DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST 1"
+   AC_DEFINE(HAVE_MPIU_FUNCS,1,[Define if MPICH2 memory tracing macros defined])
    # Add the MPICH2_INCLUDE_FLAGS to CPPFLAGS
    CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 fi
@@ -1933,6 +1941,7 @@ fi
 if test $WITHIN_KNOWN_MPI_IMPL = no ; then
    PAC_TEST_MPIR_STATUS_SET_BYTES
    PAC_TEST_MPI_GREQUEST
+   PAC_TEST_MPIU_FUNCS
    AC_DEFINE(PRINT_ERR_MSG,1,[Define for printing error messages])
 fi
 #
@@ -2156,6 +2165,7 @@ AC_OUTPUT(Makefile localdefs mpi-io/Makefile mpi2-other/info/Makefile \
 		   adio/ad_pvfs2/Makefile \
 		   adio/ad_gridftp/Makefile \
   		   adio/ad_lustre/Makefile \
+		   adio/ad_zoidfs/Makefile \
                    mpi-io/fortran/Makefile mpi2-other/info/fortran/Makefile \
                    mpi2-other/array/fortran/Makefile test/fmisc.f \
                    test/fcoll_test.f test/pfcoll_test.f test/fperf.f \

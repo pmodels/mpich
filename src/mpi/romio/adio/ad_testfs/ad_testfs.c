@@ -12,6 +12,7 @@
 
 struct ADIOI_Fns_struct ADIO_TESTFS_operations = {
     ADIOI_TESTFS_Open, /* Open */
+    ADIOI_GEN_OpenColl, /* OpenColl */
     ADIOI_TESTFS_ReadContig, /* ReadContig */
     ADIOI_TESTFS_WriteContig, /* WriteContig */
     ADIOI_TESTFS_ReadStridedColl, /* ReadStridedColl */

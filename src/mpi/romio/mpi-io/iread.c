@@ -138,9 +138,7 @@ int MPIOI_File_iread(MPI_File mpi_fh,
         else {
             /* to maintain strict atomicity semantics with other concurrent
               operations, lock (exclusive) and call blocking routine */
-            if ((fh->file_system != ADIO_PIOFS) && 
-              (fh->file_system != ADIO_NFS) && (fh->file_system != ADIO_PVFS)
-	      && (fh->file_system != ADIO_PVFS2))
+	    if (ADIO_Feature(fh, ADIO_LOCKS))
 	    {
                 ADIOI_WRITE_LOCK(fh, off, SEEK_SET, bufsize);
 	    }
@@ -148,9 +146,7 @@ int MPIOI_File_iread(MPI_File mpi_fh,
             ADIO_ReadContig(fh, buf, count, datatype, file_ptr_type, 
 			    off, &status, &error_code);
 
-            if ((fh->file_system != ADIO_PIOFS) && 
-               (fh->file_system != ADIO_NFS) && (fh->file_system != ADIO_PVFS)
-	       && (fh->file_system != ADIO_PVFS2))
+	    if (ADIO_Feature(fh, ADIO_LOCKS)) 
 	    {
                 ADIOI_UNLOCK(fh, off, SEEK_SET, bufsize);
 	    }

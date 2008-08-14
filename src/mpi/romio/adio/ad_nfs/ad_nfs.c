@@ -12,6 +12,7 @@
 
 struct ADIOI_Fns_struct ADIO_NFS_operations = {
     ADIOI_NFS_Open, /* Open */
+    ADIOI_FAILSAFE_OpenColl, /* OpenColl */
     ADIOI_NFS_ReadContig, /* ReadContig */
     ADIOI_NFS_WriteContig, /* WriteContig */
     ADIOI_GEN_ReadStridedColl, /* ReadStridedColl */

@@ -145,9 +145,7 @@ int MPI_File_set_view(MPI_File mpi_fh, MPI_Offset disp, MPI_Datatype etype,
     /* --END ERROR HANDLING-- */
 
     /* reset shared file pointer to zero */
-    if ((fh->file_system != ADIO_PIOFS) &&
-	(fh->file_system != ADIO_PVFS) &&
-	(fh->file_system != ADIO_PVFS2) && 
+    if (ADIO_Feature(fh, ADIO_SHARED_FP) && 
         (fh->shared_fp_fd != ADIO_FILE_NULL))
     {
 	/* only one process needs to set it to zero, but I don't want to 
@@ -166,9 +164,7 @@ int MPI_File_set_view(MPI_File mpi_fh, MPI_Offset disp, MPI_Datatype etype,
 	/* --END ERROR HANDLING-- */
     }
 
-    if ((fh->file_system != ADIO_PIOFS) &&
-	(fh->file_system != ADIO_PVFS) &&
-	(fh->file_system != ADIO_PVFS2 ))
+    if (ADIO_Feature(fh, ADIO_SHARED_FP))
     {
 	MPI_Barrier(fh->comm); /* for above to work correctly */
     }

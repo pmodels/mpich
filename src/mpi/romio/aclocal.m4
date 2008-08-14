@@ -823,6 +823,28 @@ EOF
   fi
   rm -f conftest mpitest.c
 ])dnl
+define(PAC_TEST_MPIU_FUNCS,[
+  AC_MSG_CHECKING(support for MPICH2 memory macros)
+  rm -f mpitest.c
+  cat > mpitest.c <<EOF
+#include "mpi.h"
+#include "stdio.h"
+  main(Int argc, char **argv)
+  {
+      MPIU_Free(NULL);
+  }
+EOF
+  rm -f conftest
+  $CC $USER_CFLAGS -I$MPI_INCLUDE_DIR -o conftest mpitest.c $MPI_LIB > /dev/null 2>&1
+  if test -x conftest ; then
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(HAVE_MPIU_FUNCS,1,[Define if MPICH2 memory tracing macros defined])
+  else
+     AC_MSG_RESULT(no)
+  fi
+  rm -f conftest mpitest.c
+])dnl
+dnl
 define(PAC_TEST_MPI_GREQUEST,[
   AC_MSG_CHECKING(support for generalized requests)
   rm -f mpitest.c
@@ -841,7 +863,8 @@ EOF
   $CC $USER_CFLAGS -I$MPI_INCLUDE_DIR -o conftest mpitest.c $MPI_LIB > /dev/null 2>&1
   if test -x conftest ; then
      AC_MSG_RESULT(yes)
-     AC_DEFINE(HAVE_MPI_GREQUEST,,[Define if generalized requests avaliable])
+     AC_DEFINE(HAVE_MPI_GREQUEST,1,[Define if generalized requests avaliable])
+     DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST 1"
   else
      AC_MSG_RESULT(no)
   fi

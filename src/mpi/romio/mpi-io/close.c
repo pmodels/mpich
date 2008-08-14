@@ -51,10 +51,7 @@ int MPI_File_close(MPI_File *mpi_fh)
     MPIO_CHECK_FILE_HANDLE(fh, myname, error_code);
     /* --END ERROR HANDLING-- */
 
-    if (((fh)->file_system != ADIO_PIOFS) &&
-	((fh)->file_system != ADIO_PVFS) &&
-	((fh)->file_system != ADIO_PVFS2) &&
-	((fh)->file_system != ADIO_GRIDFTP))
+    if (ADIO_Feature(fh, ADIO_SHARED_FP)) 
     {
 	ADIOI_Free((fh)->shared_fp_fname);
         /* need a barrier because the file containing the shared file

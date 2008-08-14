@@ -137,6 +137,8 @@ typedef struct ADIOI_AIO_req_str {
 
 struct ADIOI_Fns_struct {
     void (*ADIOI_xxx_Open) (ADIO_File fd, int *error_code);
+    void (*ADIOI_xxx_OpenColl) (ADIO_File fd, int rank, 
+		    int access_mode, int *error_code);
     void (*ADIOI_xxx_ReadContig) (ADIO_File fd, void *buf, int count, 
                    MPI_Datatype datatype, int file_ptr_type, 
                    ADIO_Offset offset, ADIO_Status *status, int *error_code);
@@ -185,6 +187,7 @@ struct ADIOI_Fns_struct {
     void (*ADIOI_xxx_Flush) (ADIO_File fd, int *error_code); 
     void (*ADIOI_xxx_Resize) (ADIO_File fd, ADIO_Offset size, int *error_code);
     void (*ADIOI_xxx_Delete) (char *filename, int *error_code);
+    int  (*ADIOI_xxx_Feature) (ADIO_File fd, int flag);
 };
 
 /* optypes for ADIO_RequestD */
@@ -213,6 +216,9 @@ struct ADIOI_Fns_struct {
 
 
 /* some of the ADIO functions are macro-replaced */
+
+#define ADIOI_OpenColl(fd, rank, access_mode, error_code) \
+	(*(fd->fns->ADIOI_xxx_OpenColl))(fd, rank, access_mode, error_code)
 
 #define ADIO_ReadContig(fd,buf,count,datatype,file_ptr_type,offset,status,error_code) \
         (*(fd->fns->ADIOI_xxx_ReadContig))(fd,buf,count,datatype,file_ptr_type,offset,status,error_code)
@@ -280,6 +286,9 @@ struct ADIOI_Fns_struct {
 #define ADIO_SetInfo(fd, users_info, error_code) \
         (*(fd->fns->ADIOI_xxx_SetInfo))(fd, users_info, error_code)
 
+#define ADIO_Feature(fd, flag) \
+	(*(fd->fns->ADIOI_xxx_Feature))(fd, flag)
+
 
 /* structure for storing access info of this process's request 
    from the file domain of other processes, and vice-versa. used 
@@ -329,6 +338,12 @@ void ADIOI_incorporate_system_hints(MPI_Info info, MPI_Info sysinfo,
 void ADIOI_GEN_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
 		     int *error_code);
 void ADIOI_GEN_Flush(ADIO_File fd, int *error_code);
+void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, 
+		int access_mode, int *error_code);
+void ADIOI_SCALEABLE_OpenColl(ADIO_File fd, int rank, 
+		int access_mode, int *error_code);
+void ADIOI_FAILSAFE_OpenColl(ADIO_File fd, int rank, 
+		int access_mode, int *error_code);
 void ADIOI_GEN_Delete(char *filename, int *error_code);
 void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count, 
 			  MPI_Datatype datatype, int file_ptr_type,
@@ -369,6 +384,8 @@ int ADIOI_GEN_aio_wait_fn(int count, void **array_of_states, double timeout,
 		ADIO_Status *status);
 int ADIOI_GEN_aio_query_fn(void *extra_state, ADIO_Status *status);
 int ADIOI_GEN_aio_free_fn(void *extra_state);
+int ADIOI_GEN_Feature(ADIO_File fd, int feature);
+
 void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, int count,
                        MPI_Datatype buftype, int file_ptr_type,
                        ADIO_Offset offset, ADIO_Status *status, int
@@ -771,7 +788,7 @@ int  ADIOI_MPE_postwrite_a;
 int  ADIOI_MPE_postwrite_b;
 #endif
 
-#if 1  /*todo fix dependency on mpich? */
+#ifdef ROMIO_INSIDE_MPICH2
 /* Assert that this MPI_Aint value can be cast to a ptr value without problem.*/
 /* Basic idea is the value should be unchanged after casting 
    (no loss of (meaningful) high order bytes in 8 byte MPI_Aint 
@@ -792,10 +809,11 @@ int  ADIOI_MPE_postwrite_b;
 #else
   #include <assert.h>
   #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)
-  #define ADIOI_AINT_CAST_TO_LONG_LONG (long long*)
+  #define ADIOI_AINT_CAST_TO_LONG_LONG (long long)
   #define ADIOI_AINT_CAST_TO_OFFSET ADIOI_AINT_CAST_TO_LONG_LONG
   #define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) 
   #define ADIOI_Assert assert
+  #define MPIR_Upint unsigned int
 #endif
 
 #ifdef USE_DBG_LOGGING    /*todo fix dependency on mpich?*/
