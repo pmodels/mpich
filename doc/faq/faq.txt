@@ -201,16 +201,16 @@ In file included from sock.c:9: \
 Check if you have set the envirnoment variable CPPFLAGS. If so, unset
 it and use CXXFLAGS instead. Then rerun configure and make.
 
-%% Heading: Q: When building the ssm or sshm channel, I get the \
+%% Heading: Q: When building the ssm channel, I get the \
 error ``mpidu\_process\_locks.h:234:2: error: \#error *** No atomic memory \
 operation specified to implement busy locks ***''
 %% Filename: asmlocks
 %% End
-The ssm and sshm channels do not work on all platforms because they
-use special interprocess locks (often assembly) that may not work
-with some compilers or machine architectures. They work on Linux with
+The ssm channel does not work on all platforms because it
+uses special interprocess locks (often assembly) that may not work
+with some compilers or machine architectures. It works on Linux with
 gcc, Intel, and Pathscale compilers on various Intel
-architectures. They also work in Windows and Solaris environments.
+architectures. It also works in Windows and Solaris environments.
 
 %% Heading: Q: When using the Intel Fortran 90 compiler (version 9), the make \
 fails with errors in compiling statement that reference \

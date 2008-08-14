@@ -2211,7 +2211,6 @@ configfile_loop:
 	    smpd_launch_node_t *iter;
 	    /* If the user specified auto channel selection then set the channel here */
 	    /* shm < 8 processes on one node
-	    * sshm >= 8 processes on one node
 	    * ssm multiple nodes
 	    */
 	    if ((strcmp(channel, "auto") == 0) && (smpd_process.launch_list != NULL))

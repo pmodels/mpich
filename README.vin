@@ -481,12 +481,6 @@ If you want to try this experimental channel, please let us know what does
 and does not work.  The next release will have a more robust, 
 ready-for-production, version of this channel.
 
-The sshm (scalable shared memory) channel is currently not
-supported. The code has been retained to provide an example of some
-MPI-2 RMA optimizations (the immediate method as opposed to the
-deferred method used in other channels for implementing the
-synchronization in MPI-2 one-sided communication).
-
 The Nemesis channel is a low-latency channel that uses shared memory
 for intra-node communication and various networks for inter-node
 communication.  It currently supports TCP, GM, MX and Qsnet/Elan
@@ -762,10 +756,7 @@ includes all of ROMIO)
 Active-target one-sided communication is implemented. Passive target
 one-sided communication (with MPI_Win_lock and MPI_Win_unlock) is
 implemented but relies on MPI functions at the target for progress to
-occur (the function could well be MPI_Win_free).  The one exception is
-in the sshm channel when window memory is allocated with
-MPI_Alloc_mem. In this case, communication happens without any action
-from the target.
+occur (the function could well be MPI_Win_free).
 
 The dynamic process management routines (MPI_Comm_spawn,
 MPI_Comm_Connect, and MPI_Comm_Accept, and their relations) are

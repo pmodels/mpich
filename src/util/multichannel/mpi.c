@@ -29,8 +29,7 @@
  * This way mpiexec or the user can choose the best channel to use at run-time.
  *
  * For example, mpiexec may choose the shm channel for up to 8 processes on a single node
- * and sshm for more than 8 processes on a single node and the sock channel for multi-node
- * jobs.
+ * and the sock channel for larger and multi-node jobs.
  * Example 2: A user has an infiniband cluster and wants the ib channel to be the default.
  * So the user sets the mpiexec option to use the ib channel as the default and then all
  * jobs run on the cluster use the ib channel without modification or re-linking.

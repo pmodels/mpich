@@ -1,4 +1,0 @@
-#! /bin/sh
-
-# Add any libraries needed by the SSHM channel
-LIBS="$LIBS @SSHM_LIBS@"

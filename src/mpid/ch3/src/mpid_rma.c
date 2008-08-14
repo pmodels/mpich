@@ -28,7 +28,7 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
     /* We pass the RMAFns function table to this function because a channel may 
        want to reset it to the default if it finds that it cannot
        optimize for this   
-       set of windows. The sshm channel does this if windows are not
+       set of windows. The sshm channel did this if windows are not
        allocated in shared memory. */
        
     mpi_errno = MPIDI_Win_create(base, size, disp_unit, info, comm_ptr, 

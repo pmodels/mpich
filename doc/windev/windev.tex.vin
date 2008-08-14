@@ -195,7 +195,7 @@ machine.
 \item run ``\texttt{winconfigure.wsf --cleancode}'' to configure mpich2 for Windows and output
 all the generated files like mpi.h and the fortran interface files, etc.
 \item run the Developer Studio command line tool to build all the pieces of MPICH2.  This
-includes each of the channels - sock, ssm, shm, sshm, and the multi-threaded sock
+includes each of the channels - sock, ssm, shm, and the multi-threaded sock
 channel.  Two versions of each channel are built, the regular release build and the rlog
 profiled version.  The mpi wrapper channel selector dll is built and three Fortran interfaces
 are built, one for each set of common symbol types and calling conventions.  mpiexec and
@@ -387,7 +387,7 @@ The default channel uses sockets for communication.  There are two channels that
 shared memory.  There is a channel that uses both sockets and shared memory.  There is a
 channel that uses Infiniband.  And there is a thread-safe version of the sockets channel.
 
-The short names for the channels are: sock, shm, sshm, ssm, mt.
+The short names for the channels are: sock, shm, ssm, mt.
 
 These channels can be selected at runtime with an environment variable: MPICH2\_CHANNEL.
 The following is an example that uses the Infiniband channel instead of the default sockets
@@ -407,7 +407,6 @@ mpiexec -channel auto -n 4 myapp.exe
 The rules are:
 \begin{enumerate}
 \item If numprocs is less than 8 on one machine, use the shm channel
-\item If numprocs is greater than 7 on one machine, use the sshm channel
 \item If running on multiple machines, use the ssm channel.  This channel can be changed 
 using winconfigure.
 \end{enumerate}
@@ -545,13 +544,13 @@ command.
 \item \texttt{-channel channel\_name}
 This option is only available under Windows and allows the user to select which
 channel implementation of MPICH2 to select at runtime.  The current channels
-supported are sock, mt, ssm, shm, and sshm.  These represent the sockets, 
-multi-threaded sockets, sockets plus shared memory, shared memory, and scalable
-shared memory channels.  The shared memory channels only work on one node.  
-The sockets, multi-threaded sockets, and sockets plus shared memory channels 
-work on multiple nodes.  There are also profiled versions of the channels that
-produce RLOG files for each process when selected.  They are named p, mtp, ssmp,
-shmp, and sshmp.  See the section on channel selection for additional information.
+supported are sock, mt, ssm, and shm.  These represent the sockets, 
+multi-threaded sockets, sockets plus shared memory, and shared memory channels.
+The shared memory channels only work on one node.  The sockets, multi-threaded
+sockets, and sockets plus shared memory channels work on multiple nodes.  There
+are also profiled versions of the channels that produce RLOG files for each
+process when selected.  They are named p, mtp, ssmp, and shmp.  See the
+section on channel selection for additional information.
 
 \item \texttt{-configfile filename}
 Use the specified job configuration file to launch the job.  Each line in the

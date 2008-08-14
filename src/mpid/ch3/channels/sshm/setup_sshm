@@ -1,6 +1,0 @@
-#! /bin/sh
-# Let the ch3 configure know which utility modules are needed for this channel
-# (in ch3/util/<directory>, in this case, shm because
-# this channel uses only shared memory)
-ch3subsystems="$ch3subsystems shm"
-needs_shm=yes
