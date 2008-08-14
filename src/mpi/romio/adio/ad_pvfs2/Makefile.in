@@ -21,7 +21,7 @@ AD_PVFS2_OBJECTS = ad_pvfs2_close.o ad_pvfs2_read.o \
       ad_pvfs2_flush.o ad_pvfs2_resize.o ad_pvfs2_hints.o \
       ad_pvfs2_delete.o ad_pvfs2.o ad_pvfs2_common.o ad_pvfs2_aio.o \
       ad_pvfs2_read_list_classic.o  ad_pvfs2_io_list.o ad_pvfs2_io_dtype.o \
-      ad_pvfs2_write_list_classic.o
+      ad_pvfs2_write_list_classic.o ad_pvfs2_features.o
 
 default: $(LIBNAME)
 	@if [ "@ENABLE_SHLIB@" != "none" ] ; then \

@@ -12,7 +12,7 @@
 
 struct ADIOI_Fns_struct ADIO_PVFS2_operations = {
     ADIOI_PVFS2_Open, /* Open */
-    ADIOI_SCALABLE_OpenColl, /* OpenColl */
+    ADIOI_SCALEABLE_OpenColl, /* OpenColl */
     ADIOI_PVFS2_ReadContig, /* ReadContig */
     ADIOI_PVFS2_WriteContig, /* WriteContig */
     ADIOI_GEN_ReadStridedColl, /* ReadStridedColl */
