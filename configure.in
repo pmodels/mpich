@@ -2275,7 +2275,22 @@ public:
  pac_cv_cxx_builds_exe=yes, ac_cv_builds_exe=no)
  AC_LANG_RESTORE
 ])
-    if test "$pac_cv_cxx_builds_exe" != yes; then
+    # Recent failures have come when a standard library is loaded
+    # If <string> is available but can't be used, then fail.
+    AC_CACHE_CHECK([whether C++ compiler works with standard headers],pac_cv_cxx_with_string_header,[
+    # Set this to YES if <string> is not available - the purpose of this
+    # test is to detect if the compiler will compile with <string> but
+    # fail to link it, which the Intel icpc 10.x compiler fails with
+    # if gcc 4.2 is installed.
+    pac_cv_cxx_with_string_header=yes
+    AC_TRY_COMPILE([#include <string>],[return 0;],pac_cv_cxx_compiles_string=yes,pac_cv_cxx_compiles_string=no)
+    if test "$pac_cv_cxx_compiles_string" = yes ; then
+        AC_TRY_LINK([#include <string>],[return 0;],pac_cv_cxx_links_string=yes,pac_cv_cxx_links_string=no)
+	if test "$pac_cv_cxx_links_string" = no ; then
+	    pac_cv_cxx_with_string_header=no
+        fi
+    fi])
+    if test "$pac_cv_cxx_builds_exe" != yes -o "$pac_cv_cxx_with_string_header" = no ; then
        AC_MSG_ERROR([Aborting because C++ compiler does not work.  If you do not need a C++ compiler, configure with --disable-cxx])
     fi
 
@@ -4575,6 +4590,13 @@ using namespace std;
     AC_DEFINE_UNQUOTED(MPIR_CXX_COMPLEX_VALUE,$MPIR_CXX_COMPLEX,[Define as the MPI Datatype handle for MPI::COMPLEX])
     AC_DEFINE_UNQUOTED(MPIR_CXX_DOUBLE_COMPLEX_VALUE,$MPIR_CXX_DOUBLE_COMPLEX,[Define as the MPI Datatype handle for MPI::DOUBLE_COMPLEX])
     AC_DEFINE_UNQUOTED(MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE,$MPIR_CXX_LONG_DOUBLE_COMPLEX,[Define as the MPI Datatype handle for MPI::LONG_DOUBLE_COMPLEX])
+    
+    # If either complex or double complex have length 0, then mark 
+    # c++ complex as unavailable
+    if test "$ac_cv_sizeof_Complex" != 0 -a \
+            "$ac_cv_sizeof_DoubleComplex" != 0 ; then
+	AC_DEFINE(HAVE_CXX_COMPLEX,1,[Define is C++ supports complex types])
+    fi
 fi
 
 # ----------------------------------------------------------------------------
