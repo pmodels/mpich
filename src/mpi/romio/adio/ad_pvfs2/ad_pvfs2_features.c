@@ -1,6 +1,7 @@
 #include "adio.h"
+#include "ad_pvfs2.h"
 
-int ADIOI_PVFS2_Features(int flag)
+int ADIOI_PVFS2_Feature(ADIO_File fd, int flag)
 {
 	switch(flag) {
 		case ADIO_SCALABLE_OPEN:
