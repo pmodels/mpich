@@ -15,7 +15,7 @@ C_COMPILE_SHL = $(CC_SHL)
 
 @VPATH@
 
-AD_BGLOCKLESS_OBJECTS = ad_bglockless.o
+AD_BGLOCKLESS_OBJECTS = ad_bglockless.o ad_bglockless_features.o
 
 
 default: $(LIBNAME)

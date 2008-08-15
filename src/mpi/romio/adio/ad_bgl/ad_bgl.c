@@ -19,6 +19,7 @@
 
 struct ADIOI_Fns_struct ADIO_BGL_operations = {
     ADIOI_BGL_Open, /* Open */
+    ADIOI_GEN_OpenColl, /* Collective open */
     ADIOI_BGL_ReadContig, /* ReadContig */
     ADIOI_BGL_WriteContig, /* WriteContig */
 #if BGL_OPTIM_STEP1_2
@@ -55,4 +56,5 @@ struct ADIOI_Fns_struct ADIO_BGL_operations = {
     ADIOI_GEN_Flush, /* Flush */
     ADIOI_GEN_Resize, /* Resize */
     ADIOI_GEN_Delete, /* Delete */
+    ADIOI_GEN_Feature, /* Features */
 };
