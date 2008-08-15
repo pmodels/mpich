@@ -653,32 +653,6 @@ int MPIDI_CH3_Sockconn_handle_connect_event( MPIDI_CH3I_Connection_t *conn,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Handle_vc_close
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_Handle_vc_close(MPIDI_VC_t *vc)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_Connection_t *conn;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_HANDLE_VC_CLOSE);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_HANDLE_VC_CLOSE);
-
-    MPIU_Assert(vc);
-    conn = ((MPIDI_CH3I_VC *)vc->channel_private)->conn;
-    if (conn) {
-        /* zero out the vc so that _handle_close_event doesn't attempt to
-         * dereference a free'd VC ptr after the PG is destroyed */
-        conn->vc = NULL;
-    }
-
-    ((MPIDI_CH3I_VC *)vc->channel_private)->conn = NULL;
-
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_HANDLE_VC_CLOSE);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Sockconn_handle_close_event
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
@@ -697,15 +671,33 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
 	    MPIU_Assert(conn->recv_active == NULL);
 	    if (conn->vc != NULL) {
 		MPIDI_CH3I_VC *vcch = (MPIDI_CH3I_VC *)conn->vc->channel_private;
-		MPIU_DBG_VCCHSTATECHANGE(conn->vc,VC_STATE_UNCONNECTED);
-		vcch->state = MPIDI_CH3I_VC_STATE_UNCONNECTED;
-		vcch->sock  = MPIDU_SOCK_INVALID_SOCK;
-		/* FIXME: Make sure that this is the correct state for the vc */
-		/* conn->vc->state    = MPIDI_VC_STATE_INACTIVE; */
-		/* Handle_connection takes care of updating the state on the VC */
-		mpi_errno = MPIDI_CH3U_Handle_connection(conn->vc, MPIDI_VC_EVENT_TERMINATED);
-		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-	    }
+
+                conn->sock = MPIDU_SOCK_INVALID_SOCK;
+                MPIU_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_CLOSED);
+                conn->state = CONN_STATE_CLOSED;
+
+                /* Only manipulate vcch if conn was not the loser in a
+                   head-to-head resolution.  */
+                if (vcch && vcch->conn == conn) {
+                    MPIU_DBG_VCCHSTATECHANGE(conn->vc,VC_STATE_UNCONNECTED);
+                    vcch->state = MPIDI_CH3I_VC_STATE_UNCONNECTED;
+                    vcch->sock  = MPIDU_SOCK_INVALID_SOCK;
+
+                    /* This step is important; without this, test
+                       disconnect_reconnect fails because the vc->ch.conn 
+                       connection will continue to be used, even though
+                       the memory has been freed */
+                    vcch->conn = NULL;
+
+                    /* Handle_connection takes care of updating the state on the VC */
+                    mpi_errno = MPIDI_CH3U_Handle_connection(conn->vc, MPIDI_VC_EVENT_TERMINATED);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                }
+            }
+
+            /* The VC was likely freed in the _Handle_connection call and should
+               not be referenced anymore in any case. */
+            conn->vc = NULL;
 	}
 	else {
 	    MPIU_Assert(conn->state == CONN_STATE_LISTENING);
@@ -713,26 +705,8 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
 	    MPIDI_CH3I_listener_port = 0;
 	    
 	    MPIDI_CH3_Progress_signal_completion();
-	    /* FIXME: Why is this commented out? */
-	    /* MPIDI_CH3I_progress_completion_count++; */
 	}
-		
-	conn->sock = MPIDU_SOCK_INVALID_SOCK;
-	MPIU_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_CLOSED);
-	conn->state = CONN_STATE_CLOSED;
-	if (conn->vc) {
-	    MPIDI_CH3I_VC *vcch = (MPIDI_CH3I_VC *)conn->vc->channel_private;
-	    /* This step is important; without this, test
-	       disconnect_reconnect fails because the vc->ch.conn 
-	       connection will continue to be used, even though
-	       the memory has been freed */
-	    /* FIXME: There have been reports of SEGVs in the disconnect
-	       calls, so we've added checks to the fields before assuming 
-	       that they're non-null.  */
-	    if (vcch && vcch->conn == conn) vcch->conn = 0;
-	    /* FIXME: If this isn't the associated connection, 
-	       there may be a problem */
-	}
+
 	connection_destroy(conn); 
     }
  fn_exit:
