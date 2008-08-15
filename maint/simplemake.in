@@ -1504,7 +1504,7 @@ sub DefaultRules {
 		    # the lo rules have newlines in them, so we need to escape them,
 		    # as well as remove any @ prefixes
 		    my $escaped_rule = $extrules{$extkey};
-		    $escaped_rule =~ s/$newline(\t+)\@*/ ; \\$newline$1/g;
+		    $escaped_rule =~ s/$newline(\t+)\@*/ ; \\$newline$1echo /g;
 		    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
 		    print FD "\t  echo \"$extstring{$extkey}\" ; \\$newline";
 		    print FD "\telse \\$newline";
