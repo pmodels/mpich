@@ -45,6 +45,10 @@ void post_client_comm (ADIO_File fd, int rw_type, int agg_rank, void *buf,
 		       int agg_alltoallw_count,
 		       MPI_Request *request);
 
+/* Avery Ching and Kenin Columa's reworked two-phase algorithm.  Key features
+ * - persistent file domains
+ * - an option to use alltoall instead of point-to-point
+ */
 void ADIOI_IOStridedColl (ADIO_File fd, void *buf, int count, int rdwr,
 			  MPI_Datatype datatype, int file_ptr_type,
 			  ADIO_Offset offset, ADIO_Status *status,
