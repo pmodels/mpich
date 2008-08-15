@@ -63,6 +63,7 @@ print_hints( int rank, MPI_File *mfh ) {
             MPI_Info_get( info, key, 1024, value, &dummy_int ); 
             printf( "%s\n", value );
         }
+	MPI_Info_free(&info);
     }
     MPI_Barrier( MPI_COMM_WORLD );
 }
@@ -169,6 +170,7 @@ read_file( char *target, int rank, MPI_Info *info, int *corrupt_blocks ) {
     if( (mpi_ret = MPI_File_close( &rfh ) ) != MPI_SUCCESS ) {
         fatal_error( mpi_ret, NULL, "close for read" );
     }
+    free(verify_buf);
 
 }
 
@@ -250,8 +252,9 @@ main( int argc, char *argv[] ) {
                 corrupt_blocks, nproc * NUM_OBJS );
 	}
     }
+    MPI_Info_free(&info);
 
     MPI_Finalize();
-
+    free(prog);
     exit( 0 );
 }

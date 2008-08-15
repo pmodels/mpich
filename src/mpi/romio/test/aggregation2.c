@@ -82,6 +82,7 @@ int main(int argc, char ** argv)
 	    fprintf( stdout, " No Errors\n" );
 	}
     }
+    MPI_Info_free(&info);
     MPI_Finalize();
 
     return 0;
