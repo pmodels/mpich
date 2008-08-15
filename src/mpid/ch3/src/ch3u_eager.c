@@ -33,9 +33,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
     iov[0].MPID_IOV_LEN = hdr_sz;
 
     iov_n = MPID_IOV_LIMIT - 1;
-    /* One the initial load of a send iov req, set the OnFinal action (null
-       for point-to-point) */
-    sreq->dev.OnFinal = 0;
+
     mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &iov[1], &iov_n);
     if (mpi_errno == MPI_SUCCESS)
     {
@@ -99,6 +97,9 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
                      "sending non-contiguous eager message, data_sz=" MPIDI_MSG_SZ_FMT,
 					data_sz));
+    sreq->dev.OnDataAvail = 0;
+    sreq->dev.OnFinal = 0;
+
     MPIDI_Pkt_init(eager_pkt, reqtype);
     eager_pkt->match.rank	= comm->rank;
     eager_pkt->match.tag	= tag;

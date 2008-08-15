@@ -34,6 +34,10 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr);
 static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr);
 
+static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
+                           const void *dataloop, MPI_Aint dataloop_sz,
+                           const void *o_addr, int o_count, MPI_Datatype o_datatype,
+                           MPID_Datatype **combined_dtp);
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_fence
@@ -326,6 +330,87 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
     /* --END ERROR HANDLING-- */
 }
 
+/* create_datatype() creates a new struct datatype for the dtype_info
+   and the dataloop of the target datatype together with the user data */
+#undef FUNCNAME
+#define FUNCNAME create_datatype
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
+                           const void *dataloop, MPI_Aint dataloop_sz,
+                           const void *o_addr, int o_count, MPI_Datatype o_datatype,
+                           MPID_Datatype **combined_dtp)
+{
+    int mpi_errno = MPI_SUCCESS;
+    /* datatype_set_contents wants an array 'ints' which is the
+       blocklens array with count prepended to it.  So blocklens
+       points to the 2nd element of ints to avoid having to copy
+       blocklens into ints later. */
+    int ints[4];
+    int *blocklens = &ints[1];
+    MPI_Aint displaces[3];
+    MPI_Datatype datatypes[3];
+    int i;
+    const int count = 3;
+    MPI_Datatype combined_datatype;
+    MPIDI_STATE_DECL(MPID_STATE_CREATE_DATATYPE);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_CREATE_DATATYPE);
+
+    /* create datatype */
+    displaces[0] = MPIU_PtrToAint(dtype_info);
+    blocklens[0] = sizeof(*dtype_info);
+    datatypes[0] = MPI_BYTE;
+    
+    displaces[1] = MPIU_PtrToAint(dataloop);
+    blocklens[1] = dataloop_sz;
+    datatypes[1] = MPI_BYTE;
+    
+    displaces[2] = MPIU_PtrToAint(o_addr);
+    blocklens[2] = o_count;
+    datatypes[2] = o_datatype;
+    
+    mpi_errno = MPID_Type_struct(count,
+                                 blocklens,
+                                 displaces,
+                                 datatypes,
+                                 &combined_datatype);
+    
+    ints[0] = count;
+
+    MPID_Datatype_get_ptr(combined_datatype, *combined_dtp);    
+    mpi_errno = MPID_Datatype_set_contents(*combined_dtp,
+				           MPI_COMBINER_STRUCT,
+				           count+1, /* ints (cnt,blklen) */
+				           count, /* aints (disps) */
+				           count, /* types */
+				           ints,
+				           displaces,
+				           datatypes);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Commit datatype */
+    
+    MPID_Dataloop_create(combined_datatype,
+                         &(*combined_dtp)->dataloop,
+                         &(*combined_dtp)->dataloop_size,
+                         &(*combined_dtp)->dataloop_depth,
+                         MPID_DATALOOP_HOMOGENEOUS);
+    
+    /* create heterogeneous dataloop */
+    MPID_Dataloop_create(combined_datatype,
+                         &(*combined_dtp)->hetero_dloop,
+                         &(*combined_dtp)->hetero_dloop_size,
+                         &(*combined_dtp)->hetero_dloop_depth,
+                         MPID_DATALOOP_HETEROGENEOUS);
+ 
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_CREATE_DATATYPE);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Send_rma_msg
@@ -363,7 +448,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
         put_pkt->dataloop_size = 0;
         put_pkt->target_win_handle = target_win_handle;
         put_pkt->source_win_handle = source_win_handle;
-
+        
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) put_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*put_pkt);
     }
@@ -383,10 +468,10 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
         iov[0].MPID_IOV_LEN = sizeof(*accum_pkt);
     }
 
-/*    printf("send pkt: type %d, addr %d, count %d, base %d\n", rma_pkt->type,
-           rma_pkt->addr, rma_pkt->count, win_ptr->base_addrs[rma_op->target_rank]);
-    fflush(stdout);
-*/
+    /*    printf("send pkt: type %d, addr %d, count %d, base %d\n", rma_pkt->type,
+          rma_pkt->addr, rma_pkt->count, win_ptr->base_addrs[rma_op->target_rank]);
+          fflush(stdout);
+    */
 
     MPID_Comm_get_ptr(win_ptr->comm, comm_ptr);
     MPIDI_Comm_get_vc(comm_ptr, rma_op->target_rank, &vc);
@@ -450,52 +535,63 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
 
-    if (!origin_dt_derived)
+
+
+    if (!target_dt_derived)
     {
-	/* basic datatype on origin */
-        if (!target_dt_derived)
-	{
-	    /* basic datatype on target */
+        /* basic datatype on target */
+        if (!origin_dt_derived)
+        {
+            /* basic datatype on origin */
             iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)rma_op->origin_addr;
             iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
             iovcnt = 2;
+            mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsgv(vc, iov, iovcnt, request));
+            MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
         else
-	{
-	    /* derived datatype on target */
-            iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)dtype_info;
-            iov[1].MPID_IOV_LEN = sizeof(*dtype_info);
-            iov[2].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)*dataloop;
-            iov[2].MPID_IOV_LEN = target_dtp->dataloop_size;
+        {
+            /* derived datatype on origin */
+            *request = MPID_Request_create();
+            if (*request == NULL) {
+                MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+            }
+            
+            MPIU_Object_set_ref(*request, 2);
+            (*request)->kind = MPID_REQUEST_SEND;
+            
+            (*request)->dev.segment_ptr = MPID_Segment_alloc( );
+            MPIU_ERR_CHKANDJUMP1((*request)->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
 
-            iov[3].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)rma_op->origin_addr;
-            iov[3].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
-            iovcnt = 4;
-        }
+            (*request)->dev.datatype_ptr = origin_dtp;
+            /* this will cause the datatype to be freed when the request
+               is freed. */
+            MPID_Segment_init(rma_op->origin_addr, rma_op->origin_count,
+                              rma_op->origin_datatype,
+                              (*request)->dev.segment_ptr, 0);
+            (*request)->dev.segment_first = 0;
+            (*request)->dev.segment_size = rma_op->origin_count * origin_type_size;
 
-        mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsgv(vc, iov, iovcnt, request));
-        if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
+            (*request)->dev.OnFinal = 0;
+            (*request)->dev.OnDataAvail = 0;
+
+            mpi_errno = vc->sendNoncontig_fn(vc, *request, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno != MPI_SUCCESS)
+            {
+                MPID_Datatype_release((*request)->dev.datatype_ptr);
+                MPIU_Object_set_ref(*request, 0);
+                MPIDI_CH3_Request_destroy(*request);
+                *request = NULL;
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+            }
+            /* --END ERROR HANDLING-- */
         }
     }
     else
     {
-	/* derived datatype on origin */
-
-        if (!target_dt_derived)
-	{
-	    /* basic datatype on target */
-            iovcnt = 1;
-	}
-        else
-	{
-	    /* derived datatype on target */
-            iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)dtype_info;
-            iov[1].MPID_IOV_LEN = sizeof(*dtype_info);
-            iov[2].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)*dataloop;
-            iov[2].MPID_IOV_LEN = target_dtp->dataloop_size;
-            iovcnt = 3;
-        }
+        /* derived datatype on target */
+        MPID_Datatype *combined_dtp;
 
         *request = MPID_Request_create();
         if (*request == NULL) {
@@ -504,58 +600,43 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 
         MPIU_Object_set_ref(*request, 2);
         (*request)->kind = MPID_REQUEST_SEND;
-	    
-        (*request)->dev.datatype_ptr = origin_dtp;
-        /* this will cause the datatype to be freed when the request
-           is freed. */ 
 
 	(*request)->dev.segment_ptr = MPID_Segment_alloc( );
-	/* if (!*request)->dev.segment_ptr) { MPIU_ERR_POP(); } */
-        MPID_Segment_init(rma_op->origin_addr, rma_op->origin_count,
-                          rma_op->origin_datatype,
+        MPIU_ERR_CHKANDJUMP1((*request)->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+
+        /* create a new datatype containing the dtype_info, dataloop, and origin data */
+
+        create_datatype(dtype_info, *dataloop, target_dtp->dataloop_size, rma_op->origin_addr,
+                        rma_op->origin_count, rma_op->origin_datatype, &combined_dtp);
+
+        (*request)->dev.datatype_ptr = combined_dtp;
+        /* combined_datatype will be freed when request is freed */
+
+        MPID_Segment_init(MPI_BOTTOM, 1, combined_dtp->handle,
                           (*request)->dev.segment_ptr, 0);
         (*request)->dev.segment_first = 0;
-        (*request)->dev.segment_size = rma_op->origin_count * origin_type_size;
-	    
-        iov_n = MPID_IOV_LIMIT - iovcnt;
-	/* On the initial load of a send iov req, set the OnFinal action (null
-	   for point-to-point) */
-	(*request)->dev.OnFinal = 0;
-        mpi_errno = MPIDI_CH3U_Request_load_send_iov(*request,
-                                                     &iov[iovcnt],
-                                                     &iov_n); 
-        if (mpi_errno == MPI_SUCCESS)
+        (*request)->dev.segment_size = combined_dtp->size;
+
+        (*request)->dev.OnFinal = 0;
+        (*request)->dev.OnDataAvail = 0;
+
+        mpi_errno = vc->sendNoncontig_fn(vc, *request, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno != MPI_SUCCESS)
         {
-            iov_n += iovcnt;
-            
-            mpi_errno = MPIU_CALL(MPIDI_CH3,iSendv(vc, *request, iov, iov_n));
-	    /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno != MPI_SUCCESS)
-            {
-                MPID_Datatype_release((*request)->dev.datatype_ptr);
-                MPIU_Object_set_ref(*request, 0);
-                MPIDI_CH3_Request_destroy(*request);
-                *request = NULL;
-		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
-            }
-	    /* --END ERROR HANDLING-- */
-        }
-        else
-        {
-	    /* --BEGIN ERROR HANDLING-- */
             MPID_Datatype_release((*request)->dev.datatype_ptr);
             MPIU_Object_set_ref(*request, 0);
             MPIDI_CH3_Request_destroy(*request);
             *request = NULL;
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|loadsendiov" );
-	    /* --END ERROR HANDLING-- */
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
-    }
+        /* --END ERROR HANDLING-- */
 
-    if (target_dt_derived)
-    {
+        /* we're done with the datatypes */
+        if (origin_dt_derived)
+            MPID_Datatype_release(origin_dtp);
         MPID_Datatype_release(target_dtp);
-    }
+    }    
 
  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEND_RMA_MSG);
@@ -1821,44 +1902,27 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr)
            is freed. */ 
 
 	request->dev.segment_ptr = MPID_Segment_alloc( );
-	/* if (!request->dev.segment_ptr) { MPIU_ERR_POP(); } */
+        MPIU_ERR_CHKANDJUMP1(request->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+
         MPID_Segment_init(rma_op->origin_addr, rma_op->origin_count,
                           rma_op->origin_datatype,
                           request->dev.segment_ptr, 0);
         request->dev.segment_first = 0;
         request->dev.segment_size = rma_op->origin_count * origin_type_size;
 	    
-        iov_n = MPID_IOV_LIMIT - iovcnt;
-	/* On the initial load of a send iov req, set the OnFinal action (null
-	   for point-to-point) */
-	request->dev.OnFinal = 0;
-        mpi_errno = MPIDI_CH3U_Request_load_send_iov(request,
-                                                     &iov[iovcnt],
-                                                     &iov_n); 
-        if (mpi_errno == MPI_SUCCESS)
-        {
-            iov_n += iovcnt;
-            
-            mpi_errno = MPIU_CALL(MPIDI_CH3,iSendv(vc, request, iov, iov_n));
-	    /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno != MPI_SUCCESS)
-            {
-                MPID_Datatype_release(request->dev.datatype_ptr);
-                MPIU_Object_set_ref(request, 0);
-                MPIDI_CH3_Request_destroy(request);
-		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
-            }
-	    /* --END ERROR HANDLING-- */
-        }
+        request->dev.OnFinal = 0;
+        request->dev.OnDataAvail = 0;
+
+        mpi_errno = vc->sendNoncontig_fn(vc, request, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
         /* --BEGIN ERROR HANDLING-- */
-        else
+        if (mpi_errno)
         {
             MPID_Datatype_release(request->dev.datatype_ptr);
             MPIU_Object_set_ref(request, 0);
             MPIDI_CH3_Request_destroy(request);
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|loadsendiov");
         }
-        /* --END ERROR HANDLING-- */
+        /* --END ERROR HANDLING-- */        
     }
 
     if (request != NULL) {

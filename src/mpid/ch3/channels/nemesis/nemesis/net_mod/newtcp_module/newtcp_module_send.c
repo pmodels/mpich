@@ -471,9 +471,7 @@ int MPID_nem_newtcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
     iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
 
     iov_n = MPID_IOV_LIMIT - 1;
-    /* On the initial load of a send iov req, set the OnFinal action (null
-       for point-to-point) */
-    sreq->dev.OnFinal = 0;
+
     mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &iov[1], &iov_n);
     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|loadsendiov");
 

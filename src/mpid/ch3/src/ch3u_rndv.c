@@ -31,7 +31,9 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, int count,
 	
     MPIU_DBG_MSG_D(CH3_OTHER,VERBOSE,
 		   "sending rndv RTS, data_sz=" MPIDI_MSG_SZ_FMT, data_sz);
-	    
+
+    sreq->dev.OnDataAvail = 0;
+    
     sreq->partner_request = NULL;
 	
     MPIDI_Pkt_init(rts_pkt, MPIDI_CH3_PKT_RNDV_REQ_TO_SEND);
@@ -193,7 +195,10 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     
     MPID_Request_get_ptr(cts_pkt->sender_req_id, sreq);
     MPIU_DBG_PRINTF(("received cts, count=%d\n", sreq->dev.user_count));
-    
+
+    sreq->dev.OnDataAvail = 0;
+    sreq->dev.OnFinal = 0;
+
     /* Release the RTS request if one exists.  
        MPID_Request_fetch_and_clear_rts_sreq() needs to be atomic to 
        prevent
@@ -206,7 +211,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     {
 	MPID_Request_release(rts_sreq);
     }
-    
+
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
     MPIDI_Pkt_init(rs_pkt, MPIDI_CH3_PKT_RNDV_SEND);
@@ -221,8 +226,6 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
 		    "sending contiguous rndv data, data_sz=" MPIDI_MSG_SZ_FMT, 
 					    data_sz));
-	
-	sreq->dev.OnDataAvail = 0;
 	
 	iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)rs_pkt;
 	iov[0].MPID_IOV_LEN = sizeof(*rs_pkt);

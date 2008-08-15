@@ -28,9 +28,6 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)header);
 
-    sreq->dev.OnFinal = 0;
-    sreq->dev.OnDataAvail = 0;
-
     if (!MPIDI_CH3I_SendQ_empty(CH3_NORMAL_QUEUE)) /* MT */
     {
         /* send queue is not empty, just enqueue this request */

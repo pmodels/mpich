@@ -41,7 +41,8 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
     
     sreq->cc = 2;
     sreq->dev.OnDataAvail = 0;
-    
+    sreq->dev.OnFinal = 0;
+
     MPIDI_Pkt_init(es_pkt, MPIDI_CH3_PKT_EAGER_SYNC_SEND);
     es_pkt->match.rank = comm->rank;
     es_pkt->match.tag = tag;
