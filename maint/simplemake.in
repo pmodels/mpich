@@ -2906,7 +2906,7 @@ sub LibraryBuild {
 	    &print_make_endline( FD );
 	    # COMMAND PRINTING
 	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	    print FD "\t  echo \"  AR              ${libloc}lib$libname.$libext\" ; \\$newline";
+	    print FD "\t  echo \"  AR cr ${libloc}lib$libname.$libext \$?\" ; \\$newline";
 	    print FD "\telse \\$newline";
 	    print FD "\t  echo \${AR} cr ${libloc}lib$libname.$libext \$? ; \\$newline";
 	    print FD "\tfi$newline";
@@ -2922,7 +2922,7 @@ sub LibraryBuild {
     if (!$dolib_member) {
         &print_make_endline( FD );
 	print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	print FD "\t  echo \"  AR              ${libloc}lib$libname.$libext \$?\" ; \\$newline";
+	print FD "\t  echo \"  AR cr ${libloc}lib$libname.$libext \$?\" ; \\$newline";
 	print FD "\telse \\$newline";
 	print FD "\t  echo \${AR} cr ${libloc}lib$libname.$libext \$? ; \\$newline";
 	print FD "\tfi$newline";
@@ -3053,7 +3053,7 @@ sub TargetProfileLibraries {
 	    # Add these files as objects to the archive
 	    # COMMAND PRINTING
 	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	    print FD "\t  echo \"  AR              ${libloc}lib$proflib_name.a\" ; \\$newline";
+	    print FD "\t  echo \"  AR cr ${libloc}lib$proflib_name.a \$?\" ; \\$newline";
 	    print FD "\telse \\$newline";
 	    print FD "\t  echo \${AR} cr ${libloc}lib$proflib_name.a \$? ; \\$newline";
 	    print FD "\tfi$newline";
@@ -3103,11 +3103,11 @@ sub TargetProfileLibraries {
 		# Add these files as objects to the archive
 		# COMMAND PRINTING
 		print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-		print FD "\t  echo \"  AR              \$?\" ; \\$newline";
+		print FD "\t  echo \"  AR cr ${libloc}lib$proflib_name.la \$?\" ; \\$newline";
 		print FD "\telse \\$newline";
-		print FD "\t  echo \${AR} cr ${libloc}lib$proflib_name.la ; \\$newline";
+		print FD "\t  echo \${AR} cr ${libloc}lib$proflib_name.la \$?; \\$newline";
 		print FD "\tfi$newline";
-		print FD "\t\@\${AR} cr ${libloc}lib$proflib_name.la$newline";
+		print FD "\t\@\${AR} cr ${libloc}lib$proflib_name.la \$?$newline";
 		# To handle timestamp problems with recursive makes, 
 		# add a delay
 		&LibraryTimestampFix( $proflib_name.".la", $libloc );
