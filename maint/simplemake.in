@@ -2960,14 +2960,17 @@ sub TargetLibraries {
 # LibraryTimestampClean - Add clean commands for library timestamps
 sub LibraryTimestampTarget {
     my ($fulllibname,$libstamp) = @_;
-    if ($fulllibname =~ /^\.\./ && !$fixup_for_timestamps) {
+    my $expandedFullName = &ExpandMakeVars( $fulllibname );
+    if ($expandedFullName =~ /^\.\./ && !$fixup_for_timestamps) {
 	$altalltargets{$fulllibname} = $libstamp;
     }
 }
 sub LibraryTimestampPrefix {
     my ($lib, $libloc) = @_;
 
-    if ($libloc =~ /^\.\./) {
+    my $expandedlibloc = &ExpandMakeVars( $libloc );
+
+    if ($expandedlibloc =~ /^\.\./) {
 	if (!$fixup_for_timestamps) {
 	    my $num = "";
 	    if (defined($libnum{$lib})) {
@@ -2979,7 +2982,8 @@ sub LibraryTimestampPrefix {
 }
 sub LibraryTimestampFix {
     my ($lib,$libloc) = @_;
-    if ($libloc =~ /^\.\./) {
+    my $expandedlibloc = &ExpandMakeVars( $libloc );
+    if ($expandedlibloc =~ /^\.\./) {
 	if ($fixup_for_timestamps) {
 	    my $SleepText = $Sleep;
 	    my $fulllibname = $libloc . "lib$lib.a";
