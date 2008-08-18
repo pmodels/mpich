@@ -66,7 +66,6 @@ static struct {
         (sc)->index = ind;                      \
         (sc)->vc = NULL;                        \
         (sc)->pg_is_set = FALSE;                \
-        (sc)->pending_event = 0;                \
         (sc)->is_tmpvc = FALSE;                 \
         (sc)->state.cstate = CONN_STATE_TS_CLOSED; \
     } while (0)
@@ -92,8 +91,8 @@ static void dbg_print_sc_tbl(FILE *stream, int print_free_entries)
     for (i = 0; i < (print_free_entries ? g_tbl_capacity : g_tbl_size); ++i) {
         sc = &g_sc_tbl[i];
 #define TF(_b) ((_b) ? "TRUE" : "FALSE")
-        fprintf(stream, "[%d] ptr=%p idx=%d fd=%d state=%s pnd_evt=%d\n",
-                i, sc, sc->index, sc->fd, CONN_STATE_TO_STRING(sc->state.cstate), sc->pending_event);
+        fprintf(stream, "[%d] ptr=%p idx=%d fd=%d state=%s\n",
+                i, sc, sc->index, sc->fd, CONN_STATE_TO_STRING(sc->state.cstate));
         fprintf(stream, "....pg_is_set=%s is_same_pg=%s is_tmpvc=%s pg_rank=%d pg_id=%s\n",
                 TF(sc->pg_is_set), TF(sc->is_same_pg), TF(sc->is_tmpvc), sc->pg_rank, sc->pg_id);
 #undef TF
@@ -818,14 +817,14 @@ int MPID_nem_newtcp_module_connect(struct MPIDI_VC *const vc)
         sc->vc = vc;
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "about to incr sc_ref_count sc=%p sc->vc=%p sc_ref_count=%d", sc, sc->vc, VC_FIELD(sc->vc, sc_ref_count)));
         ++VC_FIELD(vc, sc_ref_count);
-        sc->pending_event = 0; /* clear pending events */
     }
     else if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED) {
         sc = VC_FIELD(vc, sc);
         MPIU_Assert(sc != NULL);
-        if (sc->state.cstate == CONN_STATE_TS_D_QUIESCENT) {
-            sc->pending_event = EVENT_CONNECT;
-        }
+        /* Do nothing here, the caller just needs to wait for the connection
+           state machine to work its way through the states.  Doing something at
+           this point will almost always just mess up any head-to-head
+           resolution. */
     }
     else {
         MPIU_Assert(0);
@@ -888,25 +887,16 @@ static int cleanup_sc(sockconn_t *sc)
     if (sc->vc && VC_FIELD(sc->vc, sc) == sc) /* this vc may be connecting/accepting with another sc e.g., this sc lost the tie-breaker */
     {
         ((MPIDI_CH3I_VC *)sc->vc->channel_private)->state = MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED;
-        if (sc->pending_event != EVENT_CONNECT) /* FIXME: is there any chances where EVENT_CONNECT is set? */
-        {
-            ASSIGN_SC_TO_VC(sc->vc, NULL);
-        }
+        ASSIGN_SC_TO_VC(sc->vc, NULL);
     }
-    if (sc->vc && VC_FIELD(sc->vc, sc) == sc && sc->pending_event == EVENT_CONNECT) {
-        MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "EVENT_CONNECT pending, calling MPID_nem_newtcp_module_connect sc=%p sc->vc=%p", sc, sc->vc));
-        mpi_errno = MPID_nem_newtcp_module_connect(sc->vc);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-    else {
-        CHANGE_STATE(sc, CONN_STATE_TS_CLOSED);
-        sc->vc = NULL;
-    
-        MPIU_CHKPMEM_MALLOC (node, freenode_t *, sizeof(freenode_t), mpi_errno, "free node");
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        node->index = sc->index;
-        Q_ENQUEUE(&freeq, node);
-    }
+
+    CHANGE_STATE(sc, CONN_STATE_TS_CLOSED);
+    sc->vc = NULL;
+
+    MPIU_CHKPMEM_MALLOC (node, freenode_t *, sizeof(freenode_t), mpi_errno, "free node");
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    node->index = sc->index;
+    Q_ENQUEUE(&freeq, node);
 
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
@@ -1018,7 +1008,7 @@ static int state_tc_c_cntd_handler(pollfd_t *const plfd, sockconn_t *const sc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_TC_C_CNTD_HANDLER);
 
-    if (sc->pending_event == EVENT_DISCONNECT || found_better_sc(sc, NULL)) {
+    if (found_better_sc(sc, NULL)) {
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_tc_c_cntd_handler(): changing to "
               "quiescent"));
         CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);

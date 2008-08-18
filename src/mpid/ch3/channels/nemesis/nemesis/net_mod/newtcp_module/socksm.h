@@ -151,7 +151,6 @@ struct MPID_nem_new_tcp_module_sockconn{
     MPIDI_VC_t *vc;
     /* Conn_type_t conn_type;  Probably useful for debugging/analyzing purposes. */
     handler_func_t handler;
-    sockconn_event_t pending_event;
 };
 
 typedef enum MPIDI_nem_newtcp_module_pkt_type {
