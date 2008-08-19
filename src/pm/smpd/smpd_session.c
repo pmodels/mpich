@@ -70,7 +70,7 @@ SMPD_BOOL smpd_get_full_path_name(const char *exe, int maxlen, char *exe_path, c
     len = GetFullPathName(exe, maxlen, exe_path, namepart);
     if (temp_exe != NULL)
     {
-	free(temp_exe);
+	MPIU_Free(temp_exe);
 	temp_exe = NULL;
     }
     if (len == 0 || len > maxlen)
@@ -220,7 +220,7 @@ SMPD_BOOL smpd_search_path(const char *smpd_path, const char *exe, int maxlen, c
 	len_pre = path_spec - smpd_path;
 	len_spec = strlen(exe_path);
 	len_post = strlen(path_spec + strlen(SMPD_PATH_SPEC));
-	smpd_path2 = (char *)malloc((len_pre + len_spec + len_post + 1) * sizeof(char));
+	smpd_path2 = (char *)MPIU_Malloc((len_pre + len_spec + len_post + 1) * sizeof(char));
 	if (len_pre)
 	{
 	    memcpy(smpd_path2, smpd_path, len_pre);
@@ -245,7 +245,7 @@ SMPD_BOOL smpd_search_path(const char *smpd_path, const char *exe, int maxlen, c
 		{
 		    if (smpd_path2 != NULL)
 		    {
-			free(smpd_path2);
+			MPIU_Free(smpd_path2);
 		    }
 		    smpd_exit_fn(FCNAME);
 		    return SMPD_FALSE;
@@ -255,7 +255,7 @@ SMPD_BOOL smpd_search_path(const char *smpd_path, const char *exe, int maxlen, c
     }
     if (smpd_path2 != NULL)
     {
-	free(smpd_path2);
+	MPIU_Free(smpd_path2);
     }
     smpd_exit_fn(FCNAME);
     return SMPD_TRUE;

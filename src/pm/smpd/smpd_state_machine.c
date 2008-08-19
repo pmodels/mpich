@@ -3039,9 +3039,9 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
     outbound_buffer.cbBuffer = context->sspi_context->max_buffer_size;
     if (context->sspi_context->out_buffer != NULL)
     {
-	free(context->sspi_context->out_buffer);
+	MPIU_Free(context->sspi_context->out_buffer);
     }
-    context->sspi_context->out_buffer = malloc(context->sspi_context->max_buffer_size);
+    context->sspi_context->out_buffer = MPIU_Malloc(context->sspi_context->max_buffer_size);
     if (context->sspi_context->out_buffer == NULL)
     {
 	smpd_err_printf("unable to allocate a sspi buffer of length %d\n", context->sspi_context->max_buffer_size);

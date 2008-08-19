@@ -77,7 +77,7 @@ restart:
 			len = 1024;
 			if (RegQueryValueEx(hProcKey, "exe", NULL, NULL, (LPBYTE)value, &len) == ERROR_SUCCESS)
 			{
-			    node = malloc(sizeof(smpd_registry_proc));
+			    node = MPIU_Malloc(sizeof(smpd_registry_proc));
 			    strcpy(node->pid, name);
 			    if (len > 0)
 				strcpy(node->exe, value);
@@ -127,7 +127,7 @@ restart:
 		{
 		    node = temp_list;
 		    temp_list = temp_list->next;
-		    free(node);
+		    MPIU_Free(node);
 		}
 	    }
 	    trailer = node = list;
@@ -143,14 +143,14 @@ restart:
 		    if (trailer != node)
 		    {
 			trailer->next = node->next;
-			free(node);
+			MPIU_Free(node);
 			node = trailer->next;
 		    }
 		    else
 		    {
 			list = list->next;
 			trailer = list;
-			free(node);
+			MPIU_Free(node);
 			node = list;
 		    }
 		}

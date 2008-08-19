@@ -21,7 +21,7 @@ typedef struct DriveMapStruct
 DriveMapStruct * allocate_DriveMapStruct()
 {
     DriveMapStruct *p;
-    p = (DriveMapStruct*)malloc(sizeof(DriveMapStruct));
+    p = (DriveMapStruct*)MPIU_Malloc(sizeof(DriveMapStruct));
     if (p == NULL)
 	return NULL;
     p->nRefCount = 1;
@@ -209,7 +209,7 @@ static void RemoveDriveStruct(char *pszDrive)
 		    pTrailer->pNext = p->pNext;
 		if (g_pDriveList == p)
 		    g_pDriveList = g_pDriveList->pNext;
-		free(p);
+		MPIU_Free(p);
 	    }
 	    return;
 	}
@@ -389,7 +389,7 @@ SMPD_BOOL smpd_map_user_drives(char *pszMap, char *pszAccount, char *pszPassword
 		    smpd_err_printf("MapUserDrives: MapDrive(%s, %s, %s, ... ) failed, %s\n", pszDrive, pszShare, ipszAccount, pszError);
             retVal = SMPD_FALSE;
             /*    
-		    free(temp);
+		    MPIU_Free(temp);
 		    smpd_exit_fn(FCNAME);
 		    return SMPD_FALSE;
             */
@@ -402,7 +402,7 @@ SMPD_BOOL smpd_map_user_drives(char *pszMap, char *pszAccount, char *pszPassword
 		    smpd_err_printf("MapUserDrives: MapDrive(%s, %s, %s, ... ) failed, %s\n", pszDrive, pszShare, pszAccount, pszError);
             retVal = SMPD_FALSE;
             /*
-		    free(temp);
+		    MPIU_Free(temp);
 		    smpd_exit_fn(FCNAME);
 		    return SMPD_FALSE;
             */
@@ -411,7 +411,7 @@ SMPD_BOOL smpd_map_user_drives(char *pszMap, char *pszAccount, char *pszPassword
 	}
 	token = strtok(NULL, ";\n");
     }
-    free(temp);
+    MPIU_Free(temp);
 
     smpd_exit_fn(FCNAME);
     return retVal;
@@ -434,7 +434,7 @@ SMPD_BOOL smpd_unmap_user_drives(char *pszMap)
     token = strtok(temp, ";\n");
     if (token == NULL)
     {
-	free(temp);
+	MPIU_Free(temp);
 	smpd_exit_fn(FCNAME);
 	return SMPD_TRUE;
     }
@@ -444,14 +444,14 @@ SMPD_BOOL smpd_unmap_user_drives(char *pszMap)
 	{
 	    if (!UnmapDrive(pszDrive, pszError, 256))
 	    {
-		free(temp);
+		MPIU_Free(temp);
 		smpd_exit_fn(FCNAME);
 		return SMPD_FALSE;
 	    }
 	}
 	token = strtok(NULL, ";\n");
     }
-    free(temp);
+    MPIU_Free(temp);
 
     smpd_exit_fn(FCNAME);
     return SMPD_FALSE;

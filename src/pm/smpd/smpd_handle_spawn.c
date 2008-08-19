@@ -943,7 +943,7 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	    printf("  path: %s\n", launch_iter->path);
 	launch_temp = launch_iter;
 	launch_iter = launch_iter->next;
-	free(launch_temp);
+	MPIU_Free(launch_temp);
     }
     fflush(stdout);
 */

@@ -539,7 +539,7 @@ int smpd_free_context(smpd_context_t *context)
 
 #ifdef DEBUG_SMPD_FREE_CONTEXT
 	/* add to debugging free list */
-	citer = (cfree_t*)malloc(sizeof(cfree_t));
+	citer = (cfree_t*)MPIU_Malloc(sizeof(cfree_t));
 	citer->context = context;
 	citer->next = free_list;
 	free_list = citer;

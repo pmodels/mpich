@@ -105,7 +105,7 @@ int smpd_add_job_key(const char *key, const char *username, const char *domain, 
 	return SMPD_FAIL;
     }
 
-    node = (smpd_job_key_list_t*)malloc(sizeof(smpd_job_key_list_t));
+    node = (smpd_job_key_list_t*)MPIU_Malloc(sizeof(smpd_job_key_list_t));
     if (node == NULL)
     {
 	smpd_exit_fn(FCNAME);
@@ -133,7 +133,7 @@ int smpd_add_job_key(const char *key, const char *username, const char *domain, 
     {
 	error = GetLastError();
 	smpd_err_printf("CreateJobObject failed: %d\n", error);
-	free(node);
+	MPIU_Free(node);
 	smpd_exit_fn(FCNAME);
 	return error;
     }
@@ -159,7 +159,7 @@ int smpd_add_job_key_and_handle(const char *key, const char *username, const cha
 	return SMPD_FAIL;
     }
 
-    node = (smpd_job_key_list_t*)malloc(sizeof(smpd_job_key_list_t));
+    node = (smpd_job_key_list_t*)MPIU_Malloc(sizeof(smpd_job_key_list_t));
     if (node == NULL)
     {
 	smpd_exit_fn(FCNAME);
@@ -187,7 +187,7 @@ int smpd_add_job_key_and_handle(const char *key, const char *username, const cha
     {
 	error = GetLastError();
 	smpd_err_printf("CreateJobObject failed: %d\n", error);
-	free(node);
+	MPIU_Free(node);
 	smpd_exit_fn(FCNAME);
 	return error;
     }
@@ -226,7 +226,7 @@ int smpd_remove_job_key(const char *key)
 		TerminateJobObject(iter->job, (UINT)-1);
 		CloseHandle(iter->job);
 	    }
-	    free(iter);
+	    MPIU_Free(iter);
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_SUCCESS;
 	}

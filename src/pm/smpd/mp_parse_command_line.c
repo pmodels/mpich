@@ -1911,7 +1911,7 @@ configfile_loop:
 	{
 	    /* an absolute path was specified */
 #ifdef HAVE_WINDOWS_H
-	    char *pTemp = (char*)malloc(SMPD_MAX_EXE_LENGTH);
+	    char *pTemp = (char*)MPIU_Malloc(SMPD_MAX_EXE_LENGTH);
 	    if (pTemp == NULL)
 	    {
 		smpd_exit_fn(FCNAME);
@@ -1921,7 +1921,7 @@ configfile_loop:
 	    pTemp[SMPD_MAX_EXE_LENGTH-1] = '\0';
 	    ExeToUnc(pTemp, SMPD_MAX_EXE_LENGTH);
 	    result = MPIU_Str_add_string(&exe_iter, &exe_len_remaining, pTemp);
-	    free(pTemp);
+	    MPIU_Free(pTemp);
 	    if (result != MPIU_STR_SUCCESS)
 	    {
 		printf("Error: insufficient buffer space for the command line.\n");

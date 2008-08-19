@@ -4286,7 +4286,7 @@ int smpd_sspi_context_init(smpd_sspi_client_context_t **sspi_context_pptr, const
     if (smpd_process.logon)
     {
 	// This doesn't work because it causes LogonUser to be called and mpiexec can't do that
-	identity = (SEC_WINNT_AUTH_IDENTITY *)malloc(sizeof(SEC_WINNT_AUTH_IDENTITY));
+	identity = (SEC_WINNT_AUTH_IDENTITY *)MPIU_Malloc(sizeof(SEC_WINNT_AUTH_IDENTITY));
 	if (identity == NULL)
 	{
 	    smpd_err_printf("unable to allocate an sspi security identity.\n");
@@ -4352,7 +4352,7 @@ int smpd_sspi_context_init(smpd_sspi_client_context_t **sspi_context_pptr, const
     smpd_dbg_printf("AcquireCredentialsHandle took %0.6f seconds\n", t2-t1);
     if (identity != NULL)
     {
-	free(identity);
+	MPIU_Free(identity);
     }
     if (sec_result != SEC_E_OK)
     {
@@ -4360,7 +4360,7 @@ int smpd_sspi_context_init(smpd_sspi_client_context_t **sspi_context_pptr, const
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
-    sspi_context->buffer = malloc(max(info->cbMaxToken, SMPD_SSPI_MAX_BUFFER_SIZE));
+    sspi_context->buffer = MPIU_Malloc(max(info->cbMaxToken, SMPD_SSPI_MAX_BUFFER_SIZE));
     if (sspi_context->buffer == NULL)
     {
 	smpd_err_printf("unable to allocate a %d byte sspi buffer\n", info->cbMaxToken);
@@ -4656,7 +4656,7 @@ int smpd_sspi_context_iter(int sspi_id, void **sspi_buffer_pptr, int *length_ptr
     }
     smpd_dbg_printf("%s package, %s, with: max %d byte token, capabilities bitmask 0x%x\n",
 	info->Name, info->Comment, info->cbMaxToken, info->fCapabilities);
-    sspi_context->buffer = malloc(info->cbMaxToken);
+    sspi_context->buffer = MPIU_Malloc(info->cbMaxToken);
     if (sspi_context->buffer == NULL)
     {
 	smpd_err_printf("unable to allocate a %d byte sspi buffer\n", info->cbMaxToken);
@@ -4804,7 +4804,7 @@ int smpd_handle_sspi_iter_command(smpd_context_t *context)
     }
     smpd_dbg_printf("%s package, %s, with: max %d byte token, capabilities bitmask 0x%x\n",
 	info->Name, info->Comment, info->cbMaxToken, info->fCapabilities);
-    sspi_buffer = malloc(info->cbMaxToken);
+    sspi_buffer = MPIU_Malloc(info->cbMaxToken);
     if (sspi_buffer == NULL)
     {
 	smpd_err_printf("unable to allocate an sspi buffer\n");

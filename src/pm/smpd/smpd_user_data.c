@@ -969,7 +969,7 @@ int smpd_get_all_smpd_data(smpd_data_t **data)
     enum_result = RegEnumValue(tkey, index, name, &name_length, NULL, NULL, (LPBYTE)value, &value_length);
     while (enum_result == ERROR_SUCCESS)
     {
-	item = (smpd_data_t*)malloc(sizeof(smpd_data_t));
+	item = (smpd_data_t*)MPIU_Malloc(sizeof(smpd_data_t));
 	if (item == NULL)
 	{
 	    *data = NULL;
