@@ -1256,7 +1256,8 @@ int MTestGetIntercomm( MPI_Comm *comm, int *isLeftGroup, int min_size )
 		mcomm = *comm;
 		rank = MPI_Comm_rank(mcomm, &rank);
 		if (merr) MTestPrintError( merr );
-		merr = MPI_Comm_split(mcomm, rank, 0, comm);
+		/* this split is effectively a dup but tests the split code paths */
+		merr = MPI_Comm_split(mcomm, 0, rank, comm);
 		if (merr) MTestPrintError( merr );
 		merr = MPI_Comm_free( &mcomm );
 		if (merr) MTestPrintError( merr );

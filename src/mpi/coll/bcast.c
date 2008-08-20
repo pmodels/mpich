@@ -92,14 +92,14 @@ int MPIR_Bcast (
   
   MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_BCAST);
 
-  if (count == 0) return MPI_SUCCESS;
+  if (count == 0) goto fn_exit;
 
   comm = comm_ptr->handle;
   comm_size = comm_ptr->local_size;
   rank = comm_ptr->rank;
   
   /* If there is only one process, return */
-  if (comm_size == 1) return MPI_SUCCESS;
+  if (comm_size == 1) goto fn_exit;
 
   if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
       is_contig = 1;
@@ -140,7 +140,7 @@ int MPIR_Bcast (
       {
           mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
 					    "**nomem %d", type_size );
-          return mpi_errno;
+          goto fn_fail;
       }
       /* --END ERROR HANDLING-- */
 
@@ -492,7 +492,7 @@ int MPIR_Bcast (
 	  {
               mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
 						"**nomem %d", comm_size * sizeof(int));
-              return mpi_errno;
+              goto fn_fail;
           }
 	  /* --END ERROR HANDLING-- */
           displs = MPIU_Malloc(comm_size*sizeof(int));
@@ -501,7 +501,7 @@ int MPIR_Bcast (
 	  {
               mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
 						"**nomem %d", comm_size * sizeof(int));
-              return mpi_errno;
+              goto fn_fail;
           }
 	  /* --END ERROR HANDLING-- */
           
@@ -614,7 +614,6 @@ int MPIR_Bcast_inter (
 	}
 	/* --END ERROR HANDLING-- */
         MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-        return mpi_errno;
     }
     else
     {

@@ -67,10 +67,6 @@ int test_communicators( void )
     void *vvalue;
     int flag, world_rank, world_size, key_1, key_3;
     int errs = 0;
-    /*      integer n, ,
-	    .        key_2
-	    
-    */
     MPI_Aint value;
     int      isLeft;
 
@@ -83,35 +79,32 @@ int test_communicators( void )
 #endif
 
     while (MTestGetIntercomm( &comm, &isLeft, 2 )) {
+        MTestPrintfMsg(1, "start while loop, isLeft=%s\n", (isLeft ? "TRUE" : "FALSE"));
 
-	if (comm == MPI_COMM_NULL) continue;
+	if (comm == MPI_COMM_NULL) {
+            MTestPrintfMsg(1, "got COMM_NULL, skipping\n");
+            continue;
+        }
 
 	/*
 	  Check Comm_dup by adding attributes to comm & duplicating
 	*/
-#ifdef DEBUG
-	if (world_rank == 0) {
-	    printf( "    Comm_dup\n" );
-	    fflush(stdout);
-	}
-#endif
     
 	value = 9;
 	MPI_Keyval_create(copy_fn,     delete_fn,   &key_1, &value );
-	value = 8;
-	/*     MPI_Keyval_create(MPI_DUP_FN,  MPI_NULL_DELETE_FN,
-	                         &key_2, &value );  */
+        MTestPrintfMsg(1, "Keyval_create key=%#x value=%d\n", key_1, value);
 	value = 7;
 	MPI_Keyval_create(MPI_NULL_COPY_FN, MPI_NULL_DELETE_FN,
 			  &key_3, &value ); 
+        MTestPrintfMsg(1, "Keyval_create key=%#x value=%d\n", key_3, value);
 
 	/* This may generate a compilation warning; it is, however, an
 	   easy way to cache a value instead of a pointer */
 	/* printf( "key1 = %x key3 = %x\n", key_1, key_3 ); */
 	MPI_Attr_put(comm, key_1, (void *) (MPI_Aint) world_rank );
-	/*         MPI_Attr_put(lo_comm, key_2, world_size ) */
 	MPI_Attr_put(comm, key_3, (void *)0 );
 	
+        MTestPrintfMsg(1, "Comm_dup\n", key_3, value);
 	MPI_Comm_dup(comm, &dup_comm );
 
 	/* Note that if sizeof(int) < sizeof(void *), we can't use
@@ -136,20 +129,6 @@ int test_communicators( void )
 	    MPI_Abort(MPI_COMM_WORLD, 3005 );
 	}
 
-	/*         MPI_Attr_get(dup_comm, key_2, (int *)&value, &flag ); */
-	/*
-	  if (! flag) {
-	     printf( "dup_comm key_2 not found\n" );
-	     fflush( stdout );
-             MPI_Abort(MPI_COMM_WORLD, 3006 );
-           }
-
-	  if (value != world_size) {
-             printf( "dup_comm key_2 value incorrect: %d\n", value );
-	     fflush( stdout );
-             MPI_Abort(MPI_COMM_WORLD, 3007 );
-	   }
-	*/
 	MPI_Attr_get(dup_comm, key_3, (void **)&vvalue, &flag );
 	value = (MPI_Aint)vvalue;
 	if (flag) {
@@ -158,20 +137,16 @@ int test_communicators( void )
 	    fflush( stdout );
 	    MPI_Abort(MPI_COMM_WORLD, 3008 );
 	}
+        MTestPrintfMsg(1, "Keyval_free key=%#x\n", key_1);
 	MPI_Keyval_free(&key_1 );
-	/* 
-	   c        MPI_Keyval_free(&key_2 )
-	*/
+        MTestPrintfMsg(1, "Keyval_free key=%#x\n", key_3);
 	MPI_Keyval_free(&key_3 );
 	/*
 	  Free all communicators created
 	*/
-#ifdef DEBUG
-	if (world_rank == 0) 
-	    printf( "    Comm_free\n" );
-#endif
-	
+        MTestPrintfMsg(1, "Comm_free comm\n");
 	MPI_Comm_free( &comm );
+        MTestPrintfMsg(1, "Comm_free dup_comm\n");
 	MPI_Comm_free( &dup_comm );
     }
 

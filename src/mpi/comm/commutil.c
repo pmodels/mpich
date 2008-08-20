@@ -266,7 +266,7 @@ static int MPIR_Find_context_bit( unsigned int local_mask[] ) {
 	    context_mask[i] &= ~(1<<j);
 	    context_id = 4 * (32 * i + j);
 	    MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST,
-                    "allocating contextid = %d, (mask[%d], bit %d\n", 
+                    "allocating contextid = %d, (mask[%d], bit %d)", 
 		    context_id, i, j ) ); 
 	    return context_id;
 	}
@@ -280,15 +280,16 @@ static int MPIR_Find_context_bit( unsigned int local_mask[] ) {
 #define FUNCNAME MPIR_Get_contextid
 #undef FCNAME
 #define FCNAME "MPIR_Get_contextid"
-int MPIR_Get_contextid( MPID_Comm *comm_ptr )
+int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 {
-    int          context_id = 0;
-    int          mpi_errno = 0;
+    int mpi_errno = MPI_SUCCESS;
     unsigned int local_mask[MAX_CONTEXT_MASK];
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
+
+    *context_id = 0;
 
     if (initialize_context_mask) {
 	MPIR_Init_contextid();
@@ -302,20 +303,17 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr )
 				MPI_INT, MPI_BAND, comm_ptr->handle );
     MPIR_Nest_decr();
     /* FIXME: We should return the error code upward */
-    if (mpi_errno) {
-	MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
-	return 0;
-    }
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    context_id = MPIR_Find_context_bit( local_mask );
+    *context_id = MPIR_Find_context_bit( local_mask );
 
+fn_exit:
     MPIU_DBG_MSG_S(COMM,VERBOSE,"Context mask = %s",MPIR_ContextMaskToStr());
 
-    /* return 0 if no context id found.  The calling routine should 
-       check for this and generate the appropriate error code */
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
-
-    return context_id;
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #else /* MPICH_IS_THREADED is set and true */
@@ -331,10 +329,9 @@ static volatile int lowestContextId = MPIR_MAXID;
 #define FUNCNAME MPIR_Get_contextid
 #undef FCNAME
 #define FCNAME "MPIR_Get_contextid"
-int MPIR_Get_contextid( MPID_Comm *comm_ptr )
+int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 {
-    int          context_id = 0;
-    int          mpi_errno = 0;
+    int          mpi_errno = MPI_SUCCESS;
     unsigned int local_mask[MAX_CONTEXT_MASK];
     int          own_mask = 0;
     int          testCount = 10;
@@ -345,6 +342,8 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr )
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPIU_THREADPRIV_GET;
+
+    *context_id = 0;
 
     /* We increment the nest level now because we need to know that we're
      within another MPI routine before calling the CS_ENTER macro */
@@ -370,7 +369,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr )
      fixed number of failures, we test to see if some process has exhausted 
      its supply of context ids.  If so, all processes can invoke the 
      out-of-context-id error.  That fixed number of tests is in testCount */
-    while (context_id == 0) {
+    while (*context_id == 0) {
 	/* MPIU_THREAD_SINGLE_CS_ENTER("context_id"); */
 	if (initialize_context_mask) {
 	    MPIR_Init_contextid();
@@ -382,7 +381,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr )
 		lowestContextId = comm_ptr->context_id;
 	    }
 	    MPIU_DBG_MSG_D( COMM, VERBOSE, 
-	       "In in-use, sed lowestContextId to %d", lowestContextId );
+	       "In in-use, set lowestContextId to %d", lowestContextId );
 	}
 	else {
 	    memcpy( local_mask, context_mask, MAX_CONTEXT_MASK * sizeof(int) );
@@ -394,24 +393,19 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr )
 	/* MPIU_THREAD_SINGLE_CS_EXIT("context_id"); */
 	
 	/* Now, try to get a context id */
-	/* Comm must be an intracommunicator */
+        MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
 	mpi_errno = NMPI_Allreduce( MPI_IN_PLACE, local_mask, MAX_CONTEXT_MASK,
 				    MPI_INT, MPI_BAND, comm_ptr->handle );
-	/* FIXME: On error, return mpi_errno upward */
-	if (mpi_errno) {
-	    MPIR_Nest_decr();
-	    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
-	    return 0;
-	}
+	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 	if (own_mask) {
 	    /* There is a chance that we've found a context id */
 	    /* MPIU_THREAD_SINGLE_CS_ENTER("context_id"); */
 	    /* Find_context_bit updates the context array if it finds a match */
-	    context_id = MPIR_Find_context_bit( local_mask );
+	    *context_id = MPIR_Find_context_bit( local_mask );
 	    MPIU_DBG_MSG_D( COMM, VERBOSE, 
-			    "Context id is now %d", context_id );
-	    if (context_id > 0) {
+			    "Context id is now %hd", *context_id );
+	    if (*context_id > 0) {
 		/* If we were the lowest context id, reset the value to
 		   allow the other threads to compete for the mask */
 		if (lowestContextId == comm_ptr->context_id) {
@@ -449,26 +443,27 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr )
 	    /* We don't need to lock on this because we're just looking for
 	       zero or nonzero */
 	    hasNoId = MPIR_Find_context_bit( context_mask ) == 0;
-	    NMPI_Allreduce( &hasNoId, &totalHasNoId, 1, MPI_INT, 
+	    mpi_errno = NMPI_Allreduce( &hasNoId, &totalHasNoId, 1, MPI_INT, 
 			    MPI_MAX, comm_ptr->handle );
+	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    if (totalHasNoId == 1) {
-		/* Failure */
-		context_id = 0;
-		/* Release the masks */
-		if (own_mask) {
-		    mask_in_use = 0;
-		}
-		break;
+		*context_id = 0;
+		MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm" );
 	    }
 	}
     }
 
+fn_exit:
     MPIU_DBG_MSG_S(COMM,VERBOSE,"Context mask = %s",MPIR_ContextMaskToStr());
-
     MPIR_Nest_decr();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
-
-    return context_id;
+    return mpi_errno;
+fn_fail:
+    /* Release the masks */
+    if (own_mask) {
+        mask_in_use = 0;
+    }
+    goto fn_exit;
 }
 #endif
 
@@ -496,10 +491,10 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr )
 #define FUNCNAME MPIR_Get_intercomm_contextid
 #undef FCNAME
 #define FCNAME "MPIR_Get_intercomm_contextid"
-int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, int *context_id, 
-				  int *recvcontext_id )
+int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, 
+				  MPIR_Context_id_t *recvcontext_id )
 {
-    int mycontext_id, remote_context_id;
+    MPIR_Context_id_t mycontext_id, remote_context_id;
     int mpi_errno = MPI_SUCCESS;
     int tag = 31567; /* FIXME  - we need an internal tag or 
 		        communication channel.  Can we use a different
@@ -512,16 +507,14 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, int *context_id,
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID);
 
     if (!comm_ptr->local_comm) {
-	/* Manufacture the local communicator */
-	MPIR_Setup_intercomm_localcomm( comm_ptr );
+        /* Manufacture the local communicator */
+        mpi_errno = MPIR_Setup_intercomm_localcomm( comm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
-    /*printf( "local comm size is %d and intercomm local size is %d\n",
-      comm_ptr->local_comm->local_size, comm_ptr->local_size );*/
-    mycontext_id = MPIR_Get_contextid( comm_ptr->local_comm );
-    if (mycontext_id == 0) {
-	goto fn_fail;
-    }
+    mpi_errno = MPIR_Get_contextid( comm_ptr->local_comm, &mycontext_id );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_Assert(mycontext_id != 0);
 
     MPIU_THREADPRIV_GET;
 
@@ -529,18 +522,19 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, int *context_id,
        exchange data */
     remote_context_id = -1;
     if (comm_ptr->rank == 0) {
-	MPIC_Sendrecv( &mycontext_id, 1, MPI_INT, 0, tag,
-		       &remote_context_id, 1, MPI_INT, 0, tag, 
-		       comm_ptr->handle, MPI_STATUS_IGNORE );
+        mpi_errno = MPIC_Sendrecv( &mycontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
+                                   &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag, 
+                                   comm_ptr->handle, MPI_STATUS_IGNORE );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
     /* Make sure that all of the local processes now have this
        id */
     MPIR_Nest_incr();
-    NMPI_Bcast( &remote_context_id, 1, MPI_INT, 
-		0, comm_ptr->local_comm->handle );
+    mpi_errno = NMPI_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
+                            0, comm_ptr->local_comm->handle );
     MPIR_Nest_decr();
-    /* printf( "intercomm context = %d\n", remote_context_id ); */
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     *context_id     = remote_context_id;
     *recvcontext_id = mycontext_id;
@@ -553,7 +547,7 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, int *context_id,
 #define FUNCNAME MPIR_Free_contextid
 #undef FCNAME
 #define FCNAME "MPIR_Free_contextid"
-void MPIR_Free_contextid( int context_id )
+void MPIR_Free_contextid( MPIR_Context_id_t context_id )
 {
     int idx, bitpos;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_FREE_CONTEXTID);
@@ -561,33 +555,42 @@ void MPIR_Free_contextid( int context_id )
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_FREE_CONTEXTID);
 
     /* Convert the context id to the bit position */
-    /* printf( "Freed id = %d\n", context_id ); */
-    context_id >>= 2;       /* Remove the shift of a factor of four */
-    idx    = context_id / 32;
-    bitpos = context_id % 32;
+    /* FIXME why do we shift right by 2?  What exactly are those bottom two bits
+       used for? */
+    idx    = (context_id >> 2) / 32;
+    bitpos = (context_id >> 2) % 32;
 
     /* --BEGIN ERROR HANDLING-- */
     if (idx < 0 || idx >= MAX_CONTEXT_MASK) {
 	MPID_Abort( 0, MPI_ERR_INTERN, 1, 
 		    "In MPIR_Free_contextid, idx is out of range" );
     }
-    /* --END ERROR HANDLING-- */
 
     /* Check that this context id has been allocated */
-#if 0
-    /* FIXME: This test should be included */
     if ( (context_mask[idx] & (0x1 << bitpos)) != 0) {
+        MPIU_DBG_MSG_D(COMM,VERBOSE,"context_id=%d", context_id);
+        MPIU_DBG_MSG_S(COMM,VERBOSE,"Context mask = %s",MPIR_ContextMaskToStr());
+        /* FIXME This abort cannot be enabled at this time.  The local and
+           remote communicators in an intercommunicator (always?) share a
+           context_id prefix (bits 15..2) and free will be called on both of
+           them by the higher level code.  This should probably be fixed but we
+           can't until we understand the context_id code better.  One possible
+           solution is to only free when (context_id&0x3)!=0.
+           [goodell@ 2008-08-18]
+
 	MPID_Abort( 0, MPI_ERR_INTERN, 1, 
 		    "In MPIR_Free_contextid, the context id is not in use" );
+         */
     }
-#endif
+    /* --END ERROR HANDLING-- */
+
     /* MT: Note that this update must be done atomically in the multithreaded
        case.  In the "one, single lock" implementation, that lock is indeed
        held when this operation is called. */
     context_mask[idx] |= (0x1 << bitpos);
 
     MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST,
-			"Freed context %d, mask[%d] bit %d\n", 
+			"Freed context %d, mask[%d] bit %d", 
 			context_id, idx, bitpos ) );
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_FREE_CONTEXTID);
 }
@@ -611,7 +614,7 @@ void MPIR_Free_contextid( int context_id )
 int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
-    int new_context_id, new_recvcontext_id;
+    MPIR_Context_id_t new_context_id, new_recvcontext_id;
     MPID_Comm *newcomm_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_COPY);
 
@@ -626,16 +629,17 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
 	mpi_errno = 
 	    MPIR_Get_intercomm_contextid( 
 		 comm_ptr, &new_context_id, &new_recvcontext_id );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
-	new_context_id = MPIR_Get_contextid( comm_ptr );
+	mpi_errno = MPIR_Get_contextid( comm_ptr, &new_context_id );
 	new_recvcontext_id = new_context_id;
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_Assert(new_context_id != 0);
     }
     /* --BEGIN ERROR HANDLING-- */
-    if (new_context_id == 0 || mpi_errno != MPI_SUCCESS) {
-	mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-               FCNAME, __LINE__, MPI_ERR_OTHER, "**toomanycomm", 0 );
-	goto fn_fail;
+    if (new_context_id == 0) {
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm" );
     }
     /* --END ERROR HANDLING-- */
 

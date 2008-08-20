@@ -103,7 +103,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
     int       rank, size, remote_size, i, new_size, new_remote_size, 
 	first_entry = 0, first_remote_entry = 0,
 	*last_ptr;
-    int       new_context_id, remote_context_id;
+    MPIR_Context_id_t   new_context_id, remote_context_id;
     MPIU_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(4);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT);
@@ -254,25 +254,25 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
        context id to the pool */
     /* In the multi-threaded case, MPIR_Get_contextid assumes that the
        calling routine already holds the single criticial section */
-    new_context_id = MPIR_Get_contextid( local_comm_ptr );
-    MPIU_ERR_CHKANDJUMP(new_context_id == 0, mpi_errno, MPI_ERR_OTHER, 
-			"**toomanycomm" );
+    mpi_errno = MPIR_Get_contextid( local_comm_ptr, &new_context_id );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_Assert(new_context_id != 0);
 
     /* In the intercomm case, we need to exchange the context ids */
     if (comm_ptr->comm_kind == MPID_INTERCOMM) {
 	if (comm_ptr->rank == 0) {
-	    mpi_errno = MPIC_Sendrecv( &new_context_id, 1, MPI_INT, 0, 0,
-				       &remote_context_id, 1, MPI_INT, 
+	    mpi_errno = MPIC_Sendrecv( &new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
+				       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
 				       0, 0, comm, MPI_STATUS_IGNORE );
 	    if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }
             MPIR_Nest_incr();
-	    NMPI_Bcast( &remote_context_id, 1, MPI_INT, 0, local_comm );
+	    NMPI_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm );
             MPIR_Nest_decr();
 	}
 	else {
 	    /* Broadcast to the other members of the local group */
             MPIR_Nest_incr();
-	    NMPI_Bcast( &remote_context_id, 1, MPI_INT, 0, local_comm );
+	    NMPI_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm );
             MPIR_Nest_decr();
 	}
     }

@@ -7,7 +7,7 @@
 /* Function prototypes for communicator helper functions */
 /* The MPIR_Get_contextid routine is in mpiimpl.h so that the device 
    may use it */
-/* int MPIR_Get_contextid( MPID_Comm * ); */
-int MPIR_Get_intercomm_contextid( MPID_Comm *, int *, int * );
-void MPIR_Free_contextid( int );
+/* int MPIR_Get_contextid( MPID_Comm *, MPIR_Context_id_t * ); */
+int MPIR_Get_intercomm_contextid( MPID_Comm *, MPIR_Context_id_t *, MPIR_Context_id_t * );
+void MPIR_Free_contextid( MPIR_Context_id_t );
 

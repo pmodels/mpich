@@ -1134,6 +1134,10 @@ extern MPID_Group MPID_Group_direct[];
 
 /* ------------------------------------------------------------------------- */
 
+/* FIXME MPI_SHORT will not always be the same size as int16_t. */
+#define MPIR_CONTEXT_ID_T_DATATYPE MPI_SHORT
+typedef int16_t MPIR_Context_id_t;
+
 /*E
   MPID_Comm_kind_t - Name the two types of communicators
   E*/
@@ -1201,8 +1205,8 @@ typedef enum MPID_Comm_kind_t {
 typedef struct MPID_Comm { 
     int           handle;        /* value of MPI_Comm for this structure */
     volatile int  ref_count;
-    int16_t       context_id;    /* Send context id.  See notes */
-    int16_t       recvcontext_id;/* Assigned context id */
+    MPIR_Context_id_t context_id; /* Send context id.  See notes */
+    MPIR_Context_id_t recvcontext_id; /* Send context id.  See notes */
     int           remote_size;   /* Value of MPI_Comm_(remote)_size */
     int           rank;          /* Value of MPI_Comm_rank */
     MPID_VCRT     vcrt;          /* virtual connecton reference table */
@@ -1298,7 +1302,7 @@ extern MPID_Comm MPID_Comm_direct[];
    with the other comm routines (src/mpi/comm, in mpicomm.h).  However,
    to create a new communicator after a spawn or connect-accept operation, 
    the device may need to create a new contextid */
-int MPIR_Get_contextid( MPID_Comm * );
+int MPIR_Get_contextid( MPID_Comm *, MPIR_Context_id_t *context_id );
 
 /* ------------------------------------------------------------------------- */
 
