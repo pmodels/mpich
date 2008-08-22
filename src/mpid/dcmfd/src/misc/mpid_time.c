@@ -30,7 +30,7 @@ void MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
 {
   *t3 += *t1 - *t2;
 }
-int MPID_Wtime_init()
+int MPID_Wtime_init( void )
 {
   /* We used to call DCMF_Timer() here, but the messager wasn't created yet */
   return 1;
