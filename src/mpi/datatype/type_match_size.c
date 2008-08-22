@@ -104,43 +104,52 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
        Thus, we look at the candidate types and make use of the first fit.
     */
     switch (typeclass) {
-    case MPI_TYPECLASS_REAL:
-	tname = "MPI_TYPECLASS_REAL";
-	for (i=0; i<sizeof(real_types)/sizeof(MPI_Datatype); i++) {
-	    if (real_types[i] == MPI_DATATYPE_NULL) { continue; }
+    case MPI_TYPECLASS_REAL: 
+	{
+	    int nRealTypes = sizeof(real_types) / sizeof(MPI_Datatype);
+	    tname = "MPI_TYPECLASS_REAL";
 	    MPIR_Nest_incr();
-	    NMPI_Type_size( real_types[i], &tsize );
-	    MPIR_Nest_decr();
-	    if (tsize == size) {
-		matched_datatype = real_types[i];
-		break;
+	    for (i=0; i<nRealTypes; i++) {
+		if (real_types[i] == MPI_DATATYPE_NULL) { continue; }
+		NMPI_Type_size( real_types[i], &tsize );
+		if (tsize == size) {
+		    matched_datatype = real_types[i];
+		    break;
+		}
 	    }
+	    MPIR_Nest_decr();
 	}
 	break;
     case MPI_TYPECLASS_INTEGER:
-	tname = "MPI_TYPECLASS_INTEGER";
-	for (i=0; i<sizeof(int_types)/sizeof(MPI_Datatype); i++) {
-	    if (int_types[i] == MPI_DATATYPE_NULL) { continue; }
+	{
+	    int nIntTypes = sizeof(int_types) / sizeof(MPI_Datatype);
+	    tname = "MPI_TYPECLASS_INTEGER";
 	    MPIR_Nest_incr();
-	    NMPI_Type_size( int_types[i], &tsize );
-	    MPIR_Nest_decr();
-	    if (tsize == size) {
-		matched_datatype = int_types[i];
-		break;
+	    for (i=0; i<nIntTypes; i++) {
+		if (int_types[i] == MPI_DATATYPE_NULL) { continue; }
+		NMPI_Type_size( int_types[i], &tsize );
+		if (tsize == size) {
+		    matched_datatype = int_types[i];
+		    break;
+		}
 	    }
+	    MPIR_Nest_decr();
 	}
 	break;
     case MPI_TYPECLASS_COMPLEX:
-	tname = "MPI_TYPECLASS_COMPLEX";
-	for (i=0; i<sizeof(complex_types)/sizeof(MPI_Datatype); i++) {
-	    if (complex_types[i] == MPI_DATATYPE_NULL) { continue; }
+	{
+	    int nComplexTypes = sizeof(complex_types) / sizeof(MPI_Datatype);
+	    tname = "MPI_TYPECLASS_COMPLEX";
 	    MPIR_Nest_incr();
-	    NMPI_Type_size( complex_types[i], &tsize );
-	    MPIR_Nest_decr();
-	    if (tsize == size) {
-		matched_datatype = complex_types[i];
-		break;
+	    for (i=0; i<sizeof(complex_types)/sizeof(MPI_Datatype); i++) {
+		if (complex_types[i] == MPI_DATATYPE_NULL) { continue; }
+		NMPI_Type_size( complex_types[i], &tsize );
+		if (tsize == size) {
+		    matched_datatype = complex_types[i];
+		    break;
+		}
 	    }
+	    MPIR_Nest_decr();
 	}
 	break;
     default:
