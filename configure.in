@@ -2275,23 +2275,19 @@ public:
  pac_cv_cxx_builds_exe=yes, ac_cv_builds_exe=no)
  AC_LANG_RESTORE
 ])
-    # Recent failures have come when a standard library is loaded
-    # If <string> is available but can't be used, then fail.
-    AC_CACHE_CHECK([whether C++ compiler works with standard headers],pac_cv_cxx_with_string_header,[
-    # Set this to YES if <string> is not available - the purpose of this
-    # test is to detect if the compiler will compile with <string> but
-    # fail to link it, which the Intel icpc 10.x compiler fails with
-    # if gcc 4.2 is installed.
-    pac_cv_cxx_with_string_header=yes
-    AC_TRY_COMPILE([#include <string>],[return 0;],pac_cv_cxx_compiles_string=yes,pac_cv_cxx_compiles_string=no)
-    if test "$pac_cv_cxx_compiles_string" = yes ; then
-        AC_TRY_LINK([#include <string>],[return 0;],pac_cv_cxx_links_string=yes,pac_cv_cxx_links_string=no)
-	if test "$pac_cv_cxx_links_string" = no ; then
-	    pac_cv_cxx_with_string_header=no
-        fi
-    fi])
-    if test "$pac_cv_cxx_builds_exe" != yes -o "$pac_cv_cxx_with_string_header" = no ; then
+    if test "$pac_cv_cxx_builds_exe" != yes ; then
        AC_MSG_ERROR([Aborting because C++ compiler does not work.  If you do not need a C++ compiler, configure with --disable-cxx])
+    fi
+    # Recent failures have come when a standard header is loaded
+    # The Intel icpc 10.x compiler fails with <string> if gcc 4.2 is installed. 
+    AC_CACHE_CHECK([whether C++ compiler works with string],pac_cv_cxx_compiles_string,[
+    AC_LANG_SAVE
+    AC_LANG_CPLUSPLUS
+    AC_TRY_COMPILE([#include <string>],[return 0;],pac_cv_cxx_compiles_string=yes,pac_cv_cxx_compiles_string=no)
+    AC_LANG_RESTORE
+])
+    if test "$pac_cv_cxx_compiles_string" != yes ; then 
+        AC_MSG_WARN([The C++ compiler $CXX cannot compile a program containing the <string> header - this may indicate a problem with the C++ installation.  Consider configuing with --disable-cxx])
     fi
 
     AC_LANG_CPLUSPLUS
@@ -2740,10 +2736,11 @@ if test "$enable_debuginfo" = "yes" ; then
         BUILD_TVDLL=yes
 	CC_SHL_DBG="$CC_SHL"
 	C_LINK_SHL_DBG="$C_LINK_SHL"
+	DBG_SHLIB_TYPE=$ENABLE_SHLIB
    else
         # Try to determine how to build the tv shared library
-	AC_MSG_CHECKING([for how to build shared library for debugger interface])
-        PAC_CC_SHAREDLIBS(,CC_SHL_DBG,C_LINK_SHL_DBG)
+	AC_MSG_RESULT([for how to build shared library for debugger interface])
+        PAC_CC_SHAREDLIBS(,CC_SHL_DBG,C_LINK_SHL_DBG,DBG_SHLIB_TYPE)
 	PAC_CC_SHLIB_EXT
 	if test "$SHLIB_EXT" = "unknown" ; then
 	    # Guess that the extension is .so
@@ -2753,10 +2750,11 @@ if test "$enable_debuginfo" = "yes" ; then
 	    AC_MSG_RESULT([none found])
             AC_MSG_WARN([Debugger support requires shared libraries])      
 	else
-	    AC_MSG_RESULT($CC_SHL_DBG)
+	    AC_MSG_RESULT([Use this to build the debugger shared library: $CC_SHL_DBG])
 	    BUILD_TVDLL=yes
         fi
    fi
+   AC_SUBST(DBG_SHLIB_TYPE)
    # One more nasty problem.  Totalview relies on debugger symbols 
    # being present in the executable.  Some experimental versions of
    # gcc (3.2 20020329 for ia64) do *not* include the object symbols
