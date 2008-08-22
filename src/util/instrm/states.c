@@ -15,21 +15,39 @@
 void MPID_TimerStateBegin( int id, MPID_Time_t *time_stamp )
 {
 #ifdef HAVE_TIMING 
+    MPIU_THREADPRIV_DECL;
+    MPIU_THREADPRIV_GET;
+
+    MPID_Wtime( time_stamp );
+    MPIU_THREADPRIV_FIELD(timestamps[id].count) = 
+	MPIU_THREADPRIV_FIELD(timestamps[id].count) + 1;
+    /*
     MPICH_PerThread_t *p;
 
     MPID_Wtime( time_stamp );
     MPIR_GetPerThread( &p );
     p->timestamps[id].count++;
+    */
 #endif
 }
 void MPID_TimerStateEnd( int id, MPID_Time_t *time_stamp )
 {
 #ifdef HAVE_TIMING 
+    MPID_Time_t final_time;
+    MPIU_THREADPRIV_DECL;
+    MPIU_THREADPRIV_GET;
+
+    MPID_Wtime( &final_time );
+    MPID_Wtime_acc( time_stamp, &final_time, 
+		    &MPIU_THREADPRIV_FIELD(timestamps[id].stamp);
+
+    /*
     MPICH_PerThread_t *p;
     MPID_Time_t final_time;
 
     MPID_Wtime( &final_time );
     MPIR_GetPerThread( &p );
     MPID_Wtime_acc( time_stamp, &final_time, &p->timestamps[id].stamp );
+    */
 #endif
 }
