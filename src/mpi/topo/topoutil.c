@@ -71,7 +71,7 @@ int MPIR_Topology_put( MPID_Comm *comm_ptr, MPIR_Topology *topo_ptr )
 
 /* Ignore p */
 /* begin:nested */
-static int MPIR_Topology_finalize( void *p )
+static int MPIR_Topology_finalize( void *p ATTRIBUTE((unused)) )
 {
     MPIU_THREADPRIV_DECL;
 
@@ -114,7 +114,9 @@ static int *MPIR_Copy_array( int n, const int a[], int *err )
    of enough integers for all fields (including the ones in the structure)
    and freeing the single object later.
 */
-static int MPIR_Topology_copy_fn ( MPI_Comm comm, int keyval, void *extra_data,
+static int MPIR_Topology_copy_fn ( MPI_Comm comm ATTRIBUTE((unused)), 
+				   int keyval ATTRIBUTE((unused)), 
+				   void *extra_data ATTRIBUTE((unused)),
 				   void *attr_in, void *attr_out, 
 				   int *flag )
 {
@@ -168,8 +170,10 @@ static int MPIR_Topology_copy_fn ( MPI_Comm comm, int keyval, void *extra_data,
     return mpi_errno;
 }
 
-static int MPIR_Topology_delete_fn ( MPI_Comm comm, int keyval, 
-				     void *attr_val, void *extra_data )
+static int MPIR_Topology_delete_fn ( MPI_Comm comm ATTRIBUTE((unused)), 
+				     int keyval ATTRIBUTE((unused)), 
+				     void *attr_val, 
+				     void *extra_data ATTRIBUTE((unused)) )
 {
     MPIR_Topology *topology = (MPIR_Topology *)attr_val;
 

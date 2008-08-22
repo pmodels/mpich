@@ -36,11 +36,11 @@ MPI_Graph_get - Retrieves graph topology information associated with a
 
 Input Parameters:
 + comm - communicator with graph structure (handle) 
-. maxindex - length of vector 'index' in the calling program  (integer) 
+. maxindex - length of vector 'indx' in the calling program  (integer) 
 - maxedges - length of vector 'edges' in the calling program  (integer) 
 
 Output Parameters:
-+ index - array of integers containing the graph structure (for details see the definition of 'MPI_GRAPH_CREATE') 
++ indx - array of integers containing the graph structure (for details see the definition of 'MPI_GRAPH_CREATE') 
 - edges - array of integers containing the graph structure 
 
 .N SignalSafe
@@ -54,7 +54,7 @@ Output Parameters:
 .N MPI_ERR_ARG
 @*/
 int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, 
-                  int *index, int *edges)
+                  int *indx, int *edges)
 {
     static const char FCNAME[] = "MPI_Graph_get";
     int mpi_errno = MPI_SUCCESS;
@@ -92,7 +92,7 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges,
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    
 	    MPIR_ERRTEST_ARGNULL( edges, "edges", mpi_errno );
-	    MPIR_ERRTEST_ARGNULL( index,  "index", mpi_errno );
+	    MPIR_ERRTEST_ARGNULL( indx,  "indx", mpi_errno );
 
             if (mpi_errno) goto fn_fail;
         }
@@ -114,7 +114,7 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges,
     n = topo_ptr->topo.graph.nnodes;
     vals = topo_ptr->topo.graph.index;
     for ( i=0; i<n; i++ )
-	*index++ = *vals++;
+	*indx++ = *vals++;
 	    
     /* Get edges */
     n = topo_ptr->topo.graph.nedges;
@@ -134,7 +134,7 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_graph_get",
-	    "**mpi_graph_get %C %d %d %p %p", comm, maxindex, maxedges, index, edges);
+	    "**mpi_graph_get %C %d %d %p %p", comm, maxindex, maxedges, indx, edges);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );

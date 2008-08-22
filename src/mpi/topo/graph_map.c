@@ -23,10 +23,10 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Graph_map
 #define MPI_Graph_map PMPI_Graph_map
-int MPIR_Graph_map( const MPID_Comm *comm_ptr, int nnodes, const int index[], 
+int MPIR_Graph_map( const MPID_Comm *comm_ptr, int nnodes, const int indx[], 
 		    const int edges[], int *newrank )
 {
-    MPIU_UNREFERENCED_ARG(index);
+    MPIU_UNREFERENCED_ARG(indx);
     MPIU_UNREFERENCED_ARG(edges);
 
     /* This is the trivial version that does not remap any processes. */
@@ -49,7 +49,7 @@ MPI_Graph_map - Maps process to graph topology information
 Input Parameters:
 + comm - input communicator (handle) 
 . nnodes - number of graph nodes (integer) 
-. index - integer array specifying the graph structure, see 'MPI_GRAPH_CREATE' 
+. indx - integer array specifying the graph structure, see 'MPI_GRAPH_CREATE' 
 - edges - integer array specifying the graph structure 
 
 Output Parameter:
@@ -66,7 +66,7 @@ calling process does not belong to graph (integer)
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Graph_map(MPI_Comm comm_old, int nnodes, int *index, int *edges,
+int MPI_Graph_map(MPI_Comm comm_old, int nnodes, int *indx, int *edges,
                   int *newrank)
 {
     static const char FCNAME[] = "MPI_Graph_map";
@@ -102,7 +102,7 @@ int MPI_Graph_map(MPI_Comm comm_old, int nnodes, int *index, int *edges,
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(newrank,"newrank",mpi_errno);
-	    MPIR_ERRTEST_ARGNULL(index,"index",mpi_errno);
+	    MPIR_ERRTEST_ARGNULL(indx,"indx",mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(edges,"edges",mpi_errno);
 	    MPIR_ERRTEST_ARGNONPOS(nnodes,"nnodes",mpi_errno);
             if (mpi_errno) goto fn_fail;
@@ -118,13 +118,13 @@ int MPI_Graph_map(MPI_Comm comm_old, int nnodes, int *index, int *edges,
     
     if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->graphMap != NULL) {
 	mpi_errno = comm_ptr->topo_fns->graphMap( comm_ptr, nnodes, 
-						  (const int*) index,
+						  (const int*) indx,
 						  (const int*) edges, 
 						  newrank );
     }
     else {
 	mpi_errno = MPIR_Graph_map( comm_ptr, nnodes,
-				   (const int*) index,
+				   (const int*) indx,
 				   (const int*) edges, newrank );
     }
     /* ... end of body of routine ... */
@@ -140,7 +140,7 @@ int MPI_Graph_map(MPI_Comm comm_old, int nnodes, int *index, int *edges,
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
 	    "**mpi_graph_map",
-	    "**mpi_graph_map %C %d %p %p %p", comm_old, nnodes, index, edges, 
+	    "**mpi_graph_map %C %d %p %p %p", comm_old, nnodes, indx, edges, 
 	    newrank);
     }
 #   endif

@@ -26,11 +26,16 @@
 
 #endif
 
+/* Note on index and indx - index is an (old) function name in string.h; 
+   while it is valid to use it as a variable or parameter name, it can 
+   solicit warning messages from the compiler.  To avoid those, the name
+   indx is used instead of index in this file */
+
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
 int MPIR_Graph_create( const MPID_Comm *comm_ptr, int nnodes, 
-		       const int index[], const int edges[], int reorder, 
+		       const int indx[], const int edges[], int reorder, 
 		       MPI_Comm *comm_graph)
 {
     static const char FCNAME[] = "MPIR_Graph_create";
@@ -55,7 +60,7 @@ int MPIR_Graph_create( const MPID_Comm *comm_ptr, int nnodes,
 	   processes */
 	MPIR_Nest_incr();
 	mpi_errno = NMPI_Graph_map( comm_ptr->handle, nnodes, 
-				    (int *)index, (int *)edges, 
+				    (int *)indx, (int *)edges, 
 				    &nrank );
 	/* Create the new communicator with split, since we need to reorder
 	   the ranks (including the related internals, such as the connection
@@ -85,7 +90,7 @@ int MPIR_Graph_create( const MPID_Comm *comm_ptr, int nnodes,
 	goto fn_exit;
     }
 
-    nedges = index[nnodes-1];
+    nedges = indx[nnodes-1];
     MPIU_CHKPMEM_MALLOC(graph_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
 			mpi_errno,"graph_ptr");
     
@@ -97,7 +102,7 @@ int MPIR_Graph_create( const MPID_Comm *comm_ptr, int nnodes,
     MPIU_CHKPMEM_MALLOC(graph_ptr->topo.graph.edges,int*,
 			nedges*sizeof(int),mpi_errno,"graph.edges");
     for (i=0; i<nnodes; i++) 
-	graph_ptr->topo.graph.index[i] = index[i];
+	graph_ptr->topo.graph.index[i] = indx[i];
     for (i=0; i<nedges; i++) 
 	graph_ptr->topo.graph.edges[i] = edges[i];
 
@@ -122,7 +127,7 @@ int MPIR_Graph_create( const MPID_Comm *comm_ptr, int nnodes,
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
 	    "**mpi_graph_create",
 	    "**mpi_graph_create %C %d %p %p %d %p", comm_ptr->handle, 
-	    nnodes, index, 
+	    nnodes, indx, 
 	    edges, reorder, comm_graph);
     }
 #   endif
@@ -142,7 +147,7 @@ MPI_Graph_create - Makes a new communicator to which topology information
 Input Parameters:
 + comm_old - input communicator without topology (handle) 
 . nnodes - number of nodes in graph (integer) 
-. index - array of integers describing node degrees (see below) 
+. indx - array of integers describing node degrees (see below) 
 . edges - array of integers describing graph edges (see below) 
 - reorder - ranking may be reordered (true) or not (false) (logical) 
 
@@ -167,7 +172,7 @@ We ignore the 'reorder' info currently.
 .N MPI_ERR_ARG
 
 @*/
-int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *index, int *edges, 
+int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *indx, int *edges, 
 		     int reorder, MPI_Comm *comm_graph)
 {
     static const char FCNAME[] = "MPI_Graph_create";
@@ -209,7 +214,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *index, int *edges,
 	    }
 	    MPIR_ERRTEST_ARGNEG(nnodes,"nnodes",mpi_errno);
 	    if (nnodes > 0) {
-		MPIR_ERRTEST_ARGNULL(index,"index",mpi_errno);
+		MPIR_ERRTEST_ARGNULL(indx,"index",mpi_errno);
 		MPIR_ERRTEST_ARGNULL(edges,"edges",mpi_errno);
 	    }
 	    MPIR_ERRTEST_ARGNULL(comm_graph,"comm_graph",mpi_errno);
@@ -223,7 +228,6 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *index, int *edges,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    int j;
 	    int comm_size = comm_ptr->remote_size;
 
 	    /* Check that the communicator is large enough */
@@ -245,20 +249,20 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *index, int *edges,
 	    /* Use ERR_ARG instead of ERR_TOPOLOGY because there is no
 	       topology yet */
 	    for (i=0; i<nnodes; i++) {
-		if (index[i] < 0) {
+		if (indx[i] < 0) {
 		    mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
 						      MPIR_ERR_RECOVERABLE, 
 						      FCNAME, __LINE__, 
 						      MPI_ERR_ARG,
-			      "**indexneg", "**indexneg %d %d", i, index[i] );
+			      "**indexneg", "**indexneg %d %d", i, indx[i] );
 		}
-		if (i+1<nnodes && index[i] > index[i+1]) {
+		if (i+1<nnodes && indx[i] > indx[i+1]) {
 		    mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
 						      MPIR_ERR_RECOVERABLE, 
 						      FCNAME, __LINE__, 
 						      MPI_ERR_ARG,
 			   "**indexnonmonotone", "**indexnonmonotone %d %d %d",
-					      i, index[i], index[i+1] );
+					      i, indx[i], indx[i+1] );
 		}
 	    }
 
@@ -266,7 +270,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *index, int *edges,
 	       edges refer to a rank in the communicator, and can 
 	       be greater than nnodes */
 	    if (nnodes > 0) { 
-		for (i=0; i<index[nnodes-1]; i++) {
+		for (i=0; i<indx[nnodes-1]; i++) {
 		    if (edges[i] > comm_size || edges[i] < 0) {
 			mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
 							  MPIR_ERR_RECOVERABLE,
@@ -288,9 +292,9 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *index, int *edges,
 	       shorter.
 	    */
 	    if (!mpi_errno) {
-		j = 0;
+		int j=0;
 		for (i=0; i<nnodes && !mpi_errno; i++) {
-		    for (;j<index[i]; j++) {
+		    for (;j<indx[i]; j++) {
 			if (edges[j] == i) {
 			    mpi_errno = MPIR_Err_create_code( MPI_SUCCESS,
 						      MPIR_ERR_RECOVERABLE, 
@@ -321,13 +325,13 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *index, int *edges,
     if (comm_ptr->topo_fns != NULL && 
 	comm_ptr->topo_fns->graphCreate != NULL) {
 	mpi_errno = comm_ptr->topo_fns->graphCreate( comm_ptr, nnodes, 
-						     (const int *)index,
+						     (const int *)indx,
 						     (const int *)edges, 
 						     reorder, comm_graph );
     }	
     else {
 	mpi_errno = MPIR_Graph_create( comm_ptr, nnodes, 
-				       (const int *)index,
+				       (const int *)indx,
 				       (const int *)edges, 
 				       reorder, comm_graph );
     }
@@ -347,7 +351,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *index, int *edges,
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
 	    "**mpi_graph_create",
-	    "**mpi_graph_create %C %d %p %p %d %p", comm_old, nnodes, index, 
+	    "**mpi_graph_create %C %d %p %p %d %p", comm_old, nnodes, indx, 
 	    edges, reorder, comm_graph);
     }
 #   endif
