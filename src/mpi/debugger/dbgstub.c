@@ -20,6 +20,13 @@ typedef struct MPIR_Sendq {
     struct MPIR_Sendq *next;
 } MPIR_Sendq;
 extern MPIR_Sendq *MPIR_Sendq_head;
+/* This is from dbginit.c; it is not exported to other files */
+typedef struct MPIR_Comm_list {
+    int sequence_number;   /* Used to detect changes in the list */
+    MPID_Comm *head;       /* Head of the list */
+} MPIR_Comm_list;
+
+extern MPIR_Comm_list MPIR_All_communicators;
 
 /* 
    This file contains emulation routines for the methods and functions normally
@@ -40,9 +47,11 @@ enum { TYPE_UNKNOWN = 0,
        TYPE_MPID_REQUEST = 5, 
        TYPE_MPIR_SENDQ = 6,
 } KnownTypes;
+
 static int curType = TYPE_UNKNOWN;
+
 mqs_type * dbgrI_find_type(mqs_image *image, char *name, 
-				  mqs_lang_code lang)
+			   mqs_lang_code lang)
 {
     if (strcmp(name,"MPID_Comm") == 0) {
 	curType = TYPE_MPID_COMM;

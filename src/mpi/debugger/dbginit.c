@@ -271,7 +271,7 @@ void MPIR_CommL_forget( MPID_Comm *comm_ptr )
 	    break;
 	}
 	if (p == p->comm_next) {
-	    MPIU_Internal_error_printf( "Mangled pointers to communicators - next is itself for %x\n", p );
+	    MPIU_Internal_error_printf( "Mangled pointers to communicators - next is itself for %p\n", p );
 	    break;
 	}
 	prev = p;

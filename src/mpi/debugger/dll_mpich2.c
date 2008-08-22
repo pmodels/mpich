@@ -487,7 +487,7 @@ int mqs_setup_operation_iterator (mqs_process *proc, int op)
 {
     mpich_process_info *p_info = 
 	(mpich_process_info *)dbgr_get_process_info (proc);
-    mqs_image * image          = dbgr_get_image (proc);
+    /*    mqs_image * image          = dbgr_get_image (proc); */
 /*    mpich_image_info *i_info   = 
       (mpich_image_info *)dbgr_get_image_info (image); */
 
