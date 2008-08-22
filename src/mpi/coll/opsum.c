@@ -27,7 +27,7 @@ void MPIR_SUM (
     static const char FCNAME[] = "MPIR_SUM";
     int i, len = *Len;
 
-#if defined(HAVE_FORTRAN_BINDING) || defined(HAVE_CXX_BINDING)
+#if defined(HAVE_FORTRAN_BINDING) || defined(HAVE_CXX_COMPLEX)
     typedef struct { 
         float re;
         float im; 
@@ -38,7 +38,7 @@ void MPIR_SUM (
         double im; 
     } d_complex;
 #endif
-#if defined(HAVE_LONG_DOUBLE) && defined(HAVE_CXX_BINDING)
+#if defined(HAVE_LONG_DOUBLE) && defined(HAVE_CXX_COMPLEX)
     typedef struct {
 	long double re;
 	long double im;
@@ -259,7 +259,7 @@ void MPIR_SUM (
     }
 	/* FIXME: Need complex8, 16, and 32 */
 #endif /* HAVE_FORTRAN_BINDING */
-#ifdef HAVE_CXX_BINDING
+#ifdef HAVE_CXX_COMPLEX
     case MPIR_CXX_COMPLEX_VALUE: {
         s_complex * restrict a = (s_complex *)inoutvec; 
         s_complex const * restrict b = (s_complex *)invec;
@@ -289,7 +289,7 @@ void MPIR_SUM (
         break;
     }
 #endif /* HAVE_LONG_DOUBLE */
-#endif /* HAVE_CXX_BINDING */
+#endif /* HAVE_CXX_COMPLEX */
 	/* --BEGIN ERROR HANDLING-- */
     default: {
 	MPIU_THREADPRIV_DECL;
@@ -368,13 +368,13 @@ int MPIR_SUM_check_dtype ( MPI_Datatype type )
     case MPI_REAL16:
     case MPI_COMPLEX32:
 #endif
-#ifdef HAVE_CXX_BINDING
+#ifdef HAVE_CXX_COMPLEX
     case MPIR_CXX_COMPLEX_VALUE:
     case MPIR_CXX_DOUBLE_COMPLEX_VALUE:
 #ifdef HAVE_LONG_DOUBLE
     case MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE:
 #endif
-#endif /* HAVE_CXX_BINDING */
+#endif /* HAVE_CXX_COMPLEX */
         return MPI_SUCCESS;
 	/* --BEGIN ERROR HANDLING-- */
     default: 
