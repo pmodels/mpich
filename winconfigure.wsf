@@ -1072,22 +1072,27 @@ End Function
 ' Numeric version will have 1 digit for MAJ, 2 digits for MIN,
 ' 2 digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER.
 ' eg: 1.0.7rc2 = 10007202
+' We also support version numbers with a missing REV number like
+'   [MAJ].[MIN][EXT][EXT_NUMBER]
 
 Function GetMPICH2NumVersion(ver)
 	Dim verTokenArray, numVer, majorVer, minorVer, revNum, ext, extNum, tmpStr
-	Dim regExpObj, matchesCollection, verHasExt
+	Dim verTokenArrayIndex, minorOrRevNum
+	Dim regExpObj, matchesCollection, verHasRev, verHasExt
 	Set regExpObj = New regexp
 	regExpObj.Global = True
 	regExpObj.IgnoreCase = True
 
 	GetMPICH2NumVersion = 0
+	verTokenArrayIndex = 0
 	verTokenArray = Split(ver, ".", -1, 1)
-	if(UBound(verTokenArray, 1) <> 2) then
-		WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
+	if((UBound(verTokenArray, 1) > 2) Or (UBound(verTokenArray, 1) < 1)) then
+		WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1/1.0rc1"
 		Exit Function
 	end if
 
-	majorVer = verTokenArray(0)
+	majorVer = verTokenArray(verTokenArrayIndex)
+	verTokenArrayIndex = verTokenArrayIndex + 1
 	if (Len(majorVer) = 1) then
 		if Not IsIntString(majorVer) then
 			WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
@@ -1102,16 +1107,20 @@ Function GetMPICH2NumVersion(ver)
 		Exit Function
 	end if
 	
-	minorVer = verTokenArray(1)
-	if Not ((Len(minorVer) < 0) Or (Len(minorVer) > 2)) then
+	minorVer = verTokenArray(verTokenArrayIndex)
+'   The field for minorVer also could contain the EXT/EXT_NUM in case revNum is not present
+	if Not ((Len(minorVer) < 0) Or (Len(minorVer) > 5)) then
 		if IsIntString(minorVer) then
 			if(minorVer <= 9) then
 				minorVer = "0" & Right(minorVer, 1)
 			end if 
+			verHasRev = True
+			verTokenArrayIndex = verTokenArrayIndex + 1
 		else
-			WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
-			WScript.Echo "Minor version: " & minorVer & " is not an int"
-			Exit Function
+'			WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
+'			WScript.Echo "Minor version: " & minorVer & " is not an int"
+'			Exit Function
+			verHasRev = False
 		end if
 	else
 		WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
@@ -1121,7 +1130,7 @@ Function GetMPICH2NumVersion(ver)
 
 
 	regExpObj.Pattern = "[^0-9]+"
-	Set matchesCollection = regExpObj.Execute(verTokenArray(2))
+	Set matchesCollection = regExpObj.Execute(verTokenArray(verTokenArrayIndex))
 	if(matchesCollection.Count = 1) then
 		tmpStr = matchesCollection(0)
 		verHasExt = True			
@@ -1142,22 +1151,22 @@ Function GetMPICH2NumVersion(ver)
 	end if 
 
 	regExpObj.Pattern = "[0-9]+"
-	Set matchesCollection = regExpObj.Execute(verTokenArray(2))
+	Set matchesCollection = regExpObj.Execute(verTokenArray(verTokenArrayIndex))
 	if matchesCollection.Count = 0 then
 		WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
 		WScript.Echo "No revision num specified"
 		Exit Function
 	end if
 
-	revNum = matchesCollection(0)
-	if Not ((Len(revNum) < 0) Or (Len(revNum) > 2)) then
-		if IsIntString(revNum) then
-			if( revNum <= 9) then
-				revNum = "0" & Right(revNum, 1)
+	minorOrRevNum = matchesCollection(0)
+	if Not ((Len(minorOrRevNum) < 0) Or (Len(minorOrRevNum) > 2)) then
+		if IsIntString(minorOrRevNum) then
+			if( minorOrRevNum <= 9) then
+				minorOrRevNum = "0" & Right(minorOrRevNum, 1)
 			end if
 		else
 			WScript.Echo "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
-			WScript.Echo "Revision number: " & revNum & " not an int"
+			WScript.Echo "Revision number: " & minorOrRevNum & " not an int"
 			Exit Function
 		end if
 	else
@@ -1165,6 +1174,13 @@ Function GetMPICH2NumVersion(ver)
 		WScript.Echo "Rev no not in range [0-99]"
 		Exit Function
 	end if
+	if verHasRev then
+		revNum = minorOrRevNum
+	else
+		minorVer = minorOrRevNum
+		revNum = "00"
+	end if	
+	
 	if verHasExt then
 '		There has to be an extension number
 		if(matchesCollection.Count = 2) then
