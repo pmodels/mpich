@@ -188,6 +188,10 @@ int MPIR_Setup_intercomm_localcomm( MPID_Comm *intercomm_ptr )
  *
  * Both the threaded and non-threaded routines use the same mask of
  * available context id values.
+ *
+ * The following must hold:
+ * MAX_CONTEXT_MASK*32 <= 2**(sizeof(MPIR_Context_id_t) * 8 - 2)
+ * For a 16-bit context id field, this implies MAX_CONTEXT_MASK <= 512
  */
 #define MAX_CONTEXT_MASK 256
 static unsigned int context_mask[MAX_CONTEXT_MASK];
