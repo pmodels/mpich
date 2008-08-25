@@ -520,7 +520,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	    fd->hints->deferred_open = 0;
     }
 
-    if (ADIO_Feature(fd, ADIO_DATA_SIEVING_WRITES)) {
+    if (ADIO_Feature(fd, ADIO_DATA_SIEVING_WRITES) == 0) {
     /* disable data sieving for fs that do not
        support file locking */
        	MPI_Info_get(info, "ind_wr_buffer_size", MPI_MAX_INFO_VAL,

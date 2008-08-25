@@ -137,6 +137,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
     	/* if user has disabled data sieving on reads, use naive
 	 * approach instead.
 	 */
+
 	ADIOI_GEN_WriteStrided_naive(fd, 
 				    buf,
 				    count,
@@ -147,6 +148,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
 				    error_code);
     	return;
     }
+
 
     *error_code = MPI_SUCCESS;  /* changed below if error */
 
