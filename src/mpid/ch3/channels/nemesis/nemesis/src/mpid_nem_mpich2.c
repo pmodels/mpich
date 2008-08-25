@@ -33,10 +33,6 @@ unsigned short *MPID_nem_recv_seqno = 0;
 #define POLLS_BEFORE_YIELD 1000
 #endif
 
-/* here we include the non-inlined versions of the files in mpid_nem_inline.h */
-#define MPID_NEM_DONT_INLINE_FUNCTIONS 1
-#include <mpid_nem_inline.h>
-
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich2_init
 #undef FCNAME

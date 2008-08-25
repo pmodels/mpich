@@ -4,16 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifdef MPID_NEM_DONT_INLINE_FUNCTIONS
-#undef MPID_NEM_INLINE_DECL
-#define MPID_NEM_INLINE_DECL
-#undef _MPID_NEM_INLINE_H /* ok to include again: we're including the non-inline functions in a .c file */
-#else
-#define MPID_NEM_INLINE_DECL extern inline
-#endif
-
 #ifndef _MPID_NEM_INLINE_H
 #define _MPID_NEM_INLINE_H
+
+#define MPID_NEM_INLINE_DECL static inline
 
 #define MPID_NEM_POLLS_BEFORE_YIELD 1000
 
