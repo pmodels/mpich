@@ -6,9 +6,6 @@
 
 #include "mpid_nem_impl.h"
 #include "mpid_nem_datatypes.h"
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <errno.h>
 
 #ifdef ENABLE_NO_SCHED_YIELD
 #define SCHED_YIELD() do { } while(0)

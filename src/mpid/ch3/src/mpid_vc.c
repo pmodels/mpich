@@ -135,10 +135,8 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect )
 	/* FIXME: Need a better way to define how vc's are closed that 
 	 takes into account pending operations on vcs, including 
 	 close events received from other processes. */
-	/*
-	mpi_errno = MPIDI_CH3U_VC_FinishPending( vcrt );
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-	*/
+	/* mpi_errno = MPIDI_CH3U_VC_FinishPending( vcrt ); */
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
 	for (i = 0; i < vcrt->size; i++)
 	{

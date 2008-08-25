@@ -240,7 +240,7 @@ int MPIR_Datatype_builtin_fillin(void)
 	    dptr->contents     = NULL; /* should never get referenced? */
 	}
 	/* --BEGIN ERROR HANDLING-- */
-	if (d != -1 && mpi_dtypes[i] != -1) {
+ 	if (d != -1 && i < sizeof(mpi_dtypes)/sizeof(*mpi_dtypes) && mpi_dtypes[i] != -1) { 
 	    /* We did not hit the end-of-list */
 	    /*MPIU_Internal_error_printf( "Did not initialize all of the predefined datatypes (only did first %d)\n", i-1 );*/
 	    MPIU_Snprintf(error_msg, 1024,

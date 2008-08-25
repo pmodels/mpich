@@ -52,9 +52,11 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
     static const char FCNAME[] = "MPI_File_set_errhandler";
 #endif
     int mpi_errno = MPI_SUCCESS;
+#ifdef MPI_MODE_RDONLY
     int in_use;
     MPID_Errhandler *errhan_ptr = NULL, *old_errhandler_ptr;
     MPI_Errhandler old_errhandler;
+#endif
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_FILE_SET_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -123,6 +125,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 #else
     /* Dummy in case ROMIO is not defined */
     mpi_errno = MPI_ERR_INTERN;
+    if (0) goto fn_fail; /* quiet compiler warning about unused label */
 #endif
     
     /* ... end of body of routine ... */

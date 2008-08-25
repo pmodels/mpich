@@ -51,8 +51,10 @@
 int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
+#ifdef MPI_MODE_RDONLY
     MPID_Errhandler *e;
     MPI_Errhandler eh;
+#endif
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);
 

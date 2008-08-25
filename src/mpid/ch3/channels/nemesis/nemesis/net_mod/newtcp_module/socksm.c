@@ -413,7 +413,8 @@ static int send_id_info(const sockconn_t *const sc)
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_ID_INFO);
 
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "my_pg->id=%s my_pg->rank=%d, sc->pg_rank=%d sc->is_same_pg=%s",
-                                             MPIDI_Process.my_pg->id, MPIDI_Process.my_pg_rank, sc->pg_rank, (sc->is_same_pg ? "TRUE" : "FALSE")));
+                                             (char *)MPIDI_Process.my_pg->id, MPIDI_Process.my_pg_rank, sc->pg_rank,
+                                             (sc->is_same_pg ? "TRUE" : "FALSE")));
     if (!sc->is_same_pg)
         pg_id_len = strlen(MPIDI_Process.my_pg->id) + 1; 
 

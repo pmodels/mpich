@@ -562,11 +562,9 @@ fn_exit:
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
 {
-    MPIX_Grequest_wait_function *wait_fn = NULL;
     void ** state_ptrs;
-    int i, n_greq;
+    int i;
     int mpi_error = MPI_SUCCESS;
-    MPIX_Grequest_class curr_class;
     MPIU_CHKLMEM_DECL(1);
 
     MPIU_CHKLMEM_MALLOC(state_ptrs, void *, sizeof(void*)*count, mpi_error, "state_ptrs");
@@ -581,6 +579,9 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
            Until a waitall_fn is added for greqs, we'll call wait on
            each greq individually. */
 #if 0
+    MPIX_Grequest_wait_function *wait_fn = NULL;
+    int n_greq;
+    MPIX_Grequest_class curr_class;
     /* loop over all requests, group greqs with the same class and
        call wait_fn on the groups.  (Only consecutive greqs with the
        same class are being grouped) */

@@ -350,7 +350,6 @@ static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
     int *blocklens = &ints[1];
     MPI_Aint displaces[3];
     MPI_Datatype datatypes[3];
-    int i;
     const int count = 3;
     MPI_Datatype combined_datatype;
     MPIDI_STATE_DECL(MPID_STATE_CREATE_DATATYPE);
@@ -427,7 +426,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
     MPIDI_CH3_Pkt_accum_t *accum_pkt = &upkt.accum;
     MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno=MPI_SUCCESS, predefined;
-    int origin_dt_derived, target_dt_derived, origin_type_size, iovcnt, iov_n; 
+    int origin_dt_derived, target_dt_derived, origin_type_size, iovcnt; 
     MPIDI_VC_t * vc;
     MPID_Comm *comm_ptr;
     MPID_Datatype *target_dtp=NULL, *origin_dtp=NULL;
@@ -1793,7 +1792,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr)
 {
-    int mpi_errno=MPI_SUCCESS, lock_type, origin_dt_derived, iov_n, iovcnt;
+    int mpi_errno=MPI_SUCCESS, lock_type, origin_dt_derived, iovcnt;
     MPIDI_RMA_ops *rma_op;
     MPID_Request *request=NULL;
     MPIDI_VC_t * vc;

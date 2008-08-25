@@ -509,9 +509,9 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
     MPID_Datatype *dtp;
     MPID_Datatype_contents *cp;
 
-    MPI_Aint *aints;
-    MPI_Datatype *types;
-    int *ints;
+    MPI_Aint *aints = NULL;
+    MPI_Datatype *types = NULL;
+    int *ints = NULL;
 
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
 	MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,"# %stype: %s\n",

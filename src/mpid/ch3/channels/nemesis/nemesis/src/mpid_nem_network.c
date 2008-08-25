@@ -29,7 +29,7 @@ int MPID_nem_choose_netmod(void)
     {
         /* netmod not specified, using the default */
         MPID_nem_netmod_func = MPID_nem_netmod_funcs[0];
-        MPID_nem_netmod_id = i;
+        MPID_nem_netmod_id = 0;
         goto fn_exit;
     }
 

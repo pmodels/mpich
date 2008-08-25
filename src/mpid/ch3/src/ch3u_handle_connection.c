@@ -97,6 +97,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 			MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, 
                         MPI_ERR_INTERN, "**ch3|unhandled_connection_state",
 			"**ch3|unhandled_connection_state %p %d", vc, event);
+                    goto fn_fail;
 		    break;
 		}
 	    }
