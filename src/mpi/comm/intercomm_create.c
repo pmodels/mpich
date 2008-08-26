@@ -195,7 +195,7 @@ Notes:
    'local_leader' in the 'local_comm'.
 
   The MPI 1.1 Standard contains two mutually exclusive comments on the
-  input intracommunicators.  One says that their repective groups must be
+  input intercommunicators.  One says that their repective groups must be
   disjoint; the other that the leaders can be the same process.  After
   some discussion by the MPI Forum, it has been decided that the groups must
   be disjoint.  Note that the `reason` given for this in the standard is
