@@ -834,9 +834,6 @@ static int MPID_nem_detach_shm_region(volatile MPID_nem_copy_buf_t *buf, char ha
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DETACH_SHM_REGION);
 
-    /* for now never detach */
-    goto fn_exit;
-
     MPIU_Free(handle);
 
     mpi_errno = MPID_nem_detach_shared_memory ((char *)buf, sizeof (MPID_nem_copy_buf_t));
@@ -863,9 +860,7 @@ static int MPID_nem_delete_shm_region(volatile MPID_nem_copy_buf_t *buf, char ha
     mpi_errno = MPID_nem_remove_shared_memory(handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Free(handle);
-
-    mpi_errno = MPID_nem_detach_shared_memory ((char *)buf, sizeof (MPID_nem_copy_buf_t));
+    mpi_errno = MPID_nem_detach_shm_region(buf, handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:

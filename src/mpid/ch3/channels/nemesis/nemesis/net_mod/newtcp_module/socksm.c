@@ -30,10 +30,19 @@ pollfd_t *MPID_nem_newtcp_module_plfd_tbl = NULL;
 sockconn_t MPID_nem_newtcp_module_g_lstn_sc = {0};
 pollfd_t MPID_nem_newtcp_module_g_lstn_plfd = {0};
 
-/* We define this in order to trick the compiler into including information
-   about the MPID_nem_newtcp_module_vc_area type.  This is needed to easily
-   expand the VC_FIELD macro in a debugger. */
-static MPID_nem_newtcp_module_vc_area *dummy_vc_area = NULL;
+/* We define this in order to trick the compiler into including
+   information about the MPID_nem_newtcp_module_vc_area type.  This is
+   needed to easily expand the VC_FIELD macro in a debugger.  The
+   'unused' attribute keeps the compiler from complaining.  The 'used'
+   attribute makes sure the symbol is added in the lib, even if it's
+   unused */
+static MPID_nem_newtcp_module_vc_area *dummy_vc_area ATTRIBUTE((unused, used)) = NULL;
+
+/* Debug function to dump the sockconn table.  This is intended to be
+   called from a debugger.  The 'unused' attribute keeps the compiler
+   from complaining.  The 'used' attribute makes sure the function is
+   added in the lib, despite the fact that it's unused. */
+static void dbg_print_sc_tbl(FILE *stream, int print_free_entries) ATTRIBUTE((unused, used));
 
 static struct {
     handler_func_t sc_state_handler;
