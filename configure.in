@@ -3214,7 +3214,7 @@ dnl PAC_CHECK_SIZEOF_DERIVED(long double int,[struct { long double a; int b; }],
 AC_CHECK_HEADER(sys/bitypes.h,[use_bitypes="#include <sys/bitypes.h>"
 AC_DEFINE(HAVE_SYS_BITYPES_H,1,[Define if sys/bitypes.h exists])])
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
-AC_CHECK_HEADER(inttypes.h)
+AC_CHECK_HEADERS(inttypes.h stdint.h)
 
 # Check for types
 AC_TYPE_INT8_T
