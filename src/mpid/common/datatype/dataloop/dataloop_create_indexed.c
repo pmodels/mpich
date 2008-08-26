@@ -266,6 +266,8 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
 	    /* increase block lengths so they are in bytes */
 	    tmp_blklen_array[i] *= old_extent;
 	}
+
+        new_dlp->loop_params.i_t.total_blocks *= old_extent;
     }
 
     *dlp_p     = new_dlp;
