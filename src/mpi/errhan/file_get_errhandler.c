@@ -96,7 +96,9 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler)
 #else
     /* Dummy in case ROMIO is not defined */
     mpi_errno = MPI_ERR_INTERN;
+#ifdef HAVE_ERROR_CHECKING
     if (0) goto fn_fail; /* quiet compiler warning about unused label */
+#endif
 #endif    
     /* ... end of body of routine ... */
 
