@@ -961,8 +961,6 @@ int PMPI_Errhandler_free(MPI_Errhandler *);
 int PMPI_Error_string(int, char *, int *);
 int PMPI_Error_class(int, int *);
 
-int PMPI_Type_get_envelope(MPI_Datatype, int *, int *, int *, int *); 
-
 /* Wtime done above */
 int PMPI_Init(int *, char ***);
 int PMPI_Finalize(void);
