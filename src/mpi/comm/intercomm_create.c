@@ -455,7 +455,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     /* Leaders can now swap context ids and then broadcast the value
        to the local group of processes */
     if (comm_ptr->rank == local_leader) {
-	int remote_context_id;
+	MPIR_Context_id_t remote_context_id;
 
 	NMPI_Sendrecv( &recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
 		       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag, 
