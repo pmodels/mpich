@@ -1029,7 +1029,35 @@ if test "$enable_strict_done" != "yes" ; then
 	    # the gcc documentation claims that it does; in particular,
 	    # the -Wunused-parameter option is *not* part of -Wall
 	    # -Wextra (if available) adds some to -Wall (!)
-            COPTIONS="${COPTIONS} -Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value -std=c89"
+	    # -Wsystem-headers removed because of too many warning messages
+	    # that are unfixable by the user of this option (the warnings
+	    # often show benign but real problems)
+	    # -Wunreachable-code has a serious bug and falsely reports 
+	    # labels as unreachable code.  This makes that option useless
+	    # for the MPICH2 code, for example
+            COPTIONS="${COPTIONS} -Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wredundant-decls -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
+        fi
+	;;
+
+	# The MPICH2 code has several modules that have duplicate 
+	# function declarations.  The resulting list of warnings is
+	# swamped by those duplicates, rendering the output nearly
+	# useless.  This temporary option choice is the same as
+	# --enable-strict=all, but without that one option
+	allbutdupdefs)
+        enable_strict_done="yes"
+        if test "$CC" = "gcc" ; then 
+	    # Note that -Wall does not include all of the warnings that
+	    # the gcc documentation claims that it does; in particular,
+	    # the -Wunused-parameter option is *not* part of -Wall
+	    # -Wextra (if available) adds some to -Wall (!)
+	    # -Wsystem-headers removed because of too many warning messages
+	    # that are unfixable by the user of this option (the warnings
+	    # often show benign but real problems)
+	    # -Wunreachable-code has a serious bug and falsely reports 
+	    # labels as unreachable code.  This makes that option useless
+	    # for the MPICH2 code, for example
+            COPTIONS="${COPTIONS} -Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
         fi
 	;;
 
@@ -1111,10 +1139,56 @@ if test "$enable_strict_done" != "yes" ; then
             AC_MSG_WARN([enable strict supported only for gcc])
         fi
         ;;
+
         all)
         enable_strict_done="yes"
         if test "$ac_cv_prog_gcc" = "yes" ; then 
-            pac_cc_strict_flags="-Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wunused-parameter -Wunused-value -Wno-long-long -Werror-implicit-function-declaration"
+	    # -Wsystem-headers removed because of too many warning messages
+	    # that are unfixable by the user of this option (the warnings
+	    # often show benign but real problems)
+	    # -Wunreachable-code has a serious bug and falsely reports 
+	    # labels as unreachable code.  This makes that option useless
+	    # for the MPICH2 code, for example
+	    # The next line was the original set of options; this 
+	    # worked with gcc version 2.x
+#            pac_cc_strict_flags="-Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wunused-parameter -Wunused-value -Wno-long-long -Werror-implicit-function-declaration"
+            pac_cc_strict_flags="-Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value  -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wredundant-decls -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros"
+            CFLAGS="$CFLAGS $pac_cc_strict_flags"
+            AC_MSG_CHECKING([whether we can add -std=c89])
+            # See if we can add -std=c89
+            savCFLAGS=$CFLAGS
+            CFLAGS="$CFLAGS -std=c89"
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[int a;])],
+                  stdc_ok=yes,
+                  stdc_ok=no)
+            AC_MSG_RESULT($stdc_ok)
+            if test "$stdc_ok" != yes ; then
+                CFLAGS="$savCFLAGS"
+            else
+                pac_cc_strict_flags="$pac_cc_strict_flags -std=c89"
+            fi
+        else 
+            AC_MSG_WARN([enable strict supported only for gcc])
+        fi
+        ;;
+
+	# The MPICH2 code has several modules that have duplicate 
+	# function declarations.  The resulting list of warnings is
+	# swamped by those duplicates, rendering the output nearly
+	# useless.  This temporary option choice is the same as
+	# --enable-strict=all, but without that one option
+	allbutdupdefs)
+        enable_strict_done="yes"
+        if test "$ac_cv_prog_gcc" = "yes" ; then 
+	    # -Wsystem-headers removed because of too many warning messages
+	    # that are unfixable by the user of this option (the warnings
+	    # often show benign but real problems)
+	    # -Wunreachable-code has a serious bug and falsely reports 
+	    # labels as unreachable code.  This makes that option useless
+	    # for the MPICH2 code, for example
+	    # This next line contains the options used with gcc version 2.x
+#            pac_cc_strict_flags="-Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wunused-parameter -Wunused-value -Wno-long-long -Werror-implicit-function-declaration"
+            pac_cc_strict_flags="-Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value  -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
             CFLAGS="$CFLAGS $pac_cc_strict_flags"
             AC_MSG_CHECKING([whether we can add -std=c89])
             # See if we can add -std=c89
