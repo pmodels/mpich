@@ -338,7 +338,8 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
     int          mpi_errno = MPI_SUCCESS;
     unsigned int local_mask[MAX_CONTEXT_MASK];
     int          own_mask = 0;
-    int          testCount = 10;
+    int          testCount = 10; /* if you change this value, you need to also change 
+				    it below where it is reinitialized */
 
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -442,7 +443,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	    MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
 	}
 	/* Here is the test for out-of-context ids */
-	if (testCount-- == 0) {
+	if ((testCount-- == 0) && (*context_id == 0)) {
 	    int hasNoId, totalHasNoId;
 	    /* We don't need to lock on this because we're just looking for
 	       zero or nonzero */
@@ -451,8 +452,14 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 			    MPI_MAX, comm_ptr->handle );
 	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    if (totalHasNoId == 1) {
-		*context_id = 0;
+		/* Release the mask for use by other threads */
+		if (own_mask) {
+		    mask_in_use = 0;
+		}
 		MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm" );
+	    }
+	    else { /* reinitialize testCount */
+		testCount = 10;
 	    }
 	}
     }
