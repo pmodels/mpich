@@ -374,7 +374,8 @@ static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
                                  displaces,
                                  datatypes,
                                  &combined_datatype);
-    
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+   
     ints[0] = count;
 
     MPID_Datatype_get_ptr(combined_datatype, *combined_dtp);    
