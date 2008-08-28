@@ -17,6 +17,10 @@
 #ifndef MPISHARED_H_INCLUDED
 #define MPISHARED_H_INCLUDED
 
+#ifdef MPIIMPL_H_INCLUDED
+#error 'mpishared.h should not be used if mpiimpl.h is included'
+#endif
+
 /* Make sure that we have the basic definitions */
 #ifndef MPICHCONF_H_INCLUDED
 #include "mpichconf.h"
