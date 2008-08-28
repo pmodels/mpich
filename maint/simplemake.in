@@ -3336,6 +3336,11 @@ library, or new library name)\n" if $debug;
 # ===========================================================================
 sub TargetPrograms {
     foreach $pgm (keys(%programs)) {
+	# If there was a manual target, skip
+	if (defined($usertargets{$pgm})) { 
+	    print "Skipping generation of rule for $pgm because Makefile.sm already contains one\n";
+	    next; 
+	}
 	&print_make_line( FD,  "$pgm: " );
 	$pgmobjs = "";
 	foreach $sourcefile (split(/\s+/,$programs{$pgm})) {
