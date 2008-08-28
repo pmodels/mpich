@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 #ifndef MPIBASE_H_INCLUDED
-#define MPIBASE_H_INClUDED
+#define MPIBASE_H_INCLUDED
 
 /* This file contains various basis definitions that may be used 
    by other source files (in particular, ones in src/util) to access
