@@ -42,6 +42,7 @@ int main( int argc, char *argv[] )
 
     /* Create some pending receives and unexpected messages */
     MPI_Comm_dup( MPI_COMM_WORLD, &dupworld );
+    MPI_Comm_set_name( dupworld, "Dup of comm world" );
     MPI_Comm_rank( MPI_COMM_WORLD, &wrank );
     MPI_Comm_size( MPI_COMM_WORLD, &wsize );
     MPI_Irecv( &buf, 1, MPI_INT, (wrank + 1) % wsize, 17, dupworld, &rreq );
@@ -52,7 +53,11 @@ int main( int argc, char *argv[] )
     /*    MPI_Send( &ssbuf, 1, MPI_INT, (wrank + 2) %wsize, 18, dupworld );*/
 
     /* Access the queues */
+    printf( "Should see pending recv with tag 17, 19 on dupworld and send with tag 18 on world\n" );
     showQueues();
+    MPI_Barrier( MPI_COMM_WORLD );
+
+    /* Match up some of the messages */
     MPI_Send( &sbuf, 1, MPI_INT, (wrank + wsize - 1) % wsize, 17, dupworld );
     MPI_Recv( &rbuf, 1, MPI_INT, (wrank + 1) % wsize, 18, MPI_COMM_WORLD, 
     	      MPI_STATUS_IGNORE );
@@ -61,8 +66,10 @@ int main( int argc, char *argv[] )
 
     /* Access the queues again */
     printf( "\nAfter a few send/receives\n" );
+    printf( "Should see recv with tag 19 on dupworld\n" );
     showQueues();
 
+    MPI_Barrier( MPI_COMM_WORLD );
     MPI_Send( &sbuf, 1, MPI_INT, (wrank + wsize - 1) % wsize, 19, dupworld );
 
     /* Access the queues again */

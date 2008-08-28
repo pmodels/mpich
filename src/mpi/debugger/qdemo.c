@@ -15,8 +15,9 @@
 int main( int argc, char *argv[] )
 {
     int wsize, wrank;
-    int source, dest;
+    int source, dest, i;
     int buf1[10], buf2[10], buf3[10];
+    MPI_Request r[3];
     volatile int hold = 1; 
     MPI_Comm dupcomm;
     MPI_Status status;
@@ -33,6 +34,11 @@ int main( int argc, char *argv[] )
     MPI_Comm_dup( MPI_COMM_WORLD, &dupcomm );
     MPI_Comm_set_name( dupcomm, "Dup of comm world" );
 
+    for (i=0; i<3; i++) {
+	MPI_Irecv( MPI_BOTTOM, 0, MPI_INT, source, i + 100, MPI_COMM_WORLD, 
+		   &r[i] );
+    }
+
     MPI_Send( buf2, 8, MPI_INT, dest, 1, MPI_COMM_WORLD );
     MPI_Send( buf3, 4, MPI_INT, dest, 2, dupcomm );
     
@@ -40,6 +46,10 @@ int main( int argc, char *argv[] )
 
     MPI_Recv( buf1, 10, MPI_INT, source, 1, MPI_COMM_WORLD, &status );
     MPI_Recv( buf1, 10, MPI_INT, source, 1, dupcomm, &status );
+
+    for (i=0; i<3; i++) {
+	MPI_Cancel( &r[i] );
+    }
 
     MPI_Comm_free( &dupcomm );
     
