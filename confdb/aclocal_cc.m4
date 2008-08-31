@@ -123,6 +123,8 @@ else
     # Could not compile without the option!
     AC_MSG_RESULT(no)
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 ])
 dnl
@@ -236,6 +238,8 @@ if test -n "$ac_cv_c_depend_opt" ; then
     C_DO_DEPENDS="$ac_cv_c_do_depends"
 else
    # Determine the values
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 dnl
 dnl Some systems (/usr/ucb/cc on Solaris) do not generate a dependency for
@@ -610,6 +614,8 @@ AC_DEFUN(PAC_C_TRY_COMPILE_CLEAN,[
 $3=2
 dnl Get the compiler output to test against
 if test -z "$pac_TRY_COMPLILE_CLEAN" ; then
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     echo 'int try(void);int try(void){return 0;}' > conftest.c
     if ${CC-cc} $CFLAGS -c conftest.c >conftest.bas 2>&1 ; then
@@ -624,6 +630,8 @@ if test -z "$pac_TRY_COMPLILE_CLEAN" ; then
 fi
 dnl
 dnl Create the program that we need to test with
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 cat >conftest.c <<EOF
 #include "confdefs.h"
@@ -647,6 +655,8 @@ else
     if test -s conftest.bas ; then cat conftest.bas >> config.log ; fi
     $3=2
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 ])
 dnl
@@ -737,6 +747,8 @@ int Foo(int a) { return a; }
 # pragma.  Some compilers require this in order to make the weak symbol
 # extenally visible.  
 if test "$has_pragma_weak" = yes ; then
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     cat >>conftest1.c <<EOF
 extern int PFoo(int);
@@ -755,6 +767,8 @@ EOF
         # correctly implement it on systems where the loader doesn't 
         # support weak symbols (e.g., cygwin).  This is a bug in gcc, but it
         # it is one that *we* have to detect.
+	# This is needed for Mac OSX 10.5
+	rm -rf conftest.dSYM
         rm -f conftest*
         cat >>conftest1.c <<EOF
 extern int PFoo(int);
@@ -788,6 +802,8 @@ EOF
       has_pragma_weak=0
       pragma_extra_message="pragma weak does not work outside of a file"
     fi
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
 fi
 dnl
@@ -873,6 +889,8 @@ AC_CACHE_CHECK([for multiple weak symbol support],
 pac_cv_prog_c_multiple_weak_symbols,[
 # Test for multiple weak symbol support...
 #
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 cat >>conftest1.c <<EOF
 extern int PFoo(int);
@@ -899,6 +917,8 @@ else
     cat conftest2.c >>config.log
     if test -s conftest.out ; then cat conftest.out >> config.log ; fi
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 dnl
 ])
@@ -1413,6 +1433,8 @@ if ${CC-cc} $CFLAGS -c conftest1.c >conftest.out 2>&1 ; then
         fi
     fi
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest* libconftest*])
 if test "$ac_cv_prog_cc_globals_work" = no ; then
     AC_MSG_WARN([Common symbols not supported on this system!])
@@ -2331,6 +2353,8 @@ AC_REQUIRE([AC_PROG_RANLIB])
 AC_REQUIRE([AC_PROG_INSTALL])
 AC_REQUIRE([AC_PROG_CC])
 ac_cv_prog_install_breaks_libs=yes
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f libconftest* conftest*
 echo 'int foo(int);int foo(int a){return a;}' > conftest1.c
 echo 'extern int foo(int); int main( int argc, char **argv){ return foo(0); }' > conftest2.c
@@ -2360,6 +2384,8 @@ if ${CC-cc} $CFLAGS -c conftest1.c >conftest.out 2>&1 ; then
         fi
     fi
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest* libconftest*])
 
 if test -z "$RANLIB_AFTER_INSTALL" ; then
