@@ -164,7 +164,7 @@ int MPIDI_CH3_PreLoad( void )
     goto fn_exit;
 }
 
-int MPIDI_CH3_Finalize( )
+int MPIDI_CH3_Finalize( void )
 {
     int mpi_errno = MPIU_CALL(MPIDI_CH3,Finalize());
     MPIU_DLL_Close( dllhandle );
@@ -174,8 +174,10 @@ int MPIDI_CH3_Finalize( )
        no longer valid */
     /* FIXME: As a workaround for the use of PG_Destroy *after* 
        CH3_Finalize is called, this entry point is set to something
-       benign */
+       benign, and the VC_Destroy that PG_Destroy may invoke, is also
+       set to ignore. */
     MPIU_CALL_MPIDI_CH3.PG_Destroy = (int (*)(MPIDI_PG_t*))MPIDI_CH3I_Ignore;
+    MPIU_CALL_MPIDI_CH3.VC_Destroy = (int (*)(struct MPIDI_VC *))MPIDI_CH3I_Ignore;
 
     return mpi_errno;
 }
