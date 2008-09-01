@@ -157,6 +157,8 @@ PMPI_LOCAL int MPID_LPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 {
     int i;
     
+    /* FIXME: Should be using the local_size argument */
+    MPIU_Assert( comm_ptr->local_size == local_size );
     for (i=0; i<comm_ptr->local_size; i++) {
 	(void)MPID_VCR_Get_lpid( comm_ptr->vcr[i], &local_lpids[i] );
     }
