@@ -159,22 +159,12 @@ void MPIR_Nest_incr_export( void )
     MPIU_THREADPRIV_DECL;
     MPIU_THREADPRIV_GET;
     MPIU_THREADPRIV_FIELD(nest_count) = MPIU_THREADPRIV_FIELD(nest_count) + 1;
-    /*
-    MPICH_PerThread_t *p;
-    MPIR_GetPerThread(&p);
-    p->nest_count++;
-    */
 }
 void MPIR_Nest_decr_export( void )
 {
     MPIU_THREADPRIV_DECL;
     MPIU_THREADPRIV_GET;
     MPIU_THREADPRIV_FIELD(nest_count) = MPIU_THREADPRIV_FIELD(nest_count) - 1;
-    /*
-    MPICH_PerThread_t *p;
-    MPIR_GetPerThread(&p);
-    p->nest_count--;
-    */
 }
 
 /* ------------------------------------------------------------------------- */
