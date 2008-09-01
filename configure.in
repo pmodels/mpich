@@ -1128,35 +1128,6 @@ if test -n "$perform_dbgmutex" ; then
    AC_DEFINE(MPICH_DEBUG_MUTEX,1,[Define to enable mutex debugging])
 fi
 
-if test "$enable_debuginfo" = "yes" ; then
-    debugger_dir=debugger
-    AC_DEFINE(HAVE_DEBUGGER_SUPPORT,1,[Define if debugger support is included])
-    # The debugger support requires a shared library.  This is handled 
-    # below, after we check for compiler support for shared libraries
-    # Note: if libdir contains exec_prefix, handle the fact that the
-    # default exec_prefix is NONE, which (much later in configure)
-    # gets turned into the value of prefix
-    ##ENVVAR: MPICH_DEBUGLIBNAME - Set this environment variable to 
-    ## override the default name of the debugger support library.
-    ## The default name is libtvmpich2.so .
-    ##ENVVAR END:
-    if test -z "$MPICH_DEBUGLIBNAME" ; then
-        DEBUGLIBNAME=libtvmpich2.so
-    else
-        DEBUGLIBNAME=$MPICH_DEBUGLIBNAME
-    fi
-    if test "x$exec_prefix" = xNONE ; then
-        saveExecPrefix=$exec_prefix
-	exec_prefix=$prefix
-        eval dlldir=$libdir/$DEBUGLIBNAME
-	exec_prefix=$saveExecPrefix
-    else
-        eval dlldir=$libdir/$DEBUGLIBNAME
-    fi
-    dlldir='"'$dlldir'"'
-    AC_DEFINE_UNQUOTED(MPICH_INFODLL_LOC,$dlldir,[Define as the name of the debugger support library])
-fi
-AC_SUBST(debugger_dir)
 pac_cross_compiling=no
 if test "$with_cross" != "no" ; then
     if test -s "$with_cross" ; then
@@ -1821,6 +1792,8 @@ EOF
 		 AC_MSG_WARN([Cannot build shared libraries for Fortran with this compiler])
              fi
          fi
+	 # This is needed for Mac OSX 10.5
+	 rm -rf conftest.dSYM
          rm -f conftest*
 
 	 FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
@@ -1854,6 +1827,8 @@ EOF
     # allow this or have serious bugs (OSF Fortran compilers have a bug
     # that generates an error message from cpp).  The following test
     # checks to see if .F works, and if not, whether "cpp -P -C" can be used
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     AC_MSG_CHECKING([whether Fortran compiler processes .F files with C preprocessor])
     cat >conftest.F <<EOF
@@ -2053,6 +2028,8 @@ if test "$enable_f90" = "yes" ; then
     # allow this or have serious bugs (OSF Fortran compilers have a bug
     # that generates an error message from cpp).  The following test
     # checks to see if .F works, and if not, whether "cpp -P -C" can be used
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     AC_MSG_CHECKING([whether Fortran 90 compiler processes .F90 files with C preprocessor])
     cat >conftest.F90 <<EOF
@@ -2544,6 +2521,8 @@ EOF
     if test -n "$ETAGSADD" ; then
         AC_MSG_RESULT($ETAGSADD)
     fi
+     # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
 fi
 AC_SUBST(ETAGS)
@@ -2774,7 +2753,38 @@ on all link lines (consider adding it to LDFLAGS)])
    AC_SUBST(BUILD_TVDLL)
    AC_SUBST(CC_SHL_DBG)
    AC_SUBST(C_LINK_SHL_DBG)
+
+    # The debugger library name cannot be set until we know the extension
+    # of shared libraries - the name is so on most Unix system, dylib on OS X.
+    debugger_dir=debugger
+    AC_DEFINE(HAVE_DEBUGGER_SUPPORT,1,[Define if debugger support is included])
+    # The debugger support requires a shared library.  This is handled 
+    # below, after we check for compiler support for shared libraries
+    # Note: if libdir contains exec_prefix, handle the fact that the
+    # default exec_prefix is NONE, which (much later in configure)
+    # gets turned into the value of prefix
+    ##ENVVAR: MPICH_DEBUGLIBNAME - Set this environment variable to 
+    ## override the default name of the debugger support library.
+    ## The default name is libtvmpich2.so .
+    ##ENVVAR END:
+    if test -z "$MPICH_DEBUGLIBNAME" ; then
+        DEBUGLIBNAME=libtvmpich2.so
+    else
+        DEBUGLIBNAME=$MPICH_DEBUGLIBNAME
+    fi
+    if test "x$exec_prefix" = xNONE ; then
+        saveExecPrefix=$exec_prefix
+	exec_prefix=$prefix
+        eval dlldir=$libdir/$DEBUGLIBNAME
+	exec_prefix=$saveExecPrefix
+    else
+        eval dlldir=$libdir/$DEBUGLIBNAME
+    fi
+    dlldir='"'$dlldir'"'
+    AC_DEFINE_UNQUOTED(MPICH_INFODLL_LOC,$dlldir,[Define as the name of the debugger support library])
 fi
+AC_SUBST(debugger_dir)
+
 # ----------------------------------------------------------------------------
 
 nameserv_name=""
@@ -4893,6 +4903,8 @@ if test "$enable_coverage" = "yes" ; then
     # with the -fprofile-args -ftest-coverage option.
     # We cannot use TRY_LINK because that uses both the compilation and
     # the linking flags.  
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     cat >>conftest.c <<EOF
 int main( int argc, char **argv ) { return 1; }
@@ -4921,6 +4933,8 @@ EOF
         AC_MSG_RESULT(no)
         AC_MSG_ERROR([Unable to compile programs when coverage analysis enabled])
     fi
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     
     # Test for the routines that we need to use to ensure that the
@@ -5870,6 +5884,8 @@ if test -n "$MPI_OFFSET_TYPE" ; then
         dnl We'd like to use AC_CHECK_SIZEOF, but that won't take a variable.
         AC_CACHE_CHECK([the sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,[
         ac_cv_sizeof_MPI_Offset=unknown
+	# This is needed for Mac OSX 10.5
+	rm -rf conftest.dSYM
         rm -f conftest*
         cat >> conftest.c <<EOF
 #include "confdefs.h"
@@ -5903,6 +5919,8 @@ EOF
 	    echo "configure: failed program was:" >&AC_FD_CC
 	    cat conftest.c >&AC_FD_CC
         fi
+	# This is needed for Mac OSX 10.5
+	rm -rf conftest.dSYM
         rm -f conftest*
 	])
 	if test "$ac_cv_sizeof_MPI_Offset" != "unknown" ; then 
