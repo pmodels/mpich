@@ -1094,7 +1094,7 @@ The returned string is the generic error message for the supplied error code.
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_get_error_class_string(int error, char *error_string, int length);
+int MPIDU_Sock_get_error_class_string(int error, char *error_string, size_t length);
 
 
 CPLUSPLUS_END

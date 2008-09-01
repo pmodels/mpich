@@ -20,7 +20,7 @@ int MPIDU_Sock_hostname_to_host_description(char *hostname, char *host_descripti
     
     MPIDU_SOCKI_VERIFY_INIT(mpi_errno, fn_exit);
     
-    if (MPIU_Strncpy(host_description, hostname, len))
+    if (MPIU_Strncpy(host_description, hostname, (size_t) len))
     /* --BEGIN ERROR HANDLING-- */
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_BAD_LEN,
@@ -83,7 +83,7 @@ int MPIDU_Sock_get_host_description(int myRank,
 
     if (env_hostname != NULL)
     {
-	rc = MPIU_Strncpy(host_description, env_hostname, len);
+	rc = MPIU_Strncpy(host_description, env_hostname, (size_t) len);
 	/* --BEGIN ERROR HANDLING-- */
 	if (rc != 0)
 	{
@@ -309,7 +309,7 @@ int MPIDU_Sock_get_sock_set_id(struct MPIDU_Sock_set * sock_set)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /* --BEGIN ERROR HANDLING-- */
-int MPIDU_Sock_get_error_class_string(int error, char *error_string, int length)
+int MPIDU_Sock_get_error_class_string(int error, char *error_string, size_t length)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_GET_ERROR_CLASS_STRING);
 

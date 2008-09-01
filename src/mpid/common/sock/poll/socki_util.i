@@ -12,7 +12,7 @@ int MPIDI_Sock_update_sock_set( struct MPIDU_Sock_set *, int );
 #endif
 
 static int MPIDU_Socki_os_to_mpi_errno(struct pollinfo * pollinfo, 
-		     int os_errno, char * fcname, int line, int * conn_failed);
+		     int os_errno, const char * fcname, int line, int * conn_failed);
 
 static int MPIDU_Socki_adjust_iov(ssize_t nb, MPID_IOV * const iov, 
 				  const int count, int * const offsetp);
@@ -445,7 +445,7 @@ int MPIDI_Sock_update_sock_set( struct MPIDU_Sock_set *sock_set,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /* --BEGIN ERROR HANDLING-- */
-static int MPIDU_Socki_os_to_mpi_errno(struct pollinfo * pollinfo, int os_errno, char * fcname, int line, int * disconnected)
+static int MPIDU_Socki_os_to_mpi_errno(struct pollinfo * pollinfo, int os_errno, const char * fcname, int line, int * disconnected)
 {
     int mpi_errno;
 
