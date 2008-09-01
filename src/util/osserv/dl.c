@@ -55,10 +55,15 @@ int MPIU_DLL_FindSym( void *handle, const char symbol[], void **value )
 	MPIU_ERR_SET2(mpi_errno,MPI_ERR_OTHER,"**unableToLoadDLLsym",
 		      "**unableToLoadDLLsym %s %s", symbol, dlerror() );
     }
+    /* printf( "Symbol %s at location %p\n", symbol, *value ); */
+    MPIU_DBG_MSG_FMT(SYSCALL,VERBOSE,
+		     (MPIU_DBG_FDEST,"Symbol %s loaded at %p",symbol,*value));
+
     return mpi_errno;
 }
 int MPIU_DLL_Close( void *handle )
 {
+    MPIU_DBG_MSG(SYSCALL,VERBOSE,"Closing DLL");
     dlclose( handle );
     return 0;
 }
