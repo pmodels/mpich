@@ -12,8 +12,10 @@
 MPI_DUP_FN - A function to simple-mindedly copy attributes  
 
 D*/
-int MPIR_Dup_fn ( MPI_Comm comm, int keyval, void *extra_state, void *attr_in, 
-	void *attr_out, int *flag )
+int MPIR_Dup_fn ( MPI_Comm comm ATTRIBUTE((unused)), 
+		  int keyval ATTRIBUTE((unused)), 
+		  void *extra_state ATTRIBUTE((unused)), void *attr_in, 
+		  void *attr_out, int *flag )
 {
     /* No error checking at present */
 
