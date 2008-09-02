@@ -1,3 +1,5 @@
+#include "adio.h"
+#include "ad_nfs.h"
 
 int ADIOI_NFS_Feature(ADIO_File fd, int flag)
 {       
