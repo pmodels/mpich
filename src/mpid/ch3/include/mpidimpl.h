@@ -1555,13 +1555,6 @@ int MPIDI_CH3_InitCompleted( void );
 /* Routine to return the tag associated with a port */
 int MPIDI_GetTagFromPort( const char *, int * );
 
-/* Implement the send side of a rendevous send */
-int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, int count, 
-			MPI_Datatype datatype, int dt_contig, MPIDI_msg_sz_t data_sz, 
-			MPI_Aint dt_true_lb,
-			int rank, 
-			int tag, MPID_Comm * comm, int context_offset );
-
 /* Here are the packet handlers */
 int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 				   MPIDI_msg_sz_t *, MPID_Request ** );
@@ -1611,11 +1604,6 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 				MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 				 MPIDI_msg_sz_t *, MPID_Request ** );
-
-int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					MPIDI_msg_sz_t *, MPID_Request ** );
-int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					 MPIDI_msg_sz_t *, MPID_Request ** );
 
 /* PktHandler function:
    vc  (INPUT) -- vc on which the packet was received
