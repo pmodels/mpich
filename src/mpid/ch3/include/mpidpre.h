@@ -50,6 +50,19 @@ typedef unsigned long MPID_Seqnum_t;
 
 #include "mpichconf.h"
 
+/* For the typical communication system for which the ch3 channel is 
+   appropriate, 16 bits is sufficient for the rank.  By also using 16 bits
+   for the context, we can reduce the size of the match information, which
+   is beneficial for slower communication links. 
+
+   Note that the MPICH2 code (in src/mpi) uses int for rank (and usually for 
+   contextids, though some work is needed there).  
+
+   Note:  We need to check for truncation of rank in MPID_Init - it should 
+   confirm that the size of comm_world is less than 2^15, and in an communicator
+   create (that may make use of dynamically created processes) that the
+   size of the communicator is within range.
+*/
 typedef struct MPIDI_Message_match
 {
     int32_t tag;
