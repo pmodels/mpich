@@ -65,7 +65,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank )
 
 /* This function simply tells the CH3 device to use the defaults for the 
    MPI Port functions */
-int MPIDI_CH3_PortFnsInit( MPIDI_PortFns *portFns ) 
+int MPIDI_CH3_PortFnsInit( MPIDI_PortFns *portFns ATTRIBUTE((unused)) ) 
 {
     MPIU_UNREFERENCED_ARG(portFns);
     return 0;
@@ -73,7 +73,7 @@ int MPIDI_CH3_PortFnsInit( MPIDI_PortFns *portFns )
 
 /* This function simply tells the CH3 device to use the defaults for the 
    MPI-2 RMA functions */
-int MPIDI_CH3_RMAFnsInit( MPIDI_RMAFns *a ) 
+int MPIDI_CH3_RMAFnsInit( MPIDI_RMAFns *a ATTRIBUTE((unused)) ) 
 {
     MPIU_UNREFERENCED_ARG(a);
     return 0;
@@ -109,21 +109,21 @@ int MPIDI_CH3_Connect_to_root(const char * port_name,
 
 /* This routine is a hook for initializing information for a process
    group before the MPIDI_CH3_VC_Init routine is called */
-int MPIDI_CH3_PG_Init( MPIDI_PG_t *pg )
+int MPIDI_CH3_PG_Init( MPIDI_PG_t *pg ATTRIBUTE((unused)) )
 {
     return MPI_SUCCESS;
 }
 
 /* This routine is a hook for any operations that need to be performed before
    freeing a process group */
-int MPIDI_CH3_PG_Destroy( struct MPIDI_PG *pg )
+int MPIDI_CH3_PG_Destroy( struct MPIDI_PG *pg ATTRIBUTE((unused)) )
 {
     return MPI_SUCCESS;
 }
 
 /* This routine is a hook for any operations that need to be performed before
    freeing a virtual connection */
-int MPIDI_CH3_VC_Destroy( struct MPIDI_VC *vc )
+int MPIDI_CH3_VC_Destroy( struct MPIDI_VC *vc ATTRIBUTE((unused)) )
 {
     return MPI_SUCCESS;
 }
