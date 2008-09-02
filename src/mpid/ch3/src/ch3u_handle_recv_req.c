@@ -63,7 +63,8 @@ int MPIDI_CH3U_Handle_recv_req(MPIDI_VC_t * vc, MPID_Request * rreq,
  *    accessing the string.
  */
 /* ----------------------------------------------------------------------- */
-int MPIDI_CH3_ReqHandler_RecvComplete( MPIDI_VC_t *vc, MPID_Request *rreq, 
+int MPIDI_CH3_ReqHandler_RecvComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
+				       MPID_Request *rreq, 
 				       int *complete )
 {
     /* mark data transfer as complete and decrement CC */
@@ -138,7 +139,7 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 #define FUNCNAME MPIDI_CH3_ReqHandler_PutRespDerivedDTComplete
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_PutRespDerivedDTComplete( MPIDI_VC_t *vc, 
+int MPIDI_CH3_ReqHandler_PutRespDerivedDTComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
 						   MPID_Request *rreq, 
 						   int *complete )
 {
@@ -189,7 +190,7 @@ int MPIDI_CH3_ReqHandler_PutRespDerivedDTComplete( MPIDI_VC_t *vc,
 #define FUNCNAME MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete( MPIDI_VC_t *vc, 
+int MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
 						     MPID_Request *rreq, 
 						     int *complete )
 {
@@ -423,7 +424,7 @@ int MPIDI_CH3_ReqHandler_SinglePutAccumComplete( MPIDI_VC_t *vc,
 #define FUNCNAME MPIDI_CH3_ReqHandler_UnpackUEBufComplete
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_UnpackUEBufComplete( MPIDI_VC_t *vc, 
+int MPIDI_CH3_ReqHandler_UnpackUEBufComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
 					      MPID_Request *rreq, 
 					      int *complete )
 {
@@ -490,7 +491,7 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufComplete( MPIDI_VC_t *vc,
 #define FUNCNAME MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV( MPIDI_VC_t *vc, 
+int MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
 					      MPID_Request *rreq, 
 					      int *complete )
 {
@@ -514,8 +515,8 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV( MPIDI_VC_t *vc,
 #define FUNCNAME MPIDI_CH3_ReqHandler_ReloadIOV
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_ReloadIOV( MPIDI_VC_t *vc, MPID_Request *rreq, 
-				    int *complete )
+int MPIDI_CH3_ReqHandler_ReloadIOV( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
+				    MPID_Request *rreq, int *complete )
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_RELOADIOV);

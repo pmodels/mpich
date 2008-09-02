@@ -42,7 +42,7 @@ int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPID_Request * sreq,
  */
 /* ----------------------------------------------------------------------- */
 
-int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *vc, 
+int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
 					      MPID_Request *sreq, 
 					      int *complete )
 {
@@ -74,7 +74,7 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *vc,
     return mpi_errno;
 }
 
-int MPIDI_CH3_ReqHandler_SendReloadIOV( MPIDI_VC_t *vc, MPID_Request *sreq, 
+int MPIDI_CH3_ReqHandler_SendReloadIOV( MPIDI_VC_t *vc ATTRIBUTE((unused)), MPID_Request *sreq, 
 					int *complete )
 {
     int mpi_errno;

@@ -64,7 +64,7 @@ int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     /* FIXME: We can turn this into something like
 
-       MPIU_Assert(pkt->type >= 0 && pkt->type <= MAX_PACKET_TYPE);
+       MPIU_Assert(pkt->type <= MAX_PACKET_TYPE);
        mpi_errno = MPIDI_CH3_ProgressFunctions[pkt->type](vc,pkt,rreqp);
        
        in the progress engine itself.  Then this routine is not necessary.
@@ -74,7 +74,8 @@ int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 	MPIDI_CH3_PktHandler_Init( pktArray, MPIDI_CH3_PKT_END_CH3 );
 	needsInit = 0;
     }
-    MPIU_Assert(pkt->type  >= 0 && pkt->type <= MPIDI_CH3_PKT_END_CH3);
+    /* Packet type is an enum and hence >= 0 */
+    MPIU_Assert(pkt->type <= MPIDI_CH3_PKT_END_CH3);
     mpi_errno = pktArray[pkt->type](vc, pkt, buflen, rreqp);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_HANDLE_ORDERED_RECV_PKT);
@@ -468,7 +469,9 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPID_Win *win_ptr, int requested_lock)
 /* ------------------------------------------------------------------------ */
 
 
-/* FIXME: we still need to implement flow control */
+/* FIXME: we still need to implement flow control.  As a reminder, 
+   we don't mark these parameters as unused, because a full implementation
+   of this routine will need to make use of all 4 parameters */
 int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 					 MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
 {
@@ -476,13 +479,15 @@ int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     return MPI_SUCCESS;
 }
 
-
+/* This is a dummy handler*/
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_PktHandler_EndCH3
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-				 MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
+int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
+				 MPIDI_CH3_Pkt_t *pkt ATTRIBUTE((unused)),
+				 MPIDI_msg_sz_t *buflen ATTRIBUTE((unused)), 
+				 MPID_Request **rreqp ATTRIBUTE((unused)) )
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_ENDCH3);
     

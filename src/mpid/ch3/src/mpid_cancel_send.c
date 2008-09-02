@@ -260,7 +260,8 @@ int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     return mpi_errno;
 }
 
-int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
+					 MPIDI_CH3_Pkt_t *pkt,
 					 MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_cancel_send_resp_t * resp_pkt = &pkt->cancel_send_resp;

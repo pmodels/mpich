@@ -3024,7 +3024,8 @@ int MPIDI_CH3_PktHandler_LockAccumUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #define FUNCNAME MPIDI_CH3_PktHandler_GetResp
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_PktHandler_GetResp( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+int MPIDI_CH3_PktHandler_GetResp( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
+				  MPIDI_CH3_Pkt_t *pkt,
 				  MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_get_resp_t * get_resp_pkt = &pkt->get_resp;
@@ -3080,7 +3081,8 @@ int MPIDI_CH3_PktHandler_GetResp( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #define FUNCNAME MPIDI_CH3_PktHandler_LockGranted
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_PktHandler_LockGranted( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+int MPIDI_CH3_PktHandler_LockGranted( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
+				      MPIDI_CH3_Pkt_t *pkt,
 				      MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_lock_granted_t * lock_granted_pkt = &pkt->lock_granted;
@@ -3108,7 +3110,8 @@ int MPIDI_CH3_PktHandler_LockGranted( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #define FUNCNAME MPIDI_CH3_PktHandler_PtRMADone
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_PktHandler_PtRMADone( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
+int MPIDI_CH3_PktHandler_PtRMADone( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
+				    MPIDI_CH3_Pkt_t *pkt, 
 				    MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_pt_rma_done_t * pt_rma_done_pkt = &pkt->pt_rma_done;
