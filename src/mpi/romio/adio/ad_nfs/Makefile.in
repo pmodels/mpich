@@ -18,7 +18,7 @@ C_COMPILE_SHL = $(CC_SHL)
 AD_NFS_OBJECTS = ad_nfs_read.o \
       ad_nfs_open.o ad_nfs_write.o ad_nfs_done.o \
       ad_nfs_fcntl.o ad_nfs_iread.o ad_nfs_iwrite.o ad_nfs_wait.o \
-      ad_nfs_setsh.o ad_nfs_getsh.o ad_nfs.o ad_nfs_resize.o
+      ad_nfs_setsh.o ad_nfs_getsh.o ad_nfs.o ad_nfs_resize.o ad_nfs_features.o
 
 default: $(LIBNAME)
 	@if [ "@ENABLE_SHLIB@" != "none" ] ; then \

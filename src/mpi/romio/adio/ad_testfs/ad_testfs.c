@@ -34,4 +34,5 @@ struct ADIOI_Fns_struct ADIO_TESTFS_operations = {
     ADIOI_TESTFS_Flush, /* Flush */
     ADIOI_TESTFS_Resize, /* Resize */
     ADIOI_TESTFS_Delete, /* Delete */
+    ADIOI_GEN_Feature, /* Features */
 };

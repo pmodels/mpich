@@ -19,7 +19,7 @@ AD_GRIDFTP_OBJECTS = ad_gridftp_close.o \
 	ad_gridftp_open.o ad_gridftp_read.o ad_gridftp_write.o \
 	ad_gridftp_fcntl.o ad_gridftp_flush.o \
 	ad_gridftp_resize.o ad_gridftp_hints.o \
-	ad_gridftp_delete.o ad_gridftp.o globus_routines.o
+	ad_gridftp_delete.o ad_gridftp.o globus_routines.o ad_gridftp_features.o
 
 default: $(LIBNAME)
 	@if [ "@ENABLE_SHLIB@" != "none" ] ; then \
