@@ -291,6 +291,8 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr)
  */
 
 /* FIXME: These routines belong in a different place */
+/* FIXME: Either remove local_size or use it (and check against 
+   comm_ptr->local_size?) */
 #undef FUNCNAME
 #define FUNCNAME MPID_GPID_GetAllInComm
 #undef FCNAME
