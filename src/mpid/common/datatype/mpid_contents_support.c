@@ -55,6 +55,7 @@ void MPID_Type_access_contents(MPI_Datatype type,
     return;
 }
 
+/* FIXME: Is this routine complete?  Why is it needed? */
 void MPID_Type_release_contents(MPI_Datatype type,
 				int **ints_p,
 				MPI_Aint **aints_p,
