@@ -68,7 +68,7 @@ MPID_nem_waitforlock (MPID_nem_fbox_common_ptr_t pbox, int value, int count)
 	if(--count == 0)
 	{
 	    /* FIXME: Do we need to release/acquire locks here? */
-	    sched_yield();
+	    MPIDU_Yield();
 	}
 	DO_PAPI2 (PAPI_reset (PAPI_EventSet));
     }  

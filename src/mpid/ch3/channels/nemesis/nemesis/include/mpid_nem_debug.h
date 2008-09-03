@@ -7,12 +7,10 @@
 #ifndef MPID_NEM_DEBUG_H
 #define MPID_NEM_DEBUG_H
 
-#include <assert.h>
-
 /*#define YIELD_IN_SKIP*/
 #ifdef YIELD_IN_SKIP
-#define SKIP sched_yield()
-#warning "SKIP is sched_yield"
+#define SKIP MPIDU_Yield()
+#warning "SKIP is yield"
 #else /* YIELD_IN_SKIP */
 #define SKIP do{}while(0)
 /*#warning "SKIP is do ...while" */

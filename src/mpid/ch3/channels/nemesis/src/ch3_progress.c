@@ -56,7 +56,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
     unsigned completions = MPIDI_CH3I_progress_completion_count;
     int mpi_errno = MPI_SUCCESS;
     int complete;
-#if !defined(ENABLE_NO_SCHED_YIELD) || defined(MPICH_IS_THREADED)
+#if !defined(ENABLE_NO_YIELD) || defined(MPICH_IS_THREADED)
     int pollcount = 0;
 #endif
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS);
@@ -87,12 +87,12 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             ++pollcount;
         }
         MPIU_THREAD_CHECK_END;
-#elif !defined(ENABLE_NO_SCHED_YIELD)
+#elif !defined(ENABLE_NO_YIELD)
         if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
         {
             pollcount = 0;
-	    /* FIXME: Need to release/acquire lock around the sched_yield */
-            sched_yield();
+	    /* FIXME: Need to release/acquire lock around the yield */
+            MPIDU_Yield();
         }
         ++pollcount;
 #endif

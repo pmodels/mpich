@@ -29,10 +29,27 @@ pathlist=""
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/include"
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/nemesis/include"
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/nemesis/utils/monitor"
+pathlist="$pathlist src/mpid/common/locks"
 for path in $pathlist ; do
     MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 done
 
+devsubsystems="$devsubsystems src/mpid/common/locks"
+CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS"
+
+dir=${master_top_srcdir}/src/mpid/common/locks
+if test ! -d $dir ; then
+    echo "ERROR: ${dir} does not exist"
+    exit 1
+fi
+file=${dir}/setup
+if test -f $file ; then
+    echo sourcing $file
+    . $file
+else
+    echo "Cannot find $file , needed to build process locks"
+    exit 1
+fi
 
 # include prototype
 #prototype_dir=${master_top_srcdir}/src/mpid/${device_name}/channels/${channel_name}/nemesis

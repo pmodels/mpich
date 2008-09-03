@@ -7,11 +7,10 @@
 #include "mpid_nem_impl.h"
 #include "mpid_nem_datatypes.h"
 
-#ifdef ENABLE_NO_SCHED_YIELD
-#define SCHED_YIELD() do { } while(0)
+#ifdef ENABLE_NO_YIELD
+#define COND_Yield() do { } while(0)
 #else
-#include <sched.h>
-#define SCHED_YIELD() sched_yield()
+#define COND_Yield() MPIDU_Yield()
 #endif
 
 int MPID_nem_lmt_shm_pending = FALSE;
@@ -346,7 +345,7 @@ static int get_next_req(MPIDI_VC_t *vc)
         {
             if (i == LMT_POLLS_BEFORE_YIELD)
             {
-                SCHED_YIELD();
+                COND_Yield();
                 i = 0;
             }
             ++i;
@@ -437,7 +436,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
             {
                 if (copy_buf->receiver_present.val)
                 {
-                    SCHED_YIELD();
+                    COND_Yield();
                     i = 0;
                 }
                 else
@@ -532,7 +531,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
             {
                 if (copy_buf->sender_present.val)
                 {
-                    SCHED_YIELD();
+                    COND_Yield();
                     i = 0;
                 }
                 else

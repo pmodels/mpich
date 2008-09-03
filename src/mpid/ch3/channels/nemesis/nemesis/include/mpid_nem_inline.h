@@ -1052,7 +1052,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned completions = MPIDI_CH3I_progress_completion_count;
-#ifndef ENABLE_NO_SCHED_YIELD
+#ifndef ENABLE_NO_YIELD
     int pollcount = 0;
 #endif
     DO_PAPI (PAPI_reset (PAPI_EventSet));
@@ -1122,12 +1122,12 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
                 goto exit_l;
             }
 	}
-#ifndef ENABLE_NO_SCHED_YIELD
+#ifndef ENABLE_NO_YIELD
 	if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
 	{
 	    pollcount = 0;
 	    /* FIXME: We need to release the lock around this yield */
-	    sched_yield();
+	    MPIDU_Yield();
 	}
 	++pollcount;
 #endif
