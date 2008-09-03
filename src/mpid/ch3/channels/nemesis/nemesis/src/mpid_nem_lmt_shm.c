@@ -46,14 +46,6 @@ typedef struct MPID_nem_lmt_shm_wait_element
 #define LMT_SHM_Q_DEQUEUE(qp, epp) GENERIC_Q_DEQUEUE(qp, epp, next)
 #define LMT_SHM_Q_SEARCH_REMOVE(qp, req_id, epp) GENERIC_Q_SEARCH_REMOVE(qp, _e->req->handle == (req_id), epp, \
                                                                          MPID_nem_lmt_shm_wait_element_t, next)
-/* #define LMT_SHM_Q_EMPTY(qp) GENERIC_Q_EMPTY(qp) */
-/* #define LMT_SHM_Q_HEAD(qp) GENERIC_Q_HEAD(qp) */
-/* #define LMT_SHM_Q_ENQUEUE(qp, ep) do{printf("ENQUEUE(%d) %p\n",__LINE__,ep->req);GENERIC_Q_ENQUEUE(qp, ep, next);} while(0) */
-/* #define LMT_SHM_Q_ENQUEUE_AT_HEAD(qp, ep) do{printf("ENQUEUE_AT_HEAD(%d) %p\n",__LINE__,ep->req);GENERIC_Q_ENQUEUE_AT_HEAD(qp, ep, next);} while(0) */
-/* #define LMT_SHM_Q_DEQUEUE(qp, epp) do{GENERIC_Q_DEQUEUE(qp, epp, next);if(*epp)printf("DEQUEUE(%d) %p\n",__LINE__,(*epp)?(*epp)->req:0);} while(0) */
-/* #define LMT_SHM_Q_SEARCH_REMOVE(qp, req_id, epp) do{GENERIC_Q_SEARCH_REMOVE(qp, _e->req->handle == (req_id), epp, \ */
-/*                                                                             MPID_nem_lmt_shm_wait_element_t, next);\ */
-/*                                                     if(*epp)printf("REMOVE(%d) %p\n",__LINE__,(*epp)?(*epp)->req:0);} while(0) */
 #define CHECK_Q(qp) do{\
     if (LMT_SHM_Q_EMPTY(*(qp))) break;\
     if (LMT_SHM_Q_HEAD(*(qp))->next == NULL && (qp)->head != (qp)->tail)\
@@ -121,7 +113,7 @@ static int MPID_nem_detach_shm_region(volatile MPID_nem_copy_buf_t *buf, char ha
 static int MPID_nem_delete_shm_region(volatile MPID_nem_copy_buf_t *buf, char handle[]);
 
 /* number of iterations to wait for the other side to process a buffer */
-#define NUM_BUSY_POLLS 1000
+#define LMT_POLLS_BEFORE_YIELD 1000
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_shm_initiate_lmt
@@ -352,7 +344,7 @@ static int get_next_req(MPIDI_VC_t *vc)
         MPIDU_Shm_read_barrier();
         while (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL)
         {
-            if (i == NUM_BUSY_POLLS)
+            if (i == LMT_POLLS_BEFORE_YIELD)
             {
                 SCHED_YIELD();
                 i = 0;
@@ -441,7 +433,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
         i = 0;
         while (copy_buf->len[buf_num].val != 0)
         {
-            if (i == NUM_BUSY_POLLS)
+            if (i == LMT_POLLS_BEFORE_YIELD)
             {
                 if (copy_buf->receiver_present.val)
                 {
@@ -536,7 +528,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
         i = 0;
         while ((len = copy_buf->len[buf_num].val) == 0)
         {
-            if (i == NUM_BUSY_POLLS)
+            if (i == LMT_POLLS_BEFORE_YIELD)
             {
                 if (copy_buf->sender_present.val)
                 {

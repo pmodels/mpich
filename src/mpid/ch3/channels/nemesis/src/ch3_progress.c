@@ -91,6 +91,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
         {
             pollcount = 0;
+	    /* FIXME: Need to release/acquire lock around the sched_yield */
             sched_yield();
         }
         ++pollcount;

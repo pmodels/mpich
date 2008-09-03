@@ -36,18 +36,24 @@ int MPID_nem_choose_netmod(void);
 					    MPI_SUCCESS)
 
 /* Shared memory allocation utility functions */
-/* MPID_nem_allocate_shared_memory allocates a shared mem region of size "length" and attaches to it.  "handle" points to a string
-   descriptor for the region to be passed in to MPID_nem_attach_shared_memory.  "handle" is dynamically allocated and should be
-   freed by the caller.*/
+/* MPID_nem_allocate_shared_memory allocates a shared mem region of
+   size "length" and attaches to it.  "handle" points to a string
+   descriptor for the region to be passed in to
+   MPID_nem_attach_shared_memory.  "handle" is dynamically allocated
+   and should be freed by the caller.*/
 int MPID_nem_allocate_shared_memory (char **buf_p, const int length, char *handle[]);
-/* MPID_nem_attach_shared_memory attaches to shared memory previously allocated by MPID_nem_allocate_shared_memory */
-/*int MPID_nem_attach_shared_memory (char **buf_p, const int length, const char const handle[]);*/
+
+/* MPID_nem_attach_shared_memory attaches to shared memory previously
+ * allocated by MPID_nem_allocate_shared_memory */
 int MPID_nem_attach_shared_memory (char **buf_p, const int length, const char handle[]);
-/* MPID_nem_remove_shared_memory removes the OS descriptor associated with the handle.  Once all processes detatch from the region
-   the OS resource will be destroyed. */
-/*int MPID_nem_remove_shared_memory (const char const handle[]);*/
+
+/* MPID_nem_remove_shared_memory removes the OS descriptor associated
+   with the handle.  Once all processes detatch from the region the OS
+   resource will be destroyed. */
 int MPID_nem_remove_shared_memory (const char handle[]);
-/* MPID_nem_detach_shared_memory detaches the shared memory region from this process */
+
+/* MPID_nem_detach_shared_memory detaches the shared memory region
+ * from this process */
 int MPID_nem_detach_shared_memory (const char *buf_p, const int length);
 
 /* initialize shared-memory MPI_Barrier variables */
@@ -61,6 +67,7 @@ MPID_nem_waitforlock (MPID_nem_fbox_common_ptr_t pbox, int value, int count)
     {
 	if(--count == 0)
 	{
+	    /* FIXME: Do we need to release/acquire locks here? */
 	    sched_yield();
 	}
 	DO_PAPI2 (PAPI_reset (PAPI_EventSet));
