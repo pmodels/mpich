@@ -29,10 +29,6 @@ MPID_nem_cell_ptr_t MPID_nem_prefetched_cell = 0;
 
 unsigned short *MPID_nem_recv_seqno = 0;
 
-#ifndef ENABLE_NO_SCHED_YIELD
-#define POLLS_BEFORE_YIELD 1000
-#endif
-
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich2_init
 #undef FCNAME
