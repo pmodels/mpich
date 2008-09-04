@@ -74,7 +74,11 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #ifdef MPICH_IS_THREADED
         MPIU_THREAD_CHECK_BEGIN;
         {
-            if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
+	    /* In the case of threads, we poll for lesser number of
+	     * iterations than the case with only processes, as
+	     * threads contend for CPU and the lock, while processes
+	     * only contend for the CPU. */
+            if (pollcount >= MPID_NEM_THREAD_POLLS_BEFORE_YIELD)
             {
                 pollcount = 0;
                 MPIDI_CH3I_progress_blocked = TRUE;

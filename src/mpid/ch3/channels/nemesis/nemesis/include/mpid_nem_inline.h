@@ -9,7 +9,8 @@
 
 #define MPID_NEM_INLINE_DECL static inline
 
-#define MPID_NEM_POLLS_BEFORE_YIELD 10
+#define MPID_NEM_POLLS_BEFORE_YIELD 1000
+#define MPID_NEM_THREAD_POLLS_BEFORE_YIELD 1
 
 #include "my_papi_defs.h"
 
