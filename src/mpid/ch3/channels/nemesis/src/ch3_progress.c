@@ -91,7 +91,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
         {
             pollcount = 0;
-	    /* FIXME: Need to release/acquire lock around the yield */
             MPIDU_Yield();
         }
         ++pollcount;
@@ -113,7 +112,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
             /* make progress receiving */
             /* check queue */
-
             if (!MPID_nem_lmt_shm_pending && !MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]
                 && !MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE) && is_blocking
 #ifdef MPICH_IS_THREADED

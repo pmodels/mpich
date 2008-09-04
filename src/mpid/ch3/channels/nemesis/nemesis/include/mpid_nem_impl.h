@@ -59,28 +59,11 @@ int MPID_nem_detach_shared_memory (const char *buf_p, const int length);
 /* initialize shared-memory MPI_Barrier variables */
 int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region);
 
-static inline void
-MPID_nem_waitforlock (MPID_nem_fbox_common_ptr_t pbox, int value, int count)
-{
-    DO_PAPI2 (PAPI_reset (PAPI_EventSet));
-    while (pbox->flag.value != value)
-    {
-	if(--count == 0)
-	{
-	    /* FIXME: Do we need to release/acquire locks here? */
-	    MPIDU_Yield();
-	}
-	DO_PAPI2 (PAPI_reset (PAPI_EventSet));
-    }  
-    DO_PAPI2 (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues8));
-}
-
 static inline int
 MPID_nem_islocked (MPID_nem_fbox_common_ptr_t pbox, int value, int count)
 {
-    while (pbox->flag.value != value && --count == 0)
-    {
-    }
+    while (pbox->flag.value != value && --count == 0);
+
     return (pbox->flag.value != value);
 }
 
