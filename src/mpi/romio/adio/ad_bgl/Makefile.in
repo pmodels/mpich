@@ -14,7 +14,7 @@ C_COMPILE_SHL = $(CC_SHL) @CFLAGS@ $(INCLUDE_DIR)
 
 AD_BGL_OBJECTS = \
       ad_bgl_open.o ad_bgl_close.o \
-      ad_bgl_fcntl.o  \
+      ad_bgl_fcntl.o ad_bgl_flush.o \
       ad_bgl_read.o ad_bgl_write.o ad_bgl_getsh.o ad_bgl_setsh.o \
       ad_bgl.o ad_bgl_aggrs.o ad_bgl_pset.o ad_bgl_hints.o \
       ad_bgl_rdcoll.o ad_bgl_wrcoll.o ad_bgl_tuning.o

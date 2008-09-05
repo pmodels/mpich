@@ -26,10 +26,22 @@
     extern int *aggrsInPset;	/* defined in ad_bgl_aggrs.c */
 
 
+#if !defined(GPFS_SUPER_MAGIC)
+  #define GPFS_SUPER_MAGIC (0x47504653)
+#endif
+
+#if !defined(PVFS2_SUPER_MAGIC)
+  #define PVFS2_SUPER_MAGIC (0x20030528)
+#endif
+
     /* File system (BGL) specific information - 
          hung off of ADIOI_FileD file descriptor (fd->fs_ptr) at open */
     typedef struct ADIOI_BGL_fs_s {
       __blksize_t blksize;
+      int         fsync_aggr; /* "fsync aggregation" flags (below) */
+#define ADIOI_BGL_FSYNC_AGGREGATION_DISABLED  0x00
+#define ADIOI_BGL_FSYNC_AGGREGATION_ENABLED   0x01
+#define ADIOI_BGL_FSYNC_AGGREGATOR            0x10 /* This rank is an aggregator */
     }  ADIOI_BGL_fs;
 
     /* generate a list of I/O aggregators that utilizes BGL-PSET orginization. */
