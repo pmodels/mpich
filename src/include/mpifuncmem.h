@@ -16,7 +16,6 @@
 #define MPIDI_STATE_DECL(a)		MPIR_STATE_DECL(a)
 #define MPIDI_INIT_STATE_DECL(a)	MPIR_STATE_DECL(a)
 #define MPIDI_FINALIZE_STATE_DECL(a)	MPIR_STATE_DECL(a)
-#define MPIDI_NEMTCP_STATE_DECL(a)	MPIR_STATE_DECL(a)
 
 /* function enter and exit macros */
 #define MPIR_FUNC_ENTER(a) MPIU_trvalid( "Entering " #a )
