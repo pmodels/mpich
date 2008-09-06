@@ -474,7 +474,7 @@ static int getNodeRootRank(int pg_rank, int *root_rank)
     /* If the list is not sorted then find the lowest rank */
     for (i=1; i<num_ranks; i++)
     {
-	min_rank = MPIDU_MIN(min_rank, ranks[i]);
+	min_rank = MPIU_MIN(min_rank, ranks[i]);
     }
 
     *root_rank = min_rank;
