@@ -245,7 +245,7 @@ typedef int (MPI_Copy_function) ( MPI_Comm, int, void *, void *, void *, int * )
 typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 
 #define MPI_VERSION    2
-#define MPI_SUBVERSION 0
+#define MPI_SUBVERSION 1
 #define MPICH_NAME     2
 #define MPICH2         1
 #define MPICH_HAS_C2F  1
