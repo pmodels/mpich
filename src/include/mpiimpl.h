@@ -2045,7 +2045,7 @@ extern MPICH_PerProcess_t MPIR_Process;
    macros to track the nesting level; otherwise, allow the timing module the
    opportunity to define the macros */
 #if defined(MPICH_DEBUG_FINE_GRAIN_NESTING)
-#   include "mpidu_func_nesting.h"
+#   include "mpiu_func_nesting.h"
 #elif defined(MPICH_DEBUG_MEMARENA)
 #   include "mpifuncmem.h"
 #elif defined(USE_DBG_LOGGING)

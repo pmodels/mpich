@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPIDU_FUNC_NESTING_H_INCLUDED)
-#define MPIDU_FUNC_NESTING_H_INCLUDED
+#if !defined(MPIU_FUNC_NESTING_H_INCLUDED)
+#define MPIU_FUNC_NESTING_H_INCLUDED
 
 /* state declaration macros */
 #define MPIR_STATE_DECL(a)		int a##_nest_level_in
@@ -41,4 +41,4 @@
    terms of these */
 #define NEEDS_FUNC_ENTER_EXIT_DEFS 1
 
-#endif /* defined(MPIDU_FUNC_NESTING_H_INCLUDED) */
+#endif /* defined(MPIU_FUNC_NESTING_H_INCLUDED) */
