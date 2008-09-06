@@ -20,10 +20,7 @@
 
 - Using the nemesis channel, RMA operations will fail in certain cases
   when transferring more than about 256K of data and a complicated
-  remote datatype. There are known deficiencies for multi-threaded
-  programs in extreme cases where there is a lot of contention for
-  locks between two threads (locks are acquired when two threads make
-  MPI calls at the same time).
+  remote datatype.
 
 - Only the ch3:sock and ch3:nemesis channels support thread safety.
  
