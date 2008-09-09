@@ -55,7 +55,7 @@ PAC_MAKE_VPATH
 AC_SUBST(MAKE)
 
 dnl if we are relying on vpath and no vpath is set, then we must exit
-if test ! -s include/mpe_log.h -a -z "$VPATH" ; then
+if test ! -s include/mpe_callstack.h.in -a -z "$VPATH" ; then
     AC_MSG_ERROR( [No virtual MAKE path command found.
         You may need to set your make command
         The GNU make (sometimes available as gnumake) can be used.] )
