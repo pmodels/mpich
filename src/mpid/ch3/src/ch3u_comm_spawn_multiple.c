@@ -185,11 +185,11 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                        info_keyval_vectors, 1, 
                                        &preput_keyval_vector,
                                        pmi_errcodes);
-
-        if (mpi_errno != PMI_SUCCESS) {
+        if (pmi_errno != PMI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
 		 "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
         }
+
 	if (errcodes != MPI_ERRCODES_IGNORE) {
 	    for (i=0; i<total_num_processes; i++) {
 		/* FIXME: translate the pmi error codes here */
