@@ -1,0 +1,22 @@
+
+MYCMD=`echo "$0" | sed 's%\/% %g' | awk '{print $NF}' -`
+
+cat <<_EOF
+Usage: $MYCMD [options] file....
+
+Available $MYCMD options:
+    -echo         - Show exactly what this program is doing.
+                    This option should normally not be used.
+    -show         - Show the commands that would be used without runnning them.
+    -compile-info - Show how to compile a program.
+    -link-info    - Show how to link a program.
+    -v            - Version info of $MYCMD and its native compiler $NC.
+    -help         - Give this help message.
+    -mpe=XXX      - Build with MPE option, XXX.
+                    See "$MYCMD -mpe=help" for more information.
+    -profile=XXX  - Use profiling configuration file,
+                    $sysconfdir/XXX.conf
+                    As a special case, libXXX.so or libXXX.la may be used
+                    if the library is in $libdir.
+    -config=XXX   - Use configuration file, $MYCMD-XXX.conf.
+_EOF

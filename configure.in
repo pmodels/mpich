@@ -6253,6 +6253,7 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
 	  src/binding/f90/mpi_sizeofs.f90 \
 	  src/pkgconfig/mpich2-ch3.pc \
 	  src/pkgconfig/Makefile \
+          src/env/mpixxx_opts.conf \
           src/env/mpicc \
 	  src/env/mpicc.conf \
 	  src/env/mpicc.bash \
