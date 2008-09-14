@@ -49,7 +49,7 @@ static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size,
 			      MPIDI_PG_t **remote_pg, 
 			      MPID_Comm *intercomm );
 static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr, 
-					  MPIDI_VC_t *vc_ptr, int is_low_group);
+					  MPIDI_VC_t *vc_ptr, int is_low_group, int context_id_offset);
 /* ------------------------------------------------------------------------- */
 /*
  * Structure of this file and the connect/accept algorithm:
@@ -120,6 +120,7 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *tmp_comm;
     MPIDI_VC_t *connect_vc = NULL;
+    int port_name_tag;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CREATE_INTER_ROOT_COMMUNICATOR_CONNECT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CREATE_INTER_ROOT_COMMUNICATOR_CONNECT);
@@ -133,7 +134,13 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 	MPIU_ERR_POP(mpi_errno);
     }
 
-    mpi_errno = MPIDI_CH3I_Initialize_tmp_comm(&tmp_comm, connect_vc, 1);
+    /* extract the tag from the port_name */
+    mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
+    if (mpi_errno != MPIU_STR_SUCCESS) {
+	MPIU_ERR_POP(mpi_errno);
+    }
+
+    mpi_errno = MPIDI_CH3I_Initialize_tmp_comm(&tmp_comm, connect_vc, 1, port_name_tag);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
     }
@@ -201,7 +208,7 @@ static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
     }
     MPID_Progress_end(&progress_state);
 
-    mpi_errno = MPIDI_CH3I_Initialize_tmp_comm(&tmp_comm, new_vc, 0);
+    mpi_errno = MPIDI_CH3I_Initialize_tmp_comm(&tmp_comm, new_vc, 0, port_name_tag);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
     }
@@ -228,7 +235,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr, 
-					  MPIDI_VC_t *vc_ptr, int is_low_group)
+					  MPIDI_VC_t *vc_ptr, int is_low_group, int context_id_offset)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *tmp_comm, *commself_ptr;
@@ -245,14 +252,8 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
     }
     /* fill in all the fields of tmp_comm. */
 
-    /* FIXME: Should we allocate a new context id each time ? If
-       so, how do we make sure that each process in this tmp_comm
-       has the same context id? 
-       We can make sure by sending the context id using non-MPI
-       communication (e.g., with the initial connection packet)
-       before switching to MPI communication.
-    */
-    tmp_comm->context_id     = 4095;  
+    /* FIXME: What is this random number 4095? */
+    tmp_comm->context_id     = 4095 + context_id_offset;
     tmp_comm->recvcontext_id = tmp_comm->context_id;
 
         /* FIXME - we probably need a unique context_id. */
