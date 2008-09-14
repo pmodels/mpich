@@ -263,12 +263,16 @@ fi
 if test ! -d $sharebuild_dir ; then
     echo "creating $sharebuild_dir"
     $MKDIR $sharebuild_dir
+    if test ! -d $sharebuild_dir/logfiles ; then
+        echo "creating $sharebuild_dir/logfiles"
+        $MKDIR $sharebuild_dir/logfiles
+    fi
 fi
 
 # Copying $srcdir/logfiles to sharebuild_dir
 if test -d $srcdir/logfiles ; then
     echo "creating sample logfiles from source"
-    $CPRP -pr $srcdir/logfiles/*.rlog $sharebuild_dir
+    $CPRP -pr $srcdir/logfiles/*.rlog $sharebuild_dir/logfiles
 fi
 
 AC_SUBST(libbuild_dir)

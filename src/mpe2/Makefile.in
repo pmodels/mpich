@@ -70,11 +70,14 @@ FORCE_TARGET:
 
 ########  Installing
 install: FORCE_TARGET
-	@if [ -n "$(PREFIX)" ] ; then \
-	     ./sbin/mpeinstall -prefix=$(PREFIX) -dmode="" ; \
-	 else \
-	     ./sbin/mpeinstall -dmode="" ; \
-	 fi
+	@installopts="-dmode=" ; \
+	 if [ -n "$(PACKAGE)" ] ; then \
+	     installopts="-package=$(PACKAGE) $$installopts" ; \
+	 fi ; \
+	 if [ -n "$(PREFIX)" ] ; then \
+	     installopts="-prefix=$(PREFIX) $$installopts" ; \
+	 fi ; \
+	 ./sbin/mpeinstall $$installopts
 
 installcheck:
 	@if [ -n "$(PREFIX)" ] ; then \

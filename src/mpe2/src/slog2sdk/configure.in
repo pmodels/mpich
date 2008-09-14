@@ -101,22 +101,6 @@ AC_ARG_WITH(trace_name,
                                      traceprint and traceTOslog2.],
 TRACE_NAME=$withval, )
 
-dnl
-dnl Set non-standard autoconf/GNU install directory variables, i.e. docdir 
-dnl
-AC_ARG_WITH(docdir,
-[--with-docdir=dir                  - Specify the documentation directory.],,
-with_docdir='${prefix}/doc')
-
-#
-# Set the defaults for directories that are not included in configure's
-if test -n "$with_docdir" ; then
-    docdir=$with_docdir
-else
-    docdir='${prefix}/doc'
-fi
-AC_SUBST(docdir)
-
 # Fixup for make
 MAKE=${MAKE:-make}
 PAC_MAKE_IS_GNUMAKE
@@ -322,14 +306,18 @@ AC_SUBST(etcbuild_dir)
 if test ! -d $sharebuild_dir ; then
     echo "creating $sharebuild_dir"
     $MKDIR $sharebuild_dir
+    if test ! -d $sharebuild_dir/logfiles ; then
+        echo "creating $sharebuild_dir/logfiles"
+        $MKDIR $sharebuild_dir/logfiles
+    fi
 fi
 AC_SUBST(sharebuild_dir)
 
 # Copying $srcdir/logfiles to sharebuild_dir
 if test -d $srcdir/logfiles ; then
     echo "creating sample logfiles from source"
-    $CPRP -pr $srcdir/logfiles/*.clog* $sharebuild_dir
-    $CPRP -pr $srcdir/logfiles/*.slog* $sharebuild_dir
+    $CPRP -pr $srcdir/logfiles/*.clog* $sharebuild_dir/logfiles
+    $CPRP -pr $srcdir/logfiles/*.slog* $sharebuild_dir/logfiles
 fi
 
 AC_SUBST(sbinbuild_dir)
