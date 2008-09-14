@@ -14,6 +14,7 @@ spaconacc_SOURCES = spaconacc.c
 spaconacc2_SOURCES = spaconacc2.c
 selfconacc_SOURCES = selfconacc.c
 spawnmult2_SOURCES = spawnmult2.c
+taskmaster_SOURCES = taskmaster.c
 join_SOURCES = join.c
 disconnect_reconnect_SOURCES = disconnect_reconnect.c
 disconnect_reconnect2_SOURCES = disconnect_reconnect2.c
