@@ -3986,7 +3986,7 @@ sub TargetInstall {
 	if ($extradir =~ /^@/) {
 	    print FD "\tfor dir in $extradir - ; do \\$newline";
 	    print FD "\t\tif [ \"\$\$dir\" = \"-\" ] ; then break ; fi ;\\$newline";
-	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) install) ;\\$newline";
+	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) install) ;\\$newline";
 	    print FD "\tdone$newline";
 	}
 	else {
