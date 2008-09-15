@@ -400,10 +400,6 @@ AC_ARG_ENABLE(weak-symbols,
 [--enable-weak-symbols - Use weak symbols to implement PMPI routines (default)],,
 enable_weak_symbols=yes)
 dnl
-AC_ARG_WITH(htmldir,[--with-htmldir=dir - Specify the directory for html documentation],,
-with_htmldir='${prefix}/www')
-AC_ARG_WITH(docdir,[--with-docdir=dir - Specify the directory for documentation],,
-with_docdir='${prefix}/doc')
 dnl
 dnl
 AC_ARG_WITH(cross,
@@ -462,23 +458,6 @@ export WRAPPER_LDFLAGS
 PAC_VPATH_CHECK(src/include/mpi.h src/env/mpicc src/env/mpicc.conf,lib)
 
 # ----------------------------------------------------------------------------
-#
-# Set the defaults for directories that are not included in configure's
-# repetoire
-if test -n "$with_htmldir" ; then 
-    htmldir=$with_htmldir
-else
-    htmldir='${prefix}/www'
-fi
-AC_SUBST(htmldir)
-
-if test -n "$with_docdir" ; then 
-    docdir=$with_docdir
-else
-    docdir='${prefix}/doc'
-fi
-AC_SUBST(docdir)
-
 # This test is complicated by the fact that top_srcdir is not set until
 # the very end of configure.  Instead, we get it ourselves
 if test -z "$top_srcdir" ; then
