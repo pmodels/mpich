@@ -88,7 +88,6 @@ distclean-local:
 	-@rm -f bin/mpich2version
 	-@cd test && $(MAKE) distclean
 
-PACKAGE = mpich2
 # Version < 1 is pre MPI-1 release.
 # Version >= 2 contains MPI-2
 # Version between 1 and 2 contains all of MPI1 and parts of MPI-2
@@ -96,6 +95,7 @@ PACKAGE = mpich2
 # version on the configure output and to match the common practice of
 # current autoconfs
 VERSION = @VERSION@
+PACKAGE = mpich2-$(VERSION)
 
 # We skip the mpid/mm directories because mm is no longer active
 # mpe2 is an outside project and is tested against the default
