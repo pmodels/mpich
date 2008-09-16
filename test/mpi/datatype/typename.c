@@ -40,6 +40,7 @@ static mpi_names_t mpi_names[] = {
     { MPI_SHORT_INT, "MPI_SHORT_INT" },
     { MPI_2INT, "MPI_2INT" },
     /* Fortran */
+#ifdef HAVE_FORTRAN_BINDING
     { MPI_COMPLEX, "MPI_COMPLEX" },
     { MPI_DOUBLE_COMPLEX, "MPI_DOUBLE_COMPLEX" },
     { MPI_LOGICAL, "MPI_LOGICAL" },
@@ -52,6 +53,7 @@ static mpi_names_t mpi_names[] = {
     { MPI_2REAL, "MPI_2REAL" },
     { MPI_2DOUBLE_PRECISION, "MPI_2DOUBLE_PRECISION" },
     { MPI_CHARACTER, "MPI_CHARACTER" },
+#endif
     /* Size-specific types */
     /* Do not move MPI_REAL4 - this is used to indicate the very first 
        optional type */
