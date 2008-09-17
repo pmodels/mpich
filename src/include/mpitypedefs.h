@@ -55,6 +55,10 @@
 
 #include "mpiiov.h"
 
+/* FIXME MPI_UNSIGNED_SHORT will not always be the same size as uint16_t. */
+#define MPIR_CONTEXT_ID_T_DATATYPE MPI_UNSIGNED_SHORT
+typedef uint16_t MPIR_Context_id_t;
+
 typedef MPIU_SIZE_T MPIU_Size_t;
 
 /* Use the MPIU_PtrToXXX macros to convert pointers to and from integer types */

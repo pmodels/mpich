@@ -67,7 +67,7 @@ typedef struct MPIDI_Message_match
 {
     int32_t tag;
     int16_t rank;
-    int16_t context_id;
+    MPIR_Context_id_t context_id;
 }
 MPIDI_Message_match;
 #define MPIDI_TAG_UB (0x7fffffff)

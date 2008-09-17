@@ -1134,10 +1134,6 @@ extern MPID_Group MPID_Group_direct[];
 
 /* ------------------------------------------------------------------------- */
 
-/* FIXME MPI_UNSIGNED_SHORT will not always be the same size as uint16_t. */
-#define MPIR_CONTEXT_ID_T_DATATYPE MPI_UNSIGNED_SHORT
-typedef uint16_t MPIR_Context_id_t;
-
 /*E
   MPID_Comm_kind_t - Name the two types of communicators
   E*/
