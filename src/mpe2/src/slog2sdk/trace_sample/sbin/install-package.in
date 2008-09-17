@@ -32,8 +32,6 @@ sbindir=@sbindir@
 sysconfdir=@sysconfdir@
 datarootdir=@datarootdir@
 datadir=@datadir@
-etcdir=$sysconfdir
-sharedir=$datadir
 gui_libdir="`echo $prefix | sed -e 's%\(.*\)/[^/]*/[^/]*$%\1/lib%'`"
 
 # Determine this package's name
@@ -61,6 +59,7 @@ Show=eval
 verbose=0
 just_testing=0
 prefix_override=0
+package_override=0
 
 # filelist records files that have been installed
 filelist=""
@@ -90,6 +89,10 @@ for arg in "$@" ; do
             prefix=`echo $arg | sed -e 's/-prefix=//'`
             prefix_override=1
             ;;
+        -package=*)
+            PACKAGE=`echo $arg | sed -e 's/-package=//'`
+            package_override=1
+            ;;
         -uninstall=*)
             UNINSTALLFILE=`echo A$arg | sed -e 's/A-uninstall=//g'`
 	    appendUninstall=1
@@ -115,6 +118,7 @@ for arg in "$@" ; do
 cat <<EOF
 Install $titlename into $prefix.
 -prefix=path     - Destination directory.
+-package=name    - Set the package name for sharedir.
 -uninstall=file  - File to append uninstall information to
 -mode=nnnn       - mode for regular files.  Default is $MODE .
 -xmode=nnnn      - mode for execuables.  Default is $XMODE .
@@ -357,15 +361,22 @@ else
     MkDir $prefix
 fi
 
-if [ "$prefix_override" = 1 ] ; then
-    libdir=$prefix/lib
-    bindir=$prefix/bin
-    sbindir=$prefix/sbin
-    sharedir=$prefix/share
+# use autoconf variables, @...@, here, as they are set w.r.t. $prefix.
+if [ "$prefix_override" = 1 -o "$package_override" = 1 ] ; then
+    libdir=@libdir@
+    bindir=@bindir@
+    sbindir=@sbindir@
+    datarootdir=@datarootdir@
+    datadir=@datadir@
     gui_libdir="`echo $prefix | sed -e 's%\(.*\)/[^/]*/[^/]*$%\1/lib%'`"
     if [ $appendUninstall = 0 ] ; then
         UNINSTALLFILE=$DESTDIR${sbindir}/${UNINSTALL_base}
     fi
+fi
+
+sharedir=$datadir
+if [ -n "${PACKAGE}" ] ; then
+    sharedir=$datadir/$PACKAGE
 fi
 
 # echo "UNINSTALLFILE = $UNINSTALLFILE"
@@ -406,7 +417,9 @@ if [ ! -d $DESTDIR$libdir/$pkgname ] ; then
     MkDir $libdir/$pkgname
 fi
 
-cd $libbuild_dir/../src && $MAKE INSTALL_LIBSO LIBDIR=$libdir/$pkgname
+cd $libbuild_dir/../src \
+&& $MAKE INSTALL_LIBSO LIBDIR=$libdir/$pkgname \
+&& filelist="$filelist $libdir/$pkgname/libTraceInput.*"
 
 EXEFILES="@EXEFILES@"
 

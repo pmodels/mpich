@@ -143,7 +143,7 @@ for arg in "$@" ; do
 cat <<EOF
 Install $pkgname into $prefix.
 -prefix=path     - Destination directory.
--package=name    - Set the package name for docdir.
+-package=name    - Set the package name for docdir and sharedir(examplesdir).
 -uninstall=file  - File to append uninstall information to
 -mode=nnnn       - mode for regular files.  Default is $MODE .
 -xmode=nnnn      - mode for execuables.  Default is $XMODE .
@@ -516,7 +516,23 @@ if [ -n "$sbinbuild_dir" ] ; then
     fi
 fi
 
-MkDir $datadir
+# Append sharedir and docdir With NULL PACKAGE to dirlist for removal
+if [ -n "${PACKAGE}" ] ; then
+    # Added MkDir $datadir, so $datadir is appended to dirlist for removal.
+    MkDir $datadir
+    # Added MkDir $docdir with NULL PACKAGE,
+    # so $docdir (with NULL PACKAGE) is appended to dirlist for removal.
+    savedPACKAGE=$PACKAGE
+    PACKAGE=""
+    MkDir @docdir@
+    PACKAGE=$savedPACKAGE
+fi
+
+sharedir=$datadir
+if [ -n "${PACKAGE}" ] ; then
+    sharedir=$datadir/$PACKAGE
+fi
+MkDir $sharedir
 
 # Set up Examples directory for the MPE Logging programs
 logging_dirname="src/wrappers/test"
@@ -526,7 +542,7 @@ for pkg in logging graphics collchk ; do
     dirname=${pkg}_dirname
     eval dirvalue=\$"$dirname"
     if [ -f $libbuild_dir/../$dirvalue/Makefile ] ; then
-        examplesdir=$datadir/examples_${pkg}
+        examplesdir=$sharedir/examples_${pkg}
         MkDir $examplesdir
 #       Install example C and Fortran programs
         InstallDirRecur $top_srcdir/$dirvalue $examplesdir
@@ -600,7 +616,7 @@ fi
 #  Clean up the example directories
 for pkg in logging graphics ; do
     dirname=${pkg}_dirname
-    examplesdir=$datadir/examples_${pkg}
+    examplesdir=$sharedir/examples_${pkg}
     if [ -s $DESTDIR$examplesdir/Makefile ] ; then
        echo "( cd $examplesdir && $MAKE clean )" >> $UNINSTALLFILE
     fi

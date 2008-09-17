@@ -37,8 +37,6 @@ sysconfdir=@sysconfdir@
 datarootdir=@datarootdir@
 datadir=@datadir@
 docdir=@docdir@
-etcdir=$sysconfdir
-sharedir=$datadir
 # Since autoconf < 2.60 does not set docdir,
 # check if it is set.  If not, set it accordingly.
 if [ "$docdir" == "@docdir@" ] ; then
@@ -134,7 +132,7 @@ for arg in "$@" ; do
 cat <<EOF
 Install ${titlename} into $prefix.
 -prefix=path     - Destination directory.
--package=name    - Set the package name for docdir.
+-package=name    - Set the package name for docdir and sharedir.
 -uninstall=file  - File to append uninstall information to
 -mode=nnnn       - permission mode for regular files.  Default is $MODE .
 -xmode=nnnn      - permission mode for execuables.  Default is $XMODE .
@@ -388,8 +386,6 @@ if [ "$prefix_override" = 1 -o "$package_override" = 1 ] ; then
     datarootdir=@datarootdir@
     datadir=@datadir@
     docdir=@docdir@
-    etcdir=$sysconfdir
-    sharedir=$datadir
     # Since autoconf < 2.60 does not set docdir,
     # check if it is set.  If not, set it accordingly.
     if [ "$docdir" == "@docdir@" ] ; then
@@ -398,6 +394,11 @@ if [ "$prefix_override" = 1 -o "$package_override" = 1 ] ; then
     if [ $appendUninstall = 0 ] ; then
         UNINSTALLFILE=$DESTDIR${sbindir}/${UNINSTALL_base}
     fi
+fi
+
+sharedir=$datadir
+if [ -n "${PACKAGE}" ] ; then
+    sharedir=$datadir/$PACKAGE
 fi
 
 if [ $appendUninstall = 0 ] ; then
@@ -481,12 +482,13 @@ if [ "$UNINSTALLFILE" != "/dev/null" ] ; then
     chmod u+x $UNINSTALLFILE
 fi
 
-base_install_opts="-mode=$MODE -xmode=$XMODE -dmode=$DMODE"
-base_install_opts="-uninstall=$UNINSTALLFILE $base_install_opts"
+install_opts="-mode=$MODE -xmode=$XMODE -dmode=$DMODE"
+install_opts="-uninstall=$UNINSTALLFILE $install_opts"
+if [ "$package_override" = 1 ] ; then
+    install_opts="-package=$PACKAGE $install_opts"
+fi
 if [ "$prefix_override" = 1 ] ; then
-    install_opts="-prefix=$prefix $base_install_opts"
-else
-    install_opts="$base_install_opts"
+    install_opts="-prefix=$prefix $install_opts"
 fi
 
 # Install subpackages as specified in $PKGS
