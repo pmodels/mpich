@@ -2771,29 +2771,37 @@ Sub AddDefinitions( fout, filename, b64 )
 			fout.WriteLine(comment)
 			Select Case macroname
 				Case "HAVE_INT8_T"
-					fout.WriteLine("/* #undef HAVE_INT8_T */")
+					fout.WriteLine("#undef HAVE_INT8_T")
 				Case "HAVE_INT16_T"
-					fout.WriteLine("/* #undef HAVE_INT16_T */")
+					fout.WriteLine("#undef HAVE_INT16_T")
 				Case "HAVE_INT32_T"
-					fout.WriteLine("/* #undef HAVE_INT32_T */")
+					fout.WriteLine("#undef HAVE_INT32_T")
 				Case "HAVE_INT64_T"
-					fout.WriteLine("/* #undef HAVE_INT64_T */")
+					fout.WriteLine("#undef HAVE_INT64_T")
 				Case "int8_t"
-					fout.WriteLine("#define int8_t __int8")
+					fout.WriteLine("/* #undef int8_t */")
 				Case "int16_t"
-					fout.WriteLine("#define int16_t __int16")
+					fout.WriteLine("/* #undef int16_t */")
 				Case "int32_t"
-					fout.WriteLine("#define int32_t __int32")
+					fout.WriteLine("/* #undef int32_t */")
 				Case "int64_t"
-					fout.WriteLine("#define int64_t __int64")
+					fout.WriteLine("/* #undef int64_t */")
 				Case "uint8_t"
-					fout.WriteLine("#define uint8_t unsigned __int8")
+					fout.WriteLine("/* #undef uint8_t */")
+				Case "_UINT8_T"
+					fout.WriteLine("/* #undef _uint8_t */")
 				Case "uint16_t"
-					fout.WriteLine("#define uint16_t unsigned __int16")
+					fout.WriteLine("/* #undef uint16_t */")
+				Case "_UINT16_T"
+					fout.WriteLine("/* #undef _uint16_t */")
 				Case "uint32_t"
-					fout.WriteLine("#define uint32_t unsigned __int32")
+					fout.WriteLine("/* #undef uint32_t */")
+				Case "_UINT32_T"
+					fout.WriteLine("/* #undef _uint32_t */")
 				Case "uint64_t"
-					fout.WriteLine("#define uint64_t unsigned __int64")
+					fout.WriteLine("/* #undef uint64_t */")
+				Case "_UINT64_T"
+					fout.WriteLine("/* #undef _uint64_t */")
 				Case "MPIR_Pint"
 					If b64 Then
 						fout.WriteLine("#define MPIR_Pint __int64")
@@ -2826,6 +2834,16 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/*#define SIZEOF_LONG_LONG 8*/")
 				Case "SIZEOF_SHORT"
 					fout.WriteLine("#define SIZEOF_SHORT 2")
+				Case "SIZEOF_UNSIGNED_CHAR"
+					fout.WriteLine("#define SIZEOF_UNSIGNED_CHAR 1")
+				Case "SIZEOF_UNSIGNED_INT"
+					fout.WriteLine("#define SIZEOF_UNSIGNED_INT 4")
+				Case "SIZEOF_UNSIGNED_LONG"
+					fout.WriteLine("#define SIZEOF_UNSIGNED_LONG 4")
+				Case "SIZEOF_UNSIGNED_LONG_LONG"
+					fout.WriteLine("#define SIZEOF_UNSIGNED_LONG_LONG 8")
+				Case "SIZEOF_UNSIGNED_SHORT"
+					fout.WriteLine("#define SIZEOF_UNSIGNED_SHORT 2")
 				Case "SIZEOF_VOID_P"
 					If b64 Then
 						fout.WriteLine("#define SIZEOF_VOID_P 8")
@@ -3423,6 +3441,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* bool */")
 				Case "HAVE_ENDIAN_H"
 					fout.WriteLine("/* HAVE_ENDIAN_H */")
+				Case "WORDS_UNIVERSAL_ENDIAN"
+					fout.WriteLine("#undef WORDS_UNIVERSAL_ENDIAN")
 				Case "NEEDS_VSNPRINTF_DECL"
 					fout.WriteLine("/* NEEDS_VSNPRINTF_DECL */")
 				Case "NEEDS_GETHOSTNAME_DECL"
@@ -3675,6 +3695,108 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#undef HAVE_SYSCTL")
 				Case "HAVE_SYS_SYSCTL_H"
 					fout.WriteLine("#undef HAVE_SYS_SYSCTL_H")
+				Case "HAVE_ZOIDFS_H"
+					fout.WriteLine("#undef HAVE_ZOIDFS_H")
+				Case "HAVE_MPIU_FUNCS"
+					fout.WriteLine("#define HAVE_MPIU_FUNCS 1")
+				Case "ROMIO_BGL"
+					fout.WriteLine("#undef ROMIO_BGL")
+				Case "ROMIO_BGLOCKLESS"
+					fout.WriteLine("#undef ROMIO_BGLOCKLESS")
+				Case "ROMIO_LUSTRE"
+					fout.WriteLine("#undef ROMIO_LUSTRE")
+				Case "ROMIO_ZOIDFS"
+					fout.WriteLine("#undef ROMIO_ZOIDFS")
+				Case "CRAY_STACKSEG_END"
+					fout.WriteLine("#undef CRAY_STACKSEG_END")
+				Case "HAVE_BINDPROCESSOR"
+					fout.WriteLine("#undef HAVE_BINDPROCESSOR")
+				Case "HAVE_CPU_SET_MACROS"
+					fout.WriteLine("#undef HAVE_CPU_SET_MACROS")
+				Case "HAVE_CPU_SET_T"
+					fout.WriteLine("#undef HAVE_CPU_SET_T")
+				Case "HAVE_CXX_COMPLEX"
+					fout.WriteLine("#define HAVE_CXX_COMPLEX 1")
+				Case "HAVE_DLSYM"
+					fout.WriteLine("#undef HAVE_DLSYM")
+				Case "HAVE_DOUBLE_ALIGNMENT_EXCEPTION"
+					' FIXME: Doesn't windows 64-bit have alignment exception ? 
+					fout.WriteLine("#undef HAVE_DOUBLE_ALIGNMENT_EXCEPTION")
+				Case "HAVE_F90_TYPE_ROUTINES"
+					' FIXME: We need to provide F90 type routines - enable after that
+					fout.WriteLine("#undef HAVE_F90_TYPE_ROUTINES")
+				Case "HAVE_GETPID"
+					fout.WriteLine("#undef HAVE_GETPID")
+				Case "HAVE_MPICHCONF"
+					fout.WriteLine("#define HAVE_MPICHCONF 1")
+				Case "HAVE_OSX_THREAD_AFFINITY"
+					fout.WriteLine("#undef HAVE_OSX_THREAD_AFFINITY")
+				Case "HAVE_PTHREAD_CLEANUP_PUSH"
+					fout.WriteLine("#undef HAVE_PTHREAD_CLEANUP_PUSH")
+				Case "HAVE_PTHREAD_CLEANUP_PUSH_MACRO"
+					fout.WriteLine("#undef HAVE_PTHREAD_CLEANUP_PUSH_MACRO")
+				Case "HAVE_RUNTIME_THREADCHECK"
+					fout.WriteLine("#undef HAVE_RUNTIME_THREADCHECK")
+				Case "HAVE_SCHED_GETAFFINITY"
+					fout.WriteLine("#undef HAVE_SCHED_GETAFFINITY")
+				Case "HAVE_SCHED_SETAFFINITY"
+					fout.WriteLine("#undef HAVE_SCHED_SETAFFINITY")
+				Case "HAVE_THREAD_POLICY_SET"
+					fout.WriteLine("#undef HAVE_THREAD_POLICY_SET")
+				Case "LINUX86_CYCLE_CPUID_RDTSC"
+					fout.WriteLine("#undef LINUX86_CYCLE_CPUID_RDTSC")
+				Case "LINUX86_CYCLE_RDTSC"
+					fout.WriteLine("#undef LINUX86_CYCLE_RDTSC")
+				Case "LINUX86_CYCLE_RDTSCP"
+					fout.WriteLine("#undef LINUX86_CYCLE_RDTSCP")
+				Case "MPICH2_LIBDIR"
+					fout.WriteLine("#undef MPICH2_LIBDIR")
+				Case "MPICH_DEBUG_MEMARENA"
+					fout.WriteLine("#undef MPICH_DEBUG_MEMARENA")
+				Case "MPICH_DEBUG_MUTEX"
+					fout.WriteLine("#undef MPICH_DEBUG_MUTEX")
+				Case "STACK_DIRECTION"
+					fout.WriteLine("#undef STACK_DIRECTION")
+				Case "USE_ALLOCA"
+					fout.WriteLine("#undef USE_ALLOCA")
+				Case "USE_DYNAMIC_LIBRARIES"
+					fout.WriteLine("#undef USE_DYNAMIC_LIBRARIES")
+				Case "HAVE_MPIDI_CH3_CONF"
+					fout.WriteLine("#define HAVE_MPIDI_CH3_CONF 1")
+				Case "USE_NOPOSIX_FOR_IFCONF"
+					fout.WriteLine("#undef USE_NOPOSIX_FOR_IFCONF")
+				Case "HAVE_MPIDI_CH3SOCKCONF"
+					fout.WriteLine("#define HAVE_MPIDI_CH3SOCKCONF")
+				Case "HAVE_GCC_ASM_SPARC_MEMBAR"
+					fout.WriteLine("#undef HAVE_GCC_ASM_SPARC_MEMBAR")
+				Case "HAVE_GCC_ASM_SPARC_STBAR"
+					fout.WriteLine("#undef HAVE_GCC_ASM_SPARC_STBAR")
+				Case "HAVE_SOLARIS_ASM_SPARC_MEMBAR"
+					fout.WriteLine("#undef HAVE_SOLARIS_ASM_SPARC_MEMBAR")
+				Case "HAVE_SOLARIS_ASM_SPARC_STBAR"
+					fout.WriteLine("#undef HAVE_SOLARIS_ASM_SPARC_STBAR")
+				Case "GCC_X86_CYCLE_CPUID_RDTSC"
+					fout.WriteLine("/* #undef GCC_X86_CYCLE_CPUID_RDTSC */")
+				Case "GCC_X86_CYCLE_RDTSC"
+					fout.WriteLine("/* #undef GCC_X86_CYCLE_RDTSC */")
+				Case "GCC_X86_CYCLE_RDTSCP"
+					fout.WriteLine("/* #undef GCC_X86_CYCLE_RDTSCP */")
+				Case "HAVE_LIBPTHREAD"
+					fout.WriteLine("#undef HAVE_LIBPTHREAD")
+				Case "HAVE_O_LARGEFILE"
+					fout.WriteLine("#undef HAVE_O_LARGEFILE")
+				Case "HAVE_MPI_INIT_THREAD"
+					fout.WriteLine("#define HAVE_MPI_INIT_THREAD 1")
+				Case "HAVE_EXECINFO_H"
+					fout.WriteLine("#undef HAVE_EXECINFO_H")
+				Case "HAVE_FDOPEN"
+					fout.WriteLine("#undef HAVE_FDOPEN")
+				Case "HAVE_UCONTEXT_H"
+					fout.WriteLine("#undef HAVE_UCONTEXT_H")
+				Case "NEEDS_FDOPEN_DECL"
+					fout.WriteLine("/* #undef NEEDS_FDOPEN_DECL */")
+				Case "HAVE_H_ADDR_LIST"
+					fout.WriteLine("#define HAVE_H_ADDR_LIST 1")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
 					If appendUniqueString(unhandled_definitions, macroname) Then
