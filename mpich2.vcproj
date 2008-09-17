@@ -3993,6 +3993,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\mpi\romio\adio\common\ad_features.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mpi\romio\adio\common\ad_fstype.c"
 				>
 			</File>
@@ -4074,6 +4078,10 @@
 			</File>
 			<File
 				RelativePath=".\src\mpi\romio\adio\common\ad_open.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\romio\adio\common\ad_opencoll.c"
 				>
 			</File>
 			<File
