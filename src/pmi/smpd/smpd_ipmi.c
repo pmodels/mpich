@@ -2005,16 +2005,18 @@ int iPMI_KVS_Get(const char kvsname[], const char key[], char value[], int lengt
 
     kvsname_ = kvsname;
 
+	/* We need singleton init only for spawn, universe_size
     if(pmi_process.init_finalized == PMI_SINGLETON_INIT_BUT_NO_PM){
        if(PMIi_InitSingleton() != PMI_SUCCESS){
             return PMI_ERR_INIT;
         }
      }
+	*/
 
     if (pmi_process.local_kvs)
     {
-	result = smpd_dbs_get(kvsname_, key, value);
-	return (result == SMPD_SUCCESS) ? PMI_SUCCESS : PMI_FAIL;
+		result = smpd_dbs_get(kvsname_, key, value);
+		return (result == SMPD_SUCCESS) ? PMI_SUCCESS : PMI_FAIL;
     }
     else{
         int len = 0;
