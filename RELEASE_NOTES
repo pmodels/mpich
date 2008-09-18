@@ -1,11 +1,4 @@
 -------------------------------------------------------------------------------
-		       Major Changes Impacting Usability
--------------------------------------------------------------------------------
-
-- None expected 
-  (see the CHANGES file for a more extensive list of changes and new features)
-
--------------------------------------------------------------------------------
                               Known Deficiencies
 -------------------------------------------------------------------------------
 
@@ -17,10 +10,6 @@
 - The MPD process manager can only handle relatively small amounts of data on 
   stdin and may also have problems if there is data on stdin that is not
   consumed by the program. 
-
-- Using the nemesis channel, RMA operations will fail in certain cases
-  when transferring more than about 256K of data and a complicated
-  remote datatype.
 
 - Only the ch3:sock and ch3:nemesis channels support thread safety.
  
@@ -77,32 +66,21 @@
 - --enable-sharedlibs=gcc does not work on Solaris because of difference
   between the GNU ld program and the Solaris ld program
 
-- For the initial release, the sctp channel is fully supported for
-  FreeBSD and Mac OS X.  As of the time of this release, bugs in the
-  stack currently existed in the Linux kernel, and will hopefully soon be 
-  resolved. 
-
-  The sctp channel is known to currently not work under Solaris and Windows.
-
-  For Solaris, the SCTP API available in the kernel of standard
-  Solaris 10 is a subset of the standard API used by the sctp channel.
-  Cooperation with the Sun SCTP developers to support ch3:sctp under
-  Solaris for future releases is currently ongoing.  
-
-  For Windows, no known kernel-based SCTP stack for Windows currently
-  exists.
+- The sctp channel is fully supported for FreeBSD and Mac OS X. As of
+  the time of this release, bugs in the stack currently existed in the
+  Linux kernel, and will hopefully soon be resolved. It is known to
+  currently not work under Solaris and Windows. For Solaris, the SCTP
+  API available in the kernel of standard Solaris 10 is a subset of
+  the standard API used by the sctp channel.  Cooperation with the Sun
+  SCTP developers to support ch3:sctp under Solaris for future
+  releases is currently ongoing. For Windows, no known kernel-based
+  SCTP stack for Windows currently exists.
 
   An alternative for Linux, FreeBSD, Mac OS X, Solaris and Windows is
   the user-based SCTP stack available at 
   http://www.sctp.de/sctp-download.html ; it is currently being
   evaluated for use with a future MPICH2 release.
 
-- the installed man/, www/ and doc/ are not under share/, which is recommended
-  by autoconf 2.6x.  This will be fixed in the formal 1.1 release.
-
-- MPICH2LIB_F90FLAGS should be default to -O2.  But it isn't the case in
-  the 1.1a1 release.
-  
   
 -------------------------------------------------------------------------------
 			Issues for Developers
@@ -125,24 +103,3 @@
   to allow starting two processes as singletons and then have them connect
   using MPI_Comm_connect/MPI_Comm_accept, it was necessary to change the part
   of the PMI wire prototcol that implemented the singleton init actions.
-
-- There are significant changes to the ch3 code base.  We expect further
-  changes in the next release, particularly to reduce latency and 
-  eliminate "copy and paste" code, in order to ease maintenance and tuning.
-
-
--------------------------------------------------------------------------------
-                        Issues From Previous Releases (1.0.4)
--------------------------------------------------------------------------------
-
-
-- MPE2, which is distributed as part of MPICH2, requires autoconf 2.52 or
-  higher.  By default, MPICH2 and MPE use the autoconf programs in one's path.
-  The environment variables AUTOCONF and AUTOHEADER can be set to specify
-  alternative commands for MPICH2.  Likewise, MPE_AUTOCONF and MPE_AUTOHEADER
-  can be set to specify alternative commands for MPE2.  Obviously, these
-  environment variables must be set before running "maint/updatefiles" or
-  "make dist".  In order to handle incompatibilities between different
-  minor versions of autoconf, we've selected autoconf 2.59 as the version
-  required for MPE2 and MPICH2.
-
