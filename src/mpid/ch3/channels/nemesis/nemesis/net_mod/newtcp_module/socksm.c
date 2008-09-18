@@ -1572,39 +1572,6 @@ int MPID_nem_newtcp_module_sm_finalize()
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_connection_progress
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_connection_progress (MPIDI_VC_t *vc)
-{
-    int mpi_errno = MPI_SUCCESS, n;
-    pollfd_t *plfd;
-    sockconn_t *sc;
-    
-    sc = VC_FIELD(vc, sc);
-    if (sc == NULL)
-        goto fn_exit;
-
-    plfd = &MPID_nem_newtcp_module_plfd_tbl[sc->index];
-
-    CHECK_EINTR(n, poll(plfd, 1, 0));
-    MPIU_ERR_CHKANDJUMP1 (n == -1, mpi_errno, MPI_ERR_OTHER, 
-                          "**poll", "**poll %s", strerror (errno));
-    if (n == 1)
-    {
-        mpi_errno = sc->handler(plfd, sc);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    }
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
-    goto fn_exit;
-}
-
-
 /*
  N1: create a new listener fd?? While doing so, if we bind it to the same port used befor,
 then it is ok. Else,the new port number(and thus the business card) has to be communicated 

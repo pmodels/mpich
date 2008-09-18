@@ -59,7 +59,6 @@ typedef struct
 int MPID_nem_newtcp_module_send_init(void);
 int MPID_nem_newtcp_module_poll_init(void);
 int MPID_nem_newtcp_module_connect(struct MPIDI_VC *const vc);
-int MPID_nem_newtcp_module_connection_progress(MPIDI_VC_t *vc);
 int MPID_nem_newtcp_module_connpoll(void);
 int MPID_nem_newtcp_module_sm_init(void);
 int MPID_nem_newtcp_module_sm_finalize(void);
