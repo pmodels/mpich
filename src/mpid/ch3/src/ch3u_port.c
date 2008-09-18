@@ -252,11 +252,20 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
     }
     /* fill in all the fields of tmp_comm. */
 
-    /* FIXME: What is this random number 4095? */
-    tmp_comm->context_id     = 4095 + context_id_offset;
+    /* We use the second half of the context ID bits for dynamic
+     * processes. This assumes that the context ID mask array is made
+     * up of unsigned ints. */
+    /* FIXME: This code is still broken for two cases:
+     * 1. If the same process opens connections to the multiple
+     * processes, this context ID might get out of sync.
+     * 2. If a process connects and disconnects many times, we will
+     * run out of context IDs. That is, though there will be a lot of
+     * free context IDs, the below logic cannot reuse them.
+     */
+    tmp_comm->context_id     = (MPIR_MAX_CONTEXT_MASK * sizeof(unsigned int) * 8) + context_id_offset;
     tmp_comm->recvcontext_id = tmp_comm->context_id;
 
-        /* FIXME - we probably need a unique context_id. */
+    /* FIXME - we probably need a unique context_id. */
     tmp_comm->remote_size = 1;
 
     /* Fill in new intercomm */

@@ -1294,6 +1294,24 @@ extern MPID_Comm MPID_Comm_direct[];
 #define MPID_CONTEXT_INTER_COLLA 2
 #define MPID_CONTEXT_INTER_COLLB 3
 
+/*
+ * The following must hold:
+ * MPIR_MAX_CONTEXT_MASK*32 <= 2**(sizeof(MPIR_Context_id_t) * 8 - 2)
+ * For a 16-bit context id field, this implies MPIR_MAX_CONTEXT_MASK <= 512
+ *
+ * MPIR_Context_id_t can hold 2**(sizeof(MPIR_Context_id_t) * 8)
+ * context IDs. Of these, the last two bits are used to determine the
+ * class of the context ID, so we only have
+ * 2**(sizeof(MPIR_Context_id_t) * 8 - 2) context IDs. We can use
+ * (2**(sizeof(MPIR_Context_id_t) * 8 - 2) / 32) integers to hold
+ * these many bits assuming each integer is 32 bits, i.e.,
+ * 2**(sizeof(MPIR_Context_id_t) * 8 - 7) integers. Finally, we want
+ * to reserve the second half of this set for temporary VCs in the
+ * dynamic process case. That leaves us with
+ * 2**(sizeof(MPIR_Context_id_t) * 8 - 8) integers.
+ */
+#define MPIR_MAX_CONTEXT_MASK (1 << ((sizeof(MPIR_Context_id_t) * 8) - 8))
+
 /* Utility routines.  Where possible, these are kept in the source directory
    with the other comm routines (src/mpi/comm, in mpicomm.h).  However,
    to create a new communicator after a spawn or connect-accept operation, 
@@ -3520,12 +3538,13 @@ extern MPI_User_function *MPIR_Op_table[];
 typedef int (MPIR_Op_check_dtype_fn) ( MPI_Datatype ); 
 extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 
-#ifndef MPIR_MIN
+#if !defined MPIR_MIN
 #define MPIR_MIN(a,b) (((a)>(b))?(b):(a))
-#endif
-#ifndef MPIR_MAX
+#endif /* MPIR_MIN */
+
+#if !defined MPIR_MAX
 #define MPIR_MAX(a,b) (((b)>(a))?(b):(a))
-#endif
+#endif /* MPIR_MAX */
 
 int MPIR_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype, 

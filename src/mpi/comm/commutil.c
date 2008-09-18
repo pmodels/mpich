@@ -183,18 +183,17 @@ int MPIR_Setup_intercomm_localcomm( MPID_Comm *intercomm_ptr )
  * in detail in the mpich2 coding document.  There are versions for
  * single threaded and multithreaded MPI.
  * 
- * These assume that int is 32 bits; they should use uint_32 instead, 
- * and an MPI_UINT32 type (should be able to use MPI_INTEGER4)
+ * These assume that int is 32 bits; they should use uint_32 instead,
+ * and an MPI_UINT32 type (should be able to use MPI_INTEGER4). Code
+ * in src/mpid/ch3/src/ch3u_port.c for creating the temporary
+ * communicator assumes that the context_mask array is made up of
+ * unsigned ints. If this is changed, that code will need to be
+ * changed as well.
  *
  * Both the threaded and non-threaded routines use the same mask of
  * available context id values.
- *
- * The following must hold:
- * MAX_CONTEXT_MASK*32 <= 2**(sizeof(MPIR_Context_id_t) * 8 - 2)
- * For a 16-bit context id field, this implies MAX_CONTEXT_MASK <= 512
  */
-#define MAX_CONTEXT_MASK 256
-static unsigned int context_mask[MAX_CONTEXT_MASK];
+static unsigned int context_mask[MPIR_MAX_CONTEXT_MASK];
 static int initialize_context_mask = 1;
 
 #ifdef USE_DBG_LOGGING
@@ -204,10 +203,11 @@ static int initialize_context_mask = 1;
    Converts the mask to hex and returns a pointer to that string */
 static char *MPIR_ContextMaskToStr( void )
 {
-    static char bufstr[MAX_CONTEXT_MASK*8+1];
+    static char bufstr[MPIR_MAX_CONTEXT_MASK*8+1];
     int i;
     int maxset=0;
-    for (maxset=MAX_CONTEXT_MASK-1; maxset>=0; maxset--) {
+
+    for (maxset=MPIR_MAX_CONTEXT_MASK-1; maxset>=0; maxset--) {
 	if (context_mask[maxset] != 0) break;
     }
 
@@ -218,9 +218,11 @@ static char *MPIR_ContextMaskToStr( void )
 }
 #endif
 
-static void MPIR_Init_contextid (void) {
+static void MPIR_Init_contextid(void)
+{
     int i;
-    for (i=1; i<MAX_CONTEXT_MASK; i++) {
+
+    for (i=1; i<MPIR_MAX_CONTEXT_MASK; i++) {
 	context_mask[i] = 0xFFFFFFFF;
     }
     /* the first three values are already used (comm_world, comm_self,
@@ -232,7 +234,7 @@ static void MPIR_Init_contextid (void) {
    Return 0 if no bit found */
 static int MPIR_Find_context_bit( unsigned int local_mask[] ) {
     int i, j, context_id = 0;
-    for (i=0; i<MAX_CONTEXT_MASK; i++) {
+    for (i=0; i<MPIR_MAX_CONTEXT_MASK; i++) {
 	if (local_mask[i]) {
 	    /* There is a bit set in this word. */
 	    register unsigned int val, nval;
@@ -287,7 +289,7 @@ static int MPIR_Find_context_bit( unsigned int local_mask[] ) {
 int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 {
     int mpi_errno = MPI_SUCCESS;
-    unsigned int local_mask[MAX_CONTEXT_MASK];
+    unsigned int local_mask[MPIR_MAX_CONTEXT_MASK];
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
@@ -298,12 +300,12 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
     if (initialize_context_mask) {
 	MPIR_Init_contextid();
     }
-    memcpy( local_mask, context_mask, MAX_CONTEXT_MASK * sizeof(int) );
+    memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
 
     MPIU_THREADPRIV_GET;
     MPIR_Nest_incr();
     /* Comm must be an intracommunicator */
-    mpi_errno = NMPI_Allreduce( MPI_IN_PLACE, local_mask, MAX_CONTEXT_MASK, 
+    mpi_errno = NMPI_Allreduce( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK, 
 				MPI_INT, MPI_BAND, comm_ptr->handle );
     MPIR_Nest_decr();
     /* FIXME: We should return the error code upward */
@@ -336,7 +338,7 @@ static volatile int lowestContextId = MPIR_MAXID;
 int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 {
     int          mpi_errno = MPI_SUCCESS;
-    unsigned int local_mask[MAX_CONTEXT_MASK];
+    unsigned int local_mask[MPIR_MAX_CONTEXT_MASK];
     int          own_mask = 0;
     int          testCount = 10; /* if you change this value, you need to also change 
 				    it below where it is reinitialized */
@@ -380,7 +382,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	    MPIR_Init_contextid();
 	}
 	if (mask_in_use || comm_ptr->context_id > lowestContextId) {
-	    memset( local_mask, 0, MAX_CONTEXT_MASK * sizeof(int) );
+	    memset( local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
 	    own_mask        = 0;
 	    if (comm_ptr->context_id < lowestContextId) {
 		lowestContextId = comm_ptr->context_id;
@@ -389,7 +391,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	       "In in-use, set lowestContextId to %d", lowestContextId );
 	}
 	else {
-	    memcpy( local_mask, context_mask, MAX_CONTEXT_MASK * sizeof(int) );
+	    memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
 	    mask_in_use     = 1;
 	    own_mask        = 1;
 	    lowestContextId = comm_ptr->context_id;
@@ -399,7 +401,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	
 	/* Now, try to get a context id */
         MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
-	mpi_errno = NMPI_Allreduce( MPI_IN_PLACE, local_mask, MAX_CONTEXT_MASK,
+	mpi_errno = NMPI_Allreduce( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
 				    MPI_INT, MPI_BAND, comm_ptr->handle );
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -572,7 +574,7 @@ void MPIR_Free_contextid( MPIR_Context_id_t context_id )
     bitpos = (context_id >> 2) % 32;
 
     /* --BEGIN ERROR HANDLING-- */
-    if (idx < 0 || idx >= MAX_CONTEXT_MASK) {
+    if (idx < 0 || idx >= MPIR_MAX_CONTEXT_MASK) {
 	MPID_Abort( 0, MPI_ERR_INTERN, 1, 
 		    "In MPIR_Free_contextid, idx is out of range" );
     }
