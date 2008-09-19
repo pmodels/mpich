@@ -1,3 +1,4 @@
+@echo off
 IF "%1" == "" GOTO HELP
 IF "%1" == "--help" GOTO HELP
 REM ### SVN_HOST = SVN URL for extracting source code
@@ -18,13 +19,17 @@ REM           set USERNAME=mymcsusername
 REM      2) configure
 REM      3) build the release
 REM      this will create an mpich2 directory under the current directory
+REM		 (The "--with-checkout" option is for ANL INTERNAL USE ONLY)
 REM    makewindist --with-configure
 REM      1) configure the current directory
 REM      2) build the release
 REM      mpich2 must be the current directory
+REM		 (The "--with-configure" option is for ANL INTERNAL USE ONLY)
 REM    makewindist --with-curdir
 REM      1) build the release
 REM      mpich2 must be the current directory and it must have been configured
+REM		 (Use the "--with-curdir" option if you downloaded the MPICH2 source
+REM		  from the MPICH2 downloads webpage)
 REM
 REM
 REM Prerequisites:
@@ -121,34 +126,59 @@ if %errorlevel% NEQ 0 goto BUILDERROR
 devenv.com examples\examples.sln /project cpi /build Debug
 if %errorlevel% NEQ 0 goto BUILDERROR
 :BUILD_RELEASE
+echo Building MPICH2 Release version on windows
+echo ===========================================
+echo  Please refer to the MPICH2 Visual Studio sln file, mpich2.sln, for
+echo  more information on the various projects/configs built for MPICH2 
+echo -------------------------------------------------------------------
+echo Building CH3+SOCK channel ...
 devenv.com mpich2.sln /build ch3sockRelease > make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building mpich2s project...
 devenv.com mpich2.sln /project mpich2s /build ch3sockRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building CH3+SOCK channel (profiled version)...
 devenv.com mpich2.sln /build ch3sockPRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building mpich2s project (profiled version)...
 devenv.com mpich2.sln /project mpich2s /build ch3sockPRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building MPI user lib, MPE, MPIEXEC & SMPD ...
 devenv.com mpich2.sln /build Release >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building FORTRAN interface ...
 devenv.com mpich2.sln /build fortRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 devenv.com mpich2.sln /build gfortRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 devenv.com mpich2.sln /build sfortRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building CH3+SHM channel ...
 devenv.com mpich2.sln /build ch3shmRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building CH3+SHM channel (profiled version) ...
 devenv.com mpich2.sln /build ch3shmPRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
 REM devenv.com mpich2.sln /build ch3sshmRelease
 REM if %errorlevel% NEQ 0 goto BUILDERROR
 REM devenv.com mpich2.sln /build ch3sshmPRelease
 REM if %errorlevel% NEQ 0 goto BUILDERROR
+echo Building CH3+SSM channel ...
 devenv.com mpich2.sln /build ch3ssmRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building CH3+SSM channel (profiled version)...
 devenv.com mpich2.sln /build ch3ssmPRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
 REM devenv.com mpich2.sln /build ch3ibIbalRelease
 REM if %errorlevel% NEQ 0 goto BUILDERROR
 REM devenv.com mpich2.sln /build ch3ibIbalPRelease
@@ -157,14 +187,22 @@ REM devenv.com mpich2.sln /build ch3essmRelease
 REM if %errorlevel% NEQ 0 goto BUILDERROR
 REM devenv.com mpich2.sln /build ch3essmPRelease
 REM if %errorlevel% NEQ 0 goto BUILDERROR
+echo Building CH3+SOCK channel(multithreaded)...
 devenv.com mpich2.sln /build ch3sockmtRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building CH3+SOCK channel(multithreaded - profiled version)...
 devenv.com mpich2.sln /build ch3sockmtPRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building C++ Interface ...
 devenv.com mpich2.sln /project cxx /build Debug >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+echo Building RLOG tools ...
 devenv.com src\util\logging\rlog\rlogtools.sln /build Release >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
 devenv.com mpich2.sln /build fmpe >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 cd maint
@@ -172,11 +210,13 @@ call makegcclibs.bat
 cd ..
 devenv.com examples\examples.sln /project cpi /build Release
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo Building MPICH2 installer ...
 devenv.com mpich2.sln /build Installer
 if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
 GOTO END
 :BUILDERROR
-REM Build failed, exiting
+echo "ERROR : BUILD FAILED ! - See make.log for details"
 GOTO END
 :CVSERROR
 REM cvs returned a non-zero exit code while attempting to check out mpich2
