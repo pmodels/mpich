@@ -11,5 +11,11 @@ infomany_SOURCES   = infomany.c
 infomany2_SOURCES  = infomany2.c
 infotest_SOURCES   = infotest.c
 
+# A special testing target to simplify running just the info tests
+testing:
+	../runtests -srcdir=$(srcdir) -tests=testlist \
+		   -mpiexec=$(bindir)/mpiexec \
+		   -xmlfile=summary.xml
+
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o)
