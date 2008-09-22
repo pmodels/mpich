@@ -394,6 +394,7 @@ If MPI_Init_thread is not called, the default is funneled .
 For other channels, the --enable-threads option is not supported currently, and 
 the default is funneled.],,
 enable_threads=default)
+dnl
 AC_ARG_ENABLE(thread-cs,
 [--enable-thread-cs=type - Choose the method used for critical sections and 
  other atomic updates when multiple threads are present.  Values may be
@@ -2985,7 +2986,6 @@ case $byteOrdering in
     AC_MSG_ERROR([Unable to determine endianess])
     ;;
 esac
-dnl AC_C_BIGENDIAN(,AC_DEFINE(WORDS_LITTLEENDIAN,1,[Define if words are little endian]))
 
 # We only need this test if we are using Fortran
 if test "$enable_f77" ; then
