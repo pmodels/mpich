@@ -394,6 +394,31 @@ If MPI_Init_thread is not called, the default is funneled .
 For other channels, the --enable-threads option is not supported currently, and 
 the default is funneled.],,
 enable_threads=default)
+AC_ARG_ENABLE(thread-cs,
+[--enable-thread-cs=type - Choose the method used for critical sections and 
+ other atomic updates when multiple threads are present.  Values may be
+ global (default), brief-global, per-object, lock-free],,
+ enable_thread_cs=global)
+AC_ARG_ENABLE(refcount,
+[--enable-refcount=type - Choose the method for ensuring atomic updates to
+the reference counts for MPI objects.  Values may be lock, lock-free, none.
+The default depends on the thread-cs choice; for global it is none (because
+none is required), for brief-global and per-object it is lock, and for
+lock-free it is lock-free],,enable_refcount=default)
+AC_ARG_ENABLE(mutex-timing, [--enable-mutex-timing - calculate the
+			    time spent waiting on mutexes.  For best
+			    results, use with
+			    --enable-timer-type=linux86_cycle],
+	      AC_DEFINE(MPIU_MUTEX_WAIT_TIME,1,[Define to enable timing mutexes])
+	      )
+AC_ARG_ENABLE(handle-allocation,
+              [--enable-handle-allocation=type - Choose the method used for
+              allocating MPI object handles.  Values may be 'tls' for
+              thread-local storage or 'mutex' for simple locking.  'mutex' is
+              the default.],
+              ,
+              enable_handle_allocation=default)
+
 dnl 
 dnl
 AC_ARG_ENABLE(weak-symbols,
@@ -999,6 +1024,65 @@ if test "$thread_pkg_required" = "no" ; then
     MPE_THREAD_DEFAULT=${MPE_THREAD_DEFAULT:-none}
 fi
 export MPE_THREAD_DEFAULT
+
+# Check for value thread_cs choice; set the refcount default if necessary
+thread_granularity=0
+thread_refcount=0
+if test "$enable_threads" = "multiple" ; then
+    case $enable_thread_cs in 
+    global)
+    thread_granularity=MPIU_THREAD_GRANULARITY_GLOBAL
+    if test "$enable_refcount" = "default" ; then enable_refcount=none ; fi
+    ;;
+    brief-global|brief_global)
+    thread_granularity=MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL
+    if test "$enable_refcount" = "default" ; then enable_refcount=lock ; fi
+    ;;
+    per-object|per_object)
+    thread_granularity=MPIU_THREAD_GRANULARITY_PER_OBJECT
+    if test "$enable_refcount" = "default" ; then enable_refcount=lock ; fi
+    ;;
+    lock-free|lock_free|lockfree)
+    thread_granularity=MPIU_THREAD_GRANULARITY_LOCK_FREE
+    if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
+    ;;
+    *)
+    AC_MSG_ERROR([Unrecognized value $enable_thread_cs for --enable-thread-cs])
+    ;;
+    esac
+
+    case $enable_refcount in
+    lock)
+    thread_refcount=MPIU_REFCOUNT_LOCK
+    ;;
+    lock-free|lock_free|lockfree)
+    thread_refcount=MPIU_REFCOUNT_LOCKFREE
+    ;;
+    none)
+    thread_refcount=MPIU_REFCOUNT_NONE
+    ;;
+    *)
+    AC_MSG_ERROR([Unrecognized value $enable_refcount for --enable-refcount])
+    ;;
+    esac
+fi
+AC_DEFINE_UNQUOTED([MPIU_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
+
+case $enable_handle_allocation in
+    mutex|default)
+        handle_allocation_method=MPIU_HANDLE_ALLOCATION_MUTEX
+    ;;
+    tls)
+        handle_allocation_method=MPIU_HANDLE_ALLOCATION_THREAD_LOCAL
+    ;;
+    *)
+        AC_MSG_ERROR([Unrecognized value $enable_handle_allocation for --enable-handle-allocation])
+    ;;
+esac
+AC_DEFINE_UNQUOTED([MPIU_HANDLE_ALLOCATION_METHOD],$handle_allocation_method,[Method used to allocate MPI object handles])
+
+
+AC_DEFINE_UNQUOTED([MPIU_THREAD_REFCOUNT],$thread_refcount,[Method used to implement refcount updates])
 
 # enable-g
 # strip off multiple options, separated by commas

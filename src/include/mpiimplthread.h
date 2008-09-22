@@ -11,6 +11,9 @@
 #error 'This file requires mpichconf.h'
 #endif
 
+/* FIXME: TEMP - should make sure enable-g set this */
+/* #define MPID_THREAD_DEBUG */
+
 /* Rather than embed a conditional test in the MPICH2 code, we define a 
    single value on which we can test */
 #if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
@@ -21,12 +24,32 @@
 #include "mpid_thread.h"
 #endif
 
+/* 
+ * Define the four ways that we achieve proper thread-safe updates of 
+ * shared structures and services
+ * 
+ * A configure choice will set MPIU_THREAD_GRANULARITY to one of these values
+ * "Single" means no thread support
+ */
+#define MPIU_THREAD_GRANULARITY_SINGLE 0
+#define MPIU_THREAD_GRANULARITY_GLOBAL 1
+#define MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL 2
+#define MPIU_THREAD_GRANULARITY_PER_OBJECT 3
+#define MPIU_THREAD_GRANULARITY_LOCK_FREE 4
+
 /*
  * Define possible thread implementations that could be selected at 
  * configure time.  
  * 
  * These mean what ?
+ *
+ * not_implemented - used in src/mpid/ch3/channels/{sock,sctp}/src/ch3_progress.c 
+ * only, and basically commented out
+ * none - never used
+ * global_mutex - 
+ *
  */
+/* FIXME: These are old and deprecated */
 #define MPICH_THREAD_IMPL_NOT_IMPLEMENTED -1
 #define MPICH_THREAD_IMPL_NONE 1
 #define MPICH_THREAD_IMPL_GLOBAL_MUTEX 2
@@ -44,6 +67,23 @@ typedef struct MPICH_ThreadInfo_t {
     int isThreaded;                      /* Set to true if user requested
 					    THREAD_MULTIPLE */
 #endif
+
+    /* Define the mutex values used for each kind of implementation */
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL || \
+    MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL || \
+    MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+    /* The global mutex goes here when we eliminate USE_THREAD_IMPL */
+    /* We need the handle mutex to avoid problems with lock nesting */
+    MPID_Thread_mutex_t handle_mutex;
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
+#error MPIU_THREAD_GRANULARITY_LOCK_FREE not implemented yet
+#endif
+
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL || \
+    MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+    MPID_Thread_tls_t nest_storage;   /* Id for perthread data */
+#endif
+
 # if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
     MPID_Thread_mutex_t global_mutex;
 # endif
@@ -66,7 +106,7 @@ extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
 /* Define a macro to acquire or create the thread private storage */
 #define MPIR_GetOrInitThreadPriv( pt_ ) \
 {									\
-    MPID_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, (pt_));		\
+    MPID_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, (pt_));	\
     if (*(pt_) == NULL)							\
     {									\
 	*(pt_) = (MPICH_PerThread_t *) MPIU_Calloc(1, sizeof(MPICH_PerThread_t));	\
@@ -114,20 +154,11 @@ MPICH_PerThread_t *pt_; MPIR_GetOrInitThreadPriv( &pt_ ); MPIU_Free( pt_ ); }
 /* Function prototype (needed when no weak symbols available) */
 void MPIR_CleanupThreadStorage( void *a );
 
-/* FIXME: The "thread storage" needs to be moved out of this */
-#define MPID_CS_INITIALIZE()						\
-{									\
-    MPID_Thread_mutex_create(&MPIR_ThreadInfo.global_mutex, NULL);		\
-    MPID_Thread_tls_create(MPIR_CleanupThreadStorage, &MPIR_ThreadInfo.thread_storage, NULL);   \
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Created global mutex and private storage");\
-}
-#define MPID_CS_FINALIZE()						\
-{									\
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Freeing global mutex and private storage");\
-    MPIR_ReleasePerThread;						\
-    MPID_Thread_tls_destroy(&MPIR_ThreadInfo.thread_storage, NULL);	\
-    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.global_mutex, NULL);	\
-}
+int MPIR_Thread_CS_Init( void );
+int MPIR_Thread_CS_Finalize( void );
+#define MPID_CS_INITIALIZE() MPIR_Thread_CS_Init()
+#define MPID_CS_FINALIZE() MPIR_Thread_CS_Finalize()
+
 /* FIXME: Figure out what we want to do for the nest count on 
    these routines, so as to avoid extra function calls */
 /* 
@@ -249,5 +280,30 @@ void MPIR_CleanupThreadStorage( void *a );
 #define MPIU_THREADSAFE_INIT_CLEAR(_var) _var=0
 #define MPIU_THREADSAFE_INIT_BLOCK_END(_var) 
 #endif
+
+/* This block of text makes it easier to add local use of the thread macros */
+# if 0
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
+/* There is a single, global lock, held for the duration of an MPI call */
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL
+/* There is a single, global lock, held only when needed */
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+/* There are multiple locks, one for each logical class (e.g., each type of 
+   object) */
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
+/* Updates to shared data and access to shared services is handled without 
+   locks where ever possible. */
+#error lock-free not yet implemented
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
+/* No thread support, make all operations a no-op */
+
+#else
+#error Unrecognized thread granularity
+#endif
+#endif /* 0 */
 
 #endif /* !defined(MPIIMPLTHREAD_H_INCLUDED) */
