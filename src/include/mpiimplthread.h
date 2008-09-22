@@ -174,6 +174,7 @@ int MPIR_Thread_CS_Finalize( void );
     { 								\
         MPIU_DBG_MSG(THREAD,TYPICAL,"Enter global critical section");\
 	MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);	\
+	MPIU_THREAD_UPDATEDEPTH(global_mutex,1);                \
     }								\
 }
 #define MPID_CS_EXIT()						\
@@ -184,6 +185,7 @@ int MPIR_Thread_CS_Finalize( void );
     { 								\
         MPIU_DBG_MSG(THREAD,TYPICAL,"Exit global critical section");\
 	MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);	\
+	MPIU_THREAD_UPDATEDEPTH(global_mutex,-1);               \
     }								\
 }
 #else
@@ -237,7 +239,10 @@ int MPIR_Thread_CS_Finalize( void );
    is removed */
 #define MPIU_THREAD_SINGLE_CS_DECL
 #define MPIU_THREAD_SINGLE_CS_INITIALIZE MPID_CS_INITIALIZE()
-#define MPIU_THREAD_SINGLE_CS_FINALIZE   MPIU_THREAD_CHECK_BEGIN MPID_CS_FINALIZE(); MPIU_THREAD_CHECK_END
+/* #define MPIU_THREAD_SINGLE_CS_FINALIZE   MPIU_THREAD_CHECK_BEGIN MPID_CS_FINALIZE(); MPIU_THREAD_CHECK_END */
+/* Because we unconditionally invoke the initialize, we need to do the 
+   same with the finalize */
+#define MPIU_THREAD_SINGLE_CS_FINALIZE   MPID_CS_FINALIZE()
 #define MPIU_THREAD_SINGLE_CS_ASSERT_WITHIN(_msg)
 #define MPIU_THREAD_SINGLE_CS_ENTER(_msg) MPIU_THREAD_CHECK_BEGIN MPID_CS_ENTER() MPIU_THREAD_CHECK_END
 #define MPIU_THREAD_SINGLE_CS_EXIT(_msg)  MPIU_THREAD_CHECK_BEGIN MPID_CS_EXIT() MPIU_THREAD_CHECK_END
@@ -281,6 +286,309 @@ int MPIR_Thread_CS_Finalize( void );
 #define MPIU_THREADSAFE_INIT_BLOCK_END(_var) 
 #endif
 
+/* ------------------------------------------------------------------------- */
+/*
+ * New definitions for controling the granularity of thread atomicity
+ *
+ */
+
+/*M MPIU_THREAD_CS_ENTER - Enter a named critical section
+
+  Input Parameters:
++ _name - cname of the critical section
+- _context - A context (typically an object) of the critical section
+
+M*/
+#define MPIU_THREAD_CS_ENTER(_name,_context) MPIU_THREAD_CS_ENTER_##_name(_context)
+
+/*M MPIU_THREAD_CS_EXIT - Exit a named critical section
+
+  Input Parameters:
++ _name - cname of the critical section
+- _context - A context (typically an object) of the critical section
+
+M*/
+#define MPIU_THREAD_CS_EXIT(_name,_context) MPIU_THREAD_CS_EXIT_##_name(_context)
+
+/*M MPIU_THREAD_CS_YIELD - Temporarily release a critical section and yield
+    to other threads
+
+  Input Parameters:
++ _name - cname of the critical section
+- _context - A context (typically an object) of the critical section
+
+  M*/
+#define MPIU_THREAD_CS_YIELD(_name,_context) MPIU_THREAD_CS_YIELD_##_name(_context)
+
+/*M
+  ... move the threadsafe init block
+  
+  These use a private critical section called INITFLAG
+  M*/
+#ifdef MPICH_IS_THREADED
+
+#ifdef HAVE_RUNTIME_THREADCHECK
+#define MPIU_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
+#define MPIU_THREAD_CHECK_END   }  
+#else
+#define MPIU_THREAD_CHECK_BEGIN
+#define MPIU_THREAD_CHECK_END
+#endif
+
+#define MPIU_ISTHREADED(_s) { MPIU_THREAD_CHECK_BEGIN _s MPIU_THREAD_CHECK_END }
+
+#undef MPIU_THREADSAFE_INIT_DECL
+#undef MPIU_THREADSAFE_INIT_STMT
+#undef MPIU_THREADSAFE_INIT_BLOCK_BEGIN
+#undef MPIU_THREADSAFE_INIT_BLOCK_END
+#define MPIU_THREADSAFE_INIT_DECL(_var) static volatile int _var=1
+#define MPIU_THREADSAFE_INIT_STMT(_var,_stmt) \
+     if (_var) { \
+	 MPIU_THREAD_CS_ENTER(INITFLAG,);		\
+      _stmt; _var=0; \
+      MPIU_THREAD_CS_EXIT(INITFLAG,);			\
+     }
+#define MPIU_THREADSAFE_INIT_BLOCK_BEGIN(_var) \
+    MPIU_THREAD_CS_ENTER(INITFLAG,);		       \
+     if (_var) {
+#define MPIU_THREADSAFE_INIT_CLEAR(_var) _var=0
+#define MPIU_THREADSAFE_INIT_BLOCK_END(_var) \
+      } \
+	  MPIU_THREAD_CS_EXIT(INITFLAG,)
+#else
+/* These provide a uniform way to perform a first-use initialization
+   in a thread-safe way.  See the web page or mpidtime.c for the generic
+   wtick */
+#define MPIU_THREADSAFE_INIT_DECL(_var) static int _var=1
+#define MPIU_THREADSAFE_INIT_STMT(_var,_stmt) if (_var) { _stmt; _var = 0; }
+#define MPIU_THREADSAFE_INIT_BLOCK_BEGIN(_var) 
+#define MPIU_THREADSAFE_INIT_CLEAR(_var) _var=0
+#define MPIU_THREADSAFE_INIT_BLOCK_END(_var) 
+
+#define MPIU_THREAD_CHECK_BEGIN
+#define MPIU_THREAD_CHECK_END
+#define MPIU_ISTHREADED(_s) 
+
+#endif 
+
+/* Helper definitions */
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
+#define MPIU_THREAD_CHECKNEST(_name)
+/* XXX DJG temporarily disabled for the paper... this breaks our CS_EXIT(ALLFUNC) in sock_wait.i */
+#if 0
+#define MPIU_THREAD_CHECKNEST(_name)				\
+    MPIU_THREADPRIV_DECL;                                       \
+    MPIU_THREADPRIV_GET;                                        \
+    if (MPIR_Nest_value() == 0)	
+#endif
+
+#define MPIU_THREAD_CHECKDEPTH(_name,_value)
+#define MPIU_THREAD_UPDATEDEPTH(_name,_value)				
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL || \
+      MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+/* This structure is used to keep track of where the last change was made
+   to the thread cs depth */
+#ifdef MPID_THREAD_DEBUG
+#define MPIU_THREAD_LOC_LEN 127
+#define MPIU_THREAD_FNAME_LEN 31
+typedef struct MPIU_ThreadDebug {
+    int count;
+    int line;
+    char file[MPIU_THREAD_LOC_LEN+1];
+    char fname[MPIU_THREAD_FNAME_LEN+1];
+} MPIU_ThreadDebug_t;
+#define MPIU_THREAD_CHECKDEPTH(_name,_value) \
+    {if (1){ MPIU_ThreadDebug_t *_nest_ptr=0;				\
+    MPID_Thread_tls_get( &MPIR_ThreadInfo.nest_storage, &_nest_ptr );\
+    if (!_nest_ptr) { _nest_ptr = (MPIU_ThreadDebug_t*)MPIU_Calloc(2,sizeof(MPIU_ThreadDebug_t));\
+	    MPID_Thread_tls_set( &MPIR_ThreadInfo.nest_storage,_nest_ptr);}\
+    if (_nest_ptr[MPIUNest_##_name].count != _value) {\
+      fprintf(stderr, "%s:%d %s = %d, required %d; previously set in %s:%d(%s)\n",\
+	      __FILE__, __LINE__,  #_name, 			\
+	      _nest_ptr[MPIUNest_##_name].count, _value, 	\
+	      _nest_ptr[MPIUNest_##_name].file, \
+	      _nest_ptr[MPIUNest_##_name].line,\
+	      _nest_ptr[MPIUNest_##_name].fname );			       \
+      fflush(stdout); \
+    }}}
+#define MPIU_THREAD_UPDATEDEPTH(_name,_value)	 {if (1){	\
+	MPIU_ThreadDebug_t *_nest_ptr=0;\
+	MPID_Thread_tls_get( &MPIR_ThreadInfo.nest_storage, &_nest_ptr );\
+	if (!_nest_ptr) { _nest_ptr = (MPIU_ThreadDebug_t*)MPIU_Calloc(2,sizeof(MPIU_ThreadDebug_t));\
+	    MPID_Thread_tls_set( &MPIR_ThreadInfo.nest_storage,_nest_ptr);}\
+	_nest_ptr[MPIUNest_##_name].count += _value;\
+	_nest_ptr[MPIUNest_##_name].line = __LINE__;			\
+	MPIU_Strncpy( _nest_ptr[MPIUNest_##_name].file, __FILE__, MPIU_THREAD_LOC_LEN );	\
+	MPIU_Strncpy( _nest_ptr[MPIUNest_##_name].fname, FCNAME, MPIU_THREAD_FNAME_LEN );\
+}}
+#define MPIU_THREAD_CHECKNEST(_name)
+/* __thread would be nice here, but it is not portable (not even available
+   on Macs) */
+/* defined in mpi/init/initthread.c  */
+#define MPIUNest_global_mutex 0
+#define MPIUNest_handle_mutex 1
+#else
+#define MPIU_THREAD_CHECKDEPTH(_name,_value)
+#define MPIU_THREAD_UPDATEDEPTH(_name,_value)
+#define MPIU_THREAD_CHECKNEST(_name)
+#endif /* MPID_THREAD_DEBUG */
+#else
+#define MPIU_THREAD_CHECKNEST(_name)
+#endif
+
+#define MPIU_THREAD_CS_ENTER_LOCKNAME(_name) \
+{								\
+    MPIU_THREAD_CHECKDEPTH(_name,0)                             \
+    MPIU_THREAD_CHECKNEST(_name)				\
+    { 								\
+        MPIU_DBG_MSG(THREAD,TYPICAL,"Enter critical section "#_name);\
+	MPID_Thread_mutex_lock(&MPIR_ThreadInfo._name);	\
+	MPIU_THREAD_UPDATEDEPTH(_name,1)                        \
+    }								\
+}
+#define MPIU_THREAD_CS_EXIT_LOCKNAME(_name)			\
+{								\
+    MPIU_THREAD_CHECKDEPTH(_name,1)                             \
+    MPIU_THREAD_CHECKNEST(_name)				\
+    { 								\
+        MPIU_DBG_MSG(THREAD,TYPICAL,"Exit critical section "#_name);\
+	MPID_Thread_mutex_unlock(&MPIR_ThreadInfo._name);	\
+	MPIU_THREAD_UPDATEDEPTH(_name,-1)                       \
+    }								\
+}
+
+
+/* Definitions of the thread support for various levels of thread granularity */
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
+/* There is a single, global lock, held for the duration of an MPI call */
+#define MPIU_THREAD_CS_ENTER_ALLFUNC(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_ALLFUNC(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_ENTER_HANDLE(_context)
+#define MPIU_THREAD_CS_EXIT_HANDLE(_context)
+#define MPIU_THREAD_CS_ENTER_HANDLEALLOC(_context)
+#define MPIU_THREAD_CS_EXIT_HANDLEALLOC(_context)
+#define MPIU_THREAD_CS_ENTER_MSGQUEUE(_context)
+#define MPIU_THREAD_CS_EXIT_MSGQUEUE(_context)
+#define MPIU_THREAD_CS_ENTER_MPIDCOMM(_context)
+#define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context)
+#define MPIU_THREAD_CS_ENTER_INITFLAG(_context)
+#define MPIU_THREAD_CS_EXIT_INITFLAG(_context)
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL
+/* There is a single, global lock, held only when needed */
+#define MPIU_THREAD_CS_ENTER_ALLFUNC(_context)
+#define MPIU_THREAD_CS_EXIT_ALLFUNC(_context)
+/* We use the handle mutex to avoid conflicts with the global mutex - 
+   this is a temporary setting until the brief-global option is fully
+   implemented */
+#define MPIU_THREAD_CS_ENTER_HANDLE(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_HANDLE(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
+   /* The request handles may be allocated, and many other handles might
+      be deallocated, within the communication routines.  To avoid 
+      problems with lock nesting, for this particular case, we use a
+      separate lock (similar to the per-object lock) */
+#define MPIU_THREAD_CS_ENTER_HANDLEALLOC(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_HANDLEALLOC(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
+
+#define MPIU_THREAD_CS_ENTER_MPIDCOMM(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context) \
+    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+
+#define MPIU_THREAD_CS_ENTER_MSGQUEUE(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_MSGQUEUE(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_ENTER_INITFLAG(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_INITFLAG(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+/* There are multiple locks, one for each logical class (e.g., each type of 
+   object) */
+
+/* FIXME: That's the ugliest hack I've ever written. Use the same lock
+ * macro as LOCKNAME */
+#define MPIU_THREAD_CS_ENTER_POBJ_LOCKNAME(_name) \
+{								\
+    MPIU_THREAD_CHECKDEPTH(_name,0)                             \
+    MPIU_THREAD_CHECKNEST(_name)				\
+    { 								\
+        MPIU_DBG_MSG(THREAD,TYPICAL,"Enter critical section "#_name);\
+	MPID_Thread_mutex_lock(&_name);	                        \
+	MPIU_THREAD_UPDATEDEPTH(_name,1)                        \
+    }								\
+}
+#define MPIU_THREAD_CS_EXIT_POBJ_LOCKNAME(_name)		\
+{								\
+    MPIU_THREAD_CHECKDEPTH(_name,1)                             \
+    MPIU_THREAD_CHECKNEST(_name)				\
+    { 								\
+        MPIU_DBG_MSG(THREAD,TYPICAL,"Exit critical section "#_name);\
+	MPID_Thread_mutex_unlock(&_name);	                \
+	MPIU_THREAD_UPDATEDEPTH(_name,-1)                       \
+    }								\
+}
+
+#define MPIU_THREAD_CS_ENTER_ALLFUNC(_context)
+#define MPIU_THREAD_CS_EXIT_ALLFUNC(_context)
+
+#define dprintf(...)
+#define MPIU_THREAD_CS_ENTER_HANDLE(_context) { \
+   dprintf("Calling MPIU_THREAD_CS_ENTER_HANDLE in %s\n", __FUNCTION__); \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END \
+}
+#define MPIU_THREAD_CS_EXIT_HANDLE(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
+
+#define MPIU_THREAD_CS_ENTER_HANDLEALLOC(_context) { \
+   dprintf("Calling MPIU_THREAD_CS_ENTER_HANDLEALLOC in %s\n", __FUNCTION__);\
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END \
+}
+#define MPIU_THREAD_CS_EXIT_HANDLEALLOC(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
+
+#define MPIU_THREAD_CS_ENTER_MPIDCOMM(_context) { \
+   dprintf("Calling MPIU_THREAD_CS_ENTER_MPIDCOMM in %s\n", __FUNCTION__);\
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END \
+}
+#define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+
+#define MPIU_THREAD_CS_ENTER_MSGQUEUE(_context) {\
+   dprintf("Calling MPIU_THREAD_CS_ENTER_MSGQUEUE in %s\n", __FUNCTION__);\
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END \
+}
+#define MPIU_THREAD_CS_EXIT_MSGQUEUE(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+
+#define MPIU_THREAD_CS_ENTER_INITFLAG(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_INITFLAG(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
+/* Updates to shared data and access to shared services is handled without 
+   locks where ever possible. */
+#error lock-free not yet implemented
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
+/* No thread support, make all operations a no-op */
+
+#else
+#error Unrecognized thread granularity
+#endif
+
+#endif /* !defined(MPIIMPLTHREAD_H_INCLUDED) */
+
 /* This block of text makes it easier to add local use of the thread macros */
 # if 0
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
@@ -306,4 +614,3 @@ int MPIR_Thread_CS_Finalize( void );
 #endif
 #endif /* 0 */
 
-#endif /* !defined(MPIIMPLTHREAD_H_INCLUDED) */

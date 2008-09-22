@@ -21,6 +21,42 @@ MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM,
 				      sizeof(MPID_Comm), MPID_Comm_direct,
                                       MPID_COMM_PREALLOC};
 
+/* Support for threading */
+
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
+/* There is a single, global lock, held for the duration of an MPI call */
+#define MPIU_THREAD_CS_ENTER_CONTEXTID(_context)
+#define MPIU_THREAD_CS_EXIT_CONTEXTID(_context)
+#define MPIU_THREAD_CS_YIELD_CONTEXTID(_context) \
+		MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);\
+		MPID_Thread_yield();\
+		MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL || \
+      MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+/* There is a single, global lock, held only when needed */
+#define MPIU_THREAD_CS_ENTER_CONTEXTID(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_CONTEXTID(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_YIELD_CONTEXTID(_context) \
+    MPIU_THREAD_CHECKDEPTH(global_mutex,1);\
+		MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);\
+		MPID_Thread_yield();\
+		MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
+/* Updates to shared data and access to shared services is handled without 
+   locks where ever possible. */
+#error lock-free not yet implemented
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
+/* No thread support, make all operations a no-op */
+
+#else
+#error Unrecognized thread granularity
+#endif
+
 /* FIXME :
    Reusing context ids can lead to a race condition if (as is desirable)
    MPI_Comm_free does not include a barrier.  Consider the following:
@@ -377,7 +413,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
      its supply of context ids.  If so, all processes can invoke the 
      out-of-context-id error.  That fixed number of tests is in testCount */
     while (*context_id == 0) {
-	/* MPIU_THREAD_SINGLE_CS_ENTER("context_id"); */
+	MPIU_THREAD_CS_ENTER(CONTEXTID,);
 	if (initialize_context_mask) {
 	    MPIR_Init_contextid();
 	}
@@ -397,7 +433,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	    lowestContextId = comm_ptr->context_id;
 	    MPIU_DBG_MSG( COMM, VERBOSE, "Copied local_mask" );
 	}
-	/* MPIU_THREAD_SINGLE_CS_EXIT("context_id"); */
+	MPIU_THREAD_CS_EXIT(CONTEXTID,);
 	
 	/* Now, try to get a context id */
         MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
@@ -407,7 +443,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 
 	if (own_mask) {
 	    /* There is a chance that we've found a context id */
-	    /* MPIU_THREAD_SINGLE_CS_ENTER("context_id"); */
+	    MPIU_THREAD_CS_ENTER(CONTEXTID,);
 	    /* Find_context_bit updates the context array if it finds a match */
 	    *context_id = MPIR_Find_context_bit( local_mask );
 	    MPIU_DBG_MSG_D( COMM, VERBOSE, 
@@ -431,18 +467,26 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 		   as using a condition variable (if we know for sure that
 		   there is another thread on this process that is waiting).
 		*/
+		MPIU_THREAD_CS_YIELD(CONTEXTID,);
+#if 0
+		/* The old code */
 		MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);
 		MPID_Thread_yield();
 		MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
+#endif
 	    }
 	    mask_in_use = 0;
-	    /* MPIU_THREAD_SINGLE_CS_EXIT("context_id"); */
+	    MPIU_THREAD_CS_EXIT(CONTEXTID,);
 	}
 	else {
 	    /* As above, force this thread to yield */
+	    /* FIXME: TEMP for current yield definition*/
+	    MPIU_THREAD_CS_YIELD(CONTEXTID,);
+#if 0
 	    MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);
 	    MPID_Thread_yield();
 	    MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
+#endif
 	}
 	/* Here is the test for out-of-context ids */
 	if ((testCount-- == 0) && (*context_id == 0)) {
@@ -570,6 +614,11 @@ void MPIR_Free_contextid( MPIR_Context_id_t context_id )
     /* Convert the context id to the bit position */
     /* FIXME why do we shift right by 2?  What exactly are those bottom two bits
        used for? */
+    /* Note: The use of the context_id is covered in the design document.  They
+       are used to provide private context ids for different communication 
+       operations, such as collective communication, without requiring a
+       separate communicator.  4 ids were originally allocated to ensure
+       separation between pt-2-pt, collective, RMA, and intercomm pt-2-pt */
     idx    = (context_id >> 2) / 32;
     bitpos = (context_id >> 2) % 32;
 
@@ -597,10 +646,12 @@ void MPIR_Free_contextid( MPIR_Context_id_t context_id )
     }
     /* --END ERROR HANDLING-- */
 
+    MPIU_THREAD_CS_ENTER(CONTEXTID,);
     /* MT: Note that this update must be done atomically in the multithreaded
        case.  In the "one, single lock" implementation, that lock is indeed
        held when this operation is called. */
     context_mask[idx] |= (0x1 << bitpos);
+    MPIU_THREAD_CS_EXIT(CONTEXTID,);
 
     MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST,
 			"Freed context %d, mask[%d] bit %d", 
