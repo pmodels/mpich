@@ -13,3 +13,9 @@ ctxdup_SOURCES  = ctxdup.c
 	(cd ../../util && $(MAKE) mtest.o)
 ../util/mtestthread.o:
 	(cd ../util && $(MAKE) mtestthread.o)
+
+# A special testing target to simplify running just the thread comm tests
+testing:
+	../../runtests -srcdir=$(srcdir) -tests=testlist \
+		   -mpiexec=$(bindir)/mpiexec \
+		   -xmlfile=summary.xml

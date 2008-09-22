@@ -1,20 +1,17 @@
 INCLUDES = -I../../include -I${srcdir}/../../include
-LDADD = ../../util/mtest.o
-threaded_sr_LDADD = -lpthread 
-DEPADD = @MPILIBLOC@ ../../util/mtest.o
+#LDADD = ../../util/mtest.o
+#DEPADD = @MPILIBLOC@ ../../util/mtest.o
 smvar_do_sharedlibs = 0
 
 # Use extra programs to list programs that should not be built by default.
 EXTRA_PROGRAMS       = 
 
-threaded_sr_SOURCES  = threaded_sr.c
-alltoall_SOURCES   = alltoall.c
-sendselfth_SOURCES = sendselfth.c
+initth_SOURCES  = initth.c
 
 ../../util/mtest.o:
 	(cd ../../util && $(MAKE) mtest.o)
 
-# A special testing target to simplify running just the thread pt2pt tests
+# A special testing target to simplify running just the thread init tests
 testing:
 	../../runtests -srcdir=$(srcdir) -tests=testlist \
 		   -mpiexec=$(bindir)/mpiexec \
