@@ -147,7 +147,7 @@ echo Building mpich2s project (profiled version)...
 devenv.com mpich2.sln /project mpich2s /build ch3sockPRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 echo .....................................................SUCCESS
-echo Building MPI user lib, MPE, MPIEXEC & SMPD ...
+echo Building MPI user lib, MPE, MPIEXEC, SMPD ...
 devenv.com mpich2.sln /build Release >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 echo .....................................................SUCCESS
@@ -167,10 +167,6 @@ echo Building CH3+SHM channel (profiled version) ...
 devenv.com mpich2.sln /build ch3shmPRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 echo .....................................................SUCCESS
-REM devenv.com mpich2.sln /build ch3sshmRelease
-REM if %errorlevel% NEQ 0 goto BUILDERROR
-REM devenv.com mpich2.sln /build ch3sshmPRelease
-REM if %errorlevel% NEQ 0 goto BUILDERROR
 echo Building CH3+SSM channel ...
 devenv.com mpich2.sln /build ch3ssmRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
@@ -182,10 +178,6 @@ echo .....................................................SUCCESS
 REM devenv.com mpich2.sln /build ch3ibIbalRelease
 REM if %errorlevel% NEQ 0 goto BUILDERROR
 REM devenv.com mpich2.sln /build ch3ibIbalPRelease
-REM if %errorlevel% NEQ 0 goto BUILDERROR
-REM devenv.com mpich2.sln /build ch3essmRelease
-REM if %errorlevel% NEQ 0 goto BUILDERROR
-REM devenv.com mpich2.sln /build ch3essmPRelease
 REM if %errorlevel% NEQ 0 goto BUILDERROR
 echo Building CH3+SOCK channel(multithreaded)...
 devenv.com mpich2.sln /build ch3sockmtRelease >> make.log
@@ -208,15 +200,16 @@ if %errorlevel% NEQ 0 goto BUILDERROR
 cd maint
 call makegcclibs.bat
 cd ..
-devenv.com examples\examples.sln /project cpi /build Release
+devenv.com examples\examples.sln /project cpi /build Release > make_example.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 echo Building MPICH2 installer ...
-devenv.com mpich2.sln /build Installer
+devenv.com mpich2.sln /build Installer >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 echo .....................................................SUCCESS
+echo MPICH2 build completed successfully.... - See make.log for the compiler output
 GOTO END
 :BUILDERROR
-echo "ERROR : BUILD FAILED ! - See make.log for details"
+echo ERROR : BUILD FAILED ! - See make.log for details
 GOTO END
 :CVSERROR
 REM cvs returned a non-zero exit code while attempting to check out mpich2
