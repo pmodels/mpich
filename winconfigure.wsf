@@ -1813,29 +1813,33 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "HAVE_INT64_T"
 					fout.WriteLine("#undef HAVE_INT64_T")
 				Case "int8_t"
-					fout.WriteLine("/* #undef int8_t */")
+					fout.WriteLine("#define int8_t __int8")
 				Case "int16_t"
-					fout.WriteLine("/* #undef int16_t */")
+					fout.WriteLine("#define int16_t __int16")
 				Case "int32_t"
-					fout.WriteLine("/* #undef int32_t */")
+					fout.WriteLine("#define int32_t __int32")
 				Case "int64_t"
-					fout.WriteLine("/* #undef int64_t */")
+					fout.WriteLine("#define int64_t __int64")
 				Case "uint8_t"
-					fout.WriteLine("/* #undef uint8_t */")
+					fout.WriteLine("#define uint8_t unsigned __int8")
 				Case "_UINT8_T"
-					fout.WriteLine("/* #undef _uint8_t */")
+					' Needed only for SOLARIS machines
+					fout.WriteLine("/* #undef _UINT8_T */")
 				Case "uint16_t"
-					fout.WriteLine("/* #undef uint16_t */")
+					fout.WriteLine("#define uint16_t unsigned __int16")
 				Case "_UINT16_T"
-					fout.WriteLine("/* #undef _uint16_t */")
+					' Needed only for SOLARIS machines
+					fout.WriteLine("/* #undef _UINT16_T */")
 				Case "uint32_t"
-					fout.WriteLine("/* #undef uint32_t */")
+					fout.WriteLine("#define uint32_t unsigned __int32")
 				Case "_UINT32_T"
-					fout.WriteLine("/* #undef _uint32_t */")
+					' Needed only for SOLARIS machines
+					fout.WriteLine("/* #undef _UINT32_T */")
 				Case "uint64_t"
-					fout.WriteLine("/* #undef uint64_t */")
+					fout.WriteLine("#define uint64_t unsigned __int64")
 				Case "_UINT64_T"
-					fout.WriteLine("/* #undef _uint64_t */")
+					' Needed only for SOLARIS machines
+					fout.WriteLine("/* #undef _UINT64_T */")
 				Case "MPIR_Pint"
 					If b64 Then
 						fout.WriteLine("#define MPIR_Pint __int64")
@@ -2105,22 +2109,23 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define MPICH_ERROR_MSG_LEVEL MPICH_ERROR_MSG_ALL")
 				Case "MPICH_INFODLL_LOC"
 					fout.WriteLine("/* #undef MPICH_INFODLL_LOC */")
-				Case "MPIU_INT8_T"
-					fout.WriteLine("#define MPIU_INT8_T __int8")
-				Case "MPIU_INT16_T"
-					fout.WriteLine("#define MPIU_INT16_T __int16")
-				Case "MPIU_INT32_T"
-					fout.WriteLine("#define MPIU_INT32_T __int32")
-				Case "MPIU_INT64_T"
-					fout.WriteLine("#define MPIU_INT64_T __int64")
-				Case "MPIU_UINT8_T"
-					fout.WriteLine("#define MPIU_UINT8_T unsigned __int8")
-				Case "MPIU_UINT16_T"
-					fout.WriteLine("#define MPIU_UINT16_T unsigned __int16")
-				Case "MPIU_UINT32_T"
-					fout.WriteLine("#define MPIU_UINT32_T unsigned __int32")
-				Case "MPIU_UINT64_T"
-					fout.WriteLine("#define MPIU_UINT64_T unsigned __int64")
+				' After migrating to autoconf 2.62 we no longer use MPIU_[U]INT*
+				'Case "MPIU_INT8_T"
+				'	fout.WriteLine("#define MPIU_INT8_T __int8")
+				'Case "MPIU_INT16_T"
+				'	fout.WriteLine("#define MPIU_INT16_T __int16")
+				'Case "MPIU_INT32_T"
+				'	fout.WriteLine("#define MPIU_INT32_T __int32")
+				'Case "MPIU_INT64_T"
+				'	fout.WriteLine("#define MPIU_INT64_T __int64")
+				'Case "MPIU_UINT8_T"
+				'	fout.WriteLine("#define MPIU_UINT8_T unsigned __int8")
+				'Case "MPIU_UINT16_T"
+				'	fout.WriteLine("#define MPIU_UINT16_T unsigned __int16")
+				'Case "MPIU_UINT32_T"
+				'	fout.WriteLine("#define MPIU_UINT32_T unsigned __int32")
+				'Case "MPIU_UINT64_T"
+				'	fout.WriteLine("#define MPIU_UINT64_T unsigned __int64")
 				Case "MPIU_SIZE_T"
 					fout.WriteLine("#define MPIU_SIZE_T unsigned int")
 				Case "NDEBUG"
