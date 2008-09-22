@@ -1058,6 +1058,14 @@ sub ReadMfile {
 	}
     $origline = "";
     }
+
+    # For the simplemake maint target, see if smdir references 
+    # any of the autoconf directories (so that we'll include the 
+    # appropriate lines in the Makefile.in header)
+    if ($maint_targets && $smdir && $smdir ne "") {
+	&LookForAutoconfDirs( $smdir );
+    }
+
 }
 
 sub WriteMfile {
