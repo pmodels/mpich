@@ -451,82 +451,8 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		    }
 		    else
 		    {
-#if 1
 			mpi_errno = ReadMoreData( conn, rreq );
 			if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-#else
-			for(;;)
-			{
-			    MPID_IOV * iovp;
-			    MPIU_Size_t nb;
-				
-			    iovp = rreq->dev.iov;
-			    
-			    mpi_errno = MPIDU_Sock_readv(conn->sock, iovp, 
-						   rreq->dev.iov_count, &nb);
-			    /* --BEGIN ERROR HANDLING-- */
-			    if (mpi_errno != MPI_SUCCESS)
-			    {
-				mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,
-								 "**ch3|sock|immedread", "ch3|sock|immedread %p %p %p",
-								 rreq, conn, conn->vc);
-				goto fn_fail;
-			    }
-			    /* --END ERROR HANDLING-- */
-
-			    MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
-    (MPIU_DBG_FDEST,"immediate readv, vc=%p nb=%d, rreq=0x%08x",
-     conn->vc, nb, rreq->handle));
-				
-			    if (nb > 0 && adjust_iov(&iovp, &rreq->dev.iov_count, nb))
-			    {
-				int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
-				int complete;
-
-				reqFn = rreq->dev.OnDataAvail;
-				if (!reqFn) {
-				    MPIU_Assert(MPIDI_Request_get_type(rreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-				    MPIDI_CH3U_Request_complete(rreq);
-				    complete = TRUE;
-				}
-				else {
-				    mpi_errno = reqFn( conn->vc, rreq, &complete );
-				    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-				}
-
-				if (complete)
-				{
-				    /* conn->recv_active = NULL; -- 
-				       already set to NULL */
-				    mpi_errno = connection_post_recv_pkt(conn);
-				    if (mpi_errno != MPI_SUCCESS) {
-					MPIU_ERR_POP(mpi_errno);
-				    }
-
-				    break;
-				}
-			    }
-			    else
-			    {
-				MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
-        (MPIU_DBG_FDEST,"posting readv, vc=%p, rreq=0x%08x", 
-	 conn->vc, rreq->handle));
-				conn->recv_active = rreq;
-				mpi_errno = MPIDU_Sock_post_readv(conn->sock, iovp, rreq->dev.iov_count, NULL);
-				/* --BEGIN ERROR HANDLING-- */
-				if (mpi_errno != MPI_SUCCESS)
-				{
-				    mpi_errno = MPIR_Err_create_code(
-					mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|sock|postread",
-					"ch3|sock|postread %p %p %p", rreq, conn, conn->vc);
-				    goto fn_fail;
-				}
-				/* --END ERROR HANDLING-- */
-
-				break;
-			    }
-			}
-#endif
 		    }
 		}
 		else /* incoming data */
@@ -555,82 +481,8 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		    }
 		    else /* more data to be read */
 		    {
-#if 1
 			mpi_errno = ReadMoreData( conn, rreq );
 			if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-#else
-			for(;;)
-			{
-			    MPID_IOV * iovp;
-			    MPIU_Size_t nb;
-				
-			    iovp = rreq->dev.iov;
-			    
-			    mpi_errno = MPIDU_Sock_readv(conn->sock, iovp, rreq->dev.iov_count, &nb);
-			    /* --BEGIN ERROR HANDLING-- */
-			    if (mpi_errno != MPI_SUCCESS)
-			    {
-				mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,
-								 "**ch3|sock|immedread", "ch3|sock|immedread %p %p %p",
-								 rreq, conn, conn->vc);
-				goto fn_fail;
-			    }
-			    /* --END ERROR HANDLING-- */
-
-			    MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
-        (MPIU_DBG_FDEST,"immediate readv, vc=%p nb=%d, rreq=0x%08x",
-	 conn->vc, rreq->handle, nb));
-				
-			    if (nb > 0 && adjust_iov(&iovp, &rreq->dev.iov_count, nb))
-			    {
-				int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
-				int complete;
-
-				reqFn = rreq->dev.OnDataAvail;
-				if (!reqFn) {
-				    MPIU_Assert(MPIDI_Request_get_type(rreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-				    MPIDI_CH3U_Request_complete(rreq);
-				    complete = TRUE;
-				}
-				else {
-				    mpi_errno = reqFn( conn->vc, rreq, &complete );
-				    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-				}
-
-				if (complete)
-				{
-				    /* This differs from ReadMore */
-				    conn->recv_active = NULL;
-				    mpi_errno = connection_post_recv_pkt(conn);
-				    if (mpi_errno != MPI_SUCCESS) {
-					MPIU_ERR_POP(mpi_errno);
-				    }
-
-				    break;
-				}
-			    }
-			    else
-			    {
-				MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
-     (MPIU_DBG_FDEST,"posting readv, vc=%p, rreq=0x%08x", 
-      conn->vc, rreq->handle));
-				/* This is different in ReadMore */
-				/* conn->recv_active = rreq;  -- already set to current request */
-				mpi_errno = MPIDU_Sock_post_readv(conn->sock, iovp, rreq->dev.iov_count, NULL);
-				/* --BEGIN ERROR HANDLING-- */
-				if (mpi_errno != MPI_SUCCESS)
-				{
-				    mpi_errno = MPIR_Err_create_code(
-					mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|sock|postread",
-					"ch3|sock|postread %p %p %p", rreq, conn, conn->vc);
-				    goto fn_fail;
-				}
-				/* --END ERROR HANDLING-- */
-
-				break;
-			    }
-			}
-#endif
 		    }
 		}
 	    }
