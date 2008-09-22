@@ -62,7 +62,7 @@ int MPI_Comm_connect(char *port_name, MPI_Info info, int root, MPI_Comm comm,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("spawn");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CONNECT);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -108,7 +108,7 @@ int MPI_Comm_connect(char *port_name, MPI_Info info, int root, MPI_Comm comm,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_CONNECT);
-    MPIU_THREAD_SINGLE_CS_EXIT("spawn");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

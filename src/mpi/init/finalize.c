@@ -118,7 +118,7 @@ int MPI_Finalize( void )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_SINGLE_CS_ENTER("init");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FINALIZE_FUNC_ENTER(MPID_STATE_MPI_FINALIZE);
     
     /* ... body of routine ... */
@@ -205,7 +205,7 @@ int MPI_Finalize( void )
        Since we've set MPIR_Process.initialized value to POST_FINALIZED, 
        if the user erroneously calls Finalize from another thread, an
        error message will be issued. */
-    MPIU_THREAD_SINGLE_CS_EXIT("init");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     MPIU_THREAD_SINGLE_CS_FINALIZE;
 
     /* We place the memory tracing at the very end because any of the other
@@ -272,7 +272,7 @@ int MPI_Finalize( void )
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
-    MPIU_THREAD_SINGLE_CS_EXIT("init");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

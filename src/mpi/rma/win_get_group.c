@@ -63,7 +63,7 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("rma");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_GET_GROUP);
 
     MPIU_THREADPRIV_GET;
@@ -109,7 +109,7 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
 
   fn_exit:
     MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_GET_GROUP);
-    MPIU_THREAD_SINGLE_CS_EXIT("rma");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

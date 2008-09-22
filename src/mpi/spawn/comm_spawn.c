@@ -69,7 +69,7 @@ int MPI_Comm_spawn(char *command, char *argv[], int maxprocs, MPI_Info info,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("spawn");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SPAWN);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -120,7 +120,7 @@ int MPI_Comm_spawn(char *command, char *argv[], int maxprocs, MPI_Info info,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SPAWN);
-    MPIU_THREAD_SINGLE_CS_EXIT("spawn");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

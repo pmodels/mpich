@@ -57,7 +57,7 @@ int MPIOI_File_write_all_end(MPI_File mpi_fh,
 
     MPIU_UNREFERENCED_ARG(buf);
 
-    MPIU_THREAD_SINGLE_CS_ENTER("io");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();
 
     fh = MPIO_File_resolve(mpi_fh);
@@ -88,7 +88,7 @@ int MPIOI_File_write_all_end(MPI_File mpi_fh,
 
 fn_exit:
     MPIR_Nest_decr();
-    MPIU_THREAD_SINGLE_CS_EXIT("io");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     return error_code;
 }

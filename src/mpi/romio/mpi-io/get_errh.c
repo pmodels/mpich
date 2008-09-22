@@ -41,7 +41,7 @@ int MPI_File_get_errhandler(MPI_File mpi_fh, MPI_Errhandler *errhandler)
     ADIO_File fh;
     static char myname[] = "MPI_FILE_GET_ERRHANDLER";
 
-    MPIU_THREAD_SINGLE_CS_ENTER("io");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
     if (mpi_fh == MPI_FILE_NULL) {
 	*errhandler = ADIOI_DFLT_ERR_HANDLER;
@@ -63,6 +63,6 @@ int MPI_File_get_errhandler(MPI_File mpi_fh, MPI_Errhandler *errhandler)
     }
 
 fn_exit:
-    MPIU_THREAD_SINGLE_CS_EXIT("io");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return MPI_SUCCESS;
 }

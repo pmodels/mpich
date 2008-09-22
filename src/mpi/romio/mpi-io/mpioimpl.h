@@ -38,8 +38,8 @@ void MPIR_Nest_decr_export(void);
    error reporting features provided by MPICH2 must implement these 
    four functions.  Defining these as empty should not change the behavior 
    of correct programs */
-#define MPIU_THREAD_SINGLE_CS_ENTER(_msg)
-#define MPIU_THREAD_SINGLE_CS_EXIT(_msg)
+#define MPIU_THREAD_CS_ENTER(ALLFUNC,)
+#define MPIU_THREAD_CS_EXIT(ALLFUNC,)
 #define MPIR_Nest_incr()
 #define MPIR_Nest_decr()
 #ifdef HAVE_WINDOWS_H

@@ -49,7 +49,7 @@ int MPI_File_delete(char *filename, MPI_Info info)
 
     MPIU_UNREFERENCED_ARG(info);
 
-    MPIU_THREAD_SINGLE_CS_ENTER("io");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();
 
     /* first check if ADIO has been initialized. If not, initialize it */
@@ -119,6 +119,6 @@ int MPI_File_delete(char *filename, MPI_Info info)
 
 fn_exit:
     MPIR_Nest_decr();
-    MPIU_THREAD_SINGLE_CS_EXIT("io");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return error_code;
 }

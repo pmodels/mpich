@@ -53,7 +53,7 @@ int MPI_Win_wait(MPI_Win win)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("rma");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_WAIT);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -93,7 +93,7 @@ int MPI_Win_wait(MPI_Win win)
 
   fn_exit:
     MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_WAIT);
-    MPIU_THREAD_SINGLE_CS_EXIT("rma");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

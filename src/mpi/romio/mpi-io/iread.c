@@ -52,8 +52,7 @@ int MPI_File_iread(MPI_File mpi_fh, void *buf, int count,
 		  count);
 #endif /* MPI_hpux */
 
-    MPIU_THREAD_SINGLE_CS_ENTER("io");
-    MPIR_Nest_incr();
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
     error_code = MPIOI_File_iread(mpi_fh, (MPI_Offset) 0, ADIO_INDIVIDUAL,
 				  buf, count, datatype, myname, request);
@@ -66,7 +65,6 @@ int MPI_File_iread(MPI_File mpi_fh, void *buf, int count,
 #ifdef MPI_hpux
     HPMP_IO_END(fl_xmpi, mpi_fh, datatype, count);
 #endif /* MPI_hpux */
-
 
     return error_code;
 }
@@ -89,7 +87,7 @@ int MPIOI_File_iread(MPI_File mpi_fh,
     ADIO_Offset off;
     MPI_Offset nbytes=0;
 
-    MPIU_THREAD_SINGLE_CS_ENTER("io");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();
     fh = MPIO_File_resolve(mpi_fh);
 
@@ -161,7 +159,7 @@ int MPIOI_File_iread(MPI_File mpi_fh,
 
 fn_exit:
     MPIR_Nest_decr();
-    MPIU_THREAD_SINGLE_CS_EXIT("io");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     return error_code;
 }

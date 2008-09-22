@@ -69,7 +69,7 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("rma");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ALLOC_MEM);
     
 #   ifdef HAVE_ERROR_CHECKING
@@ -104,7 +104,7 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ALLOC_MEM);
-    MPIU_THREAD_SINGLE_CS_EXIT("rma");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

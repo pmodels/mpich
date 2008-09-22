@@ -45,7 +45,7 @@ int MPI_File_read_ordered_begin(MPI_File mpi_fh, void *buf, int count,
     ADIO_File fh;
     static char myname[] = "MPI_FILE_READ_ORDERED_BEGIN";
 
-    MPIU_THREAD_SINGLE_CS_ENTER("io");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();
 
     fh = MPIO_File_resolve(mpi_fh);
@@ -109,7 +109,7 @@ int MPI_File_read_ordered_begin(MPI_File mpi_fh, void *buf, int count,
 
 fn_exit:
     MPIR_Nest_decr();
-    MPIU_THREAD_SINGLE_CS_EXIT("io");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     return error_code;
 }

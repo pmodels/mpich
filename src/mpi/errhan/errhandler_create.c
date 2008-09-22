@@ -68,7 +68,7 @@ int MPI_Errhandler_create(MPI_Handler_function *function,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("errhan");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ERRHANDLER_CREATE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -96,7 +96,7 @@ int MPI_Errhandler_create(MPI_Handler_function *function,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ERRHANDLER_CREATE);
-    MPIU_THREAD_SINGLE_CS_EXIT("errhan");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

@@ -54,7 +54,7 @@ int MPI_File_open(MPI_Comm comm, char *filename, int amode,
     HPMP_IO_OPEN_START(fl_xmpi, comm);
 #endif /* MPI_hpux */
 
-    MPIU_THREAD_SINGLE_CS_ENTER("io");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();
 
     /* --BEGIN ERROR HANDLING-- */
@@ -222,7 +222,7 @@ int MPI_File_open(MPI_Comm comm, char *filename, int amode,
     MPIR_Nest_decr();
 
 fn_exit:
-    MPIU_THREAD_SINGLE_CS_EXIT("io");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return error_code;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */

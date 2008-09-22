@@ -61,7 +61,7 @@ int MPI_Keyval_free(int *keyval)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("attr");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_KEYVAL_FREE);
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -86,7 +86,7 @@ int MPI_Keyval_free(int *keyval)
 
   fn_exit: 
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_KEYVAL_FREE);
-    MPIU_THREAD_SINGLE_CS_EXIT("attr");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

@@ -373,14 +373,14 @@ M*/
 
 /* Helper definitions */
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
-#define MPIU_THREAD_CHECKNEST(_name)
+/*#define MPIU_THREAD_CHECKNEST(_name)*/
 /* XXX DJG temporarily disabled for the paper... this breaks our CS_EXIT(ALLFUNC) in sock_wait.i */
-#if 0
+/* #if 0 */
 #define MPIU_THREAD_CHECKNEST(_name)				\
     MPIU_THREADPRIV_DECL;                                       \
     MPIU_THREADPRIV_GET;                                        \
     if (MPIR_Nest_value() == 0)	
-#endif
+/* #endif */
 
 #define MPIU_THREAD_CHECKDEPTH(_name,_value)
 #define MPIU_THREAD_UPDATEDEPTH(_name,_value)				

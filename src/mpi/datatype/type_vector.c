@@ -60,7 +60,7 @@ int MPI_Type_vector(int count,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("datatype");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_VECTOR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -118,7 +118,7 @@ int MPI_Type_vector(int count,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_VECTOR);
-    MPIU_THREAD_SINGLE_CS_EXIT("datatype");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

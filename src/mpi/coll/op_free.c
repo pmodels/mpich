@@ -62,7 +62,7 @@ int MPI_Op_free(MPI_Op *op)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("coll");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_OP_FREE);
     
     MPID_Op_get_ptr( *op, op_ptr );
@@ -98,7 +98,7 @@ int MPI_Op_free(MPI_Op *op)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_OP_FREE);
-        MPIU_THREAD_SINGLE_CS_EXIT("coll");
+        MPIU_THREAD_CS_EXIT(ALLFUNC,);
 	return mpi_errno;
 	
     /* --BEGIN ERROR HANDLING-- */

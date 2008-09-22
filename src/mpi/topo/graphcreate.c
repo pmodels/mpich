@@ -183,7 +183,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *indx, int *edges,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("topo");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GRAPH_CREATE);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -341,7 +341,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *indx, int *edges,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GRAPH_CREATE);
-    MPIU_THREAD_SINGLE_CS_EXIT("topo");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

@@ -42,7 +42,7 @@ int MPI_File_close(MPI_File *mpi_fh)
     HPMP_IO_WSTART(fl_xmpi, BLKMPIFILECLOSE, TRDTBLOCK, *fh);
 #endif /* MPI_hpux */
 
-    MPIU_THREAD_SINGLE_CS_ENTER("io");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();
 
     fh = MPIO_File_resolve(*mpi_fh);
@@ -57,6 +57,9 @@ int MPI_File_close(MPI_File *mpi_fh)
         /* need a barrier because the file containing the shared file
         pointer is opened with COMM_SELF. We don't want it to be
 	deleted while others are still accessing it. */ 
+	/* FIXME: It is wrong to use MPI_Barrier; the user could choose to
+	   re-implement MPI_Barrier in an unexpected way.  Either use 
+	   NMPI_Barrier as in MPICH2 or PMPI_Barrier */
         MPI_Barrier((fh)->comm);
 	if ((fh)->shared_fp_fd != ADIO_FILE_NULL) {
 	    MPI_File *mpi_fh_shared = &(fh->shared_fp_fd);
@@ -80,7 +83,7 @@ int MPI_File_close(MPI_File *mpi_fh)
 
     MPIR_Nest_decr();
 fn_exit:
-    MPIU_THREAD_SINGLE_CS_EXIT("io");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return error_code;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */

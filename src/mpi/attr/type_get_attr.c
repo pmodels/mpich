@@ -72,7 +72,7 @@ int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("attr");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_GET_ATTR);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -134,7 +134,7 @@ int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val,
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_GET_ATTR);
-    MPIU_THREAD_SINGLE_CS_EXIT("attr");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

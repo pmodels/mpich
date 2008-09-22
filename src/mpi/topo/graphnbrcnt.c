@@ -61,7 +61,7 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("topo");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GRAPH_NEIGHBORS_COUNT);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -113,7 +113,7 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GRAPH_NEIGHBORS_COUNT);
-    MPIU_THREAD_SINGLE_CS_EXIT("topo");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

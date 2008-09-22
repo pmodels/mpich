@@ -67,7 +67,7 @@ int MPI_Open_port(MPI_Info info, char *port_name)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("spawn");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_OPEN_PORT);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -108,7 +108,7 @@ int MPI_Open_port(MPI_Info info, char *port_name)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_OPEN_PORT);
-    MPIU_THREAD_SINGLE_CS_EXIT("spawn");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

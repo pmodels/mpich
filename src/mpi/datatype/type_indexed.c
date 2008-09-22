@@ -88,7 +88,7 @@ int MPI_Type_indexed(int count,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("datatype");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_INDEXED);
 
     /* Validate parameters and objects (post conversion) */
@@ -161,7 +161,7 @@ int MPI_Type_indexed(int count,
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_INDEXED);
-    MPIU_THREAD_SINGLE_CS_EXIT("datatype");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

@@ -56,7 +56,7 @@ int MPI_Type_free_keyval(int *type_keyval)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("attr");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_FREE_KEYVAL);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -104,7 +104,7 @@ int MPI_Type_free_keyval(int *type_keyval)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_FREE_KEYVAL);
-    MPIU_THREAD_SINGLE_CS_EXIT("attr");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -52,7 +52,7 @@ int MPI_File_iread_shared(MPI_File mpi_fh, void *buf, int count,
     ADIO_Offset off, shared_fp;
     MPI_Offset nbytes=0;
 
-    MPIU_THREAD_SINGLE_CS_ENTER("io");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();
 
     fh = MPIO_File_resolve(mpi_fh);
@@ -133,7 +133,7 @@ int MPI_File_iread_shared(MPI_File mpi_fh, void *buf, int count,
 
 fn_exit:
     MPIR_Nest_decr();
-    MPIU_THREAD_SINGLE_CS_EXIT("io");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return error_code;
 }
 #endif

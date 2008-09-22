@@ -86,7 +86,7 @@ int MPI_Type_create_subarray(int ndims,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_SINGLE_CS_ENTER("datatype");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
 
     MPIU_THREADPRIV_GET;
@@ -326,7 +326,7 @@ int MPI_Type_create_subarray(int ndims,
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
-    MPIU_THREAD_SINGLE_CS_EXIT("datatype");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

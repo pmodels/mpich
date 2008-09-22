@@ -59,7 +59,7 @@ int MPI_Register_datarep(char *datarep,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("datatype");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_REGISTER_DATAREP);
     
     /* Validate parameters and objects (post conversion) */
@@ -84,7 +84,7 @@ int MPI_Register_datarep(char *datarep,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_REGISTER_DATAREP);
-    MPIU_THREAD_SINGLE_CS_EXIT("datatype");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

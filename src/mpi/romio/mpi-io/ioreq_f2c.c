@@ -48,7 +48,7 @@ MPIO_Request MPIO_Request_f2c(MPI_Fint request)
     return (MPIO_Request) request;
 #else
 
-    MPIU_THREAD_SINGLE_CS_ENTER("io");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     
     if (!request) {
 	return MPIO_REQUEST_NULL;
@@ -64,7 +64,7 @@ MPIO_Request MPIO_Request_f2c(MPI_Fint request)
     /* --END ERROR HANDLING-- */
 
 fn_exit:
-    MPIU_THREAD_SINGLE_CS_EXIT("io");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return ADIOI_Reqtable[request];
 #endif
 }

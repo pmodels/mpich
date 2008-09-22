@@ -76,7 +76,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *index,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("pt2pt");
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_TESTANY);
 
     /* Check the arguments */
@@ -203,7 +203,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *index,
     }
 
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_TESTANY);
-    MPIU_THREAD_SINGLE_CS_EXIT("pt2pt");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:
