@@ -57,7 +57,7 @@ int MPI_Info_set( MPI_Info info, char *key, char *value )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_SINGLE_CS_ENTER("info"); 
+    MPIU_THREAD_CS_ENTER(ALLFUNC,); 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_SET);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -133,7 +133,7 @@ int MPI_Info_set( MPI_Info info, char *key, char *value )
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_SET);
-    MPIU_THREAD_SINGLE_CS_EXIT("info");
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:
