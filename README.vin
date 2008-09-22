@@ -420,7 +420,7 @@ Alternative Channels and Devices
 The communication mechanisms in MPICH2 are called "devices", paired with
 specific "channels".  The most thoroughly tested device is the "ch3"
 device.  The default configuration chooses the "nemesis" channel in the ch3
-device (all communication goes over TCP sockets), which would be
+device (communication over shared memory and TCP or other network), which would be
 specified explicitly by putting
 
   --with-device=ch3:nemesis
