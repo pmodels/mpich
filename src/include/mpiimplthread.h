@@ -582,6 +582,8 @@ typedef struct MPIU_ThreadDebug {
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
 /* No thread support, make all operations a no-op */
+#define MPIU_THREAD_CS_ENTER_ALLFUNC(_context)
+#define MPIU_THREAD_CS_EXIT_ALLFUNC(_context)
 
 #else
 #error Unrecognized thread granularity

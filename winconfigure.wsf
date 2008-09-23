@@ -2390,6 +2390,22 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#else")
 					fout.WriteLine("#define USE_THREAD_PKG MPICH_THREAD_PKG_NONE")
 					fout.WriteLine("#endif")
+				Case "MPIU_THREAD_REFCOUNT"
+					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
+					fout.WriteLine("#define MPIU_THREAD_REFCOUNT MPIU_REFCOUNT_NONE")
+					fout.WriteLine("#endif")
+				Case "MPIU_THREAD_GRANULARITY"
+					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
+					fout.WriteLine("#define MPIU_THREAD_GRANULARITY MPIU_THREAD_GRANULARITY_GLOBAL")
+					fout.WriteLine("#else")
+					fout.WriteLine("#define MPIU_THREAD_GRANULARITY MPIU_THREAD_GRANULARITY_SINGLE")
+					fout.WriteLine("#endif")
+				Case "MPIU_HANDLE_ALLOCATION_METHOD"
+					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
+					fout.WriteLine("#define MPIU_HANDLE_ALLOCATION_METHOD MPIU_HANDLE_ALLOCATION_MUTEX")
+					fout.WriteLine("#endif")
+				Case "MPIU_MUTEX_WAIT_TIME"
+					fout.WriteLine("/* #undef MPIU_MUTEX_WAIT_TIME */")
 				Case "_REENTRANT"
 					fout.WriteLine("/* #undef _REENTRANT */")
 				Case "_THREAD_SAFE"
@@ -2418,6 +2434,10 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_ALLOCA_H */")
 				Case "HAVE_PTHREAD_YIELD"
 					fout.WriteLine("/* #undef HAVE_PTHREAD_YIELD */")
+				Case "HAVE_PTHREAD_MUTEX_RECURSIVE"
+					fout.WriteLine("/* #undef HAVE_PTHREAD_MUTEX_RECURSIVE */")
+				Case "HAVE_PTHREAD_MUTEX_RECURSIVE_NP"
+					fout.WriteLine("/* #undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP */")
 				Case "HAVE_MKSTEMP"
 					fout.WriteLine("/* #undef HAVE_MKSTEMP */")
 				Case "HAVE_O_BINARY"

@@ -52,7 +52,9 @@ MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM,
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
 /* No thread support, make all operations a no-op */
-
+#define MPIU_THREAD_CS_ENTER_CONTEXTID(_context)
+#define MPIU_THREAD_CS_EXIT_CONTEXTID(_context)
+#define MPIU_THREAD_CS_YIELD_CONTEXTID(_context)
 #else
 #error Unrecognized thread granularity
 #endif
