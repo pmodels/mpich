@@ -51,6 +51,12 @@
  *    Mutexes
  */
 
+/* FIXME: mutex creation and destruction should be implemented as routines
+   because there is no reason to use macros (these are not on the performance
+   critical path).  Making these macros requires that any code that might use
+   these must load all of the pthread.h (or other thread library) support.
+ */
+
 /* FIXME: using constant initializer if available */
 #if !defined(MPICH_DEBUG_MUTEX) || !defined(PTHREAD_MUTEX_ERRORCHECK_NP)
 #define MPE_Thread_mutex_create(mutex_ptr_, err_ptr_)                   \

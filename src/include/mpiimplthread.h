@@ -29,9 +29,7 @@
  * shared structures and services
  * 
  * A configure choice will set MPIU_THREAD_GRANULARITY to one of these values
- * "Single" means no thread support
  */
-#define MPIU_THREAD_GRANULARITY_SINGLE 0
 #define MPIU_THREAD_GRANULARITY_GLOBAL 1
 #define MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL 2
 #define MPIU_THREAD_GRANULARITY_PER_OBJECT 3
@@ -371,6 +369,8 @@ M*/
 
 #endif 
 
+#ifdef MPICH_IS_THREADED
+
 /* Helper definitions */
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 /*#define MPIU_THREAD_CHECKNEST(_name)*/
@@ -541,6 +541,8 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_ENTER_ALLFUNC(_context)
 #define MPIU_THREAD_CS_EXIT_ALLFUNC(_context)
 
+/* FIXME: dprintf is a temporary hack here.  It must be removed (use DBG_MSG
+   if a non-temporary version is desired) */
 #define dprintf(...)
 #define MPIU_THREAD_CS_ENTER_HANDLE(_context) { \
    dprintf("Calling MPIU_THREAD_CS_ENTER_HANDLE in %s\n", __FUNCTION__); \
@@ -580,14 +582,14 @@ typedef struct MPIU_ThreadDebug {
    locks where ever possible. */
 #error lock-free not yet implemented
 
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
-/* No thread support, make all operations a no-op */
-#define MPIU_THREAD_CS_ENTER_ALLFUNC(_context)
-#define MPIU_THREAD_CS_EXIT_ALLFUNC(_context)
-
 #else
 #error Unrecognized thread granularity
 #endif
+
+#else /* ! MPICH_IS_THREAED */
+#define MPIU_THREAD_CS_ENTER(_name,_context)
+#define MPIU_THREAD_CS_EXIT(_name,_context)
+#endif /* MPICH_IS_THREADED */
 
 #endif /* !defined(MPIIMPLTHREAD_H_INCLUDED) */
 
@@ -607,9 +609,6 @@ typedef struct MPIU_ThreadDebug {
 /* Updates to shared data and access to shared services is handled without 
    locks where ever possible. */
 #error lock-free not yet implemented
-
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
-/* No thread support, make all operations a no-op */
 
 #else
 #error Unrecognized thread granularity

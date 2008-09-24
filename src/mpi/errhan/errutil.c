@@ -1243,6 +1243,8 @@ static MPIR_Err_msg_t ErrorRing[MAX_ERROR_RING];
 static volatile unsigned int error_ring_loc     = 0;
 static volatile unsigned int max_error_ring_loc = 0;
 
+/* FIXME: This needs to be made consistent with the different thread levels, 
+   since in the "global" thread level, an extra thread mutex is not required. */
 #if defined(MPID_REQUIRES_THREAD_SAFETY)
 /* if the device requires internal MPICH routines to be thread safe, the
    MPIU_THREAD_CHECK macros are not appropriate */

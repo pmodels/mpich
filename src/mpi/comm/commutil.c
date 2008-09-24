@@ -340,6 +340,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
     }
     memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
 
+    /* Note that this is the unthreaded version */
     MPIU_THREADPRIV_GET;
     MPIR_Nest_incr();
     /* Comm must be an intracommunicator */
@@ -394,11 +395,6 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
      within another MPI routine before calling the CS_ENTER macro */
     MPIR_Nest_incr();
 
-    /* The SINGLE_CS_ENTER/EXIT macros are commented out because this
-       routine shold always be called from within a routine that has 
-       already entered the single critical section.  However, in a 
-       finer-grained approach, these macros indicate where atomic updates
-       to the shared data structures must be protected. */
     /* We lock only around access to the mask.  If another thread is
        using the mask, we take a mask of zero */
     MPIU_DBG_MSG_FMT( COMM, VERBOSE, (MPIU_DBG_FDEST,
@@ -439,6 +435,10 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	
 	/* Now, try to get a context id */
         MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
+	/* In the global and brief-global cases, note that this routine will
+	   release that global lock when it needs to wait.  That will allow 
+	   other processes to enter the global or brief global critical section.
+	 */ 
 	mpi_errno = NMPI_Allreduce( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
 				    MPI_INT, MPI_BAND, comm_ptr->handle );
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);

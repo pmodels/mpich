@@ -248,6 +248,10 @@ int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
     return mpi_errno;
 }
 
+/* FIXME: For the brief-global and finer-grain control, we must ensure that
+   the global lock is *not* held when this routine is called. (unless we change
+   progress_start/end to grab the lock, in which case we must *still* make
+   sure that the lock is not held when this routine is called). */
 #undef FUNCNAME
 #define FUNCNAME MPIC_Wait
 #undef FCNAME

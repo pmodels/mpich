@@ -173,6 +173,8 @@ int MPI_Finalize( void )
        completing the finalize */
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    /* FIXME: Many of these debugging items could/should be callbacks, 
+       added to the finalize callback list */
     /* FIXME: Both the memory tracing and debug nesting code blocks should
        be finalize callbacks */
     /* If memory debugging is enabled, check the memory here, after all
@@ -206,7 +208,7 @@ int MPI_Finalize( void )
        if the user erroneously calls Finalize from another thread, an
        error message will be issued. */
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
-    MPIU_THREAD_SINGLE_CS_FINALIZE;
+    MPID_CS_FINALIZE();
 
     /* We place the memory tracing at the very end because any of the other
        steps may have allocated memory that they still need to release*/
