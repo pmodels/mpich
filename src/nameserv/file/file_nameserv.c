@@ -71,7 +71,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
     
     if (stat( (*handle_ptr)->dirname, &st ) || !S_ISDIR(st.st_mode) ) {
 	/* This mode is rwx by owner only.  */
-	if (mkdir( (*handle_ptr)->dirname, 00700 )) {
+	if (mkdir( (*handle_ptr)->dirname, 0000700 )) {
 	    /* FIXME : An error.  Ignore most ? 
 	     For example, ignore EEXIST?  */
 	    ;
