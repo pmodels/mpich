@@ -48,7 +48,7 @@ int MPID_nem_finalize()
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     /* free the shared memory segment */
-    mpi_errno = MPID_nem_seg_destroy();
+    mpi_errno = MPIDI_CH3I_Seg_destroy();
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
 #ifdef PAPI_MONITOR
@@ -76,7 +76,7 @@ int MPID_nem_ckpt_shutdown()
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CKPT_SHUTDOWN);
 
     MPID_nem_netmod_func->ckpt_shutdown();
-    munmap (MPID_nem_mem_region.memory.base_addr, MPID_nem_mem_region.memory.max_size);
+    munmap (MPID_nem_mem_region.memory.base_addr, MPID_nem_mem_region.memory.segment_len);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CKPT_SHUTDOWN);
     return 0;

@@ -67,17 +67,13 @@ MPID_nem_barrier_t;
 
 typedef struct MPID_nem_seg
 {
-  /* Sizes */
-  int   max_size ;
-  int   size_left;
-  /* Pointers */
-  char *base_addr;
-  char *current_addr;
-  char *max_addr;
-  /* Misc */
-  char  file_name[MPID_NEM_MAX_FNAME_LEN];
-  int   base_descs; 
-  int   symmetrical;
+    size_t segment_len;
+    /* Pointers */
+    char *base_addr;
+    /* Misc */
+    char  file_name[MPID_NEM_MAX_FNAME_LEN];
+    int   base_descs; 
+    int   symmetrical;
 } MPID_nem_seg_t, *MPID_nem_seg_ptr_t;
 
 typedef struct MPID_nem_seg_info

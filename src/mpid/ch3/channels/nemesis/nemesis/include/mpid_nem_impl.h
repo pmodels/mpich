@@ -20,9 +20,9 @@
 
 #define MPID_NEM__BYPASS_Q_MAX_VAL  ((MPID_NEM_MPICH2_DATA_LEN) - (sizeof(MPIDI_CH3_Pkt_t)))
 
-int MPID_nem_seg_create(MPID_nem_seg_ptr_t, int, int num_local, int local_rank, MPIDI_PG_t *pg_p);
-int MPID_nem_seg_destroy (void);
-int MPID_nem_seg_alloc( MPID_nem_seg_ptr_t, MPID_nem_seg_info_ptr_t, int);
+int MPIDI_CH3I_Seg_alloc(size_t len, void **ptr_p);
+int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank);
+int MPIDI_CH3I_Seg_destroy(void);
 int MPID_nem_check_alloc(int);
 int MPID_nem_mpich2_init (int ckpt_restart);
 int MPID_nem_mpich2_send_ckpt_marker (unsigned short wave, MPIDI_VC_t *vc, int *try_again);

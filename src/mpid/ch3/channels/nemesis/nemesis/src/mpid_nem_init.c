@@ -48,15 +48,24 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, int has_parent)
     int    num_local       = -1;
     int   *local_procs     = NULL;
     int    local_rank      = -1;
-    int    global_size;
-    int    index, index2, size;
+    int    index;
     int    i;
     char  *publish_bc_orig = NULL;
     char  *bc_val          = NULL;
     int    val_max_remaining;
     int    num_nodes = 0;
     int   *node_ids = 0;
-    MPIU_CHKPMEM_DECL(4);
+    int    grank;
+    MPID_nem_fastbox_t *fastboxes_p = NULL;
+    MPID_nem_cell_t (*cells_p)[MPID_NEM_NUM_CELLS];
+    MPID_nem_cell_t (*network_cells_p)[MPID_NEM_NUM_CELLS];
+    MPID_nem_queue_t *recv_queues_p = NULL;
+    MPID_nem_queue_t *free_queues_p = NULL;
+    MPID_nem_barrier_t *barrier_region_p = NULL;
+    pid_t *pids_p = NULL;
+    
+
+    MPIU_CHKPMEM_DECL(9);
 
     /* Make sure the nemesis packet is no larger than the generic
        packet.  This is needed because we no longer include channel
@@ -109,27 +118,18 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, int has_parent)
     }
     for (index = 0; index < num_local; index++)
     {
-	index2 = local_procs[index];
-	MPID_nem_mem_region.local_ranks[index2] = index;
+	grank = local_procs[index];
+	MPID_nem_mem_region.local_ranks[grank] = index;
     }
 
-    index2 = 0;
-    for(index = 0 ; index < num_procs ; index++)
+    index = 0;
+    for(grank = 0 ; grank < num_procs ; grank++)
     {
-	if( ! MPID_NEM_IS_LOCAL (index))
+	if(!MPID_NEM_IS_LOCAL(grank))
 	{
-	    MPID_nem_mem_region.ext_ranks[index2++] = index;
+	    MPID_nem_mem_region.ext_ranks[index++] = grank;
 	}
     }
-
-    /* Global size for the segment */
-    /* Data cells + Header Qs + control blocks + Net data cells + POBoxes */
-    global_size = ((num_local * (((MPID_NEM_NUM_CELLS) * sizeof(MPID_nem_cell_t))  +
-				 (2 * sizeof(MPID_nem_queue_t))            +
-				 (sizeof(int))                       +
-				 ((MPID_NEM_NUM_CELLS) * sizeof(MPID_nem_cell_t))))+
-		   (MAX((num_local * ((num_local-1) * sizeof(MPID_nem_fastbox_t))) , MPID_NEM_ASYMM_NULL_VAL)) +
-		   sizeof (MPID_nem_barrier_t) + MPID_NEM_NUM_BARRIER_VARS * sizeof (MPID_nem_barrier_vars_t));
 
 #ifdef FORCE_ASYM
     {
@@ -167,97 +167,100 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, int has_parent)
     /*fprintf(stderr,"[%i] -- address shift ok \n",pg_rank); */
 #endif  /*FORCE_ASYM */
 
-    /*     if (num_local > 1) */
-    /* 	MPID_nem_mem_region.map_lock = make_sem (local_rank, num_local, 0); */
+    /* Request fastboxes region */
+    mpi_errno = MPIDI_CH3I_Seg_alloc(MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL),
+                                     (void **)&fastboxes_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+    /* Request data cells region */
+    mpi_errno = MPIDI_CH3I_Seg_alloc(num_local * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t), (void **)&cells_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_nem_seg_create (&(MPID_nem_mem_region.memory), global_size, num_local, local_rank, pg_p);
+    /* Request network data cells region */
+    mpi_errno = MPIDI_CH3I_Seg_alloc(num_local  * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t), (void **)&network_cells_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Request free q region */
+    mpi_errno = MPIDI_CH3I_Seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&free_queues_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Request recv q region */
+    mpi_errno = MPIDI_CH3I_Seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&recv_queues_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Request local process barrier data region */
+    mpi_errno = MPIDI_CH3I_Seg_alloc(sizeof(MPID_nem_barrier_t), (void **)&barrier_region_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Request shared collectives barrier vars region */
+    mpi_errno = MPIDI_CH3I_Seg_alloc(MPID_NEM_NUM_BARRIER_VARS * sizeof(MPID_nem_barrier_vars_t),
+                                     (void **)&MPID_nem_mem_region.barrier_vars);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Request pids region */
+    mpi_errno = MPIDI_CH3I_Seg_alloc(num_local * sizeof(pid_t), (void **)&pids_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    
+    /* Actually allocate the segment and assign regions to the pointers */
+    mpi_errno = MPIDI_CH3I_Seg_commit(&MPID_nem_mem_region.memory, num_local, local_rank);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    mpi_errno = MPID_nem_check_alloc (num_local);
+    
+    /* init shared collectives barrier region */
+    mpi_errno = MPID_nem_barrier_vars_init(MPID_nem_mem_region.barrier_vars);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    /* Fastpath boxes */
-    size =  MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL);
-    mpi_errno = MPID_nem_seg_alloc (&(MPID_nem_mem_region.memory), &(MPID_nem_mem_region.seg[0]), size);
+    /* set up local process barrier region */
+    mpi_errno = MPID_nem_barrier_init(barrier_region_p);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    /* Data cells */
-    size =  num_local * (MPID_NEM_NUM_CELLS) * sizeof(MPID_nem_cell_t);
-    mpi_errno = MPID_nem_seg_alloc (&(MPID_nem_mem_region.memory), &(MPID_nem_mem_region.seg[1]), size);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
-    /* Network data cells */
-    size =  num_local  * (MPID_NEM_NUM_CELLS) * sizeof(MPID_nem_cell_t);
-    mpi_errno = MPID_nem_seg_alloc (&(MPID_nem_mem_region.memory), &(MPID_nem_mem_region.seg[2]), size);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
-    /* Header Qs */
-    size = num_local * (2 * sizeof(MPID_nem_queue_t));
-    mpi_errno = MPID_nem_seg_alloc (&(MPID_nem_mem_region.memory), &(MPID_nem_mem_region.seg[3]), size);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
-    /* Control blocks */
-    size = num_local * (sizeof(int));
-    mpi_errno = MPID_nem_seg_alloc (&(MPID_nem_mem_region.memory), &(MPID_nem_mem_region.seg[4]), size);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
-    /* Barrier data */
-    size = sizeof(MPID_nem_barrier_t);
-    mpi_errno = MPID_nem_seg_alloc (&(MPID_nem_mem_region.memory), &(MPID_nem_mem_region.seg[5]), size);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
-    /* Shared Collectives Barrier vars */
-    size = MPID_NEM_NUM_BARRIER_VARS * sizeof(MPID_nem_barrier_vars_t);
-    mpi_errno = MPID_nem_seg_alloc (&(MPID_nem_mem_region.memory), &(MPID_nem_mem_region.seg[6]), size);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    mpi_errno = MPID_nem_barrier_vars_init ((MPID_nem_barrier_vars_t *)(MPID_nem_mem_region.seg[6].addr));
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    MPID_nem_mem_region.barrier_vars = (MPID_nem_barrier_vars_t *)(MPID_nem_mem_region.seg[6].addr);
-
-    /* set up barrier region */
-    mpi_errno = MPID_nem_barrier_init ((MPID_nem_barrier_t *)(MPID_nem_mem_region.seg[5].addr));	
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
+    /* global barrier */
     pmi_errno = PMI_Barrier();
     MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
 
+    
+    /* exchange PIDs */
     my_pid = getpid();
-    MPID_NEM_MEMCPY (&(((pid_t *)(MPID_nem_mem_region.seg[0].addr))[local_rank]), &my_pid, sizeof(pid_t));
+    pids_p[local_rank] = my_pid;
 
-    /* syncro part */
-    mpi_errno = MPID_nem_barrier (num_local, local_rank);
+    /* local procs barrier */
+    mpi_errno = MPID_nem_barrier(num_local, local_rank);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+
+    /* read pids */
     for (index = 0 ; index < num_local ; index ++)
     {
-	MPID_nem_mem_region.pid[index] = (((pid_t *)MPID_nem_mem_region.seg[0].addr)[index]);
+	MPID_nem_mem_region.pid[index] = pids_p[index];
     }
+
+    /* local procs barrier */
     mpi_errno = MPID_nem_barrier (num_local, local_rank);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    /* SHMEM QS */
-    MPID_nem_mem_region.Elements =
-	(MPID_nem_cell_ptr_t) (MPID_nem_mem_region.seg[1].addr + (local_rank * (MPID_NEM_NUM_CELLS) * sizeof(MPID_nem_cell_t)));
-    MPID_nem_mem_region.FreeQ = (MPID_nem_queue_ptr_t *)MPIU_Malloc (num_procs * sizeof(MPID_nem_queue_ptr_t));
-    MPID_nem_mem_region.RecvQ = (MPID_nem_queue_ptr_t *)MPIU_Malloc (num_procs * sizeof(MPID_nem_queue_ptr_t));
-    MPID_nem_mem_region.net_elements =
-	(MPID_nem_cell_ptr_t) (MPID_nem_mem_region.seg[2].addr + (local_rank * (MPID_NEM_NUM_CELLS) * sizeof(MPID_nem_cell_t)));
+    
+    /* find our cell regions */
+    MPID_nem_mem_region.Elements = cells_p[local_rank];
+    MPID_nem_mem_region.net_elements = network_cells_p[local_rank];
 
-    MPID_nem_mem_region.FreeQ[pg_rank] =
-	(MPID_nem_queue_ptr_t)(((char *)MPID_nem_mem_region.seg[3].addr + local_rank * sizeof(MPID_nem_queue_t)));
+    /* Tables of pointers to shared memory Qs */
+    MPIU_CHKPMEM_MALLOC(MPID_nem_mem_region.FreeQ, MPID_nem_queue_ptr_t *, num_procs * sizeof(MPID_nem_queue_ptr_t), mpi_errno, "FreeQ");
+    MPIU_CHKPMEM_MALLOC(MPID_nem_mem_region.RecvQ, MPID_nem_queue_ptr_t *, num_procs * sizeof(MPID_nem_queue_ptr_t), mpi_errno, "RecvQ");
 
-    MPID_nem_mem_region.RecvQ[pg_rank] =
-	(MPID_nem_queue_ptr_t)(((char *)MPID_nem_mem_region.seg[3].addr + (num_local + local_rank) * sizeof(MPID_nem_queue_t)));
+    /* Init table entry for our Qs */
+    MPID_nem_mem_region.FreeQ[pg_rank] = &free_queues_p[local_rank];
+    MPID_nem_mem_region.RecvQ[pg_rank] = &recv_queues_p[local_rank];
 
-    /* Free Q init and building*/
-    MPID_nem_queue_init (MPID_nem_mem_region.FreeQ[pg_rank] );
+    /* Init our queues */
+    MPID_nem_queue_init(MPID_nem_mem_region.RecvQ[pg_rank]);
+    MPID_nem_queue_init(MPID_nem_mem_region.FreeQ[pg_rank]);
+    
+    /* Init and enqueue our free cells */
     for (index = 0; index < MPID_NEM_NUM_CELLS; ++index)
     {
-	MPID_nem_cell_init (&(MPID_nem_mem_region.Elements[index]));
-	MPID_nem_queue_enqueue (MPID_nem_mem_region.FreeQ[pg_rank], &(MPID_nem_mem_region.Elements[index]));
+	MPID_nem_cell_init(&(MPID_nem_mem_region.Elements[index]));
+	MPID_nem_queue_enqueue(MPID_nem_mem_region.FreeQ[pg_rank], &(MPID_nem_mem_region.Elements[index]));
     }
-
-    /* Recv Q init only*/
-    MPID_nem_queue_init (MPID_nem_mem_region.RecvQ[pg_rank]);
 
     /* network init */
     if (MPID_nem_num_netmods)
@@ -277,82 +280,82 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, int has_parent)
     }
     else
     {
-	if (pg_rank == 0)
-	{
-	    net_free_queue = NULL;
-	}
+        net_free_queue = NULL;
     }
 
-    /* set default route for only external processes through network */
+    /* set default route for external processes through network */
     for (index = 0 ; index < MPID_nem_mem_region.ext_procs ; index++)
     {
-	index2 = MPID_nem_mem_region.ext_ranks[index];
-	MPID_nem_mem_region.FreeQ[index2] = net_free_queue;
-	MPID_nem_mem_region.RecvQ[index2] = NULL;
+	grank = MPID_nem_mem_region.ext_ranks[index];
+	MPID_nem_mem_region.FreeQ[grank] = net_free_queue;
+	MPID_nem_mem_region.RecvQ[grank] = NULL;
     }
 
 
     /* set route for local procs through shmem */
     for (index = 0; index < num_local; index++)
     {
-	index2 = local_procs[index];
-	MPID_nem_mem_region.FreeQ[index2] =
-	    (MPID_nem_queue_ptr_t)(((char *)MPID_nem_mem_region.seg[3].addr + index * sizeof(MPID_nem_queue_t)));
-	MPID_nem_mem_region.RecvQ[index2] =
-	    (MPID_nem_queue_ptr_t)(((char *)MPID_nem_mem_region.seg[3].addr + (num_local + index) * sizeof(MPID_nem_queue_t)));
-	MPIU_Assert (MPID_NEM_ALIGNED (MPID_nem_mem_region.FreeQ[index2], MPID_NEM_CACHE_LINE_LEN));
-	MPIU_Assert (MPID_NEM_ALIGNED (MPID_nem_mem_region.RecvQ[index2], MPID_NEM_CACHE_LINE_LEN));
-
+	grank = local_procs[index];
+	MPID_nem_mem_region.FreeQ[grank] = &free_queues_p[index];
+	MPID_nem_mem_region.RecvQ[grank] = &recv_queues_p[index];
+        
+	MPIU_Assert(MPID_NEM_ALIGNED(MPID_nem_mem_region.FreeQ[grank], MPID_NEM_CACHE_LINE_LEN));
+	MPIU_Assert(MPID_NEM_ALIGNED(MPID_nem_mem_region.RecvQ[grank], MPID_NEM_CACHE_LINE_LEN));
     }
 
     /* make pointers to our queues global so we don't have to dereference the array */
-    MPID_nem_mem_region.my_freeQ = MPID_nem_mem_region.FreeQ[MPID_nem_mem_region.rank];
-    MPID_nem_mem_region.my_recvQ = MPID_nem_mem_region.RecvQ[MPID_nem_mem_region.rank];
+    MPID_nem_mem_region.my_freeQ = MPID_nem_mem_region.FreeQ[pg_rank];
+    MPID_nem_mem_region.my_recvQ = MPID_nem_mem_region.RecvQ[pg_rank];
 
+    
+    /* local barrier */
+    mpi_errno = MPID_nem_barrier(num_local, local_rank);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_nem_barrier (num_local, local_rank);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    
+    /* Allocate table of pointers to fastboxes */
+    MPIU_CHKPMEM_MALLOC(MPID_nem_mem_region.mailboxes.in,  MPID_nem_fastbox_t **, num_local * sizeof(MPID_nem_fastbox_t *), mpi_errno, "fastboxes");
+    MPIU_CHKPMEM_MALLOC(MPID_nem_mem_region.mailboxes.out, MPID_nem_fastbox_t **, num_local * sizeof(MPID_nem_fastbox_t *), mpi_errno, "fastboxes");
 
-    /* POboxes stuff */
-    MPID_nem_mem_region.mailboxes.in  = (MPID_nem_fastbox_t **)MPIU_Malloc((num_local)*sizeof(MPID_nem_fastbox_t *));
-    MPID_nem_mem_region.mailboxes.out = (MPID_nem_fastbox_t **)MPIU_Malloc((num_local)*sizeof(MPID_nem_fastbox_t *));
-
-    MPIU_Assert (num_local > 0);
+    MPIU_Assert(num_local > 0);
 
 #define MAILBOX_INDEX(sender, receiver) ( ((sender) > (receiver)) ? ((num_local-1) * (sender) + (receiver)) :		\
                                           (((sender) < (receiver)) ? ((num_local-1) * (sender) + ((receiver)-1)) : 0) )
 
+    /* fill in tables */
     for (i = 0; i < num_local; ++i)
     {
 	if (i == local_rank)
 	{
+            /* No fastboxs to myself */
 	    MPID_nem_mem_region.mailboxes.in [i] = NULL ;
 	    MPID_nem_mem_region.mailboxes.out[i] = NULL ;
 	}
 	else
 	{
-	    MPID_nem_mem_region.mailboxes.in [i] = ((MPID_nem_fastbox_t *)MPID_nem_mem_region.seg[0].addr) + MAILBOX_INDEX (i, local_rank);
-	    MPID_nem_mem_region.mailboxes.out[i] = ((MPID_nem_fastbox_t *)MPID_nem_mem_region.seg[0].addr) + MAILBOX_INDEX (local_rank, i);
-	    MPID_nem_mem_region.mailboxes.in [i]->common.flag.value  = 0;
-	    MPID_nem_mem_region.mailboxes.out[i]->common.flag.value  = 0;
+	    MPID_nem_mem_region.mailboxes.in [i] = &fastboxes_p[MAILBOX_INDEX(i, local_rank)];
+	    MPID_nem_mem_region.mailboxes.out[i] = &fastboxes_p[MAILBOX_INDEX(local_rank, i)];
+	    MPID_nem_mem_region.mailboxes.in [i]->common.flag.value = 0;
+	    MPID_nem_mem_region.mailboxes.out[i]->common.flag.value = 0;
 	}
     }
 #undef MAILBOX_INDEX
 
-    mpi_errno = MPIDI_PG_SetConnInfo (pg_rank, (const char *)publish_bc_orig);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
+    /* publish business card */
+    mpi_errno = MPIDI_PG_SetConnInfo(pg_rank, (const char *)publish_bc_orig);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_Free(publish_bc_orig);
 
-    mpi_errno = MPID_nem_barrier (num_local, local_rank);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    mpi_errno = MPID_nem_mpich2_init (ckpt_restart);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    mpi_errno = MPID_nem_barrier (num_local, local_rank);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+
+    mpi_errno = MPID_nem_barrier(num_local, local_rank);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPID_nem_mpich2_init(ckpt_restart);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPID_nem_barrier(num_local, local_rank);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 #ifdef ENABLED_CHECKPOINTING
-    MPID_nem_ckpt_init (ckpt_restart);
+    MPID_nem_ckpt_init(ckpt_restart);
 #endif
 
 
