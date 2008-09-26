@@ -640,7 +640,6 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
     ADIOI_Free(tmp_len);
 
     /* Wei-keng Liao: check holes, if yes, must do read-modify-write */
-
     /* holes can be in three places.  'middle' is what you'd expect: the
      * processes are operating on noncontigous data.  But holes can also show
      * up at the beginning or end of the file domain (see John Bent ROMIO REQ
@@ -652,8 +651,10 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         *hole = 1;
     else { /* coalesce the sorted offset-length pairs */
         for (i=1; i<sum; i++) {
-            if (srt_off[i] <= srt_off[0] + srt_len[0])
-                srt_len[0] = srt_off[i] + srt_len[i] - srt_off[0];
+            if (srt_off[i] <= srt_off[0] + srt_len[0]) {
+		int new_len = srt_off[i] + srt_len[i] - srt_off[0];
+		if (new_len > srt_len[0]) srt_len[0] = new_len;
+	    }
             else
                 break;
         }
