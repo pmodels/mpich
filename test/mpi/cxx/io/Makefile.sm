@@ -35,7 +35,7 @@ fileinfox_SOURCES     = fileinfox.cxx
 shpositionx_SOURCES   = shpositionx.cxx
 setinfox_SOURCES      = setinfox.cxx
 filemiscx_SOURCES     = filemiscx.cxx
-
+seekavail_SOURCES     = seekavail.cxx
 # These IO tests are built from a template and a set of definitions.
 iwriteatx.cxx writex.cxx writeatx.cxx writeatallx.cxx writeallx.cxx \
 writeallbex.cxx writeordx.cxx writeordbex.cxx writeshx.cxx \
