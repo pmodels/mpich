@@ -40,6 +40,24 @@
 #define ROMIO_HINT_DEFAULT_CFG "/etc/romio-hints"
 #define ROMIO_HINT_ENV_VAR "ROMIO_HINTS"
 
+/* debug function: a routine I want in the library to make my life easier when
+ * using a source debugger. please ignore any "defined but not used" warnings
+ */
+static void dump_keys(MPI_Info info) {
+    int i, nkeys, flag;
+    char key[MPI_MAX_INFO_KEY];
+    char value[MPI_MAX_INFO_VAL];
+
+    MPI_Info_get_nkeys(info, &nkeys);
+
+    for (i=0; i<nkeys; i++) {
+	MPI_Info_get_nthkey(info, i, key);
+	MPI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, &flag);
+	printf("key = %s, value = %s\n", key, value);
+    }
+    return;
+}
+
 /* if user set the environment variable, use its value to find the
  * file-of-hints.  Otherwise, we'll look for the default config file.  i.e. let
  * the user override systemwide hint processing */
@@ -154,28 +172,15 @@ void ADIOI_incorporate_system_hints(MPI_Info info,
 
     for (i=0; i<nkeys_sysinfo; i++) {
 	MPI_Info_get_nthkey(sysinfo, i, key);
-	MPI_Info_get(info, key, MPI_MAX_INFO_VAL-1, val, &flag);
-	if (flag == 1) continue;
+	/* don't care about the value, just want to know if hint set already*/
+	if (info != MPI_INFO_NULL) MPI_Info_get(info, key, 1, val, &flag); 
+	if (flag == 1) continue;  /* skip any hints already set by user */
+	MPI_Info_get(sysinfo, key, MPI_MAX_INFO_VAL-1, val, &flag);
 	MPI_Info_set(*new_info, key, val);
+	flag = 0;
     }
 
     return;
 }
 
-/* debug function: a routine I want in the library to make my life easier when
- * using a source debugger. please ignore any "defined but not used" warnings
- */
-static void dump_keys(MPI_Info info) {
-    int i, nkeys, flag;
-    char key[MPI_MAX_INFO_KEY];
-    char value[MPI_MAX_INFO_VAL];
 
-    MPI_Info_get_nkeys(info, &nkeys);
-
-    for (i=0; i<nkeys; i++) {
-	MPI_Info_get_nthkey(info, i, key);
-	MPI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, &flag);
-	printf("key = %s, value = %s\n", key, value);
-    }
-    return;
-}
