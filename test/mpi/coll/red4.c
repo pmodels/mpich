@@ -10,6 +10,7 @@
 #include "mpitest.h"
 
 static char MTEST_Descrip[] = "Test MPI_Reduce with non-commutative user-define operations and arbitrary root";
+
 /*
  * This tests that the reduce operation respects the noncommutative flag.
  * and that can distinguish between P_{root} P_{root+1} 
@@ -26,14 +27,18 @@ static char MTEST_Descrip[] = "Test MPI_Reduce with non-commutative user-define 
  */
 #define MAXCOL 256
 static int matSize = 0;  /* Must be < MAXCOL */
+
 void uop( void *cinPtr, void *coutPtr, int *count, MPI_Datatype *dtype )
 {
-    const int *cin = (const int *)cinPtr;
-    int *cout = (int *)coutPtr;
-    int i, j, k, nmat;
-    int tempCol[MAXCOL];
+    const int *cin;
+    int       *cout;
+    int       i, j, k, nmat;
+    int       tempCol[MAXCOL];
 
+    if (*count != 1) printf( "Panic!\n" );
     for (nmat = 0; nmat < *count; nmat++) {
+	cin  = (const int *)cinPtr;
+	cout = (int *)coutPtr;
 	for (j=0; j<matSize; j++) {
 	    for (i=0; i<matSize; i++) {
 		tempCol[i] = 0;
@@ -46,13 +51,18 @@ void uop( void *cinPtr, void *coutPtr, int *count, MPI_Datatype *dtype )
 		cout[j+i*matSize] = tempCol[i];
 	    }
 	}
+	cinPtr += matSize*matSize;
+	coutPtr += matSize*matSize;
     }
 }
 
 /* Initialize the integer matrix as a permutation of rank with rank+1.
    If we call this matrix P_r, we know that product of P_0 P_1 ... P_{size-1}
-   is the identity I.  (The matrix is basically a circular shift right, 
-   shifting right n steps for an n x n dimensional matrix.
+   is the matrix with rows ordered as
+   1,size,2,3,4,...,size-1
+   (The matrix is basically a circular shift right, 
+   shifting right n-1 steps for an n x n dimensional matrix, with the last
+   step swapping rows 1 and size)
 */   
 
 static void initMat( MPI_Comm comm, int mat[] )
@@ -62,12 +72,18 @@ static void initMat( MPI_Comm comm, int mat[] )
     MPI_Comm_rank( comm, &rank );
     MPI_Comm_size( comm, &size );
 
-    for (i=0; i<size*size; i++) mat[i] = 0;
+    /* Remember the matrix size */
+    matSize = size;
 
-    for (i=0; i<size; i++) {
-	if (i == rank)                   mat[((i+1)%size) + i * size] = 1;
-	else if (i == ((rank + 1)%size)) mat[((i+size-1)%size) + i * size] = 1;
-	else                             mat[i+i*size] = 1;
+    for (i=0; i<matSize*matSize; i++) mat[i] = 0;
+
+    for (i=0; i<matSize; i++) {
+	if (i == rank)                   
+	    mat[((i+1)%matSize) + i * matSize] = 1;
+	else if (i == ((rank + 1)%matSize)) 
+	    mat[((i+matSize-1)%matSize) + i * matSize] = 1;
+	else                             
+	    mat[i+i*matSize] = 1;
     }
 }
 
@@ -81,13 +97,83 @@ static int isIdentity( MPI_Comm comm, int mat[] )
 
     for (i=0; i<size; i++) {
 	for (j=0; j<size; j++) {
-	    if (((j+1)%size) == i) {
+	    if (j == i) {
 		if (mat[j+i*size] != 1) {
+		    printf( "mat(%d,%d) = %d, should = 1\n", 
+			    i, j, mat[j+i*size] );
 		    errs++;
 		}
 	    }
 	    else {
 		if (mat[j+i*size] != 0) {
+		    printf( "mat(%d,%d) = %d, should = 0\n",
+			    i, j, mat[j+i*size] );
+		    errs++;
+		}
+	    }
+	}
+    }
+    return errs;
+}
+
+/* Compare a matrix with the identity matrix with rows permuted to as rows
+   1,size,2,3,4,5,...,size-1 */
+static int isPermutedIdentity( MPI_Comm comm, int mat[] )
+{
+    int i, j, size, rank, errs = 0;
+    
+    MPI_Comm_rank( comm, &rank );
+    MPI_Comm_size( comm, &size );
+
+    /* Check the first two last rows */
+    i = 0;
+    for (j=0; j<size; j++) {
+	if (j==0) { 
+	    if (mat[j] != 1) {
+		printf( "mat(%d,%d) = %d, should = 1\n", 
+			i, j, mat[j] );
+		errs++;
+	    }
+	}
+	else {
+	    if (mat[j] != 0) {
+		printf( "mat(%d,%d) = %d, should = 0\n", 
+			i, j, mat[j] );
+		errs++;
+	    }
+	}
+    }
+    i = 1;
+    for (j=0; j<size; j++) {
+	if (j==size-1) { 
+	    if (mat[j+i*size] != 1) {
+		printf( "mat(%d,%d) = %d, should = 1\n", 
+			i, j, mat[j+i*size] );
+		errs++;
+	    }
+	}
+	else {
+	    if (mat[j+i*size] != 0) {
+		printf( "mat(%d,%d) = %d, should = 0\n", 
+			i, j, mat[j+i*size] );
+		errs++;
+	    }
+	}
+    }
+    /* The remaint rows are shifted down by one */
+    for (i=2; i<size; i++) {
+	for (j=0; j<size; j++) {
+	    if (j == i-1) {
+		if (mat[j+i*size] != 1) {
+		    printf( "mat(%d,%d) = %d, should = 1\n", 
+			    i, j, mat[j+i*size] );
+		    errs++;
+		}
+	    }
+	    else {
+		if (mat[j+i*size] != 0) {
+		    printf( "mat(%d,%d) = %d, should = 0\n",
+			    i, j, mat[j+i*size] );
 		    errs++;
 		}
 	    }
@@ -115,6 +201,12 @@ int main( int argc, char *argv[] )
 	MPI_Comm_size( comm, &size );
 	MPI_Comm_rank( comm, &rank );
 
+	if (size > MAXCOL) {
+	    /* Skip because there are too many processes */
+	    MTestFreeComm( &comm );
+	    continue;
+	}
+
 	/* Only one matrix for now */
 	count = 1;
 
@@ -131,7 +223,7 @@ int main( int argc, char *argv[] )
 	    initMat( comm, buf );
 	    MPI_Reduce( buf, bufout, count, mattype, op, root, comm );
 	    if (rank == root) {
-		errs += isIdentity( comm, bufout );
+		errs += isPermutedIdentity( comm, bufout );
 	    }
 
 	    /* Try the same test, but using MPI_IN_PLACE */
@@ -143,9 +235,10 @@ int main( int argc, char *argv[] )
 		MPI_Reduce( bufout, NULL, count, mattype, op, root, comm );
 	    }
 	    if (rank == root) {
-		errs += isIdentity( comm, bufout );
+		errs += isPermutedIdentity( comm, bufout );
 	    }
 	}
+	MPI_Type_free( &mattype );
 
 	free( buf );
 	free( bufout );
