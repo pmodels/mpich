@@ -63,7 +63,7 @@
 {                                                                       \
     int err__;                                                          \
                                                                         \
-    err__ = pthread_mutex_init((mutex_ptr_), NULL);                     \
+    err__ = pthread_mutex_init((mutex_ptr_), NULL);			\
     if ((err_ptr_) != NULL)                                             \
     {                                                                   \
 	/* FIXME: convert error to an MPE_THREAD_ERR value */           \
@@ -161,8 +161,8 @@
     if (err__)                                                  \
     {                                                           \
         MPIU_DBG_MSG_S(THREAD,TYPICAL,"  mutex unlock error: %s", strerror(err__));     \
-        MPIU_Internal_sys_error_printf("pthread_mutex_unlock", err__,\
-                                       "    %s:%d\n", __FILE__, __LINE__);\
+        MPIU_Internal_sys_error_printf("pthread_mutex_unlock", err__,         \
+                                       "    %s:%d\n", __FILE__, __LINE__);    \
     }                                                           \
     if ((err_ptr_) != NULL)                                     \
     {                                                           \
