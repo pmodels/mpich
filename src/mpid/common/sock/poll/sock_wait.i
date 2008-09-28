@@ -141,6 +141,16 @@ int MPIDU_Sock_wait(struct MPIDU_Sock_set * sock_set, int millisecond_timeout,
 		{
 		    int pollfds_active_elems = sock_set->poll_array_elems;
 		
+		    /* The abstraction here is a shared (blocking) resource that
+		       the threads must coordinate.  That means not holding 
+		       a lock across the blocking operation but also 
+		       ensuring that only one thread at a time attempts
+		       to use this resource.
+
+		       What isn't yet clear in this where the test is made
+		       to ensure that two threads don't call the poll operation,
+		       even in a nonblocking sense.		       
+		    */
 		    sock_set->pollfds_active = sock_set->pollfds;
 		    
 		    /* Release the lock so that other threads may make 

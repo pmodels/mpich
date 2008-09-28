@@ -229,7 +229,7 @@ int MPIR_Thread_CS_Finalize( void );
 #else
 #define MPIU_THREAD_CHECK_BEGIN
 #define MPIU_THREAD_CHECK_END
-#endif
+#endif /* HAVE_RUNTIME_THREADCHECK */
 
 #define MPIU_ISTHREADED(_s) { MPIU_THREAD_CHECK_BEGIN _s MPIU_THREAD_CHECK_END }
 
@@ -242,8 +242,12 @@ int MPIR_Thread_CS_Finalize( void );
    same with the finalize */
 #define MPIU_THREAD_SINGLE_CS_FINALIZE   MPID_CS_FINALIZE()
 #define MPIU_THREAD_SINGLE_CS_ASSERT_WITHIN(_msg)
+/*
 #define MPIU_THREAD_SINGLE_CS_ENTER(_msg) MPIU_THREAD_CHECK_BEGIN MPID_CS_ENTER() MPIU_THREAD_CHECK_END
 #define MPIU_THREAD_SINGLE_CS_EXIT(_msg)  MPIU_THREAD_CHECK_BEGIN MPID_CS_EXIT() MPIU_THREAD_CHECK_END
+*/
+#define MPIU_THREAD_SINGLE_CS_ENTER(_msg) ''' remove me '''
+#define MPIU_THREAD_SINGLE_CS_EXIT(_msg)  ''' remove me '''
 
 /* These provide a uniform way to perform a first-use initialization
    in a thread-safe way.  See the web page or wtime.c */
@@ -282,7 +286,7 @@ int MPIR_Thread_CS_Finalize( void );
 #define MPIU_THREADSAFE_INIT_BLOCK_BEGIN(_var) 
 #define MPIU_THREADSAFE_INIT_CLEAR(_var) _var=0
 #define MPIU_THREADSAFE_INIT_BLOCK_END(_var) 
-#endif
+#endif  /* MPICH_IS_THREADED */
 
 /* ------------------------------------------------------------------------- */
 /*

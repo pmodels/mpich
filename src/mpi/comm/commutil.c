@@ -23,6 +23,7 @@ MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM,
 
 /* Support for threading */
 
+#ifdef MPICH_IS_THREADED
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
 #define MPIU_THREAD_CS_ENTER_CONTEXTID(_context)
@@ -50,14 +51,9 @@ MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM,
    locks where ever possible. */
 #error lock-free not yet implemented
 
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
-/* No thread support, make all operations a no-op */
-#define MPIU_THREAD_CS_ENTER_CONTEXTID(_context)
-#define MPIU_THREAD_CS_EXIT_CONTEXTID(_context)
-#define MPIU_THREAD_CS_YIELD_CONTEXTID(_context)
-#else
 #error Unrecognized thread granularity
-#endif
+#endif /* MPIU_THREAD_GRANULARITY */
+#endif /* MPICH_IS_THREADED */
 
 /* FIXME :
    Reusing context ids can lead to a race condition if (as is desirable)
