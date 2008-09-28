@@ -229,6 +229,7 @@ extern MPIDI_Process_t MPIDI_Process;
 #define MPIDI_CH3U_Request_complete(req_)			\
 {								\
     int incomplete__;						\
+    MPIU_THREAD_CS_ENTER(MPIDCOMM,);                            \
 								\
     MPIDI_CH3U_Request_decrement_cc((req_), &incomplete__);	\
     if (!incomplete__)						\
@@ -236,6 +237,7 @@ extern MPIDI_Process_t MPIDI_Process;
 	MPID_Request_release(req_);				\
 	MPIDI_CH3_Progress_signal_completion();			\
     }								\
+    MPIU_THREAD_CS_EXIT(MPIDCOMM,);                             \
 }
 
 
@@ -636,7 +638,12 @@ typedef struct MPIDI_VC
        called directly from CH3 and cannot be overridden. */
     int (* sendNoncontig_fn)( struct MPIDI_VC *vc, struct MPID_Request *sreq,
 			      void *header, MPIDI_msg_sz_t hdr_sz );
-    
+
+#ifdef MPICH_IS_THREADED    
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+    MPID_Thread_mutex_t pobj_mutex;
+#endif
+#endif
     /* Rather than have each channel define its own fields for the 
        channel-specific data, we provide a fixed-sized scratchpad.  Currently,
        this has a very generous size, though this may shrink later (a channel
@@ -1081,6 +1088,9 @@ int MPIDI_CH3I_Progress_finalize(void);
         MPIDI_CH3I_progress_completion_count++
 #endif
 
+/* The following is part of an implementation of a control of a 
+   resource shared among threads - it needs to be managed more 
+   explicitly as such as shared resource */
 #ifndef MPICH_IS_THREADED
 #   define MPIDI_CH3_Progress_signal_completion()	\
     {							\
@@ -1692,6 +1702,96 @@ int MPIDI_CH3_ReqHandler_SendReloadIOV( MPIDI_VC_t *vc, MPID_Request *sreq,
 					int *complete );
 int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *, MPID_Request *,
 					      int * );
+/* Thread Support */
+#ifdef MPICH_IS_THREADED
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
+/* There is a single, global lock, held for the duration of an MPI call */
+#define MPIU_THREAD_CS_ENTER_CH3COMM(_context)
+#define MPIU_THREAD_CS_EXIT_CH3COMM(_context)
+
+/* FIXME: Currently forcing the PER_OBJECT case to do a global
+ * lock. We need a better way of fixing this. */
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL
+/* There is a single, global lock, held only when needed */
+#define MPIU_THREAD_CS_ENTER_CH3COMM(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_CH3COMM(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+#if 1
+/* There is a per object lock */
+#define dprintf(...)
+#define MPIU_THREAD_CS_ENTER_CH3COMM(_context) {\
+   dprintf("Entering lock in %s\n", __FUNCTION__); \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_POBJ_LOCKNAME(_context->pobj_mutex) MPIU_THREAD_CHECK_END \
+}
+#define MPIU_THREAD_CS_EXIT_CH3COMM(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_POBJ_LOCKNAME(_context->pobj_mutex) MPIU_THREAD_CHECK_END
+
+#if 1
+static void foofunc() { }
+#define MPIU_THREAD_CS_TRYLOCK(_context) {\
+   MPIU_THREAD_CHECK_BEGIN \
+   int ret; \
+   ret = pthread_mutex_trylock(&_context->pobj_mutex); \
+   if (!ret) { \
+       printf("Trylock successful for pobj mutex\n"); \
+       pthread_mutex_unlock(&_context->pobj_mutex); \
+   } \
+   else if (ret != EBUSY) { \
+       printf("Error in pobj_mutex: %d\n", ret); \
+   } \
+   ret = pthread_mutex_trylock(&MPIR_ThreadInfo.global_mutex); \
+   if (ret) { \
+       foofunc(); \
+       printf("Trylock not successful for global mutex\n"); \
+   } \
+   else if (!ret) { \
+       pthread_mutex_unlock(&MPIR_ThreadInfo.global_mutex); \
+   } \
+   else if (ret != EBUSY) { \
+       printf("Error in global mutex: %d\n", ret); \
+   } \
+   ret = pthread_mutex_trylock(&MPIR_ThreadInfo.handle_mutex); \
+   if (ret) { \
+       printf("Trylock not successful for handle mutex\n"); \
+       pthread_mutex_unlock(&MPIR_ThreadInfo.handle_mutex); \
+   } \
+   else if (!ret) { \
+       pthread_mutex_unlock(&MPIR_ThreadInfo.handle_mutex); \
+   } \
+   else if (ret != EBUSY) { \
+       printf("Error in global mutex: %d\n", ret); \
+   } \
+   MPIU_THREAD_CHECK_END \
+}
+#else
+#define MPIU_THREAD_CS_TRYLOCK(_context)
+#endif
+
+#else
+/* There is a single, global lock, held only when needed */
+#define MPIU_THREAD_CS_ENTER_CH3COMM(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_CH3COMM(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#endif
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
+/* Updates to shared data and access to shared services is handled without 
+   locks where ever possible. */
+#error lock-free not yet implemented
+
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
+/* No thread support, make all operations a no-op */
+
+#else
+#error Unrecognized thread granularity
+#endif
+#else
+
+#endif /* MPICH_IS_THREADED */
 
 #endif /* !defined(MPICH_MPIDIMPL_H_INCLUDED) */
 
