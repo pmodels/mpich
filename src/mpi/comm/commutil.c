@@ -51,6 +51,7 @@ MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM,
    locks where ever possible. */
 #error lock-free not yet implemented
 
+#else
 #error Unrecognized thread granularity
 #endif /* MPIU_THREAD_GRANULARITY */
 #endif /* MPICH_IS_THREADED */
@@ -407,6 +408,8 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
      its supply of context ids.  If so, all processes can invoke the 
      out-of-context-id error.  That fixed number of tests is in testCount */
     while (*context_id == 0) {
+	/* In all but the global-critical-section case, we must ensure that
+	   only one thread access the context id mask at a time */
 	MPIU_THREAD_CS_ENTER(CONTEXTID,);
 	if (initialize_context_mask) {
 	    MPIR_Init_contextid();
@@ -458,6 +461,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 		/* else we did not find a context id. Give up the mask in case
 		   there is another thread (with a lower context id) waiting for
 		   it.
+
 		   We need to ensure that any other threads have the 
 		   opportunity to run.  We do this by releasing the single
 		   mutex, yielding, and then reaquiring the mutex.
@@ -645,7 +649,7 @@ void MPIR_Free_contextid( MPIR_Context_id_t context_id )
     /* --END ERROR HANDLING-- */
 
     MPIU_THREAD_CS_ENTER(CONTEXTID,);
-    /* MT: Note that this update must be done atomically in the multithreaded
+    /* MT: Note that this update must be done atomically in the multithreaedd
        case.  In the "one, single lock" implementation, that lock is indeed
        held when this operation is called. */
     context_mask[idx] |= (0x1 << bitpos);
