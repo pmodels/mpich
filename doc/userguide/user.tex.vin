@@ -1,3 +1,4 @@
+% -*- Mode: latex; -*-
 \documentclass[dvipdfm,11pt]{article}
 \usepackage[dvipdfm]{hyperref} % Upgraded url package
 \parskip=.1in
