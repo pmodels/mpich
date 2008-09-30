@@ -172,10 +172,12 @@ file-Write_ordered_end void (,in:const , )
 file-Write_shared void (,in:const , ,in:constref:Datatype , )
 # Datarep not yet available
 #-Register_datarep void (in:const ,Datarep_conversion_function* read_conversion_fn ,Datarep_conversion_function* write_conversion_fn ,Datarep_extent_function* dtype_file_extent_fn , )
-#dtype-Create_f90_complex static Datatype ( , ,return)
-#dtype-Create_f90_integer static Datatype ( ,return)
-#dtype-Create_f90_real static Datatype ( , ,return)
-#dtype-Match_size static Datatype ( , ,return)
+# These are part of the C++ interface but only make sense
+# if Fortran is available.
+dtype-Create_f90_complex static Datatype ( , ,return)
+dtype-Create_f90_integer static Datatype ( ,return)
+dtype-Create_f90_real static Datatype ( , ,return)
+dtype-Match_size static Datatype ( , ,return)
 <mpi1>
 # Errhandler creation requires special routines
 #comm-Create_errhandler static Errhandler (Comm::Errhandler_fn* function ,return)
