@@ -297,7 +297,7 @@ int MPIR_Thread_CS_Finalize( void );
 /*M MPIU_THREAD_CS_ENTER - Enter a named critical section
 
   Input Parameters:
-+ _name - cname of the critical section
++ _name - name of the critical section
 - _context - A context (typically an object) of the critical section
 
 M*/
