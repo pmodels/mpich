@@ -70,8 +70,8 @@ later, in the section "Alternative configurations".
 
     If your tar doesn't accept the z option, use
 
-      gunzip mpich2.tar.gz
-      tar xf mpich2.tar
+      gunzip mpich2-%VERSION%.tar.gz
+      tar xf mpich2-%VERSION%.tar
       cd mpich2-%VERSION%
 
 3.  Choose an installation directory (the default is /usr/local/bin),
