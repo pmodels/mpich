@@ -411,6 +411,13 @@ int MPIU_Snprintf( char *str, size_t size, const char *format, ... )
      ATTRIBUTE((format(printf,3,4)));
 #endif /* HAVE_SNPRINTF */
 
+/* MPIU_Basename(path, basename)
+   This function finds the basename in a path (ala "man 1 basename").
+   *basename will point to an element in path.
+   More formally: This function sets basename to the character just after the last '/' in path.
+*/
+void MPIU_Basename(char *path, char **basename);
+
 /* ------------------------------------------------------------------------- */
 /* end of mpimem.h */
 /* ------------------------------------------------------------------------- */

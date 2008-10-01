@@ -928,6 +928,15 @@ with MPI_Alloc_mem.
 **invalid_netmod:Invalid netmod specified
 **invalid_netmod %s:Invalid netmod specified (%s)
 
+**mkstemp:mkstemp failed
+**mkstemp %s:mkstemp failed %s
+**fdopen:fdopen failed
+**fdopen %s:fdopen failed %s
+**tmpnam:tmpnam failed
+**tmpnam %s:tmpnam failed %s
+**fopen:fopen failed
+**fopen %s:fopen failed %s
+
 #
 # mpi functions
 #

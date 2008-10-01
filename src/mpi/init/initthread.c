@@ -203,7 +203,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     int has_args;
     int has_env;
     int thread_provided;
-    int rc;
     MPIU_THREADPRIV_DECL;
 
     /* FIXME: Move to os-dependent interface? */
@@ -349,10 +348,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     /* Call any and all MPID_Init type functions */
     /* FIXME: The call to err init should be within an ifdef
        HAVE_ ERROR_CHECKING block (as must all uses of Err_create_code) */
-    rc = MPID_Wtime_init();
-#ifdef USE_DBG_LOGGING
-    MPIU_DBG_PreInit( argc, argv, rc );
-#endif
     MPIR_Err_init();
     MPIR_Datatype_init();
 
@@ -485,7 +480,13 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 {
     static const char FCNAME[] = "MPI_Init_thread";
     int mpi_errno = MPI_SUCCESS;
+    int rc;
     MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT_THREAD);
+
+    rc = MPID_Wtime_init();
+#ifdef USE_DBG_LOGGING
+    MPIU_DBG_PreInit( argc, argv, rc );
+#endif
 
     MPID_CS_INITIALIZE();
     /* FIXME: Can we get away without locking every time.  Now, we

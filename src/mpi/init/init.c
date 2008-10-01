@@ -69,7 +69,13 @@ int MPI_Init( int *argc, char ***argv )
 {
     static const char FCNAME[] = "MPI_Init";
     int mpi_errno = MPI_SUCCESS;
+    int rc;
     MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
+
+    rc = MPID_Wtime_init();
+#ifdef USE_DBG_LOGGING
+    MPIU_DBG_PreInit( argc, argv, rc );
+#endif
 
     MPID_CS_INITIALIZE();
     /* FIXME: Can we get away without locking every time.  Now, we

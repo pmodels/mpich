@@ -328,3 +328,21 @@ int MPIU_Snprintf( char *str, size_t size, const char *format, ... )
     return n;
 }
 #endif
+
+/* MPIU_Basename(path, basename)
+   This function finds the basename in a path (ala "man 1 basename").
+   *basename will point to an element in path.
+   More formally: This function sets basename to the character just after the last '/' in path.
+*/
+void MPIU_Basename(char *path, char **basename)
+{
+    char *c;
+
+    c = *basename = path;
+    while (*c)
+    {
+        if (*c == '/')
+            *basename = c+1;
+        ++c;
+    } 
+}

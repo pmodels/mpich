@@ -5134,6 +5134,22 @@ else
     # Note that HPUX and AIX may require _INCLUDE_XOPEN_SOURCE or
     # _XOPEN_SOURCE be defined respectively.
 fi
+
+# ----------------------------------------------------------------------------
+# Look for some non-posix, but commonly provided functions
+# ----------------------------------------------------------------------------
+# mkstemp() is a better replacement for mktemp()
+AC_HAVE_FUNCS(mkstemp)
+if test "$ac_cv_func_mkstemp" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
+fi
+# fdopen() converts from an fd to a FILE*
+AC_HAVE_FUNCS(fdopen)
+if test "$ac_cv_func_fdopen" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],fdopen)
+fi
+
+
 # ----------------------------------------------------------------------------
 # Support for timers.  The following code processes the 
 #  --enable-timer-type=name argument and selects the timer based on 
