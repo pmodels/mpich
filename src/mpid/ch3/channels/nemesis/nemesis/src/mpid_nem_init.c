@@ -73,6 +73,12 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, int has_parent)
        loading. */
     MPIU_Assert(sizeof(MPIDI_CH3_nem_pkt_t) <= sizeof(MPIDI_CH3_PktGeneric_t));
 
+    /* The MPID_nem_cell_rel_ptr_t defined in mpid_nem_datatypes.h
+     * should only contain a pointer. Also, we don't support compilers
+     * which add random padding to the start of the structure. The
+     * below assert should blow up if any of these happens. */
+    MPIU_Assert(sizeof(MPID_nem_cell_rel_ptr_t) == SIZEOF_VOID_P);
+
     /* Make sure the cell structure looks like it should */
     MPIU_Assert(MPID_NEM_CELL_PAYLOAD_LEN + MPID_NEM_CELL_HEAD_LEN == sizeof(MPID_nem_cell_t));
     MPIU_Assert(sizeof(MPID_nem_cell_t) == sizeof(MPID_nem_abs_cell_t));

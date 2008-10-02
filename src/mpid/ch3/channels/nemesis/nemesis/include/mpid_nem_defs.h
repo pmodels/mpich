@@ -96,7 +96,9 @@ typedef struct MPID_nem_barrier_vars
     volatile int context_id;
     volatile int usage_cnt;
     volatile int cnt;
+#if MPID_NEM_CACHE_LINE_LEN != SIZEOF_INT
     char padding0[MPID_NEM_CACHE_LINE_LEN - sizeof(int)];
+#endif
     volatile int sig0;
     volatile int sig;
     char padding1[MPID_NEM_CACHE_LINE_LEN - 2* sizeof(int)];

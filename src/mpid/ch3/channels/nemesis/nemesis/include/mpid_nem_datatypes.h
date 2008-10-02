@@ -100,7 +100,7 @@
    
 */
 
-#define MPID_NEM_CELL_HEAD_LEN sizeof(double)
+#define MPID_NEM_CELL_HEAD_LEN    8 /* We use this to keep elements 64-bit aligned */
 #define MPID_NEM_CELL_PAYLOAD_LEN (MPID_NEM_CELL_LEN - MPID_NEM_CELL_HEAD_LEN)
 
 #define MPID_NEM_CALC_CELL_LEN(cellp) (MPID_NEM_CELL_HEAD_LEN + MPID_NEM_MPICH2_HEAD_LEN + MPID_NEM_CELL_DLEN (cell))
@@ -165,6 +165,7 @@ typedef union
  * catch errors.  Use MPID_NEM_REL_TO_ABS and MPID_NEM_ABS_TO_REL to
  * convert between relative and absolute pointers. */
 
+/* This should always be exactly the size of a pointer */
 typedef struct MPID_nem_cell_rel_ptr
 {
     char *p;
@@ -180,7 +181,9 @@ MPID_nem_cell_rel_ptr_t;
 typedef struct MPID_nem_cell
 {
     MPID_nem_cell_rel_ptr_t next;
+#if MPID_NEM_CELL_HEAD_LEN != SIZEOF_VOID_P
     char padding[MPID_NEM_CELL_HEAD_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
+#endif
     MPID_nem_pkt_t pkt;
 } MPID_nem_cell_t;
 typedef volatile MPID_nem_cell_t *MPID_nem_cell_ptr_t;
@@ -188,7 +191,9 @@ typedef volatile MPID_nem_cell_t *MPID_nem_cell_ptr_t;
 typedef struct MPID_nem_abs_cell
 {
     struct MPID_nem_abs_cell *next;
+#if MPID_NEM_CELL_HEAD_LEN != SIZEOF_VOID_P
     char padding[MPID_NEM_CELL_HEAD_LEN - sizeof(struct MPID_nem_abs_cell*)];
+#endif
     volatile MPID_nem_pkt_t pkt;
 } MPID_nem_abs_cell_t;
 typedef MPID_nem_abs_cell_t *MPID_nem_abs_cell_ptr_t;
@@ -213,16 +218,22 @@ typedef struct MPID_nem_queue
 {
     volatile MPID_nem_cell_rel_ptr_t head;
     volatile MPID_nem_cell_rel_ptr_t tail;
+#if MPID_NEM_CACHE_LINE_LEN != (2 * SIZEOF_VOID_P)
     char padding1[MPID_NEM_CACHE_LINE_LEN - 2 * sizeof(MPID_nem_cell_rel_ptr_t)];
+#endif
     MPID_nem_cell_rel_ptr_t my_head;
+#if MPID_NEM_CACHE_LINE_LEN != SIZEOF_VOID_P
     char padding2[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
+#endif
 } MPID_nem_queue_t, *MPID_nem_queue_ptr_t;
 
 /* Fast Boxes*/ 
 typedef union
 {
     volatile int value;
+#if MPID_NEM_CACHE_LINE_LEN != 0
     char padding[MPID_NEM_CACHE_LINE_LEN];
+#endif
 }
 MPID_nem_opt_volint_t;
 
