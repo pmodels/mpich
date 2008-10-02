@@ -2393,16 +2393,20 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "MPIU_THREAD_REFCOUNT"
 					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
 					fout.WriteLine("#define MPIU_THREAD_REFCOUNT MPIU_REFCOUNT_NONE")
+					fout.WriteLine("#else")
+					fout.WriteLine("/* #undef MPIU_THREAD_REFCOUNT */")
 					fout.WriteLine("#endif")
 				Case "MPIU_THREAD_GRANULARITY"
 					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
 					fout.WriteLine("#define MPIU_THREAD_GRANULARITY MPIU_THREAD_GRANULARITY_GLOBAL")
 					fout.WriteLine("#else")
-					fout.WriteLine("#define MPIU_THREAD_GRANULARITY MPIU_THREAD_GRANULARITY_SINGLE")
+					fout.WriteLine("/* #undef MPIU_THREAD_GRANULARITY */")
 					fout.WriteLine("#endif")
 				Case "MPIU_HANDLE_ALLOCATION_METHOD"
 					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
 					fout.WriteLine("#define MPIU_HANDLE_ALLOCATION_METHOD MPIU_HANDLE_ALLOCATION_MUTEX")
+					fout.WriteLine("#else")
+					fout.WriteLine("/* #undef MPIU_HANDLE_ALLOCATION_METHOD */")
 					fout.WriteLine("#endif")
 				Case "MPIU_MUTEX_WAIT_TIME"
 					fout.WriteLine("/* #undef MPIU_MUTEX_WAIT_TIME */")
