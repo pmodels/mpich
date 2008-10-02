@@ -42,7 +42,7 @@ int MPID_Rsend(const void * buf, int count, MPI_Datatype datatype, int rank, int
     
     if (rank == comm->rank && comm->comm_kind != MPID_INTERCOMM)
     {
-	mpi_errno = MPIDI_Isend_self(buf, count, datatype, rank, tag, comm, context_offset, MPIDI_REQUEST_TYPE_RSEND, request);
+	mpi_errno = MPIDI_Isend_self(buf, count, datatype, rank, tag, comm, context_offset, MPIDI_REQUEST_TYPE_RSEND, &sreq);
 	goto fn_exit;
     }
 
