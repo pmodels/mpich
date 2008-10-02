@@ -366,17 +366,17 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 #endif
 	if (file_ptr_type == ADIO_INDIVIDUAL) {
            /* Wei-keng reworked type processing to be a bit more efficient */
-             offset      = fd->fp_ind - disp; /* in bytes */
-             n_filetypes = (offset-flat_file->indices[0])/ filetype_extent;  
+            offset       = fd->fp_ind - disp;
+            n_filetypes  = (offset - flat_file->indices[0]) / filetype_extent;
              offset     -= (ADIO_Offset)n_filetypes * filetype_extent;
 	     	/* now offset is local to this extent */
  
-	    /* Wei-keng Liao: find contiguous block where offset is located,
-	     * skiping blocklens[i]==0 */
-             for (i=0; i<flat_file->count; i++){
-		ADIO_Offset dist = flat_file->indices[i] + 
-			flat_file->blocklens[i] - offset;
-		/* frd_size is from offset to end of block i */
+            /* find the block where offset is located, skip blocklens[i]==0 */
+            for (i=0; i<flat_file->count; i++) {
+                ADIO_Offset dist;
+                if (flat_file->blocklens[i] == 0) continue;
+                dist = flat_file->indices[i] + flat_file->blocklens[i] - offset;
+                /* frd_size is from offset to the end of block i */
 		if (dist == 0) {
 			i++;
 			offset   = flat_file->indices[i];
@@ -384,12 +384,12 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 			break;
 		}
 		if (dist > 0) {
-			frd_size = dist;
-			break;
+                    frd_size = dist;
+		    break;
 		}
 	    }
             st_index = i;  /* starting index in flat_file->indices[] */
-            offset += disp + (ADIO_Offset)n_filetypes*filetype_extent; /*bytes*/
+            offset += disp + (ADIO_Offset)n_filetypes*filetype_extent;
         }
 	else {
 	    int i;
@@ -470,12 +470,12 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 	    }
 	    else {
 		j = (j+1) % flat_file->count;
-		n_filetypes += (j==0) ? 1 : 0;
-		while (flat_file->blocklens[j] == 0) {
+                n_filetypes += (j == 0) ? 1 : 0;
+                while (flat_file->blocklens[j]==0) {
 			j = (j+1) % flat_file->count;
-			n_filetypes += (j==0) ? 1 : 0;
-			/* hit end of flattened filetype; start at beginning
-			 * again */
+                    n_filetypes += (j == 0) ? 1 : 0;
+                    /* hit end of flattened filetype; start at beginning 
+		     * again */
 		}
 		off = disp + flat_file->indices[j] + 
 		     n_filetypes* (ADIO_Offset)filetype_extent;

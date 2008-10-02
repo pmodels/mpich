@@ -229,15 +229,16 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
 
 	if (file_ptr_type == ADIO_INDIVIDUAL) {
 	/* Wei-keng reworked type processing to be a bit more efficient */
-            offset       = fd->fp_ind - disp; /* in bytes */
+            offset       = fd->fp_ind - disp;
             n_filetypes  = (offset - flat_file->indices[0]) / filetype_extent;
             offset      -= (ADIO_Offset)n_filetypes * filetype_extent;
             /* now offset is local to this extent */
 
             /* find the block where offset is located, skip blocklens[i]==0 */
             for (i=0; i<flat_file->count; i++) {
-                ADIO_Offset dist = flat_file->indices[i] + 
-			flat_file->blocklens[i] - offset;
+                ADIO_Offset dist;
+                if (flat_file->blocklens[i] == 0) continue;
+                dist = flat_file->indices[i] + flat_file->blocklens[i] - offset;
                 /* fwr_size is from offset to the end of block i */
                 if (dist == 0) {
                     i++;
@@ -284,6 +285,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
         if (buftype_is_contig && bufsize <= fwr_size) {
             ADIO_WriteContig(fd, buf, bufsize, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                              offset, status, error_code);
+
 	    if (file_ptr_type == ADIO_INDIVIDUAL) {
                 /* update MPI-IO file pointer to point to the first byte 
 		 * that can be accessed in the fileview. */
@@ -295,8 +297,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
                             st_index = 0;
                             n_filetypes++;
                         }
-                    } while (st_index < flat_file->count &&
-                             flat_file->blocklens[st_index] == 0);
+                    } while (flat_file->blocklens[st_index] == 0);
                     fd->fp_ind = disp + flat_file->indices[st_index]
                                + (ADIO_Offset)n_filetypes*filetype_extent;
                 }
@@ -417,14 +418,15 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
 
 		if (size == fwr_size) {
 /* reached end of contiguous block in file */
-		    if (j < (flat_file->count - 1)) j++;
-		    else {
-			j = 0;
-			n_filetypes++;
+ 		    j = (j+1) % flat_file->count;
+ 		    n_filetypes += (j == 0) ? 1 : 0;
+ 		    while (flat_file->blocklens[j]==0) {
+ 			j = (j+1) % flat_file->count;
+ 			n_filetypes += (j == 0) ? 1 : 0;
 		    }
 
 		    off = disp + flat_file->indices[j] + 
-                                              n_filetypes*(ADIO_Offset)filetype_extent;
+                                      n_filetypes*(ADIO_Offset)filetype_extent;
 
 		    new_fwr_size = flat_file->blocklens[j];
 		    if (size != bwr_size) {
