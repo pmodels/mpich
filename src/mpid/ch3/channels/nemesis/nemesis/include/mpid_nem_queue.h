@@ -12,11 +12,42 @@
 
 #define MPID_nem_dump_cell_mpich2(cell, index)  MPID_nem_dump_cell_mpich2__((cell),(index),__FILE__,__LINE__) 
 
-void MPID_nem_dump_cell_mpich2__ ( MPID_nem_cell_ptr_t cell, int, char* ,int);
-inline void   MPID_nem_dump_cell_mpich ( MPID_nem_cell_ptr_t cell, int);
+void MPID_nem_dump_cell_mpich2__( MPID_nem_cell_ptr_t cell, int, char* ,int);
+void MPID_nem_dump_cell_mpich( MPID_nem_cell_ptr_t cell, int);
 
-inline void MPID_nem_cell_init( MPID_nem_cell_ptr_t cell);
-inline void MPID_nem_queue_init( MPID_nem_queue_ptr_t );
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_cell_init
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
+{
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_CELL_INIT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CELL_INIT);
+
+    MPID_NEM_SET_REL_NULL(cell->next);
+    memset((void *)&cell->pkt, 0, sizeof(MPID_nem_pkt_header_t));
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CELL_INIT);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_queue_init
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
+{
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_QUEUE_INIT);
+
+    MPID_NEM_SET_REL_NULL(qhead->head);
+    MPID_NEM_SET_REL_NULL(qhead->my_head);
+    MPID_NEM_SET_REL_NULL(qhead->tail);
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
+}
+
 int MPID_nem_network_poll (MPID_nem_poll_dir_t in_or_out);
 
 #define MPID_NEM_USE_SHADOW_HEAD

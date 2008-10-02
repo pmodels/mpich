@@ -9,35 +9,12 @@
 
 #define USE_MPICH2
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_cell_init
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-inline void MPID_nem_cell_init( MPID_nem_cell_ptr_t cell)
-{
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_CELL_INIT);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CELL_INIT);
-
-    MPID_NEM_SET_REL_NULL(cell->next);
-    memset ((void *)&cell->pkt, 0, sizeof (MPID_nem_pkt_header_t));
-
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CELL_INIT);
-}
-
-/* inline void MPID_nem_rel_cell_init( MPID_nem_cell_ptr_t cell) */
-/* { */
-/*   cell->next =  MPID_NEM_REL_NULL ; */
-/*   memset (&cell->pkt, 0, 4*1024); */
-/*   /\*  memset (&cell->pkt, 0, sizeof (MPID_nem_pkt_header_t)); *\/ */
-/* } */
-
 /* --BEGIN ERROR HANDLING-- */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_dump_cell_mpich
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-inline void MPID_nem_dump_cell_mpich ( MPID_nem_cell_ptr_t cell, int master)
+void MPID_nem_dump_cell_mpich ( MPID_nem_cell_ptr_t cell, int master)
 {
     MPID_nem_pkt_mpich2_t *mpkt     = (MPID_nem_pkt_mpich2_t *)&(cell->pkt.mpich2); /* cast away volatile */
     int              *cell_buf = (int *)(mpkt->payload);
@@ -121,27 +98,3 @@ void MPID_nem_dump_cell_mpich2__ ( MPID_nem_cell_ptr_t cell, int master, char *f
 }
 /* --END ERROR HANDLING-- */
 
-/* inline void MPID_nem_rel_queue_init (MPID_nem_queue_ptr_t rel_qhead ) */
-/* { */
-/*     MPID_nem_queue_ptr_t qhead = MPID_NEM_REL_TO_ABS( rel_qhead ); */
-/*     qhead->head    = MPID_NEM_REL_NULL; */
-/*     qhead->my_head = MPID_NEM_REL_NULL; */
-/*     qhead->tail    = MPID_NEM_REL_NULL; */
-/* } */
-
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_queue_init
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-inline void MPID_nem_queue_init (MPID_nem_queue_ptr_t qhead )
-{
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_QUEUE_INIT);
-
-    MPID_NEM_SET_REL_NULL (qhead->head);
-    MPID_NEM_SET_REL_NULL (qhead->my_head);
-    MPID_NEM_SET_REL_NULL (qhead->tail);
-
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
-}
