@@ -682,7 +682,7 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
 
     /* If the file has already been opened with a temp filename,
        rename it. */
-    if (MPIU_DBG_fp)
+    if (MPIU_DBG_fp && MPIU_DBG_fp != stdout && MPIU_DBG_fp != stderr)
     {
         char filename[MAXPATHLEN] = "";
         
