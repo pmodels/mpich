@@ -19,6 +19,7 @@
 #include <string.h>
 #include <limits.h>
 #include <sched.h>
+#include "mpichconf.h"
 
 #define MPID_NEM_OFFSETOF(struc, field) ((int)(&((struc *)0)->field))
 #define MPID_NEM_CACHE_LINE_LEN 64
