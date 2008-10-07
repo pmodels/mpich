@@ -333,6 +333,16 @@ AC_ARG_ENABLE(romio,
 dnl
 AC_ARG_ENABLE(debuginfo,
 [--enable-debuginfo - Enable support for debuggers],,enable_debuginfo=no)
+
+AC_ARG_ENABLE(smpcoll,
+	[--enable-smpcoll - Enable support for SMP/multi-core aware collectives],
+	smpcoll=$enableval,
+	smpcoll=yes)
+
+if test $smpcoll = "yes" ; then
+   AC_DEFINE(USE_SMP_COLLECTIVES,1,[define to enable SMP/multi-core aware collectives])
+fi
+
 dnl
 dnl The environment variable MPICH_DEBUGLIBNAME may be used to override the
 dnl default name of the library that the debugger will load to access the
@@ -5014,7 +5024,7 @@ AC_HEADER_STDC
 # Grrr.  OS/X fails the test for sys/uio.h because uio *requires* sys/types.h
 # to compile.  Thus, we'll make that a separate test
 # stddef.h is sometimes needed for types like wchar_t
-AC_CHECK_HEADERS(stdlib.h stdarg.h sys/types.h inttypes.h limits.h stddef.h errno.h sys/socket.h sys/time.h unistd.h endian.h assert.h)
+AC_CHECK_HEADERS(stdlib.h stdarg.h sys/types.h inttypes.h limits.h stddef.h errno.h sys/socket.h sys/time.h unistd.h endian.h assert.h sys/param.h)
 AC_CACHE_CHECK([for sys/uio.h],ac_cv_header_sys_uio_h,[
 AC_TRY_COMPILE([
 #include <sys/types.h>
@@ -6404,6 +6414,7 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
           src/util/dbg/Makefile \
 	  src/util/dbg/getfuncstack \
 	  src/util/osserv/Makefile \
+	  src/util/procmap/Makefile \
           src/include/mpi.h \
 	  test/Makefile test/util/Makefile \
 	  test/basic/Makefile \

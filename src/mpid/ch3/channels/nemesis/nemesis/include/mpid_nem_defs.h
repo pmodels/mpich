@@ -11,9 +11,13 @@
 #include "mpi.h"
 #include "pmi.h"
 
-#define MPID_NEM_MAX_KEY_VAL_LEN 256
 #define MPID_NEM_MAX_FNAME_LEN 256
+
+/* FIXME: This definition should be gotten from mpidi_ch3_impl.h */
+#ifndef MAX_HOSTNAME_LEN
 #define MAX_HOSTNAME_LEN 256
+#endif /* MAX_HOSTNAME_LEN */
+
 extern char MPID_nem_hostname[MAX_HOSTNAME_LEN];
 
 /* #define ENABLED_CHECKPOINTING */
@@ -113,8 +117,6 @@ typedef struct MPID_nem_mem_region
     int                         map_lock;
     pid_t                      *pid;
     int                         num_local;
-    int                         num_nodes;
-    int                        *node_ids;
     int                         num_procs;
     int                        *local_procs; /* local_procs[lrank] gives the global rank of proc with local rank lrank */
     int                         local_rank;    

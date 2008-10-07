@@ -185,6 +185,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                        info_keyval_vectors, 1, 
                                        &preput_keyval_vector,
                                        pmi_errcodes);
+
         if (pmi_errno != PMI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
 		 "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
@@ -264,6 +265,7 @@ static char *parent_port_name = 0;    /* Name of parent port if this
 int MPIDI_CH3_GetParentPort(char ** parent_port)
 {
     int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
     char val[MPIDI_MAX_KVS_VALUE_LEN];
 
     if (parent_port_name == NULL)
@@ -271,9 +273,10 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
 	char *kvsname = NULL;
 	/* We can always use PMI_KVS_Get on our own process group */
 	MPIDI_PG_GetConnKVSname( &kvsname );
-	mpi_errno = PMI_KVS_Get( kvsname, PARENT_PORT_KVSKEY, val, sizeof(val));
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	pmi_errno = PMI_KVS_Get( kvsname, PARENT_PORT_KVSKEY, val, sizeof(val));
+	if (pmi_errno) {
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
+            goto fn_exit;
 	}
 
 	parent_port_name = MPIU_Strdup(val);

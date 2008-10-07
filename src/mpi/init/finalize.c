@@ -154,18 +154,6 @@ int MPI_Finalize( void )
 	MPIU_ERR_POP(mpi_errno);
     }
     
-    /* delete local and remote groups on comm_world and comm_self if
-       they had been created (should we use a function pointer here
-       as well to avoid loading the group code?) */
-    if (MPIR_Process.comm_world->local_group)
-        MPIR_Group_release(MPIR_Process.comm_world->local_group);
-    if (MPIR_Process.comm_world->remote_group)
-        MPIR_Group_release(MPIR_Process.comm_world->remote_group);
-    if (MPIR_Process.comm_self->local_group)
-        MPIR_Group_release(MPIR_Process.comm_self->local_group);
-    if (MPIR_Process.comm_self->remote_group)
-        MPIR_Group_release(MPIR_Process.comm_self->remote_group);
-
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks( 0, MPIR_FINALIZE_CALLBACK_PRIO-1 );
 

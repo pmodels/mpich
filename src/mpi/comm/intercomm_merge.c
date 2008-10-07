@@ -258,6 +258,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     /* printf( "About to get context id \n" ); fflush( stdout ); */
     /* In the multi-threaded case, MPIR_Get_contextid assumes that the
        calling routine already holds the single criticial section */
+    new_context_id = 0;
     mpi_errno = MPIR_Get_contextid( newcomm_ptr, &new_context_id );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(new_context_id != 0);
@@ -267,6 +268,8 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
 
     /* Notify the device of this new communicator */
     MPID_Dev_comm_create_hook( newcomm_ptr );
+    mpi_errno = MPIR_Comm_commit(newcomm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     *newintracomm = newcomm_ptr->handle;
 

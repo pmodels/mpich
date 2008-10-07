@@ -152,6 +152,7 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Connection_t * conn = NULL;
     int id_sz;
+    int pmi_errno;
     MPIU_CHKPMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_CONNECTION_ALLOC);
 
@@ -163,12 +164,10 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
     /* FIXME: This size is unchanging, so get it only once (at most); 
        we might prefer for connections to simply point at the single process
        group to which the remote process belong */
-    mpi_errno = PMI_Get_id_length_max(&id_sz);
-    if (mpi_errno != PMI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, 
+    pmi_errno = PMI_Get_id_length_max(&id_sz);
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno,MPI_ERR_OTHER, 
 			     "**pmi_get_id_length_max",
-			     "**pmi_get_id_length_max %d", mpi_errno);
-    }
+			     "**pmi_get_id_length_max %d", pmi_errno);
     MPIU_CHKPMEM_MALLOC(conn->pg_id,char*,id_sz + 1,mpi_errno,"conn->pg_id");
     conn->pg_id[0] = 0;           /* Be careful about pg_id in case a later 
 				     error */

@@ -17,8 +17,6 @@
 #define MPID_NEM_IB_BUF_READ_WRITE  (123)
 #define MPID_NEM_IB_BUF_READ_ONLY   (321)
 
-#define MPID_NEM_MAX_HOSTNAME_LEN   (256)
-
 /* A description of the process
  * is kept in this data structure.
  * Its useful to dereference when
@@ -26,7 +24,7 @@
  */
 
 typedef struct {
-    char            hostname[MPID_NEM_MAX_HOSTNAME_LEN];
+    char            hostname[MAX_HOSTNAME_LEN];
     int             rank;
 } MPID_nem_ib_module_proc_desc_t;
 
@@ -109,7 +107,7 @@ void MPID_nem_ib_module_queue_finalize(
         MPID_nem_ib_module_queue_t *q);
 
 #define INIT_NEM_IB_PROC_DESC(_rank) {                          \
-    if(gethostname(me.hostname, MPID_NEM_MAX_HOSTNAME_LEN)) {   \
+    if(gethostname(me.hostname, MAX_HOSTNAME_LEN)) {   \
         perror("gethostname");                                  \
     }                                                           \
     me.rank = _rank;                                            \

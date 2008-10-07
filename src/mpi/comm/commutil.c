@@ -119,6 +119,12 @@ int MPIR_Comm_create( MPID_Comm **newcomm_ptr )
     newptr->topo_fns	 = 0;
     newptr->name[0]	 = 0;
 
+    newptr->is_node_aware   = 0;
+    newptr->node_comm       = NULL;
+    newptr->node_roots_comm = NULL;
+    newptr->intranode_table = NULL;
+    newptr->internode_table = NULL;
+
     /* Fields not set include context_id, remote and local size, and 
        kind, since different communicator construction routines need 
        different values */
@@ -139,6 +145,7 @@ int MPIR_Comm_create( MPID_Comm **newcomm_ptr )
 /* FIXME : 
    For the context id, use the intercomm's context id + 2.  (?)
  */
+/* FIXME this is an alternative constructor that doesn't use MPIR_Comm_create! */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Setup_intercomm_localcomm
 #undef FCNAME
@@ -208,11 +215,178 @@ int MPIR_Setup_intercomm_localcomm( MPID_Comm *intercomm_ptr )
 
     intercomm_ptr->local_comm = localcomm_ptr;
 
+    localcomm_ptr->is_node_aware   = 0;
+    localcomm_ptr->node_comm       = NULL;
+    localcomm_ptr->node_roots_comm = NULL;
+    localcomm_ptr->intranode_table = NULL;
+    localcomm_ptr->internode_table = NULL;
+
+    /* sets up the SMP-aware sub-communicators and tables */
+    mpi_errno = MPIR_Comm_commit(localcomm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
  fn_fail:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
 
-    return mpi_errno;;
+    return mpi_errno;
 }
+
+/* Provides a hook for the top level functions to perform some manipulation on a
+   communicator just before it is given to the application level.
+  
+   For example, we create sub-communicators for SMP-aware collectives at this
+   step. */
+int MPIR_Comm_commit(MPID_Comm *comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    int num_local = -1, num_external = -1;
+    int local_rank = -1, external_rank = -1;
+    int *local_procs = NULL, *external_procs = NULL;
+    MPIR_Context_id_t context_id;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_COMMIT);
+
+    /* It's OK to relax these assertions, but we should do so very
+       intentionally.  For now this function is the only place that we create
+       our hierarchy of communicators */
+    MPIU_Assert(comm->node_comm == NULL);
+    MPIU_Assert(comm->node_roots_comm == NULL);
+
+    if (comm->comm_kind == MPID_INTRACOMM) {
+
+        mpi_errno = MPIU_Find_local_and_external(comm,
+                                                 &num_local,    &local_rank,    &local_procs,
+                                                 &num_external, &external_rank, &external_procs,
+                                                 &comm->intranode_table, &comm->internode_table);
+        if (mpi_errno) {
+            if (MPIR_Err_is_fatal(mpi_errno)) MPIU_ERR_POP(mpi_errno);
+
+            /* Non-fatal errors simply mean that this communicator will not have
+               any node awareness.  Node-aware collectives are an optimization. */
+            MPIU_DBG_MSG_P(COMM,VERBOSE,"MPIU_Find_local_and_external failed for comm_ptr=%p", comm);
+            if (comm->intranode_table)
+                MPIU_Free(comm->intranode_table);
+            if (comm->internode_table)
+                MPIU_Free(comm->internode_table);
+
+            mpi_errno = MPI_SUCCESS;
+            goto fn_exit;
+        }
+
+        /* defensive checks */
+        MPIU_Assert(num_local > 0);
+        MPIU_Assert(num_local > 1 || external_rank >= 0);
+        MPIU_Assert(external_rank < 0 || external_procs != NULL);
+
+        /* if the node_roots_comm and comm would be the same size, then creating
+           the second communicator is useless and wasteful. */
+        if (num_external == comm->remote_size) {
+            MPIU_Assert(num_local == 1);
+            goto fn_fail;
+        }
+
+        comm->is_node_aware = 1;
+
+        /* FIXME could just use the same ctxid and a different tag like
+           MPIR_BCAST_TAG.  Perhaps MPIR_BCAST_INTRANODE_TAG, etc.  Or maybe
+           just use 3 bits for the ctx suffix and use some of those values. */
+        /* MPIR_Get_contextid is collective over the whole communicator, so
+           everyone has to allocate one and then processes that don't need one
+           can free it as a local operation. */
+        mpi_errno = MPIR_Get_contextid(comm, &context_id);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        /* we don't need a local comm if this process is the only one on this node */
+        if (num_local > 1) {
+            mpi_errno = MPIR_Comm_create(&comm->node_comm);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+            comm->node_comm->context_id = context_id;
+
+            comm->node_comm->recvcontext_id = comm->node_comm->context_id;
+            comm->node_comm->rank = local_rank;
+            comm->node_comm->comm_kind = MPID_INTRACOMM;
+            comm->node_comm->local_comm = NULL;
+
+            comm->node_comm->local_size  = num_local;
+            comm->node_comm->remote_size = num_local;
+
+            MPID_VCRT_Create( num_local, &comm->node_comm->vcrt );
+            MPID_VCRT_Get_ptr( comm->node_comm->vcrt, &comm->node_comm->vcr );
+            for (i = 0; i < num_local; ++i) {
+                /* For rank i in the new communicator, find the corresponding
+                   rank in the input communicator */
+                MPID_VCR_Dup( comm->vcr[local_procs[i]], 
+                              &comm->node_comm->vcr[i] );
+            }
+
+            MPID_Dev_comm_create_hook( comm->node_comm );
+            /* don't call MPIR_Comm_commit here */
+        }
+        else {
+            MPIR_Free_contextid(context_id);
+        }
+
+        /* FIXME could just use the same ctxid and a different tag like
+           MPIR_BCAST_TAG.  Perhaps MPIR_BCAST_INTRANODE_TAG, etc.  Or maybe
+           just use 3 bits for the ctx suffix and use some of those values. */
+        mpi_errno = MPIR_Get_contextid(comm, &context_id);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        /* this process may not be a member of the node_roots_comm */
+        if (local_rank == 0) {
+            mpi_errno = MPIR_Comm_create(&comm->node_roots_comm);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+            comm->node_roots_comm->context_id = context_id;
+
+            comm->node_roots_comm->recvcontext_id = comm->node_roots_comm->context_id;
+            comm->node_roots_comm->rank = external_rank;
+            comm->node_roots_comm->comm_kind = MPID_INTRACOMM;
+            comm->node_roots_comm->local_comm = NULL;
+
+            comm->node_roots_comm->local_size  = num_external;
+            comm->node_roots_comm->remote_size = num_external;
+
+            MPID_VCRT_Create( num_external, &comm->node_roots_comm->vcrt );
+            MPID_VCRT_Get_ptr( comm->node_roots_comm->vcrt, &comm->node_roots_comm->vcr );
+            for (i = 0; i < num_external; ++i) {
+                /* For rank i in the new communicator, find the corresponding
+                   rank in the input communicator */
+                MPID_VCR_Dup( comm->vcr[external_procs[i]], 
+                              &comm->node_roots_comm->vcr[i] );
+            }
+
+            MPID_Dev_comm_create_hook( comm->node_roots_comm );
+            /* don't call MPIR_Comm_commit here */
+        }
+        else {
+            MPIR_Free_contextid(context_id);
+        }
+    }
+
+fn_exit:
+    if (external_procs != NULL)
+        MPIU_Free(external_procs);
+    if (local_procs != NULL)
+        MPIU_Free(local_procs);
+
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_COMMIT);
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+/* Returns true if the given communicator is aware of node topology information,
+   false otherwise.  Such information could be used to implement more efficient
+   collective communication, for example. */
+int MPIR_Comm_is_node_aware(MPID_Comm * comm)
+{
+    return comm->is_node_aware;
+}
+
 /*
  * Here are the routines to find a new context id.  The algorithm is discussed 
  * in detail in the mpich2 coding document.  There are versions for
@@ -779,7 +953,9 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
 
     /* Notify the device of the new communicator */
     MPID_Dev_comm_create_hook(newcomm_ptr);
-	    
+    mpi_errno = MPIR_Comm_commit(newcomm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
     *outcomm_ptr = newcomm_ptr;
@@ -857,6 +1033,16 @@ int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
                 MPIR_Group_release(comm_ptr->local_group);
             if (comm_ptr->remote_group)
                 MPIR_Group_release(comm_ptr->remote_group);
+
+            /* free the intra/inter-node communicators, if they exist */
+            if (comm_ptr->node_comm)
+                MPIR_Comm_release(comm_ptr->node_comm, isDisconnect);
+            if (comm_ptr->node_roots_comm)
+                MPIR_Comm_release(comm_ptr->node_roots_comm, isDisconnect);
+            if (comm_ptr->intranode_table != NULL)
+                MPIU_Free(comm_ptr->intranode_table);
+            if (comm_ptr->internode_table != NULL)
+                MPIU_Free(comm_ptr->internode_table);
 
   	    MPIU_Handle_obj_free( &MPID_Comm_mem, comm_ptr );  
 	    

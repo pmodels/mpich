@@ -83,6 +83,7 @@ void MPIU_DBG_PrintVCState(MPIDI_VC_t *vc)
 int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank )
 {
     int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
     int pg_size;
     int p;
     char *publish_bc_orig = NULL;
@@ -123,10 +124,10 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank )
      (note that publish_bc_orig is the head of bc_val ) */
     MPIDI_CH3I_BCFree( publish_bc_orig );
 
-    mpi_errno = PMI_Get_size(&pg_size);
-    if (mpi_errno != 0) {
+    pmi_errno = PMI_Get_size(&pg_size);
+    if (pmi_errno != 0) {
 	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, 
-			     "**pmi_get_size", "**pmi_get_size %d", mpi_errno);
+			     "**pmi_get_size", "**pmi_get_size %d", pmi_errno);
     }
 
     /* Allocate and initialize the VC table associated with this process

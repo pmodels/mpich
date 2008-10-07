@@ -28,6 +28,9 @@
 #define MPICH_ERROR_MSG_GENERIC 2
 #define MPICH_ERROR_MSG_ALL 8
 
+/* Common definition for the max hostname length to be used by
+ * different channels as well as the collectives. */
+
 /* Data computed by configure.  This is included *after* mpi.h because we
    do not want mpi.h to depend on any other files or configure flags */
 #include "mpichconf.h"
@@ -59,6 +62,18 @@
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+
+/* for MAXHOSTNAMELEN under Linux and OSX */
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+
+#if (!defined MAXHOSTNAMELEN) && (!defined MAX_HOSTNAME_LEN)
+#define MAX_HOSTNAME_LEN 256
+#elif !defined MAX_HOSTNAME_LEN
+#define MAX_HOSTNAME_LEN MAXHOSTNAMELEN
+#endif
+
 
 /* This allows us to keep names local to a single file when we can use
    weak symbols */
@@ -1221,6 +1236,18 @@ typedef struct MPID_Comm {
     MPID_Errhandler *errhandler; /* Pointer to the error handler structure */
     struct MPID_Comm    *local_comm; /* Defined only for intercomms, holds
 				        an intracomm for the local group */
+    int is_node_aware;           /* true if node topology info is available,
+                                    such as node_comm and node_roots_comm */
+    struct MPID_Comm *node_comm; /* Comm of processes in this comm that are on
+                                    the same node as this process. */
+    struct MPID_Comm *node_roots_comm; /* Comm of root processes for other nodes. */
+    int *intranode_table;        /* intranode_table[i] gives the rank in
+                                    node_comm of rank i in this comm or -1 if i
+                                    is not in this process' node_comm.
+                                    It is of size 'local_size'. */
+    int *internode_table;        /* internode_table[i] gives the rank in
+                                    node_roots_comm of rank i in this comm.
+                                    It is of size 'local_size'. */
     int           is_low_group;  /* For intercomms only, this boolean is
 				    set for all members of one of the 
 				    two groups of processes and clear for 
@@ -3625,6 +3652,10 @@ int MPIR_Setup_intercomm_localcomm( MPID_Comm * );
 
 int MPIR_Comm_create( MPID_Comm ** );
 
+int MPIR_Comm_commit( MPID_Comm * );
+
+int MPIR_Comm_is_node_aware( MPID_Comm * );
+
 void MPIR_Free_err_dyncodes( void );
 
 
@@ -3641,5 +3672,14 @@ void MPIU_SetTimeout( int );
 int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 # endif
 
+/* Routines for determining local and remote processes */
+
+int MPIU_Get_local_procs(int global_rank, int num_global, int *num_local_p, int **local_procs_p,  int *local_rank_p);
+int MPIU_Find_local_and_external(struct MPID_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
+                                 int *external_size_p, int *external_rank_p, int **external_ranks_p,
+                                 int **intranode_table, int **internode_table_p);
+int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r);
+int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r);
+int MPIU_Local_procs_finalize(void);
 
 #endif /* MPIIMPL_INCLUDED */

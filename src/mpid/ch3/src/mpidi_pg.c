@@ -482,9 +482,7 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
        it to the find routine */
     /* printf( "Looking for pg with id %s\n", str );fflush(stdout); */
     mpi_errno = MPIDI_PG_Find((void *)str, &existing_pg);
-    if (mpi_errno != PMI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
-    }
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (existing_pg != NULL) {
 	/* return the existing PG */

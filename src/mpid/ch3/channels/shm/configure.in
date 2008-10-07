@@ -136,7 +136,6 @@ AC_CHECK_HEADERS(				\
     errno.h					\
     fcntl.h					\
     stdlib.h					\
-    sys/param.h					\
     sys/types.h					\
     unistd.h    \
     pthread.h   \

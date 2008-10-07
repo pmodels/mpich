@@ -55,24 +55,23 @@ int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
 {
     MPIDI_VCRT_t * vcrt;
     int mpi_errno = MPI_SUCCESS;
+    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCRT_CREATE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCRT_CREATE);
-    
-    vcrt = MPIU_Malloc(sizeof(MPIDI_VCRT_t) + (size - 1) * sizeof(MPIDI_VC_t *));
-    if (vcrt != NULL)
-    {
-	MPIU_Object_set_ref(vcrt, 1);
-	vcrt->size = size;
-	*vcrt_ptr = vcrt;
-    }
-    else
-    {
-	MPIU_ERR_SET(mpi_errno,MPI_ERR_OTHER,"**nomem");
-    }
 
+    MPIU_CHKPMEM_MALLOC(vcrt, MPIDI_VCRT_t *, sizeof(MPIDI_VCRT_t) + (size - 1) * sizeof(MPIDI_VC_t *),	mpi_errno, "**nomem");
+    MPIU_Object_set_ref(vcrt, 1);
+    vcrt->size = size;
+    *vcrt_ptr = vcrt;
+
+ fn_exit:
+    MPIU_CHKPMEM_COMMIT();
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCRT_CREATE);
     return mpi_errno;
+ fn_fail:
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit;
 }
 
 /*@

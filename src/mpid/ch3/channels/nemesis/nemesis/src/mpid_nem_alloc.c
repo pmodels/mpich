@@ -101,14 +101,17 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
-    char key[MPID_NEM_MAX_KEY_VAL_LEN];
-    char val[MPID_NEM_MAX_KEY_VAL_LEN];
+    int key_max_sz;
+    int val_max_sz;
+    char *key;
+    char *val;
     char *kvs_name;
     char *handle = 0;
     void *current_addr;
     void *start_addr;
     size_t size_left;
     MPIU_CHKPMEM_DECL (1);
+    MPIU_CHKLMEM_DECL (2);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEG_COMMIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEG_COMMIT);
@@ -140,6 +143,15 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
     }
     else
     {
+        /* Allocate space for pmi key and val */
+        pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
+        MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+        MPIU_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
+
+        pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
+        MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+        MPIU_CHKLMEM_MALLOC(val, char *, val_max_sz, mpi_errno, "val");
+
         mpi_errno = MPIDI_PG_GetConnKVSname (&kvs_name);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
@@ -147,10 +159,10 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         {
             mpi_errno = MPID_nem_allocate_shared_memory (&memory->base_addr, segment_len, &handle);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-	
+
             /* post name of shared file */
             MPIU_Assert (MPID_nem_mem_region.local_procs[0] == MPID_nem_mem_region.rank);
-            MPIU_Snprintf (key, MPID_NEM_MAX_KEY_VAL_LEN, "sharedFilename[%i]", MPID_nem_mem_region.rank);
+            MPIU_Snprintf (key, key_max_sz, "sharedFilename[%i]", MPID_nem_mem_region.rank);
 
             pmi_errno = PMI_KVS_Put (kvs_name, key, handle);
             MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put", "**pmi_kvs_put %d", pmi_errno);
@@ -167,8 +179,8 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
             MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
 
             /* get name of shared file */
-            MPIU_Snprintf (key, MPID_NEM_MAX_KEY_VAL_LEN, "sharedFilename[%i]", MPID_nem_mem_region.local_procs[0]);
-            pmi_errno = PMI_KVS_Get (kvs_name, key, val, MPID_NEM_MAX_KEY_VAL_LEN);
+            MPIU_Snprintf (key, key_max_sz, "sharedFilename[%i]", MPID_nem_mem_region.local_procs[0]);
+            pmi_errno = PMI_KVS_Get (kvs_name, key, val, val_max_sz);
             MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
 
             handle = val;
@@ -217,7 +229,9 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
     mpi_errno = check_alloc(num_local);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
+    MPIU_CHKPMEM_COMMIT();
  fn_exit:
+    MPIU_CHKLMEM_FREEALL();
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEG_COMMIT);
     return mpi_errno;
  fn_fail:

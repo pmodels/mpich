@@ -381,7 +381,9 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 
         /* Notify the device of this new communicator */
 	MPID_Dev_comm_create_hook( newcomm_ptr );
-	
+        mpi_errno = MPIR_Comm_commit(newcomm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
 	*newcomm = newcomm_ptr->handle;
     }
     else {

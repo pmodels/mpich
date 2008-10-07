@@ -268,8 +268,25 @@ MPID_nem_gm_module_vc_init(MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
     int ret;
     char *business_card;
-    
-    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, MPID_NEM_MAX_KEY_VAL_LEN, vc->pg);
+    int key_max_sz;
+
+    /* Allocate space for the business card */
+    mpi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
+    if (mpi_errno != PMI_SUCCESS) {
+	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+					 FCNAME, __LINE__, MPI_ERR_OTHER,
+					 "**fail", "**fail %d", mpi_errno);
+	return mpi_errno;
+    }
+    business_card = MPIU_Malloc(key_max_sz);
+    if (business_card == NULL) {
+	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+					 FCNAME, __LINE__, MPI_ERR_OTHER,
+					 "**nomem", 0);
+	return mpi_errno;
+    }
+
+    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, key_max_sz, vc->pg);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     VC_FIELD(vc, source_id) = my_pg_rank; /* FIXME: this is only valid for processes in COMM_WORLD */

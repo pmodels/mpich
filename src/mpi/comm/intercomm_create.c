@@ -562,6 +562,8 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 	
     /* Notify the device of this new communicator */
     MPID_Dev_comm_create_hook( newcomm_ptr );
+    mpi_errno = MPIR_Comm_commit(newcomm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
     *newintercomm = newcomm_ptr->handle;
 

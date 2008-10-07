@@ -105,6 +105,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
 
+    mpi_errno = MPIU_Get_local_procs(pg_rank, pg_size, NULL, NULL, NULL);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /*
      * Initialize the MPI_COMM_WORLD object
      */
@@ -136,6 +139,8 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     }
 
     MPID_Dev_comm_create_hook (comm);
+    mpi_errno = MPIR_Comm_commit(comm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /*
      * Initialize the MPI_COMM_SELF object
@@ -199,6 +204,8 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->vcr  = MPIR_Process.comm_world->vcr;
     
     MPID_Dev_comm_create_hook (comm);
+    mpi_errno = MPIR_Comm_commit(comm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 #endif
     
     /*

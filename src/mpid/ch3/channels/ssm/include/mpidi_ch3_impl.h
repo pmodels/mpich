@@ -168,15 +168,6 @@ MPIDI_CH3I_Process_t;
 
 extern MPIDI_CH3I_Process_t MPIDI_CH3I_Process;
 
-/* for MAXHOSTNAMELEN under Linux ans OSX */
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
-
-#ifndef MAXHOSTNAMELEN
-#define MAXHOSTNAMELEN 256
-#endif
-
 typedef struct MPIDI_CH3I_BootstrapQ_struct * MPIDI_CH3I_BootstrapQ;
 
 typedef struct MPIDI_Process_group_s
@@ -188,7 +179,7 @@ typedef struct MPIDI_Process_group_s
     int nShmWaitSpinCount;
     int nShmWaitYieldCount;
     MPIDI_CH3I_BootstrapQ bootstrapQ;
-    char shm_hostname[MAXHOSTNAMELEN];
+    char shm_hostname[MAX_HOSTNAME_LEN];
 #ifdef MPIDI_CH3_USES_SHM_NAME
     char * shm_name;
 #endif

@@ -261,34 +261,23 @@ int MPIDI_CH3U_Init_sshm(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
 	}
 	/*printf("root process created bootQ: '%s'\n", queue_name);fflush(stdout);*/
 
-	mpi_errno = PMI_KVS_Put(kvsname, key, val);          
-	if (mpi_errno != 0) {
-	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_put", 
-				 "**pmi_kvs_put %d", mpi_errno);
-	}
-	mpi_errno = PMI_KVS_Commit(kvsname);
-	if (mpi_errno != 0) {
-	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_commit", 
-				 "**pmi_kvs_commit %d", mpi_errno);
-	}
-	mpi_errno = PMI_Barrier();
-	if (mpi_errno != 0) {
-	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_barrier", 
-				 "**pmi_barrier %d", mpi_errno);
-	}
+	pmi_errno = PMI_KVS_Put(kvsname, key, val);          
+        MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put", "**pmi_kvs_put %d", pmi_errno);
+
+	pmi_errno = PMI_KVS_Commit(kvsname);
+        MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit", "**pmi_kvs_commit %d", pmi_errno);
+	
+	pmi_errno = PMI_Barrier();
+        MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
     }
     else
     {
-	mpi_errno = PMI_Barrier();
-	if (mpi_errno != 0) {
-	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_barrier", 
-				 "**pmi_barrier %d", mpi_errno);
-	}
-	mpi_errno = PMI_KVS_Get(kvsname, key, val, val_max_sz);
-	if (mpi_errno != 0) {
-	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_get", 
-				 "**pmi_kvs_get %d", mpi_errno);
-	}
+	pmi_errno = PMI_Barrier();
+        MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
+	
+	pmi_errno = PMI_KVS_Get(kvsname, key, val, val_max_sz);
+        MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
+
 	MPIU_Strncpy(queue_name, val, MPIDI_MAX_SHM_NAME_LENGTH);
 #ifdef MPIDI_CH3_USES_SHM_NAME
 	MPIU_Strncpy(pgch->shm_name, val, MPIDI_MAX_SHM_NAME_LENGTH);
@@ -324,11 +313,8 @@ int MPIDI_CH3U_Init_sshm(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**boot_create");
 	}
     }
-    mpi_errno = PMI_Barrier();
-    if (mpi_errno != 0) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", 
-			     "**pmi_barrier %d", mpi_errno);
-    }
+    pmi_errno = PMI_Barrier();
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
 
 #ifdef USE_PERSISTENT_SHARED_MEMORY
     /* The bootstrap queue cannot be unlinked because it can be used outside 

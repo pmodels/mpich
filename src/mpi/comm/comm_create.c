@@ -306,6 +306,8 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
 
 	/* Notify the device of this new communicator */
 	MPID_Dev_comm_create_hook( newcomm_ptr );
+        mpi_errno = MPIR_Comm_commit(newcomm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	
 	*newcomm = newcomm_ptr->handle;
     }

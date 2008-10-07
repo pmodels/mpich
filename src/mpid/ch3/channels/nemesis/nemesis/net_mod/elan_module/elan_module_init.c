@@ -80,8 +80,9 @@ int init_elan( MPIDI_PG_t *pg_p )
    char            file_name[256];
    char            line[255]; 
    int             numprocs  = MPID_nem_mem_region.ext_procs;
-   char            key[MPID_NEM_MAX_KEY_VAL_LEN];
-   char            val[MPID_NEM_MAX_KEY_VAL_LEN];
+   char            * key;
+   char            * val;
+   int             key_max_sz;
    char           *kvs_name;
    FILE           *myfile;
    int             ncells;
@@ -91,6 +92,30 @@ int init_elan( MPIDI_PG_t *pg_p )
    int             ret;
    ELAN_BASE      *base = NULL;
    ELAN_FLAGS      flags;
+
+
+   /* Allocate space for pmi keys and values */
+   mpi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
+   if (mpi_errno != PMI_SUCCESS) {
+	   mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+					    FCNAME, __LINE__, MPI_ERR_OTHER,
+					    "**fail", "**fail %d", mpi_errno);
+	   return mpi_errno;
+   }
+   key = MPIU_Malloc(key_max_sz);
+   if (key == NULL) {
+	   mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+					    FCNAME, __LINE__, MPI_ERR_OTHER,
+					    "**nomem", 0);
+	   return mpi_errno;
+   }
+   val = MPIU_Malloc(key_max_sz);
+   if (val == NULL) {
+	   mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+					    FCNAME, __LINE__, MPI_ERR_OTHER,
+					    "**nomem", 0);
+	   return mpi_errno;
+   }
    
    if ( !getenv("ELAN_AUTO") && !getenv("RMS_NPROCS") ) {
        /* Get My Node Id from relevant file */
@@ -115,8 +140,8 @@ int init_elan( MPIDI_PG_t *pg_p )
        for (index = 0 ; index < numprocs ; index++)
        {	
 	   grank = MPID_nem_mem_region.ext_ranks[index];
-	   MPIU_Snprintf (val, MPID_NEM_MAX_KEY_VAL_LEN, "%i",my_node_id);
-	   MPIU_Snprintf (key, MPID_NEM_MAX_KEY_VAL_LEN, "QsNetkey[%d:%d]", MPID_nem_mem_region.rank, grank);
+	   MPIU_Snprintf (val, key_max_sz, "%i",my_node_id);
+	   MPIU_Snprintf (key, key_max_sz, "QsNetkey[%d:%d]", MPID_nem_mem_region.rank, grank);
 	   
 	   pmi_errno = PMI_KVS_Put (kvs_name, key, val);
 	   MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put", "**pmi_kvs_put %d", pmi_errno);
@@ -132,10 +157,10 @@ int init_elan( MPIDI_PG_t *pg_p )
        for (index = 0 ; index < numprocs ; index++)
        {
 	   grank = MPID_nem_mem_region.ext_ranks[index];
-	   memset(val, 0, MPID_NEM_MAX_KEY_VAL_LEN);
-	   MPIU_Snprintf (key, MPID_NEM_MAX_KEY_VAL_LEN,"QsNetkey[%d:%d]", grank, MPID_nem_mem_region.rank);
+	   memset(val, 0, key_max_sz);
+	   MPIU_Snprintf (key, key_max_sz,"QsNetkey[%d:%d]", grank, MPID_nem_mem_region.rank);
 	   
-	   pmi_errno = PMI_KVS_Get (kvs_name, key, val, MPID_NEM_MAX_KEY_VAL_LEN);
+	   pmi_errno = PMI_KVS_Get (kvs_name, key, val, key_max_sz);
 	   MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
 	   
 	   ret = sscanf (val, "%i", &(node_ids[index]));

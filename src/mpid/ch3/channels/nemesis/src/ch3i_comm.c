@@ -31,98 +31,6 @@ static MPID_Collops collective_functions = {
     NULL  /* Exscan */
 };
 
-/* find_local_and_external -- from the list of processes in comm,
-   builds a list of local processes, i.e., processes on this same
-   node, and a list of external processes, i.e., one process from each
-   node.
-*/
-
-#undef FUNCNAME
-#define FUNCNAME find_local_and_external
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int find_local_and_external (MPID_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
-                                    int *external_size_p, int *external_rank_p, int **external_ranks_p)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int *nodes;
-    int external_size;
-    int external_rank;
-    int *external_ranks;
-    int local_size;
-    int local_rank;
-    int *local_ranks;
-    int i;
-    int node_id; /* this is set to -1 for a proc which is not using shared memory (e.g., spawned proc) */
-    int my_node_id;
-    MPIU_CHKLMEM_DECL(1);
-    MPIU_CHKPMEM_DECL(2);
-
-    /* Scan through the list of processes in comm and add one
-       process from each node to the list of "external" processes.  We
-       add the first process we find from each node.  nodes[] is an
-       array where we keep track of whether we have already added that
-       node to the list. */
-
-    MPIU_CHKPMEM_MALLOC (external_ranks, int *, sizeof(int) * MPID_nem_mem_region.num_nodes, mpi_errno, "external_ranks");
-    MPIU_CHKPMEM_MALLOC (local_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "local_ranks");
-    MPIU_CHKLMEM_MALLOC (nodes, int *, sizeof(int) * MPID_nem_mem_region.num_nodes, mpi_errno, "nodes");
-
-    for (i = 0; i < MPID_nem_mem_region.num_nodes; ++i)
-        nodes[i] = 0;
-
-    external_size = 0;
-    my_node_id = ((MPIDI_CH3I_VC *)comm->vcr[comm->rank]->channel_private)->node_id;
-    local_size = 0;
-    local_rank = -1;
-    external_rank = -1;
-
-    for (i = 0; i < comm->remote_size; ++i)
-    {
-        node_id = ((MPIDI_CH3I_VC *)comm->vcr[i]->channel_private)->node_id;
-
-        /* build list of external processes */
-        if (node_id == -1 || nodes[node_id] == 0)
-        {
-            if (i == comm->rank)
-                external_rank = external_size;
-            if (node_id != -1)
-                nodes[node_id] = 1;
-            external_ranks[external_size] = i;
-            ++external_size;
-        }
-
-        /* build list of local processes */
-        if (node_id != -1 && node_id == my_node_id)
-        {
-             if (i == comm->rank)
-                 local_rank = local_size;
-             local_ranks[local_size] = i;
-            ++local_size;
-        }
-    }
-
-    *local_size_p = local_size;
-    *local_rank_p = local_rank;
-    *local_ranks_p =  MPIU_Realloc (local_ranks, sizeof(int) * local_size);
-    MPIU_ERR_CHKANDJUMP (*local_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
-
-    *external_size_p = external_size;
-    *external_rank_p = external_rank;
-    *external_ranks_p = MPIU_Realloc (external_ranks, sizeof(int) * external_size);
-    MPIU_ERR_CHKANDJUMP (*external_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
-
-    MPIU_CHKPMEM_COMMIT();
-
- fn_exit:
-    MPIU_CHKLMEM_FREEALL();
-    return mpi_errno;
- fn_fail:
-    MPIU_CHKPMEM_REAP();
-    goto fn_exit;
-}
-
-
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_comm_create
 #undef FCNAME
@@ -135,8 +43,10 @@ int MPIDI_CH3I_comm_create (MPID_Comm *comm)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
     comm->ch.barrier_vars = NULL;
 
-    mpi_errno = find_local_and_external (comm, &comm->ch.local_size, &comm->ch.local_rank, &comm->ch.local_ranks,
-                                         &comm->ch.external_size, &comm->ch.external_rank, &comm->ch.external_ranks);
+    mpi_errno = MPIU_Find_local_and_external(comm, &comm->ch.local_size, &comm->ch.local_rank,
+					     &comm->ch.local_ranks, &comm->ch.external_size,
+					     &comm->ch.external_rank, &comm->ch.external_ranks,
+                                             &comm->ch.intranode_table, &comm->ch.internode_table);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     comm->coll_fns = &collective_functions;

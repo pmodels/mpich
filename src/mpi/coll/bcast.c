@@ -570,6 +570,33 @@ int MPIR_Bcast (
 }
 /* end:nested */
 
+/* A simple utility function to that calls the comm_ptr->coll_fns->Bcast
+   override if it exists or else it calls MPIR_Bcast with the same arguments.
+   This function just makes the high-level broadcast logic easier to read while
+   still accomodating coll_fns-style overrides.  It also reduces future errors
+   by eliminating the duplication of Bcast arguments. */
+static inline int MPIR_Bcast_or_coll_fn(void *buffer, 
+                                    int count, 
+                                    MPI_Datatype datatype, 
+                                    int root, 
+                                    MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Bcast != NULL)
+    {
+        /* --BEGIN USEREXTENSION-- */
+        mpi_errno = comm_ptr->node_roots_comm->coll_fns->Bcast(buffer, count,
+                                                               datatype, root, comm_ptr);
+        /* --END USEREXTENSION-- */
+    }
+    else {
+        mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm_ptr);
+    }
+
+    return mpi_errno;
+}
+
 /* begin:nested */
 /* Not PMPI_LOCAL because it is called in intercomm allgather */
 int MPIR_Bcast_inter ( 
@@ -767,13 +794,54 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
         if (comm_ptr->comm_kind == MPID_INTRACOMM)
 	{
             /* intracommunicator */
+#if USE_SMP_COLLECTIVES
+            if (MPIR_Comm_is_node_aware(comm_ptr)) {
+                /* perform the intranode broadcast on the root's node */
+                if (comm_ptr->node_comm != NULL &&
+                    MPIU_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */ 
+                {                                                /* and is on our node (!-1) */
+                    mpi_errno = MPIR_Bcast_or_coll_fn(buffer, count, datatype,
+                                                      MPIU_Get_intranode_rank(comm_ptr, root),
+                                                      comm_ptr->node_comm);
+                    if (mpi_errno) {
+                        MPIR_Nest_decr();
+                        goto fn_fail;
+                    }
+                }
+
+                /* perform the internode broadcast */
+                if (comm_ptr->node_roots_comm != NULL) {
+                    mpi_errno = MPIR_Bcast_or_coll_fn(buffer, count, datatype,
+                                                      MPIU_Get_internode_rank(comm_ptr, root),
+                                                      comm_ptr->node_roots_comm);
+                    if (mpi_errno) {
+                        MPIR_Nest_decr();
+                        goto fn_fail;
+                    }
+                }
+
+                /* perform the intranode broadcast on all except for the root's node */
+                if (comm_ptr->node_comm != NULL &&
+                    MPIU_Get_intranode_rank(comm_ptr, root) <= 0) /* 0 if root was local root too */
+                {                                                 /* -1 if different node than root */
+                    mpi_errno = MPIR_Bcast_or_coll_fn(buffer, count, datatype, 0, comm_ptr->node_comm);
+                    if (mpi_errno) {
+                        MPIR_Nest_decr();
+                        goto fn_fail;
+                    }
+                }
+            }
+            else {
+                mpi_errno = MPIR_Bcast( buffer, count, datatype, root, comm_ptr );
+            }
+#else
             mpi_errno = MPIR_Bcast( buffer, count, datatype, root, comm_ptr );
+#endif
 	}
         else
 	{
             /* intercommunicator */
-            mpi_errno = MPIR_Bcast_inter( buffer, count, datatype,
-	      root, comm_ptr );
+            mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr );
         }
 	MPIR_Nest_decr();
     }

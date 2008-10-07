@@ -182,6 +182,8 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **unableToLoadDLLsym %s %s: Unable to find or load the symbol %s from a \
  dynamically loaded library for reason %s
 
+**dynamic_node_ids: Node information for dynamic processes currently is not implemnted
+
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.
 #

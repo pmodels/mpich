@@ -738,6 +738,7 @@ int MPID_nem_newtcp_module_connect(struct MPIDI_VC *const vc)
     int index = -1;
     int mpi_errno = MPI_SUCCESS;
     freenode_t *node;
+    MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT);
@@ -763,11 +764,17 @@ int MPID_nem_newtcp_module_connect(struct MPIDI_VC *const vc)
            in MPID_nem_newtcp_module_connect_to_root()
         */
         if (vc->pg != NULL) { /* VC is not a temporary one */
-            char bc[MPID_NEM_MAX_KEY_VAL_LEN];
-
+            char *bc;
+            int pmi_errno;
+            int val_max_sz;
+            
+            pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
+            MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+            MPIU_CHKLMEM_MALLOC(bc, char *, val_max_sz, mpi_errno, "bc");
+            
             sc->is_tmpvc = FALSE;
             
-            mpi_errno = vc->pg->getConnInfo(vc->pg_rank, bc, MPID_NEM_MAX_KEY_VAL_LEN, vc->pg);
+            mpi_errno = vc->pg->getConnInfo(vc->pg_rank, bc, val_max_sz, vc->pg);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
             mpi_errno = MPID_nem_newtcp_module_get_addr_port_from_bc(bc, &addr, &(VC_FIELD(vc, sock_id).sin_port));
@@ -842,6 +849,7 @@ int MPID_nem_newtcp_module_connect(struct MPIDI_VC *const vc)
 
  fn_exit:
     /* MPID_nem_newtcp_module_connpoll(); FIXME-Imp should be called? */
+    MPIU_CHKLMEM_FREEALL();
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT);
     return mpi_errno;
  fn_fail:
