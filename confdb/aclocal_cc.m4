@@ -2226,12 +2226,17 @@ dnl the declaration is required.
 dnl
 dnl We use a 'double' as the first argument to try and catch varargs
 dnl routines that may use an int or pointer as the first argument.
+dnl
+dnl There is one difficulty - if the compiler has been instructed to
+dnl fail on implicitly defined functions, then this test will always
+dnl fail.
 dnl 
 dnl D*/
 AC_DEFUN(PAC_FUNC_NEEDS_DECL,[
 AC_CACHE_CHECK([whether $2 needs a declaration],
 pac_cv_func_decl_$2,[
-AC_TRY_COMPILE([$1],[int a=$2(1.0,27,1.0,"foo");],
+AC_TRY_COMPILE([$1
+int $2(double, int, double, const char *);],[int a=$2(1.0,27,1.0,"foo");],
 pac_cv_func_decl_$2=yes,pac_cv_func_decl_$2=no)])
 if test "$pac_cv_func_decl_$2" = "yes" ; then
 changequote(<<,>>)dnl
