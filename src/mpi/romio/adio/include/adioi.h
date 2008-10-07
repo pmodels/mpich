@@ -818,13 +818,13 @@ int  ADIOI_MPE_postwrite_b;
 
 #ifdef USE_DBG_LOGGING    /*todo fix dependency on mpich?*/
 /* DBGT_FPRINTF terse level printing */
-#define DBGT_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FUNCTION__,__LINE__); \
+#define DBGT_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
 if (MPIU_DBG_SELECTED(ROMIO,TERSE)) fprintf
 /* DBG_FPRINTF default (typical level) printing */
-#define DBG_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FUNCTION__,__LINE__); \
+#define DBG_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
 if (MPIU_DBG_SELECTED(ROMIO,TYPICAL)) fprintf
 /* DBGV_FPRINTF verbose level printing */
-#define DBGV_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FUNCTION__,__LINE__); \
+#define DBGV_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
  if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf
 #else /* compile it out */
 #define DBG_FPRINTF if (0) fprintf

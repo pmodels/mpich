@@ -167,7 +167,7 @@ int ADIOI_PVFS2_aio_poll_fn(void *extra_state, MPI_Status *status)
     aio_req = (ADIOI_AIO_Request *)extra_state;
 
     /* BUG: cannot PVFS_sys_testsome: does not work for a specific request */
-    ret = PVFS_sys_wait(aio_req->op_id, __FUNCTION__, &error);
+    ret = PVFS_sys_wait(aio_req->op_id, ADIOI_PVFS2_aio_poll_fn, &error);
     if (ret == 0) {
 	aio_req->nbytes = aio_req->resp_io.total_completed;
 	MPIR_Nest_incr();
