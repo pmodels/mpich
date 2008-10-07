@@ -66,7 +66,7 @@ typedef unsigned long MPID_Seqnum_t;
 typedef struct MPIDI_Message_match
 {
     int32_t tag;
-    int16_t rank;
+    int32_t rank;
     MPIR_Context_id_t context_id;
 }
 MPIDI_Message_match;
