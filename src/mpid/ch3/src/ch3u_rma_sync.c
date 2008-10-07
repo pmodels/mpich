@@ -599,7 +599,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 
         mpi_errno = create_datatype(dtype_info, *dataloop, target_dtp->dataloop_size, rma_op->origin_addr,
                                     rma_op->origin_count, rma_op->origin_datatype, &combined_dtp);
-        MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         (*request)->dev.datatype_ptr = combined_dtp;
         /* combined_datatype will be freed when request is freed */
@@ -629,7 +629,8 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
     if (*request)
     {
         MPIU_CHKPMEM_REAP();
-        MPID_Datatype_release((*request)->dev.datatype_ptr);
+        if ((*request)->dev.datatype_ptr)
+            MPID_Datatype_release((*request)->dev.datatype_ptr);
         MPIU_Object_set_ref(*request, 0);
         MPIDI_CH3_Request_destroy(*request);
     }
