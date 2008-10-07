@@ -326,8 +326,8 @@
         (sp)->top = ep0;                                        \
     } while (0)
 
-#define GENERIC_S_POP(sp, ep, next_field) do {  \
-        *(ep) = (sp)->top;                      \
-        (sp)->top = (*(ep))->next_field;        \
+#define GENERIC_S_POP(sp, epp, next_field) do {  \
+        *(epp) = (sp)->top;                      \
+        (sp)->top = (*(epp))->next_field;        \
     } while (0)
 #endif /* MPID_NEM_GENERIC_QUEUE_H */
