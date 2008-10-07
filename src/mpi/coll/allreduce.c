@@ -714,10 +714,7 @@ int MPI_Allreduce ( void *sendbuf, void *recvbuf, int count,
 
 		/* now broadcast the result among local processes */
                 if (comm_ptr->node_comm != NULL)
-                {
                     mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm);
-                    if (mpi_errno) goto fn_fail;
-                }
             }
             else {
                 mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype,
