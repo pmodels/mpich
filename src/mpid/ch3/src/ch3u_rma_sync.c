@@ -437,6 +437,8 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEND_RMA_MSG);
 
+    *request = NULL;
+
     if (rma_op->type == MPIDI_RMA_PUT)
     {
         MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
@@ -553,9 +555,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
         {
             /* derived datatype on origin */
             *request = MPID_Request_create();
-            if (*request == NULL) {
-                MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
-            }
+            MPIU_ERR_CHKANDJUMP(*request == NULL,mpi_errno,MPI_ERR_OTHER,"**nomem");
             
             MPIU_Object_set_ref(*request, 2);
             (*request)->kind = MPID_REQUEST_SEND;
@@ -576,22 +576,13 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
             (*request)->dev.OnDataAvail = 0;
 
             mpi_errno = vc->sendNoncontig_fn(vc, *request, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno != MPI_SUCCESS)
-            {
-                MPID_Datatype_release((*request)->dev.datatype_ptr);
-                MPIU_Object_set_ref(*request, 0);
-                MPIDI_CH3_Request_destroy(*request);
-                *request = NULL;
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
-            }
-            /* --END ERROR HANDLING-- */
+            MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
     }
     else
     {
         /* derived datatype on target */
-        MPID_Datatype *combined_dtp;
+        MPID_Datatype *combined_dtp = NULL;
 
         *request = MPID_Request_create();
         if (*request == NULL) {
@@ -606,8 +597,9 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 
         /* create a new datatype containing the dtype_info, dataloop, and origin data */
 
-        create_datatype(dtype_info, *dataloop, target_dtp->dataloop_size, rma_op->origin_addr,
-                        rma_op->origin_count, rma_op->origin_datatype, &combined_dtp);
+        mpi_errno = create_datatype(dtype_info, *dataloop, target_dtp->dataloop_size, rma_op->origin_addr,
+                                    rma_op->origin_count, rma_op->origin_datatype, &combined_dtp);
+        MPIU_ERR_POP(mpi_errno);
 
         (*request)->dev.datatype_ptr = combined_dtp;
         /* combined_datatype will be freed when request is freed */
@@ -621,16 +613,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
         (*request)->dev.OnDataAvail = 0;
 
         mpi_errno = vc->sendNoncontig_fn(vc, *request, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
-        /* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno != MPI_SUCCESS)
-        {
-            MPID_Datatype_release((*request)->dev.datatype_ptr);
-            MPIU_Object_set_ref(*request, 0);
-            MPIDI_CH3_Request_destroy(*request);
-            *request = NULL;
-            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
-        }
-        /* --END ERROR HANDLING-- */
+        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         /* we're done with the datatypes */
         if (origin_dt_derived)
@@ -643,7 +626,14 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
  fn_fail:
-    MPIU_CHKPMEM_REAP();
+    if (*request)
+    {
+        MPIU_CHKPMEM_REAP();
+        MPID_Datatype_release((*request)->dev.datatype_ptr);
+        MPIU_Object_set_ref(*request, 0);
+        MPIDI_CH3_Request_destroy(*request);
+    }
+    *request = NULL;
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
