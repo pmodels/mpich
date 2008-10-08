@@ -834,7 +834,18 @@ int MPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
         if (comm_ptr->comm_kind == MPID_INTRACOMM) {
             /* intracommunicator */
 #if USE_SMP_COLLECTIVES
-            if (MPIR_Comm_is_node_aware(comm_ptr)) {
+	    MPID_Op *op_ptr;
+	    int is_commutative; 
+
+	    /* is the op commutative? We do SMP optimizations only if it is. */ 
+	    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN)
+		is_commutative = 1;
+	    else {
+		MPID_Op_get_ptr(op, op_ptr);
+		is_commutative = (op_ptr->kind == MPID_OP_USER_NONCOMMUTE) ? 0 : 1;
+	    }
+
+            if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
 
 		void *tmp_buf;
 		MPI_Aint  true_lb, true_extent, extent; 
