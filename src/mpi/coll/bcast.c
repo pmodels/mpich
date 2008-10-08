@@ -65,6 +65,10 @@
    End Algorithm: MPI_Bcast
 */
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bcast
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* begin:nested */
 /* not declared static because it is called in intercomm. allgatherv */
 int MPIR_Bcast ( 
@@ -74,7 +78,6 @@ int MPIR_Bcast (
 	int root, 
 	MPID_Comm *comm_ptr )
 {
-  static const char FCNAME[] = "MPIR_Bcast";
   MPI_Status status;
   int        rank, comm_size, src, dst;
   int        relative_rank, mask;
@@ -575,6 +578,10 @@ int MPIR_Bcast (
    This function just makes the high-level broadcast logic easier to read while
    still accomodating coll_fns-style overrides.  It also reduces future errors
    by eliminating the duplication of Bcast arguments. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bcast_or_coll_fn
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int MPIR_Bcast_or_coll_fn(void *buffer, 
                                     int count, 
                                     MPI_Datatype datatype, 
@@ -597,6 +604,10 @@ static inline int MPIR_Bcast_or_coll_fn(void *buffer,
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bcast_inter
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* begin:nested */
 /* Not PMPI_LOCAL because it is called in intercomm allgather */
 int MPIR_Bcast_inter ( 
@@ -610,7 +621,6 @@ int MPIR_Bcast_inter (
     Root sends to rank 0 in remote group. Remote group does local
     intracommunicator broadcast.
 */
-    static const char FCNAME[] = "MPIR_Bcast_inter";
     int rank, mpi_errno;
     MPI_Status status;
     MPID_Comm *newcomm_ptr = NULL;
@@ -689,6 +699,8 @@ int MPIR_Bcast_inter (
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Bcast
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
 MPI_Bcast - Broadcasts a message from the process with rank "root" to
@@ -718,7 +730,6 @@ Input Parameters:
 int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root, 
                MPI_Comm comm )
 {
-    static const char FCNAME[] = "MPI_Bcast";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_BCAST);
