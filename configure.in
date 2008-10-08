@@ -312,7 +312,7 @@ implementation.   option is a list of comma separated names including
     all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
                when --enable-fast is specified without any option.
     O<n>     - Appends default optimization flags, -O<n>, to
-               CFLAGS, FFLAGS, CXXFLAGS, F90FLAGS.
+               MPICH2LIB_CFLAGS, MPICH2LIB_FFLAGS, MPICH2LIB_CXXFLAGS, MPICH2LIB_F90FLAGS.
     none     - None of above options, i.e. --disable-fast.
 ],,enable_fast=defopt)
 
