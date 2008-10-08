@@ -287,8 +287,6 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             goto fn_fail;
         }
 
-        comm->is_node_aware = 1;
-
         /* FIXME could just use the same ctxid and a different tag like
            MPIR_BCAST_TAG.  Perhaps MPIR_BCAST_INTRANODE_TAG, etc.  Or maybe
            just use 3 bits for the ctx suffix and use some of those values. */
@@ -365,6 +363,9 @@ int MPIR_Comm_commit(MPID_Comm *comm)
         else {
             MPIR_Free_contextid(context_id);
         }
+
+        comm->is_node_aware = 1;
+
     }
 
 fn_exit:
