@@ -26,8 +26,7 @@ int main( int argc, char *argv[] )
 
     if (parentcomm == MPI_COMM_NULL) {
 	/* Create 2 more processes */
-	/*MPI_Comm_spawn( "./spawnintra", MPI_ARGV_NULL, np,*/
-	MPI_Comm_spawn( "./spi.sh", MPI_ARGV_NULL, np,
+	MPI_Comm_spawn( "./spawnintra", MPI_ARGV_NULL, np,
 			MPI_INFO_NULL, 0, MPI_COMM_WORLD,
 			&intercomm, errcodes );
     }
