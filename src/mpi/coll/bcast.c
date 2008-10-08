@@ -825,10 +825,6 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
                     MPIU_Get_intranode_rank(comm_ptr, root) <= 0) /* 0 if root was local root too */
                 {                                                 /* -1 if different node than root */
                     mpi_errno = MPIR_Bcast_or_coll_fn(buffer, count, datatype, 0, comm_ptr->node_comm);
-                    if (mpi_errno) {
-                        MPIR_Nest_decr();
-                        goto fn_fail;
-                    }
                 }
             }
             else {
