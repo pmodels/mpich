@@ -46,9 +46,12 @@
 */
 
 /* not declared static because it is called in ch3_comm_connect/accept */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Barrier
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Barrier( MPID_Comm *comm_ptr )
 {
-    static const char FCNAME[] = "MPIR_Barrier";
     int size, rank, src, dst, mask, mpi_errno=MPI_SUCCESS;
     MPI_Comm comm;
 
@@ -217,11 +220,38 @@ int MPIR_Barrier( MPID_Comm *comm_ptr )
 #endif
 
 
+/* A simple utility function to that calls the comm_ptr->coll_fns->Barrier
+override if it exists or else it calls MPIR_Barrier with the same arguments. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Barrier_or_coll_fn
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int MPIR_Barrier_or_coll_fn(MPID_Comm *comm_ptr )
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Barrier != NULL)
+    {
+        /* --BEGIN USEREXTENSION-- */
+        mpi_errno = comm_ptr->node_roots_comm->coll_fns->Barrier(comm_ptr);
+        /* --END USEREXTENSION-- */
+    }
+    else {
+        mpi_errno = MPIR_Barrier(comm_ptr);
+    }
+
+    return mpi_errno;
+}
+
+
 /* not declared static because a machine-specific function may call this one 
    in some cases */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Barrier_inter
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Barrier_inter( MPID_Comm *comm_ptr )
 {
-    static const char FCNAME[] = "MPIR_Barrier_inter";
     int rank, mpi_errno, i, root;
     MPID_Comm *newcomm_ptr = NULL;
 
@@ -298,12 +328,13 @@ int MPIR_Barrier_inter( MPID_Comm *comm_ptr )
     return mpi_errno;
 }
 
-
-
 #endif
+
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Barrier
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
 
@@ -328,7 +359,6 @@ communicator have entered the call.
 @*/
 int MPI_Barrier( MPI_Comm comm )
 {
-    static const char FCNAME[] = "MPI_Barrier";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_BARRIER);
@@ -384,7 +414,7 @@ int MPI_Barrier( MPI_Comm comm )
                 /* do the intranode barrier on all nodes */
                 if (comm_ptr->node_comm != NULL)
                 {
-                    mpi_errno = MPIR_Barrier(comm_ptr->node_comm);
+                    mpi_errno = MPIR_Barrier_or_coll_fn(comm_ptr->node_comm);
                     if (mpi_errno) {
                         MPIR_Nest_decr();
                         goto fn_fail;
@@ -393,7 +423,7 @@ int MPI_Barrier( MPI_Comm comm )
 
                 /* do the barrier across roots of all nodes */
                 if (comm_ptr->node_roots_comm != NULL) {
-                    mpi_errno = MPIR_Barrier(comm_ptr->node_roots_comm);
+                    mpi_errno = MPIR_Barrier_or_coll_fn(comm_ptr->node_roots_comm);
                     if (mpi_errno) {
                         MPIR_Nest_decr();
                         goto fn_fail;
@@ -404,8 +434,9 @@ int MPI_Barrier( MPI_Comm comm )
                    (0-byte broadcast just returns without doing anything) */
                 if (comm_ptr->node_comm != NULL)
                 {  
-		    int i;
-                    mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, 0, comm_ptr->node_comm);
+		    int i=0;
+                    mpi_errno = MPIR_Bcast_or_coll_fn(&i, 1, MPI_BYTE, 0, 
+						      comm_ptr->node_comm);
                 }
             }
             else {

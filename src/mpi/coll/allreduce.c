@@ -706,11 +706,11 @@ int MPI_Allreduce ( void *sendbuf, void *recvbuf, int count,
 			/* IN_PLACE and not root of reduce. Data supplied to this
 			allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
 			
-			mpi_errno = MPIR_Reduce(recvbuf, NULL, count, datatype,
+			mpi_errno = MPIR_Reduce_or_coll_fn(recvbuf, NULL, count, datatype,
 						op, 0, comm_ptr->node_comm);
 		    }
 		    else {
-			mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype,
+			mpi_errno = MPIR_Reduce_or_coll_fn(sendbuf, recvbuf, count, datatype,
 						op, 0, comm_ptr->node_comm);
 		    }
 		    if (mpi_errno) goto fn_fail;
@@ -729,7 +729,8 @@ int MPI_Allreduce ( void *sendbuf, void *recvbuf, int count,
 		    MPIU_THREADPRIV_GET;
 		    
 		    MPIR_Nest_incr();
-                    mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm);
+                    mpi_errno = MPIR_Bcast_or_coll_fn(recvbuf, count, datatype, 
+						      0, comm_ptr->node_comm);
 		    MPIR_Nest_decr();
 		}
             }

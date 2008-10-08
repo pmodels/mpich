@@ -582,11 +582,11 @@ int MPIR_Bcast (
 #define FUNCNAME MPIR_Bcast_or_coll_fn
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline int MPIR_Bcast_or_coll_fn(void *buffer, 
-                                    int count, 
-                                    MPI_Datatype datatype, 
-                                    int root, 
-                                    MPID_Comm *comm_ptr)
+int MPIR_Bcast_or_coll_fn(void *buffer, 
+			  int count, 
+			  MPI_Datatype datatype, 
+			  int root, 
+			  MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
