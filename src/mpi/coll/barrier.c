@@ -378,7 +378,42 @@ int MPI_Barrier( MPI_Comm comm )
 	MPIU_THREADPRIV_GET;
         MPIR_Nest_incr();
         if (comm_ptr->comm_kind == MPID_INTRACOMM) {
-	    mpi_errno = MPIR_Barrier( comm_ptr );
+#if USE_SMP_COLLECTIVES
+            if (MPIR_Comm_is_node_aware(comm_ptr)) {
+
+                /* do the intranode barrier on all nodes */
+                if (comm_ptr->node_comm != NULL)
+                {
+                    mpi_errno = MPIR_Barrier(comm_ptr->node_comm);
+                    if (mpi_errno) {
+                        MPIR_Nest_decr();
+                        goto fn_fail;
+                    }
+                }
+
+                /* do the barrier across roots of all nodes */
+                if (comm_ptr->node_roots_comm != NULL) {
+                    mpi_errno = MPIR_Barrier(comm_ptr->node_roots_comm);
+                    if (mpi_errno) {
+                        MPIR_Nest_decr();
+                        goto fn_fail;
+                    }
+                }
+
+                /* release the local processes on each node with a 1-byte broadcast
+                   (0-byte broadcast just returns without doing anything) */
+                if (comm_ptr->node_comm != NULL)
+                {  
+		    int i;
+                    mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, 0, comm_ptr->node_comm);
+                }
+            }
+            else {
+                mpi_errno = MPIR_Barrier( comm_ptr );
+            }
+#else
+            mpi_errno = MPIR_Barrier( comm_ptr );
+#endif
         }
         else {
             /* intercommunicator */ 
