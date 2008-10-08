@@ -8,6 +8,12 @@
 #include "mpiimpl.h"
 #include <stdio.h>
 
+#if defined(MPICH_DEBUG_MEMINIT) && defined(HAVE_VALGRIND_H) && defined(HAVE_MEMCHECK_H)
+#  include <valgrind.h>
+#  include <memcheck.h>
+#  define USE_VALGRIND_MACROS 1
+#endif
+
 #ifdef NEEDS_PRINT_HANDLE
 static void MPIU_Print_handle( int handle );
 #endif
@@ -320,12 +326,18 @@ void *MPIU_Handle_obj_alloc(MPIU_Object_alloc_t *objmem)
        0xda as the byte in the memset)
     */
     if (ptr) {
+#if defined(USE_VALGRIND_MACROS)
+        VALGRIND_MAKE_MEM_DEFINED(&ptr->ref_count, objmem->size - sizeof(int));
 	memset( (void*)&ptr->ref_count, 0xef, objmem->size-sizeof(int));
+        VALGRIND_MAKE_MEM_UNDEFINED(&ptr->ref_count, objmem->size - sizeof(int));
+#else
+	memset( (void*)&ptr->ref_count, 0xef, objmem->size-sizeof(int));
+#endif
     }
 #endif
 
     return ptr;
-}   
+}
 
 /*+
   MPIU_Handle_obj_free - Free an object allocated with MPID_Handle_obj_new
@@ -342,6 +354,10 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
 {
     MPIU_Handle_common *obj = (MPIU_Handle_common *)object;
 
+#if defined(USE_VALGRIND_MACROS)
+    VALGRIND_MAKE_MEM_NOACCESS(&obj->ref_count, objmem->size - sizeof(int));
+    VALGRIND_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
+#endif
     obj->next	        = objmem->avail;
     objmem->avail	= obj;
 }

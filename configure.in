@@ -5092,6 +5092,9 @@ void foo1( char *fmt, ... ) {
     AC_DEFINE(HAVE___VA_COPY,1,[Define if we have __va_copy])
     fi
 fi
+
+# headers for valgrind client requests
+AC_CHECK_HEADERS([valgrind.h memcheck.h])
  
 dnl
 dnl If internationalization selected, try to find the needed functions
