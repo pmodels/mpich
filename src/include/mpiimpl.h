@@ -3615,6 +3615,8 @@ int MPIR_Bcast_inter(void *buffer, int count, MPI_Datatype datatype,
 		     int root, MPID_Comm *comm_ptr);
 int MPIR_Bcast (void *buffer, int count, MPI_Datatype datatype, int
                 root, MPID_Comm *comm_ptr);
+int MPIR_Bcast_or_coll_fn (void *buffer, int count, MPI_Datatype datatype, int
+                root, MPID_Comm *comm_ptr);
 int MPIR_Exscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                 MPI_Op op, MPID_Comm *comm_ptr );
 int MPIR_Gather (void *sendbuf, int sendcnt, MPI_Datatype sendtype,
@@ -3632,6 +3634,8 @@ int MPIR_Reduce_scatter_inter(void *sendbuf, void *recvbuf, int *recvcnts,
                               MPI_Datatype datatype, MPI_Op op, 
                               MPID_Comm *comm_ptr);
 int MPIR_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                MPI_Op op, int root, MPID_Comm *comm_ptr );
+int MPIR_Reduce_or_coll_fn(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                 MPI_Op op, int root, MPID_Comm *comm_ptr );
 int MPIR_Reduce_inter (void *sendbuf, void *recvbuf, int count, MPI_Datatype
                  datatype, MPI_Op op, int root, MPID_Comm *comm_ptr); 
