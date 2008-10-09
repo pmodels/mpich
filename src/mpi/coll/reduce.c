@@ -919,13 +919,14 @@ int MPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 
                 /* do the internode reduce to the root's node */
                 if (comm_ptr->node_roots_comm != NULL) {
-
 		    if (comm_ptr->node_roots_comm->rank != MPIU_Get_internode_rank(comm_ptr, root)) {
-			/* I am not on root's node */
-			mpi_errno = MPIR_Reduce_or_coll_fn(tmp_buf, NULL, count, datatype,
-					    op, MPIU_Get_internode_rank(comm_ptr, root), 
-					    comm_ptr->node_roots_comm);
-		    }
+                        /* I am not on root's node.  Use tmp_buf if we
+                           participated in the first reduce, otherwise use sendbuf */
+                        void *buf = (comm_ptr->node_comm == NULL ? sendbuf : tmp_buf);
+                        mpi_errno = MPIR_Reduce(buf, NULL, count, datatype,
+                                                op, MPIU_Get_internode_rank(comm_ptr, root), 
+                                                comm_ptr->node_roots_comm);
+                    }
 		    else { /* I am on root's node. I have not participated in the earlier reduce. */
 			if (comm_ptr->rank != root) {
 			    /* I am not the root though. I don't have a valid recvbuf.
