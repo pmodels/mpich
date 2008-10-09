@@ -101,7 +101,7 @@ VERSION = @VERSION@
 # Unsetting PACKAGE enables docdir=$datarootdir/doc and mpe2 data in $datadir
 # User can do "make install PACKAGE=mpich2-xxx" enables
 # docdir=$datarootdir/doc/mpich2-xxx and mpe2 data in $datadir/mpich2-xxx.
-PACKAGE = mpich2-$(VERSION)
+# PACKAGE = mpich2-$(VERSION)
 
 # We skip the mpid/mm directories because mm is no longer active
 # mpe2 is an outside project and is tested against the default
