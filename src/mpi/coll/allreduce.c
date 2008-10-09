@@ -715,6 +715,14 @@ int MPI_Allreduce ( void *sendbuf, void *recvbuf, int count,
 		    }
 		    if (mpi_errno) goto fn_fail;
                 }
+		else { 
+		    /* only one process on the node. copy sendbuf to recvbuf */
+		    if (sendbuf != MPI_IN_PLACE) {
+			mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, 
+						   recvbuf, count, datatype);
+			if (mpi_errno) goto fn_fail;
+		    }
+		}
 
                 /* now do an IN_PLACE allreduce among the local roots of all nodes */
                 if (comm_ptr->node_roots_comm != NULL) {
