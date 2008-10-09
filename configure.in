@@ -303,16 +303,18 @@ dnl --enable-fast
 AC_ARG_ENABLE(fast,
 [--enable-fast=option - Control the level of fast execution in the MPICH
 implementation.   option is a list of comma separated names including 
-    defopt   - Default compiler optimization -O2 for all language bindings.
-               when neither --enable-fast nor --disable-fast is specified.
+    O<n>     - Appends default optimization flags, -O<n>, to all internal
+               compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
+               MPICH2LIB_FFLAGS, and MPICH2LIB_F90FLAGS.
+    defopt   - Default compiler optimization -O2 for all language bindings,
+               i.e. --enable-fast=O2, when neither --enable-fast
+               nor --disable-fast is specified.
     nochkmsg - No error checking and no error messages, i.e.
                --disable-error-checking and --disable-error-messages.
     notiming - No timing collection, i.e. --disable-timing.
-    ndebug   - Appends -DNDEBUG to CFLAGS.
+    ndebug   - Appends -DNDEBUG to internal CFLAGS, i.e. MPICH2LIB_CFLAGS.
     all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
                when --enable-fast is specified without any option.
-    O<n>     - Appends default optimization flags, -O<n>, to
-               MPICH2LIB_CFLAGS, MPICH2LIB_FFLAGS, MPICH2LIB_CXXFLAGS, MPICH2LIB_F90FLAGS.
     none     - None of above options, i.e. --disable-fast.
 ],,enable_fast=defopt)
 
