@@ -66,9 +66,9 @@ void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc)
         sreq = MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE];
         if (sreq) {
             fprintf(stream, "....    sreq=%p ctx=%#x rank=%d tag=%d\n", sreq,
-                            sreq->dev.match.context_id,
-                            sreq->dev.match.rank,
-                            sreq->dev.match.tag);
+                            sreq->dev.match.parts.context_id,
+                            sreq->dev.match.parts.rank,
+                            sreq->dev.match.parts.tag);
         }
 
         fprintf(stream, "....CH3_NORMAL_QUEUE queue (head-to-tail)\n");
@@ -76,9 +76,9 @@ void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc)
         i = 0;
         while (sreq != NULL) {
             fprintf(stream, "....[%d] sreq=%p ctx=%#x rank=%d tag=%d\n", i, sreq,
-                            sreq->dev.match.context_id,
-                            sreq->dev.match.rank,
-                            sreq->dev.match.tag);
+                            sreq->dev.match.parts.context_id,
+                            sreq->dev.match.parts.rank,
+                            sreq->dev.match.parts.tag);
             ++i;
             sreq = sreq->dev.next;
         }

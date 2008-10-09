@@ -282,9 +282,9 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->status.cancelled	   = FALSE;		        \
     (sreq_)->dev.state = 0;                                     \
     (sreq_)->dev.cancel_pending = FALSE;                        \
-    (sreq_)->dev.match.rank = rank;				\
-    (sreq_)->dev.match.tag = tag;				\
-    (sreq_)->dev.match.context_id = comm->context_id + context_offset;	\
+    (sreq_)->dev.match.parts.rank = rank;			\
+    (sreq_)->dev.match.parts.tag = tag;				\
+    (sreq_)->dev.match.parts.context_id = comm->context_id + context_offset;	\
     (sreq_)->dev.user_buf = (void *) buf;			\
     (sreq_)->dev.user_count = count;				\
     (sreq_)->dev.datatype = datatype;				\

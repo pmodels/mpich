@@ -22,8 +22,8 @@
 
 #define set_request_info(rreq_, pkt_, msg_type_)		\
 {								\
-    (rreq_)->status.MPI_SOURCE = (pkt_)->match.rank;		\
-    (rreq_)->status.MPI_TAG = (pkt_)->match.tag;		\
+    (rreq_)->status.MPI_SOURCE = (pkt_)->match.parts.rank;	\
+    (rreq_)->status.MPI_TAG = (pkt_)->match.parts.tag;		\
     (rreq_)->status.count = (pkt_)->data_sz;			\
     (rreq_)->dev.sender_req_id = (pkt_)->sender_req_id;		\
     (rreq_)->dev.recv_data_sz = (pkt_)->data_sz;		\

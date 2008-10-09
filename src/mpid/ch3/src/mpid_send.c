@@ -75,9 +75,9 @@ int MPID_Send(const void * buf, int count, MPI_Datatype datatype, int rank,
 
 	MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending zero length message");
 	MPIDI_Pkt_init(eager_pkt, MPIDI_CH3_PKT_EAGER_SEND);
-	eager_pkt->match.rank = comm->rank;
-	eager_pkt->match.tag = tag;
-	eager_pkt->match.context_id = comm->context_id + context_offset;
+	eager_pkt->match.parts.rank = comm->rank;
+	eager_pkt->match.parts.tag = tag;
+	eager_pkt->match.parts.context_id = comm->context_id + context_offset;
 	eager_pkt->sender_req_id = MPI_REQUEST_NULL;
 	eager_pkt->data_sz = 0;
 	

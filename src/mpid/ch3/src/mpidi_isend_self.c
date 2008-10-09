@@ -35,9 +35,9 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
     MPIDI_Request_set_type(sreq, type);
     MPIDI_Request_set_msg_type(sreq, MPIDI_REQUEST_SELF_MSG);
     
-    match.rank = rank;
-    match.tag = tag;
-    match.context_id = comm->context_id + context_offset;
+    match.parts.rank = rank;
+    match.parts.tag = tag;
+    match.parts.context_id = comm->context_id + context_offset;
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&match, &found);
     /* --BEGIN ERROR HANDLING-- */
     if (rreq == NULL)

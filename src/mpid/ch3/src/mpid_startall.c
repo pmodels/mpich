@@ -35,9 +35,9 @@
     (sreq_)->kind = MPID_PREQUEST_SEND;					\
     (sreq_)->comm = comm;						\
     MPIR_Comm_add_ref(comm);						\
-    (sreq_)->dev.match.rank = rank;					\
-    (sreq_)->dev.match.tag = tag;					\
-    (sreq_)->dev.match.context_id = comm->context_id + context_offset;	\
+    (sreq_)->dev.match.parts.rank = rank;				\
+    (sreq_)->dev.match.parts.tag = tag;					\
+    (sreq_)->dev.match.parts.context_id = comm->context_id + context_offset;	\
     (sreq_)->dev.user_buf = (void *) buf;				\
     (sreq_)->dev.user_count = count;					\
     (sreq_)->dev.datatype = datatype;					\
@@ -72,32 +72,32 @@ int MPID_Startall(int count, MPID_Request * requests[])
 	{
 	    case MPIDI_REQUEST_TYPE_RECV:
 	    {
-		rc = MPID_Irecv(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.rank,
-		    preq->dev.match.tag, preq->comm, preq->dev.match.context_id - preq->comm->recvcontext_id,
+		rc = MPID_Irecv(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.parts.rank,
+		    preq->dev.match.parts.tag, preq->comm, preq->dev.match.parts.context_id - preq->comm->recvcontext_id,
 		    &preq->partner_request);
 		break;
 	    }
 	    
 	    case MPIDI_REQUEST_TYPE_SEND:
 	    {
-		rc = MPID_Isend(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.rank,
-		    preq->dev.match.tag, preq->comm, preq->dev.match.context_id - preq->comm->context_id,
+		rc = MPID_Isend(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.parts.rank,
+		    preq->dev.match.parts.tag, preq->comm, preq->dev.match.parts.context_id - preq->comm->context_id,
 		    &preq->partner_request);
 		break;
 	    }
 		
 	    case MPIDI_REQUEST_TYPE_RSEND:
 	    {
-		rc = MPID_Irsend(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.rank,
-		    preq->dev.match.tag, preq->comm, preq->dev.match.context_id - preq->comm->context_id,
+		rc = MPID_Irsend(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.parts.rank,
+		    preq->dev.match.parts.tag, preq->comm, preq->dev.match.parts.context_id - preq->comm->context_id,
 		    &preq->partner_request);
 		break;
 	    }
 		
 	    case MPIDI_REQUEST_TYPE_SSEND:
 	    {
-		rc = MPID_Issend(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.rank,
-		    preq->dev.match.tag, preq->comm, preq->dev.match.context_id - preq->comm->context_id,
+		rc = MPID_Issend(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.parts.rank,
+		    preq->dev.match.parts.tag, preq->comm, preq->dev.match.parts.context_id - preq->comm->context_id,
 		    &preq->partner_request);
 		break;
 	    }
@@ -112,8 +112,8 @@ int MPID_Startall(int count, MPID_Request * requests[])
 		MPIR_Nest_incr();
 		{
 		    rc = NMPI_Ibsend(preq->dev.user_buf, preq->dev.user_count,
-				     preq->dev.datatype, preq->dev.match.rank,
-				     preq->dev.match.tag, preq->comm->handle, 
+				     preq->dev.datatype, preq->dev.match.parts.rank,
+				     preq->dev.match.parts.tag, preq->comm->handle, 
 				     &sreq_handle);
 		    if (rc == MPI_SUCCESS)
 		    {
@@ -320,9 +320,9 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
     rreq->comm = comm;
     rreq->cc   = 0;
     MPIR_Comm_add_ref(comm);
-    rreq->dev.match.rank = rank;
-    rreq->dev.match.tag = tag;
-    rreq->dev.match.context_id = comm->recvcontext_id + context_offset;
+    rreq->dev.match.parts.rank = rank;
+    rreq->dev.match.parts.tag = tag;
+    rreq->dev.match.parts.context_id = comm->recvcontext_id + context_offset;
     rreq->dev.user_buf = (void *) buf;
     rreq->dev.user_count = count;
     rreq->dev.datatype = datatype;

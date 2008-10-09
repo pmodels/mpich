@@ -45,7 +45,7 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	goto fn_exit;
     }
 
-    MPIDI_Comm_get_vc(sreq->comm, sreq->dev.match.rank, &vc);
+    MPIDI_Comm_get_vc(sreq->comm, sreq->dev.match.parts.rank, &vc);
 
     proto = MPIDI_Request_get_msg_type(sreq);
 
@@ -172,9 +172,9 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	}
 
 	MPIDI_Pkt_init(csr_pkt, MPIDI_CH3_PKT_CANCEL_SEND_REQ);
-	csr_pkt->match.rank = sreq->comm->rank;
-	csr_pkt->match.tag = sreq->dev.match.tag;
-	csr_pkt->match.context_id = sreq->dev.match.context_id;
+	csr_pkt->match.parts.rank = sreq->comm->rank;
+	csr_pkt->match.parts.tag = sreq->dev.match.parts.tag;
+	csr_pkt->match.parts.context_id = sreq->dev.match.parts.context_id;
 	csr_pkt->sender_req_id = sreq->handle;
 	
 	mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, csr_pkt, 

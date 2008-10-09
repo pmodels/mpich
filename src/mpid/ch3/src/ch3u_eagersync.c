@@ -44,9 +44,9 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
     sreq->dev.OnFinal = 0;
 
     MPIDI_Pkt_init(es_pkt, MPIDI_CH3_PKT_EAGER_SYNC_SEND);
-    es_pkt->match.rank = comm->rank;
-    es_pkt->match.tag = tag;
-    es_pkt->match.context_id = comm->context_id + context_offset;
+    es_pkt->match.parts.rank = comm->rank;
+    es_pkt->match.parts.tag = tag;
+    es_pkt->match.parts.context_id = comm->context_id + context_offset;
     es_pkt->sender_req_id = sreq->handle;
     es_pkt->data_sz = data_sz;
 
@@ -125,9 +125,9 @@ int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag,
     sreq->dev.OnDataAvail = 0;
     
     MPIDI_Pkt_init(es_pkt, MPIDI_CH3_PKT_EAGER_SYNC_SEND);
-    es_pkt->match.rank = comm->rank;
-    es_pkt->match.tag = tag;
-    es_pkt->match.context_id = comm->context_id + context_offset;
+    es_pkt->match.parts.rank = comm->rank;
+    es_pkt->match.parts.tag = tag;
+    es_pkt->match.parts.context_id = comm->context_id + context_offset;
     es_pkt->sender_req_id = sreq->handle;
     es_pkt->data_sz = 0;
     
@@ -187,8 +187,8 @@ int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *vc, MPID_Request *rreq )
 
 #define set_request_info(rreq_, pkt_, msg_type_)		\
 {								\
-    (rreq_)->status.MPI_SOURCE = (pkt_)->match.rank;		\
-    (rreq_)->status.MPI_TAG = (pkt_)->match.tag;		\
+    (rreq_)->status.MPI_SOURCE = (pkt_)->match.parts.rank;	\
+    (rreq_)->status.MPI_TAG = (pkt_)->match.parts.tag;		\
     (rreq_)->status.count = (pkt_)->data_sz;			\
     (rreq_)->dev.sender_req_id = (pkt_)->sender_req_id;		\
     (rreq_)->dev.recv_data_sz = (pkt_)->data_sz;		\

@@ -219,9 +219,9 @@ void MPID_nem_newtcp_module_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc)
     while (sreq)
     {
         fprintf(stream, "....[%d] sreq=%p ctx=%#x rank=%d tag=%d\n", i, sreq,
-                        sreq->dev.match.context_id,
-                        sreq->dev.match.rank,
-                        sreq->dev.match.tag);
+                        sreq->dev.match.parts.context_id,
+                        sreq->dev.match.parts.rank,
+                        sreq->dev.match.parts.tag);
         ++i;
         sreq = sreq->dev.next;
     }

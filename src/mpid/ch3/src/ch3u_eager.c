@@ -101,9 +101,9 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
     sreq->dev.OnFinal = 0;
 
     MPIDI_Pkt_init(eager_pkt, reqtype);
-    eager_pkt->match.rank	= comm->rank;
-    eager_pkt->match.tag	= tag;
-    eager_pkt->match.context_id	= comm->context_id + context_offset;
+    eager_pkt->match.parts.rank	= comm->rank;
+    eager_pkt->match.parts.tag	= tag;
+    eager_pkt->match.parts.context_id	= comm->context_id + context_offset;
     eager_pkt->sender_req_id	= MPI_REQUEST_NULL;
     eager_pkt->data_sz		= data_sz;
     
@@ -157,9 +157,9 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p,
     MPID_IOV iov[2];
     
     MPIDI_Pkt_init(eager_pkt, reqtype);
-    eager_pkt->match.rank	= comm->rank;
-    eager_pkt->match.tag	= tag;
-    eager_pkt->match.context_id	= comm->context_id + context_offset;
+    eager_pkt->match.parts.rank	= comm->rank;
+    eager_pkt->match.parts.tag	= tag;
+    eager_pkt->match.parts.context_id	= comm->context_id + context_offset;
     eager_pkt->sender_req_id	= MPI_REQUEST_NULL;
     eager_pkt->data_sz		= data_sz;
     
@@ -223,9 +223,9 @@ int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p,
     
     /*    printf( "Sending short eager\n"); fflush(stdout); */
     MPIDI_Pkt_init(eagershort_pkt, reqtype);
-    eagershort_pkt->match.rank	     = comm->rank;
-    eagershort_pkt->match.tag	     = tag;
-    eagershort_pkt->match.context_id = comm->context_id + context_offset;
+    eagershort_pkt->match.parts.rank	     = comm->rank;
+    eagershort_pkt->match.parts.tag	     = tag;
+    eagershort_pkt->match.parts.context_id = comm->context_id + context_offset;
     eagershort_pkt->data_sz	     = data_sz;
     
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
@@ -297,8 +297,8 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomemreq");
     }
 
-    (rreq)->status.MPI_SOURCE = (eagershort_pkt)->match.rank;
-    (rreq)->status.MPI_TAG    = (eagershort_pkt)->match.tag;
+    (rreq)->status.MPI_SOURCE = (eagershort_pkt)->match.parts.rank;
+    (rreq)->status.MPI_TAG    = (eagershort_pkt)->match.parts.tag;
     (rreq)->status.count      = (eagershort_pkt)->data_sz;
     (rreq)->dev.recv_data_sz  = (eagershort_pkt)->data_sz;
     MPIDI_Request_set_seqnum((rreq), (eagershort_pkt)->seqnum);
@@ -495,9 +495,9 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
     sreq->dev.OnDataAvail = 0;
     
     MPIDI_Pkt_init(eager_pkt, reqtype);
-    eager_pkt->match.rank	= comm->rank;
-    eager_pkt->match.tag	= tag;
-    eager_pkt->match.context_id	= comm->context_id + context_offset;
+    eager_pkt->match.parts.rank	= comm->rank;
+    eager_pkt->match.parts.tag	= tag;
+    eager_pkt->match.parts.context_id	= comm->context_id + context_offset;
     eager_pkt->sender_req_id	= sreq->handle;
     eager_pkt->data_sz		= data_sz;
     
@@ -538,8 +538,8 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
 
 #define set_request_info(rreq_, pkt_, msg_type_)		\
 {								\
-    (rreq_)->status.MPI_SOURCE = (pkt_)->match.rank;		\
-    (rreq_)->status.MPI_TAG = (pkt_)->match.tag;		\
+    (rreq_)->status.MPI_SOURCE = (pkt_)->match.parts.rank;	\
+    (rreq_)->status.MPI_TAG = (pkt_)->match.parts.tag;		\
     (rreq_)->status.count = (pkt_)->data_sz;			\
     (rreq_)->dev.sender_req_id = (pkt_)->sender_req_id;		\
     (rreq_)->dev.recv_data_sz = (pkt_)->data_sz;		\
@@ -696,8 +696,8 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 				      MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
 				      MPI_ERR_OTHER, "**rsendnomatch", 
 				      "**rsendnomatch %d %d", 
-				      ready_pkt->match.rank,
-				      ready_pkt->match.tag);
+				      ready_pkt->match.parts.rank,
+				      ready_pkt->match.parts.tag);
 	rreq->status.count = 0;
 	if (rreq->dev.recv_data_sz > 0)
 	{

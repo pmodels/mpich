@@ -245,17 +245,17 @@ const char *MPIDI_Pkt_GetDescString( MPIDI_CH3_Pkt_t *pkt )
     case MPIDI_CH3_PKT_EAGER_SEND:
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
 		       "EAGER_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT, 
-		       pkt->eager_send.match.context_id,
-		       (int)pkt->eager_send.match.tag, 
-		       pkt->eager_send.match.rank, 
+		       pkt->eager_send.match.parts.context_id,
+		       (int)pkt->eager_send.match.parts.tag, 
+		       pkt->eager_send.match.parts.rank, 
 		       pkt->eager_send.data_sz );
 	break;
     case MPIDI_CH3_PKT_EAGER_SYNC_SEND:
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
 		       "EAGER_SYNC_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT " req=%d", 
-		       pkt->eager_sync_send.match.context_id,
-		       (int)pkt->eager_sync_send.match.tag, 
-		       pkt->eager_sync_send.match.rank, 
+		       pkt->eager_sync_send.match.parts.context_id,
+		       (int)pkt->eager_sync_send.match.parts.tag, 
+		       pkt->eager_sync_send.match.parts.rank, 
 		       pkt->eager_sync_send.data_sz,
 		       pkt->eager_sync_send.sender_req_id );
 		break;
@@ -267,17 +267,17 @@ const char *MPIDI_Pkt_GetDescString( MPIDI_CH3_Pkt_t *pkt )
     case MPIDI_CH3_PKT_READY_SEND:
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
 		       "READY_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT, 
-		       pkt->ready_send.match.context_id,
-		       (int)pkt->ready_send.match.tag, 
-		       pkt->ready_send.match.rank, 
+		       pkt->ready_send.match.parts.context_id,
+		       (int)pkt->ready_send.match.parts.tag, 
+		       pkt->ready_send.match.parts.rank, 
 		       pkt->ready_send.data_sz );
 	break;
     case MPIDI_CH3_PKT_RNDV_REQ_TO_SEND:
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
 		       "RNDV_REQ_TO_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT " req=%d", 
-		       pkt->rndv_req_to_send.match.context_id,
-		       (int)pkt->rndv_req_to_send.match.tag, 
-		       pkt->rndv_req_to_send.match.rank, 
+		       pkt->rndv_req_to_send.match.parts.context_id,
+		       (int)pkt->rndv_req_to_send.match.parts.tag, 
+		       pkt->rndv_req_to_send.match.parts.rank, 
 		       pkt->rndv_req_to_send.data_sz,
 		       pkt->rndv_req_to_send.sender_req_id );
 	break;

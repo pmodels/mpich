@@ -727,15 +727,15 @@ int MPIDI_CH3I_Posted_recv_enqueued (MPID_Request *rreq)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
     /* don't enqueue for anysource */
-    if (rreq->dev.match.rank < 0)
+    if (rreq->dev.match.parts.rank < 0)
 	goto fn_exit;
 
     /* don't enqueue a fastbox for yourself */
     MPIU_Assert(rreq->comm != NULL);
-    if (rreq->dev.match.rank == rreq->comm->rank)
+    if (rreq->dev.match.parts.rank == rreq->comm->rank)
 	goto fn_exit;
     /* don't enqueue non-local processes */
-    MPIDI_Comm_get_vc(rreq->comm, rreq->dev.match.rank, &vc);
+    MPIDI_Comm_get_vc(rreq->comm, rreq->dev.match.parts.rank, &vc);
     MPIU_Assert(vc != NULL);
     if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
 	goto fn_exit;
@@ -767,14 +767,14 @@ int MPIDI_CH3I_Posted_recv_dequeued (MPID_Request *rreq)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
-    if (rreq->dev.match.rank < 0)
+    if (rreq->dev.match.parts.rank < 0)
 	goto fn_exit;
 
-    if (rreq->dev.match.rank == rreq->comm->rank)
+    if (rreq->dev.match.parts.rank == rreq->comm->rank)
 	goto fn_exit;
 
     /* don't use MPID_NEM_IS_LOCAL, it doesn't handle dynamic processes */
-    MPIDI_Comm_get_vc(rreq->comm, rreq->dev.match.rank, &vc);
+    MPIDI_Comm_get_vc(rreq->comm, rreq->dev.match.parts.rank, &vc);
     MPIU_Assert(vc != NULL);
     if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
 	goto fn_exit;
