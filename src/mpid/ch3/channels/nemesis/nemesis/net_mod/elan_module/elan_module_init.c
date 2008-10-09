@@ -83,6 +83,7 @@ int init_elan( MPIDI_PG_t *pg_p )
    char            * key;
    char            * val;
    int             key_max_sz;
+   int             val_max_sz;
    char           *kvs_name;
    FILE           *myfile;
    int             ncells;
@@ -92,30 +93,16 @@ int init_elan( MPIDI_PG_t *pg_p )
    int             ret;
    ELAN_BASE      *base = NULL;
    ELAN_FLAGS      flags;
-
+   MPIU_CHKLMEM_DECL(2);
 
    /* Allocate space for pmi keys and values */
-   mpi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
-   if (mpi_errno != PMI_SUCCESS) {
-	   mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					    FCNAME, __LINE__, MPI_ERR_OTHER,
-					    "**fail", "**fail %d", mpi_errno);
-	   return mpi_errno;
-   }
-   key = MPIU_Malloc(key_max_sz);
-   if (key == NULL) {
-	   mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					    FCNAME, __LINE__, MPI_ERR_OTHER,
-					    "**nomem", 0);
-	   return mpi_errno;
-   }
-   val = MPIU_Malloc(key_max_sz);
-   if (val == NULL) {
-	   mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					    FCNAME, __LINE__, MPI_ERR_OTHER,
-					    "**nomem", 0);
-	   return mpi_errno;
-   }
+   pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
+   MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+   MPIU_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
+
+   pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
+   MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+   MPIU_CHKLMEM_MALLOC(val, char *, val_max_sz, mpi_errno, "val");
    
    if ( !getenv("ELAN_AUTO") && !getenv("RMS_NPROCS") ) {
        /* Get My Node Id from relevant file */
@@ -239,6 +226,7 @@ int init_elan( MPIDI_PG_t *pg_p )
      }
    
    fn_exit:
+     MPIU_CHKLMEM_FREEALL();
      return mpi_errno;
    fn_fail:
      goto fn_exit;

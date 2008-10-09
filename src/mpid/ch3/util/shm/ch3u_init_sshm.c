@@ -67,23 +67,15 @@ int MPIDI_CH3U_Init_sshm(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
 
     /* brad : need to set these locally */
     pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
-    if (pmi_errno != PMI_SUCCESS)
-    {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,
-			     "**pmi_kvs_get_key_length_max", 
-			     "**pmi_kvs_get_key_length_max %d", pmi_errno);
-    }
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_kvs_get_key_length_max",
+                         "**pmi_kvs_get_key_length_max %d", pmi_errno);
+    MPIU_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
 
-    MPIU_CHKLMEM_MALLOC(key,char *,key_max_sz,mpi_errno,"key");
-    
     pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
-    if (pmi_errno != PMI_SUCCESS)
-    {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,
-			     "**pmi_kvs_get_value_length_max", 
-			     "**pmi_kvs_get_value_length_max %d", pmi_errno);
-    }
-
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_kvs_get_value_length_max",
+                         "**pmi_kvs_get_value_length_max %d", pmi_errno);
     MPIU_CHKLMEM_MALLOC(val,char *,val_max_sz,mpi_errno,"val");
 
 #ifdef MPIDI_CH3_USES_SHM_NAME

@@ -85,47 +85,23 @@ int init_psm( MPIDI_PG_t *pg_p )
    
    char        * key, * get_key;
    char        * val, * get_val;
-   int         key_max_sz, len;
+   int         key_max_sz, val_max_sz, len;
 
    MPIU_CHKPMEM_DECL(1);
+   MPIU_CHKLMEM_DECL(5);
 
    /* Allocate space for the pmi keys and vals */
-   mpi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
-   if (mpi_errno != PMI_SUCCESS) {
-       mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					FCNAME, __LINE__, MPI_ERR_OTHER,
-					"**fail", "**fail %d", mpi_errno);
-       return mpi_errno;
-   }
-   key = MPIU_Malloc(key_max_sz);
-   if (key == NULL) {
-       mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					FCNAME, __LINE__, MPI_ERR_OTHER,
-					"**nomem", 0);
-       return mpi_errno;
-   }
-   get_key = MPIU_Malloc(key_max_sz);
-   if (get_key == NULL) {
-       mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					FCNAME, __LINE__, MPI_ERR_OTHER,
-					"**nomem", 0);
-       return mpi_errno;
-   }
-   val = MPIU_Malloc(key_max_sz);
-   if (val == NULL) {
-       mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					FCNAME, __LINE__, MPI_ERR_OTHER,
-					"**nomem", 0);
-       return mpi_errno;
-   }
-   get_val = MPIU_Malloc(key_max_sz);
-   if (get_val == NULL) {
-       mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					FCNAME, __LINE__, MPI_ERR_OTHER,
-					"**nomem", 0);
-       return mpi_errno;
-   }
-   len = key_max_sz;
+   pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
+   MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+   MPIU_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
+   MPIU_CHKLMEM_MALLOC(get_key, char *, key_max_sz, mpi_errno, "get_key");
+
+   pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
+   MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+   MPIU_CHKLMEM_MALLOC(val, char *, val_max_sz, mpi_errno, "val");
+   MPIU_CHKLMEM_MALLOC(get_val, char *, val_max_sz, mpi_errno, "get_val");
+
+   len = val_max_sz;
 
    /* Fix me : mysteriously  MPIU_CHKPMEM_MALLOC fails here, when the regular MPIU_Malloc doesn't ... */
    MPIU_CHKPMEM_MALLOC (MPID_nem_module_psm_endpoint_addrs, psm_epaddr_t *, MPID_nem_mem_region.num_procs * sizeof(psm_epaddr_t), mpi_errno, "endpoints addr");
@@ -141,14 +117,7 @@ int init_psm( MPIDI_PG_t *pg_p )
    {
        char * uuid_val;
 
-       uuid_val = MPIU_Malloc(key_max_sz);
-       if (uuid_val == NULL) {
-	   mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					    FCNAME, __LINE__, MPI_ERR_OTHER,
-					    "**nomem", 0);
-	   return mpi_errno;
-       }
-       
+       MPIU_CHKLMEM_MALLOC(uuid_val, char *, val_max_sz, mpi_errno, "uuid_val");
        psm_uuid_generate(MPID_nem_module_psm_uuid);
 
        /* Encode the generated UUID into a string and broadcast it to others */
@@ -251,6 +220,7 @@ int init_psm( MPIDI_PG_t *pg_p )
 
    MPIU_CHKPMEM_COMMIT();
    fn_exit:
+     MPIU_CHKLMEM_FREEALL();
      return mpi_errno;
    fn_fail:
      MPIU_CHKPMEM_REAP();
@@ -477,48 +447,23 @@ int MPID_nem_psm_module_exchange_endpoints(void)
     char         * key, * get_key;
     char         * val, * get_val;
     int          size = sizeof(psm_uuid_t) + 1;
-    int          key_max_sz, len;
-    
+    int          key_max_sz, val_max_sz, len;
+    MPIU_CHKLMEM_DECL(5);
+
     ret = psm_init(&verno_major, &verno_minor);
     MPIU_ERR_CHKANDJUMP1 (ret != PSM_OK, mpi_errno, MPI_ERR_OTHER, "**psm_init", "**psm_init %s", psm_error_get_string(ret));
 
     /* Allocate space for the pmi keys and vals */
-    mpi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
-    if (mpi_errno != PMI_SUCCESS) {
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					 FCNAME, __LINE__, MPI_ERR_OTHER,
-					 "**fail", "**fail %d", mpi_errno);
-	return mpi_errno;
-    }
-    key = MPIU_Malloc(key_max_sz);
-    if (key == NULL) {
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					 FCNAME, __LINE__, MPI_ERR_OTHER,
-					 "**nomem", 0);
-	return mpi_errno;
-    }
-    get_key = MPIU_Malloc(key_max_sz);
-    if (get_key == NULL) {
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					 FCNAME, __LINE__, MPI_ERR_OTHER,
-					 "**nomem", 0);
-	return mpi_errno;
-    }
-    val = MPIU_Malloc(key_max_sz);
-    if (val == NULL) {
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					 FCNAME, __LINE__, MPI_ERR_OTHER,
-					 "**nomem", 0);
-	return mpi_errno;
-    }
-    get_val = MPIU_Malloc(key_max_sz);
-    if (get_val == NULL) {
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					 FCNAME, __LINE__, MPI_ERR_OTHER,
-					 "**nomem", 0);
-	return mpi_errno;
-    }
-    len = key_max_sz;
+    pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+    MPIU_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
+    MPIU_CHKLMEM_MALLOC(get_key, char *, key_max_sz, mpi_errno, "get_key");
+
+    pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+    MPIU_CHKLMEM_MALLOC(val, char *, val_max_sz, mpi_errno, "val");
+    MPIU_CHKLMEM_MALLOC(get_val, char *, val_max_sz, mpi_errno, "get_val");
+    len = val_max_sz;
     
     mpi_errno = MPIDI_PG_GetConnKVSname (&kvs_name);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -527,14 +472,7 @@ int MPID_nem_psm_module_exchange_endpoints(void)
     {
         char * uuid_val;
 
-	uuid_val = MPIU_Malloc(key_max_sz);
-	if (uuid_val == NULL) {
-	    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					     FCNAME, __LINE__, MPI_ERR_OTHER,
-					     "**nomem", 0);
-	    return mpi_errno;
-	}
-
+        MPIU_CHKLMEM_MALLOC(uuid_val, char *, val_max_sz, mpi_errno, "uuid_val");
         psm_uuid_generate(MPID_nem_module_psm_uuid);
 
         /* Pack UUID into character array */
@@ -649,6 +587,7 @@ int MPID_nem_psm_module_exchange_endpoints(void)
     
 
  fn_exit:
+    MPIU_CHKLMEM_FREEALL();
     return mpi_errno;
  fn_fail:
     goto fn_exit;

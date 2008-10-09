@@ -268,23 +268,13 @@ MPID_nem_gm_module_vc_init(MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
     int ret;
     char *business_card;
-    int key_max_sz;
+    int val_max_sz;
+    MPIU_CHKLMEM_DECL(1);
 
     /* Allocate space for the business card */
-    mpi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
-    if (mpi_errno != PMI_SUCCESS) {
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					 FCNAME, __LINE__, MPI_ERR_OTHER,
-					 "**fail", "**fail %d", mpi_errno);
-	return mpi_errno;
-    }
-    business_card = MPIU_Malloc(key_max_sz);
-    if (business_card == NULL) {
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-					 FCNAME, __LINE__, MPI_ERR_OTHER,
-					 "**nomem", 0);
-	return mpi_errno;
-    }
+    pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+    MPIU_CHKLMEM_MALLOC(business_card, char *, val_max_sz, mpi_errno, "bc");
 
     mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, key_max_sz, vc->pg);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -303,8 +293,11 @@ MPID_nem_gm_module_vc_init(MPIDI_VC_t *vc)
     }
     /* --END ERROR HANDLING-- */
 
- fn_fail:
+fn_exit:
+    MPIU_CHKLMEM_FREEALL();
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
