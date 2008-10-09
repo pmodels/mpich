@@ -70,6 +70,7 @@ int MPI_Init( int *argc, char ***argv )
     static const char FCNAME[] = "MPI_Init";
     int mpi_errno = MPI_SUCCESS;
     int rc;
+    int threadLevel;
     MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
 
     rc = MPID_Wtime_init();
@@ -108,8 +109,37 @@ int MPI_Init( int *argc, char ***argv )
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
+
+#if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
+    /* If we support all thread levels, all the use of an environment variable to set the default
+       thread level */
+    {
+	char *str = 0;
+	threadLevel = MPI_THREAD_SINGLE;
+	if (MPIU_GetEnvStr( "MPICH_THREADLEVEL_DEFAULT", &str )) {
+	    if (strcmp(str,"MULTIPLE") == 0 || strcmp(str,"multiple") == 0) {
+		threadLevel = MPI_THREAD_MULTIPLE;
+	    }
+	    else if (strcmp(str,"SERIALIZED") == 0 || strcmp(str,"serialized") == 0) {
+		threadLevel = MPI_THREAD_SERIALIZED;
+	    }
+	    else if (strcmp(str,"FUNNELED") == 0 || strcmp(str,"funneled") == 0) {
+		threadLevel = MPI_THREAD_FUNNELED;
+	    }
+	    else if (strcmp(str,"SINGLE") == 0 || strcmp(str,"single") == 0) {
+		threadLevel = MPI_THREAD_SINGLE;
+	    }
+	    else {
+		MPIU_Error_printf( "Unrecognized thread level %s\n", str );
+		exit(1);
+	    }
+	}
+    }
+#else 
+    threadLevel = MPI_THREAD_SINGLE;
+#endif
     
-    mpi_errno = MPIR_Init_thread( argc, argv, MPI_THREAD_SINGLE, (int *)0 );
+    mpi_errno = MPIR_Init_thread( argc, argv, threadLevel, (int *)0 );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */
