@@ -1444,6 +1444,7 @@ extern MPID_Request MPID_Request_direct[];
 */
 #ifdef HAVE_DEBUGGER_SUPPORT
 void MPIR_WaitForDebugger( void );
+void MPIR_DebuggerSetAborting( const char * );
 void MPIR_Sendq_remember(MPID_Request *, int, int, int );
 void MPIR_Sendq_forget(MPID_Request *);
 void MPIR_CommL_remember( MPID_Comm * );

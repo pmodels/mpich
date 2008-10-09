@@ -20,6 +20,37 @@ void *MPIR_Breakpoint(void);
  * This file should be compiled with debug information (-g)
  */
 
+/*
+ * In addition to the discussion in the paper "A Standard Interface for Debugger 
+ * Access to Message Queue Inforation in MPI" and the more recent paper "An 
+ * Interface to Support the Identification of Dynamic {MPI} 2 Processes for 
+ * Scalable Parallel Debugging", there are a few features that have become
+ * defacto standard.  These include the "proctable" (a relic of the way 
+ * that p4 represented processes that was used in the ch_p4 device in 
+ * MPICH1), a debugger state (has MPI started or exited), and a routine that
+ * has the sole purpose of serving as a break point for a debugger.
+ * Specifically, these extensions are:
+ *
+ *  void * MPIR_Breakpoint( void )
+ *
+ * This routine should be called at any point where control should be
+ * offered to the debugger.  Typical spots are in MPI_Init/MPI_Init_thread
+ * after initialization is completed and in MPI_Abort before exiting.
+ *
+ * MPIR_DebuggerSetAborting( const char *msg )
+ *
+ * This routine should be called when MPI is exiting (either in finalize
+ * or abort.  If a message is provided, it will call MPIR_Breakpoint.
+ * This routine sets the variables MPIR_debug_state and MPIR_debug_abort_string.
+ *
+ * In MPICH1, the variables MPIR_debug_state, MPIR_debug_abort_string, 
+ * MPIR_being_debugged, and MPIR_debug_gate where exported globally.  
+ * In MPICH2, while these are global variables (so that the debugger can
+ * find them easily), they are not explicitly exported or referenced outside
+ * of a few routines.  In particular, MPID_Abort uses MPIR_DebuggerSetAborting
+ * instead of directly accessing these variables.
+ */
+
 /* The following is used to tell a debugger the location of the shared
    library that the debugger can load in order to access information about
    the parallel program, such as message queues */
@@ -40,7 +71,7 @@ char MPIR_dll_name[] = MPICH_INFODLL_LOC;
  * MPIR_being_debugged
  *    Set to 1 if the process is started or attached under the debugger 
  * MPIR_debug_abort_string
- *    String that the debugger can display on an abort (?)
+ *    String that the debugger can display on an abort.
  */
 volatile int MPIR_debug_state    = 0;
 volatile int MPIR_debug_gate     = 0;
@@ -52,6 +83,7 @@ char * MPIR_debug_abort_string   = 0;
  */
 #define MPIR_DEBUG_SPAWNED   1
 #define MPIR_DEBUG_ABORTING  2
+
 #if 0
 /*
  * MPIR_PROCDESC is used to pass information to the debugger about 
@@ -64,7 +96,7 @@ typedef struct {
 } MPIR_PROCDESC;
 MPIR_PROCDESC *MPIR_proctable    = 0;
 int MPIR_proctable_size          = 1;
-#endif
+#endif /* MPIR_proctable definition */
 
 /* Other symbols:
  * MPIR_i_am_starter - Indicates that this process is not an MPI process
@@ -130,7 +162,7 @@ void MPIR_WaitForDebugger( void )
 		    &timeout );
 	}
     }
-#endif
+#endif /* MPIR_proctable definition */
 
     if (getenv("MPIEXEC_DEBUG")) {
 	while (!MPIR_debug_gate) ; 
@@ -141,7 +173,8 @@ void MPIR_WaitForDebugger( void )
  * This routine is a special dummy routine that is used to provide a
  * location for a debugger to set a breakpoint on, allowing a user (and the
  * debugger) to attach to MPI processes after MPI_Init succeeds but before
- * MPI_Init returns control to the user.
+ * MPI_Init returns control to the user.  It may also be called when MPI aborts, 
+ * also to allow a debugger to regain control of an application.
  *
  * This routine can also initialize any datastructures that are required
  * 
@@ -149,6 +182,19 @@ void MPIR_WaitForDebugger( void )
 void * MPIR_Breakpoint( void )
 {
     return 0;
+}
+
+/* 
+ * Call this routine to signal to the debugger that the application is aborting.
+ * If there is an abort message, call the MPIR_Breakpoint routine (which allows a tool 
+ * such as a debugger to gain control.
+ */
+void MPIR_DebuggerSetAborting( const char *msg )
+{
+    MPIR_debug_abort_string = msg;
+    MPIR_debug_state        = MPIR_DEBUG_ABORTING;
+    if (msg) 
+	MPIR_Breakpoint();
 }
 
 /* ------------------------------------------------------------------------- */
