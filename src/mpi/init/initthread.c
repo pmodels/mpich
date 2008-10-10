@@ -498,9 +498,10 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
        don't release the lock after progress, we'll deadlock the next
        time this process tries to acquire the lock.
        MPID_CS_ENTER/EXIT functions are used here instead of
-       MPIU_THREAD_SINGLE_CS_ENTER/EXIT because
+       MPIU_THREAD_CS_ENTER/EXIT because
        MPIR_ThreadInfo.isThreaded hasn't been initialized yet.
     */
+    /*   */
     MPID_CS_ENTER();
 
 #if 0
