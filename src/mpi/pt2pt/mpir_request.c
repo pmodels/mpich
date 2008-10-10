@@ -497,7 +497,10 @@ int MPIR_Grequest_free(MPID_Request * request_ptr)
  * Invokes poll_fn for each request in request_ptrs.  Waits for completion of
  * multiple requests if possible (all outstanding generalized requests are of
  * same greq class) */
-
+#undef FUNCNAME
+#define FUNCNAME MPIR_Grequest_progress_poke
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Grequest_progress_poke(int count, 
 		MPID_Request **request_ptrs, 
 		MPI_Status array_of_statuses[] )
@@ -505,12 +508,10 @@ int MPIR_Grequest_progress_poke(int count,
     MPIX_Grequest_wait_function *wait_fn = NULL;
     void ** state_ptrs;
     int i, j, n_classes, n_native, n_greq;
-    int mpi_error = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIU_CHKLMEM_DECL(1);
 
-    state_ptrs = MPIU_Malloc(sizeof(void*)*count);
-
-    if (state_ptrs == NULL)
-	    goto fn_exit;
+    MPIU_CHKLMEM_MALLOC(state_ptrs, void **, sizeof(void*) * count, mpi_errno, "state_ptrs");
 
     /* This somewhat messy for-loop computes how many requests are native
      * requests and how many are generalized requests, and how many generalized
@@ -536,26 +537,30 @@ int MPIR_Grequest_progress_poke(int count,
     }
 
     if (j > 0 && n_classes == 1 && wait_fn != NULL) {
-        mpi_error = (wait_fn)(j, state_ptrs, 0, NULL);
+        mpi_errno = (wait_fn)(j, state_ptrs, 0, NULL);
     } else {
 	for (i = 0; i< count; i++ )
 	{
 	    if (request_ptrs[i] != NULL && 
-			request_ptrs[i]->kind == MPID_UREQUEST && 
-			*request_ptrs[i]->cc_ptr != 0) {
-		mpi_error = (request_ptrs[i]->poll_fn)(request_ptrs[i]->grequest_extra_state, &(array_of_statuses[i]));
+                request_ptrs[i]->kind == MPID_UREQUEST && 
+                *request_ptrs[i]->cc_ptr != 0 &&
+                request_ptrs[i]->poll_fn != NULL)
+            {
+		mpi_errno = (request_ptrs[i]->poll_fn)(request_ptrs[i]->grequest_extra_state, &(array_of_statuses[i]));
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    }
 	}
     }
 fn_exit:
-    if (state_ptrs != NULL) MPIU_Free(state_ptrs);
-    return mpi_error;
+    MPIU_CHKLMEM_FREEALL();
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 /* MPIR_Grequest_wait: Waits until all generalized requests have
    completed.  This routine groups grequests by class and calls the
    wait_fn on the whole class. */
-
 #undef FUNCNAME
 #define FUNCNAME MPIR_Grequest_waitall
 #undef FCNAME
@@ -565,6 +570,7 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
     void ** state_ptrs;
     int i;
     int mpi_error = MPI_SUCCESS;
+    MPID_Progress_state progress_state;
     MPIU_CHKLMEM_DECL(1);
 
     MPIU_CHKLMEM_MALLOC(state_ptrs, void *, sizeof(void*)*count, mpi_error, "state_ptrs");
@@ -626,12 +632,43 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
     for (i = 0; i < count; ++i)
     {
         /* skip over requests we're not interested in */
-        if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 ||  request_ptrs[i]->kind != MPID_UREQUEST)
+        if (request_ptrs[i] == NULL ||
+            *request_ptrs[i]->cc_ptr == 0 ||
+            request_ptrs[i]->kind != MPID_UREQUEST ||
+            request_ptrs[i]->wait_fn == NULL)
+        {
             continue;
+        }
+
         mpi_error = (request_ptrs[i]->wait_fn)(1, &request_ptrs[i]->grequest_extra_state, 0, NULL);
         if (mpi_error) MPIU_ERR_POP(mpi_error);
+        MPIU_Assert(*request_ptrs[i]->cc_ptr == 0);
     }
-    
+
+    MPID_Progress_start(&progress_state);
+    for (i = 0; i < count; ++i)
+    {
+        if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 || request_ptrs[i]->kind != MPID_UREQUEST)
+            continue;
+        /* We have a greq that doesn't have a wait function; some other
+           thread will cause completion via MPI_Grequest_complete().  Rather
+           than waste the time by simply yielding the processor to the
+           other thread, we'll make progress on regular requests too.  The
+           progress engine should permit the other thread to run at some
+           point. */
+        while (*request_ptrs[i]->cc_ptr != 0)
+        {
+            mpi_error = MPID_Progress_wait(&progress_state);
+            if (mpi_error != MPI_SUCCESS)
+            {
+                /* --BEGIN ERROR HANDLING-- */
+                MPID_Progress_end(&progress_state);
+                goto fn_fail;
+                /* --END ERROR HANDLING-- */
+            }
+        }
+    }
+    MPID_Progress_end(&progress_state);
 #endif
 
  fn_exit:
