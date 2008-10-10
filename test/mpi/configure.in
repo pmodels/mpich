@@ -123,22 +123,13 @@ if test "$enable_threads" = "multiple" -o "$enable_threads" = "runtime" ; then
     threadsdir="threads"
 fi
 
-# If it is building with MPICH2, set xFLAGS to null, as mpiXX contains xFLAGS.
-if test "$FROM_MPICH2" = "yes" ; then
-    CFLAGS=""
-    CXXFLAGS=""
-    FFLAGS=""
-    F90FLAGS=""
-fi
-
 PAC_LOAD_BASE_CACHE
-
 PAC_VPATH_CHECK()
-
 PAC_PROG_MAKE
 
 MPILIBLOC=""
 AC_SUBST(MPILIBLOC)
+
 # Select the base compiler.  We need to run them through
 # the ac_prog_xx commands because in later versions of autoconf, these
 # commands do more than just find the program, they set many of the 
@@ -148,6 +139,15 @@ AC_PROG_CC
 if test -z "$BASECC" ; then
     BASECC="$CC"
 fi
+
+# If it is building with MPICH2, set xFLAGS to null, as mpiXX contains xFLAGS.
+if test "$FROM_MPICH2" = "yes" ; then
+    CFLAGS=""
+    CXXFLAGS=""
+    FFLAGS=""
+    F90FLAGS=""
+fi
+
 # If we're building from MPICH2, check the MPICH2_ENABLE_xxx environment
 # variables for enable defaults
 if test "$FROM_MPICH2" = yes ; then
