@@ -114,7 +114,7 @@ int MPI_Init( int *argc, char ***argv )
     /* If we support all thread levels, all the use of an environment variable to set the default
        thread level */
     {
-	char *str = 0;
+	const char *str = 0;
 	threadLevel = MPI_THREAD_SINGLE;
 	if (MPIU_GetEnvStr( "MPICH_THREADLEVEL_DEFAULT", &str )) {
 	    if (strcmp(str,"MULTIPLE") == 0 || strcmp(str,"multiple") == 0) {
