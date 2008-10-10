@@ -293,6 +293,7 @@ int MPIR_Thread_CS_Finalize( void );
  * New definitions for controling the granularity of thread atomicity
  *
  */
+#ifdef MPICH_IS_THREADED
 
 /*M MPIU_THREAD_CS_ENTER - Enter a named critical section
 
@@ -327,7 +328,6 @@ M*/
   
   These use a private critical section called INITFLAG
   M*/
-#ifdef MPICH_IS_THREADED
 
 #ifdef HAVE_RUNTIME_THREADCHECK
 #define MPIU_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
@@ -593,6 +593,7 @@ typedef struct MPIU_ThreadDebug {
 #else /* ! MPICH_IS_THREAED */
 #define MPIU_THREAD_CS_ENTER(_name,_context)
 #define MPIU_THREAD_CS_EXIT(_name,_context)
+#define MPIU_THREAD_CS_YIELD(_name,_context)
 #endif /* MPICH_IS_THREADED */
 
 #endif /* !defined(MPIIMPLTHREAD_H_INCLUDED) */
