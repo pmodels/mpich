@@ -87,7 +87,7 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code,
 #elif defined(MPIDI_DEV_IMPLEMENTS_ABORT)
     MPIDI_CH3I_PMI_Abort(exit_code, error_msg);
 #else
-    MPIU_Error_printf("%s", error_msg);
+    MPIU_Error_printf("%s\n", error_msg);
     fflush(stderr);
 #endif
 
@@ -117,7 +117,7 @@ static int MPIDI_CH3I_PMI_Abort(int exit_code, const char *error_msg)
      * where the stdout/stderr pipes from MPICH2 to the PM are
      * broken), but not all PMs might display respect the message
      * (this problem was noticed with SLURM). */
-    MPIU_Error_printf("%s", error_msg);
+    MPIU_Error_printf("%s\n", error_msg);
     fflush(stderr);
 
     /* FIXME: What is the scope for PMI_Abort?  Shouldn't it be one or more
