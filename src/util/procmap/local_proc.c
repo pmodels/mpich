@@ -14,6 +14,9 @@
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
+#if defined(HAVE_ERRNO_H)
+#include <errno.h>
+#endif
 
 char MPIU_hostname[MAX_HOSTNAME_LEN] = "_UNKNOWN_"; /* '_' is an illegal char for a hostname so this will never match */
 
