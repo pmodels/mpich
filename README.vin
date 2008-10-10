@@ -128,11 +128,11 @@ later, in the section "Alternative configurations".
     subdirectory of the directory specified by the prefix argument to
     configure. 
 
-    (For users who wants an install directory structure compliant to
-     GNU coding standard, i.e. documentation file go to 
-     ${datarootdir}/doc/${PACKAGE}, architecture independent
-     read-only files go to ${datadir}/${PACKAGE}, then replace
-     "make install" as
+    (For users who want an install directory structure compliant to
+     GNU coding standards (i.e., documentation files go to 
+     ${datarootdir}/doc/${PACKAGE}, architecture-independent
+     read-only files go to ${datadir}/${PACKAGE}), replace
+     "make install" by
 
        make install PACKAGE=mpich2-<versrion>
 

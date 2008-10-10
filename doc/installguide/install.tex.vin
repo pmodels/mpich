@@ -233,11 +233,11 @@ This step collects all required executables and scripts in the \texttt{bin}
 subdirectory of the directory specified by the prefix argument to
 configure. 
 
-(For users who wants an install directory structure compliant to
-GNU coding standard, i.e. documentation file go to
+(For users who want an install directory structure compliant to
+GNU coding standards (i.e., documentation files go to
 \$\{datarootdir\}/doc/\$\{PACKAGE\}, architecture independent
-read-only files go to \$\{datadir\}/\$\{PACKAGE\}, then replace
-\texttt{make install} as
+read-only files go to \$\{datadir\}/\$\{PACKAGE\}), replace
+\texttt{make install} by
 
 \begin{verbatim}
        make install PACKAGE=mpich2-<versrion>
