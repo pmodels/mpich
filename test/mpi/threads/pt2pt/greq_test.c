@@ -61,6 +61,10 @@ int main(int argc, char *argv[])
     }
 
     MPI_Init_thread( &argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    if (provided != MPI_THREAD_MULTIPLE) {
+        printf( "This test requires MPI_THREAD_MULTIPLE\n" );
+        MPI_Abort( MPI_COMM_WORLD, 1 );
+    }
 
     IF_VERBOSE(("Post Init ...\n"));
 
