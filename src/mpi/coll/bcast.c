@@ -17,9 +17,6 @@
 #endif
 /* -- End Profiling Symbol Block */
 
-PMPI_LOCAL int MPIR_Bcast_or_coll_fn(void *, int, MPI_Datatype, int, 
-				     MPID_Comm *);
-
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
@@ -582,12 +579,11 @@ int MPIR_Bcast (
    This function just makes the high-level broadcast logic easier to read while
    still accomodating coll_fns-style overrides.  It also reduces future errors
    by eliminating the duplication of Bcast arguments. */
-
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bcast_or_coll_fn
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-PMPI_LOCAL int MPIR_Bcast_or_coll_fn(void *buffer, 
+int MPIR_Bcast_or_coll_fn(void *buffer, 
 			  int count, 
 			  MPI_Datatype datatype, 
 			  int root, 
