@@ -37,6 +37,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg, int pg_rank )
     int shm_block;
     char local_host[100];
     MPIDI_CH3I_PG *pgch = (MPIDI_CH3I_PG*)pg->channel_private;
+    MPIU_CHKLMEM_DECL(2);
 
 #if 1
     if (sizeof(MPIDI_CH3I_PG) > MPIDI_CH3_PG_SIZE * sizeof(int32_t) ) {
@@ -367,14 +368,8 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg, int pg_rank )
     }
 #endif
 
-    if (val != NULL)
-    { 
-	MPIU_Free(val);
-    }
-    if (key != NULL)
-    { 
-	MPIU_Free(key);
-    }
+ fn_fail:
+    MPIU_CHKLMEM_FREEALL();
     
     return mpi_errno;
 }
