@@ -658,7 +658,9 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	else {
 	    /* As above, force this thread to yield */
 	    /* FIXME: TEMP for current yield definition*/
+	    MPIU_THREAD_CS_ENTER(CONTEXTID,);
 	    MPIU_THREAD_CS_YIELD(CONTEXTID,);
+	    MPIU_THREAD_CS_EXIT(CONTEXTID,);
 #if 0
 	    MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);
 	    MPID_Thread_yield();
