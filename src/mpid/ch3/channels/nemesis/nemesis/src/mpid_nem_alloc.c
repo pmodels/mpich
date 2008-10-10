@@ -14,6 +14,10 @@
 #include <sys/shm.h>
 #endif
 
+#if defined( HAVE_MKSTEMP ) && defined( NEEDS_MKSTEMP_DECL )
+extern int mkstemp(char *t);
+#endif
+
 static int check_alloc(int num_processes);
 
 typedef struct alloc_elem
