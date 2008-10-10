@@ -458,6 +458,8 @@ with MPI_Alloc_mem.
 **winunlockrank:Invalid rank argument
 **winunlockrank %d %d:Invalid rank argument %d, should be %d
 **nomemreq:failure occurred while allocating memory for a request object
+**nomemuereq %d:Failed to allocate memory for an unexpected message. %d \
+unexpected messages queued.
 **notcstatignore:MPI_STATUS_IGNORE cannot be passed to MPI_Status_c2f()
 **notfstatignore:MPI_STATUS_IGNORE cannot be passed to MPI_Status_f2c()
 **user:user defined function returned an error code

@@ -595,3 +595,21 @@ void MPIDI_CH3U_Dbg_print_recvq(FILE *stream)
 }
 /* --END ERROR HANDLING-- */
 
+/* returns the number of elements in the unexpected queue */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3U_Recvq_count_unexp
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3U_Recvq_count_unexp(void)
+{
+    int count = 0;
+    MPID_Request *req = recvq_unexpected_head;
+
+    while (req)
+    {
+        ++count;
+        req = req->dev.next;
+    }
+
+    return count;
+}

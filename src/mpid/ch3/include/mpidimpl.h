@@ -1345,6 +1345,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq);
 MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match, 
 					   int * found);
+int MPIDI_CH3U_Recvq_count_unexp(void);
+
 
 int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq, 
 				     MPID_IOV * const iov, int * const iov_n);

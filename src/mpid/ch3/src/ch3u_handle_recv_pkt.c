@@ -472,6 +472,9 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPID_Win *win_ptr, int requested_lock)
 /* FIXME: we still need to implement flow control.  As a reminder, 
    we don't mark these parameters as unused, because a full implementation
    of this routine will need to make use of all 4 parameters */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_FlowCntlUpdate
+#undef FCNAME
 int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 					 MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
 {

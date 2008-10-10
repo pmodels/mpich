@@ -303,9 +303,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		    eagershort_pkt->match.parts.rank,eagershort_pkt->data_sz,
 		    "ReceivedEagerShort");
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&eagershort_pkt->match, &found);
-    if (rreq == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomemreq");
-    }
+    MPIU_ERR_CHKANDJUMP1(!rreq, mpi_errno,MPI_ERR_OTHER, "**nomemreq", "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
 
     (rreq)->status.MPI_SOURCE = (eagershort_pkt)->match.parts.rank;
     (rreq)->status.MPI_TAG    = (eagershort_pkt)->match.parts.tag;
@@ -562,6 +560,10 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
 /* FIXME: This is not optimized for short messages, which 
    should have the data in the same packet when the data is
    particularly short (e.g., one 8 byte long word) */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_EagerSend
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
 				    MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
@@ -583,9 +585,7 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		    "ReceivedEager");
 	    
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&eager_pkt->match, &found);
-    if (rreq == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomemreq");
-    }
+    MPIU_ERR_CHKANDJUMP1(!rreq, mpi_errno,MPI_ERR_OTHER, "**nomemreq", "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
     
     set_request_info(rreq, eager_pkt, MPIDI_REQUEST_EAGER_MSG);
     
@@ -633,6 +633,10 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_ReadySend
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 				    MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
@@ -656,9 +660,7 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		    "ReceivedReady");
 	    
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&ready_pkt->match, &found);
-    if (rreq == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomemreq");
-    }
+    MPIU_ERR_CHKANDJUMP1(!rreq, mpi_errno,MPI_ERR_OTHER, "**nomemreq", "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
     
     set_request_info(rreq, ready_pkt, MPIDI_REQUEST_EAGER_MSG);
     
