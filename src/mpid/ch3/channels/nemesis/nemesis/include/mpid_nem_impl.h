@@ -140,7 +140,7 @@ typedef union MPIDI_CH3_nem_pkt
         _iov[1].MPID_IOV_BUF = (s_cookie_buf);                                                          \
         _iov[1].MPID_IOV_LEN = (s_cookie_len);                                                          \
                                                                                                         \
-        MPIU_DBG_MSGPKT((vc), (rts_pkt)->match.tag, (rts_pkt)->match.context_id, (rts_pkt)->match.rank, \
+        MPIU_DBG_MSGPKT((vc), (rts_pkt)->match.parts.tag, (rts_pkt)->match.parts.context_id, (rts_pkt)->match.parts.rank, \
                         (rts_pkt)->data_sz, "Rndv");                                                    \
                                                                                                         \
         mpi_errno = MPIDI_CH3_iStartMsgv((vc), _iov, ((s_cookie_len)) ? 2 : 1, &_rts_req);              \
