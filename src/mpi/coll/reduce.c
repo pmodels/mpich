@@ -887,7 +887,7 @@ int MPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 
             if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
 
-		void *tmp_buf;
+		void *tmp_buf = NULL;
 		MPI_Aint  true_lb, true_extent, extent; 
 		MPIU_THREADPRIV_DECL;
 		MPIU_THREADPRIV_GET;
