@@ -1,3 +1,4 @@
+
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
  *  (C) 2001 by Argonne National Laboratory.
@@ -56,7 +57,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
     MPIDI_Pkt_set_seqnum(es_pkt, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
     
-    MPIU_DBG_MSGPKT(vc,tag,es_pkt->match.context_id,rank,data_sz,"EagerSync");
+    MPIU_DBG_MSGPKT(vc,tag,es_pkt->match.parts.context_id,rank,data_sz,"EagerSync");
 
     if (dt_contig)
     {
@@ -70,7 +71,9 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
 	iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)buf + dt_true_lb);
 	iov[1].MPID_IOV_LEN = data_sz;	
 	
+	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
 	mpi_errno = MPIU_CALL(MPIDI_CH3,iSendv(vc, sreq, iov, 2));
+	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
 	{
@@ -95,7 +98,9 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
 	sreq->dev.segment_first = 0;
 	sreq->dev.segment_size = data_sz;
 	
+	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
         mpi_errno = vc->sendNoncontig_fn(vc, sreq, es_pkt, sizeof(MPIDI_CH3_Pkt_eager_sync_send_t));
+	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -136,8 +141,10 @@ int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag,
     MPIDI_Pkt_set_seqnum(es_pkt, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
     
-    MPIU_DBG_MSGPKT(vc,tag,es_pkt->match.context_id,rank,(MPIDI_msg_sz_t)0,"EagerSync0");
+    MPIU_DBG_MSGPKT(vc,tag,es_pkt->match.parts.context_id,rank,(MPIDI_msg_sz_t)0,"EagerSync0");
+    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
     mpi_errno = MPIU_CALL(MPIDI_CH3,iSend(vc, sreq, es_pkt, sizeof(*es_pkt)));
+    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {
@@ -166,8 +173,10 @@ int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *vc, MPID_Request *rreq )
     MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending eager sync ack");
     MPIDI_Pkt_init(esa_pkt, MPIDI_CH3_PKT_EAGER_SYNC_ACK);
     esa_pkt->sender_req_id = rreq->dev.sender_req_id;
+    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
     mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, esa_pkt, sizeof(*esa_pkt), 
 					      &esa_req));
+    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
     }
@@ -209,10 +218,11 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
      "received eager sync send pkt, sreq=0x%08x, rank=%d, tag=%d, context=%d",
-	      es_pkt->sender_req_id, es_pkt->match.rank, es_pkt->match.tag, 
-              es_pkt->match.context_id));
-    MPIU_DBG_MSGPKT(vc,es_pkt->match.tag,es_pkt->match.context_id,
-		    es_pkt->match.rank,es_pkt->data_sz,
+	      es_pkt->sender_req_id, es_pkt->match.parts.rank, 
+	      es_pkt->match.parts.tag, 
+              es_pkt->match.parts.context_id));
+    MPIU_DBG_MSGPKT(vc,es_pkt->match.parts.tag,es_pkt->match.parts.context_id,
+		    es_pkt->match.parts.rank,es_pkt->data_sz,
 		    "ReceivedEagerSync");
 	    
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&es_pkt->match, &found);
@@ -261,8 +271,11 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	
 	MPIDI_Pkt_init(esa_pkt, MPIDI_CH3_PKT_EAGER_SYNC_ACK);
 	esa_pkt->sender_req_id = rreq->dev.sender_req_id;
+	/* Because this is a packet handler, it is already within a CH3 CS */
+	/* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
 	mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, esa_pkt, 
 						  sizeof(*esa_pkt), &esa_req));
+	/* MPIU_THREAD_CS_EXIT(CH3COMM,vc); */
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
 				"**ch3|syncack");
@@ -318,8 +331,7 @@ int MPIDI_CH3_PktHandler_EagerSyncAck( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
        transfer could still be in progress) */
 
     /* FIXME: This sometimes segfaults */
-    MPIDI_CH3U_Request_complete(sreq);  /* brad : seen this segfault in ssm 
-					   dynamic process...? */
+    MPIDI_CH3U_Request_complete(sreq);  
     
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     *rreqp = NULL;
@@ -331,9 +343,9 @@ int MPIDI_CH3_PktPrint_EagerSyncSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
     MPIU_DBG_PRINTF((" type ......... EAGER_SYNC_SEND\n"));
     MPIU_DBG_PRINTF((" sender_reqid . 0x%08X\n", pkt->eager_sync_send.sender_req_id));
-    MPIU_DBG_PRINTF((" context_id ... %d\n", pkt->eager_sync_send.match.context_id));
-    MPIU_DBG_PRINTF((" tag .......... %d\n", pkt->eager_sync_send.match.tag));
-    MPIU_DBG_PRINTF((" rank ......... %d\n", pkt->eager_sync_send.match.rank));
+    MPIU_DBG_PRINTF((" context_id ... %d\n", pkt->eager_sync_send.match.parts.context_id));
+    MPIU_DBG_PRINTF((" tag .......... %d\n", pkt->eager_sync_send.match.parts.tag));
+    MPIU_DBG_PRINTF((" rank ......... %d\n", pkt->eager_sync_send.match.parts.rank));
     MPIU_DBG_PRINTF((" data_sz ...... %d\n", pkt->eager_sync_send.data_sz));
 #ifdef MPID_USE_SEQUENCE_NUMBERS
     MPIU_DBG_PRINTF((" seqnum ....... %d\n", pkt->eager_sync_send.seqnum));

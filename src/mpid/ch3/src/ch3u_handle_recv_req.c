@@ -314,7 +314,10 @@ int MPIDI_CH3_ReqHandler_GetRespDerivedDTComplete( MPIDI_VC_t *vc,
     sreq->dev.segment_first = 0;
     sreq->dev.segment_size = new_dtp->size * sreq->dev.user_count;
 
+    /* Because this is in a packet handler, it is already within a critical section */	
+    /* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
     mpi_errno = vc->sendNoncontig_fn(vc, sreq, get_resp_pkt, sizeof(*get_resp_pkt));
+    /* MPIU_THREAD_CS_EXIT(CH3COMM,vc); */
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {
@@ -921,8 +924,11 @@ int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t *vc, MPI_Win source_win_handle)
     MPIDI_Pkt_init(pt_rma_done_pkt, MPIDI_CH3_PKT_PT_RMA_DONE);
     pt_rma_done_pkt->source_win_handle = source_win_handle;
 
+    /* Because this is in a packet handler, it is already within a critical section */	
+    /* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
     mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, pt_rma_done_pkt,
 					      sizeof(*pt_rma_done_pkt), &req));
+    /* MPIU_THREAD_CS_EXIT(CH3COMM,vc); */
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
     }
@@ -1025,7 +1031,10 @@ static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue)
     MPID_Datatype_get_size_macro(lock_queue->pt_single_op->datatype, type_size);
     iov[1].MPID_IOV_LEN = lock_queue->pt_single_op->count * type_size;
     
+    /* Because this is in a packet handler, it is already within a critical section */	
+    /* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
     mpi_errno = MPIU_CALL(MPIDI_CH3,iSendv(lock_queue->vc, req, iov, 2));
+    /* MPIU_THREAD_CS_EXIT(CH3COMM,vc); */
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {

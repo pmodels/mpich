@@ -39,9 +39,12 @@ int MPID_Recv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	goto fn_exit;
     }
 
-    rreq = MPIDI_CH3U_Recvq_FDU_or_AEP(rank, tag, comm->recvcontext_id + context_offset,
+    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+    rreq = MPIDI_CH3U_Recvq_FDU_or_AEP(rank, tag, 
+				       comm->recvcontext_id + context_offset,
                                        comm, buf, count, datatype, &found);
     if (rreq == NULL) {
+	MPIU_THREAD_CS_EXIT(MSGQUEUE,);
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_NO_MEM, "**nomem");
     }
 
@@ -52,6 +55,9 @@ int MPID_Recv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	/* Message was found in the unexepected queue */
 	MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"request found in unexpected queue");
 
+	/* Release the message queue - we've removed this request from 
+	   the queue already */
+	MPIU_THREAD_CS_EXIT(MSGQUEUE,);
 	if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG)
 	{
 	    int recv_pending;
@@ -149,6 +155,10 @@ int MPID_Recv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	}
 
 	rreq->dev.recv_pending_count = 1;
+	/* We must wait until here to exit the msgqueue critical section
+	   on this request (we needed to set the recv_pending_count
+	   and the datatype pointer) */
+	MPIU_THREAD_CS_EXIT(MSGQUEUE,rreq);
     }
 
   fn_exit:

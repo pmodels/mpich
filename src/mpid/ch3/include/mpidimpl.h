@@ -226,10 +226,50 @@ extern MPIDI_Process_t MPIDI_Process;
  *     completion state
  *     cancelled state
  */
+
+#define MPIU_HANDLE_ALLOCATION_MUTEX         0
+#define MPIU_HANDLE_ALLOCATION_THREAD_LOCAL  1
+
+/* XXX DJG for TLS hack */
+#define MPID_REQUEST_TLS_MAX 128
+
+#if MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL
+#  define MPIDI_Request_tls_alloc(req) \
+    do { \
+        int i;                                                         \
+        MPIU_THREADPRIV_DECL;                                          \
+        MPIU_THREADPRIV_GET;                                           \
+        if (!MPIU_THREADPRIV_FIELD(request_handles)) {                 \
+            MPID_Request *prev, *cur;                                  \
+            /* batch allocate a linked list of requests */             \
+            MPIU_THREAD_CS_ENTER(HANDLEALLOC,);                        \
+            prev = MPIU_Handle_obj_alloc_unsafe(&MPID_Request_mem);    \
+            prev->next = NULL;                                         \
+            assert(prev);                                              \
+            for (i = 1; i < MPID_REQUEST_TLS_MAX; ++i) {               \
+                cur = MPIU_Handle_obj_alloc_unsafe(&MPID_Request_mem); \
+                assert(cur);                                           \
+                cur->next = prev;                                      \
+                prev = cur;                                            \
+            }                                                          \
+            MPIU_THREAD_CS_EXIT(HANDLEALLOC,);                         \
+            MPIU_THREADPRIV_FIELD(request_handles) = cur;              \
+            MPIU_THREADPRIV_FIELD(request_handle_count) += MPID_REQUEST_TLS_MAX;    \
+        }                                                              \
+        (req) = MPIU_THREADPRIV_FIELD(request_handles);                \
+        MPIU_THREADPRIV_FIELD(request_handles) = req->next;            \
+        MPIU_THREADPRIV_FIELD(request_handle_count) -= 1;              \
+    } while (0)
+#elif MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_MUTEX
+#  define MPIDI_Request_tls_alloc(req) (req) = MPIU_Handle_obj_alloc(&MPID_Request_mem)
+#else
+#  error MPIU_HANDLE_ALLOCATION_METHOD not defined
+#endif
+
+/* FIXME: This must be used within an MPIDCOMM critical section.  */
 #define MPIDI_CH3U_Request_complete(req_)			\
 {								\
     int incomplete__;						\
-    MPIU_THREAD_CS_ENTER(MPIDCOMM,);                            \
 								\
     MPIDI_CH3U_Request_decrement_cc((req_), &incomplete__);	\
     if (!incomplete__)						\
@@ -237,7 +277,6 @@ extern MPIDI_Process_t MPIDI_Process;
 	MPID_Request_release(req_);				\
 	MPIDI_CH3_Progress_signal_completion();			\
     }								\
-    MPIU_THREAD_CS_EXIT(MPIDCOMM,);                             \
 }
 
 
@@ -409,6 +448,7 @@ extern MPIDI_Process_t MPIDI_Process;
     	(sreq_)->partner_request = NULL;				\
     }
 
+/* FIXME: We've moved to allow finer-grain critical sections... */
 /* Note: In the current implementation, the mpid_xsend.c routines that
    make use of MPIDI_VC_FAI_send_seqnum are all protected by the 
    SINGLE_CS_ENTER/EXIT macros, so all uses of this macro are 
@@ -1305,13 +1345,6 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq);
 MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match, 
 					   int * found);
-
-#if 0
-/* FIXME: These are macros! Why do they have prototypes */
-void MPIDI_CH3U_Request_complete(MPID_Request * req);
-void MPIDI_CH3U_Request_increment_cc(MPID_Request * req, int * was_incomplete);
-void MPIDI_CH3U_Request_decrement_cc(MPID_Request * req, int * incomplete);
-#endif
 
 int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq, 
 				     MPID_IOV * const iov, int * const iov_n);

@@ -34,7 +34,9 @@ int MPID_Iprobe(int source, int tag, MPID_Comm *comm, int context_offset,
        a request.  Note that in some cases it will be possible to 
        atomically query the unexpected receive list (which is what the
        probe routines are for). */
+    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
     found = MPIDI_CH3U_Recvq_FU( source, tag, context, status );
+    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
     if (!found) {
 	/* Always try to advance progress before returning failure
 	   from the iprobe test.  */
@@ -43,7 +45,9 @@ int MPID_Iprobe(int source, int tag, MPID_Comm *comm, int context_offset,
 	   a second test of the receive queue if we knew that nothing
 	   had changed */
 	mpi_errno = MPID_Progress_poke();
+	MPIU_THREAD_CS_ENTER(MSGQUEUE,);
 	found = MPIDI_CH3U_Recvq_FU( source, tag, context, status );
+	MPIU_THREAD_CS_EXIT(MSGQUEUE,);
     }
 	
     *flag = found;

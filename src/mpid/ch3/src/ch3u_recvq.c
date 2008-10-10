@@ -90,6 +90,16 @@ MPID_Request ** const MPID_Recvq_unexpected_head_ptr = &recvq_unexpected_head;
  * not MPI_STATUS_IGNORE, return information about the request in that
  * parameter.  This routine is used by mpid_probe and mpid_iprobe.
  *
+ * Multithread - As this is a read-only routine, it need not
+ * require an external critical section (careful organization of the
+ * queue updates would not even require a critical section within this
+ * routine).  However, this routine is used both from within the progress
+ * engine and from without it.  To make that work with the current
+ * design for MSGQUEUE and the brief-global mode, the critical section 
+ * is *outside* of this routine.
+ *
+ * This routine is used only in mpid_iprobe and mpid_probe
+ *
  */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Recvq_FU
@@ -153,7 +163,12 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
  *
  * Find a request in the unexpected queue and dequeue it; otherwise return NULL.
  *
- * This routine is used only in the case of send_cancel
+ * Multithread - This routine must be atomic (since it dequeues a
+ * request).  However, once the request is dequeued, no other thread can
+ * see it, so this routine provides its own atomicity.
+ *
+ * This routine is used only in the case of send_cancel.  However, it is used both
+ * within mpid_send_cancel and within a packet handler.
  */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Recvq_FDU
@@ -177,6 +192,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
 
     /* Note that since this routine is used only in the case of send_cancel,
        there can be only one match if at all. */
+    /* FIXME: Why doesn't this exit after it finds the first match? */
     cur_rreq = recvq_unexpected_head;
     while (cur_rreq != NULL) {
 	if (cur_rreq->dev.sender_req_id == sreq_id &&
@@ -216,6 +232,14 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
  *
  * Atomically find a request in the unexpected queue and dequeue it, or 
  * allocate a new request and enqueue it in the posted queue
+ *
+ * Multithread - This routine must be called from within a MSGQUEUE 
+ * critical section.  If a request is allocated, it must not release
+ * the MSGQUEUE until the request is completely valid, as another thread
+ * may then find it and dequeue it.
+ *
+ * This routine is used in mpid_irecv and mpid_recv.
+ *
  */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Recvq_FDU_or_AEP
@@ -355,6 +379,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
  *
  * Given an existing request, dequeue that request from the posted queue, or 
  * return NULL if the request was not in the posted queued
+ *
+ * Multithread - This routine is atomic
  */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Recvq_DP
@@ -372,6 +398,7 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
     found = FALSE;
     prev_rreq = NULL;
     
+    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
     cur_rreq = recvq_posted_head;
     while (cur_rreq != NULL) {
 	if (cur_rreq == rreq) {
@@ -394,6 +421,8 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
 	cur_rreq = cur_rreq->dev.next;
     }
 
+    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_RECVQ_DP);
     return found;
 }
@@ -403,6 +432,19 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
  *
  * Locate a request in the posted queue and dequeue it, or allocate a new 
  * request and enqueue it in the unexpected queue
+ *
+ * Multithread - This routine must be called from within a MSGQUEUE 
+ * critical section.  If a request is allocated, it must not release
+ * the MSGQUEUE until the request is completely valid, as another thread
+ * may then find it and dequeue it.
+ *
+ * This routine is used in ch3u_eager, ch3u_eagersync, ch3u_handle_recv_pkt,
+ * ch3u_rndv, and mpidi_isend_self.  Routines within the progress engine
+ * will need to be careful to avoid nested critical sections.  
+ *
+ * FIXME: Currently, the routines called from within the progress engine
+ * do not use the MSGQUEUE CS, because in the brief-global mode, that
+ * simply uses the global_mutex .  
  */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Recvq_FDP_or_AEU
