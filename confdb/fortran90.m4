@@ -1434,26 +1434,26 @@ if AC_TRY_EVAL(ac_fscompilelink) && test -x conftest ; then
          AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled without $1])       
          rm -f conftest2.out
          rm -f conftest.bas
-	 ac_fscompile3='${F90-f90} -c $save_F90FLAGS conftest2.$ac_f90ext >conftest2.out 2>&1'
-	 ac_fscompilelink4='${F90-f90} $F90FLAGS -o conftest conftest2.o conftest.$ac_f90ext $LDFLAGS >conftest.bas 2>&1'
+         ac_fscompile3='${F90-f90} -c $save_F90FLAGS conftest2.$ac_f90ext >conftest2.out 2>&1'
+         ac_fscompilelink4='${F90-f90} $F90FLAGS -o conftest conftest2.o conftest.$ac_f90ext $LDFLAGS >conftest.bas 2>&1'
          if AC_TRY_EVAL(ac_fscompile3) && test -s conftest2.o ; then
             if AC_TRY_EVAL(ac_fscompilelink4) && test -x conftest ; then
                if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
-	          ac_result="yes"
-	       else 
-		  echo "configure: Compiler output differed in two cases" >&AC_FD_CC
+                  ac_result="yes"
+               else 
+                  echo "configure: Compiler output differed in two cases" >&AC_FD_CC
                   diff -b conftest.out conftest.bas >&AC_FD_CC
-	       fi
-	    else
-	       echo "configure: failed program was:" >&AC_FD_CC
-	       cat conftest.$ac_f90ext >&AC_FD_CC
-	    fi
-	  else
-	    echo "configure: failed program was:" >&AC_FD_CC
-	    cat conftest2.$ac_f90ext >&AC_FD_CC
-	  fi
+               fi
+            else
+               echo "configure: failed program was:" >&AC_FD_CC
+               cat conftest.$ac_f90ext >&AC_FD_CC
+            fi
+          else
+            echo "configure: failed program was:" >&AC_FD_CC
+            cat conftest2.$ac_f90ext >&AC_FD_CC
+          fi
       else
-	# diff
+        # diff
         echo "configure: Compiler output differed in two cases" >&AC_FD_CC
         diff -b conftest.out conftest.bas >&AC_FD_CC
       fi
@@ -1463,7 +1463,7 @@ if AC_TRY_EVAL(ac_fscompilelink) && test -x conftest ; then
       cat conftest.$ac_f90ext >&AC_FD_CC
    fi
    if test "$ac_result" != "yes" -a -s conftest.out ; then
-	cat conftest.out >&AC_FD_CC
+        cat conftest.out >&AC_FD_CC
    fi
 else
     # Could not compile without the option!

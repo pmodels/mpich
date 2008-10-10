@@ -233,6 +233,25 @@ This step collects all required executables and scripts in the \texttt{bin}
 subdirectory of the directory specified by the prefix argument to
 configure. 
 
+(For users who wants an install directory structure compliant to
+GNU coding standard, i.e. documentation file go to
+\$\{datarootdir\}/doc/\$\{PACKAGE\}, architecture independent
+read-only files go to \$\{datadir\}/\$\{PACKAGE\}, then replace
+\texttt{make install} as
+
+\begin{verbatim}
+       make install PACKAGE=mpich2-<versrion>
+\end{verbatim}
+
+and corresponding installcheck step should be
+
+\begin{verbatim}
+       make installcheck PACKAGE=mpich2-<version>
+\end{verbatim}
+
+Setting PACKAGE in \texttt{make install} or \texttt{make installcheck} step
+is optional and unnecessary for typical MPI users.)
+
 \item
 Add the \texttt{bin} subdirectory of the installation directory to your path:
 \begin{verbatim}

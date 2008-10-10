@@ -128,6 +128,21 @@ later, in the section "Alternative configurations".
     subdirectory of the directory specified by the prefix argument to
     configure. 
 
+    (For users who wants an install directory structure compliant to
+     GNU coding standard, i.e. documentation file go to 
+     ${datarootdir}/doc/${PACKAGE}, architecture independent
+     read-only files go to ${datadir}/${PACKAGE}, then replace
+     "make install" as
+
+       make install PACKAGE=mpich2-<versrion>
+
+     and corresponding installcheck step should be
+
+       make installcheck PACKAGE=mpich2-<version>
+
+    Setting PACKAGE in "make install" or "installcheck" step is optional
+    and unnecessary for typical MPI users.)
+
 7.  Add the bin subdirectory of the installation directory to your path:
 
     for csh and tcsh:
