@@ -10,6 +10,8 @@ EXTRA_PROGRAMS       =
 threaded_sr_SOURCES  = threaded_sr.c
 alltoall_SOURCES   = alltoall.c
 sendselfth_SOURCES = sendselfth.c
+greq_wait_SOURCES = greq_wait.c
+greq_test_SOURCES = greq_test.c
 
 ../../util/mtest.o:
 	(cd ../../util && $(MAKE) mtest.o)
