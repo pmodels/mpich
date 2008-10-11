@@ -146,8 +146,8 @@ int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     int sendtype_iscontig, recvtype_iscontig, sendsize;
     int rank, mpi_errno = MPI_SUCCESS;
     MPI_Aint true_extent, sendtype_true_lb, recvtype_true_lb;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_LOCALCOPY);
     MPIU_THREADPRIV_DECL;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_LOCALCOPY);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_LOCALCOPY);
 
