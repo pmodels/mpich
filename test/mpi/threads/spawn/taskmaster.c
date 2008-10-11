@@ -8,7 +8,8 @@
 #include <pthread.h>
 #include <mpi.h>
 
-#define DEFAULT_TASKS 2
+#define DEFAULT_TASKS 128
+#define DEFAULT_TASK_WINDOW 2
 #define USE_THREADS
 
 int comm_world_rank;
@@ -54,7 +55,7 @@ static void * main_thread(void * arg)
 
 int main(int argc, char *argv[])
 {
-    int tasks = 0, provided, i;
+    int tasks = 0, provided, i, j;
     MPI_Comm parent;
 #ifdef USE_THREADS
     pthread_t * threads;
@@ -102,20 +103,22 @@ int main(int argc, char *argv[])
 #ifdef USE_THREADS
 	/* Create a thread for each task. Each thread will spawn a
 	 * child process to perform its task. */
-	for (i = 0; i < tasks; i++)
-	    pthread_create(&threads[i], NULL, main_thread, &i);
-
-	/* Wait for all threads to finish their work and merge back */
-	for (i = 0; i < tasks; i++)
-	    pthread_join(threads[i], NULL);
+	for (i = 0; i < tasks;) {
+	    for (j = 0; j < DEFAULT_TASK_WINDOW; j++)
+		pthread_create(&threads[j], NULL, main_thread, &j);
+	    for (j = 0; j < DEFAULT_TASK_WINDOW; j++)
+		pthread_join(threads[j], NULL);
+	    i += DEFAULT_TASK_WINDOW;
+	}
 #else
 	/* Directly spawn a child process to perform each task */
-	for (i = 0; i < tasks; i++)
-	    process_spawn(&child[i], -1);
-
-	/* Wait for all processes to finish */
-	for (i = 0; i < tasks; i++)
-	    process_disconnect(&child[i], -1);
+	for (i = 0; i < tasks;) {
+	    for (j = 0; j < DEFAULT_TASK_WINDOW; j++)
+		process_spawn(&child[j], -1);
+	    for (j = 0; j < DEFAULT_TASK_WINDOW; j++)
+		process_disconnect(&child[j], -1);
+	    i += DEFAULT_TASK_WINDOW;
+	}
 #endif /* USE_THREADS */
 
 	CHECK_SUCCESS(MPI_Barrier(MPI_COMM_WORLD));
