@@ -91,4 +91,5 @@ int main(int argc, char *argv[])
     IF_VERBOSE(("Goodbye !!!\n"));
     MTest_Finalize(0);
     MPI_Finalize();
+    return 0;
 }
