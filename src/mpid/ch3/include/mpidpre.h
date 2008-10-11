@@ -47,6 +47,12 @@ typedef unsigned long MPID_Seqnum_t;
 
 #include "mpichconf.h"
 
+#if CH3_RANK_BITS == 16
+typedef int16_t MPIR_Rank_t;
+#elif CH3_RANK_BITS == 32
+typedef int32_t MPIR_Rank_t;
+#endif /* CH3_RANK_BITS */
+
 /* For the typical communication system for which the ch3 channel is
    appropriate, 16 bits is sufficient for the rank.  By also using 16
    bits for the context, we can reduce the size of the match
@@ -68,7 +74,7 @@ typedef unsigned long MPID_Seqnum_t;
 typedef union {
     struct {
 	int32_t tag;
-	int16_t rank;
+	MPIR_Rank_t rank;
 	MPIR_Context_id_t context_id;
     } parts;
     MPIR_Upint whole;

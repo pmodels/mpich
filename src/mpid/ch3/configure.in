@@ -95,6 +95,18 @@ if test -s $srcdir/channels/$channel_name/setup_$channel_name ; then
 fi
 AC_SUBST(ch3subsystems)
 
+AC_ARG_WITH(ch3-rank-bits, [--with-ch3-rank-bits=16/32     Number of bits allocated to the rank field (16 or 32)],
+			   [ rankbits=$withval ],
+			   [ rankbits=16 ])
+AC_MSG_RESULT($rankbits)
+if test "$rankbits" = "16" ; then
+   AC_DEFINE(CH3_RANK_BITS,16,[Define the number of CH3_RANK_BITS])
+elif test "$rankbits" = "32" ; then
+   AC_DEFINE(CH3_RANK_BITS,32,[Define the number of CH3_RANK_BITS])
+else
+   AC_MSG_ERROR(Only 16 or 32-bit ranks are supported)
+fi
+
 AC_CHECK_HEADERS(assert.h limits.h string.h sys/types.h sys/uio.h uuid/uuid.h \
     time.h ctype.h unistd.h arpa/inet.h sys/socket.h net/if.h)
 
