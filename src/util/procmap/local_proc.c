@@ -342,7 +342,7 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
     int *internode_table;
     int *intranode_table;
     int i;
-    int node_id; /* this is set to -1 for a proc which is not using shared memory (e.g., spawned proc) */
+    int node_id;
     int my_node_id;
     int lpid;
     MPIU_CHKLMEM_DECL(1);
@@ -375,7 +375,12 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
     external_size = 0;
     mpi_errno = MPID_VCR_Get_lpid(comm->vcr[comm->rank], &lpid);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    MPIU_Assert(lpid < g_num_global);
+
     my_node_id = g_node_ids[lpid];
+    MPIU_Assert(my_node_id >= 0);
+    MPIU_Assert(my_node_id < g_num_nodes);
+
     local_size = 0;
     local_rank = -1;
     external_rank = -1;
@@ -389,36 +394,31 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
 
         node_id = g_node_ids[lpid];
 
+        MPIU_Assert(node_id >= 0);
         MPIU_Assert(node_id < g_num_nodes);
 
         /* build list of external processes */
-        if (node_id == -1 || nodes[node_id] == -1)
+        if (nodes[node_id] == -1)
         {
             if (i == comm->rank)
                 external_rank = external_size;
-            if (node_id != -1)
-                nodes[node_id] = i;
+            nodes[node_id] = i;
             external_ranks[external_size] = i;
             ++external_size;
         }
 
         /* build the map from rank in comm to rank in external_ranks */
-        if (node_id == -1) {
-            internode_table[i] = i;
-        }
-        else {
-            internode_table[i] = nodes[node_id];
-        }
+        internode_table[i] = nodes[node_id];
 
         /* build list of local processes */
-        if (node_id != -1 && node_id == my_node_id)
+        if (node_id == my_node_id)
         {
              if (i == comm->rank)
                  local_rank = local_size;
 
              intranode_table[i] = local_size;
              local_ranks[local_size] = i;
-            ++local_size;
+             ++local_size;
         }
     }
 
