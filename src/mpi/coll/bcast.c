@@ -578,7 +578,10 @@ int MPIR_Bcast (
    override if it exists or else it calls MPIR_Bcast with the same arguments.
    This function just makes the high-level broadcast logic easier to read while
    still accomodating coll_fns-style overrides.  It also reduces future errors
-   by eliminating the duplication of Bcast arguments. */
+   by eliminating the duplication of Bcast arguments. 
+
+   This routine is used in other files as well (barrier.c, allreduce.c)
+*/
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bcast_or_coll_fn
 #undef FCNAME
