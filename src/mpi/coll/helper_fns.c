@@ -266,7 +266,6 @@ int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
 int MPIC_Wait(MPID_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
     MPIDI_STATE_DECL(MPID_STATE_MPIC_WAIT);
 
     MPIDI_PT2PT_FUNC_ENTER(MPID_STATE_MPIC_WAIT);
