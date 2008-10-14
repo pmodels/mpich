@@ -221,16 +221,7 @@ int MPID_Comm_connect(const char * port_name, MPID_Info * info, int root,
 
 /* Though the port_name_tag_mask itself is an int, we can only have as
  * many tags as the context_id space can support. */
-static int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
-static int initialize_port_name_tag_mask = 1;
-
-static void init_port_name_tag_mask(void)
-{
-    int i;
-
-    for (i = 0; i < MPIR_MAX_CONTEXT_MASK; i++)
-	port_name_tag_mask[i] = 0;
-}
+static int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK] = { 0 };
 
 static int get_port_name_tag(int * port_name_tag)
 {
@@ -269,6 +260,7 @@ fn_exit:
 fn_fail:
     /* Everything is used up */
     *port_name_tag = -1;
+    mpi_errno = MPI_ERR_OTHER;
     goto fn_exit;
 }
 
@@ -299,11 +291,6 @@ static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_OPEN_PORT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_OPEN_PORT);
-
-    if (initialize_port_name_tag_mask) {
-	init_port_name_tag_mask();
-	initialize_port_name_tag_mask = 0;
-    }
 
     mpi_errno = get_port_name_tag(&port_name_tag);
     MPIU_ERR_CHKANDJUMP(mpi_errno,mpi_errno,MPI_ERR_OTHER,"**argstr_port_name_tag");
