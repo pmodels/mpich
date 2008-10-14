@@ -1039,6 +1039,8 @@ print $OUTFD "#if \@HAVE_CXX_EXCEPTIONS\@
 #define MPIX_CALL( fnc ) (void)fnc
 #endif\n";
 
+&PrintNewSeek( $OUTFD );
+
 #
 # Within a "namespace" qualifier, the namespace name should not be used.
 # Thus, we use Offset, not MPI::Offset.
@@ -1341,7 +1343,28 @@ sub printDefineChecks {
 #endif
 #endif\n\n";
     }
-    else {
+
+    # GCC changed the calling convention between 3.2.3 and 3.4.3 (!!!)
+    # check for that
+    print $OUTFD "
+// Check for incompatible GCC versions
+// GCC (specifically) g++ changed the calling convention
+// between 3.2.3 and 3.4.3 (!!)  Normally such changes
+// should only occur at major releases (e.g., version 3 to 4)
+#ifdef __GNUC__ 
+# if __GNUC__ >= \@GNUCXX_VERSION\@ 
+#  if __GNUC_MINOR__ > 2 && \@GNUCXX_MINORVERSION\@ == 2 
+#  error 'Please use the same version of GCC and g++ for compiling MPICH2 and user MPI programs'
+#  endif
+# endif     
+#endif\n";
+}
+
+# Use this after the MPI namespace is defined
+sub PrintNewSeek {
+    my $OUTFD = $_[0];
+
+    if (! $oldSeek) {
     print $OUTFD "
 // There is a name conflict between stdio.h and iostream (or iostream.h)
 // and the MPI C++ binding with respect to the names SEEK_SET, SEEK_CUR, 
@@ -1375,20 +1398,6 @@ const int LOCK_SHARED = MPIR_LOCK_SHARED;
 #endif // MPICH_IGNORE_CXX_SEEK
 ";
     }
-    # GCC changed the calling convention between 3.2.3 and 3.4.3 (!!!)
-    # check for that
-    print $OUTFD "
-// Check for incompatible GCC versions
-// GCC (specifically) g++ changed the calling convention
-// between 3.2.3 and 3.4.3 (!!)  Normally such changes
-// should only occur at major releases (e.g., version 3 to 4)
-#ifdef __GNUC__ 
-# if __GNUC__ >= \@GNUCXX_VERSION\@ 
-#  if __GNUC_MINOR__ > 2 && \@GNUCXX_MINORVERSION\@ == 2 
-#  error 'Please use the same version of GCC and g++ for compiling MPICH2 and user MPI programs'
-#  endif
-# endif     
-#endif\n";
 }
 
 # Print the arguments for the routine DEFINITION.
