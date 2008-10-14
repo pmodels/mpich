@@ -224,6 +224,17 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
         MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**pmi_spawn_multiple");
     }
 
+    if (comm_ptr->rank == root) {
+	/* Close the port opened for the spawned processes to connect to */
+	mpi_errno = MPID_Close_port(port_name);
+	/* --BEGIN ERROR HANDLING-- */
+	if (mpi_errno != MPI_SUCCESS)
+	{
+	    MPIU_ERR_POP(mpi_errno);
+	}
+	/* --END ERROR HANDLING-- */
+    }
+
  fn_exit:
     if (info_keyval_vectors) {
 	free_pmi_keyvals(info_keyval_vectors, count, info_keyval_sizes);

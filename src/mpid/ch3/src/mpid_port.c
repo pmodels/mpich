@@ -10,12 +10,13 @@ static int setupPortFunctions = 1;
 
 #ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 static int MPIDI_Open_port(MPID_Info *, char *);
+static int MPIDI_Close_port(char *);
 
-/* Define the functions that are used to implement the port operations.
-   There is no "close port function in the default implementation 
-   (hence the 0 in the portFns structure) */
-static MPIDI_PortFns portFns = { MPIDI_Open_port, 0, 
-				 MPIDI_Comm_accept, 
+/* Define the functions that are used to implement the port
+ * operations */
+static MPIDI_PortFns portFns = { MPIDI_Open_port,
+				 MPIDI_Close_port,
+				 MPIDI_Comm_accept,
 				 MPIDI_Comm_connect };
 #else
 static MPIDI_PortFns portFns = { 0, 0, 0, 0 };
@@ -113,6 +114,9 @@ int MPID_Close_port(const char *port_name)
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIU_ERR_POP(mpi_errno);
 	}
+    }
+    else {
+	MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
     }
 
  fn_fail:	
@@ -215,6 +219,69 @@ int MPID_Comm_connect(const char * port_name, MPID_Info * info, int root,
 
 #define MPIDI_CH3I_PORT_NAME_TAG_KEY "tag"
 
+/* Though the port_name_tag_mask itself is an int, we can only have as
+ * many tags as the context_id space can support. */
+static int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
+static int initialize_port_name_tag_mask = 1;
+
+static void init_port_name_tag_mask(void)
+{
+    int i;
+
+    for (i = 0; i < MPIR_MAX_CONTEXT_MASK; i++)
+	port_name_tag_mask[i] = 0;
+}
+
+static int get_port_name_tag(int * port_name_tag)
+{
+    int i, j;
+    int mpi_errno = MPI_SUCCESS;
+
+    for (i = 0; i < MPIR_MAX_CONTEXT_MASK; i++)
+	if (port_name_tag_mask[i] != ~0)
+	    break;
+
+    if (i < MPIR_MAX_CONTEXT_MASK) {
+	/* Found a free tag. port_name_tag_mask[i] is not fully used
+	 * up. */
+
+	/* OR the mask value with powers of two. If the OR value is
+	 * the same as the original value, then it means that the
+	 * OR'ed bit was originally 1 (used); otherwise, it was
+	 * originally 0 (free). */
+	for (j = 0; j < (8 * sizeof(int)); j++) {
+	    if ((port_name_tag_mask[i] | (1 << ((8 * sizeof(int)) - j - 1))) !=
+		port_name_tag_mask[i]) {
+		/* Mark the appropriate bit as used and return that */
+		port_name_tag_mask[i] |= (1 << ((8 * sizeof(int)) - j - 1));
+		*port_name_tag = ((i * 8 * sizeof(int)) + j);
+		goto fn_exit;
+	    }
+	}
+    }
+    else {
+	goto fn_fail;
+    }
+
+fn_exit:
+    return mpi_errno;
+
+fn_fail:
+    /* Everything is used up */
+    *port_name_tag = -1;
+    goto fn_exit;
+}
+
+static void free_port_name_tag(int tag)
+{
+    int index, rem_tag;
+
+    index = tag / (sizeof(int) * 8);
+    rem_tag = tag - (index * sizeof(int) * 8);
+
+    port_name_tag_mask[index] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
+}
+
 /*
  * MPIDI_Open_port()
  */
@@ -226,17 +293,24 @@ static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
     int len;
-    static int port_name_tag=0;   /* this tag is incremented and added to the 
-				     business card, which is then returned 
-				     as the port name */
+    int port_name_tag; /* this tag is added to the business card,
+			  which is then returned as the port name */
     int myRank = MPIR_Process.comm_world->rank;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_OPEN_PORT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_OPEN_PORT);
 
+    if (initialize_port_name_tag_mask) {
+	init_port_name_tag_mask();
+	initialize_port_name_tag_mask = 0;
+    }
+
+    mpi_errno = get_port_name_tag(&port_name_tag);
+    MPIU_ERR_CHKANDJUMP(mpi_errno,mpi_errno,MPI_ERR_OTHER,"**argstr_port_name_tag");
+
     len = MPI_MAX_PORT_NAME;
     mpi_errno = MPIU_Str_add_int_arg(&port_name, &len, 
-			MPIDI_CH3I_PORT_NAME_TAG_KEY, port_name_tag++);
+			MPIDI_CH3I_PORT_NAME_TAG_KEY, port_name_tag);
 
     /* FIXME: MPIU_xxx routines should return regular mpi error codes */
     if (mpi_errno != MPIU_STR_SUCCESS) {
@@ -257,6 +331,33 @@ static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
 
 fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_OPEN_PORT);
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+/*
+ * MPIDI_Close_port()
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Close_port
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int MPIDI_Close_port(char *port_name)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int port_name_tag;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CLOSE_PORT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CLOSE_PORT);
+
+    mpi_errno = MPIDI_GetTagFromPort(port_name, &port_name_tag);
+    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,"**argstr_port_name_tag");
+
+    free_port_name_tag(port_name_tag);
+
+fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CLOSE_PORT);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
