@@ -360,12 +360,12 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
     MPIU_CHKPMEM_MALLOC (external_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "external_ranks");
     MPIU_CHKPMEM_MALLOC (local_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "local_ranks");
 
-    MPIU_CHKPMEM_MALLOC (internode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "local_ranks");
-    MPIU_CHKPMEM_MALLOC (intranode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "local_ranks");
+    MPIU_CHKPMEM_MALLOC (internode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "internode_table");
+    MPIU_CHKPMEM_MALLOC (intranode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "intranode_table");
 
     MPIU_CHKLMEM_MALLOC (nodes, int *, sizeof(int) * g_num_nodes, mpi_errno, "nodes");
     
-    /* nodes maps node_id to rank in comm of leader for that node */
+    /* nodes maps node_id to rank in external_ranks of leader for that node */
     for (i = 0; i < g_num_nodes; ++i)
         nodes[i] = -1;
 
@@ -402,7 +402,7 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
         {
             if (i == comm->rank)
                 external_rank = external_size;
-            nodes[node_id] = i;
+            nodes[node_id] = external_size;
             external_ranks[external_size] = i;
             ++external_size;
         }
