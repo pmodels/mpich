@@ -57,6 +57,19 @@ int main( int argc, char *argv[] )
     if (SEEK_END == seekValues) {
 	errs++;
     }
+
+    /* some workarounds for the SEEK_SET problem prevent its
+       use as a case label */
+    seekValues = SEEK_SET;
+    switch (seekValues) {
+        case SEEK_SET:
+            break;
+        case SEEK_CUR:
+        case SEEK_END:
+        default:
+            errs++;
+            break;
+    }
     
     MTest_Finalize( errs );
     MPI::Finalize( );

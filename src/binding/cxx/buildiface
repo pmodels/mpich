@@ -1029,6 +1029,8 @@ $files[$#files+1] = "mpicxx.h";
 
 &printCoverageHeader( $OUTFD, 1 );
 
+&PrintNewSeek( $OUTFD );
+
 print $OUTFD "namespace MPI {\n";
 
 
@@ -1038,8 +1040,6 @@ print $OUTFD "#if \@HAVE_CXX_EXCEPTIONS\@
 #else
 #define MPIX_CALL( fnc ) (void)fnc
 #endif\n";
-
-&PrintNewSeek( $OUTFD );
 
 #
 # Within a "namespace" qualifier, the namespace name should not be used.
@@ -1365,38 +1365,49 @@ sub PrintNewSeek {
     my $OUTFD = $_[0];
 
     if (! $oldSeek) {
-    print $OUTFD "
+    print $OUTFD <<EOT;
 // There is a name conflict between stdio.h and iostream (or iostream.h)
 // and the MPI C++ binding with respect to the names SEEK_SET, SEEK_CUR, 
 // and SEEK_END.  MPI wants these in the MPI namespace, but stdio.h, 
 // iostream, or iostream.h will #define these to integer values.  
 // #undef'ing these can cause obscure problems.  
-// 
 #ifndef MPICH_IGNORE_CXX_SEEK
+
+// MPICH_DONT_INCLUDE_STDIO_H is another escape hatch for us, just like
+// MPICH_IGNORE_CXX_SEEK.  If we encounter a wacky environment or user in the
+// wild that doesn't want our workaround and/or the stdio.h header, then we can
+// offer them a way out.
+#ifndef MPICH_DONT_INCLUDE_STDIO_H
+// ensure that we have SEEK_* defined
+# include <stdio.h>
+#endif
+
+enum MPIR_Dummy_seek_type {
+    MPIR_DUMMY_SEEK_COMMA_VAL = -1  // permits cleaner comma logic
 #ifdef SEEK_SET
-const int MPIR_SEEK_SET = SEEK_SET;
-#undef SEEK_SET
-const int SEEK_SET = MPIR_SEEK_SET;
+    , MPIR_SEEK_SET = SEEK_SET
+#   undef SEEK_SET
+    , SEEK_SET = MPIR_SEEK_SET
 #endif
 #ifdef SEEK_CUR
-const int MPIR_SEEK_CUR = SEEK_CUR;
-#undef SEEK_CUR
-const int SEEK_CUR = MPIR_SEEK_CUR;
+    , MPIR_SEEK_CUR = SEEK_CUR
+#   undef SEEK_CUR
+    , SEEK_CUR = MPIR_SEEK_CUR
 #endif
 #ifdef SEEK_END
-const int MPIR_SEEK_END = SEEK_END;
-#undef SEEK_END
-const int SEEK_END = MPIR_SEEK_END;
+    , MPIR_SEEK_END = SEEK_END
+#   undef SEEK_END
+    , SEEK_END = MPIR_SEEK_END
 #endif
-// LOCK_SHARED is defined by recent versions of Solaris (a reminder of
-// why unique prefixes should be used by everyone)
 #ifdef LOCK_SHARED
-const int MPIR_LOCK_SHARED = LOCK_SHARED;
-#undef LOCK_SHARED
-const int LOCK_SHARED = MPIR_LOCK_SHARED;
+    , MPIR_LOCK_SHARED = LOCK_SHARED
+#   undef LOCK_SHARED
+    , LOCK_SHARED = MPIR_LOCK_SHARED
 #endif
+};
+
 #endif // MPICH_IGNORE_CXX_SEEK
-";
+EOT
     }
 }
 
