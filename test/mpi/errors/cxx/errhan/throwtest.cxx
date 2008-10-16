@@ -73,6 +73,39 @@ int main( int argc, char *argv[] )
     win = MPI::Win::Create(NULL, 0, 1, MPI::INFO_NULL, MPI_COMM_WORLD);
     file = MPI::File::Open(MPI::COMM_WORLD, "testfile", MPI::MODE_WRONLY | MPI::MODE_CREATE | MPI::MODE_DELETE_ON_CLOSE, MPI::INFO_NULL);
 
+    // first sanity check that ERRORS_RETURN actually returns in erroneous
+    // conditions and doesn't throw an exception
+    MPI::COMM_WORLD.Set_errhandler(MPI::ERRORS_RETURN);
+    win.Set_errhandler(MPI::ERRORS_RETURN);
+    file.Set_errhandler(MPI::ERRORS_RETURN);
+
+    try {
+        // Do something that should cause an exception.
+        MPI::COMM_WORLD.Get_attr(MPI::KEYVAL_INVALID, NULL);
+    }
+    catch (...) {
+        std::cerr << "comm threw when it shouldn't have" << std::endl;
+        ++errs;
+    }
+
+    try {
+        // Do something that should cause an exception.
+        win.Get_attr(MPI::KEYVAL_INVALID, NULL);
+    }
+    catch (...) {
+        std::cerr << "win threw when it shouldn't have" << std::endl;
+        ++errs;
+    }
+    try {
+        // Do something that should cause an exception.
+        file.Write(NULL, -1, MPI_DATATYPE_NULL);
+    }
+    catch (...) {
+        std::cerr << "file threw when it shouldn't have" << std::endl;
+        ++errs;
+    }
+
+    // now test that when ERRORS_THROW_EXCEPTIONS actually throws an exception
     MPI::COMM_WORLD.Set_errhandler(MPI::ERRORS_THROW_EXCEPTIONS);
     win.Set_errhandler(MPI::ERRORS_THROW_EXCEPTIONS);
     file.Set_errhandler(MPI::ERRORS_THROW_EXCEPTIONS);
