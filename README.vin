@@ -3,9 +3,10 @@
 MPICH2 is an all-new implementation of MPI from the group at Argonne
 National Laboratory.  It shares many goals with the original MPICH but
 no actual code.  It is a portable, high-performance implementation of
-the entire MPI-2 standard.  This release has all MPI-2 functions and
+the entire MPI 2.1 standard. This release has all MPI 2.1 functions and
 features required by the standard with the exception of support for the
-"external32" portable I/O format. 
+"external32" portable I/O format and user-defined data representations 
+for I/O. 
 
 The distribution has been tested by us on a variety of machines in our
 own environments. If you have problems, please report them to
