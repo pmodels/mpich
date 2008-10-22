@@ -18,6 +18,11 @@
 static void MPIU_Print_handle( int handle );
 #endif
 
+#ifdef MPICH_DEBUG_HANDLEALLOC
+static int MPIU_CheckHandlesOnFinalize( void * );
+static const char *MPIR_ObjectName( MPIU_Object_alloc_t * );
+#endif
+
 /* This is the utility file for info that contains routines used to 
    manage the arrays used to store handle objects.  
 
@@ -139,6 +144,7 @@ void *MPIU_Handle_direct_init(void *direct,
     char               *ptr = (char *)direct;
     
     for (i=0; i<direct_size; i++) {
+	/* printf( "Adding %p in %d\n", ptr, handle_type ); */
 	hptr = (MPIU_Handle_common *)ptr;
 	ptr  = ptr + obj_size;
 	hptr->next = ptr;
@@ -261,8 +267,30 @@ void MPIU_Handle_obj_alloc_complete(MPIU_Object_alloc_t *objmem,
   This routine is performance-critical (it may be used to allocate 
   MPI_Requests) and should not call any other routines in the common
   case.
+
+  Threading: The 'MPIU_THREAD_CS_ENTER/EXIT(HANDLEALLOC,)' enables both 
+  finer-grain
+  locking with a single global mutex and with a mutex specific for handles.
+
   +*/
+#undef FUNCNAME
+#define FUNCNAME MPIU_Handle_obj_alloc
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 void *MPIU_Handle_obj_alloc(MPIU_Object_alloc_t *objmem)
+{
+    void *ret;
+    MPIU_THREAD_CS_ENTER(HANDLEALLOC,);
+    ret = MPIU_Handle_obj_alloc_unsafe(objmem);
+    MPIU_THREAD_CS_EXIT(HANDLEALLOC,);
+    return ret;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIU_Handle_obj_alloc_unsafe
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
 {
     MPIU_Handle_common *ptr;
 
@@ -296,6 +324,12 @@ void *MPIU_Handle_obj_alloc(MPIU_Object_alloc_t *objmem)
 		objmem->avail = ptr->next;
 	    }
 
+#ifdef MPICH_DEBUG_HANDLEALLOC
+	    /* The priority of these callbacks must be greater than
+	       the priority of the callback that frees the objmem direct and 
+	       indirect storage. */
+	    MPIR_Add_finalize(MPIU_CheckHandlesOnFinalize, objmem, 1);
+#endif
 	    /* ptr points to object to allocate */
 	}
 	else {
@@ -334,7 +368,7 @@ void *MPIU_Handle_obj_alloc(MPIU_Object_alloc_t *objmem)
 	memset( (void*)&ptr->ref_count, 0xef, objmem->size-sizeof(int));
 #endif
     }
-#endif
+#endif /* USE_MEMORY_TRACING */
 
     return ptr;
 }
@@ -354,12 +388,15 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
 {
     MPIU_Handle_common *obj = (MPIU_Handle_common *)object;
 
+    MPIU_THREAD_CS_ENTER(HANDLEALLOC,);
 #if defined(USE_VALGRIND_MACROS)
     VALGRIND_MAKE_MEM_NOACCESS(&obj->ref_count, objmem->size - sizeof(int));
     VALGRIND_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
 #endif
+    /* printf( "Freeing %p in %d\n", object, objmem->kind ); */
     obj->next	        = objmem->avail;
     objmem->avail	= obj;
+    MPIU_THREAD_CS_EXIT(HANDLEALLOC,);
 }
 
 /* 
@@ -399,9 +436,135 @@ void *MPIU_Handle_get_ptr_indirect( int handle, MPIU_Object_alloc_t *objmem )
     }
 }
 
+/* style: allow:printf:5 sig:0 */
+#ifdef MPICH_DEBUG_HANDLEALLOC
+/* The following is a handler that may be added to finalize to test whether
+   handles remain allocated, including those from the direct blocks.
+   
+   When adding memory checking, this routine should be invoked as
+
+   MPIR_Add_finalize(MPIU_CheckHandlesOnFinalize, objmem, 1);
+
+   as part of the object intialization.
+
+   The algorithm follows the following approach:
+   
+   The memory allocation approach manages a list of available objects.
+   These objects are allocated from several places:
+      "direct" - this is a block of preallocated space
+      "indirect" - this is a block of blocks that are allocated as necessary.
+                   E.g., objmem_ptr->indirect[0..objmem_ptr->indirect_size-1]
+		   are pointers (or null) to a block of memory.  This block is
+		   then divided into objects that are added to the avail list.
+
+   To provide information on the handles that are still in use, we must 
+   "repatriate" all of the free objects, at least virtually.  To give
+   the best information, for each free item, we determine to which block
+   it belongs.  
+*/
+static int MPIU_CheckHandlesOnFinalize( void *objmem_ptr )
+{
+    MPIU_Object_alloc_t *objmem = (MPIU_Object_alloc_t *)objmem_ptr;
+    int i, indirect_size = objmem->indirect_size;
+    MPIU_Handle_common *ptr;
+    int   directSize = objmem->direct_size;
+    char *direct = (char *)objmem->direct;
+    char *directEnd = (char *)direct + directSize * objmem->size - 1;
+    int   nDirect = 0;
+    int  *nIndirect = 0;
+
+    /* Return immediately if this object has not allocated any space */
+    if (!objmem->initialized) {
+	return 0;
+    }
+
+    if (objmem->indirect_size > 0) {
+	nIndirect = (int *)MPIU_Calloc( objmem->indirect_size, sizeof(int) );
+    }
+    /* Count the number of items in the avail list.  These include
+       all objects, whether direct or indirect allocation */
+    ptr = objmem->avail;
+    while (ptr) {
+	/* printf( "Looking at %p\n", ptr ); */
+	/* Find where this object belongs */
+	if ((char *)ptr >= direct && (char *)ptr < directEnd) {
+	    nDirect++;
+	}
+	else {
+	    void **indirect = objmem->indirect;
+	    for (i=0; i<objmem->indirect_size; i++) {
+		char *start = indirect[i];
+		char *end   = start + HANDLE_BLOCK_SIZE *objmem->size;
+		if ((char *)ptr >= start && (char *)ptr < end) {
+		    nIndirect[i]++;
+		    break;
+		}
+	    }
+	    if (i == objmem->indirect_size) {
+		/* Error - could not find the owning memory */
+		/* Temp */
+		printf( "Could not place object at %p in handle memory for type %s\n", ptr, MPIR_ObjectName( objmem ) );
+		printf( "direct block is [%p,%p]\n", direct, directEnd );
+		if (objmem->indirect_size) {
+		    printf( "indirect block is [%p,%p]\n", indirect[0], 
+			    (char *)indirect[0] + HANDLE_BLOCK_SIZE * 
+			    objmem->size );
+		}
+	    }
+	}
+	ptr = ptr->next;
+    }
+
+    if (0) {
+	/* Produce a report */
+	printf( "Object handles:\n\ttype  \t%s\n\tsize  \t%d\n\tdirect size\t%d\n\
+\tindirect size\t%d\n",
+		MPIR_ObjectName( objmem ), objmem->size, objmem->direct_size, 
+		objmem->indirect_size );
+    }
+    if (nDirect != directSize) {
+	printf( "In direct memory block for handle type %s, %d handles are still allocated\n", MPIR_ObjectName( objmem ), directSize - nDirect );
+    }
+    for (i=0; i<objmem->indirect_size; i++) {
+	if (nIndirect[i] != HANDLE_BLOCK_SIZE) {
+	    printf( "In indirect memory block %d for handle type %s, %d handles are still allocated\n", i, MPIR_ObjectName( objmem ), HANDLE_BLOCK_SIZE - nIndirect[i] );
+	}
+    }
+
+    if (nIndirect) { 
+	MPIU_Free( nIndirect );
+    }
+
+    return 0;
+}
+
+static const char *MPIR_ObjectName( MPIU_Object_alloc_t *objmem )
+{
+    const char *name=0;
+    switch (objmem->kind) {
+    case MPID_COMM: name = "COMM"; break;
+    case MPID_GROUP: name = "GROUP"; break;
+    case MPID_DATATYPE: name = "DATATYPE"; break;
+    case MPID_FILE: name = "FILE"; break;
+    case MPID_ERRHANDLER: name = "ERRHANDLER"; break;
+    case MPID_OP: name = "OP"; break;
+    case MPID_INFO: name = "INFO"; break;
+    case MPID_WIN: name = "WIN"; break;
+    case MPID_KEYVAL: name = "ATTRIBUTE KEY"; break;
+    case MPID_ATTR: name = "ATTRIBUTE"; break;
+    case MPID_REQUEST: name = "REQUEST"; break;
+    case MPID_PROCGROUP: name = "PROCGROUP"; break;
+    case MPID_VCONN: name = "VIRTUAL CONNECTION"; break;
+    case MPID_GREQ_CLASS: name = "GENERALIZED REQUEST CLASS"; break;
+    default:
+	name = "UNKNOWN OBJECT TYPE";
+    }
+    return name;
+}
+#endif    
+
 #ifdef NEEDS_PRINT_HANDLE
 /* For debugging */
-/* style: allow:printf:4 sig:0 */
 static void MPIU_Print_handle( int handle )
 {
     int type, kind, block, index;

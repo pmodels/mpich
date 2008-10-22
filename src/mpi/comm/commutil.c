@@ -1003,6 +1003,9 @@ int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
 	    MPIU_Object_release_ref( comm_ptr, &inuse); 
 	}
 
+	/* If the attribute delete functions return failure, the
+	   communicator must not be freed.  That is the reason for the
+	   test on mpi_errno here. */
 	if (mpi_errno == MPI_SUCCESS) {
 	    /* If this communicator is our parent, and we're disconnecting
 	       from the parent, mark that fact */
@@ -1047,7 +1050,22 @@ int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
             if (comm_ptr->internode_table != NULL)
                 MPIU_Free(comm_ptr->internode_table);
 
-  	    MPIU_Handle_obj_free( &MPID_Comm_mem, comm_ptr );  
+	    /* We need to release the error handler */
+	    if (comm_ptr->errhandler && 
+		! (HANDLE_GET_KIND(comm_ptr->errhandler->handle) == 
+		   HANDLE_KIND_BUILTIN) ) {
+		int errhInuse;
+		MPIR_Errhandler_release_ref( comm_ptr->errhandler,&errhInuse);
+		if (!errhInuse) {
+		    MPIU_Handle_obj_free( &MPID_Errhandler_mem, 
+					  comm_ptr->errhandler );
+		}
+	    }
+
+	    /* Check for predefined communicators - these should not
+	       be freed */
+	    if (! (HANDLE_GET_KIND(comm_ptr->handle) == HANDLE_KIND_BUILTIN) )
+		MPIU_Handle_obj_free( &MPID_Comm_mem, comm_ptr );  
 	    
 	    /* Remove from the list of active communicators if 
 	       we are supporting message-queue debugging.  We make this

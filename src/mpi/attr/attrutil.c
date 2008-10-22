@@ -60,6 +60,7 @@ int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
     MPID_Delete_function delfn;
     MPID_Lang_t          language;
     int                  mpi_errno=0;
+    int                  userErr=0;
     MPIU_THREADPRIV_DECL;
 
     MPIU_THREADPRIV_GET;
@@ -71,16 +72,14 @@ int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
     switch (language) {
     case MPID_LANG_C: 
 	if (delfn.C_DeleteFunction) {
-	    mpi_errno = delfn.C_DeleteFunction( handle,
-						attr_p->keyval->handle, 
-						attr_p->value, 
-						attr_p->keyval->extra_state );
-	    /* --BEGIN ERROR HANDLING-- */
-	    if (mpi_errno != 0)
-	    {
-		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**user", "**userdel %d", mpi_errno);
+	    userErr = delfn.C_DeleteFunction( handle,
+					      attr_p->keyval->handle, 
+					      attr_p->value, 
+					      attr_p->keyval->extra_state );
+	    if (userErr != 0) {
+		MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
+			       "**user", "**userdel %d", userErr );
 	    }
-	    /* --END ERROR HANDLING-- */
 	}
 	break;
 
@@ -88,17 +87,15 @@ int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
     case MPID_LANG_CXX: 
 	if (delfn.C_DeleteFunction) {
 	    int handleType = HANDLE_GET_MPI_KIND(handle);
-	    mpi_errno = (*MPIR_Process.cxx_call_delfn)( handleType,
+	    userErr = (*MPIR_Process.cxx_call_delfn)( handleType,
 						handle,
 						attr_p->keyval->handle, 
 						attr_p->value,
 						attr_p->keyval->extra_state, 
 				(void (*)(void)) delfn.C_DeleteFunction );
-	    if (mpi_errno != 0) {
-		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, 
-                              MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
-			      MPI_ERR_OTHER, "**user", "**userdel %d", 
-                              mpi_errno);
+	    if (userErr != 0) {
+		MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
+			       "**user", "**userdel %d", userErr );
 	    }
 	}
 	break;
@@ -123,13 +120,11 @@ int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
 		fextra  = (MPI_Fint*) (attr_p->keyval->extra_state);
 		delfn.F77_DeleteFunction( &fhandle, &fkeyval, &fvalue, 
 					  fextra, &ierr );
-		if (ierr) mpi_errno = (int)ierr;
-		else      mpi_errno = MPI_SUCCESS;
-		if (mpi_errno != 0) {
-		    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, 
-				   MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
-                                   MPI_ERR_OTHER, "**user", "**userdel %d", 
-				   mpi_errno);
+		if (ierr) userErr = (int)ierr;
+		else      userErr = MPI_SUCCESS;
+		if (userErr != 0) {
+		    MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
+				   "**user", "**userdel %d", userErr );
 		}
 	    }
 	}
@@ -145,13 +140,11 @@ int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
 		fextra  = (MPI_Aint*) (attr_p->keyval->extra_state );
 		delfn.F90_DeleteFunction( &fhandle, &fkeyval, &fvalue, 
 					  fextra, &ierr );
-		if (ierr) mpi_errno = (int)ierr;
-		else      mpi_errno = MPI_SUCCESS;
-		if (mpi_errno != 0) {
-		    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, 
-                                  MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
-                                  MPI_ERR_OTHER, "**user", "**userdel %d", 
-                                  mpi_errno);
+		if (ierr) userErr = (int)ierr;
+		else      userErr = MPI_SUCCESS;
+		if (userErr != 0) {
+		    MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
+				   "**user", "**userdel %d", userErr );
 		}
 	    }
 	}
@@ -174,6 +167,7 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
     void               *new_value = NULL;
     int                flag;
     int                mpi_errno = 0;
+    int                userErr=0;
     MPIU_THREADPRIV_DECL;
 
     MPIU_THREADPRIV_GET;
@@ -197,38 +191,31 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
 	switch (language) {
 	case MPID_LANG_C: 
 	    if (copyfn.C_CopyFunction) {
-		mpi_errno = copyfn.C_CopyFunction( handle, 
-						p->keyval->handle, 
-						p->keyval->extra_state, 
-						p->value, &new_value, &flag );
-		/* --BEGIN ERROR HANDLING-- */
-		if (mpi_errno != 0)
-		{
-		    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**user", "**usercopy %d", mpi_errno);
+		userErr = copyfn.C_CopyFunction( handle, 
+						 p->keyval->handle, 
+						 p->keyval->extra_state, 
+						 p->value, &new_value, &flag );
+		if (userErr != 0) {
+		    MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
+				   "**user", "**usercopy %d", userErr );
 		}
-		/* --END ERROR HANDLING-- */
 	    }
 	    break;
 #ifdef HAVE_CXX_BINDING
 	case MPID_LANG_CXX: 
 	    if (copyfn.C_CopyFunction) {
 		int handleType = HANDLE_GET_MPI_KIND(handle);
-		mpi_errno = (*MPIR_Process.cxx_call_copyfn)( 
+		userErr = (*MPIR_Process.cxx_call_copyfn)( 
 				   handleType,
 				   handle,
 				   p->keyval->handle, 
 				   p->keyval->extra_state, 
 				   p->value, &new_value, &flag,
 				   (void (*)(void)) copyfn.C_CopyFunction );
-		/* --BEGIN ERROR HANDLING-- */
-		if (mpi_errno != 0) {
-		    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, 
-					 MPIR_ERR_RECOVERABLE, 
-					 FCNAME, __LINE__, 
-					 MPI_ERR_OTHER, 
-					 "**user", "**usercopy %d", mpi_errno);
+		if (userErr != 0) {
+		    MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
+				   "**user", "**usercopy %d", userErr );
 		}
-		/* --END ERROR HANDLING-- */
 	    }
 	    break;
 #endif
@@ -245,15 +232,13 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
 		    fextra  = (MPI_Fint*) (p->keyval->extra_state );
 		    copyfn.F77_CopyFunction( &fhandle, &fkeyval, fextra,
 					     &fvalue, &fnew, &fflag, &ierr );
-		    if (ierr) mpi_errno = (int)ierr;
+		    if (ierr) userErr = (int)ierr;
 		    flag      = fflag;
 		    new_value = MPI_AINT_CAST_TO_VOID_PTR (MPI_Aint) fnew;
-		    /* --BEGIN ERROR HANDLING-- */
-		    if (mpi_errno != 0)
-		    {
-			mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**user", "**usercopy %d", mpi_errno);
+		    if (userErr != 0) {
+			MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
+				       "**user", "**usercopy %d", userErr );
 		    }
-		    /* --END ERROR HANDLING-- */
 		}
 	    }
 	    break;
@@ -268,15 +253,13 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
 		    fextra  = (MPI_Aint*) (p->keyval->extra_state );
 		    copyfn.F90_CopyFunction( &fhandle, &fkeyval, fextra,
 					     &fvalue, &fnew, &fflag, &ierr );
-		    if (ierr) mpi_errno = (int)ierr;
+		    if (ierr) userErr = (int)ierr;
 		    flag = fflag;
 		    new_value = MPI_AINT_CAST_TO_VOID_PTR fnew;
-		    /* --BEGIN ERROR HANDLING-- */
-		    if (mpi_errno != 0)
-		    {
-			mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**user", "**usercopy %d", mpi_errno);
+		    if (userErr != 0) {
+			MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
+				       "**user", "**usercopy %d", userErr );
 		    }
-		    /* --END ERROR HANDLING-- */
 		}
 	    }
 	    break;
@@ -341,8 +324,7 @@ int MPIR_Attr_delete_list( int handle, MPID_Attribute *attr )
 	/* Check the sentinals first */
 	/* --BEGIN ERROR HANDLING-- */
 	if (p->pre_sentinal != 0 || p->post_sentinal != 0) {
-	    mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
-					      MPI_ERR_OTHER, "**attrsentinal", 0 );
+	    MPIU_ERR_SET(mpi_errno,MPI_ERR_OTHER,"**attrsentinal");
 	    /* We could keep trying to free the attributes, but for now
 	       we'll just bag it */
 	    return mpi_errno;
@@ -353,6 +335,21 @@ int MPIR_Attr_delete_list( int handle, MPID_Attribute *attr )
 	/* Still to do: capture any error returns but continue to 
 	   process attributes */
 	mpi_errno = MPIR_Call_attr_delete( handle, p );
+
+	/* We must also remove the keyval reference.  If the keyval
+	   was freed earlier (reducing the refcount), the actual 
+	   release and free will happen here.  We must free the keyval
+	   even if the attr delete failed, as we then remove the 
+	   attribute.
+	*/
+	{
+	    int in_use;
+	    /* Decrement the use of the keyval */
+	    MPIR_Keyval_release_ref( p->keyval, &in_use);
+	    if (!in_use) {
+		MPIU_Handle_obj_free( &MPID_Keyval_mem, p->keyval );
+	    }
+	}
 	
 	MPIU_Handle_obj_free( &MPID_Attr_mem, p );
 	

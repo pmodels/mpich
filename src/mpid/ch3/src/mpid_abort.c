@@ -77,7 +77,7 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code,
     }
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-    MPIR_DebuggerSetAborting( error_str );
+    MPIR_DebuggerSetAborting( error_msg );
 #endif
 
     /* FIXME: This should not use an ifelse chain. Either define the function

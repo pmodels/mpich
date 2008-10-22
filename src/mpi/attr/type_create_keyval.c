@@ -105,6 +105,9 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function *type_copy_attr_fn,
     keyval_ptr->extra_state      = extra_state;
     keyval_ptr->copyfn.C_CopyFunction  = type_copy_attr_fn;
     keyval_ptr->delfn.C_DeleteFunction = type_delete_attr_fn;
+
+    /* Tell finalize to check for attributes on permenant types */
+    MPIR_DatatypeAttrFinalize();
     
     /* ... end of body of routine ... */
 

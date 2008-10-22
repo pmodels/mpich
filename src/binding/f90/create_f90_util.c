@@ -54,8 +54,10 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 	return 1;
     }
     if (nAlloc == 0) {
-	/* Install the finalize callback that frees these datatyeps */
-	MPIR_Add_finalize( MPIR_FreeF90Datatypes, 0, 0 );
+	/* Install the finalize callback that frees these datatyeps.
+	   Set the priority high enough that this will be executed 
+	   before the handle allocation check */
+	MPIR_Add_finalize( MPIR_FreeF90Datatypes, 0, 2 );
     }
 
     type           = &f90Types[nAlloc++];

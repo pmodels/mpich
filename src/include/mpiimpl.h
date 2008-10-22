@@ -361,6 +361,10 @@ typedef enum MPID_Lang_t { MPID_LANG_C
    MPI_Datatype) */
 #include "mpihandlemem.h"
 
+/* This routine is used to install an attribute free routine for datatypes
+   at finalize-time */
+void MPIR_DatatypeAttrFinalize( void );
+
 /* ------------------------------------------------------------------------- */
 /* mpiobjref.h */
 /* ------------------------------------------------------------------------- */
@@ -533,8 +537,6 @@ void *MPIU_Handle_indirect_init( void *(**)[], int *, int, int, int, int );
 int MPIU_Handle_free( void *((*)[]), int );
 */
 /* Convert Handles to objects for MPI types that have predefined objects */
-/* Question.  Should this do ptr=0 first, particularly if doing --enable-strict
-   complication? */
 #define MPID_Getb_ptr(kind,a,bmsk,ptr)                                  \
 {                                                                       \
    switch (HANDLE_GET_KIND(a)) {                                        \
@@ -557,8 +559,6 @@ int MPIU_Handle_free( void *((*)[]), int );
 
 /* Convert handles to objects for MPI types that do _not_ have any predefined
    objects */
-/* Question.  Should this do ptr=0 first, particularly if doing --enable-strict
-   complication? */
 #define MPID_Get_ptr(kind,a,ptr)					\
 {									\
    switch (HANDLE_GET_KIND(a)) {					\
@@ -1786,7 +1786,7 @@ extern MPIU_Object_alloc_t MPID_Op_mem;
 /* ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
-/* mpicoll.h (in src/mpi/coll? */
+/* mpicoll.h (in src/mpi/coll?) */
 /* ------------------------------------------------------------------------- */
 
 /* Collective operations */

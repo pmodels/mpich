@@ -1033,7 +1033,12 @@ $files[$#files+1] = "mpicxx.h";
 
 print $OUTFD "namespace MPI {\n";
 
-
+#
+# FIXME: This isn't correct - if the error handler is 
+# *not* errors_throw_exceptions, this causes the wrong thing to happen.  
+# Instead, we should throw only if that is the requested error handler.
+# This may mean changing this approach, and having the error call
+# interface call back into the C++ interface to invoke a throw routine.
 print $OUTFD "#if \@HAVE_CXX_EXCEPTIONS\@
 #define MPIX_CALL( fnc ) \\
 {int err; err = fnc ; if (err) throw Exception(err);}

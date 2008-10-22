@@ -71,7 +71,9 @@ void MPIR_Add_finalize( int (*f)( void * ), void *extra_data, int priority )
 PMPI_LOCAL void MPIR_Call_finalize_callbacks( int min_prio, int max_prio )
 {
     int i, j;
-    for (j=fstack_max_priority; j>=min_prio; j--) {
+
+    if (max_prio > fstack_max_priority) max_prio = fstack_max_priority;
+    for (j=max_prio; j>=min_prio; j--) {
 	for (i=fstack_sp-1; i>=0; i--) {
 	    if (fstack[i].f && fstack[i].priority == j) {
 		fstack[i].f( fstack[i].extra_data );
@@ -132,15 +134,48 @@ int MPI_Finalize( void )
        Do this only if the attribute functions are defined. */ 
     /* The standard (MPI-2, section 4.8) says that the attributes on 
        MPI_COMM_SELF are deleted before almost anything else happens */
+    /* Note that the attributes need to be removed from the communicators 
+       so that they aren't freed twice. (The communicators are released
+       in MPID_Finalize) */
     if (MPIR_Process.attr_free && MPIR_Process.comm_self->attributes) {
         mpi_errno = MPIR_Process.attr_free( MPI_COMM_SELF,
-					   MPIR_Process.comm_self->attributes);
+					    MPIR_Process.comm_self->attributes);
+	MPIR_Process.comm_self->attributes = 0;
     }
     if (MPIR_Process.attr_free && MPIR_Process.comm_world->attributes) {
         mpi_errno = MPIR_Process.attr_free( MPI_COMM_WORLD, 
                                          MPIR_Process.comm_world->attributes);
+	MPIR_Process.comm_world->attributes = 0;
     }
 
+    /* 
+     * Now that we're finalizing, we need to take control of the error handlers
+     * At this point, we will release any user-defined error handlers on 
+     * comm self and comm world
+     */
+    if (MPIR_Process.comm_world->errhandler && 
+	! (HANDLE_GET_KIND(MPIR_Process.comm_world->errhandler->handle) == 
+	   HANDLE_KIND_BUILTIN) ) {
+	int in_use;
+	MPIR_Errhandler_release_ref( MPIR_Process.comm_world->errhandler,
+				     &in_use);
+	if (!in_use) {
+	    MPIU_Handle_obj_free( &MPID_Errhandler_mem, 
+				  MPIR_Process.comm_world->errhandler );
+	}
+    }
+    if (MPIR_Process.comm_self->errhandler && 
+	! (HANDLE_GET_KIND(MPIR_Process.comm_self->errhandler->handle) == 
+	   HANDLE_KIND_BUILTIN) ) {
+	int in_use;
+	MPIR_Errhandler_release_ref( MPIR_Process.comm_self->errhandler,
+				     &in_use);
+	if (!in_use) {
+	    MPIU_Handle_obj_free( &MPID_Errhandler_mem, 
+				  MPIR_Process.comm_self->errhandler );
+	}
+    }
+    
     /* FIXME: Why is this not one of the finalize callbacks?.  Do we need
        pre and post MPID_Finalize callbacks? */
     MPIU_Timer_finalize();
@@ -174,22 +209,28 @@ int MPI_Finalize( void )
     /* If memory debugging is enabled, check the memory here, after all
        finalize callbacks */
 #ifdef MPICH_DEBUG_NESTING
-    /* FIXME: the (1) in the if test should be replaced by a 
-       parameter call */
-    if (1) {
-	MPIU_THREADPRIV_DECL;
+    {
+	int parmFound, parmValue;
 
-	MPIU_THREADPRIV_GET;
-	/* Check for an error in the nesting level */
-	if (MPIR_Nest_value()) {
-	    int i,n;
-	    n = MPIR_Nest_value();
-	    fprintf( stderr, "Unexpected value for nesting level = %d\n", n );
-	    fprintf( stderr, "Nest stack is:\n" );
-	    for (i=n-1; i>=0; i--) {
-		fprintf( stderr, "\t[%d] %s:%d\n", i, 
-			 MPIU_THREADPRIV_FIELD(nestinfo[i].file), 
-			 MPIU_THREADPRIV_FIELD(nestinfo[i].line) );
+	MPIU_Param_register( "nestcheck", "NESTCHECK", 
+	     "List any memory that was allocated by MPICH2 and that remains allocated when MPI_Finalize completes" );
+	parmFound = MPIU_GetEnvBool( "MPICH_NESTCHECK", &parmValue );
+	if (!parmFound) parmValue = 1;
+	if (parmValue) {
+	    MPIU_THREADPRIV_DECL;
+	    
+	    MPIU_THREADPRIV_GET;
+	    /* Check for an error in the nesting level */
+	    if (MPIR_Nest_value()) {
+		int i,n;
+		n = MPIR_Nest_value();
+		fprintf( stderr, "Unexpected value for nesting level = %d\n", n );
+		fprintf( stderr, "Nest stack is:\n" );
+		for (i=n-1; i>=0; i--) {
+		    fprintf( stderr, "\t[%d] %s:%d\n", i, 
+			     MPIU_THREADPRIV_FIELD(nestinfo[i].file), 
+			     MPIU_THREADPRIV_FIELD(nestinfo[i].line) );
+		}
 	    }
 	}
     }

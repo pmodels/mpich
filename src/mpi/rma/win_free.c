@@ -101,6 +101,16 @@ int MPI_Win_free(MPI_Win *win)
      */
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    /* We need to release the error handler */
+    if (win_ptr->errhandler && 
+	! (HANDLE_GET_KIND(win_ptr->errhandler->handle) == 
+	   HANDLE_KIND_BUILTIN) ) {
+	int in_use;
+	MPIR_Errhandler_release_ref( win_ptr->errhandler,&in_use);
+	if (!in_use) {
+	    MPIU_Handle_obj_free( &MPID_Errhandler_mem, win_ptr->errhandler );
+	}
+    }
     
     mpi_errno = MPIU_RMA_CALL(win_ptr,Win_free(&win_ptr));
     *win = MPI_WIN_NULL;

@@ -356,6 +356,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 
     /* Create the new intercommunicator here. We need to send the
        context id to the other side. */
+    /* FIXME: If we fail to connect, someone needs to free this newcomm */
     mpi_errno = MPIR_Comm_create(newcomm);
     if (mpi_errno) {
 	MPIU_ERR_POP(mpi_errno);

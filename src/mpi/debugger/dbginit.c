@@ -186,7 +186,8 @@ void * MPIR_Breakpoint( void )
 
 /* 
  * Call this routine to signal to the debugger that the application is aborting.
- * If there is an abort message, call the MPIR_Breakpoint routine (which allows a tool 
+ * If there is an abort message, call the MPIR_Breakpoint routine (which 
+ * allows a tool 
  * such as a debugger to gain control.
  */
 void MPIR_DebuggerSetAborting( const char *msg )

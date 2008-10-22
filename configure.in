@@ -1108,6 +1108,9 @@ for option in $enable_g ; do
 	;;
         no|none)
 	;;
+	handlealloc)
+	perform_handlealloc=yes
+	;;
 	handle)
 	AC_DEFINE(MPICH_DEBUG_HANDLES,1,[Define to enable handle checking])
 	;;
@@ -1140,6 +1143,7 @@ for option in $enable_g ; do
 	enable_append_g=yes
 	perform_meminit=yes
 	perform_dbgmutex=yes
+	perform_handlealloc=yes
 	;;
 	*)
 	AC_MSG_WARN([Unknown value $enable_g for enable-g])
@@ -1179,6 +1183,10 @@ fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
 fi
+if test "$perform_handlealloc" = yes ; then
+   AC_DEFINE(MPICH_DEBUG_HANDLEALLOC,1,[Define to enable checking of handles still allocated at MPI_Finalize])
+fi
+
 if test -n "$perform_memtracing" ; then
     enable_g_mem=yes
     AC_DEFINE(USE_MEMORY_TRACING,1,[Define to enable memory tracing])
