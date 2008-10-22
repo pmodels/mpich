@@ -299,7 +299,7 @@ int PMI_Get_appnum( int *appnum )
     return( PMI_SUCCESS );
 }
 
-int PMI_Barrier( )
+int PMI_Barrier( void )
 {
     int err = PMI_SUCCESS;
 
@@ -390,7 +390,7 @@ int PMI_Get_clique_ranks( int ranks[], int length )
 }
 
 /* Inform the process manager that we're in finalize */
-int PMI_Finalize( )
+int PMI_Finalize( void )
 {
     int err = PMI_SUCCESS;
 
@@ -1046,6 +1046,10 @@ static int GetResponse( const char request[], const char expectedCmd[],
     char recvbuf[PMIU_MAXLINE];
     char cmdName[PMIU_MAXLINE];
 
+    /* FIXME: This is an example of an incorrect fix - writeline can change
+       the second argument in some cases, and that will break the const'ness
+       of request.  Instead, writeline should take a const item and return
+       an error in the case in which it currently truncates the data. */
     err = PMIU_writeline( PMI_fd, (char *)request );
     if (err) {
 	return err;

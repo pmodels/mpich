@@ -65,7 +65,7 @@ void PMIU_SetServer( void )
 /* style: allow:fprintf:1 sig:0 */
 /* style: allow:vfprintf:1 sig:0 */
 /* This should be combined with the message routines */
-void PMIU_printf( int print_flag, char *fmt, ... )
+void PMIU_printf( int print_flag, const char *fmt, ... )
 {
     va_list ap;
     static FILE *logfile= 0;
