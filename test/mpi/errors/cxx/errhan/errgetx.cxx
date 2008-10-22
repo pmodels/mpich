@@ -50,6 +50,9 @@ int testRetrieveErrhandler(T &obj)
     obj.Set_errhandler(custom_handler);
     retrieved_handler = obj.Get_errhandler();
     if (retrieved_handler != custom_handler) errs++;
+    retrieved_handler.Free();
+
+    custom_handler.Free();
 
     return errs;
 }
@@ -65,7 +68,9 @@ int main( int argc, char *argv[] )
     const unsigned int rank = MPI::COMM_WORLD.Get_rank();
 
     win = MPI::Win::Create(NULL, 0, 1, MPI::INFO_NULL, MPI_COMM_WORLD);
-    file = MPI::File::Open(MPI::COMM_WORLD, "testfile", MPI::MODE_WRONLY | MPI::MODE_CREATE | MPI::MODE_DELETE_ON_CLOSE, MPI::INFO_NULL);
+    file = MPI::File::Open(MPI::COMM_WORLD, "testfile", 
+	   MPI::MODE_WRONLY | MPI::MODE_CREATE | MPI::MODE_DELETE_ON_CLOSE, 
+	   MPI::INFO_NULL);
 
     if (0 == rank) {
         errs += testRetrieveErrhandler(MPI::COMM_WORLD);

@@ -12,7 +12,7 @@ static int verbose = 0;
 int main( int argc, char *argv[] )
 {
     int ierr, errs=0;
-    MPI_Comm newcomm;
+    MPI_Comm newcomm = MPI_COMM_NULL;
 
     MPI_Init( &argc, &argv );
 
@@ -31,6 +31,10 @@ int main( int argc, char *argv[] )
 	    /* Check the message */
 	    MPI_Error_string( ierr, str, &slen );
 	    printf( "Error message is: %s\n", str );
+	}
+	if (newcomm != MPI_COMM_NULL) {
+	    errs++;
+	    printf( "Comm_connect returned a communicator even with an error\n" );
 	}
     }
     fflush(stdout);

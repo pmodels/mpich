@@ -31,23 +31,30 @@ int main( int argc, char *argv[] )
     int buf[2];
     MPI_Win        win;
     MPI_Errhandler newerr;
+    int            i;
 
     MTest_Init( &argc, &argv );
 
-    MPI_Win_create( buf, 2*sizeof(int), sizeof(int), 
-		    MPI_INFO_NULL, MPI_COMM_WORLD, &win );
-    mywin = win;
-
-    MPI_Win_create_errhandler( eh, &newerr );
-
-    MPI_Win_set_errhandler( win, newerr );
-    MPI_Win_call_errhandler( win, MPI_ERR_OTHER );
-    MPI_Errhandler_free( &newerr );
-    if (calls != 1) {
-	errs++;
-	printf( "Error handler not called\n" );
+    /* Run this test multiple times to expose storage leaks (we found a leak
+       of error handlers with this test) */
+    for (i=0;i<1000; i++)  {
+	calls = 0;
+	
+	MPI_Win_create( buf, 2*sizeof(int), sizeof(int), 
+			MPI_INFO_NULL, MPI_COMM_WORLD, &win );
+	mywin = win;
+	
+	MPI_Win_create_errhandler( eh, &newerr );
+	
+	MPI_Win_set_errhandler( win, newerr );
+	MPI_Win_call_errhandler( win, MPI_ERR_OTHER );
+	MPI_Errhandler_free( &newerr );
+	if (calls != 1) {
+	    errs++;
+	    printf( "Error handler not called\n" );
+	}
+	MPI_Win_free( &win );
     }
-    MPI_Win_free( &win );
 
     MTest_Finalize( errs );
     MPI_Finalize();

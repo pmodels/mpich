@@ -51,10 +51,12 @@ int copybomb_fn( MPI_Datatype oldtype, int keyval, void *extra_state,
 
 /* Set delete flag to 1 to allow the attribute to be deleted */
 static int delete_flag = 0;
+static int deleteCalled = 0;
 
 int deletebomb_fn( MPI_Datatype type, int keyval, void *attribute_val, 
 		   void *extra_state)
 {
+    deleteCalled ++;
     if (delete_flag) return MPI_SUCCESS;
     return MPI_ERR_OTHER;
 }
@@ -119,11 +121,16 @@ int test_attrs( void )
 	printf( "dup did not return MPI_DATATYPE_NULL on error\n" );
     }
 
-    delete_flag = 1;
+    delete_flag  = 1;
+    deleteCalled = 0;
     if (d2 != MPI_DATATYPE_NULL) 
 	MPI_Type_free(&d2);
     MPI_Type_free( &dup_type );
+    if (deleteCalled == 0) {
+	errs++;
+	printf( "Free of a datatype did not invoke the attribute delete routine\n" );
+    }
+    MPI_Type_free_keyval( &key_1 );
 
     return errs;
 }
-

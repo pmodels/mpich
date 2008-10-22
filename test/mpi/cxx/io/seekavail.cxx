@@ -42,6 +42,7 @@ int main( int argc, char *argv[] )
     comm = MPI::COMM_WORLD;
 
     // Make sure that we can access each value
+    // First, the MPI C++ values
     seekValues = MPI::SEEK_SET;
     if (MPI::SEEK_CUR == seekValues) {
 	errs++;
@@ -50,6 +51,7 @@ int main( int argc, char *argv[] )
 	errs++;
     }
 
+    // Second, the stdio values
     seekValues = SEEK_SET;
     if (SEEK_CUR == seekValues) {
 	errs++;

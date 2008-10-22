@@ -24,6 +24,8 @@
  * 
  */
 
+static void MTestRMACleanup( void );
+
 /* Here is where we could put the includes and definitions to enable
    memory testing */
 
@@ -107,6 +109,9 @@ void MTest_Finalize( int errs )
 	}
 	fflush( stdout );
     }
+
+    /* Clean up any persistent objects that we allocated */
+    MTestRMACleanup();
 }
 
 /*
@@ -1500,4 +1505,12 @@ void MTestFreeWin( MPI_Win *win )
     merr = MPI_Win_free(win);
     if (merr) MTestPrintError( merr );
 }
+static void MTestRMACleanup( void )
+{
+    if (mem_keyval != MPI_KEYVAL_INVALID) {
+	MPI_Win_free_keyval( &mem_keyval );
+    }
+}
+#else 
+static void MTestRMACleanup( void ) {}
 #endif

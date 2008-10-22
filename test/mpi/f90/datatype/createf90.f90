@@ -10,7 +10,7 @@
         integer rank
         integer nparms(2), dummy(1)
         integer (kind=MPI_ADDRESS_KIND) adummy(1)
-        integer ntype1, nsize, ntype2
+        integer ntype1, nsize, ntype2, ntype3, i
 !
 !       Test the Type_create_f90_xxx routines
 !
@@ -55,6 +55,13 @@
            print *, "Types with r = 8 and r = 9 are the same, ", &
                 "should be distinct"
         endif
+
+!
+! Check that we don't create new types each time.  This test will fail only
+! if the MPI implementation checks for un-freed types or runs out of space
+        do i=1, 100000
+           call mpi_type_create_f90_integer( 8, ntype3, ierr )
+        enddo
 
         call mpi_comm_rank( MPI_COMM_WORLD, rank, ierr )
         if (rank .eq. 0) then

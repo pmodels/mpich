@@ -134,6 +134,7 @@ int main( int argc, char *argv[] )
     }
 
     MPI_Comm_free( &dupWorld );
+    MPI_Comm_free_keyval( &key );
 
     MTest_Finalize( errs );
 

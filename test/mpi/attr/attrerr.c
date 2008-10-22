@@ -122,6 +122,7 @@ int test_communicators( void )
 
     delete_flag = 1;
     MPI_Comm_free( &dup_comm_world );
+    MPI_Keyval_free( &key_1 );
 
     return errs;
 }

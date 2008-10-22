@@ -69,10 +69,6 @@ int test_communicators( void )
     int flag, world_rank, world_size, rank, size, n, key_1, key_3;
     int color, key, result;
     int errs = 0;
-    /*      integer n, ,
-	    .        key_2
-	    
-    */
     MPI_Aint value;
 
     MPI_Comm_rank( MPI_COMM_WORLD, &world_rank );
@@ -171,8 +167,6 @@ int test_communicators( void )
 	value = 9;
 	MPI_Keyval_create(copy_fn,     delete_fn,   &key_1, &value );
 	value = 8;
-	/*     MPI_Keyval_create(MPI_DUP_FN,  MPI_NULL_DELETE_FN,
-	                         &key_2, &value );  */
 	value = 7;
 	MPI_Keyval_create(MPI_NULL_COPY_FN, MPI_NULL_DELETE_FN,
 			  &key_3, &value ); 
@@ -181,7 +175,6 @@ int test_communicators( void )
 	   easy way to cache a value instead of a pointer */
 	/* printf( "key1 = %x key3 = %x\n", key_1, key_3 ); */
 	MPI_Attr_put(lo_comm, key_1, (void *) (MPI_Aint) world_rank );
-	/*         MPI_Attr_put(lo_comm, key_2, world_size ) */
 	MPI_Attr_put(lo_comm, key_3, (void *)0 );
 	
 	MPI_Comm_dup(lo_comm, &dup_comm );
@@ -208,20 +201,6 @@ int test_communicators( void )
 	    MPI_Abort(MPI_COMM_WORLD, 3005 );
 	}
 
-	/*         MPI_Attr_get(dup_comm, key_2, (int *)&value, &flag ); */
-	/*
-	  if (! flag) {
-	     printf( "dup_comm key_2 not found\n" );
-	     fflush( stdout );
-             MPI_Abort(MPI_COMM_WORLD, 3006 );
-           }
-
-	  if (value != world_size) {
-             printf( "dup_comm key_2 value incorrect: %d\n", value );
-	     fflush( stdout );
-             MPI_Abort(MPI_COMM_WORLD, 3007 );
-	   }
-	*/
 	MPI_Attr_get(dup_comm, key_3, (void **)&vvalue, &flag );
 	value = (MPI_Aint)vvalue;
 	if (flag) {
@@ -231,9 +210,6 @@ int test_communicators( void )
 	    MPI_Abort(MPI_COMM_WORLD, 3008 );
 	}
 	MPI_Keyval_free(&key_1 );
-	/* 
-	   c        MPI_Keyval_free(&key_2 )
-	*/
 	MPI_Keyval_free(&key_3 );
     }
     /* 

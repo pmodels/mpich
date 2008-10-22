@@ -38,6 +38,8 @@ int main( int argc, char **argv )
 
     /* Attach to comm_self */
     MPI_Attr_put( MPI_COMM_SELF, exit_key, (void*)0 );
+    /* We can free the key now */
+    MPI_Keyval_free( &exit_key );
 
     /* Now, exit MPI */
     /* MTest_Finalize( errs ); */

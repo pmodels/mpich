@@ -23,6 +23,9 @@ using namespace std;
 static int dbgflag = 0;         /* Flag used for debugging */
 static int wrank = -1;          /* World rank */
 static int verbose = 0;         /* Message level (0 is none) */
+
+static void MTestRMACleanup( void );
+
 /* 
  * Initialize and Finalize MTest
  */
@@ -95,6 +98,9 @@ void MTest_Finalize( int errs )
 	}
 	cout.flush();
     }
+
+    // Clean up any persistent objects that we allocated
+    MTestRMACleanup();
 }
 
 /*
@@ -880,4 +886,12 @@ void MTestFreeWin( MPI::Win &win )
     }
     win.Free();
 }
+static void MTestRMACleanup( void )
+{
+    if (mem_keyval != MPI::KEYVAL_INVALID) {
+	MPI::Win::Free_keyval( mem_keyval );
+    }
+}
+#else 
+static void MTestRMACleanup( void ) {}
 #endif

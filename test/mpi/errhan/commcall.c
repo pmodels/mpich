@@ -28,8 +28,9 @@ void eh( MPI_Comm *comm, int *err, ... )
 }
 int main( int argc, char *argv[] )
 {
-    MPI_Comm      comm;
+    MPI_Comm       comm;
     MPI_Errhandler newerr;
+    int            i;
 
     MTest_Init( &argc, &argv );
 
@@ -44,6 +45,35 @@ int main( int argc, char *argv[] )
     if (calls != 1) {
 	errs++;
 	printf( "Error handler not called\n" );
+    }
+
+    /* Here we apply the test to many copies of a communicator */
+    for (i=0; i<1000; i++) {
+	MPI_Comm comm2;
+	calls = 0;
+	MPI_Comm_dup( MPI_COMM_WORLD, &comm );
+	mycomm = comm;
+	MPI_Comm_create_errhandler( eh, &newerr );
+
+	MPI_Comm_set_errhandler( comm, newerr );
+	MPI_Comm_call_errhandler( comm, MPI_ERR_OTHER );
+	if (calls != 1) {
+	    errs++;
+	    printf( "Error handler not called\n" );
+	}
+	MPI_Comm_dup( comm, &comm2 );
+	calls = 0;
+	mycomm = comm2;
+	/* comm2 must inherit the error handler from comm */
+	MPI_Comm_call_errhandler( comm2, MPI_ERR_OTHER );
+	MPI_Errhandler_free( &newerr );
+	if (calls != 1) {
+	    errs++;
+	    printf( "Error handler not called\n" );
+	}
+
+	MPI_Comm_free( &comm );
+	MPI_Comm_free( &comm2 );
     }
 
     MTest_Finalize( errs );

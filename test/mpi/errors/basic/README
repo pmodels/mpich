@@ -1,0 +1,15 @@
+This directory contains programs that are expected to fail in some way.  
+They should be run manually to check the response of the MPI implementation 
+to these failures.
+
+The programs are:
+
+debabort: This is a simple program that passes inconsistent parameters to 
+MPI_Allreduce and should cause a run-time error.  This may be used to see
+if a debugger can regain control of an MPI program when such an error, which
+will normally cause an Abort, occurs.
+
+lefthandles: This program allocates several MPI objects that are not freed.
+An MPI implmentation is not required to report this or fail in this case, 
+but an MPI implementation that is striving to report storage leaks caused by
+user programs should report allocated and unfreed MPI objects.
