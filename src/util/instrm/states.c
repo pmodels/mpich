@@ -32,6 +32,6 @@ void MPID_TimerStateEnd( int id, MPID_Time_t *time_stamp )
 
     MPID_Wtime( &final_time );
     MPID_Wtime_acc( time_stamp, &final_time, 
-		    &MPIU_THREADPRIV_FIELD(timestamps[id].stamp);
+		    &MPIU_THREADPRIV_FIELD(timestamps[id].stamp) );
 #endif
 }
