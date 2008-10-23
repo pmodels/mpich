@@ -6,7 +6,7 @@
 
 #include <dummy_module.h>
 
-MPID_nem_netmod_funcs_t MPIDI_nem_dummy_module_funcs = {
+MPID_nem_netmod_funcs_t MPIDI_nem_none_module_funcs = {
     MPID_nem_dummy_module_init,
     MPID_nem_dummy_module_finalize,
     MPID_nem_dummy_module_ckpt_shutdown,
@@ -47,7 +47,7 @@ MPID_nem_dummy_module_connect_to_root (const char *business_card, MPIDI_VC_t *ne
 }
 
 int
-MPID_nem_dummy_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
+MPID_nem_dummy_module_vc_init (MPIDI_VC_t *vc)
 {
     return MPI_SUCCESS;
 }
