@@ -124,7 +124,9 @@ int MPI_Cart_sub(MPI_Comm comm, int *remain_dims, MPI_Comm *comm_new)
     if (all_false) { 
         /* ndims=0, or all entries in remain_dims are false.
            MPI 2.1 says return a 0D Cartesian topology. */
+	MPIR_Nest_incr();
 	mpi_errno = NMPI_Cart_create(comm, 0, NULL, NULL, 0, comm_new);
+	MPIR_Nest_decr();
 	if (mpi_errno) goto fn_fail;
     }
 

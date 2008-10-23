@@ -65,7 +65,12 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 	rank = comm_ptr->rank;
 
 	if (rank == 0) {
+            MPIU_THREADPRIV_DECL;
+
+            MPIU_THREADPRIV_GET;
+            MPIR_Nest_incr();
 	    mpi_errno = NMPI_Comm_dup(MPI_COMM_SELF, &ncomm);
+            MPIR_Nest_decr();
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    
 	    MPID_Comm_get_ptr( ncomm, newcomm_ptr );
