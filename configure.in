@@ -302,16 +302,18 @@ dnl --enable-fast
 AC_ARG_ENABLE(fast,
 [--enable-fast=option - Control the level of fast execution in the MPICH
 implementation.   option is a list of comma separated names including 
-    defopt   - Default compiler optimization -O2 for all language bindings.
-               when neither --enable-fast nor --disable-fast is specified.
+    O<n>     - Appends default optimization flags, -O<n>, to all internal
+               compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
+               MPICH2LIB_FFLAGS, and MPICH2LIB_F90FLAGS.
+    defopt   - Default compiler optimization -O2 for all language bindings,
+               i.e. --enable-fast=O2, when neither --enable-fast
+               nor --disable-fast is specified.
     nochkmsg - No error checking and no error messages, i.e.
                --disable-error-checking and --disable-error-messages.
     notiming - No timing collection, i.e. --disable-timing.
-    ndebug   - Appends -DNDEBUG to CFLAGS.
+    ndebug   - Appends -DNDEBUG to internal CFLAGS, i.e. MPICH2LIB_CFLAGS.
     all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
                when --enable-fast is specified without any option.
-    O<n>     - Appends default optimization flags, -O<n>, to
-               CFLAGS, FFLAGS, CXXFLAGS, F90FLAGS.
     none     - None of above options, i.e. --disable-fast.
 ],,enable_fast=defopt)
 
@@ -399,10 +401,6 @@ AC_ARG_ENABLE(weak-symbols,
 [--enable-weak-symbols - Use weak symbols to implement PMPI routines (default)],,
 enable_weak_symbols=yes)
 dnl
-AC_ARG_WITH(htmldir,[--with-htmldir=dir - Specify the directory for html documentation],,
-with_htmldir='${prefix}/www')
-AC_ARG_WITH(docdir,[--with-docdir=dir - Specify the directory for documentation],,
-with_docdir='${prefix}/doc')
 dnl
 dnl
 AC_ARG_WITH(cross,
@@ -461,23 +459,6 @@ export WRAPPER_LDFLAGS
 PAC_VPATH_CHECK(src/include/mpi.h src/env/mpicc src/env/mpicc.conf,lib)
 
 # ----------------------------------------------------------------------------
-#
-# Set the defaults for directories that are not included in configure's
-# repetoire
-if test -n "$with_htmldir" ; then 
-    htmldir=$with_htmldir
-else
-    htmldir='${prefix}/www'
-fi
-AC_SUBST(htmldir)
-
-if test -n "$with_docdir" ; then 
-    docdir=$with_docdir
-else
-    docdir='${prefix}/doc'
-fi
-AC_SUBST(docdir)
-
 # This test is complicated by the fact that top_srcdir is not set until
 # the very end of configure.  Instead, we get it ourselves
 if test -z "$top_srcdir" ; then
@@ -1127,35 +1108,6 @@ if test -n "$perform_dbgmutex" ; then
    AC_DEFINE(MPICH_DEBUG_MUTEX,1,[Define to enable mutex debugging])
 fi
 
-if test "$enable_debuginfo" = "yes" ; then
-    debugger_dir=debugger
-    AC_DEFINE(HAVE_DEBUGGER_SUPPORT,1,[Define if debugger support is included])
-    # The debugger support requires a shared library.  This is handled 
-    # below, after we check for compiler support for shared libraries
-    # Note: if libdir contains exec_prefix, handle the fact that the
-    # default exec_prefix is NONE, which (much later in configure)
-    # gets turned into the value of prefix
-    ##ENVVAR: MPICH_DEBUGLIBNAME - Set this environment variable to 
-    ## override the default name of the debugger support library.
-    ## The default name is libtvmpich2.so .
-    ##ENVVAR END:
-    if test -z "$MPICH_DEBUGLIBNAME" ; then
-        DEBUGLIBNAME=libtvmpich2.so
-    else
-        DEBUGLIBNAME=$MPICH_DEBUGLIBNAME
-    fi
-    if test "x$exec_prefix" = xNONE ; then
-        saveExecPrefix=$exec_prefix
-	exec_prefix=$prefix
-        eval dlldir=$libdir/$DEBUGLIBNAME
-	exec_prefix=$saveExecPrefix
-    else
-        eval dlldir=$libdir/$DEBUGLIBNAME
-    fi
-    dlldir='"'$dlldir'"'
-    AC_DEFINE_UNQUOTED(MPICH_INFODLL_LOC,$dlldir,[Define as the name of the debugger support library])
-fi
-AC_SUBST(debugger_dir)
 pac_cross_compiling=no
 if test "$with_cross" != "no" ; then
     if test -s "$with_cross" ; then
@@ -1820,6 +1772,8 @@ EOF
 		 AC_MSG_WARN([Cannot build shared libraries for Fortran with this compiler])
              fi
          fi
+	 # This is needed for Mac OSX 10.5
+	 rm -rf conftest.dSYM
          rm -f conftest*
 
 	 FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
@@ -1853,6 +1807,8 @@ EOF
     # allow this or have serious bugs (OSF Fortran compilers have a bug
     # that generates an error message from cpp).  The following test
     # checks to see if .F works, and if not, whether "cpp -P -C" can be used
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     AC_MSG_CHECKING([whether Fortran compiler processes .F files with C preprocessor])
     cat >conftest.F <<EOF
@@ -1922,9 +1878,9 @@ if test "$enable_f90" = "yes" ; then
   fi
   if test "$has_fort90_real8" = "yes" ; then
     sed -e 's/DOUBLE PRECISION/REAL*8/g' $master_top_srcdir/src/binding/f90/mpi_base.f90 > $master_top_srcdir/src/binding/f90/mpi_base.f90.new
-    mv $master_top_srcdir/binding/f90/mpi_base.f90.new $master_top_srcdir/binding/f90/mpi_base.f90
+    mv -f $master_top_srcdir/src/binding/f90/mpi_base.f90.new $master_top_srcdir/src/binding/f90/mpi_base.f90
   else
-    cp $master_top_srcdir/binding/f90/mpi_base.f90.orig $master_top_srcdir/binding/f90/mpi_base.f90
+    cp -f $master_top_srcdir/src/binding/f90/mpi_base.f90.orig $master_top_srcdir/src/binding/f90/mpi_base.f90
   fi
 fi
 
@@ -2052,6 +2008,8 @@ if test "$enable_f90" = "yes" ; then
     # allow this or have serious bugs (OSF Fortran compilers have a bug
     # that generates an error message from cpp).  The following test
     # checks to see if .F works, and if not, whether "cpp -P -C" can be used
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     AC_MSG_CHECKING([whether Fortran 90 compiler processes .F90 files with C preprocessor])
     cat >conftest.F90 <<EOF
@@ -2275,8 +2233,19 @@ public:
  pac_cv_cxx_builds_exe=yes, ac_cv_builds_exe=no)
  AC_LANG_RESTORE
 ])
-    if test "$pac_cv_cxx_builds_exe" != yes; then
+    if test "$pac_cv_cxx_builds_exe" != yes ; then
        AC_MSG_ERROR([Aborting because C++ compiler does not work.  If you do not need a C++ compiler, configure with --disable-cxx])
+    fi
+    # Recent failures have come when a standard header is loaded
+    # The Intel icpc 10.x compiler fails with <string> if gcc 4.2 is installed. 
+    AC_CACHE_CHECK([whether C++ compiler works with string],pac_cv_cxx_compiles_string,[
+    AC_LANG_SAVE
+    AC_LANG_CPLUSPLUS
+    AC_TRY_COMPILE([#include <string>],[return 0;],pac_cv_cxx_compiles_string=yes,pac_cv_cxx_compiles_string=no)
+    AC_LANG_RESTORE
+])
+    if test "$pac_cv_cxx_compiles_string" != yes ; then 
+        AC_MSG_WARN([The C++ compiler $CXX cannot compile a program containing the <string> header - this may indicate a problem with the C++ installation.  Consider configuing with --disable-cxx])
     fi
 
     AC_LANG_CPLUSPLUS
@@ -2348,19 +2317,22 @@ public:
     # the version mismatch.  By default, we set the GNU version to 0.
     # In a cross-compiling environment, these can be set with environment
     # variables, either directly or through the standard "CROSS" variable.
-    if test -z "$GNU_VERSION" ; then
-        if test -n "$CROSS_GNU_VERSION" ; then 
-	     GNU_VERSION=$CROSS_GNU_VERSION
+    if test -z "$GNUCXX_VERSION" ; then
+        if test -n "$CROSS_GNUCXX_VERSION" ; then 
+	     GNUCXX_VERSION=$CROSS_GNUCXX_VERSION
         else
-             GNU_VERSION=0
-        fi
-	if test -n "$CROSS_GNU_MINORVERSION" ; then
-	     GNU_MINORVERSION=$CROSS_GNU_MINORVERSION
-       	else
-             GNU_MINORVERSION=0
+             GNUCXX_VERSION=0
         fi
     fi
-    if test "$cross_compiling" = "no" -a "$ac_compiler_gnu" = "yes" ; then
+    if test -z "$GNUCXX_MINORVERSION" ; then 
+	if test -n "$CROSS_GNUCXX_MINORVERSION" ; then
+	     GNUCXX_MINORVERSION=$CROSS_GNUCXX_MINORVERSION
+       	else
+             GNUCXX_MINORVERSION=0
+        fi
+    fi
+    if test "$cross_compiling" = "no" -a "$ac_compiler_gnu" = "yes" -a \
+       "$GNUCXX_VERSION" = 0 -a "$GNUCXX_MINORVERSION" = 0 ; then
          ac_vals=""
 	 AC_MSG_CHECKING([for GNU g++ version])
          AC_TRY_RUN([#include <stdio.h>
@@ -2381,14 +2353,14 @@ int main() {
              v=`echo "$ac_vals" | sed -e 's/v=\(.*\),.*/\1/'`
              m=`echo "$ac_vals" | sed -e 's/.*m=\(.*\)/\1/'`
              AC_MSG_RESULT([$v . $m])
-             GNUC_VERSION=$v
-             GNUC_MINORVERSION=$m
+             GNUCXX_VERSION=$v
+             GNUCXX_MINORVERSION=$m
          else
              AC_MSG_RESULT([unknown])
          fi 
-         AC_SUBST(GNUC_VERSION)
-         AC_SUBST(GNUC_MINORVERSION)
     fi    
+    AC_SUBST(GNUCXX_VERSION)
+    AC_SUBST(GNUCXX_MINORVERSION)
 
     bindings="$bindings cxx"
     bindings_dirs="$bindings_dirs src/binding/cxx"
@@ -2529,6 +2501,8 @@ EOF
     if test -n "$ETAGSADD" ; then
         AC_MSG_RESULT($ETAGSADD)
     fi
+     # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
 fi
 AC_SUBST(ETAGS)
@@ -2722,10 +2696,11 @@ if test "$enable_debuginfo" = "yes" ; then
         BUILD_TVDLL=yes
 	CC_SHL_DBG="$CC_SHL"
 	C_LINK_SHL_DBG="$C_LINK_SHL"
+	DBG_SHLIB_TYPE=$ENABLE_SHLIB
    else
         # Try to determine how to build the tv shared library
-	AC_MSG_CHECKING([for how to build shared library for debugger interface])
-        PAC_CC_SHAREDLIBS(,CC_SHL_DBG,C_LINK_SHL_DBG)
+	AC_MSG_RESULT([for how to build shared library for debugger interface])
+        PAC_CC_SHAREDLIBS(,CC_SHL_DBG,C_LINK_SHL_DBG,DBG_SHLIB_TYPE)
 	PAC_CC_SHLIB_EXT
 	if test "$SHLIB_EXT" = "unknown" ; then
 	    # Guess that the extension is .so
@@ -2735,10 +2710,11 @@ if test "$enable_debuginfo" = "yes" ; then
 	    AC_MSG_RESULT([none found])
             AC_MSG_WARN([Debugger support requires shared libraries])      
 	else
-	    AC_MSG_RESULT($CC_SHL_DBG)
+	    AC_MSG_RESULT([Use this to build the debugger shared library: $CC_SHL_DBG])
 	    BUILD_TVDLL=yes
         fi
    fi
+   AC_SUBST(DBG_SHLIB_TYPE)
    # One more nasty problem.  Totalview relies on debugger symbols 
    # being present in the executable.  Some experimental versions of
    # gcc (3.2 20020329 for ia64) do *not* include the object symbols
@@ -2757,7 +2733,38 @@ on all link lines (consider adding it to LDFLAGS)])
    AC_SUBST(BUILD_TVDLL)
    AC_SUBST(CC_SHL_DBG)
    AC_SUBST(C_LINK_SHL_DBG)
+
+    # The debugger library name cannot be set until we know the extension
+    # of shared libraries - the name is so on most Unix system, dylib on OS X.
+    debugger_dir=debugger
+    AC_DEFINE(HAVE_DEBUGGER_SUPPORT,1,[Define if debugger support is included])
+    # The debugger support requires a shared library.  This is handled 
+    # below, after we check for compiler support for shared libraries
+    # Note: if libdir contains exec_prefix, handle the fact that the
+    # default exec_prefix is NONE, which (much later in configure)
+    # gets turned into the value of prefix
+    ##ENVVAR: MPICH_DEBUGLIBNAME - Set this environment variable to 
+    ## override the default name of the debugger support library.
+    ## The default name is libtvmpich2.so .
+    ##ENVVAR END:
+    if test -z "$MPICH_DEBUGLIBNAME" ; then
+        DEBUGLIBNAME=libtvmpich2.so
+    else
+        DEBUGLIBNAME=$MPICH_DEBUGLIBNAME
+    fi
+    if test "x$exec_prefix" = xNONE ; then
+        saveExecPrefix=$exec_prefix
+	exec_prefix=$prefix
+        eval dlldir=$libdir/$DEBUGLIBNAME
+	exec_prefix=$saveExecPrefix
+    else
+        eval dlldir=$libdir/$DEBUGLIBNAME
+    fi
+    dlldir='"'$dlldir'"'
+    AC_DEFINE_UNQUOTED(MPICH_INFODLL_LOC,$dlldir,[Define as the name of the debugger support library])
 fi
+AC_SUBST(debugger_dir)
+
 # ----------------------------------------------------------------------------
 
 nameserv_name=""
@@ -4182,7 +4189,11 @@ if test "$enable_f77" = yes ; then
     default_status_size=`expr 5 \* $ac_cv_sizeof_int`
     AC_CACHE_CHECK([for size of MPI_Status],pac_cv_sizeof_mpi_status,[
     AC_TRY_RUN([
+#include "confdefs.h"
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 typedef struct { 
     int count;
     int cancelled;
@@ -4244,6 +4255,9 @@ dnl     fi
         cat >conftestc.c <<EOF
 #include <stdio.h>
 #include "confdefs.h"
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #ifdef F77_NAME_UPPER
 #define ftest_ FTEST
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
@@ -4560,6 +4574,18 @@ using namespace std;
         esac
     fi
     AC_LANG_C
+
+    # Make these available to the collective operations and other code
+    AC_DEFINE_UNQUOTED(MPIR_CXX_COMPLEX_VALUE,$MPIR_CXX_COMPLEX,[Define as the MPI Datatype handle for MPI::COMPLEX])
+    AC_DEFINE_UNQUOTED(MPIR_CXX_DOUBLE_COMPLEX_VALUE,$MPIR_CXX_DOUBLE_COMPLEX,[Define as the MPI Datatype handle for MPI::DOUBLE_COMPLEX])
+    AC_DEFINE_UNQUOTED(MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE,$MPIR_CXX_LONG_DOUBLE_COMPLEX,[Define as the MPI Datatype handle for MPI::LONG_DOUBLE_COMPLEX])
+    
+    # If either complex or double complex have length 0, then mark 
+    # c++ complex as unavailable
+    if test "$ac_cv_sizeof_Complex" != 0 -a \
+            "$ac_cv_sizeof_DoubleComplex" != 0 ; then
+	AC_DEFINE(HAVE_CXX_COMPLEX,1,[Define is C++ supports complex types])
+    fi
 fi
 
 # ----------------------------------------------------------------------------
@@ -4587,6 +4613,13 @@ fi
 # get better performance.
 if test "$ac_cv_c_int64_t" != "no" -o -n "$INT64_T" ; then
     default_int64_t_alignment=${CROSS_INT64_T_ALIGNMENT:-"unknown"}
+    if test -z "$INT64_T" ; then
+         if test "$ac_cv_c_int64_t" = yes ; then
+	     INT64_T="int64_t"
+         else
+             INT64_T="$ac_cv_int64_t"
+         fi
+    fi
     # We use the type that we're going use for int64.
     AC_CACHE_CHECK([for alignment restrictions on $MYINT64_T],pac_cv_int64_t_alignment,[
     AC_TRY_RUN([
@@ -4594,19 +4627,19 @@ if test "$ac_cv_c_int64_t" != "no" -o -n "$INT64_T" ; then
 #include <stdlib.h>
 int main(int argc, char **argv )
 {
-    $ac_cv_c_int64_t *p1, v;
+    $INT64_T *p1, v;
     char    *buf_p = (char *)malloc( 64 ), *bp;
     bp = buf_p;
     /* Make bp aligned on 4, not 8 bytes */
     if (!( (long)bp & 0x7 ) ) bp += 4;
-    p1 = (int64_t *)bp;
+    p1 = ($INT64_T *)bp;
     v = -1;
     *p1 = v;
     if (!( (long)bp & 0x3 ) ) bp += 2;
-    p1 = (int64_t *)bp;
+    p1 = ($INT64_T *)bp;
     *p1 = 1;
     if (!( (long)bp & 0x1 ) ) bp += 1;
-    p1 = (int64_t *)bp;
+    p1 = ($INT64_T *)bp;
     *p1 = 1;
     return 0;
 }
@@ -4617,8 +4650,15 @@ int main(int argc, char **argv )
     fi
 fi
 
-if test "$pac_cv_int32_t" != "no" ; then
+if test "$ac_cv_int32_t" != "no" ; then
     default_int32_t_alignment=${CROSS_INT32_T_ALIGNMENT:-"unknown"}
+    if test -z "$INT32_T" ; then
+         if test "$ac_cv_c_int32_t" = yes ; then
+	     INT32_T="int32_t"
+         else
+             INT32_T="$ac_cv_int32_t"
+         fi
+    fi
     
     AC_CACHE_CHECK([for alignment restrictions on int32_t],pac_cv_int32_t_alignment,[
     AC_TRY_RUN([
@@ -4626,19 +4666,19 @@ if test "$pac_cv_int32_t" != "no" ; then
 #include <stdlib.h>
 int main(int argc, char **argv )
 {
-    $pac_cv_int32_t *p1, v;
+    $INT32_T *p1, v;
     char    *buf_p = (char *)malloc( 64 ), *bp;
     bp = buf_p;
     /* Make bp aligned on 4, not 8 bytes */
     if (!( (long)bp & 0x7 ) ) bp += 4;
-    p1 = (int32_t *)bp;
+    p1 = ($INT32_T *)bp;
     v = -1;
     *p1 = v;
     if (!( (long)bp & 0x3 ) ) bp += 2;
-    p1 = (int32_t *)bp;
+    p1 = ($INT32_T *)bp;
     *p1 = 1;
     if (!( (long)bp & 0x1 ) ) bp += 1;
-    p1 = (int32_t *)bp;
+    p1 = ($INT32_T *)bp;
     *p1 = 1;
     return 0;
 }
@@ -4666,7 +4706,11 @@ if test -n "$CROSS_BSEND_OVERHEAD" ; then
 fi
 AC_CACHE_CHECK([for size of MPI_BSEND_OVERHEAD],pac_cv_mpi_bsend_overhead,[
 AC_TRY_RUN([
+#include "confdefs.h"
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 /* BsendData describes a bsend request */
 typedef struct BsendData {
     int              size;             /* size that is available for data */
@@ -4839,6 +4883,8 @@ if test "$enable_coverage" = "yes" ; then
     # with the -fprofile-args -ftest-coverage option.
     # We cannot use TRY_LINK because that uses both the compilation and
     # the linking flags.  
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     cat >>conftest.c <<EOF
 int main( int argc, char **argv ) { return 1; }
@@ -4867,6 +4913,8 @@ EOF
         AC_MSG_RESULT(no)
         AC_MSG_ERROR([Unable to compile programs when coverage analysis enabled])
     fi
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     
     # Test for the routines that we need to use to ensure that the
@@ -5778,9 +5826,15 @@ if test -n "$MPI_OFFSET_TYPE" ; then
         dnl We'd like to use AC_CHECK_SIZEOF, but that won't take a variable.
         AC_CACHE_CHECK([the sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,[
         ac_cv_sizeof_MPI_Offset=unknown
+	# This is needed for Mac OSX 10.5
+	rm -rf conftest.dSYM
         rm -f conftest*
         cat >> conftest.c <<EOF
+#include "confdefs.h"
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 int main( int argc, char **argv )
 {
     $MPI_OFFSET a;
@@ -5807,6 +5861,8 @@ EOF
 	    echo "configure: failed program was:" >&AC_FD_CC
 	    cat conftest.c >&AC_FD_CC
         fi
+	# This is needed for Mac OSX 10.5
+	rm -rf conftest.dSYM
         rm -f conftest*
 	])
 	if test "$ac_cv_sizeof_MPI_Offset" != "unknown" ; then 
@@ -6139,6 +6195,7 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
 	  src/binding/f90/mpi_sizeofs.f90 \
 	  src/pkgconfig/mpich2-ch3.pc \
 	  src/pkgconfig/Makefile \
+          src/env/mpixxx_opts.conf \
           src/env/mpicc \
 	  src/env/mpicc.conf \
 	  src/env/mpicc.bash \

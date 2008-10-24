@@ -24,8 +24,7 @@
 
 #define MPID_Datatype_add_ref(datatype_ptr) MPIU_Object_add_ref((datatype_ptr))
 
-#define MPID_Datatype_get_basic_type(a,eltype_)			\
-{									\
+#define MPID_Datatype_get_basic_type(a,eltype_) do {                    \
     void *ptr;								\
     switch (HANDLE_GET_KIND(a)) {					\
         case HANDLE_KIND_DIRECT:					\
@@ -46,14 +45,13 @@
 	    break;							\
  									\
     }									\
-}
+ } while(0)
 
 /* MPID_Datatype_release decrements the reference count on the MPID_Datatype
  * and, if the refct is then zero, frees the MPID_Datatype and associated
  * structures.
  */
-#define MPID_Datatype_release(datatype_ptr)				    \
-{									    \
+#define MPID_Datatype_release(datatype_ptr) do {                            \
     int inuse;								    \
 									    \
     MPIU_Object_release_ref((datatype_ptr),&inuse);			    \
@@ -75,12 +73,11 @@
 	    MPID_Datatype_free(datatype_ptr);				    \
         }								    \
     }                                                                       \
-}
+} while(0)
 
 /* Note: Probably there is some clever way to build all of these from a macro.
  */
-#define MPID_Datatype_get_size_macro(a,size_)				\
-{									\
+#define MPID_Datatype_get_size_macro(a,size_) do {                      \
     void *ptr;								\
     switch (HANDLE_GET_KIND(a)) {					\
         case HANDLE_KIND_DIRECT:					\
@@ -101,7 +98,7 @@
 	    break;							\
  									\
     }									\
-}
+} while(0)
 
 /*
  * The following macro allows us to reference either the regular or 
@@ -112,27 +109,28 @@
  * MPID_HAS_HETERO is *not* defined.
  */
 #if defined(MPID_HAS_HETERO) || 1
-#define MPID_GET_FIELD(hetero_,value_,fieldname_) \
-  if (hetero_ == MPID_DATALOOP_HOMOGENEOUS)			\
-      value_ = ((MPID_Datatype *)ptr)->dataloop##fieldname_;	\
-  else value_ = ((MPID_Datatype *) ptr)->hetero_dloop##fieldname_;
+#define MPID_GET_FIELD(hetero_,value_,fieldname_) do {                          \
+        if (hetero_ != MPID_DATALOOP_HETEROGENEOUS)                             \
+            value_ = ((MPID_Datatype *)ptr)->dataloop##fieldname_;              \
+        else value_ = ((MPID_Datatype *) ptr)->hetero_dloop##fieldname_;        \
+    } while(0)
 #else
 #define MPID_GET_FIELD(hetero_,value_,fieldname_) \
       value_ = ((MPID_Datatype *)ptr)->dataloop##fieldname_
 #endif
 
 #if defined(MPID_HAS_HETERO) || 1
-#define MPID_SET_FIELD(hetero_,value_,fieldname_) \
-  if (hetero_ == MPID_DATALOOP_HOMOGENEOUS)			\
-      ((MPID_Datatype *)ptr)->dataloop##fieldname_ = value_;	\
-  else ((MPID_Datatype *) ptr)->hetero_dloop##fieldname_ = value_;
+#define MPID_SET_FIELD(hetero_,value_,fieldname_) do {                          \
+        if (hetero_ != MPID_DATALOOP_HETEROGENEOUS)                             \
+            ((MPID_Datatype *)ptr)->dataloop##fieldname_ = value_;              \
+        else ((MPID_Datatype *) ptr)->hetero_dloop##fieldname_ = value_;        \
+    } while(0)
 #else
-#define MPID_GET_FIELD(hetero_,value_,fieldname_) \
-      value_ = ((MPID_Datatype *)ptr)->dataloop##fieldname_
+#define MPID_SET_FIELD(hetero_,value_,fieldname_) \
+    ((MPID_Datatype *)ptr)->dataloop##fieldname_ = value_
 #endif
  
-#define MPID_Datatype_get_loopdepth_macro(a,depth_,hetero_)		\
-{									\
+#define MPID_Datatype_get_loopdepth_macro(a,depth_,hetero_) do {        \
     void *ptr;								\
     switch (HANDLE_GET_KIND(a)) {					\
         case HANDLE_KIND_DIRECT:					\
@@ -147,13 +145,12 @@
         case HANDLE_KIND_INVALID:					\
         case HANDLE_KIND_BUILTIN:					\
         default:							\
-            depth_ = 0;						\
+            depth_ = 0;                                                 \
             break;							\
     }                                                                   \
-}
+} while(0)
 
-#define MPID_Datatype_get_loopsize_macro(a,depth_,hetero_)		\
-{									\
+#define MPID_Datatype_get_loopsize_macro(a,depth_,hetero_) do {         \
     void *ptr;								\
     switch (HANDLE_GET_KIND(a)) {					\
         case HANDLE_KIND_DIRECT:					\
@@ -168,13 +165,12 @@
         case HANDLE_KIND_INVALID:					\
         case HANDLE_KIND_BUILTIN:					\
         default:							\
-            depth_ = 0;						\
+            depth_ = 0;                                                 \
             break;							\
     }                                                                   \
-}
+} while(0)
 
-#define MPID_Datatype_get_loopptr_macro(a,lptr_,hetero_)		\
-{									\
+#define MPID_Datatype_get_loopptr_macro(a,lptr_,hetero_) do {  		\
     void *ptr;								\
     switch (HANDLE_GET_KIND(a)) {					\
         case HANDLE_KIND_DIRECT:					\
@@ -192,9 +188,8 @@
             lptr_ = 0;							\
             break;							\
     }									\
-}
-#define MPID_Datatype_set_loopdepth_macro(a,depth_,hetero_)		\
-{									\
+} while(0)
+#define MPID_Datatype_set_loopdepth_macro(a,depth_,hetero_) do {        \
     void *ptr;								\
     switch (HANDLE_GET_KIND(a)) {					\
         case HANDLE_KIND_DIRECT:					\
@@ -209,13 +204,12 @@
         case HANDLE_KIND_INVALID:					\
         case HANDLE_KIND_BUILTIN:					\
         default:							\
-            depth_ = 0;						\
+            depth_ = 0;                                                 \
             break;							\
     }                                                                   \
-}
+} while(0)
 
-#define MPID_Datatype_set_loopsize_macro(a,depth_,hetero_)		\
-{									\
+#define MPID_Datatype_set_loopsize_macro(a,depth_,hetero_) do {         \
     void *ptr;								\
     switch (HANDLE_GET_KIND(a)) {					\
         case HANDLE_KIND_DIRECT:					\
@@ -230,13 +224,12 @@
         case HANDLE_KIND_INVALID:					\
         case HANDLE_KIND_BUILTIN:					\
         default:							\
-            depth_ = 0;						\
+            depth_ = 0;                                                 \
             break;							\
     }                                                                   \
-}
+} while(0)
 
-#define MPID_Datatype_set_loopptr_macro(a,lptr_,hetero_)		\
-{									\
+#define MPID_Datatype_set_loopptr_macro(a,lptr_,hetero_) do {  		\
     void *ptr;								\
     switch (HANDLE_GET_KIND(a)) {					\
         case HANDLE_KIND_DIRECT:					\
@@ -254,10 +247,9 @@
             lptr_ = 0;							\
             break;							\
     }									\
-}
+} while(0)
         
-#define MPID_Datatype_get_extent_macro(a,extent_)			    \
-{									    \
+#define MPID_Datatype_get_extent_macro(a,extent_) do {                      \
     void *ptr;								    \
     switch (HANDLE_GET_KIND(a)) {					    \
         case HANDLE_KIND_DIRECT:					    \
@@ -272,10 +264,10 @@
         case HANDLE_KIND_INVALID:					    \
         case HANDLE_KIND_BUILTIN:					    \
         default:							    \
-            extent_ = MPID_Datatype_get_basic_size(a);  /* same as size */ \
+            extent_ = MPID_Datatype_get_basic_size(a);  /* same as size */  \
             break;							    \
     }									    \
-}
+} while(0)
 
 #define MPID_Datatype_valid_ptr(ptr,err) MPID_Valid_ptr_class(Datatype,ptr,MPI_ERR_TYPE,err)
 
@@ -283,8 +275,7 @@
  * err == MPI_SUCCESS ensures that we won't try to dereference the
  * pointer if something has already been detected as wrong.
  */
-#define MPID_Datatype_committed_ptr(ptr,err)			\
-{								\
+#define MPID_Datatype_committed_ptr(ptr,err) do {               \
     if ((err == MPI_SUCCESS) && !((ptr)->is_committed))		\
         err = MPIR_Err_create_code(MPI_SUCCESS,			\
 				   MPIR_ERR_RECOVERABLE,	\
@@ -293,7 +284,7 @@
 				   MPI_ERR_TYPE,		\
 				   "**dtypecommit",		\
 				   0);				\
-}
+} while(0)
 
 /*S
   MPID_Datatype_contents - Holds envelope and contents data for a given
@@ -453,7 +444,7 @@ extern MPID_Datatype MPID_Datatype_direct[];
 				   old_extent_,	\
 				   lb_,		\
 				   ub_)		\
-{							\
+do {							\
     if (cnt_ == 0) {					\
 	lb_ = old_lb_;				\
 	ub_ = old_ub_;				\
@@ -466,7 +457,7 @@ extern MPID_Datatype MPID_Datatype_direct[];
 	lb_ = old_lb_ + (old_extent_) * (cnt_ - 1);	\
 	ub_ = old_ub_;				\
     }                                                   \
-}
+} while(0)
 
 /* MPID_DATATYPE_VECTOR_LB_UB()
  *
@@ -482,7 +473,7 @@ extern MPID_Datatype MPID_Datatype_direct[];
 				   old_extent_,		\
 				   lb_,			\
 				   ub_)			\
-{								\
+do {								\
     if (cnt_ == 0 || blklen_ == 0) {				\
 	lb_ = old_lb_;					\
 	ub_ = old_ub_;					\
@@ -505,7 +496,7 @@ extern MPID_Datatype MPID_Datatype_direct[];
 	    (stride_) * ((cnt_) - 1);				\
 	ub_ = old_ub_;					\
     }								\
-}
+} while(0)
 
 /* MPID_DATATYPE_BLOCK_LB_UB()
  *
@@ -523,7 +514,7 @@ extern MPID_Datatype MPID_Datatype_direct[];
 				  old_extent_,				\
 				  lb_,					\
 				  ub_)					\
-{									\
+do {									\
     if (cnt_ == 0) {							\
 	lb_ = old_lb_ + (disp_);					\
 	ub_ = old_ub_ + (disp_);					\
@@ -536,7 +527,7 @@ extern MPID_Datatype MPID_Datatype_direct[];
 	lb_ = old_lb_ + (disp_) + (old_extent_) * ((cnt_) - 1);	\
 	ub_ = old_ub_ + (disp_);					\
     }									\
-}
+} while(0)
 
 /* Datatype functions */
 int MPID_Type_commit(MPI_Datatype *type);

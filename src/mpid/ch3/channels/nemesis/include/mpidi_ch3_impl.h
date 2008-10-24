@@ -9,6 +9,7 @@
 
 #include "mpidi_ch3_conf.h"
 #include "mpidimpl.h"
+#include "mpidu_process_locks.h"
 
 #if defined(HAVE_ASSERT_H)
 #include <assert.h>

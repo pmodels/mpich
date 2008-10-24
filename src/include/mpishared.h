@@ -17,6 +17,10 @@
 #ifndef MPISHARED_H_INCLUDED
 #define MPISHARED_H_INCLUDED
 
+#ifdef MPIIMPL_H_INCLUDED
+#error 'mpishared.h should not be used if mpiimpl.h is included'
+#endif
+
 /* Make sure that we have the basic definitions */
 #ifndef MPICHCONF_H_INCLUDED
 #include "mpichconf.h"
@@ -56,7 +60,7 @@
 /* Add support for the states and function enter/exit macros */
 /* #include "mpitimerimpl.h" */
 #if defined(MPICH_DEBUG_FINE_GRAIN_NESTING)
-#   include "mpidu_func_nesting.h"
+#   include "mpiu_func_nesting.h"
 #elif defined(MPICH_DEBUG_MEMARENA)
 #   include "mpifuncmem.h"
 #elif defined(USE_DBG_LOGGING)

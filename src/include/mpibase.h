@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 #ifndef MPIBASE_H_INCLUDED
-#define MPIBASE_H_INClUDED
+#define MPIBASE_H_INCLUDED
 
 /* This file contains various basis definitions that may be used 
    by other source files (in particular, ones in src/util) to access
@@ -36,6 +36,6 @@ int MPIU_Msg_printf( const char *str, ... ) ATTRIBUTE((format(printf,1,2)));
 int MPIU_Error_printf( const char *str, ... ) ATTRIBUTE((format(printf,1,2)));
 int MPIU_Internal_error_printf( const char *str, ... ) ATTRIBUTE((format(printf,1,2)));
 int MPIU_Internal_sys_error_printf( const char *, int, const char *str, ... ) ATTRIBUTE((format(printf,3,4)));
-
+void MPIU_Exit( int );
 
 #endif

@@ -162,7 +162,8 @@ int MPIDI_CH3_ReqHandler_PutRespDerivedDTComplete( MPIDI_VC_t *vc,
     MPIU_Free(rreq->dev.dtype_info);
     
     rreq->dev.segment_ptr = MPID_Segment_alloc( );
-    /* if (!rreq->dev.segment_ptr) { MPIU_ERR_POP(); } */
+    MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+
     MPID_Segment_init(rreq->dev.user_buf,
 		      rreq->dev.user_count,
 		      rreq->dev.datatype,
@@ -240,7 +241,8 @@ int MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete( MPIDI_VC_t *vc,
     MPIU_Free(rreq->dev.dtype_info);
     
     rreq->dev.segment_ptr = MPID_Segment_alloc( );
-    /* if (!rreq->dev.segment_ptr) { MPIU_ERR_POP(); } */
+    MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+
     MPID_Segment_init(rreq->dev.user_buf,
 		      rreq->dev.user_count,
 		      rreq->dev.datatype,
@@ -308,7 +310,8 @@ int MPIDI_CH3_ReqHandler_GetRespDerivedDTComplete( MPIDI_VC_t *vc,
     iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
     
     sreq->dev.segment_ptr = MPID_Segment_alloc( );
-    /* if (!sreq->dev.segment_ptr) { MPIU_ERR_POP(); } */
+    MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+
     MPID_Segment_init(sreq->dev.user_buf,
 		      sreq->dev.user_count,
 		      sreq->dev.datatype,

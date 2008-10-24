@@ -79,7 +79,7 @@ static int file_to_info(int fd, MPI_Info info)
     /* assumption: config files will be small (less than 1MB) */
     fstat(fd, &statbuf);
     /* add 1 to size to make room for NULL termination */
-    buffer = (char *)calloc(statbuf.st_size + 1, sizeof (char));
+    buffer = (char *)ADIOI_Calloc(statbuf.st_size + 1, sizeof (char));
     if (buffer == NULL) return -1;
 
     ret = read(fd, buffer, statbuf.st_size);
@@ -104,11 +104,11 @@ static int file_to_info(int fd, MPI_Info info)
 #endif
 	/* don't actually care what the value is. only want to know if key
 	 * exists: we leave it alone if so*/
-	MPI_Info_get(info, key, 0, &dummy, &flag);
+	MPI_Info_get(info, key, 1, &dummy, &flag);
 	if (flag == 1) continue;
 	MPI_Info_set(info, key, val);
     } while ((token = strtok_r(NULL, "\n", &pos1)) != NULL);
-    free(buffer);
+    ADIOI_Free(buffer);
     return 0;
 }
 
@@ -165,7 +165,7 @@ void ADIOI_incorporate_system_hints(MPI_Info info,
 /* debug function: a routine I want in the library to make my life easier when
  * using a source debugger. please ignore any "defined but not used" warnings
  */
-static void dump_keys(info) {
+static void dump_keys(MPI_Info info) {
     int i, nkeys, flag;
     char key[MPI_MAX_INFO_KEY];
     char value[MPI_MAX_INFO_VAL];

@@ -3,6 +3,7 @@ LDADD = ../util/mtest.o
 DEPADD = @MPILIBLOC@ ../util/mtest.o
 smvar_do_sharedlibs = 0
 
+arcomplex_SOURCES = arcomplex.cxx
 uallredx_SOURCES = uallredx.cxx
 uallreduce_SOURCES = uallreduce.cxx
 ureduce_SOURCES = ureduce.cxx

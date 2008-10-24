@@ -1,3 +1,9 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2008 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
 /* This provides a simple test of dynamically loading a library.  If 
    NO_UPCALL is defined, this library only provides routines; otherwise,
    it will make use of the routine upcall provided in the program that is 

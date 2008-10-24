@@ -41,6 +41,7 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
     int       i, newsize, rank, nranks, mpi_errno = MPI_SUCCESS;
     MPID_Comm *newcomm_ptr = NULL;
     MPIR_Topology *cart_ptr = NULL;
+    MPI_Comm ncomm;
     MPIU_CHKPMEM_DECL(4);
     
     /* Set this as null incase we exit with an error */
@@ -56,69 +57,113 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 			 MPI_ERR_ARG, "**cartdim",
 			 "**cartdim %d %d", comm_ptr->remote_size, newsize);
 
+    if (ndims == 0) {
+	/* specified as a 0D Cartesian topology in MPI 2.1. 
+	   Rank 0 returns a dup of COMM_SELF with the topology info attached.
+           Others return MPI_COMM_NULL. */
 
-    /* Create a new communicator as a duplicate of the input communicator
-       (but do not duplicate the attributes) */
-    if (reorder) {
-	MPI_Comm ncomm;
-	MPIU_THREADPRIV_DECL;
+	rank = comm_ptr->rank;
 
-	/* Allow the cart map routine to remap the assignment of ranks to 
-	   processes */
-	MPIU_THREADPRIV_GET;
-	MPIR_Nest_incr();
-	mpi_errno = NMPI_Cart_map( comm_ptr->handle, ndims, (int *)dims, 
-				   (int *)periods, &rank );
-	/* Create the new communicator with split, since we need to reorder
-	   the ranks (including the related internals, such as the connection
-	   tables */
-	if (mpi_errno == 0) {
-	    mpi_errno = NMPI_Comm_split( comm_ptr->handle, 
-				rank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
-				rank, &ncomm );
-	    if (!mpi_errno) {
-		MPID_Comm_get_ptr( ncomm, newcomm_ptr );
-	    }
+	if (rank == 0) {
+            MPIU_THREADPRIV_DECL;
+
+            MPIU_THREADPRIV_GET;
+            MPIR_Nest_incr();
+	    mpi_errno = NMPI_Comm_dup(MPI_COMM_SELF, &ncomm);
+            MPIR_Nest_decr();
+	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+	    
+	    MPID_Comm_get_ptr( ncomm, newcomm_ptr );
+	
+	    /* Create the topology structure */
+	    MPIU_CHKPMEM_MALLOC(cart_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
+				mpi_errno, "cart_ptr" );
+	    
+	    cart_ptr->kind               = MPI_CART;
+	    cart_ptr->topo.cart.nnodes   = 1;
+	    cart_ptr->topo.cart.ndims    = 0;
+	    
+	    /* make mallocs of size 1 int so that they get freed as part of the 
+	       normal free mechanism */
+	    
+	    MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims,int*,sizeof(int),
+				mpi_errno, "cart.dims");
+	    MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic,int*,sizeof(int),
+				mpi_errno, "cart.periodic");
+	    MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.position,int*,sizeof(int),
+				mpi_errno, "cart.position");
 	}
-	MPIR_Nest_decr();
+	else {
+	    *comm_cart = MPI_COMM_NULL;
+	    return MPI_SUCCESS;
+	}
     }
+
     else {
-	mpi_errno = MPIR_Comm_copy( (MPID_Comm *)comm_ptr, newsize, 
-				    &newcomm_ptr );
-	rank   = comm_ptr->rank;
-    }
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    /* If this process is not in the resulting communicator, return a 
-       null communicator and exit */
-    if (rank >= newsize || rank == MPI_UNDEFINED) {
-	*comm_cart = MPI_COMM_NULL;
-	return MPI_SUCCESS;
-    }
+	/* Create a new communicator as a duplicate of the input communicator
+	   (but do not duplicate the attributes) */
+	if (reorder) {
+	    MPIU_THREADPRIV_DECL;
+	    
+	    /* Allow the cart map routine to remap the assignment of ranks to 
+	       processes */
+	    MPIU_THREADPRIV_GET;
+	    MPIR_Nest_incr();
+	    mpi_errno = NMPI_Cart_map( comm_ptr->handle, ndims, (int *)dims, 
+				       (int *)periods, &rank );
+	    /* Create the new communicator with split, since we need to reorder
+	       the ranks (including the related internals, such as the connection
+	       tables */
+	    if (mpi_errno == 0) {
+		mpi_errno = NMPI_Comm_split( comm_ptr->handle, 
+					     rank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
+					     rank, &ncomm );
+		if (!mpi_errno) {
+		    MPID_Comm_get_ptr( ncomm, newcomm_ptr );
+		}
+	    }
+	    MPIR_Nest_decr();
+	}
+	else {
+	    mpi_errno = MPIR_Comm_copy( (MPID_Comm *)comm_ptr, newsize, 
+					&newcomm_ptr );
+	    rank   = comm_ptr->rank;
+	}
+	if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    /* Create the topololgy structure */
-    MPIU_CHKPMEM_MALLOC(cart_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
-			mpi_errno, "cart_ptr" );
+	/* If this process is not in the resulting communicator, return a 
+	   null communicator and exit */
+	if (rank >= newsize || rank == MPI_UNDEFINED) {
+	    *comm_cart = MPI_COMM_NULL;
+	    return MPI_SUCCESS;
+	}
+	
+	/* Create the topololgy structure */
+	MPIU_CHKPMEM_MALLOC(cart_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
+			    mpi_errno, "cart_ptr" );
+	
+	cart_ptr->kind               = MPI_CART;
+	cart_ptr->topo.cart.nnodes   = newsize;
+	cart_ptr->topo.cart.ndims    = ndims;
+	MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims,int*,ndims*sizeof(int),
+			    mpi_errno, "cart.dims");
+	MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic,int*,ndims*sizeof(int),
+			    mpi_errno, "cart.periodic");
+	MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.position,int*,ndims*sizeof(int),
+			    mpi_errno, "cart.position");
+	nranks = newsize;
+	for (i=0; i<ndims; i++)
+	{
+	    cart_ptr->topo.cart.dims[i]     = dims[i];
+	    cart_ptr->topo.cart.periodic[i] = periods[i];
+	    nranks = nranks / dims[i];
+	    /* FIXME: nranks could be zero (?) */
+	    cart_ptr->topo.cart.position[i] = rank / nranks;
+	    rank = rank % nranks;
+	}
+    } 
 
-    cart_ptr->kind               = MPI_CART;
-    cart_ptr->topo.cart.nnodes   = newsize;
-    cart_ptr->topo.cart.ndims    = ndims;
-    MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims,int*,ndims*sizeof(int),
-			mpi_errno, "cart.dims");
-    MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic,int*,ndims*sizeof(int),
-			mpi_errno, "cart.periodic");
-    MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.position,int*,ndims*sizeof(int),
-			mpi_errno, "cart.position");
-    nranks = newsize;
-    for (i=0; i<ndims; i++)
-    {
-	cart_ptr->topo.cart.dims[i]     = dims[i];
-	cart_ptr->topo.cart.periodic[i] = periods[i];
-	nranks = nranks / dims[i];
-	/* FIXME: nranks could be zero (?) */
-	cart_ptr->topo.cart.position[i] = rank / nranks;
-	rank = rank % nranks;
-    }
 
     /* Place this topology onto the communicator */
     mpi_errno = MPIR_Topology_put( newcomm_ptr, cart_ptr );
@@ -214,8 +259,14 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, int *dims, int *periods,
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
 	    /* If comm_ptr is not valid, it will be reset to null */
-	    MPIR_ERRTEST_ARGNULL( dims, "dims", mpi_errno );
-	    MPIR_ERRTEST_ARGNULL( periods, "periods", mpi_errno );
+	    if (comm_ptr) {
+		MPIR_ERRTEST_COMM_INTRA(comm_ptr,mpi_errno);
+	    }
+
+	    if (ndims > 0) {
+		MPIR_ERRTEST_ARGNULL( dims, "dims", mpi_errno );
+		MPIR_ERRTEST_ARGNULL( periods, "periods", mpi_errno );
+	    }
 	    MPIR_ERRTEST_ARGNULL( comm_cart, "comm_cart", mpi_errno );
 	    if (ndims < 0) {
 		/* Must have a non-negative number of dimensions */

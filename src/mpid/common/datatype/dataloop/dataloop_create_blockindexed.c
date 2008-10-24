@@ -9,12 +9,6 @@
 
 #include "./dataloop.h"
 
-static DLOOP_Count DLOOP_Type_blockindexed_count_contig(DLOOP_Count count,
-							DLOOP_Count blklen,
-							void *disp_array,
-							int dispinbytes,
-							DLOOP_Offset old_extent);
-
 static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
 					       void *disp_array,
 					       DLOOP_Offset *out_disp_array,
@@ -82,11 +76,11 @@ int PREPEND_PREFIX(Dataloop_create_blockindexed)(int icount,
 	DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth, flag);
     }
 
-    contig_count = DLOOP_Type_blockindexed_count_contig(count,
-							blklen,
-							disp_array,
-							dispinbytes,
-							old_extent);
+    contig_count = PREPEND_PREFIX(Type_blockindexed_count_contig)(count,
+                                                                  blklen,
+                                                                  disp_array,
+                                                                  dispinbytes,
+                                                                  old_extent);
 
     /* optimization:
      *
@@ -280,11 +274,11 @@ static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
     return;
 }
 
-static DLOOP_Count DLOOP_Type_blockindexed_count_contig(DLOOP_Count count,
-							DLOOP_Count blklen,
-							void *disp_array,
-							int dispinbytes,
-							DLOOP_Offset old_extent)
+DLOOP_Count PREPEND_PREFIX(Type_blockindexed_count_contig)(DLOOP_Count count,
+                                                           DLOOP_Count blklen,
+                                                           void *disp_array,
+                                                           int dispinbytes,
+                                                           DLOOP_Offset old_extent)
 {
     int i, contig_count = 1;
 

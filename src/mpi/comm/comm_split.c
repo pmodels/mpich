@@ -355,8 +355,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	    newcomm_ptr->recvcontext_id = remote_context_id;
 	    newcomm_ptr->remote_size    = new_remote_size;
 	    newcomm_ptr->local_comm     = 0;
-	    /* FIXME: Do we need to set is_low_group? */
-	    newcomm_ptr->is_low_group   = 0;
+	    newcomm_ptr->is_low_group   = comm_ptr->is_low_group;
 
 	}
 	else {

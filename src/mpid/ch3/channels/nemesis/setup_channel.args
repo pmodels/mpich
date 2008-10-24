@@ -1,6 +1,6 @@
 
 if test -z "${channel_args}" ; then
-    nemesis_network="newtcp"
+    nemesis_network="tcp"
 else
     case "${channel_args}" in
 	elan | gm | mx | tcp | newtcp | sctp | ib | psm | none )

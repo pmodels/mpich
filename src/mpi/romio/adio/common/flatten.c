@@ -525,6 +525,45 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 	}
  	break;
 
+    case MPI_COMBINER_RESIZED: 
+
+    /* This is done similar to a type_struct with an lb, datatype, ub */
+
+    /* handle the Lb */
+	j = *curr_index;
+	flat->indices[j] = st_offset + adds[0];
+	flat->blocklens[j] = 0;
+
+	(*curr_index)++;
+
+	/* handle the datatype */
+
+	MPI_Type_get_envelope(types[0], &old_nints, &old_nadds,
+			      &old_ntypes, &old_combiner); 
+	ADIOI_Datatype_iscontig(types[0], &old_is_contig);
+
+	if ((old_combiner != MPI_COMBINER_NAMED) && (!old_is_contig)) {
+	    ADIOI_Flatten(types[0], flat, st_offset+adds[0], curr_index);
+	}
+	else {
+            /* current type is basic or contiguous */
+	    j = *curr_index;
+	    flat->indices[j] = st_offset;
+	    MPI_Type_size(types[0], (int*)&old_size);
+	    flat->blocklens[j] = old_size;
+
+	    (*curr_index)++;
+	}
+
+	/* take care of the extent as a UB */
+	j = *curr_index;
+	flat->indices[j] = st_offset + adds[0] + adds[1];
+	flat->blocklens[j] = 0;
+
+	(*curr_index)++;
+
+ 	break;
+
     default:
 	/* TODO: FIXME (requires changing prototypes to return errors...) */
 	FPRINTF(stderr, "Error: Unsupported datatype passed to ADIOI_Flatten\n");
@@ -789,6 +828,29 @@ int ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, int *curr_index)
 	    }
 	}
 	break;
+
+    case MPI_COMBINER_RESIZED: 
+	/* treat it as a struct with lb, type, ub */
+
+	/* add 2 for lb and ub */
+	(*curr_index) += 2;
+	count += 2;
+
+	/* add for datatype */ 
+	MPI_Type_get_envelope(types[0], &old_nints, &old_nadds,
+                                  &old_ntypes, &old_combiner); 
+	ADIOI_Datatype_iscontig(types[0], &old_is_contig);
+
+	if ((old_combiner != MPI_COMBINER_NAMED) && (!old_is_contig)) {
+	    count += ADIOI_Count_contiguous_blocks(types[0], curr_index);
+	}
+	else {
+        /* basic or contiguous type */
+	    count++;
+	    (*curr_index)++;
+	}
+	break;
+
     default:
 	/* TODO: FIXME */
 	FPRINTF(stderr, "Error: Unsupported datatype passed to ADIOI_Count_contiguous_blocks, combiner = %d\n", combiner);

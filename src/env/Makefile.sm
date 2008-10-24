@@ -9,6 +9,6 @@ mpich2version_SOURCES = mpich2version.c
 mpich2version_LDADD = ../../lib/lib@MPILIBNAME@.a
 
 install_BIN = mpicc mpich2version parkill
-install_ETC = mpicc.conf
+install_ETC = mpixxx_opts.conf mpicc.conf
 optinstall_BIN = mpicxx mpif77 mpif90
 optinstall_ETC = mpicxx.conf mpif77.conf mpif90.conf

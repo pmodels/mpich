@@ -32,10 +32,14 @@ int MPIR_Cart_map( const MPID_Comm *comm_ptr, int ndims, const int dims[],
     MPIU_UNREFERENCED_ARG(periodic);
 
     /* Determine number of processes needed for topology */
-    nranks = dims[0];
-    for ( i=1; i<ndims; i++ )
-	nranks *= dims[i];
-    
+    if (ndims == 0) {
+	nranks = 1;
+    }
+    else {
+	nranks = dims[0];
+	for ( i=1; i<ndims; i++ )
+	    nranks *= dims[i];
+    }
     size = comm_ptr->remote_size;
     
     /* Test that the communicator is large enough */
@@ -128,7 +132,8 @@ int MPI_Cart_map(MPI_Comm comm_old, int ndims, int *dims, int *periods,
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(newrank,"newrank",mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(dims,"dims",mpi_errno);
-	    if (ndims < 1) {
+	    /* As of MPI 2.1, 0-dimensional cartesian topologies are valid */
+	    if (ndims < 0) {
 		mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
 				  MPIR_ERR_RECOVERABLE, 
 				  FCNAME, __LINE__, MPI_ERR_DIMS,

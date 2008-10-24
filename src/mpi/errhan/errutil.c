@@ -156,15 +156,15 @@ void MPIR_Errhandler_set_cxx( MPI_Errhandler errhand, void (*errcall)(void) )
 /* These routines export the nest increment and decrement for use in ROMIO */
 void MPIR_Nest_incr_export( void )
 {
-    MPICH_PerThread_t *p;
-    MPIR_GetPerThread(&p);
-    p->nest_count++;
+    MPIU_THREADPRIV_DECL;
+    MPIU_THREADPRIV_GET;
+    MPIU_THREADPRIV_FIELD(nest_count) = MPIU_THREADPRIV_FIELD(nest_count) + 1;
 }
 void MPIR_Nest_decr_export( void )
 {
-    MPICH_PerThread_t *p;
-    MPIR_GetPerThread(&p);
-    p->nest_count--;
+    MPIU_THREADPRIV_DECL;
+    MPIU_THREADPRIV_GET;
+    MPIU_THREADPRIV_FIELD(nest_count) = MPIU_THREADPRIV_FIELD(nest_count) - 1;
 }
 
 /* ------------------------------------------------------------------------- */

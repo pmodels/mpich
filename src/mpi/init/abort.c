@@ -58,8 +58,8 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     /* FIXME: 100 is arbitrary and may not be long enough */
-    char abort_str[100], comm_name[MPI_MAX_NAME_STRING];
-    int len = MPI_MAX_NAME_STRING;
+    char abort_str[100], comm_name[MPI_MAX_OBJECT_NAME];
+    int len = MPI_MAX_OBJECT_NAME;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ABORT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -111,7 +111,7 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     NMPI_Comm_get_name(comm, comm_name, &len);
     if (len == 0)
     {
-	MPIU_Snprintf(comm_name, MPI_MAX_NAME_STRING, "comm=0x%X", comm);
+	MPIU_Snprintf(comm_name, MPI_MAX_OBJECT_NAME, "comm=0x%X", comm);
     }
     /* FIXME: This is not internationalized */
     MPIU_Snprintf(abort_str, 100, "application called MPI_Abort(%s, %d) - process %d", comm_name, errorcode, comm_ptr->rank);

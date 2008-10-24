@@ -169,7 +169,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
                                         rts_pkt->data_sz));
 
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&rts_pkt->match, &found);
-    MPIU_ERR_CHKANDJUMP(rreq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+    MPIU_ERR_CHKANDJUMP1(!rreq, mpi_errno,MPI_ERR_OTHER, "**nomemreq", "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
 
     set_request_info(rreq, rts_pkt, MPIDI_REQUEST_RNDV_MSG);
 
@@ -283,15 +283,14 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
 
     if (cts_pkt->cookie_len != 0)
     {
-        MPIU_CHKPMEM_MALLOC(sreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, char *, cts_pkt->cookie_len, mpi_errno, "tmp cookie buf");
-        sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = cts_pkt->cookie_len;
-
-        /* if all data has been received, copy it here, otherwise let channel do the copy */
         if (data_len >= cts_pkt->cookie_len)
         {
-            MPID_NEM_MEMCPY(sreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, data_buf, cts_pkt->cookie_len);
+            /* if whole cookie has been received, start the send */
+            sreq->ch.lmt_tmp_cookie.MPID_IOV_BUF = data_buf;
+            sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = cts_pkt->cookie_len;
             mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_start_send(vc, sreq, sreq->ch.lmt_tmp_cookie);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+            sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = 0;
             *buflen = sizeof(MPIDI_CH3_Pkt_t) + cts_pkt->cookie_len;
             *rreqp = NULL;
         }
@@ -299,6 +298,10 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
         {
             /* create a recv req and set up to receive the cookie into the sreq's tmp_cookie */
             MPID_Request *rreq;
+
+            MPIU_CHKPMEM_MALLOC(sreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, char *, cts_pkt->cookie_len, mpi_errno, "tmp cookie buf");
+            sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = cts_pkt->cookie_len;
+
             MPIDI_Request_create_rreq(rreq, mpi_errno, goto fn_fail);
             /* FIXME:  where does this request get freed? */
 

@@ -1,4 +1,24 @@
 ===============================================================================
+                               Changes in 1.0.8
+===============================================================================
+
+- Added support for MPI 2.1
+
+- Added support for MPI_Type_create_resized and
+  MPI_Type_create_indexed_block datatypes in ROMIO.
+
+- Many other bug fixes, memory leak fixes and code cleanup. A full
+list of changes is available using:
+  https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/branches/release/MPICH2_1_0_8?rev=HEAD&stop_rev=887&mode=follow_copy
+    or
+  svn log -r887:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/branches/release/MPICH2_1_0_8
+
+- Autoconf-2.62 instead of 2.59 is used in this release.
+  The install directory structure is slightly modified to conform to
+  autoconf-2.62.
+
+
+===============================================================================
                                Changes in 1.0.7
 ===============================================================================
 

@@ -87,7 +87,7 @@ int MPI_Comm_set_name(MPI_Comm comm, char *comm_name)
 
     /* ... body of routine ...  */
     
-    MPIU_Strncpy( comm_ptr->name, comm_name, MPI_MAX_NAME_STRING );
+    MPIU_Strncpy( comm_ptr->name, comm_name, MPI_MAX_OBJECT_NAME );
     
     /* ... end of body of routine ... */
 

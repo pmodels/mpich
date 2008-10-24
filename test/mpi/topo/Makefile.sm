@@ -14,6 +14,7 @@ graphmap1_SOURCES = graphmap1.c
 topotest_SOURCES = topotest.c
 topodup_SOURCES = topodup.c
 graphcr_SOURCES = graphcr.c
+graphcr2_SOURCES = graphcr2.c
 
 ../util/mtest.o: 
 	(cd ../util && make mtest.o)

@@ -51,6 +51,8 @@ pac_cv_prog_f77_name_mangle,
    # force a particular form.  This is particularly useful in systems
    # where a Fortran compiler option is used to force a particular
    # external name format (rs6000 xlf, for example).
+   # This is needed for Mac OSX 10.5
+   rm -rf conftest.dSYM
    rm -f conftest*
    cat > conftest.f <<EOF
        subroutine MY_name( i )
@@ -73,25 +75,25 @@ EOF
    save_LIBS="$LIBS"
    dnl FLIBS comes from AC_F77_LIBRARY_LDFLAGS
    LIBS="fconftestf.o $FLIBS $LIBS"
-   AC_TRY_LINK(,my_name();,pac_cv_prog_f77_name_mangle="lower")
+   AC_TRY_LINK([extern void my_name(int);],my_name(0);,pac_cv_prog_f77_name_mangle="lower")
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(,my_name_();,pac_cv_prog_f77_name_mangle="lower underscore")
+     AC_TRY_LINK([extern void my_name_(int);],my_name_(0);,pac_cv_prog_f77_name_mangle="lower underscore")
    fi
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(void __stdcall MY_NAME(int);,MY_NAME(0);,pac_cv_prog_f77_name_mangle="upper stdcall")
+     AC_TRY_LINK([void __stdcall MY_NAME(int);],MY_NAME(0);,pac_cv_prog_f77_name_mangle="upper stdcall")
    fi
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(,MY_NAME();,pac_cv_prog_f77_name_mangle="upper")
+     AC_TRY_LINK([extern void MY_NAME(int);],MY_NAME(0);,pac_cv_prog_f77_name_mangle="upper")
    fi
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(,my_name__();,
+     AC_TRY_LINK([extern void my_name__(int);],my_name__(0);,
        pac_cv_prog_f77_name_mangle="lower doubleunderscore")
    fi
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(,MY_name();,pac_cv_prog_f77_name_mangle="mixed")
+     AC_TRY_LINK([extern void MY_name(int);],MY_name(0);,pac_cv_prog_f77_name_mangle="mixed")
    fi
    if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
-     AC_TRY_LINK(,MY_name_();,pac_cv_prog_f77_name_mangle="mixed underscore")
+     AC_TRY_LINK([extern void MY_name_(int);],MY_name_(0);,pac_cv_prog_f77_name_mangle="mixed underscore")
    fi
    LIBS="$save_LIBS"
    AC_LANG_RESTORE
@@ -111,6 +113,8 @@ EOF
        if test "X$ac_ccompile" = "X" ; then
            ac_ccompile='${CC-cc} -c $CFLAGS conftest.c 1>&AC_FD_CC'
        fi
+       # This is needed for Mac OSX 10.5
+       rm -rf conftest.dSYM
        rm -f conftest*
        cat > conftest.c <<EOF
        void my_name( int a ) { }
@@ -126,6 +130,8 @@ EOF
            pac_cv_prog_f77_name_mangle="lower")
 
        if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
+	   # This is needed for Mac OSX 10.5
+	   rm -rf conftest.dSYM
            rm -f conftest*
            cat > conftest.c <<EOF
  void my_name_(int a) { }
@@ -140,6 +146,8 @@ EOF
 	         pac_cv_prog_f77_name_mangle="lower underscore")
        fi
        if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
+	  # This is needed for Mac OSX 10.5
+	  rm -rf conftest.dSYM
           rm -f conftest*
           cat >conftest.c <<EOF
           void __stdcall MY_NAME(int a) {}
@@ -154,6 +162,8 @@ EOF
 	         pac_cv_prog_f77_name_mangle="upper stdcall")
        fi
        if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
+	  # This is needed for Mac OSX 10.5
+	  rm -rf conftest.dSYM
           rm -f conftest*
           cat >conftest.c <<EOF
           void MY_NAME(int a) {}
@@ -168,6 +178,8 @@ EOF
                 pac_cv_prog_f77_name_mangle="upper")
        fi
        if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
+	  # This is needed for Mac OSX 10.5
+	  rm -rf conftest.dSYM
           rm -f conftest*
           cat >conftest.c <<EOF
           void my_name__(int a) {}
@@ -182,6 +194,8 @@ EOF
                pac_cv_prog_f77_name_mangle="lower doubleunderscore")
        fi
        if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
+	  # This is needed for Mac OSX 10.5
+	  rm -rf conftest.dSYM
           rm -f conftest*
           cat >conftest.c <<EOF
           void MY_name(int a) {}
@@ -196,6 +210,8 @@ EOF
 	        pac_cv_prog_f77_name_mangle="mixed")
        fi
        if test  "X$pac_cv_prog_f77_name_mangle" = "X" ; then
+	  # This is needed for Mac OSX 10.5
+	  rm -rf conftest.dSYM
           rm -f conftest*
           cat >conftest.c <<EOF
           void MY_name_(int a) {}
@@ -212,6 +228,8 @@ EOF
        LIBS="$save_LIBS"
        AC_LANG_RESTORE
    fi
+   # This is needed for Mac OSX 10.5
+   rm -rf conftest.dSYM
    rm -f fconftest*
 ])
 # Make the actual definition
@@ -291,6 +309,8 @@ define(<<PAC_CV_NAME>>, translit(pac_cv_f77_sizeof_$1, [ *], [__]))dnl
 changequote([, ])dnl
 AC_CACHE_CHECK([for size of Fortran type $1],PAC_CV_NAME,[
 AC_REQUIRE([PAC_PROG_F77_NAME_MANGLE])
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 cat <<EOF > conftest.f
       subroutine isize( )
@@ -370,6 +390,8 @@ if test "$cross_compiling" = yes ; then
     ifelse([$2],,[AC_MSG_WARN([No value provided for size of $1 when cross-compiling])]
 ,eval PAC_CV_NAME=$2)
 else
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     cat <<EOF > conftestc.c
 #include <stdio.h>
@@ -430,6 +452,8 @@ EOF
         else
 	    eval PAC_CV_NAME=0
         fi
+	# This is needed for Mac OSX 10.5
+	rm -rf conftest.dSYM
         rm -f conftest*
     else
         AC_MSG_WARN([Unable to compile the C routine for finding the size of a $1])
@@ -566,6 +590,8 @@ else
      AC_MSG_RESULT(no)
      $3
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 ])
 dnl
@@ -1005,6 +1031,8 @@ dnl Build library
         echo "configure: failed program was:" >&AC_FD_CC
         cat conftest1.f >&AC_FD_CC
     fi
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
 ])
     AC_SUBST(F77_LIBDIR_LEADER)
@@ -1052,6 +1080,8 @@ for idir in "-I" "-Wf,-I" ; do
 	break
     fi
 done
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 rm -f $checkdir/conftestf.h
 ])
@@ -1083,15 +1113,21 @@ cat > conftest.$ac_ext <<EOF
        end
 EOF
 if AC_TRY_EVAL(ac_link) && test -s conftest${ac_exeext}; then
+  # This is needed for Mac OSX 10.5
+  rm -rf conftest.dSYM
   rm -rf conftest*
   pac_cv_prog_f77_allows_unused_externals="yes"
 else
   echo "configure: failed program was:" >&AC_FD_CC
   cat conftest.$ac_ext >&AC_FD_CC
+  # This is needed for Mac OSX 10.5
+  rm -rf conftest.dSYM
   rm -rf conftest*
   pac_cv_prog_f77_allows_unused_externals="no"
   $4
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 #
 AC_LANG_RESTORE
@@ -1136,6 +1172,8 @@ dnl Fortran routine MUST be named ftest unless you include code
 dnl to select the appropriate Fortran name.
 dnl 
 AC_DEFUN(PAC_PROG_F77_RUN_PROC_FROM_C,[
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 cat <<EOF > conftest.f
 $2
@@ -1164,6 +1202,8 @@ else
     echo "configure: failed program was:" >&AC_FD_CC
     cat conftest.f >&AC_FD_CC
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 ])
 dnl
@@ -1185,6 +1225,8 @@ dnl
 AC_DEFUN(PAC_PROG_F77_IN_C_LIBS,[
 AC_MSG_CHECKING([for which Fortran libraries are needed to link C with Fortran])
 F77_IN_C_LIBS="$FLIBS"
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 cat <<EOF > conftest.f
         subroutine ftest
@@ -1207,6 +1249,7 @@ if AC_TRY_EVAL(ac_fcompile) && test -s conftest.o ; then
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
 #define ftest_ ftest
 #endif
+extern void ftest_(void);
 ftest_();
 ], [link_worked=yes], [link_worked=no] )
     if test "$link_worked" = "no" ; then
@@ -1220,6 +1263,7 @@ ftest_();
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
 #define ftest_ ftest
 #endif
+extern void ftest_(void);
 ftest_();
 ], [link_worked=yes], [link_worked=no] )
             if test "$link_worked" = "yes" ; then 
@@ -1239,6 +1283,7 @@ ftest_();
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
 #define ftest_ ftest
 #endif
+extern void ftest_(void);
 ftest_();
 ], [link_worked=yes], [link_worked=no] )
             if test "$link_worked" = "yes" ; then 
@@ -1257,6 +1302,8 @@ else
     echo "configure: failed program was:" >&AC_FD_CC
     cat conftest.f >&AC_FD_CC
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest* mconftest*
 if test -z "$F77_IN_C_LIBS" ; then
     AC_MSG_RESULT(none)
@@ -1421,6 +1468,8 @@ cat > conftest1.f <<EOF
 	call sub( a, 20 )
         end
 EOF
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm conftest*
 ])
 dnl
@@ -1444,6 +1493,8 @@ AC_DEFUN([PAC_PROG_F77_AND_C_STDIO_LIBS],[
 
     AC_CACHE_CHECK([what libraries are needed to link Fortran programs with C routines that use stdio],pac_cv_prog_f77_and_c_stdio_libs,[
     pac_cv_prog_f77_and_c_stdio_libs=unknown
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
     cat >conftest.f <<EOF
         program main
@@ -1479,6 +1530,8 @@ EOF
          fi
     fi
 
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
 ])
 if test "$pac_cv_prog_f77_and_c_stdio_libs" != none -a \
@@ -1530,6 +1583,8 @@ if test $pac_cv_f77_flibs_valid = no ; then
     AC_MSG_RESULT($FLIBS)
 fi
 #
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 AC_LANG_RESTORE
 ])

@@ -118,6 +118,7 @@ pac_cv_have_haddr_list=yes,pac_cv_have_haddr_list=no)])
 if test "$pac_cv_have_haddr_list" = "yes" ; then
     AC_DEFINE(HAVE_H_ADDR_LIST,1,[Define if struct hostent contains h_addr_list])
 fi
+PAC_C_GNU_ATTRIBUTE
 
 AC_SUBST(AR)
 AC_SUBST(RANLIB)

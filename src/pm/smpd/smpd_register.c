@@ -49,7 +49,7 @@ static int smpd_get_all_key_names(smpd_data_t **data)
     enum_result = RegEnumValue(tkey, index, name, &name_length, NULL, NULL, NULL, NULL);
     while (enum_result == ERROR_SUCCESS)
     {
-	item = (smpd_data_t*)malloc(sizeof(smpd_data_t));
+	item = (smpd_data_t*)MPIU_Malloc(sizeof(smpd_data_t));
 	if (item == NULL)
 	{
 	    *data = NULL;
@@ -161,7 +161,7 @@ SMPD_BOOL smpd_delete_current_password_registry_entry(int index)
 	    {
 		iter = data;
 		data = data->next;
-		free(iter);
+		MPIU_Free(iter);
 	    }
 	}
     }

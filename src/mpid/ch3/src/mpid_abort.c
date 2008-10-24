@@ -75,6 +75,11 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code,
 	    MPIU_Snprintf(error_str, sizeof(error_str), "internal ABORT - process %d", rank);
 	}
     }
+
+#ifdef HAVE_DEBUGGER_SUPPORT
+    MPIR_DebuggerSetAborting( error_str );
+#endif
+
     /* FIXME: This should not use an ifelse chain. Either define the function
        by name or set a function pointer */
 #ifdef MPIDI_CH3_IMPLEMENTS_ABORT

@@ -21,6 +21,7 @@ disconnect_reconnect3_SOURCES = disconnect_reconnect3.c
 multiple_ports_SOURCES = multiple_ports.c
 multiple_ports2_SOURCES = multiple_ports2.c
 spaiccreate_SOURCES = spaiccreate.c
+spaiccreate2_SOURCES = spaiccreate2.c
 disconnect_SOURCES = disconnect.c
 disconnect2_SOURCES = disconnect2.c
 disconnect3_SOURCES = disconnect3.c

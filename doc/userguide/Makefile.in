@@ -10,9 +10,9 @@ FTPDIR = /home/ftp/pub/mpi/mpich2
 
 @VPATH@
 
-LATEX      = export TEXINPUTS=".:$(srcdir):" ; latex
-BIBTEX     = export BIBINPUTS=".:$(srcdir):" ; bibtex
-DVIPDFM    = export TEXINPUTS=".:$(srcdir):" ; dvipdfm
+LATEX      = TEXINPUTS=".:$(srcdir):" ; export TEXINPUTS ; latex
+BIBTEX     = BIBINPUTS=".:$(srcdir):" ; export BIBINPUTS ; bibtex
+DVIPDFM    = TEXINPUTS=".:$(srcdir):" ; export TEXINPUTS ; dvipdfm
 LATEX2HTML = latex2html
 
 # Update the %VERSION% in user.tex with current version string.

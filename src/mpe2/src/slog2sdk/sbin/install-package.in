@@ -33,11 +33,15 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 bindir=@bindir@
 sbindir=@sbindir@
-datadir=@datadir@
 sysconfdir=@sysconfdir@
+datarootdir=@datarootdir@
+datadir=@datadir@
 docdir=@docdir@
-etcdir=$sysconfdir
-sharedir=$datadir
+# Since autoconf < 2.60 does not set docdir,
+# check if it is set.  If not, set it accordingly.
+if [ "$docdir" = "@docdir@" ] ; then
+    docdir=${datadir}/doc/${PACKAGE}
+fi
 
 # Determine this package's name
 pkgname="`echo $top_srcdir | sed -e 's%\(.*\)/\([^/]*\)%\2%'`"
@@ -66,6 +70,7 @@ Show=eval
 verbose=0
 just_testing=0
 prefix_override=0
+package_override=0
 
 # filelist records files that have been installed
 filelist=""
@@ -95,6 +100,10 @@ for arg in "$@" ; do
             prefix=`echo $arg | sed -e 's/-prefix=//'`
             prefix_override=1
             ;;
+        -package=*)
+            PACKAGE=`echo $arg | sed -e 's/-package=//'`
+            package_override=1
+            ;;
         -uninstall=*)
             UNINSTALLFILE=`echo A$arg | sed -e 's/A-uninstall=//g'`
 	    appendUninstall=1
@@ -123,6 +132,7 @@ for arg in "$@" ; do
 cat <<EOF
 Install ${titlename} into $prefix.
 -prefix=path     - Destination directory.
+-package=name    - Set the package name for docdir and sharedir.
 -uninstall=file  - File to append uninstall information to
 -mode=nnnn       - permission mode for regular files.  Default is $MODE .
 -xmode=nnnn      - permission mode for execuables.  Default is $XMODE .
@@ -366,16 +376,29 @@ else
     MkDir $prefix
 fi
 
-if [ "$prefix_override" = 1 ] ; then
-    libdir=$prefix/lib
-    bindir=$prefix/bin
-    sbindir=$prefix/sbin
-    docdir=$prefix/doc
-    etcdir=$prefix/etc
-    sharedir=$prefix/share
+# use autoconf variables, @...@, here, as they are set w.r.t. $prefix.
+if [ "$prefix_override" = 1 -o "$package_override" = 1 ] ; then
+    exec_prefix=@exec_prefix@
+    libdir=@libdir@
+    bindir=@bindir@
+    sbindir=@sbindir@
+    sysconfdir=@sysconfdir@
+    datarootdir=@datarootdir@
+    datadir=@datadir@
+    docdir=@docdir@
+    # Since autoconf < 2.60 does not set docdir,
+    # check if it is set.  If not, set it accordingly.
+    if [ "$docdir" = "@docdir@" ] ; then
+        docdir=${datadir}/doc/${PACKAGE}
+    fi
     if [ $appendUninstall = 0 ] ; then
         UNINSTALLFILE=$DESTDIR${sbindir}/${UNINSTALL_base}
     fi
+fi
+
+sharedir=$datadir
+if [ -n "${PACKAGE}" ] ; then
+    sharedir=$datadir/$PACKAGE
 fi
 
 if [ $appendUninstall = 0 ] ; then
@@ -459,12 +482,13 @@ if [ "$UNINSTALLFILE" != "/dev/null" ] ; then
     chmod u+x $UNINSTALLFILE
 fi
 
-base_install_opts="-mode=$MODE -xmode=$XMODE -dmode=$DMODE"
-base_install_opts="-uninstall=$UNINSTALLFILE $base_install_opts"
+install_opts="-mode=$MODE -xmode=$XMODE -dmode=$DMODE"
+install_opts="-uninstall=$UNINSTALLFILE $install_opts"
+if [ "$package_override" = 1 ] ; then
+    install_opts="-package=$PACKAGE $install_opts"
+fi
 if [ "$prefix_override" = 1 ] ; then
-    install_opts="-prefix=$prefix $base_install_opts"
-else
-    install_opts="$base_install_opts"
+    install_opts="-prefix=$prefix $install_opts"
 fi
 
 # Install subpackages as specified in $PKGS

@@ -317,34 +317,6 @@ if test "x$MPI_INC" != "x" ; then
 fi
 
 dnl
-dnl Set non-standard autoconf/GNU install directory variables, htmldir & docdir
-dnl
-AC_ARG_WITH( htmldir,
-[--with-htmldir=dir                 - Specify the HTML directory.],,
-with_htmldir='${prefix}/www' )
-
-AC_ARG_WITH( docdir,
-[--with-docdir=dir                  - Specify the documentation directory.],,
-with_docdir='${prefix}/doc' )
-
-#
-# Set the defaults for directories that are not included in configure's
-# repetoire
-if test -n "$with_htmldir" ; then
-    htmldir=$with_htmldir
-else
-    htmldir='${prefix}/www'
-fi
-AC_SUBST(htmldir)
-
-if test -n "$with_docdir" ; then
-    docdir=$with_docdir
-else
-    docdir='${prefix}/doc'
-fi
-AC_SUBST(docdir)
-
-dnl
 AC_ARG_WITH( cross-spec,
 [--with-cross-spec=file             - Specify the values of variables that
                                      configure cannot determine in a

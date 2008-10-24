@@ -166,7 +166,6 @@ typedef int MPI_Op;
 /* These are only guesses; make sure you change them in mpif.h as well */
 #define MPI_MAX_PROCESSOR_NAME @MPI_MAX_PROCESSOR_NAME@
 #define MPI_MAX_ERROR_STRING  1024 
-#define MPI_MAX_NAME_STRING     63
 #define MPI_MAX_PORT_NAME      256
 #define MPI_MAX_OBJECT_NAME    128
 
@@ -246,7 +245,7 @@ typedef int (MPI_Copy_function) ( MPI_Comm, int, void *, void *, void *, int * )
 typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 
 #define MPI_VERSION    2
-#define MPI_SUBVERSION 0
+#define MPI_SUBVERSION 1
 #define MPICH_NAME     2
 #define MPICH2         1
 #define MPICH_HAS_C2F  1
@@ -961,8 +960,6 @@ int PMPI_Errhandler_get(MPI_Comm, MPI_Errhandler *);
 int PMPI_Errhandler_free(MPI_Errhandler *);
 int PMPI_Error_string(int, char *, int *);
 int PMPI_Error_class(int, int *);
-
-int PMPI_Type_get_envelope(MPI_Datatype, int *, int *, int *, int *); 
 
 /* Wtime done above */
 int PMPI_Init(int *, char ***);

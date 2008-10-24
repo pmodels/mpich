@@ -51,6 +51,9 @@ for arg in "$@" ; do
                 prefix_override=1
             fi
             ;;
+        -package=*)
+            PACKAGE=`echo $arg | sed -e 's/-package=//g'`
+            ;;
         -t)
             Show=echo
             ;;
@@ -67,6 +70,7 @@ for arg in "$@" ; do
 cat <<EOF
 Check MPE installation at $prefix.
 -prefix=path        - Destination directory.
+-package=name       - Set the package name for sharedir(examplesdir).
 -t                  - Try only; do NO actual checking.
 -run                - Do installation runtests instead of linktests with
                       MPERUN="$bindir/mpiexec -n 4".
@@ -98,12 +102,14 @@ if [ ! -n "$prefix" ] ; then
 fi
 
 # If the prefix was set, we want to override these choices
+# use autoconf variables, @...@, here, as they are set w.r.t. $prefix.
 if [ "$prefix_override" = 1 ] ; then
-    includedir=$prefix/include
-    libdir=$prefix/lib
-    bindir=$prefix/bin
-    sbindir=$prefix/sbin
-    datadir=$prefix/share
+    exec_prefix=@exec_prefix@
+    includedir=@includedir@
+    libdir=@libdir@
+    bindir=@bindir@
+    sbindir=@sbindir@
+    datadir=@datadir@
 fi
 
 if [ ! -s $libdir/lib${PROF_LIBNAME}.a ] ; then
@@ -113,9 +119,14 @@ if [ ! -s $libdir/lib${PROF_LIBNAME}.a ] ; then
     exit 1
 fi
 
+sharedir=$datadir
+if [ -n "$PACKAGE" ] ; then
+    sharedir=$datadir/$PACKAGE
+fi
+
 # Set up Examples directory for the MPE Logging programs
 for pkg in logging graphics collchk ; do
-    examplesdir=$datadir/examples_${pkg}
+    examplesdir=$sharedir/examples_${pkg}
     if [ -f $examplesdir/Makefile ] ; then
         echo "Running installation $make_target for C $pkg program..."
         $Show "( cd $examplesdir && $MAKE ${make_target}_C $make_mperun )"

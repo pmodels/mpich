@@ -102,6 +102,10 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, int count,
     MPIDI_Request_set_msg_type((rreq_), (msg_type_));		\
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_RndvReqToSend
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 					MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
@@ -119,9 +123,7 @@ int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		    "ReceivedRndv");
 
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&rts_pkt->match, &found);
-    if (rreq == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomemreq");
-    }
+    MPIU_ERR_CHKANDJUMP1(!rreq, mpi_errno,MPI_ERR_OTHER, "**nomemreq", "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
     
     set_request_info(rreq, rts_pkt, MPIDI_REQUEST_RNDV_MSG);
 
@@ -175,6 +177,10 @@ int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_RndvClrToSend
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 					MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
@@ -236,7 +242,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     else
     {
 	sreq->dev.segment_ptr = MPID_Segment_alloc( );
-	/* if (!sreq->dev.segment_ptr) { MPIU_ERR_POP(); } */
+        MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
 	MPID_Segment_init(sreq->dev.user_buf, sreq->dev.user_count, 
 			  sreq->dev.datatype, sreq->dev.segment_ptr, 0);
 	sreq->dev.segment_first = 0;
@@ -251,6 +257,10 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_RndvSend
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
 				   MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
@@ -303,6 +313,10 @@ int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
  * This routine processes a rendezvous message once the message is matched.
  * It is used in mpid_recv and mpid_irecv.
  */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_RecvRndv
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3_RecvRndv( MPIDI_VC_t * vc, MPID_Request *rreq )
 {
     int mpi_errno = MPI_SUCCESS;

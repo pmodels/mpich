@@ -19,7 +19,6 @@
 #define MPIDI_STATE_DECL(a)		MPIR_STATE_DECL(a)
 #define MPIDI_INIT_STATE_DECL(a)	MPIR_STATE_DECL(a)
 #define MPIDI_FINALIZE_STATE_DECL(a)	MPIR_STATE_DECL(a)
-#define MPIDI_NEMTCP_STATE_DECL	MPIR_STATE_DECL(FCNAME)
 
 /* FIXME: it would be nice to have a nesting level for the function call, 
    and use 
@@ -33,12 +32,6 @@
 
 #define MPIR_FUNC_EXIT(a) \
     MPIU_DBG_MSG(ROUTINE_EXIT,TYPICAL,"Leaving "#a )
-
-#define MPIDI_NEMTCP_FUNC_ENTER                                 \
-    MPIU_DBG_MSG(NEM_SOCK_FUNC, TYPICAL, "Entering " FCNAME )
-
-#define MPIDI_NEMTCP_FUNC_EXIT                                  \
-    MPIU_DBG_MSG(NEM_SOCK_FUNC, TYPICAL, "Leaving " FCNAME )
 
 /* Tell the package to define the rest of the enter/exit macros in 
    terms of these */

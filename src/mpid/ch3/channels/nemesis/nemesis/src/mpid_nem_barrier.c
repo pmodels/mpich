@@ -5,11 +5,9 @@
  */
 
 #include "mpid_nem_impl.h"
-#include <sched.h>
 
 static int sense;
 static int barrier_init = 0;
-
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_barrier_init
@@ -56,7 +54,7 @@ int MPID_nem_barrier (int num_processes, int rank)
     {
 	/* wait */
 	while (MPID_nem_mem_region.barrier->wait == sense)
-            sched_yield(); /* skip */
+            MPIDU_Yield(); /* skip */
     }
     sense = 1 - sense;
 

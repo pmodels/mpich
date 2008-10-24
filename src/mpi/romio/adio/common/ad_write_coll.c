@@ -157,7 +157,7 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, void *buf, int count,
     ADIOI_Calc_file_domains(st_offsets, end_offsets, nprocs,
 			    nprocs_for_coll, &min_st_offset,
 			    &fd_start, &fd_end, 
-			    fd->hints->min_fdomain_size, &fd_size, 
+			    fd->hints->min_fdomain_size, &fd_size,
 			    fd->hints->striping_unit);   
 
 
@@ -619,9 +619,8 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         }
     ADIOI_Free(tmp_len);
 
-    /* Wei-keng Liao: check holes, if yes, must do read-modify-write */
-
-    /* holes can be in three places.  'middle' is what you'd expect: the
+    /* check if there are any holes. If yes, must do read-modify-write.
+     * holes can be in three places.  'middle' is what you'd expect: the
      * processes are operating on noncontigous data.  But holes can also show
      * up at the beginning or end of the file domain (see John Bent ROMIO REQ
      * #835). Missing these holes would result in us writing more data than
@@ -632,8 +631,10 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         *hole = 1;
     else { /* coalesce the sorted offset-length pairs */
         for (i=1; i<sum; i++) {
-            if (srt_off[i] <= srt_off[0] + srt_len[0])
-                srt_len[0] = srt_off[i] + srt_len[i] - srt_off[0];
+            if (srt_off[i] <= srt_off[0] + srt_len[0]) {
+		int new_len = srt_off[i] + srt_len[i] - srt_off[0];
+		if (new_len > srt_len[0]) srt_len[0] = new_len;
+	    }
             else
                 break;
         }

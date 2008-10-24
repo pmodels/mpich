@@ -662,7 +662,7 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_SOCKCONN_HANDLE_CLOSE_EVENT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SOCKCONN_HANDLE_CLOSE_EVENT);
-		
+
     /* If the conn pointer is NULL then the close was intentional */
     /* FIXME: What does the above comment mean? */
     if (conn != NULL) {
@@ -671,15 +671,33 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
 	    MPIU_Assert(conn->recv_active == NULL);
 	    if (conn->vc != NULL) {
 		MPIDI_CH3I_VC *vcch = (MPIDI_CH3I_VC *)conn->vc->channel_private;
-		MPIU_DBG_VCCHSTATECHANGE(conn->vc,VC_STATE_UNCONNECTED);
-		vcch->state = MPIDI_CH3I_VC_STATE_UNCONNECTED;
-		vcch->sock  = MPIDU_SOCK_INVALID_SOCK;
-		/* FIXME: Make sure that this is the correct state for the vc */
-		/* conn->vc->state    = MPIDI_VC_STATE_INACTIVE; */
-		/* Handle_connection takes care of updating the state on the VC */
-		mpi_errno = MPIDI_CH3U_Handle_connection(conn->vc, MPIDI_VC_EVENT_TERMINATED);
-		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-	    }
+
+                conn->sock = MPIDU_SOCK_INVALID_SOCK;
+                MPIU_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_CLOSED);
+                conn->state = CONN_STATE_CLOSED;
+
+                /* Only manipulate vcch if conn was not the loser in a
+                   head-to-head resolution.  */
+                if (vcch && vcch->conn == conn) {
+                    MPIU_DBG_VCCHSTATECHANGE(conn->vc,VC_STATE_UNCONNECTED);
+                    vcch->state = MPIDI_CH3I_VC_STATE_UNCONNECTED;
+                    vcch->sock  = MPIDU_SOCK_INVALID_SOCK;
+
+                    /* This step is important; without this, test
+                       disconnect_reconnect fails because the vc->ch.conn 
+                       connection will continue to be used, even though
+                       the memory has been freed */
+                    vcch->conn = NULL;
+
+                    /* Handle_connection takes care of updating the state on the VC */
+                    mpi_errno = MPIDI_CH3U_Handle_connection(conn->vc, MPIDI_VC_EVENT_TERMINATED);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                }
+            }
+
+            /* The VC was likely freed in the _Handle_connection call and should
+               not be referenced anymore in any case. */
+            conn->vc = NULL;
 	}
 	else {
 	    MPIU_Assert(conn->state == CONN_STATE_LISTENING);
@@ -687,26 +705,8 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
 	    MPIDI_CH3I_listener_port = 0;
 	    
 	    MPIDI_CH3_Progress_signal_completion();
-	    /* FIXME: Why is this commented out? */
-	    /* MPIDI_CH3I_progress_completion_count++; */
 	}
-		
-	conn->sock = MPIDU_SOCK_INVALID_SOCK;
-	MPIU_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_CLOSED);
-	conn->state = CONN_STATE_CLOSED;
-	if (conn->vc) {
-	    MPIDI_CH3I_VC *vcch = (MPIDI_CH3I_VC *)conn->vc->channel_private;
-	    /* This step is important; without this, test
-	       disconnect_reconnect fails because the vc->ch.conn 
-	       connection will continue to be used, even though
-	       the memory has been freed */
-	    /* FIXME: There have been reports of SEGVs in the disconnect
-	       calls, so we've added checks to the fields before assuming 
-	       that they're non-null.  */
-	    if (vcch && vcch->conn == conn) vcch->conn = 0;
-	    /* FIXME: If this isn't the associated connection, 
-	       there may be a problem */
-	}
+
 	connection_destroy(conn); 
     }
  fn_exit:
@@ -910,6 +910,9 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	    /* the other process is in the same comm_world; just compare the 
 	       ranks */
 	    if (MPIR_Process.comm_world->rank < pg_rank) {
+		MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
+                "vc=%p,conn=%p:Accept head-to-head connection (my process group), discarding vcch->conn=%p",vc,conn, vcch->conn));
+
 		/* accept connection */
 		MPIU_DBG_VCCHSTATECHANGE(vc,VC_STATE_CONNECTING);
 		vcch->state = MPIDI_CH3I_VC_STATE_CONNECTING;
@@ -932,6 +935,8 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	    /* the two processes are in different comm_worlds; compare their 
 	       unique pg_ids. */
 	    if (strcmp(MPIDI_Process.my_pg->id, pg->id) < 0) {
+		MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
+                "vc=%p,conn=%p:Accept head-to-head connection (two process groups), discarding vcch->conn=%p",vc,conn, vcch->conn));
 		/* accept connection */
 		MPIU_DBG_VCCHSTATECHANGE(vc,VC_STATE_CONNECTING);
 		vcch->state = MPIDI_CH3I_VC_STATE_CONNECTING;
@@ -1019,6 +1024,10 @@ int MPIDI_CH3_Sockconn_handle_connwrite( MPIDI_CH3I_Connection_t * conn )
 	       conn == NULL to identify intentional close, which this 
 	       appears to be. */
 	    conn->state = CONN_STATE_CLOSING;
+
+            /* zero out the vc to prevent trouble in _handle_close_event */
+            conn->vc = NULL;
+
 	    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL,"Closing sock2 (Post_close)");
 	    mpi_errno = MPIDU_Sock_post_close(conn->sock);
 	    if (mpi_errno != MPI_SUCCESS) {

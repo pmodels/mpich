@@ -100,7 +100,7 @@
 #ifndef _MPI_INTERFACE_INCLUDED
 #define _MPI_INTERFACE_INCLUDED
 
-#include <stdio.h>				/* For FILENAME_MAX */
+#include <stdio.h>			/* For FILENAME_MAX */
 
 #ifdef	__cplusplus
 extern "C" {
@@ -112,7 +112,7 @@ extern "C" {
 enum
 {
 #if defined(FOR_MPI2)
-  MQS_INTERFACE_COMPATIBILITY = 3		/* Has MPI-2 functions */
+  MQS_INTERFACE_COMPATIBILITY = 3	/* Has MPI-2 functions */
 #else
   MQS_INTERFACE_COMPATIBILITY = 2
 #endif
@@ -168,11 +168,11 @@ typedef struct mqs_type_     mqs_type;
  */
 
 #if !defined (FORCE_32BIT_MPI) && (defined (__sgi) || defined (__hpux) || defined (_AIX))
-typedef unsigned long long mqs_taddr_t;		/* Something long enough for a target address */
-typedef long long          mqs_tword_t;		/* Something long enough for a word    */
+typedef unsigned long long mqs_taddr_t;	/* Something long enough for a target address */
+typedef long long          mqs_tword_t;	/* Something long enough for a word */
 #else
-typedef unsigned long mqs_taddr_t;		/* Something long enough for a target address */
-typedef long          mqs_tword_t;		/* Something long enough for a word    */
+typedef unsigned long mqs_taddr_t;	/* Something long enough for a target address */
+typedef long          mqs_tword_t;	/* Something long enough for a word */
 #endif
 
 /***********************************************************************
@@ -182,11 +182,11 @@ typedef long          mqs_tword_t;		/* Something long enough for a word    */
 /* A structure for (target) architectural information */
 typedef struct
 {
-  int short_size;				/* sizeof (short) */
-  int int_size;					/* sizeof (int)   */
-  int long_size;				/* sizeof (long)  */
-  int long_long_size;				/* sizeof (long long) */
-  int pointer_size;				/* sizeof (void *) */
+  int short_size;			/* sizeof (short) */
+  int int_size;				/* sizeof (int)   */
+  int long_size;			/* sizeof (long)  */
+  int long_long_size;			/* sizeof (long long) */
+  int pointer_size;			/* sizeof (void *) */
 } mqs_target_type_sizes;
   
 /* Result codes. 
@@ -207,7 +207,7 @@ enum {
   mqs_ok = 0,
   mqs_no_information,
   mqs_end_of_list,
-  mqs_first_user_code = 100			/* Allow for more pre-defines */
+  mqs_first_user_code = 100		/* Allow for more pre-defines */
 };
 
 #if defined(FOR_MPI2)
@@ -251,10 +251,10 @@ enum mqs_status
 /* A structure to represent a communicator */
 typedef struct
 {
-  mqs_taddr_t unique_id;			/* A unique tag for the communicator */
-  mqs_tword_t local_rank;			/* The rank of this process Comm_rank */
-  mqs_tword_t size;				/* Comm_size  */
-  char    name[64];				/* the name if it has one */
+  mqs_taddr_t unique_id;		/* A unique tag for the communicator */
+  mqs_tword_t local_rank;		/* The rank of this process Comm_rank */
+  mqs_tword_t size;			/* Comm_size  */
+  char    name[64];			/* the name if it has one */
 } mqs_communicator;
 
 /*
@@ -265,18 +265,18 @@ typedef struct
 typedef struct
 {
   /* Fields for all messages */
-  int status;					/* Status of the message (really enum mqs_status) */
-  mqs_tword_t desired_local_rank;		/* Rank of target/source -1 for ANY */
-  mqs_tword_t desired_global_rank;		/* As above but in COMM_WORLD  */
-  int tag_wild;					/* Flag for wildcard receive  */
-  mqs_tword_t desired_tag;			/* Only if !tag_wild */
-  mqs_tword_t desired_length;			/* Length of the message buffer */
-  int system_buffer;				/* Is it a system or user buffer ? */
-  mqs_taddr_t buffer;				/* Where data is */
+  int status;				/* Status of the message (really enum mqs_status) */
+  mqs_tword_t desired_local_rank;	/* Rank of target/source -1 for ANY */
+  mqs_tword_t desired_global_rank;	/* As above but in COMM_WORLD  */
+  int tag_wild;				/* Flag for wildcard receive  */
+  mqs_tword_t desired_tag;		/* Only if !tag_wild */
+  mqs_tword_t desired_length;		/* Length of the message buffer */
+  int system_buffer;			/* Is it a system or user buffer ? */
+  mqs_taddr_t buffer;			/* Where data is */
 
   /* Fields valid if status >= matched or it's a send */
-  mqs_tword_t actual_local_rank;		/* Actual local rank */
-  mqs_tword_t actual_global_rank;		/* As above but in COMM_WORLD */
+  mqs_tword_t actual_local_rank;	/* Actual local rank */
+  mqs_tword_t actual_global_rank;	/* As above but in COMM_WORLD */
   mqs_tword_t actual_tag;				
   mqs_tword_t actual_length;
   

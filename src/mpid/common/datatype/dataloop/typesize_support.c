@@ -162,7 +162,7 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
     int ndims;
     MPI_Datatype tmptype;
 
-    mpi_errno = PMPI_Type_get_envelope(type, &nr_ints, &nr_aints,
+    mpi_errno = NMPI_Type_get_envelope(type, &nr_ints, &nr_aints,
 				       &nr_types, &combiner);
     DLOOP_Assert(mpi_errno == MPI_SUCCESS);
 
@@ -170,8 +170,8 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
 	int mpisize;
 	MPI_Aint mpiextent;
 
-	PMPI_Type_size(type, &mpisize);
-	PMPI_Type_extent(type, &mpiextent);
+	NMPI_Type_size(type, &mpisize);
+	NMPI_Type_extent(type, &mpiextent);
 	tfp->size    = (DLOOP_Offset) mpisize;
 	tfp->lb      = 0;
 	tfp->ub      = (DLOOP_Offset) mpiextent;
@@ -369,7 +369,7 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
 						  types[0],
 						  &tmptype);
 	    PREPEND_PREFIX(Type_calc_footprint)(tmptype, tfp);
-	    PMPI_Type_free(&tmptype);
+	    NMPI_Type_free(&tmptype);
 	    break;
 	case MPI_COMBINER_DARRAY:
 	    ndims = ints[2];
@@ -386,7 +386,7 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
 						&tmptype);
 
 	    PREPEND_PREFIX(Type_calc_footprint)(tmptype, tfp);
-	    PMPI_Type_free(&tmptype);
+	    NMPI_Type_free(&tmptype);
 	    break;
 	case MPI_COMBINER_F90_REAL:
 	case MPI_COMBINER_F90_COMPLEX:
@@ -437,7 +437,7 @@ static void DLOOP_Type_calc_footprint_struct(MPI_Datatype type,
 	/* skip zero blocklength elements */
 	if (ints[i+1] == 0) continue;
 
-	PMPI_Type_get_envelope(types[i], &nr_ints, &nr_aints, &nr_types,
+	NMPI_Type_get_envelope(types[i], &nr_ints, &nr_aints, &nr_types,
 			       &combiner);
 
 	/* opt: could just inline assignments for combiner == NAMED case */
@@ -576,7 +576,7 @@ static int DLOOP_Named_type_alignsize(MPI_Datatype type, MPI_Aint disp)
     if (type == MPI_LB || type == MPI_UB)
 	return 0;
 
-    PMPI_Type_size(type, &alignsize);
+    NMPI_Type_size(type, &alignsize);
 
     switch(type)
     {

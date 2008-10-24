@@ -161,8 +161,18 @@ for arg in "$@" ; do
     addarg=no
     # Loading the profConf file is handled below
     ;;
-	# -help
     -help)
+    NC=`echo "$CXX" | sed 's%\/% %g' | awk '{print $NF}' -`
+    if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
+        . $sysconfdir/mpixxx_opts.conf
+        echo "    -cxx=xxx      - Reset the native compiler to xxx."
+    else
+        if [ -f "./mpixxx_opts.conf" ] ; then
+            . ./mpixxx_opts.conf
+            echo "    -cxx=xxx      - Reset the native compiler to xxx."
+        fi
+    fi
+    exit 0
     ;;
     *)
     ;;
@@ -174,6 +184,12 @@ for arg in "$@" ; do
     # Some versions of bash do not accept ((argno++))
     argno=`expr $argno + 1`
 done
+
+if [ $# -eq 0 ] ; then
+    echo "Error: Command line argument is needed!"
+    "$0" -help
+    exit 1
+fi
 
 # -----------------------------------------------------------------------
 # Derived variables.  These are assembled from variables set from the

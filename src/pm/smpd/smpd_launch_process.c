@@ -636,7 +636,7 @@ int smpd_piothread(smpd_piothread_arg_t *p)
     hIn = p->hIn;
     hOut = p->hOut;
     pid = p->pid;
-    free(p);
+    MPIU_Free(p);
     p = NULL;
 
     smpd_dbg_printf("*** entering smpd_piothread pid:%d sock:%d ***\n", pid, hOut);
@@ -719,7 +719,7 @@ int smpd_pinthread(smpd_pinthread_arg_t *p)
     hIn = p->hIn;
     hOut = p->hOut;
     pid = p->pid;
-    free(p);
+    MPIU_Free(p);
     p = NULL;
 
     smpd_dbg_printf("*** entering smpd_pinthread pid:%d sock:%d ***\n", pid, hIn);
@@ -814,7 +814,7 @@ int smpd_pinthread(smpd_pinthread_arg_t *p)
 
     hIn = p->hIn;
     hOut = p->hOut;
-    free(p);
+    MPIU_Free(p);
     p = NULL;
 
     smpd_dbg_printf("*** entering smpd_pinthread ***\n");
@@ -1395,19 +1395,19 @@ CLEANUP:
 	smpd_piothread_arg_t *arg_ptr;
 	smpd_pinthread_arg_t *in_arg_ptr;
 
-	in_arg_ptr = (smpd_pinthread_arg_t*)malloc(sizeof(smpd_pinthread_arg_t));
+	in_arg_ptr = (smpd_pinthread_arg_t*)MPIU_Malloc(sizeof(smpd_pinthread_arg_t));
 	in_arg_ptr->hIn = hSockStdinR;
 	in_arg_ptr->hOut = hPipeStdinW;
 	in_arg_ptr->pid = psInfo.dwProcessId;
 	hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)smpd_pinthread, in_arg_ptr, 0, NULL);
 	CloseHandle(hThread);
-	arg_ptr = (smpd_piothread_arg_t*)malloc(sizeof(smpd_piothread_arg_t));
+	arg_ptr = (smpd_piothread_arg_t*)MPIU_Malloc(sizeof(smpd_piothread_arg_t));
 	arg_ptr->hIn = hOut;
 	arg_ptr->hOut = hSockStdoutW;
 	arg_ptr->pid = psInfo.dwProcessId;
 	hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)smpd_piothread, arg_ptr, 0, NULL);
 	CloseHandle(hThread);
-	arg_ptr = (smpd_piothread_arg_t*)malloc(sizeof(smpd_piothread_arg_t));
+	arg_ptr = (smpd_piothread_arg_t*)MPIU_Malloc(sizeof(smpd_piothread_arg_t));
 	arg_ptr->hIn = hErr;
 	arg_ptr->hOut = hSockStderrW;
 	arg_ptr->pid = psInfo.dwProcessId;
@@ -1885,8 +1885,8 @@ int smpd_launch_process(smpd_process_t *process, int priorityClass, int priority
 	env_count = 0;
 	env_size = get_env_size(process->env, &env_count) + 1024;
 	env_count += 10;
-	pPutEnv = (char*)malloc(env_size * sizeof(char));
-	pEnvArray = (char**)malloc(env_count * sizeof(char*));
+	pPutEnv = (char*)MPIU_Malloc(env_size * sizeof(char));
+	pEnvArray = (char**)MPIU_Malloc(env_count * sizeof(char*));
 	env_iter = pPutEnv;
 	pEnvArray[0] = env_iter;
 	env_iter += sprintf(env_iter, "PMI_RANK=%d", process->rank) + 1;
@@ -1918,7 +1918,7 @@ int smpd_launch_process(smpd_process_t *process, int priorityClass, int priority
 	    }
 	}
 	if (pLastEnv != NULL)
-	    free(pLastEnv);
+	    MPIU_Free(pLastEnv);
 #endif
 	result = dup2(stdin_pipe_fds[0], 0);   /* dup a new stdin */
 	if (result == -1)

@@ -56,7 +56,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
     unsigned completions = MPIDI_CH3I_progress_completion_count;
     int mpi_errno = MPI_SUCCESS;
     int complete;
-#if !defined(ENABLE_NO_SCHED_YIELD) || defined(MPICH_IS_THREADED)
+#if !defined(ENABLE_NO_YIELD) || defined(MPICH_IS_THREADED)
     int pollcount = 0;
 #endif
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS);
@@ -74,7 +74,11 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #ifdef MPICH_IS_THREADED
         MPIU_THREAD_CHECK_BEGIN;
         {
-            if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
+	    /* In the case of threads, we poll for lesser number of
+	     * iterations than the case with only processes, as
+	     * threads contend for CPU and the lock, while processes
+	     * only contend for the CPU. */
+            if (pollcount >= MPID_NEM_THREAD_POLLS_BEFORE_YIELD)
             {
                 pollcount = 0;
                 MPIDI_CH3I_progress_blocked = TRUE;
@@ -87,11 +91,11 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             ++pollcount;
         }
         MPIU_THREAD_CHECK_END;
-#elif !defined(ENABLE_NO_SCHED_YIELD)
+#elif !defined(ENABLE_NO_YIELD)
         if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
         {
             pollcount = 0;
-            sched_yield();
+            MPIDU_Yield();
         }
         ++pollcount;
 #endif
@@ -112,7 +116,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
             /* make progress receiving */
             /* check queue */
-
             if (!MPID_nem_lmt_shm_pending && !MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]
                 && !MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE) && is_blocking
 #ifdef MPICH_IS_THREADED

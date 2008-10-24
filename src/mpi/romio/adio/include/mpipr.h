@@ -24,6 +24,8 @@
 #define MPI_Alltoall PMPI_Alltoall
 #undef MPI_Alltoallv
 #define MPI_Alltoallv PMPI_Alltoallv
+#undef MPI_Alltoallw
+#define MPI_Alltoallw PMPI_Alltoallw
 #undef MPI_Attr_delete
 #define MPI_Attr_delete PMPI_Attr_delete
 #undef MPI_Attr_get
@@ -388,5 +390,14 @@
 #undef MPI_File_f2c
 #define MPI_File_f2c PMPI_File_f2c
 #endif
+
+#undef MPI_Type_get_attr
+#define MPI_Type_get_attr PMPI_Type_get_attr
+#undef MPI_Type_set_attr
+#define MPI_Type_set_attr PMPI_Type_set_attr
+#undef MPI_Comm_set_attr
+#define MPI_Comm_set_attr PMPI_Comm_set_attr
+#undef MPI_Type_create_keyval
+#define MPI_Type_create_keyval PMPI_Type_create_keyval
 
 #endif

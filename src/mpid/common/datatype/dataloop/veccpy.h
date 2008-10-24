@@ -50,25 +50,25 @@
 {								\
     type * l_src = (type *)src, * l_dest = (type *)dest;	\
     type * tmp_src = l_src;                                     \
-    register int i, j, k;		                        \
+    register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
     const int l_stride = stride;				\
                                                                 \
     if (nelms == 1) {                                           \
-        for (i = total_count; i; i--) {			        \
+        for (_i = total_count; _i; _i--) {			        \
             *l_dest++ = *l_src;				        \
             l_src += l_stride;                                  \
         }							\
     }                                                           \
     else if (nelms == 2) {                                      \
-        for (i = total_count; i; i -= 2) {			\
+        for (_i = total_count; _i; _i -= 2) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             l_src += l_stride;                                  \
         }							\
     }                                                           \
     else if (nelms == 3) {                                      \
-        for (i = total_count; i; i -= 3) {			\
+        for (_i = total_count; _i; _i -= 3) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -76,7 +76,7 @@
         }							\
     }                                                           \
     else if (nelms == 4) {                                      \
-        for (i = total_count; i; i -= 4) {			\
+        for (_i = total_count; _i; _i -= 4) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -85,7 +85,7 @@
         }							\
     }                                                           \
     else if (nelms == 5) {                                      \
-        for (i = total_count; i; i -= 5) {			\
+        for (_i = total_count; _i; _i -= 5) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -95,7 +95,7 @@
         }							\
     }                                                           \
     else if (nelms == 6) {                                      \
-        for (i = total_count; i; i -= 6) {			\
+        for (_i = total_count; _i; _i -= 6) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -106,7 +106,7 @@
         }							\
     }                                                           \
     else if (nelms == 7) {                                      \
-        for (i = total_count; i; i -= 7) {			\
+        for (_i = total_count; _i; _i -= 7) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -118,7 +118,7 @@
         }							\
     }                                                           \
     else if (nelms == 8) {                                      \
-        for (i = total_count; i; i -= 8) {			\
+        for (_i = total_count; _i; _i -= 8) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -131,8 +131,8 @@
         }							\
     }                                                           \
     else {                                                      \
-        i = total_count;                                        \
-        while (i) {                                             \
+        _i = total_count;                                        \
+        while (_i) {                                             \
             tmp_src = l_src;                                    \
             j = nelms;                                          \
             while (j >= 8) {                                    \
@@ -151,7 +151,7 @@
                 *l_dest++ = *tmp_src++;                         \
             }                                                   \
             l_src += l_stride;                                  \
-            i -= nelms;                                         \
+            _i -= nelms;                                         \
         }                                                       \
     }                                                           \
     src = (char *) l_src;                                       \
@@ -162,25 +162,25 @@
 {								\
     type * l_src = (type *)src, * l_dest = (type *)dest;	\
     type * tmp_src = l_src;                                     \
-    register int i, j, k;		                        \
+    register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
     const int l_stride = stride;				\
                                                                 \
     if (nelms == 1) {                                           \
-        for (i = total_count; i; i--) {			        \
+        for (_i = total_count; _i; _i--) {			        \
             *l_dest++ = *l_src;				        \
             l_src = (type *) ((char *) l_src + l_stride);	\
         }							\
     }                                                           \
     else if (nelms == 2) {                                      \
-        for (i = total_count; i; i -= 2) {			\
+        for (_i = total_count; _i; _i -= 2) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             l_src = (type *) ((char *) l_src + l_stride);	\
         }							\
     }                                                           \
     else if (nelms == 3) {                                      \
-        for (i = total_count; i; i -= 3) {			\
+        for (_i = total_count; _i; _i -= 3) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -188,7 +188,7 @@
         }							\
     }                                                           \
     else if (nelms == 4) {                                      \
-        for (i = total_count; i; i -= 4) {			\
+        for (_i = total_count; _i; _i -= 4) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -197,7 +197,7 @@
         }							\
     }                                                           \
     else if (nelms == 5) {                                      \
-        for (i = total_count; i; i -= 5) {			\
+        for (_i = total_count; _i; _i -= 5) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -207,7 +207,7 @@
         }							\
     }                                                           \
     else if (nelms == 6) {                                      \
-        for (i = total_count; i; i -= 6) {			\
+        for (_i = total_count; _i; _i -= 6) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -218,7 +218,7 @@
         }							\
     }                                                           \
     else if (nelms == 7) {                                      \
-        for (i = total_count; i; i -= 7) {			\
+        for (_i = total_count; _i; _i -= 7) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -230,7 +230,7 @@
         }							\
     }                                                           \
     else if (nelms == 8) {                                      \
-        for (i = total_count; i; i -= 8) {			\
+        for (_i = total_count; _i; _i -= 8) {			\
             *l_dest++ = l_src[0];				\
             *l_dest++ = l_src[1];				\
             *l_dest++ = l_src[2];				\
@@ -243,8 +243,8 @@
         }							\
     }                                                           \
     else {                                                      \
-        i = total_count;                                        \
-        while (i) {                                             \
+        _i = total_count;                                        \
+        while (_i) {                                             \
             tmp_src = l_src;                                    \
             j = nelms;                                          \
             while (j >= 8) {                                    \
@@ -263,7 +263,7 @@
                 *l_dest++ = *tmp_src++;                         \
             }                                                   \
             l_src = (type *) ((char *) l_src + l_stride);	\
-            i -= nelms;                                         \
+            _i -= nelms;                                         \
         }                                                       \
     }                                                           \
     src = (char *) l_src;                                       \
@@ -274,25 +274,25 @@
 {								\
     type * l_src = (type *)src, * l_dest = (type *)dest;	\
     type * tmp_dest = l_dest;                                   \
-    register int i, j, k;		                        \
+    register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
     const int l_stride = stride;				\
                                                                 \
     if (nelms == 1) {                                           \
-        for (i = total_count; i; i--) {			        \
+        for (_i = total_count; _i; _i--) {			        \
             *l_dest = *l_src++;				        \
             l_dest += l_stride;                                 \
         }							\
     }                                                           \
     else if (nelms == 2) {                                      \
-        for (i = total_count; i; i -= 2) {			\
+        for (_i = total_count; _i; _i -= 2) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest += l_stride;                                 \
         }							\
     }                                                           \
     else if (nelms == 3) {                                      \
-        for (i = total_count; i; i -= 3) {			\
+        for (_i = total_count; _i; _i -= 3) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -300,7 +300,7 @@
         }							\
     }                                                           \
     else if (nelms == 4) {                                      \
-        for (i = total_count; i; i -= 4) {			\
+        for (_i = total_count; _i; _i -= 4) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -309,7 +309,7 @@
         }							\
     }                                                           \
     else if (nelms == 5) {                                      \
-        for (i = total_count; i; i -= 5) {			\
+        for (_i = total_count; _i; _i -= 5) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -319,7 +319,7 @@
         }							\
     }                                                           \
     else if (nelms == 6) {                                      \
-        for (i = total_count; i; i -= 6) {			\
+        for (_i = total_count; _i; _i -= 6) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -330,7 +330,7 @@
         }							\
     }                                                           \
     else if (nelms == 7) {                                      \
-        for (i = total_count; i; i -= 7) {			\
+        for (_i = total_count; _i; _i -= 7) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -342,7 +342,7 @@
         }							\
     }                                                           \
     else if (nelms == 8) {                                      \
-        for (i = total_count; i; i -= 8) {			\
+        for (_i = total_count; _i; _i -= 8) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -355,8 +355,8 @@
         }							\
     }                                                           \
     else {                                                      \
-        i = total_count;                                        \
-        while (i) {                                             \
+        _i = total_count;                                        \
+        while (_i) {                                             \
             tmp_dest = l_dest;                                  \
             j = nelms;                                          \
             while (j >= 8) {                                    \
@@ -375,7 +375,7 @@
                 *tmp_dest++ = *l_src++;                         \
             }                                                   \
             l_dest += l_stride;                                 \
-            i -= nelms;                                         \
+            _i -= nelms;                                         \
         }                                                       \
     }                                                           \
     src = (char *) l_src;                                       \
@@ -386,25 +386,25 @@
 {								\
     type * l_src = (type *)src, * l_dest = (type *)dest;	\
     type * tmp_dest = l_dest;                                   \
-    register int i, j, k;		                        \
+    register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
     const int l_stride = stride;				\
                                                                 \
     if (nelms == 1) {                                           \
-        for (i = total_count; i; i--) {			        \
+        for (_i = total_count; _i; _i--) {			        \
             *l_dest = *l_src++;				        \
             l_dest = (type *) ((char *) l_dest + l_stride);	\
         }							\
     }                                                           \
     else if (nelms == 2) {                                      \
-        for (i = total_count; i; i -= 2) {			\
+        for (_i = total_count; _i; _i -= 2) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest = (type *) ((char *) l_dest + l_stride);	\
         }							\
     }                                                           \
     else if (nelms == 3) {                                      \
-        for (i = total_count; i; i -= 3) {			\
+        for (_i = total_count; _i; _i -= 3) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -412,7 +412,7 @@
         }							\
     }                                                           \
     else if (nelms == 4) {                                      \
-        for (i = total_count; i; i -= 4) {			\
+        for (_i = total_count; _i; _i -= 4) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -421,7 +421,7 @@
         }							\
     }                                                           \
     else if (nelms == 5) {                                      \
-        for (i = total_count; i; i -= 5) {			\
+        for (_i = total_count; _i; _i -= 5) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -431,7 +431,7 @@
         }							\
     }                                                           \
     else if (nelms == 6) {                                      \
-        for (i = total_count; i; i -= 6) {			\
+        for (_i = total_count; _i; _i -= 6) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -442,7 +442,7 @@
         }							\
     }                                                           \
     else if (nelms == 7) {                                      \
-        for (i = total_count; i; i -= 7) {			\
+        for (_i = total_count; _i; _i -= 7) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -454,7 +454,7 @@
         }							\
     }                                                           \
     else if (nelms == 8) {                                      \
-        for (i = total_count; i; i -= 8) {			\
+        for (_i = total_count; _i; _i -= 8) {			\
             l_dest[0] = *l_src++;				\
             l_dest[1] = *l_src++;				\
             l_dest[2] = *l_src++;				\
@@ -467,8 +467,8 @@
         }							\
     }                                                           \
     else {                                                      \
-        i = total_count;                                        \
-        while (i) {                                             \
+        _i = total_count;                                        \
+        while (_i) {                                             \
             tmp_dest = l_dest;                                  \
             j = nelms;                                          \
             while (j >= 8) {                                    \
@@ -487,7 +487,7 @@
                 *tmp_dest++ = *l_src++;                         \
             }                                                   \
             l_dest = (type *) ((char *) l_dest + l_stride);	\
-            i -= nelms;                                         \
+            _i -= nelms;                                         \
         }                                                       \
     }                                                           \
     src = (char *) l_src;                                       \

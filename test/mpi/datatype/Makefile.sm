@@ -5,6 +5,7 @@ smvar_do_sharedlibs = 0
 typename_SOURCES = typename.c
 typefree_SOURCES = typefree.c
 typefree_LDADD = ../util/mtest.o
+typename_LDADD = ../util/mtest.o
 
 contents_SOURCES = contents.c
 
@@ -93,6 +94,9 @@ sizedtypes_SOURCES = sizedtypes.c
 sizedtypes_LDADD = ../util/mtest.o
 
 contigstruct_SOURCES = contigstruct.c
+
+zeroblks_SOURCES = zeroblks.c
+zeroblks_LDADD = ../util/mtest.o
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o )

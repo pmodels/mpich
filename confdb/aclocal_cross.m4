@@ -51,6 +51,8 @@ else
   cat conftest.$ac_ext >&AC_FD_CC
   [$2]=no
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -fr conftest*])
 ])
 dnl
@@ -150,6 +152,8 @@ EOF
 	fi
 	pac_cv_prog_f90_cross="$ac_cv_prog_f90_cross"
 	pac_cv_prog_f90_works="$ac_cv_prog_f90_works"
+	# This is needed for Mac OSX 10.5
+	rm -rf conftest.dSYM
         rm -fr conftest*
         AC_LANG_RESTORE
     fi

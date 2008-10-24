@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include "mpi.h"
 #include <stdlib.h>
+#include <string.h>
 
 #include "mpi_interface.h"
 
@@ -30,7 +31,7 @@ int main( int argc, char *argv[] )
 {
     MPI_Request rreq, sreq, rreq2;
     int wrank, wsize;
-    int buf = -1, sbuf = 2, ssbuf = 3, rbuf=-1;;
+    int buf = -1, sbuf = 2, rbuf=-1;;
     int vbuf[10];
     MPI_Comm dupworld;
 
@@ -41,6 +42,7 @@ int main( int argc, char *argv[] )
 
     /* Create some pending receives and unexpected messages */
     MPI_Comm_dup( MPI_COMM_WORLD, &dupworld );
+    MPI_Comm_set_name( dupworld, "Dup of comm world" );
     MPI_Comm_rank( MPI_COMM_WORLD, &wrank );
     MPI_Comm_size( MPI_COMM_WORLD, &wsize );
     MPI_Irecv( &buf, 1, MPI_INT, (wrank + 1) % wsize, 17, dupworld, &rreq );
@@ -51,7 +53,11 @@ int main( int argc, char *argv[] )
     /*    MPI_Send( &ssbuf, 1, MPI_INT, (wrank + 2) %wsize, 18, dupworld );*/
 
     /* Access the queues */
+    printf( "Should see pending recv with tag 17, 19 on dupworld and send with tag 18 on world\n" );
     showQueues();
+    MPI_Barrier( MPI_COMM_WORLD );
+
+    /* Match up some of the messages */
     MPI_Send( &sbuf, 1, MPI_INT, (wrank + wsize - 1) % wsize, 17, dupworld );
     MPI_Recv( &rbuf, 1, MPI_INT, (wrank + 1) % wsize, 18, MPI_COMM_WORLD, 
     	      MPI_STATUS_IGNORE );
@@ -60,8 +66,10 @@ int main( int argc, char *argv[] )
 
     /* Access the queues again */
     printf( "\nAfter a few send/receives\n" );
+    printf( "Should see recv with tag 19 on dupworld\n" );
     showQueues();
 
+    MPI_Barrier( MPI_COMM_WORLD );
     MPI_Send( &sbuf, 1, MPI_INT, (wrank + wsize - 1) % wsize, 19, dupworld );
 
     /* Access the queues again */
@@ -186,8 +194,8 @@ int showQueues( void )
 	    printf( "Pending receives for communicator %s\n", comm.name );
 	    while ((rc = mqs_next_operation( &process, &op )) == mqs_ok) {
 		printf( "tag = %d, rank = %d, length = %d\n",
-			op.desired_tag, op.desired_local_rank, 
-			op.desired_length );
+			(int)op.desired_tag, (int)op.desired_local_rank, 
+			(int)op.desired_length );
 	    }
 	}
 	else if (rc == mqs_end_of_list) {
@@ -208,8 +216,8 @@ int showQueues( void )
 	    printf( "Unexpected messages for communicator %s\n", comm.name );
 	    while ((rc = mqs_next_operation( &process, &op )) == mqs_ok) {
 		printf( "tag = %d, rank = %d, length = %d\n",
-			op.desired_tag, op.desired_local_rank, 
-			op.desired_length );
+			(int)op.desired_tag, (int)op.desired_local_rank, 
+			(int)op.desired_length );
 	    }
 	}
 	else if (rc == mqs_end_of_list) {
@@ -230,8 +238,8 @@ int showQueues( void )
 	    printf( "Pending sends for communicator %s\n", comm.name );
 	    while ((rc = mqs_next_operation( &process, &op )) == mqs_ok) {
 		printf( "tag = %d, rank = %d, length = %d\n",
-			op.desired_tag, op.desired_local_rank, 
-			op.desired_length );
+			(int)op.desired_tag, (int)op.desired_local_rank, 
+			(int)op.desired_length );
 	    }
 	}
 	else if (rc == mqs_end_of_list) {

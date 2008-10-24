@@ -32,11 +32,20 @@ includedir=@includedir@
 libdir=@libdir@
 bindir=@bindir@
 sbindir=@sbindir@
-datadir=@datadir@
 sysconfdir=@sysconfdir@
-mandir=@mandir@
-htmldir=@htmldir@
+datarootdir=@datarootdir@
+datadir=@datadir@
 docdir=@docdir@
+htmldir=@htmldir@
+mandir=@mandir@
+# Since autoconf < 2.60 does not set docdir and htmldir,
+# check if they are set.  If not, set them accordingly.
+if [ "$docdir" = "@docdir@" ] ; then
+    docdir=${datadir}/doc/${PACKAGE}
+fi
+if [ "$htmldir" = "@htmldir@" ] ; then
+    htmldir=${docdir}
+fi
 
 # Assume PROF_LIBNAME=MPE_LIBNAME.
 PROF_LIBNAME=@MPE_LIBNAME@
@@ -69,6 +78,7 @@ Show=eval
 verbose=0
 just_testing=0
 prefix_override=0
+package_override=0
 
 # filelist records files that have been installed
 filelist=""
@@ -100,6 +110,10 @@ for arg in "$@" ; do
                 prefix_override=1
             fi
             ;;
+        -package=*)
+            PACKAGE=`echo $arg | sed -e 's/-package=//g'`
+            package_override=1
+            ;;
         -uninstall=*)
             UNINSTALLFILE=`echo A$arg | sed -e 's/A-uninstall=//g'` 
             appendUninstall=1
@@ -129,6 +143,7 @@ for arg in "$@" ; do
 cat <<EOF
 Install $pkgname into $prefix.
 -prefix=path     - Destination directory.
+-package=name    - Set the package name for docdir and sharedir(examplesdir).
 -uninstall=file  - File to append uninstall information to
 -mode=nnnn       - mode for regular files.  Default is $MODE .
 -xmode=nnnn      - mode for execuables.  Default is $XMODE .
@@ -402,23 +417,35 @@ fi
 # echo "libdir = $libdir"
 # echo "bindir = $bindir"
 # echo "sbindir = $sbindir"
-# echo "datadir = $datadir"
 # echo "sysconfdir = $sysconfdir"
+# echo "datarootdir = $datarootdir"
+# echo "datadir = $datadir"
+# echo "docdir = $docdir"
 # echo "mandir = $mandir"
 # echo "htmldir = $htmldir"
-# echo "docdir = $docdir"
 
 # If the prefix was set, we want to override these choices
-if [ "$prefix_override" = 1 ] ; then
-    includedir=$prefix/include
-    libdir=$prefix/lib
-    bindir=$prefix/bin
-    sbindir=$prefix/sbin
-    datadir=$prefix/share
-    sysconfdir=$prefix/etc
-    mandir=$prefix/man
-    htmldir=$prefix/www
-    docdir=$prefix/doc
+# use autoconf variables, @...@, here, as they are set w.r.t. $prefix.
+if [ "$prefix_override" = 1 -o "$package_override" = 1 ] ; then
+    exec_prefix=@exec_prefix@
+    includedir=@includedir@
+    libdir=@libdir@
+    bindir=@bindir@
+    sbindir=@sbindir@
+    sysconfdir=@sysconfdir@
+    datarootdir=@datarootdir@
+    datadir=@datadir@
+    docdir=@docdir@
+    htmldir=@htmldir@
+    mandir=@mandir@
+    # Since autoconf < 2.60 does not set docdir and htmldir,
+    # check if they are set.  If not, set them accordingly.
+    if [ "$docdir" = "@docdir@" ] ; then
+        docdir=${datadir}/doc/${PACKAGE}
+    fi
+    if [ "$htmldir" = "@htmldir@" ] ; then
+        htmldir=${docdir}
+    fi
     if [ $appendUninstall = 0 ] ; then
         UNINSTALLFILE=$DESTDIR${sbindir}/${UNINSTALL_base}
     fi
@@ -489,7 +516,23 @@ if [ -n "$sbinbuild_dir" ] ; then
     fi
 fi
 
-MkDir $datadir
+# Append sharedir and docdir With NULL PACKAGE to dirlist for removal
+if [ -n "${PACKAGE}" ] ; then
+    # Added MkDir $datadir, so $datadir is appended to dirlist for removal.
+    MkDir $datadir
+    # Added MkDir $docdir with NULL PACKAGE,
+    # so $docdir (with NULL PACKAGE) is appended to dirlist for removal.
+    savedPACKAGE=$PACKAGE
+    PACKAGE=""
+    MkDir @docdir@
+    PACKAGE=$savedPACKAGE
+fi
+
+sharedir=$datadir
+if [ -n "${PACKAGE}" ] ; then
+    sharedir=$datadir/$PACKAGE
+fi
+MkDir $sharedir
 
 # Set up Examples directory for the MPE Logging programs
 logging_dirname="src/wrappers/test"
@@ -499,7 +542,7 @@ for pkg in logging graphics collchk ; do
     dirname=${pkg}_dirname
     eval dirvalue=\$"$dirname"
     if [ -f $libbuild_dir/../$dirvalue/Makefile ] ; then
-        examplesdir=$datadir/examples_${pkg}
+        examplesdir=$sharedir/examples_${pkg}
         MkDir $examplesdir
 #       Install example C and Fortran programs
         InstallDirRecur $top_srcdir/$dirvalue $examplesdir
@@ -564,13 +607,16 @@ if [ -x $libbuild_dir/../src/slog2sdk/sbin/install-package ] ; then
     if [ "$prefix_override" = 1 ] ; then
         install_opts="-prefix=$prefix $install_opts"
     fi
+    if [ "$package_override" = 1 ] ; then
+        install_opts="-package=$PACKAGE $install_opts"
+    fi
     ( cd $libbuild_dir/../src/slog2sdk && ./sbin/install-package $install_opts )
 fi
 
 #  Clean up the example directories
 for pkg in logging graphics ; do
     dirname=${pkg}_dirname
-    examplesdir=$datadir/examples_${pkg}
+    examplesdir=$sharedir/examples_${pkg}
     if [ -s $DESTDIR$examplesdir/Makefile ] ; then
        echo "( cd $examplesdir && $MAKE clean )" >> $UNINSTALLFILE
     fi

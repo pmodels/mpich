@@ -39,6 +39,9 @@ $gSubdirSMVarsSeen = "";      # Set to contain the names of variables in
                               # a subdirectory
 @subdirsSMVars = ();          # Stack used with gSubdirSMVarsSeen
 
+$smrootdir = "";              # Location of simplemake - this will override 
+                              # the automatic setting if used.
+
 # makeBlockSep is used to deliniate blocks of code in the generated makefile
 # to enhance readability
 $makeBlockSep = 
@@ -164,6 +167,8 @@ $gDebugWhy = 0;             # Provide an explanation of why certain
                             # targets are created
 $gDebugSubdirVar = 0;       # Track changes to internal variables that 
                             # apply to a subdirectory
+$debugConfigHeaderDepend = 0;    # Print the config header targets added to
+                                 # makefile.in's
 # Allow us to set the debug variables from the environment:
 if (defined($ENV{"DEBUG"})) { $debug = 1; }
 if (defined($ENV{"DEBUG_DIRS"})) { $debug_dirs = 1; }
@@ -332,6 +337,9 @@ $includedir_name =           "includedir      = \@includedir\@";
 $mandir_name =               "mandir          = \@mandir\@";
 $htmldir_name =              "htmldir         = \@htmldir\@";
 $docdir_name =               "docdir          = \@docdir\@";
+# datarootdir is new in autoconf 2.60, and is needed for other
+# dirs like mandir (much as prefix and execprefix are also needed)
+$datarootdir_name =          "datarootdir     = \@datarootdir\@";
 $sysconfdir_name =           "sysconfdir      = \@sysconfdir\@";
 $pkgconfigdir_name =         "pkgconfigdir    = \@libdir\@/pkgconfig";
 $builddir_name =             "builddir        = \@builddir\@";
@@ -355,6 +363,7 @@ $top_builddir_name =         "top_builddir    = \@master_top_builddir\@";
 	     'builddir'   => $builddir_name,
 	     'abs_builddir' => $abs_builddir_name,
 	     'mandir'     => $mandir_name,
+	     'datarootdir' => $datarootdir_name,
 	     'htmldir'    => $htmldir_name,
 	     'docdir'     => $docdir_name,
 	     'sysconfdir' => $sysconfdir_name,
@@ -400,9 +409,9 @@ $top_builddir_name =         "top_builddir    = \@master_top_builddir\@";
 # These give the directories that autoconf will require for the 
 %required_dirs = ( 'libdir'      => 'exec_prefix prefix',
 		   'bindir'      => 'exec_prefix prefix',
-		   'mandir'      => 'prefix',
-		   'htmldir'     => 'prefix',
-		   'docdir'      => 'prefix',
+		   'mandir'      => 'prefix datarootdir',
+		   'htmldir'     => 'prefix datarootdir',
+		   'docdir'      => 'prefix datarootdir',
 		   'includedir'  => 'prefix',
  		   'exec_prefix' => 'prefix',
 		   'sysconfdir'  => 'prefix',
@@ -462,9 +471,10 @@ $distcleanfiles = "";
 # If we're not in the root of the source directory, then 
 # also read that directory.  We can use stat to check the inode numbers of the
 # directories; if they are the same, the directories are the same.
+# (Only read if there is a local maint/smlib directory)
 @d1 = stat( "maint/smlib" );
 @d2 = stat( "$abs_mpich2srcdir/maint/smlib" );
-if ($d1[1] != $d2[1]) {
+if ( (! -d "maint/smlib") || $d1[1] != $d2[1]) {
     &SMReadDefnFiles( "$abs_mpich2srcdir/maint/smlib" );
 }
 if (defined($ENV{"SMDIR"})) {
@@ -482,6 +492,13 @@ foreach $_ (@ARGV) {
     elsif (/-libdir=([^=]*)=(.*)$/) {
 	print "libdir{$1} = $2$newline" if (!$quiet);
 	$libdir{$1}  = "$2/";
+	# Replace with an easier-to-preserve version
+	# FIXME: Replace a single $ with double $$ in $1?
+	my $lname = $1;
+	my $rname = $2;
+	# Replace a single $ with a double $ in lname *only*
+	$lname =~ s/\$/\$\$/;
+	$keepargs[$#keepargs] = "-libdir=\'$lname=$rname\'";
     }
     elsif (/-common=(.*)$/) {
 	$filename = $1;
@@ -493,7 +510,7 @@ foreach $_ (@ARGV) {
 	close(CD);
 	# Replace this argument with an updated version
 	if ($filename =~ /^[^\/]/) {
-  	    $keepargs[$#keepargs] = "-common=$curpwd/$filename";
+  	    $keepargs[$#keepargs] = "-common=\${master_top_srcdir}/$filename";
 	}
     }
     elsif (/-autoconf=(.*)$/) {
@@ -594,6 +611,7 @@ foreach $_ (@ARGV) {
     elsif (/-docheading=(.$)/) { $doc_heading = $1; }
     elsif (/-docdestdir=(.*)/) { $globaldocdir = $1; }	   
     elsif (/-docnamedefs=(.*)/) { $doc_namedefs = $1; }	   
+    elsif (/-smroot=(.*)/) { $smrootdir = $1; $smdir = $1; }
     elsif (/-help/) {
 	&printHelp;
 	exit 0;
@@ -1201,6 +1219,8 @@ sub DefaultVariables {
     # execute commands with.
     printMakeVariable( FD, "SHELL", "\@SHELL\@" );
 
+    printMakeVariable( FD, "VERBOSE", "1" );
+
     # Library definitions
     if (scalar(%libraries)) {
 	# Add ar, ranlib definitions if there are any library targets.
@@ -1486,7 +1506,7 @@ sub DefaultRules {
 		    # the lo rules have newlines in them, so we need to escape them,
 		    # as well as remove any @ prefixes
 		    my $escaped_rule = $extrules{$extkey};
-		    $escaped_rule =~ s/$newline(\t+)\@*/ ; \\$newline$1/g;
+		    $escaped_rule =~ s/$newline(\t+)\@*/ ; \\$newline$1echo /g;
 		    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
 		    print FD "\t  echo \"$extstring{$extkey}\" ; \\$newline";
 		    print FD "\telse \\$newline";
@@ -1595,7 +1615,14 @@ sub DefaultRules {
 	close (AFD);
 	#
 	print FD "$newline";
-	&print_make_longline( FD,  "\${srcdir}/configure: \${srcdir}/configure.in $autoconf_deps" );
+	$header_depend="";
+	if ($configure_has_config_headers ne "no") {
+	    $header_depend="\${srcdir}/$configure_has_config_headers ";
+	    if ($debugConfigHeaderDepend) {
+		print "Adding $header_depend to configure target\n";
+	    }
+	}
+	&print_make_longline( FD,  "$header_depend \${srcdir}/configure: \${srcdir}/configure.in $autoconf_deps" );
 	&print_make_setpos( 8 );
 	&FindWorkingAutoconf ;
 	# Use autoheader only if AC_CONFIG_HEADER is in the configure file
@@ -1637,7 +1664,8 @@ sub DefaultRules {
 	    if ($curarg =~ /^-smvar_doc_attop=0/) { next; }
 	    # Must handle $ specially
 	    $tmparg = $curarg;
-	    $tmparg =~ s/\$/\\\$\$/;
+#	    # FIXME: Should this be s/../g (change all instances)?
+#	    $tmparg =~ s/\$/\\\$\$/;
 	    if ($tmparg =~ /\s/) {
 		print FD "\t\"$tmparg\" \\$newline";
 	    }
@@ -1917,6 +1945,10 @@ sub ExpandMakeVars {
 	    $processed .= $before;
 	    $line = $makevars{$mvar} . $after;
 	}
+#	elsif (defined($dirdefs{$mvar})) {
+#	    $processed .= $before;
+#	    $line = $dirdefs{$mvar} . $after;
+#	}
 	else {
 	    $processed .= $before . "\$$lb$mvar$rb";
 	    $line      = $after;
@@ -2876,7 +2908,7 @@ sub LibraryBuild {
 	    &print_make_endline( FD );
 	    # COMMAND PRINTING
 	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	    print FD "\t  echo \"  AR              ${libloc}lib$libname.$libext\" ; \\$newline";
+	    print FD "\t  echo \"  AR cr ${libloc}lib$libname.$libext \$?\" ; \\$newline";
 	    print FD "\telse \\$newline";
 	    print FD "\t  echo \${AR} cr ${libloc}lib$libname.$libext \$? ; \\$newline";
 	    print FD "\tfi$newline";
@@ -2892,7 +2924,7 @@ sub LibraryBuild {
     if (!$dolib_member) {
         &print_make_endline( FD );
 	print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	print FD "\t  echo \"  AR              ${libloc}lib$libname.$libext \$?\" ; \\$newline";
+	print FD "\t  echo \"  AR cr ${libloc}lib$libname.$libext \$?\" ; \\$newline";
 	print FD "\telse \\$newline";
 	print FD "\t  echo \${AR} cr ${libloc}lib$libname.$libext \$? ; \\$newline";
 	print FD "\tfi$newline";
@@ -2930,14 +2962,17 @@ sub TargetLibraries {
 # LibraryTimestampClean - Add clean commands for library timestamps
 sub LibraryTimestampTarget {
     my ($fulllibname,$libstamp) = @_;
-    if ($fulllibname =~ /^\.\./ && !$fixup_for_timestamps) {
+    my $expandedFullName = &ExpandMakeVars( $fulllibname );
+    if ($expandedFullName =~ /^\.\./ && !$fixup_for_timestamps) {
 	$altalltargets{$fulllibname} = $libstamp;
     }
 }
 sub LibraryTimestampPrefix {
     my ($lib, $libloc) = @_;
 
-    if ($libloc =~ /^\.\./) {
+    my $expandedlibloc = &ExpandMakeVars( $libloc );
+
+    if ($expandedlibloc =~ /^\.\./) {
 	if (!$fixup_for_timestamps) {
 	    my $num = "";
 	    if (defined($libnum{$lib})) {
@@ -2949,7 +2984,8 @@ sub LibraryTimestampPrefix {
 }
 sub LibraryTimestampFix {
     my ($lib,$libloc) = @_;
-    if ($libloc =~ /^\.\./) {
+    my $expandedlibloc = &ExpandMakeVars( $libloc );
+    if ($expandedlibloc =~ /^\.\./) {
 	if ($fixup_for_timestamps) {
 	    my $SleepText = $Sleep;
 	    my $fulllibname = $libloc . "lib$lib.a";
@@ -3023,7 +3059,7 @@ sub TargetProfileLibraries {
 	    # Add these files as objects to the archive
 	    # COMMAND PRINTING
 	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	    print FD "\t  echo \"  AR              ${libloc}lib$proflib_name.a\" ; \\$newline";
+	    print FD "\t  echo \"  AR cr ${libloc}lib$proflib_name.a \$?\" ; \\$newline";
 	    print FD "\telse \\$newline";
 	    print FD "\t  echo \${AR} cr ${libloc}lib$proflib_name.a \$? ; \\$newline";
 	    print FD "\tfi$newline";
@@ -3073,11 +3109,11 @@ sub TargetProfileLibraries {
 		# Add these files as objects to the archive
 		# COMMAND PRINTING
 		print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-		print FD "\t  echo \"  AR              \$?\" ; \\$newline";
+		print FD "\t  echo \"  AR cr ${libloc}lib$proflib_name.la \$?\" ; \\$newline";
 		print FD "\telse \\$newline";
-		print FD "\t  echo \${AR} cr ${libloc}lib$proflib_name.la ; \\$newline";
+		print FD "\t  echo \${AR} cr ${libloc}lib$proflib_name.la \$?; \\$newline";
 		print FD "\tfi$newline";
-		print FD "\t\@\${AR} cr ${libloc}lib$proflib_name.la$newline";
+		print FD "\t\@\${AR} cr ${libloc}lib$proflib_name.la \$?$newline";
 		# To handle timestamp problems with recursive makes, 
 		# add a delay
 		&LibraryTimestampFix( $proflib_name.".la", $libloc );
@@ -3302,6 +3338,11 @@ library, or new library name)\n" if $debug;
 # ===========================================================================
 sub TargetPrograms {
     foreach $pgm (keys(%programs)) {
+	# If there was a manual target, skip
+	if (defined($usertargets{$pgm})) { 
+	    print "Skipping generation of rule for $pgm because Makefile.sm already contains one\n";
+	    next; 
+	}
 	&print_make_line( FD,  "$pgm: " );
 	$pgmobjs = "";
 	foreach $sourcefile (split(/\s+/,$programs{$pgm})) {
@@ -3947,7 +3988,7 @@ sub TargetInstall {
 	if ($extradir =~ /^@/) {
 	    print FD "\tfor dir in $extradir - ; do \\$newline";
 	    print FD "\t\tif [ \"\$\$dir\" = \"-\" ] ; then break ; fi ;\\$newline";
-	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) install) ;\\$newline";
+	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) install) ;\\$newline";
 	    print FD "\tdone$newline";
 	}
 	else {
@@ -4077,6 +4118,7 @@ simplemake [ -nocomments ] [ -am ] [ -libdir=NAME=DIR ] [ -include=LIST ]\
                        with file systems that are not time-synchronized\
                        with the build node.  -interdirsleep=nn specifies\
                        an nn second sleep.\
+    -smroot=dir      - Location of simplemake (absolute location)\
     -help            - This output\
     \n";
     print STDERR "\

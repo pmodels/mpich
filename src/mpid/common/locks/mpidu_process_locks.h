@@ -12,9 +12,17 @@
  * whole MPI headers ball of wax at the same time, and implies a potential
  * circular dependency.  Doing the right thing here basically means a total gut
  * job, which is out of scope at this time. [goodell@ 2008-03-19] */
+
+/* FIXME: It should be sufficient to include mpidpre.h (updating the ssm etc
+   devices if necessary).  That's still not great, but better than all of 
+   mpidimpl.h, which should not be used outside of the device code. 
+   WDG - 8/8/08 */
 #include "mpidimpl.h"
 
-#include "mpishared.h"
+/* FIXME: Including mpidimpl.h includes mpiimpl.h, which is a superset of 
+   mpishared.h.  mpishared.h should only be included when the regular mpiimpl.h
+   headers are not used. */
+/* #include "mpishared.h" */
 #include "mpid_locksconf.h"
 
 /* XXX DJG TODO eliminate any atomic operations assembly in here and convert it

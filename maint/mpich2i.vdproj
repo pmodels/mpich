@@ -445,6 +445,24 @@
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_1EE41EF56BA143788490913B5A71E9C8"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_C63BA0B9501E409EB78C7834178927F3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_60D2EF188B7448598D171ECA07E6E2DE"
+        "MsmSig" = "8:_UNDEFINED"
+        }
     }
     "Configurations"
     {
@@ -953,9 +971,14 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:wmpiexec, Version=1.0.2788.27607, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:wmpiexec, Version=1.0.3212.24024, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
+                    "_1EE41EF56BA143788490913B5A71E9C8"
+                    {
+                    "Name" = "8:wmpiexec.exe"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:..\\bin\\wmpiexec.exe"
             "TargetName" = "8:"
@@ -1279,9 +1302,14 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:wmpiregister, Version=1.0.2788.27609, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:wmpiregister, Version=1.0.3212.24033, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
+                    "_60D2EF188B7448598D171ECA07E6E2DE"
+                    {
+                    "Name" = "8:wmpiregister.exe"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:..\\bin\\wmpiregister.exe"
             "TargetName" = "8:"
@@ -1885,9 +1913,14 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:wmpiconfig, Version=1.0.2788.27610, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:wmpiconfig, Version=1.0.3212.24033, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
+                    "_C63BA0B9501E409EB78C7834178927F3"
+                    {
+                    "Name" = "8:wmpiconfig.exe"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:..\\bin\\wmpiconfig.exe"
             "TargetName" = "8:"
@@ -2448,14 +2481,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MPICH2"
-        "ProductCode" = "8:{44BB7BC2-74E5-40E7-A6B4-E30FA1A88D7F}"
-        "PackageCode" = "8:{AEC3D63A-3C69-449A-8579-4B8DA56524A2}"
-        "UpgradeCode" = "8:{2CC63CCF-15DA-4D23-97BE-D82ACE5600E1}"
+        "ProductCode" = "8:{6A19E174-8D5C-4BDF-B453-BD58B0F6BE98}"
+        "PackageCode" = "8:{DB7E10BB-68C5-455C-B37E-9EDF16607A7E}"
+        "UpgradeCode" = "8:{EB7B6774-09F2-4685-9F1F-82E0B431B09A}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.5"
+        "ProductVersion" = "8:1.0.8"
         "Manufacturer" = "8:Argonne National Lab"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:www.mcs.anl.gov/mpi/mpich2"

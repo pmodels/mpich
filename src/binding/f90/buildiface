@@ -234,7 +234,9 @@ open (MPIFD, ">mpi.f90.new" ) || die "Could not open mpi.f90.new\n";
 #       USE MPI_CONSTANTS,                                               &
 #     &      BASE_MPI_WTIME => MPI_WTIME, BASE_MPI_WTICK => MPI_WTICK
 # but this caused problems with the pg compiler.  Need to understand and fix
-print MPIFD "       MODULE MPI
+print MPIFD "!  (C) 2008 by Argonne National Laboratory.
+!      See COPYRIGHT in top-level directory.
+       MODULE MPI
 !      This module was created by the script buildiface
        USE MPI_CONSTANTS
        USE MPI_SIZEOFS
@@ -249,7 +251,9 @@ close (MPIFD);
 # An example of a choice argument is a "void *buf" input argument to 
 # MPI_Send, which allows any buffer address, both numeric and character.
 open ( MPIBASEFD, ">mpi_base.f90.new" ) || die "Could not open mpi_base.f90.new\n";
-print MPIBASEFD "       MODULE MPI_BASE
+print MPIBASEFD "!  (C) 2008 by Argonne National Laboratory.
+!      See COPYRIGHT in top-level directory.       
+       MODULE MPI_BASE
        IMPLICIT NONE
 !      This module was created by the script buildiface
        INTERFACE\n";
@@ -464,7 +468,9 @@ close MPIBASEFD;
 &ReplaceIfDifferent( "mpi_base.f90", "mpi_base.f90.new" );
 
 open ( MPIFD, ">mpi_constants.f90.new" ) || die "Cannot open mpi_constants.f90.new\n";
-print MPIFD "        MODULE MPI_CONSTANTS
+print MPIFD "!  (C) 2008 by Argonne National Laboratory.
+!       See COPYRIGHT in top-level directory.
+        MODULE MPI_CONSTANTS
         IMPLICIT NONE
         INCLUDE 'mpifnoext.h'
         END MODULE MPI_CONSTANTS\n";
@@ -494,7 +500,9 @@ close MPIFD;
 # Finally, the module name needs to be distinct for each choice of
 # <type>, <dims>, <type1>, and <dims1>
 open( MPIFD, ">mpi_t1.f90.new" ) || die "Cannot open mpi_t1.f90.new\n";
-print MPIFD "        MODULE MPI_t1_s
+print MPIFD "!  (C) 2008 by Argonne National Laboratory.
+!      See COPYRIGHT in top-level directory.
+        MODULE MPI_t1_s
         IMPLICIT NONE
         PRIVATE\n";
 

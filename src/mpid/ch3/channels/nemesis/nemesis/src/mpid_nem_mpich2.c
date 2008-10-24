@@ -8,8 +8,6 @@
 #include "mpid_nem_fbox.h"
 #include "mpid_nem_nets.h"
 
-/* #define BLOCKING_FBOX */
-
 #define DO_PAPI(x)  /*x */
 #define DO_PAPI2(x) /*x */
 #define DO_PAPI3(x) /*x */
@@ -29,10 +27,6 @@ MPID_nem_cell_ptr_t MPID_nem_prefetched_cell = 0;
 
 unsigned short *MPID_nem_recv_seqno = 0;
 
-#ifndef ENABLE_NO_SCHED_YIELD
-#define POLLS_BEFORE_YIELD 1000
-#endif
-
 /* here we include the non-inlined versions of the files in mpid_nem_inline.h */
 #define MPID_NEM_DONT_INLINE_FUNCTIONS 1
 #include <mpid_nem_inline.h>
@@ -50,13 +44,6 @@ MPID_nem_mpich2_init (int ckpt_restart)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_INIT);
-
-    /*     printf ("sizeof (MPID_nem_cell_t) == %u\n", sizeof (MPID_nem_cell_t)); */
-    /*     printf ("&MPID_nem_mem_region.mailboxes.in[0]->mpich2 = %p\n", &MPID_nem_mem_region.mailboxes.in[0]->mpich2); */
-    /*     printf ("&MPID_nem_mem_region.mailboxes.in[1]->mpich2 = %p\n", &MPID_nem_mem_region.mailboxes.in[1]->mpich2); */
-    /*     printf ("sizeof (MPID_nem_fastbox_t) = %u\n", sizeof (MPID_nem_fastbox_t)); */
-    /*     printf ("sizeof (MPID_nem_mem_region.mailboxes.in[1]->mpich2) = %u\n", sizeof (MPID_nem_mem_region.mailboxes.in[1]->mpich2)); */
-    /*     printf ("OFFSETPF (MPID_nem_fbox_mpich2_t, cell) = %u\n", MPID_NEM_OFFSETOF(MPID_nem_fbox_mpich2_t, cell)); */
 
     MPID_nem_prefetched_cell = NULL;
 

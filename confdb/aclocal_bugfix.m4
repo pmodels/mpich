@@ -120,6 +120,8 @@ EOF
         echo "configure: failed program was:" >&AC_FD_CC
         cat conftest.c >&AC_FD_CC
     fi
+    # This is needed for Mac OSX 10.5
+    rm -rf conftest.dSYM
     rm -f conftest*
 fi
 # Finally, set the ac variable.

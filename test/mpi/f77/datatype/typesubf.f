@@ -27,6 +27,11 @@ C Create a Fortran-style subarray
 C starts are from zero, even in Fortran
       starts(1)    = 1
       starts(2)    = 2
+C In Fortran 90 notation, the original array is
+C    integer a(maxn,maxm)
+C and the subarray is
+C    a(1+1:(maxn-3) +(1+1)-1,2+1:(maxm-4)+(2+1)-1)
+C i.e., a (start:(len + start - 1),...)
       call mpi_type_create_subarray( 2, fullsizes, subsizes, starts, 
      &         MPI_ORDER_FORTRAN, MPI_INTEGER, newtype, ierr )
       call mpi_type_commit( newtype, ierr )

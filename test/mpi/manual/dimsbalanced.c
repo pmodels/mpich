@@ -1,3 +1,8 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2008 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
 /* This is a simple test program to see how well balanced the output from
    MPI_Dims_create is.  This test can be run with a single process
    and does not need mpiexec.

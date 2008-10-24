@@ -80,7 +80,7 @@ sub create_mpich2
     run_cmd("rm -rf src/mpid/globus doc/notes src/pm/mpd/Zeroconf.py src/mpid/ch3/channels/gasnet src/mpid/ch3/channels/sshm src/pmi/simple2");
 
     chdir("${root}/mpich2-${version}/src/mpid/ch3/channels/nemesis/nemesis/net_mod");
-    my @nem_modules = qw(newtcp sctp ib psm);
+    my @nem_modules = qw(elan mx newgm newtcp sctp ib psm);
     run_cmd("rm -rf ".join(' ', map({$_ . "_module/*"} @nem_modules)));
     for my $module (@nem_modules) {
 	# system to avoid problems with shell redirect in run_cmd
@@ -91,7 +91,7 @@ sub create_mpich2
     # Create configure
     debug("===> Creating configure in the main package... ");
     chdir("${root}/mpich2-${version}");
-    run_cmd("./maint/updatefiles");
+    run_cmd("./maint/updatefiles --with-autoconf=/homes/chan/autoconf/2.62/bin");
     debug("done\n");
 
     # Remove unnecessary files
@@ -108,7 +108,7 @@ sub create_mpich2
 
     debug("===> Configuring and making the secondary package... ");
     chdir("${root}/mpich2-${version}-tmp");
-    run_cmd("./maint/updatefiles");
+    run_cmd("./maint/updatefiles --with-autoconf=/homes/chan/autoconf/2.62/bin");
     run_cmd("./configure --without-mpe --disable-f90 --disable-f77 --disable-cxx");
     run_cmd("(make mandoc && make htmldoc && make latexdoc)");
     debug("done\n");
@@ -139,7 +139,7 @@ sub create_mpich2
     # Create the tarball
     debug("===> Creating the final mpich2 tarball... ");
     chdir("${root}");
-    run_cmd("tar -czvf mpich2-${version}.tgz mpich2-${version}");
+    run_cmd("tar -czvf mpich2-${version}.tar.gz mpich2-${version}");
     run_cmd("rm -rf mpich2-${version}");
     debug("done\n\n");
 }
@@ -166,7 +166,7 @@ sub create_romio
     debug("===> Creating the final romio tarball... ");
     chdir("${root}");
     run_cmd("mv romio romio-${version}");
-    run_cmd("tar -czvf romio-${version}.tgz romio-${version}");
+    run_cmd("tar -czvf romio-${version}.tar.gz romio-${version}");
     run_cmd("rm -rf romio-${version}");
     debug("done\n\n");
 }
@@ -181,7 +181,7 @@ sub create_mpe
 
     debug("===> Creating configure... ");
     chdir("${root}/mpe2");
-    run_cmd("./maint/updatefiles");
+    run_cmd("./maint/updatefiles --with-autoconf=/homes/chan/autoconf/2.62/bin");
     debug("done\n");
 
     debug("===> Creating MPE docs... ");
@@ -193,7 +193,7 @@ sub create_mpe
     debug("===> Creating the final mpe2 tarball... ");
     chdir("${root}");
     run_cmd("mv mpe2 mpe2-${version}");
-    run_cmd("tar -czvf mpe2-${version}.tgz mpe2-${version}");
+    run_cmd("tar -czvf mpe2-${version}.tar.gz mpe2-${version}");
     run_cmd("rm -rf mpe2-${version}");
     debug("done\n\n");
 }

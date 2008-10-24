@@ -18,9 +18,8 @@
 int main( int argc, char *argv[] )
 {
     int errs = 0;
-    int size, rank;
-    int dims[2], periods[2];
-    MPI_Comm comm;
+    int size, rank, ndims;
+    MPI_Comm comm, newcomm;
 
     MTest_Init( &argc, &argv );
 
@@ -31,10 +30,8 @@ int main( int argc, char *argv[] )
 	fprintf( stderr, "This test needs at least 2 processes\n" );
 	MPI_Abort( MPI_COMM_WORLD, 1 );
     }
-    /* None of these values should be relevant */
-    dims[0]    = 1;
-    periods[0] = 1;
-    MPI_Cart_create( MPI_COMM_WORLD, 0, dims, periods, 0, &comm );
+
+    MPI_Cart_create( MPI_COMM_WORLD, 0, NULL, NULL, 0, &comm );
 
     if (comm != MPI_COMM_NULL) {
 	int csize;
@@ -45,9 +42,42 @@ int main( int argc, char *argv[] )
 	     "Sizes is wrong in cart communicator.  Is %d, should be 1\n", 
 	     csize ); 
 	}
+
+	/* This function is not meaningful, but should not fail */
+	MPI_Dims_create(1, 0, NULL);
+
+	ndims = -1;
+	MPI_Cartdim_get(comm, &ndims);
+	if (ndims != 0) {
+	    errs++;
+	    fprintf(stderr, "MPI_Cartdim_get: ndims is %d, should be 0\n", ndims);
+	}
+
+	/* this function should not fail */
+	MPI_Cart_get(comm, 0, NULL, NULL, NULL);
+
+	MPI_Cart_rank(comm, NULL, &rank);
+	if (rank != 0) {
+	    errs++;
+	    fprintf(stderr, "MPI_Cart_rank: rank is %d, should be 0\n", rank);
+	}
+
+	/* this function should not fail */
+	MPI_Cart_coords(comm, 0, 0, NULL);
+
+	MPI_Cart_sub(comm, NULL, &newcomm);
+	ndims = -1;
+	MPI_Cartdim_get(newcomm, &ndims);
+	if (ndims != 0) {
+	    errs++;
+	    fprintf(stderr, 
+	       "MPI_Cart_sub did not return zero-dimensional communicator\n");
+	}
+
 	MPI_Barrier( comm );
 
 	MPI_Comm_free( &comm );
+	MPI_Comm_free( &newcomm );
     } 
     else if (rank == 0) {
 	errs++;

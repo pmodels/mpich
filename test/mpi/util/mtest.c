@@ -1183,7 +1183,89 @@ int MTestGetIntercomm( MPI_Comm *comm, int *isLeftGroup, int min_size )
 	    else 
 		*comm = MPI_COMM_NULL;
 	    break;
-	    
+
+	case 3:
+	    /* Split comm world in half, then dup */
+	    merr = MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+	    if (merr) MTestPrintError( merr );
+	    merr = MPI_Comm_size( MPI_COMM_WORLD, &size );
+	    if (merr) MTestPrintError( merr );
+	    if (size > 1) {
+		merr = MPI_Comm_split( MPI_COMM_WORLD, (rank < size/2), rank, 
+				       &mcomm );
+		if (merr) MTestPrintError( merr );
+		if (rank == 0) {
+		    rleader = size/2;
+		}
+		else if (rank == size/2) {
+		    rleader = 0;
+		}
+		else {
+		    /* Remote leader is signficant only for the processes
+		       designated local leaders */
+		    rleader = -1;
+		}
+		*isLeftGroup = rank < size/2;
+		merr = MPI_Intercomm_create( mcomm, 0, MPI_COMM_WORLD, rleader,
+					     12345, comm );
+		if (merr) MTestPrintError( merr );
+		merr = MPI_Comm_free( &mcomm );
+		if (merr) MTestPrintError( merr );
+
+		/* now dup, some bugs only occur for dup's of intercomms */
+		mcomm = *comm;
+		merr = MPI_Comm_dup(mcomm, comm);
+		if (merr) MTestPrintError( merr );
+		merr = MPI_Comm_free( &mcomm );
+		if (merr) MTestPrintError( merr );
+		interCommName = "Intercomm by splitting MPI_COMM_WORLD then dup'ing";
+	    }
+	    else 
+		*comm = MPI_COMM_NULL;
+	    break;
+
+	case 4:
+	    /* Split comm world in half, form intercomm, then split that intercomm */
+	    merr = MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+	    if (merr) MTestPrintError( merr );
+	    merr = MPI_Comm_size( MPI_COMM_WORLD, &size );
+	    if (merr) MTestPrintError( merr );
+	    if (size > 1) {
+		merr = MPI_Comm_split( MPI_COMM_WORLD, (rank < size/2), rank, 
+				       &mcomm );
+		if (merr) MTestPrintError( merr );
+		if (rank == 0) {
+		    rleader = size/2;
+		}
+		else if (rank == size/2) {
+		    rleader = 0;
+		}
+		else {
+		    /* Remote leader is signficant only for the processes
+		       designated local leaders */
+		    rleader = -1;
+		}
+		*isLeftGroup = rank < size/2;
+		merr = MPI_Intercomm_create( mcomm, 0, MPI_COMM_WORLD, rleader,
+					     12345, comm );
+		if (merr) MTestPrintError( merr );
+		merr = MPI_Comm_free( &mcomm );
+		if (merr) MTestPrintError( merr );
+
+		/* now split, some bugs only occur for splits of intercomms */
+		mcomm = *comm;
+		rank = MPI_Comm_rank(mcomm, &rank);
+		if (merr) MTestPrintError( merr );
+		merr = MPI_Comm_split(mcomm, rank, 0, comm);
+		if (merr) MTestPrintError( merr );
+		merr = MPI_Comm_free( &mcomm );
+		if (merr) MTestPrintError( merr );
+		interCommName = "Intercomm by splitting MPI_COMM_WORLD then then splitting again";
+	    }
+	    else 
+		*comm = MPI_COMM_NULL;
+	    break;
+
 	default:
 	    *comm = MPI_COMM_NULL;
 	    interCommName = "MPI_COMM_NULL";

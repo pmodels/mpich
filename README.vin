@@ -3,9 +3,10 @@
 MPICH2 is an all-new implementation of MPI from the group at Argonne
 National Laboratory.  It shares many goals with the original MPICH but
 no actual code.  It is a portable, high-performance implementation of
-the entire MPI-2 standard.  This release has all MPI-2 functions and
+the entire MPI 2.1 standard.  This release has all MPI 2.1 functions and
 features required by the standard with the exception of support for the
-"external32" portable I/O format. 
+"external32" portable I/O format and user-defined data representations 
+for I/O. 
 
 The distribution has been tested by us on a variety of machines in our
 own environments. If you have problems, please report them to
@@ -127,6 +128,21 @@ later, in the section "Alternative configurations".
     This step collects all required executables and scripts in the bin
     subdirectory of the directory specified by the prefix argument to
     configure. 
+
+    (For users who want an install directory structure compliant to
+     GNU coding standards (i.e., documentation files go to 
+     ${datarootdir}/doc/${PACKAGE}, architecture-independent
+     read-only files go to ${datadir}/${PACKAGE}), replace
+     "make install" by
+
+       make install PACKAGE=mpich2-<versrion>
+
+     and corresponding installcheck step should be
+
+       make install PACKAGE=mpich2-<version>
+
+    Setting PACKAGE in make install or installcheck step is optional.)
+
 
 7.  Add the bin subdirectory of the installation directory to your path:
 

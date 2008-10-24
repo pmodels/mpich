@@ -64,6 +64,7 @@
 #
 # Setup global variables
 $build_io = 1;        # If false, exclude the MPI-IO routines
+$oldSeek = 0;         # Use old code for seek_set etc.
 $indent = "    ";
 $print_line_len = 0;
 $gDebug = 0;
@@ -92,7 +93,7 @@ if (defined($ENV{"CXX_COVERAGE"}) && $ENV{"CXX_COVERAGE"} eq "yes") {
 # the class_xxx variables.  E.g., comm-Send, dtype-Commit.
 $routine_list = "";
 foreach $_ (@ARGV) {
-    if (/-feature=(.*)/) {
+    if (/--?feature=(.*)/) {
 	foreach $feature (split(/:/,$1)) {
 	    print STDERR "Processing feature $feature\n" if $gDebug;
 	    # Feature values are foo=on,off
@@ -104,18 +105,20 @@ foreach $_ (@ARGV) {
 	    $$varname = $value;
 	}
     }
-    elsif (/-nosep/ || /-sep/) { ; }   # Old argument; ignore
-    elsif (/-noromio/) { $build_io = 0; }
-    elsif (/-debug=(.*)/) {
+    elsif (/--?nosep/ || /--?sep/) { ; }   # Old argument; ignore
+    elsif (/--?noromio/) { $build_io = 0; }
+    elsif (/--?oldseek/) { $oldSeek = 1; }
+    elsif (/--?newseek/) { $oldSeek = 0; }
+    elsif (/--?debug=(.*)/) {
 	$gDebug = 0;
 	$gDebugRoutine = $1;
     }
-    elsif (/-debug/) { $gDebug = 1; }
-    elsif (/-routines=(.*)/) {
+    elsif (/--?debug/) { $gDebug = 1; }
+    elsif (/--?routines=(.*)/) {
 	$routine_list = $1;
     }
-    elsif (/-coverage/) { &setCoverage( 1 ); }
-    elsif (/-nocoverage/) { &setCoverage( 0 ); }
+    elsif (/--?coverage/) { &setCoverage( 1 ); }
+    elsif (/--?nocoverage/) { &setCoverage( 0 ); }
     else {
 	print STDERR "Unrecognized argument $_\n";
     }
@@ -723,6 +726,9 @@ if ($routine_list ne "") {
 	    'INTEGER8', 'INTEGER16', 'WCHAR', 'SIGNED_CHAR', 
 	    'UNSIGNED_LONG_LONG' );
 
+@typeclasses = ( 'TYPECLASS_REAL', 'TYPECLASS_INTEGER', 'TYPECLASS_COMPLEX' );
+
+
 #
 # Still missing: C++ only types: BOOL, COMPLEX, DOUBLE_COMPLEX, 
 # LONG_DOUBLE_COMPLEX. 
@@ -1023,6 +1029,8 @@ $files[$#files+1] = "mpicxx.h";
 
 &printCoverageHeader( $OUTFD, 1 );
 
+&PrintNewSeek( $OUTFD );
+
 print $OUTFD "namespace MPI {\n";
 
 
@@ -1305,11 +1313,13 @@ sub printDefineChecks {
     print $OUTFD "#ifdef MPI
 #error \"You cannot define MPI; that name is reserved for the MPI namespace\"
 #endif\n";
-    # Let the user define MPICH_IGNORE_CXX_SEEK to both
-    # suppress the check for SEEK_SET etc. and to suppress the definition
-    # of the values.
-    print $OUTFD "
-// There is a name conflict between stdio.h and the MPI C++ binding 
+    if ($oldSeek) {
+	# Let the user define MPICH_IGNORE_CXX_SEEK to both
+	# suppress the check for SEEK_SET etc. and to suppress the definition
+	# of the values.
+	print $OUTFD "
+// There is a name conflict between stdio.h and iostream (or iostream.h)
+// and the MPI C++ binding 
 // with respect to the names SEEK_SET, SEEK_CUR, and SEEK_END.  MPI
 // wants these in the MPI namespace, but stdio.h will #define these
 // to integer values.  #undef'ing these can cause obscure problems
@@ -1318,7 +1328,7 @@ sub printDefineChecks {
 // the names before including mpi.h or include mpi.h *before* stdio.h
 // or iostream.  
 \n";
-    print $OUTFD "#ifndef MPICH_IGNORE_CXX_SEEK
+	print $OUTFD "#ifndef MPICH_IGNORE_CXX_SEEK
 #ifdef SEEK_SET
 #error \"SEEK_SET is #defined but must not be for the C++ binding of MPI\"
 //#undef SEEK_SET
@@ -1332,21 +1342,73 @@ sub printDefineChecks {
 #error \"SEEK_END is #defined but must not be for the C++ binding of MPI\"
 #endif
 #endif\n\n";
+    }
 
     # GCC changed the calling convention between 3.2.3 and 3.4.3 (!!!)
     # check for that
-    print $OUTFD "// Check for incompatible GCC versions\n";
-    print $OUTFD "// GCC (specifically) g++ changed the calling convention\n";
-    print $OUTFD "// between 3.2.3 and 3.4.3 (!!)  Normally such changes\n";
-    print $OUTFD "// should only occur at major releases (e.g., version 3 to 4)\n";
-    print $OUTFD "#ifdef __GNUC__ 
-# if __GNUC__ >= \@GNUC_VERSION\@ 
-#  if __GNUC_MINOR__ > 2 && \@GNUC_MINORVERSION\@ == 2 
-#  error 'Please use the same version of GCC for compiling MPICH2 and user MPI programs'
+    print $OUTFD "
+// Check for incompatible GCC versions
+// GCC (specifically) g++ changed the calling convention
+// between 3.2.3 and 3.4.3 (!!)  Normally such changes
+// should only occur at major releases (e.g., version 3 to 4)
+#ifdef __GNUC__ 
+# if __GNUC__ >= \@GNUCXX_VERSION\@ 
+#  if __GNUC_MINOR__ > 2 && \@GNUCXX_MINORVERSION\@ == 2 
+#  error 'Please use the same version of GCC and g++ for compiling MPICH2 and user MPI programs'
 #  endif
 # endif     
 #endif\n";
+}
 
+# Use this after the MPI namespace is defined
+sub PrintNewSeek {
+    my $OUTFD = $_[0];
+
+    if (! $oldSeek) {
+    print $OUTFD <<EOT;
+// There is a name conflict between stdio.h and iostream (or iostream.h)
+// and the MPI C++ binding with respect to the names SEEK_SET, SEEK_CUR, 
+// and SEEK_END.  MPI wants these in the MPI namespace, but stdio.h, 
+// iostream, or iostream.h will #define these to integer values.  
+// #undef'ing these can cause obscure problems.  
+#ifndef MPICH_IGNORE_CXX_SEEK
+
+// MPICH_DONT_INCLUDE_STDIO_H is another escape hatch for us, just like
+// MPICH_IGNORE_CXX_SEEK.  If we encounter a wacky environment or user in the
+// wild that doesn't want our workaround and/or the stdio.h header, then we can
+// offer them a way out.
+#ifndef MPICH_DONT_INCLUDE_STDIO_H
+// ensure that we have SEEK_* defined
+# include <stdio.h>
+#endif
+
+enum MPIR_Dummy_seek_type {
+    MPIR_DUMMY_SEEK_COMMA_VAL = -1  // permits cleaner comma logic
+#ifdef SEEK_SET
+    , MPIR_SEEK_SET = SEEK_SET
+#   undef SEEK_SET
+    , SEEK_SET = MPIR_SEEK_SET
+#endif
+#ifdef SEEK_CUR
+    , MPIR_SEEK_CUR = SEEK_CUR
+#   undef SEEK_CUR
+    , SEEK_CUR = MPIR_SEEK_CUR
+#endif
+#ifdef SEEK_END
+    , MPIR_SEEK_END = SEEK_END
+#   undef SEEK_END
+    , SEEK_END = MPIR_SEEK_END
+#endif
+#ifdef LOCK_SHARED
+    , MPIR_LOCK_SHARED = LOCK_SHARED
+#   undef LOCK_SHARED
+    , LOCK_SHARED = MPIR_LOCK_SHARED
+#endif
+};
+
+#endif // MPICH_IGNORE_CXX_SEEK
+EOT
+    }
 }
 
 # Print the arguments for the routine DEFINITION.
@@ -1756,11 +1818,11 @@ extern Datatype TWOINTEGER;
 		  ANY_TAG, ANY_SOURCE, ROOT, TAG_UB, IO, HOST, WTIME_IS_GLOBAL,
                   UNIVERSE_SIZE, LASTUSEDCODE, APPNUM, 
 		  MAX_PROCESSOR_NAME, MAX_ERROR_STRING,
-		  MAX_NAME_STRING, MAX_PORT_NAME, MAX_OBJECT_NAME,
+		  MAX_PORT_NAME, MAX_OBJECT_NAME,
                   MAX_INFO_VAL, MAX_INFO_KEY, 
 		  UNDEFINED, LOCK_EXCLUSIVE, LOCK_SHARED, 
 		  WIN_BASE, WIN_DISP_UNIT, WIN_SIZE, 
-		  @errclasses ) {
+		  @errclasses, @typeclasses ) {
 	print $OUTFD "${extern}const int $int";
 	if ($giveValue) { print $OUTFD "= MPI_$int;\n"; }
     	else            { print $OUTFD ";\n"; }

@@ -281,6 +281,10 @@ echo '**** Testing aggregation2 ****'
 $mpirun -np 4 ./aggregation2 $FILENAME
 # CheckOutput aggregation2
 CleanExe aggregation2
+echo '**** Testing hindexed ****'
+$mpirun -np 4 ./hindexed $FILENAME
+# CheckOutput hindexed
+CleanExe hindexed
 #
 #echo '**** Testing write_all_test (run 1)****'
 #$mpirun -np 4 ./write_all_test -nzp 2 -zplace 2 -nzw 2 -naw 2 -size 100 \

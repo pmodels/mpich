@@ -109,10 +109,12 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 	    break;
 	}
     }
-	
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_HANDLE_CONNECTION);
 
+fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_HANDLE_CONNECTION);
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME

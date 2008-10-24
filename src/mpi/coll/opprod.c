@@ -22,7 +22,7 @@ void MPIR_PROD (
     static const char FCNAME[] = "MPIR_PROD";
     int i, len = *Len;
     
-#ifdef HAVE_FORTRAN_BINDING
+#if defined(HAVE_FORTRAN_BINDING) || defined(HAVE_CXX_COMPLEX)
     typedef struct { 
         float re;
         float im; 
@@ -32,6 +32,12 @@ void MPIR_PROD (
         double re;
         double im; 
     } d_complex;
+#endif
+#if defined(HAVE_LONG_DOUBLE) && defined(HAVE_CXX_COMPLEX)
+    typedef struct {
+	long double re;
+	long double im;
+    } ld_complex;
 #endif
 
     switch (*type) {
@@ -249,12 +255,50 @@ void MPIR_PROD (
         }
         break;
     }
-#endif
+#endif /* HAVE_FORTRAN_BINDING */
+#ifdef HAVE_CXX_COMPLEX
+    case MPIR_CXX_COMPLEX_VALUE: {
+        s_complex * restrict a = (s_complex *)inoutvec; 
+        s_complex const * restrict b = (s_complex *)invec;
+        for ( i=0; i<len; i++ ) {
+            s_complex c;
+            c.re = a[i].re; c.im = a[i].im;
+            a[i].re = c.re*b[i].re - c.im*b[i].im;
+            a[i].im = c.im*b[i].re + c.re*b[i].im;
+        }
+        break;
+    }
+    case MPIR_CXX_DOUBLE_COMPLEX_VALUE: {
+        d_complex * restrict a = (d_complex *)inoutvec; 
+        d_complex const * restrict b = (d_complex *)invec;
+        for ( i=0; i<len; i++ ) {
+            d_complex c;
+            c.re = a[i].re; c.im = a[i].im;
+            a[i].re = c.re*b[i].re - c.im*b[i].im;
+            a[i].im = c.im*b[i].re + c.re*b[i].im;
+        }
+        break;
+    }
+#ifdef HAVE_LONG_DOUBLE
+    case MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE: {
+        ld_complex * restrict a = (ld_complex *)inoutvec; 
+        ld_complex const * restrict b = (ld_complex *)invec;
+        for ( i=0; i<len; i++ ) {
+            ld_complex c;
+            c.re = a[i].re; c.im = a[i].im;
+            a[i].re = c.re*b[i].re - c.im*b[i].im;
+            a[i].im = c.im*b[i].re + c.re*b[i].im;
+        }
+        break;
+    }
+#endif /* HAVE_LONG_DOUBLE */
+#endif /* HAVE_CXX_COMPLEX */
+
 	/* --BEGIN ERROR HANDLING-- */
     default: {
-        MPICH_PerThread_t *p;
-        MPIR_GetPerThread(&p);
-        p->op_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_PROD" );
+	MPIU_THREADPRIV_DECL;
+	MPIU_THREADPRIV_GET;
+        MPIU_THREADPRIV_FIELD(op_errno) = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_PROD" );
         break;
     }
 	/* --END ERROR HANDLING-- */
@@ -327,6 +371,13 @@ int MPIR_PROD_check_dtype ( MPI_Datatype type )
     case MPI_REAL16:
     case MPI_COMPLEX32:
 #endif
+#ifdef HAVE_CXX_COMPLEX
+    case MPIR_CXX_COMPLEX_VALUE:
+    case MPIR_CXX_DOUBLE_COMPLEX_VALUE:
+#ifdef HAVE_LONG_DOUBLE
+    case MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE:
+#endif
+#endif /* HAVE_CXX_COMPLEX */
         return MPI_SUCCESS;
 	/* --BEGIN ERROR HANDLING-- */
     default: 

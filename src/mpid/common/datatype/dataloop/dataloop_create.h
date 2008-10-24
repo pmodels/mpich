@@ -80,6 +80,18 @@ int PREPEND_PREFIX(Type_convert_darray)(int size,
 					MPI_Datatype oldtype, 
 					MPI_Datatype *newtype);
 
+DLOOP_Count PREPEND_PREFIX(Type_indexed_count_contig)(DLOOP_Count count,
+                                                      int *blocklength_array,
+                                                      void *displacement_array,
+                                                      int dispinbytes,
+                                                      DLOOP_Offset old_extent);
+                                                     
+DLOOP_Count PREPEND_PREFIX(Type_blockindexed_count_contig)(DLOOP_Count count,
+                                                           DLOOP_Count blklen,
+                                                           void *disp_array,
+                                                           int dispinbytes,
+                                                           DLOOP_Offset old_extent);
+                                                          
 #if 0
 /* Helper functions for accessing datatype contents */
 void PREPEND_PREFIX(Type_access_contents)(MPI_Datatype type,

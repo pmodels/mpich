@@ -315,7 +315,7 @@ void smpd_trim_logfile_new()
 	}
 	sprintf(copy_cmd, "copy %s %s.%d.old", smpd_process.dbg_filename, smpd_process.dbg_filename, copy_number);
 	system(copy_cmd);
-	buffer = buffer_orig = malloc(size);
+	buffer = buffer_orig = MPIU_Malloc(size);
 	if (buffer != NULL)
 	{
 	    fseek(fout, 0, SEEK_SET);
@@ -388,7 +388,7 @@ void smpd_trim_logfile_new()
 		fflush(stdout);
 	    }
 	    */
-	    free(buffer_orig);
+	    MPIU_Free(buffer_orig);
 	}
 	/*
 	else
@@ -449,7 +449,7 @@ void smpd_trim_logfile_old()
 	sprintf(copy_cmd, "copy %s %s.%d.old", smpd_process.dbg_filename, smpd_process.dbg_filename, copy_number);
 	system(copy_cmd);
 	new_size = smpd_process.dbg_file_size / 2;
-	buffer = malloc(new_size);
+	buffer = MPIU_Malloc(new_size);
 	if (buffer != NULL)
 	{
 	    fseek(fout, - (long)new_size, SEEK_END);
@@ -512,7 +512,7 @@ void smpd_trim_logfile_old()
 		fflush(stdout);
 	    }
 	    */
-	    free(buffer);
+	    MPIU_Free(buffer);
 	}
 	/*
 	else

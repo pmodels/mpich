@@ -25,7 +25,7 @@ static int MPIDU_Socki_event_enqueue(struct pollinfo * pollinfo,
 				     enum MPIDU_Sock_op op, 
 				     MPIU_Size_t num_bytes,
 				     void * user_ptr, int error);
-static int inline MPIDU_Socki_event_dequeue(struct MPIDU_Sock_set * sock_set, 
+static inline int MPIDU_Socki_event_dequeue(struct MPIDU_Sock_set * sock_set, 
 					    int * set_elem, 
 					    struct MPIDU_Sock_event * eventp);
 

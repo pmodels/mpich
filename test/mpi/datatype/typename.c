@@ -5,6 +5,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 #include "mpi.h"
+#include "mpitest.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -29,10 +30,7 @@ static mpi_names_t mpi_names[] = {
     { MPI_UNSIGNED_LONG, "MPI_UNSIGNED_LONG" },
     { MPI_FLOAT, "MPI_FLOAT" },
     { MPI_DOUBLE, "MPI_DOUBLE" },
-    { MPI_LONG_DOUBLE, "MPI_LONG_DOUBLE" },
-/*    { MPI_LONG_LONG_INT, "MPI_LONG_LONG_INT" }, */
-    { MPI_LONG_LONG, "MPI_LONG_LONG" },
-    { MPI_UNSIGNED_LONG_LONG, "MPI_UNSIGNED_LONG_LONG" }, 
+
     { MPI_PACKED, "MPI_PACKED" },
     { MPI_LB, "MPI_LB" },
     { MPI_UB, "MPI_UB" },
@@ -41,8 +39,8 @@ static mpi_names_t mpi_names[] = {
     { MPI_LONG_INT, "MPI_LONG_INT" },
     { MPI_SHORT_INT, "MPI_SHORT_INT" },
     { MPI_2INT, "MPI_2INT" },
-    { MPI_LONG_DOUBLE_INT, "MPI_LONG_DOUBLE_INT" },
     /* Fortran */
+#ifdef HAVE_FORTRAN_BINDING
     { MPI_COMPLEX, "MPI_COMPLEX" },
     { MPI_DOUBLE_COMPLEX, "MPI_DOUBLE_COMPLEX" },
     { MPI_LOGICAL, "MPI_LOGICAL" },
@@ -55,7 +53,10 @@ static mpi_names_t mpi_names[] = {
     { MPI_2REAL, "MPI_2REAL" },
     { MPI_2DOUBLE_PRECISION, "MPI_2DOUBLE_PRECISION" },
     { MPI_CHARACTER, "MPI_CHARACTER" },
+#endif
     /* Size-specific types */
+    /* Do not move MPI_REAL4 - this is used to indicate the very first 
+       optional type */
     { MPI_REAL4, "MPI_REAL4" },
     { MPI_REAL8, "MPI_REAL8" },
     { MPI_REAL16, "MPI_REAL16" },
@@ -67,16 +68,23 @@ static mpi_names_t mpi_names[] = {
     { MPI_INTEGER4, "MPI_INTEGER4" },
     { MPI_INTEGER8, "MPI_INTEGER8" },
     { MPI_INTEGER16, "MPI_INTEGER16" },
+    /* Semi-optional types - if the compiler doesn't support long double
+       of long long, these might be MPI_DATATYPE_NULL */
+    { MPI_LONG_DOUBLE, "MPI_LONG_DOUBLE" },
+    { MPI_LONG_LONG_INT, "MPI_LONG_LONG_INT" }, 
+    { MPI_LONG_LONG, "MPI_LONG_LONG" },
+    { MPI_UNSIGNED_LONG_LONG, "MPI_UNSIGNED_LONG_LONG" }, 
+    { MPI_LONG_DOUBLE_INT, "MPI_LONG_DOUBLE_INT" },
     { 0, (char *)0 },  /* Sentinal used to indicate the last element */
 };
 
 int main( int argc, char **argv )
 {
     char name[MPI_MAX_OBJECT_NAME];
-    int namelen, i;
+    int namelen, i, inOptional;
     int errs = 0;
 
-    MPI_Init(0,0);
+    MTest_Init( &argc, &argv );
     
     /* Sample some datatypes */
     /* See 8.4, "Naming Objects" in MPI-2.  The default name is the same
@@ -94,9 +102,21 @@ int main( int argc, char **argv )
     }
 
     /* Now we try them ALL */
+    inOptional = 0;
     for (i=0; mpi_names[i].name != 0; i++) {
-	/* The size-specific types may be DATATYPE_NULL */
-	if (mpi_names[i].dtype == MPI_DATATYPE_NULL) continue;
+	/* Are we in the optional types? */
+	if (strcmp( mpi_names[i].name, "MPI_REAL4" ) == 0) 
+	    inOptional = 1;
+	/* If this optional type is not supported, skip it */
+	if (inOptional && mpi_names[i].dtype == MPI_DATATYPE_NULL) continue;
+	if (mpi_names[i].dtype == MPI_DATATYPE_NULL) {
+	    /* Report an error because all of the standard types 
+	       must be supported */
+	    errs++;
+	    fprintf( stderr, "MPI Datatype %s is MPI_DATATYPE_NULL\n", 
+		     mpi_names[i].name );
+	    continue;
+	}
 	name[0] = 0;
 	MPI_Type_get_name( mpi_names[i].dtype, name, &namelen );
 	if (strncmp( name, mpi_names[i].name, namelen )) {
@@ -116,12 +136,7 @@ int main( int argc, char **argv )
     }
 
 
-    if (errs) {
-	fprintf( stderr, "Found %d errors\n", errs );
-    }
-    else {
-	printf( " No Errors\n" );
-    }
+    MTest_Finalize( errs );
     MPI_Finalize();
     return 0;
 }

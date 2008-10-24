@@ -199,6 +199,8 @@ AC_SUBST(VPATH)AM_IGNORE(VPATH)
 AC_CACHE_CHECK([for virtual path format],
 pac_cv_prog_make_vpath,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -rf conftest*
 mkdir conftestdir
 cat >conftestdir/a.c <<EOF
@@ -228,6 +230,8 @@ EOF
 	pac_cv_prog_make_vpath="neither VPATH nor .PATH works"
     fi
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -rf conftest*
 ])
 if test "$pac_cv_prog_make_vpath" = "VPATH" ; then
@@ -289,6 +293,8 @@ AC_DEFUN(PAC_PROG_MAKE_CLOCK_SKEW,[
 AC_CACHE_CHECK([whether clock skew breaks make],
 pac_cv_prog_make_found_clock_skew,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 cat > conftest <<EOF
 ALL:
@@ -300,6 +306,8 @@ if grep -i skew conftest >/dev/null 2>&1 ; then
 else
     pac_cv_prog_make_found_clock_skew=no
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 ])
 dnl We should really do something if we detect clock skew.  The question is,
@@ -334,6 +342,8 @@ AC_DEFUN(PAC_PROG_MAKE_HAS_PATTERN_RULES,[
 AC_CACHE_CHECK([whether make has pattern rules],
 pac_cv_prog_make_has_patterns,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 cat > conftestmm <<EOF
 # Test for pattern rules
@@ -348,6 +358,8 @@ if ${MAKE} -f conftestmm conftestconftest.dep 1>&AC_FD_CC 2>&1 </dev/null ; then
 else
     pac_cv_prog_make_has_patterns="no"
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 ])
 if test "$pac_cv_prog_make_has_patterns" = "no" ; then

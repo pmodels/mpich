@@ -107,8 +107,8 @@ typedef MPIU_UINT64_T uint64_t;
 #define MPIU_UNREFERENCED_ARG(a)
 #endif
 
-#define MPIDU_MAX(a,b)    (((a) > (b)) ? (a) : (b))
-#define MPIDU_MIN(a,b)    (((a) < (b)) ? (a) : (b))
+#define MPIU_MAX(a,b)    (((a) > (b)) ? (a) : (b))
+#define MPIU_MIN(a,b)    (((a) < (b)) ? (a) : (b))
 
 #include "mpiiov.h"
 

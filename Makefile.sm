@@ -65,6 +65,7 @@ cleanlibs:
 
 all-preamble:
 	@echo "Beginning make"
+	@echo "Using variables CC='@CC@' CFLAGS='@CFLAGS@' LDFLAGS='@LDFLAGS@' AR='@AR@' FC='@FC@' F90='@F90@' FFLAGS='@FFLAGS@' F90FLAGS='@F90FLAGS@' CXX='@CXX@'"
 
 # Add any final extras:
 #    1) Build the debugger interface if requested
@@ -87,7 +88,6 @@ distclean-local:
 	-@rm -f bin/mpich2version
 	-@cd test && $(MAKE) distclean
 
-PACKAGE = mpich2
 # Version < 1 is pre MPI-1 release.
 # Version >= 2 contains MPI-2
 # Version between 1 and 2 contains all of MPI1 and parts of MPI-2
@@ -95,6 +95,13 @@ PACKAGE = mpich2
 # version on the configure output and to match the common practice of
 # current autoconfs
 VERSION = @VERSION@
+# With PACKAGE set, all mpich2 and mpe2 documentation
+# will go to docdir=$datarootdir/doc/$PACKAGE,
+# and mpe2's exaamples_*/ and logfiles/ go to $datadir/$PACKAGE.
+# Unsetting PACKAGE enables docdir=$datarootdir/doc and mpe2 data in $datadir
+# User can do "make install PACKAGE=mpich2-xxx" enables
+# docdir=$datarootdir/doc/mpich2-xxx and mpe2 data in $datadir/mpich2-xxx.
+# PACKAGE = mpich2-$(VERSION)
 
 # We skip the mpid/mm directories because mm is no longer active
 # mpe2 is an outside project and is tested against the default
@@ -211,7 +218,7 @@ install-devdocs:
 # started first.  This step does not handle that.
 installcheck-postamble:
 	@if [ -n "@mpe_dir@" -a -d "src/@mpe_dir@" ] ; then \
-	    (cd src/@mpe_dir@ && $(MAKE) installcheck-all ; ) ; fi
+	    (cd src/@mpe_dir@ && $(MAKE) installcheck-all PACKAGE=$(PACKAGE) ; ) ; fi
 #
 # The documents are shipped as part of the release, and so should be 
 # installed from the source directory, not a VPATH build directory

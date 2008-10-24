@@ -300,10 +300,16 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr)
 int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size, 
 			    int local_gpids[], int *singlePG )
 {
+    int mpi_errno = MPI_SUCCESS;
     int i;
     int *gpid = local_gpids;
     int lastPGID = -1, pgid;
     MPID_VCR vc;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_GPID_GETALLINCOMM);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_GPID_GETALLINCOMM);
+
+    MPIU_Assert(comm_ptr->local_size == local_size);
     
     *singlePG = 1;
     for (i=0; i<comm_ptr->local_size; i++) {
@@ -319,14 +325,14 @@ int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 	    lastPGID = pgid;
 	}
 	*gpid++ = vc->pg_rank;
-	if (vc->pg_rank != vc->lpid) {
-	    return 1;
-/*	    printf( "Unexpected results %d != %d\n",
-	    vc->pg_rank, vc->lpid ); */
-	}
+
+        MPIU_DBG_MSG_FMT(COMM,VERBOSE, (MPIU_DBG_FDEST,
+                         "pgid=%d vc->pg_rank=%d",
+                         pgid, vc->pg_rank));
     }
     
-    return 0;
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_GPID_GETALLINCOMM);
+    return mpi_errno;
 }
 
 #undef FUNCNAME

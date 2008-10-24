@@ -97,16 +97,19 @@
 /* FIXME: ... to do ... */
 #include "mpitypedefs.h"
 
+/* Include definitions from the device which must exist before items in this
+   file (mpiimpl.h) can be defined. mpidpre.h must be included before any
+   files that allow the device to override or extend any terms; this includes
+   mpiimplthread.h and mpiutil.h */
+/* ------------------------------------------------------------------------- */
+#include "mpidpre.h"
+/* ------------------------------------------------------------------------- */
+
 #include "mpiimplthread.h"
 /* #include "mpiu_monitors.h" */
 
 #include "mpiutil.h"
 
-/* Include definitions from the device which must exist before items in this
-   file (mpiimpl.h) can be defined. */
-/* ------------------------------------------------------------------------- */
-#include "mpidpre.h"
-/* ------------------------------------------------------------------------- */
 
 
 /* ------------------------------------------------------------------------- */
@@ -186,8 +189,6 @@ void MPIU_dump_dbg_memlog(FILE * fp);
 /* The follow is temporarily provided for backward compatibility.  Any code
    using dbg_printf should be updated to use MPIU_DBG_PRINTF. */
 #define dbg_printf MPIU_dbg_printf
-
-void MPIU_Exit(int);
 
 /* MPIR_IDebug withdrawn because the MPIU_DBG_MSG interface provides 
    a more flexible, integrated, and documented mechanism */
@@ -1392,6 +1393,7 @@ extern MPID_Request MPID_Request_direct[];
 */
 #ifdef HAVE_DEBUGGER_SUPPORT
 void MPIR_WaitForDebugger( void );
+void MPIR_DebuggerSetAborting( const char * );
 void MPIR_Sendq_remember(MPID_Request *, int, int, int );
 void MPIR_Sendq_forget(MPID_Request *);
 void MPIR_CommL_remember( MPID_Comm * );
@@ -2034,7 +2036,7 @@ extern MPICH_PerProcess_t MPIR_Process;
    macros to track the nesting level; otherwise, allow the timing module the
    opportunity to define the macros */
 #if defined(MPICH_DEBUG_FINE_GRAIN_NESTING)
-#   include "mpidu_func_nesting.h"
+#   include "mpiu_func_nesting.h"
 #elif defined(MPICH_DEBUG_MEMARENA)
 #   include "mpifuncmem.h"
 #elif defined(USE_DBG_LOGGING)

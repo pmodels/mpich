@@ -2243,7 +2243,7 @@ if ($write_mpif) {
     # Handle max processor name here.
     $mpidef{"MPI_MAX_PROCESSOR_NAME"} = "\@MPI_MAX_PROCESSOR_NAME\@";
     # Other maximum values
-    foreach $key (MAX_ERROR_STRING, MAX_NAME_STRING, MAX_PORT_NAME, 
+    foreach $key (MAX_ERROR_STRING, MAX_PORT_NAME, 
 		  MAX_OBJECT_NAME, MAX_INFO_KEY, MAX_INFO_VAL,
 		  MAX_PROCESSOR_NAME, MAX_DATAREP_STRING ) {
 	&print_mpif_int( "MPI_$key", -1 );

@@ -149,6 +149,12 @@ int MPI_Finalize( void )
     MPIR_Call_finalize_callbacks( MPIR_FINALIZE_CALLBACK_PRIO+1, 
 				  MPIR_FINALIZE_CALLBACK_MAX_PRIO );
 
+    /* Signal the debugger that we are about to exit. */
+    /* FIXME: Should this also be a finalize callback? */
+#ifdef HAVE_DEBUGGER_SUPPORT
+    MPIR_DebuggerSetAborting( (char *)0 );
+#endif
+
     mpi_errno = MPID_Finalize();
     if (mpi_errno) {
 	MPIU_ERR_POP(mpi_errno);

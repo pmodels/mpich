@@ -15,7 +15,7 @@
  */
 
 /*
- * MPIU_Strncpy - Copy at most n character.  Stop once a null is reached.
+ * MPIU_Strncpy - Copy at most n characters.  Stop once a null is reached.
  *
  * This is different from strncpy, which null pads so that exactly
  * n characters are copied.  The strncpy behavior is correct for many 
@@ -58,6 +58,8 @@ int MPIU_Strncpy( char *dest, const char *src, size_t n )
     char * restrict d_ptr = dest;
     const char * restrict s_ptr = src;
     register int i;
+
+    if (n == 0) return 0;
 
     i = (int)n;
     while (*s_ptr && i-- > 0) {

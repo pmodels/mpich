@@ -38,6 +38,8 @@
 #define NMPI_Allgather MPI_Allgather
 #define NMPI_Comm_get_attr MPI_Comm_get_attr
 #define NMPI_Comm_set_attr MPI_Comm_set_attr
+#define NMPI_Type_get_attr MPI_Type_get_attr
+#define NMPI_Type_set_attr MPI_Type_set_attr
 #define NMPI_Comm_delete_attr MPI_Comm_delete_attr
 #define NMPI_Comm_create_keyval MPI_Comm_create_keyval 
 #define NMPI_Comm_free_keyval MPI_Comm_free_keyval 
@@ -64,6 +66,7 @@
 #define NMPI_Type_free MPI_Type_free
 #define NMPI_Type_size MPI_Type_size
 #define NMPI_Type_get_extent MPI_Type_get_extent
+#define NMPI_Cart_create MPI_Cart_create
 #define NMPI_Cart_rank MPI_Cart_rank
 #define NMPI_Cart_map  MPI_Cart_map
 #define NMPI_Graph_map  MPI_Graph_map
@@ -95,6 +98,13 @@
 #define NMPI_Ibsend MPI_Ibsend
 #define NMPI_Buffer_detach MPI_Buffer_detach
 #define NMPI_Gather MPI_Gather
+#define NMPI_Type_get_envelope MPI_Type_get_envelope
+#define NMPI_Type_contiguous MPI_Type_contiguous
+#define NMPI_Type_vector MPI_Type_vector
+#define NMPI_Type_hvector MPI_Type_hvector
+#define NMPI_Type_indexed MPI_Type_indexed
+#define NMPI_Type_hindexed MPI_Type_hindexed
+#define NMPI_Type_struct MPI_Type_struct
 #define NMPIX_Grequest_class_create MPIX_Grequest_class_create
 #define NMPIX_Grequest_class_allocate MPIX_Grequest_class_allocate
 #define NMPIX_Grequest_start MPIX_Grequest_start
@@ -113,6 +123,8 @@
 #define NMPI_Allgather PMPI_Allgather
 #define NMPI_Comm_get_attr PMPI_Comm_get_attr
 #define NMPI_Comm_set_attr PMPI_Comm_set_attr
+#define NMPI_Type_get_attr PMPI_Type_get_attr
+#define NMPI_Type_set_attr PMPI_Type_set_attr
 #define NMPI_Comm_delete_attr PMPI_Comm_delete_attr
 #define NMPI_Comm_create_keyval PMPI_Comm_create_keyval 
 #define NMPI_Comm_free_keyval PMPI_Comm_free_keyval 
@@ -139,6 +151,7 @@
 #define NMPI_Type_free PMPI_Type_free
 #define NMPI_Type_size PMPI_Type_size
 #define NMPI_Type_get_extent PMPI_Type_get_extent
+#define NMPI_Cart_create PMPI_Cart_create
 #define NMPI_Cart_rank PMPI_Cart_rank
 #define NMPI_Cart_map  PMPI_Cart_map
 #define NMPI_Graph_map  PMPI_Graph_map
@@ -171,8 +184,19 @@
 #define NMPI_Ibsend PMPI_Ibsend
 #define NMPI_Buffer_detach PMPI_Buffer_detach
 #define NMPI_Gather PMPI_Gather
+#define NMPI_Type_get_envelope PMPI_Type_get_envelope
+#define NMPI_Type_contiguous PMPI_Type_contiguous
+#define NMPI_Type_vector PMPI_Type_vector
+#define NMPI_Type_hvector PMPI_Type_hvector
+#define NMPI_Type_indexed PMPI_Type_indexed
+#define NMPI_Type_hindexed PMPI_Type_hindexed
+#define NMPI_Type_struct PMPI_Type_struct
 #define NMPIX_Grequest_class_create PMPIX_Grequest_class_create
 #define NMPIX_Grequest_class_allocate PMPIX_Grequest_class_allocate
 #define NMPIX_Grequest_start PMPIX_Grequest_start
 #endif
 #endif /* MPICH_NMPI_H_INCLUDED */
+
+
+
+

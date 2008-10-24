@@ -70,33 +70,39 @@ FORCE_TARGET:
 
 ########  Installing
 install: FORCE_TARGET
-	@if [ -n "$(PREFIX)" ] ; then \
-	     ./sbin/mpeinstall -prefix=$(PREFIX) -dmode="" ; \
-	 else \
-	     ./sbin/mpeinstall -dmode="" ; \
-	 fi
+	@installopts="-dmode=" ; \
+	 if [ -n "$(PACKAGE)" ] ; then \
+	     installopts="-package=$(PACKAGE) $$installopts" ; \
+	 fi ; \
+	 if [ -n "$(PREFIX)" ] ; then \
+	     installopts="-prefix=$(PREFIX) $$installopts" ; \
+	 fi ; \
+	 ./sbin/mpeinstall $$installopts
 
 installcheck:
-	@if [ -n "$(PREFIX)" ] ; then \
-	     ./sbin/mpecheckinstall -prefix=$(PREFIX) ; \
-	 else \
-	     ./sbin/mpecheckinstall ; \
-	 fi
+	@installopts="" ; \
+	 if [ -n "$(PACKAGE)" ] ; then \
+	     installopts="-package=$(PACKAGE) $$installopts" ; \
+	 fi ; \
+	 if [ -n "$(PREFIX)" ] ; then \
+	     installopts="-prefix=$(PREFIX) $$installopts" ; \
+	 fi ; \
+	 ./sbin/mpecheckinstall $$installopts
 
 installcheck-all:
-	@if [ -n "$(PREFIX)" ] ; then \
-	     if [ -n "$(MPERUN)" ] ; then \
-	         ./sbin/mpecheckinstall -prefix=$(PREFIX) -run="$(MPERUN)" ; \
-	     else \
-	         ./sbin/mpecheckinstall -prefix=$(PREFIX) -run ; \
-	     fi ; \
+	@installopts="" ; \
+	 if [ -n "$(MPERUN)" ] ; then \
+	     installopts="-run=$(MPERUN) $$installopts" ; \
 	 else \
-	     if [ -n "$(MPERUN)" ] ; then \
-	         ./sbin/mpecheckinstall -run="$(MPERUN)" ; \
-	     else \
-	         ./sbin/mpecheckinstall -run ; \
-	     fi ; \
-	 fi
+	     installopts="-run $$installopts" ; \
+	 fi ; \
+	 if [ -n "$(PACKAGE)" ] ; then \
+	     installopts="-package=$(PACKAGE) $$installopts" ; \
+	 fi ; \
+	 if [ -n "$(PREFIX)" ] ; then \
+	     installopts="-prefix=$(PREFIX) $$installopts" ; \
+	 fi ; \
+	 ./sbin/mpecheckinstall $$installopts
 
 uninstall:
 	@./sbin/mpeuninstall

@@ -91,7 +91,6 @@ int MPI_Cart_rank(MPI_Comm comm, int *coords, int *rank)
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
 	    /* If comm_ptr is not valid, it will be reset to null */
-	    MPIR_ERRTEST_ARGNULL(coords,"coords",mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(rank,"rank",mpi_errno);
             if (mpi_errno) goto fn_fail;
         }
@@ -111,6 +110,10 @@ int MPI_Cart_rank(MPI_Comm comm, int *coords, int *rank)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    ndims = cart_ptr->topo.cart.ndims;
+	    if (ndims != 0) {
+		MPIR_ERRTEST_ARGNULL(coords,"coords",mpi_errno);
+		if (mpi_errno) goto fn_fail;
+	    }
 	    for (i=0; i<ndims; i++) {
 		if (!cart_ptr->topo.cart.periodic[i]) {
 		    coord = coords[i];

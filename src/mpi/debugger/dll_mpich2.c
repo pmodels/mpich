@@ -11,6 +11,11 @@
 #include <string.h>
 #include "mpi.h"
 
+/* Define this to have the code print out details of its list traversal
+   action.  This is primarily for use with dbgstub.c and the test programs
+   such as tvtest.c */
+/* #define DEBUG_LIST_ITER */
+
 /* MPIR_dll_name is defined in dbg_init.c; it must be part of the target image,
    not the debugger interface */
 
@@ -50,6 +55,18 @@ enum {
 
 };
 
+/* Internal structure we hold for each communicator */
+typedef struct communicator_t
+{
+  struct communicator_t * next;
+  group_t *               group;		/* Translations */
+  int                     context_id;		/* To catch changes */
+  int                     recvcontext_id;       /* May also be needed for 
+						   matchine */
+  int                     present;
+  mqs_communicator        comm_info;		/* Info needed at the higher level */
+} communicator_t;
+
 /* Internal functions used only by routines in this package */
 static void mqs_free_communicator_list( struct communicator_t *comm );
 
@@ -57,6 +74,14 @@ static int communicators_changed (mqs_process *proc);
 static int rebuild_communicator_list (mqs_process *proc);
 static int compare_comms (const void *a, const void *b);
 
+static group_t * find_or_create_group (mqs_process *proc,
+				       mqs_tword_t np,
+				       mqs_taddr_t table);
+static int translate (group_t *this, int idx);
+static int reverse_translate (group_t * this, int idx);
+static void group_decref (group_t * group);
+static communicator_t * find_communicator (mpich_process_info *p_info,
+				   mqs_taddr_t comm_base, int recv_ctx);
 
 /* ------------------------------------------------------------------------ */
 /* 
@@ -414,19 +439,6 @@ char * mqs_dll_error_string (int errcode)
  * routines make an internal copy of the communicator list.  
  * 
  */
-/* Internal structure we hold for each communicator */
-typedef struct communicator_t
-{
-  struct communicator_t * next;
-  group_t *               group;		/* Translations */
-  int                     context_id;		/* To catch changes */
-  int                     recvcontext_id;       /* May also be needed for 
-						   matchine */
-  int                     present;
-  mqs_communicator        comm_info;		/* Info needed at the higher level */
-} communicator_t;
-
-
 /* update_communicator_list makes a copy of the list of currently active
  * communicators and stores it in the mqs_process structure.   
  */
@@ -487,7 +499,7 @@ int mqs_setup_operation_iterator (mqs_process *proc, int op)
 {
     mpich_process_info *p_info = 
 	(mpich_process_info *)dbgr_get_process_info (proc);
-    mqs_image * image          = dbgr_get_image (proc);
+    /*    mqs_image * image          = dbgr_get_image (proc); */
 /*    mpich_image_info *i_info   = 
       (mpich_image_info *)dbgr_get_image_info (image); */
 
@@ -502,6 +514,8 @@ int mqs_setup_operation_iterator (mqs_process *proc, int op)
 	  return mqs_ok;
       }
 
+      /* The address on the receive queues is the address of a pointer to 
+         the head of the list.  */
   case mqs_pending_receives:
       p_info->next_msg = p_info->posted_base;
       return mqs_ok;
@@ -574,10 +588,17 @@ static int fetch_receive (mqs_process *proc, mpich_process_info *p_info,
     int16_t wanted_context     = comm->recvcontext_id;
     mqs_taddr_t base           = fetch_pointer (proc, p_info->next_msg, p_info);
 
+#ifdef DEBUG_LIST_ITER
+    printf( "fetch receive base = %x, comm= %x, context = %d\n", 
+	    base, comm, wanted_context );
+#endif
     while (base != 0) {
 	/* Check this entry to see if the context matches */
 	int16_t actual_context = fetch_int16( proc, base + i_info->req_context_id_offs, p_info );
-	
+
+#ifdef DEBUG_LIST_ITER
+	printf( "fetch receive msg context = %d\n", actual_context );
+#endif
 	if (actual_context == wanted_context) {
 	    /* Found a request for this communicator */
 	    int tag = fetch_int( proc, base + i_info->req_tag_offs, p_info );
@@ -615,7 +636,7 @@ static int fetch_receive (mqs_process *proc, mpich_process_info *p_info,
 #if 0
   while (base != 0)
     { /* Well, there's a queue, at least ! */
-      mqs_tword_t actual_context = fetch_int (proc, base + i_info->context_id_offs, p_info);
+      mqs_tword_t actual_context = fetch_int16(proc, base + i_info->context_id_offs, p_info);
       
       if (actual_context == wanted_context)
 	{ /* Found a good one */
@@ -626,7 +647,7 @@ static int fetch_receive (mqs_process *proc, mpich_process_info *p_info,
 	  mqs_taddr_t ptr     = fetch_pointer (proc, base + i_info->ptr_offs, p_info);
 	  
 	  /* Fetch the fields from the MPIR_RHANDLE */
-	  int is_complete = fetch_int (proc, ptr + i_info->is_complete_offs, p_info);
+	  int is_complete     = fetch_int (proc, ptr + i_info->is_complete_offs, p_info);
 	  mqs_taddr_t buf     = fetch_pointer (proc, ptr + i_info->buf_offs, p_info);
 	  mqs_tword_t len     = fetch_int (proc, ptr + i_info->len_offs, p_info);
 	  mqs_tword_t count   = fetch_int (proc, ptr + i_info->count_offs, p_info);
@@ -716,6 +737,11 @@ static int fetch_send (mqs_process *proc, mpich_process_info *p_info,
     if (!p_info->has_sendq)
 	return mqs_no_information;
     
+#ifdef DEBUG_LIST_ITER
+    if (base) {
+	printf( "comm ptr = %p, comm context = %d\n", comm, comm->context_id );
+    }
+#endif
     /* Say what operation it is. We can only see non blocking send operations
      * in MPICH. Other MPI systems may be able to show more here. 
      */
@@ -725,10 +751,32 @@ static int fetch_send (mqs_process *proc, mpich_process_info *p_info,
     
     while (base != 0) {
 	/* Check this entry to see if the context matches */
-	int actual_context = fetch_int( proc, base + i_info->sendq_context_id_offs, p_info );
+	int actual_context = fetch_int16( proc, base + i_info->sendq_context_id_offs, p_info );
 	
 	if (actual_context == wanted_context) {
+	    /* Fill in some of the fields */
+	    mqs_tword_t target = fetch_int (proc, base+i_info->sendq_rank_offs,      p_info);
+	    mqs_tword_t tag    = fetch_int (proc, base+i_info->sendq_tag_offs,         p_info);
+	    mqs_tword_t length = 0;
+	    mqs_taddr_t data   = 0;
+	    mqs_taddr_t shandle= 0;
+	    mqs_tword_t complete=0;
 
+#ifdef DEBUG_LIST_ITER
+	    printf( "sendq entry = %p, rank off = %d, tag off = %d, context = %d\n", 
+		    base, i_info->sendq_rank_offs, i_info->sendq_tag_offs, actual_context );
+#endif
+	    
+	    /* Ok, fill in the results */
+	    res->status = -1; /* complete ? mqs_st_complete : mqs_st_pending; *//* We can't discern matched */
+	    res->actual_local_rank = res->desired_local_rank = target;
+	    res->actual_global_rank= res->desired_global_rank= translate (comm->group, target);
+	    res->tag_wild   = 0;
+	    res->actual_tag = res->desired_tag = tag;
+	    res->desired_length = res->actual_length = length;
+	    res->system_buffer  = 0;
+	    res->buffer = data;
+	    
 	    
 	    /* Don't forget to step the queue ! */
 	    p_info->next_msg = base + i_info->sendq_next_offs;
@@ -779,16 +827,6 @@ static int fetch_send (mqs_process *proc, mpich_process_info *p_info,
 
 /* ------------------------------------------------------------------------ */
 /* Communicator */
-static communicator_t * find_communicator (mpich_process_info *p_info,
-				   mqs_taddr_t comm_base, int recv_ctx);
-static group_t * find_or_create_group (mqs_process *proc,
-				       mqs_tword_t np,
-				       mqs_taddr_t table);
-static int translate (group_t *this, int idx);
-static int reverse_translate (group_t * this, int idx);
-static void group_decref (group_t * group);
-
-
 static int communicators_changed (mqs_process *proc)
 {
     mpich_process_info *p_info = 
@@ -813,8 +851,8 @@ static int communicators_changed (mqs_process *proc)
  * being re-allocated from a free list, in which case the same
  * address will be re-used a lot, which could confuse us.
  */
-static communicator_t * find_communicator (mpich_process_info *p_info,
-					   mqs_taddr_t comm_base, int recv_ctx)
+static communicator_t * find_communicator ( mpich_process_info *p_info,
+					    mqs_taddr_t comm_base, int recv_ctx)
 {
   communicator_t * comm = p_info->communicator_list;
 
@@ -858,7 +896,8 @@ static int rebuild_communicator_list (mqs_process *proc)
      */
     while (comm_base) {
 	/* We do have one to look at, so extract the info */
-	int recv_ctx = fetch_int (proc, comm_base+i_info->comm_recvcontext_id_offs, p_info);
+	int recv_ctx = fetch_int16 (proc, comm_base+i_info->comm_recvcontext_id_offs, p_info);
+	int send_ctx = fetch_int16 (proc, comm_base+i_info->comm_context_id_offs, p_info);
 	communicator_t *old = find_communicator (p_info, comm_base, recv_ctx);
 
 	char *name = "--unnamed--";
@@ -871,7 +910,7 @@ static int rebuild_communicator_list (mqs_process *proc)
 
 	if (old) {
 	    old->present = 1;		/* We do want this communicator */
-	    strncpy (old->comm_info.name, name, 64); /* Make sure the name is up to date,
+	    strncpy (old->comm_info.name, name, sizeof(old->comm_info.name) ); /* Make sure the name is up to date,
 						    * it might have changed and we can't tell.
 						    */
 	}
@@ -892,14 +931,19 @@ static int rebuild_communicator_list (mqs_process *proc)
 	    /* Save the results */
 	    nc->next = p_info->communicator_list;
 	    p_info->communicator_list = nc;
-	    nc->present = 1;
-	    nc->group   = g;
-	    nc->context_id = recv_ctx;
+	    nc->present               = 1;
+	    nc->group                 = g;
+	    nc->context_id            = send_ctx;
+	    nc->recvcontext_id        = recv_ctx;
 	    
-	    strncpy (nc->comm_info.name, name, 64);
+	    strncpy (nc->comm_info.name, name, sizeof( nc->comm_info.name ) );
 	    nc->comm_info.unique_id = comm_base;
 	    nc->comm_info.size      = np;
 	    nc->comm_info.local_rank = fetch_int (proc, comm_base+i_info->comm_rank_offs,p_info);
+#ifdef DEBUG_LIST_ITER
+	    printf( "Adding communicator %p, send context=%d, recv context=%d, size=%d, name=%s\n",
+		    comm_base, send_ctx, recv_ctx, np, name );
+#endif	    
 #if 0
 	    nc->comm_info.local_rank= reverse_translate (g, dbgr_get_global_rank (proc));
 #endif

@@ -79,7 +79,7 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
                                     &ADIOI_MPE_postwrite_b );
 
         int  comm_world_rank;
-        PMPI_Comm_rank( MPI_COMM_WORLD, &comm_world_rank );
+        MPI_Comm_rank( MPI_COMM_WORLD, &comm_world_rank );
 
         if ( comm_world_rank == 0 ) {
             MPE_Describe_state( ADIOI_MPE_open_a, ADIOI_MPE_open_b,

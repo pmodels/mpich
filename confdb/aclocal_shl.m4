@@ -223,7 +223,17 @@ pac_kinds=$1
 ifelse($1,,[
     pac_prog=""
     AC_CHECK_PROG(pac_prog,gcc,yes,no)
-    if test "$pac_prog" = yes ; then pac_kinds=gcc ; fi
+    # If we are gcc but OS X, set the special type
+    # We need a similar setting for cygwin
+    if test "$pac_prog" = yes ; then 
+        osname=`uname -s`
+    	case $osname in 
+             *Darwin*|*darwin*) pac_kinds=gcc-osx
+             ;;				
+	     *) pac_kinds=gcc
+	     ;;
+	esac
+    fi
     pac_prog=""
     AC_CHECK_PROG(pac_prog,libtool,yes,no)
     if test "$pac_prog" = yes ; then pac_kinds="$pac_kinds libtool" ; fi
@@ -235,6 +245,12 @@ for pac_arg in $pac_kinds ; do
     #C_LINK_SHL='${CC} -shared -Wl,-h,<finallibname>'
     pac_cc_sharedlibs='gcc -shared -fpic'
     pac_clink_sharedlibs='gcc -shared'
+    pac_type_sharedlibs=gcc
+    ;;
+    gcc-osx|osx-gcc)
+    pac_clink_sharedlibs='${CC} -dynamiclib -undefined suppress -single_module -flat_namespace'
+    pac_cc_sharedlibs='${CC} -fPIC'
+    pac_type_sharedlibs=gcc-osx
     ;;
     libtool)
     AC_CHECK_PROGS(LIBTOOL,libtool,false)
@@ -245,6 +261,7 @@ for pac_arg in $pac_kinds ; do
         # either CC or CC_SHL is libtool $cc
         pac_cc_sharedlibs'${LIBTOOL} -mode=compile ${CC}'
         pac_clink_sharedlibs='${LIBTOOL} -mode=link ${CC} -rpath ${libdir}'
+	pac_type_sharedlibs=libtool
     fi
     ;;
     *)
@@ -256,6 +273,7 @@ if test -z "$pac_cc_sharedlibs" ; then pac_cc_sharedlibs=true ; fi
 if test -z "$pac_clink_sharedlibs" ; then pac_clink_sharedlibs=true ; fi
 ifelse($2,,CC_SHL=$pac_cc_sharedlibs,$2=$pac_cc_sharedlibs)
 ifelse($3,,C_LINK_SHL=$pac_clink_sharedlibs,$3=$pac_clink_sharedlibs)
+ifelse($4,,SHAREDLIB_TYPE=$pac_type_sharedlibs,$4=$pac_type_sharedlibs)
 ])
 dnl
 dnl

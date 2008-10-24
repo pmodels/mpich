@@ -889,8 +889,8 @@ void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
 				       lastp, 
 				       DLOOP_Segment_contig_mpi_flatten, 
 				       DLOOP_Segment_vector_mpi_flatten,
-				       DLOOP_Segment_blkidx_mpi_flatten,
-				       DLOOP_Segment_index_mpi_flatten,
+				       NULL, /* DLOOP_Segment_blkidx_mpi_flatten, */
+				       NULL, /* DLOOP_Segment_index_mpi_flatten, */
 				       NULL,
 				       &params);
 

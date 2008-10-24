@@ -163,9 +163,9 @@ void MPIR_BOR (
     }
 	/* --BEGIN ERROR HANDLING-- */
     default: {
-        MPICH_PerThread_t *p;
-        MPIR_GetPerThread(&p);
-        p->op_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_BOR" );
+	MPIU_THREADPRIV_DECL;
+	MPIU_THREADPRIV_GET;
+        MPIU_THREADPRIV_FIELD(op_errno) = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_BOR" );
         break;
     }
 	/* --END ERROR HANDLING-- */

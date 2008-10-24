@@ -42,6 +42,7 @@ also the value at index %d
 **topotoolarge:Topology size is greater than communicator size
 **topotoolarge %d %d:Topology size %d is larger than communicator size (%d)
 **notcarttopo:No Cartesian topology associated with this communicator
+**dimszero:Communicator associated with zero-dimensional cartesian topology
 **notgraphtopo:No Graph topology associated with this communicator
 **notopology:No topology associated with this communicator
 **dimsmany:Number of dimensions is too large 
@@ -447,6 +448,8 @@ with MPI_Alloc_mem.
 **winunlockrank:Invalid rank argument
 **winunlockrank %d %d:Invalid rank argument %d, should be %d
 **nomemreq:failure occurred while allocating memory for a request object
+**nomemuereq %d:Failed to allocate memory for an unexpected message. %d \
+unexpected messages queued.
 **notcstatignore:MPI_STATUS_IGNORE cannot be passed to MPI_Status_c2f()
 **notfstatignore:MPI_STATUS_IGNORE cannot be passed to MPI_Status_f2c()
 **user:user defined function returned an error code
