@@ -39,7 +39,7 @@ datadir=@datadir@
 docdir=@docdir@
 # Since autoconf < 2.60 does not set docdir,
 # check if it is set.  If not, set it accordingly.
-if [ "$docdir" == "@docdir@" ] ; then
+if [ "$docdir" = "@docdir@" ] ; then
     docdir=${datadir}/doc/${PACKAGE}
 fi
 
@@ -388,7 +388,7 @@ if [ "$prefix_override" = 1 -o "$package_override" = 1 ] ; then
     docdir=@docdir@
     # Since autoconf < 2.60 does not set docdir,
     # check if it is set.  If not, set it accordingly.
-    if [ "$docdir" == "@docdir@" ] ; then
+    if [ "$docdir" = "@docdir@" ] ; then
         docdir=${datadir}/doc/${PACKAGE}
     fi
     if [ $appendUninstall = 0 ] ; then
