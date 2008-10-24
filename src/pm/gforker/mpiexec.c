@@ -159,7 +159,7 @@ int main( int argc, char *argv[], char *envp[] )
        init, allowing an MPI process to contact a waiting mpiexec that 
        would serve as a process manager.  This option is not implemented */
     if (getenv("MPIEXEC_USE_PORT")) {
-	s.pmiinfo.portName = (char *)malloc( 1024 );
+	s.pmiinfo.portName = (char *)MPIU_Malloc( 1024 );
 	if (!s.pmiinfo.portName) {
 	    MPIU_Error_printf( "Failed to allocate storage for portName" );
 	}

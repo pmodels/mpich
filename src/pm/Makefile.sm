@@ -1,7 +1,7 @@
 # SUBDIRS_pm_name are the names that @ pm_name @ can take in SUBDIRS
 # (except for util, which is included so that simplemake will process
 # the Makefile.sm in that directory)
-SUBDIRS_pm_name = mpd smpd gforker remshell
+SUBDIRS_pm_name = mpd smpd gforker remshell hydra
 SUBDIRS = @pm_name@ @other_pm_names@ .
 # Remove PMPILIBNAME from the common make variables for the mpid
 # directories

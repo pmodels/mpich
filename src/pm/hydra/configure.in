@@ -1,0 +1,188 @@
+AC_PREREQ(2.62)
+#
+# (C) 2008 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+
+dnl Caching is usually WRONG for systems with cross-mounted file systems
+dnl (the cache file may correspond to a different system).  Since configure
+dnl is not on a performance-critical path, go for robustness over speed.
+define([AC_CACHE_LOAD],)
+define([AC_CACHE_SAVE],)
+
+AC_INIT()
+
+dnl The MPICH2 top-level configure adds a bunch of flags to the
+dnl user-defined CFLAGS by processing different configure command-line
+dnl arguments (--enable-g, --enable-default-optimization). These updated
+dnl flags are passed down as a separate flag. Here, we don't care about
+dnl the user-defined flags, but rather this updated flags, so we just
+dnl overwrite CFLAGS with them.
+PAC_SUBCONFIG_INIT()
+
+AC_CONFIG_HEADER(include/hydra_config.h)
+
+dnl Set the directory that contains support scripts such as install-sh and
+dnl config.guess
+AC_CONFIG_AUX_DIR(../../../confdb)
+dnl
+echo "RUNNING CONFIGURE FOR THE HYDRA PM"
+
+dnl Bug in autoconf adds -O2 and -g by default. Make sure we only get
+dnl the flags we want.
+save_cflags=$CFLAGS
+AC_PROG_CC
+CFLAGS=$save_cflags
+
+dnl Check if the necessary headers are available
+AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h)
+
+# Check for special types
+AC_TYPE_SIZE_T
+
+dnl Check for necessary functions
+AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca snprintf unsetenv strerror strsignal)
+
+dnl Check what we need to do about the environ extern
+AC_CACHE_CHECK([for environ in unistd.h],environ_in_unistd,
+	[AC_TRY_COMPILE([#include <unistd.h>],[char **x = environ;],
+	environ_in_unistd=yes,environ_in_unistd=no)])
+if test "$environ_in_unistd" = "yes" ; then
+    # We have environ defined in unistd.h; we are done
+    AC_DEFINE(HAVE_EXTERN_ENVIRON,1,[Define if environ extern is available])
+else
+    # See if we can declare it
+    AC_CACHE_CHECK([for manually declared extern environ], manual_extern_environ,
+   	[AC_TRY_LINK([#include <unistd.h>],[extern char ** environ; char **x = environ;],
+	manual_extern_environ=yes,manual_extern_environ=no)])
+    if test "$manual_extern_environ" = "yes" ; then
+        # We can manually declare the extern
+        AC_DEFINE(MANUAL_EXTERN_ENVIRON,1,[Define if environ decl needed])
+        AC_DEFINE(HAVE_EXTERN_ENVIRON,1,[Define if environ extern is available])
+    fi
+fi
+
+dnl Check what boot-strap server we should use
+AC_ARG_WITH(hydra-bss, [  --with-hydra-bss           Boot-strap Server],
+		    [ HYDRA_BSS=$withval ],
+		    [ HYDRA_BSS=ssh ])
+AC_MSG_CHECKING(boot-strap server)
+AC_MSG_RESULT($HYDRA_BSS)
+AC_SUBST(HYDRA_BSS)
+
+dnl Check what process manager we should use
+AC_ARG_WITH(hydra-pm, [  --with-hydra-pm               Process Manager (central or distributed)],
+		[ HYDRA_PM=$withval ],
+		[ HYDRA_PM=central ])
+AC_MSG_CHECKING(process manager)
+AC_MSG_RESULT($HYDRA_PM)
+AC_SUBST(HYDRA_PM)
+
+dnl Check what job launcher we should use
+AC_ARG_WITH(hydra-launcher, [  --with-hydra-launcher         Job Launcher],
+		[ HYDRA_LAUNCHER=$withval ],
+		[ HYDRA_LAUNCHER=mpiexec ])
+AC_MSG_CHECKING(job launcher)
+AC_MSG_RESULT($HYDRA_LAUNCHER)
+AC_SUBST(HYDRA_LAUNCHER)
+
+dnl Check what control system we should use
+AC_ARG_WITH(hydra-control, [  --with-hydra-control               Control System],
+		[ HYDRA_CONTROL=$withval ],
+		[ HYDRA_CONTROL=consys ])
+AC_MSG_CHECKING(control system)
+AC_MSG_RESULT($HYDRA_CONTROL)
+AC_SUBST(HYDRA_CONTROL)
+
+dnl Check what control system we should use
+AC_ARG_WITH(hydra-css, [  --with-hydra-css               Communication Sub-system],
+		[ HYDRA_CSS=$withval ],
+		[ HYDRA_CSS= ])
+AC_MSG_CHECKING(communication subsystem)
+if test "x$HYDRA_CSS" != "x" ; then
+   AC_MSG_RESULT($HYDRA_CSS)
+else
+   AC_MSG_RESULT(none)
+fi
+AC_SUBST(HYDRA_CSS)
+
+dnl Debugging support
+dnl FIXME: Inherit this from the above configure
+AC_ARG_ENABLE(g, [  --enable-g              Enable Debugging],
+		 [ DEBUG=$enableval ],
+		 [ DEBUG=no ])
+AC_MSG_CHECKING(debugging support)
+AC_MSG_RESULT($DEBUG)
+if test "$DEBUG" = "yes"; then
+   EXTRA_CFLAGS="$EXTRA_CFLAGS -g"
+fi
+AC_SUBST(EXTRA_CFLAGS)
+
+dnl Setup non-default variables
+MAKE=${MAKE:-make}
+AC_SUBST(MAKE)
+AR=${AR:-ar}
+AC_SUBST(AR)
+
+dnl Substitute common variables. Some versions of autoconf have
+dnl trouble with this.
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
+AC_SUBST(LDFLAGS)
+
+AC_PROG_INSTALL
+PAC_PROG_MKDIR_P
+PAC_PROG_MAKE
+
+case "$ENABLE_SHLIB" in 
+    none) ;;
+    gcc) 
+    LDFLAGS="$LDFLAGS -static"    
+    ;;
+    libtool)
+    ;;
+    *)
+    ;;
+esac
+
+ENABLE_SHLIB=none
+AC_SUBST(ENABLE_SHLIB)
+
+AC_SUBST(RANLIB)
+AC_SUBST(CC_SHL)
+AC_SUBST(C_LINK_SHL)
+
+MPILIBNAME=${MPILIBNAME:-"mpich"}
+AC_SUBST(MPILIBNAME)
+
+if test -z "$master_top_srcdir" ; then
+   master_top_srcdir='${srcdir}/../../..'
+fi
+
+AC_SUBST(master_top_srcdir)
+
+AC_CONFIG_SUBDIRS(../util)
+
+dnl Place holder macro for finalization
+PAC_SUBCONFIG_FINALIZE()
+
+dnl Final output
+AC_OUTPUT(Makefile \
+	utils/Makefile \
+	utils/dbg/Makefile \
+	utils/env/Makefile \
+	utils/sock/Makefile \
+	utils/signals/Makefile \
+	launcher/Makefile \
+	launcher/utils/Makefile \
+	launcher/${HYDRA_LAUNCHER}/Makefile \
+	control/Makefile \
+	control/utils/Makefile \
+	control/${HYDRA_CONTROL}/Makefile \
+	pm/Makefile \
+	pm/utils/Makefile \
+	pm/${HYDRA_PM}/Makefile \
+	demux/Makefile \
+	bootstrap/Makefile \
+	bootstrap/utils/Makefile \
+	bootstrap/${HYDRA_BSS}/Makefile)

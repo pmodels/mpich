@@ -1,0 +1,13 @@
+#
+# (C) 2008 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+
+SUBDIRS_HYDRA_LAUNCHER = mpiexec
+SUBDIRS = utils @HYDRA_LAUNCHER@ .
+
+mpich2-build-install:
+	${MAKE} -C @HYDRA_LAUNCHER@ $@
+
+mpich2-build-uninstall:
+	${MAKE} -C @HYDRA_LAUNCHER@ $@

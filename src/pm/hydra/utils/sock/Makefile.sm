@@ -1,0 +1,10 @@
+#
+# (C) 2008 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+
+HYDRA_LIB_PATH = ../../lib
+
+libhydra_a_DIR = ${HYDRA_LIB_PATH}
+libhydra_a_SOURCES = sock.c
+INCLUDES = -I${abs_srcdir}/../../utils -I${abs_srcdir}/../../control/include -I${abs_srcdir}/../../include -I../../include -I${abs_srcdir}/../include -I${abs_srcdir}/../../../../include -I../../../../include

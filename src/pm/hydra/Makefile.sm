@@ -1,0 +1,15 @@
+#
+# (C) 2008 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+
+SUBDIRS = utils control pm bootstrap demux launcher .
+
+all-preamble:
+	@if [ ! -d lib ] ; then mkdir lib ; fi
+
+mpich2-build-install:
+	${MAKE} -C launcher $@
+
+mpich2-build-uninstall:
+	${MAKE} -C launcher $@
