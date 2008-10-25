@@ -7,8 +7,6 @@
 #include "hydra.h"
 #include "hydra_sig.h"
 
-#include <signal.h>
-
 #if defined FUNCNAME
 #undef FUNCNAME
 #endif /* FUNCNAME */

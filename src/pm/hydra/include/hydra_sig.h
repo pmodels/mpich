@@ -10,6 +10,7 @@
 #include "hydra.h"
 #include <signal.h>
 #include <sys/wait.h>
+#include <bits/sigaction.h>
 
 typedef void (*sighandler_t)(int);
 

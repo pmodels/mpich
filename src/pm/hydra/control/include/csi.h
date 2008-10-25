@@ -7,6 +7,8 @@
 #ifndef CSI_H_INCLUDED
 #define CSI_H_INCLUDED
 
+#include <sys/time.h>
+
 typedef enum {
     HYD_CSI_ENV_STATIC,
     HYD_CSI_ENV_AUTOINC
