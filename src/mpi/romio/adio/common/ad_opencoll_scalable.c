@@ -17,8 +17,6 @@ void ADIOI_SCALEABLE_OpenColl(ADIO_File fd, int rank,
 		int access_mode, int *error_code)
 {    
     int orig_amode_wronly;
-    int max_error_code;
-    static char myname[] = "ADIOI_SCALABLE_OpenColl";
 
     /* if we are doing deferred open, non-aggregators should return now */
     if (fd->hints->deferred_open ) {

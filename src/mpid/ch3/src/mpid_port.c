@@ -10,7 +10,7 @@ static int setupPortFunctions = 1;
 
 #ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 static int MPIDI_Open_port(MPID_Info *, char *);
-static int MPIDI_Close_port(char *);
+static int MPIDI_Close_port(const char *);
 
 /* Define the functions that are used to implement the port
  * operations */
@@ -330,7 +330,7 @@ fn_fail:
 #define FUNCNAME MPIDI_Close_port
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_Close_port(char *port_name)
+static int MPIDI_Close_port(const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
     int port_name_tag;

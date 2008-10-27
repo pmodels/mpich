@@ -48,11 +48,11 @@ void ADIOI_Print_flatlist_node(ADIOI_Flatlist_node *flatlist_node_p)
     {
 	if (i % 5 == 0 && i != 0)
 	{
-	    fprintf(stderr, "%d=(%Ld,%d)\n", i, flatlist_node_p->indices[i],
+	    fprintf(stderr, "%d=(%Ld,%Ld)\n", i, flatlist_node_p->indices[i],
 		    flatlist_node_p->blocklens[i]);
 	}
 	else
-	    fprintf(stderr, "%d=(%Ld,%d) ", i, flatlist_node_p->indices[i],
+	    fprintf(stderr, "%d=(%Ld,%Ld) ", i, flatlist_node_p->indices[i],
 		    flatlist_node_p->blocklens[i]);
     }
     fprintf(stderr, "\n");

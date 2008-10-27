@@ -36,6 +36,8 @@ void ADIOI_Create_fr_simpletype (int size, int nprocs_for_coll,
 			      MPI_Datatype *simpletype);
 void align_fr (int fr_size, ADIO_Offset fr_off, int alignment,
 	       int *aligned_fr_size, ADIO_Offset *aligned_fr_off);
+void ADIOI_Verify_fr (int nprocs_for_coll, ADIO_Offset *file_realm_st_offs,
+		      MPI_Datatype *file_realm_types);
 
 void ADIOI_Calc_file_realms (ADIO_File fd, ADIO_Offset min_st_offset,
 			     ADIO_Offset max_end_offset)

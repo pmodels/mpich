@@ -281,7 +281,7 @@ void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 static int MPIR_DatatypeAttrFinalizeCallback(void *dummy ATTRIBUTE((unused)) )
 {
     MPID_Datatype *dtype;
-    int i, mpi_errno;
+    int i, mpi_errno=MPI_SUCCESS;
 
     for (i=0; i<MPID_DATATYPE_N_BUILTIN; i++) {
 	dtype = &MPID_Datatype_builtin[i];
@@ -291,6 +291,7 @@ static int MPIR_DatatypeAttrFinalizeCallback(void *dummy ATTRIBUTE((unused)) )
 	    /* During finalize, we ignore error returns from the free */
 	}
     }
+    return mpi_errno;
 }
 
 void MPIR_DatatypeAttrFinalize( void )

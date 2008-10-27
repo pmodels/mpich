@@ -535,11 +535,7 @@ int MPIU_Local_procs_finalize()
         MPIU_Free(g_node_ids);
     }
     
- fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIU_LOCAL_PROCS_FINALIZE);
     return mpi_errno;
- fn_fail:
-    
-    goto fn_exit;
 }
                           

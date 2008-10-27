@@ -17,6 +17,7 @@ void ADIOI_FAILSAFE_OpenColl(ADIO_File fd, int rank,
 {
     int orig_amode_excl, orig_amode_wronly;
 
+    orig_amode_excl = access_mode;
     if ((access_mode & ADIO_CREATE) && (access_mode & ADIO_EXCL)) {
 	/* the open should fail if the file exists. Only *1* process
 	 * should check this. Otherwise, if all processes try to check
