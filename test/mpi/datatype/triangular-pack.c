@@ -6,7 +6,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
 #include "mpi.h"
 
 int main(int argc, char *argv[]);
@@ -82,7 +81,7 @@ int main(int argc, char *argv[])
 
     /* print message and exit */
     if (errs) {
-	fprintf(stderr, "Found %d errors\n", errs);
+	printf( "Found %d errors\n", errs);
     }
     else {
 	printf(" No Errors\n");
