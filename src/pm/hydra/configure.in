@@ -161,6 +161,9 @@ fi
 
 AC_SUBST(master_top_srcdir)
 
+dnl Dependency handling
+AC_SUBST(MAKE_DEPEND_C)
+
 AC_CONFIG_SUBDIRS(../util)
 
 dnl Place holder macro for finalization
