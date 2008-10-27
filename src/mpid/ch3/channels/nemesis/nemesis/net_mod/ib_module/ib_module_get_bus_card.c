@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 #include "mpidimpl.h"
-#include "ib_module.h"
+#include "ib_module_impl.h"
 #include "ib_utils.h"
 #include "ib_module_cm.h"
 

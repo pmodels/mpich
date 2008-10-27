@@ -8,7 +8,6 @@
 #include "psm.h"
 #include "psm_mq.h"
 #include "mpid_nem_impl.h"
-#include "psm_module.h"
 
 MPID_nem_netmod_funcs_t MPIDI_nem_psm_module_funcs = {
     MPID_nem_psm_module_init,

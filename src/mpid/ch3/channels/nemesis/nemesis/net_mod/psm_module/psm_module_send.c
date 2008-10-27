@@ -6,7 +6,6 @@
 
 #include "psm_module_impl.h"
 #include "psm.h"
-#include "psm_module.h"
 #include "my_papi_defs.h"
 
 #undef FUNCNAME

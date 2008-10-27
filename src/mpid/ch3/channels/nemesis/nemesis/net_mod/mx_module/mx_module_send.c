@@ -6,7 +6,6 @@
 
 #include "mx_module_impl.h"
 #include "myriexpress.h"
-#include "mx_module.h"
 #include "my_papi_defs.h"
 
 #undef FUNCNAME

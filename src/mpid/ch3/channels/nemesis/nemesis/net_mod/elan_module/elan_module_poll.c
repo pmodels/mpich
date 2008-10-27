@@ -6,7 +6,6 @@
 
 #include "elan_module_impl.h"
 #include <elan/elan.h>
-#include "elan_module.h"
 #include "my_papi_defs.h"
 
 /*

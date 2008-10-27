@@ -7,7 +7,7 @@
 #ifndef SCTP_MODULE_IMPL_H
 #define SCTP_MODULE_IMPL_H
 #include "mpid_nem_impl.h"
-#include "sctp_module.h"
+#include "sctp_module_impl.h"
 #include "all_hash.h"
 #include "sctp_module_queue.h"
 #include <sys/socket.h>
@@ -100,6 +100,30 @@ extern MPIDI_VC_t * MPIDI_CH3I_dynamic_tmp_vc;
 extern int MPIDI_CH3I_dynamic_tmp_fd;
 
 /* functions */
+
+int MPID_nem_sctp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, 
+                              MPID_nem_queue_ptr_t proc_free_queue, 
+                              MPID_nem_cell_ptr_t proc_elements,   int num_proc_elements,
+                              MPID_nem_cell_ptr_t module_elements, int num_module_elements, 
+                              MPID_nem_queue_ptr_t *module_free_queue, int ckpt_restart,
+                              MPIDI_PG_t *pg_p, int pg_rank,
+                              char **bc_val_p, int *val_max_sz_p);
+int MPID_nem_sctp_module_finalize (void);
+int MPID_nem_sctp_module_ckpt_shutdown (void);
+int MPID_nem_sctp_module_poll (MPID_nem_poll_dir_t in_or_out);
+int MPID_nem_sctp_module_poll_send (void);
+int MPID_nem_sctp_module_poll_recv (void);
+int MPID_nem_sctp_module_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen);
+int MPID_nem_sctp_module_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p);
+int MPID_nem_sctp_module_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc);
+int MPID_nem_sctp_module_vc_init (MPIDI_VC_t *vc);
+int MPID_nem_sctp_module_vc_destroy(MPIDI_VC_t *vc);
+int MPID_nem_sctp_module_vc_terminate (MPIDI_VC_t *vc);
+
+/* completion counter is atomically decremented when operation completes */
+int MPID_nem_sctp_module_get (void *target_p, void *source_p, int source_node, int len, int *completion_ctr);
+int MPID_nem_sctp_module_put (void *target_p, int target_node, void *source_p, int len, int *completion_ctr);
+
 
 /* determine the stream # of a req. copied from UBC sctp channel so could be irrelevant */
 /*    we want to use context so that collectives don't

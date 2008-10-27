@@ -7,7 +7,6 @@
 #include "myriexpress.h"
 #include "mpid_nem_impl.h"
 #include "mx_module_impl.h"
-#include "mx_module.h"
 
 MPID_nem_netmod_funcs_t MPIDI_nem_mx_module_funcs = {
     MPID_nem_mx_module_init,

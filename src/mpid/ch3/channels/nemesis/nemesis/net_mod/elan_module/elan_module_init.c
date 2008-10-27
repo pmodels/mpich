@@ -11,7 +11,6 @@
 #include "mpidimpl.h"
 #include "mpid_nem_impl.h"
 #include "elan_module_impl.h"
-#include "elan_module.h"
 
 MPID_nem_netmod_funcs_t MPIDI_nem_elan_module_funcs = {
     MPID_nem_elan_module_init,
