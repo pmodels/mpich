@@ -977,8 +977,12 @@ dnl Adds '--enable-strict' to the command line.  If this is enabled, then
 dnl if no compiler has been set, set 'CC' to 'gcc'.
 dnl If the compiler is 'gcc', 'COPTIONS' is set to include
 dnl.vb
-dnl	-O -Wall -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -std=c89
+dnl	-O -Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Werror=pointer-arith -DGCC_WALL -std=c89
 dnl.ve
+dnl This makes using a void * with pointer arithmetic an error, not a warning.
+dnl We do this because pointer arithmetic with void * is not valid C but
+dnl gcc accepts this unless these particular optiones are used.
+dnl Grr. -Werror=name is a recent addition to gcc, so we can't require it yet.
 dnl
 dnl -std=c89 is used to select the C89 version of the ANSI/ISO C standard.
 dnl As of this writing, many C compilers still accepted only this version,
@@ -991,7 +995,7 @@ dnl
 dnl If the value 'all' is given to '--enable-strict', additional warning
 dnl options are included.  These are
 dnl.vb
-dnl -Wunused -Wshadow -Wmissing-declarations -Wno-long-long -Wpointer-arith
+dnl -Wunused -Wshadow -Wmissing-declarations -Wno-long-long
 dnl.ve
 dnl 
 dnl If the value 'noopt' is given to '--enable-strict', no optimization
@@ -1039,7 +1043,7 @@ if test "$enable_strict_done" != "yes" ; then
 	yes)
         enable_strict_done="yes"
         if test "$CC" = "gcc" ; then 
-            COPTIONS="${COPTIONS} -Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -std=c89"
+            COPTIONS="${COPTIONS} -Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -DGCC_WALL -std=c89"
         fi
 	;;
 	all)
@@ -1055,7 +1059,7 @@ if test "$enable_strict_done" != "yes" ; then
 	    # -Wunreachable-code has a serious bug and falsely reports 
 	    # labels as unreachable code.  This makes that option useless
 	    # for the MPICH2 code, for example
-            COPTIONS="${COPTIONS} -Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wredundant-decls -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
+            COPTIONS="${COPTIONS} -Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wredundant-decls -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
         fi
 	;;
 
@@ -1096,7 +1100,7 @@ if test "$enable_strict_done" != "yes" ; then
 	noopt)
         enable_strict_done="yes"
         if test "$CC" = "gcc" ; then 
-            COPTIONS="${COPTIONS} -Wall -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -std=c89"
+            COPTIONS="${COPTIONS} -Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -DGCC_WALL -std=c89"
         fi
 	;;
 	no)
@@ -2409,4 +2413,75 @@ case "$ac_cv_prog_install_breaks_libs" in
 	;;
 esac
 AC_SUBST(RANLIB_AFTER_INSTALL)
+])
+
+#
+# determine if the compiler defines a symbol containing the function name
+# Inspired by checks within the src/mpid/globus/configure.in file in MPICH2
+#
+# These tests check not only that the compiler defines some symbol, such
+# as __FUNCTION__, but that the symbol correctly names the function.
+#
+# Defines 
+#   HAVE__FUNC__      (if __func__ defined)
+#   HAVE_CAP__FUNC__  (if __FUNC__ defined)
+#   HAVE__FUNCTION__  (if __FUNCTION__ defined)
+#
+AC_DEFUN([PAC_CC_FUNCTION_NAME_SYMBOL],[
+AC_CACHE_CHECK([whether the compiler defines __func__],
+pac_cv_have__func__,[
+AC_RUN_IFELSE([
+#include <string.h>
+int foo(void);
+int foo(void)
+{
+    return (strcmp(__func__, "foo") == 0);
+}
+int main(int argc, char ** argv)
+{
+    return (foo() ? 0 : 1);
+}
+], pac_cv_have__func__=yes, pac_cv_have__func__=no)
+])
+if test $pac_cv_have__func__ = "yes" ; then
+    AC_DEFINE(HAVE__FUNC__,,[define if the compiler defines __func__])
+fi
+
+AC_CACHE_CHECK([whether the compiler defines __FUNC__],
+pac_cv_have_cap__func__,[
+AC_RUN_IFELSE([
+#include <string.h>
+int foo(void);
+int foo(void)
+{
+    return (strcmp(__FUNC__, "foo") == 0);
+}
+int main(int argc, char ** argv)
+{
+    return (foo() ? 0 : 1);
+}
+], pac_cv_have_cap__func__=yes, pac_cv_have_cap__func__=no)
+])
+if test $pac_cv_have_cap__func__ = "yes" ; then
+    AC_DEFINE(HAVE_CAP__FUNC__,,[define if the compiler defines __FUNC__])
+fi
+
+AC_CACHE_CHECK([whether the compiler sets __FUNCTION__],
+pac_cv_have__function__,[
+AC_RUN_IFELSE([
+#include <string.h>
+int foo(void);
+int foo(void)
+{
+    return (strcmp(__FUNCTION__, "foo") == 0);
+}
+int main(int argc, char ** argv)
+{
+    return (foo() ? 0 : 1);
+}
+], pac_cv_have__function__=yes, pac_cv_have__function__=no)
+])
+if test $pac_cv_have__function__ = "yes" ; then
+    AC_DEFINE(HAVE__FUNCTION__,,[define if the compiler defines __FUNCTION__])
+fi
 ])
