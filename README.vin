@@ -66,7 +66,7 @@ later, in the section "Alternative configurations".
 
 2.  Unpack the tar file and go to the top level directory:
 
-      tar xfz mpich2-%VERSION%.tar.gz
+      tar xzf mpich2-%VERSION%.tar.gz
       cd mpich2-%VERSION%
 
     If your tar doesn't accept the z option, use
@@ -622,7 +622,7 @@ placed in /home/me/mpich2-<VERSION>, the build is done in
 /usr/local/mpich2-<VERSION>:
 
   cd /home/me
-  tar xfz mpich2-<VERSION>.tar.gz
+  tar xzf mpich2-<VERSION>.tar.gz
   cd /tmp/me
   # Assume /tmp/me already exists
   mkdir mpich2
