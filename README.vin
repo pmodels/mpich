@@ -622,7 +622,7 @@ placed in /home/me/mpich2-<VERSION>, the build is done in
 /usr/local/mpich2-<VERSION>:
 
   cd /home/me
-  tar xzf mpich2-<VERSION>.tar.gz
+  tar xfz mpich2-<VERSION>.tar.gz
   cd /tmp/me
   # Assume /tmp/me already exists
   mkdir mpich2
