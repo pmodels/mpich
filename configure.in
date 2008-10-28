@@ -1565,6 +1565,14 @@ PAC_CC_STRICT
 if test -n "$pac_cc_strict_flags" ; then
     MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $pac_cc_strict_flags"
 fi
+# Check for whether the compiler defines a symbol that contains the 
+# function name.  The MPICH2 code, for greater portability, defines
+# its own symbols, FCNAME (a string) and FUNCNAME (a token that is not a 
+# string).  Code should use these symbols where possible.  However, 
+# some debugging macros may want to use a compiler-provided symbol
+# for the function name, and this check makes it possible to 
+# define such macros in a way that is always correct.
+PAC_CC_FUNCTION_NAME_SYMBOL
 
 # Check if $MPI_DEFAULT_COPTS is valid with $CC
 if test "$enable_default_optimize" = "yes" \
@@ -4333,6 +4341,81 @@ int main( int argc, char **argv ){
     fi
     AC_SUBST(MPI_STATUS_SIZE)
 
+    #
+    # We must convert all hex values to decimal (!).
+    # This is for the C types so they are also available in Fortran
+    for var in CHAR SIGNED_CHAR UNSIGNED_CHAR WCHAR SHORT \
+		  UNSIGNED_SHORT INT UNSIGNED_INT LONG UNSIGNED_LONG \
+		  FLOAT DOUBLE LONG_DOUBLE LONG_LONG_INT \
+		  UNSIGNED_LONG_LONG LONG_LONG FLOAT_INT DOUBLE_INT \
+		  LONG_INT SHORT_INT "2INT" LONG_DOUBLE_INT ; do
+        fullvar="MPI_$var"
+	fullf77var="MPI_F77_$var"
+        eval fullvarvalue=\$$fullvar
+        #echo "$fullvar = $fullvarvalue"
+	if test "x$fullvarvalue" = "x" ; then
+             eval $fullf77var="MPI_DATATYPE_NULL"
+             continue
+        fi
+        value=0
+        fullvarvalue=`echo $fullvarvalue | sed -e 's/..\(.*\)/\1/'`
+	offset=0
+        for pos in 3 4 5 6 7 8 9 10 ; do
+            # This works, even for Tru64, because only a single character
+  	    # is extracted
+            char=`expr $fullvarvalue : '\(.\)'`
+	    # FIXME: Tru64 Unix eliminates leading zeros (!)
+ 	    # How do we fix something that broken?
+	    fullvarvalue=`echo $fullvarvalue | sed -e 's/.\(.*\)/\1/'`
+            case $char in 
+                a) char=10 ;;
+	        b) char=11 ;;
+	        c) char=12 ;;
+	        d) char=13 ;;
+	        e) char=14 ;;
+	        f) char=15 ;;
+            esac
+	    # For Fortran, if the value is too big for an unsigned int, 
+	    # we need to make it a signed (negative) int. Currently, the
+	    # types in this class are the minloc/maxloc types.
+	    if test $pos = 3 -a $char -ge 8 ; then
+	        #echo "for $var in position $pos found a value >= 8"
+		char=`expr $char - 8`
+		offset=-2147483648
+            fi
+	    value=`expr $value \* 16 + $char`
+        done
+	if test "$offset" != 0 ; then 
+	    #echo "$fullf77var: $value, $offset"
+            value=`expr $value + $offset`
+	fi
+        #echo "$fullf77var = $value"
+        eval $fullf77var=$value
+    done
+    AC_SUBST(MPI_F77_CHAR)
+    AC_SUBST(MPI_F77_SIGNED_CHAR)
+    AC_SUBST(MPI_F77_UNSIGNED_CHAR)
+    AC_SUBST(MPI_F77_WCHAR)
+    AC_SUBST(MPI_F77_SHORT)
+    AC_SUBST(MPI_F77_UNSIGNED_SHORT)
+    MPI_F77_UNSIGNED=$MPI_F77_UNSIGNED_INT
+    AC_SUBST(MPI_F77_UNSIGNED)
+    AC_SUBST(MPI_F77_INT)
+    AC_SUBST(MPI_F77_LONG)
+    AC_SUBST(MPI_F77_UNSIGNED_LONG)
+    AC_SUBST(MPI_F77_FLOAT)
+    AC_SUBST(MPI_F77_DOUBLE)
+    AC_SUBST(MPI_F77_LONG_DOUBLE)
+    AC_SUBST(MPI_F77_UNSIGNED_LONG_LONG)
+    MPI_F77_LONG_LONG_INT=$MPI_F77_LONG_LONG
+    AC_SUBST(MPI_F77_LONG_LONG_INT)
+    AC_SUBST(MPI_F77_LONG_LONG)
+    AC_SUBST(MPI_F77_FLOAT_INT)
+    AC_SUBST(MPI_F77_DOUBLE_INT)
+    AC_SUBST(MPI_F77_LONG_INT)
+    AC_SUBST(MPI_F77_SHORT_INT)
+    AC_SUBST(MPI_F77_2INT)
+    AC_SUBST(MPI_F77_LONG_DOUBLE_INT)
     # Try and compute the values of .true. and .false. in Fortran
     # This code has been removed because the Fortran binding code does
     # not yet support it.  

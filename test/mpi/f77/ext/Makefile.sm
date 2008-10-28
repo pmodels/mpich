@@ -11,7 +11,8 @@ allocmemf_LDADD = ../util/mtestf.o
 c2f2cf_SOURCES = c2f2c.c c2f2cf.f
 c2f2cf_LDADD = ../util/mtestf.o 
 c2f2c_CFLAGSADD = -I../../include
-
+ctypesinf_SOURCES = ctypesinf.f ctypesfromc.c
+ctypesinf_LDADD = ../util/mtestf.o
 c2fmult_SOURCES = c2fmult.c
 
 ../util/mtestf.o: 

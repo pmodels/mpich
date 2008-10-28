@@ -1,3 +1,6 @@
 c2f902c.c: $(srcdir)/../../f90/ext/c2f902c.c
 	cp $(srcdir)/../../f90/ext/c2f902c.c c2f902c.c
+ctypesfromc.c: $(srcdir)/../../f77/ext/ctypesfromc.c
+	cp $(srcdir)/../../f77/ext/ctypesfromc.c ctypesfromc.c
+
 
