@@ -547,6 +547,8 @@ typedef struct MPIU_ThreadDebug {
 
 /* FIXME: dprintf is a temporary hack here.  It must be removed (use DBG_MSG
    if a non-temporary version is desired) */
+/* FIXME: Note that __FUNCTION__ is not standard C - HAVE__FUNCTION__ 
+   is defined by configure if present */
 #define dprintf(...)
 #define MPIU_THREAD_CS_ENTER_HANDLE(_context) { \
    dprintf("Calling MPIU_THREAD_CS_ENTER_HANDLE in %s\n", __FUNCTION__); \
