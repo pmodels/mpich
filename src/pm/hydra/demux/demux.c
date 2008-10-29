@@ -197,7 +197,11 @@ HYD_Status HYD_DMX_Wait_for_event()
 		if (pollfds[i].revents & POLLIN)
 		    events |= HYD_CSI_OUT;
 
-		run->callback(pollfds[i].fd, events);
+		status = run->callback(pollfds[i].fd, events);
+		if (status != HYD_SUCCESS) {
+		    HYDU_Error_printf("callback returned error status\n", errno);
+		    goto fn_fail;
+		}
 	    }
 
 	    i++;

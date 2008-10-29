@@ -132,7 +132,9 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 	}
 	else {
 	    /* We don't understand the command */
-	    printf("Unrecognized command: %s\n", cmd);
+	    HYDU_Error_printf("Unrecognized PMI command: %s\n", cmd);
+	    status = HYD_INTERNAL_ERROR;
+	    goto fn_fail;
 	}
 
 	if (status != HYD_SUCCESS) {

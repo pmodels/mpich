@@ -55,6 +55,7 @@ HYD_Status HYD_CSI_Finalize()
 	for (i = 0; i < proc_params->hostlist_length; i++)
 	    HYDU_FREE(proc_params->hostlist[i]);
 	HYDU_FREE(proc_params->hostlist);
+	HYDU_FREE(proc_params);
 	proc_params = p;
     }
     csi_handle->proc_params = NULL;

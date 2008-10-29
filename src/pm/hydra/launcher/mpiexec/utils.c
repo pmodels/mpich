@@ -319,7 +319,7 @@ fn_fail:
 #define FUNCNAME "HYD_LCHI_Get_parameters"
 HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t * params)
 {
-    int argc = t_argc;
+    int argc = t_argc, got_hostfile;
     char ** argv = t_argv;
     int local_params_started;
     HYD_CSI_Env_t * env;
@@ -596,6 +596,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
     }
 
     local = params->local;
+    got_hostfile = 0;
     while (local) {
 	if (local->prop == HYD_LCHI_PROPAGATE_NOTSET &&
 	    params->global.prop == HYD_LCHI_PROPAGATE_NOTSET)
@@ -614,16 +615,17 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 	    goto fn_fail;
 	}
 
-	if (local->hostfile == NULL && getenv("HYDRA_HOST_FILE")) {
+	if (local->hostfile == NULL && got_hostfile == 0 && getenv("HYDRA_HOST_FILE"))
 	    local->hostfile = MPIU_Strdup(getenv("HYDRA_HOST_FILE"));
-	}
-	if (local->hostfile == NULL) {
-	    HYDU_Error_printf("Host file not specified\n");
-	    status = HYD_INTERNAL_ERROR;
-	    goto fn_fail;
-	}
+	if (local->hostfile != NULL)
+	    got_hostfile = 1;
 
 	local = local->next;
+    }
+    if (got_hostfile == 0) {
+	HYDU_Error_printf("Host file not specified\n");
+	status = HYD_INTERNAL_ERROR;
+	goto fn_fail;
     }
 
 fn_exit:

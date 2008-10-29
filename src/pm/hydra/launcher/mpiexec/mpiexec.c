@@ -52,7 +52,7 @@ int main(int argc, char ** argv)
     FILE * fp;
     int procs_left, current_procs, count, index, i, exit_status;
     char node[MAX_HOSTNAME_LEN + 5]; /* Give 5 extra digits for number of processes */
-    char * nodename, * procs;
+    char * nodename, * procs, * hostfile;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -82,6 +82,7 @@ int main(int argc, char ** argv)
     /* Break host files into nodes and pass it to the control
      * system. */
     local = params.local;
+    hostfile = NULL;
     while (local) {
 	procs_left = local->num_procs;
 
@@ -97,7 +98,15 @@ int main(int argc, char ** argv)
 	proc_params->next = NULL;
 
 	index = 0;
-	fp = fopen(local->hostfile, "r");
+	/* If we got a new file, open it */
+	if (local->hostfile != NULL) {
+	    if (hostfile != NULL) { /* We have a previously opened file */
+		fclose(fp);
+	    }
+	    fp = fopen(local->hostfile, "r");
+	    hostfile = local->hostfile;
+	}
+
 	while (1) {
 	    fscanf(fp, "%s", node);
 
@@ -136,7 +145,6 @@ int main(int argc, char ** argv)
 	    if (!procs_left)
 		break;
 	}
-	fclose(fp);
 
 	if (params.global.prop != HYD_LCHI_PROPAGATE_NOTSET) {
 	    /* There is a global environment setting */
@@ -171,6 +179,9 @@ int main(int argc, char ** argv)
 		proc_params->genv_list = NULL;
 	}
 
+	proc_params->stdout_cb = HYD_LCHI_stdout_cb;
+	proc_params->stderr_cb = HYD_LCHI_stderr_cb;
+
 	if (csi_handle->proc_params == NULL) {
 	    csi_handle->proc_params = proc_params;
 	}
@@ -183,6 +194,7 @@ int main(int argc, char ** argv)
 
 	local = local->next;
     }
+    fclose(fp);
 
     gettimeofday(&csi_handle->start, NULL);
     if (getenv("MPIEXEC_TIMEOUT"))
@@ -193,8 +205,6 @@ int main(int argc, char ** argv)
     }
 
     csi_handle->stdin_cb = HYD_LCHI_stdin_cb;
-    csi_handle->proc_params->stdout_cb = HYD_LCHI_stdout_cb;
-    csi_handle->proc_params->stderr_cb = HYD_LCHI_stderr_cb;
 
     /* Launch the processes */
     status = HYD_CSI_Launch_procs();
@@ -228,7 +238,8 @@ int main(int argc, char ** argv)
     local = params.local;
     while (local) {
 	tlocal = local->next;
-	HYDU_FREE(local->hostfile);
+	if (local->hostfile)
+	    HYDU_FREE(local->hostfile);
 
 	HYD_CSU_Free_env_list(local->added_env_list);
 	HYD_CSU_Free_env_list(local->prop_env_list);
