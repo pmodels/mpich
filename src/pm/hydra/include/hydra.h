@@ -8,6 +8,7 @@
 #define HYDRA_H_INCLUDED
 
 #include <stdio.h>
+#include "mpibase.h"
 #include "hydra_config.h"
 
 #if defined HAVE_UNISTD_H

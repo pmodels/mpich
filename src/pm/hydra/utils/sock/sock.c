@@ -108,7 +108,7 @@ HYD_Status HYDU_Sock_connect(const char * host, int port, int * fd)
 	status = HYD_INVALID_PARAM;
 	goto fn_fail;
     }
-    memcpy(&sa.sin_addr, ht->h_addr, ht->h_length);
+    memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
 
     /* Create a socket and set the required options */
     *fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
