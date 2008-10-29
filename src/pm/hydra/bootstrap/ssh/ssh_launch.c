@@ -143,6 +143,11 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 	    client_arg[arg++] = MPIU_Strdup("ssh");
 	    client_arg[arg++] = MPIU_Strdup("-xq");
 	    client_arg[arg++] = MPIU_Strdup(hostname);
+
+	    client_arg[arg++] = MPIU_Strdup("cd");
+	    client_arg[arg++] = MPIU_Strdup(csi_handle->wdir);
+	    client_arg[arg++] = MPIU_Strdup(";");
+
 	    client_arg[arg++] = MPIU_Strdup("killall");
 
 	    pid = HYD_BSCU_Procstate[process_id].pid;
