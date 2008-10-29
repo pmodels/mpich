@@ -593,9 +593,11 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char * args[])
 	    }
 	    run = run->next;
 	}
-	tmp[i++] = "-1 msg=key_";
-	tmp[i++] = key;
-	tmp[i++] = "_not_found value=unknown";
+	if (run == NULL) {
+	    tmp[i++] = "-1 msg=key_";
+	    tmp[i++] = key;
+	    tmp[i++] = "_not_found value=unknown";
+	}
     }
     tmp[i++] = "\n";
     tmp[i++] = NULL;

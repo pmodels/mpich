@@ -24,7 +24,7 @@ HYD_Status HYDU_Set_signal(int signum, sighandler_t handler)
      * turn off the reset-handler-to-default bit, then set the new
      * handler */
     sigaction(signum, (struct sigaction *) NULL, &act);
-    act.sa_handler = handler;
+    act.sa_handler = (void (*)(int)) handler;
 #if defined SA_RESETHAND
     /* Note that if this feature is not supported, there is a race
      * condition in the handling of signals, and the OS is
