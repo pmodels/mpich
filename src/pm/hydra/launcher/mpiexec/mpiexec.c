@@ -89,7 +89,9 @@ int main(int argc, char ** argv)
 	proc_params->hostlist_length = local->num_procs;
 	HYDU_MALLOC(proc_params->hostlist, char **, proc_params->hostlist_length * sizeof(char *), status);
 	HYDU_MALLOC(proc_params->corelist, int *, proc_params->hostlist_length * sizeof(int), status);
+
 	proc_params->exec = local->exec;
+
 	proc_params->env_list = NULL;
 	proc_params->genv_list = NULL;
 	proc_params->next = NULL;
@@ -126,13 +128,7 @@ int main(int argc, char ** argv)
 	    }
 
 	    for (i = 0; i < current_procs; i++) {
-		if (i == 0) {
-		    HYDU_MALLOC(proc_params->hostlist[index], char *, strlen(nodename), status);
-		    strcpy(proc_params->hostlist[index], nodename);
-		}
-		else {
-		    proc_params->hostlist[index] = NULL;
-		}
+		proc_params->hostlist[index] = i ? NULL : MPIU_Strdup(nodename);
 		proc_params->corelist[index] = -1; /* We don't support core affinity right now. */
 		index++;
 	    }
@@ -236,7 +232,6 @@ int main(int argc, char ** argv)
 
 	HYD_CSU_Free_env_list(local->added_env_list);
 	HYD_CSU_Free_env_list(local->prop_env_list);
-	HYD_CSU_Free_exec_list(local->exec);
 	HYDU_FREE(local);
 
 	local = tlocal;
