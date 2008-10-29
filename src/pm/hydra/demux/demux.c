@@ -23,6 +23,27 @@ typedef struct HYD_DMXI_Callback {
 
 static HYD_DMXI_Callback_t * cb_list = NULL;
 
+static void print_callback_list()
+{
+    HYD_DMXI_Callback_t * run;
+    int i, j;
+
+    run = cb_list;
+    i = 0;
+    printf("Callback list: ");
+    while (run) {
+	for (j = 0; j < run->num_fds; j++) {
+	    if (run->fd[j] == -1)
+		continue;
+
+	    printf("%d ", run->fd[j]);
+	    i++;
+	}
+	run = run->next;
+    }
+    printf("\n");
+}
+
 #if defined FUNCNAME
 #undef FUNCNAME
 #endif /* FUNCNAME */
@@ -38,7 +59,7 @@ HYD_Status HYD_DMX_Register_fd(int num_fds, int * fd, HYD_CSI_Event_t events,
 
     for (i = 0; i < num_fds; i++) {
 	if (fd[i] < 0) {
-	    printf("bad fd %d\n", fd[i]);
+	    HYDU_Error_printf("registering bad fd %d\n", fd[i]);
 	    status = HYD_INTERNAL_ERROR;
 	    goto fn_fail;
 	}
@@ -135,6 +156,7 @@ HYD_Status HYD_DMX_Wait_for_event()
 		continue;
 
 	    pollfds[i].fd = run->fd[j];
+
 	    pollfds[i].events = 0;
 	    if (run->events & HYD_CSI_OUT)
 		pollfds[i].events |= POLLIN;
@@ -175,14 +197,17 @@ HYD_Status HYD_DMX_Wait_for_event()
 		if (pollfds[i].revents & POLLIN)
 		    events |= HYD_CSI_OUT;
 
-		if (pollfds[i].fd < 0)
-		    printf("Got event on fd %d\n", pollfds[i].fd);
 		run->callback(pollfds[i].fd, events);
 	    }
 
 	    i++;
+	    if (i == total_fds)
+		break;
 	}
 	run = run->next;
+
+	if (i == total_fds)
+	    break;
     }
 
 fn_exit:
