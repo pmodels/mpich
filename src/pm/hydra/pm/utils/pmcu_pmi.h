@@ -62,5 +62,6 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char * args[]);
 HYD_Status HYD_PMCU_pmi_put(int fd, char * args[]);
 HYD_Status HYD_PMCU_pmi_get(int fd, char * args[]);
 HYD_Status HYD_PMCU_pmi_finalize(int fd, char * args[]);
+HYD_Status HYD_PMCU_pmi_get_usize(int fd, char * args[]);
 
 #endif /* PMCU_PMI_H_INCLUDED */

@@ -50,8 +50,14 @@
 
 #define HYDU_Int_to_str(x, str, status)		\
     { \
-	int len = 1, max = 10; \
-	while ((x) >= max) {   \
+	int len = 1, max = 10, y;			\
+	if (x < 0) { \
+	    len++;	       \
+	    y = -x; \
+	}		       \
+	else \
+	    y = x; \
+	while ((y) >= max) {   \
 	    len++; \
 	    max *= 10; \
 	} \

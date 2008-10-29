@@ -183,3 +183,24 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "HYD_BSCI_Get_universe_size"
+HYD_Status HYD_BSCI_Get_universe_size(int * size)
+{
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    *size = -1;
+
+fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}

@@ -130,6 +130,9 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 		close(fd);
 	    }
 	}
+	else if (!strcmp("cmd=get_universe_size", cmd)) {
+	    status = HYD_PMCU_pmi_get_usize(fd, args);
+	}
 	else {
 	    /* We don't understand the command */
 	    HYDU_Error_printf("Unrecognized PMI command: %s\n", cmd);

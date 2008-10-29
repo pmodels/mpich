@@ -643,3 +643,47 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "HYD_PMCU_pmi_get_usize"
+HYD_Status HYD_PMCU_pmi_get_usize(int fd, char * args[])
+{
+    int usize, i;
+    char * tmp[HYD_PMCU_NUM_STR], * cmd, * usize_str;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYD_BSCI_Get_universe_size(&usize);
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("Unable to get universe size from the bootstrap server\n");
+	goto fn_fail;
+    }
+
+    HYDU_Int_to_str(usize, usize_str, status);
+
+    i = 0;
+    tmp[i++] = "cmd=universe_size size=";
+    tmp[i++] = MPIU_Strdup(usize_str);
+    tmp[i++] = "\n";
+    tmp[i++] = NULL;
+
+    HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
+    status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("sock utils returned error when writing PMI line\n");
+	goto fn_fail;
+    }
+
+    HYDU_FREE(usize_str);
+
+fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
