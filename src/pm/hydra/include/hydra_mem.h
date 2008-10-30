@@ -39,7 +39,7 @@
 	int len = 0, i, count;		     \
 	for (i = 0; (strlist)[i] != NULL; i++) \
 	    len += strlen((strlist)[i]); \
-	HYDU_MALLOC((strjoin), char *, len, (status)); \
+	HYDU_MALLOC((strjoin), char *, len + 1, (status)); \
 	count = 0; \
 	(strjoin)[0] = 0; \
 	for (i = 0; (strlist)[i] != NULL; i++) { 	   \

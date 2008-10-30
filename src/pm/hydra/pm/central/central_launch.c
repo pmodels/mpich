@@ -23,8 +23,7 @@ HYD_CSI_Handle * csi_handle;
 	\
 	HYDU_MALLOC(env, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status); \
 	env->env_name = MPIU_Strdup(str);				\
-	HYDU_MALLOC(env->env_value, char *, strlen(val), status); \
-	strcpy(env->env_value, val);				  \
+        env->env_value = MPIU_Strdup(val); \
 	env->env_type = HYD_CSI_ENV_STATIC; \
 	env->next = NULL; \
 	proc_params = csi_handle->proc_params; \
