@@ -107,6 +107,11 @@ int main(int argc, char ** argv)
 		fclose(fp);
 	    }
 	    fp = fopen(local->hostfile, "r");
+	    if (fp == NULL) {
+		HYDU_Error_printf("unable to open host file %s\n", local->hostfile);
+		status = HYD_INTERNAL_ERROR;
+		goto fn_fail;
+	    }
 	    hostfile = local->hostfile;
 	}
 
