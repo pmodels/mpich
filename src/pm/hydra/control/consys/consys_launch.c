@@ -22,7 +22,7 @@ HYD_CSI_Handle * csi_handle;
 HYD_Status HYD_CSI_Launch_procs()
 {
     struct HYD_CSI_Proc_params * proc_params;
-    int * stdin_fd, flags;
+    int stdin_fd, flags;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -64,9 +64,8 @@ HYD_Status HYD_CSI_Launch_procs()
 	goto fn_exit;
     }
 
-    HYDU_MALLOC(stdin_fd, int *, sizeof(int), status);
-    *stdin_fd = 0;
-    status = HYD_DMX_Register_fd(1, stdin_fd, HYD_CSI_OUT, csi_handle->stdin_cb);
+    stdin_fd = 0;
+    status = HYD_DMX_Register_fd(1, &stdin_fd, HYD_CSI_OUT, csi_handle->stdin_cb);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("demux engine returned error when registering fd\n");
 	goto fn_fail;
