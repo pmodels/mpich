@@ -285,6 +285,7 @@ HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char * args[])
 	HYDU_Error_printf("sock utils returned error when writing PMI line\n");
 	goto fn_fail;
     }
+    HYDU_FREE(cmd);
 
     HYDU_FREE(maxkvsname);
     HYDU_FREE(maxkeylen);
@@ -355,6 +356,7 @@ HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char * args[])
 	HYDU_Error_printf("sock utils returned error when writing PMI line\n");
 	goto fn_fail;
     }
+    HYDU_FREE(cmd);
 
     HYDU_FREE(sapp_num);
 
@@ -400,6 +402,7 @@ HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char * args[])
 	HYDU_Error_printf("sock utils returned error when writing PMI line\n");
 	goto fn_fail;
     }
+    HYDU_FREE(cmd);
 
 fn_exit:
     HYDU_FUNC_EXIT();
@@ -529,6 +532,7 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char * args[])
 	HYDU_Error_printf("sock utils returned error when writing PMI line\n");
 	goto fn_fail;
     }
+    HYDU_FREE(cmd);
 
 fn_exit:
     HYDU_FUNC_EXIT();
@@ -606,6 +610,7 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char * args[])
 	HYDU_Error_printf("sock utils returned error when writing PMI line\n");
 	goto fn_fail;
     }
+    HYDU_FREE(cmd);
 
 fn_exit:
     HYDU_FUNC_EXIT();
@@ -675,8 +680,103 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char * args[])
 	HYDU_Error_printf("sock utils returned error when writing PMI line\n");
 	goto fn_fail;
     }
+    HYDU_FREE(cmd);
 
     HYDU_FREE(usize_str);
+
+fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "free_pmi_process_list"
+static HYD_Status free_pmi_process_list(HYD_PMCU_pmi_process_t * process_list)
+{
+    HYD_PMCU_pmi_process_t * process, * tmp;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    process = process_list;
+    while (process) {
+	tmp = process->next;
+	HYDU_FREE(process);
+	process = tmp;
+    }
+
+fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "free_pmi_kvs_list"
+static HYD_Status free_pmi_kvs_list(HYD_PMCU_pmi_kvs_t * kvs_list)
+{
+    HYD_PMCU_pmi_kvs_pair_t * key_pair, * tmp;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    key_pair = kvs_list->key_pair;
+    while (key_pair) {
+	tmp = key_pair->next;
+	HYDU_FREE(key_pair);
+	key_pair = tmp;
+    }
+
+fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "HYD_PMCU_Finalize"
+HYD_Status HYD_PMCU_Finalize(void)
+{
+    HYD_PMCU_pmi_pg_t * pg, * tmp;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    pg = pg_list;
+    while (pg) {
+	tmp = pg->next;
+
+	status = free_pmi_process_list(pg->process);
+	if (status != HYD_SUCCESS) {
+	    HYDU_Error_printf("unable to free process list\n");
+	    goto fn_fail;
+	}
+
+	status = free_pmi_kvs_list(pg->kvs);
+	if (status != HYD_SUCCESS) {
+	    HYDU_Error_printf("unable to free kvs list\n");
+	    goto fn_fail;
+	}
+
+	HYDU_FREE(pg);
+	pg = tmp;
+    }
 
 fn_exit:
     HYDU_FUNC_EXIT();

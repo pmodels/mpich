@@ -54,14 +54,15 @@
 		HYDU_Int_to_str(process_id, str, status); \
 		HYDU_MALLOC(env_value, char *, strlen(str) + 1, status); \
 		MPIU_Snprintf(env_value, strlen(str) + 1, "%s", str); \
+                HYDU_FREE(str); \
 	    } \
 				 \
 	    len = strlen(env->env_name) + 2;	\
 	    if (env_value) \
 		len += strlen(env_value); \
 								\
-	    HYDU_MALLOC(client_env[arg], char *, len, status);		\
-	    MPIU_Snprintf(client_env[arg++], len, "%s=%s", env->env_name, env_value); \
+	    HYDU_MALLOC(client_env[arg], char *, len + 1, status);		\
+	    MPIU_Snprintf(client_env[arg++], len + 1, "%s=%s", env->env_name, env_value); \
 	    if (env->env_type == HYD_CSI_ENV_AUTOINC) \
 		HYDU_FREE(env_value); \
 	    env = env->next; \

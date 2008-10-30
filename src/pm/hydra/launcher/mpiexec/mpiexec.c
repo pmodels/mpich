@@ -59,6 +59,8 @@ int main(int argc, char ** argv)
 
     HYDU_FUNC_ENTER();
 
+    HYDU_MALLOC(csi_handle, HYD_CSI_Handle *, sizeof(HYD_CSI_Handle), status);
+
     status = HYD_LCHI_Get_parameters(argc, argv, &params);
     if (status != HYD_SUCCESS) {
 	usage();
@@ -68,11 +70,10 @@ int main(int argc, char ** argv)
     if (params.debug_level >= 1)
 	HYD_LCHI_Dump_params(params);
 
-    HYDU_MALLOC(csi_handle, HYD_CSI_Handle *, sizeof(HYD_CSI_Handle), status);
-
     csi_handle->debug_level = params.debug_level;
     csi_handle->enablex = params.enablex;
-    csi_handle->wdir = params.global.wdir;
+    csi_handle->wdir = MPIU_Strdup(params.global.wdir);
+    HYDU_FREE(params.global.wdir);
     csi_handle->proc_params = NULL;
 
     status = HYD_LCHI_Create_env_list(params.global.prop, params.global.added_env_list,

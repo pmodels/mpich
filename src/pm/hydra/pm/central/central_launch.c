@@ -150,6 +150,7 @@ HYD_Status HYD_PMCI_Launch_procs()
     HYDU_Int_to_str(port, sport, status);
     HYDU_MALLOC(port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
     MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1, "%s:%s", hostname, sport);
+    HYDU_FREE(sport);
 
     create_and_add_static_env("PMI_PORT", port_str, status);
     create_and_add_dynamic_env("PMI_ID", 0, status);
@@ -171,7 +172,7 @@ HYD_Status HYD_PMCI_Launch_procs()
     }
 
 fn_fail:
-/*     HYDU_FREE(port_str); */
+    HYDU_FREE(port_str);
     HYDU_FUNC_EXIT();
     return status;
 

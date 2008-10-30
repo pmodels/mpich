@@ -35,6 +35,12 @@ HYD_Status HYD_PMCI_Finalize()
     close(HYD_PMCD_Central_listenfd);
     HYD_PMCD_Central_listenfd = -1;
 
+    status = HYD_PMCU_Finalize();
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to finalize process manager utils\n");
+	goto fn_fail;
+    }
+
 fn_exit:
     HYDU_FUNC_EXIT();
     return status;
