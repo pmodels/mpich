@@ -14,7 +14,7 @@
 HYD_Status HYDU_Sock_listen(int * listen_fd, int low_port, int high_port, int * port)
 {
     struct sockaddr_in sa;
-    int one = 1, flags, i;
+    int one = 1, i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -91,7 +91,7 @@ HYD_Status HYDU_Sock_connect(const char * host, int port, int * fd)
 {
     struct sockaddr_in sa;
     struct hostent * ht;
-    int one = 1, flags;
+    int one = 1;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -156,7 +156,6 @@ fn_fail:
 #define FUNCNAME "HYDU_Sock_accept"
 HYD_Status HYDU_Sock_accept(int listen_fd, int * fd)
 {
-    int flags;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
