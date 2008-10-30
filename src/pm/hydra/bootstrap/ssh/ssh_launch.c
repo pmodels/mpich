@@ -98,6 +98,10 @@ HYD_Status HYD_BSCI_Launch_procs()
 		goto fn_fail;
 	    }
 
+	    /* For the remaining processes, set the stdin fd to -1 */
+	    if (process_id != 0)
+		csi_handle->stdin = -1;
+
 	    process_id++;
 	}
 

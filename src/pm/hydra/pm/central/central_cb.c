@@ -14,8 +14,6 @@
 #include "demux.h"
 #include "central.h"
 
-#define MAX_BUFFER_SIZE (64 * 1024)
-
 int HYD_PMCD_Central_listenfd;
 HYD_CSI_Handle * csi_handle;
 
@@ -58,7 +56,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(buf, char *, MAX_BUFFER_SIZE, status);
+    HYDU_MALLOC(buf, char *, HYD_CSI_TMPBUF_SIZE, status);
 
     if (fd == HYD_PMCD_Central_listenfd) { /* Someone is trying to connect to us */
 	status = HYDU_Sock_accept(fd, &accept_fd);
@@ -74,7 +72,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 	}
     }
     else {
-	status = HYDU_Sock_readline(fd, buf, MAX_BUFFER_SIZE, &linelen);
+	status = HYDU_Sock_readline(fd, buf, HYD_CSI_TMPBUF_SIZE, &linelen);
 	if (status != HYD_SUCCESS) {
 	    HYDU_Error_printf("sock utils returned error when reading PMI line\n");
 	    goto fn_fail;

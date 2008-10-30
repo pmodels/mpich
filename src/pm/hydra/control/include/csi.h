@@ -34,13 +34,18 @@ typedef struct HYD_CSI_Exec {
     struct HYD_CSI_Exec * next;
 } HYD_CSI_Exec_t;
 
+#define HYD_CSI_TMPBUF_SIZE (64 * 1024)
+
 typedef struct {
     int          debug_level;
     int          enablex;
-    int          stdin;
     char       * wdir;
 
+    int          stdin;
     void       * stdin_cb;
+    char         stdin_tmp_buf[HYD_CSI_TMPBUF_SIZE];
+    int          stdin_buf_offset;
+    int          stdin_buf_count;
 
     /* Start time and timeout. These are filled in by the launcher,
      * but are utilized by the demux engine and the boot-strap server

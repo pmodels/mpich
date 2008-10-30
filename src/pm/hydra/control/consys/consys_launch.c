@@ -22,7 +22,7 @@ HYD_CSI_Handle * csi_handle;
 HYD_Status HYD_CSI_Launch_procs()
 {
     struct HYD_CSI_Proc_params * proc_params;
-    int stdin_fd, flags;
+    int stdin_fd, flags, count;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -52,23 +52,30 @@ HYD_Status HYD_CSI_Launch_procs()
 	proc_params = proc_params->next;
     }
 
-    flags = fcntl(0, F_GETFL, 0);
-    if (flags < 0) {
-	status = HYD_SOCK_ERROR;
-	HYDU_Error_printf("unable to do fcntl on stdin\n");
-	goto fn_exit;
-    }
-    if (fcntl(0, F_SETFL, flags | O_NONBLOCK) < 0) {
-	status = HYD_SOCK_ERROR;
-	HYDU_Error_printf("unable to do fcntl on stdin\n");
-	goto fn_exit;
-    }
+    if (csi_handle->stdin != -1) { /* Only process_id 0 */
+	status = HYDU_Sock_set_nonblock(csi_handle->stdin);
+	if (status != HYD_SUCCESS) {
+	    HYDU_Error_printf("Unable to set socket as non-blocking\n");
+	    status = HYD_SOCK_ERROR;
+	    goto fn_fail;
+	}
 
-    stdin_fd = 0;
-    status = HYD_DMX_Register_fd(1, &stdin_fd, HYD_CSI_OUT, csi_handle->stdin_cb);
-    if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("demux engine returned error when registering fd\n");
-	goto fn_fail;
+	stdin_fd = 0;
+	status = HYDU_Sock_set_nonblock(stdin_fd);
+	if (status != HYD_SUCCESS) {
+	    HYDU_Error_printf("Unable to set socket as non-blocking\n");
+	    status = HYD_SOCK_ERROR;
+	    goto fn_fail;
+	}
+
+	csi_handle->stdin_buf_count = 0;
+	csi_handle->stdin_buf_offset = 0;
+
+	status = HYD_DMX_Register_fd(1, &stdin_fd, HYD_CSI_OUT, csi_handle->stdin_cb);
+	if (status != HYD_SUCCESS) {
+	    HYDU_Error_printf("demux engine returned error when registering fd\n");
+	    goto fn_fail;
+	}
     }
 
 fn_exit:

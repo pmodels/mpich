@@ -334,3 +334,35 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "HYDU_Sock_set_nonblock"
+HYD_Status HYDU_Sock_set_nonblock(int fd)
+{
+    int flags;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    flags = fcntl(fd, F_GETFL, 0);
+    if (flags < 0) {
+	status = HYD_SOCK_ERROR;
+	HYDU_Error_printf("unable to do fcntl on fd %d\n", fd);
+	goto fn_fail;
+    }
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+	status = HYD_SOCK_ERROR;
+	HYDU_Error_printf("unable to do fcntl on fd %d\n", fd);
+	goto fn_fail;
+    }
+
+fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
