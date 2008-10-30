@@ -166,8 +166,6 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char * args[])
     debug = csi_handle->debug_level;
 
     HYDU_Int_to_str(size, ssize, status);
-    /* FIXME: Rank will probably not be the same as the ID
-     * everytime. */
     HYDU_Int_to_str(id, srank, status);
     HYDU_Int_to_str(debug, sdebug, status);
 

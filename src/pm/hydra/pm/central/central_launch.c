@@ -133,9 +133,6 @@ HYD_Status HYD_PMCI_Launch_procs()
     }
 
     /* Register the listening socket with the demux engine */
-    /* FIXME: The callback function needs to be written. Without it,
-     * MPI applications will not work. Regular non-MPI applications
-     * will still work though. */
     status = HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd,
 				 HYD_CSI_OUT, HYD_PMCD_Central_cb);
     if (status != HYD_SUCCESS) {
