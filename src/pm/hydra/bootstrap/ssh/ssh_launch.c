@@ -74,9 +74,11 @@ HYD_Status HYD_BSCI_Launch_procs()
 
 	    /* Allow X forwarding only if explicitly requested */
 	    if (csi_handle->enablex == 1)
-		client_arg[arg++] = MPIU_Strdup("-q");
-	    else
+		client_arg[arg++] = MPIU_Strdup("-Xq");
+	    else if (csi_handle->enablex == 0)
 		client_arg[arg++] = MPIU_Strdup("-xq");
+	    else
+		client_arg[arg++] = MPIU_Strdup("-q");
 
 	    client_arg[arg++] = MPIU_Strdup(hostname);
 
