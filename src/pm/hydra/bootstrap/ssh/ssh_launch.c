@@ -77,8 +77,8 @@ HYD_Status HYD_BSCI_Launch_procs()
 		client_arg[arg++] = MPIU_Strdup("-Xq");
 	    else if (csi_handle->enablex == 0)
 		client_arg[arg++] = MPIU_Strdup("-xq");
-	    else
-		client_arg[arg++] = MPIU_Strdup("-q");
+	    else /* default mode is disable X */
+		client_arg[arg++] = MPIU_Strdup("-xq");
 
 	    client_arg[arg++] = MPIU_Strdup(hostname);
 
