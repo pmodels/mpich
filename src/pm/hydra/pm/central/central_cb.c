@@ -80,6 +80,16 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 	    goto fn_fail;
 	}
 
+	if (linelen == 0) {
+	    status = HYD_DMX_Deregister_fd(fd);
+	    if (status != HYD_SUCCESS) {
+		HYDU_Error_printf("unable to deregister fd %d\n", fd);
+		goto fn_fail;
+	    }
+	    close(fd);
+	    goto fn_exit;
+	}
+
 	/* Check what command we got and call the appropriate
 	 * function */
 	buf[linelen - 1] = 0;

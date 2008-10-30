@@ -263,5 +263,5 @@ fn_exit:
 	return exit_status;
 
 fn_fail:
-    goto fn_fail;
+    goto fn_exit;
 }
