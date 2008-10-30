@@ -1018,6 +1018,28 @@ F77_INTEGER16             = HexToInt(dtypes.Item("MPI_INTEGER16"))
 F77_REAL4                 = HexToInt(dtypes.Item("MPI_REAL4"))
 F77_REAL8                 = HexToInt(dtypes.Item("MPI_REAL8"))
 F77_REAL16                = HexToInt(dtypes.Item("MPI_REAL16"))
+F77_CHAR					= HexToInt(dtypes.Item("MPI_CHAR"))
+F77_SIGNED_CHAR				= HexToInt(dtypes.Item("MPI_SIGNED_CHAR"))
+F77_UNSIGNED_CHAR			= HexToInt(dtypes.Item("MPI_UNSIGNED_CHAR"))
+F77_WCHAR					= HexToInt(dtypes.Item("MPI_WCHAR"))
+F77_SHORT					= HexToInt(dtypes.Item("MPI_SHORT"))
+F77_UNSIGNED_SHORT			= HexToInt(dtypes.Item("MPI_UNSIGNED_SHORT"))
+F77_INT						= HexToInt(dtypes.Item("MPI_INT"))
+F77_UNSIGNED				= HexToInt(dtypes.Item("MPI_UNSIGNED"))
+F77_LONG					= HexToInt(dtypes.Item("MPI_LONG"))
+F77_UNSIGNED_LONG			= HexToInt(dtypes.Item("MPI_UNSIGNED_LONG"))
+F77_FLOAT					= HexToInt(dtypes.Item("MPI_FLOAT"))
+F77_DOUBLE					= HexToInt(dtypes.Item("MPI_DOUBLE"))
+F77_LONG_DOUBLE				= HexToInt(dtypes.Item("MPI_LONG_DOUBLE"))
+F77_LONG_LONG_INT			= HexToInt(dtypes.Item("MPI_LONG_LONG_INT"))
+F77_UNSIGNED_LONG_LONG		= HexToInt(dtypes.Item("MPI_UNSIGNED_LONG_LONG"))
+F77_LONG_LONG				= HexToInt(dtypes.Item("MPI_LONG_LONG"))
+F77_FLOAT_INT				= HexToInt(dtypes.Item("MPI_FLOAT_INT"))
+F77_DOUBLE_INT				= HexToInt(dtypes.Item("MPI_DOUBLE_INT"))
+F77_LONG_INT				= HexToInt(dtypes.Item("MPI_LONG_INT"))
+F77_SHORT_INT				= HexToInt(dtypes.Item("MPI_SHORT_INT"))
+F77_2INT					= HexToInt(dtypes.Item("MPI_2INT"))
+F77_LONG_DOUBLE_INT			= HexToInt(dtypes.Item("MPI_LONG_DOUBLE_INT"))
 
 if false then
 foo = ""
@@ -1616,6 +1638,50 @@ Function ReplaceAts( str, use_f77, b64 )
 				str = Replace(str, "@MPI_F77_LB@", F77_MPI_LB)
 			Case "@MPI_F77_PACKED@"
 				str = Replace(str, "@MPI_F77_PACKED@", F77_MPI_PACKED)
+			Case "@MPI_F77_CHAR@"
+				str = Replace(str, "@MPI_F77_CHAR@", F77_CHAR)
+			Case "@MPI_F77_SIGNED_CHAR@"
+				str = Replace(str, "@MPI_F77_SIGNED_CHAR@", F77_SIGNED_CHAR)
+			Case "@MPI_F77_UNSIGNED_CHAR@"
+				str = Replace(str, "@MPI_F77_UNSIGNED_CHAR@", F77_UNSIGNED_CHAR)
+			Case "@MPI_F77_WCHAR@"
+				str = Replace(str, "@MPI_F77_WCHAR@", F77_WCHAR)
+			Case "@MPI_F77_SHORT@"
+				str = Replace(str, "@MPI_F77_SHORT@", F77_SHORT)
+			Case "@MPI_F77_UNSIGNED_SHORT@"
+				str = Replace(str, "@MPI_F77_UNSIGNED_SHORT@", F77_UNSIGNED_SHORT)
+			Case "@MPI_F77_INT@"
+				str = Replace(str, "@MPI_F77_INT@", F77_INT)
+			Case "@MPI_F77_UNSIGNED@"
+				str = Replace(str, "@MPI_F77_UNSIGNED@", F77_UNSIGNED)
+			Case "@MPI_F77_LONG@"
+				str = Replace(str, "@MPI_F77_LONG@", F77_LONG)
+			Case "@MPI_F77_UNSIGNED_LONG@"
+				str = Replace(str, "@MPI_F77_UNSIGNED_LONG@", F77_UNSIGNED_LONG)
+			Case "@MPI_F77_FLOAT@"
+				str = Replace(str, "@MPI_F77_FLOAT@", F77_FLOAT)
+			Case "@MPI_F77_DOUBLE@"
+				str = Replace(str, "@MPI_F77_DOUBLE@", F77_DOUBLE)
+			Case "@MPI_F77_LONG_DOUBLE@"
+				str = Replace(str, "@MPI_F77_LONG_DOUBLE@", F77_LONG_DOUBLE)
+			Case "@MPI_F77_LONG_LONG_INT@"
+				str = Replace(str, "@MPI_F77_LONG_LONG_INT@", F77_LONG_LONG_INT)
+			Case "@MPI_F77_UNSIGNED_LONG_LONG@"
+				str = Replace(str, "@MPI_F77_UNSIGNED_LONG_LONG@", F77_UNSIGNED_LONG_LONG)
+			Case "@MPI_F77_LONG_LONG@"
+				str = Replace(str, "@MPI_F77_LONG_LONG@", F77_LONG_LONG)
+			Case "@MPI_F77_FLOAT_INT@"
+				str = Replace(str, "@MPI_F77_FLOAT_INT@", F77_FLOAT_INT)
+			Case "@MPI_F77_DOUBLE_INT@"
+				str = Replace(str, "@MPI_F77_DOUBLE_INT@", F77_DOUBLE_INT)
+			Case "@MPI_F77_LONG_INT@"
+				str = Replace(str, "@MPI_F77_LONG_INT@", F77_LONG_INT)
+			Case "@MPI_F77_SHORT_INT@"
+				str = Replace(str, "@MPI_F77_SHORT_INT@", F77_SHORT_INT)
+			Case "@MPI_F77_2INT@"
+				str = Replace(str, "@MPI_F77_2INT@", F77_2INT)
+			Case "@MPI_F77_LONG_DOUBLE_INT@"
+				str = Replace(str, "@MPI_F77_LONG_DOUBLE_INT@", F77_LONG_DOUBLE_INT)
 			Case "@MPI_STATUS_SIZE@"
 				str = Replace(str, "@MPI_STATUS_SIZE@", "5")
 			Case "@HAVE_CXX_EXCEPTIONS@"
@@ -2818,6 +2884,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#undef MPICH_DEBUG_MEMARENA")
 				Case "MPICH_DEBUG_MUTEX"
 					fout.WriteLine("#undef MPICH_DEBUG_MUTEX")
+				Case "MPICH_DEBUG_HANDLEALLOC"
+					fout.WriteLine("#define MPICH_DEBUG_HANDLEALLOC 1")
 				Case "STACK_DIRECTION"
 					fout.WriteLine("#undef STACK_DIRECTION")
 				Case "USE_ALLOCA"
@@ -2860,6 +2928,20 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef NEEDS_FDOPEN_DECL */")
 				Case "HAVE_H_ADDR_LIST"
 					fout.WriteLine("#define HAVE_H_ADDR_LIST 1")
+				Case "HAVE_CAP__FUNC__"
+					fout.WriteLine("/* #undef HAVE_CAP__FUNC__ */")
+				Case "HAVE__FUNC__"
+					fout.WriteLine("/* #undef HAVE__FUNC__ */")
+				Case "HAVE__FUNCTION__"
+					fout.WriteLine("#define HAVE__FUNCTION__ 1")
+				Case "HAVE_MEMCHECK_H"
+					fout.WriteLine("/* #undef HAVE_MEMCHECK_H */")
+				Case "HAVE_VALGRIND_H"
+					fout.WriteLine("/* #undef HAVE_VALGRIND_H */")
+				Case "USE_SMP_COLLECTIVES"
+					fout.WriteLine("#define USE_SMP_COLLECTIVES 1")
+				Case "CH3_RANK_BITS"
+					fout.WriteLine("#define CH3_RANK_BITS 16")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
 					If appendUniqueString(unhandled_definitions, macroname) Then

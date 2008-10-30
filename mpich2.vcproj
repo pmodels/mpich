@@ -5717,6 +5717,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\util\procmap\local_proc.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mpi\romio\adio\common\lock.c"
 				>
 			</File>
