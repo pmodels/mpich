@@ -330,6 +330,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
     HYDU_FUNC_ENTER();
 
     params->debug_level = -1;
+    params->enablex = -1;
     params->global.added_env_list = NULL;
     params->global.prop = HYD_LCHI_PROPAGATE_NOTSET;
     params->global.prop_env_list = NULL;
@@ -351,6 +352,21 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 	    }
 
 	    params->debug_level = atoi(*argv);
+	    continue;
+	}
+
+	if (!strcmp(*argv, "--enable-x")) {
+	    CHECK_LOCAL_PARAM_START(local_params_started, status);
+	    CHECK_NEXT_ARG_VALID(status);
+
+	    /* Debug level already set */
+	    if (params->enablex != -1) {
+		HYDU_Error_printf("Duplicate enable-x setting; previously set to %d\n", params->enablex);
+		status = HYD_INTERNAL_ERROR;
+		goto fn_fail;
+	    }
+
+	    params->enablex = atoi(*argv);
 	    continue;
 	}
 

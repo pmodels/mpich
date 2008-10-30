@@ -18,6 +18,8 @@ static void usage(void)
     printf("Usage: ./mpiexec [global opts] [exec1 local opts] : [exec2 local opts] : ...\n\n");
 
     printf("Global Options (passed to all executables):\n");
+    printf("\t--debug-level {value}            [Debug level]\n");
+    printf("\t--enable-x {value}               [Enable X forwarding (1 for true; 0 for false)]\n");
     printf("\t-genv {name} {value}             [Environment variable name and value]\n");
     printf("\t-genvlist {env1,env2,...}        [Environment variable list to pass]\n");
     printf("\t-genvnone                        [Do not pass any environment variables]\n");
@@ -69,6 +71,7 @@ int main(int argc, char ** argv)
     HYDU_MALLOC(csi_handle, HYD_CSI_Handle *, sizeof(HYD_CSI_Handle), status);
 
     csi_handle->debug_level = params.debug_level;
+    csi_handle->enablex = params.enablex;
     csi_handle->wdir = params.global.wdir;
     csi_handle->proc_params = NULL;
 

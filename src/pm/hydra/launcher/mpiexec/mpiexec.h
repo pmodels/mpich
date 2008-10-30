@@ -24,6 +24,7 @@ typedef enum {
 
 typedef struct {
     int debug_level;
+    int enablex;
 
     struct {
 	HYD_CSI_Env_t        * added_env_list;

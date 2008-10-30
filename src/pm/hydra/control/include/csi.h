@@ -36,6 +36,7 @@ typedef struct HYD_CSI_Exec {
 
 typedef struct {
     int          debug_level;
+    int          enablex;
     int          stdin;
     char       * wdir;
 

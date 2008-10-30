@@ -71,7 +71,13 @@ HYD_Status HYD_BSCI_Launch_procs()
 	    /* Setup the executable arguments */
 	    arg = 0;
 	    client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
-	    client_arg[arg++] = MPIU_Strdup("-q");
+
+	    /* Allow X forwarding only if explicitly requested */
+	    if (csi_handle->enablex == 1)
+		client_arg[arg++] = MPIU_Strdup("-q");
+	    else
+		client_arg[arg++] = MPIU_Strdup("-xq");
+
 	    client_arg[arg++] = MPIU_Strdup(hostname);
 
 	    HYD_BSCU_Append_env(proc_params, client_env, client_arg, arg, -1);
@@ -141,7 +147,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 	    /* Setup the executable arguments */
 	    arg = 0;
 	    client_arg[arg++] = MPIU_Strdup("ssh");
-	    client_arg[arg++] = MPIU_Strdup("-q");
+	    client_arg[arg++] = MPIU_Strdup("-xq");
 	    client_arg[arg++] = MPIU_Strdup(hostname);
 
 	    client_arg[arg++] = MPIU_Strdup("cd");
