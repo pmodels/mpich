@@ -19,7 +19,7 @@ static void usage(void)
 
     printf("Global Options (passed to all executables):\n");
     printf("\t--debug-level {value}            [Debug level]\n");
-    printf("\t--enable-x {value}               [Enable X forwarding (1 for true; 0 for false)]\n");
+    printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
     printf("\t-genv {name} {value}             [Environment variable name and value]\n");
     printf("\t-genvlist {env1,env2,...}        [Environment variable list to pass]\n");
     printf("\t-genvnone                        [Do not pass any environment variables]\n");

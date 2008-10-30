@@ -355,9 +355,8 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 	    continue;
 	}
 
-	if (!strcmp(*argv, "--enable-x")) {
+	if (!strcmp(*argv, "--enable-x") || !strcmp(*argv, "--disable-x")) {
 	    CHECK_LOCAL_PARAM_START(local_params_started, status);
-	    CHECK_NEXT_ARG_VALID(status);
 
 	    /* Debug level already set */
 	    if (params->enablex != -1) {
@@ -366,7 +365,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 		goto fn_fail;
 	    }
 
-	    params->enablex = atoi(*argv);
+	    params->enablex = !strcmp(*argv, "--enable-x");
 	    continue;
 	}
 
