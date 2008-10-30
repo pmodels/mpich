@@ -358,7 +358,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 	if (!strcmp(*argv, "--enable-x") || !strcmp(*argv, "--disable-x")) {
 	    CHECK_LOCAL_PARAM_START(local_params_started, status);
 
-	    /* Debug level already set */
+	    /* X forwarding already enabled or disabled */
 	    if (params->enablex != -1) {
 		HYDU_Error_printf("Duplicate enable-x setting; previously set to %d\n", params->enablex);
 		status = HYD_INTERNAL_ERROR;
