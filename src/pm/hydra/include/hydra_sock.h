@@ -27,5 +27,6 @@ HYD_Status HYDU_Sock_read(int fd, char * buf, int maxlen, int * count);
 HYD_Status HYDU_Sock_writeline(int fd, char * buf, int maxsize);
 HYD_Status HYDU_Sock_write(int fd, char * buf, int maxsize);
 HYD_Status HYDU_Sock_set_nonblock(int fd);
+HYD_Status HYDU_Sock_set_cloexec(int fd);
 
 #endif /* HYDRA_SOCKS_H_INCLUDED */

@@ -55,11 +55,10 @@ HYD_Status HYDU_Sock_listen(int * listen_fd, int low_port, int high_port, int * 
 	goto fn_fail;
     }
 
-    flags = fcntl(*listen_fd, F_GETFL, 0);
-    if (flags >= 0) {
-	/* Make sure that exec'd processes don't get this fd */
-	flags |= FD_CLOEXEC;
-	fcntl(*listen_fd, F_SETFD, flags);
+    status = HYDU_Sock_set_cloexec(*listen_fd);
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to set fd %d to close on exec\n", *listen_fd);
+	goto fn_fail;
     }
 
     /* We asked for any port, so we need to find out which port we
@@ -124,10 +123,16 @@ HYD_Status HYDU_Sock_connect(const char * host, int port, int * fd)
 	goto fn_fail;
     }
 
-    flags = fcntl(*fd, F_GETFL, 0);
-    if (flags >= 0) {
-	flags |= O_NDELAY;
-	fcntl(*fd, F_SETFD, flags);
+    status = HYDU_Sock_set_nonblock(*fd);
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to set fd %d as non-blocking\n", *fd);
+	goto fn_fail;
+    }
+
+    status = HYDU_Sock_set_cloexec(*fd);
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to set fd %d to close on exec\n", *fd);
+	goto fn_fail;
     }
 
     if (connect(*fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
@@ -163,13 +168,16 @@ HYD_Status HYDU_Sock_accept(int listen_fd, int * fd)
 	goto fn_fail;
     }
 
-    flags = fcntl(*fd, F_GETFL, 0);
-    if (flags >= 0) {
-	flags |= O_NDELAY;
+    status = HYDU_Sock_set_nonblock(*fd);
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to set fd %d as non-blocking\n", *fd);
+	goto fn_fail;
+    }
 
-	/* Make sure that exec'd processes don't get this fd */
-	flags |= FD_CLOEXEC;
-	fcntl(*fd, F_SETFD, flags);
+    status = HYDU_Sock_set_cloexec(*fd);
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to set fd %d to close on exec\n", *fd);
+	goto fn_fail;
     }
 
 fn_exit:
@@ -357,6 +365,33 @@ HYD_Status HYDU_Sock_set_nonblock(int fd)
 	status = HYD_SOCK_ERROR;
 	HYDU_Error_printf("unable to do fcntl on fd %d\n", fd);
 	goto fn_fail;
+    }
+
+fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "HYDU_Sock_set_cloexec"
+HYD_Status HYDU_Sock_set_cloexec(int fd)
+{
+    int flags;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    flags = fcntl(fd, F_GETFL, 0);
+    if (flags >= 0) {
+	/* Make sure that exec'd processes don't get this fd */
+	flags |= FD_CLOEXEC;
+	fcntl(fd, F_SETFD, flags);
     }
 
 fn_exit:
