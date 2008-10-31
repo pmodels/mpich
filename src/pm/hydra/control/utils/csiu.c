@@ -45,9 +45,9 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_CSU_Free_env_list"
-void HYD_CSU_Free_env_list(HYD_CSI_Env_t * env_list)
+void HYD_CSU_Free_env_list(HYDU_Env_t * env_list)
 {
-    HYD_CSI_Env_t * env1, * env2;
+    HYDU_Env_t * env1, * env2;
 
     env1 = env_list;
     while (env1) {

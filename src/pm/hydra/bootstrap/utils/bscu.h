@@ -28,7 +28,7 @@
 
 #define HYD_BSCU_Append_env(proc_params, client_env, client_arg, arg, num_args) \
     { \
-	HYD_CSI_Env_t * env; \
+	HYDU_Env_t * env; \
 	int count = 0; \
 	while (client_env[count]) { \
 	    client_arg[arg++] = MPIU_Strdup("export"); \
@@ -44,10 +44,10 @@
     { \
 	int arg = 0, len;	  \
 	char * env_value, * str;	  \
-	HYD_CSI_Env_t * env; \
+	HYDU_Env_t * env; \
 	env = proc_params->env_list; \
 	while (env) { \
-	    if (env->env_type == HYD_CSI_ENV_STATIC) \
+	    if (env->env_type == HYDU_ENV_STATIC) \
 		env_value = env->env_value; \
 	    else { /* This is an auto-increment type */ \
 		/* Allocate a small buffer; this is only an integer */ \
@@ -63,7 +63,7 @@
 								\
 	    HYDU_MALLOC(client_env[arg], char *, len + 1, status);		\
 	    MPIU_Snprintf(client_env[arg++], len + 1, "%s=%s", env->env_name, env_value); \
-	    if (env->env_type == HYD_CSI_ENV_AUTOINC) \
+	    if (env->env_type == HYDU_ENV_AUTOINC) \
 		HYDU_FREE(env_value); \
 	    env = env->next; \
 	} \

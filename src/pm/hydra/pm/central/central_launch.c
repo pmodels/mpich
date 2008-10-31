@@ -19,12 +19,12 @@ HYD_CSI_Handle * csi_handle;
 
 #define create_and_add_static_env(str, val, status)	\
     { \
-	HYD_CSI_Env_t * env; \
+	HYDU_Env_t * env; \
 	\
-	HYDU_MALLOC(env, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status); \
+	HYDU_MALLOC(env, HYDU_Env_t *, sizeof(HYDU_Env_t), status); \
 	env->env_name = MPIU_Strdup(str);				\
         env->env_value = MPIU_Strdup(val); \
-	env->env_type = HYD_CSI_ENV_STATIC; \
+	env->env_type = HYDU_ENV_STATIC; \
 	env->next = NULL; \
 	proc_params = csi_handle->proc_params; \
 	while (proc_params) { \
@@ -39,12 +39,12 @@ HYD_CSI_Handle * csi_handle;
 
 #define create_and_add_dynamic_env(str, val, status)	\
     { \
-	HYD_CSI_Env_t * env; \
+	HYDU_Env_t * env; \
 	\
-	HYDU_MALLOC(env, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status); \
+	HYDU_MALLOC(env, HYDU_Env_t *, sizeof(HYDU_Env_t), status); \
 	env->env_name = MPIU_Strdup(str);				\
 	env->env_value = NULL; \
-	env->env_type = HYD_CSI_ENV_AUTOINC; \
+	env->env_type = HYDU_ENV_AUTOINC; \
 	env->next = NULL; \
 	proc_params = csi_handle->proc_params; \
 	while (proc_params) { \

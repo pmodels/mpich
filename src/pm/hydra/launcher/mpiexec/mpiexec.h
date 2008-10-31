@@ -7,6 +7,8 @@
 #ifndef MPIEXEC_H_INCLUDED
 #define MPIEXEC_H_INCLUDED
 
+#include "hydra.h"
+#include "hydra_env.h"
 #include "csi.h"
 
 typedef enum {
@@ -27,9 +29,9 @@ typedef struct {
     int enablex;
 
     struct {
-	HYD_CSI_Env_t        * added_env_list;
+	HYDU_Env_t        * added_env_list;
 	HYD_LCHI_Propagate_t   prop;
-	HYD_CSI_Env_t        * prop_env_list;
+	HYDU_Env_t        * prop_env_list;
 	char                 * wdir;
     } global;
 
@@ -37,18 +39,18 @@ typedef struct {
 	HYD_CSI_Exec_t        * exec;
 	int                     num_procs;
 	char                  * hostfile;
-	HYD_CSI_Env_t         * added_env_list;
+	HYDU_Env_t         * added_env_list;
 	HYD_LCHI_Propagate_t    prop;
-	HYD_CSI_Env_t         * prop_env_list;
+	HYDU_Env_t         * prop_env_list;
 	struct HYD_LCHI_Local * next;
     } * local;
 } HYD_LCHI_Params_t;
 
 void HYD_LCHI_Dump_params(HYD_LCHI_Params_t params);
-void HYD_LCHI_Env_copy(HYD_CSI_Env_t * dest, HYD_CSI_Env_t src);
-HYD_Status HYD_LCHI_Global_env_list(HYD_CSI_Env_t **);
-HYD_Status HYD_LCHI_Create_env_list(HYD_LCHI_Propagate_t prop, HYD_CSI_Env_t * added_env_list,
-				    HYD_CSI_Env_t * prop_env_list, HYD_CSI_Env_t ** env_list);
+void HYD_LCHI_Env_copy(HYDU_Env_t * dest, HYDU_Env_t src);
+HYD_Status HYD_LCHI_Global_env_list(HYDU_Env_t **);
+HYD_Status HYD_LCHI_Create_env_list(HYD_LCHI_Propagate_t prop, HYDU_Env_t * added_env_list,
+				    HYDU_Env_t * prop_env_list, HYDU_Env_t ** env_list);
 HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t * handle);
 
 HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_CSI_Event_t events);

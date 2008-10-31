@@ -7,6 +7,7 @@
 #include "hydra.h"
 #include "hydra_dbg.h"
 #include "hydra_mem.h"
+#include "hydra_env.h"
 #include "mpiexec.h"
 #include "lchu.h"
 #include "csi.h"
@@ -44,7 +45,7 @@
 #define FUNCNAME "HYD_LCHI_Dump_params"
 void HYD_LCHI_Dump_params(HYD_LCHI_Params_t params)
 {
-    HYD_CSI_Env_t * env;
+    HYDU_Env_t * env;
     struct HYD_LCHI_Local * run;
     HYD_CSI_Exec_t * exec;
 
@@ -99,9 +100,9 @@ fn_exit:
     return;
 }
 
-static HYD_CSI_Env_t * env_found_in_list(HYD_CSI_Env_t * env_list, HYD_CSI_Env_t * env)
+static HYDU_Env_t * env_found_in_list(HYDU_Env_t * env_list, HYDU_Env_t * env)
 {
-    HYD_CSI_Env_t * run;
+    HYDU_Env_t * run;
 
     HYDU_FUNC_ENTER();
 
@@ -125,9 +126,9 @@ fn_exit:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_LCHI_Global_env_list"
-HYD_Status HYD_LCHI_Global_env_list(HYD_CSI_Env_t ** env_list)
+HYD_Status HYD_LCHI_Global_env_list(HYDU_Env_t ** env_list)
 {
-    HYD_CSI_Env_t * env;
+    HYDU_Env_t * env;
     char * env_name, * env_value, * env_str;
     int i;
     HYD_Status status = HYD_SUCCESS;
@@ -137,14 +138,14 @@ HYD_Status HYD_LCHI_Global_env_list(HYD_CSI_Env_t ** env_list)
     *env_list = NULL;
     i = 0;
     while (environ[i]) {
-	HYDU_MALLOC(env, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status);
+	HYDU_MALLOC(env, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
 
 	env_str = MPIU_Strdup(environ[i]);
 	env_name = strtok(env_str, "=");
 	env_value = strtok(NULL, "=");
 	env->env_name = MPIU_Strdup(env_name);
 	env->env_value = env_value ? MPIU_Strdup(env_value) : NULL;
-	env->env_type = HYD_CSI_ENV_STATIC;
+	env->env_type = HYDU_ENV_STATIC;
 
 	status = HYD_LCHU_Add_env_to_list(env_list, env);
 	if (status != HYD_SUCCESS) {
@@ -168,11 +169,11 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_LCHI_Env_copy"
-void HYD_LCHI_Env_copy(HYD_CSI_Env_t * dest, HYD_CSI_Env_t src)
+void HYD_LCHI_Env_copy(HYDU_Env_t * dest, HYDU_Env_t src)
 {
     HYDU_FUNC_ENTER();
 
-    memcpy(dest, &src, sizeof(HYD_CSI_Env_t));
+    memcpy(dest, &src, sizeof(HYDU_Env_t));
     dest->next = NULL;
 
     goto fn_exit;
@@ -187,10 +188,10 @@ fn_exit:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_LCHI_Create_env_list"
-HYD_Status HYD_LCHI_Create_env_list(HYD_LCHI_Propagate_t prop, HYD_CSI_Env_t * added_env_list,
-				    HYD_CSI_Env_t * prop_env_list, HYD_CSI_Env_t ** env_list)
+HYD_Status HYD_LCHI_Create_env_list(HYD_LCHI_Propagate_t prop, HYDU_Env_t * added_env_list,
+				    HYDU_Env_t * prop_env_list, HYDU_Env_t ** env_list)
 {
-    HYD_CSI_Env_t * env, * tenv;
+    HYDU_Env_t * env, * tenv;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -202,7 +203,7 @@ HYD_Status HYD_LCHI_Create_env_list(HYD_LCHI_Propagate_t prop, HYD_CSI_Env_t * a
 
 	env = added_env_list;
 	while (env) {
-	    HYDU_MALLOC(tenv, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status);
+	    HYDU_MALLOC(tenv, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
 	    HYD_LCHI_Env_copy(tenv, *env);
 	    status = HYD_LCHU_Add_env_to_list(env_list, tenv);
 	    if (status != HYD_SUCCESS) {
@@ -221,7 +222,7 @@ HYD_Status HYD_LCHI_Create_env_list(HYD_LCHI_Propagate_t prop, HYD_CSI_Env_t * a
 
 	env = prop_env_list;
 	while (env) {
-	    HYDU_MALLOC(tenv, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status);
+	    HYDU_MALLOC(tenv, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
 	    HYD_LCHI_Env_copy(tenv, *env);
 	    HYD_LCHU_Add_env_to_list(env_list, tenv);
 	    env = env->next;
@@ -235,7 +236,7 @@ HYD_Status HYD_LCHI_Create_env_list(HYD_LCHI_Propagate_t prop, HYD_CSI_Env_t * a
 
 	while (env) {
 	    if (env_found_in_list(prop_env_list, env)) {
-		HYDU_MALLOC(tenv, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status);
+		HYDU_MALLOC(tenv, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
 		HYD_LCHI_Env_copy(tenv, *env);
 		status = HYD_LCHU_Add_env_to_list(env_list, tenv);
 		if (status != HYD_SUCCESS) {
@@ -249,7 +250,7 @@ HYD_Status HYD_LCHI_Create_env_list(HYD_LCHI_Propagate_t prop, HYD_CSI_Env_t * a
 	env = added_env_list;
 	while (env) {
 	    if (env_found_in_list(prop_env_list, env)) {
-		HYDU_MALLOC(tenv, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status);
+		HYDU_MALLOC(tenv, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
 		HYD_LCHI_Env_copy(tenv, *env);
 		status = HYD_LCHU_Add_env_to_list(env_list, tenv);
 		if (status != HYD_SUCCESS) {
@@ -322,7 +323,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
     int argc = t_argc, got_hostfile;
     char ** argv = t_argv;
     int local_params_started;
-    HYD_CSI_Env_t * env;
+    HYDU_Env_t * env;
     char * envstr, * arg;
     struct HYD_LCHI_Local * local;
     HYD_Status status = HYD_SUCCESS;
@@ -372,7 +373,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 	if (!strcmp(*argv, "-genv")) {
 	    CHECK_LOCAL_PARAM_START(local_params_started, status);
 
-	    HYDU_MALLOC(env, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status);
+	    HYDU_MALLOC(env, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
 
 	    CHECK_NEXT_ARG_VALID(status);
 	    env->env_name = MPIU_Strdup(*argv);
@@ -380,7 +381,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 	    CHECK_NEXT_ARG_VALID(status);
 	    env->env_value = MPIU_Strdup(*argv);
 
-	    env->env_type = HYD_CSI_ENV_STATIC;
+	    env->env_type = HYDU_ENV_STATIC;
 
 	    HYD_LCHU_Add_env_to_list(&params->global.added_env_list, env);
 	    continue;
@@ -413,7 +414,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 
 		/* We don't need to set the value or type of the
 		 * environment in this list. */
-		HYDU_MALLOC(env, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status);
+		HYDU_MALLOC(env, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
 		env->env_name = MPIU_Strdup(envstr);
 
 		HYD_LCHU_Add_env_to_list(&params->global.prop_env_list, env);
@@ -475,7 +476,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 	if (!strcmp(*argv, "-env")) {
 	    local_params_started = 1;
 
-	    HYDU_MALLOC(env, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status);
+	    HYDU_MALLOC(env, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
 
 	    CHECK_NEXT_ARG_VALID(status);
 	    env->env_name = MPIU_Strdup(*argv);
@@ -483,7 +484,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 	    CHECK_NEXT_ARG_VALID(status);
 	    env->env_value = MPIU_Strdup(*argv);
 
-	    env->env_type = HYD_CSI_ENV_STATIC;
+	    env->env_type = HYDU_ENV_STATIC;
 
 	    status = get_current_local(&params->local, &local);
 	    if (status != HYD_SUCCESS) {
@@ -541,7 +542,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv, HYD_LCHI_Params_t
 
 		/* We don't need to set the value or type of the
 		 * environment in this list. */
-		HYDU_MALLOC(env, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status);
+		HYDU_MALLOC(env, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
 		env->env_name = MPIU_Strdup(envstr);
 
 	        HYD_LCHU_Add_env_to_list(&local->prop_env_list, env);

@@ -7,6 +7,7 @@
 #include "hydra.h"
 #include "hydra_dbg.h"
 #include "hydra_mem.h"
+#include "hydra_env.h"
 #include "mpiexec.h"
 #include "lchu.h"
 #include "csi.h"
@@ -48,7 +49,7 @@ int main(int argc, char ** argv)
 {
     HYD_LCHI_Params_t params;
     struct HYD_LCHI_Local * local, * tlocal;
-    HYD_CSI_Env_t * genv_list, * env, *tenv;
+    HYDU_Env_t * genv_list, * env, *tenv;
     HYD_CSI_Exec_t * exec, * texec;
     struct HYD_CSI_Proc_params * proc_params, * run;
     FILE * fp;
@@ -159,7 +160,7 @@ int main(int argc, char ** argv)
 	    /* There is a global environment setting */
 	    env = genv_list;
 	    while (env) {
-		HYDU_MALLOC(tenv, HYD_CSI_Env_t *, sizeof(HYD_CSI_Env_t), status);
+		HYDU_MALLOC(tenv, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
 		HYD_LCHI_Env_copy(tenv, *env);
 		status = HYD_LCHU_Add_env_to_list(&proc_params->env_list, tenv);
 		if (status != HYD_SUCCESS) {

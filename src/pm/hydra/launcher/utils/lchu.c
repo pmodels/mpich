@@ -12,9 +12,9 @@
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_LCHU_Add_env_to_list"
-HYD_Status HYD_LCHU_Add_env_to_list(HYD_CSI_Env_t ** env_list, HYD_CSI_Env_t * env)
+HYD_Status HYD_LCHU_Add_env_to_list(HYDU_Env_t ** env_list, HYDU_Env_t * env)
 {
-    HYD_CSI_Env_t * run;
+    HYDU_Env_t * run;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

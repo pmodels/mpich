@@ -10,6 +10,6 @@
 #include "hydra.h"
 #include "csi.h"
 
-HYD_Status HYD_LCHU_Add_env_to_list(HYD_CSI_Env_t ** env_list, HYD_CSI_Env_t * env);
+HYD_Status HYD_LCHU_Add_env_to_list(HYDU_Env_t ** env_list, HYDU_Env_t * env);
 
 #endif /* LCHU_H_INCLUDED */

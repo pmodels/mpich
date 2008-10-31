@@ -8,21 +8,8 @@
 #define CSI_H_INCLUDED
 
 #include <sys/time.h>
-
-typedef enum {
-    HYD_CSI_ENV_STATIC,
-    HYD_CSI_ENV_AUTOINC
-} HYD_CSI_Env_type_t;
-
-typedef struct HYD_CSI_Env {
-    char                 * env_name;
-    char                 * env_value;
-
-    /* Auto-incrementing environment variables can only be integers */
-    HYD_CSI_Env_type_t     env_type;
-    int                    start_val;
-    struct HYD_CSI_Env   * next;
-} HYD_CSI_Env_t;
+#include "hydra.h"
+#include "hydra_env.h"
 
 #define HYD_CSI_OUT  (1)
 #define HYD_CSI_IN   (2)
@@ -62,8 +49,8 @@ typedef struct {
 	int                         * corelist;
 
 	HYD_CSI_Exec_t              * exec;
-	HYD_CSI_Env_t               * env_list;
-	HYD_CSI_Env_t               * genv_list;
+	HYDU_Env_t               * env_list;
+	HYDU_Env_t               * genv_list;
 
 	/* These output FDs are filled in by the lower layers */
 	int                         * stdout;
