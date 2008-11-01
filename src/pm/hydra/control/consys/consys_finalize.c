@@ -11,7 +11,7 @@
 #include "pmci.h"
 #include "bsci.h"
 
-HYD_CSI_Handle * csi_handle;
+HYD_CSI_Handle *csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -19,7 +19,7 @@ HYD_CSI_Handle * csi_handle;
 #define FUNCNAME "HYD_CSI_Finalize"
 HYD_Status HYD_CSI_Finalize(void)
 {
-    struct HYD_CSI_Proc_params * proc_params, * p;
+    struct HYD_CSI_Proc_params *proc_params, *p;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -43,10 +43,10 @@ HYD_Status HYD_CSI_Finalize(void)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

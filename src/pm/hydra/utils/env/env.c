@@ -14,8 +14,8 @@
 #define FUNCNAME "HYDU_Global_env_list"
 HYD_Status HYDU_Global_env_list(HYDU_Env_t ** env_list)
 {
-    HYDU_Env_t * env;
-    char * env_name, * env_value, * env_str;
+    HYDU_Env_t *env;
+    char *env_name, *env_value, *env_str;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -43,11 +43,11 @@ HYD_Status HYDU_Global_env_list(HYDU_Env_t ** env_list)
 	i++;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -56,9 +56,9 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Envdup"
-HYDU_Env_t * HYDU_Envdup(HYDU_Env_t env)
+HYDU_Env_t *HYDU_Envdup(HYDU_Env_t env)
 {
-    HYDU_Env_t * tenv;
+    HYDU_Env_t *tenv;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -69,11 +69,11 @@ HYDU_Env_t * HYDU_Envdup(HYDU_Env_t env)
     tenv->env_name = MPIU_Strdup(env.env_name);
     tenv->env_value = env.env_value ? MPIU_Strdup(env.env_value) : NULL;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return tenv;
 
-fn_fail:
+  fn_fail:
     if (tenv)
 	HYDU_FREE(tenv);
     tenv = NULL;
@@ -85,9 +85,9 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Env_found_in_list"
-HYDU_Env_t * HYDU_Env_found_in_list(HYDU_Env_t * env_list, HYDU_Env_t * env)
+HYDU_Env_t *HYDU_Env_found_in_list(HYDU_Env_t * env_list, HYDU_Env_t * env)
 {
-    HYDU_Env_t * run;
+    HYDU_Env_t *run;
 
     HYDU_FUNC_ENTER();
 
@@ -101,7 +101,7 @@ HYDU_Env_t * HYDU_Env_found_in_list(HYDU_Env_t * env_list, HYDU_Env_t * env)
 
     goto fn_exit;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return run;
 }
@@ -113,7 +113,7 @@ fn_exit:
 #define FUNCNAME "HYDU_Add_env_to_list"
 HYD_Status HYDU_Add_env_to_list(HYDU_Env_t ** env_list, HYDU_Env_t env)
 {
-    HYDU_Env_t * run, * tenv;
+    HYDU_Env_t *run, *tenv;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -165,11 +165,11 @@ HYD_Status HYDU_Add_env_to_list(HYDU_Env_t ** env_list, HYDU_Env_t env)
 	}
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -178,14 +178,15 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Envlistdup"
-HYDU_Env_t * HYDU_Envlistdup(HYDU_Env_t * env)
+HYDU_Env_t *HYDU_Envlistdup(HYDU_Env_t * env)
 {
-    HYDU_Env_t * tenv, * run;
+    HYDU_Env_t *tenv, *run;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    run = env; tenv = NULL;
+    run = env;
+    tenv = NULL;
     while (run) {
 	status = HYDU_Add_env_to_list(&tenv, *run);
 	if (status != HYD_SUCCESS) {
@@ -196,11 +197,11 @@ HYDU_Env_t * HYDU_Envlistdup(HYDU_Env_t * env)
 	run = run->next;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return tenv;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -209,7 +210,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Create_env"
-HYD_Status HYDU_Create_env(HYDU_Env_t ** env, char * env_name, char * env_value,
+HYD_Status HYDU_Create_env(HYDU_Env_t ** env, char *env_name, char *env_value,
 			   HYDU_Env_type_t env_type, int start)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -222,11 +223,11 @@ HYD_Status HYDU_Create_env(HYDU_Env_t ** env, char * env_name, char * env_value,
     (*env)->env_type = env_type;
     (*env)->start_val = start;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -237,7 +238,7 @@ fn_fail:
 #define FUNCNAME "HYDU_Free_env_list"
 HYD_Status HYDU_Free_env_list(HYDU_Env_t * env)
 {
-    HYDU_Env_t * run, * tmp;
+    HYDU_Env_t *run, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -251,10 +252,10 @@ HYD_Status HYDU_Free_env_list(HYDU_Env_t * env)
 	run = tmp;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

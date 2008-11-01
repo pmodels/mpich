@@ -15,7 +15,7 @@
 #include "central.h"
 
 int HYD_PMCD_Central_listenfd;
-HYD_CSI_Handle * csi_handle;
+HYD_CSI_Handle *csi_handle;
 
 /*
  * HYD_PMCI_Launch_procs: Here are the steps we follow:
@@ -41,13 +41,13 @@ HYD_CSI_Handle * csi_handle;
 #define FUNCNAME "HYD_PMCI_Launch_procs"
 HYD_Status HYD_PMCI_Launch_procs(void)
 {
-    char * port_range, * port_str, * sport;
+    char *port_range, *port_str, *sport;
     int low_port, high_port, port, one = 1, i;
     int num_procs;
     char hostname[MAX_HOSTNAME_LEN];
     struct sockaddr_in sa;
-    HYDU_Env_t * env;
-    struct HYD_CSI_Proc_params * proc_params;
+    HYDU_Env_t *env;
+    struct HYD_CSI_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -60,7 +60,8 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     if (!port_range)
 	port_range = getenv("MPICH_PORT_RANGE");
 
-    low_port = 0; high_port = 0;
+    low_port = 0;
+    high_port = 0;
     if (port_range) {
 	port_str = strtok(port_range, ":");
 	if (port_str == NULL) {
@@ -93,8 +94,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     }
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd,
-				 HYD_CSI_OUT, HYD_PMCD_Central_cb);
+    status = HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd, HYD_CSI_OUT, HYD_PMCD_Central_cb);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("demux engine returned error for registering fd\n");
 	goto fn_fail;
@@ -153,10 +153,10 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 	goto fn_fail;
     }
 
- fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }

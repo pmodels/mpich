@@ -11,10 +11,10 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t * HYD_BSCU_Procstate;
+HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
 int HYD_BSCU_Num_procs;
 int HYD_BSCU_Completed_procs;
-HYD_CSI_Handle * csi_handle;
+HYD_CSI_Handle *csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -22,7 +22,7 @@ HYD_CSI_Handle * csi_handle;
 #define FUNCNAME "HYD_BSCU_Init_exit_status"
 HYD_Status HYD_BSCU_Init_exit_status(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -45,11 +45,11 @@ HYD_Status HYD_BSCU_Init_exit_status(void)
 		HYD_BSCU_Num_procs * sizeof(HYD_BSCU_Procstate_t), status);
     HYD_BSCU_Completed_procs = 0;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -60,7 +60,7 @@ fn_fail:
 #define FUNCNAME "HYD_BSCU_Finalize_exit_status"
 HYD_Status HYD_BSCU_Finalize_exit_status(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -74,11 +74,11 @@ HYD_Status HYD_BSCU_Finalize_exit_status(void)
 
     HYDU_FREE(HYD_BSCU_Procstate);
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -87,8 +87,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_BSCU_Create_process"
-HYD_Status HYD_BSCU_Create_process(char ** client_arg, int * in, int * out,
-				   int * err, int * pid)
+HYD_Status HYD_BSCU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid)
 {
     int inpipe[2], outpipe[2], errpipe[2], arg, tpid;
     HYD_Status status = HYD_SUCCESS;
@@ -117,7 +116,7 @@ HYD_Status HYD_BSCU_Create_process(char ** client_arg, int * in, int * out,
 
     /* Fork off the process */
     tpid = fork();
-    if (tpid == 0) { /* Child process */
+    if (tpid == 0) {	/* Child process */
 	close(outpipe[0]);
 	close(1);
 	if (dup2(outpipe[1], 1) < 0) {
@@ -159,7 +158,7 @@ HYD_Status HYD_BSCU_Create_process(char ** client_arg, int * in, int * out,
 	    goto fn_fail;
 	}
     }
-    else { /* Parent process */
+    else {	/* Parent process */
 	close(outpipe[1]);
 	close(errpipe[1]);
 	if (in)
@@ -173,11 +172,11 @@ HYD_Status HYD_BSCU_Create_process(char ** client_arg, int * in, int * out,
     if (pid)
 	*pid = tpid;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -236,11 +235,11 @@ HYD_Status HYD_BSCU_Wait_for_completion()
 	    break;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -249,11 +248,11 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_BSCU_Append_env"
-HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char ** client_arg, int id)
+HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char **client_arg, int id)
 {
     int i, j;
-    HYDU_Env_t * env;
-    char * envstr, * tmp[HYDU_NUM_JOIN_STR], * inc;
+    HYDU_Env_t *env;
+    char *envstr, *tmp[HYDU_NUM_JOIN_STR], *inc;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -284,11 +283,11 @@ HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char ** client_arg, int id
     }
     client_arg[i++] = NULL;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -297,7 +296,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_BSCU_Append_exec"
-HYD_Status HYD_BSCU_Append_exec(char ** exec, char ** client_arg)
+HYD_Status HYD_BSCU_Append_exec(char **exec, char **client_arg)
 {
     int i, j;
     HYD_Status status = HYD_SUCCESS;
@@ -309,10 +308,10 @@ HYD_Status HYD_BSCU_Append_exec(char ** exec, char ** client_arg)
 	client_arg[i++] = MPIU_Strdup(exec[j]);
     client_arg[i++] = NULL;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

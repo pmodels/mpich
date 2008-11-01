@@ -8,7 +8,7 @@
 #include "hydra_mem.h"
 #include "csi.h"
 
-HYD_CSI_Handle * csi_handle;
+HYD_CSI_Handle *csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -32,10 +32,10 @@ int HYD_CSU_Time_left(void)
 	    time_left = 0;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return time_left;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

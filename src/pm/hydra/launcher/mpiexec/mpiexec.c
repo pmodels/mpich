@@ -12,7 +12,7 @@
 #include "lchu.h"
 #include "csi.h"
 
-HYD_CSI_Handle * csi_handle;
+HYD_CSI_Handle *csi_handle;
 
 static void usage(void)
 {
@@ -45,9 +45,9 @@ static void usage(void)
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "mpiexec"
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     int exit_status, i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -87,7 +87,7 @@ int main(int argc, char ** argv)
     if (getenv("MPIEXEC_TIMEOUT"))
 	csi_handle->timeout.tv_sec = atoi(getenv("MPIEXEC_TIMEOUT"));
     else {
-	csi_handle->timeout.tv_sec = -1; /* Set a negative timeout */
+	csi_handle->timeout.tv_sec = -1;	/* Set a negative timeout */
 	csi_handle->timeout.tv_usec = 0;
     }
 
@@ -129,13 +129,13 @@ int main(int argc, char ** argv)
     HYD_LCHU_Free_host_list();
     HYD_LCHU_Free_proc_params();
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     if (status != HYD_SUCCESS)
 	return -1;
     else
 	return exit_status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

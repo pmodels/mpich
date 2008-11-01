@@ -10,8 +10,8 @@
 #include "csi.h"
 #include "pmcu_pmi.h"
 
-HYD_CSI_Handle * csi_handle;
-HYD_PMCU_pmi_pg_t * pg_list = NULL;
+HYD_CSI_Handle *csi_handle;
+HYD_PMCU_pmi_pg_t *pg_list = NULL;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -27,11 +27,11 @@ static HYD_Status allocate_kvs(HYD_PMCU_pmi_kvs_t ** kvs, int pgid)
     MPIU_Snprintf((*kvs)->kvs_name, MAXNAMELEN, "kvs_%d_%d", (int) getpid(), pgid);
     (*kvs)->key_pair = NULL;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -61,11 +61,11 @@ static HYD_Status create_pg(HYD_PMCU_pmi_pg_t ** pg, int pgid)
 
     (*pg)->next = NULL;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -76,7 +76,7 @@ fn_fail:
 #define FUNCNAME "add_process_to_pg"
 static HYD_Status add_process_to_pg(HYD_PMCU_pmi_pg_t * pg, int fd)
 {
-    HYD_PMCU_pmi_process_t * process, * tmp;
+    HYD_PMCU_pmi_process_t *process, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -94,11 +94,11 @@ static HYD_Status add_process_to_pg(HYD_PMCU_pmi_pg_t * pg, int fd)
 	tmp->next = process;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -109,8 +109,8 @@ fn_fail:
 #define FUNCNAME "HYD_PMCU_Create_pg"
 HYD_Status HYD_PMCU_Create_pg(void)
 {
-    HYD_PMCU_pmi_pg_t * run;
-    struct HYD_CSI_Proc_params * proc_params;
+    HYD_PMCU_pmi_pg_t *run;
+    struct HYD_CSI_Proc_params *proc_params;
     int num_procs;
     HYD_Status status = HYD_SUCCESS;
 
@@ -131,11 +131,11 @@ HYD_Status HYD_PMCU_Create_pg(void)
     }
     pg_list->num_procs = num_procs;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -144,12 +144,12 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCU_pmi_initack"
-HYD_Status HYD_PMCU_pmi_initack(int fd, char * args[])
+HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
 {
     int id, size, debug, i;
-    char * ssize, * srank, * sdebug, * tmp[HYDU_NUM_JOIN_STR], * cmd;
-    struct HYD_CSI_Proc_params * proc_params;
-    HYD_PMCU_pmi_pg_t * pg, * run;
+    char *ssize, *srank, *sdebug, *tmp[HYDU_NUM_JOIN_STR], *cmd;
+    struct HYD_CSI_Proc_params *proc_params;
+    HYD_PMCU_pmi_pg_t *pg, *run;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -201,11 +201,11 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char * args[])
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -214,10 +214,10 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCU_pmi_init"
-HYD_Status HYD_PMCU_pmi_init(int fd, char * args[])
+HYD_Status HYD_PMCU_pmi_init(int fd, char *args[])
 {
     int pmi_version, pmi_subversion, i;
-    char * tmp[HYDU_NUM_JOIN_STR];
+    char *tmp[HYDU_NUM_JOIN_STR];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -243,11 +243,11 @@ HYD_Status HYD_PMCU_pmi_init(int fd, char * args[])
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -256,11 +256,11 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCU_pmi_get_maxes"
-HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char * args[])
+HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[])
 {
     int i;
-    char * tmp[HYDU_NUM_JOIN_STR], * cmd;
-    char * maxkvsname, * maxkeylen, * maxvallen;
+    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
+    char *maxkvsname, *maxkeylen, *maxvallen;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -291,19 +291,19 @@ HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char * args[])
     HYDU_FREE(maxkeylen);
     HYDU_FREE(maxvallen);
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 
-static HYD_PMCU_pmi_process_t * find_process(int fd)
+static HYD_PMCU_pmi_process_t *find_process(int fd)
 {
-    HYD_PMCU_pmi_pg_t * pg;
-    HYD_PMCU_pmi_process_t * process;
+    HYD_PMCU_pmi_pg_t *pg;
+    HYD_PMCU_pmi_process_t *process;
 
     pg = pg_list;
     while (pg) {
@@ -324,19 +324,19 @@ static HYD_PMCU_pmi_process_t * find_process(int fd)
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCU_pmi_get_appnum"
-HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char * args[])
+HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char *args[])
 {
-    char * tmp[HYDU_NUM_JOIN_STR], * cmd;
-    char * sapp_num;
+    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
+    char *sapp_num;
     int i;
-    HYD_PMCU_pmi_process_t * process;
+    HYD_PMCU_pmi_process_t *process;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     /* Find the group id corresponding to this fd */
     process = find_process(fd);
-    if (process == NULL) { /* We didn't find the process */
+    if (process == NULL) {	/* We didn't find the process */
 	status = HYD_INTERNAL_ERROR;
 	HYDU_Error_printf("could not find the process structure\n");
 	goto fn_fail;
@@ -360,11 +360,11 @@ HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char * args[])
 
     HYDU_FREE(sapp_num);
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -373,18 +373,18 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCU_pmi_get_my_kvsname"
-HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char * args[])
+HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char *args[])
 {
-    char * tmp[HYDU_NUM_JOIN_STR], * cmd;
+    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
     int i;
-    HYD_PMCU_pmi_process_t * process;
+    HYD_PMCU_pmi_process_t *process;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     /* Find the group id corresponding to this fd */
     process = find_process(fd);
-    if (process == NULL) { /* We didn't find the process */
+    if (process == NULL) {	/* We didn't find the process */
 	status = HYD_INTERNAL_ERROR;
 	HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
 	goto fn_fail;
@@ -404,11 +404,11 @@ HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char * args[])
     }
     HYDU_FREE(cmd);
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -417,10 +417,10 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCU_pmi_barrier_in"
-HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char * args[])
+HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char *args[])
 {
-    HYD_PMCU_pmi_process_t * process, * run;
-    char * cmd;
+    HYD_PMCU_pmi_process_t *process, *run;
+    char *cmd;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -428,7 +428,7 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char * args[])
 
     /* Find the group id corresponding to this fd */
     process = find_process(fd);
-    if (process == NULL) { /* We didn't find the process */
+    if (process == NULL) {	/* We didn't find the process */
 	status = HYD_INTERNAL_ERROR;
 	HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
 	goto fn_fail;
@@ -440,7 +440,7 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char * args[])
      * barrier_out message to everyone. */
     if (process->pg->barrier_count == process->pg->num_procs) {
 	cmd = "cmd=barrier_out\n";
-	run = process->pg->process; /* The first process in the list */
+	run = process->pg->process;	/* The first process in the list */
 	while (run) {
 	    status = HYDU_Sock_writeline(run->fd, cmd, strlen(cmd));
 	    if (status != HYD_SUCCESS) {
@@ -453,11 +453,11 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char * args[])
 	process->pg->barrier_count = 0;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -466,13 +466,13 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCU_pmi_put"
-HYD_Status HYD_PMCU_pmi_put(int fd, char * args[])
+HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
 {
     int i;
-    HYD_PMCU_pmi_process_t * process;
-    HYD_PMCU_pmi_kvs_pair_t * key_pair, * run;
-    char * kvsname, * key, * val;
-    char * tmp[HYDU_NUM_JOIN_STR], * cmd;
+    HYD_PMCU_pmi_process_t *process;
+    HYD_PMCU_pmi_kvs_pair_t *key_pair, *run;
+    char *kvsname, *key, *val;
+    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -486,7 +486,7 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char * args[])
 
     /* Find the group id corresponding to this fd */
     process = find_process(fd);
-    if (process == NULL) { /* We didn't find the process */
+    if (process == NULL) {	/* We didn't find the process */
 	status = HYD_INTERNAL_ERROR;
 	HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
 	goto fn_fail;
@@ -534,11 +534,11 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char * args[])
     }
     HYDU_FREE(cmd);
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -547,13 +547,13 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCU_pmi_get"
-HYD_Status HYD_PMCU_pmi_get(int fd, char * args[])
+HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
 {
     int i;
-    HYD_PMCU_pmi_process_t * process;
-    HYD_PMCU_pmi_kvs_pair_t * run;
-    char * kvsname, * key;
-    char * tmp[HYDU_NUM_JOIN_STR], * cmd;
+    HYD_PMCU_pmi_process_t *process;
+    HYD_PMCU_pmi_kvs_pair_t *run;
+    char *kvsname, *key;
+    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -565,7 +565,7 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char * args[])
 
     /* Find the group id corresponding to this fd */
     process = find_process(fd);
-    if (process == NULL) { /* We didn't find the process */
+    if (process == NULL) {	/* We didn't find the process */
 	status = HYD_INTERNAL_ERROR;
 	HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
 	goto fn_fail;
@@ -612,11 +612,11 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char * args[])
     }
     HYDU_FREE(cmd);
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -625,9 +625,9 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCU_pmi_finalize"
-HYD_Status HYD_PMCU_pmi_finalize(int fd, char * args[])
+HYD_Status HYD_PMCU_pmi_finalize(int fd, char *args[])
 {
-    char * cmd;
+    char *cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -639,11 +639,11 @@ HYD_Status HYD_PMCU_pmi_finalize(int fd, char * args[])
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -652,10 +652,10 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCU_pmi_get_usize"
-HYD_Status HYD_PMCU_pmi_get_usize(int fd, char * args[])
+HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
 {
     int usize, i;
-    char * tmp[HYDU_NUM_JOIN_STR], * cmd, * usize_str;
+    char *tmp[HYDU_NUM_JOIN_STR], *cmd, *usize_str;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -684,11 +684,11 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char * args[])
 
     HYDU_FREE(usize_str);
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -699,7 +699,7 @@ fn_fail:
 #define FUNCNAME "free_pmi_process_list"
 static HYD_Status free_pmi_process_list(HYD_PMCU_pmi_process_t * process_list)
 {
-    HYD_PMCU_pmi_process_t * process, * tmp;
+    HYD_PMCU_pmi_process_t *process, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -711,11 +711,11 @@ static HYD_Status free_pmi_process_list(HYD_PMCU_pmi_process_t * process_list)
 	process = tmp;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -726,7 +726,7 @@ fn_fail:
 #define FUNCNAME "free_pmi_kvs_list"
 static HYD_Status free_pmi_kvs_list(HYD_PMCU_pmi_kvs_t * kvs_list)
 {
-    HYD_PMCU_pmi_kvs_pair_t * key_pair, * tmp;
+    HYD_PMCU_pmi_kvs_pair_t *key_pair, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -738,11 +738,11 @@ static HYD_Status free_pmi_kvs_list(HYD_PMCU_pmi_kvs_t * kvs_list)
 	key_pair = tmp;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -753,7 +753,7 @@ fn_fail:
 #define FUNCNAME "HYD_PMCU_Finalize"
 HYD_Status HYD_PMCU_Finalize(void)
 {
-    HYD_PMCU_pmi_pg_t * pg, * tmp;
+    HYD_PMCU_pmi_pg_t *pg, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -778,10 +778,10 @@ HYD_Status HYD_PMCU_Finalize(void)
 	pg = tmp;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

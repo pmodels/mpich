@@ -11,7 +11,7 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t * HYD_BSCU_Procstate;
+HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
 int HYD_BSCU_Num_procs;
 int HYD_BSCU_Completed_procs;
 
@@ -65,11 +65,11 @@ HYD_Status HYD_BSCU_Set_common_signals(sighandler_t handler)
     }
 #endif /* SIGCONT */
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -118,10 +118,10 @@ void HYD_BSCU_Signal_handler(int signal)
 	/* Ignore other signals for now */
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

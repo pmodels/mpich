@@ -11,7 +11,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 
-typedef void (*sighandler_t)(int);
+typedef void (*sighandler_t) (int);
 
 HYD_Status HYDU_Set_signal(int signum, sighandler_t handler);
 

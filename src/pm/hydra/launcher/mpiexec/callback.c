@@ -9,7 +9,7 @@
 #include "mpiexec.h"
 #include "csi.h"
 
-HYD_CSI_Handle * csi_handle;
+HYD_CSI_Handle *csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -52,11 +52,11 @@ HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_CSI_Event_t events)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -102,11 +102,11 @@ HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_CSI_Event_t events)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -168,10 +168,10 @@ HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_CSI_Event_t events)
 	csi_handle->stdin_buf_count += count;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

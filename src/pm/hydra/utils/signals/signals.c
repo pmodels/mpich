@@ -38,10 +38,10 @@ HYD_Status HYDU_Set_signal(int signum, sighandler_t handler)
 #error "No signaling mechanism"
 #endif
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

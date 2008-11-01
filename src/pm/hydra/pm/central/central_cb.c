@@ -15,7 +15,7 @@
 #include "central.h"
 
 int HYD_PMCD_Central_listenfd;
-HYD_CSI_Handle * csi_handle;
+HYD_CSI_Handle *csi_handle;
 
 /*
  * HYD_PMCD_Central_cb: This is the core PMI server part of the
@@ -51,14 +51,14 @@ HYD_CSI_Handle * csi_handle;
 HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 {
     int accept_fd, linelen, i;
-    char * buf, * cmd, * args[HYD_PMCU_NUM_STR];
+    char *buf, *cmd, *args[HYD_PMCU_NUM_STR];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(buf, char *, HYD_CSI_TMPBUF_SIZE, status);
 
-    if (fd == HYD_PMCD_Central_listenfd) { /* Someone is trying to connect to us */
+    if (fd == HYD_PMCD_Central_listenfd) {	/* Someone is trying to connect to us */
 	status = HYDU_Sock_accept(fd, &accept_fd);
 	if (status != HYD_SUCCESS) {
 	    HYDU_Error_printf("sock utils returned error when accepting connection\n");
@@ -154,10 +154,10 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 	}
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

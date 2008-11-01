@@ -12,8 +12,8 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t * HYD_BSCU_Procstate;
-HYD_CSI_Handle * csi_handle;
+HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
+HYD_CSI_Handle *csi_handle;
 
 /*
  * HYD_BSCI_Launch_procs: For each process, we create an executable
@@ -27,8 +27,8 @@ HYD_CSI_Handle * csi_handle;
 #define FUNCNAME "HYD_BSCI_Launch_procs"
 HYD_Status HYD_BSCI_Launch_procs(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
-    char ** client_arg, * hostname, ** proc_list;
+    struct HYD_CSI_Proc_params *proc_params;
+    char **client_arg, *hostname, **proc_list;
     int i, arg, process_id, host_id, host_id_max;
     HYD_Status status = HYD_SUCCESS;
 
@@ -54,7 +54,7 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 	HYDU_MALLOC(proc_params->stdout, int *, proc_params->user_num_procs * sizeof(int), status);
 	HYDU_MALLOC(proc_params->stderr, int *, proc_params->user_num_procs * sizeof(int), status);
 
-	if (proc_params->host_file != NULL) { /* We got a new host file */
+	if (proc_params->host_file != NULL) {	/* We got a new host file */
 	    host_id = 0;
 	    host_id_max = proc_params->total_num_procs;
 	    proc_list = proc_params->total_proc_list;
@@ -70,7 +70,7 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 		client_arg[arg++] = MPIU_Strdup("-Xq");
 	    else if (csi_handle->enablex == 0)
 		client_arg[arg++] = MPIU_Strdup("-xq");
-	    else /* default mode is disable X */
+	    else	/* default mode is disable X */
 		client_arg[arg++] = MPIU_Strdup("-xq");
 
 	    if (host_id == host_id_max)
@@ -112,7 +112,7 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 	proc_params = proc_params->next;
     }
 
-fn_exit:
+  fn_exit:
     for (arg = 0; client_arg[arg]; arg++)
 	HYDU_FREE(client_arg[arg]);
     HYDU_FREE(client_arg);
@@ -120,7 +120,7 @@ fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -131,8 +131,8 @@ fn_fail:
 #define FUNCNAME "HYD_BSCI_Cleanup_procs"
 HYD_Status HYD_BSCI_Cleanup_procs(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
-    char ** client_arg, * hostname, ** proc_list;
+    struct HYD_CSI_Proc_params *proc_params;
+    char **client_arg, *hostname, **proc_list;
     int i, arg, host_id, host_id_max;
     HYD_Status status = HYD_SUCCESS;
 
@@ -148,7 +148,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 	    client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
 	    client_arg[arg++] = MPIU_Strdup("-xq");
 
-	    if (proc_params->host_file != NULL) { /* We got a new host file */
+	    if (proc_params->host_file != NULL) {	/* We got a new host file */
 		host_id = 0;
 		host_id_max = proc_params->total_num_procs;
 		proc_list = proc_params->total_proc_list;
@@ -168,7 +168,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 	    client_arg[arg++] = MPIU_Strdup("killall");
 	    client_arg[arg++] = NULL;
 
-	    proc_params->exec[1] = 0; /* We only care about the executable name */
+	    proc_params->exec[1] = 0;	/* We only care about the executable name */
 	    HYD_BSCU_Append_exec(proc_params->exec, client_arg);
 
 	    status = HYD_BSCU_Create_process(client_arg, NULL, NULL, NULL, NULL);
@@ -181,7 +181,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 	proc_params = proc_params->next;
     }
 
-fn_exit:
+  fn_exit:
     for (arg = 0; client_arg[arg]; arg++)
 	HYDU_FREE(client_arg[arg]);
     HYDU_FREE(client_arg);
@@ -189,7 +189,7 @@ fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -198,7 +198,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_BSCI_Get_universe_size"
-HYD_Status HYD_BSCI_Get_universe_size(int * size)
+HYD_Status HYD_BSCI_Get_universe_size(int *size)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -206,10 +206,10 @@ HYD_Status HYD_BSCI_Get_universe_size(int * size)
 
     *size = -1;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

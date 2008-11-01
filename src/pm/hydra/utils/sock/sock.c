@@ -11,7 +11,7 @@
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Sock_listen"
-HYD_Status HYDU_Sock_listen(int * listen_fd, int low_port, int high_port, int * port)
+HYD_Status HYDU_Sock_listen(int *listen_fd, int low_port, int high_port, int *port)
 {
     struct sockaddr_in sa;
     int one = 1, i;
@@ -44,7 +44,7 @@ HYD_Status HYDU_Sock_listen(int * listen_fd, int low_port, int high_port, int * 
 	    HYDU_Error_printf("unable to bind listen socket %d (errno: %d)\n", *listen_fd, errno);
 	    goto fn_fail;
 	}
-	else /* We got a port */
+	else	/* We got a port */
 	    break;
     }
     *port = i;
@@ -74,11 +74,11 @@ HYD_Status HYDU_Sock_listen(int * listen_fd, int low_port, int high_port, int * 
 	*port = ntohs(sa.sin_port);
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -87,10 +87,10 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Sock_connect"
-HYD_Status HYDU_Sock_connect(const char * host, int port, int * fd)
+HYD_Status HYDU_Sock_connect(const char *host, int port, int *fd)
 {
     struct sockaddr_in sa;
-    struct hostent * ht;
+    struct hostent *ht;
     int one = 1;
     HYD_Status status = HYD_SUCCESS;
 
@@ -141,11 +141,11 @@ HYD_Status HYDU_Sock_connect(const char * host, int port, int * fd)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -154,7 +154,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Sock_accept"
-HYD_Status HYDU_Sock_accept(int listen_fd, int * fd)
+HYD_Status HYDU_Sock_accept(int listen_fd, int *fd)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -179,11 +179,11 @@ HYD_Status HYDU_Sock_accept(int listen_fd, int * fd)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -197,7 +197,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Sock_readline"
-HYD_Status HYDU_Sock_readline(int fd, char * buf, int maxlen, int * linelen)
+HYD_Status HYDU_Sock_readline(int fd, char *buf, int maxlen, int *linelen)
 {
     int n;
     HYD_Status status = HYD_SUCCESS;
@@ -207,7 +207,7 @@ HYD_Status HYDU_Sock_readline(int fd, char * buf, int maxlen, int * linelen)
     *linelen = 0;
     while (1) {
 	n = read(fd, buf + *linelen, maxlen - *linelen - 1);
-	if (n == 0) { /* No more data to read */
+	if (n == 0) {	/* No more data to read */
 	    break;
 	}
 	else if (n < 0) {
@@ -236,11 +236,11 @@ HYD_Status HYDU_Sock_readline(int fd, char * buf, int maxlen, int * linelen)
 	}
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -252,7 +252,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Sock_read"
-HYD_Status HYDU_Sock_read(int fd, char * buf, int maxlen, int * count)
+HYD_Status HYDU_Sock_read(int fd, char *buf, int maxlen, int *count)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -268,11 +268,11 @@ HYD_Status HYDU_Sock_read(int fd, char * buf, int maxlen, int * count)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -281,7 +281,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Sock_writelen"
-HYD_Status HYDU_Sock_writeline(int fd, char * buf, int maxsize)
+HYD_Status HYDU_Sock_writeline(int fd, char *buf, int maxsize)
 {
     int n;
     HYD_Status status = HYD_SUCCESS;
@@ -304,11 +304,11 @@ HYD_Status HYDU_Sock_writeline(int fd, char * buf, int maxsize)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -317,7 +317,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYDU_Sock_write"
-HYD_Status HYDU_Sock_write(int fd, char * buf, int maxsize)
+HYD_Status HYDU_Sock_write(int fd, char *buf, int maxsize)
 {
     int n;
     HYD_Status status = HYD_SUCCESS;
@@ -334,11 +334,11 @@ HYD_Status HYDU_Sock_write(int fd, char * buf, int maxsize)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -366,11 +366,11 @@ HYD_Status HYDU_Sock_set_nonblock(int fd)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -393,10 +393,10 @@ HYD_Status HYDU_Sock_set_cloexec(int fd)
 	fcntl(fd, F_SETFD, flags);
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

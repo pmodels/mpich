@@ -8,7 +8,7 @@
 #include "hydra_mem.h"
 #include "csi.h"
 
-HYD_CSI_Handle * csi_handle;
+HYD_CSI_Handle *csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -16,9 +16,9 @@ HYD_CSI_Handle * csi_handle;
 #define FUNCNAME "HYD_LCHU_Create_host_list"
 HYD_Status HYD_LCHU_Create_host_list(void)
 {
-    FILE * fp;
-    char line[2 * MAX_HOSTNAME_LEN], * hostfile, * hostname, * procs;
-    struct HYD_CSI_Proc_params * proc_params;
+    FILE *fp;
+    char line[2 * MAX_HOSTNAME_LEN], *hostfile, *hostname, *procs;
+    struct HYD_CSI_Proc_params *proc_params;
     int i, j, num_procs;
     HYD_Status status = HYD_SUCCESS;
 
@@ -95,11 +95,11 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 	proc_params = proc_params->next;
     }
 
- fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -110,7 +110,7 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 #define FUNCNAME "HYD_LCHU_Free_host_list"
 HYD_Status HYD_LCHU_Free_host_list(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -125,11 +125,11 @@ HYD_Status HYD_LCHU_Free_host_list(void)
 	proc_params = proc_params->next;
     }
 
- fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -140,8 +140,8 @@ HYD_Status HYD_LCHU_Free_host_list(void)
 #define FUNCNAME "HYD_LCHU_Create_env_list"
 HYD_Status HYD_LCHU_Create_env_list(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
-    HYDU_Env_t * env;
+    struct HYD_CSI_Proc_params *proc_params;
+    HYDU_Env_t *env;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -172,11 +172,11 @@ HYD_Status HYD_LCHU_Create_env_list(void)
 	proc_params = proc_params->next;
     }
 
- fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -187,7 +187,7 @@ HYD_Status HYD_LCHU_Create_env_list(void)
 #define FUNCNAME "HYD_LCHU_Free_env_list"
 HYD_Status HYD_LCHU_Free_env_list(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -203,11 +203,11 @@ HYD_Status HYD_LCHU_Free_env_list(void)
 	proc_params = proc_params->next;
     }
 
- fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -218,7 +218,7 @@ HYD_Status HYD_LCHU_Free_env_list(void)
 #define FUNCNAME "HYD_LCHU_Free_io"
 HYD_Status HYD_LCHU_Free_io(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -230,11 +230,11 @@ HYD_Status HYD_LCHU_Free_io(void)
 	proc_params = proc_params->next;
     }
 
- fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -245,7 +245,7 @@ HYD_Status HYD_LCHU_Free_io(void)
 #define FUNCNAME "HYD_LCHU_Free_exits"
 HYD_Status HYD_LCHU_Free_exits(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -256,11 +256,11 @@ HYD_Status HYD_LCHU_Free_exits(void)
 	proc_params = proc_params->next;
     }
 
- fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -271,7 +271,7 @@ HYD_Status HYD_LCHU_Free_exits(void)
 #define FUNCNAME "HYD_LCHU_Free_exec"
 HYD_Status HYD_LCHU_Free_exec(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -284,11 +284,11 @@ HYD_Status HYD_LCHU_Free_exec(void)
 	proc_params = proc_params->next;
     }
 
- fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -299,7 +299,7 @@ HYD_Status HYD_LCHU_Free_exec(void)
 #define FUNCNAME "HYD_LCHU_Free_proc_params"
 HYD_Status HYD_LCHU_Free_proc_params(void)
 {
-    struct HYD_CSI_Proc_params * proc_params, * run;
+    struct HYD_CSI_Proc_params *proc_params, *run;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -311,10 +311,10 @@ HYD_Status HYD_LCHU_Free_proc_params(void)
 	proc_params = run;
     }
 
- fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }

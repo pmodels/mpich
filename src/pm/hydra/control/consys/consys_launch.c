@@ -13,7 +13,7 @@
 #include "bsci.h"
 #include "demux.h"
 
-HYD_CSI_Handle * csi_handle;
+HYD_CSI_Handle *csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -21,7 +21,7 @@ HYD_CSI_Handle * csi_handle;
 #define FUNCNAME "HYD_CSI_Launch_procs"
 HYD_Status HYD_CSI_Launch_procs(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     int stdin_fd, flags, count;
     HYD_Status status = HYD_SUCCESS;
 
@@ -52,7 +52,7 @@ HYD_Status HYD_CSI_Launch_procs(void)
 	proc_params = proc_params->next;
     }
 
-    if (csi_handle->stdin != -1) { /* Only process_id 0 */
+    if (csi_handle->stdin != -1) {	/* Only process_id 0 */
 	status = HYDU_Sock_set_nonblock(csi_handle->stdin);
 	if (status != HYD_SUCCESS) {
 	    HYDU_Error_printf("Unable to set socket as non-blocking\n");
@@ -78,10 +78,10 @@ HYD_Status HYD_CSI_Launch_procs(void)
 	}
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

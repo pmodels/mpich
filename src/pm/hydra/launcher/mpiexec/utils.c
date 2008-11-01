@@ -12,7 +12,7 @@
 #include "lchu.h"
 #include "csi.h"
 
-HYD_CSI_Handle * csi_handle;
+HYD_CSI_Handle *csi_handle;
 
 #define CHECK_LOCAL_PARAM_START(start, status) \
     { \
@@ -35,15 +35,14 @@ HYD_CSI_Handle * csi_handle;
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "allocate_proc_params"
-static HYD_Status allocate_proc_params(struct HYD_CSI_Proc_params ** params)
+static HYD_Status allocate_proc_params(struct HYD_CSI_Proc_params **params)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(proc_params, struct HYD_CSI_Proc_params *,
-		sizeof(struct HYD_CSI_Proc_params), status);
+    HYDU_MALLOC(proc_params, struct HYD_CSI_Proc_params *, sizeof(struct HYD_CSI_Proc_params), status);
 
     proc_params->user_num_procs = 0;
     proc_params->total_num_procs = 0;
@@ -63,11 +62,11 @@ static HYD_Status allocate_proc_params(struct HYD_CSI_Proc_params ** params)
 
     *params = proc_params;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -76,9 +75,9 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "get_current_proc_params"
-static HYD_Status get_current_proc_params(struct HYD_CSI_Proc_params ** params)
+static HYD_Status get_current_proc_params(struct HYD_CSI_Proc_params **params)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -97,11 +96,11 @@ static HYD_Status get_current_proc_params(struct HYD_CSI_Proc_params ** params)
 
     *params = proc_params;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -110,15 +109,15 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_LCHI_Get_parameters"
-HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv)
+HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 {
     int argc = t_argc, i, got_hostfile;
-    char ** argv = t_argv;
+    char **argv = t_argv;
     int local_params_started;
-    char * arg;
-    char * env_name, * env_value;
-    HYDU_Env_t * env;
-    struct HYD_CSI_Proc_params * proc_params;
+    char *arg;
+    char *env_name, *env_value;
+    HYDU_Env_t *env;
+    struct HYD_CSI_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -368,7 +367,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv)
 
 	/* Read the executable till you hit the end of a ":" */
 	do {
-	    if (!strcmp(*argv, ":")) { /* Next executable */
+	    if (!strcmp(*argv, ":")) {	/* Next executable */
 		status = allocate_proc_params(&proc_params->next);
 		if (status != HYD_SUCCESS) {
 		    HYDU_Error_printf("allocate_proc_params returned error\n");
@@ -381,7 +380,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv)
 	    while (proc_params->exec[i] != NULL)
 		i++;
 	    proc_params->exec[i] = MPIU_Strdup(*argv);
-	    proc_params->exec[i+1] = NULL;
+	    proc_params->exec[i + 1] = NULL;
 	} while (--argc && ++argv);
 
 	if (!argc || !argv)
@@ -432,10 +431,10 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char ** t_argv)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

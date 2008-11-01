@@ -10,8 +10,8 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t * HYD_BSCU_Procstate;
-HYD_CSI_Handle * csi_handle;
+HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
+HYD_CSI_Handle *csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -19,7 +19,7 @@ HYD_CSI_Handle * csi_handle;
 #define FUNCNAME "HYD_BSCI_Finalize"
 HYD_Status HYD_BSCI_Finalize(void)
 {
-    struct HYD_CSI_Proc_params * proc_params;
+    struct HYD_CSI_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -33,10 +33,10 @@ HYD_Status HYD_BSCI_Finalize(void)
 	proc_params = proc_params->next;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

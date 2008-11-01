@@ -13,19 +13,19 @@
 static int num_cb_fds = 0;
 
 typedef struct HYD_DMXI_Callback {
-    int               num_fds;
-    int             * fd;
-    HYD_CSI_Event_t   events;
-    HYD_Status      (*callback) (int fd, HYD_CSI_Event_t events);
+    int num_fds;
+    int *fd;
+    HYD_CSI_Event_t events;
+     HYD_Status(*callback) (int fd, HYD_CSI_Event_t events);
 
-    struct HYD_DMXI_Callback * next;
+    struct HYD_DMXI_Callback *next;
 } HYD_DMXI_Callback_t;
 
-static HYD_DMXI_Callback_t * cb_list = NULL;
+static HYD_DMXI_Callback_t *cb_list = NULL;
 
 static void print_callback_list()
 {
-    HYD_DMXI_Callback_t * run;
+    HYD_DMXI_Callback_t *run;
     int i, j;
 
     run = cb_list;
@@ -48,10 +48,10 @@ static void print_callback_list()
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_DMX_Register_fd"
-HYD_Status HYD_DMX_Register_fd(int num_fds, int * fd, HYD_CSI_Event_t events,
-                               HYD_Status (*callback) (int fd, HYD_CSI_Event_t events))
+HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_CSI_Event_t events,
+			       HYD_Status(*callback) (int fd, HYD_CSI_Event_t events))
 {
-    HYD_DMXI_Callback_t * cb_element, * run;
+    HYD_DMXI_Callback_t *cb_element, *run;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -85,11 +85,11 @@ HYD_Status HYD_DMX_Register_fd(int num_fds, int * fd, HYD_CSI_Event_t events,
 
     num_cb_fds += num_fds;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -101,7 +101,7 @@ fn_fail:
 HYD_Status HYD_DMX_Deregister_fd(int fd)
 {
     int i;
-    HYD_DMXI_Callback_t * cb_element;
+    HYD_DMXI_Callback_t *cb_element;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -124,11 +124,11 @@ HYD_Status HYD_DMX_Deregister_fd(int fd)
 
     num_cb_fds--;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -140,8 +140,8 @@ fn_fail:
 HYD_Status HYD_DMX_Wait_for_event(void)
 {
     int total_fds, i, j, events, ret;
-    HYD_DMXI_Callback_t * cb_element, * run;
-    struct pollfd * pollfds = NULL;
+    HYD_DMXI_Callback_t *cb_element, *run;
+    struct pollfd *pollfds = NULL;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -214,13 +214,13 @@ HYD_Status HYD_DMX_Wait_for_event(void)
 	    break;
     }
 
-fn_exit:
+  fn_exit:
     if (pollfds)
 	HYDU_FREE(pollfds);
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -231,7 +231,7 @@ fn_fail:
 #define FUNCNAME "HYD_DMX_Finalize"
 HYD_Status HYD_DMX_Finalize(void)
 {
-    HYD_DMXI_Callback_t * run1, * run2;
+    HYD_DMXI_Callback_t *run1, *run2;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -246,10 +246,10 @@ HYD_Status HYD_DMX_Finalize(void)
     }
     cb_list = NULL;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

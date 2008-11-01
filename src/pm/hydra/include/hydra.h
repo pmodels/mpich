@@ -48,7 +48,7 @@
 #endif /* MAXHOSTNAMELEN */
 
 #if defined MANUAL_EXTERN_ENVIRON
-extern char ** environ;
+extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
 
 #if defined HAVE_DEBUGGING_SUPPORT

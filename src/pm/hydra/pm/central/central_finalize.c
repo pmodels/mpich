@@ -41,10 +41,10 @@ HYD_Status HYD_PMCI_Finalize(void)
 	goto fn_fail;
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
