@@ -9,6 +9,8 @@
 
 #include "hydra.h"
 
+#define HYDU_NUM_JOIN_STR 100
+
 #define HYDU_MALLOC(p, type, size, status) \
     { \
 	(p) = (type) MPIU_Malloc((size)); \
@@ -32,6 +34,14 @@
 	    (status) = HYD_INTERNAL_ERROR; \
 	    goto fn_fail; \
 	} \
+    }
+
+#define HYDU_PRINT_ARGS(str) \
+    { \
+	int i;		     \
+	for (i = 0; (str) != NULL && (str)[i] != NULL; i++) \
+	    printf("%s ", (str)[i]); \
+        printf("\n"); \
     }
 
 #define HYDU_STR_ALLOC_AND_JOIN(strlist, strjoin, status) \

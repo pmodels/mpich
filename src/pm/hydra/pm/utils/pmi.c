@@ -120,7 +120,7 @@ HYD_Status HYD_PMCU_Create_pg(void)
     num_procs = 0;
     proc_params = csi_handle->proc_params;
     while (proc_params) {
-	num_procs += proc_params->hostlist_length;
+	num_procs += proc_params->user_num_procs;
 	proc_params = proc_params->next;
     }
 
@@ -147,7 +147,7 @@ fn_fail:
 HYD_Status HYD_PMCU_pmi_initack(int fd, char * args[])
 {
     int id, size, debug, i;
-    char * ssize, * srank, * sdebug, * tmp[HYD_PMCU_NUM_STR], * cmd;
+    char * ssize, * srank, * sdebug, * tmp[HYDU_NUM_JOIN_STR], * cmd;
     struct HYD_CSI_Proc_params * proc_params;
     HYD_PMCU_pmi_pg_t * pg, * run;
     HYD_Status status = HYD_SUCCESS;
@@ -160,10 +160,10 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char * args[])
     size = 0;
     proc_params = csi_handle->proc_params;
     while (proc_params) {
-	size += proc_params->hostlist_length;
+	size += proc_params->user_num_procs;
 	proc_params = proc_params->next;
     }
-    debug = csi_handle->debug_level;
+    debug = csi_handle->debug;
 
     HYDU_Int_to_str(size, ssize, status);
     HYDU_Int_to_str(id, srank, status);
@@ -217,7 +217,7 @@ fn_fail:
 HYD_Status HYD_PMCU_pmi_init(int fd, char * args[])
 {
     int pmi_version, pmi_subversion, i;
-    char * tmp[HYD_PMCU_NUM_STR];
+    char * tmp[HYDU_NUM_JOIN_STR];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -259,7 +259,7 @@ fn_fail:
 HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char * args[])
 {
     int i;
-    char * tmp[HYD_PMCU_NUM_STR], * cmd;
+    char * tmp[HYDU_NUM_JOIN_STR], * cmd;
     char * maxkvsname, * maxkeylen, * maxvallen;
     HYD_Status status = HYD_SUCCESS;
 
@@ -326,7 +326,7 @@ static HYD_PMCU_pmi_process_t * find_process(int fd)
 #define FUNCNAME "HYD_PMCU_pmi_get_appnum"
 HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char * args[])
 {
-    char * tmp[HYD_PMCU_NUM_STR], * cmd;
+    char * tmp[HYDU_NUM_JOIN_STR], * cmd;
     char * sapp_num;
     int i;
     HYD_PMCU_pmi_process_t * process;
@@ -375,7 +375,7 @@ fn_fail:
 #define FUNCNAME "HYD_PMCU_pmi_get_my_kvsname"
 HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char * args[])
 {
-    char * tmp[HYD_PMCU_NUM_STR], * cmd;
+    char * tmp[HYDU_NUM_JOIN_STR], * cmd;
     int i;
     HYD_PMCU_pmi_process_t * process;
     HYD_Status status = HYD_SUCCESS;
@@ -472,7 +472,7 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char * args[])
     HYD_PMCU_pmi_process_t * process;
     HYD_PMCU_pmi_kvs_pair_t * key_pair, * run;
     char * kvsname, * key, * val;
-    char * tmp[HYD_PMCU_NUM_STR], * cmd;
+    char * tmp[HYDU_NUM_JOIN_STR], * cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -553,7 +553,7 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char * args[])
     HYD_PMCU_pmi_process_t * process;
     HYD_PMCU_pmi_kvs_pair_t * run;
     char * kvsname, * key;
-    char * tmp[HYD_PMCU_NUM_STR], * cmd;
+    char * tmp[HYDU_NUM_JOIN_STR], * cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -655,7 +655,7 @@ fn_fail:
 HYD_Status HYD_PMCU_pmi_get_usize(int fd, char * args[])
 {
     int usize, i;
-    char * tmp[HYD_PMCU_NUM_STR], * cmd, * usize_str;
+    char * tmp[HYDU_NUM_JOIN_STR], * cmd, * usize_str;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

@@ -17,47 +17,6 @@
 int HYD_PMCD_Central_listenfd;
 HYD_CSI_Handle * csi_handle;
 
-#define create_and_add_static_env(str, val, status)	\
-    { \
-	HYDU_Env_t * env; \
-	\
-	HYDU_MALLOC(env, HYDU_Env_t *, sizeof(HYDU_Env_t), status); \
-	env->env_name = MPIU_Strdup(str);				\
-        env->env_value = MPIU_Strdup(val); \
-	env->env_type = HYDU_ENV_STATIC; \
-	env->next = NULL; \
-	proc_params = csi_handle->proc_params; \
-	while (proc_params) { \
-	    status = HYD_LCHU_Add_env_to_list(&proc_params->env_list, env); \
-	    if (status != HYD_SUCCESS) { \
-		HYDU_Error_printf("launcher utils returned error adding env to list\n"); \
-		goto fn_fail; \
-	    } \
-	    proc_params = proc_params->next; \
-	} \
-    }
-
-#define create_and_add_dynamic_env(str, val, status)	\
-    { \
-	HYDU_Env_t * env; \
-	\
-	HYDU_MALLOC(env, HYDU_Env_t *, sizeof(HYDU_Env_t), status); \
-	env->env_name = MPIU_Strdup(str);				\
-	env->env_value = NULL; \
-	env->env_type = HYDU_ENV_AUTOINC; \
-	env->next = NULL; \
-	proc_params = csi_handle->proc_params; \
-	while (proc_params) { \
-	    status = HYD_LCHU_Add_env_to_list(&proc_params->env_list, env);	\
-	    if (status != HYD_SUCCESS) { \
-		HYDU_Error_printf("launcher utils returned error adding env to list\n"); \
-		goto fn_fail; \
-	    } \
-	    proc_params = proc_params->next; \
-	} \
-    }
-
-
 /*
  * HYD_PMCI_Launch_procs: Here are the steps we follow:
  *
@@ -80,13 +39,14 @@ HYD_CSI_Handle * csi_handle;
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCI_Launch_procs"
-HYD_Status HYD_PMCI_Launch_procs()
+HYD_Status HYD_PMCI_Launch_procs(void)
 {
     char * port_range, * port_str, * sport;
     int low_port, high_port, port, one = 1, i;
     int num_procs;
     char hostname[MAX_HOSTNAME_LEN];
     struct sockaddr_in sa;
+    HYDU_Env_t * env;
     struct HYD_CSI_Proc_params * proc_params;
     HYD_Status status = HYD_SUCCESS;
 
@@ -152,8 +112,30 @@ HYD_Status HYD_PMCI_Launch_procs()
     MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1, "%s:%s", hostname, sport);
     HYDU_FREE(sport);
 
-    create_and_add_static_env("PMI_PORT", port_str, status);
-    create_and_add_dynamic_env("PMI_ID", 0, status);
+    status = HYDU_Create_env(&env, "PMI_PORT", port_str, HYDU_ENV_STATIC, 0);
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to create env\n");
+	goto fn_fail;
+    }
+    status = HYDU_Add_env_to_list(&csi_handle->system_env, *env);
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to add env to list\n");
+	goto fn_fail;
+    }
+    HYDU_FREE(env);
+
+    status = HYDU_Create_env(&env, "PMI_ID", NULL, HYDU_ENV_AUTOINC, 0);
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to create env\n");
+	goto fn_fail;
+    }
+    status = HYDU_Add_env_to_list(&csi_handle->system_env, *env);
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to add env to list\n");
+	goto fn_fail;
+    }
+    HYDU_FREE(env);
+    HYDU_FREE(port_str);
 
     /* Create a process group for the MPI processes in this
      * comm_world */
@@ -171,11 +153,10 @@ HYD_Status HYD_PMCI_Launch_procs()
 	goto fn_fail;
     }
 
-fn_fail:
-    HYDU_FREE(port_str);
+ fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_exit:
-    goto fn_fail;
+ fn_fail:
+    goto fn_exit;
 }

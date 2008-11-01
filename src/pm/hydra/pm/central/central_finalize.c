@@ -18,7 +18,7 @@ int HYD_PMCD_Central_listenfd;
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_PMCI_Finalize"
-HYD_Status HYD_PMCI_Finalize()
+HYD_Status HYD_PMCI_Finalize(void)
 {
     HYD_Status status = HYD_SUCCESS;
 

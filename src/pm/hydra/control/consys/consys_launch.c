@@ -19,7 +19,7 @@ HYD_CSI_Handle * csi_handle;
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_CSI_Launch_procs"
-HYD_Status HYD_CSI_Launch_procs()
+HYD_Status HYD_CSI_Launch_procs(void)
 {
     struct HYD_CSI_Proc_params * proc_params;
     int stdin_fd, flags, count;
@@ -35,14 +35,14 @@ HYD_Status HYD_CSI_Launch_procs()
 
     proc_params = csi_handle->proc_params;
     while (proc_params) {
-	status = HYD_DMX_Register_fd(proc_params->hostlist_length, proc_params->stdout,
+	status = HYD_DMX_Register_fd(proc_params->user_num_procs, proc_params->stdout,
 				     HYD_CSI_OUT, proc_params->stdout_cb);
 	if (status != HYD_SUCCESS) {
 	    HYDU_Error_printf("demux engine returned error when registering fd\n");
 	    goto fn_fail;
 	}
 
-	status = HYD_DMX_Register_fd(proc_params->hostlist_length, proc_params->stderr,
+	status = HYD_DMX_Register_fd(proc_params->user_num_procs, proc_params->stderr,
 				     HYD_CSI_OUT, proc_params->stderr_cb);
 	if (status != HYD_SUCCESS) {
 	    HYDU_Error_printf("demux engine returned error when registering fd\n");

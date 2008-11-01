@@ -16,23 +16,32 @@
 
 typedef u_int16_t HYD_CSI_Event_t;
 
-typedef struct HYD_CSI_Exec {
-    char                * arg;
-    struct HYD_CSI_Exec * next;
-} HYD_CSI_Exec_t;
-
 #define HYD_CSI_TMPBUF_SIZE (64 * 1024)
+#define HYD_CSI_EXEC_ARGS 200
+
+typedef enum {
+    HYD_CSI_PROP_NONE,
+    HYD_CSI_PROP_ENVALL,
+    HYD_CSI_PROP_ENVNONE,
+    HYD_CSI_PROP_ENVLIST
+} HYD_CSI_Prop_t;
 
 typedef struct {
-    int          debug_level;
-    int          enablex;
-    char       * wdir;
+    int             debug;
+    int             enablex;
+    char          * wdir;
 
-    int          stdin;
-    void       * stdin_cb;
-    char         stdin_tmp_buf[HYD_CSI_TMPBUF_SIZE];
-    int          stdin_buf_offset;
-    int          stdin_buf_count;
+    HYDU_Env_t    * global_env;
+    HYDU_Env_t    * system_env;
+    HYDU_Env_t    * user_env;
+    HYD_CSI_Prop_t  prop;
+    HYDU_Env_t    * prop_env;
+
+    int             stdin;
+    void          * stdin_cb;
+    char            stdin_tmp_buf[HYD_CSI_TMPBUF_SIZE];
+    int             stdin_buf_offset;
+    int             stdin_buf_count;
 
     /* Start time and timeout. These are filled in by the launcher,
      * but are utilized by the demux engine and the boot-strap server
@@ -43,18 +52,26 @@ typedef struct {
     /* Each structure will contain all hosts/cores that use the same
      * executable and environment. */
     struct HYD_CSI_Proc_params {
-	int                           hostlist_length;
+	int                           user_num_procs;
+	int                           total_num_procs;
+	char                       ** total_proc_list;
+	int                         * total_core_list;
 
-	char                       ** hostlist;
-	int                         * corelist;
+	char                        * host_file;
 
-	HYD_CSI_Exec_t              * exec;
-	HYDU_Env_t               * env_list;
-	HYDU_Env_t               * genv_list;
+	char                        * exec[HYD_CSI_EXEC_ARGS];
+	HYDU_Env_t                  * user_env;
+	HYD_CSI_Prop_t                prop;
+	HYDU_Env_t                  * prop_env;
 
 	/* These output FDs are filled in by the lower layers */
 	int                         * stdout;
 	int                         * stderr;
+
+	/* Callback functions for the stdout/stderr events. These can
+	 * be the same. */
+	void                        * stdout_cb;
+	void                        * stderr_cb;
 
 	/* Status > 0 means that it is not set yet. Successful
 	 * completion of a process will set the status to 0. An error
@@ -63,11 +80,6 @@ typedef struct {
 	 * might correspond to per-process status, or can be a common
 	 * value for all processes. */
 	int                         * exit_status;
-
-	/* Callback functions for the stdout/stderr events. These can
-	 * be the same. */
-	void                        * stdout_cb;
-	void                        * stderr_cb;
 
 	struct HYD_CSI_Proc_params  * next;
     } * proc_params;

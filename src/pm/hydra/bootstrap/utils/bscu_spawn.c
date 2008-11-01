@@ -34,9 +34,9 @@ HYD_Status HYD_BSCU_Init_exit_status(void)
     HYD_BSCU_Num_procs = 0;
     proc_params = csi_handle->proc_params;
     while (proc_params) {
-	HYD_BSCU_Num_procs += proc_params->hostlist_length;
-	HYDU_MALLOC(proc_params->exit_status, int *, proc_params->hostlist_length * sizeof(int), status);
-	for (i = 0; i < proc_params->hostlist_length; i++)
+	HYD_BSCU_Num_procs += proc_params->user_num_procs;
+	HYDU_MALLOC(proc_params->exit_status, int *, proc_params->user_num_procs * sizeof(int), status);
+	for (i = 0; i < proc_params->user_num_procs; i++)
 	    proc_params->exit_status[i] = 1;
 	proc_params = proc_params->next;
     }
@@ -86,9 +86,9 @@ fn_fail:
 #if defined FUNCNAME
 #undef FUNCNAME
 #endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCU_Spawn_proc"
-HYD_Status HYD_BSCU_Spawn_proc(char ** client_arg, char ** client_env,
-			       int * in, int * out, int * err, int * pid)
+#define FUNCNAME "HYD_BSCU_Create_process"
+HYD_Status HYD_BSCU_Create_process(char ** client_arg, int * in, int * out,
+				   int * err, int * pid)
 {
     int inpipe[2], outpipe[2], errpipe[2], arg, tpid;
     HYD_Status status = HYD_SUCCESS;
@@ -235,6 +235,79 @@ HYD_Status HYD_BSCU_Wait_for_completion()
 	if (HYD_BSCU_Completed_procs == HYD_BSCU_Num_procs)
 	    break;
     }
+
+fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "HYD_BSCU_Append_env"
+HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char ** client_arg, int id)
+{
+    int i, j;
+    HYDU_Env_t * env;
+    char * envstr, * tmp[HYDU_NUM_JOIN_STR], * inc;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    for (i = 0; client_arg[i]; i++);
+    env = env_list;
+    while (env) {
+	client_arg[i++] = MPIU_Strdup("export");
+
+	j = 0;
+	tmp[j++] = MPIU_Strdup(env->env_name);
+	tmp[j++] = MPIU_Strdup("=");
+
+	if (env->env_type == HYDU_ENV_STATIC)
+	    tmp[j++] = MPIU_Strdup(env->env_value);
+	else if (env->env_type == HYDU_ENV_AUTOINC) {
+	    HYDU_Int_to_str(env->start_val + id, inc, status);
+	    tmp[j++] = inc;
+	}
+
+	tmp[j++] = NULL;
+	HYDU_STR_ALLOC_AND_JOIN(tmp, envstr, status);
+	client_arg[i++] = envstr;
+
+	client_arg[i++] = MPIU_Strdup(";");
+
+	env = env->next;
+    }
+    client_arg[i++] = NULL;
+
+fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "HYD_BSCU_Append_exec"
+HYD_Status HYD_BSCU_Append_exec(char ** exec, char ** client_arg)
+{
+    int i, j;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    for (i = 0; client_arg[i]; i++);
+    for (j = 0; exec[j]; j++)
+	client_arg[i++] = MPIU_Strdup(exec[j]);
+    client_arg[i++] = NULL;
 
 fn_exit:
     HYDU_FUNC_EXIT();

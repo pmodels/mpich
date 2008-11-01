@@ -16,7 +16,7 @@ HYD_CSI_Handle * csi_handle;
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_CSI_Launch_procs"
-HYD_Status HYD_CSI_Wait_for_completion()
+HYD_Status HYD_CSI_Wait_for_completion(void)
 {
     int sockets_open, i;
     struct HYD_CSI_Proc_params * proc_params;
@@ -37,7 +37,7 @@ HYD_Status HYD_CSI_Wait_for_completion()
 	proc_params = csi_handle->proc_params;
 	sockets_open = 0;
 	while (proc_params) {
-	    for (i = 0; i < proc_params->hostlist_length; i++) {
+	    for (i = 0; i < proc_params->user_num_procs; i++) {
 		if (proc_params->stdout[i] != -1 || proc_params->stderr[i] != -1) {
 		    sockets_open++;
 		    break;

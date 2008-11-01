@@ -19,7 +19,7 @@ static void usage(void)
     printf("Usage: ./mpiexec [global opts] [exec1 local opts] : [exec2 local opts] : ...\n\n");
 
     printf("Global Options (passed to all executables):\n");
-    printf("\t--debug-level {value}            [Debug level]\n");
+    printf("\t-v/-vv/-vvv                      [Verbose level]\n");
     printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
     printf("\t-genv {name} {value}             [Environment variable name and value]\n");
     printf("\t-genvlist {env1,env2,...}        [Environment variable list to pass]\n");
@@ -47,164 +47,41 @@ static void usage(void)
 #define FUNCNAME "mpiexec"
 int main(int argc, char ** argv)
 {
-    HYD_LCHI_Params_t params;
-    struct HYD_LCHI_Local * local, * tlocal;
-    HYDU_Env_t * genv_list, * env, *tenv;
-    HYD_CSI_Exec_t * exec, * texec;
-    struct HYD_CSI_Proc_params * proc_params, * run;
-    FILE * fp;
-    int procs_left, current_procs, count, index, i, exit_status;
-    char node[MAX_HOSTNAME_LEN + 5]; /* Give 5 extra digits for number of processes */
-    char * nodename, * procs, * hostfile;
+    struct HYD_CSI_Proc_params * proc_params;
+    int exit_status, i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(csi_handle, HYD_CSI_Handle *, sizeof(HYD_CSI_Handle), status);
 
-    status = HYD_LCHI_Get_parameters(argc, argv, &params);
+    status = HYD_LCHI_Get_parameters(argc, argv);
     if (status != HYD_SUCCESS) {
 	usage();
 	exit(-1);
     }
 
-    if (params.debug_level >= 1)
-	HYD_LCHI_Dump_params(params);
-
-    csi_handle->debug_level = params.debug_level;
-    csi_handle->enablex = params.enablex;
-    csi_handle->wdir = MPIU_Strdup(params.global.wdir);
-    HYDU_FREE(params.global.wdir);
-    csi_handle->proc_params = NULL;
-
-    status = HYD_LCHI_Create_env_list(params.global.prop, params.global.added_env_list,
-				      params.global.prop_env_list, &genv_list);
+    /* Convert the host file to a host list */
+    status = HYD_LCHU_Create_host_list();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("unable to create env list\n");
+	HYDU_Error_printf("unable to create host list\n");
 	goto fn_fail;
     }
 
-    /* Break host files into nodes and pass it to the control
-     * system. */
-    local = params.local;
-    hostfile = NULL;
-    while (local) {
-	procs_left = local->num_procs;
+    /* Consolidate the environment list that we need to propagate */
+    status = HYD_LCHU_Create_env_list();
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to create host list\n");
+	goto fn_fail;
+    }
 
-	HYDU_MALLOC(proc_params, struct HYD_CSI_Proc_params *, sizeof(struct HYD_CSI_Proc_params), status);
-	proc_params->hostlist_length = local->num_procs;
-	HYDU_MALLOC(proc_params->hostlist, char **, proc_params->hostlist_length * sizeof(char *), status);
-	HYDU_MALLOC(proc_params->corelist, int *, proc_params->hostlist_length * sizeof(int), status);
-
-	proc_params->exec = local->exec;
-
-	proc_params->env_list = NULL;
-	proc_params->genv_list = NULL;
-	proc_params->next = NULL;
-
-	index = 0;
-	/* If we got a new file, open it */
-	if (local->hostfile != NULL) {
-	    if (hostfile != NULL) { /* We have a previously opened file */
-		fclose(fp);
-	    }
-	    fp = fopen(local->hostfile, "r");
-	    if (fp == NULL) {
-		HYDU_Error_printf("unable to open host file %s\n", local->hostfile);
-		status = HYD_INTERNAL_ERROR;
-		goto fn_fail;
-	    }
-	    hostfile = local->hostfile;
-	}
-
-	while (1) {
-	    fscanf(fp, "%s", node);
-
-	    if (feof(fp)) {
-		/* If we are at the end of the file, and more
-		 * processes need to be spawned, go back to the start
-		 * of the file. */
-		if (procs_left != 0)
-		    fseek(fp, 0, SEEK_SET);
-		else
-		    break;
-	    }
-
-	    nodename = strtok(node, ":");
-	    procs = strtok(NULL, ":");
-
-	    if (procs)
-		current_procs = atoi(procs);
-	    else
-		current_procs = 1;
-
-	    if (procs_left > current_procs) {
-		procs_left -= current_procs;
-	    }
-	    else {
-		current_procs = procs_left;
-		procs_left = 0;
-	    }
-
-	    for (i = 0; i < current_procs; i++) {
-		proc_params->hostlist[index] = i ? NULL : MPIU_Strdup(nodename);
-		proc_params->corelist[index] = -1; /* We don't support core affinity right now. */
-		index++;
-	    }
-
-	    if (!procs_left)
-		break;
-	}
-
-	if (params.global.prop != HYD_LCHI_PROPAGATE_NOTSET) {
-	    /* There is a global environment setting */
-	    env = genv_list;
-	    while (env) {
-		HYDU_MALLOC(tenv, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
-		HYD_LCHI_Env_copy(tenv, *env);
-		status = HYD_LCHU_Add_env_to_list(&proc_params->env_list, tenv);
-		if (status != HYD_SUCCESS) {
-		    HYDU_Error_printf("launcher utils returned error adding env to list\n");
-		    goto fn_fail;
-		}
-		env = env->next;
-	    }
-	}
-	else {
-	    status = HYD_LCHI_Create_env_list(local->prop, local->added_env_list,
-					      local->prop_env_list, &proc_params->env_list);
-	    if (status != HYD_SUCCESS) {
-		HYDU_Error_printf("unable to create env list\n");
-		goto fn_fail;
-	    }
-
-	    if (local->prop == HYD_LCHI_PROPAGATE_ALL) {
-		status = HYD_LCHI_Global_env_list(&proc_params->genv_list);
-		if (status != HYD_SUCCESS) {
-		    HYDU_Error_printf("unable to get global env list\n");
-		    goto fn_fail;
-		}
-	    }
-	    else
-		proc_params->genv_list = NULL;
-	}
-
+    proc_params = csi_handle->proc_params;
+    while (proc_params) {
 	proc_params->stdout_cb = HYD_LCHI_stdout_cb;
 	proc_params->stderr_cb = HYD_LCHI_stderr_cb;
-
-	if (csi_handle->proc_params == NULL) {
-	    csi_handle->proc_params = proc_params;
-	}
-	else {
-	    run = csi_handle->proc_params;
-	    while (run->next)
-		run = run->next;
-	    run->next = proc_params;
-	}
-
-	local = local->next;
+	proc_params = proc_params->next;
     }
-    fclose(fp);
+    csi_handle->stdin_cb = HYD_LCHI_stdin_cb;
 
     gettimeofday(&csi_handle->start, NULL);
     if (getenv("MPIEXEC_TIMEOUT"))
@@ -213,8 +90,6 @@ int main(int argc, char ** argv)
 	csi_handle->timeout.tv_sec = -1; /* Set a negative timeout */
 	csi_handle->timeout.tv_usec = 0;
     }
-
-    csi_handle->stdin_cb = HYD_LCHI_stdin_cb;
 
     /* Launch the processes */
     status = HYD_CSI_Launch_procs();
@@ -234,28 +109,10 @@ int main(int argc, char ** argv)
     proc_params = csi_handle->proc_params;
     exit_status = 0;
     while (proc_params) {
-	for (i = 0; i < proc_params->hostlist_length; i++)
+	for (i = 0; i < proc_params->user_num_procs; i++)
 	    if (proc_params->exit_status[i] < 0)
 		exit_status = -1;
 	proc_params = proc_params->next;
-    }
-
-    /* Free the mpiexec params */
-    /* FIXME: Cannot call a CSU function here */
-    HYD_CSU_Free_env_list(params.global.added_env_list);
-    HYD_CSU_Free_env_list(params.global.prop_env_list);
-
-    local = params.local;
-    while (local) {
-	tlocal = local->next;
-	if (local->hostfile)
-	    HYDU_FREE(local->hostfile);
-
-	HYD_CSU_Free_env_list(local->added_env_list);
-	HYD_CSU_Free_env_list(local->prop_env_list);
-	HYDU_FREE(local);
-
-	local = tlocal;
     }
 
     /* Call finalize functions for lower layers to cleanup their resources */
@@ -264,6 +121,13 @@ int main(int argc, char ** argv)
 	HYDU_Error_printf("control system returned error on finalize\n");
 	goto fn_fail;
     }
+
+    /* Free the mpiexec params */
+    HYDU_FREE(csi_handle->wdir);
+    HYD_LCHU_Free_env_list();
+    HYD_LCHU_Free_exec();
+    HYD_LCHU_Free_host_list();
+    HYD_LCHU_Free_proc_params();
 
 fn_exit:
     HYDU_FUNC_EXIT();

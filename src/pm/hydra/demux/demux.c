@@ -137,7 +137,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_DMX_Wait_for_event"
-HYD_Status HYD_DMX_Wait_for_event()
+HYD_Status HYD_DMX_Wait_for_event(void)
 {
     int total_fds, i, j, events, ret;
     HYD_DMXI_Callback_t * cb_element, * run;
@@ -229,7 +229,7 @@ fn_fail:
 #undef FUNCNAME
 #endif /* FUNCNAME */
 #define FUNCNAME "HYD_DMX_Finalize"
-HYD_Status HYD_DMX_Finalize()
+HYD_Status HYD_DMX_Finalize(void)
 {
     HYD_DMXI_Callback_t * run1, * run2;
     HYD_Status status = HYD_SUCCESS;

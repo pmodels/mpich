@@ -7,8 +7,7 @@
 #ifndef PMCI_H_INCLUDED
 #define PMCI_H_INCLUDED
 
-HYD_Status HYD_PMCI_Launch_procs();
-HYD_Status HYD_PMCI_Wait_for_completion();
-HYD_Status HYD_PMCI_Finalize();
+HYD_Status HYD_PMCI_Launch_procs(void);
+HYD_Status HYD_PMCI_Finalize(void);
 
 #endif /* PMCI_H_INCLUDED */

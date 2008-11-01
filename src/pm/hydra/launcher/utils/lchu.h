@@ -8,8 +8,14 @@
 #define LCHU_H_INCLUDED
 
 #include "hydra.h"
-#include "csi.h"
 
-HYD_Status HYD_LCHU_Add_env_to_list(HYDU_Env_t ** env_list, HYDU_Env_t * env);
+HYD_Status HYD_LCHU_Create_host_list(void);
+HYD_Status HYD_LCHU_Free_host_list(void);
+HYD_Status HYD_LCHU_Create_env_list(void);
+HYD_Status HYD_LCHU_Free_env_list(void);
+HYD_Status HYD_LCHU_Free_io(void);
+HYD_Status HYD_LCHU_Free_exits(void);
+HYD_Status HYD_LCHU_Free_exec(void);
+HYD_Status HYD_LCHU_Free_proc_params(void);
 
 #endif /* LCHU_H_INCLUDED */

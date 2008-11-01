@@ -57,6 +57,7 @@ HYD_Status HYD_PMCU_Create_pg(void);
 HYD_Status HYD_PMCU_pmi_initack(int fd, char * args[]);
 HYD_Status HYD_PMCU_pmi_init(int fd, char * args[]);
 HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char * args[]);
+HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char * args[]);
 HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char * args[]);
 HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char * args[]);
 HYD_Status HYD_PMCU_pmi_put(int fd, char * args[]);

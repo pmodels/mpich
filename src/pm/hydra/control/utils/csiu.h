@@ -10,7 +10,5 @@
 #include "csi.h"
 
 int HYD_CSU_Time_left(void);
-int HYD_CSU_Free_env_list(HYDU_Env_t * env_list);
-int HYD_CSU_Free_exec_list(HYD_CSI_Exec_t * exec_list);
 
 #endif /* CSIU_H_INCLUDED */

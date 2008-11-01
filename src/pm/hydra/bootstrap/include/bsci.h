@@ -12,8 +12,8 @@
 
 HYD_Status HYD_BSCI_Launch_procs(void);
 HYD_Status HYD_BSCI_Cleanup_procs(void);
+HYD_Status HYD_BSCI_Get_universe_size(int * size);
 HYD_Status HYD_BSCI_Wait_for_completion(void);
 HYD_Status HYD_BSCI_Finalize(void);
-HYD_Status HYD_BSCI_Get_universe_size(int * size);
 
 #endif /* BSCI_H_INCLUDED */
