@@ -404,7 +404,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
     /* If wdir is not set, use the current one */
     if (csi_handle.wdir == NULL) {
-	csi_handle.wdir = MPIU_Strdup(getcwd(NULL, 0));
+	csi_handle.wdir = getcwd(NULL, 0);
     }
 
     proc_params = csi_handle.proc_params;

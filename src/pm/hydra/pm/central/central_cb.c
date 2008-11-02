@@ -154,6 +154,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
     }
 
   fn_exit:
+    HYDU_FREE(buf);
     HYDU_FUNC_EXIT();
     return status;
 

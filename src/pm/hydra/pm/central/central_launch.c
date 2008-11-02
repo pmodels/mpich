@@ -122,7 +122,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 	HYDU_Error_printf("unable to add env to list\n");
 	goto fn_fail;
     }
-    HYDU_FREE(env);
+    HYDU_Free_env(env);
 
     status = HYDU_Create_env(&env, "PMI_ID", NULL, HYDU_ENV_AUTOINC, 0);
     if (status != HYD_SUCCESS) {
@@ -134,7 +134,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 	HYDU_Error_printf("unable to add env to list\n");
 	goto fn_fail;
     }
-    HYDU_FREE(env);
+    HYDU_Free_env(env);
     HYDU_FREE(port_str);
 
     /* Create a process group for the MPI processes in this

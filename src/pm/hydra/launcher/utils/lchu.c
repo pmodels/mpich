@@ -52,6 +52,8 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 
 		proc_params->total_num_procs += num_procs;
 	    }
+
+	    fclose(fp);
 	}
 	proc_params = proc_params->next;
     }
@@ -91,6 +93,8 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 		    i++;
 		}
 	    }
+
+	    fclose(fp);
 	}
 	proc_params = proc_params->next;
     }
@@ -121,6 +125,7 @@ HYD_Status HYD_LCHU_Free_host_list(void)
 	for (i = 0; i < proc_params->total_num_procs; i++)
 	    HYDU_FREE(proc_params->total_proc_list[i]);
 	HYDU_FREE(proc_params->total_proc_list);
+	HYDU_FREE(proc_params->total_core_list);
 	HYDU_FREE(proc_params->host_file);
 	proc_params = proc_params->next;
     }
@@ -193,6 +198,7 @@ HYD_Status HYD_LCHU_Free_env_list(void)
     HYDU_FUNC_ENTER();
 
     HYDU_Free_env_list(csi_handle.global_env);
+    HYDU_Free_env_list(csi_handle.system_env);
     HYDU_Free_env_list(csi_handle.user_env);
     HYDU_Free_env_list(csi_handle.prop_env);
 

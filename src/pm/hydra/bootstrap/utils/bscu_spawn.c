@@ -270,12 +270,16 @@ HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char **client_arg, int id)
 	    tmp[j++] = MPIU_Strdup(env->env_value);
 	else if (env->env_type == HYDU_ENV_AUTOINC) {
 	    HYDU_Int_to_str(env->start_val + id, inc, status);
-	    tmp[j++] = inc;
+	    tmp[j++] = MPIU_Strdup(inc);
+	    HYDU_FREE(inc);
 	}
 
 	tmp[j++] = NULL;
 	HYDU_STR_ALLOC_AND_JOIN(tmp, envstr, status);
-	client_arg[i++] = envstr;
+	client_arg[i++] = MPIU_Strdup(envstr);
+	HYDU_FREE(envstr);
+	for (j = 0; tmp[j]; j++)
+	    HYDU_FREE(tmp[j]);
 
 	client_arg[i++] = MPIU_Strdup(";");
 

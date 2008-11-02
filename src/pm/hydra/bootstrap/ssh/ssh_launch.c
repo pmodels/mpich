@@ -102,6 +102,9 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 		goto fn_fail;
 	    }
 
+	    for (arg = 0; client_arg[arg]; arg++)
+		HYDU_FREE(client_arg[arg]);
+
 	    /* For the remaining processes, set the stdin fd to -1 */
 	    if (process_id != 0)
 		csi_handle.stdin = -1;
@@ -113,8 +116,6 @@ HYD_Status HYD_BSCI_Launch_procs(void)
     }
 
   fn_exit:
-    for (arg = 0; client_arg[arg]; arg++)
-	HYDU_FREE(client_arg[arg]);
     HYDU_FREE(client_arg);
 
     HYDU_FUNC_EXIT();
@@ -176,14 +177,15 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 		HYDU_Error_printf("bootstrap spawn process returned error\n");
 		goto fn_fail;
 	    }
+
+	    for (arg = 0; client_arg[arg]; arg++)
+		HYDU_FREE(client_arg[arg]);
 	}
 
 	proc_params = proc_params->next;
     }
 
   fn_exit:
-    for (arg = 0; client_arg[arg]; arg++)
-	HYDU_FREE(client_arg[arg]);
     HYDU_FREE(client_arg);
 
     HYDU_FUNC_EXIT();

@@ -471,7 +471,7 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
     int i;
     HYD_PMCU_pmi_process_t *process;
     HYD_PMCU_pmi_kvs_pair_t *key_pair, *run;
-    char *kvsname, *key, *val;
+    char *kvsname, *key, *val, *key_pair_str = NULL;
     char *tmp[HYDU_NUM_JOIN_STR], *cmd;
     HYD_Status status = HYD_SUCCESS;
 
@@ -515,7 +515,8 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
 	while (run->next) {
 	    if (!strcmp(run->key, key_pair->key)) {
 		tmp[i++] = "-1 msg=duplicate_key";
-		tmp[i++] = MPIU_Strdup(key_pair->key);
+		key_pair_str = MPIU_Strdup(key_pair->key);
+		tmp[i++] = key_pair_str;
 		break;
 	    }
 	    run = run->next;
@@ -533,6 +534,7 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
 	goto fn_fail;
     }
     HYDU_FREE(cmd);
+    HYDU_FREE(key_pair_str);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -553,7 +555,7 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
     HYD_PMCU_pmi_process_t *process;
     HYD_PMCU_pmi_kvs_pair_t *run;
     char *kvsname, *key;
-    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
+    char *tmp[HYDU_NUM_JOIN_STR], *cmd, *key_val_str;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -590,7 +592,8 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
 	while (run) {
 	    if (!strcmp(run->key, key)) {
 		tmp[i++] = "0 msg=success value=";
-		tmp[i++] = MPIU_Strdup(run->val);
+		key_val_str = MPIU_Strdup(run->val);
+		tmp[i++] = key_val_str;
 		break;
 	    }
 	    run = run->next;
@@ -611,6 +614,7 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
 	goto fn_fail;
     }
     HYDU_FREE(cmd);
+    HYDU_FREE(key_val_str);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -670,7 +674,7 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
 
     i = 0;
     tmp[i++] = "cmd=universe_size size=";
-    tmp[i++] = MPIU_Strdup(usize_str);
+    tmp[i++] = usize_str;
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
@@ -681,8 +685,6 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
 	goto fn_fail;
     }
     HYDU_FREE(cmd);
-
-    HYDU_FREE(usize_str);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -737,6 +739,7 @@ static HYD_Status free_pmi_kvs_list(HYD_PMCU_pmi_kvs_t * kvs_list)
 	HYDU_FREE(key_pair);
 	key_pair = tmp;
     }
+    HYDU_FREE(kvs_list);
 
   fn_exit:
     HYDU_FUNC_EXIT();
