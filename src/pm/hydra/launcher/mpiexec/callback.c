@@ -9,7 +9,7 @@
 #include "mpiexec.h"
 #include "csi.h"
 
-HYD_CSI_Handle *csi_handle;
+HYD_CSI_Handle csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -130,22 +130,22 @@ HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_CSI_Event_t events)
 
     while (1) {
 	/* If we already have buffered data, send it out */
-	if (csi_handle->stdin_buf_count) {
-	    count = write(csi_handle->stdin, csi_handle->stdin_tmp_buf + csi_handle->stdin_buf_offset,
-			  csi_handle->stdin_buf_count);
+	if (csi_handle.stdin_buf_count) {
+	    count = write(csi_handle.stdin, csi_handle.stdin_tmp_buf + csi_handle.stdin_buf_offset,
+			  csi_handle.stdin_buf_count);
 	    if (count < 0) {
 		/* We can't get an EAGAIN as we just got out of poll */
 		HYDU_Error_printf("socket write error on fd: %d (errno: %d)\n", fd, errno);
 		status = HYD_SOCK_ERROR;
 		goto fn_fail;
 	    }
-	    csi_handle->stdin_buf_offset += count;
-	    csi_handle->stdin_buf_count -= count;
+	    csi_handle.stdin_buf_offset += count;
+	    csi_handle.stdin_buf_count -= count;
 	    break;
 	}
 
 	/* If we are still here, we need to refill our temporary buffer */
-	count = read(0, csi_handle->stdin_tmp_buf, HYD_CSI_TMPBUF_SIZE);
+	count = read(0, csi_handle.stdin_tmp_buf, HYD_CSI_TMPBUF_SIZE);
 	if (count < 0) {
 	    if (errno == EINTR || errno == EAGAIN) {
 		/* This call was interrupted or there was no data to read; just break out. */
@@ -165,7 +165,7 @@ HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_CSI_Event_t events)
 	    }
 	    break;
 	}
-	csi_handle->stdin_buf_count += count;
+	csi_handle.stdin_buf_count += count;
     }
 
   fn_exit:

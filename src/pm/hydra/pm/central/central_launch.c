@@ -15,7 +15,7 @@
 #include "central.h"
 
 int HYD_PMCD_Central_listenfd;
-HYD_CSI_Handle *csi_handle;
+HYD_CSI_Handle csi_handle;
 
 /*
  * HYD_PMCI_Launch_procs: Here are the steps we follow:
@@ -117,7 +117,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 	HYDU_Error_printf("unable to create env\n");
 	goto fn_fail;
     }
-    status = HYDU_Add_env_to_list(&csi_handle->system_env, *env);
+    status = HYDU_Add_env_to_list(&csi_handle.system_env, *env);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("unable to add env to list\n");
 	goto fn_fail;
@@ -129,7 +129,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 	HYDU_Error_printf("unable to create env\n");
 	goto fn_fail;
     }
-    status = HYDU_Add_env_to_list(&csi_handle->system_env, *env);
+    status = HYDU_Add_env_to_list(&csi_handle.system_env, *env);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("unable to add env to list\n");
 	goto fn_fail;

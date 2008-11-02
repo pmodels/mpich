@@ -12,7 +12,7 @@
 #include "lchu.h"
 #include "csi.h"
 
-HYD_CSI_Handle *csi_handle;
+HYD_CSI_Handle csi_handle;
 
 #define CHECK_LOCAL_PARAM_START(start, status) \
     { \
@@ -84,15 +84,15 @@ static HYD_Status get_current_proc_params(struct HYD_CSI_Proc_params **params)
 
     HYDU_FUNC_ENTER();
 
-    if (csi_handle->proc_params == NULL) {
-	status = allocate_proc_params(&csi_handle->proc_params);
+    if (csi_handle.proc_params == NULL) {
+	status = allocate_proc_params(&csi_handle.proc_params);
 	if (status != HYD_SUCCESS) {
 	    HYDU_Error_printf("unable to allocate proc_params\n");
 	    goto fn_fail;
 	}
     }
 
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     while (proc_params->next)
 	proc_params = proc_params->next;
 
@@ -124,21 +124,21 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
     HYDU_FUNC_ENTER();
 
-    csi_handle->debug = -1;
-    csi_handle->enablex = -1;
-    csi_handle->wdir = NULL;
+    csi_handle.debug = -1;
+    csi_handle.enablex = -1;
+    csi_handle.wdir = NULL;
 
-    status = HYDU_Global_env_list(&csi_handle->global_env);
+    status = HYDU_Global_env_list(&csi_handle.global_env);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("unable to get the global env list\n");
 	goto fn_fail;
     }
-    csi_handle->system_env = NULL;
-    csi_handle->user_env = NULL;
-    csi_handle->prop = HYD_CSI_PROP_ENVNONE;
-    csi_handle->prop_env = NULL;
+    csi_handle.system_env = NULL;
+    csi_handle.user_env = NULL;
+    csi_handle.prop = HYD_CSI_PROP_ENVNONE;
+    csi_handle.prop_env = NULL;
 
-    csi_handle->proc_params = NULL;
+    csi_handle.proc_params = NULL;
 
     local_params_started = 0;
     while (--argc && ++argv) {
@@ -149,19 +149,19 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 	    CHECK_NEXT_ARG_VALID(status);
 
 	    /* Debug level already set */
-	    if (csi_handle->debug != -1) {
+	    if (csi_handle.debug != -1) {
 		HYDU_Error_printf("Duplicate debug level setting; previously set to %d\n",
-				  csi_handle->debug);
+				  csi_handle.debug);
 		status = HYD_INTERNAL_ERROR;
 		goto fn_fail;
 	    }
 
 	    if (!strcmp(*argv, "-v"))
-		csi_handle->debug = 1;
+		csi_handle.debug = 1;
 	    else if (!strcmp(*argv, "-vv"))
-		csi_handle->debug = 2;
+		csi_handle.debug = 2;
 	    else if (!strcmp(*argv, "-vvv"))
-		csi_handle->debug = 3;
+		csi_handle.debug = 3;
 
 	    continue;
 	}
@@ -171,14 +171,14 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 	    CHECK_LOCAL_PARAM_START(local_params_started, status);
 
 	    /* X forwarding already enabled or disabled */
-	    if (csi_handle->enablex != -1) {
+	    if (csi_handle.enablex != -1) {
 		HYDU_Error_printf("Duplicate enable-x setting; previously set to %d\n",
-				  csi_handle->enablex);
+				  csi_handle.enablex);
 		status = HYD_INTERNAL_ERROR;
 		goto fn_fail;
 	    }
 
-	    csi_handle->enablex = !strcmp(*argv, "--enable-x");
+	    csi_handle.enablex = !strcmp(*argv, "--enable-x");
 	    continue;
 	}
 
@@ -187,21 +187,21 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 	    CHECK_LOCAL_PARAM_START(local_params_started, status);
 
 	    /* propagation already set */
-	    if (csi_handle->prop != HYD_CSI_PROP_ENVNONE) {
+	    if (csi_handle.prop != HYD_CSI_PROP_ENVNONE) {
 		HYDU_Error_printf("Duplicate propagation setting; previously set to %d\n",
-				  csi_handle->prop);
+				  csi_handle.prop);
 		status = HYD_INTERNAL_ERROR;
 		goto fn_fail;
 	    }
 
 	    if (!strcmp(*argv, "-genvall")) {
-		csi_handle->prop = HYD_CSI_PROP_ENVALL;
+		csi_handle.prop = HYD_CSI_PROP_ENVALL;
 	    }
 	    else if (!strcmp(*argv, "-genvnone")) {
-		csi_handle->prop = HYD_CSI_PROP_ENVNONE;
+		csi_handle.prop = HYD_CSI_PROP_ENVNONE;
 	    }
 	    else if (!strcmp(*argv, "-genvlist")) {
-		csi_handle->prop = HYD_CSI_PROP_ENVLIST;
+		csi_handle.prop = HYD_CSI_PROP_ENVLIST;
 		CHECK_NEXT_ARG_VALID(status);
 		do {
 		    env_name = strtok(*argv, ",");
@@ -214,7 +214,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 			goto fn_fail;
 		    }
 
-		    status = HYDU_Add_env_to_list(&csi_handle->prop_env, *env);
+		    status = HYDU_Add_env_to_list(&csi_handle.prop_env, *env);
 		    if (status != HYD_SUCCESS) {
 			HYDU_Error_printf("unable to add env to list\n");
 			goto fn_fail;
@@ -290,7 +290,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 	    }
 
 	    if (!strcmp(*argv, "-genv"))
-		HYDU_Add_env_to_list(&csi_handle->user_env, *env);
+		HYDU_Add_env_to_list(&csi_handle.user_env, *env);
 	    else {
 		local_params_started = 1;
 
@@ -310,7 +310,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 	if (!strcmp(*argv, "-wdir")) {
 	    CHECK_LOCAL_PARAM_START(local_params_started, status);
 	    CHECK_NEXT_ARG_VALID(status);
-	    csi_handle->wdir = MPIU_Strdup(*argv);
+	    csi_handle.wdir = MPIU_Strdup(*argv);
 	}
 
 	if (!strcmp(*argv, "-n")) {
@@ -392,22 +392,22 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
     }
 
     /* Check on what's set and what's not */
-    if (csi_handle->debug == -1)
-	csi_handle->debug = 0;
+    if (csi_handle.debug == -1)
+	csi_handle.debug = 0;
 
     /* We need at least one local exec */
-    if (csi_handle->proc_params == NULL) {
+    if (csi_handle.proc_params == NULL) {
 	HYDU_Error_printf("No local options set\n");
 	status = HYD_INTERNAL_ERROR;
 	goto fn_fail;
     }
 
     /* If wdir is not set, use the current one */
-    if (csi_handle->wdir == NULL) {
-	csi_handle->wdir = MPIU_Strdup(getcwd(NULL, 0));
+    if (csi_handle.wdir == NULL) {
+	csi_handle.wdir = MPIU_Strdup(getcwd(NULL, 0));
     }
 
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     got_hostfile = 0;
     while (proc_params) {
 	if (proc_params->exec[0] == NULL) {

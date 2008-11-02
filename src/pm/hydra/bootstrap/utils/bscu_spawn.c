@@ -14,7 +14,7 @@
 HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
 int HYD_BSCU_Num_procs;
 int HYD_BSCU_Completed_procs;
-HYD_CSI_Handle *csi_handle;
+HYD_CSI_Handle csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -32,7 +32,7 @@ HYD_Status HYD_BSCU_Init_exit_status(void)
      * status is not set yet). Also count the number of processes in
      * the same loop. */
     HYD_BSCU_Num_procs = 0;
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     while (proc_params) {
 	HYD_BSCU_Num_procs += proc_params->user_num_procs;
 	HYDU_MALLOC(proc_params->exit_status, int *, proc_params->user_num_procs * sizeof(int), status);
@@ -66,7 +66,7 @@ HYD_Status HYD_BSCU_Finalize_exit_status(void)
 
     HYDU_FUNC_ENTER();
 
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     while (proc_params) {
 	HYDU_FREE(proc_params->exit_status);
 	proc_params = proc_params->next;
@@ -143,9 +143,9 @@ HYD_Status HYD_BSCU_Create_process(char **client_arg, int *in, int *out, int *er
 	    }
 	}
 
-	if (chdir(csi_handle->wdir) < 0) {
+	if (chdir(csi_handle.wdir) < 0) {
 	    if (chdir(getenv("HOME")) < 0) {
-		HYDU_Error_printf("unable to set working directory to %s\n", csi_handle->wdir);
+		HYDU_Error_printf("unable to set working directory to %s\n", csi_handle.wdir);
 		status = HYD_INTERNAL_ERROR;
 		goto fn_fail;
 	    }

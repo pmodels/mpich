@@ -15,7 +15,6 @@
 #include "central.h"
 
 int HYD_PMCD_Central_listenfd;
-HYD_CSI_Handle *csi_handle;
 
 /*
  * HYD_PMCD_Central_cb: This is the core PMI server part of the

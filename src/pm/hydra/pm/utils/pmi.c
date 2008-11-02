@@ -10,7 +10,7 @@
 #include "csi.h"
 #include "pmcu_pmi.h"
 
-HYD_CSI_Handle *csi_handle;
+HYD_CSI_Handle csi_handle;
 HYD_PMCU_pmi_pg_t *pg_list = NULL;
 
 #if defined FUNCNAME
@@ -118,7 +118,7 @@ HYD_Status HYD_PMCU_Create_pg(void)
 
     /* Find the number of processes in the PG */
     num_procs = 0;
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     while (proc_params) {
 	num_procs += proc_params->user_num_procs;
 	proc_params = proc_params->next;
@@ -158,12 +158,12 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     id = atoi(strtok(NULL, "="));
 
     size = 0;
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     while (proc_params) {
 	size += proc_params->user_num_procs;
 	proc_params = proc_params->next;
     }
-    debug = csi_handle->debug;
+    debug = csi_handle.debug;
 
     HYDU_Int_to_str(size, ssize, status);
     HYDU_Int_to_str(id, srank, status);

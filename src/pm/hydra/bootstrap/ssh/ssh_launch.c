@@ -13,7 +13,7 @@
 #include "bscu.h"
 
 HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
-HYD_CSI_Handle *csi_handle;
+HYD_CSI_Handle csi_handle;
 
 /*
  * HYD_BSCI_Launch_procs: For each process, we create an executable
@@ -48,7 +48,7 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 	goto fn_fail;
     }
 
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     process_id = 0;
     while (proc_params) {
 	HYDU_MALLOC(proc_params->stdout, int *, proc_params->user_num_procs * sizeof(int), status);
@@ -66,9 +66,9 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 	    client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
 
 	    /* Allow X forwarding only if explicitly requested */
-	    if (csi_handle->enablex == 1)
+	    if (csi_handle.enablex == 1)
 		client_arg[arg++] = MPIU_Strdup("-Xq");
-	    else if (csi_handle->enablex == 0)
+	    else if (csi_handle.enablex == 0)
 		client_arg[arg++] = MPIU_Strdup("-xq");
 	    else	/* default mode is disable X */
 		client_arg[arg++] = MPIU_Strdup("-xq");
@@ -81,12 +81,12 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 	    client_arg[arg++] = MPIU_Strdup(hostname);
 	    client_arg[arg++] = NULL;
 
-	    HYD_BSCU_Append_env(csi_handle->system_env, client_arg, process_id);
+	    HYD_BSCU_Append_env(csi_handle.system_env, client_arg, process_id);
 	    HYD_BSCU_Append_env(proc_params->prop_env, client_arg, process_id);
 
 	    for (arg = 0; client_arg[arg]; arg++);
 	    client_arg[arg++] = MPIU_Strdup("cd");
-	    client_arg[arg++] = MPIU_Strdup(csi_handle->wdir);
+	    client_arg[arg++] = MPIU_Strdup(csi_handle.wdir);
 	    client_arg[arg++] = MPIU_Strdup(";");
 
 	    client_arg[arg++] = NULL;
@@ -94,7 +94,7 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
 	    /* The stdin pointer will be some value for process_id 0;
 	     * for everyone else, it's NULL. */
-	    status = HYD_BSCU_Create_process(client_arg, (process_id == 0 ? &csi_handle->stdin : NULL),
+	    status = HYD_BSCU_Create_process(client_arg, (process_id == 0 ? &csi_handle.stdin : NULL),
 					     &proc_params->stdout[i], &proc_params->stderr[i],
 					     &HYD_BSCU_Procstate[process_id].pid);
 	    if (status != HYD_SUCCESS) {
@@ -104,7 +104,7 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
 	    /* For the remaining processes, set the stdin fd to -1 */
 	    if (process_id != 0)
-		csi_handle->stdin = -1;
+		csi_handle.stdin = -1;
 
 	    process_id++;
 	}
@@ -140,7 +140,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 
     HYDU_MALLOC(client_arg, char **, HYD_CSI_EXEC_ARGS * sizeof(char *), status);
 
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     while (proc_params) {
 	for (i = 0; i < proc_params->user_num_procs; i++) {
 	    /* Setup the executable arguments */
@@ -162,7 +162,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 	    client_arg[arg++] = MPIU_Strdup(hostname);
 
 	    client_arg[arg++] = MPIU_Strdup("cd");
-	    client_arg[arg++] = MPIU_Strdup(csi_handle->wdir);
+	    client_arg[arg++] = MPIU_Strdup(csi_handle.wdir);
 	    client_arg[arg++] = MPIU_Strdup(";");
 
 	    client_arg[arg++] = MPIU_Strdup("killall");

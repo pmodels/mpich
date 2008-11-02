@@ -10,7 +10,7 @@
 #include "pmci.h"
 #include "bsci.h"
 
-HYD_CSI_Handle *csi_handle;
+HYD_CSI_Handle csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -34,7 +34,7 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
 
 	/* Check to see if there's any open read socket left; if there
 	 * are, we will just wait for more events. */
-	proc_params = csi_handle->proc_params;
+	proc_params = csi_handle.proc_params;
 	sockets_open = 0;
 	while (proc_params) {
 	    for (i = 0; i < proc_params->user_num_procs; i++) {

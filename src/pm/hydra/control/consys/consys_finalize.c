@@ -11,8 +11,6 @@
 #include "pmci.h"
 #include "bsci.h"
 
-HYD_CSI_Handle *csi_handle;
-
 #if defined FUNCNAME
 #undef FUNCNAME
 #endif /* FUNCNAME */

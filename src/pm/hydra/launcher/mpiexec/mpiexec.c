@@ -12,7 +12,7 @@
 #include "lchu.h"
 #include "csi.h"
 
-HYD_CSI_Handle *csi_handle;
+HYD_CSI_Handle csi_handle;
 
 static void usage(void)
 {
@@ -53,8 +53,6 @@ int main(int argc, char **argv)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(csi_handle, HYD_CSI_Handle *, sizeof(HYD_CSI_Handle), status);
-
     status = HYD_LCHI_Get_parameters(argc, argv);
     if (status != HYD_SUCCESS) {
 	usage();
@@ -75,20 +73,20 @@ int main(int argc, char **argv)
 	goto fn_fail;
     }
 
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     while (proc_params) {
 	proc_params->stdout_cb = HYD_LCHI_stdout_cb;
 	proc_params->stderr_cb = HYD_LCHI_stderr_cb;
 	proc_params = proc_params->next;
     }
-    csi_handle->stdin_cb = HYD_LCHI_stdin_cb;
+    csi_handle.stdin_cb = HYD_LCHI_stdin_cb;
 
-    gettimeofday(&csi_handle->start, NULL);
+    gettimeofday(&csi_handle.start, NULL);
     if (getenv("MPIEXEC_TIMEOUT"))
-	csi_handle->timeout.tv_sec = atoi(getenv("MPIEXEC_TIMEOUT"));
+	csi_handle.timeout.tv_sec = atoi(getenv("MPIEXEC_TIMEOUT"));
     else {
-	csi_handle->timeout.tv_sec = -1;	/* Set a negative timeout */
-	csi_handle->timeout.tv_usec = 0;
+	csi_handle.timeout.tv_sec = -1;	/* Set a negative timeout */
+	csi_handle.timeout.tv_usec = 0;
     }
 
     /* Launch the processes */
@@ -106,7 +104,7 @@ int main(int argc, char **argv)
     }
 
     /* Check for the exit status for all the processes */
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     exit_status = 0;
     while (proc_params) {
 	for (i = 0; i < proc_params->user_num_procs; i++)
@@ -123,7 +121,7 @@ int main(int argc, char **argv)
     }
 
     /* Free the mpiexec params */
-    HYDU_FREE(csi_handle->wdir);
+    HYDU_FREE(csi_handle.wdir);
     HYD_LCHU_Free_env_list();
     HYD_LCHU_Free_exec();
     HYD_LCHU_Free_host_list();

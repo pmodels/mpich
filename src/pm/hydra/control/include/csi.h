@@ -100,7 +100,7 @@ typedef struct {
  * the HYD_CSI_Wait_for_completion() function returns (where the
  * bootstrap server can fill out these values).
  */
-extern HYD_CSI_Handle *csi_handle;
+extern HYD_CSI_Handle csi_handle;
 
 HYD_Status HYD_CSI_Launch_procs(void);
 HYD_Status HYD_CSI_Wait_for_completion(void);

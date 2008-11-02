@@ -10,7 +10,7 @@
 #include "pmci.h"
 #include "bsci.h"
 
-HYD_CSI_Handle *csi_handle;
+HYD_CSI_Handle csi_handle;
 
 #if defined FUNCNAME
 #undef FUNCNAME
@@ -34,7 +34,7 @@ HYD_Status HYD_CSI_Close_fd(int fd)
     close(fd);
 
     /* Find the FD in the handle and remove it. */
-    proc_params = csi_handle->proc_params;
+    proc_params = csi_handle.proc_params;
     while (proc_params) {
 	for (i = 0; i < proc_params->user_num_procs; i++) {
 	    if (proc_params->stdout[i] == fd) {
