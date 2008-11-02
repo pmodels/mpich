@@ -25,6 +25,12 @@ HYD_Status HYD_BSCU_Set_common_signals(sighandler_t handler)
 
     HYDU_FUNC_ENTER();
 
+    /* FIXME: Do we need a SIGCHLD signal at all? Why can't we just
+     * wait in waitpid().
+     *
+     * Update: Initial testing seems to indicate that that just
+     * waiting in waitpid() should work fine.
+     */
     status = HYDU_Set_signal(SIGCHLD, handler);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("signal utils returned error when trying to set SIGCHLD signal\n");
