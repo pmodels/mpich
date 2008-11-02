@@ -86,6 +86,60 @@ HYD_Status HYD_BSCU_Finalize_exit_status(void)
 #if defined FUNCNAME
 #undef FUNCNAME
 #endif /* FUNCNAME */
+#define FUNCNAME "HYD_BSCU_Init_io_fds"
+HYD_Status HYD_BSCU_Init_io_fds(void)
+{
+    struct HYD_CSI_Proc_params *proc_params;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    proc_params = csi_handle.proc_params;
+    while (proc_params) {
+	HYDU_MALLOC(proc_params->out, int *, proc_params->user_num_procs * sizeof(int), status);
+	HYDU_MALLOC(proc_params->err, int *, proc_params->user_num_procs * sizeof(int), status);
+	proc_params = proc_params->next;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "HYD_BSCU_Init_io_fds"
+HYD_Status HYD_BSCU_Finalize_io_fds(void)
+{
+    struct HYD_CSI_Proc_params *proc_params;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    proc_params = csi_handle.proc_params;
+    while (proc_params) {
+	HYDU_FREE(proc_params->out);
+	HYDU_FREE(proc_params->err);
+	proc_params = proc_params->next;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
 #define FUNCNAME "HYD_BSCU_Create_process"
 HYD_Status HYD_BSCU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid)
 {
@@ -311,6 +365,32 @@ HYD_Status HYD_BSCU_Append_exec(char **exec, char **client_arg)
     for (j = 0; exec[j]; j++)
 	client_arg[i++] = MPIU_Strdup(exec[j]);
     client_arg[i++] = NULL;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#if defined FUNCNAME
+#undef FUNCNAME
+#endif /* FUNCNAME */
+#define FUNCNAME "HYD_BSCU_Append_wdir"
+HYD_Status HYD_BSCU_Append_wdir(char **client_arg)
+{
+    int arg;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    for (arg = 0; client_arg[arg]; arg++);
+    client_arg[arg++] = MPIU_Strdup("cd");
+    client_arg[arg++] = MPIU_Strdup(csi_handle.wdir);
+    client_arg[arg++] = MPIU_Strdup(";");
+    client_arg[arg++] = NULL;
 
   fn_exit:
     HYDU_FUNC_EXIT();

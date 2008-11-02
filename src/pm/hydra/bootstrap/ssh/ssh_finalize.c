@@ -10,9 +10,6 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
-HYD_CSI_Handle csi_handle;
-
 #if defined FUNCNAME
 #undef FUNCNAME
 #endif /* FUNCNAME */
@@ -25,12 +22,15 @@ HYD_Status HYD_BSCI_Finalize(void)
     HYDU_FUNC_ENTER();
 
     status = HYD_BSCU_Finalize_exit_status();
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to finalize exit status\n");
+	goto fn_fail;
+    }
 
-    proc_params = csi_handle.proc_params;
-    while (proc_params) {
-	HYDU_FREE(proc_params->out);
-	HYDU_FREE(proc_params->err);
-	proc_params = proc_params->next;
+    status = HYD_BSCU_Finalize_io_fds();
+    if (status != HYD_SUCCESS) {
+	HYDU_Error_printf("unable to finalize I/O fds\n");
+	goto fn_fail;
     }
 
   fn_exit:
