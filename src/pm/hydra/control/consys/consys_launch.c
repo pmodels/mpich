@@ -35,14 +35,14 @@ HYD_Status HYD_CSI_Launch_procs(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	status = HYD_DMX_Register_fd(proc_params->user_num_procs, proc_params->stdout,
+	status = HYD_DMX_Register_fd(proc_params->user_num_procs, proc_params->out,
 				     HYD_CSI_OUT, proc_params->stdout_cb);
 	if (status != HYD_SUCCESS) {
 	    HYDU_Error_printf("demux engine returned error when registering fd\n");
 	    goto fn_fail;
 	}
 
-	status = HYD_DMX_Register_fd(proc_params->user_num_procs, proc_params->stderr,
+	status = HYD_DMX_Register_fd(proc_params->user_num_procs, proc_params->err,
 				     HYD_CSI_OUT, proc_params->stderr_cb);
 	if (status != HYD_SUCCESS) {
 	    HYDU_Error_printf("demux engine returned error when registering fd\n");
@@ -52,8 +52,8 @@ HYD_Status HYD_CSI_Launch_procs(void)
 	proc_params = proc_params->next;
     }
 
-    if (csi_handle.stdin != -1) {	/* Only process_id 0 */
-	status = HYDU_Sock_set_nonblock(csi_handle.stdin);
+    if (csi_handle.in != -1) {	/* Only process_id 0 */
+	status = HYDU_Sock_set_nonblock(csi_handle.in);
 	if (status != HYD_SUCCESS) {
 	    HYDU_Error_printf("Unable to set socket as non-blocking\n");
 	    status = HYD_SOCK_ERROR;

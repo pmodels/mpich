@@ -37,12 +37,12 @@ HYD_Status HYD_CSI_Close_fd(int fd)
     proc_params = csi_handle.proc_params;
     while (proc_params) {
 	for (i = 0; i < proc_params->user_num_procs; i++) {
-	    if (proc_params->stdout[i] == fd) {
-		proc_params->stdout[i] = -1;
+	    if (proc_params->out[i] == fd) {
+		proc_params->out[i] = -1;
 		goto fn_exit;
 	    }
-	    if (proc_params->stderr[i] == fd) {
-		proc_params->stderr[i] = -1;
+	    if (proc_params->err[i] == fd) {
+		proc_params->err[i] = -1;
 		goto fn_exit;
 	    }
 	}

@@ -28,8 +28,8 @@ HYD_Status HYD_BSCI_Finalize(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	HYDU_FREE(proc_params->stdout);
-	HYDU_FREE(proc_params->stderr);
+	HYDU_FREE(proc_params->out);
+	HYDU_FREE(proc_params->err);
 	proc_params = proc_params->next;
     }
 

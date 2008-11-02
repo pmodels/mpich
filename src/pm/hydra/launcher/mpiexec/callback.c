@@ -131,7 +131,7 @@ HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_CSI_Event_t events)
     while (1) {
 	/* If we already have buffered data, send it out */
 	if (csi_handle.stdin_buf_count) {
-	    count = write(csi_handle.stdin, csi_handle.stdin_tmp_buf + csi_handle.stdin_buf_offset,
+	    count = write(csi_handle.in, csi_handle.stdin_tmp_buf + csi_handle.stdin_buf_offset,
 			  csi_handle.stdin_buf_count);
 	    if (count < 0) {
 		/* We can't get an EAGAIN as we just got out of poll */

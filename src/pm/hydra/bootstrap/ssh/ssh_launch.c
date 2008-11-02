@@ -51,8 +51,8 @@ HYD_Status HYD_BSCI_Launch_procs(void)
     proc_params = csi_handle.proc_params;
     process_id = 0;
     while (proc_params) {
-	HYDU_MALLOC(proc_params->stdout, int *, proc_params->user_num_procs * sizeof(int), status);
-	HYDU_MALLOC(proc_params->stderr, int *, proc_params->user_num_procs * sizeof(int), status);
+	HYDU_MALLOC(proc_params->out, int *, proc_params->user_num_procs * sizeof(int), status);
+	HYDU_MALLOC(proc_params->err, int *, proc_params->user_num_procs * sizeof(int), status);
 
 	if (proc_params->host_file != NULL) {	/* We got a new host file */
 	    host_id = 0;
@@ -94,8 +94,8 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
 	    /* The stdin pointer will be some value for process_id 0;
 	     * for everyone else, it's NULL. */
-	    status = HYD_BSCU_Create_process(client_arg, (process_id == 0 ? &csi_handle.stdin : NULL),
-					     &proc_params->stdout[i], &proc_params->stderr[i],
+	    status = HYD_BSCU_Create_process(client_arg, (process_id == 0 ? &csi_handle.in : NULL),
+					     &proc_params->out[i], &proc_params->err[i],
 					     &HYD_BSCU_Procstate[process_id].pid);
 	    if (status != HYD_SUCCESS) {
 		HYDU_Error_printf("bootstrap spawn process returned error\n");
@@ -107,7 +107,7 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
 	    /* For the remaining processes, set the stdin fd to -1 */
 	    if (process_id != 0)
-		csi_handle.stdin = -1;
+		csi_handle.in = -1;
 
 	    process_id++;
 	}

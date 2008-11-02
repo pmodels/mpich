@@ -55,8 +55,8 @@ static HYD_Status allocate_proc_params(struct HYD_CSI_Proc_params **params)
     proc_params->user_env = NULL;
     proc_params->prop = HYD_CSI_PROP_ENVNONE;
     proc_params->prop_env = NULL;
-    proc_params->stdout = NULL;
-    proc_params->stderr = NULL;
+    proc_params->out = NULL;
+    proc_params->err = NULL;
     proc_params->stdout_cb = NULL;
     proc_params->stderr_cb = NULL;
     proc_params->exit_status = NULL;
@@ -404,7 +404,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
     /* If wdir is not set, use the current one */
     if (csi_handle.wdir == NULL) {
-	csi_handle.wdir = getcwd(NULL, 0);
+	csi_handle.wdir = MPIU_Strdup(getcwd(NULL, 0));
     }
 
     proc_params = csi_handle.proc_params;

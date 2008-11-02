@@ -38,7 +38,7 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
 	sockets_open = 0;
 	while (proc_params) {
 	    for (i = 0; i < proc_params->user_num_procs; i++) {
-		if (proc_params->stdout[i] != -1 || proc_params->stderr[i] != -1) {
+		if (proc_params->out[i] != -1 || proc_params->err[i] != -1) {
 		    sockets_open++;
 		    break;
 		}

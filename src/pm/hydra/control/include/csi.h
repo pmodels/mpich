@@ -26,7 +26,7 @@ typedef enum {
     HYD_CSI_PROP_ENVLIST
 } HYD_CSI_Prop_t;
 
-typedef struct {
+struct HYD_CSI_Handle_ {
     int debug;
     int enablex;
     char *wdir;
@@ -37,7 +37,7 @@ typedef struct {
     HYD_CSI_Prop_t prop;
     HYDU_Env_t *prop_env;
 
-    int stdin;
+    int in;
     void *stdin_cb;
     char stdin_tmp_buf[HYD_CSI_TMPBUF_SIZE];
     int stdin_buf_offset;
@@ -65,8 +65,8 @@ typedef struct {
 	HYDU_Env_t *prop_env;
 
 	/* These output FDs are filled in by the lower layers */
-	int *stdout;
-	int *stderr;
+	int *out;
+	int *err;
 
 	/* Callback functions for the stdout/stderr events. These can
 	 * be the same. */
@@ -83,7 +83,9 @@ typedef struct {
 
 	struct HYD_CSI_Proc_params *next;
     } *proc_params;
-} HYD_CSI_Handle;
+};
+
+typedef struct HYD_CSI_Handle_ HYD_CSI_Handle;
 
 /* We'll use this as the central handle that has most of the
  * information needed by everyone. All data to be written has to be

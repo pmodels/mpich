@@ -231,8 +231,8 @@ HYD_Status HYD_LCHU_Free_io(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	HYDU_FREE(proc_params->stdout);
-	HYDU_FREE(proc_params->stderr);
+	HYDU_FREE(proc_params->out);
+	HYDU_FREE(proc_params->err);
 	proc_params = proc_params->next;
     }
 
