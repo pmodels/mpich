@@ -49,6 +49,8 @@ static HYD_Status allocate_proc_params(struct HYD_CSI_Proc_params **params)
     proc_params->total_proc_list = NULL;
     proc_params->total_core_list = NULL;
 
+    proc_params->host_file = NULL;
+
     proc_params->exec[0] = NULL;
     proc_params->user_env = NULL;
     proc_params->prop = HYD_CSI_PROP_ENVNONE;
