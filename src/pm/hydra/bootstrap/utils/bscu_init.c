@@ -37,7 +37,7 @@ HYD_Status HYD_BSCU_Init_exit_status(void)
 	HYD_BSCU_Num_procs += proc_params->user_num_procs;
 	HYDU_MALLOC(proc_params->exit_status, int *, proc_params->user_num_procs * sizeof(int), status);
 	for (i = 0; i < proc_params->user_num_procs; i++)
-	    proc_params->exit_status[i] = 1;
+	    proc_params->exit_status[i] = 0;
 	proc_params = proc_params->next;
     }
 

@@ -36,12 +36,12 @@ int HYD_PMCD_Central_listenfd;
  *     - put [done]
  *     - get [done]
  *     - finalize [done]
+ *     - get_universe_size [done]
  *     - abort
  *     - create_kvs
  *     - destroy_kvs
  *     - getbyidx
  *     - spawn
- *     - get_universe_size
  */
 #if defined FUNCNAME
 #undef FUNCNAME
