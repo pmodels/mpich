@@ -12,15 +12,6 @@
 #include "csi.h"
 #include "bsci.h"
 
-typedef struct HYD_BSCU_Procstate {
-    int pid;
-    int exit_status;
-} HYD_BSCU_Procstate_t;
-
-extern HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
-extern int HYD_BSCU_Num_procs;
-extern int HYD_BSCU_Completed_procs;
-
 HYD_Status HYD_BSCU_Init_exit_status(void);
 HYD_Status HYD_BSCU_Finalize_exit_status(void);
 HYD_Status HYD_BSCU_Init_io_fds(void);

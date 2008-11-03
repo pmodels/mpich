@@ -11,9 +11,6 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
-int HYD_BSCU_Num_procs;
-int HYD_BSCU_Completed_procs;
 HYD_CSI_Handle csi_handle;
 
 #if defined FUNCNAME
@@ -31,19 +28,15 @@ HYD_Status HYD_BSCU_Init_exit_status(void)
     /* Set the exit status of all processes to 1 (> 0 means that the
      * status is not set yet). Also count the number of processes in
      * the same loop. */
-    HYD_BSCU_Num_procs = 0;
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	HYD_BSCU_Num_procs += proc_params->user_num_procs;
+	HYDU_MALLOC(proc_params->pid, int *, proc_params->user_num_procs * sizeof(int), status);
 	HYDU_MALLOC(proc_params->exit_status, int *, proc_params->user_num_procs * sizeof(int), status);
+	HYDU_MALLOC(proc_params->exit_status_valid, int *, proc_params->user_num_procs * sizeof(int), status);
 	for (i = 0; i < proc_params->user_num_procs; i++)
-	    proc_params->exit_status[i] = 0;
+	    proc_params->exit_status_valid[i] = 0;
 	proc_params = proc_params->next;
     }
-
-    HYDU_MALLOC(HYD_BSCU_Procstate, HYD_BSCU_Procstate_t *,
-		HYD_BSCU_Num_procs * sizeof(HYD_BSCU_Procstate_t), status);
-    HYD_BSCU_Completed_procs = 0;
 
   fn_exit:
     HYDU_FUNC_EXIT();

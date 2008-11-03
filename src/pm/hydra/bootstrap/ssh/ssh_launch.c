@@ -12,7 +12,6 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
 HYD_CSI_Handle csi_handle;
 
 /*
@@ -91,7 +90,7 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 	     * for everyone else, it's NULL. */
 	    status = HYD_BSCU_Create_process(client_arg, (process_id == 0 ? &csi_handle.in : NULL),
 					     &proc_params->out[i], &proc_params->err[i],
-					     &HYD_BSCU_Procstate[process_id].pid);
+					     &proc_params->pid[i]);
 	    if (status != HYD_SUCCESS) {
 		HYDU_Error_printf("bootstrap spawn process returned error\n");
 		goto fn_fail;

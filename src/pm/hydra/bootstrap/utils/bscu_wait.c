@@ -11,9 +11,6 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
-int HYD_BSCU_Num_procs;
-int HYD_BSCU_Completed_procs;
 HYD_CSI_Handle csi_handle;
 
 /*
@@ -28,46 +25,52 @@ HYD_CSI_Handle csi_handle;
 #define FUNCNAME "HYD_BSCU_Wait_for_completion"
 HYD_Status HYD_BSCU_Wait_for_completion(void)
 {
-    int pid, ret_status, i;
+    int pid, ret_status, i, not_completed;
+    struct HYD_CSI_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
+    not_completed = 0;
+    proc_params = csi_handle.proc_params;
+    while (proc_params) {
+	for (i = 0; i < proc_params->user_num_procs; i++)
+	    if (proc_params->exit_status_valid[i] == 0)
+		not_completed++;
+	proc_params = proc_params->next;
+    }
+
+    /* We get here only after the I/O sockets have been closed. If the
+     * application did not manually close its stdout and stderr
+     * sockets, this means that the processes have terminated. That
+     * means the below loop will return almost immediately. If not, we
+     * poll for some time, burning CPU. */
     do {
 	pid = waitpid(-1, &ret_status, WNOHANG);
 	if (pid > 0) {
-	    /* Find the pid in the procstate structure and mark it as
-	     * complete. */
-	    for (i = 0; i < HYD_BSCU_Num_procs; i++) {
-		if (HYD_BSCU_Procstate[i].pid == pid) {
-		    HYD_BSCU_Procstate[i].exit_status = ret_status;
-		    HYD_BSCU_Completed_procs++;
-		    break;
+	    /* Find the pid and mark it as complete. */
+	    proc_params = csi_handle.proc_params;
+	    while (proc_params) {
+		for (i = 0; i < proc_params->user_num_procs; i++) {
+		    if (proc_params->pid[i] == pid) {
+			proc_params->exit_status[i] = ret_status;
+			proc_params->exit_status_valid[i] = 1;
+			not_completed--;
+		    }
 		}
+		proc_params = proc_params->next;
 	    }
 	}
-	if (HYD_CSU_Time_left() == 0) {
-	    status = HYD_BSCI_Cleanup_procs();
-	    if (status != HYD_SUCCESS) {
-		HYDU_Error_printf("bootstrap process cleanup failed\n");
-		goto fn_fail;
-	    }
+	if (HYD_CSU_Time_left() == 0)
 	    break;
-	}
-    } while (pid > 0);
+    } while (not_completed > 0);
 
-    /* We need a better way of doing this; maybe semaphores? */
-    while (1) {
-	if (HYD_CSU_Time_left() == 0) {
-	    status = HYD_BSCI_Cleanup_procs();
-	    if (status != HYD_SUCCESS) {
-		HYDU_Error_printf("bootstrap process cleanup failed\n");
-		goto fn_fail;
-	    }
-	    break;
+    if (not_completed) {
+	status = HYD_BSCI_Cleanup_procs();
+	if (status != HYD_SUCCESS) {
+	    HYDU_Error_printf("bootstrap process cleanup failed\n");
+	    goto fn_fail;
 	}
-	if (HYD_BSCU_Completed_procs == HYD_BSCU_Num_procs)
-	    break;
     }
 
   fn_exit:

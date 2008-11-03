@@ -79,7 +79,9 @@ struct HYD_CSI_Handle_ {
 	 * error. Depending on the bootstrap server, these values
 	 * might correspond to per-process status, or can be a common
 	 * value for all processes. */
+	int *pid;
 	int *exit_status;
+	int *exit_status_valid;
 
 	struct HYD_CSI_Proc_params *next;
     } *proc_params;

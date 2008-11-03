@@ -11,10 +11,6 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
-int HYD_BSCU_Num_procs;
-int HYD_BSCU_Completed_procs;
-
 #if defined FUNCNAME
 #undef FUNCNAME
 #endif /* FUNCNAME */
@@ -24,18 +20,6 @@ HYD_Status HYD_BSCU_Set_common_signals(sighandler_t handler)
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    /* FIXME: Do we need a SIGCHLD signal at all? Why can't we just
-     * wait in waitpid().
-     *
-     * Update: Initial testing seems to indicate that that just
-     * waiting in waitpid() should work fine.
-     */
-    status = HYDU_Set_signal(SIGCHLD, handler);
-    if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("signal utils returned error when trying to set SIGCHLD signal\n");
-	goto fn_fail;
-    }
 
     status = HYDU_Set_signal(SIGINT, handler);
     if (status != HYD_SUCCESS) {
@@ -90,25 +74,7 @@ void HYD_BSCU_Signal_handler(int signal)
 
     HYDU_FUNC_ENTER();
 
-    if (signal == SIGCHLD) {
-	pid = wait(&status);
-
-	/* If we didn't get a PID, it means that the main thread
-	 * handled it. */
-	if (pid <= 0)
-	    goto fn_exit;
-
-	/* Find the pid in the procstate structure and mark it as
-	 * complete. */
-	for (i = 0; i < HYD_BSCU_Num_procs; i++) {
-	    if (HYD_BSCU_Procstate[i].pid == pid) {
-		HYD_BSCU_Procstate[i].exit_status = status;
-		HYD_BSCU_Completed_procs++;
-		break;
-	    }
-	}
-    }
-    else if (signal == SIGINT || signal == SIGQUIT || signal == SIGTERM
+    if (signal == SIGINT || signal == SIGQUIT || signal == SIGTERM
 #if defined SIGSTOP
 	     || signal == SIGSTOP
 #endif /* SIGSTOP */

@@ -11,9 +11,6 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
-int HYD_BSCU_Num_procs;
-int HYD_BSCU_Completed_procs;
 HYD_CSI_Handle csi_handle;
 
 #if defined FUNCNAME

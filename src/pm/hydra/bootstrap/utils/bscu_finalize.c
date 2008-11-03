@@ -11,7 +11,6 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_BSCU_Procstate_t *HYD_BSCU_Procstate;
 HYD_CSI_Handle csi_handle;
 
 #if defined FUNCNAME
@@ -28,11 +27,11 @@ HYD_Status HYD_BSCU_Finalize_exit_status(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
+	HYDU_FREE(proc_params->pid);
 	HYDU_FREE(proc_params->exit_status);
+	HYDU_FREE(proc_params->exit_status_valid);
 	proc_params = proc_params->next;
     }
-
-    HYDU_FREE(HYD_BSCU_Procstate);
 
   fn_exit:
     HYDU_FUNC_EXIT();
