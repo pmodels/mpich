@@ -26,7 +26,7 @@ void ADIOI_ZOIDFS_End(int *error_code)
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS,
 					   MPIR_ERR_RECOVERABLE,
 					   myname, __LINE__,
-					   ADIOI_zoidfs_error_convert(ret),
+					   ADIOI_ZOIDFS_error_convert(ret),
 					   "Error in zoidfs_finalize", 0);
 	return;
     }

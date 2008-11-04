@@ -12,7 +12,7 @@
 
 struct ADIOI_Fns_struct ADIO_ZOIDFS_operations = {
     ADIOI_ZOIDFS_Open, /* Open */
-    ADIOI_SCALABLE_OpenColl, /* OpenColl */
+    ADIOI_SCALEABLE_OpenColl, /* OpenColl */
     ADIOI_ZOIDFS_ReadContig, /* ReadContig */
     ADIOI_ZOIDFS_WriteContig, /* WriteContig */
     ADIOI_GEN_ReadStridedColl, /* ReadStridedColl */
