@@ -228,8 +228,10 @@ int MPIU_Str_get_string(char **str_ptr, char *val, int maxlen);
      strdup, we won't have an obscure failure when a file include string.h
     later in the compilation process. */
 #include <string.h>
+
     /* The ::: should cause the compiler to choke; the string 
        will give the explanation */
+#undef strdup /* in case strdup is a macro */
 #define strdup(a)         'Error use MPIU_Strdup' :::
 
 /* FIXME: Note that some of these prototypes are for old functions in the 

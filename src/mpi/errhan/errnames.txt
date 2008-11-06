@@ -940,6 +940,8 @@ unexpected messages queued.
 **tmpnam %s:tmpnam failed %s
 **fopen:fopen failed
 **fopen %s:fopen failed %s
+**abi_version_mismatch:ABI version mismatch
+**abi_version_mismatch %D %D:ABI version mismatch, expected %D - got %D
 
 #
 # mpi functions

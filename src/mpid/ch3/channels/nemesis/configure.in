@@ -60,7 +60,9 @@ AC_CHECK_HEADERS(				\
 	sys/types.h				\
 	errno.h					\
 	sys/ipc.h				\
-	sys/shm.h)
+	sys/shm.h                               \
+        knem_io.h                               \
+)
 
 # netinet/in.h often requires sys/types.h first.  With AC 2.57, check_headers
 # does the right thing, which is to test whether the header is found 
@@ -478,6 +480,24 @@ if test "$pac_cv_have_struct_ifconf" = "yes" -o \
         "$pac_cv_have_struct_ifconf_without_posix" ; then
     AC_DEFINE(HAVE_STRUCT_IFCONF,1,[Define if struct ifconf can be used])
 fi
+
+# allow the user to select different local LMT implementations
+AC_ARG_WITH(nemesis-local-lmt, [--with-nemesis-local-lmt=method - specify an implementation for local large message transfers (LMT).  Method is one of: 'default', 'shm_copy', 'shm_dma', or 'none'.  'default' is the same as 'shm_copy'.],,with_nemesis_local_lmt=default)
+case "$with_nemesis_local_lmt" in
+    shm_copy|default)
+    local_lmt_impl=MPID_NEM_LOCAL_LMT_SHM_COPY
+    ;;
+    dma)
+    local_lmt_impl=MPID_NEM_LOCAL_LMT_DMA
+    ;;
+    none)
+    local_lmt_impl=MPID_NEM_LOCAL_LMT_NONE
+    ;;
+    *)
+    AC_MSG_ERROR([Unrecognized value $with_nemesis_local_lmt for --with-nemesis-local-lmt])
+    ;;
+esac
+AC_DEFINE_UNQUOTED([MPID_NEM_LOCAL_LMT_IMPL],$local_lmt_impl,[Method for local large message transfers.])
 
 # Check for memory atomic instructions
 PAC_C_MEMATOMIC

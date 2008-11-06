@@ -9,6 +9,11 @@
 #include "mpid_nem_nets.h"
 #include <errno.h>
 
+/* constants for configure time selection of local LMT implementations */
+#define MPID_NEM_LOCAL_LMT_NONE 0
+#define MPID_NEM_LOCAL_LMT_SHM_COPY 1
+#define MPID_NEM_LOCAL_LMT_DMA 2
+
 #ifdef MEM_REGION_IN_HEAP
 MPID_nem_mem_region_t *MPID_nem_mem_region_ptr = 0;
 #else /* MEM_REGION_IN_HEAP */
@@ -429,12 +434,30 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->iStartContigMsg = NULL;
         vc_ch->iSendContig     = NULL;
 
+#if MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_SHM_COPY
         vc_ch->lmt_initiate_lmt  = MPID_nem_lmt_shm_initiate_lmt;
         vc_ch->lmt_start_recv    = MPID_nem_lmt_shm_start_recv;
         vc_ch->lmt_start_send    = MPID_nem_lmt_shm_start_send;
         vc_ch->lmt_handle_cookie = MPID_nem_lmt_shm_handle_cookie;
         vc_ch->lmt_done_send     = MPID_nem_lmt_shm_done_send;
         vc_ch->lmt_done_recv     = MPID_nem_lmt_shm_done_recv;
+#elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_DMA
+        vc_ch->lmt_initiate_lmt  = MPID_nem_lmt_dma_initiate_lmt;
+        vc_ch->lmt_start_recv    = MPID_nem_lmt_dma_start_recv;
+        vc_ch->lmt_start_send    = MPID_nem_lmt_dma_start_send;
+        vc_ch->lmt_handle_cookie = MPID_nem_lmt_dma_handle_cookie;
+        vc_ch->lmt_done_send     = MPID_nem_lmt_dma_done_send;
+        vc_ch->lmt_done_recv     = MPID_nem_lmt_dma_done_recv;
+#elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_NONE
+        vc_ch->lmt_initiate_lmt  = NULL;
+        vc_ch->lmt_start_recv    = NULL;
+        vc_ch->lmt_start_send    = NULL;
+        vc_ch->lmt_handle_cookie = NULL;
+        vc_ch->lmt_done_send     = NULL;
+        vc_ch->lmt_done_recv     = NULL;
+#else
+#  error Must select a valid local LMT implementation!
+#endif
 
         vc_ch->lmt_copy_buf        = NULL;
         vc_ch->lmt_copy_buf_handle = NULL;

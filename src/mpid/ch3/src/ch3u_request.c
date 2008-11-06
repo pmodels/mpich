@@ -192,6 +192,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq,
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_SEND_IOV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_SEND_IOV);
+    MPIU_Assert(sreq->dev.segment_ptr != NULL);
     last = sreq->dev.segment_size;
     MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,(MPIU_DBG_FDEST,
      "pre-pv: first=" MPIDI_MSG_SZ_FMT ", last=" MPIDI_MSG_SZ_FMT ", iov_n=%d",

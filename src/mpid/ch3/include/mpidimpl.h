@@ -329,6 +329,8 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->dev.datatype = datatype;				\
     (sreq_)->dev.datatype_ptr	   = NULL;                      \
     (sreq_)->dev.segment_ptr	   = NULL;                      \
+    (sreq_)->dev.OnDataAvail	   = NULL;                      \
+    (sreq_)->dev.OnFinal	   = NULL;                      \
 }
 
 /* This is the receive request version of MPIDI_Request_create_sreq */
