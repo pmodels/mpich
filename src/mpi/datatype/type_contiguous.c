@@ -1,6 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  $Id: type_contiguous.c,v 1.17 2006/05/08 15:34:41 toonen Exp $
- *
+/*
  *  (C) 2002 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */

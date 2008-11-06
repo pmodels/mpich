@@ -1,6 +1,5 @@
 /* -*- Mode: C++; c-basic-offset:4 ; -*- */
-/*  $Id: MainFrm.h,v 1.3 2002/11/11 13:49:54 gropp Exp $
- *
+/*
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */

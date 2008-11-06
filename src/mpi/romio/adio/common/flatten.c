@@ -1,8 +1,5 @@
-/* -*- Mode: C; c-basic-offset:4 ; -*- 
- *  vim: ts=8 sts=4 sw=4 noexpandtab 
- *
- *   $Id: flatten.c,v 1.24 2006/07/05 20:40:13 robl Exp $
- *
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
  *   Copyright (C) 1997 University of Chicago. 
  *   See COPYRIGHT notice in top-level directory.
  */

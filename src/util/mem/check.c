@@ -1,6 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  $Id: check.c,v 1.3 2003/02/17 14:07:11 gropp Exp $
- *
+/*
  *  (C) 2002 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */

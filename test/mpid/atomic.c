@@ -1,6 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  $Id: atomic.c,v 1.4 2006/04/02 18:48:47 gropp Exp $
- *
+/*
  *  (C) 2002 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */

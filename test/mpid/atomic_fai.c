@@ -1,6 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  $Id: atomic_fai.c,v 1.3 2007/07/13 17:54:33 buntinas Exp $
- *
+/*
  *  (C) 2002 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
