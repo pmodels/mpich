@@ -78,7 +78,6 @@ int MPI_Comm_spawn(char *command, char *argv[], int maxprocs, MPI_Info info,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-	    MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -87,7 +86,6 @@ int MPI_Comm_spawn(char *command, char *argv[], int maxprocs, MPI_Info info,
     
     /* Convert MPI object handles to object pointers */
     MPID_Comm_get_ptr( comm, comm_ptr );
-    MPID_Info_get_ptr( info, info_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -98,10 +96,25 @@ int MPI_Comm_spawn(char *command, char *argv[], int maxprocs, MPI_Info info,
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
 	    /* If comm_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
+
+	    MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
+	    MPIR_ERRTEST_RANK(comm_ptr, root, mpi_errno);
+
+	    if (comm_ptr->rank == root) {
+		MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
+		MPIR_ERRTEST_ARGNULL(command, "command", mpi_errno);
+		MPIR_ERRTEST_ARGNEG(maxprocs, "maxprocs", mpi_errno);
+	    }
+
+            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
+
+    if (comm_ptr->rank == root) {
+	MPID_Info_get_ptr( info, info_ptr );
+    }
 
     /* ... body of routine ...  */
     

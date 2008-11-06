@@ -102,10 +102,18 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
 	    /* If comm_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
 
+	    MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
+	    MPIR_ERRTEST_RANK(comm_ptr, root, mpi_errno);
+
 	    if (comm_ptr->rank == root) {
+		MPIR_ERRTEST_ARGNULL(array_of_commands, "array_of_commands", mpi_errno);
+		MPIR_ERRTEST_ARGNULL(array_of_maxprocs, "array_of_maxprocs", mpi_errno);
+		MPIR_ERRTEST_ARGNONPOS(count, "count", mpi_errno);
 		for (i = 0; i < count; i++)
 		{
 		    MPIR_ERRTEST_INFO_OR_NULL(array_of_info[i], mpi_errno);
+		    MPIR_ERRTEST_ARGNULL(array_of_commands[i], "array_of_commands[i]", mpi_errno);
+		    MPIR_ERRTEST_ARGNEG(array_of_maxprocs[i], "array_of_maxprocs[i]", mpi_errno);
 		}
 		if (mpi_errno) goto fn_fail;
 	    }
