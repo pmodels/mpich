@@ -1,0 +1,343 @@
+#! /bin/sh
+# 
+# (C) 2006 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+# Update all of the derived files
+# For best performance, execute this in the top-level directory.
+# There are some experimental features to allow it to be executed in
+# subdirectories
+#
+# Eventually, we want to allow this script to be executed anywhere in the
+# mpich tree.  This is not yet implemented.
+error_summary=""
+acVersion=unknown
+
+# finalStatus records whether there have been problems in updatefiles
+# 1 = warning, 3 = fatal, 2 = reserved for future use, 
+# 0 = no problems detected.
+finalStatus=0
+at_top=no
+if [ -d maint -a -s maint/f77tof90.in ] ; then
+    at_top=yes
+fi
+#
+# Default choices
+do_f77tof90=yes
+do_build_configure=yes
+do_makefiles=yes
+
+# Allow MAKE to be set from the environment
+MAKE=${MAKE-make}
+
+# List of steps that we will consider
+# (We do not include depend because the values for depend are not just yes/no)
+AllSteps="f77tof90 build_configure makefiles"
+stepsCleared=no
+
+# Options for some steps
+autoconfdir=""
+#
+# Location of mpich2 source tree 
+mpich2dir=../..
+# Extract the arguments intended for updatefiles.  Any others are
+# given to simplemake.  
+temp_args=""
+for arg in "$@" ; do
+    case $arg in 
+    -echo)
+	set -x
+	;;
+
+    -mpich2dir=*)
+    mpich2dir=`echo A$arg | sed -e 's/A-mpich2dir=//'`
+    ;;
+
+    -do=*)
+    opt=`echo A$arg | sed -e 's/A-do=//'`
+    # Handle some synonyms
+    case $opt in 
+	build-configure|configure) opt=build_configure ;;
+	makefile|Makefile|Makefiles) opt=makefiles;;
+    esac
+    var=do_$opt
+    # Check that this opt is known
+    eval oldval=\$"$var"
+    if [ -z "$oldval" ] ; then
+	echo "-do=$opt is unrecognized"
+	exit 1
+    else 
+        if [ $stepsCleared = no ] ; then
+	    for step in $AllSteps ; do
+	        var=do_$step
+	        eval $var=no
+	    done
+	    stepsCleared=yes
+        fi
+        var=do_$opt
+        eval $var=yes
+    fi
+    ;;
+
+    -with-autoconf=*|--with-autoconf=*)
+    # Select a location for a different autoconf
+    autoconfdir=`echo "A$arg" | sed -e 's/.*=//'`
+    ;;
+
+    -distrib)
+    do_build_configure=no
+    temp_args="$temp_args $arg"
+    ;;
+
+    -help|--help|-usage|--usage)
+    cat <<EOF
+    updatefiles [ --with-autoconf=dir ] [ -do=stepname ]
+                [ args for simplemake ] 
+    Update the files in the MPICH2 build tree.  This file builds the 
+    configure files, creates the Makefile.in files (using the simplemake
+    program), extracts the error messages.
+
+    You can use --with-autoconf=dir to specify a directory that contains
+    an alternate autoconf and autoheader.  
+
+    Use -do=stepname to update only a single step.  For example, 
+    -do=build_configure only updates the configure scripts.  The available
+    steps are
+    $AllSteps
+EOF
+    exit
+    ;;
+    *)
+    temp_args="$temp_args $arg"
+    ;;
+    esac
+done
+# Reset the arguments.  Note that this doesn't handle arguments that contain
+# blanks.  I hope that we don't need those.
+set -- $temp_args
+#
+#
+if [ $at_top = "no" ] ; then
+    echo "Must execute at top level directory for now"
+    exit 1
+fi
+# Determine the autoconf to use.  If --with-autoconf was set, use 
+# autoconf and autoheader from that directory
+# This may also be needed for tools in the maint directory
+if [ -n "$autoconfdir" ] ; then
+    if [ -x $autoconfdir/autoconf -a -x $autoconfdir/autoheader ] ; then
+        autoconf=$autoconfdir/autoconf
+        autoheader=$autoconfdir/autoheader
+	# Simplemake looks in environment variables for the autoconf
+	# and autoheader to use
+	AUTOCONF=$autoconf
+	AUTOHEADER=$autoheader
+	export AUTOCONF
+	export AUTOHEADER
+    else
+        echo "Could not find executable autoconf and autoheader in $autoconfdir"
+	exit 1
+    fi
+else
+    autoconf=${AUTOCONF:-autoconf}
+    autoheader=${AUTOHEADER:-autoheader}
+fi
+#
+# Check that you have a working autoconf.  Autoconf 2.57 is not compatible with
+# previous versions of autoconf (!!), even 2.52 (!!!).  
+acVersion=ok
+if [ -d .tmp ] ; then rm -rf .tmp ; fi
+if [ -s .tmp ] ; then rm -f .tmp ; fi
+if [ ! -d .tmp ] ; then
+    mkdir .tmp 2>&1 >/dev/null
+fi
+# As of autoconf 2.59, the command line arguments changed (again)
+# We now require 2.59 everywhere, so we just double check
+# Somewhere between 2.12 and 2.58, -l changed to -B
+# Argh.  In autoconf 2.59, -B doesn't work.  You must use -I instead of -B (!!)
+# Find the configure version
+# acSubversion is the version number minus 2.  (we assume autoconf 2.xx)
+# -1 is used for unknown
+acSubversion=-1
+acIncDirFlag=-I
+for ver in 62 61 60 59 ; do
+    rm -f .tmp/configure.in .tmp/configure
+    cat >.tmp/configure.in <<EOF
+AC_PREREQ(2.$ver)
+EOF
+    if (cd .tmp && $autoconf >/dev/null 2>&1 ) ; then
+	acSubversion=$ver
+	break
+    fi
+done
+rm -f .tmp/configure.in .tmp/configure
+if [ "$acSubversion" -gt 0 ] ; then
+    acVersion="2.$acSubversion"
+    echo "You have autoconf version $acVersion."
+else
+    cat <<EOF
+You either do not have autoconf in your path or updatefiles was unable to 
+determine which version of autoconf you have.  You may be able to use
+     autoconf --version
+to see the version of autoconf (unfortunately, there is no standard 
+format for the version output and it changes between autoconf versions.
+In addition, some versions of autoconf choose among many versions and
+provide incorrect output).
+EOF
+	error_summary="$error_summary \
+No autoconf in path or unable to determine the version of autoconf."
+        acVersion="Unknown"
+fi
+rm -rf .tmp
+
+#
+# Build scripts such as simplemake if necessary
+made_simplemake=no
+run_configure=no
+# Later versions of autoconf put the autoconf version into the autom4te*.cache
+# name.
+# Later versions of autoconf (2.57+?) will silently ignore the command to 
+# rebuild the configure if it thinks that nothing has changed.  However,
+# it does not accurately decide this (e.g., if aclocal.m4 includes files 
+# that have changed, autoconf will ignore that and not regenerate the 
+# configure file).  The information that autoconf uses is saved in the
+# autom4te*.cache file; since this cache is not accurate, we delete it.
+if [ ! -x maint/configure ] ; then
+    (cd maint && $autoconf && rm -rf autom4te*.cache )
+elif find maint -name 'configure.in' -newer 'maint/configure' >/dev/null 2>&1 ; then
+    # The above relies on the Unix find command
+    (cd maint && $autoconf && rm -rf autom4te*.cache)
+fi
+if [ ! -x maint/f77tof90 ] ; then
+    run_configure=yes
+fi
+#
+# The following relies on the Unix find command
+if [ -s maint/f77tof90 ] ; then
+    if find maint -name 'f77tof90.in' -newer 'maint/f77tof90' >/dev/null 2>&1 ; then
+        run_configure=yes
+    fi
+else
+    run_configure=yes
+fi
+if [ "$run_configure" = "yes" ] ; then
+    (cd maint && ./configure)
+fi
+
+#
+if [ ! -x $mpich2dir/maint/simplemake -a $do_makefiles = yes ] ; then
+    echo "Simplemake is not available"
+    echo "You can copy simplemake.in to simplemake, replacing @PERL@ with the"
+    echo "path to Perl (version5).  Make sure the resulting file has"
+    echo "execute permissions set."
+    exit 1
+fi
+
+# Create and/or update the f90 tests
+if [ -x maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
+    echo "Create or update the Fortran 90 tests derived from the Fortran 77 tests"
+    for dir in test/mpi/f77/* ; do
+        if [ ! -d $dir ] ; then continue ; fi
+	leafDir=`basename $dir`
+        if [ ! -d test/mpi/f90/$leafDir ] ; then
+	    mkdir test/mpi/f90/$leafDir
+        fi
+        maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.sm Makefile.ap
+    done
+fi
+
+#
+# Create the Makefile.in files
+# Make sure that these files exist so that the gcc dependency creation
+# can work
+rm_prepost=no
+if [ ! -s src/include/mpidpre.h ] ; then
+    rm_prepost=yes
+fi
+otherargs="$@"
+# If there is no mpi.h file (and other files, but testing on mpi.h should
+# be enough), don't generate the dependency information in the Makefiles
+# with the static dependency target.  The new default in simplemake is
+# dynamic dependency data
+# Currently, the dependency generation relies on using gcc, so we may 
+# want to test on that as well.
+# 
+# 
+otherargs="$otherargs -nodepend"
+# 
+# autoconf 2.57 drastically changed the command line arguments.
+# Up through 2.52, -l dir was the "localdir for searching"
+# By 2.57, -l was no longer accepted, and -B dir or --prepend-include=DIR
+# was used.  
+# To make things more exciting, the format of autoconf --version has
+# changed, making it very hard to automatically extract the version number
+# so that programs like this can work around poor software engineering, 
+# such as incompatible changes in a minor-numbered release.
+#
+# Just to make this even more interesting, the cygwin version of 
+# autoconf selects a version.  But the code to so this causes --version 
+# (and --help!) to fail unless there is a configure.in file in the current
+# directory.  
+if [ $do_makefiles = yes ] ; then
+    if $mpich2dir/maint/simplemake -common=$mpich2dir/maint/makedefs \
+        -docnamedefs='${master_top_srcdir}/maint/docnotes' \
+        -autoconf="$acIncDirFlag ROOTDIR/confdb" \
+        -libdir='${MPILIBNAME}'=ROOTDIR/lib \
+	-smroot='${master_top_srcdir}/maint' $otherargs \
+        Makefile.sm ; then
+        :
+    else
+        echo "Simplemake step failed!"
+        exit 1
+    fi
+fi
+#
+# Create the configure files and run autoheader
+# Eventually, make this a test for find available.  Perhaps
+# find . -name configure.in > /dev/null 2>&1
+# The problem is that even though cygwin has find, the DOS find
+# is identified first.  We probably need a test for this case
+fixBackWhackCtrlMBug=no
+if [ $do_build_configure = yes ] ; then
+    # If we don't delete the autom4te.cache files, bugs in 
+    # autoconf may fail to correctly update configure
+    # Gah. Some xargs don't accept -r, other break if there is no
+    # input.  To avoid that, we do this in two steps: first the
+    # find, then the rm (if there are any files)
+    if [ -d autom4te.cache ] ; then rm -rf autom4te.cache ; fi
+    $autoheader $acIncDirFlag $mpich2dir/confdb
+    $autoconf $acIncDirFlag $mpich2dir/confdb && rm -rf autom4te*.cache
+    if [ ! -x configure ] ; then 
+        # Check for a few allowed exceptions
+        echo "Could not build configure from configure.in in $dir"
+	echo "Aborting updatefiles!"
+	exit 1
+    fi
+fi
+
+#
+# The following must be the last statements executed
+if [ -n "$error_summary" ] ; then
+    echo " "
+    echo "Problems encountered while running updatefiles."
+    echo "These may cause problems when configuring or building MPICH2."
+    echo "$error_summary"
+fi
+case $finalStatus in 
+   0) # all is well
+	;;
+   1) # warnings
+ 	;;
+   2) # reserved for future use
+	;;
+   3) # fatal, cannot continue
+	echo "updatefiles step failed!  Review the output and fix the problem"
+        echo "before continuing"
+        exit 1
+	;;	
+   *) # unknown
+	echo "Internal error in updatefiles; finalStatus=$finalStatus"
+	exit 1
+	;;
+esac
+
