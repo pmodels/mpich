@@ -236,13 +236,13 @@ fi
 # Create and/or update the f90 tests
 if [ -x maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
     echo "Create or update the Fortran 90 tests derived from the Fortran 77 tests"
-    for dir in test/mpi/f77/* ; do
+    for dir in f77/* ; do
         if [ ! -d $dir ] ; then continue ; fi
 	leafDir=`basename $dir`
-        if [ ! -d test/mpi/f90/$leafDir ] ; then
-	    mkdir test/mpi/f90/$leafDir
+        if [ ! -d f90/$leafDir ] ; then
+	    mkdir f90/$leafDir
         fi
-        maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.sm Makefile.ap
+        maint/f77tof90 $dir f90/$leafDir Makefile.sm Makefile.ap
     done
 fi
 

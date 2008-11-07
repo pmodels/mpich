@@ -8,3 +8,22 @@ testing:
 		   -xmlfile=summary.xml
 clean-local:
 	-rm -f summary.xml
+
+dist:	
+	if [ ! -d "@mpich2_top_srcdir@" ] ; then \
+	    echo "The dist target requires that the mpich2 source directory be provided" ; \
+	    exit 1 ; \
+	fi
+	if [ ! -d .tmp ] ; then mkdir .tmp ; else rm -rf .tmp && mkdir .tmp ; fi
+	cd .tmp && svn co https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/test/mpi mpi2test
+	cd .tmp/mpi2test && \
+	    svn co https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb confdb
+	sed -e 's/AC_CONFIG_AUX_DIR.*/AC_CONFIG_AUX_DIR(confdb)/' \
+	    configure.in > conftmp.in && mv conftmp.in configure.in
+	cd .tmp/mpi2test && maint/updatefiles -mpich2dir=@mpich2_top_srcdir@
+	cd .tmp/mpi2test && @mpich2_top_srcdir@/maint/simplemake Makefile.sm
+	cd .tmp && tar cf mpi2test.tar mpi2test && gzip -9 mpi2test.tar 
+	if [ -s .tmp/mpi2test.tar.gz ] ; then \
+	    mv .tmp/mpi2test.tar.gz . ; rm -rf .tmp ; \
+	else echo "Could not create tarfile for test suite"; exit 1 ; fi
+

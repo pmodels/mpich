@@ -1,0 +1,13 @@
+In many cases, configure will find the MPI implementation
+automatically.  In some cases, it will need some help.  For example:
+
+For IBM MPI, where the compilation commands are not mpicc and mpif77 etc.:
+
+./configure --with-mpi CC=xlc MPICC=mpcc F77=xlf MPIF77=mpxlf CXX=xlC
+                       MPICXX=mpCC F90=xlf90 MPIF90=mpxlf90
+
+You may need to add MPI_SIZEOF_OFFSET=8 .
+
+The script that runs the tests assumes that the MPI implementation
+supports mpiexec; you should consider this the first test of the implementation.
+
