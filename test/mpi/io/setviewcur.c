@@ -63,9 +63,14 @@ int main( int argc, char *argv[] )
     }
     MPI_Barrier( comm );
     /* All processes must provide the same file view for MODE_SEQUENTIAL */
+    /* See MPI 2.1, 13.3 - DISPLACEMENT_CURRENT is *required* for 
+       MODE_SEQUENTIAL files */
     err = MPI_File_set_view( fh, MPI_DISPLACEMENT_CURRENT, MPI_INT, 
 		       MPI_INT, "native", MPI_INFO_NULL );
-    if (err) { errs++; MTestPrintErrorMsg( "Set_view", err ); }
+    if (err) { 
+	errs++; 
+	MTestPrintErrorMsg( "Set_view (DISPLACEMENT_CURRENT)", err );
+    }
     buf[0] = -1;
     err = MPI_File_read_ordered( fh, buf, 1, MPI_INT, &status );
     if (err) { errs++; MTestPrintErrorMsg( "Read_all", err ); }
