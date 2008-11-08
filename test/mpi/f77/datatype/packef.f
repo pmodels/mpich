@@ -139,23 +139,26 @@ C
        do i=1, insize
           if (ioutbuf(i) .ne. i) then
              errs = errs + 1
-             print *, 'ioutbuf(',i,') = ', ioutbuf(i)
+             print *, 'ioutbuf(',i,') = ', ioutbuf(i), ' expected ', i
           endif
        enddo
        do i=1, rsize
           if (routbuf(i) .ne. 1000.0 * i) then
              errs = errs + 1
-             print *, 'routbuf(',i,') = ', routbuf(i)
+             print *, 'routbuf(',i,') = ', routbuf(i), ' expected ',       & 
+     &                1000.0 * i
           endif
        enddo
        if (coutbuf(1:csize) .ne. 'This is a string') then
           errs = errs + 1
-          print *, 'coutbuf = ', coutbuf(1:csize)
+          print *, 'coutbuf = ', coutbuf(1:csize), ' expected ',           &
+     &             'This is a string'
        endif
        do i=1, insize2
           if (ioutbuf2(i) .ne. 5000-i) then
              errs = errs + 1
-             print *, 'ioutbuf2(',i,') = ', ioutbuf2(i)
+             print *, 'ioutbuf2(',i,') = ', ioutbuf2(i), ' expected ',     &
+     &              5000-i
           endif
        enddo
 C
