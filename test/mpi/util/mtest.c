@@ -852,6 +852,13 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	fflush( stderr );
 	
     }
+    else if (verbose && datatype_index > 0) {
+	printf( "Get new datatypes: send = %s, recv = %s\n", 
+		MTestGetDatatypeName( sendtype ), 
+		MTestGetDatatypeName( recvtype ) );
+	fflush( stdout );
+    }
+
     return datatype_index;
 }
 
