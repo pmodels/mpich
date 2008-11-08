@@ -577,6 +577,38 @@ EOF
 	    F77_MPI_OFFSET="integer*$len"
         fi
     done
+    # At this point, we could create a test program that would confirm that
+    # the values in Fortran matched the values in C.
+    # Note that we must make this an MPI program because the compiler for
+    # MPI programs may require that the programs be run with mpiexec or
+    # something similar (this is true for the IBM MPI, for example).
+    rm -f f77/init/checksizes.c
+    cat > f77/init/checksizes.c <<EOF
+#include "mpi.h"
+#include <stdio.h>
+int main( int argc, char **argv ) 
+{
+  int sizeof_aint, sizeof_offset;
+  int fsizeof_aint   = $MPI_SIZEOF_AINT;
+  int fsizeof_offset = $MPI_SIZEOF_OFFSET;
+  int err = 0, rc = 0;
+  
+  MPI_Init( &argc, &argv );
+  if (sizeof(MPI_Aint) != fsizeof_aint) {
+     printf( "Sizeof MPI_Aint is %d but Fortran thinks it is %d\n", 
+             sizeof(MPI_Aint), fsizeof_aint );
+     err++;
+  }
+  if (sizeof(MPI_Offset) != fsizeof_offset) {
+     printf( "Sizeof MPI_Offset is %d but Fortran thinks it is %d\n", 
+             sizeof(MPI_Offset), fsizeof_offset );
+     err++;
+  }
+  MPI_Finalize( );
+  if (err > 0) rc = 1;
+  return rc;
+}
+EOF
 
     # Check for name mapping so that we can do the handle conversion tests
     # This test needs both the base c and fortran compilers
@@ -837,13 +869,34 @@ if test "$enable_cxx" = yes ; then
     CXX=$CXXsave
     AC_LANG_RESTORE
 fi
+AC_LANG_C
 # IO
 iodir="#"
 if test "$enable_romio" != no ; then
     iodir=io
     AC_DEFINE(HAVE_MPI_IO,1,[Define if MPI-IO (really ROMIO) is included])
+    AC_CACHE_CHECK([whether MPIO_Request is defined for MPI IO],pac_cv_have_mpio_request,[
+AC_TRY_COMPILE([#include "mpi.h"],[MPIO_Request r;],pac_cv_have_mpio_request=yes,pac_cv_have_mpio_request=no)])
+    if test "$pac_cv_have_mpio_request" = no ; then
+        AC_DEFINE(MPIO_USES_MPI_REQUEST,,[Define if MPI IO uses MPI_Request])
+    fi
 fi
 AC_SUBST(iodir)
+
+#
+# MPI_INTEGER16 is mentioned in only one place in MPI 2.1, and some
+# implementations may have missed it.  Check to see if it is available in 
+# C.
+AC_CACHE_CHECK([whether MPI_INTEGER16 is available],pac_cv_have_mpi_integer16,[
+AC_TRY_COMPILE([#include "mpi.h"],[MPI_Datatype t = MPI_INTEGER16;],pac_cv_have_mpi_integer16=yes,pac_cv_have_mpi_integer16=no)])
+if test "$pac_cv_have_mpi_integer16" = yes ; then 
+    AC_DEFINE(HAVE_MPI_INTEGER16,1,[Define if MPI_INTEGER16 is available])
+fi
+AC_CACHE_CHECK([whether MPI_2DOUBLE_COMPLEX is available],pac_cv_have_mpi_2double_complex,[
+AC_TRY_COMPILE([#include "mpi.h"],[MPI_Datatype t = MPI_2DOUBLE_COMPLEX;],pac_cv_have_mpi_2double_complex=yes,pac_cv_have_mpi_2double_complex=no)])
+if test "$pac_cv_have_mpi_2double_complex" = yes ; then 
+    AC_DEFINE(HAVE_MPI_2DOUBLE_COMPLEX,1,[Define if MPI_2DOUBE_COMPLEX is available])
+fi
 
 # Find perl; used to create some of the tests from template and 
 # defintion files

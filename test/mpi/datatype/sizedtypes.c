@@ -76,6 +76,7 @@ int main( int argc, char *argv[] )
 	    printf( "MPI_INTEGER8 has size %d\n", size );
 	}
     }
+#ifdef HAVE_MPI_INTEGER16
     if (MPI_INTEGER16 != MPI_DATATYPE_NULL) {
 	MPI_Type_size( MPI_INTEGER16, &size );
 	if (size != 16) {
@@ -83,6 +84,7 @@ int main( int argc, char *argv[] )
 	    printf( "MPI_INTEGER16 has size %d\n", size );
 	}
     }
+#endif
 
     MTest_Finalize( errs );
     MPI_Finalize();

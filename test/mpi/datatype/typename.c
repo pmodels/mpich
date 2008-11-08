@@ -49,7 +49,10 @@ static mpi_names_t mpi_names[] = {
     { MPI_INTEGER, "MPI_INTEGER" },
     { MPI_2INTEGER, "MPI_2INTEGER" },
     { MPI_2COMPLEX, "MPI_2COMPLEX" },
+#ifdef HAVE_MPI_2DOUBLE_COMPLEX
+    /* MPI_2DOUBLE_COMPLEX is an extension - it is not part of MPI 2.1 */
     { MPI_2DOUBLE_COMPLEX, "MPI_2DOUBLE_COMPLEX" },
+#endif
     { MPI_2REAL, "MPI_2REAL" },
     { MPI_2DOUBLE_PRECISION, "MPI_2DOUBLE_PRECISION" },
     { MPI_CHARACTER, "MPI_CHARACTER" },
@@ -57,6 +60,9 @@ static mpi_names_t mpi_names[] = {
     /* Size-specific types */
     /* Do not move MPI_REAL4 - this is used to indicate the very first 
        optional type */
+    /* See MPI 2.1, Section 16.2.  These are required, predefined types. 
+       If the type is not available (e.g., *only* because the Fortran
+       compiler does not support it), the value may be MPI_DATATYPE_NULL */
     { MPI_REAL4, "MPI_REAL4" },
     { MPI_REAL8, "MPI_REAL8" },
     { MPI_REAL16, "MPI_REAL16" },
@@ -67,7 +73,12 @@ static mpi_names_t mpi_names[] = {
     { MPI_INTEGER2, "MPI_INTEGER2" },
     { MPI_INTEGER4, "MPI_INTEGER4" },
     { MPI_INTEGER8, "MPI_INTEGER8" },
+#ifdef HAVE_MPI_INTEGER16
+    /* MPI_INTEGER16 is not included in most of the tables in MPI 2.1,
+       and some implementations omit it.  An error will be reported, but
+       this ifdef allows the test to be built and run. */
     { MPI_INTEGER16, "MPI_INTEGER16" },
+#endif
     /* Semi-optional types - if the compiler doesn't support long double
        of long long, these might be MPI_DATATYPE_NULL */
     { MPI_LONG_DOUBLE, "MPI_LONG_DOUBLE" },
@@ -135,6 +146,10 @@ int main( int argc, char **argv )
 	fprintf( stderr, "Expected int but got :%s:\n", name );
     }
 
+#ifndef HAVE_MPI_INTEGER16
+    errs++;
+    fprintf( stderr, "MPI_INTEGER16 is not available\n" );
+#endif
 
     MTest_Finalize( errs );
     MPI_Finalize();

@@ -102,6 +102,7 @@ int main( int argc, char *argv[] )
 	    errs++;
 	}
     }
+#ifdef HAVE_MPI_INTEGER16
     if (MPI::INTEGER16 != MPI::DATATYPE_NULL) {
 	MPI::INTEGER16.Get_envelope( num_ints, num_adds, num_types, combiner );
 	if (combiner != MPI::COMBINER_NAMED) {
@@ -109,6 +110,7 @@ int main( int argc, char *argv[] )
 	    errs++;
 	}
     }
+#endif
     /* Here end the optional types */
 
     MPI::INTEGER.Get_envelope( num_ints, num_adds, num_types, combiner );
