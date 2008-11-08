@@ -94,7 +94,6 @@ int main( int argc, char *argv[] )
 	    if (flag) {
 		errs++;
 		printf( "send request 1 was cancelled!\n" );
-		printf( "cancelled value is %x\n", s[1].cancelled );
 	    }
 	}
 	else {
@@ -124,7 +123,6 @@ int main( int argc, char *argv[] )
 	if (flag) {
 	    errs++;
 	    printf( "send request 1 was cancelled!\n" );
-	    printf( "cancelled value is %x\n", s[1].cancelled );
 	}
     }
     if (rank != src && rank != dest) {

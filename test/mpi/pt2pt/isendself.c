@@ -48,7 +48,7 @@ int main( int argc, char *argv[] )
 	count != 0) {
 	errs++;
 	printf ("2 status = %d %d %d %d\n", status.MPI_SOURCE, status.MPI_TAG,
-		status.MPI_ERROR, status.count );
+		status.MPI_ERROR, count );
     }
     MPI_Wait( &request, &status );
 
