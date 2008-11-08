@@ -80,8 +80,10 @@ int main( int argc, char *argv[] )
 		    err = MTestCheckRecv( 0, &recvtype );
 		    if (err) {
 			if (errs < 10) {
-			    printf( "Data in target buffer did not match for destination datatype %s\n", 
-				    MTestGetDatatypeName( &recvtype) );
+			    printf( "Data in target buffer did not match for destination datatype %s (put with source datatype %s)\n", 
+				    MTestGetDatatypeName( &recvtype ),
+				    MTestGetDatatypeName( &sendtype ) );
+			    /* Redo the test, with the errors printed */
 			    recvtype.printErrors = 1;
 			    (void)MTestCheckRecv( 0, &recvtype );
 			}

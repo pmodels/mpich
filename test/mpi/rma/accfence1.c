@@ -61,6 +61,9 @@ int main( int argc, char *argv[] )
 		    if (err) {
 			errs++;
 			if (errs < 10) {
+			    printf( "Accumulate types: send %s, recv %s\n",
+				    MTestGetDatatypeName( &sendtype ),
+				    MTestGetDatatypeName( &recvtype ) );
 			    MTestPrintError( err );
 			}
 		    }

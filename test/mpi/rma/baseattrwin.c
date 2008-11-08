@@ -34,6 +34,9 @@ int main( int argc, char **argv)
 	fprintf( stderr, "Could not get WIN_BASE\n" );
     }
     else {
+	/* MPI 2.1, section 11.2.2.  v must be a pointer to the start of the 
+	 window.  It is not a pointer to a pointer to the start of the window. 
+	*/
 	if ((int*)v != base) {
 	    errs++;
 	    fprintf( stderr, "Got incorrect value for WIN_BASE (%p, should be %p)", 
