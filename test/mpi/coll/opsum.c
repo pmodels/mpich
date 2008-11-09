@@ -35,6 +35,7 @@ int main( int argc, char *argv[] )
     MPI_Comm_size( comm, &size );
 
     /* char */
+    MTestPrintfMsg( 10, "Reduce of MPI_CHAR\n" );
     cinbuf[0] = 1;
     cinbuf[1] = 0;
     cinbuf[2] = (rank > 0);
@@ -59,6 +60,7 @@ int main( int argc, char *argv[] )
     }
 
     /* unsigned char */
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_CHAR\n" );
     ucinbuf[0] = 1;
     ucinbuf[1] = 0;
     ucinbuf[2] = (rank > 0);
@@ -83,6 +85,7 @@ int main( int argc, char *argv[] )
     }
 
     if (MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
+	MTestPrintfMsg( 10, "Reduce of MPI_DOUBLE_COMPLEX\n" );
 	/* double complex; may be null if we do not have Fortran support */
 	dinbuf[0].r = 1;
 	dinbuf[1].r = 0;
@@ -125,6 +128,7 @@ int main( int argc, char *argv[] )
     ldoutbuf[1] = 1;
     ldoutbuf[2] = 1;
     if (MPI_LONG_DOUBLE != MPI_DATATYPE_NULL) {
+	MTestPrintfMsg( 10, "Reduce of MPI_LONG_DOUBLE\n" );
 	MPI_Reduce( ldinbuf, ldoutbuf, 3, MPI_LONG_DOUBLE, MPI_SUM, 0, comm );
 	if (rank == 0) {
 	    if (ldoutbuf[0] != size) {
@@ -156,6 +160,7 @@ int main( int argc, char *argv[] )
     lloutbuf[1] = 1;
     lloutbuf[2] = 1;
     if (MPI_LONG_LONG != MPI_DATATYPE_NULL) {
+    MTestPrintfMsg( 10, "Reduce of MPI_LONG_LONG\n" );
 	MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_SUM, 0, comm );
 	if (rank == 0) {
 	    if (lloutbuf[0] != size) {
