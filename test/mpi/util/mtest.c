@@ -598,19 +598,12 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	recvtype->isBasic  = 1;
 	break;
     case 2:
-	sendtype->datatype = MPI_INT;
-	sendtype->isBasic  = 1;
-	recvtype->datatype = MPI_BYTE;
-	recvtype->isBasic  = 1;
-	recvtype->count    *= sizeof(int);
-	break;
-    case 3:
 	sendtype->datatype = MPI_FLOAT_INT;
 	sendtype->isBasic  = 1;
 	recvtype->datatype = MPI_FLOAT_INT;
 	recvtype->isBasic  = 1;
 	break;
-    case 4:
+    case 3:
 	merr = MPI_Type_dup( MPI_INT, &sendtype->datatype );
 	if (merr) MTestPrintError( merr );
 	merr = MPI_Type_set_name( sendtype->datatype, "dup of MPI_INT" );
@@ -622,7 +615,7 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	/* dup'ed types are already committed if the original type 
 	   was committed (MPI-2, section 8.8) */
 	break;
-    case 5:
+    case 4:
 	/* vector send type and contiguous receive type */
 	/* These sizes are in bytes (see the VectorInit code) */
  	sendtype->stride   = 3 * sizeof(int);
@@ -647,7 +640,7 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	recvtype->CheckBuf = MTestTypeContigCheckbuf;
 	break;
 
-    case 6:
+    case 5:
 	/* Indexed send using many small blocks and contig receive */
 	sendtype->blksize  = sizeof(int);
 	sendtype->nelm     = recvtype->count;
@@ -686,7 +679,7 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	recvtype->CheckBuf = MTestTypeContigCheckbuf;
 	break;
 
-    case 7:
+    case 6:
 	/* Indexed send using 2 large blocks and contig receive */
 	sendtype->blksize  = sizeof(int);
 	sendtype->nelm     = 2;
@@ -722,7 +715,7 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	recvtype->CheckBuf = MTestTypeContigCheckbuf;
 	break;
 
-    case 8:
+    case 7:
 	/* Indexed receive using many small blocks and contig send */
 	recvtype->blksize  = sizeof(int);
 	recvtype->nelm     = recvtype->count;
@@ -761,6 +754,16 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	sendtype->CheckBuf = 0;
 	break;
 
+#ifndef USE_STRICT_MPI
+	/* MPI_BYTE may only be used with MPI_BYTE in strict MPI */
+    case 8:
+	sendtype->datatype = MPI_INT;
+	sendtype->isBasic  = 1;
+	recvtype->datatype = MPI_BYTE;
+	recvtype->isBasic  = 1;
+	recvtype->count    *= sizeof(int);
+	break;
+#endif
 #if 0
     case 9:
 	/* vector recv type and contiguous send type */

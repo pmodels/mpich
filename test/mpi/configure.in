@@ -67,6 +67,8 @@ AC_ARG_ENABLE(checkerrors,
 [--enable-checkerrors - Add some tests for checking for errors in user programs],,enable_checkerrors=default)
 AC_ARG_ENABLE(fast,
 [--enable-fast - Indicates that the MPI implementation may have been built for fastest operation, such as building without error checking.  Has the effect of --enable-checkerrors=no])
+AC_ARG_ENABLE(strictmpi,
+[--enable-strictmpi - Only test for operations specifically defined by the MPI standard.  This turns off tests for some common extensions, including for combinations of predefined datatypes and predefined MPI_Op s.],enable_strictmpi=no)
 
 AC_ARG_WITH(mpi,
 [--with-mpi=dir - Use the selected MPI; compilation scripts for mpicc, mpif77
@@ -234,6 +236,10 @@ else
     AC_DEFINE(HAVE_MPI_WIN_CREATE,1,[Define if MPI_Win_create is available])
 fi
 AC_SUBST(rmadir)
+#
+if test "$enable_strictmpi" = "yes" ; then
+    AC_DEFINE(USE_STRICT_MPI,1,[Define if only operations defined in MPI should be tested])
+fi
 #
 # Now, get the versions of the compilers that we'll use for MPI programs
 if test -n "$with_mpi" ; then
