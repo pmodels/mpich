@@ -33,7 +33,9 @@ int main( int argc, char *argv[] )
     MPI_Comm_rank( comm, &rank );
     MPI_Comm_size( comm, &size );
 
+#ifndef USE_STRICT_MPI
     /* char */
+    MTestPrintfMsg( 10, "Reduce of MPI_CHAR\n" );
     cinbuf[0] = 1;
     cinbuf[1] = 0;
     cinbuf[2] = (rank > 0);
@@ -58,6 +60,7 @@ int main( int argc, char *argv[] )
     }
 
     /* unsigned char */
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_CHAR\n" );
     ucinbuf[0] = 1;
     ucinbuf[1] = 0;
     ucinbuf[2] = (rank > 0);
@@ -82,6 +85,7 @@ int main( int argc, char *argv[] )
     }
 
     /* float */
+    MTestPrintfMsg( 10, "Reduce of MPI_FLOAT\n" );
     finbuf[0] = 1;
     finbuf[1] = 0;
     finbuf[2] = (rank > 0);
@@ -105,6 +109,7 @@ int main( int argc, char *argv[] )
 	}
     }
 
+    MTestPrintfMsg( 10, "Reduce of MPI_DOUBLE\n" );
     /* double */
     dinbuf[0] = 1;
     dinbuf[1] = 0;
@@ -129,6 +134,8 @@ int main( int argc, char *argv[] )
 	}
     }
 
+#endif
+
 #ifdef HAVE_LONG_DOUBLE
     { long double ldinbuf[3], ldoutbuf[3];
     /* long double */
@@ -140,6 +147,7 @@ int main( int argc, char *argv[] )
     ldoutbuf[1] = 1;
     ldoutbuf[2] = 1;
     if (MPI_LONG_DOUBLE != MPI_DATATYPE_NULL) {
+	MTestPrintfMsg( 10, "Reduce of MPI_LONG_DOUBLE\n" );
 	MPI_Reduce( ldinbuf, ldoutbuf, 3, MPI_LONG_DOUBLE, MPI_LAND, 0, comm );
 	if (rank == 0) {
 	    if (!ldoutbuf[0]) {
@@ -171,6 +179,7 @@ int main( int argc, char *argv[] )
     lloutbuf[1] = 1;
     lloutbuf[2] = 1;
     if (MPI_LONG_LONG != MPI_DATATYPE_NULL) {
+	MTestPrintfMsg( 10, "Reduce of MPI_LONG_LONG\n" );
 	MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_LAND, 0, comm );
 	if (rank == 0) {
 	    if (!lloutbuf[0]) {

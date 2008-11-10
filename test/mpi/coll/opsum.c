@@ -34,6 +34,7 @@ int main( int argc, char *argv[] )
     MPI_Comm_rank( comm, &rank );
     MPI_Comm_size( comm, &size );
 
+#ifndef USE_STRICT_MPI
     /* char */
     MTestPrintfMsg( 10, "Reduce of MPI_CHAR\n" );
     cinbuf[0] = 1;
@@ -83,6 +84,7 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "unsigned char SUM(>) test failed\n" );
 	}
     }
+#endif /* USE_MPI_STRICT */
 
     if (MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
 	MTestPrintfMsg( 10, "Reduce of MPI_DOUBLE_COMPLEX\n" );

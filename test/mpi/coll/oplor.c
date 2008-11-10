@@ -33,6 +33,7 @@ int main( int argc, char *argv[] )
     MPI_Comm_rank( comm, &rank );
     MPI_Comm_size( comm, &size );
 
+#ifndef USE_STRICT_MPI
     /* char */
     cinbuf[0] = 1;
     cinbuf[1] = 0;
@@ -128,6 +129,7 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "double OR(>) test failed\n" );
 	}
     }
+#endif /* USE_STRICT_MPI */
 
 #ifdef HAVE_LONG_DOUBLE
     { long double ldinbuf[3], ldoutbuf[3];

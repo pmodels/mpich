@@ -41,6 +41,7 @@ int main( int argc, char *argv[] )
        five (1! = 1, 2! = 2, 3! = 6, 4! = 24, 5! = 120), with n!
        stored in the array result[n] */
 
+#ifndef USE_STRICT_MPI
     /* char */
     cinbuf[0] = (rank < maxsize && rank > 0) ? rank : 1;
     cinbuf[1] = 0;
@@ -89,6 +90,7 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "unsigned char PROD(>) test failed\n" );
 	}
     }
+#endif
 
     if (MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
 	/* double complex; may be null if we do not have Fortran support */

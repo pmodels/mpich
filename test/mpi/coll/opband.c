@@ -37,7 +37,9 @@ int main( int argc, char *argv[] )
     MPI_Comm_rank( comm, &rank );
     MPI_Comm_size( comm, &size );
 
+#ifndef USE_STRICT_MPI
     /* char */
+    MTestPrintfMsg( 10, "Reduce of MPI_CHAR\n" );
     cinbuf[0] = 0xff;
     cinbuf[1] = 0;
     cinbuf[2] = (rank > 0) ? 0xff : 0xf0;
@@ -61,6 +63,7 @@ int main( int argc, char *argv[] )
 	}
     }
 
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_CHAR\n" );
     /* unsigned char */
     ucinbuf[0] = 0xff;
     ucinbuf[1] = 0;
@@ -84,8 +87,10 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "unsigned char BAND(>) test failed\n" );
 	}
     }
+#endif /* USE_STRICT_MPI */
 
     /* bytes */
+    MTestPrintfMsg( 10, "Reduce of MPI_BYTE\n" );
     cinbuf[0] = 0xff;
     cinbuf[1] = 0;
     cinbuf[2] = (rank > 0) ? 0xff : 0xf0;
@@ -110,6 +115,7 @@ int main( int argc, char *argv[] )
     }
 
     /* short */
+    MTestPrintfMsg( 10, "Reduce of MPI_SHORT\n" );
     sinbuf[0] = 0xffff;
     sinbuf[1] = 0;
     sinbuf[2] = (rank > 0) ? 0xffff : 0xf0f0;
@@ -133,6 +139,7 @@ int main( int argc, char *argv[] )
 	}
     }
 
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_SHORT\n" );
     /* unsigned short */
     usinbuf[0] = 0xffff;
     usinbuf[1] = 0;
@@ -158,6 +165,7 @@ int main( int argc, char *argv[] )
     }
 
     /* unsigned */
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED\n" );
     uinbuf[0] = 0xffffffff;
     uinbuf[1] = 0;
     uinbuf[2] = (rank > 0) ? 0xffffffff : 0xf0f0f0f0;
@@ -182,6 +190,7 @@ int main( int argc, char *argv[] )
     }
 
     /* long */
+    MTestPrintfMsg( 10, "Reduce of MPI_LONG\n" );
     linbuf[0] = 0xffffffff;
     linbuf[1] = 0;
     linbuf[2] = (rank > 0) ? 0xffffffff : 0xf0f0f0f0;
@@ -205,6 +214,7 @@ int main( int argc, char *argv[] )
 	}
     }
 
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_LONG\n" );
     /* unsigned long */
     ulinbuf[0] = 0xffffffff;
     ulinbuf[1] = 0;
@@ -241,6 +251,7 @@ int main( int argc, char *argv[] )
     lloutbuf[1] = 1;
     lloutbuf[2] = 1;
     if (MPI_LONG_LONG != MPI_DATATYPE_NULL) {
+	MTestPrintfMsg( 10, "Reduce of MPI_LONG_LONG\n" );
 	MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_BAND, 0, comm );
 	if (rank == 0) {
 	    if (lloutbuf[0] != 0xffffffff) {
@@ -259,7 +270,6 @@ int main( int argc, char *argv[] )
     }
     }
 #endif
-
 
     MTest_Finalize( errs );
     MPI_Finalize();

@@ -38,6 +38,7 @@ int main( int argc, char *argv[] )
     MPI_Comm_rank( comm, &rank );
     MPI_Comm_size( comm, &size );
 
+#ifndef USE_STRICT_MPI
     /* char */
     cinbuf[0] = 0xff;
     cinbuf[1] = 0;
@@ -85,6 +86,7 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "unsigned char BXOR(>) test failed\n" );
 	}
     }
+#endif
 
     /* bytes */
     cinbuf[0] = 0xff;
