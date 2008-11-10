@@ -15,6 +15,7 @@
 #ifndef MAX_INFOS
 #define MAX_INFOS 4000
 #endif
+#define MAX_ERRORS 10
 #define info_list 16
 /* #define DBG  */
 
@@ -56,8 +57,10 @@ int main( int arg, char *argv[] )
 	MPI_Info_get_nkeys( infos[i], &nkeys );
 	if (nkeys != info_list) {
 	    errs++;
-	    printf( "Wrong number of keys for info %d; got %d, should be %d\n",
-		    i, nkeys, info_list );
+	    if (errs < MAX_ERRORS) {
+		printf( "Wrong number of keys for info %d; got %d, should be %d\n",
+			i, nkeys, info_list );
+	    }
 	}
 	for (j=0; j<nkeys; j++) {
 	    char keystr[64];
@@ -67,21 +70,27 @@ int main( int arg, char *argv[] )
 	    sprintf( keystr, "key%d-%d", i, j );
 	    if (strcmp( keystr, key ) != 0) {
 		errs++;
-		printf( "Wrong key for info %d; got %s expected %s\n", 
-			i, key, keystr );
+		if (errs < MAX_ERRORS) {
+		    printf( "Wrong key for info %d; got %s expected %s\n", 
+			    i, key, keystr );
+		}
 		continue;
 	    }
 	    MPI_Info_get( infos[i], key, 64, value, &flag );
 	    if (!flag) {
 		errs++;
-		printf( "Get failed to return value for info %d\n", i );
+		if (errs < MAX_ERRORS) {
+		    printf( "Get failed to return value for info %d\n", i );
+		}
 		continue;
 	    }
 	    sprintf( valstr, "value%d-%d", i, j );
 	    if (strcmp( valstr, value ) != 0) {
 		errs++;
-		printf( "Wrong value for info %d; got %s expected %s\n",
-			i, value, valstr );
+		if (errs < MAX_ERRORS) {
+		    printf( "Wrong value for info %d; got %s expected %s\n",
+			    i, value, valstr );
+		}
 	    }
 	}
     }
