@@ -19,7 +19,7 @@ static inline void setupProcessorName( void );
  * MPID_Get_processor_name()
  */
 #undef FUNCNAME
-#define FUNCNAME MPID_Send
+#define FUNCNAME MPID_Get_processor_name
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_Get_processor_name(char * name, int namelen, int * resultlen)
