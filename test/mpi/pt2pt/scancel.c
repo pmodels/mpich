@@ -51,7 +51,7 @@ int main( int argc, char *argv[] )
 	    MPI_Test_cancelled( &status, &flag );
 	    if (!flag) {
 		errs ++;
-		printf( "Failed to cancel a Isend request\n" );
+		printf( "Failed to cancel an Isend request\n" );
 		fflush(stdout);
 	    }
 	    else
@@ -110,7 +110,7 @@ int main( int argc, char *argv[] )
 	    MPI_Test_cancelled( &status, &flag );
 	    if (!flag) {
 		errs ++;
-		printf( "Failed to cancel a Ibsend request\n" );
+		printf( "Failed to cancel an Ibsend request\n" );
 		fflush(stdout);
 	    }
 	    else
@@ -177,7 +177,7 @@ int main( int argc, char *argv[] )
 	       flag this as an error */
 	    if (!flag && veryPicky) {
 		errs ++;
-		printf( "Failed to cancel a Irsend request\n" );
+		printf( "Failed to cancel an Irsend request\n" );
 		fflush(stdout);
 	    }
 	    if (flag)
@@ -227,7 +227,7 @@ int main( int argc, char *argv[] )
 	    MPI_Test_cancelled( &status, &flag );
 	    if (!flag) {
 		errs ++;
-		printf( "Failed to cancel a Issend request\n" );
+		printf( "Failed to cancel an Issend request\n" );
 		fflush(stdout);
 	    }
 	    else

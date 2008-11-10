@@ -41,6 +41,7 @@ int main( int argc, char *argv[] )
 	buf = (char *)malloc( bufsize );
 	MPI_Buffer_attach( buf, bufsize );
 
+	MTestPrintfMsg( 10, "About create and free Isend request\n" );
 	smsg[0] = 10;
 	MPI_Isend( &smsg[0], 1, MPI_INT, dest, tag, comm, &r );
 	MPI_Request_free( &r );
@@ -48,6 +49,7 @@ int main( int argc, char *argv[] )
 	    errs++;
 	    fprintf( stderr, "Request not set to NULL after request free\n" );
 	}
+	MTestPrintfMsg( 10, "About create and free Ibsend request\n" );
 	smsg[1] = 11;
 	MPI_Ibsend( &smsg[1], 1, MPI_INT, dest, tag+1, comm, &r );
 	MPI_Request_free( &r );
@@ -55,6 +57,7 @@ int main( int argc, char *argv[] )
 	    errs++;
 	    fprintf( stderr, "Request not set to NULL after request free\n" );
 	}
+	MTestPrintfMsg( 10, "About create and free Issend request\n" );
 	smsg[2] = 12;
 	MPI_Issend( &smsg[2], 1, MPI_INT, dest, tag+2, comm, &r );
 	MPI_Request_free( &r );
@@ -62,6 +65,7 @@ int main( int argc, char *argv[] )
 	    errs++;
 	    fprintf( stderr, "Request not set to NULL after request free\n" );
 	}
+	MTestPrintfMsg( 10, "About create and free Irsend request\n" );
 	smsg[3] = 13;
 	MPI_Irsend( &smsg[3], 1, MPI_INT, dest, tag+3, comm, &r );
 	MPI_Request_free( &r );
@@ -94,6 +98,7 @@ int main( int argc, char *argv[] )
 		fprintf( stderr, "message %d (%d) should be %d\n", i, rmsg[i], 10+i );
 	    }
 	}
+	MTestPrintfMsg( 10, "About  free Irecv request\n" );
 	MPI_Request_free( &r[4] ); 
     }
 
