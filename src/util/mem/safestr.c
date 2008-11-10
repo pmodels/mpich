@@ -281,11 +281,11 @@ int MPIU_Snprintf( char *str, size_t size, const char *format, ... )
 
 	    case 'p':
 	    {
-		int val;
+		void *val;
 		char tmp[20];
 		char *t = tmp;
-		/* Get the argument, of integer type */
-		val = va_arg( list, int );
+		/* Get the argument, of pointer type */
+		val = va_arg( list, void * );
 		sprintf( tmp, "%p", val );
 		if (width > 0) {
 		    int tmplen = strlen(tmp);
