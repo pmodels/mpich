@@ -4,8 +4,7 @@
 #
 
 SUBDIRS_HYDRA_LAUNCHER = mpiexec
-SUBDIRS = utils .
-INSTALL_SUBDIRS = @HYDRA_LAUNCHER@
+SUBDIRS = utils @HYDRA_LAUNCHER@ .
 
 mpich2-build-install:
 	cd @HYDRA_LAUNCHER@ && ${MAKE} $@

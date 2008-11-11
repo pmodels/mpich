@@ -3,8 +3,7 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS = utils control pm bootstrap demux .
-INSTALL_SUBDIRS = launcher
+SUBDIRS = utils control pm bootstrap demux launcher .
 
 all-preamble:
 	@if [ ! -d lib ] ; then mkdir lib ; fi
