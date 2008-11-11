@@ -47,7 +47,7 @@ void MPIDU_Atomic_add_emulated(int *ptr, int val)
     MPIDU_IPC_SINGLE_CS_EXIT("atomic_add");
 }
 
-int *MPIDU_Atomic_cas_int_ptr_emulated(volatile int **ptr, int *oldv, int *newv)
+int *MPIDU_Atomic_cas_int_ptr_emulated(int * volatile *ptr, int *oldv, int *newv)
 {
     volatile int *prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_cas");
@@ -136,7 +136,7 @@ void MPIDU_Atomic_incr_emulated(volatile int *ptr)
     MPIDU_IPC_SINGLE_CS_EXIT("atomic_incr");
 }
 
-int *MPIDU_Atomic_swap_int_ptr_emulated(volatile int **ptr, int *val)
+int *MPIDU_Atomic_swap_int_ptr_emulated(int * volatile *ptr, int *val)
 {
     volatile int *prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_swap_int_ptr");

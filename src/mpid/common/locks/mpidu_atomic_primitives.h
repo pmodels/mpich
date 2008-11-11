@@ -47,7 +47,7 @@ int MPIDU_Interprocess_lock_init(MPIDU_Process_lock_t *shm_lock, int isLeader);
 
 /* function prototypes for mpidu_atomic.c */
 void MPIDU_Atomic_add_emulated(int *ptr, int val);
-int *MPIDU_Atomic_cas_int_ptr_emulated(volatile int **ptr, int *oldv, int *newv);
+int *MPIDU_Atomic_cas_int_ptr_emulated(int * volatile *ptr, int *oldv, int *newv);
 int MPIDU_Atomic_cas_int_emulated(volatile int *ptr, int oldv, int newv);
 MPI_Aint MPIDU_Atomic_cas_aint_emulated(volatile MPI_Aint *ptr, MPI_Aint oldv, MPI_Aint newv);
 int MPIDU_Atomic_decr_and_test_emulated(volatile int *ptr);
@@ -56,7 +56,7 @@ int MPIDU_Atomic_fetch_and_add_emulated(volatile int *ptr, int val);
 int MPIDU_Atomic_fetch_and_decr_emulated(volatile int *ptr);
 int MPIDU_Atomic_fetch_and_incr_emulated(volatile int *ptr);
 void MPIDU_Atomic_incr_emulated(volatile int *ptr);
-int *MPIDU_Atomic_swap_int_ptr_emulated(volatile int **ptr, int *val);
+int *MPIDU_Atomic_swap_int_ptr_emulated(int * volatile *ptr, int *val);
 int MPIDU_Atomic_swap_int_emulated(volatile int *ptr, int val);
 MPI_Aint MPIDU_Atomic_swap_aint_emulated(volatile MPI_Aint *ptr, MPI_Aint val);
 
