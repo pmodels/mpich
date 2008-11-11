@@ -589,3 +589,30 @@ static void MPIU_Print_handle( int handle )
     }
 }
 #endif
+
+/*
+ * Count the number of objects allocated and the number of objects
+ * on the available free list.  Return the difference.
+ */
+int MPIU_Handle_obj_outstanding(const MPIU_Object_alloc_t *objmem)
+{
+    int allocated = 0;
+    int available = 0;
+    MPIU_Handle_common *ptr;
+
+    ptr = objmem->avail;
+    while(ptr)
+    {
+        available++;
+        ptr = ptr->next;
+    }
+
+    if(objmem->initialized)
+    {
+        allocated = objmem->direct_size +
+            objmem->indirect_size * HANDLE_BLOCK_SIZE;
+    }
+
+    return allocated - available;
+}
+

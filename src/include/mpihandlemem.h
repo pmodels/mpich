@@ -141,4 +141,5 @@ extern void MPIU_Handle_obj_free( MPIU_Object_alloc_t *, void * );
 void *MPIU_Handle_get_ptr_indirect( int, MPIU_Object_alloc_t * );
 extern void *MPIU_Handle_direct_init(void *direct, int direct_size, 
 				     int obj_size, int handle_type);
+int MPIU_Handle_obj_outstanding(const MPIU_Object_alloc_t *objmem);
 #endif
