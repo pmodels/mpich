@@ -24,14 +24,14 @@ typedef struct HYDU_Env {
     struct HYDU_Env *next;
 } HYDU_Env_t;
 
-HYD_Status HYDU_Global_env_list(HYDU_Env_t ** env_list);
-HYDU_Env_t *HYDU_Envdup(HYDU_Env_t env);
+HYD_Status HYDU_Env_global_list(HYDU_Env_t ** env_list);
+HYDU_Env_t *HYDU_Env_dup(HYDU_Env_t env);
 HYDU_Env_t *HYDU_Env_found_in_list(HYDU_Env_t * env_list, HYDU_Env_t * env);
-HYD_Status HYDU_Add_env_to_list(HYDU_Env_t ** env_list, HYDU_Env_t env);
-HYDU_Env_t *HYDU_Envlistdup(HYDU_Env_t * env);
-HYD_Status HYDU_Create_env(HYDU_Env_t ** env, char *env_name, char *env_value,
+HYD_Status HYDU_Env_add_to_list(HYDU_Env_t ** env_list, HYDU_Env_t env);
+HYDU_Env_t *HYDU_Env_listdup(HYDU_Env_t * env);
+HYD_Status HYDU_Env_create(HYDU_Env_t ** env, char *env_name, char *env_value,
 			   HYDU_Env_type_t env_type, int start);
-HYD_Status HYDU_Free_env(HYDU_Env_t * env);
-HYD_Status HYDU_Free_env_list(HYDU_Env_t * env);
+HYD_Status HYDU_Env_free(HYDU_Env_t * env);
+HYD_Status HYDU_Env_free_list(HYDU_Env_t * env);
 
 #endif /* HYDRA_ENV_H_INCLUDED */

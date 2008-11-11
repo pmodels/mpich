@@ -128,7 +128,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
     csi_handle.enablex = -1;
     csi_handle.wdir = NULL;
 
-    status = HYDU_Global_env_list(&csi_handle.global_env);
+    status = HYDU_Env_global_list(&csi_handle.global_env);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("unable to get the global env list\n");
 	goto fn_fail;
@@ -208,13 +208,13 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 		    if (env_name == NULL)
 			break;
 
-		    status = HYDU_Create_env(&env, env_name, NULL, HYDU_ENV_STATIC, 0);
+		    status = HYDU_Env_create(&env, env_name, NULL, HYDU_ENV_STATIC, 0);
 		    if (status != HYD_SUCCESS) {
 			HYDU_Error_printf("unable to create env struct\n");
 			goto fn_fail;
 		    }
 
-		    status = HYDU_Add_env_to_list(&csi_handle.prop_env, *env);
+		    status = HYDU_Env_add_to_list(&csi_handle.prop_env, *env);
 		    if (status != HYD_SUCCESS) {
 			HYDU_Error_printf("unable to add env to list\n");
 			goto fn_fail;
@@ -256,13 +256,13 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 		    if (env_name == NULL)
 			break;
 
-		    status = HYDU_Create_env(&env, env_name, NULL, HYDU_ENV_STATIC, 0);
+		    status = HYDU_Env_create(&env, env_name, NULL, HYDU_ENV_STATIC, 0);
 		    if (status != HYD_SUCCESS) {
 			HYDU_Error_printf("unable to create env struct\n");
 			goto fn_fail;
 		    }
 
-		    status = HYDU_Add_env_to_list(&proc_params->prop_env, *env);
+		    status = HYDU_Env_add_to_list(&proc_params->prop_env, *env);
 		    if (status != HYD_SUCCESS) {
 			HYDU_Error_printf("unable to add env to list\n");
 			goto fn_fail;
@@ -283,14 +283,14 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 	    CHECK_NEXT_ARG_VALID(status);
 	    env_value = MPIU_Strdup(*argv);
 
-	    status = HYDU_Create_env(&env, env_name, env_value, HYDU_ENV_STATIC, 0);
+	    status = HYDU_Env_create(&env, env_name, env_value, HYDU_ENV_STATIC, 0);
 	    if (status != HYD_SUCCESS) {
 		HYDU_Error_printf("unable to create env struct\n");
 		goto fn_fail;
 	    }
 
 	    if (!strcmp(*argv, "-genv"))
-		HYDU_Add_env_to_list(&csi_handle.user_env, *env);
+		HYDU_Env_add_to_list(&csi_handle.user_env, *env);
 	    else {
 		local_params_started = 1;
 
@@ -300,7 +300,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 		    goto fn_fail;
 		}
 
-		HYDU_Add_env_to_list(&proc_params->user_env, *env);
+		HYDU_Env_add_to_list(&proc_params->user_env, *env);
 	    }
 
 	    HYDU_FREE(env);

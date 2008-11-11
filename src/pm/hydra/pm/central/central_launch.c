@@ -112,29 +112,29 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1, "%s:%s", hostname, sport);
     HYDU_FREE(sport);
 
-    status = HYDU_Create_env(&env, "PMI_PORT", port_str, HYDU_ENV_STATIC, 0);
+    status = HYDU_Env_create(&env, "PMI_PORT", port_str, HYDU_ENV_STATIC, 0);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("unable to create env\n");
 	goto fn_fail;
     }
-    status = HYDU_Add_env_to_list(&csi_handle.system_env, *env);
+    status = HYDU_Env_add_to_list(&csi_handle.system_env, *env);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("unable to add env to list\n");
 	goto fn_fail;
     }
-    HYDU_Free_env(env);
+    HYDU_Env_free(env);
 
-    status = HYDU_Create_env(&env, "PMI_ID", NULL, HYDU_ENV_AUTOINC, 0);
+    status = HYDU_Env_create(&env, "PMI_ID", NULL, HYDU_ENV_AUTOINC, 0);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("unable to create env\n");
 	goto fn_fail;
     }
-    status = HYDU_Add_env_to_list(&csi_handle.system_env, *env);
+    status = HYDU_Env_add_to_list(&csi_handle.system_env, *env);
     if (status != HYD_SUCCESS) {
 	HYDU_Error_printf("unable to add env to list\n");
 	goto fn_fail;
     }
-    HYDU_Free_env(env);
+    HYDU_Env_free(env);
     HYDU_FREE(port_str);
 
     /* Create a process group for the MPI processes in this
