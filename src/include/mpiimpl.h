@@ -1205,6 +1205,11 @@ typedef enum MPID_Comm_kind_t {
   byte orderings).  If the device does need to define this value, it should
   be defined in the file 'mpidpre.h'. 
 
+  Please note that the local_size and remote_size fields can be confusing.  For
+  intracommunicators both fields are always equal to the size of the
+  communicator.  For intercommunicators local_size is equal to the size of
+  local_group while remote_size is equal to the size of remote_group.
+
   Module:
   Communicator-DS
 
