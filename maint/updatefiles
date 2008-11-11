@@ -526,6 +526,13 @@ if [ $do_build_configure = yes ] ; then
 	        # be used instead of this one.
 	        continue
             fi
+	    qtestmaint=`echo $dir | sed -e 's%.*test/mpi/maint.*%FOUNDTESTMAINT%'`
+	    if [ "$qtestmaint" = "FOUNDTESTMAINT" ] ; then
+	        # echo "Found test/maint directory; skipping"
+	        # test/maint has its own updatefiles script, which should 
+	        # be used instead of this one when building that configure
+	        continue
+            fi
 	    if [ -s $dir/Makefile.in ] ; then 
                 #echo "Found $dir/configure.in"
 	        #
