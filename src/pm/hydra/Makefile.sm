@@ -8,8 +8,5 @@ SUBDIRS = utils control pm bootstrap demux launcher .
 all-preamble:
 	@if [ ! -d lib ] ; then mkdir lib ; fi
 
-mpich2-build-install:
-	cd launcher && ${MAKE} $@
-
-mpich2-build-uninstall:
+mpich2-build-install mpich2-build-uninstall install install-alt:
 	cd launcher && ${MAKE} $@

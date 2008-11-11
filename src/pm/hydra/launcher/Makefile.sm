@@ -6,8 +6,5 @@
 SUBDIRS_HYDRA_LAUNCHER = mpiexec
 SUBDIRS = utils @HYDRA_LAUNCHER@ .
 
-mpich2-build-install:
-	cd @HYDRA_LAUNCHER@ && ${MAKE} $@
-
-mpich2-build-uninstall:
+mpich2-build-install mpich2-build-uninstall install install-alt:
 	cd @HYDRA_LAUNCHER@ && ${MAKE} $@
