@@ -142,7 +142,13 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 	}
 	else {
 	    /* We don't understand the command */
-	    HYDU_Error_printf("Unrecognized PMI command: %s\n", cmd);
+	    HYDU_Error_printf("Unrecognized PMI command: %s; cleaning up processes\n", cmd);
+
+            /* Cleanup all the processes and return. We don't need to
+             * check the return status since we are anyway returning
+             * an error */
+            HYD_BSCI_Cleanup_procs();
+
 	    status = HYD_INTERNAL_ERROR;
 	    goto fn_fail;
 	}
