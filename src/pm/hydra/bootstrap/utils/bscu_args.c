@@ -29,8 +29,6 @@ HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char **client_arg, int id)
     for (i = 0; client_arg[i]; i++);
     env = env_list;
     while (env) {
-	client_arg[i++] = MPIU_Strdup("export");
-
 	j = 0;
 	tmp[j++] = MPIU_Strdup(env->env_name);
 	tmp[j++] = MPIU_Strdup("=");
@@ -49,6 +47,11 @@ HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char **client_arg, int id)
 	HYDU_FREE(envstr);
 	for (j = 0; tmp[j]; j++)
 	    HYDU_FREE(tmp[j]);
+
+	client_arg[i++] = MPIU_Strdup(";");
+
+        client_arg[i++] = MPIU_Strdup("export");
+        client_arg[i++] = MPIU_Strdup(env->env_name);
 
 	client_arg[i++] = MPIU_Strdup(";");
 
