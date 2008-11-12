@@ -113,6 +113,12 @@ int PREPEND_PREFIX(Dataloop_create_vector)(int icount,
 	    new_dlp->el_size   = 1;
 	    new_dlp->el_extent = 1;
 	    new_dlp->el_type   = MPI_BYTE;
+
+            if(!strideinbytes)
+                /* the stride was specified in units of oldtype, now
+                   that we're using bytes, rather than oldtype, we
+                   need to update stride. */
+                stride *= basic_sz;
 	}
 	else
 	{
