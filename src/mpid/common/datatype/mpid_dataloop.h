@@ -90,10 +90,12 @@
 
 /* These values are defined by DLOOP code.
  *
- * Note: DLOOP_DATALOOP_ALL_BYTES not currently used in MPICH2.
+ * Note: DLOOP_DATALOOP_ALL_BYTES is used only when the device
+ * defines MPID_NEEDS_DLOOP_ALL_BYTES.
  */
 #define MPID_DATALOOP_HETEROGENEOUS DLOOP_DATALOOP_HETEROGENEOUS
 #define MPID_DATALOOP_HOMOGENEOUS   DLOOP_DATALOOP_HOMOGENEOUS
+#define MPID_DATALOOP_ALL_BYTES     DLOOP_DATALOOP_ALL_BYTES
 
 #include <mpiimpl.h>
 

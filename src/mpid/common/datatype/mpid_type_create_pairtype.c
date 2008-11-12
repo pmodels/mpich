@@ -176,11 +176,23 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
      * if the user uses one of these w/out building some more complex
      * type and then committing it, then the dataloop will be missing.
      */
+
+#ifdef MPID_NEEDS_DLOOP_ALL_BYTES
+    /* If MPID implementation needs use to reduce everything to
+       a byte stream, do that. */
+    err = MPID_Dataloop_create_pairtype(type,
+					&(new_dtp->dataloop),
+					&(new_dtp->dataloop_size),
+					&(new_dtp->dataloop_depth),
+					MPID_DATALOOP_ALL_BYTES);
+#else
     err = MPID_Dataloop_create_pairtype(type,
 					&(new_dtp->dataloop),
 					&(new_dtp->dataloop_size),
 					&(new_dtp->dataloop_depth),
 					MPID_DATALOOP_HOMOGENEOUS);
+#endif
+
     if (!err) {
 	err = MPID_Dataloop_create_pairtype(type,
 					    &(new_dtp->hetero_dloop),

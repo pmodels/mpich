@@ -35,11 +35,21 @@ int MPID_Type_commit(MPI_Datatype *datatype_p)
     if (datatype_ptr->is_committed == 0) {
 	datatype_ptr->is_committed = 1;
 
+#ifdef MPID_NEEDS_DLOOP_ALL_BYTES
+        /* If MPID implementation needs use to reduce everything to
+           a byte stream, do that. */
+	MPID_Dataloop_create(*datatype_p,
+			     &datatype_ptr->dataloop,
+			     &datatype_ptr->dataloop_size,
+			     &datatype_ptr->dataloop_depth,
+			     MPID_DATALOOP_ALL_BYTES);
+#else
 	MPID_Dataloop_create(*datatype_p,
 			     &datatype_ptr->dataloop,
 			     &datatype_ptr->dataloop_size,
 			     &datatype_ptr->dataloop_depth,
 			     MPID_DATALOOP_HOMOGENEOUS);
+#endif
 
 	/* create heterogeneous dataloop */
 	MPID_Dataloop_create(*datatype_p,
