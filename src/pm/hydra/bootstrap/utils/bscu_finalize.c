@@ -27,10 +27,10 @@ HYD_Status HYD_BSCU_Finalize_exit_status(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	HYDU_FREE(proc_params->pid);
-	HYDU_FREE(proc_params->exit_status);
-	HYDU_FREE(proc_params->exit_status_valid);
-	proc_params = proc_params->next;
+        HYDU_FREE(proc_params->pid);
+        HYDU_FREE(proc_params->exit_status);
+        HYDU_FREE(proc_params->exit_status_valid);
+        proc_params = proc_params->next;
     }
 
   fn_exit:
@@ -55,9 +55,9 @@ HYD_Status HYD_BSCU_Finalize_io_fds(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	HYDU_FREE(proc_params->out);
-	HYDU_FREE(proc_params->err);
-	proc_params = proc_params->next;
+        HYDU_FREE(proc_params->out);
+        HYDU_FREE(proc_params->err);
+        proc_params = proc_params->next;
     }
 
   fn_exit:

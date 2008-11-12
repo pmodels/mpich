@@ -35,86 +35,86 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
     status = HYD_BSCU_Init_exit_status();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("bootstrap utils returned error when initializing exit status\n");
-	goto fn_fail;
+        HYDU_Error_printf("bootstrap utils returned error when initializing exit status\n");
+        goto fn_fail;
     }
 
     status = HYD_BSCU_Set_common_signals(HYD_BSCU_Signal_handler);
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("signal utils returned error when trying to set signal\n");
-	goto fn_fail;
+        HYDU_Error_printf("signal utils returned error when trying to set signal\n");
+        goto fn_fail;
     }
 
     status = HYD_BSCU_Init_io_fds();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("bootstrap utils returned error when initializing io fds\n");
-	goto fn_fail;
+        HYDU_Error_printf("bootstrap utils returned error when initializing io fds\n");
+        goto fn_fail;
     }
 
     proc_params = csi_handle.proc_params;
     process_id = 0;
     while (proc_params) {
-	if (proc_params->host_file != NULL) {	/* We got a new host file */
-	    host_id = 0;
-	    host_id_max = proc_params->total_num_procs;
-	    proc_list = proc_params->total_proc_list;
-	}
+        if (proc_params->host_file != NULL) {   /* We got a new host file */
+            host_id = 0;
+            host_id_max = proc_params->total_num_procs;
+            proc_list = proc_params->total_proc_list;
+        }
 
-	for (i = 0; i < proc_params->user_num_procs; i++) {
-	    /* Setup the executable arguments */
-	    arg = 0;
-	    client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
+        for (i = 0; i < proc_params->user_num_procs; i++) {
+            /* Setup the executable arguments */
+            arg = 0;
+            client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
 
-	    /* Allow X forwarding only if explicitly requested */
-	    if (csi_handle.enablex == 1)
-		client_arg[arg++] = MPIU_Strdup("-Xq");
-	    else if (csi_handle.enablex == 0)
-		client_arg[arg++] = MPIU_Strdup("-xq");
-	    else	/* default mode is disable X */
-		client_arg[arg++] = MPIU_Strdup("-xq");
+            /* Allow X forwarding only if explicitly requested */
+            if (csi_handle.enablex == 1)
+                client_arg[arg++] = MPIU_Strdup("-Xq");
+            else if (csi_handle.enablex == 0)
+                client_arg[arg++] = MPIU_Strdup("-xq");
+            else        /* default mode is disable X */
+                client_arg[arg++] = MPIU_Strdup("-xq");
 
-	    if (host_id == host_id_max)
-		host_id = 0;
-	    hostname = proc_list[host_id];
-	    host_id++;
+            if (host_id == host_id_max)
+                host_id = 0;
+            hostname = proc_list[host_id];
+            host_id++;
 
-	    client_arg[arg++] = MPIU_Strdup(hostname);
+            client_arg[arg++] = MPIU_Strdup(hostname);
 
             client_arg[arg++] = MPIU_Strdup("sh");
             client_arg[arg++] = MPIU_Strdup("-c");
             client_arg[arg++] = MPIU_Strdup("\"");
-	    client_arg[arg++] = NULL;
+            client_arg[arg++] = NULL;
 
-	    HYD_BSCU_Append_env(csi_handle.system_env, client_arg, process_id);
-	    HYD_BSCU_Append_env(proc_params->prop_env, client_arg, process_id);
-	    HYD_BSCU_Append_wdir(client_arg);
-	    HYD_BSCU_Append_exec(proc_params->exec, client_arg);
+            HYD_BSCU_Append_env(csi_handle.system_env, client_arg, process_id);
+            HYD_BSCU_Append_env(proc_params->prop_env, client_arg, process_id);
+            HYD_BSCU_Append_wdir(client_arg);
+            HYD_BSCU_Append_exec(proc_params->exec, client_arg);
 
             for (arg = 0; client_arg[arg]; arg++);
             client_arg[arg++] = MPIU_Strdup("\"");
-	    client_arg[arg++] = NULL;
+            client_arg[arg++] = NULL;
 
-	    /* The stdin pointer will be some value for process_id 0;
-	     * for everyone else, it's NULL. */
-	    status = HYD_BSCU_Create_process(client_arg, (process_id == 0 ? &csi_handle.in : NULL),
-					     &proc_params->out[i], &proc_params->err[i],
-					     &proc_params->pid[i]);
-	    if (status != HYD_SUCCESS) {
-		HYDU_Error_printf("bootstrap spawn process returned error\n");
-		goto fn_fail;
-	    }
+            /* The stdin pointer will be some value for process_id 0;
+             * for everyone else, it's NULL. */
+            status = HYD_BSCU_Create_process(client_arg, (process_id == 0 ? &csi_handle.in : NULL),
+                                             &proc_params->out[i], &proc_params->err[i],
+                                             &proc_params->pid[i]);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("bootstrap spawn process returned error\n");
+                goto fn_fail;
+            }
 
-	    for (arg = 0; client_arg[arg]; arg++)
-		HYDU_FREE(client_arg[arg]);
+            for (arg = 0; client_arg[arg]; arg++)
+                HYDU_FREE(client_arg[arg]);
 
-	    /* For the remaining processes, set the stdin fd to -1 */
-	    if (process_id != 0)
-		csi_handle.in = -1;
+            /* For the remaining processes, set the stdin fd to -1 */
+            if (process_id != 0)
+                csi_handle.in = -1;
 
-	    process_id++;
-	}
+            process_id++;
+        }
 
-	proc_params = proc_params->next;
+        proc_params = proc_params->next;
     }
 
   fn_exit:
@@ -141,47 +141,47 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	for (i = 0; i < proc_params->user_num_procs; i++) {
-	    /* Setup the executable arguments */
-	    arg = 0;
-	    client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
-	    client_arg[arg++] = MPIU_Strdup("-xq");
+        for (i = 0; i < proc_params->user_num_procs; i++) {
+            /* Setup the executable arguments */
+            arg = 0;
+            client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
+            client_arg[arg++] = MPIU_Strdup("-xq");
 
-	    if (proc_params->host_file != NULL) {	/* We got a new host file */
-		host_id = 0;
-		host_id_max = proc_params->total_num_procs;
-		proc_list = proc_params->total_proc_list;
-	    }
-	    else if (host_id == host_id_max) {
-		host_id = 0;
-	    }
-	    hostname = proc_list[host_id];
-	    host_id++;
+            if (proc_params->host_file != NULL) {       /* We got a new host file */
+                host_id = 0;
+                host_id_max = proc_params->total_num_procs;
+                proc_list = proc_params->total_proc_list;
+            }
+            else if (host_id == host_id_max) {
+                host_id = 0;
+            }
+            hostname = proc_list[host_id];
+            host_id++;
 
-	    client_arg[arg++] = MPIU_Strdup(hostname);
-	    client_arg[arg++] = NULL;
+            client_arg[arg++] = MPIU_Strdup(hostname);
+            client_arg[arg++] = NULL;
 
-	    HYD_BSCU_Append_wdir(client_arg);
+            HYD_BSCU_Append_wdir(client_arg);
 
             for (arg = 0; client_arg[arg]; arg++);
-	    client_arg[arg++] = MPIU_Strdup("killall");
-	    client_arg[arg++] = NULL;
+            client_arg[arg++] = MPIU_Strdup("killall");
+            client_arg[arg++] = NULL;
 
-	    /* FIXME: We need to free the remaining args */
-	    proc_params->exec[1] = 0;	/* We only care about the executable name */
-	    HYD_BSCU_Append_exec(proc_params->exec, client_arg);
+            /* FIXME: We need to free the remaining args */
+            proc_params->exec[1] = 0;   /* We only care about the executable name */
+            HYD_BSCU_Append_exec(proc_params->exec, client_arg);
 
-	    status = HYD_BSCU_Create_process(client_arg, NULL, NULL, NULL, NULL);
-	    if (status != HYD_SUCCESS) {
-		HYDU_Error_printf("bootstrap spawn process returned error\n");
-		goto fn_fail;
-	    }
+            status = HYD_BSCU_Create_process(client_arg, NULL, NULL, NULL, NULL);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("bootstrap spawn process returned error\n");
+                goto fn_fail;
+            }
 
-	    for (arg = 0; client_arg[arg]; arg++)
-		HYDU_FREE(client_arg[arg]);
-	}
+            for (arg = 0; client_arg[arg]; arg++)
+                HYDU_FREE(client_arg[arg]);
+        }
 
-	proc_params = proc_params->next;
+        proc_params = proc_params->next;
     }
 
   fn_exit:

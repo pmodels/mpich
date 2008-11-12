@@ -30,12 +30,13 @@ HYD_Status HYD_BSCU_Init_exit_status(void)
      * the same loop. */
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	HYDU_MALLOC(proc_params->pid, int *, proc_params->user_num_procs * sizeof(int), status);
-	HYDU_MALLOC(proc_params->exit_status, int *, proc_params->user_num_procs * sizeof(int), status);
-	HYDU_MALLOC(proc_params->exit_status_valid, int *, proc_params->user_num_procs * sizeof(int), status);
-	for (i = 0; i < proc_params->user_num_procs; i++)
-	    proc_params->exit_status_valid[i] = 0;
-	proc_params = proc_params->next;
+        HYDU_MALLOC(proc_params->pid, int *, proc_params->user_num_procs * sizeof(int), status);
+        HYDU_MALLOC(proc_params->exit_status, int *, proc_params->user_num_procs * sizeof(int), status);
+        HYDU_MALLOC(proc_params->exit_status_valid, int *, proc_params->user_num_procs * sizeof(int),
+                    status);
+        for (i = 0; i < proc_params->user_num_procs; i++)
+            proc_params->exit_status_valid[i] = 0;
+        proc_params = proc_params->next;
     }
 
   fn_exit:
@@ -60,9 +61,9 @@ HYD_Status HYD_BSCU_Init_io_fds(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	HYDU_MALLOC(proc_params->out, int *, proc_params->user_num_procs * sizeof(int), status);
-	HYDU_MALLOC(proc_params->err, int *, proc_params->user_num_procs * sizeof(int), status);
-	proc_params = proc_params->next;
+        HYDU_MALLOC(proc_params->out, int *, proc_params->user_num_procs * sizeof(int), status);
+        HYDU_MALLOC(proc_params->err, int *, proc_params->user_num_procs * sizeof(int), status);
+        proc_params = proc_params->next;
     }
 
   fn_exit:

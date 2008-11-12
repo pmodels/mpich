@@ -10,10 +10,10 @@
 #include "hydra.h"
 #include "hydra_mem.h"
 
-#define MAXKEYLEN    64	/* max length of key in keyval space */
-#define MAXVALLEN   256	/* max length of value in keyval space */
-#define MAXNAMELEN  256	/* max length of various names */
-#define MAXKVSNAME  MAXNAMELEN	/* max length of a kvsname */
+#define MAXKEYLEN    64 /* max length of key in keyval space */
+#define MAXVALLEN   256 /* max length of value in keyval space */
+#define MAXNAMELEN  256 /* max length of various names */
+#define MAXKVSNAME  MAXNAMELEN  /* max length of a kvsname */
 
 #define HYD_PMCU_NUM_STR 100
 
@@ -24,7 +24,7 @@ typedef struct HYD_PMCU_pmi_kvs_pair {
 } HYD_PMCU_pmi_kvs_pair_t;
 
 typedef struct HYD_PMCU_pmi_kvs {
-    char kvs_name[MAXNAMELEN];	/* Name of this kvs */
+    char kvs_name[MAXNAMELEN];  /* Name of this kvs */
     HYD_PMCU_pmi_kvs_pair_t *key_pair;
 } HYD_PMCU_pmi_kvs_t;
 
@@ -44,7 +44,7 @@ struct HYD_PMCU_pmi_process {
 struct HYD_PMCU_pmi_pg {
     int id;
 
-    int num_procs;		/* Number of processes in the group */
+    int num_procs;              /* Number of processes in the group */
     int barrier_count;
 
     struct HYD_PMCU_pmi_process *process;

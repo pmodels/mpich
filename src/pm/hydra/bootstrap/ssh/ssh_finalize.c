@@ -23,14 +23,14 @@ HYD_Status HYD_BSCI_Finalize(void)
 
     status = HYD_BSCU_Finalize_exit_status();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("unable to finalize exit status\n");
-	goto fn_fail;
+        HYDU_Error_printf("unable to finalize exit status\n");
+        goto fn_fail;
     }
 
     status = HYD_BSCU_Finalize_io_fds();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("unable to finalize I/O fds\n");
-	goto fn_fail;
+        HYDU_Error_printf("unable to finalize I/O fds\n");
+        goto fn_fail;
     }
 
   fn_exit:

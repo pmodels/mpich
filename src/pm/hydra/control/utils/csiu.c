@@ -22,14 +22,14 @@ int HYD_CSU_Time_left(void)
     HYDU_FUNC_ENTER();
 
     if (csi_handle.timeout.tv_sec < 0) {
-	time_left = -1;
-	goto fn_exit;
+        time_left = -1;
+        goto fn_exit;
     }
     else {
-	gettimeofday(&now, NULL);
-	time_left = (1000 * (csi_handle.timeout.tv_sec - now.tv_sec + csi_handle.start.tv_sec));
-	if (time_left < 0)
-	    time_left = 0;
+        gettimeofday(&now, NULL);
+        time_left = (1000 * (csi_handle.timeout.tv_sec - now.tv_sec + csi_handle.start.tv_sec));
+        if (time_left < 0)
+            time_left = 0;
     }
 
   fn_exit:

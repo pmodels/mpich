@@ -57,106 +57,106 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 
     HYDU_MALLOC(buf, char *, HYD_CSI_TMPBUF_SIZE, status);
 
-    if (fd == HYD_PMCD_Central_listenfd) {	/* Someone is trying to connect to us */
-	status = HYDU_Sock_accept(fd, &accept_fd);
-	if (status != HYD_SUCCESS) {
-	    HYDU_Error_printf("sock utils returned error when accepting connection\n");
-	    goto fn_fail;
-	}
+    if (fd == HYD_PMCD_Central_listenfd) {      /* Someone is trying to connect to us */
+        status = HYDU_Sock_accept(fd, &accept_fd);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("sock utils returned error when accepting connection\n");
+            goto fn_fail;
+        }
 
-	status = HYD_DMX_Register_fd(1, &accept_fd, HYD_CSI_OUT, HYD_PMCD_Central_cb);
-	if (status != HYD_SUCCESS) {
-	    HYDU_Error_printf("demux engine returned error when registering fd\n");
-	    goto fn_fail;
-	}
+        status = HYD_DMX_Register_fd(1, &accept_fd, HYD_CSI_OUT, HYD_PMCD_Central_cb);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("demux engine returned error when registering fd\n");
+            goto fn_fail;
+        }
     }
     else {
-	status = HYDU_Sock_readline(fd, buf, HYD_CSI_TMPBUF_SIZE, &linelen);
-	if (status != HYD_SUCCESS) {
-	    HYDU_Error_printf("sock utils returned error when reading PMI line\n");
-	    goto fn_fail;
-	}
+        status = HYDU_Sock_readline(fd, buf, HYD_CSI_TMPBUF_SIZE, &linelen);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("sock utils returned error when reading PMI line\n");
+            goto fn_fail;
+        }
 
-	if (linelen == 0) {
-	    status = HYD_DMX_Deregister_fd(fd);
-	    if (status != HYD_SUCCESS) {
-		HYDU_Error_printf("unable to deregister fd %d\n", fd);
-		goto fn_fail;
-	    }
-	    close(fd);
-	    goto fn_exit;
-	}
+        if (linelen == 0) {
+            status = HYD_DMX_Deregister_fd(fd);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("unable to deregister fd %d\n", fd);
+                goto fn_fail;
+            }
+            close(fd);
+            goto fn_exit;
+        }
 
-	/* Check what command we got and call the appropriate
-	 * function */
-	buf[linelen - 1] = 0;
+        /* Check what command we got and call the appropriate
+         * function */
+        buf[linelen - 1] = 0;
 
-	cmd = strtok(buf, " ");
-	for (i = 0; i < HYD_PMCU_NUM_STR; i++) {
-	    args[i] = strtok(NULL, " ");
-	    if (args[i] == NULL)
-		break;
-	}
+        cmd = strtok(buf, " ");
+        for (i = 0; i < HYD_PMCU_NUM_STR; i++) {
+            args[i] = strtok(NULL, " ");
+            if (args[i] == NULL)
+                break;
+        }
 
-	if (cmd == NULL) {
-	    status = HYD_SUCCESS;
-	}
-	else if (!strcmp("cmd=initack", cmd)) {
-	    status = HYD_PMCU_pmi_initack(fd, args);
-	}
-	else if (!strcmp("cmd=init", cmd)) {
-	    status = HYD_PMCU_pmi_init(fd, args);
-	}
-	else if (!strcmp("cmd=get_maxes", cmd)) {
-	    status = HYD_PMCU_pmi_get_maxes(fd, args);
-	}
-	else if (!strcmp("cmd=get_appnum", cmd)) {
-	    status = HYD_PMCU_pmi_get_appnum(fd, args);
-	}
-	else if (!strcmp("cmd=get_my_kvsname", cmd)) {
-	    status = HYD_PMCU_pmi_get_my_kvsname(fd, args);
-	}
-	else if (!strcmp("cmd=barrier_in", cmd)) {
-	    status = HYD_PMCU_pmi_barrier_in(fd, args);
-	}
-	else if (!strcmp("cmd=put", cmd)) {
-	    status = HYD_PMCU_pmi_put(fd, args);
-	}
-	else if (!strcmp("cmd=get", cmd)) {
-	    status = HYD_PMCU_pmi_get(fd, args);
-	}
-	else if (!strcmp("cmd=finalize", cmd)) {
-	    status = HYD_PMCU_pmi_finalize(fd, args);
+        if (cmd == NULL) {
+            status = HYD_SUCCESS;
+        }
+        else if (!strcmp("cmd=initack", cmd)) {
+            status = HYD_PMCU_pmi_initack(fd, args);
+        }
+        else if (!strcmp("cmd=init", cmd)) {
+            status = HYD_PMCU_pmi_init(fd, args);
+        }
+        else if (!strcmp("cmd=get_maxes", cmd)) {
+            status = HYD_PMCU_pmi_get_maxes(fd, args);
+        }
+        else if (!strcmp("cmd=get_appnum", cmd)) {
+            status = HYD_PMCU_pmi_get_appnum(fd, args);
+        }
+        else if (!strcmp("cmd=get_my_kvsname", cmd)) {
+            status = HYD_PMCU_pmi_get_my_kvsname(fd, args);
+        }
+        else if (!strcmp("cmd=barrier_in", cmd)) {
+            status = HYD_PMCU_pmi_barrier_in(fd, args);
+        }
+        else if (!strcmp("cmd=put", cmd)) {
+            status = HYD_PMCU_pmi_put(fd, args);
+        }
+        else if (!strcmp("cmd=get", cmd)) {
+            status = HYD_PMCU_pmi_get(fd, args);
+        }
+        else if (!strcmp("cmd=finalize", cmd)) {
+            status = HYD_PMCU_pmi_finalize(fd, args);
 
-	    if (status == HYD_SUCCESS) {
-		status = HYD_DMX_Deregister_fd(fd);
-		if (status != HYD_SUCCESS) {
-		    HYDU_Error_printf("unable to deregister fd %d\n", fd);
-		    goto fn_fail;
-		}
-		close(fd);
-	    }
-	}
-	else if (!strcmp("cmd=get_universe_size", cmd)) {
-	    status = HYD_PMCU_pmi_get_usize(fd, args);
-	}
-	else {
-	    /* We don't understand the command */
-	    HYDU_Error_printf("Unrecognized PMI command: %s; cleaning up processes\n", cmd);
+            if (status == HYD_SUCCESS) {
+                status = HYD_DMX_Deregister_fd(fd);
+                if (status != HYD_SUCCESS) {
+                    HYDU_Error_printf("unable to deregister fd %d\n", fd);
+                    goto fn_fail;
+                }
+                close(fd);
+            }
+        }
+        else if (!strcmp("cmd=get_universe_size", cmd)) {
+            status = HYD_PMCU_pmi_get_usize(fd, args);
+        }
+        else {
+            /* We don't understand the command */
+            HYDU_Error_printf("Unrecognized PMI command: %s; cleaning up processes\n", cmd);
 
             /* Cleanup all the processes and return. We don't need to
              * check the return status since we are anyway returning
              * an error */
             HYD_BSCI_Cleanup_procs();
 
-	    status = HYD_INTERNAL_ERROR;
-	    goto fn_fail;
-	}
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
+        }
 
-	if (status != HYD_SUCCESS) {
-	    HYDU_Error_printf("PMI server function returned an error\n");
-	    goto fn_fail;
-	}
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("PMI server function returned an error\n");
+            goto fn_fail;
+        }
     }
 
   fn_exit:

@@ -56,55 +56,55 @@ HYD_Status HYD_PMCI_Launch_procs(void)
      * range. */
     port_range = getenv("MPIEXEC_PORTRANGE");
     if (!port_range)
-	port_range = getenv("MPIEXEC_PORT_RANGE");
+        port_range = getenv("MPIEXEC_PORT_RANGE");
     if (!port_range)
-	port_range = getenv("MPICH_PORT_RANGE");
+        port_range = getenv("MPICH_PORT_RANGE");
 
     low_port = 0;
     high_port = 0;
     if (port_range) {
-	port_str = strtok(port_range, ":");
-	if (port_str == NULL) {
-	    HYDU_Error_printf("error parsing port range string\n");
-	    status = HYD_INTERNAL_ERROR;
-	    goto fn_fail;
-	}
-	low_port = atoi(port_str);
+        port_str = strtok(port_range, ":");
+        if (port_str == NULL) {
+            HYDU_Error_printf("error parsing port range string\n");
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
+        }
+        low_port = atoi(port_str);
 
-	port_str = strtok(NULL, ":");
-	if (port_str == NULL) {
-	    HYDU_Error_printf("error parsing port range string\n");
-	    status = HYD_INTERNAL_ERROR;
-	    goto fn_fail;
-	}
-	high_port = atoi(port_str);
+        port_str = strtok(NULL, ":");
+        if (port_str == NULL) {
+            HYDU_Error_printf("error parsing port range string\n");
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
+        }
+        high_port = atoi(port_str);
 
-	if (high_port < low_port) {
-	    HYDU_Error_printf("high port is smaller than low port\n");
-	    status = HYD_INTERNAL_ERROR;
-	    goto fn_fail;
-	}
+        if (high_port < low_port) {
+            HYDU_Error_printf("high port is smaller than low port\n");
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
+        }
     }
 
     /* Listen on a port in the port range */
     status = HYDU_Sock_listen(&HYD_PMCD_Central_listenfd, low_port, high_port, &port);
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("sock utils returned listen error\n");
-	goto fn_fail;
+        HYDU_Error_printf("sock utils returned listen error\n");
+        goto fn_fail;
     }
 
     /* Register the listening socket with the demux engine */
     status = HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd, HYD_CSI_OUT, HYD_PMCD_Central_cb);
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("demux engine returned error for registering fd\n");
-	goto fn_fail;
+        HYDU_Error_printf("demux engine returned error for registering fd\n");
+        goto fn_fail;
     }
 
     /* Create a port string for MPI processes to use to connect to */
     if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0) {
-	HYDU_Error_printf("gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
-	status = HYD_SOCK_ERROR;
-	goto fn_fail;
+        HYDU_Error_printf("gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
+        status = HYD_SOCK_ERROR;
+        goto fn_fail;
     }
 
     HYDU_Int_to_str(port, sport, status);
@@ -114,25 +114,25 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 
     status = HYDU_Env_create(&env, "PMI_PORT", port_str, HYDU_ENV_STATIC, 0);
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("unable to create env\n");
-	goto fn_fail;
+        HYDU_Error_printf("unable to create env\n");
+        goto fn_fail;
     }
     status = HYDU_Env_add_to_list(&csi_handle.system_env, *env);
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("unable to add env to list\n");
-	goto fn_fail;
+        HYDU_Error_printf("unable to add env to list\n");
+        goto fn_fail;
     }
     HYDU_Env_free(env);
 
     status = HYDU_Env_create(&env, "PMI_ID", NULL, HYDU_ENV_AUTOINC, 0);
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("unable to create env\n");
-	goto fn_fail;
+        HYDU_Error_printf("unable to create env\n");
+        goto fn_fail;
     }
     status = HYDU_Env_add_to_list(&csi_handle.system_env, *env);
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("unable to add env to list\n");
-	goto fn_fail;
+        HYDU_Error_printf("unable to add env to list\n");
+        goto fn_fail;
     }
     HYDU_Env_free(env);
     HYDU_FREE(port_str);
@@ -141,16 +141,16 @@ HYD_Status HYD_PMCI_Launch_procs(void)
      * comm_world */
     status = HYD_PMCU_Create_pg();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("pm utils returned error creating process group\n");
-	goto fn_fail;
+        HYDU_Error_printf("pm utils returned error creating process group\n");
+        goto fn_fail;
     }
 
     /* Initialize the bootstrap server and ask it to launch the
      * processes. */
     status = HYD_BSCI_Launch_procs();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("bootstrap server returned error launching processes\n");
-	goto fn_fail;
+        HYDU_Error_printf("bootstrap server returned error launching processes\n");
+        goto fn_fail;
     }
 
   fn_exit:

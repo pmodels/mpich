@@ -27,8 +27,8 @@ HYD_Status HYD_CSI_Close_fd(int fd)
     /* Deregister the FD with the demux engine and close it. */
     status = HYD_DMX_Deregister_fd(fd);
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("demux engine returned error when deregistering fd: %d\n", fd);
-	goto fn_fail;
+        HYDU_Error_printf("demux engine returned error when deregistering fd: %d\n", fd);
+        goto fn_fail;
     }
 
     close(fd);
@@ -36,17 +36,17 @@ HYD_Status HYD_CSI_Close_fd(int fd)
     /* Find the FD in the handle and remove it. */
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	for (i = 0; i < proc_params->user_num_procs; i++) {
-	    if (proc_params->out[i] == fd) {
-		proc_params->out[i] = -1;
-		goto fn_exit;
-	    }
-	    if (proc_params->err[i] == fd) {
-		proc_params->err[i] = -1;
-		goto fn_exit;
-	    }
-	}
-	proc_params = proc_params->next;
+        for (i = 0; i < proc_params->user_num_procs; i++) {
+            if (proc_params->out[i] == fd) {
+                proc_params->out[i] = -1;
+                goto fn_exit;
+            }
+            if (proc_params->err[i] == fd) {
+                proc_params->err[i] = -1;
+                goto fn_exit;
+            }
+        }
+        proc_params = proc_params->next;
     }
 
   fn_exit:

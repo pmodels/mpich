@@ -55,68 +55,68 @@ int main(int argc, char **argv)
 
     status = HYD_LCHI_Get_parameters(argc, argv);
     if (status != HYD_SUCCESS) {
-	usage();
-	exit(-1);
+        usage();
+        exit(-1);
     }
 
     /* Convert the host file to a host list */
     status = HYD_LCHU_Create_host_list();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("unable to create host list\n");
-	goto fn_fail;
+        HYDU_Error_printf("unable to create host list\n");
+        goto fn_fail;
     }
 
     /* Consolidate the environment list that we need to propagate */
     status = HYD_LCHU_Create_env_list();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("unable to create host list\n");
-	goto fn_fail;
+        HYDU_Error_printf("unable to create host list\n");
+        goto fn_fail;
     }
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	proc_params->stdout_cb = HYD_LCHI_stdout_cb;
-	proc_params->stderr_cb = HYD_LCHI_stderr_cb;
-	proc_params = proc_params->next;
+        proc_params->stdout_cb = HYD_LCHI_stdout_cb;
+        proc_params->stderr_cb = HYD_LCHI_stderr_cb;
+        proc_params = proc_params->next;
     }
     csi_handle.stdin_cb = HYD_LCHI_stdin_cb;
 
     gettimeofday(&csi_handle.start, NULL);
     if (getenv("MPIEXEC_TIMEOUT"))
-	csi_handle.timeout.tv_sec = atoi(getenv("MPIEXEC_TIMEOUT"));
+        csi_handle.timeout.tv_sec = atoi(getenv("MPIEXEC_TIMEOUT"));
     else {
-	csi_handle.timeout.tv_sec = -1;	/* Set a negative timeout */
-	csi_handle.timeout.tv_usec = 0;
+        csi_handle.timeout.tv_sec = -1; /* Set a negative timeout */
+        csi_handle.timeout.tv_usec = 0;
     }
 
     /* Launch the processes */
     status = HYD_CSI_Launch_procs();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("control system returned error when launching processes\n");
-	goto fn_fail;
+        HYDU_Error_printf("control system returned error when launching processes\n");
+        goto fn_fail;
     }
 
     /* Wait for their completion */
     status = HYD_CSI_Wait_for_completion();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("control system returned error when waiting for process' completion\n");
-	goto fn_fail;
+        HYDU_Error_printf("control system returned error when waiting for process' completion\n");
+        goto fn_fail;
     }
 
     /* Check for the exit status for all the processes */
     proc_params = csi_handle.proc_params;
     exit_status = 0;
     while (proc_params) {
-	for (i = 0; i < proc_params->user_num_procs; i++)
-	    exit_status |= proc_params->exit_status[i];
-	proc_params = proc_params->next;
+        for (i = 0; i < proc_params->user_num_procs; i++)
+            exit_status |= proc_params->exit_status[i];
+        proc_params = proc_params->next;
     }
 
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_CSI_Finalize();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("control system returned error on finalize\n");
-	goto fn_fail;
+        HYDU_Error_printf("control system returned error on finalize\n");
+        goto fn_fail;
     }
 
     /* Free the mpiexec params */
@@ -129,9 +129,9 @@ int main(int argc, char **argv)
   fn_exit:
     HYDU_FUNC_EXIT();
     if (status != HYD_SUCCESS)
-	return -1;
+        return -1;
     else
-	return exit_status;
+        return exit_status;
 
   fn_fail:
     goto fn_exit;

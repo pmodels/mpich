@@ -28,8 +28,8 @@ HYD_Status HYD_PMCI_Finalize(void)
      * it. */
     status = HYD_DMX_Deregister_fd(HYD_PMCD_Central_listenfd);
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("demux engine returned error when deregistering fd\n");
-	goto fn_fail;
+        HYDU_Error_printf("demux engine returned error when deregistering fd\n");
+        goto fn_fail;
     }
 
     close(HYD_PMCD_Central_listenfd);
@@ -37,8 +37,8 @@ HYD_Status HYD_PMCI_Finalize(void)
 
     status = HYD_PMCU_Finalize();
     if (status != HYD_SUCCESS) {
-	HYDU_Error_printf("unable to finalize process manager utils\n");
-	goto fn_fail;
+        HYDU_Error_printf("unable to finalize process manager utils\n");
+        goto fn_fail;
     }
 
   fn_exit:

@@ -29,7 +29,7 @@ HYD_Status HYD_LCHU_Create_host_list(void)
      * hosts, and another to read the actual hosts. */
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	if (proc_params->host_file != NULL) {
+        if (proc_params->host_file != NULL) {
             if (!strcmp(proc_params->host_file, "HYDRA_USE_LOCALHOST")) {
                 proc_params->total_num_procs++;
             }
@@ -60,17 +60,17 @@ HYD_Status HYD_LCHU_Create_host_list(void)
                 fclose(fp);
             }
         }
-	proc_params = proc_params->next;
+        proc_params = proc_params->next;
     }
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	if (proc_params->host_file != NULL) {
+        if (proc_params->host_file != NULL) {
 
-	    HYDU_MALLOC(proc_params->total_proc_list, char **,
-			proc_params->total_num_procs * sizeof(char *), status);
-	    HYDU_MALLOC(proc_params->total_core_list, int *,
-			proc_params->total_num_procs * sizeof(int), status);
+            HYDU_MALLOC(proc_params->total_proc_list, char **,
+                        proc_params->total_num_procs * sizeof(char *), status);
+            HYDU_MALLOC(proc_params->total_core_list, int *,
+                        proc_params->total_num_procs * sizeof(int), status);
 
             if (!strcmp(proc_params->host_file, "HYDRA_USE_LOCALHOST")) {
                 proc_params->total_proc_list[0] = MPIU_Strdup("localhost");
@@ -107,8 +107,8 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 
                 fclose(fp);
             }
-	}
-	proc_params = proc_params->next;
+        }
+        proc_params = proc_params->next;
     }
 
   fn_exit:
@@ -134,12 +134,12 @@ HYD_Status HYD_LCHU_Free_host_list(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	for (i = 0; i < proc_params->total_num_procs; i++)
-	    HYDU_FREE(proc_params->total_proc_list[i]);
-	HYDU_FREE(proc_params->total_proc_list);
-	HYDU_FREE(proc_params->total_core_list);
-	HYDU_FREE(proc_params->host_file);
-	proc_params = proc_params->next;
+        for (i = 0; i < proc_params->total_num_procs; i++)
+            HYDU_FREE(proc_params->total_proc_list[i]);
+        HYDU_FREE(proc_params->total_proc_list);
+        HYDU_FREE(proc_params->total_core_list);
+        HYDU_FREE(proc_params->host_file);
+        proc_params = proc_params->next;
     }
 
   fn_exit:
@@ -164,29 +164,29 @@ HYD_Status HYD_LCHU_Create_env_list(void)
     HYDU_FUNC_ENTER();
 
     if (csi_handle.prop == HYD_CSI_PROP_ENVALL) {
-	csi_handle.prop_env = HYDU_Env_listdup(csi_handle.global_env);
-	for (env = csi_handle.user_env; env; env = env->next) {
-	    status = HYDU_Env_add_to_list(&csi_handle.prop_env, *env);
-	    if (status != HYD_SUCCESS) {
-		HYDU_Error_printf("unable to add env to list\n");
-		goto fn_fail;
-	    }
-	}
+        csi_handle.prop_env = HYDU_Env_listdup(csi_handle.global_env);
+        for (env = csi_handle.user_env; env; env = env->next) {
+            status = HYDU_Env_add_to_list(&csi_handle.prop_env, *env);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("unable to add env to list\n");
+                goto fn_fail;
+            }
+        }
     }
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	if (proc_params->prop == HYD_CSI_PROP_ENVALL) {
-	    proc_params->prop_env = HYDU_Env_listdup(csi_handle.global_env);
-	    for (env = proc_params->user_env; env; env = env->next) {
-		status = HYDU_Env_add_to_list(&proc_params->prop_env, *env);
-		if (status != HYD_SUCCESS) {
-		    HYDU_Error_printf("unable to add env to list\n");
-		    goto fn_fail;
-		}
-	    }
-	}
-	proc_params = proc_params->next;
+        if (proc_params->prop == HYD_CSI_PROP_ENVALL) {
+            proc_params->prop_env = HYDU_Env_listdup(csi_handle.global_env);
+            for (env = proc_params->user_env; env; env = env->next) {
+                status = HYDU_Env_add_to_list(&proc_params->prop_env, *env);
+                if (status != HYD_SUCCESS) {
+                    HYDU_Error_printf("unable to add env to list\n");
+                    goto fn_fail;
+                }
+            }
+        }
+        proc_params = proc_params->next;
     }
 
   fn_exit:
@@ -216,9 +216,9 @@ HYD_Status HYD_LCHU_Free_env_list(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	HYDU_Env_free_list(proc_params->user_env);
-	HYDU_Env_free_list(proc_params->prop_env);
-	proc_params = proc_params->next;
+        HYDU_Env_free_list(proc_params->user_env);
+        HYDU_Env_free_list(proc_params->prop_env);
+        proc_params = proc_params->next;
     }
 
   fn_exit:
@@ -243,9 +243,9 @@ HYD_Status HYD_LCHU_Free_io(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	HYDU_FREE(proc_params->out);
-	HYDU_FREE(proc_params->err);
-	proc_params = proc_params->next;
+        HYDU_FREE(proc_params->out);
+        HYDU_FREE(proc_params->err);
+        proc_params = proc_params->next;
     }
 
   fn_exit:
@@ -270,8 +270,8 @@ HYD_Status HYD_LCHU_Free_exits(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	HYDU_FREE(proc_params->exit_status);
-	proc_params = proc_params->next;
+        HYDU_FREE(proc_params->exit_status);
+        proc_params = proc_params->next;
     }
 
   fn_exit:
@@ -297,9 +297,9 @@ HYD_Status HYD_LCHU_Free_exec(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	for (i = 0; proc_params->exec[i]; i++)
-	    HYDU_FREE(proc_params->exec[i]);
-	proc_params = proc_params->next;
+        for (i = 0; proc_params->exec[i]; i++)
+            HYDU_FREE(proc_params->exec[i]);
+        proc_params = proc_params->next;
     }
 
   fn_exit:
@@ -324,9 +324,9 @@ HYD_Status HYD_LCHU_Free_proc_params(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-	run = proc_params->next;
-	HYDU_FREE(proc_params);
-	proc_params = run;
+        run = proc_params->next;
+        HYDU_FREE(proc_params);
+        proc_params = run;
     }
 
   fn_exit:

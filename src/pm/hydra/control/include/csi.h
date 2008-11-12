@@ -52,38 +52,38 @@ struct HYD_CSI_Handle_ {
     /* Each structure will contain all hosts/cores that use the same
      * executable and environment. */
     struct HYD_CSI_Proc_params {
-	int user_num_procs;
-	int total_num_procs;
-	char **total_proc_list;
-	int *total_core_list;
+        int user_num_procs;
+        int total_num_procs;
+        char **total_proc_list;
+        int *total_core_list;
 
-	char *host_file;
+        char *host_file;
 
-	char *exec[HYD_CSI_EXEC_ARGS];
-	HYDU_Env_t *user_env;
-	HYD_CSI_Prop_t prop;
-	HYDU_Env_t *prop_env;
+        char *exec[HYD_CSI_EXEC_ARGS];
+        HYDU_Env_t *user_env;
+        HYD_CSI_Prop_t prop;
+        HYDU_Env_t *prop_env;
 
-	/* These output FDs are filled in by the lower layers */
-	int *out;
-	int *err;
+        /* These output FDs are filled in by the lower layers */
+        int *out;
+        int *err;
 
-	/* Callback functions for the stdout/stderr events. These can
-	 * be the same. */
-	void *stdout_cb;
-	void *stderr_cb;
+        /* Callback functions for the stdout/stderr events. These can
+         * be the same. */
+        void *stdout_cb;
+        void *stderr_cb;
 
-	/* Status > 0 means that it is not set yet. Successful
-	 * completion of a process will set the status to 0. An error
-	 * will set this to a negative value corresponding to the
-	 * error. Depending on the bootstrap server, these values
-	 * might correspond to per-process status, or can be a common
-	 * value for all processes. */
-	int *pid;
-	int *exit_status;
-	int *exit_status_valid;
+        /* Status > 0 means that it is not set yet. Successful
+         * completion of a process will set the status to 0. An error
+         * will set this to a negative value corresponding to the
+         * error. Depending on the bootstrap server, these values
+         * might correspond to per-process status, or can be a common
+         * value for all processes. */
+        int *pid;
+        int *exit_status;
+        int *exit_status_valid;
 
-	struct HYD_CSI_Proc_params *next;
+        struct HYD_CSI_Proc_params *next;
     } *proc_params;
 };
 
