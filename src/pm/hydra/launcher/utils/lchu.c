@@ -24,77 +24,89 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 
     HYDU_FUNC_ENTER();
 
-    /* We need a better approach than this -- we make two passes for
-     * the total host list, one to find the number of hosts, and
-     * another to read the actual hosts. */
+    /* FIXME: We need a better approach than this -- we make two
+     * passes for the total host list, one to find the number of
+     * hosts, and another to read the actual hosts. */
     proc_params = csi_handle.proc_params;
     while (proc_params) {
 	if (proc_params->host_file != NULL) {
-	    fp = fopen(proc_params->host_file, "r");
-	    if (fp == NULL) {
-		HYDU_Error_printf("unable to open host file %s\n", proc_params->host_file);
-		status = HYD_INTERNAL_ERROR;
-		goto fn_fail;
-	    }
+            if (!strcmp(proc_params->host_file, "HYDRA_USE_LOCALHOST")) {
+                proc_params->total_num_procs++;
+            }
+            else {
+                fp = fopen(proc_params->host_file, "r");
+                if (fp == NULL) {
+                    HYDU_Error_printf("unable to open host file %s\n", proc_params->host_file);
+                    status = HYD_INTERNAL_ERROR;
+                    goto fn_fail;
+                }
 
-	    proc_params->total_num_procs = 0;
-	    while (!feof(fp)) {
-		fscanf(fp, "%s", line);
-		if (feof(fp))
-		    break;
+                proc_params->total_num_procs = 0;
+                while (!feof(fp)) {
+                    fscanf(fp, "%s", line);
+                    if (feof(fp))
+                        break;
 
-		hostname = strtok(line, ":");
-		procs = strtok(NULL, ":");
-		if (procs)
-		    num_procs = atoi(procs);
-		else
-		    num_procs = 1;
+                    hostname = strtok(line, ":");
+                    procs = strtok(NULL, ":");
+                    if (procs)
+                        num_procs = atoi(procs);
+                    else
+                        num_procs = 1;
 
-		proc_params->total_num_procs += num_procs;
-	    }
+                    proc_params->total_num_procs += num_procs;
+                }
 
-	    fclose(fp);
-	}
+                fclose(fp);
+            }
+        }
 	proc_params = proc_params->next;
     }
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
 	if (proc_params->host_file != NULL) {
-	    fp = fopen(proc_params->host_file, "r");
-	    if (fp == NULL) {
-		HYDU_Error_printf("unable to open host file %s\n", proc_params->host_file);
-		status = HYD_INTERNAL_ERROR;
-		goto fn_fail;
-	    }
 
 	    HYDU_MALLOC(proc_params->total_proc_list, char **,
 			proc_params->total_num_procs * sizeof(char *), status);
 	    HYDU_MALLOC(proc_params->total_core_list, int *,
 			proc_params->total_num_procs * sizeof(int), status);
 
-	    i = 0;
-	    while (!feof(fp)) {
-		fscanf(fp, "%s", line);
-		if (feof(fp))
-		    break;
+            if (!strcmp(proc_params->host_file, "HYDRA_USE_LOCALHOST")) {
+                proc_params->total_proc_list[0] = MPIU_Strdup("localhost");
+                proc_params->total_core_list[0] = -1;
+            }
+            else {
+                fp = fopen(proc_params->host_file, "r");
+                if (fp == NULL) {
+                    HYDU_Error_printf("unable to open host file %s\n", proc_params->host_file);
+                    status = HYD_INTERNAL_ERROR;
+                    goto fn_fail;
+                }
 
-		hostname = strtok(line, ":");
-		procs = strtok(NULL, ":");
+                i = 0;
+                while (!feof(fp)) {
+                    fscanf(fp, "%s", line);
+                    if (feof(fp))
+                        break;
 
-		if (procs)
-		    num_procs = atoi(procs);
-		else
-		    num_procs = 1;
+                    hostname = strtok(line, ":");
+                    procs = strtok(NULL, ":");
 
-		for (j = 0; j < num_procs; j++) {
-		    proc_params->total_proc_list[i] = MPIU_Strdup(hostname);
-		    proc_params->total_core_list[i] = -1;
-		    i++;
-		}
-	    }
+                    if (procs)
+                        num_procs = atoi(procs);
+                    else
+                        num_procs = 1;
 
-	    fclose(fp);
+                    for (j = 0; j < num_procs; j++) {
+                        proc_params->total_proc_list[i] = MPIU_Strdup(hostname);
+                        proc_params->total_core_list[i] = -1;
+                        i++;
+                    }
+                }
+
+                fclose(fp);
+            }
 	}
 	proc_params = proc_params->next;
     }

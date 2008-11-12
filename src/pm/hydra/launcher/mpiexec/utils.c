@@ -421,6 +421,8 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
 	if (proc_params->host_file == NULL && got_hostfile == 0 && getenv("HYDRA_HOST_FILE"))
 	    proc_params->host_file = MPIU_Strdup(getenv("HYDRA_HOST_FILE"));
+	if (proc_params->host_file == NULL && got_hostfile == 0 && getenv("HYDRA_USE_LOCALHOST"))
+	    proc_params->host_file = MPIU_Strdup("HYDRA_USE_LOCALHOST");
 	if (proc_params->host_file != NULL)
 	    got_hostfile = 1;
 
