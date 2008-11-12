@@ -13,32 +13,6 @@
 
 HYD_CSI_Handle csi_handle;
 
-static int use_csh_format(void)
-{
-    int format = 0;
-    char * shell, * sname;
-
-    /* format = 1 represents csh; format = 0 represents sh */
-    shell = getenv("SHELL");
-    sname = strrchr(shell, '/');
-    if (!sname)
-        sname = shell;
-    else
-        sname++;
-    if (shell) {
-        if (!strcmp(sname, "bash") || !strcmp(sname, "sh") ||
-            !strcmp(sname, "ash"))
-            format = 0;
-        else
-            format = 1;
-    }
-    else {
-        format = 1;
-    }
-
-    return format;
-}
-
 #if defined FUNCNAME
 #undef FUNCNAME
 #endif /* FUNCNAME */
@@ -52,21 +26,13 @@ HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char **client_arg, int id)
 
     HYDU_FUNC_ENTER();
 
-    csh_format = use_csh_format();
-
     for (i = 0; client_arg[i]; i++);
     env = env_list;
     while (env) {
 	j = 0;
 
-        if (csh_format) {
-            tmp[j++] = MPIU_Strdup("setenv");
-            tmp[j++] = MPIU_Strdup(env->env_name);
-        }
-        else {
-            tmp[j++] = MPIU_Strdup(env->env_name);
-            tmp[j++] = MPIU_Strdup("=");
-        }
+        tmp[j++] = MPIU_Strdup(env->env_name);
+        tmp[j++] = MPIU_Strdup("=");
 
 	if (env->env_type == HYDU_ENV_STATIC)
 	    tmp[j++] = MPIU_Strdup(env->env_value);
@@ -85,11 +51,9 @@ HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char **client_arg, int id)
 
 	client_arg[i++] = MPIU_Strdup(";");
 
-        if (csh_format == 0) {
-            client_arg[i++] = MPIU_Strdup("export");
-            client_arg[i++] = MPIU_Strdup(env->env_name);
-            client_arg[i++] = MPIU_Strdup(";");
-        }
+        client_arg[i++] = MPIU_Strdup("export");
+        client_arg[i++] = MPIU_Strdup(env->env_name);
+        client_arg[i++] = MPIU_Strdup(";");
 
 	env = env->next;
     }

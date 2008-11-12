@@ -79,12 +79,20 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 	    host_id++;
 
 	    client_arg[arg++] = MPIU_Strdup(hostname);
+
+            client_arg[arg++] = MPIU_Strdup("sh");
+            client_arg[arg++] = MPIU_Strdup("-c");
+            client_arg[arg++] = MPIU_Strdup("\"");
 	    client_arg[arg++] = NULL;
 
 	    HYD_BSCU_Append_env(csi_handle.system_env, client_arg, process_id);
 	    HYD_BSCU_Append_env(proc_params->prop_env, client_arg, process_id);
 	    HYD_BSCU_Append_wdir(client_arg);
 	    HYD_BSCU_Append_exec(proc_params->exec, client_arg);
+
+            for (arg = 0; client_arg[arg]; arg++);
+            client_arg[arg++] = MPIU_Strdup("\"");
+	    client_arg[arg++] = NULL;
 
 	    /* The stdin pointer will be some value for process_id 0;
 	     * for everyone else, it's NULL. */
