@@ -155,6 +155,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 
 	    HYD_BSCU_Append_wdir(client_arg);
 
+            for (arg = 0; client_arg[arg]; arg++);
 	    client_arg[arg++] = MPIU_Strdup("killall");
 	    client_arg[arg++] = NULL;
 
