@@ -2,6 +2,13 @@
                               Known Deficiencies
 -------------------------------------------------------------------------------
 
+- The new SMP-aware collectives added in 1.1.0a2 do not perform as well in some
+  cases as the non-SMP-aware collectives on machines with multiple-processors.
+  This can be true particularly for MPI_Bcast with message sizes larger than
+  12KiB and MPI_Reduce with message sizes larger than 2KiB.  If you find this is
+  a problem for your application, please configure with "--disable-smpcoll".
+  This should be fixed in an upcoming release.
+
 - The default ch3:nemesis channel does not work on Solaris. Instead, use the
   ch3:sock channel if running on multiple machines or the ch3:shm
   channel if running on a single machine (configure with
