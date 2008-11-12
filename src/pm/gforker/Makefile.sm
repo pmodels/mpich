@@ -21,6 +21,10 @@ mpich2-build-uninstall: uninstall
 
 # A special alternate installation target when using multiple process managers
 install-alt: mpiexec
+	@if [ ! -d $(DESTDIR)${bindir} ] ; then \
+	    echo "mkdir -p $(DESTDIR)${bindir} " ;\
+	    mkdir -p $(DESTDIR)${bindir} ;\
+	fi
 	$(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) mpiexec $(DESTDIR)${bindir}/mpiexec.gforker
 
 doc_sources = mpiexec.txt
