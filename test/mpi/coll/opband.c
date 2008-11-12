@@ -22,6 +22,7 @@ int main( int argc, char *argv[] )
     int rank, size;
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];
+    signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
     short sinbuf[3], soutbuf[3];
     unsigned short usinbuf[3], usoutbuf[3];
@@ -63,6 +64,32 @@ int main( int argc, char *argv[] )
 	}
     }
 
+    /* signed char */
+    MTestPrintfMsg( 10, "Reduce of MPI_SIGNED_CHAR\n" );
+    scinbuf[0] = 0xff;
+    scinbuf[1] = 0;
+    scinbuf[2] = (rank > 0) ? 0xff : 0xf0;
+
+    scoutbuf[0] = 0;
+    scoutbuf[1] = 1;
+    scoutbuf[2] = 1;
+    MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_BAND, 0, comm );
+    if (rank == 0) {
+	if (scoutbuf[0] != (signed char)0xff) {
+	    errs++;
+	    fprintf( stderr, "signed char BAND(1) test failed\n" );
+	}
+	if (scoutbuf[1]) {
+	    errs++;
+	    fprintf( stderr, "signed char BAND(0) test failed\n" );
+	}
+	if (scoutbuf[2] != (signed char)0xf0 && size > 1) {
+	    errs++;
+	    fprintf( stderr, "signed char BAND(>) test failed\n" );
+	}
+    }
+#endif /* USE_STRICT_MPI */
+
     MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_CHAR\n" );
     /* unsigned char */
     ucinbuf[0] = 0xff;
@@ -87,7 +114,6 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "unsigned char BAND(>) test failed\n" );
 	}
     }
-#endif /* USE_STRICT_MPI */
 
     /* bytes */
     MTestPrintfMsg( 10, "Reduce of MPI_BYTE\n" );

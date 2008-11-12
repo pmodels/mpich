@@ -22,6 +22,7 @@ int main( int argc, char *argv[] )
     int rank, size;
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];
+    signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
     short sinbuf[3], soutbuf[3];
     unsigned short usinbuf[3], usoutbuf[3];
@@ -62,6 +63,31 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "char BXOR(>) test failed\n" );
 	}
     }
+#endif /* USE_STRICT_MPI */
+
+    /* signed char */
+    scinbuf[0] = 0xff;
+    scinbuf[1] = 0;
+    scinbuf[2] = (rank > 0) ? 0x3c : 0xc3;
+
+    scoutbuf[0] = 0xf;
+    scoutbuf[1] = 1;
+    scoutbuf[2] = 1;
+    MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_BXOR, 0, comm );
+    if (rank == 0) {
+	if (scoutbuf[0] != ((size % 2) ? (signed char)0xff : (signed char)0) ) {
+	    errs++;
+	    fprintf( stderr, "signed char BXOR(1) test failed\n" );
+	}
+	if (scoutbuf[1]) {
+	    errs++;
+	    fprintf( stderr, "signed char BXOR(0) test failed\n" );
+	}
+	if (scoutbuf[2] != ((size % 2) ? (signed char)0xc3 : (signed char)0xff)) {
+	    errs++;
+	    fprintf( stderr, "signed char BXOR(>) test failed\n" );
+	}
+    }
 
     /* unsigned char */
     ucinbuf[0] = 0xff;
@@ -86,7 +112,6 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "unsigned char BXOR(>) test failed\n" );
 	}
     }
-#endif
 
     /* bytes */
     cinbuf[0] = 0xff;

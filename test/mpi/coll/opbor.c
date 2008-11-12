@@ -22,6 +22,7 @@ int main( int argc, char *argv[] )
     int rank, size;
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];
+    signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
     short sinbuf[3], soutbuf[3];
     unsigned short usinbuf[3], usoutbuf[3];
@@ -62,6 +63,31 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "char BOR(>) test failed\n" );
 	}
     }
+#endif /* USE_STRICT_MPI */
+
+    /* signed char */
+    scinbuf[0] = 0xff;
+    scinbuf[1] = 0;
+    scinbuf[2] = (rank > 0) ? 0x3c : 0xc3;
+
+    scoutbuf[0] = 0;
+    scoutbuf[1] = 1;
+    scoutbuf[2] = 1;
+    MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_BOR, 0, comm );
+    if (rank == 0) {
+	if (scoutbuf[0] != (signed char)0xff) {
+	    errs++;
+	    fprintf( stderr, "signed char BOR(1) test failed\n" );
+	}
+	if (scoutbuf[1]) {
+	    errs++;
+	    fprintf( stderr, "signed char BOR(0) test failed\n" );
+	}
+	if (scoutbuf[2] != (signed char)0xff && size > 1) {
+	    errs++;
+	    fprintf( stderr, "signed char BOR(>) test failed\n" );
+	}
+    }
 
     /* unsigned char */
     ucinbuf[0] = 0xff;
@@ -86,7 +112,6 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "unsigned char BOR(>) test failed\n" );
 	}
     }
-#endif /* USE_STRICT_MPI */
 
     /* bytes */
     cinbuf[0] = 0xff;

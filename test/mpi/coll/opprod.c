@@ -24,6 +24,7 @@ int main( int argc, char *argv[] )
     int rank, size, maxsize, result[6] = { 1, 1, 2, 6, 24, 120 };
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];
+    signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
     d_complex dinbuf[3], doutbuf[3];
 
@@ -66,6 +67,32 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "char PROD(>) test failed\n" );
 	}
     }
+#endif /* USE_STRICT_MPI */
+
+    /* signed char */
+    scinbuf[0] = (rank < maxsize && rank > 0) ? rank : 1;
+    scinbuf[1] = 0;
+    scinbuf[2] = (rank > 1);
+
+    scoutbuf[0] = 0;
+    scoutbuf[1] = 1;
+    scoutbuf[2] = 1;
+    MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_PROD, 0, comm );
+    if (rank == 0) {
+	if (scoutbuf[0] != (signed char)result[maxsize-1]) {
+	    errs++;
+	    fprintf( stderr, "signed char PROD(rank) test failed (%d!=%d)\n",
+		     (int)scoutbuf[0], (int)result[maxsize]);
+	}
+	if (scoutbuf[1]) {
+	    errs++;
+	    fprintf( stderr, "signed char PROD(0) test failed\n" );
+	}
+	if (size > 1 && scoutbuf[2]) {
+	    errs++;
+	    fprintf( stderr, "signed char PROD(>) test failed\n" );
+	}
+    }
 
     /* unsigned char */
     ucinbuf[0] = (rank < maxsize && rank > 0) ? rank : 1;
@@ -90,7 +117,6 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "unsigned char PROD(>) test failed\n" );
 	}
     }
-#endif
 
     if (MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
 	/* double complex; may be null if we do not have Fortran support */

@@ -22,6 +22,7 @@ int main( int argc, char *argv[] )
     int rank, size;
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];
+    signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
 
     MTest_Init( &argc, &argv );
@@ -55,6 +56,31 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "char MAX(>) test failed\n" );
 	}
     }
+#endif /* USE_STRICT_MPI */
+
+    /* signed char */
+    scinbuf[0] = 1;
+    scinbuf[1] = 0;
+    scinbuf[2] = rank;
+
+    scoutbuf[0] = 0;
+    scoutbuf[1] = 1;
+    scoutbuf[2] = 1;
+    MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_MAX, 0, comm );
+    if (rank == 0) {
+	if (scoutbuf[0] != 1) {
+	    errs++;
+	    fprintf( stderr, "signed char MAX(1) test failed\n" );
+	}
+	if (scoutbuf[1] != 0) {
+	    errs++;
+	    fprintf( stderr, "signed char MAX(0) test failed\n" );
+	}
+	if (size < 128 && scoutbuf[2] != size - 1) {
+	    errs++;
+	    fprintf( stderr, "signed char MAX(>) test failed\n" );
+	}
+    }
 
     /* unsigned char */
     ucinbuf[0] = 1;
@@ -79,7 +105,6 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "unsigned char MAX(>) test failed\n" );
 	}
     }
-#endif /* USE_STRICT_MPI */
 
 #ifdef HAVE_LONG_DOUBLE
     { long double ldinbuf[3], ldoutbuf[3];

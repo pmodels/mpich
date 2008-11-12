@@ -24,6 +24,7 @@ int main( int argc, char *argv[] )
     int rank, size;
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];
+    signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
     d_complex dinbuf[3], doutbuf[3];
 
@@ -59,6 +60,32 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "char SUM(>) test failed\n" );
 	}
     }
+#endif /* USE_MPI_STRICT */
+
+    /* signed char */
+    MTestPrintfMsg( 10, "Reduce of MPI_SIGNED_CHAR\n" );
+    scinbuf[0] = 1;
+    scinbuf[1] = 0;
+    scinbuf[2] = (rank > 0);
+
+    scoutbuf[0] = 0;
+    scoutbuf[1] = 1;
+    scoutbuf[2] = 1;
+    MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_SUM, 0, comm );
+    if (rank == 0) {
+	if (size < 128 && scoutbuf[0] != size) {
+	    errs++;
+	    fprintf( stderr, "signed char SUM(1) test failed\n" );
+	}
+	if (size < 128 && scoutbuf[1] != 0) {
+	    errs++;
+	    fprintf( stderr, "signed char SUM(0) test failed\n" );
+	}
+	if (size < 128 && scoutbuf[2] != size - 1) {
+	    errs++;
+	    fprintf( stderr, "signed char SUM(>) test failed\n" );
+	}
+    }
 
     /* unsigned char */
     MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_CHAR\n" );
@@ -84,7 +111,6 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "unsigned char SUM(>) test failed\n" );
 	}
     }
-#endif /* USE_MPI_STRICT */
 
     if (MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
 	MTestPrintfMsg( 10, "Reduce of MPI_DOUBLE_COMPLEX\n" );
