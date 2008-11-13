@@ -7,7 +7,7 @@
 #include "hydra.h"
 #include "hydra_sig.h"
 
-HYD_Status HYDU_Set_signal(int signum, void (*handler)(int))
+HYD_Status HYDU_Set_signal(int signum, void (*handler) (int))
 {
     HYD_Status status = HYD_SUCCESS;
 #if defined HAVE_SIGACTION

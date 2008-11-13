@@ -7,7 +7,7 @@
 #include "hydra_sock.h"
 #include "hydra_dbg.h"
 
-HYD_Status HYDU_Sock_listen(int *listen_fd, uint16_t low_port, uint16_t high_port, uint16_t *port)
+HYD_Status HYDU_Sock_listen(int *listen_fd, uint16_t low_port, uint16_t high_port, uint16_t * port)
 {
     struct sockaddr_in sa;
     int one = 1;

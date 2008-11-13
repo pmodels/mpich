@@ -21,7 +21,7 @@ HYD_Status HYD_BSCU_Wait_for_completion(void);
 HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char **client_arg, int id);
 HYD_Status HYD_BSCU_Append_exec(char **exec, char **client_arg);
 HYD_Status HYD_BSCU_Append_wdir(char **client_arg);
-HYD_Status HYD_BSCU_Set_common_signals(void (*handler)(int));
+HYD_Status HYD_BSCU_Set_common_signals(void (*handler) (int));
 void HYD_BSCU_Signal_handler(int signal);
 
 #endif /* BSCI_H_INCLUDED */

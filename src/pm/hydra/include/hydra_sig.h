@@ -23,6 +23,6 @@ extern char *strsignal(int);
 
 #include "hydra.h"
 
-HYD_Status HYDU_Set_signal(int signum, void (*handler)(int));
+HYD_Status HYDU_Set_signal(int signum, void (*handler) (int));
 
 #endif /* HYDRA_SIG_H_INCLUDED */
