@@ -10,10 +10,16 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(MPICH_DEBUG_MEMINIT) && defined(HAVE_VALGRIND_H) && defined(HAVE_MEMCHECK_H)
-#  include <valgrind.h>
-#  include <memcheck.h>
-#  define USE_VALGRIND_MACROS 1
+#if defined(MPICH_DEBUG_MEMINIT)
+#  if defined(HAVE_VALGRIND_H) && defined(HAVE_MEMCHECK_H)
+#    include <valgrind.h>
+#    include <memcheck.h>
+#    define USE_VALGRIND_MACROS 1
+#  elif defined(HAVE_VALGRIND_VALGRIND_H) && defined(HAVE_VALGRIND_MEMCHECK_H)
+#    include <valgrind/valgrind.h>
+#    include <valgrind/memcheck.h>
+#    define USE_VALGRIND_MACROS 1
+#  endif
 #endif
 
 #ifndef USE_MEMORY_TRACING

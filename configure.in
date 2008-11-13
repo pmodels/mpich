@@ -5187,7 +5187,7 @@ void foo1( char *fmt, ... ) {
 fi
 
 # headers for valgrind client requests
-AC_CHECK_HEADERS([valgrind.h memcheck.h])
+AC_CHECK_HEADERS([valgrind.h memcheck.h valgrind/valgrind.h valgrind/memcheck.h])
  
 dnl
 dnl If internationalization selected, try to find the needed functions
