@@ -357,12 +357,14 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 	disp = fd->disp;
 
 #ifdef RDCOLL_DEBUG 
-	int ii;
-	DBG_FPRINTF(stderr, "flattened %3d : ", flat_file->count );
-	for (ii=0; ii<flat_file->count; ii++) {
-	    DBG_FPRINTF(stderr, "%16qd:%-16qd", flat_file->indices[ii], flat_file->blocklens[ii] );
-	}
-  	DBG_FPRINTF(stderr, "\n" );
+        {
+            int ii;
+            DBG_FPRINTF(stderr, "flattened %3d : ", flat_file->count );
+            for (ii=0; ii<flat_file->count; ii++) {
+                DBG_FPRINTF(stderr, "%16qd:%-16qd", flat_file->indices[ii], flat_file->blocklens[ii] );
+            }
+            DBG_FPRINTF(stderr, "\n" );
+        }
 #endif
 	if (file_ptr_type == ADIO_INDIVIDUAL) {
            /* Wei-keng reworked type processing to be a bit more efficient */
