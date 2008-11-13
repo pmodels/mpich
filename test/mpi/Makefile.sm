@@ -19,7 +19,6 @@ dist:
 	cd .tmp/mpi2test && \
 	    svn export https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb confdb
 	cd .tmp/mpi2test && \
-	cd .tmp/mpi2test && \
 	    sed -e 's/AC_CONFIG_AUX_DIR.*/AC_CONFIG_AUX_DIR(confdb)/' \
 	        configure.in > conftmp.in && mv conftmp.in configure.in
 	cd .tmp/mpi2test && maint/updatefiles -mpich2dir=@mpich2_top_srcdir@

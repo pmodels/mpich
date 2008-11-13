@@ -44,6 +44,7 @@ int main( int argc, char *argv[] )
 
 #ifndef USE_STRICT_MPI
     /* char */
+    MTestPrintfMsg( 10, "Reduce of MPI_CHAR\n" );
     cinbuf[0] = (rank < maxsize && rank > 0) ? rank : 1;
     cinbuf[1] = 0;
     cinbuf[2] = (rank > 1);
@@ -70,6 +71,7 @@ int main( int argc, char *argv[] )
 #endif /* USE_STRICT_MPI */
 
     /* signed char */
+    MTestPrintfMsg( 10, "Reduce of MPI_SIGNED_CHAR\n" );
     scinbuf[0] = (rank < maxsize && rank > 0) ? rank : 1;
     scinbuf[1] = 0;
     scinbuf[2] = (rank > 1);
@@ -95,6 +97,7 @@ int main( int argc, char *argv[] )
     }
 
     /* unsigned char */
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_CHAR\n" );
     ucinbuf[0] = (rank < maxsize && rank > 0) ? rank : 1;
     ucinbuf[1] = 0;
     ucinbuf[2] = (rank > 0);
@@ -118,6 +121,8 @@ int main( int argc, char *argv[] )
 	}
     }
 
+#ifndef USE_STRICT_MPI
+    /* For some reason, complex is not allowed for sum and prod */
     if (MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
 	/* double complex; may be null if we do not have Fortran support */
 	dinbuf[0].r = (rank < maxsize && rank > 0) ? rank : 1;
@@ -159,6 +164,7 @@ int main( int argc, char *argv[] )
 	    }
 	}
     }
+#endif /* USE_STRICT_MPI */
 
 #ifdef HAVE_LONG_DOUBLE
     { long double ldinbuf[3], ldoutbuf[3];
@@ -188,7 +194,7 @@ int main( int argc, char *argv[] )
 	}
     }
     }
-#endif
+#endif /* HAVE_LONG_DOUBLE */
 
 #ifdef HAVE_LONG_LONG
     {
@@ -219,7 +225,7 @@ int main( int argc, char *argv[] )
 	}
     }
     }
-#endif
+#endif /* HAVE_LONG_LONG */
 
     MTest_Finalize( errs );
     MPI_Finalize();

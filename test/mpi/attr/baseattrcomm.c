@@ -70,6 +70,10 @@ int main( int argc, char **argv)
 	}
     }
 
+    /* MPI 2.0, section 5.5.3 - MPI_APPNUM should be set if the program is
+       started with more than one executable name (e.g., in MPMD instead
+       of SPMD mode).  This is independent of the dynamic process routines,
+       and should be supported even if MPI_COMM_SPAWN and friends are not. */
     MPI_Comm_get_attr( MPI_COMM_WORLD, MPI_APPNUM, &v, &flag );
     /* appnum need not be set */
     if (flag) {
@@ -80,6 +84,8 @@ int main( int argc, char **argv)
 	}
     }
 
+    /* MPI 2.0 section 5.5.1.  MPI_UNIVERSE_SIZE need not be set, but
+       should be present.  */
     MPI_Comm_get_attr( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, &v, &flag );
     /* MPI_UNIVERSE_SIZE need not be set */
     if (flag) {

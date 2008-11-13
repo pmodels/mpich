@@ -112,6 +112,8 @@ int main( int argc, char *argv[] )
 	}
     }
 
+#ifndef USE_STRICT_MPI
+    /* For some reason, complex is not allowed for sum and prod */
     if (MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
 	MTestPrintfMsg( 10, "Reduce of MPI_DOUBLE_COMPLEX\n" );
 	/* double complex; may be null if we do not have Fortran support */
@@ -144,6 +146,7 @@ int main( int argc, char *argv[] )
 	    }
 	}
     }
+#endif /* USE_STRICT_MPI */
 
 #ifdef HAVE_LONG_DOUBLE
     { long double ldinbuf[3], ldoutbuf[3];
@@ -188,7 +191,7 @@ int main( int argc, char *argv[] )
     lloutbuf[1] = 1;
     lloutbuf[2] = 1;
     if (MPI_LONG_LONG != MPI_DATATYPE_NULL) {
-    MTestPrintfMsg( 10, "Reduce of MPI_LONG_LONG\n" );
+	MTestPrintfMsg( 10, "Reduce of MPI_LONG_LONG\n" );
 	MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_SUM, 0, comm );
 	if (rank == 0) {
 	    if (lloutbuf[0] != size) {

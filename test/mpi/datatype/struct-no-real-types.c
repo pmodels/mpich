@@ -11,7 +11,13 @@
 #include <string.h>
 #endif
 
-static int verbose = 0;
+/* 
+   The default behavior of the test routines should be to briefly indicate
+   the cause of any errors - in this test, that means that verbose needs
+   to be set. Verbose should turn on output that is independent of error
+   levels.
+*/
+static int verbose = 1;
 
 /* tests */
 int no_real_types_test(void);
@@ -108,7 +114,9 @@ int no_real_types_test(void)
     if (extent != -10) {
 	if (verbose) {
 	    fprintf(stderr,
-		    "error: extent != 0 in no_real_types_test()\n");
+		    "error: extent != -10 in no_real_types_test()\n");
+	    fprintf( stderr, 
+	     "type map is { (LB,10) }, so UB is 0 and extent is ub-lb\n" );
 	}
 	errs++;
     }    

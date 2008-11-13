@@ -8,7 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int verbose = 0;
+/* 
+   The default behavior of the test routines should be to briefly indicate
+   the cause of any errors - in this test, that means that verbose needs
+   to be set. Verbose should turn on output that is independent of error
+   levels.
+*/
+static int verbose = 1;
 
 /* tests */
 int darray_2d_c_test1(void);

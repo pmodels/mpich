@@ -102,7 +102,7 @@ int f2ctype_( MPI_Fint *fhandle, MPI_Fint *typeidx )
     ctype = MPI_Type_f2c( *fhandle );
     if (ctype != mpi_names[*typeidx].dtype) {
 	errs++;
-	printf( "C and Fortran types for %s do not match f=%d, c=%d.\n",
+	printf( "C and Fortran types for %s do not match f=%d, ctof=%d.\n",
 		mpi_names[*typeidx].name, *fhandle, MPI_Type_c2f( ctype ) );
     }
     

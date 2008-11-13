@@ -41,6 +41,7 @@ int main( int argc, char *argv[] )
 
 #ifndef USE_STRICT_MPI
     /* char */
+    MTestPrintfMsg( 10, "Reduce of MPI_CHAR\n" );
     cinbuf[0] = 0xff;
     cinbuf[1] = 0;
     cinbuf[2] = (rank > 0) ? 0x3c : 0xc3;
@@ -66,6 +67,7 @@ int main( int argc, char *argv[] )
 #endif /* USE_STRICT_MPI */
 
     /* signed char */
+    MTestPrintfMsg( 10, "Reduce of MPI_SIGNED_CHAR\n" );
     scinbuf[0] = 0xff;
     scinbuf[1] = 0;
     scinbuf[2] = (rank > 0) ? 0x3c : 0xc3;
@@ -90,6 +92,7 @@ int main( int argc, char *argv[] )
     }
 
     /* unsigned char */
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_CHAR\n" );
     ucinbuf[0] = 0xff;
     ucinbuf[1] = 0;
     ucinbuf[2] = (rank > 0) ? 0x3c : 0xc3;
@@ -114,6 +117,7 @@ int main( int argc, char *argv[] )
     }
 
     /* bytes */
+    MTestPrintfMsg( 10, "Reduce of MPI_BYTE\n" );
     cinbuf[0] = 0xff;
     cinbuf[1] = 0;
     cinbuf[2] = (rank > 0) ? 0x3c : 0xc3;
@@ -138,6 +142,7 @@ int main( int argc, char *argv[] )
     }
 
     /* short */
+    MTestPrintfMsg( 10, "Reduce of MPI_SHORT\n" );
     sinbuf[0] = 0xffff;
     sinbuf[1] = 0;
     sinbuf[2] = (rank > 0) ? 0x3c3c : 0xc3c3;
@@ -162,6 +167,7 @@ int main( int argc, char *argv[] )
     }
 
     /* unsigned short */
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_SHORT\n" );
     usinbuf[0] = 0xffff;
     usinbuf[1] = 0;
     usinbuf[2] = (rank > 0) ? 0x3c3c : 0xc3c3;
@@ -186,6 +192,7 @@ int main( int argc, char *argv[] )
     }
 
     /* unsigned */
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED\n" );
     uinbuf[0] = 0xffffffff;
     uinbuf[1] = 0;
     uinbuf[2] = (rank > 0) ? 0x3c3c3c3c : 0xc3c3c3c3;
@@ -210,6 +217,7 @@ int main( int argc, char *argv[] )
     }
 
     /* int */
+    MTestPrintfMsg( 10, "Reduce of MPI_INT\n" );
     iinbuf[0] = 0xffffffff;
     iinbuf[1] = 0;
     iinbuf[2] = (rank > 0) ? 0x3c3c3c3c : 0xc3c3c3c3;
@@ -234,6 +242,7 @@ int main( int argc, char *argv[] )
     }
 
     /* long */
+    MTestPrintfMsg( 10, "Reduce of MPI_LONG\n" );
     linbuf[0] = 0xffffffff;
     linbuf[1] = 0;
     linbuf[2] = (rank > 0) ? 0x3c3c3c3c : 0xc3c3c3c3;
@@ -258,6 +267,7 @@ int main( int argc, char *argv[] )
     }
 
     /* unsigned long */
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_LONG\n" );
     ulinbuf[0] = 0xffffffff;
     ulinbuf[1] = 0;
     ulinbuf[2] = (rank > 0) ? 0x3c3c3c3c : 0xc3c3c3c3;
@@ -293,6 +303,7 @@ int main( int argc, char *argv[] )
     lloutbuf[1] = 1;
     lloutbuf[2] = 1;
     if (MPI_LONG_LONG != MPI_DATATYPE_NULL) {
+	MTestPrintfMsg( 10, "Reduce of MPI_LONG_LONG\n" );
 	MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_BOR, 0, comm );
 	if (rank == 0) {
 	    if (lloutbuf[0] != 0xffffffff) {
@@ -311,7 +322,6 @@ int main( int argc, char *argv[] )
     }
     }
 #endif
-
 
     MTest_Finalize( errs );
     MPI_Finalize();

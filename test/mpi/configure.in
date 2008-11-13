@@ -881,8 +881,13 @@ iodir="#"
 if test "$enable_romio" != no ; then
     iodir=io
     AC_DEFINE(HAVE_MPI_IO,1,[Define if MPI-IO (really ROMIO) is included])
-    AC_CACHE_CHECK([whether MPIO_Request is defined for MPI IO],pac_cv_have_mpio_request,[
+    if test "$FROM_MPICH2" = yes ; then
+        # MPICH2 no longer uses and MPIO_Request
+        pac_cv_have_mpio_request=no
+    else 
+        AC_CACHE_CHECK([whether MPIO_Request is defined for MPI IO],pac_cv_have_mpio_request,[
 AC_TRY_COMPILE([#include "mpi.h"],[MPIO_Request r;],pac_cv_have_mpio_request=yes,pac_cv_have_mpio_request=no)])
+    fi
     if test "$pac_cv_have_mpio_request" = no ; then
         AC_DEFINE(MPIO_USES_MPI_REQUEST,,[Define if MPI IO uses MPI_Request])
     fi
@@ -893,8 +898,13 @@ AC_SUBST(iodir)
 # MPI_INTEGER16 is mentioned in only one place in MPI 2.1, and some
 # implementations may have missed it.  Check to see if it is available in 
 # C.
-AC_CACHE_CHECK([whether MPI_INTEGER16 is available],pac_cv_have_mpi_integer16,[
+if test "$FROM_MPICH2" = yes ; then
+   # MPICH2 correctly includes this type.
+   pac_cv_have_mpi_integer16=yes
+else
+    AC_CACHE_CHECK([whether MPI_INTEGER16 is available],pac_cv_have_mpi_integer16,[
 AC_TRY_COMPILE([#include "mpi.h"],[MPI_Datatype t = MPI_INTEGER16;],pac_cv_have_mpi_integer16=yes,pac_cv_have_mpi_integer16=no)])
+fi
 if test "$pac_cv_have_mpi_integer16" = yes ; then 
     AC_DEFINE(HAVE_MPI_INTEGER16,1,[Define if MPI_INTEGER16 is available])
 fi

@@ -12,6 +12,7 @@ int main( int argc, char *argv[] )
 {
     int errs = 0;
     int rc, result;
+    int ranks[1];
     MPI_Group group, outgroup;
     MPI_Comm comm;
 
@@ -28,8 +29,17 @@ int main( int argc, char *argv[] )
 	if (rc) {
 	    errs++;
 	    MTestPrintError( rc );
-	    printf( "Error in creating an empty group\n" );
+	    printf( "Error in creating an empty group with (0,0)\n" );
+	    
+	    /* Some MPI implementations may reject a null "ranks" pointer */
+	    rc = MPI_Group_incl( group, 0, ranks, &outgroup );
+	    if (rc) {
+		errs++;
+		MTestPrintError( rc );
+		printf( "Error in creating an empty group with (0,ranks)\n" );
+	    }
 	}
+
 	if (outgroup != MPI_GROUP_EMPTY) {
 	    /* Is the group equivalent to group empty? */
 	    rc = MPI_Group_compare( outgroup, MPI_GROUP_EMPTY, &result );

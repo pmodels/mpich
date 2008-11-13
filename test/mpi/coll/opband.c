@@ -63,6 +63,7 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "char BAND(>) test failed\n" );
 	}
     }
+#endif /* USE_STRICT_MPI */
 
     /* signed char */
     MTestPrintfMsg( 10, "Reduce of MPI_SIGNED_CHAR\n" );
@@ -88,10 +89,9 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "signed char BAND(>) test failed\n" );
 	}
     }
-#endif /* USE_STRICT_MPI */
 
-    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_CHAR\n" );
     /* unsigned char */
+    MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_CHAR\n" );
     ucinbuf[0] = 0xff;
     ucinbuf[1] = 0;
     ucinbuf[2] = (rank > 0) ? 0xff : 0xf0;

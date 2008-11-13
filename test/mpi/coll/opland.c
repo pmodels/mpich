@@ -22,6 +22,7 @@ int main( int argc, char *argv[] )
     int rank, size;
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];
+    signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
     float finbuf[3], foutbuf[3];
     double dinbuf[3], doutbuf[3];
@@ -58,6 +59,32 @@ int main( int argc, char *argv[] )
 	    fprintf( stderr, "char AND(>) test failed\n" );
 	}
     }
+#endif /* USE_STRICT_MPI */
+
+    /* signed char */
+    MTestPrintfMsg( 10, "Reduce of MPI_SIGNED_CHAR\n" );
+    scinbuf[0] = 1;
+    scinbuf[1] = 0;
+    scinbuf[2] = (rank > 0);
+
+    scoutbuf[0] = 0;
+    scoutbuf[1] = 1;
+    scoutbuf[2] = 1;
+    MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_LAND, 0, comm );
+    if (rank == 0) {
+	if (!scoutbuf[0]) {
+	    errs++;
+	    fprintf( stderr, "signed char AND(1) test failed\n" );
+	}
+	if (scoutbuf[1]) {
+	    errs++;
+	    fprintf( stderr, "signed char AND(0) test failed\n" );
+	}
+	if (scoutbuf[2] && size > 1) {
+	    errs++;
+	    fprintf( stderr, "signed char AND(>) test failed\n" );
+	}
+    }
 
     /* unsigned char */
     MTestPrintfMsg( 10, "Reduce of MPI_UNSIGNED_CHAR\n" );
@@ -84,6 +111,7 @@ int main( int argc, char *argv[] )
 	}
     }
 
+#ifndef USE_STRICT_MPI
     /* float */
     MTestPrintfMsg( 10, "Reduce of MPI_FLOAT\n" );
     finbuf[0] = 1;
@@ -134,8 +162,6 @@ int main( int argc, char *argv[] )
 	}
     }
 
-#endif
-
 #ifdef HAVE_LONG_DOUBLE
     { long double ldinbuf[3], ldoutbuf[3];
     /* long double */
@@ -165,7 +191,9 @@ int main( int argc, char *argv[] )
 	}
     }
     }
-#endif
+#endif /* HAVE_LONG_DOUBLE */
+#endif /* USE_STRICT_MPI */
+
 
 #ifdef HAVE_LONG_LONG
     {
@@ -198,7 +226,6 @@ int main( int argc, char *argv[] )
     }
     }
 #endif
-
 
     MTest_Finalize( errs );
     MPI_Finalize();
