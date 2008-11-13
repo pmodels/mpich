@@ -2942,6 +2942,14 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define USE_SMP_COLLECTIVES 1")
 				Case "CH3_RANK_BITS"
 					fout.WriteLine("#define CH3_RANK_BITS 16")
+                                Case "HAVE_MPI_2DOUBLE_COMPLEX"
+                                        fout.WriteLine("#define HAVE_MPI_2DOUBLE_COMPLEX 1")
+                                Case "HAVE_MPI_INTEGER16"
+                                        fout.WriteLine("#define HAVE_MPI_INTEGER16 1")
+                                Case "MPIO_USES_MPI_REQUEST"
+                                        fout.WriteLine("#define MPIO_USES_MPI_REQUEST 1")
+                                Case "USE_STRICT_MPI"
+                                        fout.WriteLine("#define USE_STRICT_MPI 1")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
 					If appendUniqueString(unhandled_definitions, macroname) Then
