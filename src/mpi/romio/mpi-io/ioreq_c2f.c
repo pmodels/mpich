@@ -48,13 +48,14 @@ MPI_Fint MPIO_Request_c2f(MPIO_Request request)
 #else
     int i;
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
-
+    /* We can make this test outside of the ALLFUNC mutex because it does
+       not access any shared data */
     if ((request <= (MPIO_Request) 0) || (request->cookie != ADIOI_REQ_COOKIE))
     {
-	    MPIU_THREAD_CS_EXIT(ALLFUNC,); 
 	    return (MPI_Fint) 0;
     }
+
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     if (!ADIOI_Reqtable) {
 	ADIOI_Reqtable_max = 1024;
 	ADIOI_Reqtable = (MPIO_Request *)
