@@ -12,6 +12,8 @@
 #include "lchu.h"
 #include "csi.h"
 
+#define HYDRA_MAX_PATH 4096
+
 HYD_CSI_Handle csi_handle;
 
 #define CHECK_LOCAL_PARAM_START(start, status) \
@@ -391,7 +393,12 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
     /* If wdir is not set, use the current one */
     if (csi_handle.wdir == NULL) {
-        csi_handle.wdir = MPIU_Strdup(getcwd(NULL, 0));
+        HYDU_MALLOC(csi_handle.wdir, char *, HYDRA_MAX_PATH, status);
+        if (getcwd(csi_handle.wdir, HYDRA_MAX_PATH) < 0) {
+            HYDU_Error_printf("allocated space is too small for absolute path\n");
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
+        }
     }
 
     proc_params = csi_handle.proc_params;
