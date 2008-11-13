@@ -82,6 +82,8 @@ HYDU_Env_t *HYDU_Env_dup(HYDU_Env_t env)
     return tenv;
 
   fn_fail:
+    if (status != HYD_SUCCESS)
+        HYDU_Error_printf("freeing temporary env structure\n");
     if (tenv)
         HYDU_FREE(tenv);
     tenv = NULL;

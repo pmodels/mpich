@@ -135,6 +135,55 @@ if AC_TRY_EVAL(pac_tmp_compile) && test -s conftest ; then
 fi
 rm -f conftest*
 
+dnl Check for functions.  This invokes another test if the function is 
+dnl found.  The braces around the second test are essential. 
+dnl AC_CHECK_FUNC(setpgrp,[AC_FUNC_SETPGRP])
+AC_CHECK_FUNCS(strsignal)
+if test "$ac_cv_func_strsignal" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <string.h>],strsignal)
+fi
+AC_CHECK_FUNCS(snprintf)
+AC_CHECK_FUNCS(strdup)
+dnl 
+dnl Check for signal handlers
+AC_CHECK_FUNCS(sigaction signal sigset)
+sigaction_ok=no
+if test "$ac_cv_func_sigaction" = "yes" ; then
+    # Make sure that the fields that we need in sigaction are defined
+    AC_CACHE_CHECK([for struct sigaction and sa_handler],
+    pac_cv_struct_sigaction_with_sa_handler,[
+    AC_TRY_COMPILE([#include <signal.h>],[
+struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+act.sa_handler = SIG_IGN;],
+    pac_cv_struct_sigaction_with_sa_handler=yes,
+    pac_cv_struct_sigaction_with_sa_handler=no)])
+    if test "$pac_cv_struct_sigaction_with_sa_handler" = "no" ; then
+        AC_CACHE_CHECK([for struct sigaction and sa_handler with _POSIX_SOURCE],
+	pac_cv_struct_sigaction_with_sa_handler_needs_posix,[
+        AC_TRY_COMPILE([#define _POSIX_SOURCE
+#include <signal.h>],[
+struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+act.sa_handler = SIG_IGN;],
+	pac_cv_struct_sigaction_with_sa_handler_needs_posix=yes,
+	pac_cv_struct_sigaction_with_sa_handler_needs_posix=no)])
+        if test "$pac_cv_struct_sigaction_with_sa_handler_needs_posix" = "yes" ; then
+            sigaction_ok=yes
+	fi
+    else
+        sigaction_ok=yes
+    fi
+fi
+
+# Decide on the signal handler to use
+if test "$ac_cv_func_sigaction" = "yes" -a "$sigaction_ok" = "yes" ; then
+    if test "$pac_cv_struct_sigaction_with_sa_handler_needs_posix" = yes ; then
+        AC_DEFINE(NEEDS_POSIX_FOR_SIGACTION,1,[Define if _POSIX_SOURCE needed to get sigaction])
+    fi
+    AC_DEFINE(USE_SIGACTION,,[Define if sigaction should be used to set signals])
+elif test "$ac_cv_func_signal" = "yes" ; then
+    AC_DEFINE(USE_SIGNAL,,[Define if signal should be used to set signals])
+fi
+
 dnl Setup non-default variables
 MAKE=${MAKE:-make}
 AC_SUBST(MAKE)

@@ -7,10 +7,11 @@
 #include "hydra_sock.h"
 #include "hydra_dbg.h"
 
-HYD_Status HYDU_Sock_listen(int *listen_fd, int low_port, int high_port, int *port)
+HYD_Status HYDU_Sock_listen(int *listen_fd, uint16_t low_port, uint16_t high_port, uint16_t *port)
 {
     struct sockaddr_in sa;
-    int one = 1, i;
+    int one = 1;
+    uint16_t i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -83,7 +84,7 @@ HYD_Status HYDU_Sock_listen(int *listen_fd, int low_port, int high_port, int *po
 }
 
 
-HYD_Status HYDU_Sock_connect(const char *host, int port, int *fd)
+HYD_Status HYDU_Sock_connect(const char *host, uint16_t port, int *fd)
 {
     struct sockaddr_in sa;
     struct hostent *ht;

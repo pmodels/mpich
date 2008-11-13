@@ -11,7 +11,7 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCU_Set_common_signals(sighandler_t handler)
+HYD_Status HYD_BSCU_Set_common_signals(void (*handler)(int))
 {
     HYD_Status status = HYD_SUCCESS;
 

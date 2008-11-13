@@ -65,7 +65,7 @@ extern char **environ;
 #define HYDU_FUNC_EXIT() {}
 #endif /* HAVE_DEBUGGING_SUPPORT */
 
-static void HYDU_Error_printf(const char *str, ...)
+static inline void HYDU_Error_printf(const char *str, ...)
 {
     va_list list;
 
@@ -80,7 +80,7 @@ static void HYDU_Error_printf(const char *str, ...)
     va_end(list);
 }
 
-static void HYDU_Print(const char *str, ...)
+static inline void HYDU_Print(const char *str, ...)
 {
     va_list list;
 
