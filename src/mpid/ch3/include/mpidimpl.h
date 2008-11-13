@@ -316,6 +316,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->comm = comm;					\
     (sreq_)->cc			   = 1;                         \
     (sreq_)->cc_ptr		   = &(sreq_)->cc;              \
+    (sreq_)->partner_request   = NULL;                          \
     MPIR_Comm_add_ref(comm);					\
     (sreq_)->status.MPI_ERROR	   = MPI_SUCCESS;               \
     (sreq_)->status.cancelled	   = FALSE;		        \
@@ -331,6 +332,8 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->dev.segment_ptr	   = NULL;                      \
     (sreq_)->dev.OnDataAvail	   = NULL;                      \
     (sreq_)->dev.OnFinal	   = NULL;                      \
+    (sreq_)->dev.iov_count	   = NULL;                      \
+    (sreq_)->dev.iov_offset	   = NULL;                      \
 }
 
 /* This is the receive request version of MPIDI_Request_create_sreq */
@@ -353,11 +356,14 @@ extern MPIDI_Process_t MPIDI_Process;
     (rreq_)->cc_ptr		   = &(rreq_)->cc;              \
     (rreq_)->status.MPI_ERROR	   = MPI_SUCCESS;               \
     (rreq_)->status.cancelled	   = FALSE;                     \
+    (rreq_)->partner_request   = NULL;                          \
     (rreq_)->dev.state = 0;                                     \
     (rreq_)->dev.cancel_pending = FALSE;                        \
     (rreq_)->dev.datatype_ptr = NULL;                           \
     (rreq_)->dev.segment_ptr = NULL;                            \
     (rreq_)->dev.iov_offset   = 0;                              \
+    (rreq_)->dev.OnDataAvail	   = NULL;                      \
+    (rreq_)->dev.OnFinal	   = NULL;                      \
      MPIDI_CH3_REQUEST_INIT(rreq_);\
 }
 
