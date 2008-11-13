@@ -433,7 +433,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
 HYD_Status HYD_LCHI_Print_parameters(void)
 {
-    HYDU_Env_t * env;
+    HYDU_Env_t *env;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

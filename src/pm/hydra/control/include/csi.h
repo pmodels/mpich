@@ -31,7 +31,7 @@ struct HYD_CSI_Handle_ {
     HYDU_Env_t *prop_env;
 
     int in;
-    void *stdin_cb;
+     HYD_Status(*stdin_cb) (int fd, HYD_CSI_Event_t events);
     char stdin_tmp_buf[HYD_CSI_TMPBUF_SIZE];
     int stdin_buf_offset;
     int stdin_buf_count;
@@ -63,8 +63,8 @@ struct HYD_CSI_Handle_ {
 
         /* Callback functions for the stdout/stderr events. These can
          * be the same. */
-        void *stdout_cb;
-        void *stderr_cb;
+         HYD_Status(*stdout_cb) (int fd, HYD_CSI_Event_t events);
+         HYD_Status(*stderr_cb) (int fd, HYD_CSI_Event_t events);
 
         /* Status > 0 means that it is not set yet. Successful
          * completion of a process will set the status to 0. An error

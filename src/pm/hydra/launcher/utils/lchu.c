@@ -39,7 +39,11 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 
                 proc_params->total_num_procs = 0;
                 while (!feof(fp)) {
-                    fscanf(fp, "%s", line);
+                    if (fscanf(fp, "%s", line) < 0) {
+                        HYDU_Error_printf("unable to read input line\n");
+                        status = HYD_INTERNAL_ERROR;
+                        goto fn_fail;
+                    }
                     if (feof(fp))
                         break;
 
@@ -82,7 +86,11 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 
                 i = 0;
                 while (!feof(fp)) {
-                    fscanf(fp, "%s", line);
+                    if (fscanf(fp, "%s", line) < 0) {
+                        HYDU_Error_printf("unable to read input line\n");
+                        status = HYD_INTERNAL_ERROR;
+                        goto fn_fail;
+                    }
                     if (feof(fp))
                         break;
 
