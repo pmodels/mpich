@@ -43,10 +43,6 @@ int HYD_PMCD_Central_listenfd;
  *     - getbyidx
  *     - spawn
  */
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCD_Central_cb"
 HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 {
     int accept_fd, linelen, i;

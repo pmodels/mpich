@@ -13,10 +13,6 @@
 
 HYD_CSI_Handle csi_handle;
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCU_Finalize_exit_status"
 HYD_Status HYD_BSCU_Finalize_exit_status(void)
 {
     struct HYD_CSI_Proc_params *proc_params;
@@ -42,10 +38,6 @@ HYD_Status HYD_BSCU_Finalize_exit_status(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCU_Init_io_fds"
 HYD_Status HYD_BSCU_Finalize_io_fds(void)
 {
     struct HYD_CSI_Proc_params *proc_params;

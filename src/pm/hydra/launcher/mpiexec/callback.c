@@ -11,10 +11,6 @@
 
 HYD_CSI_Handle csi_handle;
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHI_stdout_cb"
 HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_CSI_Event_t events)
 {
     int count;
@@ -61,10 +57,6 @@ HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_CSI_Event_t events)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHI_stderr_cb"
 HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_CSI_Event_t events)
 {
     int count;
@@ -111,10 +103,6 @@ HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_CSI_Event_t events)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHI_stdin_cb"
 HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_CSI_Event_t events)
 {
     int count;

@@ -7,10 +7,6 @@
 #include "hydra_sock.h"
 #include "hydra_dbg.h"
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Sock_listen"
 HYD_Status HYDU_Sock_listen(int *listen_fd, int low_port, int high_port, int *port)
 {
     struct sockaddr_in sa;
@@ -83,10 +79,6 @@ HYD_Status HYDU_Sock_listen(int *listen_fd, int low_port, int high_port, int *po
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Sock_connect"
 HYD_Status HYDU_Sock_connect(const char *host, int port, int *fd)
 {
     struct sockaddr_in sa;
@@ -150,10 +142,6 @@ HYD_Status HYDU_Sock_connect(const char *host, int port, int *fd)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Sock_accept"
 HYD_Status HYDU_Sock_accept(int listen_fd, int *fd)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -193,10 +181,6 @@ HYD_Status HYDU_Sock_accept(int listen_fd, int *fd)
  * maximum length maxlen.  This is a buffered version, and reads from
  * fd as necessary.
  */
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Sock_readline"
 HYD_Status HYDU_Sock_readline(int fd, char *buf, int maxlen, int *linelen)
 {
     int n;
@@ -248,10 +232,6 @@ HYD_Status HYDU_Sock_readline(int fd, char *buf, int maxlen, int *linelen)
 /*
  * HYD_Sock_read: perform a blocking read on a non-blocking socket.
  */
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Sock_read"
 HYD_Status HYDU_Sock_read(int fd, char *buf, int maxlen, int *count)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -277,10 +257,6 @@ HYD_Status HYDU_Sock_read(int fd, char *buf, int maxlen, int *count)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Sock_writelen"
 HYD_Status HYDU_Sock_writeline(int fd, char *buf, int maxsize)
 {
     int n;
@@ -313,10 +289,6 @@ HYD_Status HYDU_Sock_writeline(int fd, char *buf, int maxsize)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Sock_write"
 HYD_Status HYDU_Sock_write(int fd, char *buf, int maxsize)
 {
     int n;
@@ -343,10 +315,6 @@ HYD_Status HYDU_Sock_write(int fd, char *buf, int maxsize)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Sock_set_nonblock"
 HYD_Status HYDU_Sock_set_nonblock(int fd)
 {
     int flags;
@@ -375,10 +343,6 @@ HYD_Status HYDU_Sock_set_nonblock(int fd)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Sock_set_cloexec"
 HYD_Status HYDU_Sock_set_cloexec(int fd)
 {
     int flags;

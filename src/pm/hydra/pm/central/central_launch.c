@@ -35,10 +35,6 @@ HYD_CSI_Handle csi_handle;
  *
  * 5. Ask the bootstrap server to launch the processes.
  */
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCI_Launch_procs"
 HYD_Status HYD_PMCI_Launch_procs(void)
 {
     char *port_range, *port_str, *sport;

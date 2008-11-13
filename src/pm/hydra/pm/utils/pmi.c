@@ -13,10 +13,6 @@
 HYD_CSI_Handle csi_handle;
 HYD_PMCU_pmi_pg_t *pg_list = NULL;
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "allocate_kvs"
 static HYD_Status allocate_kvs(HYD_PMCU_pmi_kvs_t ** kvs, int pgid)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -36,10 +32,6 @@ static HYD_Status allocate_kvs(HYD_PMCU_pmi_kvs_t ** kvs, int pgid)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "create_pg"
 static HYD_Status create_pg(HYD_PMCU_pmi_pg_t ** pg, int pgid)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -70,10 +62,6 @@ static HYD_Status create_pg(HYD_PMCU_pmi_pg_t ** pg, int pgid)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "add_process_to_pg"
 static HYD_Status add_process_to_pg(HYD_PMCU_pmi_pg_t * pg, int fd)
 {
     HYD_PMCU_pmi_process_t *process, *tmp;
@@ -103,10 +91,6 @@ static HYD_Status add_process_to_pg(HYD_PMCU_pmi_pg_t * pg, int fd)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_Create_pg"
 HYD_Status HYD_PMCU_Create_pg(void)
 {
     HYD_PMCU_pmi_pg_t *run;
@@ -140,10 +124,6 @@ HYD_Status HYD_PMCU_Create_pg(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_pmi_initack"
 HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
 {
     int id, size, debug, i;
@@ -210,10 +190,6 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_pmi_init"
 HYD_Status HYD_PMCU_pmi_init(int fd, char *args[])
 {
     int pmi_version, pmi_subversion, i;
@@ -252,10 +228,6 @@ HYD_Status HYD_PMCU_pmi_init(int fd, char *args[])
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_pmi_get_maxes"
 HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[])
 {
     int i;
@@ -320,10 +292,6 @@ static HYD_PMCU_pmi_process_t *find_process(int fd)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_pmi_get_appnum"
 HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char *args[])
 {
     char *tmp[HYDU_NUM_JOIN_STR], *cmd;
@@ -369,10 +337,6 @@ HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char *args[])
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_pmi_get_my_kvsname"
 HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char *args[])
 {
     char *tmp[HYDU_NUM_JOIN_STR], *cmd;
@@ -413,10 +377,6 @@ HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char *args[])
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_pmi_barrier_in"
 HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char *args[])
 {
     HYD_PMCU_pmi_process_t *process, *run;
@@ -462,10 +422,6 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char *args[])
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_pmi_put"
 HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
 {
     int i;
@@ -545,10 +501,6 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_pmi_get"
 HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
 {
     int i;
@@ -625,10 +577,6 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_pmi_finalize"
 HYD_Status HYD_PMCU_pmi_finalize(int fd, char *args[])
 {
     char *cmd;
@@ -652,10 +600,6 @@ HYD_Status HYD_PMCU_pmi_finalize(int fd, char *args[])
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_pmi_get_usize"
 HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
 {
     int usize, i;
@@ -695,10 +639,6 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "free_pmi_process_list"
 static HYD_Status free_pmi_process_list(HYD_PMCU_pmi_process_t * process_list)
 {
     HYD_PMCU_pmi_process_t *process, *tmp;
@@ -722,10 +662,6 @@ static HYD_Status free_pmi_process_list(HYD_PMCU_pmi_process_t * process_list)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "free_pmi_kvs_list"
 static HYD_Status free_pmi_kvs_list(HYD_PMCU_pmi_kvs_t * kvs_list)
 {
     HYD_PMCU_pmi_kvs_pair_t *key_pair, *tmp;
@@ -750,10 +686,6 @@ static HYD_Status free_pmi_kvs_list(HYD_PMCU_pmi_kvs_t * kvs_list)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_PMCU_Finalize"
 HYD_Status HYD_PMCU_Finalize(void)
 {
     HYD_PMCU_pmi_pg_t *pg, *tmp;

@@ -11,10 +11,6 @@
 #include "pmci.h"
 #include "bsci.h"
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_CSI_Finalize"
 HYD_Status HYD_CSI_Finalize(void)
 {
     struct HYD_CSI_Proc_params *proc_params, *p;

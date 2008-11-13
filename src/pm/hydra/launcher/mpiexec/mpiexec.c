@@ -41,10 +41,6 @@ static void usage(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "mpiexec"
 int main(int argc, char **argv)
 {
     struct HYD_CSI_Proc_params *proc_params;

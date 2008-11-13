@@ -8,10 +8,6 @@
 #include "hydra_env.h"
 #include "hydra_mem.h"
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Env_global_list"
 HYD_Status HYDU_Env_global_list(HYDU_Env_t ** env_list)
 {
     HYDU_Env_t *env;
@@ -53,10 +49,6 @@ HYD_Status HYDU_Env_global_list(HYDU_Env_t ** env_list)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Env_dup"
 HYDU_Env_t *HYDU_Env_dup(HYDU_Env_t env)
 {
     HYDU_Env_t *tenv;
@@ -82,10 +74,6 @@ HYDU_Env_t *HYDU_Env_dup(HYDU_Env_t env)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Env_found_in_list"
 HYDU_Env_t *HYDU_Env_found_in_list(HYDU_Env_t * env_list, HYDU_Env_t * env)
 {
     HYDU_Env_t *run;
@@ -108,10 +96,6 @@ HYDU_Env_t *HYDU_Env_found_in_list(HYDU_Env_t * env_list, HYDU_Env_t * env)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Add_env_to_list"
 HYD_Status HYDU_Env_add_to_list(HYDU_Env_t ** env_list, HYDU_Env_t env)
 {
     HYDU_Env_t *run, *tenv;
@@ -175,10 +159,6 @@ HYD_Status HYDU_Env_add_to_list(HYDU_Env_t ** env_list, HYDU_Env_t env)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Env_listdup"
 HYDU_Env_t *HYDU_Env_listdup(HYDU_Env_t * env)
 {
     HYDU_Env_t *tenv, *run;
@@ -207,10 +187,6 @@ HYDU_Env_t *HYDU_Env_listdup(HYDU_Env_t * env)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Env_create"
 HYD_Status HYDU_Env_create(HYDU_Env_t ** env, char *env_name, char *env_value,
                            HYDU_Env_type_t env_type, int start)
 {
@@ -233,10 +209,6 @@ HYD_Status HYDU_Env_create(HYDU_Env_t ** env, char *env_name, char *env_value,
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Env_free"
 HYD_Status HYDU_Env_free(HYDU_Env_t * env)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -258,10 +230,6 @@ HYD_Status HYDU_Env_free(HYDU_Env_t * env)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Env_free_list"
 HYD_Status HYDU_Env_free_list(HYDU_Env_t * env)
 {
     HYDU_Env_t *run, *tmp;

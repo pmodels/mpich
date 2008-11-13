@@ -13,10 +13,6 @@
 
 HYD_CSI_Handle csi_handle;
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCU_Append_env"
 HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char **client_arg, int id)
 {
     int i, j, csh_format;
@@ -68,10 +64,6 @@ HYD_Status HYD_BSCU_Append_env(HYDU_Env_t * env_list, char **client_arg, int id)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCU_Append_exec"
 HYD_Status HYD_BSCU_Append_exec(char **exec, char **client_arg)
 {
     int i, j;
@@ -93,10 +85,6 @@ HYD_Status HYD_BSCU_Append_exec(char **exec, char **client_arg)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCU_Append_wdir"
 HYD_Status HYD_BSCU_Append_wdir(char **client_arg)
 {
     int arg;

@@ -7,10 +7,6 @@
 #include "hydra.h"
 #include "hydra_sig.h"
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYDU_Set_signal"
 HYD_Status HYDU_Set_signal(int signum, sighandler_t handler)
 {
     HYD_Status status = HYD_SUCCESS;

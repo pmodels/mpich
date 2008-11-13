@@ -31,10 +31,6 @@ HYD_CSI_Handle csi_handle;
 	} \
     }
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "allocate_proc_params"
 static HYD_Status allocate_proc_params(struct HYD_CSI_Proc_params **params)
 {
     struct HYD_CSI_Proc_params *proc_params;
@@ -73,10 +69,6 @@ static HYD_Status allocate_proc_params(struct HYD_CSI_Proc_params **params)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "get_current_proc_params"
 static HYD_Status get_current_proc_params(struct HYD_CSI_Proc_params **params)
 {
     struct HYD_CSI_Proc_params *proc_params;
@@ -107,10 +99,6 @@ static HYD_Status get_current_proc_params(struct HYD_CSI_Proc_params **params)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHI_Get_parameters"
 HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 {
     int argc = t_argc, i, got_hostfile;

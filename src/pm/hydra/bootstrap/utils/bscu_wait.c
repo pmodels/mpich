@@ -19,10 +19,6 @@ HYD_CSI_Handle csi_handle;
  * closed. In the meanwhile, the SIGCHLD handler keeps track of all
  * the terminated processes.
  */
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCU_Wait_for_completion"
 HYD_Status HYD_BSCU_Wait_for_completion(void)
 {
     int pid, ret_status, i, not_completed;

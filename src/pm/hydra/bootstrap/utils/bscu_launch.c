@@ -13,10 +13,6 @@
 
 HYD_CSI_Handle csi_handle;
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCU_Create_process"
 HYD_Status HYD_BSCU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid)
 {
     int inpipe[2], outpipe[2], errpipe[2], arg, tpid;

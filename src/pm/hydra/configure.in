@@ -118,6 +118,23 @@ if test "$DEBUG" = "yes"; then
 fi
 AC_SUBST(EXTRA_CFLAGS)
 
+dnl Check if __func__ is defined by the compiler
+AC_MSG_CHECKING([whether the compiler allows __func__])
+rm -f conftest.c
+cat > conftest.c <<EOF
+#include <stdio.h>
+int main()
+{
+    printf("%s\n", __func__);
+    return 0;
+}
+EOF
+pac_tmp_compile='$CC $CFLAGS conftest.c -o conftest'
+if AC_TRY_EVAL(pac_tmp_compile) && test -s conftest ; then
+   AC_DEFINE(COMPILER_ACCEPTS_FUNC,1,[Define if compiler supports __func__])
+fi
+rm -f conftest*
+
 dnl Setup non-default variables
 MAKE=${MAKE:-make}
 AC_SUBST(MAKE)

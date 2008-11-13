@@ -12,10 +12,6 @@
 
 HYD_CSI_Handle csi_handle;
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_CSI_Close_fd"
 HYD_Status HYD_CSI_Close_fd(int fd)
 {
     int i;

@@ -14,10 +14,6 @@
  * closed. In the meanwhile, the SIGCHLD handler keeps track of all
  * the terminated processes.
  */
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCI_Wait_for_completion"
 HYD_Status HYD_BSCI_Wait_for_completion(void)
 {
     HYD_Status status = HYD_SUCCESS;

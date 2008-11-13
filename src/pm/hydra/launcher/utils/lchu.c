@@ -10,10 +10,6 @@
 
 HYD_CSI_Handle csi_handle;
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHU_Create_host_list"
 HYD_Status HYD_LCHU_Create_host_list(void)
 {
     FILE *fp;
@@ -120,10 +116,6 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHU_Free_host_list"
 HYD_Status HYD_LCHU_Free_host_list(void)
 {
     struct HYD_CSI_Proc_params *proc_params;
@@ -151,10 +143,6 @@ HYD_Status HYD_LCHU_Free_host_list(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHU_Create_env_list"
 HYD_Status HYD_LCHU_Create_env_list(void)
 {
     struct HYD_CSI_Proc_params *proc_params;
@@ -198,10 +186,6 @@ HYD_Status HYD_LCHU_Create_env_list(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHU_Free_env_list"
 HYD_Status HYD_LCHU_Free_env_list(void)
 {
     struct HYD_CSI_Proc_params *proc_params;
@@ -230,10 +214,6 @@ HYD_Status HYD_LCHU_Free_env_list(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHU_Free_io"
 HYD_Status HYD_LCHU_Free_io(void)
 {
     struct HYD_CSI_Proc_params *proc_params;
@@ -257,10 +237,6 @@ HYD_Status HYD_LCHU_Free_io(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHU_Free_exits"
 HYD_Status HYD_LCHU_Free_exits(void)
 {
     struct HYD_CSI_Proc_params *proc_params;
@@ -283,10 +259,6 @@ HYD_Status HYD_LCHU_Free_exits(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHU_Free_exec"
 HYD_Status HYD_LCHU_Free_exec(void)
 {
     struct HYD_CSI_Proc_params *proc_params;
@@ -311,10 +283,6 @@ HYD_Status HYD_LCHU_Free_exec(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_LCHU_Free_proc_params"
 HYD_Status HYD_LCHU_Free_proc_params(void)
 {
     struct HYD_CSI_Proc_params *proc_params, *run;

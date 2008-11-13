@@ -10,10 +10,6 @@
 
 /* FIXME: This should probably be added as a default function allowing
  * the bootstrap server to override if needed. */
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCI_Get_universe_size"
 HYD_Status HYD_BSCI_Get_universe_size(int *size)
 {
     HYD_Status status = HYD_SUCCESS;

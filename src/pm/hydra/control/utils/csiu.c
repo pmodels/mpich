@@ -10,10 +10,6 @@
 
 HYD_CSI_Handle csi_handle;
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_CSU_Time_left"
 int HYD_CSU_Time_left(void)
 {
     struct timeval now;

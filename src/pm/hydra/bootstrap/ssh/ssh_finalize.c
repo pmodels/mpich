@@ -10,10 +10,6 @@
 #include "bsci.h"
 #include "bscu.h"
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCI_Finalize"
 HYD_Status HYD_BSCI_Finalize(void)
 {
     struct HYD_CSI_Proc_params *proc_params;

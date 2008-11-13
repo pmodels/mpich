@@ -20,10 +20,6 @@ HYD_CSI_Handle csi_handle;
  * variables. We fork a worker process that sets the environment and
  * execvp's this executable.
  */
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCI_Launch_procs"
 HYD_Status HYD_BSCI_Launch_procs(void)
 {
     struct HYD_CSI_Proc_params *proc_params;
@@ -126,10 +122,6 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCI_Cleanup_procs"
 HYD_Status HYD_BSCI_Cleanup_procs(void)
 {
     struct HYD_CSI_Proc_params *proc_params;

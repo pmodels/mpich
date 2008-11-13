@@ -11,10 +11,6 @@
 #include "bsci.h"
 #include "bscu.h"
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCU_Set_common_signals"
 HYD_Status HYD_BSCU_Set_common_signals(sighandler_t handler)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -64,10 +60,6 @@ HYD_Status HYD_BSCU_Set_common_signals(sighandler_t handler)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_BSCU_Signal_handler"
 void HYD_BSCU_Signal_handler(int signal)
 {
     int status, pid, i;

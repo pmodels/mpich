@@ -44,10 +44,6 @@ static void print_callback_list()
     printf("\n");
 }
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_DMX_Register_fd"
 HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_CSI_Event_t events,
                                HYD_Status(*callback) (int fd, HYD_CSI_Event_t events))
 {
@@ -94,10 +90,6 @@ HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_CSI_Event_t events,
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_DMX_Deregister_fd"
 HYD_Status HYD_DMX_Deregister_fd(int fd)
 {
     int i;
@@ -133,10 +125,6 @@ HYD_Status HYD_DMX_Deregister_fd(int fd)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_DMX_Wait_for_event"
 HYD_Status HYD_DMX_Wait_for_event(void)
 {
     int total_fds, i, j, events, ret;
@@ -225,10 +213,6 @@ HYD_Status HYD_DMX_Wait_for_event(void)
 }
 
 
-#if defined FUNCNAME
-#undef FUNCNAME
-#endif /* FUNCNAME */
-#define FUNCNAME "HYD_DMX_Finalize"
 HYD_Status HYD_DMX_Finalize(void)
 {
     HYD_DMXI_Callback_t *run1, *run2;
