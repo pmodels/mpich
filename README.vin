@@ -406,6 +406,12 @@ MPD is the default process manager.  Its setup and use have been
 described above.  The file mpich2-%VERSION%/src/pm/mpd/README has more 
 information about interactive commands for managing the ring of MPDs.
 
+hydra
+-----
+Hydra is a new process management framework that uses existing daemons
+on nodes (e.g., ssh, pbs, slurm, sge) to start MPI processes. The file
+mpich2-%VERSION%/src/pm/hydra/README has mode information about Hydra.
+
 smpd
 ---- 
 SMPD is a process management system for both Microsoft Windows and UNIX.

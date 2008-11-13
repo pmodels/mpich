@@ -1,0 +1,41 @@
+General
+-------
+
+Hydra is a process management system for starting parallel jobs,
+especially MPICH2 jobs. Hydra is designed to natively work with
+multiple daemons such as ssh, pbs, slurm and sge. However, in the
+current release, only ssh is supported.
+
+How to use Hydra
+----------------
+
+To use hydra, mpich2 needs to be configured with the configure option
+--with-pm=hydra.
+
+Once MPICH2 has been built with Hydra, the Hydra commands are in
+mpich2/bin, or the bin subdirectory of the install directory if you
+have done an install.  You should put this (bin) directory in your
+PATH in your .cshrc or .bashrc, so that it will be picked up by the
+mpd's that are started remotely:
+
+Put in .cshrc:  setenv PATH /home/you/mpich2/bin:$PATH
+
+Put in .bashrc: export PATH=/home/you/mpich2/bin:$PATH
+
+To compile your application use mpicc:
+
+ $ mpicc app.c -o app
+
+Create a file with the names of the machines that you want to run your
+job on. This file may or may not include the local machine.
+
+ $ cat hosts
+
+   donner.mcs.anl.gov
+   foo.mcs.anl.gov
+   shakey.mcs.anl.gov
+   terra.mcs.anl.gov
+
+To run your application on these nodes, use mpiexec:
+
+ $ mpiexec -n 4 -f hosts ./app

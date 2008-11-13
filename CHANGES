@@ -10,6 +10,9 @@
 - OVERALL: Initial support for shared-memory aware collective
   communication operations.
 
+- PM/PMI: Initial support for a new Hydra process management
+  framework (current support is only for ssh).
+
 - OVERALL: Support for BlueGene/P through the DCMF library (thanks to
   IBM for the patch).
 
