@@ -69,22 +69,27 @@ extern char **environ;
  * eventually. */
 #if defined COMPILER_ACCEPTS_FUNC && defined __LINE__
 #define HYDU_Error_printf(fmt, ...)		\
-    { \
+    {                                                     \
 	fprintf(stderr, "%s (%d): ", __func__, __LINE__); \
-	MPIU_Error_printf(fmt, ## __VA_ARGS__); \
+	MPIU_Error_printf(fmt, ## __VA_ARGS__);           \
     }
 #elif defined __FILE__ && defined __LINE__
-#define HYDU_Error_printf(fmt, ...) \
-    { \
+#define HYDU_Error_printf(fmt, ...)             \
+    {                                                     \
 	fprintf(stderr, "%s (%d): ", __FILE__, __LINE__); \
-	MPIU_Error_printf(fmt, ## __VA_ARGS__); \
+	MPIU_Error_printf(fmt, ## __VA_ARGS__);           \
     }
 #else
-#define HYDU_Error_printf(fmt, ...) \
-    { \
+#define HYDU_Error_printf(fmt, ...)             \
+    {                                           \
 	MPIU_Error_printf(fmt, ## __VA_ARGS__); \
     }
 #endif
+
+#define HYDU_Print(fmt, ...)                     \
+    {                                            \
+        printf(fmt, ## __VA_ARGS__);             \
+    }
 
 typedef enum {
     HYD_NO_MEM,

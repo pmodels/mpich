@@ -19,13 +19,6 @@ typedef u_int16_t HYD_CSI_Event_t;
 #define HYD_CSI_TMPBUF_SIZE (64 * 1024)
 #define HYD_CSI_EXEC_ARGS 200
 
-typedef enum {
-    HYD_CSI_PROP_NONE,
-    HYD_CSI_PROP_ENVALL,
-    HYD_CSI_PROP_ENVNONE,
-    HYD_CSI_PROP_ENVLIST
-} HYD_CSI_Prop_t;
-
 struct HYD_CSI_Handle_ {
     int debug;
     int enablex;
@@ -34,7 +27,7 @@ struct HYD_CSI_Handle_ {
     HYDU_Env_t *global_env;
     HYDU_Env_t *system_env;
     HYDU_Env_t *user_env;
-    HYD_CSI_Prop_t prop;
+    HYDU_Env_prop_t prop;
     HYDU_Env_t *prop_env;
 
     int in;
@@ -61,7 +54,7 @@ struct HYD_CSI_Handle_ {
 
         char *exec[HYD_CSI_EXEC_ARGS];
         HYDU_Env_t *user_env;
-        HYD_CSI_Prop_t prop;
+        HYDU_Env_prop_t prop;
         HYDU_Env_t *prop_env;
 
         /* These output FDs are filled in by the lower layers */

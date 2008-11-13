@@ -49,6 +49,21 @@ HYD_Status HYDU_Env_global_list(HYDU_Env_t ** env_list)
 }
 
 
+char * HYDU_Env_type_str(HYDU_Env_type_t type)
+{
+    char * str;
+
+    if (type == HYDU_ENV_STATIC)
+        str = MPIU_Strdup("STATIC");
+    else if (type == HYDU_ENV_AUTOINC)
+        str = MPIU_Strdup("AUTOINC");
+    else
+        str = NULL;
+
+    return str;
+}
+
+
 HYDU_Env_t *HYDU_Env_dup(HYDU_Env_t env)
 {
     HYDU_Env_t *tenv;

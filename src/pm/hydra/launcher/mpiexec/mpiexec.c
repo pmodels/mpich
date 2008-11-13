@@ -55,6 +55,14 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
+    if (csi_handle.debug) {
+        status = HYD_LCHI_Print_parameters();
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("unable to create host list\n");
+            goto fn_fail;
+        }
+    }
+
     /* Convert the host file to a host list */
     status = HYD_LCHU_Create_host_list();
     if (status != HYD_SUCCESS) {

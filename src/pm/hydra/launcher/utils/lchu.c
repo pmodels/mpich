@@ -151,7 +151,7 @@ HYD_Status HYD_LCHU_Create_env_list(void)
 
     HYDU_FUNC_ENTER();
 
-    if (csi_handle.prop == HYD_CSI_PROP_ENVALL) {
+    if (csi_handle.prop == HYDU_ENV_PROP_ALL) {
         csi_handle.prop_env = HYDU_Env_listdup(csi_handle.global_env);
         for (env = csi_handle.user_env; env; env = env->next) {
             status = HYDU_Env_add_to_list(&csi_handle.prop_env, *env);
@@ -164,7 +164,7 @@ HYD_Status HYD_LCHU_Create_env_list(void)
 
     proc_params = csi_handle.proc_params;
     while (proc_params) {
-        if (proc_params->prop == HYD_CSI_PROP_ENVALL) {
+        if (proc_params->prop == HYDU_ENV_PROP_ALL) {
             proc_params->prop_env = HYDU_Env_listdup(csi_handle.global_env);
             for (env = proc_params->user_env; env; env = env->next) {
                 status = HYDU_Env_add_to_list(&proc_params->prop_env, *env);
