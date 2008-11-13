@@ -236,12 +236,8 @@ HYD_Status HYDU_Env_free(HYDU_Env_t * env)
         HYDU_FREE(env->env_value);
     HYDU_FREE(env);
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -259,10 +255,6 @@ HYD_Status HYDU_Env_free_list(HYDU_Env_t * env)
         run = tmp;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

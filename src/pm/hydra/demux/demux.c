@@ -8,6 +8,7 @@
 #include "hydra_sock.h"
 #include "hydra_dbg.h"
 #include "hydra_mem.h"
+#include "csiu.h"
 #include "demux.h"
 
 static int num_cb_fds = 0;
@@ -103,6 +104,7 @@ HYD_Status HYD_DMX_Deregister_fd(int fd)
         for (i = 0; i < cb_element->num_fds; i++) {
             if (cb_element->fd[i] == fd) {
                 cb_element->fd[i] = -1;
+                num_cb_fds--;
                 goto fn_exit;
             }
         }
@@ -113,8 +115,6 @@ HYD_Status HYD_DMX_Deregister_fd(int fd)
     HYDU_Error_printf("couldn't find the fd to deregister: %d\n", fd);
     status = HYD_INTERNAL_ERROR;
     goto fn_fail;
-
-    num_cb_fds--;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -230,10 +230,6 @@ HYD_Status HYD_DMX_Finalize(void)
     }
     cb_list = NULL;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

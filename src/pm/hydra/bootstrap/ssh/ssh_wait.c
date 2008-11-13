@@ -22,10 +22,6 @@ HYD_Status HYD_BSCI_Wait_for_completion(void)
 
     status = HYD_BSCU_Wait_for_completion();
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

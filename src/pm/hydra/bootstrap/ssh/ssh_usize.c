@@ -18,10 +18,6 @@ HYD_Status HYD_BSCI_Get_universe_size(int *size)
 
     *size = -1;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

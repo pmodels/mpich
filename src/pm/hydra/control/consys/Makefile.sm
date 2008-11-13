@@ -7,4 +7,4 @@ HYDRA_LIB_PATH = ../../lib
 
 libhydra_a_DIR = ${HYDRA_LIB_PATH}
 libhydra_a_SOURCES = consys_launch.c consys_wait.c consys_close.c consys_finalize.c
-INCLUDES = -I${abs_srcdir}/../../utils -I${abs_srcdir}/../../include -I../../include -I${abs_srcdir}/../include -I${abs_srcdir}/../../bootstrap/include -I${abs_srcdir}/../../demux -I${abs_srcdir}/../../pm/include -I${abs_srcdir}/../../launch/mpiexec -I${abs_srcdir}/../../../../include -I../../../../include
+INCLUDES = -I${abs_srcdir}/../utils -I${abs_srcdir}/../../utils -I${abs_srcdir}/../../include -I../../include -I${abs_srcdir}/../include -I${abs_srcdir}/../../bootstrap/include -I${abs_srcdir}/../../demux -I${abs_srcdir}/../../pm/include -I${abs_srcdir}/../../launch/mpiexec -I${abs_srcdir}/../../../../include -I../../../../include

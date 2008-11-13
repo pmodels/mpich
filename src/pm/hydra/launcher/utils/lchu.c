@@ -142,12 +142,8 @@ HYD_Status HYD_LCHU_Free_host_list(void)
         proc_params = proc_params->next;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -213,12 +209,8 @@ HYD_Status HYD_LCHU_Free_env_list(void)
         proc_params = proc_params->next;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -236,12 +228,8 @@ HYD_Status HYD_LCHU_Free_io(void)
         proc_params = proc_params->next;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -258,12 +246,8 @@ HYD_Status HYD_LCHU_Free_exits(void)
         proc_params = proc_params->next;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -282,12 +266,8 @@ HYD_Status HYD_LCHU_Free_exec(void)
         proc_params = proc_params->next;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -305,10 +285,6 @@ HYD_Status HYD_LCHU_Free_proc_params(void)
         proc_params = run;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

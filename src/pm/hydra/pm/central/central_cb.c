@@ -7,6 +7,7 @@
 #include "hydra.h"
 #include "hydra_dbg.h"
 #include "hydra_mem.h"
+#include "hydra_sock.h"
 #include "csi.h"
 #include "pmcu_pmi.h"
 #include "pmci.h"

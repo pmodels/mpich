@@ -7,8 +7,10 @@
 #include "hydra.h"
 #include "hydra_dbg.h"
 #include "csi.h"
+#include "csiu.h"
 #include "pmci.h"
 #include "bsci.h"
+#include "demux.h"
 
 HYD_CSI_Handle csi_handle;
 

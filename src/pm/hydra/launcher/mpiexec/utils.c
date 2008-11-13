@@ -463,10 +463,6 @@ HYD_Status HYD_LCHI_Print_parameters(void)
 
     HYDU_Print("\n");
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

@@ -9,6 +9,7 @@
 #include "csi.h"
 #include "pmci.h"
 #include "bsci.h"
+#include "demux.h"
 
 HYD_CSI_Handle csi_handle;
 

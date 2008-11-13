@@ -361,10 +361,6 @@ HYD_Status HYDU_Sock_set_cloexec(int fd)
         fcntl(fd, F_SETFD, flags);
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

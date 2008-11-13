@@ -76,12 +76,8 @@ HYD_Status HYD_BSCU_Append_exec(char **exec, char **client_arg)
         client_arg[i++] = MPIU_Strdup(exec[j]);
     client_arg[i++] = NULL;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -98,10 +94,6 @@ HYD_Status HYD_BSCU_Append_wdir(char **client_arg)
     client_arg[arg++] = MPIU_Strdup(";");
     client_arg[arg++] = NULL;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

@@ -29,12 +29,8 @@ HYD_Status HYD_BSCU_Finalize_exit_status(void)
         proc_params = proc_params->next;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -52,10 +48,6 @@ HYD_Status HYD_BSCU_Finalize_io_fds(void)
         proc_params = proc_params->next;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

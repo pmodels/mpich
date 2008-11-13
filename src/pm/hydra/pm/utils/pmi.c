@@ -7,7 +7,9 @@
 #include "hydra.h"
 #include "hydra_dbg.h"
 #include "hydra_mem.h"
+#include "hydra_sock.h"
 #include "csi.h"
+#include "bsci.h"
 #include "pmcu_pmi.h"
 
 HYD_CSI_Handle csi_handle;
@@ -653,12 +655,8 @@ static HYD_Status free_pmi_process_list(HYD_PMCU_pmi_process_t * process_list)
         process = tmp;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -677,12 +675,8 @@ static HYD_Status free_pmi_kvs_list(HYD_PMCU_pmi_kvs_t * kvs_list)
     }
     HYDU_FREE(kvs_list);
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 

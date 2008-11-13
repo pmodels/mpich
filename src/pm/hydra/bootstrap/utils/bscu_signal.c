@@ -82,10 +82,6 @@ void HYD_BSCU_Signal_handler(int signal)
         /* Ignore other signals for now */
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return;
-
-  fn_fail:
-    goto fn_exit;
 }

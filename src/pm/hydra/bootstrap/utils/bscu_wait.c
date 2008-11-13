@@ -8,6 +8,7 @@
 #include "hydra_dbg.h"
 #include "hydra_mem.h"
 #include "csi.h"
+#include "csiu.h"
 #include "bsci.h"
 #include "bscu.h"
 

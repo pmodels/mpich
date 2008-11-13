@@ -31,7 +31,4 @@ int HYD_CSU_Time_left(void)
   fn_exit:
     HYDU_FUNC_EXIT();
     return time_left;
-
-  fn_fail:
-    goto fn_exit;
 }
