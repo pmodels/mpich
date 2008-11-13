@@ -394,7 +394,6 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
             offset += disp + (ADIO_Offset)n_filetypes*filetype_extent;
         }
 	else {
-	    int i;
 	    n_etypes_in_filetype = filetype_size/etype_size;
 	    n_filetypes = offset / n_etypes_in_filetype;
 	    etype_in_filetype = offset % n_etypes_in_filetype;
