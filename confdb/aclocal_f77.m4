@@ -1588,3 +1588,104 @@ rm -rf conftest.dSYM
 rm -f conftest*
 AC_LANG_RESTORE
 ])
+dnl
+dnl
+dnl
+dnl
+AC_DEFUN(PAC_PROG_F77_OBJ_LINKS_WITH_C,[
+AC_MSG_CHECKING([whether Fortran 77 and C objects are compatible])
+dnl
+rm -rf conftestc.dSYM
+rm -f conftestc*
+dnl construct with a C function with all possible F77 name mangling schemes.
+cat <<_EOF > conftestc.c
+/* lower */
+void c_subpgm( int *rc );
+void c_subpgm( int *rc ) { *rc = 1; }
+
+/* lower underscore */
+void c_subpgm_( int *rc );
+void c_subpgm_( int *rc ) { *rc = 2; }
+
+/* upper */
+void C_SUBPGM( int *rc );
+void C_SUBPGM( int *rc ) { *rc = 3; }
+
+/* lower doubleunderscore */
+void c_subpgm__( int *rc );
+void c_subpgm__( int *rc ) { *rc = 4; }
+
+/* mixed */
+void C_subpgm( int *rc );
+void C_subpgm( int *rc ) { *rc = 5; }
+
+/* mixed underscore */
+void C_subpgm_( int *rc );
+void C_subpgm_( int *rc ) { *rc = 6; }
+_EOF
+dnl
+dnl Compile the C function into object file.
+dnl
+pac_Ccompile='${CC-cc} -c $CFLAGS conftestc.c 1>&AC_FD_CC'
+if AC_TRY_EVAL(pac_Ccompile) && test -s conftestc.${ac_objext} ; then
+    pac_c_working=yes
+else
+    pac_c_working=no
+    echo "configure: failed C program was:" >&AC_FD_CC
+    cat conftestc.c >&AC_FD_CC
+fi
+dnl
+rm -rf conftestf.dSYM
+rm -f conftestf*
+cat <<_EOF > conftestf.f
+      program test
+      integer rc
+      rc = -1
+      call c_subpgm( rc )
+      write(6,*) "rc=", rc
+      end
+_EOF
+dnl - compile the fortran program into object file
+pac_Fcompile='${F77-f77} -c $FFLAGS conftestf.f 1>&AC_FD_CC'
+if AC_TRY_EVAL(pac_Fcompile) && test -s conftestf.${ac_objext} ; then
+    pac_f77_working=yes
+else
+    pac_f77_working=no
+    echo "configure: failed F77 program was:" >&AC_FD_CC
+    cat conftestf.f >&AC_FD_CC
+fi
+dnl
+if test "$pac_c_working" = "yes" -a "$pac_f77_working" = "yes" ; then
+dnl Try linking with F77 compiler
+    rm -f conftest${ac_exeext}
+    pac_link='$F77 $FFLAGS -o conftest${ac_exeext} conftestf.${ac_objext} conftestc.${ac_objext} $LDFLAGS >&AC_FD_CC'
+    if AC_TRY_EVAL(pac_link) && test -s conftest${ac_exeext} ; then
+        AC_MSG_RESULT(yes)
+        rm -fr conftestf.dSYM conftestc.dSYM conftest.dSYM
+        rm -f conftest*
+    else
+dnl     Try linking with C compiler
+        rm -f conftest${ac_exeext}
+        pac_link='$CC $CFLAGS -o conftest${ac_exeext} conftestf.${ac_objext} conftestc.${ac_objext} $LDFLAGS $FLIBS >&AC_FD_CC'
+        if AC_TRY_EVAL(pac_link) && test -s conftest${ac_exeext} ; then
+            AC_MSG_RESULT(yes)
+            rm -fr conftestf.dSYM conftestc.dSYM conftest.dSYM
+            rm -f conftest*
+        else
+            AC_MSG_RESULT(no)
+            AC_CHECK_PROG(FILE, file, file, [])
+            if test "X$FILE" != "X" ; then
+                fobjtype="`${FILE} conftestf.${ac_objext} | sed -e \"s|conftestf\.${ac_objext}||g\"`"
+                cobjtype="`${FILE} conftestc.${ac_objext} | sed -e \"s|conftestc\.${ac_objext}||g\"`"
+                if test "$fobjtype" != "$cobjtype" ; then
+                    AC_MSG_WARN([****  Incompatible Fortran and C Object File Types!  ****
+F77 Object File Type : ${fobjtype}.
+ C  Object File Type : ${cobjtype}.])
+                fi
+            fi
+        fi
+    fi
+else
+    AC_MSG_RESULT([failed compilation])
+fi
+])
