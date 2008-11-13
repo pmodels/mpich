@@ -14,7 +14,7 @@
 #define HYD_CSI_OUT  (1)
 #define HYD_CSI_IN   (2)
 
-typedef u_int16_t HYD_CSI_Event_t;
+typedef unsigned short HYD_CSI_Event_t;
 
 #define HYD_CSI_TMPBUF_SIZE (64 * 1024)
 #define HYD_CSI_EXEC_ARGS 200

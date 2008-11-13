@@ -36,9 +36,13 @@ HYD_Status HYDU_Sock_listen(int *listen_fd, int low_port, int high_port, int *po
 
         if (bind(*listen_fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
             close(*listen_fd);
-            status = HYD_SOCK_ERROR;
-            HYDU_Error_printf("unable to bind listen socket %d (errno: %d)\n", *listen_fd, errno);
-            goto fn_fail;
+            /* If the address is in use, we should try the next
+             * port. Otherwise, it's an error. */
+            if (errno != EADDRINUSE) {
+                status = HYD_SOCK_ERROR;
+                HYDU_Error_printf("unable to bind listen socket %d (errno: %d)\n", *listen_fd, errno);
+                goto fn_fail;
+            }
         }
         else    /* We got a port */
             break;
@@ -240,7 +244,7 @@ HYD_Status HYDU_Sock_read(int fd, char *buf, int maxlen, int *count)
 
     do {
         *count = read(fd, buf, maxlen);
-    } while (count < 0 && errno == EINTR);
+    } while (*count < 0 && errno == EINTR);
 
     if (*count < 0) {
         HYDU_Error_printf("error reading from socket %d (errno: %d)\n", fd, errno);
