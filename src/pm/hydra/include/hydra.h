@@ -65,31 +65,29 @@ extern char **environ;
 #define HYDU_FUNC_EXIT() {}
 #endif /* HAVE_DEBUGGING_SUPPORT */
 
-/* FIXME: __VA_ARGS__ is not portable. This needs to be fixed
- * eventually. */
+static void HYDU_Error_printf(const char *str, ...)
+{
+    va_list list;
+
 #if defined COMPILER_ACCEPTS_FUNC && defined __LINE__
-#define HYDU_Error_printf(fmt, ...)		\
-    {                                                     \
-	fprintf(stderr, "%s (%d): ", __func__, __LINE__); \
-	MPIU_Error_printf(fmt, ## __VA_ARGS__);           \
-    }
+    fprintf(stderr, "%s (%d): ", __func__, __LINE__);
 #elif defined __FILE__ && defined __LINE__
-#define HYDU_Error_printf(fmt, ...)             \
-    {                                                     \
-	fprintf(stderr, "%s (%d): ", __FILE__, __LINE__); \
-	MPIU_Error_printf(fmt, ## __VA_ARGS__);           \
-    }
-#else
-#define HYDU_Error_printf(fmt, ...)             \
-    {                                           \
-	MPIU_Error_printf(fmt, ## __VA_ARGS__); \
-    }
+    fprintf(stderr, "%s (%d): ", __FILE__, __LINE__);
 #endif
 
-#define HYDU_Print(fmt, ...)                     \
-    {                                            \
-        printf(fmt, ## __VA_ARGS__);             \
-    }
+    va_start(list, str);
+    MPIU_Error_printf(str, list);
+    va_end(list);
+}
+
+static void HYDU_Print(const char *str, ...)
+{
+    va_list list;
+
+    va_start(list, str);
+    printf(str, list);
+    va_end(list);
+}
 
 typedef enum {
     HYD_NO_MEM,
