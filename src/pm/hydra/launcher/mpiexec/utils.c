@@ -300,7 +300,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             csi_handle.wdir = MPIU_Strdup(*argv);
         }
 
-        if (!strcmp(*argv, "-n")) {
+        if (!strcmp(*argv, "-n") || !strcmp(*argv, "-np")) {
             local_params_started = 1;
             CHECK_NEXT_ARG_VALID(status);
 
