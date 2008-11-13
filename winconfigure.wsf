@@ -5642,6 +5642,7 @@ Function GenBuild()
 	CreateRules f.GetFolder("src\util\mem"), trimlength
 	CreateRules f.GetFolder("src\util\dbg"), trimlength
 	CreateRules f.GetFolder("src\util\msgs"), trimlength
+	CreateRules f.GetFolder("src\util\procmap"), trimlength
 	CreateRules f.GetFolder("src\pmi\smpd"), trimlength
 	CreateRules f.GetFolder("src\pm\smpd"), trimlength
 	' Create a special rule for smpd_adreg.cpp since it must be compiled for UNICODE
@@ -5681,6 +5682,7 @@ Function GenBuild()
 	CreateObjs "mpich2", f.GetFolder("src\util\mem"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\util\dbg"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\util\msgs"), trimlength, false, false
+	CreateObjs "mpich2", f.GetFolder("src\util\procmap"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\pmi\smpd"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\pm\smpd"), trimlength, false, false
 	mfile.Write(" \" & vbCrLF & "	$(" & outdir & ")\smpd_adreg.obj")
@@ -5721,6 +5723,8 @@ Function GenBuild()
 	mfile.WriteLine("	$(OUTDIR)\ad_open.obj \")
 	mfile.WriteLine("	$(OUTDIR)\system_hints.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_prealloc.obj \")
+	mfile.WriteLine("	$(OUTDIR)\ad_features.obj \")
+	mfile.WriteLine("	$(OUTDIR)\ad_opencoll.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_read_coll.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_read_str.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_read_str_naive.obj \")
