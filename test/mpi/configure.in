@@ -1054,6 +1054,7 @@ AC_OUTPUT(maint/testmerge \
 	  cxx/testlist \
 	  f77/testlist \
 	  f90/testlist \
+	  threads/testlist \
 	  errors/testlist \
 	  errors/cxx/testlist \
 	  )
