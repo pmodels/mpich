@@ -237,7 +237,7 @@ $quiet = 0;
 # Definitions for each extension (these are the defs needed for each ext->o
 # extension)
 %extdef = ( 'c:o'   => 'CC              = @CC@
-CFLAGS          = @CFLAGS@
+CFLAGS          = @CFLAGS@ $(MPICH2_MAKE_CFLAGS)
 C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)',
 	    'f:o'   => 'FC              = @FC@
 FFLAGS          = @FFLAGS@
