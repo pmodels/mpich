@@ -68,21 +68,21 @@ extern char **environ;
 #if !defined COMPILER_ACCEPTS_VA_ARGS
 #define HYDU_Error_printf MPIU_Error_printf
 #elif defined COMPILER_ACCEPTS_FUNC && defined __LINE__
-#define HYDU_Error_printf(fmt, ...)                       \
+#define HYDU_Error_printf(...)                            \
     {                                                     \
 	fprintf(stderr, "%s (%d): ", __func__, __LINE__); \
-	MPIU_Error_printf(fmt, ## __VA_ARGS__);           \
+	MPIU_Error_printf(__VA_ARGS__);                   \
     }
 #elif defined __FILE__ && defined __LINE__
-#define HYDU_Error_printf(fmt, ...)                       \
+#define HYDU_Error_printf(...)                            \
     {                                                     \
 	fprintf(stderr, "%s (%d): ", __FILE__, __LINE__); \
-	MPIU_Error_printf(fmt, ## __VA_ARGS__);           \
+	MPIU_Error_printf(__VA_ARGS__);                   \
     }
 #else
-#define HYDU_Error_printf(fmt, ...)             \
+#define HYDU_Error_printf(...)                  \
     {                                           \
-	MPIU_Error_printf(fmt, ## __VA_ARGS__); \
+	MPIU_Error_printf(__VA_ARGS__);         \
     }
 #endif
 
