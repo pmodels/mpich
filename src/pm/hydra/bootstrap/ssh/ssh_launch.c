@@ -63,11 +63,11 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
             /* Allow X forwarding only if explicitly requested */
             if (csi_handle.enablex == 1)
-                client_arg[arg++] = MPIU_Strdup("-Xq");
+                client_arg[arg++] = MPIU_Strdup("-X");
             else if (csi_handle.enablex == 0)
-                client_arg[arg++] = MPIU_Strdup("-xq");
+                client_arg[arg++] = MPIU_Strdup("-x");
             else        /* default mode is disable X */
-                client_arg[arg++] = MPIU_Strdup("-xq");
+                client_arg[arg++] = MPIU_Strdup("-x");
 
             if (host_id == host_id_max)
                 host_id = 0;
@@ -137,7 +137,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
             /* Setup the executable arguments */
             arg = 0;
             client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
-            client_arg[arg++] = MPIU_Strdup("-xq");
+            client_arg[arg++] = MPIU_Strdup("-x");
 
             if (proc_params->host_file != NULL) {       /* We got a new host file */
                 host_id = 0;
