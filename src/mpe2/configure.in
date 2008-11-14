@@ -474,6 +474,7 @@ if test -n "$F77" -a "$MPE_BUILD_FORTRAN2C" = "yes" ; then
     PAC_PROG_F77_CHECK_FLIBS
 
     PAC_PROG_F77_LINKER_WITH_C
+    PAC_PROG_F77_OBJ_LINKS_WITH_C
     # For name mangle, we need the library flags
     PAC_PROG_F77_NAME_MANGLE
     # Check whether additional libraries are needed when linking with C
