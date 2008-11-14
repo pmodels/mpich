@@ -5,8 +5,6 @@
  */
 
 #include "hydra.h"
-#include "hydra_dbg.h"
-#include "hydra_mem.h"
 #include "csi.h"
 #include "pmci.h"
 #include "bsci.h"
@@ -14,8 +12,6 @@
 
 HYD_Status HYD_CSI_Finalize(void)
 {
-    struct HYD_CSI_Proc_params *proc_params, *p;
-    int i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

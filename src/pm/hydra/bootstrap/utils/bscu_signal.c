@@ -5,9 +5,7 @@
  */
 
 #include "hydra.h"
-#include "hydra_dbg.h"
 #include "hydra_sig.h"
-#include "csi.h"
 #include "bsci.h"
 #include "bscu.h"
 

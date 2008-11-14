@@ -5,13 +5,11 @@
  */
 
 #include "hydra.h"
-#include "hydra_dbg.h"
 #include "hydra_mem.h"
-#include "csi.h"
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_CSI_Handle csi_handle;
+HYD_Handle handle;
 
 HYD_Status HYD_BSCU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid)
 {
@@ -69,9 +67,9 @@ HYD_Status HYD_BSCU_Create_process(char **client_arg, int *in, int *out, int *er
             }
         }
 
-        if (chdir(csi_handle.wdir) < 0) {
+        if (chdir(handle.wdir) < 0) {
             if (chdir(getenv("HOME")) < 0) {
-                HYDU_Error_printf("unable to set working directory to %s\n", csi_handle.wdir);
+                HYDU_Error_printf("unable to set working directory to %s\n", handle.wdir);
                 status = HYD_INTERNAL_ERROR;
                 goto fn_fail;
             }

@@ -5,10 +5,8 @@
  */
 
 #include "hydra.h"
-#include "hydra_dbg.h"
 #include "hydra_mem.h"
 #include "hydra_sock.h"
-#include "csi.h"
 #include "pmcu_pmi.h"
 #include "pmci.h"
 #include "bsci.h"
@@ -44,7 +42,7 @@ int HYD_PMCD_Central_listenfd;
  *     - getbyidx
  *     - spawn
  */
-HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
+HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
 {
     int accept_fd, linelen, i;
     char *buf, *cmd, *args[HYD_PMCU_NUM_STR];
@@ -52,7 +50,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(buf, char *, HYD_CSI_TMPBUF_SIZE, status);
+    HYDU_MALLOC(buf, char *, HYD_TMPBUF_SIZE, status);
 
     if (fd == HYD_PMCD_Central_listenfd) {      /* Someone is trying to connect to us */
         status = HYDU_Sock_accept(fd, &accept_fd);
@@ -61,14 +59,14 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events)
             goto fn_fail;
         }
 
-        status = HYD_DMX_Register_fd(1, &accept_fd, HYD_CSI_OUT, HYD_PMCD_Central_cb);
+        status = HYD_DMX_Register_fd(1, &accept_fd, HYD_STDOUT, HYD_PMCD_Central_cb);
         if (status != HYD_SUCCESS) {
             HYDU_Error_printf("demux engine returned error when registering fd\n");
             goto fn_fail;
         }
     }
     else {
-        status = HYDU_Sock_readline(fd, buf, HYD_CSI_TMPBUF_SIZE, &linelen);
+        status = HYDU_Sock_readline(fd, buf, HYD_TMPBUF_SIZE, &linelen);
         if (status != HYD_SUCCESS) {
             HYDU_Error_printf("sock utils returned error when reading PMI line\n");
             goto fn_fail;

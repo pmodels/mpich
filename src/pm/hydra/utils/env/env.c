@@ -8,9 +8,9 @@
 #include "hydra_env.h"
 #include "hydra_mem.h"
 
-HYD_Status HYDU_Env_global_list(HYDU_Env_t ** env_list)
+HYD_Status HYDU_Env_global_list(HYD_Env_t ** env_list)
 {
-    HYDU_Env_t *env;
+    HYD_Env_t *env;
     char *env_name, *env_value, *env_str;
     int i;
     HYD_Status status = HYD_SUCCESS;
@@ -20,14 +20,14 @@ HYD_Status HYDU_Env_global_list(HYDU_Env_t ** env_list)
     *env_list = NULL;
     i = 0;
     while (environ[i]) {
-        HYDU_MALLOC(env, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
+        HYDU_MALLOC(env, HYD_Env_t *, sizeof(HYD_Env_t), status);
 
         env_str = MPIU_Strdup(environ[i]);
         env_name = strtok(env_str, "=");
         env_value = strtok(NULL, "=");
         env->env_name = MPIU_Strdup(env_name);
         env->env_value = env_value ? MPIU_Strdup(env_value) : NULL;
-        env->env_type = HYDU_ENV_STATIC;
+        env->env_type = HYD_ENV_STATIC;
         HYDU_FREE(env_str);
 
         status = HYDU_Env_add_to_list(env_list, *env);
@@ -49,13 +49,13 @@ HYD_Status HYDU_Env_global_list(HYDU_Env_t ** env_list)
 }
 
 
-char *HYDU_Env_type_str(HYDU_Env_type_t type)
+char *HYDU_Env_type_str(HYD_Env_type_t type)
 {
     char *str;
 
-    if (type == HYDU_ENV_STATIC)
+    if (type == HYD_ENV_STATIC)
         str = MPIU_Strdup("STATIC");
-    else if (type == HYDU_ENV_AUTOINC)
+    else if (type == HYD_ENV_AUTOINC)
         str = MPIU_Strdup("AUTOINC");
     else
         str = NULL;
@@ -64,15 +64,15 @@ char *HYDU_Env_type_str(HYDU_Env_type_t type)
 }
 
 
-HYDU_Env_t *HYDU_Env_dup(HYDU_Env_t env)
+HYD_Env_t *HYDU_Env_dup(HYD_Env_t env)
 {
-    HYDU_Env_t *tenv;
+    HYD_Env_t *tenv;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(tenv, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
-    memcpy(tenv, &env, sizeof(HYDU_Env_t));
+    HYDU_MALLOC(tenv, HYD_Env_t *, sizeof(HYD_Env_t), status);
+    memcpy(tenv, &env, sizeof(HYD_Env_t));
     tenv->next = NULL;
     tenv->env_name = MPIU_Strdup(env.env_name);
     tenv->env_value = env.env_value ? MPIU_Strdup(env.env_value) : NULL;
@@ -91,9 +91,9 @@ HYDU_Env_t *HYDU_Env_dup(HYDU_Env_t env)
 }
 
 
-HYDU_Env_t *HYDU_Env_found_in_list(HYDU_Env_t * env_list, HYDU_Env_t * env)
+HYD_Env_t *HYDU_Env_found_in_list(HYD_Env_t * env_list, HYD_Env_t * env)
 {
-    HYDU_Env_t *run;
+    HYD_Env_t *run;
 
     HYDU_FUNC_ENTER();
 
@@ -113,9 +113,9 @@ HYDU_Env_t *HYDU_Env_found_in_list(HYDU_Env_t * env_list, HYDU_Env_t * env)
 }
 
 
-HYD_Status HYDU_Env_add_to_list(HYDU_Env_t ** env_list, HYDU_Env_t env)
+HYD_Status HYDU_Env_add_to_list(HYD_Env_t ** env_list, HYD_Env_t env)
 {
-    HYDU_Env_t *run, *tenv;
+    HYD_Env_t *run, *tenv;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -176,9 +176,9 @@ HYD_Status HYDU_Env_add_to_list(HYDU_Env_t ** env_list, HYDU_Env_t env)
 }
 
 
-HYDU_Env_t *HYDU_Env_listdup(HYDU_Env_t * env)
+HYD_Env_t *HYDU_Env_listdup(HYD_Env_t * env)
 {
-    HYDU_Env_t *tenv, *run;
+    HYD_Env_t *tenv, *run;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -204,14 +204,14 @@ HYDU_Env_t *HYDU_Env_listdup(HYDU_Env_t * env)
 }
 
 
-HYD_Status HYDU_Env_create(HYDU_Env_t ** env, char *env_name, char *env_value,
-                           HYDU_Env_type_t env_type, int start)
+HYD_Status HYDU_Env_create(HYD_Env_t ** env, char *env_name, char *env_value,
+                           HYD_Env_type_t env_type, int start)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*env, HYDU_Env_t *, sizeof(HYDU_Env_t), status);
+    HYDU_MALLOC(*env, HYD_Env_t *, sizeof(HYD_Env_t), status);
     (*env)->env_name = MPIU_Strdup(env_name);
     (*env)->env_value = env_value ? MPIU_Strdup(env_value) : NULL;
     (*env)->env_type = env_type;
@@ -226,7 +226,7 @@ HYD_Status HYDU_Env_create(HYDU_Env_t ** env, char *env_name, char *env_value,
 }
 
 
-HYD_Status HYDU_Env_free(HYDU_Env_t * env)
+HYD_Status HYDU_Env_free(HYD_Env_t * env)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -243,9 +243,9 @@ HYD_Status HYDU_Env_free(HYDU_Env_t * env)
 }
 
 
-HYD_Status HYDU_Env_free_list(HYDU_Env_t * env)
+HYD_Status HYDU_Env_free_list(HYD_Env_t * env)
 {
-    HYDU_Env_t *run, *tmp;
+    HYD_Env_t *run, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

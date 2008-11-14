@@ -6,13 +6,12 @@
 
 #include "hydra.h"
 #include "hydra_mem.h"
-#include "csi.h"
 #include "bsci.h"
 #include "bscu.h"
 
 HYD_Status HYD_BSCI_Finalize(void)
 {
-    struct HYD_CSI_Proc_params *proc_params;
+    struct HYD_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

@@ -9,6 +9,6 @@
 
 extern int HYD_PMCD_Central_listenfd;
 
-HYD_Status HYD_PMCD_Central_cb(int fd, HYD_CSI_Event_t events);
+HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events);
 
 #endif /* CENTRAL_H_INCLUDED */

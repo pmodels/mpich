@@ -8,7 +8,6 @@
 #define BSCI_H_INCLUDED
 
 #include "hydra.h"
-#include "csi.h"
 
 HYD_Status HYD_BSCI_Launch_procs(void);
 HYD_Status HYD_BSCI_Cleanup_procs(void);

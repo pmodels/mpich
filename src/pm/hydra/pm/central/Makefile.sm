@@ -7,4 +7,12 @@ HYDRA_LIB_PATH = ../../lib
 
 libhydra_a_DIR = ${HYDRA_LIB_PATH}
 libhydra_a_SOURCES = central_launch.c central_finalize.c central_cb.c
-INCLUDES = -I${abs_srcdir}/../../demux -I${abs_srcdir}/../../control/include -I${abs_srcdir}/../../bootstrap/include -I${abs_srcdir}/../../pm/include -I${abs_srcdir}/../../pm/utils -I${abs_srcdir}/../../include -I../../include -I${abs_srcdir}/../include -I${abs_srcdir}/../../utils -I${abs_srcdir}/../../launcher/utils -I${abs_srcdir}/../../../../include -I../../../../include
+INCLUDES = -I${abs_srcdir}/../../include \
+	-I${abs_srcdir}/../../../../include \
+	-I../../include \
+	-I../../../../include \
+	-I${abs_srcdir}/../../launcher/utils \
+	-I${abs_srcdir}/../include \
+	-I${abs_srcdir}/../utils \
+	-I${abs_srcdir}/../../bootstrap/include \
+	-I${abs_srcdir}/../../demux

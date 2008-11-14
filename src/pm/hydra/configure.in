@@ -107,7 +107,6 @@ fi
 AC_SUBST(HYDRA_CSS)
 
 dnl Debugging support
-dnl FIXME: Inherit this from the above configure
 AC_ARG_ENABLE(g, [  --enable-g              Enable Debugging],
 		 [ DEBUG=$enableval ],
 		 [ DEBUG=no ])
@@ -115,6 +114,7 @@ AC_MSG_CHECKING(debugging support)
 AC_MSG_RESULT($DEBUG)
 if test "$DEBUG" = "yes"; then
    EXTRA_CFLAGS="$EXTRA_CFLAGS -g"
+   AC_DEFINE(ENABLE_DEBUG,1,[Define if debugging support is enabled])
 fi
 AC_SUBST(EXTRA_CFLAGS)
 

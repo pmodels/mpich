@@ -8,12 +8,11 @@
 #define MPIEXEC_H_INCLUDED
 
 #include "hydra.h"
-#include "csi.h"
 
 HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv);
 HYD_Status HYD_LCHI_Print_parameters(void);
-HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_CSI_Event_t events);
-HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_CSI_Event_t events);
-HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_CSI_Event_t events);
+HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events);
+HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events);
+HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events);
 
 #endif /* MPIEXEC_H_INCLUDED */

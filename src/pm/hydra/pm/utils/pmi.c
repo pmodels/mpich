@@ -5,14 +5,12 @@
  */
 
 #include "hydra.h"
-#include "hydra_dbg.h"
 #include "hydra_mem.h"
 #include "hydra_sock.h"
-#include "csi.h"
 #include "bsci.h"
 #include "pmcu_pmi.h"
 
-HYD_CSI_Handle csi_handle;
+HYD_Handle handle;
 HYD_PMCU_pmi_pg_t *pg_list = NULL;
 
 static HYD_Status allocate_kvs(HYD_PMCU_pmi_kvs_t ** kvs, int pgid)
@@ -96,7 +94,7 @@ static HYD_Status add_process_to_pg(HYD_PMCU_pmi_pg_t * pg, int fd)
 HYD_Status HYD_PMCU_Create_pg(void)
 {
     HYD_PMCU_pmi_pg_t *run;
-    struct HYD_CSI_Proc_params *proc_params;
+    struct HYD_Proc_params *proc_params;
     int num_procs;
     HYD_Status status = HYD_SUCCESS;
 
@@ -104,7 +102,7 @@ HYD_Status HYD_PMCU_Create_pg(void)
 
     /* Find the number of processes in the PG */
     num_procs = 0;
-    proc_params = csi_handle.proc_params;
+    proc_params = handle.proc_params;
     while (proc_params) {
         num_procs += proc_params->user_num_procs;
         proc_params = proc_params->next;
@@ -130,7 +128,7 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
 {
     int id, size, debug, i;
     char *ssize, *srank, *sdebug, *tmp[HYDU_NUM_JOIN_STR], *cmd;
-    struct HYD_CSI_Proc_params *proc_params;
+    struct HYD_Proc_params *proc_params;
     HYD_PMCU_pmi_pg_t *pg, *run;
     HYD_Status status = HYD_SUCCESS;
 
@@ -140,12 +138,12 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     id = atoi(strtok(NULL, "="));
 
     size = 0;
-    proc_params = csi_handle.proc_params;
+    proc_params = handle.proc_params;
     while (proc_params) {
         size += proc_params->user_num_procs;
         proc_params = proc_params->next;
     }
-    debug = csi_handle.debug;
+    debug = handle.debug;
 
     HYDU_Int_to_str(size, ssize, status);
     HYDU_Int_to_str(id, srank, status);

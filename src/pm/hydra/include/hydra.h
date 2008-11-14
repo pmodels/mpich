@@ -51,19 +51,162 @@
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
 
-#if defined HAVE_DEBUGGING_SUPPORT
-#define HYD_FUNC_ENTER() \
-    { \
-	printf("[%s] Entering function %s\n", FUNCNAME, __LINE__);	\
+typedef enum {
+    HYD_NO_MEM,
+    HYD_SOCK_ERROR,
+    HYD_INVALID_PARAM,
+    HYD_INTERNAL_ERROR,
+    HYD_SUCCESS = 0
+} HYD_Status;
+
+#define HYD_STDOUT  (1)
+#define HYD_STDIN   (2)
+
+typedef unsigned short HYD_Event_t;
+
+#define HYD_TMPBUF_SIZE (64 * 1024)
+#define HYD_EXEC_ARGS 200
+
+typedef enum {
+    HYD_ENV_STATIC,
+    HYD_ENV_AUTOINC
+} HYD_Env_type_t;
+
+typedef struct HYD_Env {
+    char *env_name;
+    char *env_value;
+
+    /* Auto-incrementing environment variables can only be integers */
+    HYD_Env_type_t env_type;
+    int start_val;
+    struct HYD_Env *next;
+} HYD_Env_t;
+
+typedef enum {
+    HYD_ENV_PROP_UNSET,
+    HYD_ENV_PROP_ALL,
+    HYD_ENV_PROP_NONE,
+    HYD_ENV_PROP_LIST
+} HYD_Env_prop_t;
+
+struct HYD_Handle_ {
+    int debug;
+    int enablex;
+    char *wdir;
+
+    HYD_Env_t *global_env;
+    HYD_Env_t *system_env;
+    HYD_Env_t *user_env;
+    HYD_Env_prop_t prop;
+    HYD_Env_t *prop_env;
+
+    int in;
+     HYD_Status(*stdin_cb) (int fd, HYD_Event_t events);
+
+    /* Start time and timeout. These are filled in by the launcher,
+     * but are utilized by the demux engine and the boot-strap server
+     * to decide how long we need to wait for. */
+    struct timeval start;
+    struct timeval timeout;
+
+    /* Each structure will contain all hosts/cores that use the same
+     * executable and environment. */
+    struct HYD_Proc_params {
+        int user_num_procs;
+        int total_num_procs;
+        char **total_proc_list;
+        int *total_core_list;
+
+        char *host_file;
+
+        char *exec[HYD_EXEC_ARGS];
+        HYD_Env_t *user_env;
+        HYD_Env_prop_t prop;
+        HYD_Env_t *prop_env;
+
+        /* These output FDs are filled in by the lower layers */
+        int *out;
+        int *err;
+
+        /* Callback functions for the stdout/stderr events. These can
+         * be the same. */
+         HYD_Status(*stdout_cb) (int fd, HYD_Event_t events);
+         HYD_Status(*stderr_cb) (int fd, HYD_Event_t events);
+
+        /* Status > 0 means that it is not set yet. Successful
+         * completion of a process will set the status to 0. An error
+         * will set this to a negative value corresponding to the
+         * error. Depending on the bootstrap server, these values
+         * might correspond to per-process status, or can be a common
+         * value for all processes. */
+        int *pid;
+        int *exit_status;
+        int *exit_status_valid;
+
+        struct HYD_Proc_params *next;
+    } *proc_params;
+
+    /* Random parameters used for internal code */
+    int func_depth;
+    char stdin_tmp_buf[HYD_TMPBUF_SIZE];
+    int stdin_buf_offset;
+    int stdin_buf_count;
+};
+
+typedef struct HYD_Handle_ HYD_Handle;
+
+/* We'll use this as the central handle that has most of the
+ * information needed by everyone. All data to be written has to be
+ * done before the HYD_CSI_Wait_for_completion() function is called,
+ * except for two exceptions:
+ *
+ * 1. The timeout value is initially added by the launcher before the
+ * HYD_CSI_Wait_for_completion() function is called, but can be edited
+ * by the control system within this call. There's no guarantee on
+ * what value it will contain for the other layers.
+ *
+ * 2. There is no guarantee on what the exit status will contain till
+ * the HYD_CSI_Wait_for_completion() function returns (where the
+ * bootstrap server can fill out these values).
+ */
+extern HYD_Handle handle;
+
+#if !defined COMPILER_ACCEPTS_VA_ARGS
+#define HYDU_Print printf
+#else
+#define HYDU_Print(...)                         \
+    {                                           \
+        int i;                                  \
+        for (i = 0; i < HYDU_Dbg_depth; i++)    \
+            printf("  ");                       \
+        printf(__VA_ARGS__);                    \
     }
-#define HYD_FUNC_EXIT() \
-    { \
-	printf("[%s] Exiting function %s", FUNCNAME, __LINE__);	\
+#endif /* COMPILER_ACCEPTS_VA_ARGS */
+
+#if !defined ENABLE_DEBUG
+#define HYDU_FUNC_ENTER()
+#define HYDU_FUNC_EXIT()
+#elif defined COMPILER_ACCEPTS_FUNC
+#define HYDU_FUNC_ENTER()                                               \
+    {                                                                   \
+	HYDU_Print("Entering function %s\n", __func__);                 \
+        HYDU_Dbg_depth++;                                               \
+    }
+#define HYDU_FUNC_EXIT()                                               \
+    {                                                                  \
+	HYDU_Print("Exiting function %s\n", __func__);                 \
+        HYDU_Dbg_depth--;                                              \
     }
 #else
-#define HYDU_FUNC_ENTER() {}
-#define HYDU_FUNC_EXIT() {}
-#endif /* HAVE_DEBUGGING_SUPPORT */
+#define HYDU_FUNC_ENTER()                                               \
+    {                                                                   \
+        HYDU_Dbg_depth++;                                               \
+    }
+#define HYDU_FUNC_EXIT()                                               \
+    {                                                                  \
+        HYDU_Dbg_depth--;                                              \
+    }
+#endif
 
 #if !defined COMPILER_ACCEPTS_VA_ARGS
 #define HYDU_Error_printf MPIU_Error_printf
@@ -85,22 +228,5 @@ extern char **environ;
 	MPIU_Error_printf(__VA_ARGS__);         \
     }
 #endif
-
-static inline void HYDU_Print(const char *str, ...)
-{
-    va_list list;
-
-    va_start(list, str);
-    printf(str, list);
-    va_end(list);
-}
-
-typedef enum {
-    HYD_NO_MEM,
-    HYD_SOCK_ERROR,
-    HYD_INVALID_PARAM,
-    HYD_INTERNAL_ERROR,
-    HYD_SUCCESS = 0
-} HYD_Status;
 
 #endif /* HYDRA_H_INCLUDED */

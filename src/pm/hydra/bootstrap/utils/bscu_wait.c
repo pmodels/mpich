@@ -5,14 +5,11 @@
  */
 
 #include "hydra.h"
-#include "hydra_dbg.h"
 #include "hydra_mem.h"
-#include "csi.h"
-#include "csiu.h"
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_CSI_Handle csi_handle;
+HYD_Handle handle;
 
 /*
  * HYD_BSCU_Wait_for_completion: We first wait for communication
@@ -23,13 +20,13 @@ HYD_CSI_Handle csi_handle;
 HYD_Status HYD_BSCU_Wait_for_completion(void)
 {
     int pid, ret_status, i, not_completed;
-    struct HYD_CSI_Proc_params *proc_params;
+    struct HYD_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     not_completed = 0;
-    proc_params = csi_handle.proc_params;
+    proc_params = handle.proc_params;
     while (proc_params) {
         for (i = 0; i < proc_params->user_num_procs; i++)
             if (proc_params->exit_status_valid[i] == 0)
@@ -46,7 +43,7 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
         pid = waitpid(-1, &ret_status, WNOHANG);
         if (pid > 0) {
             /* Find the pid and mark it as complete. */
-            proc_params = csi_handle.proc_params;
+            proc_params = handle.proc_params;
             while (proc_params) {
                 for (i = 0; i < proc_params->user_num_procs; i++) {
                     if (proc_params->pid[i] == pid) {

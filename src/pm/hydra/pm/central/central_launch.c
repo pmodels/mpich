@@ -6,9 +6,7 @@
 
 #include "hydra.h"
 #include "hydra_sock.h"
-#include "hydra_dbg.h"
 #include "hydra_mem.h"
-#include "csi.h"
 #include "pmci.h"
 #include "pmcu_pmi.h"
 #include "bsci.h"
@@ -16,7 +14,7 @@
 #include "central.h"
 
 int HYD_PMCD_Central_listenfd;
-HYD_CSI_Handle csi_handle;
+HYD_Handle handle;
 
 /*
  * HYD_PMCI_Launch_procs: Here are the steps we follow:
@@ -44,8 +42,8 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     int num_procs;
     char hostname[MAX_HOSTNAME_LEN];
     struct sockaddr_in sa;
-    HYDU_Env_t *env;
-    struct HYD_CSI_Proc_params *proc_params;
+    HYD_Env_t *env;
+    struct HYD_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -92,7 +90,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     }
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd, HYD_CSI_OUT, HYD_PMCD_Central_cb);
+    status = HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd, HYD_STDOUT, HYD_PMCD_Central_cb);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("demux engine returned error for registering fd\n");
         goto fn_fail;
@@ -110,24 +108,24 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1, "%s:%s", hostname, sport);
     HYDU_FREE(sport);
 
-    status = HYDU_Env_create(&env, "PMI_PORT", port_str, HYDU_ENV_STATIC, 0);
+    status = HYDU_Env_create(&env, "PMI_PORT", port_str, HYD_ENV_STATIC, 0);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("unable to create env\n");
         goto fn_fail;
     }
-    status = HYDU_Env_add_to_list(&csi_handle.system_env, *env);
+    status = HYDU_Env_add_to_list(&handle.system_env, *env);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("unable to add env to list\n");
         goto fn_fail;
     }
     HYDU_Env_free(env);
 
-    status = HYDU_Env_create(&env, "PMI_ID", NULL, HYDU_ENV_AUTOINC, 0);
+    status = HYDU_Env_create(&env, "PMI_ID", NULL, HYD_ENV_AUTOINC, 0);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("unable to create env\n");
         goto fn_fail;
     }
-    status = HYDU_Env_add_to_list(&csi_handle.system_env, *env);
+    status = HYDU_Env_add_to_list(&handle.system_env, *env);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("unable to add env to list\n");
         goto fn_fail;

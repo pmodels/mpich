@@ -6,7 +6,12 @@
 mpiexec_SOURCES = mpiexec.c utils.c callback.c
 mpiexec_LDADD = -L../../lib -lhydra -L../../../util -lmpiexec -L../../../../../lib -lmpich
 mpiexec_DEPADD = ../../../util/libmpiexec.a
-INCLUDES = -I${abs_srcdir}/../../include -I../../include -I${abs_srcdir}/../../control/include -I${abs_srcdir} -I${abs_srcdir}/../../pm/include -I${abs_srcdir}/../../utils -I${abs_srcdir}/../utils -I${abs_srcdir}/../../../../include -I../../../../include
+INCLUDES = -I${abs_srcdir}/../../include \
+	-I${abs_srcdir}/../../../../include \
+	-I../../include \
+	-I../../../../include \
+	-I${abs_srcdir}/../utils \
+	-I${abs_srcdir}/../../control/include
 install_BIN = mpiexec
 
 # Use the mpich2-build-install target to include mpiexec in the build bin

@@ -5,19 +5,17 @@
  */
 
 #include "hydra.h"
-#include "hydra_dbg.h"
 #include "csi.h"
-#include "csiu.h"
 #include "pmci.h"
 #include "bsci.h"
 #include "demux.h"
 
-HYD_CSI_Handle csi_handle;
+HYD_Handle handle;
 
 HYD_Status HYD_CSI_Wait_for_completion(void)
 {
     int sockets_open, i;
-    struct HYD_CSI_Proc_params *proc_params;
+    struct HYD_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -32,7 +30,7 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
 
         /* Check to see if there's any open read socket left; if there
          * are, we will just wait for more events. */
-        proc_params = csi_handle.proc_params;
+        proc_params = handle.proc_params;
         sockets_open = 0;
         while (proc_params) {
             for (i = 0; i < proc_params->user_num_procs; i++) {

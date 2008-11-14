@@ -11,12 +11,12 @@
 #include "bsci.h"
 #include "demux.h"
 
-HYD_CSI_Handle csi_handle;
+HYD_Handle handle;
 
 HYD_Status HYD_CSI_Close_fd(int fd)
 {
     int i;
-    struct HYD_CSI_Proc_params *proc_params;
+    struct HYD_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -31,7 +31,7 @@ HYD_Status HYD_CSI_Close_fd(int fd)
     close(fd);
 
     /* Find the FD in the handle and remove it. */
-    proc_params = csi_handle.proc_params;
+    proc_params = handle.proc_params;
     while (proc_params) {
         for (i = 0; i < proc_params->user_num_procs; i++) {
             if (proc_params->out[i] == fd) {

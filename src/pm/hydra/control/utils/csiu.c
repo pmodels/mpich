@@ -5,10 +5,8 @@
  */
 
 #include "hydra.h"
-#include "hydra_mem.h"
-#include "csi.h"
 
-HYD_CSI_Handle csi_handle;
+HYD_Handle handle;
 
 int HYD_CSU_Time_left(void)
 {
@@ -17,13 +15,13 @@ int HYD_CSU_Time_left(void)
 
     HYDU_FUNC_ENTER();
 
-    if (csi_handle.timeout.tv_sec < 0) {
+    if (handle.timeout.tv_sec < 0) {
         time_left = -1;
         goto fn_exit;
     }
     else {
         gettimeofday(&now, NULL);
-        time_left = (1000 * (csi_handle.timeout.tv_sec - now.tv_sec + csi_handle.start.tv_sec));
+        time_left = (1000 * (handle.timeout.tv_sec - now.tv_sec + handle.start.tv_sec));
         if (time_left < 0)
             time_left = 0;
     }

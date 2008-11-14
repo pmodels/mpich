@@ -6,9 +6,7 @@
 
 #include "hydra.h"
 #include "hydra_sock.h"
-#include "hydra_dbg.h"
 #include "hydra_mem.h"
-#include "csiu.h"
 #include "demux.h"
 
 static int num_cb_fds = 0;
@@ -16,8 +14,8 @@ static int num_cb_fds = 0;
 typedef struct HYD_DMXI_Callback {
     int num_fds;
     int *fd;
-    HYD_CSI_Event_t events;
-     HYD_Status(*callback) (int fd, HYD_CSI_Event_t events);
+    HYD_Event_t events;
+     HYD_Status(*callback) (int fd, HYD_Event_t events);
 
     struct HYD_DMXI_Callback *next;
 } HYD_DMXI_Callback_t;
@@ -45,8 +43,8 @@ static void print_callback_list()
     printf("\n");
 }
 
-HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_CSI_Event_t events,
-                               HYD_Status(*callback) (int fd, HYD_CSI_Event_t events))
+HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_Event_t events,
+                               HYD_Status(*callback) (int fd, HYD_Event_t events))
 {
     HYD_DMXI_Callback_t *cb_element, *run;
     int i;
@@ -146,9 +144,9 @@ HYD_Status HYD_DMX_Wait_for_event(void)
             pollfds[i].fd = run->fd[j];
 
             pollfds[i].events = 0;
-            if (run->events & HYD_CSI_OUT)
+            if (run->events & HYD_STDOUT)
                 pollfds[i].events |= POLLIN;
-            if (run->events & HYD_CSI_IN)
+            if (run->events & HYD_STDIN)
                 pollfds[i].events |= POLLOUT;
 
             i++;
@@ -181,9 +179,9 @@ HYD_Status HYD_DMX_Wait_for_event(void)
             if (pollfds[i].revents) {
                 events = 0;
                 if (pollfds[i].revents & POLLOUT)
-                    events |= HYD_CSI_IN;
+                    events |= HYD_STDIN;
                 if (pollfds[i].revents & POLLIN)
-                    events |= HYD_CSI_OUT;
+                    events |= HYD_STDOUT;
 
                 status = run->callback(pollfds[i].fd, events);
                 if (status != HYD_SUCCESS) {
