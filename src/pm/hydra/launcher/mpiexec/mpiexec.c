@@ -132,10 +132,8 @@ int main(int argc, char **argv)
 
   fn_exit:
     HYDU_FUNC_EXIT();
-    if (status != HYD_SUCCESS)
+    if (status != HYD_SUCCESS || exit_status)
         return -1;
-    else
-        return exit_status;
 
   fn_fail:
     goto fn_exit;
