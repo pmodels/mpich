@@ -39,7 +39,8 @@ HYD_CSI_Handle csi_handle;
 HYD_Status HYD_PMCI_Launch_procs(void)
 {
     char *port_range, *port_str, *sport;
-    int low_port, high_port, port, one = 1, i;
+    uint16_t low_port, high_port, port;
+    int one = 1, i;
     int num_procs;
     char hostname[MAX_HOSTNAME_LEN];
     struct sockaddr_in sa;
