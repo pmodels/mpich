@@ -1,6 +1,7 @@
 winname 2
 allocmem 2
 putfence1 4
+putfidx 4
 getfence1 4
 accfence1 4
 accfence2 4

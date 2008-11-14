@@ -29,6 +29,7 @@ fetchandadd_tree_SOURCES = fetchandadd_tree.c
 
 winname_SOURCES = winname.c
 putfence1_SOURCES = putfence1.c
+putfidx_SOURCES   = putfidx.c
 getfence1_SOURCES = getfence1.c
 accfence1_SOURCES = accfence1.c
 accfence2_SOURCES = accfence2.c
