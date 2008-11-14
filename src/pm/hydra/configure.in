@@ -135,6 +135,24 @@ if AC_TRY_EVAL(pac_tmp_compile) && test -s conftest ; then
 fi
 rm -f conftest*
 
+dnl Check if __VA_ARGS__ is defined by the compiler
+AC_MSG_CHECKING([whether the compiler allows __VA_ARGS__])
+rm -f conftest.c
+cat > conftest.c <<EOF
+#include <stdio.h>
+#define my_print(...) printf(__VA_ARGS__)
+int main()
+{
+    my_print("woohoo!");
+    return 0;
+}
+EOF
+pac_tmp_compile='$CC $CFLAGS conftest.c -o conftest'
+if AC_TRY_EVAL(pac_tmp_compile) && test -s conftest ; then
+   AC_DEFINE(COMPILER_ACCEPTS_VA_ARGS,1,[Define if compiler supports __VA_ARGS__])
+fi
+rm -f conftest*
+
 dnl Check for functions.  This invokes another test if the function is 
 dnl found.  The braces around the second test are essential. 
 dnl AC_CHECK_FUNC(setpgrp,[AC_FUNC_SETPGRP])
