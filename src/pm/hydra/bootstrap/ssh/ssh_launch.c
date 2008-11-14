@@ -125,7 +125,7 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 HYD_Status HYD_BSCI_Cleanup_procs(void)
 {
     struct HYD_CSI_Proc_params *proc_params;
-    char *client_arg[HYD_CSI_EXEC_ARGS], *hostname, **proc_list;
+    char *client_arg[HYD_CSI_EXEC_ARGS], *hostname, **proc_list, *execname;
     int i, arg, host_id, host_id_max;
     HYD_Status status = HYD_SUCCESS;
 
@@ -157,11 +157,15 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 
             for (arg = 0; client_arg[arg]; arg++);
             client_arg[arg++] = MPIU_Strdup("killall");
-            client_arg[arg++] = NULL;
 
-            /* FIXME: We need to free the remaining args */
-            proc_params->exec[1] = 0;   /* We only care about the executable name */
-            HYD_BSCU_Append_exec(proc_params->exec, client_arg);
+            execname = strrchr(proc_params->exec[0], '/');
+            if (!execname)
+                execname = proc_params->exec[0];
+            else
+                execname++;
+
+            client_arg[arg++] = MPIU_Strdup(execname);
+            client_arg[arg++] = NULL;
 
             status = HYD_BSCU_Create_process(client_arg, NULL, NULL, NULL, NULL);
             if (status != HYD_SUCCESS) {
