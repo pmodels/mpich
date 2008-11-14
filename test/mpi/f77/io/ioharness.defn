@@ -114,8 +114,10 @@ offset = (r * n + (k - 1) * n * s) * intsize
 # collective I/O and independent file I/O without seek
 <setcontigview>
 call mpi_type_vector( b, n, n*s, MPI_INTEGER, filetype, ierr )
+call mpi_type_commit( filetype, ierr )
 offset = r * n * intsize
 call mpi_file_set_view( fh, offset, MPI_INTEGER, filetype, "native", MPI_INFO_NULL, ierr )
+<checkErr/>
 call mpi_type_free( filetype, ierr )
 </setcontigview>
 
@@ -345,11 +347,13 @@ do k=1, b ,2
    <findOffset/>
    nreq = 1
    call mpi_file_seek( fh, offset, MPI_SEEK_SET, ierr )	
+   <checkErr/>
    call mpi_file_iwrite( fh, buf, n, MPI_INTEGER, req(1), ierr )
    <checkErr/>
    if (k+1 .le. b) then
        offset = offset + (s * n) * intsize
        call mpi_file_seek( fh, offset, MPI_SEEK_SET, ierr )	
+       <checkErr/>
        <setContigBuffer2/>
        nreq = nreq + 1
        call mpi_file_iwrite( fh, buf2, n, MPI_INTEGER, req(2), ierr )
@@ -368,6 +372,7 @@ do k=1, b ,2
    <findOffset/>
    nreq = 1
    call mpi_file_seek( fh, offset, MPI_SEEK_SET, ierr )	
+   <checkErr/>
    call mpi_file_iread( fh, buf, n, MPI_INTEGER, req(1), ierr )
    <checkErr/>
    if (k+1 .le. b) then
