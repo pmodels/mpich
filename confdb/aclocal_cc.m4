@@ -419,6 +419,87 @@ fi
 ])dnl
 dnl
 dnl/*D
+dnl PAC_C_CONST - Check if C supports const 
+dnl
+dnl Synopsis:
+dnl PAC_C_CONST
+dnl
+dnl Output Effect:
+dnl AC_MSG_ERROR if const is not supported.
+dnl
+dnl D*/
+dnl AC_DEFUN(PAC_C_CONST,[
+dnl AC_CACHE_CHECK([for support of const in C],
+dnl pac_cv_c_const,[
+dnl AC_LANG_PUSH(C)
+dnl AC_TRY_COMPILE(,[const int a = 1; int b; b = a;],
+dnl pac_cv_c_const="yes", pac_cv_c_const="no")])
+dnl if test "$pac_cv_c_const" = "no" ; then
+dnl     AC_MSG_ERROR([C does not support const! Abort...])
+dnl fi
+dnl AC_LANG_POP(C)
+dnl ])dnl
+AC_DEFUN([PAC_C_CONST],
+[AC_CACHE_CHECK([for an ANSI C-conforming const], pac_cv_c_const,
+[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],
+[[/* FIXME: Include the comments suggested by Paul. */
+#ifndef __cplusplus
+  /* Ultrix mips cc rejects this.  */
+  typedef int charset[2];
+  const charset cs = {0,0};
+  /* SunOS 4.1.1 cc rejects this.  */
+  char const *const *pcpcc;
+  char **ppc;
+  /* NEC SVR4.0.2 mips cc rejects this.  */
+  struct point {int x, y;};
+  static struct point const zero = {0,0};
+  /* AIX XL C 1.02.0.0 rejects this.
+     It does not let you subtract one const X* pointer from another in
+     an arm of an if-expression whose if-part is not a constant
+     expression */
+  const char *g = "string";
+  pcpcc = &g + (g ? g-g : 0);
+  /* HPUX 7.0 cc rejects these. */
+  ++pcpcc;
+  ppc = (char**) pcpcc;
+  pcpcc = (char const *const *) ppc;
+  { /* SCO 3.2v4 cc rejects this.  */
+    char const *s = 0 ? (char *) 0 : (char const *) 0;
+    if (s) return 0;
+  }
+  { /* Someone thinks the Sun supposedly-ANSI compiler will reject this.  */
+    int x[] = {25, 17};
+    const int *foo = &x[0];
+    ++foo;
+  }
+  { /* Sun SC1.0 ANSI compiler rejects this -- but not the above. */
+    typedef const int *iptr;
+    iptr p = 0;
+    ++p;
+  }
+  { /* AIX XL C 1.02.0.0 rejects this saying
+       "k.c", line 2.27: 1506-025 (S) Operand must be a modifiable lvalue. */
+    struct s { int j; const int *ap[3]; };
+    struct s a;
+    struct s *b = &a;
+    b->j = 5; 
+  }
+  { /* ULTRIX-32 V3.1 (Rev 9) vcc rejects this */
+    const int foo = 10;
+    if (!foo) return 0;
+  }
+  return !cs[0] && !zero.x;
+#endif
+]])],
+                   [pac_cv_c_const=yes],
+                   [pac_cv_c_const=no])])
+if test $pac_cv_c_const = no; then
+  AC_DEFINE(const,,
+            [Define to empty if `const' does not conform to ANSI C.])
+fi
+])dnl
+dnl
+dnl/*D
 dnl PAC_C_CPP_CONCAT - Check whether the C compiler accepts ISO CPP string
 dnl   concatenation
 dnl
