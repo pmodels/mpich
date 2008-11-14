@@ -689,10 +689,12 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	if (!sendtype->displs || !sendtype->index) {
 	    MTestError( "Out of memory in type init\n" );
 	}
+	/* index -> block size */
 	sendtype->index[0]   = (recvtype->count + 1) / 2;
 	sendtype->displs[0]  = 0;
-	sendtype->index[1]   = (recvtype->count + 1) / 2;
-	sendtype->displs[1]  = sendtype->index[0] + 1;
+	sendtype->index[1]   = recvtype->count - sendtype->index[0];
+	sendtype->displs[1]  = sendtype->index[0] + 1; 
+	/* There is a deliberate gap here */
 
 	merr = MPI_Type_indexed( sendtype->nelm,
 				 sendtype->index, sendtype->displs, 
@@ -729,6 +731,7 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	   size to over 256k in some cases, as the MPICH2 code as of
 	   10/1/06 used large internal buffers for packing non-contiguous
 	   messages */
+	/* Note that there are gaps in the indexed type */
 	for (i=0; i<recvtype->nelm; i++) {
 	    recvtype->index[i]   = 4;
 	    recvtype->displs[i]  = 5*i;
