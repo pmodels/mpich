@@ -47,7 +47,7 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
             while (proc_params) {
                 for (i = 0; i < proc_params->user_num_procs; i++) {
                     if (proc_params->pid[i] == pid) {
-                        proc_params->exit_status[i] = ret_status;
+                        proc_params->exit_status[i] = WEXITSTATUS(ret_status);
                         proc_params->exit_status_valid[i] = 1;
                         not_completed--;
                     }
