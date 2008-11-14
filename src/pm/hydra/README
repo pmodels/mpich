@@ -39,3 +39,26 @@ job on. This file may or may not include the local machine.
 To run your application on these nodes, use mpiexec:
 
  $ mpiexec -n 4 -f hosts ./app
+
+
+Environment settings
+--------------------
+
+HYDRA_HOST_FILE: This variable points to the default host file to use,
+when the "-f" option is not provided to mpiexec.
+
+  For bash:
+    export HYDRA_HOST_FILE=<path_to_host_file>/hosts
+
+  For csh/tcsh:
+    setenv HYDRA_HOST_FILE <path_to_host_file>/hosts
+
+
+HYDRA_USE_LOCALHOST: This variable forces Hydra to run all processes
+on the local machine.
+
+  For bash:
+    export HYDRA_USE_LOCALHOST=1
+
+  For csh/tcsh:
+    setenv HYDRA_USE_LOCALHOST 1
