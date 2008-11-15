@@ -119,6 +119,8 @@ int MPI_Finalize( void )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
+    /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
+       be called at most once in any program) */
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FINALIZE_FUNC_ENTER(MPID_STATE_MPI_FINALIZE);
     
@@ -174,6 +176,15 @@ int MPI_Finalize( void )
 				  MPIR_Process.comm_self->errhandler );
 	}
     }
+
+    /* At this point, we end the critical section for the Finalize call.
+       Since we've set MPIR_Process.initialized value to POST_FINALIZED, 
+       if the user erroneously calls Finalize from another thread, an
+       error message will be issued. */
+    /* We put this here to avoid nesting problems with the callbacks - 
+       however, an erroneous user program could cause problems here if if
+       makes its own MPI calls. */
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     
     /* FIXME: Why is this not one of the finalize callbacks?.  Do we need
        pre and post MPID_Finalize callbacks? */
@@ -237,11 +248,6 @@ int MPI_Finalize( void )
 
     MPIR_Process.initialized = MPICH_POST_FINALIZED;
 
-    /* At this point, we end the critical section for the Finalize call.
-       Since we've set MPIR_Process.initialized value to POST_FINALIZED, 
-       if the user erroneously calls Finalize from another thread, an
-       error message will be issued. */
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     MPID_CS_FINALIZE();
 
     /* We place the memory tracing at the very end because any of the other
