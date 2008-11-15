@@ -110,8 +110,8 @@ HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events)
 
     HYDU_FUNC_ENTER();
 
-    if (events & HYD_STDOUT) {
-        HYDU_Error_printf("stdin handler got an stdout event: %d\n", events);
+    if (events & HYD_STDIN) {
+        HYDU_Error_printf("stdin handler got a writeable event on local stdin: %d\n", events);
         status = HYD_INTERNAL_ERROR;
         goto fn_fail;
     }
@@ -123,7 +123,7 @@ HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events)
                           handle.stdin_buf_count);
             if (count < 0) {
                 /* We can't get an EAGAIN as we just got out of poll */
-                HYDU_Error_printf("socket write error on fd: %d (errno: %d)\n", fd, errno);
+                HYDU_Error_printf("socket write error on fd: %d (errno: %d)\n", handle.in, errno);
                 status = HYD_SOCK_ERROR;
                 goto fn_fail;
             }
