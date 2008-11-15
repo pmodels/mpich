@@ -18,4 +18,13 @@ the top-level mpich2 directory:
     ./configure [configopts]
     make
 
+To use CFLAGS like -Werror (which tends to cause some configure tests
+fail to detect correct system features) in building MPICH2 libraries,
+developer can pass -Werror in make step through MPICH2_MAKE_CFLAGS, e.g.
 
+make VERBOSE=1 MPICH2_MAKE_CFLAGS="-Wall -Werror"
+
+where VERBOSE=1 turns off the concise Makefile output
+and   MPICH2_MAKE_CFLAGS="-Wall -Werror" appends "-Wall -Werror" to CFLAGS
+in building MPICH2 libraries.
+ 

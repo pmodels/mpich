@@ -544,6 +544,21 @@ or
 This will cause the MPICH2 libraries to be built with -O3, and -O3 will
 not be included in the mpicc and other MPI wrapper script.
 
+There are certain compiler flags that should not be used with MPICH2's
+configure, e.g. gcc's -Werror which would confuse configure and causes
+certain configure tests fail to detect the correct system features.
+To use -Werror in building MPICH2 libraries, user can pass the compiler
+flags during make steps through Makefile variable,
+\texttt{MPICH2\_MAKE\_CFLAGS}, e.g.
+
+\begin{verbatim}
+  make VERBOSE=1 MPICH2_MAKE_CFLAGS="-Wall -Werror"
+\end{verbatim}
+
+(assume CC is set to gcc).  The content of \texttt{MPICH2\_MAKE\_CFLAGS}
+is appended to the \texttt{CFLAGS} in almost all Makefiles.
+
+
 
 \subsection{Common Non-Default Configuration Options}
 \label{sec:non-default}
