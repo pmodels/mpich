@@ -1,1 +1,2 @@
 createf90types 1
+createf90types 1 arg=10000

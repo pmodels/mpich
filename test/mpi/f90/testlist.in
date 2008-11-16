@@ -8,6 +8,7 @@ init
 misc
 pt2pt
 datatype
+f90types
 @rmadir@
 @spawndir@
 timer

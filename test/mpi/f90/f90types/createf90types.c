@@ -31,11 +31,14 @@ static int checkType( const char str[], int p, int r, int f90kind,
 	MPI_Type_get_envelope( dtype, &nints, &nadds, &ndtypes, &combiner );
 	if (combiner != f90kind) {
 	    errs++;
-	    printf( "Wrong combiner type (got %d) for %s\n", combiner, str );
+	    printf( "Wrong combiner type (got %d, should be %d) for %s\n", 
+		    combiner, f90kind, str );
 	}
 	else {
 	    int          parms[2];
 	    MPI_Datatype outtype;
+	    parms[0] = 0;
+	    parms[1] = 0;
 
 	    if (ndtypes != 0) {
 		errs++;
@@ -47,30 +50,30 @@ static int checkType( const char str[], int p, int r, int f90kind,
 	    case MPI_COMBINER_F90_COMPLEX:
 		if (nints != 2) {
 		    errs++;
-		    printf( "Returned %d integer values, 2 expected\n", 
-			    nints );
+		    printf( "Returned %d integer values, 2 expected for %s\n", 
+			    nints, str );
 		}
 		if (parms[0] != p || parms[1] != r) {
 		    errs++;
-		    printf( "Returned (p=%d,r=%d); expected (p=%d,r=%d)\n",
-			    parms[0], parms[1], p, r );
+		    printf( "Returned (p=%d,r=%d); expected (p=%d,r=%d) for %s\n",
+			    parms[0], parms[1], p, r, str );
 		}
 		break;
 	    case MPI_COMBINER_F90_INTEGER:
 		if (nints != 1) {
 		    errs++;
-		    printf( "Returned %d integer values, 1 expected\n", 
-			    nints );
+		    printf( "Returned %d integer values, 1 expected for %s\n", 
+			    nints, str );
 		}
 		if (parms[0] != p) {
 		    errs++;
-		    printf( "Returned (p=%d); expected (p=%d)\n",
-			    parms[0], p );
+		    printf( "Returned (p=%d); expected (p=%d) for %s\n",
+			    parms[0], p, str );
 		}
 		break;
 	    default:
 		errs++;
-		printf( "Unrecognized combiner\n" );
+		printf( "Unrecognized combiner for %s\n", str );
 		break;
 	    }
 	    
@@ -84,53 +87,60 @@ int main( int argc, char *argv[] )
     int p, r;
     int errs = 0;
     int err;
+    int i, nLoop = 1;
     MPI_Datatype newtype;
 
     MPI_Init(0,0);
 
+    if (argc > 1) {
+	nLoop = atoi( argv[1] );
+    }
     /* Set the handler to errors return, since according to the
        standard, it is invalid to provide p and/or r that are unsupported */
 
     MPI_Comm_set_errhandler( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
 
-    /* This should be a valid type similar to MPI_REAL */
-    p = 3;
-    r = 10;
-    err = MPI_Type_create_f90_real( p, r, &newtype );
-    errs += checkType( "REAL", p, r, MPI_COMBINER_F90_REAL, err, newtype );
+    for (i=0; i<nLoop; i++) {
+	/* printf( "+" );fflush(stdout); */
+	/* This should be a valid type similar to MPI_REAL */
+	p = 3;
+	r = 10;
+	err = MPI_Type_create_f90_real( p, r, &newtype );
+	errs += checkType( "REAL", p, r, MPI_COMBINER_F90_REAL, err, newtype );
+	
+	r = MPI_UNDEFINED;
+	err = MPI_Type_create_f90_real( p, r, &newtype );
+	errs += checkType( "REAL", p, r, MPI_COMBINER_F90_REAL, err, newtype );
+	
+	p = MPI_UNDEFINED;
+	r = 10;
+	err = MPI_Type_create_f90_real( p, r, &newtype );
+	errs += checkType( "REAL", p, r, MPI_COMBINER_F90_REAL, err, newtype );
 
-    r = MPI_UNDEFINED;
-    err = MPI_Type_create_f90_real( p, r, &newtype );
-    errs += checkType( "REAL", p, r, MPI_COMBINER_F90_REAL, err, newtype );
-
-    p = MPI_UNDEFINED;
-    r = 10;
-    err = MPI_Type_create_f90_real( p, r, &newtype );
-    errs += checkType( "REAL", p, r, MPI_COMBINER_F90_REAL, err, newtype );
-
-    /* This should be a valid type similar to MPI_COMPLEX */
-    p = 3;
-    r = 10;
-    err = MPI_Type_create_f90_complex( p, r, &newtype );
-    errs += checkType( "COMPLEX", p, r, MPI_COMBINER_F90_COMPLEX, 
-		       err, newtype );
-
-    r = MPI_UNDEFINED;
-    err = MPI_Type_create_f90_complex( p, r, &newtype );
-    errs += checkType( "COMPLEX", p, r, MPI_COMBINER_F90_COMPLEX, 
-		       err, newtype );
-
-    p = MPI_UNDEFINED;
-    r = 10;
-    err = MPI_Type_create_f90_complex( p, r, &newtype );
-    errs += checkType( "COMPLEX", p, r, MPI_COMBINER_F90_COMPLEX, 
-		       err, newtype );
-
-    /* This should be a valid type similar to MPI_INTEGER */
-    p = 3;
-    err = MPI_Type_create_f90_integer( p, &newtype );
-    errs += checkType( "INTEGER", p, r, MPI_COMBINER_F90_INTEGER, 
-		       err, newtype );
+	/* This should be a valid type similar to MPI_COMPLEX */
+	p = 3;
+	r = 10;
+	err = MPI_Type_create_f90_complex( p, r, &newtype );
+	errs += checkType( "COMPLEX", p, r, MPI_COMBINER_F90_COMPLEX, 
+			   err, newtype );
+	
+	r = MPI_UNDEFINED;
+	err = MPI_Type_create_f90_complex( p, r, &newtype );
+	errs += checkType( "COMPLEX", p, r, MPI_COMBINER_F90_COMPLEX, 
+			   err, newtype );
+	
+	p = MPI_UNDEFINED;
+	r = 10;
+	err = MPI_Type_create_f90_complex( p, r, &newtype );
+	errs += checkType( "COMPLEX", p, r, MPI_COMBINER_F90_COMPLEX, 
+			   err, newtype );
+	
+	/* This should be a valid type similar to MPI_INTEGER */
+	p = 3;
+	err = MPI_Type_create_f90_integer( p, &newtype );
+	errs += checkType( "INTEGER", p, r, MPI_COMBINER_F90_INTEGER, 
+			   err, newtype );
+    }
 
     if (errs == 0) {
 	printf( " No Errors\n" );
