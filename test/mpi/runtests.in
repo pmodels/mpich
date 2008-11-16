@@ -56,6 +56,7 @@ $xmloutput = 0;          # Set to true to get xml output (also specify file)
 $closeXMLOutput = 1;     # Set to false to leave XML output file open to
                          # accept additional data
 $verbose = 0;            # Set to true to get more output
+$showProgress = 0;       # Set to true to get a "." with each run program.
 $newline = "\r\n";       # Set to \r\n for Windows-friendly, \n for Unix only
 
 $debug = 1;
@@ -72,11 +73,15 @@ $clean_pgms      = 1;
 #   VERBOSE
 #   RUNTESTS_VERBOSE  (an alias for VERBOSE in case you want to 
 #                      reserve VERBOSE)
+#   RUNTESTS_SHOWPROGRESS
 #   MPITEST_STOPTEST
 #   MPITEST_TIMEOUT
 #---------------------------------------------------------------------------
 if ( defined($ENV{"VERBOSE"}) || defined($ENV{"RUNTESTS_VERBOSE"}) ) {
     $verbose = 1;
+}
+if ( defined($ENV{"RUNTESTS_SHOWPROGRESS"} ) ) {
+    $showProgress = 1;       
 }
 if (defined($ENV{"MPITEST_STOPTEST"})) {
     $stopfile = $ENV{"MPITEST_STOPTEST"};
@@ -120,6 +125,7 @@ foreach $_ (@ARGV) {
     elsif (/-tests=(.*)/) { $listfiles = $1; }
     elsif (/-srcdir=(.*)/) { $srcdir = $1; }
     elsif (/-verbose/) { $verbose = 1; }
+    elsif (/-showprogress/) { $showProgress = 1; }
     elsif (/-debug/) { $debug = 1; }
     elsif (/-xmlfile=(.*)/) {
 	$xmlfile   = $1;
@@ -151,7 +157,7 @@ foreach $_ (@ARGV) {
 	print STDERR "runtests [-tests=testfile] [-np=nprocesses] \
         [-maxnp=max-nprocesses] [-srcdir=location-of-tests] \
         [-xmlfile=filename ] [-noxmlclose] \
-        [-verbose] [-debug]\n";
+        [-verbose] [-showprogress] [-debug]\n";
     }
 }
 
@@ -208,7 +214,7 @@ sub ProcessDir {
     $curdir .= "/$dir";
 
     &RunList( $listfile );
-
+    print "\n" if $showProgress; # Terminate line from progress output
     chdir $savedir;
     $curdir = $savecurdir;
     $srcdir = $savesrcdir;
@@ -263,6 +269,7 @@ sub RunList {
 	my $ResultTest = "";
 	my $InitForRun = "";
 	my $timeLimit  = "";
+	my $progArgs   = "";
 	if ($#args >= 1) { $np = $args[1]; }
 	# Process the key=value arguments
 	for (my $i=2; $i <= $#args; $i++) {
@@ -277,6 +284,9 @@ sub RunList {
 		}
 		elsif ($key eq "timeLimit") {
 		    $timeLimit = $value;
+		}
+		elsif ($key eq "arg") {
+		    $progArgs = "$progArgs $value";
 		}
 		else {
 		    print STDERR "Unrecognized key $key in $listfileSource\n";
@@ -297,7 +307,7 @@ sub RunList {
 	    $total_count++;
 	    if (&BuildMPIProgram( $programname ) == 0) {
 		&RunMPIProgram( $programname, $np, $ResultTest, $InitForRun, 
-				$timeLimit );
+				$timeLimit, $progArgs );
 	    }
 	    else {
 		# We expected to run this program, so failure to build
@@ -345,7 +355,7 @@ sub ProcessImplicitList {
 	    if ($programname eq "runtests") { next; } # Ignore self
 	    if (-x $programname) {
 		$total_count++;
-		&RunMPIProgram( $programname, $np_default, "", "" );
+		&RunMPIProgram( $programname, $np_default, "", "", "", "" );
 	    }
 	}
 	close PGMS;
@@ -366,7 +376,7 @@ sub ProcessImplicitList {
 	    $programname =~ s/\.c//;
 	    $total_count++;
 	    if (&BuildMPIProgram( $programname ) == 0) {
-		&RunMPIProgram( $programname, $np_default, "", "" );
+		&RunMPIProgram( $programname, $np_default, "", "", "", "" );
 	    }
 	    else {
 		# We expected to run this program, so failure to build
@@ -383,10 +393,11 @@ sub ProcessImplicitList {
 # ToDo: Add a way to limit the time that any particular program may run.
 # The arguments are
 #    name of program, number of processes, name of routine to check results
+#    init for testing, timelimit, and any additional program arguments
 # If the 3rd arg is not present, the a default that simply checks that the
 # return status is 0 and that the output is " No Errors" is used.
 sub RunMPIProgram {
-    my ($programname,$np,$ResultTest,$InitForTest,$timeLimit) = @_;
+    my ($programname,$np,$ResultTest,$InitForTest,$timeLimit,$progArgs) = @_;
     my $found_error   = 0;
     my $found_noerror = 0;
     my $inline = "";
@@ -406,8 +417,9 @@ sub RunMPIProgram {
     if ($InitForTest ne "") {
 	&$InitForTest();
     }
-    print STDOUT "$mpiexec $np_arg $np ./$programname\n" if $verbose;
-    open ( MPIOUT, "$mpiexec $np_arg $np ./$programname 2>&1 |" ) ||
+    print STDOUT "$mpiexec $np_arg $np ./$programname $progArgs\n" if $verbose;
+    print STDOUT "." if $showProgress;
+    open ( MPIOUT, "$mpiexec $np_arg $np ./$programname $progArgs 2>&1 |" ) ||
 	 die "Could not run ./$programname\n";
     if ($ResultTest ne "") {
 	# Read and process the output
