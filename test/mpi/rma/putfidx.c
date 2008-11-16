@@ -24,7 +24,7 @@ int main( int argc, char *argv[] )
     MPI_Aint      extent;
     MPI_Datatype  originType;
     int           counts[2];
-    MPI_Aint      displs[2];
+    int           displs[2];
 
     MTest_Init( &argc, &argv );
 
