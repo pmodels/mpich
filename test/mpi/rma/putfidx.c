@@ -7,6 +7,9 @@
 #include "mpi.h"
 #include <stdio.h>
 #include "mpitest.h"
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 
 static char MTEST_Descrip[] = "Put with Fence for an indexed datatype";
 
