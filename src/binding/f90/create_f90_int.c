@@ -99,7 +99,6 @@ int MPI_Type_create_f90_integer( int range, MPI_Datatype *newtype )
 	}
     }
 
-    /* FIXME: Check on action if no match found */
     if (basetype == MPI_DATATYPE_NULL) {
 	mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  "MPI_Type_create_f90_integer",
