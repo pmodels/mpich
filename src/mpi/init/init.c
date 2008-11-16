@@ -110,8 +110,8 @@ int MPI_Init( int *argc, char ***argv )
     /* ... body of routine ... */
 
 #if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
-    /* If we support all thread levels, all the use of an environment variable to set the default
-       thread level */
+    /* If we support all thread levels, allow the use of an environment 
+       variable to set the default thread level */
     {
 	const char *str = 0;
 	threadLevel = MPI_THREAD_SINGLE;
