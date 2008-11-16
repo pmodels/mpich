@@ -82,7 +82,10 @@ int MPID_Datatype_set_contents(MPID_Datatype *new_dtp,
      * following the structure itself.
      */
     ptr = ((char *) cp) + struct_sz;
-    memcpy(ptr, array_of_types, nr_types * sizeof(MPI_Datatype));
+    /* Fortran90 combiner types do not have a "base" type */
+    if (nr_types > 0) {
+	memcpy(ptr, array_of_types, nr_types * sizeof(MPI_Datatype));
+    }
     
     ptr = ((char *) cp) + struct_sz + types_sz;
     if (nr_ints > 0) {
