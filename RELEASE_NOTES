@@ -18,6 +18,8 @@
   stdin and may also have problems if there is data on stdin that is not
   consumed by the program. 
 
+- The Hydra process manager does not work on Solaris at this time.
+
 - Only the ch3:sock and ch3:nemesis channels support thread safety.
  
 - The sock, sctp, nemesis, and ssm channels are the only channels that
