@@ -18,7 +18,8 @@
   stdin and may also have problems if there is data on stdin that is not
   consumed by the program. 
 
-- The Hydra process manager does not work on Solaris at this time.
+- The Hydra process manager does not work on Solaris and does not
+  support dynamic processes at this time.
 
 - Only the ch3:sock and ch3:nemesis channels support thread safety.
  
