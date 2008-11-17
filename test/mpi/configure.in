@@ -68,7 +68,7 @@ AC_ARG_ENABLE(checkerrors,
 AC_ARG_ENABLE(fast,
 [--enable-fast - Indicates that the MPI implementation may have been built for fastest operation, such as building without error checking.  Has the effect of --enable-checkerrors=no])
 AC_ARG_ENABLE(strictmpi,
-[--enable-strictmpi - Only test for operations specifically defined by the MPI standard.  This turns off tests for some common extensions, including for combinations of predefined datatypes and predefined MPI_Op s.],enable_strictmpi=no)
+[--enable-strictmpi - Only test for operations specifically defined by the MPI standard.  This turns off tests for some common extensions, including for combinations of predefined datatypes and predefined MPI_Op s.],,enable_strictmpi=no)
 
 AC_ARG_WITH(mpi,
 [--with-mpi=dir - Use the selected MPI; compilation scripts for mpicc, mpif77
