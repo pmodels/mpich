@@ -13,7 +13,7 @@ C
        double precision rbuf(10), routbuf(10)
        integer packbuf(1000), pbufsize, intsize
        integer max_asizev
-       parameter (max_asizev = 2)
+       parameter (max_asizev = 3)
        include 'typeaints.h'
 
        errs = 0
@@ -111,17 +111,37 @@ C
 C
        aintv(1) = pbufsize
        aintv(2) = 0
+       aintv(3) = 0
+C One MPI implementation failed to increment the position; instead, 
+C it set the value with the amount of data packed in this call
+C We use aintv(3) to detect and report this specific error
        call mpi_pack_external( 'external32', inbuf, insize, MPI_INTEGER,
      &               packbuf, aintv(1), aintv(2), ierr )
+       if (aintv(2) .le. aintv(3)) then
+            print *, ' Position decreased after pack of integer!'
+       endif
+       aintv(3) = aintv(2)
        call mpi_pack_external( 'external32', rbuf, rsize, 
      &               MPI_DOUBLE_PRECISION, packbuf, aintv(1), 
      &               aintv(2), ierr )
+       if (aintv(2) .le. aintv(3)) then
+            print *, ' Position decreased after pack of real!'
+       endif
+       aintv(3) = aintv(2)
        call mpi_pack_external( 'external32', cbuf, csize, 
      &               MPI_CHARACTER, packbuf, aintv(1), 
      &               aintv(2), ierr )
+       if (aintv(2) .le. aintv(3)) then
+            print *, ' Position decreased after pack of character!'
+       endif
+       aintv(3) = aintv(2)
        call mpi_pack_external( 'external32', inbuf2, insize2, 
      &               MPI_INTEGER,
      &               packbuf, aintv(1), aintv(2), ierr )
+       if (aintv(2) .le. aintv(3)) then
+            print *, ' Position decreased after pack of integer (2nd)!'
+       endif
+       aintv(3) = aintv(2)
 C
 C We could try sending this with MPI_BYTE...
        aintv(2) = 0

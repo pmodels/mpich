@@ -38,7 +38,7 @@ C First, create and initialize an info
 C
       call mpi_info_get_nkeys( i1, nkeys, ierr )
       if (nkeys .ne. 6) then
-         print *, 'Number of keys should be 6, is ', nkeys
+         print *, ' Number of keys should be 6, is ', nkeys
       endif
       sumindex = 0
       do i=1, nkeys
@@ -58,13 +58,13 @@ C        keys are number from 0 to n-1, even in Fortran (Section 4.10)
      &                               myvalue, flag, ierr )
                   if (myvalue .ne. values(j)) then
                      errs = errs + 1
-                     print *, 'Value for ', mykey, ' not expected'
+                     print *, ' Value for ', mykey, ' not expected'
                   else
                      do ln=MPI_MAX_INFO_VAL,1,-1
                         if (myvalue(ln:ln) .ne. ' ') then
                            if (vlen .ne. ln) then
                               errs = errs + 1
-                              print *, 'length is ', ln, 
+                              print *, ' length is ', ln, 
      &                          ' but valuelen gave ',  vlen, 
      &                          ' for key ', mykey
                            endif
@@ -82,7 +82,7 @@ C        keys are number from 0 to n-1, even in Fortran (Section 4.10)
       enddo
       if (sumindex .ne. 21) then
          errs = errs + 1
-         print *, 'Not all keys found'
+         print *, ' Not all keys found'
       endif
 C
 C delete 2, then dup, then delete 2 more
@@ -99,29 +99,35 @@ C flag to false
          call mpi_info_get_valuelen( i2, keys(i), valuelen, flag, ierr )
          if (flag) then
             errs = errs + 1
-            print *, 'Found unexpected key ', keys(i)
+            print *, ' Found unexpected key ', keys(i)
          endif
          myvalue = 'A test'
          call mpi_info_get( i2, keys(i), MPI_MAX_INFO_VAL, 
      &                      myvalue, flag, ierr )
          if (flag) then
             errs = errs + 1
-            print *, 'Found unexpected key in MPI_Info_get ', keys(i)
+            print *, ' Found unexpected key in MPI_Info_get ', keys(i)
          else 
             if (myvalue .ne. 'A test') then
                errs = errs + 1
-               print *, 'Returned value overwritten, is now ', myvalue
+               print *, ' Returned value overwritten, is now ', myvalue
             endif
          endif
          
       enddo
       do i=3,6
+         myvalue = ' '
          call mpi_info_get( i2, keys(i), MPI_MAX_INFO_VAL, 
      &                      myvalue, flag, ierr )
-         if (myvalue .ne. values(i)) then
-            errs = errs + 1
-            print *, 'Found wrong value (', myvalue, ') for key ', 
-     &               keys(i)
+         if (.not. flag) then
+             errs = errs + 1
+             print *, ' Did not find key ', keys(i)
+         else 
+            if (myvalue .ne. values(i)) then
+               errs = errs + 1
+               print *, ' Found wrong value (', myvalue, ') for key ', 
+     &                  keys(i)
+            endif
          endif
       enddo
 C

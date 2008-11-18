@@ -30,6 +30,7 @@ static int pack_and_unpack(char *typebuf,
 int main(int argc, char **argv)
 {
     int err, errs = 0;
+    int toterrs, rank;
 
     MPI_Init(&argc, &argv); /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
     parse_args(argc, argv);
@@ -50,11 +51,18 @@ int main(int argc, char **argv)
     errs += err;
 
     /* print message and exit */
-    if (errs) {
-	fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
-	printf(" No Errors\n");
+    /* Allow the use of more than one process - some MPI implementations
+       (including IBM's) check that the number of processes given to 
+       Type_create_darray is no larger than MPI_COMM_WORLD */
+    MPI_Reduce( &errs, &toterrs, 1, MPI_INT, 0, MPI_SUM, MPI_COMM_WORLD );
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    if (rank == 0) {
+	if (toterrs) {
+	    fprintf(stderr, "Found %d errors\n", errs);
+	}
+	else {
+	    printf(" No Errors\n");
+	}
     }
     MPI_Finalize();
     return 0;

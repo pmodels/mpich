@@ -21,6 +21,8 @@ blockindexed-misc 1
 indexed-misc 1
 subarray-pack 1
 darray-pack 1
+darray-pack 9
+# darray-pack 72
 pairtype-size-extent 1
 simple-commit 1
 simple-size-extent 1

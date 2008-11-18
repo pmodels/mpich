@@ -98,8 +98,16 @@ int main( int argc, char *argv[] )
 		fprintf( stderr, "message %d (%d) should be %d\n", i, rmsg[i], 10+i );
 	    }
 	}
+	/* The MPI standard says that there is no way to use MPI_Request_free
+	   safely with receive requests.  A strict MPI implementation may
+	   choose to consider these erroreous (an IBM MPI implementation
+	   does so)  */
+#ifdef USE_STRICT_MPI
+	MPI_Wait( &r[4], MPI_STATUS_IGNORE );
+#else
 	MTestPrintfMsg( 10, "About  free Irecv request\n" );
 	MPI_Request_free( &r[4] ); 
+#endif
     }
 
     if (rank != dest && rank != src) {

@@ -22,6 +22,12 @@ C
       include 'mpif.h'
       integer value, ierr
       include 'attr1aints.h'
+      integer freefncall
+      common /fnccalls/ freefncall
+C
+C   For testing purposes, the following print can be used to check whether
+C   the free_fn is called
+C      print *, 'Free_fn called'
 C
       extrastate = extrastate - 1
 C   The value returned by the free function is the error code
@@ -59,8 +65,11 @@ C
        integer request
        external query_fn, free_fn, cancel_fn
        include 'attr1aints.h'
+       integer freefncall
+       common /fnccalls/ freefncall
 
        errs = 0
+       freefncall = 0
        
        call MTest_Init( ierr )
 
@@ -85,9 +94,12 @@ C
 C       
        if (extrastate .ne. 0) then
           errs = errs + 1
-          print *, 'Free routine not called' //
-     &         ', or not called with extra_data'
-          print *, 'extrastate = ', extrastate
+          if (freefncall .eq. 0) then
+              print *, 'Free routine not called'
+          else 
+              print *, 'Free routine did not update extra_data'
+              print *, 'extrastate = ', extrastate
+          endif
        endif
 C
        call MTest_Finalize( errs )
