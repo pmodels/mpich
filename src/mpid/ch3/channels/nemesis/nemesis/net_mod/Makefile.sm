@@ -1,3 +1,3 @@
-SUBDIRS_nemesis_nets_dirs = elan_module gm_module mx_module newtcp_module ib_module none_module sctp_module psm_module
+SUBDIRS_nemesis_nets_dirs = elan_module gm_module mx_module newtcp_module ib_module none_module psm_module
 SUBDIRS = @nemesis_nets_dirs@
 
