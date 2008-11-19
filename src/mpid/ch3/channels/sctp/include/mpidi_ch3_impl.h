@@ -52,7 +52,7 @@ extern int MPIDI_CH3I_dynamic_tmp_fd;
  */
 /*#define Req_Stream_from_match(match) (match.tag)%MPICH_SCTP_NUM_STREAMS*/
 /* the following keeps stream s.t. 1 <= stream <= MPICH_SCTP_NUM_REQS_ACTIVE */
-#define Req_Stream_from_match(match) (abs((match.tag) + (match.context_id))% MPICH_SCTP_NUM_REQS_ACTIVE)+1
+#define Req_Stream_from_match(match) (abs((match.parts.tag) + (match.parts.context_id))% MPICH_SCTP_NUM_REQS_ACTIVE)+1
 #define REQ_Stream(req) Req_Stream_from_match(req->dev.match)
 int Req_Stream_from_pkt_and_req(MPIDI_CH3_Pkt_t * pkt, MPID_Request * sreq);
 
