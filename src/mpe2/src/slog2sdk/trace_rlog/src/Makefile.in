@@ -71,7 +71,7 @@ $(libbuild_dir)/$(LIB_TRACE): $(LOBJ)
 	               -export-symbols $(srcdir)/JavaTraceInput.sym \
 	               -rpath $(libbuild_dir) ; \
 	else \
-	    $(LIBTOOL) --mode=link $(LD_CC) @CFLAGS@ -o $(LIB_TRACE) $(LOBJ) $(LDFLAGS) \
+	    $(LIBTOOL) --mode=link $(LD_CC) -o $(LIB_TRACE) $(LOBJ) $(LDFLAGS) \
 	               -rpath $(libbuild_dir) ; \
 	fi
 	$(LIBTOOL) --mode=install $(INSTALL) $(LIB_TRACE) $(libbuild_dir)

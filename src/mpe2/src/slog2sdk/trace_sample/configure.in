@@ -110,10 +110,17 @@ if test "$JDK_TOPDIR" = "no" ; then
     PAC_MSG_ERROR($enable_softerror, [--without-java is specified, exit!])
 fi
 
+AC_ARG_VAR(TRACE_CC,[TRACE_CC overrides CC if it exists.])
+AC_ARG_VAR(TRACE_CFLAGS,[TRACE_CFLAGS overrides CFLAGS if it exists.])
 dnl Check if TRACE_CC has been set before AC_PROG_CC
 if test -n "$TRACE_CC" ; then
     TRACE_ORIG_CC="$CC"
     CC="$TRACE_CC"
+fi
+dnl Check if TRACE_CFLAGS has been set before AC_PROG_CC
+if test -n "$TRACE_CFLAGS" ; then
+    TRACE_ORIG_CFLAGS="$CFLAGS"
+    CFLAGS="$TRACE_CFLAGS"
 fi
 dnl Checks for programs.
 AC_PROG_CC
@@ -316,4 +323,8 @@ fi
 dnl Restore the original CC if it is needed
 if test -n "$TRACE_CC" ; then
     CC="$TRACE_ORIG_CC"
+fi
+dnl Restore the original CFLAGS if it is needed
+if test -n "$TRACE_CFLAGS" ; then
+    CFLAGS="$TRACE_ORIG_CFLAGS"
 fi
