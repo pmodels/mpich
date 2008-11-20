@@ -41,13 +41,14 @@ OBJ4T            = $(CSRC4T:.c=.@OBJEXT@)
 OBJ4E            = $(CSRC4E:.c=.@OBJEXT@)
 
 CC               = @CC@
+LD_CC            = @CC@ @CFLAGS@
 INSTALL          = @INSTALL@ 
 LIBTOOL          = $(SHELL) ../libtool
 EXPORT_SYMBOLS   = @EXPORT_SYMBOLS@
 RM               = @RM@
 
 JNI_INC          = @JNI_INC@
-CFLAGS           = -I.. $(JNI_INC) -I$(TRACE_INCDIR) @COPTS@
+CFLAGS           = -I.. $(JNI_INC) -I$(TRACE_INCDIR) @CFLAGS@
 LDFLAGS          = -module -no-undefined -avoid-version @LDFLAGS@
 
 # memory leak checker
@@ -66,11 +67,11 @@ ALL: $(libbuild_dir)/$(LIB_TRACE) $(binbuild_dir)/$(PGM_PRINT) $(binbuild_dir)/$
 
 $(libbuild_dir)/$(LIB_TRACE): $(LOBJ)
 	if [ "$(EXPORT_SYMBOLS)" = "yes" ] ; then \
-	    $(LIBTOOL) --mode=link $(CC) -o $(LIB_TRACE) $(LOBJ) $(LDFLAGS) \
+	    $(LIBTOOL) --mode=link $(LD_CC) -o $(LIB_TRACE) $(LOBJ) $(LDFLAGS) \
 	               -export-symbols $(srcdir)/JavaTraceInput.sym \
 	               -rpath $(libbuild_dir) ; \
 	else \
-	    $(LIBTOOL) --mode=link $(CC) -o $(LIB_TRACE) $(LOBJ) $(LDFLAGS) \
+	    $(LIBTOOL) --mode=link $(LD_CC) @CFLAGS@ -o $(LIB_TRACE) $(LOBJ) $(LDFLAGS) \
 	               -rpath $(libbuild_dir) ; \
 	fi
 	$(LIBTOOL) --mode=install $(INSTALL) $(LIB_TRACE) $(libbuild_dir)
@@ -78,21 +79,21 @@ $(libbuild_dir)/$(LIB_TRACE): $(LOBJ)
 
 INSTALL_LIBSO: $(LOBJ)
 	if [ "$(EXPORT_SYMBOLS)" = "yes" ] ; then \
-	    $(LIBTOOL) --mode=link $(CC) -o $(LIB_TRACE) $(LOBJ) $(LDFLAGS) \
+	    $(LIBTOOL) --mode=link $(LD_CC) -o $(LIB_TRACE) $(LOBJ) $(LDFLAGS) \
 	               -export-symbols $(srcdir)/JavaTraceInput.sym \
 	               -rpath $(LIBDIR) ; \
 	else \
-	    $(LIBTOOL) --mode=link $(CC) -o $(LIB_TRACE) $(LOBJ) $(LDFLAGS) \
+	    $(LIBTOOL) --mode=link $(LD_CC) -o $(LIB_TRACE) $(LOBJ) $(LDFLAGS) \
 	               -rpath $(LIBDIR) ; \
 	fi
 	$(LIBTOOL) --mode=install $(INSTALL) $(LIB_TRACE) $(DESTDIR)$(LIBDIR)
 	$(LIBTOOL) --finish $(LIBDIR)
 
 $(binbuild_dir)/$(PGM_PRINT): $(OBJ4T)
-	$(CC) @COPTS@ -o $@ $(OBJ4T) $(MEMLIBS)
+	$(LD_CC) -o $@ $(OBJ4T) $(MEMLIBS) @LDFLAGS@
 
 $(binbuild_dir)/$(PGM_CHECK): $(OBJ4E)
-	$(CC) @COPTS@ -o $@ $(OBJ4E) $(MEMLIBS)
+	$(LD_CC) -o $@ $(OBJ4E) $(MEMLIBS) @LDFLAGS@
 
 clean:
 	@-$(RM) *.@OBJEXT@ *.lo *.la

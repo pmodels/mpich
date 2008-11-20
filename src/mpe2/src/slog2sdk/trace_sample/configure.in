@@ -178,12 +178,6 @@ case "$host_os" in
 esac
 AC_SUBST(LIBSO_PREFIX)
 
-dnl  set COPTS equal to CFLAGS during configuration
-if test "x$CFLAGS" != "x" ; then
-    COPTS="$CFLAGS"
-    AC_SUBST(COPTS)
-fi
-
 dnl  intel compiler does not need shared library symbol exported.
 EXPORT_SYMBOLS=yes
 case "$CC" in
