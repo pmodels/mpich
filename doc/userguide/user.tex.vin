@@ -767,7 +767,7 @@ simply \texttt{fork}ed from the \texttt{mpiexec} process.  This process
 manager supports programs that use \texttt{MPI\_Comm\_spawn} and the other
 dynamic process routines, but does not support the use of the dynamic process
 routines from programs that are not started with \texttt{mpiexec}.  The
-\texttt{gforker} process manager is primiarily intended as a debugging aid as
+\texttt{gforker} process manager is primarily intended as a debugging aid as
 it simplifies development and testing of MPI programs on a single node or
 processor.  
 
@@ -842,6 +842,62 @@ but for standard error.
   defined).  The default is \texttt{NONE}. 
 \item[\texttt{MPIEXEC\_STDERRBUF}]Like \texttt{MPIEXEC\_STDOUTBUF},
   but for standard error. 
+\end{description}
+
+\subsection{Extensions for the hydra Process Management Environment}
+\label{sec:extensions-hydra}
+\texttt{hydra} is a process management system for starting processes
+using the native launcher daemons present on the system such as ssh,
+slurm, pbs. This process manager does not support programs that use
+\texttt{MPI\_Comm\_spawn} and the other dynamic process routines.
+
+\subsubsection{\texttt{mpiexec} arguments for hydra}
+\label{sec:mpiexec-hydra}
+
+In addition to the standard \texttt{mpiexec} command-line arguments,
+the \texttt{hydra} \texttt{mpiexec} supports the following options:
+\begin{description}
+\item[\texttt{-np <num>}]A synonym for the standard \texttt{-n} argument
+\item[\texttt{-env <name> <value>}]Set the environment variable
+\texttt{<name>} to \texttt{<value>} for the processes being run by
+\texttt{mpiexec}.
+\item[\texttt{-envnone}]Pass no environment variables (other than ones
+specified with  other \texttt{-env} or \texttt{-genv} arguments) to the
+processes being run by \texttt{mpiexec}. 
+By default, all environment
+variables are provided to each MPI process (rationale: principle of
+least surprise for the user)
+\item[\texttt{-envlist <list>}]Pass the listed environment variables (names
+separated  by commas), with their current values, to the processes being run by
+ \texttt{mpiexec}.
+\item[\texttt{-genv <name> <value>}]The \item{-genv} options have the same
+meaning as their corresponding \texttt{-env} version, except they apply to all
+executables, not just the current executable (in the case that the colon
+syntax is used to specify multiple execuables).
+\item[\texttt{-genvnone}]Like \texttt{-envnone}, but for all executables
+\item[\texttt{-genvlist <list>}]Like \texttt{-envlist}, but for all executables
+\end{description}
+
+In addition to the commandline argments, the \texttt{hydra}
+\texttt{mpiexec} provides a number of environment variables that can
+be used to control the behavior of \texttt{mpiexec}:
+
+\begin{description}
+\item[\texttt{MPIEXEC\_TIMEOUT}]Maximum running time in seconds.
+\texttt{mpiexec} will terminate MPI programs that take longer than the value
+specified by \texttt{MPIEXEC\_TIMEOUT}.  
+\item[\texttt{MPIEXEC\_PORT\_RANGE}]Set the range of ports that
+\texttt{mpiexec} will use  
+  in communicating with the processes that it starts.  The format of 
+  this is \texttt{<low>:<high>}.  For example, to specify any port between
+  10000 and 10100, use \texttt{10000:10100}.  
+\item[\texttt{MPICH\_PORT\_RANGE}]Has the same meaning as
+\texttt{MPIEXEC\_PORT\_RANGE} and is used if \texttt{MPIEXEC\_PORT\_RANGE} is
+not set. 
+\item[\texttt{HYDRA\_HOST\_FILE}]Specifies the host file to use to
+  launch processes.
+\item[\texttt{HYDRA\_USE\_LOCALHOST}]Forces hydra to spawn all
+  processes on the local host.
 \end{description}
 
 \subsection{Restrictions of the remshell Process Management Environment}

@@ -591,10 +591,10 @@ Section~\ref{configure-options}.  Here we comment on some of them.
 \item[\texttt{--enable-sharedlibs=solaris-cc}]for cc on Solaris
 \end{description}
 \item[--with-pm]Select the process manager.  The default is
-  \texttt{mpd}; also useful is \texttt{gforker}.  You can build with
-  both process managers by specifying
+  \texttt{mpd}; also useful are \texttt{gforker} and \texttt{hydra}.  You can build with
+  all three process managers by specifying
 \begin{verbatim}
-  --with-pm=mpd:gforker
+  --with-pm=mpd:gforker:hydra
 \end{verbatim}
 \item[--without-mpe]Configure MPICH2 without the MPE package of
   program development tools (including the Jumpshot performance viewer)
@@ -780,6 +780,8 @@ Currently three process managers are distributed with MPICH2
 \item[gforker] This is a simple process manager that creates all
   processes on a single machine.  It is useful for both debugging and on
   shared memory multiprocessors.
+\item[hydra] This is a new process manager tha natively uses the
+existing daemons on the system such as ssh, slurm, pbs.
 \end{description}
 
 \subsection{mpd}
@@ -1088,6 +1090,15 @@ a single node; it's version of \texttt{mpiexec} uses the system
 To configure with the \texttt{gforker} process manager, use
 \begin{verbatim}
     configure --with-pm=gforker ...
+\end{verbatim}
+
+\subsection{hydra} \label{sec:hydra} \texttt{hydra} is a simple
+process manager that launches processes using the native daemons
+present on the system such as ssh, slurm, pbs, etc. To configure with
+the \texttt{hydra} process manager, use
+
+\begin{verbatim}
+    configure --with-pm=hydra ...
 \end{verbatim}
 
 \section{Testing}
