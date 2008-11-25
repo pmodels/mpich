@@ -8,6 +8,8 @@
 #include "mpiimpl.h"
 #include "datatype.h"
 
+#define COPY_BUFFER_SZ 16384
+
 /* These functions are used in the implementation of collective
    operations. They are wrappers around MPID send/recv functions. They do
    sends/receives by setting the context offset to
@@ -143,9 +145,11 @@ int MPIC_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype)
 {
-    int sendtype_iscontig, recvtype_iscontig, sendsize;
-    int rank, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    int sendtype_iscontig, recvtype_iscontig;
+    MPI_Aint sendsize, recvsize, sdata_sz, rdata_sz, copy_sz;
     MPI_Aint true_extent, sendtype_true_lb, recvtype_true_lb;
+    MPIU_CHKLMEM_DECL(1);
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_LOCALCOPY);
 
@@ -158,35 +162,117 @@ int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPIR_Datatype_iscontig(sendtype, &sendtype_iscontig);
     MPIR_Datatype_iscontig(recvtype, &recvtype_iscontig);
 
-    if (sendtype_iscontig && recvtype_iscontig)
+    MPID_Datatype_get_size_macro(sendtype, sendsize);
+    MPID_Datatype_get_size_macro(recvtype, recvsize);
+    sdata_sz = sendsize * sendcount;
+    rdata_sz = recvsize * recvcount;
+    
+    if (sdata_sz > rdata_sz)
     {
-        MPID_Datatype_get_size_macro(sendtype, sendsize);
-        mpi_errno = NMPI_Type_get_true_extent(sendtype, &sendtype_true_lb,
-                                              &true_extent);
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-        
-        mpi_errno = NMPI_Type_get_true_extent(recvtype, &recvtype_true_lb,
-                                              &true_extent);
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        MPIU_ERR_SET2(mpi_errno, MPI_ERR_TRUNCATE, "**truncate", "**truncate %d %d", sdata_sz, rdata_sz);
+        copy_sz = rdata_sz;
+    }
+    else
+    {
+        copy_sz = sdata_sz;
+    }
 
+    mpi_errno = NMPI_Type_get_true_extent(sendtype, &sendtype_true_lb, &true_extent);
+    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    
+    mpi_errno = NMPI_Type_get_true_extent(recvtype, &recvtype_true_lb, &true_extent);
+    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+    if (sendtype_iscontig && recvtype_iscontig)
+    {    
         memcpy(((char *) recvbuf + recvtype_true_lb), 
                ((char *) sendbuf + sendtype_true_lb), 
-               sendcount*sendsize);
+               copy_sz);
     }
-    else {
-	/* FIXME: This invokes a lot of machinery, including possible nested 
-	   mutexes (see accumulate) just to make use of the datatype copy
-	   routines from one buffer to another. */
-        NMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        mpi_errno = MPIC_Sendrecv ( sendbuf, sendcount, sendtype,
-                                    rank, MPIR_LOCALCOPY_TAG, 
-                                    recvbuf, recvcount, recvtype,
-                                    rank, MPIR_LOCALCOPY_TAG,
-                                    MPI_COMM_WORLD, MPI_STATUS_IGNORE );
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    else if (sendtype_iscontig)
+    {
+        MPID_Segment seg;
+	MPIDI_msg_sz_t last;
+
+	MPID_Segment_init(recvbuf, recvcount, recvtype, &seg, 0);
+	last = copy_sz;
+	MPID_Segment_unpack(&seg, 0, &last, (char*)sendbuf + sendtype_true_lb);
+        MPIU_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");        
+    }
+    else if (recvtype_iscontig)
+    {
+        MPID_Segment seg;
+	MPIDI_msg_sz_t last;
+
+	MPID_Segment_init(sendbuf, sendcount, sendtype, &seg, 0);
+	last = copy_sz;
+	MPID_Segment_pack(&seg, 0, &last, (char*)recvbuf + recvtype_true_lb);
+        MPIU_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
+    }
+    else
+    {
+	char * buf;
+	MPIDI_msg_sz_t buf_off;
+	MPID_Segment sseg;
+	MPIDI_msg_sz_t sfirst;
+	MPID_Segment rseg;
+	MPIDI_msg_sz_t rfirst;
+        
+        MPIU_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf"); 
+
+	MPID_Segment_init(sendbuf, sendcount, sendtype, &sseg, 0);
+	MPID_Segment_init(recvbuf, recvcount, recvtype, &rseg, 0);
+
+	sfirst = 0;
+	rfirst = 0;
+	buf_off = 0;
+	
+	while (1)
+	{
+	    MPI_Aint last;
+	    char * buf_end;
+
+	    if (copy_sz - sfirst > COPY_BUFFER_SZ - buf_off)
+	    {
+		last = sfirst + (COPY_BUFFER_SZ - buf_off);
+	    }
+	    else
+	    {
+		last = copy_sz;
+	    }
+	    
+	    MPID_Segment_pack(&sseg, sfirst, &last, buf + buf_off);
+	    MPIU_Assert(last > sfirst);
+	    
+	    buf_end = buf + buf_off + (last - sfirst);
+	    sfirst = last;
+	    
+	    MPID_Segment_unpack(&rseg, rfirst, &last, buf);
+	    MPIU_Assert(last > rfirst);
+
+	    rfirst = last;
+
+	    if (rfirst == copy_sz)
+	    {
+		/* successful completion */
+		break;
+	    }
+
+            /* if the send side finished, but the recv side couldn't unpack it, there's a datatype mismatch */
+            MPIU_ERR_CHKANDJUMP(sfirst == copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");        
+
+            /* if not all data was unpacked, copy it to the front of the buffer for next time */
+	    buf_off = sfirst - rfirst;
+	    if (buf_off > 0)
+	    {
+		memmove(buf, buf_end - buf_off, buf_off);
+	    }
+	}
     }
     
+    
   fn_exit:
+    MPIU_CHKLMEM_FREEALL();
     MPIR_Nest_decr();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_LOCALCOPY);
     return mpi_errno;
