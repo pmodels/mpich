@@ -779,6 +779,10 @@ EOF
     if test -n "$BASEF90" ; then
         F90=$saveF90
     fi
+
+    if test -f f77/init/checksizes.c ; then
+        cp f77/init/checksizes.c f90/init
+    fi
 fi
 #
 if test "$FROM_MPICH2" = yes ; then
