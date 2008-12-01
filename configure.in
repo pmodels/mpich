@@ -1517,6 +1517,7 @@ dnl
 # find the C preprocessor reliably.
 saveCFLAGS=$CFLAGS
 AC_PROG_CC
+AC_PROG_CPP
 # Bug in autoconf.  Restore cross settings
 if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
     AC_MSG_RESULT([Resetting cross compilation to yes])

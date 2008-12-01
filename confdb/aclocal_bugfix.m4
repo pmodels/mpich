@@ -94,8 +94,8 @@ dnl However, on failure, we still test to see if, even though CPP
 dnl failed, the compiler accepts it (this avoids some of the "evaluation
 dnl copy" problems.
 dnl 
-undefine([AC_CHECK_HEADER])
-AC_DEFUN(AC_CHECK_HEADER,
+dnl undefine([AC_CHECK_HEADER])
+AC_DEFUN(PAC_OLD_CHECK_HEADER,
 [dnl Do the transliteration at runtime so arg 1 can be a shell variable.
 ac_safe=`echo "$1" | sed 'y%./+-%__p_%'`
 AC_MSG_CHECKING([for $1])
