@@ -64,7 +64,7 @@ void ADIOI_XFS_WriteContig(ADIO_File fd, void *buf, int count,
 		    memcpy(newbuf, buf, size);
 		    ADIOI_XFS_Aligned_Mem_File_Write(fd, newbuf, size, offset, &err);
 		    nbytes += err;
-		    free(newbuf);
+		    ADIOI_Free(newbuf);
 		}
 		else nbytes += pwrite(fd->fd_sys, buf, size, offset);
 	    }
@@ -78,7 +78,7 @@ void ADIOI_XFS_WriteContig(ADIO_File fd, void *buf, int count,
 	    if (newbuf) {
 		memcpy(newbuf, buf, len);
 		ADIOI_XFS_Aligned_Mem_File_Write(fd, newbuf, len, offset, &err);
-		free(newbuf);
+		ADIOI_Free(newbuf);
 	    }
 	    else err = pwrite(fd->fd_sys, buf, len, offset);
 	}

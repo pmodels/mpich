@@ -87,7 +87,7 @@ static int ADIOI_LUSTRE_Directio(ADIO_File fd, void *buf, int len,
 		memcpy(newbuf, buf, size);
 		ADIOI_LUSTRE_Aligned_Mem_File_Write(fd, newbuf, size, offset, &err);
 		nbytes += err;
-		free(newbuf);
+		ADIOI_Free(newbuf);
 	    }
 	    else nbytes += pwrite(fd->fd_sys, buf, size, offset);
 	}
@@ -102,7 +102,7 @@ static int ADIOI_LUSTRE_Directio(ADIO_File fd, void *buf, int len,
 		ADIOI_LUSTRE_Aligned_Mem_File_Read(fd, newbuf, size, offset, &err);
 		if (err > 0) memcpy(buf, newbuf, err);
 		nbytes += err;
-		free(newbuf);
+		ADIOI_Free(newbuf);
 	    }
 	    else nbytes += pread(fd->fd_sys, buf, size, offset);
 	}

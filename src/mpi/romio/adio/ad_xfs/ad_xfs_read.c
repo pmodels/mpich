@@ -63,7 +63,7 @@ void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, int count,
 		    ADIOI_XFS_Aligned_Mem_File_Read(fd, newbuf, size, offset, &err);
 		    if (err > 0) memcpy(buf, newbuf, err);
 		    nbytes += err;
-		    free(newbuf);
+		    ADIOI_Free(newbuf);
 		}
 		else nbytes += pread(fd->fd_sys, buf, size, offset);
 	    }
@@ -77,7 +77,7 @@ void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, int count,
 	    if (newbuf) {
 		ADIOI_XFS_Aligned_Mem_File_Read(fd, newbuf, len, offset, &err);
 		if (err > 0) memcpy(buf, newbuf, err);
-		free(newbuf);
+		ADIOI_Free(newbuf);
 	    }
 	    else err = pread(fd->fd_sys, buf, len, offset);
 	}

@@ -192,7 +192,7 @@ void ADIOI_BGL_Open(ADIO_File fd, int *error_code)
         bgl_statfs.f_type = -1; /* bogus magic number */
         DBGV_FPRINTF(stderr,"Statfs '%s' failed with rc=%d, errno=%d\n",dir,rc,errno);
       }
-      free(dir);
+      ADIOI_Free(dir);
     }
     if ((bgl_statfs.f_type == GPFS_SUPER_MAGIC) ||
         (bgl_statfs.f_type == PVFS2_SUPER_MAGIC))
