@@ -7,6 +7,7 @@ non_zero_root_SOURCES = non_zero_root.c
 sendrecvl_SOURCES       = sendrecvl.c
 twovec_SOURCES          = twovec.c
 dtpack_SOURCES          = dtpack.c
+allredtrace_SOURCES     = allredtrace.c
 
 # A special testing target to simplify running just the performance tests
 testing:
