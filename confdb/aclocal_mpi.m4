@@ -123,6 +123,10 @@ AC_SUBST(F90)
 AC_ARG_WITH(mpich,
 [--with-mpich=path  - Assume that we are building with MPICH],
 ac_mpi_type=mpich)
+# Allow MPICH2 as well as MPICH
+AC_ARG_WITH(mpich2,
+[--with-mpich=path  - Assume that we are building with MPICH],
+ac_mpi_type=mpich)
 AC_ARG_WITH(lammpi,
 [--with-lammpi=path  - Assume that we are building with LAM/MPI],
 ac_mpi_type=lammpi)
