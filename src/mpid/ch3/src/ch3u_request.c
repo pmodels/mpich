@@ -179,6 +179,8 @@ void MPIDI_CH3_Request_destroy(MPID_Request * req)
  * by the segment contained in the request structure.
  * If the density of IOV is not sufficient, pack the data into a send/receive 
  * buffer and point the IOV at the buffer.
+ *
+ * Expects sreq->dev.OnFinal to be initialized (even if it's NULL).
  */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Request_load_send_iov

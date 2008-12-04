@@ -678,6 +678,7 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
     vc->pg      = pg;
     vc->pg_rank = rank;
     vc->lpid    = lpid_counter++;
+    vc->node_id = -1;
     MPIDI_VC_Init_seqnum_send(vc);
     MPIDI_VC_Init_seqnum_recv(vc);
     vc->rndvSend_fn           = MPIDI_CH3_RndvSend;
@@ -689,3 +690,221 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
 
     return MPI_SUCCESS;
 }
+
+/* ----------------------------------------------------------------------- */
+/* Routines to vend topology information. */
+
+static MPID_Node_id_t g_num_nodes = 0;
+char MPIU_hostname[MAX_HOSTNAME_LEN] = "_UNKNOWN_"; /* '_' is an illegal char for a hostname so */
+                                                    /* this will never match */
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Get_node_id
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_Get_node_id(MPID_Comm *comm, int rank, MPID_Node_id_t *id_p)
+{
+    *id_p = comm->vcr[rank]->node_id;
+    return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Get_max_node_id
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+/* Providing a comm argument permits optimization, but this function is always
+   allowed to return the max for the universe. */
+int MPID_Get_max_node_id(MPID_Comm *comm, MPID_Node_id_t *max_id_p)
+{
+    /* easiest way to implement this is to track it at PG create/destroy time */
+    *max_id_p = g_num_nodes - 1;
+    MPIU_Assert(*max_id_p >= 0);
+    return MPI_SUCCESS;
+}
+
+static int publish_node_id(MPIDI_PG_t *pg, int our_pg_rank)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    int ret;
+    char *key;
+    int key_max_sz;
+    char *kvs_name;
+    MPIU_CHKLMEM_DECL(1);
+
+    /* set MPIU_hostname */
+    ret = gethostname(MPIU_hostname, MAX_HOSTNAME_LEN);
+    MPIU_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost", "**sock_gethost %s %d", strerror(errno), errno);
+    MPIU_hostname[MAX_HOSTNAME_LEN-1] = '\0';
+
+    /* Allocate space for pmi key */
+    pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+
+    MPIU_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
+
+    mpi_errno = MPIDI_PG_GetConnKVSname(&kvs_name);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Put my hostname id */
+    if (pg->size > 1)
+    {
+        memset(key, 0, key_max_sz);
+        MPIU_Snprintf(key, key_max_sz, "hostname[%d]", our_pg_rank);
+
+        pmi_errno = PMI_KVS_Put(kvs_name, key, MPIU_hostname);
+        MPIU_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put", "**pmi_kvs_put %d", pmi_errno);
+
+        pmi_errno = PMI_KVS_Commit(kvs_name);
+        MPIU_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit", "**pmi_kvs_commit %d", pmi_errno);
+
+        pmi_errno = PMI_Barrier();
+        MPIU_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
+    }
+
+fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+/* Fills in the node_id info from PMI info.  Adapted from MPIU_Get_local_procs.
+   This function is collective over the entire PG because PMI_Barrier is called.
+   
+   our_pg_rank should be set to -1 if this is not the current process' PG.  This
+   is currently not supported due to PMI limitations.
+
+   Algorithm:
+  
+   Each process kvs_puts its hostname and stores the total number of
+   processes (g_num_global).  Each process determines the number of nodes
+   (g_num_nodes) and assigns a node id to each process (g_node_ids[]):
+   
+     For each hostname the process seaches the list of unique nodes
+     names (node_names[]) for a match.  If a match is found, the node id
+     is recorded for that matching process.  Otherwise, the hostname is
+     added to the list of node names.
+*/
+int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    int ret;
+    int val;
+    int i, j;
+    char *key;
+    int key_max_sz;
+    char *kvs_name;
+    char **node_names;
+    char *node_name_buf;
+    int no_local = 0;
+    int odd_even_cliques = 0;
+    MPIU_CHKLMEM_DECL(3);
+
+    if (our_pg_rank == -1) {
+        /* FIXME this routine can't handle the dynamic process case at this
+           time.  This will require more support from the process manager. */
+        MPIU_Assert(0);
+    }
+
+    mpi_errno = publish_node_id(pg, our_pg_rank);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Used for debugging only.  This disables communication over shared memory */
+#ifdef ENABLED_NO_LOCAL
+    no_local = 1;
+#else
+    ret = MPIU_GetEnvBool("MPICH_NO_LOCAL", &val);
+    if (ret == 1 && val)
+        no_local = 1;
+#endif
+
+    /* Used for debugging on a single machine: Odd procs on a node are
+       seen as local to each other, and even procs on a node are seen
+       as local to each other. */
+#ifdef ENABLED_ODD_EVEN_CLIQUES
+    odd_even_cliques = 1;
+#else
+    ret = MPIU_GetEnvBool("MPICH_ODD_EVEN_CLIQUES", &val);
+    if (ret == 1 && val)
+        odd_even_cliques = 1;
+#endif
+
+    if (no_local) {
+        /* just assign 0 to n-1 as node ids and bail */
+        for (i = 0; i < pg->size; ++i) {
+            pg->vct[i].node_id = g_num_nodes++;
+        }
+        goto fn_exit;
+    }
+
+    /* Allocate space for pmi key */
+    pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+
+    MPIU_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
+
+    mpi_errno = MPIDI_PG_GetConnKVSname(&kvs_name);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Allocate temporary structures.  These would need to be persistent if
+       we somehow were able to support dynamic processes via this method. */
+    MPIU_CHKLMEM_MALLOC(node_names, char **, pg->size * sizeof(char*), mpi_errno, "node_names");
+    MPIU_CHKLMEM_MALLOC(node_name_buf, char *, pg->size * key_max_sz * sizeof(char), mpi_errno, "node_name_buf");
+
+    /* Gather hostnames */
+    for (i = 0; i < pg->size; ++i)
+    {
+        node_names[i] = &node_name_buf[i * key_max_sz];
+        node_names[i][0] = '\0';
+    }
+
+    for (i = 0; i < pg->size; ++i)
+    {
+        if (i == our_pg_rank)
+        {
+            /* This is us, no need to perform a get */
+            MPIU_Snprintf(node_names[g_num_nodes], key_max_sz, "%s", MPIU_hostname);
+        }
+        else
+        {
+            memset(key, 0, key_max_sz);
+            MPIU_Snprintf(key, key_max_sz, "hostname[%d]", i);
+
+            pmi_errno = PMI_KVS_Get(kvs_name, key, node_names[g_num_nodes], key_max_sz);
+            MPIU_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
+        }
+
+        /* Find the node_id for this process, or create a new one */
+        /* FIXME:need a better algorithm -- this one does O(N^2) strncmp()s! */
+        /* The right fix is to get all this information from the process
+           manager, rather than bother with this hostname hack at all. */
+        for (j = 0; j < g_num_nodes; ++j)
+            if (!strncmp(node_names[j], node_names[g_num_nodes], key_max_sz))
+                break;
+        if (j == g_num_nodes)
+            ++g_num_nodes;
+        else
+            node_names[g_num_nodes][0] = '\0';
+        pg->vct[i].node_id = j;
+    }
+
+    if (odd_even_cliques)
+    {
+        /* Create new processes for all odd numbered processes. This
+           may leave nodes ids with no processes assigned to them, but
+           I think this is OK */
+        for (i = 0; i < pg->size; ++i)
+            if (i & 0x1)
+                pg->vct[i].node_id += g_num_nodes;
+        g_num_nodes *= 2;
+    }
+
+fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+

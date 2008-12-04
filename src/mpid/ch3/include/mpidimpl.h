@@ -651,6 +651,9 @@ typedef struct MPIDI_VC
     /* Local process ID */
     int lpid;
 
+    /* The node id of this process, used for topologically aware collectives. */
+    MPID_Node_id_t node_id;
+
     /* port name tag */ 
     int port_name_tag; /* added to handle dynamic process mgmt */
     
@@ -1168,6 +1171,9 @@ int MPIDI_CH3I_BCFree( char *publish_bc );
 /* Inform the process group of our connection information string (business
    card) */
 int MPIDI_PG_SetConnInfo( int rank, const char *connString );
+
+/* Fill in the node_id information for each VC in the given PG. */
+int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank);
 
 /* NOTE: Channel function prototypes are in mpidi_ch3_post.h since some of the 
    macros require their declarations. */

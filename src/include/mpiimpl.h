@@ -1468,7 +1468,13 @@ void MPIR_CommL_forget( MPID_Comm * );
 
 
 /* ------------------------------------------------------------------------- */
-
+/* Prototypes and definitions for the node ID code.  This is used to support
+   hierarchical collectives in a (mostly) device-independent way. */
+#if defined(MPID_USE_NODE_IDS)
+/* MPID_Node_id_t is a signed integer type defined by the device in mpidpre.h. */
+int MPID_Get_node_id(MPID_Comm *comm, int rank, MPID_Node_id_t *id_p);
+int MPID_Get_max_node_id(MPID_Comm *comm, MPID_Node_id_t *max_id_p);
+#endif
 
 /* ------------------------------------------------------------------------- */
 /*S
@@ -3684,12 +3690,10 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 
 /* Routines for determining local and remote processes */
 
-int MPIU_Get_local_procs(int global_rank, int num_global, int *num_local_p, int **local_procs_p,  int *local_rank_p);
 int MPIU_Find_local_and_external(struct MPID_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
                                  int *external_size_p, int *external_rank_p, int **external_ranks_p,
                                  int **intranode_table, int **internode_table_p);
 int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r);
 int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r);
-int MPIU_Local_procs_finalize(void);
 
 #endif /* MPIIMPL_INCLUDED */

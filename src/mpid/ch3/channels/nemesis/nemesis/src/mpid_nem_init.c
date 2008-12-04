@@ -24,6 +24,9 @@ char MPID_nem_hostname[MAX_HOSTNAME_LEN] = "UNKNOWN";
 
 static MPID_nem_queue_ptr_t net_free_queue;
 
+static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
+                           int **local_procs_p, int *local_rank_p);
+
 #ifndef MIN
 #define MIN( a , b ) ((a) >  (b)) ? (b) : (a)
 #endif /* MIN */
@@ -101,7 +104,7 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, int has_parent)
 
     MPID_nem_hostname[MAX_HOSTNAME_LEN-1] = '\0';
 
-    mpi_errno = MPIU_Get_local_procs(pg_rank, num_procs, &num_local, &local_procs, &local_rank);
+    mpi_errno = get_local_procs(pg_p, pg_rank, &num_local, &local_procs, &local_rank);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 #ifdef MEM_REGION_IN_HEAP
@@ -551,3 +554,59 @@ int MPID_nem_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
     return MPID_nem_netmod_func->connect_to_root (business_card, new_vc);
 }
+
+/* get_local_procs() determines which processes are local and
+   should use shared memory
+ 
+   If an output variable pointer is NULL, it won't be set.
+
+   Caller should NOT free any returned buffers.
+
+   Note that this is really only a temporary solution as it only
+   calculates these values for processes MPI_COMM_WORLD, i.e., not for
+   spawned or attached processes.
+*/
+#undef FUNCNAME
+#define FUNCNAME get_local_procs
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
+                           int **local_procs_p, int *local_rank_p)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int *procs;
+    int i;
+    int num_local = 0;
+    MPID_Node_id_t our_node_id;
+    MPIU_CHKPMEM_DECL(1);
+
+    MPIU_Assert(our_pg_rank < pg->size);
+    our_node_id = pg->vct[our_pg_rank].node_id;
+
+    MPIU_CHKPMEM_MALLOC(procs, int *, pg->size * sizeof(int), mpi_errno, "local process index array");
+
+    for (i = 0; i < pg->size; ++i) {
+        if (our_node_id == pg->vct[i].node_id) {
+            if (i == our_pg_rank && local_rank_p != NULL) {
+                *local_rank_p = num_local;
+            }
+            procs[num_local] = i;
+            ++num_local;
+        }
+    }
+
+    MPIU_CHKPMEM_COMMIT();
+
+    if (num_local_p != NULL)
+        *num_local_p = num_local;
+    if (local_procs_p != NULL)
+        *local_procs_p = procs;
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+

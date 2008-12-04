@@ -36,6 +36,8 @@ int MPID_nem_finalize()
     MPIU_Free(MPID_nem_mem_region.mailboxes.out);
     MPIU_Free(MPID_nem_mem_region.mailboxes.in);
 
+    MPIU_Free(MPID_nem_mem_region.local_procs);
+
 #ifdef MEM_REGION_IN_HEAP
     MPIU_Free(MPID_nem_mem_region_ptr);
 #endif /* MEM_REGION_IN_HEAP */

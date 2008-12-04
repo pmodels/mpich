@@ -55,8 +55,8 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     /* This is a sanity check because we define a generic packet size
      */
     if (sizeof(MPIDI_CH3_PktGeneric_t) < sizeof(MPIDI_CH3_Pkt_t)) {
-	fprintf( stderr, "Internal error - packet definition is too small.  Generic is %d bytes, MPIDI_CH3_Pkt_t is %d\n", sizeof(MPIDI_CH3_PktGeneric_t),
-		 sizeof(MPIDI_CH3_Pkt_t) );
+	fprintf( stderr, "Internal error - packet definition is too small.  Generic is %ld bytes, MPIDI_CH3_Pkt_t is %ld\n", (long int)sizeof(MPIDI_CH3_PktGeneric_t),
+		 (long int)sizeof(MPIDI_CH3_Pkt_t) );
 	exit(1);
     }
 #endif
@@ -93,6 +93,12 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     /* FIXME: Why do we add a ref to pg here? */
     MPIDI_PG_add_ref(pg);
 
+    /* We intentionally call this before the channel init so that the channel
+       can use the node_id info. */
+    /* Ideally this wouldn't be needed.  Once we have PMIv2 support for node
+       information we should probably eliminate this function. */
+    mpi_errno = MPIDI_Populate_vc_node_ids(pg, pg_rank);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /*
      * Let the channel perform any necessary initialization
@@ -104,9 +110,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
-
-    mpi_errno = MPIU_Get_local_procs(pg_rank, pg_size, NULL, NULL, NULL);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /*
      * Initialize the MPI_COMM_WORLD object
@@ -422,23 +425,8 @@ static int InitPG( int *argc, char ***argv,
        connection information by passing the pg to the channel init routine */
     if (usePMI) {
 	/* Tell the process group how to get connection information */
-	MPIDI_PG_InitConnKVS( pg );
-
-#if 0
-	/* If we're supporting the debugger, we can save our host and 
-	   pid here.  This publishes the data in the kvs space. 
-	   This allows the MPI processes to access the information 
-	   about the other processes without any PMI changes. */
-#ifdef HAVE_DEBUGGER_SUPPORT
-	{
-	    char key[64];
-	    char myinfo[512];
-	    MPIU_Snprintf( key, sizeof(key), "hpid-%d", pg_rank );
-	    MPIU_Snpritnf( myinfo, sizeof(key), "%s:%d", hostname, getpid() );
-	    PMI_KVS_Put( pg->world->connData, key, myinfo );
-	}
-#endif
-#endif
+        mpi_errno = MPIDI_PG_InitConnKVS( pg );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
     /* FIXME: Who is this for and where does it belong? */

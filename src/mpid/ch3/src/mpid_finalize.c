@@ -143,9 +143,6 @@ int MPID_Finalize(void)
 	}
     }
     
-    mpi_errno = MPIU_Local_procs_finalize();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_FINALIZE);
     return mpi_errno;
