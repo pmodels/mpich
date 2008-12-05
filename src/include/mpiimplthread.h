@@ -221,6 +221,7 @@ int MPIR_Thread_CS_Finalize( void );
 #endif
 
 
+#if !defined(MPID_DEFINES_MPID_CS)
 #ifdef MPICH_IS_THREADED
 
 #ifdef HAVE_RUNTIME_THREADCHECK
@@ -287,12 +288,14 @@ int MPIR_Thread_CS_Finalize( void );
 #define MPIU_THREADSAFE_INIT_CLEAR(_var) _var=0
 #define MPIU_THREADSAFE_INIT_BLOCK_END(_var) 
 #endif  /* MPICH_IS_THREADED */
+#endif  /* !defined(MPID_DEFINES_MPID_CS) */
 
 /* ------------------------------------------------------------------------- */
 /*
  * New definitions for controling the granularity of thread atomicity
  *
  */
+#if !defined(MPID_DEFINES_MPID_CS)
 #ifdef MPICH_IS_THREADED
 
 /*M MPIU_THREAD_CS_ENTER - Enter a named critical section
@@ -371,8 +374,10 @@ M*/
 #define MPIU_THREAD_CHECK_END
 #define MPIU_ISTHREADED(_s) 
 
-#endif 
+#endif  /* MPICH_IS_THREADED */
+#endif  /* !defined(MPID_DEFINES_MPID_CS) */
 
+#if !defined(MPID_DEFINES_MPID_CS)
 #ifdef MPICH_IS_THREADED
 
 /* Helper definitions */
@@ -597,6 +602,7 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_EXIT(_name,_context)
 #define MPIU_THREAD_CS_YIELD(_name,_context)
 #endif /* MPICH_IS_THREADED */
+#endif /* !defined(MPID_DEFINES_MPID_CS)a */
 
 #endif /* !defined(MPIIMPLTHREAD_H_INCLUDED) */
 

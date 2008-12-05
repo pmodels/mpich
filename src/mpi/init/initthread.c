@@ -97,7 +97,7 @@ MPICH_PerThread_t  MPIR_Thread = { 0 };
 MPICH_PerThread_t  MPIR_ThreadSingle = { 0 };
 #endif
 
-#if defined(MPICH_IS_THREADED)
+#if defined(MPICH_IS_THREADED) && !defined(MPID_DEFINES_MPID_CS)
 /* This routine is called when a thread exits; it is passed the value 
    associated with the key.  In our case, this is simply storage allocated
    with MPIU_Calloc */
