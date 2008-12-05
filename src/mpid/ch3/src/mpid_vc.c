@@ -6,6 +6,18 @@
 
 #include "mpidimpl.h"
 
+#include "pmi.h"
+#if defined(HAVE_LIMITS_H)
+#include <limits.h>
+#endif
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
+#endif
+#if defined(HAVE_ERRNO_H)
+#include <errno.h>
+#endif
+
+
 /*S
  * MPIDI_VCRT - virtual connection reference table
  *
