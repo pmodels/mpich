@@ -96,11 +96,6 @@
 /* Include some basic (and easily shared) definitions */
 #include "mpibase.h"
 
-/*
- * Basic utility macros
- */
-#define MPIU_QUOTE(A) MPIU_QUOTE2(A)
-#define MPIU_QUOTE2(A) #A
 
 /* FIXME: The code base should not define two of these */
 /* This is used to quote a name in a definition (see FUNCNAME/FCNAME below) */

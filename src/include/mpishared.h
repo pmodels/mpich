@@ -50,9 +50,6 @@
 #include "mpierror.h"
 #include "mpierrs.h"
 
-#define MPIU_QUOTE(A) MPIU_QUOTE2(A)
-#define MPIU_QUOTE2(A) #A
-
 /* FIXME: This is extracted from mpi.h.in, where it may not be appropriate */
 #define MPICH_ERR_LAST_CLASS 53     /* It is also helpful to know the
 				       last valid class */

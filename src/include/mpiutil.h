@@ -110,4 +110,10 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
 #define MPID_Ensure_Aint_fits_in_pointer(aint) \
   MPIU_Assert((aint) == (MPI_Aint)(MPIR_Upint) MPI_AINT_CAST_TO_VOID_PTR(aint));
 
+/*
+ * Basic utility macros
+ */
+#define MPIU_QUOTE(A) MPIU_QUOTE2(A)
+#define MPIU_QUOTE2(A) #A
+
 #endif /* !defined(MPIUTIL_H_INCLUDED) */
