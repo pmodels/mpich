@@ -5,7 +5,9 @@
  */
 
 #include "mpid_nem_impl.h"
-#include "strings.h"
+#ifdef HAVE_STRINGS_H
+    #include "strings.h"
+#endif
 
 MPID_nem_netmod_funcs_t *MPID_nem_netmod_func;
 int MPID_nem_netmod_id;
