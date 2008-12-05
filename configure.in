@@ -3327,6 +3327,9 @@ AC_TYPE_INT64_T
 
 # Temporary backwards compatiblity for the pre autoconf 2.62 integer
 # type checking
+if test "$ac_cv_c_int8_t" != no ; then
+    AC_DEFINE(HAVE_INT8_T,1,[Define if int8_t is supported by the C compiler])
+fi
 if test "$ac_cv_c_int16_t" != no ; then
     AC_DEFINE(HAVE_INT16_T,1,[Define if int16_t is supported by the C compiler])
 fi
@@ -3336,73 +3339,6 @@ fi
 if test "$ac_cv_c_int64_t" != no ; then
     AC_DEFINE(HAVE_INT64_T,1,[Define if int64_t is supported by the C compiler])
 fi
-
-dnl AC_CACHE_CHECK([for int16_t],pac_cv_int16_t,[
-dnl AC_TRY_COMPILE([#include <sys/types.h>
-dnl $use_bitypes
-dnl ],[int16_t a=0;],
-dnl pac_cv_int16_t=yes,pac_cv_int16_t=no)])
-
-dnl # If there is no int16_t, try to define one
-dnl if test "$pac_cv_int16_t" = "no" ; then
-dnl     if test -z "$CROSS_SIZEOF_SHORT" ; then CROSS_SIZEOF_SHORT=2 ; fi
-dnl     AC_CHECK_SIZEOF(short,$CROSS_SIZEOF_SHORT)
-dnl     if test "$ac_cv_sizeof_short" = 2 ; then 
-dnl         INT16_T=short
-dnl     else
-dnl         # No good option
-dnl         INT16_T=int
-dnl     fi
-dnl     AC_SUBST(INT16_T)
-dnl     AC_DEFINE_UNQUOTED(MPIU_INT16_T,$INT16_T,[Define for the 16 bit integer type])
-dnl else
-dnl     AC_DEFINE(HAVE_INT16_T,1,[Define if int16_t is supported by the C compiler])
-dnl fi
-dnl AC_CACHE_CHECK([for int32_t],pac_cv_int32_t,[
-dnl AC_TRY_COMPILE([#include <sys/types.h>
-dnl $use_bitypes
-dnl ],[int32_t a=0;],
-dnl pac_cv_int32_t=yes,pac_cv_int32_t=no)])
-dnl # If there is no int32_t, try to define one
-dnl if test "$pac_cv_int32_t" = "no" ; then
-dnl     if test -z "$CROSS_SIZEOF_INT" ; then CROSS_SIZEOF_INT=4 ; fi
-dnl     AC_CHECK_SIZEOF(int,$CROSS_SIZEOF_INT)
-dnl     if test "$ac_cv_sizeof_int" = 4 ; then 
-dnl         INT32_T=int
-dnl     else
-dnl         # No good alternative
-dnl         INT32_T=int
-dnl     fi
-dnl     AC_SUBST(INT32_T)
-dnl     AC_DEFINE_UNQUOTED(MPIU_INT32_T,$INT32_T,[Define for the 32 bit integer type])
-dnl else
-dnl     AC_DEFINE(HAVE_INT32_T,1,[Define if int32_t is supported by the C compiler])
-dnl fi
-dnl AC_CACHE_CHECK([for int64_t],pac_cv_int64_t,[
-dnl AC_TRY_COMPILE([#include <sys/types.h>
-dnl $use_bitypes
-dnl ],[int64_t a=0;],
-dnl pac_cv_int64_t=yes,pac_cv_int64_t=no)])
-dnl # If there is no int64_t, try to define one
-dnl if test "$pac_cv_int64_t" = "no" ; then
-dnl     if test -z "$CROSS_SIZEOF_LONG_LONG" ; then CROSS_SIZEOF_LONG_LONG=8 ; fi
-dnl     AC_CHECK_SIZEOF(long,$CROSS_SIZEOF_LONG)
-dnl     if test "$ac_cv_sizeof_long" = 8 ; then 
-dnl         INT64_T="long"
-dnl     else
-dnl         AC_CHECK_SIZEOF(long long,$CROSS_SIZEOF_LONG_LONG)
-dnl         if test "$ac_cv_sizeof_long_long" = 8 ; then 
-dnl             INT64_T="long long"
-dnl         else
-dnl             # No good alternative
-dnl             INT64_T="long long"
-dnl         fi
-dnl     fi
-dnl     AC_SUBST(INT64_T)
-dnl     AC_DEFINE_UNQUOTED(MPIU_INT64_T,$INT64_T,[Define for the 64 bit integer type])
-dnl else
-dnl     AC_DEFINE(HAVE_INT64_T,1,[Define if int64_t is supported by the C compiler])
-dnl fi
 
 # The following make these definitions:
 #   define _UINT<n>_T 1 
@@ -3415,136 +3351,20 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 
-dnl # Check for availability of uint8_t, uint16_t, uint32_t, uint64_t
-dnl if test "$ac_cv_header_inttypes.h" = "yes" ; then
-dnl 	AC_CACHE_CHECK([for uint8_t],pac_cv_uint8_t,[
-dnl 	AC_TRY_COMPILE([#include <inttypes.h>],
-dnl 	[uint8_t a=0;],
-dnl 	pac_cv_uint8_t=yes,pac_cv_uint8_t=no)])
-dnl 	AC_CACHE_CHECK([for uint16_t],pac_cv_uint16_t,[
-dnl 	AC_TRY_COMPILE([#include <inttypes.h>],
-dnl 	[uint16_t a=0;],
-dnl 	pac_cv_uint16_t=yes,pac_cv_uint16_t=no)])
-dnl 	AC_CACHE_CHECK([for uint32_t],pac_cv_uint32_t,[
-dnl 	AC_TRY_COMPILE([#include <inttypes.h>],
-dnl 	[uint32_t a=0;],
-dnl 	pac_cv_uint32_t=yes,pac_cv_uint32_t=no)])
-dnl 	AC_CACHE_CHECK([for uint64_t],pac_cv_uint64_t,[
-dnl 	AC_TRY_COMPILE([#include <inttypes.h>],
-dnl 	[uint64_t a=0;],
-dnl 	pac_cv_uint64_t=yes,pac_cv_uint64_t=no)])
-dnl else
-dnl 	AC_CACHE_CHECK([for uint8_t],pac_cv_uint8_t,[
-dnl 	AC_TRY_COMPILE([#include <sys/types.h>
-dnl 	$use_bitypes
-dnl 	],[uint8_t a=0;],
-dnl 	pac_cv_uint8_t=yes,pac_cv_uint8_t=no)])
-dnl 	AC_CACHE_CHECK([for uint16_t],pac_cv_uint16_t,[
-dnl 	AC_TRY_COMPILE([#include <sys/types.h>
-dnl 	$use_bitypes
-dnl 	],[uint16_t a=0;],
-dnl 	pac_cv_uint16_t=yes,pac_cv_uint16_t=no)])
-dnl 	AC_CACHE_CHECK([for uint32_t],pac_cv_uint32_t,[
-dnl 	AC_TRY_COMPILE([#include <sys/types.h>
-dnl 	$use_bitypes
-dnl 	],[uint32_t a=0;],
-dnl 	pac_cv_uint32_t=yes,pac_cv_uint32_t=no)])
-dnl 	AC_CACHE_CHECK([for uint64_t],pac_cv_uint64_t,[
-dnl 	AC_TRY_COMPILE([#include <sys/types.h>
-dnl 	$use_bitypes
-dnl 	],[uint64_t a=0;],
-dnl 	pac_cv_uint64_t=yes,pac_cv_uint64_t=no)])
-dnl fi
-
-dnl # Fallback types for uint8_t
-dnl if test "$pac_cv_uint8_t" = "no" ; then
-dnl 	# Check if u_int8_t is available
-dnl 	AC_CACHE_CHECK([for u_int8_t],pac_cv_u_int8_t,[
-dnl 	AC_TRY_COMPILE([#include <sys/types.h>
-dnl 	$use_bitypes
-dnl 	],[u_int8_t a=0;],
-dnl 	pac_cv_u_int8_t=yes,pac_cv_u_int8_t=no)])
-dnl 	if test "$pac_cv_u_int8_t" = "yes" ; then
-dnl 		UINT8_T="u_int8_t"
-dnl     elif test "$ac_cv_sizeof_unsigned_char" = 1 ; then 
-dnl         UINT8_T="unsigned char"
-dnl     else
-dnl         # No good option - Non-compliant C compilers?
-dnl         UINT8_T="unsigned int"
-dnl     fi
-dnl     AC_SUBST(UINT8_T)
-dnl     AC_DEFINE_UNQUOTED(MPIU_UINT8_T,$UINT8_T,[Define for the 8 bit unsigned integer type])
-dnl else
-dnl     AC_DEFINE(HAVE_UINT8_T,1,[Define if uint8_t is supported by the C compiler])
-dnl fi
-
-dnl # Fallback types for uint16_t
-dnl if test "$pac_cv_uint16_t" = "no" ; then
-dnl # Check if u_int16_t is available
-dnl 	AC_CACHE_CHECK([for u_int16_t],pac_cv_u_int16_t,[
-dnl 	AC_TRY_COMPILE([#include <sys/types.h>
-dnl 	$use_bitypes
-dnl 	],[u_int16_t a=0;],
-dnl 	pac_cv_u_int16_t=yes,pac_cv_u_int16_t=no)])
-dnl 	if test "$pac_cv_u_int16_t" = "yes" ; then
-dnl 		UINT16_T="u_int16_t"
-dnl     elif test "$ac_cv_sizeof_unsigned_short" = 2 ; then 
-dnl         UINT16_T="unsigned short"
-dnl     else
-dnl         # No good option
-dnl         UINT16_T="unsigned int"
-dnl     fi
-dnl     AC_SUBST(UINT16_T)
-dnl     AC_DEFINE_UNQUOTED(MPIU_UINT16_T,$UINT16_T,[Define for the 16 bit unsigned integer type])
-dnl else
-dnl     AC_DEFINE(HAVE_UINT16_T,1,[Define if uint16_t is supported by the C compiler])
-dnl fi
-
-dnl # Fallback types for uint32_t
-dnl if test "$pac_cv_uint32_t" = "no" ; then
-dnl # Check if u_int32_t is available
-dnl 	AC_CACHE_CHECK([for u_int32_t],pac_cv_u_int32_t,[
-dnl 	AC_TRY_COMPILE([#include <sys/types.h>
-dnl 	$use_bitypes
-dnl 	],[u_int32_t a=0;],
-dnl 	pac_cv_u_int32_t=yes,pac_cv_u_int32_t=no)])
-dnl 	if test "$pac_cv_u_int32_t" = "yes" ; then
-dnl 		UINT32_T="u_int32_t"
-dnl     elif test "$ac_cv_sizeof_unsigned_int" = 4 ; then 
-dnl         UINT32_T="unsigned int"
-dnl     else
-dnl         # No good option
-dnl         UINT32_T="unsigned int"
-dnl     fi
-dnl     AC_SUBST(UINT32_T)
-dnl     AC_DEFINE_UNQUOTED(MPIU_UINT32_T,$UINT32_T,[Define for the 32 bit unsigned integer type])
-dnl else
-dnl     AC_DEFINE(HAVE_UINT32_T,1,[Define if uint32_t is supported by the C compiler])
-dnl fi
-
-dnl # Fallback types for uint64_t
-dnl if test "$pac_cv_uint64_t" = "no" ; then
-dnl # Check if u_int64_t is available
-dnl 	AC_CACHE_CHECK([for u_int64_t],pac_cv_u_int64_t,[
-dnl 	AC_TRY_COMPILE([#include <sys/types.h>
-dnl 	$use_bitypes
-dnl 	],[u_int64_t a=0;],
-dnl 	pac_cv_u_int64_t=yes,pac_cv_u_int64_t=no)])
-dnl 	if test "$pac_cv_u_int64_t" = "yes" ; then
-dnl 		UINT64_T="u_int64_t"
-dnl     elif test "$ac_cv_sizeof_unsigned_long" = 8 ; then 
-dnl         UINT64_T="unsigned long"
-dnl     elif test "$ac_cv_sizeof_unsigned_long_long" = 8 ; then 
-dnl         UINT64_T="unsigned long long"
-dnl     else
-dnl         # No good option
-dnl         UINT64_T="unsigned int"
-dnl     fi
-dnl     AC_SUBST(UINT64_T)
-dnl     AC_DEFINE_UNQUOTED(MPIU_UINT64_T,$UINT64_T,[Define for the 64 bit unsigned integer type])
-dnl else
-dnl     AC_DEFINE(HAVE_UINT64_T,1,[Define if uint64_t is supported by the C compiler])
-dnl fi
+# Temporary backwards compatiblity for the pre autoconf 2.62 integer
+# type checking
+if test "$ac_cv_c_uint8_t" != no ; then
+    AC_DEFINE(HAVE_UINT8_T,1,[Define if uint8_t is supported by the C compiler])
+fi
+if test "$ac_cv_c_uint16_t" != no ; then
+    AC_DEFINE(HAVE_UINT16_T,1,[Define if uint16_t is supported by the C compiler])
+fi
+if test "$ac_cv_c_uint32_t" != no ; then
+    AC_DEFINE(HAVE_UINT32_T,1,[Define if uint32_t is supported by the C compiler])
+fi
+if test "$ac_cv_c_uint64_t" != no ; then
+    AC_DEFINE(HAVE_UINT64_T,1,[Define if uint64_t is supported by the C compiler])
+fi
 
 # Generate a hex version of the size of each type
 for type in short int long long_long float double long_double wchar_t \
