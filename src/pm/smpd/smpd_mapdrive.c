@@ -366,7 +366,7 @@ SMPD_BOOL smpd_map_user_drives(char *pszMap, char *pszAccount, char *pszPassword
     char ipszAccount[SMPD_MAX_ACCOUNT_LENGTH];
     char ipszPassword[SMPD_MAX_PASSWORD_LENGTH];
     char *token;
-    char *temp = strdup(pszMap);
+    char *temp = MPIU_Strdup(pszMap);
     SMPD_BOOL retVal = SMPD_TRUE;
 
     smpd_enter_fn(FCNAME);
@@ -426,7 +426,7 @@ SMPD_BOOL smpd_unmap_user_drives(char *pszMap)
     char pszShare[MAX_PATH];
     char pszAccount[SMPD_MAX_ACCOUNT_LENGTH];
     char pszPassword[SMPD_MAX_PASSWORD_LENGTH];
-    char *temp = strdup(pszMap);
+    char *temp = MPIU_Strdup(pszMap);
     char *token;
 
     smpd_enter_fn(FCNAME);

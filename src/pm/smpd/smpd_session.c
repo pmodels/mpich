@@ -59,7 +59,7 @@ SMPD_BOOL smpd_get_full_path_name(const char *exe, int maxlen, char *exe_path, c
     {
 	if (exe[0] == '.' && exe[1] == '/')
 	{
-	    temp_exe = strdup(exe);
+	    temp_exe = MPIU_Strdup(exe);
 	    temp_exe[1] = '\\';
 	    exe = temp_exe;
 	}
