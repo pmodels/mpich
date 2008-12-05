@@ -375,9 +375,9 @@ int MPIDI_CH3_PktPrint_RndvReqToSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
     MPIU_DBG_PRINTF((" type ......... REQ_TO_SEND\n"));
     MPIU_DBG_PRINTF((" sender_reqid . 0x%08X\n", pkt->rndv_req_to_send.sender_req_id));
-    MPIU_DBG_PRINTF((" context_id ... %d\n", pkt->rndv_req_to_send.match.context_id));
-    MPIU_DBG_PRINTF((" tag .......... %d\n", pkt->rndv_req_to_send.match.tag));
-    MPIU_DBG_PRINTF((" rank ......... %d\n", pkt->rndv_req_to_send.match.rank));
+    MPIU_DBG_PRINTF((" context_id ... %d\n", pkt->rndv_req_to_send.match.parts.context_id));
+    MPIU_DBG_PRINTF((" tag .......... %d\n", pkt->rndv_req_to_send.match.parts.tag));
+    MPIU_DBG_PRINTF((" rank ......... %d\n", pkt->rndv_req_to_send.match.parts.rank));
     MPIU_DBG_PRINTF((" data_sz ...... %d\n", pkt->rndv_req_to_send.data_sz));
 #ifdef MPID_USE_SEQUENCE_NUMBERS
     MPIU_DBG_PRINTF((" seqnum ....... %d\n", pkt->rndv_req_to_send.seqnum));
