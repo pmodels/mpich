@@ -4963,7 +4963,7 @@ if test "$ac_cv_func_vsnprintf" = "yes" ; then
 fi
 # We would like to use strerror in the file namepublisher; it is also used
 # in MPIU_Strerror (whose implementation is broken if strerror is not found)
-AC_CHECK_FUNCS(strerror)
+AC_CHECK_FUNCS(strerror strncasecmp)
 
 # Use snprintf if possible when creating messages
 AC_CHECK_FUNCS(snprintf)

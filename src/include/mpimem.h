@@ -398,11 +398,21 @@ if (!(pointer_)) { \
     stmt_;\
 }}
 
-/* Provide a fallback snprintf for systems that do not have one */
 /* Define attribute as empty if it has no definition */
 #ifndef ATTRIBUTE
 #define ATTRIBUTE(a)
 #endif
+
+#if defined(HAVE_STRNCASECMP)
+#   define MPIU_Strncasecmp strncasecmp
+#elif defined(HAVE_STRNICMP)
+#   define MPIU_Strncasecmp strnicmp
+#else
+/* FIXME: Provide a fallback function ? */
+#   error "No function defined for case-insensitive strncmp"
+#endif
+
+/* Provide a fallback snprintf for systems that do not have one */
 #ifdef HAVE_SNPRINTF
 #define MPIU_Snprintf snprintf
 /* Sometimes systems don't provide prototypes for snprintf */
