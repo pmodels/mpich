@@ -362,7 +362,7 @@ static double timeOrigin = 0.0;
 static int MPIU_DBG_Usage( const char *, const char * );
 static int MPIU_DBG_OpenFile( void );
 static int setDBGClass( const char * );
-static int SetDBGLevel( const char *, const char *([]) );
+static int SetDBGLevel( const char *, const char *(names[]) );
 static int MPIU_DBG_Get_filename(char *filename, int len);
 
 int MPIU_DBG_Outevent( const char *file, int line, int class, int kind, 
