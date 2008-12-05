@@ -67,8 +67,8 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     {
 	MPID_nem_fbox_mpich2_t *pbox = vc_ch->fbox_out;
 	int count = 10;
-	u_int32_t *payload_32 = (u_int32_t *)pbox->cell.pkt.mpich2.payload;
-	u_int32_t *buf_32 = (u_int32_t *)buf;
+	uint32_t *payload_32 = (uint32_t *)pbox->cell.pkt.mpich2.payload;
+	uint32_t *buf_32 = (uint32_t *)buf;
 
 	if (MPID_nem_islocked ((MPID_nem_fbox_common_ptr_t)pbox, 0, count))
 	    goto usequeue_l;
@@ -145,18 +145,18 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
     
 #if 1
-    ((u_int32_t *)(el->pkt.mpich2.payload))[0] = ((u_int32_t *)buf)[0];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[1] = ((u_int32_t *)buf)[1];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[2] = ((u_int32_t *)buf)[2];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[3] = ((u_int32_t *)buf)[3];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[4] = ((u_int32_t *)buf)[4];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[5] = ((u_int32_t *)buf)[5];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[6] = ((u_int32_t *)buf)[6];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[7] = ((u_int32_t *)buf)[7];
+    ((uint32_t *)(el->pkt.mpich2.payload))[0] = ((uint32_t *)buf)[0];
+    ((uint32_t *)(el->pkt.mpich2.payload))[1] = ((uint32_t *)buf)[1];
+    ((uint32_t *)(el->pkt.mpich2.payload))[2] = ((uint32_t *)buf)[2];
+    ((uint32_t *)(el->pkt.mpich2.payload))[3] = ((uint32_t *)buf)[3];
+    ((uint32_t *)(el->pkt.mpich2.payload))[4] = ((uint32_t *)buf)[4];
+    ((uint32_t *)(el->pkt.mpich2.payload))[5] = ((uint32_t *)buf)[5];
+    ((uint32_t *)(el->pkt.mpich2.payload))[6] = ((uint32_t *)buf)[6];
+    ((uint32_t *)(el->pkt.mpich2.payload))[7] = ((uint32_t *)buf)[7];
     if (sizeof(MPIDI_CH3_Pkt_t) == 40) /* This conditional should be optimized out */
     {
-	((u_int32_t *)(el->pkt.mpich2.payload))[8] = ((u_int32_t *)buf)[8];
-	((u_int32_t *)(el->pkt.mpich2.payload))[9] = ((u_int32_t *)buf)[9];
+	((uint32_t *)(el->pkt.mpich2.payload))[8] = ((uint32_t *)buf)[8];
+	((uint32_t *)(el->pkt.mpich2.payload))[9] = ((uint32_t *)buf)[9];
     }
 #else /*1 */
     MPID_NEM_MEMCPY (el->pkt.mpich2.payload, buf, size);
@@ -368,8 +368,8 @@ MPID_nem_mpich2_sendv_header (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, in
     {
 	MPID_nem_fbox_mpich2_t *pbox = vc_ch->fbox_out;
 	int count = 10;
-	u_int32_t *payload_32 = (u_int32_t *)(pbox->cell.pkt.mpich2.payload ) ;
-	u_int32_t *buf_32 = (u_int32_t *)(*iov)->iov_base;
+	uint32_t *payload_32 = (uint32_t *)(pbox->cell.pkt.mpich2.payload ) ;
+	uint32_t *buf_32 = (uint32_t *)(*iov)->iov_base;
 
 	if (MPID_nem_islocked ((MPID_nem_fbox_common_ptr_t)pbox, 0, count))
 	    goto usequeue_l;
@@ -434,18 +434,18 @@ MPID_nem_mpich2_sendv_header (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, in
     MPID_nem_queue_dequeue (MPID_nem_mem_region.my_freeQ, &el);
 #endif /*PREFETCH_CELL */
 
-    ((u_int32_t *)(el->pkt.mpich2.payload))[0] = ((u_int32_t *)(*iov)->iov_base)[0];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[1] = ((u_int32_t *)(*iov)->iov_base)[1];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[2] = ((u_int32_t *)(*iov)->iov_base)[2];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[3] = ((u_int32_t *)(*iov)->iov_base)[3];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[4] = ((u_int32_t *)(*iov)->iov_base)[4];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[5] = ((u_int32_t *)(*iov)->iov_base)[5];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[6] = ((u_int32_t *)(*iov)->iov_base)[6];
-    ((u_int32_t *)(el->pkt.mpich2.payload))[7] = ((u_int32_t *)(*iov)->iov_base)[7];
+    ((uint32_t *)(el->pkt.mpich2.payload))[0] = ((uint32_t *)(*iov)->iov_base)[0];
+    ((uint32_t *)(el->pkt.mpich2.payload))[1] = ((uint32_t *)(*iov)->iov_base)[1];
+    ((uint32_t *)(el->pkt.mpich2.payload))[2] = ((uint32_t *)(*iov)->iov_base)[2];
+    ((uint32_t *)(el->pkt.mpich2.payload))[3] = ((uint32_t *)(*iov)->iov_base)[3];
+    ((uint32_t *)(el->pkt.mpich2.payload))[4] = ((uint32_t *)(*iov)->iov_base)[4];
+    ((uint32_t *)(el->pkt.mpich2.payload))[5] = ((uint32_t *)(*iov)->iov_base)[5];
+    ((uint32_t *)(el->pkt.mpich2.payload))[6] = ((uint32_t *)(*iov)->iov_base)[6];
+    ((uint32_t *)(el->pkt.mpich2.payload))[7] = ((uint32_t *)(*iov)->iov_base)[7];
     if (sizeof(MPIDI_CH3_Pkt_t) == 40) /* This conditional should be optimized out */
     {
-	((u_int32_t *)(el->pkt.mpich2.payload))[8] = ((u_int32_t *)(*iov)->iov_base)[8];
-	((u_int32_t *)(el->pkt.mpich2.payload))[9] = ((u_int32_t *)(*iov)->iov_base)[9];
+	((uint32_t *)(el->pkt.mpich2.payload))[8] = ((uint32_t *)(*iov)->iov_base)[8];
+	((uint32_t *)(el->pkt.mpich2.payload))[9] = ((uint32_t *)(*iov)->iov_base)[9];
     }
 
     cell_buf = (char *)(el->pkt.mpich2.payload) + sizeof(MPIDI_CH3_Pkt_t);
