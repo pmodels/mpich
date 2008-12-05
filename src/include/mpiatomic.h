@@ -63,18 +63,22 @@ static inline int MPIDU_Ref_release_and_test(volatile int *ptr)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_REF_RELEASE_AND_TEST);
 
 #if defined(ATOMIC_DECR_AND_TEST_IS_EMULATED) && !defined(ATOMIC_FETCH_AND_DECR_IS_EMULATED)
-    int prev;
-    prev = MPIDU_Atomic_fetch_and_decr(ptr);
-    retval = (1 == prev);
-    goto fn_exit;
+    {
+        int prev;
+        prev = MPIDU_Atomic_fetch_and_decr(ptr);
+        retval = (1 == prev);
+        goto fn_exit;
+    }
 #elif defined(ATOMIC_DECR_AND_TEST_IS_EMULATED) && !defined(ATOMIC_CAS_INT_IS_EMULATED)
-    int oldv, newv;
-    do {
-        oldv = *ptr;
-        newv = oldv - 1;
-    } while (oldv != MPIDU_Atomic_cas_int(ptr, oldv, newv));
-    retval = (0 == newv);
-    goto fn_exit;
+    {
+        int oldv, newv;
+        do {
+            oldv = *ptr;
+            newv = oldv - 1;
+        } while (oldv != MPIDU_Atomic_cas_int(ptr, oldv, newv));
+        retval = (0 == newv);
+        goto fn_exit;
+    }
 #else
     retval = MPIDU_Atomic_decr_and_test(ptr);
     goto fn_exit;
