@@ -820,7 +820,7 @@ sub print_profiling_block {
 #endif /* USE_WEAK_SYMBOLS */\
 /* End MPI profiling block */\n\n";
 
-    &AddFwrapWeakName( $lcname, $ucname, $args );
+    &AddFwrapWeakName( $lcname, $ucname );
     }
 }
 
@@ -3579,11 +3579,11 @@ sub AddFwrapBuild {
 # Allow multiple underscore versions of names
 # but without the PMPI versions (needed for the wrapper library)
 sub AddFwrapWeakName {
-    my ($lcname, $ucname, $args) = @_;
+    my ($lcname, $ucname) = @_;
 
     print $OUTFD "
 /* These definitions are used only for generating the Fortran wrappers */
-#if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK) && \\
+#if defined(USE_WEAK_SYBMOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK) && \\
     defined(USE_ONLY_MPI_NAMES)\n";
     &print_weak_decl( $OUTFD, "MPI_$ucname", $args, $lcname ); 
     &print_weak_decl( $OUTFD, "mpi_${lcname}__", $args, $lcname );
