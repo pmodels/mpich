@@ -435,9 +435,9 @@ static int send_id_info(const sockconn_t *const sc)
     hdr.datalen = sizeof(MPIDI_nem_newtcp_module_idinfo_t) + pg_id_len;    
     id_info.pg_rank = MPIDI_Process.my_pg_rank;
 
-    iov[0].iov_base = &hdr;
+    iov[0].iov_base = (MPID_IOV_BUF_CAST)&hdr;
     iov[0].iov_len = sizeof(hdr);
-    iov[1].iov_base = &id_info;
+    iov[1].iov_base = (MPID_IOV_BUF_CAST)&id_info;
     iov[1].iov_len = sizeof(id_info);
     buf_size = sizeof(hdr) + sizeof(id_info);
 
@@ -493,9 +493,9 @@ static int send_tmpvc_info(const sockconn_t *const sc)
     hdr.datalen = sizeof(MPIDI_nem_newtcp_module_portinfo_t);
     port_info.port_name_tag = sc->vc->port_name_tag;
 
-    iov[0].iov_base = &hdr;
+    iov[0].iov_base = (MPID_IOV_BUF_CAST)&hdr;
     iov[0].iov_len = sizeof(hdr);
-    iov[1].iov_base = &port_info;
+    iov[1].iov_base = (MPID_IOV_BUF_CAST)&port_info;
     iov[1].iov_len = sizeof(port_info);
     buf_size = sizeof(hdr) + sizeof(port_info);
     

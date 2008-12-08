@@ -504,7 +504,7 @@ int MPID_nem_newtcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
     {
         /* header was not yet sent, save it in req */
         sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)header;
-        iov[0].MPID_IOV_BUF = &sreq->dev.pending_pkt;
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)&sreq->dev.pending_pkt;
         iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
     }
 
@@ -515,7 +515,7 @@ int MPID_nem_newtcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
     {
         if (offset < iov_p->MPID_IOV_LEN)
         {
-            sreq->dev.iov[sreq->dev.iov_count].MPID_IOV_BUF = (char *)iov_p->MPID_IOV_BUF + offset;
+            sreq->dev.iov[sreq->dev.iov_count].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)((char *)iov_p->MPID_IOV_BUF + offset);
             sreq->dev.iov[sreq->dev.iov_count].MPID_IOV_LEN = iov_p->MPID_IOV_LEN - offset;
             offset = 0;
             ++sreq->dev.iov_count;

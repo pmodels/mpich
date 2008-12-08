@@ -135,9 +135,9 @@ typedef union MPIDI_CH3_nem_pkt
         MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv RTS packet");                                      \
         (rts_pkt)->cookie_len = (s_cookie_len);                                                         \
                                                                                                         \
-        _iov[0].MPID_IOV_BUF = (rts_pkt);                                                               \
+        _iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)(rts_pkt);                                            \
         _iov[0].MPID_IOV_LEN = sizeof(*(rts_pkt));                                                      \
-        _iov[1].MPID_IOV_BUF = (s_cookie_buf);                                                          \
+        _iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)(s_cookie_buf);                                       \
         _iov[1].MPID_IOV_LEN = (s_cookie_len);                                                          \
                                                                                                         \
         MPIU_DBG_MSGPKT((vc), (rts_pkt)->match.parts.tag, (rts_pkt)->match.parts.context_id, (rts_pkt)->match.parts.rank, \
@@ -180,9 +180,9 @@ typedef union MPIDI_CH3_nem_pkt
         _cts_pkt->cookie_len = (r_cookie_len);                                                          \
         _cts_pkt->data_sz = (rreq)->ch.lmt_data_sz;                                                     \
                                                                                                         \
-        _iov[0].MPID_IOV_BUF = _cts_pkt;                                                                \
+        _iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)_cts_pkt;                                             \
         _iov[0].MPID_IOV_LEN = sizeof(*_cts_pkt);                                                       \
-        _iov[1].MPID_IOV_BUF = (r_cookie_buf);                                                          \
+        _iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)(r_cookie_buf);                                       \
         _iov[1].MPID_IOV_LEN = (r_cookie_len);                                                          \
                                                                                                         \
         mpi_errno = MPIDI_CH3_iStartMsgv((vc), _iov, (r_cookie_len) ? 2 : 1, &_cts_req);                \
@@ -196,7 +196,7 @@ typedef union MPIDI_CH3_nem_pkt
         
 #define MPID_nem_lmt_send_COOKIE(vc, rreq, r_cookie_buf, r_cookie_len) do {                                     \
         MPIDI_CH3_Pkt_t _upkt;                                                                                  \
-        MPID_nem_pkt_lmt_cookie_t * const _cookie_pkt = (MPID_nem_pkt_lmt_cookie_t *)&_upkt;                                      \
+        MPID_nem_pkt_lmt_cookie_t * const _cookie_pkt = (MPID_nem_pkt_lmt_cookie_t *)&_upkt;                    \
         MPID_Request *_cookie_req;                                                                              \
         MPID_IOV _iov[2];                                                                                       \
                                                                                                                 \
@@ -205,9 +205,9 @@ typedef union MPIDI_CH3_nem_pkt
         _cookie_pkt->req_id = (rreq)->ch.lmt_req_id;                                                            \
         _cookie_pkt->cookie_len = (r_cookie_len);                                                               \
                                                                                                                 \
-        _iov[0].MPID_IOV_BUF = _cookie_pkt;                                                                     \
+        _iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)_cookie_pkt;                                                  \
         _iov[0].MPID_IOV_LEN = sizeof(*_cookie_pkt);                                                            \
-        _iov[1].MPID_IOV_BUF = (r_cookie_buf);                                                                  \
+        _iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)(r_cookie_buf);                                               \
         _iov[1].MPID_IOV_LEN = (r_cookie_len);                                                                  \
                                                                                                                 \
         mpi_errno = MPIDI_CH3_iStartMsgv((vc), _iov, (r_cookie_len) ? 2 : 1, &_cookie_req);                     \
@@ -221,7 +221,7 @@ typedef union MPIDI_CH3_nem_pkt
         
 #define MPID_nem_lmt_send_DONE(vc, rreq) do {                                                                   \
         MPIDI_CH3_Pkt_t _upkt;                                                                                  \
-        MPID_nem_pkt_lmt_done_t * const _done_pkt = (MPID_nem_pkt_lmt_done_t *)&_upkt;                                            \
+        MPID_nem_pkt_lmt_done_t * const _done_pkt = (MPID_nem_pkt_lmt_done_t *)&_upkt;                          \
         MPID_Request *_done_req;                                                                                \
                                                                                                                 \
         MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv DONE packet");                                             \
