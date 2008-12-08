@@ -36,7 +36,7 @@ int g_nLockSpinCount = 100;
 
 
 /* FIXME: Why is this here? Is this a misnamed use-inline-locks? */
-#if !defined(USE_BUSY_LOCKS) && !defined(HAVE_MUTEX_INIT) && !defined(HAVE_SPARC_INLINE_PROCESS_LOCKS)
+#if !defined(USE_BUSY_LOCKS) && !defined(HAVE_SPARC_INLINE_PROCESS_LOCKS)
 
 #if !defined(USE_INLINE_LOCKS)
 
@@ -127,7 +127,7 @@ void MPIDU_Process_lock_init( MPIDU_Process_lock_t *lock )
     memset(lock, 0, sizeof(MPIDU_Process_lock_t));
     err = mutex_init(lock,USYNC_PROCESS,(void*)0);
     if ( err != 0 ) 
-        MPIU_Error_printf( "error in mutex_init: %s\n", err );
+        MPIU_Error_printf( "error in mutex_init: %s\n", strerror(err) );
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_PROCESS_LOCK_INIT);
 }
 
@@ -143,7 +143,7 @@ void MPIDU_Process_lock( MPIDU_Process_lock_t *lock )
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_PROCESS_LOCK);
     err = mutex_lock( lock );
     if ( err != 0 ) 
-        MPIU_Error_printf( "error in mutex_lock: %s\n", err );
+        MPIU_Error_printf( "error in mutex_lock: %s\n", strerror(err) );
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_PROCESS_LOCK);
 }
 
@@ -156,9 +156,9 @@ void MPIDU_Process_unlock( MPIDU_Process_lock_t *lock )
     int err;
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_PROCESS_UNLOCK);
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_PROCESS_UNLOCK);
-    err = _mutex_unlock( lock );
+    err = mutex_unlock( lock );
     if ( err != 0 ) 
-        MPIU_Error_printf( "error in mutex_unlock: %s\n", err );
+        MPIU_Error_printf( "error in mutex_unlock: %s\n", strerror(err) );
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_PROCESS_UNLOCK);
 }
 
@@ -173,7 +173,7 @@ void MPIDU_Process_lock_free( MPIDU_Process_lock_t *lock )
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_PROCESS_LOCK_FREE);
     err = mutex_destroy( lock );
     if ( err != 0 ) 
-	MPIU_Error_printf( "error in mutex_destroy: %s\n", err );
+	MPIU_Error_printf( "error in mutex_destroy: %s\n", strerror(err) );
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_PROCESS_LOCK_FREE);
 }
 
