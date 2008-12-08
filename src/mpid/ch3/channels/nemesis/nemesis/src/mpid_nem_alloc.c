@@ -34,6 +34,8 @@ static struct { alloc_elem_t *head, *tail; } allocq = {0};
 #define ALLOCQ_ENQUEUE(ep) GENERIC_Q_ENQUEUE(&allocq, ep, next)
 #define ALLOCQ_DEQUEUE(epp) GENERIC_Q_DEQUEUE(&allocq, epp, next)
 
+#define ROUND_UP_8(x) (((x) + (size_t)7) & ~(size_t)7) /* rounds up to multiple of 8 */
+
 static size_t segment_len = 0;
 
 /* MPIDI_CH3I_Seg_alloc(len, ptr_p)
@@ -60,6 +62,10 @@ int MPIDI_CH3I_Seg_alloc(size_t len, void **ptr_p)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEG_ALLOC);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEG_ALLOC);
+
+    /* round up to multiple of 8 to ensure the start of the next
+       region is 64-bit aligned. */
+    len = ROUND_UP_8(len);
 
     MPIU_Assert(len);
     MPIU_Assert(ptr_p);
