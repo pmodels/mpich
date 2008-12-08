@@ -8,15 +8,15 @@
 #include "mpidu_process_locks.h"
 
 /* initialized to keep it from becoming a common symbol */
-MPIDU_Process_lock_t *emulation_lock = NULL;
+MPIDU_Process_lock_t *MPIDU_Emulation_lock = NULL;
 
 int MPIDU_Interprocess_lock_init(MPIDU_Process_lock_t *shm_lock, int isLeader)
 {
     int mpi_errno = MPI_SUCCESS;
-    emulation_lock = shm_lock;
+    MPIDU_Emulation_lock = shm_lock;
 
     if (isLeader) {
-        MPIDU_Process_lock_init(emulation_lock);
+        MPIDU_Process_lock_init(MPIDU_Emulation_lock);
     }
 
     return mpi_errno;

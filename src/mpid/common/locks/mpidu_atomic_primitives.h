@@ -24,7 +24,7 @@
     Used to provide atomic operation emulation.  See MPIDU_Interprocess_lock_init()
     for initialization of this variable.
 */
-extern MPIDU_Process_lock_t *emulation_lock;
+extern MPIDU_Process_lock_t *MPIDU_Emulation_lock;
 /*
     This routine is needed because the MPIU_THREAD_XXX_CS_{ENTER,EXIT} macros do
     not provide synchronization across multiple processes, only across multiple
@@ -64,16 +64,16 @@ MPI_Aint MPIDU_Atomic_swap_aint_emulated(volatile MPI_Aint *ptr, MPI_Aint val);
     These macros are analogous to the MPIDU_THREAD_XXX_CS_{ENTER,EXIT} macros.
     TODO Consider putting debugging macros in here that utilize 'msg'.
 */
-#define MPIDU_IPC_SINGLE_CS_ENTER(msg)     \
-    do {                                   \
-        MPIU_Assert(emulation_lock);       \
-        MPIDU_Process_lock(emulation_lock); \
+#define MPIDU_IPC_SINGLE_CS_ENTER(msg)                  \
+    do {                                                \
+        MPIU_Assert(MPIDU_Emulation_lock);              \
+        MPIDU_Process_lock(MPIDU_Emulation_lock);       \
     } while (0)
 
-#define MPIDU_IPC_SINGLE_CS_EXIT(msg)        \
-    do {                                     \
-        MPIU_Assert(emulation_lock);         \
-        MPIDU_Process_unlock(emulation_lock); \
+#define MPIDU_IPC_SINGLE_CS_EXIT(msg)                   \
+    do {                                                \
+        MPIU_Assert(MPIDU_Emulation_lock);              \
+        MPIDU_Process_unlock(MPIDU_Emulation_lock);     \
     } while (0)
 
 #if defined(HAVE_SCHED_YIELD)
