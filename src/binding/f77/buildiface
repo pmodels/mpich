@@ -755,24 +755,37 @@ sub print_profiling_block {
     my $ucname = uc($lcname);
 
     if ($do_weak) {
-	# We do the multiple pragma only for the gcc-style names for now 
-        # This simplifies the generation of the names for the output;
-	# Later, we can add support for other name mappings.
 	print $OUTFD "\
 /* Begin MPI profiling block */\
 #if defined(USE_WEAK_SYMBOLS) && !defined(USE_ONLY_MPI_NAMES) \
-#if defined(HAVE_MULTIPLE_PRAGMA_WEAK) && defined(F77_NAME_LOWER_2USCORE)\n";
+#if defined(HAVE_MULTIPLE_PRAGMA_WEAK)\n";
         &print_weak_decl( $OUTFD, "MPI_$ucname", $args, $lcname ); 
 	&print_weak_decl( $OUTFD, "mpi_${lcname}__", $args, $lcname );
 	&print_weak_decl( $OUTFD, "mpi_${lcname}", $args, $lcname );
 	&print_weak_decl( $OUTFD, "mpi_${lcname}_", $args, $lcname );
-	&print_weak_decl( $OUTFD, "pmpi_${lcname}_", $args, $lcname );
 	print $OUTFD "\
+#if defined(F77_NAME_UPPER)
+#pragma weak MPI_$ucname = pmpi_${lcname}
+#pragma weak mpi_${lcname}__ = PMPI_${ucname}
+#pragma weak mpi_${lcname}_ = PMPI_${ucname}
+#pragma weak mpi_${lcname} = PMPI_${ucname}
+#elif defined(F77_NAME_LOWER_2USCORE)
 #pragma weak MPI_$ucname = pmpi_${lcname}__
 #pragma weak mpi_${lcname}__ = pmpi_${lcname}__
 #pragma weak mpi_${lcname}_ = pmpi_${lcname}__
 #pragma weak mpi_${lcname} = pmpi_${lcname}__
-#pragma weak pmpi_${lcname}_ = pmpi_${lcname}__\n\n";
+#elif defined(F77_NAME_LOWER_USCORE)
+#pragma weak MPI_$ucname = pmpi_${lcname}_
+#pragma weak mpi_${lcname}__ = pmpi_${lcname}_
+#pragma weak mpi_${lcname}_ = pmpi_${lcname}_
+#pragma weak mpi_${lcname} = pmpi_${lcname}_
+#else
+#pragma weak MPI_$ucname = pmpi_${lcname}
+#pragma weak mpi_${lcname}__ = pmpi_${lcname}
+#pragma weak mpi_${lcname}_ = pmpi_${lcname}
+#pragma weak mpi_${lcname} = pmpi_${lcname}
+#endif
+\n\n";
 
        print $OUTFD "\
 #elif defined(HAVE_PRAGMA_WEAK)\
@@ -820,7 +833,7 @@ sub print_profiling_block {
 #endif /* USE_WEAK_SYMBOLS */\
 /* End MPI profiling block */\n\n";
 
-    &AddFwrapWeakName( $lcname, $ucname );
+    &AddFwrapWeakName( $lcname, $ucname, $args );
     }
 }
 
@@ -3579,20 +3592,35 @@ sub AddFwrapBuild {
 # Allow multiple underscore versions of names
 # but without the PMPI versions (needed for the wrapper library)
 sub AddFwrapWeakName {
-    my ($lcname, $ucname) = @_;
+    my ($lcname, $ucname, $args) = @_;
 
     print $OUTFD "
 /* These definitions are used only for generating the Fortran wrappers */
-#if defined(USE_WEAK_SYBMOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK) && \\
+#if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK) && \\
     defined(USE_ONLY_MPI_NAMES)\n";
     &print_weak_decl( $OUTFD, "MPI_$ucname", $args, $lcname ); 
     &print_weak_decl( $OUTFD, "mpi_${lcname}__", $args, $lcname );
     &print_weak_decl( $OUTFD, "mpi_${lcname}", $args, $lcname );
     &print_weak_decl( $OUTFD, "mpi_${lcname}_", $args, $lcname );
     print $OUTFD "\
+#if defined(F77_NAME_UPPER)
+#pragma weak mpi_${lcname}__ = MPI_${ucname}
+#pragma weak mpi_${lcname}_ = MPI_${ucname}
+#pragma weak mpi_${lcname} = MPI_${ucname}
+#elif defined(F77_NAME_LOWER_2USCORE)
 #pragma weak MPI_$ucname = mpi_${lcname}__
 #pragma weak mpi_${lcname}_ = mpi_${lcname}__
 #pragma weak mpi_${lcname} = mpi_${lcname}__
+#elif defined(F77_NAME_LOWER_USCORE)
+#pragma weak MPI_$ucname = mpi_${lcname}_
+#pragma weak mpi_${lcname}__ = mpi_${lcname}_
+#pragma weak mpi_${lcname} = mpi_${lcname}_
+#else
+#pragma weak MPI_$ucname = mpi_${lcname}
+#pragma weak mpi_${lcname}__ = mpi_${lcname}
+#pragma weak mpi_${lcname}_ = mpi_${lcname}
+#endif
+
 #endif
 ";
 }
