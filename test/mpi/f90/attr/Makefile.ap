@@ -1,0 +1,1 @@
+fandcattrf90_SOURCES = fandcattrf90.f90 fandcattrc.c
