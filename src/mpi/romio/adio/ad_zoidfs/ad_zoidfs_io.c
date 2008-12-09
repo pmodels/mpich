@@ -29,7 +29,7 @@ static void ZOIDFS_IOContig(ADIO_File fd, void * buf, int count,
     MPI_Type_size(datatype, &datatype_size);
     file_len = mem_len = datatype_size * count;
 
-    if (file_ptr_type = ADIO_INDIVIDUAL) {
+    if (file_ptr_type == ADIO_INDIVIDUAL) {
 	offset = fd->fp_ind;
     }
 
