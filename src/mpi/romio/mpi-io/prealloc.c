@@ -74,7 +74,7 @@ int MPI_File_preallocate(MPI_File mpi_fh, MPI_Offset size)
     }
     /* --END ERROR HANDLING-- */
 
-    if (size == 0) return MPI_SUCCESS;
+    if (size == 0) goto fn_exit;
 
     ADIOI_TEST_DEFERRED(fh, myname, &error_code);
 
