@@ -22,6 +22,7 @@ static void ZOIDFS_IOContig(ADIO_File fd, void * buf, int count,
     uint64_t file_len;
     size_t mem_len;
     ADIOI_ZOIDFS_object *zoidfs_obj_ptr;
+    uint64_t file_offset = offset;
     static char myname[] = "ADIOI_ZOIDFS_IOCONTIG";
 
     zoidfs_obj_ptr = (ADIOI_ZOIDFS_object*)fd->fs_ptr;
@@ -30,17 +31,17 @@ static void ZOIDFS_IOContig(ADIO_File fd, void * buf, int count,
     file_len = mem_len = datatype_size * count;
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
-	offset = fd->fp_ind;
+	file_offset = fd->fp_ind;
     }
 
     if (flag == ZOIDFS_READ) {
 	ret = zoidfs_read(zoidfs_obj_ptr, 
 		1, buf, &mem_len,
-		1, &offset, &file_len);
+		1, &file_offset, &file_len);
     } else {
 	ret = zoidfs_write(zoidfs_obj_ptr, 
 		1, buf, &mem_len,
-		1, &offset, &file_len);
+		1, &file_offset, &file_len);
     }
     /* --BEGIN ERROR HANDLING-- */
     if (ret != ZFS_OK ) {
@@ -56,7 +57,7 @@ static void ZOIDFS_IOContig(ADIO_File fd, void * buf, int count,
     if (file_ptr_type == ADIO_INDIVIDUAL) {
 	fd->fp_ind += file_len;
     }
-    fd->fp_sys_posn = offset + file_len;
+    fd->fp_sys_posn = file_offset + file_len;
 
 #ifdef HAVE_STATUS_SET_BYTES
     MPIR_Status_set_bytes(status, datatype, file_len);
