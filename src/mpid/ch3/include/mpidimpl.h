@@ -1770,13 +1770,7 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *, MPID_Request *,
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 #if 1
 /* There is a per object lock */
-/* FIXME: dprintf is a temporary hack here.  It must be removed (use DBG_MSG
-   if a non-temporary version is desired) */
-/* FIXME: Note that __FUNCTION__ is not standard C - HAVE__FUNCTION__ 
-   is defined by configure if present */
-#define dprintf(...)
 #define MPIU_THREAD_CS_ENTER_CH3COMM(_context) {\
-   dprintf("Entering lock in %s\n", __FUNCTION__); \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_POBJ_LOCKNAME(_context->pobj_mutex) MPIU_THREAD_CHECK_END \
 }
 #define MPIU_THREAD_CS_EXIT_CH3COMM(_context) \

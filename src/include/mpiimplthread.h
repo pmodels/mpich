@@ -550,34 +550,25 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_ENTER_ALLFUNC(_context)
 #define MPIU_THREAD_CS_EXIT_ALLFUNC(_context)
 
-/* FIXME: dprintf is a temporary hack here.  It must be removed (use DBG_MSG
-   if a non-temporary version is desired) */
-/* FIXME: Note that __FUNCTION__ is not standard C - HAVE__FUNCTION__ 
-   is defined by configure if present */
-#define dprintf(...)
 #define MPIU_THREAD_CS_ENTER_HANDLE(_context) { \
-   dprintf("Calling MPIU_THREAD_CS_ENTER_HANDLE in %s\n", __FUNCTION__); \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END \
 }
 #define MPIU_THREAD_CS_EXIT_HANDLE(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
 
 #define MPIU_THREAD_CS_ENTER_HANDLEALLOC(_context) { \
-   dprintf("Calling MPIU_THREAD_CS_ENTER_HANDLEALLOC in %s\n", __FUNCTION__);\
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END \
 }
 #define MPIU_THREAD_CS_EXIT_HANDLEALLOC(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
 
 #define MPIU_THREAD_CS_ENTER_MPIDCOMM(_context) { \
-   dprintf("Calling MPIU_THREAD_CS_ENTER_MPIDCOMM in %s\n", __FUNCTION__);\
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END \
 }
 #define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
 
 #define MPIU_THREAD_CS_ENTER_MSGQUEUE(_context) {\
-   dprintf("Calling MPIU_THREAD_CS_ENTER_MSGQUEUE in %s\n", __FUNCTION__);\
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END \
 }
 #define MPIU_THREAD_CS_EXIT_MSGQUEUE(_context) \

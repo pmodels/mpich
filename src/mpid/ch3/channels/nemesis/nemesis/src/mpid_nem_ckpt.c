@@ -6,8 +6,6 @@
 
 #include "mpid_nem_impl.h"
 
-#define printf_dd(x...) /*printf (x) */
-
 int MPID_nem_ckpt_logging_messages = 0; /* are we in logging-message-mode? */
 int MPID_nem_ckpt_sending_markers = 0; /* are we in the process of sending markers? */
 struct cli_message_log_total *MPID_nem_ckpt_message_log = 0; /* are we replaying messages? */
