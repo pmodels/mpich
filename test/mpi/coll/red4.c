@@ -51,8 +51,8 @@ void uop( void *cinPtr, void *coutPtr, int *count, MPI_Datatype *dtype )
 		cout[j+i*matSize] = tempCol[i];
 	    }
 	}
-	cinPtr += matSize*matSize;
-	coutPtr += matSize*matSize;
+	cinPtr = (int *)cinPtr + matSize*matSize;
+	coutPtr = (int *)coutPtr + matSize*matSize;
     }
 }
 
