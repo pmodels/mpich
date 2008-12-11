@@ -231,7 +231,7 @@ sub CreateMakefile {
 # .f -> .f90, .F -> .F90
 # Others as necessary
 # ConvertMakefile( indir, outdir, filename )
-# By providing the filename, we can accept Makefile, Makefile.in, Makefile.am,
+# By providing the filename, we can accept Makefile, Makefile.in, Makefile.ap,
 # Makefile.sm, or even nonstandard names such as buildscript.
 sub ConvertMakefile {
     my ($indir, $outdir, $filename) = @_;
