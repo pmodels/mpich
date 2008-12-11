@@ -2511,6 +2511,7 @@ AC_SUBST(RANLIB_AFTER_INSTALL)
 AC_DEFUN([PAC_CC_FUNCTION_NAME_SYMBOL],[
 AC_CACHE_CHECK([whether the compiler defines __func__],
 pac_cv_have__func__,[
+tmp_am_cross=no
 AC_RUN_IFELSE([
 #include <string.h>
 int foo(void);
@@ -2522,14 +2523,30 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
+], pac_cv_have__func__=yes, pac_cv_have__func__=no,tmp_am_cross=yes)
+if test "$tmp_am_cross" = yes ; then
+    AC_LINK_IFELSE([
+#include <string.h>
+int foo(void);
+int foo(void)
+{
+    return (strcmp(__func__, "foo") == 0);
+}
+int main(int argc, char ** argv)
+{
+    return (foo() ? 0 : 1);
+}
 ], pac_cv_have__func__=yes, pac_cv_have__func__=no)
+fi
 ])
+
 if test $pac_cv_have__func__ = "yes" ; then
     AC_DEFINE(HAVE__FUNC__,,[define if the compiler defines __func__])
 fi
 
 AC_CACHE_CHECK([whether the compiler defines __FUNC__],
 pac_cv_have_cap__func__,[
+tmp_am_cross=no
 AC_RUN_IFELSE([
 #include <string.h>
 int foo(void);
@@ -2541,14 +2558,30 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
-], pac_cv_have_cap__func__=yes, pac_cv_have_cap__func__=no)
+], pac_cv_have_cap__func__=yes, pac_cv_have_cap__func__=no,tmp_am_cross=yes)
+if test "$tmp_am_cross" = yes ; then
+    AC_LINK_IFELSE([
+#include <string.h>
+int foo(void);
+int foo(void)
+{
+    return (strcmp(__FUNC__, "foo") == 0);
+}
+int main(int argc, char ** argv)
+{
+    return (foo() ? 0 : 1);
+}
+], pac_cv_have__func__=yes, pac_cv_have__func__=no)
+fi
 ])
+
 if test $pac_cv_have_cap__func__ = "yes" ; then
     AC_DEFINE(HAVE_CAP__FUNC__,,[define if the compiler defines __FUNC__])
 fi
 
 AC_CACHE_CHECK([whether the compiler sets __FUNCTION__],
 pac_cv_have__function__,[
+tmp_am_cross=no
 AC_RUN_IFELSE([
 #include <string.h>
 int foo(void);
@@ -2560,9 +2593,25 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
-], pac_cv_have__function__=yes, pac_cv_have__function__=no)
+], pac_cv_have__function__=yes, pac_cv_have__function__=no,tmp_am_cross=yes)
+if test "$tmp_am_cross" = yes ; then
+    AC_LINK_IFELSE([
+#include <string.h>
+int foo(void);
+int foo(void)
+{
+    return (strcmp(__FUNCTION__, "foo") == 0);
+}
+int main(int argc, char ** argv)
+{
+    return (foo() ? 0 : 1);
+}
+], pac_cv_have__func__=yes, pac_cv_have__func__=no)
+fi
 ])
+
 if test $pac_cv_have__function__ = "yes" ; then
     AC_DEFINE(HAVE__FUNCTION__,,[define if the compiler defines __FUNCTION__])
 fi
+
 ])
