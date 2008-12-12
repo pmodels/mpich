@@ -328,8 +328,8 @@ if (pointer_) { \
     stmt_;\
 }}
 #define MPIU_CHKLMEM_FREEALL() \
-    { while (mpiu_chklmem_stk_sp_ > 0) {\
-       MPIU_Free( mpiu_chklmem_stk_[--mpiu_chklmem_stk_sp_] ); } }
+    do { while (mpiu_chklmem_stk_sp_ > 0) {\
+       MPIU_Free( mpiu_chklmem_stk_[--mpiu_chklmem_stk_sp_] ); } } while(0)
 #endif /* HAVE_ALLOCA */
 #define MPIU_CHKLMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
     MPIU_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
