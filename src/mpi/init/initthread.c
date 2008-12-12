@@ -385,10 +385,8 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     /* Capture the level of thread support provided */
     MPIR_ThreadInfo.thread_provided = thread_provided;
     if (provided) *provided = thread_provided;
-    /* FIXME: Rationalize this with the above */
 #ifdef HAVE_RUNTIME_THREADCHECK
-    MPIR_ThreadInfo.isThreaded = required == MPI_THREAD_MULTIPLE;
-    if (provided) *provided = required;
+    MPIR_ThreadInfo.isThreaded = (thread_provided == MPI_THREAD_MULTIPLE);
 #endif
 
     /* FIXME: Define these in the interface.  Does Timer init belong here? */
