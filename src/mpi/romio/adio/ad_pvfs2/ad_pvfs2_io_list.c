@@ -92,7 +92,7 @@ int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, int count,
 	/* flatten and add to the list */
 	flat_buf_p = (ADIOI_Flatlist_node *) ADIOI_Malloc
 	    (sizeof(ADIOI_Flatlist_node));
-	flat_buf_p->blocklens = (int *) ADIOI_Malloc(sizeof(int));
+	flat_buf_p->blocklens = (ADIO_Offset*)ADIOI_Malloc(sizeof(ADIO_Offset));
 	flat_buf_p->indices = 
 		(ADIO_Offset *) ADIOI_Malloc(sizeof(ADIO_Offset));
 	/* For the buffer, we can optimize the buftype, this is not 
@@ -118,7 +118,7 @@ int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, int count,
         /* flatten and add to the list */
         flat_file_p = (ADIOI_Flatlist_node *) ADIOI_Malloc
             (sizeof(ADIOI_Flatlist_node));
-        flat_file_p->blocklens = (int *) ADIOI_Malloc(sizeof(int));
+        flat_file_p->blocklens =(ADIO_Offset*)ADIOI_Malloc(sizeof(ADIO_Offset));
         flat_file_p->indices = 
 		(ADIO_Offset *) ADIOI_Malloc(sizeof(ADIO_Offset));
         flat_file_p->blocklens[0] = filetype_size;
