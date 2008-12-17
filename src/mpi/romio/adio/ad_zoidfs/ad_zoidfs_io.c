@@ -13,7 +13,7 @@
 #define ZOIDFS_READ 0
 #define ZOIDFS_WRITE 1
 
-static void ZOIDFS_IOContig(ADIO_File fd, void ** buf, int count,
+static void ZOIDFS_IOContig(ADIO_File fd, void * buf, int count,
 	    MPI_Datatype datatype, int file_ptr_type,
 	    ADIO_Offset offset, ADIO_Status *status,
 	    int flag, int *error_code)
@@ -24,6 +24,7 @@ static void ZOIDFS_IOContig(ADIO_File fd, void ** buf, int count,
     ADIOI_ZOIDFS_object *zoidfs_obj_ptr;
     uint64_t file_offset = offset;
     static char myname[] = "ADIOI_ZOIDFS_IOCONTIG";
+    void * mem_starts[1];
 
     zoidfs_obj_ptr = (ADIOI_ZOIDFS_object*)fd->fs_ptr;
 
@@ -36,11 +37,13 @@ static void ZOIDFS_IOContig(ADIO_File fd, void ** buf, int count,
 
     if (flag == ZOIDFS_READ) {
 	ret = zoidfs_read(zoidfs_obj_ptr, 
-		1, buf, &mem_len,
+		1, mem_starts, &mem_len,
 		1, &file_offset, &file_len);
+	memcpy(buf, mem_starts[0], mem_len);
     } else {
+	memcpy(mem_starts[0], buf, mem_len);
 	ret = zoidfs_write(zoidfs_obj_ptr, 
-		1, (const void **)buf, &mem_len,
+		1, (const void **)mem_starts, &mem_len,
 		1, &file_offset, &file_len);
     }
     /* --BEGIN ERROR HANDLING-- */
@@ -74,7 +77,7 @@ void ADIOI_ZOIDFS_ReadContig(ADIO_File fd, void *buf, int count,
 			    ADIO_Offset offset, ADIO_Status *status,
 			    int *error_code)
 {
-    ZOIDFS_IOContig(fd, &buf, count, datatype, file_ptr_type, 
+    ZOIDFS_IOContig(fd, buf, count, datatype, file_ptr_type, 
 	    offset, status, ZOIDFS_READ, error_code);
 }
 
@@ -83,7 +86,7 @@ void ADIOI_ZOIDFS_WriteContig(ADIO_File fd, void *buf, int count,
 			   ADIO_Offset offset, ADIO_Status *status,
 			   int *error_code)
 {
-    ZOIDFS_IOContig(fd, &buf, count, datatype, file_ptr_type,
+    ZOIDFS_IOContig(fd, buf, count, datatype, file_ptr_type,
 	    offset, status, ZOIDFS_WRITE, error_code);
 }
 
