@@ -324,6 +324,22 @@ foreach $_ (@ARGV) {
 		      'Type_create_f90_real' => 1,
 		      'Type_create_f90_complex' => 1,
 		      );
+
+# Some routines have special needs and must call a different routine.  For
+# similicity, we make the requirement that the replacement routine take
+# all of the arguments of the original routine, but all additional arguments
+# at the end.  This is used with the attribute routines which must 
+# pass an additional argument to a special attribute routine that handles
+# the differences between C and Fortran attributes.
+%ChangeCall = ( 'Comm_get_attr' => 'MPIR_CommGetAttr:!MPIR_ATTR_AINT' ,
+		'Type_get_attr' => 'MPIR_TypeGetAttr:!MPIR_ATTR_AINT',
+		'Win_get_attr'  => 'MPIR_WinGetAttr:!MPIR_ATTR_AINT',
+		'Attr_get'      => 'MPIR_CommGetAttr:!MPIR_ATTR_INT',
+		'Comm_set_attr' => 'MPIR_CommSetAttr:!MPIR_ATTR_AINT',
+		'Type_set_attr' => 'MPIR_TypeSetAttr:!MPIR_ATTR_AINT',
+		'Win_set_attr'  => 'MPIR_WinSetAttr:!MPIR_ATTR_AINT',
+		'Attr_put'      => 'MPIR_CommSetAttr:!MPIR_ATTR_INT',
+    );
 # 
 # Note that wtime and wtick aren't found because they don't match the 
 # int MPI_xxx format.  They're handled directly by the special routine
@@ -1124,6 +1140,12 @@ sub print_call_args {
 	    # We must handle this argument specially
 	    &print_special_call_arg( $routine_name, $count );
 	}
+	elsif ($parm =~ /!/) {
+	    # This parameter is a special case; the exclamation point
+	    # is used to say "call with this argument as is"
+	    $parm =~ s/!//;
+	    print $OUTFD $parm;
+	}
 	else {
 	    # Convert to/from object type as required.  
 	    #print "TMP: parm = $arg_qualifiers[$count]$parm\n";
@@ -1140,7 +1162,7 @@ sub print_call_args {
 	    else {
 		# Since MPICH objects are ints, we don't need to do 
 		# anything unless MPI_Fint and int are different.
-# print STDERR "XXX $count $#arg_addresses XXX\n";
+		# print STDERR "XXX $count $#arg_addresses XXX\n";
 		if ($arg_addresses[$count] > 0) {
 		    print $OUTFD "*";
 		}
@@ -1446,6 +1468,7 @@ sub addraint_in_decl {
 }
 sub addraint_in_arg {
     my $count = $_[0];
+    # FIXME: This has far too many redundant casts
     print $OUTFD "(void *)(MPI_Aint)((MPI_Aint)*(MPI_Aint *)v$count)";
 }
 
@@ -3181,9 +3204,18 @@ sub ReadAndProcessInterface {
 		    print $OUTFD "#ifdef MPI_MODE_RDONLY\n";
  		}
 		&print_special_decls( $routine_name );
-		print $OUTFD "    $errparmlval = $routine_prefix$routine_name";
-		print "Printing call arguments for mpi_${lcname}_\n" if $debug;
-		&print_call_args( $args );
+		if (defined($ChangeCall{$routine_name})) {
+		    my ($newName,$extraArgs) = 
+			split(/:/,$ChangeCall{$routine_name} );
+		    print $OUTFD "   $errparmlval = $newName";
+		    my $largs = $args . "," . $extraArgs;
+		    &print_call_args( $largs );
+		}
+		else {
+		    print $OUTFD "    $errparmlval = $routine_prefix$routine_name";
+		    print "Printing call arguments for mpi_${lcname}_\n" if $debug;
+		    &print_call_args( $args );
+		}
 		# Print any post call processing
 		&print_post_call( $routine_name, $args );
 		if ($protectMPIO) {

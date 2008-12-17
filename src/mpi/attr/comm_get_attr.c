@@ -23,55 +23,28 @@
 #undef MPI_Comm_get_attr
 #define MPI_Comm_get_attr PMPI_Comm_get_attr
 
-#endif
+/* Find the requested attribute.  If it exists, return either the attribute
+   entry or the address of the entry, based on whether the request is for 
+   a pointer-valued attribute (C or C++) or an integer-valued attribute
+   (Fortran, either 77 or 90).
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_get_attr
-
-/*@
-   MPI_Comm_get_attr - Retrieves attribute value by key
-
-Input Parameters:
-+ comm - communicator to which attribute is attached (handle) 
-- keyval - key value (integer) 
-
-Output Parameters:
-+ attr_value - attribute value, unless 'flag' = false 
-- flag -  true if an attribute value was extracted;  false if no attribute is
-  associated with the key 
-
-   Notes:
-    Attributes must be extracted from the same language as they were inserted  
-    in with 'MPI_Comm_set_attr'.  The notes for C and Fortran below explain 
-    why. 
-
-Notes for C:
-    Even though the 'attr_value' arguement is declared as 'void *', it is
-    really the address of a void pointer.  See the rationale in the 
-    standard for more details. 
-
-.N ThreadSafe
-
-.N Fortran
-
-.N Errors
-.N MPI_SUCCESS
-.N MPI_ERR_COMM
-.N MPI_ERR_KEYVAL
-@*/
-int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *flag)
+   If the attribute has the same type as the request, it is returned as-is.
+   Otherwise, the address of the attribute is returned.
+*/
+int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val, 
+		      int *flag, MPIR_AttrType outAttrType )
 {
-    static const char FCNAME[] = "MPI_Comm_get_attr";
+    static const char FCNAME[] = "MPIR_CommGetAttr";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     static PreDefined_attrs attr_copy;    /* Used to provide a copy of the
 					     predefined attributes */
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_GET_ATTR);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_GET_ATTR);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_GET_ATTR);
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -134,7 +107,9 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 	   On some 64-bit plaforms, such as Solaris-SPARC, using an MPI_Fint
 	   will cause the value to placed into the high, rather than low,
 	   end of the output value. */
+#if 0
 	MPIR_Pint  *attr_int = (MPIR_Pint *)attribute_val;
+#endif
 #endif
 	*flag = 1;
 
@@ -148,18 +123,23 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 	attr_copy = MPIR_Process.attrs;
 	switch (attr_idx) {
 	case 1: /* TAG_UB */
+	case 2:
 	    *attr_val_p = &attr_copy.tag_ub;
 	    break;
 	case 3: /* HOST */
+	case 4:
 	    *attr_val_p = &attr_copy.host;
 	    break;
 	case 5: /* IO */
+	case 6:
 	    *attr_val_p = &attr_copy.io;
 	    break;
 	case 7: /* WTIME */
+	case 8:
 	    *attr_val_p = &attr_copy.wtime_is_global;
 	    break;
 	case 9: /* UNIVERSE_SIZE */
+	case 10:
 	    /* This is a special case.  If universe is not set, then we
 	       attempt to get it from the device.  If the device is doesn't
 	       supply a value, then we set the flag accordingly */
@@ -194,9 +174,11 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 	    }
 	    break;
 	case 11: /* LASTUSEDCODE */
+	case 12:
 	    *attr_val_p = &attr_copy.lastusedcode;
 	    break;
 	case 13: /* APPNUM */
+	case 14:
 	    /* This is another special case.  If appnum is negative,
 	       we take that as indicating no value of APPNUM, and set
 	       the flag accordingly */
@@ -207,6 +189,7 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 		*attr_val_p = &attr_copy.appnum;
 	    }
 	    break;
+#if 0
 #ifdef HAVE_FORTRAN_BINDING
 	case 2: /* Fortran TAG_UB */
 	    *attr_int = attr_copy.tag_ub;
@@ -269,7 +252,14 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 	    }
 	    break;
 #endif
+#endif
 	}
+	/* All of the predefined attributes are INTEGER; since we've set 
+	   the output value as the pointer to these, we need to dereference
+	   it here. */
+	if (*flag && 
+	    (outAttrType == MPIR_ATTR_AINT || outAttrType == MPIR_ATTR_INT))
+	    *attr_val_p = **(void ***)attr_val_p;
     }
     else {
 	MPID_Attribute *p = comm_ptr->attributes;
@@ -277,8 +267,12 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 	*flag = 0;
 	while (p) {
 	    if (p->keyval->handle == comm_keyval) {
-		*flag = 1;
-		(*(void **)attribute_val) = p->value;
+		*flag                  = 1;
+		if (outAttrType == MPIR_ATTR_PTR &&
+		    MPIR_ATTR_KIND(p->attrType) == MPIR_ATTR_KIND(MPIR_ATTR_INT)) 
+		    *(void**)attribute_val = &(p->value);
+		else
+		    *(void**)attribute_val = (p->value);
 		break;
 	    }
 	    p = p->next;
@@ -287,8 +281,80 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_GET_ATTR);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_GET_ATTR);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    return mpi_errno;
+
+  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+	mpi_errno = MPIR_Err_create_code(
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpir_comm_get_attr",
+	    "**mpir_comm_get_attr %C %d %p %p", comm, comm_keyval, attribute_val, flag);
+    }
+#   endif
+    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+#endif /* MPICH_MPI_FROM_PMPI */
+
+#undef FUNCNAME
+#define FUNCNAME MPI_Comm_get_attr
+
+/* FIXME: Attributes must be visable from all languages */
+/*@
+   MPI_Comm_get_attr - Retrieves attribute value by key
+
+Input Parameters:
++ comm - communicator to which attribute is attached (handle) 
+- keyval - key value (integer) 
+
+Output Parameters:
++ attr_value - attribute value, unless 'flag' = false 
+- flag -  true if an attribute value was extracted;  false if no attribute is
+  associated with the key 
+
+   Notes:
+    Attributes must be extracted from the same language as they were inserted  
+    in with 'MPI_Comm_set_attr'.  The notes for C and Fortran below explain 
+    why. 
+
+Notes for C:
+    Even though the 'attr_value' arguement is declared as 'void *', it is
+    really the address of a void pointer.  See the rationale in the 
+    standard for more details. 
+
+.N ThreadSafe
+
+.N Fortran
+
+.N Errors
+.N MPI_SUCCESS
+.N MPI_ERR_COMM
+.N MPI_ERR_KEYVAL
+@*/
+int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, 
+		      int *flag)
+{
+    static const char FCNAME[] = "MPI_Comm_get_attr";
+    int mpi_errno = MPI_SUCCESS;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_GET_ATTR);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+    
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_GET_ATTR);
+
+    /* Instead, ask for a desired type. */
+    mpi_errno = MPIR_CommGetAttr( comm, comm_keyval, attribute_val, flag, 
+				  MPIR_ATTR_PTR );
+    if (mpi_errno) goto fn_fail;
+    /* printf( "attr value = %x\n", *(void**)attribute_val ); */
+    /* ... end of body of routine ... */
+
+  fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_GET_ATTR);
     return mpi_errno;
 
   fn_fail:
@@ -300,7 +366,6 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 	    "**mpi_comm_get_attr %C %d %p %p", comm, comm_keyval, attribute_val, flag);
     }
 #   endif
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

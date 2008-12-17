@@ -23,53 +23,20 @@
 #undef MPI_Win_get_attr
 #define MPI_Win_get_attr PMPI_Win_get_attr
 
-#endif
-
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_get_attr
-
-/*@
-   MPI_Win_get_attr - Get attribute cached on an MPI window object
-
-   Input Parameters:
-+ win - window to which the attribute is attached (handle) 
-- win_keyval - key value (integer) 
-
-   Output Parameters:
-+ attribute_val - attribute value, unless flag is false 
-- flag - false if no attribute is associated with the key (logical) 
-
-   Notes:
-   The following attributes are predefined for all MPI Window objects\:
-
-+ MPI_WIN_BASE - window base address. 
-. MPI_WIN_SIZE - window size, in bytes. 
-- MPI_WIN_DISP_UNIT - displacement unit associated with the window. 
-
-.N ThreadSafe
-
-.N Fortran
-
-.N Errors
-.N MPI_SUCCESS
-.N MPI_ERR_WIN
-.N MPI_ERR_KEYVAL
-.N MPI_ERR_OTHER
-@*/
-int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, 
-		     int *flag)
+int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val, 
+		     int *flag, MPIR_AttrType outAttrType )
 {
 #ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Win_get_attr";
+    static const char FCNAME[] = "MPIR_WinGetAttr";
 #endif
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_GET_ATTR);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_WIN_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_GET_ATTR);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_WIN_GET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -174,7 +141,11 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 	while (p) {
 	    if (p->keyval->handle == win_keyval) {
 		*flag = 1;
-		(*(void **)attribute_val) = p->value;
+		if (outAttrType == MPIR_ATTR_PTR &&
+		    MPIR_ATTR_KIND(p->attrType) == MPIR_ATTR_KIND(MPIR_ATTR_INT)) 
+		    *(void**)attribute_val = &(p->value);
+		else
+		    *(void**)attribute_val = (p->value);
 		break;
 	    }
 	    p = p->next;
@@ -186,8 +157,82 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_GET_ATTR);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_WIN_GET_ATTR);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+#   ifdef HAVE_ERROR_CHECKING
+  fn_fail:
+    {
+	mpi_errno = MPIR_Err_create_code(
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
+	    "**mpi_win_get_attr", 
+	    "**mpi_win_get_attr %W %d %p %p", 
+	    win, win_keyval, attribute_val, flag);
+    }
+    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+    goto fn_exit;
+#   endif
+    /* --END ERROR HANDLING-- */
+}
+#endif
+
+#undef FUNCNAME
+#define FUNCNAME MPI_Win_get_attr
+
+/*@
+   MPI_Win_get_attr - Get attribute cached on an MPI window object
+
+   Input Parameters:
++ win - window to which the attribute is attached (handle) 
+- win_keyval - key value (integer) 
+
+   Output Parameters:
++ attribute_val - attribute value, unless flag is false 
+- flag - false if no attribute is associated with the key (logical) 
+
+   Notes:
+   The following attributes are predefined for all MPI Window objects\:
+
++ MPI_WIN_BASE - window base address. 
+. MPI_WIN_SIZE - window size, in bytes. 
+- MPI_WIN_DISP_UNIT - displacement unit associated with the window. 
+
+.N ThreadSafe
+
+.N Fortran
+
+.N Errors
+.N MPI_SUCCESS
+.N MPI_ERR_WIN
+.N MPI_ERR_KEYVAL
+.N MPI_ERR_OTHER
+@*/
+int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, 
+		     int *flag)
+{
+#ifdef HAVE_ERROR_CHECKING
+    static const char FCNAME[] = "MPI_Win_get_attr";
+#endif
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Win *win_ptr = NULL;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_GET_ATTR);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+    
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_GET_ATTR);
+
+    /* ... body of routine ...  */
+    mpi_errno = MPIR_WinGetAttr( win, win_keyval, attribute_val, flag, 
+				 MPIR_ATTR_PTR );
+    if (mpi_errno) goto fn_fail;
+    /* ... end of body of routine ... */
+
+#ifdef HAVE_ERROR_CHECKING
+  fn_exit:
+#endif
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_GET_ATTR);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -1016,6 +1016,10 @@ typedef struct MPID_Keyval {
        MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
          "Decr keyval %p ref count to %d",_keyval,_keyval->ref_count));}
 
+/* Include the attribute access routines that permit access to the 
+   attribute or its pointer, needed for cross-language access to attributes */
+#include "mpi_attr.h"
+
 /* Attributes need no ref count or handle, but since we want to use the
    common block allocator for them, we must provide those elements 
 */
@@ -1042,6 +1046,16 @@ typedef struct MPID_Keyval {
   For the Fortran 77 routines in the case where 'sizeof(MPI_Fint)' < 
   'sizeof(void*)', the high end of the 'void *' value is used.  That is,
   we cast it to 'MPI_Fint *' and use that value.
+
+  MPI defines three kinds of attributes (see MPI 2.1, Section 16.3, pages 
+  487-488 (the standard says two, but there are really three, as discussed
+  below).  These are pointer-valued attributes and two types of integer-valued
+  attributes.  
+  Pointer-valued attributes are used in C.
+  Integer-valued attributes are used in Fortran.  These are of type either
+  INTEGER or INTEGER(KIND=MPI_ADDRESS_KIND).
+
+  The predefined attributes are a combination of INTEGER and pointers.
  
   Module:
   Attribute-DS
@@ -1051,7 +1065,9 @@ typedef struct MPID_Attribute {
     int          handle;
     volatile int ref_count;
     MPID_Keyval  *keyval;           /* Keyval structure for this attribute */
+    
     struct MPID_Attribute *next;    /* Pointer to next in the list */
+    MPIR_AttrType attrType;         /* Type of the attribute */
     long        pre_sentinal;       /* Used to detect user errors in accessing
 				       the value */
     void *      value;              /* Stored value */

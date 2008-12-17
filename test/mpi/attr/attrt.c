@@ -196,7 +196,8 @@ int test_communicators( void )
 	
 	if (value != world_rank) {
 	    errs++;
-	    printf( "dup_comm key_1 value incorrect: %ld\n", (long)value );
+	    printf( "dup_comm key_1 value incorrect: %ld, expected %d\n", 
+		    (long)value, world_rank );
 	    fflush( stdout );
 	    MPI_Abort(MPI_COMM_WORLD, 3005 );
 	}

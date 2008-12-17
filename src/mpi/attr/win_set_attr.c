@@ -24,38 +24,8 @@
 #undef MPI_Win_set_attr
 #define MPI_Win_set_attr PMPI_Win_set_attr
 
-#endif
-
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_set_attr
-
-/*@
-   MPI_Win_set_attr - Stores attribute value associated with a key
-
-Input Parameters:
-+ win - MPI window object to which attribute will be attached (handle) 
-. keyval - key value, as returned by  'MPI_Win_create_keyval' (integer) 
-- attribute_val - attribute value 
-
-Notes:
-
-The type of the attribute value depends on whether C or Fortran is being used.
-In C, an attribute value is a pointer ('void *'); in Fortran, it is an 
-address-sized integer.
-
-If an attribute is already present, the delete function (specified when the
-corresponding keyval was created) will be called.
-
-.N ThreadSafe
-
-.N Fortran
-
-.N Errors
-.N MPI_SUCCESS
-.N MPI_ERR_WIN
-.N MPI_ERR_KEYVAL
-@*/
-int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
+int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val, 
+		     MPIR_AttrType attrType )
 {
     static const char FCNAME[] = "MPI_Win_set_attr";
     int mpi_errno = MPI_SUCCESS;
@@ -138,6 +108,7 @@ int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
 	    MPIU_ERR_CHKANDJUMP1(!new_p,mpi_errno,MPI_ERR_OTHER,
 				 "**nomem", "**nomem %s", "MPID_Attribute" );
 	    new_p->keyval	 = keyval_ptr;
+	    new_p->attrType      = attrType;
 	    new_p->pre_sentinal	 = 0;
 	    new_p->value	 = attribute_val;
 	    new_p->post_sentinal = 0;
@@ -156,6 +127,7 @@ int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
 	MPIU_ERR_CHKANDJUMP1(!new_p,mpi_errno,MPI_ERR_OTHER,
 			     "**nomem", "**nomem %s", "MPID_Attribute" );
 	/* Did not find in list.  Add at end */
+	new_p->attrType      = attrType;
 	new_p->keyval	     = keyval_ptr;
 	new_p->pre_sentinal  = 0;
 	new_p->value	     = attribute_val;
@@ -187,6 +159,67 @@ int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
     }
 #   endif
     mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+#endif
+
+#undef FUNCNAME
+#define FUNCNAME MPI_Win_set_attr
+
+/*@
+   MPI_Win_set_attr - Stores attribute value associated with a key
+
+Input Parameters:
++ win - MPI window object to which attribute will be attached (handle) 
+. keyval - key value, as returned by  'MPI_Win_create_keyval' (integer) 
+- attribute_val - attribute value 
+
+Notes:
+
+The type of the attribute value depends on whether C or Fortran is being used.
+In C, an attribute value is a pointer ('void *'); in Fortran, it is an 
+address-sized integer.
+
+If an attribute is already present, the delete function (specified when the
+corresponding keyval was created) will be called.
+
+.N ThreadSafe
+
+.N Fortran
+
+.N Errors
+.N MPI_SUCCESS
+.N MPI_ERR_WIN
+.N MPI_ERR_KEYVAL
+@*/
+int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
+{
+    static const char FCNAME[] = "MPI_Win_set_attr";
+    int mpi_errno = MPI_SUCCESS;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_SET_ATTR);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+    
+    /* ... body of routine ...  */
+    mpi_errno = MPIR_WinSetAttr( win, win_keyval, attribute_val, 
+				 MPIR_ATTR_PTR );
+    if (mpi_errno) goto fn_fail;
+    /* ... end of body of routine ... */
+
+  fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_SET_ATTR);
+    return mpi_errno;
+
+  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+	mpi_errno = MPIR_Err_create_code(
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_set_attr", 
+	    "**mpi_win_set_attr %W %d %p", win, win_keyval, attribute_val);
+    }
+#   endif
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

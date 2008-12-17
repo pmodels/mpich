@@ -24,43 +24,8 @@
 #undef MPI_Type_get_attr
 #define MPI_Type_get_attr PMPI_Type_get_attr
 
-#endif
-
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_get_attr
-
-/*@
-   MPI_Type_get_attr - Retrieves attribute value by key
-
-   Input Parameters:
-+ type - datatype to which the attribute is attached (handle) 
-- type_keyval - key value (integer) 
-
-   Output Parameters:
-+ attribute_val - attribute value, unless flag = false 
-- flag - false if no attribute is associated with the key (logical) 
-
-   Notes:
-    Attributes must be extracted from the same language as they were inserted  
-    in with 'MPI_Type_set_attr'.  The notes for C and Fortran below explain 
-    why. 
-
-Notes for C:
-    Even though the 'attr_value' arguement is declared as 'void *', it is
-    really the address of a void pointer.  See the rationale in the 
-    standard for more details. 
-
-.N ThreadSafe
-
-.N Fortran
-
-.N Errors
-.N MPI_SUCCESS
-.N MPI_ERR_KEYVAL
-.N MPI_ERR_ARG
-@*/
-int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val, 
-		      int *flag)
+int MPIR_TypeGetAttr( MPI_Datatype type, int type_keyval, void *attribute_val, 
+		      int *flag, MPIR_AttrType outAttrType )
 {
 #ifdef HAVE_ERROR_CHECKING
     static const char FCNAME[] = "MPI_Type_get_attr";
@@ -68,12 +33,12 @@ int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val,
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *type_ptr = NULL;
     MPID_Attribute *p;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_GET_ATTR);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TYPE_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_GET_ATTR);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_TYPE_GET_ATTR);
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -122,7 +87,11 @@ int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val,
     while (p) {
 	if (p->keyval->handle == type_keyval) {
 	    *flag = 1;
-	    (*(void **)attribute_val) = p->value;
+	    if (outAttrType == MPIR_ATTR_PTR &&
+		MPIR_ATTR_KIND(p->attrType) == MPIR_ATTR_KIND(MPIR_ATTR_INT)) 
+		*(void**)attribute_val = &(p->value);
+	    else
+		*(void**)attribute_val = (p->value);
 	    break;
 	}
 	p = p->next;
@@ -133,8 +102,84 @@ int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val,
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_GET_ATTR);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_TYPE_GET_ATTR);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+#   ifdef HAVE_ERROR_CHECKING
+  fn_fail:
+    {
+	mpi_errno = MPIR_Err_create_code(
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
+	    "**mpir_type_get_attr",
+	    "**mpir_type_get_attr %D %d %p %p", 
+	    type, type_keyval, attribute_val, flag);
+    }
+    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+    goto fn_exit;
+#   endif
+    /* --END ERROR HANDLING-- */
+}
+#endif
+
+#undef FUNCNAME
+#define FUNCNAME MPI_Type_get_attr
+
+/*@
+   MPI_Type_get_attr - Retrieves attribute value by key
+
+   Input Parameters:
++ type - datatype to which the attribute is attached (handle) 
+- type_keyval - key value (integer) 
+
+   Output Parameters:
++ attribute_val - attribute value, unless flag = false 
+- flag - false if no attribute is associated with the key (logical) 
+
+   Notes:
+    Attributes must be extracted from the same language as they were inserted  
+    in with 'MPI_Type_set_attr'.  The notes for C and Fortran below explain 
+    why. 
+
+Notes for C:
+    Even though the 'attr_value' arguement is declared as 'void *', it is
+    really the address of a void pointer.  See the rationale in the 
+    standard for more details. 
+
+.N ThreadSafe
+
+.N Fortran
+
+.N Errors
+.N MPI_SUCCESS
+.N MPI_ERR_KEYVAL
+.N MPI_ERR_ARG
+@*/
+int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val, 
+		      int *flag)
+{
+#ifdef HAVE_ERROR_CHECKING
+    static const char FCNAME[] = "MPI_Type_get_attr";
+#endif
+    int mpi_errno = MPI_SUCCESS;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_GET_ATTR);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+    
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_GET_ATTR);
+    
+    /* ... body of routine ...  */
+    mpi_errno = MPIR_TypeGetAttr( type, type_keyval, attribute_val, flag, 
+				  MPIR_ATTR_PTR );
+    if (mpi_errno) goto fn_fail;
+    
+    /* ... end of body of routine ... */
+
+#ifdef HAVE_ERROR_CHECKING
+  fn_exit:
+#endif
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_GET_ATTR);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

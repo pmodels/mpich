@@ -19,11 +19,14 @@
 */
 
 #ifdef F77_NAME_UPPER
-#define chkinc_ CHKINC
+#define chkcomm2inc_ CHKCOMM2INC
+#define chkckeyvals_ CHKCKEYVALS
 
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
 /* Mixed is ok because we use lowercase in all uses */
-#define chkinc_ chkinc
+#define chkcomm2inc_ chkcomm2inc
+#define chkckeyvals_ chkckeyvals
+
 #elif defined(F77_NAME_LOWER_2USCORE) || defined(F77_NAME_LOWER_USCORE) || \
       defined(F77_NAME_MIXED_USCORE)
 /* Else leave name alone (routines have no underscore, so both
@@ -33,9 +36,10 @@
 #endif
 
 /* Prototypes to keep compilers happy */
-void chkinc( int *, const int *, int * );
+int chkcomm2inc_( int *, const int *, int * );
+int chkckeyvals_( int *, int *, int * );
 
-int chkinc_ (int *keyval, int *expected, int *ierr)
+int chkcomm2inc_ (int *keyval, const int *expected, int *ierr)
 {
     int      flag;
     MPI_Aint *val;
@@ -51,3 +55,49 @@ int chkinc_ (int *keyval, int *expected, int *ierr)
     }
 }
 
+/* Attribute delete and copy functions for each type */
+int myCommCopyfn( MPI_Comm comm, int keyval, void *extra_state, 
+		  void *attr_val_in, void *attr_val_out, int *flag )
+{
+    *(void **)attr_val_out = (char *)attr_val_in + 2;
+    *flag = 1;
+    return MPI_SUCCESS;
+}
+
+int myCommDelfn( MPI_Comm comm, int keyval, void *attr_val, void *extra_state )
+{
+    return MPI_SUCCESS;
+}
+
+int myTypeCopyfn( MPI_Datatype dtype, int keyval, void *extra_state, 
+		  void *attr_val_in, void *attr_val_out, int *flag )
+{
+    *(void **)attr_val_out = (char *)attr_val_in + 2;
+    *flag = 1;
+    return MPI_SUCCESS;
+}
+
+int myTypeDelfn( MPI_Datatype dtype, int keyval, void *attr_val, void *extra_state )
+{
+    return MPI_SUCCESS;
+}
+
+int myWinCopyfn( MPI_Win win, int keyval, void *extra_state, 
+		  void *attr_val_in, void *attr_val_out, int *flag )
+{
+    *(void **)attr_val_out = (char *)attr_val_in + 2;
+    *flag = 1;
+    return MPI_SUCCESS;
+}
+
+int myWinDelfn( MPI_Win win, int keyval, void *attr_val, void *extra_state )
+{
+    return MPI_SUCCESS;
+}
+
+int chkckeyvals_( int *comm_keyval, int *type_keyval, int *win_keyval )
+{
+    MPI_Comm_create_keyval( myCommCopyfn, myCommDelfn, comm_keyval, 0 );
+    MPI_Type_create_keyval( myTypeCopyfn, myTypeDelfn, type_keyval, 0 );
+    MPI_Win_create_keyval( myWinCopyfn, myWinDelfn, win_keyval, 0 );
+}
