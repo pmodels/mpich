@@ -4,6 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "create_f90_util.h"
+
 #include "mpiimpl.h"
 #ifdef HAVE_F90_TYPE_ROUTINES
 #include "mpif90model.h"
