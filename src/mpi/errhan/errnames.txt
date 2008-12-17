@@ -1412,6 +1412,16 @@ unexpected messages queued.
 **mpi_register_datarep %s %p %p %p %p:MPI_Register_datarep(datarep=%s, read_conversion_fn=%p, write_conversion_fn=%p, dtype_file_extent_fn=%p, extra_state=%p) failed
 **mpi_pcontrol:MPI_Pcontrol failed
 **mpi_pcontrol %d:MPI_Pcontrol(level=%d) failed
+
+# MPIR functions
+
+**mpir_comm_get_attr:MPIR_Comm_get_attr failed
+**mpir_comm_get_attr %C %d %p %p:MPIR_Comm_get_attr(%C, comm_keyval=%d, attribute_val=%p, flag=%p) failed
+**mpir_type_get_attr:MPIR_Type_get_attr failed
+**mpir_type_get_attr %D %d %p %p:MPIR_Type_get_attr(%D, type_keyval=%d, attribute_val=%p, flag=%p) failed
+**mpir_wingetattr:MPIR_WinGetAttr failed
+**mpir_wingetattr %W %d %p %p:MPIR_WinGetAttr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
+
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)

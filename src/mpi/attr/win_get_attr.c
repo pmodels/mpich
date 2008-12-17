@@ -167,8 +167,8 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpi_win_get_attr", 
-	    "**mpi_win_get_attr %W %d %p %p", 
+	    "**mpir_wingetattr", 
+	    "**mpir_wingetattr %W %d %p %p", 
 	    win, win_keyval, attribute_val, flag);
     }
     mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
