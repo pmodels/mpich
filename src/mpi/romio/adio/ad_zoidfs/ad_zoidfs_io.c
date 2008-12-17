@@ -24,6 +24,7 @@ static void ZOIDFS_IOContig(ADIO_File fd, void * buf, int count,
     ADIOI_ZOIDFS_object *zoidfs_obj_ptr;
     uint64_t file_offset = offset;
     static char myname[] = "ADIOI_ZOIDFS_IOCONTIG";
+    void * mem_offsets[1];
 
     zoidfs_obj_ptr = (ADIOI_ZOIDFS_object*)fd->fs_ptr;
 
@@ -36,11 +37,12 @@ static void ZOIDFS_IOContig(ADIO_File fd, void * buf, int count,
 
     if (flag == ZOIDFS_READ) {
 	ret = zoidfs_read(zoidfs_obj_ptr, 
-		1, buf, &mem_len,
+		1, &buf, &mem_len,
 		1, &file_offset, &file_len);
     } else {
+	memcpy(mem_offsets[0], buf, sizeof(void*));
 	ret = zoidfs_write(zoidfs_obj_ptr, 
-		1, buf, &mem_len,
+		1, (const void **)mem_offsets, &mem_len,
 		1, &file_offset, &file_len);
     }
     /* --BEGIN ERROR HANDLING-- */
