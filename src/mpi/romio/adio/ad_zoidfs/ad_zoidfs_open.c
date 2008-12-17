@@ -73,7 +73,7 @@ static void fake_an_open(char *fname, int access_mode,
  * special handling when CREATE is set.  */
 void ADIOI_ZOIDFS_Open(ADIO_File fd, int *error_code)
 {
-    int rank, ret;
+    int rank;
     static char myname[] = "ADIOI_ZOIDFS_OPEN";
     ADIOI_ZOIDFS_object *zoidfs_obj_ptr;
 
@@ -81,12 +81,13 @@ void ADIOI_ZOIDFS_Open(ADIO_File fd, int *error_code)
      * doing the error checking.  define a struct for both the object reference
      * and the error code to broadcast to all the processors */
 
-    open_status o_status = {0, 0}; 
+    open_status o_status;
     MPI_Datatype open_status_type;
     MPI_Datatype types[2] = {MPI_INT, MPI_BYTE};
     int lens[2] = {1, sizeof(ADIOI_ZOIDFS_object)};
     MPI_Aint offsets[2];
     
+    memset(&o_status, 0, sizeof(o_status));
     zoidfs_obj_ptr = (ADIOI_ZOIDFS_object *) 
 	ADIOI_Malloc(sizeof(ADIOI_ZOIDFS_object));
     /* --BEGIN ERROR HANDLING-- */
