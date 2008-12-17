@@ -40,7 +40,7 @@ static void ZOIDFS_IOContig(ADIO_File fd, void * buf, int count,
 		1, &buf, &mem_len,
 		1, &file_offset, &file_len);
     } else {
-	memcpy(mem_offsets[0], buf, sizeof(void*));
+	memcpy(mem_offsets[0], buf, mem_len);
 	ret = zoidfs_write(zoidfs_obj_ptr, 
 		1, (const void **)mem_offsets, &mem_len,
 		1, &file_offset, &file_len);
