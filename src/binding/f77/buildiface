@@ -874,6 +874,26 @@ sub print_name_map_block {
 	print $OUTFD "
 /* Map the name to the correct form */
 #ifndef MPICH_MPI_FROM_PMPI
+#if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
+#if defined(F77_NAME_UPPER)
+#pragma weak PMPI_$ucname = pmpi_${lcname}
+#pragma weak pmpi_${lcname}_ = PMPI_${ucname}
+#pragma weak pmpi_${lcname} = PMPI_${ucname}
+#elif defined(F77_NAME_LOWER_2USCORE)
+#pragma weak PMPI_$ucname = pmpi_${lcname}__
+#pragma weak pmpi_${lcname}_ = pmpi_${lcname}__
+#pragma weak pmpi_${lcname} = pmpi_${lcname}__
+#elif defined(F77_NAME_LOWER_USCORE)
+#pragma weak PMPI_$ucname = pmpi_${lcname}_
+#pragma weak pmpi_${lcname}__ = pmpi_${lcname}_
+#pragma weak pmpi_${lcname} = pmpi_${lcname}_
+#else
+#pragma weak PMPI_$ucname = pmpi_${lcname}
+#pragma weak pmpi_${lcname}__ = pmpi_${lcname}
+#pragma weak pmpi_${lcname}_ = pmpi_${lcname}
+#endif /* Test on name mapping */
+#endif /* Use multiple pragma weak */
+
 #ifdef F77_NAME_UPPER
 #define ${out_prefix}${lcname}_ PMPI_${ucname}
 #elif defined(F77_NAME_LOWER_2USCORE)
@@ -882,7 +902,8 @@ sub print_name_map_block {
 #define ${out_prefix}${lcname}_ pmpi_${lcname}
 #else
 #define ${out_prefix}${lcname}_ pmpi_${lcname}_
-#endif
+#endif /* Test on name mapping */
+
 /* This defines the routine that we call, which must be the PMPI version
    since we're renaming the Fortran entry as the pmpi version.  The MPI name
    must be undefined first to prevent any conflicts with previous renamings,
