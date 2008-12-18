@@ -7,16 +7,32 @@
 #include "mpiatomic.h"
 #include "mpidu_process_locks.h"
 
-/* initialized to keep it from becoming a common symbol */
-MPIDU_Process_lock_t *MPIDU_Emulation_lock = NULL;
+/*
+    These macros are analogous to the MPIDU_THREAD_XXX_CS_{ENTER,EXIT} macros.
+    TODO Consider putting debugging macros in here that utilize 'msg'.
+*/
+#define MPIDU_IPC_SINGLE_CS_ENTER(msg)          \
+    do {                                        \
+        MPIU_Assert(emulation_lock);            \
+        MPIDU_Process_lock(emulation_lock);     \
+    } while (0)
+
+#define MPIDU_IPC_SINGLE_CS_EXIT(msg)           \
+    do {                                        \
+        MPIU_Assert(emulation_lock);            \
+        MPIDU_Process_unlock(emulation_lock);   \
+    } while (0)
+
+
+static MPIDU_Process_lock_t *emulation_lock = NULL;
 
 int MPIDU_Interprocess_lock_init(MPIDU_Process_lock_t *shm_lock, int isLeader)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDU_Emulation_lock = shm_lock;
+    emulation_lock = shm_lock;
 
     if (isLeader) {
-        MPIDU_Process_lock_init(MPIDU_Emulation_lock);
+        MPIDU_Process_lock_init(emulation_lock);
     }
 
     return mpi_errno;
@@ -40,14 +56,14 @@ int MPIDU_Interprocess_lock_init(MPIDU_Process_lock_t *shm_lock, int isLeader)
 */
 
 
-void MPIDU_Atomic_add_emulated(int *ptr, int val)
+void MPIDU_Atomic_add_by_lock(int *ptr, int val)
 {
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_add");
     *ptr += val;
     MPIDU_IPC_SINGLE_CS_EXIT("atomic_add");
 }
 
-int *MPIDU_Atomic_cas_int_ptr_emulated(int * volatile *ptr, int *oldv, int *newv)
+int *MPIDU_Atomic_cas_int_ptr_by_lock(int * volatile *ptr, int *oldv, int *newv)
 {
     volatile int *prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_cas");
@@ -59,7 +75,12 @@ int *MPIDU_Atomic_cas_int_ptr_emulated(int * volatile *ptr, int *oldv, int *newv
     return (int *)prev;
 }
 
-int MPIDU_Atomic_cas_int_emulated(volatile int *ptr, int oldv, int newv)
+char *MPIDU_Atomic_cas_char_ptr_by_lock(char * volatile *ptr, char *oldv, char *newv)
+{
+    return (char *)MPIDU_Atomic_cas_int_ptr_by_lock((int *volatile*)ptr, (int *)oldv, (int *)newv);
+}
+
+int MPIDU_Atomic_cas_int_by_lock(volatile int *ptr, int oldv, int newv)
 {
     int prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_cas");
@@ -71,7 +92,7 @@ int MPIDU_Atomic_cas_int_emulated(volatile int *ptr, int oldv, int newv)
     return prev;
 }
 
-MPI_Aint MPIDU_Atomic_cas_aint_emulated(volatile MPI_Aint *ptr, MPI_Aint oldv, MPI_Aint newv)
+MPI_Aint MPIDU_Atomic_cas_aint_by_lock(volatile MPI_Aint *ptr, MPI_Aint oldv, MPI_Aint newv)
 {
     MPI_Aint prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_cas_aint");
@@ -83,7 +104,7 @@ MPI_Aint MPIDU_Atomic_cas_aint_emulated(volatile MPI_Aint *ptr, MPI_Aint oldv, M
     return (MPI_Aint)prev;
 }
 
-int MPIDU_Atomic_decr_and_test_emulated(volatile int *ptr)
+int MPIDU_Atomic_decr_and_test_by_lock(volatile int *ptr)
 {
     int new_val;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_decr_and_test");
@@ -92,14 +113,14 @@ int MPIDU_Atomic_decr_and_test_emulated(volatile int *ptr)
     return (0 == new_val);
 }
 
-void MPIDU_Atomic_decr_emulated(volatile int *ptr)
+void MPIDU_Atomic_decr_by_lock(volatile int *ptr)
 {
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_decr");
     --(*ptr);
     MPIDU_IPC_SINGLE_CS_EXIT("atomic_decr");
 }
 
-int MPIDU_Atomic_fetch_and_add_emulated(volatile int *ptr, int val)
+int MPIDU_Atomic_fetch_and_add_by_lock(volatile int *ptr, int val)
 {
     int prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_fetch_and_add");
@@ -109,7 +130,7 @@ int MPIDU_Atomic_fetch_and_add_emulated(volatile int *ptr, int val)
     return prev;
 }
 
-int MPIDU_Atomic_fetch_and_decr_emulated(volatile int *ptr)
+int MPIDU_Atomic_fetch_and_decr_by_lock(volatile int *ptr)
 {
     int prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_fetch_and_decr");
@@ -119,7 +140,7 @@ int MPIDU_Atomic_fetch_and_decr_emulated(volatile int *ptr)
     return prev;
 }
 
-int MPIDU_Atomic_fetch_and_incr_emulated(volatile int *ptr)
+int MPIDU_Atomic_fetch_and_incr_by_lock(volatile int *ptr)
 {
     int prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_fetch_and_incr");
@@ -129,14 +150,14 @@ int MPIDU_Atomic_fetch_and_incr_emulated(volatile int *ptr)
     return prev;
 }
 
-void MPIDU_Atomic_incr_emulated(volatile int *ptr)
+void MPIDU_Atomic_incr_by_lock(volatile int *ptr)
 {
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_incr");
     ++(*ptr);
     MPIDU_IPC_SINGLE_CS_EXIT("atomic_incr");
 }
 
-int *MPIDU_Atomic_swap_int_ptr_emulated(int * volatile *ptr, int *val)
+int *MPIDU_Atomic_swap_int_ptr_by_lock(int * volatile *ptr, int *val)
 {
     volatile int *prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_swap_int_ptr");
@@ -146,7 +167,12 @@ int *MPIDU_Atomic_swap_int_ptr_emulated(int * volatile *ptr, int *val)
     return (int *)prev;
 }
 
-int MPIDU_Atomic_swap_int_emulated(volatile int *ptr, int val)
+char *MPIDU_Atomic_swap_char_ptr_by_lock(char * volatile *ptr, char *val)
+{
+    return (char *)MPIDU_Atomic_swap_int_ptr_by_lock((int *volatile*)ptr, (int *)val);
+}
+
+int MPIDU_Atomic_swap_int_by_lock(volatile int *ptr, int val)
 {
     int prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_swap_int");
@@ -156,7 +182,7 @@ int MPIDU_Atomic_swap_int_emulated(volatile int *ptr, int val)
     return (int)prev;
 }
 
-MPI_Aint MPIDU_Atomic_swap_aint_emulated(volatile MPI_Aint *ptr, MPI_Aint val)
+MPI_Aint MPIDU_Atomic_swap_aint_by_lock(volatile MPI_Aint *ptr, MPI_Aint val)
 {
     MPI_Aint prev;
     MPIDU_IPC_SINGLE_CS_ENTER("atomic_swap_aint");
