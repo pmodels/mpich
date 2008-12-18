@@ -365,14 +365,14 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
 	    MPIDI_FUNC_EXIT(MPID_STATE_MPID_SEGMENT_VECTOR_PACK_TO_IOV);
 	    return 1;
 	}
-	else if (last_idx >= 0 && (last_end == ((char *) bufp + (int) rel_off)))
+	else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off)))
 	{
 	    /* add this size to the last vector rather than using up new one */
 	    paramp->u.pack_vector.vectorp[last_idx].DLOOP_VECTOR_LEN += size;
 	}
 	else {
 	    paramp->u.pack_vector.vectorp[last_idx+1].DLOOP_VECTOR_BUF =
-		(char *) bufp + (int) rel_off;
+		(char *) bufp + rel_off;
 	    paramp->u.pack_vector.vectorp[last_idx+1].DLOOP_VECTOR_LEN = size;
 	    paramp->u.pack_vector.index++;
 	}
