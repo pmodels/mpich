@@ -84,7 +84,6 @@
 #include "mpidu_atomics_sun_atomic_ops.h"
 #else
 
-#error Need functions for atomic read and write
 /* FIXME: In order to support atomic emulated with locks, we need to
    wrap locks around regular loads and stores.  This means that we
    also need these macros/functions to be used in the non-emulated
