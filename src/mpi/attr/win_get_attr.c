@@ -23,6 +23,9 @@
 #undef MPI_Win_get_attr
 #define MPI_Win_get_attr PMPI_Win_get_attr
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_WinGetAttr
+
 int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val, 
 		     int *flag, MPIR_AttrType outAttrType )
 {
@@ -141,11 +144,34 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	while (p) {
 	    if (p->keyval->handle == win_keyval) {
 		*flag = 1;
-		if (outAttrType == MPIR_ATTR_PTR &&
-		    MPIR_ATTR_KIND(p->attrType) == MPIR_ATTR_KIND(MPIR_ATTR_INT)) 
-		    *(void**)attribute_val = &(p->value);
+		if (outAttrType == MPIR_ATTR_PTR) {
+		    if (p->attrType == MPIR_ATTR_INT) {
+			/* This is the tricky case: if the system is
+			   bigendian, and we have to return a pointer to
+			   an int, then we may need to point to the 
+			   correct location in the word. */
+#if defined(WORDS_LITTLEENDIAN) || (SIZEOF_VOID_P == SIZEOF_INT)
+			*(void**)attribute_val = &(p->value);
+#else
+			int *p_loc = (int *)&(p->value);
+#if SIZEOF_VOID_P == 2 * SIZEOF_INT
+			p_loc++;
+#else 
+#error Expected sizeof(void*) to be either sizeof(int) or 2*sizeof(int)
+#endif
+			*(void **)attribute_val = p_loc;
+#endif
+		    }
+		    else if (p->attrType == MPIR_ATTR_AINT) {
+			*(void**)attribute_val = &(p->value);
+		    }
+		    else {
+			*(void**)attribute_val = (p->value);
+		    }
+		}
 		else
 		    *(void**)attribute_val = (p->value);
+		
 		break;
 	    }
 	    p = p->next;

@@ -23,6 +23,9 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_set_attr
 #define MPI_Type_set_attr PMPI_Type_set_attr
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_TypeSetAttr
 int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
 		     MPIR_AttrType attrType )
 {
@@ -31,14 +34,14 @@ int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
     MPID_Datatype *type_ptr = NULL;
     MPID_Keyval *keyval_ptr = NULL;
     MPID_Attribute *p, **old_p;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_SET_ATTR);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TYPE_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     /* The thread lock prevents a valid attr delete on the same datatype
        but in a different thread from causing problems */
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_SET_ATTR);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_TYPE_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -137,7 +140,7 @@ int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_SET_ATTR);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_TYPE_SET_ATTR);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

@@ -23,6 +23,9 @@
 #undef MPI_Comm_get_attr
 #define MPI_Comm_get_attr PMPI_Comm_get_attr
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_CommGetAttr
+
 /* Find the requested attribute.  If it exists, return either the attribute
    entry or the address of the entry, based on whether the request is for 
    a pointer-valued attribute (C or C++) or an integer-valued attribute
@@ -257,22 +260,49 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	/* All of the predefined attributes are INTEGER; since we've set 
 	   the output value as the pointer to these, we need to dereference
 	   it here. */
-	if (*flag && 
-	    (outAttrType == MPIR_ATTR_AINT || outAttrType == MPIR_ATTR_INT))
-	    *attr_val_p = **(void ***)attr_val_p;
+	if (*flag) {
+	    if (outAttrType == MPIR_ATTR_AINT)
+		*(MPI_Aint*)attr_val_p = *(MPI_Aint*)*(void **)attr_val_p;
+	    else if (outAttrType == MPIR_ATTR_INT)
+		*(MPI_Aint*)attr_val_p = *(int *)*(void **)attr_val_p;
+	}
     }
     else {
 	MPID_Attribute *p = comm_ptr->attributes;
 
+	/*   */
 	*flag = 0;
 	while (p) {
 	    if (p->keyval->handle == comm_keyval) {
 		*flag                  = 1;
-		if (outAttrType == MPIR_ATTR_PTR &&
-		    MPIR_ATTR_KIND(p->attrType) == MPIR_ATTR_KIND(MPIR_ATTR_INT)) 
-		    *(void**)attribute_val = &(p->value);
+		if (outAttrType == MPIR_ATTR_PTR) {
+		    if (p->attrType == MPIR_ATTR_INT) {
+			/* This is the tricky case: if the system is
+			 bigendian, and we have to return a pointer to
+			 an int, then we may need to point to the 
+			 correct location in the word. */
+#if defined(WORDS_LITTLEENDIAN) || (SIZEOF_VOID_P == SIZEOF_INT)
+			*(void**)attribute_val = &(p->value);
+#else
+			int *p_loc = (int *)&(p->value);
+#if SIZEOF_VOID_P == 2 * SIZEOF_INT
+			p_loc++;
+#else 
+#error Expected sizeof(void*) to be either sizeof(int) or 2*sizeof(int)
+#endif
+			*(void **)attribute_val = p_loc;
+#endif
+		    }
+		    else if (p->attrType == MPIR_ATTR_AINT) {
+			*(void**)attribute_val = &(p->value);
+		    }
+		    else {
+			*(void**)attribute_val = (p->value);
+		    }
+		}
 		else
 		    *(void**)attribute_val = (p->value);
+
 		break;
 	    }
 	    p = p->next;

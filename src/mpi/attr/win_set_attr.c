@@ -24,23 +24,24 @@
 #undef MPI_Win_set_attr
 #define MPI_Win_set_attr PMPI_Win_set_attr
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_WinSetAttr
 int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val, 
 		     MPIR_AttrType attrType )
 {
     static const char FCNAME[] = "MPI_Win_set_attr";
     int mpi_errno = MPI_SUCCESS;
-
     MPID_Win *win_ptr = NULL;
     MPID_Keyval *keyval_ptr = NULL;
     MPID_Attribute *p, **old_p;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_SET_ATTR);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_WIN_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     /* The thread lock prevents a valid attr delete on the same window
        but in a different thread from causing problems */
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_SET_ATTR);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_WIN_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -145,7 +146,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_SET_ATTR);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_WIN_SET_ATTR);
     MPIU_THREAD_CS_EXIT(ALLFUNC,); 
     return mpi_errno;
 

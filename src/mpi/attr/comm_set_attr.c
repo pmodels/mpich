@@ -23,6 +23,9 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_set_attr
 #define MPI_Comm_set_attr PMPI_Comm_set_attr
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_CommSetAttr
 int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val, 
 		      MPIR_AttrType attrType )
 {
@@ -31,7 +34,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
     MPID_Comm *comm_ptr = NULL;
     MPID_Keyval *keyval_ptr = NULL;
     MPID_Attribute *p, **old_p;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SET_ATTR);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
