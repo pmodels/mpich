@@ -38,7 +38,9 @@ typedef struct Finalize_func_t {
     int  priority;           /* priority is used to control the order
 				in which the callbacks are invoked */
 } Finalize_func_t;
-#define MAX_FINALIZE_FUNC 16
+/* When full debugging is enabled, each MPI handle type has a finalize handler
+   installed to detect unfreed handles.  */
+#define MAX_FINALIZE_FUNC 32
 static Finalize_func_t fstack[MAX_FINALIZE_FUNC];
 static int fstack_sp = 0;
 static int fstack_max_priority = 0;
