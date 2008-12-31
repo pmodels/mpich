@@ -611,7 +611,6 @@ int MPIR_Allgather_inter (
 
     static const char FCNAME[] = "MPIR_Allgather_inter";
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS, root;
-    MPI_Comm newcomm;
     MPI_Aint true_extent, true_lb = 0, extent, send_extent;
     void *tmp_buf=NULL;
     MPID_Comm *newcomm_ptr = NULL;
@@ -644,7 +643,6 @@ int MPIR_Allgather_inter (
 	MPIR_Setup_intercomm_localcomm( comm_ptr );
 
     newcomm_ptr = comm_ptr->local_comm;
-    newcomm = newcomm_ptr->handle;
 
     if (sendcount != 0) {
         mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype, tmp_buf, sendcount,

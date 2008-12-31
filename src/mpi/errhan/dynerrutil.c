@@ -306,7 +306,7 @@ const char *MPIR_Err_get_dynerr_string( int code )
 }
 
 
-static int MPIR_Dynerrcodes_finalize( void *p )
+static int MPIR_Dynerrcodes_finalize( void *p ATTRIBUTE((unused)) )
 {
     int i;
 

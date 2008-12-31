@@ -221,6 +221,7 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPIU_THREADPRIV_DECL;
 
+    /* FIXME: Why do we need to get the thread-private storage here? */
     MPIU_THREADPRIV_GET;
 
     switch(request_ptr->kind)
@@ -276,8 +277,7 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
 	    /* The user error handler may make calls to MPI routines, so the 
 	       nesting counter must be incremented before the handler 
 	       is called */
-	    MPIU_THREADPRIV_DECL;
-	    MPIU_THREADPRIV_GET;
+	    /* Note that we've acquired the thread private storage above */
 	    MPIR_Nest_incr();
     
 	    switch (request_ptr->greq_lang)

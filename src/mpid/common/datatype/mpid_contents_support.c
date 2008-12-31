@@ -55,7 +55,9 @@ void MPID_Type_access_contents(MPI_Datatype type,
     return;
 }
 
-/* FIXME: Is this routine complete?  Why is it needed? */
+/* FIXME: Is this routine complete?  Why is it needed? If it is needed, it 
+   must have a comment that describes why it is needed and the arguments 
+   must have ATTRIBUTE((unused)) */
 void MPID_Type_release_contents(MPI_Datatype type,
 				int **ints_p,
 				MPI_Aint **aints_p,

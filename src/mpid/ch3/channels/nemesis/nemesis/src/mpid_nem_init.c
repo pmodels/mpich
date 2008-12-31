@@ -48,7 +48,8 @@ MPID_nem_init (int rank, MPIDI_PG_t *pg_p, int has_parent)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-_MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, int has_parent)
+_MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, 
+		int has_parent ATTRIBUTE((unused)) )
 {
     int    mpi_errno       = MPI_SUCCESS;
     int    pmi_errno;

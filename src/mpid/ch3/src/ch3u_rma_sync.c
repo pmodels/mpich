@@ -1589,7 +1589,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, 
 					    int *wait_for_rma_done_pkt)
 {
-    int mpi_errno = MPI_SUCCESS, comm_size, done, i, nops;
+    int mpi_errno = MPI_SUCCESS, done, i, nops;
     MPIDI_RMA_ops *curr_ptr, *next_ptr, **curr_ptr_ptr, *tmp_ptr;
     MPID_Comm *comm_ptr;
     MPID_Request **requests=NULL; /* array of requests */
@@ -1650,7 +1650,6 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
     }
 
     MPID_Comm_get_ptr( win_ptr->comm, comm_ptr );
-    comm_size = comm_ptr->local_size;
 
     /* Ignore the first op in the list because it is a win_lock and do
        the rest */
@@ -1982,7 +1981,6 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr)
     MPIDI_RMA_ops *rma_op;
     MPID_Request *rreq=NULL, *sreq=NULL;
     MPIDI_VC_t * vc;
-    MPID_IOV iov[MPID_IOV_LIMIT];
     MPID_Comm *comm_ptr;
     MPID_Datatype *dtp;
     MPIDI_CH3_Pkt_t upkt;
@@ -2036,9 +2034,6 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr)
     lock_get_unlock_pkt->count = rma_op->target_count;
     lock_get_unlock_pkt->datatype = rma_op->target_datatype;
     lock_get_unlock_pkt->request_handle = rreq->handle;
-
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) lock_get_unlock_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*lock_get_unlock_pkt);
 
     MPID_Comm_get_ptr(win_ptr->comm, comm_ptr);
     MPIDI_Comm_get_vc(comm_ptr, rma_op->target_rank, &vc);

@@ -2019,8 +2019,9 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen )
     return;
 }
 
+/* FIXME: Remove the bogus fn argument from all uses of this routine */
 static int ErrGetInstanceString( int errorcode, char *msg, int num_remaining, 
-				 MPIR_Err_get_class_string_func_t fn )
+				 MPIR_Err_get_class_string_func_t fn ATTRIBUTE((unused)) )
 {
     int len;
 

@@ -199,6 +199,9 @@ fn_fail:
 #define FUNCNAME scatter_for_bcast
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
+/* FIXME: Many of the arguments to this routine are ignored.  Why are they
+   included?  Is there an error here (missing a case in support of 
+   non-contiguous datatypes, perhaps? */
 static int scatter_for_bcast(
     void *buffer,
     int count, 

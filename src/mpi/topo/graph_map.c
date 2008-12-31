@@ -23,8 +23,9 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Graph_map
 #define MPI_Graph_map PMPI_Graph_map
-int MPIR_Graph_map( const MPID_Comm *comm_ptr, int nnodes, const int indx[], 
-		    const int edges[], int *newrank )
+int MPIR_Graph_map( const MPID_Comm *comm_ptr, int nnodes, 
+		    const int indx[] ATTRIBUTE((unused)), 
+		    const int edges[] ATTRIBUTE((unused)), int *newrank )
 {
     MPIU_UNREFERENCED_ARG(indx);
     MPIU_UNREFERENCED_ARG(edges);

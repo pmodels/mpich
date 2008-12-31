@@ -555,7 +555,8 @@ static int create_derived_datatype(MPID_Request *req, MPID_Datatype **dtp)
     MPIDI_FUNC_ENTER(MPID_STATE_CREATE_DERIVED_DATATYPE);
 
     dtype_info = req->dev.dtype_info;
-    dataloop = req->dev.dataloop;
+    /* FIXME: What is this variable for (it is never referenced)? */
+    dataloop   = req->dev.dataloop;
 
     /* allocate new datatype object and handle */
     new_dtp = (MPID_Datatype *) MPIU_Handle_obj_alloc(&MPID_Datatype_mem);

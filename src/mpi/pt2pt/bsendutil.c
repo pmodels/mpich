@@ -605,8 +605,7 @@ static void MPIR_Bsend_take_buffer( BsendData_t *p, int size  )
     MPIU_DBG_STMT(BSEND,TYPICAL,MPIR_Bsend_dump());
 }
 
-/* Ignore p */
-static int MPIR_Bsend_finalize( void *p )
+static int MPIR_Bsend_finalize( void *p ATTRIBUTE((unused)) )
 {
     void *b;
     int  s;

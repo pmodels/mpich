@@ -184,6 +184,7 @@ void MPIDI_Datatype_get_contents_aints(MPID_Datatype_contents *cp,
     struct_sz = sizeof(MPID_Datatype_contents);
     types_sz  = cp->nr_types * sizeof(MPI_Datatype);
     ints_sz   = cp->nr_ints * sizeof(int);
+    /* FIXME: Why is this here?  The value is never used.  Should it be? */
     aints_sz  = cp->nr_aints * sizeof(MPI_Aint);
 
     /* pad the struct, types, and ints before we allocate.

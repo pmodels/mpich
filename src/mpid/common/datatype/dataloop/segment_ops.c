@@ -16,7 +16,7 @@
 int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
 				       DLOOP_Type el_type,
 				       DLOOP_Offset rel_off,
-				       void *bufp, /* unused */
+				       void *bufp ATTRIBUTE((unused)),
 				       void *v_paramp)
 {
     DLOOP_Offset el_size; /* DLOOP_Count? */
@@ -63,12 +63,12 @@ int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
  * of a whole block in a vector type.
  */
 int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
-				       DLOOP_Count count, /* unused */
+				       DLOOP_Count count ATTRIBUTE((unused)),
 				       DLOOP_Count blksz,
 				       DLOOP_Offset stride,
 				       DLOOP_Type el_type,
 				       DLOOP_Offset rel_off, /* offset into buffer */
-				       void *bufp, /* unused */
+				       void *bufp ATTRIBUTE((unused)),
 				       void *v_paramp)
 {
     DLOOP_Count i, blocks_left, whole_count;
@@ -188,7 +188,7 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 				       DLOOP_Offset *offsetarray,
 				       DLOOP_Type el_type,
 				       DLOOP_Offset rel_off,
-				       void *bufp, /*unused */
+				       void *bufp ATTRIBUTE((unused)),
 				       void *v_paramp)
 {
     DLOOP_Count curblock = 0;
@@ -261,7 +261,7 @@ int PREPEND_PREFIX(Segment_index_m2m)(DLOOP_Offset *blocks_p,
 				      DLOOP_Offset *offsetarray,
 				      DLOOP_Type el_type,
 				      DLOOP_Offset rel_off,
-				      void *bufp, /*unused */
+				      void *bufp ATTRIBUTE((unused)),
 				      void *v_paramp)
 {
     int curblock = 0;
@@ -390,7 +390,7 @@ struct PREPEND_PREFIX(contig_blocks_params) {
 static int DLOOP_Segment_contig_count_block(DLOOP_Offset *blocks_p,
 					    DLOOP_Type el_type,
 					    DLOOP_Offset rel_off,
-					    DLOOP_Buffer bufp, /* unused */
+					    DLOOP_Buffer bufp ATTRIBUTE((unused)),
 					    void *v_paramp)
 {
     DLOOP_Offset size, el_size;
@@ -440,7 +440,7 @@ static int DLOOP_Segment_vector_count_block(DLOOP_Offset *blocks_p,
 					    DLOOP_Offset stride,
 					    DLOOP_Type el_type,
 					    DLOOP_Offset rel_off, /* offset into buffer */
-					    void *bufp, /* unused */
+					    void *bufp ATTRIBUTE((unused)),
 					    void *v_paramp)
 {
     DLOOP_Count new_blk_count;
@@ -478,7 +478,7 @@ static int DLOOP_Segment_blkidx_count_block(DLOOP_Offset *blocks_p,
 					    DLOOP_Offset *offsetarray,
 					    DLOOP_Type el_type,
 					    DLOOP_Offset rel_off,
-					    void *bufp, /* unused */
+					    void *bufp ATTRIBUTE((unused)),
 					    void *v_paramp)
 {
     DLOOP_Count i, new_blk_count;
@@ -520,7 +520,7 @@ static int DLOOP_Segment_index_count_block(DLOOP_Offset *blocks_p,
 					   DLOOP_Offset *offsetarray,
 					   DLOOP_Type el_type,
 					   DLOOP_Offset rel_off,
-					   void *bufp, /* unused */
+					   void *bufp ATTRIBUTE((unused)),
 					   void *v_paramp)
 {
     DLOOP_Count new_blk_count;
@@ -788,7 +788,7 @@ static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
                                             DLOOP_Offset *offsetarray,
                                             DLOOP_Type el_type,
                                             DLOOP_Offset rel_off,
-                                            void *bufp, /* unused */
+                                            void *bufp ATTRIBUTE((unused)),
                                             void *v_paramp)
 {
     int i, size, blocks_left;
@@ -881,7 +881,7 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 					   DLOOP_Offset *offsetarray,
 					   DLOOP_Type el_type,
 					   DLOOP_Offset rel_off,
-					   void *bufp, /* unused */
+					   void *bufp ATTRIBUTE((unused)),
 					   void *v_paramp)
 {
     int i, size, blocks_left;
