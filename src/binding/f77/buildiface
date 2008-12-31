@@ -781,7 +781,7 @@ sub print_profiling_block {
 	&print_weak_decl( $OUTFD, "mpi_${lcname}_", $args, $lcname );
 	print $OUTFD "\
 #if defined(F77_NAME_UPPER)
-#pragma weak MPI_$ucname = pmpi_${lcname}
+#pragma weak MPI_$ucname = PMPI_${ucname}
 #pragma weak mpi_${lcname}__ = PMPI_${ucname}
 #pragma weak mpi_${lcname}_ = PMPI_${ucname}
 #pragma weak mpi_${lcname} = PMPI_${ucname}
@@ -875,8 +875,20 @@ sub print_name_map_block {
 /* Map the name to the correct form */
 #ifndef MPICH_MPI_FROM_PMPI
 #if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
+/* Define the weak versions of the PMPI routine*/
+#ifndef F77_NAME_UPPER\n";
+	&print_weak_decl( $OUTFD, "PMPI_$ucname", $args, $lcname ); 
+	print $OUTFD "#endif\n#ifndef F77_NAME_LOWER_2USCORE\n";
+	&print_weak_decl( $OUTFD, "pmpi_${lcname}__", $args, $lcname );
+	print $OUTFD "#endif\n#ifndef F77_NAME_LOWER_USCORE\n";
+	&print_weak_decl( $OUTFD, "pmpi_${lcname}_", $args, $lcname );
+	print $OUTFD "#endif\n#ifndef F77_NAME_LOWER\n";
+	&print_weak_decl( $OUTFD, "pmpi_${lcname}", $args, $lcname );
+	print $OUTFD "
+#endif
+
 #if defined(F77_NAME_UPPER)
-#pragma weak PMPI_$ucname = pmpi_${lcname}
+#pragma weak pmpi_${lcname}__ = PMPI_${ucname}
 #pragma weak pmpi_${lcname}_ = PMPI_${ucname}
 #pragma weak pmpi_${lcname} = PMPI_${ucname}
 #elif defined(F77_NAME_LOWER_2USCORE)
