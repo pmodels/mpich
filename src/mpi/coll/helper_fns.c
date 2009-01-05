@@ -166,6 +166,9 @@ int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPID_Datatype_get_size_macro(recvtype, recvsize);
     sdata_sz = sendsize * sendcount;
     rdata_sz = recvsize * recvcount;
+
+    if (!sdata_sz || !rdata_sz)
+        goto fn_exit;
     
     if (sdata_sz > rdata_sz)
     {
