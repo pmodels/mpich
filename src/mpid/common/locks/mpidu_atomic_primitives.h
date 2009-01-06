@@ -78,6 +78,8 @@
 #include "mpidu_atomics_gcc_intel_32_64.h"
 #elif defined(HAVE_GCC_AND_IA64_ASM)
 #include "mpidu_atomics_gcc_ia64.h"
+#elif defined(HAVE_GCC_AND_SICORTEX_ASM)
+#include "mpidu_atomics_gcc_sicortex.h"
 #elif defined(HAVE_GCC_INTRINSIC_ATOMICS)
 #include "mpidu_atomics_gcc_intrinsics.h"
 #elif defined(HAVE_SUN_ATOMIC_OPS)

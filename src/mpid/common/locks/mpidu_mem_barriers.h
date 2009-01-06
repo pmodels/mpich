@@ -23,6 +23,10 @@
 #  define MPIDU_Shm_write_barrier() __asm__ __volatile__  ("mf" ::: "memory" )
 #  define MPIDU_Shm_read_barrier() __asm__ __volatile__  ("mf" ::: "memory" )
 #  define MPIDU_Shm_read_write_barrier() __asm__ __volatile__  ("mf" ::: "memory" )
+#elif defined(HAVE_GCC_AND_SICORTEX_ASM)
+#  define MPIDU_Shm_write_barrier() __asm__ __volatile__  ("sync" ::: "memory" )
+#  define MPIDU_Shm_read_barrier() __asm__ __volatile__  ("sync" ::: "memory" )
+#  define MPIDU_Shm_read_write_barrier() __asm__ __volatile__  ("sync" ::: "memory" )
 #else
 /* FIXME this should probably be a configure/winconfigure test instead. */
 #  define MPIDU_Shm_write_barrier()      MPID_Abort(MPIR_Process.comm_self, MPI_ERR_OTHER, 1, "memory barriers not implemented on this platform")

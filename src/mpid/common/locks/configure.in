@@ -68,6 +68,14 @@ AC_C_INLINE
 AC_C_VOLATILE
 AC_C_CONST
 
+# This test is extremely lame, but it is easy and it _should_ work in
+# cross-compilation scenarios.  A better test should be used in the future.
+mips_szptr=0
+AC_COMPUTE_INT(mips_szptr, [_MIPS_SZPTR],,)
+if test $mips_szptr -ne 0 ; then
+    AC_DEFINE(HAVE_GCC_AND_SICORTEX_ASM, 1, [Use SiCortex atomic primitives])
+fi
+
 # Check for Sun's atomic library
 AC_MSG_CHECKING([for sun atomic library])
 SAVE_CFLAGS="$CFLAGS"
