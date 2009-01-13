@@ -41,13 +41,12 @@
 #define MPI_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(MPIR_Upint)
 #define MPI_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(MPIR_Pint)
 
+#include <stdio.h>
 #ifdef STDC_HEADERS
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <stdio.h>
 #else
-#include <stdio.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
