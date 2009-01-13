@@ -470,7 +470,7 @@ void *MPIU_Handle_get_ptr_indirect( int handle, MPIU_Object_alloc_t *objmem )
 static int MPIU_CheckHandlesOnFinalize( void *objmem_ptr )
 {
     MPIU_Object_alloc_t *objmem = (MPIU_Object_alloc_t *)objmem_ptr;
-    int i, indirect_size = objmem->indirect_size;
+    int i;
     MPIU_Handle_common *ptr;
     int   directSize = objmem->direct_size;
     char *direct = (char *)objmem->direct;
@@ -496,7 +496,7 @@ static int MPIU_CheckHandlesOnFinalize( void *objmem_ptr )
 	    nDirect++;
 	}
 	else {
-	    void **indirect = objmem->indirect;
+	    void **indirect = (void **)objmem->indirect;
 	    for (i=0; i<objmem->indirect_size; i++) {
 		char *start = indirect[i];
 		char *end   = start + HANDLE_BLOCK_SIZE *objmem->size;
