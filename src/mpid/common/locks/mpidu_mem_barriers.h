@@ -11,6 +11,10 @@
 
 #include <mpichconf.h>
 
+#if defined(HAVE_NT_INTRINSICS)
+#include <intrin.h>
+#endif
+
 #if defined(HAVE_GCC_AND_PENTIUM_ASM) || defined(HAVE_GCC_AND_X86_64_ASM)
 #  define MPIDU_Shm_write_barrier() __asm__ __volatile__  ( "sfence" ::: "memory" )
 #  define MPIDU_Shm_read_barrier() __asm__ __volatile__  ( "lfence" ::: "memory" )
@@ -23,6 +27,10 @@
 #  define MPIDU_Shm_write_barrier() __asm__ __volatile__  ("mf" ::: "memory" )
 #  define MPIDU_Shm_read_barrier() __asm__ __volatile__  ("mf" ::: "memory" )
 #  define MPIDU_Shm_read_write_barrier() __asm__ __volatile__  ("mf" ::: "memory" )
+#elif defined(HAVE_NT_INTRINSICS)
+#   define MPIDU_Shm_write_barrier() {_WriteBarrier();}
+#   define MPIDU_Shm_read_barrier() {_ReadBarrier();}
+#   define MPIDU_Shm_read_write_barrier() {_ReadWriteBarrier();}
 #elif defined(HAVE_GCC_AND_SICORTEX_ASM)
 #  define MPIDU_Shm_write_barrier() __asm__ __volatile__  ("sync" ::: "memory" )
 #  define MPIDU_Shm_read_barrier() __asm__ __volatile__  ("sync" ::: "memory" )

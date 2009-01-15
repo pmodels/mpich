@@ -84,6 +84,8 @@
 #include "mpidu_atomics_gcc_intrinsics.h"
 #elif defined(HAVE_SUN_ATOMIC_OPS)
 #include "mpidu_atomics_sun_atomic_ops.h"
+#elif defined(HAVE_NT_INTRINSICS)
+#include "mpidu_atomics_nt_intrinsics.h"
 #else
 
 /* FIXME: In order to support atomic emulated with locks, we need to
