@@ -83,7 +83,8 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 		    if (MPIDI_Outstanding_close_ops == 0)
 		    {
 			MPIDI_CH3_Progress_signal_completion();
-                        MPIDI_CH3_Channel_close();
+                        mpi_errno = MPIDI_CH3_Channel_close();
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		    }
 
 		    break;
