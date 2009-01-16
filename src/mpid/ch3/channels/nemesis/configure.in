@@ -473,6 +473,10 @@ case "$with_nemesis_local_lmt" in
 esac
 AC_DEFINE_UNQUOTED([MPID_NEM_LOCAL_LMT_IMPL],$local_lmt_impl,[Method for local large message transfers.])
 
+AC_ARG_ENABLE(nemesis-lock-free-queues,
+              [--enable-lock-free-queues - Use atomic instructions and lock-free queues for shared memory communication.  Lock-based queues will be used otherwise.  The default is enabled (lock-free).],
+              AC_DEFINE(MPID_NEM_USE_LOCK_FREE_QUEUES, 1, [Define to enable lock-free communication queues]),)
+
 # Check for memory atomic instructions
 PAC_C_MEMATOMIC
 

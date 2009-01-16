@@ -21,6 +21,14 @@
 #include <sched.h>
 #include "mpichconf.h"
 
+/* FIXME We are using this as an interprocess lock in the queue code, although
+   it's not strictly guaranteed to work for this scenario.  These should really
+   use the "process locks" code, but it's in such terrible shape that it doesn't
+   really work for us right now.  Also, because it has some inline assembly it's
+   not really a fair comparison for studying the impact of atomic instructions.
+   [goodell@ 2009-01-16] */
+#include "mpid_thread.h"
+
 #define MPID_NEM_OFFSETOF(struc, field) ((int)(&((struc *)0)->field))
 #define MPID_NEM_CACHE_LINE_LEN 64
 #define MPID_NEM_NUM_CELLS      64
@@ -225,6 +233,10 @@ typedef struct MPID_nem_queue
     MPID_nem_cell_rel_ptr_t my_head;
 #if MPID_NEM_CACHE_LINE_LEN != SIZEOF_VOID_P
     char padding2[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
+#endif
+#if !defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
+    MPID_Thread_mutex_t lock;
+    char padding3[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_Thread_mutex_t)];
 #endif
 } MPID_nem_queue_t, *MPID_nem_queue_ptr_t;
 

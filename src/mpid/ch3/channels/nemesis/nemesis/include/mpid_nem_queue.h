@@ -10,6 +10,8 @@
 #include "mpid_nem_defs.h"
 #include "mpid_nem_atomics.h"
 
+int MPID_nem_network_poll (MPID_nem_poll_dir_t in_or_out);
+
 #define MPID_nem_dump_cell_mpich2(cell, index)  MPID_nem_dump_cell_mpich2__((cell),(index),__FILE__,__LINE__) 
 
 void MPID_nem_dump_cell_mpich2__( MPID_nem_cell_ptr_t cell, int, char* ,int);
@@ -31,6 +33,8 @@ static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CELL_INIT);
 }
 
+#if defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
+
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_queue_init
 #undef FCNAME
@@ -47,8 +51,6 @@ static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
 }
-
-int MPID_nem_network_poll (MPID_nem_poll_dir_t in_or_out);
 
 #define MPID_NEM_USE_SHADOW_HEAD
 #define MPID_NEM_USE_MACROS
@@ -103,6 +105,19 @@ MPID_nem_queue_enqueue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t element)
     }									\
 } while (0)
 #endif /*MPID_NEM_USE_MACROS */
+
+/* This operation is only safe because this is a single-dequeuer queue impl.
+   Assumes that MPID_nem_queue_empty was called immediately prior to fix up any
+   shadow head issues. */
+#ifndef MPID_NEM_USE_MACROS
+static inline MPID_nem_cell_ptr_t
+MPID_nem_queue_head (MPID_nem_queue_ptr_t qhead)
+{
+    return MPID_NEM_REL_TO_ABS(qhead->my_head);
+}
+#else /*MPID_NEM_USE_MACROS */
+#define MPID_nem_queue_head(qhead_) MPID_NEM_REL_TO_ABS((qhead_)->my_head)
+#endif
 
 #ifndef MPID_NEM_USE_MACROS
 static inline int
@@ -207,5 +222,105 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
     *(e) = _e;								\
 } while (0)                                             
 #endif /* MPID_NEM_USE_MACROS */
+
+#else /* !defined(MPID_NEM_USE_LOCK_FREE_QUEUES) */
+
+/* FIXME This is probably not the most efficient implementation right now.  We
+   should probably look at adding the shadow head back in even for the lock-ful
+   versions.  We should also look at not locking in some cases (taking advantage
+   of the single-dequeuer restriction) and the organization of the pointers and
+   the lock in the cache. [goodell@ 2009-01-16] */
+
+/* must be called by exactly one process per queue */
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_queue_init
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
+{
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_QUEUE_INIT);
+
+    MPID_NEM_SET_REL_NULL(qhead->head);
+    MPID_NEM_SET_REL_NULL(qhead->my_head);
+    MPID_NEM_SET_REL_NULL(qhead->tail);
+    MPID_Thread_mutex_create(&qhead->lock, NULL);
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
+}
+
+static inline void
+MPID_nem_queue_enqueue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t element)
+{
+    MPID_nem_cell_rel_ptr_t r_prev;
+    MPID_nem_cell_rel_ptr_t r_element = MPID_NEM_ABS_TO_REL (element);
+
+    MPID_Thread_mutex_lock(&qhead->lock);
+
+    r_prev = qhead->tail;
+    qhead->tail = r_element;
+    if (MPID_NEM_IS_REL_NULL(r_prev)) {
+        qhead->head = r_element;
+    }
+    else {
+        MPID_NEM_REL_TO_ABS(r_prev)->next = r_element;
+    }
+
+    MPID_Thread_mutex_unlock(&qhead->lock);
+}
+
+/* This operation is only safe because this is a single-dequeuer queue impl. */
+static inline MPID_nem_cell_ptr_t
+MPID_nem_queue_head (MPID_nem_queue_ptr_t qhead)
+{
+    MPID_nem_cell_ptr_t retval;
+    MPID_Thread_mutex_lock(&qhead->lock);
+    retval = MPID_NEM_REL_TO_ABS(qhead->head);
+    MPID_Thread_mutex_unlock(&qhead->lock);
+    return retval;
+}
+
+static inline int
+MPID_nem_queue_empty (MPID_nem_queue_ptr_t qhead)
+{
+    int is_empty = 0;
+
+    MPID_Thread_mutex_lock(&qhead->lock);
+
+    /* the "lock-ful" impl doesn't use the shadow head right now */
+    if (MPID_NEM_IS_REL_NULL(qhead->head)) {
+        is_empty = 1;
+    }
+
+    MPID_Thread_mutex_unlock(&qhead->lock);
+    return is_empty;
+}
+
+static inline void
+MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
+{
+    register MPID_nem_cell_ptr_t _e;
+    register MPID_nem_cell_rel_ptr_t _r_e;
+
+    MPID_Thread_mutex_lock(&qhead->lock);
+
+    /* the "lock-ful" impl doesn't use the shadow head right now */
+    _r_e = qhead->head;
+
+    _e = MPID_NEM_REL_TO_ABS (_r_e);
+
+    qhead->head = _e->next;
+    if (MPID_NEM_IS_REL_NULL(_e->next)) {
+        MPID_NEM_SET_REL_NULL(qhead->tail);
+    }
+
+    MPID_NEM_SET_REL_NULL (_e->next);
+    *e = _e;
+
+    MPID_Thread_mutex_unlock(&qhead->lock);
+}
+
+#endif /* !defined(MPID_NEM_USE_LOCK_FREE_QUEUES) */
 
 #endif /* MPID_NEM_QUEUE_H */

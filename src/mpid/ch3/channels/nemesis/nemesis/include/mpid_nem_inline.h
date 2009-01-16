@@ -867,8 +867,9 @@ int MPID_nem_mpich2_enqueue_fastbox (int local_rank)
 static inline int
 MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead)
 {
-    MPID_nem_cell_ptr_t cell = MPID_NEM_REL_TO_ABS(qhead->my_head);
-    int source = cell->pkt.mpich2.source;
+    int source;
+    MPID_nem_cell_ptr_t cell = MPID_nem_queue_head(qhead);
+    source = cell->pkt.mpich2.source;
     
     return (cell->pkt.mpich2.seqno == MPID_nem_recv_seqno[source]);
 }
