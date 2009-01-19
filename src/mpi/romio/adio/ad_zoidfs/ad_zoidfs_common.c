@@ -8,7 +8,7 @@
 #include "ad_zoidfs_common.h"
 #include <unistd.h>
 #include <sys/types.h>
-#include <time.h>
+#include <sys/time.h>
 
 /* keyval hack to both tell us if we've already initialized zoidfs and also
  * close it down when mpi exits */
@@ -80,8 +80,8 @@ void ADIOI_ZOIDFS_makeattribs(zoidfs_sattr_t * attribs)
 
     attribs->mask = ZOIDFS_ATTR_SETABLE;
     attribs->mode = 0644;
-    attribs->uid = getuid();
-    attribs->gid = getgid(); 
+    attribs->uid = geteuid();
+    attribs->gid = getegid(); 
 
     gettimeofday(&now, NULL);
     attribs->atime.seconds = now.tv_sec;

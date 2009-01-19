@@ -26,35 +26,21 @@ static void fake_an_open(char *fname, int access_mode,
 
     ADIOI_ZOIDFS_makeattribs(&attribs);
 
-    /* similar to PVFS v2: 
-     *	- lookup the file
-     *	- if CREATE flag passed in 
-     *	    - create the file if CREATE flag passed in
-     *	    - if *that* fails, lookup file again
-     *	- else return error
+    /* zoidfs_create succeeds even if a file already exists, so we can do
+     * our job with fewer calls than in other cases.  However, we need to
+     * be careful with ADIO_EXCL.
      */
-    ret = zoidfs_lookup(NULL, NULL, fname, &handle);
-    if (ret == ZFSERR_NOENT) {
-	/* file does not exist. create it, but only if given apropriate flag */
-	if (access_mode & ADIO_CREATE) {
-	    ret = zoidfs_create(NULL, NULL, 
-		    fname, &attribs, &handle, &created);
-	    if (ret == ZFSERR_EXIST) {
-		/* could have case where many independent processes are trying
-		 * to create the same file.  At this point another  process
-		 * could have created the file between our lookup and create
-		 * calls.  If so, just look up the file */
-		ret = zoidfs_lookup(NULL, NULL, fname, &handle);
-		if (ret != ZFS_OK) {
-		    o_status->error = ret;
-		    return;
-		}
-	    }
+    if (access_mode & ADIO_CREATE) {
+	ret = zoidfs_create(NULL, NULL, 
+			    fname, &attribs, &handle, &created);
+	if ((ret == ZFS_OK) && !created && (access_mode & ADIO_EXCL)) {
+	    /* lookup should not succeed if opened with EXCL */
+	    o_status->error = ZFSERR_EXIST;
+	    return;
 	}
-    } else if ((ret == ZFS_OK) && (access_mode & ADIO_EXCL)) {
-	/* lookup should not successd if opened with EXCL */
-	o_status->error = ZFSERR_EXIST;
-	return;
+    }
+    else {
+	ret = zoidfs_lookup(NULL, NULL, fname, &handle);
     }
 
     o_status->error = ret;
