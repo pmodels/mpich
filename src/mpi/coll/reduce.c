@@ -755,7 +755,9 @@ int MPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
+#if defined(USE_SMP_COLLECTIVES)
     MPIU_CHKLMEM_DECL(1);
+#endif
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -872,7 +874,7 @@ int MPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
     {
         if (comm_ptr->comm_kind == MPID_INTRACOMM) {
             /* intracommunicator */
-#if USE_SMP_COLLECTIVES
+#if defined(USE_SMP_COLLECTIVES)
 	    MPID_Op *op_ptr;
 	    int is_commutative; 
 
@@ -983,7 +985,9 @@ int MPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
     /* ... end of body of routine ... */
     
   fn_exit:
+#if defined(USE_SMP_COLLECTIVES)
     MPIU_CHKLMEM_FREEALL();
+#endif
     MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_REDUCE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;

@@ -410,7 +410,7 @@ int MPI_Barrier( MPI_Comm comm )
 	MPIU_THREADPRIV_GET;
         MPIR_Nest_incr();
         if (comm_ptr->comm_kind == MPID_INTRACOMM) {
-#if USE_SMP_COLLECTIVES
+#if defined(USE_SMP_COLLECTIVES)
             if (MPIR_Comm_is_node_aware(comm_ptr)) {
 
                 /* do the intranode barrier on all nodes */

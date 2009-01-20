@@ -680,7 +680,7 @@ int MPI_Allreduce ( void *sendbuf, void *recvbuf, int count,
     {
         if (comm_ptr->comm_kind == MPID_INTRACOMM) {
             /* intracommunicator */
-#if USE_SMP_COLLECTIVES
+#if defined(USE_SMP_COLLECTIVES)
 	    MPID_Op *op_ptr;
 	    int is_commutative; 
 

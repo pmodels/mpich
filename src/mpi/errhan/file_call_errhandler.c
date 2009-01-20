@@ -131,7 +131,7 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 #endif
     /* ... end of body of routine ... */
 
-#ifdef HAVE_CXX_BINDING
+#if defined(HAVE_CXX_BINDING) && defined(MPI_MODE_RDONLY)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);
