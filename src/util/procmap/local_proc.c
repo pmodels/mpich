@@ -115,7 +115,7 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
     
     for (i = 0; i < comm->remote_size; ++i)
     {
-        mpi_errno = MPID_Get_node_id(comm, comm->rank, &node_id);
+        mpi_errno = MPID_Get_node_id(comm, i, &node_id);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
         /* The upper level can catch this non-fatal error and should be
