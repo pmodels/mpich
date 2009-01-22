@@ -84,4 +84,9 @@ static inline MPI_Aint MPIDU_Atomic_swap_aint(volatile MPI_Aint *ptr, MPI_Aint v
 #endif
 }
 
+/* Implement fetch_and_incr/decr using fetch_and_add (*_faa) */
+#define MPIDU_Atomic_fetch_and_incr MPIDU_Atomic_fetch_and_incr_by_faa
+#define MPIDU_Atomic_fetch_and_decr MPIDU_Atomic_fetch_and_decr_by_faa
+#include "mpidu_atomic_emulated.h"
+
 #endif /* defined(MPIDU_ATOMICS_NT_INTRINSICS_H_INCLUDED) */
