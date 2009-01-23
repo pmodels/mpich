@@ -761,8 +761,8 @@ fn_fail:
         if (comm_ptr_->coll_fns != NULL && comm_ptr_->coll_fns->Bcast != NULL)                   \
         {                                                                                        \
             /* --BEGIN USEREXTENSION-- */                                                        \
-            mpi_errno_ = comm_ptr->node_roots_comm->coll_fns->Bcast(buffer_, count_,             \
-                                                                   datatype_, root_, comm_ptr_); \
+            mpi_errno_ = comm_ptr->coll_fns->Bcast(buffer_, count_,                              \
+                                                   datatype_, root_, comm_ptr_);                 \
             /* --END USEREXTENSION-- */                                                          \
         }                                                                                        \
         else                                                                                     \
