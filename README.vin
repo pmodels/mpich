@@ -451,6 +451,8 @@ with SLURM. To enable this support, use "--with-pmi=slurm
 Alternative Channels and Devices
 ================================
 
+nemesis, sock and ssm
+---------------------
 The communication mechanisms in MPICH2 are called "devices", paired with
 specific "channels".  The most thoroughly tested device is the "ch3"
 device.  The default configuration chooses the "nemesis" channel in the ch3
@@ -485,6 +487,8 @@ unless one of the following cases is true:
  * The target operating systems is not Linux.
 
 
+dllchan
+-------
 A new channel supports the dynamic loading of other channels.  To use this
 channel, configure with
 
@@ -515,6 +519,9 @@ If you want to try this experimental channel, please let us know what does
 and does not work.  The next release will have a more robust, 
 ready-for-production, version of this channel.
 
+
+nemesis network modules
+-----------------------
 The Nemesis channel is a low-latency channel that uses shared memory
 for intra-node communication and various networks for inter-node
 communication.  It currently supports TCP, GM, MX and Qsnet/Elan
@@ -567,6 +574,9 @@ configure option.  The default network is TCP.
   segments so using this for Nemesis may limit the number of processes
   that can be started on a single node.
 
+
+sctp channel
+------------
 The SCTP channel is a new channel using the Stream Control
 Transmission Protocol.  SCTP is a new transport protocol available on
 most operating systems using standard commodity hardware.  For some
@@ -625,6 +635,38 @@ SCTP stack specific instructions:
 In the SCTP channel, all MPI features except multithreading are
 supported. Some performance optimizations could surely exist for this
 channel and will be investigated for future releases.
+
+
+IBM Blue Gene/P device
+----------------------
+Starting from the 1.1 release series, MPICH2 also supports the IBM
+Blue Gene/P systems. Since BG/P's front-end uses a different
+architecture than the actual compute nodes, MPICH2 has to be
+cross-compiled for this platform. The configuration of MPICH2 on BG/P
+relies on the availability of the DCMF driver stack and cross compiler
+binaries on the system. These are packaged by IBM in their driver
+releases (default installation path is /bgsys/drivers/ppcfloor) and
+are not released with MPICH2.
+
+Assuming DRIVER_PATH points to the driver installation path (e.g.,
+/bgsys/drivers/ppcfloor), the following is an example configure
+command-line for MPICH2:
+
+  GCC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gcc \
+  CC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gcc \
+  CXX=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-g++ \
+  F77=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
+  F90=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
+  CFLAGS="-mcpu=450fp2" \
+  CXXFLAGS="-mcpu=450fp2" \
+  FFLAGS="-mcpu=450fp2" \
+  F90FLAGS="-mcpu=450fp2" \
+  AR=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-ar \
+  LD=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-ld \
+  MSGLAYER_INCLUDE="-I${DRIVER_PATH}/comm/include" \
+  MSGLAYER_LIB="-L${DRIVER_PATH}/comm/lib -ldcmfcoll.cnk -ldcmf.cnk -lpthread -lrt -L$DRIVER_PATH/runtime/SPI -lSPI.cna" \
+  ./configure --with-device=dcmfd:BGP --with-pmi=no --with-pm=no --with-file-system=bgl \
+  	      --enable-timer-type=device --with-cross=src/mpid/dcmfd/cross
 
 
 VPATH Builds
