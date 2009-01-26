@@ -82,7 +82,7 @@ typedef struct MPID_nem_seg
 
 typedef struct MPID_nem_seg_info
 {
-    int   size;
+    size_t size;
     char *addr; 
 } MPID_nem_seg_info_t, *MPID_nem_seg_info_ptr_t; 
 
