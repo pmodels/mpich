@@ -56,18 +56,18 @@ int MPID_nem_mpich2_serialize_win (void *buf, int buf_len, MPID_nem_mpich2_win_t
 int MPID_nem_mpich2_deserialize_win (void *buf, int buf_len, MPID_nem_mpich2_win_t **win);
 
 int MPID_nem_mpich2_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich2_win_t *remote_win);
-int MPID_nem_mpich2_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, MPID_nem_mpich2_win_t *remote_win);
+int MPID_nem_mpich2_win_putv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, MPID_nem_mpich2_win_t *remote_win);
 int MPID_nem_mpich2_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich2_win_t *remote_win);
-int MPID_nem_mpich2_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, MPID_nem_mpich2_win_t *remote_win);
+int MPID_nem_mpich2_win_getv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, MPID_nem_mpich2_win_t *remote_win);
 
 int MPID_nem_mpich2_register_memory (void *buf, int len);
 int MPID_nem_mpich2_deregister_memory (void *buf, int len);
 
 int MPID_nem_mpich2_put (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr);
-int MPID_nem_mpich2_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, int proc,
+int MPID_nem_mpich2_putv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, int proc,
 		       int *completion_ctr);
 int MPID_nem_mpich2_get (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr);
-int MPID_nem_mpich2_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, int proc,
+int MPID_nem_mpich2_getv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, int proc,
 		       int *completion_ctr);
 
      
@@ -91,8 +91,8 @@ int MPID_nem_mpich2_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_io
 #if !defined (MPID_NEM_INLINE) || !MPID_NEM_INLINE
 int MPID_nem_mpich2_send_ckpt_marker(unsigned short wave, struct MPIDI_VC *vc, int *again);
 int MPID_nem_mpich2_send_header(void* buf, int size, struct MPIDI_VC *vc, int *again);
-int MPID_nem_mpich2_sendv(struct iovec **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
-int MPID_nem_mpich2_sendv_header(struct iovec **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
+int MPID_nem_mpich2_sendv(MPID_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
+int MPID_nem_mpich2_sendv_header(MPID_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
 void MPID_nem_mpich2_send_seg(MPID_Segment segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_sz, struct MPIDI_VC *vc, int *again);
 void MPID_nem_mpich2_send_seg_header(MPID_Segment segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
                                      void *header, MPIDI_msg_sz_t header_sz, struct MPIDI_VC *vc, int *again);
