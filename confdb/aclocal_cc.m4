@@ -2540,7 +2540,7 @@ int main(int argc, char ** argv)
 fi
 ])
 
-if test $pac_cv_have__func__ = "yes" ; then
+if test "$pac_cv_have__func__" = "yes" ; then
     AC_DEFINE(HAVE__FUNC__,,[define if the compiler defines __func__])
 fi
 
@@ -2575,7 +2575,7 @@ int main(int argc, char ** argv)
 fi
 ])
 
-if test $pac_cv_have_cap__func__ = "yes" ; then
+if test "$pac_cv_have_cap__func__" = "yes" ; then
     AC_DEFINE(HAVE_CAP__FUNC__,,[define if the compiler defines __FUNC__])
 fi
 
@@ -2610,7 +2610,7 @@ int main(int argc, char ** argv)
 fi
 ])
 
-if test $pac_cv_have__function__ = "yes" ; then
+if test "$pac_cv_have__function__" = "yes" ; then
     AC_DEFINE(HAVE__FUNCTION__,,[define if the compiler defines __FUNCTION__])
 fi
 
