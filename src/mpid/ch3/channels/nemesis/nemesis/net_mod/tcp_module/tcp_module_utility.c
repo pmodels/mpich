@@ -4,18 +4,18 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "newtcp_module_impl.h"
+#include "tcp_module_impl.h"
 
-/* MPID_nem_newtcp_module_get_conninfo -- This function takes a VC
+/* MPID_nem_tcp_module_get_conninfo -- This function takes a VC
    pointer as input and outputs the sockaddr, pg_id, and pg_rank of
    the remote process associated with this VC.  [NOTE: I'm not sure
    yet, if the pg_id parameters will be char* or char**.  I'd like to
    avoid a copy on this.] */
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_get_conninfo
+#define FUNCNAME MPID_nem_tcp_module_get_conninfo
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_get_conninfo (struct MPIDI_VC *vc, struct sockaddr_in *addr, char **pg_id, int *pg_rank)
+int MPID_nem_tcp_module_get_conninfo (struct MPIDI_VC *vc, struct sockaddr_in *addr, char **pg_id, int *pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -26,19 +26,19 @@ int MPID_nem_newtcp_module_get_conninfo (struct MPIDI_VC *vc, struct sockaddr_in
     return mpi_errno;
 }
 
-/* MPID_nem_newtcp_module_get_vc_from_conninfo -- This function takes
+/* MPID_nem_tcp_module_get_vc_from_conninfo -- This function takes
    the pg_id and pg_rank and returns the corresponding VC. */
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_get_vc_from_conninfo
+#define FUNCNAME MPID_nem_tcp_module_get_vc_from_conninfo
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_get_vc_from_conninfo (char *pg_id, int pg_rank, struct MPIDI_VC **vc)
+int MPID_nem_tcp_module_get_vc_from_conninfo (char *pg_id, int pg_rank, struct MPIDI_VC **vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_PG_t *pg;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_VC_FROM_CONNINFO);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_GET_VC_FROM_CONNINFO);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_VC_FROM_CONNINFO);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_GET_VC_FROM_CONNINFO);
 
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "pg_id=%s pg_rank=%d", pg_id, pg_rank));
     
@@ -51,7 +51,7 @@ int MPID_nem_newtcp_module_get_vc_from_conninfo (char *pg_id, int pg_rank, struc
     MPIDI_PG_Get_vc (pg, pg_rank, vc);
     
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_VC_FROM_CONNINFO);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_GET_VC_FROM_CONNINFO);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -61,7 +61,7 @@ int MPID_nem_newtcp_module_get_vc_from_conninfo (char *pg_id, int pg_rank, struc
 #define FUNCNAME set_sockopts
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_set_sockopts (int fd)
+int MPID_nem_tcp_module_set_sockopts (int fd)
 {
     int mpi_errno = MPI_SUCCESS;
     int option, flags;
@@ -109,9 +109,9 @@ int MPID_nem_newtcp_module_set_sockopts (int fd)
 
 
 /*
-  MPID_NEM_NEWTCP_MODULE_SOCK_ERROR_EOF : connection failed
-  MPID_NEM_NEWTCP_MODULE_SOCK_CONNECTED : socket connected (connection success)
-  MPID_NEM_NEWTCP_MODULE_SOCK_NOEVENT   : No event on socket
+  MPID_NEM_TCP_MODULE_SOCK_ERROR_EOF : connection failed
+  MPID_NEM_TCP_MODULE_SOCK_CONNECTED : socket connected (connection success)
+  MPID_NEM_TCP_MODULE_SOCK_NOEVENT   : No event on socket
 
 N1: some implementations do not set POLLERR when there is a pending error on socket.
 So, solution is to check for readability/writeablility and then call getsockopt.
@@ -127,7 +127,7 @@ write will still be succesful, even if the peer has sent us FIN. Only the subseq
 write will fail. So, this function is made tight enough and this should be called
 before doing any read/write at least in the connection establishment state machine code.
 
-N3: return code MPID_NEM_NEWTCP_MODULE_SOCK_NOEVENT is used only by the code that wants to
+N3: return code MPID_NEM_TCP_MODULE_SOCK_NOEVENT is used only by the code that wants to
 know whether the connect is still not complete after a non-blocking connect is issued.
 
 TODO: Make this a macro for performance, if needed based on the usage.
@@ -136,17 +136,17 @@ actually done now in this function.
 */
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_check_sock_status
+#define FUNCNAME MPID_nem_tcp_module_check_sock_status
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t 
-MPID_nem_newtcp_module_check_sock_status(const pollfd_t *const plfd)
+MPID_NEM_TCP_MODULE_SOCK_STATUS_t 
+MPID_nem_tcp_module_check_sock_status(const pollfd_t *const plfd)
 {
-    int rc = MPID_NEM_NEWTCP_MODULE_SOCK_NOEVENT;
+    int rc = MPID_NEM_TCP_MODULE_SOCK_NOEVENT;
 
     if (plfd->revents & POLLERR) 
     {
-        rc = MPID_NEM_NEWTCP_MODULE_SOCK_ERROR_EOF;
+        rc = MPID_NEM_TCP_MODULE_SOCK_ERROR_EOF;
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "POLLERR on socket"));
         goto fn_exit;
     }
@@ -158,11 +158,11 @@ MPID_nem_newtcp_module_check_sock_status(const pollfd_t *const plfd)
         n = sizeof(error);
         if (getsockopt(plfd->fd, SOL_SOCKET, SO_ERROR, &error, &n) < 0 || error != 0) 
         {
-            rc = MPID_NEM_NEWTCP_MODULE_SOCK_ERROR_EOF; /*  (N1) */
+            rc = MPID_NEM_TCP_MODULE_SOCK_ERROR_EOF; /*  (N1) */
             MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "getsockopt failure. error=%d:%s", error, strerror(error)));
             goto fn_exit;
         }
-        rc = MPID_NEM_NEWTCP_MODULE_SOCK_CONNECTED;
+        rc = MPID_NEM_TCP_MODULE_SOCK_CONNECTED;
     }
  fn_exit:
     return rc;
@@ -171,10 +171,10 @@ MPID_nem_newtcp_module_check_sock_status(const pollfd_t *const plfd)
 /*
  */
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_is_sock_connected
+#define FUNCNAME MPID_nem_tcp_module_is_sock_connected
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_is_sock_connected(int fd)
+int MPID_nem_tcp_module_is_sock_connected(int fd)
 {
     int rc = FALSE;
     char buf[1];
@@ -204,7 +204,7 @@ int MPID_nem_newtcp_module_is_sock_connected(int fd)
 #define FUNCNAME MPID_nem_dbg_print_all_sendq
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-void MPID_nem_newtcp_module_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc)
+void MPID_nem_tcp_module_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc)
 {
     int i;
     MPID_Request *sreq;

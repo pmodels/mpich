@@ -8,7 +8,7 @@
 #define TCP_MODULE_QUEUE_H
 
 /* Generic queue macros -- "next_field" should be set to the name of
-   the next pointer field in the element (e.g., "ch.newtcp_sendq_next") */
+   the next pointer field in the element (e.g., "ch.tcp_sendq_next") */
 
 #define PRINT_QUEUE(qp, next_field) do {        \
     } while(0)       

@@ -29,7 +29,7 @@ static int dbg_ifname = 0;
 #define _SVID_SOURCE
 #endif
 
-#include "newtcp_module_impl.h"
+#include "tcp_module_impl.h"
 #include <sys/types.h>
 
 #ifdef HAVE_SYS_SOCKET_H

@@ -4,24 +4,24 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "newtcp_module_impl.h"
+#include "tcp_module_impl.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
 #define DBG_IFNAME 0
 
-MPID_nem_netmod_funcs_t MPIDI_nem_newtcp_module_funcs = {
-    MPID_nem_newtcp_module_init,
-    MPID_nem_newtcp_module_finalize,
-    MPID_nem_newtcp_module_ckpt_shutdown,
-    MPID_nem_newtcp_module_poll,
-    MPID_nem_newtcp_module_send,
-    MPID_nem_newtcp_module_get_business_card,
-    MPID_nem_newtcp_module_connect_to_root,
-    MPID_nem_newtcp_module_vc_init,
-    MPID_nem_newtcp_module_vc_destroy,
-    MPID_nem_newtcp_module_vc_terminate
+MPID_nem_netmod_funcs_t MPIDI_nem_tcp_module_funcs = {
+    MPID_nem_tcp_module_init,
+    MPID_nem_tcp_module_finalize,
+    MPID_nem_tcp_module_ckpt_shutdown,
+    MPID_nem_tcp_module_poll,
+    MPID_nem_tcp_module_send,
+    MPID_nem_tcp_module_get_business_card,
+    MPID_nem_tcp_module_connect_to_root,
+    MPID_nem_tcp_module_vc_init,
+    MPID_nem_tcp_module_vc_destroy,
+    MPID_nem_tcp_module_vc_terminate
 };
 
 #define MPIDI_CH3I_PORT_KEY "port"
@@ -29,58 +29,58 @@ MPID_nem_netmod_funcs_t MPIDI_nem_newtcp_module_funcs = {
 #define MPIDI_CH3I_IFNAME_KEY "ifname"
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_init
+#define FUNCNAME MPID_nem_tcp_module_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_t proc_free_queue,
+int MPID_nem_tcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_t proc_free_queue,
                                  MPID_nem_cell_ptr_t proc_elements, int num_proc_elements, MPID_nem_cell_ptr_t module_elements,
                                  int num_module_elements, MPID_nem_queue_ptr_t *module_free_queue,
                                  int ckpt_restart, MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_INIT);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_INIT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_INIT);
 
-    MPID_nem_net_module_vc_dbg_print_sendq = MPID_nem_newtcp_module_vc_dbg_print_sendq;
+    MPID_nem_net_module_vc_dbg_print_sendq = MPID_nem_tcp_module_vc_dbg_print_sendq;
 
     /* first make sure that our private fields in the vc fit into the area provided  */
-    MPIU_Assert(sizeof(MPID_nem_newtcp_module_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
+    MPIU_Assert(sizeof(MPID_nem_tcp_module_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
 
     /* set up listener socket */
 /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
-    MPID_nem_newtcp_module_g_lstn_plfd.fd = MPID_nem_newtcp_module_g_lstn_sc.fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    MPIU_ERR_CHKANDJUMP2 (MPID_nem_newtcp_module_g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror (errno), errno);
+    MPID_nem_tcp_module_g_lstn_plfd.fd = MPID_nem_tcp_module_g_lstn_sc.fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    MPIU_ERR_CHKANDJUMP2 (MPID_nem_tcp_module_g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror (errno), errno);
 
-    mpi_errno = MPID_nem_newtcp_module_set_sockopts (MPID_nem_newtcp_module_g_lstn_sc.fd);
+    mpi_errno = MPID_nem_tcp_module_set_sockopts (MPID_nem_tcp_module_g_lstn_sc.fd);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    MPID_nem_newtcp_module_g_lstn_plfd.events = POLLIN;
-    mpi_errno = MPID_nem_newtcp_module_bind (MPID_nem_newtcp_module_g_lstn_sc.fd);
+    MPID_nem_tcp_module_g_lstn_plfd.events = POLLIN;
+    mpi_errno = MPID_nem_tcp_module_bind (MPID_nem_tcp_module_g_lstn_sc.fd);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    ret = listen (MPID_nem_newtcp_module_g_lstn_sc.fd, SOMAXCONN);	      
+    ret = listen (MPID_nem_tcp_module_g_lstn_sc.fd, SOMAXCONN);	      
     MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", errno, MPIU_Strerror (errno));  
-    MPID_nem_newtcp_module_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
-    MPID_nem_newtcp_module_g_lstn_sc.handler = MPID_nem_newtcp_module_state_listening_handler;
+    MPID_nem_tcp_module_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
+    MPID_nem_tcp_module_g_lstn_sc.handler = MPID_nem_tcp_module_state_listening_handler;
 
     /* create business card */
-    mpi_errno = MPID_nem_newtcp_module_get_business_card(pg_rank, bc_val_p, val_max_sz_p);
+    mpi_errno = MPID_nem_tcp_module_get_business_card(pg_rank, bc_val_p, val_max_sz_p);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     *module_free_queue = NULL;
 
-    mpi_errno = MPID_nem_newtcp_module_sm_init();
+    mpi_errno = MPID_nem_tcp_module_sm_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPID_nem_newtcp_module_send_init();
+    mpi_errno = MPID_nem_tcp_module_send_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPID_nem_newtcp_module_poll_init();
+    mpi_errno = MPID_nem_tcp_module_poll_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_INIT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_INIT);
 /*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
     return mpi_errno;
  fn_fail:
@@ -185,10 +185,10 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_get_business_card
+#define FUNCNAME MPID_nem_tcp_module_get_business_card
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p)
+int MPID_nem_tcp_module_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDU_Sock_ifaddr_t ifaddr;
@@ -196,9 +196,9 @@ int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int 
     int ret;
     struct sockaddr_in sock_id;
     socklen_t len;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_BUSINESS_CARD);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_GET_BUSINESS_CARD);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_BUSINESS_CARD);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_GET_BUSINESS_CARD);
     
     mpi_errno = GetSockInterfaceAddr(my_rank, ifname, sizeof(ifname), &ifaddr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -218,7 +218,7 @@ int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int 
     }
 
     len = sizeof(sock_id);
-    ret = getsockname (MPID_nem_newtcp_module_g_lstn_sc.fd, (struct sockaddr *)&sock_id, &len);
+    ret = getsockname (MPID_nem_tcp_module_g_lstn_sc.fd, (struct sockaddr *)&sock_id, &len);
     MPIU_ERR_CHKANDJUMP1 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**getsockname", "**getsockname %s", MPIU_Strerror (errno));
 
     mpi_errno = MPIU_Str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, ntohs(sock_id.sin_port));
@@ -257,40 +257,40 @@ int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int 
 	}
     }
 
-    /*     printf("MPID_nem_newtcp_module_get_business_card. port=%d\n", sock_id.sin_port); */
+    /*     printf("MPID_nem_tcp_module_get_business_card. port=%d\n", sock_id.sin_port); */
 
  fn_exit:
-/*     fprintf(stdout, "MPID_nem_newtcp_module_get_business_card Exit, mpi_errno=%d\n", mpi_errno); fflush(stdout); */
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_BUSINESS_CARD);
+/*     fprintf(stdout, "MPID_nem_tcp_module_get_business_card Exit, mpi_errno=%d\n", mpi_errno); fflush(stdout); */
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_GET_BUSINESS_CARD);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_connect_to_root
+#define FUNCNAME MPID_nem_tcp_module_connect_to_root
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
+int MPID_nem_tcp_module_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
     struct in_addr addr;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT_TO_ROOT);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_CONNECT_TO_ROOT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT_TO_ROOT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_CONNECT_TO_ROOT);
 
     /* vc is already allocated before reaching this point */
 
-    mpi_errno = MPID_nem_newtcp_module_get_addr_port_from_bc(business_card, &addr, &(VC_FIELD(new_vc, sock_id).sin_port));
+    mpi_errno = MPID_nem_tcp_module_get_addr_port_from_bc(business_card, &addr, &(VC_FIELD(new_vc, sock_id).sin_port));
     VC_FIELD(new_vc, sock_id).sin_addr.s_addr = addr.s_addr;
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPID_nem_newtcp_module_connect(new_vc); 
+    MPID_nem_tcp_module_connect(new_vc); 
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT_TO_ROOT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_CONNECT_TO_ROOT);
     return mpi_errno;
 
  fn_fail:
@@ -298,22 +298,22 @@ int MPID_nem_newtcp_module_connect_to_root (const char *business_card, MPIDI_VC_
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_vc_init
+#define FUNCNAME MPID_nem_tcp_module_vc_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
+int MPID_nem_tcp_module_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_VC_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_VC_INIT);
 
-    vc_ch->state = MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED;
+    vc_ch->state = MPID_NEM_TCP_MODULE_VC_STATE_DISCONNECTED;
     
-    vc->sendNoncontig_fn      = MPID_nem_newtcp_SendNoncontig;
-    vc_ch->iStartContigMsg    = MPID_nem_newtcp_iStartContigMsg;
-    vc_ch->iSendContig        = MPID_nem_newtcp_iSendContig;
+    vc->sendNoncontig_fn      = MPID_nem_tcp_SendNoncontig;
+    vc_ch->iStartContigMsg    = MPID_nem_tcp_iStartContigMsg;
+    vc_ch->iSendContig        = MPID_nem_tcp_iSendContig;
     memset(&VC_FIELD(vc, sock_id), 0, sizeof(VC_FIELD(vc, sock_id)));
     VC_FIELD(vc, sock_id).sin_family = AF_INET;
 
@@ -325,15 +325,15 @@ int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
 
     VC_FIELD(vc, sc_ref_count) = 0;
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_VC_INIT);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_vc_destroy
+#define FUNCNAME MPID_nem_tcp_module_vc_destroy
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_vc_destroy(MPIDI_VC_t *vc)
+int MPID_nem_tcp_module_vc_destroy(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -346,7 +346,7 @@ int MPID_nem_newtcp_module_vc_destroy(MPIDI_VC_t *vc)
     if (sc == NULL)
         goto fn_exit;
 
-    plfd = &MPID_nem_newtcp_module_plfd_tbl[sc->index]; 
+    plfd = &MPID_nem_tcp_module_plfd_tbl[sc->index]; 
 #endif
 
     return mpi_errno;
@@ -359,19 +359,19 @@ int MPID_nem_newtcp_module_vc_destroy(MPIDI_VC_t *vc)
 */
    
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_get_addr_port_from_bc
+#define FUNCNAME MPID_nem_tcp_module_get_addr_port_from_bc
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_get_addr_port_from_bc(const char *business_card, struct in_addr *addr, in_port_t *port)
+int MPID_nem_tcp_module_get_addr_port_from_bc(const char *business_card, struct in_addr *addr, in_port_t *port)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
     int port_int;
     /*char desc_str[256];*/
     char ifname[256];
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_ADDR_PORT_FROM_BC);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_GET_ADDR_PORT_FROM_BC);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_ADDR_PORT_FROM_BC);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_GET_ADDR_PORT_FROM_BC);
     
     /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
     /* desc_str is only used for debugging
@@ -397,7 +397,7 @@ int MPID_nem_newtcp_module_get_addr_port_from_bc(const char *business_card, stru
     
  fn_exit:
 /*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_GET_ADDR_PORT_FROM_BC);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_GET_ADDR_PORT_FROM_BC);
     return mpi_errno;
  fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
@@ -405,22 +405,22 @@ int MPID_nem_newtcp_module_get_addr_port_from_bc(const char *business_card, stru
     goto fn_exit;
 }
 
-/* MPID_nem_newtcp_module_bind -- if MPICH_PORT_RANGE is set, this
+/* MPID_nem_tcp_module_bind -- if MPICH_PORT_RANGE is set, this
    binds the socket to an available port number in the range.
    Otherwise, it binds it to any addr and any port */
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_bind
+#define FUNCNAME MPID_nem_tcp_module_bind
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_bind (int sockfd)
+int MPID_nem_tcp_module_bind (int sockfd)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
     struct sockaddr_in sin;
     int port, low_port, high_port;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_BIND);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_BIND);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_BIND);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_BIND);
    
     low_port = 0;
     high_port = 0;
@@ -452,7 +452,7 @@ int MPID_nem_newtcp_module_bind (int sockfd)
 /*     if (ret == 0) */
 /*         fprintf(stdout, "sockfd=%d  port=%d bound\n", sockfd, port); */
 /*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_BIND);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_MODULE_BIND);
     return mpi_errno;
  fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
@@ -462,21 +462,21 @@ int MPID_nem_newtcp_module_bind (int sockfd)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_vc_terminate
+#define FUNCNAME MPID_nem_tcp_module_vc_terminate
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_vc_terminate (MPIDI_VC_t *vc)
+int MPID_nem_tcp_module_vc_terminate (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_NEM_NEWTCP_MODULE_VC_TERMINATE);
+    MPIDI_STATE_DECL(MPID_NEM_TCP_MODULE_VC_TERMINATE);
 
-    MPIDI_FUNC_ENTER(MPID_NEM_NEWTCP_MODULE_VC_TERMINATE);
+    MPIDI_FUNC_ENTER(MPID_NEM_TCP_MODULE_VC_TERMINATE);
 
-    mpi_errno = MPID_nem_newtcp_module_cleanup(vc);
+    mpi_errno = MPID_nem_tcp_module_cleanup(vc);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_NEM_NEWTCP_MODULE_VC_TERMINATE);
+    MPIDI_FUNC_EXIT(MPID_NEM_TCP_MODULE_VC_TERMINATE);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
