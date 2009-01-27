@@ -55,18 +55,18 @@ static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 #define MPID_NEM_USE_SHADOW_HEAD
 #define MPID_NEM_USE_MACROS
 
-static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (volatile MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t val)
+static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t val)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    ret.p = MPIDU_Atomic_swap_char_ptr(&(ptr->p), val.p);
+    MPIDU_Atomic_store_ptr(&ret.p, MPIDU_Atomic_swap_ptr(&(ptr->p), MPIDU_Atomic_load_ptr(&val.p)));
     return ret;
 }
 
 /* do a compare-and-swap with MPID_NEM_RELNULL */
-static inline MPID_nem_cell_rel_ptr_t MPID_NEM_CAS_REL_NULL (volatile MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t oldv)
+static inline MPID_nem_cell_rel_ptr_t MPID_NEM_CAS_REL_NULL (MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t oldv)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    ret.p = MPIDU_Atomic_cas_char_ptr(&(ptr->p), oldv.p, MPID_NEM_REL_NULL);
+    MPIDU_Atomic_store_ptr(&ret.p, MPIDU_Atomic_cas_ptr(&(ptr->p), MPIDU_Atomic_load_ptr(&oldv.p), MPID_NEM_REL_NULL));
     return ret;
 }
 
@@ -158,8 +158,8 @@ MPID_nem_queue_empty (MPID_nem_queue_ptr_t qhead)
 static inline void
 MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
 {
-    register MPID_nem_cell_ptr_t _e;
-    register MPID_nem_cell_rel_ptr_t _r_e;
+    MPID_nem_cell_ptr_t _e;
+    MPID_nem_cell_rel_ptr_t _r_e;
 
     _r_e = qhead->my_head;
 
@@ -191,8 +191,8 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
 
 #else /* MPID_NEM_USE_MACROS */
 #define MPID_nem_queue_dequeue(qhead, e) do {				\
-    register MPID_nem_cell_ptr_t _e;					\
-    register MPID_nem_cell_rel_ptr_t _r_e;				\
+    MPID_nem_cell_ptr_t _e;					\
+    MPID_nem_cell_rel_ptr_t _r_e;				\
 									\
     _r_e = (qhead)->my_head;						\
     _e = MPID_NEM_REL_TO_ABS (_r_e);					\
@@ -275,9 +275,9 @@ static inline MPID_nem_cell_ptr_t
 MPID_nem_queue_head (MPID_nem_queue_ptr_t qhead)
 {
     MPID_nem_cell_ptr_t retval;
-    MPID_Thread_mutex_lock(&qhead->lock);
+    /* It should be safe to check the head without locking
+       the queue.  Atomic reads/writes are assumed here. */
     retval = MPID_NEM_REL_TO_ABS(qhead->head);
-    MPID_Thread_mutex_unlock(&qhead->lock);
     return retval;
 }
 
@@ -286,22 +286,20 @@ MPID_nem_queue_empty (MPID_nem_queue_ptr_t qhead)
 {
     int is_empty = 0;
 
-    MPID_Thread_mutex_lock(&qhead->lock);
-
+    /* It should be safe to check the head without locking
+       the queue.  Atomic reads/writes are assumed here. */
     /* the "lock-ful" impl doesn't use the shadow head right now */
     if (MPID_NEM_IS_REL_NULL(qhead->head)) {
         is_empty = 1;
     }
-
-    MPID_Thread_mutex_unlock(&qhead->lock);
     return is_empty;
 }
 
 static inline void
 MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
 {
-    register MPID_nem_cell_ptr_t _e;
-    register MPID_nem_cell_rel_ptr_t _r_e;
+    MPID_nem_cell_ptr_t _e;
+    MPID_nem_cell_rel_ptr_t _r_e;
 
     MPID_Thread_mutex_lock(&qhead->lock);
 

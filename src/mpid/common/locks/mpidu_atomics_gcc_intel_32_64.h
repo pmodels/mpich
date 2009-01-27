@@ -7,83 +7,113 @@
 #ifndef MPIDU_ATOMICS_GCC_INTEL_32_64_H_INCLUDED
 #define MPIDU_ATOMICS_GCC_INTEL_32_64_H_INCLUDED
 
-static inline void MPIDU_Atomic_add(volatile int *ptr, int val)
+#define MPIDU_ATOMIC_UNIVERSAL_PRIMITIVE MPIDU_ATOMIC_CAS
+
+/* XXX DJG FIXME do we need to align these? */
+typedef struct { volatile int v;  } MPIDU_Atomic_t;
+typedef struct { int * volatile v; } MPIDU_Atomic_ptr_t;
+
+/* Aligned loads and stores are atomic on x86(-64). */
+static inline int MPIDU_Atomic_load(MPIDU_Atomic_t *ptr)
 {
-    __asm__ __volatile__ ("lock ; add %1,%0"
-                          :"=m" (*ptr)
-                          :"ir" (val), "m" (*ptr));
+    return ptr->v;
 }
 
-static inline void MPIDU_Atomic_incr(volatile int *ptr)
+/* Aligned loads and stores are atomic on x86(-64). */
+static inline void MPIDU_Atomic_store(MPIDU_Atomic_t *ptr, int val)
 {
-    switch(sizeof(*ptr))
+    ptr->v = val;
+}
+
+/* Aligned loads and stores are atomic on x86(-64). */
+static inline void *MPIDU_Atomic_load_ptr(MPIDU_Atomic_ptr_t *ptr)
+{
+    return ptr->v;
+}
+
+/* Aligned loads and stores are atomic on x86(-64). */
+static inline void MPIDU_Atomic_store_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
+{
+    ptr->v = val;
+}
+
+static inline void MPIDU_Atomic_add(MPIDU_Atomic_t *ptr, int val)
+{
+    __asm__ __volatile__ ("lock ; add %1,%0"
+                          :"=m" (ptr->v)
+                          :"ir" (val), "m" (ptr->v));
+}
+
+static inline void MPIDU_Atomic_incr(MPIDU_Atomic_t *ptr)
+{
+    switch(sizeof(ptr->v))
     {
     case 4:
         __asm__ __volatile__ ("lock ; incl %0"
-                              :"=m" (*ptr)
-                              :"m" (*ptr));
+                              :"=m" (ptr->v)
+                              :"m" (ptr->v));
         break;
     case 8:
         __asm__ __volatile__ ("lock ; incq %0"
-                              :"=m" (*ptr)
-                              :"m" (*ptr));
+                              :"=m" (ptr->v)
+                              :"m" (ptr->v));
         break;
     default:
         /* int is not 64 or 32 bits  */
-        MPIU_Assert(0);
+        MPIDU_Atomic_assert(0);
     }
     return;
 }
 
-static inline void MPIDU_Atomic_decr(volatile int *ptr)
+static inline void MPIDU_Atomic_decr(MPIDU_Atomic_t *ptr)
 {
-    switch(sizeof(*ptr))
+    switch(sizeof(ptr->v))
     {
     case 4:
         __asm__ __volatile__ ("lock ; decl %0"
-                              :"=m" (*ptr)
-                              :"m" (*ptr));
+                              :"=m" (ptr->v)
+                              :"m" (ptr->v));
         break;
     case 8:
         __asm__ __volatile__ ("lock ; decq %0"
-                              :"=m" (*ptr)
-                              :"m" (*ptr));
+                              :"=m" (ptr->v)
+                              :"m" (ptr->v));
         break;
     default:
         /* int is not 64 or 32 bits  */
-        MPIU_Assert(0);
+        MPIDU_Atomic_assert(0);
     }
     return;
 }
 
 
-static inline int MPIDU_Atomic_decr_and_test(volatile int *ptr)
+static inline int MPIDU_Atomic_decr_and_test(MPIDU_Atomic_t *ptr)
 {
     int result;
-    switch(sizeof(*ptr))
+    switch(sizeof(ptr->v))
     {
     case 4:
         __asm__ __volatile__ ("lock ; decl %0; setz %1"
-                              :"=m" (*ptr), "=q" (result)
-                              :"m" (*ptr));
+                              :"=m" (ptr->v), "=q" (result)
+                              :"m" (ptr->v));
         break;
     case 8:
         __asm__ __volatile__ ("lock ; decq %0; setz %1"
-                              :"=m" (*ptr), "=q" (result)
-                              :"m" (*ptr));
+                              :"=m" (ptr->v), "=q" (result)
+                              :"m" (ptr->v));
         break;
     default:
         /* int is not 64 or 32 bits  */
-        MPIU_Assert(0);
+        MPIDU_Atomic_assert(0);
     }
     return result;
 }
 
-static inline int MPIDU_Atomic_fetch_and_add(volatile int *ptr, int val)
+static inline int MPIDU_Atomic_fetch_and_add(MPIDU_Atomic_t *ptr, int val)
 {
     __asm__ __volatile__ ("lock ; xadd %0,%1"
-                          : "=r" (val), "=m" (*ptr)
-                          :  "0" (val),  "m" (*ptr));
+                          : "=r" (val), "=m" (ptr->v)
+                          :  "0" (val),  "m" (ptr->v));
     return val;
 }
 
@@ -91,57 +121,38 @@ static inline int MPIDU_Atomic_fetch_and_add(volatile int *ptr, int val)
 #define MPIDU_Atomic_fetch_and_incr_by_faa MPIDU_Atomic_fetch_and_incr 
 
 
-static inline int *MPIDU_Atomic_cas_int_ptr(int * volatile *ptr, int *oldv, int *newv)
+static inline int *MPIDU_Atomic_cas_ptr(MPIDU_Atomic_ptr_t *ptr, void *oldv, void *newv)
 {
     int *prev;
     __asm__ __volatile__ ("lock ; cmpxchg %2,%3"
-                          : "=a" (prev), "=m" (*ptr)
-                          : "q" (newv), "m" (*ptr), "0" (oldv));
+                          : "=a" (prev), "=m" (ptr->v)
+                          : "q" (newv), "m" (ptr->v), "0" (oldv));
     return prev;
 }
 
-static inline int MPIDU_Atomic_cas_int(volatile int *ptr, int oldv, int newv)
+static inline int MPIDU_Atomic_cas_int(MPIDU_Atomic_t *ptr, int oldv, int newv)
 {
     int prev;
     __asm__ __volatile__ ("lock ; cmpxchg %2,%3"
-                          : "=a" (prev), "=m" (*ptr)
-                          : "q" (newv), "m" (*ptr), "0" (oldv)
+                          : "=a" (prev), "=m" (ptr->v)
+                          : "q" (newv), "m" (ptr->v), "0" (oldv)
                           : "memory");
     return prev;
 }
 
-static inline MPI_Aint MPIDU_Atomic_cas_aint(volatile MPI_Aint *ptr, MPI_Aint oldv, MPI_Aint newv)
-{
-    MPI_Aint prev;
-    __asm__ __volatile__ ("lock ; cmpxchg %2,%3"
-                          : "=a" (prev), "=m" (*ptr)
-                          : "q" (newv), "m" (*ptr), "0" (oldv)
-                          : "memory");
-    return prev;   
-}
-
-
-static inline int *MPIDU_Atomic_swap_int_ptr(int * volatile *ptr, int *val)
+static inline int *MPIDU_Atomic_swap_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
 {
     __asm__ __volatile__ ("xchg %0,%1"
-                          :"=r" (val), "=m" (*ptr)
-                          : "0" (val),  "m" (*ptr));
+                          :"=r" (val), "=m" (ptr->v)
+                          : "0" (val),  "m" (ptr->v));
     return val;
 }
 
-static inline int MPIDU_Atomic_swap_int(volatile int *ptr, int val)
+static inline int MPIDU_Atomic_swap_int(MPIDU_Atomic_t *ptr, int val)
 {
     __asm__ __volatile__ ("xchg %0,%1"
-                          :"=r" (val), "=m" (*ptr)
-                          : "0" (val),  "m" (*ptr));
-    return val;
-}
-
-static inline MPI_Aint MPIDU_Atomic_swap_aint(volatile MPI_Aint *ptr, MPI_Aint val)
-{
-    __asm__ __volatile__ ("xchg %0,%1"
-                          :"=r" (val), "=m" (*ptr)
-                          : "0" (val),  "m" (*ptr));
+                          :"=r" (val), "=m" (ptr->v)
+                          : "0" (val),  "m" (ptr->v));
     return val;
 }
 

@@ -6,6 +6,8 @@
 #if !defined(MPIUTIL_H_INCLUDED)
 #define MPIUTIL_H_INCLUDED
 
+#include "mpiimplthread.h"
+
 #ifndef HAS_MPID_ABORT_DECL
 /* FIXME: 4th arg is undocumented and bogus */
 struct MPID_Comm;

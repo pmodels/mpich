@@ -19,6 +19,7 @@ void MPID_nem_dump_cell_mpich ( MPID_nem_cell_ptr_t cell, int master)
     MPID_nem_pkt_mpich2_t *mpkt     = (MPID_nem_pkt_mpich2_t *)&(cell->pkt.mpich2); /* cast away volatile */
     int              *cell_buf = (int *)(mpkt->payload);
     int               mark;
+    MPID_nem_cell_rel_ptr_t rel_cell;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DUMP_CELL_MPICH);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DUMP_CELL_MPICH);
@@ -28,12 +29,13 @@ void MPID_nem_dump_cell_mpich ( MPID_nem_cell_ptr_t cell, int master)
     else
 	mark = 777;
 
+    rel_cell = MPID_NEM_ABS_TO_REL(cell);
     fprintf(stdout,"Cell[%i  @ %p (rel %p), next @ %p (rel %p)]\n ",
 	    mark,
 	    cell,
-	    MPID_NEM_ABS_TO_REL (cell).p,
-	    MPID_NEM_REL_TO_ABS (cell->next),
-	    cell->next.p );
+	    MPIDU_Atomic_load_ptr(&rel_cell.p),
+	    MPID_NEM_REL_TO_ABS(cell->next),
+	    MPIDU_Atomic_load_ptr(&cell->next.p) );
 
     fprintf(stdout,"%i  [Source:%i] [dest : %i] [dlen : %i] [seqno : %i]\n",
 	    mark,

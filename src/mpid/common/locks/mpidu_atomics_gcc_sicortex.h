@@ -11,6 +11,11 @@
 #ifndef MPIDU_ATOMICS_GCC_SICORTEX_H
 #define MPIDU_ATOMICS_GCC_SICORTEX_H
 
+#define MPIDU_ATOMIC_UNIVERSAL_PRIMITIVE MPIDU_ATOMIC_LL_SC
+
+typedef struct { volatile int v;  } MPIDU_Atomic_t;
+typedef struct { int * volatile v; } MPIDU_Atomic_ptr_t;
+
 #include <stdint.h>
 
 /* ICE9 rev A1 chips have a low-frequency bug that causes LL to
@@ -309,88 +314,69 @@ static __inline__ long int shmemi_cswap_8(volatile long int * v, long int expect
 #endif
 
 
-static __inline__ void MPIDU_Atomic_add(volatile int *ptr, int val)
+static __inline__ void MPIDU_Atomic_add(MPIDU_Atomic_t *ptr, int val)
 {
     shmemi_fetch_add_4(ptr, val);
 }
 
-static __inline__ int *MPIDU_Atomic_cas_int_ptr(int * volatile *ptr, int *oldv, int *newv)
+static __inline__ void *MPIDU_Atomic_cas_ptr(MPIDU_Atomic_ptr_t *ptr, void *oldv, void *newv)
 {
 #if (_MIPS_SZPTR == 64)
-    return((int *) shmemi_cswap_8((volatile long int *) ptr, (uintptr_t) oldv, (uintptr_t) newv));
+    return((int *) shmemi_cswap_8((volatile long int *) &ptr->v, (uintptr_t) oldv, (uintptr_t) newv));
 #else
-    return((int *) shmemi_cswap_4((volatile int *) ptr, (uintptr_t) oldv, (uintptr_t) newv));
+    return((int *) shmemi_cswap_4((volatile int *) &ptr->v, (uintptr_t) oldv, (uintptr_t) newv));
 #endif
 }
 
-static __inline__ int MPIDU_Atomic_cas_int(volatile int *ptr, int oldv, int newv)
+static __inline__ int MPIDU_Atomic_cas_int(MPIDU_Atomic_t *ptr, int oldv, int newv)
 {
-    return(shmemi_cswap_4(ptr, oldv, newv));
+    return(shmemi_cswap_4(&ptr->v, oldv, newv));
 }
 
-static __inline__ MPI_Aint MPIDU_Atomic_cas_aint(volatile MPI_Aint *ptr, MPI_Aint oldv, MPI_Aint newv)
+static __inline__ void MPIDU_Atomic_decr(MPIDU_Atomic_t *ptr)
 {
-#if (_MIPS_SZPTR == 64)
-    return((MPI_Aint) shmemi_cswap_8((volatile long int *) ptr, (uintptr_t) oldv, (uintptr_t) newv));
-#else
-    return((MPI_Aint) shmemi_cswap_4((volatile int *) ptr, (uintptr_t) oldv, (uintptr_t) newv));
-#endif
-}
-
-static __inline__ void MPIDU_Atomic_decr(volatile int *ptr)
-{
-    shmemi_fetch_add_4(ptr, -1);
+    shmemi_fetch_add_4(&ptr->v, -1);
 }
 
 
-static __inline__ int MPIDU_Atomic_decr_and_test(volatile int *ptr)
+static __inline__ int MPIDU_Atomic_decr_and_test(MPIDU_Atomic_t *ptr)
 {
-    int old = shmemi_fetch_add_4(ptr, -1);
+    int old = shmemi_fetch_add_4(&ptr->v, -1);
     return (old == 1);
 }
 
-static __inline__ int MPIDU_Atomic_fetch_and_add(volatile int *ptr, int val)
+static __inline__ int MPIDU_Atomic_fetch_and_add(MPIDU_Atomic_t *ptr, int val)
 {
-    return(shmemi_fetch_add(ptr, val));
+    return(shmemi_fetch_add(&ptr->v, val));
 }
 
-static __inline__ int MPIDU_Atomic_fetch_and_decr(volatile int *ptr)
+static __inline__ int MPIDU_Atomic_fetch_and_decr(MPIDU_Atomic_t *ptr)
 {
-    return(shmemi_fetch_add_4(ptr, -1));
+    return(shmemi_fetch_add_4(&ptr->v, -1));
 }
 
-static __inline__ int MPIDU_Atomic_fetch_and_incr(volatile int *ptr)
+static __inline__ int MPIDU_Atomic_fetch_and_incr(MPIDU_Atomic_t *ptr)
 {
-    return(shmemi_fetch_add_4(ptr, 1));
+    return(shmemi_fetch_add_4(&ptr->v, 1));
 }
 
-static __inline__ void MPIDU_Atomic_incr(volatile int *ptr)
+static __inline__ void MPIDU_Atomic_incr(MPIDU_Atomic_t *ptr)
 {
-    shmemi_fetch_add_4(ptr, 1);
+    shmemi_fetch_add_4(&ptr->v, 1);
 }
 
-static __inline__ int *MPIDU_Atomic_swap_int_ptr(int * volatile *ptr, int *val)
+static __inline__ int *MPIDU_Atomic_swap_ptr(MPIDU_Atomic_ptr_t *ptr, int *val)
 {
 #if (_MIPS_SZPTR == 64)
-    return((int *) shmemi_swap_8((long int *) ptr, (uintptr_t) val));
+    return((int *) shmemi_swap_8((long int *) &ptr->v, (uintptr_t) val));
 #else
-    return((int *) shmemi_swap_4((int *) ptr, (uintptr_t) val));
+    return((int *) shmemi_swap_4((int *) &ptr->v, (uintptr_t) val));
 #endif
 }
 
-static __inline__ int MPIDU_Atomic_swap_int(volatile int *ptr, int val)
+static __inline__ int MPIDU_Atomic_swap_int(MPIDU_Atomic_t *ptr, int val)
 {
-    return(shmemi_swap_4((int *) ptr, val));
+    return(shmemi_swap_4(&ptr->v, val));
 }
-
-static __inline__ MPI_Aint MPIDU_Atomic_swap_aint(volatile MPI_Aint *ptr, MPI_Aint val) 
-{
-#if (_MIPS_SZPTR == 64)
-    return((MPI_Aint) shmemi_swap_8((volatile long int *) ptr, (uintptr_t) val));
-#else
-    return((MPI_Aint) shmemi_swap_4((volatile int *) ptr, (uintptr_t) val));
-#endif
-}
-
 
 #endif /* MPIDU_ATOMICS_GCC_SICORTEX_H */

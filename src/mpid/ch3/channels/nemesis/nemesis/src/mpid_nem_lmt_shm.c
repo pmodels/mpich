@@ -82,7 +82,7 @@ typedef union
 {
     struct
     {
-        int rank;
+        MPIDU_Atomic_t rank;
         int remote_req_id;
         DBG_LMT(int ctr;)
     } val;
@@ -177,7 +177,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_co
         for (i = 0; i < NUM_BUFS; ++i)
             vc_ch->lmt_copy_buf->len[i].val = 0;
 
-        vc_ch->lmt_copy_buf->owner_info.val.rank          = NO_OWNER;
+        MPIDU_Atomic_store((MPIDU_Atomic_t*)&vc_ch->lmt_copy_buf->owner_info.val.rank, NO_OWNER);
         vc_ch->lmt_copy_buf->owner_info.val.remote_req_id = MPI_REQUEST_NULL;
         DBG_LMT(vc_ch->lmt_copy_buf->owner_info.val.ctr = 0);
     }
@@ -327,7 +327,10 @@ static int get_next_req(MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_GET_NEXT_REQ);
 
-    prev_owner_rank = MPIDU_Atomic_cas_int(&copy_buf->owner_info.val.rank, NO_OWNER, MPIDI_Process.my_pg_rank);
+    /* FIXME casting away volatile for now.  In the longer run we need to
+       constrain the volatile keyword to the right parts rather than the whole
+       structure */
+    prev_owner_rank = MPIDU_Atomic_cas_int((MPIDU_Atomic_t*)&copy_buf->owner_info.val.rank, NO_OWNER, MPIDI_Process.my_pg_rank);
 
     if (prev_owner_rank == MPIDI_Process.my_pg_rank)
     {
@@ -640,7 +643,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "completed request local_req=%d", req->handle);
     MPIDU_Shm_write_barrier();
-    copy_buf->owner_info.val.rank = NO_OWNER;
+    MPIDU_Atomic_store((MPIDU_Atomic_t*)&copy_buf->owner_info.val.rank, NO_OWNER);
 
     *done = TRUE;
     MPIDI_CH3U_Request_complete(req);

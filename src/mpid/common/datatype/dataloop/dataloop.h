@@ -14,6 +14,7 @@
 
 /* This is specific to MPICH2 */
 #include "mpid_dataloop.h"
+#include "mpiimpl.h"
 
 #endif
 

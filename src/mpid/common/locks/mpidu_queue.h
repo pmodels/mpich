@@ -31,9 +31,10 @@ int MPIDU_Shm_asymm_init(char *base);
 /* Relative addressing macros.  These are for manipulating addresses relative
    to the start of a shared memory region. */
 #define MPIDU_SHM_REL_NULL (0x0)
-#define MPIDU_SHM_IS_REL_NULL(rel_ptr) ((rel_ptr).offset == MPIDU_SHM_REL_NULL)
-#define MPIDU_SHM_SET_REL_NULL(rel_ptr) ((rel_ptr).offset = MPIDU_SHM_REL_NULL)
-#define MPIDU_SHM_REL_ARE_EQUAL(rel_ptr1, rel_ptr2) ((rel_ptr1).offset == (rel_ptr2).offset)
+#define MPIDU_SHM_IS_REL_NULL(rel_ptr) (MPIDU_Atomic_load_ptr(&(rel_ptr).offset) == MPIDU_SHM_REL_NULL)
+#define MPIDU_SHM_SET_REL_NULL(rel_ptr) (MPIDU_Atomic_store_ptr(&(rel_ptr).offset, MPIDU_SHM_REL_NULL))
+#define MPIDU_SHM_REL_ARE_EQUAL(rel_ptr1, rel_ptr2) \
+    (MPIDU_Atomic_load(&(rel_ptr1).offset) == MPIDU_Atomic_load(&(rel_ptr2).offset))
 
 /* This structure exists such that it is possible to expand the expressiveness
    of a relative address at some point in the future.  It also provides a
@@ -50,7 +51,7 @@ int MPIDU_Shm_asymm_init(char *base);
    requirement that relative addresses can only be swapped within the same
    segment.  */
 typedef struct MPIDU_Shm_rel_addr_t {
-    volatile MPI_Aint offset;
+    MPIDU_Atomic_ptr_t offset;
 } MPIDU_Shm_rel_addr_t;
 
 /* converts a relative pointer to an absolute pointer */
@@ -61,8 +62,9 @@ typedef struct MPIDU_Shm_rel_addr_t {
 static inline
 void *MPIDU_Shm_rel_to_abs(MPIDU_Shm_rel_addr_t r)
 {
-    MPIU_Assert((MPI_Aint)MPIDU_Shm_asymm_base_addr != MPIDU_SHM_ASYMM_NULL_VAL);
-    return (void*)(MPIDU_Shm_asymm_base_addr + r.offset);
+    void *offset = MPIDU_Atomic_load_ptr(&r.offset);
+    MPIDU_Atomic_assert((size_t)MPIDU_Shm_asymm_base_addr != MPIDU_SHM_ASYMM_NULL_VAL);
+    return (void*)(MPIDU_Shm_asymm_base_addr + (size_t)offset);
 }
 
 /* converts an absolute pointer to a relative pointer */
@@ -71,12 +73,12 @@ void *MPIDU_Shm_rel_to_abs(MPIDU_Shm_rel_addr_t r)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline
-MPIDU_Shm_rel_addr_t MPIDU_Shm_abs_to_rel(volatile void *a)
+MPIDU_Shm_rel_addr_t MPIDU_Shm_abs_to_rel(void *a)
 {
     MPIDU_Shm_rel_addr_t ret;
 
-    MPIU_Assert((MPI_Aint)MPIDU_Shm_asymm_base_addr != MPIDU_SHM_ASYMM_NULL_VAL);
-    ret.offset = (MPI_Aint)a - (MPI_Aint)MPIDU_Shm_asymm_base_addr;
+    MPIDU_Atomic_assert((size_t)MPIDU_Shm_asymm_base_addr != MPIDU_SHM_ASYMM_NULL_VAL);
+    MPIDU_Atomic_store_ptr(&ret.offset, (void*)((size_t)a - (size_t)MPIDU_Shm_asymm_base_addr));
     return ret;
 }
 
@@ -87,7 +89,7 @@ MPIDU_Shm_rel_addr_t MPIDU_Shm_abs_to_rel(volatile void *a)
 static inline
 MPIDU_Shm_rel_addr_t MPIDU_Shm_swap_rel(MPIDU_Shm_rel_addr_t *addr, MPIDU_Shm_rel_addr_t newv) {
     MPIDU_Shm_rel_addr_t oldv;
-    oldv.offset = MPIDU_Atomic_swap_aint(&(addr->offset), newv.offset);
+    MPIDU_Atomic_store_ptr(&oldv.offset, MPIDU_Atomic_swap_ptr(&addr->offset, MPIDU_Atomic_load_ptr(&newv.offset)));
     return oldv;
 }
 
@@ -101,7 +103,7 @@ MPIDU_Shm_rel_addr_t MPIDU_Shm_swap_rel(MPIDU_Shm_rel_addr_t *addr, MPIDU_Shm_re
 static inline
 MPIDU_Shm_rel_addr_t MPIDU_Shm_cas_rel_null(MPIDU_Shm_rel_addr_t *addr, MPIDU_Shm_rel_addr_t oldv) {
     MPIDU_Shm_rel_addr_t prev;
-    prev.offset = MPIDU_Atomic_cas_aint(&(addr->offset), oldv.offset, MPIDU_SHM_REL_NULL);
+    MPIDU_Atomic_store_ptr(&prev.offset, MPIDU_Atomic_cas_ptr(&(addr->offset), MPIDU_Atomic_load_ptr(&oldv.offset), (void*)MPIDU_SHM_REL_NULL));
     return prev;
 }
 
@@ -168,7 +170,7 @@ typedef struct MPIDU_Queue_element_hdr_t {
 void MPIDU_Queue_init(MPIDU_Queue_info_t *qhead);
 
 /* Used to initialize a queue element header. */
-void MPIDU_Queue_header_init(volatile MPIDU_Queue_element_hdr_t *hdr);
+void MPIDU_Queue_header_init(MPIDU_Queue_element_hdr_t *hdr);
 
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Queue_is_empty
@@ -211,7 +213,7 @@ int MPIDU_Queue_is_empty(MPIDU_Queue_info_t *qhead)
 static inline
 volatile void *MPIDU_Queue_peek_head(MPIDU_Queue_info_t *qhead_ptr)
 {
-    MPIU_Assert(qhead_ptr != NULL);
+    MPIDU_Atomic_assert(qhead_ptr != NULL);
 
     if (MPIDU_SHM_IS_REL_NULL(qhead_ptr->shadow_head)) {
         return NULL;

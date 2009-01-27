@@ -23,8 +23,8 @@ int MPID_nem_barrier_init(int num_processes, MPID_nem_barrier_t *barrier_region)
         goto fn_exit;
 
     MPID_nem_mem_region.barrier = barrier_region;
-    MPID_nem_mem_region.barrier->val = 0;
-    MPID_nem_mem_region.barrier->wait = 0;
+    MPIDU_Atomic_store(&MPID_nem_mem_region.barrier->val, 0);
+    MPIDU_Atomic_store(&MPID_nem_mem_region.barrier->wait, 0);
     sense = 0;
     barrier_init = 1;
     MPIDU_Shm_write_barrier();
@@ -53,14 +53,14 @@ int MPID_nem_barrier (int num_processes, int rank)
 
     if (MPIDU_Atomic_fetch_and_incr(&MPID_nem_mem_region.barrier->val) == MPID_nem_mem_region.num_local - 1)
     {
-	MPID_nem_mem_region.barrier->val = 0;
-	MPID_nem_mem_region.barrier->wait = 1 - sense;
+	MPIDU_Atomic_store(&MPID_nem_mem_region.barrier->val, 0);
+	MPIDU_Atomic_store(&MPID_nem_mem_region.barrier->wait, 1 - sense);
         MPIDU_Shm_write_barrier();
     }
     else
     {
 	/* wait */
-	while (MPID_nem_mem_region.barrier->wait == sense)
+	while (MPIDU_Atomic_load(&MPID_nem_mem_region.barrier->wait) == sense)
             MPIDU_Yield(); /* skip */
     }
     sense = 1 - sense;
