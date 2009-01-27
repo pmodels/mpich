@@ -653,7 +653,7 @@ fn_fail:
    
    Algorithm: MPI_Reduce
 
-   For long messages and for builtin ops and if count >= pof2 (where
+   For long messages  and if count >= pof2 (where
    pof2 is the nearest power-of-two less than or equal to the number
    of processes), we use Rabenseifner's algorithm (see 
    http://www.hlrs.de/organization/par/services/models/mpi/myreduce.html ).
@@ -682,21 +682,10 @@ fn_fail:
            n.(1+(p-1)/p).gamma
 
 
-   For short messages, user-defined ops, and count < pof2, we use a
-   binomial tree algorithm for both short and long messages. 
+   For short messages or count < pof2, we use a binomial tree algorithm.
 
    Cost = lgp.alpha + n.lgp.beta + n.lgp.gamma
 
-
-   We use the binomial tree algorithm in the case of user-defined ops
-   because in this case derived datatypes are allowed, and the user
-   could pass basic datatypes on one process and derived on another as
-   long as the type maps are the same. Breaking up derived datatypes
-   to do the reduce-scatter is tricky.
-
-   FIXME: Per the MPI-2.1 standard this case is not possible.  We
-   should be able to use the reduce-scatter/gather approach as long as
-   count >= pof2.  [goodell@ 2009-01-21]
 
    Possible improvements: 
 
@@ -755,8 +744,7 @@ int MPIR_Reduce (
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
         
-    if ((count*type_size > MPIR_REDUCE_SHORT_MSG) &&
-        (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
+    if ((count*type_size > MPIR_REDUCE_SHORT_MSG) && (count >= pof2)) {
         /* do a reduce-scatter followed by gather to root. */
         mpi_errno = MPIR_Reduce_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
