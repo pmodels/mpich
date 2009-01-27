@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffs.lib"
+				AdditionalDependencies="mpi.lib mpich2ffs.lib mpich2.lib"
 				OutputFile="../../../lib/fmpich2s.dll"
 				AdditionalLibraryDirectories="../../../lib"
 				ModuleDefinitionFile="mpich2fs.def"
@@ -203,7 +203,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="..\..\include,..\..\include\win32"
+				AdditionalIncludeDirectories="..\..\include;..\..\include\win32"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_WINCONF_H;USE_FORT_CDECL;USE_MSC_DLLSPEC;FORTRAN_EXPORTS;F77_NAME_UPPER;HAVE_C_API"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -222,7 +222,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ff.lib"
+				AdditionalDependencies="mpi.lib mpich2ff.lib mpich2.lib"
 				OutputFile="../../../lib/fmpich2.dll"
 				AdditionalLibraryDirectories="../../../lib"
 				ModuleDefinitionFile="mpich2f.def"
@@ -251,7 +251,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
 				CommandLine=""
 			/>
 		</Configuration>
@@ -462,7 +461,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib"
+				AdditionalDependencies="mpi.lib mpich2ffg.lib mpich2.lib"
 				OutputFile="../../../lib/fmpich2g.dll"
 				AdditionalLibraryDirectories="../../../lib"
 				ModuleDefinitionFile="mpich2fg.def"

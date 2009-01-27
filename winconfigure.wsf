@@ -1970,6 +1970,9 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define HAVE_SOCKET 1")
 				Case "HAVE_STRDUP"
 					fout.WriteLine("#define HAVE_STRDUP 1")
+                                Case "HAVE_STRNCASECMP"
+                                        fout.WriteLine("/* #undef HAVE_STRNCASECMP */")
+                                        fout.WriteLine("#define HAVE_STRNICMP")
 				Case "HAVE_ERRNO_H"
 					fout.WriteLine("#define HAVE_ERRNO_H 1")
 				Case "HAVE_FCNTL_H"
