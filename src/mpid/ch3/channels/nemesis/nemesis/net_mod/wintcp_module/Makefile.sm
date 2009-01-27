@@ -1,0 +1,5 @@
+INCLUDES = -I. -I../../include -I${master_top_srcdir}/src/ch3/channels/nemesis/nemesis/include -I${master_top_srcdir}/src/include \
+           -I${top_builddir}/src/include
+lib${MPILIBNAME}_a_SOURCES = \
+  wintcp_module_finalize.c  wintcp_module_init.c  wintcp_module_poll.c  wintcp_module_send.c wintcp_module_utility.c socksm.c
+
