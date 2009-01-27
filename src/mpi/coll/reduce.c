@@ -787,8 +787,8 @@ int MPIR_Reduce_or_coll_fn(
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Reduce != NULL)
     {
         /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->node_roots_comm->coll_fns->Reduce(sendbuf, recvbuf, count,
-								datatype, op, root, comm_ptr);
+        mpi_errno = comm_ptr->coll_fns->Reduce(sendbuf, recvbuf, count,
+                                               datatype, op, root, comm_ptr);
         /* --END USEREXTENSION-- */
     }
     else {
