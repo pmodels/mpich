@@ -380,6 +380,7 @@ $top_builddir_name =         "top_builddir    = \@master_top_builddir\@";
 		 'HTML' => 'htmldir',
 		 'DOC' => 'docdir',
 		 'ETC' => 'sysconfdir',
+		 'DATADIR' => 'datadir',
 		 'PKGCONFIG' => 'pkgconfigdir',
 		);
 # We add the -p switch to install for the libraries because libraries

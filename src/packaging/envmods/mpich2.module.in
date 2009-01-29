@@ -1,0 +1,5 @@
+#%Module 1.0
+#
+#  MPICH2 module for use with 'environment-modules' package:
+# 
+prepend-path 		PATH 		@datadir@/bin
