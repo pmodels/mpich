@@ -666,7 +666,8 @@ command-line for MPICH2:
   MSGLAYER_INCLUDE="-I${DRIVER_PATH}/comm/include" \
   MSGLAYER_LIB="-L${DRIVER_PATH}/comm/lib -ldcmfcoll.cnk -ldcmf.cnk -lpthread -lrt -L$DRIVER_PATH/runtime/SPI -lSPI.cna" \
   ./configure --with-device=dcmfd:BGP --with-pmi=no --with-pm=no --with-file-system=bgl \
-  	      --enable-timer-type=device --with-cross=src/mpid/dcmfd/cross
+  	      --enable-timer-type=device --with-cross=src/mpid/dcmfd/cross \
+	      --host=powerpc-bgp-linux --target=powerpc-bgp-linux --build=powerpc64-linux-gnu
 
 
 VPATH Builds
