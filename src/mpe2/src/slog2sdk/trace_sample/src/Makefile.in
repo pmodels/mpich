@@ -49,7 +49,7 @@ RM               = @RM@
 
 JNI_INC          = @JNI_INC@
 CFLAGS           = -I.. $(JNI_INC) -I$(TRACE_INCDIR) @CFLAGS@
-LDFLAGS          = -module -no-undefined -avoid-version @LDFLAGS@
+LDFLAGS          = -module -no-undefined -avoid-version @CFLAGS@ @LDFLAGS@
 
 # memory leak checker
 MEMLIBS          = @DEBUG_LIBS@
