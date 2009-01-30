@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
     MTest_Init(&argc,&argv);
 
     t1 = MPI_Wtime();
-    sleep(2);
+    usleep(500);
     t2 = MPI_Wtime();
 
     if (t1 == t2)
