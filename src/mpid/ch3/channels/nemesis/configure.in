@@ -178,8 +178,8 @@ nemesis_nets_macro_defs=""
 net_index=0
 for net in $nemesis_networks ; do
 
-    if test ! -d $srcdir/nemesis/net_mod/${net} ; then
-        AC_MSG_ERROR([Network module ${net} is unknown  $srcdir/nemesis/net_mod/${net} ])
+    if test ! -d $srcdir/nemesis/netmod/${net} ; then
+        AC_MSG_ERROR([Network module ${net} is unknown  $srcdir/nemesis/netmod/${net} ])
     fi
     net_macro=`echo $net | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
     net_macro="MPIDI_NEM_${net_macro}"
@@ -520,4 +520,4 @@ CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 dnl Place holder macro for finalization
 PAC_SUBCONFIG_FINALIZE()
 
-AC_OUTPUT(Makefile src/Makefile nemesis/Makefile nemesis/src/Makefile nemesis/utils/Makefile nemesis/utils/replacements/Makefile nemesis/utils/monitor/Makefile nemesis/net_mod/Makefile nemesis/net_mod/elan/Makefile  nemesis/net_mod/gm/Makefile nemesis/net_mod/mx/Makefile nemesis/net_mod/tcp/Makefile nemesis/net_mod/ib/Makefile nemesis/net_mod/psm/Makefile nemesis/net_mod/none/Makefile localdefs nemesis/include/mpid_nem_net_module_defs.h nemesis/src/mpid_nem_net_array.c)
+AC_OUTPUT(Makefile src/Makefile nemesis/Makefile nemesis/src/Makefile nemesis/utils/Makefile nemesis/utils/replacements/Makefile nemesis/utils/monitor/Makefile nemesis/netmod/Makefile nemesis/netmod/elan/Makefile  nemesis/netmod/gm/Makefile nemesis/netmod/mx/Makefile nemesis/netmod/tcp/Makefile nemesis/netmod/ib/Makefile nemesis/netmod/psm/Makefile nemesis/netmod/none/Makefile localdefs nemesis/include/mpid_nem_net_module_defs.h nemesis/src/mpid_nem_net_array.c)
