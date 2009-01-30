@@ -1,5 +1,6 @@
 INCLUDES = -I../include -I${srcdir}/../include
-DEPADD = @MPILIBLOC@
+LDADD = ../util/mtest.o
+DEPADD = @MPILIBLOC@ ../util/mtest.o
 smvar_do_sharedlibs = 0
 
 transp-datatype_SOURCES = transp-datatype.c
@@ -8,6 +9,10 @@ sendrecvl_SOURCES       = sendrecvl.c
 twovec_SOURCES          = twovec.c
 dtpack_SOURCES          = dtpack.c
 allredtrace_SOURCES     = allredtrace.c
+timer_SOURCES		= timer.c
+
+../util/mtest.o:
+	(cd ../util && $(MAKE) mtest.o)
 
 # A special testing target to simplify running just the performance tests
 testing:
@@ -15,3 +20,5 @@ testing:
 		   -mpiexec=$(bindir)/mpiexec \
 		   -xmlfile=summary.xml
 
+clean-local:
+	-rm -f summary.xml
