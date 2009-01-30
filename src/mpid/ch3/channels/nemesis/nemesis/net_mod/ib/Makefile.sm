@@ -1,0 +1,6 @@
+INCLUDES = -I. -I../../include -I${master_top_srcdir}/src/ch3/channels/nemesis/nemesis/include -I${master_top_srcdir}/src/include \
+           -I${top_builddir}/src/include
+lib${MPILIBNAME}_a_SOURCES = \
+  ib_init.c ib_ckpt_shutdown.c ib_connect_to_root.c ib_finalize.c ib_get_bus_card.c ib_init.c \
+  ib_poll.c ib_vc_init.c ib_send.c ib_param.c ib_cm.c ib_priv.c ib_utils.c ib_cell.c \
+  ib_vc_finalize.c

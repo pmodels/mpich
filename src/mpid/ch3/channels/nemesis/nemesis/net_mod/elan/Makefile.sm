@@ -1,0 +1,5 @@
+INCLUDES = -I. -I../../include -I${master_top_srcdir}/src/ch3/channels/nemesis/nemesis/include -I${master_top_srcdir}/src/include \
+           -I${top_builddir}/src/include
+lib${MPILIBNAME}_a_SOURCES = \
+  elan_finalize.c  elan_init.c  elan_poll.c      elan_send.c \
+  elan_register.c  elan_test.c

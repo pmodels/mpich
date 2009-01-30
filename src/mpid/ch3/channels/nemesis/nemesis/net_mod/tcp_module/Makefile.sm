@@ -1,5 +1,0 @@
-INCLUDES = -I. -I../../include -I${master_top_srcdir}/src/ch3/channels/nemesis/nemesis/include -I${master_top_srcdir}/src/include \
-           -I${top_builddir}/src/include
-lib${MPILIBNAME}_a_SOURCES = \
-  tcp_module_finalize.c  tcp_module_init.c  tcp_module_poll.c  tcp_module_send.c tcp_module_utility.c socksm.c tcp_module_getip.c
-

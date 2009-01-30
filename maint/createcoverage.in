@@ -208,7 +208,7 @@ case $device in
     ;;
     ch3:nemesis)
     # FIXME: Add the other directories
-    devsrcdirs="src/mpid/ch3/channels/nemesis/src src/mpid/ch3/src src/mpid/ch3/channels/nemesis/nemesis/net_mod/tcp_module src/mpid/ch3/channels/nemesis/nemesis/src"
+    devsrcdirs="src/mpid/ch3/channels/nemesis/src src/mpid/ch3/src src/mpid/ch3/channels/nemesis/nemesis/net_mod/tcp src/mpid/ch3/channels/nemesis/nemesis/src"
     extra_opts="$extra_opts --enable-nemesis-dbg-localoddeven"
     ;;
     ch3|ch3:sock)

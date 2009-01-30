@@ -178,11 +178,11 @@ nemesis_nets_macro_defs=""
 net_index=0
 for net in $nemesis_networks ; do
 
-    if test ! -d $srcdir/nemesis/net_mod/${net}_module ; then
-        AC_MSG_ERROR([Network module ${net} is unknown  $srcdir/nemesis/net_mod/${net}_module ])
+    if test ! -d $srcdir/nemesis/net_mod/${net} ; then
+        AC_MSG_ERROR([Network module ${net} is unknown  $srcdir/nemesis/net_mod/${net} ])
     fi
     net_macro=`echo $net | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
-    net_macro="MPIDI_NEM_${net_macro}_MODULE"
+    net_macro="MPIDI_NEM_${net_macro}"
 
     if test -z "$nemesis_nets_array" ; then
 	nemesis_nets_array="$net_macro"
@@ -197,21 +197,21 @@ for net in $nemesis_networks ; do
     fi
 
     if test -z "$nemesis_nets_dirs" ; then
-	nemesis_nets_dirs="${net}_module"
+	nemesis_nets_dirs="${net}"
     else
-        nemesis_nets_dirs="$nemesis_nets_dirs ${net}_module"
+        nemesis_nets_dirs="$nemesis_nets_dirs ${net}"
     fi
 
     if test -z "$nemesis_nets_func_decl" ; then
-        nemesis_nets_func_decl="MPIDI_nem_${net}_module_funcs"
+        nemesis_nets_func_decl="MPIDI_nem_${net}_funcs"
     else
-        nemesis_nets_func_decl="${nemesis_nets_func_decl}, MPIDI_nem_${net}_module_funcs"
+        nemesis_nets_func_decl="${nemesis_nets_func_decl}, MPIDI_nem_${net}_funcs"
     fi
 
     if test -z "$nemesis_nets_func_array" ; then
-        nemesis_nets_func_array="&MPIDI_nem_${net}_module_funcs"
+        nemesis_nets_func_array="&MPIDI_nem_${net}_funcs"
     else
-        nemesis_nets_func_array="${nemesis_nets_func_array}, &MPIDI_nem_${net}_module_funcs"
+        nemesis_nets_func_array="${nemesis_nets_func_array}, &MPIDI_nem_${net}_funcs"
     fi
 
     if test -z "$nemesis_nets_macro_defs" ; then
@@ -276,19 +276,19 @@ nemesis_nets_array_sz=$net_index
 
 case "${nemesis_network}" in
      elan )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_ELAN_MODULE, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
+          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_ELAN, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
      gm )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_GM_MODULE, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
+          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_GM, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
      mx )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_MX_MODULE, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
+          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_MX, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
      tcp )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_TCP_MODULE, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
+          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_TCP, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
      ib )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_IB_MODULE, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
+          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_IB, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
      psm )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_PSM_MODULE, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
+          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_PSM, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
      * )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_NO_MODULE, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
+          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_NONE, [Choose elan, gm, mx, tcp, ib, psm, or no network]) ;;
 esac
 
 AC_ARG_ENABLE(nemesis-dbg-nolocal, [--enable-nemesis-dbg-nolocal - enables debugging mode where shared-memory communication is disabled],
@@ -520,4 +520,4 @@ CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 dnl Place holder macro for finalization
 PAC_SUBCONFIG_FINALIZE()
 
-AC_OUTPUT(Makefile src/Makefile nemesis/Makefile nemesis/src/Makefile nemesis/utils/Makefile nemesis/utils/replacements/Makefile nemesis/utils/monitor/Makefile nemesis/net_mod/Makefile nemesis/net_mod/elan_module/Makefile  nemesis/net_mod/gm_module/Makefile nemesis/net_mod/mx_module/Makefile nemesis/net_mod/tcp_module/Makefile nemesis/net_mod/ib_module/Makefile nemesis/net_mod/psm_module/Makefile nemesis/net_mod/none_module/Makefile localdefs nemesis/include/mpid_nem_net_module_defs.h nemesis/src/mpid_nem_net_array.c)
+AC_OUTPUT(Makefile src/Makefile nemesis/Makefile nemesis/src/Makefile nemesis/utils/Makefile nemesis/utils/replacements/Makefile nemesis/utils/monitor/Makefile nemesis/net_mod/Makefile nemesis/net_mod/elan/Makefile  nemesis/net_mod/gm/Makefile nemesis/net_mod/mx/Makefile nemesis/net_mod/tcp/Makefile nemesis/net_mod/ib/Makefile nemesis/net_mod/psm/Makefile nemesis/net_mod/none/Makefile localdefs nemesis/include/mpid_nem_net_module_defs.h nemesis/src/mpid_nem_net_array.c)

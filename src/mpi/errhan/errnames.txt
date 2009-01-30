@@ -900,8 +900,8 @@ unexpected messages queued.
 **ctspkt:failure occurred while attempting to send CTS packet
 **cookiepkt:failure occurred while attempting to send COOKIE packet
 **donepkt:failure occurred while attempting to send DONE packet
-**psm_module_connect:psm_module_connect failed
-**psm_module_connect %d: psm_module_connect failed (%d)
+**psm_connect:psm_connect failed
+**psm_connect %d: psm_connect failed (%d)
 **decode_buffer:decode_buffer failed
 **decode_buffer %d:decode_buffer failed (%d)
 **encode_buffer:decode_buffer failed
