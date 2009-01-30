@@ -80,11 +80,11 @@ sub create_mpich2
     run_cmd("rm -rf src/mpid/globus doc/notes src/pm/mpd/Zeroconf.py src/pmi/simple2");
 
     chdir("${root}/mpich2-${version}/src/mpid/ch3/channels/nemesis/nemesis/netmod");
-    my @nem_modules = qw(elan mx newgm sctp ib psm);
-    run_cmd("rm -rf ".join(' ', map({$_ . "_module/*"} @nem_modules)));
+    my @nem_modules = qw(elan mx ib psm);
+    run_cmd("rm -rf ".join(' ', map({$_ . "/*"} @nem_modules)));
     for my $module (@nem_modules) {
 	# system to avoid problems with shell redirect in run_cmd
-	system(qq(echo "# Stub Makefile" > ${module}_module/Makefile.sm));
+	system(qq(echo "# Stub Makefile" > ${module}/Makefile.sm));
     }
     debug("done\n");
 
