@@ -493,7 +493,7 @@ fi
 if [ -n "$etcbuild_dir" ] ; then
     if [ -d $etcbuild_dir ] ; then
          echo "Installing $pkgname configuration files to $DESTDIR$sysconfdir"
-         InstallDirRecur $etcbuild_dir $sysconfdir $MODE
+         MkDir $sysconfdir
          cd $etcbuild_dir && \
          for file in *.conf ; do \
              FixInstallFile $file $sysconfdir/$file ; \
