@@ -455,9 +455,7 @@ fi
 if [ -n "$includebuild_dir" ] ; then
     if [ -d $includebuild_dir ] ; then
         echo "Installing $pkgname include files to $DESTDIR$includedir"
-        if [ ! -d $DESTDIR$includedir ] ; then
-            MkDir $includedir
-        fi
+        MkDir $includedir
         cd $includebuild_dir
         for file in clog*.h mpe*.h ; do
             if [ -f $includebuild_dir/$file ] ; then
@@ -492,12 +490,12 @@ fi
 # Install compiler configuration files
 if [ -n "$etcbuild_dir" ] ; then
     if [ -d $etcbuild_dir ] ; then
-         echo "Installing $pkgname configuration files to $DESTDIR$sysconfdir"
-         MkDir $sysconfdir
-         cd $etcbuild_dir && \
-         for file in *.conf ; do \
-             FixInstallFile $file $sysconfdir/$file ; \
-         done
+        echo "Installing $pkgname configuration files to $DESTDIR$sysconfdir"
+        MkDir $sysconfdir
+        cd $etcbuild_dir && \
+        for file in *.conf ; do \
+            FixInstallFile $file $sysconfdir/$file ; \
+        done
     fi
 fi
 
@@ -576,9 +574,7 @@ for type in doc man html ; do
     typename=${type}dir
     eval typevalue=\$"$typename"
     if [ -d $top_srcdir/$type ] ; then
-        if [ ! -d $DESTDIR$typevalue ] ; then
-            MkDir $typevalue
-        fi
+        MkDir $typevalue
         echo "Installing $pkgname $type to $DESTDIR$typevalue"
         InstallDirRecur $top_srcdir/$type $typevalue $MODE
     fi
