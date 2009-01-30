@@ -236,7 +236,9 @@ typedef struct MPID_nem_queue
     char padding2[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
 #endif
 #if !defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
-    MPID_Thread_mutex_t lock;
+    /* see FIXME in mpid_nem_queue.h */
+#define MPID_nem_queue_mutex_t MPID_Thread_mutex_t
+    MPID_nem_queue_mutex_t lock;
     char padding3[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_Thread_mutex_t)];
 #endif
 } MPID_nem_queue_t, *MPID_nem_queue_ptr_t;
