@@ -624,7 +624,7 @@ int MPE_Describe_event( int eventID,
   routine.
   *** The function is deprecated, its use is strongly discouraged.
       The function has been replaced by
-   MPE_Log_get_state_eventIDs() and MPE_Log_get_event_eventID(). ***
+   MPE_Log_get_state_eventIDs() and MPE_Log_get_solo_eventID(). ***
 
   This function is threadsafe.
 @*/
