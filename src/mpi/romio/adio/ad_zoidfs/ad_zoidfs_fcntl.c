@@ -21,6 +21,7 @@ void ADIOI_ZOIDFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
 
     switch(flag) {
     case ADIO_FCNTL_GET_FSIZE:
+	attr.mask = ZOIDFS_ATTR_SIZE;
 	ret = zoidfs_getattr(zoidfs_obj_ptr, &attr);
 	if ( !(attr.mask & ZOIDFS_ATTR_SIZE) || (ret != ZFS_OK ) ) {
 	    /* --BEGIN ERROR HANDLING-- */

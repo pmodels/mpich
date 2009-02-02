@@ -8,7 +8,6 @@
 #include "ad_zoidfs_common.h"
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/time.h>
 
 /* keyval hack to both tell us if we've already initialized zoidfs and also
  * close it down when mpi exits */
@@ -74,25 +73,51 @@ void ADIOI_ZOIDFS_Init(int rank, int *error_code )
 
 void ADIOI_ZOIDFS_makeattribs(zoidfs_sattr_t * attribs)
 {
-    struct timeval now;
-
     memset(attribs, 0, sizeof(zoidfs_sattr_t));
 
-    attribs->mask = ZOIDFS_ATTR_SETABLE;
+    attribs->mask = ZOIDFS_ATTR_MODE;
     attribs->mode = 0644;
-    attribs->uid = geteuid();
-    attribs->gid = getegid(); 
-
-    gettimeofday(&now, NULL);
-    attribs->atime.seconds = now.tv_sec;
-    attribs->atime.useconds = now.tv_usec;
-    attribs->mtime.seconds = now.tv_sec;
-    attribs->mtime.useconds = now.tv_usec;
 }
 
 int ADIOI_ZOIDFS_error_convert(int error)
 {
-    return MPI_UNDEFINED;
+    switch (error)
+    {
+	case ZFSERR_PERM: /* ??? */
+	case ZFSERR_ACCES:
+	    return MPI_ERR_ACCESS;
+	case ZFSERR_NOENT:
+	case ZFSERR_NXIO: /* ??? */
+	case ZFSERR_NODEV: /* ??? */
+	    return MPI_ERR_NO_SUCH_FILE;
+	case ZFSERR_IO:
+	    return MPI_ERR_IO;
+	case ZFSERR_NOMEM:
+	    return MPI_ERR_NO_MEM;
+	case ZFSERR_EXIST:
+	    return MPI_ERR_FILE_EXISTS;
+	case ZFSERR_NOTDIR: /* ??? */
+	case ZFSERR_ISDIR: /* ??? */
+	case ZFSERR_NAMETOOLONG:
+	    return MPI_ERR_BAD_FILE;
+	case ZFSERR_INVAL:
+	case ZFSERR_STALE:
+	    return MPI_ERR_FILE;
+	case ZFSERR_FBIG: /* ??? */
+	case ZFSERR_NOSPC:
+	    return MPI_ERR_NO_SPACE;
+	case ZFSERR_ROFS:
+	    return MPI_ERR_READ_ONLY;
+	case ZFSERR_NOTIMPL:
+	    return MPI_ERR_UNSUPPORTED_OPERATION;
+	case ZFSERR_DQUOT:
+	    return MPI_ERR_QUOTA;
+	/* case ZFSERR_NOTEMPTY: */
+	/* case ZFSERR_WFLUSH: */
+	/* case ZFSERR_OTHER: */
+	default:
+	    return MPI_UNDEFINED;
+    }
 }
 
 /* 
