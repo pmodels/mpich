@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffs.lib mpich2.lib"
+				AdditionalDependencies="mpi.lib mpich2ffs.lib"
 				OutputFile="../../../lib/fmpich2s.dll"
 				AdditionalLibraryDirectories="../../../lib"
 				ModuleDefinitionFile="mpich2fs.def"
@@ -222,7 +222,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ff.lib mpich2.lib"
+				AdditionalDependencies="mpi.lib mpich2ff.lib"
 				OutputFile="../../../lib/fmpich2.dll"
 				AdditionalLibraryDirectories="../../../lib"
 				ModuleDefinitionFile="mpich2f.def"
@@ -461,7 +461,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib mpich2.lib"
+				AdditionalDependencies="mpi.lib mpich2ffg.lib"
 				OutputFile="../../../lib/fmpich2g.dll"
 				AdditionalLibraryDirectories="../../../lib"
 				ModuleDefinitionFile="mpich2fg.def"

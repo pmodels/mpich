@@ -6,6 +6,7 @@
  */
 
 #include "mpi.h"
+#include "mpi_attr.h"
 #include <winsock2.h>
 #include <windows.h>
 #include "mpichconf.h"
@@ -693,6 +694,13 @@ static struct fn_table
     /*int (*MPIR_Dup_fn)(MPI_Comm, int, void *, void *, void *, int *);*/
     int (*MPIR_Err_create_code)(int , int , const char [], int , int , const char [], const char [], ...);
     int (*MPIR_Err_return_comm)(struct MPID_Comm *, const char [], int);
+    
+    int (*MPIR_CommGetAttr)( MPI_Comm , int , void *, int *, MPIR_AttrType );
+    int (*MPIR_CommSetAttr)( MPI_Comm , int , void *, MPIR_AttrType );
+    int (*MPIR_TypeGetAttr)( MPI_Datatype , int , void *,int *, MPIR_AttrType );
+    int (*MPIR_TypeSetAttr)(MPI_Datatype , int , void *,MPIR_AttrType );
+    int (*MPIR_WinSetAttr)( MPI_Win , int , void *, MPIR_AttrType );
+    int (*MPIR_WinGetAttr)( MPI_Win , int , void *, int *, MPIR_AttrType );
 
     /* global variables */
     MPI_Fint **MPI_F_STATUS_IGNORE;
@@ -1658,6 +1666,13 @@ static BOOL LoadFunctions(const char *dll_name, const char *wrapper_dll_name)
     fn.MPIR_Err_create_code = (int (*)(int , int , const char [], int , int , const char [], const char [], ...))GetProcAddress(hPMPIModule, "MPIR_Err_create_code");
     fn.MPIR_Err_return_comm = (int (*)(struct MPID_Comm *, const char [], int ))GetProcAddress(hPMPIModule, "MPIR_Err_return_comm");
 
+    fn.MPIR_CommGetAttr = (int (*)( MPI_Comm , int , void *, int *, MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_CommGetAttr");
+    fn.MPIR_CommSetAttr = (int (*)( MPI_Comm , int , void *, MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_CommSetAttr");
+    fn.MPIR_TypeGetAttr = (int (*)( MPI_Datatype , int , void *,int *, MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_TypeGetAttr");
+    fn.MPIR_TypeSetAttr = (int (*)(MPI_Datatype , int , void *,MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_TypeSetAttr");
+    fn.MPIR_WinSetAttr = (int (*)( MPI_Win , int , void *, MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_WinSetAttr");
+    fn.MPIR_WinGetAttr = (int (*)( MPI_Win , int , void *, int *, MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_WinGetAttr");
+
     /* global variables */
     fn.MPI_F_STATUS_IGNORE = (MPI_Fint**)GetProcAddress(hPMPIModule, "MPI_F_STATUS_IGNORE");
     fn.MPI_F_STATUSES_IGNORE = (MPI_Fint**)GetProcAddress(hPMPIModule, "MPI_F_STATUSES_IGNORE");
@@ -1750,6 +1765,54 @@ int MPIR_Err_create_code(int lastcode, int fatal, const char fcname[], int line,
     result = fn.MPIR_Err_create_code(lastcode, fatal, fcname, line, error_class, generic_msg, specific_msg, args);
     va_end(args);
     return result;
+}
+
+#undef FCNAME
+#define FCNAME MPIR_CommGetAttr
+int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val, int *flag, MPIR_AttrType outAttrType )
+{
+    MPICH_CHECK_INIT(MPIR_CommGetAttr);
+    return fn.MPIR_CommGetAttr(comm, comm_keyval, attribute_val, flag, outAttrType);
+}
+
+#undef FCNAME
+#define FCNAME MPIR_CommSetAttr
+int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val, MPIR_AttrType attrType )
+{
+    MPICH_CHECK_INIT(MPIR_CommSetAttr);
+    return fn.MPIR_CommSetAttr(comm, comm_keyval, attribute_val, attrType);
+}
+
+#undef FCNAME
+#define FCNAME MPIR_TypeGetAttr
+int MPIR_TypeGetAttr( MPI_Datatype type, int type_keyval, void *attribute_val, int *flag, MPIR_AttrType outAttrType )
+{
+    MPICH_CHECK_INIT(MPIR_TypeGetAttr);
+    return fn.MPIR_TypeGetAttr(type, type_keyval, attribute_val, flag, outAttrType );
+}
+
+#undef FCNAME
+#define FCNAME MPIR_TypeSetAttr
+int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val, MPIR_AttrType attrType )
+{
+    MPICH_CHECK_INIT(MPIR_TypeSetAttr);
+    return fn.MPIR_TypeSetAttr(type, type_keyval, attribute_val, attrType );
+}
+
+#undef FCNAME
+#define FCNAME MPIR_WinSetAttr
+int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val, MPIR_AttrType attrType )
+{
+    MPICH_CHECK_INIT(MPIR_WinSetAttr);
+    return fn.MPIR_WinSetAttr( win, win_keyval, attribute_val, attrType );
+}
+
+#undef FCNAME
+#define FCNAME MPIR_WinGetAttr
+int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val, int *flag, MPIR_AttrType outAttrType )
+{
+    MPICH_CHECK_INIT(MPIR_WinGetAttr);
+    return fn.MPIR_WinGetAttr( win, win_keyval, attribute_val, flag, outAttrType );
 }
 
 #undef FCNAME
