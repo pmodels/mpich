@@ -167,13 +167,13 @@
 /* Tests for totally meaningless datatypes first, then for
  * MPI_DATATYPE_NULL as a separate case.
  */
-#define MPIR_ERRTEST_DATATYPE(datatype, name_, err)	       \
+#define MPIR_ERRTEST_DATATYPE(datatype, name_, err_)	       \
 {							       \
     if (HANDLE_GET_MPI_KIND(datatype) != MPID_DATATYPE ||      \
 	(HANDLE_GET_KIND(datatype) == HANDLE_KIND_INVALID &&   \
 	datatype != MPI_DATATYPE_NULL))			       \
     {							       \
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,          \
+	err_ = MPIR_Err_create_code(MPI_SUCCESS,               \
 					 MPIR_ERR_RECOVERABLE, \
 					 FCNAME, __LINE__,     \
 					 MPI_ERR_TYPE,         \
@@ -181,7 +181,7 @@
     }							       \
     if (datatype == MPI_DATATYPE_NULL)            	       \
     {							       \
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,          \
+	err_ = MPIR_Err_create_code(MPI_SUCCESS,               \
 					 MPIR_ERR_RECOVERABLE, \
 					 FCNAME, __LINE__,     \
 					 MPI_ERR_TYPE,         \
