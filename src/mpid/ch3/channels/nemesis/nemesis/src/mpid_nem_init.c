@@ -73,7 +73,7 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     MPID_nem_barrier_t *barrier_region_p = NULL;
     pid_t *pids_p = NULL;
 #ifdef USE_ATOMIC_EMULATION
-    MPIDU_Process_lock_t *process_lock;
+    pthread_mutex_t *process_lock;
 #endif
     
     MPIU_CHKPMEM_DECL(9);
