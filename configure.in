@@ -5251,31 +5251,86 @@ pac_cv_posix_clock_realtime=no)
 
     linux86_cycle|linux86_cycle_2)
     
+# The following AC_TRY_RUN statements are needed because x86_64 compilers
+# usually know about rdtscp but the cpu may or may not actually implement the
+# feature.  This is not cross-compile safe, unfortunately.  In the long run we
+# should allow the user to override this with a configure flag.
     AC_CACHE_CHECK([that linux86 cycle counter is available],
-        pac_cv_linux86_cycle,[
-            AC_TRY_COMPILE(,[
-                long long var, *var_ptr=&var;
-		__asm__ __volatile__("rdtscp; shl \$32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+        pac_cv_linux86_cycle,
+            AC_TRY_RUN([
+int main()
+{
+    /* rdtscp */
+    long long var, *var_ptr=&var;
+    __asm__ __volatile__("rdtscp; shl \$32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+    return 0;
+}
             ],pac_cv_linux86_cycle=rdtscp,
-                AC_TRY_COMPILE(,[
-	            long long var, *var_ptr=&var;
-		    __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*var_ptr) : : "ecx");
-                ],pac_cv_linux86_cycle=cpuid_rdtsc,
-                    AC_TRY_COMPILE(,[[
-	                long long var, *var_ptr=&var;
-	                __asm__ __volatile__("rdtsc" : "=A" (*var_ptr));
-                    ]],pac_cv_linux86_cycle=rdtsc,
-		    pac_cv_linux86_cycle=no)
+                AC_TRY_RUN([[
+int main()
+{
+    /* cpuid 64 */
+    long long var, *var_ptr=&var;
+    __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx ; shl $32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+    return 0;
+}
+                ]],pac_cv_linux86_cycle=cpuid_rdtsc64,
+                    AC_TRY_RUN([[[
+int main()
+{
+    /* cpuid 32 */
+    long long var, *var_ptr=&var;
+    __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*var_ptr) : : "ecx");
+    return 0;
+}
+                    ]]],pac_cv_linux86_cycle=cpuid_rdtsc32,
+                        AC_TRY_RUN([[[[
+int main()
+{
+    /* simple */
+    long long var, *var_ptr=&var;
+    __asm__ __volatile__("rdtsc" : "=A" (*var_ptr));
+    return 0;
+}
+                        ]]]],pac_cv_linux86_cycle=rdtsc,
+                        pac_cv_linux86_cycle=no)
+                    )
+                ),
+dnl The if-cross-compiling clause from the first AC_TRY_RUN.  Hope that if the
+dnl compiler knows about the instruction then it's supported by the target
+dnl platform.
+                AC_TRY_COMPILE(,[[
+                    long long var, *var_ptr=&var;
+                    __asm__ __volatile__("rdtscp; shl \$32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+                ]],pac_cv_linux86_cycle=rdtscp,
+                    AC_TRY_COMPILE(,[[[
+                        long long var, *var_ptr=&var;
+                        __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx ; shl $32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+                    ]]],pac_cv_linux86_cycle=cpuid_rdtsc64,
+                        AC_TRY_COMPILE(,[[[[
+                            long long var, *var_ptr=&var;
+                            __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*var_ptr) : : "ecx");
+                        ]]]],pac_cv_linux86_cycle=cpuid_rdtsc32,
+                            AC_TRY_COMPILE(,[[[[[
+                                long long var, *var_ptr=&var;
+                                __asm__ __volatile__("rdtsc" : "=A" (*var_ptr));
+                            ]]]]],pac_cv_linux86_cycle=rdtsc,
+                            pac_cv_linux86_cycle=no)
+                        )
+                    )
                 )
             )
-    ])
+    )
 
     case "$pac_cv_linux86_cycle" in
         "rdtscp")
             AC_DEFINE(LINUX86_CYCLE_RDTSCP,1,[Define which x86 cycle counter to use])
 	    ;;
-        "cpuid_rdtsc")
-            AC_DEFINE(LINUX86_CYCLE_CPUID_RDTSC,1,[Define which x86 cycle counter to use])
+        "cpuid_rdtsc64")
+            AC_DEFINE(LINUX86_CYCLE_CPUID_RDTSC64,1,[Define which x86 cycle counter to use])
+            ;;
+        "cpuid_rdtsc32")
+            AC_DEFINE(LINUX86_CYCLE_CPUID_RDTSC32,1,[Define which x86 cycle counter to use])
 	    ;;
         "rdtsc")
             AC_DEFINE(LINUX86_CYCLE_RDTSC,1,[Define which x86 cycle counter to use])
