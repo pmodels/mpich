@@ -62,6 +62,8 @@ int MPIR_Alltoallw (
     int dst, rank;
     MPI_Comm comm;
     int outstanding_requests;
+
+    MPIU_CHKLMEM_DECL(2);
     
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
@@ -70,21 +72,8 @@ int MPIR_Alltoallw (
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
-    starray = (MPI_Status *) MPIU_Malloc(2*comm_size*sizeof(MPI_Status));
-    /* --BEGIN ERROR HANDLING-- */
-    if (!starray) {
-        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
-
-    reqarray = (MPI_Request *) MPIU_Malloc(2*comm_size*sizeof(MPI_Request));
-    /* --BEGIN ERROR HANDLING-- */
-    if (!reqarray) {
-        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
+    MPIU_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*comm_size*sizeof(MPI_Status),  mpi_errno, "starray");
+    MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request*, 2*comm_size*sizeof(MPI_Request), mpi_errno, "reqarray");
 
     outstanding_requests = 0;
     for ( i=0; i<comm_size; i++ ) { 
@@ -98,7 +87,7 @@ int MPIR_Alltoallw (
 	    if (mpi_errno)
 	    {
 		mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-		return mpi_errno;
+                goto fn_fail;
 	    }
 	    /* --END ERROR HANDLING-- */
 
@@ -117,7 +106,7 @@ int MPIR_Alltoallw (
 	    if (mpi_errno)
 	    {
 		mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-		return mpi_errno;
+                goto fn_fail;
 	    }
 	    /* --END ERROR HANDLING-- */
 
@@ -134,11 +123,7 @@ int MPIR_Alltoallw (
                 mpi_errno = starray[i].MPI_ERROR;
         }
     }
-    /* --END ERROR HANDLING-- */
-    
-    MPIU_Free(reqarray);
-    MPIU_Free(starray);
-
+    /* --END ERROR HANDLING-- */   
 
 #ifdef FOO
     /* Use pairwise exchange algorithm. */
@@ -152,7 +137,7 @@ int MPIR_Alltoallw (
     if (mpi_errno)
     {
 	mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-	return mpi_errno;
+	goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
     /* Do the pairwise exchange. */
@@ -169,16 +154,20 @@ int MPIR_Alltoallw (
         if (mpi_errno)
 	{
 	    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-	    return mpi_errno;
+	    goto fn_fail;
 	}
 	/* --END ERROR HANDLING-- */
     }
 #endif
     
     /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-    
+  fn_exit:
+    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );  
+    MPIU_CHKLMEM_FREEALL();
     return (mpi_errno);
+
+  fn_fail:
+    goto fn_exit;
 }
 /* end:nested */
 

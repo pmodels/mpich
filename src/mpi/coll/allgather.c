@@ -85,7 +85,7 @@ int MPIR_Allgather (
     MPI_Aint recvtype_true_extent, recvbuf_extent, recvtype_true_lb;
     int        j, i, pof2, src, rem;
     static const char FCNAME[] = "MPIR_Allgather";
-    void *tmp_buf;
+    void *tmp_buf = NULL;
     int curr_cnt, dst, type_size, left, right, jnext, comm_size_is_pof2;
     MPI_Comm comm;
     MPI_Status status;
@@ -95,6 +95,8 @@ int MPIR_Allgather (
 #ifdef MPID_HAS_HETERO
     int position, tmp_buf_size, nbytes;
 #endif
+
+    MPIU_CHKLMEM_DECL(1);
 
     if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
         return MPI_SUCCESS;
@@ -278,13 +280,7 @@ int MPIR_Allgather (
             
             NMPI_Pack_size(recvcount*comm_size, recvtype, comm, &tmp_buf_size);
             
-            tmp_buf = MPIU_Malloc(tmp_buf_size);
-	    /* --BEGIN ERROR HANDLING-- */
-            if (!tmp_buf) { 
-                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
-                return mpi_errno;
-            }
-	    /* --END ERROR HANDLING-- */
+            MPIU_CHKLMEM_MALLOC(tmp_buf, void*, tmp_buf_size, mpi_errno, "tmp_buf");
             
             /* calculate the value of nbytes, the number of bytes in packed
                representation that each process contributes. We can't simply divide
@@ -428,9 +424,7 @@ int MPIR_Allgather (
             
             position = 0;
             NMPI_Unpack(tmp_buf, tmp_buf_size, &position, recvbuf,
-                        recvcount*comm_size, recvtype, comm);
-            
-            MPIU_Free(tmp_buf);
+                        recvcount*comm_size, recvtype, comm);            
         }
 #endif /* MPID_HAS_HETERO */
     }
@@ -451,13 +445,7 @@ int MPIR_Allgather (
         recvbuf_extent = recvcount * comm_size *
             (MPIR_MAX(recvtype_true_extent, recvtype_extent));
 
-        tmp_buf = MPIU_Malloc(recvbuf_extent);
-        /* --BEGIN ERROR HANDLING-- */
-        if (!tmp_buf) {
-            mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
-            return mpi_errno;
-        }
-	/* --END ERROR HANDLING-- */
+        MPIU_CHKLMEM_MALLOC(tmp_buf, void*, recvbuf_extent, mpi_errno, "tmp_buf");
             
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
@@ -539,8 +527,6 @@ int MPIR_Allgather (
 		MPIU_ERR_POP(mpi_errno);
 	    }
         }
-
-        MPIU_Free((char*)tmp_buf + recvtype_true_lb);
     }
 
     else {  /* long message or medium-size message and non-power-of-two
@@ -585,10 +571,13 @@ int MPIR_Allgather (
     }
 
     /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-
- fn_fail:    
+ fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );    
     return (mpi_errno);
+
+ fn_fail:
+    goto fn_exit;
 }
 /* end:nested */
 
@@ -615,6 +604,8 @@ int MPIR_Allgather_inter (
     void *tmp_buf=NULL;
     MPID_Comm *newcomm_ptr = NULL;
 
+    MPIU_CHKLMEM_DECL(1);
+
     local_size = comm_ptr->local_size; 
     remote_size = comm_ptr->remote_size;
     rank = comm_ptr->rank;
@@ -630,10 +621,8 @@ int MPIR_Allgather_inter (
         extent = MPIR_MAX(send_extent, true_extent);
 
 	MPID_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
-        tmp_buf = MPIU_Malloc(extent*sendcount*local_size);
-        if (!tmp_buf) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
-        }
+        MPIU_CHKLMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf");
+
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);
     }
@@ -696,12 +685,13 @@ int MPIR_Allgather_inter (
 	    }
         }
     }
-    
- fn_fail:
-    if ((rank == 0) && (sendcount != 0) && tmp_buf)
-        MPIU_Free((char*)tmp_buf+true_lb);
 
+  fn_exit:    
+    MPIU_CHKLMEM_FREEALL();
     return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
 /* end:nested */
 #endif
