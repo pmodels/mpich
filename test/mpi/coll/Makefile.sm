@@ -35,6 +35,7 @@ alltoallw2_SOURCES = alltoallw2.c
 alltoallw2_LDADD = ../util/mtest.o
 alltoall1_SOURCES = alltoall1.c
 redscat_SOURCES = redscat.c
+redscat2_SOURCES = redscat2.c
 coll9_SOURCES = coll9.c
 coll7_SOURCES = coll7.c
 coll6_SOURCES = coll6.c
