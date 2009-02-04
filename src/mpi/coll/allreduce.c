@@ -71,8 +71,13 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
    Cost = (2.floor(lgp)+2).alpha + (2.((p-1)/p) + 2).n.beta + n.(1+(p-1)/p).gamma
 
    
-   For short messages and for count < pof2 we use a recursive doubling
-   algorithm (similar to the one in MPI_Allgather).
+   For short messages, for user-defined ops, and for count < pof2 
+   we use a recursive doubling algorithm (similar to the one in
+   MPI_Allgather). We use this algorithm in the case of user-defined ops
+   because in this case derived datatypes are allowed, and the user
+   could pass basic datatypes on one process and derived on another as
+   long as the type maps are the same. Breaking up derived datatypes
+   to do the reduce-scatter is tricky. 
 
    Cost = lgp.alpha + n.lgp.beta + n.lgp.gamma
 
@@ -255,10 +260,18 @@ int MPIR_Allreduce (
         else  /* rank >= 2*rem */
             newrank = rank - rem;
         
-        /* If count is less than pof2, use recursive doubling algorithm.
-           Otherwise do a reduce-scatter followed by allgather. */
+        /* If op is user-defined or count is less than pof2, use
+           recursive doubling algorithm. Otherwise do a reduce-scatter
+           followed by allgather. (If op is user-defined,
+           derived datatypes are allowed and the user could pass basic
+           datatypes on one process and derived on another as long as
+           the type maps are the same. Breaking up derived
+           datatypes to do the reduce-scatter is tricky, therefore
+           using recursive doubling in that case.) */
+
         if (newrank != -1) {
             if ((count*type_size <= MPIR_ALLREDUCE_SHORT_MSG) ||
+                (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) ||  
                 (count < pof2)) { /* use recursive doubling */
                 mask = 0x1;
                 while (mask < pof2) {
