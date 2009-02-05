@@ -516,7 +516,6 @@ unexpected messages queued.
 **opundefined_rma:RMA target received unknown RMA operation
 
 **init:Initialization failed
-**bad_sock:bad sock
 
 #
 # To be removed
@@ -524,9 +523,117 @@ unexpected messages queued.
 **init_vcrt:failed to create VCRT
 **init_getptr:failed to get the vcr
 
-#
+# Socket error codes - used by several devices & utils
+**bad_sock:bad sock
 **ifnameinvalid:Interface name was invalid in call to inet_pton
 **afinetinvalid:Network type AF_INET invalid in call to inet_pton
+
+**wsasock:WSAStartup failed
+**wsasock %d:WSAStartup failed (errno %d)
+**wsasock %s %d:WSAStartup failed, %s (errno %d)
+# FIXME: remove wsasock error codes above and replace with wsastartup
+**wsastartup: WSAStartup failed
+**wsastartup %s %d: WSAStartup failed, %s (errno = %d)
+**wsacleanup: WSACleanup failed
+**wsacleanup %s %d: WSACleanup failed, %s (errno = %d)
+**sock_closed:socket closed
+
+**socket:WSASocket failed
+**socket %d:WSASocket failed (errno %d)
+**socket %s %d:WSASocket failed, %s (errno %d)
+# FIXME: remove socket error codes above and replace with sock_create
+**sock_create:unable to create a socket
+**sock_create %d:unable to create a socket (errno %d)
+**sock_create %s %d:unable to create a socket, %s (errno %d)
+**shutdown:shutdown failed
+**shutdown %d:shutdown failed (errno %d)
+**shutdown %s %d:shutdown failed, %s (errno %d)
+**closesocket:closesocket failed
+**closesocket %d:closesocket failed (errno %d)
+**closesocket %s %d:closesocket failed, %s (errno %d)
+**close:close of socket failed
+**close %s:close of socket failed - %s
+# FIXME: remove closesocket/close error codes and replace with sock_close
+**sock_close: unable to close a socket
+**sock_close %s %d: close of socket failed, %s (errno %d)
+**bind: Unable to bind socket to address
+**bind %s %d: Unable to bind socket to address, %s (errno %d)
+**bindportrange: Unable to bind socket to port range
+**bindportrange %d %d: Unable to bind socket to port range [%d, %d]
+**listen:listen failed
+**listen %d:listen failed (errno %d)
+**listen %s %d:listen failed, %s (errno %d)
+**sock_accept:accept of socket fd failed
+**sock_accept %s:accept of socket fd failed - %s
+**sock_accept %s %d:accept failed, %s (errno %d) 
+**sock_connect:connect failed
+**sock_connect %d:connect failed (errno %d)
+**sock_connect %s %d:connect failed - %s (errno %d)
+# FIXME: Change sock_connect %d %s to sock_connect %s %d
+**sock_connect %d %s:connect failed - %s (errno %d)
+**sock_connect %s %d %d:unable to connect to %s on port %d, error %d
+**sock_connect %s %d %s %d:unable to connect to %s on port %d, %s (errno %d)
+**sock_nop_accept:accept called without having received an op_accept
+**read:read from socket failed
+**read %s:read from socket failed - %s
+# FIXME: remove read error codes and replace with sock_read
+**sock_read:read from socket failed
+**sock_read %s %d:read from socket failed, %s (errno %d)
+# FIXME: ambiguous name for sock write failure
+**write %s:write to socket failed - %s
+**writev %s:writev to socket failed - %s
+**sock_write:Unable to write to a socket
+**sock_write %s %d: Unable to write to a socket, %s (errno %d)
+**sock_writev:Unable to write an iovec to a socket
+**select:select failed
+**select %s:select failed - %s
+**poll:poll of socket fds failed
+**poll %s:poll of socket fds failed - %s
+**select; select of socket fds failed
+**select %s %d: select of socket fds failed, %s (errno %d)
+**ioctlsocket: ioctl on socket failed
+**ioctlsocket %s %d: ioctl on socket failed, %s (errno %d)
+
+**gethostbyname:gethostbyname failed
+**gethostbyname %d:gethostbyname failed (errno %d)
+**gethostbyname %s %d:gethostbyname failed, %s (errno %d)
+**sock_byname:gethostbyname failed
+**sock_byname %d:gethostbyname failed (errno %d)
+**sock_byname %s %d:gethostbyname failed, %s (errno %d)
+**sock_gethost:gethostname failed
+**sock_gethost %d:gethostname failed (errno %d)
+**sock_gethost %s %d:gethostname failed, %s (errno %d)
+**getinfo:getaddrinfo failed
+**getinfo %d:getaddrinfo failed (errno %d)
+**getinfo %s %d:getinfo failed, %s (errno %d)
+**getsockname:getsockname failed
+**getsockname %s:getsockname failed - %s
+**setsockopt:setsockopt failed
+**setsockopt %s:setsockopt failed - %s
+**setsockopt %s %d:setsockopt failed, %s (errno %d)
+**getsockopt:getsockopt failed
+**getsockopt %s:getsockopt failed - %s
+**getsockopt %s %d:getsockopt failed, %s (errno %d)
+**inet_ntop:inet_ntop failed
+**inet_ntop %s:inet_ntop failed - %s
+**inet_pton:inet_pton failed
+**inet_pton %s:inet_pton failed - %s
+**inet_addr: inet_addr failed
+**inet_addr %s %d: inet_addr failed, %s (errno %d)
+**inet_addr %s %s %d: inet_addr on %s failed, %s (errno %d)
+**sock_iocp:unable to create an I/O completion port
+**sock_iocp %d:unable to create an I/O completion port (errno %d)
+**sockw_badtvalhnd: Invalid handle to timeval
+**sockw_badwsethnd: Invalid handle to waitSet
+**sockw_badwsetshnd: Invalid handle to waitSet sock handle
+**shmw_badhnd: Invalid handle to shared memory
+**shmw_gethnd: Unable to get shared memory handle
+**shmw_sethnd: Unable to set shared memory handle
+**shmw_serbufsmall: Size of buffer to serialize shared memory handle    \
+is too small (< MPIU_SHMW_GHND_SZ)
+**shmw_deserbufbig: Size of buffer to deserialize shared memory handle  \
+is too big (> MPIU_SHMW_GHND_SZ) 
+
 #
 # CH3:ssm
 #
@@ -661,12 +768,6 @@ unexpected messages queued.
 **shmq_index %d %d:invalid shm queue index (%d > %d)
 **sock_post_close:posting a close of the socket failed
 **sock_post_close %d:posting a close of the socket failed (errno %d)
-**closesocket:closesocket failed
-**closesocket %d:closesocket failed (errno %d)
-**closesocket %s %d:closesocket failed, %s (errno %d)
-**shutdown:shutdown failed
-**shutdown %d:shutdown failed (errno %d)
-**shutdown %s %d:shutdown failed, %s (errno %d)
 **strncpy:insufficient buffer length to complete strncpy
 **vc_state:invalid vc state
 **vc_state %d:invalid vc state (%d)
@@ -691,54 +792,17 @@ unexpected messages queued.
 **fail %d:generic failure with errno = %d
 **fail %s:%s
 **fail %s %d:%s (errno %d)
-**gethostbyname:gethostbyname failed
-**gethostbyname %d:gethostbyname failed (errno %d)
-**gethostbyname %s %d:gethostbyname failed, %s (errno %d)
-**getinfo:getaddrinfo failed
-**getinfo %d:getaddrinfo failed (errno %d)
-**getinfo %s %d:getinfo failed, %s (errno %d)
 **init_description:unable to get the host description
 **iocp:unable to create an I/O completion port
 **iocp %d:unable to create an I/O completion port (errno %d)
 **iocp %s %d:unable to create an I/O copmletion port, %s (erron %d)
-**listen:listen failed
-**listen %d:listen failed (errno %d)
-**listen %s %d:listen failed, %s (errno %d)
 **pctwice:post close called twice
 **post_accept:post accept failed
 **progress_init:unable to initialize the progress engine
-**sock_byname:gethostbyname failed
-**sock_byname %d:gethostbyname failed (errno %d)
-**sock_byname %s %d:gethostbyname failed, %s (errno %d)
-**sock_closed:socket closed
-**sock_connect:connect failed
-**sock_connect %d:connect failed (errno %d)
-**sock_connect %d %s:connect failed - %s (errno %d)
-**sock_connect %s %d %d:unable to connect to %s on port %d, error %d
-**sock_connect %s %d %s %d:unable to connect to %s on port %d, %s (errno %d)
-**sock_create:unable to create a socket
-**sock_create %d:unable to create a socket (errno %d)
-**sock_create %s %d:unable to create a socket, %s (errno %d)
-**sock_gethost:gethostname failed
-**sock_gethost %d:gethostname failed (errno %d)
-**sock_gethost %s %d:gethostname failed, %s (errno %d)
-**sock_init:unable to initialize the sock library
-**sock_iocp:unable to create an I/O completion port
-**sock_iocp %d:unable to create an I/O completion port (errno %d)
-**sock_nop_accept:accept called without having received an op_accept
-**socket:WSASocket failed
-**socket %d:WSASocket failed (errno %d)
-**socket %s %d:WSASocket failed, %s (errno %d)
 **test_sock_wait:sock_wait failed
-**wsasock:WSAStartup failed
-**wsasock %d:WSAStartup failed (errno %d)
-**wsasock %s %d:WSAStartup failed, %s (errno %d)
 **post_write:Unable to post a write
 **post_write %p %p:Unable to post a write (%p %p)
-#**sock_accept:Unable to accept a socket connection
-**sock_writev:Unable to write an iovec to a socket
-**sock_write:Unable to write to a socket
-
+**sock_init:unable to initialize the sock library
 **write:write failed
 **writev:writev failed
 
@@ -777,10 +841,6 @@ unexpected messages queued.
 **remove_shar_mem %s %s:unable to remove shared memory - %s %s
 **detach_shar_mem:unable to detach shared memory
 **detach_shar_mem %s %s:unable to detach shared memory - %s %s
-**getsockname:getsockname failed
-**getsockname %s:getsockname failed - %s
-**setsockopt:setsockopt failed
-**setsockopt %s:setsockopt failed - %s
 **fcntl:fcntl failed
 **fcntl %s:fcntl failed - %s
 **gm_init:gm_init failed
@@ -792,12 +852,6 @@ unexpected messages queued.
 **gm_incompatible_lib:GM library and driver are different versions
 **gm_no_port:unable to find a free GM port
 **not_in_local_ranks:cannot find our rank in the list of local processes
-**write %s:write to socket failed - %s
-**writev %s:writev to socket failed - %s
-**select:select failed
-**select %s:select failed - %s
-**read:read from socket failed
-**read %s:read from socket failed - %s
 **read %d %s:read from socket failed - nread=%d %s
 **winput_oob:target pointer for win_put is out of bounds
 **winget_oob:source pointer for win_get is out of bounds
@@ -835,16 +889,6 @@ unexpected messages queued.
 **mx_isend %s:mx_isend failed (%s)
 **mx_wait:mx_wait failed
 **mx_wait %s:mx_wait failed (%s)
-**inet_ntop:inet_ntop failed
-**inet_ntop %s:inet_ntop failed - %s
-**inet_pton:inet_pton failed
-**inet_pton %s:inet_pton failed - %s
-**close:close of socket failed
-**close %s:close of socket failed - %s
-**poll:poll of socket fds failed
-**poll %s:poll of socket fds failed - %s
-**sock_accept:accept of socket fd failed
-**sock_accept %s:accept of socket fd failed - %s
 **ibv_alloc_pd:ibv_alloc_pd failed
 **ibv_alloc_pd %s:ibv_alloc_pd failed for device (%s)
 **ibv_create_comp_channel:ibv_create_comp_channel failed
@@ -934,6 +978,8 @@ unexpected messages queued.
 
 **mkstemp:mkstemp failed
 **mkstemp %s:mkstemp failed %s
+**lseek:lseek failed
+**lseek %s:lseek failed - %s
 **fdopen:fdopen failed
 **fdopen %s:fdopen failed %s
 **tmpnam:tmpnam failed
