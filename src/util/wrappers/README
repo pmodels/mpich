@@ -1,0 +1,13 @@
+This directory contains wrappers funcs to provide platform independence to MPICH2 source code. Currently used only in NEMESIS channel. The util functions are MPIU* and not MPIDU* since atleast the process managers might need to use the OS wrapper funcs.
+
+TODO
+------
+# The code currently uses MPIU_Assert*() and hence requires device support. Re-define MPIU_Assert*().
+
+Notes:
+
+SHARED MEMORY
+--------------
+POSIX shared mem ==> shm seg removed when you explicitly remove it 
+Windows shared mem using file mapping ==> shm seg removed when no process has a handle to the shm seg 
+Windows native shared mem ==> shm seg removed when creating process exits
