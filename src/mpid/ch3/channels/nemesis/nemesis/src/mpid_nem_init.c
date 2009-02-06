@@ -73,7 +73,7 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     MPID_nem_barrier_t *barrier_region_p = NULL;
     pid_t *pids_p = NULL;
 #ifdef USE_ATOMIC_EMULATION
-    pthread_mutex_t *process_lock;
+    MPIDU_Process_lock_t *process_lock;
 #endif
     
     MPIU_CHKPMEM_DECL(9);
@@ -154,30 +154,33 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
            communication is allocated it will probably be mapped at a
            different location for each process
         */
-        char *handle;
+        MPIU_SHMW_Hnd_t handle;
 	int size = (local_rank * 65536) + 65536;
 	char *base_addr;
 
-        mpi_errno = MPID_nem_allocate_shared_memory (&base_addr, size, &handle);
+        mpi_errno = MPIU_SHMW_Hnd_init(&handle);
+        if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
+        mpi_errno = MPIU_SHMW_Seg_create_and_attach(handle, size, &base_addr, 0);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno)
         {
-            MPID_nem_remove_shared_memory (handle);
-            MPIU_Free (handle);
+            MPIU_SHMW_Seg_remove(handle);
+            MPIU_SHMW_Hnd_finalize(&handle);
             MPIU_ERR_POP (mpi_errno);
         }
         /* --END ERROR HANDLING-- */
 
-        mpi_errno = MPID_nem_remove_shared_memory (handle);
+        mpi_errno = MPIU_SHMW_Seg_remove(handle);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno)
         {
-            MPIU_Free (handle);
+            MPIU_SHMW_Hnd_finalize(&handle);
             MPIU_ERR_POP (mpi_errno);
         }
         /* --END ERROR HANDLING-- */
 
-        MPIU_Free (handle);
+        MPIU_SHMW_Hnd_finalize(&handle);
     }
     /*fprintf(stderr,"[%i] -- address shift ok \n",pg_rank); */
 #endif  /*FORCE_ASYM */
@@ -477,7 +480,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 #endif
 
         vc_ch->lmt_copy_buf        = NULL;
-        vc_ch->lmt_copy_buf_handle = NULL;
+        mpi_errno = MPIU_SHMW_Hnd_init(&(vc_ch->lmt_copy_buf_handle));
+        if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
         vc_ch->lmt_queue.head      = NULL;
         vc_ch->lmt_queue.tail      = NULL;
         vc_ch->lmt_active_lmt      = NULL;

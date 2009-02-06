@@ -69,15 +69,22 @@ int MPID_nem_finalize()
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ckpt_shutdown()
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_CKPT_SHUTDOWN);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CKPT_SHUTDOWN);
 
     MPID_nem_netmod_func->ckpt_shutdown();
-    munmap (MPID_nem_mem_region.memory.base_addr, MPID_nem_mem_region.memory.segment_len);
+    mpi_errno = MPIU_SHMW_Seg_detach(MPID_nem_mem_region.memory.hnd,
+                    &(MPID_nem_mem_region.memory.base_addr),
+                    MPID_nem_mem_region.memory.segment_len);
+    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); } 
 
+fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CKPT_SHUTDOWN);
-    return 0;
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -91,8 +98,12 @@ int MPID_nem_vc_terminate(MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_VC_TERMINATE);
 
-    MPIU_Free(((MPIDI_CH3I_VC *)vc->channel_private)->lmt_copy_buf_handle);
+    mpi_errno = MPIU_SHMW_Hnd_finalize(&(((MPIDI_CH3I_VC *)vc->channel_private)->lmt_copy_buf_handle));
+    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
+fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_VC_TERMINATE);
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }

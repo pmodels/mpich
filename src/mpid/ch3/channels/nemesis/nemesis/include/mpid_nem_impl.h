@@ -9,6 +9,7 @@
 
 #include "my_papi_defs.h"
 #include "mpidi_ch3_impl.h"
+#include "mpimem.h"
 #include "mpid_nem_net_module_defs.h"
 #include "mpid_nem_atomics.h"
 #include "mpid_nem_defs.h"
@@ -17,6 +18,9 @@
 #include "mpid_nem_nets.h"
 #include "mpid_nem_queue.h"
 #include "mpid_nem_generic_queue.h"
+#include "mpiu_os_wrappers.h"
+
+
 
 #define MPID_NEM__BYPASS_Q_MAX_VAL  ((MPID_NEM_MPICH2_DATA_LEN) - (sizeof(MPIDI_CH3_Pkt_t)))
 
@@ -34,27 +38,6 @@ int MPID_nem_choose_netmod(void);
 
 #define MPID_nem_mpich2_release_fbox(cell) (MPID_nem_mem_region.mailboxes.in[(cell)->pkt.mpich2.source]->mpich2.flag.value = 0, \
 					    MPI_SUCCESS)
-
-/* Shared memory allocation utility functions */
-/* MPID_nem_allocate_shared_memory allocates a shared mem region of
-   size "length" and attaches to it.  "handle" points to a string
-   descriptor for the region to be passed in to
-   MPID_nem_attach_shared_memory.  "handle" is dynamically allocated
-   and should be freed by the caller.*/
-int MPID_nem_allocate_shared_memory (char **buf_p, const int length, char *handle[]);
-
-/* MPID_nem_attach_shared_memory attaches to shared memory previously
- * allocated by MPID_nem_allocate_shared_memory */
-int MPID_nem_attach_shared_memory (char **buf_p, const int length, const char handle[]);
-
-/* MPID_nem_remove_shared_memory removes the OS descriptor associated
-   with the handle.  Once all processes detatch from the region the OS
-   resource will be destroyed. */
-int MPID_nem_remove_shared_memory (const char handle[]);
-
-/* MPID_nem_detach_shared_memory detaches the shared memory region
- * from this process */
-int MPID_nem_detach_shared_memory (const char *buf_p, const int length);
 
 /* initialize shared-memory MPI_Barrier variables */
 int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region);

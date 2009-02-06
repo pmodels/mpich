@@ -7,9 +7,11 @@
 #ifndef MPID_NEM_DEFS_H
 #define MPID_NEM_DEFS_H
 
+#include "mpitypedefs.h"
 #include "mpid_nem_datatypes.h"
 #include "mpi.h"
 #include "pmi.h"
+#include "mpiu_os_wrappers.h"
 
 #define MPID_NEM_MAX_FNAME_LEN 256
 
@@ -67,12 +69,14 @@ typedef struct MPID_nem_barrier
 {
     MPIDU_Atomic_t val;
     MPIDU_Atomic_t wait;
-}
+} 
 MPID_nem_barrier_t;
 
 typedef struct MPID_nem_seg
 {
-    size_t segment_len;
+    MPIU_Size_t segment_len;
+    /* Handle to shm seg */
+    MPIU_SHMW_Hnd_t hnd;
     /* Pointers */
     char *base_addr;
     /* Misc */

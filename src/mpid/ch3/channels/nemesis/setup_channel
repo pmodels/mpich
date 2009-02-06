@@ -30,6 +30,7 @@ pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/include"
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/nemesis/include"
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/nemesis/utils/monitor"
 pathlist="$pathlist src/mpid/common/locks"
+pathlist="$pathlist src/util/wrappers"
 for path in $pathlist ; do
     MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 done

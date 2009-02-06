@@ -5,6 +5,7 @@
  */
 
 #include "mpid_nem_impl.h"
+#include "mpiu_os_wrappers.h"
 
 static int sense;
 static int barrier_init = 0;

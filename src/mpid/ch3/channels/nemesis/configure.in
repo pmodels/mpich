@@ -38,6 +38,8 @@ PAC_PROG_MAKE
 
 AC_C_INLINE
 
+AC_TYPE_PID_T
+
 dnl AC_CHECK_HEADER(net/if.h) fails on Solaris; extra header files needed
 AC_TRY_COMPILE([
 #include <sys/types.h>
@@ -358,6 +360,7 @@ if test "$with_shared_memory" = auto -o "$with_shared_memory" = mmap; then
     AC_CHECK_FUNCS(mmap munmap, , found_mmap_funcs=no)
     if test "$found_mmap_funcs" = yes ; then
         with_shared_memory=mmap
+        AC_DEFINE(USE_MMAP_SHM,1,[Define if we have sysv shared memory])
         AC_MSG_NOTICE([Using a memory-mapped file for shared memory])
     elif test "$with_shared_memory" = mmap ; then
         AC_MSG_ERROR([cannot support shared memory:  mmap() or munmap() not found])
@@ -367,7 +370,7 @@ if test "$with_shared_memory" = auto -o "$with_shared_memory" = sysv; then
     found_sysv_shm_funcs=yes
     AC_CHECK_FUNCS(shmget shmat shmctl shmdt, , found_sysv_shm_funcs=no)
     if test "$found_sysv_shm_funcs" = yes ; then
-        AC_DEFINE(HAVE_SYSV_SHARED_MEM,1,[Define if we have sysv shared memory])
+        AC_DEFINE(USE_SYSV_SHM,1,[Define if we have sysv shared memory])
         AC_MSG_NOTICE([Using SYSV shared memory])
     elif test "$with_shared_memory" = sysv ; then
         AC_MSG_ERROR([cannot support shared memory:  sysv shared memory functions functions not found])
