@@ -58,14 +58,12 @@
 
    If the operation is not commutative, we do the following:
 
-   For very short messages, we use a recursive doubling algorithm, which
+   We use a recursive doubling algorithm, which
    takes lgp steps. At step 1, processes exchange (n-n/p) amount of
    data; at step 2, (n-2n/p) amount of data; at step 3, (n-4n/p)
    amount of data, and so forth.
 
    Cost = lgp.alpha + n.(lgp-(p-1)/p).beta + n.(lgp-(p-1)/p).gamma
-
-   For medium and long messages, we use pairwise exchange as above.
 
    Possible improvements: 
 
@@ -455,10 +453,7 @@ int MPIR_Reduce_scatter (
         MPIU_Free((char*)tmp_recvbuf + true_lb);
     }
     
-    if ((is_commutative && (nbytes >=
-                               MPIR_REDSCAT_COMMUTATIVE_LONG_MSG)) ||
-        (!is_commutative && (nbytes >=
-                                MPIR_REDSCAT_NONCOMMUTATIVE_SHORT_MSG))) {
+    if (is_commutative && (nbytes >= MPIR_REDSCAT_COMMUTATIVE_LONG_MSG)) {
 
         /* commutative and long message, or noncommutative and long message.
            use (p-1) pairwise exchanges */ 
@@ -616,10 +611,9 @@ int MPIR_Reduce_scatter (
         }
     }
     
-    if (!is_commutative && (nbytes <
-                            MPIR_REDSCAT_NONCOMMUTATIVE_SHORT_MSG)) {
+    if (!is_commutative) {
         
-        /* noncommutative and short messages, use recursive doubling. */
+        /* noncommutative, use recursive doubling. */
         
         /* need to allocate temporary buffer to receive incoming data*/
         tmp_recvbuf = MPIU_Malloc(total_count*(MPIR_MAX(true_extent,extent)));
