@@ -416,7 +416,6 @@ int MPIDI_CH3I_SHM_read_progress(MPIDI_VC_t *vc, int millisecond_timeout,
 	    {
 		continue;
 	    }
-	    MPIDI_DBG_PRINTF((60, FCNAME, "read update, total = %d + %d = %d\n", recv_vcch->read.total, num_bytes, recv_vcch->ch.read.total + num_bytes));
 	    if (recv_vcch->read.use_iov)
 	    {
 		iter_ptr = mem_ptr;
