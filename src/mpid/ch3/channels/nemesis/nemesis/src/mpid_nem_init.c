@@ -506,7 +506,14 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 
         MPIU_DBG_MSG_FMT(VC, VERBOSE, (MPIU_DBG_FDEST, "vc using %s netmod for rank %d pg %s",
                                        MPID_nem_netmod_strings[MPID_nem_netmod_id], vc->pg_rank,
-                                       (vc->pg == MPIDI_Process.my_pg ? "my_pg" : (char *)vc->pg->id)));
+                                       ((vc->pg == MPIDI_Process.my_pg) 
+                                        ? "my_pg" 
+                                        :   ((vc->pg)
+                                            ? ((char *)vc->pg->id)
+                                            : "unknown"
+                                            )
+                                        )
+                                    ));
         
         mpi_errno = MPID_nem_netmod_func->vc_init(vc);
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
