@@ -333,6 +333,9 @@ typedef int MPI_Info;
 /* Definitions that are determined by configure. */
 typedef @MPI_AINT@ MPI_Aint;
 typedef @MPI_FINT@ MPI_Fint;
+/* FIXME: The following two definition are not defined by MPI and must not be
+   included in the mpi.h file, as the MPI namespace is reserved to the MPI 
+   standard */
 #define MPI_AINT_FMT_DEC_SPEC "@MPI_AINT_FMT_DEC_SPEC@"
 #define MPI_AINT_FMT_HEX_SPEC "@MPI_AINT_FMT_HEX_SPEC@"
 
