@@ -137,20 +137,14 @@ MPID_nem_queue_empty (MPID_nem_queue_ptr_t qhead)
 }
 
 #else /*MPID_NEM_USE_MACROS */
-#define MPID_nem_queue_empty(qhead) ({						\
-    int __ret = 0;								\
-    if (MPID_NEM_IS_REL_NULL (qhead->my_head))					\
-    {										\
-	if (MPID_NEM_IS_REL_NULL (qhead->head))					\
-	    __ret = 1;								\
-	else									\
-	{									\
-	    qhead->my_head = qhead->head;					\
-	    MPID_NEM_SET_REL_NULL (qhead->head); /* reset it for next time */	\
-	}									\
-    }										\
-    __ret;									\
-})
+#define MPID_nem_queue_empty(qhead)                                                     \
+    (                                                                                   \
+     MPID_NEM_IS_REL_NULL((qhead)->my_head) ? (                                         \
+      MPID_NEM_IS_REL_NULL((qhead)->head) ? 1                                           \
+      : ( (qhead)->my_head = (qhead)->head, MPID_NEM_SET_REL_NULL((qhead)->head), 0 )   \
+     )                                                                                  \
+     : 0                                                                                \
+    )
 #endif /* MPID_NEM_USE_MACROS */
 
 #ifndef MPID_NEM_USE_MACROS
