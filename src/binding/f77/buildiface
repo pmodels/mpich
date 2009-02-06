@@ -3592,6 +3592,25 @@ sub HelperForRegister_datarep {
     my $OUTFD = $_[0]; 
 
     print $OUTFD "\
+    /* There is a dummy routine, mpi_conversion_fn_null, that is available 
+       for use as the conversion function for MPI_Register_datarep.  
+       Like the attribute null functions, we provide multiple weak versions
+       of this if possible */
+#if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null__ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+/* */
+#ifndef MPICH_MPI_FROM_PMPI
+#pragma weak mpi_conversion_fn_null__ = mpi_conversion_fn_null_
+#pragma weak mpi_conversion_fn_null   = mpi_conversion_fn_null_
+#pragma weak MPI_CONVERSION_FN_NULL   = mpi_conversion_fn_null_
+#endif /* MPICH_MPI_FROM_PMPI */
+
+#else
+   /* No weak symbols, so simply rename the one version to match the 
+      Fortran naming convention */
 #ifdef F77_NAME_UPPER
 #define mpi_conversion_fn_null_ MPI_CONVERSION_FN_NULL
 #elif defined(F77_NAME_LOWER_2USCORE)
@@ -3599,19 +3618,23 @@ sub HelperForRegister_datarep {
 #elif !defined(F77_NAME_LOWER_USCORE)
 #define mpi_conversion_fn_null_ mpi_conversion_fn_null
 /* Else leave name alone */
-#endif
+#endif /* Test on name mapping */
 
 /* Add the prototype so the routine knows what this is */
 extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
 
 
+#endif /* Test on use multiple weak symbols */
 #ifndef MPICH_MPI_FROM_PMPI
+
 /* This isn't a callable function */
 FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr ) {
     return 0;
 }
-#endif\n";
-    
+#endif
+
+";
+
 }
 #
 # FWRAPLIB is a special case.  We want to compile all of the same files,
