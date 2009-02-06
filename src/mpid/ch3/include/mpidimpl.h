@@ -700,8 +700,13 @@ typedef struct MPIDI_VC
        this has a very generous size, though this may shrink later (a channel
        can always allocate storage and hang it off of the end).  This 
        is necessary to allow dynamic loading of channels at MPI_Init time. */
-/* The ssm channel needs a *huge* space for the VC.  We need to fix that. */
+    /* The ssm channel needs a *huge* space for the VC.  We need to fix that. 
+       Note also that for dynamically-loaded channels, the VCs must all be the
+       same size, so MPIDI_CH3_VC_SIZE should not be overridden when building
+       multiple channels that will be used together */
+#ifndef MPIDI_CH3_VC_SIZE
 #define MPIDI_CH3_VC_SIZE 256
+#endif
     int32_t channel_private[MPIDI_CH3_VC_SIZE];
 # if defined(MPIDI_CH3_VC_DECL)
     MPIDI_CH3_VC_DECL
