@@ -6,7 +6,9 @@
 
 #include "mpid_nem_impl.h"
 #include <stdlib.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+    #include <unistd.h>
+#endif
 #include <errno.h>
 
 #if defined (HAVE_SYSV_SHARED_MEM)

@@ -7,7 +7,13 @@
 #if !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED)
 #define MPICH_MPIDI_CH3_PRE_H_INCLUDED
 #include "mpid_nem_pre.h"
-#include <netinet/in.h>
+
+#if defined(HAVE_NETINET_IN_H)
+    #include <netinet/in.h>
+#elif defined(HAVE_WINSOCK2_H)
+    #include <winsock2.h>
+    #include <windows.h>
+#endif
 
 /*#define MPID_USE_SEQUENCE_NUMBERS*/
 /*#define HAVE_CH3_PRE_INIT*/

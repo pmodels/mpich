@@ -54,6 +54,9 @@ fi
 AC_CHECK_HEADERS(				\
 	assert.h				\
 	netdb.h					\
+        unistd.h                                \
+        sched.h                                 \
+        sys/mman.h                              \
 	sys/ioctl.h				\
 	sys/socket.h				\
 	sys/sockio.h				\

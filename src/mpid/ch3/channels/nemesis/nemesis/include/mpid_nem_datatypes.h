@@ -12,14 +12,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <sys/mman.h>
+#ifdef HAVE_SYS_MMAN_H
+    #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+    #include <unistd.h>
+#endif
 #include <string.h>
 #include <limits.h>
-#include <sched.h>
+#ifdef HAVE_SCHED_H
+    #include <sched.h>
+#endif
 #include "mpichconf.h"
 
 /* FIXME We are using this as an interprocess lock in the queue code, although
