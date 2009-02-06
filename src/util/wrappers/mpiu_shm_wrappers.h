@@ -460,6 +460,7 @@ static inline int MPIU_SHMW_Hnd_finalize(
     int rc = -1;
 
     MPIU_Assert(hnd_ptr);
+    MPIU_Assert(*hnd_ptr);
 
     /* A finalize can/should be called on an invalid handle
      * Don't assert if we fail here ...
