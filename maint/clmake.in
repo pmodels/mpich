@@ -65,6 +65,7 @@ $rootSrcDir = "";
 # This next is a general version to handle all of these mistakes
 		'^PGC-W-0114-More than one type specified.*/usr/include<SEP>^PGC-W-0143-Useless typedef declaration \(no declarators present\).*/usr/include<SEP>2',
 		'copying python',
+		'LOOP WAS VECTORIZED',
 		);
 # In the past, we also needed
 # WARNING 84.*not used for resolving any symbol
