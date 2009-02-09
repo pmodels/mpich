@@ -605,10 +605,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\nemesis\src\mpid_nem_mpich2_rma.c"
-				>
-			</File>
-			<File
 				RelativePath=".\nemesis\src\mpid_nem_net_array.c"
 				>
 			</File>
