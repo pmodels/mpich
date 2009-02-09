@@ -202,15 +202,13 @@ int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val,
     
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_GET_ATTR);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
+#ifdef HAVE_ERROR_CHECKING
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
@@ -219,7 +217,7 @@ int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val,
 	    type, type_keyval, attribute_val, flag);
     }
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }

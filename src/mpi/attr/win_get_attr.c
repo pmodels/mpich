@@ -255,15 +255,13 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
     if (mpi_errno) goto fn_fail;
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_GET_ATTR);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
+#ifdef HAVE_ERROR_CHECKING
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
@@ -272,7 +270,7 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 	    win, win_keyval, attribute_val, flag);
     }
     mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+#endif
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }
