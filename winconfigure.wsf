@@ -1840,6 +1840,16 @@ Function ReplaceAts( str, use_f77, b64 )
 				str = Replace(str, "@VERSION@", mpich2Version)
 			Case "@NUMVERSION@"
 				str = Replace(str, "@NUMVERSION@", mpich2NumVersion)
+			Case "@nemesis_nets_macro_defs@"
+				str = Replace(str, "@nemesis_nets_macro_defs@", "#define MPIDI_NEM_NEWTCP_MODULE 0")
+			Case "@nemesis_nets_func_decl@"
+				str = Replace(str, "@nemesis_nets_func_decl@", "MPIDI_nem_newtcp_module_funcs")
+			Case "@nemesis_nets_array_sz@"
+				str = Replace(str, "@nemesis_nets_array_sz@", "1")
+			Case "@nemesis_nets_func_array@"
+				str = Replace(str, "@nemesis_nets_func_array@", "&MPIDI_nem_newtcp_module_funcs")
+			Case "@nemesis_nets_strings@"
+				str = Replace(str, "@nemesis_nets_strings@", """newtcp""")
 			Case Else
 			'	unhandled_ats = unhandled_ats & Match & vbNewLine
 			'	unhandled_ats_count = unhandled_ats_count + 1
@@ -1871,13 +1881,21 @@ Sub AddDefinitions( fout, filename, b64 )
 			fout.WriteLine(comment)
 			Select Case macroname
 				Case "HAVE_INT8_T"
-					fout.WriteLine("#undef HAVE_INT8_T")
+					fout.WriteLine("/* #undef HAVE_INT8_T */")
 				Case "HAVE_INT16_T"
-					fout.WriteLine("#undef HAVE_INT16_T")
+					fout.WriteLine("/* #undef HAVE_INT16_T */")
 				Case "HAVE_INT32_T"
-					fout.WriteLine("#undef HAVE_INT32_T")
+					fout.WriteLine("/* #undef HAVE_INT32_T */")
 				Case "HAVE_INT64_T"
-					fout.WriteLine("#undef HAVE_INT64_T")
+					fout.WriteLine("/* #undef HAVE_INT64_T */")
+				Case "HAVE_UINT8_T"
+					fout.WriteLine("/* #undef HAVE_INT8_T */")
+				Case "HAVE_UINT16_T"
+					fout.WriteLine("/* #undef HAVE_INT16_T */")
+				Case "HAVE_UINT32_T"
+					fout.WriteLine("/* #undef HAVE_INT32_T */")
+				Case "HAVE_UINT64_T"
+					fout.WriteLine("/* #undef HAVE_INT64_T */")
 				Case "int8_t"
 					fout.WriteLine("#define int8_t __int8")
 				Case "int16_t"
@@ -1935,7 +1953,7 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "SIZEOF_LONG_DOUBLE"
 					fout.WriteLine("#define SIZEOF_LONG_DOUBLE 12")
 				Case "SIZEOF_LONG_LONG"
-					fout.WriteLine("/*#define SIZEOF_LONG_LONG 8*/")
+					fout.WriteLine("#define SIZEOF_LONG_LONG 8")
 				Case "SIZEOF_SHORT"
 					fout.WriteLine("#define SIZEOF_SHORT 2")
 				Case "SIZEOF_UNSIGNED_CHAR"
@@ -1970,9 +1988,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define HAVE_SOCKET 1")
 				Case "HAVE_STRDUP"
 					fout.WriteLine("#define HAVE_STRDUP 1")
-                                Case "HAVE_STRNCASECMP"
-                                        fout.WriteLine("/* #undef HAVE_STRNCASECMP */")
-                                        fout.WriteLine("#define HAVE_STRNICMP")
+				Case "HAVE_STRNCASECMP"
+					fout.WriteLine("/* #undef HAVE_STRNCASECMP */")
 				Case "HAVE_ERRNO_H"
 					fout.WriteLine("#define HAVE_ERRNO_H 1")
 				Case "HAVE_FCNTL_H"
@@ -2031,7 +2048,11 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "HAVE_UNISTD_H"
 					fout.WriteLine("/* #undef HAVE_UNISTD_H */")
 				Case "SIZEOF_INT_IS_AINT"
-					fout.WriteLine("/* #undef SIZEOF_INT_IS_AINT */")
+					If b64 then
+						fout.WriteLine("/* #undef SIZEOF_INT_IS_AINT */")
+					Else
+						fout.WriteLine("#define SIZEOF_INT_IS_AINT")
+					End If
 				Case "volatile"
 					fout.WriteLine("/* #undef volatile */")
 				Case "HAVE_GETTIMEOFDAY"
@@ -2441,6 +2462,12 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define HAVE_NAMESPACE_STD 1")
 				Case "HAVE_STDDEF_H"
 					fout.WriteLine("#define HAVE_STDDEF_H 1")
+				Case "HAVE_RUNTIME_THREADCHECK"
+					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
+					fout.WriteLine("#define HAVE_RUNTIME_THREADCHECK 1")
+					fout.WriteLine("#else")
+					fout.WriteLine("/* #undef HAVE_RUNTIME_THREADCHECK */")
+					fout.WriteLine("#endif")
 				Case "MPICH_THREAD_LEVEL"
 					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
 					fout.WriteLine("#define MPICH_THREAD_LEVEL MPI_THREAD_MULTIPLE")
@@ -2827,6 +2854,82 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#undef HAVE_SYSCTL")
 				Case "HAVE_SYS_SYSCTL_H"
 					fout.WriteLine("#undef HAVE_SYS_SYSCTL_H")
+				' Define to enable nemesis checkpointing
+				Case "ENABLED_CHECKPOINTING"
+					fout.WriteLine("/* #undef ENABLED_CHECKPOINTING */")
+				' Define to disable shm communicn in nemesis 
+				' - for debugging
+				Case "ENABLED_NO_LOCAL"
+					fout.WriteLine("/* #undef ENABLED_NO_LOCAL */")
+				' Define to enable shm communicn btw even procs or
+				' odd procs in nemesis - for debugging
+				Case "ENABLED_ODD_EVEN_CLIQUES"
+					fout.WriteLine("/* #undef ENABLED_ODD_EVEN_CLIQUES */")
+				' Define to enable shared memory collectives in nemesis
+				Case "ENABLED_SHM_COLLECTIVES"
+					fout.WriteLine("/* #undef ENABLED_SHM_COLLECTIVES */")
+				' Define to remove SwithToThread in polling loops in nemesis
+				'Case "ENABLE_NO_SCHED_YIELD"
+				'	fout.WriteLine("/* #undef ENABLE_NO_SCHED_YIELD */")
+				Case "ENABLE_NO_YIELD"
+					fout.WriteLine("/* #undef ENABLE_NO_YIELD */")
+				' Define for lfence within _asm{} in nemesis
+				Case "HAVE_ASM_AND_X86_LFENCE"
+					fout.WriteLIne("/* #undef HAVE_ASM_AND_X86_LFENCE */")
+				' Define for mfence within _asm{} in nemesis
+				Case "HAVE_ASM_AND_X86_MFENCE"
+					fout.WriteLIne("/* #undef HAVE_ASM_AND_X86_MFENCE */")
+				' Define for sfence within _asm{} in nemesis
+				Case "HAVE_ASM_AND_X86_SFENCE"
+					fout.WriteLIne("/* #undef HAVE_ASM_AND_X86_SFENCE */")
+				' Define for lfence within _asm{} +gcc in nemesis
+				Case "HAVE_GCC_ASM_AND_X86_LFENCE"
+					fout.WriteLIne("/* #undef HAVE_GCC_ASM_AND_X86_LFENCE */")
+				' Define for mfence within _asm{} +gcc in nemesis
+				Case "HAVE_GCC_ASM_AND_X86_MFENCE"
+					fout.WriteLIne("/* #undef HAVE_GCC_ASM_AND_X86_MFENCE */")
+				' Define for sfence within _asm{} in nemesis
+				Case "HAVE_GCC_ASM_AND_X86_SFENCE"
+					fout.WriteLIne("/* #undef HAVE_GCC_ASM_AND_X86_SFENCE */")
+				' Define to turn on inline opt in nemesis
+				Case "MPID_NEM_INLINE"
+					fout.WriteLine("#define MPID_NEM_INLINE 1")
+				' Choosing the net module in nemesis
+				Case "MPID_NEM_NET_MODULE"
+					fout.WriteLine("#define MPID_NEM_NET_MODULE MPID_NEM_NEWTCP_MODULE")
+				' Define if SYSV shm available 
+				Case "HAVE_SYSV_SHARED_MEM"
+					fout.WriteLine("/* #undef HAVE_SYSV_SHARED_MEM */")
+				' Define to turn on prefetching opt in nemesis
+				Case "PREFETCH_CELL"
+					fout.WriteLine("#define PREFETCH_CELL 1")
+				' Define to use fastboxes in nemesis
+				Case "USE_FASTBOX"
+					fout.WriteLine("#define USE_FASTBOX 1")
+				Case "HAVE_LIBCKPT"
+					fout.WriteLine("/* #undef HAVE_LIBCKPT */")
+				Case "HAVE_LIBCLI"
+					fout.WriteLine("/* #undef HAVE_LIBCLI */")
+				Case "HAVE_LIBELAN"
+					fout.WriteLine("/* #undef HAVE_LIBELAN */")
+				Case "HAVE_LIBGM"
+					fout.WriteLine("/* #undef HAVE_LIBGM */")
+				Case "HAVE_LIBIBVERBS"
+					fout.WriteLine("/* #undef HAVE_LIBIBVERBS */")
+				Case "HAVE_LIBMYRIEXPRESS"
+					fout.WriteLine("/* #undef HAVE_LIBMYRIEXPRESS */")
+				Case "HAVE_LIBPSM_INFINIPATH"
+					fout.WriteLine("/* #undef HAVE_LIBPSM_INFINIPATH */")
+				Case "HAVE_LIBSCTP"
+					fout.WriteLine("/* #undef HAVE_LIBSCTP */")
+				Case "HAVE_MUNMAP"
+					fout.WriteLine("/* #undef HAVE_MUNMAP */")
+				Case "HAVE_RAND"
+					fout.WriteLIne("/* #undef HAVE_RAND */")
+				Case "HAVE_SRAND"
+					fout.WriteLine("/* #undef HAVE_SRAND */")
+				Case "HAVE_STRTOLL"
+					fout.WriteLine("/* #undef HAVE_STRTOLL */")
 				Case "HAVE_ZOIDFS_H"
 					fout.WriteLine("#undef HAVE_ZOIDFS_H")
 				Case "HAVE_MPIU_FUNCS"
@@ -2888,7 +2991,7 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "MPICH_DEBUG_MUTEX"
 					fout.WriteLine("#undef MPICH_DEBUG_MUTEX")
 				Case "MPICH_DEBUG_HANDLEALLOC"
-					fout.WriteLine("#define MPICH_DEBUG_HANDLEALLOC 1")
+					fout.WriteLine("/* #undef MPICH_DEBUG_HANDLEALLOC */")
 				Case "STACK_DIRECTION"
 					fout.WriteLine("#undef STACK_DIRECTION")
 				Case "USE_ALLOCA"
@@ -2949,6 +3052,16 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define USE_SMP_COLLECTIVES 1")
 				Case "CH3_RANK_BITS"
 					fout.WriteLine("#define CH3_RANK_BITS 16")
+                                Case "NEEDS_STRNCASECMP_DECL"
+                                        fout.WriteLine("/* #undef NEEDS_STRNCASECMP_DECL */")
+                                Case "HAVE_KNEM_IO_H"
+                                        fout.WriteLine("/* #undef HAVE_KNEM_IO_H */")
+                                Case "MPID_NEM_LOCAL_LMT_IMPL"
+                                        fout.WriteLine("/* #undef MPID_NEM_LOCAL_LMT_IMPL */")
+                                Case "USE_MMAP_SHM"
+                                        fout.WriteLine("/* #undef USE_MMAP_SHM */")
+                                Case "USE_SYSV_SHM"
+                                        fout.WriteLine("/* #undef USE_SYSV_SHM */")
                                 Case "HAVE_MPI_2DOUBLE_COMPLEX"
                                         fout.WriteLine("#define HAVE_MPI_2DOUBLE_COMPLEX 1")
                                 Case "HAVE_MPI_INTEGER16"
@@ -2956,7 +3069,7 @@ Sub AddDefinitions( fout, filename, b64 )
                                 Case "MPIO_USES_MPI_REQUEST"
                                         fout.WriteLine("#define MPIO_USES_MPI_REQUEST 1")
                                 Case "USE_STRICT_MPI"
-                                        fout.WriteLine("#define USE_STRICT_MPI 1")
+                                        fout.WriteLine("/* #undef USE_STRICT_MPI */")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
 					If appendUniqueString(unhandled_definitions, macroname) Then
@@ -4143,7 +4256,7 @@ fout.WriteLine("#define WITH_SOCK_TYPE SOCK_IOCP")
 fout.WriteLine("")
 fout.WriteLine("/* Define if building mpich in development mode */")
 fout.WriteLine("#define MPICH_DEV_BUILD")
-fout.WriteLine("/*#define MPICH_DBG_OUTPUT*/")
+fout.WriteLine("#define MPICH_DBG_OUTPUT")
 fout.WriteLine("")
 fout.WriteLine("/*#define MPICH_MPI_FROM_PMPI*/")
 fout.WriteLine("#define USE_PROCESS_LOCKS 1")
@@ -4158,6 +4271,26 @@ fout.WriteLine("#define HAVE_LONGTOPTR")
 fout.WriteLine("#define HAVE_INTTOPTR")
 fout.WriteLine("#define HAVE_AINTTOPTR")
 fout.WriteLine("#endif")
+fout.WriteLine("#ifndef HAVE_STRNICMP")
+fout.WriteLine("	#define HAVE_STRNICMP")
+fout.WriteLine("#endif")
+fout.WriteLine("#ifndef __WIN32_WINNT")
+fout.WriteLine("	#define _WIN32_WINNT 0x500")
+fout.WriteLine("#endif")
+fout.WriteLine("#define HAVE_SWITCHTOTHREAD	1")
+fout.WriteLine("#define HAVE_GETLASTERROR 1")
+fout.WriteLine("#define HAVE_FORMATMESSAGE 1")
+fout.WriteLine("#define HAVE_SRAND 1")
+fout.WriteLine("#define HAVE_QUERYPERFORMANCECOUNTER 1")
+fout.WriteLine("#ifndef ENABLE_NO_MACRO_VARARG_NAME")
+fout.WriteLine("	#define ENABLE_NO_MACRO_VARARG_NAME")
+fout.WriteLine("#endif")
+' Use Windows Intrinsics for atomics
+fout.WriteLine("#define HAVE_NT_INTRINSICS")
+' Use Windows SHM
+fout.WriteLine("#define HAVE_NT_SHARED_MEM")
+fout.WriteLine("#define USE_NT_SHM	1")
+fout.WriteLine("#define USE_NT_SOCK 1")
 ' Define so that we can test whether the mpichconf.h file has been included 
 fout.WriteLine(" /* Define so that we can test whether the mpichconf.h has been included */")
 fout.WriteLine("#define HAVE_MPICHCONF 1")
@@ -4193,7 +4326,7 @@ fout.WriteLine("#define WITH_SOCK_TYPE SOCK_IOCP")
 fout.WriteLine("")
 fout.WriteLine("/* Define if building mpich in development mode */")
 fout.WriteLine("#define MPICH_DEV_BUILD")
-fout.WriteLine("/*#define MPICH_DBG_OUTPUT*/")
+fout.WriteLine("#define MPICH_DBG_OUTPUT")
 fout.WriteLine("")
 fout.WriteLine("/*#define MPICH_MPI_FROM_PMPI*/")
 fout.WriteLine("#define USE_PROCESS_LOCKS 1")
@@ -4208,6 +4341,26 @@ fout.WriteLine("#define HAVE_LONGTOPTR")
 fout.WriteLine("#define HAVE_INTTOPTR")
 fout.WriteLine("#define HAVE_AINTTOPTR")
 fout.WriteLine("#endif")
+fout.WriteLine("#ifndef HAVE_STRNICMP")
+fout.WriteLine("	#define HAVE_STRNICMP")
+fout.WriteLine("#endif")
+fout.WriteLine("#ifndef __WIN32_WINNT")
+fout.WriteLine("	#define _WIN32_WINNT 0x500")
+fout.WriteLine("#endif")
+fout.WriteLine("#define HAVE_SWITCHTOTHREAD	1")
+fout.WriteLine("#define HAVE_GETLASTERROR 1")
+fout.WriteLine("#define HAVE_FORMATMESSAGE 1")
+fout.WriteLine("#define HAVE_SRAND 1")
+fout.WriteLine("#define HAVE_QUERYPERFORMANCECOUNTER 1")
+fout.WriteLine("#ifndef ENABLE_NO_MACRO_VARARG_NAME")
+fout.WriteLine("	#define ENABLE_NO_MACRO_VARARG_NAME")
+fout.WriteLine("#endif")
+' Use Windows Intrinsics for atomics
+fout.WriteLine("#define HAVE_NT_INTRINSICS")
+' Use Windows SHM
+fout.WriteLine("#define HAVE_NT_SHARED_MEM")
+fout.WriteLine("#define USE_NT_SHM	1")
+fout.WriteLine("#define USE_NT_SOCK 1")
 ' Define so that we can test whether the mpichconf.h file has been included 
 fout.WriteLine(" /* Define so that we can test whether the mpichconf.h has been included */")
 fout.WriteLine("#define HAVE_MPICHCONF 1")
@@ -4328,6 +4481,34 @@ Call WriteFooter(fout)
 fout.Close()
 
 '
+' mpiu_os_wrappers_conf.h
+'
+'If f.FileExists("src\util\wrappers\mpiu_os_wrappers_conf.h.in") Then
+'	cEcho "Creating src\util\wrappers\mpiu_os_wrappers_conf.h"
+'	Set fout = f.CreateTextFile("src\util\wrappers\mpiu_os_wrappers_conf.h")
+'	Call WriteHeader(fout, "mpiu_os_wrappers")
+'	Call AddDefinitions(fout, "src\util\wrappers\mpiu_os_wrappers_conf.h.in", false)
+'	fout.WriteLine("#ifndef HAVE_WINDOWS_H")
+'		fout.WriteLine("#define HAVE_WINDOWS_H")
+'	fout.WriteLine("#endif")
+'	fout.WriteLine("#define USE_NT_SHM	1")
+'	fout.WriteLine("#define USE_NT_SOCK 1")
+'	fout.WriteLine("#define HAVE_SWITCHTOTHREAD	1")
+'	fout.WriteLine("#define HAVE_GETLASTERROR 1")
+'	fout.WriteLine("#define HAVE_FORMATMESSAGE 1")
+'	fout.WriteLine("#define HAVE_SRAND 1")
+'	fout.WriteLine("#define HAVE_QUERYPERFORMANCECOUNTER 1")
+'	fout.WriteLine("#define HAVE_DOUBLEUNDERSCOREINLINE 1")
+'	fout.WriteLine("#ifndef __cplusplus")
+'		fout.WriteLine("#define HAVE_NOINLINE 1")
+'	fout.WriteLine("#endif")
+'	Call WriteFooter(fout)
+'	fout.Close()
+'Else
+'	cEcho "Skipping file: mpiu_os_wrappers_conf.h"
+'End If
+
+'
 ' mpidi_ch3i_rdma_conf.h
 '
 If f.FileExists("src\mpid\ch3\channels\rdma\include\mpidi_ch3i_rdma_conf.h.in") Then
@@ -4426,6 +4607,21 @@ Else
 End If
 
 '
+' mpidi_ch3i_nemesis_conf.h
+'
+If f.FileExists("src\mpid\ch3\channels\nemesis\include\mpidi_ch3i_nemesis_conf.h.in") Then
+	printMsg "VERBOSE", "Creating src\mpid\ch3\channels\nemesis\include\mpidi_ch3i_nemesis_conf.h"
+	Set fout = f.CreateTextFile("src\mpid\ch3\channels\nemesis\include\mpidi_ch3i_nemesis_conf.h")
+	Call WriteHeader(fout, "mpidi_ch3i_nemesis_")
+	Call AddDefinitions(fout, "src\mpid\ch3\channels\nemesis\include\mpidi_ch3i_nemesis_conf.h.in", false)
+    ' Use Windows Intrinsics for atomics
+	fout.WriteLine("#define HAVE_NT_INTRINSICS")
+	Call WriteFooter(fout)
+	fout.Close()
+Else
+	printMsg "VERBOSE","Skipping file: mpidi_ch3i_nemesis_conf.h"
+End If
+'
 ' mpidi_ch3i_essm_conf.h
 '
 'If f.FileExists("src\mpid\ch3\channels\essm\include\mpidi_ch3i_essm_conf.h.in") Then
@@ -4517,6 +4713,38 @@ If f.FileExists("src\mpid\ch3\channels\ib\include\mpidi_ch3i_ib_conf.h.in") Then
 	fout.Close()
 Else
 	printMsg "VERBOSE", "Skipping file: mpidi_ch3i_ib_conf.h"
+End If
+
+'
+' Generate mpid_nem_net_module_defs.h
+'
+If f.FileExists("src\mpid\ch3\channels\nemesis\nemesis\include\mpid_nem_net_module_defs.h.in") Then
+	printMsg "VERBOSE","Creating src\mpid\ch3\channels\nemesis\nemesis\include\mpid_nem_net_module_defs.h"
+	set fout = f.CreateTextFile("src\mpid\ch3\channels\nemesis\nemesis\include\mpid_nem_net_module_defs.h")
+	set fin  = f.OpenTextFile("src\mpid\ch3\channels\nemesis\nemesis\include\mpid_nem_net_module_defs.h.in")
+	contents = fin.ReadAll()
+	contents = ReplaceAts(contents, false, false)
+	fout.Write(contents)
+	fin.Close()
+	fout.Close()
+Else
+	printMsg "VERBOSE", "Skipping file: mpid_nem_net_module_defs.h"
+End If
+
+'
+' Generate mpid_nem_net_array.c
+'
+If f.FileExists("src\mpid\ch3\channels\nemesis\nemesis\src\mpid_nem_net_array.c.in") Then
+	printMsg "VERBOSE","Creating src\mpid\ch3\channels\nemesis\nemesis\src\mpid_nem_net_array.c"
+	set fout = f.CreateTextFile("src\mpid\ch3\channels\nemesis\nemesis\src\mpid_nem_net_array.c")
+	set fin  = f.OpenTextFile("src\mpid\ch3\channels\nemesis\nemesis\src\mpid_nem_net_array.c.in")
+	contents = fin.ReadAll()
+	contents = ReplaceAts(contents, false, false)
+	fout.Write(contents)
+	fin.Close()
+	fout.Close()
+Else
+	printMsg "VERBOSE", "Skipping file: mpid_nem_net_array.c"
 End If
 
 '
@@ -5292,12 +5520,14 @@ Function GenBuild()
 	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=ssm RLOG=1")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=shm")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=shm RLOG=1")
-	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=sshm")
-	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=sshm RLOG=1")
-	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=ib IB=IBAL IB_PATH=c:\ibal\src\base IB_PATH_LIB=c:\ibal\Install")
-	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=ib IB=IBAL IB_PATH=c:\ibal\src\base IB_PATH_LIB=c:\ibal\Install RLOG=1")
-	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=ib IB=VAPI")
-	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=ib IB=VAPI RLOG=1")
+	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=nemesis")
+	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=nemesis RLOG=1")
+'	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=sshm")
+'	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=sshm RLOG=1")
+'	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=ib IB=IBAL IB_PATH=c:\ibal\src\base IB_PATH_LIB=c:\ibal\Install")
+'	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=ib IB=IBAL IB_PATH=c:\ibal\src\base IB_PATH_LIB=c:\ibal\Install RLOG=1")
+'	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=ib IB=VAPI")
+'	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=ib IB=VAPI RLOG=1")
 '	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=essm")
 '	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=essm RLOG=1")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO cxx")
@@ -5365,7 +5595,7 @@ Function GenBuild()
 	mfile.WriteLine("!ELSEIF ""$(APPVER)"" == ""5.02""")
 	mfile.WriteLine("NMAKE_WINVER = 0x0502")
 	mfile.WriteLine("!ENDIF")
-	mfile.WriteLine("common_cflags = $(common_cflags) -DMPI_EXPORTS -D_WINNT -D_WIN32_WINNT=$(NMAKE_WINVER)")
+	mfile.WriteLine("common_cflags = $(common_cflags) -Oi -DMPI_EXPORTS -D_WINNT -D_WIN32_WINNT=$(NMAKE_WINVER)")
 	mfile.WriteLine
 	mfile.WriteLine("!IFDEF NODEBUG")
 	mfile.WriteLine("!IFDEF USE_STATIC")
@@ -5404,7 +5634,7 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("!IFDEF RLOG")
 	mfile.WriteLine("P = p")
-	mfile.WriteLine("common_cflags = $(common_cflags) /DHAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED /DUSE_LOGGING=MPID_LOGGING_RLOG")
+	mfile.WriteLine("common_cflags = $(common_cflags) /DHAVE_STRNICMP /DHAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED /DUSE_LOGGING=MPID_LOGGING_RLOG")
 	mfile.WriteLine("rlog_libs = $(RLOG_OUTDIR)\rlog$(D).lib")
 	mfile.WriteLine("!ELSE")
 	mfile.WriteLine("P =")
@@ -5423,6 +5653,7 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("common_cflags = $(common_cflags) \")
 	mfile.WriteLine(" /I..\src\include \")
+	mfile.WriteLine(" /I..\src\util\wrappers \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\$(CHANNEL)\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\$(CHANNEL)\src \")
@@ -5508,6 +5739,14 @@ Function GenBuild()
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\sock\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\sock\src")
 	mfile.WriteLine("!ENDIF")
+	mfile.WriteLine
+	mfile.WriteLine("!IF ""$(CHANNEL)"" == ""nemesis""")
+	mfile.WriteLine("cflags = $(cflags) \")
+	mfile.WriteLine(" /DMPICH_MULTITHREADED /D ENABLE_NO_MACRO_VARARG_NAME \")
+	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\include \")
+	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\utils\monitor \")
+	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp_module")
+	mfile.WriteLine("!ENDIF")
 '	mfile.WriteLine
 '	mfile.WriteLine("!IF ""$(CHANNEL)"" == ""essm""")
 '	mfile.WriteLine("cflags = $(cflags) /DMPICH_MULTITHREADED")
@@ -5554,9 +5793,10 @@ Function GenBuild()
 	mfile.WriteLine("MT_OUTDIR = $(CPU)\$(CFG)\mt$(P)")
 	mfile.WriteLine("SSM_OUTDIR = $(CPU)\$(CFG)\ssm$(P)")
 	mfile.WriteLine("SHM_OUTDIR = $(CPU)\$(CFG)\shm$(P)")
-	mfile.WriteLine("SSHM_OUTDIR = $(CPU)\$(CFG)\sshm$(P)")
+	mfile.WriteLine("NEMESIS_OUTDIR = $(CPU)\$(CFG)\nemesis$(P)")
+'	mfile.WriteLine("SSHM_OUTDIR = $(CPU)\$(CFG)\sshm$(P)")
 '	mfile.WriteLine("ESSM_OUTDIR = $(CPU)\$(CFG)\essm$(P)")
-	mfile.WriteLine("IB_OUTDIR = $(CPU)\$(CFG)\ib_$(IB)$(P)")
+'	mfile.WriteLine("IB_OUTDIR = $(CPU)\$(CFG)\ib_$(IB)$(P)")
 	mfile.WriteLine("FORT_OUTDIR = $(CPU)\$(CFG)\fortran")
 	mfile.WriteLine("GFORT_OUTDIR = $(CPU)\$(CFG)\gfortran")
 	mfile.WriteLine("SFORT_OUTDIR = $(CPU)\$(CFG)\sfortran")
@@ -5615,18 +5855,20 @@ Function GenBuild()
 	mfile.WriteLine("	if exist $(MT_OUTDIR)\$(NULL) rd /s /q $(MT_OUTDIR)")
 	mfile.WriteLine("	if exist $(SSM_OUTDIR)\$(NULL) rd /s /q $(SSM_OUTDIR)")
 	mfile.WriteLine("	if exist $(SHM_OUTDIR)\$(NULL) rd /s /q $(SHM_OUTDIR)")
-	mfile.WriteLine("	if exist $(SSHM_OUTDIR)\$(NULL) rd /s /q $(SSHM_OUTDIR)")
+	mfile.WriteLine("	if exist $(NEMESIS_OUTDIR)\$(NULL) rd /s /q $(NEMESIS_OUTDIR)")
+'	mfile.WriteLine("	if exist $(SSHM_OUTDIR)\$(NULL) rd /s /q $(SSHM_OUTDIR)")
 '	mfile.WriteLine("	if exist $(ESSM_OUTDIR)\$(NULL) rd /s /q $(ESSM_OUTDIR)")
-	mfile.WriteLine("	if exist $(IB_OUTDIR)IBAL\$(NULL) rd /s /q $(IB_OUTDIR)IBAL")
-	mfile.WriteLine("	if exist $(IB_OUTDIR)VAPI\$(NULL) rd /s /q $(IB_OUTDIR)VAPI")
+'	mfile.WriteLine("	if exist $(IB_OUTDIR)IBAL\$(NULL) rd /s /q $(IB_OUTDIR)IBAL")
+'	mfile.WriteLine("	if exist $(IB_OUTDIR)VAPI\$(NULL) rd /s /q $(IB_OUTDIR)VAPI")
 	mfile.WriteLine("	if exist $(SOCK_OUTDIR)p\$(NULL) rd /s /q $(SOCK_OUTDIR)p")
 	mfile.WriteLine("	if exist $(MT_OUTDIR)p\$(NULL) rd /s /q $(MT_OUTDIR)p")
 	mfile.WriteLine("	if exist $(SSM_OUTDIR)p\$(NULL) rd /s /q $(SSM_OUTDIR)p")
 	mfile.WriteLine("	if exist $(SHM_OUTDIR)p\$(NULL) rd /s /q $(SHM_OUTDIR)p")
-	mfile.WriteLine("	if exist $(SSHM_OUTDIR)p\$(NULL) rd /s /q $(SSHM_OUTDIR)p")
+	mfile.WriteLine("	if exist $(NEMESIS_OUTDIR)p\$(NULL) rd /s /q $(NEMESIS_OUTDIR)p")
+'	mfile.WriteLine("	if exist $(SSHM_OUTDIR)p\$(NULL) rd /s /q $(SSHM_OUTDIR)p")
 '	mfile.WriteLine("	if exist $(ESSM_OUTDIR)p\$(NULL) rd /s /q $(ESSM_OUTDIR)p")
-	mfile.WriteLine("	if exist $(IB_OUTDIR)IBALp\$(NULL) rd /s /q $(IB_OUTDIR)IBALp")
-	mfile.WriteLine("	if exist $(IB_OUTDIR)VAPIp\$(NULL) rd /s /q $(IB_OUTDIR)VAPIp")
+'	mfile.WriteLine("	if exist $(IB_OUTDIR)IBALp\$(NULL) rd /s /q $(IB_OUTDIR)IBALp")
+'	mfile.WriteLine("	if exist $(IB_OUTDIR)VAPIp\$(NULL) rd /s /q $(IB_OUTDIR)VAPIp")
 	mfile.WriteLine("	if exist $(FORT_OUTDIR)\$(NULL) rd /s /q $(FORT_OUTDIR)")
 	mfile.WriteLine("	if exist $(GFORT_OUTDIR)\$(NULL) rd /s /q $(GFORT_OUTDIR)")
 	mfile.WriteLine("	if exist $(SFORT_OUTDIR)\$(NULL) rd /s /q $(SFORT_OUTDIR)")
@@ -5742,9 +5984,11 @@ Function GenBuild()
 	mfile.WriteLine("	$(OUTDIR)\ad_write_str.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_write_str_naive.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_io_coll.obj \")
+	mfile.WriteLine("	$(OUTDIR)\ad_opencoll.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_coll_build_req_new.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_coll_exch_new.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_aggregate_new.obj \")
+	mfile.WriteLine("	$(OUTDIR)\ad_features.obj \")
 	mfile.WriteLine("	$(OUTDIR)\heap-sort.obj \")
 '	mfile.WriteLine("	$(OUTDIR)\async_list.obj \")
 	mfile.WriteLine("	$(OUTDIR)\byte_offset.obj \")
@@ -5853,6 +6097,23 @@ Function GenBuild()
 	mfile.WriteLine(" \" & vbCrLf & "	$(MT_OUTDIR)\mpe_thread_win.obj")
 
 	mfile.WriteLine
+	mfile.WriteLine("# ch3nemesis")
+	mfile.WriteLine
+	outdir = "NEMESIS_OUTDIR"
+	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\src"), trimlength
+	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength
+'	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength
+	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp_module"), trimlength
+	mfile.WriteLine("{..\src\util\thread}.c{$(NEMESIS_OUTDIR)}.obj:")
+	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(NEMESIS_OUTDIR)\\"" /Fd""$(NEMESIS_OUTDIR)\\"" $**")
+	mfile.WriteLine
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\src"), trimlength, true, false
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength, false, false
+'	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength, false, false
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp_module"), trimlength, false, false
+	mfile.WriteLine(" \" & vbCrLf & "	$(NEMESIS_OUTDIR)\mpe_thread_win.obj")
+
+	mfile.WriteLine
 	mfile.WriteLine("# ch3ssm")
 	mfile.WriteLine
 	outdir = "SSM_OUTDIR"
@@ -5924,14 +6185,16 @@ Function GenBuild()
 	mfile.WriteLine("channel_objs = $(ch3ssm_objs)")
 	mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""shm""")
 	mfile.WriteLine("channel_objs = $(ch3shm_objs)")
-	mfile.WriteLine("# !ELSEIF ""$(CHANNEL)"" == ""sshm""")
-	mfile.WriteLine("# channel_objs = $(ch3sshm_objs)")
+'	mfile.WriteLine("# !ELSEIF ""$(CHANNEL)"" == ""sshm""")
+'	mfile.WriteLine("# channel_objs = $(ch3sshm_objs)")
 '	mfile.WriteLine("# !ELSEIF ""$(CHANNEL)"" == ""essm""")
 '	mfile.WriteLine("# channel_objs = $(ch3essm_objs)")
-	mfile.WriteLine("# !ELSEIF ""$(CHANNEL)"" == ""ib""")
-	mfile.WriteLine("# channel_objs = $(ch3ib_objs)")
+'	mfile.WriteLine("# !ELSEIF ""$(CHANNEL)"" == ""ib""")
+'	mfile.WriteLine("# channel_objs = $(ch3ib_objs)")
 	mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""mt""")
 	mfile.WriteLine("channel_objs = $(ch3mt_objs)")
+	mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""nemesis""")
+	mfile.WriteLine("channel_objs = $(ch3nemesis_objs)")
 	mfile.WriteLine("!ELSE")
 	mfile.WriteLine("!ERROR Invalid channel selected - $(CHANNEL)")
 	mfile.WriteLine("!ENDIF")
@@ -6216,10 +6479,10 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("# create special rules for the TraceInput.dll source files since they need to include Java paths")
 	mfile.WriteLine("$(RLOG_OUTDIR)\logformat_trace_InputLog.obj: ..\src\util\logging\rlog\logformat_trace_InputLog.c")
-	mfile.WriteLine("    $(cc) $(cflags) /I..\src\mpe2\src\slog2sdk\src\logformat\trace /I$(JAVA_HOME)\include /I$(JAVA_HOME)\include\win32 /Fo""$(RLOG_OUTDIR)\\"" /Fd""$(RLOG_OUTDIR)\\"" ..\src\util\logging\rlog\logformat_trace_InputLog.c")
+	mfile.WriteLine("    $(cc) $(cflags) /I..\src\mpe2\src\slog2sdk\src\logformat\trace -DHAVE_STRNICMP /I$(JAVA_HOME)\include /I$(JAVA_HOME)\include\win32 /Fo""$(RLOG_OUTDIR)\\"" /Fd""$(RLOG_OUTDIR)\\"" ..\src\util\logging\rlog\logformat_trace_InputLog.c")
 	mfile.WriteLine
 	mfile.WriteLine("$(RLOG_OUTDIR)\trace_input.obj: ..\src\util\logging\rlog\trace_input.c")
-	mfile.WriteLine("    $(cc) $(cflags) /I..\src\mpe2\src\slog2sdk\src\logformat\trace /I$(JAVA_HOME)\include /I$(JAVA_HOME)\include\win32 /Fo""$(RLOG_OUTDIR)\\"" /Fd""$(RLOG_OUTDIR)\\"" ..\src\util\logging\rlog\trace_input.c")
+	mfile.WriteLine("    $(cc) $(cflags) /DHAVE_STRNICMP /I..\src\mpe2\src\slog2sdk\src\logformat\trace /I$(JAVA_HOME)\include /I$(JAVA_HOME)\include\win32 /Fo""$(RLOG_OUTDIR)\\"" /Fd""$(RLOG_OUTDIR)\\"" ..\src\util\logging\rlog\trace_input.c")
 	mfile.WriteLine
 	mfile.WriteLine("trace_input_objs = \")
 	mfile.WriteLine("	$(RLOG_OUTDIR)\logformat_trace_InputLog.obj \")
