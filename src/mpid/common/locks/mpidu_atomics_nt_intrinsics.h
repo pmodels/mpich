@@ -8,6 +8,30 @@
 #define MPIDU_ATOMICS_NT_INTRINSICS_H_INCLUDED
 
 #include<intrin.h>
+#include "mpi.h"
+
+typedef struct { volatile int v;  } MPIDU_Atomic_t;
+typedef struct { int * volatile v; } MPIDU_Atomic_ptr_t;
+
+static inline int MPIDU_Atomic_load(MPIDU_Atomic_t *ptr)
+{
+    return ptr->v;
+}
+
+static inline void MPIDU_Atomic_store(MPIDU_Atomic_t *ptr, int val)
+{
+    ptr->v = val;
+}
+
+static inline void *MPIDU_Atomic_load_ptr(MPIDU_Atomic_ptr_t *ptr)
+{
+    return ptr->v;
+}
+
+static inline void MPIDU_Atomic_store_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
+{
+    ptr->v = val;
+}
 
 static inline void MPIDU_Atomic_add(volatile int *ptr, int val)
 {
