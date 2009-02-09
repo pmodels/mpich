@@ -39,6 +39,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_1BE96E15F472462586C19E8C77FF7927"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_1C4C987A6879485B8ED55B84C4DF9BD3"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -112,6 +118,12 @@
         "Entry"
         {
         "MsmKey" = "8:_4BF17D75F44F4CEEB89D9839E70C22E3"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_55116394473C40CD956A4224C4479211"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -467,6 +479,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1BE96E15F472462586C19E8C77FF7927"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\nemesisp\\mpich2nemesisp.dll"
+            "TargetName" = "8:mpich2nemesisp.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_68D5CBFB6E6E4F878DE0BFA8C411C515"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1C4C987A6879485B8ED55B84C4DF9BD3"
             {
             "SourcePath" = "8:..\\src\\mpe2\\src\\misc\\include\\mpe_misc.h"
@@ -713,6 +745,26 @@
             "TargetName" = "8:rlog.lib"
             "Tag" = "8:"
             "Folder" = "8:_21FB2EC726254C54839F05E4290C1045"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_55116394473C40CD956A4224C4479211"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\nemesis\\mpich2nemesis.dll"
+            "TargetName" = "8:mpich2nemesis.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_68D5CBFB6E6E4F878DE0BFA8C411C515"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
