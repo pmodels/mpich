@@ -311,7 +311,7 @@ static int MPIR_Scan_or_coll_fn(
 #define FUNCNAME MPIR_Scan_sub_shmcoll
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_SMP_Scan(
+static int MPIR_SMP_Scan(
     void *sendbuf,
     void *recvbuf,
     int count,
