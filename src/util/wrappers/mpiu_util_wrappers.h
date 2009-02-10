@@ -44,7 +44,8 @@
 /*
  * Returns size of uniqStr, 0 on error
  */
-static inline int MPIU_OSW_Get_uniq_str(char *str, int strlen){
+static inline int MPIU_OSW_Get_uniq_str(char *str, int strlen)
+{
     LARGE_INTEGER perfCnt;
     QueryPerformanceCounter(&perfCnt);
     return(MPIU_Snprintf(str, strlen, "%u", 

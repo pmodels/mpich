@@ -189,7 +189,7 @@ static inline int MPIU_SHMW_Ghnd_set_uniq(MPIU_SHMW_Hnd_t hnd)
 /* Returns -1 on error, 0 on success */
 #define MPIU_SHMW_Ghnd_get_by_val(hnd, str, strlen)  (              \
     (MPIU_Snprintf(str, strlen, "%s",                               \
-        MPIU_SHMW_Ghandle_get_by_ref(hnd))) ? 0 : -1                \
+        MPIU_SHMW_Ghnd_get_by_ref(hnd))) ? 0 : -1                   \
 )
 #define MPIU_SHMW_Ghnd_set_by_ref(hnd, val) ((hnd)->ghnd = val)
 /* Returns -1 on error, 0 on success */
@@ -277,6 +277,7 @@ static inline void MPIU_SHMW_Hnd_free(MPIU_SHMW_Hnd_t hnd)
 }
 
 static inline int MPIU_SHMW_Seg_open(MPIU_SHMW_Hnd_t hnd, int seg_sz);
+static inline int MPIU_SHMW_Hnd_deserialize_by_ref(MPIU_SHMW_Hnd_t hnd, char **ser_hnd_ptr);
 
 /* FIXME : Don't print ENGLISH strings on error. Define the error
  * strings in errnames.txt
@@ -305,9 +306,12 @@ static inline int MPIU_SHMW_Hnd_serialize(char *str,
     MPIU_Assert(str_len >= MPIU_SHMW_GHND_SZ);
 
     rc = MPIU_SHMW_Ghnd_get_by_val(hnd, str, str_len);
-    MPIU_Assert(rc == 0);
+    MPIU_ERR_CHKANDJUMP(rc == 0, mpi_errno, MPI_ERR_OTHER, "**shmw_gethnd");
 
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 /* Deserialize a handle.
@@ -397,7 +401,6 @@ static inline int MPIU_SHMW_Hnd_deserialize_by_ref(
     MPIU_SHMW_Hnd_t hnd, char **ser_hnd_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rc = -1;
 
     MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
     MPIU_Assert(ser_hnd_ptr);
@@ -457,7 +460,6 @@ static inline int MPIU_SHMW_Hnd_finalize(
                     MPIU_SHMW_Hnd_t *hnd_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rc = -1;
 
     MPIU_Assert(hnd_ptr);
     MPIU_Assert(*hnd_ptr);
