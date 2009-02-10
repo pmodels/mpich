@@ -20,6 +20,15 @@
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool" CommandLine="copy /y win32\mpi_sizeofs.f90 ." Description="Copy (overwrite) the arch dependent mpi_sizeofs source"/>
+				<Tool Name="VFPostBuildEventTool"/></Configuration>
+		<Configuration Name="ch3nemesisPRelease|Win32" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\..\include\win32" ModulePath="..\..\include\win32"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="copy /y win32\mpi_sizeofs.f90 ." Description="Copy (overwrite) the arch dependent mpi_sizeofs source"/>
 				<Tool Name="VFPostBuildEventTool"/></Configuration></Configurations>
 	<Files>
 		<Filter Name="Header Files" Filter="fi;fd"/>

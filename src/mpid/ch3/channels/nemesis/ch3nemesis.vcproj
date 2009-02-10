@@ -343,6 +343,70 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="ch3nemesisPRelease|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories=".\include;.\nemesis\include;.\nemesis\netmod\wintcp_module;.\nemesis\utils\monitor;..\..\..\..\util\wrappers;..\..\..\..\include;..\..\..\..\include\win32;..\..\include;..\..\..\common\datatype;..\..\..\common\locks"
+				PreprocessorDefinitions="WIN32;NDEBUG;USE_WINCONF_H;_WIN32_WINNT=0x0500;ENABLE_NO_MACRO_VARARG_NAME;HAVE_DOUBLEUNDERSCORE_INLINE;MPICH_MULTITHREADED;HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED;USE_LOGGING=MPID_LOGGING_RLOG"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="true"
+				WarningLevel="0"
+				Detect64BitPortabilityProblems="true"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="..\..\..\..\..\lib\ch3nemesis.lib"
+				AdditionalLibraryDirectories=""
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -357,6 +421,14 @@
 				>
 				<FileConfiguration
 					Name="ch3nemesisRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ShowIncludes="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ch3nemesisPRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -583,6 +655,14 @@
 						ShowIncludes="false"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ch3nemesisPRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ShowIncludes="false"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\nemesis\src\mpid_nem_lmt.c"
@@ -675,12 +755,28 @@
 						ShowIncludes="false"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ch3nemesisPRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ShowIncludes="false"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\nemesis\netmod\wintcp_module\socksm.c"
 				>
 				<FileConfiguration
 					Name="ch3nemesisRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ShowIncludes="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ch3nemesisPRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

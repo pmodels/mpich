@@ -738,6 +738,73 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="ch3nemesisPRelease|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="1"
+				OmitFramePointers="true"
+				AdditionalIncludeDirectories="..\..\mpid\common\sock,..\..\mpid\common\sock\iocp,..\..\include,..\..\include\win32"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;HAVE_WINDOWS_H;USE_WINCONF_H;_WIN32_WINNT=0x0500"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="..\..\..\lib\smpd_util.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -837,6 +904,14 @@
 						PreprocessorDefinitions="MPICH_SKIP_MPICXX"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ch3nemesisPRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PreprocessorDefinitions="MPICH_SKIP_MPICXX"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\smpd_adreg.cpp"
@@ -923,6 +998,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="fortDebugConfig_1_0_5|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PreprocessorDefinitions="UNICODE;_UNICODE;_WIN32_WINNT=0x0500;MPICH_SKIP_MPICXX"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ch3nemesisPRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
