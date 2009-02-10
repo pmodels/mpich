@@ -3682,6 +3682,8 @@ int MPIR_Comm_commit( MPID_Comm * );
 
 int MPIR_Comm_is_node_aware( MPID_Comm * );
 
+int MPIR_Comm_is_node_consecutive( MPID_Comm *);
+
 void MPIR_Free_err_dyncodes( void );
 
 

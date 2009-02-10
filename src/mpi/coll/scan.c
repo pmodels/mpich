@@ -272,9 +272,221 @@ int MPIR_Scan (
 /* end:nested */
 #endif
 
+/* A simple utility function to that calls the comm_ptr->coll_fns->Scan
+override if it exists or else it calls MPIR_Scan with the same arguments. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Scan_or_coll_fn
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int MPIR_Scan_or_coll_fn(
+    void *sendbuf, 
+    void *recvbuf, 
+    int count, 
+    MPI_Datatype datatype, 
+    MPI_Op op, 
+    MPID_Comm *comm_ptr )
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Scan != NULL)
+    {
+        /* --BEGIN USEREXTENSION-- */
+        mpi_errno = comm_ptr->coll_fns->Scan(sendbuf, recvbuf, count,
+                                             datatype, op, comm_ptr);
+        /* --END USEREXTENSION-- */
+    }
+    else {
+        mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, 
+                              datatype, op, comm_ptr);
+    }
+
+    return mpi_errno;
+}
+
+/* Sub function to perform shmcoll scan operation. The "op" could be either 
+   commutative or non-commutative. 
+   Restriction: we require a communicator, in which all the nodes contain 
+   processes with consecutive ranks. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Scan_sub_shmcoll
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_SMP_Scan(
+    void *sendbuf,
+    void *recvbuf,
+    int count,
+    MPI_Datatype datatype,
+    MPI_Op op,
+    MPID_Comm *comm_ptr )
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIU_CHKLMEM_DECL(3);
+
+    int rank = comm_ptr->rank;
+    MPI_Status status;
+    void *tempbuf = NULL, *localfulldata = NULL, *prefulldata = NULL;
+    MPI_Aint  true_lb, true_extent, extent; 
+    MPI_User_function *uop;
+    MPID_Op *op_ptr;
+    mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb, &true_extent);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno); 
+
+    MPID_Datatype_get_extent_macro(datatype, extent);
+
+    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+
+    MPIU_CHKLMEM_MALLOC(tempbuf, void *, count*(MPIR_MAX(extent, true_extent)),
+                        mpi_errno, "temporary buffer");
+    tempbuf = (void *)((char*)tempbuf - true_lb);
+
+    /* Create prefulldata and localfulldata on local roots of all nodes */
+    if (comm_ptr->node_roots_comm != NULL) {
+        MPIU_CHKLMEM_MALLOC(prefulldata, void *, count*(MPIR_MAX(extent, true_extent)),
+                            mpi_errno, "prefulldata for scan");
+        prefulldata = (void *)((char*)prefulldata - true_lb);
+
+        if (comm_ptr->node_comm != NULL) {
+            MPIU_CHKLMEM_MALLOC(localfulldata, void *, count*(MPIR_MAX(extent, true_extent)),
+                                mpi_errno, "localfulldata for scan");
+            localfulldata = (void *)((char*)localfulldata - true_lb);
+        }
+    }
+  
+    /* perform intranode scan to get temporary result in recvbuf. if there is only 
+       one process, just copy the raw data. */
+    if (comm_ptr->node_comm != NULL)
+    {
+        mpi_errno = MPIR_Scan_or_coll_fn(sendbuf, recvbuf, count, datatype, 
+                                         op, comm_ptr->node_comm);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    else if (sendbuf != MPI_IN_PLACE)
+    {
+        mpi_errno = MPIR_Localcopy(sendbuf, count, datatype,
+                                   recvbuf, count, datatype);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+    /* get result from local node's last processor which 
+       contains the reduce result of the whole node. Name it as
+       localfulldata. For example, localfulldata from node 1 contains
+       reduced data of rank 1,2,3. */
+    if (comm_ptr->node_roots_comm != NULL && comm_ptr->node_comm != NULL)
+    {
+        mpi_errno = MPIC_Recv(localfulldata, count, datatype, 
+                              comm_ptr->node_comm->local_size - 1, MPIR_SCAN_TAG, 
+                              comm_ptr->node_comm->handle, &status);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    else if (comm_ptr->node_roots_comm == NULL && 
+             comm_ptr->node_comm != NULL && 
+             MPIU_Get_intranode_rank(comm_ptr, rank) == comm_ptr->node_comm->local_size - 1)
+    {
+        mpi_errno = MPIC_Send(recvbuf, count, datatype,
+                              0, MPIR_SCAN_TAG, comm_ptr->node_comm->handle);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    else if (comm_ptr->node_roots_comm != NULL)
+    {
+        localfulldata = recvbuf;
+    }
+
+    /* do scan on localfulldata to prefulldata. for example, 
+       prefulldata on rank 4 contains reduce result of ranks 
+       1,2,3,4,5,6. it will be sent to rank 7 which is master 
+       process of node 3. */
+    int noneed = 1; /* noneed=1 means no need to bcast tempbuf and 
+                       reduce tempbuf & recvbuf */
+    if (comm_ptr->node_roots_comm != NULL)
+    {
+        mpi_errno = MPIR_Scan_or_coll_fn(localfulldata, prefulldata, count, datatype,
+                                         op, comm_ptr->node_roots_comm);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        if (MPIU_Get_internode_rank(comm_ptr, rank) != 
+            comm_ptr->node_roots_comm->local_size-1)
+        {
+            mpi_errno = MPIC_Send(prefulldata, count, datatype,
+                                  MPIU_Get_internode_rank(comm_ptr, rank) + 1,
+                                  MPIR_SCAN_TAG, comm_ptr->node_roots_comm->handle);
+            if(mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+        if (MPIU_Get_internode_rank(comm_ptr, rank) != 0)
+        {
+            mpi_errno = MPIC_Recv(tempbuf, count, datatype,
+                                  MPIU_Get_internode_rank(comm_ptr, rank) - 1, 
+                                  MPIR_SCAN_TAG, comm_ptr->node_roots_comm->handle, 
+                                  &status);
+            noneed = 0;
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+    /* now tempbuf contains all the data needed to get the correct 
+       scan result. for example, to node 3, it will have reduce result 
+       of rank 1,2,3,4,5,6 in tempbuf. 
+       then we should broadcast this result in the local node, and
+       reduce it with recvbuf to get final result if nessesary. */
+
+    if (comm_ptr->node_comm != NULL) {
+        mpi_errno = MPIR_Bcast_or_coll_fn(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+    if (noneed == 0) {
+        if (comm_ptr->node_comm != NULL) {
+            mpi_errno = MPIR_Bcast_or_coll_fn(tempbuf, count, datatype, 0, comm_ptr->node_comm);
+            if(mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+
+        /* do reduce on tempbuf and recvbuf, finish scan. */
+#ifdef HAVE_CXX_BINDING
+        int is_cxx_uop = 0;
+#endif
+        if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+            /* get the function by indexing into the op table */
+            uop = MPIR_Op_table[op%16 - 1];
+        }
+        else {
+            MPID_Op_get_ptr(op, op_ptr);
+
+#ifdef HAVE_CXX_BINDING
+            if (op_ptr->language == MPID_LANG_CXX) {
+                 uop = (MPI_User_function *) op_ptr->function.c_function;
+                 is_cxx_uop = 1;
+            }
+            else
+#endif
+            {
+                if ((op_ptr->language == MPID_LANG_C))
+                    uop = (MPI_User_function *) op_ptr->function.c_function;
+                else
+                    uop = (MPI_User_function *) op_ptr->function.f77_function;
+            }
+        }
+
+#ifdef HAVE_CXX_BINDING
+        if (is_cxx_uop) {
+            (*MPIR_Process.cxx_call_op_fn)( tempbuf, recvbuf, count, 
+                                            datatype, uop );
+        }
+        else
+#endif
+            (*uop)(tempbuf, recvbuf, &count, &datatype);
+    }
+
+  fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPI_Scan
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Scan - Computes the scan (partial reductions) of data on a collection of
@@ -307,7 +519,6 @@ Output Parameter:
 int MPI_Scan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
 	     MPI_Op op, MPI_Comm comm)
 {
-    static const char FCNAME[] = "MPI_Scan";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SCAN);
@@ -386,10 +597,24 @@ int MPI_Scan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
     {
 	MPIU_THREADPRIV_DECL;
 	MPIU_THREADPRIV_GET;
-
 	MPIR_Nest_incr();
-	mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype,
+#if defined(USE_SMP_COLLECTIVES)
+
+        /* The current algorithm assume the ranks of processes in the 
+           same node are consecutive. for example, node 1 contains rank
+           1, 2, 3; while node 2 has 4, 5, 6 and node 3 with 7, 8, 9 */
+        if (MPIR_Comm_is_node_consecutive(comm_ptr)) {
+            mpi_errno = MPIR_SMP_Scan(sendbuf, recvbuf, count,
+                                      datatype, op, comm_ptr);
+        }
+        else {
+            mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, 
+                                  op, comm_ptr);
+        }
+#else
+        mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype,
                               op, comm_ptr); 
+#endif
 	MPIR_Nest_decr();
     }
     

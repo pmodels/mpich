@@ -387,6 +387,26 @@ int MPIR_Comm_is_node_aware(MPID_Comm * comm)
     return comm->is_node_aware;
 }
 
+/* Returns true if the processes in all the nodes are consecutive. For example, 
+   if node 0 contains "0, 1, 2, 3", node 1 contains "4, 5, 6", and node 2 
+   contains "7", we shall return true. */
+int MPIR_Comm_is_node_consecutive(MPID_Comm * comm)
+{
+    if (comm->is_node_aware)
+    {
+        int i = 0, curr_nodeidx = 0;
+        int *internode_table = comm->internode_table;
+        for (; i < comm->local_size; i++)
+        {
+            if (internode_table[i] == curr_nodeidx + 1)
+                curr_nodeidx++;
+            else if (internode_table[i] != curr_nodeidx)
+                return 0;
+        }
+    }
+    return 1;
+}
+
 /*
  * Here are the routines to find a new context id.  The algorithm is discussed 
  * in detail in the mpich2 coding document.  There are versions for
