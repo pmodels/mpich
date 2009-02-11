@@ -306,7 +306,7 @@ static inline int MPIU_SHMW_Hnd_serialize(char *str,
     MPIU_Assert(str_len >= MPIU_SHMW_GHND_SZ);
 
     rc = MPIU_SHMW_Ghnd_get_by_val(hnd, str, str_len);
-    MPIU_ERR_CHKANDJUMP(rc == 0, mpi_errno, MPI_ERR_OTHER, "**shmw_gethnd");
+    MPIU_ERR_CHKANDJUMP(rc != 0, mpi_errno, MPI_ERR_OTHER, "**shmw_gethnd");
 
 fn_exit:
     return mpi_errno;
