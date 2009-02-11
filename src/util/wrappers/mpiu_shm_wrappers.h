@@ -164,8 +164,6 @@ static inline int MPIU_SHMW_Lhnd_close(MPIU_SHMW_Hnd_t hnd)
 #define MPIU_SHMW_Lhnd_close(hnd)(                                  \
     (CloseHandle(MPIU_SHMW_Lhnd_get(hnd)) != 0) ? 0 : -1            \
 )
-#endif /* USE_NT_SHM */
-
 /* Returns 0 on success, -1 on error */
 static inline int MPIU_SHMW_Ghnd_set_uniq(MPIU_SHMW_Hnd_t hnd)
 {
@@ -179,6 +177,7 @@ static inline int MPIU_SHMW_Ghnd_set_uniq(MPIU_SHMW_Hnd_t hnd)
     }
     return 0;
 }
+#endif /* USE_NT_SHM */
 
 #define MPIU_SHMW_HND_SZ    (sizeof(MPIU_SHMW_LGhnd_t))
 #define MPIU_SHMW_SER_HND_SZ MPIU_SHMW_GHND_SZ
