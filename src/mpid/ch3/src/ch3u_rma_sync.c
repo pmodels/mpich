@@ -578,7 +578,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
             (*request)->dev.OnFinal = 0;
             (*request)->dev.OnDataAvail = 0;
 
-	    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+	    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
             mpi_errno = vc->sendNoncontig_fn(vc, *request, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
 	    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
