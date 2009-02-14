@@ -54,7 +54,7 @@ int main( int argc, char *argv[] )
     /* Clear winbuf */
     memset( winbuf, 0, count*sizeof(int) );
     MPI_Win_lock( MPI_LOCK_EXCLUSIVE, rank, 0, win );
-    MPI_Put( sbuf, 1, vectype, 0, rank, 1, vectype, win );
+    MPI_Put( sbuf, 1, vectype, rank, 0, 1, vectype, win );
     MPI_Win_unlock( rank, win );
     /* Check results */
     j = 0;
@@ -69,7 +69,7 @@ int main( int argc, char *argv[] )
 
     memset( winbuf, 0, count*sizeof(int) );
     MPI_Win_lock( MPI_LOCK_SHARED, rank, 0, win );
-    MPI_Accumulate( sbuf, 1, vectype, 0, rank, 1, vectype, MPI_SUM, win );
+    MPI_Accumulate( sbuf, 1, vectype, rank, 0, 1, vectype, MPI_SUM, win );
     MPI_Win_unlock( rank, win );
     /* Check results */
     j = 0;
@@ -85,7 +85,7 @@ int main( int argc, char *argv[] )
     /* Now, use get to fetch back the results that we just wrote */
     memset( sbuf, 0, count*sizeof(int) );
     MPI_Win_lock( MPI_LOCK_SHARED, rank, 0, win );
-    MPI_Get( sbuf, 1, vectype, 0, rank, 1, vectype, win );
+    MPI_Get( sbuf, 1, vectype, rank, 0, 1, vectype, win );
     MPI_Win_unlock( rank, win );
     /* Check results */
     j = 0;
