@@ -101,9 +101,17 @@ int f2ctype_( MPI_Fint *fhandle, MPI_Fint *typeidx )
     /* printf( "Testing %s\n", mpi_names[*typeidx].name ); */
     ctype = MPI_Type_f2c( *fhandle );
     if (ctype != mpi_names[*typeidx].dtype) {
-	errs++;
-	printf( "C and Fortran types for %s do not match f=%d, ctof=%d.\n",
-		mpi_names[*typeidx].name, *fhandle, MPI_Type_c2f( ctype ) );
+	char mytypename[MPI_MAX_OBJECT_NAME];
+	int mytypenamelen;
+	/* An implementation is not *required* to deliver the 
+	   corresponding C version of the MPI Datatype bit-for-bit.  But 
+	   if *must* act like it - e.g., the datatype name must be the same */
+	MPI_Type_get_name( ctype, mytypename, &mytypenamelen );
+	if (strcmp( mytypename, mpi_names[*typeidx].name ) != 0) {
+	    errs++;
+	    printf( "C and Fortran types for %s (c name is %s) do not match f=%d, ctof=%d.\n",
+		    mpi_names[*typeidx].name, mytypename, *fhandle, MPI_Type_c2f( ctype ) );
+	}
     }
     
     return errs;
