@@ -499,7 +499,9 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
        MPIR_ThreadInfo.isThreaded hasn't been initialized yet.
     */
     /*   */
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
     MPID_CS_ENTER();
+#endif
 
 #if 0
     /* Create the thread-private region if necessary and go ahead 
@@ -532,7 +534,9 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
     /* ... end of body of routine ... */
     
     MPID_MPI_INIT_FUNC_EXIT(MPID_STATE_MPI_INIT_THREAD);
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
     MPID_CS_EXIT();
+#endif
     return mpi_errno;
     
   fn_fail:

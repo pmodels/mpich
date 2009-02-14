@@ -163,9 +163,9 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     {
 	goto fn_exit;
     }
-    
-    MPID_Progress_start(&progress_state);
 
+    /* Grequest_waitall may run the progress engine - thus, we don't 
+       invoke progress_start until after running Grequest_waitall */
     /* first, complete any generalized requests */
     if (n_greqs)
     {
@@ -173,6 +173,8 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
         if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     }
     
+    MPID_Progress_start(&progress_state);
+
     for (i = 0; i < count; i++)
     {
         if (request_ptrs[i] == NULL)

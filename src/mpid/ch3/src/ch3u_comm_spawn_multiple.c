@@ -167,7 +167,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	/* FIXME: info may be needed for port name */
         mpi_errno = MPID_Open_port(NULL, port_name);
 	/* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno != MPI_SUCCESS)
+        if (mpi_errno != MPI_SUCCESS) 
 	{
 	    MPIU_ERR_POP(mpi_errno);
 	}
@@ -177,6 +177,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
         preput_keyval_vector.val = port_name;
 
 	/* Spawn the processes */
+	MPIU_THREAD_CS_ENTER(PMI,);
         pmi_errno = PMI_Spawn_multiple(count, (const char **)
                                        commands, 
                                        (const char ***) argvs,
@@ -185,7 +186,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                        info_keyval_vectors, 1, 
                                        &preput_keyval_vector,
                                        pmi_errcodes);
-
+	MPIU_THREAD_CS_EXIT(PMI,);
         if (pmi_errno != PMI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
 		 "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
@@ -284,7 +285,9 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
 	char *kvsname = NULL;
 	/* We can always use PMI_KVS_Get on our own process group */
 	MPIDI_PG_GetConnKVSname( &kvsname );
+	MPIU_THREAD_CS_ENTER(PMI,);
 	pmi_errno = PMI_KVS_Get( kvsname, PARENT_PORT_KVSKEY, val, sizeof(val));
+	MPIU_THREAD_CS_EXIT(PMI,);
 	if (pmi_errno) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
             goto fn_exit;

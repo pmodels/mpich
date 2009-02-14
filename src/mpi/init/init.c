@@ -90,7 +90,9 @@ int MPI_Init( int *argc, char ***argv )
        MPIU_THREAD_SINGLE_CS_ENTER/EXIT because
        MPIR_ThreadInfo.isThreaded hasn't been initialized yet.
     */
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
     MPID_CS_ENTER();
+#endif
     
     MPID_MPI_INIT_FUNC_ENTER(MPID_STATE_MPI_INIT);
 #   ifdef HAVE_ERROR_CHECKING
@@ -144,7 +146,9 @@ int MPI_Init( int *argc, char ***argv )
     /* ... end of body of routine ... */
     
     MPID_MPI_INIT_FUNC_EXIT(MPID_STATE_MPI_INIT);
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
     MPID_CS_EXIT();
+#endif
     return mpi_errno;
     
   fn_fail:

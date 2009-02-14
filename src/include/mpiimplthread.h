@@ -11,8 +11,9 @@
 #error 'This file requires mpichconf.h'
 #endif
 
-/* FIXME: TEMP - should make sure enable-g set this */
-/* #define MPID_THREAD_DEBUG */
+#if !defined(MPID_THREAD_DEBUG) && defined(MPICH_DEBUG_MUTEXNESTING) 
+#define MPID_THREAD_DEBUG 1
+#endif
 
 /* Rather than embed a conditional test in the MPICH2 code, we define a 
    single value on which we can test */
@@ -419,13 +420,22 @@ typedef struct MPIU_ThreadDebug {
 	      _nest_ptr[MPIUNest_##_name].file, \
 	      _nest_ptr[MPIUNest_##_name].line,\
 	      _nest_ptr[MPIUNest_##_name].fname );			       \
-      fflush(stdout); \
+      fflush(stderr); \
     }}}
 #define MPIU_THREAD_UPDATEDEPTH(_name,_value)	 {if (1){	\
 	MPIU_ThreadDebug_t *_nest_ptr=0;\
 	MPID_Thread_tls_get( &MPIR_ThreadInfo.nest_storage, &_nest_ptr );\
 	if (!_nest_ptr) { _nest_ptr = (MPIU_ThreadDebug_t*)MPIU_Calloc(2,sizeof(MPIU_ThreadDebug_t));\
 	    MPID_Thread_tls_set( &MPIR_ThreadInfo.nest_storage,_nest_ptr);}\
+	    if (_nest_ptr[MPIUNest_##_name].count +_value< 0) {\
+                fprintf(stderr, "%s:%d %s = %d (<0); previously set in %s:%d(%s)\n",\
+	          __FILE__, __LINE__,  #_name, 			\
+	          _nest_ptr[MPIUNest_##_name].count,		\
+	          _nest_ptr[MPIUNest_##_name].file, \
+	          _nest_ptr[MPIUNest_##_name].line,\
+	          _nest_ptr[MPIUNest_##_name].fname );	       \
+                fflush(stderr); \
+	     }\
 	_nest_ptr[MPIUNest_##_name].count += _value;\
 	_nest_ptr[MPIUNest_##_name].line = __LINE__;			\
 	MPIU_Strncpy( _nest_ptr[MPIUNest_##_name].file, __FILE__, MPIU_THREAD_LOC_LEN );	\
@@ -444,7 +454,7 @@ typedef struct MPIU_ThreadDebug {
 #endif /* MPID_THREAD_DEBUG */
 #else
 #define MPIU_THREAD_CHECKNEST(_name)
-#endif
+#endif /* test on THREAD_GRANULARITY */
 
 #define MPIU_THREAD_CS_ENTER_LOCKNAME(_name) \
 {								\
@@ -467,7 +477,6 @@ typedef struct MPIU_ThreadDebug {
     }								\
 }
 
-
 /* Definitions of the thread support for various levels of thread granularity */
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
@@ -485,6 +494,8 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context)
 #define MPIU_THREAD_CS_ENTER_INITFLAG(_context)
 #define MPIU_THREAD_CS_EXIT_INITFLAG(_context)
+#define MPIU_THREAD_CS_ENTER_PMI(_context) 
+#define MPIU_THREAD_CS_EXIT_PMI(_context) 
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL
 /* There is a single, global lock, held only when needed */
@@ -518,6 +529,13 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_ENTER_INITFLAG(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
 #define MPIU_THREAD_CS_EXIT_INITFLAG(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+   /* PMI for spawn needs to be single-threaded - this allows us to add 
+      PMI calls where no other mutex may be active.  This is a temporary
+      fix for brief-global only */
+#define MPIU_THREAD_CS_ENTER_PMI(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_PMI(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
@@ -577,6 +595,10 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_ENTER_INITFLAG(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
 #define MPIU_THREAD_CS_EXIT_INITFLAG(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_ENTER_PMI(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_PMI(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
