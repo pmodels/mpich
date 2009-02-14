@@ -86,6 +86,10 @@ static MPIDI_CH3I_Connection_t * MPIDI_CH3I_listener_conn = NULL;
 /* Required for (socket version) upcall to Connect_to_root (see FIXME) */
 extern MPIDU_Sock_set_t MPIDI_CH3I_sock_set;
 
+#undef FUNCNAME
+#define FUNCNAME MPIDU_CH3I_SetupListener
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDU_CH3I_SetupListener( MPIDU_Sock_set_t sock_set )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -116,6 +120,10 @@ int MPIDU_CH3I_SetupListener( MPIDU_Sock_set_t sock_set )
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDU_CH3I_ShutdownListener
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDU_CH3I_ShutdownListener( void )
 {
     int mpi_errno;
