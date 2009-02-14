@@ -227,7 +227,7 @@ for net in $nemesis_networks ; do
 
     net_index=`expr $net_index + 1`
 
-    if test "${net}" == "gm" ; then 
+    if test "${net}" = "gm" ; then 
         AC_CHECK_HEADER([gm.h], , [
             AC_MSG_ERROR(['gm.h not found.  Did you specify --with-gm= or --with-gm-include=?'])
     	    ])
@@ -236,7 +236,7 @@ for net in $nemesis_networks ; do
     	    ])
     fi
 
-    if test "${net}" == "ib" ; then 
+    if test "${net}" = "ib" ; then 
         AC_CHECK_HEADER([verbs.h], , [
             AC_MSG_ERROR(['verbs.h not found.  Did you specify --with-ib= or --with-ib-include=?'])
         ])
@@ -245,7 +245,7 @@ for net in $nemesis_networks ; do
         ])
     fi;
 
-    if test "${net}" == "mx" ; then
+    if test "${net}" = "mx" ; then
         AC_CHECK_HEADER([myriexpress.h], , [
             AC_MSG_ERROR(['myriexpress.h not found.  Did you specify --with-mx= or --with-mx-include=?'])
         ])
@@ -255,7 +255,7 @@ for net in $nemesis_networks ; do
         ])
     fi;
 
-    if test "${net}" == "elan" ; then
+    if test "${net}" = "elan" ; then
     echo "=== You're about to use the experimental Nemesis/Elan network module." 
     echo "=== This module has not been thoroughly tested and some performance issues remain."
 
@@ -267,7 +267,7 @@ for net in $nemesis_networks ; do
         ])
     fi;
 
-    if test "${net}" == "psm" ; then
+    if test "${net}" = "psm" ; then
         AC_CHECK_HEADER([psm.h], , [
             AC_MSG_ERROR(['psm.h not found.  Did you specify --with-psm= or --with-psm-include=?'])
     ])

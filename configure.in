@@ -278,13 +278,20 @@ AC_ARG_ENABLE(g,
 [--enable-g=option - Control the level of debugging support in the MPICH
 implementation.  option is a list of comma separated names including
     none     - No debugging
-    mem      - Memory usage tracing
     handle   - Trace handle operations
+    handlealloc - Trace hancle allocations
     dbg      - Add compiler flag, -g, to CFLAGS, CXXFLAGS FFLAGS and F90FLAGS.
+    debug    - Synonym for dbg
     log      - Enable debug event logging
+    mem      - Memory usage tracing
     meminit  - Preinitialize memory associated structures and unions to
                eliminate access warnings from programs like valgrind
+    memarena - Check for overwrite errors in memory allocation arena
     mutex    - Enable error checking on pthread mutexes
+    mutexnesting - Check for non-nesting of mutexes
+    nesting  - Check for proper nesting values
+    fine-grain-nesting - Perform a fine-grain nesting check on exit
+    
     all      - All of the above choices],,enable_g=none)
 dnl
 dnl We may want to force MPI_Aint to be the same size as MPI_Offset, 
@@ -1136,6 +1143,9 @@ for option in $enable_g ; do
 	mutex)
 	perform_dbgmutex=yes
 	;;
+	mutexnesting)
+	perform_mutexnesting=yes
+	;;
 	all|yes)
 	perform_memtracing=yes
 	perform_nesttesting=yes
@@ -1143,6 +1153,7 @@ for option in $enable_g ; do
 	enable_append_g=yes
 	perform_meminit=yes
 	perform_dbgmutex=yes
+	perform_mutexnesting=yes
 	perform_handlealloc=yes
 	;;
 	*)
@@ -1196,6 +1207,9 @@ if test -n "$perform_memtracing" ; then
 fi
 if test -n "$perform_nesttesting" ; then
     AC_DEFINE(MPICH_DEBUG_NESTING,1,[Define to check nesting level on exit])
+fi
+if test -n "$perform_mutexnesting" ; then 
+    AC_DEFINE(MPICH_DEBUG_MUTEXNESTING,1,[Define to check nesting in mutexes])
 fi
 if test -n "$perform_fg_nesttesting" ; then
     AC_DEFINE(MPICH_DEBUG_FINE_GRAIN_NESTING,1,[Define to perform a fine-grain nesting level check on exit])
@@ -5340,7 +5354,7 @@ dnl platform.
 	    ;;
     esac
 
-    if test "$cpu_gcc_x86_cycle" == "no" ; then
+    if test "$cpu_gcc_x86_cycle" = "no" ; then
         AC_MSG_ERROR([Linux86 cycle counter is not available on this system and or with the $CC compiler])
     fi
     MPID_TIMER_TYPE="long long"
