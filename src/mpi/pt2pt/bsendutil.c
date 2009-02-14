@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/* -*- MODE: C; c-basic-offset:4 ; -*- */
 /*
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
@@ -137,6 +137,10 @@ static int MPIR_Bsend_finalize( void * );
  * Attach a buffer.  This checks for the error conditions and then
  * initialized the avail buffer.
  */    
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bsend_attach
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIR_Bsend_attach( void *buffer, int buffer_size )
 {
     BsendData_t *p;
@@ -202,6 +206,10 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
  * Detach a buffer.  This routine must wait until any pending bsends 
  * are complete.
  */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bsend_detach
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIR_Bsend_detach( void *bufferp, int *size )
 {
     if (BsendBuffer.pending) {
@@ -242,6 +250,10 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
 /*
  * Initiate an ibsend.  We'll used this for Bsend as well.
  */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bsend_isend
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype, 
 		      int dest, int tag, MPID_Comm *comm_ptr, 
 		      BsendKind_t kind, MPID_Request **request )
@@ -358,6 +370,10 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
 /* Add block p to the free list. Merge into adjacent blocks.  Used only 
    within the check_active */
 /* begin:nested */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bsend_free_segment
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 static void MPIR_Bsend_free_segment( BsendData_t *p )
 {
     BsendData_t *prev = p->prev, *avail = BsendBuffer.avail, *avail_prev;
@@ -447,6 +463,10 @@ static void MPIR_Bsend_free_segment( BsendData_t *p )
  * track of the type of MPI routine (ibsend, bsend, or bsend_init/start)
  * that created the bsend entry.
  */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bsend_check_active
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 static void MPIR_Bsend_check_active( void )
 {
     BsendData_t *active = BsendBuffer.active, *next_active;

@@ -371,6 +371,10 @@ void MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
  * Note that this uses a thread-safe initialization procedure in the
  * event that multiple threads invoke this routine
  */
+#undef FUNCNAME
+#define FUNCNAME MPID_Wtick
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 double MPID_Wtick( void )
 {
     MPIU_THREADSAFE_INIT_DECL(initTick);
