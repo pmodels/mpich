@@ -18,6 +18,8 @@ int main( int argc, char *argv[] )
 
     MTest_Init( &argc, &argv );
 
+    /* MPI 2.1, page 246, lines 29-30 make it clear that this is a valid
+       (not erroneous) call that must return MPI_COMM_NULL */
     MPI_Graph_create( MPI_COMM_WORLD, 0, index, edges, 0, &comm );
     if (comm != MPI_COMM_NULL) {
 	errs++;
