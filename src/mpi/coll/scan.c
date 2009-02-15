@@ -328,6 +328,9 @@ static int MPIR_SMP_Scan(
     MPI_Aint  true_lb, true_extent, extent; 
     MPI_User_function *uop;
     MPID_Op *op_ptr;
+    int noneed = 1; /* noneed=1 means no need to bcast tempbuf and 
+                       reduce tempbuf & recvbuf */
+
     mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb, &true_extent);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno); 
 
@@ -395,8 +398,6 @@ static int MPIR_SMP_Scan(
        prefulldata on rank 4 contains reduce result of ranks 
        1,2,3,4,5,6. it will be sent to rank 7 which is master 
        process of node 3. */
-    int noneed = 1; /* noneed=1 means no need to bcast tempbuf and 
-                       reduce tempbuf & recvbuf */
     if (comm_ptr->node_roots_comm != NULL)
     {
         mpi_errno = MPIR_Scan_or_coll_fn(localfulldata, prefulldata, count, datatype,
@@ -434,15 +435,15 @@ static int MPIR_SMP_Scan(
     }
 
     if (noneed == 0) {
+#ifdef HAVE_CXX_BINDING
+        int is_cxx_uop = 0;
+#endif
         if (comm_ptr->node_comm != NULL) {
             mpi_errno = MPIR_Bcast_or_coll_fn(tempbuf, count, datatype, 0, comm_ptr->node_comm);
             if(mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
         /* do reduce on tempbuf and recvbuf, finish scan. */
-#ifdef HAVE_CXX_BINDING
-        int is_cxx_uop = 0;
-#endif
         if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
             /* get the function by indexing into the op table */
             uop = MPIR_Op_table[op%16 - 1];
