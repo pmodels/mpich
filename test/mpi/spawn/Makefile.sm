@@ -10,6 +10,7 @@ spawnminfo1_SOURCES = spawnminfo1.c
 spawn2_SOURCES = spawn2.c
 spawnintra_SOURCES = spawnintra.c
 spawnargv_SOURCES = spawnargv.c
+spawnmanyarg_SOURCES = spawnmanyarg.c
 spaconacc_SOURCES = spaconacc.c
 spaconacc2_SOURCES = spaconacc2.c
 selfconacc_SOURCES = selfconacc.c
