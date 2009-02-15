@@ -746,8 +746,14 @@ int PMI_Spawn_multiple(int count,
             {
 		/* FIXME (protocol design flaw): command line arguments
 		   may contain both = and <space> (and even tab!).
-		   Also, command line args may be quite long, leading to 
-		   errors when PMIU_MAXLINE is exceeded */
+		*/
+		/* Note that part of this fixme was really a design error -
+		   because this uses the mcmd form, the data can be
+		   sent in multiple writelines.  This code now takes 
+		   advantage of that.  Note also that a correct parser 
+		   of the commands will permit any character other than a 
+		   new line in the argument, since the form is 
+		   argn=<any nonnewline><newline> */
                 rc = MPIU_Snprintf(tempbuf,PMIU_MAXLINE,"arg%d=%s\n",
 				   i+1,argvs[spawncnt][i]);
 		if (rc < 0) {
@@ -758,6 +764,9 @@ int PMI_Spawn_multiple(int count,
 		    return PMI_FAIL;
 		}
                 argcnt++;
+		rc = PMIU_writeline( PMI_fd, buf );
+		buf[0] = 0;
+
             }
         }
         rc = MPIU_Snprintf(tempbuf,PMIU_MAXLINE,"argcnt=%d\n",argcnt);
