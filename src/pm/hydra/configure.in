@@ -44,18 +44,18 @@ dnl Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca snprintf unsetenv strerror strsignal)
 
 dnl Check what we need to do about the environ extern
-AC_CACHE_CHECK([for environ in unistd.h],environ_in_unistd,
+AC_CACHE_CHECK([for environ in unistd.h],pac_cv_environ_in_unistd,
 	[AC_TRY_COMPILE([#include <unistd.h>],[char **x = environ;],
-	environ_in_unistd=yes,environ_in_unistd=no)])
-if test "$environ_in_unistd" = "yes" ; then
+	pac_cv_environ_in_unistd=yes,pac_cv_environ_in_unistd=no)])
+if test "$pac_cv_environ_in_unistd" = "yes" ; then
     # We have environ defined in unistd.h; we are done
     AC_DEFINE(HAVE_EXTERN_ENVIRON,1,[Define if environ extern is available])
 else
     # See if we can declare it
-    AC_CACHE_CHECK([for manually declared extern environ], manual_extern_environ,
+    AC_CACHE_CHECK([for manually declared extern environ], pac_cv_manual_extern_environ,
    	[AC_TRY_LINK([#include <unistd.h>],[extern char ** environ; char **x = environ;],
-	manual_extern_environ=yes,manual_extern_environ=no)])
-    if test "$manual_extern_environ" = "yes" ; then
+	pac_cv_manual_extern_environ=yes,pac_cv_manual_extern_environ=no)])
+    if test "$pac_cv_manual_extern_environ" = "yes" ; then
         # We can manually declare the extern
         AC_DEFINE(MANUAL_EXTERN_ENVIRON,1,[Define if environ decl needed])
         AC_DEFINE(HAVE_EXTERN_ENVIRON,1,[Define if environ extern is available])
