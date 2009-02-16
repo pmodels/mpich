@@ -10,6 +10,7 @@ red4 10
 alltoall1 8
 alltoallv 10
 alltoallv0 10
+alltoallw1 10
 alltoallw2 10
 allgather2 10
 allgather3 10
