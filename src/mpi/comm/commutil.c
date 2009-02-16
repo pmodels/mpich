@@ -283,7 +283,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
            the second communicator is useless and wasteful. */
         if (num_external == comm->remote_size) {
             MPIU_Assert(num_local == 1);
-            goto fn_fail;
+            goto fn_exit;
         }
 
         /* FIXME could just use the same ctxid and a different tag like
@@ -387,23 +387,25 @@ int MPIR_Comm_is_node_aware(MPID_Comm * comm)
     return comm->is_node_aware;
 }
 
-/* Returns true if the processes in all the nodes are consecutive. For example, 
-   if node 0 contains "0, 1, 2, 3", node 1 contains "4, 5, 6", and node 2 
-   contains "7", we shall return true. */
+/* Returns true if the communicator is node-aware and processes in all the nodes
+   are consecutive. For example, if node 0 contains "0, 1, 2, 3", node 1
+   contains "4, 5, 6", and node 2 contains "7", we shall return true. */
 int MPIR_Comm_is_node_consecutive(MPID_Comm * comm)
 {
-    if (comm->is_node_aware)
+    int i = 0, curr_nodeidx = 0;
+    int *internode_table = comm->internode_table;
+
+    if (!comm->is_node_aware)
+        return 0;
+
+    for (; i < comm->local_size; i++)
     {
-        int i = 0, curr_nodeidx = 0;
-        int *internode_table = comm->internode_table;
-        for (; i < comm->local_size; i++)
-        {
-            if (internode_table[i] == curr_nodeidx + 1)
-                curr_nodeidx++;
-            else if (internode_table[i] != curr_nodeidx)
-                return 0;
-        }
+        if (internode_table[i] == curr_nodeidx + 1)
+            curr_nodeidx++;
+        else if (internode_table[i] != curr_nodeidx)
+            return 0;
     }
+
     return 1;
 }
 
