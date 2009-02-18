@@ -90,6 +90,8 @@ int main( int argc, char **argv )
 
         for (i=0; i<(size*block_size); i++) 
             sendbuf[i] = rank + i;
+        for (i=0; i<block_size; i++)
+            recvbuf[i] = 0xdeadbeef;
         recvcounts = (int *)malloc( size * sizeof(int) );
         for (i=0; i<size; i++) 
             recvcounts[i] = block_size;
