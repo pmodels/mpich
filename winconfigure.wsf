@@ -2418,6 +2418,14 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_GCC_AND_X86_64_ASM */")
 				Case "HAVE_GCC_AND_IA64_ASM"
 					fout.WriteLine("/* #undef HAVE_GCC_AND_IA64_ASM */")
+				Case "HAVE_GCC_AND_SICORTEX_ASM"
+					fout.WriteLine("/* #undef HAVE_GCC_AND_SICORTEX_ASM */")
+				Case "HAVE_GCC_INTRINSIC_ATOMICS"
+					fout.WriteLine("/* #undef HAVE_GCC_INTRINSIC_ATOMICS */")
+				Case "HAVE_SUN_ATOMIC_OPS"
+					fout.WriteLine("/* #undef HAVE_SUN_ATOMIC_OPS */")
+				Case "SYNC_LOCK_TEST_AND_SET_IS_SWAP"
+					fout.WriteLine("/* #undef SYNC_LOCK_TEST_AND_SET_IS_SWAP */")
 				Case "NEEDS_SYS_TIME_H"
 					fout.WriteLine("/* #undef NEEDS_SYS_TIME_H */")
 				Case "HAVE_ALARM"
@@ -2984,8 +2992,14 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#undef LINUX86_CYCLE_RDTSC")
 				Case "LINUX86_CYCLE_RDTSCP"
 					fout.WriteLine("#undef LINUX86_CYCLE_RDTSCP")
+                                Case "LINUX86_CYCLE_CPUID_RDTSC32"
+                                        fout.WriteLine("/* #undef LINUX86_CYCLE_CPUID_RDTSC32 */")
+                                Case "LINUX86_CYCLE_CPUID_RDTSC64"
+                                        fout.WriteLine("/* #undef LINUX86_CYCLE_CPUID_RDTSC64 */")
 				Case "MPICH2_LIBDIR"
 					fout.WriteLine("#undef MPICH2_LIBDIR")
+                                Case "MPICH_DEBUG_MUTEXNESTING"
+                                        fout.WriteLine("/* #undef MPICH_DEBUG_MUTEXNESTING */")
 				Case "MPICH_DEBUG_MEMARENA"
 					fout.WriteLine("#undef MPICH_DEBUG_MEMARENA")
 				Case "MPICH_DEBUG_MUTEX"
@@ -3058,6 +3072,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef HAVE_KNEM_IO_H */")
                                 Case "MPID_NEM_LOCAL_LMT_IMPL"
                                         fout.WriteLine("/* #undef MPID_NEM_LOCAL_LMT_IMPL */")
+                                Case "MPID_NEM_USE_LOCK_FREE_QUEUES"
+                                        fout.WriteLine("#define MPID_NEM_USE_LOCK_FREE_QUEUES 1")
                                 Case "USE_MMAP_SHM"
                                         fout.WriteLine("/* #undef USE_MMAP_SHM */")
                                 Case "USE_SYSV_SHM"
