@@ -920,7 +920,7 @@ static inline int MPIU_SOCKW_Waitset_sock_hnd_get_user_ptr(
     int mpi_errno = MPI_SUCCESS;
 
     MPIU_Assert(MPIU_SOCKW_Waitset_sock_hnd_is_init_(sock_hnd));
-    MPIU_Assert(user_ptr);
+    MPIU_Assert(userp_ptr);
 
     *userp_ptr = sock_hnd->user_ptr;
 
