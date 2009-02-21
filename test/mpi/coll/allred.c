@@ -269,6 +269,7 @@ struct double_test { double a; int b; };
     {                                                               \
         test_types_set1(op, post);                                  \
         op##_test##post(unsigned char, MPI_UNSIGNED_CHAR);          \
+        op##_test##post(unsigned char, MPI_BYTE);                   \
     }
 
 #define test_types_set3(op, post)               \
