@@ -372,11 +372,21 @@ sub AddTestCall {
 		print TESTFD "    int i$narg = $narg;\n";
 		$args[$#args+1] = "i$narg";
 	    }
+            elsif ($type eq "x")
+            {
+                print TESTFD "    int i$narg = $narg;\n";
+                $args[$#args+1] = "i$narg";
+            }
 	    elsif ($type eq "L") 
 	    {
 		print TESTFD "    long long i$narg = $narg;\n";
 		$args[$#args+1] = "i$narg";
 	    }
+            elsif ($type eq "X")
+            {
+                print TESTFD "    long long i$narg = $narg;\n";
+                $args[$#args+1] = "i$narg";
+            }
 	    elsif ($type eq "i")
 	    {
 		print TESTFD "    int i$narg = $narg;\n";
@@ -720,7 +730,7 @@ sub ProcessFile
 		    if ($followchar ne "%") {
 			$nargs ++;
 		    }
-		    if (! ($followchar =~ /[%sditpDCRWOEIGFAL]/) ) {
+                    if (! ($followchar =~ /[%sdxitpDCRWOEIGFALX]/) ) {
 			print STDERR "Warning: Unrecognized format specifier in specific message $specific_msg in $filename\n";
 		    }
 		}

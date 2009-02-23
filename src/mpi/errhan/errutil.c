@@ -962,6 +962,14 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    ll = va_arg(list, long long);
 	    MPIU_Snprintf(str, maxlen, "%lld", ll);
 	    break;
+        case (int)'x':
+            d = va_arg(list, int);
+            MPIU_Snprintf(str, maxlen, "%x", d);
+            break;
+        case (int)'X':
+            ll = va_arg(list, long long);
+            MPIU_Snprintf(str, maxlen, "%llx", ll);
+            break;
 	case (int)'i':
 	    i = va_arg(list, int);
 	    switch (i)
