@@ -11,6 +11,12 @@
 #include <unistd.h>
 #include "mpidi_ch3i_nemesis_conf.h"
 
+/* for ATTRIBUTE */
+#include "mpichconf.h"
+#include "mpibase.h"
+/* here to prevent "has no symbols" warnings from ranlib on OS X */
+static int dummy ATTRIBUTE((unused)) = 0;
+
 #if !defined (HAVE_MKSTEMP) || !HAVE_MKSTEMP
 
 #warning The mkstemp function is not provided in the standard library.
