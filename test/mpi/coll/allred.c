@@ -263,16 +263,11 @@ struct double_test { double a; int b; };
         op##_test##post(unsigned short, MPI_UNSIGNED_SHORT);        \
         op##_test##post(unsigned, MPI_UNSIGNED);                    \
         op##_test##post(unsigned long, MPI_UNSIGNED_LONG);          \
-    }
-
-#define test_types_set2(op, post)                                   \
-    {                                                               \
-        test_types_set1(op, post);                                  \
         op##_test##post(unsigned char, MPI_UNSIGNED_CHAR);          \
         op##_test##post(unsigned char, MPI_BYTE);                   \
     }
 
-#define test_types_set3(op, post)               \
+#define test_types_set2(op, post)               \
     {                                           \
         test_types_set1(op, post);              \
         op##_test##post(float, MPI_FLOAT);      \
@@ -287,10 +282,10 @@ int main( int argc, char **argv )
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     count = 10;
 
-    test_types_set3(sum, 1);
-    test_types_set3(prod, 1);
-    test_types_set3(max, 1);
-    test_types_set3(min, 1);
+    test_types_set2(sum, 1);
+    test_types_set2(prod, 1);
+    test_types_set2(max, 1);
+    test_types_set2(min, 1);
 
     test_types_set1(lor, 1);
     test_types_set1(lor, 2);
@@ -302,9 +297,8 @@ int main( int argc, char **argv )
     test_types_set1(land, 1);
     test_types_set1(land, 2);
 
-    test_types_set2(bor, 1);
-
-    test_types_set2(band, 1);
+    test_types_set1(bor, 1);
+    test_types_set1(band, 1);
     test_types_set1(band, 2);
 
     test_types_set1(bxor, 1);
