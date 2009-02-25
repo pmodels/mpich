@@ -264,7 +264,6 @@ struct double_test { double a; int b; };
         op##_test##post(unsigned, MPI_UNSIGNED);                    \
         op##_test##post(unsigned long, MPI_UNSIGNED_LONG);          \
         op##_test##post(unsigned char, MPI_UNSIGNED_CHAR);          \
-        op##_test##post(unsigned char, MPI_BYTE);                   \
     }
 
 #define test_types_set2(op, post)               \
@@ -272,6 +271,11 @@ struct double_test { double a; int b; };
         test_types_set1(op, post);              \
         op##_test##post(float, MPI_FLOAT);      \
         op##_test##post(double, MPI_DOUBLE);    \
+    }
+
+#define test_types_set3(op, post)                                   \
+    {                                                               \
+        op##_test##post(unsigned char, MPI_BYTE);                   \
     }
 
 int main( int argc, char **argv )
@@ -304,6 +308,14 @@ int main( int argc, char **argv )
     test_types_set1(bxor, 1);
     test_types_set1(bxor, 2);
     test_types_set1(bxor, 3);
+
+    test_types_set3(bor, 1);
+    test_types_set3(band, 1);
+    test_types_set3(band, 2);
+
+    test_types_set3(bxor, 1);
+    test_types_set3(bxor, 2);
+    test_types_set3(bxor, 3);
 
     maxloc_test(struct int_test, MPI_2INT);
     maxloc_test(struct long_test, MPI_LONG_INT);
