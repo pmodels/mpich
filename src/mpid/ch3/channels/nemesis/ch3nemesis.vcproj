@@ -118,7 +118,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				GenerateDebugInformation="true"
+				GenerateDebugInformation="false"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -332,9 +332,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -396,9 +398,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"

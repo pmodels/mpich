@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="impgen"
 	ProjectGUID="{68A6C7AD-9713-4315-9ABE-B47E22E5E0A9}"
+	RootNamespace="impgen"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -151,9 +152,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"

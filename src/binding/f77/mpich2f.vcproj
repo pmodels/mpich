@@ -158,9 +158,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -236,9 +238,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -474,9 +478,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -717,9 +723,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"

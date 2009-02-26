@@ -164,9 +164,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"

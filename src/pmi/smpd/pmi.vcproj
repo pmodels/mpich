@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="pmi"
 	ProjectGUID="{97B727A6-0F41-4E8E-A524-FC0F30D3AC8A}"
+	RootNamespace="pmi"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -130,9 +131,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"
