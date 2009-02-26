@@ -7,6 +7,7 @@
 #ifndef MPID_NEM_DEFS_H
 #define MPID_NEM_DEFS_H
 
+#include "mpidi_ch3_conf.h"
 #include "mpitypedefs.h"
 #include "mpid_nem_datatypes.h"
 #include "mpi.h"
