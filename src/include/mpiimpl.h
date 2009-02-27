@@ -35,12 +35,6 @@
    do not want mpi.h to depend on any other files or configure flags */
 #include "mpichconf.h"
 
-/* Adding the 32-bit compute/64-bit I/O related type-casts in here as
- * they are not a part of the MPI standard yet. */
-#define MPI_AINT_CAST_TO_VOID_PTR (void *)(MPIR_Pint)
-#define MPI_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(MPIR_Upint)
-#define MPI_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(MPIR_Pint)
-
 #include <stdio.h>
 #ifdef STDC_HEADERS
 #include <stdlib.h>

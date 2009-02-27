@@ -105,6 +105,13 @@ typedef MPIU_SIZE_T MPIU_Size_t;
 #else
 #define MPIU_AintToPtr(a) (void*)(a)
 #endif
+
+/* Adding the 32-bit compute/64-bit I/O related type-casts in here as
+ * they are not a part of the MPI standard yet. */
+#define MPI_AINT_CAST_TO_VOID_PTR (void *)(MPIR_Pint)
+#define MPI_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(MPIR_Upint)
+#define MPI_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(MPIR_Pint)
+
 /* ------------------------------------------------------------------------- */
 /* end of mpitypedefs.h */
 /* ------------------------------------------------------------------------- */
