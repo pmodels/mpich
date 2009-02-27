@@ -2979,7 +2979,7 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "HAVE_PTHREAD_CLEANUP_PUSH_MACRO"
 					fout.WriteLine("#undef HAVE_PTHREAD_CLEANUP_PUSH_MACRO")
 				Case "HAVE_RUNTIME_THREADCHECK"
-					fout.WriteLine("#undef HAVE_RUNTIME_THREADCHECK")
+					fout.WriteLine("#define HAVE_RUNTIME_THREADCHECK 1")
 				Case "HAVE_SCHED_GETAFFINITY"
 					fout.WriteLine("#undef HAVE_SCHED_GETAFFINITY")
 				Case "HAVE_SCHED_SETAFFINITY"
@@ -3071,7 +3071,7 @@ Sub AddDefinitions( fout, filename, b64 )
                                 Case "HAVE_KNEM_IO_H"
                                         fout.WriteLine("/* #undef HAVE_KNEM_IO_H */")
                                 Case "MPID_NEM_LOCAL_LMT_IMPL"
-                                        fout.WriteLine("/* #undef MPID_NEM_LOCAL_LMT_IMPL */")
+                                        fout.WriteLine("#define MPID_NEM_LOCAL_LMT_IMPL MPID_NEM_LOCAL_LMT_SHM_COPY")
                                 Case "MPID_NEM_USE_LOCK_FREE_QUEUES"
                                         fout.WriteLine("#define MPID_NEM_USE_LOCK_FREE_QUEUES 1")
                                 Case "USE_MMAP_SHM"
