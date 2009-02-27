@@ -272,7 +272,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
        to the C++ compiler (e.g., under more non-GNU compilers, including
        Solaris and IRIX). */
     MPIR_Process.cxx_call_op_fn = 0;
-    MPIR_Process.cxx_call_delfn = 0;
 
 #endif
     /* This allows the device to select an alternative function for 

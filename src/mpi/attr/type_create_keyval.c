@@ -100,11 +100,12 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function *type_copy_attr_fn,
 	(MPID_DATATYPE << 22);
     *type_keyval		 = keyval_ptr->handle;
     MPIU_Object_set_ref(keyval_ptr,1);
-    keyval_ptr->language         = MPID_LANG_C;
     keyval_ptr->kind	         = MPID_DATATYPE;
     keyval_ptr->extra_state      = extra_state;
-    keyval_ptr->copyfn.C_CopyFunction  = type_copy_attr_fn;
-    keyval_ptr->delfn.C_DeleteFunction = type_delete_attr_fn;
+    keyval_ptr->copyfn.user_function = type_copy_attr_fn;
+    keyval_ptr->copyfn.proxy = MPIR_Attr_copy_c_proxy;
+    keyval_ptr->delfn.user_function = type_delete_attr_fn;
+    keyval_ptr->delfn.proxy = MPIR_Attr_delete_c_proxy;
 
     /* Tell finalize to check for attributes on permenant types */
     MPIR_DatatypeAttrFinalize();

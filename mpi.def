@@ -709,6 +709,7 @@ EXPORTS
     MPIR_TypeSetAttr
     MPIR_WinSetAttr
     MPIR_WinGetAttr
+    MPIR_Keyval_set_proxy
 	MPIR_Keyval_set_fortran
 	MPIR_Keyval_set_fortran90
 	MPIR_Grequest_set_lang_f77

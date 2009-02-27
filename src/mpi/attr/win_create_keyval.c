@@ -100,11 +100,12 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function *win_copy_attr_fn,
 	(MPID_WIN << 22);
     *win_keyval		         = keyval_ptr->handle;
     MPIU_Object_set_ref(keyval_ptr,1);
-    keyval_ptr->language         = MPID_LANG_C;
     keyval_ptr->kind	         = MPID_WIN;
     keyval_ptr->extra_state      = extra_state;
-    keyval_ptr->copyfn.C_CopyFunction  = win_copy_attr_fn;
-    keyval_ptr->delfn.C_DeleteFunction = win_delete_attr_fn;
+    keyval_ptr->copyfn.user_function = win_copy_attr_fn;
+    keyval_ptr->copyfn.proxy = MPIR_Attr_copy_c_proxy;
+    keyval_ptr->delfn.user_function = win_delete_attr_fn;
+    keyval_ptr->delfn.proxy = MPIR_Attr_delete_c_proxy;
     
     /* ... end of body of routine ... */
 

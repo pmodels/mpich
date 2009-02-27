@@ -87,6 +87,7 @@
 
 /* mpi.h includes the definitions of MPI_Fint */
 #include "mpi.h"
+#include "mpitypedefs.h"
 
 /* Include prototypes of helper functions.
    These include MPIR_Keyval_set_fortran, fortran90, and 
@@ -95,6 +96,11 @@
 /* Include the attribute access routines that permit access to the 
    attribute or its pointer, needed for cross-language access to attributes */
 #include "mpi_attr.h"
+
+/* mpi_lang.h - Prototypes for language specific routines. Currently used to
+ * set keyval attribute callbacks
+ */
+#include "mpi_lang.h"
 
 /* If there is no MPI I/O support, and we are still using MPIO_Request,
    make sure that one is defined */

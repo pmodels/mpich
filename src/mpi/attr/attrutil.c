@@ -56,119 +56,91 @@ void MPID_Attr_free(MPID_Attribute *attr_ptr)
 int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
 {
     static const char FCNAME[] = "MPIR_Call_attr_delete";
-    MPID_Delete_function delfn;
-    MPID_Lang_t          language;
-    int                  mpi_errno=0;
-    int                  userErr=0;
-    void                 *attribute_val = 0;
+    int rc;
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Keyval* kv = attr_p->keyval;
+
     MPIU_THREADPRIV_DECL;
 
     MPIU_THREADPRIV_GET;
 
     MPIR_Nest_incr();
     
-    delfn    = attr_p->keyval->delfn;
-    language = attr_p->keyval->language;
-    switch (language) {
-    case MPID_LANG_C: 
-	/* Make sure that the attribute value is delieverd as a pointer */
-	if (MPIR_ATTR_KIND(attr_p->attrType) == MPIR_ATTR_KIND(MPIR_ATTR_INT))
-	    attribute_val = &attr_p->value;
-	else
-	    attribute_val = attr_p->value;
+    if(kv->delfn.user_function == NULL)
+        goto fn_exit;
 
-	if (delfn.C_DeleteFunction) {
-	    userErr = delfn.C_DeleteFunction( handle,
-					      attr_p->keyval->handle, 
-					      attribute_val,
-					      attr_p->keyval->extra_state );
-	    if (userErr != 0) {
-		MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
-			       "**user", "**userdel %d", userErr );
-	    }
-	}
-	break;
-
-#ifdef HAVE_CXX_BINDING
-    case MPID_LANG_CXX: 
-	/* Make sure that the attribute value is delieverd as a pointer */
-	if (MPIR_ATTR_KIND(attr_p->attrType) == MPIR_ATTR_KIND(MPIR_ATTR_INT))
-	    attribute_val = &attr_p->value;
-	else
-	    attribute_val = attr_p->value;
-
-	if (delfn.C_DeleteFunction) {
-	    int handleType = HANDLE_GET_MPI_KIND(handle);
-	    userErr = (*MPIR_Process.cxx_call_delfn)( handleType,
-						handle,
-						attr_p->keyval->handle, 
-						attribute_val,
-						attr_p->keyval->extra_state, 
-				(void (*)(void)) delfn.C_DeleteFunction );
-	    if (userErr != 0) {
-		MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
-			       "**user", "**userdel %d", userErr );
-	    }
-	}
-	break;
-#endif
-
-#ifdef HAVE_FORTRAN_BINDING
-	/* If the attribute routine was created in Fortran, we always
-	   pass the keyval's attribute delete routine a pointer to a
-	   variable containing the attribute value */
-    case MPID_LANG_FORTRAN: 
-	{
-	    MPI_Fint fhandle, fkeyval, fvalue, *fextra, ierr;
-	    if (delfn.F77_DeleteFunction) {
-		fhandle = (MPI_Fint) (handle);
-		fkeyval = (MPI_Fint) (attr_p->keyval->handle);
-		/* The following cast can lose data on systems whose
-		   pointers are longer than integers.
-		   We do this in two steps to keep compilers happy.
-		   Note that the casts are consistent with the 
-		   way in which the Fortran attributes are used (they
-                   are MPI_Fint values, and we assume 
-		   sizeof(MPI_Fint) <= sizeof(MPI_Aint).  
-		   See also src/binding/f77/attr_getf.c . */
-		fvalue  = (MPI_Fint) MPI_VOID_PTR_CAST_TO_MPI_AINT(attr_p->value);
-		fextra  = (MPI_Fint*) (attr_p->keyval->extra_state);
-		delfn.F77_DeleteFunction( &fhandle, &fkeyval, &fvalue, 
-					  fextra, &ierr );
-		if (ierr) userErr = (int)ierr;
-		else      userErr = MPI_SUCCESS;
-		if (userErr != 0) {
-		    MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
-				   "**user", "**userdel %d", userErr );
-		}
-	    }
-	}
-	break;
-    case MPID_LANG_FORTRAN90: 
-	{
-	    MPI_Fint fhandle, fkeyval, ierr;
-	    MPI_Aint fvalue, *fextra;
-	    if (delfn.F90_DeleteFunction) {
-		fhandle = (MPI_Fint) (handle);
-		fkeyval = (MPI_Fint) (attr_p->keyval->handle);
-		fvalue  = MPI_VOID_PTR_CAST_TO_MPI_AINT(attr_p->value);
-		fextra  = (MPI_Aint*) (attr_p->keyval->extra_state );
-		delfn.F90_DeleteFunction( &fhandle, &fkeyval, &fvalue, 
-					  fextra, &ierr );
-		if (ierr) userErr = (int)ierr;
-		else      userErr = MPI_SUCCESS;
-		if (userErr != 0) {
-		    MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
-				   "**user", "**userdel %d", userErr );
-		}
-	    }
-	}
-	break;
-#endif
+    rc = kv->delfn.proxy(
+                kv->delfn.user_function,
+                handle,
+                attr_p->keyval->handle,
+                attr_p->attrType,
+                attr_p->value,
+                attr_p->keyval->extra_state
+                );
+    /* --BEGIN ERROR HANDLING-- */
+    if(rc != 0){
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**user", "**userdel %d", rc);
+        goto fn_fail;
     }
-    
+    /* --END ERROR HANDLING-- */
+
+  fn_exit:
     MPIR_Nest_decr();
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/*
+  This function copies a single attribute.
+  It is called by the function to copy a list of attribute
+  Return the return code from the copy function; MPI_SUCCESS if there is
+  no copy function.
+
+  Even though there are separate keyvals for communicators, types, and files,
+  we can use the same function because the handle for these is always an int
+  in MPICH2.
+
+  Note that this simply invokes the attribute copy function.
+*/
+int MPIR_Call_attr_copy( int handle, MPID_Attribute *attr_p, void** value_copy, int* flag)
+{
+    static const char FCNAME[] = "MPIR_Call_attr_copy";
+    int mpi_errno = MPI_SUCCESS;
+    int rc;
+    MPID_Keyval* kv = attr_p->keyval;
+
+    MPIU_THREADPRIV_DECL;
+    
+    MPIU_THREADPRIV_GET;
+    
+    MPIR_Nest_incr();
+
+    if(kv->copyfn.user_function == NULL)
+        goto fn_exit;
+
+    rc = kv->copyfn.proxy(
+                kv->copyfn.user_function,
+                handle,
+                attr_p->keyval->handle,
+                attr_p->keyval->extra_state,
+                attr_p->attrType,
+                attr_p->value,
+                value_copy,
+                flag
+                );
+
+    /* --BEGIN ERROR HANDLING-- */
+    if(rc != 0){
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**user", "**usercopy %d", rc);
+        goto fn_fail;
+    }
+    /* --END ERROR HANDLING-- */
+fn_exit:
+    MPIR_Nest_decr();
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 /* Routine to duplicate an attribute list */
@@ -176,166 +148,59 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
 			MPID_Attribute **new_attr )
 {
     static const char FCNAME[] = "MPIR_Attr_dup_list";
-    MPID_Attribute     *p, *new_p, **next_new_attr_ptr = new_attr;
-    MPID_Copy_function copyfn;
-    MPID_Lang_t        language;
-    void               *new_value = NULL;
-    void               *attribute_value = NULL;
-    int                flag;
-    int                mpi_errno = 0;
-    int                userErr=0;
-    MPIU_THREADPRIV_DECL;
+    MPID_Attribute *p, *new_p, **next_new_attr_ptr=new_attr;
+    void* new_value = NULL;
+    int mpi_errno = MPI_SUCCESS;
 
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
-    
-    p = old_attrs;
-    while (p) {
-	/* Run the attribute delete function first */
-/* Why is this here?
-	mpi_errno = MPIR_Call_attr_delete( handle, p );
-	if (mpi_errno)
-	{
-	    goto fn_exit;
-	}
-*/
+    for(p = old_attrs; p != NULL; p = p->next)
+    {
+        /* call the attribute copy function (if any) */
+        int flag = 0;
+        mpi_errno = MPIR_Call_attr_copy(
+                        handle,
+                        p,
+                        &new_value,
+                        &flag
+                        );
 
-	/* Now call the attribute copy function (if any) */
-	copyfn   = p->keyval->copyfn;
-	language = p->keyval->language;
-	flag = 0;
-	switch (language) {
-	case MPID_LANG_C: 
-	    /* Make sure that the attribute value is delieverd as a pointer */
-	    if (copyfn.C_CopyFunction) {
-		if (MPIR_ATTR_KIND(p->attrType) == MPIR_ATTR_KIND(MPIR_ATTR_INT))
-		    attribute_value = &p->value;
-		else
-		    attribute_value = p->value;
-		userErr = copyfn.C_CopyFunction( handle, 
-						 p->keyval->handle, 
-						 p->keyval->extra_state, 
-						 attribute_value, 
-						 &new_value, &flag );
-		if (userErr != 0) {
-		    MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
-				   "**user", "**usercopy %d", userErr );
-		}
-	    }
-	    break;
-#ifdef HAVE_CXX_BINDING
-	case MPID_LANG_CXX: 
-	    if (copyfn.C_CopyFunction) {
-		int handleType = HANDLE_GET_MPI_KIND(handle);
-		void *attr_val = 0;
-		/* Make sure that the attribute value is delieverd as a pointer */
-		if (MPIR_ATTR_KIND(p->attrType) == MPIR_ATTR_KIND(MPIR_ATTR_INT))
-		    attribute_value = &p->value;
-		else
-		    attribute_value = p->value;
-		userErr = (*MPIR_Process.cxx_call_copyfn)( 
-				   handleType,
-				   handle,
-				   p->keyval->handle, 
-				   p->keyval->extra_state, 
-				   attribute_value, &new_value, &flag,
-				   (void (*)(void)) copyfn.C_CopyFunction );
-		if (userErr != 0) {
-		    MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
-				   "**user", "**usercopy %d", userErr );
-		}
-	    }
-	    break;
-#endif
-#ifdef HAVE_FORTRAN_BINDING
-	case MPID_LANG_FORTRAN: 
-	    {
-		if (copyfn.F77_CopyFunction) {
-		    MPI_Fint fhandle, fkeyval, fvalue, *fextra, fflag, fnew, ierr;
-		    void *attr_val=0;
-		    fhandle = (MPI_Fint) (handle);
-		    fkeyval = (MPI_Fint) (p->keyval->handle);
-		    /* The following cast can lose data on systems whose
-		       pointers are longer than integers */
-		    fvalue  = (MPI_Fint) MPI_VOID_PTR_CAST_TO_MPI_AINT(p->value);
-		    fextra  = (MPI_Fint*) (p->keyval->extra_state );
-		    copyfn.F77_CopyFunction( &fhandle, &fkeyval, fextra,
-					     &fvalue, &fnew, &fflag, &ierr );
-		    if (ierr) userErr = (int)ierr;
-		    flag      = fflag;
-		    new_value = MPI_AINT_CAST_TO_VOID_PTR (MPI_Aint) fnew;
-		    if (userErr != 0) {
-			MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
-				       "**user", "**usercopy %d", userErr );
-		    }
-		}
-	    }
-	    break;
-	case MPID_LANG_FORTRAN90: 
-	    {
-		if (copyfn.F90_CopyFunction) {
-		    MPI_Fint fhandle, fkeyval, fflag, ierr;
-		    MPI_Aint fvalue, fnew, *fextra;
-		    fhandle = (MPI_Fint) (handle);
-		    fkeyval = (MPI_Fint) (p->keyval->handle);
-		    fvalue  = MPI_VOID_PTR_CAST_TO_MPI_AINT(p->value);
-		    fextra  = (MPI_Aint*) (p->keyval->extra_state );
-		    copyfn.F90_CopyFunction( &fhandle, &fkeyval, fextra,
-					     &fvalue, &fnew, &fflag, &ierr );
-		    if (ierr) userErr = (int)ierr;
-		    flag = fflag;
-		    new_value = MPI_AINT_CAST_TO_VOID_PTR fnew;
-		    if (userErr != 0) {
-			MPIU_ERR_SET1( mpi_errno, MPI_ERR_OTHER, 
-				       "**user", "**usercopy %d", userErr );
-		    }
-		}
-	    }
-	    break;
-#endif
-	}
-	
-	/* If flag was returned as true and there was no error, then
-	   insert this attribute into the new list (new_attr) */
-	if (flag && !mpi_errno) {
-	    /* duplicate the attribute by creating new storage, copying the
-	       attribute value, and invoking the copy function */
-	    new_p = (MPID_Attribute *)MPIU_Handle_obj_alloc( &MPID_Attr_mem );
-	    /* --BEGIN ERROR HANDLING-- */
-	    if (!new_p) {
-		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-						 "MPIR_Attr_dup_list", __LINE__,
-						  MPI_ERR_OTHER, "**nomem", 0 );
-		goto fn_exit;
-	    }
-	    /* --END ERROR HANDLING-- */
-	    if (!*new_attr) { 
-		*new_attr = new_p;
-	    }
-	    new_p->keyval        = p->keyval;
-	    *(next_new_attr_ptr) = new_p;
-	    /* Remember that we need this keyval */
-	    MPIR_Keyval_add_ref(p->keyval);
+        if(mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
 
-	    /* printf( "copy to new attr at %x\n", &new_p->value ); */
-	    new_p->attrType      = p->attrType;
-	    new_p->pre_sentinal  = 0;
-	    new_p->value 	 = new_value;
-	    new_p->post_sentinal = 0;
-	    new_p->next	         = 0;
-	    next_new_attr_ptr    = &(new_p->next);
-	}
-	else if (mpi_errno)
-	{ 
-	    goto fn_exit;
-	}
+        if(!flag)
+            continue;
+        /* If flag was returned as true, then insert this attribute into the new list (new_attr) */
 
-	p = p->next;
-    }
+        /* duplicate the attribute by creating new storage, copying the
+        attribute value, and invoking the copy function */
+        new_p = (MPID_Attribute *)MPIU_Handle_obj_alloc( &MPID_Attr_mem );
+        /* --BEGIN ERROR HANDLING-- */
+        if (!new_p){
+            mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
+            goto fn_fail;
+        }
+        /* --END ERROR HANDLING-- */
+        if(!*new_attr){
+            *new_attr = new_p;
+        }
+        *(next_new_attr_ptr) = new_p;
+
+        new_p->keyval = p->keyval;
+        /* Remember that we need this keyval */
+        MPIR_Keyval_add_ref(p->keyval);
+
+        new_p->attrType         = p->attrType;
+        new_p->pre_sentinal     = 0;
+        new_p->value            = new_value;
+        new_p->post_sentinal    = 0;
+        new_p->next             = 0;
+
+        next_new_attr_ptr = &(new_p->next);
+    } /* for(;;) */
 
   fn_exit:
-    MPIR_Nest_decr();
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Routine to delete an attribute list */
@@ -389,48 +254,62 @@ int MPIR_Attr_delete_list( int handle, MPID_Attribute *attr )
     return mpi_errno;
 }
 
-#ifdef HAVE_FORTRAN_BINDING
-/* This routine is used by the Fortran binding to change the language of a
-   keyval to Fortran 
-*/
-void MPIR_Keyval_set_fortran( int keyval )
+int
+MPIR_Attr_copy_c_proxy(
+    MPI_Comm_copy_attr_function* user_function,
+    int handle,
+    int keyval,
+    void* extra_state,
+    MPIR_AttrType attrib_type,
+    void* attrib,
+    void** attrib_copy,
+    int* flag
+    )
 {
-    MPID_Keyval *keyval_ptr;
-
-    MPID_Keyval_get_ptr( keyval, keyval_ptr );
-    if (keyval_ptr) 
-	keyval_ptr->language = MPID_LANG_FORTRAN;
+    void *attrib_val = NULL;
+    /* Make sure that the attribute value is delieverd as a pointer */
+    if (MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
+        attrib_val = &attrib;
+    }
+    else{
+        attrib_val = attrib;
+    }
+    return user_function(handle, keyval, extra_state, attrib_val, attrib_copy, flag);
 }
 
-/* 
-   This routine is used by the Fortran binding to change the language of a
-   keyval to Fortran90 (also used for Fortran77 when address-sized integers
-   are used 
-*/
-void MPIR_Keyval_set_fortran90( int keyval )
-{
-    MPID_Keyval *keyval_ptr;
 
-    MPID_Keyval_get_ptr( keyval, keyval_ptr );
-    if (keyval_ptr) 
-	keyval_ptr->language = MPID_LANG_FORTRAN90;
-}
-#endif
-#ifdef HAVE_CXX_BINDING
-/* This function allows the C++ interface to provide the routines that use
-   a C interface that invoke the C++ attribute copy and delete functions.
-*/
-void MPIR_Keyval_set_cxx( int keyval, void (*delfn)(void), void (*copyfn)(void) )
+int
+MPIR_Attr_delete_c_proxy(
+    MPI_Comm_delete_attr_function* user_function,
+    int handle,
+    int keyval,
+    MPIR_AttrType attrib_type,
+    void* attrib,
+    void* extra_state
+    )
 {
-    MPID_Keyval *keyval_ptr;
-
-    MPID_Keyval_get_ptr( keyval, keyval_ptr );
-    
-    keyval_ptr->language	 = MPID_LANG_CXX;
-    MPIR_Process.cxx_call_delfn	 = (int (*)(int, int, int, void *, void *, 
-					    void (*)(void)))delfn;
-    MPIR_Process.cxx_call_copyfn = (int (*)(int, int, int, void *, void *, 
-					    void *, int *, 
-					    void (*)(void)))copyfn;
+    void *attrib_val = NULL;
+    /* Make sure that the attribute value is delieverd as a pointer */
+    if (MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT))
+        attrib_val = &attrib;
+    else
+        attrib_val = attrib;
+    return user_function(handle, keyval, attrib_val, extra_state);
 }
-#endif
+
+
+void
+MPIR_Keyval_set_proxy(
+    int keyval,
+    MPID_Attr_copy_proxy copy_proxy,
+    MPID_Attr_delete_proxy delete_proxy
+    )
+{
+    MPID_Keyval*  keyval_ptr;
+    MPID_Keyval_get_ptr( keyval, keyval_ptr );
+    if(keyval_ptr == NULL)
+        return;
+
+    keyval_ptr->copyfn.proxy = copy_proxy;
+    keyval_ptr->delfn.proxy = delete_proxy;
+}

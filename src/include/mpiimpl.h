@@ -323,6 +323,10 @@ void MPIU_dump_dbg_memlog(FILE * fp);
   
  T*/
 
+/* mpi_lang.h - Prototypes for language specific routines. Currently used to
+ * set keyval attribute callbacks
+ */
+#include "mpi_lang.h"
 /* Known language bindings */
 /*E
   MPID_Lang_t - Known language bindings for MPI
@@ -919,6 +923,10 @@ extern MPID_Errhandler MPID_Errhandler_direct[];
  *
  T*/
 
+/* Include the attribute access routines that permit access to the 
+   attribute or its pointer, needed for cross-language access to attributes */
+#include "mpi_attr.h"
+
 /* Because Comm, Datatype, and File handles are all ints, and because
    attributes are otherwise identical between the three types, we
    only store generic copy and delete functions.  This allows us to use
@@ -942,12 +950,30 @@ extern MPID_Errhandler MPID_Errhandler_direct[];
   Attribute-DS
 
   E*/
-typedef union MPID_Copy_function {
+int
+MPIR_Attr_copy_c_proxy(
+    MPI_Comm_copy_attr_function* user_function,
+    int handle,
+    int keyval,
+    void* extra_state,
+    MPIR_AttrType attrib_type,
+    void* attrib,
+    void** attrib_copy,
+    int* flag
+    );
+
+typedef struct MPID_Copy_function {
   int  (*C_CopyFunction)( int, int, void *, void *, void *, int * );
   void (*F77_CopyFunction)  ( MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *, 
                               MPI_Fint *, MPI_Fint *, MPI_Fint * );
   void (*F90_CopyFunction)  ( MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
                               MPI_Aint *, MPI_Fint *, MPI_Fint * );
+  /* The generic lang-independent user_function and proxy will
+   * replace the lang dependent copy funcs above
+   * Currently the lang-indpendent funcs are used only for keyvals
+   */
+  MPI_Comm_copy_attr_function *user_function;
+  MPID_Attr_copy_proxy *proxy;
   /* The C++ function is the same as the C function */
 } MPID_Copy_function;
 
@@ -970,12 +996,28 @@ typedef union MPID_Copy_function {
   Attribute-DS
 
   E*/
-typedef union MPID_Delete_function {
+int
+MPIR_Attr_delete_c_proxy(
+    MPI_Comm_delete_attr_function* user_function,
+    int handle,
+    int keyval,
+    MPIR_AttrType attrib_type,
+    void* attrib,
+    void* extra_state
+    );
+
+typedef struct MPID_Delete_function {
   int  (*C_DeleteFunction)  ( int, int, void *, void * );
   void (*F77_DeleteFunction)( MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *, 
                               MPI_Fint * );
   void (*F90_DeleteFunction)( MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *, 
                               MPI_Fint * );
+  /* The generic lang-independent user_function and proxy will
+   * replace the lang dependent copy funcs above
+   * Currently the lang-indpendent funcs are used only for keyvals
+   */
+  MPI_Comm_delete_attr_function *user_function;
+  MPID_Attr_delete_proxy *proxy;
 } MPID_Delete_function;
 
 /*S
@@ -988,7 +1030,6 @@ typedef union MPID_Delete_function {
 typedef struct MPID_Keyval {
     int                  handle;
     volatile int         ref_count;
-    MPID_Lang_t          language;
     MPID_Object_kind     kind;
     void                 *extra_state;
     MPID_Copy_function   copyfn;
@@ -1008,10 +1049,6 @@ typedef struct MPID_Keyval {
     { MPIU_Object_release_ref( _keyval, _inuse );        \
        MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
          "Decr keyval %p ref count to %d",_keyval,_keyval->ref_count));}
-
-/* Include the attribute access routines that permit access to the 
-   attribute or its pointer, needed for cross-language access to attributes */
-#include "mpi_attr.h"
 
 /* Attributes need no ref count or handle, but since we want to use the
    common block allocator for them, we must provide those elements 
@@ -2031,12 +2068,6 @@ typedef struct MPICH_PerProcess_t {
        MPI reduction and attribute routines */
     void (*cxx_call_op_fn)( void *, void *, int, MPI_Datatype, 
 			    MPI_User_function * );
-    /* Attribute functions.  We use a single "call" function for Comm, Datatype,
-       and File, since all are ints (and we can cast in the call) */
-    int  (*cxx_call_delfn)( int, int, int, void *, void *, 
-			    void (*)(void) );
-    int  (*cxx_call_copyfn)( int, int, int, void *, void *, void *, int *, 
-			    void (*)(void) );
     /* Error handling functions.  As for the attribute functions,
        we pass the integer file/comm/win, the address of the error code, 
        and the C function to call (itself a function defined by the

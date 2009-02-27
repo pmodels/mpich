@@ -2,13 +2,13 @@
 
 EXPORTS
 ; Fortran values
-	MPIR_Keyval_set_fortran
-	MPIR_Keyval_set_fortran90
+;	MPIR_Keyval_set_fortran
+;	MPIR_Keyval_set_fortran90
 	MPIR_Grequest_set_lang_f77
 	MPI_F_STATUS_IGNORE
 	MPI_F_STATUSES_IGNORE
 ; C++ values
-	MPIR_Keyval_set_cxx
+;	MPIR_Keyval_set_cxx
 	MPIR_Errhandler_set_cxx
 	MPIR_Op_set_cxx
 ; misc
@@ -18,6 +18,7 @@ EXPORTS
     MPIR_TypeSetAttr
     MPIR_WinGetAttr
     MPIR_WinSetAttr
+    MPIR_Keyval_set_proxy
 	MPIR_Err_create_code
 	MPIR_Err_return_comm
 	MPID_Wtick

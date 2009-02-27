@@ -7,6 +7,7 @@
 
 #include "mpi.h"
 #include "mpi_attr.h"
+#include "mpi_lang.h"
 #include <winsock2.h>
 #include <windows.h>
 #include "mpichconf.h"
@@ -683,6 +684,7 @@ static struct fn_table
     double (*PMPI_Wtick)(void);
 
     /* Extra exported internal symbols */
+    void (*MPIR_Keyval_set_proxy)(int ,MPID_Attr_copy_proxy ,MPID_Attr_delete_proxy );
     void (*MPIR_Keyval_set_fortran)(int);
     void (*MPIR_Keyval_set_fortran90)(int);
     void (*MPIR_Grequest_set_lang_f77)(MPI_Request);
@@ -1654,6 +1656,7 @@ static BOOL LoadFunctions(const char *dll_name, const char *wrapper_dll_name)
     fn.PMPI_Type_create_f90_complex = (int (*)( int, int, MPI_Datatype * ))GetProcAddress(hPMPIModule, "PMPI_Type_create_f90_complex");
 
     /* Extra exported internal symbols */
+    fn.MPIR_Keyval_set_proxy = (void (*)(int))GetProcAddress(hPMPIModule, "MPIR_Keyval_set_proxy");
     fn.MPIR_Keyval_set_fortran = (void (*)(int))GetProcAddress(hPMPIModule, "MPIR_Keyval_set_fortran");
     fn.MPIR_Keyval_set_fortran90 = (void (*)(int))GetProcAddress(hPMPIModule, "MPIR_Keyval_set_fortran90");
     fn.MPIR_Grequest_set_lang_f77 = (void (*)(MPI_Request))GetProcAddress(hPMPIModule, "MPIR_Grequest_set_lang_f77");
@@ -1829,6 +1832,15 @@ int MPIR_Dup_fn(MPI_Comm comm, int keyval, void *extra_state, void *attr_in, voi
 {
     MPICH_CHECK_INIT(FCNAME);
     return fn.MPIR_Dup_fn(comm, keyval, extra_state, attr_in, attr_out, flag);
+}
+
+#undef FCNAME
+#define FCNAME MPIR_Keyval_set_proxy
+void MPIR_Keyval_set_proxy(int keyval, MPID_Attr_copy_proxy copy_proxy,
+        MPID_Attr_delete_proxy delete_proxy)
+{
+    MPICH_CHECK_INIT_VOID(FCNAME);
+    fn.MPIR_Keyval_set_proxy(keyval, copy_proxy, delete_proxy);
 }
 
 #undef FCNAME
