@@ -1656,7 +1656,7 @@ static BOOL LoadFunctions(const char *dll_name, const char *wrapper_dll_name)
     fn.PMPI_Type_create_f90_complex = (int (*)( int, int, MPI_Datatype * ))GetProcAddress(hPMPIModule, "PMPI_Type_create_f90_complex");
 
     /* Extra exported internal symbols */
-    fn.MPIR_Keyval_set_proxy = (void (*)(int))GetProcAddress(hPMPIModule, "MPIR_Keyval_set_proxy");
+    fn.MPIR_Keyval_set_proxy = (void (*)(int ,MPID_Attr_copy_proxy ,MPID_Attr_delete_proxy ))GetProcAddress(hPMPIModule, "MPIR_Keyval_set_proxy");
     fn.MPIR_Keyval_set_fortran = (void (*)(int))GetProcAddress(hPMPIModule, "MPIR_Keyval_set_fortran");
     fn.MPIR_Keyval_set_fortran90 = (void (*)(int))GetProcAddress(hPMPIModule, "MPIR_Keyval_set_fortran90");
     fn.MPIR_Grequest_set_lang_f77 = (void (*)(MPI_Request))GetProcAddress(hPMPIModule, "MPIR_Grequest_set_lang_f77");
