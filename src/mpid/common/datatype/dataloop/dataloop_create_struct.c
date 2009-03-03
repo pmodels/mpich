@@ -570,24 +570,29 @@ static int DLOOP_Dataloop_create_flattened_struct(int count,
 	{
 	    nr_blks++;
 	}
-	else /* derived type; get a count of contig blocks */
-	{
-	    DLOOP_Count tmp_nr_blks;
+        else /* derived type; get a count of contig blocks */
+        {
+            DLOOP_Count tmp_nr_blks, sz;
 
-	    PREPEND_PREFIX(Segment_init)(NULL,
-					 (DLOOP_Count) blklens[i],
-					 oldtypes[i],
-					 segp,
-					 flag);
-	    bytes = SEGMENT_IGNORE_LAST;
+            DLOOP_Handle_get_size_macro(oldtypes[i], sz);
 
-	    PREPEND_PREFIX(Segment_count_contig_blocks)(segp,
-							0,
-							&bytes,
-							&tmp_nr_blks);
+            /* if the derived type has some data to contribute, add to flattened representation */
+            if ((blklens[i] > 0) && (sz > 0)) {
+                PREPEND_PREFIX(Segment_init)(NULL,
+                                             (DLOOP_Count) blklens[i],
+                                             oldtypes[i],
+                                             segp,
+                                             flag);
+                bytes = SEGMENT_IGNORE_LAST;
 
-	    nr_blks += tmp_nr_blks;
-	}
+                PREPEND_PREFIX(Segment_count_contig_blocks)(segp,
+                                                            0,
+                                                            &bytes,
+                                                            &tmp_nr_blks);
+
+                nr_blks += tmp_nr_blks;
+            }
+        }
     }
 
     nr_blks += 2; /* safety measure */
