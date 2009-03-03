@@ -57,97 +57,67 @@ int MPIR_Gatherv (
     int        mpi_errno = MPI_SUCCESS;
     MPI_Comm comm;
     MPI_Aint       extent;
-    int            i;
+    int            i, reqs;
+    MPI_Request *reqarray;
+    MPI_Status *starray;
     
     comm = comm_ptr->handle;
     rank = comm_ptr->rank;
     
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-    
-    /* If rank == root, then I recv lots, otherwise I send */
-    if ((comm_ptr->comm_kind == MPID_INTRACOMM) && (rank == root)) {
-        /* intracomm root */
-        comm_size = comm_ptr->local_size;
-        MPID_Datatype_get_extent_macro(recvtype, extent);
 
+    /* If rank == root, then I recv lots, otherwise I send */
+    if (((comm_ptr->comm_kind == MPID_INTRACOMM) && (root == rank)) ||
+        ((comm_ptr->comm_kind == MPID_INTERCOMM) && (root == MPI_ROOT))) {
+        if (comm_ptr->comm_kind == MPID_INTRACOMM)
+            comm_size = comm_ptr->local_size;
+        else
+            comm_size = comm_ptr->remote_size;
+
+        MPID_Datatype_get_extent_macro(recvtype, extent);
 	/* each node can make sure it is not going to overflow aint */
         MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 					 displs[rank] * extent);
 
-        for ( i=0; i<root; i++ ) {
-            if (recvcnts[i]) {
-                mpi_errno = MPIC_Recv(((char *)recvbuf+displs[i]*extent), 
-                                      recvcnts[i], recvtype, i,
-                                      MPIR_GATHERV_TAG, comm,
-                                      MPI_STATUS_IGNORE);
-		/* --BEGIN ERROR HANDLING-- */
-                if (mpi_errno)
-		{
-		    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-		    return mpi_errno;
-		}
-		/* --END ERROR HANDLING-- */
-            }
-        }
-        if (sendbuf != MPI_IN_PLACE) {
-            if (recvcnts[rank]) {
-		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-						 displs[rank]*extent);
-                mpi_errno = MPIR_Localcopy(sendbuf, sendcnt, sendtype,
-                                           ((char *)recvbuf+displs[rank]*extent), 
-                                           recvcnts[rank], recvtype);
-		/* --BEGIN ERROR HANDLING-- */
-                if (mpi_errno)
-		{
-		    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-		    return mpi_errno;
-		}
-		/* --END ERROR HANDLING-- */
-            }
-        }
-        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-					 displs[rank] * extent);
+        reqarray = (MPI_Request *) MPIU_Malloc(comm_size * sizeof(MPI_Request));
+        starray = (MPI_Request *) MPIU_Malloc(comm_size * sizeof(MPI_Status));
 
-        for ( i=root+1; i<comm_size; i++ ) {
+        reqs = 0;
+        for (i = 0; i < comm_size; i++) {
             if (recvcnts[i]) {
-                mpi_errno = MPIC_Recv(((char *)recvbuf+displs[i]*extent), 
-                                      recvcnts[i], recvtype, i,
-                                      MPIR_GATHERV_TAG, comm,
-                                      MPI_STATUS_IGNORE);
+                if ((comm_ptr->comm_kind == MPID_INTRACOMM) && (i == rank) &&
+                    (sendbuf != MPI_IN_PLACE)) {
+                    mpi_errno = MPIR_Localcopy(sendbuf, sendcnt, sendtype,
+                                               ((char *)recvbuf+displs[rank]*extent), 
+                                               recvcnts[rank], recvtype);
+                }
+                else {
+                    mpi_errno = MPIC_Irecv(((char *)recvbuf+displs[i]*extent), 
+                                           recvcnts[i], recvtype, i,
+                                           MPIR_GATHERV_TAG, comm,
+                                           &reqarray[reqs++]);
+                }
 		/* --BEGIN ERROR HANDLING-- */
-                if (mpi_errno)
-		{
+                if (mpi_errno) {
 		    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
 		    return mpi_errno;
 		}
 		/* --END ERROR HANDLING-- */
             }
         }
-    }
-    
-    else if ((comm_ptr->comm_kind == MPID_INTERCOMM) && (root == MPI_ROOT)) {
-        /* intercommunicator root */
-        remote_comm_size = comm_ptr->remote_size;
-        MPID_Datatype_get_extent_macro(recvtype, extent);
-
-	MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-					 displs[rank] * extent);
-        for (i=0; i<remote_comm_size; i++) {
-            if (recvcnts[i]) {
-                mpi_errno = MPIC_Recv(((char *)recvbuf+displs[i]*extent), 
-                                      recvcnts[i], recvtype, i,
-                                      MPIR_GATHERV_TAG, comm,
-                                      MPI_STATUS_IGNORE);
-		/* --BEGIN ERROR HANDLING-- */
-                if (mpi_errno)
-		{
-		    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-		    return mpi_errno;
-		}
-		/* --END ERROR HANDLING-- */
-            }                
+        /* ... then wait for *all* of them to finish: */
+        mpi_errno = NMPI_Waitall(reqs, reqarray, starray);
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno == MPI_ERR_IN_STATUS) {
+            for (i = 0; i < reqs; i++) {
+                if (starray[i].MPI_ERROR != MPI_SUCCESS)
+                    mpi_errno = starray[i].MPI_ERROR;
+            }
         }
+
+        MPIU_Free(reqarray);
+        MPIU_Free(starray);
     }
 
     else if (root != MPI_PROC_NULL) { /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
