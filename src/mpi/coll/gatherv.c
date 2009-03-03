@@ -60,6 +60,7 @@ int MPIR_Gatherv (
     int            i, reqs;
     MPI_Request *reqarray;
     MPI_Status *starray;
+    MPIU_CHKLMEM_DECL(2);
     
     comm = comm_ptr->handle;
     rank = comm_ptr->rank;
@@ -80,8 +81,8 @@ int MPIR_Gatherv (
         MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 					 displs[rank] * extent);
 
-        reqarray = (MPI_Request *) MPIU_Malloc(comm_size * sizeof(MPI_Request));
-        starray = (MPI_Request *) MPIU_Malloc(comm_size * sizeof(MPI_Status));
+        MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request *, comm_size * sizeof(MPI_Request), mpi_errno, "reqarray");
+        MPIU_CHKLMEM_MALLOC(starray, MPI_Status *, comm_size * sizeof(MPI_Status), mpi_errno, "starray");
 
         reqs = 0;
         for (i = 0; i < comm_size; i++) {
@@ -115,9 +116,6 @@ int MPIR_Gatherv (
                     mpi_errno = starray[i].MPI_ERROR;
             }
         }
-
-        MPIU_Free(reqarray);
-        MPIU_Free(starray);
     }
 
     else if (root != MPI_PROC_NULL) { /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
@@ -128,8 +126,12 @@ int MPIR_Gatherv (
     
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-    
-    return (mpi_errno);
+
+fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #endif
