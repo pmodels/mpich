@@ -95,6 +95,42 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIC_Ssend
+#undef FCNAME
+#define FCNAME "MPIC_Ssend"
+int MPIC_Ssend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+               MPI_Comm comm)
+{
+    int mpi_errno, context_id;
+    MPID_Request *request_ptr=NULL;
+    MPID_Comm *comm_ptr=NULL;
+    MPIDI_STATE_DECL(MPID_STATE_MPIC_SEND);
+
+    MPIDI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPIC_SEND);
+
+    MPID_Comm_get_ptr( comm, comm_ptr );
+    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
+        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+
+    mpi_errno = MPID_Ssend(buf, count, datatype, dest, tag, comm_ptr,
+                           context_id, &request_ptr); 
+    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    if (request_ptr) {
+        mpi_errno = MPIC_Wait(request_ptr);
+	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+	MPID_Request_release(request_ptr);
+    }
+ fn_exit:
+    MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_SEND);
+    return mpi_errno;
+ fn_fail:
+    if (request_ptr) {
+        MPID_Request_release(request_ptr);
+    }
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIC_Sendrecv
 #undef FCNAME
 #define FCNAME "MPIC_Sendrecv"

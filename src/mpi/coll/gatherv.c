@@ -120,9 +120,16 @@ int MPIR_Gatherv (
     }
 
     else if (root != MPI_PROC_NULL) { /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
-        if (sendcnt)
-            mpi_errno = MPIC_Send(sendbuf, sendcnt, sendtype, root, 
-                                  MPIR_GATHERV_TAG, comm);
+        if (sendcnt) {
+            if (comm_size >= MPIR_GATHERV_MIN_PROCS) {
+                mpi_errno = MPIC_Ssend(sendbuf, sendcnt, sendtype, root, 
+                                       MPIR_GATHERV_TAG, comm);
+            }
+            else {
+                mpi_errno = MPIC_Send(sendbuf, sendcnt, sendtype, root, 
+                                      MPIR_GATHERV_TAG, comm);
+            }
+        }
     }
     
     /* check if multiple threads are calling this collective function */
