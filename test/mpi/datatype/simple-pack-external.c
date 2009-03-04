@@ -331,7 +331,7 @@ int struct_of_basics_test(void)
 
     for (i = 0; i < 10; i++) {
 	blocks[i] = 2;
-	indices[i] = 2 * sizeofint;
+	indices[i] = 2 * i * sizeofint;
 	/* This will cause MPICH2 to consider this as a blockindex. We
 	 * need different types here. */
 	types[i] = MPI_INT;
