@@ -54,18 +54,19 @@ MPID_Request ** const MPID_Recvq_unexpected_head_ptr = &recvq_unexpected_head;
 /* MATCH_WITH_NO_MASK compares the match values without masking
  * them. This is useful for the case where there are no ANY_TAG or
  * ANY_SOURCE wild cards. */
-#define MATCH_WITH_NO_MASK(match1, match2) \
-    ((sizeof(MPIDI_Message_match) == SIZEOF_VOID_P && 0) ? ((match1).whole == (match2).whole) : \
-     (((match1).parts.rank == (match2).parts.rank) && \
-      ((match1).parts.tag == (match2).parts.tag) && \
+#define MATCH_WITH_NO_MASK(match1, match2)                              \
+    ((sizeof(MPIDI_Message_match) == SIZEOF_VOID_P) ? ((match1).whole == (match2).whole) : \
+     (((match1).parts.rank == (match2).parts.rank) &&                   \
+      ((match1).parts.tag == (match2).parts.tag) &&                     \
       ((match1).parts.context_id == (match2).parts.context_id)))
 
 /* MATCH_WITH_LEFT_MASK compares the match values after masking only
  * the left field. This is useful for the case where the right match
  * is a part of the unexpected queue and has no ANY_TAG or ANY_SOURCE
  * wild cards, but the left match might have them. */
-#define MATCH_WITH_LEFT_MASK(match1, match2, mask) \
-    ((sizeof(MPIDI_Message_match) == SIZEOF_VOID_P && 0) ? (((match1).whole & (mask).whole) == (match2).whole) : \
+#define MATCH_WITH_LEFT_MASK(match1, match2, mask)                      \
+    ((sizeof(MPIDI_Message_match) == SIZEOF_VOID_P) ?                   \
+     (((match1).whole & (mask).whole) == (match2).whole) :              \
      ((((match1).parts.rank & (mask).parts.rank) == (match2).parts.rank) && \
       (((match1).parts.tag & (mask).parts.tag) == (match2).parts.tag) && \
       ((match1).parts.context_id == (match2).parts.context_id)))
@@ -73,8 +74,9 @@ MPID_Request ** const MPID_Recvq_unexpected_head_ptr = &recvq_unexpected_head;
 /* This is the most general case where both matches have to be
  * masked. Both matches are masked with the same value. There doesn't
  * seem to be a need for two different masks at this time. */
-#define MATCH_WITH_LEFT_RIGHT_MASK(match1, match2, mask) \
-    ((sizeof(MPIDI_Message_match) == SIZEOF_VOID_P && 0) ? (((match1).whole & (mask).whole) == ((match2).whole & (mask).whole)) : \
+#define MATCH_WITH_LEFT_RIGHT_MASK(match1, match2, mask)                \
+    ((sizeof(MPIDI_Message_match) == SIZEOF_VOID_P) ?                   \
+     (((match1).whole & (mask).whole) == ((match2).whole & (mask).whole)) : \
      ((((match1).parts.rank & (mask).parts.rank) == ((match2).parts.rank & (mask).parts.rank)) && \
       (((match1).parts.tag & (mask).parts.tag) == ((match2).parts.tag & (mask).parts.tag)) && \
       ((match1).parts.context_id == (match2).parts.context_id)))
