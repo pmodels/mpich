@@ -87,11 +87,12 @@ int MPIR_Gatherv (
         reqs = 0;
         for (i = 0; i < comm_size; i++) {
             if (recvcnts[i]) {
-                if ((comm_ptr->comm_kind == MPID_INTRACOMM) && (i == rank) &&
-                    (sendbuf != MPI_IN_PLACE)) {
-                    mpi_errno = MPIR_Localcopy(sendbuf, sendcnt, sendtype,
-                                               ((char *)recvbuf+displs[rank]*extent), 
-                                               recvcnts[rank], recvtype);
+                if ((comm_ptr->comm_kind == MPID_INTRACOMM) && (i == rank)) {
+                    if (sendbuf != MPI_IN_PLACE) {
+                        mpi_errno = MPIR_Localcopy(sendbuf, sendcnt, sendtype,
+                                                   ((char *)recvbuf+displs[rank]*extent), 
+                                                   recvcnts[rank], recvtype);
+                    }
                 }
                 else {
                     mpi_errno = MPIC_Irecv(((char *)recvbuf+displs[i]*extent), 
