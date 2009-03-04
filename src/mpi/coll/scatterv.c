@@ -92,11 +92,12 @@ int MPIR_Scatterv (
         reqs = 0;
         for (i = 0; i < comm_size; i++) {
             if (sendcnts[i]) {
-                if ((comm_ptr->comm_kind == MPID_INTRACOMM) && (i == rank) &&
-                    (sendbuf != MPI_IN_PLACE)) {
-                    mpi_errno = MPIR_Localcopy(((char *)sendbuf+displs[rank]*extent), 
-                                               sendcnts[rank], sendtype, 
-                                               recvbuf, recvcnt, recvtype);
+                if ((comm_ptr->comm_kind == MPID_INTRACOMM) && (i == rank)) {
+                    if (sendbuf != MPI_IN_PLACE) {
+                        mpi_errno = MPIR_Localcopy(((char *)sendbuf+displs[rank]*extent), 
+                                                   sendcnts[rank], sendtype, 
+                                                   recvbuf, recvcnt, recvtype);
+                    }
                 }
                 else {
                     mpi_errno = MPIC_Isend(((char *)sendbuf+displs[i]*extent), 
