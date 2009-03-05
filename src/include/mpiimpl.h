@@ -3533,6 +3533,9 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIR_GATHER_SHORT_MSG         2048  /* for intercommunicator scatter */
 #define MPIR_GATHERV_MIN_PROCS        32
 
+/* For pipelined collectives */
+#define MPIR_ALLGATHERV_PIPELINE_MSGSIZE   32768
+
 /* Tags for point to point operations which implement collective operations */
 #define MPIR_BARRIER_TAG               1
 #define MPIR_BCAST_TAG                 2

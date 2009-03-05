@@ -352,6 +352,16 @@ if test $smpcoll = "yes" ; then
    AC_DEFINE(USE_SMP_COLLECTIVES,1,[define to enable SMP/multi-core aware collectives])
 fi
 
+dnl Check for pipelined collectives
+AC_ARG_ENABLE(pipecoll,
+	[--enable-pipecoll - Enable support for pipelined collectives],
+	pipecoll=$enableval,
+	pipecoll=yes)
+
+if test $pipecoll = "yes" ; then
+   AC_DEFINE(USE_PIPE_COLLECTIVES,1,[define to enable pipelined collectives])
+fi
+
 dnl
 dnl The environment variable MPICH_DEBUGLIBNAME may be used to override the
 dnl default name of the library that the debugger will load to access the
@@ -6405,6 +6415,7 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
 	  src/util/dbg/getfuncstack \
 	  src/util/osserv/Makefile \
 	  src/util/procmap/Makefile \
+	  src/util/other/Makefile \
           src/include/mpi.h \
 	  test/Makefile test/util/Makefile \
 	  test/basic/Makefile \

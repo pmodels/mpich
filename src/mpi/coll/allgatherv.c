@@ -695,6 +695,116 @@ int MPIR_Allgatherv (
         MPIU_Free((char*)tmp_buf + recvtype_true_lb);
     }
 
+#ifdef USE_PIPE_COLLECTIVES
+    else {
+	/* long message or medium-size message and non-power-of-two
+	 * no. of processes. Use ring algorithm. */
+	char * sbuf = NULL, * rbuf = NULL, * smsg, * rmsg;
+        int soffset, roffset;
+	int torecv, tosend, min;
+	int sendnow, recvnow;
+	int smsg_len, rmsg_len, sindex, rindex;
+
+        if (sendbuf != MPI_IN_PLACE) {
+            /* First, load the "local" version in the recvbuf. */
+            mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype, 
+				       ((char *)recvbuf + displs[rank]*recvtype_extent),
+                                       recvcounts[rank], recvtype);
+	    /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno)
+	    {
+		mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
+		return mpi_errno;
+	    }
+	    /* --END ERROR HANDLING-- */
+        }
+
+        left  = (comm_size + rank - 1) % comm_size;
+        right = (rank + 1) % comm_size;
+
+	torecv = total_count - recvcounts[rank];
+	tosend = total_count - recvcounts[right];
+
+	min = recvcounts[0];
+	for (i = 1; i < comm_size; i++)
+	    if (min > recvcounts[i])
+                min = recvcounts[i];
+	if (min * recvtype_extent < MPIR_ALLGATHERV_PIPELINE_MSGSIZE)
+	    min = MPIR_ALLGATHERV_PIPELINE_MSGSIZE / recvtype_extent;
+        /* Handle the case where the datatype extent is larger than
+         * the pipeline size. */
+        if (!min)
+            min = 1;
+
+        sindex = rank;
+        rindex = left;
+        soffset = 0;
+        roffset = 0;
+        while (tosend || torecv) { /* While we have data to send or receive */
+            sendnow = ((recvcounts[sindex] - soffset) > min) ? min : (recvcounts[sindex] - soffset);
+            recvnow = ((recvcounts[rindex] - roffset) > min) ? min : (recvcounts[rindex] - roffset);
+            sbuf = recvbuf + ((displs[sindex] + soffset) * recvtype_extent);
+            rbuf = recvbuf + ((displs[rindex] + roffset) * recvtype_extent);
+
+	    /* Communicate */
+	    if (!sendnow && !recvnow) {
+		/* Don't do anything. This case is possible if two
+		 * consecutive processes contribute 0 bytes each. */
+	    }
+	    else if (!sendnow) { /* If there's no data to send, just do a recv call */
+		MPIU_Assert(recvnow > 0);
+		mpi_errno = MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm, &status);
+		/* --BEGIN ERROR HANDLING-- */
+		if (mpi_errno)
+		{
+		    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
+		    return mpi_errno;
+		}
+		/* --END ERROR HANDLING-- */
+		torecv -= recvnow;
+	    }
+	    else if (!recvnow) { /* If there's no data to receive, just do a send call */
+		MPIU_Assert(sendnow > 0);
+		mpi_errno = MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm);
+		/* --BEGIN ERROR HANDLING-- */
+		if (mpi_errno)
+		{
+		    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
+		    return mpi_errno;
+		}
+		/* --END ERROR HANDLING-- */
+		tosend -= sendnow;
+	    }
+	    else { /* There's data to be sent and received */
+		MPIU_Assert(sendnow > 0);
+		MPIU_Assert(recvnow > 0);
+		mpi_errno = MPIC_Sendrecv(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, 
+					  rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG,
+					  comm, &status);
+		/* --BEGIN ERROR HANDLING-- */
+		if (mpi_errno)
+		{
+		    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
+		    return mpi_errno;
+		}
+		/* --END ERROR HANDLING-- */
+		tosend -= sendnow;
+		torecv -= recvnow;
+	    }
+
+            soffset += sendnow;
+            roffset += recvnow;
+            if (soffset == recvcounts[sindex]) {
+                soffset = 0;
+                sindex = (sindex + comm_size - 1) % comm_size;
+            }
+            if (roffset == recvcounts[rindex]) {
+                roffset = 0;
+                rindex = (rindex + comm_size - 1) % comm_size;
+            }
+        }
+    }
+#else /* This case is retained as its more tested; we should eventually discard it */
     else {  /* long message or medium-size message and non-power-of-two
              * no. of processes. Use ring algorithm. */
 
@@ -735,6 +845,7 @@ int MPIR_Allgatherv (
             jnext = (comm_size + jnext - 1) % comm_size;
         }
     }
+#endif /* USE_PIPE_COLLECTIVES */
 
   /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
