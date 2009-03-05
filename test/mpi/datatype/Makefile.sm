@@ -64,7 +64,7 @@ struct-ezhov_SOURCES = struct-ezhov.c
 
 pairtype-size-extent_SOURCES = pairtype-size-extent.c
 
-hvector-zeros_SOURCES = hvector-zeros.c
+struct-derived-zeros_SOURCES = struct-derived-zeros.c
 
 localpack_SOURCES = localpack.c
 

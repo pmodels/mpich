@@ -37,4 +37,4 @@ get-elements-pairtype 1
 unpack 1
 struct-ezhov 1
 zeroblks 1
-hvector-zeros 1
+struct-derived-zeros 1
