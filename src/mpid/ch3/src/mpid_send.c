@@ -63,11 +63,20 @@ int MPID_Send(const void * buf, int count, MPI_Datatype datatype, int rank,
 	goto fn_exit;
     }
 
+    MPIDI_Comm_get_vc(comm, rank, &vc);
+
+#ifdef ENABLE_COMM_OVERRIDES
+    if (vc->comm_ops && vc->comm_ops->send)
+    {
+	mpi_errno = vc->comm_ops->send( vc, buf, count, datatype, rank, tag, comm, context_offset, &sreq);
+	goto fn_exit;
+    }
+#endif
+
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, 
 			    dt_true_lb);
 
-    MPIDI_Comm_get_vc(comm, rank, &vc);
-    
+
     if (data_sz == 0)
     {
 	MPIDI_CH3_Pkt_t upkt;

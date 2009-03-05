@@ -4,7 +4,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "myriexpress.h"
 #include "mpid_nem_impl.h"
 #include "mx_impl.h"
 
@@ -21,80 +20,58 @@ MPID_nem_netmod_funcs_t MPIDI_nem_mx_funcs = {
     MPID_nem_mx_vc_terminate
 };
 
+static MPIDI_Comm_ops_t comm_ops = {
+    MPID_nem_mx_directRecv, /* recv_posted */
+    
+    MPID_nem_mx_directSend, /* send */
+    MPID_nem_mx_directSend, /* rsend */
+    MPID_nem_mx_directSsend, /* ssend */
+    MPID_nem_mx_directSend, /* isend */
+    MPID_nem_mx_directSend, /* irsend */
+    MPID_nem_mx_directSsend, /* issend */
+    
+    NULL,                   /* send_init */
+    NULL,                   /* bsend_init */
+    NULL,                   /* rsend_init */
+    NULL,                   /* ssend_init */
+    NULL,                   /* startall */
+    
+    MPID_nem_mx_cancel_send,/* cancel_send */
+    MPID_nem_mx_cancel_recv /* cancel_recv */
+};
+
 
 #define MPIDI_CH3I_ENDPOINT_KEY "endpoint_id"
 #define MPIDI_CH3I_NIC_KEY      "nic_id"
 
-static uint64_t local_nic_id;
-static uint64_t remote_nic_id;
-static uint32_t local_endpoint_id;
-static uint32_t remote_endpoint_id;
-
-mx_endpoint_t       MPID_nem_module_mx_local_endpoint;
-mx_endpoint_addr_t *MPID_nem_module_mx_endpoints_addr;
-
-MPID_nem_mx_cell_ptr_t MPID_nem_module_mx_send_outstanding_request;
-int                    MPID_nem_module_mx_send_outstanding_request_num;
-MPID_nem_mx_cell_ptr_t MPID_nem_module_mx_recv_outstanding_request;
-int                    MPID_nem_module_mx_recv_outstanding_request_num;
-
-uint32_t        MPID_nem_module_mx_filter  = 0xdeadbeef;
-static uint32_t MPID_nem_module_mx_timeout = MX_INFINITE;
-int             MPID_nem_module_mx_pendings_sends = 0;
-int             MPID_nem_module_mx_pendings_recvs = 0 ;
-int            *MPID_nem_module_mx_pendings_sends_array;
-int            *MPID_nem_module_mx_pendings_recvs_array;
-
-
-static MPID_nem_mx_req_queue_t _mx_send_free_req_q;
-static MPID_nem_mx_req_queue_t _mx_send_pend_req_q;
-static MPID_nem_mx_req_queue_t _mx_recv_free_req_q;
-static MPID_nem_mx_req_queue_t _mx_recv_pend_req_q;
-
-MPID_nem_mx_req_queue_ptr_t MPID_nem_module_mx_send_free_req_queue    = &_mx_send_free_req_q;
-MPID_nem_mx_req_queue_ptr_t MPID_nem_module_mx_send_pending_req_queue = &_mx_send_pend_req_q;
-MPID_nem_mx_req_queue_ptr_t MPID_nem_module_mx_recv_free_req_queue    = &_mx_recv_free_req_q;
-MPID_nem_mx_req_queue_ptr_t MPID_nem_module_mx_recv_pending_req_queue = &_mx_recv_pend_req_q;
-
-static MPID_nem_queue_t _free_queue;
-
-MPID_nem_queue_ptr_t MPID_nem_module_mx_free_queue = 0;
-
-MPID_nem_queue_ptr_t MPID_nem_process_recv_queue = 0;
-MPID_nem_queue_ptr_t MPID_nem_process_free_queue = 0;
+int           MPID_nem_mx_pending_send_req = 0;
+uint32_t      MPID_NEM_MX_FILTER = 0xabadbada;
+uint64_t      MPID_nem_mx_local_nic_id;
+uint32_t      MPID_nem_mx_local_endpoint_id;
+mx_endpoint_t MPID_nem_mx_local_endpoint;
 
 #undef FUNCNAME
 #define FUNCNAME init_mx
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int init_mx( MPIDI_PG_t *pg_p )
+static int init_mx( MPIDI_PG_t *pg_p )
 {
-   mx_return_t ret;
-   int         mpi_errno = MPI_SUCCESS;
-   int         index;
-   MPIU_CHKPMEM_DECL(1);
+   mx_endpoint_addr_t local_endpoint_addr;
+   mx_return_t        ret;
+   mx_param_t         param;
+   int                mpi_errno = MPI_SUCCESS;
+   int                r;
+
+   r = MPIU_SetEnv("MX_DISABLE_SHARED", "1", 1);
+   MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**setenv");
+   r = MPIU_SetEnv("MX_DISABLE_SELF", "1", 1);
+   MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**setenv");
 
    ret = mx_init();
    MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_init", "**mx_init %s", mx_strerror (ret));
    
-   /* Allocate more than needed but use only external processes */   
-   MPIU_CHKPMEM_MALLOC (MPID_nem_module_mx_endpoints_addr, mx_endpoint_addr_t *, MPID_nem_mem_region.num_procs * sizeof(mx_endpoint_addr_t), mpi_errno, "endpoints addr");   
-#if 1
-   /* Fix me : mysteriously  MPIU_CHKPMEM_MALLOC fails here, when the regular MPIU_Malloc doesn't ... */
-   MPID_nem_module_mx_send_outstanding_request =(MPID_nem_mx_cell_ptr_t)MPIU_Malloc(MPID_NEM_MX_REQ * sizeof(MPID_nem_mx_cell_t));
-   MPID_nem_module_mx_recv_outstanding_request =(MPID_nem_mx_cell_ptr_t)MPIU_Malloc(MPID_NEM_MX_REQ * sizeof(MPID_nem_mx_cell_t));
-   MPID_nem_module_mx_pendings_recvs_array     =(int *)MPIU_Malloc(MPID_nem_mem_region.num_procs * sizeof(int));
-#else 
-   MPIU_CHKPMEM_MALLOC (MPID_nem_module_mx_send_outstanding_request, MPID_nem_mx_cell_ptr_t, MPID_NEM_MX_REQ * sizeof(MPID_nem_mx_cell_t), mpi_errno, "send outstanding req");   
-   MPIU_CHKPMEM_MALLOC (MPID_nem_module_mx_recv_outstanding_request, MPID_nem_mx_cell_ptr_t, MPID_NEM_MX_REQ * sizeof(MPID_nem_mx_cell_t), mpi_errno, "recv outstanding req");   
-   MPIU_CHKPMEM_MALLOC (MPID_nem_module_mx_pendings_recvs_array,int *, MPID_nem_mem_region.num_procs * sizeof(int), mpi_errno, "pending recvs array");
-#endif 
-   memset(MPID_nem_module_mx_send_outstanding_request,0,MPID_NEM_MX_REQ*sizeof(MPID_nem_mx_cell_t));  
-   memset(MPID_nem_module_mx_recv_outstanding_request,0,MPID_NEM_MX_REQ*sizeof(MPID_nem_mx_cell_t));     
-   for (index = 0 ; index < MPID_nem_mem_region.num_procs ; index++)
-     {
-	MPID_nem_module_mx_pendings_recvs_array[index] = 0;
-     }         
+   mx_set_error_handler(MX_ERRORS_RETURN);
+
    /*
    ret = mx_get_info(NULL, MX_NIC_COUNT, NULL, 0, &nic_count, sizeof(int));
    MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_get_info", "**mx_get_info %s", mx_strerror (ret));
@@ -109,39 +86,26 @@ int init_mx( MPIDI_PG_t *pg_p )
       index++;
    }while(ret != MX_SUCCESS);
    */
-   
-   /* mx_board_num */
-   ret = mx_open_endpoint(MX_ANY_NIC,MX_ANY_ENDPOINT,MPID_nem_module_mx_filter,NULL,0,&MPID_nem_module_mx_local_endpoint);
+#ifndef USE_CTXT_AS_MARK
+   param.key = MX_PARAM_CONTEXT_ID;
+   param.val.context_id.bits  = NEM_MX_MATCHING_BITS - SHIFT_TYPE;
+   param.val.context_id.shift = SHIFT_TYPE;
+   ret = mx_open_endpoint(MX_ANY_NIC,MX_ANY_ENDPOINT,MPID_NEM_MX_FILTER,&param,1,&MPID_nem_mx_local_endpoint);
+#else
+   ret = mx_open_endpoint(MX_ANY_NIC,MX_ANY_ENDPOINT,MPID_NEM_MX_FILTER,NULL,0,&MPID_nem_mx_local_endpoint);
+#endif
    MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_open_endpoint", "**mx_open_endpoint %s", mx_strerror (ret));
       
-   ret = mx_get_endpoint_addr( MPID_nem_module_mx_local_endpoint,&MPID_nem_module_mx_endpoints_addr[MPID_nem_mem_region.rank]);
+   ret = mx_get_endpoint_addr(MPID_nem_mx_local_endpoint,&local_endpoint_addr);
    MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_get_endpoint_addr", "**mx_get_endpoint_addr %s", mx_strerror (ret));   
    
-   ret = mx_decompose_endpoint_addr(MPID_nem_module_mx_endpoints_addr[MPID_nem_mem_region.rank],&local_nic_id, &local_endpoint_id);
+   ret = mx_decompose_endpoint_addr(local_endpoint_addr,&MPID_nem_mx_local_nic_id,&MPID_nem_mx_local_endpoint_id);
    MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_decompose_endpoint_addr", "**mx_decompose_endpoint_addr %s", mx_strerror (ret));
    
-   MPID_nem_module_mx_send_free_req_queue->head    = NULL;
-   MPID_nem_module_mx_send_free_req_queue->tail    = NULL;
-   MPID_nem_module_mx_send_pending_req_queue->head = NULL;
-   MPID_nem_module_mx_send_pending_req_queue->tail = NULL;
-   
-   MPID_nem_module_mx_recv_free_req_queue->head    = NULL;
-   MPID_nem_module_mx_recv_free_req_queue->tail    = NULL;
-   MPID_nem_module_mx_recv_pending_req_queue->head = NULL;
-   MPID_nem_module_mx_recv_pending_req_queue->tail = NULL;
-   
-   for (index = 0; index < MPID_NEM_MX_REQ ; ++index)
-     {
-	MPID_nem_mx_req_queue_enqueue (MPID_nem_module_mx_send_free_req_queue,&MPID_nem_module_mx_send_outstanding_request[index]);
-	MPID_nem_mx_req_queue_enqueue (MPID_nem_module_mx_recv_free_req_queue,&MPID_nem_module_mx_recv_outstanding_request[index]);
-     }
-
-   MPIU_CHKPMEM_COMMIT();
-   fn_exit:
-     return mpi_errno;
-   fn_fail:
-     MPIU_CHKPMEM_REAP();
-     goto fn_exit;
+ fn_exit:
+   return mpi_errno;
+ fn_fail:
+   goto fn_exit;
 }
 
 /*
@@ -170,36 +134,25 @@ int init_mx( MPIDI_PG_t *pg_p )
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
 MPID_nem_mx_init (MPID_nem_queue_ptr_t proc_recv_queue, 
-		MPID_nem_queue_ptr_t proc_free_queue, 
-		MPID_nem_cell_ptr_t proc_elements,   int num_proc_elements,
-		MPID_nem_cell_ptr_t module_elements, int num_module_elements, 
-		MPID_nem_queue_ptr_t *module_free_queue, int ckpt_restart,
-		MPIDI_PG_t *pg_p, int pg_rank,
-		char **bc_val_p, int *val_max_sz_p)
+		  MPID_nem_queue_ptr_t proc_free_queue, 
+		  MPID_nem_cell_ptr_t proc_elements,   int num_proc_elements,
+		  MPID_nem_cell_ptr_t module_elements, int num_module_elements, 
+		  MPID_nem_queue_ptr_t *module_free_queue, int ckpt_restart,
+		  MPIDI_PG_t *pg_p, int pg_rank,
+		  char **bc_val_p, int *val_max_sz_p)
 {   
    int mpi_errno = MPI_SUCCESS ;
-   int index;
    
-   if( MPID_nem_mem_region.ext_procs > 0)
-     {
-	init_mx(pg_p);
-	mpi_errno = MPID_nem_mx_get_business_card (pg_rank, bc_val_p, val_max_sz_p);
-	if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-     }
-   
-   MPID_nem_process_recv_queue = proc_recv_queue;
-   MPID_nem_process_free_queue = proc_free_queue;
-   
-   MPID_nem_module_mx_free_queue = &_free_queue;
-   
-   MPID_nem_queue_init (MPID_nem_module_mx_free_queue);
-   
-   for (index = 0; index < num_module_elements; ++index)
-     {
-	MPID_nem_queue_enqueue (MPID_nem_module_mx_free_queue, &module_elements[index]);
-     }
-   
-   *module_free_queue = MPID_nem_module_mx_free_queue;
+   init_mx(pg_p);
+
+   mpi_errno = MPID_nem_mx_get_business_card (pg_rank, bc_val_p, val_max_sz_p);
+   if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+
+   mx_register_unexp_handler(MPID_nem_mx_local_endpoint,MPID_nem_mx_get_adi_msg,NULL);
+
+   mpi_errno = MPIDI_CH3I_Register_anysource_notification(MPID_nem_mx_anysource_posted, 
+							  MPID_nem_mx_anysource_matched);
+   if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
    fn_exit:
        return mpi_errno;
@@ -216,66 +169,63 @@ MPID_nem_mx_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
    int mpi_errno = MPI_SUCCESS;
 
-   mpi_errno = MPIU_Str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_ENDPOINT_KEY, local_endpoint_id);
+   mpi_errno = MPIU_Str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_ENDPOINT_KEY, MPID_nem_mx_local_endpoint_id);
    if (mpi_errno != MPIU_STR_SUCCESS)
-     {
-	if (mpi_errno == MPIU_STR_NOMEM) 
-	  {
-	     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard_len");
-	  }
-	else 
-	  {
-	     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard");
-	  }
+   {
+       if (mpi_errno == MPIU_STR_NOMEM) 
+       {
+	   MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+       }
+       else 
+       {
+	   MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard");
+       }
 	goto fn_exit;
-     }
-
-   mpi_errno = MPIU_Str_add_binary_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_NIC_KEY, (char *)&local_nic_id, sizeof(uint64_t));
+   }
+   
+   mpi_errno = MPIU_Str_add_binary_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_NIC_KEY, (char *)&MPID_nem_mx_local_nic_id, sizeof(uint64_t));
    if (mpi_errno != MPIU_STR_SUCCESS)
-     {
-	if (mpi_errno == MPIU_STR_NOMEM) 
-	  {
-	     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard_len");
-	  }
-	else 
-	  {
-	     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard");
-	  }
-	goto fn_exit;
-     }
+   {
+       if (mpi_errno == MPIU_STR_NOMEM) 
+       {
+	   MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+       }
+       else 
+       {
+	   MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard");
+       }
+       goto fn_exit;
+   }
    
    
    fn_exit:
        return mpi_errno;
-   fn_fail:
-       goto fn_exit;
 }
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mx_get_from_bc
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int
-MPID_nem_mx_get_from_bc (const char *business_card, uint32_t *remote_endpoint_id, uint64_t *remote_nic_id)
+int MPID_nem_mx_get_from_bc(const char *business_card, uint32_t *remote_endpoint_id, uint64_t *remote_nic_id)
 {
    int mpi_errno = MPI_SUCCESS;
    int len;
-   uint32_t tmp_endpoint_id;
+   int tmp_endpoint_id;
    
-   mpi_errno = MPIU_Str_get_int_arg (business_card, MPIDI_CH3I_ENDPOINT_KEY, &tmp_endpoint_id);
+   mpi_errno = MPIU_Str_get_int_arg(business_card, MPIDI_CH3I_ENDPOINT_KEY, &tmp_endpoint_id);
    if (mpi_errno != MPIU_STR_SUCCESS) 
-     {
-	/* FIXME: create a real error string for this */
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_hostd");
-     }
+   {
+       /* FIXME: create a real error string for this */
+       MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_hostd");
+   }
    *remote_endpoint_id = (uint32_t)tmp_endpoint_id;
    
    mpi_errno = MPIU_Str_get_binary_arg (business_card, MPIDI_CH3I_NIC_KEY, (char *)remote_nic_id, sizeof(uint64_t), &len);
    if ((mpi_errno != MPIU_STR_SUCCESS) || len != sizeof(uint64_t)) 
-     {	
-	/* FIXME: create a real error string for this */
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_hostd");
-     }
+   {	
+       /* FIXME: create a real error string for this */
+       MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_hostd");
+   }
    
    fn_exit:
      return mpi_errno;
@@ -290,11 +240,7 @@ MPID_nem_mx_get_from_bc (const char *business_card, uint32_t *remote_endpoint_id
 int
 MPID_nem_mx_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
-   int mpi_errno = MPI_SUCCESS;
-   fn_exit:
-       return mpi_errno;
-   fn_fail:
-       goto fn_exit;
+   return MPI_SUCCESS;
 }
 
 #undef FUNCNAME
@@ -302,37 +248,49 @@ MPID_nem_mx_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mx_vc_init (MPIDI_VC_t *vc, const char *business_card)
+MPID_nem_mx_vc_init (MPIDI_VC_t *vc)
 {
+   uint32_t threshold;
+   MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
    int mpi_errno = MPI_SUCCESS;
-   int ret;
-   
+
    /* first make sure that our private fields in the vc fit into the area provided  */
    MPIU_Assert(sizeof(MPID_nem_mx_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
 
-   if( MPID_nem_mem_region.ext_procs > 0)
-     {
-	mpi_errno = MPID_nem_mx_get_from_bc (business_card, &VC_FIELD(vc, remote_endpoint_id), &VC_FIELD(vc, remote_nic_id));
-	/* --BEGIN ERROR HANDLING-- */   
-	if (mpi_errno) 
-	  {	
-	     MPIU_ERR_POP (mpi_errno);
-	  }   
-	/* --END ERROR HANDLING-- */
-	
-	ret = mx_connect(MPID_nem_module_mx_local_endpoint,
-			 VC_FIELD(vc, remote_nic_id),
-			 VC_FIELD(vc, remote_endpoint_id),
-			 MPID_nem_module_mx_filter,
-			 MPID_nem_module_mx_timeout,
-			 &MPID_nem_module_mx_endpoints_addr[vc->pg_rank]);
-	MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_connect", "**mx_connect %s", mx_strerror (ret));
-     }
-   
-   fn_exit:
-       return mpi_errno;
-   fn_fail:
-       goto fn_exit;
+#ifdef ONDEMAND
+   VC_FIELD(vc, local_connected)  = 0;
+   VC_FIELD(vc, remote_connected) = 0;
+#else
+   {
+       char business_card[MPID_NEM_MAX_NETMOD_STRING_LEN];
+       int ret;
+       
+       mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, MPID_NEM_MAX_NETMOD_STRING_LEN, vc->pg);
+       if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+       
+       mpi_errno = MPID_nem_mx_get_from_bc (business_card, &VC_FIELD(vc, remote_endpoint_id), &VC_FIELD(vc, remote_nic_id));
+       if (mpi_errno)    MPIU_ERR_POP (mpi_errno);
+ 
+       ret = mx_connect(MPID_nem_mx_local_endpoint,VC_FIELD(vc, remote_nic_id),VC_FIELD(vc, remote_endpoint_id),
+			MPID_NEM_MX_FILTER,MX_INFINITE,&(VC_FIELD(vc, remote_endpoint_addr)));
+       MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_connect", "**mx_connect %s", mx_strerror (ret));
+       mx_set_endpoint_addr_context(VC_FIELD(vc, remote_endpoint_addr),(void *)vc);
+   }
+#endif
+   mx_get_info(MPID_nem_mx_local_endpoint, MX_COPY_SEND_MAX, NULL, 0, &threshold, sizeof(uint32_t));
+
+   vc->eager_max_msg_sz = threshold;
+   vc->rndvSend_fn      = NULL;
+   vc->sendNoncontig_fn = MPID_nem_mx_SendNoncontig;
+   vc->comm_ops         = &comm_ops;
+ 
+   vc_ch->iStartContigMsg = MPID_nem_mx_iStartContigMsg;
+   vc_ch->iSendContig     = MPID_nem_mx_iSendContig;
+
+ fn_exit:
+   return mpi_errno;
+ fn_fail:
+   goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -345,10 +303,7 @@ int MPID_nem_mx_vc_destroy(MPIDI_VC_t *vc)
 
     /* free any resources associated with this VC here */
 
- fn_exit:   
-       return mpi_errno;
- fn_fail:
-       goto fn_exit;
+    return mpi_errno;
 }
 
 #undef FUNCNAME

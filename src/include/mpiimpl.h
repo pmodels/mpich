@@ -681,6 +681,8 @@ int MPIU_GetEnvInt( const char *envName, int *val );
 int MPIU_GetEnvRange( const char *envName, int *lowPtr, int *highPtr );
 int MPIU_GetEnvBool( const char *envName, int *val );
 int MPIU_GetEnvStr( const char *envName, const char **val );
+int MPIU_SetEnv( const char *name, const char *value, int overwrite );
+
 
 /* See mpishared.h as well */
 /* ------------------------------------------------------------------------- */

@@ -14,6 +14,11 @@
 #include <stdio.h>
 #include <ctype.h>
 
+
+#if defined( HAVE_SETENV ) && defined( NEEDS_SETENV_DECL )
+extern int setenv(const char *name, const char *value, int overwrite);
+#endif
+
 #ifndef isascii
 #define isascii(c) (((c)&~0x7f)==0)
 #endif
@@ -415,4 +420,9 @@ int MPIU_GetEnvStr( const char *envName, const char **val )
     }
 
     return 0;
+}
+
+int MPIU_SetEnv( const char *name, const char *value, int overwrite )
+{
+    return setenv( name, value, overwrite );
 }

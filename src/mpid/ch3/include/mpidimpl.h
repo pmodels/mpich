@@ -627,6 +627,50 @@ typedef enum MPIDI_VC_State
 
 struct MPID_Comm;
 
+#ifdef ENABLE_COMM_OVERRIDES
+typedef struct MPIDI_Comm_ops
+{
+    /* Overriding calls in case of matching-capable interfaces */
+    int (*recv_posted)(struct MPIDI_VC *vc, struct MPID_Request *req);
+    
+    int (*send)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+		int dest, int tag, MPID_Comm *comm, int context_offset,
+		struct MPID_Request **request);
+    int (*rsend)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+		 int dest, int tag, MPID_Comm *comm, int context_offset,
+		 struct MPID_Request **request);
+    int (*ssend)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+		 int dest, int tag, MPID_Comm *comm, int context_offset,
+		 struct MPID_Request **request );
+    int (*isend)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+		 int dest, int tag, MPID_Comm *comm, int context_offset,
+		 struct MPID_Request **request );
+    int (*irsend)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+		  int dest, int tag, MPID_Comm *comm, int context_offset,
+		  struct MPID_Request **request );
+    int (*issend)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+		  int dest, int tag, MPID_Comm *comm, int context_offset,
+		  struct MPID_Request **request );
+    
+    int (*send_init)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+		     int dest, int tag, MPID_Comm *comm, int context_offset,
+		     struct MPID_Request **request );
+    int (*bsend_init)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+		      int dest, int tag, MPID_Comm *comm, int context_offset,
+		      struct MPID_Request **request);
+    int (*rsend_init)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+		      int dest, int tag, MPID_Comm *comm, int context_offset,
+		      struct MPID_Request **request );
+    int (*ssend_init)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+		      int dest, int tag, MPID_Comm *comm, int context_offset,
+		      struct MPID_Request **request );
+    int (*startall)(struct MPIDI_VC *vc, int count,  struct MPID_Request *requests[]);
+    
+    int (*cancel_send)(struct MPIDI_VC *vc,  struct MPID_Request *sreq);
+    int (*cancel_recv)(struct MPIDI_VC *vc,  struct MPID_Request *rreq);
+} MPIDI_Comm_ops_t;
+#endif
+
 typedef struct MPIDI_VC
 {
     /* XXX - need better comment */
@@ -689,6 +733,10 @@ typedef struct MPIDI_VC
        called directly from CH3 and cannot be overridden. */
     int (* sendNoncontig_fn)( struct MPIDI_VC *vc, struct MPID_Request *sreq,
 			      void *header, MPIDI_msg_sz_t hdr_sz );
+
+#ifdef ENABLE_COMM_OVERRIDES
+    MPIDI_Comm_ops_t *comm_ops;    
+#endif
 
 #ifdef MPICH_IS_THREADED    
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT

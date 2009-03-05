@@ -18,8 +18,8 @@ extern MPID_nem_cell_ptr_t MPID_nem_prefetched_cell;
 
 static inline int MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again);
 static inline int MPID_nem_mpich2_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
-static inline int MPID_nem_mpich2_dequeue_fastbox (int local_rank);
-static inline int MPID_nem_mpich2_enqueue_fastbox (int local_rank);
+static inline void MPID_nem_mpich2_dequeue_fastbox (int local_rank);
+static inline void MPID_nem_mpich2_enqueue_fastbox (int local_rank);
 static inline int MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
 static inline int MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead);
 static inline int MPID_nem_mpich2_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox);
@@ -769,10 +769,8 @@ MPID_nem_mpich2_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, 
 #define FUNCNAME MPID_nem_mpich2_dequeue_fastbox
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int
-MPID_nem_mpich2_dequeue_fastbox (int local_rank)
+static inline void MPID_nem_mpich2_dequeue_fastbox(int local_rank)
 {
-    int mpi_errno = MPI_SUCCESS;
     MPID_nem_fboxq_elem_t *el;
 
     MPIU_Assert(local_rank < MPID_nem_mem_region.num_local);
@@ -780,7 +778,7 @@ MPID_nem_mpich2_dequeue_fastbox (int local_rank)
     el = &MPID_nem_fboxq_elem_list[local_rank];    
     MPIU_Assert(el->fbox != NULL);
 
-    MPIU_ERR_CHKANDJUMP (!el->usage, mpi_errno, MPI_ERR_OTHER, "**intern");
+    MPIU_Assert(el->usage);
 
     --el->usage;
     if (el->usage == 0)
@@ -802,12 +800,7 @@ MPID_nem_mpich2_dequeue_fastbox (int local_rank)
 	    else
 		MPID_nem_curr_fboxq_elem = el->next;
 	}
-    }
-    
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
+    }    
 }
 
 /*
@@ -820,10 +813,8 @@ MPID_nem_mpich2_dequeue_fastbox (int local_rank)
 #define FUNCNAME MPID_nem_mpich2_dequeue_fastbox
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline
-int MPID_nem_mpich2_enqueue_fastbox (int local_rank)
+static inline void MPID_nem_mpich2_enqueue_fastbox(int local_rank)
 {
-    int mpi_errno = MPI_SUCCESS;
     MPID_nem_fboxq_elem_t *el;
 
     MPIU_Assert(local_rank < MPID_nem_mem_region.num_local);
@@ -851,9 +842,7 @@ int MPID_nem_mpich2_enqueue_fastbox (int local_rank)
 	    
 	el->next = NULL;
 	MPID_nem_fboxq_tail = el;
-    }    
-
-    return mpi_errno;
+    }
 }
 /*
   MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead)

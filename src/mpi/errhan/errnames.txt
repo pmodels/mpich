@@ -889,6 +889,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mx_isend %s:mx_isend failed (%s)
 **mx_wait:mx_wait failed
 **mx_wait %s:mx_wait failed (%s)
+**mx_cancel:mx_cancel failed
+**mx_cancel %s:mx_cancel failed (%s)
 **ibv_alloc_pd:ibv_alloc_pd failed
 **ibv_alloc_pd %s:ibv_alloc_pd failed for device (%s)
 **ibv_create_comp_channel:ibv_create_comp_channel failed

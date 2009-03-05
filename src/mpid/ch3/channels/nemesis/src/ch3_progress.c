@@ -18,10 +18,10 @@
 static MPIDI_CH3_PktHandler_Fcn *pktArray[PKTARRAY_SIZE];
 
 #ifndef MPIDI_POSTED_RECV_ENQUEUE_HOOK
-#define MPIDI_POSTED_RECV_ENQUEUE_HOOK(x) do {} while (0)
+#define MPIDI_POSTED_RECV_ENQUEUE_HOOK(x) do{}while(0)
 #endif
 #ifndef MPIDI_POSTED_RECV_DEQUEUE_HOOK
-#define MPIDI_POSTED_RECV_DEQUEUE_HOOK(x) do {} while (0)
+#define MPIDI_POSTED_RECV_DEQUEUE_HOOK(x) 0
 #endif
 
 #ifdef BY_PASS_PROGRESS
@@ -46,6 +46,18 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count);
 struct MPID_Request *MPIDI_CH3I_sendq_head[CH3_NUM_QUEUES] = {0};
 struct MPID_Request *MPIDI_CH3I_sendq_tail[CH3_NUM_QUEUES] = {0};
 struct MPID_Request *MPIDI_CH3I_active_send[CH3_NUM_QUEUES] = {0};
+
+/* qn_ent and friends are used to keep a list of notification
+   callbacks for posted and matched anysources */
+typedef struct qn_ent
+{
+    struct qn_ent *next;
+    void (*enqueue_fn)(MPID_Request *rreq);
+    int (*dequeue_fn)(MPID_Request *rreq);
+} qn_ent_t;
+
+static qn_ent_t *qn_head = NULL;
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Progress
@@ -715,81 +727,166 @@ fn_fail:
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Posted_recv_enqueued
+#define FUNCNAME MPIDI_CH3I_Register_anysource_notification
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Posted_recv_enqueued (MPID_Request *rreq)
+int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPID_Request *rreq), int (*dequeue_fn)(MPID_Request *rreq))
 {
     int mpi_errno = MPI_SUCCESS;
-    int local_rank = -1;
-    MPIDI_VC_t *vc;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
+    qn_ent_t *ent;
+    MPIU_CHKPMEM_DECL(1);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
-    /* don't enqueue for anysource */
-    if (rreq->dev.match.parts.rank < 0)
-	goto fn_exit;
+    MPIU_CHKPMEM_MALLOC(ent, qn_ent_t *, sizeof(qn_ent_t), mpi_errno, "queue entry");
 
-    /* don't enqueue a fastbox for yourself */
-    MPIU_Assert(rreq->comm != NULL);
-    if (rreq->dev.match.parts.rank == rreq->comm->rank)
-	goto fn_exit;
-    /* don't enqueue non-local processes */
-    MPIDI_Comm_get_vc(rreq->comm, rreq->dev.match.parts.rank, &vc);
-    MPIU_Assert(vc != NULL);
-    if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
-	goto fn_exit;
-
-    /* Translate the communicator rank to a local rank.  Note that there is an
-       implicit assumption here that because is_local is true above, that these
-       processes are in the same PG. */
-    local_rank = MPID_NEM_LOCAL_RANK(vc->pg_rank);
-
-    mpi_errno = MPID_nem_mpich2_enqueue_fastbox (local_rank);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    ent->enqueue_fn = enqueue_fn;
+    ent->dequeue_fn = dequeue_fn;
+    ent->next = qn_head;
+    qn_head = ent;
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
+    MPIU_CHKPMEM_COMMIT();
     return mpi_errno;
  fn_fail:
+    MPIU_CHKPMEM_REAP();
     goto fn_exit;
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Anysource_posted
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static void anysource_posted(MPID_Request *rreq)
+{
+    qn_ent_t *ent = qn_head;
+
+    /* call all of the registered handlers */
+    while (ent)
+    {
+        if (ent->enqueue_fn)
+        {
+            ent->enqueue_fn(rreq);
+        }
+        ent = ent->next;
+    }
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Anysource_matched
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int anysource_matched(MPID_Request *rreq)
+{
+    int matched = FALSE;
+    qn_ent_t *ent = qn_head;
+
+    /* call all of the registered handlers */
+    while(ent) {
+        if (ent->dequeue_fn)
+        {
+            int m;
+            
+            m = ent->dequeue_fn(rreq);
+            
+            /* this is a crude check to check if the req has been
+               matched by more than one netmod.  When MPIU_Assert() is
+               defined to empty, the extra matched=m is optimized
+               away. */
+            MPIU_Assert(!m || !matched);
+            matched = m;
+        }
+        ent = ent->next;
+    }
+
+    return matched;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Posted_recv_enqueued
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq)
+{
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
+
+    if ((rreq)->dev.match.parts.rank == MPI_ANY_SOURCE)
+        /* call anysource handler */
+	anysource_posted(rreq);
+    else
+    {
+        int local_rank = -1;
+	MPIDI_VC_t *vc;
+
+#ifdef ENABLE_COMM_OVERRIDES
+        /* call vc-specific handler */
+	MPIDI_Comm_get_vc((rreq)->comm, (rreq)->dev.match.parts.rank, &vc);
+	if (vc->comm_ops && vc->comm_ops->recv_posted)
+            vc->comm_ops->recv_posted(vc, rreq);
+#endif
+        
+        /* enqueue fastbox */
+        
+        /* don't enqueue a fastbox for yourself */
+        MPIU_Assert(rreq->comm != NULL);
+        if (rreq->dev.match.parts.rank == rreq->comm->rank)
+            goto fn_exit;
+
+        /* don't enqueue non-local processes */
+        if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
+            goto fn_exit;
+
+        /* Translate the communicator rank to a local rank.  Note that there is an
+           implicit assumption here that because is_local is true above, that these
+           processes are in the same PG. */
+        local_rank = MPID_NEM_LOCAL_RANK(vc->pg_rank);
+
+        MPID_nem_mpich2_enqueue_fastbox(local_rank);
+    }
+    
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
+}
+
+/* returns non-zero when req has been matched by channel */
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Posted_recv_dequeued
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Posted_recv_dequeued (MPID_Request *rreq)
+int MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq)
 {
-    int mpi_errno = MPI_SUCCESS;
     int local_rank = -1;
     MPIDI_VC_t *vc;
+    int matched = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
-    if (rreq->dev.match.parts.rank < 0)
-	goto fn_exit;
+    
+    if (rreq->dev.match.parts.rank == MPI_ANY_SOURCE)
+    {
+	matched = anysource_matched(rreq);
+    }
+    else
+    {
+        if (rreq->dev.match.parts.rank == rreq->comm->rank)
+            goto fn_exit;
+        
+        /* don't use MPID_NEM_IS_LOCAL, it doesn't handle dynamic processes */
+        MPIDI_Comm_get_vc(rreq->comm, rreq->dev.match.parts.rank, &vc);
+        MPIU_Assert(vc != NULL);
+        if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
+            goto fn_exit;
 
-    if (rreq->dev.match.parts.rank == rreq->comm->rank)
-	goto fn_exit;
+        /* Translate the communicator rank to a local rank.  Note that there is an
+           implicit assumption here that because is_local is true above, that these
+           processes are in the same PG. */
+        local_rank = MPID_NEM_LOCAL_RANK(vc->pg_rank);
 
-    /* don't use MPID_NEM_IS_LOCAL, it doesn't handle dynamic processes */
-    MPIDI_Comm_get_vc(rreq->comm, rreq->dev.match.parts.rank, &vc);
-    MPIU_Assert(vc != NULL);
-    if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
-	goto fn_exit;
-
-    /* Translate the communicator rank to a local rank.  Note that there is an
-       implicit assumption here that because is_local is true above, that these
-       processes are in the same PG. */
-    local_rank = MPID_NEM_LOCAL_RANK(vc->pg_rank);
-
-    mpi_errno = MPID_nem_mpich2_dequeue_fastbox (local_rank);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
+        MPID_nem_mpich2_dequeue_fastbox(local_rank);
+    }
+    
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
+    return matched;
 }
+

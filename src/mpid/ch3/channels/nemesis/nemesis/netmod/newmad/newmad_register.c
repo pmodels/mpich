@@ -4,11 +4,18 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mx_impl.h"
-#include "myriexpress.h"
+#include "newmad_impl.h"
 
 int
-MPID_nem_mx_test()
+MPID_nem_newmad_register_mem (void *p, int len)
 {
+    return  0;
+}
+
+int
+MPID_nem_newmad_deregister_mem (void *p, int len)
+{    
     return 0;
 }
+
+

@@ -6,12 +6,21 @@
 
 #include "mpidimpl.h"
 
-/* These are needed for nemesis to know from where to expect a message */
+/* MPIDI_POSTED_RECV_ENQUEUE_HOOK(req): Notifies channel that req has
+   been enqueued on the posted recv queue.  Returns void. */
 #ifndef MPIDI_POSTED_RECV_ENQUEUE_HOOK
-#define MPIDI_POSTED_RECV_ENQUEUE_HOOK(x)
+#define MPIDI_POSTED_RECV_ENQUEUE_HOOK(req) do{}while(0)
 #endif
+/* MPIDI_POSTED_RECV_DEQUEUE_HOOK(req): Notifies channel that req has
+   been dequeued from the posted recv queue.  Returns non-zero if the
+   channel has already matched the request; 0 otherwise.  This happens
+   when the channel supports shared-memory and network communication
+   with a network capable of matching, and the same request is matched
+   by the network and, e.g., shared-memory.  When that happens the
+   dequeue functions below should, either search for the next matching
+   request, or report that no request was found. */
 #ifndef MPIDI_POSTED_RECV_DEQUEUE_HOOK
-#define MPIDI_POSTED_RECV_DEQUEUE_HOOK(x)
+#define MPIDI_POSTED_RECV_DEQUEUE_HOOK(req) 0
 #endif
 
 /* FIXME: 
@@ -361,8 +370,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 	    recvq_posted_head = rreq;
 	}
 	recvq_posted_tail = rreq;
-	/* This is for nemesis to know from where to expect a message */
-	MPIDI_POSTED_RECV_ENQUEUE_HOOK (rreq);
+	MPIDI_POSTED_RECV_ENQUEUE_HOOK(rreq);
     }
     
     found = FALSE;
@@ -393,10 +401,11 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
     int found;
     MPID_Request * cur_rreq;
     MPID_Request * prev_rreq;
+    int dequeue_failed;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_DP);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_RECVQ_DP);
-    
+
     found = FALSE;
     prev_rreq = NULL;
     
@@ -413,9 +422,11 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
 	    if (cur_rreq->dev.next == NULL) {
 		recvq_posted_tail = prev_rreq;
 	    }
-	    /* This is for nemesis to know from where to expect a message */
-	    MPIDI_POSTED_RECV_DEQUEUE_HOOK (rreq);
-	    found = TRUE;
+            /* Notify channel that rreq has been dequeued and check if
+               it has already matched rreq, fail if so */
+	    dequeue_failed = MPIDI_POSTED_RECV_DEQUEUE_HOOK(rreq);
+            if (!dequeue_failed)
+                found = TRUE;
 	    break;
 	}
 	
@@ -458,10 +469,12 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
     int found;
     MPID_Request * rreq;
     MPID_Request * prev_rreq;
+    int channel_matched;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_FDP_OR_AEU);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_RECVQ_FDP_OR_AEU);
-    
+
+ top_loop:
     prev_rreq = NULL;
 
     rreq = recvq_posted_head;
@@ -477,10 +490,13 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 	    if (rreq->dev.next == NULL) {
 		recvq_posted_tail = prev_rreq;
 	    }
-	    found = TRUE;
-	    /* This is for the channel to know from where to expect a
-	     * message */
-	    MPIDI_POSTED_RECV_DEQUEUE_HOOK (rreq);
+
+            /* give channel a chance to match the request, try again if so */
+	    channel_matched = MPIDI_POSTED_RECV_DEQUEUE_HOOK(rreq);
+            if (channel_matched)
+                goto top_loop;
+            
+	    found = TRUE;                
 	    goto lock_exit;
 	}
 	prev_rreq = rreq;
