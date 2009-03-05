@@ -34,6 +34,23 @@ int main(int argc, char *argv[])
         MPI_Type_free(&vecs[i]);
     }
 
+    /* this time with the first argument always 0 */
+    for(i = 0; i < 3; i++)
+    {
+        MPI_Type_hvector(0, 1, stride, MPI_INT, &vecs[i]);
+        MPI_Type_commit(&vecs[i]);
+        blockcount[i]=1;
+    }
+    displs[0]=0; displs[1]=-100; displs[2]=-200; /* irrelevant */
+
+    MPI_Type_struct(3, blockcount, displs, vecs, &mystruct);
+    MPI_Type_commit(&mystruct);
+
+    MPI_Type_free(&mystruct);
+    for(i = 0; i < 3; i++)
+    {
+        MPI_Type_free(&vecs[i]);
+    }
     printf(" No Errors\n");
 
     MPI_Finalize();
