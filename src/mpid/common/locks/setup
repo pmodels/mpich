@@ -3,7 +3,7 @@ echo "RUNNING SETUP FOR THE PROCESS LOCKS MODULE"
 #
 # Test for SPARC Compiler inline features.
 cat >lconftest.il << EOF
-void lock_acquire(int * lock);
+void MPIDU_lock_acquire(int * lock);
 .inline lock_acquire, 4
  1:
     set 1, %o1
@@ -13,7 +13,7 @@ void lock_acquire(int * lock);
     nop
     membar #LoadLoad | #LoadStore
 .end
-void lock_release(int * lock);
+void MPIDU_lock_release(int * lock);
 .inline lock_release, 4
     membar #StoreStore | #LoadStore
     clr [%o0]
@@ -23,8 +23,8 @@ cat >lconftest.c << EOF
 int main(int argc, char ** argv)
 {
     int lock = 0;
-    lock_acquire(&lock);
-    lock_release(&lock);
+    MPIDU_lock_acquire(&lock);
+    MPIDU_lock_release(&lock);
     return 0;
 }
 EOF
@@ -48,7 +48,7 @@ fi
 rm -f lconftest*
 
 cat >lconftest.il << EOF
-void lock_acquire(int * lock);
+void MPIDU_lock_acquire(int * lock);
 .inline lock_acquire, 4
  1:
     ldstub [%o0], %o1
@@ -56,7 +56,7 @@ void lock_acquire(int * lock);
     bne 1b
     nop
 .end
-void lock_release(int * lock);
+void MPIDU_lock_release(int * lock);
 .inline lock_release, 4
     stbar
     clrb [%o0]
@@ -66,8 +66,8 @@ cat >lconftest.c << EOF
 int main(int argc, char ** argv)
 {
     int lock = 0;
-    lock_acquire(&lock);
-    lock_release(&lock);
+    MPIDU_lock_acquire(&lock);
+    MPIDU_lock_release(&lock);
     return 0;
 }
 EOF
