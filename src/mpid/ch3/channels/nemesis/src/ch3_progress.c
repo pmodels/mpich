@@ -818,9 +818,9 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq)
         int local_rank = -1;
 	MPIDI_VC_t *vc;
 
+	MPIDI_Comm_get_vc((rreq)->comm, (rreq)->dev.match.parts.rank, &vc);
 #ifdef ENABLE_COMM_OVERRIDES
         /* call vc-specific handler */
-	MPIDI_Comm_get_vc((rreq)->comm, (rreq)->dev.match.parts.rank, &vc);
 	if (vc->comm_ops && vc->comm_ops->recv_posted)
             vc->comm_ops->recv_posted(vc, rreq);
 #endif
