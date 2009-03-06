@@ -53,7 +53,7 @@ int MPIR_Gatherv (
 	MPID_Comm *comm_ptr )
 {
     static const char FCNAME[] = "MPIR_Gatherv";
-    int        comm_size, rank, remote_comm_size;
+    int        comm_size, rank;
     int        mpi_errno = MPI_SUCCESS;
     MPI_Comm comm;
     MPI_Aint       extent;
@@ -121,6 +121,11 @@ int MPIR_Gatherv (
 
     else if (root != MPI_PROC_NULL) { /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (sendcnt) {
+            /* we want local size in both the intracomm and intercomm cases
+               because the size of the root's group (group A in the standard) is
+               irrelevant here. */
+            comm_size = comm_ptr->local_size;
+
             if (comm_size >= MPIR_GATHERV_MIN_PROCS) {
                 mpi_errno = MPIC_Ssend(sendbuf, sendcnt, sendtype, root, 
                                        MPIR_GATHERV_TAG, comm);
