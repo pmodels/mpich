@@ -65,7 +65,7 @@ static void k_select_r(const int k, int a[], const int n, int *value)
 
     assert (k < n);
     ngroups = (n + GROUPSIZE-1) / GROUPSIZE;
-    medians = malloc (ngroups * sizeof (int));
+    medians = MPIU_Malloc(ngroups * sizeof (int));
 
     /* Divide 'a' into groups, sort the elements of each group and
        pull out the median of each group */
@@ -79,13 +79,13 @@ static void k_select_r(const int k, int a[], const int n, int *value)
 
     if (ngroups == 1) {
 	*value = a[n - 1 - k];
-	free(medians);
+	MPIU_Free(medians);
 	return;
     }
 
     /* use k_select to find the median of medians */
     k_select_r((ngroups / 2) - 1 + (ngroups % 2), medians, ngroups, &median_median);
-    free(medians);
+    MPIU_Free(medians);
 
     /* partition array a around the median of medians and return the
        index of the median of medians */
@@ -120,6 +120,8 @@ static int k_select(const int k, int a[], const int n, int *value)
     return mpi_errno;
 }
 
+/* silence "no previous prototype" warnings */
+int MPIU_Outlier_ratio(int * sizes, int n_sizes, double outlier_frac, double threshold);
 
 /* Returns the ratio of the maximum size and the outlier_frac
  * percentile size. */
