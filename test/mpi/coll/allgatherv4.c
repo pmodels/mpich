@@ -99,6 +99,7 @@ int main(int argc, char ** argv)
     free(recvcounts);
     free(displs);
 
+    MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
     if (!comm_rank)
         printf(" No Errors\n");
 
