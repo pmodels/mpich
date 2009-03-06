@@ -699,7 +699,7 @@ int MPIR_Allgatherv (
     else {
 	/* long message or medium-size message and non-power-of-two
 	 * no. of processes. Use ring algorithm. */
-	char * sbuf = NULL, * rbuf = NULL, * smsg, * rmsg;
+	char * sbuf = NULL, * rbuf = NULL;
         int soffset, roffset;
 	int torecv, tosend, min;
 	int sendnow, recvnow;
@@ -746,13 +746,18 @@ int MPIR_Allgatherv (
             sbuf = recvbuf + ((displs[sindex] + soffset) * recvtype_extent);
             rbuf = recvbuf + ((displs[rindex] + roffset) * recvtype_extent);
 
+            /* Protect against wrap-around of indices */
+            if (!tosend)
+                sendnow = 0;
+            if (!torecv)
+                recvnow = 0;
+
 	    /* Communicate */
 	    if (!sendnow && !recvnow) {
 		/* Don't do anything. This case is possible if two
 		 * consecutive processes contribute 0 bytes each. */
 	    }
 	    else if (!sendnow) { /* If there's no data to send, just do a recv call */
-		MPIU_Assert(recvnow > 0);
 		mpi_errno = MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm, &status);
 		/* --BEGIN ERROR HANDLING-- */
 		if (mpi_errno)
@@ -764,7 +769,6 @@ int MPIR_Allgatherv (
 		torecv -= recvnow;
 	    }
 	    else if (!recvnow) { /* If there's no data to receive, just do a send call */
-		MPIU_Assert(sendnow > 0);
 		mpi_errno = MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm);
 		/* --BEGIN ERROR HANDLING-- */
 		if (mpi_errno)
@@ -776,8 +780,6 @@ int MPIR_Allgatherv (
 		tosend -= sendnow;
 	    }
 	    else { /* There's data to be sent and received */
-		MPIU_Assert(sendnow > 0);
-		MPIU_Assert(recvnow > 0);
 		mpi_errno = MPIC_Sendrecv(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, 
 					  rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG,
 					  comm, &status);
