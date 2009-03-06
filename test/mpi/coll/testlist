@@ -16,6 +16,7 @@ allgather2 10
 allgather3 10
 allgatherv2 10
 allgatherv3 10
+# allgatherv4 10
 bcasttest 4
 bcasttest 10
 bcast2 4
