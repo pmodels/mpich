@@ -121,12 +121,20 @@ int MPIR_Scatterv (
                     mpi_errno = starray[i].MPI_ERROR;
             }
         }
+        /* --END ERROR HANDLING-- */
     }
 
     else if (root != MPI_PROC_NULL) { /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
-        if (recvcnt)
+        if (recvcnt) {
             mpi_errno = MPIC_Recv(recvbuf,recvcnt,recvtype,root,
                                   MPIR_SCATTERV_TAG,comm,MPI_STATUS_IGNORE);
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno) {
+                mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
+                return mpi_errno;
+            }
+            /* --END ERROR HANDLING-- */
+        }
     }
     
     /* check if multiple threads are calling this collective function */

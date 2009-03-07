@@ -117,6 +117,7 @@ int MPIR_Gatherv (
                     mpi_errno = starray[i].MPI_ERROR;
             }
         }
+        /* --END ERROR HANDLING-- */
     }
 
     else if (root != MPI_PROC_NULL) { /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
@@ -134,6 +135,12 @@ int MPIR_Gatherv (
                 mpi_errno = MPIC_Send(sendbuf, sendcnt, sendtype, root, 
                                       MPIR_GATHERV_TAG, comm);
             }
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno) {
+                mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
+                return mpi_errno;
+            }
+            /* --END ERROR HANDLING-- */
         }
     }
     
