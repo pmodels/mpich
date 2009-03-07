@@ -133,6 +133,13 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
     local_params_started = 0;
     while (--argc && ++argv) {
 
+        /* Help options */
+        if (!strcmp(*argv, "-h") || !strcmp(*argv, "--help") || !strcmp(*argv, "-help")) {
+            /* Just return from this function; the main code will show the usage */
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
+        }
+
         /* Check what debug level is requested */
         if (!strcmp(*argv, "-v") || !strcmp(*argv, "-vv") || !strcmp(*argv, "-vvv")) {
             CHECK_LOCAL_PARAM_START(local_params_started, status);
@@ -410,6 +417,12 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         if (proc_params->user_num_procs == 0)
             proc_params->user_num_procs = 1;
 
+        /*
+         * We use the following priority order to specify the host file:
+         *    1. Specified to mpiexec using -f
+         *    2. Specified through the environment HYDRA_HOST_FILE
+         *    3. Specified through the environment HYDRA_USE_LOCALHOST
+         */
         if (proc_params->host_file == NULL && got_hostfile == 0 && getenv("HYDRA_HOST_FILE"))
             proc_params->host_file = MPIU_Strdup(getenv("HYDRA_HOST_FILE"));
         if (proc_params->host_file == NULL && got_hostfile == 0 && getenv("HYDRA_USE_LOCALHOST"))

@@ -16,6 +16,7 @@ HYD_Handle handle;
 
 static void usage(void)
 {
+    printf("\n");
     printf("Usage: ./mpiexec [global opts] [exec1 local opts] : [exec2 local opts] : ...\n\n");
 
     printf("Global Options (passed to all executables):\n");
