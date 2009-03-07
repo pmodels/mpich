@@ -15,8 +15,7 @@ To use hydra, mpich2 needs to be configured with the configure option
 Once MPICH2 has been built with Hydra, the Hydra commands are in
 mpich2/bin, or the bin subdirectory of the install directory if you
 have done an install.  You should put this (bin) directory in your
-PATH in your .cshrc or .bashrc, so that it will be picked up by the
-mpd's that are started remotely:
+PATH in your .cshrc or .bashrc for usage convenience:
 
 Put in .cshrc:  setenv PATH /home/you/mpich2/bin:$PATH
 
