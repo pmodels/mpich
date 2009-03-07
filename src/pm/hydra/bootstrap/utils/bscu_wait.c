@@ -36,8 +36,8 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
 
     /* We get here only after the I/O sockets have been closed. If the
      * application did not manually close its stdout and stderr
-     * sockets, this means that the processes have terminated. That
-     * means the below loop will return almost immediately. If not, we
+     * sockets, this means that the processes have terminated. In that
+     * case the below loop will return almost immediately. If not, we
      * poll for some time, burning CPU. */
     do {
         pid = waitpid(-1, &ret_status, WNOHANG);
@@ -57,6 +57,13 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
         }
         if (HYD_CSU_Time_left() == 0)
             break;
+
+        /* FIXME: If we did not break out yet, add a small usleep to
+         * yield CPU here. We can not just sleep for the remaining
+         * time, as the timeout value might be large and the
+         * application might exit much quicker. Note that the
+         * sched_yield() call is broken on newer linux kernel versions
+         * and should not be used. */
     } while (not_completed > 0);
 
     if (not_completed) {
