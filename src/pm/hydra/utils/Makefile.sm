@@ -3,4 +3,4 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS = dbg env sock signals .
+SUBDIRS = dbg env sock signals launch .

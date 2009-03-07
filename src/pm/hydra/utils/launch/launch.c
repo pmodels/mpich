@@ -6,12 +6,11 @@
 
 #include "hydra.h"
 #include "hydra_mem.h"
-#include "bsci.h"
-#include "bscu.h"
+#include "hydra_launch.h"
 
 HYD_Handle handle;
 
-HYD_Status HYD_BSCU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid)
+HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid)
 {
     int inpipe[2], outpipe[2], errpipe[2], arg, tpid;
     HYD_Status status = HYD_SUCCESS;

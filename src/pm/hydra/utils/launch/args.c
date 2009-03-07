@@ -6,12 +6,11 @@
 
 #include "hydra.h"
 #include "hydra_mem.h"
-#include "bsci.h"
-#include "bscu.h"
+#include "hydra_launch.h"
 
 HYD_Handle handle;
 
-HYD_Status HYD_BSCU_Append_env(HYD_Env_t * env_list, char **client_arg, int id)
+HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg, int id)
 {
     int i, j, csh_format;
     HYD_Env_t *env;
@@ -62,7 +61,7 @@ HYD_Status HYD_BSCU_Append_env(HYD_Env_t * env_list, char **client_arg, int id)
 }
 
 
-HYD_Status HYD_BSCU_Append_exec(char **exec, char **client_arg)
+HYD_Status HYDU_Append_exec(char **exec, char **client_arg)
 {
     int i, j;
     HYD_Status status = HYD_SUCCESS;
@@ -79,7 +78,7 @@ HYD_Status HYD_BSCU_Append_exec(char **exec, char **client_arg)
 }
 
 
-HYD_Status HYD_BSCU_Append_wdir(char **client_arg)
+HYD_Status HYDU_Append_wdir(char **client_arg)
 {
     int arg;
     HYD_Status status = HYD_SUCCESS;

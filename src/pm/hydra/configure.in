@@ -260,6 +260,7 @@ AC_OUTPUT(Makefile \
 	utils/env/Makefile \
 	utils/sock/Makefile \
 	utils/signals/Makefile \
+	utils/launch/Makefile \
 	launcher/Makefile \
 	launcher/utils/Makefile \
 	launcher/${HYDRA_LAUNCHER}/Makefile \

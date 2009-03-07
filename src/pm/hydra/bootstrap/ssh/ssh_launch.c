@@ -7,6 +7,7 @@
 #include "hydra.h"
 #include "hydra_sock.h"
 #include "hydra_mem.h"
+#include "hydra_launch.h"
 #include "bsci.h"
 #include "bscu.h"
 
@@ -79,10 +80,10 @@ HYD_Status HYD_BSCI_Launch_procs(void)
             client_arg[arg++] = MPIU_Strdup("\"");
             client_arg[arg++] = NULL;
 
-            HYD_BSCU_Append_env(handle.system_env, client_arg, process_id);
-            HYD_BSCU_Append_env(proc_params->prop_env, client_arg, process_id);
-            HYD_BSCU_Append_wdir(client_arg);
-            HYD_BSCU_Append_exec(proc_params->exec, client_arg);
+            HYDU_Append_env(handle.system_env, client_arg, process_id);
+            HYDU_Append_env(proc_params->prop_env, client_arg, process_id);
+            HYDU_Append_wdir(client_arg);
+            HYDU_Append_exec(proc_params->exec, client_arg);
 
             for (arg = 0; client_arg[arg]; arg++);
             client_arg[arg++] = MPIU_Strdup("\"");
@@ -90,9 +91,9 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
             /* The stdin pointer will be some value for process_id 0;
              * for everyone else, it's NULL. */
-            status = HYD_BSCU_Create_process(client_arg, (process_id == 0 ? &handle.in : NULL),
-                                             &proc_params->out[i], &proc_params->err[i],
-                                             &proc_params->pid[i]);
+            status = HYDU_Create_process(client_arg, (process_id == 0 ? &handle.in : NULL),
+                                         &proc_params->out[i], &proc_params->err[i],
+                                         &proc_params->pid[i]);
             if (status != HYD_SUCCESS) {
                 HYDU_Error_printf("bootstrap spawn process returned error\n");
                 goto fn_fail;
@@ -151,7 +152,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
             client_arg[arg++] = MPIU_Strdup(hostname);
             client_arg[arg++] = NULL;
 
-            HYD_BSCU_Append_wdir(client_arg);
+            HYDU_Append_wdir(client_arg);
 
             for (arg = 0; client_arg[arg]; arg++);
             client_arg[arg++] = MPIU_Strdup("killall");
@@ -165,7 +166,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
             client_arg[arg++] = MPIU_Strdup(execname);
             client_arg[arg++] = NULL;
 
-            status = HYD_BSCU_Create_process(client_arg, NULL, NULL, NULL, NULL);
+            status = HYDU_Create_process(client_arg, NULL, NULL, NULL, NULL);
             if (status != HYD_SUCCESS) {
                 HYDU_Error_printf("bootstrap spawn process returned error\n");
                 goto fn_fail;
