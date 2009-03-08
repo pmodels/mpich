@@ -32,18 +32,20 @@ HYD_Handle handle;
  * auto-incrementing variable; the bootstrap server will take care of
  * adding the process ID to the start value.
  *
- * 5. Ask the bootstrap server to launch the processes.
+ * 5. Create a process info setup and ask the bootstrap server to
+ * launch the processes.
  */
 HYD_Status HYD_PMCI_Launch_procs(void)
 {
     char *port_range, *port_str, *sport;
     uint16_t low_port, high_port, port;
-    int one = 1, i;
-    int num_procs;
+    int one = 1, i, arg;
+    int num_procs, process_id, group_id;
     char hostname[MAX_HOSTNAME_LEN];
     struct sockaddr_in sa;
     HYD_Env_t *env;
     struct HYD_Proc_params *proc_params;
+    struct HYD_Partition_list *partition, *run, *next_partition;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -139,6 +141,58 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("pm utils returned error creating process group\n");
         goto fn_fail;
+    }
+
+    /* FIXME: Temporary hack for testing till the proxy is in shape to
+     * be used -- we just break the partition list to multiple
+     * segments, one for each process and call the application
+     * executable directly. */
+    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
+        group_id = 0;
+        for (partition = proc_params->partition; partition;) {
+            next_partition = partition->next; /* Keep track of the next partition */
+
+            partition->group_id = group_id++;
+            partition->group_rank = 0;
+
+            run = partition;
+            for (process_id = 1; process_id < partition->proc_count; process_id++) {
+                HYDU_Allocate_Partition(&run->next);
+                run = run->next;
+
+                run->name = MPIU_Strdup(partition->name);
+                run->proc_count = 1;
+                run->group_id = group_id++;
+                run->group_rank = 0;
+            }
+
+            partition->proc_count = 1;
+            partition = next_partition;
+        }
+    }
+
+    /* Create the arguments list for each proxy */
+    process_id = 0;
+    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
+        for (partition = proc_params->partition; partition; partition = partition->next) {
+            /* Setup the executable arguments */
+            arg = 0;
+            partition->args[arg++] = MPIU_Strdup("sh");
+            partition->args[arg++] = MPIU_Strdup("-c");
+            partition->args[arg++] = MPIU_Strdup("\"");
+            partition->args[arg++] = NULL;
+
+            HYDU_Append_env(handle.system_env, partition->args, process_id);
+            HYDU_Append_env(proc_params->prop_env, partition->args, process_id);
+            HYDU_Append_wdir(partition->args);
+            HYDU_Append_exec(proc_params->exec, partition->args);
+
+            for (arg = 0; partition->args[arg]; arg++);
+            partition->args[arg++] = MPIU_Strdup("\"");
+            partition->args[arg++] = NULL;
+
+            process_id++;
+        }
     }
 
     /* Initialize the bootstrap server and ask it to launch the

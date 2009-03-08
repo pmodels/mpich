@@ -45,6 +45,7 @@ static void usage(void)
 int main(int argc, char **argv)
 {
     struct HYD_Proc_params *proc_params;
+    struct HYD_Partition_list *partition;
     int exit_status, i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -109,13 +110,10 @@ int main(int argc, char **argv)
     }
 
     /* Check for the exit status for all the processes */
-    proc_params = handle.proc_params;
     exit_status = 0;
-    while (proc_params) {
-        for (i = 0; i < proc_params->exec_proc_count; i++)
-            exit_status |= proc_params->exit_status[i];
-        proc_params = proc_params->next;
-    }
+    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next)
+        for (partition = proc_params->partition; partition; partition = partition->next)
+            exit_status |= partition->exit_status;
 
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_CSI_Finalize();

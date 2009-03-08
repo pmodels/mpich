@@ -7,7 +7,7 @@
 HYDRA_LIB_PATH = ../../lib
 
 libhydra_a_DIR = ${HYDRA_LIB_PATH}
-libhydra_a_SOURCES = bscu_init.c bscu_finalize.c bscu_wait.c bscu_signal.c
+libhydra_a_SOURCES = bscu_wait.c bscu_signal.c
 INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../../../include \
 	-I../../include \

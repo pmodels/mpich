@@ -29,76 +29,54 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_BSCU_Init_exit_status();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("bootstrap utils returned error when initializing exit status\n");
-        goto fn_fail;
-    }
-
     status = HYD_BSCU_Set_common_signals(HYD_BSCU_Signal_handler);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("signal utils returned error when trying to set signal\n");
         goto fn_fail;
     }
 
-    status = HYD_BSCU_Init_io_fds();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("bootstrap utils returned error when initializing io fds\n");
-        goto fn_fail;
-    }
-
     process_id = 0;
     for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
         for (partition = proc_params->partition; partition; partition = partition->next) {
-            for (i = 0; i < partition->proc_count; i++) {
-                /* Setup the executable arguments */
-                arg = 0;
-                client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
+            if (partition->group_rank) /* Only rank 0 is spawned */
+                continue;
 
-                /* Allow X forwarding only if explicitly requested */
-                if (handle.enablex == 1)
-                    client_arg[arg++] = MPIU_Strdup("-X");
-                else if (handle.enablex == 0)
-                    client_arg[arg++] = MPIU_Strdup("-x");
-                else        /* default mode is disable X */
-                    client_arg[arg++] = MPIU_Strdup("-x");
+            /* Setup the executable arguments */
+            arg = 0;
+            client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
 
-                /* ssh does not support any partition names other than host names */
-                client_arg[arg++] = MPIU_Strdup(partition->name);
+            /* Allow X forwarding only if explicitly requested */
+            if (handle.enablex == 1)
+                client_arg[arg++] = MPIU_Strdup("-X");
+            else if (handle.enablex == 0)
+                client_arg[arg++] = MPIU_Strdup("-x");
+            else        /* default mode is disable X */
+                client_arg[arg++] = MPIU_Strdup("-x");
 
-                client_arg[arg++] = MPIU_Strdup("sh");
-                client_arg[arg++] = MPIU_Strdup("-c");
-                client_arg[arg++] = MPIU_Strdup("\"");
-                client_arg[arg++] = NULL;
+            /* ssh does not support any partition names other than host names */
+            client_arg[arg++] = MPIU_Strdup(partition->name);
 
-                HYDU_Append_env(handle.system_env, client_arg, process_id);
-                HYDU_Append_env(proc_params->prop_env, client_arg, process_id);
-                HYDU_Append_wdir(client_arg);
-                HYDU_Append_exec(proc_params->exec, client_arg);
+            for (i = 0; partition->args[i]; i++)
+                client_arg[arg++] = MPIU_Strdup(partition->args[i]);
+            client_arg[arg] = NULL;
 
-                for (arg = 0; client_arg[arg]; arg++);
-                client_arg[arg++] = MPIU_Strdup("\"");
-                client_arg[arg++] = NULL;
-
-                /* The stdin pointer will be some value for process_id
-                 * 0; for everyone else, it's NULL. */
-                status = HYDU_Create_process(client_arg, (process_id == 0 ? &handle.in : NULL),
-                                             &proc_params->out[i], &proc_params->err[i],
-                                             &proc_params->pid[i]);
-                if (status != HYD_SUCCESS) {
-                    HYDU_Error_printf("bootstrap spawn process returned error\n");
-                    goto fn_fail;
-                }
-
-                for (arg = 0; client_arg[arg]; arg++)
-                    HYDU_FREE(client_arg[arg]);
-
-                /* For the remaining processes, set the stdin fd to -1 */
-                if (process_id != 0)
-                    handle.in = -1;
-
-                process_id++;
+            /* The stdin pointer will be some value for process_id 0;
+             * for everyone else, it's NULL. */
+            status = HYDU_Create_process(client_arg, (process_id == 0 ? &handle.in : NULL),
+                                         &partition->out, &partition->err, &partition->pid);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("bootstrap spawn process returned error\n");
+                goto fn_fail;
             }
+
+            for (arg = 0; client_arg[arg]; arg++)
+                HYDU_FREE(client_arg[arg]);
+
+            /* For the remaining processes, set the stdin fd to -1 */
+            if (process_id != 0)
+                handle.in = -1;
+
+            process_id++;
         }
     }
 

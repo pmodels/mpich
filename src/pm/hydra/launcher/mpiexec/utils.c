@@ -49,11 +49,8 @@ static HYD_Status allocate_proc_params(struct HYD_Proc_params **params)
     proc_params->user_env = NULL;
     proc_params->prop = HYD_ENV_PROP_UNSET;
     proc_params->prop_env = NULL;
-    proc_params->out = NULL;
-    proc_params->err = NULL;
     proc_params->stdout_cb = NULL;
     proc_params->stderr_cb = NULL;
-    proc_params->exit_status = NULL;
     proc_params->next = NULL;
 
     *params = proc_params;

@@ -32,13 +32,9 @@ HYD_Status HYD_LCHU_Create_host_list(void)
     proc_params = handle.proc_params;
     while (proc_params) {
         if (!strcmp(handle.host_file, "HYDRA_USE_LOCALHOST")) {
-            HYDU_MALLOC(proc_params->partition, struct HYD_Partition_list *,
-                        sizeof(struct HYD_Partition_list), status);
-
+            HYDU_Allocate_Partition(&proc_params->partition);
             proc_params->partition->name = MPIU_Strdup("localhost");
             proc_params->partition->proc_count = proc_params->exec_proc_count;
-            proc_params->partition->mapping = NULL;
-            proc_params->partition->next = NULL;
             total_procs = proc_params->exec_proc_count;
         }
         else {
@@ -59,20 +55,18 @@ HYD_Status HYD_LCHU_Create_host_list(void)
                 if (num_procs > (proc_params->exec_proc_count - total_procs))
                     num_procs = (proc_params->exec_proc_count - total_procs);
 
-                if (proc_params->partition) {
+                if (!proc_params->partition) {
+                    HYDU_Allocate_Partition(&proc_params->partition);
+                    partition = proc_params->partition;
+                }
+                else {
                     for (partition = proc_params->partition; partition->next;
                          partition = partition->next);
-                    HYDU_MALLOC(partition->next, struct HYD_Partition_list *,
-                                sizeof(struct HYD_Partition_list), status);
+                    HYDU_Allocate_Partition(&partition->next);
                     partition = partition->next;
                 }
-
                 partition->name = MPIU_Strdup(hostname);
-
-                /* FIXME: We don't support mappings yet */
-                partition->mapping = NULL;
                 partition->proc_count = num_procs;
-                partition->next = NULL;
 
                 total_procs += num_procs;
                 if (total_procs == proc_params->exec_proc_count)
@@ -198,33 +192,16 @@ HYD_Status HYD_LCHU_Free_env_list(void)
 HYD_Status HYD_LCHU_Free_io(void)
 {
     struct HYD_Proc_params *proc_params;
+    struct HYD_Partition_list *partition;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        HYDU_FREE(proc_params->out);
-        HYDU_FREE(proc_params->err);
-        proc_params = proc_params->next;
-    }
-
-    HYDU_FUNC_EXIT();
-    return status;
-}
-
-
-HYD_Status HYD_LCHU_Free_exits(void)
-{
-    struct HYD_Proc_params *proc_params;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        HYDU_FREE(proc_params->exit_status);
-        proc_params = proc_params->next;
+    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
+        for (partition = proc_params->partition; partition; partition = partition->next) {
+            HYDU_FREE(partition->out);
+            HYDU_FREE(partition->err);
+        }
     }
 
     HYDU_FUNC_EXIT();

@@ -14,7 +14,6 @@ HYD_Status HYD_LCHU_Free_host_list(void);
 HYD_Status HYD_LCHU_Create_env_list(void);
 HYD_Status HYD_LCHU_Free_env_list(void);
 HYD_Status HYD_LCHU_Free_io(void);
-HYD_Status HYD_LCHU_Free_exits(void);
 HYD_Status HYD_LCHU_Free_exec(void);
 HYD_Status HYD_LCHU_Free_proc_params(void);
 

@@ -96,6 +96,7 @@ struct HYD_Handle_ {
 
     char *host_file;
 
+    /* Global environment */
     HYD_Env_t *global_env;
     HYD_Env_t *system_env;
     HYD_Env_t *user_env;
@@ -115,36 +116,55 @@ struct HYD_Handle_ {
      * executable and environment. */
     struct HYD_Proc_params {
         int  exec_proc_count;
+        char *exec[HYD_EXEC_ARGS];
+
         struct HYD_Partition_list {
             char  * name;
             int     proc_count;
             char ** mapping; /* Can be core IDs or something else */
+
+            /*
+             * The boot-strap server is expected to start a single
+             * executable on the first possible node and return a
+             * single PID. This executable could be a PM proxy that
+             * will launch the actual application on the rest of the
+             * partition list.
+             *
+             * Possible hacks:
+             *
+             *   1. If the process manager needs more proxies within
+             *      this same list, it can use different group
+             *      IDs. Each group ID will have its own proxy.
+             *
+             *   2. If no proxy is needed, the PM can split this list
+             *      into one element per process. The boot-strap
+             *      server itself does not distinguish a proxy from
+             *      the application executable, so it will not require
+             *      any changes.
+             *
+             *   3. One proxy per physical node means that each
+             *      partition will have a different group ID.
+             */
+            int     group_id; /* Assumed to be in ascending order */
+            int     group_rank; /* Rank within the group */
+            int     pid;
+            int     out;
+            int     err;
+            int     exit_status;
+            char  * args[HYD_EXEC_ARGS];
+
             struct HYD_Partition_list *next;
         } *partition;
 
-        char *exec[HYD_EXEC_ARGS];
+        /* Local environment */
         HYD_Env_t *user_env;
         HYD_Env_prop_t prop;
         HYD_Env_t *prop_env;
-
-        /* These output FDs are filled in by the lower layers */
-        int *out;
-        int *err;
 
         /* Callback functions for the stdout/stderr events. These can
          * be the same. */
          HYD_Status(*stdout_cb) (int fd, HYD_Event_t events);
          HYD_Status(*stderr_cb) (int fd, HYD_Event_t events);
-
-        /* Status > 0 means that it is not set yet. Successful
-         * completion of a process will set the status to 0. An error
-         * will set this to a negative value corresponding to the
-         * error. Depending on the bootstrap server, these values
-         * might correspond to per-process status, or can be a common
-         * value for all processes. */
-        int *pid;
-        int *exit_status;
-        int *exit_status_valid;
 
         struct HYD_Proc_params *next;
     } *proc_params;

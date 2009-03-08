@@ -15,6 +15,7 @@ HYD_Handle handle;
 HYD_Status HYD_CSI_Launch_procs(void)
 {
     struct HYD_Proc_params *proc_params;
+    struct HYD_Partition_list *partition;
     int stdin_fd, flags, count;
     HYD_Status status = HYD_SUCCESS;
 
@@ -26,23 +27,20 @@ HYD_Status HYD_CSI_Launch_procs(void)
         goto fn_fail;
     }
 
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        status = HYD_DMX_Register_fd(proc_params->exec_proc_count, proc_params->out,
-                                     HYD_STDOUT, proc_params->stdout_cb);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("demux engine returned error when registering fd\n");
-            goto fn_fail;
-        }
+    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
+        for (partition = proc_params->partition; partition; partition = partition->next) {
+            status = HYD_DMX_Register_fd(1, &partition->out, HYD_STDOUT, proc_params->stdout_cb);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("demux engine returned error when registering fd\n");
+                goto fn_fail;
+            }
 
-        status = HYD_DMX_Register_fd(proc_params->exec_proc_count, proc_params->err,
-                                     HYD_STDOUT, proc_params->stderr_cb);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("demux engine returned error when registering fd\n");
-            goto fn_fail;
+            status = HYD_DMX_Register_fd(1, &partition->err, HYD_STDOUT, proc_params->stderr_cb);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("demux engine returned error when registering fd\n");
+                goto fn_fail;
+            }
         }
-
-        proc_params = proc_params->next;
     }
 
     if (handle.in != -1) {      /* Only process_id 0 */
