@@ -11,110 +11,89 @@ HYD_Handle handle;
 
 HYD_Status HYD_LCHU_Create_host_list(void)
 {
-    FILE *fp;
-    char line[2 * MAX_HOSTNAME_LEN], *hostfile, *hostname, *procs;
+    FILE *fp = NULL;
+    char line[2 * MAX_HOSTNAME_LEN], *hostname, *procs;
     struct HYD_Proc_params *proc_params;
-    int i, j, num_procs;
+    struct HYD_Partition_list *partition;
+    int num_procs, total_procs;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /* FIXME: We need a better approach than this -- we make two
-     * passes for the total host list, one to find the number of
-     * hosts, and another to read the actual hosts. */
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        if (proc_params->host_file != NULL) {
-            if (!strcmp(proc_params->host_file, "HYDRA_USE_LOCALHOST")) {
-                proc_params->total_num_procs++;
-            }
-            else {
-                fp = fopen(proc_params->host_file, "r");
-                if (fp == NULL) {
-                    HYDU_Error_printf("unable to open host file %s\n", proc_params->host_file);
-                    status = HYD_INTERNAL_ERROR;
-                    goto fn_fail;
-                }
-
-                proc_params->total_num_procs = 0;
-                while (!feof(fp)) {
-                    if ((fscanf(fp, "%s", line) < 0) && errno) {
-                        HYDU_Error_printf("unable to read input line (errno: %d)\n", errno);
-                        status = HYD_INTERNAL_ERROR;
-                        goto fn_fail;
-                    }
-                    if (feof(fp))
-                        break;
-
-                    hostname = strtok(line, ":");
-                    procs = strtok(NULL, ":");
-                    if (procs)
-                        num_procs = atoi(procs);
-                    else
-                        num_procs = 1;
-
-                    proc_params->total_num_procs += num_procs;
-                }
-
-                fclose(fp);
-            }
+    if (strcmp(handle.host_file, "HYDRA_USE_LOCALHOST")) {
+        fp = fopen(handle.host_file, "r");
+        if (fp == NULL) {
+            HYDU_Error_printf("unable to open host file %s\n", handle.host_file);
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
         }
-        proc_params = proc_params->next;
     }
 
     proc_params = handle.proc_params;
     while (proc_params) {
-        if (proc_params->host_file != NULL) {
+        if (!strcmp(handle.host_file, "HYDRA_USE_LOCALHOST")) {
+            HYDU_MALLOC(proc_params->partition, struct HYD_Partition_list *,
+                        sizeof(struct HYD_Partition_list), status);
 
-            HYDU_MALLOC(proc_params->total_proc_list, char **,
-                        proc_params->total_num_procs * sizeof(char *), status);
-            HYDU_MALLOC(proc_params->total_core_list, int *,
-                        proc_params->total_num_procs * sizeof(int), status);
-
-            if (!strcmp(proc_params->host_file, "HYDRA_USE_LOCALHOST")) {
-                proc_params->total_proc_list[0] = MPIU_Strdup("localhost");
-                proc_params->total_core_list[0] = -1;
-            }
-            else {
-                fp = fopen(proc_params->host_file, "r");
-                if (fp == NULL) {
-                    HYDU_Error_printf("unable to open host file %s\n", proc_params->host_file);
+            proc_params->partition->name = MPIU_Strdup("localhost");
+            proc_params->partition->proc_count = proc_params->exec_proc_count;
+            proc_params->partition->mapping = NULL;
+            proc_params->partition->next = NULL;
+            total_procs = proc_params->exec_proc_count;
+        }
+        else {
+            total_procs = 0;
+            while (!feof(fp)) {
+                if ((fscanf(fp, "%s", line) < 0) && errno) {
+                    HYDU_Error_printf("unable to read input line (errno: %d)\n", errno);
                     status = HYD_INTERNAL_ERROR;
                     goto fn_fail;
                 }
+                if (feof(fp))
+                    break;
 
-                i = 0;
-                while (!feof(fp)) {
-                    if ((fscanf(fp, "%s", line) < 0) && errno) {
-                        HYDU_Error_printf("unable to read input line (errno: %d)\n", errno);
-                        status = HYD_INTERNAL_ERROR;
-                        goto fn_fail;
-                    }
-                    if (feof(fp))
-                        break;
+                hostname = strtok(line, ":");
+                procs = strtok(NULL, ":");
 
-                    hostname = strtok(line, ":");
-                    procs = strtok(NULL, ":");
+                num_procs = procs ? atoi(procs) : 1;
+                if (num_procs > (proc_params->exec_proc_count - total_procs))
+                    num_procs = (proc_params->exec_proc_count - total_procs);
 
-                    if (procs)
-                        num_procs = atoi(procs);
-                    else
-                        num_procs = 1;
-
-                    for (j = 0; j < num_procs; j++) {
-                        proc_params->total_proc_list[i] = MPIU_Strdup(hostname);
-                        proc_params->total_core_list[i] = -1;
-                        i++;
-                    }
+                if (proc_params->partition) {
+                    for (partition = proc_params->partition; partition->next;
+                         partition = partition->next);
+                    HYDU_MALLOC(partition->next, struct HYD_Partition_list *,
+                                sizeof(struct HYD_Partition_list), status);
+                    partition = partition->next;
                 }
 
-                fclose(fp);
+                partition->name = MPIU_Strdup(hostname);
+
+                /* FIXME: We don't support mappings yet */
+                partition->mapping = NULL;
+                partition->proc_count = num_procs;
+                partition->next = NULL;
+
+                total_procs += num_procs;
+                if (total_procs == proc_params->exec_proc_count)
+                    break;
             }
         }
+
+        if (total_procs != proc_params->exec_proc_count)
+            break;
         proc_params = proc_params->next;
+    }
+
+    if (proc_params) {
+        HYDU_Error_printf("Not enough number of hosts in host file: %s\n", handle.host_file);
+        status = HYD_INTERNAL_ERROR;
+        goto fn_fail;
     }
 
   fn_exit:
+    if (fp)
+        fclose(fp);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -126,20 +105,23 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 HYD_Status HYD_LCHU_Free_host_list(void)
 {
     struct HYD_Proc_params *proc_params;
+    struct HYD_Partition_list *partition;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        for (i = 0; i < proc_params->total_num_procs; i++)
-            HYDU_FREE(proc_params->total_proc_list[i]);
-        HYDU_FREE(proc_params->total_proc_list);
-        HYDU_FREE(proc_params->total_core_list);
-        HYDU_FREE(proc_params->host_file);
-        proc_params = proc_params->next;
+    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
+        for (partition = proc_params->partition; partition; partition = partition->next) {
+            HYDU_FREE(partition->name);
+            if (partition->mapping) {
+                if (partition->mapping[i])
+                    HYDU_FREE(partition->mapping[i]);
+                HYDU_FREE(partition->mapping);
+            }
+        }
     }
+    HYDU_FREE(handle.host_file);
 
     HYDU_FUNC_EXIT();
     return status;

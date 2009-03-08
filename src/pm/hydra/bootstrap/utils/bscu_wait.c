@@ -28,7 +28,7 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
     not_completed = 0;
     proc_params = handle.proc_params;
     while (proc_params) {
-        for (i = 0; i < proc_params->user_num_procs; i++)
+        for (i = 0; i < proc_params->exec_proc_count; i++)
             if (proc_params->exit_status_valid[i] == 0)
                 not_completed++;
         proc_params = proc_params->next;
@@ -45,7 +45,7 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
             /* Find the pid and mark it as complete. */
             proc_params = handle.proc_params;
             while (proc_params) {
-                for (i = 0; i < proc_params->user_num_procs; i++) {
+                for (i = 0; i < proc_params->exec_proc_count; i++) {
                     if (proc_params->pid[i] == pid) {
                         proc_params->exit_status[i] = WEXITSTATUS(ret_status);
                         proc_params->exit_status_valid[i] = 1;

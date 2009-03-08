@@ -94,6 +94,8 @@ struct HYD_Handle_ {
     int enablex;
     char *wdir;
 
+    char *host_file;
+
     HYD_Env_t *global_env;
     HYD_Env_t *system_env;
     HYD_Env_t *user_env;
@@ -112,12 +114,13 @@ struct HYD_Handle_ {
     /* Each structure will contain all hosts/cores that use the same
      * executable and environment. */
     struct HYD_Proc_params {
-        int user_num_procs;
-        int total_num_procs;
-        char **total_proc_list;
-        int *total_core_list;
-
-        char *host_file;
+        int  exec_proc_count;
+        struct HYD_Partition_list {
+            char  * name;
+            int     proc_count;
+            char ** mapping; /* Can be core IDs or something else */
+            struct HYD_Partition_list *next;
+        } *partition;
 
         char *exec[HYD_EXEC_ARGS];
         HYD_Env_t *user_env;

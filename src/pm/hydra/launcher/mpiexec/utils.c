@@ -42,12 +42,8 @@ static HYD_Status allocate_proc_params(struct HYD_Proc_params **params)
 
     HYDU_MALLOC(proc_params, struct HYD_Proc_params *, sizeof(struct HYD_Proc_params), status);
 
-    proc_params->user_num_procs = 0;
-    proc_params->total_num_procs = 0;
-    proc_params->total_proc_list = NULL;
-    proc_params->total_core_list = NULL;
-
-    proc_params->host_file = NULL;
+    proc_params->exec_proc_count = 0;
+    proc_params->partition = NULL;
 
     proc_params->exec[0] = NULL;
     proc_params->user_env = NULL;
@@ -103,7 +99,7 @@ static HYD_Status get_current_proc_params(struct HYD_Proc_params **params)
 
 HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 {
-    int argc = t_argc, i, got_hostfile;
+    int argc = t_argc, i;
     char **argv = t_argv;
     int local_params_started;
     char *arg;
@@ -117,6 +113,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
     handle.debug = -1;
     handle.enablex = -1;
     handle.wdir = NULL;
+    handle.host_file = NULL;
 
     status = HYDU_Env_global_list(&handle.global_env);
     if (status != HYD_SUCCESS) {
@@ -304,6 +301,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             CHECK_LOCAL_PARAM_START(local_params_started, status);
             CHECK_NEXT_ARG_VALID(status);
             handle.wdir = MPIU_Strdup(*argv);
+            continue;
         }
 
         if (!strcmp(*argv, "-n") || !strcmp(*argv, "-np")) {
@@ -317,37 +315,22 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             }
 
             /* Num_procs already set */
-            if (proc_params->user_num_procs != 0) {
+            if (proc_params->exec_proc_count != 0) {
                 HYDU_Error_printf("Duplicate setting for number of processes; previously set to %d\n",
-                                  proc_params->user_num_procs);
+                                  proc_params->exec_proc_count);
                 status = HYD_INTERNAL_ERROR;
                 goto fn_fail;
             }
 
-            proc_params->user_num_procs = atoi(*argv);
+            proc_params->exec_proc_count = atoi(*argv);
 
             continue;
         }
 
         if (!strcmp(*argv, "-f")) {
-            local_params_started = 1;
+            CHECK_LOCAL_PARAM_START(local_params_started, status);
             CHECK_NEXT_ARG_VALID(status);
-
-            status = get_current_proc_params(&proc_params);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("get_current_proc_params returned error\n");
-                goto fn_fail;
-            }
-
-            /* host_file already set */
-            if (proc_params->host_file != NULL) {
-                HYDU_Error_printf("Duplicate setting for host file; previously set to %s\n",
-                                  proc_params->host_file);
-                status = HYD_INTERNAL_ERROR;
-                goto fn_fail;
-            }
-
-            proc_params->host_file = MPIU_Strdup(*argv);
+            handle.host_file = MPIU_Strdup(*argv);
             continue;
         }
 
@@ -405,8 +388,23 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         }
     }
 
+    /*
+     * We use the following priority order to specify the host file:
+     *    1. Specified to mpiexec using -f
+     *    2. Specified through the environment HYDRA_HOST_FILE
+     *    3. Specified through the environment HYDRA_USE_LOCALHOST
+     */
+    if (handle.host_file == NULL && getenv("HYDRA_HOST_FILE"))
+        handle.host_file = MPIU_Strdup(getenv("HYDRA_HOST_FILE"));
+    if (handle.host_file == NULL && getenv("HYDRA_USE_LOCALHOST"))
+        handle.host_file = MPIU_Strdup("HYDRA_USE_LOCALHOST");
+    if (handle.host_file == NULL) {
+        HYDU_Error_printf("Host file not specified\n");
+        status = HYD_INTERNAL_ERROR;
+        goto fn_fail;
+    }
+
     proc_params = handle.proc_params;
-    got_hostfile = 0;
     while (proc_params) {
         if (proc_params->exec[0] == NULL) {
             HYDU_Error_printf("no executable specified\n");
@@ -414,29 +412,10 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             goto fn_fail;
         }
 
-        if (proc_params->user_num_procs == 0)
-            proc_params->user_num_procs = 1;
-
-        /*
-         * We use the following priority order to specify the host file:
-         *    1. Specified to mpiexec using -f
-         *    2. Specified through the environment HYDRA_HOST_FILE
-         *    3. Specified through the environment HYDRA_USE_LOCALHOST
-         */
-        if (proc_params->host_file == NULL && got_hostfile == 0 && getenv("HYDRA_HOST_FILE"))
-            proc_params->host_file = MPIU_Strdup(getenv("HYDRA_HOST_FILE"));
-        if (proc_params->host_file == NULL && got_hostfile == 0 && getenv("HYDRA_USE_LOCALHOST"))
-            proc_params->host_file = MPIU_Strdup("HYDRA_USE_LOCALHOST");
-        if (proc_params->host_file != NULL)
-            got_hostfile = 1;
+        if (proc_params->exec_proc_count == 0)
+            proc_params->exec_proc_count = 1;
 
         proc_params = proc_params->next;
-    }
-
-    if (got_hostfile == 0) {
-        HYDU_Error_printf("Host file not specified\n");
-        status = HYD_INTERNAL_ERROR;
-        goto fn_fail;
     }
 
   fn_exit:

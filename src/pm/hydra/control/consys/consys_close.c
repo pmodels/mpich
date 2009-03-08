@@ -33,7 +33,7 @@ HYD_Status HYD_CSI_Close_fd(int fd)
     /* Find the FD in the handle and remove it. */
     proc_params = handle.proc_params;
     while (proc_params) {
-        for (i = 0; i < proc_params->user_num_procs; i++) {
+        for (i = 0; i < proc_params->exec_proc_count; i++) {
             if (proc_params->out[i] == fd) {
                 proc_params->out[i] = -1;
                 goto fn_exit;

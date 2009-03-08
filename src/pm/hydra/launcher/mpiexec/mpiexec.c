@@ -112,7 +112,7 @@ int main(int argc, char **argv)
     proc_params = handle.proc_params;
     exit_status = 0;
     while (proc_params) {
-        for (i = 0; i < proc_params->user_num_procs; i++)
+        for (i = 0; i < proc_params->exec_proc_count; i++)
             exit_status |= proc_params->exit_status[i];
         proc_params = proc_params->next;
     }

@@ -104,7 +104,7 @@ HYD_Status HYD_PMCU_Create_pg(void)
     num_procs = 0;
     proc_params = handle.proc_params;
     while (proc_params) {
-        num_procs += proc_params->user_num_procs;
+        num_procs += proc_params->exec_proc_count;
         proc_params = proc_params->next;
     }
 
@@ -140,7 +140,7 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     size = 0;
     proc_params = handle.proc_params;
     while (proc_params) {
-        size += proc_params->user_num_procs;
+        size += proc_params->exec_proc_count;
         proc_params = proc_params->next;
     }
     debug = handle.debug;

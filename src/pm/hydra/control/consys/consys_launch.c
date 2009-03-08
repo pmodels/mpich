@@ -28,14 +28,14 @@ HYD_Status HYD_CSI_Launch_procs(void)
 
     proc_params = handle.proc_params;
     while (proc_params) {
-        status = HYD_DMX_Register_fd(proc_params->user_num_procs, proc_params->out,
+        status = HYD_DMX_Register_fd(proc_params->exec_proc_count, proc_params->out,
                                      HYD_STDOUT, proc_params->stdout_cb);
         if (status != HYD_SUCCESS) {
             HYDU_Error_printf("demux engine returned error when registering fd\n");
             goto fn_fail;
         }
 
-        status = HYD_DMX_Register_fd(proc_params->user_num_procs, proc_params->err,
+        status = HYD_DMX_Register_fd(proc_params->exec_proc_count, proc_params->err,
                                      HYD_STDOUT, proc_params->stderr_cb);
         if (status != HYD_SUCCESS) {
             HYDU_Error_printf("demux engine returned error when registering fd\n");
