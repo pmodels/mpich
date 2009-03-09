@@ -6,13 +6,6 @@
 
 #include "mpid_nem_impl.h"
 #include "mpid_nem_datatypes.h"
-#ifdef HAVE_SYS_IPC_H
-    #include <sys/ipc.h>
-#endif
-#ifdef HAVE_SYS_SHM_H
-    #include <sys/shm.h>
-#endif
-#include <errno.h>
 
 #include "mpiu_os_wrappers.h"
 #if defined(USE_DBG_LOGGING) && 1
