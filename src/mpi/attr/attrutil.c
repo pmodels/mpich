@@ -35,6 +35,12 @@ MPIU_Object_alloc_t MPID_Attr_mem = { 0, 0, 0, 0, MPID_ATTR,
 					    MPID_Attr_direct,
 					    MPID_ATTR_PREALLOC, };
 
+/* Provides a way to trap all attribute allocations when debugging leaks. */
+MPID_Attribute *MPID_Attr_alloc(void)
+{
+    return (MPID_Attribute *)MPIU_Handle_obj_alloc(&MPID_Attr_mem);
+}
+
 void MPID_Attr_free(MPID_Attribute *attr_ptr)
 {
     MPIU_Handle_obj_free(&MPID_Attr_mem, attr_ptr);
@@ -172,7 +178,7 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
 
         /* duplicate the attribute by creating new storage, copying the
         attribute value, and invoking the copy function */
-        new_p = (MPID_Attribute *)MPIU_Handle_obj_alloc( &MPID_Attr_mem );
+        new_p = MPID_Attr_alloc();
         /* --BEGIN ERROR HANDLING-- */
         if (!new_p){
             mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );

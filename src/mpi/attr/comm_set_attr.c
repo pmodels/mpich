@@ -99,8 +99,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    break;
 	}
 	else if (p->keyval->handle > keyval_ptr->handle) {
-	    MPID_Attribute *new_p = 
-		(MPID_Attribute *)MPIU_Handle_obj_alloc( &MPID_Attr_mem );
+	    MPID_Attribute *new_p = MPID_Attr_alloc();
 	    MPIU_ERR_CHKANDJUMP(!new_p,mpi_errno,MPI_ERR_OTHER,"**nomem");
 	    new_p->keyval	 = keyval_ptr;
 	    new_p->attrType      = attrType;
@@ -117,8 +116,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	p = p->next;
     }
     if (!p) {
-	MPID_Attribute *new_p = 
-	    (MPID_Attribute *)MPIU_Handle_obj_alloc( &MPID_Attr_mem );
+	MPID_Attribute *new_p = MPID_Attr_alloc();
 	MPIU_ERR_CHKANDJUMP(!new_p,mpi_errno,MPI_ERR_OTHER,"**nomem");
 	/* Did not find in list.  Add at end */
 	new_p->keyval	     = keyval_ptr;

@@ -104,8 +104,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	    break;
 	}
 	else if (p->keyval->handle > keyval_ptr->handle) {
-	    MPID_Attribute *new_p = 
-		(MPID_Attribute *)MPIU_Handle_obj_alloc( &MPID_Attr_mem );
+	    MPID_Attribute *new_p = MPID_Attr_alloc();
 	    MPIU_ERR_CHKANDJUMP1(!new_p,mpi_errno,MPI_ERR_OTHER,
 				 "**nomem", "**nomem %s", "MPID_Attribute" );
 	    new_p->keyval	 = keyval_ptr;
@@ -123,8 +122,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
     }
     if (!p)
     {
-	MPID_Attribute *new_p = 
-	    (MPID_Attribute *)MPIU_Handle_obj_alloc( &MPID_Attr_mem );
+	MPID_Attribute *new_p = MPID_Attr_alloc();
 	MPIU_ERR_CHKANDJUMP1(!new_p,mpi_errno,MPI_ERR_OTHER,
 			     "**nomem", "**nomem %s", "MPID_Attribute" );
 	/* Did not find in list.  Add at end */
