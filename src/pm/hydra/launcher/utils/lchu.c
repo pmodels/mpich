@@ -99,20 +99,25 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 HYD_Status HYD_LCHU_Free_host_list(void)
 {
     struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
+    struct HYD_Partition_list *partition, *next;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
+        for (partition = proc_params->partition; partition;) {
             HYDU_FREE(partition->name);
             if (partition->mapping) {
                 if (partition->mapping[i])
                     HYDU_FREE(partition->mapping[i]);
                 HYDU_FREE(partition->mapping);
             }
+            for (i = 0; partition->args[i]; i++)
+                HYDU_FREE(partition->args[i]);
+            next = partition->next;
+            HYDU_FREE(partition);
+            partition = next;
         }
     }
     HYDU_FREE(handle.host_file);
