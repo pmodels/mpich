@@ -8,7 +8,7 @@
 #include "mpichconf.h"
 #include "mpibase.h"
 /* here to prevent "has no symbols" warnings from ranlib on OS X */
-static int dummy ATTRIBUTE((unused)) = 0;
+static int dummy ATTRIBUTE((unused,used)) = 0;
 
 #ifdef PAPI_MONITOR
 #include <papi.h>
