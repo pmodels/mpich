@@ -27,8 +27,10 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
     HYDU_FUNC_ENTER();
 
     not_completed = 0;
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next)
-        for (partition = proc_params->partition; partition; partition = partition->next)
+    for (proc_params = handle.proc_params; proc_params;
+         proc_params = proc_params->next)
+        for (partition = proc_params->partition; partition;
+             partition = partition->next)
             if (partition->exit_status == -1)
                 not_completed++;
 
@@ -41,8 +43,10 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
         pid = waitpid(-1, &ret_status, WNOHANG);
         if (pid > 0) {
             /* Find the pid and mark it as complete. */
-            for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-                for (partition = proc_params->partition; partition; partition = partition->next) {
+            for (proc_params = handle.proc_params; proc_params;
+                 proc_params = proc_params->next) {
+                for (partition = proc_params->partition; partition;
+                     partition = partition->next) {
                     if (partition->pid == pid) {
                         partition->exit_status = WEXITSTATUS(ret_status);
                         not_completed--;

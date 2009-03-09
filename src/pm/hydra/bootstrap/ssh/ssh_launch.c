@@ -31,7 +31,8 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
     status = HYD_BSCU_Set_common_signals(HYD_BSCU_Signal_handler);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("signal utils returned error when trying to set signal\n");
+        HYDU_Error_printf
+            ("signal utils returned error when trying to set signal\n");
         goto fn_fail;
     }
 
@@ -40,9 +41,11 @@ HYD_Status HYD_BSCI_Launch_procs(void)
      * they want launched. Without this functionality, the proxy
      * cannot use this and will have to perfom its own launch. */
     process_id = 0;
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
-            if (partition->group_rank) /* Only rank 0 is spawned */
+    for (proc_params = handle.proc_params; proc_params;
+         proc_params = proc_params->next) {
+        for (partition = proc_params->partition; partition;
+             partition = partition->next) {
+            if (partition->group_rank)  /* Only rank 0 is spawned */
                 continue;
 
             /* Setup the executable arguments */
@@ -66,10 +69,14 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
             /* The stdin pointer will be some value for process_id 0;
              * for everyone else, it's NULL. */
-            status = HYDU_Create_process(client_arg, (process_id == 0 ? &handle.in : NULL),
-                                         &partition->out, &partition->err, &partition->pid);
+            status =
+                HYDU_Create_process(client_arg,
+                                    (process_id == 0 ? &handle.in : NULL),
+                                    &partition->out, &partition->err,
+                                    &partition->pid);
             if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("bootstrap spawn process returned error\n");
+                HYDU_Error_printf
+                    ("bootstrap spawn process returned error\n");
                 goto fn_fail;
             }
 
@@ -103,8 +110,10 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
+    for (proc_params = handle.proc_params; proc_params;
+         proc_params = proc_params->next) {
+        for (partition = proc_params->partition; partition;
+             partition = partition->next) {
             /* Setup the executable arguments */
             arg = 0;
             client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
@@ -126,9 +135,11 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
             client_arg[arg++] = MPIU_Strdup(execname);
             client_arg[arg++] = NULL;
 
-            status = HYDU_Create_process(client_arg, NULL, NULL, NULL, NULL);
+            status =
+                HYDU_Create_process(client_arg, NULL, NULL, NULL, NULL);
             if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("bootstrap spawn process returned error\n");
+                HYDU_Error_printf
+                    ("bootstrap spawn process returned error\n");
                 goto fn_fail;
             }
 

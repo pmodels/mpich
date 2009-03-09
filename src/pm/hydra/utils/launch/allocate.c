@@ -10,14 +10,14 @@
 
 HYD_Handle handle;
 
-HYD_Status HYDU_Allocate_Partition(struct HYD_Partition_list ** partition)
+HYD_Status HYDU_Allocate_Partition(struct HYD_Partition_list **partition)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*partition, struct HYD_Partition_list *, sizeof(struct HYD_Partition_list),
-                status);
+    HYDU_MALLOC(*partition, struct HYD_Partition_list *,
+                sizeof(struct HYD_Partition_list), status);
     (*partition)->name = NULL;
     (*partition)->proc_count = 0;
     (*partition)->mapping = NULL;

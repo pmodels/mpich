@@ -32,7 +32,8 @@ HYD_Status HYDU_Env_global_list(HYD_Env_t ** env_list)
 
         status = HYDU_Env_add_to_list(env_list, *env);
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("launcher returned error adding env to list\n");
+            HYDU_Error_printf
+                ("launcher returned error adding env to list\n");
             goto fn_fail;
         }
         HYDU_Env_free(env);
@@ -204,8 +205,9 @@ HYD_Env_t *HYDU_Env_listdup(HYD_Env_t * env)
 }
 
 
-HYD_Status HYDU_Env_create(HYD_Env_t ** env, char *env_name, char *env_value,
-                           HYD_Env_type_t env_type, int start)
+HYD_Status HYDU_Env_create(HYD_Env_t ** env, char *env_name,
+                           char *env_value, HYD_Env_type_t env_type,
+                           int start)
 {
     HYD_Status status = HYD_SUCCESS;
 

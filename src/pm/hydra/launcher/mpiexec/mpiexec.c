@@ -17,26 +17,38 @@ HYD_Handle handle;
 static void usage(void)
 {
     printf("\n");
-    printf("Usage: ./mpiexec [global opts] [exec1 local opts] : [exec2 local opts] : ...\n\n");
+    printf
+        ("Usage: ./mpiexec [global opts] [exec1 local opts] : [exec2 local opts] : ...\n\n");
 
     printf("Global Options (passed to all executables):\n");
     printf("\t-v/-vv/-vvv                      [Verbose level]\n");
-    printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
-    printf("\t-genv {name} {value}             [Environment variable name and value]\n");
-    printf("\t-genvlist {env1,env2,...}        [Environment variable list to pass]\n");
-    printf("\t-genvnone                        [Do not pass any environment variables]\n");
-    printf("\t-genvall                         [Pass all environment variables (default)]\n");
+    printf
+        ("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
+    printf
+        ("\t-genv {name} {value}             [Environment variable name and value]\n");
+    printf
+        ("\t-genvlist {env1,env2,...}        [Environment variable list to pass]\n");
+    printf
+        ("\t-genvnone                        [Do not pass any environment variables]\n");
+    printf
+        ("\t-genvall                         [Pass all environment variables (default)]\n");
 
     printf("\n");
 
     printf("Local Options (passed to individual executables):\n");
     printf("\t-n/-np {value}                   [Number of processes]\n");
-    printf("\t-f {name}                        [File containing the host names]\n");
-    printf("\t-env {name} {value}              [Environment variable name and value]\n");
-    printf("\t-envlist {env1,env2,...}         [Environment variable list to pass]\n");
-    printf("\t-envnone                         [Do not pass any environment variables]\n");
-    printf("\t-envall                          [Pass all environment variables (default)]\n");
-    printf("\t{exec_name} {args}               [Name of the executable to run and its arguments]\n");
+    printf
+        ("\t-f {name}                        [File containing the host names]\n");
+    printf
+        ("\t-env {name} {value}              [Environment variable name and value]\n");
+    printf
+        ("\t-envlist {env1,env2,...}         [Environment variable list to pass]\n");
+    printf
+        ("\t-envnone                         [Do not pass any environment variables]\n");
+    printf
+        ("\t-envall                          [Pass all environment variables (default)]\n");
+    printf
+        ("\t{exec_name} {args}               [Name of the executable to run and its arguments]\n");
 
     printf("\n");
 }
@@ -98,21 +110,25 @@ int main(int argc, char **argv)
     /* Launch the processes */
     status = HYD_CSI_Launch_procs();
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("control system returned error when launching processes\n");
+        HYDU_Error_printf
+            ("control system returned error when launching processes\n");
         goto fn_fail;
     }
 
     /* Wait for their completion */
     status = HYD_CSI_Wait_for_completion();
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("control system returned error when waiting for process' completion\n");
+        HYDU_Error_printf
+            ("control system returned error when waiting for process' completion\n");
         goto fn_fail;
     }
 
     /* Check for the exit status for all the processes */
     exit_status = 0;
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next)
-        for (partition = proc_params->partition; partition; partition = partition->next)
+    for (proc_params = handle.proc_params; proc_params;
+         proc_params = proc_params->next)
+        for (partition = proc_params->partition; partition;
+             partition = partition->next)
             exit_status |= partition->exit_status;
 
     /* Call finalize functions for lower layers to cleanup their resources */

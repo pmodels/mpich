@@ -59,32 +59,40 @@ HYD_Status HYD_PMCI_Launch_procs(void)
         port_range = getenv("MPICH_PORT_RANGE");
 
     /* Listen on a port in the port range */
-    status = HYDU_Sock_listen(&HYD_PMCD_Central_listenfd, port_range, &port);
+    status =
+        HYDU_Sock_listen(&HYD_PMCD_Central_listenfd, port_range, &port);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned listen error\n");
         goto fn_fail;
     }
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd, HYD_STDOUT, HYD_PMCD_Central_cb);
+    status =
+        HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd, HYD_STDOUT,
+                            HYD_PMCD_Central_cb);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("demux engine returned error for registering fd\n");
+        HYDU_Error_printf
+            ("demux engine returned error for registering fd\n");
         goto fn_fail;
     }
 
     /* Create a port string for MPI processes to use to connect to */
     if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0) {
-        HYDU_Error_printf("gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
+        HYDU_Error_printf("gethostname error (hostname: %s; errno: %d)\n",
+                          hostname, errno);
         status = HYD_SOCK_ERROR;
         goto fn_fail;
     }
 
     HYDU_Int_to_str(port, sport, status);
-    HYDU_MALLOC(port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
-    MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1, "%s:%s", hostname, sport);
+    HYDU_MALLOC(port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1,
+                status);
+    MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1,
+                  "%s:%s", hostname, sport);
     HYDU_FREE(sport);
 
-    status = HYDU_Env_create(&env, "PMI_PORT", port_str, HYD_ENV_STATIC, 0);
+    status =
+        HYDU_Env_create(&env, "PMI_PORT", port_str, HYD_ENV_STATIC, 0);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("unable to create env\n");
         goto fn_fail;
@@ -113,7 +121,8 @@ HYD_Status HYD_PMCI_Launch_procs(void)
      * comm_world */
     status = HYD_PMCU_Create_pg();
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("pm utils returned error creating process group\n");
+        HYDU_Error_printf
+            ("pm utils returned error creating process group\n");
         goto fn_fail;
     }
 
@@ -121,16 +130,18 @@ HYD_Status HYD_PMCI_Launch_procs(void)
      * be used -- we just break the partition list to multiple
      * segments, one for each process and call the application
      * executable directly. */
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
+    for (proc_params = handle.proc_params; proc_params;
+         proc_params = proc_params->next) {
         group_id = 0;
         for (partition = proc_params->partition; partition;) {
-            next_partition = partition->next; /* Keep track of the next partition */
+            next_partition = partition->next;   /* Keep track of the next partition */
 
             partition->group_id = group_id++;
             partition->group_rank = 0;
 
             run = partition;
-            for (process_id = 1; process_id < partition->proc_count; process_id++) {
+            for (process_id = 1; process_id < partition->proc_count;
+                 process_id++) {
                 HYDU_Allocate_Partition(&run->next);
                 run = run->next;
 
@@ -148,8 +159,10 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 
     /* Create the arguments list for each proxy */
     process_id = 0;
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
+    for (proc_params = handle.proc_params; proc_params;
+         proc_params = proc_params->next) {
+        for (partition = proc_params->partition; partition;
+             partition = partition->next) {
             /* Setup the executable arguments */
             arg = 0;
             partition->args[arg++] = MPIU_Strdup("sh");
@@ -157,8 +170,10 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             partition->args[arg++] = MPIU_Strdup("\"");
             partition->args[arg++] = NULL;
 
-            HYDU_Append_env(handle.system_env, partition->args, process_id);
-            HYDU_Append_env(proc_params->prop_env, partition->args, process_id);
+            HYDU_Append_env(handle.system_env, partition->args,
+                            process_id);
+            HYDU_Append_env(proc_params->prop_env, partition->args,
+                            process_id);
             HYDU_Append_wdir(partition->args);
             HYDU_Append_exec(proc_params->exec, partition->args);
 
@@ -174,7 +189,8 @@ HYD_Status HYD_PMCI_Launch_procs(void)
      * processes. */
     status = HYD_BSCI_Launch_procs();
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("bootstrap server returned error launching processes\n");
+        HYDU_Error_printf
+            ("bootstrap server returned error launching processes\n");
         goto fn_fail;
     }
 

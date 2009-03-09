@@ -59,7 +59,8 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
             if (!HYD_Proxy_params.partition)
                 HYD_Proxy_params.partition = partition;
             else {
-                for (run = HYD_Proxy_params.partition; run->next; run = run->next);
+                for (run = HYD_Proxy_params.partition; run->next;
+                     run = run->next);
                 run->next = partition;
             }
             continue;

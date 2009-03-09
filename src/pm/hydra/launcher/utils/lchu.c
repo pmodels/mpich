@@ -23,7 +23,8 @@ HYD_Status HYD_LCHU_Create_host_list(void)
     if (strcmp(handle.host_file, "HYDRA_USE_LOCALHOST")) {
         fp = fopen(handle.host_file, "r");
         if (fp == NULL) {
-            HYDU_Error_printf("unable to open host file %s\n", handle.host_file);
+            HYDU_Error_printf("unable to open host file %s\n",
+                              handle.host_file);
             status = HYD_INTERNAL_ERROR;
             goto fn_fail;
         }
@@ -34,14 +35,16 @@ HYD_Status HYD_LCHU_Create_host_list(void)
         if (!strcmp(handle.host_file, "HYDRA_USE_LOCALHOST")) {
             HYDU_Allocate_Partition(&proc_params->partition);
             proc_params->partition->name = MPIU_Strdup("localhost");
-            proc_params->partition->proc_count = proc_params->exec_proc_count;
+            proc_params->partition->proc_count =
+                proc_params->exec_proc_count;
             total_procs = proc_params->exec_proc_count;
         }
         else {
             total_procs = 0;
             while (!feof(fp)) {
                 if ((fscanf(fp, "%s", line) < 0) && errno) {
-                    HYDU_Error_printf("unable to read input line (errno: %d)\n", errno);
+                    HYDU_Error_printf
+                        ("unable to read input line (errno: %d)\n", errno);
                     status = HYD_INTERNAL_ERROR;
                     goto fn_fail;
                 }
@@ -52,16 +55,18 @@ HYD_Status HYD_LCHU_Create_host_list(void)
                 procs = strtok(NULL, ":");
 
                 num_procs = procs ? atoi(procs) : 1;
-                if (num_procs > (proc_params->exec_proc_count - total_procs))
-                    num_procs = (proc_params->exec_proc_count - total_procs);
+                if (num_procs >
+                    (proc_params->exec_proc_count - total_procs))
+                    num_procs =
+                        (proc_params->exec_proc_count - total_procs);
 
                 if (!proc_params->partition) {
                     HYDU_Allocate_Partition(&proc_params->partition);
                     partition = proc_params->partition;
                 }
                 else {
-                    for (partition = proc_params->partition; partition->next;
-                         partition = partition->next);
+                    for (partition = proc_params->partition;
+                         partition->next; partition = partition->next);
                     HYDU_Allocate_Partition(&partition->next);
                     partition = partition->next;
                 }
@@ -80,7 +85,8 @@ HYD_Status HYD_LCHU_Create_host_list(void)
     }
 
     if (proc_params) {
-        HYDU_Error_printf("Not enough number of hosts in host file: %s\n", handle.host_file);
+        HYDU_Error_printf("Not enough number of hosts in host file: %s\n",
+                          handle.host_file);
         status = HYD_INTERNAL_ERROR;
         goto fn_fail;
     }
@@ -105,7 +111,8 @@ HYD_Status HYD_LCHU_Free_host_list(void)
 
     HYDU_FUNC_ENTER();
 
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
+    for (proc_params = handle.proc_params; proc_params;
+         proc_params = proc_params->next) {
         for (partition = proc_params->partition; partition;) {
             HYDU_FREE(partition->name);
             if (partition->mapping) {
@@ -151,7 +158,8 @@ HYD_Status HYD_LCHU_Create_env_list(void)
         if (proc_params->prop == HYD_ENV_PROP_ALL) {
             proc_params->prop_env = HYDU_Env_listdup(handle.global_env);
             for (env = proc_params->user_env; env; env = env->next) {
-                status = HYDU_Env_add_to_list(&proc_params->prop_env, *env);
+                status =
+                    HYDU_Env_add_to_list(&proc_params->prop_env, *env);
                 if (status != HYD_SUCCESS) {
                     HYDU_Error_printf("unable to add env to list\n");
                     goto fn_fail;
@@ -202,8 +210,10 @@ HYD_Status HYD_LCHU_Free_io(void)
 
     HYDU_FUNC_ENTER();
 
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
+    for (proc_params = handle.proc_params; proc_params;
+         proc_params = proc_params->next) {
+        for (partition = proc_params->partition; partition;
+             partition = partition->next) {
             HYDU_FREE(partition->out);
             HYDU_FREE(partition->err);
         }

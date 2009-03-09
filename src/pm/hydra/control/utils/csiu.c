@@ -21,7 +21,9 @@ int HYD_CSU_Time_left(void)
     }
     else {
         gettimeofday(&now, NULL);
-        time_left = (1000 * (handle.timeout.tv_sec - now.tv_sec + handle.start.tv_sec));
+        time_left =
+            (1000 *
+             (handle.timeout.tv_sec - now.tv_sec + handle.start.tv_sec));
         if (time_left < 0)
             time_left = 0;
     }

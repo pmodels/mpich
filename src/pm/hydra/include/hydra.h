@@ -115,13 +115,13 @@ struct HYD_Handle_ {
     /* Each structure will contain all hosts/cores that use the same
      * executable and environment. */
     struct HYD_Proc_params {
-        int  exec_proc_count;
+        int exec_proc_count;
         char *exec[HYD_EXEC_ARGS];
 
         struct HYD_Partition_list {
-            char  * name;
-            int     proc_count;
-            char ** mapping; /* Can be core IDs or something else */
+            char *name;
+            int proc_count;
+            char **mapping;     /* Can be core IDs or something else */
 
             /*
              * The boot-strap server is expected to start a single
@@ -145,13 +145,13 @@ struct HYD_Handle_ {
              *   3. One proxy per physical node means that each
              *      partition will have a different group ID.
              */
-            int     group_id; /* Assumed to be in ascending order */
-            int     group_rank; /* Rank within the group */
-            int     pid;
-            int     out;
-            int     err;
-            int     exit_status;
-            char  * args[HYD_EXEC_ARGS];
+            int group_id;       /* Assumed to be in ascending order */
+            int group_rank;     /* Rank within the group */
+            int pid;
+            int out;
+            int err;
+            int exit_status;
+            char *args[HYD_EXEC_ARGS];
 
             struct HYD_Partition_list *next;
         } *partition;

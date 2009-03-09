@@ -25,15 +25,18 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
         /* Wait for some event to occur */
         status = HYD_DMX_Wait_for_event();
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("demux engine returned error when waiting for event\n");
+            HYDU_Error_printf
+                ("demux engine returned error when waiting for event\n");
             goto fn_fail;
         }
 
         /* Check to see if there's any open read socket left; if there
          * are, we will just wait for more events. */
         sockets_open = 0;
-        for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-            for (partition = proc_params->partition; partition; partition = partition->next) {
+        for (proc_params = handle.proc_params; proc_params;
+             proc_params = proc_params->next) {
+            for (partition = proc_params->partition; partition;
+                 partition = partition->next) {
                 if (partition->out != -1 || partition->err != -1) {
                     sockets_open++;
                     break;
@@ -50,7 +53,8 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
          * control device will take care of that. */
         status = HYD_BSCI_Wait_for_completion();
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("bootstrap server returned error when waiting for completion\n");
+            HYDU_Error_printf
+                ("bootstrap server returned error when waiting for completion\n");
             goto fn_fail;
         }
 

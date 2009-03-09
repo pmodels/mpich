@@ -42,9 +42,12 @@ int main(int argc, char **argv)
     }
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_Register_fd(1, &HYD_Proxy_listenfd, HYD_STDOUT, HYD_Proxy_listen_cb);
+    status =
+        HYD_DMX_Register_fd(1, &HYD_Proxy_listenfd, HYD_STDOUT,
+                            HYD_Proxy_listen_cb);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("demux engine returned error for registering fd\n");
+        HYDU_Error_printf
+            ("demux engine returned error for registering fd\n");
         goto fn_fail;
     }
 
@@ -56,19 +59,25 @@ int main(int argc, char **argv)
      * local processes. That is, we can only have a single-level
      * hierarchy of proxies. */
 
-    HYDU_MALLOC(HYD_Proxy_params.out, int *, HYD_Proxy_params.proc_count * sizeof(int), status);
-    HYDU_MALLOC(HYD_Proxy_params.err, int *, HYD_Proxy_params.proc_count * sizeof(int), status);
+    HYDU_MALLOC(HYD_Proxy_params.out, int *,
+                HYD_Proxy_params.proc_count * sizeof(int), status);
+    HYDU_MALLOC(HYD_Proxy_params.err, int *,
+                HYD_Proxy_params.proc_count * sizeof(int), status);
 
     /* Spawn the processes */
     for (i = 0; i < HYD_Proxy_params.proc_count; i++) {
         if ((i & HYD_Proxy_params.pmi_id) == 0) {
-            status = HYDU_Create_process(HYD_Proxy_params.args, &HYD_Proxy_params.in,
-                                         &HYD_Proxy_params.out[i], &HYD_Proxy_params.err[i],
-                                         &HYD_Proxy_params.pid[i]);
+            status =
+                HYDU_Create_process(HYD_Proxy_params.args,
+                                    &HYD_Proxy_params.in,
+                                    &HYD_Proxy_params.out[i],
+                                    &HYD_Proxy_params.err[i],
+                                    &HYD_Proxy_params.pid[i]);
         }
         else {
             status = HYDU_Create_process(HYD_Proxy_params.args, NULL,
-                                         &HYD_Proxy_params.out[i], &HYD_Proxy_params.err[i],
+                                         &HYD_Proxy_params.out[i],
+                                         &HYD_Proxy_params.err[i],
                                          &HYD_Proxy_params.pid[i]);
         }
         if (status != HYD_SUCCESS) {
@@ -78,16 +87,22 @@ int main(int argc, char **argv)
     }
 
     /* Everything is spawned, now wait for I/O */
-    status = HYD_DMX_Register_fd(HYD_Proxy_params.proc_count, HYD_Proxy_params.out,
-                                 HYD_STDOUT, HYD_Proxy_stdout_cb);
+    status =
+        HYD_DMX_Register_fd(HYD_Proxy_params.proc_count,
+                            HYD_Proxy_params.out, HYD_STDOUT,
+                            HYD_Proxy_stdout_cb);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("demux engine returned error when registering fd\n");
+        HYDU_Error_printf
+            ("demux engine returned error when registering fd\n");
         goto fn_fail;
     }
-    status = HYD_DMX_Register_fd(HYD_Proxy_params.proc_count, HYD_Proxy_params.err,
-                                 HYD_STDOUT, HYD_Proxy_stderr_cb);
+    status =
+        HYD_DMX_Register_fd(HYD_Proxy_params.proc_count,
+                            HYD_Proxy_params.err, HYD_STDOUT,
+                            HYD_Proxy_stderr_cb);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("demux engine returned error when registering fd\n");
+        HYDU_Error_printf
+            ("demux engine returned error when registering fd\n");
         goto fn_fail;
     }
 

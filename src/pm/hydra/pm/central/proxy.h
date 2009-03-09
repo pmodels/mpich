@@ -16,9 +16,9 @@ struct HYD_Proxy_params {
     char *args[HYD_EXEC_ARGS];
     struct HYD_Partition_list *partition;
 
-    int * pid;
-    int * out;
-    int * err;
+    int *pid;
+    int *out;
+    int *err;
     int in;
 
     int stdin_buf_offset;
@@ -29,7 +29,7 @@ struct HYD_Proxy_params {
 extern struct HYD_Proxy_params HYD_Proxy_params;
 extern int HYD_Proxy_listenfd;
 
-HYD_Status HYD_Proxy_get_params(int t_argc, char ** t_argv);
+HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv);
 HYD_Status HYD_Proxy_listen_cb(int fd, HYD_Event_t events);
 HYD_Status HYD_Proxy_stdout_cb(int fd, HYD_Event_t events);
 HYD_Status HYD_Proxy_stderr_cb(int fd, HYD_Event_t events);

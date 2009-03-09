@@ -23,7 +23,8 @@ HYD_Status HYD_PMCI_Finalize(void)
      * it. */
     status = HYD_DMX_Deregister_fd(HYD_PMCD_Central_listenfd);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("demux engine returned error when deregistering fd\n");
+        HYDU_Error_printf
+            ("demux engine returned error when deregistering fd\n");
         goto fn_fail;
     }
 
