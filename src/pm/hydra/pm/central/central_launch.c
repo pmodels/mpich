@@ -167,6 +167,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             }
 
             partition->proc_count = 1;
+            run->next = next_partition;
             partition = next_partition;
         }
     }
