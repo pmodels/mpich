@@ -108,6 +108,7 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 
             /* ssh does not support any partition names other than host names */
             client_arg[arg++] = MPIU_Strdup(partition->name);
+            client_arg[arg++] = NULL;
 
             for (arg = 0; client_arg[arg]; arg++);
             client_arg[arg++] = MPIU_Strdup("killall");
