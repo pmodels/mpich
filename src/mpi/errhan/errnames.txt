@@ -865,6 +865,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **winRMArequest: RMA message operation failed; request returned error
 **open %s:open failed - %s
 **setenv:setenv failed
+**putenv:putenv failed
 **mx_close_endpoint: mx_close_endpoint failed
 **mx_close_endpoint %s:mx_close_endpoint failed (%s)
 **mx_finalize:mx_finalize failed

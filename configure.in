@@ -5100,10 +5100,10 @@ AC_HAVE_FUNCS(fdopen)
 if test "$ac_cv_func_fdopen" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],fdopen)
 fi
-# setenv() sets environment variable
-AC_HAVE_FUNCS(setenv)
-if test "$ac_cv_func_setenv" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],setenv)
+# putenv() sets environment variable
+AC_HAVE_FUNCS(putenv)
+if test "$ac_cv_func_putenv" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
 fi
 
 
