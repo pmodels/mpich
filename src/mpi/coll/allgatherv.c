@@ -75,7 +75,7 @@ int MPIR_Allgatherv (
 {
     static const char FCNAME[] = "MPIR_Allgatherv";
     MPI_Comm comm;
-    int        comm_size, rank, j, i, jnext, left, right;
+    int        comm_size, rank, j, i, left, right;
     int        mpi_errno = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint recvbuf_extent, recvtype_extent, recvtype_true_extent, 
@@ -703,7 +703,7 @@ int MPIR_Allgatherv (
         int soffset, roffset;
 	int torecv, tosend, min;
 	int sendnow, recvnow;
-	int smsg_len, rmsg_len, sindex, rindex;
+	int sindex, rindex;
 
         if (sendbuf != MPI_IN_PLACE) {
             /* First, load the "local" version in the recvbuf. */
@@ -743,8 +743,8 @@ int MPIR_Allgatherv (
         while (tosend || torecv) { /* While we have data to send or receive */
             sendnow = ((recvcounts[sindex] - soffset) > min) ? min : (recvcounts[sindex] - soffset);
             recvnow = ((recvcounts[rindex] - roffset) > min) ? min : (recvcounts[rindex] - roffset);
-            sbuf = recvbuf + ((displs[sindex] + soffset) * recvtype_extent);
-            rbuf = recvbuf + ((displs[rindex] + roffset) * recvtype_extent);
+            sbuf = (char *)recvbuf + ((displs[sindex] + soffset) * recvtype_extent);
+            rbuf = (char *)recvbuf + ((displs[rindex] + roffset) * recvtype_extent);
 
             /* Protect against wrap-around of indices */
             if (!tosend)
