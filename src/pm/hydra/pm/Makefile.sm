@@ -6,3 +6,6 @@
 
 SUBDIRS_HYDRA_PM = central
 SUBDIRS = utils @HYDRA_PM@ .
+
+mpich2-build-install mpich2-build-uninstall install install-alt:
+	cd @HYDRA_PM@ && ${MAKE} $@

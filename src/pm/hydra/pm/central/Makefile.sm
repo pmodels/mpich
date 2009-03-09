@@ -17,3 +17,19 @@ INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../utils \
 	-I${abs_srcdir}/../../bootstrap/include \
 	-I${abs_srcdir}/../../demux
+
+proxy_SOURCES = proxy.c proxy_utils.c proxy_cb.c
+proxy_LDADD = -L../../lib -lhydra -L../../../util -lmpiexec -L../../../../../lib -lmpich
+proxy_DEPADD = ../../../util/libmpiexec.a
+install_BIN = proxy
+
+# Use the mpich2-build-install target to include mpiexec in the build bin
+# directory (all pm's require these targets)
+mpich2-build-install: install
+mpich2-build-uninstall: uninstall
+
+# We use a dummy dependency to ensure that we always go to the util
+# directory to see if anything needs to be done
+../../../util/libmpiexec.a: dummy
+dummy:
+	cd ../../../util && $(MAKE)

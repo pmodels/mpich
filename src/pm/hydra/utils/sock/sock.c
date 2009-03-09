@@ -7,14 +7,42 @@
 #include "hydra_sock.h"
 #include "hydra_dbg.h"
 
-HYD_Status HYDU_Sock_listen(int *listen_fd, uint16_t low_port, uint16_t high_port, uint16_t * port)
+HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 {
     struct sockaddr_in sa;
     int one = 1;
+    uint16_t low_port, high_port;
+    char *port_str;
     uint16_t i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    low_port = 0;
+    high_port = 0;
+    if (port_range) {
+        port_str = strtok(port_range, ":");
+        if (port_str == NULL) {
+            HYDU_Error_printf("error parsing port range string\n");
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
+        }
+        low_port = atoi(port_str);
+
+        port_str = strtok(NULL, ":");
+        if (port_str == NULL) {
+            HYDU_Error_printf("error parsing port range string\n");
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
+        }
+        high_port = atoi(port_str);
+
+        if (high_port < low_port) {
+            HYDU_Error_printf("high port is smaller than low port\n");
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
+        }
+    }
 
     *listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (*listen_fd < 0) {

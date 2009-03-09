@@ -35,6 +35,10 @@ HYD_Status HYD_BSCI_Launch_procs(void)
         goto fn_fail;
     }
 
+    /* FIXME: Instead of directly reading from the HYD_Handle
+     * structure, the upper layers should be able to pass what exactly
+     * they want launched. Without this functionality, the proxy
+     * cannot use this and will have to perfom its own launch. */
     process_id = 0;
     for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
         for (partition = proc_params->partition; partition; partition = partition->next) {

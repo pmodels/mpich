@@ -58,34 +58,8 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     if (!port_range)
         port_range = getenv("MPICH_PORT_RANGE");
 
-    low_port = 0;
-    high_port = 0;
-    if (port_range) {
-        port_str = strtok(port_range, ":");
-        if (port_str == NULL) {
-            HYDU_Error_printf("error parsing port range string\n");
-            status = HYD_INTERNAL_ERROR;
-            goto fn_fail;
-        }
-        low_port = atoi(port_str);
-
-        port_str = strtok(NULL, ":");
-        if (port_str == NULL) {
-            HYDU_Error_printf("error parsing port range string\n");
-            status = HYD_INTERNAL_ERROR;
-            goto fn_fail;
-        }
-        high_port = atoi(port_str);
-
-        if (high_port < low_port) {
-            HYDU_Error_printf("high port is smaller than low port\n");
-            status = HYD_INTERNAL_ERROR;
-            goto fn_fail;
-        }
-    }
-
     /* Listen on a port in the port range */
-    status = HYDU_Sock_listen(&HYD_PMCD_Central_listenfd, low_port, high_port, &port);
+    status = HYDU_Sock_listen(&HYD_PMCD_Central_listenfd, port_range, &port);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned listen error\n");
         goto fn_fail;
