@@ -104,9 +104,9 @@ int MPIC_Ssend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     int mpi_errno, context_id;
     MPID_Request *request_ptr=NULL;
     MPID_Comm *comm_ptr=NULL;
-    MPIDI_STATE_DECL(MPID_STATE_MPIC_SEND);
+    MPIDI_STATE_DECL(MPID_STATE_MPIC_SSEND);
 
-    MPIDI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPIC_SEND);
+    MPIDI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPIC_SSEND);
 
     MPID_Comm_get_ptr( comm, comm_ptr );
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
@@ -121,7 +121,7 @@ int MPIC_Ssend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 	MPID_Request_release(request_ptr);
     }
  fn_exit:
-    MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_SEND);
+    MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_SSEND);
     return mpi_errno;
  fn_fail:
     if (request_ptr) {
