@@ -15,7 +15,7 @@
 #include "mpitest.h"
 
 #define START_BUF (1)
-#define LARGE_BUF (8 * 1024 * 1024)
+#define LARGE_BUF (256 * 1024)
 #define MAX_BUF   (128 * 1024 * 1024)
 #define LOOPS 10
 
