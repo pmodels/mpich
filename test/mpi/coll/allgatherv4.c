@@ -84,6 +84,7 @@ int main(int argc, char ** argv)
     MPI_Comm_split(MPI_COMM_WORLD, (comm_rank == comm_size - 1) ? 0 : 1, 0, &comm);
     if (comm_rank < comm_size - 1)
         comm_tests(comm);
+    MPI_Comm_free(&comm);
 
     /* Randomized communicator tests */
     if (!comm_rank) {
@@ -93,6 +94,7 @@ int main(int argc, char ** argv)
     }
     MPI_Comm_split(MPI_COMM_WORLD, 0, rand(), &comm);
     comm_tests(comm);
+    MPI_Comm_free(&comm);
 
     free(sbuf);
     free(rbuf);
