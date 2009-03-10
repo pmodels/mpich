@@ -199,7 +199,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                     if (env_name == NULL)
                         break;
 
-                    status = HYDU_Env_create(&env, env_name, NULL, HYD_ENV_STATIC, 0);
+                    status = HYDU_Env_create(&env, env_name, NULL);
                     if (status != HYD_SUCCESS) {
                         HYDU_Error_printf("unable to create env struct\n");
                         goto fn_fail;
@@ -249,7 +249,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                     if (env_name == NULL)
                         break;
 
-                    status = HYDU_Env_create(&env, env_name, NULL, HYD_ENV_STATIC, 0);
+                    status = HYDU_Env_create(&env, env_name, NULL);
                     if (status != HYD_SUCCESS) {
                         HYDU_Error_printf("unable to create env struct\n");
                         goto fn_fail;
@@ -276,7 +276,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             CHECK_NEXT_ARG_VALID(status);
             env_value = MPIU_Strdup(*argv);
 
-            status = HYDU_Env_create(&env, env_name, env_value, HYD_ENV_STATIC, 0);
+            status = HYDU_Env_create(&env, env_name, env_value);
             if (status != HYD_SUCCESS) {
                 HYDU_Error_printf("unable to create env struct\n");
                 goto fn_fail;
@@ -441,20 +441,17 @@ HYD_Status HYD_LCHI_Print_parameters(void)
     HYDU_Print("\n");
     HYDU_Print("  Global environment:\n");
     for (env = handle.global_env; env; env = env->next)
-        HYDU_Print("    %s=%s (type: %s)\n", env->env_name, env->env_value,
-                   HYDU_Env_type_str(env->env_type));
+        HYDU_Print("    %s=%s\n", env->env_name, env->env_value);
 
     HYDU_Print("\n");
     HYDU_Print("  Hydra internal environment:\n");
     for (env = handle.system_env; env; env = env->next)
-        HYDU_Print("    %s=%s (type: %s)\n", env->env_name, env->env_value,
-                   HYDU_Env_type_str(env->env_type));
+        HYDU_Print("    %s=%s\n", env->env_name, env->env_value);
 
     HYDU_Print("\n");
     HYDU_Print("  User set environment:\n");
     for (env = handle.user_env; env; env = env->next)
-        HYDU_Print("    %s=%s (type: %s)\n", env->env_name, env->env_value,
-                   HYDU_Env_type_str(env->env_type));
+        HYDU_Print("    %s=%s\n", env->env_name, env->env_value);
 
     HYDU_Print("\n");
 

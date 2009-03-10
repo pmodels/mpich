@@ -67,18 +67,9 @@ typedef unsigned short HYD_Event_t;
 #define HYD_TMPBUF_SIZE (64 * 1024)
 #define HYD_EXEC_ARGS 200
 
-typedef enum {
-    HYD_ENV_STATIC,
-    HYD_ENV_AUTOINC
-} HYD_Env_type_t;
-
 typedef struct HYD_Env {
     char *env_name;
     char *env_value;
-
-    /* Auto-incrementing environment variables can only be integers */
-    HYD_Env_type_t env_type;
-    int start_val;
     struct HYD_Env *next;
 } HYD_Env_t;
 

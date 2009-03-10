@@ -86,7 +86,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
                   "%s:%s", hostname, sport);
     HYDU_FREE(sport);
 
-    status = HYDU_Env_create(&env, "PMI_PORT", port_str, HYD_ENV_STATIC, 0);
+    status = HYDU_Env_create(&env, "PMI_PORT", port_str);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("unable to create env\n");
         goto fn_fail;
@@ -99,7 +99,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     HYDU_Env_free(env);
     HYDU_FREE(port_str);
 
-    status = HYDU_Env_create(&env, "PMI_ID", NULL, HYD_ENV_AUTOINC, 0);
+    status = HYDU_Env_create(&env, "PMI_ID", NULL);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("unable to create env\n");
         goto fn_fail;

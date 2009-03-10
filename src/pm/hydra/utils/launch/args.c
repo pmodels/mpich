@@ -24,15 +24,7 @@ HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg, int id)
 
         tmp[j++] = MPIU_Strdup(env->env_name);
         tmp[j++] = MPIU_Strdup("=");
-
-        if (env->env_type == HYD_ENV_STATIC)
-            tmp[j++] = MPIU_Strdup(env->env_value);
-        else if (env->env_type == HYD_ENV_AUTOINC) {
-            HYDU_Int_to_str(env->start_val + id, inc, status);
-            tmp[j++] = MPIU_Strdup(inc);
-            HYDU_FREE(inc);
-        }
-
+        tmp[j++] = env->env_value ? MPIU_Strdup(env->env_value) : MPIU_Strdup("");
         tmp[j++] = NULL;
         HYDU_STR_ALLOC_AND_JOIN(tmp, envstr, status);
         client_arg[i++] = MPIU_Strdup(envstr);

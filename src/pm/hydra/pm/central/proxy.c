@@ -71,8 +71,6 @@ int main(int argc, char **argv)
         pmi.env_name = MPIU_Strdup("PMI_ID");
         HYDU_Int_to_str(HYD_Proxy_params.pmi_id + i, str, status);
         pmi.env_value = MPIU_Strdup(str);
-        pmi.env_type = HYD_ENV_STATIC;
-        pmi.start_val = 0;
         pmi.next = NULL;
 
         /* Update the PMI_ID value with this one */
