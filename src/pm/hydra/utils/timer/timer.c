@@ -8,15 +8,15 @@
 
 /* FIXME: Here we assume that the timer is gettimeofday. */
 
-void HYDU_Time_set(HYD_Time time, int * val)
+void HYDU_Time_set(HYD_Time * time, int * val)
 {
     if (val == NULL) {
         /* Set time to right now */
-        gettimeofday(&time, NULL);
+        gettimeofday(time, NULL);
     }
     else {
-        time.tv_sec = *val;
-        time.tv_usec = 0;
+        time->tv_sec = *val;
+        time->tv_usec = 0;
     }
 }
 

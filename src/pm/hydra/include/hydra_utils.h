@@ -164,7 +164,7 @@ HYD_Status HYDU_Set_signal(int signum, void (*handler) (int));
 #include <time.h>
 #endif /* HAVE_TIME */
 typedef struct timeval HYD_Time;
-void HYDU_Time_set(HYD_Time time, int * val);
+void HYDU_Time_set(HYD_Time * time, int * val);
 int HYDU_Time_left(HYD_Time start, HYD_Time timeout);
 
 
