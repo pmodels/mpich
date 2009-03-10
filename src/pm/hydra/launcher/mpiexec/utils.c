@@ -396,17 +396,12 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
      * We use the following priority order to specify the host file:
      *    1. Specified to mpiexec using -f
      *    2. Specified through the environment HYDRA_HOST_FILE
-     *    3. Specified through the environment HYDRA_USE_LOCALHOST
+     *    3. If nothing is given, we use the local host
      */
     if (handle.host_file == NULL && getenv("HYDRA_HOST_FILE"))
         handle.host_file = MPIU_Strdup(getenv("HYDRA_HOST_FILE"));
-    if (handle.host_file == NULL && getenv("HYDRA_USE_LOCALHOST"))
+    if (handle.host_file == NULL)
         handle.host_file = MPIU_Strdup("HYDRA_USE_LOCALHOST");
-    if (handle.host_file == NULL) {
-        HYDU_Error_printf("Host file not specified\n");
-        status = HYD_INTERNAL_ERROR;
-        goto fn_fail;
-    }
 
     proc_params = handle.proc_params;
     while (proc_params) {
