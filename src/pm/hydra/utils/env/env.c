@@ -252,7 +252,7 @@ HYD_Status HYDU_Env_putenv(HYD_Env_t env)
     i = 0;
     tmp[i++] = MPIU_Strdup(env.env_name);
     tmp[i++] = MPIU_Strdup("=");
-    tmp[i++] = MPIU_Strdup(env.env_value);
+    tmp[i++] = env.env_value ? MPIU_Strdup(env.env_value) : MPIU_Strdup("");
     tmp[i++] = NULL;
     HYDU_STR_ALLOC_AND_JOIN(tmp, env_str, status);
 

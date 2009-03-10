@@ -64,7 +64,7 @@ HYD_Status HYD_CSI_Launch_procs(void)
         handle.stdin_buf_count = 0;
         handle.stdin_buf_offset = 0;
 
-        status = HYD_DMX_Register_fd(1, &stdin_fd, HYD_STDOUT, handle.stdin_cb);
+        status = HYD_DMX_Register_fd(1, &stdin_fd, HYD_STDIN, handle.stdin_cb);
         if (status != HYD_SUCCESS) {
             HYDU_Error_printf("demux engine returned error when registering fd\n");
             goto fn_fail;

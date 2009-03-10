@@ -451,8 +451,8 @@ HYD_Status HYDU_Sock_stdin_cb(int fd, HYD_Event_t events, char *buf, int *buf_co
 
     *closed = 0;
 
-    if (events & HYD_STDIN) {
-        HYDU_Error_printf("stdin handler got a writeable event on local stdin: %d\n", events);
+    if (events & HYD_STDOUT) {
+        HYDU_Error_printf("stdin handler got an stdout event\n");
         status = HYD_INTERNAL_ERROR;
         goto fn_fail;
     }

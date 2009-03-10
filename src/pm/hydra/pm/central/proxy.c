@@ -16,7 +16,7 @@ int HYD_Proxy_listenfd;
 int main(int argc, char **argv)
 {
     int i, j, arg, high_port, low_port, port, sockets_open;
-    int HYD_Proxy_listenfd;
+    int HYD_Proxy_listenfd, stdin_fd;
     char *port_range, *port_str, *str;
     HYD_Env_t *env, pmi;
     char *client_args[HYD_EXEC_ARGS];
@@ -123,9 +123,30 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    /* FIXME: Handle stdin */
-    HYD_Proxy_params.stdin_buf_offset = 0;
-    HYD_Proxy_params.stdin_buf_count = 0;
+    if (HYD_Proxy_params.pmi_id == 0) {
+        status = HYDU_Sock_set_nonblock(HYD_Proxy_params.in);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("Unable to set socket as non-blocking\n");
+            status = HYD_SOCK_ERROR;
+            goto fn_fail;
+        }
+
+        stdin_fd = 0;
+        status = HYDU_Sock_set_nonblock(stdin_fd);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("Unable to set socket as non-blocking\n");
+            status = HYD_SOCK_ERROR;
+            goto fn_fail;
+        }
+
+        HYD_Proxy_params.stdin_buf_offset = 0;
+        HYD_Proxy_params.stdin_buf_count = 0;
+        status = HYD_DMX_Register_fd(1, &stdin_fd, HYD_STDIN, HYD_Proxy_stdin_cb);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("demux engine returned error when registering fd\n");
+            goto fn_fail;
+        }
+    }
 
     while (1) {
         /* Wait for some event to occur */

@@ -54,9 +54,9 @@ HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, i
             goto fn_fail;
         }
 
+        close(inpipe[1]);
+        close(0);
         if (in != NULL) {
-            close(inpipe[1]);
-            close(0);
             if (dup2(inpipe[0], 0) < 0) {
                 HYDU_Error_printf("dup2 error (errno: %d)\n", errno);
                 status = HYD_SOCK_ERROR;

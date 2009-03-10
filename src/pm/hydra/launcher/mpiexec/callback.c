@@ -83,7 +83,7 @@ HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_Sock_stdin_cb(fd, events, handle.stdin_tmp_buf,
+    status = HYDU_Sock_stdin_cb(handle.in, events, handle.stdin_tmp_buf,
                                 &handle.stdin_buf_count, &handle.stdin_buf_offset, &closed);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock stdin callback returned an error\n");
@@ -97,6 +97,10 @@ HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events)
             HYDU_Error_printf("socket close error on fd: %d (errno: %d)\n", fd, errno);
             goto fn_fail;
         }
+
+        /* Close the input handler for the process, so it knows that
+         * we got a close event */
+        close(handle.in);
     }
 
   fn_exit:

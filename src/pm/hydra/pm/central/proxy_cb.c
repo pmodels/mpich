@@ -153,9 +153,9 @@ HYD_Status HYD_Proxy_stdin_cb(int fd, HYD_Event_t events)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_Sock_stdin_cb(fd, events, HYD_Proxy_params.stdin_tmp_buf,
+    status = HYDU_Sock_stdin_cb(HYD_Proxy_params.in, events, HYD_Proxy_params.stdin_tmp_buf,
                                 &HYD_Proxy_params.stdin_buf_count,
-                                &HYD_Proxy_params.stdin_buf_count, &closed);
+                                &HYD_Proxy_params.stdin_buf_offset, &closed);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock stdin callback error\n");
         goto fn_fail;
@@ -169,8 +169,10 @@ HYD_Status HYD_Proxy_stdin_cb(int fd, HYD_Event_t events)
             goto fn_fail;
         }
 
-        if (HYD_Proxy_params.in == fd)
-            HYD_Proxy_params.in = -1;
+        close(HYD_Proxy_params.in);
+        close(fd);
+
+        HYD_Proxy_params.in = -1;
     }
 
   fn_exit:
