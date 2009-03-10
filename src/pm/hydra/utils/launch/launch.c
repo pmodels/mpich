@@ -4,9 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
-#include "hydra_mem.h"
-#include "hydra_launch.h"
+#include "hydra_utils.h"
 
 HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid)
 {

@@ -8,7 +8,7 @@
 #define PMCU_PMI_H_INCLUDED
 
 #include "hydra.h"
-#include "hydra_mem.h"
+#include "hydra_utils.h"
 
 #define MAXKEYLEN    64 /* max length of key in keyval space */
 #define MAXVALLEN   256 /* max length of value in keyval space */

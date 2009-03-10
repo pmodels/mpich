@@ -8,7 +8,7 @@
 #define BSCU_H_INCLUDED
 
 #include "hydra.h"
-#include "hydra_sig.h"
+#include "hydra_utils.h"
 #include "bsci.h"
 
 HYD_Status HYD_BSCU_Wait_for_completion(void);

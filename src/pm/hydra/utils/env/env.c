@@ -4,9 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
-#include "hydra_env.h"
-#include "hydra_mem.h"
+#include "hydra_utils.h"
 
 HYD_Status HYDU_Env_global_list(HYD_Env_t ** env_list)
 {

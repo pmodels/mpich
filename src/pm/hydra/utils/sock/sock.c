@@ -4,8 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_sock.h"
-#include "hydra_dbg.h"
+#include "hydra_utils.h"
 
 HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 {

@@ -5,9 +5,7 @@
  */
 
 #include "hydra.h"
-#include "hydra_dbg.h"
-#include "hydra_mem.h"
-#include "hydra_env.h"
+#include "hydra_utils.h"
 #include "mpiexec.h"
 #include "lchu.h"
 

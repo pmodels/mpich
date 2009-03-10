@@ -5,7 +5,7 @@
  */
 
 #include "hydra.h"
-#include "hydra_mem.h"
+#include "hydra_utils.h"
 
 HYD_Handle handle;
 

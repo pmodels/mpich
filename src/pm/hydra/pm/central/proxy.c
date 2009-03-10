@@ -5,8 +5,7 @@
  */
 
 #include "hydra.h"
-#include "hydra_mem.h"
-#include "hydra_sock.h"
+#include "hydra_utils.h"
 #include "demux.h"
 #include "proxy.h"
 

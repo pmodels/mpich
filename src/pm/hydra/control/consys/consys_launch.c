@@ -5,7 +5,7 @@
  */
 
 #include "hydra.h"
-#include "hydra_sock.h"
+#include "hydra_utils.h"
 #include "csi.h"
 #include "pmci.h"
 #include "demux.h"
