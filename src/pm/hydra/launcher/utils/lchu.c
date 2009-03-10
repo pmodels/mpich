@@ -100,12 +100,6 @@ HYD_Status HYD_LCHU_Create_host_list(void)
         proc_params = proc_params->next;
     }
 
-    if (proc_params) {
-        HYDU_Error_printf("Not enough number of hosts in host file: %s\n", handle.host_file);
-        status = HYD_INTERNAL_ERROR;
-        goto fn_fail;
-    }
-
   fn_exit:
     if (fp)
         fclose(fp);
