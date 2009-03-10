@@ -24,12 +24,12 @@ static void usage(void)
     printf("\t-genvlist {env1,env2,...}        [Environment variable list to pass]\n");
     printf("\t-genvnone                        [Do not pass any environment variables]\n");
     printf("\t-genvall                         [Pass all environment variables (default)]\n");
+    printf("\t-f {name}                        [File containing the host names]\n");
 
     printf("\n");
 
     printf("Local Options (passed to individual executables):\n");
     printf("\t-n/-np {value}                   [Number of processes]\n");
-    printf("\t-f {name}                        [File containing the host names]\n");
     printf("\t-env {name} {value}              [Environment variable name and value]\n");
     printf("\t-envlist {env1,env2,...}         [Environment variable list to pass]\n");
     printf("\t-envnone                         [Do not pass any environment variables]\n");
