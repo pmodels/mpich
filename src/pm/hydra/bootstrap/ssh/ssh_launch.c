@@ -97,8 +97,8 @@ HYD_Status HYD_BSCI_Cleanup_procs(void)
 {
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
-    char *client_arg[HYD_EXEC_ARGS], *hostname, **proc_list, *execname;
-    int i, arg, host_id, host_id_max;
+    char *client_arg[HYD_EXEC_ARGS], *execname;
+    int arg;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

@@ -45,7 +45,8 @@ int main(int argc, char **argv)
 {
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
-    int exit_status, i;
+    int exit_status;
+    int timeout;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -86,13 +87,12 @@ int main(int argc, char **argv)
     }
     handle.stdin_cb = HYD_LCHI_stdin_cb;
 
-    gettimeofday(&handle.start, NULL);
+    HYDU_Time_set(&handle.start, NULL); /* NULL implies right now */
     if (getenv("MPIEXEC_TIMEOUT"))
-        handle.timeout.tv_sec = atoi(getenv("MPIEXEC_TIMEOUT"));
-    else {
-        handle.timeout.tv_sec = -1;     /* Set a negative timeout */
-        handle.timeout.tv_usec = 0;
-    }
+        timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
+    else
+        timeout = -1; /* Set a negative timeout */
+    HYD_Time_set(&handle.timeout, &timeout);
 
     /* Launch the processes */
     status = HYD_CSI_Launch_procs();

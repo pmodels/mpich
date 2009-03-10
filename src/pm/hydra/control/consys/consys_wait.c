@@ -6,6 +6,7 @@
 
 #include "hydra.h"
 #include "csi.h"
+#include "csiu.h"
 #include "pmci.h"
 #include "bsci.h"
 #include "demux.h"
@@ -14,7 +15,7 @@ HYD_Handle handle;
 
 HYD_Status HYD_CSI_Wait_for_completion(void)
 {
-    int sockets_open, i;
+    int sockets_open;
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
     HYD_Status status = HYD_SUCCESS;
@@ -23,7 +24,7 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
 
     while (1) {
         /* Wait for some event to occur */
-        status = HYD_DMX_Wait_for_event();
+        status = HYD_DMX_Wait_for_event(HYDU_Time_left(handle.start, handle.timeout));
         if (status != HYD_SUCCESS) {
             HYDU_Error_printf("demux engine returned error when waiting for event\n");
             goto fn_fail;
@@ -43,7 +44,7 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
                 break;
         }
 
-        if (sockets_open && HYD_CSU_Time_left())
+        if (sockets_open && HYDU_Time_left(handle.start, handle.timeout))
             continue;
 
         /* Make sure all the processes have terminated. The bootstrap

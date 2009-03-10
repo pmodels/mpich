@@ -21,27 +21,6 @@ typedef struct HYD_DMXI_Callback {
 
 static HYD_DMXI_Callback_t *cb_list = NULL;
 
-static void print_callback_list()
-{
-    HYD_DMXI_Callback_t *run;
-    int i, j;
-
-    run = cb_list;
-    i = 0;
-    printf("Callback list: ");
-    while (run) {
-        for (j = 0; j < run->num_fds; j++) {
-            if (run->fd[j] == -1)
-                continue;
-
-            printf("%d ", run->fd[j]);
-            i++;
-        }
-        run = run->next;
-    }
-    printf("\n");
-}
-
 HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_Event_t events,
                                HYD_Status(*callback) (int fd, HYD_Event_t events))
 {
@@ -122,10 +101,10 @@ HYD_Status HYD_DMX_Deregister_fd(int fd)
 }
 
 
-HYD_Status HYD_DMX_Wait_for_event(void)
+HYD_Status HYD_DMX_Wait_for_event(int time)
 {
     int total_fds, i, j, events, ret;
-    HYD_DMXI_Callback_t *cb_element, *run;
+    HYD_DMXI_Callback_t *run;
     struct pollfd *pollfds = NULL;
     HYD_Status status = HYD_SUCCESS;
 
@@ -155,7 +134,7 @@ HYD_Status HYD_DMX_Wait_for_event(void)
     total_fds = i;
 
     while (1) {
-        ret = poll(pollfds, total_fds, HYD_CSU_Time_left());
+        ret = poll(pollfds, total_fds, time);
         if (ret < 0) {
             if (errno == EINTR) {
                 /* We were interrupted by a system call; loop back */

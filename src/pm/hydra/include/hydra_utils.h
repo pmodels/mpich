@@ -158,6 +158,16 @@ extern char *strsignal(int);
 HYD_Status HYDU_Set_signal(int signum, void (*handler) (int));
 
 
+/* Timer utilities */
+/* FIXME: HYD_Time should be OS specific */
+#ifdef HAVE_TIME
+#include <time.h>
+#endif /* HAVE_TIME */
+typedef struct timeval HYD_Time;
+void HYDU_Time_set(HYD_Time time, int * val);
+int HYDU_Time_left(HYD_Time start, HYD_Time timeout);
+
+
 /* Sock utilities */
 #include <poll.h>
 #include <fcntl.h>

@@ -7,6 +7,4 @@
 #ifndef CSIU_H_INCLUDED
 #define CSIU_H_INCLUDED
 
-int HYD_CSU_Time_left(void);
-
 #endif /* CSIU_H_INCLUDED */

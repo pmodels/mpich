@@ -19,7 +19,7 @@ HYD_Handle handle;
  */
 HYD_Status HYD_BSCU_Wait_for_completion(void)
 {
-    int pid, ret_status, i, not_completed;
+    int pid, ret_status, not_completed;
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
     HYD_Status status = HYD_SUCCESS;
@@ -52,7 +52,7 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
                 }
             }
         }
-        if (HYD_CSU_Time_left() == 0)
+        if (HYDU_Time_left(handle.start, handle.timeout) == 0)
             break;
 
         /* FIXME: If we did not break out yet, add a small usleep to

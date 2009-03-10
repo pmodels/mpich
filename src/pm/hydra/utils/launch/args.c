@@ -8,9 +8,9 @@
 
 HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg, int id)
 {
-    int i, j, csh_format;
+    int i, j;
     HYD_Env_t *env;
-    char *envstr, *tmp[HYDU_NUM_JOIN_STR], *inc;
+    char *envstr, *tmp[HYDU_NUM_JOIN_STR];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

@@ -11,15 +11,10 @@
 
 HYD_Status HYD_BSCI_Finalize(void)
 {
-    struct HYD_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

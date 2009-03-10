@@ -16,7 +16,7 @@ HYD_Status HYD_CSI_Launch_procs(void)
 {
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
-    int stdin_fd, flags, count;
+    int stdin_fd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

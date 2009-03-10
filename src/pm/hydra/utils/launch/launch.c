@@ -8,7 +8,7 @@
 
 HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid)
 {
-    int inpipe[2], outpipe[2], errpipe[2], arg, tpid;
+    int inpipe[2], outpipe[2], errpipe[2], tpid;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

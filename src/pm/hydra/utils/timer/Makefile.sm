@@ -1,0 +1,14 @@
+# -*- Mode: Makefile; -*-
+#
+# (C) 2008 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+
+HYDRA_LIB_PATH = ../../lib
+
+libhydra_a_DIR = ${HYDRA_LIB_PATH}
+libhydra_a_SOURCES = timer.c
+INCLUDES = -I${abs_srcdir}/../../include \
+	-I${abs_srcdir}/../../../../include \
+	-I../../include \
+	-I../../../../include

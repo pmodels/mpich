@@ -6,6 +6,7 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
+#include "lchu.h"
 
 HYD_Handle handle;
 
@@ -109,8 +110,9 @@ HYD_Status HYD_LCHU_Free_host_list(void)
         for (partition = proc_params->partition; partition;) {
             HYDU_FREE(partition->name);
             if (partition->mapping) {
-                if (partition->mapping[i])
-                    HYDU_FREE(partition->mapping[i]);
+                for (i = 0;; i++)
+                    if (partition->mapping[i])
+                        HYDU_FREE(partition->mapping[i]);
                 HYDU_FREE(partition->mapping);
             }
             for (i = 0; partition->args[i]; i++)

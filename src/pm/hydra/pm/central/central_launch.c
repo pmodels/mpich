@@ -37,14 +37,13 @@ HYD_Handle handle;
 HYD_Status HYD_PMCI_Launch_procs(void)
 {
     char *port_range, *port_str, *sport, *str;
-    uint16_t low_port, high_port, port;
-    int one = 1, i, j, arg;
-    int num_procs, process_id, group_id;
+    uint16_t port;
+    int i, arg;
+    int process_id, group_id;
     char hostname[MAX_HOSTNAME_LEN];
-    struct sockaddr_in sa;
     HYD_Env_t *env;
     struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition, *run, *next_partition;
+    struct HYD_Partition_list *partition;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -157,12 +156,12 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             partition->args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
 
-            j = 0;
+            i = 0;
             for (env = handle.system_env; env; env = env->next)
-                j++;
+                i++;
             for (env = proc_params->prop_env; env; env = env->next)
-                j++;
-            HYDU_Int_to_str(j, str, status);
+                i++;
+            HYDU_Int_to_str(i, str, status);
             partition->args[arg++] = MPIU_Strdup("--environment");
             partition->args[arg++] = MPIU_Strdup(str);
             for (env = handle.system_env; env; env = env->next)

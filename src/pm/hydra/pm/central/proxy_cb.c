@@ -7,6 +7,7 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "proxy.h"
+#include "demux.h"
 #include "central.h"
 
 struct HYD_Proxy_params HYD_Proxy_params;

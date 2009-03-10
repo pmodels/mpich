@@ -60,8 +60,6 @@ HYD_Status HYD_BSCU_Set_common_signals(void (*handler) (int))
 
 void HYD_BSCU_Signal_handler(int signal)
 {
-    int status, pid, i;
-
     HYDU_FUNC_ENTER();
 
     if (signal == SIGINT || signal == SIGQUIT || signal == SIGTERM

@@ -15,7 +15,6 @@ HYD_Handle handle;
 
 HYD_Status HYD_CSI_Close_fd(int fd)
 {
-    int i;
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
     HYD_Status status = HYD_SUCCESS;

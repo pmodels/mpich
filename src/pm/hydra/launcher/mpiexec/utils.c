@@ -97,7 +97,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
     int argc = t_argc, i;
     char **argv = t_argv;
     int local_params_started;
-    char *arg;
     char *env_name, *env_value;
     HYD_Env_t *env;
     struct HYD_Proc_params *proc_params;

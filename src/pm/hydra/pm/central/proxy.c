@@ -14,9 +14,10 @@ int HYD_Proxy_listenfd;
 
 int main(int argc, char **argv)
 {
-    int i, j, arg, high_port, low_port, port, sockets_open;
-    int HYD_Proxy_listenfd, stdin_fd;
-    char *port_range, *port_str, *str;
+    int i, j, arg, sockets_open;
+    uint16_t port;
+    int HYD_Proxy_listenfd, stdin_fd, timeout;
+    char *port_range, *str, *timeout_str;
     HYD_Env_t *env, pmi;
     char *client_args[HYD_EXEC_ARGS];
     HYD_Status status = HYD_SUCCESS;
@@ -147,9 +148,15 @@ int main(int argc, char **argv)
         }
     }
 
+    timeout_str = getenv("MPIEXEC_TIMEOUT");
+    if (timeout_str)
+        timeout = atoi(timeout_str);
+    else
+        timeout = -1;
+
     while (1) {
         /* Wait for some event to occur */
-        status = HYD_DMX_Wait_for_event();
+        status = HYD_DMX_Wait_for_event(timeout);
         if (status != HYD_SUCCESS) {
             HYDU_Error_printf("demux engine returned error when waiting for event\n");
             goto fn_fail;

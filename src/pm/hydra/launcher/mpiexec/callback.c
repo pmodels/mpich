@@ -45,8 +45,7 @@ HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events)
 
 HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events)
 {
-    int count, closed;
-    char buf[HYD_TMPBUF_SIZE];
+    int closed;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -78,7 +77,7 @@ HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events)
 
 HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events)
 {
-    int count, closed;
+    int closed;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

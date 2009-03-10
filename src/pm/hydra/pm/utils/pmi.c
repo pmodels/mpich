@@ -92,7 +92,6 @@ static HYD_Status add_process_to_pg(HYD_PMCU_pmi_pg_t * pg, int fd)
 
 HYD_Status HYD_PMCU_Create_pg(void)
 {
-    HYD_PMCU_pmi_pg_t *run;
     struct HYD_Proc_params *proc_params;
     int num_procs;
     HYD_Status status = HYD_SUCCESS;
@@ -128,7 +127,7 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     int id, size, debug, i;
     char *ssize, *srank, *sdebug, *tmp[HYDU_NUM_JOIN_STR], *cmd;
     struct HYD_Proc_params *proc_params;
-    HYD_PMCU_pmi_pg_t *pg, *run;
+    HYD_PMCU_pmi_pg_t *run;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -191,7 +190,7 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
 
 HYD_Status HYD_PMCU_pmi_init(int fd, char *args[])
 {
-    int pmi_version, pmi_subversion, i;
+    int pmi_version, pmi_subversion;
     char *tmp[HYDU_NUM_JOIN_STR];
     HYD_Status status = HYD_SUCCESS;
 
@@ -275,7 +274,7 @@ HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[])
 static HYD_PMCU_pmi_process_t *find_process(int fd)
 {
     HYD_PMCU_pmi_pg_t *pg;
-    HYD_PMCU_pmi_process_t *process;
+    HYD_PMCU_pmi_process_t *process = NULL;
 
     pg = pg_list;
     while (pg) {
@@ -381,7 +380,6 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char *args[])
 {
     HYD_PMCU_pmi_process_t *process, *run;
     char *cmd;
-    int i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

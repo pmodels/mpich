@@ -31,8 +31,8 @@ struct HYD_Handle_ {
     /* Start time and timeout. These are filled in by the launcher,
      * but are utilized by the demux engine and the boot-strap server
      * to decide how long we need to wait for. */
-    struct timeval start;
-    struct timeval timeout;
+    HYD_Time start;
+    HYD_Time timeout;
 
     /* Each structure will contain all hosts/cores that use the same
      * executable and environment. */
