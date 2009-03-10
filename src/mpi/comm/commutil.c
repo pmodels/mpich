@@ -242,7 +242,6 @@ int MPIR_Comm_commit(MPID_Comm *comm)
     int num_local = -1, num_external = -1;
     int local_rank = -1, external_rank = -1;
     int *local_procs = NULL, *external_procs = NULL;
-    MPIR_Context_id_t context_id;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_COMMIT);
@@ -286,22 +285,12 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             goto fn_exit;
         }
 
-        /* FIXME could just use the same ctxid and a different tag like
-           MPIR_BCAST_TAG.  Perhaps MPIR_BCAST_INTRANODE_TAG, etc.  Or maybe
-           just use 3 bits for the ctx suffix and use some of those values. */
-        /* MPIR_Get_contextid is collective over the whole communicator, so
-           everyone has to allocate one and then processes that don't need one
-           can free it as a local operation. */
-        mpi_errno = MPIR_Get_contextid(comm, &context_id);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
         /* we don't need a local comm if this process is the only one on this node */
         if (num_local > 1) {
             mpi_errno = MPIR_Comm_create(&comm->node_comm);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-            comm->node_comm->context_id = context_id;
-
+            comm->node_comm->context_id = comm->context_id + MPID_CONTEXT_INTRANODE_OFFSET;
             comm->node_comm->recvcontext_id = comm->node_comm->context_id;
             comm->node_comm->rank = local_rank;
             comm->node_comm->comm_kind = MPID_INTRACOMM;
@@ -322,23 +311,14 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             MPID_Dev_comm_create_hook( comm->node_comm );
             /* don't call MPIR_Comm_commit here */
         }
-        else {
-            MPIR_Free_contextid(context_id);
-        }
 
-        /* FIXME could just use the same ctxid and a different tag like
-           MPIR_BCAST_TAG.  Perhaps MPIR_BCAST_INTRANODE_TAG, etc.  Or maybe
-           just use 3 bits for the ctx suffix and use some of those values. */
-        mpi_errno = MPIR_Get_contextid(comm, &context_id);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         /* this process may not be a member of the node_roots_comm */
         if (local_rank == 0) {
             mpi_errno = MPIR_Comm_create(&comm->node_roots_comm);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-            comm->node_roots_comm->context_id = context_id;
-
+            comm->node_roots_comm->context_id = comm->context_id + MPID_CONTEXT_INTERNODE_OFFSET;
             comm->node_roots_comm->recvcontext_id = comm->node_roots_comm->context_id;
             comm->node_roots_comm->rank = external_rank;
             comm->node_roots_comm->comm_kind = MPID_INTRACOMM;
@@ -359,12 +339,8 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             MPID_Dev_comm_create_hook( comm->node_roots_comm );
             /* don't call MPIR_Comm_commit here */
         }
-        else {
-            MPIR_Free_contextid(context_id);
-        }
 
         comm->is_node_aware = 1;
-
     }
 
 fn_exit:
@@ -501,7 +477,7 @@ static int MPIR_Find_context_bit( unsigned int local_mask[] ) {
 		j += 1;
 	    }
 	    context_mask[i] &= ~(1<<j);
-	    context_id = 4 * (32 * i + j);
+	    context_id = (32 * i + j) << MPID_CONTEXT_PREFIX_SHIFT;
 	    MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST,
                     "allocating contextid = %d, (mask[%d], bit %d)", 
 		    context_id, i, j ) ); 
@@ -812,15 +788,8 @@ void MPIR_Free_contextid( MPIR_Context_id_t context_id )
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_FREE_CONTEXTID);
 
     /* Convert the context id to the bit position */
-    /* FIXME why do we shift right by 2?  What exactly are those bottom two bits
-       used for? */
-    /* Note: The use of the context_id is covered in the design document.  They
-       are used to provide private context ids for different communication 
-       operations, such as collective communication, without requiring a
-       separate communicator.  4 ids were originally allocated to ensure
-       separation between pt-2-pt, collective, RMA, and intercomm pt-2-pt */
-    idx    = (context_id >> 2) / 32;
-    bitpos = (context_id >> 2) % 32;
+    idx    = (context_id >> MPID_CONTEXT_PREFIX_SHIFT) / 32;
+    bitpos = (context_id >> MPID_CONTEXT_PREFIX_SHIFT) % 32;
 
     /* --BEGIN ERROR HANDLING-- */
     if (idx < 0 || idx >= MPIR_MAX_CONTEXT_MASK) {
@@ -834,11 +803,11 @@ void MPIR_Free_contextid( MPIR_Context_id_t context_id )
         MPIU_DBG_MSG_S(COMM,VERBOSE,"Context mask = %s",MPIR_ContextMaskToStr());
         /* FIXME This abort cannot be enabled at this time.  The local and
            remote communicators in an intercommunicator (always?) share a
-           context_id prefix (bits 15..2) and free will be called on both of
-           them by the higher level code.  This should probably be fixed but we
-           can't until we understand the context_id code better.  One possible
-           solution is to only free when (context_id&0x3)!=0.
-           [goodell@ 2008-08-18]
+           context_id prefix (bits 15..MPID_CONTEXT_NUM_SUFFIX_BITS) and free
+           will be called on both of them by the higher level code.  This should
+           probably be fixed but we can't until we understand the context_id
+           code better.  One possible solution is to only free when
+           (context_id&MPID_CONTEXT_SUFFIX_MASK)!=0.  [goodell@ 2008-08-18]
 
 	MPID_Abort( 0, MPI_ERR_INTERN, 1, 
 		    "In MPIR_Free_contextid, the context id is not in use" );

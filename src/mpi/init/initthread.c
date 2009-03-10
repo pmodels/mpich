@@ -285,8 +285,8 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     MPIR_Process.comm_world		    = MPID_Comm_builtin + 0;
     MPIR_Process.comm_world->handle	    = MPI_COMM_WORLD;
     MPIU_Object_set_ref( MPIR_Process.comm_world, 1 );
-    MPIR_Process.comm_world->context_id	    = 0; /* XXX */
-    MPIR_Process.comm_world->recvcontext_id = 0;
+    MPIR_Process.comm_world->context_id	    = 0 << MPID_CONTEXT_PREFIX_SHIFT;
+    MPIR_Process.comm_world->recvcontext_id = 0 << MPID_CONTEXT_PREFIX_SHIFT;
     MPIR_Process.comm_world->attributes	    = NULL;
     MPIR_Process.comm_world->local_group    = NULL;
     MPIR_Process.comm_world->remote_group   = NULL;
@@ -302,8 +302,8 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     MPIR_Process.comm_self		    = MPID_Comm_builtin + 1;
     MPIR_Process.comm_self->handle	    = MPI_COMM_SELF;
     MPIU_Object_set_ref( MPIR_Process.comm_self, 1 );
-    MPIR_Process.comm_self->context_id	    = 4; /* XXX */
-    MPIR_Process.comm_self->recvcontext_id  = 4; /* XXX */
+    MPIR_Process.comm_self->context_id	    = 1 << MPID_CONTEXT_PREFIX_SHIFT;
+    MPIR_Process.comm_self->recvcontext_id  = 1 << MPID_CONTEXT_PREFIX_SHIFT;
     MPIR_Process.comm_self->attributes	    = NULL;
     MPIR_Process.comm_self->local_group	    = NULL;
     MPIR_Process.comm_self->remote_group    = NULL;
@@ -318,8 +318,8 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     MPIR_Process.icomm_world		    = MPID_Comm_builtin + 2;
     MPIR_Process.icomm_world->handle	    = MPIR_ICOMM_WORLD;
     MPIU_Object_set_ref( MPIR_Process.icomm_world, 1 );
-    MPIR_Process.icomm_world->context_id    = 8; 
-    MPIR_Process.icomm_world->recvcontext_id= 8;
+    MPIR_Process.icomm_world->context_id    = 2 << MPID_CONTEXT_PREFIX_SHIFT;
+    MPIR_Process.icomm_world->recvcontext_id= 2 << MPID_CONTEXT_PREFIX_SHIFT;
     MPIR_Process.icomm_world->attributes    = NULL;
     MPIR_Process.icomm_world->local_group   = NULL;
     MPIR_Process.icomm_world->remote_group  = NULL;

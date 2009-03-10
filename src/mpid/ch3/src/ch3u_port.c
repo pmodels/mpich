@@ -259,7 +259,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
      * If the same process opens connections to the multiple
      * processes, this context ID might get out of sync.
      */
-    tmp_comm->context_id     = (MPIR_MAX_CONTEXT_MASK * sizeof(unsigned int) * 8) + context_id_offset;
+    tmp_comm->context_id     = (MPIR_MAX_CONTEXT_MASK * MPIR_CONTEXT_INT_BITS) + context_id_offset;
     tmp_comm->recvcontext_id = tmp_comm->context_id;
 
     /* FIXME - we probably need a unique context_id. */

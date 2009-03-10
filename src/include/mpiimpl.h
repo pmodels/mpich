@@ -1351,41 +1351,46 @@ extern MPID_Comm MPID_Comm_direct[];
    of the handle is 3-1 (e.g., the index in the builtin array) */
 #define MPIR_ICOMM_WORLD  ((MPI_Comm)0x44000002)
 
-/*
- * The order of the context offsets is important.  The collective routines
- * in the case of intercommunicator operations use offsets 2 and 3 for
- * the local intracommunicator; thus it is vital that the offsets used 
- * for communication between processes in the intercommunicator in a
- * collective operation (MPID_CONTEXT_INTER_COLL) be distinct from the 
- * offsets uses for communication on the local intracommunicator (2+
- * MPID_CONTEXT_INTRA_COLL)
- */
+/* Context suffixes for separating pt2pt and collective communication */
+#define MPID_CONTEXT_NUM_SUFFIX_BITS 1
+#define MPID_CONTEXT_SUFFIX_MASK ((1 << MPID_CONTEXT_NUM_SUFFIX_BITS) - 1)
 #define MPID_CONTEXT_INTRA_PT2PT 0
 #define MPID_CONTEXT_INTRA_COLL  1
-#define MPID_CONTEXT_INTRA_FILE  2
-#define MPID_CONTEXT_INTRA_WIN   3
 #define MPID_CONTEXT_INTER_PT2PT 0
 #define MPID_CONTEXT_INTER_COLL  1
-#define MPID_CONTEXT_INTER_COLLA 2
-#define MPID_CONTEXT_INTER_COLLB 3
 
-/*
- * The following must hold:
- * MPIR_MAX_CONTEXT_MASK*32 <= 2**(sizeof(MPIR_Context_id_t) * 8 - 2)
- * For a 16-bit context id field, this implies MPIR_MAX_CONTEXT_MASK <= 512
+/* Used to derive context IDs for sub-communicators from a parent communicator's
+   context ID value.  This field comes after the one bit suffix.
+   values are shifted left by 1. */
+#define MPID_CONTEXT_NUM_SUBCOMM_BITS 2
+#define MPID_CONTEXT_SUBCOMM_MASK      (((1 << MPID_CONTEXT_NUM_SUBCOMM_BITS) - 1) << MPID_CONTEXT_NUM_SUFFIX_BITS)
+#define MPID_CONTEXT_PARENT_OFFSET    (0 << MPID_CONTEXT_NUM_SUFFIX_BITS)
+#define MPID_CONTEXT_INTRANODE_OFFSET (1 << MPID_CONTEXT_NUM_SUFFIX_BITS)
+#define MPID_CONTEXT_INTERNODE_OFFSET (2 << MPID_CONTEXT_NUM_SUFFIX_BITS)
+
+/* MPIR_MAX_CONTEXT_MASK is the number of ints that make up the bit vector that
+ * describes the context ID prefix space.
  *
- * MPIR_Context_id_t can hold 2**(sizeof(MPIR_Context_id_t) * 8)
- * context IDs. Of these, the last two bits are used to determine the
- * class of the context ID, so we only have
- * 2**(sizeof(MPIR_Context_id_t) * 8 - 2) context IDs. We can use
- * (2**(sizeof(MPIR_Context_id_t) * 8 - 2) / 32) integers to hold
- * these many bits assuming each integer is 32 bits, i.e.,
- * 2**(sizeof(MPIR_Context_id_t) * 8 - 7) integers. Finally, we want
- * to reserve the second half of this set for temporary VCs in the
- * dynamic process case. That leaves us with
- * 2**(sizeof(MPIR_Context_id_t) * 8 - 8) integers.
+ * The following must hold:
+ * (num_bits_in_vector) <= (maximum_context_id_prefix)
+ *   which is the following in concrete terms:
+ * MPIR_MAX_CONTEXT_MASK*MPIR_CONTEXT_INT_BITS <= 2**(MPIR_CONTEXT_ID_BITS - (MPID_CONTEXT_PREFIX_SHIFT + MPID_CONTEXT_DYNAMIC_PROC_BITS))
+ *
+ * We currently always assume MPIR_CONTEXT_INT_BITS is 32, regardless of the
+ * value of sizeof(int)*CHAR_BITS.  We also make the assumption that CHAR_BITS==8.
+ *
+ * For a 16-bit context id field and CHAR_BITS==8, this implies MPIR_MAX_CONTEXT_MASK <= 256
  */
-#define MPIR_MAX_CONTEXT_MASK (1 << ((sizeof(MPIR_Context_id_t) * 8) - 8))
+
+/* number of bits to shift right by in order to obtain the context ID prefix */
+#define MPID_CONTEXT_PREFIX_SHIFT (MPID_CONTEXT_NUM_SUFFIX_BITS + MPID_CONTEXT_NUM_SUBCOMM_BITS)
+
+/* should probably be (sizeof(int)*CHAR_BITS) once we make the code CHAR_BITS-clean */
+#define MPIR_CONTEXT_INT_BITS (32)
+#define MPIR_CONTEXT_ID_BITS (sizeof(MPIR_Context_id_t)*8) /* 8 --> CHAR_BITS eventually */
+#define MPID_CONTEXT_DYNAMIC_PROC_BITS (1) /* the upper half is reserved for dynamic procs */
+#define MPIR_MAX_CONTEXT_MASK \
+    ((1 << (MPIR_CONTEXT_ID_BITS - (MPID_CONTEXT_PREFIX_SHIFT + MPID_CONTEXT_DYNAMIC_PROC_BITS))) / MPIR_CONTEXT_INT_BITS)
 
 /* Utility routines.  Where possible, these are kept in the source directory
    with the other comm routines (src/mpi/comm, in mpicomm.h).  However,
