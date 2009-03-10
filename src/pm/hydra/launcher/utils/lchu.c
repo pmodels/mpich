@@ -15,7 +15,7 @@ HYD_Status HYD_LCHU_Create_host_list(void)
     FILE *fp = NULL;
     char line[2 * MAX_HOSTNAME_LEN], *hostname, *procs;
     struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
+    struct HYD_Partition_list *partition, *run;
     int num_procs, total_procs;
     HYD_Status status = HYD_SUCCESS;
 
@@ -75,8 +75,28 @@ HYD_Status HYD_LCHU_Create_host_list(void)
             }
         }
 
-        if (total_procs != proc_params->exec_proc_count)
-            break;
+        /* We don't have enough processes; use whatever we have */
+        if (total_procs != proc_params->exec_proc_count) {
+            for (partition = proc_params->partition;
+                 partition->next; partition = partition->next);
+            run = proc_params->partition;
+
+            /* Optimize the case where there is only one node */
+            if (run->next == NULL) {
+                run->proc_count = proc_params->exec_proc_count;
+            }
+            else {
+                while (total_procs != proc_params->exec_proc_count) {
+                    HYDU_Allocate_Partition(&partition->next);
+                    partition = partition->next;
+                    partition->name = MPIU_Strdup(run->name);
+                    partition->proc_count = run->proc_count;
+                    total_procs += partition->proc_count;
+                    run = run->next;
+                }
+            }
+        }
+
         proc_params = proc_params->next;
     }
 

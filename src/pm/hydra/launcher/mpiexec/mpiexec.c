@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     if (getenv("MPIEXEC_TIMEOUT"))
         timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
     else
-        timeout = -1; /* Set a negative timeout */
+        timeout = -1;   /* Set a negative timeout */
     HYDU_Time_set(&handle.timeout, &timeout);
 
     /* Launch the processes */

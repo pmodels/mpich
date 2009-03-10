@@ -26,7 +26,7 @@ HYD_Status HYDU_Env_putenv(HYD_Env_t env);
 struct HYD_Partition_list {
     char *name;
     int proc_count;
-    char **mapping;     /* Can be core IDs or something else */
+    char **mapping;             /* Can be core IDs or something else */
 
     /*
      * The boot-strap server is expected to start a single executable
@@ -48,8 +48,8 @@ struct HYD_Partition_list {
      *   3. One proxy per physical node means that each partition will
      *      have a different group ID.
      */
-    int group_id;       /* Assumed to be in ascending order */
-    int group_rank;     /* Rank within the group */
+    int group_id;               /* Assumed to be in ascending order */
+    int group_rank;             /* Rank within the group */
     int pid;
     int out;
     int err;
@@ -164,7 +164,7 @@ HYD_Status HYDU_Set_signal(int signum, void (*handler) (int));
 #include <time.h>
 #endif /* HAVE_TIME */
 typedef struct timeval HYD_Time;
-void HYDU_Time_set(HYD_Time * time, int * val);
+void HYDU_Time_set(HYD_Time * time, int *val);
 int HYDU_Time_left(HYD_Time start, HYD_Time timeout);
 
 
