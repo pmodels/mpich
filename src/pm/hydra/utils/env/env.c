@@ -277,7 +277,7 @@ HYD_Status HYDU_Env_putenv(HYD_Env_t env)
     tmp[i++] = NULL;
     HYDU_STR_ALLOC_AND_JOIN(tmp, env_str, status);
 
-    putenv(env_str);
+    MPIU_PutEnv(env_str);
 
   fn_exit:
     HYDU_FUNC_EXIT();
