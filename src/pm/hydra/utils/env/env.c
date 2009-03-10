@@ -32,8 +32,7 @@ HYD_Status HYDU_Env_global_list(HYD_Env_t ** env_list)
 
         status = HYDU_Env_add_to_list(env_list, *env);
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf
-                ("launcher returned error adding env to list\n");
+            HYDU_Error_printf("launcher returned error adding env to list\n");
             goto fn_fail;
         }
         HYDU_Env_free(env);
@@ -92,7 +91,7 @@ HYD_Env_t *HYDU_Env_dup(HYD_Env_t env)
 }
 
 
-HYD_Env_t *HYDU_Env_found_in_list(HYD_Env_t * env_list, HYD_Env_t * env)
+HYD_Env_t *HYDU_Env_found_in_list(HYD_Env_t * env_list, HYD_Env_t env)
 {
     HYD_Env_t *run;
 
@@ -100,7 +99,7 @@ HYD_Env_t *HYDU_Env_found_in_list(HYD_Env_t * env_list, HYD_Env_t * env)
 
     run = env_list;
     while (run->next) {
-        if (!strcmp(run->env_name, env->env_name))
+        if (!strcmp(run->env_name, env.env_name))
             goto fn_exit;
         run = run->next;
     }
@@ -206,8 +205,7 @@ HYD_Env_t *HYDU_Env_listdup(HYD_Env_t * env)
 
 
 HYD_Status HYDU_Env_create(HYD_Env_t ** env, char *env_name,
-                           char *env_value, HYD_Env_type_t env_type,
-                           int start)
+                           char *env_value, HYD_Env_type_t env_type, int start)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -261,4 +259,30 @@ HYD_Status HYDU_Env_free_list(HYD_Env_t * env)
 
     HYDU_FUNC_EXIT();
     return status;
+}
+
+
+HYD_Status HYDU_Env_putenv(HYD_Env_t env)
+{
+    int i;
+    char *tmp[HYDU_NUM_JOIN_STR], *env_str;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    i = 0;
+    tmp[i++] = MPIU_Strdup(env.env_name);
+    tmp[i++] = MPIU_Strdup("=");
+    tmp[i++] = MPIU_Strdup(env.env_value);
+    tmp[i++] = NULL;
+    HYDU_STR_ALLOC_AND_JOIN(tmp, env_str, status);
+
+    putenv(env_str);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }

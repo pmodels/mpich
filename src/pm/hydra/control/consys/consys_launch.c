@@ -23,30 +23,23 @@ HYD_Status HYD_CSI_Launch_procs(void)
 
     status = HYD_PMCI_Launch_procs();
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("process manager returned error when launching processes\n");
+        HYDU_Error_printf("process manager returned error when launching processes\n");
         goto fn_fail;
     }
 
-    for (proc_params = handle.proc_params; proc_params;
-         proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition;
-             partition = partition->next) {
+    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
+        for (partition = proc_params->partition; partition; partition = partition->next) {
             status =
-                HYD_DMX_Register_fd(1, &partition->out, HYD_STDOUT,
-                                    proc_params->stdout_cb);
+                HYD_DMX_Register_fd(1, &partition->out, HYD_STDOUT, proc_params->stdout_cb);
             if (status != HYD_SUCCESS) {
-                HYDU_Error_printf
-                    ("demux engine returned error when registering fd\n");
+                HYDU_Error_printf("demux engine returned error when registering fd\n");
                 goto fn_fail;
             }
 
             status =
-                HYD_DMX_Register_fd(1, &partition->err, HYD_STDOUT,
-                                    proc_params->stderr_cb);
+                HYD_DMX_Register_fd(1, &partition->err, HYD_STDOUT, proc_params->stderr_cb);
             if (status != HYD_SUCCESS) {
-                HYDU_Error_printf
-                    ("demux engine returned error when registering fd\n");
+                HYDU_Error_printf("demux engine returned error when registering fd\n");
                 goto fn_fail;
             }
         }
@@ -71,11 +64,9 @@ HYD_Status HYD_CSI_Launch_procs(void)
         handle.stdin_buf_count = 0;
         handle.stdin_buf_offset = 0;
 
-        status =
-            HYD_DMX_Register_fd(1, &stdin_fd, HYD_STDOUT, handle.stdin_cb);
+        status = HYD_DMX_Register_fd(1, &stdin_fd, HYD_STDOUT, handle.stdin_cb);
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf
-                ("demux engine returned error when registering fd\n");
+            HYDU_Error_printf("demux engine returned error when registering fd\n");
             goto fn_fail;
         }
     }

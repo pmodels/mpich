@@ -11,6 +11,7 @@
 
 struct HYD_Proxy_params {
     HYD_Env_t *global_env;
+    HYD_Env_t *env_list;
     int proc_count;
     int pmi_id;
     char *args[HYD_EXEC_ARGS];

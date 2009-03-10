@@ -8,10 +8,7 @@
 #include "hydra_mem.h"
 #include "hydra_launch.h"
 
-HYD_Handle handle;
-
-HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out,
-                               int *err, int *pid)
+HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid)
 {
     int inpipe[2], outpipe[2], errpipe[2], arg, tpid;
     HYD_Status status = HYD_SUCCESS;
@@ -67,17 +64,6 @@ HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out,
             }
         }
 
-        if (chdir(handle.wdir) < 0) {
-            if (chdir(getenv("HOME")) < 0) {
-                HYDU_Error_printf
-                    ("unable to set working directory to %s\n",
-                     handle.wdir);
-                status = HYD_INTERNAL_ERROR;
-                goto fn_fail;
-            }
-        }
-
-        /* execvp the process */
         if (execvp(client_arg[0], client_arg) < 0) {
             HYDU_Error_printf("execvp error\n");
             status = HYD_INTERNAL_ERROR;

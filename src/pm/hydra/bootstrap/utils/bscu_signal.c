@@ -17,30 +17,26 @@ HYD_Status HYD_BSCU_Set_common_signals(void (*handler) (int))
 
     status = HYDU_Set_signal(SIGINT, handler);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("signal utils returned error when trying to set SIGINT signal\n");
+        HYDU_Error_printf("signal utils returned error when trying to set SIGINT signal\n");
         goto fn_fail;
     }
 
     status = HYDU_Set_signal(SIGQUIT, handler);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("signal utils returned error when trying to set SIGQUIT signal\n");
+        HYDU_Error_printf("signal utils returned error when trying to set SIGQUIT signal\n");
         goto fn_fail;
     }
 
     status = HYDU_Set_signal(SIGTERM, handler);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("signal utils returned error when trying to set SIGTERM signal\n");
+        HYDU_Error_printf("signal utils returned error when trying to set SIGTERM signal\n");
         goto fn_fail;
     }
 
 #if defined SIGSTOP
     status = HYDU_Set_signal(SIGSTOP, handler);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("signal utils returned error when trying to set SIGSTOP signal\n");
+        HYDU_Error_printf("signal utils returned error when trying to set SIGSTOP signal\n");
         goto fn_fail;
     }
 #endif /* SIGSTOP */
@@ -48,8 +44,7 @@ HYD_Status HYD_BSCU_Set_common_signals(void (*handler) (int))
 #if defined SIGCONT
     status = HYDU_Set_signal(SIGCONT, handler);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("signal utils returned error when trying to set SIGCONT signal\n");
+        HYDU_Error_printf("signal utils returned error when trying to set SIGCONT signal\n");
         goto fn_fail;
     }
 #endif /* SIGCONT */

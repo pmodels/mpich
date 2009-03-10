@@ -8,8 +8,6 @@
 #include "hydra_mem.h"
 #include "hydra_launch.h"
 
-HYD_Handle handle;
-
 HYD_Status HYDU_Allocate_Partition(struct HYD_Partition_list **partition)
 {
     HYD_Status status = HYD_SUCCESS;

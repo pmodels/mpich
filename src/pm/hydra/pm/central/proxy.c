@@ -15,9 +15,11 @@ int HYD_Proxy_listenfd;
 
 int main(int argc, char **argv)
 {
-    int i, high_port, low_port, port;
+    int i, j, arg, high_port, low_port, port, sockets_open;
     int HYD_Proxy_listenfd;
-    char *port_range, *port_str;
+    char *port_range, *port_str, *str;
+    HYD_Env_t *env, pmi;
+    char *client_args[HYD_EXEC_ARGS];
     HYD_Status status = HYD_SUCCESS;
 
     status = HYD_Proxy_get_params(argc, argv);
@@ -42,12 +44,9 @@ int main(int argc, char **argv)
     }
 
     /* Register the listening socket with the demux engine */
-    status =
-        HYD_DMX_Register_fd(1, &HYD_Proxy_listenfd, HYD_STDOUT,
-                            HYD_Proxy_listen_cb);
+    status = HYD_DMX_Register_fd(1, &HYD_Proxy_listenfd, HYD_STDOUT, HYD_Proxy_listen_cb);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("demux engine returned error for registering fd\n");
+        HYDU_Error_printf("demux engine returned error for registering fd\n");
         goto fn_fail;
     }
 
@@ -63,22 +62,48 @@ int main(int argc, char **argv)
                 HYD_Proxy_params.proc_count * sizeof(int), status);
     HYDU_MALLOC(HYD_Proxy_params.err, int *,
                 HYD_Proxy_params.proc_count * sizeof(int), status);
+    HYDU_MALLOC(HYD_Proxy_params.pid, int *,
+                HYD_Proxy_params.proc_count * sizeof(int), status);
 
     /* Spawn the processes */
     for (i = 0; i < HYD_Proxy_params.proc_count; i++) {
+
+        pmi.env_name = MPIU_Strdup("PMI_ID");
+        HYDU_Int_to_str(HYD_Proxy_params.pmi_id + i, str, status);
+        pmi.env_value = MPIU_Strdup(str);
+        pmi.env_type = HYD_ENV_STATIC;
+        pmi.start_val = 0;
+        pmi.next = NULL;
+
+        /* Update the PMI_ID value with this one */
+        status = HYDU_Env_add_to_list(&HYD_Proxy_params.env_list, pmi);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("unable to add env to list\n");
+            goto fn_fail;
+        }
+
+        /* Set the environment with the current values */
+        for (env = HYD_Proxy_params.env_list; env; env = env->next) {
+            status = HYDU_Env_putenv(*env);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("unable to putenv\n");
+                goto fn_fail;
+            }
+        }
+
+        for (j = 0, arg = 0; HYD_Proxy_params.args[j]; j++)
+            client_args[arg++] = MPIU_Strdup(HYD_Proxy_params.args[j]);
+        client_args[arg++] = NULL;
+
         if ((i & HYD_Proxy_params.pmi_id) == 0) {
-            status =
-                HYDU_Create_process(HYD_Proxy_params.args,
-                                    &HYD_Proxy_params.in,
-                                    &HYD_Proxy_params.out[i],
-                                    &HYD_Proxy_params.err[i],
-                                    &HYD_Proxy_params.pid[i]);
+            status = HYDU_Create_process(client_args, &HYD_Proxy_params.in,
+                                         &HYD_Proxy_params.out[i], &HYD_Proxy_params.err[i],
+                                         &HYD_Proxy_params.pid[i]);
         }
         else {
-            status = HYDU_Create_process(HYD_Proxy_params.args, NULL,
+            status = HYDU_Create_process(client_args, NULL,
                                          &HYD_Proxy_params.out[i],
-                                         &HYD_Proxy_params.err[i],
-                                         &HYD_Proxy_params.pid[i]);
+                                         &HYD_Proxy_params.err[i], &HYD_Proxy_params.pid[i]);
         }
         if (status != HYD_SUCCESS) {
             HYDU_Error_printf("spawn process returned error\n");
@@ -87,28 +112,45 @@ int main(int argc, char **argv)
     }
 
     /* Everything is spawned, now wait for I/O */
-    status =
-        HYD_DMX_Register_fd(HYD_Proxy_params.proc_count,
-                            HYD_Proxy_params.out, HYD_STDOUT,
-                            HYD_Proxy_stdout_cb);
+    status = HYD_DMX_Register_fd(HYD_Proxy_params.proc_count, HYD_Proxy_params.out,
+                                 HYD_STDOUT, HYD_Proxy_stdout_cb);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("demux engine returned error when registering fd\n");
+        HYDU_Error_printf("demux engine returned error when registering fd\n");
         goto fn_fail;
     }
-    status =
-        HYD_DMX_Register_fd(HYD_Proxy_params.proc_count,
-                            HYD_Proxy_params.err, HYD_STDOUT,
-                            HYD_Proxy_stderr_cb);
+    status = HYD_DMX_Register_fd(HYD_Proxy_params.proc_count, HYD_Proxy_params.err,
+                                 HYD_STDOUT, HYD_Proxy_stderr_cb);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("demux engine returned error when registering fd\n");
+        HYDU_Error_printf("demux engine returned error when registering fd\n");
         goto fn_fail;
     }
 
     /* FIXME: Handle stdin */
     HYD_Proxy_params.stdin_buf_offset = 0;
     HYD_Proxy_params.stdin_buf_count = 0;
+
+    while (1) {
+        /* Wait for some event to occur */
+        status = HYD_DMX_Wait_for_event();
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("demux engine returned error when waiting for event\n");
+            goto fn_fail;
+        }
+
+        /* Check to see if there's any open read socket left; if there
+         * are, we will just wait for more events. */
+        sockets_open = 0;
+        for (i = 0; i < HYD_Proxy_params.proc_count; i++) {
+            if (HYD_Proxy_params.out[i] != -1 || HYD_Proxy_params.err[i] != -1) {
+                sockets_open++;
+                break;
+            }
+        }
+
+        /* We are done */
+        if (!sockets_open)
+            break;
+    }
 
   fn_exit:
     return status;

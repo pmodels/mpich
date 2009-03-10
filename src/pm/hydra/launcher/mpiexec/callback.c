@@ -13,43 +13,25 @@ HYD_Handle handle;
 
 HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events)
 {
-    int count;
-    char buf[HYD_TMPBUF_SIZE];
+    int closed;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (events & HYD_STDIN) {
-        HYDU_Error_printf("stdout handler got an stdin event: %d\n",
-                          events);
-        status = HYD_INTERNAL_ERROR;
+    /* Write output to fd 1 */
+    status = HYDU_Sock_stdout_cb(fd, events, 1, &closed);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("socket stdout callback error on fd: %d (errno: %d)\n", fd, errno);
         goto fn_fail;
     }
 
-    count = read(fd, buf, HYD_TMPBUF_SIZE);
-    if (count < 0) {
-        HYDU_Error_printf("socket read error on fd: %d (errno: %d)\n", fd,
-                          errno);
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
-    }
-    else if (count == 0) {
-        /* The connection has closed */
+    if (closed) {
         status = HYD_CSI_Close_fd(fd);
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("socket close error on fd: %d (errno: %d)\n",
-                              fd, errno);
+            HYDU_Error_printf("socket close error on fd: %d (errno: %d)\n", fd, errno);
             goto fn_fail;
         }
         goto fn_exit;
-    }
-
-    count = write(1, buf, count);
-    if (count < 0) {
-        HYDU_Error_printf("socket write error on fd: %d (errno: %d)\n", fd,
-                          errno);
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
     }
 
   fn_exit:
@@ -63,43 +45,26 @@ HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events)
 
 HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events)
 {
-    int count;
+    int count, closed;
     char buf[HYD_TMPBUF_SIZE];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (events & HYD_STDIN) {
-        HYDU_Error_printf("stderr handler got an stdin event: %d\n",
-                          events);
-        status = HYD_INTERNAL_ERROR;
+    /* Write output to fd 2 */
+    status = HYDU_Sock_stdout_cb(fd, events, 2, &closed);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("socket stdout callback error on fd: %d (errno: %d)\n", fd, errno);
         goto fn_fail;
     }
 
-    count = read(fd, buf, HYD_TMPBUF_SIZE);
-    if (count < 0) {
-        HYDU_Error_printf("socket read error on fd: %d (errno: %d)\n", fd,
-                          errno);
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
-    }
-    else if (count == 0) {
-        /* The connection has closed */
+    if (closed) {
         status = HYD_CSI_Close_fd(fd);
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("socket close error on fd: %d (errno: %d)\n",
-                              fd, errno);
+            HYDU_Error_printf("socket close error on fd: %d (errno: %d)\n", fd, errno);
             goto fn_fail;
         }
         goto fn_exit;
-    }
-
-    count = write(2, buf, count);
-    if (count < 0) {
-        HYDU_Error_printf("socket write error on fd: %d (errno: %d)\n", fd,
-                          errno);
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
     }
 
   fn_exit:
@@ -113,64 +78,25 @@ HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events)
 
 HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events)
 {
-    int count;
+    int count, closed;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (events & HYD_STDIN) {
-        HYDU_Error_printf
-            ("stdin handler got a writeable event on local stdin: %d\n",
-             events);
-        status = HYD_INTERNAL_ERROR;
+    status = HYDU_Sock_stdin_cb(fd, events, handle.stdin_tmp_buf,
+                                &handle.stdin_buf_count, &handle.stdin_buf_offset, &closed);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("sock stdin callback returned an error\n");
+        status = HYD_SOCK_ERROR;
         goto fn_fail;
     }
 
-    while (1) {
-        /* If we already have buffered data, send it out */
-        if (handle.stdin_buf_count) {
-            count =
-                write(handle.in,
-                      handle.stdin_tmp_buf + handle.stdin_buf_offset,
-                      handle.stdin_buf_count);
-            if (count < 0) {
-                /* We can't get an EAGAIN as we just got out of poll */
-                HYDU_Error_printf
-                    ("socket write error on fd: %d (errno: %d)\n",
-                     handle.in, errno);
-                status = HYD_SOCK_ERROR;
-                goto fn_fail;
-            }
-            handle.stdin_buf_offset += count;
-            handle.stdin_buf_count -= count;
-            break;
-        }
-
-        /* If we are still here, we need to refill our temporary buffer */
-        count = read(0, handle.stdin_tmp_buf, HYD_TMPBUF_SIZE);
-        if (count < 0) {
-            if (errno == EINTR || errno == EAGAIN) {
-                /* This call was interrupted or there was no data to read; just break out. */
-                break;
-            }
-
-            HYDU_Error_printf("socket read error on fd: %d (errno: %d)\n",
-                              fd, errno);
-            status = HYD_SOCK_ERROR;
+    if (closed) {
+        status = HYD_CSI_Close_fd(fd);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("socket close error on fd: %d (errno: %d)\n", fd, errno);
             goto fn_fail;
         }
-        else if (count == 0) {
-            /* The connection has closed */
-            status = HYD_CSI_Close_fd(fd);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf
-                    ("socket close error on fd: %d (errno: %d)\n", fd,
-                     errno);
-                goto fn_fail;
-            }
-            break;
-        }
-        handle.stdin_buf_count += count;
     }
 
   fn_exit:

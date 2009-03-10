@@ -40,8 +40,7 @@ static HYD_Status allocate_proc_params(struct HYD_Proc_params **params)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(proc_params, struct HYD_Proc_params *,
-                sizeof(struct HYD_Proc_params), status);
+    HYDU_MALLOC(proc_params, struct HYD_Proc_params *, sizeof(struct HYD_Proc_params), status);
 
     proc_params->exec_proc_count = 0;
     proc_params->partition = NULL;
@@ -129,23 +128,20 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
     while (--argc && ++argv) {
 
         /* Help options */
-        if (!strcmp(*argv, "-h") || !strcmp(*argv, "--help") ||
-            !strcmp(*argv, "-help")) {
+        if (!strcmp(*argv, "-h") || !strcmp(*argv, "--help") || !strcmp(*argv, "-help")) {
             /* Just return from this function; the main code will show the usage */
             status = HYD_INTERNAL_ERROR;
             goto fn_fail;
         }
 
         /* Check what debug level is requested */
-        if (!strcmp(*argv, "-v") || !strcmp(*argv, "-vv") ||
-            !strcmp(*argv, "-vvv")) {
+        if (!strcmp(*argv, "-v") || !strcmp(*argv, "-vv") || !strcmp(*argv, "-vvv")) {
             CHECK_LOCAL_PARAM_START(local_params_started, status);
 
             /* Debug level already set */
             if (handle.debug != -1) {
                 HYDU_Error_printf
-                    ("Duplicate debug level setting; previously set to %d\n",
-                     handle.debug);
+                    ("Duplicate debug level setting; previously set to %d\n", handle.debug);
                 status = HYD_INTERNAL_ERROR;
                 goto fn_fail;
             }
@@ -167,8 +163,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             /* X forwarding already enabled or disabled */
             if (handle.enablex != -1) {
                 HYDU_Error_printf
-                    ("Duplicate enable-x setting; previously set to %d\n",
-                     handle.enablex);
+                    ("Duplicate enable-x setting; previously set to %d\n", handle.enablex);
                 status = HYD_INTERNAL_ERROR;
                 goto fn_fail;
             }
@@ -185,8 +180,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             /* propagation already set */
             if (handle.prop != HYD_ENV_PROP_UNSET) {
                 HYDU_Error_printf
-                    ("Duplicate propagation setting; previously set to %d\n",
-                     handle.prop);
+                    ("Duplicate propagation setting; previously set to %d\n", handle.prop);
                 status = HYD_INTERNAL_ERROR;
                 goto fn_fail;
             }
@@ -205,9 +199,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                     if (env_name == NULL)
                         break;
 
-                    status =
-                        HYDU_Env_create(&env, env_name, NULL,
-                                        HYD_ENV_STATIC, 0);
+                    status = HYDU_Env_create(&env, env_name, NULL, HYD_ENV_STATIC, 0);
                     if (status != HYD_SUCCESS) {
                         HYDU_Error_printf("unable to create env struct\n");
                         goto fn_fail;
@@ -230,8 +222,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
             status = get_current_proc_params(&proc_params);
             if (status != HYD_SUCCESS) {
-                HYDU_Error_printf
-                    ("get_current_proc_params returned error\n");
+                HYDU_Error_printf("get_current_proc_params returned error\n");
                 goto fn_fail;
             }
 
@@ -258,16 +249,13 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                     if (env_name == NULL)
                         break;
 
-                    status =
-                        HYDU_Env_create(&env, env_name, NULL,
-                                        HYD_ENV_STATIC, 0);
+                    status = HYDU_Env_create(&env, env_name, NULL, HYD_ENV_STATIC, 0);
                     if (status != HYD_SUCCESS) {
                         HYDU_Error_printf("unable to create env struct\n");
                         goto fn_fail;
                     }
 
-                    status =
-                        HYDU_Env_add_to_list(&proc_params->prop_env, *env);
+                    status = HYDU_Env_add_to_list(&proc_params->prop_env, *env);
                     if (status != HYD_SUCCESS) {
                         HYDU_Error_printf("unable to add env to list\n");
                         goto fn_fail;
@@ -288,9 +276,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             CHECK_NEXT_ARG_VALID(status);
             env_value = MPIU_Strdup(*argv);
 
-            status =
-                HYDU_Env_create(&env, env_name, env_value, HYD_ENV_STATIC,
-                                0);
+            status = HYDU_Env_create(&env, env_name, env_value, HYD_ENV_STATIC, 0);
             if (status != HYD_SUCCESS) {
                 HYDU_Error_printf("unable to create env struct\n");
                 goto fn_fail;
@@ -303,8 +289,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
                 status = get_current_proc_params(&proc_params);
                 if (status != HYD_SUCCESS) {
-                    HYDU_Error_printf
-                        ("get_current_proc_params returned error\n");
+                    HYDU_Error_printf("get_current_proc_params returned error\n");
                     goto fn_fail;
                 }
 
@@ -328,8 +313,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
             status = get_current_proc_params(&proc_params);
             if (status != HYD_SUCCESS) {
-                HYDU_Error_printf
-                    ("get_current_proc_params returned error\n");
+                HYDU_Error_printf("get_current_proc_params returned error\n");
                 goto fn_fail;
             }
 
@@ -368,8 +352,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             if (!strcmp(*argv, ":")) {  /* Next executable */
                 status = allocate_proc_params(&proc_params->next);
                 if (status != HYD_SUCCESS) {
-                    HYDU_Error_printf
-                        ("allocate_proc_params returned error\n");
+                    HYDU_Error_printf("allocate_proc_params returned error\n");
                     goto fn_fail;
                 }
                 break;
@@ -403,8 +386,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
     if (handle.wdir == NULL) {
         HYDU_MALLOC(handle.wdir, char *, HYDRA_MAX_PATH, status);
         if (getcwd(handle.wdir, HYDRA_MAX_PATH) == NULL) {
-            HYDU_Error_printf
-                ("allocated space is too small for absolute path\n");
+            HYDU_Error_printf("allocated space is too small for absolute path\n");
             status = HYD_INTERNAL_ERROR;
             goto fn_fail;
         }

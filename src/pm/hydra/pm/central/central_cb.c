@@ -55,25 +55,20 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
     if (fd == HYD_PMCD_Central_listenfd) {      /* Someone is trying to connect to us */
         status = HYDU_Sock_accept(fd, &accept_fd);
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf
-                ("sock utils returned error when accepting connection\n");
+            HYDU_Error_printf("sock utils returned error when accepting connection\n");
             goto fn_fail;
         }
 
-        status =
-            HYD_DMX_Register_fd(1, &accept_fd, HYD_STDOUT,
-                                HYD_PMCD_Central_cb);
+        status = HYD_DMX_Register_fd(1, &accept_fd, HYD_STDOUT, HYD_PMCD_Central_cb);
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf
-                ("demux engine returned error when registering fd\n");
+            HYDU_Error_printf("demux engine returned error when registering fd\n");
             goto fn_fail;
         }
     }
     else {
         status = HYDU_Sock_readline(fd, buf, HYD_TMPBUF_SIZE, &linelen);
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf
-                ("sock utils returned error when reading PMI line\n");
+            HYDU_Error_printf("sock utils returned error when reading PMI line\n");
             goto fn_fail;
         }
 
@@ -142,9 +137,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
         }
         else {
             /* We don't understand the command */
-            HYDU_Error_printf
-                ("Unrecognized PMI command: %s; cleaning up processes\n",
-                 cmd);
+            HYDU_Error_printf("Unrecognized PMI command: %s; cleaning up processes\n", cmd);
 
             /* Cleanup all the processes and return. We don't need to
              * check the return status since we are anyway returning

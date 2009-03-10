@@ -13,13 +13,15 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
 {
     int argc = t_argc;
     char **argv = t_argv;
-    int app_params = 0, arg;
+    int arg, i, count;
     struct HYD_Partition_list *partition, *run;
+    HYD_Env_t *found, env;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYD_Proxy_params.global_env = NULL;
+    HYD_Proxy_params.env_list = NULL;
     HYD_Proxy_params.partition = NULL;
 
     status = HYDU_Env_global_list(&HYD_Proxy_params.global_env);
@@ -28,7 +30,6 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
         goto fn_fail;
     }
 
-    app_params = 0;
     while (--argc && ++argv) {
 
         /* Process count */
@@ -59,18 +60,48 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
             if (!HYD_Proxy_params.partition)
                 HYD_Proxy_params.partition = partition;
             else {
-                for (run = HYD_Proxy_params.partition; run->next;
-                     run = run->next);
+                for (run = HYD_Proxy_params.partition; run->next; run = run->next);
                 run->next = partition;
+            }
+            continue;
+        }
+
+        /* Environment information is passed as a list of names; we
+         * need to find the values from our environment. */
+        if (!strcmp(*argv, "--environment")) {
+            argv++;
+            count = atoi(*argv);
+            for (i = 0; i < count; i++) {
+                argv++;
+
+                /* First find the environment variable */
+                env.env_name = MPIU_Strdup(*argv);
+                found = HYDU_Env_found_in_list(HYD_Proxy_params.global_env, env);
+                if (!found) {
+                    HYDU_Error_printf("Unable to find requested env: %s\n", env.env_name);
+                    status = HYD_INTERNAL_ERROR;
+                    goto fn_fail;
+                }
+
+                /* Now add it to the env_list */
+                status = HYDU_Env_add_to_list(&HYD_Proxy_params.env_list, *found);
+                if (status != HYD_SUCCESS) {
+                    HYDU_Error_printf("Unable to add env to list\n");
+                    goto fn_fail;
+                }
             }
             continue;
         }
 
         /* Fall through case is application parameters. Load
          * everything into the args variable. */
-        for (arg = 0; argv;)
-            HYD_Proxy_params.args[arg++] = MPIU_Strdup(argv++);
+        for (arg = 0; *argv;) {
+            HYD_Proxy_params.args[arg++] = MPIU_Strdup(*argv);
+            ++argv;
+            --argc;
+        }
         HYD_Proxy_params.args[arg++] = NULL;
+        break;
     }
 
   fn_exit:

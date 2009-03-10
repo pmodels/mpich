@@ -52,11 +52,11 @@ extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
 
 typedef enum {
+    HYD_SUCCESS = 0,
     HYD_NO_MEM,
     HYD_SOCK_ERROR,
     HYD_INVALID_PARAM,
-    HYD_INTERNAL_ERROR,
-    HYD_SUCCESS = 0
+    HYD_INTERNAL_ERROR
 } HYD_Status;
 
 #define HYD_STDOUT  (1)

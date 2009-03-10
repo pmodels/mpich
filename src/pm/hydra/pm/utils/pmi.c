@@ -19,10 +19,8 @@ static HYD_Status allocate_kvs(HYD_PMCU_pmi_kvs_t ** kvs, int pgid)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*kvs, HYD_PMCU_pmi_kvs_t *, sizeof(HYD_PMCU_pmi_kvs_t),
-                status);
-    MPIU_Snprintf((*kvs)->kvs_name, MAXNAMELEN, "kvs_%d_%d",
-                  (int) getpid(), pgid);
+    HYDU_MALLOC(*kvs, HYD_PMCU_pmi_kvs_t *, sizeof(HYD_PMCU_pmi_kvs_t), status);
+    MPIU_Snprintf((*kvs)->kvs_name, MAXNAMELEN, "kvs_%d_%d", (int) getpid(), pgid);
     (*kvs)->key_pair = NULL;
 
   fn_exit:
@@ -40,8 +38,7 @@ static HYD_Status create_pg(HYD_PMCU_pmi_pg_t ** pg, int pgid)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*pg, HYD_PMCU_pmi_pg_t *, sizeof(HYD_PMCU_pmi_pg_t),
-                status);
+    HYDU_MALLOC(*pg, HYD_PMCU_pmi_pg_t *, sizeof(HYD_PMCU_pmi_pg_t), status);
     (*pg)->id = pgid;
     (*pg)->num_procs = 0;
     (*pg)->barrier_count = 0;
@@ -72,8 +69,7 @@ static HYD_Status add_process_to_pg(HYD_PMCU_pmi_pg_t * pg, int fd)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(process, HYD_PMCU_pmi_process_t *,
-                sizeof(HYD_PMCU_pmi_process_t), status);
+    HYDU_MALLOC(process, HYD_PMCU_pmi_process_t *, sizeof(HYD_PMCU_pmi_process_t), status);
     process->fd = fd;
     process->pg = pg;
     process->next = NULL;
@@ -166,8 +162,7 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("sock utils returned error when writing PMI line\n");
+        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
         goto fn_fail;
     }
     HYDU_FREE(ssize);
@@ -210,12 +205,10 @@ HYD_Status HYD_PMCU_pmi_init(int fd, char *args[])
 
     if (pmi_version == 1 && pmi_subversion <= 1) {
         /* We support PMI v1.0 and 1.1 */
-        tmp[0] =
-            "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
+        tmp[0] = "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
         status = HYDU_Sock_writeline(fd, tmp[0], strlen(tmp[0]));
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf
-                ("sock utils returned error when writing PMI line\n");
+            HYDU_Error_printf("sock utils returned error when writing PMI line\n");
             goto fn_fail;
         }
     }
@@ -262,8 +255,7 @@ HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[])
     HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("sock utils returned error when writing PMI line\n");
+        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
         goto fn_fail;
     }
     HYDU_FREE(cmd);
@@ -330,8 +322,7 @@ HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char *args[])
     HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("sock utils returned error when writing PMI line\n");
+        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
         goto fn_fail;
     }
     HYDU_FREE(cmd);
@@ -360,8 +351,7 @@ HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char *args[])
     process = find_process(fd);
     if (process == NULL) {      /* We didn't find the process */
         status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf
-            ("could not find the process structure for fd %d\n", fd);
+        HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
         goto fn_fail;
     }
 
@@ -374,8 +364,7 @@ HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char *args[])
     HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("sock utils returned error when writing PMI line\n");
+        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
         goto fn_fail;
     }
     HYDU_FREE(cmd);
@@ -402,8 +391,7 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char *args[])
     process = find_process(fd);
     if (process == NULL) {      /* We didn't find the process */
         status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf
-            ("could not find the process structure for fd %d\n", fd);
+        HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
         goto fn_fail;
     }
 
@@ -417,8 +405,7 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char *args[])
         while (run) {
             status = HYDU_Sock_writeline(run->fd, cmd, strlen(cmd));
             if (status != HYD_SUCCESS) {
-                HYDU_Error_printf
-                    ("sock utils returned error when writing PMI line\n");
+                HYDU_Error_printf("sock utils returned error when writing PMI line\n");
                 goto fn_fail;
             }
             run = run->next;
@@ -458,8 +445,7 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
     process = find_process(fd);
     if (process == NULL) {      /* We didn't find the process */
         status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf
-            ("could not find the process structure for fd %d\n", fd);
+        HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
         goto fn_fail;
     }
 
@@ -471,8 +457,7 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
         goto fn_fail;
     }
 
-    HYDU_MALLOC(key_pair, HYD_PMCU_pmi_kvs_pair_t *,
-                sizeof(HYD_PMCU_pmi_kvs_pair_t), status);
+    HYDU_MALLOC(key_pair, HYD_PMCU_pmi_kvs_pair_t *, sizeof(HYD_PMCU_pmi_kvs_pair_t), status);
     MPIU_Snprintf(key_pair->key, MAXKEYLEN, "%s", key);
     MPIU_Snprintf(key_pair->val, MAXVALLEN, "%s", val);
     key_pair->next = NULL;
@@ -503,8 +488,7 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
     HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("sock utils returned error when writing PMI line\n");
+        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
         goto fn_fail;
     }
     HYDU_FREE(cmd);
@@ -539,8 +523,7 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
     process = find_process(fd);
     if (process == NULL) {      /* We didn't find the process */
         status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf
-            ("could not find the process structure for fd %d\n", fd);
+        HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
         goto fn_fail;
     }
 
@@ -582,8 +565,7 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
     HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("sock utils returned error when writing PMI line\n");
+        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
         goto fn_fail;
     }
     HYDU_FREE(cmd);
@@ -608,8 +590,7 @@ HYD_Status HYD_PMCU_pmi_finalize(int fd, char *args[])
     cmd = "cmd=finalize_ack\n";
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("sock utils returned error when writing PMI line\n");
+        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
         goto fn_fail;
     }
 
@@ -632,8 +613,7 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
 
     status = HYD_BSCI_Get_universe_size(&usize);
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("Unable to get universe size from the bootstrap server\n");
+        HYDU_Error_printf("Unable to get universe size from the bootstrap server\n");
         goto fn_fail;
     }
 
@@ -648,8 +628,7 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
     HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("sock utils returned error when writing PMI line\n");
+        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
         goto fn_fail;
     }
     HYDU_FREE(cmd);
@@ -663,8 +642,7 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
 }
 
 
-static HYD_Status free_pmi_process_list(HYD_PMCU_pmi_process_t *
-                                        process_list)
+static HYD_Status free_pmi_process_list(HYD_PMCU_pmi_process_t * process_list)
 {
     HYD_PMCU_pmi_process_t *process, *tmp;
     HYD_Status status = HYD_SUCCESS;

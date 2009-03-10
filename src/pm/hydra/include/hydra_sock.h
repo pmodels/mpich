@@ -19,8 +19,7 @@
 #define size_t unsigned int
 #endif /* size_t */
 
-HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range,
-                            uint16_t * port);
+HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port);
 HYD_Status HYDU_Sock_connect(const char *host, uint16_t port, int *fd);
 HYD_Status HYDU_Sock_accept(int listen_fd, int *fd);
 HYD_Status HYDU_Sock_readline(int fd, char *buf, int maxlen, int *linelen);
@@ -29,5 +28,8 @@ HYD_Status HYDU_Sock_writeline(int fd, char *buf, int maxsize);
 HYD_Status HYDU_Sock_write(int fd, char *buf, int maxsize);
 HYD_Status HYDU_Sock_set_nonblock(int fd);
 HYD_Status HYDU_Sock_set_cloexec(int fd);
+HYD_Status HYDU_Sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *closed);
+HYD_Status HYDU_Sock_stdin_cb(int fd, HYD_Event_t events, char *buf, int *buf_count,
+                              int *buf_offset, int *closed);
 
 #endif /* HYDRA_SOCKS_H_INCLUDED */
