@@ -51,13 +51,3 @@ when the "-f" option is not provided to mpiexec.
 
   For csh/tcsh:
     setenv HYDRA_HOST_FILE <path_to_host_file>/hosts
-
-
-HYDRA_USE_LOCALHOST: This variable forces Hydra to run all processes
-on the local machine.
-
-  For bash:
-    export HYDRA_USE_LOCALHOST=1
-
-  For csh/tcsh:
-    setenv HYDRA_USE_LOCALHOST 1
