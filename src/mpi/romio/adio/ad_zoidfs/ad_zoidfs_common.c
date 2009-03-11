@@ -68,7 +68,7 @@ void ADIOI_ZOIDFS_Init(int rank, int *error_code )
 		      &ADIOI_ZOIDFS_Initialized, (void *)0); 
     /* just like romio does, we make a dummy attribute so we 
      * get cleaned up */
-    MPI_Attr_put(MPI_COMM_WORLD, ADIOI_ZOIDFS_Initialized, (void *)0);
+    MPI_Attr_put(MPI_COMM_SELF, ADIOI_ZOIDFS_Initialized, (void *)0);
 }
 
 void ADIOI_ZOIDFS_makeattribs(zoidfs_sattr_t * attribs)
