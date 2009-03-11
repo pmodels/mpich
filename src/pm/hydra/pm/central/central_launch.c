@@ -131,13 +131,6 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             partition->group_id = group_id++;
             partition->group_rank = 0;
 
-            /* Setup the executable arguments */
-            arg = 0;
-            partition->args[arg++] = MPIU_Strdup("sh");
-            partition->args[arg++] = MPIU_Strdup("-c");
-            partition->args[arg++] = MPIU_Strdup("\"");
-            partition->args[arg++] = NULL;
-
             /* Pass the entire environment here; the proxy will cherry
              * pick from this. */
             HYDU_Append_env(handle.system_env, partition->args, process_id);
@@ -201,10 +194,6 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 
             partition->args[arg] = NULL;
             HYDU_Append_exec(proc_params->exec, partition->args);
-
-            for (arg = 0; partition->args[arg]; arg++);
-            partition->args[arg++] = MPIU_Strdup("\"");
-            partition->args[arg++] = NULL;
 
             process_id += partition->proc_count;
         }
