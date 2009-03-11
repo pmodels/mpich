@@ -77,7 +77,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
              * might have aborted. Just cleanup all the processes */
             status = HYD_BSCI_Cleanup_procs();
             if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("unable to deregister fd %d\n", fd);
+                HYDU_Error_printf("bootstrap server returned error cleaning up processes\n");
                 goto fn_fail;
             }
 
