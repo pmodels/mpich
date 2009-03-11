@@ -42,6 +42,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     int process_id, group_id;
     char hostname[MAX_HOSTNAME_LEN];
     HYD_Env_t *env;
+    char *path_str[HYDU_NUM_JOIN_STR];
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
     HYD_Status status = HYD_SUCCESS;
@@ -140,7 +141,12 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             HYDU_Append_wdir(partition->args, handle.wdir);
 
             for (arg = 0; partition->args[arg]; arg++);
-            partition->args[arg++] = MPIU_Strdup("proxy");
+            i = 0;
+            path_str[i++] = MPIU_Strdup(handle.base_path);
+            path_str[i++] = MPIU_Strdup("proxy");
+            path_str[i] = NULL;
+            HYDU_STR_ALLOC_AND_JOIN(path_str, partition->args[arg], status);
+            arg++;
 
             HYDU_Int_to_str(partition->proc_count, str, status);
             partition->args[arg++] = MPIU_Strdup("--proc-count");

@@ -16,6 +16,8 @@ struct HYD_Handle_ {
     int enablex;
     char *wdir;
 
+    char *base_path;
+
     char *host_file;
 
     /* Global environment */

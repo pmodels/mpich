@@ -109,6 +109,12 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
     handle.wdir = NULL;
     handle.host_file = NULL;
 
+    status = HYDU_Get_base_path(argv[0], &handle.base_path);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("unable to get base path\n");
+        goto fn_fail;
+    }
+
     status = HYDU_Env_global_list(&handle.global_env);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("unable to get the global env list\n");

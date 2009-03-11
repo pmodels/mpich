@@ -65,6 +65,7 @@ HYD_Status HYDU_Append_wdir(char **client_arg, char *wdir);
 HYD_Status HYDU_Allocate_Partition(struct HYD_Partition_list **partition);
 HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid);
 HYD_Status HYDU_Dump_args(char **args);
+HYD_Status HYDU_Get_base_path(char *execname, char **path);
 
 
 /* Memory utilities */
@@ -88,7 +89,7 @@ HYD_Status HYDU_Dump_args(char **args);
 #define HYDU_STRDUP(src, dest, type, status)                            \
     {                                                                   \
         (dest) = (type) MPIU_Strdup((src));                             \
-        if ((p) == NULL) {                                              \
+        if ((dest) == NULL) {                                           \
             HYDU_Error_printf("failed duping string %s\n", (src));      \
             (status) = HYD_INTERNAL_ERROR;                              \
             goto fn_fail;                                               \

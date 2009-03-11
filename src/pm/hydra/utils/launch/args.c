@@ -98,3 +98,30 @@ HYD_Status HYDU_Dump_args(char **args)
     HYDU_FUNC_EXIT();
     return status;
 }
+
+
+HYD_Status HYDU_Get_base_path(char * execname, char **path)
+{
+    char * str[HYDU_NUM_JOIN_STR];
+    int i;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    i = 0;
+    str[i++] = strtok(execname, "/");
+    do {
+        str[i++] = "/";
+        str[i++] = strtok(NULL, "/");
+    } while (str[i-1]);
+    str[i-3] = NULL;
+
+    HYDU_STR_ALLOC_AND_JOIN(str, *path, status);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
