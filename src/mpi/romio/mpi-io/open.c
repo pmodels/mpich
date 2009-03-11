@@ -118,34 +118,8 @@ int MPI_File_open(MPI_Comm comm, char *filename, int amode,
 */
 
 /* check if ADIO has been initialized. If not, initialize it */
-    if (ADIO_Init_keyval == MPI_KEYVAL_INVALID) {
-	MPI_Initialized(&flag);
-
-	/* --BEGIN ERROR HANDLING-- */
-	if (!flag) {
-	    error_code = MPIO_Err_create_code(MPI_SUCCESS,
-					      MPIR_ERR_RECOVERABLE,
-					      myname, __LINE__, MPI_ERR_OTHER,
-					      "**initialized", 0);
-	    goto fn_fail;
-	}
-	/* --END ERROR HANDLING-- */
-
-	MPI_Keyval_create(MPI_NULL_COPY_FN, ADIOI_End_call, &ADIO_Init_keyval,
-			  (void *) 0);  
-
-/* put a dummy attribute on MPI_COMM_WORLD, because we want the delete
-   function to be called when MPI_COMM_WORLD is freed. Hopefully the
-   MPI library frees MPI_COMM_WORLD when MPI_Finalize is called,
-   though the standard does not mandate this. */
-
-	MPI_Attr_put(MPI_COMM_WORLD, ADIO_Init_keyval, (void *) 0);
-
-/* initialize ADIO */
-
-	ADIO_Init( (int *)0, (char ***)0, &error_code);
-    }
-
+    MPIR_MPIOInit(&error_code);
+    if (error_code != MPI_SUCCESS) goto fn_fail;
 
     file_system = -1;
 

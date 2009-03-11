@@ -32,7 +32,8 @@ mpi_sources = close.c read.c open.c write.c set_view.c \
       wr_atalle.c write_allb.c write_alle.c \
       get_posn_sh.c iread_sh.c read_sh.c write_sh.c \
       iwrite_sh.c seek_sh.c read_ord.c read_orde.c write_ordb.c \
-      read_ordb.c write_ord.c write_orde.c mpiu_greq.c register_datarep.c
+      read_ordb.c write_ord.c write_orde.c mpiu_greq.c register_datarep.c\
+      mpir-mpioinit.c
 
 # EXTRA objects are ones that need to be included for all but MPICH2
 MPIO_OBJECTS = close.o read.o open.o write.o set_view.o \
@@ -49,7 +50,7 @@ MPIO_OBJECTS = close.o read.o open.o write.o set_view.o \
       get_posn_sh.o iread_sh.o read_sh.o write_sh.o \
       iwrite_sh.o seek_sh.o read_ord.o read_orde.o write_ordb.o \
       read_ordb.o write_ord.o write_orde.o mpiu_greq.o mpich2_fileutil.o \
-      register_datarep.o
+      register_datarep.o mpir-mpioinit.o
 
 # MPIO_REQOBJECTS are the routines that provide the MPIO_Wait etc.
 # routines (iotest.o, iowait.o iowaitall.o iowaitany.o iotestall.o

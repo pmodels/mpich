@@ -60,6 +60,10 @@ struct MPIR_Info {
 
 MPI_Delete_function ADIOI_End_call;
 
+/* common initialization routine */
+void MPIR_MPIOInit(int * error_code);
+
+
 #include "mpioprof.h"
 
 #ifdef MPI_hpux
