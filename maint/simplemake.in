@@ -10,8 +10,7 @@ $abs_mpich2srcdir = "@abs_mpich2srcdir@";
 $includedir = ".";
 $skipAction = 0;
 $makefilebase = "Makefile.base";
-$ranliblib    = 0;   # only set to 1 on obsolescent systems where ar does not
-                     # compute a symbol table index
+$ranliblib    = 1;
 $useinclude = 0;     # set to 1 to make the Makefiles refer to a single
                      # base makefile.
 $include_list = "";
