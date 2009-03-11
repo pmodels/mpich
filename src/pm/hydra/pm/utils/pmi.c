@@ -143,9 +143,23 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     }
     debug = handle.debug;
 
-    HYDU_Int_to_str(size, ssize, status);
-    HYDU_Int_to_str(id, srank, status);
-    HYDU_Int_to_str(debug, sdebug, status);
+    status = HYDU_String_int_to_str(size, &ssize);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while converting int to string\n");
+        goto fn_fail;
+    }
+
+    status = HYDU_String_int_to_str(id, &srank);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while converting int to string\n");
+        goto fn_fail;
+    }
+
+    status = HYDU_String_int_to_str(debug, &sdebug);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while converting int to string\n");
+        goto fn_fail;
+    }
 
     i = 0;
     tmp[i++] = "cmd=initack\ncmd=set size=";
@@ -157,7 +171,12 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
+    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while joining strings\n");
+        goto fn_fail;
+    }
+
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned error when writing PMI line\n");
@@ -236,9 +255,23 @@ HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    HYDU_Int_to_str(MAXKVSNAME, maxkvsname, status);
-    HYDU_Int_to_str(MAXKEYLEN, maxkeylen, status);
-    HYDU_Int_to_str(MAXVALLEN, maxvallen, status);
+    status = HYDU_String_int_to_str(MAXKVSNAME, &maxkvsname);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while converting int to string\n");
+        goto fn_fail;
+    }
+
+    status = HYDU_String_int_to_str(MAXKEYLEN, &maxkeylen);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while converting int to string\n");
+        goto fn_fail;
+    }
+
+    status = HYDU_String_int_to_str(MAXVALLEN, &maxvallen);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while converting int to string\n");
+        goto fn_fail;
+    }
 
     i = 0;
     tmp[i++] = "cmd=maxes kvsname_max=";
@@ -250,7 +283,12 @@ HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
+    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while joining strings\n");
+        goto fn_fail;
+    }
+
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned error when writing PMI line\n");
@@ -309,7 +347,11 @@ HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char *args[])
         goto fn_fail;
     }
 
-    HYDU_Int_to_str(process->pg->id, sapp_num, status);
+    status = HYDU_String_int_to_str(process->pg->id, &sapp_num);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while converting int to string\n");
+        goto fn_fail;
+    }
 
     i = 0;
     tmp[i++] = "cmd=appnum appnum=";
@@ -317,7 +359,12 @@ HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
+    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while joining strings\n");
+        goto fn_fail;
+    }
+
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned error when writing PMI line\n");
@@ -359,7 +406,12 @@ HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
+    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while joining strings\n");
+        goto fn_fail;
+    }
+
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned error when writing PMI line\n");
@@ -482,7 +534,12 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
+    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while joining strings\n");
+        goto fn_fail;
+    }
+
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned error when writing PMI line\n");
@@ -506,7 +563,7 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
     HYD_PMCU_pmi_process_t *process;
     HYD_PMCU_pmi_kvs_pair_t *run;
     char *kvsname, *key;
-    char *tmp[HYDU_NUM_JOIN_STR], *cmd, *key_val_str;
+    char *tmp[HYDU_NUM_JOIN_STR], *cmd, *key_val_str = NULL;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -559,7 +616,12 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
+    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while joining strings\n");
+        goto fn_fail;
+    }
+
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned error when writing PMI line\n");
@@ -614,7 +676,11 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
         goto fn_fail;
     }
 
-    HYDU_Int_to_str(usize, usize_str, status);
+    status = HYDU_String_int_to_str(usize, &usize_str);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while converting int to string\n");
+        goto fn_fail;
+    }
 
     i = 0;
     tmp[i++] = "cmd=universe_size size=";
@@ -622,7 +688,12 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    HYDU_STR_ALLOC_AND_JOIN(tmp, cmd, status);
+    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while joining strings\n");
+        goto fn_fail;
+    }
+
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned error when writing PMI line\n");

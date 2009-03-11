@@ -69,7 +69,13 @@ int main(int argc, char **argv)
     for (i = 0; i < HYD_Proxy_params.proc_count; i++) {
 
         pmi.env_name = MPIU_Strdup("PMI_ID");
-        HYDU_Int_to_str(HYD_Proxy_params.pmi_id + i, str, status);
+
+        status = HYDU_String_int_to_str(HYD_Proxy_params.pmi_id + i, &str);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("String utils returned error while converting int to string\n");
+            goto fn_fail;
+        }
+
         pmi.env_value = MPIU_Strdup(str);
         pmi.next = NULL;
 

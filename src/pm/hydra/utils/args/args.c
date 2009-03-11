@@ -24,7 +24,13 @@ HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg, int id)
         tmp[j++] = MPIU_Strdup("=");
         tmp[j++] = env->env_value ? MPIU_Strdup(env->env_value) : MPIU_Strdup("");
         tmp[j++] = NULL;
-        HYDU_STR_ALLOC_AND_JOIN(tmp, envstr, status);
+
+        status = HYDU_String_alloc_and_join(tmp, &envstr);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("String utils returned error while joining strings\n");
+            goto fn_fail;
+        }
+
         client_arg[i++] = MPIU_Strdup(envstr);
         HYDU_FREE(envstr);
         for (j = 0; tmp[j]; j++)
@@ -100,9 +106,9 @@ HYD_Status HYDU_Dump_args(char **args)
 }
 
 
-HYD_Status HYDU_Get_base_path(char * execname, char **path)
+HYD_Status HYDU_Get_base_path(char *execname, char **path)
 {
-    char * str[HYDU_NUM_JOIN_STR];
+    char *str[HYDU_NUM_JOIN_STR];
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -113,10 +119,14 @@ HYD_Status HYDU_Get_base_path(char * execname, char **path)
     do {
         str[i++] = "/";
         str[i++] = strtok(NULL, "/");
-    } while (str[i-1]);
-    str[i-3] = NULL;
+    } while (str[i - 1]);
+    str[i - 3] = NULL;
 
-    HYDU_STR_ALLOC_AND_JOIN(str, *path, status);
+    status = HYDU_String_alloc_and_join(str, path);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while joining strings\n");
+        goto fn_fail;
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

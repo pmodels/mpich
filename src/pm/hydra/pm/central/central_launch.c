@@ -79,7 +79,11 @@ HYD_Status HYD_PMCI_Launch_procs(void)
         goto fn_fail;
     }
 
-    HYDU_Int_to_str(port, sport, status);
+    status = HYDU_String_int_to_str(port, &sport);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while converting int to string\n");
+        goto fn_fail;
+    }
     HYDU_MALLOC(port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
     MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1,
                   "%s:%s", hostname, sport);
@@ -145,10 +149,19 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             path_str[i++] = MPIU_Strdup(handle.base_path);
             path_str[i++] = MPIU_Strdup("proxy");
             path_str[i] = NULL;
-            HYDU_STR_ALLOC_AND_JOIN(path_str, partition->args[arg], status);
+            status = HYDU_String_alloc_and_join(path_str, &partition->args[arg]);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("String utils returned error when joining strings\n");
+                goto fn_fail;
+            }
             arg++;
 
-            HYDU_Int_to_str(partition->proc_count, str, status);
+            status = HYDU_String_int_to_str(partition->proc_count, &str);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf
+                    ("String utils returned error while converting int to string\n");
+                goto fn_fail;
+            }
             partition->args[arg++] = MPIU_Strdup("--proc-count");
             partition->args[arg++] = MPIU_Strdup(str);
 
@@ -157,7 +170,12 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             partition->args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
 
-            HYDU_Int_to_str(process_id, str, status);
+            status = HYDU_String_int_to_str(process_id, &str);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf
+                    ("String utils returned error while converting int to string\n");
+                goto fn_fail;
+            }
             partition->args[arg++] = MPIU_Strdup("--pmi-id");
             partition->args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
@@ -167,7 +185,12 @@ HYD_Status HYD_PMCI_Launch_procs(void)
                 i++;
             for (env = proc_params->prop_env; env; env = env->next)
                 i++;
-            HYDU_Int_to_str(i, str, status);
+            status = HYDU_String_int_to_str(i, &str);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf
+                    ("String utils returned error while converting int to string\n");
+                goto fn_fail;
+            }
             partition->args[arg++] = MPIU_Strdup("--environment");
             partition->args[arg++] = MPIU_Strdup(str);
             for (env = handle.system_env; env; env = env->next)

@@ -252,7 +252,12 @@ HYD_Status HYDU_Env_putenv(HYD_Env_t env)
     tmp[i++] = MPIU_Strdup("=");
     tmp[i++] = env.env_value ? MPIU_Strdup(env.env_value) : MPIU_Strdup("");
     tmp[i++] = NULL;
-    HYDU_STR_ALLOC_AND_JOIN(tmp, env_str, status);
+
+    status = HYDU_String_alloc_and_join(tmp, &env_str);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("String utils returned error while joining strings\n");
+        goto fn_fail;
+    }
 
     MPIU_PutEnv(env_str);
 

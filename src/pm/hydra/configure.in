@@ -256,11 +256,13 @@ PAC_SUBCONFIG_FINALIZE()
 dnl Final output
 AC_OUTPUT(Makefile \
 	utils/Makefile \
+	utils/args/Makefile \
 	utils/dbg/Makefile \
 	utils/env/Makefile \
-	utils/sock/Makefile \
-	utils/signals/Makefile \
 	utils/launch/Makefile \
+	utils/signals/Makefile \
+	utils/sock/Makefile \
+	utils/string/Makefile \
 	utils/timer/Makefile \
 	launcher/Makefile \
 	launcher/utils/Makefile \

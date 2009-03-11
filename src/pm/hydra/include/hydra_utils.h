@@ -96,49 +96,8 @@ HYD_Status HYDU_Get_base_path(char *execname, char **path);
         }                                                               \
     }
 
-#define HYDU_PRINT_ARGS(str)                                    \
-    {                                                           \
-        int i;                                                  \
-        for (i = 0; (str) != NULL && (str)[i] != NULL; i++)     \
-            printf("%s ", (str)[i]);                            \
-        printf("\n");                                           \
-    }
-
-#define HYDU_STR_ALLOC_AND_JOIN(strlist, strjoin, status)               \
-    {                                                                   \
-        int len = 0, i, count;                                          \
-        for (i = 0; (strlist)[i] != NULL; i++)                          \
-            len += strlen((strlist)[i]);                                \
-        HYDU_MALLOC((strjoin), char *, len + 1, (status));              \
-        count = 0;                                                      \
-        (strjoin)[0] = 0;                                               \
-        for (i = 0; (strlist)[i] != NULL; i++) {                        \
-            MPIU_Snprintf((strjoin) + count, len - count + 1, "%s", (strlist)[i]); \
-            count += strlen((strlist)[i]);                              \
-        }                                                               \
-    }
-
-#define HYDU_Int_to_str(x, str, status)                                 \
-    {                                                                   \
-        int len = 1, max = 10, y;                                       \
-        if ((x) < 0) {                                                  \
-            len++;                                                      \
-            y = -(x);                                                   \
-        }                                                               \
-        else                                                            \
-            y = (x);                                                    \
-        while (y >= max) {                                              \
-            len++;                                                      \
-            max *= 10;                                                  \
-        }                                                               \
-        (str) = (char *) MPIU_Malloc(len + 1);                          \
-        if ((str) == NULL) {                                            \
-            HYDU_Error_printf("failed trying to allocate %d bytes\n", len + 1); \
-            (status) = HYD_NO_MEM;                                      \
-            goto fn_fail;                                               \
-        }                                                               \
-        MPIU_Snprintf((str), len + 1, "%d", (x));                       \
-    }
+HYD_Status HYDU_String_alloc_and_join(char **strlist, char **strjoin);
+HYD_Status HYDU_String_int_to_str(int x, char **str);
 
 
 /* Signal utilities */

@@ -4,4 +4,4 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS = dbg env sock signals launch timer .
+SUBDIRS = args dbg env launch signals sock string timer .

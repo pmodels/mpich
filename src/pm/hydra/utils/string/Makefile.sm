@@ -7,7 +7,7 @@
 HYDRA_LIB_PATH = ../../lib
 
 libhydra_a_DIR = ${HYDRA_LIB_PATH}
-libhydra_a_SOURCES = allocate.c launch.c
+libhydra_a_SOURCES = string.c
 INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../../../include \
 	-I../../include \
