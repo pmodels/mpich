@@ -115,6 +115,8 @@ HYD_Status HYDU_Get_base_path(char *execname, char **path)
     HYDU_FUNC_ENTER();
 
     i = 0;
+    if (execname[0] == '/')
+        str[i++] = "/";
     str[i++] = strtok(execname, "/");
     do {
         str[i++] = "/";
