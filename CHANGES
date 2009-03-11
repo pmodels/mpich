@@ -1,11 +1,15 @@
 ===============================================================================
-                               Changes in 1.1 (a1 and a2)
+                               Changes in 1.1
 ===============================================================================
 
 - OVERALL: Added MPI 2.1 support.
 
 - OVERALL: Nemesis is now the default configuration channel with a
   completely new TCP communication module.
+
+- OVERALL: Windows support for nemesis.
+
+- OVERALL: Added a new Myrinet MX network module for nemesis.
 
 - OVERALL: Initial support for shared-memory aware collective
   communication operations.
@@ -26,7 +30,7 @@
 
 - Many other bug fixes, memory leak fixes and code cleanup. A full
 list of changes is available using:
-  svn log -r813:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.1a2
+  svn log -r813:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.1b1
 
 
 ===============================================================================
