@@ -72,11 +72,21 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
         }
 
         if (linelen == 0) {
+            /* This is not a clean close. If a finalize was called, we
+             * would have deregistered this socket. The application
+             * might have aborted. Just cleanup all the processes */
+            status = HYD_BSCI_Cleanup_procs();
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("unable to deregister fd %d\n", fd);
+                goto fn_fail;
+            }
+
             status = HYD_DMX_Deregister_fd(fd);
             if (status != HYD_SUCCESS) {
                 HYDU_Error_printf("unable to deregister fd %d\n", fd);
                 goto fn_fail;
             }
+
             close(fd);
             goto fn_exit;
         }
