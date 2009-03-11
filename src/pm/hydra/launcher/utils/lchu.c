@@ -210,26 +210,6 @@ HYD_Status HYD_LCHU_Free_env_list(void)
 }
 
 
-HYD_Status HYD_LCHU_Free_io(void)
-{
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
-            HYDU_FREE(partition->out);
-            HYDU_FREE(partition->err);
-        }
-    }
-
-    HYDU_FUNC_EXIT();
-    return status;
-}
-
-
 HYD_Status HYD_LCHU_Free_exec(void)
 {
     struct HYD_Proc_params *proc_params;
