@@ -476,6 +476,7 @@ HYD_Status HYDU_Sock_stdin_cb(int fd, HYD_Event_t events, char *buf, int *buf_co
         if (count < 0) {
             if (errno == EINTR || errno == EAGAIN) {
                 /* This call was interrupted or there was no data to read; just break out. */
+                *closed = 1;
                 break;
             }
 
