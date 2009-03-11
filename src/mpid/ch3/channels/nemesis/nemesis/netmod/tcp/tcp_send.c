@@ -121,7 +121,7 @@ int MPID_nem_tcp_send_queued (MPIDI_VC_t *vc)
             else
                 MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
         }
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write %d", offset);
+        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
 
         complete = 1;
         for (iov = &sreq->dev.iov[sreq->dev.iov_offset]; iov < &sreq->dev.iov[sreq->dev.iov_offset + sreq->dev.iov_count]; ++iov)
@@ -264,7 +264,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                 else
                     MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
             }
-            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write %d", offset);
+            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
 
             if (offset == sizeof(MPIDI_CH3_PktGeneric_t) + data_sz)
             {
@@ -368,7 +368,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                 else
                     MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
             }
-            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write %d", offset);
+            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
 
             if (offset == sizeof(MPIDI_CH3_PktGeneric_t) + data_sz)
             {
@@ -491,7 +491,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                 else
                     MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
             }
-            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write noncontig %d", offset);
+            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write noncontig " MPIDI_MSG_SZ_FMT, offset);
         }
     }
     else
