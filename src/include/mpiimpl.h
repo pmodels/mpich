@@ -1042,15 +1042,21 @@ typedef struct MPID_Keyval {
 #endif
 } MPID_Keyval;
 
-#define MPIR_Keyval_add_ref( _keyval ) \
-    { MPIU_Object_add_ref( _keyval );                   \
-      MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Incr keyval %p ref count to %d",_keyval,_keyval->ref_count));}
+#define MPIR_Keyval_add_ref( _keyval )                                  \
+    do {                                                                \
+        MPIU_Assert((_keyval)->ref_count >= 0);                         \
+        MPIU_Object_add_ref( _keyval );                                 \
+        MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,              \
+         "Incr keyval %p ref count to %d",_keyval,_keyval->ref_count)); \
+    } while(0)
 
-#define MPIR_Keyval_release_ref( _keyval, _inuse ) \
-    { MPIU_Object_release_ref( _keyval, _inuse );        \
-       MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Decr keyval %p ref count to %d",_keyval,_keyval->ref_count));}
+#define MPIR_Keyval_release_ref( _keyval, _inuse )                      \
+    do {                                                                \
+        MPIU_Object_release_ref( _keyval, _inuse );                     \
+        MPIU_Assert((_keyval)->ref_count >= 0);                         \
+        MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,              \
+         "Decr keyval %p ref count to %d",_keyval,_keyval->ref_count)); \
+    } while(0)
 
 /* Attributes need no ref count or handle, but since we want to use the
    common block allocator for them, we must provide those elements 
