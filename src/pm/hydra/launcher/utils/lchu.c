@@ -146,7 +146,7 @@ HYD_Status HYD_LCHU_Free_host_list(void)
 HYD_Status HYD_LCHU_Create_env_list(void)
 {
     struct HYD_Proc_params *proc_params;
-    HYD_Env_t *env;
+    HYD_Env_t *env, *run;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -161,6 +161,18 @@ HYD_Status HYD_LCHU_Create_env_list(void)
             }
         }
     }
+    else if (handle.prop == HYD_ENV_PROP_LIST) {
+        for (env = handle.user_env; env; env = env->next) {
+            run = HYDU_Env_found_in_list(handle.global_env, *env);
+            if (run) {
+                status = HYDU_Env_add_to_list(&handle.prop_env, *run);
+                if (status != HYD_SUCCESS) {
+                    HYDU_Error_printf("unable to add env to list\n");
+                    goto fn_fail;
+                }
+            }
+        }
+    }
 
     proc_params = handle.proc_params;
     while (proc_params) {
@@ -171,6 +183,18 @@ HYD_Status HYD_LCHU_Create_env_list(void)
                 if (status != HYD_SUCCESS) {
                     HYDU_Error_printf("unable to add env to list\n");
                     goto fn_fail;
+                }
+            }
+        }
+        else if (proc_params->prop == HYD_ENV_PROP_LIST) {
+            for (env = proc_params->user_env; env; env = env->next) {
+                run = HYDU_Env_found_in_list(handle.global_env, *env);
+                if (run) {
+                    status = HYDU_Env_add_to_list(&proc_params->prop_env, *run);
+                    if (status != HYD_SUCCESS) {
+                        HYDU_Error_printf("unable to add env to list\n");
+                        goto fn_fail;
+                    }
                 }
             }
         }

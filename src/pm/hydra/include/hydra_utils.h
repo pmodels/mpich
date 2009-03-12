@@ -19,7 +19,8 @@ HYD_Status HYDU_Env_free(HYD_Env_t * env);
 HYD_Status HYDU_Env_free_list(HYD_Env_t * env);
 HYD_Env_t *HYDU_Env_found_in_list(HYD_Env_t * env_list, HYD_Env_t env);
 HYD_Status HYDU_Env_add_to_list(HYD_Env_t ** env_list, HYD_Env_t env);
-HYD_Status HYDU_Env_putenv(HYD_Env_t env);
+HYD_Status HYDU_Env_assign_form(HYD_Env_t env, char **env_str);
+void HYDU_Env_putenv(char *env_str);
 
 
 /* Launch utilities */
@@ -59,7 +60,7 @@ struct HYD_Partition_list {
     struct HYD_Partition_list *next;
 };
 
-HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg, int id);
+HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg);
 HYD_Status HYDU_Append_exec(char **exec, char **client_arg);
 HYD_Status HYDU_Append_wdir(char **client_arg, char *wdir);
 HYD_Status HYDU_Allocate_Partition(struct HYD_Partition_list **partition);

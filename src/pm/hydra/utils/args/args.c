@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 
-HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg, int id)
+HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg)
 {
     int i, j;
     HYD_Env_t *env;
@@ -35,12 +35,6 @@ HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg, int id)
         HYDU_FREE(envstr);
         for (j = 0; tmp[j]; j++)
             HYDU_FREE(tmp[j]);
-
-        client_arg[i++] = MPIU_Strdup(";");
-
-        client_arg[i++] = MPIU_Strdup("export");
-        client_arg[i++] = MPIU_Strdup(env->env_name);
-        client_arg[i++] = MPIU_Strdup(";");
 
         env = env->next;
     }

@@ -214,23 +214,20 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             else if (!strcmp(*argv, "-genvlist")) {
                 handle.prop = HYD_ENV_PROP_LIST;
                 CHECK_NEXT_ARG_VALID(status);
+                env_name = strtok(*argv, ",");
                 do {
-                    env_name = strtok(*argv, ",");
-                    if (env_name == NULL)
-                        break;
-
                     status = HYDU_Env_create(&env, env_name, NULL);
                     if (status != HYD_SUCCESS) {
                         HYDU_Error_printf("unable to create env struct\n");
                         goto fn_fail;
                     }
 
-                    status = HYDU_Env_add_to_list(&handle.prop_env, *env);
+                    status = HYDU_Env_add_to_list(&handle.user_env, *env);
                     if (status != HYD_SUCCESS) {
                         HYDU_Error_printf("unable to add env to list\n");
                         goto fn_fail;
                     }
-                } while (env_name);
+                } while (env_name = strtok(NULL, ","));
             }
             continue;
         }
@@ -433,6 +430,13 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
         if (proc_params->exec_proc_count == 0)
             proc_params->exec_proc_count = 1;
+
+        if (handle.prop == HYD_ENV_PROP_UNSET && proc_params->prop == HYD_ENV_PROP_UNSET) {
+            /* By default we pass no environment as a lot of users
+             * have crazy environments which make passing them as
+             * strings a nightmare. */
+            proc_params->prop = HYD_ENV_PROP_NONE;
+        }
 
         proc_params = proc_params->next;
     }

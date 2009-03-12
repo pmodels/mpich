@@ -17,8 +17,8 @@ int main(int argc, char **argv)
     int i, j, arg, sockets_open;
     int stdin_fd, timeout;
     char *str, *timeout_str;
-    HYD_Env_t *env, pmi;
     char *client_args[HYD_EXEC_ARGS];
+    char *tmp[HYDU_NUM_JOIN_STR];
     HYD_Status status = HYD_SUCCESS;
 
     status = HYD_Proxy_get_params(argc, argv);
@@ -70,32 +70,22 @@ int main(int argc, char **argv)
     /* Spawn the processes */
     for (i = 0; i < HYD_Proxy_params.proc_count; i++) {
 
-        pmi.env_name = MPIU_Strdup("PMI_ID");
-
+        j = 0;
+        tmp[j++] = MPIU_Strdup("PMI_ID=");
         status = HYDU_String_int_to_str(HYD_Proxy_params.pmi_id + i, &str);
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("String utils returned error while converting int to string\n");
+            HYDU_Error_printf("string utils returned error while converting int to string\n");
             goto fn_fail;
         }
-
-        pmi.env_value = MPIU_Strdup(str);
-        pmi.next = NULL;
-
-        /* Update the PMI_ID value with this one */
-        status = HYDU_Env_add_to_list(&HYD_Proxy_params.env_list, pmi);
+        tmp[j++] = MPIU_Strdup(str);
+        HYDU_FREE(str);
+        tmp[j++] = NULL;
+        status = HYDU_String_alloc_and_join(tmp, &str);
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("unable to add env to list\n");
+            HYDU_Error_printf("string utils returned error while joining strings\n");
             goto fn_fail;
         }
-
-        /* Set the environment with the current values */
-        for (env = HYD_Proxy_params.env_list; env; env = env->next) {
-            status = HYDU_Env_putenv(*env);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("unable to putenv\n");
-                goto fn_fail;
-            }
-        }
+        HYDU_Env_putenv(str);
 
         for (j = 0, arg = 0; HYD_Proxy_params.args[j]; j++)
             client_args[arg++] = MPIU_Strdup(HYD_Proxy_params.args[j]);

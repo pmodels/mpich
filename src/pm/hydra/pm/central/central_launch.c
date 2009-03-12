@@ -109,18 +109,6 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     HYDU_Env_free(env);
     HYDU_FREE(port_str);
 
-    status = HYDU_Env_create(&env, "PMI_ID", NULL);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to create env\n");
-        goto fn_fail;
-    }
-    status = HYDU_Env_add_to_list(&handle.system_env, *env);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to add env to list\n");
-        goto fn_fail;
-    }
-    HYDU_Env_free(env);
-
     /* Create a process group for the MPI processes in this
      * comm_world */
     status = HYD_PMCU_Create_pg();
@@ -140,8 +128,6 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 
             /* Pass the entire environment here; the proxy will cherry
              * pick from this. */
-            HYDU_Append_env(handle.system_env, partition->args, process_id);
-            HYDU_Append_env(proc_params->prop_env, partition->args, process_id);
             HYDU_Append_wdir(partition->args, handle.wdir);
 
             for (arg = 0; partition->args[arg]; arg++);
@@ -190,8 +176,11 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             partition->args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
 
+            partition->args[arg++] = MPIU_Strdup("--environment");
             i = 0;
             for (env = handle.system_env; env; env = env->next)
+                i++;
+            for (env = handle.prop_env; env; env = env->next)
                 i++;
             for (env = proc_params->prop_env; env; env = env->next)
                 i++;
@@ -201,14 +190,14 @@ HYD_Status HYD_PMCI_Launch_procs(void)
                     ("String utils returned error while converting int to string\n");
                 goto fn_fail;
             }
-            partition->args[arg++] = MPIU_Strdup("--environment");
             partition->args[arg++] = MPIU_Strdup(str);
-            for (env = handle.system_env; env; env = env->next)
-                partition->args[arg++] = MPIU_Strdup(env->env_name);
-            for (env = proc_params->prop_env; env; env = env->next)
-                partition->args[arg++] = MPIU_Strdup(env->env_name);
-            HYDU_FREE(str);
+            partition->args[arg++] = NULL;
 
+            HYDU_Append_env(handle.system_env, partition->args);
+            HYDU_Append_env(handle.prop_env, partition->args);
+            HYDU_Append_env(proc_params->prop_env, partition->args);
+
+            for (arg = 0; partition->args[arg]; arg++);
             partition->args[arg] = NULL;
             HYDU_Append_exec(proc_params->exec, partition->args);
 

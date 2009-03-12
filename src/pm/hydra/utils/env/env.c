@@ -239,10 +239,10 @@ HYD_Status HYDU_Env_add_to_list(HYD_Env_t ** env_list, HYD_Env_t env)
 }
 
 
-HYD_Status HYDU_Env_putenv(HYD_Env_t env)
+HYD_Status HYDU_Env_assign_form(HYD_Env_t env, char **env_str)
 {
     int i;
-    char *tmp[HYDU_NUM_JOIN_STR], *env_str;
+    char *tmp[HYDU_NUM_JOIN_STR];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -253,13 +253,11 @@ HYD_Status HYDU_Env_putenv(HYD_Env_t env)
     tmp[i++] = env.env_value ? MPIU_Strdup(env.env_value) : MPIU_Strdup("");
     tmp[i++] = NULL;
 
-    status = HYDU_String_alloc_and_join(tmp, &env_str);
+    status = HYDU_String_alloc_and_join(tmp, env_str);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("String utils returned error while joining strings\n");
         goto fn_fail;
     }
-
-    MPIU_PutEnv(env_str);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -267,4 +265,15 @@ HYD_Status HYDU_Env_putenv(HYD_Env_t env)
 
   fn_fail:
     goto fn_exit;
+}
+
+
+void HYDU_Env_putenv(char *env_str)
+{
+    HYDU_FUNC_ENTER();
+
+    MPIU_PutEnv(env_str);
+
+    HYDU_FUNC_EXIT();
+    return;
 }

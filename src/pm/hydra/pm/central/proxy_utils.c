@@ -80,22 +80,7 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
             count = atoi(*argv);
             for (i = 0; i < count; i++) {
                 argv++;
-
-                /* First find the environment variable */
-                env.env_name = MPIU_Strdup(*argv);
-                found = HYDU_Env_found_in_list(HYD_Proxy_params.global_env, env);
-                if (!found) {
-                    HYDU_Error_printf("Unable to find requested env: %s\n", env.env_name);
-                    status = HYD_INTERNAL_ERROR;
-                    goto fn_fail;
-                }
-
-                /* Now add it to the env_list */
-                status = HYDU_Env_add_to_list(&HYD_Proxy_params.env_list, *found);
-                if (status != HYD_SUCCESS) {
-                    HYDU_Error_printf("Unable to add env to list\n");
-                    goto fn_fail;
-                }
+                HYDU_Env_putenv(*argv);
             }
             continue;
         }
