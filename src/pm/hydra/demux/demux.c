@@ -137,8 +137,11 @@ HYD_Status HYD_DMX_Wait_for_event(int time)
         ret = poll(pollfds, total_fds, time);
         if (ret < 0) {
             if (errno == EINTR) {
-                /* We were interrupted by a system call; loop back */
-                continue;
+                /* We were interrupted by a system call; this is not
+                 * an error case in the regular sense; but the upper
+                 * layer needs to gracefully cleanup the processes. */
+                status = HYD_SUCCESS;
+                goto fn_exit;
             }
             HYDU_Error_printf("poll error (errno: %d)\n", errno);
             status = HYD_SOCK_ERROR;

@@ -20,6 +20,9 @@ HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port)
     low_port = 0;
     high_port = 0;
     if (port_range) {
+        /* If port range is set, we always pick from there */
+        *port = 0;
+
         port_str = strtok(port_range, ":");
         if (port_str == NULL) {
             HYDU_Error_printf("error parsing port range string\n");
@@ -42,6 +45,12 @@ HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port)
             goto fn_fail;
         }
     }
+    else {
+        /* If port range is NULL, if a port is already provided, we
+         * pick that. Otherwise, we search for an available port. */
+        low_port = *port;
+        high_port = *port;
+    }
 
     *listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (*listen_fd < 0) {
@@ -50,8 +59,7 @@ HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port)
         goto fn_fail;
     }
 
-    if (setsockopt(*listen_fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(int))
-        < 0) {
+    if (setsockopt(*listen_fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(int)) < 0) {
         HYDU_Error_printf("unable to set the TCP_NODELAY socket option (errno: %d)\n", errno);
         status = HYD_SOCK_ERROR;
         goto fn_fail;
@@ -62,6 +70,16 @@ HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port)
         sa.sin_family = AF_INET;
         sa.sin_port = htons(i);
         sa.sin_addr.s_addr = INADDR_ANY;
+
+        /* The sockets standard does not guarantee that a successful
+         * return here means that this is set. However, REUSEADDR not
+         * being set is not a fatal error, so we ignore that
+         * case. However, we do check for error cases, which means
+         * that something bad has happened. */
+        if (setsockopt(*listen_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) < 0) {
+            HYDU_Error_printf("unable to set socket option to SO_REUSEADDR\n");
+            goto fn_fail;
+        }
 
         if (bind(*listen_fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
             close(*listen_fd);
@@ -77,10 +95,16 @@ HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port)
         else    /* We got a port */
             break;
     }
+
     *port = i;
+    if (*port > high_port) {
+        HYDU_Error_printf("unable to find an appropriate port to bind to\n");
+        status = HYD_SOCK_ERROR;
+        goto fn_fail;
+    }
 
     if (listen(*listen_fd, -1) < 0) {
-        HYDU_Error_printf("listen error (errno: %d)\n", errno);
+        HYDU_Error_printf("listen error on fd %d (errno: %d)\n", *listen_fd, errno);
         status = HYD_SOCK_ERROR;
         goto fn_fail;
     }
@@ -136,22 +160,10 @@ HYD_Status HYDU_Sock_connect(const char *host, uint16_t port, int *fd)
     memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
 
     /* Create a socket and set the required options */
-    *fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    *fd = socket(AF_INET, SOCK_STREAM, 0);
     if (*fd < 0) {
         HYDU_Error_printf("unable to create a stream socket (errno: %d)\n", errno);
         status = HYD_SOCK_ERROR;
-        goto fn_fail;
-    }
-
-    if (setsockopt(*fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0) {
-        HYDU_Error_printf("unable to set the SO_REUSEADDR socket option (errno: %d)\n", errno);
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
-    }
-
-    status = HYDU_Sock_set_nonblock(*fd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to set fd %d as non-blocking\n", *fd);
         goto fn_fail;
     }
 
@@ -186,12 +198,6 @@ HYD_Status HYDU_Sock_accept(int listen_fd, int *fd)
     if (*fd < 0) {
         HYDU_Error_printf("accept error on socket %d (errno: %d)\n", listen_fd, errno);
         status = HYD_SOCK_ERROR;
-        goto fn_fail;
-    }
-
-    status = HYDU_Sock_set_nonblock(*fd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to set fd %d as non-blocking\n", *fd);
         goto fn_fail;
     }
 

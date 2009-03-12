@@ -108,6 +108,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
     handle.enablex = -1;
     handle.wdir = NULL;
     handle.host_file = NULL;
+    handle.proxy_port = -1;
 
     status = HYDU_Get_base_path(argv[0], &handle.base_path);
     if (status != HYD_SUCCESS) {
@@ -172,6 +173,22 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             }
 
             handle.enablex = !strcmp(*argv, "--enable-x");
+            continue;
+        }
+
+        /* Check if the proxy port is set */
+        if (!strcmp(*argv, "--proxy-port")) {
+            CHECK_LOCAL_PARAM_START(local_params_started, status);
+            CHECK_NEXT_ARG_VALID(status);
+
+            if (handle.proxy_port != -1) {
+                HYDU_Error_printf("Duplicate proxy port setting; previously set to %d\n",
+                                  handle.proxy_port);
+                status = HYD_INTERNAL_ERROR;
+                goto fn_fail;
+            }
+
+            handle.proxy_port = atoi(*argv);
             continue;
         }
 
@@ -418,6 +435,11 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             proc_params->exec_proc_count = 1;
 
         proc_params = proc_params->next;
+    }
+
+    /* If the proxy port is not set, set it to the default value */
+    if (handle.proxy_port == -1) {
+        handle.proxy_port = HYD_DEFAULT_PROXY_PORT;
     }
 
   fn_exit:

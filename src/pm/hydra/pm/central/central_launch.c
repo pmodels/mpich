@@ -49,6 +49,12 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
+    status = HYDU_Set_common_signals(HYD_PMCD_Central_signal_cb);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("signal utils returned error when trying to set signal\n");
+        goto fn_fail;
+    }
+
     /* Check if the user wants us to use a port within a certain
      * range. */
     port_range = getenv("MPIEXEC_PORTRANGE");
@@ -58,6 +64,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
         port_range = getenv("MPICH_PORT_RANGE");
 
     /* Listen on a port in the port range */
+    port = 0;
     status = HYDU_Sock_listen(&HYD_PMCD_Central_listenfd, port_range, &port);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned listen error\n");
@@ -65,8 +72,8 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     }
 
     /* Register the listening socket with the demux engine */
-    status =
-        HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd, HYD_STDOUT, HYD_PMCD_Central_cb);
+    status = HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd, HYD_STDOUT,
+                                 HYD_PMCD_Central_cb);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("demux engine returned error for registering fd\n");
         goto fn_fail;
@@ -173,6 +180,16 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             partition->args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
 
+            status = HYDU_String_int_to_str(handle.proxy_port, &str);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf
+                    ("String utils returned error while converting int to string\n");
+                goto fn_fail;
+            }
+            partition->args[arg++] = MPIU_Strdup("--proxy-port");
+            partition->args[arg++] = MPIU_Strdup(str);
+            HYDU_FREE(str);
+
             i = 0;
             for (env = handle.system_env; env; env = env->next)
                 i++;
@@ -205,6 +222,30 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("bootstrap server returned error launching processes\n");
         goto fn_fail;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYD_PMCI_Wait_for_completion(void)
+{
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYD_BSCI_Wait_for_completion();
+    if (status != HYD_SUCCESS) {
+        status = HYD_PMCD_Central_cleanup();
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("process manager device returned error for process cleanup\n");
+            goto fn_fail;
+        }
     }
 
   fn_exit:

@@ -39,6 +39,13 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
             continue;
         }
 
+        /* Proxy port */
+        if (!strcmp(*argv, "--proxy-port")) {
+            argv++;
+            HYD_Proxy_params.proxy_port = atoi(*argv);
+            continue;
+        }
+
         /* PMI_ID: This is the PMI_ID for the first process;
          * everything else is incremented from here. */
         if (!strcmp(*argv, "--pmi-id")) {

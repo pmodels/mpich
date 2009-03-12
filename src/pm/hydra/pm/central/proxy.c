@@ -15,9 +15,8 @@ int HYD_Proxy_listenfd;
 int main(int argc, char **argv)
 {
     int i, j, arg, sockets_open;
-    uint16_t port;
-    int HYD_Proxy_listenfd, stdin_fd, timeout;
-    char *port_range, *str, *timeout_str;
+    int stdin_fd, timeout;
+    char *str, *timeout_str;
     HYD_Env_t *env, pmi;
     char *client_args[HYD_EXEC_ARGS];
     HYD_Status status = HYD_SUCCESS;
@@ -28,16 +27,19 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    /* Check if the user wants us to use a port within a certain
-     * range. */
-    port_range = getenv("MPIEXEC_PORTRANGE");
-    if (!port_range)
-        port_range = getenv("MPIEXEC_PORT_RANGE");
-    if (!port_range)
-        port_range = getenv("MPICH_PORT_RANGE");
+    /* We don't know if the bootstrap server will automatically
+     * forward the signals or not. We have our signal handlers for the
+     * case where it does. For when it doesn't, we also open a listen
+     * port where an explicit kill request can be sent */
+    status = HYDU_Set_common_signals(HYD_Proxy_signal_cb);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("signal utils returned error when trying to set signal\n");
+        goto fn_fail;
+    }
 
     /* Listen on a port in the port range */
-    status = HYDU_Sock_listen(&HYD_Proxy_listenfd, port_range, &port);
+    status = HYDU_Sock_listen(&HYD_Proxy_listenfd, NULL,
+                              (uint16_t *) & HYD_Proxy_params.proxy_port);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("sock utils returned listen error\n");
         goto fn_fail;

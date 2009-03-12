@@ -51,6 +51,8 @@
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
 
+#define HYD_DEFAULT_PROXY_PORT 9899
+
 typedef enum {
     HYD_SUCCESS = 0,
     HYD_NO_MEM,

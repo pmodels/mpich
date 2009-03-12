@@ -116,6 +116,7 @@ extern char *strsignal(int);
 #endif
 
 HYD_Status HYDU_Set_signal(int signum, void (*handler) (int));
+HYD_Status HYDU_Set_common_signals(void (*handler) (int));
 
 
 /* Timer utilities */

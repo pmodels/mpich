@@ -7,12 +7,14 @@
 #ifndef PROXY_H_INCLUDED
 #define PROXY_H_INCLUDED
 
-#include "hydra.h"
+#include "hydra_base.h"
+#include "hydra_utils.h"
 
 struct HYD_Proxy_params {
     HYD_Env_t *global_env;
     HYD_Env_t *env_list;
     int proc_count;
+    int proxy_port;
     int pmi_id;
     char *args[HYD_EXEC_ARGS];
     struct HYD_Partition_list *partition;
@@ -35,5 +37,6 @@ HYD_Status HYD_Proxy_listen_cb(int fd, HYD_Event_t events);
 HYD_Status HYD_Proxy_stdout_cb(int fd, HYD_Event_t events);
 HYD_Status HYD_Proxy_stderr_cb(int fd, HYD_Event_t events);
 HYD_Status HYD_Proxy_stdin_cb(int fd, HYD_Event_t events);
+void HYD_Proxy_signal_cb(int signal);
 
 #endif /* PROXY_H_INCLUDED */

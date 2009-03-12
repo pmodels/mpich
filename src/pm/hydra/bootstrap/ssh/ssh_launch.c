@@ -27,12 +27,6 @@ HYD_Status HYD_BSCI_Launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_BSCU_Set_common_signals(HYD_BSCU_Signal_handler);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("signal utils returned error when trying to set signal\n");
-        goto fn_fail;
-    }
-
     /* FIXME: Instead of directly reading from the HYD_Handle
      * structure, the upper layers should be able to pass what exactly
      * they want launched. Without this functionality, the proxy
@@ -87,59 +81,6 @@ HYD_Status HYD_BSCI_Launch_procs(void)
                 handle.in = -1;
 
             process_id++;
-        }
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-HYD_Status HYD_BSCI_Cleanup_procs(void)
-{
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
-    char *client_arg[HYD_EXEC_ARGS], *execname;
-    int arg;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
-            /* Setup the executable arguments */
-            arg = 0;
-            client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
-            client_arg[arg++] = MPIU_Strdup("-x");
-
-            /* ssh does not support any partition names other than host names */
-            client_arg[arg++] = MPIU_Strdup(partition->name);
-            client_arg[arg++] = NULL;
-
-            for (arg = 0; client_arg[arg]; arg++);
-            client_arg[arg++] = MPIU_Strdup("killall");
-
-            execname = strrchr(proc_params->exec[0], '/');
-            if (!execname)
-                execname = proc_params->exec[0];
-            else
-                execname++;
-
-            client_arg[arg++] = MPIU_Strdup(execname);
-            client_arg[arg++] = NULL;
-
-            status = HYDU_Create_process(client_arg, NULL, NULL, NULL, NULL);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("bootstrap spawn process returned error\n");
-                goto fn_fail;
-            }
-
-            for (arg = 0; client_arg[arg]; arg++)
-                HYDU_FREE(client_arg[arg]);
         }
     }
 

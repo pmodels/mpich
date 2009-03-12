@@ -54,12 +54,20 @@ HYD_Status HYD_Proxy_listen_cb(int fd, HYD_Event_t events)
                 HYDU_Error_printf("demux engine returned error when deregistering fd\n");
                 goto fn_fail;
             }
+            close(fd);
             goto fn_exit;
         }
 
         if (cmd == KILLALL_PROCS) {     /* Got the killall command */
             for (i = 0; i < HYD_Proxy_params.proc_count; i++)
                 kill(HYD_Proxy_params.pid[i], SIGKILL);
+
+            status = HYD_DMX_Deregister_fd(fd);
+            if (status != HYD_SUCCESS) {
+                HYDU_Error_printf("demux engine returned error when deregistering fd\n");
+                goto fn_fail;
+            }
+            close(fd);
         }
         else {
             HYDU_Error_printf("got unrecognized command from mpiexec\n");
@@ -182,4 +190,32 @@ HYD_Status HYD_Proxy_stdin_cb(int fd, HYD_Event_t events)
 
   fn_fail:
     goto fn_exit;
+}
+
+
+void HYD_Proxy_signal_cb(int signal)
+{
+    int i;
+
+    HYDU_FUNC_ENTER();
+
+    if (signal == SIGINT || signal == SIGQUIT || signal == SIGTERM
+#if defined SIGSTOP
+        || signal == SIGSTOP
+#endif /* SIGSTOP */
+#if defined SIGCONT
+        || signal == SIGCONT
+#endif /* SIGSTOP */
+) {
+        /* There's nothing we can do with the return value for now. */
+        for (i = 0; i < HYD_Proxy_params.proc_count; i++)
+            kill(HYD_Proxy_params.pid[i], SIGKILL);
+        exit(-1);
+    }
+    else {
+        /* Ignore other signals for now */
+    }
+
+    HYDU_FUNC_EXIT();
+    return;
 }

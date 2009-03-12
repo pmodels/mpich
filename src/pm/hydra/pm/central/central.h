@@ -15,5 +15,7 @@ enum HYD_Proxy_cmds {
 extern int HYD_PMCD_Central_listenfd;
 
 HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events);
+HYD_Status HYD_PMCD_Central_cleanup(void);
+void HYD_PMCD_Central_signal_cb(int signal);
 
 #endif /* CENTRAL_H_INCLUDED */

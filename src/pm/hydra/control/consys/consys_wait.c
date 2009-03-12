@@ -8,7 +8,6 @@
 #include "csi.h"
 #include "csiu.h"
 #include "pmci.h"
-#include "bsci.h"
 #include "demux.h"
 
 HYD_Handle handle;
@@ -47,11 +46,11 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
         if (sockets_open && HYDU_Time_left(handle.start, handle.timeout))
             continue;
 
-        /* Make sure all the processes have terminated. The bootstrap
-         * control device will take care of that. */
-        status = HYD_BSCI_Wait_for_completion();
+        /* Make sure all the processes have terminated. The process
+         * manager control device will take care of that. */
+        status = HYD_PMCI_Wait_for_completion();
         if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("bootstrap server returned error when waiting for completion\n");
+            HYDU_Error_printf("process manager returned error when waiting for completion\n");
             goto fn_fail;
         }
 

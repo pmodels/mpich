@@ -8,7 +8,6 @@
 #include "hydra_utils.h"
 #include "csi.h"
 #include "pmci.h"
-#include "bsci.h"
 #include "demux.h"
 
 HYD_Handle handle;

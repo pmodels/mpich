@@ -12,7 +12,5 @@
 #include "bsci.h"
 
 HYD_Status HYD_BSCU_Wait_for_completion(void);
-HYD_Status HYD_BSCU_Set_common_signals(void (*handler) (int));
-void HYD_BSCU_Signal_handler(int signal);
 
 #endif /* BSCI_H_INCLUDED */

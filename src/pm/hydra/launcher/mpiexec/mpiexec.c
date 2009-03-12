@@ -25,6 +25,7 @@ static void usage(void)
     printf("\t-genvnone                        [Do not pass any environment variables]\n");
     printf("\t-genvall                         [Pass all environment variables (default)]\n");
     printf("\t-f {name}                        [File containing the host names]\n");
+    printf("\t--proxy-port                     [Port on which proxies can listen]\n");
 
     printf("\n");
 

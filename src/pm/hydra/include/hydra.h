@@ -12,12 +12,13 @@
 #include "hydra_utils.h"
 
 struct HYD_Handle_ {
+    char *base_path;
+    int proxy_port;
+    char *boot_server;
+
     int debug;
     int enablex;
     char *wdir;
-
-    char *base_path;
-
     char *host_file;
 
     /* Global environment */

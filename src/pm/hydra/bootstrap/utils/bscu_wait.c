@@ -63,13 +63,8 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
          * and should not be used. */
     } while (not_completed > 0);
 
-    if (not_completed) {
-        status = HYD_BSCI_Cleanup_procs();
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("bootstrap process cleanup failed\n");
-            goto fn_fail;
-        }
-    }
+    if (not_completed)
+        status = HYD_INTERNAL_ERROR;
 
   fn_exit:
     HYDU_FUNC_EXIT();
