@@ -64,47 +64,48 @@ fi
 
 dnl Check what boot-strap server we should use
 AC_ARG_WITH(hydra-bss, [  --with-hydra-bss           Boot-strap Server],
-		    [ HYDRA_BSS=$withval ],
-		    [ HYDRA_BSS=ssh ])
+		    [ hydra_bss=$withval ],
+		    [ hydra_bss=ssh ])
 AC_MSG_CHECKING(boot-strap server)
-AC_MSG_RESULT($HYDRA_BSS)
-AC_SUBST(HYDRA_BSS)
+AC_MSG_RESULT($hydra_bss)
+hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
+AC_SUBST(hydra_bss_names)
 
 dnl Check what process manager we should use
 AC_ARG_WITH(hydra-pm, [  --with-hydra-pm               Process Manager (central or distributed)],
-		[ HYDRA_PM=$withval ],
-		[ HYDRA_PM=central ])
+		[ hydra_pm=$withval ],
+		[ hydra_pm=central ])
 AC_MSG_CHECKING(process manager)
-AC_MSG_RESULT($HYDRA_PM)
-AC_SUBST(HYDRA_PM)
+AC_MSG_RESULT($hydra_pm)
+AC_SUBST(hydra_pm)
 
 dnl Check what job launcher we should use
 AC_ARG_WITH(hydra-launcher, [  --with-hydra-launcher         Job Launcher],
-		[ HYDRA_LAUNCHER=$withval ],
-		[ HYDRA_LAUNCHER=mpiexec ])
+		[ hydra_launcher=$withval ],
+		[ hydra_launcher=mpiexec ])
 AC_MSG_CHECKING(job launcher)
-AC_MSG_RESULT($HYDRA_LAUNCHER)
-AC_SUBST(HYDRA_LAUNCHER)
+AC_MSG_RESULT($hydra_launcher)
+AC_SUBST(hydra_launcher)
 
 dnl Check what control system we should use
 AC_ARG_WITH(hydra-control, [  --with-hydra-control               Control System],
-		[ HYDRA_CONTROL=$withval ],
-		[ HYDRA_CONTROL=consys ])
+		[ hydra_control=$withval ],
+		[ hydra_control=consys ])
 AC_MSG_CHECKING(control system)
-AC_MSG_RESULT($HYDRA_CONTROL)
-AC_SUBST(HYDRA_CONTROL)
+AC_MSG_RESULT($hydra_control)
+AC_SUBST(hydra_control)
 
-dnl Check what control system we should use
+dnl Check what communication sub-system we should use
 AC_ARG_WITH(hydra-css, [  --with-hydra-css               Communication Sub-system],
-		[ HYDRA_CSS=$withval ],
-		[ HYDRA_CSS= ])
+		[ hydra_css=$withval ],
+		[ hydra_css= ])
 AC_MSG_CHECKING(communication subsystem)
-if test "x$HYDRA_CSS" != "x" ; then
-   AC_MSG_RESULT($HYDRA_CSS)
+if test "x$hydra_css" != "x" ; then
+   AC_MSG_RESULT($hydra_css)
 else
    AC_MSG_RESULT(none)
 fi
-AC_SUBST(HYDRA_CSS)
+AC_SUBST(hydra_css)
 
 dnl Debugging support
 AC_ARG_ENABLE(g, [  --enable-g              Enable Debugging],
@@ -253,6 +254,10 @@ AC_CONFIG_SUBDIRS(../util)
 dnl Place holder macro for finalization
 PAC_SUBCONFIG_FINALIZE()
 
+for hydra_bss_name in ${hydra_bss_names}; do
+    hydra_bss_makefiles="$hydra_bss_makefiles bootstrap/${hydra_bss_name}/Makefile"
+done
+
 dnl Final output
 AC_OUTPUT(Makefile \
 	utils/Makefile \
@@ -266,14 +271,15 @@ AC_OUTPUT(Makefile \
 	utils/timer/Makefile \
 	launcher/Makefile \
 	launcher/utils/Makefile \
-	launcher/${HYDRA_LAUNCHER}/Makefile \
+	launcher/${hydra_launcher}/Makefile \
 	control/Makefile \
 	control/utils/Makefile \
-	control/${HYDRA_CONTROL}/Makefile \
+	control/${hydra_control}/Makefile \
 	pm/Makefile \
 	pm/utils/Makefile \
-	pm/${HYDRA_PM}/Makefile \
+	pm/${hydra_pm}/Makefile \
 	demux/Makefile \
 	bootstrap/Makefile \
 	bootstrap/utils/Makefile \
-	bootstrap/${HYDRA_BSS}/Makefile)
+	${hydra_bss_makefiles}
+)

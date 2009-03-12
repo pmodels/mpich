@@ -4,5 +4,5 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS_HYDRA_CONTROL = consys
-SUBDIRS = utils @HYDRA_CONTROL@ .
+SUBDIRS_hydra_control = consys
+SUBDIRS = utils @hydra_control@ .

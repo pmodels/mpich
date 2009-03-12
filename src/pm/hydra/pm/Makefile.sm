@@ -4,8 +4,8 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS_HYDRA_PM = central
-SUBDIRS = utils @HYDRA_PM@ .
+SUBDIRS_hydra_pm = central
+SUBDIRS = utils @hydra_pm@ .
 
 mpich2-build-install mpich2-build-uninstall install install-alt:
-	cd @HYDRA_PM@ && ${MAKE} $@
+	cd @hydra_pm@ && ${MAKE} $@
