@@ -316,8 +316,7 @@ implementation.   option is a list of comma separated names including
     defopt   - Default compiler optimization -O2 for all language bindings,
                i.e. --enable-fast=O2, when neither --enable-fast
                nor --disable-fast is specified.
-    nochkmsg - No error checking and no error messages, i.e.
-               --disable-error-checking and --disable-error-messages.
+    nochkmsg - No error checking, i.e. --disable-error-checking
     notiming - No timing collection, i.e. --disable-timing.
     ndebug   - Appends -DNDEBUG to internal CFLAGS, i.e. MPICH2LIB_CFLAGS.
     all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
@@ -690,7 +689,6 @@ IFS="$save_IFS"
 # We must do enable-fast first, because it changes the other enable values
 if test "$enable_fast_nochkmsg" = "yes" ; then
     enable_error_checking=no
-    enable_error_messages=no
     # Export a variable that will allow the test suite to detect that
     # MPICH has no error testing
     MPICH_FAST=yes
