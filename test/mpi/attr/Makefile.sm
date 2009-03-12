@@ -18,6 +18,7 @@ baseattrcomm_SOURCES = baseattrcomm.c
 fkeyval_SOURCES = fkeyval.c
 fkeyvalcomm_SOURCES = fkeyvalcomm.c
 fkeyvaltype_SOURCES = fkeyvaltype.c
+keyval_double_free_SOURCES = keyval_double_free.c
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o)
