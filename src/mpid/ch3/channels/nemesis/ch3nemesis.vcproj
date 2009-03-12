@@ -765,43 +765,27 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\nemesis\netmod\wintcp_module\socksm.c"
-				>
-				<FileConfiguration
-					Name="ch3nemesisRelease|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ShowIncludes="false"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="ch3nemesisPRelease|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ShowIncludes="false"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\nemesis\netmod\wintcp_module\wintcp_module_finalize.c"
+				RelativePath=".\nemesis\netmod\wintcp\socksm.c"
 				>
 			</File>
 			<File
-				RelativePath=".\nemesis\netmod\wintcp_module\wintcp_module_init.c"
+				RelativePath=".\nemesis\netmod\wintcp\wintcp_finalize.c"
 				>
 			</File>
 			<File
-				RelativePath=".\nemesis\netmod\wintcp_module\wintcp_module_poll.c"
+				RelativePath=".\nemesis\netmod\wintcp\wintcp_init.c"
 				>
 			</File>
 			<File
-				RelativePath=".\nemesis\netmod\wintcp_module\wintcp_module_send.c"
+				RelativePath=".\nemesis\netmod\wintcp\wintcp_poll.c"
 				>
 			</File>
 			<File
-				RelativePath=".\nemesis\netmod\wintcp_module\wintcp_module_utility.c"
+				RelativePath=".\nemesis\netmod\wintcp\wintcp_send.c"
+				>
+			</File>
+			<File
+				RelativePath=".\nemesis\netmod\wintcp\wintcp_utility.c"
 				>
 			</File>
 		</Filter>

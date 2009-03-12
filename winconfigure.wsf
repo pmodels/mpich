@@ -5761,7 +5761,7 @@ Function GenBuild()
 	mfile.WriteLine(" /DMPICH_MULTITHREADED /D ENABLE_NO_MACRO_VARARG_NAME \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\utils\monitor \")
-	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp_module")
+	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp")
 	mfile.WriteLine("!ENDIF")
 '	mfile.WriteLine
 '	mfile.WriteLine("!IF ""$(CHANNEL)"" == ""essm""")
@@ -6119,14 +6119,14 @@ Function GenBuild()
 	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\src"), trimlength
 	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength
 '	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength
-	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp_module"), trimlength
+	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength
 	mfile.WriteLine("{..\src\util\thread}.c{$(NEMESIS_OUTDIR)}.obj:")
 	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(NEMESIS_OUTDIR)\\"" /Fd""$(NEMESIS_OUTDIR)\\"" $**")
 	mfile.WriteLine
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\src"), trimlength, true, false
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength, false, false
 '	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength, false, false
-	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp_module"), trimlength, false, false
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength, false, false
 	mfile.WriteLine(" \" & vbCrLf & "	$(NEMESIS_OUTDIR)\mpe_thread_win.obj")
 
 	mfile.WriteLine
