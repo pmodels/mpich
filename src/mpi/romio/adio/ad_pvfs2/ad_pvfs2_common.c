@@ -42,6 +42,7 @@ int ADIOI_PVFS2_End_call(MPI_Comm comm, int keyval,
 {
     int error_code;
     ADIOI_PVFS2_End(&error_code);
+    MPI_Keyval_free(&keyval);
     return error_code;
 }
 

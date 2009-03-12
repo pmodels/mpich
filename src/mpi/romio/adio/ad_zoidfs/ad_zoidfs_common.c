@@ -39,6 +39,7 @@ int ADIOI_ZOIDFS_End_call(MPI_Comm comm, int keyval,
 {
     int error_code;
     ADIOI_ZOIDFS_End(&error_code);
+    MPI_Keyval_free(&keyval);
     return error_code;
 }
 
