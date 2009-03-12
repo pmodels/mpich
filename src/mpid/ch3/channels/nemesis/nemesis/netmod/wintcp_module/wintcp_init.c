@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "wintcp_module_impl.h"
+#include "wintcp_impl.h"
 #ifdef HAVE_SYS_TYPES_H
     #include <sys/types.h>
 #endif

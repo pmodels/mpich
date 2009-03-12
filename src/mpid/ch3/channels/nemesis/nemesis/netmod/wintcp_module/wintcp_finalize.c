@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "wintcp_module_impl.h"
+#include "wintcp_impl.h"
 
 extern sockconn_t MPID_nem_newtcp_module_g_lstn_sc;
 

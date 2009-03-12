@@ -6,7 +6,7 @@
 
 #define SOCKSM_H_DEFGLOBALS_
 
-#include "wintcp_module_impl.h"
+#include "wintcp_impl.h"
 #include "socksm.h"
 
 /* FIXME trace/log all the state transitions */

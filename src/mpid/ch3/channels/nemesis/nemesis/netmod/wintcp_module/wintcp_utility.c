@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "wintcp_module_impl.h"
+#include "wintcp_impl.h"
 
 /* MPID_nem_newtcp_module_get_conninfo -- This function takes a VC
    pointer as input and outputs the sockaddr, pg_id, and pg_rank of

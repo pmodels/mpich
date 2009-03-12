@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "wintcp_module_impl.h"
+#include "wintcp_impl.h"
 #ifdef HAVE_ERRNO_H
 	#include <errno.h>
 #endif

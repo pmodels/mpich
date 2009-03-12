@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "wintcp_module_impl.h"
+#include "wintcp_impl.h"
 
 #define NUM_PREALLOC_SENDQ 10
 #define MAX_SEND_IOV 10

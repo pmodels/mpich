@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "wintcp_module_impl.h"
+#include "wintcp_impl.h"
 extern int h_errno;
 
 static int create_s_cookie (int data_sz, char **cookie, int *len);
