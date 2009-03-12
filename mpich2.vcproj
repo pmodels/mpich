@@ -5962,6 +5962,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\mpi\romio\mpi-io\mpir-mpioinit.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mpi\pt2pt\mpir_request.c"
 				>
 			</File>
