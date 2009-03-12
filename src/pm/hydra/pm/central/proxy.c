@@ -86,6 +86,15 @@ int main(int argc, char **argv)
             goto fn_fail;
         }
         HYDU_Env_putenv(str);
+        HYDU_FREE(str);
+        for (j = 0; tmp[j]; j++)
+            HYDU_FREE(tmp[j]);
+
+        status = HYDU_Chdir(HYD_Proxy_params.wdir);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("unable to change to wdir %s\n", HYD_Proxy_params.wdir);
+            goto fn_fail;
+        }
 
         for (j = 0, arg = 0; HYD_Proxy_params.args[j]; j++)
             client_args[arg++] = MPIU_Strdup(HYD_Proxy_params.args[j]);

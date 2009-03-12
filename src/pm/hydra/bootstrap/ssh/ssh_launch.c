@@ -52,14 +52,9 @@ HYD_Status HYD_BSCI_Launch_procs(void)
             /* ssh does not support any partition names other than host names */
             client_arg[arg++] = MPIU_Strdup(partition->name);
 
-            client_arg[arg++] = MPIU_Strdup("sh");
-            client_arg[arg++] = MPIU_Strdup("-c");
-            client_arg[arg++] = MPIU_Strdup("\"");
-
             for (i = 0; partition->args[i]; i++)
                 client_arg[arg++] = MPIU_Strdup(partition->args[i]);
 
-            client_arg[arg++] = MPIU_Strdup("\"");
             client_arg[arg++] = NULL;
 
             /* The stdin pointer will be some value for process_id 0;

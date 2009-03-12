@@ -17,6 +17,7 @@ struct HYD_Proxy_params {
     int proxy_port;
     int pmi_id;
     char *args[HYD_EXEC_ARGS];
+    char *wdir;
     struct HYD_Partition_list *partition;
 
     int *pid;

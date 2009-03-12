@@ -126,10 +126,6 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             partition->group_id = group_id++;
             partition->group_rank = 0;
 
-            /* Pass the entire environment here; the proxy will cherry
-             * pick from this. */
-            HYDU_Append_wdir(partition->args, handle.wdir);
-
             for (arg = 0; partition->args[arg]; arg++);
             i = 0;
             path_str[i++] = MPIU_Strdup(handle.base_path);
@@ -175,6 +171,9 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             partition->args[arg++] = MPIU_Strdup("--proxy-port");
             partition->args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
+
+            partition->args[arg++] = MPIU_Strdup("--wdir");
+            partition->args[arg++] = MPIU_Strdup(handle.wdir);
 
             partition->args[arg++] = MPIU_Strdup("--environment");
             i = 0;

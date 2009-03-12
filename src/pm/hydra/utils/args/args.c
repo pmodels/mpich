@@ -125,3 +125,25 @@ HYD_Status HYDU_Get_base_path(char *execname, char **path)
   fn_fail:
     goto fn_exit;
 }
+
+
+HYD_Status HYDU_Chdir(const char *dir)
+{
+    char *home;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (chdir(dir) < 0) {
+        status = HYD_INTERNAL_ERROR;
+        HYDU_Error_printf("chdir failed\n");
+        goto fn_fail;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

@@ -73,6 +73,13 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
             continue;
         }
 
+        /* Working directory */
+        if (!strcmp(*argv, "--wdir")) {
+            argv++;
+            HYD_Proxy_params.wdir = MPIU_Strdup(*argv);
+            continue;
+        }
+
         /* Environment information is passed as a list of names; we
          * need to find the values from our environment. */
         if (!strcmp(*argv, "--environment")) {

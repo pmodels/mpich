@@ -20,12 +20,13 @@ static void usage(void)
     printf("Global Options (passed to all executables):\n");
     printf("\t-v/-vv/-vvv                      [Verbose level]\n");
     printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
+    printf("\t--proxy-port                     [Port on which proxies can listen]\n");
     printf("\t-genv {name} {value}             [Environment variable name and value]\n");
     printf("\t-genvlist {env1,env2,...}        [Environment variable list to pass]\n");
     printf("\t-genvnone                        [Do not pass any environment variables]\n");
     printf("\t-genvall                         [Pass all environment variables (default)]\n");
     printf("\t-f {name}                        [File containing the host names]\n");
-    printf("\t--proxy-port                     [Port on which proxies can listen]\n");
+    printf("\t-wdir {dirname}                  [Working directory to use]\n");
 
     printf("\n");
 
