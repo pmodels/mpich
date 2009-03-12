@@ -95,6 +95,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1,
                   "%s:%s", hostname, sport);
     HYDU_FREE(sport);
+    HYDU_Debug("Process manager listening on PMI port %s\n", port_str);
 
     status = HYDU_Env_create(&env, "PMI_PORT", port_str);
     if (status != HYD_SUCCESS) {
@@ -199,6 +200,11 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             for (arg = 0; partition->args[arg]; arg++);
             partition->args[arg] = NULL;
             HYDU_Append_exec(proc_params->exec, partition->args);
+
+            if (handle.debug) {
+                HYDU_Debug("Executable passed to the bootstrap: ");
+                HYDU_Dump_args(partition->args);
+            }
 
             process_id += partition->proc_count;
         }

@@ -18,7 +18,7 @@ static void usage(void)
     printf("Usage: ./mpiexec [global opts] [exec1 local opts] : [exec2 local opts] : ...\n\n");
 
     printf("Global Options (passed to all executables):\n");
-    printf("\t-v/-vv/-vvv                      [Verbose level]\n");
+    printf("\t-v                               [Verbose mode]\n");
     printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
     printf("\t--proxy-port                     [Port on which proxies can listen]\n");
     printf("\t-genv {name} {value}             [Environment variable name and value]\n");
@@ -94,6 +94,7 @@ int main(int argc, char **argv)
         timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
     else
         timeout = -1;   /* Set a negative timeout */
+    HYDU_Debug("Timeout set to %d seconds (negative means infinite)\n", timeout);
     HYDU_Time_set(&handle.timeout, &timeout);
 
     /* Launch the processes */

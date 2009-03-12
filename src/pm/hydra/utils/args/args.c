@@ -92,8 +92,8 @@ HYD_Status HYDU_Dump_args(char **args)
     HYDU_FUNC_ENTER();
 
     for (arg = 0; args[arg]; arg++)
-        fprintf(stderr, "%s ", args[arg]);
-    fprintf(stderr, "\n");
+        printf("%s ", args[arg]);
+    printf("\n");
 
     HYDU_FUNC_EXIT();
     return status;

@@ -83,43 +83,6 @@ typedef enum {
 } HYD_Env_prop_t;
 
 #if !defined COMPILER_ACCEPTS_VA_ARGS
-#define HYDU_Print printf
-#else
-#define HYDU_Print(...)                         \
-    {                                           \
-        int i;                                  \
-        for (i = 0; i < HYDU_Dbg_depth; i++)    \
-            printf("  ");                       \
-        printf(__VA_ARGS__);                    \
-    }
-#endif /* COMPILER_ACCEPTS_VA_ARGS */
-
-#if !defined ENABLE_DEBUG
-#define HYDU_FUNC_ENTER()
-#define HYDU_FUNC_EXIT()
-#elif defined COMPILER_ACCEPTS_FUNC
-#define HYDU_FUNC_ENTER()                                               \
-    {                                                                   \
-	HYDU_Print("Entering function %s\n", __func__);                 \
-        HYDU_Dbg_depth++;                                               \
-    }
-#define HYDU_FUNC_EXIT()                                               \
-    {                                                                  \
-	HYDU_Print("Exiting function %s\n", __func__);                 \
-        HYDU_Dbg_depth--;                                              \
-    }
-#else
-#define HYDU_FUNC_ENTER()                                               \
-    {                                                                   \
-        HYDU_Dbg_depth++;                                               \
-    }
-#define HYDU_FUNC_EXIT()                                               \
-    {                                                                  \
-        HYDU_Dbg_depth--;                                              \
-    }
-#endif
-
-#if !defined COMPILER_ACCEPTS_VA_ARGS
 #define HYDU_Error_printf MPIU_Error_printf
 #elif defined COMPILER_ACCEPTS_FUNC && defined __LINE__
 #define HYDU_Error_printf(...)                            \
@@ -137,6 +100,37 @@ typedef enum {
 #define HYDU_Error_printf(...)                  \
     {                                           \
 	MPIU_Error_printf(__VA_ARGS__);         \
+    }
+#endif
+
+#if !defined COMPILER_ACCEPTS_VA_ARGS
+#define HYDU_Debug if (handle.debug) printf
+#else
+#define HYDU_Debug(...)                                 \
+    {                                                   \
+        if (handle.debug)                               \
+            printf(__VA_ARGS__);                        \
+    }
+#endif /* COMPILER_ACCEPTS_VA_ARGS */
+
+#if !defined ENABLE_DEBUG
+#define HYDU_FUNC_ENTER()
+#define HYDU_FUNC_EXIT()
+#elif defined COMPILER_ACCEPTS_FUNC
+#define HYDU_FUNC_ENTER()                                               \
+    {                                                                   \
+	HYDU_Debug("Entering function %s\n", __func__);                 \
+    }
+#define HYDU_FUNC_EXIT()                                               \
+    {                                                                  \
+	HYDU_Debug("Exiting function %s\n", __func__);                 \
+    }
+#else
+#define HYDU_FUNC_ENTER()                                               \
+    {                                                                   \
+    }
+#define HYDU_FUNC_EXIT()                                               \
+    {                                                                  \
     }
 #endif
 

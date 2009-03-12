@@ -30,6 +30,7 @@ HYD_Status HYD_LCHU_Create_host_list(void)
         }
     }
 
+    HYDU_Debug("Partition list: ");
     proc_params = handle.proc_params;
     while (proc_params) {
         if (!strcmp(handle.host_file, "HYDRA_USE_LOCALHOST")) {
@@ -37,6 +38,7 @@ HYD_Status HYD_LCHU_Create_host_list(void)
             proc_params->partition->name = MPIU_Strdup("localhost");
             proc_params->partition->proc_count = proc_params->exec_proc_count;
             total_procs = proc_params->exec_proc_count;
+            HYDU_Debug("%s:%d ", proc_params->partition->name, proc_params->exec_proc_count);
         }
         else {
             total_procs = 0;
@@ -70,6 +72,9 @@ HYD_Status HYD_LCHU_Create_host_list(void)
                 partition->proc_count = num_procs;
 
                 total_procs += num_procs;
+
+                HYDU_Debug("%s:%d ", partition->name, partition->proc_count);
+
                 if (total_procs == proc_params->exec_proc_count)
                     break;
             }
@@ -84,6 +89,7 @@ HYD_Status HYD_LCHU_Create_host_list(void)
             /* Optimize the case where there is only one node */
             if (run->next == NULL) {
                 run->proc_count = proc_params->exec_proc_count;
+                HYDU_Debug("%s:%d ", run->name, run->proc_count);
             }
             else {
                 while (total_procs != proc_params->exec_proc_count) {
@@ -91,6 +97,9 @@ HYD_Status HYD_LCHU_Create_host_list(void)
                     partition = partition->next;
                     partition->name = MPIU_Strdup(run->name);
                     partition->proc_count = run->proc_count;
+
+                    HYDU_Debug("%s:%d ", partition->name, partition->proc_count);
+
                     total_procs += partition->proc_count;
                     run = run->next;
                 }
@@ -99,6 +108,7 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 
         proc_params = proc_params->next;
     }
+    HYDU_Debug("\n");
 
   fn_exit:
     if (fp)

@@ -12,7 +12,6 @@
 #define HYDRA_MAX_PATH 4096
 
 HYD_Handle handle;
-int HYDU_Dbg_depth;
 
 #define CHECK_LOCAL_PARAM_START(start, status) \
     { \
@@ -139,7 +138,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         }
 
         /* Check what debug level is requested */
-        if (!strcmp(*argv, "-v") || !strcmp(*argv, "-vv") || !strcmp(*argv, "-vvv")) {
+        if (!strcmp(*argv, "-v")) {
             CHECK_LOCAL_PARAM_START(local_params_started, status);
 
             /* Debug level already set */
@@ -149,13 +148,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                 status = HYD_INTERNAL_ERROR;
                 goto fn_fail;
             }
-
-            if (!strcmp(*argv, "-v"))
-                handle.debug = 1;
-            else if (!strcmp(*argv, "-vv"))
-                handle.debug = 2;
-            else if (!strcmp(*argv, "-vvv"))
-                handle.debug = 3;
+            handle.debug = 1;
 
             continue;
         }
@@ -458,31 +451,86 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 HYD_Status HYD_LCHI_Print_parameters(void)
 {
     HYD_Env_t *env;
+    int i, j;
+    struct HYD_Proc_params *proc_params;
+    struct HYD_Partition_list *partition;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_Print("mpiexec options:\n\n");
-    HYDU_Print("  Debug level: %d\n", handle.debug);
-    HYDU_Print("  Enable X: %d\n", handle.enablex);
-    HYDU_Print("  Working dir: %s\n", handle.wdir);
+    HYDU_Debug("\n");
+    HYDU_Debug("=================================================");
+    HYDU_Debug("=================================================");
+    HYDU_Debug("\n");
+    HYDU_Debug("mpiexec options:\n");
+    HYDU_Debug("----------------\n");
+    HYDU_Debug("  Base path: %s\n", handle.base_path);
+    HYDU_Debug("  Proxy port: %d\n", handle.proxy_port);
+    HYDU_Debug("  Bootstrap server: %s\n", handle.bootstrap);
+    HYDU_Debug("  Debug level: %d\n", handle.debug);
+    HYDU_Debug("  Enable X: %d\n", handle.enablex);
+    HYDU_Debug("  Working dir: %s\n", handle.wdir);
+    HYDU_Debug("  Host file: %s\n", handle.host_file);
 
-    HYDU_Print("\n");
-    HYDU_Print("  Global environment:\n");
+    HYDU_Debug("\n");
+    HYDU_Debug("  Global environment:\n");
+    HYDU_Debug("  -------------------\n");
     for (env = handle.global_env; env; env = env->next)
-        HYDU_Print("    %s=%s\n", env->env_name, env->env_value);
+        HYDU_Debug("    %s=%s\n", env->env_name, env->env_value);
 
-    HYDU_Print("\n");
-    HYDU_Print("  Hydra internal environment:\n");
-    for (env = handle.system_env; env; env = env->next)
-        HYDU_Print("    %s=%s\n", env->env_name, env->env_value);
+    if (handle.system_env) {
+        HYDU_Debug("\n");
+        HYDU_Debug("  Hydra internal environment:\n");
+        HYDU_Debug("  ---------------------------\n");
+        for (env = handle.system_env; env; env = env->next)
+            HYDU_Debug("    %s=%s\n", env->env_name, env->env_value);
+    }
 
-    HYDU_Print("\n");
-    HYDU_Print("  User set environment:\n");
-    for (env = handle.user_env; env; env = env->next)
-        HYDU_Print("    %s=%s\n", env->env_name, env->env_value);
+    if (handle.user_env) {
+        HYDU_Debug("\n");
+        HYDU_Debug("  User set environment:\n");
+        HYDU_Debug("  ---------------------\n");
+        for (env = handle.user_env; env; env = env->next)
+            HYDU_Debug("    %s=%s\n", env->env_name, env->env_value);
+    }
 
-    HYDU_Print("\n");
+    HYDU_Debug("\n\n");
+
+    HYDU_Debug("    Process parameters:\n");
+    HYDU_Debug("    *******************\n");
+    i = 1;
+    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
+        HYDU_Debug("      Executable ID: %2d\n", i++);
+        HYDU_Debug("      -----------------\n");
+        HYDU_Debug("        Process count: %d\n", proc_params->exec_proc_count);
+        HYDU_Debug("        Executable: ");
+        for (j = 0; proc_params->exec[j]; j++)
+            HYDU_Debug("%s ", proc_params->exec[j]);
+        HYDU_Debug("\n");
+
+        if (proc_params->user_env) {
+            HYDU_Debug("\n");
+            HYDU_Debug("        User set environment:\n");
+            HYDU_Debug("        .....................\n");
+            for (env = proc_params->user_env; env; env = env->next)
+                HYDU_Debug("          %s=%s\n", env->env_name, env->env_value);
+        }
+
+        j = 0;
+        for (partition = proc_params->partition; partition; partition = partition->next) {
+            HYDU_Debug("\n");
+            HYDU_Debug("        Partition ID: %2d\n", j++);
+            HYDU_Debug("        ----------------\n");
+            HYDU_Debug("          Partition name: %s\n", partition->name);
+            HYDU_Debug("          Partition process count: %d\n", partition->proc_count);
+            HYDU_Debug("\n");
+        }
+    }
+
+    HYDU_Debug("\n");
+    HYDU_Debug("=================================================");
+    HYDU_Debug("=================================================");
+    HYDU_Debug("\n\n");
 
     HYDU_FUNC_EXIT();
     return status;
