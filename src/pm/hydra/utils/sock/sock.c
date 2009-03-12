@@ -173,8 +173,11 @@ HYD_Status HYDU_Sock_connect(const char *host, uint16_t port, int *fd)
         goto fn_fail;
     }
 
+    /* Not being able to connect is not an error in all cases. So we
+     * return an error, but only print a warning message. The upper
+     * layer can decide what to do with the return status. */
     if (connect(*fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
-        HYDU_Error_printf("connect error (errno: %d)\n", errno);
+        HYDU_Warn_printf("connect error (errno: %d)\n", errno);
         status = HYD_SOCK_ERROR;
         goto fn_fail;
     }

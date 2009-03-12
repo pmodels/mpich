@@ -82,6 +82,12 @@ typedef enum {
     HYD_ENV_PROP_LIST
 } HYD_Env_prop_t;
 
+#if defined ENABLE_WARNINGS
+#define HYDU_Warn_printf HYDU_Error_printf
+#else
+#define HYDU_Warn_printf(...)
+#endif /* ENABLE_WARNINGS */
+
 #if !defined COMPILER_ACCEPTS_VA_ARGS
 #define HYDU_Error_printf MPIU_Error_printf
 #elif defined COMPILER_ACCEPTS_FUNC && defined __LINE__

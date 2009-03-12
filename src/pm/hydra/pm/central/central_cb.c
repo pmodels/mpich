@@ -86,13 +86,15 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
              * might have aborted. Just cleanup all the processes */
             status = HYD_PMCD_Central_cleanup();
             if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("bootstrap server returned error cleaning up processes\n");
+                HYDU_Warn_printf("bootstrap server returned error cleaning up processes\n");
+                status = HYD_SUCCESS;
                 goto fn_fail;
             }
 
             status = HYD_DMX_Deregister_fd(fd);
             if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("unable to deregister fd %d\n", fd);
+                HYDU_Warn_printf("unable to deregister fd %d\n", fd);
+                status = HYD_SUCCESS;
                 goto fn_fail;
             }
 
@@ -161,7 +163,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
              * check the return status since we are anyway returning
              * an error */
             HYD_PMCD_Central_cleanup();
-            status = HYD_INTERNAL_ERROR;
+            status = HYD_SUCCESS;
             goto fn_fail;
         }
 
@@ -199,15 +201,15 @@ HYD_Status HYD_PMCD_Central_cleanup(void)
         for (partition = proc_params->partition; partition; partition = partition->next) {
             status = HYDU_Sock_connect(partition->name, handle.proxy_port, &fd);
             if (status != HYD_SUCCESS) {
+                HYDU_Warn_printf("unable to connect to the proxy on %s\n", partition->name);
                 overall_status = HYD_INTERNAL_ERROR;
-                HYDU_Error_printf("unable to connect to the proxy on %s\n", partition->name);
                 continue;       /* Move on to the next proxy */
             }
 
             status = HYDU_Sock_write(fd, &cmd, sizeof(cmd));
             if (status != HYD_SUCCESS) {
+                HYDU_Warn_printf("unable to send data to the proxy on %s\n", partition->name);
                 overall_status = HYD_INTERNAL_ERROR;
-                HYDU_Error_printf("unable to send data to the proxy on %s\n", partition->name);
                 continue;       /* Move on to the next proxy */
             }
 

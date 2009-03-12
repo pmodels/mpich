@@ -119,6 +119,16 @@ if test "$DEBUG" = "yes"; then
 fi
 AC_SUBST(EXTRA_CFLAGS)
 
+dnl Warning messages
+AC_ARG_ENABLE(g, [  --enable-warnings              Enable warnings],
+		 [ WARNINGS=$enableval ],
+		 [ WARNINGS=no ])
+AC_MSG_CHECKING(warnings)
+AC_MSG_RESULT($WARNINGS)
+if test "$WARNINGS" = "yes"; then
+   AC_DEFINE(ENABLE_WARNINGS,1,[Define if warnings enabled])
+fi
+
 dnl Check if __func__ is defined by the compiler
 AC_MSG_CHECKING([whether the compiler allows __func__])
 rm -f conftest.c
