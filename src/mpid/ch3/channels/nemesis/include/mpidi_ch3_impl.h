@@ -130,7 +130,7 @@ typedef struct MPIDI_CH3I_VC
     int (* lmt_done_recv)(struct MPIDI_VC *vc, struct MPID_Request *req);
 
     /* LMT shared memory copy-buffer ptr */
-    volatile struct MPID_nem_copy_buf *lmt_copy_buf;
+    struct MPID_nem_copy_buf *lmt_copy_buf;
     MPIU_SHMW_Hnd_t lmt_copy_buf_handle;
     int lmt_buf_num;
     MPIDI_msg_sz_t lmt_surfeit;
