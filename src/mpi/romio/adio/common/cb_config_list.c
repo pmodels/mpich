@@ -115,10 +115,19 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm,
 	MPI_Keyval_create((MPI_Copy_function *) ADIOI_cb_copy_name_array, 
 			  (MPI_Delete_function *) ADIOI_cb_delete_name_array,
 			  &cb_config_list_keyval, NULL);
+	/* Need a hook so we can cleanup in Finalize */
+	MPI_Attr_put(MPI_COMM_SELF, cb_config_list_keyval, NULL);
     }
     else {
 	MPI_Attr_get(comm, cb_config_list_keyval, (void *) &array, &found);
-	if (found) {
+	/* see above: we put a cb_config_list_keyval with NULL array on
+	 * COMM_SELF so we can clean it up on exit.  So it's not enough
+	 * to find the keyval. we also need a non-null array (every mpi
+	 * program will have at least one element in the array --
+	 * itself.  Not doing this confuses the shared file ponters
+	 * routines.  I know it is ugly but I can't figure out a better
+	 * way... if we find the e*/
+	if (found && (array != NULL)) {
 	    *arrayp = array;
 	    return 0;
 	}
@@ -375,7 +384,7 @@ int ADIOI_cb_copy_name_array(MPI_Comm comm,
     ADIOI_UNREFERENCED_ARG(extra);
 
     array = (ADIO_cb_name_array) attr_in;
-    array->refct++;
+    if (array != NULL) array->refct++;
 
     *attr_out = attr_in;
     *flag = 1; /* make a copy in the new communicator */
@@ -393,10 +402,11 @@ int ADIOI_cb_delete_name_array(MPI_Comm comm,
     ADIO_cb_name_array array;
 
     ADIOI_UNREFERENCED_ARG(comm);
-    ADIOI_UNREFERENCED_ARG(keyval);
     ADIOI_UNREFERENCED_ARG(extra);
 
     array = (ADIO_cb_name_array) attr_val;
+    if (array == NULL)
+	    goto fn_exit;
     array->refct--;
 
     if (array->refct <= 0) {
@@ -411,6 +421,8 @@ int ADIOI_cb_delete_name_array(MPI_Comm comm,
 	if (array->names != NULL) ADIOI_Free(array->names);
 	ADIOI_Free(array);
     }
+fn_exit:
+    MPI_Keyval_free(&keyval);
     return MPI_SUCCESS;
 }
 
