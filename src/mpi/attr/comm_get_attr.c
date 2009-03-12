@@ -332,6 +332,8 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_get_attr
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /* FIXME: Attributes must be visable from all languages */
 /*@
@@ -368,7 +370,6 @@ Notes for C:
 int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, 
 		      int *flag)
 {
-    static const char FCNAME[] = "MPI_Comm_get_attr";
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_GET_ATTR);
 

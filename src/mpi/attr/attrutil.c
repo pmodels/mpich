@@ -46,6 +46,10 @@ void MPID_Attr_free(MPID_Attribute *attr_ptr)
     MPIU_Handle_obj_free(&MPID_Attr_mem, attr_ptr);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Call_attr_delete
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*
   This function deletes a single attribute.
   It is called by both the function to delete a list and attribute set/put 
@@ -61,7 +65,6 @@ void MPID_Attr_free(MPID_Attribute *attr_ptr)
 */
 int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
 {
-    static const char FCNAME[] = "MPIR_Call_attr_delete";
     int rc;
     int mpi_errno = MPI_SUCCESS;
     MPID_Keyval* kv = attr_p->keyval;
@@ -109,9 +112,12 @@ int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
 
   Note that this simply invokes the attribute copy function.
 */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Call_attr_copy
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Call_attr_copy( int handle, MPID_Attribute *attr_p, void** value_copy, int* flag)
 {
-    static const char FCNAME[] = "MPIR_Call_attr_copy";
     int mpi_errno = MPI_SUCCESS;
     int rc;
     MPID_Keyval* kv = attr_p->keyval;
@@ -149,11 +155,14 @@ fn_fail:
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Attr_dup_list
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* Routine to duplicate an attribute list */
 int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs, 
 			MPID_Attribute **new_attr )
 {
-    static const char FCNAME[] = "MPIR_Attr_dup_list";
     MPID_Attribute *p, *new_p, **next_new_attr_ptr=new_attr;
     void* new_value = NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -209,10 +218,13 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Attr_delete_list
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* Routine to delete an attribute list */
 int MPIR_Attr_delete_list( int handle, MPID_Attribute *attr )
 {
-    static const char FCNAME[] = "MPIR_Attr_delete_list";
     MPID_Attribute *p, *new_p;
     int mpi_errno = MPI_SUCCESS;
 

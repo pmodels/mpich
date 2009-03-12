@@ -159,7 +159,8 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_set_attr
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_set_attr - Stores attribute value associated with a key
 
@@ -195,7 +196,6 @@ corresponding keyval was created) will be called.
 @*/
 int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
 {
-    static const char FCNAME[] = "MPI_Comm_set_attr";
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SET_ATTR);
 

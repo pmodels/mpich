@@ -238,9 +238,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, 
 		     int *flag)
 {
-#ifdef HAVE_ERROR_CHECKING
     static const char FCNAME[] = "MPI_Win_get_attr";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_GET_ATTR);

@@ -144,7 +144,7 @@ int MPIDI_CH3_ReqHandler_PutRespDerivedDTComplete( MPIDI_VC_t *vc ATTRIBUTE((unu
 						   int *complete )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *new_dtp;
+    MPID_Datatype *new_dtp = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTRESPDERIVEDDTCOMPLETE);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTRESPDERIVEDDTCOMPLETE);
@@ -195,7 +195,7 @@ int MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete( MPIDI_VC_t *vc ATTRIBUTE((u
 						     int *complete )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *new_dtp;
+    MPID_Datatype *new_dtp = NULL;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
     MPIU_THREADPRIV_DECL;
@@ -274,7 +274,7 @@ int MPIDI_CH3_ReqHandler_GetRespDerivedDTComplete( MPIDI_VC_t *vc,
 						   int *complete )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *new_dtp;
+    MPID_Datatype *new_dtp = NULL;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_resp_t * get_resp_pkt = &upkt.get_resp;
     MPID_Request * sreq;

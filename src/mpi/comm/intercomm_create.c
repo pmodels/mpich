@@ -20,7 +20,9 @@
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
+#ifdef HAVE_ERROR_CHECKING
 PMPI_LOCAL int MPIR_CheckDisjointLpids( int [], int, int [], int );
+#endif
 PMPI_LOCAL int MPID_LPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size, 
 				       int local_lpids[] );
 
@@ -33,10 +35,11 @@ PMPI_LOCAL int MPID_LPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 #define MAX_LPID32_ARRAY 128
 #undef FUNCNAME
 #define FUNCNAME MPIR_CheckDisjointLpids
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 PMPI_LOCAL int MPIR_CheckDisjointLpids( int lpids1[], int n1, 
 					 int lpids2[], int n2 )
 {
-    static const char FCNAME[] = "MPIR_CheckDisjointLpids";
     int i, maxi, idx, bit, maxlpid = -1;
     int mpi_errno = MPI_SUCCESS;
     int32_t lpidmaskPrealloc[MAX_LPID32_ARRAY];
@@ -171,7 +174,8 @@ PMPI_LOCAL int MPID_LPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Intercomm_create
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Intercomm_create - Creates an intercommuncator from two intracommunicators
@@ -224,7 +228,6 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 			 MPI_Comm peer_comm, int remote_leader, int tag, 
 			 MPI_Comm *newintercomm)
 {
-    static const char FCNAME[] = "MPI_Intercomm_create";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Comm *peer_comm_ptr = NULL;

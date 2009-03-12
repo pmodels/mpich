@@ -1254,7 +1254,7 @@ static int state_l_rankrcvd_handler(pollfd_t *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_NEM_TCP_SOCK_STATUS_t stat;
-    sockconn_t *fnd_sc;
+    sockconn_t *fnd_sc = NULL;
     int snd_nak = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_STATE_L_RANKRCVD_HANDLER);
 
@@ -1685,7 +1685,7 @@ int MPID_nem_tcp_state_listening_handler(pollfd_t *const unused_1, sockconn_t *c
                                   "**sock_accept", "**sock_accept %s", strerror(errno));
         }
         else {
-            int index;
+            int index = -1;
             pollfd_t *plfd;
             sockconn_t *sc;
 

@@ -151,6 +151,8 @@ int MPIR_TypeGetAttr( MPI_Datatype type, int type_keyval, void *attribute_val,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_attr
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
    MPI_Type_get_attr - Retrieves attribute value by key
@@ -185,9 +187,6 @@ Notes for C:
 int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val, 
 		      int *flag)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Type_get_attr";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_GET_ATTR);
 

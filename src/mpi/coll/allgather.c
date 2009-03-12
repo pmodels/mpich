@@ -581,6 +581,10 @@ int MPIR_Allgather (
 }
 /* end:nested */
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allgather_inter
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* begin:nested */
 /* not declared static because a machine-specific function may call this one 
    in some cases */
@@ -598,7 +602,6 @@ int MPIR_Allgather_inter (
        intracommunicator, and then does an intercommunicator broadcast.
     */
 
-    static const char FCNAME[] = "MPIR_Allgather_inter";
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS, root;
     MPI_Aint true_extent, true_lb = 0, extent, send_extent;
     void *tmp_buf=NULL;
@@ -698,7 +701,8 @@ int MPIR_Allgather_inter (
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Allgather
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 MPI_Allgather - Gathers data from all tasks and distribute the combined
     data to all tasks
@@ -746,7 +750,6 @@ int MPI_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   void *recvbuf, int recvcount, MPI_Datatype recvtype, 
                   MPI_Comm comm)
 {
-    static const char FCNAME[] = "MPI_Allgather";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ALLGATHER);

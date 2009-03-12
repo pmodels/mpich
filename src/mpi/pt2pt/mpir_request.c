@@ -7,6 +7,10 @@
 
 #include "mpiimpl.h"
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Request_complete
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* Complete a request, saving the status data if necessary.
    "active" has meaning only if the request is a persistent request; this 
    allows the completion routines to indicate that a persistent request 
@@ -20,7 +24,6 @@
 int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr, 
 			  MPI_Status * status, int * active)
 {
-    static const char FCNAME[] = "MPIR_Request_complete";
     int mpi_errno = MPI_SUCCESS;
 
     *active = TRUE;
@@ -210,6 +213,10 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Request_get_error
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* FIXME: What is this routine for?
  *  
  * [BRT] it is used by testall, although looking at testall now, I think the
@@ -217,7 +224,6 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
  */
 int MPIR_Request_get_error(MPID_Request * request_ptr)
 {
-    static const char FCNAME[] = "MPIR_Request_get_error";
     int mpi_errno = MPI_SUCCESS;
     MPIU_THREADPRIV_DECL;
 
@@ -352,9 +358,10 @@ void MPIR_Grequest_set_lang_f77( MPI_Request greq )
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Grequest_cancel
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Grequest_cancel(MPID_Request * request_ptr, int complete)
 {
-    static const char * FCNAME = MPIU_QUOTE(FUNCNAME);
     int rc;
     int mpi_errno = MPI_SUCCESS;
     
@@ -401,9 +408,10 @@ int MPIR_Grequest_cancel(MPID_Request * request_ptr, int complete)
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Grequest_query
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Grequest_query(MPID_Request * request_ptr)
 {
-    static const char * FCNAME = MPIU_QUOTE(FUNCNAME);
     int rc;
     int mpi_errno = MPI_SUCCESS;
     
@@ -448,9 +456,10 @@ int MPIR_Grequest_query(MPID_Request * request_ptr)
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Grequest_free
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Grequest_free(MPID_Request * request_ptr)
 {
-    static const char * FCNAME = MPIU_QUOTE(FUNCNAME);
     int rc;
     int mpi_errno = MPI_SUCCESS;
     
