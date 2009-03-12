@@ -809,6 +809,7 @@ int MPIR_Allgatherv (
 #else /* This case is retained as its more tested; we should eventually discard it */
     else {  /* long message or medium-size message and non-power-of-two
              * no. of processes. Use ring algorithm. */
+        int jnext;
 
         if (sendbuf != MPI_IN_PLACE) {
             /* First, load the "local" version in the recvbuf. */
