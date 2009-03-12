@@ -102,26 +102,20 @@ HYD_Status HYDU_Dump_args(char **args)
 
 HYD_Status HYDU_Get_base_path(char *execname, char **path)
 {
-    char *str[HYDU_NUM_JOIN_STR];
-    int i;
+    char *loc;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    i = 0;
-    if (execname[0] == '/')
-        str[i++] = "/";
-    str[i++] = strtok(execname, "/");
-    do {
-        str[i++] = "/";
-        str[i++] = strtok(NULL, "/");
-    } while (str[i - 1]);
-    str[i - 3] = NULL;
-
-    status = HYDU_String_alloc_and_join(str, path);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while joining strings\n");
-        goto fn_fail;
+    *path = MPIU_Strdup(execname);
+    loc = strrchr(*path, '/');
+    if (loc) {
+        loc++;
+        *loc = 0;
+    }
+    else {
+        HYDU_FREE(*path);
+        *path = MPIU_Strdup("");
     }
 
   fn_exit:
