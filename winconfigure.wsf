@@ -1774,7 +1774,7 @@ Function ReplaceAts( str, use_f77, b64 )
 			Case "@MPIR_CXX_LONG_DOUBLE_COMPLEX@"
 				str = Replace(str, "@MPIR_CXX_LONG_DOUBLE_COMPLEX@", MPIR_CXX_LONG_DOUBLE_COMPLEX)
 			Case "@FORTRAN_MPI_OFFSET@"
-				str = Replace(str, "@FORTRAN_MPI_OFFSET@", "INTEGER (KIND=8)")
+				str = Replace(str, "@FORTRAN_MPI_OFFSET@", "INTEGER *8")
 			Case "@mpe_c99_stdint_inc@"
 				str = Replace(str, "@mpe_c99_stdint_inc@", "/* #include <stdint.h> */")
 			Case "@mpe_c99_pridxx_inc@"
