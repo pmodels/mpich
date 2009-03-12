@@ -1033,6 +1033,7 @@ typedef struct MPID_Keyval {
     int                  handle;
     volatile int         ref_count;
     MPID_Object_kind     kind;
+    int                  was_freed;
     void                 *extra_state;
     MPID_Copy_function   copyfn;
     MPID_Delete_function delfn;

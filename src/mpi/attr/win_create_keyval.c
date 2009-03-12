@@ -100,6 +100,7 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function *win_copy_attr_fn,
 	(MPID_WIN << 22);
     *win_keyval		         = keyval_ptr->handle;
     MPIU_Object_set_ref(keyval_ptr,1);
+    keyval_ptr->was_freed        = 0;
     keyval_ptr->kind	         = MPID_WIN;
     keyval_ptr->extra_state      = extra_state;
     keyval_ptr->copyfn.user_function = win_copy_attr_fn;

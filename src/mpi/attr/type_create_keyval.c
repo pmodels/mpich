@@ -100,6 +100,7 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function *type_copy_attr_fn,
 	(MPID_DATATYPE << 22);
     *type_keyval		 = keyval_ptr->handle;
     MPIU_Object_set_ref(keyval_ptr,1);
+    keyval_ptr->was_freed        = 0;
     keyval_ptr->kind	         = MPID_DATATYPE;
     keyval_ptr->extra_state      = extra_state;
     keyval_ptr->copyfn.user_function = type_copy_attr_fn;

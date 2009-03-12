@@ -92,9 +92,12 @@ int MPI_Type_free_keyval(int *type_keyval)
 
     /* ... body of routine ...  */
     
-    MPIR_Keyval_release_ref( keyval_ptr, &in_use);
-    if (!in_use) {
-	MPIU_Handle_obj_free( &MPID_Keyval_mem, keyval_ptr );
+    if (!keyval_ptr->was_freed) {
+        keyval_ptr->was_freed = 1;
+        MPIR_Keyval_release_ref( keyval_ptr, &in_use);
+        if (!in_use) {
+            MPIU_Handle_obj_free( &MPID_Keyval_mem, keyval_ptr );
+        }
     }
     *type_keyval = MPI_KEYVAL_INVALID;
 
