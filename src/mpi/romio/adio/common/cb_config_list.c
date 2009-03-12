@@ -362,7 +362,7 @@ int ADIOI_cb_config_list_parse(char *config_list,
 /* ADIOI_cb_copy_name_array() - attribute copy routine
  */
 int ADIOI_cb_copy_name_array(MPI_Comm comm, 
-		       int *keyval, 
+		       int keyval, 
 		       void *extra, 
 		       void *attr_in,
 		       void **attr_out, 
@@ -371,7 +371,7 @@ int ADIOI_cb_copy_name_array(MPI_Comm comm,
     ADIO_cb_name_array array;
 
     ADIOI_UNREFERENCED_ARG(comm);
-    ADIOI_UNREFERENCED_ARG(keyval);
+    ADIOI_UNREFERENCED_ARG(keyval); 
     ADIOI_UNREFERENCED_ARG(extra);
 
     array = (ADIO_cb_name_array) attr_in;
@@ -386,7 +386,7 @@ int ADIOI_cb_copy_name_array(MPI_Comm comm,
 /* ADIOI_cb_delete_name_array() - attribute destructor
  */
 int ADIOI_cb_delete_name_array(MPI_Comm comm, 
-			 int *keyval, 
+			 int keyval, 
 			 void *attr_val, 
 			 void *extra)
 {
@@ -411,7 +411,6 @@ int ADIOI_cb_delete_name_array(MPI_Comm comm,
 	if (array->names != NULL) ADIOI_Free(array->names);
 	ADIOI_Free(array);
     }
-
     return MPI_SUCCESS;
 }
 
