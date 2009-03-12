@@ -2226,6 +2226,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef NEEDS_SNPRINTF_DECL */")
 				Case "NEEDS_STRDUP_DECL"
 					fout.WriteLine("/* #undef NEEDS_STRDUP_DECL */")
+				Case "NEEDS_PUTENV_DECL"
+					fout.WriteLine("/* #undef NEEDS_PUTENV_DECL */")
 				Case "PACKAGE_BUGREPORT"
 					fout.WriteLine("/* #undef PACKAGE_BUGREPORT */")
 				Case "PACKAGE_NAME"
@@ -2876,6 +2878,10 @@ Sub AddDefinitions( fout, filename, b64 )
 				' Define to enable shared memory collectives in nemesis
 				Case "ENABLED_SHM_COLLECTIVES"
 					fout.WriteLine("/* #undef ENABLED_SHM_COLLECTIVES */")
+				Case "ENABLE_COMM_OVERRIDES"
+					fout.WriteLine("/* #undef ENABLE_COMM_OVERRIDES */")
+				Case "USE_PIPE_COLLECTIVES"
+					fout.WriteLine("#define USE_PIPE_COLLECTIVES")
 				' Define to remove SwithToThread in polling loops in nemesis
 				'Case "ENABLE_NO_SCHED_YIELD"
 				'	fout.WriteLine("/* #undef ENABLE_NO_SCHED_YIELD */")
@@ -2905,6 +2911,8 @@ Sub AddDefinitions( fout, filename, b64 )
 				' Choosing the net module in nemesis
 				Case "MPID_NEM_NET_MODULE"
 					fout.WriteLine("#define MPID_NEM_NET_MODULE MPID_NEM_NEWTCP_MODULE")
+				Case "MPID_MAD_MODULE_MULTIRAIL"
+					fout.WriteLine("/* #undef MPID_MAD_MODULE_MULTIRAIL */")
 				' Define if SYSV shm available 
 				Case "HAVE_SYSV_SHARED_MEM"
 					fout.WriteLine("/* #undef HAVE_SYSV_SHARED_MEM */")
@@ -2930,6 +2938,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_LIBPSM_INFINIPATH */")
 				Case "HAVE_LIBSCTP"
 					fout.WriteLine("/* #undef HAVE_LIBSCTP */")
+				Case "HAVE_LIBNMAD"
+					fout.WriteLine("/* #undef HAVE_LIBNMAD */")
 				Case "HAVE_MUNMAP"
 					fout.WriteLine("/* #undef HAVE_MUNMAP */")
 				Case "HAVE_RAND"
