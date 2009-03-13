@@ -28,10 +28,8 @@
 - ROMIO: Added support for MPI_Type_create_resized and
   MPI_Type_create_indexed_block datatypes in ROMIO.
 
-- ROMIO: Weikuan Yu contributed initial work for an optimized Lustre
-  ADIO driver in 1.0.8.  Sun contributed a further-improved version of
-  that initial work. Should result in improved collective I/O
-  performance for many workloads.
+- ROMIO: Optimized Lustre ADIO driver (Thanks to Weikuan Yu for initial
+  work and Sun for further improvements).
 
 - Many other bug fixes, memory leak fixes and code cleanup. A full
 list of changes is available using:
