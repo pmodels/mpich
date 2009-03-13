@@ -28,6 +28,9 @@ install_BIN = proxy
 mpich2-build-install: install
 mpich2-build-uninstall: uninstall
 
+# Only hydra has a proxy for now; so install it even when multiple PMs are used
+install-alt: install
+
 # We use a dummy dependency to ensure that we always go to the util
 # directory to see if anything needs to be done
 ../../../util/libmpiexec.a: dummy
