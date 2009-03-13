@@ -4,5 +4,5 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS_hydra_bss = ssh fork
+SUBDIRS_hydra_bss_names = ssh fork .
 SUBDIRS = utils @hydra_bss_names@ .
