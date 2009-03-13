@@ -206,6 +206,16 @@ if test "$enable_f77" = yes ; then
         enable_f77=no
     fi    
 fi
+if test "$enable_f90" = yes ; then
+    AC_PROG_F90
+    if test -z "$BASEF90" ; then
+        BASEF90="$F90"
+    fi
+    # If there is no working F90, then set enable_f90 to no
+    if test -z "$F90" ; then
+        enable_f90=no
+    fi
+fi
 if test "$enable_cxx" = yes ; then
     AC_PROG_CXX
     if test -z "$BASECXX" ; then
@@ -254,6 +264,11 @@ if test -n "$with_mpi" ; then
         F77=$with_mpi/bin/mpif77
     else
         F77=$MPIF77
+    fi
+    if test -z "$MPIF90" ; then
+        F90=$with_mpi/bin/mpif90
+    else
+        F90=$MPIF90
     fi
     if test -z "$MPICXX" ; then
         CXX=$with_mpi/bin/mpicxx
@@ -591,6 +606,11 @@ EOF
     # MPI programs may require that the programs be run with mpiexec or
     # something similar (this is true for the IBM MPI, for example).
     rm -f f77/init/checksizes.c
+    # If it is a VPATH build, f77/init may not be there.
+    if test ! -d f77/init ; then
+        mkdir f77
+        mkdir f77/init
+    fi
     cat > f77/init/checksizes.c <<EOF
 #include "mpi.h"
 #include <stdio.h>
@@ -719,7 +739,9 @@ if test "$enable_f90" = default -a "$enable_f77" = yes ; then
     elif test -z "$BASEF90" ; then
         BASEF90=$F90
     fi
-    F90=$saveF90
+    if test -n "$BASEF90" ; then
+        F90=$saveF90
+    fi
 fi
 
 if test "$enable_f90" = yes ; then
@@ -781,6 +803,11 @@ EOF
     fi
 
     if test -f f77/init/checksizes.c ; then
+        # If it is a VPATH build, f90/init may not be there.
+        if test ! -d f90/init ; then
+            mkdir f90
+            mkdir f90/init
+        fi
         cp f77/init/checksizes.c f90/init
     fi
 fi
