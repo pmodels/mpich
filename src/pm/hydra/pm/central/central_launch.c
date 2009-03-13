@@ -129,6 +129,11 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 
             for (arg = 0; partition->args[arg]; arg++);
             i = 0;
+            if (handle.base_path[0] && (handle.base_path[0] != '/')) {
+                /* This should be a relative path; add the wdir as well */
+                path_str[i++] = MPIU_Strdup(handle.wdir);
+                path_str[i++] = MPIU_Strdup("/");
+            }
             path_str[i++] = MPIU_Strdup(handle.base_path);
             path_str[i++] = MPIU_Strdup("proxy");
             path_str[i] = NULL;
