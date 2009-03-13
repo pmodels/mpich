@@ -28,7 +28,14 @@ sub ReadInterface {
     # Read each one
     while (<FD>) {
 	# Remove any comments
-	s/\/\*.*\*\///g;
+	$origline = $_;
+	while (/(.*)\/\*(.*?)\*\/(.*)/) {
+	    my $removed = $2;
+	    $_ = $1.$3;
+	    if ($2 =~ /\/\*/) {
+		print STDERR "Error in processing comment within interface file $prototype_file in line $origline";
+	    }
+	}
 	print $_ if $debug;
 	if (/\/\*\s*End Prototypes/) { last; }
 	if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {

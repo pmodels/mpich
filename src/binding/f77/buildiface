@@ -3029,6 +3029,8 @@ MPIR_Comm_delete_attr_f77_proxy(
     $filename = "statusf2c.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
+    # Status_f2c and c2f will need to have const added before the input
+    # argument for MPI 2.2
     print $OUTFD "
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*  
@@ -3228,8 +3230,15 @@ sub ReadAndProcessInterface {
 		&SkipCPPIfdef( FD );
 	    }
 	}
-	# Remove any comments
-	s/\/\*.*\*\///g;
+	# Remove any comments; check for problems
+	$origline = $_;
+	while (/(.*)\/\*(.*?)\*\/(.*)/) {
+	    my $removed = $2;
+	    $_ = $1.$3;
+	    if ($2 =~ /\/\*/) {
+		print STDERR "Error in processing comment within interface file $prototype_file in line $origline";
+	    }
+	}
 
 	if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
 	    $routine_name = $1;
@@ -3367,8 +3376,15 @@ sub ReadInterfaceForDefinitions {
     # First, find the values that we need
     while (<MPIFD>) {
 	$linecount++;
-	# Remove any comments
-	s/\/\*.*\*\///g;
+	# Remove any comments; check for problems
+	$origline = $_;
+	while (/(.*)\/\*(.*?)\*\/(.*)/) {
+	    my $removed = $2;
+	    $_ = $1.$3;
+	    if ($2 =~ /\/\*/) {
+		print STDERR "Error in processing comment within interface file $prototype_file in line $origline";
+	    }
+	}
 
 	# We should also skip #ifndef xxx, for some xxx.  
 	if (/^#\s*ifndef\s+(\w*)/) {
