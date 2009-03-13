@@ -987,7 +987,7 @@ int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
                the attr_free code requires a valid communicator */ 
 	    MPIU_Object_add_ref( comm_ptr ); 
 	    mpi_errno = MPIR_Process.attr_free( comm_ptr->handle, 
-						comm_ptr->attributes );
+						&comm_ptr->attributes );
 	    /* Release the temporary reference added before the call to 
                attr_free */ 
 	    MPIU_Object_release_ref( comm_ptr, &inuse); 

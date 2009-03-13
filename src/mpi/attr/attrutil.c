@@ -223,12 +223,13 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /* Routine to delete an attribute list */
-int MPIR_Attr_delete_list( int handle, MPID_Attribute *attr )
+int MPIR_Attr_delete_list( int handle, MPID_Attribute **attr )
 {
     MPID_Attribute *p, *new_p;
     int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_ptr;
 
-    p = attr;
+    p = *attr;
     while (p) {
 	/* delete the attribute by first executing the delete routine, if any,
 	   determine the the next attribute, and recover the attributes 
@@ -269,6 +270,17 @@ int MPIR_Attr_delete_list( int handle, MPID_Attribute *attr )
 	
 	p = new_p;
     }
+
+    /* We must zero out the attribute list pointer or we could attempt to use it
+       later.  This normally can't happen because the communicator usually
+       disappears after a call to MPI_Comm_free.  But if the attribute keyval
+       has an associated delete function that returns an error then we don't
+       actually free the communicator despite having freed all the attributes
+       associated with the communicator.
+
+       This function is also used for Win and Type objects, but the idea is the
+       same in those cases as well. */
+    *attr = NULL;
     return mpi_errno;
 }
 

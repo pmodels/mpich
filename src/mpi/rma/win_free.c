@@ -93,7 +93,7 @@ int MPI_Win_free(MPI_Win *win)
     if (MPIR_Process.attr_free && win_ptr->attributes)
     {
 	mpi_errno = MPIR_Process.attr_free( win_ptr->handle, 
-					    win_ptr->attributes );
+					    &win_ptr->attributes );
     }
     /*
      * If the user attribute free function returns an error, 

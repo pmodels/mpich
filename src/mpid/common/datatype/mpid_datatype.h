@@ -59,7 +59,7 @@
         int lmpi_errno = MPI_SUCCESS;					    \
 	if (MPIR_Process.attr_free && datatype_ptr->attributes) {	    \
 	    lmpi_errno = MPIR_Process.attr_free( datatype_ptr->handle,	    \
-						datatype_ptr->attributes ); \
+						 &datatype_ptr->attributes ); \
 	}								    \
  	/* LEAVE THIS COMMENTED OUT UNTIL WE HAVE SOME USE FOR THE FREE_FN  \
 	if (datatype_ptr->free_fn) {					    \

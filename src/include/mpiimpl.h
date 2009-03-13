@@ -2071,7 +2071,7 @@ typedef struct MPICH_PerProcess_t {
 
     /* Attribute dup functions.  Here for lazy initialization */
     int (*attr_dup)( int, MPID_Attribute *, MPID_Attribute ** );
-    int (*attr_free)( int, MPID_Attribute * );
+    int (*attr_free)( int, MPID_Attribute ** );
     /* There is no win_attr_dup function because there can be no MPI_Win_dup
        function */
     /* Routine to get the messages corresponding to dynamically created

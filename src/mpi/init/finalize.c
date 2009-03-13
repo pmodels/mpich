@@ -142,12 +142,12 @@ int MPI_Finalize( void )
        in MPID_Finalize) */
     if (MPIR_Process.attr_free && MPIR_Process.comm_self->attributes) {
         mpi_errno = MPIR_Process.attr_free( MPI_COMM_SELF,
-					    MPIR_Process.comm_self->attributes);
+					    &MPIR_Process.comm_self->attributes);
 	MPIR_Process.comm_self->attributes = 0;
     }
     if (MPIR_Process.attr_free && MPIR_Process.comm_world->attributes) {
         mpi_errno = MPIR_Process.attr_free( MPI_COMM_WORLD, 
-                                         MPIR_Process.comm_world->attributes);
+                                            &MPIR_Process.comm_world->attributes);
 	MPIR_Process.comm_world->attributes = 0;
     }
 
