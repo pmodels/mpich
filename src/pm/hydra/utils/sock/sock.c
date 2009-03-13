@@ -109,12 +109,6 @@ HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port)
         goto fn_fail;
     }
 
-    status = HYDU_Sock_set_cloexec(*listen_fd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to set fd %d to close on exec\n", *listen_fd);
-        goto fn_fail;
-    }
-
     /* We asked for any port, so we need to find out which port we
      * actually got. */
     if (*port == 0) {
@@ -167,12 +161,6 @@ HYD_Status HYDU_Sock_connect(const char *host, uint16_t port, int *fd)
         goto fn_fail;
     }
 
-    status = HYDU_Sock_set_cloexec(*fd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to set fd %d to close on exec\n", *fd);
-        goto fn_fail;
-    }
-
     /* Not being able to connect is not an error in all cases. So we
      * return an error, but only print a warning message. The upper
      * layer can decide what to do with the return status. */
@@ -201,12 +189,6 @@ HYD_Status HYDU_Sock_accept(int listen_fd, int *fd)
     if (*fd < 0) {
         HYDU_Error_printf("accept error on socket %d (errno: %d)\n", listen_fd, errno);
         status = HYD_SOCK_ERROR;
-        goto fn_fail;
-    }
-
-    status = HYDU_Sock_set_cloexec(*fd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to set fd %d to close on exec\n", *fd);
         goto fn_fail;
     }
 

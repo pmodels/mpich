@@ -82,7 +82,6 @@ int main(int argc, char **argv)
             goto fn_fail;
         }
         HYDU_Env_putenv(str);
-        HYDU_FREE(str);
         for (j = 0; tmp[j]; j++)
             HYDU_FREE(tmp[j]);
 

@@ -59,14 +59,6 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
             goto fn_fail;
         }
 
-        /* Make this socket non-blocking as we should not keep waiting
-         * for data on the PMI connections. */
-        status = HYDU_Sock_set_nonblock(accept_fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("sock utils returned error setting socket to non-blocking\n");
-            goto fn_fail;
-        }
-
         status = HYD_DMX_Register_fd(1, &accept_fd, HYD_STDOUT, HYD_PMCD_Central_cb);
         if (status != HYD_SUCCESS) {
             HYDU_Error_printf("demux engine returned error when registering fd\n");
