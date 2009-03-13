@@ -10,7 +10,9 @@ $abs_mpich2srcdir = "@abs_mpich2srcdir@";
 $includedir = ".";
 $skipAction = 0;
 $makefilebase = "Makefile.base";
-$ranliblib    = 1;
+$ranliblib    = 1;   # only set to 0 on systems where ar 
+                     # computes a symbol table index.  Also see RANLIBNEEDED
+                     # environment variable
 $useinclude = 0;     # set to 1 to make the Makefiles refer to a single
                      # base makefile.
 $include_list = "";
@@ -66,7 +68,6 @@ else {
 if (defined($ENV{"CHECKTARGETS"})) {
     $gCheckForTargets = 1;
 }
-
 $autoconf_args = ""; # Extra arguments for autoconf
 $acincdir_arg = "-l";
 
@@ -141,6 +142,16 @@ else {
     $Sleep = $SleepSlow;
 }
 
+# Check environment variable to see if ranlib is needed.
+if (defined($ENV{"RANLIBNEEDED"})) {
+    my $val = $ENV{"RANLIBNEEDED"};
+    if ($val eq "YES" || $val eq "yes" || $val == 1) {
+	$ranliblib = 1;
+    }
+    elsif ($val eq "NO" || $val eq "no" || $val == 0) {
+	$ranliblib = 0;
+    }
+}
 
 #
 # Output File end-of-line character
