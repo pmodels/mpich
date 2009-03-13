@@ -289,7 +289,7 @@ int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype
 {
     MPID_Request  *sreq =*sreq_p;
     MPIDI_msg_sz_t last;
-    int iov_num_ub  = count * dt_ptr->n_contig_blocks;
+    int iov_num_ub  = count * dt_ptr->max_contig_blocks;
     int n_iov       = iov_num_ub;
     int mpi_errno   = MPI_SUCCESS;
 

@@ -167,7 +167,7 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
     }
 
     new_dtp->is_contig       = (((MPI_Aint) type_size) == type_extent) ? 1 : 0;
-    new_dtp->n_contig_blocks = (((MPI_Aint) type_size) == type_extent) ? 1 : 2;
+    new_dtp->max_contig_blocks = (((MPI_Aint) type_size) == type_extent) ? 1 : 2;
 
     /* fill in dataloops -- only case where we precreate dataloops
      *

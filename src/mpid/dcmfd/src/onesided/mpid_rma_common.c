@@ -92,7 +92,7 @@ void make_dt_map_vec(MPI_Datatype dt, mpid_dt_info *dti) {
         /* Use existing routines to get IOV */
 
         MPID_Datatype_get_ptr(dt, dtp);
-        nb = dtp->n_contig_blocks + 1;
+        nb = dtp->max_contig_blocks + 1;
 
         MPIDU_MALLOC(mv, MPID_Type_map, nb * sizeof(*mv), last, "MPID_Type_map");
         MPID_assert(mv != NULL);

@@ -13,7 +13,7 @@
 /* to send derived datatype across in RMA ops */
 typedef struct MPIDI_RMA_dtype_info { /* for derived datatypes */
     int           is_contig; 
-    int           n_contig_blocks;
+    int           max_contig_blocks;
     int           size;     
     MPI_Aint      extent;   
     int           dataloop_size; /* not needed because this info is sent in packet header. remove it after lock/unlock is implemented in the device */

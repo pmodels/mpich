@@ -517,7 +517,7 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 		last  = SEGMENT_IGNORE_LAST;
 		
 		MPID_Datatype_get_ptr(target_datatype, dtp);
-		vec_len = dtp->n_contig_blocks * target_count + 1; 
+		vec_len = dtp->max_contig_blocks * target_count + 1; 
 		/* +1 needed because Rob says so */
 		MPIU_CHKLMEM_MALLOC(dloop_vec, DLOOP_VECTOR *, 
 				    vec_len * sizeof(DLOOP_VECTOR), 

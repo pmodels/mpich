@@ -574,7 +574,7 @@ static int create_derived_datatype(MPID_Request *req, MPID_Datatype **dtp)
     new_dtp->cache_id     = 0;
     new_dtp->name[0]      = 0;
     new_dtp->is_contig = dtype_info->is_contig;
-    new_dtp->n_contig_blocks = dtype_info->n_contig_blocks; 
+    new_dtp->max_contig_blocks = dtype_info->max_contig_blocks; 
     new_dtp->size = dtype_info->size;
     new_dtp->extent = dtype_info->extent;
     new_dtp->dataloop_size = dtype_info->dataloop_size;
@@ -681,7 +681,7 @@ static int do_accumulate_op(MPID_Request *rreq)
         last  = SEGMENT_IGNORE_LAST;
         
         MPID_Datatype_get_ptr(rreq->dev.datatype, dtp);
-        vec_len = dtp->n_contig_blocks * rreq->dev.user_count + 1; 
+        vec_len = dtp->max_contig_blocks * rreq->dev.user_count + 1; 
         /* +1 needed because Rob says so */
         dloop_vec = (DLOOP_VECTOR *)
             MPIU_Malloc(vec_len * sizeof(DLOOP_VECTOR));

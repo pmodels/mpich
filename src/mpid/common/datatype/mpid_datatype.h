@@ -381,7 +381,11 @@ typedef struct MPID_Datatype {
      * contiguous.
      */
     int is_contig;
-    int n_contig_blocks; /* # of contig blocks in one instance */
+    /* Upper bound on the number of contig blocks for one instance.
+     * It is not trivial to calculate the *real* number of contig 
+     * blocks in the case where old datatype is non-contiguous
+     */
+    int max_contig_blocks;
 
     /* pointer to contents and envelope data for the datatype */
     MPID_Datatype_contents *contents;

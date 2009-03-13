@@ -47,6 +47,8 @@ fetchandadd_am_SOURCES = fetchandadd_am.c
 fetchandadd_tree_am_SOURCES = fetchandadd_tree_am.c
 accfence2_am_SOURCES = accfence2_am.c
 
+test1_dt_SOURCES = test1_dt.c
+
 attrorderwin_SOURCES = attrorderwin.c
 wincall_SOURCES = wincall.c
 fkeyvalwin_SOURCES = fkeyvalwin.c 

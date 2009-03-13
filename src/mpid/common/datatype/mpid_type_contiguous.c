@@ -86,6 +86,7 @@ int MPID_Type_contiguous(int count,
 	new_dtp->element_size  = el_sz;
         new_dtp->eltype        = el_type;
 	new_dtp->is_contig     = 1;
+        new_dtp->max_contig_blocks = 1;
 
     }
     else
@@ -121,6 +122,10 @@ int MPID_Type_contiguous(int count,
         new_dtp->eltype       = el_type;
 
 	new_dtp->is_contig    = old_dtp->is_contig;
+        if(old_dtp->is_contig)
+            new_dtp->max_contig_blocks = 1;
+        else
+            new_dtp->max_contig_blocks = count * old_dtp->max_contig_blocks;
     }
 
     *newtype = new_dtp->handle;

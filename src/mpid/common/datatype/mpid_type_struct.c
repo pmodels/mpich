@@ -209,7 +209,7 @@ int MPID_Type_struct(int count,
 	return MPID_Type_zerolen(newtype);
     }
 
-    new_dtp->n_contig_blocks = 0;
+    new_dtp->max_contig_blocks = 0;
     for (i=0; i < count; i++)
     {
 	int is_builtin =
@@ -241,7 +241,7 @@ int MPID_Type_struct(int count,
 
 	    size += tmp_el_sz * blocklength_array[i];
 
-	    new_dtp->n_contig_blocks++;
+	    new_dtp->max_contig_blocks++;
 	}
 	else
 	{
@@ -265,7 +265,7 @@ int MPID_Type_struct(int count,
 
 	    size += old_dtp->size * blocklength_array[i];
 
-	    new_dtp->n_contig_blocks += old_dtp->n_contig_blocks;
+	    new_dtp->max_contig_blocks += old_dtp->max_contig_blocks;
 	}
 
 	/* element size and type */

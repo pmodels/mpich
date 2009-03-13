@@ -395,7 +395,7 @@ int MPID_nem_mx_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype,  M
     MPID_IOV  *iov;
     MPIDI_msg_sz_t last;
     int num_entries = MX_MAX_SEGMENTS - first_free_slot;
-    int iov_num_ub  = count * dt_ptr->n_contig_blocks;
+    int iov_num_ub  = count * dt_ptr->max_contig_blocks;
     int n_iov       = iov_num_ub;
     int mpi_errno   = MPI_SUCCESS;
     int index;

@@ -87,7 +87,7 @@ int MPID_Type_commit(MPI_Datatype *datatype_p)
 #endif
 
 	MPIU_DBG_PRINTF(("# contig blocks = %d\n",
-			 (int) datatype_ptr->n_contig_blocks));
+			 (int) datatype_ptr->max_contig_blocks));
 
 #if 0
 	MPIDI_Dataloop_dot_printf(datatype_ptr->dataloop, 0, 1);

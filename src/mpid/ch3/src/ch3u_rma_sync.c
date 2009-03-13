@@ -507,7 +507,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
     {
         /* derived datatype on target. fill derived datatype info */
         dtype_info->is_contig = target_dtp->is_contig;
-        dtype_info->n_contig_blocks = target_dtp->n_contig_blocks;
+        dtype_info->max_contig_blocks = target_dtp->max_contig_blocks;
         dtype_info->size = target_dtp->size;
         dtype_info->extent = target_dtp->extent;
         dtype_info->dataloop_size = target_dtp->dataloop_size;
@@ -731,7 +731,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 
         MPID_Datatype_get_ptr(rma_op->target_datatype, dtp);
         dtype_info->is_contig = dtp->is_contig;
-        dtype_info->n_contig_blocks = dtp->n_contig_blocks;
+        dtype_info->max_contig_blocks = dtp->max_contig_blocks;
         dtype_info->size = dtp->size;
         dtype_info->extent = dtp->extent;
         dtype_info->dataloop_size = dtp->dataloop_size;

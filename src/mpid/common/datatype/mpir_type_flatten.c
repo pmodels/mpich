@@ -41,7 +41,7 @@ int MPIR_Type_flatten(MPI_Datatype type,
 
     MPID_Datatype_get_ptr(type, datatype_ptr);
     MPIU_Assert(datatype_ptr->is_committed);
-    MPIU_Assert(*array_len_p >= datatype_ptr->n_contig_blocks);
+    MPIU_Assert(*array_len_p >= datatype_ptr->max_contig_blocks);
 
     segp = MPID_Segment_alloc();
     MPID_Segment_init(0, 1, type, segp, 0); /* first 0 is bufptr,

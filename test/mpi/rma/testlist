@@ -32,6 +32,7 @@ test5_am 2
 fetchandadd_am 7
 fetchandadd_tree_am 7
 accfence2_am 4
+test1_dt 2 timeLimit=30
 nullpscw 7
 attrorderwin 1
 wincall 2
