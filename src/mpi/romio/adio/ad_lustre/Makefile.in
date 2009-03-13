@@ -16,7 +16,9 @@ C_COMPILE_SHL = $(CC_SHL) @CFLAGS@ $(INCLUDE_DIR)
 @VPATH@
 
 AD_LUSTRE_OBJECTS = ad_lustre.o ad_lustre_open.o \
-      ad_lustre_rwcontig.o ad_lustre_hints.o 
+      ad_lustre_rwcontig.o ad_lustre_wrcoll.o ad_lustre_wrstr.o  \
+      ad_lustre_hints.o ad_lustre_aggregate.o
+
 
 default: $(LIBNAME)
 	@if [ "@ENABLE_SHLIB@" != "none" ] ; then \

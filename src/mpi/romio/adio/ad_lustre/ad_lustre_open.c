@@ -1,9 +1,11 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
-/* 
- *   Copyright (C) 1997 University of Chicago. 
+/*
+ *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  *
  *   Copyright (C) 2007 Oak Ridge National Laboratory
+ *
+ *   Copyright (C) 2008 Sun Microsystems, Lustre group
  */
 
 #include "ad_lustre.h"
@@ -51,14 +53,17 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
         err = ioctl(fd->fd_sys, LL_IOC_LOV_GETSTRIPE, (void *) &lum);
 
         if (!err) {
+            fd->hints->striping_unit = lum.lmm_stripe_size;
             sprintf(value, "%d", lum.lmm_stripe_size);
             MPI_Info_set(fd->info, "striping_unit", value);
 
+            fd->hints->striping_factor = lum.lmm_stripe_count;
             sprintf(value, "%d", lum.lmm_stripe_count);
             MPI_Info_set(fd->info, "striping_factor", value);
 
+            fd->hints->fs_hints.lustre.start_iodevice = lum.lmm_stripe_offset;
             sprintf(value, "%d", lum.lmm_stripe_offset);
-            MPI_Info_set(fd->info, "start_iodevice", value);
+            MPI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
         }
         ADIOI_Free(value);
 

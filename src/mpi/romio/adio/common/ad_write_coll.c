@@ -46,7 +46,7 @@ static void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                            int *send_buf_idx, int *curr_to_proc, 
                            int *done_to_proc, int iter, 
                            MPI_Aint buftype_extent);
-static void ADIOI_Heap_merge(ADIOI_Access *others_req, int *count, 
+void ADIOI_Heap_merge(ADIOI_Access *others_req, int *count, 
                       ADIO_Offset *srt_off, int *srt_len, int *start_pos,
                       int nprocs, int nprocs_recv, int total_elements);
 
@@ -958,7 +958,7 @@ static void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 
 
 
-static void ADIOI_Heap_merge(ADIOI_Access *others_req, int *count, 
+void ADIOI_Heap_merge(ADIOI_Access *others_req, int *count, 
 		      ADIO_Offset *srt_off, int *srt_len, int *start_pos,
 		      int nprocs, int nprocs_recv, int total_elements)
 {

@@ -64,6 +64,14 @@ struct ADIOI_Hints_struct {
 		    int dtype_read;
 		    int dtype_write;
 	    } pvfs2;
+            struct {
+                    int start_iodevice;
+                    int CO;
+                    int bigsize;
+                    int contig_data;
+                    int samesize;
+                    int ds_in_coll;
+            } lustre;
     } fs_hints;
 
 };

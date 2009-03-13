@@ -1,9 +1,11 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
-/* 
- *   Copyright (C) 1997 University of Chicago. 
+/*
+ *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  *
  *   Copyright (C) 2007 Oak Ridge National Laboratory
+ *
+ *   Copyright (C) 2008 Sun Microsystems, Lustre group
  */
 
 #ifndef AD_UNIX_INCLUDE
@@ -24,7 +26,7 @@
 
 /*#include <fcntl.h>*/
 #include <sys/ioctl.h>
-#include "lustre/lustre_user.h"
+#include <lustre/lustre_user.h>
 #include "adio.h"
 /*#include "adioi.h"*/
 
@@ -41,24 +43,31 @@
 
 void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code);
 void ADIOI_LUSTRE_Close(ADIO_File fd, int *error_code);
-void ADIOI_LUSTRE_ReadContig(ADIO_File fd, void *buf, int count, 
-                      MPI_Datatype datatype, int file_ptr_type,
-                     ADIO_Offset offset, ADIO_Status *status, int
-		     *error_code);
-void ADIOI_LUSTRE_WriteContig(ADIO_File fd, void *buf, int count, 
-                      MPI_Datatype datatype, int file_ptr_type,
-                      ADIO_Offset offset, ADIO_Status *status, int
-		      *error_code);   
+void ADIOI_LUSTRE_ReadContig(ADIO_File fd, void *buf, int count,
+                             MPI_Datatype datatype, int file_ptr_type,
+                             ADIO_Offset offset, ADIO_Status *status,
+                             int *error_code);
+void ADIOI_LUSTRE_WriteContig(ADIO_File fd, void *buf, int count,
+                              MPI_Datatype datatype, int file_ptr_type,
+                              ADIO_Offset offset, ADIO_Status *status,
+                              int *error_code);
+void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, void *buf, int count,
+			       MPI_Datatype datatype, int file_ptr_type,
+			       ADIO_Offset offset, ADIO_Status *status,
+			       int *error_code);
 void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, void *buf, int count,
-		       MPI_Datatype datatype, int file_ptr_type,
-		       ADIO_Offset offset, ADIO_Status *status, int
-		       *error_code);
+		                   MPI_Datatype datatype, int file_ptr_type,
+		                   ADIO_Offset offset, ADIO_Status *status,
+                                   int *error_code);
 void ADIOI_LUSTRE_ReadStridedColl(ADIO_File fd, void *buf, int count,
-		       MPI_Datatype datatype, int file_ptr_type,
-		       ADIO_Offset offset, ADIO_Status *status, int
-		       *error_code);
+		                  MPI_Datatype datatype, int file_ptr_type,
+		                  ADIO_Offset offset, ADIO_Status *status,
+                                  int *error_code);
+void ADIOI_LUSTRE_ReadStrided(ADIO_File fd, void *buf, int count,
+			      MPI_Datatype datatype, int file_ptr_type,
+			      ADIO_Offset offset, ADIO_Status *status,
+                              int *error_code);
 void ADIOI_LUSTRE_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
 	               int *error_code);
 void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code);
-
 #endif /* End of AD_UNIX_INCLUDE */

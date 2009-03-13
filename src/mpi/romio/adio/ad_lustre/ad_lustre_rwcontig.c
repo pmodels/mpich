@@ -1,9 +1,11 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
-/* 
- *   Copyright (C) 1997 University of Chicago. 
+/*
+ *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  *
  *   Copyright (C) 2007 Oak Ridge National Laboratory
+ *
+ *   Copyright (C) 2008 Sun Microsystems, Lustre group
  */
 
 #define _XOPEN_SOURCE 600
@@ -136,10 +138,23 @@ static void ADIOI_LUSTRE_IOContig(ADIO_File fd, void *buf, int count,
 	    if (err == -1) goto ioerr;
 	}
 	
-	if (io_mode)
+	if (io_mode) {
+#ifdef ADIOI_MPE_LOGGING
+        MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);
+#endif
 	    err = write(fd->fd_sys, buf, len);
-	else 
+#ifdef ADIOI_MPE_LOGGING
+        MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
+#endif
+        } else {
+#ifdef ADIOI_MPE_LOGGING
+        MPE_Log_event(ADIOI_MPE_read_a, 0, NULL);
+#endif
 	    err = read(fd->fd_sys, buf, len);
+#ifdef ADIOI_MPE_LOGGING
+        MPE_Log_event(ADIOI_MPE_read_b, 0, NULL);
+#endif
+        }
     } else {
 	err = ADIOI_LUSTRE_Directio(fd, buf, len, offset, io_mode);
     }
