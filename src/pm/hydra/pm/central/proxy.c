@@ -109,6 +109,8 @@ int main(int argc, char **argv)
             HYDU_Error_printf("spawn process returned error\n");
             goto fn_fail;
         }
+
+        HYDU_FREE(str);
     }
 
     /* Everything is spawned, now wait for I/O */
