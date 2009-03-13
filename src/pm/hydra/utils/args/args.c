@@ -118,18 +118,13 @@ HYD_Status HYDU_Get_base_path(char *execname, char **path)
         *path = MPIU_Strdup("");
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
 HYD_Status HYDU_Chdir(const char *dir)
 {
-    char *home;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

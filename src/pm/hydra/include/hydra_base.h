@@ -36,9 +36,14 @@
 #endif /* HAVE_SYS_TYPES_H */
 
 #include <errno.h>
+
+#if defined HAVE_GETTIMEOFDAY
 /* FIXME: Is time.h available everywhere? We should probably have
  * multiple timer options like MPICH2. */
 #include <time.h>
+#include <sys/time.h>
+#endif /* HAVE_GETTIMEOFDAY */
+
 #include "mpimem.h"
 
 #if defined MAXHOSTNAMELEN

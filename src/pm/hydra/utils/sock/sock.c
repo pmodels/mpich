@@ -135,7 +135,6 @@ HYD_Status HYDU_Sock_connect(const char *host, uint16_t port, int *fd)
 {
     struct sockaddr_in sa;
     struct hostent *ht;
-    int one = 1;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -257,7 +256,7 @@ HYD_Status HYDU_Sock_readline(int fd, char *buf, int maxlen, int *linelen)
 /*
  * HYD_Sock_read: perform a blocking read on a non-blocking socket.
  */
-HYD_Status HYDU_Sock_read(int fd, char *buf, int maxlen, int *count)
+HYD_Status HYDU_Sock_read(int fd, void *buf, int maxlen, int *count)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -314,7 +313,7 @@ HYD_Status HYDU_Sock_writeline(int fd, char *buf, int maxsize)
 }
 
 
-HYD_Status HYDU_Sock_write(int fd, char *buf, int maxsize)
+HYD_Status HYDU_Sock_write(int fd, void *buf, int maxsize)
 {
     int n;
     HYD_Status status = HYD_SUCCESS;

@@ -9,7 +9,6 @@
 
 #include "hydra_base.h"
 
-
 /* Environment utilities */
 HYD_Status HYDU_Env_global_list(HYD_Env_t ** env_list);
 HYD_Env_t *HYDU_Env_dup(HYD_Env_t env);
@@ -146,9 +145,9 @@ HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port);
 HYD_Status HYDU_Sock_connect(const char *host, uint16_t port, int *fd);
 HYD_Status HYDU_Sock_accept(int listen_fd, int *fd);
 HYD_Status HYDU_Sock_readline(int fd, char *buf, int maxlen, int *linelen);
-HYD_Status HYDU_Sock_read(int fd, char *buf, int maxlen, int *count);
+HYD_Status HYDU_Sock_read(int fd, void *buf, int maxlen, int *count);
 HYD_Status HYDU_Sock_writeline(int fd, char *buf, int maxsize);
-HYD_Status HYDU_Sock_write(int fd, char *buf, int maxsize);
+HYD_Status HYDU_Sock_write(int fd, void *buf, int maxsize);
 HYD_Status HYDU_Sock_set_nonblock(int fd);
 HYD_Status HYDU_Sock_set_cloexec(int fd);
 HYD_Status HYDU_Sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *closed);

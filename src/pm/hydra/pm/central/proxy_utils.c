@@ -15,7 +15,6 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
     char **argv = t_argv;
     int arg, i, count;
     struct HYD_Partition_list *partition, *run;
-    HYD_Env_t *found, env;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

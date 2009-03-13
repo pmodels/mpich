@@ -220,7 +220,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                         HYDU_Error_printf("unable to add env to list\n");
                         goto fn_fail;
                     }
-                } while (env_name = strtok(NULL, ","));
+                } while ((env_name = strtok(NULL, ",")));
             }
             continue;
         }

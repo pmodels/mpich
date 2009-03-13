@@ -66,10 +66,6 @@ HYD_Status HYD_BSCU_Wait_for_completion(void)
     if (not_completed)
         status = HYD_INTERNAL_ERROR;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
