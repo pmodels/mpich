@@ -23,6 +23,7 @@ struct HYD_Proxy_params {
     int *pid;
     int *out;
     int *err;
+    int *exit_status;
     int in;
 
     int stdin_buf_offset;
@@ -38,6 +39,5 @@ HYD_Status HYD_Proxy_listen_cb(int fd, HYD_Event_t events);
 HYD_Status HYD_Proxy_stdout_cb(int fd, HYD_Event_t events);
 HYD_Status HYD_Proxy_stderr_cb(int fd, HYD_Event_t events);
 HYD_Status HYD_Proxy_stdin_cb(int fd, HYD_Event_t events);
-void HYD_Proxy_signal_cb(int signal);
 
 #endif /* PROXY_H_INCLUDED */

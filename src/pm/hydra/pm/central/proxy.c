@@ -14,7 +14,7 @@ int HYD_Proxy_listenfd;
 
 int main(int argc, char **argv)
 {
-    int i, j, arg, sockets_open;
+    int i, j, arg, count, pid, ret_status;
     int stdin_fd, timeout;
     char *str, *timeout_str;
     char *client_args[HYD_EXEC_ARGS];
@@ -24,16 +24,6 @@ int main(int argc, char **argv)
     status = HYD_Proxy_get_params(argc, argv);
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("Bad parameters passed to the proxy\n");
-        goto fn_fail;
-    }
-
-    /* We don't know if the bootstrap server will automatically
-     * forward the signals or not. We have our signal handlers for the
-     * case where it does. For when it doesn't, we also open a listen
-     * port where an explicit kill request can be sent */
-    status = HYDU_Set_common_signals(HYD_Proxy_signal_cb);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("signal utils returned error when trying to set signal\n");
         goto fn_fail;
     }
 
@@ -66,6 +56,12 @@ int main(int argc, char **argv)
                 HYD_Proxy_params.proc_count * sizeof(int), status);
     HYDU_MALLOC(HYD_Proxy_params.pid, int *,
                 HYD_Proxy_params.proc_count * sizeof(int), status);
+    HYDU_MALLOC(HYD_Proxy_params.exit_status, int *,
+                HYD_Proxy_params.proc_count * sizeof(int), status);
+
+    /* Initialize the exit status */
+    for (i = 0; i < HYD_Proxy_params.proc_count; i++)
+        HYD_Proxy_params.exit_status[i] = -1;
 
     /* Spawn the processes */
     for (i = 0; i < HYD_Proxy_params.proc_count; i++) {
@@ -171,21 +167,64 @@ int main(int argc, char **argv)
 
         /* Check to see if there's any open read socket left; if there
          * are, we will just wait for more events. */
-        sockets_open = 0;
+        count = 0;
         for (i = 0; i < HYD_Proxy_params.proc_count; i++) {
             if (HYD_Proxy_params.out[i] != -1 || HYD_Proxy_params.err[i] != -1) {
-                sockets_open++;
+                count++;
                 break;
             }
         }
 
         /* We are done */
-        if (!sockets_open)
+        if (!count)
             break;
     }
 
+    /* FIXME: If we did not break out yet, add a small usleep to yield
+     * CPU here. We can not just sleep for the remaining time, as the
+     * timeout value might be large and the application might exit
+     * much quicker. Note that the sched_yield() call is broken on
+     * newer linux kernel versions and should not be used. */
+    /* Once all the sockets are closed, wait for all the processes to
+     * finish. We poll here, but hopefully not for too long. */
+    do {
+        pid = waitpid(-1, &ret_status, WNOHANG);
+
+        /* Find the pid and mark it as complete. */
+        if (pid > 0)
+            for (i = 0; i < HYD_Proxy_params.proc_count; i++)
+                if (HYD_Proxy_params.pid[i] == pid)
+                    HYD_Proxy_params.exit_status[i] = WEXITSTATUS(ret_status);
+
+        /* Check how many more processes are pending */
+        count = 0;
+        for (i = 0; i < HYD_Proxy_params.proc_count; i++) {
+            if (HYD_Proxy_params.exit_status[i] == -1) {
+                count++;
+                break;
+            }
+        }
+
+        if (count == 0)
+            break;
+
+        /* Check if there are any messages from the launcher */
+        status = HYD_DMX_Wait_for_event(0);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("demux engine returned error when waiting for event\n");
+            goto fn_fail;
+        }
+    } while (1);
+
+    ret_status = 0;
+    for (i = 0; i < HYD_Proxy_params.proc_count; i++)
+        ret_status |= HYD_Proxy_params.exit_status[i];
+
   fn_exit:
-    return status;
+    if (status != HYD_SUCCESS)
+        return -1;
+    else
+        return ret_status;
 
   fn_fail:
     goto fn_exit;
