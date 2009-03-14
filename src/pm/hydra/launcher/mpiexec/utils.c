@@ -138,7 +138,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         }
 
         /* Check what debug level is requested */
-        if (!strcmp(*argv, "-v")) {
+        if (!strcmp(*argv, "--verbose")) {
             CHECK_LOCAL_PARAM_START(local_params_started, status);
 
             /* Debug level already set */

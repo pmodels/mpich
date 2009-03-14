@@ -18,7 +18,7 @@ static void usage(void)
     printf("Usage: ./mpiexec [global opts] [exec1 local opts] : [exec2 local opts] : ...\n\n");
 
     printf("Global Options (passed to all executables):\n");
-    printf("\t-v                               [Verbose mode]\n");
+    printf("\t--verbose                        [Verbose mode]\n");
     printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
     printf("\t--proxy-port                     [Port on which proxies can listen]\n");
     printf("\t-genv {name} {value}             [Environment variable name and value]\n");
