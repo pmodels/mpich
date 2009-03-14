@@ -425,10 +425,8 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             proc_params->exec_proc_count = 1;
 
         if (handle.prop == HYD_ENV_PROP_UNSET && proc_params->prop == HYD_ENV_PROP_UNSET) {
-            /* By default we pass no environment as a lot of users
-             * have crazy environments which make passing them as
-             * strings a nightmare. */
-            proc_params->prop = HYD_ENV_PROP_NONE;
+            /* By default we pass the entire environment */
+            proc_params->prop = HYD_ENV_PROP_ALL;
         }
 
         proc_params = proc_params->next;
