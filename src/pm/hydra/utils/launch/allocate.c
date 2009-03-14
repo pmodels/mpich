@@ -34,3 +34,39 @@ HYD_Status HYDU_Allocate_Partition(struct HYD_Partition_list **partition)
   fn_fail:
     goto fn_exit;
 }
+
+
+void HYDU_Free_partition_list(struct HYD_Partition_list *partition)
+{
+    struct HYD_Partition_list *run, *p;
+    int arg;
+
+    HYDU_FUNC_ENTER();
+
+    p = partition;
+    run = p;
+    while (run) {
+        run = p->next;
+
+        if (p->name) {
+            HYDU_FREE(p->name);
+            p->name = NULL;
+        }
+
+        if (p->mapping) {
+            for (arg = 0; p->mapping[arg]; arg++) {
+                HYDU_FREE(p->mapping[arg]);
+                p->mapping[arg] = NULL;
+            }
+            HYDU_FREE(p->mapping);
+            p->mapping = NULL;
+        }
+
+        HYDU_Free_args(p->args);
+        HYDU_FREE(p);
+
+        p = run;
+    }
+
+    HYDU_FUNC_EXIT();
+}

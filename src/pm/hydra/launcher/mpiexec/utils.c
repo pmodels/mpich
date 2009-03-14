@@ -103,11 +103,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
     HYDU_FUNC_ENTER();
 
-    handle.debug = -1;
-    handle.enablex = -1;
-    handle.wdir = NULL;
-    handle.host_file = NULL;
-    handle.proxy_port = -1;
+    HYD_LCHU_Init_params();
 
     status = HYDU_Get_base_path(argv[0], &handle.base_path);
     if (status != HYD_SUCCESS) {
@@ -120,12 +116,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         HYDU_Error_printf("unable to get the global env list\n");
         goto fn_fail;
     }
-    handle.system_env = NULL;
-    handle.user_env = NULL;
-    handle.prop = HYD_ENV_PROP_UNSET;
-    handle.prop_env = NULL;
-
-    handle.proc_params = NULL;
 
     local_params_started = 0;
     while (--argc && ++argv) {

@@ -59,12 +59,15 @@ struct HYD_Partition_list {
     struct HYD_Partition_list *next;
 };
 
+HYD_Status HYDU_Allocate_Partition(struct HYD_Partition_list **partition);
+void HYDU_Free_partition_list(struct HYD_Partition_list *partition);
+
 HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg);
 HYD_Status HYDU_Append_exec(char **exec, char **client_arg);
 HYD_Status HYDU_Append_wdir(char **client_arg, char *wdir);
-HYD_Status HYDU_Allocate_Partition(struct HYD_Partition_list **partition);
-HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid);
 HYD_Status HYDU_Dump_args(char **args);
+void HYDU_Free_args(char **args);
+HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid);
 HYD_Status HYDU_Get_base_path(char *execname, char **path);
 HYD_Status HYDU_Chdir(const char *dir);
 

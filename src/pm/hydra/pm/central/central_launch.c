@@ -144,6 +144,8 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             }
             arg++;
 
+            HYDU_Free_args(path_str);
+
             status = HYDU_String_int_to_str(partition->proc_count, &str);
             if (status != HYD_SUCCESS) {
                 HYDU_Error_printf

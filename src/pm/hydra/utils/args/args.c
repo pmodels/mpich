@@ -102,6 +102,19 @@ HYD_Status HYDU_Dump_args(char **args)
 }
 
 
+void HYDU_Free_args(char **args)
+{
+    int arg;
+
+    HYDU_FUNC_ENTER();
+
+    for (arg = 0; args[arg]; arg++)
+        HYDU_FREE(args[arg]);
+
+    HYDU_FUNC_EXIT();
+}
+
+
 HYD_Status HYDU_Get_base_path(char *execname, char **path)
 {
     char *loc;

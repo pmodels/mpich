@@ -126,11 +126,7 @@ int main(int argc, char **argv)
     }
 
     /* Free the mpiexec params */
-    HYDU_FREE(handle.wdir);
-    HYD_LCHU_Free_env_list();
-    HYD_LCHU_Free_exec();
-    HYD_LCHU_Free_host_list();
-    HYD_LCHU_Free_proc_params();
+    HYD_LCHU_Free_params();
 
   fn_exit:
     HYDU_FUNC_EXIT();

@@ -10,6 +10,108 @@
 
 HYD_Handle handle;
 
+void HYD_LCHU_Init_params()
+{
+    handle.base_path = NULL;
+    handle.proxy_port = -1;
+    handle.bootstrap = NULL;
+
+    handle.debug = -1;
+    handle.enablex = -1;
+    handle.wdir = NULL;
+    handle.host_file = NULL;
+
+    handle.global_env = NULL;
+    handle.system_env = NULL;
+    handle.user_env = NULL;
+    handle.prop = HYD_ENV_PROP_UNSET;
+    handle.prop_env = NULL;
+
+    handle.in = -1;
+    handle.stdin_cb = NULL;
+
+    /* FIXME: Should the timers be initialized? */
+
+    handle.proc_params = NULL;
+    handle.func_depth = 0;
+    handle.stdin_buf_offset = 0;
+    handle.stdin_buf_count = 0;
+}
+
+
+void HYD_LCHU_Free_params()
+{
+    if (handle.base_path) {
+        HYDU_FREE(handle.base_path);
+        handle.base_path = NULL;
+    }
+    if (handle.bootstrap) {
+        HYDU_FREE(handle.bootstrap);
+        handle.bootstrap = NULL;
+    }
+
+    if (handle.wdir) {
+        HYDU_FREE(handle.wdir);
+        handle.wdir = NULL;
+    }
+    if (handle.host_file) {
+        HYDU_FREE(handle.host_file);
+        handle.host_file = NULL;
+    }
+
+    if (handle.global_env) {
+        HYDU_Env_free_list(handle.global_env);
+        handle.global_env = NULL;
+    }
+
+    if (handle.system_env) {
+        HYDU_Env_free_list(handle.system_env);
+        handle.system_env = NULL;
+    }
+
+    if (handle.user_env) {
+        HYDU_Env_free_list(handle.user_env);
+        handle.user_env = NULL;
+    }
+
+    if (handle.prop_env) {
+        HYDU_Env_free_list(handle.prop_env);
+        handle.prop_env = NULL;
+    }
+
+    if (handle.proc_params) {
+        HYD_LCHU_Free_proc_params();
+        handle.proc_params = NULL;
+    }
+}
+
+
+void HYD_LCHU_Free_proc_params()
+{
+    struct HYD_Proc_params *proc_params, *run;
+
+    HYDU_FUNC_ENTER();
+
+    proc_params = handle.proc_params;
+    while (proc_params) {
+        run = proc_params->next;
+        HYDU_Free_args(proc_params->exec);
+        HYDU_Free_partition_list(proc_params->partition);
+        proc_params->partition = NULL;
+
+        HYDU_Env_free_list(proc_params->user_env);
+        proc_params->user_env = NULL;
+        HYDU_Env_free_list(proc_params->prop_env);
+        proc_params->prop_env = NULL;
+
+        HYDU_FREE(proc_params);
+        proc_params = run;
+    }
+
+    HYDU_FUNC_EXIT();
+}
+
+
 HYD_Status HYD_LCHU_Create_host_list(void)
 {
     FILE *fp = NULL;
@@ -217,67 +319,4 @@ HYD_Status HYD_LCHU_Create_env_list(void)
 
   fn_fail:
     goto fn_exit;
-}
-
-
-HYD_Status HYD_LCHU_Free_env_list(void)
-{
-    struct HYD_Proc_params *proc_params;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_Env_free_list(handle.global_env);
-    HYDU_Env_free_list(handle.system_env);
-    HYDU_Env_free_list(handle.user_env);
-    HYDU_Env_free_list(handle.prop_env);
-
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        HYDU_Env_free_list(proc_params->user_env);
-        HYDU_Env_free_list(proc_params->prop_env);
-        proc_params = proc_params->next;
-    }
-
-    HYDU_FUNC_EXIT();
-    return status;
-}
-
-
-HYD_Status HYD_LCHU_Free_exec(void)
-{
-    struct HYD_Proc_params *proc_params;
-    int i;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        for (i = 0; proc_params->exec[i]; i++)
-            HYDU_FREE(proc_params->exec[i]);
-        proc_params = proc_params->next;
-    }
-
-    HYDU_FUNC_EXIT();
-    return status;
-}
-
-
-HYD_Status HYD_LCHU_Free_proc_params(void)
-{
-    struct HYD_Proc_params *proc_params, *run;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        run = proc_params->next;
-        HYDU_FREE(proc_params);
-        proc_params = run;
-    }
-
-    HYDU_FUNC_EXIT();
-    return status;
 }
