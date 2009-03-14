@@ -388,7 +388,7 @@ HYD_Status HYDU_Sock_set_cloexec(int fd)
 
 HYD_Status HYDU_Sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *closed)
 {
-    int count;
+    int count, written, ret;
     char buf[HYD_TMPBUF_SIZE];
     HYD_Status status = HYD_SUCCESS;
 
@@ -414,11 +414,16 @@ HYD_Status HYDU_Sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *c
         goto fn_exit;
     }
 
-    count = write(stdout_fd, buf, count);
-    if (count < 0) {
-        HYDU_Error_printf("socket write error on fd: %d (errno: %d)\n", fd, errno);
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
+    written = 0;
+    while (written != count) {
+        ret = write(stdout_fd, buf + written, count - written);
+        if (ret < 0 && errno != EAGAIN) {
+            HYDU_Error_printf("socket write error on fd: %d (errno: %d)\n", stdout_fd, errno);
+            status = HYD_SOCK_ERROR;
+            goto fn_fail;
+        }
+        if (ret > 0)
+            written += ret;
     }
 
   fn_exit:
@@ -470,7 +475,7 @@ HYD_Status HYDU_Sock_stdin_cb(int fd, HYD_Event_t events, char *buf, int *buf_co
                 break;
             }
 
-            HYDU_Error_printf("socket read error on fd: %d (errno: %d)\n", fd, errno);
+            HYDU_Error_printf("socket read error on fd: %d (errno: %d)\n", 0, errno);
             status = HYD_SOCK_ERROR;
             goto fn_fail;
         }
