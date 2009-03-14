@@ -348,6 +348,12 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             continue;
         }
 
+        if (*argv[0] == '-') {
+            HYDU_Error_printf("unrecognized argument\n");
+            status = HYD_INTERNAL_ERROR;
+            goto fn_fail;
+        }
+
         /* This is to catch everything that fell through */
         local_params_started = 1;
 
