@@ -135,7 +135,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
                 path_str[i++] = MPIU_Strdup("/");
             }
             path_str[i++] = MPIU_Strdup(handle.base_path);
-            path_str[i++] = MPIU_Strdup("proxy");
+            path_str[i++] = MPIU_Strdup("hydproxy");
             path_str[i] = NULL;
             status = HYDU_String_alloc_and_join(path_str, &partition->args[arg]);
             if (status != HYD_SUCCESS) {

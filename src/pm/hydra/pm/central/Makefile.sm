@@ -4,9 +4,7 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-HYDRA_LIB_PATH = ../../lib
-
-libhydra_a_DIR = ${HYDRA_LIB_PATH}
+libhydra_a_DIR = ../../lib
 libhydra_a_SOURCES = central_launch.c central_finalize.c central_cb.c
 INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../../../include \
@@ -18,10 +16,10 @@ INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../bootstrap/include \
 	-I${abs_srcdir}/../../demux
 
-proxy_SOURCES = proxy.c proxy_utils.c proxy_cb.c
-proxy_LDADD = -L../../lib -lhydra -L../../../util -lmpiexec -L../../../../../lib -lmpich
-proxy_DEPADD = ../../../util/libmpiexec.a
-install_BIN = proxy
+hydproxy_SOURCES = proxy.c proxy_utils.c proxy_cb.c
+hydproxy_LDADD = -L../../lib -lhydra -L../../../util -lmpiexec -L../../../../../lib -lmpich
+hydproxy_DEPADD = ../../../util/libmpiexec.a
+install_BIN = hydproxy
 
 # Use the mpich2-build-install target to include mpiexec in the build bin
 # directory (all pm's require these targets)
