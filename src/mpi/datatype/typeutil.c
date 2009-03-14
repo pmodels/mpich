@@ -287,7 +287,7 @@ static int MPIR_DatatypeAttrFinalizeCallback(void *dummy ATTRIBUTE((unused)) )
 	dtype = &MPID_Datatype_builtin[i];
 	if (dtype && MPIR_Process.attr_free && dtype->attributes) {
 	    mpi_errno = MPIR_Process.attr_free( dtype->handle, 
-						dtype->attributes );
+						&dtype->attributes );
 	    /* During finalize, we ignore error returns from the free */
 	}
     }

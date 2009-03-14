@@ -227,7 +227,6 @@ int MPIR_Attr_delete_list( int handle, MPID_Attribute **attr )
 {
     MPID_Attribute *p, *new_p;
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr;
 
     p = *attr;
     while (p) {
