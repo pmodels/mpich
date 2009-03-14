@@ -1840,14 +1840,36 @@ sub SaveSrcNames {
 sub FindPgmSrcType {
     $pgm = $_[0];
     $pgmsrc = $_[1];
+    # Also keep track of the types seen
+    my %exttypes;
+    my $firstext = "";
     foreach $file (split(/\s+/,$pgmsrc)) {
 	($name,$ext) = split('\.',$file);
 	if ($name eq $pgm) {
 	    $pgmlinktypes{$ext} = 1;
 	    return $ext;
 	}
+	else {
+	    $exttypes{$ext} = 1;
+	    if ($firstext eq "") { $firstext = $ext; }
+	}
     }
-    return "c";
+    if (defined($exttypes{"c"})) {
+	$pgmlinktypes{"c"} = 1;
+	return "c";
+    }
+    elsif (defined($exttypes{"cxx"})) {
+	$pgmlinktypes{"cxx"} = 1;
+	return "cxx";
+    }
+    elsif (defined($exttypes{"f90"})) {
+	$pgmlinktypes{"f90"} = 1;
+	return "f90";
+    }
+    else {
+	$pgmlinktypes{$firstext} = 1;
+	return $firstext;
+    }
 }
 
 sub ClearVars {
