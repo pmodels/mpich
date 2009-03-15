@@ -8,6 +8,7 @@
 #include "hydra_utils.h"
 #include "mpiexec.h"
 #include "lchu.h"
+#include "mpi.h"
 
 #define HYDRA_MAX_PATH 4096
 
@@ -15,7 +16,7 @@ HYD_Handle handle;
 
 #define CHECK_LOCAL_PARAM_START(start, status) \
     { \
-	if ((start)) {			 \
+	if ((start)) {                          \
 	    (status) = HYD_INTERNAL_ERROR;	\
 	    goto fn_fail; \
 	} \
@@ -91,6 +92,14 @@ static HYD_Status get_current_proc_params(struct HYD_Proc_params **params)
 }
 
 
+static void show_version(void)
+{
+    printf("MPICH2 Version: %s\n", MPICH2_VERSION);
+    printf("Process Manager: HYDRA\n");
+    printf("Boot-strap servers available: %s\n", HYDRA_BSS_NAMES);
+}
+
+
 HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 {
     int argc = t_argc, i;
@@ -139,6 +148,20 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                 goto fn_fail;
             }
             handle.debug = 1;
+
+            continue;
+        }
+
+        /* Version information */
+        if (!strcmp(*argv, "--version")) {
+            CHECK_LOCAL_PARAM_START(local_params_started, status);
+
+            /* Just show the version information and continue. This
+             * option can be used in conjunction with other
+             * options. */
+            show_version();
+            status = HYD_GRACEFUL_ABORT;
+            goto fn_fail;
 
             continue;
         }

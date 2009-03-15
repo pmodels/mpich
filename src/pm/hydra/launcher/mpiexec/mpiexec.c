@@ -54,9 +54,12 @@ int main(int argc, char **argv)
     HYDU_FUNC_ENTER();
 
     status = HYD_LCHI_Get_parameters(argc, argv);
-    if (status != HYD_SUCCESS) {
+    if (status == HYD_GRACEFUL_ABORT) {
+        exit(0);
+    }
+    else if (status != HYD_SUCCESS) {
         usage();
-        exit(-1);
+        goto fn_fail;
     }
 
     if (handle.debug) {
@@ -130,7 +133,9 @@ int main(int argc, char **argv)
 
   fn_exit:
     HYDU_FUNC_EXIT();
-    if (status != HYD_SUCCESS)
+    if (status == HYD_GRACEFUL_ABORT)
+        return 0;
+    else if (status != HYD_SUCCESS)
         return -1;
     else
         return exit_status;

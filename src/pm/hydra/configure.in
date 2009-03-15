@@ -69,6 +69,7 @@ AC_ARG_WITH(hydra-bss, [  --with-hydra-bss           Boot-strap Server],
 AC_MSG_CHECKING(boot-strap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
+AC_DEFINE_UNQUOTED(HYDRA_BSS_NAMES,"$hydra_bss_names",[Definition of enabled bootstrap servers])
 AC_SUBST(hydra_bss_names)
 
 dnl Check what process manager we should use

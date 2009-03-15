@@ -60,6 +60,7 @@ extern char **environ;
 
 typedef enum {
     HYD_SUCCESS = 0,
+    HYD_GRACEFUL_ABORT,
     HYD_NO_MEM,
     HYD_SOCK_ERROR,
     HYD_INVALID_PARAM,
