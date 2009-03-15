@@ -164,6 +164,22 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             goto fn_fail;
         }
 
+        /* Bootstrap server */
+        if (!strcmp(*argv, "--bootstrap")) {
+            CHECK_LOCAL_PARAM_START(local_params_started, status);
+            CHECK_NEXT_ARG_VALID(status);
+
+            if (handle.bootstrap != NULL) {
+                HYDU_Error_printf("Duplicate bootstrap setting; previously set to %s\n",
+                                  handle.bootstrap);
+                status = HYD_INTERNAL_ERROR;
+                goto fn_fail;
+            }
+
+            handle.bootstrap = MPIU_Strdup(*argv);
+            continue;
+        }
+
         /* Check if X forwarding is explicitly set */
         if (!strcmp(*argv, "--enable-x") || !strcmp(*argv, "--disable-x")) {
             CHECK_LOCAL_PARAM_START(local_params_started, status);
@@ -418,6 +434,9 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             goto fn_fail;
         }
     }
+
+    if (handle.bootstrap == NULL)
+        handle.bootstrap = MPIU_Strdup(HYDRA_DEFAULT_BSS);
 
     /*
      * We use the following priority order to specify the host file:

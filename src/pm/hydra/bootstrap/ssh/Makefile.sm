@@ -7,7 +7,7 @@
 HYDRA_LIB_PATH = ../../lib
 
 libhydra_a_DIR = ${HYDRA_LIB_PATH}
-libhydra_a_SOURCES = ssh_launch.c ssh_wait.c ssh_finalize.c ssh_usize.c
+libhydra_a_SOURCES = ssh_launch.c ssh_init.c
 INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../../../include \
 	-I../../include \

@@ -11,7 +11,7 @@
 
 HYD_Handle handle;
 
-HYD_Status HYD_BSCI_Launch_procs(void)
+HYD_Status HYD_BSCD_fork_launch_procs(void)
 {
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;

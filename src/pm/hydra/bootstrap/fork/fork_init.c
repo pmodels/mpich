@@ -4,17 +4,24 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
-#include "hydra_utils.h"
+#include "hydra_base.h"
 #include "bsci.h"
-#include "bscu.h"
+#include "fork.h"
 
-HYD_Status HYD_BSCI_Finalize(void)
+struct HYD_BSCI_fns HYD_BSCI_fns;
+
+HYD_Status HYD_BSCI_fork_init(void)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
+    HYD_BSCI_fns.launch_procs = HYD_BSCD_fork_launch_procs;
+
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
+
+  fn_fail:
+    goto fn_exit;
 }

@@ -219,7 +219,13 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 
     /* Initialize the bootstrap server and ask it to launch the
      * processes. */
-    status = HYD_BSCI_Launch_procs();
+    status = HYD_BSCI_init(handle.bootstrap);
+    if (status != HYD_SUCCESS) {
+        HYDU_Error_printf("bootstrap server initialization failed\n");
+        goto fn_fail;
+    }
+
+    status = HYD_BSCI_launch_procs();
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("bootstrap server returned error launching processes\n");
         goto fn_fail;
@@ -240,7 +246,7 @@ HYD_Status HYD_PMCI_Wait_for_completion(void)
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_BSCI_Wait_for_completion();
+    status = HYD_BSCI_wait_for_completion();
     if (status != HYD_SUCCESS) {
         status = HYD_PMCD_Central_cleanup();
         if (status != HYD_SUCCESS) {

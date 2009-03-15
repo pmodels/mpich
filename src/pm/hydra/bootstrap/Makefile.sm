@@ -5,4 +5,4 @@
 #
 
 SUBDIRS_hydra_bss_names = ssh fork
-SUBDIRS = utils @hydra_bss_names@ .
+SUBDIRS = utils src @hydra_bss_names@ .

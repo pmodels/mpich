@@ -65,7 +65,7 @@ fi
 dnl Check what boot-strap server we should use
 AC_ARG_WITH(hydra-bss, [  --with-hydra-bss           Boot-strap Server],
 		    [ hydra_bss=$withval ],
-		    [ hydra_bss=ssh ])
+		    [ hydra_bss="ssh,fork" ])
 AC_MSG_CHECKING(boot-strap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -266,8 +266,12 @@ dnl Place holder macro for finalization
 PAC_SUBCONFIG_FINALIZE()
 
 for hydra_bss_name in ${hydra_bss_names}; do
+    if test -z "${hydra_default_bss}" ; then
+       hydra_default_bss=$hydra_bss_name
+    fi
     hydra_bss_makefiles="$hydra_bss_makefiles bootstrap/${hydra_bss_name}/Makefile"
 done
+AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BSS,"$hydra_default_bss",[Default bootstrap server])
 
 dnl Final output
 AC_OUTPUT(Makefile \
@@ -292,5 +296,6 @@ AC_OUTPUT(Makefile \
 	demux/Makefile \
 	bootstrap/Makefile \
 	bootstrap/utils/Makefile \
+	bootstrap/src/Makefile \
 	${hydra_bss_makefiles}
 )

@@ -4,17 +4,21 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
-#include "hydra_utils.h"
+#include "hydra_base.h"
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCI_Finalize(void)
+struct HYD_BSCI_fns HYD_BSCI_fns;
+
+HYD_Status HYD_BSCI_get_usize(int *size)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
+    status = HYD_BSCI_fns.get_usize(size);
+
     HYDU_FUNC_EXIT();
+
     return status;
 }

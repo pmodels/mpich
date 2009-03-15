@@ -36,7 +36,7 @@ HYD_Status HYD_PMCI_Finalize(void)
         goto fn_fail;
     }
 
-    status = HYD_BSCI_Finalize();
+    status = HYD_BSCI_finalize();
     if (status != HYD_SUCCESS) {
         HYDU_Error_printf("unable to finalize the bootstrap server\n");
         goto fn_fail;

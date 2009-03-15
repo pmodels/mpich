@@ -4,13 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
-#include "bsci.h"
+#include "hydra_base.h"
+#include "bscu.h"
 
-
-/* FIXME: This should probably be added as a default function allowing
- * the bootstrap server to override if needed. */
-HYD_Status HYD_BSCI_Get_universe_size(int *size)
+HYD_Status HYD_BSCU_get_usize(int *size)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -19,5 +16,6 @@ HYD_Status HYD_BSCI_Get_universe_size(int *size)
     *size = -1;
 
     HYDU_FUNC_EXIT();
+
     return status;
 }

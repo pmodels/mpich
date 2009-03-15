@@ -6,18 +6,17 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
-#include "bsci.h"
 #include "bscu.h"
 
 HYD_Handle handle;
 
 /*
- * HYD_BSCU_Wait_for_completion: We first wait for communication
+ * HYD_BSCU_wait_for_completion: We first wait for communication
  * events from the available processes till all connections have
  * closed. In the meanwhile, the SIGCHLD handler keeps track of all
  * the terminated processes.
  */
-HYD_Status HYD_BSCU_Wait_for_completion(void)
+HYD_Status HYD_BSCU_wait_for_completion(void)
 {
     int pid, ret_status, not_completed;
     struct HYD_Proc_params *proc_params;

@@ -12,12 +12,12 @@
 HYD_Handle handle;
 
 /*
- * HYD_BSCI_Launch_procs: For each process, we create an executable
- * which reads like "ssh exec args" and the list of environment
- * variables. We fork a worker process that sets the environment and
- * execvp's this executable.
+ * HYD_BSCD_ssh_launch_procs: For each process, we create an
+ * executable which reads like "ssh exec args" and the list of
+ * environment variables. We fork a worker process that sets the
+ * environment and execvp's this executable.
  */
-HYD_Status HYD_BSCI_Launch_procs(void)
+HYD_Status HYD_BSCD_ssh_launch_procs(void)
 {
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;

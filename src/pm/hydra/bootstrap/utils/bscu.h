@@ -7,10 +7,10 @@
 #ifndef BSCU_H_INCLUDED
 #define BSCU_H_INCLUDED
 
-#include "hydra.h"
-#include "hydra_utils.h"
-#include "bsci.h"
+#include "hydra_base.h"
 
-HYD_Status HYD_BSCU_Wait_for_completion(void);
+HYD_Status HYD_BSCU_finalize(void);
+HYD_Status HYD_BSCU_get_usize(int *size);
+HYD_Status HYD_BSCU_wait_for_completion(void);
 
-#endif /* BSCI_H_INCLUDED */
+#endif /* BSCU_H_INCLUDED */
