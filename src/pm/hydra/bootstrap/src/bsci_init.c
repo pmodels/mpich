@@ -10,7 +10,7 @@
 
 struct HYD_BSCI_fns HYD_BSCI_fns;
 
-HYD_Status HYD_BSCI_init(char * bootstrap)
+HYD_Status HYD_BSCI_init(char *bootstrap)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -44,10 +44,10 @@ HYD_Status HYD_BSCI_init(char * bootstrap)
     if (HYD_BSCI_fns.finalize == NULL)
         HYD_BSCI_fns.finalize = HYD_BSCU_finalize;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

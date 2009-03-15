@@ -18,7 +18,7 @@ struct HYD_BSCI_fns {
 
 extern struct HYD_BSCI_fns HYD_BSCI_fns;
 
-HYD_Status HYD_BSCI_init(char * bootstrap);
+HYD_Status HYD_BSCI_init(char *bootstrap);
 HYD_Status HYD_BSCI_launch_procs(void);
 HYD_Status HYD_BSCI_finalize(void);
 HYD_Status HYD_BSCI_get_usize(int *size);

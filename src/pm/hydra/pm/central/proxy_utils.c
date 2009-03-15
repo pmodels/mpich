@@ -93,7 +93,7 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
                  * where they are not removed, we do it ourselves. */
                 if (*str == '"') {
                     str++;
-                    str[strlen(str)-1] = 0;
+                    str[strlen(str) - 1] = 0;
                 }
                 HYDU_Env_putenv(str);
             }
