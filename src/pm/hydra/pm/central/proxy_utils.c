@@ -12,7 +12,7 @@ struct HYD_Proxy_params HYD_Proxy_params;
 HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
 {
     int argc = t_argc;
-    char **argv = t_argv;
+    char **argv = t_argv, *str;
     int arg, i, count;
     struct HYD_Partition_list *partition, *run;
     HYD_Status status = HYD_SUCCESS;
@@ -86,7 +86,16 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
             count = atoi(*argv);
             for (i = 0; i < count; i++) {
                 argv++;
-                HYDU_Env_putenv(*argv);
+                str = *argv;
+
+                /* Some bootstrap servers remove the quotes that we
+                 * added, while some others do not. For the cases
+                 * where they are not removed, we do it ourselves. */
+                if (*str == '"') {
+                    str++;
+                    str[strlen(str)-1] = 0;
+                }
+                HYDU_Env_putenv(str);
             }
             continue;
         }
