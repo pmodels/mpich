@@ -162,8 +162,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             show_version();
             status = HYD_GRACEFUL_ABORT;
             goto fn_fail;
-
-            continue;
         }
 
         /* Check if X forwarding is explicitly set */
