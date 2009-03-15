@@ -12,6 +12,7 @@
 
 int delete_fn(MPI_Comm comm, int keyval, void *attr, void *extra) {
     MPI_Keyval_free(&keyval);
+    return MPI_SUCCESS;
 }
 
 int main (int argc, char **argv)
