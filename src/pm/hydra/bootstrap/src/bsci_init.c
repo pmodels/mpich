@@ -22,9 +22,9 @@ HYD_Status HYD_BSCI_init(char * bootstrap)
     HYD_BSCI_fns.finalize = NULL;
 
     if (!strcmp(bootstrap, "ssh"))
-        HYD_BSCI_ssh_init();
+        status = HYD_BSCI_ssh_init();
     else if (!strcmp(bootstrap, "fork"))
-        HYD_BSCI_fork_init();
+        status = HYD_BSCI_fork_init();
     else {
         HYDU_Error_printf("unrecognized bootstrap server: %s\n", bootstrap);
         status = HYD_INTERNAL_ERROR;

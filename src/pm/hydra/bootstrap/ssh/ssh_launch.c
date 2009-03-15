@@ -8,6 +8,7 @@
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
+#include "ssh.h"
 
 HYD_Handle handle;
 

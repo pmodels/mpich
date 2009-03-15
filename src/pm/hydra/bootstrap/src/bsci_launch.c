@@ -17,10 +17,7 @@ HYD_Status HYD_BSCI_launch_procs(void)
 
     status = HYD_BSCI_fns.launch_procs();
 
-  fn_exit:
     HYDU_FUNC_EXIT();
-    return status;
 
-  fn_fail:
-    goto fn_exit;
+    return status;
 }
