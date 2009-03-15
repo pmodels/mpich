@@ -6,7 +6,6 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
-#include "bsci.h"
 #include "bscu.h"
 #include "fork.h"
 

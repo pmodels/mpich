@@ -4,8 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
-#include "hydra_utils.h"
+#include "hydra_base.h"
 #include "bsci.h"
 #include "ssh.h"
 
