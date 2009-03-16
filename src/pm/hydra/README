@@ -69,6 +69,9 @@ can pick these through the mpiexec option --bootstrap:
 
  $ mpiexec --bootstrap fork -f hosts -n 4 ./app
 
+This can also be controlled by using the HYDRA_BOOTSTRAP environment
+variable.
+
 The default bootstrap server is ssh.
 
 

@@ -435,6 +435,14 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         }
     }
 
+    /*
+     * We use the following priority order to specify the bootstrap server:
+     *    1. Specified to mpiexec using --bootstrap
+     *    2. Specified through the environment HYDRA_BOOTSTRAP
+     *    3. If nothing is given, we use the default bootstrap server
+     */
+    if (handle.bootstrap == NULL && getenv("HYDRA_BOOTSTRAP"))
+        handle.bootstrap = MPIU_Strdup(getenv("HYDRA_BOOTSTRAP"));
     if (handle.bootstrap == NULL)
         handle.bootstrap = MPIU_Strdup(HYDRA_DEFAULT_BSS);
 
