@@ -34,6 +34,37 @@ HYD_Status HYDU_String_alloc_and_join(char **strlist, char **strjoin)
 }
 
 
+HYD_Status HYDU_String_break(char *str, char **str1, char **str2)
+{
+    int i;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (str == NULL) {
+        str = HYD_INTERNAL_ERROR;
+        goto fn_fail;
+    }
+
+    *str1 = MPIU_Strdup(str);
+    for (i = 0; (*str1)[i] && ((*str1)[i] != '='); i++);
+
+    if ((*str1)[i] == 0) /* End of the string */
+        *str2 = NULL;
+    else {
+        *str2 = &((*str1)[i+1]);
+        (*str1)[i] = 0;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
 HYD_Status HYDU_String_int_to_str(int x, char **str)
 {
     int len = 1, max = 10, y;

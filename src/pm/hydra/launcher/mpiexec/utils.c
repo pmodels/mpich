@@ -14,7 +14,7 @@
 
 HYD_Handle handle;
 
-#define CHECK_NEXT_ARG_VALID(status) \
+#define CHECK_NEXT_ARG_VALID(status)            \
     { \
 	--argc; ++argv; \
 	if (!argc || !argv) { \
@@ -96,7 +96,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 {
     int argc = t_argc, i;
     char **argv = t_argv;
-    char *env_name, *env_value;
+    char *env_name, *env_value, *str1, *str2;
     HYD_Env_t *env;
     struct HYD_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
@@ -119,15 +119,21 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
     while (--argc && ++argv) {
 
+        status = HYDU_String_break(*argv, &str1, &str2);
+        if (status != HYD_SUCCESS) {
+            HYDU_Error_printf("string break returned error\n");
+            goto fn_fail;
+        }
+
         /* Help options */
-        if (!strcmp(*argv, "-h") || !strcmp(*argv, "--help") || !strcmp(*argv, "-help")) {
+        if (!strcmp(str1, "-h") || !strcmp(str1, "--help") || !strcmp(str1, "-help")) {
             /* Just return from this function; the main code will show the usage */
             status = HYD_INTERNAL_ERROR;
             goto fn_fail;
         }
 
         /* Check what debug level is requested */
-        if (!strcmp(*argv, "--verbose")) {
+        if (!strcmp(str1, "--verbose")) {
             /* Debug level already set */
             if (handle.debug != -1) {
                 HYDU_Error_printf
@@ -141,7 +147,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         }
 
         /* Version information */
-        if (!strcmp(*argv, "--version")) {
+        if (!strcmp(str1, "--version")) {
             /* Just show the version information and continue. This
              * option can be used in conjunction with other
              * options. */
@@ -151,8 +157,11 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         }
 
         /* Bootstrap server */
-        if (!strcmp(*argv, "--bootstrap")) {
-            CHECK_NEXT_ARG_VALID(status);
+        if (!strcmp(str1, "--bootstrap")) {
+            if (!str2) {
+                CHECK_NEXT_ARG_VALID(status);
+                str2 = *argv;
+            }
 
             if (handle.bootstrap != NULL) {
                 HYDU_Error_printf("Duplicate bootstrap setting; previously set to %s\n",
@@ -161,12 +170,12 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                 goto fn_fail;
             }
 
-            handle.bootstrap = MPIU_Strdup(*argv);
+            handle.bootstrap = MPIU_Strdup(str2);
             continue;
         }
 
         /* Check if X forwarding is explicitly set */
-        if (!strcmp(*argv, "--enable-x") || !strcmp(*argv, "--disable-x")) {
+        if (!strcmp(str1, "--enable-x") || !strcmp(str1, "--disable-x")) {
             /* X forwarding already enabled or disabled */
             if (handle.enablex != -1) {
                 HYDU_Error_printf
@@ -175,13 +184,16 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                 goto fn_fail;
             }
 
-            handle.enablex = !strcmp(*argv, "--enable-x");
+            handle.enablex = !strcmp(str1, "--enable-x");
             continue;
         }
 
         /* Check if the proxy port is set */
-        if (!strcmp(*argv, "--proxy-port")) {
-            CHECK_NEXT_ARG_VALID(status);
+        if (!strcmp(str1, "--proxy-port")) {
+            if (!str2) {
+                CHECK_NEXT_ARG_VALID(status);
+                str2 = *argv;
+            }
 
             if (handle.proxy_port != -1) {
                 HYDU_Error_printf("Duplicate proxy port setting; previously set to %d\n",
@@ -190,13 +202,13 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                 goto fn_fail;
             }
 
-            handle.proxy_port = atoi(*argv);
+            handle.proxy_port = atoi(str2);
             continue;
         }
 
         /* Check what all environment variables need to be propagated */
-        if (!strcmp(*argv, "-genvall") || !strcmp(*argv, "-genvnone") ||
-            !strcmp(*argv, "-genvlist")) {
+        if (!strcmp(str1, "-genvall") || !strcmp(str1, "-genvnone") ||
+            !strcmp(str1, "-genvlist")) {
             /* propagation already set */
             if (handle.prop != HYD_ENV_PROP_UNSET) {
                 HYDU_Error_printf
@@ -205,16 +217,21 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                 goto fn_fail;
             }
 
-            if (!strcmp(*argv, "-genvall")) {
+            if (!strcmp(str1, "-genvall")) {
                 handle.prop = HYD_ENV_PROP_ALL;
             }
-            else if (!strcmp(*argv, "-genvnone")) {
+            else if (!strcmp(str1, "-genvnone")) {
                 handle.prop = HYD_ENV_PROP_NONE;
             }
-            else if (!strcmp(*argv, "-genvlist")) {
+            else if (!strcmp(str1, "-genvlist")) {
                 handle.prop = HYD_ENV_PROP_LIST;
-                CHECK_NEXT_ARG_VALID(status);
-                env_name = strtok(*argv, ",");
+
+                if (!str2) {
+                    CHECK_NEXT_ARG_VALID(status);
+                    str2 = *argv;
+                }
+
+                env_name = strtok(str2, ",");
                 do {
                     status = HYDU_Env_create(&env, env_name, NULL);
                     if (status != HYD_SUCCESS) {
@@ -233,8 +250,8 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         }
 
         /* Check what all environment variables need to be propagated */
-        if (!strcmp(*argv, "-envall") || !strcmp(*argv, "-envnone") ||
-            !strcmp(*argv, "-envlist")) {
+        if (!strcmp(str1, "-envall") || !strcmp(str1, "-envnone") ||
+            !strcmp(str1, "-envlist")) {
             status = get_current_proc_params(&proc_params);
             if (status != HYD_SUCCESS) {
                 HYDU_Error_printf("get_current_proc_params returned error\n");
@@ -250,17 +267,22 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                 goto fn_fail;
             }
 
-            if (!strcmp(*argv, "-envall")) {
+            if (!strcmp(str1, "-envall")) {
                 proc_params->prop = HYD_ENV_PROP_ALL;
             }
-            else if (!strcmp(*argv, "-envnone")) {
+            else if (!strcmp(str1, "-envnone")) {
                 proc_params->prop = HYD_ENV_PROP_NONE;
             }
-            else if (!strcmp(*argv, "-envlist")) {
+            else if (!strcmp(str1, "-envlist")) {
                 proc_params->prop = HYD_ENV_PROP_LIST;
-                CHECK_NEXT_ARG_VALID(status);
+
+                if (!str2) {
+                    CHECK_NEXT_ARG_VALID(status);
+                    str2 = *argv;
+                }
+
                 do {
-                    env_name = strtok(*argv, ",");
+                    env_name = strtok(str2, ",");
                     if (env_name == NULL)
                         break;
 
@@ -281,9 +303,12 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         }
 
         /* Add additional environment variables */
-        if (!strcmp(*argv, "-genv") || !strcmp(*argv, "-env")) {
-            CHECK_NEXT_ARG_VALID(status);
-            env_name = MPIU_Strdup(*argv);
+        if (!strcmp(str1, "-genv") || !strcmp(str1, "-env")) {
+            if (!str2) {
+                CHECK_NEXT_ARG_VALID(status);
+                str2 = *argv;
+            }
+            env_name = MPIU_Strdup(str2);
 
             CHECK_NEXT_ARG_VALID(status);
             env_value = MPIU_Strdup(*argv);
@@ -294,7 +319,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                 goto fn_fail;
             }
 
-            if (!strcmp(*argv, "-genv"))
+            if (!strcmp(str1, "-genv"))
                 HYDU_Env_add_to_list(&handle.user_env, *env);
             else {
                 status = get_current_proc_params(&proc_params);
@@ -310,14 +335,20 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             continue;
         }
 
-        if (!strcmp(*argv, "-wdir")) {
-            CHECK_NEXT_ARG_VALID(status);
-            handle.wdir = MPIU_Strdup(*argv);
+        if (!strcmp(str1, "-wdir")) {
+            if (!str2) {
+                CHECK_NEXT_ARG_VALID(status);
+                str2 = *argv;
+            }
+            handle.wdir = MPIU_Strdup(str2);
             continue;
         }
 
-        if (!strcmp(*argv, "-n") || !strcmp(*argv, "-np")) {
-            CHECK_NEXT_ARG_VALID(status);
+        if (!strcmp(str1, "-n") || !strcmp(str1, "-np")) {
+            if (!str2) {
+                CHECK_NEXT_ARG_VALID(status);
+                str2 = *argv;
+            }
 
             status = get_current_proc_params(&proc_params);
             if (status != HYD_SUCCESS) {
@@ -334,14 +365,16 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                 goto fn_fail;
             }
 
-            proc_params->exec_proc_count = atoi(*argv);
-
+            proc_params->exec_proc_count = atoi(str2);
             continue;
         }
 
-        if (!strcmp(*argv, "-f")) {
-            CHECK_NEXT_ARG_VALID(status);
-            handle.host_file = MPIU_Strdup(*argv);
+        if (!strcmp(str1, "-f")) {
+            if (!str2) {
+                CHECK_NEXT_ARG_VALID(status);
+                str2 = *argv;
+            }
+            handle.host_file = MPIU_Strdup(str2);
             continue;
         }
 

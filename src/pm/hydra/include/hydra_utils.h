@@ -101,6 +101,7 @@ HYD_Status HYDU_Chdir(const char *dir);
     }
 
 HYD_Status HYDU_String_alloc_and_join(char **strlist, char **strjoin);
+HYD_Status HYDU_String_break(char *str, char **str1, char **str2);
 HYD_Status HYDU_String_int_to_str(int x, char **str);
 
 
