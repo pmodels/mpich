@@ -95,3 +95,17 @@ HYD_Status HYDU_String_int_to_str(int x, char **str)
   fn_fail:
     goto fn_exit;
 }
+
+
+char *HYDU_String_error(int error)
+{
+    char *str;
+
+#if defined HAVE_STRERROR
+    str = strerror(error);
+#else
+    str = MPIU_Strdup("errno: %d", error);
+#endif /* HAVE_STRERROR */
+
+    return str;
+}

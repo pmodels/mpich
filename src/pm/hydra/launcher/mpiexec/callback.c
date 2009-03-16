@@ -20,13 +20,13 @@ HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events)
 
     /* Write output to fd 1 */
     status = HYDU_Sock_stdout_cb(fd, events, 1, &closed);
-    HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on fd %d (errno: %d)\n",
-                         fd, errno);
+    HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on fd %d: %s\n",
+                         fd, HYDU_String_error(errno));
 
     if (closed) {
         status = HYD_CSI_Close_fd(fd);
-        HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (errno: %d)\n",
-                             fd, errno);
+        HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d: %s\n",
+                             fd, HYDU_String_error(errno));
         goto fn_exit;
     }
 
@@ -48,13 +48,13 @@ HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events)
 
     /* Write output to fd 2 */
     status = HYDU_Sock_stdout_cb(fd, events, 2, &closed);
-    HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on %d (errno: %d)\n",
-                         fd, errno)
+    HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on %d (%s)\n",
+                         fd, HYDU_String_error(errno))
 
     if (closed) {
         status = HYD_CSI_Close_fd(fd);
-        HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (errno: %d)\n",
-                             fd, errno);
+        HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (%s)\n",
+                             fd, HYDU_String_error(errno));
         goto fn_exit;
     }
 

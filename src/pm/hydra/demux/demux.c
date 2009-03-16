@@ -139,7 +139,8 @@ HYD_Status HYD_DMX_Wait_for_event(int time)
                 status = HYD_SUCCESS;
                 goto fn_exit;
             }
-            HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "poll error (errno: %d)\n", errno);
+            HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "poll error (%s)\n",
+                                 HYDU_String_error(errno));
         }
         break;
     }

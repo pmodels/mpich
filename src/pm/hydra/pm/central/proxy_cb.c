@@ -34,8 +34,8 @@ HYD_Status HYD_Proxy_listen_cb(int fd, HYD_Event_t events)
     else {      /* We got a command from mpiexec */
         count = read(fd, &cmd, HYD_TMPBUF_SIZE);
         if (count < 0) {
-            HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR, "read error on %d (errno: %d)\n",
-                                 fd, errno);
+            HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR, "read error on %d (%s)\n",
+                                 fd, HYDU_String_error(errno));
         }
         else if (count == 0) {
             /* The connection has closed */
