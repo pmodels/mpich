@@ -15,5 +15,6 @@ INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../launcher/utils \
 	-I${abs_srcdir}/../../pm/utils \
 	-I${abs_srcdir}/../include \
+	-I../include \
 	-I${abs_srcdir}/../utils \
 	-I${abs_srcdir}/../../demux

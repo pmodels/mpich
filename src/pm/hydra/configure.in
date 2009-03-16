@@ -72,6 +72,24 @@ hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
 AC_DEFINE_UNQUOTED(HYDRA_BSS_NAMES,"$hydra_bss_names",[Definition of enabled bootstrap servers])
 AC_SUBST(hydra_bss_names)
 
+for hydra_bss_name in ${hydra_bss_names}; do
+    if test -z "${hydra_default_bss}" ; then
+       hydra_default_bss=$hydra_bss_name
+    fi
+    hydra_bss_makefiles="$hydra_bss_makefiles bootstrap/${hydra_bss_name}/Makefile"
+    hydra_bss_init_decl="${hydra_bss_init_decl}
+HYD_Status HYD_BSCI_${hydra_bss_name}_init(void);"
+    hydra_bss_name_array="${hydra_bss_name_array} \"${hydra_bss_name}\", "
+    hydra_bss_init_array="${hydra_bss_init_array} HYD_BSCI_${hydra_bss_name}_init, "
+done
+hydra_bss_name_array="${hydra_bss_name_array} NULL"
+hydra_bss_init_array="${hydra_bss_init_array} NULL"
+AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BSS,"$hydra_default_bss",[Default bootstrap server])
+AC_SUBST(hydra_bss_init_decl)
+AC_SUBST(hydra_bss_name_array)
+AC_SUBST(hydra_bss_init_array)
+
+
 dnl Check what process manager we should use
 AC_ARG_WITH(hydra-pm, [  --with-hydra-pm               Process Manager (central or distributed)],
 		[ hydra_pm=$withval ],
@@ -265,14 +283,6 @@ AC_CONFIG_SUBDIRS(../util)
 dnl Place holder macro for finalization
 PAC_SUBCONFIG_FINALIZE()
 
-for hydra_bss_name in ${hydra_bss_names}; do
-    if test -z "${hydra_default_bss}" ; then
-       hydra_default_bss=$hydra_bss_name
-    fi
-    hydra_bss_makefiles="$hydra_bss_makefiles bootstrap/${hydra_bss_name}/Makefile"
-done
-AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BSS,"$hydra_default_bss",[Default bootstrap server])
-
 dnl Final output
 AC_OUTPUT(Makefile \
 	utils/Makefile \
@@ -297,5 +307,7 @@ AC_OUTPUT(Makefile \
 	bootstrap/Makefile \
 	bootstrap/utils/Makefile \
 	bootstrap/src/Makefile \
+	bootstrap/src/bsci_init.c \
+	bootstrap/include/bsci.h \
 	${hydra_bss_makefiles}
 )

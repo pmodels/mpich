@@ -25,7 +25,6 @@ HYD_Status HYD_BSCI_get_usize(int *size);
 HYD_Status HYD_BSCI_wait_for_completion(void);
 
 /* Each bootstrap server has to expose an initialization function */
-HYD_Status HYD_BSCI_ssh_init(void);
-HYD_Status HYD_BSCI_fork_init(void);
+@hydra_bss_init_decl@
 
 #endif /* BSCI_H_INCLUDED */

@@ -14,6 +14,7 @@ INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../include \
 	-I${abs_srcdir}/../utils \
 	-I${abs_srcdir}/../../bootstrap/include \
+	-I../../bootstrap/include \
 	-I${abs_srcdir}/../../demux
 
 hydproxy_SOURCES = proxy.c proxy_utils.c proxy_cb.c

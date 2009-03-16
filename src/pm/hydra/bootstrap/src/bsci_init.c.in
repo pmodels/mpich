@@ -10,8 +10,12 @@
 
 struct HYD_BSCI_fns HYD_BSCI_fns;
 
+char *HYD_BSCI_comp_array[] = { @hydra_bss_name_array@ };
+HYD_Status(*HYD_BSCI_comp_init[])(void) = { @hydra_bss_init_array@ };
+
 HYD_Status HYD_BSCI_init(char *bootstrap)
 {
+    int i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -21,11 +25,15 @@ HYD_Status HYD_BSCI_init(char *bootstrap)
     HYD_BSCI_fns.wait_for_completion = NULL;
     HYD_BSCI_fns.finalize = NULL;
 
-    if (!strcmp(bootstrap, "ssh"))
-        status = HYD_BSCI_ssh_init();
-    else if (!strcmp(bootstrap, "fork"))
-        status = HYD_BSCI_fork_init();
-    else {
+    i = 0;
+    for (i = 0; HYD_BSCI_comp_array[i]; i++) {
+        if (!strcmp(bootstrap, HYD_BSCI_comp_array[i])) {
+            status = (*HYD_BSCI_comp_init[i])();
+            break;
+        }
+    }
+
+    if (HYD_BSCI_comp_array[i] == NULL) {
         HYDU_Error_printf("unrecognized bootstrap server: %s\n", bootstrap);
         status = HYD_INTERNAL_ERROR;
         goto fn_fail;
