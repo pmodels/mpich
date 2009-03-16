@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 {
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
-    int exit_status;
+    int exit_status = 0;
     int timeout;
     HYD_Status status = HYD_SUCCESS;
 
