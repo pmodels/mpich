@@ -29,6 +29,14 @@ static int dbg_ifname = 0;
 #define _SVID_SOURCE
 #endif
 
+#ifdef USE_ALL_SOURCE_FOR_IFCONF
+/* This is a very special case.  Allow the use of some extensions for just
+   the rest of this file so that we can get the ifconf structure 
+   This is needed for AIX.
+ */
+#define _ALL_SOURCE
+#endif
+
 #include "tcp_impl.h"
 #include <sys/types.h>
 
