@@ -78,7 +78,7 @@ Contains the arch dependent libraries and their build configuration for mpich2
 %endif
 
 %prep
-%setup -q -n %{name}-%{version}b1
+%setup -q -n %{name}-%{version}%VERSION_EXT%
 
 %configure	\
 	--enable-sharedlibs=gcc					\
