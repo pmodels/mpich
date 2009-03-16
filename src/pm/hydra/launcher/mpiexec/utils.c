@@ -14,14 +14,6 @@
 
 HYD_Handle handle;
 
-#define CHECK_LOCAL_PARAM_START(start, status) \
-    { \
-	if ((start)) {                          \
-	    (status) = HYD_INTERNAL_ERROR;	\
-	    goto fn_fail; \
-	} \
-    }
-
 #define CHECK_NEXT_ARG_VALID(status) \
     { \
 	--argc; ++argv; \
@@ -104,7 +96,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 {
     int argc = t_argc, i;
     char **argv = t_argv;
-    int local_params_started;
     char *env_name, *env_value;
     HYD_Env_t *env;
     struct HYD_Proc_params *proc_params;
@@ -126,7 +117,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         goto fn_fail;
     }
 
-    local_params_started = 0;
     while (--argc && ++argv) {
 
         /* Help options */
@@ -138,8 +128,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
         /* Check what debug level is requested */
         if (!strcmp(*argv, "--verbose")) {
-            CHECK_LOCAL_PARAM_START(local_params_started, status);
-
             /* Debug level already set */
             if (handle.debug != -1) {
                 HYDU_Error_printf
@@ -154,8 +142,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
         /* Version information */
         if (!strcmp(*argv, "--version")) {
-            CHECK_LOCAL_PARAM_START(local_params_started, status);
-
             /* Just show the version information and continue. This
              * option can be used in conjunction with other
              * options. */
@@ -166,7 +152,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
         /* Bootstrap server */
         if (!strcmp(*argv, "--bootstrap")) {
-            CHECK_LOCAL_PARAM_START(local_params_started, status);
             CHECK_NEXT_ARG_VALID(status);
 
             if (handle.bootstrap != NULL) {
@@ -182,8 +167,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
         /* Check if X forwarding is explicitly set */
         if (!strcmp(*argv, "--enable-x") || !strcmp(*argv, "--disable-x")) {
-            CHECK_LOCAL_PARAM_START(local_params_started, status);
-
             /* X forwarding already enabled or disabled */
             if (handle.enablex != -1) {
                 HYDU_Error_printf
@@ -198,7 +181,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
         /* Check if the proxy port is set */
         if (!strcmp(*argv, "--proxy-port")) {
-            CHECK_LOCAL_PARAM_START(local_params_started, status);
             CHECK_NEXT_ARG_VALID(status);
 
             if (handle.proxy_port != -1) {
@@ -215,8 +197,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         /* Check what all environment variables need to be propagated */
         if (!strcmp(*argv, "-genvall") || !strcmp(*argv, "-genvnone") ||
             !strcmp(*argv, "-genvlist")) {
-            CHECK_LOCAL_PARAM_START(local_params_started, status);
-
             /* propagation already set */
             if (handle.prop != HYD_ENV_PROP_UNSET) {
                 HYDU_Error_printf
@@ -255,8 +235,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         /* Check what all environment variables need to be propagated */
         if (!strcmp(*argv, "-envall") || !strcmp(*argv, "-envnone") ||
             !strcmp(*argv, "-envlist")) {
-            local_params_started = 1;
-
             status = get_current_proc_params(&proc_params);
             if (status != HYD_SUCCESS) {
                 HYDU_Error_printf("get_current_proc_params returned error\n");
@@ -304,9 +282,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
         /* Add additional environment variables */
         if (!strcmp(*argv, "-genv") || !strcmp(*argv, "-env")) {
-            if (!strcmp(*argv, "-genv"))
-                CHECK_LOCAL_PARAM_START(local_params_started, status);
-
             CHECK_NEXT_ARG_VALID(status);
             env_name = MPIU_Strdup(*argv);
 
@@ -322,8 +297,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             if (!strcmp(*argv, "-genv"))
                 HYDU_Env_add_to_list(&handle.user_env, *env);
             else {
-                local_params_started = 1;
-
                 status = get_current_proc_params(&proc_params);
                 if (status != HYD_SUCCESS) {
                     HYDU_Error_printf("get_current_proc_params returned error\n");
@@ -338,14 +311,12 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         }
 
         if (!strcmp(*argv, "-wdir")) {
-            CHECK_LOCAL_PARAM_START(local_params_started, status);
             CHECK_NEXT_ARG_VALID(status);
             handle.wdir = MPIU_Strdup(*argv);
             continue;
         }
 
         if (!strcmp(*argv, "-n") || !strcmp(*argv, "-np")) {
-            local_params_started = 1;
             CHECK_NEXT_ARG_VALID(status);
 
             status = get_current_proc_params(&proc_params);
@@ -369,7 +340,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         }
 
         if (!strcmp(*argv, "-f")) {
-            CHECK_LOCAL_PARAM_START(local_params_started, status);
             CHECK_NEXT_ARG_VALID(status);
             handle.host_file = MPIU_Strdup(*argv);
             continue;
@@ -380,9 +350,6 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             status = HYD_INTERNAL_ERROR;
             goto fn_fail;
         }
-
-        /* This is to catch everything that fell through */
-        local_params_started = 1;
 
         status = get_current_proc_params(&proc_params);
         if (status != HYD_SUCCESS) {
