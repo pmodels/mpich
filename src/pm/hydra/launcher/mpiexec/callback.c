@@ -20,17 +20,13 @@ HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events)
 
     /* Write output to fd 1 */
     status = HYDU_Sock_stdout_cb(fd, events, 1, &closed);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("socket stdout callback error on fd: %d (errno: %d)\n", fd, errno);
-        goto fn_fail;
-    }
+    HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on fd %d (errno: %d)\n",
+                         fd, errno);
 
     if (closed) {
         status = HYD_CSI_Close_fd(fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("socket close error on fd: %d (errno: %d)\n", fd, errno);
-            goto fn_fail;
-        }
+        HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (errno: %d)\n",
+                             fd, errno);
         goto fn_exit;
     }
 
@@ -52,17 +48,13 @@ HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events)
 
     /* Write output to fd 2 */
     status = HYDU_Sock_stdout_cb(fd, events, 2, &closed);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("socket stdout callback error on fd: %d (errno: %d)\n", fd, errno);
-        goto fn_fail;
-    }
+    HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on %d (errno: %d)\n",
+                         fd, errno)
 
     if (closed) {
         status = HYD_CSI_Close_fd(fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("socket close error on fd: %d (errno: %d)\n", fd, errno);
-            goto fn_fail;
-        }
+        HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (errno: %d)\n",
+                             fd, errno);
         goto fn_exit;
     }
 
@@ -84,18 +76,12 @@ HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events)
 
     status = HYDU_Sock_stdin_cb(handle.in, events, handle.stdin_tmp_buf,
                                 &handle.stdin_buf_count, &handle.stdin_buf_offset, &closed);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock stdin callback returned an error\n");
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "stdin callback error\n");
 
     if (closed) {
         status = HYD_CSI_Close_fd(fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("socket close error on fd: %d (errno: %d)\n", fd, errno);
-            goto fn_fail;
-        }
+        HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (errno: %d)\n",
+                             fd, errno);
 
         /* Close the input handler for the process, so it knows that
          * we got a close event */

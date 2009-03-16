@@ -28,10 +28,7 @@ HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg)
         tmp[j++] = NULL;
 
         status = HYDU_String_alloc_and_join(tmp, &envstr);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("String utils returned error while joining strings\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to join strings\n");
 
         client_arg[i++] = MPIU_Strdup(envstr);
         HYDU_FREE(envstr);
@@ -144,11 +141,8 @@ HYD_Status HYDU_Chdir(const char *dir)
 
     HYDU_FUNC_ENTER();
 
-    if (chdir(dir) < 0) {
-        status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf("chdir failed\n");
-        goto fn_fail;
-    }
+    if (chdir(dir) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "chdir failed\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

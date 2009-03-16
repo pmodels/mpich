@@ -66,25 +66,16 @@ int main(int argc, char **argv)
 
     if (handle.debug) {
         status = HYD_LCHI_Print_parameters();
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("unable to create host list\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, NULL);
     }
 
     /* Convert the host file to a host list */
     status = HYD_LCHU_Create_host_list();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to create host list\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to create host list\n");
 
     /* Consolidate the environment list that we need to propagate */
     status = HYD_LCHU_Create_env_list();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to create host list\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to create env list\n");
 
     proc_params = handle.proc_params;
     while (proc_params) {
@@ -104,18 +95,11 @@ int main(int argc, char **argv)
 
     /* Launch the processes */
     status = HYD_CSI_Launch_procs();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("control system returned error when launching processes\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "control system error launching processes\n");
 
     /* Wait for their completion */
     status = HYD_CSI_Wait_for_completion();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf
-            ("control system returned error when waiting for process' completion\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "control system error waiting for completion\n");
 
     /* Check for the exit status for all the processes */
     exit_status = 0;
@@ -125,10 +109,7 @@ int main(int argc, char **argv)
 
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_CSI_Finalize();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("control system returned error on finalize\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "control system error on finalize\n");
 
     /* Free the mpiexec params */
     HYD_LCHU_Free_params();

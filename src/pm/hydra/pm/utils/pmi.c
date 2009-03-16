@@ -44,11 +44,7 @@ static HYD_Status create_pg(HYD_PMCU_pmi_pg_t ** pg, int pgid)
     (*pg)->process = NULL;
 
     status = allocate_kvs(&(*pg)->kvs, pgid);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("Unable to allocate kvs space\n");
-        status = HYD_INTERNAL_ERROR;
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to allocate kvs space\n");
 
     (*pg)->next = NULL;
 
@@ -107,10 +103,7 @@ HYD_Status HYD_PMCU_Create_pg(void)
     }
 
     status = create_pg(&pg_list, 0);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to create pg\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to create pg\n");
     pg_list->num_procs = num_procs;
 
   fn_exit:
@@ -144,22 +137,13 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     debug = handle.debug;
 
     status = HYDU_String_int_to_str(size, &ssize);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while converting int to string\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     status = HYDU_String_int_to_str(id, &srank);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while converting int to string\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     status = HYDU_String_int_to_str(debug, &sdebug);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while converting int to string\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     i = 0;
     tmp[i++] = "cmd=initack\ncmd=set size=";
@@ -172,16 +156,11 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     tmp[i++] = NULL;
 
     status = HYDU_String_alloc_and_join(tmp, &cmd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while joining strings\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "error while joining strings\n");
 
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "error writing PMI line\n");
+
     HYDU_FREE(ssize);
     HYDU_FREE(srank);
     HYDU_FREE(sdebug);
@@ -193,10 +172,7 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
 
     /* Add the process to the last PG */
     status = add_process_to_pg(run, fd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to add process to pg\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to add process to pg\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -224,17 +200,12 @@ HYD_Status HYD_PMCU_pmi_init(int fd, char *args[])
         /* We support PMI v1.0 and 1.1 */
         tmp[0] = "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
         status = HYDU_Sock_writeline(fd, tmp[0], strlen(tmp[0]));
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("sock utils returned error when writing PMI line\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "error writing PMI line\n");
     }
     else {
         /* PMI version mismatch */
-        HYDU_Error_printf
-            ("got a pmi version mismatch; pmi_version: %d; pmi_subversion: %d\n",
-             pmi_version, pmi_subversion);
-        goto fn_fail;
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
     }
 
   fn_exit:
@@ -256,22 +227,13 @@ HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     status = HYDU_String_int_to_str(MAXKVSNAME, &maxkvsname);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while converting int to string\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     status = HYDU_String_int_to_str(MAXKEYLEN, &maxkeylen);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while converting int to string\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     status = HYDU_String_int_to_str(MAXVALLEN, &maxvallen);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while converting int to string\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     i = 0;
     tmp[i++] = "cmd=maxes kvsname_max=";
@@ -284,16 +246,10 @@ HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[])
     tmp[i++] = NULL;
 
     status = HYDU_String_alloc_and_join(tmp, &cmd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while joining strings\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to join strings\n");
 
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
 
     HYDU_FREE(maxkvsname);
@@ -341,17 +297,12 @@ HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char *args[])
 
     /* Find the group id corresponding to this fd */
     process = find_process(fd);
-    if (process == NULL) {      /* We didn't find the process */
-        status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf("could not find the process structure\n");
-        goto fn_fail;
-    }
+    if (process == NULL) /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unable to find process structure\n");
 
     status = HYDU_String_int_to_str(process->pg->id, &sapp_num);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while converting int to string\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     i = 0;
     tmp[i++] = "cmd=appnum appnum=";
@@ -360,16 +311,10 @@ HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char *args[])
     tmp[i++] = NULL;
 
     status = HYDU_String_alloc_and_join(tmp, &cmd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while joining strings\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to join strings\n");
 
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
 
     HYDU_FREE(sapp_num);
@@ -394,11 +339,9 @@ HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char *args[])
 
     /* Find the group id corresponding to this fd */
     process = find_process(fd);
-    if (process == NULL) {      /* We didn't find the process */
-        status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
-        goto fn_fail;
-    }
+    if (process == NULL) /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d\n", fd);
 
     i = 0;
     tmp[i++] = "cmd=my_kvsname kvsname=";
@@ -407,16 +350,10 @@ HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char *args[])
     tmp[i++] = NULL;
 
     status = HYDU_String_alloc_and_join(tmp, &cmd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while joining strings\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to join strings\n");
 
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
 
   fn_exit:
@@ -438,11 +375,9 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char *args[])
 
     /* Find the group id corresponding to this fd */
     process = find_process(fd);
-    if (process == NULL) {      /* We didn't find the process */
-        status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
-        goto fn_fail;
-    }
+    if (process == NULL) /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d\n", fd);
 
     process->pg->barrier_count++;
 
@@ -453,10 +388,7 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char *args[])
         run = process->pg->process;     /* The first process in the list */
         while (run) {
             status = HYDU_Sock_writeline(run->fd, cmd, strlen(cmd));
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("sock utils returned error when writing PMI line\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "error writing PMI line\n");
             run = run->next;
         }
 
@@ -492,19 +424,14 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
 
     /* Find the group id corresponding to this fd */
     process = find_process(fd);
-    if (process == NULL) {      /* We didn't find the process */
-        status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
-        goto fn_fail;
-    }
+    if (process == NULL) /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d\n", fd);
 
-    if (strcmp(process->pg->kvs->kvs_name, kvsname)) {
-        status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf
-            ("kvsname (%s) does not match this process' kvs space (%s)\n",
-             kvsname, process->pg->kvs->kvs_name);
-        goto fn_fail;
-    }
+    if (strcmp(process->pg->kvs->kvs_name, kvsname))
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "kvsname (%s) does not match this process' kvs space (%s)\n",
+                             kvsname, process->pg->kvs->kvs_name);
 
     HYDU_MALLOC(key_pair, HYD_PMCU_pmi_kvs_pair_t *, sizeof(HYD_PMCU_pmi_kvs_pair_t), status);
     MPIU_Snprintf(key_pair->key, MAXKEYLEN, "%s", key);
@@ -535,16 +462,10 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
     tmp[i++] = NULL;
 
     status = HYDU_String_alloc_and_join(tmp, &cmd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while joining strings\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to join strings\n");
 
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
     HYDU_FREE(key_pair_str);
 
@@ -575,19 +496,14 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
 
     /* Find the group id corresponding to this fd */
     process = find_process(fd);
-    if (process == NULL) {      /* We didn't find the process */
-        status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf("could not find the process structure for fd %d\n", fd);
-        goto fn_fail;
-    }
+    if (process == NULL) /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d\n", fd);
 
-    if (strcmp(process->pg->kvs->kvs_name, kvsname)) {
-        status = HYD_INTERNAL_ERROR;
-        HYDU_Error_printf
-            ("kvsname (%s) does not match this process' kvs space (%s)\n",
-             kvsname, process->pg->kvs->kvs_name);
-        goto fn_fail;
-    }
+    if (strcmp(process->pg->kvs->kvs_name, kvsname))
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "kvsname (%s) does not match this process' kvs space (%s)\n",
+                             kvsname, process->pg->kvs->kvs_name);
 
     i = 0;
     tmp[i++] = "cmd=get_result rc=";
@@ -617,16 +533,10 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
     tmp[i++] = NULL;
 
     status = HYDU_String_alloc_and_join(tmp, &cmd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while joining strings\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to join strings\n");
 
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
     HYDU_FREE(key_val_str);
 
@@ -648,10 +558,7 @@ HYD_Status HYD_PMCU_pmi_finalize(int fd, char *args[])
 
     cmd = "cmd=finalize_ack\n";
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "error writing PMI line\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -671,16 +578,10 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     status = HYD_BSCI_get_usize(&usize);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("Unable to get universe size from the bootstrap server\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to get bootstrap universe size\n");
 
     status = HYDU_String_int_to_str(usize, &usize_str);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while converting int to string\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     i = 0;
     tmp[i++] = "cmd=universe_size size=";
@@ -689,16 +590,10 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
     tmp[i++] = NULL;
 
     status = HYDU_String_alloc_and_join(tmp, &cmd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while joining strings\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to join strings\n");
 
     status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock utils returned error when writing PMI line\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
 
   fn_exit:
@@ -761,16 +656,10 @@ HYD_Status HYD_PMCU_Finalize(void)
         tmp = pg->next;
 
         status = free_pmi_process_list(pg->process);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("unable to free process list\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to free process list\n");
 
         status = free_pmi_kvs_list(pg->kvs);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("unable to free kvs list\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to free kvs list\n");
 
         HYDU_FREE(pg);
         pg = tmp;

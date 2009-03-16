@@ -24,10 +24,7 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
     HYD_Proxy_params.partition = NULL;
 
     status = HYDU_Env_global_list(&HYD_Proxy_params.global_env);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to get the global env list\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to get the global env list\n");
 
     while (--argc && ++argv) {
 

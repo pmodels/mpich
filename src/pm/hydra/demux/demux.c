@@ -30,13 +30,10 @@ HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_Event_t events,
 
     HYDU_FUNC_ENTER();
 
-    for (i = 0; i < num_fds; i++) {
-        if (fd[i] < 0) {
-            HYDU_Error_printf("registering bad fd %d\n", fd[i]);
-            status = HYD_INTERNAL_ERROR;
-            goto fn_fail;
-        }
-    }
+    for (i = 0; i < num_fds; i++)
+        if (fd[i] < 0)
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "registering bad fd %d\n",
+                                 fd[i]);
 
     HYDU_MALLOC(cb_element, HYD_DMXI_Callback_t *, sizeof(HYD_DMXI_Callback_t), status);
     cb_element->num_fds = num_fds;
@@ -88,9 +85,8 @@ HYD_Status HYD_DMX_Deregister_fd(int fd)
     }
 
     /* FD is not found */
-    HYDU_Error_printf("couldn't find the fd to deregister: %d\n", fd);
-    status = HYD_INTERNAL_ERROR;
-    goto fn_fail;
+    HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                         "could not find fd to deregister: %d\n", fd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -143,9 +139,7 @@ HYD_Status HYD_DMX_Wait_for_event(int time)
                 status = HYD_SUCCESS;
                 goto fn_exit;
             }
-            HYDU_Error_printf("poll error (errno: %d)\n", errno);
-            status = HYD_SOCK_ERROR;
-            goto fn_fail;
+            HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "poll error (errno: %d)\n", errno);
         }
         break;
     }
@@ -165,10 +159,7 @@ HYD_Status HYD_DMX_Wait_for_event(int time)
                     events |= HYD_STDOUT;
 
                 status = run->callback(pollfds[i].fd, events);
-                if (status != HYD_SUCCESS) {
-                    HYDU_Error_printf("callback returned error status\n", errno);
-                    goto fn_fail;
-                }
+                HYDU_ERR_POP(status, "callback returned error status\n");
             }
 
             i++;

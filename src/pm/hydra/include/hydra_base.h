@@ -67,6 +67,57 @@ typedef enum {
     HYD_INTERNAL_ERROR
 } HYD_Status;
 
+#define HYDU_ERR_POP(status, message)                                   \
+    {                                                                   \
+        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
+            if (message)                                                \
+                HYDU_Error_printf(message);                             \
+            goto fn_fail;                                               \
+        }                                                               \
+        else if (status == HYD_GRACEFUL_ABORT) {                        \
+            goto fn_exit;                                               \
+        }                                                               \
+    }
+
+#define HYDU_ERR_SETANDJUMP(status, error, message)                     \
+    {                                                                   \
+        status = error;                                                 \
+        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
+            if (message)                                                \
+                HYDU_Error_printf(message);                             \
+            goto fn_fail;                                               \
+        }                                                               \
+        else if (status == HYD_GRACEFUL_ABORT) {                        \
+            goto fn_exit;                                               \
+        }                                                               \
+    }
+
+#define HYDU_ERR_SETANDJUMP1(status, error, message, arg1)              \
+    {                                                                   \
+        status = error;                                                 \
+        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
+            if (message)                                                \
+                HYDU_Error_printf(message, arg1);                       \
+            goto fn_fail;                                               \
+        }                                                               \
+        else if (status == HYD_GRACEFUL_ABORT) {                        \
+            goto fn_exit;                                               \
+        }                                                               \
+    }
+
+#define HYDU_ERR_SETANDJUMP2(status, error, message, arg1, arg2)        \
+    {                                                                   \
+        status = error;                                                 \
+        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
+            if (message)                                                \
+                HYDU_Error_printf(message, arg1, arg2);                 \
+            goto fn_fail;                                               \
+        }                                                               \
+        else if (status == HYD_GRACEFUL_ABORT) {                        \
+            goto fn_exit;                                               \
+        }                                                               \
+    }
+
 #define HYD_STDOUT  (1)
 #define HYD_STDIN   (2)
 

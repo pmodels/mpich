@@ -28,10 +28,8 @@ HYD_Status HYDU_Env_global_list(HYD_Env_t ** env_list)
         HYDU_FREE(env_str);
 
         status = HYDU_Env_add_to_list(env_list, *env);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("launcher returned error adding env to list\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to add env to list\n");
+
         HYDU_Env_free(env);
 
         i++;
@@ -64,8 +62,6 @@ HYD_Env_t *HYDU_Env_dup(HYD_Env_t env)
     return tenv;
 
   fn_fail:
-    if (status != HYD_SUCCESS)
-        HYDU_Error_printf("freeing temporary env structure\n");
     if (tenv)
         HYDU_FREE(tenv);
     tenv = NULL;
@@ -84,11 +80,7 @@ HYD_Env_t *HYDU_Env_listdup(HYD_Env_t * env)
     tenv = NULL;
     while (run) {
         status = HYDU_Env_add_to_list(&tenv, *run);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("unable to add env to list\n");
-            tenv = NULL;
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to add env to list\n");
         run = run->next;
     }
 
@@ -97,6 +89,7 @@ HYD_Env_t *HYDU_Env_listdup(HYD_Env_t * env)
     return tenv;
 
   fn_fail:
+    tenv = NULL;
     goto fn_exit;
 }
 
@@ -185,11 +178,8 @@ HYD_Status HYDU_Env_add_to_list(HYD_Env_t ** env_list, HYD_Env_t env)
     HYDU_FUNC_ENTER();
 
     tenv = HYDU_Env_dup(env);
-    if (tenv == NULL) {
-        HYDU_Error_printf("unable to dup environment\n");
-        status = HYD_INTERNAL_ERROR;
-        goto fn_fail;
-    }
+    if (tenv == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unable to dup env\n");
 
     tenv->next = NULL;
 
@@ -254,10 +244,7 @@ HYD_Status HYDU_Env_assign_form(HYD_Env_t env, char **env_str)
     tmp[i++] = NULL;
 
     status = HYDU_String_alloc_and_join(tmp, env_str);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while joining strings\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to join strings\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

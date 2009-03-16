@@ -33,18 +33,14 @@ HYD_Status HYD_BSCI_init(char *bootstrap)
         }
     }
 
-    if (HYD_BSCI_comp_array[i] == NULL) {
-        HYDU_Error_printf("unrecognized bootstrap server: %s\n", bootstrap);
-        status = HYD_INTERNAL_ERROR;
-        goto fn_fail;
-    }
+    if (HYD_BSCI_comp_array[i] == NULL)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unrecognized bootstrap server: %s\n", bootstrap);
 
-    if (HYD_BSCI_fns.launch_procs == NULL) {
-        /* This function is mandatory */
-        HYDU_Error_printf("Mandatory bootstrap launch function undefined\n");
-        status = HYD_INTERNAL_ERROR;
-        goto fn_fail;
-    }
+    /* This function is mandatory */
+    if (HYD_BSCI_fns.launch_procs == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "mandatory bootstrap launch function undefined\n");
     if (HYD_BSCI_fns.get_usize == NULL)
         HYD_BSCI_fns.get_usize = HYD_BSCU_get_usize;
     if (HYD_BSCI_fns.wait_for_completion == NULL)

@@ -54,23 +54,14 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
 
     if (fd == HYD_PMCD_Central_listenfd) {      /* Someone is trying to connect to us */
         status = HYDU_Sock_accept(fd, &accept_fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("sock utils returned error when accepting connection\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "accept error\n");
 
         status = HYD_DMX_Register_fd(1, &accept_fd, HYD_STDOUT, HYD_PMCD_Central_cb);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("demux engine returned error when registering fd\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to register fd\n");
     }
     else {
         status = HYDU_Sock_readline(fd, buf, HYD_TMPBUF_SIZE, &linelen);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("sock utils returned error when reading PMI line\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "PMI read line error\n");
 
         if (linelen == 0) {
             /* This is not a clean close. If a finalize was called, we
@@ -137,10 +128,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
 
             if (status == HYD_SUCCESS) {
                 status = HYD_DMX_Deregister_fd(fd);
-                if (status != HYD_SUCCESS) {
-                    HYDU_Error_printf("unable to deregister fd %d\n", fd);
-                    goto fn_fail;
-                }
+                HYDU_ERR_POP(status, "unable to register fd\n");
                 close(fd);
             }
         }
@@ -159,10 +147,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
             goto fn_fail;
         }
 
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("PMI server function returned an error\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "PMI server returned error\n");
     }
 
   fn_exit:

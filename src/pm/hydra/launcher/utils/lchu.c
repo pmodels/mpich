@@ -125,11 +125,9 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 
     if (strcmp(handle.host_file, "HYDRA_USE_LOCALHOST")) {
         fp = fopen(handle.host_file, "r");
-        if (fp == NULL) {
-            HYDU_Error_printf("unable to open host file %s\n", handle.host_file);
-            status = HYD_INTERNAL_ERROR;
-            goto fn_fail;
-        }
+        if (fp == NULL)
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                                 "unable to open host file: %s\n", handle.host_file);
     }
 
     HYDU_Debug("Partition list: ");
@@ -145,11 +143,9 @@ HYD_Status HYD_LCHU_Create_host_list(void)
         else {
             total_procs = 0;
             while (!feof(fp)) {
-                if ((fscanf(fp, "%s", line) < 0) && errno) {
-                    HYDU_Error_printf("unable to read input line (errno: %d)\n", errno);
-                    status = HYD_INTERNAL_ERROR;
-                    goto fn_fail;
-                }
+                if ((fscanf(fp, "%s", line) < 0) && errno)
+                    HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                                         "unable to read input line (errno: %d)\n", errno);
                 if (feof(fp))
                     break;
 
@@ -267,10 +263,7 @@ HYD_Status HYD_LCHU_Create_env_list(void)
         handle.prop_env = HYDU_Env_listdup(handle.global_env);
         for (env = handle.user_env; env; env = env->next) {
             status = HYDU_Env_add_to_list(&handle.prop_env, *env);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("unable to add env to list\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "unable to add env to list\n");
         }
     }
     else if (handle.prop == HYD_ENV_PROP_LIST) {
@@ -278,10 +271,7 @@ HYD_Status HYD_LCHU_Create_env_list(void)
             run = HYDU_Env_found_in_list(handle.global_env, *env);
             if (run) {
                 status = HYDU_Env_add_to_list(&handle.prop_env, *run);
-                if (status != HYD_SUCCESS) {
-                    HYDU_Error_printf("unable to add env to list\n");
-                    goto fn_fail;
-                }
+                HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
     }
@@ -292,10 +282,7 @@ HYD_Status HYD_LCHU_Create_env_list(void)
             proc_params->prop_env = HYDU_Env_listdup(handle.global_env);
             for (env = proc_params->user_env; env; env = env->next) {
                 status = HYDU_Env_add_to_list(&proc_params->prop_env, *env);
-                if (status != HYD_SUCCESS) {
-                    HYDU_Error_printf("unable to add env to list\n");
-                    goto fn_fail;
-                }
+                HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
         else if (proc_params->prop == HYD_ENV_PROP_LIST) {
@@ -303,10 +290,7 @@ HYD_Status HYD_LCHU_Create_env_list(void)
                 run = HYDU_Env_found_in_list(handle.global_env, *env);
                 if (run) {
                     status = HYDU_Env_add_to_list(&proc_params->prop_env, *run);
-                    if (status != HYD_SUCCESS) {
-                        HYDU_Error_printf("unable to add env to list\n");
-                        goto fn_fail;
-                    }
+                    HYDU_ERR_POP(status, "unable to add env to list\n");
                 }
             }
         }

@@ -78,11 +78,10 @@ HYD_Status HYDU_Chdir(const char *dir);
 #define HYDU_MALLOC(p, type, size, status)                              \
     {                                                                   \
         (p) = (type) MPIU_Malloc((size));                               \
-        if ((p) == NULL) {                                              \
-            HYDU_Error_printf("failed trying to allocate %d bytes\n", (size)); \
-            (status) = HYD_NO_MEM;                                      \
-            goto fn_fail;                                               \
-        }                                                               \
+        if ((p) == NULL)                                                \
+            HYDU_ERR_SETANDJUMP1((status), HYD_NO_MEM,                  \
+                                 "failed to allocate %d bytes\n",       \
+                                 (size));                               \
     }
 
 #define HYDU_FREE(p)                            \
@@ -93,11 +92,9 @@ HYD_Status HYDU_Chdir(const char *dir);
 #define HYDU_STRDUP(src, dest, type, status)                            \
     {                                                                   \
         (dest) = (type) MPIU_Strdup((src));                             \
-        if ((dest) == NULL) {                                           \
-            HYDU_Error_printf("failed duping string %s\n", (src));      \
-            (status) = HYD_INTERNAL_ERROR;                              \
-            goto fn_fail;                                               \
-        }                                                               \
+        if ((dest) == NULL)                                             \
+            HYDU_ERR_SETANDJUMP1((status), HYD_INTERNAL_ERROR,          \
+                             "failed duping string %s\n", (src));       \
     }
 
 HYD_Status HYDU_String_alloc_and_join(char **strlist, char **strjoin);

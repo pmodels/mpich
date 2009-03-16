@@ -24,10 +24,7 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
     while (1) {
         /* Wait for some event to occur */
         status = HYD_DMX_Wait_for_event(HYDU_Time_left(handle.start, handle.timeout));
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("demux engine returned error when waiting for event\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "error waiting for event\n");
 
         /* Check to see if there's any open read socket left; if there
          * are, we will just wait for more events. */
@@ -49,10 +46,7 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
         /* Make sure all the processes have terminated. The process
          * manager control device will take care of that. */
         status = HYD_PMCI_Wait_for_completion();
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("process manager returned error when waiting for completion\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "error waiting for completion\n");
 
         /* We are done */
         break;

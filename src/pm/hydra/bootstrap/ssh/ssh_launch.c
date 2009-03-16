@@ -61,10 +61,7 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
              * for everyone else, it's NULL. */
             status = HYDU_Create_process(client_arg, (process_id == 0 ? &handle.in : NULL),
                                          &partition->out, &partition->err, &partition->pid);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("bootstrap spawn process returned error\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "create process returned error\n");
 
             for (arg = 0; client_arg[arg]; arg++)
                 HYDU_FREE(client_arg[arg]);

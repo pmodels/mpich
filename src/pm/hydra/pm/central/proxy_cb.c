@@ -21,39 +21,26 @@ HYD_Status HYD_Proxy_listen_cb(int fd, HYD_Event_t events)
 
     HYDU_FUNC_ENTER();
 
-    if (events & HYD_STDIN) {
-        HYDU_Error_printf("stdout handler got an stdin event: %d\n", events);
-        status = HYD_INTERNAL_ERROR;
-        goto fn_fail;
-    }
+    if (events & HYD_STDIN)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
 
     if (fd == HYD_Proxy_listenfd) {     /* mpiexec is trying to connect */
         status = HYDU_Sock_accept(fd, &accept_fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("sock utils returned error when accepting connection\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "accept error\n");
 
         status = HYD_DMX_Register_fd(1, &accept_fd, HYD_STDOUT, HYD_Proxy_listen_cb);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("demux engine returned error when registering fd\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to register fd\n");
     }
     else {      /* We got a command from mpiexec */
         count = read(fd, &cmd, HYD_TMPBUF_SIZE);
         if (count < 0) {
-            HYDU_Error_printf("socket read error on fd: %d (errno: %d)\n", fd, errno);
-            status = HYD_SOCK_ERROR;
-            goto fn_fail;
+            HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR, "read error on %d (errno: %d)\n",
+                                 fd, errno);
         }
         else if (count == 0) {
             /* The connection has closed */
             status = HYD_DMX_Deregister_fd(fd);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("demux engine returned error when deregistering fd\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "unable to deregister fd\n");
             close(fd);
             goto fn_exit;
         }
@@ -64,16 +51,12 @@ HYD_Status HYD_Proxy_listen_cb(int fd, HYD_Event_t events)
                     kill(HYD_Proxy_params.pid[i], SIGKILL);
 
             status = HYD_DMX_Deregister_fd(fd);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("demux engine returned error when deregistering fd\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "unable to register fd\n");
             close(fd);
         }
         else {
-            HYDU_Error_printf("got unrecognized command from mpiexec\n");
-            status = HYD_INTERNAL_ERROR;
-            goto fn_fail;
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "got unrecognized command from mpiexec\n");
         }
     }
 
@@ -94,18 +77,12 @@ HYD_Status HYD_Proxy_stdout_cb(int fd, HYD_Event_t events)
     HYDU_FUNC_ENTER();
 
     status = HYDU_Sock_stdout_cb(fd, events, 1, &closed);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock stdout callback error\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "stdout callback error\n");
 
     if (closed) {
         /* The connection has closed */
         status = HYD_DMX_Deregister_fd(fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("demux engine returned error when deregistering fd\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
 
         for (i = 0; i < HYD_Proxy_params.proc_count; i++)
             if (HYD_Proxy_params.out[i] == fd)
@@ -129,18 +106,12 @@ HYD_Status HYD_Proxy_stderr_cb(int fd, HYD_Event_t events)
     HYDU_FUNC_ENTER();
 
     status = HYDU_Sock_stdout_cb(fd, events, 2, &closed);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock stdout callback error\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "stdout callback error\n");
 
     if (closed) {
         /* The connection has closed */
         status = HYD_DMX_Deregister_fd(fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("demux engine returned error when deregistering fd\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
 
         for (i = 0; i < HYD_Proxy_params.proc_count; i++)
             if (HYD_Proxy_params.err[i] == fd)
@@ -166,18 +137,12 @@ HYD_Status HYD_Proxy_stdin_cb(int fd, HYD_Event_t events)
     status = HYDU_Sock_stdin_cb(HYD_Proxy_params.in, events, HYD_Proxy_params.stdin_tmp_buf,
                                 &HYD_Proxy_params.stdin_buf_count,
                                 &HYD_Proxy_params.stdin_buf_offset, &closed);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock stdin callback error\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "stdin callback error\n");
 
     if (closed) {
         /* The connection has closed */
         status = HYD_DMX_Deregister_fd(fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("demux engine returned error when deregistering fd\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
 
         close(HYD_Proxy_params.in);
         close(fd);

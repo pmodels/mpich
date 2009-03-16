@@ -22,53 +22,33 @@ HYD_Status HYD_CSI_Launch_procs(void)
     HYDU_FUNC_ENTER();
 
     status = HYD_PMCI_Launch_procs();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("process manager returned error when launching processes\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "PM returned error while launching processes\n");
 
     for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
         for (partition = proc_params->partition; partition; partition = partition->next) {
             status =
                 HYD_DMX_Register_fd(1, &partition->out, HYD_STDOUT, proc_params->stdout_cb);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("demux engine returned error when registering fd\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
             status =
                 HYD_DMX_Register_fd(1, &partition->err, HYD_STDOUT, proc_params->stderr_cb);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("demux engine returned error when registering fd\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
     }
 
     if (handle.in != -1) {      /* Only process_id 0 */
         status = HYDU_Sock_set_nonblock(handle.in);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("Unable to set socket as non-blocking\n");
-            status = HYD_SOCK_ERROR;
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
         stdin_fd = 0;
         status = HYDU_Sock_set_nonblock(stdin_fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("Unable to set socket as non-blocking\n");
-            status = HYD_SOCK_ERROR;
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
         handle.stdin_buf_count = 0;
         handle.stdin_buf_offset = 0;
 
         status = HYD_DMX_Register_fd(1, &stdin_fd, HYD_STDIN, handle.stdin_cb);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("demux engine returned error when registering fd\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
   fn_exit:

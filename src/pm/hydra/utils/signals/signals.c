@@ -45,37 +45,22 @@ HYD_Status HYDU_Set_common_signals(void (*handler) (int))
     HYDU_FUNC_ENTER();
 
     status = HYDU_Set_signal(SIGINT, handler);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("signal utils returned error when trying to set SIGINT signal\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to set SIGINT\n");
 
     status = HYDU_Set_signal(SIGQUIT, handler);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("signal utils returned error when trying to set SIGQUIT signal\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to set SIGQUIT\n");
 
     status = HYDU_Set_signal(SIGTERM, handler);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("signal utils returned error when trying to set SIGTERM signal\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to set SIGTERM\n");
 
 #if defined SIGSTOP
     status = HYDU_Set_signal(SIGSTOP, handler);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("signal utils returned error when trying to set SIGSTOP signal\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to set SIGSTOP\n");
 #endif /* SIGSTOP */
 
 #if defined SIGCONT
     status = HYDU_Set_signal(SIGCONT, handler);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("signal utils returned error when trying to set SIGCONT signal\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to set SIGCONT\n");
 #endif /* SIGCONT */
 
   fn_exit:

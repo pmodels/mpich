@@ -41,10 +41,8 @@ HYD_Status HYDU_String_break(char *str, char **str1, char **str2)
 
     HYDU_FUNC_ENTER();
 
-    if (str == NULL) {
-        str = HYD_INTERNAL_ERROR;
-        goto fn_fail;
-    }
+    if (str == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, NULL);
 
     *str1 = MPIU_Strdup(str);
     for (i = 0; (*str1)[i] && ((*str1)[i] != '='); i++);
@@ -85,11 +83,8 @@ HYD_Status HYDU_String_int_to_str(int x, char **str)
     }
 
     *str = (char *) MPIU_Malloc(len + 1);
-    if (*str == NULL) {
-        HYDU_Error_printf("failed trying to allocate %d bytes\n", len + 1);
-        status = HYD_NO_MEM;
-        goto fn_fail;
-    }
+    if (*str == NULL)
+        HYDU_ERR_SETANDJUMP1(status, HYD_NO_MEM, "unable to allocate %d bytes\n", len + 1);
 
     MPIU_Snprintf(*str, len + 1, "%d", x);
 

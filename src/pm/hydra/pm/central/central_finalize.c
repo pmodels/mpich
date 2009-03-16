@@ -22,25 +22,16 @@ HYD_Status HYD_PMCI_Finalize(void)
     /* Deregister the listen socket from the demux engine and close
      * it. */
     status = HYD_DMX_Deregister_fd(HYD_PMCD_Central_listenfd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("demux engine returned error when deregistering fd\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to deregister fd\n");
 
     close(HYD_PMCD_Central_listenfd);
     HYD_PMCD_Central_listenfd = -1;
 
     status = HYD_PMCU_Finalize();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to finalize process manager utils\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to finalize process manager utils\n");
 
     status = HYD_BSCI_finalize();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to finalize the bootstrap server\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

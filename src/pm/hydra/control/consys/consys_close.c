@@ -22,11 +22,7 @@ HYD_Status HYD_CSI_Close_fd(int fd)
 
     /* Deregister the FD with the demux engine and close it. */
     status = HYD_DMX_Deregister_fd(fd);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("demux engine returned error when deregistering fd: %d\n", fd);
-        goto fn_fail;
-    }
-
+    HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
     close(fd);
 
     /* Find the FD in the handle and remove it. */

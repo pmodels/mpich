@@ -50,10 +50,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     HYDU_FUNC_ENTER();
 
     status = HYDU_Set_common_signals(HYD_PMCD_Central_signal_cb);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("signal utils returned error when trying to set signal\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to set signal\n");
 
     /* Check if the user wants us to use a port within a certain
      * range. */
@@ -66,31 +63,22 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     /* Listen on a port in the port range */
     port = 0;
     status = HYDU_Sock_listen(&HYD_PMCD_Central_listenfd, port_range, &port);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("sock utils returned listen error\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
     status = HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd, HYD_STDOUT,
                                  HYD_PMCD_Central_cb);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("demux engine returned error for registering fd\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */
-    if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0) {
-        HYDU_Error_printf("gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
-    }
+    if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
+        HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR,
+                             "gethostname error (hostname: %s; errno: %d)\n", hostname,
+                             errno);
 
     status = HYDU_String_int_to_str(port, &sport);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("String utils returned error while converting int to string\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "cannot convert int to string\n");
+
     HYDU_MALLOC(port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
     MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1,
                   "%s:%s", hostname, sport);
@@ -98,25 +86,18 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     HYDU_Debug("Process manager listening on PMI port %s\n", port_str);
 
     status = HYDU_Env_create(&env, "PMI_PORT", port_str);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to create env\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to create env\n");
+
     status = HYDU_Env_add_to_list(&handle.system_env, *env);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("unable to add env to list\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to add env to list\n");
+
     HYDU_Env_free(env);
     HYDU_FREE(port_str);
 
     /* Create a process group for the MPI processes in this
      * comm_world */
     status = HYD_PMCU_Create_pg();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("pm utils returned error creating process group\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "unable to create process group\n");
 
     /* Create the arguments list for each proxy */
     process_id = 0;
@@ -138,20 +119,14 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             path_str[i++] = MPIU_Strdup("hydproxy");
             path_str[i] = NULL;
             status = HYDU_String_alloc_and_join(path_str, &partition->args[arg]);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf("String utils returned error when joining strings\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "unable to join strings\n");
             arg++;
 
             HYDU_Free_args(path_str);
 
             status = HYDU_String_int_to_str(partition->proc_count, &str);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf
-                    ("String utils returned error while converting int to string\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "unable to convert int to string\n");
+
             partition->args[arg++] = MPIU_Strdup("--proc-count");
             partition->args[arg++] = MPIU_Strdup(str);
 
@@ -161,21 +136,15 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             HYDU_FREE(str);
 
             status = HYDU_String_int_to_str(process_id, &str);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf
-                    ("String utils returned error while converting int to string\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "unable to convert int to string\n");
+
             partition->args[arg++] = MPIU_Strdup("--pmi-id");
             partition->args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
 
             status = HYDU_String_int_to_str(handle.proxy_port, &str);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf
-                    ("String utils returned error while converting int to string\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "unable to convert in to string\n");
+
             partition->args[arg++] = MPIU_Strdup("--proxy-port");
             partition->args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
@@ -192,11 +161,8 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             for (env = proc_params->prop_env; env; env = env->next)
                 i++;
             status = HYDU_String_int_to_str(i, &str);
-            if (status != HYD_SUCCESS) {
-                HYDU_Error_printf
-                    ("String utils returned error while converting int to string\n");
-                goto fn_fail;
-            }
+            HYDU_ERR_POP(status, "unable to convert in to string\n");
+
             partition->args[arg++] = MPIU_Strdup(str);
             partition->args[arg++] = NULL;
 
@@ -220,16 +186,10 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     /* Initialize the bootstrap server and ask it to launch the
      * processes. */
     status = HYD_BSCI_init(handle.bootstrap);
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("bootstrap server initialization failed\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
 
     status = HYD_BSCI_launch_procs();
-    if (status != HYD_SUCCESS) {
-        HYDU_Error_printf("bootstrap server returned error launching processes\n");
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -249,10 +209,7 @@ HYD_Status HYD_PMCI_Wait_for_completion(void)
     status = HYD_BSCI_wait_for_completion();
     if (status != HYD_SUCCESS) {
         status = HYD_PMCD_Central_cleanup();
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("process manager device returned error for process cleanup\n");
-            goto fn_fail;
-        }
+        HYDU_ERR_POP(status, "process manager cannot cleanup processes\n");
     }
 
   fn_exit:
