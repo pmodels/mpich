@@ -40,8 +40,16 @@ HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, i
         if (in && (dup2(inpipe[0], 0) < 0))
             HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (errno: %d)\n", errno);
 
-        if (execvp(client_arg[0], client_arg) < 0)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "execvp error\n");
+        if (execvp(client_arg[0], client_arg) < 0) {
+            if (errno == ENOENT) {
+                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                                     "execvp error: file %s not found\n", client_arg[0]);
+            }
+            else {
+                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                                     "execvp error (errno: %d)\n", errno);
+            }
+        }
     }
     else {      /* Parent process */
         close(outpipe[1]);
