@@ -15,7 +15,7 @@
   communication operations.
 
 - PM/PMI: Initial support for the new Hydra process management
-  framework (current support is only for ssh).
+  framework (current support is for ssh and fork).
 
 - OVERALL: Support for BlueGene/P through the DCMF library (thanks to
   IBM for the patch).
@@ -28,12 +28,17 @@
 - ROMIO: Added support for MPI_Type_create_resized and
   MPI_Type_create_indexed_block datatypes in ROMIO.
 
-- ROMIO: Optimized Lustre ADIO driver (Thanks to Weikuan Yu for initial
-  work and Sun for further improvements).
+- ROMIO: Optimized Lustre ADIO driver (thanks to Weikuan Yu for
+  initial work and Sun for further improvements).
 
 - Many other bug fixes, memory leak fixes and code cleanup. A full
-list of changes is available using:
+  list of changes is available using:
+
   svn log -r813:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.1b1
+
+  ... or at the following link:
+
+  https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.1b1?action=follow_copy&rev=HEAD&stop_rev=813&mode=follow_copy
 
 
 ===============================================================================
