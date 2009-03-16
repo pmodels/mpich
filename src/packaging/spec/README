@@ -1,0 +1,5 @@
+This directory contains the spec file for building MPICH2 SRPMS on
+the Fedora Linux distribution.
+
+Thanks to Deji Akingunola (dakingun@gmail.com) for contributing and
+maintaining this file.

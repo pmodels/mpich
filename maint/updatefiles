@@ -754,6 +754,11 @@ echo "Updating README's version ID."
 VERSION=`cat maint/Version`
 sed -e "s/%VERSION%/${VERSION}/g" README.vin > README
 
+BASIC_VERSION=`expr $VERSION : '\([0-9]*\.[0-9]*[\.]*[0-9]*\)[a-zA-Z]*[0-9]*'`
+VERSION_EXT=`expr $VERSION : '[0-9]*\.[0-9]*[\.]*[0-9]*\([a-zA-Z]*[0-9]*\)'`
+sed -e "s/%BASIC_VERSION%/${BASIC_VERSION}/g" -e "s/%VERSION_EXT%/${VERSION_EXT}/g" \
+    src/packaging/spec/fedora.spec.in > src/packaging/spec/fedora.spec
+
 #
 # The following must be the last statements executed
 if [ -n "$error_summary" ] ; then
