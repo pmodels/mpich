@@ -20,11 +20,11 @@ HYD_Status HYDU_Append_env(HYD_Env_t * env_list, char **client_arg)
     while (env) {
         j = 0;
 
-        tmp[j++] = MPIU_Strdup("\"");
+        tmp[j++] = MPIU_Strdup("'");
         tmp[j++] = MPIU_Strdup(env->env_name);
         tmp[j++] = MPIU_Strdup("=");
         tmp[j++] = env->env_value ? MPIU_Strdup(env->env_value) : MPIU_Strdup("");
-        tmp[j++] = MPIU_Strdup("\"");
+        tmp[j++] = MPIU_Strdup("'");
         tmp[j++] = NULL;
 
         status = HYDU_String_alloc_and_join(tmp, &envstr);
