@@ -104,7 +104,7 @@ Function RunTests(filename)
 			 if Left(twostrings(0), 1) <> "#" then
 			  if Len(twostrings(1)) > 0 then
 				exe = Replace( filename, "testlist", config + twostrings(0) + ".exe" )
-				cmd = "mpiexec -timeout 180 -n " + twostrings(1) + " -channel " + channel_name + " " + exe
+				cmd = "mpiexec -timeout 900 -n " + twostrings(1) + " -channel " + channel_name + " " + exe
 				if bEcho = true then
 			 		WScript.Echo cmd '+ vbCrLf
 				end if
