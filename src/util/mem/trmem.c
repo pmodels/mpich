@@ -436,8 +436,16 @@ called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE),
      */
     /* FIXME why do we skip the first few ints? [goodell@] */
     nset = head->size -  2 * sizeof(int);
-    if (nset > 0) 
+    if (nset > 0)  {
+#if defined(USE_VALGRIND_MACROS)
+        /* If an upper layer (like the handle allocation code) ever used the
+           VALGRIND_MAKE_MEM_NOACCESS macro on part/all of the data we gave
+           them then our memset will elicit "invalid write" errors from
+           valgrind.  Mark it as accessible but undefined here to prevent this. */
+        VALGRIND_MAKE_MEM_UNDEFINED(ahead + 2 * sizeof(int), nset); 
+#endif
 	memset( ahead + 2 * sizeof(int), TRFreedByte, nset );
+    }
     free( a );
 }
 
