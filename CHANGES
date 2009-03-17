@@ -12,10 +12,10 @@
 - OVERALL: Added a new Myrinet MX network module for nemesis.
 
 - OVERALL: Initial support for shared-memory aware collective
-  communication operations.
+  communication operations.  Currently MPI_Bcast, MPI_Reduce, MPI_Allreduce,
+  and MPI_Scan.
 
-- PM/PMI: Initial support for the new Hydra process management
-  framework (current support is for ssh and fork).
+- OVERALL: Improved handling of MPI Attributes.
 
 - OVERALL: Support for BlueGene/P through the DCMF library (thanks to
   IBM for the patch).
@@ -24,6 +24,11 @@
 
 - OVERALL: Added automatic as well as statically runtime configurable
   receive timeout variation for MPD (thanks to OSU for the patch).
+
+- OVERALL: Improved performance for MPI_Allgatherv and MPI_Gatherv.
+
+- PM/PMI: Initial support for the new Hydra process management
+  framework (current support is for ssh and fork).
 
 - ROMIO: Added support for MPI_Type_create_resized and
   MPI_Type_create_indexed_block datatypes in ROMIO.
