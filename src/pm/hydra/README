@@ -7,8 +7,8 @@ multiple daemons such as ssh, pbs, slurm and sge. However, in the
 current release, only ssh and fork are supported.
 
 More detailed documentation of the internal workings of Hydra are
-available on the "Developer Documentation" wiki page:
-http://wiki.mcs.anl.gov/mpich2/index.php/Category:Design_Documents
+available here:
+http://wiki.mcs.anl.gov/mpich2/index.php/Hydra_Process_Management_Framework
 
 How to use Hydra
 ----------------
