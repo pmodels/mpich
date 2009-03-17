@@ -32,7 +32,7 @@ HYD_Status HYD_Proxy_listen_cb(int fd, HYD_Event_t events)
         HYDU_ERR_POP(status, "unable to register fd\n");
     }
     else {      /* We got a command from mpiexec */
-        count = read(fd, &cmd, HYD_TMPBUF_SIZE);
+        count = read(fd, &cmd, sizeof(enum HYD_Proxy_cmds));
         if (count < 0) {
             HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR, "read error on %d (%s)\n",
                                  fd, HYDU_String_error(errno));
