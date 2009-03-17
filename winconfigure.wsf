@@ -2860,6 +2860,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#undef HAVE_STRUCT_IFCONF")
 				Case "USE_SVIDSOURCE_FOR_IFCONF"
 					fout.WriteLine("#undef USE_SVIDSOURCE_FOR_IFCONF")
+                                Case "USE_ALL_SOURCE_FOR_IFCONF"
+                                        fout.WriteLine("/* #undef USE_ALL_SOURCE_FOR_IFCONF */")
 				Case "HAVE_SYSCTL"
 					fout.WriteLine("#undef HAVE_SYSCTL")
 				Case "HAVE_SYS_SYSCTL_H"
@@ -2958,6 +2960,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#undef ROMIO_BGLOCKLESS")
 				Case "ROMIO_LUSTRE"
 					fout.WriteLine("#undef ROMIO_LUSTRE")
+                                Case "HAVE_LUSTRE_LUSTRE_USER_H"
+                                        fout.WriteLine("/* #undef HAVE_LUSTRE_LUSTRE_USER_H */")
 				Case "ROMIO_ZOIDFS"
 					fout.WriteLine("#undef ROMIO_ZOIDFS")
 				Case "CRAY_STACKSEG_END"
