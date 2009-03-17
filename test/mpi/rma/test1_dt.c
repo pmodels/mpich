@@ -48,19 +48,19 @@ int main(int argc, char *argv[])
     MPI_Win_fence(0, win); 
 
     if (rank == 0) {
-        for (i=0; i<SIZE-1; i++)
+        for (i=0; i<SIZE-2; i+=2)
             MPI_Put(A+i, 2, MPI_INT, 1, i, 1, contig_2ints, win);
     }        
     else {
-        for (i=0; i<SIZE-1; i++)
+        for (i=0; i<SIZE-2; i+=2)
             MPI_Get(A+i, 2, MPI_INT, 0, i, 1, contig_2ints, win);
 
-        MPI_Accumulate(A+i, 2, MPI_INT, 0, i, 1, contig_2ints, MPI_SUM, win);
+        MPI_Accumulate(A+SIZE-2, 2, MPI_INT, 0, SIZE-2, 1, contig_2ints, MPI_SUM, win);
     }
     MPI_Win_fence(0, win); 
 
     if (rank == 1) {
-        for (i=0; i<SIZE-1; i++) {
+        for (i=0; i<SIZE-2; i++) {
             if (A[i] != B[i]) {
                 printf("Put/Get Error: A[i]=%d, B[i]=%d\n", A[i], B[i]);
                 errs++;
