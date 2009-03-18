@@ -56,7 +56,8 @@ HYD_Status HYD_BSCD_slurm_launch_procs(void)
             /* The stdin pointer will be some value for process_id 0;
              * for everyone else, it's NULL. */
             status = HYDU_Create_process(client_arg, (process_id == 0 ? &handle.in : NULL),
-                                         &partition->out, &partition->err, &partition->pid);
+                                         &partition->out, &partition->err, &partition->pid,
+                                         -1);
             if (status != HYD_SUCCESS) {
                 HYDU_Error_printf("bootstrap spawn process returned error\n");
                 goto fn_fail;

@@ -6,9 +6,10 @@
 
 #include "hydra_utils.h"
 
-HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, int *pid)
+HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err,
+                               int *pid, int core)
 {
-    int inpipe[2], outpipe[2], errpipe[2], tpid;
+    int inpipe[2], outpipe[2], errpipe[2], tpid, my_pid;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -39,6 +40,11 @@ HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, i
         if (dup2(errpipe[1], 2) < 0)
             HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
                                  HYDU_String_error(errno));
+
+        if (core >= 0) {
+            status = HYDU_bind_process(core);
+            HYDU_ERR_POP(status, "bind process failed\n");
+        }
 
         close(inpipe[1]);
         close(0);

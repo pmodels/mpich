@@ -78,15 +78,19 @@ int main(int argc, char **argv)
             client_args[arg++] = MPIU_Strdup(HYD_Proxy_params.args[j]);
         client_args[arg++] = NULL;
 
+        /* FIXME: We need to figure out how many total number of
+         * processes are there on this partition, and appropriately
+         * bind them. */
         if ((i + HYD_Proxy_params.pmi_id) == 0) {
             status = HYDU_Create_process(client_args, &HYD_Proxy_params.in,
                                          &HYD_Proxy_params.out[i], &HYD_Proxy_params.err[i],
-                                         &HYD_Proxy_params.pid[i]);
+                                         &HYD_Proxy_params.pid[i], i);
         }
         else {
             status = HYDU_Create_process(client_args, NULL,
                                          &HYD_Proxy_params.out[i],
-                                         &HYD_Proxy_params.err[i], &HYD_Proxy_params.pid[i]);
+                                         &HYD_Proxy_params.err[i], &HYD_Proxy_params.pid[i],
+                                         i);
         }
         HYDU_ERR_POP(status, "spawn process returned error\n");
 

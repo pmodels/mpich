@@ -35,7 +35,7 @@ AC_PROG_CC
 CFLAGS=$save_cflags
 
 dnl Check if the necessary headers are available
-AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h)
+AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h sched.h)
 
 # Check for special types
 AC_TYPE_SIZE_T
@@ -145,8 +145,21 @@ AC_ARG_ENABLE(g, [  --enable-warnings              Enable warnings],
 AC_MSG_CHECKING(warnings)
 AC_MSG_RESULT($WARNINGS)
 if test "$WARNINGS" = "yes"; then
-   AC_DEFINE(ENABLE_WARNINGS,1,[Define if warnings enabled])
+   AC_DEFINE(ENABLE_WARNINGS,1,[Define if warnings are enabled])
 fi
+
+dnl Process Binding
+AC_ARG_ENABLE(g, [  --enable-process-binding       Process Binding],
+		 [ PROC_BINDING=$enableval ],
+		 [ PROC_BINDING=no ])
+AC_MSG_CHECKING(process binding)
+AC_MSG_RESULT($PROC_BINDING)
+if test "$PROC_BINDING" = "yes"; then
+   AC_DEFINE(PROC_BINDING,1,[Define if process binding is enabled])
+   plpa_makefile="utils/plpa/Makefile"
+   all_utils="${all_utils} plpa"
+fi
+AC_SUBST(all_utils)
 
 dnl Check if __func__ is defined by the compiler
 AC_MSG_CHECKING([whether the compiler allows __func__])
@@ -294,6 +307,7 @@ AC_OUTPUT(Makefile \
 	utils/sock/Makefile \
 	utils/string/Makefile \
 	utils/timer/Makefile \
+	${plpa_makefile} \
 	launcher/Makefile \
 	launcher/utils/Makefile \
 	launcher/${hydra_launcher}/Makefile \
