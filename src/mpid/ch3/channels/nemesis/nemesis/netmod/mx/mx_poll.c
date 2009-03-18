@@ -305,7 +305,7 @@ int MPID_nem_mx_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 }
 
 
-//static int my__count = 0;
+
 #ifndef USE_CTXT_AS_MARK	
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mx_poll
@@ -333,7 +333,7 @@ MPID_nem_mx_poll(MPID_nem_poll_dir_t in_or_out)
      MPID_Request *req = (MPID_Request *)(status.context);
      if ((req->kind == MPID_REQUEST_SEND) || (req->kind == MPID_PREQUEST_SEND))
      {	   
-	//MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
+
        MPID_nem_mx_handle_sreq(req);
      }
      else if (req->kind == MPID_REQUEST_RECV)	       
@@ -433,7 +433,7 @@ MPID_nem_mx_poll(MPID_nem_poll_dir_t in_or_out)
      { 
        if ((req->kind == MPID_REQUEST_SEND) || (req->kind == MPID_PREQUEST_SEND))
        {	   
-	  //MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
+
 	 MPID_nem_mx_handle_sreq(req);
        }
        else if (req->kind == MPID_REQUEST_RECV)	       
