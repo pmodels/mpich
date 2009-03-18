@@ -305,7 +305,7 @@ int MPID_nem_mx_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 }
 
 
-static int my__count = 0;
+//static int my__count = 0;
 #ifndef USE_CTXT_AS_MARK	
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mx_poll
@@ -319,9 +319,10 @@ MPID_nem_mx_poll(MPID_nem_poll_dir_t in_or_out)
    mx_return_t   ret;
    uint32_t      result;
 
+   /*
    if ( ((my__count++)%100000000) == 0)
      fprintf(stdout,"[%i] ==== Polling %i\n",MPID_nem_mem_region.rank,my__count);
-
+    */
    /*mx_progress(MPID_nem_mx_local_endpoint); */
 
    /* first check ADI msgs */
@@ -332,7 +333,7 @@ MPID_nem_mx_poll(MPID_nem_poll_dir_t in_or_out)
      MPID_Request *req = (MPID_Request *)(status.context);
      if ((req->kind == MPID_REQUEST_SEND) || (req->kind == MPID_PREQUEST_SEND))
      {	   
-       MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
+	//MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
        MPID_nem_mx_handle_sreq(req);
      }
      else if (req->kind == MPID_REQUEST_RECV)	       
@@ -413,11 +414,13 @@ MPID_nem_mx_poll(MPID_nem_poll_dir_t in_or_out)
    mx_return_t   ret;
    uint32_t      result;
 
+   /*
    mx_progress(MPID_nem_mx_local_endpoint);
    
    if ( ((my__count++)%100000000) == 0)
      fprintf(stdout,"[%i] ==== Polling %i\n",MPID_nem_mem_region.rank,my__count);
-
+    */
+   
    ret = mx_test_any(MPID_nem_mx_local_endpoint,NEM_MX_MATCH_EMPTY_MASK,NEM_MX_MATCH_EMPTY_MASK,&status,&result);
    MPIU_Assert(ret == MX_SUCCESS);
    if ((ret == MX_SUCCESS) && (result > 0))
@@ -430,7 +433,7 @@ MPID_nem_mx_poll(MPID_nem_poll_dir_t in_or_out)
      { 
        if ((req->kind == MPID_REQUEST_SEND) || (req->kind == MPID_PREQUEST_SEND))
        {	   
-	 MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
+	  //MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
 	 MPID_nem_mx_handle_sreq(req);
        }
        else if (req->kind == MPID_REQUEST_RECV)	       
