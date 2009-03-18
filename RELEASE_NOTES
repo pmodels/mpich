@@ -63,6 +63,11 @@
   like, and let us know what does and does not work, but know that fixes will
   probably wait for the next release.
 
+- The SMPD process manager does not work reliably with threaded MPI processes.
+  This will be fixed in the next release
+  MPI_Comm_spawn() does not currently work for >= 256 arguments with smpd.
+  This will be fixed in the next release. 
+
 - C++ Binding:
   
   The MPI datatypes corresponding to Fortran datatypes are not available
