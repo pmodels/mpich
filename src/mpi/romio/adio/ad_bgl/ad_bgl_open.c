@@ -133,8 +133,13 @@ void ADIOI_BGL_Open(ADIO_File fd, int *error_code)
 	amode = amode | O_RDWR;
     if (fd->access_mode & ADIO_EXCL)
 	amode = amode | O_EXCL;
-
+#ifdef ADIOI_MPE_LOGGING
+    MPE_Log_event(ADIOI_MPE_open_a, 0, NULL);
+#endif
     fd->fd_sys = open(fd->filename, amode, perm);
+#ifdef ADIOI_MPE_LOGGING
+    MPE_Log_event(ADIOI_MPE_open_b, 0, NULL);
+#endif
   DBG_FPRINTF(stderr,"open('%s',%#X,%#X) rc=%d, errno=%d\n",fd->filename,amode,perm,fd->fd_sys,errno);
     fd->fd_direct = -1;
 
@@ -158,6 +163,10 @@ void ADIOI_BGL_Open(ADIO_File fd, int *error_code)
     ((ADIOI_BGL_fs*)fd->fs_ptr)->fsync_aggr = ADIOI_BGL_FSYNC_AGGREGATION_DISABLED; 
     
 
+
+#ifdef ADIOI_MPE_LOGGING
+        MPE_Log_event(ADIOI_MPE_stat_a, 0, NULL);
+#endif
     /* Get the (real) underlying file system block size */
     rc = stat64(fd->filename,&bgl_stat);
       if (rc >= 0)
@@ -194,6 +203,9 @@ void ADIOI_BGL_Open(ADIO_File fd, int *error_code)
       }
       ADIOI_Free(dir);
     }
+#ifdef ADIOI_MPE_LOGGING
+	MPE_Log_event(ADIOI_MPE_stat_b, 0, NULL);
+#endif
     if ((bgl_statfs.f_type == GPFS_SUPER_MAGIC) ||
         (bgl_statfs.f_type == PVFS2_SUPER_MAGIC))
     {
