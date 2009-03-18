@@ -6,10 +6,6 @@
 
 #include "hydra_utils.h"
 
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-
 HYD_Status HYDU_Sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 {
     struct sockaddr_in sa;

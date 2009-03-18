@@ -139,6 +139,10 @@ int HYDU_Time_left(HYD_Time start, HYD_Time timeout);
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
 #if !defined size_t
 #define size_t unsigned int
 #endif /* size_t */
