@@ -88,7 +88,7 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
                 /* Some bootstrap servers remove the quotes that we
                  * added, while some others do not. For the cases
                  * where they are not removed, we do it ourselves. */
-                if (*str == '"') {
+                if (*str == '\'') {
                     str++;
                     str[strlen(str) - 1] = 0;
                 }
