@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 
     if (handle.debug) {
         status = HYD_LCHI_Print_parameters();
-        HYDU_ERR_POP(status, NULL);
+        HYDU_ERR_POP(status, "");
     }
 
     /* Convert the host file to a host list */

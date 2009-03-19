@@ -70,7 +70,7 @@ typedef enum {
 #define HYDU_ERR_POP(status, message)                                   \
     {                                                                   \
         if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (message)                                                \
+            if (strcmp(message, ""))                                    \
                 HYDU_Error_printf(message);                             \
             goto fn_fail;                                               \
         }                                                               \
@@ -83,7 +83,7 @@ typedef enum {
     {                                                                   \
         status = error;                                                 \
         if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (message)                                                \
+            if (strcmp(message, ""))                                    \
                 HYDU_Error_printf(message);                             \
             goto fn_fail;                                               \
         }                                                               \
@@ -96,7 +96,7 @@ typedef enum {
     {                                                                   \
         status = error;                                                 \
         if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (message)                                                \
+            if (strcmp(message, ""))                                    \
                 HYDU_Error_printf(message, arg1);                       \
             goto fn_fail;                                               \
         }                                                               \
@@ -109,7 +109,7 @@ typedef enum {
     {                                                                   \
         status = error;                                                 \
         if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (message)                                                \
+            if (strcmp(message, ""))                                    \
                 HYDU_Error_printf(message, arg1, arg2);                 \
             goto fn_fail;                                               \
         }                                                               \

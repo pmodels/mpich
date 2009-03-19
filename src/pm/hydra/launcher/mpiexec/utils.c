@@ -114,7 +114,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
         HYDU_ERR_POP(status, "string break returned error\n");
 
         if (!strcmp(str1, "-h") || !strcmp(str1, "--help") || !strcmp(str1, "-help"))
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, NULL);
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
 
         if (!strcmp(str1, "--verbose")) {
             if (handle.debug != -1)
@@ -125,7 +125,7 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
         if (!strcmp(str1, "--version")) {
             show_version();
-            HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, NULL);
+            HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
         }
 
         if (!strcmp(str1, "--bootstrap")) {

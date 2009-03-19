@@ -42,7 +42,7 @@ HYD_Status HYDU_String_break(char *str, char **str1, char **str2)
     HYDU_FUNC_ENTER();
 
     if (str == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, NULL);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
 
     *str1 = MPIU_Strdup(str);
     for (i = 0; (*str1)[i] && ((*str1)[i] != '='); i++);
