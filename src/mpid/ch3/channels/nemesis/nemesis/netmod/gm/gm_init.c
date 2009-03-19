@@ -268,6 +268,7 @@ MPID_nem_gm_vc_init(MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
     int ret;
     char *business_card;
+    int pmi_errno;
     int val_max_sz;
     MPIU_CHKLMEM_DECL(1);
 
@@ -276,7 +277,7 @@ MPID_nem_gm_vc_init(MPIDI_VC_t *vc)
     MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
     MPIU_CHKLMEM_MALLOC(business_card, char *, val_max_sz, mpi_errno, "bc");
 
-    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, key_max_sz, vc->pg);
+    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, val_max_sz, vc->pg);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     VC_FIELD(vc, source_id) = my_pg_rank; /* FIXME: this is only valid for processes in COMM_WORLD */
