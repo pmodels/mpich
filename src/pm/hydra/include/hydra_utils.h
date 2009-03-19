@@ -72,11 +72,20 @@ HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err, i
 HYD_Status HYDU_Get_base_path(char *execname, char **path);
 HYD_Status HYDU_Chdir(const char *dir);
 
+
+/* Process binding */
 #if defined PROC_BINDING
+
 #include "plpa.h"
 #include "plpa_internal.h"
-#endif /* PROC_BINDING */
+
 HYD_Status HYDU_bind_process(int core);
+
+#else
+
+#define HYDU_bind_process(...) HYD_SUCCESS
+
+#endif /* PROC_BINDING */
 
 
 /* Memory utilities */

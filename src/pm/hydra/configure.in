@@ -156,8 +156,8 @@ AC_MSG_CHECKING(process binding)
 AC_MSG_RESULT($PROC_BINDING)
 if test "$PROC_BINDING" = "yes"; then
    AC_DEFINE(PROC_BINDING,1,[Define if process binding is enabled])
-   plpa_makefile="utils/plpa/Makefile"
-   opt_utils="${opt_utils} plpa"
+   opt_utils_makefiles="${opt_utils_makefiles} utils/plpa/Makefile utils/bind/Makefile"
+   opt_utils="${opt_utils} plpa bind"
 fi
 AC_SUBST(opt_utils)
 
@@ -307,7 +307,7 @@ AC_OUTPUT(Makefile \
 	utils/sock/Makefile \
 	utils/string/Makefile \
 	utils/timer/Makefile \
-	${plpa_makefile} \
+	${opt_utils_makefiles} \
 	launcher/Makefile \
 	launcher/utils/Makefile \
 	launcher/${hydra_launcher}/Makefile \

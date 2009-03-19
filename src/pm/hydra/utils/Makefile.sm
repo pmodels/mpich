@@ -4,5 +4,5 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS_opt_utils = plpa .
+SUBDIRS_opt_utils = plpa bind .
 SUBDIRS = args dbg env launch signals sock string timer @opt_utils@
