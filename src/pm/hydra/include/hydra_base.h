@@ -142,7 +142,7 @@ typedef enum {
 #if defined ENABLE_WARNINGS
 #define HYDU_Warn_printf HYDU_Error_printf
 #else
-#define HYDU_Warn_printf(...)
+#define HYDU_Warn_printf(...) {}
 #endif /* ENABLE_WARNINGS */
 
 #if !defined COMPILER_ACCEPTS_VA_ARGS

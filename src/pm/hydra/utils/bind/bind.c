@@ -18,6 +18,7 @@ HYD_Status HYDU_bind_process(int core)
 
     if (!((plpa_api_probe(&p) == 0) && (p == PLPA_PROBE_OK))) {
         /* If this failed, we just return without binding */
+        HYDU_Warn_printf("plpa api probe failed; not binding\n");
         goto fn_exit;
     }
 
@@ -33,6 +34,7 @@ HYD_Status HYDU_bind_process(int core)
     }
     else {
         /* If this failed, we just return without binding */
+        HYDU_Warn_printf("plpa unable to get topology information; not binding\n");
         goto fn_exit;
     }
 
