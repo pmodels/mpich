@@ -139,9 +139,9 @@ fi
 AC_SUBST(EXTRA_CFLAGS)
 
 dnl Warning messages
-AC_ARG_ENABLE(g, [  --enable-warnings              Enable warnings],
-		 [ WARNINGS=$enableval ],
-		 [ WARNINGS=no ])
+AC_ARG_ENABLE(warnings, [  --enable-warnings              Enable warnings],
+			[ WARNINGS=$enableval ],
+			[ WARNINGS=no ])
 AC_MSG_CHECKING(warnings)
 AC_MSG_RESULT($WARNINGS)
 if test "$WARNINGS" = "yes"; then
