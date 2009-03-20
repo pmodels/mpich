@@ -152,6 +152,25 @@ if [ $at_top = "no" ] ; then
     echo "Must execute at top level directory for now"
     exit 1
 fi
+# 
+# On some systems (including Solaris), using -nt in a test statement causes
+# the shell script to abort.  We test for this here to make updatefiles more
+# robust in this case.  We use conftest as the name of the test program
+# because autoconf also uses this name, so we know that it will be ok.
+testNTfails=yes
+rm -rf conftest
+cat <<EOF >>conftest
+#! /bin/sh
+test a -nt b
+exit 2
+EOF
+chmod +x conftest
+./conftest 2>&1 >/dev/null
+st=$?
+if [ "$st" = 2 ] ; then
+    testNTfails=no
+fi
+rm -rf conftest
 #
 # Determine the autoconf to use.  If --with-autoconf was set, use 
 # autoconf and autoheader from that directory
@@ -192,7 +211,7 @@ fi
 # -1 is used for unknown
 acSubversion=-1
 acIncDirFlag=-I
-for ver in 62 61 60 59 ; do
+for ver in 63 62 61 60 59 ; do
     rm -f .tmp/configure.in .tmp/configure
     cat >.tmp/configure.in <<EOF
 AC_PREREQ(2.$ver)
@@ -205,7 +224,7 @@ done
 rm -f .tmp/configure.in .tmp/configure
 if [ "$acSubversion" -gt 0 ] ; then
     acVersion="2.$acSubversion"
-    echo "You have autoconf version $acVersion."
+    echo "You have autoconf version $acVersion or greater."
 else
     cat <<EOF
 You either do not have autoconf in your path or updatefiles was unable to 
@@ -596,15 +615,17 @@ if [ $do_build_configure = yes ] ; then
 		    # and set builtConfigure to true (or use find with
 		    # -newer if you want to replace the test)
 		    # Test for support of -nt
-		    rm -f .foo
-		    test $dir/configure -nt $dir/mf.newer 2>.foo
-		    # If .foo is empty, there was no error in test with -nt
-		    if [ ! -s ".foo" ] ; then
-		        if [ $dir/configure -nt $dir/mf.newer ] ; then
-			    builtConfigure=yes
-		        fi
+		    if [ "$testNTfails" = "no" ] ; then
+		        rm -f .foo
+		        test $dir/configure -nt $dir/mf.newer 2>.foo
+		        # If .foo is empty, there was no error in test with -nt
+		        if [ ! -s ".foo" ] ; then
+		            if [ $dir/configure -nt $dir/mf.newer ] ; then
+			        builtConfigure=yes
+		            fi
+                        fi
+		        rm -f .foo
                     fi
-		    rm -f .foo
 		    #
 		    rm -f $dir/mf.newer
 		    if [ ! -x $dir/configure ] ; then
