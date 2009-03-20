@@ -24,7 +24,7 @@ AC_CONFIG_HEADER(include/hydra_config.h)
 
 dnl Set the directory that contains support scripts such as install-sh and
 dnl config.guess
-AC_CONFIG_AUX_DIR(../../../confdb)
+AC_CONFIG_AUX_DIR(confdb)
 dnl
 echo "RUNNING CONFIGURE FOR THE HYDRA PM"
 
