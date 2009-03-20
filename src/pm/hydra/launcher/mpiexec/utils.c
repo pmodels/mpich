@@ -89,28 +89,25 @@ static void show_version(void)
 }
 
 
-HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
+HYD_Status HYD_LCHI_get_parameters(int t_argc, char **t_argv)
 {
     int argc = t_argc, i;
     char **argv = t_argv;
-    char *env_name, *env_value, *str1, *str2;
+    char *env_name, *env_value, *str1, *str2, *progname = *argv;
     HYD_Env_t *env;
     struct HYD_Proc_params *proc_params;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_LCHU_Init_params();
+    HYD_LCHU_init_params();
 
-    status = HYDU_Get_base_path(argv[0], &handle.base_path);
-    HYDU_ERR_POP(status, "unable to get base path\n");
-
-    status = HYDU_Env_global_list(&handle.global_env);
+    status = HYDU_list_global_env(&handle.global_env);
     HYDU_ERR_POP(status, "unable to get the global env list\n");
 
     while (--argc && ++argv) {
 
-        status = HYDU_String_break(*argv, &str1, &str2);
+        status = HYDU_strsplit(*argv, &str1, &str2, '=');
         HYDU_ERR_POP(status, "string break returned error\n");
 
         if (!strcmp(str1, "-h") || !strcmp(str1, "--help") || !strcmp(str1, "-help"))
@@ -176,10 +173,10 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 
                 env_name = strtok(str2, ",");
                 do {
-                    status = HYDU_Env_create(&env, env_name, NULL);
+                    status = HYDU_env_create(&env, env_name, NULL);
                     HYDU_ERR_POP(status, "unable to create env struct\n");
 
-                    status = HYDU_Env_add_to_list(&handle.user_env, *env);
+                    status = HYDU_append_env_to_list(*env, &handle.user_env);
                     HYDU_ERR_POP(status, "unable to add env to list\n");
                 } while ((env_name = strtok(NULL, ",")));
             }
@@ -211,10 +208,10 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
                     if (env_name == NULL)
                         break;
 
-                    status = HYDU_Env_create(&env, env_name, NULL);
+                    status = HYDU_env_create(&env, env_name, NULL);
                     HYDU_ERR_POP(status, "unable to create env struct\n");
 
-                    status = HYDU_Env_add_to_list(&proc_params->prop_env, *env);
+                    status = HYDU_append_env_to_list(*env, &proc_params->prop_env);
                     HYDU_ERR_POP(status, "unable to add env to list\n");
                 } while (env_name);
             }
@@ -232,16 +229,16 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
             CHECK_NEXT_ARG_VALID(status);
             env_value = MPIU_Strdup(*argv);
 
-            status = HYDU_Env_create(&env, env_name, env_value);
+            status = HYDU_env_create(&env, env_name, env_value);
             HYDU_ERR_POP(status, "unable to create env struct\n");
 
             if (!strcmp(str1, "-genv"))
-                HYDU_Env_add_to_list(&handle.user_env, *env);
+                HYDU_append_env_to_list(*env, &handle.user_env);
             else {
                 status = get_current_proc_params(&proc_params);
                 HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
 
-                HYDU_Env_add_to_list(&proc_params->user_env, *env);
+                HYDU_append_env_to_list(*env, &proc_params->user_env);
             }
 
             HYDU_FREE(env);
@@ -344,6 +341,9 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
     if (handle.host_file == NULL)
         handle.host_file = MPIU_Strdup("HYDRA_USE_LOCALHOST");
 
+    status = HYDU_get_base_path(progname, handle.wdir, &handle.base_path);
+    HYDU_ERR_POP(status, "unable to get base path\n");
+
     proc_params = handle.proc_params;
     while (proc_params) {
         if (proc_params->exec[0] == NULL)
@@ -370,13 +370,12 @@ HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv)
 }
 
 
-HYD_Status HYD_LCHI_Print_parameters(void)
+void HYD_LCHI_print_parameters(void)
 {
     HYD_Env_t *env;
     int i, j;
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
-    HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -455,5 +454,6 @@ HYD_Status HYD_LCHI_Print_parameters(void)
     HYDU_Debug("\n\n");
 
     HYDU_FUNC_EXIT();
-    return status;
+
+    return;
 }

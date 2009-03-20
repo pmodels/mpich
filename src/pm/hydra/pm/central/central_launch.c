@@ -16,7 +16,7 @@ int HYD_PMCD_Central_listenfd;
 HYD_Handle handle;
 
 /*
- * HYD_PMCI_Launch_procs: Here are the steps we follow:
+ * HYD_PMCI_launch_procs: Here are the steps we follow:
  *
  * 1. Find what all ports the user wants to allow and listen on one of
  * those ports.
@@ -34,7 +34,7 @@ HYD_Handle handle;
  * 5. Create a process info setup and ask the bootstrap server to
  * launch the processes.
  */
-HYD_Status HYD_PMCI_Launch_procs(void)
+HYD_Status HYD_PMCI_launch_procs(void)
 {
     char *port_range, *port_str, *sport, *str;
     uint16_t port;
@@ -49,7 +49,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_Set_common_signals(HYD_PMCD_Central_signal_cb);
+    status = HYDU_set_common_signals(HYD_PMCD_Central_signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
 
     /* Check if the user wants us to use a port within a certain
@@ -62,11 +62,11 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 
     /* Listen on a port in the port range */
     port = 0;
-    status = HYDU_Sock_listen(&HYD_PMCD_Central_listenfd, port_range, &port);
+    status = HYDU_sock_listen(&HYD_PMCD_Central_listenfd, port_range, &port);
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_Register_fd(1, &HYD_PMCD_Central_listenfd, HYD_STDOUT,
+    status = HYD_DMX_register_fd(1, &HYD_PMCD_Central_listenfd, HYD_STDOUT,
                                  HYD_PMCD_Central_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
@@ -76,7 +76,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
                              "gethostname error (hostname: %s; errno: %d)\n", hostname,
                              errno);
 
-    status = HYDU_String_int_to_str(port, &sport);
+    status = HYDU_int_to_str(port, &sport);
     HYDU_ERR_POP(status, "cannot convert int to string\n");
 
     HYDU_MALLOC(port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
@@ -85,18 +85,18 @@ HYD_Status HYD_PMCI_Launch_procs(void)
     HYDU_FREE(sport);
     HYDU_Debug("Process manager listening on PMI port %s\n", port_str);
 
-    status = HYDU_Env_create(&env, "PMI_PORT", port_str);
+    status = HYDU_env_create(&env, "PMI_PORT", port_str);
     HYDU_ERR_POP(status, "unable to create env\n");
 
-    status = HYDU_Env_add_to_list(&handle.system_env, *env);
+    status = HYDU_append_env_to_list(*env, &handle.system_env);
     HYDU_ERR_POP(status, "unable to add env to list\n");
 
-    HYDU_Env_free(env);
+    HYDU_env_free(env);
     HYDU_FREE(port_str);
 
     /* Create a process group for the MPI processes in this
      * comm_world */
-    status = HYD_PMCU_Create_pg();
+    status = HYD_PMCU_create_pg();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
     /* Create the arguments list for each proxy */
@@ -110,21 +110,15 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 
             for (arg = 0; partition->args[arg]; arg++);
             i = 0;
-            if (handle.base_path[0] && (handle.base_path[0] != '/')) {
-                /* This should be a relative path; add the wdir as well */
-                path_str[i++] = MPIU_Strdup(handle.wdir);
-                path_str[i++] = MPIU_Strdup("/");
-            }
             path_str[i++] = MPIU_Strdup(handle.base_path);
             path_str[i++] = MPIU_Strdup("hydproxy");
             path_str[i] = NULL;
-            status = HYDU_String_alloc_and_join(path_str, &partition->args[arg]);
+            status = HYDU_str_alloc_and_join(path_str, &partition->args[arg++]);
             HYDU_ERR_POP(status, "unable to join strings\n");
-            arg++;
 
-            HYDU_Free_args(path_str);
+            HYDU_free_strlist(path_str);
 
-            status = HYDU_String_int_to_str(partition->proc_count, &str);
+            status = HYDU_int_to_str(partition->proc_count, &str);
             HYDU_ERR_POP(status, "unable to convert int to string\n");
 
             partition->args[arg++] = MPIU_Strdup("--proc-count");
@@ -135,14 +129,14 @@ HYD_Status HYD_PMCI_Launch_procs(void)
             partition->args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
 
-            status = HYDU_String_int_to_str(process_id, &str);
+            status = HYDU_int_to_str(process_id, &str);
             HYDU_ERR_POP(status, "unable to convert int to string\n");
 
             partition->args[arg++] = MPIU_Strdup("--pmi-id");
             partition->args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
 
-            status = HYDU_String_int_to_str(handle.proxy_port, &str);
+            status = HYDU_int_to_str(handle.proxy_port, &str);
             HYDU_ERR_POP(status, "unable to convert in to string\n");
 
             partition->args[arg++] = MPIU_Strdup("--proxy-port");
@@ -160,23 +154,23 @@ HYD_Status HYD_PMCI_Launch_procs(void)
                 i++;
             for (env = proc_params->prop_env; env; env = env->next)
                 i++;
-            status = HYDU_String_int_to_str(i, &str);
+            status = HYDU_int_to_str(i, &str);
             HYDU_ERR_POP(status, "unable to convert in to string\n");
 
             partition->args[arg++] = MPIU_Strdup(str);
             partition->args[arg++] = NULL;
 
-            HYDU_Append_env(handle.system_env, partition->args);
-            HYDU_Append_env(handle.prop_env, partition->args);
-            HYDU_Append_env(proc_params->prop_env, partition->args);
+            HYDU_list_append_env_to_str(handle.system_env, partition->args);
+            HYDU_list_append_env_to_str(handle.prop_env, partition->args);
+            HYDU_list_append_env_to_str(proc_params->prop_env, partition->args);
 
             for (arg = 0; partition->args[arg]; arg++);
             partition->args[arg] = NULL;
-            HYDU_Append_exec(proc_params->exec, partition->args);
+            HYDU_list_append_strlist(proc_params->exec, partition->args);
 
             if (handle.debug) {
                 HYDU_Debug("Executable passed to the bootstrap: ");
-                HYDU_Dump_args(partition->args);
+                HYDU_print_strlist(partition->args);
             }
 
             process_id += partition->proc_count;
@@ -200,7 +194,7 @@ HYD_Status HYD_PMCI_Launch_procs(void)
 }
 
 
-HYD_Status HYD_PMCI_Wait_for_completion(void)
+HYD_Status HYD_PMCI_wait_for_completion(void)
 {
     HYD_Status status = HYD_SUCCESS;
 

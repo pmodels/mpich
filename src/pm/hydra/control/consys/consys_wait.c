@@ -12,7 +12,7 @@
 
 HYD_Handle handle;
 
-HYD_Status HYD_CSI_Wait_for_completion(void)
+HYD_Status HYD_CSI_wait_for_completion(void)
 {
     int sockets_open;
     struct HYD_Proc_params *proc_params;
@@ -23,7 +23,7 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
 
     while (1) {
         /* Wait for some event to occur */
-        status = HYD_DMX_Wait_for_event(HYDU_Time_left(handle.start, handle.timeout));
+        status = HYD_DMX_wait_for_event(HYDU_time_left(handle.start, handle.timeout));
         HYDU_ERR_POP(status, "error waiting for event\n");
 
         /* Check to see if there's any open read socket left; if there
@@ -40,12 +40,12 @@ HYD_Status HYD_CSI_Wait_for_completion(void)
                 break;
         }
 
-        if (sockets_open && HYDU_Time_left(handle.start, handle.timeout))
+        if (sockets_open && HYDU_time_left(handle.start, handle.timeout))
             continue;
 
         /* Make sure all the processes have terminated. The process
          * manager control device will take care of that. */
-        status = HYD_PMCI_Wait_for_completion();
+        status = HYD_PMCI_wait_for_completion();
         HYDU_ERR_POP(status, "error waiting for completion\n");
 
         /* We are done */

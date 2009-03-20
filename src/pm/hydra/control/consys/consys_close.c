@@ -12,7 +12,7 @@
 
 HYD_Handle handle;
 
-HYD_Status HYD_CSI_Close_fd(int fd)
+HYD_Status HYD_CSI_close_fd(int fd)
 {
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
@@ -21,7 +21,7 @@ HYD_Status HYD_CSI_Close_fd(int fd)
     HYDU_FUNC_ENTER();
 
     /* Deregister the FD with the demux engine and close it. */
-    status = HYD_DMX_Deregister_fd(fd);
+    status = HYD_DMX_deregister_fd(fd);
     HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
     close(fd);
 

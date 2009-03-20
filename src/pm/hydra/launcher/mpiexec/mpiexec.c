@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_LCHI_Get_parameters(argc, argv);
+    status = HYD_LCHI_get_parameters(argc, argv);
     if (status == HYD_GRACEFUL_ABORT) {
         exit(0);
     }
@@ -64,17 +64,15 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    if (handle.debug) {
-        status = HYD_LCHI_Print_parameters();
-        HYDU_ERR_POP(status, "");
-    }
+    if (handle.debug)
+        HYD_LCHI_print_parameters();
 
     /* Convert the host file to a host list */
-    status = HYD_LCHU_Create_host_list();
+    status = HYD_LCHU_create_host_list();
     HYDU_ERR_POP(status, "unable to create host list\n");
 
     /* Consolidate the environment list that we need to propagate */
-    status = HYD_LCHU_Create_env_list();
+    status = HYD_LCHU_create_env_list();
     HYDU_ERR_POP(status, "unable to create env list\n");
 
     proc_params = handle.proc_params;
@@ -85,20 +83,20 @@ int main(int argc, char **argv)
     }
     handle.stdin_cb = HYD_LCHI_stdin_cb;
 
-    HYDU_Time_set(&handle.start, NULL); /* NULL implies right now */
+    HYDU_time_set(&handle.start, NULL); /* NULL implies right now */
     if (getenv("MPIEXEC_TIMEOUT"))
         timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
     else
         timeout = -1;   /* Set a negative timeout */
     HYDU_Debug("Timeout set to %d seconds (negative means infinite)\n", timeout);
-    HYDU_Time_set(&handle.timeout, &timeout);
+    HYDU_time_set(&handle.timeout, &timeout);
 
     /* Launch the processes */
-    status = HYD_CSI_Launch_procs();
+    status = HYD_CSI_launch_procs();
     HYDU_ERR_POP(status, "control system error launching processes\n");
 
     /* Wait for their completion */
-    status = HYD_CSI_Wait_for_completion();
+    status = HYD_CSI_wait_for_completion();
     HYDU_ERR_POP(status, "control system error waiting for completion\n");
 
     /* Check for the exit status for all the processes */
@@ -108,11 +106,11 @@ int main(int argc, char **argv)
             exit_status |= partition->exit_status;
 
     /* Call finalize functions for lower layers to cleanup their resources */
-    status = HYD_CSI_Finalize();
+    status = HYD_CSI_finalize();
     HYDU_ERR_POP(status, "control system error on finalize\n");
 
     /* Free the mpiexec params */
-    HYD_LCHU_Free_params();
+    HYD_LCHU_free_params();
 
   fn_exit:
     HYDU_FUNC_EXIT();

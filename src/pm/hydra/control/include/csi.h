@@ -9,9 +9,9 @@
 
 #include "hydra.h"
 
-HYD_Status HYD_CSI_Launch_procs(void);
-HYD_Status HYD_CSI_Wait_for_completion(void);
-HYD_Status HYD_CSI_Close_fd(int fd);
-HYD_Status HYD_CSI_Finalize(void);
+HYD_Status HYD_CSI_launch_procs(void);
+HYD_Status HYD_CSI_wait_for_completion(void);
+HYD_Status HYD_CSI_close_fd(int fd);
+HYD_Status HYD_CSI_finalize(void);
 
 #endif /* CSI_H_INCLUDED */

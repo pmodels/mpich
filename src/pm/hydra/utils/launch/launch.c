@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 
-HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err,
+HYD_Status HYDU_create_process(char **client_arg, int *in, int *out, int *err,
                                int *pid, int core)
 {
     int inpipe[2], outpipe[2], errpipe[2], tpid, my_pid;
@@ -16,15 +16,15 @@ HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err,
 
     if (in && (pipe(inpipe) < 0))
         HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
-                             HYDU_String_error(errno));
+                             HYDU_strerror(errno));
 
     if (out && (pipe(outpipe) < 0))
         HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
-                             HYDU_String_error(errno));
+                             HYDU_strerror(errno));
 
     if (err && (pipe(errpipe) < 0))
         HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
-                             HYDU_String_error(errno));
+                             HYDU_strerror(errno));
 
     /* Fork off the process */
     tpid = fork();
@@ -33,13 +33,13 @@ HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err,
         close(1);
         if (dup2(outpipe[1], 1) < 0)
             HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                 HYDU_String_error(errno));
+                                 HYDU_strerror(errno));
 
         close(errpipe[0]);
         close(2);
         if (dup2(errpipe[1], 2) < 0)
             HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                 HYDU_String_error(errno));
+                                 HYDU_strerror(errno));
 
         if (core >= 0) {
             status = HYDU_bind_process(core);
@@ -50,11 +50,11 @@ HYD_Status HYDU_Create_process(char **client_arg, int *in, int *out, int *err,
         close(0);
         if (in && (dup2(inpipe[0], 0) < 0))
             HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                 HYDU_String_error(errno));
+                                 HYDU_strerror(errno));
 
         if (execvp(client_arg[0], client_arg) < 0) {
             HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "execvp error (%s)\n",
-                                 HYDU_String_error(errno));
+                                 HYDU_strerror(errno));
         }
     }
     else {      /* Parent process */

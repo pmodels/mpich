@@ -9,10 +9,10 @@
 
 #include "hydra.h"
 
-void HYD_LCHU_Init_params(void);
-void HYD_LCHU_Free_params(void);
-void HYD_LCHU_Free_proc_params(void);
-HYD_Status HYD_LCHU_Create_host_list(void);
-HYD_Status HYD_LCHU_Create_env_list(void);
+void HYD_LCHU_init_params(void);
+void HYD_LCHU_free_params(void);
+void HYD_LCHU_free_proc_params(void);
+HYD_Status HYD_LCHU_create_host_list(void);
+HYD_Status HYD_LCHU_create_env_list(void);
 
 #endif /* LCHU_H_INCLUDED */

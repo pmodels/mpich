@@ -53,14 +53,14 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
     HYDU_MALLOC(buf, char *, HYD_TMPBUF_SIZE, status);
 
     if (fd == HYD_PMCD_Central_listenfd) {      /* Someone is trying to connect to us */
-        status = HYDU_Sock_accept(fd, &accept_fd);
+        status = HYDU_sock_accept(fd, &accept_fd);
         HYDU_ERR_POP(status, "accept error\n");
 
-        status = HYD_DMX_Register_fd(1, &accept_fd, HYD_STDOUT, HYD_PMCD_Central_cb);
+        status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, HYD_PMCD_Central_cb);
         HYDU_ERR_POP(status, "unable to register fd\n");
     }
     else {
-        status = HYDU_Sock_readline(fd, buf, HYD_TMPBUF_SIZE, &linelen);
+        status = HYDU_sock_readline(fd, buf, HYD_TMPBUF_SIZE, &linelen);
         HYDU_ERR_POP(status, "PMI read line error\n");
 
         if (linelen == 0) {
@@ -74,7 +74,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
                 goto fn_fail;
             }
 
-            status = HYD_DMX_Deregister_fd(fd);
+            status = HYD_DMX_deregister_fd(fd);
             if (status != HYD_SUCCESS) {
                 HYDU_Warn_printf("unable to deregister fd %d\n", fd);
                 status = HYD_SUCCESS;
@@ -127,7 +127,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
             status = HYD_PMCU_pmi_finalize(fd, args);
 
             if (status == HYD_SUCCESS) {
-                status = HYD_DMX_Deregister_fd(fd);
+                status = HYD_DMX_deregister_fd(fd);
                 HYDU_ERR_POP(status, "unable to register fd\n");
                 close(fd);
             }
@@ -176,14 +176,14 @@ HYD_Status HYD_PMCD_Central_cleanup(void)
     cmd = KILLALL_PROCS;
     for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
         for (partition = proc_params->partition; partition; partition = partition->next) {
-            status = HYDU_Sock_connect(partition->name, handle.proxy_port, &fd);
+            status = HYDU_sock_connect(partition->name, handle.proxy_port, &fd);
             if (status != HYD_SUCCESS) {
                 HYDU_Warn_printf("unable to connect to the proxy on %s\n", partition->name);
                 overall_status = HYD_INTERNAL_ERROR;
                 continue;       /* Move on to the next proxy */
             }
 
-            status = HYDU_Sock_write(fd, &cmd, sizeof(cmd));
+            status = HYDU_sock_write(fd, &cmd, sizeof(cmd));
             if (status != HYD_SUCCESS) {
                 HYDU_Warn_printf("unable to send data to the proxy on %s\n", partition->name);
                 overall_status = HYD_INTERNAL_ERROR;

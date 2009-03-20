@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 
-HYD_Status HYDU_Set_signal(int signum, void (*handler) (int))
+HYD_Status HYDU_set_signal(int signum, void (*handler) (int))
 {
     HYD_Status status = HYD_SUCCESS;
 #if defined HAVE_SIGACTION
@@ -38,28 +38,28 @@ HYD_Status HYDU_Set_signal(int signum, void (*handler) (int))
 }
 
 
-HYD_Status HYDU_Set_common_signals(void (*handler) (int))
+HYD_Status HYDU_set_common_signals(void (*handler) (int))
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_Set_signal(SIGINT, handler);
+    status = HYDU_set_signal(SIGINT, handler);
     HYDU_ERR_POP(status, "unable to set SIGINT\n");
 
-    status = HYDU_Set_signal(SIGQUIT, handler);
+    status = HYDU_set_signal(SIGQUIT, handler);
     HYDU_ERR_POP(status, "unable to set SIGQUIT\n");
 
-    status = HYDU_Set_signal(SIGTERM, handler);
+    status = HYDU_set_signal(SIGTERM, handler);
     HYDU_ERR_POP(status, "unable to set SIGTERM\n");
 
 #if defined SIGSTOP
-    status = HYDU_Set_signal(SIGSTOP, handler);
+    status = HYDU_set_signal(SIGSTOP, handler);
     HYDU_ERR_POP(status, "unable to set SIGSTOP\n");
 #endif /* SIGSTOP */
 
 #if defined SIGCONT
-    status = HYDU_Set_signal(SIGCONT, handler);
+    status = HYDU_set_signal(SIGCONT, handler);
     HYDU_ERR_POP(status, "unable to set SIGCONT\n");
 #endif /* SIGCONT */
 

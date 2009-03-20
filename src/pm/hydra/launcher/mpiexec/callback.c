@@ -19,14 +19,14 @@ HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events)
     HYDU_FUNC_ENTER();
 
     /* Write output to fd 1 */
-    status = HYDU_Sock_stdout_cb(fd, events, 1, &closed);
+    status = HYDU_sock_stdout_cb(fd, events, 1, &closed);
     HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on fd %d: %s\n",
-                         fd, HYDU_String_error(errno));
+                         fd, HYDU_strerror(errno));
 
     if (closed) {
-        status = HYD_CSI_Close_fd(fd);
+        status = HYD_CSI_close_fd(fd);
         HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d: %s\n",
-                             fd, HYDU_String_error(errno));
+                             fd, HYDU_strerror(errno));
         goto fn_exit;
     }
 
@@ -47,14 +47,14 @@ HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events)
     HYDU_FUNC_ENTER();
 
     /* Write output to fd 2 */
-    status = HYDU_Sock_stdout_cb(fd, events, 2, &closed);
+    status = HYDU_sock_stdout_cb(fd, events, 2, &closed);
     HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on %d (%s)\n",
-                         fd, HYDU_String_error(errno))
+                         fd, HYDU_strerror(errno))
 
     if (closed) {
-        status = HYD_CSI_Close_fd(fd);
+        status = HYD_CSI_close_fd(fd);
         HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (%s)\n",
-                             fd, HYDU_String_error(errno));
+                             fd, HYDU_strerror(errno));
         goto fn_exit;
     }
 
@@ -74,12 +74,12 @@ HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_Sock_stdin_cb(handle.in, events, handle.stdin_tmp_buf,
+    status = HYDU_sock_stdin_cb(handle.in, events, handle.stdin_tmp_buf,
                                 &handle.stdin_buf_count, &handle.stdin_buf_offset, &closed);
     HYDU_ERR_POP(status, "stdin callback error\n");
 
     if (closed) {
-        status = HYD_CSI_Close_fd(fd);
+        status = HYD_CSI_close_fd(fd);
         HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (errno: %d)\n",
                              fd, errno);
 

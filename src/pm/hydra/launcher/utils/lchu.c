@@ -10,7 +10,7 @@
 
 HYD_Handle handle;
 
-void HYD_LCHU_Init_params()
+void HYD_LCHU_init_params(void)
 {
     handle.base_path = NULL;
     handle.proxy_port = -1;
@@ -39,7 +39,7 @@ void HYD_LCHU_Init_params()
 }
 
 
-void HYD_LCHU_Free_params()
+void HYD_LCHU_free_params(void)
 {
     if (handle.base_path) {
         HYDU_FREE(handle.base_path);
@@ -60,33 +60,33 @@ void HYD_LCHU_Free_params()
     }
 
     if (handle.global_env) {
-        HYDU_Env_free_list(handle.global_env);
+        HYDU_env_free_list(handle.global_env);
         handle.global_env = NULL;
     }
 
     if (handle.system_env) {
-        HYDU_Env_free_list(handle.system_env);
+        HYDU_env_free_list(handle.system_env);
         handle.system_env = NULL;
     }
 
     if (handle.user_env) {
-        HYDU_Env_free_list(handle.user_env);
+        HYDU_env_free_list(handle.user_env);
         handle.user_env = NULL;
     }
 
     if (handle.prop_env) {
-        HYDU_Env_free_list(handle.prop_env);
+        HYDU_env_free_list(handle.prop_env);
         handle.prop_env = NULL;
     }
 
     if (handle.proc_params) {
-        HYD_LCHU_Free_proc_params();
+        HYD_LCHU_free_proc_params();
         handle.proc_params = NULL;
     }
 }
 
 
-void HYD_LCHU_Free_proc_params()
+void HYD_LCHU_free_proc_params(void)
 {
     struct HYD_Proc_params *proc_params, *run;
 
@@ -95,13 +95,13 @@ void HYD_LCHU_Free_proc_params()
     proc_params = handle.proc_params;
     while (proc_params) {
         run = proc_params->next;
-        HYDU_Free_args(proc_params->exec);
-        HYDU_Free_partition_list(proc_params->partition);
+        HYDU_free_strlist(proc_params->exec);
+        HYDU_free_partition_list(proc_params->partition);
         proc_params->partition = NULL;
 
-        HYDU_Env_free_list(proc_params->user_env);
+        HYDU_env_free_list(proc_params->user_env);
         proc_params->user_env = NULL;
-        HYDU_Env_free_list(proc_params->prop_env);
+        HYDU_env_free_list(proc_params->prop_env);
         proc_params->prop_env = NULL;
 
         HYDU_FREE(proc_params);
@@ -112,7 +112,7 @@ void HYD_LCHU_Free_proc_params()
 }
 
 
-HYD_Status HYD_LCHU_Create_host_list(void)
+HYD_Status HYD_LCHU_create_host_list(void)
 {
     FILE *fp = NULL;
     char line[2 * MAX_HOSTNAME_LEN], *hostname, *procs;
@@ -134,7 +134,7 @@ HYD_Status HYD_LCHU_Create_host_list(void)
     proc_params = handle.proc_params;
     while (proc_params) {
         if (!strcmp(handle.host_file, "HYDRA_USE_LOCALHOST")) {
-            HYDU_Allocate_Partition(&proc_params->partition);
+            HYDU_alloc_partition(&proc_params->partition);
             proc_params->partition->name = MPIU_Strdup("localhost");
             proc_params->partition->proc_count = proc_params->exec_proc_count;
             total_procs = proc_params->exec_proc_count;
@@ -157,13 +157,13 @@ HYD_Status HYD_LCHU_Create_host_list(void)
                     num_procs = (proc_params->exec_proc_count - total_procs);
 
                 if (!proc_params->partition) {
-                    HYDU_Allocate_Partition(&proc_params->partition);
+                    HYDU_alloc_partition(&proc_params->partition);
                     partition = proc_params->partition;
                 }
                 else {
                     for (partition = proc_params->partition;
                          partition->next; partition = partition->next);
-                    HYDU_Allocate_Partition(&partition->next);
+                    HYDU_alloc_partition(&partition->next);
                     partition = partition->next;
                 }
                 partition->name = MPIU_Strdup(hostname);
@@ -191,7 +191,7 @@ HYD_Status HYD_LCHU_Create_host_list(void)
             }
             else {
                 while (total_procs != proc_params->exec_proc_count) {
-                    HYDU_Allocate_Partition(&partition->next);
+                    HYDU_alloc_partition(&partition->next);
                     partition = partition->next;
                     partition->name = MPIU_Strdup(run->name);
                     partition->proc_count = run->proc_count;
@@ -219,7 +219,7 @@ HYD_Status HYD_LCHU_Create_host_list(void)
 }
 
 
-HYD_Status HYD_LCHU_Free_host_list(void)
+HYD_Status HYD_LCHU_free_host_list(void)
 {
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition, *next;
@@ -251,7 +251,7 @@ HYD_Status HYD_LCHU_Free_host_list(void)
 }
 
 
-HYD_Status HYD_LCHU_Create_env_list(void)
+HYD_Status HYD_LCHU_create_env_list(void)
 {
     struct HYD_Proc_params *proc_params;
     HYD_Env_t *env, *run;
@@ -260,17 +260,17 @@ HYD_Status HYD_LCHU_Create_env_list(void)
     HYDU_FUNC_ENTER();
 
     if (handle.prop == HYD_ENV_PROP_ALL) {
-        handle.prop_env = HYDU_Env_listdup(handle.global_env);
+        handle.prop_env = HYDU_env_list_dup(handle.global_env);
         for (env = handle.user_env; env; env = env->next) {
-            status = HYDU_Env_add_to_list(&handle.prop_env, *env);
+            status = HYDU_append_env_to_list(*env, &handle.prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
     }
     else if (handle.prop == HYD_ENV_PROP_LIST) {
         for (env = handle.user_env; env; env = env->next) {
-            run = HYDU_Env_found_in_list(handle.global_env, *env);
+            run = HYDU_env_lookup(*env, handle.global_env);
             if (run) {
-                status = HYDU_Env_add_to_list(&handle.prop_env, *run);
+                status = HYDU_append_env_to_list(*run, &handle.prop_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
@@ -279,17 +279,17 @@ HYD_Status HYD_LCHU_Create_env_list(void)
     proc_params = handle.proc_params;
     while (proc_params) {
         if (proc_params->prop == HYD_ENV_PROP_ALL) {
-            proc_params->prop_env = HYDU_Env_listdup(handle.global_env);
+            proc_params->prop_env = HYDU_env_list_dup(handle.global_env);
             for (env = proc_params->user_env; env; env = env->next) {
-                status = HYDU_Env_add_to_list(&proc_params->prop_env, *env);
+                status = HYDU_append_env_to_list(*env, &proc_params->prop_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
         else if (proc_params->prop == HYD_ENV_PROP_LIST) {
             for (env = proc_params->user_env; env; env = env->next) {
-                run = HYDU_Env_found_in_list(handle.global_env, *env);
+                run = HYDU_env_lookup(*env, handle.global_env);
                 if (run) {
-                    status = HYDU_Env_add_to_list(&proc_params->prop_env, *run);
+                    status = HYDU_append_env_to_list(*run, &proc_params->prop_env);
                     HYDU_ERR_POP(status, "unable to add env to list\n");
                 }
             }

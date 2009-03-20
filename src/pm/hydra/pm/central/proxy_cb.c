@@ -25,21 +25,21 @@ HYD_Status HYD_Proxy_listen_cb(int fd, HYD_Event_t events)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
 
     if (fd == HYD_Proxy_listenfd) {     /* mpiexec is trying to connect */
-        status = HYDU_Sock_accept(fd, &accept_fd);
+        status = HYDU_sock_accept(fd, &accept_fd);
         HYDU_ERR_POP(status, "accept error\n");
 
-        status = HYD_DMX_Register_fd(1, &accept_fd, HYD_STDOUT, HYD_Proxy_listen_cb);
+        status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, HYD_Proxy_listen_cb);
         HYDU_ERR_POP(status, "unable to register fd\n");
     }
     else {      /* We got a command from mpiexec */
         count = read(fd, &cmd, sizeof(enum HYD_Proxy_cmds));
         if (count < 0) {
             HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR, "read error on %d (%s)\n",
-                                 fd, HYDU_String_error(errno));
+                                 fd, HYDU_strerror(errno));
         }
         else if (count == 0) {
             /* The connection has closed */
-            status = HYD_DMX_Deregister_fd(fd);
+            status = HYD_DMX_deregister_fd(fd);
             HYDU_ERR_POP(status, "unable to deregister fd\n");
             close(fd);
             goto fn_exit;
@@ -50,7 +50,7 @@ HYD_Status HYD_Proxy_listen_cb(int fd, HYD_Event_t events)
                 if (HYD_Proxy_params.pid[i] != -1)
                     kill(HYD_Proxy_params.pid[i], SIGKILL);
 
-            status = HYD_DMX_Deregister_fd(fd);
+            status = HYD_DMX_deregister_fd(fd);
             HYDU_ERR_POP(status, "unable to register fd\n");
             close(fd);
         }
@@ -76,12 +76,12 @@ HYD_Status HYD_Proxy_stdout_cb(int fd, HYD_Event_t events)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_Sock_stdout_cb(fd, events, 1, &closed);
+    status = HYDU_sock_stdout_cb(fd, events, 1, &closed);
     HYDU_ERR_POP(status, "stdout callback error\n");
 
     if (closed) {
         /* The connection has closed */
-        status = HYD_DMX_Deregister_fd(fd);
+        status = HYD_DMX_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
         for (i = 0; i < HYD_Proxy_params.proc_count; i++)
@@ -105,12 +105,12 @@ HYD_Status HYD_Proxy_stderr_cb(int fd, HYD_Event_t events)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_Sock_stdout_cb(fd, events, 2, &closed);
+    status = HYDU_sock_stdout_cb(fd, events, 2, &closed);
     HYDU_ERR_POP(status, "stdout callback error\n");
 
     if (closed) {
         /* The connection has closed */
-        status = HYD_DMX_Deregister_fd(fd);
+        status = HYD_DMX_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
         for (i = 0; i < HYD_Proxy_params.proc_count; i++)
@@ -134,14 +134,14 @@ HYD_Status HYD_Proxy_stdin_cb(int fd, HYD_Event_t events)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_Sock_stdin_cb(HYD_Proxy_params.in, events, HYD_Proxy_params.stdin_tmp_buf,
+    status = HYDU_sock_stdin_cb(HYD_Proxy_params.in, events, HYD_Proxy_params.stdin_tmp_buf,
                                 &HYD_Proxy_params.stdin_buf_count,
                                 &HYD_Proxy_params.stdin_buf_offset, &closed);
     HYDU_ERR_POP(status, "stdin callback error\n");
 
     if (closed) {
         /* The connection has closed */
-        status = HYD_DMX_Deregister_fd(fd);
+        status = HYD_DMX_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
         close(HYD_Proxy_params.in);

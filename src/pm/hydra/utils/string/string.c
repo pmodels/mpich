@@ -6,7 +6,53 @@
 
 #include "hydra_utils.h"
 
-HYD_Status HYDU_String_alloc_and_join(char **strlist, char **strjoin)
+HYD_Status HYDU_list_append_strlist(char **src_strlist, char **dest_strlist)
+{
+    int i, j;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    for (i = 0; dest_strlist[i]; i++);
+    for (j = 0; src_strlist[j]; j++)
+        dest_strlist[i++] = MPIU_Strdup(src_strlist[j]);
+    dest_strlist[i++] = NULL;
+
+    HYDU_FUNC_EXIT();
+    return status;
+}
+
+
+HYD_Status HYDU_print_strlist(char **strlist)
+{
+    int arg;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    for (arg = 0; strlist[arg]; arg++)
+        printf("%s ", strlist[arg]);
+    printf("\n");
+
+    HYDU_FUNC_EXIT();
+    return status;
+}
+
+
+void HYDU_free_strlist(char **strlist)
+{
+    int arg;
+
+    HYDU_FUNC_ENTER();
+
+    for (arg = 0; strlist[arg]; arg++)
+        HYDU_FREE(strlist[arg]);
+
+    HYDU_FUNC_EXIT();
+}
+
+
+HYD_Status HYDU_str_alloc_and_join(char **strlist, char **strjoin)
 {
     int len = 0, i, count;
     HYD_Status status = HYD_SUCCESS;
@@ -34,7 +80,7 @@ HYD_Status HYDU_String_alloc_and_join(char **strlist, char **strjoin)
 }
 
 
-HYD_Status HYDU_String_break(char *str, char **str1, char **str2)
+HYD_Status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
 {
     int i;
     HYD_Status status = HYD_SUCCESS;
@@ -45,7 +91,7 @@ HYD_Status HYDU_String_break(char *str, char **str1, char **str2)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
 
     *str1 = MPIU_Strdup(str);
-    for (i = 0; (*str1)[i] && ((*str1)[i] != '='); i++);
+    for (i = 0; (*str1)[i] && ((*str1)[i] != sep); i++);
 
     if ((*str1)[i] == 0) /* End of the string */
         *str2 = NULL;
@@ -63,7 +109,7 @@ HYD_Status HYDU_String_break(char *str, char **str1, char **str2)
 }
 
 
-HYD_Status HYDU_String_int_to_str(int x, char **str)
+HYD_Status HYDU_int_to_str(int x, char **str)
 {
     int len = 1, max = 10, y;
     HYD_Status status = HYD_SUCCESS;
@@ -97,7 +143,7 @@ HYD_Status HYDU_String_int_to_str(int x, char **str)
 }
 
 
-char *HYDU_String_error(int error)
+char *HYDU_strerror(int error)
 {
     char *str;
 

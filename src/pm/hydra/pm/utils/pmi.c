@@ -86,7 +86,7 @@ static HYD_Status add_process_to_pg(HYD_PMCU_pmi_pg_t * pg, int fd)
 }
 
 
-HYD_Status HYD_PMCU_Create_pg(void)
+HYD_Status HYD_PMCU_create_pg(void)
 {
     struct HYD_Proc_params *proc_params;
     int num_procs;
@@ -136,13 +136,13 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     }
     debug = handle.debug;
 
-    status = HYDU_String_int_to_str(size, &ssize);
+    status = HYDU_int_to_str(size, &ssize);
     HYDU_ERR_POP(status, "unable to convert int to string\n");
 
-    status = HYDU_String_int_to_str(id, &srank);
+    status = HYDU_int_to_str(id, &srank);
     HYDU_ERR_POP(status, "unable to convert int to string\n");
 
-    status = HYDU_String_int_to_str(debug, &sdebug);
+    status = HYDU_int_to_str(debug, &sdebug);
     HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     i = 0;
@@ -155,10 +155,10 @@ HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "error while joining strings\n");
 
-    status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
+    status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
     HYDU_FREE(ssize);
@@ -199,7 +199,7 @@ HYD_Status HYD_PMCU_pmi_init(int fd, char *args[])
     if (pmi_version == 1 && pmi_subversion <= 1) {
         /* We support PMI v1.0 and 1.1 */
         tmp[0] = "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
-        status = HYDU_Sock_writeline(fd, tmp[0], strlen(tmp[0]));
+        status = HYDU_sock_writeline(fd, tmp[0], strlen(tmp[0]));
         HYDU_ERR_POP(status, "error writing PMI line\n");
     }
     else {
@@ -226,13 +226,13 @@ HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_String_int_to_str(MAXKVSNAME, &maxkvsname);
+    status = HYDU_int_to_str(MAXKVSNAME, &maxkvsname);
     HYDU_ERR_POP(status, "unable to convert int to string\n");
 
-    status = HYDU_String_int_to_str(MAXKEYLEN, &maxkeylen);
+    status = HYDU_int_to_str(MAXKEYLEN, &maxkeylen);
     HYDU_ERR_POP(status, "unable to convert int to string\n");
 
-    status = HYDU_String_int_to_str(MAXVALLEN, &maxvallen);
+    status = HYDU_int_to_str(MAXVALLEN, &maxvallen);
     HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     i = 0;
@@ -245,10 +245,10 @@ HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
 
-    status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
+    status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
 
@@ -301,7 +301,7 @@ HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char *args[])
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "unable to find process structure\n");
 
-    status = HYDU_String_int_to_str(process->pg->id, &sapp_num);
+    status = HYDU_int_to_str(process->pg->id, &sapp_num);
     HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     i = 0;
@@ -310,10 +310,10 @@ HYD_Status HYD_PMCU_pmi_get_appnum(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
 
-    status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
+    status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
 
@@ -349,10 +349,10 @@ HYD_Status HYD_PMCU_pmi_get_my_kvsname(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
 
-    status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
+    status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
 
@@ -387,7 +387,7 @@ HYD_Status HYD_PMCU_pmi_barrier_in(int fd, char *args[])
         cmd = "cmd=barrier_out\n";
         run = process->pg->process;     /* The first process in the list */
         while (run) {
-            status = HYDU_Sock_writeline(run->fd, cmd, strlen(cmd));
+            status = HYDU_sock_writeline(run->fd, cmd, strlen(cmd));
             HYDU_ERR_POP(status, "error writing PMI line\n");
             run = run->next;
         }
@@ -461,10 +461,10 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
 
-    status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
+    status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
     HYDU_FREE(key_pair_str);
@@ -532,10 +532,10 @@ HYD_Status HYD_PMCU_pmi_get(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
 
-    status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
+    status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
     HYDU_FREE(key_val_str);
@@ -557,7 +557,7 @@ HYD_Status HYD_PMCU_pmi_finalize(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     cmd = "cmd=finalize_ack\n";
-    status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
+    status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
   fn_exit:
@@ -580,7 +580,7 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
     status = HYD_BSCI_get_usize(&usize);
     HYDU_ERR_POP(status, "unable to get bootstrap universe size\n");
 
-    status = HYDU_String_int_to_str(usize, &usize_str);
+    status = HYDU_int_to_str(usize, &usize_str);
     HYDU_ERR_POP(status, "unable to convert int to string\n");
 
     i = 0;
@@ -589,10 +589,10 @@ HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[])
     tmp[i++] = "\n";
     tmp[i++] = NULL;
 
-    status = HYDU_String_alloc_and_join(tmp, &cmd);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
 
-    status = HYDU_Sock_writeline(fd, cmd, strlen(cmd));
+    status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
 
@@ -644,7 +644,7 @@ static HYD_Status free_pmi_kvs_list(HYD_PMCU_pmi_kvs_t * kvs_list)
 }
 
 
-HYD_Status HYD_PMCU_Finalize(void)
+HYD_Status HYD_PMCU_finalize(void)
 {
     HYD_PMCU_pmi_pg_t *pg, *tmp;
     HYD_Status status = HYD_SUCCESS;

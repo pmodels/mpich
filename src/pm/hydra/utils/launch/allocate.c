@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 
-HYD_Status HYDU_Allocate_Partition(struct HYD_Partition_list **partition)
+HYD_Status HYDU_alloc_partition(struct HYD_Partition_list **partition)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -36,7 +36,7 @@ HYD_Status HYDU_Allocate_Partition(struct HYD_Partition_list **partition)
 }
 
 
-void HYDU_Free_partition_list(struct HYD_Partition_list *partition)
+void HYDU_free_partition_list(struct HYD_Partition_list *partition)
 {
     struct HYD_Partition_list *run, *p;
     int arg;
@@ -62,7 +62,7 @@ void HYDU_Free_partition_list(struct HYD_Partition_list *partition)
             p->mapping = NULL;
         }
 
-        HYDU_Free_args(p->args);
+        HYDU_free_strlist(p->args);
         HYDU_FREE(p);
 
         p = run;

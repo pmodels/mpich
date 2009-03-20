@@ -69,16 +69,16 @@ typedef struct HYD_Handle_ HYD_Handle;
 
 /* We'll use this as the central handle that has most of the
  * information needed by everyone. All data to be written has to be
- * done before the HYD_CSI_Wait_for_completion() function is called,
+ * done before the HYD_CSI_wait_for_completion() function is called,
  * except for two exceptions:
  *
  * 1. The timeout value is initially added by the launcher before the
- * HYD_CSI_Wait_for_completion() function is called, but can be edited
+ * HYD_CSI_wait_for_completion() function is called, but can be edited
  * by the control system within this call. There's no guarantee on
  * what value it will contain for the other layers.
  *
  * 2. There is no guarantee on what the exit status will contain till
- * the HYD_CSI_Wait_for_completion() function returns (where the
+ * the HYD_CSI_wait_for_completion() function returns (where the
  * bootstrap server can fill out these values).
  */
 extern HYD_Handle handle;

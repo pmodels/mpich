@@ -23,7 +23,7 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
     HYD_Proxy_params.env_list = NULL;
     HYD_Proxy_params.partition = NULL;
 
-    status = HYDU_Env_global_list(&HYD_Proxy_params.global_env);
+    status = HYDU_list_global_env(&HYD_Proxy_params.global_env);
     HYDU_ERR_POP(status, "unable to get the global env list\n");
 
     while (--argc && ++argv) {
@@ -55,7 +55,7 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
          * as multiple parameters. */
         if (!strcmp(*argv, "--partition")) {
             argv++;
-            HYDU_Allocate_Partition(&partition);
+            HYDU_alloc_partition(&partition);
             partition->name = MPIU_Strdup(*argv);
             argv++;
             partition->proc_count = atoi(*argv);
@@ -92,7 +92,7 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
                     str++;
                     str[strlen(str) - 1] = 0;
                 }
-                HYDU_Env_putenv(str);
+                HYDU_putenv(str);
             }
             continue;
         }

@@ -9,10 +9,10 @@
 
 #include "hydra.h"
 
-HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_Event_t events,
+HYD_Status HYD_DMX_register_fd(int num_fds, int *fd, HYD_Event_t events,
                                HYD_Status(*callback) (int fd, HYD_Event_t events));
-HYD_Status HYD_DMX_Deregister_fd(int fd);
-HYD_Status HYD_DMX_Wait_for_event(int time);
-HYD_Status HYD_DMX_Finalize(void);
+HYD_Status HYD_DMX_deregister_fd(int fd);
+HYD_Status HYD_DMX_wait_for_event(int time);
+HYD_Status HYD_DMX_finalize(void);
 
 #endif /* DEMUX_H_INCLUDED */

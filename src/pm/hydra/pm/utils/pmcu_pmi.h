@@ -53,7 +53,7 @@ struct HYD_PMCU_pmi_pg {
     struct HYD_PMCU_pmi_pg *next;
 };
 
-HYD_Status HYD_PMCU_Create_pg(void);
+HYD_Status HYD_PMCU_create_pg(void);
 HYD_Status HYD_PMCU_pmi_initack(int fd, char *args[]);
 HYD_Status HYD_PMCU_pmi_init(int fd, char *args[]);
 HYD_Status HYD_PMCU_pmi_get_maxes(int fd, char *args[]);
@@ -64,6 +64,6 @@ HYD_Status HYD_PMCU_pmi_put(int fd, char *args[]);
 HYD_Status HYD_PMCU_pmi_get(int fd, char *args[]);
 HYD_Status HYD_PMCU_pmi_finalize(int fd, char *args[]);
 HYD_Status HYD_PMCU_pmi_get_usize(int fd, char *args[]);
-HYD_Status HYD_PMCU_Finalize(void);
+HYD_Status HYD_PMCU_finalize(void);
 
 #endif /* PMCU_PMI_H_INCLUDED */

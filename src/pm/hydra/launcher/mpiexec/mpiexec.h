@@ -9,8 +9,8 @@
 
 #include "hydra.h"
 
-HYD_Status HYD_LCHI_Get_parameters(int t_argc, char **t_argv);
-HYD_Status HYD_LCHI_Print_parameters(void);
+HYD_Status HYD_LCHI_get_parameters(int t_argc, char **t_argv);
+void HYD_LCHI_print_parameters(void);
 HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events);
 HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events);
 HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events);

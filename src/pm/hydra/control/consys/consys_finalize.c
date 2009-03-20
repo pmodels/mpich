@@ -9,16 +9,16 @@
 #include "pmci.h"
 #include "demux.h"
 
-HYD_Status HYD_CSI_Finalize(void)
+HYD_Status HYD_CSI_finalize(void)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_PMCI_Finalize();
+    status = HYD_PMCI_finalize();
     HYDU_ERR_POP(status, "error returned from PM finalize\n");
 
-    status = HYD_DMX_Finalize();
+    status = HYD_DMX_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
 
   fn_exit:

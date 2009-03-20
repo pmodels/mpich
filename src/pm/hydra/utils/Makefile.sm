@@ -5,4 +5,4 @@
 #
 
 SUBDIRS_opt_utils = plpa bind .
-SUBDIRS = args dbg env launch signals sock string timer @opt_utils@
+SUBDIRS = args env launch signals sock string timer @opt_utils@

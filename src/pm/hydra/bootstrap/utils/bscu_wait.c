@@ -51,7 +51,7 @@ HYD_Status HYD_BSCU_wait_for_completion(void)
                 }
             }
         }
-        if (HYDU_Time_left(handle.start, handle.timeout) == 0)
+        if (HYDU_time_left(handle.start, handle.timeout) == 0)
             break;
 
         /* FIXME: If we did not break out yet, add a small usleep to

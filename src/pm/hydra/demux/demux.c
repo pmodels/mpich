@@ -10,21 +10,21 @@
 
 static int num_cb_fds = 0;
 
-typedef struct HYD_DMXI_Callback {
+typedef struct HYD_DMXI_callback {
     int num_fds;
     int *fd;
     HYD_Event_t events;
      HYD_Status(*callback) (int fd, HYD_Event_t events);
 
-    struct HYD_DMXI_Callback *next;
-} HYD_DMXI_Callback_t;
+    struct HYD_DMXI_callback *next;
+} HYD_DMXI_callback_t;
 
-static HYD_DMXI_Callback_t *cb_list = NULL;
+static HYD_DMXI_callback_t *cb_list = NULL;
 
-HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_Event_t events,
+HYD_Status HYD_DMX_register_fd(int num_fds, int *fd, HYD_Event_t events,
                                HYD_Status(*callback) (int fd, HYD_Event_t events))
 {
-    HYD_DMXI_Callback_t *cb_element, *run;
+    HYD_DMXI_callback_t *cb_element, *run;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -35,7 +35,7 @@ HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_Event_t events,
             HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "registering bad fd %d\n",
                                  fd[i]);
 
-    HYDU_MALLOC(cb_element, HYD_DMXI_Callback_t *, sizeof(HYD_DMXI_Callback_t), status);
+    HYDU_MALLOC(cb_element, HYD_DMXI_callback_t *, sizeof(HYD_DMXI_callback_t), status);
     cb_element->num_fds = num_fds;
     HYDU_MALLOC(cb_element->fd, int *, num_fds * sizeof(int), status);
     memcpy(cb_element->fd, fd, num_fds * sizeof(int));
@@ -64,10 +64,10 @@ HYD_Status HYD_DMX_Register_fd(int num_fds, int *fd, HYD_Event_t events,
 }
 
 
-HYD_Status HYD_DMX_Deregister_fd(int fd)
+HYD_Status HYD_DMX_deregister_fd(int fd)
 {
     int i;
-    HYD_DMXI_Callback_t *cb_element;
+    HYD_DMXI_callback_t *cb_element;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -97,10 +97,10 @@ HYD_Status HYD_DMX_Deregister_fd(int fd)
 }
 
 
-HYD_Status HYD_DMX_Wait_for_event(int time)
+HYD_Status HYD_DMX_wait_for_event(int time)
 {
     int total_fds, i, j, events, ret;
-    HYD_DMXI_Callback_t *run;
+    HYD_DMXI_callback_t *run;
     struct pollfd *pollfds = NULL;
     HYD_Status status = HYD_SUCCESS;
 
@@ -140,7 +140,7 @@ HYD_Status HYD_DMX_Wait_for_event(int time)
                 goto fn_exit;
             }
             HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "poll error (%s)\n",
-                                 HYDU_String_error(errno));
+                                 HYDU_strerror(errno));
         }
         break;
     }
@@ -184,9 +184,9 @@ HYD_Status HYD_DMX_Wait_for_event(int time)
 }
 
 
-HYD_Status HYD_DMX_Finalize(void)
+HYD_Status HYD_DMX_finalize(void)
 {
-    HYD_DMXI_Callback_t *run1, *run2;
+    HYD_DMXI_callback_t *run1, *run2;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

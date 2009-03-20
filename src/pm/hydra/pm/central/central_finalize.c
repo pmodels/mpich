@@ -13,7 +13,7 @@
 
 int HYD_PMCD_Central_listenfd;
 
-HYD_Status HYD_PMCI_Finalize(void)
+HYD_Status HYD_PMCI_finalize(void)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -21,13 +21,13 @@ HYD_Status HYD_PMCI_Finalize(void)
 
     /* Deregister the listen socket from the demux engine and close
      * it. */
-    status = HYD_DMX_Deregister_fd(HYD_PMCD_Central_listenfd);
+    status = HYD_DMX_deregister_fd(HYD_PMCD_Central_listenfd);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
 
     close(HYD_PMCD_Central_listenfd);
     HYD_PMCD_Central_listenfd = -1;
 
-    status = HYD_PMCU_Finalize();
+    status = HYD_PMCU_finalize();
     HYDU_ERR_POP(status, "unable to finalize process manager utils\n");
 
     status = HYD_BSCI_finalize();

@@ -12,7 +12,7 @@
 
 HYD_Handle handle;
 
-HYD_Status HYD_CSI_Launch_procs(void)
+HYD_Status HYD_CSI_launch_procs(void)
 {
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
@@ -21,33 +21,33 @@ HYD_Status HYD_CSI_Launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_PMCI_Launch_procs();
+    status = HYD_PMCI_launch_procs();
     HYDU_ERR_POP(status, "PM returned error while launching processes\n");
 
     for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
         for (partition = proc_params->partition; partition; partition = partition->next) {
             status =
-                HYD_DMX_Register_fd(1, &partition->out, HYD_STDOUT, proc_params->stdout_cb);
+                HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, proc_params->stdout_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
             status =
-                HYD_DMX_Register_fd(1, &partition->err, HYD_STDOUT, proc_params->stderr_cb);
+                HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, proc_params->stderr_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
     }
 
     if (handle.in != -1) {      /* Only process_id 0 */
-        status = HYDU_Sock_set_nonblock(handle.in);
+        status = HYDU_sock_set_nonblock(handle.in);
         HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
         stdin_fd = 0;
-        status = HYDU_Sock_set_nonblock(stdin_fd);
+        status = HYDU_sock_set_nonblock(stdin_fd);
         HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
         handle.stdin_buf_count = 0;
         handle.stdin_buf_offset = 0;
 
-        status = HYD_DMX_Register_fd(1, &stdin_fd, HYD_STDIN, handle.stdin_cb);
+        status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, handle.stdin_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
