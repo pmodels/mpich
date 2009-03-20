@@ -300,7 +300,6 @@ dnl Final output
 AC_OUTPUT(Makefile \
 	utils/Makefile \
 	utils/args/Makefile \
-	utils/dbg/Makefile \
 	utils/env/Makefile \
 	utils/launch/Makefile \
 	utils/signals/Makefile \
