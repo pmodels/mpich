@@ -14,72 +14,13 @@
 
 HYD_Handle handle;
 
-#define CHECK_NEXT_ARG_VALID(status)            \
-    { \
-	--argc; ++argv; \
-	if (!argc || !argv) { \
-	    (status) = HYD_INTERNAL_ERROR;	\
-	    goto fn_fail; \
-	} \
+#define INCREMENT_ARGV(status)             \
+    {                                      \
+	if (!(++argv)) {                   \
+	    (status) = HYD_INTERNAL_ERROR; \
+	    goto fn_fail;                  \
+	}                                  \
     }
-
-static HYD_Status allocate_proc_params(struct HYD_Proc_params **params)
-{
-    struct HYD_Proc_params *proc_params;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(proc_params, struct HYD_Proc_params *, sizeof(struct HYD_Proc_params), status);
-
-    proc_params->exec_proc_count = 0;
-    proc_params->partition = NULL;
-
-    proc_params->exec[0] = NULL;
-    proc_params->user_env = NULL;
-    proc_params->prop = HYD_ENV_PROP_UNSET;
-    proc_params->prop_env = NULL;
-    proc_params->stdout_cb = NULL;
-    proc_params->stderr_cb = NULL;
-    proc_params->next = NULL;
-
-    *params = proc_params;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-static HYD_Status get_current_proc_params(struct HYD_Proc_params **params)
-{
-    struct HYD_Proc_params *proc_params;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (handle.proc_params == NULL) {
-        status = allocate_proc_params(&handle.proc_params);
-        HYDU_ERR_POP(status, "unable to allocate proc_params\n");
-    }
-
-    proc_params = handle.proc_params;
-    while (proc_params->next)
-        proc_params = proc_params->next;
-
-    *params = proc_params;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 
 static void show_version(void)
 {
@@ -89,9 +30,9 @@ static void show_version(void)
 }
 
 
-HYD_Status HYD_LCHI_get_parameters(int t_argc, char **t_argv)
+HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 {
-    int argc = t_argc, i;
+    int i;
     char **argv = t_argv;
     char *env_name, *env_value, *str1, *str2, *progname = *argv;
     HYD_Env_t *env;
@@ -105,190 +46,178 @@ HYD_Status HYD_LCHI_get_parameters(int t_argc, char **t_argv)
     status = HYDU_list_global_env(&handle.global_env);
     HYDU_ERR_POP(status, "unable to get the global env list\n");
 
-    while (--argc && ++argv) {
+    while (++argv) {
 
-        status = HYDU_strsplit(*argv, &str1, &str2, '=');
-        HYDU_ERR_POP(status, "string break returned error\n");
-
-        if (!strcmp(str1, "-h") || !strcmp(str1, "--help") || !strcmp(str1, "-help"))
+        if (!strcmp(*argv, "-h") || !strcmp(*argv, "-help") || !strcmp(*argv, "--help"))
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
 
-        if (!strcmp(str1, "--verbose")) {
-            if (handle.debug != -1)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate debug level\n");
-            handle.debug = 1;
-            continue;
-        }
-
-        if (!strcmp(str1, "--version")) {
+        if (!strcmp(*argv, "--version")) {
             show_version();
             HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
         }
 
-        if (!strcmp(str1, "--bootstrap")) {
-            if (!str2) {
-                CHECK_NEXT_ARG_VALID(status);
-                str2 = *argv;
-            }
-            if (handle.bootstrap != NULL)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate bootstrap\n");
-            handle.bootstrap = MPIU_Strdup(str2);
+        if (!strcmp(*argv, "--verbose")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.debug != -1, HYD_INTERNAL_ERROR,
+                                "duplicate debug level\n");
+            handle.debug = 1;
             continue;
         }
 
-        if (!strcmp(str1, "--enable-x") || !strcmp(str1, "--disable-x")) {
-            if (handle.enablex != -1)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate enable-x\n");
-            handle.enablex = !strcmp(str1, "--enable-x");
+        if (!strcmp(*argv, "--enable-x") || !strcmp(*argv, "--disable-x")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.enablex != -1, HYD_INTERNAL_ERROR,
+                                "duplicate enable-x\n");
+            handle.enablex = !strcmp(*argv, "--enable-x");
             continue;
         }
 
-        if (!strcmp(str1, "--proxy-port")) {
-            if (!str2) {
-                CHECK_NEXT_ARG_VALID(status);
-                str2 = *argv;
-            }
-            if (handle.proxy_port != -1)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate proxy port\n");
-            handle.proxy_port = atoi(str2);
+        if (!strcmp(*argv, "-genvall")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.prop != HYD_ENV_PROP_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+            handle.prop = HYD_ENV_PROP_ALL;
             continue;
         }
 
-        if (!strcmp(str1, "-genvall") || !strcmp(str1, "-genvnone") ||
-            !strcmp(str1, "-genvlist")) {
-            if (handle.prop != HYD_ENV_PROP_UNSET)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate prop setting\n");
-
-            if (!strcmp(str1, "-genvall"))
-                handle.prop = HYD_ENV_PROP_ALL;
-            else if (!strcmp(str1, "-genvnone"))
-                handle.prop = HYD_ENV_PROP_NONE;
-            else if (!strcmp(str1, "-genvlist")) {
-                handle.prop = HYD_ENV_PROP_LIST;
-
-                if (!str2) {
-                    CHECK_NEXT_ARG_VALID(status);
-                    str2 = *argv;
-                }
-
-                env_name = strtok(str2, ",");
-                do {
-                    status = HYDU_env_create(&env, env_name, NULL);
-                    HYDU_ERR_POP(status, "unable to create env struct\n");
-
-                    status = HYDU_append_env_to_list(*env, &handle.user_env);
-                    HYDU_ERR_POP(status, "unable to add env to list\n");
-                } while ((env_name = strtok(NULL, ",")));
-            }
+        if (!strcmp(*argv, "-genvnone")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.prop != HYD_ENV_PROP_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+            handle.prop = HYD_ENV_PROP_NONE;
             continue;
         }
 
-        if (!strcmp(str1, "-envall") || !strcmp(str1, "-envnone") ||
-            !strcmp(str1, "-envlist")) {
-            status = get_current_proc_params(&proc_params);
-            HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
+        if (!strcmp(*argv, "-genvlist")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.prop != HYD_ENV_PROP_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+            handle.prop = HYD_ENV_PROP_LIST;
 
-            if (proc_params->prop != HYD_ENV_PROP_UNSET)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate prop setting\n");
-
-            if (!strcmp(str1, "-envall"))
-                proc_params->prop = HYD_ENV_PROP_ALL;
-            else if (!strcmp(str1, "-envnone"))
-                proc_params->prop = HYD_ENV_PROP_NONE;
-            else if (!strcmp(str1, "-envlist")) {
-                proc_params->prop = HYD_ENV_PROP_LIST;
-
-                if (!str2) {
-                    CHECK_NEXT_ARG_VALID(status);
-                    str2 = *argv;
-                }
-
-                do {
-                    env_name = strtok(str2, ",");
-                    if (env_name == NULL)
-                        break;
-
-                    status = HYDU_env_create(&env, env_name, NULL);
-                    HYDU_ERR_POP(status, "unable to create env struct\n");
-
-                    status = HYDU_append_env_to_list(*env, &proc_params->prop_env);
-                    HYDU_ERR_POP(status, "unable to add env to list\n");
-                } while (env_name);
-            }
+            INCREMENT_ARGV(status);
+            HYDU_comma_list_to_env_list(*argv, &handle.user_env);
             continue;
         }
 
-        /* Add additional environment variables */
-        if (!strcmp(str1, "-genv") || !strcmp(str1, "-env")) {
-            if (!str2) {
-                CHECK_NEXT_ARG_VALID(status);
-                str2 = *argv;
-            }
-            env_name = MPIU_Strdup(str2);
-
-            CHECK_NEXT_ARG_VALID(status);
+        if (!strcmp(*argv, "-genv")) {
+            INCREMENT_ARGV(status);
+            env_name = MPIU_Strdup(*argv);
+            INCREMENT_ARGV(status);
             env_value = MPIU_Strdup(*argv);
 
             status = HYDU_env_create(&env, env_name, env_value);
             HYDU_ERR_POP(status, "unable to create env struct\n");
 
-            if (!strcmp(str1, "-genv"))
-                HYDU_append_env_to_list(*env, &handle.user_env);
-            else {
-                status = get_current_proc_params(&proc_params);
-                HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
-
-                HYDU_append_env_to_list(*env, &proc_params->user_env);
-            }
-
-            HYDU_FREE(env);
+            HYDU_append_env_to_list(*env, &handle.user_env);
             continue;
         }
 
-        if (!strcmp(str1, "-wdir")) {
-            if (!str2) {
-                CHECK_NEXT_ARG_VALID(status);
-                str2 = *argv;
-            }
-            handle.wdir = MPIU_Strdup(str2);
+        if (!strcmp(*argv, "-envall")) {
+            status = HYD_LCHU_get_current_proc_params(&proc_params);
+            HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
+
+            HYDU_ERR_CHKANDJUMP(status, proc_params->prop != HYD_ENV_PROP_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+            proc_params->prop = HYD_ENV_PROP_ALL;
             continue;
         }
 
-        if (!strcmp(str1, "-n") || !strcmp(str1, "-np")) {
-            if (!str2) {
-                CHECK_NEXT_ARG_VALID(status);
-                str2 = *argv;
-            }
+        if (!strcmp(*argv, "-envnone")) {
+            status = HYD_LCHU_get_current_proc_params(&proc_params);
+            HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
 
-            status = get_current_proc_params(&proc_params);
+            HYDU_ERR_CHKANDJUMP(status, proc_params->prop != HYD_ENV_PROP_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+            proc_params->prop = HYD_ENV_PROP_NONE;
+            continue;
+        }
+
+        if (!strcmp(*argv, "-envlist")) {
+            status = HYD_LCHU_get_current_proc_params(&proc_params);
+            HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
+
+            HYDU_ERR_CHKANDJUMP(status, proc_params->prop != HYD_ENV_PROP_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+            proc_params->prop = HYD_ENV_PROP_LIST;
+
+            INCREMENT_ARGV(status);
+            HYDU_comma_list_to_env_list(*argv, &proc_params->user_env);
+            continue;
+        }
+
+        if (!strcmp(*argv, "-env")) {
+            INCREMENT_ARGV(status);
+            env_name = MPIU_Strdup(*argv);
+            INCREMENT_ARGV(status);
+            env_value = MPIU_Strdup(*argv);
+
+            status = HYDU_env_create(&env, env_name, env_value);
+            HYDU_ERR_POP(status, "unable to create env struct\n");
+
+            status = HYD_LCHU_get_current_proc_params(&proc_params);
+            HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
+
+            HYDU_append_env_to_list(*env, &proc_params->user_env);
+            continue;
+        }
+
+        if (!strcmp(*argv, "-wdir")) {
+            INCREMENT_ARGV(status);
+            handle.wdir = MPIU_Strdup(*argv);
+            continue;
+        }
+
+        if (!strcmp(*argv, "-n") || !strcmp(*argv, "-np")) {
+            INCREMENT_ARGV(status);
+
+            status = HYD_LCHU_get_current_proc_params(&proc_params);
             HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
 
             if (proc_params->exec_proc_count != 0)
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate proc count\n");
 
-            proc_params->exec_proc_count = atoi(str2);
+            proc_params->exec_proc_count = atoi(*argv);
             continue;
         }
 
-        if (!strcmp(str1, "-f")) {
+        if (!strcmp(*argv, "-f")) {
+            INCREMENT_ARGV(status);
+            handle.host_file = MPIU_Strdup(*argv);
+            continue;
+        }
+
+        /* The below options allow for "--foo=x" form of argument,
+         * instead of "--foo x" for convenience. */
+        status = HYDU_strsplit(*argv, &str1, &str2, '=');
+        HYDU_ERR_POP(status, "string break returned error\n");
+
+        if (!strcmp(str1, "--bootstrap")) {
             if (!str2) {
-                CHECK_NEXT_ARG_VALID(status);
+                INCREMENT_ARGV(status);
                 str2 = *argv;
             }
-            handle.host_file = MPIU_Strdup(str2);
+            HYDU_ERR_CHKANDJUMP(status, handle.bootstrap, HYD_INTERNAL_ERROR,
+                                "duplicate bootstrap server\n");
+            handle.bootstrap = MPIU_Strdup(str2);
+            continue;
+        }
+
+        if (!strcmp(str1, "--proxy-port")) {
+            if (!str2) {
+                INCREMENT_ARGV(status);
+                str2 = *argv;
+            }
+            HYDU_ERR_CHKANDJUMP(status, handle.proxy_port != -1, HYD_INTERNAL_ERROR,
+                                "duplicate proxy port\n");
+            handle.proxy_port = atoi(str2);
             continue;
         }
 
         if (*argv[0] == '-')
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized argument\n");
 
-        status = get_current_proc_params(&proc_params);
+        status = HYD_LCHU_get_current_proc_params(&proc_params);
         HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
 
         /* Read the executable till you hit the end of a ":" */
         do {
             if (!strcmp(*argv, ":")) {  /* Next executable */
-                status = allocate_proc_params(&proc_params->next);
+                status = HYD_LCHU_allocate_proc_params(&proc_params->next);
                 HYDU_ERR_POP(status, "allocate_proc_params returned error\n");
                 break;
             }
@@ -298,9 +227,9 @@ HYD_Status HYD_LCHI_get_parameters(int t_argc, char **t_argv)
                 i++;
             proc_params->exec[i] = MPIU_Strdup(*argv);
             proc_params->exec[i + 1] = NULL;
-        } while (--argc && ++argv);
+        } while (++argv && *argv);
 
-        if (!argc || !argv)
+        if (!(*argv))
             break;
 
         continue;
@@ -319,23 +248,11 @@ HYD_Status HYD_LCHI_get_parameters(int t_argc, char **t_argv)
                                 "allocated space is too small for absolute path\n");
     }
 
-    /*
-     * We use the following priority order to specify the bootstrap server:
-     *    1. Specified to mpiexec using --bootstrap
-     *    2. Specified through the environment HYDRA_BOOTSTRAP
-     *    3. If nothing is given, we use the default bootstrap server
-     */
     if (handle.bootstrap == NULL && getenv("HYDRA_BOOTSTRAP"))
         handle.bootstrap = MPIU_Strdup(getenv("HYDRA_BOOTSTRAP"));
     if (handle.bootstrap == NULL)
         handle.bootstrap = MPIU_Strdup(HYDRA_DEFAULT_BSS);
 
-    /*
-     * We use the following priority order to specify the host file:
-     *    1. Specified to mpiexec using -f
-     *    2. Specified through the environment HYDRA_HOST_FILE
-     *    3. If nothing is given, we use the local host
-     */
     if (handle.host_file == NULL && getenv("HYDRA_HOST_FILE"))
         handle.host_file = MPIU_Strdup(getenv("HYDRA_HOST_FILE"));
     if (handle.host_file == NULL)
@@ -367,93 +284,4 @@ HYD_Status HYD_LCHI_get_parameters(int t_argc, char **t_argv)
 
   fn_fail:
     goto fn_exit;
-}
-
-
-void HYD_LCHI_print_parameters(void)
-{
-    HYD_Env_t *env;
-    int i, j;
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_Debug("\n");
-    HYDU_Debug("=================================================");
-    HYDU_Debug("=================================================");
-    HYDU_Debug("\n");
-    HYDU_Debug("mpiexec options:\n");
-    HYDU_Debug("----------------\n");
-    HYDU_Debug("  Base path: %s\n", handle.base_path);
-    HYDU_Debug("  Proxy port: %d\n", handle.proxy_port);
-    HYDU_Debug("  Bootstrap server: %s\n", handle.bootstrap);
-    HYDU_Debug("  Debug level: %d\n", handle.debug);
-    HYDU_Debug("  Enable X: %d\n", handle.enablex);
-    HYDU_Debug("  Working dir: %s\n", handle.wdir);
-    HYDU_Debug("  Host file: %s\n", handle.host_file);
-
-    HYDU_Debug("\n");
-    HYDU_Debug("  Global environment:\n");
-    HYDU_Debug("  -------------------\n");
-    for (env = handle.global_env; env; env = env->next)
-        HYDU_Debug("    %s=%s\n", env->env_name, env->env_value);
-
-    if (handle.system_env) {
-        HYDU_Debug("\n");
-        HYDU_Debug("  Hydra internal environment:\n");
-        HYDU_Debug("  ---------------------------\n");
-        for (env = handle.system_env; env; env = env->next)
-            HYDU_Debug("    %s=%s\n", env->env_name, env->env_value);
-    }
-
-    if (handle.user_env) {
-        HYDU_Debug("\n");
-        HYDU_Debug("  User set environment:\n");
-        HYDU_Debug("  ---------------------\n");
-        for (env = handle.user_env; env; env = env->next)
-            HYDU_Debug("    %s=%s\n", env->env_name, env->env_value);
-    }
-
-    HYDU_Debug("\n\n");
-
-    HYDU_Debug("    Process parameters:\n");
-    HYDU_Debug("    *******************\n");
-    i = 1;
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        HYDU_Debug("      Executable ID: %2d\n", i++);
-        HYDU_Debug("      -----------------\n");
-        HYDU_Debug("        Process count: %d\n", proc_params->exec_proc_count);
-        HYDU_Debug("        Executable: ");
-        for (j = 0; proc_params->exec[j]; j++)
-            HYDU_Debug("%s ", proc_params->exec[j]);
-        HYDU_Debug("\n");
-
-        if (proc_params->user_env) {
-            HYDU_Debug("\n");
-            HYDU_Debug("        User set environment:\n");
-            HYDU_Debug("        .....................\n");
-            for (env = proc_params->user_env; env; env = env->next)
-                HYDU_Debug("          %s=%s\n", env->env_name, env->env_value);
-        }
-
-        j = 0;
-        for (partition = proc_params->partition; partition; partition = partition->next) {
-            HYDU_Debug("\n");
-            HYDU_Debug("        Partition ID: %2d\n", j++);
-            HYDU_Debug("        ----------------\n");
-            HYDU_Debug("          Partition name: %s\n", partition->name);
-            HYDU_Debug("          Partition process count: %d\n", partition->proc_count);
-            HYDU_Debug("\n");
-        }
-    }
-
-    HYDU_Debug("\n");
-    HYDU_Debug("=================================================");
-    HYDU_Debug("=================================================");
-    HYDU_Debug("\n\n");
-
-    HYDU_FUNC_EXIT();
-
-    return;
 }

@@ -92,6 +92,12 @@ typedef enum {
         }                                                               \
     }
 
+#define HYDU_ERR_CHKANDJUMP(status, chk, error, message)                \
+    {                                                                   \
+        if ((chk))                                                      \
+            HYDU_ERR_SETANDJUMP(status, error, message);                \
+    }
+
 #define HYDU_ERR_SETANDJUMP1(status, error, message, arg1)              \
     {                                                                   \
         status = error;                                                 \

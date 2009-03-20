@@ -296,3 +296,29 @@ void HYDU_putenv(char *env_str)
     HYDU_FUNC_EXIT();
     return;
 }
+
+
+HYD_Status HYDU_comma_list_to_env_list(char *str, HYD_Env_t **env_list)
+{
+    char *env_name;
+    HYD_Env_t *env;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    env_name = strtok(str, ",");
+    do {
+        status = HYDU_env_create(&env, env_name, NULL);
+        HYDU_ERR_POP(status, "unable to create env struct\n");
+
+        status = HYDU_append_env_to_list(*env, env_list);
+        HYDU_ERR_POP(status, "unable to add env to list\n");
+    } while ((env_name = strtok(NULL, ",")));
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

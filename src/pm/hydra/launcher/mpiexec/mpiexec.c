@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_LCHI_get_parameters(argc, argv);
+    status = HYD_LCHI_get_parameters(argv);
     if (status == HYD_GRACEFUL_ABORT) {
         exit(0);
     }
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     }
 
     if (handle.debug)
-        HYD_LCHI_print_parameters();
+        HYD_LCHU_print_params();
 
     /* Convert the host file to a host list */
     status = HYD_LCHU_create_host_list();
