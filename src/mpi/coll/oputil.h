@@ -220,6 +220,7 @@ typedef struct {
 #define MPIR_OP_TYPE_GROUP_COMPLEX                          \
     MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_COMPLEX, s_complex)
 #define MPIR_OP_TYPE_GROUP_COMPLEX_EXTRA                                                            \
+    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_DOUBLE_COMPLEX, d_complex)                                  \
     MPIR_OP_TYPE_MACRO_HAVE_COMPLEX8(MPI_COMPLEX8, s_complex)                                       \
     MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(MPI_COMPLEX16, d_complex)                                     \
     MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(MPIR_CXX_COMPLEX_VALUE, s_complex)                          \
