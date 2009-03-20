@@ -33,75 +33,78 @@
 typedef struct mpi_names_t { MPI_Datatype dtype; const char *name; } mpi_names_t;
 /* The MPI standard specifies that the names must be the MPI names,
    not the related language names (e.g., MPI_CHAR, not char) */
+#define type_name_entry(x_) { x_, MPIU_QUOTE(x_) }
 static mpi_names_t mpi_names[] = {
-    { MPI_CHAR, "MPI_CHAR" },
-    { MPI_SIGNED_CHAR, "MPI_SIGNED_CHAR" },
-    { MPI_UNSIGNED_CHAR, "MPI_UNSIGNED_CHAR" },
-    { MPI_BYTE, "MPI_BYTE" },
-    { MPI_WCHAR, "MPI_WCHAR" },
-    { MPI_SHORT, "MPI_SHORT" },
-    { MPI_UNSIGNED_SHORT, "MPI_UNSIGNED_SHORT" },
-    { MPI_INT, "MPI_INT" },
-    { MPI_UNSIGNED, "MPI_UNSIGNED" },
-    { MPI_LONG, "MPI_LONG" },
-    { MPI_UNSIGNED_LONG, "MPI_UNSIGNED_LONG" },
-    { MPI_FLOAT, "MPI_FLOAT" },
-    { MPI_DOUBLE, "MPI_DOUBLE" },
-    { MPI_LONG_DOUBLE, "MPI_LONG_DOUBLE" },
+    type_name_entry(MPI_CHAR),
+    type_name_entry(MPI_SIGNED_CHAR),
+    type_name_entry(MPI_UNSIGNED_CHAR),
+    type_name_entry(MPI_BYTE),
+    type_name_entry(MPI_WCHAR),
+    type_name_entry(MPI_SHORT),
+    type_name_entry(MPI_UNSIGNED_SHORT),
+    type_name_entry(MPI_INT),
+    type_name_entry(MPI_UNSIGNED),
+    type_name_entry(MPI_LONG),
+    type_name_entry(MPI_UNSIGNED_LONG),
+    type_name_entry(MPI_FLOAT),
+    type_name_entry(MPI_DOUBLE),
+    type_name_entry(MPI_LONG_DOUBLE),
     /* LONG_LONG_INT is allowed as an alias; we don't make it a separate
        type */
-/*    { MPI_LONG_LONG_INT, "MPI_LONG_LONG_INT" }, */
-    { MPI_LONG_LONG, "MPI_LONG_LONG" },
-    { MPI_UNSIGNED_LONG_LONG, "MPI_UNSIGNED_LONG_LONG" },
-    { MPI_PACKED, "MPI_PACKED" },
-    { MPI_LB, "MPI_LB" },
-    { MPI_UB, "MPI_UB" },
+/*    type_name_entry(MPI_LONG_LONG_INT), */
+    type_name_entry(MPI_LONG_LONG),
+    type_name_entry(MPI_UNSIGNED_LONG_LONG),
+    type_name_entry(MPI_PACKED),
+    type_name_entry(MPI_LB),
+    type_name_entry(MPI_UB),
 
-/* The maxloc/minloc types are not builtin because they're size and
+/* The maxloc/minloc types are not builtin because their size and
    extent may not be the same. */
 /*
-    { MPI_FLOAT_INT, "MPI_FLOAT_INT" },
-    { MPI_DOUBLE_INT, "MPI_DOUBLE_INT" },
-    { MPI_LONG_INT, "MPI_LONG_INT" },
-    { MPI_SHORT_INT, "MPI_SHORT_INT" },
+    type_name_entry(MPI_FLOAT_INT),
+    type_name_entry(MPI_DOUBLE_INT),
+    type_name_entry(MPI_LONG_INT),
+    type_name_entry(MPI_SHORT_INT),
 */
     /* Fortran */
-    { MPI_COMPLEX, "MPI_COMPLEX" },
-    { MPI_DOUBLE_COMPLEX, "MPI_DOUBLE_COMPLEX" },
-    { MPI_LOGICAL, "MPI_LOGICAL" },
-    { MPI_REAL, "MPI_REAL" },
-    { MPI_DOUBLE_PRECISION, "MPI_DOUBLE_PRECISION" },
-    { MPI_INTEGER, "MPI_INTEGER" },
-    { MPI_2INTEGER, "MPI_2INTEGER" },
-    { MPI_2COMPLEX, "MPI_2COMPLEX" },
-    { MPI_2DOUBLE_COMPLEX, "MPI_2DOUBLE_COMPLEX" },
-    { MPI_2REAL, "MPI_2REAL" },
-    { MPI_2DOUBLE_PRECISION, "MPI_2DOUBLE_PRECISION" },
-    { MPI_CHARACTER, "MPI_CHARACTER" },
+    type_name_entry(MPI_COMPLEX),
+    type_name_entry(MPI_DOUBLE_COMPLEX),
+    type_name_entry(MPI_LOGICAL),
+    type_name_entry(MPI_REAL),
+    type_name_entry(MPI_DOUBLE_PRECISION),
+    type_name_entry(MPI_INTEGER),
+    type_name_entry(MPI_2INTEGER),
+    type_name_entry(MPI_2COMPLEX),
+    type_name_entry(MPI_2DOUBLE_COMPLEX),
+    type_name_entry(MPI_2REAL),
+    type_name_entry(MPI_2DOUBLE_PRECISION),
+    type_name_entry(MPI_CHARACTER),
     /* Size-specific types (C, Fortran, and C++) */
-    { MPI_REAL4, "MPI_REAL4" },
-    { MPI_REAL8, "MPI_REAL8" },
-    { MPI_REAL16, "MPI_REAL16" },
-    { MPI_COMPLEX8, "MPI_COMPLEX8" },
-    { MPI_COMPLEX16, "MPI_COMPLEX16" },
-    { MPI_COMPLEX32, "MPI_COMPLEX32" },
-    { MPI_INTEGER1, "MPI_INTEGER1" },
-    { MPI_INTEGER2, "MPI_INTEGER2" },
-    { MPI_INTEGER4, "MPI_INTEGER4" },
-    { MPI_INTEGER8, "MPI_INTEGER8" },
-    { MPI_INTEGER16, "MPI_INTEGER16" },
-    { 0, (char *) 0 },  /* Sentinal used to indicate the last element */
+    type_name_entry(MPI_REAL4),
+    type_name_entry(MPI_REAL8),
+    type_name_entry(MPI_REAL16),
+    type_name_entry(MPI_COMPLEX8),
+    type_name_entry(MPI_COMPLEX16),
+    type_name_entry(MPI_COMPLEX32),
+    type_name_entry(MPI_INTEGER1),
+    type_name_entry(MPI_INTEGER2),
+    type_name_entry(MPI_INTEGER4),
+    type_name_entry(MPI_INTEGER8),
+    type_name_entry(MPI_INTEGER16),
+
+    { 0, (char *) 0 },  /* Sentinel used to indicate the last element */
 };
 
 static mpi_names_t mpi_maxloc_names[] = {
-    { MPI_FLOAT_INT, "MPI_FLOAT_INT" },
-    { MPI_DOUBLE_INT, "MPI_DOUBLE_INT" },
-    { MPI_LONG_INT, "MPI_LONG_INT" },
-    { MPI_SHORT_INT, "MPI_SHORT_INT" },
-    { MPI_2INT, "MPI_2INT" },
-    { MPI_LONG_DOUBLE_INT, "MPI_LONG_DOUBLE_INT" },
-    { 0, (char *) 0 },  /* Sentinal used to indicate the last element */
+    type_name_entry(MPI_FLOAT_INT),
+    type_name_entry(MPI_DOUBLE_INT),
+    type_name_entry(MPI_LONG_INT),
+    type_name_entry(MPI_SHORT_INT),
+    type_name_entry(MPI_2INT),
+    type_name_entry(MPI_LONG_DOUBLE_INT),
+    { 0, (char *) 0 },  /* Sentinel used to indicate the last element */
 };
+#undef type_name_entry
 /* This routine is also needed by type_set_name */
 
 int MPIR_Datatype_init_names(void)
