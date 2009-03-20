@@ -6,218 +6,74 @@
  */
 
 #include "mpiimpl.h"
+#include "oputil.h"
 
-/* 
- * In MPI-1, this operation is valid only for  C integer, Fortran integer,
- * and byte data items (4.9.2 Predefined reduce operations)
+/*
+ * In MPI-2.1, this operation is valid only for C integer, Fortran integer,
+ * and byte types (5.9.2 Predefined reduce operations)
  */
 #ifndef MPIR_LBAND
 #define MPIR_LBAND(a,b) ((a)&(b))
 #endif
-void MPIR_BAND ( 
-    void *invec, 
-    void *inoutvec, 
-    int *Len, 
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_BAND
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_BAND (
+    void *invec,
+    void *inoutvec,
+    int *Len,
     MPI_Datatype *type )
 {
-    static const char FCNAME[] = "MPIR_BAND";
     int i, len = *Len;
-    
+
     switch (*type) {
-#ifdef HAVE_FORTRAN_BINDING
-    case MPI_LOGICAL: case MPI_INTEGER: {
-        MPI_Fint * restrict a = (MPI_Fint *)inoutvec; 
-        MPI_Fint * restrict b = (MPI_Fint *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-#endif
-#ifdef MPIR_INTEGER1_CTYPE
-    case MPI_INTEGER1: {
-        MPIR_INTEGER1_CTYPE * restrict a = (MPIR_INTEGER1_CTYPE *)inoutvec; 
-        MPIR_INTEGER1_CTYPE * restrict b = (MPIR_INTEGER1_CTYPE *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-#endif
-#ifdef MPIR_INTEGER2_CTYPE
-    case MPI_INTEGER2: {
-        MPIR_INTEGER2_CTYPE * restrict a = (MPIR_INTEGER2_CTYPE *)inoutvec; 
-        MPIR_INTEGER2_CTYPE * restrict b = (MPIR_INTEGER2_CTYPE *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-#endif
-#ifdef MPIR_INTEGER4_CTYPE
-    case MPI_INTEGER4: {
-        MPIR_INTEGER4_CTYPE * restrict a = (MPIR_INTEGER4_CTYPE *)inoutvec; 
-        MPIR_INTEGER4_CTYPE * restrict b = (MPIR_INTEGER4_CTYPE *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-#endif
-#ifdef MPIR_INTEGER8_CTYPE
-    case MPI_INTEGER8: {
-        MPIR_INTEGER8_CTYPE * restrict a = (MPIR_INTEGER8_CTYPE *)inoutvec; 
-        MPIR_INTEGER8_CTYPE * restrict b = (MPIR_INTEGER8_CTYPE *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-#endif
-#ifdef MPIR_INTEGER16_CTYPE
-    case MPI_INTEGER16: {
-        MPIR_INTEGER16_CTYPE * restrict a = (MPIR_INTEGER16_CTYPE *)inoutvec; 
-        MPIR_INTEGER16_CTYPE * restrict b = (MPIR_INTEGER16_CTYPE *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-#endif
-    case MPI_INT: {
-        int * restrict a = (int *)inoutvec; 
-        int * restrict b = (int *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-    case MPI_UNSIGNED: {
-        unsigned * restrict a = (unsigned *)inoutvec; 
-        unsigned * restrict b = (unsigned *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-    case MPI_LONG: {
-        long * restrict a = (long *)inoutvec; 
-        long * restrict b = (long *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-#if defined(HAVE_LONG_LONG_INT)
-    case MPI_LONG_LONG: {
-	/* case MPI_LONG_LONG_INT: defined to be the same as long_long */
-        long long * restrict a = (long long *)inoutvec; 
-        long long * restrict b = (long long *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-#endif
-    case MPI_UNSIGNED_LONG: {
-        unsigned long * restrict a = (unsigned long *)inoutvec; 
-        unsigned long * restrict b = (unsigned long *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-    case MPI_SHORT: {
-        short * restrict a = (short *)inoutvec; 
-        short * restrict b = (short *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-    case MPI_UNSIGNED_SHORT: {
-        unsigned short * restrict a = (unsigned short *)inoutvec; 
-        unsigned short * restrict b = (unsigned short *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-    case MPI_CHAR: 
-#ifdef HAVE_FORTRAN_BINDING
-    case MPI_CHARACTER: 
-#endif
-    {
-        char * restrict a = (char *)inoutvec; 
-        char * restrict b = (char *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-    case MPI_SIGNED_CHAR: {
-        signed char * restrict a = (signed char *)inoutvec; 
-        signed char * restrict b = (signed char *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-    case MPI_UNSIGNED_CHAR: {
-        unsigned char * restrict a = (unsigned char *)inoutvec; 
-        unsigned char * restrict b = (unsigned char *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-    case MPI_BYTE: {
-        unsigned char * restrict a = (unsigned char *)inoutvec; 
-        unsigned char * restrict b = (unsigned char *)invec;
-        for ( i=0; i<len; i++ )
-            a[i] = MPIR_LBAND(a[i],b[i]);
-        break;
-    }
-	/* --BEGIN ERROR HANDLING-- */
-    default: {
-	MPIU_THREADPRIV_DECL;
-	MPIU_THREADPRIV_GET;
-        MPIU_THREADPRIV_FIELD(op_errno) = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_BAND" );
-        break;
-    }
-	/* --END ERROR HANDLING-- */
+#undef MPIR_OP_TYPE_MACRO
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_LBAND)
+        /* no semicolons by necessity */
+        MPIR_OP_TYPE_GROUP(C_INTEGER)
+        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+        MPIR_OP_TYPE_GROUP(BYTE)
+        /* extra types that are not required to be supported by the MPI Standard */
+        MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
+        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
+        MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
+#undef MPIR_OP_TYPE_MACRO
+        /* --BEGIN ERROR HANDLING-- */
+        default: {
+            MPIU_THREADPRIV_DECL;
+            MPIU_THREADPRIV_GET;
+            MPIU_THREADPRIV_FIELD(op_errno) = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_BAND" );
+            break;
+        }
+        /* --END ERROR HANDLING-- */
     }
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_BAND_check_dtype
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_BAND_check_dtype ( MPI_Datatype type )
 {
-    static const char FCNAME[] = "MPIR_BAND_check_dtype";
     switch (type) {
-#ifdef HAVE_FORTRAN_BINDING
-    case MPI_LOGICAL: case MPI_INTEGER: 
-#endif
-    case MPI_INT: 
-    case MPI_UNSIGNED: 
-    case MPI_LONG: 
-#if defined(HAVE_LONG_LONG_INT)
-    case MPI_LONG_LONG: 
-#endif
-    case MPI_UNSIGNED_LONG: 
-    case MPI_SHORT: 
-    case MPI_UNSIGNED_SHORT: 
-    case MPI_CHAR: 
-#ifdef HAVE_FORTRAN_BINDING
-    case MPI_CHARACTER: 
-#endif
-    case MPI_SIGNED_CHAR: 
-    case MPI_UNSIGNED_CHAR: 
-    case MPI_BYTE: 
-/* The length type can be provided without Fortran, so we do so */
-#ifdef MPIR_INTEGER1_CTYPE
-    case MPI_INTEGER1:
-#endif
-#ifdef MPIR_INTEGER2_CTYPE
-    case MPI_INTEGER2:
-#endif
-#ifdef MPIR_INTEGER4_CTYPE
-    case MPI_INTEGER4:
-#endif
-#ifdef MPIR_INTEGER8_CTYPE
-    case MPI_INTEGER8:
-#endif
-#ifdef MPIR_INTEGER16_CTYPE
-    case MPI_INTEGER16:
-#endif
-        return MPI_SUCCESS;
-	/* --BEGIN ERROR HANDLING-- */
-    default: 
-        return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_BAND" );
-	/* --END ERROR HANDLING-- */
+#undef MPIR_OP_TYPE_MACRO
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) case (mpi_type_):
+        MPIR_OP_TYPE_GROUP(C_INTEGER)
+        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+        MPIR_OP_TYPE_GROUP(BYTE)
+        /* extra types that are not required to be supported by the MPI Standard */
+        MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
+        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
+        MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
+#undef MPIR_OP_TYPE_MACRO
+            return MPI_SUCCESS;
+        /* --BEGIN ERROR HANDLING-- */
+        default:
+            return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_BAND" );
+        /* --END ERROR HANDLING-- */
     }
 }
 
