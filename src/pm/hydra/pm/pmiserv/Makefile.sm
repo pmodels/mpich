@@ -5,7 +5,7 @@
 #
 
 libhydra_a_DIR = ../../lib
-libhydra_a_SOURCES = central_launch.c central_finalize.c central_cb.c
+libhydra_a_SOURCES = pmi_serv_launch.c pmi_serv_finalize.c pmi_serv_cb.c pmi_query.c
 INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../../../include \
 	-I../../include \
@@ -17,10 +17,10 @@ INCLUDES = -I${abs_srcdir}/../../include \
 	-I../../bootstrap/include \
 	-I${abs_srcdir}/../../demux
 
-hydproxy_SOURCES = proxy.c proxy_utils.c proxy_cb.c
-hydproxy_LDADD = -L../../lib -lhydra -L../../../util -lmpiexec -L../../../../../lib -lmpich
-hydproxy_DEPADD = ../../../util/libmpiexec.a
-install_BIN = hydproxy
+pmi_proxy_SOURCES = pmi_proxy.c pmi_proxy_utils.c pmi_proxy_cb.c pmi_query.c
+pmi_proxy_LDADD = -L../../lib -lhydra -L../../../util -lmpiexec -L../../../../../lib -lmpich
+pmi_proxy_DEPADD = ../../../util/libmpiexec.a
+install_BIN = pmi_proxy
 
 # Use the mpich2-build-install target to include mpiexec in the build bin
 # directory (all pm's require these targets)

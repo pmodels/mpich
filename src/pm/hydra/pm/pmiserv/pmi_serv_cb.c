@@ -6,17 +6,17 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
-#include "pmcu_pmi.h"
+#include "pmi_query.h"
 #include "pmci.h"
 #include "bsci.h"
 #include "demux.h"
-#include "central.h"
+#include "pmi_serv.h"
 
-int HYD_PMCD_Central_listenfd;
+int HYD_PMCD_pmi_serv_listenfd;
 HYD_Handle handle;
 
 /*
- * HYD_PMCD_Central_cb: This is the core PMI server part of the
+ * HYD_PMCD_pmi_serv_cb: This is the core PMI server part of the
  * code. Here's the expected protocol:
  *
  * 1. The client (MPI process) connects to us, which will result in an
@@ -42,21 +42,21 @@ HYD_Handle handle;
  *     - getbyidx
  *     - spawn
  */
-HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
+HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events)
 {
     int accept_fd, linelen, i;
-    char *buf, *cmd, *args[HYD_PMCU_NUM_STR];
+    char *buf, *cmd, *args[HYD_EXEC_ARGS];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(buf, char *, HYD_TMPBUF_SIZE, status);
 
-    if (fd == HYD_PMCD_Central_listenfd) {      /* Someone is trying to connect to us */
+    if (fd == HYD_PMCD_pmi_serv_listenfd) {      /* Someone is trying to connect to us */
         status = HYDU_sock_accept(fd, &accept_fd);
         HYDU_ERR_POP(status, "accept error\n");
 
-        status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, HYD_PMCD_Central_cb);
+        status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, HYD_PMCD_pmi_serv_cb);
         HYDU_ERR_POP(status, "unable to register fd\n");
     }
     else {
@@ -67,7 +67,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
             /* This is not a clean close. If a finalize was called, we
              * would have deregistered this socket. The application
              * might have aborted. Just cleanup all the processes */
-            status = HYD_PMCD_Central_cleanup();
+            status = HYD_PMCD_pmi_serv_cleanup();
             if (status != HYD_SUCCESS) {
                 HYDU_Warn_printf("bootstrap server returned error cleaning up processes\n");
                 status = HYD_SUCCESS;
@@ -90,7 +90,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
         buf[linelen - 1] = 0;
 
         cmd = strtok(buf, " ");
-        for (i = 0; i < HYD_PMCU_NUM_STR; i++) {
+        for (i = 0; i < HYD_EXEC_ARGS; i++) {
             args[i] = strtok(NULL, " ");
             if (args[i] == NULL)
                 break;
@@ -100,31 +100,31 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
             status = HYD_SUCCESS;
         }
         else if (!strcmp("cmd=initack", cmd)) {
-            status = HYD_PMCU_pmi_initack(fd, args);
+            status = HYD_PMCD_pmi_query_initack(fd, args);
         }
         else if (!strcmp("cmd=init", cmd)) {
-            status = HYD_PMCU_pmi_init(fd, args);
+            status = HYD_PMCD_pmi_query_init(fd, args);
         }
         else if (!strcmp("cmd=get_maxes", cmd)) {
-            status = HYD_PMCU_pmi_get_maxes(fd, args);
+            status = HYD_PMCD_pmi_query_get_maxes(fd, args);
         }
         else if (!strcmp("cmd=get_appnum", cmd)) {
-            status = HYD_PMCU_pmi_get_appnum(fd, args);
+            status = HYD_PMCD_pmi_query_get_appnum(fd, args);
         }
         else if (!strcmp("cmd=get_my_kvsname", cmd)) {
-            status = HYD_PMCU_pmi_get_my_kvsname(fd, args);
+            status = HYD_PMCD_pmi_query_get_my_kvsname(fd, args);
         }
         else if (!strcmp("cmd=barrier_in", cmd)) {
-            status = HYD_PMCU_pmi_barrier_in(fd, args);
+            status = HYD_PMCD_pmi_query_barrier_in(fd, args);
         }
         else if (!strcmp("cmd=put", cmd)) {
-            status = HYD_PMCU_pmi_put(fd, args);
+            status = HYD_PMCD_pmi_query_put(fd, args);
         }
         else if (!strcmp("cmd=get", cmd)) {
-            status = HYD_PMCU_pmi_get(fd, args);
+            status = HYD_PMCD_pmi_query_get(fd, args);
         }
         else if (!strcmp("cmd=finalize", cmd)) {
-            status = HYD_PMCU_pmi_finalize(fd, args);
+            status = HYD_PMCD_pmi_query_finalize(fd, args);
 
             if (status == HYD_SUCCESS) {
                 status = HYD_DMX_deregister_fd(fd);
@@ -133,7 +133,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
             }
         }
         else if (!strcmp("cmd=get_universe_size", cmd)) {
-            status = HYD_PMCU_pmi_get_usize(fd, args);
+            status = HYD_PMCD_pmi_query_get_usize(fd, args);
         }
         else {
             /* We don't understand the command */
@@ -142,7 +142,7 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
             /* Cleanup all the processes and return. We don't need to
              * check the return status since we are anyway returning
              * an error */
-            HYD_PMCD_Central_cleanup();
+            HYD_PMCD_pmi_serv_cleanup();
             status = HYD_SUCCESS;
             goto fn_fail;
         }
@@ -160,12 +160,12 @@ HYD_Status HYD_PMCD_Central_cb(int fd, HYD_Event_t events)
 }
 
 
-HYD_Status HYD_PMCD_Central_cleanup(void)
+HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
 {
     struct HYD_Proc_params *proc_params;
     struct HYD_Partition_list *partition;
     int fd;
-    enum HYD_Proxy_cmds cmd;
+    enum HYD_PMCD_pmi_proxy_cmds cmd;
     HYD_Status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -200,7 +200,7 @@ HYD_Status HYD_PMCD_Central_cleanup(void)
 }
 
 
-void HYD_PMCD_Central_signal_cb(int signal)
+void HYD_PMCD_pmi_serv_signal_cb(int signal)
 {
     HYDU_FUNC_ENTER();
 
@@ -213,7 +213,7 @@ void HYD_PMCD_Central_signal_cb(int signal)
 #endif /* SIGSTOP */
 ) {
         /* There's nothing we can do with the return value for now. */
-        HYD_PMCD_Central_cleanup();
+        HYD_PMCD_pmi_serv_cleanup();
         exit(-1);
     }
     else {

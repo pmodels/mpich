@@ -4,7 +4,7 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS_hydra_pm = central
+SUBDIRS_hydra_pm = pmiserv
 SUBDIRS = utils @hydra_pm@ .
 
 mpich2-build-install mpich2-build-uninstall install install-alt:

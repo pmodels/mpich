@@ -5,11 +5,11 @@
  */
 
 #include "hydra.h"
-#include "proxy.h"
+#include "pmi_proxy.h"
 
-struct HYD_Proxy_params HYD_Proxy_params;
+struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 
-HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
+HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
 {
     int argc = t_argc;
     char **argv = t_argv, *str;
@@ -19,11 +19,11 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
 
     HYDU_FUNC_ENTER();
 
-    HYD_Proxy_params.global_env = NULL;
-    HYD_Proxy_params.env_list = NULL;
-    HYD_Proxy_params.partition = NULL;
+    HYD_PMCD_pmi_proxy_params.global_env = NULL;
+    HYD_PMCD_pmi_proxy_params.env_list = NULL;
+    HYD_PMCD_pmi_proxy_params.partition = NULL;
 
-    status = HYDU_list_global_env(&HYD_Proxy_params.global_env);
+    status = HYDU_list_global_env(&HYD_PMCD_pmi_proxy_params.global_env);
     HYDU_ERR_POP(status, "unable to get the global env list\n");
 
     while (--argc && ++argv) {
@@ -31,14 +31,14 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
         /* Process count */
         if (!strcmp(*argv, "--proc-count")) {
             argv++;
-            HYD_Proxy_params.proc_count = atoi(*argv);
+            HYD_PMCD_pmi_proxy_params.proc_count = atoi(*argv);
             continue;
         }
 
         /* Proxy port */
         if (!strcmp(*argv, "--proxy-port")) {
             argv++;
-            HYD_Proxy_params.proxy_port = atoi(*argv);
+            HYD_PMCD_pmi_proxy_params.proxy_port = atoi(*argv);
             continue;
         }
 
@@ -46,7 +46,7 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
          * everything else is incremented from here. */
         if (!strcmp(*argv, "--pmi-id")) {
             argv++;
-            HYD_Proxy_params.pmi_id = atoi(*argv);
+            HYD_PMCD_pmi_proxy_params.pmi_id = atoi(*argv);
             continue;
         }
 
@@ -60,10 +60,10 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
             argv++;
             partition->proc_count = atoi(*argv);
 
-            if (!HYD_Proxy_params.partition)
-                HYD_Proxy_params.partition = partition;
+            if (!HYD_PMCD_pmi_proxy_params.partition)
+                HYD_PMCD_pmi_proxy_params.partition = partition;
             else {
-                for (run = HYD_Proxy_params.partition; run->next; run = run->next);
+                for (run = HYD_PMCD_pmi_proxy_params.partition; run->next; run = run->next);
                 run->next = partition;
             }
             continue;
@@ -72,7 +72,7 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
         /* Working directory */
         if (!strcmp(*argv, "--wdir")) {
             argv++;
-            HYD_Proxy_params.wdir = MPIU_Strdup(*argv);
+            HYD_PMCD_pmi_proxy_params.wdir = MPIU_Strdup(*argv);
             continue;
         }
 
@@ -100,11 +100,11 @@ HYD_Status HYD_Proxy_get_params(int t_argc, char **t_argv)
         /* Fall through case is application parameters. Load
          * everything into the args variable. */
         for (arg = 0; *argv;) {
-            HYD_Proxy_params.args[arg++] = MPIU_Strdup(*argv);
+            HYD_PMCD_pmi_proxy_params.args[arg++] = MPIU_Strdup(*argv);
             ++argv;
             --argc;
         }
-        HYD_Proxy_params.args[arg++] = NULL;
+        HYD_PMCD_pmi_proxy_params.args[arg++] = NULL;
         break;
     }
 

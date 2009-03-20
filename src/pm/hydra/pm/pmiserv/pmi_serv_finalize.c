@@ -6,12 +6,12 @@
 
 #include "hydra.h"
 #include "pmci.h"
-#include "pmcu_pmi.h"
+#include "pmi_query.h"
 #include "bsci.h"
 #include "demux.h"
-#include "central.h"
+#include "pmi_serv.h"
 
-int HYD_PMCD_Central_listenfd;
+int HYD_PMCD_pmi_serv_listenfd;
 
 HYD_Status HYD_PMCI_finalize(void)
 {
@@ -21,13 +21,13 @@ HYD_Status HYD_PMCI_finalize(void)
 
     /* Deregister the listen socket from the demux engine and close
      * it. */
-    status = HYD_DMX_deregister_fd(HYD_PMCD_Central_listenfd);
+    status = HYD_DMX_deregister_fd(HYD_PMCD_pmi_serv_listenfd);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
 
-    close(HYD_PMCD_Central_listenfd);
-    HYD_PMCD_Central_listenfd = -1;
+    close(HYD_PMCD_pmi_serv_listenfd);
+    HYD_PMCD_pmi_serv_listenfd = -1;
 
-    status = HYD_PMCU_finalize();
+    status = HYD_PMCD_pmi_finalize();
     HYDU_ERR_POP(status, "unable to finalize process manager utils\n");
 
     status = HYD_BSCI_finalize();

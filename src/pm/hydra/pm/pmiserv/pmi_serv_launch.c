@@ -7,12 +7,12 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "pmci.h"
-#include "pmcu_pmi.h"
+#include "pmi_query.h"
 #include "bsci.h"
 #include "demux.h"
-#include "central.h"
+#include "pmi_serv.h"
 
-int HYD_PMCD_Central_listenfd;
+int HYD_PMCD_pmi_serv_listenfd;
 HYD_Handle handle;
 
 /*
@@ -49,7 +49,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_set_common_signals(HYD_PMCD_Central_signal_cb);
+    status = HYDU_set_common_signals(HYD_PMCD_pmi_serv_signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
 
     /* Check if the user wants us to use a port within a certain
@@ -62,12 +62,12 @@ HYD_Status HYD_PMCI_launch_procs(void)
 
     /* Listen on a port in the port range */
     port = 0;
-    status = HYDU_sock_listen(&HYD_PMCD_Central_listenfd, port_range, &port);
+    status = HYDU_sock_listen(&HYD_PMCD_pmi_serv_listenfd, port_range, &port);
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_register_fd(1, &HYD_PMCD_Central_listenfd, HYD_STDOUT,
-                                 HYD_PMCD_Central_cb);
+    status = HYD_DMX_register_fd(1, &HYD_PMCD_pmi_serv_listenfd, HYD_STDOUT,
+                                 HYD_PMCD_pmi_serv_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */
@@ -96,7 +96,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
 
     /* Create a process group for the MPI processes in this
      * comm_world */
-    status = HYD_PMCU_create_pg();
+    status = HYD_PMCD_pmi_create_pg();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
     /* Create the arguments list for each proxy */
@@ -111,7 +111,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
             for (arg = 0; partition->args[arg]; arg++);
             i = 0;
             path_str[i++] = MPIU_Strdup(handle.base_path);
-            path_str[i++] = MPIU_Strdup("hydproxy");
+            path_str[i++] = MPIU_Strdup("pmi_proxy");
             path_str[i] = NULL;
             status = HYDU_str_alloc_and_join(path_str, &partition->args[arg++]);
             HYDU_ERR_POP(status, "unable to join strings\n");
@@ -202,7 +202,7 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
 
     status = HYD_BSCI_wait_for_completion();
     if (status != HYD_SUCCESS) {
-        status = HYD_PMCD_Central_cleanup();
+        status = HYD_PMCD_pmi_serv_cleanup();
         HYDU_ERR_POP(status, "process manager cannot cleanup processes\n");
     }
 

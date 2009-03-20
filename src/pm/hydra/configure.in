@@ -91,9 +91,9 @@ AC_SUBST(hydra_bss_init_array)
 
 
 dnl Check what process manager we should use
-AC_ARG_WITH(hydra-pm, [  --with-hydra-pm               Process Manager (central or distributed)],
+AC_ARG_WITH(hydra-pm, [  --with-hydra-pm               Process Manager],
 		[ hydra_pm=$withval ],
-		[ hydra_pm=central ])
+		[ hydra_pm=pmiserv ])
 AC_MSG_CHECKING(process manager)
 AC_MSG_RESULT($hydra_pm)
 AC_SUBST(hydra_pm)
