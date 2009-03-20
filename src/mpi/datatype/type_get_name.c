@@ -33,7 +33,7 @@
 typedef struct mpi_names_t { MPI_Datatype dtype; const char *name; } mpi_names_t;
 /* The MPI standard specifies that the names must be the MPI names,
    not the related language names (e.g., MPI_CHAR, not char) */
-#define type_name_entry(x_) { x_, MPIU_QUOTE(x_) }
+#define type_name_entry(x_) { x_, #x_ }
 static mpi_names_t mpi_names[] = {
     type_name_entry(MPI_CHAR),
     type_name_entry(MPI_SIGNED_CHAR),
