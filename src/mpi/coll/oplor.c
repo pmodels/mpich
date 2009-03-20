@@ -51,6 +51,7 @@ void MPIR_LOR (
         }
         /* expand logicals (which may include MPI_C_BOOL, a non-Fortran type) */
         MPIR_OP_TYPE_GROUP(LOGICAL)
+        MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
         /* now revert _HAVE_FORTRAN macro to default */
 #  undef MPIR_OP_TYPE_MACRO_HAVE_FORTRAN
 #  define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_, c_type_) MPIR_OP_TYPE_MACRO(mpi_type_, c_type_)
@@ -58,6 +59,7 @@ void MPIR_LOR (
         /* if we don't have Fortran support then we don't have to jump through
            any hoops, simply expand the group */
         MPIR_OP_TYPE_GROUP(LOGICAL)
+        MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
 #endif
 
         /* extra types that are not required to be supported by the MPI Standard */
@@ -92,6 +94,7 @@ int MPIR_LOR_check_dtype ( MPI_Datatype type )
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) case (mpi_type_):
         MPIR_OP_TYPE_GROUP(C_INTEGER)
         MPIR_OP_TYPE_GROUP(LOGICAL) /* no special handling needed in check_dtype code */
+        MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
 
         /* extra types that are not required to be supported by the MPI Standard */
         MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
