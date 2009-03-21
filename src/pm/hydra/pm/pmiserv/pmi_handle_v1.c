@@ -7,55 +7,26 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "bsci.h"
-#include "pmi_query.h"
+#include "pmi_handle.h"
+#include "pmi_handle_v1.h"
 
 HYD_Handle handle;
-HYD_PMCD_pmi_pg_t *pg_list = NULL;
+HYD_PMCD_pmi_pg_t *pg_list;
 
-static HYD_Status allocate_kvs(HYD_PMCD_pmi_kvs_t ** kvs, int pgid)
-{
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(*kvs, HYD_PMCD_pmi_kvs_t *, sizeof(HYD_PMCD_pmi_kvs_t), status);
-    MPIU_Snprintf((*kvs)->kvs_name, MAXNAMELEN, "kvs_%d_%d", (int) getpid(), pgid);
-    (*kvs)->key_pair = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-static HYD_Status create_pg(HYD_PMCD_pmi_pg_t ** pg, int pgid)
-{
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(*pg, HYD_PMCD_pmi_pg_t *, sizeof(HYD_PMCD_pmi_pg_t), status);
-    (*pg)->id = pgid;
-    (*pg)->num_procs = 0;
-    (*pg)->barrier_count = 0;
-    (*pg)->process = NULL;
-
-    status = allocate_kvs(&(*pg)->kvs, pgid);
-    HYDU_ERR_POP(status, "unable to allocate kvs space\n");
-
-    (*pg)->next = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
+/* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
+struct HYD_PMCD_pmi_handle HYD_PMCD_pmi_v1_foo[] = {
+    { "initack",           HYD_PMCD_pmi_handle_v1_initack },
+    { "get_maxes",         HYD_PMCD_pmi_handle_v1_get_maxes },
+    { "get_appnum",        HYD_PMCD_pmi_handle_v1_get_appnum },
+    { "get_my_kvsname",    HYD_PMCD_pmi_handle_v1_get_my_kvsname },
+    { "barrier_in",        HYD_PMCD_pmi_handle_v1_barrier_in },
+    { "put",               HYD_PMCD_pmi_handle_v1_put },
+    { "get",               HYD_PMCD_pmi_handle_v1_get },
+    { "get_universe_size", HYD_PMCD_pmi_handle_v1_get_usize },
+    { "finalize",          HYD_PMCD_pmi_handle_v1_finalize },
+    { "\0",                NULL }
+};
+struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v1 = HYD_PMCD_pmi_v1_foo;
 
 static HYD_Status add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd)
 {
@@ -86,36 +57,47 @@ static HYD_Status add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd)
 }
 
 
-HYD_Status HYD_PMCD_pmi_create_pg(void)
+static HYD_PMCD_pmi_process_t *find_process(int fd)
 {
-    struct HYD_Proc_params *proc_params;
-    int num_procs;
+    HYD_PMCD_pmi_pg_t *pg;
+    HYD_PMCD_pmi_process_t *process = NULL;
+
+    pg = pg_list;
+    while (pg) {
+        process = pg->process;
+        while (process) {
+            if (process->fd == fd)
+                break;
+            process = process->next;
+        }
+        pg = pg->next;
+    }
+
+    return process;
+}
+
+
+static HYD_Status free_pmi_kvs_list(HYD_PMCD_pmi_kvs_t * kvs_list)
+{
+    HYD_PMCD_pmi_kvs_pair_t *key_pair, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /* Find the number of processes in the PG */
-    num_procs = 0;
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        num_procs += proc_params->exec_proc_count;
-        proc_params = proc_params->next;
+    key_pair = kvs_list->key_pair;
+    while (key_pair) {
+        tmp = key_pair->next;
+        HYDU_FREE(key_pair);
+        key_pair = tmp;
     }
+    HYDU_FREE(kvs_list);
 
-    status = create_pg(&pg_list, 0);
-    HYDU_ERR_POP(status, "unable to create pg\n");
-    pg_list->num_procs = num_procs;
-
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
-HYD_Status HYD_PMCD_pmi_query_initack(int fd, char *args[])
+HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
 {
     int id, size, debug, i;
     char *ssize, *srank, *sdebug, *tmp[HYDU_NUM_JOIN_STR], *cmd;
@@ -183,7 +165,7 @@ HYD_Status HYD_PMCD_pmi_query_initack(int fd, char *args[])
 }
 
 
-HYD_Status HYD_PMCD_pmi_query_init(int fd, char *args[])
+HYD_Status HYD_PMCD_pmi_handle_v1_init(int fd, char *args[])
 {
     int pmi_version, pmi_subversion;
     char *tmp[HYDU_NUM_JOIN_STR];
@@ -217,7 +199,7 @@ HYD_Status HYD_PMCD_pmi_query_init(int fd, char *args[])
 }
 
 
-HYD_Status HYD_PMCD_pmi_query_get_maxes(int fd, char *args[])
+HYD_Status HYD_PMCD_pmi_handle_v1_get_maxes(int fd, char *args[])
 {
     int i;
     char *tmp[HYDU_NUM_JOIN_STR], *cmd;
@@ -265,27 +247,7 @@ HYD_Status HYD_PMCD_pmi_query_get_maxes(int fd, char *args[])
 }
 
 
-static HYD_PMCD_pmi_process_t *find_process(int fd)
-{
-    HYD_PMCD_pmi_pg_t *pg;
-    HYD_PMCD_pmi_process_t *process = NULL;
-
-    pg = pg_list;
-    while (pg) {
-        process = pg->process;
-        while (process) {
-            if (process->fd == fd)
-                break;
-            process = process->next;
-        }
-        pg = pg->next;
-    }
-
-    return process;
-}
-
-
-HYD_Status HYD_PMCD_pmi_query_get_appnum(int fd, char *args[])
+HYD_Status HYD_PMCD_pmi_handle_v1_get_appnum(int fd, char *args[])
 {
     char *tmp[HYDU_NUM_JOIN_STR], *cmd;
     char *sapp_num;
@@ -328,7 +290,7 @@ HYD_Status HYD_PMCD_pmi_query_get_appnum(int fd, char *args[])
 }
 
 
-HYD_Status HYD_PMCD_pmi_query_get_my_kvsname(int fd, char *args[])
+HYD_Status HYD_PMCD_pmi_handle_v1_get_my_kvsname(int fd, char *args[])
 {
     char *tmp[HYDU_NUM_JOIN_STR], *cmd;
     int i;
@@ -365,7 +327,7 @@ HYD_Status HYD_PMCD_pmi_query_get_my_kvsname(int fd, char *args[])
 }
 
 
-HYD_Status HYD_PMCD_pmi_query_barrier_in(int fd, char *args[])
+HYD_Status HYD_PMCD_pmi_handle_v1_barrier_in(int fd, char *args[])
 {
     HYD_PMCD_pmi_process_t *process, *run;
     char *cmd;
@@ -404,7 +366,7 @@ HYD_Status HYD_PMCD_pmi_query_barrier_in(int fd, char *args[])
 }
 
 
-HYD_Status HYD_PMCD_pmi_query_put(int fd, char *args[])
+HYD_Status HYD_PMCD_pmi_handle_v1_put(int fd, char *args[])
 {
     int i;
     HYD_PMCD_pmi_process_t *process;
@@ -478,7 +440,7 @@ HYD_Status HYD_PMCD_pmi_query_put(int fd, char *args[])
 }
 
 
-HYD_Status HYD_PMCD_pmi_query_get(int fd, char *args[])
+HYD_Status HYD_PMCD_pmi_handle_v1_get(int fd, char *args[])
 {
     int i;
     HYD_PMCD_pmi_process_t *process;
@@ -549,7 +511,7 @@ HYD_Status HYD_PMCD_pmi_query_get(int fd, char *args[])
 }
 
 
-HYD_Status HYD_PMCD_pmi_query_finalize(int fd, char *args[])
+HYD_Status HYD_PMCD_pmi_handle_v1_finalize(int fd, char *args[])
 {
     char *cmd;
     HYD_Status status = HYD_SUCCESS;
@@ -560,6 +522,12 @@ HYD_Status HYD_PMCD_pmi_query_finalize(int fd, char *args[])
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
+    if (status == HYD_SUCCESS) {
+        status = HYD_DMX_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to register fd\n");
+        close(fd);
+    }
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
@@ -569,7 +537,7 @@ HYD_Status HYD_PMCD_pmi_query_finalize(int fd, char *args[])
 }
 
 
-HYD_Status HYD_PMCD_pmi_query_get_usize(int fd, char *args[])
+HYD_Status HYD_PMCD_pmi_handle_v1_get_usize(int fd, char *args[])
 {
     int usize, i;
     char *tmp[HYDU_NUM_JOIN_STR], *cmd, *usize_str;
@@ -595,75 +563,6 @@ HYD_Status HYD_PMCD_pmi_query_get_usize(int fd, char *args[])
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-static HYD_Status free_pmi_process_list(HYD_PMCD_pmi_process_t * process_list)
-{
-    HYD_PMCD_pmi_process_t *process, *tmp;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    process = process_list;
-    while (process) {
-        tmp = process->next;
-        HYDU_FREE(process);
-        process = tmp;
-    }
-
-    HYDU_FUNC_EXIT();
-    return status;
-}
-
-
-static HYD_Status free_pmi_kvs_list(HYD_PMCD_pmi_kvs_t * kvs_list)
-{
-    HYD_PMCD_pmi_kvs_pair_t *key_pair, *tmp;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    key_pair = kvs_list->key_pair;
-    while (key_pair) {
-        tmp = key_pair->next;
-        HYDU_FREE(key_pair);
-        key_pair = tmp;
-    }
-    HYDU_FREE(kvs_list);
-
-    HYDU_FUNC_EXIT();
-    return status;
-}
-
-
-HYD_Status HYD_PMCD_pmi_finalize(void)
-{
-    HYD_PMCD_pmi_pg_t *pg, *tmp;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    pg = pg_list;
-    while (pg) {
-        tmp = pg->next;
-
-        status = free_pmi_process_list(pg->process);
-        HYDU_ERR_POP(status, "unable to free process list\n");
-
-        status = free_pmi_kvs_list(pg->kvs);
-        HYDU_ERR_POP(status, "unable to free kvs list\n");
-
-        HYDU_FREE(pg);
-        pg = tmp;
-    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

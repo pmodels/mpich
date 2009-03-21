@@ -4,11 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef PMI_QUERY_H_INCLUDED
-#define PMI_QUERY_H_INCLUDED
+#ifndef PMI_HANDLE_H_INCLUDED
+#define PMI_HANDLE_H_INCLUDED
 
-#include "hydra.h"
-#include "hydra_utils.h"
+#include "hydra_base.h"
 
 #define MAXKEYLEN    64 /* max length of key in keyval space */
 #define MAXVALLEN   256 /* max length of value in keyval space */
@@ -52,16 +51,16 @@ struct HYD_PMCD_pmi_pg {
 };
 
 HYD_Status HYD_PMCD_pmi_create_pg(void);
-HYD_Status HYD_PMCD_pmi_query_initack(int fd, char *args[]);
-HYD_Status HYD_PMCD_pmi_query_init(int fd, char *args[]);
-HYD_Status HYD_PMCD_pmi_query_get_maxes(int fd, char *args[]);
-HYD_Status HYD_PMCD_pmi_query_get_appnum(int fd, char *args[]);
-HYD_Status HYD_PMCD_pmi_query_get_my_kvsname(int fd, char *args[]);
-HYD_Status HYD_PMCD_pmi_query_barrier_in(int fd, char *args[]);
-HYD_Status HYD_PMCD_pmi_query_put(int fd, char *args[]);
-HYD_Status HYD_PMCD_pmi_query_get(int fd, char *args[]);
-HYD_Status HYD_PMCD_pmi_query_finalize(int fd, char *args[]);
-HYD_Status HYD_PMCD_pmi_query_get_usize(int fd, char *args[]);
+HYD_Status HYD_PMCD_pmi_init(int fd, char *args[]);
 HYD_Status HYD_PMCD_pmi_finalize(void);
 
-#endif /* PMI_QUERY_H_INCLUDED */
+extern HYD_PMCD_pmi_pg_t *pg_list;
+
+struct HYD_PMCD_pmi_handle {
+    char *cmd;
+    HYD_Status (*handler)(int fd, char *args[]);
+};
+
+extern struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle_list;
+
+#endif /* PMI_HANDLE_H_INCLUDED */

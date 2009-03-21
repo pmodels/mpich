@@ -5,7 +5,8 @@
 #
 
 libhydra_a_DIR = ../../lib
-libhydra_a_SOURCES = pmi_serv_launch.c pmi_serv_finalize.c pmi_serv_cb.c pmi_query.c
+libhydra_a_SOURCES = pmi_serv_launch.c pmi_serv_finalize.c pmi_serv_cb.c \
+	pmi_handle.c pmi_handle_v1.c
 INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../../../include \
 	-I../../include \
@@ -17,7 +18,7 @@ INCLUDES = -I${abs_srcdir}/../../include \
 	-I../../bootstrap/include \
 	-I${abs_srcdir}/../../demux
 
-pmi_proxy_SOURCES = pmi_proxy.c pmi_proxy_utils.c pmi_proxy_cb.c pmi_query.c
+pmi_proxy_SOURCES = pmi_proxy.c pmi_proxy_utils.c pmi_proxy_cb.c
 pmi_proxy_LDADD = -L../../lib -lhydra -L../../../util -lmpiexec -L../../../../../lib -lmpich
 pmi_proxy_DEPADD = ../../../util/libmpiexec.a
 install_BIN = pmi_proxy

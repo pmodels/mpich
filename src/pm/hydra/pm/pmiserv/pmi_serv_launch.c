@@ -7,7 +7,7 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "pmci.h"
-#include "pmi_query.h"
+#include "pmi_handle.h"
 #include "bsci.h"
 #include "demux.h"
 #include "pmi_serv.h"

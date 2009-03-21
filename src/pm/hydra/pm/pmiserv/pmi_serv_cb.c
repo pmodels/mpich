@@ -6,7 +6,8 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
-#include "pmi_query.h"
+#include "pmi_handle.h"
+#include "pmi_handle_v1.h"
 #include "pmci.h"
 #include "bsci.h"
 #include "demux.h"
@@ -14,6 +15,7 @@
 
 int HYD_PMCD_pmi_serv_listenfd;
 HYD_Handle handle;
+struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle_list;
 
 /*
  * HYD_PMCD_pmi_serv_cb: This is the core PMI server part of the
@@ -24,28 +26,13 @@ HYD_Handle handle;
  *
  * 2. The client sends us a "cmd" or "mcmd" string which means that a
  * single or multi-line command is to follow.
- *
- * 3. Here are the commands that we respect:
- *     - initack [done]
- *     - init [done]
- *     - get_maxes [done]
- *     - get_appnum [done]
- *     - get_my_kvsname [done]
- *     - barrier_in [done]
- *     - put [done]
- *     - get [done]
- *     - finalize [done]
- *     - get_universe_size [done]
- *     - abort
- *     - create_kvs
- *     - destroy_kvs
- *     - getbyidx
- *     - spawn
  */
 HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events)
 {
     int accept_fd, linelen, i;
     char *buf, *cmd, *args[HYD_EXEC_ARGS];
+    char *str1, *str2;
+    struct HYD_PMCD_pmi_handle *h;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -99,55 +86,42 @@ HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events)
         if (cmd == NULL) {
             status = HYD_SUCCESS;
         }
-        else if (!strcmp("cmd=initack", cmd)) {
-            status = HYD_PMCD_pmi_query_initack(fd, args);
-        }
         else if (!strcmp("cmd=init", cmd)) {
-            status = HYD_PMCD_pmi_query_init(fd, args);
-        }
-        else if (!strcmp("cmd=get_maxes", cmd)) {
-            status = HYD_PMCD_pmi_query_get_maxes(fd, args);
-        }
-        else if (!strcmp("cmd=get_appnum", cmd)) {
-            status = HYD_PMCD_pmi_query_get_appnum(fd, args);
-        }
-        else if (!strcmp("cmd=get_my_kvsname", cmd)) {
-            status = HYD_PMCD_pmi_query_get_my_kvsname(fd, args);
-        }
-        else if (!strcmp("cmd=barrier_in", cmd)) {
-            status = HYD_PMCD_pmi_query_barrier_in(fd, args);
-        }
-        else if (!strcmp("cmd=put", cmd)) {
-            status = HYD_PMCD_pmi_query_put(fd, args);
-        }
-        else if (!strcmp("cmd=get", cmd)) {
-            status = HYD_PMCD_pmi_query_get(fd, args);
-        }
-        else if (!strcmp("cmd=finalize", cmd)) {
-            status = HYD_PMCD_pmi_query_finalize(fd, args);
-
-            if (status == HYD_SUCCESS) {
-                status = HYD_DMX_deregister_fd(fd);
-                HYDU_ERR_POP(status, "unable to register fd\n");
-                close(fd);
-            }
-        }
-        else if (!strcmp("cmd=get_universe_size", cmd)) {
-            status = HYD_PMCD_pmi_query_get_usize(fd, args);
+            /* Init is generic to all PMI implementations */
+            status = HYD_PMCD_pmi_init(fd, args);
         }
         else {
-            /* We don't understand the command */
-            HYDU_Error_printf("Unrecognized PMI command: %s; cleaning up processes\n", cmd);
+            /* Search for the PMI command in our table */
+            status = HYDU_strsplit(cmd, &str1, &str2, '=');
+            HYDU_ERR_POP(status, "string split returned error\n");
 
-            /* Cleanup all the processes and return. We don't need to
-             * check the return status since we are anyway returning
-             * an error */
-            HYD_PMCD_pmi_serv_cleanup();
-            status = HYD_SUCCESS;
-            goto fn_fail;
+            /* If we did not get an init, fall back to PMI-v1 */
+            /* FIXME: This part of the code should not know anything
+             * about PMI-1 vs. PMI-2. */
+            if (!HYD_PMCD_pmi_handle_list)
+                HYD_PMCD_pmi_handle_list = HYD_PMCD_pmi_v1;
+
+            h = HYD_PMCD_pmi_handle_list;
+            while (h->handler) {
+                if (!strcmp(str2, h->cmd)) {
+                    status = h->handler(fd, args);
+                    HYDU_ERR_POP(status, "PMI handler returned error\n");
+                    break;
+                }
+                h++;
+            }
+            if (!h->handler) {
+                /* We don't understand the command */
+                HYDU_Error_printf("Unrecognized PMI command: %s; cleaning up processes\n",
+                                  cmd);
+
+                /* Cleanup all the processes and return. We don't need
+                 * to check the return status since we are anyway
+                 * returning an error */
+                HYD_PMCD_pmi_serv_cleanup();
+                HYDU_ERR_SETANDJUMP(status, HYD_SUCCESS, "");
+            }
         }
-
-        HYDU_ERR_POP(status, "PMI server returned error\n");
     }
 
   fn_exit:
