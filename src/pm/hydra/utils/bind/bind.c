@@ -17,7 +17,7 @@ static struct HYDU_bind_info HYDU_bind_info = { 0, -1, -1, -1 };
 
 HYD_Status HYDU_bind_init(void)
 {
-    plpa_api_type_t p;
+    PLPA_NAME(api_type_t) p;
     int ret, supported;
     int num_procs, max_proc_id;
     int num_sockets = -1, max_socket_id;
@@ -26,30 +26,31 @@ HYD_Status HYDU_bind_init(void)
 
     HYDU_FUNC_ENTER();
 
-    if (!((plpa_api_probe(&p) == 0) && (p == PLPA_PROBE_OK))) {
+    if (!((PLPA_NAME(api_probe)(&p) == 0) && (p == PLPA_NAME_CAPS(PROBE_OK)))) {
         /* If this failed, we just return without binding */
         HYDU_Warn_printf("plpa api probe failed; not binding\n");
         goto fn_exit;
     }
 
     /* We need topology information too */
-    ret = plpa_have_topology_information(&supported);
+    ret = PLPA_NAME(have_topology_information)(&supported);
     if ((ret == 0) && (supported == 1)) {
         /* Find the maximum number of processing elements */
-        ret = plpa_get_processor_data(PLPA_COUNT_ALL, &num_procs, &max_proc_id);
+        ret = PLPA_NAME(get_processor_data)(PLPA_NAME_CAPS(COUNT_ALL), &num_procs,
+                                            &max_proc_id);
         if (ret) {
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "plpa get processor data failed\n");
         }
 
         /* PLPA only gives information about sockets and cores */
-        ret = plpa_get_socket_info(&num_sockets, &max_socket_id);
+        ret = PLPA_NAME(get_socket_info)(&num_sockets, &max_socket_id);
         if (ret) {
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "plpa get processor data failed\n");
         }
 
-        ret = plpa_get_core_info(0, &num_cores, &max_core_id);
+        ret = PLPA_NAME(get_core_info)(0, &num_cores, &max_core_id);
         if (ret) {
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "plpa get processor data failed\n");
@@ -77,15 +78,15 @@ HYD_Status HYDU_bind_init(void)
 void HYDU_bind_process(int core)
 {
     int ret;
-    plpa_cpu_set_t cpuset;
+    PLPA_NAME(cpu_set_t) cpuset;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     if (HYDU_bind_info.supported) {
-        PLPA_CPU_ZERO(&cpuset);
-        PLPA_CPU_SET(core % HYDU_bind_info.num_procs, &cpuset);
-        ret = plpa_sched_setaffinity(0, 1, &cpuset);
+        PLPA_NAME_CAPS(CPU_ZERO)(&cpuset);
+        PLPA_NAME_CAPS(CPU_SET)(core % HYDU_bind_info.num_procs, &cpuset);
+        ret = PLPA_NAME(sched_setaffinity)(0, 1, &cpuset);
         if (ret)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "plpa setaffinity failed\n");
     }
@@ -116,7 +117,7 @@ int HYDU_next_core(int old_core, HYD_Binding binding)
             found = 0;
             for (core = 0; core < HYDU_bind_info.num_cores; core++)
                 for (socket = 0; socket < HYDU_bind_info.num_sockets; socket++) {
-                    ret = plpa_map_to_processor_id(socket, core, &proc);
+                    ret = PLPA_NAME(map_to_processor_id)(socket, core, &proc);
                     if (ret)
                         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                                              "plpa map_to_proc_id failed (%d,%d)\n",
@@ -136,7 +137,7 @@ int HYDU_next_core(int old_core, HYD_Binding binding)
             found = 0;
             for (socket = 0; socket < HYDU_bind_info.num_sockets; socket++) {
                 for (core = 0; core < HYDU_bind_info.num_cores; core++)
-                    ret = plpa_map_to_processor_id(socket, core, &proc);
+                    ret = PLPA_NAME(map_to_processor_id)(socket, core, &proc);
                     if (ret)
                         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                                              "plpa map_to_proc_id failed (%d,%d)\n",
