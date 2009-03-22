@@ -6,8 +6,8 @@
 
 #include "hydra_utils.h"
 
-HYD_Status HYDU_create_process(char **client_arg, int *in, int *out, int *err,
-                               int *pid, int core)
+HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
+                               int *in, int *out, int *err, int *pid, int core)
 {
     int inpipe[2], outpipe[2], errpipe[2], tpid;
     HYD_Status status = HYD_SUCCESS;
@@ -51,6 +51,9 @@ HYD_Status HYDU_create_process(char **client_arg, int *in, int *out, int *err,
         if (in && (dup2(inpipe[0], 0) < 0))
             HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
                                  HYDU_strerror(errno));
+
+        status = HYDU_putenv_list(env_list);
+        HYDU_ERR_POP(status, "unable to putenv\n");
 
         if (execvp(client_arg[0], client_arg) < 0) {
             HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "execvp error (%s)\n",

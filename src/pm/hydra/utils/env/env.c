@@ -96,12 +96,11 @@ HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list)
 
     HYDU_FUNC_ENTER();
 
-    for (i = 0; str_list[i]; i++);
+    i = HYDU_strlist_lastidx(str_list);
     env = env_list;
     while (env) {
         status = env_to_str(env, &str_list[i++]);
         HYDU_ERR_POP(status, "env_to_str returned error\n");
-
         env = env->next;
     }
     str_list[i++] = NULL;
@@ -309,14 +308,56 @@ HYD_Status HYDU_append_env_to_list(HYD_Env_t env, HYD_Env_t ** env_list)
 }
 
 
-void HYDU_putenv(char *env_str)
+HYD_Status HYDU_putenv(HYD_Env_t * env)
 {
+    char *tmp[HYDU_NUM_JOIN_STR], *str;
+    int i;
+    HYD_Status status = HYD_SUCCESS;
+
     HYDU_FUNC_ENTER();
 
-    MPIU_PutEnv(env_str);
+    i = 0;
+    tmp[i++] = MPIU_Strdup(env->env_name);
+    tmp[i++] = MPIU_Strdup("=");
+    tmp[i++] = MPIU_Strdup(env->env_value);
+    tmp[i++] = NULL;
+    status = HYDU_str_alloc_and_join(tmp, &str);
+    HYDU_ERR_POP(status, "unable to join strings\n");
 
+    MPIU_PutEnv(str);
+
+    for (i = 0; tmp[i]; i++)
+        HYDU_FREE(tmp[i]);
+
+  fn_exit:
     HYDU_FUNC_EXIT();
-    return;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYDU_putenv_list(HYD_Env_t * env_list)
+{
+    HYD_Env_t *env;
+    int i;
+    char *tmp[HYDU_NUM_JOIN_STR], *str;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    for (env = env_list; env; env = env->next) {
+        status = HYDU_putenv(env);
+        HYDU_ERR_POP(status, "putenv failed\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 

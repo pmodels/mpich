@@ -61,37 +61,20 @@ int main(int argc, char **argv)
         HYD_PMCD_pmi_proxy_params.exit_status[i] = -1;
 
     /* For local spawning, set the global environment here itself */
-    for (env = HYD_PMCD_pmi_proxy_params.global_env; env; env = env->next) {
-        j = 0;
-        tmp[j++] = MPIU_Strdup(env->env_name);
-        tmp[j++] = MPIU_Strdup("=");
-        tmp[j++] = MPIU_Strdup(env->env_value);
-        tmp[j++] = NULL;
-        status = HYDU_str_alloc_and_join(tmp, &str);
-        HYDU_ERR_POP(status, "unable to join strings\n");
-        HYDU_putenv(str);
-        for (j = 0; tmp[j]; j++)
-            HYDU_FREE(tmp[j]);
-    }
+    status = HYDU_putenv_list(HYD_PMCD_pmi_proxy_params.global_env);
+    HYDU_ERR_POP(status, "putenv returned error\n");
 
     /* Spawn the processes */
     process_id = 0;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next) {
         for (i = 0; i < exec->proc_count; i++) {
-            j = 0;
-            tmp[j++] = MPIU_Strdup("PMI_ID=");
-            status = HYDU_int_to_str(HYD_PMCD_pmi_proxy_params.pmi_id + process_id, &str);
-            HYDU_ERR_POP(status, "unable to convert int to string\n");
-            tmp[j++] = MPIU_Strdup(str);
+
+            str = HYDU_int_to_str(HYD_PMCD_pmi_proxy_params.pmi_id + process_id);
+            status = HYDU_env_create(&env, "PMI_ID", str);
+            HYDU_ERR_POP(status, "unable to create env\n");
             HYDU_FREE(str);
-            tmp[j++] = NULL;
-
-            status = HYDU_str_alloc_and_join(tmp, &str);
-            HYDU_ERR_POP(status, "unable to join strings\n");
-
-            HYDU_putenv(str);
-            for (j = 0; tmp[j]; j++)
-                HYDU_FREE(tmp[j]);
+            status = HYDU_putenv(env);
+            HYDU_ERR_POP(status, "putenv failed\n");
 
             if (chdir(HYD_PMCD_pmi_proxy_params.wdir) < 0)
                 HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
@@ -102,22 +85,22 @@ int main(int argc, char **argv)
             client_args[arg++] = NULL;
 
             if ((process_id + HYD_PMCD_pmi_proxy_params.pmi_id) == 0) {
-                status = HYDU_create_process(client_args, &HYD_PMCD_pmi_proxy_params.in,
+                status = HYDU_create_process(client_args, exec->prop_env,
+                                             &HYD_PMCD_pmi_proxy_params.in,
                                              &HYD_PMCD_pmi_proxy_params.out[process_id],
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
                                              &HYD_PMCD_pmi_proxy_params.pid[process_id],
                                              process_id);
             }
             else {
-                status = HYDU_create_process(client_args, NULL,
+                status = HYDU_create_process(client_args, exec->prop_env,
+                                             NULL,
                                              &HYD_PMCD_pmi_proxy_params.out[process_id],
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
                                              &HYD_PMCD_pmi_proxy_params.pid[process_id],
                                              process_id);
             }
             HYDU_ERR_POP(status, "spawn process returned error\n");
-
-            HYDU_FREE(str);
 
             process_id++;
         }

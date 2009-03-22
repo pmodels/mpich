@@ -33,7 +33,8 @@ HYD_Status HYDU_env_free(HYD_Env_t * env);
 HYD_Status HYDU_env_free_list(HYD_Env_t * env);
 HYD_Env_t *HYDU_env_lookup(HYD_Env_t env, HYD_Env_t * env_list);
 HYD_Status HYDU_append_env_to_list(HYD_Env_t env, HYD_Env_t ** env_list);
-void HYDU_putenv(char *env_str);
+HYD_Status HYDU_putenv(HYD_Env_t * env);
+HYD_Status HYDU_putenv_list(HYD_Env_t * env_list);
 HYD_Status HYDU_comma_list_to_env_list(char *str, HYD_Env_t ** env_list);
 
 
@@ -47,8 +48,8 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
                                         struct HYD_Partition **partition_list);
 HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec);
 HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partition_list);
-HYD_Status HYDU_create_process(char **client_arg, int *in, int *out, int *err,
-                               int *pid, int core);
+HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
+                               int *in, int *out, int *err, int *pid, int core);
 
 
 /* signals */
@@ -129,8 +130,9 @@ HYD_Status HYDU_print_strlist(char **args);
 void HYDU_free_strlist(char **args);
 HYD_Status HYDU_str_alloc_and_join(char **strlist, char **strjoin);
 HYD_Status HYDU_strsplit(char *str, char **str1, char **str2, char sep);
-HYD_Status HYDU_int_to_str(int x, char **str);
+char *HYDU_int_to_str(int x);
 char *HYDU_strerror(int error);
+int HYDU_strlist_lastidx(char **strlist);
 
 
 /* Timer utilities */

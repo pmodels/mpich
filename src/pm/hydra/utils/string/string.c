@@ -13,7 +13,7 @@ HYD_Status HYDU_list_append_strlist(char **src_strlist, char **dest_strlist)
 
     HYDU_FUNC_ENTER();
 
-    for (i = 0; dest_strlist[i]; i++);
+    i = HYDU_strlist_lastidx(dest_strlist);
     for (j = 0; src_strlist[j]; j++)
         dest_strlist[i++] = MPIU_Strdup(src_strlist[j]);
     dest_strlist[i++] = NULL;
@@ -109,9 +109,10 @@ HYD_Status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
 }
 
 
-HYD_Status HYDU_int_to_str(int x, char **str)
+char *HYDU_int_to_str(int x)
 {
     int len = 1, max = 10, y;
+    char *str;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -128,15 +129,17 @@ HYD_Status HYDU_int_to_str(int x, char **str)
         max *= 10;
     }
 
-    *str = (char *) MPIU_Malloc(len + 1);
-    if (*str == NULL)
+    str = (char *) MPIU_Malloc(len + 1);
+    if (str == NULL) {
         HYDU_ERR_SETANDJUMP1(status, HYD_NO_MEM, "unable to allocate %d bytes\n", len + 1);
+        goto fn_fail;
+    }
 
-    MPIU_Snprintf(*str, len + 1, "%d", x);
+    MPIU_Snprintf(str, len + 1, "%d", x);
 
   fn_exit:
     HYDU_FUNC_EXIT();
-    return status;
+    return str;
 
   fn_fail:
     goto fn_exit;
@@ -154,4 +157,14 @@ char *HYDU_strerror(int error)
 #endif /* HAVE_STRERROR */
 
     return str;
+}
+
+
+int HYDU_strlist_lastidx(char **strlist)
+{
+    int i;
+
+    for (i = 0; strlist[i]; i++);
+
+    return i;
 }

@@ -36,7 +36,7 @@ HYD_Handle handle;
  */
 HYD_Status HYD_PMCI_launch_procs(void)
 {
-    char *port_range, *port_str, *sport, *str;
+    char *port_range, *port_str, *sport;
     uint16_t port;
     int i, arg, process_id;
     char hostname[MAX_HOSTNAME_LEN];
@@ -74,8 +74,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
         HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR,
                              "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
 
-    status = HYDU_int_to_str(port, &sport);
-    HYDU_ERR_POP(status, "cannot convert int to string\n");
+    sport = HYDU_int_to_str(port);
 
     HYDU_MALLOC(port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
     MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1,
@@ -105,7 +104,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
     process_id = 0;
     for (partition = handle.partition_list; partition; partition = partition->next) {
 
-        for (arg = 0; partition->proxy_args[arg]; arg++);
+        arg = HYDU_strlist_lastidx(partition->proxy_args);
         i = 0;
         path_str[i++] = MPIU_Strdup(handle.base_path);
         path_str[i++] = MPIU_Strdup("pmi_proxy");
@@ -114,17 +113,11 @@ HYD_Status HYD_PMCI_launch_procs(void)
         HYDU_ERR_POP(status, "unable to join strings\n");
         HYDU_free_strlist(path_str);
 
-        status = HYDU_int_to_str(handle.proxy_port, &str);
-        HYDU_ERR_POP(status, "unable to convert in to string\n");
         partition->proxy_args[arg++] = MPIU_Strdup("--proxy-port");
-        partition->proxy_args[arg++] = MPIU_Strdup(str);
-        HYDU_FREE(str);
+        partition->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
 
-        status = HYDU_int_to_str(handle.one_pass_count, &str);
-        HYDU_ERR_POP(status, "unable to convert in to string\n");
         partition->proxy_args[arg++] = MPIU_Strdup("--one-pass-count");
-        partition->proxy_args[arg++] = MPIU_Strdup(str);
-        HYDU_FREE(str);
+        partition->proxy_args[arg++] = HYDU_int_to_str(handle.one_pass_count);
 
         partition->proxy_args[arg++] = MPIU_Strdup("--wdir");
         partition->proxy_args[arg++] = MPIU_Strdup(handle.wdir);
@@ -134,41 +127,30 @@ HYD_Status HYD_PMCI_launch_procs(void)
         partition->proxy_args[arg++] = MPIU_Strdup("--global-env");
         for (i = 0, env = handle.system_env; env; env = env->next, i++);
         for (env = handle.prop_env; env; env = env->next, i++);
-        status = HYDU_int_to_str(i, &str);
-        HYDU_ERR_POP(status, "unable to convert int to string\n");
-        partition->proxy_args[arg++] = MPIU_Strdup(str);
-        HYDU_FREE(str);
+        partition->proxy_args[arg++] = HYDU_int_to_str(i);
         partition->proxy_args[arg++] = NULL;
         HYDU_list_append_env_to_str(handle.system_env, partition->proxy_args);
         HYDU_list_append_env_to_str(handle.prop_env, partition->proxy_args);
 
-        status = HYDU_int_to_str(process_id, &str);
-        HYDU_ERR_POP(status, "unable to convert int to string\n");
-        for (arg = 0; partition->proxy_args[arg]; arg++);
+        arg = HYDU_strlist_lastidx(partition->proxy_args);
         partition->proxy_args[arg++] = MPIU_Strdup("--pmi-id");
-        partition->proxy_args[arg++] = MPIU_Strdup(str);
-        HYDU_FREE(str);
+        partition->proxy_args[arg++] = HYDU_int_to_str(process_id);;
         partition->proxy_args[arg++] = NULL;
 
         /* Now pass the local executable information */
         for (exec = partition->exec_list; exec; exec = exec->next) {
-            for (arg = 0; partition->proxy_args[arg]; arg++);
+            arg = HYDU_strlist_lastidx(partition->proxy_args);
             partition->proxy_args[arg++] = MPIU_Strdup("--exec");
 
-            status = HYDU_int_to_str(exec->proc_count, &str);
-            HYDU_ERR_POP(status, "unable to convert int to string\n");
             partition->proxy_args[arg++] = MPIU_Strdup("--proc-count");
-            partition->proxy_args[arg++] = MPIU_Strdup(str);
-            HYDU_FREE(str);
+            partition->proxy_args[arg++] = HYDU_int_to_str(exec->proc_count);
             partition->proxy_args[arg++] = NULL;
 
-            for (arg = 0; partition->proxy_args[arg]; arg++);
+            arg = HYDU_strlist_lastidx(partition->proxy_args);
             partition->proxy_args[arg++] = MPIU_Strdup("--local-env");
             for (i = 0, env = exec->prop_env; env; env = env->next, i++);
-            status = HYDU_int_to_str(i, &str);
             HYDU_ERR_POP(status, "unable to convert int to string\n");
-            partition->proxy_args[arg++] = MPIU_Strdup(str);
-            HYDU_FREE(str);
+            partition->proxy_args[arg++] = HYDU_int_to_str(i);
             partition->proxy_args[arg++] = NULL;
             HYDU_list_append_env_to_str(exec->prop_env, partition->proxy_args);
 

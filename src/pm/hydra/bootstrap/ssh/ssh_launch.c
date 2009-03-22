@@ -55,7 +55,8 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
 
         /* The stdin pointer will be some value for process_id 0; for
          * everyone else, it's NULL. */
-        status = HYDU_create_process(client_arg, (process_id == 0 ? &handle.in : NULL),
+        status = HYDU_create_process(client_arg, NULL,
+                                     (process_id == 0 ? &handle.in : NULL),
                                      &partition->out, &partition->err, &partition->pid, -1);
         HYDU_ERR_POP(status, "create process returned error\n");
 
