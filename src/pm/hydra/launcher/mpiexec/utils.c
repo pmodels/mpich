@@ -32,7 +32,7 @@ static void show_version(void)
 
 HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 {
-    int i, env_pref;
+    int i;
     char **argv = t_argv;
     char *env_name, *env_value, *str1, *str2, *progname = *argv;
     HYD_Env_t *env;
@@ -279,8 +279,10 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     status = HYDU_get_base_path(progname, handle.wdir, &handle.base_path);
     HYDU_ERR_POP(status, "unable to get base path\n");
 
+    if (handle.prop == HYD_ENV_PROP_UNSET)
+        handle.prop = HYD_ENV_PROP_ALL;
+
     /* Check if any individual app has an environment preference */
-    env_pref = 0;
     for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
         if (exec_info->exec[0] == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
@@ -288,20 +290,10 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         if (exec_info->exec_proc_count == 0)
             exec_info->exec_proc_count = 1;
 
-        if (handle.prop == HYD_ENV_PROP_UNSET && exec_info->prop != HYD_ENV_PROP_UNSET)
-            env_pref = 1;
+        /* If no local env property is set, use the global one */
+        if (exec_info->prop == HYD_ENV_PROP_UNSET)
+            exec_info->prop = handle.prop;
     }
-
-    /* Only if someone has an individual preference, assign executable
-     * specific environment. Otherwise, just optimize by setting one
-     * global environment (common case). */
-    if (env_pref) {
-        for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next)
-            if (exec_info->prop == HYD_ENV_PROP_UNSET)
-                exec_info->prop = HYD_ENV_PROP_ALL;
-    }
-    else if (handle.prop == HYD_ENV_PROP_UNSET)
-        handle.prop = HYD_ENV_PROP_ALL;
 
     if (handle.proxy_port == -1)
         handle.proxy_port = HYD_DEFAULT_PROXY_PORT;
