@@ -159,9 +159,11 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
 
     HYDU_FUNC_ENTER();
 
-    if (partition_list == NULL) {
+    if (*partition_list == NULL) {
         HYDU_alloc_partition(partition_list);
         (*partition_list)->segment_list = segment;
+        (*partition_list)->name = MPIU_Strdup(name);
+        (*partition_list)->total_proc_count += segment->proc_count;
     }
     else {
         partition = *partition_list;
@@ -175,11 +177,14 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
                         s = s->next;
                     s->next = segment;
                 }
+                partition->total_proc_count += segment->proc_count;
                 break;
             }
             else if (partition->next == NULL) {
                 HYDU_alloc_partition(&partition->next);
                 partition->next->segment_list = segment;
+                partition->next->name = MPIU_Strdup(name);
+                partition->next->total_proc_count += segment->proc_count;
                 break;
             }
             else {

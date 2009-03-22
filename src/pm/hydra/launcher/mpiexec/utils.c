@@ -46,7 +46,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     status = HYDU_list_global_env(&handle.global_env);
     HYDU_ERR_POP(status, "unable to get the global env list\n");
 
-    while (++argv) {
+    while (++argv && *argv) {
 
         if (!strcmp(*argv, "-h") || !strcmp(*argv, "-help") || !strcmp(*argv, "--help"))
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
