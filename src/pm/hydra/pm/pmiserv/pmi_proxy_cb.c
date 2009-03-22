@@ -46,7 +46,7 @@ HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events)
         }
 
         if (cmd == KILLALL_PROCS) {     /* Got the killall command */
-            for (i = 0; i < HYD_PMCD_pmi_proxy_params.partition_proc_count; i++)
+            for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
                 if (HYD_PMCD_pmi_proxy_params.pid[i] != -1)
                     kill(HYD_PMCD_pmi_proxy_params.pid[i], SIGKILL);
 
@@ -84,7 +84,7 @@ HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events)
         status = HYD_DMX_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
-        for (i = 0; i < HYD_PMCD_pmi_proxy_params.partition_proc_count; i++)
+        for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
             if (HYD_PMCD_pmi_proxy_params.out[i] == fd)
                 HYD_PMCD_pmi_proxy_params.out[i] = -1;
     }
@@ -113,7 +113,7 @@ HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events)
         status = HYD_DMX_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
-        for (i = 0; i < HYD_PMCD_pmi_proxy_params.partition_proc_count; i++)
+        for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
             if (HYD_PMCD_pmi_proxy_params.err[i] == fd)
                 HYD_PMCD_pmi_proxy_params.err[i] = -1;
     }

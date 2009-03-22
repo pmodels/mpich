@@ -12,16 +12,16 @@
 
 struct HYD_PMCD_pmi_proxy_params {
     int proxy_port;
-    int pmi_id;
     char *wdir;
     HYD_Binding binding;
     HYD_Env_t *global_env;
 
     int one_pass_count;
     int partition_proc_count;
+    int exec_proc_count;
 
     /* Process segmentation information for this partition */
-    struct HYD_Partition_segment segment;
+    struct HYD_Partition_segment *segment_list;
     struct HYD_Partition_exec *exec_list;
 
     int *pid;

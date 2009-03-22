@@ -15,12 +15,13 @@ int HYD_PMCD_pmi_proxy_listenfd;
 int main(int argc, char **argv)
 {
     int i, j, arg, count, pid, ret_status;
-    int stdin_fd, timeout, process_id, core;
+    int stdin_fd, timeout, process_id, core, pmi_id, rem;
     char *str, *timeout_str;
     char *client_args[HYD_EXEC_ARGS];
     char *tmp[HYDU_NUM_JOIN_STR];
     HYD_Env_t *env;
     struct HYD_Partition_exec *exec;
+    struct HYD_Partition_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
     status = HYD_PMCD_pmi_proxy_get_params(argc, argv);
@@ -44,20 +45,24 @@ int main(int argc, char **argv)
      * hierarchy of proxies. */
 
     HYD_PMCD_pmi_proxy_params.partition_proc_count = 0;
+    for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment; segment = segment->next)
+        HYD_PMCD_pmi_proxy_params.partition_proc_count += segment->proc_count;
+
+    HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
-        HYD_PMCD_pmi_proxy_params.partition_proc_count += exec->proc_count;
+        HYD_PMCD_pmi_proxy_params.exec_proc_count += exec->proc_count;
 
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.out, int *,
-                HYD_PMCD_pmi_proxy_params.partition_proc_count * sizeof(int), status);
+                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.err, int *,
-                HYD_PMCD_pmi_proxy_params.partition_proc_count * sizeof(int), status);
+                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.pid, int *,
-                HYD_PMCD_pmi_proxy_params.partition_proc_count * sizeof(int), status);
+                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.exit_status, int *,
-                HYD_PMCD_pmi_proxy_params.partition_proc_count * sizeof(int), status);
+                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
 
     /* Initialize the exit status */
-    for (i = 0; i < HYD_PMCD_pmi_proxy_params.partition_proc_count; i++)
+    for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
         HYD_PMCD_pmi_proxy_params.exit_status[i] = -1;
 
     /* For local spawning, set the global environment here itself */
@@ -73,7 +78,21 @@ int main(int argc, char **argv)
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next) {
         for (i = 0; i < exec->proc_count; i++) {
 
-            str = HYDU_int_to_str(HYD_PMCD_pmi_proxy_params.pmi_id + process_id);
+            pmi_id = ((process_id / HYD_PMCD_pmi_proxy_params.partition_proc_count) *
+                      HYD_PMCD_pmi_proxy_params.one_pass_count);
+            rem = (process_id % HYD_PMCD_pmi_proxy_params.partition_proc_count);
+
+            for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment;
+                 segment = segment->next) {
+                if (rem >= segment->proc_count)
+                    rem -= segment->proc_count;
+                else {
+                    pmi_id += segment->start_pid + rem;
+                    break;
+                }
+            }
+
+            str = HYDU_int_to_str(pmi_id);
             status = HYDU_env_create(&env, "PMI_ID", str);
             HYDU_ERR_POP(status, "unable to create env\n");
             HYDU_FREE(str);
@@ -89,13 +108,25 @@ int main(int argc, char **argv)
             client_args[arg++] = NULL;
 
             core = HYDU_next_core(core, HYD_PMCD_pmi_proxy_params.binding);
-            if ((process_id + HYD_PMCD_pmi_proxy_params.pmi_id) == 0) {
+            if (pmi_id == 0) {
                 status = HYDU_create_process(client_args, exec->prop_env,
                                              &HYD_PMCD_pmi_proxy_params.in,
                                              &HYD_PMCD_pmi_proxy_params.out[process_id],
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
                                              &HYD_PMCD_pmi_proxy_params.pid[process_id],
                                              core);
+
+                status = HYDU_sock_set_nonblock(HYD_PMCD_pmi_proxy_params.in);
+                HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
+
+                stdin_fd = 0;
+                status = HYDU_sock_set_nonblock(stdin_fd);
+                HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
+
+                HYD_PMCD_pmi_proxy_params.stdin_buf_offset = 0;
+                HYD_PMCD_pmi_proxy_params.stdin_buf_count = 0;
+                status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, HYD_PMCD_pmi_proxy_stdin_cb);
+                HYDU_ERR_POP(status, "unable to register fd\n");
             }
             else {
                 status = HYDU_create_process(client_args, exec->prop_env,
@@ -112,45 +143,25 @@ int main(int argc, char **argv)
     }
 
     /* Everything is spawned, now wait for I/O */
-    status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.partition_proc_count,
+    status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.exec_proc_count,
                                  HYD_PMCD_pmi_proxy_params.out,
                                  HYD_STDOUT, HYD_PMCD_pmi_proxy_stdout_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.partition_proc_count,
+    status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.exec_proc_count,
                                  HYD_PMCD_pmi_proxy_params.err,
                                  HYD_STDOUT, HYD_PMCD_pmi_proxy_stderr_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    if (HYD_PMCD_pmi_proxy_params.pmi_id == 0) {
-        status = HYDU_sock_set_nonblock(HYD_PMCD_pmi_proxy_params.in);
-        HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
-
-        stdin_fd = 0;
-        status = HYDU_sock_set_nonblock(stdin_fd);
-        HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
-
-        HYD_PMCD_pmi_proxy_params.stdin_buf_offset = 0;
-        HYD_PMCD_pmi_proxy_params.stdin_buf_count = 0;
-        status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, HYD_PMCD_pmi_proxy_stdin_cb);
-        HYDU_ERR_POP(status, "unable to register fd\n");
-    }
-
-    timeout_str = getenv("MPIEXEC_TIMEOUT");
-    if (timeout_str)
-        timeout = atoi(timeout_str);
-    else
-        timeout = -1;
-
     while (1) {
         /* Wait for some event to occur */
-        status = HYD_DMX_wait_for_event(timeout);
+        status = HYD_DMX_wait_for_event(-1);
         HYDU_ERR_POP(status, "demux engine error waiting for event\n");
 
         /* Check to see if there's any open read socket left; if there
          * are, we will just wait for more events. */
         count = 0;
-        for (i = 0; i < HYD_PMCD_pmi_proxy_params.partition_proc_count; i++) {
+        for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++) {
             if (HYD_PMCD_pmi_proxy_params.out[i] != -1 ||
                 HYD_PMCD_pmi_proxy_params.err[i] != -1) {
                 count++;
@@ -175,13 +186,13 @@ int main(int argc, char **argv)
 
         /* Find the pid and mark it as complete. */
         if (pid > 0)
-            for (i = 0; i < HYD_PMCD_pmi_proxy_params.partition_proc_count; i++)
+            for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
                 if (HYD_PMCD_pmi_proxy_params.pid[i] == pid)
                     HYD_PMCD_pmi_proxy_params.exit_status[i] = WEXITSTATUS(ret_status);
 
         /* Check how many more processes are pending */
         count = 0;
-        for (i = 0; i < HYD_PMCD_pmi_proxy_params.partition_proc_count; i++) {
+        for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++) {
             if (HYD_PMCD_pmi_proxy_params.exit_status[i] == -1) {
                 count++;
                 break;
@@ -197,7 +208,7 @@ int main(int argc, char **argv)
     } while (1);
 
     ret_status = 0;
-    for (i = 0; i < HYD_PMCD_pmi_proxy_params.partition_proc_count; i++)
+    for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
         ret_status |= HYD_PMCD_pmi_proxy_params.exit_status[i];
 
   fn_exit:

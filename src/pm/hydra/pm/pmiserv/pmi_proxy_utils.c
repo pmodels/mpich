@@ -14,15 +14,19 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
     int arg, i, count;
     HYD_Env_t *env;
     struct HYD_Partition_exec *exec = NULL;
+    struct HYD_Partition_segment *segment = NULL;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYD_PMCD_pmi_proxy_params.exec_list = NULL;
+    HYD_PMCD_pmi_proxy_params.segment_list = NULL;
     HYD_PMCD_pmi_proxy_params.global_env = NULL;
 
     while (*argv) {
         ++argv;
+        if (*argv == NULL)
+            break;
 
         /* Proxy port */
         if (!strcmp(*argv, "--proxy-port")) {
@@ -74,11 +78,36 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
             continue;
         }
 
-        /* PMI_ID: This is the PMI_ID for the first process;
-         * everything else is incremented from here. */
-        if (!strcmp(*argv, "--pmi-id")) {
+        /* New segment */
+        if (!strcmp(*argv, "--segment")) {
+            if (HYD_PMCD_pmi_proxy_params.segment_list == NULL) {
+                status = HYDU_alloc_partition_segment(&HYD_PMCD_pmi_proxy_params.segment_list);
+                HYDU_ERR_POP(status, "unable to allocate partition segment\n");
+            }
+            else {
+                for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment->next;
+                     segment = segment->next);
+                status = HYDU_alloc_partition_segment(&segment->next);
+                HYDU_ERR_POP(status, "unable to allocate partition segment\n");
+            }
+            continue;
+        }
+
+        /* Process count */
+        if (!strcmp(*argv, "--segment-proc-count")) {
             argv++;
-            HYD_PMCD_pmi_proxy_params.pmi_id = atoi(*argv);
+            for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment->next;
+                 segment = segment->next);
+            segment->proc_count = atoi(*argv);
+            continue;
+        }
+
+        /* Process count */
+        if (!strcmp(*argv, "--segment-start-pid")) {
+            argv++;
+            for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment->next;
+                 segment = segment->next);
+            segment->start_pid = atoi(*argv);
             continue;
         }
 
@@ -98,7 +127,7 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
         }
 
         /* Process count */
-        if (!strcmp(*argv, "--proc-count")) {
+        if (!strcmp(*argv, "--exec-proc-count")) {
             argv++;
             for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec->next; exec = exec->next);
             exec->proc_count = atoi(*argv);
@@ -106,7 +135,7 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
         }
 
         /* Local env */
-        if (!strcmp(*argv, "--local-env")) {
+        if (!strcmp(*argv, "--exec-local-env")) {
             argv++;
             count = atoi(*argv);
             for (i = 0; i < count; i++) {

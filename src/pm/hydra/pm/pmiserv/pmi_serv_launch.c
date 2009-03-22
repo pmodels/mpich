@@ -44,6 +44,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
     char *path_str[HYDU_NUM_JOIN_STR];
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;
+    struct HYD_Partition_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -135,22 +136,30 @@ HYD_Status HYD_PMCI_launch_procs(void)
         HYDU_list_append_env_to_str(handle.system_env, partition->proxy_args);
         HYDU_list_append_env_to_str(handle.prop_env, partition->proxy_args);
 
-        arg = HYDU_strlist_lastidx(partition->proxy_args);
-        partition->proxy_args[arg++] = MPIU_Strdup("--pmi-id");
-        partition->proxy_args[arg++] = HYDU_int_to_str(process_id);;
-        partition->proxy_args[arg++] = NULL;
+        /* Pass the segment information */
+        for (segment = partition->segment_list; segment; segment = segment->next) {
+            arg = HYDU_strlist_lastidx(partition->proxy_args);
+            partition->proxy_args[arg++] = MPIU_Strdup("--segment");
+
+            partition->proxy_args[arg++] = MPIU_Strdup("--segment-start-pid");
+            partition->proxy_args[arg++] = HYDU_int_to_str(segment->start_pid);
+
+            partition->proxy_args[arg++] = MPIU_Strdup("--segment-proc-count");
+            partition->proxy_args[arg++] = HYDU_int_to_str(segment->proc_count);
+            partition->proxy_args[arg++] = NULL;
+        }
 
         /* Now pass the local executable information */
         for (exec = partition->exec_list; exec; exec = exec->next) {
             arg = HYDU_strlist_lastidx(partition->proxy_args);
             partition->proxy_args[arg++] = MPIU_Strdup("--exec");
 
-            partition->proxy_args[arg++] = MPIU_Strdup("--proc-count");
+            partition->proxy_args[arg++] = MPIU_Strdup("--exec-proc-count");
             partition->proxy_args[arg++] = HYDU_int_to_str(exec->proc_count);
             partition->proxy_args[arg++] = NULL;
 
             arg = HYDU_strlist_lastidx(partition->proxy_args);
-            partition->proxy_args[arg++] = MPIU_Strdup("--local-env");
+            partition->proxy_args[arg++] = MPIU_Strdup("--exec-local-env");
             for (i = 0, env = exec->prop_env; env; env = env->next, i++);
             HYDU_ERR_POP(status, "unable to convert int to string\n");
             partition->proxy_args[arg++] = HYDU_int_to_str(i);
