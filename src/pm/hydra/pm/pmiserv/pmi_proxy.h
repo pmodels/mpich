@@ -14,6 +14,7 @@ struct HYD_PMCD_pmi_proxy_params {
     int proxy_port;
     int pmi_id;
     char *wdir;
+    HYD_Binding binding;
     HYD_Env_t *global_env;
 
     int one_pass_count;

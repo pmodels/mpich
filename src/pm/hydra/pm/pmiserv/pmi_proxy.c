@@ -15,7 +15,7 @@ int HYD_PMCD_pmi_proxy_listenfd;
 int main(int argc, char **argv)
 {
     int i, j, arg, count, pid, ret_status;
-    int stdin_fd, timeout, process_id;
+    int stdin_fd, timeout, process_id, core;
     char *str, *timeout_str;
     char *client_args[HYD_EXEC_ARGS];
     char *tmp[HYDU_NUM_JOIN_STR];
@@ -64,8 +64,12 @@ int main(int argc, char **argv)
     status = HYDU_putenv_list(HYD_PMCD_pmi_proxy_params.global_env);
     HYDU_ERR_POP(status, "putenv returned error\n");
 
+    status = HYDU_bind_init();
+    HYDU_ERR_POP(status, "unable to initialize process binding\n");
+
     /* Spawn the processes */
     process_id = 0;
+    core = -1;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next) {
         for (i = 0; i < exec->proc_count; i++) {
 
@@ -84,13 +88,14 @@ int main(int argc, char **argv)
                 client_args[arg++] = MPIU_Strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
+            core = HYDU_next_core(core, HYD_PMCD_pmi_proxy_params.binding);
             if ((process_id + HYD_PMCD_pmi_proxy_params.pmi_id) == 0) {
                 status = HYDU_create_process(client_args, exec->prop_env,
                                              &HYD_PMCD_pmi_proxy_params.in,
                                              &HYD_PMCD_pmi_proxy_params.out[process_id],
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
                                              &HYD_PMCD_pmi_proxy_params.pid[process_id],
-                                             process_id);
+                                             core);
             }
             else {
                 status = HYDU_create_process(client_args, exec->prop_env,
@@ -98,7 +103,7 @@ int main(int argc, char **argv)
                                              &HYD_PMCD_pmi_proxy_params.out[process_id],
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
                                              &HYD_PMCD_pmi_proxy_params.pid[process_id],
-                                             process_id);
+                                             core);
             }
             HYDU_ERR_POP(status, "spawn process returned error\n");
 

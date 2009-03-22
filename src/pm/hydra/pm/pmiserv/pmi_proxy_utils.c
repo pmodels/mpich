@@ -4,7 +4,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
 #include "pmi_proxy.h"
 
 struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
@@ -36,6 +35,13 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
         if (!strcmp(*argv, "--wdir")) {
             argv++;
             HYD_PMCD_pmi_proxy_params.wdir = MPIU_Strdup(*argv);
+            continue;
+        }
+
+        /* Working directory */
+        if (!strcmp(*argv, "--binding")) {
+            argv++;
+            HYD_PMCD_pmi_proxy_params.binding = atoi(*argv);
             continue;
         }
 

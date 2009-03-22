@@ -17,9 +17,13 @@ HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path);
 #if defined PROC_BINDING
 #include "plpa.h"
 #include "plpa_internal.h"
-HYD_Status HYDU_bind_process(int core);
+HYD_Status HYDU_bind_init(void);
+void HYDU_bind_process(int core);
+int HYDU_next_core(int core, HYD_Binding binding);
 #else
+#define HYDU_bind_init(...) HYD_SUCCESS
 #define HYDU_bind_process(...) HYD_SUCCESS
+#define HYDU_next_core(...) (-1)
 #endif /* PROC_BINDING */
 
 

@@ -197,6 +197,24 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             continue;
         }
 
+        if (!strcmp(str1, "--binding")) {
+            if (!str2) {
+                INCREMENT_ARGV(status);
+                str2 = *argv;
+            }
+            HYDU_ERR_CHKANDJUMP(status, handle.binding != HYD_BIND_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate binding\n");
+            if (!strcmp(str2, "rr"))
+                handle.binding = HYD_BIND_RR;
+            else if (!strcmp(str2, "buddy"))
+                handle.binding = HYD_BIND_BUDDY;
+            else if (!strcmp(str2, "pack"))
+                handle.binding = HYD_BIND_PACK;
+            /* We don't support user-specified mappings yet */
+
+            continue;
+        }
+
         if (!strcmp(str1, "--proxy-port")) {
             if (!str2) {
                 INCREMENT_ARGV(status);

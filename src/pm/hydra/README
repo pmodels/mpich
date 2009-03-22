@@ -10,8 +10,9 @@ More detailed documentation of the internal workings of Hydra are
 available here:
 http://wiki.mcs.anl.gov/mpich2/index.php/Hydra_Process_Management_Framework
 
-How to use Hydra
-----------------
+
+Quick Start
+-----------
 
 To use hydra, mpich2 needs to be configured with the configure option
 --with-pm=hydra.
@@ -34,14 +35,25 @@ job on. This file may or may not include the local machine.
 
  $ cat hosts
 
-   donner.mcs.anl.gov
-   foo.mcs.anl.gov
-   shakey.mcs.anl.gov
-   terra.mcs.anl.gov
+   donner
+   foo
+   shakey
+   terra
 
 To run your application on these nodes, use mpiexec:
 
  $ mpiexec -f hosts -n 4 ./app
+
+The host file can also be specified as follows:
+
+ $ cat hosts
+
+   donner:2
+   foo:3
+   shakey:2
+
+In this case, the first 2 processes are scheduled on "donner", the
+next 3 on "foo" and the last 2 on "shakey".
 
 
 Environment settings
@@ -73,6 +85,69 @@ This can also be controlled by using the HYDRA_BOOTSTRAP environment
 variable.
 
 The default bootstrap server is ssh.
+
+
+Process-core binding
+--------------------
+
+We support multiple modes of process-core binding: round-robin ("rr"),
+buddy-allocation ("buddy"), closest packing ("pack") and user-defined
+("user"). These can be selected as follows:
+
+ $ mpiexec --binding rr -f hosts -n 8 ./app
+
+ ... or ...
+
+ $ mpiexec --binding pack -f hosts -n 8 ./app
+
+Consider the following layout of processing elements in the system
+(e.g., two nodes, each with two processors, and each processor with
+two cores). Suppose the Operating System assigned processor IDs for
+each of these processing elements are as shown below:
+
+__________________________________________      __________________________________________
+|  _________________    _________________  |    |  _________________    _________________  | 
+| |  _____   _____  |  |  _____   _____  | |    | |  _____   _____  |  |  _____   _____  | |
+| | |     | |     | |  | |     | |     | | |    | | |     | |     | |  | |     | |     | | |
+| | |     | |     | |  | |     | |     | | |    | | |     | |     | |  | |     | |     | | | 
+| | |  0  | |  2  | |  | |  1  | |  3  | | |    | | |  0  | |  1  | |  | |  2  | |  3  | | |
+| | |     | |     | |  | |     | |     | | |    | | |     | |     | |  | |     | |     | | |
+| | |_____| |_____| |  | |_____| |_____| | |    | | |_____| |_____| |  | |_____| |_____| | |
+| |_________________|  |_________________| |    | |_________________|  |_________________| |
+|__________________________________________|    |__________________________________________|
+
+
+In this case, the binding options are as follows:
+
+RR: 0, 1, 2, 3 (use the order provided by the OS)
+Buddy: 0, 1, 2, 3 (increasing sharing of resources)
+Pack: 0, 2, 1, 3 (closest packing)
+User: as defined by the user
+
+Within the user-defined binding, two modes are supported: command-line
+and host-file based. The command-line based mode can be used as
+follows:
+
+ $ mpiexec --binding user:0,3 -f hosts -n 4 ./app
+
+In this case, the first two processes are bound to the processing
+elements specified, while the last two are not bound at all. The
+mapping is the same for all machines, so if the application is run
+with 8 processes, the first 2 processes on "each machine" are bound to
+processing elements as specified.
+
+The host-file based mode for user-defined binding can be used by the
+"map=" argument on each host line. E.g.:
+
+ $ cat hosts
+
+   donner:4    map=1,2,3,4
+   foo:4       map=4,3,2,1
+   shakey:2
+
+Using this method, each host can be given a different mapping. Note
+that the last line does not have any mapping: in this case, the
+processes on that machine are not bound to any core.
 
 
 X Forwarding

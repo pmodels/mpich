@@ -122,6 +122,9 @@ HYD_Status HYD_PMCI_launch_procs(void)
         partition->proxy_args[arg++] = MPIU_Strdup("--wdir");
         partition->proxy_args[arg++] = MPIU_Strdup(handle.wdir);
 
+        partition->proxy_args[arg++] = MPIU_Strdup("--binding");
+        partition->proxy_args[arg++] = HYDU_int_to_str(handle.binding);
+
         /* Pass the global environment separately, instead of for each
          * executable, as an optimization */
         partition->proxy_args[arg++] = MPIU_Strdup("--global-env");

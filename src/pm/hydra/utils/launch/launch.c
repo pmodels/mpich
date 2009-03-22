@@ -41,19 +41,20 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
             HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
                                  HYDU_strerror(errno));
 
-        if (core >= 0) {
-            status = HYDU_bind_process(core);
-            HYDU_ERR_POP(status, "bind process failed\n");
-        }
-
         close(inpipe[1]);
         close(0);
-        if (in && (dup2(inpipe[0], 0) < 0))
+        if (in && (dup2(inpipe[0], 0) < 0)) {
             HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
                                  HYDU_strerror(errno));
+        }
 
         status = HYDU_putenv_list(env_list);
         HYDU_ERR_POP(status, "unable to putenv\n");
+
+        if (core >= 0) {
+            HYDU_bind_process(core);
+            HYDU_ERR_POP(status, "bind process failed\n");
+        }
 
         if (execvp(client_arg[0], client_arg) < 0) {
             HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "execvp error (%s)\n",

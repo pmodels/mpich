@@ -23,6 +23,8 @@ static void usage(void)
     printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
     printf("\t--proxy-port                     [Port on which proxies can listen]\n");
     printf("\t--bootstrap                      [Bootstrap server to use]\n");
+    printf("\t--binding                        [Process binding]");
+
     printf("\t-genv {name} {value}             [Environment variable name and value]\n");
     printf("\t-genvlist {env1,env2,...}        [Environment variable list to pass]\n");
     printf("\t-genvnone                        [Do not pass any environment variables]\n");
