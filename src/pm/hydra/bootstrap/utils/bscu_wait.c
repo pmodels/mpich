@@ -19,17 +19,15 @@ HYD_Handle handle;
 HYD_Status HYD_BSCU_wait_for_completion(void)
 {
     int pid, ret_status, not_completed;
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
+    struct HYD_Partition *partition;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     not_completed = 0;
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next)
-        for (partition = proc_params->partition; partition; partition = partition->next)
-            if (partition->exit_status == -1)
-                not_completed++;
+    for (partition = handle.partition_list; partition; partition = partition->next)
+        if (partition->exit_status == -1)
+            not_completed++;
 
     /* We get here only after the I/O sockets have been closed. If the
      * application did not manually close its stdout and stderr
@@ -40,14 +38,10 @@ HYD_Status HYD_BSCU_wait_for_completion(void)
         pid = waitpid(-1, &ret_status, WNOHANG);
         if (pid > 0) {
             /* Find the pid and mark it as complete. */
-            for (proc_params = handle.proc_params; proc_params;
-                 proc_params = proc_params->next) {
-                for (partition = proc_params->partition; partition;
-                     partition = partition->next) {
-                    if (partition->pid == pid) {
-                        partition->exit_status = WEXITSTATUS(ret_status);
-                        not_completed--;
-                    }
+            for (partition = handle.partition_list; partition; partition = partition->next) {
+                if (partition->pid == pid) {
+                    partition->exit_status = WEXITSTATUS(ret_status);
+                    not_completed--;
                 }
             }
         }

@@ -58,7 +58,7 @@ extern HYD_PMCD_pmi_pg_t *pg_list;
 
 struct HYD_PMCD_pmi_handle {
     char *cmd;
-    HYD_Status (*handler)(int fd, char *args[]);
+     HYD_Status(*handler) (int fd, char *args[]);
 };
 
 extern struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle_list;

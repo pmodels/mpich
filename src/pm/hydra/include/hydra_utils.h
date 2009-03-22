@@ -24,6 +24,7 @@ HYD_Status HYDU_bind_process(int core);
 
 
 /* env */
+HYD_Env_t *HYDU_str_to_env(char *str);
 HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list);
 HYD_Status HYDU_list_global_env(HYD_Env_t ** env_list);
 HYD_Env_t *HYDU_env_list_dup(HYD_Env_t * env);
@@ -33,28 +34,19 @@ HYD_Status HYDU_env_free_list(HYD_Env_t * env);
 HYD_Env_t *HYDU_env_lookup(HYD_Env_t env, HYD_Env_t * env_list);
 HYD_Status HYDU_append_env_to_list(HYD_Env_t env, HYD_Env_t ** env_list);
 void HYDU_putenv(char *env_str);
-HYD_Status HYDU_comma_list_to_env_list(char *str, HYD_Env_t **env_list);
+HYD_Status HYDU_comma_list_to_env_list(char *str, HYD_Env_t ** env_list);
 
 
 /* launch */
-struct HYD_Partition_list {
-    char *name;
-    int proc_count;
-    char **mapping;             /* Can be core IDs or something else */
-
-    int group_id;               /* Assumed to be in ascending order */
-    int group_rank;             /* Rank within the group */
-    int pid;
-    int out;
-    int err;
-    int exit_status;
-    char *args[HYD_EXEC_ARGS];
-
-    struct HYD_Partition_list *next;
-};
-
-HYD_Status HYDU_alloc_partition(struct HYD_Partition_list **partition);
-void HYDU_free_partition_list(struct HYD_Partition_list *partition);
+HYD_Status HYDU_alloc_partition(struct HYD_Partition **partition);
+void HYDU_free_partition_list(struct HYD_Partition *partition);
+HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info);
+void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list);
+HYD_Status HYDU_alloc_partition_segment(struct HYD_Partition_segment **segment);
+HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment *segment,
+                                        struct HYD_Partition **partition_list);
+HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec);
+HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partition_list);
 HYD_Status HYDU_create_process(char **client_arg, int *in, int *out, int *err,
                                int *pid, int core);
 

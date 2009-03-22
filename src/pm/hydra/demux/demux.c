@@ -32,8 +32,7 @@ HYD_Status HYD_DMX_register_fd(int num_fds, int *fd, HYD_Event_t events,
 
     for (i = 0; i < num_fds; i++)
         if (fd[i] < 0)
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "registering bad fd %d\n",
-                                 fd[i]);
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "registering bad fd %d\n", fd[i]);
 
     HYDU_MALLOC(cb_element, HYD_DMXI_callback_t *, sizeof(HYD_DMXI_callback_t), status);
     cb_element->num_fds = num_fds;

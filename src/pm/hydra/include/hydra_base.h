@@ -58,6 +58,16 @@ extern char **environ;
 
 #define HYD_DEFAULT_PROXY_PORT 9899
 
+#define HYD_STDOUT  (1)
+#define HYD_STDIN   (2)
+
+typedef unsigned short HYD_Event_t;
+
+#define HYD_TMPBUF_SIZE (64 * 1024)
+#define HYD_EXEC_ARGS 200
+
+
+/* Status information */
 typedef enum {
     HYD_SUCCESS = 0,
     HYD_GRACEFUL_ABORT,
@@ -66,6 +76,74 @@ typedef enum {
     HYD_INVALID_PARAM,
     HYD_INTERNAL_ERROR
 } HYD_Status;
+
+
+/* Environment information */
+typedef struct HYD_Env {
+    char *env_name;
+    char *env_value;
+    struct HYD_Env *next;
+} HYD_Env_t;
+
+typedef enum {
+    HYD_ENV_PROP_UNSET,
+    HYD_ENV_PROP_ALL,
+    HYD_ENV_PROP_NONE,
+    HYD_ENV_PROP_LIST
+} HYD_Env_prop_t;
+
+/* List of contiguous segments of processes on a partition */
+struct HYD_Partition_segment {
+    int start_pid;
+    int proc_count;
+    char **mapping;
+    struct HYD_Partition_segment *next;
+};
+
+/* Executables on a partition */
+struct HYD_Partition_exec {
+    char *exec[HYD_EXEC_ARGS];
+    int proc_count;
+    HYD_Env_prop_t prop;
+    HYD_Env_t *prop_env;
+    struct HYD_Partition_exec *next;
+};
+
+/* Partition information */
+struct HYD_Partition {
+    char *name;
+    int total_proc_count;
+
+    /* Segment list will contain one-pass of the hosts file */
+    struct HYD_Partition_segment *segment_list;
+    struct HYD_Partition_exec *exec_list;
+
+    /* Spawn information: each partition can have one or more
+     * proxies. For the time being, we only support one proxy per
+     * partition, but this can be easily extended later. We will also
+     * need to give different ports for the proxies to listen on in
+     * that case. */
+    int pid;
+    int out;
+    int err;
+    int exit_status;
+    char *proxy_args[HYD_EXEC_ARGS];    /* Full argument list */
+
+    struct HYD_Partition *next;
+};
+
+struct HYD_Exec_info {
+    int exec_proc_count;
+    char *exec[HYD_EXEC_ARGS];
+
+    /* Local environment */
+    HYD_Env_t *user_env;
+    HYD_Env_prop_t prop;
+    HYD_Env_t *prop_env;
+
+    struct HYD_Exec_info *next;
+} *exec_info;
+
 
 #define HYDU_ERR_POP(status, message)                                   \
     {                                                                   \
@@ -124,26 +202,6 @@ typedef enum {
         }                                                               \
     }
 
-#define HYD_STDOUT  (1)
-#define HYD_STDIN   (2)
-
-typedef unsigned short HYD_Event_t;
-
-#define HYD_TMPBUF_SIZE (64 * 1024)
-#define HYD_EXEC_ARGS 200
-
-typedef struct HYD_Env {
-    char *env_name;
-    char *env_value;
-    struct HYD_Env *next;
-} HYD_Env_t;
-
-typedef enum {
-    HYD_ENV_PROP_UNSET,
-    HYD_ENV_PROP_ALL,
-    HYD_ENV_PROP_NONE,
-    HYD_ENV_PROP_LIST
-} HYD_Env_prop_t;
 
 #if defined ENABLE_WARNINGS
 #define HYDU_Warn_printf HYDU_Error_printf

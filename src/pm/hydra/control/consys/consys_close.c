@@ -14,8 +14,7 @@ HYD_Handle handle;
 
 HYD_Status HYD_CSI_close_fd(int fd)
 {
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
+    struct HYD_Partition *partition;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -26,16 +25,14 @@ HYD_Status HYD_CSI_close_fd(int fd)
     close(fd);
 
     /* Find the FD in the handle and remove it. */
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
-            if (partition->out == fd) {
-                partition->out = -1;
-                goto fn_exit;
-            }
-            if (partition->err == fd) {
-                partition->err = -1;
-                goto fn_exit;
-            }
+    for (partition = handle.partition_list; partition; partition = partition->next) {
+        if (partition->out == fd) {
+            partition->out = -1;
+            goto fn_exit;
+        }
+        if (partition->err == fd) {
+            partition->err = -1;
+            goto fn_exit;
         }
     }
 

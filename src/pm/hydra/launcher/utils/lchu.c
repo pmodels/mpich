@@ -29,10 +29,15 @@ void HYD_LCHU_init_params(void)
 
     handle.in = -1;
     handle.stdin_cb = NULL;
+    handle.stdout_cb = NULL;
+    handle.stderr_cb = NULL;
 
     /* FIXME: Should the timers be initialized? */
 
-    handle.proc_params = NULL;
+    handle.one_pass_count = 0;
+    handle.exec_info_list = NULL;
+    handle.partition_list = NULL;
+
     handle.func_depth = 0;
     handle.stdin_buf_offset = 0;
     handle.stdin_buf_count = 0;
@@ -45,6 +50,7 @@ void HYD_LCHU_free_params(void)
         HYDU_FREE(handle.base_path);
         handle.base_path = NULL;
     }
+
     if (handle.bootstrap) {
         HYDU_FREE(handle.bootstrap);
         handle.bootstrap = NULL;
@@ -79,181 +85,21 @@ void HYD_LCHU_free_params(void)
         handle.prop_env = NULL;
     }
 
-    if (handle.proc_params) {
-        HYD_LCHU_free_proc_params();
-        handle.proc_params = NULL;
-    }
-}
-
-
-void HYD_LCHU_free_proc_params(void)
-{
-    struct HYD_Proc_params *proc_params, *run;
-
-    HYDU_FUNC_ENTER();
-
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        run = proc_params->next;
-        HYDU_free_strlist(proc_params->exec);
-        HYDU_free_partition_list(proc_params->partition);
-        proc_params->partition = NULL;
-
-        HYDU_env_free_list(proc_params->user_env);
-        proc_params->user_env = NULL;
-        HYDU_env_free_list(proc_params->prop_env);
-        proc_params->prop_env = NULL;
-
-        HYDU_FREE(proc_params);
-        proc_params = run;
+    if (handle.exec_info_list) {
+        HYDU_free_exec_info_list(handle.exec_info_list);
+        handle.exec_info_list = NULL;
     }
 
-    HYDU_FUNC_EXIT();
-}
-
-
-HYD_Status HYD_LCHU_create_host_list(void)
-{
-    FILE *fp = NULL;
-    char line[2 * MAX_HOSTNAME_LEN], *hostname, *procs;
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition, *run;
-    int num_procs, total_procs;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (strcmp(handle.host_file, "HYDRA_USE_LOCALHOST")) {
-        fp = fopen(handle.host_file, "r");
-        if (fp == NULL)
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                                 "unable to open host file: %s\n", handle.host_file);
+    if (handle.partition_list) {
+        HYDU_free_partition_list(handle.partition_list);
+        handle.partition_list = NULL;
     }
-
-    HYDU_Debug("Partition list: ");
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        if (!strcmp(handle.host_file, "HYDRA_USE_LOCALHOST")) {
-            HYDU_alloc_partition(&proc_params->partition);
-            proc_params->partition->name = MPIU_Strdup("localhost");
-            proc_params->partition->proc_count = proc_params->exec_proc_count;
-            total_procs = proc_params->exec_proc_count;
-            HYDU_Debug("%s:%d ", proc_params->partition->name, proc_params->exec_proc_count);
-        }
-        else {
-            total_procs = 0;
-            while (!feof(fp)) {
-                if ((fscanf(fp, "%s", line) < 0) && errno)
-                    HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                                         "unable to read input line (errno: %d)\n", errno);
-                if (feof(fp))
-                    break;
-
-                hostname = strtok(line, ":");
-                procs = strtok(NULL, ":");
-
-                num_procs = procs ? atoi(procs) : 1;
-                if (num_procs > (proc_params->exec_proc_count - total_procs))
-                    num_procs = (proc_params->exec_proc_count - total_procs);
-
-                if (!proc_params->partition) {
-                    HYDU_alloc_partition(&proc_params->partition);
-                    partition = proc_params->partition;
-                }
-                else {
-                    for (partition = proc_params->partition;
-                         partition->next; partition = partition->next);
-                    HYDU_alloc_partition(&partition->next);
-                    partition = partition->next;
-                }
-                partition->name = MPIU_Strdup(hostname);
-                partition->proc_count = num_procs;
-
-                total_procs += num_procs;
-
-                HYDU_Debug("%s:%d ", partition->name, partition->proc_count);
-
-                if (total_procs == proc_params->exec_proc_count)
-                    break;
-            }
-        }
-
-        /* We don't have enough processes; use whatever we have */
-        if (total_procs != proc_params->exec_proc_count) {
-            for (partition = proc_params->partition;
-                 partition->next; partition = partition->next);
-            run = proc_params->partition;
-
-            /* Optimize the case where there is only one node */
-            if (run->next == NULL) {
-                run->proc_count = proc_params->exec_proc_count;
-                HYDU_Debug("%s:%d ", run->name, run->proc_count);
-            }
-            else {
-                while (total_procs != proc_params->exec_proc_count) {
-                    HYDU_alloc_partition(&partition->next);
-                    partition = partition->next;
-                    partition->name = MPIU_Strdup(run->name);
-                    partition->proc_count = run->proc_count;
-
-                    HYDU_Debug("%s:%d ", partition->name, partition->proc_count);
-
-                    total_procs += partition->proc_count;
-                    run = run->next;
-                }
-            }
-        }
-
-        proc_params = proc_params->next;
-    }
-    HYDU_Debug("\n");
-
-  fn_exit:
-    if (fp)
-        fclose(fp);
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-HYD_Status HYD_LCHU_free_host_list(void)
-{
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition, *next;
-    int i;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition;) {
-            HYDU_FREE(partition->name);
-            if (partition->mapping) {
-                for (i = 0;; i++)
-                    if (partition->mapping[i])
-                        HYDU_FREE(partition->mapping[i]);
-                HYDU_FREE(partition->mapping);
-            }
-            for (i = 0; partition->args[i]; i++)
-                HYDU_FREE(partition->args[i]);
-            next = partition->next;
-            HYDU_FREE(partition);
-            partition = next;
-        }
-    }
-    HYDU_FREE(handle.host_file);
-
-    HYDU_FUNC_EXIT();
-    return status;
 }
 
 
 HYD_Status HYD_LCHU_create_env_list(void)
 {
-    struct HYD_Proc_params *proc_params;
+    struct HYD_Exec_info *exec_info;
     HYD_Env_t *env, *run;
     HYD_Status status = HYD_SUCCESS;
 
@@ -276,25 +122,126 @@ HYD_Status HYD_LCHU_create_env_list(void)
         }
     }
 
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        if (proc_params->prop == HYD_ENV_PROP_ALL) {
-            proc_params->prop_env = HYDU_env_list_dup(handle.global_env);
-            for (env = proc_params->user_env; env; env = env->next) {
-                status = HYDU_append_env_to_list(*env, &proc_params->prop_env);
+    exec_info = handle.exec_info_list;
+    while (exec_info) {
+        if (exec_info->prop == HYD_ENV_PROP_ALL) {
+            exec_info->prop_env = HYDU_env_list_dup(handle.global_env);
+            for (env = exec_info->user_env; env; env = env->next) {
+                status = HYDU_append_env_to_list(*env, &exec_info->prop_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
-        else if (proc_params->prop == HYD_ENV_PROP_LIST) {
-            for (env = proc_params->user_env; env; env = env->next) {
+        else if (exec_info->prop == HYD_ENV_PROP_LIST) {
+            for (env = exec_info->user_env; env; env = env->next) {
                 run = HYDU_env_lookup(*env, handle.global_env);
                 if (run) {
-                    status = HYDU_append_env_to_list(*run, &proc_params->prop_env);
+                    status = HYDU_append_env_to_list(*run, &exec_info->prop_env);
                     HYDU_ERR_POP(status, "unable to add env to list\n");
                 }
             }
         }
-        proc_params = proc_params->next;
+        exec_info = exec_info->next;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYD_LCHU_get_current_exec_info(struct HYD_Exec_info **info)
+{
+    struct HYD_Exec_info *exec_info;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (handle.exec_info_list == NULL) {
+        status = HYDU_alloc_exec_info(&handle.exec_info_list);
+        HYDU_ERR_POP(status, "unable to allocate exec_info\n");
+    }
+
+    exec_info = handle.exec_info_list;
+    while (exec_info->next)
+        exec_info = exec_info->next;
+
+    *info = exec_info;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYD_LCHU_merge_exec_info_to_partition(void)
+{
+    int total_procs, run_count, i, rem;
+    struct HYD_Partition *partition;
+    struct HYD_Exec_info *exec_info;
+    struct HYD_Partition_exec *exec;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    total_procs = 0;
+    for (partition = handle.partition_list; partition; partition = partition->next)
+        total_procs += partition->total_proc_count;
+
+    for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
+        /* The run_count tells us how many processes the partitions
+         * before us can host */
+        run_count = 0;
+        for (partition = handle.partition_list; partition; partition = partition->next) {
+            if (run_count >= exec_info->exec_proc_count)
+                break;
+
+            if (partition->exec_list == NULL) {
+                status = HYDU_alloc_partition_exec(&partition->exec_list);
+                HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+
+                for (i = 0; exec_info->exec[i]; i++)
+                    partition->exec_list->exec[i] = MPIU_Strdup(exec_info->exec[i]);
+                partition->exec_list->exec[i] = NULL;
+
+                partition->exec_list->proc_count =
+                    ((exec_info->exec_proc_count / total_procs) * partition->total_proc_count);
+                rem = (exec_info->exec_proc_count % total_procs);
+                if (rem > run_count + partition->total_proc_count)
+                    rem = run_count + partition->total_proc_count;
+                partition->exec_list->proc_count += (rem > run_count) ? (rem - run_count) : 0;
+
+                partition->exec_list->prop = exec_info->prop;
+                partition->exec_list->prop_env = HYDU_env_list_dup(exec_info->prop_env);
+            }
+            else {
+                for (exec = partition->exec_list; exec->next; exec = exec->next);
+                status = HYDU_alloc_partition_exec(&exec->next);
+                HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+
+                exec = exec->next;
+                for (i = 0; exec_info->exec[i]; i++)
+                    exec->exec[i] = MPIU_Strdup(exec_info->exec[i]);
+                exec->exec[i] = NULL;
+
+                exec->proc_count =
+                    ((exec_info->exec_proc_count / total_procs) * partition->total_proc_count);
+                rem = (exec_info->exec_proc_count % total_procs);
+                if (rem > run_count + partition->total_proc_count)
+                    rem = run_count + partition->total_proc_count;
+                exec->proc_count += (rem > run_count) ? (rem - run_count) : 0;
+
+                exec->prop = exec_info->prop;
+                exec->prop_env = HYDU_env_list_dup(exec_info->prop_env);
+            }
+
+            run_count += partition->total_proc_count;
+        }
     }
 
   fn_exit:
@@ -309,9 +256,11 @@ HYD_Status HYD_LCHU_create_env_list(void)
 void HYD_LCHU_print_params(void)
 {
     HYD_Env_t *env;
-    int i, j;
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
+    int i;
+    struct HYD_Partition *partition;
+    struct HYD_Partition_segment *segment;
+    struct HYD_Partition_exec *exec;
+    struct HYD_Exec_info *exec_info;
 
     HYDU_FUNC_ENTER();
 
@@ -353,35 +302,46 @@ void HYD_LCHU_print_params(void)
 
     HYDU_Debug("\n\n");
 
-    HYDU_Debug("    Process parameters:\n");
-    HYDU_Debug("    *******************\n");
+    HYDU_Debug("    Executable information:\n");
+    HYDU_Debug("    **********************\n");
     i = 1;
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
+    for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
         HYDU_Debug("      Executable ID: %2d\n", i++);
         HYDU_Debug("      -----------------\n");
-        HYDU_Debug("        Process count: %d\n", proc_params->exec_proc_count);
+        HYDU_Debug("        Process count: %d\n", exec_info->exec_proc_count);
         HYDU_Debug("        Executable: ");
-        for (j = 0; proc_params->exec[j]; j++)
-            HYDU_Debug("%s ", proc_params->exec[j]);
+        HYDU_print_strlist(exec_info->exec);
         HYDU_Debug("\n");
 
-        if (proc_params->user_env) {
+        if (exec_info->user_env) {
             HYDU_Debug("\n");
             HYDU_Debug("        User set environment:\n");
             HYDU_Debug("        .....................\n");
-            for (env = proc_params->user_env; env; env = env->next)
+            for (env = exec_info->user_env; env; env = env->next)
                 HYDU_Debug("          %s=%s\n", env->env_name, env->env_value);
         }
+    }
 
-        j = 0;
-        for (partition = proc_params->partition; partition; partition = partition->next) {
-            HYDU_Debug("\n");
-            HYDU_Debug("        Partition ID: %2d\n", j++);
-            HYDU_Debug("        ----------------\n");
-            HYDU_Debug("          Partition name: %s\n", partition->name);
-            HYDU_Debug("          Partition process count: %d\n", partition->proc_count);
-            HYDU_Debug("\n");
-        }
+    HYDU_Debug("    Partition information:\n");
+    HYDU_Debug("    *********************\n");
+    i = 1;
+    for (partition = handle.partition_list; partition; partition = partition->next) {
+        HYDU_Debug("      Partition ID: %2d\n", i++);
+        HYDU_Debug("      -----------------\n");
+        HYDU_Debug("        Partition name: %s\n", partition->name);
+        HYDU_Debug("        Process count: %d\n", partition->total_proc_count);
+        HYDU_Debug("\n");
+        HYDU_Debug("        Partition segment list:\n");
+        HYDU_Debug("        .......................\n");
+        for (segment = partition->segment_list; segment; segment = segment->next)
+            HYDU_Debug("          Start PID: %d; Process count: %d\n",
+                       segment->start_pid, segment->proc_count);
+        HYDU_Debug("\n");
+        HYDU_Debug("        Partition exec list:\n");
+        HYDU_Debug("        ....................\n");
+        for (exec = partition->exec_list; exec; exec = exec->next)
+            HYDU_Debug("          Exec: %s; Process count: %d\n", exec->exec[0],
+                       exec->proc_count);
     }
 
     HYDU_Debug("\n");
@@ -392,62 +352,4 @@ void HYD_LCHU_print_params(void)
     HYDU_FUNC_EXIT();
 
     return;
-}
-
-
-HYD_Status HYD_LCHU_allocate_proc_params(struct HYD_Proc_params **params)
-{
-    struct HYD_Proc_params *proc_params;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(proc_params, struct HYD_Proc_params *, sizeof(struct HYD_Proc_params), status);
-
-    proc_params->exec_proc_count = 0;
-    proc_params->partition = NULL;
-
-    proc_params->exec[0] = NULL;
-    proc_params->user_env = NULL;
-    proc_params->prop = HYD_ENV_PROP_UNSET;
-    proc_params->prop_env = NULL;
-    proc_params->stdout_cb = NULL;
-    proc_params->stderr_cb = NULL;
-    proc_params->next = NULL;
-
-    *params = proc_params;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-HYD_Status HYD_LCHU_get_current_proc_params(struct HYD_Proc_params **params)
-{
-    struct HYD_Proc_params *proc_params;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (handle.proc_params == NULL) {
-        status = HYD_LCHU_allocate_proc_params(&handle.proc_params);
-        HYDU_ERR_POP(status, "unable to allocate proc_params\n");
-    }
-
-    proc_params = handle.proc_params;
-    while (proc_params->next)
-        proc_params = proc_params->next;
-
-    *params = proc_params;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
 }

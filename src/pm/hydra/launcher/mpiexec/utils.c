@@ -32,11 +32,11 @@ static void show_version(void)
 
 HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 {
-    int i;
+    int i, env_pref;
     char **argv = t_argv;
     char *env_name, *env_value, *str1, *str2, *progname = *argv;
     HYD_Env_t *env;
-    struct HYD_Proc_params *proc_params;
+    struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -108,35 +108,35 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         }
 
         if (!strcmp(*argv, "-envall")) {
-            status = HYD_LCHU_get_current_proc_params(&proc_params);
-            HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
+            status = HYD_LCHU_get_current_exec_info(&exec_info);
+            HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-            HYDU_ERR_CHKANDJUMP(status, proc_params->prop != HYD_ENV_PROP_UNSET,
+            HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
                                 HYD_INTERNAL_ERROR, "duplicate prop setting\n");
-            proc_params->prop = HYD_ENV_PROP_ALL;
+            exec_info->prop = HYD_ENV_PROP_ALL;
             continue;
         }
 
         if (!strcmp(*argv, "-envnone")) {
-            status = HYD_LCHU_get_current_proc_params(&proc_params);
-            HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
+            status = HYD_LCHU_get_current_exec_info(&exec_info);
+            HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-            HYDU_ERR_CHKANDJUMP(status, proc_params->prop != HYD_ENV_PROP_UNSET,
+            HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
                                 HYD_INTERNAL_ERROR, "duplicate prop setting\n");
-            proc_params->prop = HYD_ENV_PROP_NONE;
+            exec_info->prop = HYD_ENV_PROP_NONE;
             continue;
         }
 
         if (!strcmp(*argv, "-envlist")) {
-            status = HYD_LCHU_get_current_proc_params(&proc_params);
-            HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
+            status = HYD_LCHU_get_current_exec_info(&exec_info);
+            HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-            HYDU_ERR_CHKANDJUMP(status, proc_params->prop != HYD_ENV_PROP_UNSET,
+            HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
                                 HYD_INTERNAL_ERROR, "duplicate prop setting\n");
-            proc_params->prop = HYD_ENV_PROP_LIST;
+            exec_info->prop = HYD_ENV_PROP_LIST;
 
             INCREMENT_ARGV(status);
-            HYDU_comma_list_to_env_list(*argv, &proc_params->user_env);
+            HYDU_comma_list_to_env_list(*argv, &exec_info->user_env);
             continue;
         }
 
@@ -149,10 +149,10 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             status = HYDU_env_create(&env, env_name, env_value);
             HYDU_ERR_POP(status, "unable to create env struct\n");
 
-            status = HYD_LCHU_get_current_proc_params(&proc_params);
-            HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
+            status = HYD_LCHU_get_current_exec_info(&exec_info);
+            HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-            HYDU_append_env_to_list(*env, &proc_params->user_env);
+            HYDU_append_env_to_list(*env, &exec_info->user_env);
             continue;
         }
 
@@ -165,13 +165,13 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         if (!strcmp(*argv, "-n") || !strcmp(*argv, "-np")) {
             INCREMENT_ARGV(status);
 
-            status = HYD_LCHU_get_current_proc_params(&proc_params);
-            HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
+            status = HYD_LCHU_get_current_exec_info(&exec_info);
+            HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-            if (proc_params->exec_proc_count != 0)
+            if (exec_info->exec_proc_count != 0)
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate proc count\n");
 
-            proc_params->exec_proc_count = atoi(*argv);
+            exec_info->exec_proc_count = atoi(*argv);
             continue;
         }
 
@@ -211,22 +211,22 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         if (*argv[0] == '-')
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized argument\n");
 
-        status = HYD_LCHU_get_current_proc_params(&proc_params);
-        HYDU_ERR_POP(status, "get_current_proc_params returned error\n");
+        status = HYD_LCHU_get_current_exec_info(&exec_info);
+        HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
         /* Read the executable till you hit the end of a ":" */
         do {
             if (!strcmp(*argv, ":")) {  /* Next executable */
-                status = HYD_LCHU_allocate_proc_params(&proc_params->next);
-                HYDU_ERR_POP(status, "allocate_proc_params returned error\n");
+                status = HYDU_alloc_exec_info(&exec_info->next);
+                HYDU_ERR_POP(status, "allocate_exec_info returned error\n");
                 break;
             }
 
             i = 0;
-            while (proc_params->exec[i] != NULL)
+            while (exec_info->exec[i] != NULL)
                 i++;
-            proc_params->exec[i] = MPIU_Strdup(*argv);
-            proc_params->exec[i + 1] = NULL;
+            exec_info->exec[i] = MPIU_Strdup(*argv);
+            exec_info->exec[i + 1] = NULL;
         } while (++argv && *argv);
 
         if (!(*argv))
@@ -238,7 +238,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     if (handle.debug == -1)
         handle.debug = 0;
 
-    if (handle.proc_params == NULL)
+    if (handle.exec_info_list == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no local options set\n");
 
     if (handle.wdir == NULL) {
@@ -261,24 +261,38 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     status = HYDU_get_base_path(progname, handle.wdir, &handle.base_path);
     HYDU_ERR_POP(status, "unable to get base path\n");
 
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        if (proc_params->exec[0] == NULL)
+    /* Check if any individual app has an environment preference */
+    env_pref = 0;
+    for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
+        if (exec_info->exec[0] == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
 
-        if (proc_params->exec_proc_count == 0)
-            proc_params->exec_proc_count = 1;
+        if (exec_info->exec_proc_count == 0)
+            exec_info->exec_proc_count = 1;
 
-        if (handle.prop == HYD_ENV_PROP_UNSET && proc_params->prop == HYD_ENV_PROP_UNSET)
-            proc_params->prop = HYD_ENV_PROP_ALL;
-
-        proc_params = proc_params->next;
+        if (handle.prop == HYD_ENV_PROP_UNSET && exec_info->prop != HYD_ENV_PROP_UNSET)
+            env_pref = 1;
     }
+
+    /* Only if someone has an individual preference, assign executable
+     * specific environment. Otherwise, just optimize by setting one
+     * global environment (common case). */
+    if (env_pref) {
+        for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next)
+            if (exec_info->prop == HYD_ENV_PROP_UNSET)
+                exec_info->prop = HYD_ENV_PROP_ALL;
+    }
+    else if (handle.prop == HYD_ENV_PROP_UNSET)
+        handle.prop = HYD_ENV_PROP_ALL;
 
     if (handle.proxy_port == -1)
         handle.proxy_port = HYD_DEFAULT_PROXY_PORT;
 
   fn_exit:
+    if (str1)
+        HYDU_FREE(str1);
+    if (str2)
+        HYDU_FREE(str2);
     HYDU_FUNC_EXIT();
     return status;
 

@@ -11,61 +11,24 @@ struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 
 HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
 {
-    int argc = t_argc;
     char **argv = t_argv, *str;
     int arg, i, count;
-    struct HYD_Partition_list *partition, *run;
+    HYD_Env_t *env;
+    struct HYD_Partition_exec *exec = NULL;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
+    HYD_PMCD_pmi_proxy_params.exec_list = NULL;
     HYD_PMCD_pmi_proxy_params.global_env = NULL;
-    HYD_PMCD_pmi_proxy_params.env_list = NULL;
-    HYD_PMCD_pmi_proxy_params.partition = NULL;
 
-    status = HYDU_list_global_env(&HYD_PMCD_pmi_proxy_params.global_env);
-    HYDU_ERR_POP(status, "unable to get the global env list\n");
-
-    while (--argc && ++argv) {
-
-        /* Process count */
-        if (!strcmp(*argv, "--proc-count")) {
-            argv++;
-            HYD_PMCD_pmi_proxy_params.proc_count = atoi(*argv);
-            continue;
-        }
+    while (*argv) {
+        ++argv;
 
         /* Proxy port */
         if (!strcmp(*argv, "--proxy-port")) {
             argv++;
             HYD_PMCD_pmi_proxy_params.proxy_port = atoi(*argv);
-            continue;
-        }
-
-        /* PMI_ID: This is the PMI_ID for the first process;
-         * everything else is incremented from here. */
-        if (!strcmp(*argv, "--pmi-id")) {
-            argv++;
-            HYD_PMCD_pmi_proxy_params.pmi_id = atoi(*argv);
-            continue;
-        }
-
-        /* Partition information is passed as two parameters; name
-         * followed by proc count. Multiple partitions are specified
-         * as multiple parameters. */
-        if (!strcmp(*argv, "--partition")) {
-            argv++;
-            HYDU_alloc_partition(&partition);
-            partition->name = MPIU_Strdup(*argv);
-            argv++;
-            partition->proc_count = atoi(*argv);
-
-            if (!HYD_PMCD_pmi_proxy_params.partition)
-                HYD_PMCD_pmi_proxy_params.partition = partition;
-            else {
-                for (run = HYD_PMCD_pmi_proxy_params.partition; run->next; run = run->next);
-                run->next = partition;
-            }
             continue;
         }
 
@@ -76,9 +39,8 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
             continue;
         }
 
-        /* Environment information is passed as a list of names; we
-         * need to find the values from our environment. */
-        if (!strcmp(*argv, "--environment")) {
+        /* Global env */
+        if (!strcmp(*argv, "--global-env")) {
             argv++;
             count = atoi(*argv);
             for (i = 0; i < count; i++) {
@@ -92,20 +54,85 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
                     str++;
                     str[strlen(str) - 1] = 0;
                 }
-                HYDU_putenv(str);
+                env = HYDU_str_to_env(str);
+                HYDU_append_env_to_list(*env, &HYD_PMCD_pmi_proxy_params.global_env);
+                HYDU_FREE(env);
+            }
+            continue;
+        }
+
+        /* One-pass Count */
+        if (!strcmp(*argv, "--one-pass-count")) {
+            argv++;
+            HYD_PMCD_pmi_proxy_params.one_pass_count = atoi(*argv);
+            continue;
+        }
+
+        /* PMI_ID: This is the PMI_ID for the first process;
+         * everything else is incremented from here. */
+        if (!strcmp(*argv, "--pmi-id")) {
+            argv++;
+            HYD_PMCD_pmi_proxy_params.pmi_id = atoi(*argv);
+            continue;
+        }
+
+        /* New executable */
+        if (!strcmp(*argv, "--exec")) {
+            if (HYD_PMCD_pmi_proxy_params.exec_list == NULL) {
+                status = HYDU_alloc_partition_exec(&HYD_PMCD_pmi_proxy_params.exec_list);
+                HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+            }
+            else {
+                for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec->next;
+                     exec = exec->next);
+                status = HYDU_alloc_partition_exec(&exec->next);
+                HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+            }
+            continue;
+        }
+
+        /* Process count */
+        if (!strcmp(*argv, "--proc-count")) {
+            argv++;
+            for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec->next; exec = exec->next);
+            exec->proc_count = atoi(*argv);
+            continue;
+        }
+
+        /* Local env */
+        if (!strcmp(*argv, "--local-env")) {
+            argv++;
+            count = atoi(*argv);
+            for (i = 0; i < count; i++) {
+                argv++;
+                str = *argv;
+
+                /* Some bootstrap servers remove the quotes that we
+                 * added, while some others do not. For the cases
+                 * where they are not removed, we do it ourselves. */
+                if (*str == '\'') {
+                    str++;
+                    str[strlen(str) - 1] = 0;
+                }
+                env = HYDU_str_to_env(str);
+                HYDU_append_env_to_list(*env, &exec->prop_env);
+                HYDU_FREE(env);
             }
             continue;
         }
 
         /* Fall through case is application parameters. Load
          * everything into the args variable. */
-        for (arg = 0; *argv;) {
-            HYD_PMCD_pmi_proxy_params.args[arg++] = MPIU_Strdup(*argv);
+        for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec->next; exec = exec->next);
+        for (arg = 0; *argv && strcmp(*argv, "--exec");) {
+            exec->exec[arg++] = MPIU_Strdup(*argv);
             ++argv;
-            --argc;
         }
-        HYD_PMCD_pmi_proxy_params.args[arg++] = NULL;
-        break;
+        exec->exec[arg++] = NULL;
+
+        /* If we already touched the next --exec, step back */
+        if (*argv && !strcmp(*argv, "--exec"))
+            argv--;
     }
 
   fn_exit:

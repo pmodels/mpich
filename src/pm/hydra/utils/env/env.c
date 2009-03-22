@@ -28,11 +28,11 @@ static HYD_Status env_to_str(HYD_Env_t * env, char **str)
     for (i = 0; tmp[i]; i++)
         HYDU_FREE(tmp[i]);
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -62,6 +62,32 @@ static HYD_Env_t *env_dup(HYD_Env_t env)
 }
 
 
+HYD_Env_t *HYDU_str_to_env(char *str)
+{
+    HYD_Env_t *env;
+    char *env_name, *env_value;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(env, HYD_Env_t *, sizeof(HYD_Env_t), status);
+    env_name = strtok(str, "=");
+    env_value = strtok(NULL, "=");
+    env->env_name = MPIU_Strdup(env_name);
+    env->env_value = env_value ? MPIU_Strdup(env_value) : NULL;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return env;
+
+  fn_fail:
+    if (env)
+        HYDU_FREE(env);
+    env = NULL;
+    goto fn_exit;
+}
+
+
 HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list)
 {
     int i;
@@ -80,11 +106,11 @@ HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list)
     }
     str_list[i++] = NULL;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -92,7 +118,7 @@ fn_fail:
 HYD_Status HYDU_list_global_env(HYD_Env_t ** env_list)
 {
     HYD_Env_t *env;
-    char *env_name, *env_value, *env_str;
+    char *env_str;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -101,19 +127,15 @@ HYD_Status HYDU_list_global_env(HYD_Env_t ** env_list)
     *env_list = NULL;
     i = 0;
     while (environ[i]) {
-        HYDU_MALLOC(env, HYD_Env_t *, sizeof(HYD_Env_t), status);
-
         env_str = MPIU_Strdup(environ[i]);
-        env_name = strtok(env_str, "=");
-        env_value = strtok(NULL, "=");
-        env->env_name = MPIU_Strdup(env_name);
-        env->env_value = env_value ? MPIU_Strdup(env_value) : NULL;
-        HYDU_FREE(env_str);
+
+        env = HYDU_str_to_env(env_str);
 
         status = HYDU_append_env_to_list(*env, env_list);
         HYDU_ERR_POP(status, "unable to add env to list\n");
 
         HYDU_env_free(env);
+        HYDU_FREE(env_str);
 
         i++;
     }
@@ -298,7 +320,7 @@ void HYDU_putenv(char *env_str)
 }
 
 
-HYD_Status HYDU_comma_list_to_env_list(char *str, HYD_Env_t **env_list)
+HYD_Status HYDU_comma_list_to_env_list(char *str, HYD_Env_t ** env_list)
 {
     char *env_name;
     HYD_Env_t *env;

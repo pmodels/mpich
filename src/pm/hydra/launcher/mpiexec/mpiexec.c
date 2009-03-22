@@ -47,8 +47,7 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
+    struct HYD_Partition *partition;
     int exit_status = 0;
     int timeout;
     HYD_Status status = HYD_SUCCESS;
@@ -64,23 +63,22 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    if (handle.debug)
-        HYD_LCHU_print_params();
-
     /* Convert the host file to a host list */
-    status = HYD_LCHU_create_host_list();
+    status = HYDU_create_host_list(handle.host_file, &handle.partition_list);
     HYDU_ERR_POP(status, "unable to create host list\n");
 
     /* Consolidate the environment list that we need to propagate */
     status = HYD_LCHU_create_env_list();
     HYDU_ERR_POP(status, "unable to create env list\n");
 
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        proc_params->stdout_cb = HYD_LCHI_stdout_cb;
-        proc_params->stderr_cb = HYD_LCHI_stderr_cb;
-        proc_params = proc_params->next;
-    }
+    status = HYD_LCHU_merge_exec_info_to_partition();
+    HYDU_ERR_POP(status, "unable to merge exec info\n");
+
+    if (handle.debug)
+        HYD_LCHU_print_params();
+
+    handle.stdout_cb = HYD_LCHI_stdout_cb;
+    handle.stderr_cb = HYD_LCHI_stderr_cb;
     handle.stdin_cb = HYD_LCHI_stdin_cb;
 
     HYDU_time_set(&handle.start, NULL); /* NULL implies right now */
@@ -101,9 +99,8 @@ int main(int argc, char **argv)
 
     /* Check for the exit status for all the processes */
     exit_status = 0;
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next)
-        for (partition = proc_params->partition; partition; partition = partition->next)
-            exit_status |= partition->exit_status;
+    for (partition = handle.partition_list; partition; partition = partition->next)
+        exit_status |= partition->exit_status;
 
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_CSI_finalize();

@@ -13,8 +13,7 @@ HYD_Handle handle;
 
 HYD_Status HYD_BSCD_fork_launch_procs(void)
 {
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
+    struct HYD_Partition *partition;
     char *client_arg[HYD_EXEC_ARGS];
     int i, arg, process_id;
     HYD_Status status = HYD_SUCCESS;
@@ -26,33 +25,28 @@ HYD_Status HYD_BSCD_fork_launch_procs(void)
      * they want launched. Without this functionality, the proxy
      * cannot use this and will have to perfom its own launch. */
     process_id = 0;
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
-            if (partition->group_rank)  /* Only rank 0 is spawned */
-                continue;
+    for (partition = handle.partition_list; partition; partition = partition->next) {
 
-            /* Setup the executable arguments */
-            arg = 0;
-            for (i = 0; partition->args[i]; i++)
-                client_arg[arg++] = MPIU_Strdup(partition->args[i]);
-            client_arg[arg++] = NULL;
+        /* Setup the executable arguments */
+        arg = 0;
+        for (i = 0; partition->proxy_args[i]; i++)
+            client_arg[arg++] = MPIU_Strdup(partition->proxy_args[i]);
+        client_arg[arg++] = NULL;
 
-            /* The stdin pointer will be some value for process_id 0;
-             * for everyone else, it's NULL. */
-            status = HYDU_create_process(client_arg, (process_id == 0 ? &handle.in : NULL),
-                                         &partition->out, &partition->err, &partition->pid,
-                                         -1);
-            HYDU_ERR_POP(status, "create process returned error\n");
+        /* The stdin pointer will be some value for process_id 0; for
+         * everyone else, it's NULL. */
+        status = HYDU_create_process(client_arg, (process_id == 0 ? &handle.in : NULL),
+                                     &partition->out, &partition->err, &partition->pid, -1);
+        HYDU_ERR_POP(status, "create process returned error\n");
 
-            for (arg = 0; client_arg[arg]; arg++)
-                HYDU_FREE(client_arg[arg]);
+        for (arg = 0; client_arg[arg]; arg++)
+            HYDU_FREE(client_arg[arg]);
 
-            /* For the remaining processes, set the stdin fd to -1 */
-            if (process_id != 0)
-                handle.in = -1;
+        /* For the remaining processes, set the stdin fd to -1 */
+        if (process_id != 0)
+            handle.in = -1;
 
-            process_id++;
-        }
+        process_id++;
     }
 
   fn_exit:

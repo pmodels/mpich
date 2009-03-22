@@ -11,14 +11,17 @@
 #include "hydra_utils.h"
 
 struct HYD_PMCD_pmi_proxy_params {
-    HYD_Env_t *global_env;
-    HYD_Env_t *env_list;
-    int proc_count;
     int proxy_port;
     int pmi_id;
-    char *args[HYD_EXEC_ARGS];
     char *wdir;
-    struct HYD_Partition_list *partition;
+    HYD_Env_t *global_env;
+
+    int one_pass_count;
+    int partition_proc_count;
+
+    /* Process segmentation information for this partition */
+    struct HYD_Partition_segment segment;
+    struct HYD_Partition_exec *exec_list;
 
     int *pid;
     int *out;

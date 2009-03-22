@@ -99,7 +99,8 @@ static HYD_Status free_pmi_kvs_list(HYD_PMCD_pmi_kvs_t * kvs_list)
 
 HYD_Status HYD_PMCD_pmi_create_pg(void)
 {
-    struct HYD_Proc_params *proc_params;
+    struct HYD_Partition *partition;
+    struct HYD_Partition_exec *exec;
     int num_procs;
     HYD_Status status = HYD_SUCCESS;
 
@@ -107,11 +108,9 @@ HYD_Status HYD_PMCD_pmi_create_pg(void)
 
     /* Find the number of processes in the PG */
     num_procs = 0;
-    proc_params = handle.proc_params;
-    while (proc_params) {
-        num_procs += proc_params->exec_proc_count;
-        proc_params = proc_params->next;
-    }
+    for (partition = handle.partition_list; partition; partition = partition->next)
+        for (exec = partition->exec_list; exec; exec = exec->next)
+            num_procs += exec->proc_count;
 
     status = create_pg(&pg_list, 0);
     HYDU_ERR_POP(status, "unable to create pg\n");
@@ -182,10 +181,10 @@ HYD_Status HYD_PMCD_pmi_init(int fd, char *args[])
                              "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

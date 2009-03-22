@@ -14,8 +14,7 @@ HYD_Handle handle;
 
 HYD_Status HYD_CSI_launch_procs(void)
 {
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
+    struct HYD_Partition *partition;
     int stdin_fd;
     HYD_Status status = HYD_SUCCESS;
 
@@ -24,16 +23,12 @@ HYD_Status HYD_CSI_launch_procs(void)
     status = HYD_PMCI_launch_procs();
     HYDU_ERR_POP(status, "PM returned error while launching processes\n");
 
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
-            status =
-                HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, proc_params->stdout_cb);
-            HYDU_ERR_POP(status, "demux returned error registering fd\n");
+    for (partition = handle.partition_list; partition; partition = partition->next) {
+        status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, handle.stdout_cb);
+        HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-            status =
-                HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, proc_params->stderr_cb);
-            HYDU_ERR_POP(status, "demux returned error registering fd\n");
-        }
+        status = HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, handle.stderr_cb);
+        HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
     if (handle.in != -1) {      /* Only process_id 0 */

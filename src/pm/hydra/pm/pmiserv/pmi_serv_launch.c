@@ -38,13 +38,12 @@ HYD_Status HYD_PMCI_launch_procs(void)
 {
     char *port_range, *port_str, *sport, *str;
     uint16_t port;
-    int i, arg;
-    int process_id, group_id;
+    int i, arg, process_id;
     char hostname[MAX_HOSTNAME_LEN];
     HYD_Env_t *env;
     char *path_str[HYDU_NUM_JOIN_STR];
-    struct HYD_Proc_params *proc_params;
-    struct HYD_Partition_list *partition;
+    struct HYD_Partition *partition;
+    struct HYD_Partition_exec *exec;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -73,8 +72,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
     /* Create a port string for MPI processes to use to connect to */
     if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
         HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR,
-                             "gethostname error (hostname: %s; errno: %d)\n", hostname,
-                             errno);
+                             "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
 
     status = HYDU_int_to_str(port, &sport);
     HYDU_ERR_POP(status, "cannot convert int to string\n");
@@ -99,81 +97,89 @@ HYD_Status HYD_PMCI_launch_procs(void)
     status = HYD_PMCD_pmi_create_pg();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
+    handle.one_pass_count = 0;
+    for (partition = handle.partition_list; partition; partition = partition->next)
+        handle.one_pass_count += partition->total_proc_count;
+
     /* Create the arguments list for each proxy */
     process_id = 0;
-    group_id = 0;
-    for (proc_params = handle.proc_params; proc_params; proc_params = proc_params->next) {
-        for (partition = proc_params->partition; partition; partition = partition->next) {
+    for (partition = handle.partition_list; partition; partition = partition->next) {
 
-            partition->group_id = group_id++;
-            partition->group_rank = 0;
+        for (arg = 0; partition->proxy_args[arg]; arg++);
+        i = 0;
+        path_str[i++] = MPIU_Strdup(handle.base_path);
+        path_str[i++] = MPIU_Strdup("pmi_proxy");
+        path_str[i] = NULL;
+        status = HYDU_str_alloc_and_join(path_str, &partition->proxy_args[arg++]);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+        HYDU_free_strlist(path_str);
 
-            for (arg = 0; partition->args[arg]; arg++);
-            i = 0;
-            path_str[i++] = MPIU_Strdup(handle.base_path);
-            path_str[i++] = MPIU_Strdup("pmi_proxy");
-            path_str[i] = NULL;
-            status = HYDU_str_alloc_and_join(path_str, &partition->args[arg++]);
-            HYDU_ERR_POP(status, "unable to join strings\n");
+        status = HYDU_int_to_str(handle.proxy_port, &str);
+        HYDU_ERR_POP(status, "unable to convert in to string\n");
+        partition->proxy_args[arg++] = MPIU_Strdup("--proxy-port");
+        partition->proxy_args[arg++] = MPIU_Strdup(str);
+        HYDU_FREE(str);
 
-            HYDU_free_strlist(path_str);
+        status = HYDU_int_to_str(handle.one_pass_count, &str);
+        HYDU_ERR_POP(status, "unable to convert in to string\n");
+        partition->proxy_args[arg++] = MPIU_Strdup("--one-pass-count");
+        partition->proxy_args[arg++] = MPIU_Strdup(str);
+        HYDU_FREE(str);
 
-            status = HYDU_int_to_str(partition->proc_count, &str);
+        partition->proxy_args[arg++] = MPIU_Strdup("--wdir");
+        partition->proxy_args[arg++] = MPIU_Strdup(handle.wdir);
+
+        /* Pass the global environment separately, instead of for each
+         * executable, as an optimization */
+        partition->proxy_args[arg++] = MPIU_Strdup("--global-env");
+        for (i = 0, env = handle.system_env; env; env = env->next, i++);
+        for (env = handle.prop_env; env; env = env->next, i++);
+        status = HYDU_int_to_str(i, &str);
+        HYDU_ERR_POP(status, "unable to convert int to string\n");
+        partition->proxy_args[arg++] = MPIU_Strdup(str);
+        HYDU_FREE(str);
+        partition->proxy_args[arg++] = NULL;
+        HYDU_list_append_env_to_str(handle.system_env, partition->proxy_args);
+        HYDU_list_append_env_to_str(handle.prop_env, partition->proxy_args);
+
+        status = HYDU_int_to_str(process_id, &str);
+        HYDU_ERR_POP(status, "unable to convert int to string\n");
+        for (arg = 0; partition->proxy_args[arg]; arg++);
+        partition->proxy_args[arg++] = MPIU_Strdup("--pmi-id");
+        partition->proxy_args[arg++] = MPIU_Strdup(str);
+        HYDU_FREE(str);
+        partition->proxy_args[arg++] = NULL;
+
+        /* Now pass the local executable information */
+        for (exec = partition->exec_list; exec; exec = exec->next) {
+            for (arg = 0; partition->proxy_args[arg]; arg++);
+            partition->proxy_args[arg++] = MPIU_Strdup("--exec");
+
+            status = HYDU_int_to_str(exec->proc_count, &str);
             HYDU_ERR_POP(status, "unable to convert int to string\n");
-
-            partition->args[arg++] = MPIU_Strdup("--proc-count");
-            partition->args[arg++] = MPIU_Strdup(str);
-
-            partition->args[arg++] = MPIU_Strdup("--partition");
-            partition->args[arg++] = MPIU_Strdup(partition->name);
-            partition->args[arg++] = MPIU_Strdup(str);
+            partition->proxy_args[arg++] = MPIU_Strdup("--proc-count");
+            partition->proxy_args[arg++] = MPIU_Strdup(str);
             HYDU_FREE(str);
+            partition->proxy_args[arg++] = NULL;
 
-            status = HYDU_int_to_str(process_id, &str);
-            HYDU_ERR_POP(status, "unable to convert int to string\n");
-
-            partition->args[arg++] = MPIU_Strdup("--pmi-id");
-            partition->args[arg++] = MPIU_Strdup(str);
-            HYDU_FREE(str);
-
-            status = HYDU_int_to_str(handle.proxy_port, &str);
-            HYDU_ERR_POP(status, "unable to convert in to string\n");
-
-            partition->args[arg++] = MPIU_Strdup("--proxy-port");
-            partition->args[arg++] = MPIU_Strdup(str);
-            HYDU_FREE(str);
-
-            partition->args[arg++] = MPIU_Strdup("--wdir");
-            partition->args[arg++] = MPIU_Strdup(handle.wdir);
-
-            partition->args[arg++] = MPIU_Strdup("--environment");
-            i = 0;
-            for (env = handle.system_env; env; env = env->next)
-                i++;
-            for (env = handle.prop_env; env; env = env->next)
-                i++;
-            for (env = proc_params->prop_env; env; env = env->next)
-                i++;
+            for (arg = 0; partition->proxy_args[arg]; arg++);
+            partition->proxy_args[arg++] = MPIU_Strdup("--local-env");
+            for (i = 0, env = exec->prop_env; env; env = env->next, i++);
             status = HYDU_int_to_str(i, &str);
-            HYDU_ERR_POP(status, "unable to convert in to string\n");
+            HYDU_ERR_POP(status, "unable to convert int to string\n");
+            partition->proxy_args[arg++] = MPIU_Strdup(str);
+            HYDU_FREE(str);
+            partition->proxy_args[arg++] = NULL;
+            HYDU_list_append_env_to_str(exec->prop_env, partition->proxy_args);
 
-            partition->args[arg++] = MPIU_Strdup(str);
-            partition->args[arg++] = NULL;
+            HYDU_list_append_strlist(exec->exec, partition->proxy_args);
 
-            HYDU_list_append_env_to_str(handle.system_env, partition->args);
-            HYDU_list_append_env_to_str(handle.prop_env, partition->args);
-            HYDU_list_append_env_to_str(proc_params->prop_env, partition->args);
+            process_id += exec->proc_count;
+        }
 
-            for (arg = 0; partition->args[arg]; arg++);
-            partition->args[arg] = NULL;
-            HYDU_list_append_strlist(proc_params->exec, partition->args);
-
-            if (handle.debug) {
-                HYDU_Debug("Executable passed to the bootstrap: ");
-                HYDU_print_strlist(partition->args);
-            }
-
-            process_id += partition->proc_count;
+        if (handle.debug) {
+            HYDU_Debug("Executable passed to the bootstrap: ");
+            HYDU_print_strlist(partition->proxy_args);
         }
     }
 
