@@ -90,9 +90,11 @@ The default bootstrap server is ssh.
 Process-core binding
 --------------------
 
-We support multiple modes of process-core binding: round-robin ("rr"),
-buddy-allocation ("buddy"), closest packing ("pack") and user-defined
-("user"). These can be selected as follows:
+To configure hydra with process-core binding support, use the
+configure option --enable-hydra-procbind. We support multiple modes of
+process-core binding: round-robin ("rr"), buddy-allocation ("buddy"),
+closest packing ("pack") and user-defined ("user"). These can be
+selected as follows:
 
  $ mpiexec --binding rr -f hosts -n 8 ./app
 
@@ -110,7 +112,7 @@ __________________________________________      ________________________________
 | |  _____   _____  |  |  _____   _____  | |    | |  _____   _____  |  |  _____   _____  | |
 | | |     | |     | |  | |     | |     | | |    | | |     | |     | |  | |     | |     | | |
 | | |     | |     | |  | |     | |     | | |    | | |     | |     | |  | |     | |     | | | 
-| | |  0  | |  2  | |  | |  1  | |  3  | | |    | | |  0  | |  1  | |  | |  2  | |  3  | | |
+| | |  0  | |  2  | |  | |  1  | |  3  | | |    | | |  0  | |  2  | |  | |  1  | |  3  | | |
 | | |     | |     | |  | |     | |     | | |    | | |     | |     | |  | |     | |     | | |
 | | |_____| |_____| |  | |_____| |_____| | |    | | |_____| |_____| |  | |_____| |_____| | |
 | |_________________|  |_________________| |    | |_________________|  |_________________| |
@@ -130,11 +132,12 @@ follows:
 
  $ mpiexec --binding user:0,3 -f hosts -n 4 ./app
 
-In this case, the first two processes are bound to the processing
-elements specified, while the last two are not bound at all. The
-mapping is the same for all machines, so if the application is run
-with 8 processes, the first 2 processes on "each machine" are bound to
-processing elements as specified.
+If a machine has 4 processing elements, and only two bindings are
+provided (as in the above example), the rest are padded with (-1),
+which refers to no binding. Also, the mapping is the same for all
+machines; so if the application is run with 8 processes, the first 2
+processes on "each machine" are bound to processing elements as
+specified.
 
 The host-file based mode for user-defined binding can be used by the
 "map=" argument on each host line. E.g.:

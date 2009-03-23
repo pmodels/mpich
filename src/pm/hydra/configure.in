@@ -149,9 +149,9 @@ if test "$WARNINGS" = "yes"; then
 fi
 
 dnl Process Binding
-AC_ARG_ENABLE(process-binding, [  --enable-process-binding       Process Binding],
-			       [ PROC_BINDING=$enableval ],
-			       [ PROC_BINDING=no ])
+AC_ARG_ENABLE(hydra-procbind, [  --enable-hydra-procbind       Process Binding],
+			      [ PROC_BINDING=$enableval ],
+			      [ PROC_BINDING=no ])
 AC_MSG_CHECKING(process binding)
 AC_MSG_RESULT($PROC_BINDING)
 if test "$PROC_BINDING" = "yes"; then
