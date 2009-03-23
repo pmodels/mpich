@@ -128,11 +128,12 @@ MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
 #endif
 
 /* C++ complex types */
-#if defined(MPIR_CXX_COMPLEX_VALUE)
+#if defined(HAVE_CXX_COMPLEX)
 #  undef MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX
 #  define MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
-#if defined(MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE)
+/* also test against MPI_DATATYPE_NULL for extra safety, 0x0c000000 is the uncasted value. */
+#if defined(HAVE_CXX_COMPLEX) && (MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE != 0x0c000000)
 #  undef MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX
 #  define MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
