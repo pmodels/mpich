@@ -105,6 +105,9 @@ HYD_Status HYD_PMCI_launch_procs(void)
     process_id = 0;
     for (partition = handle.partition_list; partition; partition = partition->next) {
 
+        if (partition->exec_list == NULL)
+            break;
+
         arg = HYDU_strlist_lastidx(partition->proxy_args);
         i = 0;
         path_str[i++] = MPIU_Strdup(handle.base_path);
