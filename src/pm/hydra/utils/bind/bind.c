@@ -183,8 +183,13 @@ int HYDU_next_core(int old_core, HYD_Binding binding)
             else
                 return bind_info.bind_map[0][0];
         }
-        else
+        else if (binding == HYD_BIND_NONE) {
             return -1;
+        }
+        else if (binding == HYD_BIND_USER) {
+            HYDU_Error_printf("User-specified binding is not supported yet\n");
+            return -1;
+        }
     }
     else {
         HYDU_Error_printf("Process-core binding is not supported on this platform\n");

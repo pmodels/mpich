@@ -94,6 +94,7 @@ typedef enum {
 
 typedef enum {
     HYD_BIND_UNSET,
+    HYD_BIND_NONE,
     HYD_BIND_RR,
     HYD_BIND_BUDDY,
     HYD_BIND_PACK,

@@ -204,13 +204,16 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             }
             HYDU_ERR_CHKANDJUMP(status, handle.binding != HYD_BIND_UNSET,
                                 HYD_INTERNAL_ERROR, "duplicate binding\n");
-            if (!strcmp(str2, "rr"))
+            if (!strcmp(str2, "none"))
+                handle.binding = HYD_BIND_NONE;
+            else if (!strcmp(str2, "rr"))
                 handle.binding = HYD_BIND_RR;
             else if (!strcmp(str2, "buddy"))
                 handle.binding = HYD_BIND_BUDDY;
             else if (!strcmp(str2, "pack"))
                 handle.binding = HYD_BIND_PACK;
-            /* We don't support user-specified mappings yet */
+            else if (!strcmp(str2, "user"))
+                handle.binding = HYD_BIND_USER;
 
             continue;
         }
@@ -278,6 +281,9 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 
     status = HYDU_get_base_path(progname, handle.wdir, &handle.base_path);
     HYDU_ERR_POP(status, "unable to get base path\n");
+
+    if (handle.binding == HYD_BIND_UNSET)
+        handle.binding = HYD_BIND_NONE;
 
     if (handle.prop == HYD_ENV_PROP_UNSET)
         handle.prop = HYD_ENV_PROP_ALL;
