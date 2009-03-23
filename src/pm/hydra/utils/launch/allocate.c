@@ -247,10 +247,11 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
 
         total_count = 0;
         while (!feof(fp)) {
+            line[0] = 0;
             if ((fscanf(fp, "%s", line) < 0) && errno)
                 HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                                      "unable to read input line (errno: %d)\n", errno);
-            if (feof(fp))
+            if (line[0] == 0)
                 break;
 
             hostname = strtok(line, ":");
