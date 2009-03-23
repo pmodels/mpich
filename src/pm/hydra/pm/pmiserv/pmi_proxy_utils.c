@@ -46,6 +46,11 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
         if (!strcmp(*argv, "--binding")) {
             argv++;
             HYD_PMCD_pmi_proxy_params.binding = atoi(*argv);
+            argv++;
+            if (!strcmp(*argv, "HYDRA_NO_USER_MAP"))
+                HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
+            else
+                HYD_PMCD_pmi_proxy_params.user_bind_map = MPIU_Strdup(*argv);
             continue;
         }
 

@@ -16,6 +16,7 @@ void HYD_LCHU_init_params(void)
     handle.proxy_port = -1;
     handle.bootstrap = NULL;
     handle.binding = HYD_BIND_UNSET;
+    handle.user_bind_map = NULL;
 
     handle.debug = -1;
     handle.enablex = -1;

@@ -9,7 +9,7 @@
 HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path)
 {
     char *loc, *post;
-    char *path_str[HYDU_NUM_JOIN_STR];
+    char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

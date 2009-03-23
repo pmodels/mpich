@@ -14,7 +14,7 @@ HYD_Handle handle;
 HYD_Status HYD_BSCD_fork_launch_procs(void)
 {
     struct HYD_Partition *partition;
-    char *client_arg[HYD_EXEC_ARGS];
+    char *client_arg[HYD_NUM_TMP_STRINGS];
     int i, arg, process_id;
     HYD_Status status = HYD_SUCCESS;
 

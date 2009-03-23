@@ -41,7 +41,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
     int i, arg, process_id;
     char hostname[MAX_HOSTNAME_LEN];
     HYD_Env_t *env;
-    char *path_str[HYDU_NUM_JOIN_STR];
+    char *path_str[HYD_NUM_TMP_STRINGS];
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;
     struct HYD_Partition_segment *segment;
@@ -128,6 +128,10 @@ HYD_Status HYD_PMCI_launch_procs(void)
 
         partition->proxy_args[arg++] = MPIU_Strdup("--binding");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.binding);
+        if (handle.user_bind_map)
+            partition->proxy_args[arg++] = MPIU_Strdup(handle.user_bind_map);
+        else
+            partition->proxy_args[arg++] = MPIU_Strdup("HYDRA_NO_USER_MAP");
 
         /* Pass the global environment separately, instead of for each
          * executable, as an optimization */

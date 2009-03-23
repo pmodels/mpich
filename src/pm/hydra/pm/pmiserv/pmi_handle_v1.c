@@ -82,7 +82,7 @@ static HYD_PMCD_pmi_process_t *find_process(int fd)
 HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
 {
     int id, size, debug, i;
-    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;
     HYD_PMCD_pmi_pg_t *run;
@@ -141,7 +141,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
 HYD_Status HYD_PMCD_pmi_handle_v1_get_maxes(int fd, char *args[])
 {
     int i;
-    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -177,7 +177,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get_maxes(int fd, char *args[])
 
 HYD_Status HYD_PMCD_pmi_handle_v1_get_appnum(int fd, char *args[])
 {
-    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     int i;
     HYD_PMCD_pmi_process_t *process;
     HYD_Status status = HYD_SUCCESS;
@@ -216,7 +216,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get_appnum(int fd, char *args[])
 
 HYD_Status HYD_PMCD_pmi_handle_v1_get_my_kvsname(int fd, char *args[])
 {
-    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     int i;
     HYD_PMCD_pmi_process_t *process;
     HYD_Status status = HYD_SUCCESS;
@@ -296,7 +296,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_put(int fd, char *args[])
     HYD_PMCD_pmi_process_t *process;
     HYD_PMCD_pmi_kvs_pair_t *key_pair, *run;
     char *kvsname, *key, *val, *key_pair_str = NULL;
-    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -370,7 +370,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get(int fd, char *args[])
     HYD_PMCD_pmi_process_t *process;
     HYD_PMCD_pmi_kvs_pair_t *run;
     char *kvsname, *key;
-    char *tmp[HYDU_NUM_JOIN_STR], *cmd, *key_val_str = NULL;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *key_val_str = NULL;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -464,7 +464,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_finalize(int fd, char *args[])
 HYD_Status HYD_PMCD_pmi_handle_v1_get_usize(int fd, char *args[])
 {
     int usize, i;
-    char *tmp[HYDU_NUM_JOIN_STR], *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

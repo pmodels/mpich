@@ -158,7 +158,7 @@ HYD_Status HYD_PMCD_pmi_finalize(void)
 HYD_Status HYD_PMCD_pmi_init(int fd, char *args[])
 {
     int pmi_version, pmi_subversion;
-    char *tmp[HYDU_NUM_JOIN_STR];
+    char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

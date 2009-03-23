@@ -17,7 +17,7 @@ HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path);
 #if defined PROC_BINDING
 #include "plpa.h"
 #include "plpa_internal.h"
-HYD_Status HYDU_bind_init(void);
+HYD_Status HYDU_bind_init(char *user_bind_map);
 void HYDU_bind_process(int core);
 int HYDU_next_core(int core, HYD_Binding binding);
 #else
@@ -105,8 +105,6 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, char *buf, int *buf_co
 
 
 /* Memory utilities */
-#define HYDU_NUM_JOIN_STR 100
-
 #define HYDU_MALLOC(p, type, size, status)                              \
     {                                                                   \
         (p) = (type) MPIU_Malloc((size));                               \

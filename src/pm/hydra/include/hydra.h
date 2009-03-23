@@ -16,6 +16,7 @@ struct HYD_Handle_ {
     int proxy_port;
     char *bootstrap;
     HYD_Binding binding;
+    char *user_bind_map;
 
     int debug;
     int enablex;

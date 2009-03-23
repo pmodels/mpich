@@ -64,7 +64,7 @@ extern char **environ;
 typedef unsigned short HYD_Event_t;
 
 #define HYD_TMPBUF_SIZE (64 * 1024)
-#define HYD_EXEC_ARGS 200
+#define HYD_NUM_TMP_STRINGS 200
 
 
 /* Status information */
@@ -111,7 +111,7 @@ struct HYD_Partition_segment {
 
 /* Executables on a partition */
 struct HYD_Partition_exec {
-    char *exec[HYD_EXEC_ARGS];
+    char *exec[HYD_NUM_TMP_STRINGS];
     int proc_count;
     HYD_Env_prop_t prop;
     HYD_Env_t *prop_env;
@@ -136,14 +136,14 @@ struct HYD_Partition {
     int out;
     int err;
     int exit_status;
-    char *proxy_args[HYD_EXEC_ARGS];    /* Full argument list */
+    char *proxy_args[HYD_NUM_TMP_STRINGS];    /* Full argument list */
 
     struct HYD_Partition *next;
 };
 
 struct HYD_Exec_info {
     int exec_proc_count;
-    char *exec[HYD_EXEC_ARGS];
+    char *exec[HYD_NUM_TMP_STRINGS];
 
     /* Local environment */
     HYD_Env_t *user_env;

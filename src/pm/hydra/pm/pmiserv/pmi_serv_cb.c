@@ -30,7 +30,7 @@ struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle_list;
 HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events)
 {
     int accept_fd, linelen, i;
-    char *buf = NULL, *cmd, *args[HYD_EXEC_ARGS];
+    char *buf = NULL, *cmd, *args[HYD_NUM_TMP_STRINGS];
     char *str1 = NULL, *str2 = NULL;
     struct HYD_PMCD_pmi_handle *h;
     HYD_Status status = HYD_SUCCESS;
@@ -77,7 +77,7 @@ HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events)
         buf[linelen - 1] = 0;
 
         cmd = strtok(buf, " ");
-        for (i = 0; i < HYD_EXEC_ARGS; i++) {
+        for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
             args[i] = strtok(NULL, " ");
             if (args[i] == NULL)
                 break;

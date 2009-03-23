@@ -34,7 +34,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 {
     int i;
     char **argv = t_argv;
-    char *env_name, *env_value, *str1, *str2, *progname = *argv;
+    char *env_name, *env_value, *str[4] = { NULL }, *progname = *argv;
     HYD_Env_t *env;
     struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
@@ -183,49 +183,58 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 
         /* The below options allow for "--foo=x" form of argument,
          * instead of "--foo x" for convenience. */
-        status = HYDU_strsplit(*argv, &str1, &str2, '=');
+        status = HYDU_strsplit(*argv, &str[0], &str[1], '=');
         HYDU_ERR_POP(status, "string break returned error\n");
 
-        if (!strcmp(str1, "--bootstrap")) {
-            if (!str2) {
+        if (!strcmp(str[0], "--bootstrap")) {
+            if (!str[1]) {
                 INCREMENT_ARGV(status);
-                str2 = *argv;
+                str[1] = *argv;
             }
             HYDU_ERR_CHKANDJUMP(status, handle.bootstrap, HYD_INTERNAL_ERROR,
                                 "duplicate bootstrap server\n");
-            handle.bootstrap = MPIU_Strdup(str2);
+            handle.bootstrap = MPIU_Strdup(str[1]);
             continue;
         }
 
-        if (!strcmp(str1, "--binding")) {
-            if (!str2) {
+        if (!strcmp(str[0], "--binding")) {
+            if (!str[1]) {
                 INCREMENT_ARGV(status);
-                str2 = *argv;
+                str[1] = *argv;
             }
             HYDU_ERR_CHKANDJUMP(status, handle.binding != HYD_BIND_UNSET,
                                 HYD_INTERNAL_ERROR, "duplicate binding\n");
-            if (!strcmp(str2, "none"))
+            if (!strcmp(str[1], "none"))
                 handle.binding = HYD_BIND_NONE;
-            else if (!strcmp(str2, "rr"))
+            else if (!strcmp(str[1], "rr"))
                 handle.binding = HYD_BIND_RR;
-            else if (!strcmp(str2, "buddy"))
+            else if (!strcmp(str[1], "buddy"))
                 handle.binding = HYD_BIND_BUDDY;
-            else if (!strcmp(str2, "pack"))
+            else if (!strcmp(str[1], "pack"))
                 handle.binding = HYD_BIND_PACK;
-            else if (!strcmp(str2, "user"))
-                handle.binding = HYD_BIND_USER;
+            else {
+                /* Check if the user wants to specify her own mapping */
+                status = HYDU_strsplit(str[1], &str[2], &str[3], ':');
+                HYDU_ERR_POP(status, "string break returned error\n");
+
+                if (!strcmp(str[2], "user")) {
+                    handle.binding = HYD_BIND_USER;
+                    if (str[3])
+                        handle.user_bind_map = MPIU_Strdup(str[3]);
+                }
+            }
 
             continue;
         }
 
-        if (!strcmp(str1, "--proxy-port")) {
-            if (!str2) {
+        if (!strcmp(str[0], "--proxy-port")) {
+            if (!str[1]) {
                 INCREMENT_ARGV(status);
-                str2 = *argv;
+                str[1] = *argv;
             }
             HYDU_ERR_CHKANDJUMP(status, handle.proxy_port != -1, HYD_INTERNAL_ERROR,
                                 "duplicate proxy port\n");
-            handle.proxy_port = atoi(str2);
+            handle.proxy_port = atoi(str[1]);
             continue;
         }
 
@@ -305,10 +314,9 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         handle.proxy_port = HYD_DEFAULT_PROXY_PORT;
 
   fn_exit:
-    if (str1)
-        HYDU_FREE(str1);
-    if (str2)
-        HYDU_FREE(str2);
+    for (i = 0; i < 4; i++)
+        if (str[i])
+            HYDU_FREE(str[i]);
     HYDU_FUNC_EXIT();
     return status;
 

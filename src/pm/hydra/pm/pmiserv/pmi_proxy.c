@@ -15,10 +15,9 @@ int HYD_PMCD_pmi_proxy_listenfd;
 int main(int argc, char **argv)
 {
     int i, j, arg, count, pid, ret_status;
-    int stdin_fd, timeout, process_id, core, pmi_id, rem;
-    char *str, *timeout_str;
-    char *client_args[HYD_EXEC_ARGS];
-    char *tmp[HYDU_NUM_JOIN_STR];
+    int stdin_fd, process_id, core, pmi_id, rem;
+    char *str;
+    char *client_args[HYD_NUM_TMP_STRINGS];
     HYD_Env_t *env;
     struct HYD_Partition_exec *exec;
     struct HYD_Partition_segment *segment;
@@ -69,7 +68,7 @@ int main(int argc, char **argv)
     status = HYDU_putenv_list(HYD_PMCD_pmi_proxy_params.global_env);
     HYDU_ERR_POP(status, "putenv returned error\n");
 
-    status = HYDU_bind_init();
+    status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.user_bind_map);
     HYDU_ERR_POP(status, "unable to initialize process binding\n");
 
     /* Spawn the processes */
@@ -113,8 +112,7 @@ int main(int argc, char **argv)
                                              &HYD_PMCD_pmi_proxy_params.in,
                                              &HYD_PMCD_pmi_proxy_params.out[process_id],
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
-                                             &HYD_PMCD_pmi_proxy_params.pid[process_id],
-                                             core);
+                                             &HYD_PMCD_pmi_proxy_params.pid[process_id], core);
 
                 status = HYDU_sock_set_nonblock(HYD_PMCD_pmi_proxy_params.in);
                 HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
@@ -125,7 +123,8 @@ int main(int argc, char **argv)
 
                 HYD_PMCD_pmi_proxy_params.stdin_buf_offset = 0;
                 HYD_PMCD_pmi_proxy_params.stdin_buf_count = 0;
-                status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, HYD_PMCD_pmi_proxy_stdin_cb);
+                status =
+                    HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, HYD_PMCD_pmi_proxy_stdin_cb);
                 HYDU_ERR_POP(status, "unable to register fd\n");
             }
             else {
@@ -133,8 +132,7 @@ int main(int argc, char **argv)
                                              NULL,
                                              &HYD_PMCD_pmi_proxy_params.out[process_id],
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
-                                             &HYD_PMCD_pmi_proxy_params.pid[process_id],
-                                             core);
+                                             &HYD_PMCD_pmi_proxy_params.pid[process_id], core);
             }
             HYDU_ERR_POP(status, "spawn process returned error\n");
 

@@ -9,7 +9,7 @@
 static HYD_Status env_to_str(HYD_Env_t * env, char **str)
 {
     int i;
-    char *tmp[HYDU_NUM_JOIN_STR];
+    char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -310,7 +310,7 @@ HYD_Status HYDU_append_env_to_list(HYD_Env_t env, HYD_Env_t ** env_list)
 
 HYD_Status HYDU_putenv(HYD_Env_t * env)
 {
-    char *tmp[HYDU_NUM_JOIN_STR], *str;
+    char *tmp[HYD_NUM_TMP_STRINGS], *str;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -341,8 +341,6 @@ HYD_Status HYDU_putenv(HYD_Env_t * env)
 HYD_Status HYDU_putenv_list(HYD_Env_t * env_list)
 {
     HYD_Env_t *env;
-    int i;
-    char *tmp[HYDU_NUM_JOIN_STR], *str;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

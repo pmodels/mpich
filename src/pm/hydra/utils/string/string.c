@@ -96,7 +96,7 @@ HYD_Status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
     if ((*str1)[i] == 0)        /* End of the string */
         *str2 = NULL;
     else {
-        *str2 = &((*str1)[i + 1]);
+        *str2 = MPIU_Strdup(&((*str1)[i + 1]));
         (*str1)[i] = 0;
     }
 
