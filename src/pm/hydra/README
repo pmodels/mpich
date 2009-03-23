@@ -69,6 +69,13 @@ when the "-f" option is not provided to mpiexec.
     setenv HYDRA_HOST_FILE <path_to_host_file>/hosts
 
 
+MPIEXEC_DEBUG: Setting this to "1" enables debug mode; set it to "0"
+to disable.
+
+HYDRA_ENV: Setting this to "all" will pass all the environment to the
+application processes.
+
+
 Bootstrap servers
 -----------------
 
@@ -178,6 +185,9 @@ unspecified mappings are treated as (-1), referring to no binding.
 Command-line based mappings are given a higher priority than the
 host-file based mappings. So, if a mapping is given at both places,
 the host-file mappings are ignored.
+
+Binding options can also be controlled with the environment variable
+HYDRA_BINDING.
 
 
 X Forwarding

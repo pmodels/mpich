@@ -33,7 +33,7 @@ static void show_version(void)
 HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 {
     int i;
-    char **argv = t_argv;
+    char **argv = t_argv, *tmp;
     char *env_name, *env_value, *str[4] = { NULL }, *progname = *argv;
     HYD_Env_t *env;
     struct HYD_Exec_info *exec_info;
@@ -265,6 +265,9 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         continue;
     }
 
+    tmp = getenv("MPIEXEC_DEBUG");
+    if (handle.debug == -1 && tmp)
+        handle.debug = atoi(tmp) ? 1 : 0;
     if (handle.debug == -1)
         handle.debug = 0;
 
@@ -278,24 +281,37 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
                                 "allocated space is too small for absolute path\n");
     }
 
-    if (handle.bootstrap == NULL && getenv("HYDRA_BOOTSTRAP"))
-        handle.bootstrap = MPIU_Strdup(getenv("HYDRA_BOOTSTRAP"));
+    tmp = getenv("HYDRA_BOOTSTRAP");
+    if (handle.bootstrap == NULL && tmp)
+        handle.bootstrap = MPIU_Strdup(tmp);
     if (handle.bootstrap == NULL)
         handle.bootstrap = MPIU_Strdup(HYDRA_DEFAULT_BSS);
 
-    if (handle.host_file == NULL && getenv("HYDRA_HOST_FILE"))
-        handle.host_file = MPIU_Strdup(getenv("HYDRA_HOST_FILE"));
+    tmp = getenv("HYDRA_HOST_FILE");
+    if (handle.host_file == NULL && tmp)
+        handle.host_file = MPIU_Strdup(tmp);
     if (handle.host_file == NULL)
         handle.host_file = MPIU_Strdup("HYDRA_USE_LOCALHOST");
 
     status = HYDU_get_base_path(progname, handle.wdir, &handle.base_path);
     HYDU_ERR_POP(status, "unable to get base path\n");
 
+    tmp = getenv("HYDRA_BINDING");
+    if (handle.binding == HYD_BIND_UNSET && tmp)
+        handle.binding = !strcmp(tmp, "none") ? HYD_BIND_NONE :
+            !strcmp(tmp, "rr") ? HYD_BIND_RR :
+            !strcmp(tmp, "buddy") ? HYD_BIND_BUDDY :
+            !strcmp(tmp, "pack") ? HYD_BIND_PACK :
+            HYD_BIND_USER;
     if (handle.binding == HYD_BIND_UNSET)
         handle.binding = HYD_BIND_NONE;
 
+    /* Global environment setting */
+    tmp = getenv("HYDRA_ENV");
+    if (handle.prop == HYD_ENV_PROP_UNSET && tmp)
+        handle.prop = !strcmp(tmp, "all") ? HYD_ENV_PROP_ALL : HYD_ENV_PROP_NONE;
     if (handle.prop == HYD_ENV_PROP_UNSET)
-        handle.prop = HYD_ENV_PROP_ALL;
+        handle.prop = HYD_ENV_PROP_NONE;
 
     /* Check if any individual app has an environment preference */
     for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
