@@ -14,6 +14,7 @@ HYD_Status HYDU_alloc_partition(struct HYD_Partition **partition)
 
     HYDU_MALLOC(*partition, struct HYD_Partition *, sizeof(struct HYD_Partition), status);
     (*partition)->name = NULL;
+    (*partition)->user_bind_map = NULL;
     (*partition)->segment_list = NULL;
     (*partition)->total_proc_count = 0;
 
@@ -96,6 +97,8 @@ void HYDU_free_partition_list(struct HYD_Partition *partition_list)
         tpartition = partition->next;
 
         HYDU_FREE(partition->name);
+        if (partition->user_bind_map)
+            HYDU_FREE(partition->user_bind_map);
 
         segment = partition->segment_list;
         while (segment) {
@@ -198,7 +201,124 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
 }
 
 
-HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec ** exec)
+static int count_elements(char *str, char *delim)
+{
+    int count;
+
+    HYDU_FUNC_ENTER();
+
+    strtok(str, delim);
+    count = 1;
+    while (strtok(NULL, delim))
+        count++;
+
+    HYDU_FUNC_EXIT();
+
+    return count;
+}
+
+
+static char *pad_string(char *str, char *pad, int count)
+{
+    char *tmp[HYD_NUM_TMP_STRINGS], *out;
+    int i, j;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    i = 0;
+    tmp[i++] = MPIU_Strdup(str);
+    for (j = 0; j < count; j++)
+        tmp[i++] = MPIU_Strdup(pad);
+    tmp[i] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, &out);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+
+    HYDU_free_strlist(tmp);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return out;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
+                                        struct HYD_Partition **partition_list)
+{
+    struct HYD_Partition *partition;
+    char *tmp[HYD_NUM_TMP_STRINGS], *x;
+    int i, count;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (*partition_list == NULL) {
+        HYDU_alloc_partition(partition_list);
+        (*partition_list)->name = MPIU_Strdup(name);
+
+        x = MPIU_Strdup(map);
+        count = num_procs - count_elements(x, ",");
+        HYDU_FREE(x);
+
+        (*partition_list)->user_bind_map = pad_string(map, ",-1", count);
+    }
+    else {
+        partition = *partition_list;
+        while (partition) {
+            if (strcmp(partition->name, name) == 0) {
+                /* Found a partition with the same name; append */
+                if (partition->user_bind_map == NULL) {
+                    x = MPIU_Strdup(map);
+                    count = num_procs - count_elements(x, ",");
+                    HYDU_FREE(x);
+
+                    partition->user_bind_map = pad_string(map, ",-1", count);
+                }
+                else {
+                    x = MPIU_Strdup(map);
+                    count = num_procs - count_elements(x, ",");
+                    HYDU_FREE(x);
+
+                    i = 0;
+                    tmp[i++] = MPIU_Strdup(partition->user_bind_map);
+                    tmp[i++] = MPIU_Strdup(",");
+                    tmp[i++] = pad_string(map, ",-1", count);
+                    tmp[i++] = NULL;
+
+                    HYDU_FREE(partition->user_bind_map);
+                    status = HYDU_str_alloc_and_join(tmp, &partition->user_bind_map);
+                    HYDU_ERR_POP(status, "unable to join strings\n");
+
+                    HYDU_free_strlist(tmp);
+                }
+                break;
+            }
+            else if (partition->next == NULL) {
+                HYDU_alloc_partition(&partition->next);
+                partition->next->name = MPIU_Strdup(name);
+                partition->next->user_bind_map = MPIU_Strdup(map);
+                break;
+            }
+            else {
+                partition = partition->next;
+            }
+        }
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -223,8 +343,9 @@ HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec ** exec)
 HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partition_list)
 {
     FILE *fp = NULL;
-    char line[2 * MAX_HOSTNAME_LEN], *hostname, *procs;
-    int num_procs, total_count;
+    char line[HYD_TMP_STRLEN], *hostname, *procs, **arg_list;
+    char *str[2] = { NULL };
+    int num_procs, total_count, arg, i;
     struct HYD_Partition_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
@@ -246,15 +367,10 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
                                  "unable to open host file: %s\n", host_file);
 
         total_count = 0;
-        while (!feof(fp)) {
-            line[0] = 0;
-            if ((fscanf(fp, "%s", line) < 0) && errno)
-                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                                     "unable to read input line (errno: %d)\n", errno);
-            if (line[0] == 0)
-                break;
+        while (fgets(line, HYD_TMP_STRLEN, fp)) {
+            arg_list = HYDU_str_to_strlist(line);
 
-            hostname = strtok(line, ":");
+            hostname = strtok(arg_list[0], ":");
             procs = strtok(NULL, ":");
             num_procs = procs ? atoi(procs) : 1;
 
@@ -264,15 +380,34 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
             HYDU_alloc_partition_segment(&segment);
             segment->start_pid = total_count;
             segment->proc_count = num_procs;
-            HYDU_merge_partition_segment(hostname, segment, partition_list);
+            status = HYDU_merge_partition_segment(hostname, segment, partition_list);
+            HYDU_ERR_POP(status, "merge partition segment failed\n");
 
             total_count += num_procs;
+
+            /* Check for the remaining parameters */
+            arg = 1;
+            while (arg_list[arg]) {
+                status = HYDU_strsplit(arg_list[arg], &str[0], &str[1], '=');
+                HYDU_ERR_POP(status, "unable to split string\n");
+
+                if (!strcmp(str[0], "map")) {
+                    status = HYDU_merge_partition_mapping(hostname, str[1], num_procs,
+                                                          partition_list);
+                    HYDU_ERR_POP(status, "merge partition mapping failed\n");
+                }
+
+                arg++;
+            }
         }
 
         fclose(fp);
     }
 
   fn_exit:
+    for (i = 0; i < 2; i++)
+        if (str[i])
+            HYDU_FREE(str[i]);
     HYDU_FUNC_EXIT();
     return status;
 

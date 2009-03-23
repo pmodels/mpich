@@ -16,8 +16,7 @@ static struct bind_info {
 
     int user_bind_valid;
     int *user_bind_map;
-} bind_info = {
-0, -1, -1, -1, NULL, 0, NULL};
+} bind_info;
 
 HYD_Status HYDU_bind_init(char *user_bind_map)
 {
@@ -139,71 +138,39 @@ void HYDU_bind_process(int core)
 }
 
 
-int HYDU_next_core(int old_core, HYD_Binding binding)
+int HYDU_bind_get_core_id(int id, HYD_Binding binding)
 {
-    int socket = 0, core = 0;
+    int socket = 0, core = 0, curid, realid;
     int i, j;
 
     HYDU_FUNC_ENTER();
 
     if (bind_info.supported) {
+        realid = (id % (bind_info.num_cores * bind_info.num_sockets));
+
         if (binding == HYD_BIND_RR) {
-            /* Round-robin is easy; just give the next core */
-            return ((old_core + 1) % (bind_info.num_sockets * bind_info.num_cores));
+            return (id % (bind_info.num_sockets * bind_info.num_cores));
         }
         else if (binding == HYD_BIND_BUDDY) {
-            if (old_core < -1)
-                return 0;
-
-            /* First find the old core */
+            /* If we reached the maximum, loop around */
+            curid = 0;
             for (core = 0; core < bind_info.num_cores; core++) {
                 for (socket = 0; socket < bind_info.num_sockets; socket++) {
-                    if (bind_info.bind_map[socket][core] == old_core)
-                        break;
+                    if (curid == realid)
+                        return bind_info.bind_map[socket][core];
+                    curid++;
                 }
-                if (bind_info.bind_map[socket][core] == old_core)
-                    break;
             }
-
-            /* If there is another socket available after this, give
-             * the same core ID on that socket */
-            if (socket < bind_info.num_sockets - 1)
-                return bind_info.bind_map[socket + 1][core];
-            /* If we are the last socket, and there is a core left
-             * after ours, give that core on the first socket */
-            else if (core < bind_info.num_cores - 1)
-                return bind_info.bind_map[0][core + 1];
-            /* If we are the last socket and last core, loop back to
-             * the start */
-            else
-                return bind_info.bind_map[0][0];
         }
         else if (binding == HYD_BIND_PACK) {
-            if (old_core < -1)
-                return 0;
-
-            /* First find the old core */
-            for (core = 0; core < bind_info.num_cores; core++) {
-                for (socket = 0; socket < bind_info.num_sockets; socket++) {
-                    if (bind_info.bind_map[socket][core] == old_core)
-                        break;
+            curid = 0;
+            for (socket = 0; socket < bind_info.num_sockets; socket++) {
+                for (core = 0; core < bind_info.num_cores; core++) {
+                    if (curid == realid)
+                        return bind_info.bind_map[socket][core];
+                    curid++;
                 }
-                if (bind_info.bind_map[socket][core] == old_core)
-                    break;
             }
-
-            /* If there is another core available after this, give
-             * that core ID on the same socket */
-            if (core < bind_info.num_cores - 1)
-                return bind_info.bind_map[socket][core + 1];
-            /* If we are the last core, and there is a socket left
-             * after ours, give the first core on that socket */
-            else if (socket < bind_info.num_sockets - 1)
-                return bind_info.bind_map[socket + 1][0];
-            /* If we are the last socket and last core, loop back to
-             * the start */
-            else
-                return bind_info.bind_map[0][0];
         }
         else if (binding == HYD_BIND_NONE) {
             return -1;
@@ -211,18 +178,8 @@ int HYDU_next_core(int old_core, HYD_Binding binding)
         else if (binding == HYD_BIND_USER) {
             if (!bind_info.user_bind_valid)
                 return -1;
-
-            if (old_core < 0)
-                return bind_info.user_bind_map[0];
-
-            for (i = 0; i < ((bind_info.num_cores * bind_info.num_sockets) - 1); i++) {
-                if (bind_info.user_bind_map[i] == old_core) {
-                    j = ((i + 1) % (bind_info.num_cores * bind_info.num_sockets));
-                    return bind_info.user_bind_map[j];
-                }
-                else if (bind_info.user_bind_map[i] == -1)
-                    return -1;
-            }
+            else
+                return bind_info.user_bind_map[realid];
         }
     }
     else {

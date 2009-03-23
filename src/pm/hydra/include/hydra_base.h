@@ -64,6 +64,7 @@ extern char **environ;
 typedef unsigned short HYD_Event_t;
 
 #define HYD_TMPBUF_SIZE (64 * 1024)
+#define HYD_TMP_STRLEN  1024
 #define HYD_NUM_TMP_STRINGS 200
 
 
@@ -121,6 +122,7 @@ struct HYD_Partition_exec {
 /* Partition information */
 struct HYD_Partition {
     char *name;
+    char *user_bind_map;
     int total_proc_count;
 
     /* Segment list will contain one-pass of the hosts file */
@@ -136,7 +138,7 @@ struct HYD_Partition {
     int out;
     int err;
     int exit_status;
-    char *proxy_args[HYD_NUM_TMP_STRINGS];    /* Full argument list */
+    char *proxy_args[HYD_NUM_TMP_STRINGS];      /* Full argument list */
 
     struct HYD_Partition *next;
 };

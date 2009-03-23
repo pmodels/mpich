@@ -130,6 +130,8 @@ HYD_Status HYD_PMCI_launch_procs(void)
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.binding);
         if (handle.user_bind_map)
             partition->proxy_args[arg++] = MPIU_Strdup(handle.user_bind_map);
+        else if (partition->user_bind_map)
+            partition->proxy_args[arg++] = MPIU_Strdup(partition->user_bind_map);
         else
             partition->proxy_args[arg++] = MPIU_Strdup("HYDRA_NO_USER_MAP");
 

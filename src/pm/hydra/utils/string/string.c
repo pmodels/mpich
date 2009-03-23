@@ -59,8 +59,9 @@ HYD_Status HYDU_str_alloc_and_join(char **strlist, char **strjoin)
 
     HYDU_FUNC_ENTER();
 
-    for (i = 0; strlist[i] != NULL; i++)
+    for (i = 0; strlist[i] != NULL; i++) {
         len += strlen(strlist[i]);
+    }
 
     HYDU_MALLOC(*strjoin, char *, len + 1, status);
     count = 0;
@@ -167,4 +168,44 @@ int HYDU_strlist_lastidx(char **strlist)
     for (i = 0; strlist[i]; i++);
 
     return i;
+}
+
+
+char **HYDU_str_to_strlist(char *str)
+{
+    int argc = 0;
+    char **strlist;
+    char *p, *r;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(strlist, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
+
+    p = str;
+    while (*p) {
+        while (isspace(*p))
+            p++;
+        if (argc >= HYD_NUM_TMP_STRINGS)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "too many arguments in line\n");
+
+        /* Make a copy and NULL terminate it */
+        strlist[argc] = MPIU_Strdup(p);
+        r = strlist[argc];
+        while (*r && !isspace(*r))
+            r++;
+        *r = 0;
+
+        while (*p && !isspace(*p))
+            p++;
+        argc++;
+    }
+    strlist[argc] = NULL;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return strlist;
+
+  fn_fail:
+    goto fn_exit;
 }

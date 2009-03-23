@@ -144,13 +144,16 @@ The host-file based mode for user-defined binding can be used by the
 
  $ cat hosts
 
-   donner:4    map=1,2,3,4
-   foo:4       map=4,3,2,1
+   donner:4    map=0,-1,-1,3
+   foo:4       map=3,2
    shakey:2
 
-Using this method, each host can be given a different mapping. Note
-that the last line does not have any mapping: in this case, the
-processes on that machine are not bound to any core.
+Using this method, each host can be given a different mapping. Any
+unspecified mappings are treated as (-1), referring to no binding.
+
+Command-line based mappings are given a higher priority than the
+host-file based mappings. So, if a mapping is given at both places,
+the host-file mappings are ignored.
 
 
 X Forwarding

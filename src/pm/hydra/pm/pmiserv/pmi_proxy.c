@@ -73,7 +73,6 @@ int main(int argc, char **argv)
 
     /* Spawn the processes */
     process_id = 0;
-    core = -1;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next) {
         for (i = 0; i < exec->proc_count; i++) {
 
@@ -106,7 +105,7 @@ int main(int argc, char **argv)
                 client_args[arg++] = MPIU_Strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
-            core = HYDU_next_core(core, HYD_PMCD_pmi_proxy_params.binding);
+            core = HYDU_bind_get_core_id(process_id, HYD_PMCD_pmi_proxy_params.binding);
             if (pmi_id == 0) {
                 status = HYDU_create_process(client_args, exec->prop_env,
                                              &HYD_PMCD_pmi_proxy_params.in,

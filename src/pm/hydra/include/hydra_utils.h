@@ -19,11 +19,11 @@ HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path);
 #include "plpa_internal.h"
 HYD_Status HYDU_bind_init(char *user_bind_map);
 void HYDU_bind_process(int core);
-int HYDU_next_core(int core, HYD_Binding binding);
+int HYDU_bind_get_core_id(int id, HYD_Binding binding);
 #else
 #define HYDU_bind_init(...) HYD_SUCCESS
 #define HYDU_bind_process(...) HYD_SUCCESS
-#define HYDU_next_core(...) (-1)
+#define HYDU_bind_get_core_id(...) (-1)
 #endif /* PROC_BINDING */
 
 
@@ -49,6 +49,8 @@ HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info);
 void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list);
 HYD_Status HYDU_alloc_partition_segment(struct HYD_Partition_segment **segment);
 HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment *segment,
+                                        struct HYD_Partition **partition_list);
+HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
                                         struct HYD_Partition **partition_list);
 HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec);
 HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partition_list);
@@ -105,6 +107,8 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, char *buf, int *buf_co
 
 
 /* Memory utilities */
+#include <ctype.h>
+
 #define HYDU_MALLOC(p, type, size, status)                              \
     {                                                                   \
         (p) = (type) MPIU_Malloc((size));                               \
@@ -135,6 +139,7 @@ HYD_Status HYDU_strsplit(char *str, char **str1, char **str2, char sep);
 char *HYDU_int_to_str(int x);
 char *HYDU_strerror(int error);
 int HYDU_strlist_lastidx(char **strlist);
+char **HYDU_str_to_strlist(char *str);
 
 
 /* Timer utilities */
