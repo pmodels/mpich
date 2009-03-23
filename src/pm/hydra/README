@@ -91,10 +91,34 @@ Process-core binding
 --------------------
 
 To configure hydra with process-core binding support, use the
-configure option --enable-hydra-procbind. We support multiple modes of
-process-core binding: round-robin ("rr"), buddy-allocation ("buddy"),
-closest packing ("pack") and user-defined ("user"). These can be
-selected as follows:
+configure option --enable-hydra-procbind.
+
+We support three models of allocation strategies:
+
+1. Basic allocation strategies: this just allocates processes using
+the OS specified processor IDs. Currently, only round-robin scheme is
+provided here.
+
+2. Topology-aware allocation strategies: these are a bit more
+intelligent in that they try to understand the system topology and
+assign processes in that order. Currently, "buddy" and "pack" schemes
+are provided. The "buddy" scheme loops between all the available
+sockets, allocating one process per socket; this tries to minimize the
+inter-process resource sharing (assuming the closer the processes are
+the more resources that they share). The "pack" scheme packs
+everything as closely as it can; this tries to maximize resource
+sharing hoping that the MPI library can take advantage of this packing
+for better performance.
+
+3. User-defined allocation strategies: two schemes are
+provided---command-line and host-file based. The command-line scheme
+lets the user specify a common-mapping for all physical nodes on the
+command line. The host-file scheme is the most general and lets the
+user specify the mapping for each node separately.
+
+The modes of process-core binding are: round-robin ("rr"),
+buddy-allocation ("buddy"), closest packing ("pack") and user-defined
+("user"). These can be selected as follows:
 
  $ mpiexec --binding rr -f hosts -n 8 ./app
 
