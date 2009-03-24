@@ -8,6 +8,7 @@
 #define MPIDU_ATOMIC_PRIMITIVES_H_INCLUDED
 
 #include <mpichconf.h>
+#include <mpid_locksconf.h>
 
 /* FIXME We need assert capability but we can't rely on MPIU_Assert down at this
    level.  To futher complicate matters this is definitely performance critical

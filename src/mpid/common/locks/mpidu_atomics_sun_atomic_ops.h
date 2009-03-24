@@ -9,98 +9,89 @@
 
 #include <atomic.h>
 
-static inline void MPIDU_Atomic_add(volatile int *ptr, int val)
+typedef struct { volatile uint_t v;  } MPIDU_Atomic_t;
+typedef struct { void * volatile v; } MPIDU_Atomic_ptr_t;
+
+static inline int MPIDU_Atomic_load(MPIDU_Atomic_t *ptr)
 {
-    atomic_add_int((volatile uint_t *)ptr, val);
+    return (int)ptr->v;
 }
 
-static inline void MPIDU_Atomic_incr(volatile int *ptr)
+static inline void MPIDU_Atomic_store(MPIDU_Atomic_t *ptr, int val)
 {
-    atomic_inc_uint((volatile uint_t *)ptr);
+    ptr->v = (uint)val;
 }
 
-static inline void MPIDU_Atomic_decr(volatile int *ptr)
+static inline void *MPIDU_Atomic_load_ptr(MPIDU_Atomic_ptr_t *ptr)
 {
-    atomic_dec_uint((volatile uint_t *)ptr);
+    return ptr->v;
 }
 
-
-static inline int MPIDU_Atomic_decr_and_test(volatile int *ptr)
+static inline void MPIDU_Atomic_store_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
 {
-    return atomic_dec_uint_nv((volatile uint_t *)ptr) == 0;    
-}
-
-
-static inline int MPIDU_Atomic_fetch_and_add(volatile int *ptr, int val)
-{
-    return (int)atomic_add_int_nv((volatile uint_t *)ptr, val) - val;
-}
-
-static inline int MPIDU_Atomic_fetch_and_decr(volatile int *ptr)
-{
-    return (int)atomic_dec_uint_nv((volatile uint_t *)ptr) + 1;
-}
-
-static inline int MPIDU_Atomic_fetch_and_incr(volatile int *ptr)
-{
-    return (int)atomic_inc_uint_nv((volatile uint_t *)ptr) - 1;
+    ptr->v = val;
 }
 
 
-static inline int *MPIDU_Atomic_cas_int_ptr(int * volatile *ptr, int *oldv, int *newv)
+static inline void MPIDU_Atomic_add(MPIDU_Atomic_t *ptr, int val)
+{
+    atomic_add_int(&ptr->v, val);
+}
+
+static inline void MPIDU_Atomic_incr(MPIDU_Atomic_t *ptr)
+{
+    atomic_inc_uint(&ptr->v);
+}
+
+static inline void MPIDU_Atomic_decr(MPIDU_Atomic_t *ptr)
+{
+    atomic_dec_uint(&ptr->v);
+}
+
+
+static inline int MPIDU_Atomic_decr_and_test(MPIDU_Atomic_t *ptr)
+{
+    return atomic_dec_uint_nv(&ptr->v) == 0;    
+}
+
+
+static inline int MPIDU_Atomic_fetch_and_add(MPIDU_Atomic_t *ptr, int val)
+{
+    return (int)atomic_add_int_nv(&ptr->v, val) - val;
+}
+
+static inline int MPIDU_Atomic_fetch_and_decr(MPIDU_Atomic_t *ptr)
+{
+    return (int)atomic_dec_uint_nv(&ptr->v) + 1;
+}
+
+static inline int MPIDU_Atomic_fetch_and_incr(MPIDU_Atomic_t *ptr)
+{
+    return (int)atomic_inc_uint_nv(&ptr->v) - 1;
+}
+
+
+static inline int *MPIDU_Atomic_cas_ptr(MPIDU_Atomic_ptr_t *ptr, int *oldv, int *newv)
 {
     return atomic_cas_ptr(ptr, oldv, newv);
 }
 
-static inline int MPIDU_Atomic_cas_int(volatile int *ptr, int oldv, int newv)
+static inline int MPIDU_Atomic_cas_int(MPIDU_Atomic_t *ptr, int oldv, int newv)
 {
-    return (int)atomic_cas_uint((volatile uint_t *)ptr, (uint_t)oldv, (uint_t)newv);
-}
-
-static inline MPI_Aint MPIDU_Atomic_cas_aint(volatile MPI_Aint *ptr, MPI_Aint oldv, MPI_Aint newv)
-{
-    switch (sizeof(MPI_Aint))
-    {
-    case 4:
-        return (MPI_Aint)atomic_cas_32((volatile uint32_t *)ptr, (uint32_t)oldv, (uint32_t)newv);
-        break;
-    case 8:
-        return (MPI_Aint)atomic_cas_64((volatile uint64_t *)ptr, (uint64_t)oldv, (uint64_t)newv);
-        break;
-    default:
-        /* FIXME: A compile-time check for this would be better. */
-        MPIU_Assertp(0);
-        break;
-    }
+    return (int)atomic_cas_uint(&ptr->v, (uint_t)oldv, (uint_t)newv);
 }
 
 
-static inline int *MPIDU_Atomic_swap_int_ptr(int * volatile *ptr, int *val)
+static inline int *MPIDU_Atomic_swap_ptr(MPIDU_Atomic_ptr_t *ptr, int *val)
 {
     return atomic_swap_ptr(ptr, val);
 }
 
-static inline int MPIDU_Atomic_swap_int(volatile int *ptr, int val)
+static inline int MPIDU_Atomic_swap_int(MPIDU_Atomic_t *ptr, int val)
 {
-    return (int)atomic_swap_uint((volatile uint_t *)ptr, (uint_t) val);
+    return (int)atomic_swap_uint(&ptr->v, (uint_t) val);
 }
 
-static inline MPI_Aint MPIDU_Atomic_swap_aint(volatile MPI_Aint *ptr, MPI_Aint val)
-{
-    switch (sizeof(MPI_Aint))
-    {
-    case 4:
-        return (MPI_Aint)atomic_swap_32((volatile uint32_t *)ptr, (uint32_t)val);
-        break;
-    case 8:
-        return (MPI_Aint)atomic_swap_64((volatile uint64_t *)ptr, (uint64_t)val);
-        break;
-    default:
-        /* FIXME: A compile-time check for this would be better. */
-        MPIU_Assertp(0);
-        break;
-    }
-}
 
 #define MPIDU_Shm_write_barrier()      membar_producer()
 #define MPIDU_Shm_read_barrier()       membar_consumer()
