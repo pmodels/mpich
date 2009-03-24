@@ -149,7 +149,7 @@ int HYDU_bind_get_core_id(int id, HYD_Binding binding)
         realid = (id % (bind_info.num_cores * bind_info.num_sockets));
 
         if (binding == HYD_BIND_RR) {
-            return (id % (bind_info.num_sockets * bind_info.num_cores));
+            return realid;
         }
         else if (binding == HYD_BIND_BUDDY) {
             /* If we reached the maximum, loop around */
