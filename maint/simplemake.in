@@ -418,6 +418,7 @@ $top_builddir_name =         "top_builddir    = \@master_top_builddir\@";
 		     'HTML'    => '$(INSTALL_DATA)',
 		     'DOC'     => '$(INSTALL_DATA)',
 		     'ETC'     => '$(INSTALL_DATA)',
+		     'DATADIR' => '$(INSTALL_DATA)',
 		     'PKGCONFIG' => '$(INSTALL_DATA)',
 		    );
 %uninstall_methods = ( 'SHLIB'   => '$(CREATESHLIB) --mode=uninstall',
