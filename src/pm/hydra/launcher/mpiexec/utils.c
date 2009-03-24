@@ -311,7 +311,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     if (handle.prop == HYD_ENV_PROP_UNSET && tmp)
         handle.prop = !strcmp(tmp, "all") ? HYD_ENV_PROP_ALL : HYD_ENV_PROP_NONE;
     if (handle.prop == HYD_ENV_PROP_UNSET)
-        handle.prop = HYD_ENV_PROP_NONE;
+        handle.prop = HYD_ENV_PROP_ALL;
 
     /* Check if any individual app has an environment preference */
     for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
