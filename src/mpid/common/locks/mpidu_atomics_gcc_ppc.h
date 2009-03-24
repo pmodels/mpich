@@ -85,6 +85,13 @@ static inline int MPIDU_Atomic_SC_int_ptr(volatile int **ptr, int *val)
 #define MPIDU_Atomic_swap_int_by_llsc       MPIDU_Atomic_swap_int
 #define MPIDU_Atomic_swap_aint_by_llsc      MPIDU_Atomic_swap_aint
 
+/* FIXME: "sync" is a full memory barrier, we should look into using
+   less costly barriers (like lwsync or eieio) where appropriate
+   whenever they're available */
+#define MPIDU_Shm_write_barrier()      __asm__ __volatile__  ("sync" ::: "memory" )
+#define MPIDU_Shm_read_barrier()       __asm__ __volatile__  ("sync" ::: "memory" )
+#define MPIDU_Shm_read_write_barrier() __asm__ __volatile__  ("sync" ::: "memory" )
+
 #include"mpidu_atomic_emulated.h"
 
 #endif /* MPIDU_ATOMICS_GCC_PPC_H_INCLUDED */

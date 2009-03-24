@@ -64,6 +64,10 @@ static inline MPI_Aint MPIDU_Atomic_swap_aint(volatile MPI_Aint *ptr, MPI_Aint v
 #define MPIDU_Atomic_swap_aint_by_cas MPIDU_Atomic_swap_aint 
 #endif
 
+#define MPIDU_Shm_write_barrier()      __sync_synchronize()
+#define MPIDU_Shm_read_barrier()       __sync_synchronize()
+#define MPIDU_Shm_read_write_barrier() __sync_synchronize()
+
 #include"mpidu_atomic_emulated.h"
 
 #endif /* MPIDU_ATOMICS_GCC_INTRINSICS_H_INCLUDED */

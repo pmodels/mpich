@@ -379,4 +379,8 @@ static __inline__ int MPIDU_Atomic_swap_int(MPIDU_Atomic_t *ptr, int val)
     return(shmemi_swap_4(&ptr->v, val));
 }
 
+#define MPIDU_Shm_write_barrier()      __asm__ __volatile__  ("sync" ::: "memory" )
+#define MPIDU_Shm_read_barrier()       __asm__ __volatile__  ("sync" ::: "memory" )
+#define MPIDU_Shm_read_write_barrier() __asm__ __volatile__  ("sync" ::: "memory" )
+
 #endif /* MPIDU_ATOMICS_GCC_SICORTEX_H */

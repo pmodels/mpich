@@ -11,6 +11,5 @@
 #include <mpidi_ch3i_nemesis_conf.h>
 
 #include <mpidu_atomic_primitives.h>
-#include <mpidu_mem_barriers.h>
 
 #endif /* MPID_NEM_ATOMICS_H */

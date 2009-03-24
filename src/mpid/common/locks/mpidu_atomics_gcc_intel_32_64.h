@@ -156,6 +156,10 @@ static inline int MPIDU_Atomic_swap_int(MPIDU_Atomic_t *ptr, int val)
     return val;
 }
 
+#define MPIDU_Shm_write_barrier()      __asm__ __volatile__  ( "sfence" ::: "memory" )
+#define MPIDU_Shm_read_barrier()       __asm__ __volatile__  ( "lfence" ::: "memory" )
+#define MPIDU_Shm_read_write_barrier() __asm__ __volatile__  ( "mfence" ::: "memory" )
+
 #include"mpidu_atomic_emulated.h"
 
 #endif /* MPIDU_ATOMICS_GCC_INTEL_32_64_H_INCLUDED */

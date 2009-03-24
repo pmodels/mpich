@@ -1,5 +1,5 @@
 lib${MPILIBNAME}_a_SOURCES = mpidu_process_locks.c mpidu_atomic_primitives.c mpidu_queue.c
-HEADERS = mpidu_process_locks.h mpidu_atomic_primitives.h mpidu_mem_barriers.h mpidu_queue.h
+HEADERS = mpidu_process_locks.h mpidu_atomic_primitives.h mpidu_queue.h
 INCLUDES = -I${srcdir} -I../../../include -I${master_top_srcdir}/src/include
 
 # Create a local library as an option

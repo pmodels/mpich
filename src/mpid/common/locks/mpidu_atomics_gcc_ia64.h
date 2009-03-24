@@ -149,6 +149,10 @@ static inline MPI_Aint MPIDU_Atomic_swap_aint(volatile MPI_Aint *ptr, MPI_Aint v
     return val;
 }
 
+#define MPIDU_Shm_write_barrier()      __asm__ __volatile__  ("mf" ::: "memory" )
+#define MPIDU_Shm_read_barrier()       __asm__ __volatile__  ("mf" ::: "memory" )
+#define MPIDU_Shm_read_write_barrier() __asm__ __volatile__  ("mf" ::: "memory" )
+
 #include"mpidu_atomic_emulated.h"
 
 #endif /* MPIDU_ATOMICS_GCC_IA64_H_INCLUDED */

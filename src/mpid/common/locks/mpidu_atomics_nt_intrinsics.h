@@ -93,6 +93,11 @@ static inline int MPIDU_Atomic_swap_int(MPIDU_Atomic_t *ptr, int val)
 /* Implement fetch_and_incr/decr using fetch_and_add (*_faa) */
 #define MPIDU_Atomic_fetch_and_incr MPIDU_Atomic_fetch_and_incr_by_faa
 #define MPIDU_Atomic_fetch_and_decr MPIDU_Atomic_fetch_and_decr_by_faa
+
+#define MPIDU_Shm_write_barrier()      _WriteBarrier()
+#define MPIDU_Shm_read_barrier()       _ReadBarrier()
+#define MPIDU_Shm_read_write_barrier() _ReadWriteBarrier()
+
 #include "mpidu_atomic_emulated.h"
 
 #endif /* defined(MPIDU_ATOMICS_NT_INTRINSICS_H_INCLUDED) */

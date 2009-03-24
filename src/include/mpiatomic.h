@@ -10,7 +10,6 @@
 #include <stddef.h>
 #include <string.h>
 #include "mpidu_atomic_primitives.h"
-#include "mpidu_mem_barriers.h"
 #include "mpidu_queue.h"
 #include "mpiimpl.h"
 

@@ -187,5 +187,10 @@ static inline int MPIDU_Atomic_swap_int(MPIDU_Atomic_t *ptr, int val)
     return (int)prev;
 }
 
+/* lock/unlock provides barrier */
+#define MPIDU_Shm_write_barrier()      do {} while (0)
+#define MPIDU_Shm_read_barrier()       do {} while (0)
+#define MPIDU_Shm_read_write_barrier() do {} while (0)
+
 #endif /* defined(HAVE_PTHREAD_H) */
 #endif /* !defined(MPIDU_ATOMICS_BY_LOCK_H_INCLUDED) */

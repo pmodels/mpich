@@ -102,6 +102,8 @@ static inline MPI_Aint MPIDU_Atomic_swap_aint(volatile MPI_Aint *ptr, MPI_Aint v
     }
 }
 
-
+#define MPIDU_Shm_write_barrier()      membar_producer()
+#define MPIDU_Shm_read_barrier()       membar_consumer()
+#define MPIDU_Shm_read_write_barrier() do { membar_consumer(); membar_producer(); } while (0)
 
 #endif /* MPIDU_ATOMICS_SUN_ATOMIC_OPS_H_INCLUDED */
