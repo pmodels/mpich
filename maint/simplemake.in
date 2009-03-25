@@ -2997,8 +2997,14 @@ sub TargetLibraries {
 	&LibraryBuild( $lib, $libloc, $sourcefiles, "a", "o" );
 	# Add any additional actions for this library.
 	&SMInvokeAction( "OutputLib", $lib, $libloc );
-        if ($ranliblib) { 
-	    print FD "\t\${RANLIB} ${libloc}lib$lib.a$newline"; 
+        if ($ranliblib) {
+	    # COMMAND PRINTING
+	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+	    print FD "\t  echo \"  RANLIB          lib$lib.a\" ; \\$newline";
+	    print FD "\telse \\$newline";
+	    print FD "\t  echo \${RANLIB} ${libloc}lib$lib.a ; \\$newline";
+	    print FD "\tfi$newline";
+	    print FD "\t\@\${RANLIB} ${libloc}lib$lib.a$newline";
 	}
 	# To handle timestamp problems with recursive makes, add a delay
 	&LibraryTimestampFix( $lib, $libloc )
