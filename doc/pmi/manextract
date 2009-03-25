@@ -1,4 +1,4 @@
-#! /usr/bin/env perl -w
+#! /usr/bin/env perl
 #
 # This script extracts the text blocks from a source file and creates a
 # simple text block out of them.  
@@ -7,6 +7,9 @@
 # manual can contain the comments from the example source files adi3.c and
 # adi3.h.  
 #
+
+use warnings;
+
 $debug = 0;
 while (<>) {
     if (/\/\*T([^ ]*)[ ]*\n/) {

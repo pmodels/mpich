@@ -1,7 +1,10 @@
-#! /usr/bin/env perl -w
+#! /usr/bin/env perl
 # (Tested with -w; 2/23/07)
 # 
 # Find the parse.sub routine.
+
+use warnings;
+
 my $maintdir = "maint";
 my $rootdir  = ".";
 if ( ! -s "maint/parse.sub" ) {
