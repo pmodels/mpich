@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/env perl -w
 # binding.sub provides the routines for reading the prototype file
 # and extracting the function definitions.
 require "binding.sub";

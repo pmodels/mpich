@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/env perl -w
 #
 # Create an FAQ from a single source file.  Handles both LaTeX and HTML output
 # The file uses structured comments to provide information needed to create 

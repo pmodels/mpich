@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/env perl -w
 #
 # This script extracts the text blocks from a source file and creates a
 # simple text block out of them.  
