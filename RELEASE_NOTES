@@ -1,125 +1,101 @@
--------------------------------------------------------------------------------
-                              Known Deficiencies
--------------------------------------------------------------------------------
 
-- The new SMP-aware collectives added in 1.1a2 do not perform as well in some
-  cases as the non-SMP-aware collectives on machines with multiple-processors.
-  This can be true particularly for MPI_Bcast with message sizes larger than
-  12KiB and MPI_Reduce with message sizes larger than 2KiB.  If you find this is
-  a problem for your application, please configure with "--disable-smpcoll".
-  This should be fixed in an upcoming release.
+----------------------------------------------------------------------
+			KNOWN ISSUES
+----------------------------------------------------------------------
 
-- The default ch3:nemesis channel does not work on Solaris. Instead, use the
-  ch3:sock channel if running on multiple machines or the ch3:shm
-  channel if running on a single machine (configure with
-  --with-device=ch3:sock or --with-device=ch3:shm). 
+### Lacking channel-specific features
 
-- The MPD process manager can only handle relatively small amounts of data on 
-  stdin and may also have problems if there is data on stdin that is not
-  consumed by the program. 
+ * ch3 does not presently support communication across heterogeneous
+   platforms (e.g., a big-endian machine communicating with a
+   little-endian machine).
 
-- The Hydra process manager does not work on Solaris and does not
-  support dynamic processes at this time.
+ * ch3:ssm and ch3:shm do not support thread safety.
 
-- The --enable-strict configure option is broken when using sigaction
-  and friends; this causes some of the process managers (e.g., hydra,
-  remshell) to not work correctly. --enable-strict=posix is the
-  recommended configure option.
+ * ch3:shm does not support dynamic processes (e.g., MPI_Comm_spawn).
 
-- Only the ch3:sock and ch3:nemesis channels support thread safety.
- 
-- The sock, sctp, nemesis, and ssm channels are the only channels that
-  implement dynamic process support (i.e., MPI_COMM_SPAWN,
-  MPI_COMM_CONNECT, MPI_COMM_ACCEPT, etc.) under Unix.  All other
-  channels will experience failures for tests exercising dynamic
-  process functionality.  Under Windows, the sock and ssm
-  channels implement the dynamic process support.
+ * Support for "external32" data representation is incomplete. This
+   affects the MPI_Pack_external and MPI_Unpack_external routines, as
+   well the external data representation capabilities of ROMIO.
 
-- The ssm channel uses special interprocess locks (often assembly) that may 
-  not work with some compilers or machine architectures. It works on
-  Linux with gcc, Intel, and Pathscale compilers on various Intel
-  architectures. It also works in Windows environments.
+ * ch3:dllchan is rated "experimental". There are known problems when
+   configured with --enable-g and --enable-g=log.
 
-- Support for the "external32" data representation is incomplete.  This affects
-  the MPI_PACK_EXTERNAL and MPI_UNPACK_EXTERNAL routines, as well the external
-  data representation capabilities of ROMIO.
 
-- The CH3 device does not presently support heterogeneous communication.  That
-  is to say that the processes involved in a job must use the same basic type
-  sizes and format.  The sizes and format are typically determined by the
-  processor architecture, although it may also be influenced by compiler
-  options.  This device does support the use of different executables (e.g.,
-  multiple-program-multiple-data, or MPMD, programming).
+### Build Platforms
 
-- MPI_IRECV operations that are not explicitly completed before MPI_FINALIZE is
-  called may fail to complete before MPI_FINALIZE returns, and thus never
-  complete.  Furthermore, any matching send operations may erroneously fail.
-  By explicitly completed, we mean that the request associated with the
-  operation is completed by one of the MPI_TEST or MPI_WAIT routines.
+ * ch3:nemesis does not work on Solaris. You can use ch3:sock on this
+   platform.
 
-- The dllchan in the ch3 device is experimental and is very fragile.  For
-  example, you may encounter problems when configuring with --enable-g and 
-  --enable-g=log .  This is an "alpha test" of the dllchan; try it if you'd 
-  like, and let us know what does and does not work, but know that fixes will
-  probably wait for the next release.
+ * ch3:ssm uses special interprocess locks (often assembly) that many
+   not work with some compilers or machine architectures. It is known
+   to work on Linux with GNU, Intel and Pathscale compilers and on
+   Windows with the Visual Studio compilers, on Intel and AMD
+   architectures.
 
-- The SMPD process manager does not work reliably with threaded MPI processes.
-  This will be fixed in the next release
-  MPI_Comm_spawn() does not currently work for >= 256 arguments with smpd.
-  This will be fixed in the next release. 
+ * The sctp channel is fully supported for FreeBSD and Mac OS X. As of
+   the time of this release, bugs in the stack currently existed in
+   the Linux kernel, and will hopefully soon be resolved. It is known
+   to not work under Solaris and Windows. For Solaris, the SCTP API
+   available in the kernel of standard Solaris 10 is a subset of the
+   standard API used by the sctp channel. Cooperation with the Sun
+   SCTP developers to support ch3:sctp under Solaris for future
+   releases is currently ongoing. For Windows, no known kernel-based
+   SCTP stack for Windows currently exists.
 
-- C++ Binding:
+
+### Other configure options
+
+ * The "--enable-strict" configure option is broken when using
+   sigaction and friends; this causes some of the process managers
+   (e.g., hydra, remshell) to not work
+   correctly. "--enable-strict=posix" is the recommended configure
+   option.
+
+ * --enable-sharedlibs=gcc does not work on Solaris because of
+   difference between the GNU ld program and the Solaris ld program.
+
+
+### Process Managers
+
+ * The MPD process manager can only handle relatively small amounts of
+   data on stdin and may also have problems if there is data on stdin
+   that is not consumed by the program.
+
+ * The Hydra process manager does not support dynamic processes at
+   this time.
+
+ * The SMPD process manager does not work reliably with threaded MPI
+   processes. MPI_Comm_spawn() does not currently work for >= 256
+   arguments with smpd.
+
+
+### Performance issues
+
+ * SMP-aware collectives do not perform as well, in select cases, as
+   non-SMP-aware collectives, e.g. MPI_Reduce with message sizes
+   larger than 64KiB. These can be disabled by the configure option
+   "--disable-smpcoll".
+
+ * MPI_Irecv operations that are not explicitly completed before
+   MPI_Finalize is called may fail to complete before MPI_Finalize
+   returns, and thus never complete. Furthermore, any matching send
+   operations may erroneously fail. By explicitly completed, we mean
+   that the request associated with the operation is completed by one
+   of the MPI_Test or MPI_Wait routines.
+
+ * For passive target RMA, there is no asynchronous agent at the
+   target that will cause progress to occur. Progress occurs only when
+   the user calls an MPI function at the target (which could well be
+   MPI_Win_free).
+
+
+### C++ Binding:
   
-  The MPI datatypes corresponding to Fortran datatypes are not available
-  (e.g., no MPI::DOUBLE_PRECISION).
+ * The MPI datatypes corresponding to Fortran datatypes are not
+   available (e.g., no MPI::DOUBLE_PRECISION).
 
-  The C++ binding does not implement a separate profiling interface, 
-  as allowed by the MPI-2 Standard (Section 10.1.10 Profiling).  
+ * The C++ binding does not implement a separate profiling interface,
+   as allowed by the MPI-2 Standard (Section 10.1.10 Profiling).
 
-  With the exception of the profiling interface, future releases of MPICH2 
-  will address these limitations of the C++ binding.
-
-- For passive target RMA, there is no asynchronous agent at the target
-  that will cause progress to occur. Progress occurs only when the user
-  calls an MPI function at the target (which could well be MPI_WIN_FREE).
-
-- --enable-sharedlibs=gcc does not work on Solaris because of difference
-  between the GNU ld program and the Solaris ld program
-
-- The sctp channel is fully supported for FreeBSD and Mac OS X. As of
-  the time of this release, bugs in the stack currently existed in the
-  Linux kernel, and will hopefully soon be resolved. It is known to
-  currently not work under Solaris and Windows. For Solaris, the SCTP
-  API available in the kernel of standard Solaris 10 is a subset of
-  the standard API used by the sctp channel.  Cooperation with the Sun
-  SCTP developers to support ch3:sctp under Solaris for future
-  releases is currently ongoing. For Windows, no known kernel-based
-  SCTP stack for Windows currently exists.
-
-  An alternative for Linux, FreeBSD, Mac OS X, Solaris and Windows is
-  the user-based SCTP stack available at 
-  http://www.sctp.de/sctp-download.html ; it is currently being
-  evaluated for use with a future MPICH2 release.
-
-  
--------------------------------------------------------------------------------
-			Issues for Developers
--------------------------------------------------------------------------------
-
-- MPICH2 is switched to autoconf-2.62.  So any older autoconf won't work
-  with the top-level MPICH2 configure.in.
-
-- In order to handle the construction of intercommunicators in the dynamic
-  process case, the context id in MPID_Comm has been split into a receive 
-  and a send context id.  In the case of intracommunicators (e.g.,
-  MPI_COMM_WORLD), these two context id values are the same.  The send
-  context is still the context_id field in the MPID_Comm structure; 
-  the receive context is now recvcontext_id .  This makes the total number
-  of changes relatively small; only in a few places in the ADI3 code 
-  (primarily the MPID_Recv, MPID_Irecv, and persisistent receive request
-  routines) are changes needed.  
-
-- To enable the use of singleton init with more than one process, e.g., 
-  to allow starting two processes as singletons and then have them connect
-  using MPI_Comm_connect/MPI_Comm_accept, it was necessary to change the part
-  of the PMI wire prototcol that implemented the singleton init actions.
+ * MPI::ERRORS_RETURN may still throw exceptions in the event of an
+   error rather than silently returning.
