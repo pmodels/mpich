@@ -22,16 +22,16 @@ int MPID_nem_mx_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int
     uint32_t result;
 
     NEM_MX_DIRECT_MATCH(match_info,0,source,comm->context_id + context_offset);
-    //NEM_MX_SET_CTXT(match_info,comm->context_id + context_offset);
     /*
+    NEM_MX_SET_CTXT(match_info,comm->context_id + context_offset);
     if( source  == MPI_ANY_SOURCE)
     {
 	NEM_MX_SET_ANYSRC(match_info);
 	NEM_MX_SET_ANYSRC(match_mask);	
     }
     else
+      NEM_MX_SET_SRC(match_info,source);	
     */
-    //NEM_MX_SET_SRC(match_info,source);	
 
     if (tag == MPI_ANY_TAG)
     {
@@ -72,16 +72,16 @@ int MPID_nem_mx_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, in
     uint32_t result;
 
     NEM_MX_DIRECT_MATCH(match_info,0,source,comm->context_id + context_offset);
-    //    NEM_MX_SET_CTXT(match_info,comm->context_id + context_offset);
     /*
+    NEM_MX_SET_CTXT(match_info,comm->context_id + context_offset);
     if( source  == MPI_ANY_SOURCE)
     {
 	NEM_MX_SET_ANYSRC(match_info);
 	NEM_MX_SET_ANYSRC(match_mask);	
     }
     else
+	NEM_MX_SET_SRC(match_info,source);	
     */
-    //NEM_MX_SET_SRC(match_info,source);	
 
     if (tag == MPI_ANY_TAG)
     {
