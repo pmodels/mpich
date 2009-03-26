@@ -39,21 +39,21 @@ static MPIDI_Comm_ops_t comm_ops = {
     NULL,                   /* startall */
 
     MPID_nem_newmad_cancel_send,/* cancel_send */
-    MPID_nem_newmad_cancel_recv /* cancel_recv */
+    MPID_nem_newmad_cancel_recv, /* cancel_recv */
+
+    MPID_nem_newmad_probe, /* probe */
+    MPID_nem_newmad_iprobe /* iprobe */
 };
 
-//typedef int (*nm_driver_load)(struct nm_drv_ops*);
 
 static int         mpid_nem_newmad_myrank;
 static nm_drv_id_t drv_id[MPID_NEM_NMAD_MAX_NETS];
 static char       *url[MPID_NEM_NMAD_MAX_NETS];
-static char        url_keys[MPID_NEM_NMAD_MAX_NETS][MPID_NEM_NMAD_MAX_STRING_SIZE] = {"url_id0","url_id1","url_id2","url_id3"};
+static char        url_keys[MPID_NEM_NMAD_MAX_NETS][MPID_NEM_MAX_NETMOD_STRING_LEN] = {"url_id0","url_id1","url_id2","url_id3"};
 static int         mpid_nem_newmad_num_rails = 1 ;
 nm_core_t          mpid_nem_newmad_pcore;
 int                mpid_nem_newmad_pending_send_req = 0;
-mpid_nem_newmad_p_gate_t *mpid_nem_newmad_gate_to_rank = NULL;
 
-                                                                                                      
 #ifdef MPID_MAD_MODULE_MULTIRAIL
 static puk_component_t *p_driver_load_array;
 static void mpid_nem_newmad_rails(void)
@@ -75,6 +75,7 @@ static void mpid_nem_newmad_rails(void)
 #if defined CONFIG_TCP
     mpid_nem_newmad_num_rails++;
 #endif
+    MPIU_Assert(mpid_nem_newmad_num_rails <= MPID_NEM_NMAD_MAX_NETS);
 
     p_driver_load_array = (puk_component_t *)MPIU_Malloc( mpid_nem_newmad_num_rails*sizeof(puk_component_t));
 
@@ -94,7 +95,7 @@ static void mpid_nem_newmad_rails(void)
     p_driver_load_array[index++] = nm_core_component_load("driver", "tcp");
 #endif
 }
-#else //MPID_MAD_MODULE_MULTIRAIL
+#else /* MPID_MAD_MODULE_MULTIRAIL */
 static puk_component_t  p_driver_load;
 static void mpid_nem_newmad_rails(void)
 {
@@ -110,7 +111,7 @@ static void mpid_nem_newmad_rails(void)
     p_driver_load = nm_core_component_load("driver", "tcp");
 # endif
 }
-#endif //MULTIRAIL
+#endif /* MULTIRAIL */
 
 
 #undef FUNCNAME
@@ -123,8 +124,8 @@ static int init_mad( MPIDI_PG_t *pg_p )
 #ifdef CONFIG_TCP
 #ifndef MPID_MAD_MODULE_MULTIRAIL
     char  hostname[16];
-#endif //TCP
-#endif //MPID_MAD_MODULE_MULTIRAIL
+#endif /* TCP */
+#endif /* MPID_MAD_MODULE_MULTIRAIL */
 #endif
     int   index = 0;
     int   ret;
@@ -140,7 +141,7 @@ static int init_mad( MPIDI_PG_t *pg_p )
     mpid_nem_newmad_rails();
 #ifdef MPID_MAD_MODULE_MULTIRAIL
     fprintf(stdout,"Number of rails : %i\n",nem_mad_num_rail);
-#endif //MPID_MAD_MODULE_MULTIRAIL
+#endif /* MPID_MAD_MODULE_MULTIRAIL */
 
     ret = nm_sr_init(mpid_nem_newmad_pcore);
     if(ret != NM_ESUCCESS) {
@@ -150,10 +151,10 @@ static int init_mad( MPIDI_PG_t *pg_p )
 #warning "========== MAD MODULE MULTIRAIL CODE ENABLED ============="
     ret = nm_core_driver_load_init_some(mpid_nem_newmad_pcore, mpid_nem_newmad_num_rails, 
 					p_driver_load_array, drv_id, url);
-#else //MPID_MAD_MODULE_MULTIRAIL
+#else /* MPID_MAD_MODULE_MULTIRAIL */
     ret = nm_core_driver_load_init(mpid_nem_newmad_pcore, 
 				   p_driver_load, &drv_id[0], &url[0]);
-#endif //MPID_MAD_MODULE_MULTIRAIL
+#endif /* MPID_MAD_MODULE_MULTIRAIL */
     if (ret != NM_ESUCCESS) {
 	fprintf(stdout,"nm_core_driver_init(some) returned ret = %d\n", ret);
     }
@@ -168,15 +169,15 @@ static int init_mad( MPIDI_PG_t *pg_p )
 	url[0] = (char *)MPIU_Malloc(strlen(hostname)+1);
 	strcpy(url[0],hostname);
     }
-#endif //!MULTIRAIL 
-#endif // TCP                                                                                                                             
+#endif /* !MULTIRAIL  */
+#endif /* TCP */                                                                                                                            
 #endif  
     
     nm_ns_init(mpid_nem_newmad_pcore);
-    
+
  fn_exit:
     return mpi_errno;
- fn_fail:
+ fn_fail: ATTRIBUTE((unused))
     goto fn_exit;
 }
 
@@ -219,7 +220,7 @@ MPID_nem_newmad_init (MPID_nem_queue_ptr_t proc_recv_queue,
    int index;
 
    fprintf(stdout,"Size of MPID_nem_mad_module_vc_area_internal_t : %i | size of nm_sr_request_t :%i | Size of req_area : %i\n",
-           sizeof(MPID_nem_newmad_vc_area_internal_t),sizeof(nm_sr_request_t), sizeof(MPID_nem_newmad_req_area));
+         sizeof(MPID_nem_newmad_vc_area_internal_t),sizeof(nm_sr_request_t), sizeof(MPID_nem_newmad_req_area));
    MPIU_Assert( sizeof(MPID_nem_newmad_vc_area_internal_t) <= MPID_NEM_VC_NETMOD_AREA_LEN);
    MPIU_Assert( sizeof(MPID_nem_newmad_req_area) <= MPID_NEM_REQ_NETMOD_AREA_LEN);
 
@@ -232,12 +233,11 @@ MPID_nem_newmad_init (MPID_nem_queue_ptr_t proc_recv_queue,
 
    init_mad(pg_p);
 
-   mpi_errno = MPID_nem_mad_module_get_business_card (pg_rank,bc_val_p, val_max_sz_p);
+   mpi_errno = MPID_nem_newmad_get_business_card(pg_rank,bc_val_p, val_max_sz_p);
    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
    nm_sr_monitor(mpid_nem_newmad_pcore, NM_SR_EVENT_RECV_UNEXPECTED, &MPID_nem_newmad_get_adi_msg);
    nm_sr_monitor(mpid_nem_newmad_pcore, NM_SR_EVENT_SEND_COMPLETED, &MPID_nem_newmad_handle_sreq);
-   //nm_sr_monitor(mpid_nem_newmad_pcore, NM_SR_EVENT_RECV_COMPLETED, &MPID_nem_newmad_handle_rreq);
 
    mpi_errno = MPIDI_CH3I_Register_anysource_notification(MPID_nem_newmad_anysource_posted, 
                                                           MPID_nem_newmad_anysource_matched);
@@ -245,7 +245,7 @@ MPID_nem_newmad_init (MPID_nem_queue_ptr_t proc_recv_queue,
 
    fn_exit:
        return mpi_errno;
-   fn_fail:
+   fn_fail: 
        goto fn_exit;
 }
 
@@ -341,10 +341,38 @@ MPID_nem_newmad_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 int
 MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
 {
-    int mpi_errno = MPI_SUCCESS;   
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC           *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    char                     business_card[MPID_NEM_MAX_NETMOD_STRING_LEN];
+    int                      mpi_errno = MPI_SUCCESS;   
+    int                      ret;
+    int                      index;
 
+    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, MPID_NEM_MAX_NETMOD_STRING_LEN, vc->pg);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+       
+    (((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->area) =
+	(MPID_nem_newmad_vc_area_internal_t *)MPIU_Malloc(sizeof(MPID_nem_newmad_vc_area_internal_t));
+
+    MPIU_Assert( (((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->area) != NULL);
+
+    ret = nm_core_gate_init(mpid_nem_newmad_pcore, &(VC_FIELD(vc, p_gate)));
+    if (ret != NM_ESUCCESS) fprintf(stdout,"nm_core_gate_init returned ret = %d\n", ret);
+    nm_gate_ref_set(VC_FIELD(vc, p_gate),(void*)vc);
     
+    for(index = 0 ; index < mpid_nem_newmad_num_rails ; index ++)
+    {	
+	mpi_errno = MPID_nem_newmad_get_from_bc (business_card, VC_FIELD(vc, hostname), VC_FIELD(vc, url[index]), index);
+	if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+	
+	VC_FIELD(vc, drv_id[index]) = drv_id[index];
+	
+	if (vc->lpid > mpid_nem_newmad_myrank){
+	    ret = nm_core_gate_accept(mpid_nem_newmad_pcore,VC_FIELD(vc, p_gate), drv_id[index], NULL);
+	}
+	else if (vc->lpid < mpid_nem_newmad_myrank){
+	    ret = nm_core_gate_connect(mpid_nem_newmad_pcore,VC_FIELD(vc, p_gate), drv_id[index], VC_FIELD(vc, url[index]));
+	}
+    }
 
     vc->eager_max_msg_sz = 32768;
     vc->rndvSend_fn      = NULL;
@@ -367,6 +395,8 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
 int MPID_nem_newmad_vc_destroy(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;   
+
+    MPIU_Free((((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->area));
 
  fn_exit:   
        return mpi_errno;
