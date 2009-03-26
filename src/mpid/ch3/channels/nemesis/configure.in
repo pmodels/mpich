@@ -291,6 +291,7 @@ for net in $nemesis_networks ; do
        if test "$enable_multi" = "yes" ; then
            AC_DEFINE(MPID_MAD_MODULE_MULTIRAIL, 1, [Define to enable multirail support in newmad module])
        fi	  	  
+       AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions]) 
     fi; 
 
     if test "${net}" == "elan" ; then
