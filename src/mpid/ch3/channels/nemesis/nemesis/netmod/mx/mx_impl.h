@@ -10,7 +10,7 @@
 #include "mx_extensions.h"
 #include "mpid_nem_impl.h"
 
-/* #define USE_CTXT_AS_MARK */
+/* #define USE_CTXT_AS_MARK  */
 /* #define DEBUG_IOV */
 /* #define ONDEMAND */
 
@@ -45,6 +45,8 @@ int  MPID_nem_mx_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MPI_Da
 int MPID_nem_mx_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq);
 int MPID_nem_mx_cancel_send(MPIDI_VC_t *vc, MPID_Request *sreq);
 int MPID_nem_mx_cancel_recv(MPIDI_VC_t *vc, MPID_Request *rreq);
+int MPID_nem_mx_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset, MPI_Status *status);
+int MPID_nem_mx_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status);
 
 /* Callback routine for unex msgs in MX */
 mx_unexp_handler_action_t MPID_nem_mx_get_adi_msg(void *context,mx_endpoint_addr_t source,

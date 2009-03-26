@@ -37,7 +37,10 @@ static MPIDI_Comm_ops_t comm_ops = {
     NULL,                   /* startall */
     
     MPID_nem_mx_cancel_send,/* cancel_send */
-    MPID_nem_mx_cancel_recv /* cancel_recv */
+    MPID_nem_mx_cancel_recv, /* cancel_recv */
+    
+    MPID_nem_mx_probe, /* probe */
+    MPID_nem_mx_iprobe /* iprobe */
 };
 
 
