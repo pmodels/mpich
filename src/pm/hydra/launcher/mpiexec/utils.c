@@ -306,24 +306,22 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     if (handle.binding == HYD_BIND_UNSET)
         handle.binding = HYD_BIND_NONE;
 
-    /* Global environment setting */
+    /* Check environment for setting the global environment */
     tmp = getenv("HYDRA_ENV");
     if (handle.prop == HYD_ENV_PROP_UNSET && tmp)
         handle.prop = !strcmp(tmp, "all") ? HYD_ENV_PROP_ALL : HYD_ENV_PROP_NONE;
+
+    /* If nothing is set for the global environment, set it to the default */
     if (handle.prop == HYD_ENV_PROP_UNSET)
         handle.prop = HYD_ENV_PROP_ALL;
 
-    /* Check if any individual app has an environment preference */
+    /* Make sure local executable is set */
     for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
         if (exec_info->exec[0] == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
 
         if (exec_info->exec_proc_count == 0)
             exec_info->exec_proc_count = 1;
-
-        /* If no local env property is set, use the global one */
-        if (exec_info->prop == HYD_ENV_PROP_UNSET)
-            exec_info->prop = handle.prop;
     }
 
     if (handle.proxy_port == -1)

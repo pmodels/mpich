@@ -319,7 +319,7 @@ HYD_Status HYDU_putenv(HYD_Env_t * env)
     i = 0;
     tmp[i++] = MPIU_Strdup(env->env_name);
     tmp[i++] = MPIU_Strdup("=");
-    tmp[i++] = MPIU_Strdup(env->env_value);
+    tmp[i++] = env->env_value ? MPIU_Strdup(env->env_value) : MPIU_Strdup("");
     tmp[i++] = NULL;
     status = HYDU_str_alloc_and_join(tmp, &str);
     HYDU_ERR_POP(status, "unable to join strings\n");

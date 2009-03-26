@@ -170,7 +170,6 @@ HYD_Status HYD_PMCI_launch_procs(void)
             arg = HYDU_strlist_lastidx(partition->proxy_args);
             partition->proxy_args[arg++] = MPIU_Strdup("--exec-local-env");
             for (i = 0, env = exec->prop_env; env; env = env->next, i++);
-            HYDU_ERR_POP(status, "unable to convert int to string\n");
             partition->proxy_args[arg++] = HYDU_int_to_str(i);
             partition->proxy_args[arg++] = NULL;
             HYDU_list_append_env_to_str(exec->prop_env, partition->proxy_args);
