@@ -8,7 +8,6 @@
 #define HYDRA_BASE_H_INCLUDED
 
 #include <stdio.h>
-#include "mpibase.h"
 #include "hydra_config.h"
 
 #if defined HAVE_UNISTD_H
@@ -39,12 +38,10 @@
 
 #if defined HAVE_GETTIMEOFDAY
 /* FIXME: Is time.h available everywhere? We should probably have
- * multiple timer options like MPICH2. */
+ * multiple timer options. */
 #include <time.h>
 #include <sys/time.h>
 #endif /* HAVE_GETTIMEOFDAY */
-
-#include "mpimem.h"
 
 #if defined MAXHOSTNAMELEN
 #define MAX_HOSTNAME_LEN MAXHOSTNAMELEN
@@ -154,118 +151,5 @@ struct HYD_Exec_info {
 
     struct HYD_Exec_info *next;
 } *exec_info;
-
-
-#define HYDU_ERR_POP(status, message)                                   \
-    {                                                                   \
-        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (strcmp(message, ""))                                    \
-                HYDU_Error_printf(message);                             \
-            goto fn_fail;                                               \
-        }                                                               \
-        else if (status == HYD_GRACEFUL_ABORT) {                        \
-            goto fn_exit;                                               \
-        }                                                               \
-    }
-
-#define HYDU_ERR_SETANDJUMP(status, error, message)                     \
-    {                                                                   \
-        status = error;                                                 \
-        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (strcmp(message, ""))                                    \
-                HYDU_Error_printf(message);                             \
-            goto fn_fail;                                               \
-        }                                                               \
-        else if (status == HYD_GRACEFUL_ABORT) {                        \
-            goto fn_exit;                                               \
-        }                                                               \
-    }
-
-#define HYDU_ERR_CHKANDJUMP(status, chk, error, message)                \
-    {                                                                   \
-        if ((chk))                                                      \
-            HYDU_ERR_SETANDJUMP(status, error, message);                \
-    }
-
-#define HYDU_ERR_SETANDJUMP1(status, error, message, arg1)              \
-    {                                                                   \
-        status = error;                                                 \
-        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (strcmp(message, ""))                                    \
-                HYDU_Error_printf(message, arg1);                       \
-            goto fn_fail;                                               \
-        }                                                               \
-        else if (status == HYD_GRACEFUL_ABORT) {                        \
-            goto fn_exit;                                               \
-        }                                                               \
-    }
-
-#define HYDU_ERR_SETANDJUMP2(status, error, message, arg1, arg2)        \
-    {                                                                   \
-        status = error;                                                 \
-        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (strcmp(message, ""))                                    \
-                HYDU_Error_printf(message, arg1, arg2);                 \
-            goto fn_fail;                                               \
-        }                                                               \
-        else if (status == HYD_GRACEFUL_ABORT) {                        \
-            goto fn_exit;                                               \
-        }                                                               \
-    }
-
-
-#if defined ENABLE_WARNINGS
-#define HYDU_Warn_printf HYDU_Error_printf
-#else
-#define HYDU_Warn_printf(...) {}
-#endif /* ENABLE_WARNINGS */
-
-#if !defined COMPILER_ACCEPTS_VA_ARGS
-#define HYDU_Error_printf MPIU_Error_printf
-#elif defined COMPILER_ACCEPTS_FUNC && defined __LINE__
-#define HYDU_Error_printf(...)                            \
-    {                                                     \
-	fprintf(stderr, "%s (%d): ", __func__, __LINE__); \
-	MPIU_Error_printf(__VA_ARGS__);                   \
-    }
-#elif defined __FILE__ && defined __LINE__
-#define HYDU_Error_printf(...)                            \
-    {                                                     \
-	fprintf(stderr, "%s (%d): ", __FILE__, __LINE__); \
-	MPIU_Error_printf(__VA_ARGS__);                   \
-    }
-#else
-#define HYDU_Error_printf(...)                  \
-    {                                           \
-	MPIU_Error_printf(__VA_ARGS__);         \
-    }
-#endif
-
-#if !defined COMPILER_ACCEPTS_VA_ARGS
-#define HYDU_Debug if (handle.debug) printf
-#else
-#define HYDU_Debug(...)                                 \
-    {                                                   \
-        if (handle.debug)                               \
-            printf(__VA_ARGS__);                        \
-    }
-#endif /* COMPILER_ACCEPTS_VA_ARGS */
-
-#if !defined ENABLE_DEBUG
-#define HYDU_FUNC_ENTER()
-#define HYDU_FUNC_EXIT()
-#elif defined COMPILER_ACCEPTS_FUNC
-#define HYDU_FUNC_ENTER()                                               \
-    {                                                                   \
-	HYDU_Debug("Entering function %s\n", __func__);                 \
-    }
-#define HYDU_FUNC_EXIT()                                               \
-    {                                                                  \
-	HYDU_Debug("Exiting function %s\n", __func__);                 \
-    }
-#else
-#define HYDU_FUNC_ENTER() {}
-#define HYDU_FUNC_EXIT() {}
-#endif
 
 #endif /* HYDRA_BASE_H_INCLUDED */

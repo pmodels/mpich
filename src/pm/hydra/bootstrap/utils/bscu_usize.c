@@ -5,6 +5,7 @@
  */
 
 #include "hydra_base.h"
+#include "hydra_utils.h"
 #include "bscu.h"
 
 HYD_Status HYD_BSCU_get_usize(int *size)
