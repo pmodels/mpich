@@ -101,13 +101,13 @@ HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
     debug = handle.debug;
 
     i = 0;
-    tmp[i++] = MPIU_Strdup("cmd=initack\ncmd=set size=");
+    tmp[i++] = HYDU_strdup("cmd=initack\ncmd=set size=");
     tmp[i++] = HYDU_int_to_str(size);
-    tmp[i++] = MPIU_Strdup("\ncmd=set rank=");
+    tmp[i++] = HYDU_strdup("\ncmd=set rank=");
     tmp[i++] = HYDU_int_to_str(id);
-    tmp[i++] = MPIU_Strdup("\ncmd=set debug=");
+    tmp[i++] = HYDU_strdup("\ncmd=set debug=");
     tmp[i++] = HYDU_int_to_str(debug);
-    tmp[i++] = MPIU_Strdup("\n");
+    tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
@@ -147,13 +147,13 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get_maxes(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     i = 0;
-    tmp[i++] = MPIU_Strdup("cmd=maxes kvsname_max=");
+    tmp[i++] = HYDU_strdup("cmd=maxes kvsname_max=");
     tmp[i++] = HYDU_int_to_str(MAXKVSNAME);
-    tmp[i++] = MPIU_Strdup(" keylen_max=");
+    tmp[i++] = HYDU_strdup(" keylen_max=");
     tmp[i++] = HYDU_int_to_str(MAXKEYLEN);
-    tmp[i++] = MPIU_Strdup(" vallen_max=");
+    tmp[i++] = HYDU_strdup(" vallen_max=");
     tmp[i++] = HYDU_int_to_str(MAXVALLEN);
-    tmp[i++] = MPIU_Strdup("\n");
+    tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
@@ -190,9 +190,9 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get_appnum(int fd, char *args[])
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unable to find process structure\n");
 
     i = 0;
-    tmp[i++] = MPIU_Strdup("cmd=appnum appnum=");
+    tmp[i++] = HYDU_strdup("cmd=appnum appnum=");
     tmp[i++] = HYDU_int_to_str(process->pg->id);
-    tmp[i++] = MPIU_Strdup("\n");
+    tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
@@ -320,8 +320,8 @@ HYD_Status HYD_PMCD_pmi_handle_v1_put(int fd, char *args[])
                              kvsname, process->pg->kvs->kvs_name);
 
     HYDU_MALLOC(key_pair, HYD_PMCD_pmi_kvs_pair_t *, sizeof(HYD_PMCD_pmi_kvs_pair_t), status);
-    MPIU_Snprintf(key_pair->key, MAXKEYLEN, "%s", key);
-    MPIU_Snprintf(key_pair->val, MAXVALLEN, "%s", val);
+    HYDU_snprintf(key_pair->key, MAXKEYLEN, "%s", key);
+    HYDU_snprintf(key_pair->val, MAXVALLEN, "%s", val);
     key_pair->next = NULL;
 
     i = 0;
@@ -335,7 +335,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_put(int fd, char *args[])
         while (run->next) {
             if (!strcmp(run->key, key_pair->key)) {
                 tmp[i++] = "-1 msg=duplicate_key";
-                key_pair_str = MPIU_Strdup(key_pair->key);
+                key_pair_str = HYDU_strdup(key_pair->key);
                 tmp[i++] = key_pair_str;
                 break;
             }
@@ -403,7 +403,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get(int fd, char *args[])
         while (run) {
             if (!strcmp(run->key, key)) {
                 tmp[i++] = "0 msg=success value=";
-                key_val_str = MPIU_Strdup(run->val);
+                key_val_str = HYDU_strdup(run->val);
                 tmp[i++] = key_val_str;
                 break;
             }

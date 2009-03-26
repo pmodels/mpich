@@ -15,7 +15,7 @@ HYD_Status HYDU_list_append_strlist(char **src_strlist, char **dest_strlist)
 
     i = HYDU_strlist_lastidx(dest_strlist);
     for (j = 0; src_strlist[j]; j++)
-        dest_strlist[i++] = MPIU_Strdup(src_strlist[j]);
+        dest_strlist[i++] = HYDU_strdup(src_strlist[j]);
     dest_strlist[i++] = NULL;
 
     HYDU_FUNC_EXIT();
@@ -68,7 +68,7 @@ HYD_Status HYDU_str_alloc_and_join(char **strlist, char **strjoin)
     (*strjoin)[0] = 0;
 
     for (i = 0; strlist[i] != NULL; i++) {
-        MPIU_Snprintf(*strjoin + count, len - count + 1, "%s", strlist[i]);
+        HYDU_snprintf(*strjoin + count, len - count + 1, "%s", strlist[i]);
         count += strlen(strlist[i]);
     }
 
@@ -91,13 +91,13 @@ HYD_Status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
     if (str == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
 
-    *str1 = MPIU_Strdup(str);
+    *str1 = HYDU_strdup(str);
     for (i = 0; (*str1)[i] && ((*str1)[i] != sep); i++);
 
     if ((*str1)[i] == 0)        /* End of the string */
         *str2 = NULL;
     else {
-        *str2 = MPIU_Strdup(&((*str1)[i + 1]));
+        *str2 = HYDU_strdup(&((*str1)[i + 1]));
         (*str1)[i] = 0;
     }
 
@@ -130,13 +130,10 @@ char *HYDU_int_to_str(int x)
         max *= 10;
     }
 
-    str = (char *) MPIU_Malloc(len + 1);
-    if (str == NULL) {
-        HYDU_ERR_SETANDJUMP1(status, HYD_NO_MEM, "unable to allocate %d bytes\n", len + 1);
-        goto fn_fail;
-    }
+    HYDU_MALLOC(str, char *, len + 1, status);
+    HYDU_ERR_POP(status, "unable to allocate memory\n");
 
-    MPIU_Snprintf(str, len + 1, "%d", x);
+    HYDU_snprintf(str, len + 1, "%d", x);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -154,7 +151,7 @@ char *HYDU_strerror(int error)
 #if defined HAVE_STRERROR
     str = strerror(error);
 #else
-    str = MPIU_Strdup("errno: %d", error);
+    str = HYDU_strdup("errno: %d", error);
 #endif /* HAVE_STRERROR */
 
     return str;
@@ -190,7 +187,7 @@ char **HYDU_str_to_strlist(char *str)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "too many arguments in line\n");
 
         /* Make a copy and NULL terminate it */
-        strlist[argc] = MPIU_Strdup(p);
+        strlist[argc] = HYDU_strdup(p);
         r = strlist[argc];
         while (*r && !isspace(*r))
             r++;

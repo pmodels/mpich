@@ -1,10 +1,10 @@
 General
 -------
 
-Hydra is a process management system for starting parallel jobs,
-especially MPICH2 jobs. Hydra is designed to natively work with
-multiple daemons such as ssh, pbs, slurm and sge. However, in the
-current release, only ssh and fork are supported.
+Hydra is a process management system for starting parallel jobs. Hydra
+is designed to natively work with multiple daemons such as ssh, pbs,
+slurm and sge. However, in the current release, only ssh and fork are
+supported.
 
 More detailed documentation of the internal workings of Hydra are
 available here:
@@ -17,10 +17,10 @@ Quick Start
 To use hydra, mpich2 needs to be configured with the configure option
 --with-pm=hydra.
 
-Once MPICH2 has been built with Hydra, the Hydra commands are in
-mpich2/bin, or the bin subdirectory of the install directory if you
-have done an install.  You should put this (bin) directory in your
-PATH in your .cshrc or .bashrc for usage convenience:
+Once built, the Hydra executables are in mpich2/bin, or the bin
+subdirectory of the install directory if you have done an install.
+You should put this (bin) directory in your PATH in your .cshrc or
+.bashrc for usage convenience:
 
 Put in .cshrc:  setenv PATH /home/you/mpich2/bin:$PATH
 
@@ -114,8 +114,8 @@ sockets, allocating one process per socket; this tries to minimize the
 inter-process resource sharing (assuming the closer the processes are
 the more resources that they share). The "pack" scheme packs
 everything as closely as it can; this tries to maximize resource
-sharing hoping that the MPI library can take advantage of this packing
-for better performance.
+sharing hoping that the communication library can take advantage of
+this packing for better performance.
 
 3. User-defined allocation strategies: two schemes are
 provided---command-line and host-file based. The command-line scheme

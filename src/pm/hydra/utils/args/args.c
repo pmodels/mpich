@@ -15,10 +15,10 @@ HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path)
     HYDU_FUNC_ENTER();
 
     /* Find the last '/' in the executable name */
-    post = MPIU_Strdup(execname);
+    post = HYDU_strdup(execname);
     loc = strrchr(post, '/');
     if (!loc) { /* If there is no path */
-        *path = MPIU_Strdup("");
+        *path = HYDU_strdup("");
     }
     else {      /* There is a path */
         *(++loc) = 0;
@@ -33,7 +33,7 @@ HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path)
             HYDU_ERR_POP(status, "unable to join strings\n");
         }
         else {  /* absolute */
-            *path = MPIU_Strdup(post);
+            *path = HYDU_strdup(post);
         }
     }
 

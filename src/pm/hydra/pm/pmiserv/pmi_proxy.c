@@ -102,7 +102,7 @@ int main(int argc, char **argv)
                                      "unable to change wdir (%s)\n", HYDU_strerror(errno));
 
             for (j = 0, arg = 0; exec->exec[j]; j++)
-                client_args[arg++] = MPIU_Strdup(exec->exec[j]);
+                client_args[arg++] = HYDU_strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
             core = HYDU_bind_get_core_id(process_id, HYD_PMCD_pmi_proxy_params.binding);

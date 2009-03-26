@@ -78,7 +78,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
     sport = HYDU_int_to_str(port);
 
     HYDU_MALLOC(port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
-    MPIU_Snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1,
+    HYDU_snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1,
                   "%s:%s", hostname, sport);
     HYDU_FREE(sport);
     HYDU_Debug("Process manager listening on PMI port %s\n", port_str);
@@ -110,34 +110,34 @@ HYD_Status HYD_PMCI_launch_procs(void)
 
         arg = HYDU_strlist_lastidx(partition->proxy_args);
         i = 0;
-        path_str[i++] = MPIU_Strdup(handle.base_path);
-        path_str[i++] = MPIU_Strdup("pmi_proxy");
+        path_str[i++] = HYDU_strdup(handle.base_path);
+        path_str[i++] = HYDU_strdup("pmi_proxy");
         path_str[i] = NULL;
         status = HYDU_str_alloc_and_join(path_str, &partition->proxy_args[arg++]);
         HYDU_ERR_POP(status, "unable to join strings\n");
         HYDU_free_strlist(path_str);
 
-        partition->proxy_args[arg++] = MPIU_Strdup("--proxy-port");
+        partition->proxy_args[arg++] = HYDU_strdup("--proxy-port");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
 
-        partition->proxy_args[arg++] = MPIU_Strdup("--one-pass-count");
+        partition->proxy_args[arg++] = HYDU_strdup("--one-pass-count");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.one_pass_count);
 
-        partition->proxy_args[arg++] = MPIU_Strdup("--wdir");
-        partition->proxy_args[arg++] = MPIU_Strdup(handle.wdir);
+        partition->proxy_args[arg++] = HYDU_strdup("--wdir");
+        partition->proxy_args[arg++] = HYDU_strdup(handle.wdir);
 
-        partition->proxy_args[arg++] = MPIU_Strdup("--binding");
+        partition->proxy_args[arg++] = HYDU_strdup("--binding");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.binding);
         if (handle.user_bind_map)
-            partition->proxy_args[arg++] = MPIU_Strdup(handle.user_bind_map);
+            partition->proxy_args[arg++] = HYDU_strdup(handle.user_bind_map);
         else if (partition->user_bind_map)
-            partition->proxy_args[arg++] = MPIU_Strdup(partition->user_bind_map);
+            partition->proxy_args[arg++] = HYDU_strdup(partition->user_bind_map);
         else
-            partition->proxy_args[arg++] = MPIU_Strdup("HYDRA_NO_USER_MAP");
+            partition->proxy_args[arg++] = HYDU_strdup("HYDRA_NO_USER_MAP");
 
         /* Pass the global environment separately, instead of for each
          * executable, as an optimization */
-        partition->proxy_args[arg++] = MPIU_Strdup("--global-env");
+        partition->proxy_args[arg++] = HYDU_strdup("--global-env");
         for (i = 0, env = handle.system_env; env; env = env->next, i++);
         for (env = handle.prop_env; env; env = env->next, i++);
         partition->proxy_args[arg++] = HYDU_int_to_str(i);
@@ -148,12 +148,12 @@ HYD_Status HYD_PMCI_launch_procs(void)
         /* Pass the segment information */
         for (segment = partition->segment_list; segment; segment = segment->next) {
             arg = HYDU_strlist_lastidx(partition->proxy_args);
-            partition->proxy_args[arg++] = MPIU_Strdup("--segment");
+            partition->proxy_args[arg++] = HYDU_strdup("--segment");
 
-            partition->proxy_args[arg++] = MPIU_Strdup("--segment-start-pid");
+            partition->proxy_args[arg++] = HYDU_strdup("--segment-start-pid");
             partition->proxy_args[arg++] = HYDU_int_to_str(segment->start_pid);
 
-            partition->proxy_args[arg++] = MPIU_Strdup("--segment-proc-count");
+            partition->proxy_args[arg++] = HYDU_strdup("--segment-proc-count");
             partition->proxy_args[arg++] = HYDU_int_to_str(segment->proc_count);
             partition->proxy_args[arg++] = NULL;
         }
@@ -161,14 +161,14 @@ HYD_Status HYD_PMCI_launch_procs(void)
         /* Now pass the local executable information */
         for (exec = partition->exec_list; exec; exec = exec->next) {
             arg = HYDU_strlist_lastidx(partition->proxy_args);
-            partition->proxy_args[arg++] = MPIU_Strdup("--exec");
+            partition->proxy_args[arg++] = HYDU_strdup("--exec");
 
-            partition->proxy_args[arg++] = MPIU_Strdup("--exec-proc-count");
+            partition->proxy_args[arg++] = HYDU_strdup("--exec-proc-count");
             partition->proxy_args[arg++] = HYDU_int_to_str(exec->proc_count);
             partition->proxy_args[arg++] = NULL;
 
             arg = HYDU_strlist_lastidx(partition->proxy_args);
-            partition->proxy_args[arg++] = MPIU_Strdup("--exec-local-env");
+            partition->proxy_args[arg++] = HYDU_strdup("--exec-local-env");
             for (i = 0, env = exec->prop_env; env; env = env->next, i++);
             partition->proxy_args[arg++] = HYDU_int_to_str(i);
             partition->proxy_args[arg++] = NULL;

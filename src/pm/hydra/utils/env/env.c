@@ -15,11 +15,11 @@ static HYD_Status env_to_str(HYD_Env_t * env, char **str)
     HYDU_FUNC_ENTER();
 
     i = 0;
-    tmp[i++] = MPIU_Strdup("'");
-    tmp[i++] = MPIU_Strdup(env->env_name);
-    tmp[i++] = MPIU_Strdup("=");
-    tmp[i++] = env->env_value ? MPIU_Strdup(env->env_value) : MPIU_Strdup("");
-    tmp[i++] = MPIU_Strdup("'");
+    tmp[i++] = HYDU_strdup("'");
+    tmp[i++] = HYDU_strdup(env->env_name);
+    tmp[i++] = HYDU_strdup("=");
+    tmp[i++] = env->env_value ? HYDU_strdup(env->env_value) : HYDU_strdup("");
+    tmp[i++] = HYDU_strdup("'");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, str);
@@ -47,8 +47,8 @@ static HYD_Env_t *env_dup(HYD_Env_t env)
     HYDU_MALLOC(tenv, HYD_Env_t *, sizeof(HYD_Env_t), status);
     memcpy(tenv, &env, sizeof(HYD_Env_t));
     tenv->next = NULL;
-    tenv->env_name = MPIU_Strdup(env.env_name);
-    tenv->env_value = env.env_value ? MPIU_Strdup(env.env_value) : NULL;
+    tenv->env_name = HYDU_strdup(env.env_name);
+    tenv->env_value = env.env_value ? HYDU_strdup(env.env_value) : NULL;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -73,8 +73,8 @@ HYD_Env_t *HYDU_str_to_env(char *str)
     HYDU_MALLOC(env, HYD_Env_t *, sizeof(HYD_Env_t), status);
     env_name = strtok(str, "=");
     env_value = strtok(NULL, "=");
-    env->env_name = MPIU_Strdup(env_name);
-    env->env_value = env_value ? MPIU_Strdup(env_value) : NULL;
+    env->env_name = HYDU_strdup(env_name);
+    env->env_value = env_value ? HYDU_strdup(env_value) : NULL;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -126,7 +126,7 @@ HYD_Status HYDU_list_global_env(HYD_Env_t ** env_list)
     *env_list = NULL;
     i = 0;
     while (environ[i]) {
-        env_str = MPIU_Strdup(environ[i]);
+        env_str = HYDU_strdup(environ[i]);
 
         env = HYDU_str_to_env(env_str);
 
@@ -180,8 +180,8 @@ HYD_Status HYDU_env_create(HYD_Env_t ** env, char *env_name, char *env_value)
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(*env, HYD_Env_t *, sizeof(HYD_Env_t), status);
-    (*env)->env_name = MPIU_Strdup(env_name);
-    (*env)->env_value = env_value ? MPIU_Strdup(env_value) : NULL;
+    (*env)->env_name = HYDU_strdup(env_name);
+    (*env)->env_value = env_value ? HYDU_strdup(env_value) : NULL;
     (*env)->next = NULL;
 
   fn_exit:
@@ -274,14 +274,14 @@ HYD_Status HYDU_append_env_to_list(HYD_Env_t env, HYD_Env_t ** env_list)
                 /* If we found an entry for this environment variable, just update it */
                 if (run->env_value != NULL && tenv->env_value != NULL) {
                     HYDU_FREE(run->env_value);
-                    run->env_value = MPIU_Strdup(tenv->env_value);
+                    run->env_value = HYDU_strdup(tenv->env_value);
                 }
                 else if (run->env_value != NULL) {
                     HYDU_FREE(run->env_value);
                     run->env_value = NULL;
                 }
                 else if (env.env_value != NULL) {
-                    run->env_value = MPIU_Strdup(tenv->env_value);
+                    run->env_value = HYDU_strdup(tenv->env_value);
                 }
 
                 HYDU_FREE(tenv->env_name);
@@ -317,14 +317,14 @@ HYD_Status HYDU_putenv(HYD_Env_t * env)
     HYDU_FUNC_ENTER();
 
     i = 0;
-    tmp[i++] = MPIU_Strdup(env->env_name);
-    tmp[i++] = MPIU_Strdup("=");
-    tmp[i++] = env->env_value ? MPIU_Strdup(env->env_value) : MPIU_Strdup("");
+    tmp[i++] = HYDU_strdup(env->env_name);
+    tmp[i++] = HYDU_strdup("=");
+    tmp[i++] = env->env_value ? HYDU_strdup(env->env_value) : HYDU_strdup("");
     tmp[i++] = NULL;
     status = HYDU_str_alloc_and_join(tmp, &str);
     HYDU_ERR_POP(status, "unable to join strings\n");
 
-    MPIU_PutEnv(str);
+    putenv(str);
 
     for (i = 0; tmp[i]; i++)
         HYDU_FREE(tmp[i]);

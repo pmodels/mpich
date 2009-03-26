@@ -165,7 +165,7 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
     if (*partition_list == NULL) {
         HYDU_alloc_partition(partition_list);
         (*partition_list)->segment_list = segment;
-        (*partition_list)->name = MPIU_Strdup(name);
+        (*partition_list)->name = HYDU_strdup(name);
         (*partition_list)->total_proc_count += segment->proc_count;
     }
     else {
@@ -186,7 +186,7 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
             else if (partition->next == NULL) {
                 HYDU_alloc_partition(&partition->next);
                 partition->next->segment_list = segment;
-                partition->next->name = MPIU_Strdup(name);
+                partition->next->name = HYDU_strdup(name);
                 partition->next->total_proc_count += segment->proc_count;
                 break;
             }
@@ -227,9 +227,9 @@ static char *pad_string(char *str, char *pad, int count)
     HYDU_FUNC_ENTER();
 
     i = 0;
-    tmp[i++] = MPIU_Strdup(str);
+    tmp[i++] = HYDU_strdup(str);
     for (j = 0; j < count; j++)
-        tmp[i++] = MPIU_Strdup(pad);
+        tmp[i++] = HYDU_strdup(pad);
     tmp[i] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &out);
@@ -258,9 +258,9 @@ HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
 
     if (*partition_list == NULL) {
         HYDU_alloc_partition(partition_list);
-        (*partition_list)->name = MPIU_Strdup(name);
+        (*partition_list)->name = HYDU_strdup(name);
 
-        x = MPIU_Strdup(map);
+        x = HYDU_strdup(map);
         count = num_procs - count_elements(x, ",");
         HYDU_FREE(x);
 
@@ -272,20 +272,20 @@ HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
             if (strcmp(partition->name, name) == 0) {
                 /* Found a partition with the same name; append */
                 if (partition->user_bind_map == NULL) {
-                    x = MPIU_Strdup(map);
+                    x = HYDU_strdup(map);
                     count = num_procs - count_elements(x, ",");
                     HYDU_FREE(x);
 
                     partition->user_bind_map = pad_string(map, ",-1", count);
                 }
                 else {
-                    x = MPIU_Strdup(map);
+                    x = HYDU_strdup(map);
                     count = num_procs - count_elements(x, ",");
                     HYDU_FREE(x);
 
                     i = 0;
-                    tmp[i++] = MPIU_Strdup(partition->user_bind_map);
-                    tmp[i++] = MPIU_Strdup(",");
+                    tmp[i++] = HYDU_strdup(partition->user_bind_map);
+                    tmp[i++] = HYDU_strdup(",");
                     tmp[i++] = pad_string(map, ",-1", count);
                     tmp[i++] = NULL;
 
@@ -299,8 +299,8 @@ HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
             }
             else if (partition->next == NULL) {
                 HYDU_alloc_partition(&partition->next);
-                partition->next->name = MPIU_Strdup(name);
-                partition->next->user_bind_map = MPIU_Strdup(map);
+                partition->next->name = HYDU_strdup(name);
+                partition->next->user_bind_map = HYDU_strdup(map);
                 break;
             }
             else {
@@ -353,7 +353,7 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
 
     if (!strcmp(host_file, "HYDRA_USE_LOCALHOST")) {
         HYDU_alloc_partition(&(*partition_list));
-        (*partition_list)->name = MPIU_Strdup("localhost");
+        (*partition_list)->name = HYDU_strdup("localhost");
         (*partition_list)->total_proc_count = 1;
 
         HYDU_alloc_partition_segment(&((*partition_list)->segment_list));

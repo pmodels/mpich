@@ -5,6 +5,7 @@
  */
 
 #include "pmi_proxy.h"
+#include "hydra_utils.h"
 
 struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 
@@ -38,7 +39,7 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
         /* Working directory */
         if (!strcmp(*argv, "--wdir")) {
             argv++;
-            HYD_PMCD_pmi_proxy_params.wdir = MPIU_Strdup(*argv);
+            HYD_PMCD_pmi_proxy_params.wdir = HYDU_strdup(*argv);
             continue;
         }
 
@@ -50,7 +51,7 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
             if (!strcmp(*argv, "HYDRA_NO_USER_MAP"))
                 HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
             else
-                HYD_PMCD_pmi_proxy_params.user_bind_map = MPIU_Strdup(*argv);
+                HYD_PMCD_pmi_proxy_params.user_bind_map = HYDU_strdup(*argv);
             continue;
         }
 
@@ -165,7 +166,7 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
          * everything into the args variable. */
         for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec->next; exec = exec->next);
         for (arg = 0; *argv && strcmp(*argv, "--exec");) {
-            exec->exec[arg++] = MPIU_Strdup(*argv);
+            exec->exec[arg++] = HYDU_strdup(*argv);
             ++argv;
         }
         exec->exec[arg++] = NULL;

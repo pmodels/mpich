@@ -35,21 +35,21 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
 
         /* Setup the executable arguments */
         arg = 0;
-        client_arg[arg++] = MPIU_Strdup("/usr/bin/ssh");
+        client_arg[arg++] = HYDU_strdup("/usr/bin/ssh");
 
         /* Allow X forwarding only if explicitly requested */
         if (handle.enablex == 1)
-            client_arg[arg++] = MPIU_Strdup("-X");
+            client_arg[arg++] = HYDU_strdup("-X");
         else if (handle.enablex == 0)
-            client_arg[arg++] = MPIU_Strdup("-x");
+            client_arg[arg++] = HYDU_strdup("-x");
         else    /* default mode is disable X */
-            client_arg[arg++] = MPIU_Strdup("-x");
+            client_arg[arg++] = HYDU_strdup("-x");
 
         /* ssh does not support any partition names other than host names */
-        client_arg[arg++] = MPIU_Strdup(partition->name);
+        client_arg[arg++] = HYDU_strdup(partition->name);
 
         for (i = 0; partition->proxy_args[i]; i++)
-            client_arg[arg++] = MPIU_Strdup(partition->proxy_args[i]);
+            client_arg[arg++] = HYDU_strdup(partition->proxy_args[i]);
 
         client_arg[arg++] = NULL;
 

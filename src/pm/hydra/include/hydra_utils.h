@@ -123,13 +123,8 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, char *buf, int *buf_co
         MPIU_Free(p);                           \
     }
 
-#define HYDU_STRDUP(src, dest, type, status)                            \
-    {                                                                   \
-        (dest) = (type) MPIU_Strdup((src));                             \
-        if ((dest) == NULL)                                             \
-            HYDU_ERR_SETANDJUMP1((status), HYD_INTERNAL_ERROR,          \
-                             "failed duping string %s\n", (src));       \
-    }
+#define HYDU_snprintf MPIU_Snprintf
+#define HYDU_strdup MPIU_Strdup
 
 HYD_Status HYDU_list_append_strlist(char **exec, char **client_arg);
 HYD_Status HYDU_print_strlist(char **args);

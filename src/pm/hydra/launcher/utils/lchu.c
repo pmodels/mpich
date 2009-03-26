@@ -220,7 +220,7 @@ HYD_Status HYD_LCHU_merge_exec_info_to_partition(void)
                 HYDU_ERR_POP(status, "unable to allocate partition exec\n");
 
                 for (i = 0; exec_info->exec[i]; i++)
-                    partition->exec_list->exec[i] = MPIU_Strdup(exec_info->exec[i]);
+                    partition->exec_list->exec[i] = HYDU_strdup(exec_info->exec[i]);
                 partition->exec_list->exec[i] = NULL;
 
                 partition->exec_list->proc_count =
@@ -240,7 +240,7 @@ HYD_Status HYD_LCHU_merge_exec_info_to_partition(void)
 
                 exec = exec->next;
                 for (i = 0; exec_info->exec[i]; i++)
-                    exec->exec[i] = MPIU_Strdup(exec_info->exec[i]);
+                    exec->exec[i] = HYDU_strdup(exec_info->exec[i]);
                 exec->exec[i] = NULL;
 
                 exec->proc_count =

@@ -264,12 +264,8 @@ struct HYD_Exec_info {
 	HYDU_Debug("Exiting function %s\n", __func__);                 \
     }
 #else
-#define HYDU_FUNC_ENTER()                                               \
-    {                                                                   \
-    }
-#define HYDU_FUNC_EXIT()                                               \
-    {                                                                  \
-    }
+#define HYDU_FUNC_ENTER() {}
+#define HYDU_FUNC_EXIT() {}
 #endif
 
 #endif /* HYDRA_BASE_H_INCLUDED */

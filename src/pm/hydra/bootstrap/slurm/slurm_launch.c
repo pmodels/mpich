@@ -30,14 +30,14 @@ HYD_Status HYD_BSCD_slurm_launch_procs(void)
         /* Setup the executable arguments */
         arg = 0;
         /* FIXME: Get the path to srun */
-        client_arg[arg++] = MPIU_Strdup("srun");
+        client_arg[arg++] = HYDU_strdup("srun");
 
         /* Currently, we do not support any partition names other than
          * host names */
-        client_arg[arg++] = MPIU_Strdup(partition->name);
+        client_arg[arg++] = HYDU_strdup(partition->name);
 
         for (i = 0; partition->proxy_args[i]; i++)
-            client_arg[arg++] = MPIU_Strdup(partition->proxy_args[i]);
+            client_arg[arg++] = HYDU_strdup(partition->proxy_args[i]);
 
         client_arg[arg++] = NULL;
 

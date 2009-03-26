@@ -8,7 +8,6 @@
 #include "hydra_utils.h"
 #include "mpiexec.h"
 #include "lchu.h"
-#include "mpi.h"
 
 #define HYDRA_MAX_PATH 4096
 
@@ -24,8 +23,8 @@ HYD_Handle handle;
 
 static void show_version(void)
 {
-    printf("MPICH2 Version: %s\n", MPICH2_VERSION);
-    printf("Process Manager: HYDRA\n");
+    printf("HYDRA Build Details\n");
+    printf("Process Manager: PMI\n");
     printf("Boot-strap servers available: %s\n", HYDRA_BSS_NAMES);
 }
 
@@ -96,9 +95,9 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 
         if (!strcmp(*argv, "-genv")) {
             INCREMENT_ARGV(status);
-            env_name = MPIU_Strdup(*argv);
+            env_name = HYDU_strdup(*argv);
             INCREMENT_ARGV(status);
-            env_value = MPIU_Strdup(*argv);
+            env_value = HYDU_strdup(*argv);
 
             status = HYDU_env_create(&env, env_name, env_value);
             HYDU_ERR_POP(status, "unable to create env struct\n");
@@ -142,9 +141,9 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 
         if (!strcmp(*argv, "-env")) {
             INCREMENT_ARGV(status);
-            env_name = MPIU_Strdup(*argv);
+            env_name = HYDU_strdup(*argv);
             INCREMENT_ARGV(status);
-            env_value = MPIU_Strdup(*argv);
+            env_value = HYDU_strdup(*argv);
 
             status = HYDU_env_create(&env, env_name, env_value);
             HYDU_ERR_POP(status, "unable to create env struct\n");
@@ -158,7 +157,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 
         if (!strcmp(*argv, "-wdir")) {
             INCREMENT_ARGV(status);
-            handle.wdir = MPIU_Strdup(*argv);
+            handle.wdir = HYDU_strdup(*argv);
             continue;
         }
 
@@ -177,7 +176,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 
         if (!strcmp(*argv, "-f")) {
             INCREMENT_ARGV(status);
-            handle.host_file = MPIU_Strdup(*argv);
+            handle.host_file = HYDU_strdup(*argv);
             continue;
         }
 
@@ -193,7 +192,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             }
             HYDU_ERR_CHKANDJUMP(status, handle.bootstrap, HYD_INTERNAL_ERROR,
                                 "duplicate bootstrap server\n");
-            handle.bootstrap = MPIU_Strdup(str[1]);
+            handle.bootstrap = HYDU_strdup(str[1]);
             continue;
         }
 
@@ -220,7 +219,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
                 if (!strcmp(str[2], "user")) {
                     handle.binding = HYD_BIND_USER;
                     if (str[3])
-                        handle.user_bind_map = MPIU_Strdup(str[3]);
+                        handle.user_bind_map = HYDU_strdup(str[3]);
                 }
             }
 
@@ -255,7 +254,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             i = 0;
             while (exec_info->exec[i] != NULL)
                 i++;
-            exec_info->exec[i] = MPIU_Strdup(*argv);
+            exec_info->exec[i] = HYDU_strdup(*argv);
             exec_info->exec[i + 1] = NULL;
         } while (++argv && *argv);
 
@@ -283,15 +282,15 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 
     tmp = getenv("HYDRA_BOOTSTRAP");
     if (handle.bootstrap == NULL && tmp)
-        handle.bootstrap = MPIU_Strdup(tmp);
+        handle.bootstrap = HYDU_strdup(tmp);
     if (handle.bootstrap == NULL)
-        handle.bootstrap = MPIU_Strdup(HYDRA_DEFAULT_BSS);
+        handle.bootstrap = HYDU_strdup(HYDRA_DEFAULT_BSS);
 
     tmp = getenv("HYDRA_HOST_FILE");
     if (handle.host_file == NULL && tmp)
-        handle.host_file = MPIU_Strdup(tmp);
+        handle.host_file = HYDU_strdup(tmp);
     if (handle.host_file == NULL)
-        handle.host_file = MPIU_Strdup("HYDRA_USE_LOCALHOST");
+        handle.host_file = HYDU_strdup("HYDRA_USE_LOCALHOST");
 
     status = HYDU_get_base_path(progname, handle.wdir, &handle.base_path);
     HYDU_ERR_POP(status, "unable to get base path\n");
