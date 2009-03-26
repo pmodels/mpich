@@ -49,6 +49,7 @@ static mpid_nem_mx_hash_t *mpid_nem_mx_connreqs ATTRIBUTE((unused, used))= NULL;
     if(s){ (_ret) = 1; } else {(_ret) = 0;}                                   \
 }while(0)
 
+/* GM: A dummy comment for testing */
 
 static int MPID_nem_mx_handle_sreq(MPID_Request *sreq);
 static int MPID_nem_mx_handle_rreq(MPID_Request *rreq, mx_status_t status);
