@@ -455,7 +455,7 @@ static inline int *MPIDU_Atomic_swap_int_ptr(volatile int **ptr, int *val)
 #elif defined(HAVE_GCC_AND_IA64_ASM)
     /* is pointer swizzling necessary here? */
     __asm__ __volatile__ ("xchg8 %0=[%2],%3"
-                          : "=r" (val), "=m" (*val)
+                          : "=r" (val), "=m" (*ptr)
                           : "r" (ptr), "0" (val));
     return val;
 #else /* "lock-op-unlock" fallback */
@@ -501,7 +501,7 @@ static inline int MPIDU_Atomic_swap_int(volatile int *ptr, int val)
 #elif defined(HAVE_GCC_AND_IA64_ASM)
     /* is pointer swizzling necessary here? */
     __asm__ __volatile__ ("xchg8 %0=[%2],%3"
-                          : "=r" (val), "=m" (*val)
+                          : "=r" (val), "=m" (*ptr)
                           : "r" (ptr), "0" (val));
     return val;
 #else /* "lock-op-unlock" fallback */
@@ -535,7 +535,7 @@ static inline MPI_Aint MPIDU_Atomic_swap_aint(volatile MPI_Aint *ptr, MPI_Aint v
 #elif defined(HAVE_GCC_AND_IA64_ASM)
     /* is pointer swizzling necessary here? */
     __asm__ __volatile__ ("xchg8 %0=[%2],%3"
-                          : "=r" (val), "=m" (*val)
+                          : "=r" (val), "=m" (*ptr)
                           : "r" (ptr), "0" (val));
     return val;
 #else /* "lock-op-unlock" fallback */

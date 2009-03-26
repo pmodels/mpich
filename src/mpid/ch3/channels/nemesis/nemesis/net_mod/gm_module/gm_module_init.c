@@ -249,11 +249,23 @@ MPID_nem_gm_module_connect_to_root (const char *business_card, MPIDI_VC_t *new_v
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_gm_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
+MPID_nem_gm_module_vc_init (MPIDI_VC_t *vc)
 {    
+    char *business_card;
     int mpi_errno = MPI_SUCCESS;
     int ret;
-
+    int pmi_errno;
+    int val_max_sz;
+    MPIU_CHKLMEM_DECL(1);
+    
+    pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+    
+    MPIU_CHKLMEM_MALLOC(business_card, char *, val_max_sz, mpi_errno, "business_card");
+    
+    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, val_max_sz, vc->pg);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
     VC_FIELD(vc, source_id) = my_pg_rank; /* FIXME: this is only valid for processes in COMM_WORLD */
 
     mpi_errno = MPID_nem_gm_module_get_port_unique_from_bc (business_card, &VC_FIELD(vc, gm_port_id), VC_FIELD(vc, gm_unique_id));
@@ -269,6 +281,7 @@ MPID_nem_gm_module_vc_init (MPIDI_VC_t *vc, const char *business_card)
     /* --END ERROR HANDLING-- */
 
  fn_fail:
+    MPIU_CHKLMEM_FREEALL()
     return mpi_errno;
 }
 

@@ -13,8 +13,6 @@ send_callback (struct gm_port *p, void *context, gm_status_t status)
 {
     MPID_nem_cell_t *cell = (MPID_nem_cell_t *)context;
 
-    printf_d ("send_callback()\n");
-
     if (status != GM_SUCCESS)
     {
 	gm_perror ("Send error", status);
@@ -39,8 +37,6 @@ send_cell (int node_id, int port_id, MPID_nem_cell_ptr_t cell, int datalen)
     gm_send_with_callback (MPID_nem_module_gm_port, pkt, PACKET_SIZE, datalen + MPID_NEM_MPICH2_HEAD_LEN, GM_LOW_PRIORITY, node_id,
 			   port_id, send_callback, (void *)cell);
     DO_PAPI (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues4));
-    printf_d ("  Sent packet to node = %d, port = %d\n", node_id, port_id);
-    printf_d ("    datalen %d\n", datalen);
     return MPI_SUCCESS;
 }
 
