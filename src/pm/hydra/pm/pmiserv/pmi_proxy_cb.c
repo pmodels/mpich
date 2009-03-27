@@ -28,7 +28,8 @@ HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events, void *userp)
         status = HYDU_sock_accept(fd, &accept_fd);
         HYDU_ERR_POP(status, "accept error\n");
 
-        status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_listen_cb);
+        status =
+            HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_listen_cb);
         HYDU_ERR_POP(status, "unable to register fd\n");
     }
     else {      /* We got a command from mpiexec */
@@ -59,7 +60,7 @@ HYD_Status HYD_PMCD_pmi_proxy_rstdout_cb(int fd, HYD_Event_t events, void *userp
     struct HYD_PMCD_pmi_proxy_params *proxy_params;
 
     HYDU_FUNC_ENTER();
-    proxy_params = (struct HYD_PMCD_pmi_proxy_params *)userp;
+    proxy_params = (struct HYD_PMCD_pmi_proxy_params *) userp;
 
     status = HYDU_sock_stdout_cb(fd, events, proxy_params->rproxy_connfd, &closed);
     HYDU_ERR_POP(status, "stdout callback error\n");
@@ -81,9 +82,10 @@ HYD_Status HYD_PMCD_pmi_proxy_rstdout_cb(int fd, HYD_Event_t events, void *userp
                 proxy_params->out[i] = -1;
                 proxy_params->err[i] = -1;
             }
-            if (proxy_params->out[i] != -1) all_procs_exited = 0;
+            if (proxy_params->out[i] != -1)
+                all_procs_exited = 0;
         }
-        if(all_procs_exited) {
+        if (all_procs_exited) {
             close(proxy_params->rproxy_connfd);
             status = HYD_DMX_deregister_fd(proxy_params->rproxy_connfd);
             HYDU_ERR_POP(status, "Error deregistering remote job conn fd\n");
@@ -102,7 +104,7 @@ HYD_Status HYD_PMCD_pmi_proxy_rstdout_cb(int fd, HYD_Event_t events, void *userp
 
 HYD_Status HYD_PMCD_pmi_proxy_remote_cb(int fd, HYD_Event_t events, void *userp)
 {
-    int closed=0, i;
+    int closed = 0, i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

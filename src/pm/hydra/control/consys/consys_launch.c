@@ -27,8 +27,9 @@ HYD_Status HYD_CSI_launch_procs(void)
         status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, NULL, handle.stdout_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-        if(partition->err != -1) {
-            status = HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, NULL, handle.stderr_cb);
+        if (partition->err != -1) {
+            status =
+                HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, NULL, handle.stderr_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
     }

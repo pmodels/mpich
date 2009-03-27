@@ -16,7 +16,7 @@ int HYD_PMCD_pmi_serv_listenfd;
 extern HYD_Handle handle;
 
 /* Local proxy is a proxy that is local to this process */
-static HYD_Status launch_procs_with_local_proxy(void ) 
+static HYD_Status launch_procs_with_local_proxy(void)
 {
     HYD_Status status = HYD_SUCCESS;
     int i, arg, process_id;
@@ -129,25 +129,24 @@ static HYD_Status launch_procs_with_local_proxy(void )
 }
 
 /* Request remote proxies to shutdown */
-static HYD_Status shutdown_remote_proxies(void )
+static HYD_Status shutdown_remote_proxies(void)
 {
     char shutdown_proxies_cmd[HYD_PMCD_MAX_CMD_LEN];
-    struct HYD_Partition *partition=NULL;
-    int HYD_PMCD_pmi_proxy_connfd=-1;
+    struct HYD_Partition *partition = NULL;
+    int HYD_PMCD_pmi_proxy_connfd = -1;
     HYD_Status status = HYD_SUCCESS;
 
     for (partition = handle.partition_list; partition; partition = partition->next) {
         status = HYDU_sock_connect(partition->name, handle.pproxy_port,
-                                    &HYD_PMCD_pmi_proxy_connfd);
+                                   &HYD_PMCD_pmi_proxy_connfd);
         HYDU_ERR_POP(status, "Error connecting to remote proxy");
 
         /* Create shutdown command */
         HYDU_snprintf(shutdown_proxies_cmd, HYD_PMCD_MAX_CMD_LEN,
-            "%s=%s %c\n",
-            "cmd", HYD_PMCD_CMD_SHUTDOWN, HYD_PMCD_CMD_SEP_CHAR);
+                      "%s=%s %c\n", "cmd", HYD_PMCD_CMD_SHUTDOWN, HYD_PMCD_CMD_SEP_CHAR);
 
         status = HYDU_sock_writeline(HYD_PMCD_pmi_proxy_connfd, shutdown_proxies_cmd,
-                                        strlen(shutdown_proxies_cmd));
+                                     strlen(shutdown_proxies_cmd));
         HYDU_ERR_POP(status, "Error writing the launch procs command\n");
 
         /* FIXME: Read result */
@@ -162,21 +161,21 @@ static HYD_Status shutdown_remote_proxies(void )
 }
 
 /* Remote proxy is a proxy external to this process */
-static HYD_Status launch_procs_with_remote_proxy(void )
+static HYD_Status launch_procs_with_remote_proxy(void)
 {
     HYD_Status status = HYD_SUCCESS;
     char launch_procs_cmd[HYD_PMCD_MAX_CMD_LEN];
-    char env_list[HYD_PMCD_MAX_CMD_LEN]; /* FIXME: Wrong *MAX*... */
+    char env_list[HYD_PMCD_MAX_CMD_LEN];        /* FIXME: Wrong *MAX*... */
     int env_list_len = 0;
     char *p = NULL;
-    struct HYD_Partition *partition=NULL;
-    struct HYD_Partition_exec *exec=NULL;
-    struct HYD_Env *env=NULL;
-    int HYD_PMCD_pmi_proxy_connfd=-1;
+    struct HYD_Partition *partition = NULL;
+    struct HYD_Partition_exec *exec = NULL;
+    struct HYD_Env *env = NULL;
+    int HYD_PMCD_pmi_proxy_connfd = -1;
 
     for (partition = handle.partition_list; partition; partition = partition->next) {
         status = HYDU_sock_connect(partition->name, handle.pproxy_port,
-                                    &HYD_PMCD_pmi_proxy_connfd);
+                                   &HYD_PMCD_pmi_proxy_connfd);
         HYDU_ERR_POP(status, "Error connecting to remote proxy");
 
         exec = partition->exec_list;
@@ -186,23 +185,23 @@ static HYD_Status launch_procs_with_remote_proxy(void )
         p = env_list;
         *p = '\0';
         env_list_len = HYD_PMCD_MAX_CMD_LEN;
-        while(env){
-            HYDU_snprintf(p, env_list_len,"%s=%s %c",
-                            env->env_name, env->env_value, HYD_PMCD_CMD_ENV_SEP_CHAR);
+        while (env) {
+            HYDU_snprintf(p, env_list_len, "%s=%s %c",
+                          env->env_name, env->env_value, HYD_PMCD_CMD_ENV_SEP_CHAR);
             env_list_len -= strlen(p);
             p += strlen(p);
-            env = env->next; 
+            env = env->next;
         }
         /* Create launch command */
         HYDU_snprintf(launch_procs_cmd, HYD_PMCD_MAX_CMD_LEN,
-            "%s=%s %c %s=%s %c %s=%d %c %s=%s %c\n",
-            "cmd", HYD_PMCD_CMD_LAUNCH_PROCS, HYD_PMCD_CMD_SEP_CHAR,
-            "exec_name", exec->exec[0], HYD_PMCD_CMD_SEP_CHAR,
-            "exec_cnt", exec->proc_count, HYD_PMCD_CMD_SEP_CHAR,
-            "env", env_list, HYD_PMCD_CMD_SEP_CHAR); 
+                      "%s=%s %c %s=%s %c %s=%d %c %s=%s %c\n",
+                      "cmd", HYD_PMCD_CMD_LAUNCH_PROCS, HYD_PMCD_CMD_SEP_CHAR,
+                      "exec_name", exec->exec[0], HYD_PMCD_CMD_SEP_CHAR,
+                      "exec_cnt", exec->proc_count, HYD_PMCD_CMD_SEP_CHAR,
+                      "env", env_list, HYD_PMCD_CMD_SEP_CHAR);
 
         status = HYDU_sock_writeline(HYD_PMCD_pmi_proxy_connfd, launch_procs_cmd,
-                                        strlen(launch_procs_cmd));
+                                     strlen(launch_procs_cmd));
         HYDU_ERR_POP(status, "Error writing the launch procs command\n");
 
         /* FIXME: Read result */
@@ -293,12 +292,12 @@ HYD_Status HYD_PMCI_launch_procs(void)
     status = HYD_PMCD_pmi_create_pg();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
-    if(handle.is_proxy_remote) {
-        if(handle.is_proxy_terminator) {
+    if (handle.is_proxy_remote) {
+        if (handle.is_proxy_terminator) {
             status = shutdown_remote_proxies();
             HYDU_ERR_POP(status, "Error shutting down remote proxies\n");
         }
-        else{
+        else {
             status = launch_procs_with_remote_proxy();
             HYDU_ERR_POP(status, "Error launching procs with remote proxy\n");
         }
@@ -323,10 +322,10 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
 
     HYDU_FUNC_ENTER();
 
-    if(handle.is_proxy_remote) {
+    if (handle.is_proxy_remote) {
         status = HYD_SUCCESS;
     }
-    else{
+    else {
         status = HYD_BSCI_wait_for_completion();
         if (status != HYD_SUCCESS) {
             status = HYD_PMCD_pmi_serv_cleanup();

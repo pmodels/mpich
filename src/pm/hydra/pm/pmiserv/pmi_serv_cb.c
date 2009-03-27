@@ -150,7 +150,7 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
      * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
     HYDU_snprintf(cmd, HYD_PMCD_MAX_CMD_LEN, "%s=%s %c\n",
-        "cmd", HYD_PMCD_CMD_KILLALL_PROCS, HYD_PMCD_CMD_SEP_CHAR);
+                  "cmd", HYD_PMCD_CMD_KILLALL_PROCS, HYD_PMCD_CMD_SEP_CHAR);
     for (partition = handle.partition_list; partition; partition = partition->next) {
         status = HYDU_sock_connect(partition->name, handle.proxy_port, &fd);
         if (status != HYD_SUCCESS) {

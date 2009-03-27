@@ -68,8 +68,8 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             handle.enablex = !strcmp(*argv, "--enable-x");
             continue;
         }
-        
-        if(!strcmp(*argv, "--boot-proxies")) {
+
+        if (!strcmp(*argv, "--boot-proxies")) {
             /* FIXME: Prevent usage of incompatible params */
             handle.bootstrap = HYDU_strdup("ssh");
             handle.is_proxy_launcher = 1;
@@ -77,7 +77,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             continue;
         }
 
-        if(!strcmp(*argv, "--remote-proxy")) {
+        if (!strcmp(*argv, "--remote-proxy")) {
             /* FIXME: We should get rid of this option eventually.
              * This should be the default case. The centralized
              * version should use an option like "--local-proxy"
@@ -87,7 +87,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             continue;
         }
 
-        if(!strcmp(*argv, "--shutdown-proxies")) {
+        if (!strcmp(*argv, "--shutdown-proxies")) {
             handle.is_proxy_remote = 1;
             handle.is_proxy_terminator = 1;
             handle.prop = HYD_ENV_PROP_ALL;
@@ -303,14 +303,14 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     }
     /* In the case of the proxy launcher, aka --boot-proxies, there is no executable
      * specified */
-    if(handle.is_proxy_launcher || handle.is_proxy_terminator) {
+    if (handle.is_proxy_launcher || handle.is_proxy_terminator) {
 
         status = HYD_LCHU_get_current_exec_info(&exec_info);
         HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-        exec_info->exec[0] = HYDU_strdup(HYD_PROXY_NAME" --persistent");
+        exec_info->exec[0] = HYDU_strdup(HYD_PROXY_NAME " --persistent");
         exec_info->exec[1] = NULL;
-        if(exec_info->exec_proc_count == 0)
+        if (exec_info->exec_proc_count == 0)
             exec_info->exec_proc_count = 1;
 
         env_name = HYDU_strdup("HYD_PROXY_PORT");
@@ -359,8 +359,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         handle.binding = !strcmp(tmp, "none") ? HYD_BIND_NONE :
             !strcmp(tmp, "rr") ? HYD_BIND_RR :
             !strcmp(tmp, "buddy") ? HYD_BIND_BUDDY :
-            !strcmp(tmp, "pack") ? HYD_BIND_PACK :
-            HYD_BIND_USER;
+            !strcmp(tmp, "pack") ? HYD_BIND_PACK : HYD_BIND_USER;
     if (handle.binding == HYD_BIND_UNSET)
         handle.binding = HYD_BIND_NONE;
 

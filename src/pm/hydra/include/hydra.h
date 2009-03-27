@@ -18,7 +18,7 @@ struct HYD_Handle_ {
      * and hence needs its own port - pproxy_port */
     int pproxy_port;
     char *bootstrap;
-    /* FIXME: We should define a proxy type instead of all these 
+    /* FIXME: We should define a proxy type instead of all these
      * flags... proxy_type = PROXY_LAUNCHER | PROXY_TERMINATOR
      */
     int is_proxy_launcher;

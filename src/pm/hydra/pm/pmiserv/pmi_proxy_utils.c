@@ -12,7 +12,8 @@
 struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 
 HYD_Status HYD_PMCD_pmi_proxy_get_next_keyvalp(char **bufp, int *buf_lenp, char **keyp,
-                                    int *key_lenp, char **valp, int *val_lenp, char separator) 
+                                               int *key_lenp, char **valp, int *val_lenp,
+                                               char separator)
 {
     char *p = NULL;
     int len = 0;
@@ -24,41 +25,53 @@ HYD_Status HYD_PMCD_pmi_proxy_get_next_keyvalp(char **bufp, int *buf_lenp, char 
     p = *bufp;
     len = *buf_lenp;
 
-    while(len && isspace(*p)) { p++; len--; }
-    if(len <= 0)
+    while (len && isspace(*p)) {
+        p++;
+        len--;
+    }
+    if (len <= 0)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Error reading keyval from command\n");
 
     *keyp = p;
     klen = 0;
-    while(len && (*p != '=')) {
-        p++; len--;
+    while (len && (*p != '=')) {
+        p++;
+        len--;
         klen++;
     }
-    if(key_lenp) *key_lenp = klen;
-    p++; len--;
-    if(len <= 0)
+    if (key_lenp)
+        *key_lenp = klen;
+    p++;
+    len--;
+    if (len <= 0)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Error reading keyval from command\n");
 
     *valp = p;
     vlen = 0;
     /* FIXME: Allow escaping ';' */
-    while(len && (*p != separator)) {
-        p++; len--;
+    while (len && (*p != separator)) {
+        p++;
+        len--;
         vlen++;
     }
-    if(val_lenp) *val_lenp = vlen;
-    p++; len--;
-    if(len < 0)
+    if (val_lenp)
+        *val_lenp = vlen;
+    p++;
+    len--;
+    if (len < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Error reading keyval from command\n");
 
-    while(len && isspace(*p)) { p++; len--; }
+    while (len && isspace(*p)) {
+        p++;
+        len--;
+    }
     /* p now points to the next key or the end of string */
     *bufp = p;
-    if(*p != '\0') {
+    if (*p != '\0') {
         /* Remaining length of buffer to be processed */
         *buf_lenp = len;
     }
-    else{
+    else {
         /* End of string - no more keyvals */
         *buf_lenp = 0;
     }
@@ -72,9 +85,9 @@ HYD_Status HYD_PMCD_pmi_proxy_get_next_keyvalp(char **bufp, int *buf_lenp, char 
 HYD_Status HYD_PMCD_pmi_proxy_handle_launch_cmd(int job_connfd, char *launch_cmd, int cmd_len)
 {
     char *key, *val;
-    int i=0, key_len=0, val_len = 0, core = 0;
+    int i = 0, key_len = 0, val_len = 0, core = 0;
     struct HYD_Partition_exec *exec = NULL;
-    HYD_Env_t *env=NULL;
+    HYD_Env_t *env = NULL;
     HYD_Status status = HYD_SUCCESS;
 
     /* FIXME: We currently support only one job - We need a list of proxy params for multiple jobs */
@@ -85,7 +98,9 @@ HYD_Status HYD_PMCD_pmi_proxy_handle_launch_cmd(int job_connfd, char *launch_cmd
 
     status = HYD_DMX_deregister_fd(job_connfd);
     HYDU_ERR_POP(status, "Unable to deregister job conn fd\n");
-    status = HYD_DMX_register_fd(1, &job_connfd, HYD_STDIN, (void *)&HYD_PMCD_pmi_proxy_params, HYD_PMCD_pmi_proxy_remote_cb);
+    status =
+        HYD_DMX_register_fd(1, &job_connfd, HYD_STDIN, (void *) &HYD_PMCD_pmi_proxy_params,
+                            HYD_PMCD_pmi_proxy_remote_cb);
     HYDU_ERR_POP(status, "Unable to register job conn fd\n");
 
     status = HYDU_alloc_partition_exec(&HYD_PMCD_pmi_proxy_params.exec_list);
@@ -93,59 +108,70 @@ HYD_Status HYD_PMCD_pmi_proxy_handle_launch_cmd(int job_connfd, char *launch_cmd
 
     exec = HYD_PMCD_pmi_proxy_params.exec_list;
 
-    while(cmd_len > 0){
-        status = HYD_PMCD_pmi_proxy_get_next_keyvalp(&launch_cmd, &cmd_len, &key, &key_len, &val, &val_len, HYD_PMCD_CMD_SEP_CHAR);
+    while (cmd_len > 0) {
+        status =
+            HYD_PMCD_pmi_proxy_get_next_keyvalp(&launch_cmd, &cmd_len, &key, &key_len, &val,
+                                                &val_len, HYD_PMCD_CMD_SEP_CHAR);
         HYDU_ERR_POP(status, "Unable to get next key from launch command\n");
 
         /* FIXME: Use pre-defined macros for keys */
-        if(!strncmp(key, "exec_name", key_len)) {
+        if (!strncmp(key, "exec_name", key_len)) {
             HYDU_MALLOC(exec->exec[0], char *, (val_len + 1), status);
             HYDU_ERR_POP(status, "Error allocating memory for executable name\n");
             HYDU_snprintf(exec->exec[0], val_len, "%s", val);
             exec->exec[1] = NULL;
         }
-        else if(!strncmp(key, "exec_cnt", key_len)) {
+        else if (!strncmp(key, "exec_cnt", key_len)) {
             for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec->next; exec = exec->next);
-                exec->proc_count = atoi(val);
+            exec->proc_count = atoi(val);
         }
-        else if(!strncmp(key, "env", key_len)) {
+        else if (!strncmp(key, "env", key_len)) {
             char *env_str;
             int env_str_len;
 
-            env_str = val; env_str_len = val_len;
+            env_str = val;
+            env_str_len = val_len;
             exec->prop_env = NULL;
-            while(env_str_len > 0) {
-                status = HYD_PMCD_pmi_proxy_get_next_keyvalp(&env_str, &env_str_len, &key, &key_len, &val, &val_len, HYD_PMCD_CMD_ENV_SEP_CHAR);
-                HYDU_ERR_POP(status, "Error getting next environment variable from launch command\n");
+            while (env_str_len > 0) {
+                status =
+                    HYD_PMCD_pmi_proxy_get_next_keyvalp(&env_str, &env_str_len, &key, &key_len,
+                                                        &val, &val_len,
+                                                        HYD_PMCD_CMD_ENV_SEP_CHAR);
+                HYDU_ERR_POP(status,
+                             "Error getting next environment variable from launch command\n");
 
                 HYDU_MALLOC(env, HYD_Env_t *, sizeof(HYD_Env_t), status);
-                HYDU_ERR_POP(status, "Error allocating memory for environment variable in proxy params\n");
+                HYDU_ERR_POP(status,
+                             "Error allocating memory for environment variable in proxy params\n");
 
-                HYDU_MALLOC(env->env_name, char *, key_len+1, status);
-                HYDU_ERR_POP(status, "Error allocating memory for environment variable in proxy params\n");
-                HYDU_snprintf(env->env_name, key_len+1, "%s", key);
+                HYDU_MALLOC(env->env_name, char *, key_len + 1, status);
+                HYDU_ERR_POP(status,
+                             "Error allocating memory for environment variable in proxy params\n");
+                HYDU_snprintf(env->env_name, key_len + 1, "%s", key);
 
-                HYDU_MALLOC(env->env_value, char *, val_len+1, status);
-                HYDU_ERR_POP(status, "Error allocating memory for environment variable in proxy params\n");
-                HYDU_snprintf(env->env_value, val_len+1, "%s", val);
+                HYDU_MALLOC(env->env_value, char *, val_len + 1, status);
+                HYDU_ERR_POP(status,
+                             "Error allocating memory for environment variable in proxy params\n");
+                HYDU_snprintf(env->env_value, val_len + 1, "%s", val);
                 env->next = exec->prop_env;
                 exec->prop_env = env;
             }
         }
-        else{
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Unrecognized key in launch command\n");
+        else {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "Unrecognized key in launch command\n");
         }
 
         /* FIXME: Set these ... */
         /* HYD_PMCD_pmi_proxy_params.wdir =
-           HYD_PMCD_pmi_proxy_params.binding = 
-           HYD_PMCD_pmi_proxy_params.user_bind_map = ;
-           HYDU_append_env_to_list(*env, &HYD_PMCD_pmi_proxy_params.global_env);
-           HYD_PMCD_pmi_proxy_params.one_pass_count 
-           status = HYDU_alloc_partition_segment(&segment->next);
-           segment->proc_count = ;
-            segment->start_pid = ;
-        */
+         * HYD_PMCD_pmi_proxy_params.binding =
+         * HYD_PMCD_pmi_proxy_params.user_bind_map = ;
+         * HYDU_append_env_to_list(*env, &HYD_PMCD_pmi_proxy_params.global_env);
+         * HYD_PMCD_pmi_proxy_params.one_pass_count
+         * status = HYDU_alloc_partition_segment(&segment->next);
+         * segment->proc_count = ;
+         * segment->start_pid = ;
+         */
     }
 
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
@@ -172,12 +198,15 @@ HYD_Status HYD_PMCD_pmi_proxy_handle_launch_cmd(int job_connfd, char *launch_cmd
             HYDU_ERR_POP(status, "unable to create env\n");
             status = HYDU_putenv(env);
             HYDU_ERR_POP(status, "putenv failed\n");
-            status = HYDU_create_process(&exec->exec[0], exec->prop_env, NULL, 
-                                             &HYD_PMCD_pmi_proxy_params.out[i],
-                                             &HYD_PMCD_pmi_proxy_params.err[i],
-                                             &HYD_PMCD_pmi_proxy_params.pid[i], core);
+            status = HYDU_create_process(&exec->exec[0], exec->prop_env, NULL,
+                                         &HYD_PMCD_pmi_proxy_params.out[i],
+                                         &HYD_PMCD_pmi_proxy_params.err[i],
+                                         &HYD_PMCD_pmi_proxy_params.pid[i], core);
             HYDU_ERR_POP(status, "Error launching process\n");
-            status = HYD_DMX_register_fd(1, &HYD_PMCD_pmi_proxy_params.out[i], HYD_STDOUT, (void *)&HYD_PMCD_pmi_proxy_params, HYD_PMCD_pmi_proxy_rstdout_cb);
+            status =
+                HYD_DMX_register_fd(1, &HYD_PMCD_pmi_proxy_params.out[i], HYD_STDOUT,
+                                    (void *) &HYD_PMCD_pmi_proxy_params,
+                                    HYD_PMCD_pmi_proxy_rstdout_cb);
             HYDU_ERR_POP(status, "Error registering process stdout\n");
         }
     }
@@ -193,16 +222,16 @@ HYD_Status HYD_PMCD_pmi_proxy_handle_cmd(int fd, char *cmd, int cmd_len)
 {
     char *key = NULL;
     char *cmd_name = NULL;
-    int i=0, key_len = 0, cmd_name_len = 0;
+    int i = 0, key_len = 0, cmd_name_len = 0;
     char *cmdp = NULL;
     HYD_Status status = HYD_SUCCESS;
 
     cmdp = cmd;
     /* First key/val is the command name */
     status = HYD_PMCD_pmi_proxy_get_next_keyvalp(&cmdp, &cmd_len, &key, &key_len, &cmd_name,
-                                                    &cmd_name_len, HYD_PMCD_CMD_SEP_CHAR );
+                                                 &cmd_name_len, HYD_PMCD_CMD_SEP_CHAR);
     HYDU_ERR_POP(status, "Error retreiving command name from command\n");
-    
+
     if (!strncmp(cmd_name, HYD_PMCD_CMD_KILLALL_PROCS, key_len)) {
         for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
             if (HYD_PMCD_pmi_proxy_params.pid[i] != -1)
@@ -212,11 +241,11 @@ HYD_Status HYD_PMCD_pmi_proxy_handle_cmd(int fd, char *cmd, int cmd_len)
         HYDU_ERR_POP(status, "unable to register fd\n");
         close(fd);
     }
-    else if(!strncmp(cmd_name, HYD_PMCD_CMD_LAUNCH_PROCS, key_len)) {
+    else if (!strncmp(cmd_name, HYD_PMCD_CMD_LAUNCH_PROCS, key_len)) {
         status = HYD_PMCD_pmi_proxy_handle_launch_cmd(fd, cmdp, cmd_len);
         HYDU_ERR_POP(status, "Unable to handle launch command\n");
     }
-    else if(!strncmp(cmd_name, HYD_PMCD_CMD_SHUTDOWN, key_len)) {
+    else if (!strncmp(cmd_name, HYD_PMCD_CMD_SHUTDOWN, key_len)) {
         /* FIXME: Not a clean shutdown... Kill all procs before exiting */
         status = HYD_DMX_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to register fd\n");
@@ -262,39 +291,39 @@ HYD_Status HYD_PMCD_pmi_proxy_init_params(struct HYD_PMCD_pmi_proxy_params *prox
 }
 
 /* Cleanup proxy params after use */
-HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(struct HYD_PMCD_pmi_proxy_params *proxy_params)
+HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(struct HYD_PMCD_pmi_proxy_params * proxy_params)
 {
     HYD_Status status = HYD_SUCCESS;
-    if(proxy_params->wdir != NULL)
+    if (proxy_params->wdir != NULL)
         HYDU_FREE(proxy_params->wdir);
-    if(proxy_params->user_bind_map != NULL)
+    if (proxy_params->user_bind_map != NULL)
         HYDU_FREE(proxy_params->user_bind_map);
-    if(proxy_params->global_env != NULL){
+    if (proxy_params->global_env != NULL) {
         HYD_Env_t *p, *q;
         do {
             p = proxy_params->global_env;
             q = p->next;
             HYDU_FREE(p);
-        }while(q);
+        } while (q);
     }
-    if(proxy_params->segment_list != NULL) {
+    if (proxy_params->segment_list != NULL) {
         /* FIXME : incomplete */
     }
-    if(proxy_params->exec_list != NULL) {
+    if (proxy_params->exec_list != NULL) {
         struct HYD_Partition_exec *p, *q;
-        do{
+        do {
             p = proxy_params->exec_list;
             q = p->next;
             HYDU_FREE(p);
-        }while(q);
+        } while (q);
     }
-    if(proxy_params->pid != NULL)
+    if (proxy_params->pid != NULL)
         HYDU_FREE(proxy_params->pid);
-    if(proxy_params->out != NULL)
+    if (proxy_params->out != NULL)
         HYDU_FREE(proxy_params->out);
-    if(proxy_params->err != NULL)
+    if (proxy_params->err != NULL)
         HYDU_FREE(proxy_params->err);
-    if(proxy_params->exit_status != NULL)
+    if (proxy_params->exit_status != NULL)
         HYDU_FREE(proxy_params->exit_status);
 
     status = HYD_PMCD_pmi_proxy_init_params(proxy_params);
@@ -325,7 +354,7 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
         if (*argv == NULL)
             break;
 
-        if(!strcmp(*argv, "--verbose")) {
+        if (!strcmp(*argv, "--verbose")) {
             HYD_PMCD_pmi_proxy_params.debug = 1;
             continue;
         }
@@ -336,7 +365,7 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
             continue;
         }
 
-        if(!strcmp(*argv, "--persistent")) {
+        if (!strcmp(*argv, "--persistent")) {
             HYD_PMCD_pmi_proxy_params.is_persistent = 1;
             continue;
         }
