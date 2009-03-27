@@ -8,7 +8,7 @@
 #include "hydra_utils.h"
 #include "bscu.h"
 
-HYD_Handle handle;
+extern HYD_Handle handle;
 
 /*
  * HYD_BSCU_wait_for_completion: We first wait for communication

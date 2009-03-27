@@ -10,7 +10,7 @@
 #include "pmci.h"
 #include "demux.h"
 
-HYD_Handle handle;
+extern HYD_Handle handle;
 
 HYD_Status HYD_CSI_launch_procs(void)
 {
@@ -24,11 +24,13 @@ HYD_Status HYD_CSI_launch_procs(void)
     HYDU_ERR_POP(status, "PM returned error while launching processes\n");
 
     for (partition = handle.partition_list; partition; partition = partition->next) {
-        status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, handle.stdout_cb);
+        status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, NULL, handle.stdout_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-        status = HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, handle.stderr_cb);
-        HYDU_ERR_POP(status, "demux returned error registering fd\n");
+        if(partition->err != -1) {
+            status = HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, NULL, handle.stderr_cb);
+            HYDU_ERR_POP(status, "demux returned error registering fd\n");
+        }
     }
 
     if (handle.in != -1) {      /* Only process_id 0 */
@@ -42,7 +44,7 @@ HYD_Status HYD_CSI_launch_procs(void)
         handle.stdin_buf_count = 0;
         handle.stdin_buf_offset = 0;
 
-        status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, handle.stdin_cb);
+        status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, NULL, handle.stdin_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 

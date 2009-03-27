@@ -34,6 +34,10 @@
 #include <sys/types.h>
 #endif /* HAVE_SYS_TYPES_H */
 
+#if defined HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif /* HAVE_SYS_STAT_H */
+
 #include <errno.h>
 
 #if defined HAVE_GETTIMEOFDAY

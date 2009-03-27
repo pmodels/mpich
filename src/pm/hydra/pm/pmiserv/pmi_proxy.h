@@ -11,7 +11,10 @@
 #include "hydra_utils.h"
 
 struct HYD_PMCD_pmi_proxy_params {
+    int debug;
+
     int proxy_port;
+    int is_persistent;
     char *wdir;
     HYD_Binding binding;
     char *user_bind_map;
@@ -31,6 +34,7 @@ struct HYD_PMCD_pmi_proxy_params {
     int *err;
     int *exit_status;
     int in;
+    int rproxy_connfd;
 
     int stdin_buf_offset;
     int stdin_buf_count;
@@ -40,10 +44,18 @@ struct HYD_PMCD_pmi_proxy_params {
 extern struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 extern int HYD_PMCD_pmi_proxy_listenfd;
 
+HYD_Status HYD_PMCD_pmi_proxy_init_params(struct HYD_PMCD_pmi_proxy_params *proxy_params);
+HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(struct HYD_PMCD_pmi_proxy_params *proxy_params);
 HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv);
-HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events);
-HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events);
-HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events);
-HYD_Status HYD_PMCD_pmi_proxy_stdin_cb(int fd, HYD_Event_t events);
+HYD_Status HYD_PMCD_pmi_proxy_get_next_keyvalp(char **bufp, int *buf_lenp, char **keyp,
+                                    int *key_lenp, char **valp, int *val_lenp, char separator); 
+HYD_Status HYD_PMCD_pmi_proxy_handle_cmd(int fd, char *cmd, int cmd_len);
+HYD_Status HYD_PMCD_pmi_proxy_handle_launch_cmd(int job_connfd, char *launch_cmd, int cmd_len);
+HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_PMCD_pmi_proxy_remote_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_PMCD_pmi_proxy_rstdout_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_PMCD_pmi_proxy_stdin_cb(int fd, HYD_Event_t events, void *userp);
 
 #endif /* PMI_PROXY_H_INCLUDED */

@@ -9,7 +9,7 @@
 #include "bscu.h"
 #include "fork.h"
 
-HYD_Handle handle;
+extern HYD_Handle handle;
 
 HYD_Status HYD_BSCD_fork_launch_procs(void)
 {

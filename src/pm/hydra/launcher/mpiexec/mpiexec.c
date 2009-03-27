@@ -10,7 +10,7 @@
 #include "lchu.h"
 #include "csi.h"
 
-HYD_Handle handle;
+extern HYD_Handle handle;
 
 static void usage(void)
 {

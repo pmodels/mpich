@@ -100,7 +100,7 @@ HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list)
     env = env_list;
     while (env) {
         status = env_to_str(env, &str_list[i++]);
-        HYDU_ERR_POP(status, "env_to_str returned error\n");
+        HYDU_ERR_POP(status, "HYDU_env_to_str returned error\n");
         env = env->next;
     }
     str_list[i++] = NULL;

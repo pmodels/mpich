@@ -10,13 +10,13 @@
 #include "demux.h"
 #include "pmi_serv.h"
 
-struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
+extern struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 int HYD_PMCD_pmi_proxy_listenfd;
 
-HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events)
+HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events, void *userp)
 {
-    int accept_fd, count, i;
-    enum HYD_PMCD_pmi_proxy_cmds cmd;
+    int accept_fd, cmd_len;
+    char cmd[HYD_PMCD_MAX_CMD_LEN];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -28,39 +28,67 @@ HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events)
         status = HYDU_sock_accept(fd, &accept_fd);
         HYDU_ERR_POP(status, "accept error\n");
 
-        status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, HYD_PMCD_pmi_proxy_listen_cb);
+        status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_listen_cb);
         HYDU_ERR_POP(status, "unable to register fd\n");
     }
     else {      /* We got a command from mpiexec */
-        count = read(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
-        if (count < 0) {
-            HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR, "read error on %d (%s)\n",
-                                 fd, HYDU_strerror(errno));
-        }
-        else if (count == 0) {
+        status = HYDU_sock_readline(fd, cmd, HYD_PMCD_MAX_CMD_LEN, &cmd_len);
+        HYDU_ERR_POP(status, "Error reading command from proxy");
+        if (cmd_len == 0) {
             /* The connection has closed */
             status = HYD_DMX_deregister_fd(fd);
             HYDU_ERR_POP(status, "unable to deregister fd\n");
             close(fd);
             goto fn_exit;
         }
+        status = HYD_PMCD_pmi_proxy_handle_cmd(fd, cmd, cmd_len);
+        HYDU_ERR_POP(status, "Error handling proxy command\n");
+    }
 
-        if (cmd == KILLALL_PROCS) {     /* Got the killall command */
-            for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
-                if (HYD_PMCD_pmi_proxy_params.pid[i] != -1)
-                {
-                    kill(HYD_PMCD_pmi_proxy_params.pid[i], SIGTERM);
-                    kill(HYD_PMCD_pmi_proxy_params.pid[i], SIGKILL);
-                }
-            
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
 
-            status = HYD_DMX_deregister_fd(fd);
-            HYDU_ERR_POP(status, "unable to register fd\n");
-            close(fd);
+HYD_Status HYD_PMCD_pmi_proxy_rstdout_cb(int fd, HYD_Event_t events, void *userp)
+{
+    int closed, i;
+    HYD_Status status = HYD_SUCCESS;
+    struct HYD_PMCD_pmi_proxy_params *proxy_params;
+
+    HYDU_FUNC_ENTER();
+    proxy_params = (struct HYD_PMCD_pmi_proxy_params *)userp;
+
+    status = HYDU_sock_stdout_cb(fd, events, proxy_params->rproxy_connfd, &closed);
+    HYDU_ERR_POP(status, "stdout callback error\n");
+
+    if (closed) {
+        int all_procs_exited = 1;
+        /* The process exited */
+        status = HYD_DMX_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+
+        /* FIXME: This could be a perf killer if we have a lot of procs associated with
+         * the same job on a single proxy
+         */
+        for (i = 0; i < proxy_params->exec_proc_count; i++) {
+            int ret_status = 0;
+            if (proxy_params->out[i] == fd) {
+                waitpid(proxy_params->pid[i], &ret_status, WUNTRACED);
+                close(proxy_params->in);
+                proxy_params->out[i] = -1;
+                proxy_params->err[i] = -1;
+            }
+            if (proxy_params->out[i] != -1) all_procs_exited = 0;
         }
-        else {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "got unrecognized command from mpiexec\n");
+        if(all_procs_exited) {
+            close(proxy_params->rproxy_connfd);
+            status = HYD_DMX_deregister_fd(proxy_params->rproxy_connfd);
+            HYDU_ERR_POP(status, "Error deregistering remote job conn fd\n");
+            status = HYD_PMCD_pmi_proxy_cleanup_params(proxy_params);
+            HYDU_ERR_POP(status, "Error cleaning up proxy params\n");
         }
     }
 
@@ -72,8 +100,33 @@ HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events)
     goto fn_exit;
 }
 
+HYD_Status HYD_PMCD_pmi_proxy_remote_cb(int fd, HYD_Event_t events, void *userp)
+{
+    int closed=0, i;
+    HYD_Status status = HYD_SUCCESS;
 
-HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events)
+    HYDU_FUNC_ENTER();
+    /* FIXME: This cb should take care of the commands from mpiexec */
+
+    if (closed) {
+        /* The connection has closed */
+        status = HYD_DMX_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+
+        for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
+            if (HYD_PMCD_pmi_proxy_params.out[i] == fd)
+                HYD_PMCD_pmi_proxy_params.out[i] = -1;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events, void *userp)
 {
     int closed, i;
     HYD_Status status = HYD_SUCCESS;
@@ -102,7 +155,7 @@ HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events)
 }
 
 
-HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events)
+HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events, void *userp)
 {
     int closed, i;
     HYD_Status status = HYD_SUCCESS;
@@ -131,7 +184,7 @@ HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events)
 }
 
 
-HYD_Status HYD_PMCD_pmi_proxy_stdin_cb(int fd, HYD_Event_t events)
+HYD_Status HYD_PMCD_pmi_proxy_stdin_cb(int fd, HYD_Event_t events, void *userp)
 {
     int closed;
     HYD_Status status = HYD_SUCCESS;

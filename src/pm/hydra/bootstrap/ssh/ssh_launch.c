@@ -9,7 +9,7 @@
 #include "bscu.h"
 #include "ssh.h"
 
-HYD_Handle handle;
+extern HYD_Handle handle;
 
 /*
  * HYD_BSCD_ssh_launch_procs: For each process, we create an

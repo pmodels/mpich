@@ -14,15 +14,16 @@ typedef struct HYD_DMXI_callback {
     int num_fds;
     int *fd;
     HYD_Event_t events;
-     HYD_Status(*callback) (int fd, HYD_Event_t events);
+    void *userp;
+     HYD_Status(*callback) (int fd, HYD_Event_t events, void *userp);
 
     struct HYD_DMXI_callback *next;
 } HYD_DMXI_callback_t;
 
 static HYD_DMXI_callback_t *cb_list = NULL;
 
-HYD_Status HYD_DMX_register_fd(int num_fds, int *fd, HYD_Event_t events,
-                               HYD_Status(*callback) (int fd, HYD_Event_t events))
+HYD_Status HYD_DMX_register_fd(int num_fds, int *fd, HYD_Event_t events, void *userp,
+                               HYD_Status(*callback) (int fd, HYD_Event_t events, void *userp))
 {
     HYD_DMXI_callback_t *cb_element, *run;
     int i;
@@ -39,6 +40,7 @@ HYD_Status HYD_DMX_register_fd(int num_fds, int *fd, HYD_Event_t events,
     HYDU_MALLOC(cb_element->fd, int *, num_fds * sizeof(int), status);
     memcpy(cb_element->fd, fd, num_fds * sizeof(int));
     cb_element->events = events;
+    cb_element->userp = userp;
     cb_element->callback = callback;
     cb_element->next = NULL;
 
@@ -158,7 +160,7 @@ HYD_Status HYD_DMX_wait_for_event(int time)
                 if (pollfds[i].revents & POLLIN)
                     events |= HYD_STDOUT;
 
-                status = run->callback(pollfds[i].fd, events);
+                status = run->callback(pollfds[i].fd, events, run->userp);
                 HYDU_ERR_POP(status, "callback returned error status\n");
             }
 

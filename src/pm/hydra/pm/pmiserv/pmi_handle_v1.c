@@ -11,7 +11,7 @@
 #include "pmi_handle.h"
 #include "pmi_handle_v1.h"
 
-HYD_Handle handle;
+extern HYD_Handle handle;
 HYD_PMCD_pmi_pg_t *pg_list;
 
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */

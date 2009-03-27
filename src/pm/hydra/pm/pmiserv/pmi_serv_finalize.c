@@ -30,8 +30,11 @@ HYD_Status HYD_PMCI_finalize(void)
     status = HYD_PMCD_pmi_finalize();
     HYDU_ERR_POP(status, "unable to finalize process manager utils\n");
 
-    status = HYD_BSCI_finalize();
-    HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
+    /* We use BSC only for local proxies */
+    if(!handle.is_proxy_remote) {
+        status = HYD_BSCI_finalize();
+        HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

@@ -12,6 +12,76 @@
 struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 int HYD_PMCD_pmi_proxy_listenfd;
 
+static HYD_Status HYD_PMCD_pmi_pproxy_start(void ) {
+    /* If this function exits... its always an error */
+    HYD_Status status = HYD_INTERNAL_ERROR;
+    int ret = 0;
+    pid_t proc_id = -1;
+    struct rlimit rl;
+
+    umask(0);
+
+    /* Get the limit of fds */
+    ret = getrlimit(RLIMIT_NOFILE, &rl);
+    if(ret == -1)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "getrlimit() failed (%s)\n",
+                                HYDU_strerror(errno));
+
+    proc_id = fork();
+    if(proc_id > 0 ) {
+        /* Ignore exit from child proc - persistent pmi proxy */
+        status = HYDU_set_signal(SIGCHLD, SIG_IGN);
+        HYDU_ERR_POP(status, "Setting SIGCHLD handler to SIG_IGN failed\n");
+        
+        /* Parent process exits */
+        if(!HYD_PMCD_pmi_proxy_params.debug)
+            exit(0);
+    }
+    else if(proc_id == 0 ) {
+        /* Child proc continues */
+        int i;
+        pid_t spid;
+        spid = setsid();
+        if(spid == -1)
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "setsid() failed(%s)\n",
+                                    HYDU_strerror(errno));
+
+        if(!HYD_PMCD_pmi_proxy_params.debug)
+        for(i=0; i<rl.rlim_max; i++)
+            close(i);
+        /* FIXME: dup(0,1,2) to "/dev/null" */
+
+        if(getenv("HYD_PROXY_PORT"))
+            HYD_PMCD_pmi_proxy_params.proxy_port = atoi(getenv("HYD_PROXY_PORT"));
+        else
+            HYD_PMCD_pmi_proxy_params.proxy_port = -1;
+
+        status = HYDU_sock_listen(&HYD_PMCD_pmi_proxy_listenfd, NULL,
+                              (uint16_t *) & HYD_PMCD_pmi_proxy_params.proxy_port);
+        HYDU_ERR_POP(status, "unable to listen on socket\n");
+
+        /* Register the listening socket with the demux engine */
+        status = HYD_DMX_register_fd(1, &HYD_PMCD_pmi_proxy_listenfd, HYD_STDOUT, NULL,
+                                 HYD_PMCD_pmi_proxy_listen_cb);
+        HYDU_ERR_POP(status, "unable to register fd\n");
+    }
+    else {
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "fork() failed (%s) \n",
+                                HYDU_strerror(errno));
+    }
+
+
+    while(1) {
+        status = HYD_DMX_wait_for_event(-1);
+        HYDU_ERR_POP(status, "demux engine error waiting for event\n");
+    }
+
+fn_exit:
+    return status;
+fn_fail:
+    goto fn_exit;
+}
+
 int main(int argc, char **argv)
 {
     int i, j, arg, count, pid, ret_status;
@@ -26,12 +96,18 @@ int main(int argc, char **argv)
     status = HYD_PMCD_pmi_proxy_get_params(argc, argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
+    if(HYD_PMCD_pmi_proxy_params.is_persistent) {
+        status = HYD_PMCD_pmi_pproxy_start();
+        HYDU_ERR_POP(status, "Error starting persistent PMI proxy\n");
+        goto fn_exit;
+    }
+
     status = HYDU_sock_listen(&HYD_PMCD_pmi_proxy_listenfd, NULL,
                               (uint16_t *) & HYD_PMCD_pmi_proxy_params.proxy_port);
     HYDU_ERR_POP(status, "unable to listen on socket\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_register_fd(1, &HYD_PMCD_pmi_proxy_listenfd, HYD_STDOUT,
+    status = HYD_DMX_register_fd(1, &HYD_PMCD_pmi_proxy_listenfd, HYD_STDOUT, NULL,
                                  HYD_PMCD_pmi_proxy_listen_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
@@ -123,7 +199,7 @@ int main(int argc, char **argv)
                 HYD_PMCD_pmi_proxy_params.stdin_buf_offset = 0;
                 HYD_PMCD_pmi_proxy_params.stdin_buf_count = 0;
                 status =
-                    HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, HYD_PMCD_pmi_proxy_stdin_cb);
+                    HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, NULL, HYD_PMCD_pmi_proxy_stdin_cb);
                 HYDU_ERR_POP(status, "unable to register fd\n");
             }
             else {
@@ -142,12 +218,12 @@ int main(int argc, char **argv)
     /* Everything is spawned, now wait for I/O */
     status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.exec_proc_count,
                                  HYD_PMCD_pmi_proxy_params.out,
-                                 HYD_STDOUT, HYD_PMCD_pmi_proxy_stdout_cb);
+                                 HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_stdout_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.exec_proc_count,
                                  HYD_PMCD_pmi_proxy_params.err,
-                                 HYD_STDOUT, HYD_PMCD_pmi_proxy_stderr_cb);
+                                 HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_stderr_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     while (1) {

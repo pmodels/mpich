@@ -10,7 +10,7 @@
 #include "pmci.h"
 #include "demux.h"
 
-HYD_Handle handle;
+extern HYD_Handle handle;
 
 HYD_Status HYD_CSI_wait_for_completion(void)
 {

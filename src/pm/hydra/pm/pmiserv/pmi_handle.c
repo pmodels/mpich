@@ -8,7 +8,7 @@
 #include "pmi_handle.h"
 #include "pmi_handle_v1.h"
 
-HYD_Handle handle;
+extern HYD_Handle handle;
 HYD_PMCD_pmi_pg_t *pg_list = NULL;
 
 struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v1;

@@ -9,7 +9,7 @@
 #include "bscu.h"
 #include "slurm.h"
 
-HYD_Handle handle;
+extern HYD_Handle handle;
 
 HYD_Status HYD_BSCD_slurm_launch_procs(void)
 {

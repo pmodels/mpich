@@ -11,7 +11,7 @@
 
 #define HYDRA_MAX_PATH 4096
 
-HYD_Handle handle;
+extern HYD_Handle handle;
 
 #define INCREMENT_ARGV(status)             \
     {                                      \
@@ -33,7 +33,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 {
     int i, local_env_set;
     char **argv = t_argv, *tmp;
-    char *env_name, *env_value, *str[4] = { NULL }, *progname = *argv;
+    char *env_name, *env_value, *str[4] = { NULL, NULL, NULL, NULL }, *progname = *argv;
     HYD_Env_t *env;
     struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
@@ -66,6 +66,31 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             HYDU_ERR_CHKANDJUMP(status, handle.enablex != -1, HYD_INTERNAL_ERROR,
                                 "duplicate enable-x\n");
             handle.enablex = !strcmp(*argv, "--enable-x");
+            continue;
+        }
+        
+        if(!strcmp(*argv, "--boot-proxies")) {
+            /* FIXME: Prevent usage of incompatible params */
+            handle.bootstrap = HYDU_strdup("ssh");
+            handle.is_proxy_launcher = 1;
+            handle.prop = HYD_ENV_PROP_ALL;
+            continue;
+        }
+
+        if(!strcmp(*argv, "--remote-proxy")) {
+            /* FIXME: We should get rid of this option eventually.
+             * This should be the default case. The centralized
+             * version should use an option like "--local-proxy"
+             */
+            handle.is_proxy_remote = 1;
+            handle.prop = HYD_ENV_PROP_ALL;
+            continue;
+        }
+
+        if(!strcmp(*argv, "--shutdown-proxies")) {
+            handle.is_proxy_remote = 1;
+            handle.is_proxy_terminator = 1;
+            handle.prop = HYD_ENV_PROP_ALL;
             continue;
         }
 
@@ -237,12 +262,24 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             continue;
         }
 
+        if (!strcmp(str[0], "--pproxy-port")) {
+            if (!str[1]) {
+                INCREMENT_ARGV(status);
+                str[1] = *argv;
+            }
+            HYDU_ERR_CHKANDJUMP(status, handle.pproxy_port != -1, HYD_INTERNAL_ERROR,
+                                "duplicate persistent proxy port\n");
+            handle.pproxy_port = atoi(str[1]);
+            continue;
+        }
+
         if (*argv[0] == '-')
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized argument\n");
 
         status = HYD_LCHU_get_current_exec_info(&exec_info);
         HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
+        /* End of Job launcher option handling */
         /* Read the executable till you hit the end of a ":" */
         do {
             if (!strcmp(*argv, ":")) {  /* Next executable */
@@ -262,7 +299,31 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             break;
 
         continue;
+
     }
+    /* In the case of the proxy launcher, aka --boot-proxies, there is no executable
+     * specified */
+    if(handle.is_proxy_launcher || handle.is_proxy_terminator) {
+        if(handle.exec_info_list != NULL)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                "No executable should be specified when booting proxies\n");
+
+        status = HYD_LCHU_get_current_exec_info(&exec_info);
+        HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
+
+        exec_info->exec[0] = HYDU_strdup(HYD_PROXY_NAME" --persistent");
+        exec_info->exec[1] = NULL;
+        exec_info->exec_proc_count = 1;
+
+        env_name = HYDU_strdup("HYD_PROXY_PORT");
+        env_value = HYDU_int_to_str(handle.pproxy_port);
+
+        status = HYDU_env_create(&env, env_name, env_value);
+        HYDU_ERR_POP(status, "unable to create env struct\n");
+
+        HYDU_append_env_to_list(*env, &exec_info->user_env);
+    }
+
 
     tmp = getenv("MPIEXEC_DEBUG");
     if (handle.debug == -1 && tmp)

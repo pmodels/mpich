@@ -14,7 +14,7 @@
 #include "pmi_serv.h"
 
 int HYD_PMCD_pmi_serv_listenfd;
-HYD_Handle handle;
+extern HYD_Handle handle;
 struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle_list;
 
 /*
@@ -27,7 +27,7 @@ struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle_list;
  * 2. The client sends us a "cmd" or "mcmd" string which means that a
  * single or multi-line command is to follow.
  */
-HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events)
+HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events, void *userp)
 {
     int accept_fd, linelen, i;
     char *buf = NULL, *cmd, *args[HYD_NUM_TMP_STRINGS];
@@ -41,7 +41,7 @@ HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events)
         status = HYDU_sock_accept(fd, &accept_fd);
         HYDU_ERR_POP(status, "accept error\n");
 
-        status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, HYD_PMCD_pmi_serv_cb);
+        status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, NULL, HYD_PMCD_pmi_serv_cb);
         HYDU_ERR_POP(status, "unable to register fd\n");
     }
     else {
@@ -141,7 +141,7 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
 {
     struct HYD_Partition *partition;
     int fd;
-    enum HYD_PMCD_pmi_proxy_cmds cmd;
+    char cmd[HYD_PMCD_MAX_CMD_LEN];
     HYD_Status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -149,7 +149,8 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
     /* FIXME: Instead of doing this from this process itself, fork a
      * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
-    cmd = KILLALL_PROCS;
+    HYDU_snprintf(cmd, HYD_PMCD_MAX_CMD_LEN, "%s=%s %c\n",
+        "cmd", HYD_PMCD_CMD_KILLALL_PROCS, HYD_PMCD_CMD_SEP_CHAR);
     for (partition = handle.partition_list; partition; partition = partition->next) {
         status = HYDU_sock_connect(partition->name, handle.proxy_port, &fd);
         if (status != HYD_SUCCESS) {
@@ -158,7 +159,7 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
             continue;   /* Move on to the next proxy */
         }
 
-        status = HYDU_sock_write(fd, &cmd, sizeof(cmd));
+        status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
         if (status != HYD_SUCCESS) {
             HYDU_Warn_printf("unable to send data to the proxy on %s\n", partition->name);
             overall_status = HYD_INTERNAL_ERROR;

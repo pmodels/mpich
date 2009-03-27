@@ -10,8 +10,8 @@
 #include "hydra.h"
 
 HYD_Status HYD_LCHI_get_parameters(char **t_argv);
-HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events);
-HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events);
-HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events);
+HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events, void *userp);
 
 #endif /* MPIEXEC_H_INCLUDED */
