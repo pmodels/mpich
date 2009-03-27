@@ -31,7 +31,7 @@ static void show_version(void)
 
 HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 {
-    int i;
+    int i, local_env_set;
     char **argv = t_argv, *tmp;
     char *env_name, *env_value, *str[4] = { NULL }, *progname = *argv;
     HYD_Env_t *env;
@@ -310,18 +310,22 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     if (handle.prop == HYD_ENV_PROP_UNSET && tmp)
         handle.prop = !strcmp(tmp, "all") ? HYD_ENV_PROP_ALL : HYD_ENV_PROP_NONE;
 
-    /* If nothing is set for the global environment, set it to the default */
-    if (handle.prop == HYD_ENV_PROP_UNSET)
-        handle.prop = HYD_ENV_PROP_ALL;
-
     /* Make sure local executable is set */
+    local_env_set = 0;
     for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
         if (exec_info->exec[0] == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
 
         if (exec_info->exec_proc_count == 0)
             exec_info->exec_proc_count = 1;
+
+        if (exec_info->prop != HYD_ENV_PROP_UNSET)
+            local_env_set = 1;
     }
+
+    /* If no global or local environment is set, use the default */
+    if ((handle.prop == HYD_ENV_PROP_UNSET) && (local_env_set == 0))
+        handle.prop = HYD_ENV_PROP_ALL;
 
     if (handle.proxy_port == -1)
         handle.proxy_port = HYD_DEFAULT_PROXY_PORT;

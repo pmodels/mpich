@@ -129,6 +129,12 @@ HYD_Status HYD_LCHU_create_env_list(void)
             }
         }
     }
+    else if (handle.prop == HYD_ENV_PROP_UNSET) {
+        for (env = handle.user_env; env; env = env->next) {
+            status = HYDU_append_env_to_list(*env, &handle.prop_env);
+            HYDU_ERR_POP(status, "unable to add env to list\n");
+        }
+    }
 
     exec_info = handle.exec_info_list;
     while (exec_info) {
@@ -152,6 +158,12 @@ HYD_Status HYD_LCHU_create_env_list(void)
                     status = HYDU_append_env_to_list(*run, &exec_info->prop_env);
                     HYDU_ERR_POP(status, "unable to add env to list\n");
                 }
+            }
+        }
+        else if (exec_info->prop == HYD_ENV_PROP_UNSET) {
+            for (env = exec_info->user_env; env; env = env->next) {
+                status = HYDU_append_env_to_list(*env, &exec_info->prop_env);
+                HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
         exec_info = exec_info->next;
