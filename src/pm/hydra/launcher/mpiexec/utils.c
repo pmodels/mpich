@@ -304,16 +304,14 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     /* In the case of the proxy launcher, aka --boot-proxies, there is no executable
      * specified */
     if(handle.is_proxy_launcher || handle.is_proxy_terminator) {
-        if(handle.exec_info_list != NULL)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                "No executable should be specified when booting proxies\n");
 
         status = HYD_LCHU_get_current_exec_info(&exec_info);
         HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
         exec_info->exec[0] = HYDU_strdup(HYD_PROXY_NAME" --persistent");
         exec_info->exec[1] = NULL;
-        exec_info->exec_proc_count = 1;
+        if(exec_info->exec_proc_count == 0)
+            exec_info->exec_proc_count = 1;
 
         env_name = HYDU_strdup("HYD_PROXY_PORT");
         env_value = HYDU_int_to_str(handle.pproxy_port);
