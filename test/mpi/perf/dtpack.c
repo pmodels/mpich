@@ -131,9 +131,10 @@ int TestVecPackDouble( int n, int stride,
 		*avgTimeMPI = 0;
 		if (verbose)
 			printf("Too much noise; discarding measurement\n");
-		return 0;
 	}
-	*avgTimeMPI = mean(t, NTRIALS) / N_REPS;
+	else {
+	    *avgTimeMPI = mean(t, NTRIALS) / N_REPS;
+	}
 
 	MPI_Type_free( &vectype );
 
@@ -203,9 +204,10 @@ int TestVecUnPackDouble( int n, int stride,
 		*avgTimeMPI = 0;
 		if (verbose)
 			printf("Too much noise; discarding measurement\n");
-		return 0;
 	}
-	*avgTimeMPI = mean(t, NTRIALS) / N_REPS;
+	else {
+	    *avgTimeMPI = mean(t, NTRIALS) / N_REPS;
+	}
 
 	MPI_Type_free( &vectype );
 
@@ -276,10 +278,10 @@ int TestVecPack2Double( int n, int stride,
 		*avgTimeMPI = 0;
 		if (verbose)
 			printf("Too much noise; discarding measurement\n");
-		return 0;
 	}
-	*avgTimeMPI = mean(t, NTRIALS) / N_REPS;
-
+	else {
+	    *avgTimeMPI = mean(t, NTRIALS) / N_REPS;
+	}
 	MPI_Type_free( &vectype );
 
 	return 0;
@@ -357,10 +359,10 @@ int TestIndexPackDouble( int n, int stride,
 		*avgTimeMPI = 0;
 		if (verbose)
 			printf("Too much noise; discarding measurement\n");
-		return 0;
 	}
-	*avgTimeMPI = mean(t, NTRIALS) / N_REPS;
-
+	else {
+	    *avgTimeMPI = mean(t, NTRIALS) / N_REPS;
+	}
 	MPI_Type_free( &indextype );
 
 	return 0;
