@@ -1,0 +1,22 @@
+# These are currently unused error names for the Globus device
+**globus|cm_vmpi|progress_add_req:a error occurred while adding a vendor MPI request to the request tracking array
+**globus|cm_vmpi|progress_add_req %R %p:a error occurred while adding a vendor MPI request to the request tracking array: req_handle=%R, req_ptr=%p
+**globus|cm_vmpi|uuid_create %s:an error occurred while attempting to create a UUID -- %s
+**globus|cm_xio|module_finalize:an error occurred while shutting down the XIO communication module
+**globus|cm_xio|xio_read:globus|cm_xio|xio_read
+**globus|cm_xio|xio_write:globus|cm_xio|xio_write
+**globus|comm_list_wait_empty:globus|comm_list_wait_empty
+**globus|cond_destroy %s:globus|cond_destroy -- %s
+**globus|cond_init %s:globus|cond_init -- %s
+**globus|connacc|bcast_vct_error_status_recvd %p %p %d:globus|connacc|bcast_vct_error_status_recvd -- %p %p %d
+**globus|connacc|bcast_vct_len %p %p %d:globus|connacc|bcast_vct_len -- %p %p %d
+**globus|failed:globus|failed
+**globus|mutex_destroy %s:globus|mutex_destroy -- %s
+**globus|mutex_init %s:globus|mutex_init -- %s
+**globus|pe_test:globus|pe_test
+**globus|pe_test %s:globus|pe_test -- %s
+**globus|pe_wait %s:globus|pe_wait -- %s
+**globus|pm_get_gram_sj_contact:an error occurred while attempting to acquire the GRAM contact information for the subjob to which the current process belongs
+**globus|vc_destruct_contact_info:an error occurred while destroying contact information contained within a VC
+**globus|vc_destruct_contact_info %s %d:an error occurred while destroying contact information contained within the VC associated with process %s:%d
+**globus|vmpi_init:an error occurred while initializing the vendor MPI

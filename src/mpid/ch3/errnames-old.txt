@@ -1,0 +1,12 @@
+# Previously used error names
+**ch3|badca %d:specified completion action in not known (%d)
+**ch3|badca:specified completion action in not known
+**ch3|canceleager:failure occurred while performing local cancellation of a eager message
+**ch3|flowcntlpkt:UNIMPLEMENTED: unable to handle flow control packets
+**ch3|get_parent_port_err_bcast:an error occurred while broadcasting the error code from MPIDI_CH3_GetParentPort()
+**ch3|get_universe_size_notimpl: MPIDI_CH3_Get_universe_size() is not implemented
+**ch3|loadrecviov %s:failure occurred while loading the receive I/O vector (%s)
+**ch3|recvdata:failure occurred while attempting to receive message data
+**ch3|recvdata %s:failure occurred while attempting to receive message data (%s)
+**ch3|unknownpkt:received unknown packet type
+**ch3|unknownpkt %d:received unknown packet type (type=%d)

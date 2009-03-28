@@ -3,8 +3,6 @@
 #
 **pmi_init:PMI_Init failed
 **pmi_init %d:PMI_Init returned %d
-**pmi_initialized:PMI_Initialized failed
-**pmi_initialized %d:PMI_Initialized returned %d
 **pmi_get_size:PMI_Get_size failed
 **pmi_get_size %d:PMI_Get_size returned %d
 **pmi_get_universe_size:PMI_Get_universe_size failed
@@ -19,8 +17,6 @@
 **pmi_get_id %d:PMI_Get_id returned %d
 **pmi_barrier:PMI_Barrier failed
 **pmi_barrier %d:PMI_Barrier returned %d
-**pmi_finalize:PMI_Finalize failed
-**pmi_finalize %d:PMI_Finalize returned %d
 **pmi_kvs_get_my_name:PMI_KVS_Get_my_name failed
 **pmi_kvs_get_my_name %d:PMI_KVS_Get_my_name returned %d
 **pmi_kvs_get_name_length_max:PMI_KVS_Get_name_length_max failed
@@ -29,24 +25,13 @@
 **pmi_kvs_get_key_length_max %d:PMI_KVS_Get_key_length_max returned %d
 **pmi_kvs_get_value_length_max:PMI_KVS_Get_value_length_max failed
 **pmi_kvs_get_value_length_max %d:PMI_KVS_Get_value_length_max returned %d
-**pmi_kvs_create:PMI_KVS_Create failed
-**pmi_kvs_create %d:PMI_KVS_Create returned %d
 **pmi_kvs_destroy:PMI_KVS_Destroy failed
-**pmi_kvs_destroy %d:PMI_KVS_Destroy returned %d
 **pmi_kvs_put:PMI_KVS_Put failed
-**pmi_kvs_put %s %s %s %d:PMI_KVS_Put(%s, %s, %s) returned %d
 **pmi_kvs_put %d:PMI_KVS_Put returned %d
 **pmi_kvs_commit:PMI_KVS_Commit failed
 **pmi_kvs_commit %d:PMI_KVS_Commit returned %d
 **pmi_kvs_get:PMI_KVS_Get failed
 **pmi_kvs_get %d:PMI_KVS_Get returned %d
-**pmi_kvs_get %s %s %d:PMI_KVS_Get(%s, %s) returned %d
-**pmi_kvs_iter_first:PMI_KVS_iter_first failed
-**pmi_kvs_iter_first %s %d:PMI_KVS_iter_first(%s) returned %d
-**pmi_kvs_iter_first %d:PMI_KVS_iter_first returned %d
-**pmi_kvs_iter_next:PMI_KVS_iter_next failed
-**pmi_kvs_iter_next %s %d:PMI_KVS_iter_next(%s) returned %d
-**pmi_kvs_iter_next %d:PMI_KVS_iter_next returned %d
 **pmi_spawn_multiple:PMI_Spawn_multiple failed
 **pmi_spawn_multiple %d:PMI_Spawn_multiple returned %d
 **pmi_get_clique_size:PMI_Get_clique_size failed

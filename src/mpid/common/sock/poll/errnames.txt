@@ -15,7 +15,6 @@
 **sock|poll|eqfail:fatal error: failed to enqueue an event; event was lost
 **sock|poll|eqfail %d %d %d:fatal error: failed to enqueue an event; event was lost (set=%d,sock=%d,op=%d)
 **sock|poll|getport %d %s:failed to obtain port number of listener (errno=%d:%s)
-**sock|poll|hostres %d %d %s:unable to resolve host name to an address (set=%d,sock=%d,host=%s)
 **sock|poll|listen:listen() failed
 **sock|poll|listen %d %s:listen() failed (errno=%d:%s)
 **sock|poll|nodelay:unable to set TCP no delay attribute on socket
@@ -23,7 +22,6 @@
 **sock|poll|nonblock:unable to set socket to nonblocking
 **sock|poll|nonblock %d %s:unable to set socket to nonblocking (errno=%d:%s)
 **sock|poll|oserror %d %s:unexpected operating system error (errno=%d:%s)
-**sock|poll|oserror %s %d %s:unexpected operating system error from %s (errno=%d:%s)
 **sock|poll|oserror %d %d %d %s:unexpected operating system error (set=%d,sock=%d,errno=%d:%s)
 **sock|poll|oserror %s %d %d %d %s:unpected operating system error from %s (set=%d,sock=%d,errno=%d:%s)
 **sock|poll|osnomem %d %d %d %s:operating system routine failed due to lack of memory (set=%d,sock=%d,errno=%d:%s)

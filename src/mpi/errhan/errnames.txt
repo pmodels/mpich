@@ -8,7 +8,6 @@
 **finalized:MPI has already called MPI_Finalize
 **inittwice:Cannot call MPI_INIT or MPI_INIT_THREAD more than once
 **nomem:Out of memory
-**nomem %d %d:Out of memory (requested %d but only %d available)
 **nomem %s %d:Out of memory (unable to allocate a '%s' of size %d)
 **nomem %s:Out of memory (unable to allocate a '%s')
 **nomem %d:Out of memory (unable to allocate %d bytes)
@@ -20,15 +19,10 @@
 **nullptr %s:Null pointer in parameter %s
 **nullptrtype:Null pointer
 **nullptrtype %s:Null %s pointer
-**commnamelen:Specified communicator name is too long
-**commnamelen %d:Specified communicator name is too long (%d characters)
-**winnamelen:Specified window object name is too long
-**winnamelen %d:Specified window object name is too long (%d characters)
 **typenamelen:Specified datatype name is too long
 **typenamelen %d:Specified datatype name is too long (%d characters)
 **success:No MPI error
 **fileexist:File exists
-**fileexist %s:File %s exists
 **keyvalobj:Keyval was not defined for the supplied object
 **keyvalobj %s:Keyval was not defined for %s objects
 **keyvalinvalid:Attribute key was MPI_KEYVAL_INVALID
@@ -73,7 +67,6 @@ also the value at index %d
 **stride:Range does not terminate
 **stride %d %d %d:Range (start = %d, end = %d, stride = %d) does not terminate
 **stridezero:Zero stride is invalid
-**rangeinvalid:Invalid range
 **rangestartinvalid:Some element of a range array is either negative or too large
 **rangestartinvalid %d %d %d:The %dth element of a range array starts at %d \
  but must be nonnegative and less than %d
@@ -118,17 +111,12 @@ be in the range 0 to %d
 **tag:Invalid tag
 **tag %d:Invalid tag, value is %d
 **count:Invalid count
-**count %d:Invalid count, value = %d
 **bufnull:Null buffer pointer
-**intercommcoll:Intercommunicator collective operations have not been implemented
-**intercommcoll %s:Intercommunicator collective operation for %s has not been implemented
 **bufbsend:Insufficient space in Bsend buffer
 **bufbsend %d %d:Insufficient space in Bsend buffer; requested %d; total \
  buffer size is %d
 **inttoosmall:An address does not fit into a Fortran INTEGER.  Use \
  MPI_Get_address instead
-**namepublish:Unable to publish service name
-**namepublish %s:Unable to publish service name %s
 **namepubnotpub:Lookup failed for service name 
 **namepubnotpub %s:Lookup failed for service name %s
 **nonamepub:No name publishing service available
@@ -139,7 +127,6 @@ be in the range 0 to %d
 **namepubnotfound %s:Lookup failed for service name %s
 **namepubnotunpub:Failed to unpublish service name
 **namepubnotunpub %s:Failed to unpublish service name %s
-**needthreads:This function needs threads and threads have not been enabled
 **sendbuf_inplace:sendbuf cannot be MPI_IN_PLACE
 **recvbuf_inplace:recvbuf cannot be MPI_IN_PLACE
 **buf_inplace:buffer cannot be MPI_IN_PLACE
@@ -147,12 +134,7 @@ be in the range 0 to %d
 MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **typematchsize:No MPI datatype available for the given typeclass and size
 **typematchsize %s %d:No MPI datatype available for typeclass %s and size %d
-**nouniquehigh:Could not determine which group to place first in merged \
- intracommunicator.  Please use the parameter high to choose which group \
- should be placed first.
 **f90typetoomany:Too many requests for unnamed, predefined f90 types
-**f90typetoomany %s %d:Too many requests for unnamed, predefined f90 %s \
- types; no more than %d allowed.
 **f90typeintnone: No integer type with the requested range is available
 **f90typeintnone %d: No integer type with %d digits of range is avaiable
 **f90typerealnone: No real type with the requested range and/or precision \
@@ -189,64 +171,35 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 #
 **buffer:Invalid buffer pointer
 **bufalias:Buffers must not be aliased
-**countarray:Invalid count in count array 
-**countarray %d %d:Invalid count in the %d element of the count array; value \
-is %d
 **dtype:Invalid datatype
 **dtypenull:Null datatype
 **dtypenull %s:Datatype for argument %s is a null datatype
-**dtypenullarray:Null datatype in array of datatypes
-**dtypenullarray %s %d:Null datatype in array of datatypes %s[%d]
 **dtypecommit:Datatype has not been committed 
 **dtypeperm:Cannot free permanent data type 
-**dtypeperm %s:Cannot free permanent data type %s
-**dtypepermcontents:Cannot get contents of a permanent or basic data type 
-**dtypepermcontents %s:Cannot get contents of a permanent or basic data type %s
-**dtypename:Cannot set name in data type 
-**dtypenomatch:Type signatures do not match in communication
-**dtypecomm:Pack buffer not packed for this communicator.
 **dtypemismatch:Receiving data with a datatype whose signature does not match that of the sending datatype.
 **comm:Invalid communicator
 **commnull:Null communicator
-**intercomm:Intercommunicator is not allowed 
-**intracomm:Intracommunicator is not allowed 
-**commname:Cannot set name in communicator 
-**commpeer:Peer communicator is not valid 
-**commlocalnull:Local communicator must not be MPI_COMM_NULL
 **rankarray:Invalid rank in rank array
 **rankarray %d %d %d:Invalid rank in rank array at index %d; value is %d but must \
 be in the range 0 to %d
 **root:Invalid root
 **root %d:Invalid root (value given was %d)
-**rootlarge:Value of root is too large
-**rootlarge %d %d:Value of root is too large (value is %d but must be less than %d)
 **groupnull:Null group
 **op:Invalid MPI_Op
 **opnull:Null MPI_Op
 **opundefined:MPI_Op operation not defined for this datatype 
 **opundefined %s:MPI_Op %s operation not defined for this datatype 
 **topology:Invalid topology
-**grapharraysize:Specified edge less than zero or greater than nnodes
-**grapharraysize %d %d %d:Specified edge %d is %d but must be at least zero \
- and less than %d
 **dims:Invalid dimension argument
 **dims %d:Invalid dimension argument (value is %d)
-**dimsarray:Invalid dimension argument in array 
-**dimsarray %d %d:Value of dims[%d] is %d which is invalid
-**dimstensor:Tensor product size does not match nnodes
-**dimstensor %d %d:Tensor product size is %d but must be the same as the number of \
- nodes, which is %d
 **arg:Invalid argument
 **arg %s:Invalid argument %s
 **argerrcode:Invalid error code
 **argerrcode %d:Invalid error code %d
 **errhandler:Invalid errhandler
 **errhandlernull:Null errhandler 
-**errhandlerperm:Cannot free permanent error handler
-**errhandlerperm %s:Cannot free permanent error handler %s
 **errhandnotfile:Error handler is not a file error handler
 **errhandnotwin:Error handler is not a win error handler
-**statusignore:Invalid use of MPI_STATUS_IGNORE or MPI_STATUSES_IGNORE
 **darraydist:For MPI_DISTRIBUTE_NONE, the number of processes in that \
       dimension of the grid must be 1
 **darraydist %d %d:For MPI_DISTRIBUTE_NONE, the value of array_of_psizes[%d] \
@@ -282,17 +235,8 @@ be in the range 0 to %d
 **truncate %d %d %d %d:Message from rank %d and tag %d truncated; \
  %d bytes received but buffer size is %d
 **other:Other MPI error
-**othersys:System resource limit exceeded 
-**othersys %s:System resource (%s) limit exceeded 
 **rsendnomatch:Ready send had no matching receive 
-**rsendnomatch %d %d %d:Ready send from source %d, for destination %d and \
- with tag %d had no matching receive
 **rsendnomatch %d %d:Ready send from source %d and with tag %d had no matching receive
-**preinit:MPI_Init or MPI_Init_thread must be called first
-**preinit %s:MPI_Init or MPI_Init_thread must be called before %s
-**startup:Error on startup, such as a \
-      mismatch between mpiexec and the MPI libraries
-**startup %s:Error on startup: reason is %s
 **attrnotptr:The attribute value is not the address of a pointer or \
  pointer-sized integer.  A common error is to pass the address of an integer \
  to any of the MPI_Xxx_get_attr routines on systems where the size of a \
@@ -300,7 +244,6 @@ be in the range 0 to %d
 **intern:Internal MPI error!
 **intern %s:Internal MPI error!  %s
 **internrc:Internal MPI error!  Unexpected return code from internal function.
-**internrc %d:Internal MPI error!  Unexpected return code from internal function (rc=%d).
 **instatus:See the MPI_ERROR field in MPI_Status for the error code
 **inpending:Pending request (no error)
 **unknowngpid:Internal MPI error: Unknown gpid
@@ -314,7 +257,6 @@ be in the range 0 to %d
 **fileaccess:Access denied to file
 **fileaccess %s:Access denied to file %s
 **fileamode:Invalid amode value in MPI_File_open 
-**fileamode %d:Invalid amode value of %d in MPI_File_open 
 **fileamodeone:Exactly one of MPI_MODE_RDONLY, MPI_MODE_WRONLY, or \
  MPI_MODE_RDWR must be specified
 **fileamoderead:Cannot use MPI_MODE_CREATE or MPI_MODE_EXCL with \
@@ -334,20 +276,16 @@ be in the range 0 to %d
  MPI_REGISTER_DATAREP
 **datarepextent:Invalid extent callback
 **fileinuse:File in use by some process
-**fileinuse %s:File %s is in use by some process
 **file:Invalid MPI_File
-**filenull:Null MPI_File 
 **info:Invalid MPI_Info
 **infonull:Null MPI_Info 
 **infokey:Invalid key for MPI_Info 
 **infokeynull:Null key
 **infokeylong:Key is too long
-**infokeylong %s %d %d:Key %s is too long (length is %d but maximum allowed is %d)
 **infokeyempty:Empty or blank key 
 **infoval:Invalid MPI_Info value 
 **infovalnull:Null value
 **infovallong:Value is too long 
-**infovallong %s %d %d:Value %s is too long (length is %d but maximum length is %d)
 **infonokey:MPI_Info key is not defined 
 **infonokey %s:MPI_Info key %s is not defined 
 **infonkey:Requested nth key does not exist
@@ -355,32 +293,20 @@ be in the range 0 to %d
 **io:Other I/O error 
 **io %s:Other I/O error %s
 **ioetype:Only an integral number of etypes can be accessed
-**iofstype:Cannot determine filesystem type
-**iofstype %s:Cannot determine filesystem type for file %s
 **iofstypeunsupported:Specified filesystem is not available
-**iofstypeunsupported %s:Specified filesystem %s is not available
 **iosplitcoll:Only one active split collective I/O operation is allowed per file handle
 **iosplitcollnone:No split collective I/O operation is active
-**ioasyncwaiting:There are outstanding nonblocking I/O operations on this file
-**ioneedrdwr:Read/write access is required to this file
 **ioneedrd:Read access is required to this file
-**ioneedwr:Write access is required to this file
 **iofiletype:Filetype must be constructed out of one or more etypes
 **iosharedunsupported:Shared file pointers not supported
-**iosharedunsupported %s:Shared file pointers not supported on filesystem %s
 **iosharedfailed:Could not access shared file pointer
 **ioamodeseq:Cannot use this function when the file is opened with amode \
     MPI_MODE_SEQUENTIAL 
-**ioamodeseq %s:Cannot use function %s when the file is opened with amode \
-    MPI_MODE_SEQUENTIAL
 **iowronly:Cannot read from a file opened with amode MPI_MODE_WRONLY
 **iordonly:Cannot write to a file opened with amode MPI_MODE_RDONLY
 **iosequnsupported:MPI_MODE_SEQUENTIAL not supported on this file system
-**iosequnsupported %s:MPI_MODE_SEQUENTIAL not supported on file system %s
 **iodispifseq:disp must be set to MPI_DISPLACEMENT_CURRENT since file \
     was opened with MPI_MODE_SEQUENTIAL
-**iodispnotcurrent:Displacement must be set to MPI_DISPLACEMENT_CURRENT \
-    since file was opened with MPI_MODE_SEQUENTIAL
 **iobaddisp:Invalid displacement argument
 **iobadoffset:Invalid offset argument
 **ionegoffset:Negative offset argument
@@ -392,63 +318,30 @@ be in the range 0 to %d
 **iowsrc:Unable to read from the file as part of a strided write operation
 **iowswc:Unable to write to the file as part of a strided write operation
 **ioagnomatch:No aggregators match
-**iofilenull:Null file handle
-**iofilecorrupt:File corrupt
 **iobadsize:Invalid size argument
 **unsupporteddatarep:Only native data representation currently supported
 **iodatarepnomem:User must allocate memory for datarep
 **servicename:Attempt to lookup an unknown service name 
-**servicename %s:Attempt to lookup an unknown service name %s
 **allocmem:Unable to allocate memory for MPI_Alloc_mem
 **notsame:Inconsistent arguments to collective routine 
 **notsame %s %s:Inconsistent arguments %s to collective routine %s
-**notsamevalue:Arguments to collective routine must be the same
-**notsamevalue %s %s:Argument %s to collective routine %s must be the same
-**notsameroot:Inconsistent root 
-**notsameorder:Collective routines called in an inconsistent order
-#**notsameorder:Collective routines called in an inconsistent order (optional arguments: null terminated
-#      array of names (array of string))
 **filenospace:Not enough space for file 
-**filenospace %s %d %d:Not enough space for file %s; %d needed but only %d available
 **filenoexist:File does not exist
 **filenoexist %s:File %s does not exist
 **port:Invalid port
 **portexist:Named port does not exist
 **portexist %s:Named port %s does not exist
-**porttimeout:Time out attempting an MPI_Comm_connect to a port
-**porttimeout %s:Time out attempting an MPI_Comm_connect to a port named %s
 **openportfailed:Unable to establish a port
 **filequota:Quota exceeded for files
-**filequota %s:Quota %s exceeded for files
 **filerdonly:Read-only file or filesystem name
-**filerdonly %s:Read-only file or filesystem name %s
 **nameservice:Invalid service name (see MPI_Publish_name)
-**nameservice %s:Invalid service name %s (see MPI_Publish_name)
-**servicenameunpublish:Attempt to unpublish an unknown service name
-**servicenameunpublish %s:Attempt to unpublish an unknown service name %s
 **spawn:Error in spawn call
-**spawnfail:Could not spawn all requested processes 
-**spawnpgm:The named program could not be found
-**spawnpgm %s:The program %s could not be found
-**spawnmanager:The process manager returned an error
-**spawnmanager %s:The process manager returned an error: %s
 **datarepunsupported:Unsupported datarep passed to MPI_File_set_view 
-**datarepunsupported %s:Unsupported datarep %s passed to MPI_File_set_view
 **fileopunsupported:Unsupported file operation 
-**fileopunsupported %s:Unsupported file operation %s
 **win:Invalid MPI_Win
 **winnull:Null MPI_Win
-**winname:Cannot set window object name 
-**winpassive:Attempt to use passive target access with a window not allocated \
-with MPI_Alloc_mem. 
-**freemembase:Invalid base address in MPI_Free_mem 
 **base:Invalid base address
 **locktype:Invalid lock type
-**keyvalnull:Null keyval 
-**keyvalperm:Cannot free permanent attribute key
-**keyvalcomm:Keyval is not in communicator 
-**keyvaldtype:Keyval is not in datatype 
-**keyvalwin:Keyval is not in window object 
 **rmaconflict:Conflicting accesses to window 
 **rmasync:Wrong synchronization of RMA calls 
 **rmasize:Invalid size argument in RMA call
@@ -480,10 +373,6 @@ unexpected messages queued.
 **badcase:INTERNAL ERROR: unexpected value in case statement
 **badcase %d:INTERNAL ERROR: unexpected value in case statement (value=%d)
 **node_root_rank:Unable to get the node root rank
-**contextIdInUse:Context id already in use
-**contextIdInUse %d:Context id %d already in use
-**contextIdNotInUse:Context id to be freed is not in use
-**contextIdNotInUse %d:Context id %d to be freed is not in use
 # Duplicates?
 #**argnull:Invalid null parameter
 #**argnull %s:Invalid null parameter %s
@@ -497,10 +386,6 @@ unexpected messages queued.
 **dev|pg_finalize:unable to shutdown the process group management module
 **dev|pg_not_found:the specified process group object could not be located
 **dev|pg_not_found %p:the specified process group object could not be located (pg=%p)
-**dev|pg_destroy_failed:attempt to destroy a process group failed
-**dev|pg_destroy_failed %p:attempt to destroy a process group failed (pg=%p)
-**dev|pg_destroy|pg_not_found %p:process group being destroyed was not in the process group list (pg=%p)
-**dev|pg_destroy|pg_not_found:process group being destroyed was not in the process group list
 **dev|pg_finalize|list_not_empty:process group list was not empty
 **dev|selfsenddeadlock:DEADLOCK: attempting to send a message to the local process without a prior matching receive
 **dev|vcrt_create:failed to a create VCRT
@@ -508,12 +393,8 @@ unexpected messages queued.
 **dev|vcrt_get_ptr:failed to get a pointer to VCR table
 **dev|vcrt_get_ptr %s:failed to get a pointer to VCR table for %s
 
-**init_comm_create %d:unable to create an intercommunicator for the parent (error %d)
-**init_comm_create:unable to create an intercommunicator for the parent
 **opnotpredefined %d:only predefined ops are valid (op = %d)
 **opnotpredefined:only predefined ops are valid
-**opundefined_rma %d:RMA target received unknown RMA operation type %d
-**opundefined_rma:RMA target received unknown RMA operation
 
 **init:Initialization failed
 
@@ -529,7 +410,6 @@ unexpected messages queued.
 **afinetinvalid:Network type AF_INET invalid in call to inet_pton
 
 **wsasock:WSAStartup failed
-**wsasock %d:WSAStartup failed (errno %d)
 **wsasock %s %d:WSAStartup failed, %s (errno %d)
 # FIXME: remove wsasock error codes above and replace with wsastartup
 **wsastartup: WSAStartup failed
@@ -539,17 +419,13 @@ unexpected messages queued.
 **sock_closed:socket closed
 
 **socket:WSASocket failed
-**socket %d:WSASocket failed (errno %d)
 **socket %s %d:WSASocket failed, %s (errno %d)
 # FIXME: remove socket error codes above and replace with sock_create
 **sock_create:unable to create a socket
-**sock_create %d:unable to create a socket (errno %d)
 **sock_create %s %d:unable to create a socket, %s (errno %d)
 **shutdown:shutdown failed
-**shutdown %d:shutdown failed (errno %d)
 **shutdown %s %d:shutdown failed, %s (errno %d)
 **closesocket:closesocket failed
-**closesocket %d:closesocket failed (errno %d)
 **closesocket %s %d:closesocket failed, %s (errno %d)
 **close:close of socket failed
 **close %s:close of socket failed - %s
@@ -561,17 +437,14 @@ unexpected messages queued.
 **bindportrange: Unable to bind socket to port range
 **bindportrange %d %d: Unable to bind socket to port range [%d, %d]
 **listen:listen failed
-**listen %d:listen failed (errno %d)
 **listen %s %d:listen failed, %s (errno %d)
 **sock_accept:accept of socket fd failed
 **sock_accept %s:accept of socket fd failed - %s
 **sock_accept %s %d:accept failed, %s (errno %d) 
 **sock_connect:connect failed
-**sock_connect %d:connect failed (errno %d)
 **sock_connect %s %d:connect failed - %s (errno %d)
 # FIXME: Change sock_connect %d %s to sock_connect %s %d
 **sock_connect %d %s:connect failed - %s (errno %d)
-**sock_connect %s %d %d:unable to connect to %s on port %d, error %d
 **sock_connect %s %d %s %d:unable to connect to %s on port %d, %s (errno %d)
 **sock_nop_accept:accept called without having received an op_accept
 **read:read from socket failed
@@ -586,7 +459,6 @@ unexpected messages queued.
 **sock_write %s %d: Unable to write to a socket, %s (errno %d)
 **sock_writev:Unable to write an iovec to a socket
 **select:select failed
-**select %s:select failed - %s
 **poll:poll of socket fds failed
 **poll %s:poll of socket fds failed - %s
 **select; select of socket fds failed
@@ -595,42 +467,22 @@ unexpected messages queued.
 **ioctlsocket %s %d: ioctl on socket failed, %s (errno %d)
 
 **gethostbyname:gethostbyname failed
-**gethostbyname %d:gethostbyname failed (errno %d)
 **gethostbyname %s %d:gethostbyname failed, %s (errno %d)
-**sock_byname:gethostbyname failed
-**sock_byname %d:gethostbyname failed (errno %d)
-**sock_byname %s %d:gethostbyname failed, %s (errno %d)
 **sock_gethost:gethostname failed
-**sock_gethost %d:gethostname failed (errno %d)
 **sock_gethost %s %d:gethostname failed, %s (errno %d)
 **getinfo:getaddrinfo failed
-**getinfo %d:getaddrinfo failed (errno %d)
 **getinfo %s %d:getinfo failed, %s (errno %d)
 **getsockname:getsockname failed
 **getsockname %s:getsockname failed - %s
 **setsockopt:setsockopt failed
-**setsockopt %s:setsockopt failed - %s
 **setsockopt %s %d:setsockopt failed, %s (errno %d)
 **getsockopt:getsockopt failed
-**getsockopt %s:getsockopt failed - %s
 **getsockopt %s %d:getsockopt failed, %s (errno %d)
-**inet_ntop:inet_ntop failed
-**inet_ntop %s:inet_ntop failed - %s
-**inet_pton:inet_pton failed
-**inet_pton %s:inet_pton failed - %s
 **inet_addr: inet_addr failed
 **inet_addr %s %d: inet_addr failed, %s (errno %d)
-**inet_addr %s %s %d: inet_addr on %s failed, %s (errno %d)
-**sock_iocp:unable to create an I/O completion port
-**sock_iocp %d:unable to create an I/O completion port (errno %d)
-**sockw_badtvalhnd: Invalid handle to timeval
-**sockw_badwsethnd: Invalid handle to waitSet
-**sockw_badwsetshnd: Invalid handle to waitSet sock handle
 **shmw_badhnd: Invalid handle to shared memory
 **shmw_gethnd: Unable to get shared memory handle
 **shmw_sethnd: Unable to set shared memory handle
-**shmw_serbufsmall: Size of buffer to serialize shared memory handle    \
-is too small (< MPIU_SHMW_GHND_SZ)
 **shmw_deserbufbig: Size of buffer to deserialize shared memory handle  \
 is too big (> MPIU_SHMW_GHND_SZ) 
 
@@ -642,13 +494,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **MPIU_Strdup:MPIU_Strdup failed
 **business_card:Invalid business card
 **business_card %s:Invalid business card (%s)
-**hostlookup:Host lookup failed
-**hostlookup %d %d %s:Host lookup failed for process group %d, rank %d, business card <%s>
-**connrefused:Connection refused
-**connrefused %d %d %s:Connection refused for process group %d, rank %d, business card <%s>
-**connallocfailed:Connection failed
-**connfailed:Failed to connect to remote process
-**connfailed %d %d:Failed to connect to remote process %d-%d
 **OpenProcess:OpenProcess failed
 **OpenProcess %d %d:OpenProcess failed for process %d, error %d
 **open:open failed
@@ -661,22 +506,13 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **shmget %d:shmget failed, error %d
 **MapViewOfFileEx:MapViewOfFileEx failed
 **MapViewOfFileEx %d:MapViewOfFileEx failed, error %d
-**connclose:active connection unexpectedly closed
-**connterm:active connection unexpectedly terminated
-**badsock:internal error - bad sock
-**failure:unknown failure
-**failure %d:unknown failure, error %d
 **init_progress:progress_init failed
 **snprintf:snprintf returned an invalid number
 **snprintf %d:snprintf returned %d
 **init_buscard:failed to get my business card
-**init_strtok_host:failed to copy the hostname from the business card
-**init_strtok_host %s:failed to copy the hostname from this business card: %s
-**boot_tostring:unable to get a string representation of the boostrap queue
 **boot_create:unable to create a bootstrap message queue
 **boot_unlink:unable to unlink the shared memory message queue
 **mqshm_unlink:unable to unlink the shared memory message queue
-**ch3ireadaggressive:aggressive reading failed
 **msgctl:msgctl failed
 **msgctl %d:msgctl returned %d
 **msgget:msgget failed
@@ -704,17 +540,13 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **boot_recv:receiving bootstrap message failed
 **boot_send:sending bootstrap message failed
 **finalize_boot:destroying the message queue failed
-**finalize_progress:finalizing the progress engine failed
 **handle_sock_op:handle_sock_op failed
-**pfinal_sockclose:sock_close failed
 **post_connect:failed to post a connection
 **progress_handle_sock_op:handle_sock_op failed
 **progress_sock_wait:sock_wait failed
-**sock_wait:sock_wait failed
 **shm_read_progress:shared memory read progress failed
 **shmconnect_getmem:failed to allocate shared memory for a write queue
 **shmwrite:shared memory write failed
-**ibwrite:infiniband write failed
 **ssmwrite:sock/shared memory write failed
 **ssmwritev:sock/shared memory writev failed
 **attach_to_mem %d:attach to shared memory returned error %d
@@ -725,49 +557,29 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **shm_unlink:failed to unlink shared memory
 **shm_unlink %s %d:failed to unlink shared memory object %s, error %d
 **shmctl:failed to mark the sysv segment for removal
-**shmctl %d:shmctl failed, error %d
 **shmctl %d %d:failed to mark the sysv segment %d for removal, error %d
 **ftok:failed to create a sysv key from a file name
 **ftok %s %d %d:failed to create a sysv key from the file '%s' and id %d, error %d
 **mqp_failure:failed to make progress on the shared memory bootstrap message queue
-**invalid_listener:invalid listener
-**invalid_listener %p:invalid listener (%p)
-**pkt_type:invalid packet type
-**pkt_type %d:invalid packet type (%d)
 **pkt_ptr:invalid shm queue packet pointer
 **pkt_ptr %p %p:invalid shm queue packet pointer (%p != %p)
 **bad_listenersock:bad listener sock
 **bootqmsg:invalid bootstrap queue message size
 **bootqmsg %d:invalid bootstrap queue message size (%d bytes)
-**conn_still_active:connection closed while still active
 **handle_written:unable to handle written data
-**init_vcrdup:failed to duplicate the virtual connection reference
 **invalid_handle:invalid handle
 **invalid_handle %d:invalid handle (%d)
-**invalid_handle %d %p:invalid handle (handle=%d, object=%p)
 **invalid_refcount:invalid reference count
 **invalid_refcount %d:invalid reference count (%d)
-**invalid_refcount %d %p %d:invalid reference count (handle=%d, object=%p, count=%d)
-**invalid_shmq:invalid shm queue pointer
-**invalid_shmq %p %p:invalid shm queue pointer (%p != %p)
 **iov_offset:invalid iov offset
 **iov_offset %d %d:invalid iov offset (%d > %d)
-**multi_post_read:posting a read while a previously posted read is outstanding
-**multi_post_write:posting a write while a previously posted write is outstanding
-**post_sock_write_on_shm:posting a socket read on a shm connection
 **progress:progress engine failure
-**progress_finalize:finalization of the progress engine failed
 **progress_test:progress_test engine failure
 **shm_op:invalid shm operation
 **shm_op %d:invalid shm operation (%d)
-**ibu_op:invalid infiniband operation
-**ibu_op %d:invalid infiniband operation (%d)
-**shmq:invalid shm queue pointer
-**shmq %p %p:invalid shm queue pointer (%p != %p)
 **shmq_index:invalid shm queue index
 **shmq_index %d %d:invalid shm queue index (%d > %d)
 **sock_post_close:posting a close of the socket failed
-**sock_post_close %d:posting a close of the socket failed (errno %d)
 **strncpy:insufficient buffer length to complete strncpy
 **vc_state:invalid vc state
 **vc_state %d:invalid vc state (%d)
@@ -786,7 +598,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **buscard_len:no space left in the business card to add a parameter
 **desc_len:host description buffer too small
 **duphandle:unable to duplicate a handle
-**duphandle %d:unable to duplicate a handle (errno %d)
 **duphandle %s %d:unable to duplicate a handle, %s (errno %d)
 **fail:
 **fail %d:generic failure with errno = %d
@@ -794,14 +605,11 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **fail %s %d:%s (errno %d)
 **init_description:unable to get the host description
 **iocp:unable to create an I/O completion port
-**iocp %d:unable to create an I/O completion port (errno %d)
 **iocp %s %d:unable to create an I/O copmletion port, %s (erron %d)
 **pctwice:post close called twice
 **post_accept:post accept failed
 **progress_init:unable to initialize the progress engine
 **test_sock_wait:sock_wait failed
-**post_write:Unable to post a write
-**post_write %p %p:Unable to post a write (%p %p)
 **sock_init:unable to initialize the sock library
 **write:write failed
 **writev:writev failed
@@ -809,8 +617,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 #
 # CH3:shm
 #
-**shm_wait:wait function failed
-**GetMemTwice:Global shared memory initializer called more than once
 **finalize_progress_finalize:Progress finalize failed
 **finalize_release_mem:Release shared memory failed
 **shmgetmem:Unable to allocate shared memory
@@ -831,8 +637,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 #
 **ioctl:ioctl failed
 **ioctl %d %s:ioctl failed errno=%d - %s
-**shmdt:shmdt failed
-**shmdt %s:shmdt failed - %s
 **alloc_shar_mem:unable to allocate shared memory
 **alloc_shar_mem %s %s:unable to allocate shared memory - %s %s
 **attach_shar_mem:unable to attach to shared memory
@@ -841,8 +645,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **remove_shar_mem %s %s:unable to remove shared memory - %s %s
 **detach_shar_mem:unable to detach shared memory
 **detach_shar_mem %s %s:unable to detach shared memory - %s %s
-**fcntl:fcntl failed
-**fcntl %s:fcntl failed - %s
 **gm_init:gm_init failed
 **gm_init %d:gm_init failed gm_status=%d
 **gm_regmem:gm_register_memory failed
@@ -851,14 +653,11 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **gm_get_unique_board_id %d:gm_get_unique_board_id failed status=%d
 **gm_incompatible_lib:GM library and driver are different versions
 **gm_no_port:unable to find a free GM port
-**not_in_local_ranks:cannot find our rank in the list of local processes
 **read %d %s:read from socket failed - nread=%d %s
 **winput_oob:target pointer for win_put is out of bounds
 **winget_oob:source pointer for win_get is out of bounds
 **winserialize:serializing win object
 **windeserialize:deserializing win object
-**winnotinit: Attempt to use an MPI RMA function that requires an MPI Window \
- object before creating any MPI Window object
 **winnoprogress: Detected an error while in progress wait for RMA messages
 **winInvalidOp: Invalid RMA operation
 **winRMAmessage: RMA message operation failed
@@ -872,8 +671,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mx_finalize %s:mx_finalize failed (%s)
 **mx_init:mx_init failed
 **mx_init %s:mx_init failed (%s)
-**mx_get_info:mx_get_info failed
-**mx_get_info %s:mx_get_info failed (%s)
 **mx_open_endpoint:mx_open_endpoint failed
 **mx_open_endpoint %s:mx_open_endpoint failed (%s)
 **mx_get_endpoint_addr:mx_get_endpoint_addr failed
@@ -882,14 +679,10 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mx_decompose_endpoint_addr %s:mx_decompose_endpoint_addr failed (%s)
 **mx_connect:mx_connect failed
 **mx_connect %s:mx_connect failed (%s)
-**mx_test:mx_test failed
-**mx_test %s:mx_test failed (%s)
 **mx_irecv:mx_irecv failed
 **mx_irecv %s:mx_irecv failed (%s)
 **mx_isend:mx_isend failed
 **mx_isend %s:mx_isend failed (%s)
-**mx_wait:mx_wait failed
-**mx_wait %s:mx_wait failed (%s)
 **mx_cancel:mx_cancel failed
 **mx_cancel %s:mx_cancel failed (%s)
 **ibv_alloc_pd:ibv_alloc_pd failed
@@ -909,7 +702,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **ibv_get_device_list:ibv_get_device_list failed
 **ibv_get_device_list %p:ibv_get_device_list failed got list (%p)
 **ibv_open_device:ibv_open_device failed
-**ibv_open_device %p:ibv_open_device failed got list (%p)
 **ibv_open_device %s:ibv_open_device failed for device (%s)
 **ibv_reg_mr:ibv_reg_mr failed
 **ibv_reg_mr %d:ibv_reg_mr failed for buffer length (%d)
@@ -942,7 +734,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **pthread_cancel %s:pthread_cancel failed (%s)
 **badportrange:MPICH_PORT_RANGE - invalid range specified
 **argstr_missingifname:Missing ifname or invalid host/port description in business card
-**pmi_kvs_get_parent %d:unable to get the PARENT_ROOT_PORT_NAME from the keyval space (pmi_error %d)
 **rtspkt:failure occurred while attempting to send RTS packet
 **ctspkt:failure occurred while attempting to send CTS packet
 **cookiepkt:failure occurred while attempting to send COOKIE packet
@@ -973,8 +764,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **psm_mq_init %s:psm_mq_init failed (%s)
 **psm_test:psm_test failed
 **psm_test %s:psm_test failed (%s)
-**psm_wait:psm_wait failed
-**psm_wait %s:psm_wait failed (%s)
 
 **invalid_netmod:Invalid netmod specified
 **invalid_netmod %s:Invalid netmod specified (%s)
@@ -1239,8 +1028,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_error_string %d %s %p:MPI_Error_string(errorcode=%d, string=%s, resultlen=%p) failed
 **mpi_error_class:MPI_Error_class failed
 **mpi_error_class %d %p:MPI_Error_class(errorcode=%d, errorclass=%p) failed
-**mpi_wtime:MPI_Wtime failed
-**mpi_wtick:MPI_Wtick failed
 **mpi_init:MPI_Init failed
 **mpi_init %p %p:MPI_Init(argc_p=%p, argv_p=%p) failed
 **mpi_finalize:MPI_Finalize failed
@@ -1426,10 +1213,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_pack_external_size %s %d %D %p:MPI_Pack_external_size(datarep=%s, incount=%d, %D, size=%p) failed
 **mpi_request_get_status:MPI_Request_get_status failed
 **mpi_request_get_status %R %p %p:MPI_Request_get_status(%R, flag=%p, status=%p) failed
-**mpi_status_c2f:MPI_Status_c2f failed
-**mpi_status_c2f %p %p:MPI_Status_c2f(c_status=%p, f_status=%p) failed
-**mpi_status_f2c:MPI_Status_f2c failed
-**mpi_status_f2c %p %p:MPI_Status_f2c(f_status=%p, c_status=%p) failed
 **mpi_type_create_darray:MPI_Type_create_darray failed
 **mpi_type_create_darray %d %d %d %p %p %p %p %d %D %p:MPI_Type_create_darray(size=%d, rank=%d, ndims=%d, array_of_gsizes=%p, array_of_distribs=%p, array_of_dargs=%p, array_of_psizes=%p, order=%d, %D, newtype=%p) failed
 **mpi_type_create_hindexed:MPI_Type_create_hindexed failed
@@ -1448,7 +1231,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_type_get_extent %D %p %p:MPI_Type_get_extent(%D, lb=%p, extent=%p) failed
 **mpi_type_get_true_extent:MPI_Type_get_true_extent failed
 **mpi_type_get_true_extent %D %p %p:MPI_Type_get_true_extent(%D, lb=%p, true_extent=%p) failed
-**mpi_type_test:MPI_Type_test failed
 **mpi_unpack_external:MPI_Unpack_external failed
 **mpi_unpack_external %s %p %d %p %p %d %D:MPI_Unpack_external(datarep=%s, inbuf=%p, insize=%d, position=%p, outbuf=%p, outcount=%d, %D) failed
 **mpi_win_create_errhandler:MPI_Win_create_errhandler failed
@@ -1459,8 +1241,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_win_set_errhandler %W %E:MPI_Win_set_errhandler(%W, %E) failed
 **mpi_register_datarep:MPI_Register_datarep failed
 **mpi_register_datarep %s %p %p %p %p:MPI_Register_datarep(datarep=%s, read_conversion_fn=%p, write_conversion_fn=%p, dtype_file_extent_fn=%p, extra_state=%p) failed
-**mpi_pcontrol:MPI_Pcontrol failed
-**mpi_pcontrol %d:MPI_Pcontrol(level=%d) failed
 
 # MPIR functions
 

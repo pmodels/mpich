@@ -2,22 +2,16 @@
 # CH3 errors
 #
 **ch3|pktarraytoosmall: Size of the array of packet handlers is too small
-**ch3|badca %d:specified completion action in not known (%d)
-**ch3|badca:specified completion action in not known
 **ch3|badmsgtype %d:request contained an invalid message type (%d)
 **ch3|badmsgtype:request contained an invalid message type
 **ch3|badreqtype %d:request contained an invalid request type (%d)
 **ch3|badreqtype:request contained an invalid request type
-**ch3|canceleager:failure occurred while performing local cancellation of a eager message
 **ch3|cancelreq:failure occurred while sending remote cancellation request packet
 **ch3|cancelresp:failure occurred while attempting to send cancel response packet
 **ch3|cancelrndv:failure occurred while performing local cancellation of a rendezvous message
 **ch3|ch3_init:channel initialization failed
 **ch3|ctspkt:failure occurred while attempting to send CTS packet
 **ch3|eagermsg:failure occurred while attempting to send an eager message
-**ch3|flowcntlpkt:UNIMPLEMENTED: unable to handle flow control packets
-**ch3|get_universe_size_notimpl: MPIDI_CH3_Get_universe_size() is not implemented
-**ch3|loadrecviov %s:failure occurred while loading the receive I/O vector (%s)
 **ch3|loadrecviov:failure occurred while loading the receive I/O vector
 **ch3|loadsendiov:failure occurred while loading the send I/O vector
 **ch3|nopktcontainermem:failed to allocate memory for a packet reorder container
@@ -25,16 +19,11 @@
 **ch3|pktordered:failure occurred while processing a reordered packet
 **ch3|postrecv %s:failure occurred while posting a receive for message data (%s)
 **ch3|postrecv:failure occurred while posting a receive for message data
-**ch3|recvdata %s:failure occurred while attempting to receive message data (%s)
-**ch3|recvdata:failure occurred while attempting to receive message data
 **ch3|rmamsg:failure occurred while attempting to send an RMA message
 **ch3|rtspkt:failure occurred while attempting to send RTS packet
 **ch3|senddata:failure occurred while attempting to send message data
 **ch3|syncack:failure occurred while attempting to send eager synchronization packet
-**ch3|unknownpkt %d:received unknown packet type (type=%d)
-**ch3|unknownpkt:received unknown packet type
 **ch3|get_parent_port:spawn process group was unable to obtain parent port name from the channel
-**ch3|get_parent_port_err_bcast:an error occurred while broadcasting the error code from MPIDI_CH3_GetParentPort()
 **ch3|conn_parent:spawned process group was unable to connect back to the parent
 **ch3|conn_parent %s:spawned process group was unable to connect back to the parent on port <%s>
 **ch3|unhandled_connection_state:encountered an unexpected connection state

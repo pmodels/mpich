@@ -1,0 +1,19 @@
+# No longer used error strings
+**ch3|sock|connfailed %s %d:[ch3:sock] failed to connnect to remote process %s:%d
+**ch3|sock|pg_limit:reached the limit of process groups for spawn/connect/accept
+**ch3|sock|pgrank:rank must be less than process group size
+**ch3|sock|pgrank %d %d:pg size %d, rank passed %d
+**ch3|sock|pgrank_cache:rank must be less than process group size in the cache
+**ch3|sock|pgrank_cache %d %d:pg size in cache %d, rank passed %d
+**ch3|sock|pgsize:process group sizes don't match
+**ch3|sock|pgsize %d %d:existing pg size %d, matching pg size %d
+**ch3|sock|postwrite %p %p %p:attempt to post a write operation failed (sreq=%p,conn=%p,vc=%p)
+**ch3|sock|progress_finalize:[ch3:sock] progress_finalize failed
+**ch3|sock|strdup:[ch3:sock] MPIU_Strdup failed
+**ch3|sock|immedread %p %p %p:immediate read operation failed (rreq=%p,conn=%p,vc=%p)
+**ch3|sock|immedwrite %p %p %p:immediate write operation failed (rreq=%p,conn=%p,vc=%p)
+**ch3|sock|pg_finalize:process group finalization failed
+**ch3|sock|pgsize_cache:process group size does not match the one in the cache
+**ch3|sock|pgsize_cache %d %d:size in cache %d, size passed %d
+**ch3|sock|post_write:[ch3:sock] posting a write failed
+**ch3|sock|postread %p %p %p:attempt to post a read operation failed (rreq=%p,conn=%p,vc=%p)

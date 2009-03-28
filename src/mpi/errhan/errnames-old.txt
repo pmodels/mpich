@@ -65,4 +65,224 @@ Fortran integer (value is %ld)
 **ch3|sock|connallocfailed:[ch3:sock] unable to allocate a connection structure
 **ch3|sock|connfailed %d %d:[ch3:sock] failed to connnect to remote process %d:%d
 **ch3|sock|hostlookup %s %d %s:[ch3:sock] failed to obtain host information for process %s:%d (%s)
-
+# 
+**fcntl:fcntl failed
+**needthreads:This function needs threads and threads have not been enabled
+**winpassive:Attempt to use passive target access with a window not allocated \
+with MPI_Alloc_mem. 
+**namepublish %s:Unable to publish service name %s
+**spawnfail:Could not spawn all requested processes 
+**failure:unknown failure
+**post_write %p %p:Unable to post a write (%p %p)
+**socket %d:WSASocket failed (errno %d)
+**shmq:invalid shm queue pointer
+**mx_get_info:mx_get_info failed
+**internrc %d:Internal MPI error!  Unexpected return code from internal function (rc=%d).
+**mpi_status_f2c:MPI_Status_f2c failed
+**hostlookup:Host lookup failed
+**mpi_wtick:MPI_Wtick failed
+**ioneedwr:Write access is required to this file
+**winnamelen:Specified window object name is too long
+**mpi_type_test:MPI_Type_test failed
+**iofstype:Cannot determine filesystem type
+**countarray:Invalid count in count array 
+**dimstensor %d %d:Tensor product size is %d but must be the same as the number of \
+ nodes, which is %d
+**shmctl %d:shmctl failed, error %d
+**keyvalwin:Keyval is not in window object 
+**rangeinvalid:Invalid range
+**f90typetoomany %s %d:Too many requests for unnamed, predefined f90 %s \
+ types; no more than %d allowed.
+**nameservice %s:Invalid service name %s (see MPI_Publish_name)
+**namepublish:Unable to publish service name
+**connclose:active connection unexpectedly closed
+**mpi_pcontrol %d:MPI_Pcontrol(level=%d) failed
+**dtypecomm:Pack buffer not packed for this communicator.
+**spawnpgm:The named program could not be found
+**listen %d:listen failed (errno %d)
+**badsock:internal error - bad sock
+**pkt_type:invalid packet type
+**pkt_type %d:invalid packet type (%d)
+**connterm:active connection unexpectedly terminated
+**opundefined_rma %d:RMA target received unknown RMA operation type %d
+**duphandle %d:unable to duplicate a handle (errno %d)
+**keyvalperm:Cannot free permanent attribute key
+**psm_wait:psm_wait failed
+**inet_ntop:inet_ntop failed
+**notsamevalue:Arguments to collective routine must be the same
+**invalid_shmq:invalid shm queue pointer
+**startup:Error on startup, such as a \
+      mismatch between mpiexec and the MPI libraries
+**ioamodeseq %s:Cannot use function %s when the file is opened with amode \
+    MPI_MODE_SEQUENTIAL
+**preinit %s:MPI_Init or MPI_Init_thread must be called before %s
+**rootlarge:Value of root is too large
+**dtypepermcontents:Cannot get contents of a permanent or basic data type 
+**psm_wait %s:psm_wait failed (%s)
+**connfailed %d %d:Failed to connect to remote process %d-%d
+**fcntl %s:fcntl failed - %s
+**getinfo %d:getaddrinfo failed (errno %d)
+**contextIdInUse:Context id already in use
+**mpi_wtime:MPI_Wtime failed
+**intracomm:Intracommunicator is not allowed 
+**infovallong %s %d %d:Value %s is too long (length is %d but maximum length is %d)
+**sock_gethost %d:gethostname failed (errno %d)
+**intercommcoll %s:Intercommunicator collective operation for %s has not been implemented
+**iofilenull:Null file handle
+**sock_iocp:unable to create an I/O completion port
+**dev|pg_destroy|pg_not_found:process group being destroyed was not in the process group list
+**dev|pg_destroy|pg_not_found %p:process group being destroyed was not in the process group list (pg=%p)
+**servicename %s:Attempt to lookup an unknown service name %s
+**multi_post_write:posting a write while a previously posted write is outstanding
+**mx_get_info %s:mx_get_info failed (%s)
+**statusignore:Invalid use of MPI_STATUS_IGNORE or MPI_STATUSES_IGNORE
+**gethostbyname %d:gethostbyname failed (errno %d)
+**fileopunsupported %s:Unsupported file operation %s
+**notsameorder:Collective routines called in an inconsistent order
+#**notsameorder:Collective routines called in an inconsistent order (optional arguments: null terminated
+#      array of names (array of string))
+**sock_byname %d:gethostbyname failed (errno %d)
+**sockw_badwsethnd: Invalid handle to waitSet
+**mpi_pcontrol:MPI_Pcontrol failed
+**failure %d:unknown failure, error %d
+**shmdt %s:shmdt failed - %s
+**preinit:MPI_Init or MPI_Init_thread must be called first
+**not_in_local_ranks:cannot find our rank in the list of local processes
+**inet_pton %s:inet_pton failed - %s
+**fileinuse %s:File %s is in use by some process
+**ioasyncwaiting:There are outstanding nonblocking I/O operations on this file
+**init_comm_create:unable to create an intercommunicator for the parent
+**post_sock_write_on_shm:posting a socket read on a shm connection
+**rootlarge %d %d:Value of root is too large (value is %d but must be less than %d)
+**mx_wait:mx_wait failed
+**init_strtok_host:failed to copy the hostname from the business card
+**iosequnsupported %s:MPI_MODE_SEQUENTIAL not supported on file system %s
+**keyvalcomm:Keyval is not in communicator 
+**commpeer:Peer communicator is not valid 
+**iofstypeunsupported %s:Specified filesystem %s is not available
+**GetMemTwice:Global shared memory initializer called more than once
+**inet_addr %s %s %d: inet_addr on %s failed, %s (errno %d)
+**othersys %s:System resource (%s) limit exceeded 
+**getsockopt %s:getsockopt failed - %s
+**filenospace %s %d %d:Not enough space for file %s; %d needed but only %d available
+**ibv_open_device %p:ibv_open_device failed got list (%p)
+**init_comm_create %d:unable to create an intercommunicator for the parent (error %d)
+**ibu_op:invalid infiniband operation
+**iofilecorrupt:File corrupt
+**shutdown %d:shutdown failed (errno %d)
+**sock_iocp %d:unable to create an I/O completion port (errno %d)
+**post_write:Unable to post a write
+**keyvaldtype:Keyval is not in datatype 
+**errhandlerperm:Cannot free permanent error handler
+**closesocket %d:closesocket failed (errno %d)
+**shm_wait:wait function failed
+**opundefined_rma:RMA target received unknown RMA operation
+**ibwrite:infiniband write failed
+**ioneedrdwr:Read/write access is required to this file
+**dimsarray %d %d:Value of dims[%d] is %d which is invalid
+**select %s:select failed - %s
+**iodispnotcurrent:Displacement must be set to MPI_DISPLACEMENT_CURRENT \
+    since file was opened with MPI_MODE_SEQUENTIAL
+**connfailed:Failed to connect to remote process
+**dtypeperm %s:Cannot free permanent data type %s
+**mpi_status_c2f:MPI_Status_c2f failed
+**boot_tostring:unable to get a string representation of the boostrap queue
+**porttimeout:Time out attempting an MPI_Comm_connect to a port
+**contextIdNotInUse %d:Context id %d to be freed is not in use
+**dtypepermcontents %s:Cannot get contents of a permanent or basic data type %s
+**countarray %d %d:Invalid count in the %d element of the count array; value \
+is %d
+**mpi_status_c2f %p %p:MPI_Status_c2f(c_status=%p, f_status=%p) failed
+**conn_still_active:connection closed while still active
+**sock_post_close %d:posting a close of the socket failed (errno %d)
+**servicenameunpublish:Attempt to unpublish an unknown service name
+**grapharraysize:Specified edge less than zero or greater than nnodes
+**commname:Cannot set name in communicator 
+**dimsarray:Invalid dimension argument in array 
+**infokeylong %s %d %d:Key %s is too long (length is %d but maximum allowed is %d)
+**count %d:Invalid count, value = %d
+**invalid_refcount %d %p %d:invalid reference count (handle=%d, object=%p, count=%d)
+**sock_create %d:unable to create a socket (errno %d)
+**nouniquehigh:Could not determine which group to place first in merged \
+ intracommunicator.  Please use the parameter high to choose which group \
+ should be placed first.
+**mx_test:mx_test failed
+**mx_test %s:mx_test failed (%s)
+**dtypenullarray:Null datatype in array of datatypes
+**dimstensor:Tensor product size does not match nnodes
+**spawnpgm %s:The program %s could not be found
+**hostlookup %d %d %s:Host lookup failed for process group %d, rank %d, business card <%s>
+**commlocalnull:Local communicator must not be MPI_COMM_NULL
+**init_vcrdup:failed to duplicate the virtual connection reference
+**sock_wait:sock_wait failed
+**invalid_handle %d %p:invalid handle (handle=%d, object=%p)
+**connrefused %d %d %s:Connection refused for process group %d, rank %d, business card <%s>
+**grapharraysize %d %d %d:Specified edge %d is %d but must be at least zero \
+ and less than %d
+**init_strtok_host %s:failed to copy the hostname from this business card: %s
+**contextIdNotInUse:Context id to be freed is not in use
+**fileexist %s:File %s exists
+**filerdonly %s:Read-only file or filesystem name %s
+**notsameroot:Inconsistent root 
+**wsasock %d:WSAStartup failed (errno %d)
+**contextIdInUse %d:Context id %d already in use
+**mpi_status_f2c %p %p:MPI_Status_f2c(f_status=%p, c_status=%p) failed
+**rsendnomatch %d %d %d:Ready send from source %d, for destination %d and \
+ with tag %d had no matching receive
+**iocp %d:unable to create an I/O completion port (errno %d)
+**winnotinit: Attempt to use an MPI RMA function that requires an MPI Window \
+ object before creating any MPI Window object
+**inet_ntop %s:inet_ntop failed - %s
+**finalize_progress:finalizing the progress engine failed
+**inet_pton:inet_pton failed
+**filenull:Null MPI_File 
+**mx_wait %s:mx_wait failed (%s)
+**nomem %d %d:Out of memory (requested %d but only %d available)
+**fileamode %d:Invalid amode value of %d in MPI_File_open 
+**ibu_op %d:invalid infiniband operation (%d)
+**dtypenomatch:Type signatures do not match in communication
+**shmdt:shmdt failed
+**winname:Cannot set window object name 
+**multi_post_read:posting a read while a previously posted read is outstanding
+**progress_finalize:finalization of the progress engine failed
+**iofstype %s:Cannot determine filesystem type for file %s
+**keyvalnull:Null keyval 
+**startup %s:Error on startup: reason is %s
+**porttimeout %s:Time out attempting an MPI_Comm_connect to a port named %s
+**invalid_listener:invalid listener
+**invalid_listener %p:invalid listener (%p)
+**invalid_shmq %p %p:invalid shm queue pointer (%p != %p)
+**freemembase:Invalid base address in MPI_Free_mem 
+**spawnmanager:The process manager returned an error
+**spawnmanager %s:The process manager returned an error: %s
+**commnamelen:Specified communicator name is too long
+**commnamelen %d:Specified communicator name is too long (%d characters)
+**connallocfailed:Connection failed
+**connrefused:Connection refused
+**datarepunsupported %s:Unsupported datarep %s passed to MPI_File_set_view
+**errhandlerperm %s:Cannot free permanent error handler %s
+**filequota %s:Quota %s exceeded for files
+**intercommcoll:Intercommunicator collective operations have not been implemented
+**intercomm:Intercommunicator is not allowed 
+**iosharedunsupported %s:Shared file pointers not supported on filesystem %s
+**notsamevalue %s %s:Argument %s to collective routine %s must be the same
+**othersys:System resource limit exceeded 
+**pfinal_sockclose:sock_close failed
+**servicenameunpublish %s:Attempt to unpublish an unknown service name %s
+**setsockopt %s:setsockopt failed - %s
+**shmq %p %p:invalid shm queue pointer (%p != %p)
+**shmw_serbufsmall: Size of buffer to serialize shared memory handle    \
+is too small (< MPIU_SHMW_GHND_SZ)
+**sock_byname:gethostbyname failed
+**sock_byname %s %d:gethostbyname failed, %s (errno %d)
+**sock_connect %d:connect failed (errno %d)
+**sock_connect %s %d %d:unable to connect to %s on port %d, error %d
+**sockw_badtvalhnd: Invalid handle to timeval
+**sockw_badwsetshnd: Invalid handle to waitSet sock handle
+**winnamelen %d:Specified window object name is too long (%d characters)
+**ch3ireadaggressive:aggressive reading failed
+**dtypename:Cannot set name in data type 
+**dtypenullarray %s %d:Null datatype in array of datatypes %s[%d]
+**dev|pg_destroy_failed:attempt to destroy a process group failed
+**dev|pg_destroy_failed %p:attempt to destroy a process group failed (pg=%p)
+**pmi_kvs_get_parent %d:unable to get the PARENT_ROOT_PORT_NAME from the keyval space (pmi_error %d)

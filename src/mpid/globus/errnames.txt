@@ -28,12 +28,9 @@
 **globus|cm_vmpi|localcomm %C %p:globus|cm_vmpi|localcomm -- %C %p
 **globus|cm_vmpi|pe_table_add_req:globus|cm_vmpi|pe_table_add_req
 **globus|cm_vmpi|pe_table_add_req %R %p:globus|cm_vmpi|pe_table_add_req -- %R %p
-**globus|cm_vmpi|progress_add_req:a error occurred while adding a vendor MPI request to the request tracking array
-**globus|cm_vmpi|progress_add_req %R %p:a error occurred while adding a vendor MPI request to the request tracking array: req_handle=%R, req_ptr=%p
 **globus|cm_vmpi|reg_ras:globus|cm_vmpi|reg_ras
 **globus|cm_vmpi|unreg_ras:globus|cm_vmpi|unreg_ras
 **globus|cm_vmpi|uuid_create:an error occurred while attempting to create a UUID
-**globus|cm_vmpi|uuid_create %s:an error occurred while attempting to create a UUID -- %s
 **globus|cm_vmpi|uuid_generate:globus|cm_vmpi|uuid_generate
 **globus|cm_vmpi|uuid_import:globus|cm_vmpi|uuid_import
 **globus|cm_vmpi|uuid_parse:globus|cm_vmpi|uuid_parse
@@ -99,7 +96,6 @@
 **globus|cm_xio|disconnect_send_enq_close_msg %p:globus|cm_xio|disconnect_send_enq_close_msg -- %p
 **globus|cm_xio|disconnnect_handle_close_proc:globus|cm_xio|disconnnect_handle_close_proc
 **globus|cm_xio|disconnnect_handle_close_proc %p %s:globus|cm_xio|disconnnect_handle_close_proc -- %p %s
-**globus|cm_xio|module_finalize:an error occurred while shutting down the XIO communication module
 **globus|cm_xio|module_init:an error occurred while initializing the XIO communication module
 **globus|cm_xio|msg_handler:globus|cm_xio|msg_handler
 **globus|cm_xio|nets_init:globus|cm_xio|nets_init
@@ -205,7 +201,6 @@
 **globus|cm_xio|xio_driver_load_transport:globus|cm_xio|xio_driver_load_transport
 **globus|cm_xio|xio_driver_load_transport %s %s:globus|cm_xio|xio_driver_load_transport -- %s %s
 **globus|cm_xio|xio_driver_unload_transport:globus|cm_xio|xio_driver_unload_transport
-**globus|cm_xio|xio_read:globus|cm_xio|xio_read
 **globus|cm_xio|xio_read %p %s:globus|cm_xio|xio_read %p %s
 **globus|cm_xio|xio_reg_close:globus|cm_xio|xio_reg_close
 **globus|cm_xio|xio_reg_close %p %s:globus|cm_xio|xio_reg_close -- %p %s
@@ -228,7 +223,6 @@
 **globus|cm_xio|xio_stack_init %s:globus|cm_xio|xio_stack_init -- %s
 **globus|cm_xio|xio_stack_push_driver:globus|cm_xio|xio_stack_push_driver
 **globus|cm_xio|xio_stack_push_driver %s %s:globus|cm_xio|xio_stack_push_driver -- %s %s
-**globus|cm_xio|xio_write:globus|cm_xio|xio_write
 **globus|cm_xio|xio_write %p %s:globus|cm_xio|xio_write %p %s
 **globus|cm|add_contact_info:an error occurred while a communication method was adding its contact information to the business card
 **globus|cm|add_contact_info %s:an error occurred while the '%s' communication method was adding its contact information to the business card
@@ -248,21 +242,16 @@
 **globus|comm_destroy_key %s:globus|comm_destroy_key -- %s
 **globus|comm_finalize:globus|comm_finalize
 **globus|comm_init:globus|comm_init
-**globus|comm_list_wait_empty:globus|comm_list_wait_empty
 **globus|comm_set_attr:globus|comm_set_attr
 **globus|comm_set_attr %s:globus|comm_set_attr -- %s
 **globus|cond_destroy:an error occurred while destroying a condition variable 
-**globus|cond_destroy %s:globus|cond_destroy -- %s
 **globus|cond_init:an error occurred while initializing a condition variable 
-**globus|cond_init %s:globus|cond_init -- %s
 **globus|connacc|bcast_vct_error_status:globus|connacc|bcast_vct_error_status
 **globus|connacc|bcast_vct_error_status %p:globus|connacc|bcast_vct_error_status -- %p
 **globus|connacc|bcast_vct_error_status_recvd:globus|connacc|bcast_vct_error_status_recvd
 **globus|connacc|bcast_vct_error_status_recvd %p:globus|connacc|bcast_vct_error_status_recvd -- %p
-**globus|connacc|bcast_vct_error_status_recvd %p %p %d:globus|connacc|bcast_vct_error_status_recvd -- %p %p %d
 **globus|connacc|bcast_vct_len:globus|connacc|bcast_vct_len
 **globus|connacc|bcast_vct_len %p:globus|connacc|bcast_vct_len -- %p
-**globus|connacc|bcast_vct_len %p %p %d:globus|connacc|bcast_vct_len -- %p %p %d
 **globus|connacc|bcast_vct_str:globus|connacc|bcast_vct_str
 **globus|connacc|bcast_vct_str %p %p %d:globus|connacc|bcast_vct_str -- %p %p %d
 **globus|connacc|close_port:globus|connacc|close_port
@@ -290,7 +279,6 @@
 **globus|datatype_cmap_to_bc:globus|datatype_cmap_to_bc
 **globus|disconnect_handle_close_temp:globus|disconnect_handle_close_temp
 **globus|disconnect_handle_close_temp %p %s:globus|disconnect_handle_close_temp -- %p %s
-**globus|failed:globus|failed
 **globus|fifo_enq:globus|fifo_enq
 **globus|get_vc_compatability:globus|get_vc_compatability
 **globus|get_vc_compatability %s:globus|get_vc_compatability -- %s
@@ -302,14 +290,9 @@
 **globus|module_deactivate %s:attempt to deactivate the Globus %s module failed
 **globus|module_deactivate %s %s:globus|module_deactivate -- %s %s
 **globus|mutex_destroy:an error occurred while destroying a mutex
-**globus|mutex_destroy %s:globus|mutex_destroy -- %s
 **globus|mutex_init:an error occurred while initializing a mutex 
-**globus|mutex_init %s:globus|mutex_init -- %s
 **globus|pe_poke:globus|pe_poke
-**globus|pe_test:globus|pe_test
-**globus|pe_test %s:globus|pe_test -- %s
 **globus|pe_wait:globus|pe_wait
-**globus|pe_wait %s:globus|pe_wait -- %s
 **globus|pg_acquire_ref:globus|pg_acquire_ref
 **globus|pg_acquire_ref %s %d:globus|pg_acquire_ref -- %s %d
 **globus|pg_create:globus|pg_create
@@ -319,7 +302,6 @@
 **globus|pm_finalize:globus|pm_finalize
 **globus|pm_finalized:attempt to use the process manangement module after shutdown
 **globus|pm_get_app_num:globus|pm_get_app_num
-**globus|pm_get_gram_sj_contact:an error occurred while attempting to acquire the GRAM contact information for the subjob to which the current process belongs
 **globus|pm_get_sjrank:an error occurred while attempting to acquire the rank of this process within its subjob
 **globus|pm_get_sjsize:an error occurred while attempting to acquire  the size of the subjob to which this process belongs
 **globus|pm_get_topology:an error occurred while exchanging topology information
@@ -372,15 +354,12 @@
 **globus|topology_init:globus|topology_init
 **globus|vc_construct_contact_info:an error occurred while initializing the contact information contained within a VC
 **globus|vc_construct_contact_info %s %d:an error occurred while initializing the contact information contained within the VC associated with process %s:%d
-**globus|vc_destruct_contact_info:an error occurred while destroying contact information contained within a VC
-**globus|vc_destruct_contact_info %s %d:an error occurred while destroying contact information contained within the VC associated with process %s:%d
 **globus|vc_ptr_bad:globus|vc_ptr_bad
 **globus|vc_ptr_bad %p:globus|vc_ptr_bad -- %p
 **globus|vc_select_comm_method:a error occurred while attempting to select a suitable method for communicating with a process
 **globus|vc_select_comm_method %s %d:a error occurred while attempting to select a suitable method for communicating with process %s:%d
 **globus|vmpi_fn_failed:globus|vmpi_fn_failed
 **globus|vmpi_fn_failed %s %s:globus|vmpi_fn_failed -- %s %s
-**globus|vmpi_init:an error occurred while initializing the vendor MPI
 **globus|vmpi_pe_finalize:globus|vmpi_pe_finalize
 **globus|vmpi_pe_init:globus|vmpi_pe_init
 **globus|vmpi_pe_table_inc_size:globus|vmpi_pe_table_inc_size

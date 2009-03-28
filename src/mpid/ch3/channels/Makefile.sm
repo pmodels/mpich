@@ -1,5 +1,5 @@
 # SUBDIRS_channel_name contains the list of all possible channel
 # implementations
-SUBDIRS_channel_name = shm sock ssm nemesis sctp dllchan
+SUBDIRS_channel_name = shm sock ssm nemesis sctp dllchan 
 SUBDIRS = @channel_name@ .
 
