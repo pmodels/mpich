@@ -4,6 +4,9 @@ DEPADD = @MPILIBLOC@ ../../util/mtest.o
 smvar_do_sharedlibs = 0
 
 pt2ptf1_SOURCES = pt2ptf1.c
+pt2ptf2_SOURCES = pt2ptf2.c
+collf1_SOURCES  = collf1.c
+collf2_SOURCES  = collf2.c
 
 ../../util/mtest.o: 
 	(cd ../../util && make mtest.o)

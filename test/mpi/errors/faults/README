@@ -1,0 +1,7 @@
+This directory contains tests for the ability of MPI to survive faults.
+The MPI standard permits but does not require that an MPI
+implementation continue through a fault.  If the MPI implementation
+does (claim) to be fault tolerant, these test programs provide some
+basic tests.  To enable these, configure the tests with the configure
+option --enable-checkfaults .
+

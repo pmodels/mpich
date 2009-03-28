@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
-static char MTEST_Descrip[] = "Test survivability from faults with point to point communication";
+static char MTEST_Descrip[] = "Test survivability from faults with collective communication";
 
 int main( int argc, char *argv[] )
 {
@@ -36,11 +36,9 @@ int main( int argc, char *argv[] )
     MPI_Comm_size( newcomm, &size );
     MPI_Comm_rank( newcomm, &rank );
 
-    for (j=0; j<rank; j++) {
-	MPI_Recv( &tmp, 1, MPI_INT, j, 0, newcomm, MPI_STATUS_IGNORE );
-    }
-    for (j=rank+1; j<size; j++) {
-	MPI_Send( &rank, 1, MPI_INT, j, 0, newcomm );
+    MPI_Allreduce( &rank, &tmp, 1, MPI_INT, MPI_SUM, newcomm );
+    if (tmp != (size*(size+1)) / 2) {
+	printf( "Allreduce gave %d but expected %d\n", tmp, (size*(size+1))/2);
     }
 
     MPI_Comm_free( &newcomm );
