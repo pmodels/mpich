@@ -6,8 +6,7 @@
 
 #include "mpidi_ch3_impl.h"
 
-/* FIXME: Who uses this routine?  Should it be a no-op (no routine even)? */
-/* FIXME: Should this use the common func enter/exit macros? */
+/* This routine is called by MPID_Finalize to finalize the channel. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Finalize
 #undef FCNAME
