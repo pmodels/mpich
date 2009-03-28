@@ -1,0 +1,30 @@
+#! /usr/bin/perl -w
+#
+open FD, "<unusederr.txt";
+%errkeys = ();
+while (<FD>) {
+    if (/^Name\s\*\*([\w\| \%]+)\sis defined in\s(.*)/) {
+	my $errname = $1;
+	my $location = $2;
+	$errkeys{$errname} = $location;
+    }
+}
+close FD;
+foreach $errname (sort(keys(%errkeys))) {
+    my $location = $errkeys{$errname};
+    print "About to run on $errname ($location)\n";
+    open FDG, "grep -R '\"\\\*\\\*$errname\"' src 2>&1 |";
+    while (<FDG>) {
+	# Skip those svn files
+	if (/\/\.svn\//) { next; }
+	# Skip the definition file
+	if (/errnames\.txt/) { next; }
+	if (/errnames-old\.txt/) { next; }
+	# Skip the translation files
+	if (/errhan\/defmsg\.h/) { next; }
+	if (/errhan\/windefmsg\.h/) { next; }
+	print $_;
+    }
+    close FDG;
+}
+
