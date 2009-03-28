@@ -270,6 +270,8 @@ sub RunList {
 	my $InitForRun = "";
 	my $timeLimit  = "";
 	my $progArgs   = "";
+	my $mpiexecArgs = "";
+	my $progEnv    = "";
 	if ($#args >= 1) { $np = $args[1]; }
 	# Process the key=value arguments
 	for (my $i=2; $i <= $#args; $i++) {
@@ -287,6 +289,12 @@ sub RunList {
 		}
 		elsif ($key eq "arg") {
 		    $progArgs = "$progArgs $value";
+		}
+		elsif ($key eq "mpiexecarg") {
+		    $mpiexecArgs = "$mpiexecArgs $value";
+		}
+		elsif ($key eq "env") {
+		    $progEnv = "$progEnv $value";
 		}
 		else {
 		    print STDERR "Unrecognized key $key in $listfileSource\n";
@@ -307,7 +315,7 @@ sub RunList {
 	    $total_count++;
 	    if (&BuildMPIProgram( $programname ) == 0) {
 		&RunMPIProgram( $programname, $np, $ResultTest, $InitForRun, 
-				$timeLimit, $progArgs );
+				$timeLimit, $progArgs, $progEnv, $mpiexecArgs );
 	    }
 	    else {
 		# We expected to run this program, so failure to build
@@ -355,7 +363,7 @@ sub ProcessImplicitList {
 	    if ($programname eq "runtests") { next; } # Ignore self
 	    if (-x $programname) {
 		$total_count++;
-		&RunMPIProgram( $programname, $np_default, "", "", "", "" );
+		&RunMPIProgram( $programname, $np_default, "", "", "", "", "", "" );
 	    }
 	}
 	close PGMS;
@@ -376,7 +384,7 @@ sub ProcessImplicitList {
 	    $programname =~ s/\.c//;
 	    $total_count++;
 	    if (&BuildMPIProgram( $programname ) == 0) {
-		&RunMPIProgram( $programname, $np_default, "", "", "", "" );
+		&RunMPIProgram( $programname, $np_default, "", "", "", "", "", "" );
 	    }
 	    else {
 		# We expected to run this program, so failure to build
@@ -397,7 +405,7 @@ sub ProcessImplicitList {
 # If the 3rd arg is not present, the a default that simply checks that the
 # return status is 0 and that the output is " No Errors" is used.
 sub RunMPIProgram {
-    my ($programname,$np,$ResultTest,$InitForTest,$timeLimit,$progArgs) = @_;
+    my ($programname,$np,$ResultTest,$InitForTest,$timeLimit,$progArgs,$progEnv,$mpiexecArgs) = @_;
     my $found_error   = 0;
     my $found_noerror = 0;
     my $inline = "";
@@ -417,10 +425,26 @@ sub RunMPIProgram {
     if ($InitForTest ne "") {
 	&$InitForTest();
     }
+    print STDOUT "Env includes $progEnv\n" if $verbose;
     print STDOUT "$mpiexec $np_arg $np ./$programname $progArgs\n" if $verbose;
     print STDOUT "." if $showProgress;
-    open ( MPIOUT, "$mpiexec $np_arg $np ./$programname $progArgs 2>&1 |" ) ||
+    # Save and restore the environment if necessary before running mpiexec.
+    if ($progEnv ne "") {
+	%saveEnv = %ENV;
+	foreach $val (split(/\s+/, $progEnv)) {
+	    if ($val =~ /([^=]+)=(.*)/) {
+		$ENV{$1} = $2;
+	    }
+	    else {
+		print STDERR "Environment variable/value $val not in a=b form\n";
+	    }
+	}
+    }
+    open ( MPIOUT, "$mpiexec $np_arg $np $mpiexecArgs ./$programname $progArgs 2>&1 |" ) ||
 	 die "Could not run ./$programname\n";
+    if ($progEnv ne "") {
+	%ENV = %saveEnv;
+    }
     if ($ResultTest ne "") {
 	# Read and process the output
 	($found_error, $inline) = &$ResultTest( MPIOUT, $programname );
