@@ -49,7 +49,7 @@ static MPIDI_Comm_ops_t comm_ops = {
 static int         mpid_nem_newmad_myrank;
 static nm_drv_id_t drv_id[MPID_NEM_NMAD_MAX_NETS];
 static char       *url[MPID_NEM_NMAD_MAX_NETS];
-static char        url_keys[MPID_NEM_NMAD_MAX_NETS][MPID_NEM_MAX_NETMOD_STRING_LEN] = {"url_id0","url_id1","url_id2","url_id3"};
+static char        url_keys[MPID_NEM_NMAD_MAX_NETS][MPID_NEM_NMAD_MAX_SIZE] = {"url_id0","url_id1","url_id2","url_id3"};
 static int         mpid_nem_newmad_num_rails = 1 ;
 nm_core_t          mpid_nem_newmad_pcore;
 int                mpid_nem_newmad_pending_send_req = 0;
@@ -170,7 +170,7 @@ static int init_mad( MPIDI_PG_t *pg_p )
 	strcpy(url[0],hostname);
     }
 #endif /* !MULTIRAIL  */
-#endif /* TCP */                                                                                                                            
+#endif /* TCP */                                                                                                                         
 #endif  
     
     nm_ns_init(mpid_nem_newmad_pcore);
@@ -221,7 +221,7 @@ MPID_nem_newmad_init (MPID_nem_queue_ptr_t proc_recv_queue,
 
    fprintf(stdout,"Size of MPID_nem_mad_module_vc_area_internal_t : %i | size of nm_sr_request_t :%i | Size of req_area : %i\n",
          sizeof(MPID_nem_newmad_vc_area_internal_t),sizeof(nm_sr_request_t), sizeof(MPID_nem_newmad_req_area));
-   MPIU_Assert( sizeof(MPID_nem_newmad_vc_area_internal_t) <= MPID_NEM_VC_NETMOD_AREA_LEN);
+   //MPIU_Assert( sizeof(MPID_nem_newmad_vc_area_internal_t) <= MPID_NEM_VC_NETMOD_AREA_LEN);
    MPIU_Assert( sizeof(MPID_nem_newmad_req_area) <= MPID_NEM_REQ_NETMOD_AREA_LEN);
 
    mpid_nem_newmad_myrank = pg_rank;
@@ -236,7 +236,8 @@ MPID_nem_newmad_init (MPID_nem_queue_ptr_t proc_recv_queue,
    mpi_errno = MPID_nem_newmad_get_business_card(pg_rank,bc_val_p, val_max_sz_p);
    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-   nm_sr_monitor(mpid_nem_newmad_pcore, NM_SR_EVENT_RECV_UNEXPECTED, &MPID_nem_newmad_get_adi_msg);
+   nm_sr_monitor(mpid_nem_newmad_pcore, NM_SR_EVENT_RECV_UNEXPECTED,&MPID_nem_newmad_get_adi_msg);
+   nm_sr_monitor(mpid_nem_newmad_pcore, NM_SR_EVENT_RECV_COMPLETED, &MPID_nem_newmad_get_rreq);
    nm_sr_monitor(mpid_nem_newmad_pcore, NM_SR_EVENT_SEND_COMPLETED, &MPID_nem_newmad_handle_sreq);
 
    mpi_errno = MPIDI_CH3I_Register_anysource_notification(MPID_nem_newmad_anysource_posted, 
@@ -257,10 +258,10 @@ int
 MPID_nem_newmad_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
    int mpi_errno = MPI_SUCCESS;
-   char name[MPID_NEM_MAX_NETMOD_STRING_LEN];
+   char name[MPID_NEM_NMAD_MAX_SIZE];
    int index;
    
-   gethostname(name,MPID_NEM_MAX_NETMOD_STRING_LEN);
+   gethostname(name,MPID_NEM_NMAD_MAX_SIZE);
 
    mpi_errno = MPIU_Str_add_binary_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_HOSTNAME_KEY, name, strlen(name));
    if (mpi_errno != MPIU_STR_SUCCESS){
@@ -288,7 +289,7 @@ MPID_nem_newmad_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz
 
    fn_exit:
        return mpi_errno;
-   fn_fail:
+   fn_fail: ATTRIBUTE((unused))
        goto fn_exit;
 }
 
@@ -303,13 +304,13 @@ MPID_nem_newmad_get_from_bc (const char *business_card, char *hostname, char *ur
    int len;
    
    mpi_errno = MPIU_Str_get_binary_arg (business_card, MPIDI_CH3I_HOSTNAME_KEY, hostname, 
-					MPID_NEM_MAX_NETMOD_STRING_LEN, &len);
+					MPID_NEM_NMAD_MAX_SIZE, &len);
    if ((mpi_errno != MPIU_STR_SUCCESS)){
        MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_hostd");
    }
 
    mpi_errno = MPIU_Str_get_binary_arg (business_card, url_keys[index], url, 
-					MPID_NEM_MAX_NETMOD_STRING_LEN, &len);
+					MPID_NEM_NMAD_MAX_SIZE, &len);
    if ((mpi_errno != MPIU_STR_SUCCESS)){
        MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_hostd");
    }
@@ -328,10 +329,10 @@ int
 MPID_nem_newmad_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
     int mpi_errno = MPI_SUCCESS;   
-   fn_exit:
-       return mpi_errno;
-   fn_fail:
-       goto fn_exit;
+ fn_exit:
+    return mpi_errno;
+ fn_fail: ATTRIBUTE((unused))
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -342,12 +343,12 @@ int
 MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
 {
     MPIDI_CH3I_VC           *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
-    char                     business_card[MPID_NEM_MAX_NETMOD_STRING_LEN];
+    char                     business_card[MPID_NEM_NMAD_MAX_SIZE];
     int                      mpi_errno = MPI_SUCCESS;   
     int                      ret;
     int                      index;
 
-    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, MPID_NEM_MAX_NETMOD_STRING_LEN, vc->pg);
+    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, MPID_NEM_NMAD_MAX_SIZE, vc->pg);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
        
     (((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->area) =
@@ -400,7 +401,7 @@ int MPID_nem_newmad_vc_destroy(MPIDI_VC_t *vc)
 
  fn_exit:   
        return mpi_errno;
- fn_fail:
+ fn_fail: ATTRIBUTE((unused))
        goto fn_exit;
 }
 

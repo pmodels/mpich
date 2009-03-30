@@ -54,7 +54,9 @@ int MPID_nem_newmad_anysource_matched(MPID_Request *rreq);
 
 /* Callbacks for events */
 void MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info);
+void MPID_nem_newmad_get_rreq(nm_sr_event_t event, const nm_sr_event_info_t*info);
 void MPID_nem_newmad_handle_sreq(nm_sr_event_t event, const nm_sr_event_info_t*info);
+
 
 /* Dtype management */
 int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype,  MPID_Datatype * dt_ptr, const void *buf, 
@@ -65,14 +67,14 @@ int MPID_nem_newmad_process_rdtype(MPID_Request **rreq_p, MPID_Datatype * dt_ptr
 /* Connection management*/
 int MPID_nem_newmad_send_conn_info (MPIDI_VC_t *vc);
 
-#define MPID_NEM_NMAD_MAX_NETS 3
-#define MY_SIZE (MPID_NEM_MAX_NETMOD_STRING_LEN/2)
+#define MPID_NEM_NMAD_MAX_NETS 4
+#define MPID_NEM_NMAD_MAX_SIZE MPID_NEM_MAX_NETMOD_STRING_LEN
 typedef nm_gate_t mpid_nem_newmad_p_gate_t;
 
 typedef struct MPID_nem_newmad_vc_area_internal
 {
-    char                     hostname[MY_SIZE];
-    char                     url[MPID_NEM_NMAD_MAX_NETS][MY_SIZE];
+    char                     hostname[MPID_NEM_NMAD_MAX_SIZE];
+    char                     url[MPID_NEM_NMAD_MAX_NETS][MPID_NEM_NMAD_MAX_SIZE];
     uint8_t                  drv_id[MPID_NEM_NMAD_MAX_NETS];
     mpid_nem_newmad_p_gate_t p_gate;
 } MPID_nem_newmad_vc_area_internal_t;
@@ -91,6 +93,7 @@ typedef struct
 typedef struct 
 {
     nm_sr_request_t newmad_req;
+    void           *iov;
 } MPID_nem_newmad_req_area;
 /* accessor macro to private fields in REQ */
 #define REQ_FIELD(reqp, field) (((MPID_nem_newmad_req_area *)((reqp)->ch.netmod_area.padding))->field)
@@ -168,6 +171,7 @@ extern nm_core_t  mpid_nem_newmad_pcore;
 extern int        mpid_nem_newmad_pending_send_req;
 
 #define NMAD_IOV_MAX_DEPTH 15 /* NM_SO_PREALLOC_IOV_LEN */
+//#define DEBUG
 
 #endif //NEWMAD_MODULE_IMPL_H
 

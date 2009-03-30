@@ -37,8 +37,13 @@ static int MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_sr_request_t *nmad_
 void 
 MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info)
 {
-    nm_tag_t match_info = info->recv_unexpected.tag;
+    nm_tag_t          match_info = info->recv_unexpected.tag;
     MPIR_Context_id_t ctxt;
+
+#ifdef DEBUG
+    fprintf(stdout,"===> Getting ADI MSG match is %lx \n",match_info);
+#endif
+
     NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);
     if(ctxt == NEM_NMAD_INTRA_CTXT)
     {
@@ -69,6 +74,7 @@ MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info)
     return;
 }
 
+
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newmad_directRecv
 #undef FCNAME
@@ -86,12 +92,10 @@ int MPID_nem_newmad_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 	MPIR_Context_id_t context    = rreq->dev.match.parts.context_id;
 	Nmad_Nem_tag_t    tag        = rreq->dev.match.parts.tag;
 	int               ret;
-	int               num_seg = 1;
 	MPIDI_msg_sz_t    data_sz;
 	int               dt_contig;
 	MPI_Aint          dt_true_lb;
 	MPID_Datatype    *dt_ptr;
-	struct iovec      newmad_iov[NMAD_IOV_MAX_DEPTH];
 	
 	NEM_NMAD_DIRECT_MATCH(match_info,0,source,context);
 	if (tag != MPI_ANY_TAG)
@@ -102,25 +106,41 @@ int MPID_nem_newmad_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 	{
 	    MPIU_Assert(0);
 	}
-	
+#ifdef DEBUG
+	fprintf(stdout,"========> Posting Recv req  %p (match is %lx) \n",rreq,match_info);
+#endif
 	MPIDI_Datatype_get_info(rreq->dev.user_count,rreq->dev.datatype, dt_contig, data_sz, dt_ptr,dt_true_lb);
 	rreq->dev.OnDataAvail = NULL;
-	
+
 	if (dt_contig)
 	{
-            newmad_iov[0].iov_base = (char*)(rreq->dev.user_buf) + dt_true_lb;
-            newmad_iov[0].iov_len  = data_sz;
+	    ret = nm_sr_irecv_with_ref(mpid_nem_newmad_pcore,VC_FIELD(vc,p_gate),match_info,
+				       (char*)(rreq->dev.user_buf) + dt_true_lb,data_sz,
+				       &(REQ_FIELD(rreq,newmad_req)),(void*)rreq);
 	}
 	else
 	{
-	    struct iovec *newmad_iov_ptr = &(newmad_iov[0]); 
+	    int           num_seg = 0;
+	    struct iovec *newmad_iov_ptr = NULL;
+	    struct iovec *newmad_iov = (struct iovec *)MPIU_Malloc(NMAD_IOV_MAX_DEPTH*sizeof(struct iovec));	    
+	    newmad_iov_ptr = &(newmad_iov[0]); 
 	    MPID_nem_newmad_process_rdtype(&rreq,dt_ptr,data_sz,&newmad_iov_ptr,&num_seg);
+	    MPIU_Assert(num_seg <= NMAD_IOV_MAX_DEPTH);
+#ifdef DEBUG
+	    {
+		int index;
+		for(index = 0; index < num_seg ; index++)
+		    {
+			fprintf(stdout,"======================\n");
+			fprintf(stdout,"RECV nmad_iov[%i]: [base %p][len %i]\n",index,
+				newmad_iov[index].iov_base,newmad_iov[index].iov_len);
+		    }
+	    }
+#endif
+	    ret = nm_sr_irecv_iov_with_ref(mpid_nem_newmad_pcore,VC_FIELD(vc,p_gate),match_info,
+					   newmad_iov,num_seg,&(REQ_FIELD(rreq,newmad_req)),(void*)rreq);	
+	    REQ_FIELD(rreq,iov) = newmad_iov;
 	}
-	
-	MPIU_Assert(num_seg <= NMAD_IOV_MAX_DEPTH);
-
-	ret = nm_sr_irecv_iov_with_ref(mpid_nem_newmad_pcore,VC_FIELD(vc,p_gate),match_info,
-				       newmad_iov,num_seg,&(REQ_FIELD(rreq,newmad_req)),(void*)rreq);	
     }
    
  fn_exit:
@@ -130,83 +150,74 @@ int MPID_nem_newmad_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
     goto fn_exit;
 }
 
+
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newmad_poll_recv
+#define FUNCNAME MPID_nem_newmad_get_rreq
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int 
-MPID_nem_newmad_poll_recv(void)
+void MPID_nem_newmad_get_rreq(nm_sr_event_t event, const nm_sr_event_info_t*info)
 {
-   int              mpi_errno = MPI_SUCCESS;   
-   nm_sr_request_t *p_out_req = NULL;
-   MPID_Request    *req = NULL;
-   int              ret;
+   nm_sr_request_t  *p_request = info->recv_completed.p_request;
+   MPID_Request     *req = NULL;
+   void             *ref;
+   nm_tag_t          match_info = 0;
+   MPIR_Context_id_t ctxt;
+   size_t            size;
 
-   ret = nm_sr_recv_success(mpid_nem_newmad_pcore, &p_out_req);
-   if (p_out_req != NULL)
+   nm_sr_get_size(mpid_nem_newmad_pcore, p_request, &size);
+   nm_sr_get_tag(mpid_nem_newmad_pcore, p_request, &match_info);
+   nm_sr_get_ref(mpid_nem_newmad_pcore, p_request, &ref);
+   req =  (MPID_Request *)ref;
+   MPIU_Assert(req != NULL);
+#ifdef DEBUG
+   fprintf(stdout,"========> Completing Recv req  %p (match is %lx) \n",req,match_info);
+#endif
+   NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);       
+   if(ctxt == NEM_NMAD_INTRA_CTXT)
    {
-       nm_tag_t          match_info = 0;
-       MPIR_Context_id_t ctxt;
-       size_t            size;
-       MPID_Request     *req;
-       void             *ref;
-       nm_sr_get_size(mpid_nem_newmad_pcore, p_out_req, &size);
-       nm_sr_get_tag(mpid_nem_newmad_pcore, p_out_req, &match_info);
-       nm_sr_get_ref(mpid_nem_newmad_pcore,p_out_req,&ref);
-       req =  (MPID_Request *)ref;
-       MPIU_Assert(req != NULL);
-
-       NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);       
-       if(ctxt == NEM_NMAD_INTRA_CTXT)
+       if (req->kind == MPID_REQUEST_RECV)
        {
-	   if (req->kind == MPID_REQUEST_RECV)
+	   if (size <= sizeof(MPIDI_CH3_PktGeneric_t))
 	   {
-	       if (size <= sizeof(MPIDI_CH3_PktGeneric_t))
-	       {
-		   MPID_nem_handle_pkt(req->ch.vc,(char *)&(req->dev.pending_pkt),(MPIDI_msg_sz_t)(size));
-	       }
-	       else
-	       {
-		   MPID_nem_handle_pkt(req->ch.vc,(char *)(req->dev.tmpbuf),(MPIDI_msg_sz_t)(req->dev.tmpbuf_sz));
-		   MPIU_Free(req->dev.tmpbuf);
-	       }
-	       MPIDI_CH3_Request_destroy(req);
+	       MPID_nem_handle_pkt(req->ch.vc,(char *)&(req->dev.pending_pkt),(MPIDI_msg_sz_t)(size));
 	   }
 	   else
 	   {
-	       MPIU_Assert(0);
+	       MPID_nem_handle_pkt(req->ch.vc,(char *)(req->dev.tmpbuf),(MPIDI_msg_sz_t)(req->dev.tmpbuf_sz));
+	       MPIU_Free(req->dev.tmpbuf);
 	   }
+	   MPIDI_CH3_Request_destroy(req);
        }
        else
        {
-	   if ((req->kind == MPID_REQUEST_RECV) || (req->kind == MPID_PREQUEST_RECV))
-	   {
-	       int found = FALSE;
-	       nm_sr_request_t *nmad_request = NULL;	       
-	       MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);
-	       MPIU_THREAD_CS_ENTER(MSGQUEUE,req);
-	       MPID_NEM_NMAD_GET_REQ_FROM_HASH(req,nmad_request);
-	       found = MPIDI_CH3U_Recvq_DP(req);
-	       if(found){
-		   MPID_nem_newmad_handle_rreq(req,nmad_request,match_info,size);
-	       }
-	       if(nmad_request != NULL)
-	       {
-		   MPIU_Assert(req->dev.match.parts.rank == MPI_ANY_SOURCE);
-		   MPIU_Free(nmad_request);
-	       }
-	       MPIU_THREAD_CS_EXIT(MSGQUEUE,req);
-	   }
-	   else
-	   {
-	       MPIU_Assert(0);
-	   }
+	   MPIU_Assert(0);
        }
    }
- fn_exit:
-   return mpi_errno;
- fn_fail:  ATTRIBUTE((unused))
-   goto fn_exit;   
+   else
+   {
+       if ((req->kind == MPID_REQUEST_RECV) || (req->kind == MPID_PREQUEST_RECV))
+       {
+	   int found = FALSE;
+	   nm_sr_request_t *nmad_request = NULL;	       
+	   MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);
+	   MPIU_THREAD_CS_ENTER(MSGQUEUE,req);
+	   MPID_NEM_NMAD_GET_REQ_FROM_HASH(req,nmad_request);
+	   found = MPIDI_CH3U_Recvq_DP(req);
+	   if(found){
+	       MPID_nem_newmad_handle_rreq(req,nmad_request,match_info,size);
+	   }
+	   if(nmad_request != NULL)
+	   {
+	       MPIU_Assert(req->dev.match.parts.rank == MPI_ANY_SOURCE);
+	       MPIU_Free(nmad_request);
+	   }
+	   MPIU_THREAD_CS_EXIT(MSGQUEUE,req);
+       }
+       else
+       {
+	   MPIU_Assert(0);
+       }
+   }
 }
 
 #undef FUNCNAME
@@ -218,20 +229,7 @@ MPID_nem_newmad_poll(MPID_nem_poll_dir_t in_or_out)
 {
    int mpi_errno = MPI_SUCCESS;   
 
-   MPID_nem_newmad_poll_recv();   
-
-   /*
-   if (in_or_out)
-   {
-       MPID_nem_newmad_poll_recv();   
-       MPID_nem_newmad_poll_send();   
-   }
-   else 
-   {
-       MPID_nem_newmad_poll_send();   
-       MPID_nem_newmad_poll_recv();   
-   }
-   */
+   nm_schedule(mpid_nem_newmad_pcore);
 
  fn_exit:
    return mpi_errno;
@@ -257,7 +255,9 @@ MPID_nem_newmad_handle_sreq(nm_sr_event_t event, const nm_sr_event_info_t*info)
     nm_sr_get_ref(mpid_nem_newmad_pcore,p_request,&ref);
     req = (MPID_Request *)ref;
     MPIU_Assert(req != NULL);
-
+#ifdef DEBUG
+    fprintf(stdout,"========> Completing Send req  %p (match is %lx) \n",req,match_info);
+#endif
     NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);
     if(ctxt != NEM_NMAD_INTRA_CTXT)
     {
@@ -345,6 +345,7 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_sr_request_t *nmad_request, nm
 		MPIU_ERR_SETSIMPLE(req->status.MPI_ERROR,MPI_ERR_TYPE,"**dtypemismatch");
 	    }
 	}
+	MPIU_Free(REQ_FIELD(req,iov));
     }
     
     MPIDI_Comm_get_vc(req->comm, req->status.MPI_SOURCE, &vc);
@@ -478,6 +479,14 @@ int MPID_nem_newmad_process_rdtype(MPID_Request **rreq_p, MPID_Datatype * dt_ptr
     iov = MPIU_Malloc(iov_num_ub*sizeof(MPID_IOV));
     MPID_Segment_unpack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last,iov, &n_iov);
     MPIU_Assert(last == rreq->dev.segment_size);
+#ifdef DEBUG
+    for(index = 0; index < n_iov ; index++)
+	{
+	    fprintf(stdout,"======================\n");
+	    fprintf(stdout,"RECV iov[%i]: [base %p][len %i]\n",index,
+		    iov[index].MPID_IOV_BUF,iov[index].MPID_IOV_LEN);
+	}
+#endif
 
     if(n_iov <= NMAD_IOV_MAX_DEPTH) 
     {

@@ -26,6 +26,9 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
 
     NEM_NMAD_ADI_MATCH(match_info);
+
+    fprintf(stdout,"iSendContig ========> Sending ADI msg  for req %p (match is %lx) \n",sreq,match_info);
+
     memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
     mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
     mad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
@@ -74,6 +77,10 @@ int MPID_nem_newmad_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
     sreq->dev.OnDataAvail = 0;
 
     NEM_NMAD_ADI_MATCH(match_info);
+#ifdef DEBUG
+    fprintf(stdout,"StartcontigMsg ========> Sending ADI msg  for req %p (match is %lx) \n",sreq,match_info);
+#endif
+
     memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
     mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
     mad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
@@ -128,6 +135,9 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
 				       sreq->dev.user_count,data_sz, &mad_iov_ptr,&num_iov,1);
     }
     NEM_NMAD_ADI_MATCH(match_info);
+#ifdef DEBUG
+    fprintf(stdout,"SendNonContig ========> Sending ADI msg  for req %p (match is %lx) \n",sreq,match_info);
+#endif
     memcpy(&(sreq->dev.pending_pkt),(char *)header,sizeof(MPIDI_CH3_PktGeneric_t));
     mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
     mad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
@@ -160,6 +170,7 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
     int            dt_contig;
     MPIDI_msg_sz_t data_sz;
     MPI_Aint       dt_true_lb;
+    int            index;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_DIRECTSEND);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWMAD_DIRECTSEND);
@@ -174,7 +185,9 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
     sreq->ch.vc = vc;
     sreq->dev.OnDataAvail = NULL;
     NEM_NMAD_DIRECT_MATCH(match_info,tag,comm->rank,comm->context_id + context_offset);
-
+#ifdef DEBUG
+    fprintf(stdout,"Direct Send ========> Sending NON ADI msg for req %p (match is %lx) \n",sreq,match_info);
+#endif
     if(data_sz)
     {
 	if (dt_contig)
@@ -189,6 +202,14 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
 	    MPID_nem_newmad_process_sdtype(&sreq,datatype,dt_ptr,buf,count,data_sz,&mad_iov_ptr,&num_iov,0);	    	    
 	}
 	MPIU_Assert(num_iov <= NMAD_IOV_MAX_DEPTH);
+#ifdef DEBUG
+	for(index = 0; index < num_iov ; index++)
+	    {
+		fprintf(stdout,"======================\n");
+		fprintf(stdout,"SEND nmad_iov[%i]: [base %p][len %i]\n",index,
+			mad_iov[index].iov_base,mad_iov[index].iov_len);
+	    }
+#endif
 	nm_sr_isend_iov_with_ref(mpid_nem_newmad_pcore, VC_FIELD(vc, p_gate), match_info, 
 				 mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
     }
@@ -301,6 +322,15 @@ int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype
     iov = MPIU_Malloc(iov_num_ub*sizeof(MPID_IOV));
     MPID_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,iov, &n_iov);
     MPIU_Assert(last == sreq->dev.segment_size);
+
+#ifdef DEBUG
+    for(index = 0; index < n_iov ; index++)
+	{
+	    fprintf(stdout,"======================\n");
+	    fprintf(stdout,"SEND: iov[%i]: [base %p][len %i]\n",index,
+		    iov[index].MPID_IOV_BUF,iov[index].MPID_IOV_LEN);
+	}
+#endif
 
     if(n_iov <= num_entries) 
     {

@@ -16,6 +16,8 @@ MPID_nem_newmad_finalize()
 {
     int mpi_errno = MPI_SUCCESS;
 
+    common_exit(NULL);
+
    fn_exit:
      return mpi_errno;
    fn_fail:  ATTRIBUTE((unused))
