@@ -12,7 +12,8 @@ INCLUDES = -I${abs_srcdir}/../../include \
 	-I../../include \
 	-I../../../../include \
 	-I${abs_srcdir}/../utils \
-	-I${abs_srcdir}/../../control/include
+	-I${abs_srcdir}/../../control/include \
+	-I${abs_srcdir}/../../demux
 install_BIN = mpiexec
 
 # Use the mpich2-build-install target to include mpiexec in the build bin

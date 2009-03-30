@@ -141,7 +141,6 @@ void HYDU_bind_process(int core)
 int HYDU_bind_get_core_id(int id, HYD_Binding binding)
 {
     int socket = 0, core = 0, curid, realid;
-    int i, j;
 
     HYDU_FUNC_ENTER();
 

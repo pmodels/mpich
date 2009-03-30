@@ -334,8 +334,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     HYDU_ERR_POP(status, "unable to get base path\n");
 
     /* Proxy setup or teardown */
-    if ((handle.launch_mode == HYD_LAUNCH_BOOT) ||
-        (handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
+    if ((handle.launch_mode == HYD_LAUNCH_BOOT) || (handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
 
         /* NULL out variables we don't care about */
         HYDU_ERR_CHKANDJUMP(status, handle.prop != HYD_ENV_PROP_UNSET, HYD_INTERNAL_ERROR,
@@ -349,7 +348,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         HYDU_ERR_CHKANDJUMP(status, handle.exec_info_list, HYD_INTERNAL_ERROR,
                             "executables specified in proxy launch mode\n");
     }
-    else { /* Application launch */
+    else {      /* Application launch */
         if (handle.exec_info_list == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no local options set\n");
 

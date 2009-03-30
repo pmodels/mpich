@@ -353,7 +353,7 @@ HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd)
     status = HYDU_sock_read(fd, &num_strings, sizeof(int), &recvd);
     HYDU_ERR_POP(status, "error reading data from upstream\n");
 
-    HYDU_MALLOC(arglist, char **, num_strings * sizeof(char *), status);
+    HYDU_MALLOC(arglist, char **, (num_strings + 1) * sizeof(char *), status);
 
     for (i = 0; i < num_strings; i++) {
         status = HYDU_sock_read(fd, &str_len, sizeof(int), &recvd);
@@ -370,6 +370,9 @@ HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd)
     status = parse_params(arglist);
     HYDU_ERR_POP(status, "unable to parse argument list\n");
 
+    HYDU_free_strlist(arglist);
+    HYDU_FREE(arglist);
+
     /* Save this fd as we need to send back the exit status on
      * this. */
     HYD_PMCD_pmi_proxy_params.control_fd = fd;
@@ -383,7 +386,7 @@ HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd)
 }
 
 
-HYD_Status HYD_PMCD_pmi_proxy_launch_procs()
+HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 {
     int i, j, arg, stdin_fd, process_id, core, pmi_id, rem;
     char *str;
@@ -396,8 +399,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs()
     HYDU_FUNC_ENTER();
 
     HYD_PMCD_pmi_proxy_params.partition_proc_count = 0;
-    for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment;
-         segment = segment->next)
+    for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment; segment = segment->next)
         HYD_PMCD_pmi_proxy_params.partition_proc_count += segment->proc_count;
 
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
@@ -452,8 +454,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs()
 
             if (chdir(HYD_PMCD_pmi_proxy_params.wdir) < 0)
                 HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                                     "unable to change wdir (%s)\n",
-                                     HYDU_strerror(errno));
+                                     "unable to change wdir (%s)\n", HYDU_strerror(errno));
 
             for (j = 0, arg = 0; exec->exec[j]; j++)
                 client_args[arg++] = HYDU_strdup(exec->exec[j]);
@@ -465,8 +466,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs()
                                              &HYD_PMCD_pmi_proxy_params.in,
                                              &HYD_PMCD_pmi_proxy_params.out[process_id],
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
-                                             &HYD_PMCD_pmi_proxy_params.pid[process_id],
-                                             core);
+                                             &HYD_PMCD_pmi_proxy_params.pid[process_id], core);
 
                 status = HYDU_sock_set_nonblock(HYD_PMCD_pmi_proxy_params.in);
                 HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
@@ -486,8 +486,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs()
                                              NULL,
                                              &HYD_PMCD_pmi_proxy_params.out[process_id],
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
-                                             &HYD_PMCD_pmi_proxy_params.pid[process_id],
-                                             core);
+                                             &HYD_PMCD_pmi_proxy_params.pid[process_id], core);
             }
             HYDU_ERR_POP(status, "spawn process returned error\n");
 
@@ -532,10 +531,5 @@ void HYD_PMCD_pmi_proxy_killjob(void)
         }
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
-    return;
-
-  fn_fail:
-    goto fn_exit;
 }

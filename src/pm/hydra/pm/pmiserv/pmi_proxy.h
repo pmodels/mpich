@@ -61,7 +61,7 @@ extern int HYD_PMCD_pmi_proxy_listenfd;
 HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv);
 HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void);
 HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd);
-HYD_Status HYD_PMCD_pmi_proxy_launch(void);
+HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void);
 void HYD_PMCD_pmi_proxy_killjob(void);
 
 /* callback */

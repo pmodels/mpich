@@ -95,8 +95,6 @@ static HYD_Status wait_for_procs_to_finish(void)
 int main(int argc, char **argv)
 {
     int i, ret_status;
-    struct HYD_Partition_exec *exec;
-    struct HYD_Partition_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
     status = HYD_PMCD_pmi_proxy_get_params(argv);
@@ -136,7 +134,7 @@ int main(int argc, char **argv)
         for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
             ret_status |= HYD_PMCD_pmi_proxy_params.exit_status[i];
     }
-    else { /* Persistent mode */
+    else {      /* Persistent mode */
         do {
             /* Wait for the processes to finish. If there are no
              * processes, we will just wait blocking for the work to

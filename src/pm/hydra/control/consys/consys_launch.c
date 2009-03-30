@@ -13,8 +13,6 @@ extern HYD_Handle handle;
 
 HYD_Status HYD_CSI_launch_procs(void)
 {
-    struct HYD_Partition *partition;
-    int stdin_fd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

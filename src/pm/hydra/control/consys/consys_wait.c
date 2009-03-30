@@ -13,8 +13,6 @@ extern HYD_Handle handle;
 
 HYD_Status HYD_CSI_wait_for_completion(void)
 {
-    int sockets_open;
-    struct HYD_Partition *partition;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

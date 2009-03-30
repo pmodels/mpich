@@ -8,6 +8,7 @@
 #include "hydra_utils.h"
 #include "mpiexec.h"
 #include "csi.h"
+#include "demux.h"
 
 extern HYD_Handle handle;
 
@@ -35,11 +36,11 @@ static HYD_Status close_fd(int fd)
         }
     }
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

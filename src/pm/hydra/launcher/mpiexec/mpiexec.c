@@ -9,6 +9,7 @@
 #include "mpiexec.h"
 #include "lchu.h"
 #include "csi.h"
+#include "demux.h"
 
 extern HYD_Handle handle;
 
@@ -109,12 +110,10 @@ int main(int argc, char **argv)
 
     /* Setup stdout/stderr/stdin handlers */
     for (partition = handle.partition_list; partition; partition = partition->next) {
-        status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, NULL,
-                                     HYD_LCHI_stdout_cb);
+        status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, NULL, HYD_LCHI_stdout_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-        status = HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, NULL,
-                                     HYD_LCHI_stderr_cb);
+        status = HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, NULL, HYD_LCHI_stderr_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 

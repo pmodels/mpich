@@ -129,6 +129,8 @@ HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events, void *userp)
         HYDU_FREE(buf);
     if (str1)
         HYDU_FREE(str1);
+    if (str2)
+        HYDU_FREE(str2);
     HYDU_FUNC_EXIT();
     return status;
 

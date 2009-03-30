@@ -123,12 +123,6 @@ static HYD_Status fill_in_proxy_args(void)
 /* Local proxy is a proxy that is local to this process */
 static HYD_Status launch_procs_in_runtime_mode(void)
 {
-    int i, arg, process_id;
-    char *path_str[HYD_NUM_TMP_STRINGS];
-    HYD_Env_t *env;
-    struct HYD_Partition *partition;
-    struct HYD_Partition_exec *exec;
-    struct HYD_Partition_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
     status = fill_in_proxy_args();
@@ -272,8 +266,7 @@ static HYD_Status launch_procs_in_persistent_mode(void)
 
     first_partition = 1;
     for (partition = handle.partition_list; partition; partition = partition->next) {
-        status = HYDU_sock_connect(partition->name, handle.proxy_port,
-                                   &partition->control_fd);
+        status = HYDU_sock_connect(partition->name, handle.proxy_port, &partition->control_fd);
         HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
         cmd = PROC_INFO;
@@ -293,8 +286,7 @@ static HYD_Status launch_procs_in_persistent_mode(void)
             status = HYDU_sock_write(partition->control_fd, &arg_len, sizeof(int));
             HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
-            status = HYDU_sock_write(partition->control_fd, partition->proxy_args[i],
-                                     arg_len);
+            status = HYDU_sock_write(partition->control_fd, partition->proxy_args[i], arg_len);
             HYDU_ERR_POP(status, "unable to write data to proxy\n");
         }
 
@@ -448,8 +440,7 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
 
     HYDU_FUNC_ENTER();
 
-    if ((handle.launch_mode == HYD_LAUNCH_BOOT) ||
-        (handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
+    if ((handle.launch_mode == HYD_LAUNCH_BOOT) || (handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
         status = HYD_SUCCESS;
     }
     else {
