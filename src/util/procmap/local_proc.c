@@ -206,7 +206,7 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
                                  int *external_size_p, int *external_rank_p, int **external_ranks_p,
                                  int **intranode_table_p, int **internode_table_p)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     
     /* The upper level can catch this non-fatal error and should be
        able to recover gracefully. */
