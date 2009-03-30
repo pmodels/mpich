@@ -44,6 +44,7 @@ static void usage(void)
     printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
     printf("\t--proxy-port                     [Port on which proxies can listen]\n");
     printf("\t--bootstrap                      [Bootstrap server to use]\n");
+    printf("\t--css                            [Communication sub-system to use]\n");
     printf("\t--binding                        [Process binding]");
     printf("\t--boot-proxies                   [Boot proxies to run in persistent mode]\n");
     printf("\t--shutdown-proxies               [Shutdown persistent mode proxies]\n");

@@ -17,6 +17,7 @@ struct HYD_Handle_ {
     HYD_Launch_mode_t launch_mode;
 
     char *bootstrap;
+    char *css;
     HYD_Binding binding;
     char *user_bind_map;
 

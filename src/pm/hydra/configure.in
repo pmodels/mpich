@@ -90,6 +90,34 @@ AC_SUBST(hydra_bss_name_array)
 AC_SUBST(hydra_bss_init_array)
 
 
+dnl Check what communication sub-system we should use
+AC_ARG_WITH(hydra-css, [  --with-hydra-css           Communication Sub-system],
+		    [ hydra_css=$withval ],
+		    [ hydra_css="none" ])
+AC_MSG_CHECKING(communication subsystem)
+AC_MSG_RESULT($hydra_css)
+hydra_css_names="`echo $hydra_css | sed -e 's/:/ /g' -e 's/,/ /g'`"
+AC_DEFINE_UNQUOTED(HYDRA_CSS_NAMES,"$hydra_css_names",[Definition of enabled communication systems])
+AC_SUBST(hydra_css_names)
+
+for hydra_css_name in ${hydra_css_names}; do
+    if test -z "${hydra_default_css}" ; then
+       hydra_default_css=$hydra_css_name
+    fi
+    hydra_css_makefiles="$hydra_css_makefiles css/${hydra_css_name}/Makefile"
+    hydra_css_init_decl="${hydra_css_init_decl}
+HYD_Status HYD_CSSI_${hydra_css_name}_init(void);"
+    hydra_css_name_array="${hydra_css_name_array} \"${hydra_css_name}\", "
+    hydra_css_init_array="${hydra_css_init_array} HYD_CSSI_${hydra_css_name}_init, "
+done
+hydra_css_name_array="${hydra_css_name_array} NULL"
+hydra_css_init_array="${hydra_css_init_array} NULL"
+AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_CSS,"$hydra_default_css",[Default communication sub-system])
+AC_SUBST(hydra_css_init_decl)
+AC_SUBST(hydra_css_name_array)
+AC_SUBST(hydra_css_init_array)
+
+
 dnl Check what process manager we should use
 AC_ARG_WITH(hydra-pm, [  --with-hydra-pm               Process Manager],
 		[ hydra_pm=$withval ],
@@ -323,5 +351,11 @@ AC_OUTPUT(Makefile \
 	bootstrap/src/Makefile \
 	bootstrap/src/bsci_init.c \
 	bootstrap/include/bsci.h \
-	${hydra_bss_makefiles}
+	${hydra_bss_makefiles} \
+	css/Makefile \
+	css/utils/Makefile \
+	css/src/Makefile \
+	css/src/cssi_init.c \
+	css/include/cssi.h \
+	${hydra_css_makefiles}
 )

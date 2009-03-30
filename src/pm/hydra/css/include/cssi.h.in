@@ -1,0 +1,25 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2008 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#ifndef CSSI_H_INCLUDED
+#define CSSI_H_INCLUDED
+
+struct HYD_CSSI_fns {
+    HYD_Status(*init) (void);
+    HYD_Status(*query_string) (char *str);
+    HYD_Status(*finalize) (void);
+};
+
+extern struct HYD_CSSI_fns HYD_CSSI_fns;
+
+HYD_Status HYD_CSSI_init(char *css);
+HYD_Status HYD_CSSI_query_string(char *str);
+HYD_Status HYD_CSSI_finalize(void);
+
+/* Each communication sub-system has to expose an initialization function */
+@hydra_css_init_decl@
+
+#endif /* CSSI_H_INCLUDED */

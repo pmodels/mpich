@@ -4,7 +4,7 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS = utils control bootstrap demux pm launcher .
+SUBDIRS = utils control bootstrap css demux pm launcher .
 
 all-preamble:
 	@if [ ! -d lib ] ; then mkdir lib ; fi

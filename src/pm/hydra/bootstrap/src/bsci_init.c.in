@@ -25,7 +25,6 @@ HYD_Status HYD_BSCI_init(char *bootstrap)
     HYD_BSCI_fns.wait_for_completion = NULL;
     HYD_BSCI_fns.finalize = NULL;
 
-    i = 0;
     for (i = 0; HYD_BSCI_comp_array[i]; i++) {
         if (!strcmp(bootstrap, HYD_BSCI_comp_array[i])) {
             status = (*HYD_BSCI_comp_init[i])();

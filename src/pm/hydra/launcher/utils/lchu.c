@@ -17,6 +17,7 @@ void HYD_LCHU_init_params(void)
     handle.launch_mode = HYD_LAUNCH_UNSET;
 
     handle.bootstrap = NULL;
+    handle.css = NULL;
     handle.binding = HYD_BIND_UNSET;
     handle.user_bind_map = NULL;
 
@@ -50,54 +51,41 @@ void HYD_LCHU_init_params(void)
 
 void HYD_LCHU_free_params(void)
 {
-    if (handle.base_path) {
+    if (handle.base_path)
         HYDU_FREE(handle.base_path);
-        handle.base_path = NULL;
-    }
 
-    if (handle.bootstrap) {
+    if (handle.bootstrap)
         HYDU_FREE(handle.bootstrap);
-        handle.bootstrap = NULL;
-    }
 
-    if (handle.wdir) {
+    if (handle.css)
+        HYDU_FREE(handle.css);
+
+    if (handle.wdir)
         HYDU_FREE(handle.wdir);
-        handle.wdir = NULL;
-    }
-    if (handle.host_file) {
+
+    if (handle.host_file)
         HYDU_FREE(handle.host_file);
-        handle.host_file = NULL;
-    }
 
-    if (handle.global_env) {
+    if (handle.global_env)
         HYDU_env_free_list(handle.global_env);
-        handle.global_env = NULL;
-    }
 
-    if (handle.system_env) {
+    if (handle.system_env)
         HYDU_env_free_list(handle.system_env);
-        handle.system_env = NULL;
-    }
 
-    if (handle.user_env) {
+    if (handle.user_env)
         HYDU_env_free_list(handle.user_env);
-        handle.user_env = NULL;
-    }
 
-    if (handle.prop_env) {
+    if (handle.prop_env)
         HYDU_env_free_list(handle.prop_env);
-        handle.prop_env = NULL;
-    }
 
-    if (handle.exec_info_list) {
+    if (handle.exec_info_list)
         HYDU_free_exec_info_list(handle.exec_info_list);
-        handle.exec_info_list = NULL;
-    }
 
-    if (handle.partition_list) {
+    if (handle.partition_list)
         HYDU_free_partition_list(handle.partition_list);
-        handle.partition_list = NULL;
-    }
+
+    /* Re-initialize everything to default values */
+    HYD_LCHU_init_params();
 }
 
 

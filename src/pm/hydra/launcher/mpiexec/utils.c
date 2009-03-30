@@ -222,6 +222,17 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             continue;
         }
 
+        if (!strcmp(str[0], "--css")) {
+            if (!str[1]) {
+                INCREMENT_ARGV(status);
+                str[1] = *argv;
+            }
+            HYDU_ERR_CHKANDJUMP(status, handle.css, HYD_INTERNAL_ERROR,
+                                "duplicate communication sub-system\n");
+            handle.css = HYDU_strdup(str[1]);
+            continue;
+        }
+
         if (!strcmp(str[0], "--binding")) {
             if (!str[1]) {
                 INCREMENT_ARGV(status);
@@ -292,7 +303,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     }
 
     /* First set all the variables that do not depend on the launch mode */
-    tmp = getenv("MPIEXEC_DEBUG");
+    tmp = getenv("HYDRA_DEBUG");
     if (handle.debug == -1 && tmp)
         handle.debug = atoi(tmp) ? 1 : 0;
     if (handle.debug == -1)
@@ -303,6 +314,12 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         handle.bootstrap = HYDU_strdup(tmp);
     if (handle.bootstrap == NULL)
         handle.bootstrap = HYDU_strdup(HYDRA_DEFAULT_BSS);
+
+    tmp = getenv("HYDRA_CSS");
+    if (handle.css == NULL && tmp)
+        handle.css = HYDU_strdup(tmp);
+    if (handle.css == NULL)
+        handle.css = HYDU_strdup(HYDRA_DEFAULT_CSS);
 
     tmp = getenv("HYDRA_HOST_FILE");
     if (handle.host_file == NULL && tmp)

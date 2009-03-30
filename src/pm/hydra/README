@@ -1,6 +1,5 @@
 General
 -------
-
 Hydra is a process management system for starting parallel jobs. Hydra
 is designed to natively work with multiple daemons such as ssh, pbs,
 slurm and sge. However, in the current release, only ssh and fork are
@@ -13,7 +12,6 @@ http://wiki.mcs.anl.gov/mpich2/index.php/Hydra_Process_Management_Framework
 
 Quick Start
 -----------
-
 To use hydra, mpich2 needs to be configured with the configure option
 --with-pm=hydra.
 
@@ -58,7 +56,6 @@ next 3 on "foo" and the last 2 on "shakey".
 
 Environment settings
 --------------------
-
 HYDRA_HOST_FILE: This variable points to the default host file to use,
 when the "-f" option is not provided to mpiexec.
 
@@ -69,8 +66,8 @@ when the "-f" option is not provided to mpiexec.
     setenv HYDRA_HOST_FILE <path_to_host_file>/hosts
 
 
-MPIEXEC_DEBUG: Setting this to "1" enables debug mode; set it to "0"
-to disable.
+HYDRA_DEBUG: Setting this to "1" enables debug mode; set it to "0" to
+disable.
 
 HYDRA_ENV: Setting this to "all" will pass all the environment to the
 application processes.
@@ -78,7 +75,6 @@ application processes.
 
 Bootstrap servers
 -----------------
-
 Hydra supports SSH and FORK bootstrap servers to launch processes. You
 can pick these through the mpiexec option --bootstrap:
 
@@ -96,7 +92,6 @@ The default bootstrap server is ssh.
 
 Process-core binding
 --------------------
-
 To configure hydra with process-core binding support, use the
 configure option --enable-hydra-procbind.
 
@@ -192,7 +187,6 @@ HYDRA_BINDING.
 
 X Forwarding
 ------------
-
 X-forwarding is specific to each bootstrap server. Some servers do it
 by default, while some don't. For ssh, this is disabled by default. To
 enable it, you should use the option --enable-x to mpiexec.
@@ -202,20 +196,36 @@ enable it, you should use the option --enable-x to mpiexec.
 
 Persistent-mode Proxies
 -----------------------
-
 Hydra also supports proxies to be launched in persistent mode on the
 system (e.g., by a system administrator). To launch in persistent
 mode, use:
 
- $ mpiexec --boot-proxies
+ $ mpiexec --boot-proxies -f hosts
 
- $ mpiexec --use-persistent -n 4 ./app1
+ $ mpiexec --use-persistent -f hosts -n 4 ./app1
 
- $ mpiexec --use-persistent -n 4 ./app2
+ $ mpiexec --use-persistent -f hosts -n 4 ./app2
 
- $ mpiexec --use-persistent -n 4 ./app3
+ $ mpiexec --use-persistent -f hosts -n 4 ./app3
 
- $ mpiexec --shutdown-proxies
+ $ mpiexec --shutdown-proxies -f hosts
 
 Persistent mode can also be picked using the environment setting
 HYDRA_LAUNCH_MODE=persistent.
+
+
+Communication sub-systems
+-------------------------
+Hydra supports different communication sub-systems to connect proxies
+in the persistent mode. The default is "none", which means that the
+proxies are not connected. You can pick these through the mpiexec
+option --css:
+
+ $ mpiexec --css ib -f hosts -n 4 ./app
+
+ (or)
+
+ $ mpiexec --css mx -f hosts -n 4 ./app
+
+This can also be controlled by using the HYDRA_CSS environment
+variable.
