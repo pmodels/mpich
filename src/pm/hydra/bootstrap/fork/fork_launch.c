@@ -43,10 +43,6 @@ HYD_Status HYD_BSCD_fork_launch_procs(void)
         for (arg = 0; client_arg[arg]; arg++)
             HYDU_FREE(client_arg[arg]);
 
-        /* For the remaining processes, set the stdin fd to -1 */
-        if (process_id != 0)
-            handle.in = -1;
-
         process_id++;
     }
 

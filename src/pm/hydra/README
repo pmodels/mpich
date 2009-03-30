@@ -198,3 +198,24 @@ by default, while some don't. For ssh, this is disabled by default. To
 enable it, you should use the option --enable-x to mpiexec.
 
  $ mpiexec --enable-x -f hosts -n 4 ./app
+
+
+Persistent-mode Proxies
+-----------------------
+
+Hydra also supports proxies to be launched in persistent mode on the
+system (e.g., by a system administrator). To launch in persistent
+mode, use:
+
+ $ mpiexec --boot-proxies
+
+ $ mpiexec --use-persistent -n 4 ./app1
+
+ $ mpiexec --use-persistent -n 4 ./app2
+
+ $ mpiexec --use-persistent -n 4 ./app3
+
+ $ mpiexec --shutdown-proxies
+
+Persistent mode can also be picked using the environment setting
+HYDRA_LAUNCH_MODE=persistent.

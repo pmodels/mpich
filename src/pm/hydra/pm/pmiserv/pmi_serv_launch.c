@@ -13,18 +13,17 @@
 #include "pmi_serv.h"
 
 int HYD_PMCD_pmi_serv_listenfd;
-extern HYD_Handle handle;
+HYD_Handle handle;
 
-/* Local proxy is a proxy that is local to this process */
-static HYD_Status launch_procs_with_local_proxy(void)
+static HYD_Status fill_in_proxy_args(void)
 {
-    HYD_Status status = HYD_SUCCESS;
     int i, arg, process_id;
     char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_Env_t *env;
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;
     struct HYD_Partition_segment *segment;
+    HYD_Status status = HYD_SUCCESS;
 
     handle.one_pass_count = 0;
     for (partition = handle.partition_list; partition; partition = partition->next)
@@ -114,6 +113,27 @@ static HYD_Status launch_procs_with_local_proxy(void)
         }
     }
 
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+/* Local proxy is a proxy that is local to this process */
+static HYD_Status launch_procs_in_runtime_mode(void)
+{
+    int i, arg, process_id;
+    char *path_str[HYD_NUM_TMP_STRINGS];
+    HYD_Env_t *env;
+    struct HYD_Partition *partition;
+    struct HYD_Partition_exec *exec;
+    struct HYD_Partition_segment *segment;
+    HYD_Status status = HYD_SUCCESS;
+
+    status = fill_in_proxy_args();
+    HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
+
     /* Initialize the bootstrap server and ask it to launch the
      * processes. */
     status = HYD_BSCI_init(handle.bootstrap);
@@ -124,93 +144,196 @@ static HYD_Status launch_procs_with_local_proxy(void)
 
   fn_exit:
     return status;
+
   fn_fail:
     goto fn_exit;
 }
 
-/* Request remote proxies to shutdown */
-static HYD_Status shutdown_remote_proxies(void)
-{
-    char shutdown_proxies_cmd[HYD_PMCD_MAX_CMD_LEN];
-    struct HYD_Partition *partition = NULL;
-    int HYD_PMCD_pmi_proxy_connfd = -1;
-    HYD_Status status = HYD_SUCCESS;
-
-    for (partition = handle.partition_list; partition; partition = partition->next) {
-        status = HYDU_sock_connect(partition->name, handle.pproxy_port,
-                                   &HYD_PMCD_pmi_proxy_connfd);
-        HYDU_ERR_POP(status, "Error connecting to remote proxy");
-
-        /* Create shutdown command */
-        HYDU_snprintf(shutdown_proxies_cmd, HYD_PMCD_MAX_CMD_LEN,
-                      "%s=%s %c\n", "cmd", HYD_PMCD_CMD_SHUTDOWN, HYD_PMCD_CMD_SEP_CHAR);
-
-        status = HYDU_sock_writeline(HYD_PMCD_pmi_proxy_connfd, shutdown_proxies_cmd,
-                                     strlen(shutdown_proxies_cmd));
-        HYDU_ERR_POP(status, "Error writing the launch procs command\n");
-
-        /* FIXME: Read result */
-        partition->out = HYD_PMCD_pmi_proxy_connfd;
-        partition->err = -1;
-    }
-
-  fn_exit:
-    return status;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* Remote proxy is a proxy external to this process */
-static HYD_Status launch_procs_with_remote_proxy(void)
+static HYD_Status boot_proxies(void)
 {
     HYD_Status status = HYD_SUCCESS;
-    char launch_procs_cmd[HYD_PMCD_MAX_CMD_LEN];
-    char env_list[HYD_PMCD_MAX_CMD_LEN];        /* FIXME: Wrong *MAX*... */
-    int env_list_len = 0;
-    char *p = NULL;
-    struct HYD_Partition *partition = NULL;
-    struct HYD_Partition_exec *exec = NULL;
-    struct HYD_Env *env = NULL;
-    int HYD_PMCD_pmi_proxy_connfd = -1;
+    int i, arg;
+    char *path_str[HYD_NUM_TMP_STRINGS];
+    struct HYD_Partition *partition;
 
+    handle.one_pass_count = 0;
+    for (partition = handle.partition_list; partition; partition = partition->next)
+        handle.one_pass_count += partition->total_proc_count;
+
+    /* Create the arguments list for each proxy */
     for (partition = handle.partition_list; partition; partition = partition->next) {
-        status = HYDU_sock_connect(partition->name, handle.pproxy_port,
-                                   &HYD_PMCD_pmi_proxy_connfd);
-        HYDU_ERR_POP(status, "Error connecting to remote proxy");
 
-        exec = partition->exec_list;
+        arg = HYDU_strlist_lastidx(partition->proxy_args);
+        i = 0;
+        path_str[i++] = HYDU_strdup(handle.base_path);
+        path_str[i++] = HYDU_strdup("pmi_proxy");
+        path_str[i] = NULL;
+        status = HYDU_str_alloc_and_join(path_str, &partition->proxy_args[arg++]);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+        HYDU_free_strlist(path_str);
 
-        /* FIXME: Create a util func for converting env list to a string */
-        env = handle.system_env;
-        p = env_list;
-        *p = '\0';
-        env_list_len = HYD_PMCD_MAX_CMD_LEN;
-        while (env) {
-            HYDU_snprintf(p, env_list_len, "%s=%s %c",
-                          env->env_name, env->env_value, HYD_PMCD_CMD_ENV_SEP_CHAR);
-            env_list_len -= strlen(p);
-            p += strlen(p);
-            env = env->next;
+        partition->proxy_args[arg++] = HYDU_strdup("--persistent-mode");
+        partition->proxy_args[arg++] = HYDU_strdup("--proxy-port");
+        partition->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
+        partition->proxy_args[arg++] = NULL;
+
+        if (handle.debug) {
+            HYDU_Debug("Executable passed to the bootstrap: ");
+            HYDU_print_strlist(partition->proxy_args);
         }
-        /* Create launch command */
-        HYDU_snprintf(launch_procs_cmd, HYD_PMCD_MAX_CMD_LEN,
-                      "%s=%s %c %s=%s %c %s=%d %c %s=%s %c\n",
-                      "cmd", HYD_PMCD_CMD_LAUNCH_PROCS, HYD_PMCD_CMD_SEP_CHAR,
-                      "exec_name", exec->exec[0], HYD_PMCD_CMD_SEP_CHAR,
-                      "exec_cnt", exec->proc_count, HYD_PMCD_CMD_SEP_CHAR,
-                      "env", env_list, HYD_PMCD_CMD_SEP_CHAR);
+    }
 
-        status = HYDU_sock_writeline(HYD_PMCD_pmi_proxy_connfd, launch_procs_cmd,
-                                     strlen(launch_procs_cmd));
-        HYDU_ERR_POP(status, "Error writing the launch procs command\n");
+    /* Initialize the bootstrap server and ask it to launch the
+     * processes. */
+    status = HYD_BSCI_init(handle.bootstrap);
+    HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
 
-        /* FIXME: Read result */
-        partition->out = HYD_PMCD_pmi_proxy_connfd;
-        partition->err = -1;
+    status = HYD_BSCI_launch_procs();
+    HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_Status shutdown_proxies(void)
+{
+    struct HYD_Partition *partition;
+    enum HYD_PMCD_pmi_proxy_cmds cmd;
+    int fd;
+    HYD_Status status = HYD_SUCCESS;
+
+    for (partition = handle.partition_list; partition; partition = partition->next) {
+        status = HYDU_sock_connect(partition->name, handle.proxy_port, &fd);
+        HYDU_ERR_POP(status, "unable to connect to proxy\n");
+
+        cmd = PROXY_SHUTDOWN;
+        status = HYDU_sock_write(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+        close(fd);
     }
 
   fn_exit:
     return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_Status launch_procs_in_persistent_mode(void)
+{
+    struct HYD_Partition *partition;
+    enum HYD_PMCD_pmi_proxy_cmds cmd;
+    int i, list_len, arg_len, first_partition;
+    HYD_Status status = HYD_SUCCESS;
+
+    /*
+     * Here are the steps we will follow:
+     *
+     * 1. Put all the arguments to pass in to a string list.
+     *
+     * 2. Connect to the proxy (this will be our primary control
+     *    socket).
+     *
+     * 3. Read this string list and write the following to the socket:
+     *    (a) The PROC_INFO command.
+     *    (b) Integer sized data with the number of arguments to
+     *        follow.
+     *    (c) For each argument to pass, first send an integer which
+     *        tells the proxy how many bytes are coming in that
+     *        argument.
+     *
+     * 4. Open two new sockets and connect them to the proxy.
+     *
+     * 5. On the first new socket, send USE_AS_STDOUT and the second
+     *    send USE_AS_STDERR.
+     *
+     * 6. For PMI_ID "0", open a separate socket and send the
+     *    USE_AS_STDIN command on it.
+     *
+     * 7. We need to figure out what to do with the LAUNCH_JOB
+     *    command; since it's going on a different socket, it might go
+     *    out-of-order. Maybe a state machine on the proxy to see if
+     *    it got all the information it needs to launch the job would
+     *    work.
+     */
+
+    status = fill_in_proxy_args();
+    HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
+
+    /* Though we don't use the bootstrap server right now, we still
+     * initialize it, as we need to query it for information
+     * sometimes. */
+    status = HYD_BSCI_init(handle.bootstrap);
+    HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
+
+    first_partition = 1;
+    for (partition = handle.partition_list; partition; partition = partition->next) {
+        status = HYDU_sock_connect(partition->name, handle.proxy_port,
+                                   &partition->control_fd);
+        HYDU_ERR_POP(status, "unable to connect to proxy\n");
+
+        cmd = PROC_INFO;
+        status = HYDU_sock_write(partition->control_fd, &cmd,
+                                 sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+        /* Check how many arguments we have */
+        list_len = HYDU_strlist_lastidx(partition->proxy_args);
+        status = HYDU_sock_write(partition->control_fd, &list_len, sizeof(int));
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+        /* Convert the string list to parseable data and send */
+        for (i = 0; partition->proxy_args[i]; i++) {
+            arg_len = strlen(partition->proxy_args[i]) + 1;
+
+            status = HYDU_sock_write(partition->control_fd, &arg_len, sizeof(int));
+            HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+            status = HYDU_sock_write(partition->control_fd, partition->proxy_args[i],
+                                     arg_len);
+            HYDU_ERR_POP(status, "unable to write data to proxy\n");
+        }
+
+        /* Register the control socket with the demux engine */
+        status = HYD_DMX_register_fd(1, &partition->control_fd, HYD_STDOUT, partition,
+                                     HYD_PMCD_pmi_serv_control_cb);
+
+        /* Create an stdout socket */
+        status = HYDU_sock_connect(partition->name, handle.proxy_port, &partition->out);
+        HYDU_ERR_POP(status, "unable to connect to proxy\n");
+
+        cmd = USE_AS_STDOUT;
+        status = HYDU_sock_write(partition->out, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+        /* Create an stderr socket */
+        status = HYDU_sock_connect(partition->name, handle.proxy_port, &partition->err);
+        HYDU_ERR_POP(status, "unable to connect to proxy\n");
+
+        cmd = USE_AS_STDERR;
+        status = HYDU_sock_write(partition->err, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+        /* If rank 0 is here, create an stdin socket */
+        if (first_partition) {
+            status = HYDU_sock_connect(partition->name, handle.proxy_port, &handle.in);
+            HYDU_ERR_POP(status, "unable to connect to proxy\n");
+
+            cmd = USE_AS_STDIN;
+            status = HYDU_sock_write(handle.in, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+            HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+            first_partition = 0;
+        }
+    }
+
+  fn_exit:
+    return status;
+
   fn_fail:
     goto fn_exit;
 }
@@ -271,7 +394,6 @@ HYD_Status HYD_PMCI_launch_procs(void)
                              "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
 
     sport = HYDU_int_to_str(port);
-
     HYDU_MALLOC(port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
     HYDU_snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1,
                   "%s:%s", hostname, sport);
@@ -292,19 +414,21 @@ HYD_Status HYD_PMCI_launch_procs(void)
     status = HYD_PMCD_pmi_create_pg();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
-    if (handle.is_proxy_remote) {
-        if (handle.is_proxy_terminator) {
-            status = shutdown_remote_proxies();
-            HYDU_ERR_POP(status, "Error shutting down remote proxies\n");
-        }
-        else {
-            status = launch_procs_with_remote_proxy();
-            HYDU_ERR_POP(status, "Error launching procs with remote proxy\n");
-        }
+    if (handle.launch_mode == HYD_LAUNCH_RUNTIME) {
+        status = launch_procs_in_runtime_mode();
+        HYDU_ERR_POP(status, "error launching procs in runtime mode\n");
     }
-    else {
-        status = launch_procs_with_local_proxy();
-        HYDU_ERR_POP(status, "Error launching procs with local proxy\n");
+    else if (handle.launch_mode == HYD_LAUNCH_BOOT) {
+        status = boot_proxies();
+        HYDU_ERR_POP(status, "error booting proxies\n");
+    }
+    else if (handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
+        status = shutdown_proxies();
+        HYDU_ERR_POP(status, "error shutting down proxies\n");
+    }
+    else if (handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
+        status = launch_procs_in_persistent_mode();
+        HYDU_ERR_POP(status, "error launching procs in persistent mode\n");
     }
 
   fn_exit:
@@ -318,18 +442,64 @@ HYD_Status HYD_PMCI_launch_procs(void)
 
 HYD_Status HYD_PMCI_wait_for_completion(void)
 {
+    struct HYD_Partition *partition;
+    int sockets_open, all_procs_exited;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (handle.is_proxy_remote) {
+    if ((handle.launch_mode == HYD_LAUNCH_BOOT) ||
+        (handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
         status = HYD_SUCCESS;
     }
     else {
-        status = HYD_BSCI_wait_for_completion();
-        if (status != HYD_SUCCESS) {
-            status = HYD_PMCD_pmi_serv_cleanup();
-            HYDU_ERR_POP(status, "process manager cannot cleanup processes\n");
+        while (1) {
+            /* Wait for some event to occur */
+            status = HYD_DMX_wait_for_event(HYDU_time_left(handle.start, handle.timeout));
+            HYDU_ERR_POP(status, "error waiting for event\n");
+
+            /* Check to see if there's any open read socket left; if
+             * there are, we will just wait for more events. */
+            sockets_open = 0;
+            for (partition = handle.partition_list; partition; partition = partition->next) {
+                if (partition->out != -1 || partition->err != -1) {
+                    sockets_open++;
+                    break;
+                }
+            }
+
+            if (sockets_open && HYDU_time_left(handle.start, handle.timeout))
+                continue;
+
+            break;
+        }
+
+        /* The bootstrap will wait for all processes to terminate */
+        if (handle.launch_mode == HYD_LAUNCH_RUNTIME) {
+            status = HYD_BSCI_wait_for_completion();
+            if (status != HYD_SUCCESS) {
+                status = HYD_PMCD_pmi_serv_cleanup();
+                HYDU_ERR_POP(status, "process manager cannot cleanup processes\n");
+            }
+        }
+        else if (handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
+            do {
+                /* Check if the exit status has already arrived */
+                all_procs_exited = 1;
+                for (partition = handle.partition_list; partition; partition = partition->next) {
+                    if (partition->exit_status == -1) {
+                        all_procs_exited = 0;
+                        break;
+                    }
+                }
+
+                if (all_procs_exited)
+                    break;
+
+                /* If not, wait for some event to occur */
+                status = HYD_DMX_wait_for_event(HYDU_time_left(handle.start, handle.timeout));
+                HYDU_ERR_POP(status, "error waiting for event\n");
+            } while (1);
         }
     }
 

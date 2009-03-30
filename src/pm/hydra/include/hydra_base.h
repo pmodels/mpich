@@ -80,6 +80,18 @@ typedef enum {
 } HYD_Status;
 
 
+/* Proxy type */
+typedef enum {
+    HYD_LAUNCH_UNSET,
+    HYD_LAUNCH_RUNTIME,
+
+    /* For persistent proxies */
+    HYD_LAUNCH_BOOT,
+    HYD_LAUNCH_SHUTDOWN,
+    HYD_LAUNCH_PERSISTENT
+} HYD_Launch_mode_t;
+
+
 /* Environment information */
 typedef struct HYD_Env {
     char *env_name;
@@ -139,6 +151,7 @@ struct HYD_Partition {
     int out;
     int err;
     int exit_status;
+    int control_fd;
     char *proxy_args[HYD_NUM_TMP_STRINGS];      /* Full argument list */
 
     struct HYD_Partition *next;

@@ -217,8 +217,8 @@ HYD_Status HYDU_sock_write(int fd, void *buf, int maxsize);
 HYD_Status HYDU_sock_set_nonblock(int fd);
 HYD_Status HYDU_sock_set_cloexec(int fd);
 HYD_Status HYDU_sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *closed);
-HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, char *buf, int *buf_count,
-                              int *buf_offset, int *closed);
+HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *buf,
+                              int *buf_count, int *buf_offset, int *closed);
 
 
 /* Memory utilities */

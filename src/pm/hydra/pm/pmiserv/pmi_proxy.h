@@ -9,12 +9,19 @@
 
 #include "hydra_base.h"
 #include "hydra_utils.h"
+#include "pmi_common.h"
+
+typedef enum {
+    HYD_PMCD_PMI_PROXY_UNSET,
+    HYD_PMCD_PMI_PROXY_RUNTIME,
+    HYD_PMCD_PMI_PROXY_PERSISTENT
+} HYD_PMCD_pmi_proxy_type;
 
 struct HYD_PMCD_pmi_proxy_params {
     int debug;
 
     int proxy_port;
-    int is_persistent;
+    HYD_PMCD_pmi_proxy_type proxy_type;
     char *wdir;
     HYD_Binding binding;
     char *user_bind_map;
@@ -25,16 +32,22 @@ struct HYD_PMCD_pmi_proxy_params {
     int partition_proc_count;
     int exec_proc_count;
 
+    int procs_are_launched;
+
     /* Process segmentation information for this partition */
     struct HYD_Partition_segment *segment_list;
     struct HYD_Partition_exec *exec_list;
+
+    int out_upstream_fd;
+    int err_upstream_fd;
+    int in_upstream_fd;
+    int control_fd;
 
     int *pid;
     int *out;
     int *err;
     int *exit_status;
     int in;
-    int rproxy_connfd;
 
     int stdin_buf_offset;
     int stdin_buf_count;
@@ -44,17 +57,15 @@ struct HYD_PMCD_pmi_proxy_params {
 extern struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 extern int HYD_PMCD_pmi_proxy_listenfd;
 
-HYD_Status HYD_PMCD_pmi_proxy_init_params(struct HYD_PMCD_pmi_proxy_params *proxy_params);
-HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(struct HYD_PMCD_pmi_proxy_params *proxy_params);
-HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv);
-HYD_Status HYD_PMCD_pmi_proxy_get_next_keyvalp(char **bufp, int *buf_lenp, char **keyp,
-                                               int *key_lenp, char **valp, int *val_lenp,
-                                               char separator);
-HYD_Status HYD_PMCD_pmi_proxy_handle_cmd(int fd, char *cmd, int cmd_len);
-HYD_Status HYD_PMCD_pmi_proxy_handle_launch_cmd(int job_connfd, char *launch_cmd, int cmd_len);
+/* utils */
+HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv);
+HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void);
+HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd);
+HYD_Status HYD_PMCD_pmi_proxy_launch(void);
+void HYD_PMCD_pmi_proxy_killjob(void);
+
+/* callback */
 HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events, void *userp);
-HYD_Status HYD_PMCD_pmi_proxy_remote_cb(int fd, HYD_Event_t events, void *userp);
-HYD_Status HYD_PMCD_pmi_proxy_rstdout_cb(int fd, HYD_Event_t events, void *userp);
 HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events, void *userp);
 HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events, void *userp);
 HYD_Status HYD_PMCD_pmi_proxy_stdin_cb(int fd, HYD_Event_t events, void *userp);

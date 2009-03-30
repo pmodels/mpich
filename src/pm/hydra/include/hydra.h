@@ -14,16 +14,9 @@
 struct HYD_Handle_ {
     char *base_path;
     int proxy_port;
-    /* The persistent proxy is different from the centralized proxy
-     * and hence needs its own port - pproxy_port */
-    int pproxy_port;
+    HYD_Launch_mode_t launch_mode;
+
     char *bootstrap;
-    /* FIXME: We should define a proxy type instead of all these
-     * flags... proxy_type = PROXY_LAUNCHER | PROXY_TERMINATOR
-     */
-    int is_proxy_launcher;
-    int is_proxy_terminator;
-    int is_proxy_remote;
     HYD_Binding binding;
     char *user_bind_map;
 
@@ -65,8 +58,5 @@ struct HYD_Handle_ {
 typedef struct HYD_Handle_ HYD_Handle;
 
 extern HYD_Handle handle;
-
-#define HYD_PROXY_NAME "pmi_proxy"
-#define HYD_PPROXY_PORT 8677
 
 #endif /* HYDRA_H_INCLUDED */

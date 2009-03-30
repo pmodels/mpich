@@ -22,6 +22,7 @@ HYD_Status HYDU_alloc_partition(struct HYD_Partition **partition)
     (*partition)->out = -1;
     (*partition)->err = -1;
     (*partition)->exit_status = -1;
+    (*partition)->control_fd = -1;
     (*partition)->proxy_args[0] = NULL;
 
     (*partition)->exec_list = NULL;

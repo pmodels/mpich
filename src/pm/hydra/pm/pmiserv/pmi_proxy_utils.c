@@ -5,337 +5,57 @@
  */
 
 #include "pmi_proxy.h"
-#include "pmi_serv.h"
 #include "demux.h"
 #include "hydra_utils.h"
 
 struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 
-HYD_Status HYD_PMCD_pmi_proxy_get_next_keyvalp(char **bufp, int *buf_lenp, char **keyp,
-                                               int *key_lenp, char **valp, int *val_lenp,
-                                               char separator)
+static HYD_Status init_params()
 {
-    char *p = NULL;
-    int len = 0;
-    int klen = 0;
-    int vlen = 0;
-
     HYD_Status status = HYD_SUCCESS;
 
-    p = *bufp;
-    len = *buf_lenp;
+    HYD_PMCD_pmi_proxy_params.debug = 0;
 
-    while (len && isspace(*p)) {
-        p++;
-        len--;
-    }
-    if (len <= 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Error reading keyval from command\n");
+    HYD_PMCD_pmi_proxy_params.proxy_port = -1;
+    HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_UNSET;
+    HYD_PMCD_pmi_proxy_params.wdir = NULL;
+    HYD_PMCD_pmi_proxy_params.binding = HYD_BIND_UNSET;
+    HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
 
-    *keyp = p;
-    klen = 0;
-    while (len && (*p != '=')) {
-        p++;
-        len--;
-        klen++;
-    }
-    if (key_lenp)
-        *key_lenp = klen;
-    p++;
-    len--;
-    if (len <= 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Error reading keyval from command\n");
+    HYD_PMCD_pmi_proxy_params.global_env = NULL;
 
-    *valp = p;
-    vlen = 0;
-    /* FIXME: Allow escaping ';' */
-    while (len && (*p != separator)) {
-        p++;
-        len--;
-        vlen++;
-    }
-    if (val_lenp)
-        *val_lenp = vlen;
-    p++;
-    len--;
-    if (len < 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Error reading keyval from command\n");
-
-    while (len && isspace(*p)) {
-        p++;
-        len--;
-    }
-    /* p now points to the next key or the end of string */
-    *bufp = p;
-    if (*p != '\0') {
-        /* Remaining length of buffer to be processed */
-        *buf_lenp = len;
-    }
-    else {
-        /* End of string - no more keyvals */
-        *buf_lenp = 0;
-    }
-
-  fn_exit:
-    return status;
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_Status HYD_PMCD_pmi_proxy_handle_launch_cmd(int job_connfd, char *launch_cmd, int cmd_len)
-{
-    char *key, *val;
-    int i = 0, key_len = 0, val_len = 0, core = 0;
-    struct HYD_Partition_exec *exec = NULL;
-    HYD_Env_t *env = NULL;
-    HYD_Status status = HYD_SUCCESS;
-
-    /* FIXME: We currently support only one job - We need a list of proxy params for multiple jobs */
-    status = HYD_PMCD_pmi_proxy_init_params(&HYD_PMCD_pmi_proxy_params);
-    HYDU_ERR_POP(status, "Error initializing proxy params\n");
-
-    HYD_PMCD_pmi_proxy_params.rproxy_connfd = job_connfd;
-
-    status = HYD_DMX_deregister_fd(job_connfd);
-    HYDU_ERR_POP(status, "Unable to deregister job conn fd\n");
-    status =
-        HYD_DMX_register_fd(1, &job_connfd, HYD_STDIN, (void *) &HYD_PMCD_pmi_proxy_params,
-                            HYD_PMCD_pmi_proxy_remote_cb);
-    HYDU_ERR_POP(status, "Unable to register job conn fd\n");
-
-    status = HYDU_alloc_partition_exec(&HYD_PMCD_pmi_proxy_params.exec_list);
-    HYDU_ERR_POP(status, "unable to allocate partition exec\n");
-
-    exec = HYD_PMCD_pmi_proxy_params.exec_list;
-
-    while (cmd_len > 0) {
-        status =
-            HYD_PMCD_pmi_proxy_get_next_keyvalp(&launch_cmd, &cmd_len, &key, &key_len, &val,
-                                                &val_len, HYD_PMCD_CMD_SEP_CHAR);
-        HYDU_ERR_POP(status, "Unable to get next key from launch command\n");
-
-        /* FIXME: Use pre-defined macros for keys */
-        if (!strncmp(key, "exec_name", key_len)) {
-            HYDU_MALLOC(exec->exec[0], char *, (val_len + 1), status);
-            HYDU_ERR_POP(status, "Error allocating memory for executable name\n");
-            HYDU_snprintf(exec->exec[0], val_len, "%s", val);
-            exec->exec[1] = NULL;
-        }
-        else if (!strncmp(key, "exec_cnt", key_len)) {
-            for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec->next; exec = exec->next);
-            exec->proc_count = atoi(val);
-        }
-        else if (!strncmp(key, "env", key_len)) {
-            char *env_str;
-            int env_str_len;
-
-            env_str = val;
-            env_str_len = val_len;
-            exec->prop_env = NULL;
-            while (env_str_len > 0) {
-                status =
-                    HYD_PMCD_pmi_proxy_get_next_keyvalp(&env_str, &env_str_len, &key, &key_len,
-                                                        &val, &val_len,
-                                                        HYD_PMCD_CMD_ENV_SEP_CHAR);
-                HYDU_ERR_POP(status,
-                             "Error getting next environment variable from launch command\n");
-
-                HYDU_MALLOC(env, HYD_Env_t *, sizeof(HYD_Env_t), status);
-                HYDU_ERR_POP(status,
-                             "Error allocating memory for environment variable in proxy params\n");
-
-                HYDU_MALLOC(env->env_name, char *, key_len + 1, status);
-                HYDU_ERR_POP(status,
-                             "Error allocating memory for environment variable in proxy params\n");
-                HYDU_snprintf(env->env_name, key_len + 1, "%s", key);
-
-                HYDU_MALLOC(env->env_value, char *, val_len + 1, status);
-                HYDU_ERR_POP(status,
-                             "Error allocating memory for environment variable in proxy params\n");
-                HYDU_snprintf(env->env_value, val_len + 1, "%s", val);
-                env->next = exec->prop_env;
-                exec->prop_env = env;
-            }
-        }
-        else {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "Unrecognized key in launch command\n");
-        }
-
-        /* FIXME: Set these ... */
-        /* HYD_PMCD_pmi_proxy_params.wdir =
-         * HYD_PMCD_pmi_proxy_params.binding =
-         * HYD_PMCD_pmi_proxy_params.user_bind_map = ;
-         * HYDU_append_env_to_list(*env, &HYD_PMCD_pmi_proxy_params.global_env);
-         * HYD_PMCD_pmi_proxy_params.one_pass_count
-         * status = HYDU_alloc_partition_segment(&segment->next);
-         * segment->proc_count = ;
-         * segment->start_pid = ;
-         */
-    }
-
+    HYD_PMCD_pmi_proxy_params.one_pass_count = 0;
+    HYD_PMCD_pmi_proxy_params.partition_proc_count = 0;
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
-    for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
-        HYD_PMCD_pmi_proxy_params.exec_proc_count += exec->proc_count;
 
-    HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.out, int *,
-                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
-    HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.err, int *,
-                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
-    HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.pid, int *,
-                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
-    HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.exit_status, int *,
-                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
+    HYD_PMCD_pmi_proxy_params.procs_are_launched = 0;
 
-    for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next) {
-        for (i = 0; i < exec->proc_count; i++) {
-            char *str = NULL;
-            core = 0;
-            env = NULL;
-            /* FIXME: Use the start pmi_id from launch command */
-            str = HYDU_int_to_str(i);
-            status = HYDU_env_create(&env, "PMI_ID", str);
-            HYDU_ERR_POP(status, "unable to create env\n");
-            status = HYDU_putenv(env);
-            HYDU_ERR_POP(status, "putenv failed\n");
-            status = HYDU_create_process(&exec->exec[0], exec->prop_env, NULL,
-                                         &HYD_PMCD_pmi_proxy_params.out[i],
-                                         &HYD_PMCD_pmi_proxy_params.err[i],
-                                         &HYD_PMCD_pmi_proxy_params.pid[i], core);
-            HYDU_ERR_POP(status, "Error launching process\n");
-            status =
-                HYD_DMX_register_fd(1, &HYD_PMCD_pmi_proxy_params.out[i], HYD_STDOUT,
-                                    (void *) &HYD_PMCD_pmi_proxy_params,
-                                    HYD_PMCD_pmi_proxy_rstdout_cb);
-            HYDU_ERR_POP(status, "Error registering process stdout\n");
-        }
-    }
+    HYD_PMCD_pmi_proxy_params.segment_list = NULL;
+    HYD_PMCD_pmi_proxy_params.exec_list = NULL;
 
-  fn_exit:
-    return status;
-  fn_fail:
-    goto fn_exit;
-}
+    HYD_PMCD_pmi_proxy_params.out_upstream_fd = -1;
+    HYD_PMCD_pmi_proxy_params.err_upstream_fd = -1;
+    HYD_PMCD_pmi_proxy_params.in_upstream_fd = -1;
+    HYD_PMCD_pmi_proxy_params.control_fd = -1;
 
-/* Handle proxy commands */
-HYD_Status HYD_PMCD_pmi_proxy_handle_cmd(int fd, char *cmd, int cmd_len)
-{
-    char *key = NULL;
-    char *cmd_name = NULL;
-    int i = 0, key_len = 0, cmd_name_len = 0;
-    char *cmdp = NULL;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_PMCD_pmi_proxy_params.pid = NULL;
+    HYD_PMCD_pmi_proxy_params.out = NULL;
+    HYD_PMCD_pmi_proxy_params.err = NULL;
+    HYD_PMCD_pmi_proxy_params.exit_status = NULL;
+    HYD_PMCD_pmi_proxy_params.in = -1;
 
-    cmdp = cmd;
-    /* First key/val is the command name */
-    status = HYD_PMCD_pmi_proxy_get_next_keyvalp(&cmdp, &cmd_len, &key, &key_len, &cmd_name,
-                                                 &cmd_name_len, HYD_PMCD_CMD_SEP_CHAR);
-    HYDU_ERR_POP(status, "Error retreiving command name from command\n");
+    HYD_PMCD_pmi_proxy_params.stdin_buf_offset = 0;
+    HYD_PMCD_pmi_proxy_params.stdin_buf_count = 0;
+    HYD_PMCD_pmi_proxy_params.stdin_tmp_buf[0] = '\0';
 
-    if (!strncmp(cmd_name, HYD_PMCD_CMD_KILLALL_PROCS, key_len)) {
-        for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
-            if (HYD_PMCD_pmi_proxy_params.pid[i] != -1)
-                kill(HYD_PMCD_pmi_proxy_params.pid[i], SIGKILL);
-
-        status = HYD_DMX_deregister_fd(fd);
-        HYDU_ERR_POP(status, "unable to register fd\n");
-        close(fd);
-    }
-    else if (!strncmp(cmd_name, HYD_PMCD_CMD_LAUNCH_PROCS, key_len)) {
-        status = HYD_PMCD_pmi_proxy_handle_launch_cmd(fd, cmdp, cmd_len);
-        HYDU_ERR_POP(status, "Unable to handle launch command\n");
-    }
-    else if (!strncmp(cmd_name, HYD_PMCD_CMD_SHUTDOWN, key_len)) {
-        /* FIXME: Not a clean shutdown... Kill all procs before exiting */
-        status = HYD_DMX_deregister_fd(fd);
-        HYDU_ERR_POP(status, "unable to register fd\n");
-        close(fd);
-        exit(0);
-    }
-    else {
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "got unrecognized command from mpiexec\n");
-    }
-  fn_exit:
-    return status;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* Initialize proxy params */
-HYD_Status HYD_PMCD_pmi_proxy_init_params(struct HYD_PMCD_pmi_proxy_params *proxy_params)
-{
-    HYD_Status status = HYD_SUCCESS;
-    proxy_params->debug = 0;
-    proxy_params->proxy_port = -1;
-    proxy_params->is_persistent = 0;
-    proxy_params->wdir = NULL;
-    proxy_params->binding = HYD_BIND_UNSET;
-    proxy_params->user_bind_map = NULL;
-    proxy_params->global_env = NULL;
-    proxy_params->one_pass_count = 0;
-    proxy_params->partition_proc_count = 0;
-    proxy_params->exec_proc_count = 0;
-    proxy_params->segment_list = NULL;
-    proxy_params->exec_list = NULL;
-    proxy_params->pid = NULL;
-    proxy_params->out = NULL;
-    proxy_params->err = NULL;
-    proxy_params->exit_status = NULL;
-    proxy_params->in = -1;
-    proxy_params->rproxy_connfd = -1;
-    proxy_params->stdin_buf_offset = 0;
-    proxy_params->stdin_buf_count = 0;
-    proxy_params->stdin_tmp_buf[0] = '\0';
     return status;
 }
 
-/* Cleanup proxy params after use */
-HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(struct HYD_PMCD_pmi_proxy_params * proxy_params)
-{
-    HYD_Status status = HYD_SUCCESS;
-    if (proxy_params->wdir != NULL)
-        HYDU_FREE(proxy_params->wdir);
-    if (proxy_params->user_bind_map != NULL)
-        HYDU_FREE(proxy_params->user_bind_map);
-    if (proxy_params->global_env != NULL) {
-        HYD_Env_t *p, *q;
-        do {
-            p = proxy_params->global_env;
-            q = p->next;
-            HYDU_FREE(p);
-        } while (q);
-    }
-    if (proxy_params->segment_list != NULL) {
-        /* FIXME : incomplete */
-    }
-    if (proxy_params->exec_list != NULL) {
-        struct HYD_Partition_exec *p, *q;
-        do {
-            p = proxy_params->exec_list;
-            q = p->next;
-            HYDU_FREE(p);
-        } while (q);
-    }
-    if (proxy_params->pid != NULL)
-        HYDU_FREE(proxy_params->pid);
-    if (proxy_params->out != NULL)
-        HYDU_FREE(proxy_params->out);
-    if (proxy_params->err != NULL)
-        HYDU_FREE(proxy_params->err);
-    if (proxy_params->exit_status != NULL)
-        HYDU_FREE(proxy_params->exit_status);
-
-    status = HYD_PMCD_pmi_proxy_init_params(proxy_params);
-    HYDU_ERR_POP(status, "Error initializing proxy params\n");
-
-  fn_exit:
-    return status;
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
+/* FIXME: This function performs minimal error checking as it is not
+ * supposed to be called by the user, but rather by the process
+ * management server. It will still be helpful for debugging to add
+ * some error checks. */
+static HYD_Status parse_params(char **t_argv)
 {
     char **argv = t_argv, *str;
     int arg, i, count;
@@ -346,27 +66,16 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_PMCD_pmi_proxy_init_params(&HYD_PMCD_pmi_proxy_params);
-    HYDU_ERR_POP(status, "Error initializing proxy params\n");
-
-    while (*argv) {
-        ++argv;
-        if (*argv == NULL)
-            break;
-
+    while (++argv && *argv) {
         if (!strcmp(*argv, "--verbose")) {
             HYD_PMCD_pmi_proxy_params.debug = 1;
             continue;
         }
+
         /* Proxy port */
         if (!strcmp(*argv, "--proxy-port")) {
             argv++;
             HYD_PMCD_pmi_proxy_params.proxy_port = atoi(*argv);
-            continue;
-        }
-
-        if (!strcmp(*argv, "--persistent")) {
-            HYD_PMCD_pmi_proxy_params.is_persistent = 1;
             continue;
         }
 
@@ -508,11 +217,324 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(int t_argc, char **t_argv)
         /* If we already touched the next --exec, step back */
         if (*argv && !strcmp(*argv, "--exec"))
             argv--;
+
+        if (!(*argv))
+            break;
     }
 
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
+{
+    char **argv = t_argv;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = init_params();
+    HYDU_ERR_POP(status, "Error initializing proxy params\n");
+
+    /* For the persistent mode, the parameters are fairly
+     * straightward. For the runtime mode, we call the parse_params()
+     * function to parse through argv and fill in the proxy handle. */
+    ++argv;
+    if (!strcmp(*argv, "--persistent-mode")) {
+        HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_PERSISTENT;
+
+        /* the next argument should be proxy port */
+        ++argv;
+        if (strcmp(*argv, "--proxy-port"))
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "incorrect proxy parameters\n");
+
+        ++argv;
+        HYD_PMCD_pmi_proxy_params.proxy_port = atoi(*argv);
+    }
+    else {
+        HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_RUNTIME;
+        status = parse_params(t_argv);
+        HYDU_ERR_POP(status, "error parsing proxy params\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
+{
+    struct HYD_Partition_segment *segment, *tsegment;
+    struct HYD_Partition_exec *exec, *texec;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (HYD_PMCD_pmi_proxy_params.wdir)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.wdir);
+
+    if (HYD_PMCD_pmi_proxy_params.user_bind_map)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.user_bind_map);
+
+    if (HYD_PMCD_pmi_proxy_params.global_env)
+        HYDU_env_free_list(HYD_PMCD_pmi_proxy_params.global_env);
+
+    if (HYD_PMCD_pmi_proxy_params.segment_list) {
+        segment = HYD_PMCD_pmi_proxy_params.segment_list;
+        while (segment) {
+            tsegment = segment->next;
+            if (segment->mapping) {
+                HYDU_free_strlist(segment->mapping);
+                HYDU_FREE(segment->mapping);
+            }
+            HYDU_FREE(segment);
+            segment = tsegment;
+        }
+    }
+
+    if (HYD_PMCD_pmi_proxy_params.exec_list) {
+        exec = HYD_PMCD_pmi_proxy_params.exec_list;
+        while (exec) {
+            texec = exec->next;
+            HYDU_free_strlist(exec->exec);
+            if (exec->prop_env)
+                HYDU_env_free(exec->prop_env);
+            HYDU_FREE(exec);
+            exec = texec;
+        }
+    }
+
+    if (HYD_PMCD_pmi_proxy_params.pid)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.pid);
+
+    if (HYD_PMCD_pmi_proxy_params.out)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.out);
+
+    if (HYD_PMCD_pmi_proxy_params.err)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.err);
+
+    if (HYD_PMCD_pmi_proxy_params.exit_status)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.exit_status);
+
+    /* Reinitialize all params to set everything to "NULL" or
+     * equivalent. */
+    status = init_params();
+    HYDU_ERR_POP(status, "unable to initialize params\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd)
+{
+    char **arglist;
+    int num_strings, str_len, recvd, i;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Read information about the application to launch into a string
+     * array and call parse_params() to interpret it and load it into
+     * the proxy handle. */
+    status = HYDU_sock_read(fd, &num_strings, sizeof(int), &recvd);
+    HYDU_ERR_POP(status, "error reading data from upstream\n");
+
+    HYDU_MALLOC(arglist, char **, num_strings * sizeof(char *), status);
+
+    for (i = 0; i < num_strings; i++) {
+        status = HYDU_sock_read(fd, &str_len, sizeof(int), &recvd);
+        HYDU_ERR_POP(status, "error reading data from upstream\n");
+
+        HYDU_MALLOC(arglist[i], char *, str_len, status);
+
+        status = HYDU_sock_read(fd, arglist[i], str_len, &recvd);
+        HYDU_ERR_POP(status, "error reading data from upstream\n");
+    }
+    arglist[num_strings] = NULL;
+
+    /* Get the parser to fill in the proxy params structure. */
+    status = parse_params(arglist);
+    HYDU_ERR_POP(status, "unable to parse argument list\n");
+
+    /* Save this fd as we need to send back the exit status on
+     * this. */
+    HYD_PMCD_pmi_proxy_params.control_fd = fd;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYD_PMCD_pmi_proxy_launch_procs()
+{
+    int i, j, arg, stdin_fd, process_id, core, pmi_id, rem;
+    char *str;
+    char *client_args[HYD_NUM_TMP_STRINGS];
+    HYD_Env_t *env;
+    struct HYD_Partition_segment *segment;
+    struct HYD_Partition_exec *exec;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYD_PMCD_pmi_proxy_params.partition_proc_count = 0;
+    for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment;
+         segment = segment->next)
+        HYD_PMCD_pmi_proxy_params.partition_proc_count += segment->proc_count;
+
+    HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
+    for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
+        HYD_PMCD_pmi_proxy_params.exec_proc_count += exec->proc_count;
+
+    HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.out, int *,
+                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
+    HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.err, int *,
+                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
+    HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.pid, int *,
+                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
+    HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.exit_status, int *,
+                HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
+
+    /* Initialize the exit status */
+    for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
+        HYD_PMCD_pmi_proxy_params.exit_status[i] = -1;
+
+    /* For local spawning, set the global environment here itself */
+    status = HYDU_putenv_list(HYD_PMCD_pmi_proxy_params.global_env);
+    HYDU_ERR_POP(status, "putenv returned error\n");
+
+    status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.user_bind_map);
+    HYDU_ERR_POP(status, "unable to initialize process binding\n");
+
+    /* Spawn the processes */
+    process_id = 0;
+    for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next) {
+        for (i = 0; i < exec->proc_count; i++) {
+
+            pmi_id = ((process_id / HYD_PMCD_pmi_proxy_params.partition_proc_count) *
+                      HYD_PMCD_pmi_proxy_params.one_pass_count);
+            rem = (process_id % HYD_PMCD_pmi_proxy_params.partition_proc_count);
+
+            for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment;
+                 segment = segment->next) {
+                if (rem >= segment->proc_count)
+                    rem -= segment->proc_count;
+                else {
+                    pmi_id += segment->start_pid + rem;
+                    break;
+                }
+            }
+
+            str = HYDU_int_to_str(pmi_id);
+            status = HYDU_env_create(&env, "PMI_ID", str);
+            HYDU_ERR_POP(status, "unable to create env\n");
+            HYDU_FREE(str);
+            status = HYDU_putenv(env);
+            HYDU_ERR_POP(status, "putenv failed\n");
+
+            if (chdir(HYD_PMCD_pmi_proxy_params.wdir) < 0)
+                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                                     "unable to change wdir (%s)\n",
+                                     HYDU_strerror(errno));
+
+            for (j = 0, arg = 0; exec->exec[j]; j++)
+                client_args[arg++] = HYDU_strdup(exec->exec[j]);
+            client_args[arg++] = NULL;
+
+            core = HYDU_bind_get_core_id(process_id, HYD_PMCD_pmi_proxy_params.binding);
+            if (pmi_id == 0) {
+                status = HYDU_create_process(client_args, exec->prop_env,
+                                             &HYD_PMCD_pmi_proxy_params.in,
+                                             &HYD_PMCD_pmi_proxy_params.out[process_id],
+                                             &HYD_PMCD_pmi_proxy_params.err[process_id],
+                                             &HYD_PMCD_pmi_proxy_params.pid[process_id],
+                                             core);
+
+                status = HYDU_sock_set_nonblock(HYD_PMCD_pmi_proxy_params.in);
+                HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
+
+                stdin_fd = 0;
+                status = HYDU_sock_set_nonblock(stdin_fd);
+                HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
+
+                HYD_PMCD_pmi_proxy_params.stdin_buf_offset = 0;
+                HYD_PMCD_pmi_proxy_params.stdin_buf_count = 0;
+                status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, NULL,
+                                             HYD_PMCD_pmi_proxy_stdin_cb);
+                HYDU_ERR_POP(status, "unable to register fd\n");
+            }
+            else {
+                status = HYDU_create_process(client_args, exec->prop_env,
+                                             NULL,
+                                             &HYD_PMCD_pmi_proxy_params.out[process_id],
+                                             &HYD_PMCD_pmi_proxy_params.err[process_id],
+                                             &HYD_PMCD_pmi_proxy_params.pid[process_id],
+                                             core);
+            }
+            HYDU_ERR_POP(status, "spawn process returned error\n");
+
+            process_id++;
+        }
+    }
+
+    /* Everything is spawned, register the required FDs  */
+    status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.exec_proc_count,
+                                 HYD_PMCD_pmi_proxy_params.out,
+                                 HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_stdout_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+    status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.exec_proc_count,
+                                 HYD_PMCD_pmi_proxy_params.err,
+                                 HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_stderr_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+    /* Indicate that the processes have been launched */
+    HYD_PMCD_pmi_proxy_params.procs_are_launched = 1;
+
+    HYDU_FUNC_EXIT();
+
+  fn_exit:
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
+
+void HYD_PMCD_pmi_proxy_killjob(void)
+{
+    int i;
+
+    HYDU_FUNC_ENTER();
+
+    /* Send the kill signal to all processes */
+    for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++) {
+        if (HYD_PMCD_pmi_proxy_params.pid[i] != -1) {
+            kill(HYD_PMCD_pmi_proxy_params.pid[i], SIGTERM);
+            kill(HYD_PMCD_pmi_proxy_params.pid[i], SIGKILL);
+        }
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return;
 
   fn_fail:
     goto fn_exit;

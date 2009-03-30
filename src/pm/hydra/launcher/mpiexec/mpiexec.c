@@ -18,13 +18,6 @@ static void usage(void)
     printf("Usage: ./mpiexec [global opts] [exec1 local opts] : [exec2 local opts] : ...\n\n");
 
     printf("Global Options (passed to all executables):\n");
-    printf("\t--verbose                        [Verbose mode]\n");
-    printf("\t--version                        [Version information]\n");
-    printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
-    printf("\t--proxy-port                     [Port on which proxies can listen]\n");
-    printf("\t--bootstrap                      [Bootstrap server to use]\n");
-    printf("\t--binding                        [Process binding]");
-
     printf("\t-genv {name} {value}             [Environment variable name and value]\n");
     printf("\t-genvlist {env1,env2,...}        [Environment variable list to pass]\n");
     printf("\t-genvnone                        [Do not pass any environment variables]\n");
@@ -40,10 +33,20 @@ static void usage(void)
     printf("\t-envlist {env1,env2,...}         [Environment variable list to pass]\n");
     printf("\t-envnone                         [Do not pass any environment variables]\n");
     printf("\t-envall                          [Pass all environment variables (default)]\n");
-    printf
-        ("\t{exec_name} {args}               [Name of the executable to run and its arguments]\n");
+    printf("\t{exec_name} {args}               [Executable name to run and arguments]\n");
 
     printf("\n");
+
+    printf("Hydra specific options (treated as global):\n");
+    printf("\t--verbose                        [Verbose mode]\n");
+    printf("\t--version                        [Version information]\n");
+    printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
+    printf("\t--proxy-port                     [Port on which proxies can listen]\n");
+    printf("\t--bootstrap                      [Bootstrap server to use]\n");
+    printf("\t--binding                        [Process binding]");
+    printf("\t--boot-proxies                   [Boot proxies to run in persistent mode]\n");
+    printf("\t--shutdown-proxies               [Shutdown persistent mode proxies]\n");
+    printf("\t--use-persistent                 [Use persistent mode proxies to launch]\n");
 }
 
 
@@ -51,7 +54,7 @@ int main(int argc, char **argv)
 {
     struct HYD_Partition *partition;
     int exit_status = 0;
-    int timeout;
+    int timeout, stdin_fd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -79,10 +82,6 @@ int main(int argc, char **argv)
     if (handle.debug)
         HYD_LCHU_print_params();
 
-    handle.stdout_cb = HYD_LCHI_stdout_cb;
-    handle.stderr_cb = HYD_LCHI_stderr_cb;
-    handle.stdin_cb = HYD_LCHI_stdin_cb;
-
     HYDU_time_set(&handle.start, NULL); /* NULL implies right now */
     if (getenv("MPIEXEC_TIMEOUT"))
         timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
@@ -94,6 +93,44 @@ int main(int argc, char **argv)
     /* Launch the processes */
     status = HYD_CSI_launch_procs();
     HYDU_ERR_POP(status, "control system error launching processes\n");
+
+    /* During shutdown, no processes are launched, so there is nothing
+     * to wait for. If the launch command didn't return an error, we
+     * are OK; just return a success. */
+    /* FIXME: We are assuming a working model for the process manager
+     * here. We need to get how many processes the PM has launched
+     * instead of assuming this. For example, it is possible to have a
+     * PM implementation that launches separate "new" proxies on a
+     * different port and kills the original proxies using them. */
+    if (handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
+        exit_status = 0;
+        goto fn_exit;
+    }
+
+    /* Setup stdout/stderr/stdin handlers */
+    for (partition = handle.partition_list; partition; partition = partition->next) {
+        status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, NULL,
+                                     HYD_LCHI_stdout_cb);
+        HYDU_ERR_POP(status, "demux returned error registering fd\n");
+
+        status = HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, NULL,
+                                     HYD_LCHI_stderr_cb);
+        HYDU_ERR_POP(status, "demux returned error registering fd\n");
+    }
+
+    status = HYDU_sock_set_nonblock(handle.in);
+    HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
+
+    stdin_fd = 0;
+    status = HYDU_sock_set_nonblock(stdin_fd);
+    HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
+
+    handle.stdin_buf_count = 0;
+    handle.stdin_buf_offset = 0;
+
+    status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, NULL, HYD_LCHI_stdin_cb);
+    HYDU_ERR_POP(status, "demux returned error registering fd\n");
+
 
     /* Wait for their completion */
     status = HYD_CSI_wait_for_completion();

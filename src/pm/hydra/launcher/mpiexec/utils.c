@@ -70,27 +70,28 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         }
 
         if (!strcmp(*argv, "--boot-proxies")) {
-            /* FIXME: Prevent usage of incompatible params */
-            handle.bootstrap = HYDU_strdup("ssh");
-            handle.is_proxy_launcher = 1;
-            handle.prop = HYD_ENV_PROP_ALL;
-            continue;
-        }
-
-        if (!strcmp(*argv, "--remote-proxy")) {
-            /* FIXME: We should get rid of this option eventually.
-             * This should be the default case. The centralized
-             * version should use an option like "--local-proxy"
-             */
-            handle.is_proxy_remote = 1;
-            handle.prop = HYD_ENV_PROP_ALL;
+            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
+            handle.launch_mode = HYD_LAUNCH_BOOT;
             continue;
         }
 
         if (!strcmp(*argv, "--shutdown-proxies")) {
-            handle.is_proxy_remote = 1;
-            handle.is_proxy_terminator = 1;
-            handle.prop = HYD_ENV_PROP_ALL;
+            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
+            handle.launch_mode = HYD_LAUNCH_SHUTDOWN;
+            continue;
+        }
+
+        if (!strcmp(*argv, "--use-persistent") || !strcmp(*argv, "--use-runtime")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
+
+            if (!strcmp(*argv, "--use-persistent"))
+                handle.launch_mode = HYD_LAUNCH_PERSISTENT;
+            else
+                handle.launch_mode = HYD_LAUNCH_RUNTIME;
+
             continue;
         }
 
@@ -262,17 +263,6 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             continue;
         }
 
-        if (!strcmp(str[0], "--pproxy-port")) {
-            if (!str[1]) {
-                INCREMENT_ARGV(status);
-                str[1] = *argv;
-            }
-            HYDU_ERR_CHKANDJUMP(status, handle.pproxy_port != -1, HYD_INTERNAL_ERROR,
-                                "duplicate persistent proxy port\n");
-            handle.pproxy_port = atoi(str[1]);
-            continue;
-        }
-
         if (*argv[0] == '-')
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized argument\n");
 
@@ -299,45 +289,14 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             break;
 
         continue;
-
-    }
-    /* In the case of the proxy launcher, aka --boot-proxies, there is no executable
-     * specified */
-    if (handle.is_proxy_launcher || handle.is_proxy_terminator) {
-
-        status = HYD_LCHU_get_current_exec_info(&exec_info);
-        HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
-
-        exec_info->exec[0] = HYDU_strdup(HYD_PROXY_NAME " --persistent");
-        exec_info->exec[1] = NULL;
-        if (exec_info->exec_proc_count == 0)
-            exec_info->exec_proc_count = 1;
-
-        env_name = HYDU_strdup("HYD_PROXY_PORT");
-        env_value = HYDU_int_to_str(handle.pproxy_port);
-
-        status = HYDU_env_create(&env, env_name, env_value);
-        HYDU_ERR_POP(status, "unable to create env struct\n");
-
-        HYDU_append_env_to_list(*env, &exec_info->user_env);
     }
 
-
+    /* First set all the variables that do not depend on the launch mode */
     tmp = getenv("MPIEXEC_DEBUG");
     if (handle.debug == -1 && tmp)
         handle.debug = atoi(tmp) ? 1 : 0;
     if (handle.debug == -1)
         handle.debug = 0;
-
-    if (handle.exec_info_list == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no local options set\n");
-
-    if (handle.wdir == NULL) {
-        HYDU_MALLOC(handle.wdir, char *, HYDRA_MAX_PATH, status);
-        if (getcwd(handle.wdir, HYDRA_MAX_PATH) == NULL)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "allocated space is too small for absolute path\n");
-    }
 
     tmp = getenv("HYDRA_BOOTSTRAP");
     if (handle.bootstrap == NULL && tmp)
@@ -351,42 +310,81 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     if (handle.host_file == NULL)
         handle.host_file = HYDU_strdup("HYDRA_USE_LOCALHOST");
 
+    if (handle.proxy_port == -1)
+        handle.proxy_port = HYD_DEFAULT_PROXY_PORT;
+
+    tmp = getenv("HYDRA_LAUNCH_MODE");
+    if (handle.launch_mode == HYD_LAUNCH_UNSET && tmp) {
+        if (!strcmp(tmp, "persistent"))
+            handle.launch_mode = HYD_LAUNCH_PERSISTENT;
+        else if (!strcmp(tmp, "runtime"))
+            handle.launch_mode = HYD_LAUNCH_RUNTIME;
+    }
+    if (handle.launch_mode == HYD_LAUNCH_UNSET)
+        handle.launch_mode = HYD_LAUNCH_RUNTIME;
+
+    /* Get the base path for the proxy */
+    if (handle.wdir == NULL) {
+        HYDU_MALLOC(handle.wdir, char *, HYDRA_MAX_PATH, status);
+        if (getcwd(handle.wdir, HYDRA_MAX_PATH) == NULL)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "allocated space is too small for absolute path\n");
+    }
     status = HYDU_get_base_path(progname, handle.wdir, &handle.base_path);
     HYDU_ERR_POP(status, "unable to get base path\n");
 
-    tmp = getenv("HYDRA_BINDING");
-    if (handle.binding == HYD_BIND_UNSET && tmp)
-        handle.binding = !strcmp(tmp, "none") ? HYD_BIND_NONE :
-            !strcmp(tmp, "rr") ? HYD_BIND_RR :
-            !strcmp(tmp, "buddy") ? HYD_BIND_BUDDY :
-            !strcmp(tmp, "pack") ? HYD_BIND_PACK : HYD_BIND_USER;
-    if (handle.binding == HYD_BIND_UNSET)
-        handle.binding = HYD_BIND_NONE;
+    /* Proxy setup or teardown */
+    if ((handle.launch_mode == HYD_LAUNCH_BOOT) ||
+        (handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
 
-    /* Check environment for setting the global environment */
-    tmp = getenv("HYDRA_ENV");
-    if (handle.prop == HYD_ENV_PROP_UNSET && tmp)
-        handle.prop = !strcmp(tmp, "all") ? HYD_ENV_PROP_ALL : HYD_ENV_PROP_NONE;
+        /* NULL out variables we don't care about */
+        HYDU_ERR_CHKANDJUMP(status, handle.prop != HYD_ENV_PROP_UNSET, HYD_INTERNAL_ERROR,
+                            "environment setting in proxy launch mode\n");
+        handle.prop = HYD_ENV_PROP_NONE;
 
-    /* Make sure local executable is set */
-    local_env_set = 0;
-    for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
-        if (exec_info->exec[0] == NULL)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
+        HYDU_ERR_CHKANDJUMP(status, handle.binding != HYD_BIND_UNSET, HYD_INTERNAL_ERROR,
+                            "binding setting in proxy launch mode\n");
+        handle.binding = HYD_BIND_UNSET;
 
-        if (exec_info->exec_proc_count == 0)
-            exec_info->exec_proc_count = 1;
-
-        if (exec_info->prop != HYD_ENV_PROP_UNSET)
-            local_env_set = 1;
+        HYDU_ERR_CHKANDJUMP(status, handle.exec_info_list, HYD_INTERNAL_ERROR,
+                            "executables specified in proxy launch mode\n");
     }
+    else { /* Application launch */
+        if (handle.exec_info_list == NULL)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no local options set\n");
 
-    /* If no global or local environment is set, use the default */
-    if ((handle.prop == HYD_ENV_PROP_UNSET) && (local_env_set == 0))
-        handle.prop = HYD_ENV_PROP_ALL;
+        /* Check environment for setting binding */
+        tmp = getenv("HYDRA_BINDING");
+        if (handle.binding == HYD_BIND_UNSET && tmp)
+            handle.binding = !strcmp(tmp, "none") ? HYD_BIND_NONE :
+                !strcmp(tmp, "rr") ? HYD_BIND_RR :
+                !strcmp(tmp, "buddy") ? HYD_BIND_BUDDY :
+                !strcmp(tmp, "pack") ? HYD_BIND_PACK : HYD_BIND_USER;
+        if (handle.binding == HYD_BIND_UNSET)
+            handle.binding = HYD_BIND_NONE;
 
-    if (handle.proxy_port == -1)
-        handle.proxy_port = HYD_DEFAULT_PROXY_PORT;
+        /* Check environment for setting the global environment */
+        tmp = getenv("HYDRA_ENV");
+        if (handle.prop == HYD_ENV_PROP_UNSET && tmp)
+            handle.prop = !strcmp(tmp, "all") ? HYD_ENV_PROP_ALL : HYD_ENV_PROP_NONE;
+
+        /* Make sure local executable is set */
+        local_env_set = 0;
+        for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
+            if (exec_info->exec[0] == NULL)
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
+
+            if (exec_info->exec_proc_count == 0)
+                exec_info->exec_proc_count = 1;
+
+            if (exec_info->prop != HYD_ENV_PROP_UNSET)
+                local_env_set = 1;
+        }
+
+        /* If no global or local environment is set, use the default */
+        if ((handle.prop == HYD_ENV_PROP_UNSET) && (local_env_set == 0))
+            handle.prop = HYD_ENV_PROP_ALL;
+    }
 
   fn_exit:
     for (i = 0; i < 4; i++)

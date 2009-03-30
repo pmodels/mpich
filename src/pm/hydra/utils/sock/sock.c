@@ -134,7 +134,7 @@ HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
      * return an error, but only print a warning message. The upper
      * layer can decide what to do with the return status. */
     if (connect(*fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
-        HYDU_Warn_printf("connect error (%s)\n", HYDU_strerror(errno));
+        HYDU_Error_printf("connect error (%s)\n", HYDU_strerror(errno));
         status = HYD_SOCK_ERROR;
         goto fn_fail;
     }
@@ -375,8 +375,8 @@ HYD_Status HYDU_sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *c
 }
 
 
-HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, char *buf, int *buf_count,
-                              int *buf_offset, int *closed)
+HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *buf,
+                              int *buf_count, int *buf_offset, int *closed)
 {
     int count;
     HYD_Status status = HYD_SUCCESS;
@@ -401,7 +401,7 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, char *buf, int *buf_co
         }
 
         /* If we are still here, we need to refill our temporary buffer */
-        count = read(0, buf, HYD_TMPBUF_SIZE);
+        count = read(stdin_fd, buf, HYD_TMPBUF_SIZE);
         if (count < 0) {
             if (errno == EINTR || errno == EAGAIN) {
                 /* This call was interrupted or there was no data to read; just break out. */

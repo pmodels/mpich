@@ -14,11 +14,9 @@ void HYD_LCHU_init_params(void)
 {
     handle.base_path = NULL;
     handle.proxy_port = -1;
-    handle.pproxy_port = HYD_PPROXY_PORT;
+    handle.launch_mode = HYD_LAUNCH_UNSET;
+
     handle.bootstrap = NULL;
-    handle.is_proxy_launcher = 0;
-    handle.is_proxy_terminator = 0;
-    handle.is_proxy_remote = 0;
     handle.binding = HYD_BIND_UNSET;
     handle.user_bind_map = NULL;
 
