@@ -31,10 +31,8 @@ static HYD_Status fill_in_proxy_args(void)
 
     /* Create the arguments list for each proxy */
     process_id = 0;
-    for (partition = handle.partition_list; partition; partition = partition->next) {
-
-        if (partition->exec_list == NULL)
-            break;
+    for (partition = handle.partition_list; partition && partition->exec_list;
+         partition = partition->next) {
 
         arg = HYDU_strlist_lastidx(partition->proxy_args);
         i = 0;
@@ -265,7 +263,9 @@ static HYD_Status launch_procs_in_persistent_mode(void)
     HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
 
     first_partition = 1;
-    for (partition = handle.partition_list; partition; partition = partition->next) {
+    for (partition = handle.partition_list; partition && partition->exec_list;
+         partition = partition->next) {
+
         status = HYDU_sock_connect(partition->name, handle.proxy_port, &partition->control_fd);
         HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
@@ -452,7 +452,8 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
             /* Check to see if there's any open read socket left; if
              * there are, we will just wait for more events. */
             sockets_open = 0;
-            for (partition = handle.partition_list; partition; partition = partition->next) {
+            for (partition = handle.partition_list; partition && partition->exec_list;
+                 partition = partition->next) {
                 if (partition->out != -1 || partition->err != -1) {
                     sockets_open++;
                     break;
@@ -477,7 +478,8 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
             do {
                 /* Check if the exit status has already arrived */
                 all_procs_exited = 1;
-                for (partition = handle.partition_list; partition; partition = partition->next) {
+                for (partition = handle.partition_list; partition && partition->exec_list;
+                     partition = partition->next) {
                     if (partition->exit_status == -1) {
                         all_procs_exited = 0;
                         break;

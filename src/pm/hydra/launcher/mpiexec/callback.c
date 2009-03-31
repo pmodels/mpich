@@ -25,7 +25,8 @@ static HYD_Status close_fd(int fd)
     close(fd);
 
     /* Find the FD in the handle and remove it. */
-    for (partition = handle.partition_list; partition; partition = partition->next) {
+    for (partition = handle.partition_list; partition && partition->exec_list;
+         partition = partition->next) {
         if (partition->out == fd) {
             partition->out = -1;
             goto fn_exit;

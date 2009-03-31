@@ -108,7 +108,8 @@ HYD_Status HYD_PMCD_pmi_create_pg(void)
 
     /* Find the number of processes in the PG */
     num_procs = 0;
-    for (partition = handle.partition_list; partition; partition = partition->next)
+    for (partition = handle.partition_list; partition && partition->exec_list;
+         partition = partition->next)
         for (exec = partition->exec_list; exec; exec = exec->next)
             num_procs += exec->proc_count;
 

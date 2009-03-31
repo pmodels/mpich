@@ -110,7 +110,8 @@ int main(int argc, char **argv)
     }
 
     /* Setup stdout/stderr/stdin handlers */
-    for (partition = handle.partition_list; partition; partition = partition->next) {
+    for (partition = handle.partition_list; partition && partition->exec_list;
+         partition = partition->next) {
         status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, NULL, HYD_LCHI_stdout_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
@@ -138,7 +139,8 @@ int main(int argc, char **argv)
 
     /* Check for the exit status for all the processes */
     exit_status = 0;
-    for (partition = handle.partition_list; partition; partition = partition->next)
+    for (partition = handle.partition_list; partition && partition->exec_list;
+         partition = partition->next)
         exit_status |= partition->exit_status;
 
     /* Call finalize functions for lower layers to cleanup their resources */

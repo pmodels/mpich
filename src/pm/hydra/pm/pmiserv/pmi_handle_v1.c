@@ -94,7 +94,8 @@ HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
     id = atoi(strtok(NULL, "="));
 
     size = 0;
-    for (partition = handle.partition_list; partition; partition = partition->next)
+    for (partition = handle.partition_list; partition && partition->exec_list;
+         partition = partition->next)
         for (exec = partition->exec_list; exec; exec = exec->next)
             size += exec->proc_count;
 
