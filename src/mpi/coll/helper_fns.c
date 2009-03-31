@@ -231,17 +231,17 @@ int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     else if (sendtype_iscontig)
     {
         MPID_Segment seg;
-	MPIDI_msg_sz_t last;
+	MPI_Aint last;
 
 	MPID_Segment_init(recvbuf, recvcount, recvtype, &seg, 0);
 	last = copy_sz;
 	MPID_Segment_unpack(&seg, 0, &last, (char*)sendbuf + sendtype_true_lb);
-        MPIU_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");        
+        MPIU_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
     }
     else if (recvtype_iscontig)
     {
         MPID_Segment seg;
-	MPIDI_msg_sz_t last;
+	MPI_Aint last;
 
 	MPID_Segment_init(sendbuf, sendcount, sendtype, &seg, 0);
 	last = copy_sz;
@@ -256,8 +256,8 @@ int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 	MPIDI_msg_sz_t sfirst;
 	MPID_Segment rseg;
 	MPIDI_msg_sz_t rfirst;
-        
-        MPIU_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf"); 
+
+        MPIU_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf");
 
 	MPID_Segment_init(sendbuf, sendcount, sendtype, &sseg, 0);
 	MPID_Segment_init(recvbuf, recvcount, recvtype, &rseg, 0);
