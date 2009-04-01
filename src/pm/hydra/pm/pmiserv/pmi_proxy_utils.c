@@ -471,7 +471,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                 status = HYDU_sock_set_nonblock(HYD_PMCD_pmi_proxy_params.in);
                 HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
-                stdin_fd = 0;
+                stdin_fd = HYD_PMCD_pmi_proxy_params.in_upstream_fd;
                 status = HYDU_sock_set_nonblock(stdin_fd);
                 HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 

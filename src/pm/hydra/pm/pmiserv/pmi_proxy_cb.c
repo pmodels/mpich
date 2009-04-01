@@ -180,6 +180,7 @@ HYD_Status HYD_PMCD_pmi_proxy_stdin_cb(int fd, HYD_Event_t events, void *userp)
         status = HYD_DMX_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
+        close(HYD_PMCD_pmi_proxy_params.in_upstream_fd);
         close(HYD_PMCD_pmi_proxy_params.in);
         HYD_PMCD_pmi_proxy_params.in = -1;
     }
