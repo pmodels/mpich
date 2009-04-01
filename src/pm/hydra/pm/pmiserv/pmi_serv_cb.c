@@ -179,7 +179,9 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
      * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
     for (partition = handle.partition_list; partition; partition = partition->next) {
-        status = HYDU_sock_connect(partition->name, handle.proxy_port, &fd);
+        /* We only "try" to connect here, since the proxy might have
+         * already exited and the connect might fail. */
+        status = HYDU_sock_tryconnect(partition->sa, &fd);
         if (status != HYD_SUCCESS) {
             HYDU_Warn_printf("unable to connect to the proxy on %s\n", partition->name);
             overall_status = HYD_INTERNAL_ERROR;

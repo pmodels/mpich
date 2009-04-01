@@ -15,6 +15,102 @@
 int HYD_PMCD_pmi_serv_listenfd;
 HYD_Handle handle;
 
+static void launch_helper(void *args)
+{
+    struct HYD_Partition *partition = (struct HYD_Partition *) args;
+    int first_partition = (partition == handle.partition_list);
+    enum HYD_PMCD_pmi_proxy_cmds cmd;
+    int i, list_len, arg_len;
+    HYD_Status status = HYD_SUCCESS;
+
+    /*
+     * Here are the steps we will follow:
+     *
+     * 1. Put all the arguments to pass in to a string list.
+     *
+     * 2. Connect to the proxy (this will be our primary control
+     *    socket).
+     *
+     * 3. Read this string list and write the following to the socket:
+     *    (a) The PROC_INFO command.
+     *    (b) Integer sized data with the number of arguments to
+     *        follow.
+     *    (c) For each argument to pass, first send an integer which
+     *        tells the proxy how many bytes are coming in that
+     *        argument.
+     *
+     * 4. Open two new sockets and connect them to the proxy.
+     *
+     * 5. On the first new socket, send USE_AS_STDOUT and the second
+     *    send USE_AS_STDERR.
+     *
+     * 6. For PMI_ID "0", open a separate socket and send the
+     *    USE_AS_STDIN command on it.
+     *
+     * 7. We need to figure out what to do with the LAUNCH_JOB
+     *    command; since it's going on a different socket, it might go
+     *    out-of-order. Maybe a state machine on the proxy to see if
+     *    it got all the information it needs to launch the job would
+     *    work.
+     */
+
+    status = HYDU_sock_connect(partition->sa, &partition->control_fd);
+    HYDU_ERR_POP(status, "unable to connect to proxy\n");
+
+    cmd = PROC_INFO;
+    status = HYDU_sock_write(partition->control_fd, &cmd,
+                             sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+    HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+    /* Check how many arguments we have */
+    list_len = HYDU_strlist_lastidx(partition->proxy_args);
+    status = HYDU_sock_write(partition->control_fd, &list_len, sizeof(int));
+    HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+    /* Convert the string list to parseable data and send */
+    for (i = 0; partition->proxy_args[i]; i++) {
+        arg_len = strlen(partition->proxy_args[i]) + 1;
+
+        status = HYDU_sock_write(partition->control_fd, &arg_len, sizeof(int));
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+        status = HYDU_sock_write(partition->control_fd, partition->proxy_args[i], arg_len);
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+    }
+
+    /* Create an stdout socket */
+    status = HYDU_sock_connect(partition->sa, &partition->out);
+    HYDU_ERR_POP(status, "unable to connect to proxy\n");
+
+    cmd = USE_AS_STDOUT;
+    status = HYDU_sock_write(partition->out, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+    HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+    /* Create an stderr socket */
+    status = HYDU_sock_connect(partition->sa, &partition->err);
+    HYDU_ERR_POP(status, "unable to connect to proxy\n");
+
+    cmd = USE_AS_STDERR;
+    status = HYDU_sock_write(partition->err, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+    HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+    /* If rank 0 is here, create an stdin socket */
+    if (first_partition) {
+        status = HYDU_sock_connect(partition->sa, &handle.in);
+        HYDU_ERR_POP(status, "unable to connect to proxy\n");
+
+        cmd = USE_AS_STDIN;
+        status = HYDU_sock_write(handle.in, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+    }
+
+  fn_exit:
+    return;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_Status fill_in_proxy_args(void)
 {
     int i, arg, process_id;
@@ -198,7 +294,7 @@ static HYD_Status shutdown_proxies(void)
     HYD_Status status = HYD_SUCCESS;
 
     for (partition = handle.partition_list; partition; partition = partition->next) {
-        status = HYDU_sock_connect(partition->name, handle.proxy_port, &fd);
+        status = HYDU_sock_connect(partition->sa, &fd);
         HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
         cmd = PROXY_SHUTDOWN;
@@ -218,40 +314,9 @@ static HYD_Status shutdown_proxies(void)
 static HYD_Status launch_procs_in_persistent_mode(void)
 {
     struct HYD_Partition *partition;
-    enum HYD_PMCD_pmi_proxy_cmds cmd;
-    int i, list_len, arg_len, first_partition;
+    int len, id;
+    struct HYD_Thread_context *thread_context;
     HYD_Status status = HYD_SUCCESS;
-
-    /*
-     * Here are the steps we will follow:
-     *
-     * 1. Put all the arguments to pass in to a string list.
-     *
-     * 2. Connect to the proxy (this will be our primary control
-     *    socket).
-     *
-     * 3. Read this string list and write the following to the socket:
-     *    (a) The PROC_INFO command.
-     *    (b) Integer sized data with the number of arguments to
-     *        follow.
-     *    (c) For each argument to pass, first send an integer which
-     *        tells the proxy how many bytes are coming in that
-     *        argument.
-     *
-     * 4. Open two new sockets and connect them to the proxy.
-     *
-     * 5. On the first new socket, send USE_AS_STDOUT and the second
-     *    send USE_AS_STDERR.
-     *
-     * 6. For PMI_ID "0", open a separate socket and send the
-     *    USE_AS_STDIN command on it.
-     *
-     * 7. We need to figure out what to do with the LAUNCH_JOB
-     *    command; since it's going on a different socket, it might go
-     *    out-of-order. Maybe a state machine on the proxy to see if
-     *    it got all the information it needs to launch the job would
-     *    work.
-     */
 
     status = fill_in_proxy_args();
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
@@ -262,65 +327,31 @@ static HYD_Status launch_procs_in_persistent_mode(void)
     status = HYD_BSCI_init(handle.bootstrap);
     HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
 
-    first_partition = 1;
+    len = 0;
+    for (partition = handle.partition_list; partition && partition->exec_list;
+         partition = partition->next)
+        len++;
+
+    HYDU_MALLOC(thread_context, struct HYD_Thread_context *,
+                len * sizeof(struct HYD_Thread_context), status);
+
+    id = 0;
     for (partition = handle.partition_list; partition && partition->exec_list;
          partition = partition->next) {
+        HYDU_create_thread(launch_helper, (void *) partition, &thread_context[id]);
+        id++;
+    }
 
-        status = HYDU_sock_connect(partition->name, handle.proxy_port, &partition->control_fd);
-        HYDU_ERR_POP(status, "unable to connect to proxy\n");
+    id = 0;
+    for (partition = handle.partition_list; partition && partition->exec_list;
+         partition = partition->next) {
+        HYDU_join_thread(thread_context[id]);
 
-        cmd = PROC_INFO;
-        status = HYDU_sock_write(partition->control_fd, &cmd,
-                                 sizeof(enum HYD_PMCD_pmi_proxy_cmds));
-        HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-        /* Check how many arguments we have */
-        list_len = HYDU_strlist_lastidx(partition->proxy_args);
-        status = HYDU_sock_write(partition->control_fd, &list_len, sizeof(int));
-        HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-        /* Convert the string list to parseable data and send */
-        for (i = 0; partition->proxy_args[i]; i++) {
-            arg_len = strlen(partition->proxy_args[i]) + 1;
-
-            status = HYDU_sock_write(partition->control_fd, &arg_len, sizeof(int));
-            HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-            status = HYDU_sock_write(partition->control_fd, partition->proxy_args[i], arg_len);
-            HYDU_ERR_POP(status, "unable to write data to proxy\n");
-        }
-
-        /* Register the control socket with the demux engine */
         status = HYD_DMX_register_fd(1, &partition->control_fd, HYD_STDOUT, partition,
                                      HYD_PMCD_pmi_serv_control_cb);
+        HYDU_ERR_POP(status, "unable to register control fd\n");
 
-        /* Create an stdout socket */
-        status = HYDU_sock_connect(partition->name, handle.proxy_port, &partition->out);
-        HYDU_ERR_POP(status, "unable to connect to proxy\n");
-
-        cmd = USE_AS_STDOUT;
-        status = HYDU_sock_write(partition->out, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
-        HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-        /* Create an stderr socket */
-        status = HYDU_sock_connect(partition->name, handle.proxy_port, &partition->err);
-        HYDU_ERR_POP(status, "unable to connect to proxy\n");
-
-        cmd = USE_AS_STDERR;
-        status = HYDU_sock_write(partition->err, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
-        HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-        /* If rank 0 is here, create an stdin socket */
-        if (first_partition) {
-            status = HYDU_sock_connect(partition->name, handle.proxy_port, &handle.in);
-            HYDU_ERR_POP(status, "unable to connect to proxy\n");
-
-            cmd = USE_AS_STDIN;
-            status = HYDU_sock_write(handle.in, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
-            HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-            first_partition = 0;
-        }
+        id++;
     }
 
   fn_exit:
@@ -329,6 +360,7 @@ static HYD_Status launch_procs_in_persistent_mode(void)
   fn_fail:
     goto fn_exit;
 }
+
 
 /*
  * HYD_PMCI_launch_procs: Here are the steps we follow:
@@ -355,6 +387,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
     uint16_t port;
     char hostname[MAX_HOSTNAME_LEN];
     HYD_Env_t *env;
+    struct HYD_Partition *partition;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -405,6 +438,13 @@ HYD_Status HYD_PMCI_launch_procs(void)
      * comm_world */
     status = HYD_PMCD_pmi_create_pg();
     HYDU_ERR_POP(status, "unable to create process group\n");
+
+    /* For each partition, get the appropriate sockaddr to connect to */
+    for (partition = handle.partition_list; partition; partition = partition->next) {
+        status = HYDU_sock_gethostbyname(partition->name, &partition->sa,
+                                         handle.proxy_port);
+        HYDU_ERR_POP(status, "unable to get sockaddr information\n");
+    }
 
     if (handle.launch_mode == HYD_LAUNCH_RUNTIME) {
         status = launch_procs_in_runtime_mode();

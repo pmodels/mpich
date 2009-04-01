@@ -35,13 +35,15 @@ AC_PROG_CC
 CFLAGS=$save_cflags
 
 dnl Check if the necessary headers are available
-AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h sched.h)
+AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h \
+		 sched.h pthread.h)
 
 # Check for special types
 AC_TYPE_SIZE_T
 
 dnl Check for necessary functions
-AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca snprintf unsetenv strerror strsignal)
+AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca snprintf unsetenv \
+	       strerror strsignal)
 
 dnl Check what we need to do about the environ extern
 AC_CACHE_CHECK([for environ in unistd.h],pac_cv_environ_in_unistd,

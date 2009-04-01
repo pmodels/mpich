@@ -82,3 +82,46 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
   fn_fail:
     goto fn_exit;
 }
+
+
+HYD_Status HYDU_create_thread(void *(func)(void *), void *args,
+                              struct HYD_Thread_context *ctxt)
+{
+    int ret;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    ret = pthread_create(&ctxt->thread, NULL, func, args);
+    if (ret < 0)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "pthread create failed (%s)\n",
+                             HYDU_strerror(errno));
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt)
+{
+    int ret;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    ret = pthread_join(ctxt.thread, NULL);
+    if (ret < 0)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "pthread join failed (%s)\n",
+                             HYDU_strerror(errno));
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

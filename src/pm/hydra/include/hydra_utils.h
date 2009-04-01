@@ -171,6 +171,9 @@ HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec);
 HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partition_list);
 HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
                                int *in, int *out, int *err, int *pid, int core);
+HYD_Status HYDU_create_thread(void *(func)(void *), void *args,
+                              struct HYD_Thread_context *ctxt);
+HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt);
 
 
 /* signals */
@@ -193,22 +196,10 @@ HYD_Status HYDU_set_common_signals(void (*handler) (int));
 
 
 /* Sock utilities */
-#include <poll.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-
-#if !defined size_t
-#define size_t unsigned int
-#endif /* size_t */
-
 HYD_Status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port);
-HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd);
+HYD_Status HYDU_sock_gethostbyname(const char *host, struct sockaddr_in *sa, uint16_t port);
+HYD_Status HYDU_sock_connect(struct sockaddr_in sa, int *fd);
+HYD_Status HYDU_sock_tryconnect(struct sockaddr_in sa, int *fd);
 HYD_Status HYDU_sock_accept(int listen_fd, int *fd);
 HYD_Status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen);
 HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count);

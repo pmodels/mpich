@@ -115,6 +115,8 @@ HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events, void *userp)
         for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
             if (HYD_PMCD_pmi_proxy_params.out[i] == fd)
                 HYD_PMCD_pmi_proxy_params.out[i] = -1;
+
+        close(fd);
     }
 
   fn_exit:
@@ -145,6 +147,8 @@ HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events, void *userp)
         for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
             if (HYD_PMCD_pmi_proxy_params.err[i] == fd)
                 HYD_PMCD_pmi_proxy_params.err[i] = -1;
+
+        close(fd);
     }
 
   fn_exit:

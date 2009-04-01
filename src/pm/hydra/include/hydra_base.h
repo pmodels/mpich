@@ -57,6 +57,23 @@
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
 
+
+/* sockets required headers */
+#include <poll.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
+#if !defined size_t
+#define size_t unsigned int
+#endif /* size_t */
+
+
 #define HYD_DEFAULT_PROXY_PORT 9899
 
 #define HYD_STDOUT  (1)
@@ -132,9 +149,21 @@ struct HYD_Partition_exec {
     struct HYD_Partition_exec *next;
 };
 
+#if !defined HAVE_PTHREAD_H
+#error "pthread.h needed"
+#else
+#include <pthread.h>
+#endif
+
+struct HYD_Thread_context {
+    pthread_t thread;
+};
+
 /* Partition information */
 struct HYD_Partition {
     char *name;
+    struct sockaddr_in sa;
+
     char *user_bind_map;
     int total_proc_count;
 
@@ -167,6 +196,6 @@ struct HYD_Exec_info {
     HYD_Env_t *prop_env;
 
     struct HYD_Exec_info *next;
-} *exec_info;
+};
 
 #endif /* HYDRA_BASE_H_INCLUDED */

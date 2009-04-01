@@ -105,24 +105,38 @@ HYD_Status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 }
 
 
-HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
+HYD_Status HYDU_sock_gethostbyname(const char *host, struct sockaddr_in *sa, uint16_t port)
 {
-    struct sockaddr_in sa;
     struct hostent *ht;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    memset((char *) &sa, 0, sizeof(sa));
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons(port);
+    memset((char *) sa, 0, sizeof(struct sockaddr_in));
+    (*sa).sin_family = AF_INET;
+    (*sa).sin_port = htons(port);
 
     /* Get the remote host's IP address */
     ht = gethostbyname(host);
     if (ht == NULL)
         HYDU_ERR_SETANDJUMP1(status, HYD_INVALID_PARAM,
                              "unable to get host address (%s)\n", HYDU_strerror(errno));
-    memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
+    memcpy(&sa->sin_addr, ht->h_addr_list[0], ht->h_length);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYDU_sock_connect(struct sockaddr_in sa, int *fd)
+{
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
 
     /* Create a socket and set the required options */
     *fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -135,6 +149,36 @@ HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
      * layer can decide what to do with the return status. */
     if (connect(*fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
         HYDU_Error_printf("connect error (%s)\n", HYDU_strerror(errno));
+        status = HYD_SOCK_ERROR;
+        goto fn_fail;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYDU_sock_tryconnect(struct sockaddr_in sa, int *fd)
+{
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Create a socket and set the required options */
+    *fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (*fd < 0)
+        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
+                             HYDU_strerror(errno));
+
+    /* Not being able to connect is not an error in all cases. So we
+     * return an error, but only print a warning message. The upper
+     * layer can decide what to do with the return status. */
+    if (connect(*fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
+        HYDU_Warn_printf("connect error (%s)\n", HYDU_strerror(errno));
         status = HYD_SOCK_ERROR;
         goto fn_fail;
     }
