@@ -64,8 +64,10 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
     else {      /* Parent process */
         close(outpipe[1]);
         close(errpipe[1]);
-        if (in)
+        if (in) {
+            close(inpipe[0]);
             *in = inpipe[1];
+        }
         if (out)
             *out = outpipe[0];
         if (err)
