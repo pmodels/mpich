@@ -97,8 +97,10 @@ HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events, void *userp)
 
             /* If we did not get an init, fall back to PMI-v1 */
             /* FIXME: This part of the code should not know anything
-             * about PMI-1 vs. PMI-2. */
-            if (!HYD_PMCD_pmi_handle_list)
+             * about PMI-1 vs. PMI-2. But the simple PMI client-side
+             * code is so hacked up, that commands can arrive
+             * out-of-order and this is necessary. */
+            if (HYD_PMCD_pmi_handle_list == NULL)
                 HYD_PMCD_pmi_handle_list = HYD_PMCD_pmi_v1;
 
             h = HYD_PMCD_pmi_handle_list;

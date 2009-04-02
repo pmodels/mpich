@@ -31,8 +31,7 @@ typedef struct HYD_PMCD_pmi_process HYD_PMCD_pmi_process_t;
 struct HYD_PMCD_pmi_process {
     /* This is a bad design if we need to tie in an FD to a PMI
      * process. This essentially kills any chance of PMI server
-     * masquerading. However, PMI v1 requires this state to be
-     * maintained. */
+     * masquerading. */
     int fd;
     struct HYD_PMCD_pmi_pg *pg;
     struct HYD_PMCD_pmi_process *next;

@@ -6,7 +6,7 @@
 
 libhydra_a_DIR = ../../lib
 libhydra_a_SOURCES = pmi_serv_launch.c pmi_serv_finalize.c pmi_serv_cb.c \
-	pmi_handle.c pmi_handle_v1.c
+	pmi_handle.c pmi_handle_v1.c pmi_handle_v2.c
 INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../../../include \
 	-I../../include \
