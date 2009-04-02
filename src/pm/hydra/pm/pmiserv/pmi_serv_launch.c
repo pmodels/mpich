@@ -295,7 +295,11 @@ static HYD_Status shutdown_proxies(void)
 
     for (partition = handle.partition_list; partition; partition = partition->next) {
         status = HYDU_sock_connect(partition->sa, &fd);
-        HYDU_ERR_POP(status, "unable to connect to proxy\n");
+        if(status != HYD_SUCCESS){
+            /* Don't abort. Try to shutdown as many proxies as possible */
+            HYDU_Error_printf("Unable to connect to proxy at %s\n", partition->name);
+            continue;
+        }
 
         cmd = PROXY_SHUTDOWN;
         status = HYDU_sock_write(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
