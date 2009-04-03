@@ -104,6 +104,7 @@ typedef enum {
 
     /* For persistent proxies */
     HYD_LAUNCH_BOOT,
+    HYD_LAUNCH_BOOT_FOREGROUND,
     HYD_LAUNCH_SHUTDOWN,
     HYD_LAUNCH_PERSISTENT
 } HYD_Launch_mode_t;

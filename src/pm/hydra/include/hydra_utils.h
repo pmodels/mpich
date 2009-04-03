@@ -133,7 +133,7 @@ HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path);
 #include "plpa.h"
 #include "plpa_internal.h"
 HYD_Status HYDU_bind_init(char *user_bind_map);
-void HYDU_bind_process(int core);
+HYD_Status HYDU_bind_process(int core);
 int HYDU_bind_get_core_id(int id, HYD_Binding binding);
 #else
 #define HYDU_bind_init(...) HYD_SUCCESS
@@ -171,6 +171,7 @@ HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec);
 HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partition_list);
 HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
                                int *in, int *out, int *err, int *pid, int core);
+HYD_Status HYDU_fork_and_exit(int core);
 HYD_Status HYDU_create_thread(void *(func)(void *), void *args,
                               struct HYD_Thread_context *ctxt);
 HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt);

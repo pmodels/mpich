@@ -76,8 +76,10 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             continue;
         }
 
-        if(!strcmp(*argv, "--boot-proxies-defer-exit")) {
-            handle.proxy_defer_exit = 1;
+        if(!strcmp(*argv, "--boot-foreground-proxies")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
+            handle.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
             continue;
         }
 
@@ -345,11 +347,10 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     if (handle.launch_mode == HYD_LAUNCH_UNSET)
         handle.launch_mode = HYD_LAUNCH_RUNTIME;
 
-    /* Deferring exit of proxies is only valid for persistent proxies */
-    tmp = getenv("HYDRA_BOOT_PROXIES_DEFER_EXIT");
-    if(handle.launch_mode == HYD_LAUNCH_PERSISTENT && tmp) {
+    tmp = getenv("HYDRA_BOOT_FOREGROUND_PROXIES");
+    if(handle.launch_mode == HYD_LAUNCH_UNSET && tmp) {
         if(atoi(tmp) == 1) {
-            handle.proxy_defer_exit = 1;
+            handle.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
         }
     }
 
@@ -364,7 +365,9 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     HYDU_ERR_POP(status, "unable to get base path\n");
 
     /* Proxy setup or teardown */
-    if ((handle.launch_mode == HYD_LAUNCH_BOOT) || (handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
+    if ((handle.launch_mode == HYD_LAUNCH_BOOT) ||
+        (handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) ||
+        (handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
 
         /* NULL out variables we don't care about */
         HYDU_ERR_CHKANDJUMP(status, handle.prop != HYD_ENV_PROP_UNSET, HYD_INTERNAL_ERROR,

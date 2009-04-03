@@ -14,13 +14,12 @@
 typedef enum {
     HYD_PMCD_PMI_PROXY_UNSET,
     HYD_PMCD_PMI_PROXY_RUNTIME,
-    HYD_PMCD_PMI_PROXY_PERSISTENT
+    HYD_PMCD_PMI_PROXY_PERSISTENT,
+    HYD_PMCD_PMI_PROXY_PERSISTENT_FG
 } HYD_PMCD_pmi_proxy_type;
 
 struct HYD_PMCD_pmi_proxy_params {
     int debug;
-    /* If enabled the proxy does not fork and exit */
-    int proxy_defer_exit;
 
     int proxy_port;
     HYD_PMCD_pmi_proxy_type proxy_type;

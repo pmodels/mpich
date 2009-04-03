@@ -15,7 +15,6 @@ static HYD_Status init_params()
     HYD_Status status = HYD_SUCCESS;
 
     HYD_PMCD_pmi_proxy_params.debug = 0;
-    HYD_PMCD_pmi_proxy_params.proxy_defer_exit = 0;
 
     HYD_PMCD_pmi_proxy_params.proxy_port = -1;
     HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_UNSET;
@@ -260,8 +259,8 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
         ++argv;
         if(*argv) {
             /* optional argument - don't fork and exit - useful for debugging */
-            if (!strcmp(*argv, "--proxy-defer-exit")) {
-                HYD_PMCD_pmi_proxy_params.proxy_defer_exit = 1;
+            if (!strcmp(*argv, "--proxy-foreground")) {
+                HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_PERSISTENT_FG;
             }
         }
     }

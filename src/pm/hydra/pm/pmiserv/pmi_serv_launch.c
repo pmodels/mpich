@@ -237,7 +237,7 @@ static HYD_Status launch_procs_in_runtime_mode(void)
     goto fn_exit;
 }
 
-static HYD_Status boot_proxies(void)
+static HYD_Status boot_proxies(int launch_in_foreground)
 {
     HYD_Status status = HYD_SUCCESS;
     int i, arg;
@@ -263,8 +263,8 @@ static HYD_Status boot_proxies(void)
         partition->proxy_args[arg++] = HYDU_strdup("--persistent-mode");
         partition->proxy_args[arg++] = HYDU_strdup("--proxy-port");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
-        if(handle.proxy_defer_exit) {
-            partition->proxy_args[arg++] = HYDU_strdup("--proxy-defer-exit");
+        if(launch_in_foreground) {
+            partition->proxy_args[arg++] = HYDU_strdup("--proxy-foreground");
         }
         partition->proxy_args[arg++] = NULL;
 
@@ -457,8 +457,9 @@ HYD_Status HYD_PMCI_launch_procs(void)
         status = launch_procs_in_runtime_mode();
         HYDU_ERR_POP(status, "error launching procs in runtime mode\n");
     }
-    else if (handle.launch_mode == HYD_LAUNCH_BOOT) {
-        status = boot_proxies();
+    else if (handle.launch_mode == HYD_LAUNCH_BOOT ||
+                handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) {
+        status = boot_proxies((handle.launch_mode == HYD_LAUNCH_BOOT) ? 0 : 1);
         HYDU_ERR_POP(status, "error booting proxies\n");
     }
     else if (handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {

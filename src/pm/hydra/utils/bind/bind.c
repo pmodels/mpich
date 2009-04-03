@@ -113,7 +113,7 @@ HYD_Status HYDU_bind_init(char *user_bind_map)
     goto fn_exit;
 }
 
-void HYDU_bind_process(int core)
+HYD_Status HYDU_bind_process(int core)
 {
     int ret;
     PLPA_NAME(cpu_set_t) cpuset;
@@ -131,7 +131,7 @@ void HYDU_bind_process(int core)
 
   fn_exit:
     HYDU_FUNC_EXIT();
-    return;
+    return status;
 
   fn_fail:
     goto fn_exit;

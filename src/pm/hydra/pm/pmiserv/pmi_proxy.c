@@ -92,50 +92,6 @@ static HYD_Status wait_for_procs_to_finish(void)
     goto fn_exit;
 }
 
-/* Fork a child process and exit from the parent process */
-static HYD_Status fork_and_exit(void )
-{
-    struct rlimit rl;
-    pid_t pid;
-    int i=0;
-    HYD_Status status = HYD_SUCCESS;
-
-    /* Make sure we don't carry over file creation masks from parent to child */
-    umask(0);
-    
-    if(getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "Error obtaining limit of fds for proxy (%s)\n",
-                                HYDU_strerror(errno));
-    } 
-    pid = fork();
-    if(pid < 0) {
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "Error spawning persistent proxy (%s)\n",
-                                HYDU_strerror(errno));
-    }
-    else if(pid > 0) {
-        /* Parent - exit without waiting for children */
-        if(signal(SIGCLD, SIG_IGN) == SIG_ERR) {
-            /* Don't abort on error. Just exit */
-            HYDU_Error_printf("Error setting signal handler for SIGCLD to SIG_IGN (%s)", HYDU_strerror(errno));
-        }
-        exit(0);
-    }
-    else {
-        /* child - persistent proxy */
-        if(rl.rlim_max == RLIM_INFINITY)
-            rl.rlim_max = 1024;
-        for(i = 0; i < rl.rlim_max; i++)
-            close(i);
-        /* Create a new session */
-        setsid();
-    }
-
-  fn_exit:
-    return status;
-  fn_fail:
-    goto fn_exit;
-}
-
 int main(int argc, char **argv)
 {
     int i, ret_status;
@@ -144,10 +100,9 @@ int main(int argc, char **argv)
     status = HYD_PMCD_pmi_proxy_get_params(argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
-    if((HYD_PMCD_pmi_proxy_params.proxy_type == HYD_PMCD_PMI_PROXY_PERSISTENT)
-        && !HYD_PMCD_pmi_proxy_params.proxy_defer_exit ) {
-        /* Spawn the persistent proxy and exit parent proxy */
-        status = fork_and_exit();
+    if(HYD_PMCD_pmi_proxy_params.proxy_type != HYD_PMCD_PMI_PROXY_PERSISTENT_FG) {
+        /* Spawn a persistent daemon proxy and exit parent proxy */
+        status = HYDU_fork_and_exit(-1);
         HYDU_ERR_POP(status, "Error spawning persistent proxy\n");
     }
 
