@@ -263,6 +263,9 @@ static HYD_Status boot_proxies(void)
         partition->proxy_args[arg++] = HYDU_strdup("--persistent-mode");
         partition->proxy_args[arg++] = HYDU_strdup("--proxy-port");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
+        if(handle.proxy_defer_exit) {
+            partition->proxy_args[arg++] = HYDU_strdup("--proxy-defer-exit");
+        }
         partition->proxy_args[arg++] = NULL;
 
         if (handle.debug) {

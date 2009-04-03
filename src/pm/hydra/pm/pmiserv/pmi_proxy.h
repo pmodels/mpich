@@ -19,6 +19,8 @@ typedef enum {
 
 struct HYD_PMCD_pmi_proxy_params {
     int debug;
+    /* If enabled the proxy does not fork and exit */
+    int proxy_defer_exit;
 
     int proxy_port;
     HYD_PMCD_pmi_proxy_type proxy_type;

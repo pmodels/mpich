@@ -213,6 +213,11 @@ mode, use:
 Persistent mode can also be picked using the environment setting
 HYDRA_LAUNCH_MODE=persistent.
 
+The option "--boot-proxies-defer-exit" can be used to prevent
+persistent proxies from spawning a child process and exiting.
+This option is useful for debugging. This option can also be
+picked using the environment setting
+HYDRA_BOOT_PROXIES_DEFER_EXIT=1
 
 Communication sub-systems
 -------------------------

@@ -22,6 +22,10 @@ struct HYD_Handle_ {
     char *user_bind_map;
 
     int debug;
+    /* Defer proxy exit until shutdown. If this option is enabled
+     * he launched proxy will not fork a child process and exit.
+     * This option is useful in debugging persistent proxies */
+    int proxy_defer_exit;
     int enablex;
     char *wdir;
     char *host_file;

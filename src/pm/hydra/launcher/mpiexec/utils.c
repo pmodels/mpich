@@ -76,6 +76,11 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             continue;
         }
 
+        if(!strcmp(*argv, "--boot-proxies-defer-exit")) {
+            handle.proxy_defer_exit = 1;
+            continue;
+        }
+
         if (!strcmp(*argv, "--shutdown-proxies")) {
             HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
                                 HYD_INTERNAL_ERROR, "duplicate launch mode\n");
@@ -339,6 +344,14 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     }
     if (handle.launch_mode == HYD_LAUNCH_UNSET)
         handle.launch_mode = HYD_LAUNCH_RUNTIME;
+
+    /* Deferring exit of proxies is only valid for persistent proxies */
+    tmp = getenv("HYDRA_BOOT_PROXIES_DEFER_EXIT");
+    if(handle.launch_mode == HYD_LAUNCH_PERSISTENT && tmp) {
+        if(atoi(tmp) == 1) {
+            handle.proxy_defer_exit = 1;
+        }
+    }
 
     /* Get the base path for the proxy */
     if (handle.wdir == NULL) {

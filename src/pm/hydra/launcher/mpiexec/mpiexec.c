@@ -47,6 +47,7 @@ static void usage(void)
     printf("\t--css                            [Communication sub-system to use]\n");
     printf("\t--binding                        [Process binding]");
     printf("\t--boot-proxies                   [Boot proxies to run in persistent mode]\n");
+    printf("\t--boot-proxies-defer-exit        [Boot proxies don't exit till shutdown]\n");
     printf("\t--shutdown-proxies               [Shutdown persistent mode proxies]\n");
     printf("\t--use-persistent                 [Use persistent mode proxies to launch]\n");
 }
