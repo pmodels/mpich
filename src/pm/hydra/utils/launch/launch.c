@@ -109,9 +109,6 @@ HYD_Status HYDU_fork_and_exit(int core)
         close(1);
         close(2);
 
-        /* Create a session */
-        setsid();
-
         if (core >= 0) {
             status = HYDU_bind_process(core);
             HYDU_ERR_POP(status, "bind process failed\n");
