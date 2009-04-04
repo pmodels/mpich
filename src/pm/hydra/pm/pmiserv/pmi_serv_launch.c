@@ -12,8 +12,8 @@
 #include "demux.h"
 #include "pmi_serv.h"
 
-int HYD_PMCD_pmi_serv_listenfd;
 HYD_Handle handle;
+static char *pmi_port_str = NULL;
 
 static void launch_helper(void *args)
 {
@@ -144,9 +144,12 @@ static HYD_Status fill_in_proxy_args(void)
 
         partition->proxy_args[arg++] = HYDU_strdup("--one-pass-count");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.one_pass_count);
-
+ 
         partition->proxy_args[arg++] = HYDU_strdup("--wdir");
         partition->proxy_args[arg++] = HYDU_strdup(handle.wdir);
+
+        partition->proxy_args[arg++] = HYDU_strdup("--pmi-port-str");
+        partition->proxy_args[arg++] = HYDU_strdup(pmi_port_str);
 
         partition->proxy_args[arg++] = HYDU_strdup("--binding");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.binding);
@@ -390,7 +393,8 @@ static HYD_Status launch_procs_in_persistent_mode(void)
  */
 HYD_Status HYD_PMCI_launch_procs(void)
 {
-    char *port_range, *port_str, *sport;
+    int listenfd;
+    char *port_range, *sport;
     uint16_t port;
     char hostname[MAX_HOSTNAME_LEN];
     HYD_Env_t *env;
@@ -412,12 +416,12 @@ HYD_Status HYD_PMCI_launch_procs(void)
 
     /* Listen on a port in the port range */
     port = 0;
-    status = HYDU_sock_listen(&HYD_PMCD_pmi_serv_listenfd, port_range, &port);
+    status = HYDU_sock_listen(&listenfd, port_range, &port);
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_register_fd(1, &HYD_PMCD_pmi_serv_listenfd, HYD_STDOUT, NULL,
-                                 HYD_PMCD_pmi_serv_cb);
+    status = HYD_DMX_register_fd(1, &listenfd, HYD_STDOUT, NULL,
+                                 HYD_PMCD_pmi_connect_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */
@@ -426,20 +430,11 @@ HYD_Status HYD_PMCI_launch_procs(void)
                              "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
 
     sport = HYDU_int_to_str(port);
-    HYDU_MALLOC(port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
-    HYDU_snprintf(port_str, strlen(hostname) + 1 + strlen(sport) + 1,
+    HYDU_MALLOC(pmi_port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
+    HYDU_snprintf(pmi_port_str, strlen(hostname) + 1 + strlen(sport) + 1,
                   "%s:%s", hostname, sport);
     HYDU_FREE(sport);
-    HYDU_Debug("Process manager listening on PMI port %s\n", port_str);
-
-    status = HYDU_env_create(&env, "PMI_PORT", port_str);
-    HYDU_ERR_POP(status, "unable to create env\n");
-
-    status = HYDU_append_env_to_list(*env, &handle.system_env);
-    HYDU_ERR_POP(status, "unable to add env to list\n");
-
-    HYDU_env_free(env);
-    HYDU_FREE(port_str);
+    HYDU_Debug("Process manager listening on PMI port %s\n", pmi_port_str);
 
     /* Create a process group for the MPI processes in this
      * comm_world */
@@ -458,7 +453,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
         HYDU_ERR_POP(status, "error launching procs in runtime mode\n");
     }
     else if (handle.launch_mode == HYD_LAUNCH_BOOT ||
-                handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) {
+             handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) {
         status = boot_proxies((handle.launch_mode == HYD_LAUNCH_BOOT) ? 0 : 1);
         HYDU_ERR_POP(status, "error booting proxies\n");
     }
@@ -472,6 +467,8 @@ HYD_Status HYD_PMCI_launch_procs(void)
     }
 
   fn_exit:
+    if (pmi_port_str)
+        HYDU_FREE(pmi_port_str);
     HYDU_FUNC_EXIT();
     return status;
 

@@ -10,11 +10,36 @@
 #include "demux.h"
 
 struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
-int HYD_PMCD_pmi_proxy_listenfd;
 
-HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events, void *userp)
+HYD_Status HYD_PMCD_pmi_proxy_control_connect_cb(int fd, HYD_Event_t events, void *userp)
 {
-    int accept_fd = -1, cmd_len;
+    int accept_fd = -1;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (events & HYD_STDIN)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
+
+    /* We got a connection from upstream */
+    status = HYDU_sock_accept(fd, &accept_fd);
+    HYDU_ERR_POP(status, "accept error\n");
+
+    status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, NULL,
+                                 HYD_PMCD_pmi_proxy_control_cmd_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_Status HYD_PMCD_pmi_proxy_control_cmd_cb(int fd, HYD_Event_t events, void *userp)
+{
+    int cmd_len;
     enum HYD_PMCD_pmi_proxy_cmds cmd;
     HYD_Status status = HYD_SUCCESS;
 
@@ -23,70 +48,61 @@ HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events, void *userp)
     if (events & HYD_STDIN)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
 
-    if (fd == HYD_PMCD_pmi_proxy_listenfd) {    /* mpiexec is trying to connect */
-        status = HYDU_sock_accept(fd, &accept_fd);
-        HYDU_ERR_POP(status, "accept error\n");
-
-        status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, NULL,
-                                     HYD_PMCD_pmi_proxy_listen_cb);
-        HYDU_ERR_POP(status, "unable to register fd\n");
+    /* We got a command from upstream */
+    status = HYDU_sock_read(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds), &cmd_len);
+    HYDU_ERR_POP(status, "error reading command from launcher\n");
+    if (cmd_len == 0) {
+        /* The connection has closed */
+        status = HYD_DMX_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+        close(fd);
+        goto fn_exit;
     }
-    else {      /* We got a command from mpiexec */
-        status = HYDU_sock_read(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds), &cmd_len);
-        HYDU_ERR_POP(status, "error reading command from launcher\n");
-        if (cmd_len == 0) {
-            /* The connection has closed */
-            status = HYD_DMX_deregister_fd(fd);
-            HYDU_ERR_POP(status, "unable to deregister fd\n");
-            close(fd);
-            goto fn_exit;
-        }
 
-        if (cmd == PROC_INFO) {
-            status = HYD_PMCD_pmi_proxy_procinfo(fd);
-        }
-        else if (cmd == USE_AS_STDOUT) {
-            HYD_PMCD_pmi_proxy_params.out_upstream_fd = fd;
-            status = HYD_DMX_deregister_fd(fd);
-            HYDU_ERR_POP(status, "unable to deregister fd\n");
-        }
-        else if (cmd == USE_AS_STDERR) {
-            HYD_PMCD_pmi_proxy_params.err_upstream_fd = fd;
-            status = HYD_DMX_deregister_fd(fd);
-            HYDU_ERR_POP(status, "unable to deregister fd\n");
-        }
-        else if (cmd == USE_AS_STDIN) {
-            HYD_PMCD_pmi_proxy_params.in_upstream_fd = fd;
-            status = HYD_DMX_deregister_fd(fd);
-            HYDU_ERR_POP(status, "unable to deregister fd\n");
-        }
-        else if (cmd == KILL_JOB) {
-            HYD_PMCD_pmi_proxy_killjob();
-            status = HYD_SUCCESS;
-        }
-        else if (cmd == PROXY_SHUTDOWN) {
-            /* FIXME: shutdown should be handled more cleanly. That
-             * is, check if there are other processes still running
-             * and kill them before exiting. */
-            exit(-1);
-        }
-        else {
-            status = HYD_INTERNAL_ERROR;
-        }
-
-        HYDU_ERR_POP(status, "error handling proxy command\n");
-
-        /* One of these commands can trigger the start of the
-         * application since they can arrive in any order. */
-        if ((cmd == PROC_INFO) || (cmd == USE_AS_STDOUT) || (cmd == USE_AS_STDERR) ||
-            (cmd == USE_AS_STDIN))
-            if ((HYD_PMCD_pmi_proxy_params.segment_list != NULL) &&
-                (HYD_PMCD_pmi_proxy_params.out_upstream_fd != -1) &&
-                (HYD_PMCD_pmi_proxy_params.err_upstream_fd != -1))
-                if ((HYD_PMCD_pmi_proxy_params.segment_list->start_pid != 0) ||
-                    (HYD_PMCD_pmi_proxy_params.in_upstream_fd != -1))
-                    HYD_PMCD_pmi_proxy_launch_procs();
+    if (cmd == PROC_INFO) {
+        status = HYD_PMCD_pmi_proxy_procinfo(fd);
     }
+    else if (cmd == USE_AS_STDOUT) {
+        HYD_PMCD_pmi_proxy_params.out_upstream_fd = fd;
+        status = HYD_DMX_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+    }
+    else if (cmd == USE_AS_STDERR) {
+        HYD_PMCD_pmi_proxy_params.err_upstream_fd = fd;
+        status = HYD_DMX_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+    }
+    else if (cmd == USE_AS_STDIN) {
+        HYD_PMCD_pmi_proxy_params.in_upstream_fd = fd;
+        status = HYD_DMX_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+    }
+    else if (cmd == KILL_JOB) {
+        HYD_PMCD_pmi_proxy_killjob();
+        status = HYD_SUCCESS;
+    }
+    else if (cmd == PROXY_SHUTDOWN) {
+        /* FIXME: shutdown should be handled more cleanly. That is,
+         * check if there are other processes still running and kill
+         * them before exiting. */
+        exit(-1);
+    }
+    else {
+        status = HYD_INTERNAL_ERROR;
+    }
+
+    HYDU_ERR_POP(status, "error handling proxy command\n");
+
+    /* One of these commands can trigger the start of the application
+     * since they can arrive in any order. */
+    if ((cmd == PROC_INFO) || (cmd == USE_AS_STDOUT) || (cmd == USE_AS_STDERR) ||
+        (cmd == USE_AS_STDIN))
+        if ((HYD_PMCD_pmi_proxy_params.segment_list != NULL) &&
+            (HYD_PMCD_pmi_proxy_params.out_upstream_fd != -1) &&
+            (HYD_PMCD_pmi_proxy_params.err_upstream_fd != -1))
+            if ((HYD_PMCD_pmi_proxy_params.segment_list->start_pid != 0) ||
+                (HYD_PMCD_pmi_proxy_params.in_upstream_fd != -1))
+                HYD_PMCD_pmi_proxy_launch_procs();
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -167,7 +183,6 @@ HYD_Status HYD_PMCD_pmi_proxy_stdin_cb(int fd, HYD_Event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    /* FIXME: HYD_PMCD_pmi_proxy_params.in_upstream_fd needs to be passed in */
     status = HYDU_sock_stdin_cb(HYD_PMCD_pmi_proxy_params.in, events,
                                 HYD_PMCD_pmi_proxy_params.in_upstream_fd,
                                 HYD_PMCD_pmi_proxy_params.stdin_tmp_buf,

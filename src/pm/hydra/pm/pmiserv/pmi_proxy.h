@@ -24,6 +24,7 @@ struct HYD_PMCD_pmi_proxy_params {
     int proxy_port;
     HYD_PMCD_pmi_proxy_type proxy_type;
     char *wdir;
+    char *pmi_port_str;
     HYD_Binding binding;
     char *user_bind_map;
 
@@ -56,7 +57,6 @@ struct HYD_PMCD_pmi_proxy_params {
 };
 
 extern struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
-extern int HYD_PMCD_pmi_proxy_listenfd;
 
 /* utils */
 HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv);
@@ -66,7 +66,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void);
 void HYD_PMCD_pmi_proxy_killjob(void);
 
 /* callback */
-HYD_Status HYD_PMCD_pmi_proxy_listen_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_PMCD_pmi_proxy_control_connect_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_PMCD_pmi_proxy_control_cmd_cb(int fd, HYD_Event_t events, void *userp);
 HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events, void *userp);
 HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events, void *userp);
 HYD_Status HYD_PMCD_pmi_proxy_stdin_cb(int fd, HYD_Event_t events, void *userp);

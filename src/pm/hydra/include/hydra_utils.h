@@ -172,7 +172,7 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
 HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
                                int *in, int *out, int *err, int *pid, int core);
 HYD_Status HYDU_fork_and_exit(int core);
-HYD_Status HYDU_create_thread(void *(func)(void *), void *args,
+HYD_Status HYDU_create_thread(void (func)(void *), void *args,
                               struct HYD_Thread_context *ctxt);
 HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt);
 

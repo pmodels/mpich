@@ -10,7 +10,6 @@
 #include "pmi_proxy.h"
 
 struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
-int HYD_PMCD_pmi_proxy_listenfd;
 
 static HYD_Status wait_for_procs_to_finish(void)
 {
@@ -94,25 +93,19 @@ static HYD_Status wait_for_procs_to_finish(void)
 
 int main(int argc, char **argv)
 {
-    int i, ret_status;
+    int i, ret_status, listenfd;
     HYD_Status status = HYD_SUCCESS;
 
     status = HYD_PMCD_pmi_proxy_get_params(argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
-    if(HYD_PMCD_pmi_proxy_params.proxy_type != HYD_PMCD_PMI_PROXY_PERSISTENT_FG) {
-        /* Spawn a persistent daemon proxy and exit parent proxy */
-        status = HYDU_fork_and_exit(-1);
-        HYDU_ERR_POP(status, "Error spawning persistent proxy\n");
-    }
-
-    status = HYDU_sock_listen(&HYD_PMCD_pmi_proxy_listenfd, NULL,
+    status = HYDU_sock_listen(&listenfd, NULL,
                               (uint16_t *) & HYD_PMCD_pmi_proxy_params.proxy_port);
     HYDU_ERR_POP(status, "unable to listen on socket\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_register_fd(1, &HYD_PMCD_pmi_proxy_listenfd, HYD_STDOUT, NULL,
-                                 HYD_PMCD_pmi_proxy_listen_cb);
+    status = HYD_DMX_register_fd(1, &listenfd, HYD_STDOUT, NULL,
+                                 HYD_PMCD_pmi_proxy_control_connect_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* FIXME: We do not use the bootstrap server right now, as the
@@ -141,10 +134,16 @@ int main(int argc, char **argv)
             ret_status |= HYD_PMCD_pmi_proxy_params.exit_status[i];
     }
     else {      /* Persistent mode */
+        if (HYD_PMCD_pmi_proxy_params.proxy_type != HYD_PMCD_PMI_PROXY_PERSISTENT_FG) {
+            /* Spawn a persistent daemon proxy and exit parent proxy */
+            status = HYDU_fork_and_exit(-1);
+            HYDU_ERR_POP(status, "Error spawning persistent proxy\n");
+        }
+
         do {
             /* Wait for the processes to finish. If there are no
-             * processes, we will just wait blocking for the work to
-             * arrive. */
+             * processes, we will just wait blocking for the next job
+             * to arrive. */
             status = wait_for_procs_to_finish();
             HYDU_ERR_POP(status, "error waiting for processes to finish\n");
 

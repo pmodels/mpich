@@ -33,7 +33,7 @@ struct HYD_PMCD_pmi_process {
      * process. This essentially kills any chance of PMI server
      * masquerading. */
     int fd;
-    struct HYD_PMCD_pmi_pg *pg;
+    struct HYD_PMCD_pmi_pg *pg; /* Back pointer to the group */
     struct HYD_PMCD_pmi_process *next;
 };
 

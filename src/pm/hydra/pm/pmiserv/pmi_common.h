@@ -17,4 +17,12 @@ enum HYD_PMCD_pmi_proxy_cmds {
     USE_AS_STDIN
 };
 
+/* FIXME: This structure only provides the PMI_ID, as we currently
+ * only support single job environments with no dynamic
+ * processes. When there are multiple jobs or dynamic processes, we
+ * will need a process group ID as well. */
+struct HYD_PMCD_pmi_header {
+    int pmi_id;
+};
+
 #endif /* PMI_COMMON_H_INCLUDED */

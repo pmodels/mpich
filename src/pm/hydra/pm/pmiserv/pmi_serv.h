@@ -9,9 +9,8 @@
 
 #include "pmi_common.h"
 
-extern int HYD_PMCD_pmi_serv_listenfd;
-
-HYD_Status HYD_PMCD_pmi_serv_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_PMCD_pmi_connect_cb(int fd, HYD_Event_t events, void *userp);
+HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp);
 HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp);
 HYD_Status HYD_PMCD_pmi_serv_cleanup(void);
 void HYD_PMCD_pmi_serv_signal_cb(int signal);

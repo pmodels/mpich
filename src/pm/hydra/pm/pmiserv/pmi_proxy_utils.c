@@ -19,6 +19,7 @@ static HYD_Status init_params()
     HYD_PMCD_pmi_proxy_params.proxy_port = -1;
     HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_UNSET;
     HYD_PMCD_pmi_proxy_params.wdir = NULL;
+    HYD_PMCD_pmi_proxy_params.pmi_port_str = NULL;
     HYD_PMCD_pmi_proxy_params.binding = HYD_BIND_UNSET;
     HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
 
@@ -83,6 +84,13 @@ static HYD_Status parse_params(char **t_argv)
         if (!strcmp(*argv, "--wdir")) {
             argv++;
             HYD_PMCD_pmi_proxy_params.wdir = HYDU_strdup(*argv);
+            continue;
+        }
+
+        /* PMI port string */
+        if (!strcmp(*argv, "--pmi-port-str")) {
+            argv++;
+            HYD_PMCD_pmi_proxy_params.pmi_port_str = HYDU_strdup(*argv);
             continue;
         }
 
@@ -290,6 +298,9 @@ HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
     if (HYD_PMCD_pmi_proxy_params.wdir)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.wdir);
 
+    if (HYD_PMCD_pmi_proxy_params.pmi_port_str)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.pmi_port_str);
+
     if (HYD_PMCD_pmi_proxy_params.user_bind_map)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.user_bind_map);
 
@@ -433,6 +444,15 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
     status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.user_bind_map);
     HYDU_ERR_POP(status, "unable to initialize process binding\n");
+
+    /* Set the PMI port string to connect to. We currently just use
+     * the global PMI port. */
+    str = HYDU_strdup(HYD_PMCD_pmi_proxy_params.pmi_port_str);
+    status = HYDU_env_create(&env, "PMI_PORT", str);
+    HYDU_ERR_POP(status, "unable to create env\n");
+    HYDU_FREE(str);
+    status = HYDU_putenv(env);
+    HYDU_ERR_POP(status, "putenv failed\n");
 
     /* Spawn the processes */
     process_id = 0;
