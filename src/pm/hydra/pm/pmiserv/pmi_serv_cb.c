@@ -84,7 +84,7 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
     for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
         args[i] = strtok(NULL, " ");
         if (args[i] == NULL)
-                break;
+            break;
     }
 
     if (cmd == NULL) {
@@ -118,8 +118,7 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
         }
         if (!h->handler) {
             /* We don't understand the command */
-            HYDU_Error_printf("Unrecognized PMI command: %s; cleaning up processes\n",
-                              cmd);
+            HYDU_Error_printf("Unrecognized PMI command: %s; cleaning up processes\n", cmd);
 
             /* Cleanup all the processes and return. We don't need to
              * check the return status since we are anyway returning

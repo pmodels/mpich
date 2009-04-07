@@ -265,7 +265,7 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
         HYD_PMCD_pmi_proxy_params.proxy_port = atoi(*argv);
 
         ++argv;
-        if(*argv) {
+        if (*argv) {
             /* optional argument - don't fork and exit - useful for debugging */
             if (!strcmp(*argv, "--proxy-foreground")) {
                 HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_PERSISTENT_FG;

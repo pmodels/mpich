@@ -76,7 +76,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             continue;
         }
 
-        if(!strcmp(*argv, "--boot-foreground-proxies")) {
+        if (!strcmp(*argv, "--boot-foreground-proxies")) {
             HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
                                 HYD_INTERNAL_ERROR, "duplicate launch mode\n");
             handle.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
@@ -215,36 +215,45 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 
         /* The below options allow for "--foo=x" form of argument,
          * instead of "--foo x" for convenience. */
+        for (i = 0; i < 4; i++)
+            str[i] = NULL;
+
         status = HYDU_strsplit(*argv, &str[0], &str[1], '=');
         HYDU_ERR_POP(status, "string break returned error\n");
 
         if (!strcmp(str[0], "--bootstrap")) {
             if (!str[1]) {
+                /* Argument could be of the form "--foo x" */
                 INCREMENT_ARGV(status);
-                str[1] = *argv;
+                str[1] = HYDU_strdup(*argv);
             }
+
             HYDU_ERR_CHKANDJUMP(status, handle.bootstrap, HYD_INTERNAL_ERROR,
                                 "duplicate bootstrap server\n");
-            handle.bootstrap = HYDU_strdup(str[1]);
+            handle.bootstrap = str[1];
+            HYDU_FREE(str[0]);
             continue;
         }
-
-        if (!strcmp(str[0], "--css")) {
+        else if (!strcmp(str[0], "--css")) {
             if (!str[1]) {
+                /* Argument could be of the form "--foo x" */
                 INCREMENT_ARGV(status);
-                str[1] = *argv;
+                str[1] = HYDU_strdup(*argv);
             }
+
             HYDU_ERR_CHKANDJUMP(status, handle.css, HYD_INTERNAL_ERROR,
                                 "duplicate communication sub-system\n");
-            handle.css = HYDU_strdup(str[1]);
+            handle.css = str[1];
+            HYDU_FREE(str[0]);
             continue;
         }
-
-        if (!strcmp(str[0], "--binding")) {
+        else if (!strcmp(str[0], "--binding")) {
             if (!str[1]) {
+                /* Argument could be of the form "--foo x" */
                 INCREMENT_ARGV(status);
-                str[1] = *argv;
+                str[1] = HYDU_strdup(*argv);
             }
+
             HYDU_ERR_CHKANDJUMP(status, handle.binding != HYD_BIND_UNSET,
                                 HYD_INTERNAL_ERROR, "duplicate binding\n");
             if (!strcmp(str[1], "none"))
@@ -263,23 +272,38 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
                 if (!strcmp(str[2], "user")) {
                     handle.binding = HYD_BIND_USER;
                     if (str[3])
-                        handle.user_bind_map = HYDU_strdup(str[3]);
+                        handle.user_bind_map = str[3];
+                    HYDU_FREE(str[2]);
                 }
             }
-
+            HYDU_FREE(str[0]);
+            HYDU_FREE(str[1]);
             continue;
         }
-
-        if (!strcmp(str[0], "--proxy-port")) {
+        else if (!strcmp(str[0], "--proxy-port")) {
             if (!str[1]) {
+                /* Argument could be of the form "--foo x" */
                 INCREMENT_ARGV(status);
-                str[1] = *argv;
+                str[1] = HYDU_strdup(*argv);
             }
+
             HYDU_ERR_CHKANDJUMP(status, handle.proxy_port != -1, HYD_INTERNAL_ERROR,
                                 "duplicate proxy port\n");
             handle.proxy_port = atoi(str[1]);
+            HYDU_FREE(str[0]);
+            HYDU_FREE(str[1]);
             continue;
         }
+        else {
+            /* Not a recognized argument of the form --foo=x OR --foo x */
+            HYDU_FREE(str[0]);
+            if (str[1])
+                HYDU_FREE(str[1]);
+        }
+
+        /* Prevent strings from being free'd twice */
+        for (i = 0; i < 4; i++)
+            str[i] = NULL;
 
         if (*argv[0] == '-')
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized argument\n");
@@ -348,8 +372,8 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         handle.launch_mode = HYD_LAUNCH_RUNTIME;
 
     tmp = getenv("HYDRA_BOOT_FOREGROUND_PROXIES");
-    if(handle.launch_mode == HYD_LAUNCH_UNSET && tmp) {
-        if(atoi(tmp) == 1) {
+    if (handle.launch_mode == HYD_LAUNCH_UNSET && tmp) {
+        if (atoi(tmp) == 1) {
             handle.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
         }
     }
@@ -419,12 +443,12 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     }
 
   fn_exit:
-    for (i = 0; i < 4; i++)
-        if (str[i])
-            HYDU_FREE(str[i]);
     HYDU_FUNC_EXIT();
     return status;
 
   fn_fail:
+    for (i = 0; i < 4; i++)
+        if (str[i])
+            HYDU_FREE(str[i]);
     goto fn_exit;
 }

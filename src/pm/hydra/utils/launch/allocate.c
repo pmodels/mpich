@@ -164,7 +164,8 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
     HYDU_FUNC_ENTER();
 
     if (*partition_list == NULL) {
-        HYDU_alloc_partition(partition_list);
+        status = HYDU_alloc_partition(partition_list);
+        HYDU_ERR_POP(status, "Unable to alloc partition\n");
         (*partition_list)->segment_list = segment;
         (*partition_list)->name = HYDU_strdup(name);
         (*partition_list)->total_proc_count += segment->proc_count;
@@ -185,7 +186,8 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
                 break;
             }
             else if (partition->next == NULL) {
-                HYDU_alloc_partition(&partition->next);
+                status = HYDU_alloc_partition(&partition->next);
+                HYDU_ERR_POP(status, "Unable to alloc partition\n");
                 partition->next->segment_list = segment;
                 partition->next->name = HYDU_strdup(name);
                 partition->next->total_proc_count += segment->proc_count;
@@ -197,8 +199,11 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
         }
     }
 
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -378,7 +383,8 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
             /* Try to find an existing partition with this name and
              * add this segment in. If there is no existing partition
              * with this name, we create a new one. */
-            HYDU_alloc_partition_segment(&segment);
+            status = HYDU_alloc_partition_segment(&segment);
+            HYDU_ERR_POP(status, "Unable to allocate partition segment\n");
             segment->start_pid = total_count;
             segment->proc_count = num_procs;
             status = HYDU_merge_partition_segment(hostname, segment, partition_list);
@@ -388,6 +394,7 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
 
             /* Check for the remaining parameters */
             arg = 1;
+            str[0] = str[1] = NULL;
             while (arg_list[arg]) {
                 status = HYDU_strsplit(arg_list[arg], &str[0], &str[1], '=');
                 HYDU_ERR_POP(status, "unable to split string\n");
@@ -397,21 +404,27 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
                                                           partition_list);
                     HYDU_ERR_POP(status, "merge partition mapping failed\n");
                 }
-
+                if (str[0])
+                    HYDU_FREE(str[0]);
+                if (str[1])
+                    HYDU_FREE(str[1]);
+                str[0] = str[1] = NULL;
                 arg++;
             }
+            HYDU_free_strlist(arg_list);
+            HYDU_FREE(arg_list);
         }
 
         fclose(fp);
     }
 
   fn_exit:
-    for (i = 0; i < 2; i++)
-        if (str[i])
-            HYDU_FREE(str[i]);
     HYDU_FUNC_EXIT();
     return status;
 
   fn_fail:
+    for (i = 0; i < 2; i++)
+        if (str[i])
+            HYDU_FREE(str[i]);
     goto fn_exit;
 }

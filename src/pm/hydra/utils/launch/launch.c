@@ -30,30 +30,30 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
     tpid = fork();
     if (tpid == 0) {    /* Child process */
         close(1);
-        if(out) {
+        if (out) {
             close(outpipe[0]);
             if (dup2(outpipe[1], 1) < 0)
                 HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                 HYDU_strerror(errno));
+                                     HYDU_strerror(errno));
         }
 
         close(2);
-        if(err) {
+        if (err) {
             close(errpipe[0]);
             if (dup2(errpipe[1], 2) < 0)
                 HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                 HYDU_strerror(errno));
+                                     HYDU_strerror(errno));
         }
 
         close(0);
-        if(in) {
+        if (in) {
             close(inpipe[1]);
             if (dup2(inpipe[0], 0) < 0)
                 HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                 HYDU_strerror(errno));
+                                     HYDU_strerror(errno));
         }
 
-        if(env_list) {
+        if (env_list) {
             status = HYDU_putenv_list(env_list);
             HYDU_ERR_POP(status, "unable to putenv\n");
         }
@@ -65,13 +65,13 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
 
         if (execvp(client_arg[0], client_arg) < 0) {
             HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "execvp error (%s)\n",
-                                    HYDU_strerror(errno));
+                                 HYDU_strerror(errno));
         }
     }
     else {      /* Parent process */
-        if(out)
+        if (out)
             close(outpipe[1]);
-        if(err)
+        if (err)
             close(errpipe[1]);
         if (in) {
             close(inpipe[0]);
@@ -126,7 +126,7 @@ HYD_Status HYDU_fork_and_exit(int core)
     goto fn_exit;
 }
 
-HYD_Status HYDU_create_thread(void (func)(void *), void *args,
+HYD_Status HYDU_create_thread(void (func) (void *), void *args,
                               struct HYD_Thread_context *ctxt)
 {
     int ret;

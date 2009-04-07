@@ -47,7 +47,8 @@ static void usage(void)
     printf("\t--css                            [Communication sub-system to use]\n");
     printf("\t--binding                        [Process binding]");
     printf("\t--boot-proxies                   [Boot proxies to run in persistent mode]\n");
-    printf("\t--boot-foreground-proxies        [Boot foreground proxies to run in persistent mode]\n");
+    printf
+        ("\t--boot-foreground-proxies        [Boot foreground proxies to run in persistent mode]\n");
     printf("\t--shutdown-proxies               [Shutdown persistent mode proxies]\n");
     printf("\t--use-persistent                 [Use persistent mode proxies to launch]\n");
 }
@@ -106,6 +107,13 @@ int main(int argc, char **argv)
      * PM implementation that launches separate "new" proxies on a
      * different port and kills the original proxies using them. */
     if (handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
+        /* Call finalize functions for lower layers to cleanup their resources */
+        status = HYD_CSI_finalize();
+        HYDU_ERR_POP(status, "control system error on finalize\n");
+
+        /* Free the mpiexec params */
+        HYD_LCHU_free_params();
+
         exit_status = 0;
         goto fn_exit;
     }

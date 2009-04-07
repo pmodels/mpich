@@ -167,17 +167,19 @@ int HYDU_strlist_lastidx(char **strlist)
     return i;
 }
 
-
 char **HYDU_str_to_strlist(char *str)
 {
     int argc = 0;
-    char **strlist;
+    char **strlist = NULL;
     char *p, *r;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(strlist, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
+    HYDU_CALLOC(strlist, char **, HYD_NUM_TMP_STRINGS, sizeof(char *), status);
+    if (!strlist)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "Unable to allocate mem for strlist\n");
 
     p = str;
     while (*p) {

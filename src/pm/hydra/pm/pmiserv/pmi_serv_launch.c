@@ -144,7 +144,7 @@ static HYD_Status fill_in_proxy_args(void)
 
         partition->proxy_args[arg++] = HYDU_strdup("--one-pass-count");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.one_pass_count);
- 
+
         partition->proxy_args[arg++] = HYDU_strdup("--wdir");
         partition->proxy_args[arg++] = HYDU_strdup(handle.wdir);
 
@@ -266,7 +266,7 @@ static HYD_Status boot_proxies(int launch_in_foreground)
         partition->proxy_args[arg++] = HYDU_strdup("--persistent-mode");
         partition->proxy_args[arg++] = HYDU_strdup("--proxy-port");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
-        if(launch_in_foreground) {
+        if (launch_in_foreground) {
             partition->proxy_args[arg++] = HYDU_strdup("--proxy-foreground");
         }
         partition->proxy_args[arg++] = NULL;
@@ -301,7 +301,7 @@ static HYD_Status shutdown_proxies(void)
 
     for (partition = handle.partition_list; partition; partition = partition->next) {
         status = HYDU_sock_connect(partition->sa, &fd);
-        if(status != HYD_SUCCESS){
+        if (status != HYD_SUCCESS) {
             /* Don't abort. Try to shutdown as many proxies as possible */
             HYDU_Error_printf("Unable to connect to proxy at %s\n", partition->name);
             continue;
@@ -325,7 +325,7 @@ static HYD_Status launch_procs_in_persistent_mode(void)
 {
     struct HYD_Partition *partition;
     int len, id;
-    struct HYD_Thread_context *thread_context;
+    struct HYD_Thread_context *thread_context = NULL;
     HYD_Status status = HYD_SUCCESS;
 
     status = fill_in_proxy_args();
@@ -342,8 +342,11 @@ static HYD_Status launch_procs_in_persistent_mode(void)
          partition = partition->next)
         len++;
 
-    HYDU_MALLOC(thread_context, struct HYD_Thread_context *,
-                len * sizeof(struct HYD_Thread_context), status);
+    HYDU_CALLOC(thread_context, struct HYD_Thread_context *, len,
+                sizeof(struct HYD_Thread_context), status);
+    if (!thread_context)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "Unable to allocate memory for thread context\n");
 
     id = 0;
     for (partition = handle.partition_list; partition && partition->exec_list;
@@ -365,6 +368,8 @@ static HYD_Status launch_procs_in_persistent_mode(void)
     }
 
   fn_exit:
+    if (thread_context)
+        HYDU_FREE(thread_context);
     return status;
 
   fn_fail:
@@ -420,8 +425,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_register_fd(1, &listenfd, HYD_STDOUT, NULL,
-                                 HYD_PMCD_pmi_connect_cb);
+    status = HYD_DMX_register_fd(1, &listenfd, HYD_STDOUT, NULL, HYD_PMCD_pmi_connect_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */
@@ -443,8 +447,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
 
     /* For each partition, get the appropriate sockaddr to connect to */
     for (partition = handle.partition_list; partition; partition = partition->next) {
-        status = HYDU_sock_gethostbyname(partition->name, &partition->sa,
-                                         handle.proxy_port);
+        status = HYDU_sock_gethostbyname(partition->name, &partition->sa, handle.proxy_port);
         HYDU_ERR_POP(status, "unable to get sockaddr information\n");
     }
 
