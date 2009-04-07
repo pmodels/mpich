@@ -51,8 +51,15 @@ The host file can also be specified as follows:
    shakey:2
 
 In this case, the first 2 processes are scheduled on "donner", the
-next 3 on "foo" and the last 2 on "shakey".
+next 3 on "foo" and the last 2 on "shakey". Comments in the
+host file start with a "#" character.
 
+ $ cat hosts
+
+   # This is a sample host file
+   donner:2     # The first 2 procs are scheduled to run here
+   foo:3        # The next 3 procs run on this host
+   shakey:2     # The last 2 procs run on this host
 
 Environment settings
 --------------------

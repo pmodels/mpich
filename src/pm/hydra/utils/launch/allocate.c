@@ -374,7 +374,23 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
 
         total_count = 0;
         while (fgets(line, HYD_TMP_STRLEN, fp)) {
-            arg_list = HYDU_str_to_strlist(line);
+            char *linep = NULL;
+
+            linep = line;
+
+            strtok(linep, "#");
+
+            while (isspace(*linep))
+                linep++;
+
+            /* Ignore blank lines & comments */
+            if ((*linep == '#') || (*linep == '\0'))
+                continue;
+
+            arg_list = HYDU_str_to_strlist(linep);
+            if (!arg_list)
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "Unable to convert host file entry to strlist\n");
 
             hostname = strtok(arg_list[0], ":");
             procs = strtok(NULL, ":");
