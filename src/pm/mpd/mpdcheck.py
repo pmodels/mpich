@@ -273,7 +273,7 @@ if __name__ == '__main__':    # so I can be imported by pydoc
             having correctly configured name resolvers, or by your IP 
             address not existing in resolution services.
             If you run DNS, you may wish to make sure that your
-            DNS server has the correct forward A set up for yout machine's
+            DNS server has the correct forward A set up for your machine's
             hostname. If you are not using DNS and are only using hosts
             files, please check that a line similar to the one below exists
             in your /etc/hosts file:
@@ -320,7 +320,7 @@ if __name__ == '__main__':    # so I can be imported by pydoc
             having correctly configured name resolvers, or by your IP 
             address not existing in resolution services.
             If you run DNS, please check and make sure that your
-            DNS server has the correct forward A record set up for yout
+            DNS server has the correct forward A record set up for your
             machine's hostname. If you are not using DNS and are only using
             hosts files, please check that a line similar to the one below
             exists in your /etc/hosts file:
