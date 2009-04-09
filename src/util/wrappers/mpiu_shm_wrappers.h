@@ -132,12 +132,16 @@ typedef MPIU_SHMW_LGhnd_t * MPIU_SHMW_Hnd_t;
 /* Returns 0 on success, -1 on error */
 static inline int MPIU_SHMW_Lhnd_close(MPIU_SHMW_Hnd_t hnd)
 {
-    if(close(MPIU_SHMW_Lhnd_get(hnd)) == 0){
-        MPIU_SHMW_Lhnd_set(hnd, MPIU_SHMW_LHND_INIT_VAL);
-    }
-    else{
-        /* close() failed */
-        return -1;
+    MPIU_SHMW_Lhnd_t lhnd = MPIU_SHMW_LHND_INVALID;
+    lhnd = MPIU_SHMW_Lhnd_get(hnd);
+    if(lhnd != MPIU_SHMW_LHND_INVALID) {
+        if(close(lhnd) == 0){
+            MPIU_SHMW_Lhnd_set(hnd, MPIU_SHMW_LHND_INIT_VAL);
+        }
+        else{
+            /* close() failed */
+            return -1;
+        }
     }
     return 0;
 }
