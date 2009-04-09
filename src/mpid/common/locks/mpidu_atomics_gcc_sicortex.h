@@ -16,12 +16,32 @@
 typedef struct { volatile int v;  } MPIDU_Atomic_t;
 typedef struct { int * volatile v; } MPIDU_Atomic_ptr_t;
 
+static inline int MPIDU_Atomic_load(MPIDU_Atomic_t *ptr)
+{
+    return ptr->v;
+}
+
+static inline void MPIDU_Atomic_store(MPIDU_Atomic_t *ptr, int val)
+{
+    ptr->v = val;
+}
+
+static inline void *MPIDU_Atomic_load_ptr(MPIDU_Atomic_ptr_t *ptr)
+{
+    return ptr->v;
+}
+
+static inline void MPIDU_Atomic_store_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
+{
+    ptr->v = val;
+}
+
 #include <stdint.h>
 
 /* ICE9 rev A1 chips have a low-frequency bug that causes LL to
    fail. The workaround is to do the LL twice to make sure the data
    is in L1
-  
+
    very few systems are affected
 
    FIXME We should either remove the workaround entirely or make it
@@ -34,7 +54,7 @@ typedef struct { int * volatile v; } MPIDU_Atomic_ptr_t;
 
    relevant excerpt:
        I - A signed 16-bit constant (for arithmetic instructions).
-       J - Integer zero. 
+       J - Integer zero.
 
    Other inline asm knowledge worth remembering:
        r - a general register operand is allowed
@@ -316,7 +336,7 @@ static __inline__ long int shmemi_cswap_8(volatile long int * v, long int expect
 
 static __inline__ void MPIDU_Atomic_add(MPIDU_Atomic_t *ptr, int val)
 {
-    shmemi_fetch_add_4(ptr, val);
+    shmemi_fetch_add_4(&ptr->v, val);
 }
 
 static __inline__ void *MPIDU_Atomic_cas_ptr(MPIDU_Atomic_ptr_t *ptr, void *oldv, void *newv)
@@ -347,7 +367,7 @@ static __inline__ int MPIDU_Atomic_decr_and_test(MPIDU_Atomic_t *ptr)
 
 static __inline__ int MPIDU_Atomic_fetch_and_add(MPIDU_Atomic_t *ptr, int val)
 {
-    return(shmemi_fetch_add(&ptr->v, val));
+    return(shmemi_fetch_add_4(&ptr->v, val));
 }
 
 static __inline__ int MPIDU_Atomic_fetch_and_decr(MPIDU_Atomic_t *ptr)
