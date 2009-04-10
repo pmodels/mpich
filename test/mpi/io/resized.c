@@ -82,9 +82,25 @@ int main(int argc, char **argv)
     MPI_File_close(&fh);
 
     
+    /* read back file view with resized type  and verify */
+
+    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+
+    mpi_errno = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    if (mpi_errno != MPI_SUCCESS) errs++;
+
+    for (i=0; i<4; i++) newbuf[i] = 100;
+    MPI_File_read(fh, newbuf, 2, MPI_INT, MPI_STATUS_IGNORE);
+    if ((newbuf[0] != 10) || (newbuf[1] != 20) || (newbuf[2] !=100) || (newbuf[3] != 100)) {
+   errs++;
+   fprintf(stderr, "newbuf[0] is %d, should be 10,\n newbuf[1] is %d, should be 20\n newbuf[2] is %d, should be 100,\n newbuf[3] is %d, should be 100,\n", newbuf[0], newbuf[1], newbuf[2], newbuf[3]);
+    }
+
+    MPI_File_close(&fh);
+
     /* read file back and verify */
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_DELETE_ON_CLOSE | 
+    MPI_File_open(MPI_COMM_WORLD, filename, 
 		  MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
 
     MPI_File_get_size(fh, &size);
