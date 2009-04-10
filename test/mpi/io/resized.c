@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 
     MPI_File_delete(filename, MPI_INFO_NULL);
 
-    /* create a resized type comprising an integer with an lb at 0 and extent = 3*sizeof(int) */
+    /* create a resized type comprising an integer with an lb at sizeof(int) and extent = 3*sizeof(int) */
     lb = sizeof(int);
     extent = 3*sizeof(int);
     MPI_Type_create_resized(MPI_INT, lb, extent, &newtype);   
