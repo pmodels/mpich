@@ -30,7 +30,7 @@ static int MPIDI_CH3I_PMI_Abort(int exit_code, const char *error_msg);
 #define FUNCNAME MPID_Abort
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code, 
+void MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code, 
 	       const char *error_msg)
 {
     int rank;
@@ -94,9 +94,7 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code,
     /* ch3_abort should not return but if it does, exit here.  If it does,
        add the function exit code before calling the final exit.  */
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_ABORT);
-    MPIU_Exit(exit_code);
-    
-    return MPI_ERR_INTERN;
+    MPIU_Exit(exit_code);    
 }
 
 #ifdef MPIDI_DEV_IMPLEMENTS_ABORT

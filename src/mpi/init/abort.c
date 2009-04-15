@@ -115,10 +115,9 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     }
     /* FIXME: This is not internationalized */
     MPIU_Snprintf(abort_str, 100, "application called MPI_Abort(%s, %d) - process %d", comm_name, errorcode, comm_ptr->rank);
-    mpi_errno = MPID_Abort( comm_ptr, mpi_errno, errorcode, abort_str );
+    MPID_Abort( comm_ptr, mpi_errno, errorcode, abort_str );
     /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-    /* MPID_Abort() should never return MPI_SUCCESS */
+    /* MPID_Abort() should never return */
     MPIU_Assert(0);
     /* --END ERROR HANDLING-- */
     /* ... end of body of routine ... */
