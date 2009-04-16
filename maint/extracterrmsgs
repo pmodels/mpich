@@ -1,4 +1,4 @@
-#! /usr/bin/env perl 
+#! /usr/bin/env perl
 # (Tested with -w; 10/5/04)
 # 
 # Find the parse.sub routine.
