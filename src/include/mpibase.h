@@ -36,6 +36,6 @@ int MPIU_Msg_printf( const char *str, ... ) ATTRIBUTE((format(printf,1,2)));
 int MPIU_Error_printf( const char *str, ... ) ATTRIBUTE((format(printf,1,2)));
 int MPIU_Internal_error_printf( const char *str, ... ) ATTRIBUTE((format(printf,1,2)));
 int MPIU_Internal_sys_error_printf( const char *, int, const char *str, ... ) ATTRIBUTE((format(printf,3,4)));
-void MPIU_Exit( int ) ATTRIBUTE((noreturn));
+void MPIU_Exit( int );
 
 #endif

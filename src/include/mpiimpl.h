@@ -2674,7 +2674,7 @@ int MPID_Finalize(void);
 /* FIXME: the 4th argument isn't part of the original design and isn't documented */
 
 # if 0
-int MPID_Abort( MPID_Comm *comm, int mpi_errno, int exit_code, const char *error_msg ) ATTRIBUTE((noreturn));
+int MPID_Abort( MPID_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
 #endif
 /* FIXME: Should we turn off this flag and only declare MPID_Abort in mpiutil.h? */
 /* We want to also declare MPID_Abort in mpiutil.h if mpiimpl.h is not used */

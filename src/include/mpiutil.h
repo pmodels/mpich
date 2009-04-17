@@ -9,7 +9,7 @@
 #ifndef HAS_MPID_ABORT_DECL
 /* FIXME: 4th arg is undocumented and bogus */
 struct MPID_Comm;
-void MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char *error_msg ) ATTRIBUTE((noreturn));
+int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
 #endif
 
 /*
