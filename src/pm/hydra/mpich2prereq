@@ -2,9 +2,16 @@
 # Check that we are using the simple PMI implementation
 # (Selecting multiple PM's may require incompatible PMI implementations 
 # (e.g., gforker and SMPD).
-if [ -z "$PM_REQUIRES_PMI" ] ; then
-    PM_REQUIRES_PMI=simple
-elif [ "$PM_REQUIRES_PMI" != "simple" ] ; then
-    echo "hydra requires the simple PMI implementation; $PM_REQUIRES_PMI has already been selected"
+
+
+if test -z "$PM_REQUIRES_PMI" ; then
+    if test "$with_pmi" = "simple2" -o "$with_pmi" = "simple" ; then
+        PM_REQUIRES_PMI=$with_pmi
+    else
+	PM_REQUIRES_PMI=simple
+    fi
+elif test "$PM_REQUIRES_PMI" != "simple" -a "$PM_REQUIRES_PMI" != "simple2" ; then
+    echo "hydra requires the simple or simple2 PMI implementation; $PM_REQUIRES_PMI has already been selected"
     exit 1
 fi
+

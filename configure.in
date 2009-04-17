@@ -6401,6 +6401,7 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
           src/mpid/common/datatype/dataloop/Makefile \
           src/pm/Makefile \
           src/pmi/Makefile \
+          src/pmi/${pmi_name}/Makefile \
 	  src/nameserv/Makefile \
 	  src/nameserv/file/Makefile \
 	  src/nameserv/mpd/Makefile \
