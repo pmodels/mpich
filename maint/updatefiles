@@ -523,7 +523,7 @@ if [ $do_build_configure = yes ] ; then
 	    rm -f .atmp
 	    date > maint/conftimestamp
 	else
-	    # We can't us a status check here because find will always
+	    # We can't use a status check here because find will always
 	    # report success, even if there are no newer files in confdb
 	    files=`find confdb -newer  maint/conftimestamp 2>&1` 
 	    if [ -n "$files" ] ; then
