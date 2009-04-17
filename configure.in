@@ -2881,10 +2881,11 @@ on all link lines (consider adding it to LDFLAGS)])
     # gets turned into the value of prefix
     ##ENVVAR: MPICH_DEBUGLIBNAME - Set this environment variable to 
     ## override the default name of the debugger support library.
-    ## The default name is libtvmpich2.so .
+    ## The default name is libtvmpich2.$SHLIB_EXT (e.g., libtvmpich2.so for
+    ## most Unix versions, libtvmpich2.dylib for Mac OSX).
     ##ENVVAR END:
     if test -z "$MPICH_DEBUGLIBNAME" ; then
-        DEBUGLIBNAME=libtvmpich2.so
+        DEBUGLIBNAME=libtvmpich2.$SHLIB_EXT
     else
         DEBUGLIBNAME=$MPICH_DEBUGLIBNAME
     fi
