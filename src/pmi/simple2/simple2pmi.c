@@ -93,10 +93,10 @@ static int GetResponse(const char request[], const char expectedCmd[], int check
 /* PMI API Routines */
 /* ------------------------------------------------------------------------- */
 #undef FUNCNAME
-#define FUNCNAME PMI2_Init
+#define FUNCNAME PMI_Init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
+int PMI_Init(int *spawned, int *size, int *rank, int *appnum)
 {
     int mpi_errno = MPI_SUCCESS;
     char *p;
@@ -250,10 +250,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_Finalize
+#define FUNCNAME PMI_Finalize
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Finalize(void)
+int PMI_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
@@ -278,16 +278,16 @@ fn_fail:
     goto fn_exit;
 }
 
-int PMI2_Initialized(void)
+int PMI_Initialized(void)
 {
     /* Turn this into a logical value (1 or 0) .  This allows us
-       to use PMI2_initialized to distinguish between initialized with
+       to use PMI_initialized to distinguish between initialized with
        an PMI service (e.g., via mpiexec) and the singleton init, 
        which has no PMI service */
     return PMI_initialized != 0;
 }
 
-int PMI2_Abort( int flag, const char msg[] )
+int PMI_Abort( int flag, const char msg[] )
 {
     PMIU_printf(1, "aborting job:\n%s\n", msg);
 
@@ -298,7 +298,7 @@ int PMI2_Abort( int flag, const char msg[] )
     return MPI_SUCCESS;
 }
 
-int PMI2_Job_Spawn( int count, const char * cmds[], const char ** argvs[],
+int PMI_Job_Spawn( int count, const char * cmds[], const char ** argvs[],
                    const int maxprocs[], 
                    const int info_keyval_sizes[],
                    const MPID_Info *info_keyval_vectors[],
@@ -491,10 +491,10 @@ int PMI2_Job_Spawn( int count, const char * cmds[], const char ** argvs[],
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_Job_GetId
+#define FUNCNAME PMI_Job_GetId
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Job_GetId(char jobid[], int jobid_size)
+int PMI_Job_GetId(char jobid[], int jobid_size)
 {
     int mpi_errno = MPI_SUCCESS;
     int found;
@@ -523,10 +523,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_Job_Connect
+#define FUNCNAME PMI_Job_Connect
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Job_Connect(const char jobid[], PMI_Connect_comm_t *conn)
+int PMI_Job_Connect(const char jobid[], PMI_Connect_comm_t *conn)
 {
     int mpi_errno = MPI_SUCCESS;
     PMI_Command cmd = {0};
@@ -555,10 +555,10 @@ int PMI2_Job_Connect(const char jobid[], PMI_Connect_comm_t *conn)
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_Job_Disconnect
+#define FUNCNAME PMI_Job_Disconnect
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Job_Disconnect(const char jobid[])
+int PMI_Job_Disconnect(const char jobid[])
 {
     int mpi_errno = MPI_SUCCESS;
     PMI_Command cmd = {0};
@@ -578,10 +578,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_KVS_Put
+#define FUNCNAME PMI_KVS_Put
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_KVS_Put(const char key[], const char value[])
+int PMI_KVS_Put(const char key[], const char value[])
 {
     int mpi_errno = MPI_SUCCESS;
     PMI_Command cmd = {0};
@@ -600,10 +600,10 @@ fn_fail:
     goto fn_exit;
 }
 #undef FUNCNAME
-#define FUNCNAME PMI2_KVS_Fence
+#define FUNCNAME PMI_KVS_Fence
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_KVS_Fence(void)
+int PMI_KVS_Fence(void)
 {
     int mpi_errno = MPI_SUCCESS;
     PMI_Command cmd = {0};
@@ -623,10 +623,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_KVS_Get
+#define FUNCNAME PMI_KVS_Get
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_KVS_Get(const char *jobid, const char key[], char value [], int maxValue, int *valLen)
+int PMI_KVS_Get(const char *jobid, const char key[], char value [], int maxValue, int *valLen)
 {
     int mpi_errno = MPI_SUCCESS;
     int found, keyfound;
@@ -665,10 +665,10 @@ int PMI2_KVS_Get(const char *jobid, const char key[], char value [], int maxValu
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_Info_GetNodeAttr
+#define FUNCNAME PMI_Info_GetNodeAttr
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Info_GetNodeAttr(const char name[], char value[], int valuelen, int *flag, int waitfor)
+int PMI_Info_GetNodeAttr(const char name[], char value[], int valuelen, int *flag, int waitfor)
 {
     int mpi_errno = MPI_SUCCESS;
     int found;
@@ -703,10 +703,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_Info_PutNodeAttr
+#define FUNCNAME PMI_Info_PutNodeAttr
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Info_PutNodeAttr(const char name[], const char value[])
+int PMI_Info_PutNodeAttr(const char name[], const char value[])
 {
     int mpi_errno = MPI_SUCCESS;
     PMI_Command cmd = {0};
@@ -726,10 +726,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_Info_GetJobAttr
+#define FUNCNAME PMI_Info_GetJobAttr
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Info_GetJobAttr(const char name[], char value[], int valuelen, int *flag)
+int PMI_Info_GetJobAttr(const char name[], char value[], int valuelen, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     int found;
@@ -765,10 +765,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_Nameserv_publish
+#define FUNCNAME PMI_Nameserv_publish
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Nameserv_publish(const char service_name[], const MPID_Info *info_ptr, const char port[])
+int PMI_Nameserv_publish(const char service_name[], const MPID_Info *info_ptr, const char port[])
 {
 #if 0
     int mpi_errno = MPI_SUCCESS;
@@ -816,10 +816,10 @@ fn_fail:
 
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_Nameserv_lookup
+#define FUNCNAME PMI_Nameserv_lookup
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Nameserv_lookup(const char service_name[], const MPID_Info *info_ptr,
+int PMI_Nameserv_lookup(const char service_name[], const MPID_Info *info_ptr,
                         char port[], int portLen)
 {
 #if 0
@@ -837,10 +837,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME PMI2_Nameserv_unpublish
+#define FUNCNAME PMI_Nameserv_unpublish
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI2_Nameserv_unpublish(const char service_name[], 
+int PMI_Nameserv_unpublish(const char service_name[], 
                            const MPID_Info *info_ptr)
 {
 #if 0
