@@ -15,7 +15,7 @@ HYD_Handle handle;
 HYD_PMCD_pmi_pg_t *pg_list;
 
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
-struct HYD_PMCD_pmi_handle HYD_PMCD_pmi_v1_foo[] = {
+static struct HYD_PMCD_pmi_handle_fns pmi_v1_handle_fns_foo[] = {
     {"initack", HYD_PMCD_pmi_handle_v1_initack},
     {"get_maxes", HYD_PMCD_pmi_handle_v1_get_maxes},
     {"get_appnum", HYD_PMCD_pmi_handle_v1_get_appnum},
@@ -28,7 +28,12 @@ struct HYD_PMCD_pmi_handle HYD_PMCD_pmi_v1_foo[] = {
     {"\0", NULL}
 };
 
-struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v1 = HYD_PMCD_pmi_v1_foo;
+static struct HYD_PMCD_pmi_handle pmi_v1_foo = {
+    HYD_PMCD_pmi_handle_v1_parser,
+    pmi_v1_handle_fns_foo
+};
+
+struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v1 = &pmi_v1_foo;
 
 static HYD_Status add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd)
 {
@@ -76,6 +81,26 @@ static HYD_PMCD_pmi_process_t *find_process(int fd)
     }
 
     return process;
+}
+
+
+char *HYD_PMCD_pmi_handle_v1_parser(char *buf, char **args)
+{
+    char *cmd;
+    int i;
+
+    HYDU_FUNC_ENTER();
+
+    cmd = strtok(buf, " ");
+    for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
+        args[i] = strtok(NULL, " ");
+        if (args[i] == NULL)
+            break;
+    }
+
+    HYDU_FUNC_EXIT();
+
+    return cmd;
 }
 
 

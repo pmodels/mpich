@@ -7,6 +7,7 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "pmi_handle.h"
+#include "pmi_handle_common.h"
 #include "pmi_handle_v1.h"
 #include "pmci.h"
 #include "bsci.h"
@@ -14,7 +15,7 @@
 #include "pmi_serv.h"
 
 HYD_Handle handle;
-struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle_list;
+struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle;
 
 HYD_Status HYD_PMCD_pmi_connect_cb(int fd, HYD_Event_t events, void *userp)
 {
@@ -44,7 +45,7 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
     int linelen, i;
     char *buf = NULL, *cmd, *args[HYD_NUM_TMP_STRINGS];
     char *str1 = NULL, *str2 = NULL;
-    struct HYD_PMCD_pmi_handle *h;
+    struct HYD_PMCD_pmi_handle_fns *h;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -77,37 +78,41 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
         goto fn_exit;
     }
 
-    /* Check what command we got and call the appropriate function */
-    buf[linelen - 1] = 0;
+    /*
+     * FIXME: This is a big hack. We temporarily initialize to
+     * PMI-v1. If the incoming message is an "init", it will
+     * reinitialize the function pointers. If we get an unsolicited
+     * command, we just use the PMI-1 version for it.
+     *
+     * This part of the code should not know anything about PMI-1
+     * vs. PMI-2. But the simple PMI client-side code is so hacked up,
+     * that commands can arrive out-of-order and this is necessary.
+     */
+    if (HYD_PMCD_pmi_handle == NULL)
+        HYD_PMCD_pmi_handle = HYD_PMCD_pmi_v1;
 
-    cmd = strtok(buf, " ");
-    for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
-        args[i] = strtok(NULL, " ");
-        if (args[i] == NULL)
-            break;
-    }
+    /* Use the PMI version specific command parser to find what
+     * command we got and call the appropriate handler
+     * function. Before we get an "init", we are preinitialized to
+     * PMI-1, so we will use that parser even for PMI-2 for this one
+     * command. From the next command onward, we will use the PMI-2
+     * specific parser. */
+    buf[linelen - 1] = 0;
+    cmd = HYD_PMCD_pmi_handle->parser(buf, args);
 
     if (cmd == NULL) {
         status = HYD_SUCCESS;
     }
     else if (!strcmp("cmd=init", cmd)) {
         /* Init is generic to all PMI implementations */
-        status = HYD_PMCD_pmi_init(fd, args);
+        status = HYD_PMCD_pmi_handle_init(fd, args);
     }
     else {
         /* Search for the PMI command in our table */
         status = HYDU_strsplit(cmd, &str1, &str2, '=');
         HYDU_ERR_POP(status, "string split returned error\n");
 
-        /* If we did not get an init, fall back to PMI-v1 */
-        /* FIXME: This part of the code should not know anything about
-         * PMI-1 vs. PMI-2. But the simple PMI client-side code is so
-         * hacked up, that commands can arrive out-of-order and this
-         * is necessary. */
-        if (HYD_PMCD_pmi_handle_list == NULL)
-            HYD_PMCD_pmi_handle_list = HYD_PMCD_pmi_v1;
-
-        h = HYD_PMCD_pmi_handle_list;
+        h = HYD_PMCD_pmi_handle->handle_fns;
         while (h->handler) {
             if (!strcmp(str2, h->cmd)) {
                 status = h->handler(fd, args);

@@ -12,6 +12,7 @@
 extern struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v2;
 
 /* PMI handles */
+char *HYD_PMCD_pmi_handle_v2_parser(char *buf, char *args[]);
 HYD_Status HYD_PMCD_pmi_handle_v2_initack(int fd, char *args[]);
 HYD_Status HYD_PMCD_pmi_handle_v2_get_maxes(int fd, char *args[]);
 HYD_Status HYD_PMCD_pmi_handle_v2_get_appnum(int fd, char *args[]);

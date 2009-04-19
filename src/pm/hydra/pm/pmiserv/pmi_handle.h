@@ -49,17 +49,21 @@ struct HYD_PMCD_pmi_pg {
     struct HYD_PMCD_pmi_pg *next;
 };
 
-HYD_Status HYD_PMCD_pmi_create_pg(void);
-HYD_Status HYD_PMCD_pmi_init(int fd, char *args[]);
+HYD_Status HYD_PMCD_pmi_init(void);
 HYD_Status HYD_PMCD_pmi_finalize(void);
 
 extern HYD_PMCD_pmi_pg_t *pg_list;
 
-struct HYD_PMCD_pmi_handle {
+struct HYD_PMCD_pmi_handle_fns {
     char *cmd;
      HYD_Status(*handler) (int fd, char *args[]);
 };
 
-extern struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle_list;
+struct HYD_PMCD_pmi_handle {
+    char *(*parser) (char *buf, char *args[]);
+    struct HYD_PMCD_pmi_handle_fns *handle_fns;
+};
+
+extern struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle;
 
 #endif /* PMI_HANDLE_H_INCLUDED */

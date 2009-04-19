@@ -440,9 +440,8 @@ HYD_Status HYD_PMCI_launch_procs(void)
     HYDU_FREE(sport);
     HYDU_Debug("Process manager listening on PMI port %s\n", pmi_port_str);
 
-    /* Create a process group for the MPI processes in this
-     * comm_world */
-    status = HYD_PMCD_pmi_create_pg();
+    /* Initialize PMI */
+    status = HYD_PMCD_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
     /* For each partition, get the appropriate sockaddr to connect to */
