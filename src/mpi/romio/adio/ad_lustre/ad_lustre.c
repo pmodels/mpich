@@ -12,6 +12,7 @@
 
 struct ADIOI_Fns_struct ADIO_LUSTRE_operations = {
     ADIOI_LUSTRE_Open, /* Open */
+    ADIOI_GEN_OpenColl, /* OpenColl */
     ADIOI_LUSTRE_ReadContig, /* ReadContig */
     ADIOI_LUSTRE_WriteContig, /* WriteContig */
     ADIOI_GEN_ReadStridedColl, /* ReadStridedColl */
