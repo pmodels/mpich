@@ -60,7 +60,7 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
             /* A common user error is to pass the address of a 4-byte
 	       int when the address of a pointer (or an address-sized int)
 	       should have been used.  We can test for this specific
-	       case.  Note that this code assumes sizeof(MPI_Aint) is 
+	       case.  Note that this code assumes sizeof(MPIR_Pint) is 
 	       a power of 2. */
 	    if ((MPIR_Pint)attribute_val & (sizeof(MPIR_Pint)-1)) {
 		MPIU_ERR_SET(mpi_errno,MPI_ERR_ARG,"**attrnotptr");
@@ -194,10 +194,12 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	   the output value as the pointer to these, we need to dereference
 	   it here. */
 	if (*flag) {
+            /* Use the internal pointer-sized-int for systems (e.g., BG/P)
+ *             that define MPI_Aint as a different size that MPIR_Pint */
 	    if (outAttrType == MPIR_ATTR_AINT)
-		*(MPI_Aint*)attr_val_p = *(MPI_Aint*)*(void **)attr_val_p;
+		*(MPIR_Pint*)attr_val_p = *(MPIR_Pint*)*(void **)attr_val_p;
 	    else if (outAttrType == MPIR_ATTR_INT)
-		*(MPI_Aint*)attr_val_p = *(int *)*(void **)attr_val_p;
+		*(MPIR_Pint*)attr_val_p = *(int *)*(void **)attr_val_p;
 	}
     }
     else {
