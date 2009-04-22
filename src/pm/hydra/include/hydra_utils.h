@@ -250,6 +250,7 @@ HYD_Status HYDU_strsplit(char *str, char **str1, char **str2, char sep);
 char *HYDU_int_to_str(int x);
 char *HYDU_strerror(int error);
 int HYDU_strlist_lastidx(char **strlist);
+int HYDU_strlist_is_empty(char **strlist);
 char **HYDU_str_to_strlist(char *str);
 
 
