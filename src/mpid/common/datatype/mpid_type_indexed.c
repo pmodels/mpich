@@ -141,7 +141,7 @@ int MPID_Type_indexed(int count,
         for(i=0; i<count; i++)
             new_dtp->max_contig_blocks 
                 += old_dtp->max_contig_blocks
-                    * ((MPI_Aint *)blocklength_array)[i];
+                    * ((MPI_Aint ) blocklength_array[i]);
     }
 
     /* find the first nonzero blocklength element */
