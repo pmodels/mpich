@@ -403,7 +403,15 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz
     data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
     data_buf = (char *)pkt + sizeof(MPIDI_CH3_Pkt_t);
 
-    MPID_Request_get_ptr(cookie_pkt->req_id, req);
+    if (cookie_pkt->from_sender) {
+        MPID_Request_get_ptr(cookie_pkt->receiver_req_id, req);
+        req->ch.lmt_req_id = cookie_pkt->sender_req_id;
+    }
+    else {
+        MPID_Request_get_ptr(cookie_pkt->sender_req_id, req);
+        req->ch.lmt_req_id = cookie_pkt->receiver_req_id;
+    }
+    MPIU_Assert(req != NULL);
 
     if (cookie_pkt->cookie_len != 0)
     {

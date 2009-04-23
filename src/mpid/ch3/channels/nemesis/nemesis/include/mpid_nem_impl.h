@@ -91,7 +91,9 @@ MPID_nem_pkt_lmt_done_t;
 typedef struct MPID_nem_pkt_lmt_cookie
 {
     MPID_nem_pkt_type_t type;
-    MPI_Request req_id;
+    int from_sender;
+    MPI_Request sender_req_id;
+    MPI_Request receiver_req_id;
     MPIDI_msg_sz_t cookie_len;
 }
 MPID_nem_pkt_lmt_cookie_t;
@@ -177,30 +179,57 @@ typedef union MPIDI_CH3_nem_pkt
         }                                                                                               \
     } while (0)   
         
-#define MPID_nem_lmt_send_COOKIE(vc, rreq, r_cookie_buf, r_cookie_len) do {                                     \
-        MPIDI_CH3_Pkt_t _upkt;                                                                                  \
-        MPID_nem_pkt_lmt_cookie_t * const _cookie_pkt = (MPID_nem_pkt_lmt_cookie_t *)&_upkt;                    \
-        MPID_Request *_cookie_req;                                                                              \
-        MPID_IOV _iov[2];                                                                                       \
-                                                                                                                \
-        MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv COOKIE packet");                                           \
-        MPIDI_Pkt_init(_cookie_pkt, MPIDI_NEM_PKT_LMT_COOKIE);                                                  \
-        _cookie_pkt->req_id = (rreq)->ch.lmt_req_id;                                                            \
-        _cookie_pkt->cookie_len = (r_cookie_len);                                                               \
-                                                                                                                \
-        _iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)_cookie_pkt;                                                  \
-        _iov[0].MPID_IOV_LEN = sizeof(*_cookie_pkt);                                                            \
-        _iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)(r_cookie_buf);                                               \
-        _iov[1].MPID_IOV_LEN = (r_cookie_len);                                                                  \
-                                                                                                                \
-        mpi_errno = MPIDI_CH3_iStartMsgv((vc), _iov, (r_cookie_len) ? 2 : 1, &_cookie_req);                     \
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**cookiepkt");                                \
-        if (_cookie_req != NULL)                                                                                \
-        {                                                                                                       \
-            MPIU_ERR_CHKANDJUMP(_cookie_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**cookiepkt");        \
-            MPID_Request_release(_cookie_req);                                                                  \
-        }                                                                                                       \
-    } while (0)   
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_lmt_send_COOKIE
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
+                                           void *cookie_buf, MPI_Aint cookie_len)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_CH3_Pkt_t _upkt;
+    MPID_nem_pkt_lmt_cookie_t * const cookie_pkt = (MPID_nem_pkt_lmt_cookie_t *)&_upkt;
+    MPID_Request *cookie_req;
+    MPID_IOV iov[2];
+
+    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv COOKIE packet");
+    MPIDI_Pkt_init(cookie_pkt, MPIDI_NEM_PKT_LMT_COOKIE);
+    cookie_pkt->cookie_len = (cookie_len);
+
+    /* We need to send both handle IDs in case there was
+       no CTS message in this protocol. */
+    switch (MPIDI_Request_get_type(req)) {
+        case MPIDI_REQUEST_TYPE_RECV:
+            cookie_pkt->from_sender = FALSE;
+            cookie_pkt->sender_req_id = (req)->ch.lmt_req_id;
+            cookie_pkt->receiver_req_id = (req)->handle;
+            break;
+        case MPIDI_REQUEST_TYPE_SEND:
+            cookie_pkt->from_sender = TRUE;
+            cookie_pkt->sender_req_id = (req)->handle;
+            cookie_pkt->receiver_req_id = (req)->ch.lmt_req_id;
+            break;
+        default:
+            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unexpected request type");
+            break;
+    }
+
+    iov[0].MPID_IOV_BUF = cookie_pkt;
+    iov[0].MPID_IOV_LEN = sizeof(*cookie_pkt);
+    iov[1].MPID_IOV_BUF = cookie_buf;
+    iov[1].MPID_IOV_LEN = cookie_len;
+
+    mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, (cookie_len ? 2 : 1), &cookie_req);
+    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**cookiepkt");
+    if (cookie_req != NULL)
+    {
+        MPIU_ERR_CHKANDJUMP(cookie_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**cookiepkt");
+        MPID_Request_release(cookie_req);
+    }
+
+fn_fail:
+    return mpi_errno;
+}
         
 #define MPID_nem_lmt_send_DONE(vc, rreq) do {                                                                   \
         MPIDI_CH3_Pkt_t _upkt;                                                                                  \
