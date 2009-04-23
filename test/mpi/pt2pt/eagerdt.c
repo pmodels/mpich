@@ -10,7 +10,7 @@
 
 static char MTEST_Descrip[] = "Test of a large number of derived-datatype messages eagerly, with no preposted receive so that an MPI implementation may have to queue up messages on the sending side";
 
-#define MAX_MSGS 1/*30*/
+#define MAX_MSGS 30
 
 int main( int argc, char *argv[] )
 {
