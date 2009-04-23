@@ -1,0 +1,15 @@
+knem ("kernel nemesis")
+-------------------------
+This is a Linux kernel module that provides high-bandwidth message
+transfers on Linux when using the nemesis communication subsystem.  In
+order to use MPICH2 with knem you must build and install knem according
+configure MPICH2 with the following arguments:
+
+  --enable-device=ch3:nemesis(:net_mod)
+  --with-nemesis-local-lmt=knem
+  --with-knem-include=/path/to/knem/include/files
+
+Where (:net_mod) indicates an optional network module parameter such as
+tcp or mx.  Omitting a netmod will select the default netmod ("tcp" as
+of the time of this writing).
+

@@ -1,0 +1,5 @@
+This directory contains non-essential code that complements MPICH2 but
+is not part of MPICH2 itself.  Code in this directory may have a
+different license and copyright than MPICH2 and should be explained in
+each subdirectory.
+

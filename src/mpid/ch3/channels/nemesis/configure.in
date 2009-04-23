@@ -516,14 +516,14 @@ if test "${pac_cv_have_knem_io_h}" = yes ; then
 fi
 
 # allow the user to select different local LMT implementations
-AC_ARG_WITH(nemesis-local-lmt, [--with-nemesis-local-lmt=method - specify an implementation for local large message transfers (LMT).  Method is one of: 'default', 'shm_copy', 'shm_dma', or 'none'.  'default' is the same as 'shm_copy'.],,with_nemesis_local_lmt=default)
+AC_ARG_WITH(nemesis-local-lmt, [--with-nemesis-local-lmt=method - specify an implementation for local large message transfers (LMT).  Method is one of: 'default', 'shm_copy', 'knem', or 'none'.  'default' is the same as 'shm_copy'.],,with_nemesis_local_lmt=default)
 case "$with_nemesis_local_lmt" in
     shm_copy|default)
     local_lmt_impl=MPID_NEM_LOCAL_LMT_SHM_COPY
     ;;
-    dma)
+    dma|shm_dma|knem)
     if test "${pac_cv_have_knem_io_h}" != yes ; then
-        AC_MSG_ERROR([Failed to find knem_io.h for nemesis-local-lmt=dma])
+        AC_MSG_ERROR([Failed to find knem_io.h for nemesis-local-lmt=knem])
     fi
     local_lmt_impl=MPID_NEM_LOCAL_LMT_DMA
     ;;
