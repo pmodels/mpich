@@ -20,8 +20,6 @@
 #define COND_Yield() MPIDU_Yield()
 #endif
 
-int MPID_nem_lmt_shm_pending = FALSE;
-
 /* Progress queue */
 
 typedef struct lmt_shm_prog_element
@@ -215,7 +213,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_co
         MPIU_CHKPMEM_MALLOC (pe, lmt_shm_prog_element_t *, sizeof (lmt_shm_prog_element_t), mpi_errno, "lmt progress queue element");
         pe->vc = vc;
         LMT_SHM_L_ADD(pe);
-        MPID_nem_lmt_shm_pending = TRUE;
+        MPID_nem_local_lmt_pending = TRUE;
         MPIU_Assert(!vc_ch->lmt_enqueued);
         vc_ch->lmt_enqueued = TRUE;
     }
@@ -305,7 +303,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
         MPIU_CHKPMEM_MALLOC (pe, lmt_shm_prog_element_t *, sizeof (lmt_shm_prog_element_t), mpi_errno, "lmt progress queue element");
         pe->vc = vc;
         LMT_SHM_L_ADD(pe);
-        MPID_nem_lmt_shm_pending = TRUE;
+        MPID_nem_local_lmt_pending = TRUE;
         MPIU_Assert(!vc_ch->lmt_enqueued);
         vc_ch->lmt_enqueued = TRUE;
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "lmt send not finished:  enqueue");
@@ -796,7 +794,7 @@ int MPID_nem_lmt_shm_progress()
     }
 
     if (LMT_SHM_L_EMPTY())
-        MPID_nem_lmt_shm_pending = FALSE;
+        MPID_nem_local_lmt_pending = FALSE;
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_SHM_PROGRESS);

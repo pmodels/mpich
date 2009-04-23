@@ -47,6 +47,9 @@ struct MPID_Request *MPIDI_CH3I_sendq_head[CH3_NUM_QUEUES] = {0};
 struct MPID_Request *MPIDI_CH3I_sendq_tail[CH3_NUM_QUEUES] = {0};
 struct MPID_Request *MPIDI_CH3I_active_send[CH3_NUM_QUEUES] = {0};
 
+int (*MPID_nem_local_lmt_progress)(void) = NULL;
+int MPID_nem_local_lmt_pending = FALSE;
+
 /* qn_ent and friends are used to keep a list of notification
    callbacks for posted and matched anysources */
 typedef struct qn_ent
@@ -57,7 +60,6 @@ typedef struct qn_ent
 } qn_ent_t;
 
 static qn_ent_t *qn_head = NULL;
-
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Progress
@@ -128,7 +130,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
             /* make progress receiving */
             /* check queue */
-            if (!MPID_nem_lmt_shm_pending && !MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]
+            if (!MPID_nem_local_lmt_pending && !MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]
                 && !MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE) && is_blocking
 #ifdef MPICH_IS_THREADED
 #ifdef HAVE_RUNTIME_THREADCHECK
@@ -225,7 +227,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #ifdef MPICH_IS_THREADED
                 MPIU_THREAD_CHECK_BEGIN;
                 {
-                    if (MPIDI_CH3I_progress_blocked == TRUE && is_blocking && !MPID_nem_lmt_shm_pending)
+                    if (MPIDI_CH3I_progress_blocked == TRUE && is_blocking && !MPID_nem_local_lmt_pending)
                     {
                         /* There's nothing to send and there's another thread already blocking in the progress engine.*/
                         MPIDI_CH3I_Progress_delay(MPIDI_CH3I_progress_completion_count);
@@ -359,9 +361,9 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         while (0); /* do the loop exactly once.  Used so we can jump out of send progress using break. */
 
         /* make progress on LMTs */
-        if (MPID_nem_lmt_shm_pending)
+        if (MPID_nem_local_lmt_pending)
         {
-            mpi_errno = MPID_nem_lmt_shm_progress();
+            mpi_errno = MPID_nem_local_lmt_progress();
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }

@@ -780,6 +780,19 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **fopen %s:fopen failed %s
 **abi_version_mismatch:ABI version mismatch
 **abi_version_mismatch %D %D:ABI version mismatch, expected %D - got %D
+**recv_status:receive status failed
+**recv_status %d:receive status failed %d
+**invalid_knem_status:Invalid knem status value
+**invalid_knem_status %d:Invalid knem status value - %d
+
+**vmsplice:vmsplice failed
+**vmsplice %d %s:vmsplice failed - errno %d (%s)
+**mkfifo:mkfifo failed
+**mkfifo %d %s:mkfifo failed - errno %d (%s)
+**tempnam:tempnam failed
+**tempnam %d %s:tempnam failed - errno %d (%s)
+**readv:readv failed
+**readv %d %s:readv failed - errno %d (%s)
 
 #
 # mpi functions

@@ -13,6 +13,7 @@
 #define MPID_NEM_LOCAL_LMT_NONE 0
 #define MPID_NEM_LOCAL_LMT_SHM_COPY 1
 #define MPID_NEM_LOCAL_LMT_DMA 2
+#define MPID_NEM_LOCAL_LMT_VMSPLICE 3
 
 #ifdef MEM_REGION_IN_HEAP
 MPID_nem_mem_region_t *MPID_nem_mem_region_ptr = 0;
@@ -370,6 +371,19 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     }
 #undef MAILBOX_INDEX
 
+    /* setup local LMT */
+#if MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_SHM_COPY
+        MPID_nem_local_lmt_progress = MPID_nem_lmt_shm_progress;
+#elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_DMA
+        MPID_nem_local_lmt_progress = MPID_nem_lmt_dma_progress;
+#elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_VMSPLICE
+        MPID_nem_local_lmt_progress = MPID_nem_lmt_vmsplice_progress;
+#elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_NONE
+        MPID_nem_local_lmt_progress = NULL;
+#else
+#  error Must select a valid local LMT implementation!
+#endif
+
     /* publish business card */
     mpi_errno = MPIDI_PG_SetConnInfo(pg_rank, (const char *)publish_bc_orig);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -468,6 +482,13 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = MPID_nem_lmt_dma_handle_cookie;
         vc_ch->lmt_done_send     = MPID_nem_lmt_dma_done_send;
         vc_ch->lmt_done_recv     = MPID_nem_lmt_dma_done_recv;
+#elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_VMSPLICE
+        vc_ch->lmt_initiate_lmt  = MPID_nem_lmt_vmsplice_initiate_lmt;
+        vc_ch->lmt_start_recv    = MPID_nem_lmt_vmsplice_start_recv;
+        vc_ch->lmt_start_send    = MPID_nem_lmt_vmsplice_start_send;
+        vc_ch->lmt_handle_cookie = MPID_nem_lmt_vmsplice_handle_cookie;
+        vc_ch->lmt_done_send     = MPID_nem_lmt_vmsplice_done_send;
+        vc_ch->lmt_done_recv     = MPID_nem_lmt_vmsplice_done_recv;
 #elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_NONE
         vc_ch->lmt_initiate_lmt  = NULL;
         vc_ch->lmt_start_recv    = NULL;
@@ -481,6 +502,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 
         vc_ch->lmt_copy_buf        = NULL;
         mpi_errno = MPIU_SHMW_Hnd_init(&(vc_ch->lmt_copy_buf_handle));
+        if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+        mpi_errno = MPIU_SHMW_Hnd_init(&(vc_ch->lmt_recv_copy_buf_handle));
         if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
         vc_ch->lmt_queue.head      = NULL;
         vc_ch->lmt_queue.tail      = NULL;

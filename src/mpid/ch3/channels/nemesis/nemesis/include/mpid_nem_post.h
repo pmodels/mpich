@@ -9,6 +9,11 @@
 
 struct MPIDI_PG;
 
+/* if local_lmt_pending is true, local_lmt_progress will be called in the
+   progress loop */
+extern int MPID_nem_local_lmt_pending;
+extern int (*MPID_nem_local_lmt_progress)(void);
+
 /* FIXME: Do not export these definitions all the way into mpiimpl.h (which
    will happen if this is included in mpidpost.h or mpidpre.h) */
 int MPID_nem_init(int rank, struct MPIDI_PG *pg_p, int has_parent);
@@ -22,6 +27,8 @@ int MPID_nem_vc_destroy(struct MPIDI_VC *vc);
 int MPID_nem_get_business_card(int myRank, char *value, int length);
 int MPID_nem_connect_to_root(const char *port_name, struct MPIDI_VC *new_vc);
 int MPID_nem_lmt_shm_progress(void);
+int MPID_nem_lmt_dma_progress(void);
+int MPID_nem_lmt_vmsplice_progress(void);
 int MPID_nem_vc_terminate(struct MPIDI_VC *vc);
 
 #ifdef ENABLED_CHECKPOINTING
