@@ -73,7 +73,6 @@ static HYD_Status send_command(int fd, char *cmd)
     status = HYDU_sock_write(fd, cmdlen, 6);
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
-    dprintf("[%d] sending command: %s\n", fd, cmd);
     status = HYDU_sock_write(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
 

@@ -102,7 +102,6 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
 
             if (!strcmp("cmd=init", cmd)) {
                 /* Init is generic to all PMI implementations */
-                dprintf("[%d] got cmd=init\n", fd);
                 status = HYD_PMCD_pmi_handle_init(fd, args);
                 goto fn_exit;
             }
@@ -145,7 +144,6 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
      * PMI-1, so we will use that delimited even for PMI-2 for this
      * one command. From the next command onward, we will use the
      * PMI-2 specific delimiter. */
-    dprintf("[%d] got buf: %s\n", fd, buf);
     cmd = strtok(buf, HYD_PMCD_pmi_handle->delim);
     for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
         args[i] = strtok(NULL, HYD_PMCD_pmi_handle->delim);
