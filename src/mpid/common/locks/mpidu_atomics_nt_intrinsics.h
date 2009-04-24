@@ -10,22 +10,27 @@
 #include<intrin.h>
 #include "mpi.h"
 
-typedef struct { volatile int v;  } MPIDU_Atomic_t;
-typedef struct { int * volatile v; } MPIDU_Atomic_ptr_t;
+typedef struct {
+    volatile long v;
+} MPIDU_Atomic_t;
+
+typedef struct {
+    void * volatile v;
+}MPIDU_Atomic_ptr_t;
 
 static inline int MPIDU_Atomic_load(MPIDU_Atomic_t *ptr)
 {
-    return ptr->v;
+    return ((int )ptr->v);
 }
 
 static inline void MPIDU_Atomic_store(MPIDU_Atomic_t *ptr, int val)
 {
-    ptr->v = val;
+    ptr->v = (long )val;
 }
 
 static inline void *MPIDU_Atomic_load_ptr(MPIDU_Atomic_ptr_t *ptr)
 {
-    return ptr->v;
+    return ((void *)ptr->v);
 }
 
 static inline void MPIDU_Atomic_store_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
@@ -35,7 +40,7 @@ static inline void MPIDU_Atomic_store_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
 
 static inline void MPIDU_Atomic_add(MPIDU_Atomic_t *ptr, int val)
 {
-    _InterlockedExchangeAdd(&(ptr->v), val);
+    _InterlockedExchangeAdd(&(ptr->v), (long )val);
 }
 
 static inline void MPIDU_Atomic_incr(MPIDU_Atomic_t *ptr)
@@ -50,20 +55,21 @@ static inline void MPIDU_Atomic_decr(MPIDU_Atomic_t *ptr)
 
 static inline int MPIDU_Atomic_decr_and_test(MPIDU_Atomic_t *ptr)
 {
-    return (_InterlockedDecrement(&(ptr->v)) == 0);
+    return ((int )(_InterlockedDecrement(&(ptr->v)) == 0));
 }
 
 static inline int MPIDU_Atomic_fetch_and_add(MPIDU_Atomic_t *ptr, int val)
 {
-    return _InterlockedExchangeAdd(&(ptr->v), val);
+    return ((int )_InterlockedExchangeAdd(&(ptr->v), (long )val));
 }
 
 static inline int *MPIDU_Atomic_cas_ptr(MPIDU_Atomic_ptr_t *ptr, void *oldv, void *newv)
 {
+/* InterlockedExchangePointer() is only available > win2k */
 #if (SIZEOF_VOID_P == 4)
-    return _InterlockedCompareExchange(&(ptr->v), newv, oldv);
+    return ((int *)(LONG_PTR )_InterlockedCompareExchange((LONG volatile *)&(ptr->v), (LONG )(LONG_PTR )newv, (LONG ) (LONG_PTR )oldv));
 #elif (SIZEOF_VOID_P == 8)
-    return _InterlockedCompareExchange64(&(ptr->v), newv, oldv);
+    return ((int *)(LONG_PTR )_InterlockedCompareExchange64((INT64 volatile *)&(ptr->v), (INT64 )(LONG_PTR )newv, (INT64 ) (LONG_PTR )oldv));
 #else
 #error  "SIZEOF_VOID_P not valid"
 #endif
@@ -71,15 +77,15 @@ static inline int *MPIDU_Atomic_cas_ptr(MPIDU_Atomic_ptr_t *ptr, void *oldv, voi
 
 static inline int MPIDU_Atomic_cas_int(MPIDU_Atomic_t *ptr, int oldv, int newv)
 {
-    return _InterlockedCompareExchange(&(ptr->v), newv, oldv);
+    return ((int )_InterlockedCompareExchange(&(ptr->v), (long )newv, (long )oldv));
 }
 
 static inline int *MPIDU_Atomic_swap_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
 {
 #if (SIZEOF_VOID_P == 4)
-    return _InterlockedExchange(&(ptr->v), val);
+    return ((int * )(LONG_PTR )_InterlockedExchange((LONG volatile * )&(ptr->v), (LONG )(LONG_PTR )val));
 #elif (SIZEOF_VOID_P == 8)
-    return _InterlockedExchange64(&(ptr->v), val);
+    return ((int * )(LONG_PTR )_InterlockedExchange64((INT64 volatile * )&(ptr->v), (INT64 )(LONG_PTR )val));
 #else
 #error  "SIZEOF_VOID_P not valid"
 #endif
@@ -87,7 +93,7 @@ static inline int *MPIDU_Atomic_swap_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
 
 static inline int MPIDU_Atomic_swap_int(MPIDU_Atomic_t *ptr, int val)
 {
-    return _InterlockedExchange(&(ptr->v), val);
+    return ((int )_InterlockedExchange(&(ptr->v), (long )val));
 }
 
 /* Implement fetch_and_incr/decr using fetch_and_add (*_faa) */
