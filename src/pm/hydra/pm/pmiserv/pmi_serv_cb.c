@@ -42,8 +42,8 @@ HYD_Status HYD_PMCD_pmi_connect_cb(int fd, HYD_Event_t events, void *userp)
 
 HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
 {
-    int linelen, i;
-    char *buf = NULL, *cmd, *args[HYD_NUM_TMP_STRINGS];
+    int linelen, i, cmdlen;
+    char *buf = NULL, *tbuf = NULL, *cmd, *args[HYD_NUM_TMP_STRINGS];
     char *str1 = NULL, *str2 = NULL;
     struct HYD_PMCD_pmi_handle_fns *h;
     HYD_Status status = HYD_SUCCESS;
@@ -53,8 +53,69 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
     /* We got a PMI command */
     HYDU_MALLOC(buf, char *, HYD_TMPBUF_SIZE, status);
 
-    status = HYDU_sock_readline(fd, buf, HYD_TMPBUF_SIZE, &linelen);
-    HYDU_ERR_POP(status, "PMI read line error\n");
+    /*
+     * FIXME: This is a big hack. We temporarily initialize to
+     * PMI-v1. If the incoming message is an "init", it will
+     * reinitialize the function pointers. If we get an unsolicited
+     * command, we just use the PMI-1 version for it.
+     *
+     * This part of the code should not know anything about PMI-1
+     * vs. PMI-2. But the simple PMI client-side code is so hacked up,
+     * that commands can arrive out-of-order and this is necessary.
+     */
+    if (HYD_PMCD_pmi_handle == NULL)
+        HYD_PMCD_pmi_handle = HYD_PMCD_pmi_v1;
+
+    do {
+        status = HYDU_sock_read(fd, buf, 6, &linelen);
+        HYDU_ERR_POP(status, "unable to read the length of the command");
+
+        /* Unexpected termination of connection */
+        if (linelen == 0)
+            break;
+
+        /* If we get "cmd=" here, we just assume that this is PMI-1
+         * format (or a PMI-2 command that is backward compatible). */
+        if (!strncmp(buf, "cmd=", strlen("cmd="))) {
+            /* PMI-1 format command; read the rest of it */
+            status = HYDU_sock_readline(fd, buf + 6, HYD_TMPBUF_SIZE, &linelen);
+            HYDU_ERR_POP(status, "PMI read line error\n");
+
+            /* Unexpected termination of connection */
+            if (linelen == 0)
+                break;
+            else
+                buf[linelen + 5] = 0;
+
+            /* Here we only get PMI-1 commands or backward compatible
+             * PMI-2 commands, so we always explicitly use the PMI-1
+             * delimiter. This allows us to get backward-compatible
+             * PMI-2 commands interleaved with regular PMI-2
+             * commands. */
+            tbuf = HYDU_strdup(buf);
+            cmd = strtok(tbuf, HYD_PMCD_pmi_v1->delim);
+            for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
+                args[i] = strtok(NULL, HYD_PMCD_pmi_v1->delim);
+                if (args[i] == NULL)
+                    break;
+            }
+
+            if (!strcmp("cmd=init", cmd)) {
+                /* Init is generic to all PMI implementations */
+                dprintf("[%d] got cmd=init\n", fd);
+                status = HYD_PMCD_pmi_handle_init(fd, args);
+                goto fn_exit;
+            }
+        }
+        else { /* PMI-2 command */
+            buf[linelen] = 0;
+            cmdlen = atoi(buf);
+
+            status = HYDU_sock_read(fd, buf, cmdlen, &linelen);
+            HYDU_ERR_POP(status, "PMI read line error\n");
+            buf[linelen] = 0;
+        }
+    } while (0);
 
     if (linelen == 0) {
         /* This is not a clean close. If a finalize was called, we
@@ -78,34 +139,22 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
         goto fn_exit;
     }
 
-    /*
-     * FIXME: This is a big hack. We temporarily initialize to
-     * PMI-v1. If the incoming message is an "init", it will
-     * reinitialize the function pointers. If we get an unsolicited
-     * command, we just use the PMI-1 version for it.
-     *
-     * This part of the code should not know anything about PMI-1
-     * vs. PMI-2. But the simple PMI client-side code is so hacked up,
-     * that commands can arrive out-of-order and this is necessary.
-     */
-    if (HYD_PMCD_pmi_handle == NULL)
-        HYD_PMCD_pmi_handle = HYD_PMCD_pmi_v1;
-
-    /* Use the PMI version specific command parser to find what
+    /* Use the PMI version specific command delimiter to find what
      * command we got and call the appropriate handler
      * function. Before we get an "init", we are preinitialized to
-     * PMI-1, so we will use that parser even for PMI-2 for this one
-     * command. From the next command onward, we will use the PMI-2
-     * specific parser. */
-    buf[linelen - 1] = 0;
-    cmd = HYD_PMCD_pmi_handle->parser(buf, args);
+     * PMI-1, so we will use that delimited even for PMI-2 for this
+     * one command. From the next command onward, we will use the
+     * PMI-2 specific delimiter. */
+    dprintf("[%d] got buf: %s\n", fd, buf);
+    cmd = strtok(buf, HYD_PMCD_pmi_handle->delim);
+    for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
+        args[i] = strtok(NULL, HYD_PMCD_pmi_handle->delim);
+        if (args[i] == NULL)
+            break;
+    }
 
     if (cmd == NULL) {
         status = HYD_SUCCESS;
-    }
-    else if (!strcmp("cmd=init", cmd)) {
-        /* Init is generic to all PMI implementations */
-        status = HYD_PMCD_pmi_handle_init(fd, args);
     }
     else {
         /* Search for the PMI command in our table */
@@ -123,7 +172,7 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
         }
         if (!h->handler) {
             /* We don't understand the command */
-            HYDU_Error_printf("Unrecognized PMI command: %s; cleaning up processes\n", cmd);
+            HYDU_Error_printf("Unrecognized PMI command: %s | cleaning up processes\n", cmd);
 
             /* Cleanup all the processes and return. We don't need to
              * check the return status since we are anyway returning

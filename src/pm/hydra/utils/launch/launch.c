@@ -126,7 +126,7 @@ HYD_Status HYDU_fork_and_exit(int core)
     goto fn_exit;
 }
 
-HYD_Status HYDU_create_thread(void (func) (void *), void *args,
+HYD_Status HYDU_create_thread(void (*func)(void *), void *args,
                               struct HYD_Thread_context *ctxt)
 {
     int ret;

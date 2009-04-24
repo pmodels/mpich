@@ -110,6 +110,29 @@ HYD_Status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
 }
 
 
+HYD_Status HYDU_strdup_list(char *src[], char **dest[])
+{
+    int i, count;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    count = HYDU_strlist_lastidx(src);
+    HYDU_MALLOC(*dest, char **, (count + 1) * sizeof(char *), status);
+
+    for (i = 0; i < count; i++)
+        (*dest)[i] = HYDU_strdup(src[i]);
+    (*dest)[i] = NULL;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
 char *HYDU_int_to_str(int x)
 {
     int len = 1, max = 10, y;

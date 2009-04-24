@@ -197,7 +197,7 @@ HYD_Status HYD_LCHU_get_current_exec_info(struct HYD_Exec_info **info)
 
 HYD_Status HYD_LCHU_merge_exec_info_to_partition(void)
 {
-    int total_procs, run_count, i, rem;
+    int run_count, i, rem;
     struct HYD_Partition *partition;
     struct HYD_Exec_info *exec_info;
     struct HYD_Partition_exec *exec;
@@ -205,9 +205,8 @@ HYD_Status HYD_LCHU_merge_exec_info_to_partition(void)
 
     HYDU_FUNC_ENTER();
 
-    total_procs = 0;
     for (partition = handle.partition_list; partition; partition = partition->next)
-        total_procs += partition->total_proc_count;
+        handle.one_pass_count += partition->one_pass_count;
 
     for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
         /* The run_count tells us how many processes the partitions
@@ -221,15 +220,18 @@ HYD_Status HYD_LCHU_merge_exec_info_to_partition(void)
                 status = HYDU_alloc_partition_exec(&partition->exec_list);
                 HYDU_ERR_POP(status, "unable to allocate partition exec\n");
 
+                partition->exec_list->pgid = 0; /* This is the COMM_WORLD exec */
+
                 for (i = 0; exec_info->exec[i]; i++)
                     partition->exec_list->exec[i] = HYDU_strdup(exec_info->exec[i]);
                 partition->exec_list->exec[i] = NULL;
 
                 partition->exec_list->proc_count =
-                    ((exec_info->exec_proc_count / total_procs) * partition->total_proc_count);
-                rem = (exec_info->exec_proc_count % total_procs);
-                if (rem > run_count + partition->total_proc_count)
-                    rem = run_count + partition->total_proc_count;
+                    ((exec_info->exec_proc_count / handle.one_pass_count) *
+                     partition->one_pass_count);
+                rem = (exec_info->exec_proc_count % handle.one_pass_count);
+                if (rem > run_count + partition->one_pass_count)
+                    rem = run_count + partition->one_pass_count;
                 partition->exec_list->proc_count += (rem > run_count) ? (rem - run_count) : 0;
 
                 partition->exec_list->prop = exec_info->prop;
@@ -241,22 +243,25 @@ HYD_Status HYD_LCHU_merge_exec_info_to_partition(void)
                 HYDU_ERR_POP(status, "unable to allocate partition exec\n");
 
                 exec = exec->next;
+                exec->pgid = 0; /* This is the COMM_WORLD exec */
+
                 for (i = 0; exec_info->exec[i]; i++)
                     exec->exec[i] = HYDU_strdup(exec_info->exec[i]);
                 exec->exec[i] = NULL;
 
                 exec->proc_count =
-                    ((exec_info->exec_proc_count / total_procs) * partition->total_proc_count);
-                rem = (exec_info->exec_proc_count % total_procs);
-                if (rem > run_count + partition->total_proc_count)
-                    rem = run_count + partition->total_proc_count;
+                    ((exec_info->exec_proc_count / handle.one_pass_count) *
+                     partition->one_pass_count);
+                rem = (exec_info->exec_proc_count % handle.one_pass_count);
+                if (rem > run_count + partition->one_pass_count)
+                    rem = run_count + partition->one_pass_count;
                 exec->proc_count += (rem > run_count) ? (rem - run_count) : 0;
 
                 exec->prop = exec_info->prop;
                 exec->prop_env = HYDU_env_list_dup(exec_info->prop_env);
             }
 
-            run_count += partition->total_proc_count;
+            run_count += partition->one_pass_count;
         }
     }
 
@@ -345,7 +350,7 @@ void HYD_LCHU_print_params(void)
         HYDU_Debug("      Partition ID: %2d\n", i++);
         HYDU_Debug("      -----------------\n");
         HYDU_Debug("        Partition name: %s\n", partition->name);
-        HYDU_Debug("        Process count: %d\n", partition->total_proc_count);
+        HYDU_Debug("        Process count: %d\n", partition->one_pass_count);
         HYDU_Debug("\n");
         HYDU_Debug("        Partition segment list:\n");
         HYDU_Debug("        .......................\n");

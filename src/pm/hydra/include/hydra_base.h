@@ -147,6 +147,10 @@ struct HYD_Partition_exec {
     int proc_count;
     HYD_Env_prop_t prop;
     HYD_Env_t *prop_env;
+
+    int pgid; /* All executables with the same PGID belong to the same
+               * job. */
+
     struct HYD_Partition_exec *next;
 };
 
@@ -155,6 +159,8 @@ struct HYD_Partition_exec {
 #else
 #include <pthread.h>
 #endif
+
+#define dprintf if (getenv("PMI2_DEBUG")) printf
 
 struct HYD_Thread_context {
     pthread_t thread;
@@ -166,7 +172,7 @@ struct HYD_Partition {
     struct sockaddr_in sa;
 
     char *user_bind_map;
-    int total_proc_count;
+    int one_pass_count;
 
     /* Segment list will contain one-pass of the hosts file */
     struct HYD_Partition_segment *segment_list;

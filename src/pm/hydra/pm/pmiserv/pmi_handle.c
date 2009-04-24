@@ -44,7 +44,7 @@ static HYD_Status create_pg(HYD_PMCD_pmi_pg_t ** pg, int pgid)
     (*pg)->id = pgid;
     (*pg)->num_procs = 0;
     (*pg)->barrier_count = 0;
-    (*pg)->process = NULL;
+    (*pg)->node_list = NULL;
 
     status = allocate_kvs(&(*pg)->kvs, pgid);
     HYDU_ERR_POP(status, "unable to allocate kvs space\n");
@@ -99,6 +99,291 @@ static HYD_Status free_pmi_kvs_list(HYD_PMCD_pmi_kvs_t * kvs_list)
 }
 
 
+static HYD_Status free_pmi_node_list(HYD_PMCD_pmi_node_t * node_list)
+{
+    HYD_PMCD_pmi_node_t *node, *tmp;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    node = node_list;
+    while (node) {
+        tmp = node->next;
+        free_pmi_process_list(node->process_list);
+        free_pmi_kvs_list(node->kvs);
+        HYDU_FREE(node);
+        node = tmp;
+    }
+
+    HYDU_FUNC_EXIT();
+    return status;
+}
+
+
+static struct HYD_PMCD_pmi_node *allocate_node(HYD_PMCD_pmi_pg_t * pg, int node_id)
+{
+    struct HYD_PMCD_pmi_node *node;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(node, HYD_PMCD_pmi_node_t *, sizeof(HYD_PMCD_pmi_node_t), status);
+    node->node_id = node_id;
+    node->pg = pg;
+    node->process_list = NULL;
+    node->kvs = NULL;
+    node->next = NULL;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return node;
+
+  fn_fail:
+    node = NULL;
+    goto fn_exit;
+}
+
+
+HYD_Status HYD_PMCD_pmi_add_kvs(char *key, char *val, HYD_PMCD_pmi_kvs_t *kvs,
+                                char **key_pair_str, int *ret)
+{
+    HYD_PMCD_pmi_process_t *process;
+    HYD_PMCD_pmi_kvs_pair_t *key_pair, *run;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(key_pair, HYD_PMCD_pmi_kvs_pair_t *, sizeof(HYD_PMCD_pmi_kvs_pair_t), status);
+    HYDU_snprintf(key_pair->key, MAXKEYLEN, "%s", key);
+    HYDU_snprintf(key_pair->val, MAXVALLEN, "%s", val);
+    key_pair->next = NULL;
+
+    key_pair_str = NULL;
+    *ret = 0;
+
+    if (kvs->key_pair == NULL) {
+        kvs->key_pair = key_pair;
+    }
+    else {
+        run = kvs->key_pair;
+        while (run->next) {
+            if (!strcmp(run->key, key_pair->key)) {
+                /* duplicate key found */
+                *key_pair_str = HYDU_strdup(key_pair->key);
+                *ret = -1;
+                break;
+            }
+            run = run->next;
+        }
+        run->next = key_pair;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+static HYD_Status add_preassigned_node_kvs(struct HYD_PMCD_pmi_node *node)
+{
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+static HYD_Status add_preassigned_job_kvs(struct HYD_PMCD_pmi_pg *pg)
+{
+    int *nodeIDs, i, j, ret, rank, node_id, process_id, rem;
+    struct HYD_PMCD_pmi_node *node;
+    struct HYD_PMCD_pmi_process *process;
+    char *tmp[HYD_NUM_TMP_STRINGS], *node_list, *key_pair_str;
+    struct HYD_Partition *partition;
+    struct HYD_Partition_exec *exec;
+    struct HYD_Partition_segment *segment;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* nodeIDs */
+    HYDU_MALLOC(nodeIDs, int *, pg->num_procs * sizeof(int), status);
+
+    /* We search all executables with our PGID in each partition of
+     * handle. */
+    rank = -1;
+    node_id = -1;
+    for (partition = handle.partition_list; partition; partition = partition->next) {
+        node_id++;
+        process_id = 0;
+        for (exec = partition->exec_list; exec; exec = exec->next) {
+            if (exec->pgid == pg->id) {
+                for (i = 0; i < exec->proc_count; i++) {
+                    /* Figure out what this process' rank will be */
+                    rank = ((process_id / partition->one_pass_count) * handle.one_pass_count);
+                    rem = process_id - rank;
+
+                    for (segment = partition->segment_list; segment; segment = segment->next) {
+                        if (rem >= segment->proc_count)
+                            rem -= segment->proc_count;
+                        else {
+                            rank += segment->start_pid + rem;
+                            break;
+                        }
+                    }
+
+                    nodeIDs[rank] = node_id;
+                    process_id++;
+                }
+            }
+            else
+                break;
+        }
+    }
+
+    i = 0;
+    for (j = 0; j < pg->num_procs; j++) {
+        tmp[i++] = HYDU_int_to_str(nodeIDs[j]);
+        if (j < pg->num_procs - 1)
+            tmp[i++] = HYDU_strdup(",");
+    }
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, &node_list);
+    HYDU_ERR_POP(status, "error while joining strings\n");
+
+    for (i = 0; tmp[i]; i++)
+        HYDU_FREE(tmp[i]);
+
+    status = HYD_PMCD_pmi_add_kvs("nodeIDs", node_list, pg->kvs, &key_pair_str, &ret);
+    HYDU_ERR_POP(status, "unable to add nodeIDs to KVS\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+static struct HYD_PMCD_pmi_node *find_node(HYD_PMCD_pmi_pg_t * pg, int rank)
+{
+    int found = 0, node_id, srank;
+    struct HYD_Partition *partition;
+    struct HYD_Partition_segment *segment;
+    struct HYD_PMCD_pmi_node *node, *tmp;
+    HYD_Status status = HYD_SUCCESS;
+
+    srank = rank % handle.one_pass_count;
+
+    node_id = 0;
+    for (partition = handle.partition_list; partition; partition = partition->next) {
+        for (segment = partition->segment_list; segment; segment = segment->next) {
+            if ((srank >= segment->start_pid) &&
+                (srank < (segment->start_pid + segment->proc_count))) {
+                /* We found our rank */
+                found = 1;
+                break;
+            }
+        }
+        if (found)
+            break;
+        node_id++;
+    }
+
+    /* See if the node already exists */
+    for (node = pg->node_list; node; node = node->next)
+        if (node->node_id == node_id)
+            return node;
+
+    /* allocate node-level KVS space */
+    node = allocate_node(pg, node_id);
+    HYDU_ERR_CHKANDJUMP(status, !node, HYD_INTERNAL_ERROR, "unable to allocate PMI node\n");
+
+    status = allocate_kvs(&node->kvs, 0);
+    HYDU_ERR_POP(status, "unable to allocate kvs space\n");
+
+    status = add_preassigned_node_kvs(node);
+    HYDU_ERR_POP(status, "unable to add preassigned node kvs keys\n");
+
+    if (pg->node_list == NULL)
+        pg->node_list = node;
+    else {
+        tmp = pg->node_list;
+        while (tmp->next)
+            tmp = tmp->next;
+        tmp->next = node;
+    }
+
+fn_exit:
+    return node;
+
+fn_fail:
+    goto fn_exit;
+}
+
+HYD_Status HYD_PMCD_pmi_add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd, int rank)
+{
+    HYD_PMCD_pmi_process_t *process, *tmp;
+    struct HYD_PMCD_pmi_node *node;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Find the node corresponding to the rank */
+    node = find_node(pg, rank);
+
+    /* Add process to the node */
+    HYDU_MALLOC(process, HYD_PMCD_pmi_process_t *, sizeof(HYD_PMCD_pmi_process_t), status);
+    process->fd = fd;
+    process->rank = rank;
+    process->node = node;
+    process->next = NULL;
+    if (node->process_list == NULL)
+        node->process_list = process;
+    else {
+        tmp = node->process_list;
+        while (tmp->next)
+            tmp = tmp->next;
+        tmp->next = process;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_PMCD_pmi_process_t *HYD_PMCD_pmi_find_process(int fd)
+{
+    HYD_PMCD_pmi_pg_t *pg;
+    HYD_PMCD_pmi_node_t *node;
+    HYD_PMCD_pmi_process_t *process = NULL;
+
+    for (pg = pg_list; pg; pg = pg->next) {
+        for (node = pg->node_list; node; node = node->next) {
+            for (process = node->process_list; process; process = process->next) {
+                if (process->fd == fd)
+                    return process;
+            }
+        }
+    }
+}
+
+
 HYD_Status HYD_PMCD_pmi_init(void)
 {
     struct HYD_Partition *partition;
@@ -117,7 +402,11 @@ HYD_Status HYD_PMCD_pmi_init(void)
 
     status = create_pg(&pg_list, 0);
     HYDU_ERR_POP(status, "unable to create pg\n");
+
     pg_list->num_procs = num_procs;
+
+    status = add_preassigned_job_kvs(pg_list);
+    HYDU_ERR_POP(status, "unable to add preassigned job kvs keys\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -139,7 +428,7 @@ HYD_Status HYD_PMCD_pmi_finalize(void)
     while (pg) {
         tmp = pg->next;
 
-        status = free_pmi_process_list(pg->process);
+        status = free_pmi_node_list(pg->node_list);
         HYDU_ERR_POP(status, "unable to free process list\n");
 
         status = free_pmi_kvs_list(pg->kvs);

@@ -9,10 +9,11 @@
 
 #include "pmi_handle.h"
 
+#define PMI_V1_DELIM " "
+
 extern struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v1;
 
 /* PMI handles */
-char *HYD_PMCD_pmi_handle_v1_parser(char *buf, char *args[]);
 HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[]);
 HYD_Status HYD_PMCD_pmi_handle_v1_get_maxes(int fd, char *args[]);
 HYD_Status HYD_PMCD_pmi_handle_v1_get_appnum(int fd, char *args[]);

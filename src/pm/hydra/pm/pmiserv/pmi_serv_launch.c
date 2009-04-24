@@ -121,10 +121,6 @@ static HYD_Status fill_in_proxy_args(void)
     struct HYD_Partition_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
-    handle.one_pass_count = 0;
-    for (partition = handle.partition_list; partition; partition = partition->next)
-        handle.one_pass_count += partition->total_proc_count;
-
     /* Create the arguments list for each proxy */
     process_id = 0;
     for (partition = handle.partition_list; partition && partition->exec_list;
@@ -217,7 +213,6 @@ static HYD_Status fill_in_proxy_args(void)
     goto fn_exit;
 }
 
-/* Local proxy is a proxy that is local to this process */
 static HYD_Status launch_procs_in_runtime_mode(void)
 {
     struct HYD_Partition *partition;
@@ -260,7 +255,7 @@ static HYD_Status boot_proxies(int launch_in_foreground)
     for (partition = handle.partition_list; partition; partition = partition->next) {
         status = HYDU_sock_gethostbyname(partition->name, &partition->sa, handle.proxy_port);
         HYDU_ERR_POP(status, "unable to get sockaddr information\n");
-        handle.one_pass_count += partition->total_proc_count;
+        handle.one_pass_count += partition->one_pass_count;
     }
 
     /* Create the arguments list for each proxy */
