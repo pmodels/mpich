@@ -263,7 +263,7 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
     int mpi_errno = MPI_SUCCESS;
 
     MPIU_Assert(nb_rd_ptr);
-    if(WSARecv(sock, iov, iov_cnt, nb_rd_ptr, &flags, NULL, NULL)
+    if(WSARecv(sock, iov, iov_cnt, (LPDWORD )nb_rd_ptr, &flags, NULL, NULL)
         == SOCKET_ERROR){
         err = MPIU_OSW_Get_errno();
         MPIU_ERR_CHKANDJUMP2(!( (err == WSAEWOULDBLOCK) ||
@@ -327,7 +327,7 @@ fn_fail:
 #   undef FCNAME
 #   define FCNAME MPIU_QUOTE(FUNCNAME)
 #   define MPIU_SOCKW_Sock_cntrl_nb(sock, is_nb)(                   \
-        (ioctlsocket(sock, FIONBIO, &is_nb)                         \
+        (ioctlsocket(sock, FIONBIO, (u_long *)&is_nb)               \
             != SOCKET_ERROR)                                        \
         ? MPI_SUCCESS                                               \
         : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, \
@@ -343,8 +343,9 @@ fn_fail:
 #   define FCNAME MPIU_QUOTE(FUNCNAME)
 #   define MPIU_SOCKW_Sock_setopt(sock, level, opt_name,opt_val_ptr,\
         opt_len) (                                                  \
-        (setsockopt(sock, level, opt_name, opt_val_ptr, opt_len)    \
-            != SOCKET_ERROR)                                        \
+        (setsockopt(sock, level, opt_name,                          \
+                    (const char *)opt_val_ptr, opt_len)             \
+                    != SOCKET_ERROR)                                \
         ? MPI_SUCCESS                                               \
         : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, \
             __LINE__, MPI_ERR_OTHER, "**setsockopt",                \
@@ -418,43 +419,49 @@ typedef struct {
         int nevents;
     } MPIU_SOCKW_Waitset_;
 
-#define MPIU_SOCKW_WAITSET_CURINDEX_INVALID_    -1
-#define MPIU_SOCKW_WAITSET_CURINDEX_RESET_(waitset_hnd) do{         \
-    (waitset_hnd)->fdset_cur_index = 0;                             \
-}while(0)
+typedef MPIU_SOCKW_Waitset_ * MPIU_SOCKW_Waitset_hnd_t;
 
-#define MPIU_SOCKW_WAITSET_CURINDEX_INC_(waitset_hnd) do{           \
-    if(++((waitset_hnd)->fdset_cur_index) >= (waitset_hnd)->nfds){  \
-        MPIU_SOCKW_WAITSET_CURINDEX_RESET_(waitset_hnd);            \
-    }                                                               \
-}while(0)
+#define MPIU_SOCKW_WAITSET_CURINDEX_INVALID_    -1
+static inline void MPIU_SOCKW_Waitset_curindex_reset_(MPIU_SOCKW_Waitset_hnd_t waitset_hnd)
+{
+    (waitset_hnd)->fdset_cur_index = 0;
+}
+
+static inline void MPIU_SOCKW_Waitset_curindex_inc_(MPIU_SOCKW_Waitset_hnd_t waitset_hnd)
+{
+    if(++((waitset_hnd)->fdset_cur_index) >= (waitset_hnd)->nfds){
+        MPIU_SOCKW_Waitset_curindex_reset_(waitset_hnd);
+    }
+}
 
 /* FIXME: This is cheating... Expand dynamically - we need to take
  * care of updating sock Handles if we expand dynamically. 
  */
-#define MPIU_SOCKW_WAITSET_EXPAND_(waitset_hnd, index_ptr) do{      \
-    (waitset_hnd)->nfds++;                                          \
-    MPIU_Assert((waitset_hnd)->nfds < FD_SETSIZE);                  \
-}while(0)
+static inline void MPIU_SOCKW_Waitset_expand_(MPIU_SOCKW_Waitset_hnd_t waitset_hnd,
+    int *index_ptr)
+{
+    MPIU_UNREFERENCED_ARG(index_ptr);
+    (waitset_hnd)->nfds++;
+    MPIU_Assert((waitset_hnd)->nfds < FD_SETSIZE);
+}
 
 
-#define MPIU_SOCKW_WAITSET_FREEINDEX_GET_(waitset_hnd, index_ptr)do{\
-    int i;                                                          \
-    *index_ptr = MPIU_SOCKW_WAITSET_CURINDEX_INVALID_;              \
-    for(i = 0; i < (waitset_hnd)->nfds; i++){                       \
-        if(((waitset_hnd)->fdset[i]).sockfd                         \
-                == MPIU_SOCKW_SOCKFD_INVALID){                      \
-            *index_ptr = i;                                         \
-            break;                                                  \
-        }                                                           \
-    } /*                                                            \
-    if(*index_ptr == MPIU_SOCKW_WAITSET_CURINDEX_INVALID_){         \
-        MPIU_SOCKW_WAITSET_EXPAND_(waitset_hnd);                    \
-        *index_ptr = i;                                             \
-    }*/                                                             \
-}while(0)
-
-typedef MPIU_SOCKW_Waitset_ *MPIU_SOCKW_Waitset_hnd_t;
+static inline int MPIU_SOCKW_Waitset_freeindex_get_(MPIU_SOCKW_Waitset_hnd_t waitset_hnd)
+{
+    int i, findex;
+    findex = MPIU_SOCKW_WAITSET_CURINDEX_INVALID_;
+    for(i = 0; i < (waitset_hnd)->nfds; i++){
+        if(((waitset_hnd)->fdset[i]).sockfd == MPIU_SOCKW_SOCKFD_INVALID){
+            findex = i;
+            break;
+        }
+    } /*
+    if(findex == MPIU_SOCKW_WAITSET_CURINDEX_INVALID_){
+        MPIU_SOCKW_Waitset_expand_(waitset_hnd);
+        findex = i;
+    }*/
+    return findex;
+}
 
 #   define MPIU_SOCKW_TIMEVAL_INFINITE      -1
 #   define MPIU_SOCKW_TIMEVAL_ZERO          0
@@ -524,10 +531,7 @@ static inline int MPIU_SOCKW_Timeval_hnd_finalize(
     }
     *hnd_ptr = NULL;
 
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 #   define MPIU_SOCKW_FLAG_CLR                      0x0
@@ -576,7 +580,7 @@ static inline int MPIU_SOCKW_Waitset_hnd_init(
     (*hnd_ptr)->nexcept_fds = 0;
     (*hnd_ptr)->nfds = nfds;
     (*hnd_ptr)->fdset_index = 0;
-    MPIU_SOCKW_WAITSET_CURINDEX_RESET_(*hnd_ptr);
+    MPIU_SOCKW_Waitset_curindex_reset_(*hnd_ptr);
 
     /* FIXME: Cheating - Expand dynamically */
     (*hnd_ptr)->fdset = (MPIU_SOCKW_Waitset_sock_hnd_ *)
@@ -608,11 +612,7 @@ static inline int MPIU_SOCKW_Waitset_hnd_finalize(
     }
 
     *hnd_ptr = NULL;
-
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 #   undef FUNCNAME
@@ -636,7 +636,7 @@ static inline int MPIU_SOCKW_Waitset_wait(
     MPIU_Assert(MPIU_SOCKW_Waitset_hnd_is_init_(hnd));
     MPIU_Assert(MPIU_SOCKW_Timeval_hnd_is_init_(timeout));
 
-    MPIU_SOCKW_WAITSET_CURINDEX_RESET_(hnd);
+    MPIU_SOCKW_Waitset_curindex_reset_(hnd);
     FD_ZERO(&(hnd->tmp_read_fds));
     if(hnd->nread_fds > 0){
         MPIU_SOCKW_FDSETCPY_(hnd->tmp_read_fds, hnd->read_fds);
@@ -728,11 +728,11 @@ static inline int MPIU_SOCKW_Waitset_get_nxt_sock_with_evnt(
             if(MPIU_SOCKW_Waitset_get_sock_evnts_(waitset_hnd, fd,
                 &(waitset_hnd->fdset[waitset_hnd->fdset_cur_index].event_flag))){
                 *sock_hnd_ptr = &(waitset_hnd->fdset[waitset_hnd->fdset_cur_index]);
-                MPIU_SOCKW_WAITSET_CURINDEX_INC_(waitset_hnd);
+                MPIU_SOCKW_Waitset_curindex_inc_(waitset_hnd);
                 break;
             }
         }
-        MPIU_SOCKW_WAITSET_CURINDEX_INC_(waitset_hnd);
+        MPIU_SOCKW_Waitset_curindex_inc_(waitset_hnd);
     }
 
     return mpi_errno;
@@ -756,7 +756,7 @@ static inline int MPIU_SOCKW_Waitset_add_sock(
 
     index = waitset_hnd->fdset_index;
     if(index >= waitset_hnd->nfds){
-        MPIU_SOCKW_WAITSET_FREEINDEX_GET_(waitset_hnd, &index);
+        index = MPIU_SOCKW_Waitset_freeindex_get_(waitset_hnd);
         /* FIXME: Try not to use MPIU_Assert(). Utils should not depend
          * on a device impl of assert */
         MPIU_Assert(index != MPIU_SOCKW_WAITSET_CURINDEX_INVALID_);
