@@ -69,6 +69,10 @@ def mpdboot():
         shell = path.split(environ['SHELL'])[-1]
     except:
         shell = 'csh'
+    if environ.has_key('MPD_TMPDIR'):
+        tmpdir = environ['MPD_TMPDIR']
+    else:
+        tmpdir = ''
 
     argidx = 1    # skip arg 0
     while argidx < len(argv):
@@ -249,6 +253,8 @@ def mpdboot():
                 if cons == 'n':
                     cons = '-n'
                 mpdArgs = '%s %s %s %s %s ' % (cons,entryHost,entryPort,ifhn,ncpus)
+                if tmpdir:
+                    mpdArgs += ' --tmpdir=%s' % (tmpdir)
                 (mpdPID,mpdFD) = launch_one_mpd(idxToStart,currRoot,mpdArgs,hostsAndInfo)
                 hostsAndInfo[idxToStart]['pid'] = mpdPID
                 hostsSeen[hostsAndInfo[idxToStart]['host']] = 1

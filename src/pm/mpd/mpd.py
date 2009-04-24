@@ -8,7 +8,7 @@
 usage: mpd [--host=<host> --port=<portnum>] [--noconsole]
            [--trace] [--echo] [--daemon] [--bulletproof] --ncpus=<ncpus>
            [--ifhn=<interface-hostname>] [--listenport=<listenport>]
-           [--pid=<pidfilename>] [-zc] [--debug]
+           [--pid=<pidfilename>] --tmpdir=<tmpdir>] [-zc] [--debug]
 
 Some long parameter names may be abbreviated to their first letters by using
   only one hyphen and no equal sign:
@@ -36,6 +36,7 @@ Some long parameter names may be abbreviated to their first letters by using
   will acquire one from the system
 --pid=filename writes the mpd pid into the specified file, or --pid alone
   writes it into /var/run/mpd.pid
+--tmpdir=tmpdirname where mpd places temporary sockets, etc.
 -zc is a purely EXPERIMENTAL option right now used to investigate zeroconf
   networking; it can be used to allow mpds to discover each other locally
   using multicast DNS; its usage may change over time
@@ -74,7 +75,7 @@ from  mpdlib      import  mpd_set_my_id, mpd_check_python_version, mpd_sockpair,
                           mpd_print, mpd_get_my_username, mpd_close_zc, \
                           mpd_get_groups_for_username, mpd_uncaught_except_tb, \
                           mpd_set_procedures_to_trace, mpd_trace_calls, \
-                          mpd_dbg_level, mpd_set_dbg_level, \
+                          mpd_dbg_level, mpd_set_dbg_level, mpd_set_tmpdir, \
                           MPDSock, MPDListenSock, MPDConListenSock, \
                           MPDStreamHandler, MPDRing, MPDParmDB
 from  mpdman      import  MPDMan
@@ -139,6 +140,7 @@ class MPD(object):
                                  'MPD_ZC'               :  0,
                                  'MPD_LOGFILE_TRUNC_SZ' :  4000000,  # -1 -> don't trunc
                                  'MPD_PORT_RANGE'       :  0,
+                                 'MPD_TMPDIR'           :  '/tmp',
                                }
         for (k,v) in self.parmsToOverride.items():
             self.parmdb[('thispgm',k)] = v
@@ -149,6 +151,8 @@ class MPD(object):
         self.myPid = os.getpid()
         if self.parmdb['MPD_PORT_RANGE']:
             os.environ['MPICH_PORT_RANGE'] = self.parmdb['MPD_PORT_RANGE']
+        self.tmpdir = self.parmdb['MPD_TMPDIR']
+        mpd_set_tmpdir(self.tmpdir)
         self.listenSock = MPDListenSock(name='ring_listen_sock',
                                         port=self.parmdb['MPD_LISTEN_PORT'])
         self.parmdb[('thispgm','MPD_LISTEN_PORT')] = self.listenSock.sock.getsockname()[1]
@@ -200,7 +204,7 @@ class MPD(object):
             self.conExt = '_'  + os.environ['MPD_CON_EXT']
         else:
             self.conExt = ''
-        self.logFilename = '/tmp/mpd2.logfile_' + mpd_get_my_username() + self.conExt
+        self.logFilename = self.tmpdir + '/mpd2.logfile_' + mpd_get_my_username() + self.conExt
         if self.parmdb['MPD_PID_FILENAME']:  # may overwrite it below
             pidFile = open(self.parmdb['MPD_PID_FILENAME'],'w')
             print >>pidFile, "%d" % (os.getpid())
@@ -394,6 +398,18 @@ class MPD(object):
                 else:
                     pidFilename = splitPid[1]
                 self.parmdb[('cmdline','MPD_PID_FILENAME')] = pidFilename
+                argidx += 1
+            elif sys.argv[argidx].startswith('--tmpdir'):
+                try:
+                    splitTmpdir = sys.argv[argidx].split('=')
+                except:
+                    print 'failed to parse --tmpdir option'
+                    self.usage()
+                if len(splitTmpdir) == 1  or  not splitTmpdir[1]:
+                    tmpdirName = '/tmp'
+                else:
+                    tmpdirName = splitTmpdir[1]
+                self.parmdb[('cmdline','MPD_TMPDIR')] = tmpdirName
                 argidx += 1
             elif sys.argv[argidx].startswith('--ifhn'):
                 try:

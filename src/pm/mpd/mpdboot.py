@@ -268,6 +268,10 @@ def mpdboot():
     except:
         pass
 
+    if environ.has_key('MPD_TMPDIR'):
+        tmpdir = environ['MPD_TMPDIR']
+    else:
+        tmpdir = ''
     if myIfhn:
         ifhn = '--ifhn=%s' % (myIfhn)
     else:
@@ -275,6 +279,8 @@ def mpdboot():
     hostsAndInfo[0]['entry_host'] = ''
     hostsAndInfo[0]['entry_port'] = ''
     mpdArgs = '%s %s --ncpus=%d' % (localConArg,ifhn,myNcpus)
+    if tmpdir:
+        mpdArgs += ' --tmpdir=%s' % (tmpdir)
     (mpdPID,mpdFD) = launch_one_mpd(0,0,mpdArgs,hostsAndInfo)
     fd2idx = {mpdFD : 0}
 
@@ -309,6 +315,8 @@ def mpdboot():
                 if ifhn:
                     ifhn = '--ifhn=%s' % (ifhn)
                 mpdArgs = '%s -h %s -p %s %s --ncpus=%d' % (remoteConArg,entryHost,entryPort,ifhn,myNcpus)
+                if tmpdir:
+                    mpdArgs += ' --tmpdir=%s' % (tmpdir)
                 (mpdPID,mpdFD) = launch_one_mpd(idxToStart,currRoot,mpdArgs,hostsAndInfo)
                 numStarting += 1
                 numUnderCurrRoot += 1

@@ -46,6 +46,7 @@ except:
 # some global vars for some utilities
 global mpd_my_id, mpd_signum, mpd_my_hostname, mpd_procedures_to_trace
 global mpd_cli_app  # for debug during mpich nightly tests
+global mpd_tmpdir
 mpd_cli_app = ''
 mpd_my_id = ''
 mpd_procedures_to_trace = []
@@ -55,6 +56,10 @@ mpd_my_hostname = ''
 # NOTE: mpd_handle_signal must be called by the user, e.g. in his own signal handler
 mpd_signum = 0
 mpd_zc = 0
+if os.environ.has_key('MPD_TMPDIR'):
+    mpd_tmpdir = os.environ['MPD_TMPDIR']
+else:
+    mpd_tmpdir = '/tmp'
 
 # For easier debugging, we provide this variable that is used in the
 # mpd_print calls.  This makes it a little easier to debug problems involving
@@ -69,6 +74,10 @@ def mpd_set_dbg_level(flag):
 def mpd_set_my_id(myid=''):
     global mpd_my_id
     mpd_my_id = myid
+
+def mpd_set_tmpdir(tmpdir):
+    global mpd_tmpdir
+    mpd_tmpdir = tmpdir
 
 def mpd_get_my_id():
     global mpd_my_id
@@ -1110,7 +1119,7 @@ class MPDConListenSock(MPDListenSock):
             self.conExt = '_'  + os.environ['MPD_CON_EXT']
         else:
             self.conExt = ''
-        self.conFilename = '/tmp/mpd2.console_' + mpd_get_my_username() + self.conExt
+        self.conFilename = mpd_tmpdir + '/mpd2.console_' + mpd_get_my_username() + self.conExt
         self.secretword = secretword
         consoleAlreadyExists = 0
         if hasattr(socket,'AF_UNIX'):
@@ -1178,7 +1187,7 @@ class MPDConClientSock(MPDSock):
             self.conExt = ''
         self.secretword = secretword
         if mpdroot:
-            self.conFilename = '/tmp/mpd2.console_root' + self.conExt
+            self.conFilename = mpd_tmpdir + '/mpd2.console_root' + self.conExt
             self.sock = MPDSock(family=socket.AF_UNIX,name=name)
             rootpid = os.fork()
             if rootpid == 0:
@@ -1195,7 +1204,7 @@ class MPDConClientSock(MPDSock):
                     mpd_print(1,'forked process failed; status=%s' % status)
                     sys.exit(-1)
         else:
-            self.conFilename = '/tmp/mpd2.console_' + mpd_get_my_username() + self.conExt
+            self.conFilename = mpd_tmpdir + '/mpd2.console_' + mpd_get_my_username() + self.conExt
             if hasattr(socket,'AF_UNIX'):
                 sockFamily = socket.AF_UNIX
             else:

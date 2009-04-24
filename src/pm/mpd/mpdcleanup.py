@@ -23,7 +23,7 @@ __credits__ = ""
 import sys, os, socket
 
 from getopt import getopt
-from mpdlib import mpd_get_my_username, mpd_same_ips
+from mpdlib import mpd_get_my_username, mpd_same_ips, mpd_set_tmpdir
 
 def mpdcleanup():
     rshCmd    = 'ssh'
@@ -65,7 +65,11 @@ def mpdcleanup():
         conExt = '_' + os.environ['MPD_CON_EXT']
     else:
         conExt = ''
-    cleanFile = '/tmp/mpd2.console_' + user + conExt
+    if os.environ.has_key('MPD_TMPDIR'):
+        tmpdir = os.environ['MPD_TMPDIR']
+    else:
+        tmpdir = '/tmp'
+    cleanFile = tmpdir + '/mpd2.console_' + user + conExt
     if rshCmd == 'ssh':
 	xOpt = '-x'
     else:
