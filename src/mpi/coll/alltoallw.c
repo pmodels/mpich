@@ -347,15 +347,19 @@ int MPI_Alltoallw(void *sendbuf, int *sendcnts, int *sdispls,
             for (i=0; i<comm_size; i++) {
                 MPIR_ERRTEST_COUNT(sendcnts[i], mpi_errno);
                 MPIR_ERRTEST_COUNT(recvcnts[i], mpi_errno);
-                MPIR_ERRTEST_DATATYPE(sendtypes[i], "sendtype[i]", mpi_errno);
-                MPIR_ERRTEST_DATATYPE(recvtypes[i], "recvtype[i]", mpi_errno);
+                if (sendcnts[i] > 0) {
+                    MPIR_ERRTEST_DATATYPE(sendtypes[i], "sendtype[i]", mpi_errno);
+                }
+                if (recvcnts[i] > 0) {
+                    MPIR_ERRTEST_DATATYPE(recvtypes[i], "recvtype[i]", mpi_errno);
+                }
 
-                if (HANDLE_GET_KIND(sendtypes[i]) != HANDLE_KIND_BUILTIN) {
+                if ((sendcnts[i] > 0) && (HANDLE_GET_KIND(sendtypes[i]) != HANDLE_KIND_BUILTIN)) {
                     MPID_Datatype_get_ptr(sendtypes[i], sendtype_ptr);
                     MPID_Datatype_valid_ptr( sendtype_ptr, mpi_errno );
                     MPID_Datatype_committed_ptr( sendtype_ptr, mpi_errno );
                 }
-                if (HANDLE_GET_KIND(recvtypes[i]) != HANDLE_KIND_BUILTIN) {
+                if ((recvcnts[i] > 0) && (HANDLE_GET_KIND(recvtypes[i]) != HANDLE_KIND_BUILTIN)) {
                     MPID_Datatype_get_ptr(recvtypes[i], recvtype_ptr);
                     MPID_Datatype_valid_ptr( recvtype_ptr, mpi_errno );
                     MPID_Datatype_committed_ptr( recvtype_ptr, mpi_errno );
