@@ -278,7 +278,14 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
        fragmentation */
     MPIR_Bsend_check_active();
 
-    (void)NMPI_Pack_size( count, dtype, comm_ptr->handle, &packsize );
+    if (dtype != MPI_PACKED)
+    {
+        (void)NMPI_Pack_size( count, dtype, comm_ptr->handle, &packsize );
+    }
+    else
+    {
+        packsize = count;
+    }
 
     MPIU_DBG_MSG_D(BSEND,TYPICAL,"looking for buffer of size %d", packsize);
     /*
@@ -302,8 +309,16 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
 	       either primative or contiguous types, and just
 	       use memcpy and the provided datatype */
 	    msg->count = 0;
-	    (void)NMPI_Pack( buf, count, dtype, msg->msgbuf, packsize, 
-			     &msg->count, comm_ptr->handle );
+            if (dtype != MPI_PACKED)
+            {
+                (void)NMPI_Pack( buf, count, dtype, p->msg.msgbuf, packsize, 
+                                 &p->msg.count, comm_ptr->handle );
+            }
+            else
+            {
+                memcpy(p->msg.msgbuf, buf, count);
+                p->msg.count = count;
+            }
 	    /* Try to send the message.  We must use MPID_Isend
 	       because this call must not block */
 	    mpi_errno = MPID_Isend(msg->msgbuf, msg->count, MPI_PACKED, 
