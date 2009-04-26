@@ -26,6 +26,8 @@ void HYD_LCHU_init_params(void)
     handle.wdir = NULL;
     handle.host_file = NULL;
 
+    handle.ranks_per_proc = -1;
+
     handle.global_env = NULL;
     handle.system_env = NULL;
     handle.user_env = NULL;

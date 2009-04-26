@@ -220,7 +220,7 @@ static HYD_Status launch_procs_in_runtime_mode(void)
 
     /* For each active partition, get the appropriate sockaddr to connect to */
     for (partition = handle.partition_list; partition && partition->exec_list;
-            partition = partition->next) {
+         partition = partition->next) {
         status = HYDU_sock_gethostbyname(partition->name, &partition->sa, handle.proxy_port);
         HYDU_ERR_POP(status, "unable to get sockaddr information\n");
     }
@@ -251,7 +251,7 @@ static HYD_Status boot_proxies(int launch_in_foreground)
     struct HYD_Partition *partition;
 
     handle.one_pass_count = 0;
-    /* For each partition, get the appropriate sockaddr to connect to & find one pass cnt*/
+    /* For each partition, get the appropriate sockaddr to connect to & find one pass cnt */
     for (partition = handle.partition_list; partition; partition = partition->next) {
         status = HYDU_sock_gethostbyname(partition->name, &partition->sa, handle.proxy_port);
         HYDU_ERR_POP(status, "unable to get sockaddr information\n");
@@ -343,7 +343,7 @@ static HYD_Status launch_procs_in_persistent_mode(void)
 
     /* For each active partition, get the appropriate sockaddr to connect to */
     for (partition = handle.partition_list; partition && partition->exec_list;
-            partition = partition->next) {
+         partition = partition->next) {
         status = HYDU_sock_gethostbyname(partition->name, &partition->sa, handle.proxy_port);
         HYDU_ERR_POP(status, "unable to get sockaddr information\n");
     }

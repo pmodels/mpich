@@ -33,7 +33,7 @@ struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v1 = &pmi_v1_foo;
 
 HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
 {
-    int id, size, debug, i;
+    int id, rank, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;
@@ -45,21 +45,17 @@ HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
     strtok(args[0], "=");
     id = atoi(strtok(NULL, "="));
 
-    size = 0;
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next)
-        for (exec = partition->exec_list; exec; exec = exec->next)
-            size += exec->proc_count;
-
-    debug = handle.debug;
-
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=initack\ncmd=set size=");
-    tmp[i++] = HYDU_int_to_str(size);
+    tmp[i++] = HYDU_int_to_str(pg_list->num_procs);
     tmp[i++] = HYDU_strdup("\ncmd=set rank=");
-    tmp[i++] = HYDU_int_to_str(id);
+
+    status = HYD_PMCD_pmi_id_to_rank(id, &rank);
+    HYDU_ERR_POP(status, "unable to convert ID to rank\n");
+    tmp[i++] = HYDU_int_to_str(rank);
+
     tmp[i++] = HYDU_strdup("\ncmd=set debug=");
-    tmp[i++] = HYDU_int_to_str(debug);
+    tmp[i++] = HYDU_int_to_str(handle.debug);
     tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 

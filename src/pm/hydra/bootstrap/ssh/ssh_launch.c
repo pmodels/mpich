@@ -32,8 +32,8 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
      * cannot use this and will have to perfom its own launch. */
     process_id = 0;
     for (partition = handle.partition_list;
-            partition && !HYDU_strlist_is_empty(partition->proxy_args);
-            partition = partition->next) {
+         partition && !HYDU_strlist_is_empty(partition->proxy_args);
+         partition = partition->next) {
 
         /* Setup the executable arguments */
         arg = 0;

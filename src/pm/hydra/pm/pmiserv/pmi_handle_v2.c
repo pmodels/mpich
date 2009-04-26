@@ -215,7 +215,7 @@ char *find_token_keyval(struct token *tokens, int count, char *key)
 
 HYD_Status HYD_PMCD_pmi_handle_v2_fullinit(int fd, char *args[])
 {
-    int rank, size, debug, i;
+    int id, rank, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *rank_str;
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;
@@ -232,22 +232,17 @@ HYD_Status HYD_PMCD_pmi_handle_v2_fullinit(int fd, char *args[])
     rank_str = find_token_keyval(tokens, token_count, "pmirank");
     HYDU_ERR_CHKANDJUMP(status, rank_str == NULL, HYD_INTERNAL_ERROR,
                         "unable to find pmirank token\n");
-
-    rank = atoi(rank_str);
-
-    size = 0;
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next)
-        for (exec = partition->exec_list; exec; exec = exec->next)
-            size += exec->proc_count;
-
-    debug = handle.debug;
+    id = atoi(rank_str);
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=fullinit-response;pmi-version=2;pmi-subversion=0;rank=");
+
+    status = HYD_PMCD_pmi_id_to_rank(id, &rank);
+    HYDU_ERR_POP(status, "unable to convert ID to rank\n");
     tmp[i++] = HYDU_int_to_str(rank);
+
     tmp[i++] = HYDU_strdup(";size=");
-    tmp[i++] = HYDU_int_to_str(size);
+    tmp[i++] = HYDU_int_to_str(pg_list->num_procs);
     tmp[i++] = HYDU_strdup(";appnum=0;debugged=FALSE;pmiverbose=0;rc=0;");
     tmp[i++] = NULL;
 

@@ -43,6 +43,8 @@ static HYD_Status create_pg(HYD_PMCD_pmi_pg_t ** pg, int pgid)
     HYDU_MALLOC(*pg, HYD_PMCD_pmi_pg_t *, sizeof(HYD_PMCD_pmi_pg_t), status);
     (*pg)->id = pgid;
     (*pg)->num_procs = 0;
+    (*pg)->num_subgroups = 0;
+    (*pg)->conn_procs = NULL;
     (*pg)->barrier_count = 0;
     (*pg)->node_list = NULL;
 
@@ -176,6 +178,30 @@ HYD_Status HYD_PMCD_pmi_add_kvs(char *key, char *val, HYD_PMCD_pmi_kvs_t *kvs,
             run = run->next;
         }
         run->next = key_pair;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYD_PMCD_pmi_id_to_rank(int id, int *rank)
+{
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (handle.ranks_per_proc == -1) {
+        /* If multiple procs per rank is not defined, use ID as the rank */
+        *rank = id;
+    }
+    else {
+        *rank = (id * handle.ranks_per_proc) + pg_list->conn_procs[id];
+        pg_list->conn_procs[id]++;
     }
 
   fn_exit:
@@ -389,25 +415,33 @@ HYD_Status HYD_PMCD_pmi_init(void)
 {
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;
-    int num_procs;
+    int i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /* Find the number of processes in the PG */
-    num_procs = 0;
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next)
-        for (exec = partition->exec_list; exec; exec = exec->next)
-            num_procs += exec->proc_count;
-
     status = create_pg(&pg_list, 0);
     HYDU_ERR_POP(status, "unable to create pg\n");
 
-    pg_list->num_procs = num_procs;
+    /* Find the number of processes in the PG */
+    pg_list->num_subgroups = 0;
+    for (partition = handle.partition_list; partition && partition->exec_list;
+         partition = partition->next)
+        for (exec = partition->exec_list; exec; exec = exec->next)
+            pg_list->num_subgroups += exec->proc_count;
+
+    if (handle.ranks_per_proc != -1)
+        pg_list->num_procs = pg_list->num_subgroups * handle.ranks_per_proc;
+    else
+        pg_list->num_procs = pg_list->num_subgroups;
 
     status = add_preassigned_job_kvs(pg_list);
     HYDU_ERR_POP(status, "unable to add preassigned job kvs keys\n");
+
+    /* Allocate and initialize the connected ranks */
+    HYDU_MALLOC(pg_list->conn_procs, int *, pg_list->num_subgroups * sizeof(int), status);
+    for (i = 0; i < pg_list->num_subgroups; i++)
+        pg_list->conn_procs[i] = 0;
 
   fn_exit:
     HYDU_FUNC_EXIT();

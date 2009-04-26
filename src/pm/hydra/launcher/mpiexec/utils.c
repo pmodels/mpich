@@ -294,6 +294,20 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             HYDU_FREE(str[1]);
             continue;
         }
+        else if (!strcmp(str[0], "--ranks-per-proc")) {
+            if (!str[1]) {
+                /* Argument could be of the form "--foo x" */
+                INCREMENT_ARGV(status);
+                str[1] = HYDU_strdup(*argv);
+            }
+
+            HYDU_ERR_CHKANDJUMP(status, handle.ranks_per_proc != -1, HYD_INTERNAL_ERROR,
+                                "duplicate ranks per proc\n");
+            handle.ranks_per_proc = atoi(str[1]);
+            HYDU_FREE(str[0]);
+            HYDU_FREE(str[1]);
+            continue;
+        }
         else {
             /* Not a recognized argument of the form --foo=x OR --foo x */
             HYDU_FREE(str[0]);

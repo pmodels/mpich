@@ -26,6 +26,8 @@ struct HYD_Handle_ {
     char *wdir;
     char *host_file;
 
+    int ranks_per_proc;
+
     /* Global environment */
     HYD_Env_t *global_env;
     HYD_Env_t *system_env;

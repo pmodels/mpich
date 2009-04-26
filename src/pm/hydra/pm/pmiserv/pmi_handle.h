@@ -56,6 +56,9 @@ struct HYD_PMCD_pmi_pg {
     int id;
 
     int num_procs;              /* Number of processes in the group */
+    int num_subgroups;          /* Number of subgroups */
+    int *conn_procs;            /* Number of connected procs in each subgroup */
+
     int barrier_count;
 
     struct HYD_PMCD_pmi_node *node_list;
@@ -65,6 +68,7 @@ struct HYD_PMCD_pmi_pg {
 };
 
 HYD_Status HYD_PMCD_pmi_add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd, int rank);
+HYD_Status HYD_PMCD_pmi_id_to_rank(int id, int *rank);
 HYD_PMCD_pmi_process_t *HYD_PMCD_pmi_find_process(int fd);
 HYD_Status HYD_PMCD_pmi_add_kvs(char *key, char *val, HYD_PMCD_pmi_kvs_t *kvs,
                                 char **key_pair_str, int *ret);

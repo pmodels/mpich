@@ -26,8 +26,8 @@ HYD_Status HYD_BSCU_wait_for_completion(void)
 
     not_completed = 0;
     for (partition = handle.partition_list;
-            partition && !HYDU_strlist_is_empty(partition->proxy_args);
-            partition = partition->next)
+         partition && !HYDU_strlist_is_empty(partition->proxy_args);
+         partition = partition->next)
         if (partition->exit_status == -1)
             not_completed++;
 
@@ -41,8 +41,8 @@ HYD_Status HYD_BSCU_wait_for_completion(void)
         if (pid > 0) {
             /* Find the pid and mark it as complete. */
             for (partition = handle.partition_list;
-                    partition && !HYDU_strlist_is_empty(partition->proxy_args);
-                    partition = partition->next) {
+                 partition && !HYDU_strlist_is_empty(partition->proxy_args);
+                 partition = partition->next) {
                 if (partition->pid == pid) {
                     partition->exit_status = WEXITSTATUS(ret_status);
                     not_completed--;
