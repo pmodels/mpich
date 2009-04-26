@@ -36,6 +36,7 @@ struct HYD_PMCD_pmi_process {
      * masquerading. */
     int fd;
     int rank; /* COMM_WORLD rank of this process */
+    int epoch; /* Epoch this process has reached */
     struct HYD_PMCD_pmi_node *node; /* Back pointer to the PMI node */
     struct HYD_PMCD_pmi_process *next;
 };

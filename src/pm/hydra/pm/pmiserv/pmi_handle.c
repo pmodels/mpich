@@ -347,6 +347,7 @@ HYD_Status HYD_PMCD_pmi_add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd, int ra
     HYDU_MALLOC(process, HYD_PMCD_pmi_process_t *, sizeof(HYD_PMCD_pmi_process_t), status);
     process->fd = fd;
     process->rank = rank;
+    process->epoch = 0;
     process->node = node;
     process->next = NULL;
     if (node->process_list == NULL)
