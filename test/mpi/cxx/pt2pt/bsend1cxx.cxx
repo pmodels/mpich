@@ -21,6 +21,8 @@ using namespace std;
 #else
 #include <iostream.h>
 #endif
+/* Needed for strcmp */
+#include <string.h>
 
 /* Rather than deal with the need to declare strncpy correctly 
    (avoiding possible conflicts with other header files), we 
