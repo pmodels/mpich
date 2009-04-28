@@ -44,12 +44,20 @@ int chkcomm2inc_ (int *keyval, const int *expected, int *ierr)
     int      flag;
     MPI_Aint *val;
 
+    /* See Example 16.19 in MPI 2.2, part B.  The use of MPI_Aint *val
+       and the address of val in the get_attr call is correct, as is
+       the use of *val to access the value. */
     MPI_Comm_get_attr( MPI_COMM_WORLD, *keyval, &val, &flag );
     if (!flag) {
 	*ierr = 1;
     }
     else {
 	if (*val != *expected) {
+	    /* In some cases, using printf from a c routine linked 
+	       with a Fortran routine can cause linking difficulties.
+	       To avoid problems in running the tests, this print
+	       is commented out */
+	    /* printf( "Val = %x, expected = %d\n", val, *expected ); */
 	    *ierr = *ierr + 1;
 	}
     }

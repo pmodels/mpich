@@ -22,6 +22,7 @@
       callcount = 0
       delcount  = 0
 
+      errs      = 0
       call mpi_init(ierr)
       commextra = 1001
       call mpi_comm_create_keyval( mycopyfn, mydelfn,                     &
@@ -30,6 +31,11 @@
       call mpi_type_create_keyval( mytcopyfn, mytdelfn,                   &
                                    ftype2_keyval, typeextra, ierr )
       call chkckeyvals( ccomm2_keyval, ctype2_keyval, cwin2_keyval )
+
+      ! Address-sized ints may be 32, 64, or something else in size;
+      ! we can't assume any particular size.  We can use the Fortran 90
+      ! intrinsic range to determine the available size and compute
+      ! a suitable value.
       val = 5555
       call mpi_comm_set_attr( MPI_COMM_WORLD, fcomm2_keyval, val, ierr )
 
@@ -42,7 +48,7 @@
       call mpi_type_free_keyval( ctype2_keyval, ierr )
       call mpi_win_free_keyval( cwin2_keyval, ierr )
 
-      if (ierr .eq. 0) then
+      if (errs .eq. 0) then
          print *, ' No Errors'
       else
          print *, ' Found ', errs, ' errors'
