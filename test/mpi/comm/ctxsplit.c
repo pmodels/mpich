@@ -19,39 +19,61 @@
 
 main(int argc, char** argv) {
 
-   int i=0;
-   int randval;
-   int rank;
-   int errs = 0;
+   int      i=0;
+   int      randval;
+   int      rank;
+   int      errs = 0;
    MPI_Comm newcomm;
-
+   double   startTime;
+   int      nLoop = 100000;
+   
    MTest_Init(&argc,&argv);
-   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
-   for (i=0; i<100000; i++) {
-
-     if ( rank == 0 && (i%100 == 0) ) {
-       MTestPrintfMsg( 10, "After %d\n", i );
-     }
-
-     randval=rand();
-
-     if (randval%(rank+2) == 0) {
-       MPI_Comm_split(MPI_COMM_WORLD,1,rank,&newcomm);
-       MPI_Comm_free( &newcomm );
-     }
-     else {
-       MPI_Comm_split(MPI_COMM_WORLD,MPI_UNDEFINED,rank,&newcomm);
-       if (newcomm != MPI_COMM_NULL) {
-	 errs++;
-	 printf( "Created a non-null communicator with MPI_UNDEFINED\n" );
+   for (i=1; i<argc; i++) {
+       if (strcmp( argv[i], "--loopcount" ) == 0)  {
+	   i++;
+	   nLoop = atoi( argv[i] );
        }
-     }
-
+       else {
+	   fprintf( stderr, "Unrecognized argument %s\n", argv[i] );
+       }
    }
 
+   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+
+   startTime = MPI_Wtime();
+   for (i=0; i<nLoop; i++) {
+       
+       if ( rank == 0 && (i%100 == 0) ) {
+	   double rate = MPI_Wtime() - startTime;
+	   if (rate > 0) {
+	       rate = i / rate;
+	       MTestPrintfMsg( 10, "After %d (%f)\n", i, rate );
+	   }
+	   else {
+	       MTestPrintfMsg( 10, "After %d\n", i );
+	   }
+       }
+       
+       /* FIXME: Explain the rationale behind rand in this test */
+       randval=rand();
+       
+       if (randval%(rank+2) == 0) {
+	   MPI_Comm_split(MPI_COMM_WORLD,1,rank,&newcomm);
+	   MPI_Comm_free( &newcomm );
+       }
+       else {
+	   MPI_Comm_split(MPI_COMM_WORLD,MPI_UNDEFINED,rank,&newcomm);
+	   if (newcomm != MPI_COMM_NULL) {
+	       errs++;
+	       printf( "Created a non-null communicator with MPI_UNDEFINED\n" );
+	   }
+       }
+       
+   }
+   
    MTest_Finalize( errs );
    MPI_Finalize();
-
+   
    return 0;
 }
