@@ -12,3 +12,10 @@ all-preamble:
 mpich2-build-install mpich2-build-uninstall install install-alt:
 	cd launcher && ${MAKE} $@
 	cd pm && ${MAKE} $@
+
+clean-preamble:
+	${MAKE} cleanlibs
+
+# cleanlibs makes sure that we clean all of the library files
+cleanlibs:
+	rm -f lib/libhydra.a

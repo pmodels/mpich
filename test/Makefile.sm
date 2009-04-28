@@ -1,6 +1,7 @@
 SUBDIRS = mpi mpid util basic commands .
 smvar_do_sharedlibs = 0
 smvarSubdir_commonmake=
+smvarSubdir_do_dependencies=no
 distclean-local:
 	rm -f runtests
 

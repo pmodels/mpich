@@ -31,6 +31,8 @@ $do_dependencies = "dynamic"; # set to no, static, or dynamic to attempt
                               # to generate dependency information 
 			      # use "ignore" to produce a target (for
 			      # recursive ops) but no actions
+$dependenciesDummy = "no";    # set to yes to create a dummy target for
+                              # dependencies
 $makeInclude = "include";     # set to the include command to use.
                               # This is more robust if it ignores missing files
                               # (e.g., the gnumake "-include")
@@ -1207,6 +1209,11 @@ sub WriteMfile {
 	    &TargetDependenciesDynamic;
 	}
     }
+    elsif ($dependenciesDummy == "yes") {
+	print FD "# Dummy target$newline";
+	print FD "dependencies:$newline$newline";
+    }
+
 
     # Tags
     print FD $makeBlockSep;
@@ -1498,12 +1505,8 @@ sub DefaultRules {
 	    $extkey = "$ext:o";
 	    # COMMAND PRINTING
 	    if (defined($extstring{$extkey})) {
-		print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-		print FD "\t  echo \"$extstring{$extkey}\" ; \\$newline";
-		print FD "\telse \\$newline";
-		print FD "\t  echo $extrules_with_profile{$extkey} ; \\$newline";
-		print FD "\tfi$newline";
-		print FD "\t\@$extrules_with_profile{$extkey}$newline";
+		&PrintVerboseOptionCommand( "$extrules_with_profile{$extkey}",
+					    "-", "$extstring{$extkey}" );
 	    }
 	    else {
 		print FD "\t$extrules_with_profile{$extkey}$newline";
@@ -1514,12 +1517,8 @@ sub DefaultRules {
 	    if (defined($extrules{$extkey})) {
 		# COMMAND PRINTING
 		if (defined($extstring{$extkey})) {
-		    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-		    print FD "\t  echo \"$extstring{$extkey}\" ; \\$newline";
-		    print FD "\telse \\$newline";
-		    print FD "\t  echo $extrules{$extkey} ; \\$newline";
-		    print FD "\tfi$newline";
-		    print FD "\t\@$extrules{$extkey}$newline";
+		    &PrintVerboseOptionCommand( "$extrules{$extkey}", "-",
+						"$extstring{$extkey}" );
 		}
 		else {
 		    print FD "\t$extrules{$extkey}$newline";
@@ -1539,12 +1538,8 @@ sub DefaultRules {
 		    # as well as remove any @ prefixes
 		    my $escaped_rule = $extrules{$extkey};
 		    $escaped_rule =~ s/$newline(\t+)\@*/ ; \\$newline$1echo /g;
-		    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-		    print FD "\t  echo \"$extstring{$extkey}\" ; \\$newline";
-		    print FD "\telse \\$newline";
-		    print FD "\t  echo $escaped_rule ; \\$newline";
-		    print FD "\tfi$newline";
-		    print FD "\t\@$extrules{$extkey}$newline";
+		    &PrintVerboseOptionCommand( "$extrules{$extkey}", "-",
+						"$extstring{$extkey}" );
 		}
 		else {
 		    print FD "\t$extrules{$extkey}$newline";
@@ -1575,12 +1570,8 @@ sub DefaultRules {
 	    print FD ".$extkey$newline";
 	    # COMMAND PRINTING
 	    if (defined($extstring{$extkey})) {
-		print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-		print FD "\t  echo \"$extstring{$extkey}\" ; \\$newline";
-		print FD "\telse \\$newline";
-		print FD "\t  echo $extrules{$extkey} ; \\$newline";
-		print FD "\tfi$newline";
-		print FD "\t\@$extrules{$extkey}$newline";
+		&PrintVerboseOptionCommand( "$extrules{$extkey}", "-", 
+					    "$extstring{$extkey}" );
 	    }
 	    else {
 		print FD "\t$extrules{$extkey}$newline";
@@ -2961,12 +2952,7 @@ sub LibraryBuild {
 	    &print_make_line( FD, "${libloc}lib$libname.$libext($obj): $obj" );
 	    &print_make_endline( FD );
 	    # COMMAND PRINTING
-	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	    print FD "\t  echo \"  AR cr ${libloc}lib$libname.$libext \$?\" ; \\$newline";
-	    print FD "\telse \\$newline";
-	    print FD "\t  echo \${AR} cr ${libloc}lib$libname.$libext \$? ; \\$newline";
-	    print FD "\tfi$newline";
-	    print FD "\t\${AR} cr ${libloc}lib$libname.$libext \$?$newline";
+	    &PrintVerboseOptionCommand( "\${AR} cr ${libloc}lib$libname.$libext \$?", "  AR" );
 	}
 	else {
 	    if ($ext ne "h") {
@@ -2977,12 +2963,8 @@ sub LibraryBuild {
     &SMInvokeAction( "OutputLibDependencies", $lib, $libloc, $memext );
     if (!$dolib_member) {
         &print_make_endline( FD );
-	print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	print FD "\t  echo \"  AR cr ${libloc}lib$libname.$libext \$?\" ; \\$newline";
-	print FD "\telse \\$newline";
-	print FD "\t  echo \${AR} cr ${libloc}lib$libname.$libext \$? ; \\$newline";
-	print FD "\tfi$newline";
-        print FD "\t\@\${AR} cr ${libloc}lib$libname.$libext \$?$newline";
+	&PrintVerboseOptionCommand( "\${AR} cr ${libloc}lib$libname.$libext \$?",
+				    "  AR" );
     }
 }
 
@@ -2999,12 +2981,8 @@ sub TargetLibraries {
 	&SMInvokeAction( "OutputLib", $lib, $libloc );
         if ($ranliblib) {
 	    # COMMAND PRINTING
-	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	    print FD "\t  echo \"  RANLIB          lib$lib.a\" ; \\$newline";
-	    print FD "\telse \\$newline";
-	    print FD "\t  echo \${RANLIB} ${libloc}lib$lib.a ; \\$newline";
-	    print FD "\tfi$newline";
-	    print FD "\t\@\${RANLIB} ${libloc}lib$lib.a$newline";
+	    &PrintVerboseOptionCommand( "\${RANLIB} ${libloc}lib$lib.a", "-",
+					"  RANLIB          lib$lib.a" );
 	}
 	# To handle timestamp problems with recursive makes, add a delay
 	&LibraryTimestampFix( $lib, $libloc )
@@ -3118,20 +3096,12 @@ sub TargetProfileLibraries {
 	if ($found_source_files) {
 	    # Add these files as objects to the archive
 	    # COMMAND PRINTING
-	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	    print FD "\t  echo \"  AR cr ${libloc}lib$proflib_name.a \$?\" ; \\$newline";
-	    print FD "\telse \\$newline";
-	    print FD "\t  echo \${AR} cr ${libloc}lib$proflib_name.a \$? ; \\$newline";
-	    print FD "\tfi$newline";
-	    print FD "\t\@\${AR} cr ${libloc}lib$proflib_name.a \$?$newline";
+	    &PrintVerboseOptionCommand( "\${AR} cr ${libloc}lib$proflib_name.a \$?",
+					"  AR" );
 	    if ($ranliblib) { 
 		# COMMAND PRINTING
-		print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-		print FD "\t  echo \"  RANLIB          lib$proflib_name.a\" ; \\$newline";
-		print FD "\telse \\$newline";
-		print FD "\t  echo \${RANLIB} ${libloc}lib$proflib_name.a ; \\$newline"; 
-		print FD "\tfi$newline";
-		print FD "\t\@\${RANLIB} ${libloc}lib$proflib_name.a$newline"; 
+		&PrintVerboseOptionCommand( "\${RANLIB} ${libloc}lib$proflib_name.a", 
+					    "-", "  RANLIB          lib$proflib_name.a" );
 	    }
 	    # To handle timestamp problems with recursive makes, 
 	    # add a delay
@@ -3168,12 +3138,8 @@ sub TargetProfileLibraries {
 	    if ($found_source_files) {
 		# Add these files as objects to the archive
 		# COMMAND PRINTING
-		print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-		print FD "\t  echo \"  AR cr ${libloc}lib$proflib_name.la \$?\" ; \\$newline";
-		print FD "\telse \\$newline";
-		print FD "\t  echo \${AR} cr ${libloc}lib$proflib_name.la \$?; \\$newline";
-		print FD "\tfi$newline";
-		print FD "\t\@\${AR} cr ${libloc}lib$proflib_name.la \$?$newline";
+		&PrintVerboseOptionCommand( "\${AR} cr ${libloc}lib$proflib_name.la \$?",
+					    "  AR" );
 		# To handle timestamp problems with recursive makes, 
 		# add a delay
 		&LibraryTimestampFix( $proflib_name.".la", $libloc );
@@ -3197,12 +3163,7 @@ sub TargetProfileLibraries {
 	    # so we explicitly list the source file
 	    print FD "$obj: $sourcefile$newline";
 	    # COMMAND PRINTING
-	    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
-	    print FD "\t  echo \"  CC              \${srcdir}/$sourcefile\" ; \\$newline";
-	    print FD "\telse \\$newline";
-	    print FD "\t  echo \$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj ; \\$newline";
-	    print FD "\tfi$newline";
-	    print FD "\t\@\$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj$newline";
+	    &PrintVerboseOptionCommand( "\$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj", "-", "  CC             \${srcdir}/$sourcefile" );
 	    if ($do_sharedlibs) {
 		$obj =~ s/\.o/.lo/;
 	        print FD "$obj: $sourcefile$newline";
@@ -4291,9 +4252,10 @@ sub TargetDependenciesDynamic {
 
     # First, are there any sources?
     # a hash in a scalar context is 0 if empty and nonzero otherwise
-    if (scalar(%libraries)) {
+    if (scalar(%libraries) || scalar(%programs)) {
 	$has_sources = 1;
     }
+    
     
     # Some makes will accept sinclude instead of -include
     # -include is gnumake for "include if file exists, ignore otherwise"
@@ -4301,7 +4263,7 @@ sub TargetDependenciesDynamic {
 
     print FD $makeBlockSep;
     print FD "# Dependencies$newline";
-    # This definition follows the cone for COMPILE_C
+    # This definition follows the one for COMPILE_C
     if ($has_sources) {
 	# By setting DEPS_DIR to just ., you can use -MMD to update the
 	# dependencies with gcc
@@ -4371,8 +4333,14 @@ in the build directory\n";
 
     if ($has_sources) {
 	print FD "\$(DEPS_DIR)/timestamp: ";
+	# FIXME: Create a single list of source files (remove duplicates)
 	foreach $lib (keys(%libraries)) {
 	    $sourcefiles = $libraries{$lib};
+	    PrintMakeLongline( FD, "$sourcefiles ", "append" );
+	}
+	foreach $pgm (keys(%programs)) {
+	    print "Adding sources for $pgm to deps\n" if $debug;
+	    $sourcefiles = $programs{$pgm};
 	    PrintMakeLongline( FD, "$sourcefiles ", "append" );
 	}
 	# Add Makefile as a dependency, since changes in the Makefile
@@ -4406,11 +4374,38 @@ in the build directory\n";
 		}
 	    }
 	}
+
+	# Programs
+	foreach $pgm (keys(%programs)) {
+	    foreach $sourcefile (split(/\s+/,$programs{$pgm})) {
+		if (defined($sawFile{$sourcefile})) { next; }
+		print "Adding deps command for program source $sourcefile\n" if $debug;
+		$sawFile{$sourcefile} = 1;
+		my $srcdirloc = '$(srcdir)/';
+		$ext = $sourcefile;
+		$ext =~ s/^.*\.//g;
+		$sourcebasename = $sourcefile;
+		$sourcebasename =~ s/\.\w*$//;
+		if ($ext eq "c") {
+		    if (! -s $sourcefile) {
+			$srcdirloc = '';
+		    }
+		    $targetOpts = "-MT \'_$sourcebasename.o $sourcebasename.o\'";
+		    if (!$found_profilelib) {
+			$targetOpts = "";
+		    }
+		    print FD "\t\$(MAKE_DEPEND_C) $targetOpts $srcdirloc$sourcefile >\$(DEPS_DIR)/$sourcebasename.d$newline";
+		    print FD "\techo \"$makeInclude \$(DEPS_DIR)/$sourcebasename.d\" >>\$(DEPS_DIR)/newalldeps$newline";
+		}
+	    }
+	}
+
 	print FD "\tif [ -s \$(DEPS_DIR)/newalldeps ] ; then mv -f \$(DEPS_DIR)/newalldeps \$(DEPS_DIR)/alldeps ; fi$newline";
 	print FD "\tdate >\$(DEPS_DIR)/timestamp$newline";
 
 	print FD "$makeInclude \$(DEPS_DIR)/alldeps$newline";
     }
+    
     print FD "# End of Dependencies$newline";
     print FD $makeBlockSep;
 }
@@ -4536,7 +4531,7 @@ sub ReadAutoconf {
 			$autoconf_files_by_dir_orig{$lcurdir} .= " $file";
 		    }
 		}
-		elsif ($file =~ /^\$(\w*)/) {
+		elsif ($file =~ /^\$[\{\(]?(\w*)[\}\)]?/) {
 		    # Another special case.  The name is actually
 		    # a shell variable.  This is too hard for us right now,
 		    # so generate a warning and do NOT add it to the list
@@ -5061,4 +5056,52 @@ sub SMInvokeAction {
 	    &$function ( @_ );
 	}
     }
+}
+
+#
+# Print a command with a VERBOSE option.  The format is
+#   PrintVerboseOptionCommand( cmd, altprefix, echocmd )
+# altprefix and echocmd are optional.
+# If echocmd is provided, this is echoed (rather than the actual command)
+# Otherwise, if altprefix is provided, the first token (up to the first
+# space) in cmd is replaced with altprefix.
+# Examples:
+#  &PrintVerboseOptionCommand( "cc -c \$<", "CC" )
+# will run 
+#  cc -c $<
+# but will echo
+#  CC -c $<
+# (this is a typical Linux build output, and is intended to be interpreted
+# as 
+#  $(CC) -c $< 
+#
+# Note that empty arguments are not properly handled in Perl (they are ignored,
+# so a,,b looks like a,b to Perl!), so "-" may be used as an empty altprefix
+sub PrintVerboseOptionCommand {
+    my $cmd       = $_[0];
+    my $altprefix = $_[1];
+    my $echocmd   = $_[2];
+
+    if (defined($altprefix) && $altprefix ne "" && $altprefix ne "-") {
+	my $cmdline = $cmd;
+	$cmdline =~ /[\S]+(\s.*)/;
+	$cmdline = $1;
+	if (defined($echocmd) && $echocmd ne "") {
+	    print STDERR "Invalid to define both altprefix ($altprefix) and echocmd ($echocmd)\n";
+	}
+	$echocmd = $altprefix . $cmdline;
+    }
+    elsif ($echocmd eq "") {
+	$echocmd = $cmd;
+    }
+
+    my $escaped_rule = $cmd;
+    $escaped_rule =~ s/$newline(\t+)\@*/ ; \\$newline$1echo /g;
+
+    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+    print FD "\t  echo \"$echocmd\" ; \\$newline";
+    print FD "\telse \\$newline";
+    print FD "\t  echo $escaped_rule ; \\$newline";
+    print FD "\tfi$newline";
+    print FD "\t\@$cmd$newline";
 }

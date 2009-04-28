@@ -1,3 +1,5 @@
+smvarSubdir_do_dependencies=no
+smvar_dependenciesDummy=yes
 #OTHER_DIRS = f77 f90 cxx
 # We want to replace the compilation and linking rule used by simplement
 MPICHDIR=..
