@@ -462,7 +462,7 @@ if test -n "$arch_rs6000"; then
     fi
     AC_DEFINE(AIX,1,[Define for AIX])
 # assume long long exists.
-    longlongsize=${longlongsize:-8} 
+    ac_cv_sizeof_long_long=${ac_cv_sizeof_long_long:-8} 
     MPI_OFFSET_KIND1="      INTEGER MPI_OFFSET_KIND"
     MPI_OFFSET_KIND2="      PARAMETER (MPI_OFFSET_KIND=8)"
     MPI_OFFSET_KIND_VAL=8
@@ -486,7 +486,7 @@ fi
 #
 if test -n "$arch_freebsd" || test -n "$arch_LINUX" || test -n "$arch_LINUX_ALPHA" || test -n "$arch_netbsd" || test -n "$arch_openbsd" ; then
     if test -n "$arch_freebsd" || test -n "$arch_netbsd" || test -n "$arch_openbsd"; then
-        longlongsize=${longlongsize:-0}
+        ac_cv_sizeof_long_long=${ac_cv_sizeof_long_long:-0}
 	# printf doesn't work properly and no integer*8 as far as I can tell
     fi
     # Find the CPP before the header check
@@ -787,7 +787,7 @@ fi
 
 
 #
-if test -n "$longlongsize"; then
+if test -n "$ac_cv_sizeof_long_long"; then
    if test $WITHIN_KNOWN_MPI_IMPL = no ; then
        PAC_MPI_LONG_LONG_INT
    else
