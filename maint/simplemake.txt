@@ -258,6 +258,47 @@ Other actions are detailed in the simplemake code.
 Currently, this feature is under development.  More operations are needed; if
 you need something, please ask for it.
 
+Setting Simplemake Variables from Makefile.sm
+---------------------------------------------
+There are some variables that control the behavior of simplemake that 
+you may want to set for a single directory or directory tree.  You can 
+do this by using 
+
+smvar_<variable-name>=<value>
+
+for the current directory, and
+
+smvarSubdir_<variable-name>=<value>
+
+for the current directory and all of its subdirectories.
+
+For example, in packages that contain examples and tests as well as libraries,
+the line
+
+smvarSubdir_do_dependencies=no
+
+in the Makefile.sm in the top-level directory of the examples or tests will
+prevent simplemake from adding dependency-creation code to the Makefile.in for
+all of the Makefile.in's in that directory tree.
+
+Adding
+
+smvar_dependenciesDummy=yes
+
+to that same top level to create a dummy target "dependencies:" in just the 
+top-level Makefile.in.
+
+The following are simplemake variables that have been used in this way 
+in MPICH2:
+
+autoconf           - Name of autoconf program to use
+debug              - Enable debugging
+dependenciesDummy  - Add a dummy dependencies target
+do_dependencies    - Create commands for automatically creating dependencies
+do_sharedlibs      - Create commands for shared libraries
+doc_attop          - This directory is the top for documentation
+makefile_configdir - This is the directory for the configure that controls this 
+                     Makefile
 
 Differences with Automake
 -------------------------
