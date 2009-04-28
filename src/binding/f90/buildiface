@@ -295,6 +295,13 @@ foreach $routine (keys(%mpi_routines)) {
 
 # Add special routines (e.g., the ones with unusual arguments)
 
+#
+# Some Fortran 90 compilers permit REAL*8; for some systems, this is
+# preferable to DOUBLE PRECISION (in cases where the user is permitted
+# to change the size of these basic types(!)).  This script must produce
+# a standard-conforming file.  The top-level configure (in mpich2/configure)
+# will replace DOUBLE PRECISION with REAL*8 if the Fortran compiler 
+# supports REAL*8.
 print MPIBASEFD "
         SUBROUTINE MPI_INIT(ierror)
         INTEGER ierror

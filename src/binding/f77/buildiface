@@ -2249,6 +2249,10 @@ if ( -s "../../mpi/romio/include/mpio.h.in" && $build_io) {
 #
 if ($write_mpif) {
 
+    # The ONLY valid comment character for Fortran 77 is a C in column 1
+    # For those Fortran compilers that support it (which is most at this point)
+    # the top-level configure will replace the "C" in column 1 with "!" 
+    # (also in column 1)
     $cchar = "C";
     open ( MPIFFD, ">mpif.h.in.new" ) || die "Could not open mpif.h.in.new\n";
 
@@ -2475,8 +2479,10 @@ if ($write_mpif) {
     # making real 8 bytes and double precision 16.  To allow mpif.h
     # to be used with such compilers, those compilers allow the
     # use of the non-standard real*8 to force exactly 8 bytes.
-    # Do we want to make this a configure time value or a 
-    # build-time value?
+    # WARNING: REAL*8 is not standard and must not be used here. 
+    # Instead, the top level configure (in mpich2/configure) will
+    # replace DOUBLE PRECISION with REAL*8 where the Fortran compiler 
+    # supports it.  
     print MPIFFD "       DOUBLE PRECISION MPI_WTIME, MPI_WTICK\n";
     print MPIFFD "       DOUBLE PRECISION PMPI_WTIME, PMPI_WTICK\n";
     # We avoid adding the external declarations because some Fortran
