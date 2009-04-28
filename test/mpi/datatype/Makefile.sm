@@ -92,6 +92,9 @@ tresized2_LDADD = ../util/mtest.o
 tfree_SOURCES = tfree.c
 tfree_LDADD = ../util/mtest.o 
 
+typelb_SOURCES = typelb.c
+#typelb_LDADD = ../util/mtest.o
+
 sizedtypes_SOURCES = sizedtypes.c
 sizedtypes_LDADD = ../util/mtest.o
 

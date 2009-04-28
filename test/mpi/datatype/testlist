@@ -14,6 +14,7 @@ tresized 2
 tresized2 2
 tmatchsize 1
 tfree 2
+typelb 1
 contigstruct 1
 struct-zero-count 1
 blockindexed-zero-count 1
