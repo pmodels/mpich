@@ -12,6 +12,7 @@ alltoall_SOURCES   = alltoall.c
 sendselfth_SOURCES = sendselfth.c
 greq_wait_SOURCES = greq_wait.c
 greq_test_SOURCES = greq_test.c
+multisend_SOURCES = multisend.c
 
 ../../util/mtest.o:
 	(cd ../../util && $(MAKE) mtest.o)
