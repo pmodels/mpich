@@ -4,6 +4,7 @@ sendrecv3 2
 sendflood 8 timeLimit=600
 sendself 1
 sendall 4
+anyall 2
 eagerdt 2
 pingping 2
 bottom 2
