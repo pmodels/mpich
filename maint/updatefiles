@@ -165,7 +165,7 @@ test a -nt b
 exit 2
 EOF
 chmod +x conftest
-./conftest 2>&1 >/dev/null
+./conftest 1>/dev/null 2>&1 >/dev/null
 st=$?
 if [ "$st" = 2 ] ; then
     testNTfails=no
@@ -203,7 +203,8 @@ if [ ! -d .tmp ] ; then
     mkdir .tmp 2>&1 >/dev/null
 fi
 # As of autoconf 2.59, the command line arguments changed (again)
-# We now require 2.59 everywhere, so we just double check
+# We now require 2.59 most places, and 2.62 in several (including the 
+# top-level), so we just double check
 # Somewhere between 2.12 and 2.58, -l changed to -B
 # Argh.  In autoconf 2.59, -B doesn't work.  You must use -I instead of -B (!!)
 # Find the configure version
@@ -211,7 +212,7 @@ fi
 # -1 is used for unknown
 acSubversion=-1
 acIncDirFlag=-I
-for ver in 63 62 61 60 59 ; do
+for ver in 64 63 62 61 60 59 ; do
     rm -f .tmp/configure.in .tmp/configure
     cat >.tmp/configure.in <<EOF
 AC_PREREQ(2.$ver)
@@ -225,6 +226,15 @@ rm -f .tmp/configure.in .tmp/configure
 if [ "$acSubversion" -gt 0 ] ; then
     acVersion="2.$acSubversion"
     echo "You have autoconf version $acVersion or greater."
+    if [ "$acSubversion" -lt 62 ] ; then 
+       cat <<EOF
+autoconf version 2.62 or later is required for MPICH2.
+EOF
+       if [ "$do_build_configure" = yes ] ; then 
+            echo "Exiting updatefiles...."
+            exit 1
+       fi
+    fi
 else
     cat <<EOF
 You either do not have autoconf in your path or updatefiles was unable to 
@@ -607,7 +617,10 @@ if [ $do_build_configure = yes ] ; then
 		        if ${MAKE} -q -f mf.tmp configure >mf.out 2>&1 ; then \
                     : ; else \
 	            echo "Found $dir/configure.in; executing make configure target" ; \
-	            ${MAKE} -f mf.tmp configure ; fi ; rm -f mf.tmp  \
+	            ${MAKE} -f mf.tmp configure ; fi ; \
+			if [ -s configure ] ; then rm -f mf.tmp ; \
+			else echo "See `pwd`/mf.tmp for Makefile that failed" ;\
+                        fi ;\
 	            )
 		    # Newer versions of test support -nt, which is
 		    # filea newer-than fileb.  If this doesn't 
