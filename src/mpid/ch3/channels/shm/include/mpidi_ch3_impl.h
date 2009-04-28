@@ -60,7 +60,7 @@
 #include <sys/mman.h>
 #endif
 
-#ifdef HAVE_GCC_AND_PENTIUM_ASM
+#if defined(HAVE_GCC_AND_PENTIUM_ASM) || defined(HAVE_GCC_AND_X86_64_ASM)
 #ifdef HAVE_GCC_ASM_AND_X86_SFENCE
 #define MPID_WRITE_BARRIER() __asm__ __volatile__  ( "sfence" ::: "memory" )
 #else
