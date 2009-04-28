@@ -6,6 +6,7 @@ smvar_do_sharedlibs = 0
 # isendirecv contains features that not all systems support (e.g., the
 # sincos call, not available on IRIX).
 EXTRA_PROGRAMS = 
+attrself_SOURCES = attrself.c
 exitst1_SOURCES = exitst1.c
 exitst2_SOURCES = exitst2.c
 exitst3_SOURCES = exitst3.c

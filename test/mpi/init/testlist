@@ -4,3 +4,4 @@ initstat 1
 timeout 2 resultTest=TestTimeout timeLimit=10
 version 1
 finalized 1
+attrself 1
