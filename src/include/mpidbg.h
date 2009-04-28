@@ -40,6 +40,16 @@
 
 #define MPIU_DBG_MAXLINE 256
 #define MPIU_DBG_FDEST _s,(size_t)MPIU_DBG_MAXLINE
+/*M
+  MPIU_DBG_MSG_FMT - General debugging output macro
+
+  Notes:
+  To use this macro, the third argument should be an "sprintf" - style 
+  argument, using MPIU_DBG_FDEST as the buffer argument.  For example,
+.vb
+    MPIU_DBG_MSG_FMT(CMM,VERBOSE,(MPIU_DBG_FDEST,"fmat",args...));
+.ve  
+  M*/
 #define MPIU_DBG_MSG_FMT(_class,_level,_fmatargs) \
    {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) {\
