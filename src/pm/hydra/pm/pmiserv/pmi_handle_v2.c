@@ -11,6 +11,8 @@
 #include "pmi_handle.h"
 #include "pmi_handle_v2.h"
 
+#define dprintf(...)
+
 HYD_Handle handle;
 HYD_PMCD_pmi_pg_t *pg_list;
 
