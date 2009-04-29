@@ -27,6 +27,7 @@ void HYD_LCHU_init_params(void)
     handle.host_file = NULL;
 
     handle.ranks_per_proc = -1;
+    handle.bootstrap_exec = NULL;
 
     handle.global_env = NULL;
     handle.system_env = NULL;
@@ -67,6 +68,9 @@ void HYD_LCHU_free_params(void)
 
     if (handle.host_file)
         HYDU_FREE(handle.host_file);
+
+    if (handle.bootstrap_exec)
+        HYDU_FREE(handle.bootstrap_exec);
 
     if (handle.global_env)
         HYDU_env_free_list(handle.global_env);

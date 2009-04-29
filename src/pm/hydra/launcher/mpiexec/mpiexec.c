@@ -45,12 +45,13 @@ static void usage(void)
     printf("\t--proxy-port                     [Port on which proxies can listen]\n");
     printf("\t--bootstrap                      [Bootstrap server to use]\n");
     printf("\t--css                            [Communication sub-system to use]\n");
-    printf("\t--binding                        [Process binding]");
+    printf("\t--binding                        [Process binding]\n");
     printf("\t--boot-proxies                   [Boot proxies to run in persistent mode]\n");
     printf("\t--boot-foreground-proxies        [Boot foreground proxies (persistent mode)]\n");
     printf("\t--shutdown-proxies               [Shutdown persistent mode proxies]\n");
     printf("\t--use-persistent                 [Use persistent mode proxies to launch]\n");
     printf("\t--ranks-per-proc                 [Assign so many ranks to each process]\n");
+    printf("\t--bootstrap-exec                 [Executable to use to bootstrap processes]\n");
 }
 
 

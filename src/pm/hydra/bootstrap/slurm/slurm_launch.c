@@ -29,8 +29,12 @@ HYD_Status HYD_BSCD_slurm_launch_procs(void)
 
         /* Setup the executable arguments */
         arg = 0;
+
         /* FIXME: Get the path to srun */
-        client_arg[arg++] = HYDU_strdup("srun");
+        if (handle.bootstrap_exec)
+            client_arg[arg++] =HYDU_strdup(handle.bootstrap_exec);
+        else
+            client_arg[arg++] = HYDU_strdup("srun");
 
         /* Currently, we do not support any partition names other than
          * host names */

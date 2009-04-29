@@ -308,6 +308,19 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             HYDU_FREE(str[1]);
             continue;
         }
+        else if (!strcmp(str[0], "--bootstrap-exec")) {
+            if (!str[1]) {
+                /* Argument could be of the form "--foo x" */
+                INCREMENT_ARGV(status);
+                str[1] = HYDU_strdup(*argv);
+            }
+
+            HYDU_ERR_CHKANDJUMP(status, handle.bootstrap_exec, HYD_INTERNAL_ERROR,
+                                "duplicate communication sub-system\n");
+            handle.bootstrap_exec = str[1];
+            HYDU_FREE(str[0]);
+            continue;
+        }
         else {
             /* Not a recognized argument of the form --foo=x OR --foo x */
             HYDU_FREE(str[0]);
@@ -391,6 +404,10 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             handle.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
         }
     }
+
+    tmp = getenv("HYDRA_BOOTSTRAP_EXEC");
+    if (handle.bootstrap_exec == NULL && tmp)
+        handle.bootstrap_exec = HYDU_strdup(tmp);
 
     /* Get the base path for the proxy */
     if (handle.wdir == NULL) {

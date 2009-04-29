@@ -27,6 +27,7 @@ struct HYD_Handle_ {
     char *host_file;
 
     int ranks_per_proc;
+    char *bootstrap_exec;
 
     /* Global environment */
     HYD_Env_t *global_env;

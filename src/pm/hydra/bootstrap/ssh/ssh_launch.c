@@ -37,7 +37,10 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
 
         /* Setup the executable arguments */
         arg = 0;
-        client_arg[arg++] = HYDU_strdup("/usr/bin/ssh");
+        if (handle.bootstrap_exec)
+            client_arg[arg++] = HYDU_strdup(handle.bootstrap_exec);
+        else
+            client_arg[arg++] = HYDU_strdup("/usr/bin/ssh");
 
         /* Allow X forwarding only if explicitly requested */
         if (handle.enablex == 1)

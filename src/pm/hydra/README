@@ -96,6 +96,15 @@ variable.
 
 The default bootstrap server is ssh.
 
+The executable to use as the bootstrap server can be specified using
+the option --bootstrap-exec:
+
+ $ mpiexec --bootstrap ssh --bootstrap-exec /usr/bin/ssh -f hosts -n 4 ./app
+
+This can also be specified using the HYDRA_BOOTSTRAP_EXEC environment
+variable. If the bootstrap executable is not specified, the default
+path (specific to each bootstrap server) is chosen.
+
 
 Process-core binding
 --------------------
