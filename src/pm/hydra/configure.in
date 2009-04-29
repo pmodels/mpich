@@ -67,7 +67,7 @@ fi
 dnl Check what boot-strap server we should use
 AC_ARG_WITH(hydra-bss, [  --with-hydra-bss           Boot-strap Server],
 		    [ hydra_bss=$withval ],
-		    [ hydra_bss="ssh,fork,slurm" ])
+		    [ hydra_bss="ssh,rsh,fork,slurm" ])
 AC_MSG_CHECKING(boot-strap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
