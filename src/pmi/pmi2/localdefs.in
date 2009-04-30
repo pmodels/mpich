@@ -1,4 +1,5 @@
 #! /bin/sh
 # Add any libraries needed by the PMI
 LIBS="$LIBS @PMI_LIBS@"
-DEFS="$DEFS -DUSE_PMI2_API"
+USE_PMI2_API=yes
+

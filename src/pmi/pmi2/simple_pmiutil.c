@@ -11,7 +11,8 @@
    the PMI interface itself.  Reading and writing on pipes, signals, and parsing
    key=value messages
 */
-#include "pmiconf.h"
+#include "pmi2conf.h"
+#define printf_d(x...) /* printf(x) */
 
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H
@@ -167,6 +168,8 @@ int PMIU_readline( int fd, char *buf, int maxlen )
     /* We null terminate the string for convenience in printing */
     *p = 0;
 
+    printf_d("PMI received: %s\n", buf);
+
     /* Return the number of characters, not counting the null */
     return curlen-1;
 }
@@ -184,6 +187,8 @@ int PMIU_writeline( int fd, char *buf )
 	    PMIU_printf( 1, "write_line: message string doesn't end in newline: :%s:\n",
 		       buf );
     else {
+        printf_d("PMI sending: %s\n", buf);
+
 	do {
 	    n = write( fd, buf, size );
 	} while (n == -1 && errno == EINTR);

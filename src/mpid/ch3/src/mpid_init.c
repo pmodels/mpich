@@ -6,6 +6,8 @@
 
 #include "mpidimpl.h"
 
+#define MAX_JOBID_LEN 1024
+
 #if defined(HAVE_LIMITS_H)
 #include <limits.h>
 #endif
@@ -20,7 +22,12 @@ char *MPIU_DBG_parent_str = "?";
 
 /* FIXME: the PMI init function should ONLY do the PMI operations, not the 
    process group or bc operations.  These should be in a separate routine */
+#ifdef USE_PMI2_API
+#include "pmi2.h"
+#else
 #include "pmi.h"
+#endif
+
 static int InitPG( int *argc_p, char ***argv_p,
 		   int *has_args, int *has_env, int *has_parent, 
 		   int *pg_rank_p, MPIDI_PG_t **pg_p );
@@ -339,6 +346,11 @@ static int InitPG( int *argc, char ***argv,
 	 * Initialize the process manangement interface (PMI), 
 	 * and get rank and size information about our process group
 	 */
+
+#ifdef USE_PMI2_API
+        mpi_errno = PMI_Init(has_parent, &pg_size, &pg_rank, &appnum);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+#else        
 	pmi_errno = PMI_Init(has_parent);
 	if (pmi_errno != PMI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_init",
@@ -362,13 +374,26 @@ static int InitPG( int *argc, char ***argv,
 	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_appnum",
 				 "**pmi_get_appnum %d", pmi_errno);
 	}
-
+#endif
 	/* Note that if pmi is not availble, the value of MPI_APPNUM is 
 	   not set */
 	if (appnum != -1) {
 	    MPIR_Process.attrs.appnum = appnum;
 	}
-	
+
+#ifdef USE_PMI2_API
+        
+        /* This memory will be freed by the PG_Destroy if there is an error */
+	pg_id = MPIU_Malloc(MAX_JOBID_LEN);
+	if (pg_id == NULL) {
+	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
+	}
+
+        mpi_errno = PMI_Job_GetId(pg_id, MAX_JOBID_LEN);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        
+
+#else
 	/* Now, initialize the process group information with PMI calls */
 	/*
 	 * Get the process group id
@@ -394,6 +419,7 @@ static int InitPG( int *argc, char ***argv,
 	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_id",
 				 "**pmi_get_id %d", pmi_errno);
 	}
+#endif
     }
     else {
 	/* Create a default pg id */
@@ -466,15 +492,17 @@ int MPIDI_CH3I_BCInit( char **bc_val_p, int *val_max_sz_p )
 {
     int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
-
+#ifdef USE_PMI2_API
+    *val_max_sz_p = PMI_MAX_VALLEN;
+#else
     pmi_errno = PMI_KVS_Get_value_length_max(val_max_sz_p);
     if (pmi_errno != PMI_SUCCESS)
     {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, 
-			     "**pmi_kvs_get_value_length_max",
-			     "**pmi_kvs_get_value_length_max %d", pmi_errno);
+        MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,
+                             "**pmi_kvs_get_value_length_max",
+                             "**pmi_kvs_get_value_length_max %d", pmi_errno);
     }
-
+#endif
     /* This memroy is returned by this routine */
     *bc_val_p = MPIU_Malloc(*val_max_sz_p);
     if (*bc_val_p == NULL) {

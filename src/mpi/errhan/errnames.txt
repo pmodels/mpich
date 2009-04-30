@@ -1255,7 +1255,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_register_datarep:MPI_Register_datarep failed
 **mpi_register_datarep %s %p %p %p %p:MPI_Register_datarep(datarep=%s, read_conversion_fn=%p, write_conversion_fn=%p, dtype_file_extent_fn=%p, extra_state=%p) failed
 
-# simple2pmi errors
+# pmi2 errors
 **bad_keyval:PMI2 received malformed key-value pair
 **bad_cmd:PMI2 received malformed command
 **cmd_too_long: PMI2 command is too long
@@ -1292,6 +1292,10 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **pmi_getjobattr %s: PMI2 GetJobAttr failed: %s
 **pmi_nameservpublish: PMI2 Nameserv_publish failed
 **pmi_nameservpublish %s: PMI2 Nameserv_publish failed: %s
+**connect_to_pm: Unable to connect process manager
+**connect_to_pm %s %d: Unable to connect process manager at host %s port %d
+**pmi_port: Unable to decide hostport from PMI_PORT
+**pmi_port %s: Unable to decide hostport from \"%s\"
 
 # MPIR functions
 

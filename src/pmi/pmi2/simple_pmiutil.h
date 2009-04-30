@@ -3,6 +3,8 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
+#ifndef SIMPLE_PMI_UTIL_H_INCLUDED
+#define SIMPLE_PMI_UTIL_H_INCLUDED
 
 /* maximum sizes for arrays */
 #define PMIU_MAXLINE 1024
@@ -27,3 +29,5 @@ int  PMIU_parse_keyvals( char *st );
 void PMIU_dump_keyvals( void );
 char *PMIU_getval( const char *keystr, char *valstr, int vallen );
 void PMIU_chgval( const char *keystr, char *valstr );
+
+#endif /*SIMPLE_PMI_UTIL_H_INCLUDED*/

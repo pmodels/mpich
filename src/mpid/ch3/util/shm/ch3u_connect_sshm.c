@@ -5,7 +5,6 @@
  */
 
 #include "mpidi_ch3_impl.h"
-#include "pmi.h"
 
 /* FIXME: Packet types used for establishing connections */
 typedef struct

@@ -11,7 +11,6 @@
 #if defined (MPID_NEM_INLINE) && MPID_NEM_INLINE
 #include "mpid_nem_inline.h"
 #endif
-#include "pmi.h"
 
 
 #define PKTARRAY_SIZE (MPIDI_NEM_PKT_END+1)

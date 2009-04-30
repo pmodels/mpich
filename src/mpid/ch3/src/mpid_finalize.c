@@ -11,8 +11,6 @@
    rather than direct routine calls.
  */
 
-#include "pmi.h"
-
 #undef FUNCNAME
 #define FUNCNAME MPID_Finalize
 #undef FCNAME
