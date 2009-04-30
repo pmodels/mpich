@@ -5,13 +5,13 @@
 
 
 if test -z "$PM_REQUIRES_PMI" ; then
-    if test "$with_pmi" = "simple2" -o "$with_pmi" = "simple" ; then
+    if test "$with_pmi" = "pmi2" -o "$with_pmi" = "simple" ; then
         PM_REQUIRES_PMI=$with_pmi
     else
 	PM_REQUIRES_PMI=simple
     fi
-elif test "$PM_REQUIRES_PMI" != "simple" -a "$PM_REQUIRES_PMI" != "simple2" ; then
-    echo "hydra requires the simple or simple2 PMI implementation; $PM_REQUIRES_PMI has already been selected"
+elif test "$PM_REQUIRES_PMI" != "simple" -a "$PM_REQUIRES_PMI" != "pmi2" ; then
+    echo "hydra requires the \"simple\" or \"pmi2\" PMI implementation; \"$PM_REQUIRES_PMI\" has already been selected"
     exit 1
 fi
 

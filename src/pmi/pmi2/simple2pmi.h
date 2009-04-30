@@ -34,8 +34,8 @@ static const char GETNODEATTR_CMD[]       = "info-getnodeattr";
 static const char GETNODEATTRRESP_CMD[]   = "info-getnodeattr-response";
 static const char PUTNODEATTR_CMD[]       = "info-putnodeattr";
 static const char PUTNODEATTRRESP_CMD[]   = "info-putnodeattr-response";
-static const char GETJOBATTR_CMD[]        = "info-getnodeattr";
-static const char GETJOBATTRRESP_CMD[]    = "info-getnodeattr-response";
+static const char GETJOBATTR_CMD[]        = "info-getjobattr";
+static const char GETJOBATTRRESP_CMD[]    = "info-getjobattr-response";
 static const char NAMEPUBLISH_CMD[]       = "name-publish";
 static const char NAMEPUBLISHRESP_CMD[]   = "name-publish-response";
 static const char NAMEUNPUBLISH_CMD[]     = "name-unpublish";
@@ -71,6 +71,7 @@ static const char THRID_KEY[]        = "thrid";
 static const char INFOKEYCOUNT_KEY[] = "infokeycount";
 static const char INFOKEY_KEY[]      = "infokey%d";
 static const char INFOVAL_KEY[]      = "infoval%d";
+
 static const char TRUE_VAL[]  = "TRUE";
 static const char FALSE_VAL[] = "FALSE";
 

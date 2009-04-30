@@ -14,24 +14,23 @@ static int barrier_init = 0;
 #define FUNCNAME MPID_nem_barrier_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_barrier_init(int num_processes, MPID_nem_barrier_t *barrier_region)
+int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_BARRIER_INIT);
 
-    if (num_processes == 1)
-        goto fn_exit;
-
     MPID_nem_mem_region.barrier = barrier_region;
-    MPIDU_Atomic_store(&MPID_nem_mem_region.barrier->val, 0);
-    MPIDU_Atomic_store(&MPID_nem_mem_region.barrier->wait, 0);
+    if (init_values) {
+        MPIDU_Atomic_store(&MPID_nem_mem_region.barrier->val, 0);
+        MPIDU_Atomic_store(&MPID_nem_mem_region.barrier->wait, 0);
+        MPIDU_Shm_write_barrier();
+    }
     sense = 0;
     barrier_init = 1;
-    MPIDU_Shm_write_barrier();
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_BARRIER_INIT);
- fn_exit:
+
     return MPI_SUCCESS;
 }
 

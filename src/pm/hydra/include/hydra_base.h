@@ -160,6 +160,8 @@ struct HYD_Partition_exec {
 #include <pthread.h>
 #endif
 
+#define dprintf if (getenv("PMI2_DEBUG")) printf
+
 struct HYD_Thread_context {
     pthread_t thread;
 };

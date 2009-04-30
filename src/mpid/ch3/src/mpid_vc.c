@@ -6,7 +6,11 @@
 
 #include "mpidimpl.h"
 
+#ifdef USE_PMI2_API
+#include "pmi2.h"
+#else
 #include "pmi.h"
+#endif
 #if defined(HAVE_LIMITS_H)
 #include <limits.h>
 #endif
@@ -738,6 +742,8 @@ int MPID_Get_max_node_id(MPID_Comm *comm, MPID_Node_id_t *max_id_p)
     return MPI_SUCCESS;
 }
 
+#if !defined(USE_PMI2_API)
+/* this function is not used in pmi2 */
 static int publish_node_id(MPIDI_PG_t *pg, int our_pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -777,13 +783,14 @@ static int publish_node_id(MPIDI_PG_t *pg, int our_pg_rank)
         pmi_errno = PMI_Barrier();
         MPIU_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
     }
-
+    
 fn_exit:
     MPIU_CHKLMEM_FREEALL();
     return mpi_errno;
 fn_fail:
     goto fn_exit;
 }
+#endif
 
 /* Fills in the node_id info from PMI info.  Adapted from MPIU_Get_local_procs.
    This function is collective over the entire PG because PMI_Barrier is called.
@@ -818,6 +825,28 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     int odd_even_cliques = 0;
     MPIU_CHKLMEM_DECL(3);
 
+#ifdef USE_PMI2_API
+    {
+        int *node_ids;
+        int outlen;
+        int found = FALSE;
+        MPIU_CHKLMEM_MALLOC(node_ids, int *, pg->size * sizeof(int), mpi_errno, "node_ids");
+
+        mpi_errno = PMI_Info_GetJobAttrIntArray("nodeIDs", node_ids, pg->size, &outlen, &found);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP1(outlen != pg->size, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "did not receive enough nodeids");
+        g_num_nodes = 0;
+        for (i = 0; i < pg->size; ++i) {
+            pg->vct[i].node_id = node_ids[i];
+            if (g_num_nodes < node_ids[i])
+                g_num_nodes = node_ids[i];
+        }
+        
+        ++g_num_nodes;
+        
+        /* FIXME: need to handle oddeven cliques DARIUS */
+    }
+#else
     if (our_pg_rank == -1) {
         /* FIXME this routine can't handle the dynamic process case at this
            time.  This will require more support from the process manager. */
@@ -916,6 +945,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
                 pg->vct[i].node_id += g_num_nodes;
         g_num_nodes *= 2;
     }
+#endif
 
 fn_exit:
     MPIU_CHKLMEM_FREEALL();
