@@ -214,7 +214,7 @@ static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
             break;
     }
 
-    iov[0].MPID_IOV_BUF = cookie_pkt;
+    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) cookie_pkt;
     iov[0].MPID_IOV_LEN = sizeof(*cookie_pkt);
     iov[1].MPID_IOV_BUF = cookie_buf;
     iov[1].MPID_IOV_LEN = cookie_len;
