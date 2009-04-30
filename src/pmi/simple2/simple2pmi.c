@@ -9,7 +9,6 @@
 #include "simple_pmiutil.h"
 #include "pmi2.h"
 
-
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -27,7 +26,6 @@
 #include <sys/socket.h>
 #endif
 
-#define printf_d(x...)  /* printf(x) */
 
 #ifdef USE_PMI_PORT
 #ifndef MAXHOSTNAME
@@ -82,7 +80,6 @@ static int PMIi_WriteSimpleCommand( int fd, PMI_Command *resp, const char cmd[],
 static int PMIi_WriteSimpleCommandStr( int fd, PMI_Command *resp, const char cmd[], ...);
 static int PMIi_InitIfSingleton(void);
 
-static void freepairs(PMI_Keyvalpair** pairs, int npairs);
 static int getval(PMI_Keyvalpair *const pairs[], int npairs, const char *key,  const char **value, int *vallen);
 static int getvalint(PMI_Keyvalpair *const pairs[], int npairs, const char *key, int *val);
 static int getvalptr(PMI_Keyvalpair *const pairs[], int npairs, const char *key, void *val);
@@ -90,81 +87,6 @@ static int getvalbool(PMI_Keyvalpair *const pairs[], int npairs, const char *key
 
 static int accept_one_connection(int list_sock);
 static int GetResponse(const char request[], const char expectedCmd[], int checkRc);
-
-static void dump_PMI_Command(FILE *file, PMI_Command *cmd);
-static void dump_PMI_Keyvalpair(FILE *file, PMI_Keyvalpair *kv);
-
-
-typedef struct MPIDI_Process
-{
-    void * my_pg;
-    int my_pg_rank;
-}
-MPIDI_Process_t;
-extern MPIDI_Process_t MPIDI_Process;
-
-int PRINT = 0;
-
-typedef struct pending_item 
-{
-    struct pending_item *next;
-    PMI_Command *cmd;
-} pending_item_t;
-
-pending_item_t *pendingq_head = NULL;
-pending_item_t *pendingq_tail = NULL;
-
-static inline void ENQUEUE(PMI_Command *cmd)
-{
-    pending_item_t *pi = MPIU_Malloc(sizeof(pending_item_t));
-
-    if (PRINT)
-        printf("%d ENQUEUE(%p)\n", MPIDI_Process.my_pg_rank, cmd);
-
-    pi->next = NULL;
-    pi->cmd = cmd;
-
-    if (pendingq_head == NULL) {
-        pendingq_head = pendingq_tail = pi;
-    } else {
-        pendingq_tail->next = pi;
-        pendingq_tail = pi;
-    }
-}
-        
-static inline int SEARCH_REMOVE(PMI_Command *cmd)
-{
-    pending_item_t *pi, *prev;
-
-    if (PRINT)
-        printf("%d SEARCH_REMOVE(%p)\n", MPIDI_Process.my_pg_rank, cmd);
-
-    pi = pendingq_head;
-    if (pi->cmd == cmd) {
-        pendingq_head = pi->next;
-        if (pendingq_head == NULL)
-            pendingq_tail = NULL;
-        MPIU_Free(pi);
-        return 1;
-    }
-    prev = pi;
-    pi = pi->next;
-    
-    for ( ; pi ; pi = pi->next) {
-        if (pi->cmd == cmd) {
-            prev->next = pi->next;
-            if (prev->next == NULL)
-                pendingq_tail = prev;
-            MPIU_Free(pi);
-            return 1;
-        }
-    }
-    
-    printf("%d cmd %p not found in queue\n", MPIDI_Process.my_pg_rank, cmd);
-
-    return 0;
-}
-
 
 
 /* ------------------------------------------------------------------------- */
@@ -314,8 +236,7 @@ int PMI_Init(int *spawned, int *size, int *rank, int *appnum)
         pmiverbose = 0;
         found = getvalint(cmd.pairs, cmd.nPairs, PMIVERBOSE_KEY, &pmiverbose);
         MPIU_ERR_CHKANDJUMP(found == -1, mpi_errno, MPI_ERR_OTHER, "**intern");
-        
-        freepairs(cmd.pairs, cmd.nPairs);
+
     }
     
     if ( ! PMI_initialized )
@@ -345,7 +266,6 @@ int PMI_Finalize(void)
         mpi_errno = PMIi_ReadCommandExp(PMI_fd, &cmd, FINALIZERESP_CMD, &rc, &errmsg);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_finalize", "**pmi_finalize %s", errmsg ? errmsg : "unknown");
-        freepairs(cmd.pairs, cmd.nPairs);
         
 	shutdown( PMI_fd, SHUT_RDWR );
 	close( PMI_fd );
@@ -566,8 +486,8 @@ int PMI_Job_Spawn( int count, const char * cmds[], const char ** argvs[],
         }
     }
 
-#endif
     return 0;
+#endif
 }
 
 #undef FUNCNAME
@@ -594,9 +514,8 @@ int PMI_Job_GetId(char jobid[], int jobid_size)
     MPIU_ERR_CHKANDJUMP(found != 1, mpi_errno, MPI_ERR_OTHER, "**intern");
 
     MPIU_Strncpy(jobid, jid, jobid_size);
-
+        
 fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
     return mpi_errno;
 fn_fail:
 
@@ -629,7 +548,6 @@ int PMI_Job_Connect(const char jobid[], PMI_Connect_comm_t *conn)
 
     
  fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
     return mpi_errno;
  fn_fail:
 
@@ -654,7 +572,6 @@ int PMI_Job_Disconnect(const char jobid[])
     MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_jobdisconnect", "**pmi_jobdisconnect %s", errmsg ? errmsg : "unknown");
         
 fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -678,7 +595,6 @@ int PMI_KVS_Put(const char key[], const char value[])
     MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsput", "**pmi_kvsput %s", errmsg ? errmsg : "unknown");        
         
 fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -696,12 +612,11 @@ int PMI_KVS_Fence(void)
 
     mpi_errno = PMIi_WriteSimpleCommandStr(PMI_fd, &cmd, KVSFENCE_CMD, NULL);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = PMIi_ReadCommandExp(PMI_fd, &cmd, KVSFENCERESP_CMD, &rc, &errmsg);
+    mpi_errno = PMIi_ReadCommandExp(PMI_fd, &cmd, KVSPUTRESP_CMD, &rc, &errmsg);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence", "**pmi_kvsfence %s", errmsg ? errmsg : "unknown");
 
 fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -743,7 +658,6 @@ int PMI_KVS_Get(const char *jobid, const char key[], char value [], int maxValue
     
 
  fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
     return mpi_errno;
  fn_fail:
 
@@ -783,60 +697,6 @@ int PMI_Info_GetNodeAttr(const char name[], char value[], int valuelen, int *fla
     }
     
 fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME PMI_Info_GetNodeAttr
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI_Info_GetNodeAttrIntArray(const char name[], int array[], int arraylen, int *outlen, int *flag)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int found;
-    const char *kvsvalue;
-    int kvsvallen;
-    PMI_Command cmd = {0};
-    int rc;
-    const char *errmsg;
-    int i;
-    const char *valptr;
-    
-    mpi_errno = PMIi_InitIfSingleton();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    
-    mpi_errno = PMIi_WriteSimpleCommandStr(PMI_fd, &cmd, GETNODEATTR_CMD, KEY_KEY, name, WAIT_KEY, "FALSE", NULL);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = PMIi_ReadCommandExp(PMI_fd, &cmd, GETNODEATTRRESP_CMD, &rc, &errmsg);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_getnodeattr", "**pmi_getnodeattr %s", errmsg ? errmsg : "unknown");
-
-    found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, flag);
-    MPIU_ERR_CHKANDJUMP(found != 1, mpi_errno, MPI_ERR_OTHER, "**intern");
-    if (*flag) {
-        found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &kvsvalue, &kvsvallen);
-        MPIU_ERR_CHKANDJUMP(found != 1, mpi_errno, MPI_ERR_OTHER, "**intern");
-
-        valptr = kvsvalue;
-        i = 0;
-        rc = sscanf(valptr, "%d", &array[i]);
-        MPIU_ERR_CHKANDJUMP1(rc != 1, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unable to parse intarray");
-        ++i;
-        while ((valptr = strchr(valptr, ',')) && i < arraylen) {
-            ++valptr; /* skip over the ',' */
-            rc = sscanf(valptr, "%d", &array[i]);
-            MPIU_ERR_CHKANDJUMP1(rc != 1, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unable to parse intarray");
-            ++i;
-        }
-        
-        *outlen = i;
-    }
-    
-fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -860,7 +720,6 @@ int PMI_Info_PutNodeAttr(const char name[], const char value[])
     MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_putnodeattr", "**pmi_putnodeattr %s", errmsg ? errmsg : "unknown");
         
 fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -900,59 +759,6 @@ int PMI_Info_GetJobAttr(const char name[], char value[], int valuelen, int *flag
     }
     
 fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-#undef FUNCNAME
-#define FUNCNAME PMI_Info_GetJobAttrIntArray
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int PMI_Info_GetJobAttrIntArray(const char name[], int array[], int arraylen, int *outlen, int *flag)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int found;
-    const char *kvsvalue;
-    int kvsvallen;
-    PMI_Command cmd = {0};
-    int rc;
-    const char *errmsg;
-    int i;
-    const char *valptr;
-    
-    mpi_errno = PMIi_InitIfSingleton();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    
-    mpi_errno = PMIi_WriteSimpleCommandStr(PMI_fd, &cmd, GETJOBATTR_CMD, KEY_KEY, name, NULL);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = PMIi_ReadCommandExp(PMI_fd, &cmd, GETJOBATTRRESP_CMD, &rc, &errmsg);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_getjobattr", "**pmi_getjobattr %s", errmsg ? errmsg : "unknown");
-
-    found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, flag);
-    MPIU_ERR_CHKANDJUMP(found != 1, mpi_errno, MPI_ERR_OTHER, "**intern");
-    if (*flag) {
-        found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &kvsvalue, &kvsvallen);
-        MPIU_ERR_CHKANDJUMP(found != 1, mpi_errno, MPI_ERR_OTHER, "**intern");
-
-        valptr = kvsvalue;
-        i = 0;
-        rc = sscanf(valptr, "%d", &array[i]);
-        MPIU_ERR_CHKANDJUMP1(rc != 1, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unable to parse intarray");
-        ++i;
-        while ((valptr = strchr(valptr, ',')) && i < arraylen) {
-            ++valptr; /* skip over the ',' */
-            rc = sscanf(valptr, "%d", &array[i]);
-            MPIU_ERR_CHKANDJUMP1(rc != 1, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unable to parse intarray");
-            ++i;
-        }
-        
-        *outlen = i;
-    }
-    
-fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -1000,14 +806,12 @@ int PMI_Nameserv_publish(const char service_name[], const MPID_Info *info_ptr, c
         
         
 fn_exit:
-    freepairs(cmd.pairs, cmd.nPairs);
     MPIU_CHKLMEM_FREEALL();
     return mpi_errno;
 fn_fail:
 
     goto fn_exit;
 #endif
-    return 0;
 }
 
 
@@ -1018,13 +822,18 @@ fn_fail:
 int PMI_Nameserv_lookup(const char service_name[], const MPID_Info *info_ptr,
                         char port[], int portLen)
 {
+#if 0
     int mpi_errno = MPI_SUCCESS;
+    int rc;
+    const char *errmsg;
         
         
 fn_exit:
     return mpi_errno;
 fn_fail:
+
     goto fn_exit;
+#endif
 }
 
 #undef FUNCNAME
@@ -1034,13 +843,18 @@ fn_fail:
 int PMI_Nameserv_unpublish(const char service_name[], 
                            const MPID_Info *info_ptr)
 {
+#if 0
     int mpi_errno = MPI_SUCCESS;
+    int rc;
+    const char *errmsg;
         
         
 fn_exit:
     return mpi_errno;
 fn_fail:
+
     goto fn_exit;
+#endif
 }
 
 
@@ -1059,22 +873,6 @@ fn_fail:
  * In a multithreaded environment, this may 
  */
 /* ------------------------------------------------------------------------- */
-
-
-/* frees all of the keyvals pointed to by a keyvalpair* array and the array iteself*/
-static void freepairs(PMI_Keyvalpair** pairs, int npairs)
-{
-    int i;
-
-    if (!pairs)
-        return;
-
-    for (i = 0; i < npairs; ++i)
-        if (pairs[i]->isCopy)
-            MPIU_Free(pairs[i]);
-    MPIU_Free(pairs);
-}
-
 
 /* getval & friends -- these functions search the pairs list for a
  * matching key, set val appropriately and return 1.  If no matching
@@ -1115,7 +913,7 @@ static int getvalint(PMI_Keyvalpair *const pairs[], int npairs, const char *key,
     if (vallen == 0)
         return -1;
 
-    *val = strtoll(value, &endptr, 0);
+    *val = strtol(value, &endptr, 0);
     if (endptr - value != vallen)
         return -1;
     
@@ -1140,8 +938,13 @@ static int getvalptr(PMI_Keyvalpair *const pairs[], int npairs, const char *key,
 
     if (vallen == 0)
         return -1;
-
-    *val_ = (void *)(unsigned int)strtoll(value, &endptr, 0);
+#if SIZEOF_VOID_P == 4
+    *val_ = (void *)(unsigned int)strtol(value, &endptr, 0);
+#elif SIZEOF_VOID_P == 8
+    *val_ = (void *)strtoll(value, &endptr, 0);
+#else
+#error Size of void* is neither 4 nor 8    
+#endif
     if (endptr - value != vallen)
         return -1;
     
@@ -1286,18 +1089,18 @@ int PMIi_ReadCommand( int fd, PMI_Command *cmd )
     int mpi_errno = MPI_SUCCESS;
     char cmd_len_str[PMII_COMMANDLEN_SIZE+1];
     int cmd_len, remaining_len, vallen = 0;
-    char *c, *cmd_buf = NULL;
-    char *key, *val = NULL;
+    char *cmd_buf, *c, *key, *val = NULL;
     ssize_t nbytes;
     ssize_t offset;
     int num_pairs;
     int pair_index;
-    char *command = NULL;
+    char *command;
     int nPairs;
     int found;
-    PMI_Keyvalpair **pairs = NULL;
+    PMI_Keyvalpair **pairs;
     PMI_Command *target_cmd;
-    MPIU_CHKPMEM_DECL(2);
+    MPIU_CHKLMEM_DECL(1);
+    MPIU_CHKPMEM_DECL(1);
 
     memset(cmd_len_str, 0, sizeof(cmd_len_str));
 
@@ -1309,18 +1112,21 @@ int PMIi_ReadCommand( int fd, PMI_Command *cmd )
         while (blocked && !cmd->complete)
             MPID_Thread_cond_wait(&cond, &mutex);
 
-        if (cmd->complete) {
-            MPID_Thread_mutex_unlock(&mutex);
+        if (cmd->complete)
             goto fn_exit;
-        }
-
-        blocked = TRUE;
-        MPID_Thread_mutex_unlock(&mutex);
     }
     MPIU_THREAD_CHECK_END;
 #endif
-
     do {
+        
+#ifdef MPICH_IS_THREADED
+        MPIU_THREAD_CHECK_BEGIN;
+        {
+            blocked = TRUE;
+            MPID_Thread_mutex_unlock(&mutex);
+        }
+        MPIU_THREAD_CHECK_END;
+#endif
 
         /* get length of cmd */
         offset = 0;
@@ -1337,10 +1143,8 @@ int PMIi_ReadCommand( int fd, PMI_Command *cmd )
         while (offset < PMII_COMMANDLEN_SIZE);
     
         cmd_len = atoi(cmd_len_str);
-
-        cmd_buf = MPIU_Malloc(cmd_len+1);
-        if (!cmd_buf) { MPIU_CHKMEM_SETERR(mpi_errno, cmd_len+1, "cmd_buf"); goto fn_exit; }        
-
+    
+        MPIU_CHKLMEM_MALLOC(cmd_buf, char *, cmd_len+1, mpi_errno, "cmd_buf");
         memset(cmd_buf, 0, cmd_len+1);
 
         /* get command */
@@ -1357,8 +1161,15 @@ int PMIi_ReadCommand( int fd, PMI_Command *cmd )
         }
         while (offset < cmd_len);
 
-        printf_d("PMI received (cmdlen %d):  %s\n", cmd_len, cmd_buf);
-
+#ifdef MPICH_IS_THREADED
+        MPIU_THREAD_CHECK_BEGIN;
+        {
+            MPID_Thread_mutex_lock(&mutex);
+            blocked = FALSE;
+        }
+        MPIU_THREAD_CHECK_END;
+#endif
+    
         /* count number of "key=val;" */
         c = cmd_buf;
         remaining_len = cmd_len;
@@ -1386,15 +1197,12 @@ int PMIi_ReadCommand( int fd, PMI_Command *cmd )
 
         MPIU_ERR_CHKANDJUMP(strncmp(key, "cmd", PMI_MAX_KEYLEN) != 0, mpi_errno, MPI_ERR_OTHER, "**bad_cmd");
     
-        command = MPIU_Malloc(vallen+1);
-        if (!command) { MPIU_CHKMEM_SETERR(mpi_errno, vallen+1, "command"); goto fn_exit; }
+        MPIU_CHKPMEM_MALLOC(command, char *, vallen+1, mpi_errno, "command");
         memcpy(command, val, vallen);
         val[vallen] = '\0';
 
         nPairs = num_pairs-1;  /* num_pairs-1 because the first pair is the command */
-
-        pairs = MPIU_Malloc(sizeof(PMI_Keyvalpair *) * nPairs);
-        if (!pairs) { MPIU_CHKMEM_SETERR(mpi_errno, sizeof(PMI_Keyvalpair *) * nPairs, "pairs"); goto fn_exit; }
+        MPIU_CHKPMEM_MALLOC(pairs, PMI_Keyvalpair **, sizeof(PMI_Keyvalpair *) * nPairs, mpi_errno, "keyvalpairs");
     
         pair_index = 0;
         while (remaining_len)
@@ -1414,15 +1222,7 @@ int PMIi_ReadCommand( int fd, PMI_Command *cmd )
         found = getvalptr(pairs, nPairs, THRID_KEY, &target_cmd);
         if (!found) /* if there's no thrid specified, assume it's for you */
             target_cmd = cmd;
-        else
-            if (PMI_debug && SEARCH_REMOVE(target_cmd) == 0) {
-                int i;
-                
-                printf("command=%s\n", command);
-                for (i = 0; i < nPairs; ++i)
-                    dump_PMI_Keyvalpair(stdout, pairs[i]);
-            }
-        
+
         target_cmd->command = command;
         target_cmd->nPairs = nPairs;
         target_cmd->pairs = pairs;
@@ -1430,30 +1230,24 @@ int PMIi_ReadCommand( int fd, PMI_Command *cmd )
         target_cmd->complete = TRUE;
 #endif
 
-        MPIU_Free(cmd_buf);
     } while (!cmd->complete);
     
-#ifdef MPICH_IS_THREADED
-    MPIU_THREAD_CHECK_BEGIN;
-    {
-        MPID_Thread_mutex_lock(&mutex);
-        blocked = FALSE;
-        MPID_Thread_cond_broadcast(&cond);
-        MPID_Thread_mutex_unlock(&mutex);
-    }
-    MPIU_THREAD_CHECK_END;
-#endif
-
 
     
 
 fn_exit:
+    MPIU_CHKLMEM_FREEALL();
     MPIU_CHKPMEM_COMMIT();
+#ifdef MPICH_IS_THREADED
+    MPIU_THREAD_CHECK_BEGIN;
+    {
+        MPID_Thread_mutex_unlock(&mutex);
+    }
+    MPIU_THREAD_CHECK_END;
+#endif
     return mpi_errno;
 fn_fail:
     MPIU_CHKPMEM_REAP();
-    if (cmd_buf)
-        MPIU_Free(cmd_buf);
     goto fn_exit;
 }
 
@@ -1566,26 +1360,7 @@ int PMIi_WriteSimpleCommand( int fd, PMI_Command *resp, const char cmd[], PMI_Ke
 
     memcpy(cmdbuf, cmdlenbuf, ret);
 
-    printf_d("PMI sending: %s\n", cmdbuf);
     
-    
- #ifdef MPICH_IS_THREADED
-    MPIU_THREAD_CHECK_BEGIN;
-    {
-        MPID_Thread_mutex_lock(&mutex);
-
-        while (blocked)
-            MPID_Thread_cond_wait(&cond, &mutex);
-
-        blocked = TRUE;
-        MPID_Thread_mutex_unlock(&mutex);
-    }
-    MPIU_THREAD_CHECK_END;
-#endif
-
-    if (PMI_debug)
-        ENQUEUE(resp);
-
     offset = 0;
     do {
         do {
@@ -1596,16 +1371,6 @@ int PMIi_WriteSimpleCommand( int fd, PMI_Command *resp, const char cmd[], PMI_Ke
 
         offset += nbytes;
     } while (offset < cmdlen + PMII_COMMANDLEN_SIZE);
-#ifdef MPICH_IS_THREADED
-    MPIU_THREAD_CHECK_BEGIN;
-    {
-        MPID_Thread_mutex_lock(&mutex);
-        blocked = FALSE;
-        MPID_Thread_cond_broadcast(&cond);
-        MPID_Thread_mutex_unlock(&mutex);
-    }
-    MPIU_THREAD_CHECK_END;
-#endif
     
 fn_exit:
     return mpi_errno;
@@ -1634,6 +1399,7 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI_Command *resp, const char cmd[], ...)
     va_start(ap, cmd);
     while ((key = va_arg(ap, const char *))) {
         val = va_arg(ap, const char *);
+        vallen = va_arg(ap, int);
 
         ++npairs;
     }
@@ -1646,12 +1412,12 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI_Command *resp, const char cmd[], ...)
     va_start(ap, cmd);
     while ((key = va_arg(ap, const char *))) {
         val = va_arg(ap, const char *);
+        vallen = va_arg(ap, int);
         pairs_p[i] = &pairs[i];
         pairs[i].key = key;
         pairs[i].value = val;
-        pairs[i].valueLen = strlen(val);
+        pairs[i].valueLen = vallen;
         pairs[i].isCopy = FALSE;
-        ++i;
     }
     va_end(ap);
 
@@ -1665,6 +1431,109 @@ fn_fail:
     goto fn_exit;
 }
 
+#if 0
+#undef FUNCNAME
+#define FUNCNAME PMIi_WriteSimpleCommandStr
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int PMIi_WriteSimpleCommandStr(int fd, PMI_Command *resp, const char cmd[], ...)
+{
+    va_list ap;
+    int mpi_errno = MPI_SUCCESS;
+    char cmdbuf[PMII_MAX_COMMAND_LEN];
+    char cmdlenbuf[PMII_COMMANDLEN_SIZE+1];
+    char *c = cmdbuf;
+    int ret;
+    int remaining_len = PMII_MAX_COMMAND_LEN;
+    int cmdlen;
+    int i;
+    ssize_t nbytes;
+    ssize_t offset;
+    const char *key, *val;
+    int vallen;
+
+    /* leave space for length field */
+    memset(c, ' ', PMII_COMMANDLEN_SIZE);
+    c += PMII_COMMANDLEN_SIZE;
+
+    MPIU_ERR_CHKANDJUMP(strlen(cmd) > PMI_MAX_VALLEN, mpi_errno, MPI_ERR_OTHER, "**cmd_too_long");
+
+    ret = MPIU_Snprintf(c, remaining_len, "cmd=%s;", cmd);
+    MPIU_ERR_CHKANDJUMP1(ret >= remaining_len, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "Ran out of room for command");
+    c += ret;
+    remaining_len -= ret;
+    
+#ifdef MPICH_IS_THREADED
+    MPIU_THREAD_CHECK_BEGIN;
+    if (resp) {
+        ret = MPIU_Snprintf(c, remaining_len, "thrid=%p;", resp);
+        MPIU_ERR_CHKANDJUMP1(ret >= remaining_len, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "Ran out of room for command");
+        c += ret;
+        remaining_len -= ret;
+    }
+    MPIU_THREAD_CHECK_END;
+#endif
+
+    va_start(ap, cmd);
+    while ((key = va_arg(ap, const char *))) {
+        /* write key= */
+        MPIU_ERR_CHKANDJUMP(strlen(key) > PMI_MAX_KEYLEN, mpi_errno, MPI_ERR_OTHER, "**key_too_long");
+        ret = MPIU_Snprintf(c, remaining_len, "%s=", key);
+        MPIU_ERR_CHKANDJUMP1(ret >= remaining_len, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "Ran out of room for command");
+        c += ret;
+        remaining_len -= ret;
+
+        /* write value and escape ;'s as ;; */
+        val = va_arg(ap, const char *);
+        vallen = va_arg(ap, int);
+        
+        MPIU_ERR_CHKANDJUMP(vallen > PMI_MAX_VALLEN, mpi_errno, MPI_ERR_OTHER, "**val_too_long");
+        for (i = 0; i < vallen; ++i) {
+            if (val[i] == ';') {
+                *c = ';';
+                ++c;
+                --remaining_len;
+            }
+            *c = val[i];
+            ++c;
+            --remaining_len;
+        }        
+
+        /* append ; */
+        *c = ';';
+        ++c;
+        --remaining_len;
+    }
+    va_end(ap);
+
+    /* prepend the buffer length stripping off the trailing '\0' */
+    cmdlen = PMII_MAX_COMMAND_LEN - remaining_len;
+    ret = MPIU_Snprintf(cmdlenbuf, sizeof(cmdlenbuf), "%d", cmdlen);
+    MPIU_ERR_CHKANDJUMP1(ret >= PMII_COMMANDLEN_SIZE, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "Command length won't fit in length buffer");
+
+    memcpy(cmdbuf, cmdlenbuf, ret);
+
+    
+    offset = 0;
+    do {
+        do {
+            nbytes = write(fd, &cmdbuf[offset], cmdlen + PMII_COMMANDLEN_SIZE - offset);
+        } while (nbytes == -1 && errno == EINTR);
+
+        MPIU_ERR_CHKANDJUMP1(nbytes <= 0, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", strerror(errno));
+
+        offset += nbytes;
+    } while (offset < cmdlen + PMII_COMMANDLEN_SIZE);
+
+        
+    
+    
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+#endif
 
 /*
  * This code allows a program to contact a host/port for the PMI socket.
@@ -1765,7 +1634,6 @@ static int PMII_Connect_to_pm( char *hostname, int portnum )
     return fd;
 }
 
-#if 0
 #undef FUNCNAME
 #define FUNCNAME PMII_Set_from_port
 #undef FCNAME
@@ -1873,7 +1741,6 @@ static int PMII_Set_from_port( int fd, int id )
 
     return 0;
 }
-#endif
 
 /* ------------------------------------------------------------------------- */
 /* 
@@ -2089,8 +1956,8 @@ static int PMIi_InitIfSingleton(void)
        process group */
     PMI_KVS_Put( singinit_kvsname, cached_singinit_key, cached_singinit_val );
 
-#endif
     return 0;
+#endif
 }
 
 #undef FUNCNAME
@@ -2135,7 +2002,6 @@ static int accept_one_connection(int list_sock)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int getPMIFD(void)
 {
-    int mpi_errno = MPI_SUCCESS;
     char *p;
 
     /* Set the default */
@@ -2158,23 +2024,32 @@ static int getPMIFD(void)
 	}
 	*ph = 0;
 
-        MPIU_ERR_CHKANDJUMP1(*pn != ':', mpi_errno, MPI_ERR_OTHER, "**pmi_port", "**pmi_port %s", p);
-        
-        portnum = atoi( pn+1 );
-        /* FIXME: Check for valid integer after : */
-        /* This routine only gets the fd to use to talk to 
-           the process manager. The handshake below is used
-           to setup the initial values */
-        PMI_fd = PMII_Connect_to_pm( hostname, portnum );
-        MPIU_ERR_CHKANDJUMP2(PMI_fd < 0, mpi_errno, MPI_ERR_OTHER, "**connect_to_pm", "**connect_to_pm %s %d", hostname, portnum);
+	if (PMI_debug) {
+	    DBG_PRINTF( ("Connecting to %s\n", p) );
+	}
+	if (*pn == ':') {
+	    portnum = atoi( pn+1 );
+	    /* FIXME: Check for valid integer after : */
+	    /* This routine only gets the fd to use to talk to 
+	       the process manager. The handshake below is used
+	       to setup the initial values */
+	    PMI_fd = PMII_Connect_to_pm( hostname, portnum );
+	    if (PMI_fd < 0) {
+		PMIU_printf( 1, "Unable to connect to %s on %d\n", 
+			     hostname, portnum );
+		return -1;
+	    }
+	}
+	else {
+	    PMIU_printf( 1, "unable to decode hostport from %s\n", p );
+	    return PMI_FAIL;
+	}
+
+	return 0;
     }
 
-    /* OK to return success for singleton init */
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
+    /* Singleton init case - its ok to return success with no fd set */
+    return 0;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2188,10 +2063,6 @@ static int getPMIFD(void)
  * was 0.  If not, it uses the "msg" value to report on the reason for
  * the failure.
  */
-#undef FUNCNAME
-#define FUNCNAME GetResponse
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int GetResponse( const char request[], const char expectedCmd[],
 			int checkRc )
 {
@@ -2199,7 +2070,6 @@ static int GetResponse( const char request[], const char expectedCmd[],
     char *p;
     char recvbuf[PMIU_MAXLINE];
     char cmdName[PMIU_MAXLINE];
-#if 0
 
     /* FIXME: This is an example of an incorrect fix - writeline can change
        the second argument in some cases, and that will break the const'ness
@@ -2238,7 +2108,6 @@ static int GetResponse( const char request[], const char expectedCmd[],
 	}
     }
 
-#endif
     return err;
 }
 

@@ -20,7 +20,7 @@ int MPID_nem_init(int rank, struct MPIDI_PG *pg_p, int has_parent);
 int _MPID_nem_init(int rank, struct MPIDI_PG *pg_p, int ckpt_restart, int has_parent);
 int MPID_nem_finalize(void);
 int MPID_nem_ckpt_shutdown(void);
-int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values);
+int MPID_nem_barrier_init(int num_processes, MPID_nem_barrier_t *barrier_region);
 int MPID_nem_barrier(int num_processes, int rank);
 int MPID_nem_vc_init(struct MPIDI_VC *vc);
 int MPID_nem_vc_destroy(struct MPIDI_VC *vc);

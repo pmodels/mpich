@@ -7,6 +7,8 @@
 #include "ch3usockconf.h"
 #include "mpidi_ch3_impl.h"
 
+#include "pmi.h"
+
 #include "mpidu_sock.h"
 
 #ifdef HAVE_UNISTD_H
@@ -51,7 +53,11 @@ int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
      */
 
     /* FIXME: Get the size from the process group */
-    pg_size = MPIDI_PG_Get_size(*pg_p)
+    pmi_errno = PMI_Get_size(&pg_size);
+    if (pmi_errno != 0) {
+	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_size",
+			     "**pmi_get_size %d", pmi_errno);
+    }
 
     /* FIXME: This should probably be the same as MPIDI_VC_InitSock.  If
        not, why not? */

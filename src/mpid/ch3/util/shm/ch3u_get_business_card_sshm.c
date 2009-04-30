@@ -5,6 +5,7 @@
  */
 
 #include "mpidi_ch3_impl.h"
+#include "pmi.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

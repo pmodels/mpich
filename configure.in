@@ -6342,10 +6342,6 @@ AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h f
 # CPPFLAGS
 CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 
-if test "$USE_PMI2_API" = "yes" ; then
-   AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
-fi
-
 dnl Place holder macro for finalize
 PAC_MPICH2_FINALIZE()
 

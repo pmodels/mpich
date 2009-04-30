@@ -8,11 +8,6 @@
 
 #include "tcp_impl.h"
 #include "socksm.h"
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
-#include "pmi.h"
-#endif
 
 /* FIXME trace/log all the state transitions */
 
@@ -772,13 +767,9 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
             char *bc;
             int pmi_errno;
             int val_max_sz;
-
-#ifdef USE_PMI2_API
-            val_max_sz = PMI_MAX_VALLEN;
-#else
+            
             pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
             MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
-#endif
             MPIU_CHKLMEM_MALLOC(bc, char *, val_max_sz, mpi_errno, "bc");
             
             sc->is_tmpvc = FALSE;

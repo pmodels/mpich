@@ -11,6 +11,7 @@
 #include <sys/param.h>
 #endif
 #include "mpidi_ch3_impl.h"
+#include "pmi.h"
 
 
 /*  MPIDI_CH3U_Finalize_sshm - does scalable shared memory specific channel 

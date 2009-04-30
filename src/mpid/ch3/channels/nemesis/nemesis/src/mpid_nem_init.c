@@ -53,7 +53,9 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
 		int has_parent ATTRIBUTE((unused)) )
 {
     int    mpi_errno       = MPI_SUCCESS;
+    int    pmi_errno;
     int    num_procs       = pg_p->size;
+    pid_t  my_pid;
     int    ret;
     int    num_local       = -1;
     int   *local_procs     = NULL;
@@ -69,6 +71,8 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     MPID_nem_cell_t (*network_cells_p)[MPID_NEM_NUM_CELLS];
     MPID_nem_queue_t *recv_queues_p = NULL;
     MPID_nem_queue_t *free_queues_p = NULL;
+    MPID_nem_barrier_t *barrier_region_p = NULL;
+    pid_t *pids_p = NULL;
 #ifdef USE_ATOMIC_EMULATION
     MPIDU_Process_lock_t *process_lock;
 #endif
@@ -113,6 +117,7 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
 
     MPID_nem_mem_region.num_seg        = 7;
     MPIU_CHKPMEM_MALLOC (MPID_nem_mem_region.seg, MPID_nem_seg_info_ptr_t, MPID_nem_mem_region.num_seg * sizeof(MPID_nem_seg_info_t), mpi_errno, "mem_region segments");
+    MPIU_CHKPMEM_MALLOC (MPID_nem_mem_region.pid, pid_t *, num_local * sizeof(pid_t), mpi_errno, "mem_region pid list");
     MPID_nem_mem_region.rank           = pg_rank;
     MPID_nem_mem_region.num_local      = num_local;
     MPID_nem_mem_region.num_procs      = num_procs;
@@ -202,9 +207,17 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     mpi_errno = MPIDI_CH3I_Seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&recv_queues_p);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+    /* Request local process barrier data region */
+    mpi_errno = MPIDI_CH3I_Seg_alloc(sizeof(MPID_nem_barrier_t), (void **)&barrier_region_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* Request shared collectives barrier vars region */
     mpi_errno = MPIDI_CH3I_Seg_alloc(MPID_NEM_NUM_BARRIER_VARS * sizeof(MPID_nem_barrier_vars_t),
                                      (void **)&MPID_nem_mem_region.barrier_vars);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Request pids region */
+    mpi_errno = MPIDI_CH3I_Seg_alloc(num_local * sizeof(pid_t), (void **)&pids_p);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 #ifdef USE_ATOMIC_EMULATION
@@ -227,6 +240,29 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     /* init shared collectives barrier region */
     mpi_errno = MPID_nem_barrier_vars_init(MPID_nem_mem_region.barrier_vars);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+
+    /* set up local process barrier region */
+    mpi_errno = MPID_nem_barrier_init(num_local, barrier_region_p);
+    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+
+    /* global barrier */
+    pmi_errno = PMI_Barrier();
+    MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
+
+    
+    /* exchange PIDs */
+    my_pid = getpid();
+    pids_p[local_rank] = my_pid;
+
+    /* local procs barrier */
+    mpi_errno = MPID_nem_barrier(num_local, local_rank);
+    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+
+    /* read pids */
+    for (index = 0 ; index < num_local ; index ++)
+    {
+	MPID_nem_mem_region.pid[index] = pids_p[index];
+    }
 
     /* local procs barrier */
     mpi_errno = MPID_nem_barrier (num_local, local_rank);

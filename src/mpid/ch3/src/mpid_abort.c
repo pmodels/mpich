@@ -8,11 +8,7 @@
 
 /* FIXME: Who uses/sets MPIDI_DEV_IMPLEMENTS_ABORT? */
 #ifdef MPIDI_DEV_IMPLEMENTS_ABORT
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 static int MPIDI_CH3I_PMI_Abort(int exit_code, const char *error_msg);
 #endif
 
@@ -129,11 +125,7 @@ static int MPIDI_CH3I_PMI_Abort(int exit_code, const char *error_msg)
        process groups of the communicator or only the current process?
        Should PMI_Abort have a parameter for which of these two cases to
        perform? */
-#ifdef USE_PMI2_API
-    PMI_Abort(TRUE, error_msg);
-#else    
     PMI_Abort(exit_code, error_msg);
-#endif
 
     /* if abort returns for some reason, exit here */
     exit(exit_code);

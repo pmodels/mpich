@@ -11,6 +11,7 @@
 #include "mpitypedefs.h"
 #include "mpid_nem_datatypes.h"
 #include "mpi.h"
+#include "pmi.h"
 #include "mpiu_os_wrappers.h"
 
 #define MPID_NEM_MAX_FNAME_LEN 256
@@ -120,6 +121,7 @@ typedef struct MPID_nem_mem_region
     MPID_nem_seg_info_t        *seg;
     int                         num_seg;
     int                         map_lock;
+    pid_t                      *pid;
     int                         num_local;
     int                         num_procs;
     int                        *local_procs; /* local_procs[lrank] gives the global rank of proc with local rank lrank */

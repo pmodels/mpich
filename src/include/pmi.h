@@ -7,10 +7,6 @@
 #ifndef PMI_H_INCLUDED
 #define PMI_H_INCLUDED
 
-#ifdef USE_PMI2_API
-#error This header file defines the PMI v1 API, but PMI2 was selected
-#endif
-
 /* prototypes for the PMI interface in MPICH2 */
 
 #if defined(__cplusplus)

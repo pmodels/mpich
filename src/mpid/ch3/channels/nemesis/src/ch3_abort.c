@@ -5,12 +5,7 @@
  */
 
 #include "mpid_nem_impl.h"
-
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Abort
@@ -22,11 +17,8 @@ int MPIDI_CH3_Abort(int exit_code, char *error_msg)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ABORT);
 
-#ifdef USE_PMI2_API
-    PMI_Abort(TRUE, error_msg);
-#else
     PMI_Abort(exit_code, error_msg);
-#endif
+
     /* if abort returns for some reason, exit here */
 
     MPIU_Error_printf("%s", error_msg);

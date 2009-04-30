@@ -5,6 +5,7 @@
  */
 
 #include "mpid_nem_impl.h"
+#include "pmi.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Comm_spawn_multiple

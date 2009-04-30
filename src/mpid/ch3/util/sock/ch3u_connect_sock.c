@@ -5,11 +5,7 @@
  */
 
 #include "mpidi_ch3_impl.h"
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 
 #include "mpidu_sock.h"
 
@@ -176,14 +172,10 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
     /* FIXME: This size is unchanging, so get it only once (at most); 
        we might prefer for connections to simply point at the single process
        group to which the remote process belong */
-#ifdef USE_PMI2_API
-    id_sz = MPID_MAX_JOBID_LEN;
-#else
     pmi_errno = PMI_Get_id_length_max(&id_sz);
     MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno,MPI_ERR_OTHER, 
 			     "**pmi_get_id_length_max",
 			     "**pmi_get_id_length_max %d", pmi_errno);
-#endif
     MPIU_CHKPMEM_MALLOC(conn->pg_id,char*,id_sz + 1,mpi_errno,"conn->pg_id");
     conn->pg_id[0] = 0;           /* Be careful about pg_id in case a later 
 				     error */

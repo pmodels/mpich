@@ -16,11 +16,7 @@
  */
    
 
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 
 /* Define the name of the kvs key used to provide the port name to the
    children */
@@ -182,9 +178,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 
 	/* Spawn the processes */
 	MPIU_THREAD_CS_ENTER(PMI,);
-#ifdef USE_PMI2_API
-        MPIU_Assert(0); /* FIX for pmi2 DARIUS */
-#else
         pmi_errno = PMI_Spawn_multiple(count, (const char **)
                                        commands, 
                                        (const char ***) argvs,
@@ -198,7 +191,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
 		 "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
         }
-#endif
 
 	if (errcodes != MPI_ERRCODES_IGNORE) {
 	    for (i=0; i<total_num_processes; i++) {
@@ -293,15 +285,6 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
 	char *kvsname = NULL;
 	/* We can always use PMI_KVS_Get on our own process group */
 	MPIDI_PG_GetConnKVSname( &kvsname );
-#ifdef USE_PMI2_API
-        {
-            int vallen = 0;
-            MPIU_THREAD_CS_ENTER(PMI,);
-            mpi_errno = PMI_KVS_Get(kvsname, PARENT_PORT_KVSKEY, val, sizeof(val), &vallen);
-            MPIU_THREAD_CS_EXIT(PMI,);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
-#else
 	MPIU_THREAD_CS_ENTER(PMI,);
 	pmi_errno = PMI_KVS_Get( kvsname, PARENT_PORT_KVSKEY, val, sizeof(val));
 	MPIU_THREAD_CS_EXIT(PMI,);
@@ -309,10 +292,10 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
             goto fn_exit;
 	}
-#endif
+
 	parent_port_name = MPIU_Strdup(val);
 	if (parent_port_name == NULL) {
-	    MPIU_ERR_POP(mpi_errno); /* FIXME DARIUS */
+	    MPIU_ERR_POP(mpi_errno);
 	}
     }
 
