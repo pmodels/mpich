@@ -103,7 +103,7 @@ mx_unexp_handler_action_t MPID_nem_mx_get_adi_msg(void *context, mx_endpoint_add
       
       MPIDI_PG_Find (pg_id, &pg);
       NEM_MX_MATCH_GET_PGRANK(match_info,pg_rank);
-      MPIDI_PG_Get_vc(pg, pg_rank, &vc);	    
+      MPIDI_PG_Get_vc_set_active(pg, pg_rank, &vc);	    
       
       fprintf(stdout,"[%i]=== NULL VC : Receiver Unex Got infos (%lx) from  Sender (in data) ..%li %i %s %p\n", 
 	      MPID_nem_mem_region.rank,match_info,remote_nic_id,remote_endpoint_id,pg_id,vc);
@@ -177,7 +177,7 @@ if(type == NEM_MX_DIRECT_TYPE)
 	
 	MPIDI_PG_Find (pg_id, &pg);
 	NEM_MX_MATCH_GET_PGRANK(match_info,pg_rank);
-	MPIDI_PG_Get_vc(pg, pg_rank, &vc);
+	MPIDI_PG_Get_vc_set_active(pg, pg_rank, &vc);
 	
 	if(VC_FIELD(vc, local_connected) == 0)
 	{			

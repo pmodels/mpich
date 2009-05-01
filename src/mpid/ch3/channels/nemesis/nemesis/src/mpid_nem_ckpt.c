@@ -205,7 +205,7 @@ MPID_nem_ckpt_got_marker (MPID_nem_cell_ptr_t *cell, int *in_fbox)
 
     if (!*in_fbox)
     {
-	MPIDI_PG_Get_vc (MPIDI_Process.my_pg, source, &vc);
+	MPIDI_PG_Get_vc_set_active (MPIDI_Process.my_pg, source, &vc);
 	MPID_nem_mpich2_release_cell (*cell, vc);
     }
     else
@@ -341,7 +341,7 @@ MPID_nem_ckpt_send_markers()
 	    continue;
 	}
 	
-	MPIDI_PG_Get_vc (MPIDI_Process.my_pg, next_marker_dest, &vc);
+	MPIDI_PG_Get_vc_set_active (MPIDI_Process.my_pg, next_marker_dest, &vc);
 	mpi_errno = MPID_nem_mpich2_send_ckpt_marker (current_wave, vc, &try_again);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
         if (try_again)

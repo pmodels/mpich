@@ -344,7 +344,7 @@ int MPIDI_CH3I_SHM_read_progress(MPIDI_VC_t *vc, int millisecond_timeout,
 	    recv_vcch = (MPIDI_CH3I_VC *)vc->channel_private;
 
 	    shm_ptr = &recv_vcch->shm[i];
-	    MPIDI_PG_Get_vc(vc->pg, i, &recv_vc_ptr);
+	    MPIDI_PG_Get_vc_set_active(vc->pg, i, &recv_vc_ptr);
 	    recv_vcch = (MPIDI_CH3I_VC *)recv_vc_ptr->channel_private;
 #endif
 	    index = shm_ptr->head_index;

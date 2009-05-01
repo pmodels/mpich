@@ -904,7 +904,7 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
     
     /* We require that the packet be the open_req type */
     pg_rank = openpkt->pg_rank;
-    MPIDI_PG_Get_vc(pg, pg_rank, &vc);
+    MPIDI_PG_Get_vc_set_active(pg, pg_rank, &vc);
     MPIU_Assert(vc->pg_rank == pg_rank);
     
     vcch = (MPIDI_CH3I_VC *)vc->channel_private;

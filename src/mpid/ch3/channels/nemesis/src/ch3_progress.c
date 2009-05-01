@@ -166,7 +166,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Recv pkt from fbox");
                     MPIU_Assert(payload_len >= sizeof (MPIDI_CH3_Pkt_t));
 
-                    MPIDI_PG_Get_vc(MPIDI_Process.my_pg, MPID_NEM_FBOX_SOURCE(cell), &vc);
+                    MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, MPID_NEM_FBOX_SOURCE(cell), &vc);
                     MPIU_Assert(((MPIDI_CH3I_VC *)vc->channel_private)->recv_active == NULL &&
                                 ((MPIDI_CH3I_VC *)vc->channel_private)->pending_pkt_len == 0);
                     vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
@@ -201,7 +201,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Recv pkt from queue");
 
-                MPIDI_PG_Get_vc(MPIDI_Process.my_pg, MPID_NEM_CELL_SOURCE(cell), &vc);
+                MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, MPID_NEM_CELL_SOURCE(cell), &vc);
 
                 mpi_errno = MPID_nem_handle_pkt(vc, cell_buf, payload_len);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);

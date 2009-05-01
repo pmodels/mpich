@@ -56,7 +56,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
     for (i = 0; i < pg_p->size; i++)
     {
 	MPIDI_VC_t *vc;
-	MPIDI_PG_Get_vc (pg_p, i, &vc);
+	MPIDI_PG_Get_vc_set_active (pg_p, i, &vc);
 	mpi_errno = MPIDI_CH3_VC_Init (vc);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }

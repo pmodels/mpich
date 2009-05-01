@@ -294,7 +294,7 @@ int MPIDI_CH3I_Progress(int is_blocking, MPID_Progress_state *state)
 	for (i=0; i<MPIDI_PG_Get_size(MPIDI_CH3I_Process.vc->pg); i++)
 	{
 	    MPIDI_CH3I_VC *vcch;
-	    MPIDI_PG_Get_vc(MPIDI_CH3I_Process.vc->pg, i, &vc_ptr);
+	    MPIDI_PG_Get_vc_set_active(MPIDI_CH3I_Process.vc->pg, i, &vc_ptr);
 	    vcch = (MPIDI_CH3I_VC *)vc_ptr->channel_private;
 	    if (/*MPIDI_Process.my_pg->ch.vc_table[i].*/vcch->send_active != NULL)
 	    {

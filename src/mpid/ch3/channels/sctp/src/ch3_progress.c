@@ -432,7 +432,7 @@ int MPIDI_CH3I_Progress_handle_sctp_event(MPIDU_Sctp_event_t * event)
 		}
 
                 /* get VC from an existing PG */
-		MPIDI_PG_Get_vc(pg, pkt->sc_open_req.pg_rank, &vc);
+		MPIDI_PG_Get_vc_set_active(pg, pkt->sc_open_req.pg_rank, &vc);
 		MPIU_Assert(vc->pg_rank == pkt->sc_open_req.pg_rank);
 		result->vc = vc;
                 vc->ch.sinfo_assoc_id = result->assoc_id;

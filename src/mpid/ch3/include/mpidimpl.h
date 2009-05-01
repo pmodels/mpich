@@ -72,7 +72,7 @@ typedef struct MPIDI_PG
 
     /* VC table.  At present this is a pointer to an array of VC structures. 
        Someday we may want make this a pointer to an array
-       of VC references.  Thus, it is important to use MPIDI_PG_Get_vc() 
+       of VC references.  Thus, it is important to use MPIDI_PG_Get_vc_set_active() 
        instead of directly referencing this field. */
     struct MPIDI_VC * vct;
 
@@ -555,8 +555,8 @@ int MPIDI_PG_Get_iterator(MPIDI_PG_iterator *iter);
 int MPIDI_PG_Has_next(MPIDI_PG_iterator *iter);
 int MPIDI_PG_Get_next(MPIDI_PG_iterator *iter, MPIDI_PG_t **pgp);
 
-/* FIXME: MPIDI_PG_Get_vc is a macro, not a routine */
-int MPIDI_PG_Get_vc(MPIDI_PG_t * pg, int rank, struct MPIDI_VC ** vc); 
+/* FIXME: MPIDI_PG_Get_vc_set_active is a macro, not a routine */
+int MPIDI_PG_Get_vc_set_active(MPIDI_PG_t * pg, int rank, struct MPIDI_VC ** vc); 
 int MPIDI_PG_Close_VCs( void );
 
 int MPIDI_PG_InitConnKVS( MPIDI_PG_t * );
@@ -585,7 +585,7 @@ int MPIDI_CH3_PG_Init( MPIDI_PG_t * );
          "Decr process group %p ref count to %d",pg_,pg_->ref_count));\
 }
 /* FIXME: What is the difference between get_vcr and get_vc? */
-#define MPIDI_PG_Get_vc(pg_, rank_, vcp_)		\
+#define MPIDI_PG_Get_vc_set_active(pg_, rank_, vcp_)    \
 {							\
     *(vcp_) = &(pg_)->vct[rank_];			\
     if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE)	\

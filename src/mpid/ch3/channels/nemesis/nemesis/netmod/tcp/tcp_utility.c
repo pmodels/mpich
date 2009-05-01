@@ -48,7 +48,7 @@ int MPID_nem_tcp_get_vc_from_conninfo (char *pg_id, int pg_rank, struct MPIDI_VC
     MPIU_ERR_CHKANDJUMP1 (pg == NULL, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "invalid PG");
     MPIU_ERR_CHKANDJUMP1 (pg_rank < 0 || pg_rank > MPIDI_PG_Get_size (pg), mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "invalid pg_rank");
         
-    MPIDI_PG_Get_vc (pg, pg_rank, vc);
+    MPIDI_PG_Get_vc_set_active (pg, pg_rank, vc);
     
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_GET_VC_FROM_CONNINFO);

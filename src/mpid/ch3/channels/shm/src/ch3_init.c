@@ -107,7 +107,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg, int pg_rank )
     }
     
     /* save my vc_ptr for easy access */
-    /* MPIDI_PG_Get_vcr(pg, pg_rank, &MPIDI_CH3I_Process.vc); */
+    /* MPIDI_PG_Get_vc_set_activer(pg, pg_rank, &MPIDI_CH3I_Process.vc); */
     /* FIXME: Figure out whether this is a common feature of process 
        groups (and thus make it part of the general PG_Init) or 
        something else.  Avoid a "get" routine because of the danger in
@@ -265,7 +265,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg, int pg_rank )
     for (i=0; i<pg_size; i++)
     {
 	MPIDI_CH3I_VC *vcch;
-	/* MPIDI_PG_Get_vcr(pg, i, &vc); */
+	/* MPIDI_PG_Get_vc_set_activer(pg, i, &vc); */
 	/* FIXME: Move this code to the general init pg for shared
 	   memory */
 	vc = &pg->vct[i];

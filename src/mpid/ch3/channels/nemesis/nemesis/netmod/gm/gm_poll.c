@@ -115,7 +115,7 @@ inline int MPID_nem_gm_recv()
             pkt = (volatile MPID_nem_pkt_t *)gm_ntohp(e->recv.message);
             msg_len = pkt->mpich2.datalen;
             MPIU_Assert(msg_len ==  gm_ntoh_u32(e->recv.length) - MPID_NEM_MPICH2_HEAD_LEN);
-            MPIDI_PG_Get_vc (MPIDI_Process.my_pg, pkt->mpich2.source, &vc);
+            MPIDI_PG_Get_vc_set_active (MPIDI_Process.my_pg, pkt->mpich2.source, &vc);
 
             MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Recvd pkt src=%d len=%d\n", pkt->mpich2.source, msg_len));
             mpi_errno = MPID_nem_handle_pkt(vc, (char *)pkt->mpich2.payload, msg_len);
@@ -131,7 +131,7 @@ inline int MPID_nem_gm_recv()
             pkt = (volatile MPID_nem_pkt_t *)gm_ntohp(e->recv.buffer);
             msg_len = pkt->mpich2.datalen;
             MPIU_Assert(msg_len ==  gm_ntoh_u32(e->recv.length) - MPID_NEM_MPICH2_HEAD_LEN);
-            MPIDI_PG_Get_vc (MPIDI_Process.my_pg, pkt->mpich2.source, &vc);
+            MPIDI_PG_Get_vc_set_active (MPIDI_Process.my_pg, pkt->mpich2.source, &vc);
             
             MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Recvd pkt src=%d len=%d\n", pkt->mpich2.source, msg_len));
             mpi_errno = MPID_nem_handle_pkt(vc, (char *)pkt->mpich2.payload, msg_len);

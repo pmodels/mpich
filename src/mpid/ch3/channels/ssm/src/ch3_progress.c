@@ -187,7 +187,7 @@ int MPIDI_CH3I_Progress(int is_blocking, MPID_Progress_state *state)
 		MPIDI_PG_t *pg;
 
 		MPIDI_PG_Find(info.pg_id, &pg);
-		MPIDI_PG_Get_vc(pg, info.pg_rank, &vc_ptr);
+		MPIDI_PG_Get_vc_set_active(pg, info.pg_rank, &vc_ptr);
 		/*
 		printf("attaching to shared memory queue:\nVC.rank %d\nVC.pg_id <%s>\nPG.id <%s>\n",
 		    vc_ptr->pg_rank, vc_ptr->pg->id, pg->id);
@@ -1140,7 +1140,7 @@ static int MPIDI_CH3I_Message_queue_progress( void )
 	MPIDI_PG_t *pg;
 
 	MPIDI_PG_Find(info.pg_id, &pg);
-	MPIDI_PG_Get_vc(pg, info.pg_rank, &vc_ptr);
+	MPIDI_PG_Get_vc_set_active(pg, info.pg_rank, &vc_ptr);
 	/*vc_ptr = &MPIDI_Process.my_pg->ch.vc_table[info.pg_rank];*/
 	mpi_errno = MPIDI_CH3I_SHM_Attach_to_mem(
 	    &info.info, &vc_ptr->ch.shm_read_queue_info);
