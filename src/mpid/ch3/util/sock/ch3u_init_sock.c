@@ -37,7 +37,6 @@ int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
 			 char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pmi_errno;
     int pg_size;
     int p;
 
@@ -51,7 +50,7 @@ int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
      */
 
     /* FIXME: Get the size from the process group */
-    pg_size = MPIDI_PG_Get_size(*pg_p)
+    pg_size = MPIDI_PG_Get_size(pg_p);
 
     /* FIXME: This should probably be the same as MPIDI_VC_InitSock.  If
        not, why not? */
