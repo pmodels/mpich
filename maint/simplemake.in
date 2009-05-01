@@ -1209,7 +1209,7 @@ sub WriteMfile {
 	    &TargetDependenciesDynamic;
 	}
     }
-    elsif ($dependenciesDummy == "yes") {
+    elsif ($dependenciesDummy eq "yes") {
 	print FD "# Dummy target$newline";
 	print FD "dependencies:$newline$newline";
     }
