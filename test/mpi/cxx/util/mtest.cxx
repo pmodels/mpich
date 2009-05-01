@@ -418,7 +418,7 @@ int MTestCheckRecv( MPI::Status &status, MTestDatatype *recvtype )
     int count;
     int errs = 0;
 
-    if (status) {
+    if (status != MPI_STATUS_IGNORE) {
 	count = status.Get_count( recvtype->datatype );
 	
 	/* Check count against expected count */
@@ -520,10 +520,10 @@ int MTestGetIntracommGeneral( MPI::Intracomm &comm, int min_size,
 	    
 	    if (allowSmaller && newsize >= min_size) {
 		rank = MPI::COMM_WORLD.Get_rank();
-		*comm = MPI::COMM_WORLD.Split( rank < newsize, rank );
+		comm = MPI::COMM_WORLD.Split( rank < newsize, rank );
 		if (rank >= newsize) {
 		    comm.Free();
-		    *comm = MPI::COMM_NULL;
+		    comm = MPI::COMM_NULL;
 		}
 	    }
 	    else {
