@@ -889,52 +889,6 @@ int PMI_Spawn_multiple(int count,
     return( 0 );
 }
 
-int PMI_Args_to_keyval(int *argcp ATTRIBUTE((unused)), 
-		       char *((*argvp)[]) ATTRIBUTE((unused)), 
-		       PMI_keyval_t **keyvalp ATTRIBUTE((unused)), 
-		       int *size ATTRIBUTE((unused)) )
-{
-    return ( 0 );
-}
-
-int PMI_Parse_option(int num_args, char *args[], int *num_parsed, 
-		     PMI_keyval_t **keyvalp, int *size)
-{
-    if (num_args < 1)
-        return PMI_ERR_INVALID_NUM_ARGS;
-    if (args == NULL)
-        return PMI_ERR_INVALID_ARGS;
-    if (num_parsed == NULL)
-        return PMI_ERR_INVALID_NUM_PARSED;
-    if (keyvalp == NULL)
-        return PMI_ERR_INVALID_KEYVALP;
-    if (size == NULL)
-        return PMI_ERR_INVALID_SIZE;
-    *num_parsed = 0;
-    *keyvalp = NULL;
-    *size = 0;
-    return PMI_SUCCESS;
-}
-
-int PMI_Free_keyvals(PMI_keyval_t keyvalp[], int size)
-{
-    int i;
-    if (size < 0)
-        return PMI_ERR_INVALID_ARG;
-    if (keyvalp == NULL && size > 0)
-        return PMI_ERR_INVALID_ARG;
-    if (size == 0)
-        return PMI_SUCCESS;
-    /* free stuff */
-    for (i=0; i<size; i++)
-    {
-	MPIU_Free(keyvalp[i].key);
-	MPIU_Free(keyvalp[i].val);
-    }
-    MPIU_Free(keyvalp);
-    return PMI_SUCCESS;
-}
-
 /***************** Internal routines not part of PMI interface ***************/
 
 /* get a keyval pair by specific index */

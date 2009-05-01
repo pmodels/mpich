@@ -251,7 +251,7 @@ static void print_configfile(FILE *fout)
 	{
 	    fprintf(fout, "%s", env);
 	}
-	fprintf(fout, "-host %s -n %d ", node->host, node->nSMPProcs);
+	fprintf(fout, "-host %s -n %d ", node->host, (int)(node->nSMPProcs));
 	if (node->exe[0] != '\0')
 	{
 	    exe = node->exe;
@@ -275,7 +275,7 @@ static void print_configfile(FILE *fout)
 
 #undef FCNAME
 #define FCNAME "cleanup"
-static void cleanup()
+static void cleanup(void)
 {
     MapDriveNode *map;
     HostNode *node;

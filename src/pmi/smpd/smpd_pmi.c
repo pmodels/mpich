@@ -322,6 +322,7 @@ int PMI_Spawn_multiple(int count,
 	errors);
 }
 
+#if 0
 int PMI_Parse_option(int num_args, char *args[], int *num_parsed, PMI_keyval_t **keyvalp, int *size)
 {
     if (fn.PMI_Parse_option == NULL)
@@ -342,6 +343,7 @@ int PMI_Free_keyvals(PMI_keyval_t keyvalp[], int size)
 	return PMI_FAIL;
     return fn.PMI_Free_keyvals(keyvalp, size);
 }
+#endif
 
 int PMI_Publish_name( const char service_name[], const char port[] )
 {

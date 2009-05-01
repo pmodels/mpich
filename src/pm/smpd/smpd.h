@@ -49,6 +49,9 @@
 #endif
 #ifdef USE_PTHREAD_STDIN_REDIRECTION
 #include <pthread.h>
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 #endif
 #include "mpi.h"
 #include "mpidu_sock.h"
