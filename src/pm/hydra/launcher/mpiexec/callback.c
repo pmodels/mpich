@@ -83,9 +83,9 @@ HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events, void *userp)
     /* Write output to fd 2 */
     status = HYDU_sock_stdout_cb(fd, events, 2, &closed);
     HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on %d (%s)\n",
-                         fd, HYDU_strerror(errno))
+                         fd, HYDU_strerror(errno));
 
-        if (closed) {
+    if (closed) {
         status = close_fd(fd);
         HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (%s)\n",
                              fd, HYDU_strerror(errno));
