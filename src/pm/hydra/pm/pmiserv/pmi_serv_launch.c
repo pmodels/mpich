@@ -44,7 +44,7 @@ static void launch_helper(void *args)
      * 5. On the first new socket, send USE_AS_STDOUT and the second
      *    send USE_AS_STDERR.
      *
-     * 6. For PMI_ID "0", open a separate socket and send the
+     * 6. For the first process, open a separate socket and send the
      *    USE_AS_STDIN command on it.
      *
      * 7. We need to figure out what to do with the LAUNCH_JOB
@@ -135,17 +135,20 @@ static HYD_Status fill_in_proxy_args(void)
         HYDU_ERR_POP(status, "unable to join strings\n");
         HYDU_free_strlist(path_str);
 
-        partition->proxy_args[arg++] = HYDU_strdup("--proxy-port");
-        partition->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
-
         partition->proxy_args[arg++] = HYDU_strdup("--one-pass-count");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.one_pass_count);
 
         partition->proxy_args[arg++] = HYDU_strdup("--wdir");
         partition->proxy_args[arg++] = HYDU_strdup(handle.wdir);
 
+        partition->proxy_args[arg++] = HYDU_strdup("--proxy-port");
+        partition->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
+
         partition->proxy_args[arg++] = HYDU_strdup("--pmi-port-str");
-        partition->proxy_args[arg++] = HYDU_strdup(pmi_port_str);
+        if (handle.pm_env)
+            partition->proxy_args[arg++] = HYDU_strdup(pmi_port_str);
+        else
+            partition->proxy_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
         partition->proxy_args[arg++] = HYDU_strdup("--binding");
         partition->proxy_args[arg++] = HYDU_int_to_str(handle.binding);
@@ -154,7 +157,7 @@ static HYD_Status fill_in_proxy_args(void)
         else if (partition->user_bind_map)
             partition->proxy_args[arg++] = HYDU_strdup(partition->user_bind_map);
         else
-            partition->proxy_args[arg++] = HYDU_strdup("HYDRA_NO_USER_MAP");
+            partition->proxy_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
         /* Pass the global environment separately, instead of for each
          * executable, as an optimization */
@@ -397,25 +400,6 @@ static HYD_Status launch_procs_in_persistent_mode(void)
 }
 
 
-/*
- * HYD_PMCI_launch_procs: Here are the steps we follow:
- *
- * 1. Find what all ports the user wants to allow and listen on one of
- * those ports.
- *
- * 2. Create a call-back function to accept connections and register
- * the listening socket with the demux engine.
- *
- * 3. Create a port string out of this hostname and port and add it to
- * the environment list under the variable "PMI_PORT".
- *
- * 4. Create an environment variable for PMI_ID. This is an
- * auto-incrementing variable; the bootstrap server will take care of
- * adding the process ID to the start value.
- *
- * 5. Create a process info setup and ask the bootstrap server to
- * launch the processes.
- */
 HYD_Status HYD_PMCI_launch_procs(void)
 {
     int listenfd;

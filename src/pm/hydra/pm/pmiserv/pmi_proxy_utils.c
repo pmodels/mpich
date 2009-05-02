@@ -90,7 +90,10 @@ static HYD_Status parse_params(char **t_argv)
         /* PMI port string */
         if (!strcmp(*argv, "--pmi-port-str")) {
             argv++;
-            HYD_PMCD_pmi_proxy_params.pmi_port_str = HYDU_strdup(*argv);
+            if (!strcmp(*argv, "HYDRA_NULL"))
+                HYD_PMCD_pmi_proxy_params.pmi_port_str = NULL;
+            else
+                HYD_PMCD_pmi_proxy_params.pmi_port_str = HYDU_strdup(*argv);
             continue;
         }
 
@@ -99,7 +102,7 @@ static HYD_Status parse_params(char **t_argv)
             argv++;
             HYD_PMCD_pmi_proxy_params.binding = atoi(*argv);
             argv++;
-            if (!strcmp(*argv, "HYDRA_NO_USER_MAP"))
+            if (!strcmp(*argv, "HYDRA_NULL"))
                 HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
             else
                 HYD_PMCD_pmi_proxy_params.user_bind_map = HYDU_strdup(*argv);
@@ -447,12 +450,14 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
     /* Set the PMI port string to connect to. We currently just use
      * the global PMI port. */
-    str = HYDU_strdup(HYD_PMCD_pmi_proxy_params.pmi_port_str);
-    status = HYDU_env_create(&env, "PMI_PORT", str);
-    HYDU_ERR_POP(status, "unable to create env\n");
-    HYDU_FREE(str);
-    status = HYDU_putenv(env);
-    HYDU_ERR_POP(status, "putenv failed\n");
+    if (HYD_PMCD_pmi_proxy_params.pmi_port_str) {
+        str = HYDU_strdup(HYD_PMCD_pmi_proxy_params.pmi_port_str);
+        status = HYDU_env_create(&env, "PMI_PORT", str);
+        HYDU_ERR_POP(status, "unable to create env\n");
+        HYDU_FREE(str);
+        status = HYDU_putenv(env);
+        HYDU_ERR_POP(status, "putenv failed\n");
+    }
 
     /* Spawn the processes */
     process_id = 0;
@@ -473,12 +478,14 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                 }
             }
 
-            str = HYDU_int_to_str(pmi_id);
-            status = HYDU_env_create(&env, "PMI_ID", str);
-            HYDU_ERR_POP(status, "unable to create env\n");
-            HYDU_FREE(str);
-            status = HYDU_putenv(env);
-            HYDU_ERR_POP(status, "putenv failed\n");
+            if (HYD_PMCD_pmi_proxy_params.pmi_port_str) {
+                str = HYDU_int_to_str(pmi_id);
+                status = HYDU_env_create(&env, "PMI_ID", str);
+                HYDU_ERR_POP(status, "unable to create env\n");
+                HYDU_FREE(str);
+                status = HYDU_putenv(env);
+                HYDU_ERR_POP(status, "putenv failed\n");
+            }
 
             if (chdir(HYD_PMCD_pmi_proxy_params.wdir) < 0)
                 HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
