@@ -148,8 +148,8 @@ struct HYD_Partition_exec {
     HYD_Env_prop_t prop;
     HYD_Env_t *prop_env;
 
-    int pgid; /* All executables with the same PGID belong to the same
-               * job. */
+    int pgid;                   /* All executables with the same PGID belong to the same
+                                 * job. */
 
     struct HYD_Partition_exec *next;
 };

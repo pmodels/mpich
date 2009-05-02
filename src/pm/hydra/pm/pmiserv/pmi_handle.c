@@ -146,7 +146,7 @@ static struct HYD_PMCD_pmi_node *allocate_node(HYD_PMCD_pmi_pg_t * pg, int node_
 }
 
 
-HYD_Status HYD_PMCD_pmi_add_kvs(char *key, char *val, HYD_PMCD_pmi_kvs_t *kvs,
+HYD_Status HYD_PMCD_pmi_add_kvs(char *key, char *val, HYD_PMCD_pmi_kvs_t * kvs,
                                 char **key_pair_str, int *ret)
 {
     HYD_PMCD_pmi_process_t *process;
@@ -351,10 +351,10 @@ static struct HYD_PMCD_pmi_node *find_node(HYD_PMCD_pmi_pg_t * pg, int rank)
         tmp->next = node;
     }
 
-fn_exit:
+  fn_exit:
     return node;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

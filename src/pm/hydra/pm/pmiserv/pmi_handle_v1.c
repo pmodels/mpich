@@ -29,6 +29,7 @@ static struct HYD_PMCD_pmi_handle_fns pmi_v1_handle_fns_foo[] = {
 };
 
 static struct HYD_PMCD_pmi_handle pmi_v1_foo = { PMI_V1_DELIM, pmi_v1_handle_fns_foo };
+
 struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v1 = &pmi_v1_foo;
 
 HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])

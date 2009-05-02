@@ -106,7 +106,7 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
                 goto fn_exit;
             }
         }
-        else { /* PMI-2 command */
+        else {  /* PMI-2 command */
             buf[linelen] = 0;
             cmdlen = atoi(buf);
 

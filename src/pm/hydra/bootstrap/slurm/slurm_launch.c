@@ -32,7 +32,7 @@ HYD_Status HYD_BSCD_slurm_launch_procs(void)
 
         /* FIXME: Get the path to srun */
         if (handle.bootstrap_exec)
-            client_arg[arg++] =HYDU_strdup(handle.bootstrap_exec);
+            client_arg[arg++] = HYDU_strdup(handle.bootstrap_exec);
         else
             client_arg[arg++] = HYDU_strdup("srun");
 

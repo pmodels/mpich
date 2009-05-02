@@ -35,19 +35,19 @@ struct HYD_PMCD_pmi_process {
      * process. This essentially kills any chance of PMI server
      * masquerading. */
     int fd;
-    int rank; /* COMM_WORLD rank of this process */
-    int epoch; /* Epoch this process has reached */
-    struct HYD_PMCD_pmi_node *node; /* Back pointer to the PMI node */
+    int rank;                   /* COMM_WORLD rank of this process */
+    int epoch;                  /* Epoch this process has reached */
+    struct HYD_PMCD_pmi_node *node;     /* Back pointer to the PMI node */
     struct HYD_PMCD_pmi_process *next;
 };
 
 struct HYD_PMCD_pmi_node {
-    int node_id; /* This corresponds to the partition ID of the
-                  * launched processes */
+    int node_id;                /* This corresponds to the partition ID of the
+                                 * launched processes */
     struct HYD_PMCD_pmi_pg *pg; /* Back pointer to the group */
     struct HYD_PMCD_pmi_process *process_list;
 
-    HYD_PMCD_pmi_kvs_t *kvs; /* Node-level KVS space for node attributes */
+    HYD_PMCD_pmi_kvs_t *kvs;    /* Node-level KVS space for node attributes */
 
     struct HYD_PMCD_pmi_node *next;
 };
@@ -70,7 +70,7 @@ struct HYD_PMCD_pmi_pg {
 HYD_Status HYD_PMCD_pmi_add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd, int rank);
 HYD_Status HYD_PMCD_pmi_id_to_rank(int id, int *rank);
 HYD_PMCD_pmi_process_t *HYD_PMCD_pmi_find_process(int fd);
-HYD_Status HYD_PMCD_pmi_add_kvs(char *key, char *val, HYD_PMCD_pmi_kvs_t *kvs,
+HYD_Status HYD_PMCD_pmi_add_kvs(char *key, char *val, HYD_PMCD_pmi_kvs_t * kvs,
                                 char **key_pair_str, int *ret);
 HYD_Status HYD_PMCD_pmi_init(void);
 HYD_Status HYD_PMCD_pmi_finalize(void);

@@ -378,7 +378,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     if (handle.pm_env == -1 && tmp)
         handle.pm_env = (atoi(getenv("HYDRA_PM_ENV")) != 0);
     if (handle.pm_env == -1)
-        handle.pm_env = 1; /* Default is to pass the PM environment */
+        handle.pm_env = 1;      /* Default is to pass the PM environment */
 
     tmp = getenv("HYDRA_BOOTSTRAP");
     if (handle.bootstrap == NULL && tmp)

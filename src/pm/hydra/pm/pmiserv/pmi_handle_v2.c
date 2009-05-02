@@ -58,7 +58,7 @@ static void print_attr_reqs(void)
         dprintf("%d:%d(", areq->fd, areq->type);
         for (i = 0; areq->req[i]; i++) {
             dprintf("%s", areq->req[i]);
-            if (areq->req[i+1])
+            if (areq->req[i + 1])
                 dprintf(",");
         }
         dprintf(") ");
@@ -105,10 +105,10 @@ static HYD_Status args_to_tokens(char *args[], struct token **tokens, int *count
         (*tokens)[i].val = strtok(NULL, "=");
     }
 
-fn_exit:
+  fn_exit:
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -144,10 +144,10 @@ static HYD_Status queue_outstanding_req(int fd, enum req_type req_type, char *ar
     }
     print_attr_reqs();
 
-fn_exit:
+  fn_exit:
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -191,11 +191,11 @@ static HYD_Status poke_progress(void)
         print_attr_reqs();
     }
 
-fn_exit:
+  fn_exit:
     progress_nest_count--;
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -343,8 +343,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_putnodeattr(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
     key = find_token_keyval(tokens, token_count, "key");
-    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find key token\n");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
     val = find_token_keyval(tokens, token_count, "value");
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
@@ -414,8 +413,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
     key = find_token_keyval(tokens, token_count, "key");
-    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find key token\n");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
     wait = find_token_keyval(tokens, token_count, "wait");
     thrid = find_token_keyval(tokens, token_count, "thrid");
@@ -434,7 +432,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
         }
     }
 
-    if (!found) { /* We need to decide whether to return not found or queue up */
+    if (!found) {       /* We need to decide whether to return not found or queue up */
         /* If we are already nested, get out of here */
         if (progress_nest_count)
             goto fn_exit;
@@ -464,7 +462,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
             HYDU_FREE(cmd);
         }
     }
-    else { /* We found the attribute */
+    else {      /* We found the attribute */
         i = 0;
         tmp[i++] = HYDU_strdup("cmd=info-getnodeattr-response;");
         if (thrid) {
@@ -515,8 +513,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
     key = find_token_keyval(tokens, token_count, "key");
-    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find key token\n");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
     thrid = find_token_keyval(tokens, token_count, "thrid");
 
@@ -589,8 +586,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_kvs_put(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
     key = find_token_keyval(tokens, token_count, "key");
-    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find key token\n");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
     val = find_token_keyval(tokens, token_count, "value");
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
@@ -660,8 +656,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_kvs_get(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
     key = find_token_keyval(tokens, token_count, "key");
-    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find key token\n");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
     thrid = find_token_keyval(tokens, token_count, "thrid");
 
@@ -762,7 +757,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_kvs_fence(int fd, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
-    process->epoch++; /* We have reached the next epoch */
+    process->epoch++;   /* We have reached the next epoch */
 
     process->node->pg->barrier_count++;
 
