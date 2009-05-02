@@ -61,6 +61,7 @@ host file start with a "#" character.
    foo:3        # The next 3 procs run on this host
    shakey:2     # The last 2 procs run on this host
 
+
 Environment settings
 --------------------
 HYDRA_HOST_FILE: This variable points to the default host file to use,
@@ -78,6 +79,8 @@ disable.
 
 HYDRA_ENV: Setting this to "all" will pass all the environment to the
 application processes.
+
+HYDRA_PROXY_PORT: The port to use for the proxies.
 
 
 Bootstrap servers
@@ -241,6 +244,7 @@ HYDRA_BOOT_FOREGROUND_PROXIES=1
 
  $ mpiexec --shutdown-proxies -f hosts
 
+
 Communication sub-systems
 -------------------------
 Hydra supports different communication sub-systems to connect proxies
@@ -256,3 +260,25 @@ option --css:
 
 This can also be controlled by using the HYDRA_CSS environment
 variable.
+
+
+Hydra in hybrid environments
+----------------------------
+Hydra can be used to launch other process managers as well, such as a
+UPC launcher, for example:
+
+ $ mpiexec -n 2 --ranks-per-proc=4 upcrun -n 4 ./app
+
+This launches two instances of upcrun, each of which is expected to
+launch 4 application processes (two subgroups of processes). Hydra
+needs the --ranks-per-proc argument to tell it how many MPI ranks it
+needs to allocate to each group of processes.
+
+If the internal nested environment also needs to use Hydra as a
+launcher, but not as a process manager, this can be set using:
+
+ $ mpiexec -n 2 --ranks-per-proc=4 mpiexec -n 4 --disable-pm-env ./app
+
+ (or)
+
+ $ mpiexec -n 2 --ranks-per-proc=4 HYDRA_PM_ENV=0 mpiexec -n 4 ./app

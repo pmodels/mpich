@@ -69,6 +69,13 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             continue;
         }
 
+        if (!strcmp(*argv, "--enable-pm-env") || !strcmp(*argv, "--disable-pm-env")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.pm_env != -1, HYD_INTERNAL_ERROR,
+                                "duplicate enable-pm-env\n");
+            handle.pm_env = !strcmp(*argv, "--enable-pm-env");
+            continue;
+        }
+
         if (!strcmp(*argv, "--boot-proxies")) {
             HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
                                 HYD_INTERNAL_ERROR, "duplicate launch mode\n");
@@ -367,6 +374,12 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     if (handle.debug == -1)
         handle.debug = 0;
 
+    tmp = getenv("HYDRA_PM_ENV");
+    if (handle.pm_env == -1 && tmp)
+        handle.pm_env = (atoi(getenv("HYDRA_PM_ENV")) != 0);
+    if (handle.pm_env == -1)
+        handle.pm_env = 1; /* Default is to pass the PM environment */
+
     tmp = getenv("HYDRA_BOOTSTRAP");
     if (handle.bootstrap == NULL && tmp)
         handle.bootstrap = HYDU_strdup(tmp);
@@ -385,6 +398,9 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
     if (handle.host_file == NULL)
         handle.host_file = HYDU_strdup("HYDRA_USE_LOCALHOST");
 
+    tmp = getenv("HYDRA_PROXY_PORT");
+    if (handle.proxy_port == -1 && tmp)
+        handle.proxy_port = atoi(getenv("HYDRA_PROXY_PORT"));
     if (handle.proxy_port == -1)
         handle.proxy_port = HYD_DEFAULT_PROXY_PORT;
 

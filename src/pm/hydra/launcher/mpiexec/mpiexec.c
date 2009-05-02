@@ -52,6 +52,7 @@ static void usage(void)
     printf("\t--use-persistent                 [Use persistent mode proxies to launch]\n");
     printf("\t--ranks-per-proc                 [Assign so many ranks to each process]\n");
     printf("\t--bootstrap-exec                 [Executable to use to bootstrap processes]\n");
+    printf("\t--enable/--disable-pm-env        [PM environment settings]\n");
 }
 
 

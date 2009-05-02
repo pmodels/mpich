@@ -23,6 +23,7 @@ void HYD_LCHU_init_params(void)
 
     handle.debug = -1;
     handle.enablex = -1;
+    handle.pm_env = -1;
     handle.wdir = NULL;
     handle.host_file = NULL;
 

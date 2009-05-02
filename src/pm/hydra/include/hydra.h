@@ -23,6 +23,7 @@ struct HYD_Handle_ {
 
     int debug;
     int enablex;
+    int pm_env;
     char *wdir;
     char *host_file;
 
