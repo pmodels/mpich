@@ -167,8 +167,14 @@ int main(int argc, char **argv)
         return 0;
     else if (status != HYD_SUCCESS)
         return -1;
-    else
-        return exit_status;
+    else {
+        if (WIFSIGNALED(exit_status))
+            raise(WTERMSIG(exit_status));
+        else if (WIFEXITED(exit_status))
+            return (WEXITSTATUS(exit_status));
+        else
+            return -1;
+    }
 
   fn_fail:
     goto fn_exit;

@@ -65,7 +65,7 @@ static HYD_Status wait_for_procs_to_finish(void)
         if (pid > 0)
             for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
                 if (HYD_PMCD_pmi_proxy_params.pid[i] == pid)
-                    HYD_PMCD_pmi_proxy_params.exit_status[i] = WEXITSTATUS(ret_status);
+                    HYD_PMCD_pmi_proxy_params.exit_status[i] = ret_status;
 
         /* Check how many more processes are pending */
         count = 0;
