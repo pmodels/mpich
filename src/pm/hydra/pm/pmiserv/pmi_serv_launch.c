@@ -15,7 +15,7 @@
 HYD_Handle handle;
 static char *pmi_port_str = NULL;
 
-static void launch_helper(void *args)
+static void *launch_helper(void *args)
 {
     struct HYD_Partition *partition = (struct HYD_Partition *) args;
     int first_partition = (partition == handle.partition_list);
