@@ -3100,6 +3100,9 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("#define MPIO_USES_MPI_REQUEST 1")
                                 Case "USE_STRICT_MPI"
                                         fout.WriteLine("/* #undef USE_STRICT_MPI */")
+                                Case "USE_PMI2_API"
+                                        ' SMPD does not support PMI2
+                                        fout.WriteLine("/* #undef USE_PMI2_API */")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
 					If appendUniqueString(unhandled_definitions, macroname) Then
