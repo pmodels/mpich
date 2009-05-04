@@ -55,7 +55,7 @@
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) {\
           char _s[MPIU_DBG_MAXLINE]; \
           MPIU_Snprintf _fmatargs ; \
-     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, _s ); }}
+     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _s ); }}
 #define MPIU_DBG_STMT(_class,_level,_stmt) \
    {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) { _stmt; }}
@@ -65,7 +65,7 @@
 #define MPIU_DBG_OUT_FMT(_class,_fmatargs) \
     {     char _s[MPIU_DBG_MAXLINE]; \
           MPIU_Snprintf _fmatargs ; \
-    MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, _s );}
+    MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _s );}
     
 #else
 #define MPIU_DBG_SELECTED(_class,_level) 0
