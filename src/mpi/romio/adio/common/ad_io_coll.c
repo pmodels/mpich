@@ -18,24 +18,21 @@
 
 #define USE_PRE_REQ
 
-void Exch_data_amounts (ADIO_File fd, int nprocs,
+static void Exch_data_amounts (ADIO_File fd, int nprocs,
 			ADIO_Offset *client_comm_sz_arr,
 			ADIO_Offset *agg_comm_sz_arr,
 			int *client_alltoallw_counts,
 			int *agg_alltoallw_counts,
 			int *aggregators_done);
-void post_aggregator_comm (MPI_Comm comm, int rw_type, int nproc,
+static void post_aggregator_comm (MPI_Comm comm, int rw_type, int nproc,
 			   void *cb_buf,
 			   MPI_Datatype *client_comm_dtype_arr,
 			   ADIO_Offset *client_comm_sz_arr,
 			   MPI_Request **requests,
 			   int *aggregators_client_count_p);
-void post_client_comms (ADIO_File fd, int rw_type, void *buf,
-			MPI_Datatype *agg_comm_dtype_arr,
-			int *agg_alltoallw_counts,
-			MPI_Request **requests,
-			int *clients_aggregator_count_p);
-void post_client_comm (ADIO_File fd, int rw_type, int agg_rank, void *buf,
+
+static void post_client_comm (ADIO_File fd, int rw_type, 
+		       int agg_rank, void *buf,
 		       MPI_Datatype agg_comm_dtype,
 		       int agg_alltoallw_count,
 		       MPI_Request *request);
@@ -986,7 +983,7 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, int count,
 #endif
 }
 
-void Exch_data_amounts (ADIO_File fd, int nprocs,
+static void Exch_data_amounts (ADIO_File fd, int nprocs,
 			ADIO_Offset *client_comm_sz_arr,
 			ADIO_Offset *agg_comm_sz_arr,
 			int *client_alltoallw_counts,
@@ -1074,7 +1071,8 @@ void Exch_data_amounts (ADIO_File fd, int nprocs,
     }
 }
 
-void post_aggregator_comm (MPI_Comm comm, int rw_type, int nproc, void *cb_buf,
+static void post_aggregator_comm (MPI_Comm comm, int rw_type, 
+		           int nproc, void *cb_buf,
 			   MPI_Datatype *client_comm_dtype_arr,
 			   ADIO_Offset *client_comm_sz_arr,
 			   MPI_Request **requests_p,
@@ -1121,45 +1119,8 @@ void post_aggregator_comm (MPI_Comm comm, int rw_type, int nproc, void *cb_buf,
     }
 }
 
-void post_client_comms (ADIO_File fd, int rw_type, void *buf,
-			MPI_Datatype *agg_comm_dtype_arr,
-			int *agg_alltoallw_counts,
-			MPI_Request **requests_p,
-			int *clients_agg_count_p)
-{
-    int clients_agg_count = 0;
-    MPI_Request *requests;
-    int i, agg_rank;;
-
-#ifdef DEBUG
-    printf ("posting client communication\n");
-#endif
-
-    for (i=0; i<fd->hints->cb_nodes; i++)
-	if (agg_alltoallw_counts[fd->hints->ranklist[i]] > 0)
-	    clients_agg_count++;
-#ifdef DEBUG
-    printf ("client needs to talk to %d aggregators\n",
-	    clients_agg_count);
-#endif
-    *clients_agg_count_p = clients_agg_count;
-    if (clients_agg_count) {
-	requests = ADIOI_Malloc (clients_agg_count *
-				 sizeof(MPI_Request));
-	clients_agg_count = 0;
-	for (i=0; i<fd->hints->cb_nodes; i++) {
-	    agg_rank = fd->hints->ranklist[i];
-	    if (agg_alltoallw_counts[agg_rank] > 0)
-		post_client_comm (fd, rw_type, agg_rank, buf,
-				  agg_comm_dtype_arr[agg_rank],
-				  agg_alltoallw_counts[agg_rank],
-				  &requests[clients_agg_count]);
-	}
-	*requests_p = requests;
-    }
-}
-
-void post_client_comm (ADIO_File fd, int rw_type, int agg_rank, void *buf,
+static void post_client_comm (ADIO_File fd, int rw_type, 
+		       int agg_rank, void *buf,
 		       MPI_Datatype agg_comm_dtype,
 		       int agg_alltoallw_count,
 		       MPI_Request *request)

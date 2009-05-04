@@ -13,6 +13,9 @@
 
 #define NOEXP2
 
+static void heapify(heap_t *heap, int i);
+static void build_heap(heap_t *heap);
+
 /* From Introduction To Algorithms by Cormen, Leiserson, and Rivest */
 
 static inline int parent(int i) {
@@ -27,7 +30,7 @@ static inline int right(int i) {
     return (2*i + 1);
 }
 
-int create_heap(heap_t *heap, int size) {
+int ADIOI_Heap_create(heap_t *heap, int size) {
     heap->size = size;
     heap->nodes = (heap_node_t *) ADIOI_Calloc (size, sizeof(heap_node_t));
     if (heap->nodes == NULL)
@@ -36,17 +39,17 @@ int create_heap(heap_t *heap, int size) {
 	return 0;
 }
 
-void free_heap(heap_t *heap) {
+void ADIOI_Heap_free(heap_t *heap) {
     ADIOI_Free(heap->nodes);
 }
 
-void build_heap(heap_t *heap) {
+static void build_heap(heap_t *heap) {
     int i;
     for (i=(heap->size/2-1); i >= 0; i--)
 	heapify(heap, i);
 }
 
-void heapify(heap_t *heap, int i) {
+static void heapify(heap_t *heap, int i) {
     int l, r, smallest;
     heap_node_t *nodes;
     heap_node_t tmp_node;
@@ -72,7 +75,7 @@ void heapify(heap_t *heap, int i) {
     }
 }
 
-void heap_insert(heap_t *heap, ADIO_Offset offset, int proc,
+void ADIOI_Heap_insert(heap_t *heap, ADIO_Offset offset, int proc,
 		 ADIO_Offset reg_max_len) {
     heap_node_t *nodes;
     int i;
@@ -87,7 +90,7 @@ void heap_insert(heap_t *heap, ADIO_Offset offset, int proc,
     nodes[i].reg_max_len = reg_max_len;
 }
 
-void heap_extract_min(heap_t *heap, ADIO_Offset* offset, int *proc,
+void ADIOI_Heap_extract_min(heap_t *heap, ADIO_Offset* offset, int *proc,
 		      ADIO_Offset *reg_max_len) {
     heap_node_t *nodes;
     nodes = heap->nodes;
@@ -101,7 +104,7 @@ void heap_extract_min(heap_t *heap, ADIO_Offset* offset, int *proc,
     heapify(heap, 0);
 }
 
-void print_heap(heap_t *heap) {
+static void print_heap(heap_t *heap) {
 #ifndef NOEXP2
     int i;
     double level = 0;

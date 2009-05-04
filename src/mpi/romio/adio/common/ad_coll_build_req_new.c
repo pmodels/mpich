@@ -22,7 +22,7 @@
 
 #define DTYPE_SKIP
 
-char *off_type_name[MAX_OFF_TYPE] = {"TEMP_OFFSETS",
+static char *off_type_name[MAX_OFF_TYPE] = {"TEMP_OFFSETS",
 				     "REAL_OFFSETS"};
 
 /* Simple function to return the size of the view_state. */
@@ -201,7 +201,7 @@ static inline int view_state_add_region(
 
 /* Set up the abs_off, idx, and cur_reg_off of a view_state for the
  * tmp_state or the cur_state. */
-int init_view_state(int file_ptr_type,
+int ADIOI_init_view_state(int file_ptr_type,
 		    int nprocs, 
 		    view_state *view_state_arr,
 		    int op_type)
@@ -513,7 +513,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
 	ds_fr_end = -1;
 
 	/* initialize heap */
-	create_heap(&offset_heap, nprocs);
+	ADIOI_Heap_create(&offset_heap, nprocs);
 	offset_heap.size = 0;
 	
 	for (j=0; j<nprocs; j++) {
@@ -525,7 +525,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
 			  &cur_off,
 			  &cur_reg_max_len);
 	    if ((cur_off != -1) && (cur_reg_max_len > 0)) {
-		heap_insert(&offset_heap, cur_off, j, cur_reg_max_len);
+		ADIOI_Heap_insert(&offset_heap, cur_off, j, cur_reg_max_len);
 #ifdef DEBUG_HEAP
 		printf ("initial: inserting offset %lld with "
 			"cur_reg_max_len = %lld for p%d\n",
@@ -535,14 +535,14 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
 
 	}
 	if (!offset_heap.size)
-	    heap_insert(&offset_heap, -1, -1, -1);
+	    ADIOI_Heap_insert(&offset_heap, -1, -1, -1);
 
 	while (tmp_coll_buf_sz < fd->hints->cb_buffer_size)
 	{
 	    /* Find the next process with the next region within the
 	     * file realm and the maximum amount that can be added for
 	     * this particular file realm as a contiguous region. */
-	    heap_extract_min(&offset_heap, &cur_off, &cur_off_proc,
+	    ADIOI_Heap_extract_min(&offset_heap, &cur_off, &cur_off_proc,
 			     &cur_reg_max_len);
 #ifdef DEBUG_HEAP
 	    printf ("extracted cur_off %lld from proc %d\n",
@@ -689,7 +689,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
 			  &next_reg_max_len);
 
 	    if ((next_off != -1) || (!offset_heap.size)) {
-		heap_insert(&offset_heap, next_off, cur_off_proc,
+		ADIOI_Heap_insert(&offset_heap, next_off, cur_off_proc,
 			    next_reg_max_len);
 #ifdef DEBUG_HEAP
 		printf ("inserting offset %lld for p%d\n", next_off,
@@ -755,7 +755,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
 		}
 	    }
 	}
-	free_heap(&offset_heap);
+	ADIOI_Heap_free(&offset_heap);
     }
     
     /* Let the clients know if this aggregator is totally finished

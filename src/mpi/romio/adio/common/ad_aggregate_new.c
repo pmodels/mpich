@@ -29,7 +29,7 @@ void ADIOI_Calc_file_realms_fsize (ADIO_File fd,
 				   MPI_Datatype *file_realm_types);
 void ADIOI_Create_fr_simpletype (int size, int nprocs_for_coll,
 			      MPI_Datatype *simpletype);
-void align_fr (int fr_size, ADIO_Offset fr_off, int alignment,
+static void align_fr (int fr_size, ADIO_Offset fr_off, int alignment,
 	       int *aligned_fr_size, ADIO_Offset *aligned_fr_off);
 void ADIOI_Verify_fr (int nprocs_for_coll, ADIO_Offset *file_realm_st_offs,
 		      MPI_Datatype *file_realm_types);
@@ -271,7 +271,7 @@ int ADIOI_Agg_idx (int rank, ADIO_File fd) {
     return -1;
 }
 
-void align_fr (int fr_size, ADIO_Offset fr_off, int alignment,
+static void align_fr (int fr_size, ADIO_Offset fr_off, int alignment,
 	       int *aligned_fr_size, ADIO_Offset *aligned_fr_off) {
     *aligned_fr_off = fr_off - (fr_off % alignment);
     *aligned_fr_size = ((fr_off + fr_size) / alignment) * alignment - 

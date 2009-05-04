@@ -234,11 +234,11 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 	my_mem_view_state_arr[tmp_agg_idx].type_sz     =
 	    (ADIO_Offset) memtype_sz;
 	my_mem_view_state_arr[tmp_agg_idx].flat_type_p = flat_mem_p;
-	init_view_state(file_ptr_type,
+	ADIOI_init_view_state(file_ptr_type,
 			1,
 			&(my_mem_view_state_arr[tmp_agg_idx]),
 			TEMP_OFF);
-	init_view_state(file_ptr_type,
+	ADIOI_init_view_state(file_ptr_type,
 			1,
 			&(my_mem_view_state_arr[tmp_agg_idx]),
 			REAL_OFF);
@@ -258,11 +258,11 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 	    disp_off_sz_ext_typesz[5];
 	agg_file_view_state_arr[tmp_agg_idx].flat_type_p = flat_file_p;
 
-	init_view_state(file_ptr_type,
+	ADIOI_init_view_state(file_ptr_type,
 			1,
 			&(agg_file_view_state_arr[tmp_agg_idx]),
 			TEMP_OFF);
-	init_view_state(file_ptr_type,
+	ADIOI_init_view_state(file_ptr_type,
 			1,
 			&(agg_file_view_state_arr[tmp_agg_idx]),
 			REAL_OFF);
@@ -456,11 +456,11 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 
     if (fd->is_agg == 1)
     {
-	init_view_state(file_ptr_type,
+	ADIOI_init_view_state(file_ptr_type,
 			nprocs,
 			client_file_view_state_arr,
 			TEMP_OFF);
-	init_view_state(file_ptr_type,
+	ADIOI_init_view_state(file_ptr_type,
 			nprocs,
 			client_file_view_state_arr,
 			REAL_OFF);
