@@ -172,8 +172,8 @@ int main(int argc, char **argv)
             raise(WTERMSIG(exit_status));
         else if (WIFEXITED(exit_status))
             return (WEXITSTATUS(exit_status));
-        else
-            return -1;
+
+        return exit_status;
     }
 
   fn_fail:
