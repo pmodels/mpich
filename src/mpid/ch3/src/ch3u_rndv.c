@@ -50,7 +50,7 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, int count,
 
     MPIU_DBG_MSGPKT(vc,tag,rts_pkt->match.parts.context_id,rank,data_sz,"Rndv");
 
-    MPIU_THREAD_CS_ENTER(CH3COMM,);
+    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
     mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, rts_pkt, sizeof(*rts_pkt), 
 					      &rts_sreq));
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);

@@ -539,8 +539,7 @@ typedef struct MPIU_ThreadDebug {
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
-/* There are multiple locks, one for each logical class (e.g., each type of 
-   object) */
+/* There are multiple locks, one for each (major) object */
 
 /* FIXME: That's the ugliest hack I've ever written. Use the same lock
  * macro as LOCKNAME */

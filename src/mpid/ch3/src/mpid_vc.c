@@ -704,7 +704,11 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
 #ifdef ENABLE_COMM_OVERRIDES
     vc->comm_ops         = NULL;
 #endif
-
+    /* FIXME: We need a better abstraction for initializing the thread state 
+       for an object */
+#ifdef MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+    MPID_Thread_mutex_create(&vc->pobj_mutex,NULL)
+#endif /* MPIU_THREAD_GRANULARITY */
     MPIU_CALL(MPIDI_CH3,VC_Init( vc ));
     MPIU_DBG_PrintVCState(vc);
 
