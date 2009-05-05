@@ -4,13 +4,13 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS = utils control bootstrap css demux pm launcher .
+SUBDIRS = utils control bootstrap css demux pm ui .
 
 all-preamble:
 	@if [ ! -d lib ] ; then mkdir lib ; fi
 
 mpich2-build-install mpich2-build-uninstall install install-alt:
-	cd launcher && ${MAKE} $@
+	cd ui && ${MAKE} $@
 	cd pm && ${MAKE} $@
 
 clean-preamble:

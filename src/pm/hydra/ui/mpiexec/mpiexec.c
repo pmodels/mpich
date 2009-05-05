@@ -7,7 +7,7 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "mpiexec.h"
-#include "lchu.h"
+#include "uiu.h"
 #include "csi.h"
 #include "demux.h"
 
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_LCHI_get_parameters(argv);
+    status = HYD_UII_mpx_get_parameters(argv);
     if (status == HYD_GRACEFUL_ABORT) {
         exit(0);
     }
@@ -79,14 +79,14 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "unable to create host list\n");
 
     /* Consolidate the environment list that we need to propagate */
-    status = HYD_LCHU_create_env_list();
+    status = HYD_UIU_create_env_list();
     HYDU_ERR_POP(status, "unable to create env list\n");
 
-    status = HYD_LCHU_merge_exec_info_to_partition();
+    status = HYD_UIU_merge_exec_info_to_partition();
     HYDU_ERR_POP(status, "unable to merge exec info\n");
 
     if (handle.debug)
-        HYD_LCHU_print_params();
+        HYD_UIU_print_params();
 
     HYDU_time_set(&handle.start, NULL); /* NULL implies right now */
     if (getenv("MPIEXEC_TIMEOUT"))
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "control system error on finalize\n");
 
         /* Free the mpiexec params */
-        HYD_LCHU_free_params();
+        HYD_UIU_free_params();
 
         exit_status = 0;
         goto fn_exit;
@@ -123,10 +123,12 @@ int main(int argc, char **argv)
     /* Setup stdout/stderr/stdin handlers */
     for (partition = handle.partition_list; partition && partition->exec_list;
          partition = partition->next) {
-        status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, NULL, HYD_LCHI_stdout_cb);
+        status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, NULL,
+                                     HYD_UII_mpx_stdout_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-        status = HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, NULL, HYD_LCHI_stderr_cb);
+        status = HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, NULL,
+                                     HYD_UII_mpx_stderr_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
@@ -140,7 +142,7 @@ int main(int argc, char **argv)
     handle.stdin_buf_count = 0;
     handle.stdin_buf_offset = 0;
 
-    status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, NULL, HYD_LCHI_stdin_cb);
+    status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, NULL, HYD_UII_mpx_stdin_cb);
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
 
@@ -159,7 +161,7 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "control system error on finalize\n");
 
     /* Free the mpiexec params */
-    HYD_LCHU_free_params();
+    HYD_UIU_free_params();
 
   fn_exit:
     HYDU_FUNC_EXIT();

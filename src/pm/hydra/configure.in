@@ -128,13 +128,13 @@ AC_MSG_CHECKING(process manager)
 AC_MSG_RESULT($hydra_pm)
 AC_SUBST(hydra_pm)
 
-dnl Check what job launcher we should use
-AC_ARG_WITH(hydra-launcher, [  --with-hydra-launcher         Job Launcher],
-		[ hydra_launcher=$withval ],
-		[ hydra_launcher=mpiexec ])
-AC_MSG_CHECKING(job launcher)
-AC_MSG_RESULT($hydra_launcher)
-AC_SUBST(hydra_launcher)
+dnl Check what UI we should use
+AC_ARG_WITH(hydra-ui, [  --with-hydra-ui         User Interface],
+		[ hydra_ui=$withval ],
+		[ hydra_ui=mpiexec ])
+AC_MSG_CHECKING(user interface)
+AC_MSG_RESULT($hydra_ui)
+AC_SUBST(hydra_ui)
 
 dnl Check what control system we should use
 AC_ARG_WITH(hydra-control, [  --with-hydra-control               Control System],
@@ -338,9 +338,9 @@ AC_OUTPUT(Makefile \
 	utils/string/Makefile \
 	utils/timer/Makefile \
 	${opt_utils_makefiles} \
-	launcher/Makefile \
-	launcher/utils/Makefile \
-	launcher/${hydra_launcher}/Makefile \
+	ui/Makefile \
+	ui/utils/Makefile \
+	ui/${hydra_ui}/Makefile \
 	control/Makefile \
 	control/utils/Makefile \
 	control/${hydra_control}/Makefile \

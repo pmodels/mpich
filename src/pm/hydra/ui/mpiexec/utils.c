@@ -7,7 +7,7 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "mpiexec.h"
-#include "lchu.h"
+#include "uiu.h"
 
 #define HYDRA_MAX_PATH 4096
 
@@ -29,7 +29,7 @@ static void show_version(void)
 }
 
 
-HYD_Status HYD_LCHI_get_parameters(char **t_argv)
+HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 {
     int i, local_env_set;
     char **argv = t_argv, *tmp;
@@ -40,7 +40,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
 
     HYDU_FUNC_ENTER();
 
-    HYD_LCHU_init_params();
+    HYD_UIU_init_params();
 
     status = HYDU_list_global_env(&handle.global_env);
     HYDU_ERR_POP(status, "unable to get the global env list\n");
@@ -147,7 +147,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         }
 
         if (!strcmp(*argv, "-envall")) {
-            status = HYD_LCHU_get_current_exec_info(&exec_info);
+            status = HYD_UIU_get_current_exec_info(&exec_info);
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
             HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
@@ -157,7 +157,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         }
 
         if (!strcmp(*argv, "-envnone")) {
-            status = HYD_LCHU_get_current_exec_info(&exec_info);
+            status = HYD_UIU_get_current_exec_info(&exec_info);
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
             HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
@@ -167,7 +167,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         }
 
         if (!strcmp(*argv, "-envlist")) {
-            status = HYD_LCHU_get_current_exec_info(&exec_info);
+            status = HYD_UIU_get_current_exec_info(&exec_info);
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
             HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
@@ -188,7 +188,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
             status = HYDU_env_create(&env, env_name, env_value);
             HYDU_ERR_POP(status, "unable to create env struct\n");
 
-            status = HYD_LCHU_get_current_exec_info(&exec_info);
+            status = HYD_UIU_get_current_exec_info(&exec_info);
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
             HYDU_append_env_to_list(*env, &exec_info->user_env);
@@ -204,7 +204,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         if (!strcmp(*argv, "-n") || !strcmp(*argv, "-np")) {
             INCREMENT_ARGV(status);
 
-            status = HYD_LCHU_get_current_exec_info(&exec_info);
+            status = HYD_UIU_get_current_exec_info(&exec_info);
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
             if (exec_info->exec_proc_count != 0)
@@ -342,7 +342,7 @@ HYD_Status HYD_LCHI_get_parameters(char **t_argv)
         if (*argv[0] == '-')
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized argument\n");
 
-        status = HYD_LCHU_get_current_exec_info(&exec_info);
+        status = HYD_UIU_get_current_exec_info(&exec_info);
         HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
         /* End of Job launcher option handling */

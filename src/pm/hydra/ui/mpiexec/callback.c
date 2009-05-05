@@ -46,7 +46,7 @@ static HYD_Status close_fd(int fd)
 }
 
 
-HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events, void *userp)
+HYD_Status HYD_UII_mpx_stdout_cb(int fd, HYD_Event_t events, void *userp)
 {
     int closed;
     HYD_Status status = HYD_SUCCESS;
@@ -73,7 +73,7 @@ HYD_Status HYD_LCHI_stdout_cb(int fd, HYD_Event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events, void *userp)
+HYD_Status HYD_UII_mpx_stderr_cb(int fd, HYD_Event_t events, void *userp)
 {
     int closed;
     HYD_Status status = HYD_SUCCESS;
@@ -101,7 +101,7 @@ HYD_Status HYD_LCHI_stderr_cb(int fd, HYD_Event_t events, void *userp)
 }
 
 
-HYD_Status HYD_LCHI_stdin_cb(int fd, HYD_Event_t events, void *userp)
+HYD_Status HYD_UII_mpx_stdin_cb(int fd, HYD_Event_t events, void *userp)
 {
     int closed;
     HYD_Status status = HYD_SUCCESS;

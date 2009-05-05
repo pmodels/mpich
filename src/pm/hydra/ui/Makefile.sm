@@ -4,8 +4,8 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS_hydra_launcher = mpiexec
-SUBDIRS = utils @hydra_launcher@ .
+SUBDIRS_hydra_ui = mpiexec
+SUBDIRS = utils @hydra_ui@ .
 
 mpich2-build-install mpich2-build-uninstall install install-alt:
-	cd @hydra_launcher@ && ${MAKE} $@
+	cd @hydra_ui@ && ${MAKE} $@

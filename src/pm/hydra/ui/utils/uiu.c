@@ -6,11 +6,11 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
-#include "lchu.h"
+#include "uiu.h"
 
 HYD_Handle handle;
 
-void HYD_LCHU_init_params(void)
+void HYD_UIU_init_params(void)
 {
     handle.base_path = NULL;
     handle.proxy_port = -1;
@@ -53,7 +53,7 @@ void HYD_LCHU_init_params(void)
 }
 
 
-void HYD_LCHU_free_params(void)
+void HYD_UIU_free_params(void)
 {
     if (handle.base_path)
         HYDU_FREE(handle.base_path);
@@ -92,11 +92,11 @@ void HYD_LCHU_free_params(void)
         HYDU_free_partition_list(handle.partition_list);
 
     /* Re-initialize everything to default values */
-    HYD_LCHU_init_params();
+    HYD_UIU_init_params();
 }
 
 
-HYD_Status HYD_LCHU_create_env_list(void)
+HYD_Status HYD_UIU_create_env_list(void)
 {
     struct HYD_Exec_info *exec_info;
     HYD_Env_t *env, *run;
@@ -175,7 +175,7 @@ HYD_Status HYD_LCHU_create_env_list(void)
 }
 
 
-HYD_Status HYD_LCHU_get_current_exec_info(struct HYD_Exec_info **info)
+HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **info)
 {
     struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
@@ -202,7 +202,7 @@ HYD_Status HYD_LCHU_get_current_exec_info(struct HYD_Exec_info **info)
 }
 
 
-HYD_Status HYD_LCHU_merge_exec_info_to_partition(void)
+HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
 {
     int run_count, i, rem;
     struct HYD_Partition *partition;
@@ -281,7 +281,7 @@ HYD_Status HYD_LCHU_merge_exec_info_to_partition(void)
 }
 
 
-void HYD_LCHU_print_params(void)
+void HYD_UIU_print_params(void)
 {
     HYD_Env_t *env;
     int i;
