@@ -4447,6 +4447,30 @@ double MPI_Wtick()
     return fn.MPI_Wtick();
 }
 
+#undef FCNAME
+#define FCNAME MPI_Type_create_f90_integer
+int MPI_Type_create_f90_integer(int r, MPI_Datatype *newtype)
+{
+    MPICH_CHECK_INIT(FCNAME);
+    return fn.MPI_Type_create_f90_integer(r, newtype);
+}
+
+#undef FCNAME
+#define FCNAME MPI_Type_create_f90_real
+int MPI_Type_create_f90_real(int p, int r, MPI_Datatype *newtype)
+{
+    MPICH_CHECK_INIT(FCNAME);
+    return fn.MPI_Type_create_f90_real(p, r, newtype);
+}
+
+#undef FCNAME
+#define FCNAME MPI_Type_create_f90_complex
+int MPI_Type_create_f90_complex(int p, int r, MPI_Datatype *newtype)
+{
+    MPICH_CHECK_INIT(FCNAME);
+    return fn.MPI_Type_create_f90_complex(p, r, newtype);
+}
+
 /* PMPI versions */
 #undef FCNAME
 #define FCNAME PMPI_Init
@@ -6985,4 +7009,28 @@ double PMPI_Wtick()
 {
     /*MPICH_CHECK_INIT_VOID(PMPI_Wtick);*/ /* No checking for performance */
     return fn.PMPI_Wtick();
+}
+
+#undef FCNAME
+#define FCNAME PMPI_Type_create_f90_integer
+int PMPI_Type_create_f90_integer(int r, MPI_Datatype *newtype)
+{
+    MPICH_CHECK_INIT(FCNAME);
+    return fn.PMPI_Type_create_f90_integer(r, newtype);
+}
+
+#undef FCNAME
+#define FCNAME PMPI_Type_create_f90_real
+int PMPI_Type_create_f90_real(int p, int r, MPI_Datatype *newtype)
+{
+    MPICH_CHECK_INIT(FCNAME);
+    return fn.PMPI_Type_create_f90_real(p, r, newtype);
+}
+
+#undef FCNAME
+#define FCNAME PMPI_Type_create_f90_complex
+int PMPI_Type_create_f90_complex(int p, int r, MPI_Datatype *newtype)
+{
+    MPICH_CHECK_INIT(FCNAME);
+    return fn.PMPI_Type_create_f90_complex(p, r, newtype);
 }

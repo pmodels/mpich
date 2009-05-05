@@ -149,7 +149,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="src\mpi\romio\mpi-io,src\mpi\romio\adio\include,src\include,src\include\win32,src\mpid\common\datatype,src\mpid\common\sock,src\mpid\ch3\channels\shm\include,src\mpid\ch3\include,src\mpid\common\locks,src\mpi\datatype"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\channels\shm\include;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32,NDEBUG,USE_WINCONF_H,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -349,7 +349,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="src\mpi\romio\mpi-io,src\mpi\romio\adio\include,src\include,src\include\win32,src\mpid\common\datatype,src\mpid\common\sock,src\mpid\common\sock\iocp,src\mpid\ch3\channels\ssm\include,src\mpid\ch3\include,src\mpid\common\locks,src\mpi\datatype"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\channels\ssm\include;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32,NDEBUG,USE_WINCONF_H,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -552,7 +552,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="src\mpi\romio\mpi-io,src\mpi\romio\adio\include,src\include,src\include\win32,src\mpid\common\datatype,src\mpid\common\sock,src\mpid\common\sock\iocp,src\mpid\ch3\include,src\mpid\common\locks,src\mpid\ch3\channels\sock\include,src\mpi\datatype"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="WIN32;NDEBUG;USE_WINCONF_H;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -657,7 +657,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="src\mpi\romio\mpi-io,src\mpi\romio\adio\include,src\include,src\include\win32,src\mpid\common\datatype,src\mpid\common\sock,src\mpid\common\sock\iocp,src\mpid\ch3\include,src\mpid\common\locks,src\mpid\ch3\channels\sock\include,src\mpi\datatype"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="WIN32;NDEBUG;USE_WINCONF_H;HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED;USE_LOGGING=MPID_LOGGING_RLOG;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -1467,7 +1467,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="src\mpi\romio\mpi-io,src\mpi\romio\adio\include,src\include,src\include\win32,src\mpid\common\datatype,src\mpid\common\sock,src\mpid\ch3\channels\shm\include,src\mpid\ch3\include,src\mpid\common\locks,src\mpi\datatype"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\channels\shm\include;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32,NDEBUG,USE_WINCONF_H,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS,HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED,USE_LOGGING=MPID_LOGGING_RLOG"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -1566,7 +1566,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="src\mpi\romio\mpi-io,src\mpi\romio\adio\include,src\include,src\include\win32,src\mpid\common\datatype,src\mpid\common\sock,src\mpid\common\sock\iocp,src\mpid\ch3\channels\ssm\include,src\mpid\ch3\include,src\mpid\common\locks,src\mpi\datatype"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\channels\ssm\include;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32,NDEBUG,USE_WINCONF_H,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS,HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED,USE_LOGGING=MPID_LOGGING_RLOG"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -2266,7 +2266,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="src\mpi\romio\mpi-io,src\mpi\romio\adio\include,src\include,src\include\win32,src\mpid\common\datatype,src\mpid\common\sock,src\mpid\common\sock\iocp,src\mpid\ch3\include,src\mpid\common\locks,src\mpid\ch3\channels\sock\include,src\mpi\datatype"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_WINCONF_H,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS,MPICH_MULTITHREADED"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -2372,7 +2372,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="src\mpi\romio\mpi-io,src\mpi\romio\adio\include,src\include,src\include\win32,src\mpid\common\datatype,src\mpid\common\sock,src\mpid\common\sock\iocp,src\mpid\ch3\include,src\mpid\common\locks,src\mpid\ch3\channels\sock\include,src\mpi\datatype"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32,NDEBUG,USE_WINCONF_H,HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED,USE_LOGGING=MPID_LOGGING_RLOG,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS,MPICH_MULTITHREADED"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -3893,7 +3893,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\mpi\spawn;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\util\wrappers;src\mpid\ch3\channels\nemesis\nemesis\include;src\mpid\ch3\channels\nemesis\include"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\mpi\spawn;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32;src\util\wrappers;src\mpid\ch3\channels\nemesis\nemesis\include;src\mpid\ch3\channels\nemesis\include"
 				PreprocessorDefinitions="WIN32;_WIN32_WINNT=0x500;NDEBUG;USE_WINCONF_H;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN;MPICH_MULTITHREADED;ENABLE_NO_MACRO_VARARG_NAME"
 				RuntimeLibrary="0"
 				WarningLevel="0"
@@ -3967,7 +3967,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\mpi\spawn;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\util\wrappers;src\mpid\ch3\channels\nemesis\nemesis\include;src\mpid\ch3\channels\nemesis\include"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\mpi\spawn;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32;src\util\wrappers;src\mpid\ch3\channels\nemesis\nemesis\include;src\mpid\ch3\channels\nemesis\include"
 				PreprocessorDefinitions="WIN32;_WIN32_WINNT=0x500;NDEBUG;USE_WINCONF_H;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN;MPICH_MULTITHREADED;ENABLE_NO_MACRO_VARARG_NAME;HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED;USE_LOGGING=MPID_LOGGING_RLOG"
 				RuntimeLibrary="0"
 				WarningLevel="0"
@@ -4775,6 +4775,22 @@
 			</File>
 			<File
 				RelativePath=".\src\mpi\comm\commutil.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\binding\f90\create_f90_complex.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\binding\f90\create_f90_int.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\binding\f90\create_f90_real.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\binding\f90\create_f90_util.c"
 				>
 			</File>
 			<File

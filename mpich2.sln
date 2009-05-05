@@ -1694,6 +1694,7 @@ Global
 		{3DE857FA-6F20-4214-8D99-811165354D3F}.ch3nemesisPRelease|x64.ActiveCfg = ch3nemesisPRelease|Win32
 		{3DE857FA-6F20-4214-8D99-811165354D3F}.ch3nemesisRelease|Any CPU.ActiveCfg = Release|Win32
 		{3DE857FA-6F20-4214-8D99-811165354D3F}.ch3nemesisRelease|Mixed Platforms.ActiveCfg = Release|Win32
+		{3DE857FA-6F20-4214-8D99-811165354D3F}.ch3nemesisRelease|Mixed Platforms.Build.0 = Release|Win32
 		{3DE857FA-6F20-4214-8D99-811165354D3F}.ch3nemesisRelease|Win32.ActiveCfg = Release|Win32
 		{3DE857FA-6F20-4214-8D99-811165354D3F}.ch3nemesisRelease|Win32.Build.0 = Release|Win32
 		{3DE857FA-6F20-4214-8D99-811165354D3F}.ch3nemesisRelease|x64.ActiveCfg = Release|Win32

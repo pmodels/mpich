@@ -205,7 +205,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="..\..\include;..\..\include\win32"
+				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;..\f90;..\f90\win32"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_WINCONF_H;USE_FORT_CDECL;USE_MSC_DLLSPEC;FORTRAN_EXPORTS;F77_NAME_UPPER;HAVE_C_API"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -6770,6 +6770,18 @@
 			</File>
 			<File
 				RelativePath=".\typedelattrf.c"
+				>
+			</File>
+			<File
+				RelativePath="..\f90\typef90cmplxf.c"
+				>
+			</File>
+			<File
+				RelativePath="..\f90\typef90intf.c"
+				>
+			</File>
+			<File
+				RelativePath="..\f90\typef90realf.c"
 				>
 			</File>
 			<File
