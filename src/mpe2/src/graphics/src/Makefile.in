@@ -20,8 +20,7 @@ MPI_CFLAGS           = @MPI_CFLAGS@
 MPI_LIBS             = @MPI_LIBS@
 INCLUDE_DIR          = -I.. -I${top_srcdir}/include \
                        -I${includebuild_dir} \
-                       -I../../.. -I${top_srcdir}/../../include \
-                       @X_INC@
+                       -I../../.. -I${top_srcdir}/../../include @X_INC@
 PROF_LIBNAME         = @PROF_LIBNAME@
 ANIM_LIBNAME         = @ANIM_LIBNAME@
 CFLAGS               = @CFLAGS@
