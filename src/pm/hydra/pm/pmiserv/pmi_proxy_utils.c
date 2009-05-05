@@ -10,7 +10,7 @@
 
 struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 
-static HYD_Status init_params()
+static HYD_Status init_params(void)
 {
     HYD_Status status = HYD_SUCCESS;
 

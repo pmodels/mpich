@@ -36,8 +36,6 @@ HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
 {
     int id, rank, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
-    struct HYD_Partition *partition;
-    struct HYD_Partition_exec *exec;
     HYD_PMCD_pmi_pg_t *run;
     HYD_Status status = HYD_SUCCESS;
 

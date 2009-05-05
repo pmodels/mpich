@@ -154,7 +154,6 @@ static HYD_Status queue_outstanding_req(int fd, enum req_type req_type, char *ar
 static HYD_Status poke_progress(void)
 {
     struct attr_reqs *areq, *tmp;
-    int i;
     HYD_Status status = HYD_SUCCESS;
 
     progress_nest_count++;
@@ -200,7 +199,7 @@ static HYD_Status poke_progress(void)
 }
 
 
-char *find_token_keyval(struct token *tokens, int count, char *key)
+static char *find_token_keyval(struct token *tokens, int count, char *key)
 {
     int i;
 
@@ -217,8 +216,6 @@ HYD_Status HYD_PMCD_pmi_handle_v2_fullinit(int fd, char *args[])
 {
     int id, rank, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *rank_str;
-    struct HYD_Partition *partition;
-    struct HYD_Partition_exec *exec;
     HYD_PMCD_pmi_pg_t *run;
     struct token *tokens;
     int token_count;
@@ -404,7 +401,6 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
     char *tmp[HYD_NUM_TMP_STRINGS] = { 0 }, *cmd;
     struct token *tokens;
     int token_count;
-    struct attr_reqs *attr_req, *a;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -444,6 +440,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
         }
         else {
             /* Tell the client that we can't find the attribute */
+            i = 0;
             tmp[i++] = HYDU_strdup("cmd=info-getnodeattr-response;");
             if (thrid) {
                 tmp[i++] = HYDU_strdup("thrid=");
@@ -498,13 +495,13 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
 
 HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
 {
-    int i;
+    int i, ret;
     HYD_PMCD_pmi_process_t *process;
     HYD_PMCD_pmi_kvs_pair_t *run;
     char *key, *thrid;
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *node_list, *key_pair_str;
     struct token *tokens;
-    int token_count;
+    int token_count, found;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -523,6 +520,59 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
+    /* If no format is specified, use the default values */
+    if (strcmp(key, "process-mapping") == 0)
+        key = "process-mapping-vector";
+
+    /* Try to find the key */
+    found = 0;
+    for (run = process->node->pg->kvs->key_pair; run; run = run->next) {
+        if (!strcmp(run->key, key)) {
+            found = 1;
+            break;
+        }
+    }
+
+    if (found == 0) {
+        /* Didn't find the job attribute; see if we know how to
+         * generate it */
+        if (strcmp(key, "process-mapping-vector") == 0) {
+            /* Create a vector format */
+            status = HYD_PMCD_pmi_process_mapping(process, HYD_PMCD_pmi_vector,
+                                                  &node_list);
+            HYDU_ERR_POP(status, "Unable to get process mapping information\n");
+
+            if (strlen(node_list) > MAXVALLEN)
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "key value larger than maximum allowed\n");
+
+            status = HYD_PMCD_pmi_add_kvs("process-mapping-vector", node_list,
+                                          process->node->pg->kvs, &key_pair_str, &ret);
+            HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
+        }
+        else if (strcmp(key, "process-mapping-explicit") == 0) {
+            status = HYD_PMCD_pmi_process_mapping(process, HYD_PMCD_pmi_explicit,
+                                                  &node_list);
+            HYDU_ERR_POP(status, "Unable to get process mapping information\n");
+
+            if (strlen(node_list) > MAXVALLEN)
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "key value larger than maximum allowed\n");
+
+            status = HYD_PMCD_pmi_add_kvs("process-mapping-explicit", node_list,
+                                          process->node->pg->kvs, &key_pair_str, &ret);
+            HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
+        }
+
+        /* Search for the key again */
+        for (run = process->node->pg->kvs->key_pair; run; run = run->next) {
+            if (!strcmp(run->key, key)) {
+                found = 1;
+                break;
+            }
+        }
+    }
+
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=info-getjobattr-response;");
     if (thrid) {
@@ -531,23 +581,13 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
         tmp[i++] = HYDU_strdup(";");
     }
     tmp[i++] = HYDU_strdup("found=");
-    if (process->node->pg->kvs->key_pair == NULL) {
-        tmp[i++] = HYDU_strdup("FALSE;rc=0;");
+    if (found) {
+        tmp[i++] = HYDU_strdup("TRUE;value=");
+        tmp[i++] = HYDU_strdup(run->val);
+        tmp[i++] = HYDU_strdup(";rc=0;");
     }
     else {
-        run = process->node->pg->kvs->key_pair;
-        while (run) {
-            if (!strcmp(run->key, key)) {
-                tmp[i++] = HYDU_strdup("TRUE;value=");
-                tmp[i++] = HYDU_strdup(run->val);
-                tmp[i++] = HYDU_strdup(";rc=0;");
-                break;
-            }
-            run = run->next;
-        }
-        if (run == NULL) {
-            tmp[i++] = HYDU_strdup("FALSE;rc=0;");
-        }
+        tmp[i++] = HYDU_strdup("FALSE;rc=0;");
     }
     tmp[i++] = NULL;
 

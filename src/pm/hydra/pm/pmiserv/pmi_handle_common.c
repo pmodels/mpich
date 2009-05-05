@@ -6,6 +6,7 @@
 
 #include "hydra.h"
 #include "pmi_handle.h"
+#include "pmi_handle_common.h"
 #include "pmi_handle_v1.h"
 #include "pmi_handle_v2.h"
 
