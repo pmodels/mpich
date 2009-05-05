@@ -34,13 +34,9 @@ int HYDU_Error_printf_simple(const char *str, ...);
 #endif
 
 #if !defined COMPILER_ACCEPTS_VA_ARGS
-#define HYDU_Debug if (handle.debug) printf
+#define HYDU_Debug(...)
 #else
-#define HYDU_Debug(...)                                 \
-    {                                                   \
-        if (handle.debug)                               \
-            printf(__VA_ARGS__);                        \
-    }
+#define HYDU_Debug(...)
 #endif /* COMPILER_ACCEPTS_VA_ARGS */
 
 #define HYDU_ERR_POP(status, message)                                   \
