@@ -1726,14 +1726,18 @@ Function ReplaceAts( str, use_f77, b64 )
 				Else
 					str = Replace(str, "@SIZEOF_F90_DOUBLE_PRECISION@", "8")
 				End If
+                        ' Fortran real model in "precision, range" format
                         Case "@F90_REAL_MODEL@"
                             str = Replace(str, "@F90_REAL_MODEL@", "6 , 37")
+                        ' Fortran double model in "precision, range" format
                         Case "@F90_DOUBLE_MODEL@"
                             str = Replace(str, "@F90_DOUBLE_MODEL@", "15 , 307")
+                        ' Fortran integer model in "range1, kind1, range2, kind2, ..." format
                         Case "@F90_INTEGER_MODEL@"
-                            str = Replace(str, "@F90_INTEGER_MODEL@", "9")
+                            str = Replace(str, "@F90_INTEGER_MODEL@", "2 , 1 , 4 , 2 , 9 , 4 , 18 , 8 ,")
+                        ' Fortran integer model map in "{range1, kind1, size1}, {range2, kind2, size2}..." format
                         Case "@F90_INTEGER_MODEL_MAP@"
-                            str = Replace(str, "@F90_INTEGER_MODEL_MAP@", "{ 2 , 1 , 1 }, { 4 , 2 , 2 }, { 9 , 4 , 4 }, { 18 , 8 , 8 }")
+                            str = Replace(str, "@F90_INTEGER_MODEL_MAP@", "{ 2 , 1 , 1 }, { 4 , 2 , 2 }, { 9 , 4 , 4 }, { 18 , 8 , 8 },")
 			' REQD = (Real EQuals Double precision) ? "!" : ""
 			Case "@REQD@"
 				str = Replace(str, "@REQD@", "")
