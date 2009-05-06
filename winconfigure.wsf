@@ -249,9 +249,9 @@ MPI_AINT64               = "__int64"
 MPI_AINT64_FMT_DEC_SPEC  = "%I64d"
 MPI_AINT64_FMT_HEX_SPEC  = "%I64x"
 BSEND_OVERHEAD64         = "95"
-MPI_AINT32               = "int"
-MPI_AINT32_FMT_DEC_SPEC  = "%d"
-MPI_AINT32_FMT_HEX_SPEC  = "%x"
+MPI_AINT32               = "__int32"
+MPI_AINT32_FMT_DEC_SPEC  = "%I32d"
+MPI_AINT32_FMT_HEX_SPEC  = "%I32x"
 BSEND_OVERHEAD32         = "59"
 MPI_FINT               = "int"
 'MPI_OFFSET             = "long long"
@@ -4297,6 +4297,7 @@ fout.WriteLine("#define HAVE_WINDOWS_H")
 fout.WriteLine("#endif")
 fout.WriteLine("#define HAVE_WINDOWS_SOCKET")
 fout.WriteLine("#define HAVE_WINSOCK2_H")
+fout.WriteLine("#define HAVE_INTSAFE_H")
 fout.WriteLine("#define HAVE_WIN32_SLEEP")
 fout.WriteLine("#define HAVE_NT_LOCKS")
 fout.WriteLine("#define HAVE_MAPVIEWOFFILE")
@@ -4331,7 +4332,7 @@ fout.WriteLine("#endif")
 fout.WriteLine("#ifndef HAVE_STRNICMP")
 fout.WriteLine("	#define HAVE_STRNICMP")
 fout.WriteLine("#endif")
-fout.WriteLine("#ifndef __WIN32_WINNT")
+fout.WriteLine("#ifndef _WIN32_WINNT")
 fout.WriteLine("	#define _WIN32_WINNT 0x500")
 fout.WriteLine("#endif")
 fout.WriteLine("#define HAVE_SWITCHTOTHREAD	1")
@@ -4367,6 +4368,7 @@ fout.WriteLine("#define HAVE_WINDOWS_H")
 fout.WriteLine("#endif")
 fout.WriteLine("#define HAVE_WINDOWS_SOCKET")
 fout.WriteLine("#define HAVE_WINSOCK2_H")
+fout.WriteLine("#define HAVE_INTSAFE_H")
 fout.WriteLine("#define HAVE_WIN32_SLEEP")
 fout.WriteLine("#define HAVE_NT_LOCKS")
 fout.WriteLine("#define HAVE_MAPVIEWOFFILE")
@@ -4401,7 +4403,7 @@ fout.WriteLine("#endif")
 fout.WriteLine("#ifndef HAVE_STRNICMP")
 fout.WriteLine("	#define HAVE_STRNICMP")
 fout.WriteLine("#endif")
-fout.WriteLine("#ifndef __WIN32_WINNT")
+fout.WriteLine("#ifndef _WIN32_WINNT")
 fout.WriteLine("	#define _WIN32_WINNT 0x500")
 fout.WriteLine("#endif")
 fout.WriteLine("#define HAVE_SWITCHTOTHREAD	1")
