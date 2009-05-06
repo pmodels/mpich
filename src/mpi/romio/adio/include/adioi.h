@@ -839,6 +839,7 @@ if (MPIU_DBG_SELECTED(ROMIO,TYPICAL)) fprintf
 #define DBGV_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
  if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf
 #else /* compile it out */
+#define DBGT_FPRINTF if (0) fprintf
 #define DBG_FPRINTF if (0) fprintf
 #define DBGV_FPRINTF if (0) fprintf
 #endif
