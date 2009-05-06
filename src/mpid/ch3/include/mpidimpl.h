@@ -47,6 +47,11 @@
 int gethostname(char *name, size_t len);
 # endif
 
+#define MPIDI_CHANGE_VC_STATE(vc, new_state) do {               \
+        MPIU_DBG_VCSTATECHANGE(vc, VC_STATE_##new_state);       \
+        (vc)->state = MPIDI_VC_STATE_##new_state;               \
+    } while (0)
+
 /*S
   MPIDI_PG_t - Process group description
 
@@ -496,15 +501,15 @@ extern MPIDI_Process_t MPIDI_Process;
 /*------------------
   BEGIN COMM SECTION
   ------------------*/
-#define MPIDI_Comm_get_vc(comm_, rank_, vcp_)		\
-{							\
-    *(vcp_) = (comm_)->vcr[(rank_)];			\
-    if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE)	\
-    {							\
-	MPIU_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);  \
-	(*(vcp_))->state = MPIDI_VC_STATE_ACTIVE;	\
-    }							\
-}
+#define MPIDI_Comm_get_vc_set_active(comm_, rank_, vcp_) do {           \
+        *(vcp_) = (comm_)->vcr[(rank_)];                                \
+        if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE)                \
+        {                                                               \
+            MPIU_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);     \
+            MPIDI_CHANGE_VC_STATE((*(vcp_)), ACTIVE);                   \
+        }                                                               \
+    } while(0)
+
 /*----------------
   END COMM SECTION
   ----------------*/
@@ -584,16 +589,15 @@ int MPIDI_CH3_PG_Init( MPIDI_PG_t * );
     MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
          "Decr process group %p ref count to %d",pg_,pg_->ref_count));\
 }
-/* FIXME: What is the difference between get_vcr and get_vc? */
-#define MPIDI_PG_Get_vc_set_active(pg_, rank_, vcp_)    \
-{							\
-    *(vcp_) = &(pg_)->vct[rank_];			\
-    if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE)	\
-    {							\
-	MPIU_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);  \
-	(*(vcp_))->state = MPIDI_VC_STATE_ACTIVE;	\
-    }							\
-}
+
+#define MPIDI_PG_Get_vc_set_active(pg_, rank_, vcp_)  do {              \
+        *(vcp_) = &(pg_)->vct[rank_];                                   \
+        if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE)                \
+        {                                                               \
+            MPIU_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);     \
+            MPIDI_CHANGE_VC_STATE((*(vcp_)), ACTIVE);                   \
+        }                                                               \
+    } while(0)
 
 #define MPIDI_PG_Get_size(pg_) ((pg_)->size)
 

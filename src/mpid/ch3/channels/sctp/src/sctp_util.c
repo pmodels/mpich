@@ -271,7 +271,7 @@ void inline MPIDU_Sctp_stream_init(MPIDI_VC_t* vc, MPID_Request* req, int stream
 
   /* need to update state for upcalls to close protocol to fully work, and barriers */
   if(vc->state == MPIDI_VC_STATE_INACTIVE)
-      vc->state = MPIDI_VC_STATE_ACTIVE;
+      MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
   if(req) {
     MPIDI_CH3I_SendQ_enqueue_x(vc, req, stream);

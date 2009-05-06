@@ -479,7 +479,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
     */
 
     MPID_Comm_get_ptr(win_ptr->comm, comm_ptr);
-    MPIDI_Comm_get_vc(comm_ptr, rma_op->target_rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype, predefined);
     if (!predefined)
@@ -714,7 +714,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 */
 	    
     MPID_Comm_get_ptr(win_ptr->comm, comm_ptr);
-    MPIDI_Comm_get_vc(comm_ptr, rma_op->target_rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(rma_op->target_datatype, predefined);
     if (predefined)
@@ -1156,7 +1156,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    put_pkt->target_win_handle = win_ptr->all_win_handles[dst];
 	    put_pkt->source_win_handle = win_ptr->handle;
 	    
-	    MPIDI_Comm_get_vc(comm_ptr, dst, &vc);
+	    MPIDI_Comm_get_vc_set_active(comm_ptr, dst, &vc);
 	    
 	    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
 	    mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, put_pkt,
@@ -1454,7 +1454,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
         
     single_op_opt = 0;
 
-    MPIDI_Comm_get_vc(comm_ptr, dest, &vc);
+    MPIDI_Comm_get_vc_set_active(comm_ptr, dest, &vc);
    
     if (rma_op->next->next == NULL) {
 	/* Single put, get, or accumulate between the lock and unlock. If it
@@ -1860,7 +1860,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr)
     }
 
     MPID_Comm_get_ptr(win_ptr->comm, comm_ptr);
-    MPIDI_Comm_get_vc(comm_ptr, rma_op->target_rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype, predefined);
     if (!predefined)
@@ -2036,7 +2036,7 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr)
     lock_get_unlock_pkt->request_handle = rreq->handle;
 
     MPID_Comm_get_ptr(win_ptr->comm, comm_ptr);
-    MPIDI_Comm_get_vc(comm_ptr, rma_op->target_rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
     mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, lock_get_unlock_pkt, 
 				      sizeof(*lock_get_unlock_pkt), &sreq));

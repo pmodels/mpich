@@ -91,7 +91,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg, int pg_rank )
 	MPIDI_CH3I_VC *vcch = (MPIDI_CH3I_VC *)pg->vct[p].channel_private;
 	/* FIXME: the vc's must be set to active for the close protocol to 
 	   work in the shm channel */
-	pg->vct[p].state = MPIDI_VC_STATE_ACTIVE;
+        MPIDI_CHANGE_VC_STATE(&(pg->vct[p]), ACTIVE);
 	/* FIXME: Should the malloc be within the init? */
 	MPIDI_CH3_VC_Init( &pg->vct[p] );
 	/* FIXME: Need to free this request when the vc is removed */

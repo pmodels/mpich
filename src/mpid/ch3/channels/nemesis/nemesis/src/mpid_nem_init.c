@@ -421,6 +421,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 
     if (vc_ch->is_local)
     {
+        MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
+        
 	vc_ch->fbox_out = &MPID_nem_mem_region.mailboxes.out[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich2;
 	vc_ch->fbox_in = &MPID_nem_mem_region.mailboxes.in[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich2;
 	vc_ch->recv_queue = MPID_nem_mem_region.RecvQ[vc->lpid];

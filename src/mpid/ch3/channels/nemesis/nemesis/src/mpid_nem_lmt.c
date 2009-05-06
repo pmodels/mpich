@@ -73,7 +73,7 @@ int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count, MP
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_RNDVSEND);
 
-    MPIDI_Comm_get_vc(comm, rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
 
     /* if the lmt functions are not set, fall back to the default rendezvous code */
     if (((MPIDI_CH3I_VC *)vc->channel_private)->lmt_initiate_lmt == NULL)

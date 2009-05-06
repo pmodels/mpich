@@ -278,6 +278,8 @@ MPID_nem_mx_vc_init (MPIDI_VC_t *vc)
 			MPID_NEM_MX_FILTER,MX_INFINITE,&(VC_FIELD(vc, remote_endpoint_addr)));
        MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_connect", "**mx_connect %s", mx_strerror (ret));
        mx_set_endpoint_addr_context(VC_FIELD(vc, remote_endpoint_addr),(void *)vc);
+
+       MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
    }
 #endif
    mx_get_info(MPID_nem_mx_local_endpoint, MX_COPY_SEND_MAX, NULL, 0, &threshold, sizeof(uint32_t));

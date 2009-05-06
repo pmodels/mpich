@@ -110,7 +110,7 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
     eager_pkt->sender_req_id	= MPI_REQUEST_NULL;
     eager_pkt->data_sz		= data_sz;
     
-    MPIDI_Comm_get_vc(comm, rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
 
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Pkt_set_seqnum(eager_pkt, seqnum);
@@ -178,7 +178,7 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p,
     iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) buf;
     iov[1].MPID_IOV_LEN = data_sz;
     
-    MPIDI_Comm_get_vc(comm, rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Pkt_set_seqnum(eager_pkt, seqnum);
     
@@ -239,7 +239,7 @@ int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p,
        "sending contiguous short eager message, data_sz=" MPIDI_MSG_SZ_FMT,
 					data_sz));
 	    
-    MPIDI_Comm_get_vc(comm, rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Pkt_set_seqnum(eagershort_pkt, seqnum);
 
@@ -515,7 +515,7 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
     iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) buf;
     iov[1].MPID_IOV_LEN = data_sz;
     
-    MPIDI_Comm_get_vc(comm, rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Pkt_set_seqnum(eager_pkt, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);

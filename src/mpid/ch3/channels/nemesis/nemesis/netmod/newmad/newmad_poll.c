@@ -348,7 +348,7 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_sr_request_t *nmad_request, nm
 	MPIU_Free(REQ_FIELD(req,iov));
     }
     
-    MPIDI_Comm_get_vc(req->comm, req->status.MPI_SOURCE, &vc);
+    MPIDI_Comm_get_vc_set_active(req->comm, req->status.MPI_SOURCE, &vc);
     MPIDI_CH3U_Handle_recv_req(vc, req, &complete);
     MPIU_Assert(complete == TRUE);
  fn_exit:

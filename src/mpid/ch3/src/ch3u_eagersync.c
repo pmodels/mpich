@@ -51,7 +51,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
     es_pkt->sender_req_id = sreq->handle;
     es_pkt->data_sz = data_sz;
 
-    MPIDI_Comm_get_vc(comm, rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Pkt_set_seqnum(es_pkt, seqnum);
@@ -136,7 +136,7 @@ int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag,
     es_pkt->sender_req_id = sreq->handle;
     es_pkt->data_sz = 0;
     
-    MPIDI_Comm_get_vc(comm, rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Pkt_set_seqnum(es_pkt, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);

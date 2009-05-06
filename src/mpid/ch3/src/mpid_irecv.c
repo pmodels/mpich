@@ -74,7 +74,7 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	       acknowledgement back to the sender. */
 	    if (MPIDI_Request_get_sync_send_flag(rreq))
 	    {
-		MPIDI_Comm_get_vc(comm, rreq->dev.match.parts.rank, &vc);
+		MPIDI_Comm_get_vc_set_active(comm, rreq->dev.match.parts.rank, &vc);
 		mpi_errno = MPIDI_CH3_EagerSyncAck( vc, rreq );
 		if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    }
@@ -110,7 +110,7 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	}
 	else if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_RNDV_MSG)
 	{
-	    MPIDI_Comm_get_vc(comm, rreq->dev.match.parts.rank, &vc);
+	    MPIDI_Comm_get_vc_set_active(comm, rreq->dev.match.parts.rank, &vc);
 	
 	    mpi_errno = vc->rndvRecv_fn( vc, rreq );
 	    if (mpi_errno) MPIU_ERR_POP( mpi_errno );

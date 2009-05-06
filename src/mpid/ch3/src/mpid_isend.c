@@ -66,7 +66,7 @@ int MPID_Isend(const void * buf, int count, MPI_Datatype datatype, int rank,
 	goto fn_exit;
     }
 
-    MPIDI_Comm_get_vc(comm, rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
 
 #ifdef ENABLE_COMM_OVERRIDES
     if (vc->comm_ops && vc->comm_ops->isend)

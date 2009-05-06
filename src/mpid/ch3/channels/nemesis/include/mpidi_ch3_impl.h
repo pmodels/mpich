@@ -59,7 +59,6 @@ extern struct MPID_Request *MPIDI_CH3I_active_send[CH3_NUM_QUEUES];
 
 #define MPIDI_CH3I_SendQ_empty(queue) (MPIDI_CH3I_sendq_head[queue] == NULL)
 
-
 int MPIDI_CH3I_Progress_init(void);
 int MPIDI_CH3I_Progress_finalize(void);
 

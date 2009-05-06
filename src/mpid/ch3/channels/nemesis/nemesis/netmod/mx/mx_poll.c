@@ -581,7 +581,7 @@ MPID_nem_mx_handle_rreq(MPID_Request *req, mx_status_t status)
     mx_status_t  status;
     uint32_t     result;
     
-    MPIDI_Comm_get_vc(req->comm, req->status.MPI_SOURCE, &vc);   
+    MPIDI_Comm_get_vc_set_active(req->comm, req->status.MPI_SOURCE, &vc);   
     mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, MPID_NEM_MAX_NETMOD_STRING_LEN, vc->pg);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_mx_get_from_bc (business_card, &VC_FIELD(vc, remote_endpoint_id), &VC_FIELD(vc, remote_nic_id));

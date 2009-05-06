@@ -750,6 +750,8 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
 
     MPIU_Assert(vc != NULL);
 
+    MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
+
     if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_TCP_VC_STATE_DISCONNECTED) {
         struct sockaddr_in *sock_addr;
 	struct in_addr addr;

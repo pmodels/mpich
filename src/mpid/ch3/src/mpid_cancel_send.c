@@ -45,7 +45,7 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	goto fn_exit;
     }
 
-    MPIDI_Comm_get_vc(sreq->comm, sreq->dev.match.parts.rank, &vc);
+    MPIDI_Comm_get_vc_set_active(sreq->comm, sreq->dev.match.parts.rank, &vc);
 
     proto = MPIDI_Request_get_msg_type(sreq);
 

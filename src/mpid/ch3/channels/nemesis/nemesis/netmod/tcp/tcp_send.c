@@ -212,6 +212,8 @@ int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_CONN_EST);
 
+    MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
+
     if (!SENDQ_EMPTY (VC_FIELD(vc, send_queue)))
     {
         SET_PLFD(vc);

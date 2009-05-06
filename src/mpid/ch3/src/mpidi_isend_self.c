@@ -50,7 +50,7 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
     }
     /* --END ERROR HANDLING-- */
 
-    MPIDI_Comm_get_vc(comm, rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
     MPIDI_Request_set_seqnum(rreq, seqnum);

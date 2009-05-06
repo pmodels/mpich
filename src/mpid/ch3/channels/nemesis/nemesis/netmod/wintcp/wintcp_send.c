@@ -211,6 +211,8 @@ int MPID_nem_newtcp_module_conn_est (MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONN_EST);
 
+    MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
+
     if (!SENDQ_EMPTY (VC_FIELD(vc, send_queue)))
     {
         mpi_errno = MPID_nem_newtcp_module_conn_wr_enable(vc);
