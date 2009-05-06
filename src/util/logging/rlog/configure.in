@@ -24,6 +24,8 @@ AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 ])
 AH_BOTTOM([#endif])
 dnl
+AC_CONFIG_AUX_DIR(../../../../confdb)
+dnl
 echo "RUNNING CONFIGURE FOR RLOG"
 dnl
 dnl
