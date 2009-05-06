@@ -855,7 +855,8 @@ if test "$logging_name" != "none" ; then
 	fi
     else
         logdir=$srcdir/src/util/logging
-        logging_subsystems="$logging_subsystems src/util/logging/$logging_name"
+        logreldir=src/util/logging/$logging_name
+        logging_subsystems="$logging_subsystems $logreldir"
         logging_subdirs=$logging_name
         for dir in $logging_subdirs ; do
             if test ! -d $logdir/$dir ; then
@@ -868,6 +869,7 @@ if test "$logging_name" != "none" ; then
 	        AC_MSG_ERROR([$logdir/$dir has no configure (required).  Configure aborted])
 	        logging_name=none
             fi
+            other_install_dirs="${other_install_dirs} $logreldir"
         done
     fi
 fi

@@ -9,4 +9,9 @@ printrlog_LDADD = -L../../../../lib -L${master_top_srcdir}/lib -lmpich
 minalignrlog_SOURCES = minalignrlog.c
 minalignrlog_LDADD = -L../../../../lib -L${master_top_srcdir}/lib -lmpich
 INCLUDES = -I../../../include -I${master_top_srcdir}/src/include -I../../../mpi/timer -I../common -I${master_top_srcdir}/src/util/logging/common
+install_BIN = printrlog printirlog irlog2rlog
+distclean-local:
+	@-rm -f rlogconf.h
 
+mpich2-build-install: install
+mpich2-build-uninstall: uninstall
