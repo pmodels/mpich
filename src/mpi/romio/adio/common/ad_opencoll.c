@@ -38,7 +38,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank,
 	       fd->access_mode = access_mode;
 	       
 	   tmp_comm = fd->comm;
-	   fd->comm == MPI_COMM_SELF
+	   fd->comm = MPI_COMM_SELF;
 	   (*(fd->fns->ADIOI_xxx_Open))(fd, error_code);
 	   fd->comm = tmp_comm;
 	   MPI_Bcast(error_code, 1, MPI_INT, \
