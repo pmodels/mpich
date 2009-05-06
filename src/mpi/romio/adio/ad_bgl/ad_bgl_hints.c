@@ -312,25 +312,12 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     if (did_anything) {
 	ADIOI_BGL_gen_agg_ranklist(fd, fd->hints->cb_nodes);
     }
-
-    /* deferred_open won't be set by callers, but if the user doesn't
-     * explicitly disable collecitve buffering (two-phase) and does hint that
-     * io w/o independent io is going on, we'll set this internal hint as a
-     * convenience */
-    if ( ( (fd->hints->cb_read != ADIOI_HINT_DISABLE) 
-	    && (fd->hints->cb_write != ADIOI_HINT_DISABLE)
-	    && fd->hints->no_indep_rw ) ) 
-    {
-	    fd->hints->deferred_open = 1;
-    } else {
-	    /* setting romio_no_indep_rw enable and romio_cb_{read,write}
-	     * disable at the same time doesn't make sense. honor
-	     * romio_cb_{read,write} and force the no_indep_rw hint to
-	     * 'disable' */
-	    MPI_Info_set(info, "romio_no_indep_rw", "false");
-	    fd->hints->no_indep_rw = 0;
-	    fd->hints->deferred_open = 0;
-    }
+    /* ignore defered open hints and do not enable it for bluegene: need all
+     * processors in the open path so we can stat-and-broadcast the blocksize
+     */
+    MPI_Info_set(info, "romio_no_indep_rw", "false");
+    fd->hints->no_indep_rw = 0;
+    fd->hints->deferred_open = 0;
 
     ADIOI_Free(value);
 
