@@ -37,12 +37,12 @@ int main( int argc, char **argv )
       MPI_Comm_size( comm, &size );
       MPI_Comm_rank( comm, &rank );
 
-      if ( argv != NULL && argv[1] != NULL )
+      if ( argc > 1 && argv[1] != NULL )
           length = atoi( argv[1] );
       else
           length = 1;
 
-      if ( argv != NULL && argv[2] != NULL )
+      if ( argc > 1 && argv[2] != NULL )
           num_itr = atoi( argv[2] );
       else
           num_itr = 1;

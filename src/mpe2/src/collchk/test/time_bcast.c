@@ -18,12 +18,12 @@ int main( int argc, char *argv[] )
     MPI_Init( &argc, &argv );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 
-    if ( argv != NULL && argv[1] != NULL )
+    if ( argc > 1 && argv[1] != NULL )
         count = atoi( argv[1] );
     else
         count = 1;
 
-    if ( argv != NULL && argv[2] != NULL )
+    if ( argc > 1 && argv[2] != NULL )
         num_itr = atoi( argv[2] );
     else
         num_itr = 1;
