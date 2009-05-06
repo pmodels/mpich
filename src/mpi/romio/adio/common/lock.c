@@ -93,7 +93,7 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 	     ADIO_Offset len) 
 {
-    int err, error_code, err_count = 0;
+    int err, error_code, err_count = 0, sav_errno;
     struct flock lock;
 
     if (len == 0) return MPI_SUCCESS;
@@ -120,6 +120,7 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
     lock.l_len	  = len;
 #endif
 
+    sav_errno = errno; /* save previous errno in case we recover from retryable errors */
     errno = 0;
     do {
 	err = fcntl(fd, cmd, &lock);
@@ -168,6 +169,9 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
   FPRINTF(stderr,"ADIOI_Set_lock:offset %llu, length %llu\n",(unsigned long long)offset, (unsigned long long)len);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
+
+    if(!err)             /* report fcntl failure errno's (EBADF), otherwise */
+      errno = sav_errno; /* restore previous errno in case we recovered from retryable errors */
 
     error_code = (err == 0) ? MPI_SUCCESS : MPI_ERR_UNKNOWN;
     return error_code;
