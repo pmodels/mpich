@@ -24,7 +24,7 @@
 #define MPIU_DBG_MSG(_class,_level,_string)  \
    {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) {\
-     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, _string ); }}
+     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _string ); }}
 #define MPIU_DBG_MSG_S(_class,_level,_fmat,_string) \
    {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) {\
@@ -61,12 +61,12 @@
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) { _stmt; }}
 
 #define MPIU_DBG_OUT(_class,_msg) \
-    MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0,_msg )
+    MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _msg )
 #define MPIU_DBG_OUT_FMT(_class,_fmatargs) \
     {     char _s[MPIU_DBG_MAXLINE]; \
           MPIU_Snprintf _fmatargs ; \
     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _s );}
-    
+
 #else
 #define MPIU_DBG_SELECTED(_class,_level) 0
 #define MPIU_DBG_MSG(_class,_level,_string) 

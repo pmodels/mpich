@@ -404,9 +404,11 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
     /* The kind values are used with the macros to simplify these cases */
     switch (kind) {
 	case 0:
+	    va_start(list,fmat);
+	    str = va_arg(list,char *);
 	    fprintf( MPIU_DBG_fp, "%d\t%d\t%d[%d]\t%d\t%f\t%s\t%d\t%s\n",
 		     worldNum, worldRank, threadID, pid, class, curtime, 
-		     file, line, fmat );
+		     file, line, str );
 	    break;
 	case 1:
 	    va_start(list,fmat);

@@ -1011,8 +1011,8 @@ int MPIDI_PrintConnStr( const char *file, int line,
 {
     int pg_size, i;
 
-    MPIU_DBG_Outevent( file, line, MPIU_DBG_CH3_CONNECT, 0, label );
-    MPIU_DBG_Outevent( file, line, MPIU_DBG_CH3_CONNECT, 0, str );
+    MPIU_DBG_Outevent( file, line, MPIU_DBG_CH3_CONNECT, 0, "%s", label );
+    MPIU_DBG_Outevent( file, line, MPIU_DBG_CH3_CONNECT, 0, "%s", str );
     
     /* Skip the pg id */
     while (*str) str++; str++;
@@ -1022,7 +1022,7 @@ int MPIDI_PrintConnStr( const char *file, int line,
     while (*str) str++; str++;
 
     for (i=0; i<pg_size; i++) {
-	MPIU_DBG_Outevent( file, line, MPIU_DBG_CH3_CONNECT, 0, str );
+	MPIU_DBG_Outevent( file, line, MPIU_DBG_CH3_CONNECT, 0, "%s", str );
 	while (*str) str++;
 	str++;
     }
