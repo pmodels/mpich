@@ -745,6 +745,9 @@ int MPIDU_Sock_get_host_description(int myRank,
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_GET_HOST_DESCRIPTION);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SOCK_GET_HOST_DESCRIPTION);
+
+    MPIU_UNREFERENCED_ARG(myRank);
+
     if (!g_init_called)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_INIT, "**sock_init", 0);
@@ -2652,8 +2655,11 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
 	    return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_FAIL, "**fail", "**fail %s %d", get_error_string(mpi_errno), mpi_errno);
 	}
     }
+    /* Unreachable code section - all sections exit/return before reaching this segment */
+    /*
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SOCK_WAIT);
     return MPI_SUCCESS;
+    */
 }
 
 #undef FUNCNAME
