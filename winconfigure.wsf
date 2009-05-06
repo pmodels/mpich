@@ -5722,14 +5722,15 @@ Function GenBuild()
 	mfile.WriteLine(" /I..\src\mpid\common\datatype \")
 	mfile.WriteLine(" /I..\src\mpid\common\locks \")
 	mfile.WriteLine(" /I..\src\mpi\datatype \")
+	mfile.WriteLine(" /I..\src\mpi\binding\f90 \")
 	mfile.WriteLine(" /I..\src\pm\smpd \")
 	mfile.WriteLine(" /I..\src\mpi\spawn \")
 	mfile.WriteLine(" /I..\src\binding\f77")
 	mfile.WriteLine
 	mfile.WriteLine("!IF ""$(CPU)"" == ""i386"" || ""$(CPU)"" == ""x86""")
-	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win32")
+	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win32 /I..\src\binding\f90\win32")
 	mfile.WriteLine("!ELSE")
-	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win64")
+	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win64 /I..\src\binding\f90\win64")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
 	mfile.WriteLine("cxxflags = $(common_cflags)")
@@ -5982,6 +5983,11 @@ Function GenBuild()
 	mfile.WriteLine("$(OUTDIR)\rlogtime.obj: ..\src\util\logging\rlog\rlogtime.c")
 	mfile.WriteLine("	$(cc) $(cflags) /I..\src\util\logging\common /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" ..\src\util\logging\rlog\rlogtime.c")
 	mfile.WriteLine
+	' Insert rules for f90 type create funcs manually because the src/binding/f90
+        ' directory has both C & fortran interfaces
+	mfile.WriteLine("{..\src\binding\f90}.c{$(OUTDIR)}.obj:")
+	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" $**")
+	mfile.WriteLine
 
 	CreateObjs "mpich2", f.GetFolder("src\mpi"), trimlength, true, false
 	CreateObjs "mpich2", f.GetFolder("src\mpid\common\datatype"), trimlength, false, false
@@ -6122,7 +6128,13 @@ Function GenBuild()
 	mfile.WriteLine("	$(OUTDIR)\write_ord.obj \")
 	mfile.WriteLine("	$(OUTDIR)\write_ordb.obj \")
 	mfile.WriteLine("	$(OUTDIR)\write_orde.obj \")
-	mfile.WriteLine("	$(OUTDIR)\write_sh.obj")
+	mfile.WriteLine("	$(OUTDIR)\write_sh.obj \")
+	' Insert objs for f90 type create funcs manually because the src/binding/f90
+        ' directory has both C & fortran interfaces
+        mfile.WriteLine("   $(OUTDIR)\create_f90_util.obj \")
+        mfile.WriteLine("   $(OUTDIR)\create_f90_int.obj \")
+        mfile.WriteLine("   $(OUTDIR)\create_f90_real.obj \")
+        mfile.WriteLine("   $(OUTDIR)\create_f90_complex.obj")
 	mfile.WriteLine
 	mfile.WriteLine("!IFDEF RLOG")
 	mfile.WriteLine("mpich2_objs = $(mpich2_objs) $(OUTDIR)\rlogtime.obj")
@@ -6319,7 +6331,17 @@ Function GenBuild()
 	extra_flags = "$(fcflags)"
 	fort_prefix = ""
 	CreateRules f.GetFolder("src\binding\f77"), trimlength
-	CreateObjs "fort", f.GetFolder("src\binding\f77"), trimlength, true, true
+	' Insert rules for f90 type create funcs manually because the src/binding/f90
+        ' directory has both C & fortran interfaces
+	mfile.WriteLine("{..\src\binding\f90}.c{$(FORT_OUTDIR)}.obj:")
+	mfile.WriteLine("    $(cc) $(cflags) $(fcflags) /Fo""$(FORT_OUTDIR)\\"" /Fd""$(FORT_OUTDIR)\\"" $**")
+	mfile.WriteLine
+	CreateObjs "fort", f.GetFolder("src\binding\f77"), trimlength, true, false
+	mfile.WriteLine(" \" & vbCrLf & "   $(FORT_OUTDIR)\typef90intf.obj \")
+        mfile.WriteLine("   $(FORT_OUTDIR)\typef90realf.obj \")
+        mfile.WriteLine("   $(FORT_OUTDIR)\typef90cmplxf.obj")
+        mfile.WriteLine
+
 	mfile.WriteLine("$(FORT_OUTDIR)\fmpich2$(D).dll: $(fort_objs)")
 	mfile.WriteLine("	$(link) $(dlllflags) $(fort_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\binding\f77\mpich2f.def -out:$(FORT_OUTDIR)\fmpich2$(D).dll")
 	mfile.WriteLine("	if exist $(FORT_OUTDIR)\fmpich2$(D).dll.manifest mt.exe -manifest $(FORT_OUTDIR)\fmpich2$(D).dll.manifest -outputresource:$(FORT_OUTDIR)\fmpich2$(D).dll;2")
