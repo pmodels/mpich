@@ -49,6 +49,9 @@ static MPID_nem_tcp_vc_area *dummy_vc_area ATTRIBUTE((unused, used)) = NULL;
    added in the lib, despite the fact that it's unused. */
 static void dbg_print_sc_tbl(FILE *stream, int print_free_entries) ATTRIBUTE((unused, used));
 
+#define MPID_NEM_TCP_RECV_MAX_PKT_LEN 1024
+static char *recv_buf;
+
 static struct {
     handler_func_t sc_state_handler;
     short sc_state_plfd_events;
@@ -1369,7 +1372,7 @@ static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *sc)
     if (((MPIDI_CH3I_VC *)sc->vc->channel_private)->recv_active == NULL)
     {
         /* receive a new message */
-        CHECK_EINTR(bytes_recvd, recv(sc->fd, MPID_nem_tcp_recv_buf, MPID_NEM_TCP_RECV_MAX_PKT_LEN, 0));
+        CHECK_EINTR(bytes_recvd, recv(sc->fd, recv_buf, MPID_NEM_TCP_RECV_MAX_PKT_LEN, 0));
         if (bytes_recvd <= 0)
         {
             if (bytes_recvd == -1 && errno == EAGAIN) /* handle this fast */
@@ -1407,7 +1410,7 @@ static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *sc)
     
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "New recv " MPIDI_MSG_SZ_FMT " (fd=%d, vc=%p, sc=%p)", bytes_recvd, sc->fd, sc->vc, sc));
 
-        mpi_errno = MPID_nem_handle_pkt(sc->vc, MPID_nem_tcp_recv_buf, bytes_recvd);
+        mpi_errno = MPID_nem_handle_pkt(sc->vc, recv_buf, bytes_recvd);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else
@@ -1543,6 +1546,8 @@ static int state_d_quiescent_handler(pollfd_t *const plfd, sockconn_t *const sc)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_tcp_sm_init()
 {
+    int mpi_errno = MPI_SUCCESS;
+    MPIU_CHKPMEM_DECL(1);
     /* Set the appropriate handlers */
     sc_state_info[CONN_STATE_TS_CLOSED].sc_state_handler = NULL;
     sc_state_info[CONN_STATE_TC_C_CNTING].sc_state_handler = state_tc_c_cnting_handler;
@@ -1569,7 +1574,15 @@ int MPID_nem_tcp_sm_init()
 
     /* Allocate the PLFD table */
     alloc_sc_plfd_tbls();
-    return 0;
+    
+    MPIU_CHKPMEM_MALLOC(recv_buf, char*, MPID_NEM_TCP_RECV_MAX_PKT_LEN, mpi_errno, "TCP temporary buffer");
+    MPIU_CHKPMEM_COMMIT();
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -1587,6 +1600,8 @@ int MPID_nem_tcp_sm_finalize()
     }
 
     free_sc_plfd_tbls();
+
+    MPIU_Free(recv_buf);
 
     return MPI_SUCCESS;
 }

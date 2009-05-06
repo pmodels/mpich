@@ -15,7 +15,7 @@ MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
     MPID_nem_tcp_init,
     MPID_nem_tcp_finalize,
     MPID_nem_tcp_ckpt_shutdown,
-    MPID_nem_tcp_poll,
+    MPID_nem_tcp_connpoll,
     MPID_nem_tcp_send,
     MPID_nem_tcp_get_business_card,
     MPID_nem_tcp_connect_to_root,
@@ -74,8 +74,6 @@ int MPID_nem_tcp_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_
     mpi_errno = MPID_nem_tcp_sm_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_tcp_send_init();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPID_nem_tcp_poll_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 

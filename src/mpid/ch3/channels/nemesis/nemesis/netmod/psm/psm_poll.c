@@ -183,11 +183,10 @@ MPID_nem_psm_recv()
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_psm_poll(MPID_nem_poll_dir_t in_or_out)
+MPID_nem_psm_poll()
 {
    int mpi_errno = MPI_SUCCESS;
    int ret;
-   
    
    if (!MPID_nem_module_psm_connected)
    {
@@ -195,17 +194,8 @@ MPID_nem_psm_poll(MPID_nem_poll_dir_t in_or_out)
        MPIU_ERR_CHKANDJUMP1 (ret != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**psm_connect", "**psm_connect %d", ret);
    }
    
-   
-   if (in_or_out == MPID_NEM_POLL_OUT)
-     {
-	MPID_nem_psm_send_from_queue();
-	MPID_nem_psm_recv();
-     }
-   else
-     {
-	MPID_nem_psm_recv();
-	MPID_nem_psm_send_from_queue();
-     }
+   MPID_nem_psm_recv();
+   MPID_nem_psm_send_from_queue();
    
    fn_exit:
        return mpi_errno;

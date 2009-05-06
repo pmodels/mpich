@@ -31,8 +31,6 @@ extern char MPID_nem_hostname[MAX_HOSTNAME_LEN];
 #define MPID_NEM_IN           1
 #define MPID_NEM_OUT          0 
 
-typedef enum {MPID_NEM_POLL_IN, MPID_NEM_POLL_OUT} MPID_nem_poll_dir_t;
-
 #define MPID_NEM_POLL_IN      0
 #define MPID_NEM_POLL_OUT     1
 

@@ -11,7 +11,7 @@
 #define FUNCNAME MPID_nem_network_poll
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_network_poll (MPID_nem_poll_dir_t in_or_out)
+int MPID_nem_network_poll(void)
 {
-    return MPID_nem_netmod_func->poll (in_or_out);
+    return MPID_nem_netmod_func->poll();
 }

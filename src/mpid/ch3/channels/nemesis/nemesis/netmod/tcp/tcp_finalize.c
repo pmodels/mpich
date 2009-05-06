@@ -18,8 +18,6 @@ int MPID_nem_tcp_finalize()
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_FINALIZE);
 
-    mpi_errno = MPID_nem_tcp_poll_finalize();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_tcp_send_finalize();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_tcp_sm_finalize();

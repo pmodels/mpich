@@ -10,7 +10,7 @@
 #include "mpid_nem_defs.h"
 #include "mpid_nem_atomics.h"
 
-int MPID_nem_network_poll (MPID_nem_poll_dir_t in_or_out);
+int MPID_nem_network_poll(void);
 
 #define MPID_nem_dump_cell_mpich2(cell, index)  MPID_nem_dump_cell_mpich2__((cell),(index),__FILE__,__LINE__) 
 

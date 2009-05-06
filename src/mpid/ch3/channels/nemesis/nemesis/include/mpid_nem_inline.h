@@ -905,7 +905,7 @@ MPID_nem_mpich2_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox)
        flag that is set whenever a port is opened. [goodell@ 2008-06-18] */
     if ((MPID_nem_num_netmods) /*&& (MPID_nem_mem_region.ext_procs > 0)*/)
     {
-	mpi_errno = MPID_nem_network_poll (MPID_NEM_POLL_IN);
+	mpi_errno = MPID_nem_network_poll();
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
 
@@ -976,7 +976,7 @@ MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int tim
        flag that is set whenever a port is opened. [goodell@ 2008-06-18] */
     if ((MPID_nem_num_netmods) /*&& (MPID_nem_mem_region.ext_procs > 0)*/)
     {
-	mpi_errno = MPID_nem_network_poll (MPID_NEM_POLL_IN);
+	mpi_errno = MPID_nem_network_poll();
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
 
@@ -1067,7 +1067,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
        flag that is set whenever a port is opened. [goodell@ 2008-06-18] */
     if ((MPID_nem_num_netmods) /*&& (MPID_nem_mem_region.ext_procs > 0)*/)
     {
-	mpi_errno = MPID_nem_network_poll (MPID_NEM_POLL_IN);
+	mpi_errno = MPID_nem_network_poll();
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
 
@@ -1086,7 +1086,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
            flag that is set whenever a port is opened. [goodell@ 2008-06-18] */
 	if ((MPID_nem_num_netmods) /*&& (MPID_nem_mem_region.ext_procs > 0)*/)
 	{            
-	    mpi_errno = MPID_nem_network_poll (MPID_NEM_POLL_IN);
+	    mpi_errno = MPID_nem_network_poll();
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
             if (completions != MPIDI_CH3I_progress_completion_count || MPID_nem_local_lmt_pending || MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]

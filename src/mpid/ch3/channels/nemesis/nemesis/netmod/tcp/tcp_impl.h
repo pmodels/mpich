@@ -21,10 +21,6 @@ extern pollfd_t *MPID_nem_tcp_plfd_tbl;
 extern sockconn_t MPID_nem_tcp_g_lstn_sc;
 extern pollfd_t MPID_nem_tcp_g_lstn_plfd;
 
-extern char *MPID_nem_tcp_recv_buf;
-#define MPID_NEM_TCP_RECV_MAX_PKT_LEN 1024
-
-
 #define MPID_NEM_TCP_VC_STATE_DISCONNECTED 0
 #define MPID_NEM_TCP_VC_STATE_CONNECTED 1
 
@@ -63,7 +59,6 @@ int MPID_nem_tcp_init (MPID_nem_queue_ptr_t proc_recv_queue,
                                  char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_tcp_finalize (void);
 int MPID_nem_tcp_ckpt_shutdown (void);
-int MPID_nem_tcp_poll (MPID_nem_poll_dir_t in_or_out);
 int MPID_nem_tcp_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen);
 int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc);
@@ -76,14 +71,12 @@ int MPID_nem_tcp_get (void *target_p, void *source_p, int source_node, int len, 
 int MPID_nem_tcp_put (void *target_p, int target_node, void *source_p, int len, int *completion_ctr);
 
 int MPID_nem_tcp_send_init(void);
-int MPID_nem_tcp_poll_init(void);
 int MPID_nem_tcp_connect(struct MPIDI_VC *const vc);
 int MPID_nem_tcp_connpoll(void);
 int MPID_nem_tcp_sm_init(void);
 int MPID_nem_tcp_sm_finalize(void);
 int MPID_nem_tcp_set_sockopts(int fd);
 MPID_NEM_TCP_SOCK_STATUS_t MPID_nem_tcp_check_sock_status(const pollfd_t *const plfd);
-int MPID_nem_tcp_poll_finalize(void);
 int MPID_nem_tcp_send_finalize(void);
 int MPID_nem_tcp_bind(int sockfd);
 int MPID_nem_tcp_conn_est(MPIDI_VC_t *vc);

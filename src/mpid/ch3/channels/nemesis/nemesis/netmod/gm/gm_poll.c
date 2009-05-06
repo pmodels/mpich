@@ -243,14 +243,17 @@ MPID_nem_gm_recv_poll( void )
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_gm_poll(MPID_nem_poll_dir_t in_or_out)
+MPID_nem_gm_poll()
 {
-    if (in_or_out == MPID_NEM_POLL_OUT)
-    {
-	return MPID_nem_gm_send_poll();
-    }
-    else
-    {
-	return MPID_nem_gm_recv_poll();
-    }
+    int mpi_errno = MPI_SUCCESS;
+    
+    mpi_errno = MPID_nem_gm_recv();
+    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    mpi_errno = MPID_nem_send_from_queue();
+    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }

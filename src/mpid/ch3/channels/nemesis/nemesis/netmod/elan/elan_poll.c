@@ -123,23 +123,15 @@ MPID_nem_elan_recv( void )
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_elan_poll(MPID_nem_poll_dir_t in_or_out)
+MPID_nem_elan_poll()
 {
    int mpi_errno = MPI_SUCCESS;
    
    if (MPID_nem_elan_freq > 0)
-     {	
-	if (in_or_out == MPID_NEM_POLL_OUT)
-	  {
-	     MPID_nem_elan_send_from_queue();
-	     MPID_nem_elan_recv();
-	  }
-	else
-	  {
-	     MPID_nem_elan_recv();
-	     MPID_nem_elan_send_from_queue();
-	  }
-     }
+   {	
+       MPID_nem_elan_recv();
+       MPID_nem_elan_send_from_queue();
+   }
    
    fn_exit:
        return mpi_errno;

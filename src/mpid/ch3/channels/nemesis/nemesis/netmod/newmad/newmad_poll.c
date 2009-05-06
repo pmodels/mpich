@@ -225,7 +225,7 @@ void MPID_nem_newmad_get_rreq(nm_sr_event_t event, const nm_sr_event_info_t*info
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int 
-MPID_nem_newmad_poll(MPID_nem_poll_dir_t in_or_out)
+MPID_nem_newmad_poll()
 {
    int mpi_errno = MPI_SUCCESS;   
 

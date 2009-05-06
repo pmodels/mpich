@@ -146,7 +146,7 @@ int MPID_nem_newtcp_module_recv_handler (struct pollfd *pfd, sockconn_t *sc)
 #define FUNCNAME MPID_nem_newtcp_module_poll
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_poll (MPID_nem_poll_dir_t in_or_out)
+int MPID_nem_newtcp_module_poll()
 {
     int mpi_errno = MPI_SUCCESS;
 

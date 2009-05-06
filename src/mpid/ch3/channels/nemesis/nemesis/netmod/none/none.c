@@ -51,7 +51,7 @@ static int nm_send(MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
     return MPI_SUCCESS;
 }
 
-static int nm_poll(MPID_nem_poll_dir_t in_or_out)
+static int nm_poll()
 {  
     return MPI_SUCCESS;
 }
