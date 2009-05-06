@@ -51,6 +51,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_1E8D4446F79E4B7EA76D983E922131B7"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_2A131B743AAD4CC99C6926BDEAB87CB2"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -70,6 +76,12 @@
         "Entry"
         {
         "MsmKey" = "8:_343CE58947F643698E15CD6F39D6A2BA"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_35A1BA324472467D9DCE38274F4CBBDC"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -100,6 +112,12 @@
         "Entry"
         {
         "MsmKey" = "8:_416B3244828948FD94438F068D53EB6D"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_451C73E0FC7D4CEABC9DF17BBB029B32"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -226,6 +244,12 @@
         "Entry"
         {
         "MsmKey" = "8:_9F16A72499EF48B0BCBA05DBF252CB18"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A09539DCAC1340319AC29295E437BDEF"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -539,6 +563,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1E8D4446F79E4B7EA76D983E922131B7"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\fortran\\mpi_constants.mod"
+            "TargetName" = "8:mpi_constants.mod"
+            "Tag" = "8:"
+            "Folder" = "8:_40F589E2DCCB433E88F7946F0C0C75C5"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2A131B743AAD4CC99C6926BDEAB87CB2"
             {
             "SourcePath" = "8:..\\winbuild\\x64\\Release\\mpe_wrap\\mpich2mpe.dll"
@@ -603,6 +647,26 @@
             {
             "SourcePath" = "8:..\\src\\mpe2\\src\\logging\\include\\mpe_log.h"
             "TargetName" = "8:mpe_log.h"
+            "Tag" = "8:"
+            "Folder" = "8:_40F589E2DCCB433E88F7946F0C0C75C5"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_35A1BA324472467D9DCE38274F4CBBDC"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\fortran\\mpi.mod"
+            "TargetName" = "8:mpi.mod"
             "Tag" = "8:"
             "Folder" = "8:_40F589E2DCCB433E88F7946F0C0C75C5"
             "Condition" = "8:"
@@ -703,6 +767,26 @@
             {
             "SourcePath" = "8:..\\src\\mpe2\\include\\mpe.h"
             "TargetName" = "8:mpe.h"
+            "Tag" = "8:"
+            "Folder" = "8:_40F589E2DCCB433E88F7946F0C0C75C5"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_451C73E0FC7D4CEABC9DF17BBB029B32"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\fortran\\mpi_base.mod"
+            "TargetName" = "8:mpi_base.mod"
             "Tag" = "8:"
             "Folder" = "8:_40F589E2DCCB433E88F7946F0C0C75C5"
             "Condition" = "8:"
@@ -1125,6 +1209,26 @@
             "TargetName" = "8:mpich2shm.dll"
             "Tag" = "8:"
             "Folder" = "8:_C25C11E398284C2EAFD99160D8C6EA71"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A09539DCAC1340319AC29295E437BDEF"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\fortran\\mpi_sizeofs.mod"
+            "TargetName" = "8:mpi_sizeofs.mod"
+            "Tag" = "8:"
+            "Folder" = "8:_40F589E2DCCB433E88F7946F0C0C75C5"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"

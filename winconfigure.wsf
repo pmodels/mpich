@@ -5589,6 +5589,7 @@ Function GenBuild()
 '	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=essm RLOG=1")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO cxx")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO fort")
+	bfile.WriteLine("nmake %SILENT% /NOLOGO mpi_mod")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO gfort")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO sfort")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO irlog2rlog")
@@ -5766,6 +5767,11 @@ Function GenBuild()
 	mfile.WriteLine("fortflags = /iface:cref /c /names:uppercase")
 	mfile.WriteLine("gfortflags = /iface:cref /assume:underscore /c /names:lowercase")
 	mfile.WriteLine("sfortflags = /iface:stdcall /c /names:uppercase")
+	mfile.WriteLine("!IF ""$(CPU)"" != ""x86""")
+        mfile.WriteLine("fortflags = $(fortflags) /I..\src\include\win32 ")
+        mfile.WriteLine("!ELSE")
+        mfile.WriteLine("fortflags = $(fortflags) /I..\src\include\win64 ")
+	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine("impl_cxxflags = $(cflags)")
 	mfile.WriteLine("mpe_cflags = \")
 	mfile.WriteLine(" /I ..\src\mpe2\include \")
@@ -5945,6 +5951,7 @@ Function GenBuild()
 	mfile.WriteLine("# MPICH2")
 	mfile.WriteLine
 	CreateRules f.GetFolder("src\mpi"), trimlength
+	CreateRules f.GetFolder("src\binding\f90"), trimlength
 	CreateRules f.GetFolder("src\mpid\common\datatype"), trimlength
 	CreateRules f.GetFolder("src\util\mem"), trimlength
 	CreateRules f.GetFolder("src\util\dbg"), trimlength
@@ -5983,12 +5990,6 @@ Function GenBuild()
 	mfile.WriteLine("$(OUTDIR)\rlogtime.obj: ..\src\util\logging\rlog\rlogtime.c")
 	mfile.WriteLine("	$(cc) $(cflags) /I..\src\util\logging\common /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" ..\src\util\logging\rlog\rlogtime.c")
 	mfile.WriteLine
-	' Insert rules for f90 type create funcs manually because the src/binding/f90
-        ' directory has both C & fortran interfaces
-	mfile.WriteLine("{..\src\binding\f90}.c{$(OUTDIR)}.obj:")
-	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" $**")
-	mfile.WriteLine
-
 	CreateObjs "mpich2", f.GetFolder("src\mpi"), trimlength, true, false
 	CreateObjs "mpich2", f.GetFolder("src\mpid\common\datatype"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\util\mem"), trimlength, false, false
@@ -6331,10 +6332,7 @@ Function GenBuild()
 	extra_flags = "$(fcflags)"
 	fort_prefix = ""
 	CreateRules f.GetFolder("src\binding\f77"), trimlength
-	' Insert rules for f90 type create funcs manually because the src/binding/f90
-        ' directory has both C & fortran interfaces
-	mfile.WriteLine("{..\src\binding\f90}.c{$(FORT_OUTDIR)}.obj:")
-	mfile.WriteLine("    $(cc) $(cflags) $(fcflags) /Fo""$(FORT_OUTDIR)\\"" /Fd""$(FORT_OUTDIR)\\"" $**")
+	CreateRules f.GetFolder("src\binding\f90"), trimlength
 	mfile.WriteLine
 	CreateObjs "fort", f.GetFolder("src\binding\f77"), trimlength, true, false
 	mfile.WriteLine(" \" & vbCrLf & "   $(FORT_OUTDIR)\typef90intf.obj \")
@@ -6348,6 +6346,23 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("fort: $(FORT_OUTDIR) $(FORT_OUTDIR)\fmpich2$(D).dll")
 	mfile.WriteLine
+        ' Adding rules for F90 mod files
+        mfile.WriteLine("{..\src\binding\f90}.f90{$(FORT_OUTDIR)}.mod:")
+	mfile.WriteLine("!IF ""$(CPU)"" != ""x86""")
+        mfile.WriteLine("   copy /y ..\src\binding\f90\win32\mpi_sizeofs.f90 ..\src\binding\f90")
+	mfile.WriteLine("!ELSE")
+        mfile.WriteLine("   copy /y ..\src\binding\f90\win64\mpi_sizeofs.f90 ..\src\binding\f90")
+	mfile.WriteLine("!ENDIF")
+        mfile.WriteLine("   $(fc) $(fortflags) /module:""$(FORT_OUTDIR)\\"" /object:""$(FORT_OUTDIR)\\"" $**")
+        mfile.WriteLine
+        mfile.WriteLine("mpi_mod_objs = \")
+        mfile.WriteLine("   $(FORT_OUTDIR)\mpi_constants.mod \")
+        mfile.WriteLine("   $(FORT_OUTDIR)\mpi_base.mod \")
+        mfile.WriteLine("   $(FORT_OUTDIR)\mpi_sizeofs.mod \")
+        mfile.WriteLine("   $(FORT_OUTDIR)\mpi.mod ")
+        mfile.WriteLine
+        mfile.WriteLine("mpi_mod: $(FORT_OUTDIR) $(mpi_mod_objs)")
+        mfile.WriteLine
 	mfile.WriteLine("!IF ""$(CPU)"" != ""x86""")
 	mfile.WriteLine("# Only one calling convention for Win64 so gfort and sfort are not necessary")
 	mfile.WriteLine("gfort: $(GFORT_OUTDIR)")
