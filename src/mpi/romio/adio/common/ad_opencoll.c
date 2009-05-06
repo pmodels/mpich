@@ -25,6 +25,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank,
 	int access_mode, int *error_code)
 {
     int orig_amode_excl, orig_amode_wronly;
+    MPI_Comm tmp_comm;
 
     orig_amode_excl = access_mode;
 
@@ -36,7 +37,10 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank,
 	   else 
 	       fd->access_mode = access_mode;
 	       
+	   tmp_comm = fd->comm;
+	   fd->comm == MPI_COMM_SELF
 	   (*(fd->fns->ADIOI_xxx_Open))(fd, error_code);
+	   fd->comm = tmp_comm;
 	   MPI_Bcast(error_code, 1, MPI_INT, \
 		     fd->hints->ranklist[0], fd->comm);
 	   /* if no error, close the file and reopen normally below */
