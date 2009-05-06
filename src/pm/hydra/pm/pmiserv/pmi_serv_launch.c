@@ -105,7 +105,7 @@ static void *launch_helper(void *args)
     }
 
   fn_exit:
-    return;
+    return NULL;
 
   fn_fail:
     goto fn_exit;
@@ -406,7 +406,6 @@ HYD_Status HYD_PMCI_launch_procs(void)
     char *port_range, *sport;
     uint16_t port;
     char hostname[MAX_HOSTNAME_LEN];
-    HYD_Env_t *env;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

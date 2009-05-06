@@ -538,8 +538,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
          * generate it */
         if (strcmp(key, "process-mapping-vector") == 0) {
             /* Create a vector format */
-            status = HYD_PMCD_pmi_process_mapping(process, HYD_PMCD_pmi_vector,
-                                                  &node_list);
+            status = HYD_PMCD_pmi_process_mapping(process, HYD_PMCD_pmi_vector, &node_list);
             HYDU_ERR_POP(status, "Unable to get process mapping information\n");
 
             if (strlen(node_list) > MAXVALLEN)
@@ -551,8 +550,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
             HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
         }
         else if (strcmp(key, "process-mapping-explicit") == 0) {
-            status = HYD_PMCD_pmi_process_mapping(process, HYD_PMCD_pmi_explicit,
-                                                  &node_list);
+            status = HYD_PMCD_pmi_process_mapping(process, HYD_PMCD_pmi_explicit, &node_list);
             HYDU_ERR_POP(status, "Unable to get process mapping information\n");
 
             if (strlen(node_list) > MAXVALLEN)

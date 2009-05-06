@@ -15,6 +15,20 @@ HYD_PMCD_pmi_pg_t *pg_list = NULL;
 struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v1;
 struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v2;
 
+struct segment {
+    int start_pid;
+    int proc_count;
+    int node_id;
+    struct segment *next;
+};
+
+struct block {
+    int start_node_id;
+    int num_blocks;
+    int block_size;
+    struct block *next;
+};
+
 static HYD_Status allocate_kvs(HYD_PMCD_pmi_kvs_t ** kvs, int pgid)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -208,63 +222,108 @@ HYD_Status HYD_PMCD_pmi_id_to_rank(int id, int *rank)
 }
 
 
-HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t *process,
+HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
                                         enum HYD_PMCD_pmi_process_mapping_type type,
                                         char **process_mapping_str)
 {
-    int i, j, rank, node_id, process_id, rem, *process_mapping;
+    int i, j, k, node_id, *process_mapping;
     char *tmp[HYD_NUM_TMP_STRINGS];
     struct HYD_Partition *partition;
-    struct HYD_Partition_exec *exec;
     struct HYD_Partition_segment *segment;
+    struct segment *seglist_head, *seglist_tail = NULL, *seg;
+    struct block *blocklist_head, *blocklist_tail = NULL, *block;
+    int done;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    seglist_head = NULL;
+    node_id = -1;
+    for (partition = handle.partition_list; partition; partition = partition->next) {
+        node_id++;
+        for (segment = partition->segment_list; segment; segment = segment->next) {
+            HYDU_MALLOC(seg, struct segment *, sizeof(struct segment), status);
+            seg->start_pid = segment->start_pid;
+            seg->proc_count = segment->proc_count;
+            seg->node_id = node_id;
+            seg->next = NULL;
+
+            if (seglist_head == NULL) {
+                seglist_head = seg;
+                seglist_tail = seg;
+            }
+            else {
+                seglist_tail->next = seg;
+                seglist_tail = seg;
+            }
+        }
+    }
+
+    /* Sort the segment list */
+    done = 1;
+    while (1) {
+        for (seg = seglist_head; seg; seg = seg->next) {
+            if (seg->next && (seg->start_pid > seg->next->start_pid)) {
+                seg->start_pid = seg->start_pid + seg->next->start_pid;
+                seg->next->start_pid = seg->start_pid - seg->next->start_pid;
+                seg->start_pid = seg->start_pid - seg->next->start_pid;
+
+                seg->proc_count = seg->proc_count + seg->next->proc_count;
+                seg->next->proc_count = seg->proc_count - seg->next->proc_count;
+                seg->proc_count = seg->proc_count - seg->next->proc_count;
+
+                seg->node_id = seg->node_id + seg->next->node_id;
+                seg->next->node_id = seg->node_id - seg->next->node_id;
+                seg->node_id = seg->node_id - seg->next->node_id;
+
+                done = 0;
+            }
+        }
+        if (done)
+            break;
+    }
+
+    /* Create a block list off the segment list */
+    blocklist_head = NULL;
+    for (seg = seglist_head; seg; seg = seg->next) {
+        if (blocklist_head == NULL) {
+            HYDU_MALLOC(blocklist_head, struct block *, sizeof(struct block), status);
+            blocklist_head->start_node_id = seg->node_id;
+            blocklist_head->block_size = seg->proc_count;
+            blocklist_head->num_blocks = 1;
+            blocklist_head->next = NULL;
+            blocklist_tail = blocklist_head;
+        }
+        else if ((blocklist_tail->start_node_id + blocklist_tail->num_blocks == seg->node_id)
+                 && (blocklist_tail->block_size == seg->proc_count)) {
+            blocklist_tail->num_blocks++;
+        }
+        else {
+            HYDU_MALLOC(blocklist_tail->next, struct block *, sizeof(struct block), status);
+            blocklist_tail = blocklist_tail->next;
+            blocklist_tail->start_node_id = seg->node_id;
+            blocklist_tail->block_size = seg->proc_count;
+            blocklist_tail->num_blocks = 1;
+            blocklist_tail->next = NULL;
+        }
+    }
 
     if (type == HYD_PMCD_pmi_explicit) {
         /* Explicit process mapping */
         HYDU_MALLOC(process_mapping, int *, process->node->pg->num_procs * sizeof(int),
                     status);
 
-        /* We search all executables with our PGID in each partition
-         * of handle. */
-        rank = -1;
-        node_id = -1;
-        for (partition = handle.partition_list; partition; partition = partition->next) {
-            node_id++;
-            process_id = 0;
-            for (exec = partition->exec_list; exec; exec = exec->next) {
-                if (exec->pgid == process->node->pg->id) {
-                    for (i = 0; i < exec->proc_count; i++) {
-                        /* Figure out what this process' rank will be */
-                        rank = ((process_id / partition->one_pass_count) *
-                                handle.one_pass_count);
-                        rem = process_id - rank;
-
-                        for (segment = partition->segment_list; segment;
-                             segment = segment->next) {
-                            if (rem >= segment->proc_count)
-                                rem -= segment->proc_count;
-                            else {
-                                rank += segment->start_pid + rem;
-                                break;
-                            }
-                        }
-
-                        process_mapping[rank] = node_id;
-                        process_id++;
-                    }
-                }
-                else
-                    break;
-            }
-        }
+        k = 0;
+        for (block = blocklist_head; block; block = block->next)
+            for (i = 0; i < block->num_blocks; i++)
+                for (j = 0; j < block->block_size; j++)
+                    process_mapping[k++] = block->start_node_id + i;
 
         i = 0;
         tmp[i++] = HYDU_strdup("explicit,");
-        for (j = 0; j < process->node->pg->num_procs; j++) {
+        for (j = 0; j < k; j++) {
             tmp[i++] = HYDU_int_to_str(process_mapping[j]);
-            if (j < process->node->pg->num_procs - 1)
+            if (j < k - 1)
                 tmp[i++] = HYDU_strdup(",");
         }
         tmp[i++] = NULL;
@@ -272,10 +331,26 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t *process,
         status = HYDU_str_alloc_and_join(tmp, process_mapping_str);
         HYDU_ERR_POP(status, "error while joining strings\n");
 
-        for (i = 0; tmp[i]; i++)
-            HYDU_FREE(tmp[i]);
+        HYDU_free_strlist(tmp);
     }
     else if (type == HYD_PMCD_pmi_vector) {
+        i = 0;
+        tmp[i++] = HYDU_strdup("vector,");
+        for (block = blocklist_head; block; block = block->next) {
+            tmp[i++] = HYDU_int_to_str(block->start_node_id);
+            tmp[i++] = HYDU_strdup(",");
+            tmp[i++] = HYDU_int_to_str(block->num_blocks);
+            tmp[i++] = HYDU_strdup(",");
+            tmp[i++] = HYDU_int_to_str(block->block_size);
+            if (block->next)
+                tmp[i++] = HYDU_strdup(",");
+        }
+        tmp[i++] = NULL;
+
+        status = HYDU_str_alloc_and_join(tmp, process_mapping_str);
+        HYDU_ERR_POP(status, "error while joining strings\n");
+
+        HYDU_free_strlist(tmp);
     }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized process mapping\n");
