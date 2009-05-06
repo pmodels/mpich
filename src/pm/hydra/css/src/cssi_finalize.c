@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_base.h"
+#include "hydra_utils.h"
 #include "cssi.h"
 
 struct HYD_CSSI_fns HYD_CSSI_fns;
