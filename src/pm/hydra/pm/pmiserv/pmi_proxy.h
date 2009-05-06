@@ -40,10 +40,12 @@ struct HYD_PMCD_pmi_proxy_params {
     struct HYD_Partition_segment *segment_list;
     struct HYD_Partition_exec *exec_list;
 
-    int out_upstream_fd;
-    int err_upstream_fd;
-    int in_upstream_fd;
-    int control_fd;
+    struct {
+        int out;
+        int err;
+        int in;
+        int control;
+    } upstream;
 
     int *pid;
     int *out;

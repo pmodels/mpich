@@ -37,10 +37,10 @@ static HYD_Status wait_for_procs_to_finish(void)
 
         if (HYD_PMCD_pmi_proxy_params.procs_are_launched) {
             if (out_count == 0)
-                close(HYD_PMCD_pmi_proxy_params.out_upstream_fd);
+                close(HYD_PMCD_pmi_proxy_params.upstream.out);
 
             if (err_count == 0)
-                close(HYD_PMCD_pmi_proxy_params.err_upstream_fd);
+                close(HYD_PMCD_pmi_proxy_params.upstream.err);
 
             /* We are done */
             if (!out_count && !err_count)
@@ -118,9 +118,9 @@ int main(int argc, char **argv)
 
     /* Process launching only happens in the runtime case over here */
     if (HYD_PMCD_pmi_proxy_params.proxy_type == HYD_PMCD_PMI_PROXY_RUNTIME) {
-        HYD_PMCD_pmi_proxy_params.out_upstream_fd = 1;
-        HYD_PMCD_pmi_proxy_params.err_upstream_fd = 2;
-        HYD_PMCD_pmi_proxy_params.in_upstream_fd = 0;
+        HYD_PMCD_pmi_proxy_params.upstream.out = 1;
+        HYD_PMCD_pmi_proxy_params.upstream.err = 2;
+        HYD_PMCD_pmi_proxy_params.upstream.in = 0;
 
         status = HYD_PMCD_pmi_proxy_launch_procs();
         HYDU_ERR_POP(status, "unable to launch procs based on proxy handle info\n");
@@ -155,13 +155,13 @@ int main(int argc, char **argv)
                     ret_status |= HYD_PMCD_pmi_proxy_params.exit_status[i];
 
                 /* Send the exit status upstream */
-                status = HYDU_sock_write(HYD_PMCD_pmi_proxy_params.control_fd, &ret_status,
-                                         sizeof(int));
+                status = HYDU_sock_write(HYD_PMCD_pmi_proxy_params.upstream.control,
+                                         &ret_status, sizeof(int));
                 HYDU_ERR_POP(status, "unable to return exit status upstream\n");
 
-                status = HYD_DMX_deregister_fd(HYD_PMCD_pmi_proxy_params.control_fd);
+                status = HYD_DMX_deregister_fd(HYD_PMCD_pmi_proxy_params.upstream.control);
                 HYDU_ERR_POP(status, "unable to deregister fd\n");
-                close(HYD_PMCD_pmi_proxy_params.control_fd);
+                close(HYD_PMCD_pmi_proxy_params.upstream.control);
 
                 /* cleanup the params structure for the next job */
                 status = HYD_PMCD_pmi_proxy_cleanup_params();

@@ -34,10 +34,10 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.segment_list = NULL;
     HYD_PMCD_pmi_proxy_params.exec_list = NULL;
 
-    HYD_PMCD_pmi_proxy_params.out_upstream_fd = -1;
-    HYD_PMCD_pmi_proxy_params.err_upstream_fd = -1;
-    HYD_PMCD_pmi_proxy_params.in_upstream_fd = -1;
-    HYD_PMCD_pmi_proxy_params.control_fd = -1;
+    HYD_PMCD_pmi_proxy_params.upstream.out = -1;
+    HYD_PMCD_pmi_proxy_params.upstream.err = -1;
+    HYD_PMCD_pmi_proxy_params.upstream.in = -1;
+    HYD_PMCD_pmi_proxy_params.upstream.control = -1;
 
     HYD_PMCD_pmi_proxy_params.pid = NULL;
     HYD_PMCD_pmi_proxy_params.out = NULL;
@@ -397,7 +397,7 @@ HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd)
 
     /* Save this fd as we need to send back the exit status on
      * this. */
-    HYD_PMCD_pmi_proxy_params.control_fd = fd;
+    HYD_PMCD_pmi_proxy_params.upstream.control = fd;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -506,7 +506,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                 status = HYDU_sock_set_nonblock(HYD_PMCD_pmi_proxy_params.in);
                 HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
-                stdin_fd = HYD_PMCD_pmi_proxy_params.in_upstream_fd;
+                stdin_fd = HYD_PMCD_pmi_proxy_params.upstream.in;
                 status = HYDU_sock_set_nonblock(stdin_fd);
                 HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
