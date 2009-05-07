@@ -3512,6 +3512,9 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIR_BCAST_MIN_PROCS          8
 #define MPIR_ALLTOALL_SHORT_MSG       256
 #define MPIR_ALLTOALL_MEDIUM_MSG      32768
+#define MPIR_ALLTOALL_THROTTLE        4  /* max no. of irecvs/isends posted at a 
+time in some alltoall algorithms. Setting it to 0 causes all irecvs/isends to be 
+posted at once. */
 #define MPIR_REDSCAT_COMMUTATIVE_LONG_MSG 524288
 #define MPIR_REDSCAT_NONCOMMUTATIVE_SHORT_MSG 512
 #define MPIR_ALLGATHER_SHORT_MSG      81920
