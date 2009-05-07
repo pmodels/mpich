@@ -29,7 +29,7 @@ int main( int argc, char *argv[] )
         else
             count = 1;
 
-        if ( argc > 1 && argv[2] != NULL )
+        if ( argc > 2 && argv[2] != NULL )
             num_itr = atoi( argv[2] );
         else
             num_itr = 1;
