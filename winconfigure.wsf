@@ -5483,9 +5483,20 @@ Sub OutputLine(path, line)
 	End If
 End Sub
 
+' Returns true if name (folder/file name) is excluded from build
+' eg: We don't want to compile sock/poll on windows
+Function IsInBuildExclusionList(name)
+    IsInBuildExclusionList = false
+    If Right(name, 4) = "poll" Then
+        IsInBuildExclusionList = true
+    End If
+End Function
+
 Sub FindSimpleMakeFiles(folder, trimpath)
 	For Each sub_folder in folder.SubFolders
-		FindSimpleMakeFiles sub_folder, trimpath
+                If Not IsInBuildExclusionList(sub_folder) Then
+		    FindSimpleMakeFiles sub_folder, trimpath
+                End If
 	Next
 	For Each file in folder.Files
 		If file.Name = "Makefile.sm" Then
