@@ -13,9 +13,7 @@
  * to stderr.
  */
 
-#include "mpichconf.h"
-#include "mpimem.h"
-#include "mpidbg.h"
+#include "mpiimpl.h"
 
 #include <stdio.h>
 #ifdef HAVE_STDARG_H
