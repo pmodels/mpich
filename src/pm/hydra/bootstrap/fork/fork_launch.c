@@ -28,8 +28,8 @@ HYD_Status HYD_BSCD_fork_launch_procs(void)
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         /* Setup the executable arguments */
         arg = 0;
-        for (i = 0; partition->base->proxy_args[i]; i++)
-            client_arg[arg++] = HYDU_strdup(partition->base->proxy_args[i]);
+        for (i = 0; partition->base->exec_args[i]; i++)
+            client_arg[arg++] = HYDU_strdup(partition->base->exec_args[i]);
         client_arg[arg++] = NULL;
 
         /* The stdin pointer will be some value for process_id 0; for

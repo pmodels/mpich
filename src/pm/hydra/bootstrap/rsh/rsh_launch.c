@@ -42,8 +42,8 @@ HYD_Status HYD_BSCD_rsh_launch_procs(void)
         /* rsh does not support any partition names other than host names */
         client_arg[arg++] = HYDU_strdup(partition->base->name);
 
-        for (i = 0; partition->base->proxy_args[i]; i++)
-            client_arg[arg++] = HYDU_strdup(partition->base->proxy_args[i]);
+        for (i = 0; partition->base->exec_args[i]; i++)
+            client_arg[arg++] = HYDU_strdup(partition->base->exec_args[i]);
 
         client_arg[arg++] = NULL;
 
