@@ -393,10 +393,7 @@ int MPIR_Alltoall(
            a small number of isends/irecvs at a time. */
         int ii, ss, bblock;
 
-#define BBLOCK 4   /* temporary. move to mpiimpl.h 
-                      BBLOCK=0 posts all isends/irecvs */
-
-        bblock = BBLOCK; 
+        bblock = MPIR_ALLTOALL_THROTTLE;
         if (bblock == 0) bblock = comm_size;
 
         reqarray = (MPI_Request *) MPIU_Malloc(2*bblock*sizeof(MPI_Request));

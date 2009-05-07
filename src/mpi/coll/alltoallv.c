@@ -68,6 +68,8 @@ int MPIR_Alltoallv (
     MPI_Comm comm;
     int ii, ss, bblock;
 
+    MPIU_CHKLMEM_DECL(2);
+
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -79,27 +81,11 @@ int MPIR_Alltoallv (
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
-#define BBLOCK 4   /* temporary. move to mpiimpl.h 
-                      BBLOCK=0 posts all isends/irecvs */
-
-    bblock = BBLOCK; 
+    bblock = MPIR_ALLTOALL_THROTTLE;
     if (bblock == 0) bblock = comm_size;
 
-    starray = (MPI_Status *) MPIU_Malloc(2*bblock*sizeof(MPI_Status));
-    /* --BEGIN ERROR HANDLING-- */
-    if (!starray) {
-        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
-
-    reqarray = (MPI_Request *) MPIU_Malloc(2*bblock*sizeof(MPI_Request));
-    /* --BEGIN ERROR HANDLING-- */
-    if (!reqarray) {
-        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
+    MPIU_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray");
+    MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request*, 2*bblock*sizeof(MPI_Request), mpi_errno, "reqarray");
 
     /* post only bblock isends/irecvs at a time as suggested by Tony Lad */
     for (ii=0; ii<comm_size; ii+=bblock) {
@@ -147,14 +133,15 @@ int MPIR_Alltoallv (
         /* --END ERROR HANDLING-- */
     }
 
-    MPIU_Free(reqarray);
-    MPIU_Free(starray);
-
-fn_fail:    
+fn_exit:    
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     
+    MPIU_CHKLMEM_FREEALL();
     return (mpi_errno);
+
+fn_fail:
+    goto fn_exit;
 }
 /* end:nested */
 
