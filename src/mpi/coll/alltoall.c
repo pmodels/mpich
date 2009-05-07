@@ -45,7 +45,7 @@
    same process at the same time.
 
    *** Modification: We post only a small number of isends and irecvs 
-   at a time and wait on them as suggested by Tony Lad. ***
+   at a time and wait on them as suggested by Tony Ladd. ***
 
    For long messages and power-of-two number of processes, we use a
    pairwise exchange algorithm, which takes p-1 steps. We
@@ -389,7 +389,7 @@ int MPIR_Alltoall(
 
     else if (nbytes <= MPIR_ALLTOALL_MEDIUM_MSG) {  
         /* Medium-size message. Use isend/irecv with scattered
-           destinations. Use Tony Lad's modification to post only
+           destinations. Use Tony Ladd's modification to post only
            a small number of isends/irecvs at a time. */
         int ii, ss, bblock;
 

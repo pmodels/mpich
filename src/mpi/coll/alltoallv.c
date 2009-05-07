@@ -38,7 +38,7 @@
    same time. 
 
    *** Modification: We post only a small number of isends and irecvs 
-   at a time and wait on them as suggested by Tony Lad. ***
+   at a time and wait on them as suggested by Tony Ladd. ***
 
    Possible improvements: 
 
@@ -87,7 +87,7 @@ int MPIR_Alltoallv (
     MPIU_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray");
     MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request*, 2*bblock*sizeof(MPI_Request), mpi_errno, "reqarray");
 
-    /* post only bblock isends/irecvs at a time as suggested by Tony Lad */
+    /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
     for (ii=0; ii<comm_size; ii+=bblock) {
         req_cnt = 0;
         ss = comm_size-ii < bblock ? comm_size-ii : bblock;
