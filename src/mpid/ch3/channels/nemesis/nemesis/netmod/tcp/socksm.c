@@ -43,6 +43,10 @@ pollfd_t MPID_nem_tcp_g_lstn_plfd = {0};
    unused */
 static MPID_nem_tcp_vc_area *dummy_vc_area ATTRIBUTE((unused, used)) = NULL;
 
+#define MAX_SKIP_POLLS_INACTIVE (1<<22) /* something big */
+#define MAX_SKIP_POLLS_ACTIVE (128)     /* something small */
+static int MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_INACTIVE;
+
 /* Debug function to dump the sockconn table.  This is intended to be
    called from a debugger.  The 'unused' attribute keeps the compiler
    from complaining.  The 'used' attribute makes sure the function is
@@ -753,6 +757,9 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
 
     MPIU_Assert(vc != NULL);
 
+    /* We have an active connection, start polling more often */
+    MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_ACTIVE;    
+        
     MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
     if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_TCP_VC_STATE_DISCONNECTED) {
@@ -1113,6 +1120,7 @@ static int state_c_ranksent_handler(pollfd_t *const plfd, sockconn_t *const sc)
             if (pkt_type == MPIDI_NEM_TCP_PKT_ID_ACK) {
                 CHANGE_STATE(sc, CONN_STATE_TS_COMMRDY);
                 ASSIGN_SC_TO_VC(sc->vc, sc);
+
                 MPID_nem_tcp_conn_est (sc->vc);
                 MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "c_ranksent_handler(): connection established (sc=%p, sc->vc=%p, fd=%d)", sc, sc->vc, sc->fd));
             }
@@ -1187,6 +1195,9 @@ static int state_l_cntd_handler(pollfd_t *const plfd, sockconn_t *const sc)
         CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
         goto fn_exit;
     }
+
+    /* We have an active connection, start polling more often */
+    MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_ACTIVE;
 
     if (IS_READABLE(plfd)) {
         mpi_errno = recv_id_or_tmpvc_info(sc, &got_sc_eof);
@@ -1620,10 +1631,18 @@ Evaluate the need for it by testing and then do it, if needed.
 int MPID_nem_tcp_connpoll()
 {
     int mpi_errno = MPI_SUCCESS, n, i;
+    static int num_skipped_polls = 0;
 
     /* num_polled is needed b/c the call to it_sc->handler() can change the
        size of the table, which leads to iterating over invalid revents. */
     int num_polled = g_tbl_size;
+
+    /* To improve shared memory performance, we don't call the poll()
+     * systemcall every time. The MPID_nem_tcp_skip_polls value is
+     * changed depending on whether we have any active connections. */
+    if (num_skipped_polls++ < MPID_nem_tcp_skip_polls)
+        goto fn_exit;
+    num_skipped_polls = 0;
 
     CHECK_EINTR(n, poll(MPID_nem_tcp_plfd_tbl, num_polled, 0));
     MPIU_ERR_CHKANDJUMP1 (n == -1, mpi_errno, MPI_ERR_OTHER, 

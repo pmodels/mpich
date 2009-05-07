@@ -899,11 +899,7 @@ MPID_nem_mpich2_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox)
     if (poll_fboxes(cell)) goto fbox_l;
 #endif/* USE_FASTBOX     */
 
-    /* FIXME the ext_procs bit is an optimization for the all-local-procs case.
-       This has been commented out for now because it breaks dynamic processes.
-       Some other solution should be implemented eventually, possibly using a
-       flag that is set whenever a port is opened. [goodell@ 2008-06-18] */
-    if ((MPID_nem_num_netmods) /*&& (MPID_nem_mem_region.ext_procs > 0)*/)
+    if (MPID_nem_num_netmods)
     {
 	mpi_errno = MPID_nem_network_poll();
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -970,11 +966,7 @@ MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int tim
     if (poll_fboxes(cell)) goto fbox_l;
 #endif/* USE_FASTBOX     */
 
-    /* FIXME the ext_procs bit is an optimization for the all-local-procs case.
-       This has been commented out for now because it breaks dynamic processes.
-       Some other solution should be implemented eventually, possibly using a
-       flag that is set whenever a port is opened. [goodell@ 2008-06-18] */
-    if ((MPID_nem_num_netmods) /*&& (MPID_nem_mem_region.ext_procs > 0)*/)
+    if (MPID_nem_num_netmods)
     {
 	mpi_errno = MPID_nem_network_poll();
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -1061,11 +1053,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
     if (poll_fboxes(cell)) goto fbox_l;
 #endif /*USE_FASTBOX */
 
-    /* FIXME the ext_procs bit is an optimization for the all-local-procs case.
-       This has been commented out for now because it breaks dynamic processes.
-       Some other solution should be implemented eventually, possibly using a
-       flag that is set whenever a port is opened. [goodell@ 2008-06-18] */
-    if ((MPID_nem_num_netmods) /*&& (MPID_nem_mem_region.ext_procs > 0)*/)
+    if (MPID_nem_num_netmods)
     {
 	mpi_errno = MPID_nem_network_poll();
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -1080,11 +1068,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
         if (poll_fboxes(cell)) goto fbox_l;
 #endif /*USE_FASTBOX */
 
-        /* FIXME the ext_procs bit is an optimization for the all-local-procs case.
-           This has been commented out for now because it breaks dynamic processes.
-           Some other solution should be implemented eventually, possibly using a
-           flag that is set whenever a port is opened. [goodell@ 2008-06-18] */
-	if ((MPID_nem_num_netmods) /*&& (MPID_nem_mem_region.ext_procs > 0)*/)
+	if (MPID_nem_num_netmods)
 	{            
 	    mpi_errno = MPID_nem_network_poll();
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
