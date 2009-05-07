@@ -18,7 +18,6 @@ static char *pmi_port_str = NULL;
 static void *launch_helper(void *args)
 {
     struct HYD_Partition *partition = (struct HYD_Partition *) args;
-    int first_partition = (partition == handle.partition_list);
     enum HYD_PMCD_pmi_proxy_cmds cmd;
     int i, list_len, arg_len;
     HYD_Status status = HYD_SUCCESS;
@@ -63,44 +62,46 @@ static void *launch_helper(void *args)
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* Check how many arguments we have */
-    list_len = HYDU_strlist_lastidx(partition->proxy_args);
+    list_len = HYDU_strlist_lastidx(partition->base->proxy_args);
     status = HYDU_sock_write(partition->control_fd, &list_len, sizeof(int));
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* Convert the string list to parseable data and send */
-    for (i = 0; partition->proxy_args[i]; i++) {
-        arg_len = strlen(partition->proxy_args[i]) + 1;
+    for (i = 0; partition->base->proxy_args[i]; i++) {
+        arg_len = strlen(partition->base->proxy_args[i]) + 1;
 
         status = HYDU_sock_write(partition->control_fd, &arg_len, sizeof(int));
         HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
-        status = HYDU_sock_write(partition->control_fd, partition->proxy_args[i], arg_len);
+        status =
+            HYDU_sock_write(partition->control_fd, partition->base->proxy_args[i], arg_len);
         HYDU_ERR_POP(status, "unable to write data to proxy\n");
     }
 
     /* Create an stdout socket */
-    status = HYDU_sock_connect(partition->sa, &partition->out);
+    status = HYDU_sock_connect(partition->sa, &partition->base->out);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
     cmd = USE_AS_STDOUT;
-    status = HYDU_sock_write(partition->out, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+    status = HYDU_sock_write(partition->base->out, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* Create an stderr socket */
-    status = HYDU_sock_connect(partition->sa, &partition->err);
+    status = HYDU_sock_connect(partition->sa, &partition->base->err);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
     cmd = USE_AS_STDERR;
-    status = HYDU_sock_write(partition->err, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+    status = HYDU_sock_write(partition->base->err, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* If rank 0 is here, create an stdin socket */
-    if (first_partition) {
-        status = HYDU_sock_connect(partition->sa, &handle.in);
+    if (partition->base->partition_id == 0) {
+        status = HYDU_sock_connect(partition->sa, &partition->base->in);
         HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
         cmd = USE_AS_STDIN;
-        status = HYDU_sock_write(handle.in, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+        status = HYDU_sock_write(partition->base->in, &cmd,
+                                 sizeof(enum HYD_PMCD_pmi_proxy_cmds));
         HYDU_ERR_POP(status, "unable to write data to proxy\n");
     }
 
@@ -123,89 +124,87 @@ static HYD_Status fill_in_proxy_args(void)
 
     /* Create the arguments list for each proxy */
     process_id = 0;
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next) {
-
-        arg = HYDU_strlist_lastidx(partition->proxy_args);
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        arg = HYDU_strlist_lastidx(partition->base->proxy_args);
         i = 0;
         path_str[i++] = HYDU_strdup(handle.base_path);
         path_str[i++] = HYDU_strdup("pmi_proxy");
         path_str[i] = NULL;
-        status = HYDU_str_alloc_and_join(path_str, &partition->proxy_args[arg++]);
+        status = HYDU_str_alloc_and_join(path_str, &partition->base->proxy_args[arg++]);
         HYDU_ERR_POP(status, "unable to join strings\n");
         HYDU_free_strlist(path_str);
 
-        partition->proxy_args[arg++] = HYDU_strdup("--one-pass-count");
-        partition->proxy_args[arg++] = HYDU_int_to_str(handle.one_pass_count);
+        partition->base->proxy_args[arg++] = HYDU_strdup("--one-pass-count");
+        partition->base->proxy_args[arg++] = HYDU_int_to_str(handle.one_pass_count);
 
-        partition->proxy_args[arg++] = HYDU_strdup("--wdir");
-        partition->proxy_args[arg++] = HYDU_strdup(handle.wdir);
+        partition->base->proxy_args[arg++] = HYDU_strdup("--wdir");
+        partition->base->proxy_args[arg++] = HYDU_strdup(handle.wdir);
 
-        partition->proxy_args[arg++] = HYDU_strdup("--proxy-port");
-        partition->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
+        partition->base->proxy_args[arg++] = HYDU_strdup("--proxy-port");
+        partition->base->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
 
-        partition->proxy_args[arg++] = HYDU_strdup("--pmi-port-str");
+        partition->base->proxy_args[arg++] = HYDU_strdup("--pmi-port-str");
         if (handle.pm_env)
-            partition->proxy_args[arg++] = HYDU_strdup(pmi_port_str);
+            partition->base->proxy_args[arg++] = HYDU_strdup(pmi_port_str);
         else
-            partition->proxy_args[arg++] = HYDU_strdup("HYDRA_NULL");
+            partition->base->proxy_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
-        partition->proxy_args[arg++] = HYDU_strdup("--binding");
-        partition->proxy_args[arg++] = HYDU_int_to_str(handle.binding);
+        partition->base->proxy_args[arg++] = HYDU_strdup("--binding");
+        partition->base->proxy_args[arg++] = HYDU_int_to_str(handle.binding);
         if (handle.user_bind_map)
-            partition->proxy_args[arg++] = HYDU_strdup(handle.user_bind_map);
+            partition->base->proxy_args[arg++] = HYDU_strdup(handle.user_bind_map);
         else if (partition->user_bind_map)
-            partition->proxy_args[arg++] = HYDU_strdup(partition->user_bind_map);
+            partition->base->proxy_args[arg++] = HYDU_strdup(partition->user_bind_map);
         else
-            partition->proxy_args[arg++] = HYDU_strdup("HYDRA_NULL");
+            partition->base->proxy_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
         /* Pass the global environment separately, instead of for each
          * executable, as an optimization */
-        partition->proxy_args[arg++] = HYDU_strdup("--global-env");
+        partition->base->proxy_args[arg++] = HYDU_strdup("--global-env");
         for (i = 0, env = handle.system_env; env; env = env->next, i++);
         for (env = handle.prop_env; env; env = env->next, i++);
-        partition->proxy_args[arg++] = HYDU_int_to_str(i);
-        partition->proxy_args[arg++] = NULL;
-        HYDU_list_append_env_to_str(handle.system_env, partition->proxy_args);
-        HYDU_list_append_env_to_str(handle.prop_env, partition->proxy_args);
+        partition->base->proxy_args[arg++] = HYDU_int_to_str(i);
+        partition->base->proxy_args[arg++] = NULL;
+        HYDU_list_append_env_to_str(handle.system_env, partition->base->proxy_args);
+        HYDU_list_append_env_to_str(handle.prop_env, partition->base->proxy_args);
 
         /* Pass the segment information */
         for (segment = partition->segment_list; segment; segment = segment->next) {
-            arg = HYDU_strlist_lastidx(partition->proxy_args);
-            partition->proxy_args[arg++] = HYDU_strdup("--segment");
+            arg = HYDU_strlist_lastidx(partition->base->proxy_args);
+            partition->base->proxy_args[arg++] = HYDU_strdup("--segment");
 
-            partition->proxy_args[arg++] = HYDU_strdup("--segment-start-pid");
-            partition->proxy_args[arg++] = HYDU_int_to_str(segment->start_pid);
+            partition->base->proxy_args[arg++] = HYDU_strdup("--segment-start-pid");
+            partition->base->proxy_args[arg++] = HYDU_int_to_str(segment->start_pid);
 
-            partition->proxy_args[arg++] = HYDU_strdup("--segment-proc-count");
-            partition->proxy_args[arg++] = HYDU_int_to_str(segment->proc_count);
-            partition->proxy_args[arg++] = NULL;
+            partition->base->proxy_args[arg++] = HYDU_strdup("--segment-proc-count");
+            partition->base->proxy_args[arg++] = HYDU_int_to_str(segment->proc_count);
+            partition->base->proxy_args[arg++] = NULL;
         }
 
         /* Now pass the local executable information */
         for (exec = partition->exec_list; exec; exec = exec->next) {
-            arg = HYDU_strlist_lastidx(partition->proxy_args);
-            partition->proxy_args[arg++] = HYDU_strdup("--exec");
+            arg = HYDU_strlist_lastidx(partition->base->proxy_args);
+            partition->base->proxy_args[arg++] = HYDU_strdup("--exec");
 
-            partition->proxy_args[arg++] = HYDU_strdup("--exec-proc-count");
-            partition->proxy_args[arg++] = HYDU_int_to_str(exec->proc_count);
-            partition->proxy_args[arg++] = NULL;
+            partition->base->proxy_args[arg++] = HYDU_strdup("--exec-proc-count");
+            partition->base->proxy_args[arg++] = HYDU_int_to_str(exec->proc_count);
+            partition->base->proxy_args[arg++] = NULL;
 
-            arg = HYDU_strlist_lastidx(partition->proxy_args);
-            partition->proxy_args[arg++] = HYDU_strdup("--exec-local-env");
+            arg = HYDU_strlist_lastidx(partition->base->proxy_args);
+            partition->base->proxy_args[arg++] = HYDU_strdup("--exec-local-env");
             for (i = 0, env = exec->prop_env; env; env = env->next, i++);
-            partition->proxy_args[arg++] = HYDU_int_to_str(i);
-            partition->proxy_args[arg++] = NULL;
-            HYDU_list_append_env_to_str(exec->prop_env, partition->proxy_args);
+            partition->base->proxy_args[arg++] = HYDU_int_to_str(i);
+            partition->base->proxy_args[arg++] = NULL;
+            HYDU_list_append_env_to_str(exec->prop_env, partition->base->proxy_args);
 
-            HYDU_list_append_strlist(exec->exec, partition->proxy_args);
+            HYDU_list_append_strlist(exec->exec, partition->base->proxy_args);
 
             process_id += exec->proc_count;
         }
 
         if (handle.debug) {
             HYDU_Debug("Executable passed to the bootstrap: ");
-            HYDU_print_strlist(partition->proxy_args);
+            HYDU_print_strlist(partition->base->proxy_args);
         }
     }
 
@@ -222,9 +221,9 @@ static HYD_Status launch_procs_in_runtime_mode(void)
     HYD_Status status = HYD_SUCCESS;
 
     /* For each active partition, get the appropriate sockaddr to connect to */
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next) {
-        status = HYDU_sock_gethostbyname(partition->name, &partition->sa, handle.proxy_port);
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        status = HYDU_sock_gethostbyname(partition->base->name, &partition->sa,
+                                         handle.proxy_port);
         HYDU_ERR_POP(status, "unable to get sockaddr information\n");
     }
 
@@ -255,35 +254,35 @@ static HYD_Status boot_proxies(int launch_in_foreground)
 
     handle.one_pass_count = 0;
     /* For each partition, get the appropriate sockaddr to connect to & find one pass cnt */
-    for (partition = handle.partition_list; partition; partition = partition->next) {
-        status = HYDU_sock_gethostbyname(partition->name, &partition->sa, handle.proxy_port);
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        status = HYDU_sock_gethostbyname(partition->base->name, &partition->sa,
+                                         handle.proxy_port);
         HYDU_ERR_POP(status, "unable to get sockaddr information\n");
         handle.one_pass_count += partition->one_pass_count;
     }
 
     /* Create the arguments list for each proxy */
-    for (partition = handle.partition_list; partition; partition = partition->next) {
-
-        arg = HYDU_strlist_lastidx(partition->proxy_args);
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        arg = HYDU_strlist_lastidx(partition->base->proxy_args);
         i = 0;
         path_str[i++] = HYDU_strdup(handle.base_path);
         path_str[i++] = HYDU_strdup("pmi_proxy");
         path_str[i] = NULL;
-        status = HYDU_str_alloc_and_join(path_str, &partition->proxy_args[arg++]);
+        status = HYDU_str_alloc_and_join(path_str, &partition->base->proxy_args[arg++]);
         HYDU_ERR_POP(status, "unable to join strings\n");
         HYDU_free_strlist(path_str);
 
-        partition->proxy_args[arg++] = HYDU_strdup("--persistent-mode");
-        partition->proxy_args[arg++] = HYDU_strdup("--proxy-port");
-        partition->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
+        partition->base->proxy_args[arg++] = HYDU_strdup("--persistent-mode");
+        partition->base->proxy_args[arg++] = HYDU_strdup("--proxy-port");
+        partition->base->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
         if (launch_in_foreground) {
-            partition->proxy_args[arg++] = HYDU_strdup("--proxy-foreground");
+            partition->base->proxy_args[arg++] = HYDU_strdup("--proxy-foreground");
         }
-        partition->proxy_args[arg++] = NULL;
+        partition->base->proxy_args[arg++] = NULL;
 
         if (handle.debug) {
             HYDU_Debug("Executable passed to the bootstrap: ");
-            HYDU_print_strlist(partition->proxy_args);
+            HYDU_print_strlist(partition->base->proxy_args);
         }
     }
 
@@ -310,16 +309,17 @@ static HYD_Status shutdown_proxies(void)
     HYD_Status status = HYD_SUCCESS;
 
     /* For each partition, get the appropriate sockaddr to connect to */
-    for (partition = handle.partition_list; partition; partition = partition->next) {
-        status = HYDU_sock_gethostbyname(partition->name, &partition->sa, handle.proxy_port);
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        status = HYDU_sock_gethostbyname(partition->base->name, &partition->sa,
+                                         handle.proxy_port);
         HYDU_ERR_POP(status, "unable to get sockaddr information\n");
     }
 
-    for (partition = handle.partition_list; partition; partition = partition->next) {
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         status = HYDU_sock_connect(partition->sa, &fd);
         if (status != HYD_SUCCESS) {
             /* Don't abort. Try to shutdown as many proxies as possible */
-            HYDU_Error_printf("Unable to connect to proxy at %s\n", partition->name);
+            HYDU_Error_printf("Unable to connect to proxy at %s\n", partition->base->name);
             continue;
         }
 
@@ -345,9 +345,9 @@ static HYD_Status launch_procs_in_persistent_mode(void)
     HYD_Status status = HYD_SUCCESS;
 
     /* For each active partition, get the appropriate sockaddr to connect to */
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next) {
-        status = HYDU_sock_gethostbyname(partition->name, &partition->sa, handle.proxy_port);
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        status = HYDU_sock_gethostbyname(partition->base->name, &partition->sa,
+                                         handle.proxy_port);
         HYDU_ERR_POP(status, "unable to get sockaddr information\n");
     }
 
@@ -361,8 +361,7 @@ static HYD_Status launch_procs_in_persistent_mode(void)
     HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
 
     len = 0;
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next)
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
         len++;
 
     HYDU_CALLOC(thread_context, struct HYD_Thread_context *, len,
@@ -372,15 +371,13 @@ static HYD_Status launch_procs_in_persistent_mode(void)
                             "Unable to allocate memory for thread context\n");
 
     id = 0;
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next) {
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         HYDU_create_thread(launch_helper, (void *) partition, &thread_context[id]);
         id++;
     }
 
     id = 0;
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next) {
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         HYDU_join_thread(thread_context[id]);
 
         status = HYD_DMX_register_fd(1, &partition->control_fd, HYD_STDOUT, partition,
@@ -495,9 +492,8 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
             /* Check to see if there's any open read socket left; if
              * there are, we will just wait for more events. */
             sockets_open = 0;
-            for (partition = handle.partition_list; partition && partition->exec_list;
-                 partition = partition->next) {
-                if (partition->out != -1 || partition->err != -1) {
+            FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+                if (partition->base->out != -1 || partition->base->err != -1) {
                     sockets_open++;
                     break;
                 }
@@ -521,8 +517,7 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
             do {
                 /* Check if the exit status has already arrived */
                 all_procs_exited = 1;
-                for (partition = handle.partition_list; partition && partition->exec_list;
-                     partition = partition->next) {
+                FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
                     if (partition->exit_status == -1) {
                         all_procs_exited = 0;
                         break;

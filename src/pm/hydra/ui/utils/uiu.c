@@ -36,7 +36,6 @@ void HYD_UIU_init_params(void)
     handle.prop = HYD_ENV_PROP_UNSET;
     handle.prop_env = NULL;
 
-    handle.in = -1;
     handle.stdin_cb = NULL;
     handle.stdout_cb = NULL;
     handle.stderr_cb = NULL;

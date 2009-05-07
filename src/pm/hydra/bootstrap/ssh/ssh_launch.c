@@ -31,10 +31,7 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
      * they want launched. Without this functionality, the proxy
      * cannot use this and will have to perfom its own launch. */
     process_id = 0;
-    for (partition = handle.partition_list;
-         partition && !HYDU_strlist_is_empty(partition->proxy_args);
-         partition = partition->next) {
-
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         /* Setup the executable arguments */
         arg = 0;
         if (handle.bootstrap_exec)
@@ -51,18 +48,20 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
             client_arg[arg++] = HYDU_strdup("-x");
 
         /* ssh does not support any partition names other than host names */
-        client_arg[arg++] = HYDU_strdup(partition->name);
+        client_arg[arg++] = HYDU_strdup(partition->base->name);
 
-        for (i = 0; partition->proxy_args[i]; i++)
-            client_arg[arg++] = HYDU_strdup(partition->proxy_args[i]);
+        for (i = 0; partition->base->proxy_args[i]; i++)
+            client_arg[arg++] = HYDU_strdup(partition->base->proxy_args[i]);
 
         client_arg[arg++] = NULL;
+        HYDU_print_strlist(client_arg);
 
         /* The stdin pointer will be some value for process_id 0; for
          * everyone else, it's NULL. */
         status = HYDU_create_process(client_arg, NULL,
-                                     (process_id == 0 ? &handle.in : NULL),
-                                     &partition->out, &partition->err, &partition->pid, -1);
+                                     (process_id == 0 ? &partition->base->in : NULL),
+                                     &partition->base->out, &partition->base->err,
+                                     &partition->base->pid, -1);
         HYDU_ERR_POP(status, "create process returned error\n");
 
         for (arg = 0; client_arg[arg]; arg++)

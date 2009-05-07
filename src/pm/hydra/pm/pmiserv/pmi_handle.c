@@ -239,7 +239,7 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
 
     seglist_head = NULL;
     node_id = -1;
-    for (partition = handle.partition_list; partition; partition = partition->next) {
+    FORALL_PARTITIONS(partition, handle.partition_list) {
         node_id++;
         for (segment = partition->segment_list; segment; segment = segment->next) {
             HYDU_MALLOC(seg, struct segment *, sizeof(struct segment), status);
@@ -376,7 +376,7 @@ static struct HYD_PMCD_pmi_node *find_node(HYD_PMCD_pmi_pg_t * pg, int rank)
     srank = rank % handle.one_pass_count;
 
     node_id = 0;
-    for (partition = handle.partition_list; partition; partition = partition->next) {
+    FORALL_PARTITIONS(partition, handle.partition_list) {
         for (segment = partition->segment_list; segment; segment = segment->next) {
             if ((srank >= segment->start_pid) &&
                 (srank < (segment->start_pid + segment->proc_count))) {
@@ -487,8 +487,7 @@ HYD_Status HYD_PMCD_pmi_init(void)
 
     /* Find the number of processes in the PG */
     pg_list->num_subgroups = 0;
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next)
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
         for (exec = partition->exec_list; exec; exec = exec->next)
             pg_list->num_subgroups += exec->proc_count;
 

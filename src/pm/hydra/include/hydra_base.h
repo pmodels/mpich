@@ -166,9 +166,24 @@ struct HYD_Thread_context {
     pthread_t thread;
 };
 
+struct HYD_Partition_base {
+    char *name;
+    char *proxy_args[HYD_NUM_TMP_STRINGS];      /* Full argument list */
+
+    int partition_id;
+    int active;
+
+    int pid;
+    int in;                     /* stdin is only valid for partition_id 0 */
+    int out;
+    int err;
+
+    struct HYD_Partition_base *next;  /* Unused */
+};
+
 /* Partition information */
 struct HYD_Partition {
-    char *name;
+    struct HYD_Partition_base *base;
     struct sockaddr_in sa;
 
     char *user_bind_map;
@@ -183,12 +198,8 @@ struct HYD_Partition {
      * partition, but this can be easily extended later. We will also
      * need to give different ports for the proxies to listen on in
      * that case. */
-    int pid;
-    int out;
-    int err;
     int exit_status;
     int control_fd;
-    char *proxy_args[HYD_NUM_TMP_STRINGS];      /* Full argument list */
 
     struct HYD_Partition *next;
 };

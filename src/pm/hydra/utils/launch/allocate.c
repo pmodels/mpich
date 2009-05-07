@@ -6,6 +6,40 @@
 
 #include "hydra_utils.h"
 
+static HYD_Status alloc_partition_base(struct HYD_Partition_base **base)
+{
+    static partition_id = 0;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_MALLOC(*base, struct HYD_Partition_base *, sizeof(struct HYD_Partition_base),
+                status);
+
+    (*base)->name = NULL;
+    (*base)->pid = -1;
+    (*base)->out = -1;
+    (*base)->err = -1;
+
+    (*base)->partition_id = partition_id++;
+    (*base)->active = 0;
+
+    (*base)->proxy_args[0] = NULL;
+
+fn_exit:
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+
+static void free_partition_base(struct HYD_Partition_base *base)
+{
+    if (base->name)
+        HYDU_FREE(base->name);
+    HYDU_free_strlist(base->proxy_args);
+
+    HYDU_FREE(base);
+}
+
 HYD_Status HYDU_alloc_partition(struct HYD_Partition **partition)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -13,17 +47,15 @@ HYD_Status HYDU_alloc_partition(struct HYD_Partition **partition)
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(*partition, struct HYD_Partition *, sizeof(struct HYD_Partition), status);
-    (*partition)->name = NULL;
+
+    alloc_partition_base(&((*partition)->base));
+
     (*partition)->user_bind_map = NULL;
     (*partition)->segment_list = NULL;
     (*partition)->one_pass_count = 0;
 
-    (*partition)->pid = -1;
-    (*partition)->out = -1;
-    (*partition)->err = -1;
     (*partition)->exit_status = -1;
     (*partition)->control_fd = -1;
-    (*partition)->proxy_args[0] = NULL;
 
     (*partition)->exec_list = NULL;
     (*partition)->next = NULL;
@@ -97,7 +129,8 @@ void HYDU_free_partition_list(struct HYD_Partition *partition_list)
     while (partition) {
         tpartition = partition->next;
 
-        HYDU_FREE(partition->name);
+        free_partition_base(partition->base);
+
         if (partition->user_bind_map)
             HYDU_FREE(partition->user_bind_map);
 
@@ -121,8 +154,6 @@ void HYDU_free_partition_list(struct HYD_Partition *partition_list)
             HYDU_FREE(exec);
             exec = texec;
         }
-
-        HYDU_free_strlist(partition->proxy_args);
 
         HYDU_FREE(partition);
         partition = tpartition;
@@ -167,13 +198,13 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
         status = HYDU_alloc_partition(partition_list);
         HYDU_ERR_POP(status, "Unable to alloc partition\n");
         (*partition_list)->segment_list = segment;
-        (*partition_list)->name = HYDU_strdup(name);
+        (*partition_list)->base->name = HYDU_strdup(name);
         (*partition_list)->one_pass_count += segment->proc_count;
     }
     else {
         partition = *partition_list;
         while (partition) {
-            if (strcmp(partition->name, name) == 0) {
+            if (strcmp(partition->base->name, name) == 0) {
                 if (partition->segment_list == NULL)
                     partition->segment_list = segment;
                 else {
@@ -189,8 +220,9 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
                 status = HYDU_alloc_partition(&partition->next);
                 HYDU_ERR_POP(status, "Unable to alloc partition\n");
                 partition->next->segment_list = segment;
-                partition->next->name = HYDU_strdup(name);
+                partition->next->base->name = HYDU_strdup(name);
                 partition->next->one_pass_count += segment->proc_count;
+                partition->base->next = partition->next->base;
                 break;
             }
             else {
@@ -264,7 +296,7 @@ HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
 
     if (*partition_list == NULL) {
         HYDU_alloc_partition(partition_list);
-        (*partition_list)->name = HYDU_strdup(name);
+        (*partition_list)->base->name = HYDU_strdup(name);
 
         x = HYDU_strdup(map);
         count = num_procs - count_elements(x, ",");
@@ -275,7 +307,7 @@ HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
     else {
         partition = *partition_list;
         while (partition) {
-            if (strcmp(partition->name, name) == 0) {
+            if (strcmp(partition->base->name, name) == 0) {
                 /* Found a partition with the same name; append */
                 if (partition->user_bind_map == NULL) {
                     x = HYDU_strdup(map);
@@ -305,7 +337,8 @@ HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
             }
             else if (partition->next == NULL) {
                 HYDU_alloc_partition(&partition->next);
-                partition->next->name = HYDU_strdup(name);
+                partition->base->next = partition->next->base;
+                partition->next->base->name = HYDU_strdup(name);
                 partition->next->user_bind_map = HYDU_strdup(map);
                 break;
             }
@@ -359,7 +392,7 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
 
     if (!strcmp(host_file, "HYDRA_USE_LOCALHOST")) {
         HYDU_alloc_partition(&(*partition_list));
-        (*partition_list)->name = HYDU_strdup("localhost");
+        (*partition_list)->base->name = HYDU_strdup("localhost");
         (*partition_list)->one_pass_count = 1;
 
         HYDU_alloc_partition_segment(&((*partition_list)->segment_list));

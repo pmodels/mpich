@@ -190,11 +190,6 @@ int HYDU_strlist_lastidx(char **strlist)
     return i;
 }
 
-int HYDU_strlist_is_empty(char **strlist)
-{
-    return (strlist[0] == NULL);
-}
-
 char **HYDU_str_to_strlist(char *str)
 {
     int argc = 0;

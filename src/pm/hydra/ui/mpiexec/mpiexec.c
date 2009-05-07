@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 {
     struct HYD_Partition *partition;
     int exit_status = 0;
-    int timeout, stdin_fd;
+    int timeout;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -87,6 +87,21 @@ int main(int argc, char **argv)
 
     if (handle.debug)
         HYD_UIU_print_params();
+
+    /* Figure out what the active partitions are: in RUNTIME and
+     * PERSISTENT modes, only partitions which have an executable are
+     * active. In BOOT, BOOT_FOREGROUND and SHUTDOWN modes, all
+     * partitions are active. */
+    if (handle.launch_mode == HYD_LAUNCH_RUNTIME ||
+        handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
+        for (partition = handle.partition_list; partition && partition->exec_list;
+             partition = partition->next)
+            partition->base->active = 1;
+    }
+    else {
+        for (partition = handle.partition_list; partition; partition = partition->next)
+            partition->base->active = 1;
+    }
 
     HYDU_time_set(&handle.start, NULL); /* NULL implies right now */
     if (getenv("MPIEXEC_TIMEOUT"))
@@ -121,28 +136,27 @@ int main(int argc, char **argv)
     }
 
     /* Setup stdout/stderr/stdin handlers */
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next) {
-        status = HYD_DMX_register_fd(1, &partition->out, HYD_STDOUT, NULL,
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        status = HYD_DMX_register_fd(1, &partition->base->out, HYD_STDOUT, NULL,
                                      HYD_UII_mpx_stdout_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-        status = HYD_DMX_register_fd(1, &partition->err, HYD_STDOUT, NULL,
+        status = HYD_DMX_register_fd(1, &partition->base->err, HYD_STDOUT, NULL,
                                      HYD_UII_mpx_stderr_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
-    status = HYDU_sock_set_nonblock(handle.in);
+    status = HYDU_sock_set_nonblock(handle.partition_list->base->in);
     HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
-    stdin_fd = 0;
-    status = HYDU_sock_set_nonblock(stdin_fd);
+    status = HYDU_sock_set_nonblock(0);
     HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
     handle.stdin_buf_count = 0;
     handle.stdin_buf_offset = 0;
 
-    status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, NULL, HYD_UII_mpx_stdin_cb);
+    status = HYD_DMX_register_fd(1, &handle.partition_list->base->in, HYD_STDIN, NULL,
+                                 HYD_UII_mpx_stdin_cb);
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
 
@@ -152,8 +166,7 @@ int main(int argc, char **argv)
 
     /* Check for the exit status for all the processes */
     exit_status = 0;
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next)
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
         exit_status |= partition->exit_status;
 
     /* Call finalize functions for lower layers to cleanup their resources */

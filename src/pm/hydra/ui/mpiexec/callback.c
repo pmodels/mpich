@@ -25,14 +25,13 @@ static HYD_Status close_fd(int fd)
     close(fd);
 
     /* Find the FD in the handle and remove it. */
-    for (partition = handle.partition_list; partition && partition->exec_list;
-         partition = partition->next) {
-        if (partition->out == fd) {
-            partition->out = -1;
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        if (partition->base->out == fd) {
+            partition->base->out = -1;
             goto fn_exit;
         }
-        if (partition->err == fd) {
-            partition->err = -1;
+        if (partition->base->err == fd) {
+            partition->base->err = -1;
             goto fn_exit;
         }
     }
@@ -108,18 +107,16 @@ HYD_Status HYD_UII_mpx_stdin_cb(int fd, HYD_Event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_stdin_cb(handle.in, events, 0, handle.stdin_tmp_buf,
+    status = HYDU_sock_stdin_cb(fd, events, 0, handle.stdin_tmp_buf,
                                 &handle.stdin_buf_count, &handle.stdin_buf_offset, &closed);
     HYDU_ERR_POP(status, "stdin callback error\n");
 
     if (closed) {
+        /* Close the input handler for the process, so it knows that
+         * we got a close event */
         status = close_fd(fd);
         HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (errno: %d)\n",
                              fd, errno);
-
-        /* Close the input handler for the process, so it knows that
-         * we got a close event */
-        close(handle.in);
     }
 
   fn_exit:

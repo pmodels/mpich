@@ -234,7 +234,7 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
     /* FIXME: Instead of doing this from this process itself, fork a
      * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
-    for (partition = handle.partition_list; partition; partition = partition->next) {
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         /* We only "try" to connect here, since the proxy might have
          * already exited and the connect might fail. */
         status = HYDU_sock_tryconnect(partition->sa, &fd);

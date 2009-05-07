@@ -11,6 +11,13 @@
 #include "hydra_base.h"
 #include "hydra_utils.h"
 
+#define FORALL_ACTIVE_PARTITIONS(partition, partition_list)    \
+    for ((partition) = (partition_list); (partition) && (partition)->base->active; \
+         (partition) = (partition)->next)
+
+#define FORALL_PARTITIONS(partition, partition_list)    \
+    for ((partition) = (partition_list); (partition); (partition) = (partition)->next)
+
 struct HYD_Handle_ {
     char *base_path;
     int proxy_port;
@@ -37,7 +44,6 @@ struct HYD_Handle_ {
     HYD_Env_prop_t prop;
     HYD_Env_t *prop_env;
 
-    int in;
      HYD_Status(*stdin_cb) (int fd, HYD_Event_t events, void *userp);
      HYD_Status(*stdout_cb) (int fd, HYD_Event_t events, void *userp);
      HYD_Status(*stderr_cb) (int fd, HYD_Event_t events, void *userp);

@@ -119,8 +119,7 @@ HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_stdout_cb(fd, events, HYD_PMCD_pmi_proxy_params.upstream.out,
-                                 &closed);
+    status = HYDU_sock_stdout_cb(fd, events, HYD_PMCD_pmi_proxy_params.upstream.out, &closed);
     HYDU_ERR_POP(status, "stdout callback error\n");
 
     if (closed) {
@@ -151,8 +150,7 @@ HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_stdout_cb(fd, events, HYD_PMCD_pmi_proxy_params.upstream.err,
-                                 &closed);
+    status = HYDU_sock_stdout_cb(fd, events, HYD_PMCD_pmi_proxy_params.upstream.err, &closed);
     HYDU_ERR_POP(status, "stdout callback error\n");
 
     if (closed) {
