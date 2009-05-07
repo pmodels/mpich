@@ -37,6 +37,9 @@
    processes don't try to send/recv to/from the same process at the
    same time. 
 
+   *** Modification: We post only a small number of isends and irecvs 
+   at a time and wait on them as suggested by Tony Lad. ***
+
    Possible improvements: 
 
    End Algorithm: MPI_Alltoallw
@@ -62,6 +65,7 @@ int MPIR_Alltoallw (
     int dst, rank;
     MPI_Comm comm;
     int outstanding_requests;
+    int ii, ss, bblock;
 
     MPIU_CHKLMEM_DECL(2);
     
@@ -72,58 +76,55 @@ int MPIR_Alltoallw (
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
-    MPIU_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*comm_size*sizeof(MPI_Status),  mpi_errno, "starray");
-    MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request*, 2*comm_size*sizeof(MPI_Request), mpi_errno, "reqarray");
+    bblock = MPIR_ALLTOALL_THROTTLE;
+    if (bblock == 0) bblock = comm_size;
 
-    outstanding_requests = 0;
-    for ( i=0; i<comm_size; i++ ) { 
-        dst = (rank+i) % comm_size;
-	if (recvcnts[dst]) {
-	    mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst], 
-				   recvcnts[dst], recvtypes[dst], dst,
-				   MPIR_ALLTOALLW_TAG, comm,
-				   &reqarray[outstanding_requests]);
-	    /* --BEGIN ERROR HANDLING-- */
-	    if (mpi_errno)
-	    {
-		mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-                goto fn_fail;
-	    }
-	    /* --END ERROR HANDLING-- */
+    MPIU_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray");
+    MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request*, 2*bblock*sizeof(MPI_Request), mpi_errno, "reqarray");
 
-	    outstanding_requests++;
-	}
-    }
+    /* post only bblock isends/irecvs at a time as suggested by Tony Lad */
+    for (ii=0; ii<comm_size; ii+=bblock) {
+        outstanding_requests = 0;
+        ss = comm_size-ii < bblock ? comm_size-ii : bblock;
 
-    for ( i=0; i<comm_size; i++ ) { 
-        dst = (rank+i) % comm_size;
-	if (sendcnts[dst]) {
-	    mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst], 
-				   sendcnts[dst], sendtypes[dst], dst,
-				   MPIR_ALLTOALLW_TAG, comm,
-				   &reqarray[outstanding_requests]);
-	    /* --BEGIN ERROR HANDLING-- */
-	    if (mpi_errno)
-	    {
-		mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-                goto fn_fail;
-	    }
-	    /* --END ERROR HANDLING-- */
-
-	    outstanding_requests++;
-	}
-    }
-
-    mpi_errno = NMPI_Waitall(outstanding_requests, reqarray, starray);
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno == MPI_ERR_IN_STATUS) {
-        for (i=0; i<outstanding_requests; i++) {
-            if (starray[i].MPI_ERROR != MPI_SUCCESS) 
-                mpi_errno = starray[i].MPI_ERROR;
+        /* do the communication -- post ss sends and receives: */
+        for ( i=0; i<ss; i++ ) { 
+            dst = (rank+i+ii) % comm_size;
+            if (recvcnts[dst]) {
+                mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst], 
+                                       recvcnts[dst], recvtypes[dst], dst,
+                                       MPIR_ALLTOALLW_TAG, comm,
+                                       &reqarray[outstanding_requests]);
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }  
+                
+                outstanding_requests++;
+            }
         }
+
+        for ( i=0; i<ss; i++ ) { 
+            dst = (rank-i-ii+comm_size) % comm_size;
+            if (sendcnts[dst]) {
+                mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst], 
+                                       sendcnts[dst], sendtypes[dst], dst,
+                                       MPIR_ALLTOALLW_TAG, comm,
+                                       &reqarray[outstanding_requests]);
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }  
+                
+                outstanding_requests++;
+            }
+        }
+
+        mpi_errno = NMPI_Waitall(outstanding_requests, reqarray, starray);
+
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno == MPI_ERR_IN_STATUS) {
+            for (i=0; i<outstanding_requests; i++) {
+                if (starray[i].MPI_ERROR != MPI_SUCCESS) 
+                    mpi_errno = starray[i].MPI_ERROR;
+            }
+        }
+        /* --END ERROR HANDLING-- */   
     }
-    /* --END ERROR HANDLING-- */   
 
 #ifdef FOO
     /* Use pairwise exchange algorithm. */
