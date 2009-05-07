@@ -44,6 +44,9 @@
    processes, so that all processes don't try to send/recv to/from the
    same process at the same time.
 
+   *** Modification: We post only a small number of isends and irecvs 
+   at a time and wait on them as suggested by Tony Lad. ***
+
    For long messages and power-of-two number of processes, we use a
    pairwise exchange algorithm, which takes p-1 steps. We
    calculate the pairs by using an exclusive-or algorithm:
@@ -386,9 +389,17 @@ int MPIR_Alltoall(
 
     else if (nbytes <= MPIR_ALLTOALL_MEDIUM_MSG) {  
         /* Medium-size message. Use isend/irecv with scattered
-           destinations */
+           destinations. Use Tony Lad's modification to post only
+           a small number of isends/irecvs at a time. */
+        int ii, ss, bblock;
 
-        reqarray = (MPI_Request *) MPIU_Malloc(2*comm_size*sizeof(MPI_Request));
+#define BBLOCK 4   /* temporary. move to mpiimpl.h 
+                      BBLOCK=0 posts all isends/irecvs */
+
+        bblock = BBLOCK; 
+        if (bblock == 0) bblock = comm_size;
+
+        reqarray = (MPI_Request *) MPIU_Malloc(2*bblock*sizeof(MPI_Request));
         /* --BEGIN ERROR HANDLING-- */
         if (!reqarray) {
             mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
@@ -396,7 +407,7 @@ int MPIR_Alltoall(
         }
         /* --END ERROR HANDLING-- */
 
-        starray = (MPI_Status *) MPIU_Malloc(2*comm_size*sizeof(MPI_Status));
+        starray = (MPI_Status *) MPIU_Malloc(2*bblock*sizeof(MPI_Status));
         /* --BEGIN ERROR HANDLING-- */
         if (!starray) {
             mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
@@ -404,37 +415,40 @@ int MPIR_Alltoall(
         }
         /* --END ERROR HANDLING-- */
 
-        /* do the communication -- post all sends and receives: */
-        for ( i=0; i<comm_size; i++ ) { 
-            dst = (rank+i) % comm_size;
-            mpi_errno = MPIC_Irecv((char *)recvbuf +
-                                  dst*recvcount*recvtype_extent, 
-                                  recvcount, recvtype, dst,
-                                  MPIR_ALLTOALL_TAG, comm,
-                                  &reqarray[i]);
-	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-        }
-
-        for ( i=0; i<comm_size; i++ ) { 
-            dst = (rank+i) % comm_size;
-            mpi_errno = MPIC_Isend((char *)sendbuf +
-                                   dst*sendcount*sendtype_extent, 
-                                   sendcount, sendtype, dst,
-                                   MPIR_ALLTOALL_TAG, comm,
-                                   &reqarray[i+comm_size]);
-	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-        }
-  
-        /* ... then wait for *all* of them to finish: */
-        mpi_errno = NMPI_Waitall(2*comm_size,reqarray,starray);
-	/* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno == MPI_ERR_IN_STATUS) {
-            for (j=0; j<2*comm_size; j++) {
-                if (starray[j].MPI_ERROR != MPI_SUCCESS) 
-                    mpi_errno = starray[j].MPI_ERROR;
+        for (ii=0; ii<comm_size; ii+=bblock) {
+            ss = comm_size-ii < bblock ? comm_size-ii : bblock;
+            /* do the communication -- post ss sends and receives: */
+            for ( i=0; i<ss; i++ ) { 
+                dst = (rank+i+ii) % comm_size;
+                mpi_errno = MPIC_Irecv((char *)recvbuf +
+                                       dst*recvcount*recvtype_extent, 
+                                       recvcount, recvtype, dst,
+                                       MPIR_ALLTOALL_TAG, comm,
+                                       &reqarray[i]);
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
             }
+
+            for ( i=0; i<ss; i++ ) { 
+                dst = (rank-i-ii+comm_size) % comm_size;
+                mpi_errno = MPIC_Isend((char *)sendbuf +
+                                       dst*sendcount*sendtype_extent, 
+                                       sendcount, sendtype, dst,
+                                       MPIR_ALLTOALL_TAG, comm,
+                                       &reqarray[i+ss]);
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            }
+  
+            /* ... then wait for them to finish: */
+            mpi_errno = NMPI_Waitall(2*ss,reqarray,starray);
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno == MPI_ERR_IN_STATUS) {
+                for (j=0; j<2*ss; j++) {
+                    if (starray[j].MPI_ERROR != MPI_SUCCESS) 
+                        mpi_errno = starray[j].MPI_ERROR;
+                }
+            }
+            /* --END ERROR HANDLING-- */
         }
-	/* --END ERROR HANDLING-- */
         MPIU_Free(starray);
         MPIU_Free(reqarray);
     }
