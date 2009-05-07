@@ -43,8 +43,8 @@ pollfd_t MPID_nem_tcp_g_lstn_plfd = {0};
    unused */
 static MPID_nem_tcp_vc_area *dummy_vc_area ATTRIBUTE((unused, used)) = NULL;
 
-#define MAX_SKIP_POLLS_INACTIVE (1<<22) /* something big */
-#define MAX_SKIP_POLLS_ACTIVE (128)     /* something small */
+#define MAX_SKIP_POLLS_INACTIVE (512) /* something bigger */
+#define MAX_SKIP_POLLS_ACTIVE (128)   /* something smaller */
 static int MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_INACTIVE;
 
 /* Debug function to dump the sockconn table.  This is intended to be
