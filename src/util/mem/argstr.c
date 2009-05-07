@@ -4,7 +4,10 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#include "mpiimpl.h"
+#include "mpichconf.h"
+#include "mpimem.h"
+#include "mpidbg.h"
+
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
 #endif

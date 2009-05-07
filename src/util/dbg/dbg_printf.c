@@ -12,7 +12,11 @@
  * MPIU_dump_dbg_memlog( stderr ) will print the contents of the file ring
  * to stderr.
  */
-#include "mpiimpl.h"
+
+#include "mpichconf.h"
+#include "mpimem.h"
+#include "mpidbg.h"
+
 #include <stdio.h>
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
@@ -316,8 +320,7 @@ void MPIU_dump_dbg_memlog_to_file(const char *filename)
     }
 }
 
-void MPIU_dump_dbg_memlog(FILE * fp)
-{
+void MPIU_dump_dbg_memlog(FILE * fp){
     if (dbg_memlog_count != 0)
     {
 	int ent;

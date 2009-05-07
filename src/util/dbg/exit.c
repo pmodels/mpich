@@ -4,7 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpiimpl.h"
+#include "mpichconf.h"
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
 
 void MPIU_Exit(int exit_code)
 {

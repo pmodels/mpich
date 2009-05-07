@@ -5,7 +5,9 @@
  */
 #ifndef MPIDBG_H_INCLUDED
 #define MPIDBG_H_INCLUDED
-
+#include <stdio.h>
+#include <stdarg.h>
+#include "mpibase.h"
 /*
  * Multilevel debugging and tracing macros.
  * The design is discussed at 
@@ -113,6 +115,33 @@ enum MPIU_DBG_CLASS { MPIU_DBG_PT2PT         = 0x1,
 
 extern int MPIU_DBG_ActiveClasses;
 extern int MPIU_DBG_MaxLevel;
+typedef enum MPIU_dbg_state_t
+{
+    MPIU_DBG_STATE_NONE = 0,
+    MPIU_DBG_STATE_UNINIT = 1,
+    MPIU_DBG_STATE_STDOUT = 2,
+    MPIU_DBG_STATE_MEMLOG = 4,
+    MPIU_DBG_STATE_FILE = 8
+}
+MPIU_dbg_state_t;
+
+int MPIU_dbg_init(int rank);
+int MPIU_dbg_printf(const char *str, ...) ATTRIBUTE((format(printf,1,2)));
+int MPIU_dbglog_printf(const char *str, ...) ATTRIBUTE((format(printf,1,2)));
+int MPIU_dbglog_vprintf(const char *str, va_list ap);
+void MPIU_dump_dbg_memlog_to_stdout(void);
+void MPIU_dump_dbg_memlog_to_file(const char *filename);
+void MPIU_dump_dbg_memlog(FILE * fp);
+
+extern MPIU_dbg_state_t MPIUI_dbg_state;
+extern FILE * MPIUI_dbg_fp;
+#define MPIU_dbglog_flush()				\
+{							\
+    if (MPIUI_dbg_state & MPIU_DBG_STATE_STDOUT)	\
+    {							\
+	fflush(stdout);					\
+    }							\
+}
 int MPIU_DBG_Outevent(const char *, int, int, int, const char *, ...) 
                                         ATTRIBUTE((format(printf,5,6)));
 int MPIU_DBG_Init( int *, char ***, int, int, int );

@@ -4,7 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpiimpl.h"
+#include "mpichconf.h"
+#include "mpimem.h"
 #include <string.h>
 
 /* FIXME: Delete this file (functionality switched to MPIU_DBG_MSG interface */

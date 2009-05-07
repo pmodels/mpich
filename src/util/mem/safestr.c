@@ -4,7 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpiimpl.h"
+#include "mpichconf.h"
+#include "mpimem.h"
 
 /* style: allow:sprintf:1 sig:0 */
 
