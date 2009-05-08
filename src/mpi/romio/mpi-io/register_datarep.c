@@ -54,7 +54,7 @@ int MPI_Register_datarep(char *name,
 			 MPI_Datarep_extent_function *extent_fn,
 			 void *state)
 {
-    int error_code, flag;
+    int error_code;
     ADIOI_Datarep *datarep;
     static char myname[] = "MPI_REGISTER_DATAREP";
 
