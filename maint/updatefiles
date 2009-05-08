@@ -777,7 +777,7 @@ fi
 # logic will delete the results of this actual autoreconf
 if test -e "openpa" ; then
     echo "running autoreconf on openpa"
-    (cd openpa && $autoreconf -vif)
+    (cd openpa && $autoreconf -vif) || exit 1
 fi
 
 if [ -f src/mpe2/maint/updatefiles -a "$do_build_configure" = "yes" ] ; then
