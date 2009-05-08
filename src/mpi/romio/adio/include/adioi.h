@@ -524,7 +524,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 			   view_state *my_mem_view_state_arr,
 			   view_state *agg_file_view_state_arr,
 			   view_state *client_file_view_state_arr);
-int init_view_state(int file_ptr_type,
+int ADIOI_init_view_state(int file_ptr_type,
 		    int nprocs, 
 		    view_state *view_state_arr,
 		    int op_type);
