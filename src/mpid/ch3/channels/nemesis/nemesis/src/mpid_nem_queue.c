@@ -33,9 +33,9 @@ void MPID_nem_dump_cell_mpich ( MPID_nem_cell_ptr_t cell, int master)
     fprintf(stdout,"Cell[%i  @ %p (rel %p), next @ %p (rel %p)]\n ",
 	    mark,
 	    cell,
-	    MPIDU_Atomic_load_ptr(&rel_cell.p),
+	    OPA_load_ptr(&rel_cell.p),
 	    MPID_NEM_REL_TO_ABS(cell->next),
-	    MPIDU_Atomic_load_ptr(&cell->next.p) );
+	    OPA_load_ptr(&cell->next.p) );
 
     fprintf(stdout,"%i  [Source:%i] [dest : %i] [dlen : %i] [seqno : %i]\n",
 	    mark,

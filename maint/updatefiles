@@ -179,12 +179,15 @@ if [ -n "$autoconfdir" ] ; then
     if [ -x $autoconfdir/autoconf -a -x $autoconfdir/autoheader ] ; then
         autoconf=$autoconfdir/autoconf
         autoheader=$autoconfdir/autoheader
+        autoreconf=$autoconfdir/autoreconf
 	# Simplemake looks in environment variables for the autoconf
 	# and autoheader to use
 	AUTOCONF=$autoconf
 	AUTOHEADER=$autoheader
+        AUTORECONF=$autoreconf
 	export AUTOCONF
 	export AUTOHEADER
+        export AUTORECONF
     else
         echo "Could not find executable autoconf and autoheader in $autoconfdir"
 	exit 1
@@ -192,6 +195,7 @@ if [ -n "$autoconfdir" ] ; then
 else
     autoconf=${AUTOCONF:-autoconf}
     autoheader=${AUTOHEADER:-autoheader}
+    autoreconf=${AUTORECONF:-autoreconf}
 fi
 #
 # Check that you have a working autoconf.  Autoconf 2.57 is not compatible with
@@ -504,7 +508,12 @@ if [ $do_makefiles = yes ] ; then
         exit 1
     fi
 fi
-#
+
+if test -e "openpa" ; then
+    echo "running autoreconf on openpa"
+    (cd openpa && $autoreconf -vif)
+fi
+
 # Create the configure files and run autoheader
 # Eventually, make this a test for find available.  Perhaps
 # find . -name configure.in > /dev/null 2>&1
@@ -601,6 +610,10 @@ if [ $do_build_configure = yes ] ; then
 		    builtConfigure=yes
 		    (cd $dir && $autoconf $acIncDirFlag . && rm -rf autom4te*.cache)
 		    continue
+                elif [ $dir = "./openpa" ] ; then
+                    # the autoreconf step above created the configure for openpa
+                    echo "openpa configure already created"
+                    continue
 	        fi
 	        # First, check for a configure target in Makefile.in
 	        if grep 'configure:' $dir/Makefile.in >/dev/null 2>&1 ; then

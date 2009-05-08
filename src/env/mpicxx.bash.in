@@ -33,6 +33,7 @@ exec_prefix=@exec_prefix@
 sysconfdir=@sysconfdir@
 includedir=@includedir@
 libdir=@libdir@
+opalibdir=@libdir@
 #
 # Default settings for compiler, flags, and libraries
 CXX="@CXX@"
@@ -196,9 +197,9 @@ fi
 # default, environment, configuration file (if any) and command-line
 # options (if any)
 if [ "$NEEDSPLIB" = yes ] ; then
-    mpilibs="-l$PMPILIBNAME -l$MPILIBNAME"
+    mpilibs="-l$PMPILIBNAME -l$MPILIBNAME -lopa"
 else
-    mpilibs="-l$MPILIBNAME"
+    mpilibs="-l$MPILIBNAME -lopa"
 fi
 cxxlibs=
 if [ "$MPICXXLIBNAME" != "$MPILIBNAME" ] ; then
@@ -244,7 +245,7 @@ if [ "$linking" = yes ] ; then
         # Prepend the path for the shared libraries to the library list
         shllibpath="$CXX_LINKPATH_SHL$libdir"
     fi
-    $Show $CXX $CXXFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir $shllibpath $cxxlibs $mpilibs $MPI_OTHERLIBS
+    $Show $CXX $CXXFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir -L$opalibdir $shllibpath $cxxlibs $mpilibs $MPI_OTHERLIBS
     rc=$?
 else
     $Show $CXX $CXXFLAGS "${allargs[@]}" -I$includedir

@@ -390,6 +390,72 @@ AC_CHECK_FUNCS(mkstemp)
 AC_CHECK_FUNCS(rand)
 AC_CHECK_FUNCS(srand)
 
+# ensure that atomic primitives are available
+AC_MSG_CHECKING([for OpenPA atomic primitive availability])
+AC_ARG_WITH(atomic-primitives, [--with-atomic-primitives - set to 'no' to permit
+                                atomic primitive emulation.  See the openpa
+                                directory for more info.],, with_atomic_primitives=not_specified)
+
+# Double check that we actually have a present and working OpenPA
+# configuration.  This must be AC_COMPILE_IFELSE instead of the stronger
+# AC_LINK_IFELSE because the OpenPA library will typically not be
+# completely built by this point.
+#
+# This test was taken from sanity.c in the OpenPA test suite.
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <opa_primitives.h> /* will include pthread.h if present and needed */
+]],[[
+    OPA_int_t a, b;
+    int c;
+#if defined(OPA_USE_LOCK_BASED_PRIMITIVES)
+    pthread_mutex_t shm_lock;
+    OPA_Interprocess_lock_init(&shm_lock, 1/*isLeader*/);
+#endif
+
+    OPA_store(&a, 0);
+    OPA_store(&b, 1);
+    OPA_add(&a, 10);
+    OPA_assert(10 == OPA_load(&a));
+    c = OPA_cas_int(&a, 10, 11);
+    OPA_assert(10 == c);
+    c = OPA_swap_int(&a, OPA_load(&b));
+    OPA_assert(11 == c);
+    OPA_assert(1 == OPA_load(&a));
+]])],
+openpa_present_and_working=yes,
+openpa_present_and_working=no)
+
+if test "$openpa_present_and_working" = yes ; then
+    AC_PREPROC_IFELSE([
+#include <opa_primitives.h>
+#if defined(OPA_USE_LOCK_BASED_PRIMITIVES)
+#error "lock-based emulation is currently in use"
+#endif
+],using_emulated_atomics=no,using_emulated_atomics=yes)
+
+    if test "$using_emulated_atomics" = "yes" ; then
+        if test "$with_atomic_primitives" = "no" ; then
+            AC_MSG_RESULT([yes (emulated)])
+        else
+            # error
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([
+The nemesis channel was selected yet no native atomic primitives are
+available on this platform.  OpenPA can emulate atomic primitives using
+locks by specifying --with-atomic-primitives=no but performance will be
+very poor.  This override should only be specified for correctness
+testing purposes.])
+        fi
+    else
+        AC_MSG_RESULT([yes])
+    fi
+else
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([
+The nemesis channel was selected yet a set of working OpenPA headers
+were not found.  Please check the OpenPA configure step for errors.])
+fi
+
 # check how to allocate shared memory
 AC_ARG_WITH(shared-memory, [--with-shared-memory[=auto|sysv|mmap] - create shared memory using sysv or mmap (default is auto)],,
     with_shared_memory=auto)
@@ -545,9 +611,6 @@ AC_ARG_ENABLE(nemesis-lock-free-queues,
 if test "$enable_nemesis_lock_free_queues" = "yes" ; then
     AC_DEFINE(MPID_NEM_USE_LOCK_FREE_QUEUES, 1, [Define to enable lock-free communication queues])
 fi
-
-# Check for memory atomic instructions
-PAC_C_MEMATOMIC
 
 AC_SUBST(device_name)
 AC_SUBST(channel_name)

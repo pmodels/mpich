@@ -26,7 +26,7 @@
 #include "mpid_locksconf.h"
 
 /* XXX DJG TODO eliminate any atomic operations assembly in here and convert it
-   to using the MPIDU_Atomic_* functions. */
+   to using the OPA_* functions. */
 
 /* This is used to quote a name in a definition (see FUNCNAME/FCNAME below) */
 #ifndef MPIDI_QUOTE

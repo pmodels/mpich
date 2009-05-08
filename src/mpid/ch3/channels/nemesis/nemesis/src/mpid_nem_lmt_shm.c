@@ -81,7 +81,7 @@ typedef union
 {
     struct
     {
-        MPIDU_Atomic_t rank; /* MPIDU_Atomic_t is already volatile */
+        OPA_int_t rank; /* OPA_int_t is already volatile */
         volatile int remote_req_id;
         DBG_LMT(volatile int ctr;)
     } val;
@@ -178,7 +178,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_co
         for (i = 0; i < NUM_BUFS; ++i)
             vc_ch->lmt_copy_buf->len[i].val = 0;
 
-        MPIDU_Atomic_store(&vc_ch->lmt_copy_buf->owner_info.val.rank, NO_OWNER);
+        OPA_store(&vc_ch->lmt_copy_buf->owner_info.val.rank, NO_OWNER);
         vc_ch->lmt_copy_buf->owner_info.val.remote_req_id = MPI_REQUEST_NULL;
         DBG_LMT(vc_ch->lmt_copy_buf->owner_info.val.ctr = 0);
     }
@@ -248,7 +248,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
     if (vc_ch->lmt_copy_buf == NULL){
         mpi_errno = MPIU_SHMW_Hnd_deserialize(vc_ch->lmt_copy_buf_handle, r_cookie.MPID_IOV_BUF, strlen(r_cookie.MPID_IOV_BUF));
         if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
-        
+
         mpi_errno = MPID_nem_attach_shm_region(&vc_ch->lmt_copy_buf, vc_ch->lmt_copy_buf_handle);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "attached to remote copy_buf");
@@ -270,7 +270,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
 
             mpi_errno = MPIU_SHMW_Hnd_deserialize(vc_ch->lmt_copy_buf_handle, r_cookie.MPID_IOV_BUF, strlen(r_cookie.MPID_IOV_BUF));
             if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
-        
+
             mpi_errno = MPID_nem_attach_shm_region(&vc_ch->lmt_copy_buf, vc_ch->lmt_copy_buf_handle);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -335,7 +335,7 @@ static int get_next_req(MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_GET_NEXT_REQ);
 
-    prev_owner_rank = MPIDU_Atomic_cas_int(&copy_buf->owner_info.val.rank, NO_OWNER, MPIDI_Process.my_pg_rank);
+    prev_owner_rank = OPA_cas_int(&copy_buf->owner_info.val.rank, NO_OWNER, MPIDI_Process.my_pg_rank);
 
     if (prev_owner_rank == IN_USE || prev_owner_rank == MPIDI_Process.my_pg_rank)
     {
@@ -349,13 +349,13 @@ static int get_next_req(MPIDI_VC_t *vc)
     {
         int i;
         /* successfully grabbed idle copy buf */
-        MPIDU_Shm_write_barrier(); 
+        OPA_write_barrier();
         for (i = 0; i < NUM_BUFS; ++i)
             copy_buf->len[i].val = 0;
 
         DBG_LMT(++copy_buf->owner_info.val.ctr);
 
-        MPIDU_Shm_write_barrier();
+        OPA_write_barrier();
 
         LMT_SHM_Q_DEQUEUE(&vc_ch->lmt_queue, &vc_ch->lmt_active_lmt);
         copy_buf->owner_info.val.remote_req_id = vc_ch->lmt_active_lmt->req->ch.lmt_req_id;
@@ -368,7 +368,7 @@ static int get_next_req(MPIDI_VC_t *vc)
         /* remote side chooses next transfer */
         int i = 0;
 
-        MPIDU_Shm_read_barrier();
+        OPA_read_barrier();
         
         MPIU_DBG_STMT(CH3_CHANNEL, VERBOSE, if (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL)
                                                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "waiting for owner rank=%d", vc->pg_rank));
@@ -383,7 +383,7 @@ static int get_next_req(MPIDI_VC_t *vc)
             ++i;
         }
 
-        MPIDU_Shm_read_barrier();
+        OPA_read_barrier();
         LMT_SHM_Q_SEARCH_REMOVE(&vc_ch->lmt_queue, copy_buf->owner_info.val.remote_req_id, &vc_ch->lmt_active_lmt);
 
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "remote side owns buf.  local_req=%d", copy_buf->owner_info.val.remote_req_id);
@@ -399,7 +399,7 @@ static int get_next_req(MPIDI_VC_t *vc)
         /* found request, clear remote_req_id field to prevent this buffer from matching future reqs */
         copy_buf->owner_info.val.remote_req_id = MPI_REQUEST_NULL;
 
-        MPIDU_Atomic_store(&vc_ch->lmt_copy_buf->owner_info.val.rank, IN_USE);
+        OPA_store(&vc_ch->lmt_copy_buf->owner_info.val.rank, IN_USE);
     }
 
     req = vc_ch->lmt_active_lmt->req;
@@ -488,7 +488,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
             ++i;
         }
 
-        MPIDU_Shm_read_write_barrier();
+        OPA_read_write_barrier();
 
 
         /* we have a free buffer, fill it */
@@ -498,12 +498,12 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
             copy_limit = MPID_NEM_COPY_BUF_LEN;
         last = (data_sz - first <= copy_limit) ? data_sz : first + copy_limit;
 	MPID_Segment_pack(req->dev.segment_ptr, first, &last, (void *)copy_buf->buf[buf_num]); /* cast away volatile */
-        MPIDU_Shm_write_barrier();
+        OPA_write_barrier();
         copy_buf->len[buf_num].val = last - first;
 
         first = last;
         buf_num = (buf_num+1) % NUM_BUFS;
-        
+
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "sent data.  last=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, last, data_sz));        
     }
     while (last < data_sz);
@@ -547,9 +547,9 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     MPIDI_STATE_DECL(MPID_STATE_LMT_SHM_RECV_PROGRESS);
 
     MPIDI_FUNC_ENTER(MPID_STATE_LMT_SHM_RECV_PROGRESS);
-    
+
     DBG_LMT(MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
-                    
+
     copy_buf->receiver_present.val = TRUE;
 
     surfeit = vc_ch->lmt_surfeit;
@@ -578,7 +578,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                     vc_ch->lmt_buf_num = buf_num;
                     vc_ch->lmt_surfeit = surfeit;
                     *done = FALSE;
-                    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, first, data_sz));        
+                    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, first, data_sz));
                     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "Waiting on empty buffer %d", buf_num);
                     goto fn_exit;
                 }
@@ -587,7 +587,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
             ++i;
         }
 
-        MPIDU_Shm_read_barrier();
+        OPA_read_barrier();
 
         /* unpack data including any leftover from the previous buffer */
         src_buf = ((char *)copy_buf->buf[buf_num]) - surfeit; /* cast away volatile */
@@ -595,14 +595,14 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
 	MPID_Segment_unpack(req->dev.segment_ptr, first, &last, src_buf);
 
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "recvd data.  last=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, last, data_sz));        
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "recvd data.  last=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, last, data_sz));
 
         if (surfeit && buf_num > 0)
         {
             /* we had leftover data from the previous buffer, we can
                now mark that buffer as empty */
 
-            MPIDU_Shm_read_write_barrier();
+            OPA_read_write_barrier();
             copy_buf->len[(buf_num-1)].val = 0;
             /* Make sure we copied at least the leftover data from last time */
             MPIU_Assert(last - first > surfeit);
@@ -623,7 +623,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                 /* if we're wrapping back to buf 0, then we can copy it directly */
                 memcpy(((char *)copy_buf->buf[0]) - surfeit, surfeit_ptr, surfeit);
 
-                MPIDU_Shm_read_write_barrier();
+                OPA_read_write_barrier();
                 copy_buf->len[buf_num].val = 0;
             }
             else
@@ -632,7 +632,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                 memcpy(tmpbuf, surfeit_ptr, surfeit);
                 memcpy(((char *)copy_buf->buf[buf_num+1]) - surfeit, tmpbuf, surfeit);
             }
-            
+
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "copied leftover data");
         }
         else
@@ -640,7 +640,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
             /* all data was unpacked, we can mark this buffer as empty */
             surfeit = 0;
 
-            MPIDU_Shm_read_write_barrier();
+            OPA_read_write_barrier();
             copy_buf->len[buf_num].val = 0;
         }
 
@@ -653,8 +653,8 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
         copy_buf->len[i].val = 0;
 
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "completed request local_req=%d", req->handle);
-    MPIDU_Shm_write_barrier();
-    MPIDU_Atomic_store(&copy_buf->owner_info.val.rank, NO_OWNER);
+    OPA_write_barrier();
+    OPA_store(&copy_buf->owner_info.val.rank, NO_OWNER);
 
     *done = TRUE;
     MPIDI_CH3U_Request_complete(req);

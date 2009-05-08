@@ -10,6 +10,6 @@
 #include <mpichconf.h>
 #include <mpidi_ch3i_nemesis_conf.h>
 
-#include <mpidu_atomic_primitives.h>
+#include <opa_primitives.h>
 
 #endif /* MPID_NEM_ATOMICS_H */

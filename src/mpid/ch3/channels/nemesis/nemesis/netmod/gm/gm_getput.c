@@ -16,7 +16,7 @@ getput_callback (struct gm_port *p, void *completion_ctr, gm_status_t status)
 
     ++MPID_nem_module_gm_num_send_tokens;
 
-    MPIDU_Atomic_decr((int *)completion_ctr);
+    OPA_decr((int *)completion_ctr);
 }
 
 
@@ -39,7 +39,7 @@ MPID_nem_gm_get (void *target_p, void *source_p, int len, MPIDI_VC_t *source_vc,
     
     if (len == 0)
     {
-	MPIDU_Atomic_decr (completion_ctr);
+	OPA_decr (completion_ctr);
 	return 0;
     }
 #if 0
@@ -52,7 +52,7 @@ MPID_nem_gm_get (void *target_p, void *source_p, int len, MPIDI_VC_t *source_vc,
 	    gm_perror ("directcopy", status);
 	    exit (-1);
 	}
-	MPIDU_Atomic_decr (completion_ctr);
+	OPA_decr (completion_ctr);
     return 0;
     }
 #endif
@@ -97,7 +97,7 @@ MPID_nem_gm_put (void *target_p, void *source_p, int len, MPIDI_VC_t *target_vc,
     
     if (len == 0)
     {
-	MPIDU_Atomic_decr (completion_ctr);
+	OPA_decr (completion_ctr);
 	return 0;
     }
     

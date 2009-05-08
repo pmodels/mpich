@@ -35,6 +35,7 @@ sysconfdir=@sysconfdir@
 includedir=@includedir@
 modincdir=@modincdir@
 libdir=@libdir@
+opalibdir=@libdir@
 #
 # Default settings for compiler, flags, and libraries
 # Determined by a combination of environment variables and tests within
@@ -258,9 +259,9 @@ fi
 # such as the module objects and the routines defined by them
 # (MPI_SIZEOF is handled in lib${MPILIBNAME)f90, for example).
 if [ "$NEEDSPLIB" = yes ] ; then
-    mpilibs="-l${MPILIBNAME}f90 -l$PMPILIBNAME -l$MPILIBNAME"
+    mpilibs="-l${MPILIBNAME}f90 -l$PMPILIBNAME -l$MPILIBNAME -lopa"
 else
-    mpilibs="-l${MPILIBNAME}f90 -l$MPILIBNAME"
+    mpilibs="-l${MPILIBNAME}f90 -l$MPILIBNAME -lopa"
 fi
 #
 # Init with the ones needed by MPI
@@ -339,7 +340,7 @@ if [ "$linking" = yes ] ; then
         # Prepend the path for the shared libraries to the library list
         mpilibs="$F90_LINKPATH_SHL$libdir $mpilibs"
     fi
-    $Show $F90 $F90FLAGS $LDFLAGS "${allargs[@]}" $F90INCDIRS $F90MODDIRS -L$libdir $F90MODLIBS $mpilibs $MPI_OTHERLIBS
+    $Show $F90 $F90FLAGS $LDFLAGS "${allargs[@]}" $F90INCDIRS $F90MODDIRS -L$libdir -L$opalibdir $F90MODLIBS $mpilibs $MPI_OTHERLIBS
     rc=$?
 else
     $Show $F90 $F90FLAGS "${allargs[@]}" $F90INCDIRS $F90MODDIRS

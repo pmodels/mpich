@@ -1,6 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
+ *  (C) 2008 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
@@ -8,30 +8,33 @@
  * Originally contributed by Lawrence Stewart at SiCortex.
  */
 
-#ifndef MPIDU_ATOMICS_GCC_SICORTEX_H
-#define MPIDU_ATOMICS_GCC_SICORTEX_H
+#ifndef OPA_GCC_SICORTEX_H
+#define OPA_GCC_SICORTEX_H
 
-#define MPIDU_ATOMIC_UNIVERSAL_PRIMITIVE MPIDU_ATOMIC_LL_SC
+/* FIXME do these need alignment? */
+typedef struct { volatile int v;  } OPA_int_t;
+typedef struct { int * volatile v; } OPA_ptr_t;
 
-typedef struct { volatile int v;  } MPIDU_Atomic_t;
-typedef struct { int * volatile v; } MPIDU_Atomic_ptr_t;
-
-static inline int MPIDU_Atomic_load(MPIDU_Atomic_t *ptr)
+/* Aligned loads and stores are atomic. */
+static inline int OPA_load(OPA_int_t *ptr)
 {
     return ptr->v;
 }
 
-static inline void MPIDU_Atomic_store(MPIDU_Atomic_t *ptr, int val)
+/* Aligned loads and stores are atomic. */
+static inline void OPA_store(OPA_int_t *ptr, int val)
 {
     ptr->v = val;
 }
 
-static inline void *MPIDU_Atomic_load_ptr(MPIDU_Atomic_ptr_t *ptr)
+/* Aligned loads and stores are atomic. */
+static inline void *OPA_load_ptr(OPA_ptr_t *ptr)
 {
     return ptr->v;
 }
 
-static inline void MPIDU_Atomic_store_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
+/* Aligned loads and stores are atomic. */
+static inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
 {
     ptr->v = val;
 }
@@ -68,7 +71,7 @@ static inline void MPIDU_Atomic_store_ptr(MPIDU_Atomic_ptr_t *ptr, void *val)
  */
 
 /* Atomic increment of a 32 bit value, returning the old value */
-static __inline__ int shmemi_fetch_add_4(volatile int * v, int inc)
+static inline int OPA_shmemi_fetch_add_4(volatile int * v, int inc)
 {
         unsigned long result;
         if (ICE9A_LLSC_WAR) {
@@ -110,7 +113,7 @@ static __inline__ int shmemi_fetch_add_4(volatile int * v, int inc)
 }
 
 /* Atomic increment of a 64 bit value, returning the old value */
-static __inline__ long int shmemi_fetch_add_8(volatile long int * v, long int inc)
+static inline long int OPA_shmemi_fetch_add_8(volatile long int * v, long int inc)
 {
         unsigned long result;
         if (ICE9A_LLSC_WAR) {
@@ -152,7 +155,7 @@ static __inline__ long int shmemi_fetch_add_8(volatile long int * v, long int in
 }
 
 /* Atomic swap of a 32 bit value, returning the old contents */
-static __inline__ int shmemi_swap_4(volatile int * v, int new)
+static inline int OPA_shmemi_swap_4(volatile int * v, int val)
 {
         unsigned long result;
         if (ICE9A_LLSC_WAR) {
@@ -170,7 +173,7 @@ static __inline__ int shmemi_swap_4(volatile int * v, int new)
                 "       .set    reorder                                 \n"
                 "       .set    mips0                                   \n"
                 : "=&r" (result), "=&r" (temp), "=m" (*v)
-                : "r" (new)
+                : "r" (val)
                 : "memory");
         } else {
                 unsigned long temp;
@@ -186,7 +189,7 @@ static __inline__ int shmemi_swap_4(volatile int * v, int new)
                 "       .set    reorder                                 \n"
                 "       .set    mips0                                   \n"
                 : "=&r" (result), "=&r" (temp), "=m" (*v)
-                : "r" (new)
+                : "r" (val)
                 : "memory");
         }
 
@@ -194,7 +197,7 @@ static __inline__ int shmemi_swap_4(volatile int * v, int new)
 }
 
 /* Atomic swap of a 64 bit value, returning the old contents */
-static __inline__ long int shmemi_swap_8(volatile long int * v, long int new)
+static inline long int OPA_shmemi_swap_8(volatile long int * v, long int val)
 {
         unsigned long result;
         if (ICE9A_LLSC_WAR) {
@@ -212,7 +215,7 @@ static __inline__ long int shmemi_swap_8(volatile long int * v, long int new)
                 "       .set    reorder                                 \n"
                 "       .set    mips0                                   \n"
                 : "=&r" (result), "=&r" (temp), "=m" (*v)
-                : "r" (new)
+                : "r" (val)
                 : "memory");
         } else {
                 unsigned long temp;
@@ -228,7 +231,7 @@ static __inline__ long int shmemi_swap_8(volatile long int * v, long int new)
                 "       .set    reorder                                 \n"
                 "       .set    mips0                                   \n"
                 : "=&r" (result), "=&r" (temp), "=m" (*v)
-                : "r" (new)
+                : "r" (val)
                 : "memory");
         }
 
@@ -236,8 +239,8 @@ static __inline__ long int shmemi_swap_8(volatile long int * v, long int new)
 }
 
 /* Atomic compare and swap of a 32 bit value, returns the old value
- * but only does the store of the new value if the old value == expect */
-static __inline__ int shmemi_cswap_4(volatile int * v, int expect, int new)
+ * but only does the store of the val value if the old value == expect */
+static inline int OPA_shmemi_cswap_4(volatile int * v, int expect, int val)
 {
         unsigned long result;
         if (ICE9A_LLSC_WAR) {
@@ -257,7 +260,7 @@ static __inline__ int shmemi_cswap_4(volatile int * v, int expect, int new)
                 "1:                                                     \n"
                 "       .set    mips0                                   \n"
                 : "=&r" (result), "=&r" (temp), "=m" (*v)
-                : "r" (new), "Jr" (expect)
+                : "r" (val), "Jr" (expect)
                 : "memory");
         } else {
                 unsigned long temp;
@@ -275,7 +278,7 @@ static __inline__ int shmemi_cswap_4(volatile int * v, int expect, int new)
                 "1:                                                     \n"
                 "       .set    mips0                                   \n"
                 : "=&r" (result), "=&r" (temp), "=m" (*v)
-                : "r" (new), "Jr" (expect)
+                : "r" (val), "Jr" (expect)
                 : "memory");
         }
 
@@ -283,8 +286,8 @@ static __inline__ int shmemi_cswap_4(volatile int * v, int expect, int new)
 }
 
 /* Atomic compare and swap of a 64 bit value, returns the old value
- * but only does the store of the new value if the old value == expect */
-static __inline__ long int shmemi_cswap_8(volatile long int * v, long int expect, long int new)
+ * but only does the store of the val value if the old value == expect */
+static inline long int OPA_shmemi_cswap_8(volatile long int * v, long int expect, long int val)
 {
         unsigned long result;
         if (ICE9A_LLSC_WAR) {
@@ -304,7 +307,7 @@ static __inline__ long int shmemi_cswap_8(volatile long int * v, long int expect
                 "1:                                                     \n"
                 "       .set    mips0                                   \n"
                 : "=&r" (result), "=&r" (temp), "=m" (*v)
-                : "r" (new), "Jr" (expect)
+                : "r" (val), "Jr" (expect)
                 : "memory");
         } else {
                 unsigned long temp;
@@ -322,85 +325,83 @@ static __inline__ long int shmemi_cswap_8(volatile long int * v, long int expect
                 "1:                                                     \n"
                 "       .set    mips0                                   \n"
                 : "=&r" (result), "=&r" (temp), "=m" (*v)
-                : "r" (new), "Jr" (expect)
+                : "r" (val), "Jr" (expect)
                 : "memory");
         }
 
         return result;
 }
 
-#if !defined(_MIPS_SZPTR)
-#  error "_MIPS_SZPTR must be defined!"
-#endif
-
-
-static __inline__ void MPIDU_Atomic_add(MPIDU_Atomic_t *ptr, int val)
+static inline void OPA_add(OPA_int_t *ptr, int val)
 {
-    shmemi_fetch_add_4(&ptr->v, val);
+    OPA_shmemi_fetch_add_4(&ptr->v, val);
 }
 
-static __inline__ void *MPIDU_Atomic_cas_ptr(MPIDU_Atomic_ptr_t *ptr, void *oldv, void *newv)
+static inline void *OPA_cas_ptr(OPA_ptr_t *ptr, void *oldv, void *newv)
 {
-#if (_MIPS_SZPTR == 64)
-    return((int *) shmemi_cswap_8((volatile long int *) &ptr->v, (uintptr_t) oldv, (uintptr_t) newv));
+#if (OPA_SIZEOF_VOID_P == 8)
+    return((int *) OPA_shmemi_cswap_8((volatile long int *) &ptr->v, (uintptr_t) oldv, (uintptr_t) newv));
+#elif (OPA_SIZEOF_VOID_P == 4)
+    return((int *) OPA_shmemi_cswap_4((volatile int *) &ptr->v, (uintptr_t) oldv, (uintptr_t) newv));
 #else
-    return((int *) shmemi_cswap_4((volatile int *) &ptr->v, (uintptr_t) oldv, (uintptr_t) newv));
+#error "OPA_SIZEOF_VOID_P has an unexpected value :" OPA_QUOTE(OPA_SIZEOF_VOID_P);
 #endif
 }
 
-static __inline__ int MPIDU_Atomic_cas_int(MPIDU_Atomic_t *ptr, int oldv, int newv)
+static inline int OPA_cas_int(OPA_int_t *ptr, int oldv, int newv)
 {
-    return(shmemi_cswap_4(&ptr->v, oldv, newv));
+    return(OPA_shmemi_cswap_4(&ptr->v, oldv, newv));
 }
 
-static __inline__ void MPIDU_Atomic_decr(MPIDU_Atomic_t *ptr)
+static inline void OPA_decr(OPA_int_t *ptr)
 {
-    shmemi_fetch_add_4(&ptr->v, -1);
+    OPA_shmemi_fetch_add_4(&ptr->v, -1);
 }
 
-
-static __inline__ int MPIDU_Atomic_decr_and_test(MPIDU_Atomic_t *ptr)
+static inline int OPA_decr_and_test(OPA_int_t *ptr)
 {
-    int old = shmemi_fetch_add_4(&ptr->v, -1);
+    int old = OPA_shmemi_fetch_add_4(&ptr->v, -1);
     return (old == 1);
 }
 
-static __inline__ int MPIDU_Atomic_fetch_and_add(MPIDU_Atomic_t *ptr, int val)
+static inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
 {
-    return(shmemi_fetch_add_4(&ptr->v, val));
+    return(OPA_shmemi_fetch_add_4(&ptr->v, val));
 }
 
-static __inline__ int MPIDU_Atomic_fetch_and_decr(MPIDU_Atomic_t *ptr)
+static inline int OPA_fetch_and_decr(OPA_int_t *ptr)
 {
-    return(shmemi_fetch_add_4(&ptr->v, -1));
+    return(OPA_shmemi_fetch_add_4(&ptr->v, -1));
 }
 
-static __inline__ int MPIDU_Atomic_fetch_and_incr(MPIDU_Atomic_t *ptr)
+static inline int OPA_fetch_and_incr(OPA_int_t *ptr)
 {
-    return(shmemi_fetch_add_4(&ptr->v, 1));
+    return(OPA_shmemi_fetch_add_4(&ptr->v, 1));
 }
 
-static __inline__ void MPIDU_Atomic_incr(MPIDU_Atomic_t *ptr)
+static inline void OPA_incr(OPA_int_t *ptr)
 {
-    shmemi_fetch_add_4(&ptr->v, 1);
+    OPA_shmemi_fetch_add_4(&ptr->v, 1);
 }
 
-static __inline__ int *MPIDU_Atomic_swap_ptr(MPIDU_Atomic_ptr_t *ptr, int *val)
+static inline int *OPA_swap_ptr(OPA_ptr_t *ptr, int *val)
 {
-#if (_MIPS_SZPTR == 64)
-    return((int *) shmemi_swap_8((long int *) &ptr->v, (uintptr_t) val));
+#if (OPA_SIZEOF_VOID_P == 8)
+    return((int *) OPA_shmemi_swap_8((volatile long int *) &ptr->v, (uintptr_t) val));
+#elif (OPA_SIZEOF_VOID_P == 4)
+    return((int *) OPA_shmemi_swap_4((volatile int *) &ptr->v, (uintptr_t) val));
 #else
-    return((int *) shmemi_swap_4((int *) &ptr->v, (uintptr_t) val));
+#error "OPA_SIZEOF_VOID_P has an unexpected value :" OPA_QUOTE(OPA_SIZEOF_VOID_P);
 #endif
 }
 
-static __inline__ int MPIDU_Atomic_swap_int(MPIDU_Atomic_t *ptr, int val)
+static inline int OPA_swap_int(OPA_int_t *ptr, int val)
 {
-    return(shmemi_swap_4(&ptr->v, val));
+    return(OPA_shmemi_swap_4(&ptr->v, val));
 }
 
-#define MPIDU_Shm_write_barrier()      __asm__ __volatile__  ("sync" ::: "memory" )
-#define MPIDU_Shm_read_barrier()       __asm__ __volatile__  ("sync" ::: "memory" )
-#define MPIDU_Shm_read_write_barrier() __asm__ __volatile__  ("sync" ::: "memory" )
+#define OPA_write_barrier()      __asm__ __volatile__  ("sync" ::: "memory" )
+#define OPA_read_barrier()       __asm__ __volatile__  ("sync" ::: "memory" )
+#define OPA_read_write_barrier() __asm__ __volatile__  ("sync" ::: "memory" )
 
-#endif /* MPIDU_ATOMICS_GCC_SICORTEX_H */
+#endif /* OPA_GCC_SICORTEX_H */

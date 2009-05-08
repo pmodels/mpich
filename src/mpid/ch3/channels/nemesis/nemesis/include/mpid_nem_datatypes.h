@@ -165,7 +165,7 @@ typedef struct MPID_nem_pkt_ckpt
 #endif
 
 typedef union
-{    
+{
     MPID_nem_pkt_header_t      header;
     MPID_nem_pkt_mpich2_t      mpich2;
 #ifdef ENABLED_CHECKPOINTING
@@ -184,7 +184,7 @@ typedef union
 /* This should always be exactly the size of a pointer */
 typedef struct MPID_nem_cell_rel_ptr
 {
-    MPIDU_Atomic_ptr_t p;
+    OPA_ptr_t p;
 }
 MPID_nem_cell_rel_ptr_t;
 

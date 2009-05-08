@@ -81,7 +81,7 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 	    pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2;
 #endif /* ENABLED_CHECKPOINTING */
             MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
-            
+
 	    payload_32[0] = buf_32[0];
 	    payload_32[1] = buf_32[1];
 	    payload_32[2] = buf_32[2];
@@ -95,8 +95,8 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 		payload_32[8] = buf_32[8];
 		payload_32[9] = buf_32[9];
 	    }
-	    
-	    MPIDU_Shm_write_barrier();
+
+	    OPA_write_barrier();
 	    pbox->flag.value = 1;
 
 	    MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent fbox ");
@@ -107,11 +107,11 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     }
  usequeue_l:
 #endif /*USE_FASTBOX */
-    
+
 #ifdef PREFETCH_CELL
     DO_PAPI (PAPI_reset (PAPI_EventSet));
     el = MPID_nem_prefetched_cell;
-    
+
     if (!el)
     {
 	if (MPID_nem_queue_empty (MPID_nem_mem_region.my_freeQ))
@@ -381,7 +381,7 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
 	    pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2;
 #endif
             MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
-            
+
 	    payload_32[0] = buf_32[0];
 	    payload_32[1] = buf_32[1];
 	    payload_32[2] = buf_32[2];
@@ -396,7 +396,7 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
 		payload_32[9] = buf_32[9];
 	    }
 	    MPID_NEM_MEMCPY ((char *)pbox->cell.pkt.mpich2.payload +sizeof(MPIDI_CH3_Pkt_t), (*iov)[1].MPID_IOV_BUF, (*iov)[1].MPID_IOV_LEN);
-	    MPIDU_Shm_write_barrier();
+	    OPA_write_barrier();
 	    pbox->flag.value = 1;
 	    *n_iov = 0;
 
@@ -407,12 +407,12 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
 	}
     }
  usequeue_l:
-    
+
 #endif /*USE_FASTBOX */
 	
 #ifdef PREFETCH_CELL
     el = MPID_nem_prefetched_cell;
-    
+
     if (!el)
     {
 	if (MPID_nem_queue_empty (MPID_nem_mem_region.my_freeQ))
@@ -581,8 +581,8 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
             last = segment_size;
             MPID_Segment_pack(segment, *segment_first, &last, (char *)pbox->cell.pkt.mpich2.payload + sizeof(MPIDI_CH3_Pkt_t));
             MPIU_Assert(last == segment_size);
-            
-	    MPIDU_Shm_write_barrier();
+
+	    OPA_write_barrier();
 	    pbox->flag.value = 1;
 
             *segment_first = last;
@@ -594,12 +594,12 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
 	}
     }
  usequeue_l:
-    
+
 #endif /*USE_FASTBOX */
 	
 #ifdef PREFETCH_CELL
     el = MPID_nem_prefetched_cell;
-    
+
     if (!el)
     {
 	if (MPID_nem_queue_empty (MPID_nem_mem_region.my_freeQ))

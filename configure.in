@@ -933,7 +933,20 @@ fi
 # ----------------------------------------------------------------------------
 # atomic operations
 # ----------------------------------------------------------------------------
+# FIXME TODO eventually delete the src/mpid/common/locks directory
 subsystems="$subsystems src/mpid/common/locks"
+
+opadir="${use_top_srcdir}/openpa"
+if test -e "$opadir" ; then
+    EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS openpa"
+    # this must go in CPPFLAGS intead of MPICH2_INCLUDE_FLAGS because we need it
+    # to be available to lower-level configure scripts
+    CPPFLAGS="$CPPFLAGS -I${use_top_srcdir}/openpa/src -I${master_top_builddir}/openpa/src"
+    # openpa needs to go at the front of the devsubsystems because it needs to
+    # be configured before the device itself (e.g. nemesis).
+    devsubsystems="openpa $devsubsystems"
+    other_install_dirs="$other_install_dirs openpa"
+fi
 
 # ----------------------------------------------------------------------------
 # Threads
@@ -2048,7 +2061,9 @@ fi
 
 if test ! -d bin  ; then mkdir bin ; fi 
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
-   -e 's%libdir=.*%libdir='$libbuild_dir% src/env/mpif77 > bin/mpif77 ;
+    -e 's%libdir=.*%libdir='$libbuild_dir% \
+    -e 's%^opalibdir=.*%opalibdir='$opalibbuild_dir% \
+    src/env/mpif77 > bin/mpif77 ;
 chmod a+x bin/mpif77
 else
     rm -f src/env/mpif77 src/env/mpif77.conf
@@ -2332,7 +2347,9 @@ chmod a+x src/env/mpif90
 if test ! -d bin  ; then mkdir bin ; fi 
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
     -e 's%modincdir=.*%modincdir='$modincbuild_dir% \
-    -e 's%libdir=.*%libdir='$libbuild_dir% src/env/mpif90 > bin/mpif90 ;
+    -e 's%libdir=.*%libdir='$libbuild_dir% \
+    -e 's%^opalibdir=.*%opalibdir='$opalibbuild_dir% \
+    src/env/mpif90 > bin/mpif90 ;
 chmod a+x bin/mpif90 
 else
     rm -f src/env/mpif90 src/env/mpif90.conf bin/mpif90
@@ -2605,7 +2622,9 @@ chmod a+x src/env/mpicxx
 cp src/binding/cxx/mpicxx.h src/include 
 if test ! -d bin  ; then mkdir bin ; fi 
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
-    -e 's%libdir=.*%libdir='$libbuild_dir% src/env/mpicxx > bin/mpicxx ;
+    -e 's%libdir=.*%libdir='$libbuild_dir% \
+    -e 's%^opalibdir=.*%opalibdir='$opalibbuild_dir% \
+    src/env/mpicxx > bin/mpicxx ;
 chmod a+x bin/mpicxx
 else
     rm -f src/env/mpicxx src/env/mpicxx.conf
@@ -5908,10 +5927,12 @@ PAC_CREATE_BASE_CACHE
 # particularly important for the bindings, which may need to know the
 # libraries in order to create the compilation scripts)
 
+user_specified_atomic_primitives=no
 if test "$DEBUG_SUBDIR_CACHE" = yes ; then 
     set -x
 fi
 for subsys in $devsubsystems $subsystems ; do 
+    AC_MSG_NOTICE([configuring subsystem in $subsys])
     if test -x $subsys/mpich2setup ; then 
         $subsys/mpich2setup 
     elif test -x $use_top_srcdir/$subsys/mpich2setup ; then
@@ -5925,13 +5946,19 @@ for subsys in $devsubsystems $subsystems ; do
 	    if test -n "$ac_narg" ; then ac_arg=$ac_narg ; fi	    
 	    case $ac_arg in 
 	        -cache-file=* | --cache-file=* | --cache-fil=* | --cache-fi=* \
-    | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* \
-    | --c=*) ;;
-	  --config-cache | -C)
-	  ;;
-    -srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*) ;;
-    -prefix=* | --prefix=* | --prefi=* | --pref=* | --pre=* | --pr=* | --p=*)
-      ;;
+                | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* \
+                | --c=*) ;;
+        --config-cache | -C)
+        ;;
+        -srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*) ;;
+        -prefix=* | --prefix=* | --prefi=* | --pref=* | --pre=* | --pr=* | --p=*)
+          ;;
+        --with-atomic-primitives* | --without-atomic-primitives*)
+            # if the user specified a particular atomic-primitives argument to
+            # use then we should use that instead of 'auto_allow_emulation'
+            user_specified_atomic_primitives=yes
+            ac_sub_configure_args="$ac_sub_configure_args $ac_arg"
+        ;;
 	-*)
         ac_sub_configure_args="$ac_sub_configure_args $ac_arg" 
 	;;
@@ -5943,10 +5970,16 @@ dnl updated values.  Here's an attempt at a fix
 	ac_sub_configure_args="$ac_sub_configure_args 'CPPFLAGS=$CPPFLAGS'"
         ;;
 
+        dnl FIXME isn't this a duplication of the *) case a few lines above? [goodell@]
     	*) 
 	    ac_sub_configure_args="$ac_sub_configure_args $ac_arg" ;;
 	    esac
         done
+
+        # pass an atomic primitives argument if the user didn't specify one
+        if test "$user_specified_atomic_primitives" = "no" ; then
+            ac_sub_configure_args="$ac_sub_configure_args --with-atomic-primitives=auto_allow_emulation"
+        fi
 
 	# add in the correct prefix argument
         ac_sub_configure_args="--prefix=$prefix $ac_sub_configure_args"
@@ -6271,20 +6304,28 @@ fi
 if test -z "$libbuild_dir" ; then
     libbuild_dir=`pwd`/lib
 fi
+if test -z "$opalibbuild_dir" ; then
+    opalibbuild_dir=`pwd`/openpa/src
+fi
 if test -z "$modincbuild_dir" ; then
    # The include files may be in a different directory from the mpif.h file
    modincbuild_dir=$top_build_dir/src/binding/f90
 fi
 
+dnl create a copy of mpicc in the build directory that will work for compiling
+dnl MPI programs without requiring installation
 AC_OUTPUT_COMMANDS([
 if test "$bashWorks" = yes ; then cp -f src/env/mpicc.bash src/env/mpicc ; fi
 chmod a+x src/env/mpicc ;
 if test ! -d bin  ; then mkdir bin ; fi 
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
-       -e 's%libdir=.*%libdir='$libbuild_dir% src/env/mpicc > bin/mpicc ;
+    -e 's%libdir=.*%libdir='$libbuild_dir% \
+    -e 's%^opalibdir=.*%opalibdir='$opalibbuild_dir% \
+    src/env/mpicc > bin/mpicc ;
 chmod a+x bin/mpicc ],
 includebuild_dir=$includebuild_dir
 libbuild_dir=$libbuild_dir
+opalibbuild_dir=$opalibbuild_dir
 bashWorks=$bashWorks)
 
 # move the parkill command into the bin directory of the build tree

@@ -68,68 +68,6 @@ AC_C_INLINE
 AC_C_VOLATILE
 AC_C_CONST
 
-# This test is extremely lame, but it is easy and it _should_ work in
-# cross-compilation scenarios.  A better test should be used in the future.
-mips_szptr=0
-AC_COMPUTE_INT(mips_szptr, [_MIPS_SZPTR],,)
-if test $mips_szptr -ne 0 ; then
-    AC_DEFINE(HAVE_GCC_AND_SICORTEX_ASM, 1, [Use SiCortex atomic primitives])
-fi
-
-# Check for Sun's atomic library
-AC_MSG_CHECKING([for sun atomic library])
-SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -I${srcdir}"
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-    typedef int MPI_Aint; 
-    #include"mpidu_atomics_sun_atomic_ops.h"
-]],[[
-    int a = 0, b = 1, c;
-    MPIDU_Atomic_add(&a, 10);
-    c = MPIDU_Atomic_cas_int(&a, 10, 11);
-    c = MPIDU_Atomic_swap_int(&a, b);
- ]])]
-,AC_DEFINE(HAVE_SUN_ATOMIC_OPS, 1, [define to 1 if we have sun's atomic library and atomic.h])
-AC_MSG_RESULT([yes]),
-AC_MSG_RESULT([no]))
-CFLAGS="$SAVE_CFLAGS"
-
-
-# Check for gcc intrinsic atomics
-AC_MSG_CHECKING([for gcc atomic intrinsics])
-SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -I${srcdir}"
-AC_RUN_IFELSE([AC_LANG_PROGRAM(,[[
-    const int orig_a = 0xCAFEBABE;
-    const int orig_b = 0xDEADBEEF;
-    int a = orig_a;
-    int b;
-    
-    b = __sync_lock_test_and_set(&a, orig_b);
-
-    if (a != orig_b || b != orig_a)
-    {
-        return 1;
-    }
-    return 0;
-]])]
-,AC_DEFINE(SYNC_LOCK_TEST_AND_SET_IS_SWAP, 1, [define to 1 if the gcc intrinisic __sync_lock_test_and_set is implemented as a swap ]),,true)
-
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-    typedef int MPI_Aint; 
-    #include"mpidu_atomics_gcc_intrinsics.h"
-]],[[
-    int a = 0, b = 1, c;
-    MPIDU_Atomic_add(&a, 10);
-    c = MPIDU_Atomic_cas_int(&a, 10, 11);
-    c = MPIDU_Atomic_swap_int(&a, b);
- ]])]
-,AC_DEFINE(HAVE_GCC_INTRINSIC_ATOMICS, 1, [define to 1 if we have gcc atomic intrinsic functions])
-AC_MSG_RESULT([yes]),
-AC_MSG_RESULT([no]))
-CFLAGS="$SAVE_CFLAGS"
-
-
 # Add the MPICH2 include flags to CPPFLAGS.  
 CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 

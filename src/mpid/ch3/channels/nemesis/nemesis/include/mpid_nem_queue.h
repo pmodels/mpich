@@ -58,7 +58,7 @@ static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t val)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    MPIDU_Atomic_store_ptr(&ret.p, MPIDU_Atomic_swap_ptr(&(ptr->p), MPIDU_Atomic_load_ptr(&val.p)));
+    OPA_store_ptr(&ret.p, OPA_swap_ptr(&(ptr->p), OPA_load_ptr(&val.p)));
     return ret;
 }
 
@@ -66,7 +66,7 @@ static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (MPID_nem_cell_rel_ptr_t
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_CAS_REL_NULL (MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t oldv)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    MPIDU_Atomic_store_ptr(&ret.p, MPIDU_Atomic_cas_ptr(&(ptr->p), MPIDU_Atomic_load_ptr(&oldv.p), MPID_NEM_REL_NULL));
+    OPA_store_ptr(&ret.p, OPA_cas_ptr(&(ptr->p), OPA_load_ptr(&oldv.p), MPID_NEM_REL_NULL));
     return ret;
 }
 

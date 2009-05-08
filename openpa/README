@@ -1,0 +1,74 @@
+OpenPA v0.0.1
+-------------
+
+The goal of this project is to provide an open source, highly-portable
+library that provides atomic primitives (and related constructs) for
+high performance, concurrent software. This project is a collaboration
+between the Mathematics and Computer Science (MCS) division at Argonne
+National Laboratory (ANL) and the HDF Group. The code was originally
+derived from work on the MPICH2 project. 
+
+Project documentation and bug tracking can be found at:
+
+  https://trac.mcs.anl.gov/projects/openpa/
+
+If you would like to email questions or discuss topics related to OpenPA
+you can send mail to opa-discuss@lists.mcs.anl.gov.
+
+
+Building 
+--------
+
+If you checked out the project from source control then you will need to
+generate configure files and makefiles with autoreconf:
+
+Otherwise, the build procedure is basically the same as any other
+autoconfiscated software:
+
+% autoreconf -vif
+% ./configure [configure_args]
+% make
+% make install
+
+OpenPA does support Microsoft Windows but the build system
+infrastructure is unfortunately not yet in place for general use.
+
+
+Supported Platforms
+-------------------
+
+The following header files in the src/primitives directory support the
+listed platforms:
+opa_gcc_ia64.h        - GCC on Intel's IA64 (Itanium) architecture
+opa_gcc_intel_32_64.h - GCC (and some GCC-like compilers) on x86 and
+                        x86_64 architectures
+opa_gcc_intrinsics.h  - GCC on many other platforms.  These use compiler
+                        intrinsics which are not always implemented on
+                        every platform
+opa_gcc_ppc.h         - GCC and IBM's XLC on PowerPC 4xx systems.  Specifically,
+                        this supports the modified-PPC440 processor in IBM's
+                        Blue Gene/P supercomputers.
+opa_gcc_sicortex.h    - GCC on SiCortex machines.  This is a MIPS 5K based
+                        architecture, so it may work on similar platforms.
+opa_nt_intrinsics.h   - Windows support.  These use compiler intrinsics
+                        available in Microsoft's Visual Studio compiler.
+opa_sun_atomic_ops.h  - Solaris support.  This uses Solaris' built-in
+                        atomic operations library.  Tested on a Niagara
+                        (T5240) machine with Solaris (s10s_u4wos_12b).
+
+
+Known Issues
+------------
+
+* One known issue is that the gcc atomic intrinsics aren't supported by
+  compilers prior to GCC 4.1.  In particular the Mac OS X compiler is
+  gcc 4.0.1 so these result in a linker error when using this set of
+  primitives.  The good news is that on OSX/intel we use native inline
+  assembly anyway, so this isn't a big problem.
+* The PGI compilers currently are not supported.  They accept a
+  gcc-style inline assembly but with slightly different register
+  constraints that are not compatible with the current gcc primitives.
+  This issue should be rectified in an upcoming release.
+* As mentioned earlier, Windows is supported but the build system is not
+  yet present.
+

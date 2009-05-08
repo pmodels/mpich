@@ -49,7 +49,7 @@ static size_t segment_len = 0;
 typedef struct asym_check_region 
 {
     void *base_ptr;
-    MPIDU_Atomic_t is_asym;
+    OPA_int_t is_asym;
 } asym_check_region;
 
 static asym_check_region* asym_check_region_p = NULL;
@@ -403,19 +403,19 @@ static int check_alloc(int num_local, int local_rank)
 
     if (local_rank == 0) {
         asym_check_region_p->base_ptr = MPID_nem_mem_region.memory.base_addr;
-        MPIDU_Atomic_store(&asym_check_region_p->is_asym, 0);
+        OPA_store(&asym_check_region_p->is_asym, 0);
     }
 
     mpi_errno = MPID_nem_barrier(num_local, local_rank);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (asym_check_region_p->base_ptr != MPID_nem_mem_region.memory.base_addr)
-        MPIDU_Atomic_store(&asym_check_region_p->is_asym, 1);
+        OPA_store(&asym_check_region_p->is_asym, 1);
 
     mpi_errno = MPID_nem_barrier(num_local, local_rank);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    
-    if (MPIDU_Atomic_load(&asym_check_region_p->is_asym))
+
+    if (OPA_load(&asym_check_region_p->is_asym))
     {
 	MPID_nem_mem_region.memory.symmetrical = 0;
 	MPID_nem_asymm_base_addr = MPID_nem_mem_region.memory.base_addr;

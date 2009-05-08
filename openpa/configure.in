@@ -1,0 +1,250 @@
+# -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
+#  
+#  (C) 2008 by Argonne National Laboratory.
+#      See COPYRIGHT in top-level directory.
+# 
+
+# FIXME what do we do about windows?  Do we require autotools?  MPICH2 doesn't
+# currently require this...
+
+AC_PREREQ(2.62)
+
+AC_INIT([OpenPA], [0.0.1], [https://trac.mcs.anl.gov/projects/openpa/newticket])
+dnl Set the directory that contains support scripts such as install-sh and
+dnl config.guess.  It also contains autoconf macro files.
+AC_CONFIG_AUX_DIR(confdb)
+
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+
+# FIXME this header needs to end up in the installation include directory in some form,
+# so we probably need to change its name to something that won't collide in the
+# global namespace. [goodell@ 2009-02-19]
+AC_CONFIG_HEADER([src/config.h])
+AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2008 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+])
+AH_BOTTOM([])
+
+dnl Preps an opa_config.h with prefixed macros from config.h for output at
+dnl AC_OUTPUT time.  This way we can safely include opa_config.h in the
+dnl installation and include it in installed headers.
+AX_PREFIX_CONFIG_H([src/opa_config.h],[OPA])
+
+########################################################################
+
+AC_PROG_CC
+AC_PROG_RANLIB
+
+AC_HEADER_ASSERT
+# do we need intrin.h in here since it's a windows file?
+AC_CHECK_HEADERS([pthread.h atomic.h intrin.h inttypes.h stdint.h])
+
+AC_C_RESTRICT
+AC_C_INLINE
+
+dnl Check for presence of the pthreads library.  This is needed by the test
+dnl suite.
+AC_CHECK_LIB(pthread, pthread_create)
+
+if test "$ac_cv_lib_pthread_pthread_create" = yes; then
+AC_MSG_CHECKING([if 100 threads can be run at once])
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+    #include <stddef.h>
+    #include <pthread.h>
+    pthread_mutex_t mutexus_maximus;
+    void *thread_func(void *udata) {
+        pthread_mutex_lock(&mutexus_maximus);
+        pthread_mutex_unlock(&mutexus_maximus);
+        return NULL;
+    }
+]], [[
+    int i;
+    pthread_t threads[100];
+    pthread_mutex_init(&mutexus_maximus, NULL);
+    pthread_mutex_lock(&mutexus_maximus);
+    for(i=0; i<100; i++)
+        if(pthread_create(&threads[i], NULL, thread_func, NULL)) {
+            pthread_mutex_unlock(&mutexus_maximus);
+            return 1;
+        }
+    pthread_mutex_unlock(&mutexus_maximus);
+    return 0;
+]])],
+AC_MSG_RESULT([yes]),
+AC_MSG_RESULT([no])
+AC_DEFINE(LIMIT_THREADS, 1, [define to 1 to skip tests with 100 threads]),
+AC_MSG_RESULT([N/A]))
+fi
+
+AC_CHECK_SIZEOF([void *])
+AC_CHECK_SIZEOF([int])
+
+dnl Check for __attribute__ support.  This was originally taken from
+dnl the PAC_C_GNU_ATTRIBUTE macro in mpich2.
+dnl
+dnl We start by requiring Gcc.  Some other compilers accept __attribute__
+dnl but generate warning messages, or have different interpretations 
+dnl (which seems to make __attribute__ just as bad as #pragma) 
+dnl For example, the Intel icc compiler accepts __attribute__ and
+dnl __attribute__((pure)) but generates warnings for __attribute__((format...))
+if test "$GCC" = "yes" ; then
+    AC_CACHE_CHECK([whether __attribute__ allowed],
+pac_cv_gnu_attr_pure,[
+AC_TRY_COMPILE([int foo(int) __attribute__ ((pure));],[int a;],
+pac_cv_gnu_attr_pure=yes,pac_cv_gnu_attr_pure=no)])
+AC_CACHE_CHECK([whether __attribute__((format)) allowed],
+pac_cv_gnu_attr_format,[
+AC_TRY_COMPILE([int foo(char *,...) __attribute__ ((format(printf,1,2)));],[int a;],
+pac_cv_gnu_attr_format=yes,pac_cv_gnu_attr_format=no)])
+    if test "$pac_cv_gnu_attr_pure" = "yes" -a "$pac_cv_gnu_attr_format" = "yes" ; then
+        AC_DEFINE(HAVE_GCC_ATTRIBUTE,1,[Define if GNU __attribute__ is supported])
+    fi
+fi
+
+dnl Check to make sure that the compiler rejects bogus inline assembly
+dnl statements.  If it does not, then we need to be careful below when
+dnl we're checking which primitives header file to use.
+AC_MSG_CHECKING([if compiler rejects bogus asm statements])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[
+    __asm__ __volatile__ ("ILLEGAL_ASM_STMT");
+  ]])],
+  compiler_rejects_bogus_asm=no
+  AC_MSG_RESULT([no])
+  ,
+  compiler_rejects_bogus_asm=yes
+  AC_MSG_RESULT([yes])
+)
+
+AC_ARG_WITH(atomic-primitives, AC_HELP_STRING([--with-atomic-primitives],
+    [Force OPA to use a specific atomic primitives implementation file (default
+     is auto).  A value of 'no' forces the use of locks to implement atomic
+     primitives.  A value of 'auto_allow_emulation' will attempt to detect
+     native primitives and will fall back to lock-based emulation if none are
+     available.  Note that using locks to implement atomic primitives will have
+     a substantial impact on performance and is intended for testing only.]),
+    if test "$with_atomic_primitives" = "yes" ; then with_atomic_primitives=auto; fi
+    , 
+    with_atomic_primitives=auto
+)
+
+
+dnl is set to yes by the macro below if any test ever succeeds
+non_emulated_primitives_available=no
+dnl is set to yes in OPA_TRY_PRIMITIVE_HEADER when a primitive
+dnl matching $with_atomic_primitives is checked
+checked_specified_primitive=no
+
+dnl OPA_TRY_PRIMITIVE_HEADER([header file from src/ dir], [HAVE_ macro suffix], [feature description])
+dnl FIXME should probably change this to do an AC_TRY_RUN with the existing code
+dnl used as a fallback when cross-compiling.  This will provide us with a
+dnl stronger guarantee that the code really works on the given platform.
+AC_DEFUN([OPA_TRY_PRIMITIVE_HEADER],[
+if test     "$with_atomic_primitives" = "auto"                 \
+         -o "$with_atomic_primitives" = "auto_allow_emulation" \
+         -o "$with_atomic_primitives" = "$1"
+    then
+    checked_specified_primitive=yes
+    AC_MSG_CHECKING([for support for $3])
+    SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS -I${srcdir}/src"
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    #define OPA_SIZEOF_INT SIZEOF_INT
+    #define OPA_SIZEOF_VOID_P SIZEOF_VOID_P
+    #include "opa_util.h" /* for ATTRIBUTE and friends */
+    #include "primitives/$1"
+    ]],[[
+    OPA_int_t a, b;
+    int c;
+
+    OPA_store(&a, 0);
+    OPA_store(&b, 1);
+    c = OPA_load(&a);
+
+    OPA_add(&a, 10);
+    OPA_incr(&a);
+    OPA_decr(&a);
+
+    c = OPA_decr_and_test(&a);
+    c = OPA_fetch_and_add(&a, 10);
+    c = OPA_fetch_and_incr(&a);
+    c = OPA_fetch_and_decr(&a);
+
+    c = OPA_cas_int(&a, 10, 11);
+    c = OPA_swap_int(&a, OPA_load(&b));
+
+    OPA_write_barrier();
+    OPA_read_barrier();
+    OPA_read_write_barrier();
+     ]])]
+    ,
+        AC_DEFINE(HAVE_$2, 1, [define to 1 if we have support for $3])
+        non_emulated_primitives_available=yes
+        AC_MSG_RESULT([yes])
+    ,
+        AC_MSG_RESULT([no])
+    )
+    CFLAGS="$SAVE_CFLAGS"
+fi
+])
+
+if test "$with_atomic_primitives" = "no" ; then
+    using_emulated_primitives=yes
+else
+dnl We currently test for support of each platform or implementation by
+dnl attempting to compile the associated primitives header file.  This doesn't
+dnl feel right, but it's actually pretty effective while being fairly easy to
+dnl implement as well.  The biggest problem with this strategy is that if we are
+dnl missing some little bit of compatibility code (a missing type or header for
+dnl which we have a workaround) we could end up selecting the wrong
+dnl implementation.
+dnl
+dnl If the compiler can't tell that it's getting bad assembly, we have
+dnl no hope of being able to check what asm statements are supported
+dnl without AC_TRY_RUN().
+    if test "$compiler_rejects_bogus_asm" = "yes"  ; then 
+        OPA_TRY_PRIMITIVE_HEADER([opa_gcc_intel_32_64.h], [GCC_X86_32_64], [gcc x86/x86_64 bit primitives])
+        OPA_TRY_PRIMITIVE_HEADER([opa_gcc_ia64.h], [GCC_AND_IA64_ASM], [gcc ia64 primitives])
+        OPA_TRY_PRIMITIVE_HEADER([opa_gcc_ppc.h], [GCC_AND_POWERPC_ASM], [gcc PowerPC atomics])
+        OPA_TRY_PRIMITIVE_HEADER([opa_gcc_sicortex.h], [GCC_AND_SICORTEX_ASM], [gcc SiCortex atomics])
+    fi
+
+    OPA_TRY_PRIMITIVE_HEADER([opa_gcc_intrinsics.h], [GCC_INTRINSIC_ATOMICS], [gcc atomic intrinsics])
+    OPA_TRY_PRIMITIVE_HEADER([opa_nt_intrinsics.h], [NT_INTRINSICS], [Windows NT atomic intrinsics])
+    OPA_TRY_PRIMITIVE_HEADER([opa_sun_atomic_ops.h], [SUN_ATOMIC_OPS], [Sun atomic operations library])
+
+    if test "$checked_specified_primitive" = "no" ; then
+        AC_MSG_ERROR([didn't find specified atomic primitives file "$with_atomic_primitives"], 1)
+    fi
+
+    if test "$non_emulated_primitives_available" = "no" ; then
+        if test "$with_atomic_primitives" = "auto_allow_emulation" ; then
+            using_emulated_primitives=yes
+        else
+            AC_MSG_ERROR([
+=======================================================
+No native supported atomic primitives were detected.
+You can use "--with-atomic-primitives=no" to emulate
+the atomic primitives using locks, but note that doing
+this will result in a substantial performance
+penalty.
+=======================================================], 1)
+        fi
+    fi
+fi
+
+if test "$using_emulated_primitives" = "yes" ; then
+    AC_MSG_WARN([
+===================================================
+Using locks to implement atomic primitives.  This
+will result in a substantial impact on performance.
+Use this only for testing.
+===================================================])
+    AC_DEFINE(USE_LOCK_BASED_PRIMITIVES, 1, [define to 1 to force using lock-based atomic primitives])
+fi
+
+AC_CONFIG_FILES([Makefile src/Makefile test/Makefile])
+AC_OUTPUT
+
