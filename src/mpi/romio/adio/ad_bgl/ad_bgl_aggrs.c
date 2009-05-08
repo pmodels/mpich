@@ -8,7 +8,7 @@
 
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /* 
- *   Copyright (C) 1997 University of Chicago. 
+ *   Copyright (C) 1997-2001 University of Chicago. 
  *   See COPYRIGHT notice in top-level directory.
  */
 
@@ -17,6 +17,9 @@
 #include "ad_bgl.h"
 #include "ad_bgl_pset.h"
 #include "ad_bgl_aggrs.h"
+#ifdef AGGREGATION_PROFILE
+#include "mpe.h"
+#endif
 
 #ifdef USE_DBG_LOGGING
   #define AGG_DEBUG 1
@@ -24,8 +27,39 @@
 
 
 
-int aggrsInPsetSize=0;
-int *aggrsInPset=NULL;
+static int aggrsInPsetSize=0;
+static int *aggrsInPset=NULL;
+
+/* Comments copied from common:
+ * This file contains four functions:
+ *
+ * ADIOI_Calc_aggregator()
+ * ADIOI_Calc_file_domains()
+ * ADIOI_Calc_my_req()
+ * ADIOI_Calc_others_req()
+ *
+ * The last three of these were originally in ad_read_coll.c, but they are
+ * also shared with ad_write_coll.c.  I felt that they were better kept with
+ * the rest of the shared aggregation code.  
+ */
+
+/* Discussion of values available from above:
+ *
+ * ADIO_Offset st_offsets[0..nprocs-1]
+ * ADIO_Offset end_offsets[0..nprocs-1]
+ *    These contain a list of start and end offsets for each process in 
+ *    the communicator.  For example, an access at loc 10, size 10 would
+ *    have a start offset of 10 and end offset of 19.
+ * int nprocs
+ *    number of processors in the collective I/O communicator
+ * ADIO_Offset min_st_offset
+ * ADIO_Offset fd_start[0..nprocs_for_coll-1]
+ *    starting location of "file domain"; region that a given process will
+ *    perform aggregation for (i.e. actually do I/O)
+ * ADIO_Offset fd_end[0..nprocs_for_coll-1]
+ *    start + size - 1 roughly, but it can be less, or 0, in the case of 
+ *    uneven distributions
+ */
 
 /* forward declaration */
 static void 
@@ -274,7 +308,112 @@ ADIOI_BGL_compute_agg_ranklist_serial ( ADIO_File fd,
     return;
 }
 
+/* Description from common/ad_aggregate.c.  (Does it completely apply to bgl?)
+ * ADIOI_Calc_aggregator()
+ *
+ * The intention here is to implement a function which provides basically 
+ * the same functionality as in Rajeev's original version of 
+ * ADIOI_Calc_my_req().  He used a ceiling division approach to assign the 
+ * file domains, and we use the same approach here when calculating the
+ * location of an offset/len in a specific file domain.  Further we assume
+ * this same distribution when calculating the rank_index, which is later
+ *  used to map to a specific process rank in charge of the file domain.
+ *
+ * A better (i.e. more general) approach would be to use the list of file
+ * domains only.  This would be slower in the case where the
+ * original ceiling division was used, but it would allow for arbitrary
+ * distributions of regions to aggregators.  We'd need to know the 
+ * nprocs_for_coll in that case though, which we don't have now.
+ *
+ * Note a significant difference between this function and Rajeev's old code:
+ * this code doesn't necessarily return a rank in the range
+ * 0..nprocs_for_coll; instead you get something in 0..nprocs.  This is a
+ * result of the rank mapping; any set of ranks in the communicator could be
+ * used now.
+ *
+ * Returns an integer representing a rank in the collective I/O communicator.
+ *
+ * The "len" parameter is also modified to indicate the amount of data
+ * actually available in this file domain.
+ */
+/* 
+ * This is more general aggregator search function which does not base on the assumption
+ * that each aggregator hosts the file domain with the same size 
+ */
+int ADIOI_BGL_Calc_aggregator(ADIO_File fd,
+			      ADIO_Offset off,
+			      ADIO_Offset min_off,
+			      ADIO_Offset *len,
+			      ADIO_Offset fd_size,
+			      ADIO_Offset *fd_start,
+			      ADIO_Offset *fd_end)
+{
+    int rank_index, rank;
+    ADIO_Offset avail_bytes;
 
+    AD_BGL_assert ( (off <= fd_end[fd->hints->cb_nodes-1] && off >= min_off && fd_start[0] >= min_off ) );
+
+    /* binary search --> rank_index is returned */
+    int ub = fd->hints->cb_nodes;
+    int lb = 0;
+    /* get an index into our array of aggregators */
+    /* Common code for striping - bgl doesn't use it but it's
+       here to make diff'ing easier.
+    rank_index = (int) ((off - min_off + fd_size)/ fd_size - 1);
+
+    if (fd->hints->striping_unit > 0) {
+        * wkliao: implementation for file domain alignment
+           fd_start[] and fd_end[] have been aligned with file lock
+	   boundaries when returned from ADIOI_Calc_file_domains() so cannot
+	   just use simple arithmatic as above *
+        rank_index = 0;
+        while (off > fd_end[rank_index]) rank_index++;
+    } 
+    bgl does it's own striping below 
+    */
+    rank_index = fd->hints->cb_nodes / 2;
+    while ( off < fd_start[rank_index] || off > fd_end[rank_index] ) {
+	if ( off > fd_end  [rank_index] ) {
+	    lb = rank_index;
+	    rank_index = (rank_index + ub) / 2;
+	}
+	else 
+	if ( off < fd_start[rank_index] ) {
+	    ub = rank_index;
+	    rank_index = (rank_index + lb) / 2;
+	}
+    }
+    /* we index into fd_end with rank_index, and fd_end was allocated to be no
+     * bigger than fd->hins->cb_nodes.   If we ever violate that, we're
+     * overrunning arrays.  Obviously, we should never ever hit this abort */
+    if (rank_index >= fd->hints->cb_nodes || rank_index < 0) {
+        FPRINTF(stderr, "Error in ADIOI_Calc_aggregator(): rank_index(%d) >= fd->hints->cb_nodes (%d) fd_size=%lld off=%lld\n",
+			rank_index,fd->hints->cb_nodes,fd_size,off);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+    // DBG_FPRINTF ("ADIOI_BGL_Calc_aggregator: rank_index = %d\n", rank_index );
+
+    /* 
+     * remember here that even in Rajeev's original code it was the case that
+     * different aggregators could end up with different amounts of data to
+     * aggregate.  here we use fd_end[] to make sure that we know how much
+     * data this aggregator is working with.  
+     *
+     * the +1 is to take into account the end vs. length issue.
+     */
+    avail_bytes = fd_end[rank_index] + 1 - off;
+    if (avail_bytes < *len && avail_bytes > 0) {
+        /* this file domain only has part of the requested contig. region */
+
+        *len = avail_bytes;
+    }
+
+    /* map our index to a rank */
+    /* NOTE: FOR NOW WE DON'T HAVE A MAPPING...JUST DO 0..NPROCS_FOR_COLL */
+    rank = fd->hints->ranklist[rank_index];
+
+    return rank;
+}
 
 /* 
  * Compute a dynamic access range based file domain partition among I/O aggregators,
@@ -285,6 +424,10 @@ ADIOI_BGL_compute_agg_ranklist_serial ( ADIO_File fd,
  * Additional effort is to make sure that each I/O aggregator get
  * a file domain that aligns to the GPFS block size.  So, there will 
  * not be any false sharing of GPFS file blocks among multiple I/O nodes. 
+ *  
+ * The common version of this now accepts a min_fd_size and striping_unit. 
+ * It doesn't seem necessary here (using GPFS block sizes) but keep it in mind
+ * (e.g. we could pass striping unit instead of using fs_ptr->blksize). 
  */
 void ADIOI_BGL_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
                                       ADIO_Offset *end_offsets,
@@ -298,8 +441,15 @@ void ADIOI_BGL_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
 {
     ADIO_Offset min_st_offset, max_end_offset, *fd_start, *fd_end, *fd_size;
     int i, aggr;
+
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5004, 0, NULL);
+#endif
+
 #   if AGG_DEBUG
     static char myname[] = "ADIOI_BGL_GPFS_Calc_file_domains";
+    DBG_FPRINTF(stderr, "%s(%d): %d aggregator(s)\n", 
+	    myname,__LINE__,nprocs_for_coll);
 #   endif
     __blksize_t blksize = 1048576; /* default to 1M */
     if(fs_ptr && ((ADIOI_BGL_fs*)fs_ptr)->blksize) /* ignore null ptr or 0 blksize */
@@ -307,7 +457,7 @@ void ADIOI_BGL_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
 #   if AGG_DEBUG
     DBG_FPRINTF(stderr,"%s(%d): Blocksize=%ld\n",myname,__LINE__,blksize);
 #   endif
-    /* find the range of all the requests */
+/* find min of start offsets and max of end offsets of all processes */
     min_st_offset  = st_offsets [0];
     max_end_offset = end_offsets[0];
     for (i=1; i<nprocs; i++) {
@@ -327,6 +477,18 @@ void ADIOI_BGL_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
     ADIO_Offset fd_gpfs_range = gpfs_ub - gpfs_lb + 1;
 
     int         naggs    = nprocs_for_coll;
+
+    /* Tweak the file domains so that no fd is smaller than a threshold.  We
+     * have to strike a balance between efficency and parallelism: somewhere
+     * between 10k processes sending 32-byte requests and one process sending a
+     * 320k request is a (system-dependent) sweet spot 
+     
+    This is from the common code - the new min_fd_size parm that we didn't implement. 
+    (And common code uses a different declaration of fd_size so beware) 
+     
+    if (fd_size < min_fd_size)
+        fd_size = min_fd_size;
+    */
     fd_size              = (ADIO_Offset *) ADIOI_Malloc(nprocs_for_coll * sizeof(ADIO_Offset));
     *fd_start_ptr        = (ADIO_Offset *) ADIOI_Malloc(nprocs_for_coll * sizeof(ADIO_Offset));
     *fd_end_ptr          = (ADIO_Offset *) ADIOI_Malloc(nprocs_for_coll * sizeof(ADIO_Offset));
@@ -381,178 +543,11 @@ void ADIOI_BGL_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
     *fd_size_ptr = fd_size[0];
     *min_st_offset_ptr = min_st_offset;
 
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5005, 0, NULL);
+#endif
     ADIOI_Free (fd_size);
 }
-
-
-/* 
- * deprecated
- *
-void ADIOI_BGL_GPFS_Calc_file_domain0(ADIO_Offset *st_offsets, 
-				      ADIO_Offset *end_offsets, 
-				      int          nprocs, 
-				      int          nprocs_for_coll,
-				      ADIO_Offset *min_st_offset_ptr,
-				      ADIO_Offset **fd_start_ptr, 
-				      ADIO_Offset **fd_end_ptr, 
-				      ADIO_Offset *fd_size_ptr)
-{
-    ADIO_Offset min_st_offset, max_end_offset, *fd_start, *fd_end, *fd_size;
-    int i;
-static int GPFS_BSIZE=1048576;
-     * find the range of all the requests *
-    min_st_offset  = st_offsets [0];
-    max_end_offset = end_offsets[0];
-    for (i=1; i<nprocs; i++) {
-        min_st_offset = ADIOI_MIN(min_st_offset, st_offsets[i]);
-        max_end_offset = ADIOI_MAX(max_end_offset, end_offsets[i]);
-    }
-
-     * determine the "file domain (FD)" of each process, i.e., the portion of
-       the file that will be "owned" by each process *
-          
-     * GPFS specific, pseudo starting/end point has to round to GPFS_BSIZE *
-    ADIO_Offset gpfs_ub       = (max_end_offset +GPFS_BSIZE-1) / GPFS_BSIZE * GPFS_BSIZE - 1;
-    ADIO_Offset gpfs_lb       = min_st_offset / GPFS_BSIZE * GPFS_BSIZE;
-    ADIO_Offset gpfs_ub_rdoff = (max_end_offset +GPFS_BSIZE-1) / GPFS_BSIZE * GPFS_BSIZE - 1 - max_end_offset;
-    ADIO_Offset gpfs_lb_rdoff = min_st_offset - min_st_offset / GPFS_BSIZE * GPFS_BSIZE;
-    ADIO_Offset fd_gpfs_range = gpfs_ub - gpfs_lb + 1;
-
-     * all computation of partition is based on the rounded pseudo-range *
-    ADIO_Offset fds_ub   = (fd_gpfs_range  +nprocs_for_coll-1) / nprocs_for_coll;
-    ADIO_Offset fds_lb   =  fd_gpfs_range                      / nprocs_for_coll;
-    int         naggs    = nprocs_for_coll;
-    int         npsets   = aggrsInPset[0];         * special meaning for element 0 *
-    fd_size              = (ADIO_Offset *) ADIOI_Malloc(naggs * sizeof(ADIO_Offset));
-    *fd_start_ptr        = (ADIO_Offset *) ADIOI_Malloc(naggs * sizeof(ADIO_Offset));
-    *fd_end_ptr          = (ADIO_Offset *) ADIOI_Malloc(naggs * sizeof(ADIO_Offset));
-    fd_start             = *fd_start_ptr;
-    fd_end               = *fd_end_ptr;
-
-     * some pre-computation to determine rough ratio of when to up-fit, when to low-fit *
-     * 1. get the estimated data per pset *
-     * 2. determine a factor between up and down *
-        int           avg_aggrsInPset = (naggs +npsets-1)/npsets;
-        ADIO_Offset avg_bytes_perPset = fd_gpfs_range / npsets;
-        ADIO_Offset             resid = avg_bytes_perPset % GPFS_BSIZE;
-        ADIO_Offset             downr = GPFS_BSIZE - resid;
-        int                     small = (resid < downr);
-        int                     ratio = downr == 0 ? npsets + 2 : (resid +downr-1)/downr;
-        if (small)              ratio = resid == 0 ? npsets + 2 : (downr +resid-1)/resid;
-
-
-     * go through aggrsInfo of all PSETs *
-    ADIO_Offset fd_range = fd_gpfs_range;
-    int aggr = 0, pset; 
-    for (pset=0; pset<npsets; pset++) {
-
-        ADIO_Offset fds_try  = fds_lb;
-	int         my_naggs = aggrsInPset[pset+1];
-	ADIO_Offset fds_pset;
-
-	 * Last pset will deal with the residuals *
-	if (pset == npsets-1) 
-	    fds_pset = fd_range;
-	else 
-	{
-	    int cond1 = ((pset+1) % ratio == 0);
-	    int cond2 = ((pset+1) % ratio != 0);
-
-	    if (small) {
-		int temp = cond1; cond1 = cond2; cond2 = temp;
-	    }
-
-	    if (cond1) {
-		fds_pset = fds_try * my_naggs;
-		if (fds_pset % GPFS_BSIZE)   			// align to GPFS_BSIZE
-		    fds_pset = ((fds_pset +GPFS_BSIZE-1)/GPFS_BSIZE) * GPFS_BSIZE;	
-	    }
-	    if (cond2) 
-	    {
-		fds_try = fds_ub;
-		fds_pset = fds_try * my_naggs;
-		if (fds_pset % GPFS_BSIZE)   			// align to GPFS_BSIZE
-		    fds_pset = (fds_pset / GPFS_BSIZE) * GPFS_BSIZE;	
-	    }
-	}
-
-	 * for aggrs in each PSET, divide evenly the data range *
-#define CN_ALIGN 1
-#if !CN_ALIGN
-	fd_range -= fds_pset;
-	if ( pset == 0        ) fds_pset -= gpfs_lb_rdoff;
-	if ( pset == npsets-1 ) fds_pset -= gpfs_ub_rdoff;
-        int p;
-        for (p=0; p<my_naggs; p++) {
-            fd_size[aggr]  = (fds_pset   +my_naggs-1) / my_naggs;
-            if (p== my_naggs-1)
-                fd_size[aggr] -= (fd_size[aggr]*my_naggs - fds_pset);
-
-            aggr++;
-        }
-#else
-        ADIO_Offset avg_bytes_perP = fds_pset / my_naggs;
-        ADIO_Offset resid2 = avg_bytes_perP % GPFS_BSIZE;
-        ADIO_Offset downr2 = GPFS_BSIZE - resid2;
-        int small2 = (resid2 < downr2);
-        int         ratio2 = downr2 == 0 ? my_naggs + 2 : (resid2 +downr2-1)/downr2;
-        if (small2) ratio2 = resid2 == 0 ? my_naggs + 2 : (downr2 +resid2-1)/resid2;
-        ADIO_Offset accu = 0;
-        int p;
-        for (p=0; p<my_naggs; p++) {
-            int cond1 = ((p+1) % ratio2 == 0);
-            int cond2 = ((p+1) % ratio2 != 0);
-            if (small2) {
-                int temp = cond1; cond1 = cond2; cond2 = temp;
-            }
-            fd_size[aggr]  = avg_bytes_perP;
-            if (cond2) fd_size[aggr] = ((fd_size[aggr] +GPFS_BSIZE-1)/GPFS_BSIZE) * GPFS_BSIZE;
-            if (cond1) fd_size[aggr] = ((fd_size[aggr]              )/GPFS_BSIZE) * GPFS_BSIZE;
-            if (p== my_naggs-1)
-                fd_size[aggr] = (fds_pset - accu);
-
-            accu     += fd_size[aggr];
-            fd_range -= fd_size[aggr];
-            aggr++;
-        }
-#endif
-    }
-
-     * after scheduling, the first and the last region has to remove the round-off effect *
-
-#if CN_ALIGN
-    fd_size[0]       -= gpfs_lb_rdoff;
-    fd_size[naggs-1] -= gpfs_ub_rdoff;
-#endif
-    
-     * compute the file domain for each aggr *
-    ADIO_Offset offset = min_st_offset;
-    for (aggr=0; aggr<naggs; aggr++) {
-        fd_start[aggr] = offset;
-	fd_end  [aggr] = offset + fd_size[aggr] - 1;
-	offset += fd_size[aggr];
-    }
-
-     *
-    DBG_FPRINTF(stderr, "\t%6d : %12qd:%12qd, %12qd:%12qd:%12qd, %12qd:%12qd:%12qd\n", 
-	    naggs,
-	    min_st_offset,
-	    max_end_offset,
-	    fd_start[0],	
-	    fd_end  [0],	
-	    fd_size [0],	
-	    fd_start[naggs-1],	
-	    fd_end  [naggs-1],	
-	    fd_size [naggs-1] );	
-    *
-
-
-    *fd_size_ptr = fd_size[0];
-    *min_st_offset_ptr = min_st_offset;
-
-    ADIOI_Free (fd_size);
-}
-*/
 
 /* 
  * When a process is an IO aggregator, this will return its index in the aggrs list.
@@ -567,68 +562,10 @@ int ADIOI_BGL_Aggrs_index( ADIO_File fd, int myrank )
 }
 
 /* 
- * This is more general aggregator search function which does not base on the assumption
- * that each aggregator hosts the file domain with the same size 
- */
-int ADIOI_BGL_Calc_aggregator(ADIO_File fd,
-			      ADIO_Offset off,
-			      ADIO_Offset min_off,
-			      ADIO_Offset *len,
-			      ADIO_Offset fd_size,
-			      ADIO_Offset *fd_start,
-			      ADIO_Offset *fd_end)
-{
-    int rank_index, rank;
-    ADIO_Offset avail_bytes;
-
-    AD_BGL_assert ( (off <= fd_end[fd->hints->cb_nodes-1] && off >= min_off && fd_start[0] >= min_off ) );
-
-    /* binary search --> rank_index is returned */
-    int ub = fd->hints->cb_nodes;
-    int lb = 0;
-    rank_index = fd->hints->cb_nodes / 2;
-    while ( off < fd_start[rank_index] || off > fd_end[rank_index] ) {
-	if ( off > fd_end  [rank_index] ) {
-	    lb = rank_index;
-	    rank_index = (rank_index + ub) / 2;
-	}
-	else 
-	if ( off < fd_start[rank_index] ) {
-	    ub = rank_index;
-	    rank_index = (rank_index + lb) / 2;
-	}
-    }
-
-    // DBG_FPRINTF ("ADIOI_BGL_Calc_aggregator: rank_index = %d\n", rank_index );
-
-    /* 
-     * remember here that even in Rajeev's original code it was the case that
-     * different aggregators could end up with different amounts of data to
-     * aggregate.  here we use fd_end[] to make sure that we know how much
-     * data this aggregator is working with.  
-     *
-     * the +1 is to take into account the end vs. length issue.
-     */
-    avail_bytes = fd_end[rank_index] + 1 - off;
-    if (avail_bytes < *len && avail_bytes > 0) {
-        /* this file domain only has part of the requested contig. region */
-
-        *len = avail_bytes;
-    }
-
-    /* map our index to a rank */
-    /* NOTE: FOR NOW WE DON'T HAVE A MAPPING...JUST DO 0..NPROCS_FOR_COLL */
-    rank = fd->hints->ranklist[rank_index];
-
-    return rank;
-}
-
-
-/* 
  * ADIOI_BGL_Calc_my_req() overrides ADIOI_Calc_my_req for the default implementation 
  * is specific for static file domain partitioning.
  *
- * ADIOI_Calc_my_req() calculate what portions of the access requests
+ * ADIOI_Calc_my_req() - calculate what portions of the access requests
  * of this process are located in the file domains of various processes
  * (including this one)
  */
@@ -649,6 +586,9 @@ void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *
     ADIO_Offset fd_len, rem_len, curr_idx, off;
     ADIOI_Access *my_req;
 
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5024, 0, NULL);
+#endif
 
     *count_my_req_per_proc_ptr = (int *) ADIOI_Calloc(nprocs,sizeof(int)); 
     count_my_req_per_proc = *count_my_req_per_proc_ptr;
@@ -670,10 +610,10 @@ void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *
      * contig_access_count was calculated way back in ADIOI_Calc_my_off_len()
      */
     for (i=0; i < contig_access_count; i++) {
-
-	/* When there is no data being processed, bypass this loop */
-	if (len_list[i] == 0) continue;
-
+	/* short circuit offset/len processing if len == 0 
+	 * 	(zero-byte  read/write */
+	if (len_list[i] == 0) 
+		continue;
 	off = offset_list[i];
 	fd_len = len_list[i];
 	/* note: we set fd_len to be the total size of the access.  then
@@ -724,10 +664,10 @@ void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *
 /* now fill in my_req */
     curr_idx = 0;
     for (i=0; i<contig_access_count; i++) { 
-
-        /* When there is no data being processed, bypass this loop */
-        if (len_list[i] == 0) continue;
-
+	/* short circuit offset/len processing if len == 0 
+	 * 	(zero-byte  read/write */
+	if (len_list[i] == 0)
+		continue;
 	off = offset_list[i];
 	fd_len = len_list[i];
 	proc = ADIOI_BGL_Calc_aggregator(fd, off, min_st_offset, &fd_len, fd_size, 
@@ -794,6 +734,9 @@ void ADIOI_BGL_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *
 
     *count_my_req_procs_ptr = count_my_req_procs;
     *buf_idx_ptr = buf_idx;
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5025, 0, NULL);
+#endif
 }
 
 /*
@@ -846,7 +789,9 @@ void ADIOI_BGL_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	 *recvBufForLens   =(void*)0xFFFFFFFF; 
 
 /* first find out how much to send/recv and from/to whom */
-
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5026, 0, NULL);
+#endif
     /* Send 1 int to each process.  count_my_req_per_proc[i] is the number of 
      * requests that my process will do to the file domain owned by process[i].
      * Receive 1 int from each process.  count_others_req_per_proc[i] is the number of
@@ -1002,4 +947,7 @@ void ADIOI_BGL_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     ADIOI_Free (rdispls);
 
     *count_others_req_procs_ptr = count_others_req_procs;
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5027, 0, NULL);
+#endif
 }

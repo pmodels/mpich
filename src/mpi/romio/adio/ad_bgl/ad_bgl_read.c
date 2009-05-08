@@ -24,7 +24,6 @@ void ADIOI_BGL_ReadContig(ADIO_File fd, void *buf, int count,
     int err=-1, datatype_size;
     ADIO_Offset len;
     static char myname[] = "ADIOI_BGL_READCONTIG";
-
 #if BGL_PROFILE
 		/* timing */
 		double io_time, io_time2;
@@ -122,13 +121,6 @@ void ADIOI_BGL_ReadContig(ADIO_File fd, void *buf, int count,
 }
 
 
-void ADIOI_BGL_ReadStrided(ADIO_File fd, void *buf, int count,
-                       MPI_Datatype datatype, int file_ptr_type,
-                       ADIO_Offset offset, ADIO_Status *status, int
-                       *error_code)
-{
-/* offset is in units of etype relative to the filetype. */
-
 #define ADIOI_BUFFERED_READ \
 { \
     if (req_off >= readbuf_off + readbuf_len) { \
@@ -163,14 +155,21 @@ void ADIOI_BGL_ReadStrided(ADIO_File fd, void *buf, int count,
 }
 
 
+void ADIOI_BGL_ReadStrided(ADIO_File fd, void *buf, int count,
+                       MPI_Datatype datatype, int file_ptr_type,
+                       ADIO_Offset offset, ADIO_Status *status, int
+                       *error_code)
+{
+/* offset is in units of etype relative to the filetype. */
+
 
     ADIOI_Flatlist_node *flat_buf, *flat_file;
     ADIO_Offset i_offset, new_brd_size, brd_size, size;
-    int j, k, err=-1, st_index=0;
+    int i, j, k, err=-1, st_index=0;
     ADIO_Offset frd_size=0, new_frd_size, st_frd_size;
-    unsigned bufsize, num; 
+    unsigned num, bufsize; 
     int n_etypes_in_filetype;
-    ADIO_Offset n_filetypes, etype_in_filetype, size_in_filetype;
+    ADIO_Offset n_filetypes, etype_in_filetype, st_n_filetypes, size_in_filetype;
     ADIO_Offset abs_off_in_filetype=0;
     int filetype_size, etype_size, buftype_size, partial_read;
     MPI_Aint filetype_extent, buftype_extent; 
@@ -178,7 +177,6 @@ void ADIOI_BGL_ReadStrided(ADIO_File fd, void *buf, int count,
     ADIO_Offset userbuf_off, req_len, sum;
     ADIO_Offset off, req_off, disp, end_offset=0, readbuf_off, start_off;
     char *readbuf, *tmp_buf, *value;
-    int flag, st_n_filetypes;
     int err_flag=0, info_flag;
     unsigned max_bufsize, readbuf_len;
     static char myname[] = "ADIOI_BGL_READSTRIDED";
@@ -288,28 +286,33 @@ void ADIOI_BGL_ReadStrided(ADIO_File fd, void *buf, int count,
 	disp = fd->disp;
 
 	if (file_ptr_type == ADIO_INDIVIDUAL) {
-	    offset = fd->fp_ind; /* in bytes */
-	    n_filetypes = -1;
-	    flag = 0;
-	    while (!flag) {
-        int i;
-                n_filetypes++;
-		for (i=0; i<flat_file->count; i++) {
-		    if (disp + flat_file->indices[i] + 
-                        n_filetypes*(ADIO_Offset)filetype_extent + flat_file->blocklens[i] 
-                            >= offset) {
-			st_index = i;
-			frd_size = disp + flat_file->indices[i] + 
-			        n_filetypes*(ADIO_Offset)filetype_extent
-			         + flat_file->blocklens[i] - offset;
-			flag = 1;
-			break;
-		    }
+	    /* Wei-keng reworked type processing to be a bit more efficient */
+            offset       = fd->fp_ind - disp;
+            n_filetypes  = (offset - flat_file->indices[0]) / filetype_extent;
+	    offset -= (ADIO_Offset)n_filetypes * filetype_extent;
+	    /* now offset is local to this extent */
+
+            /* find the block where offset is located, skip blocklens[i]==0 */
+            for (i=0; i<flat_file->count; i++) {
+                ADIO_Offset dist;
+                if (flat_file->blocklens[i] == 0) continue;
+                dist = flat_file->indices[i] + flat_file->blocklens[i] - offset;
+                /* frd_size is from offset to the end of block i */
+		if (dist == 0) {
+		    i++;
+		    offset   = flat_file->indices[i];
+		    frd_size = flat_file->blocklens[i];
+		    break;
+		}
+		if (dist > 0) {
+                    frd_size = dist;
+		    break;
 		}
 	    }
+            st_index = i;  /* starting index in flat_file->indices[] */
+            offset += disp + (ADIO_Offset)n_filetypes*filetype_extent;
 	}
 	else {
-    int i;
 	    n_etypes_in_filetype = filetype_size/etype_size;
 	    n_filetypes = offset / n_etypes_in_filetype;
 	    etype_in_filetype = offset % n_etypes_in_filetype;
@@ -328,10 +331,41 @@ void ADIOI_BGL_ReadStrided(ADIO_File fd, void *buf, int count,
 	    }
 
 	    /* abs. offset in bytes in the file */
-	    offset = disp + n_filetypes*(ADIO_Offset)filetype_extent + abs_off_in_filetype;
+	    offset = disp + (ADIO_Offset) n_filetypes*filetype_extent + 
+		    abs_off_in_filetype;
 	}
 
         start_off = offset;
+
+	/* Wei-keng Liao: read request is within a single flat_file contig
+	 * block e.g. with subarray types that actually describe the whole
+	 * array */
+	if (buftype_is_contig && bufsize <= frd_size) {
+            ADIO_ReadContig(fd, buf, bufsize, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
+                             offset, status, error_code);
+
+	    if (file_ptr_type == ADIO_INDIVIDUAL) {
+                /* update MPI-IO file pointer to point to the first byte that 
+		 * can be accessed in the fileview. */
+		fd->fp_ind = offset + bufsize;
+		if (bufsize == frd_size) {
+		    do {
+			st_index++;
+			if (st_index == flat_file->count) {
+			    st_index = 0;
+			    n_filetypes++;
+			}
+                    } while (flat_file->blocklens[st_index] == 0);
+		    fd->fp_ind = disp + flat_file->indices[st_index]
+                               + n_filetypes*filetype_extent;
+		}
+	    }
+	    fd->fp_sys_posn = -1;   /* set it to null. */ 
+#ifdef HAVE_STATUS_SET_BYTES
+	    MPIR_Status_set_bytes(status, datatype, bufsize);
+#endif 
+            return;
+	}
 
        /* Calculate end_offset, the last byte-offset that will be accessed.
          e.g., if start_offset=0 and 100 bytes to be read, end_offset=99*/
@@ -346,12 +380,12 @@ void ADIOI_BGL_ReadStrided(ADIO_File fd, void *buf, int count,
 	    i_offset += frd_size;
 	    end_offset = off + frd_size - 1;
 
-	    if (j < (flat_file->count - 1)) j++;
-	    else {
-		j = 0;
-		n_filetypes++;
+	    j = (j+1) % flat_file->count;
+            n_filetypes += (j == 0) ? 1 : 0;
+            while (flat_file->blocklens[j]==0) {
+		j = (j+1) % flat_file->count;
+		n_filetypes += (j == 0) ? 1 : 0;
 	    }
-
 	    off = disp + flat_file->indices[j] + n_filetypes*(ADIO_Offset)filetype_extent;
 	    frd_size = ADIOI_MIN(flat_file->blocklens[j], bufsize-i_offset);
 	}
@@ -402,10 +436,11 @@ void ADIOI_BGL_ReadStrided(ADIO_File fd, void *buf, int count,
                 /* did not reach end of contiguous block in filetype.
                    no more I/O needed. off is incremented by frd_size. */
                 else {
-		    if (j < (flat_file->count - 1)) j++;
-		    else {
-			j = 0;
-			n_filetypes++;
+                    j = (j+1) % flat_file->count;
+                    n_filetypes += (j == 0) ? 1 : 0;
+                    while (flat_file->blocklens[j]==0) {
+                        j = (j+1) % flat_file->count;
+                        n_filetypes += (j == 0) ? 1 : 0;
 		    }
 		    off = disp + flat_file->indices[j] + 
                                         n_filetypes*(ADIO_Offset)filetype_extent;
@@ -445,10 +480,11 @@ void ADIOI_BGL_ReadStrided(ADIO_File fd, void *buf, int count,
 
 		if (size == frd_size) {
 /* reached end of contiguous block in file */
-		    if (j < (flat_file->count - 1)) j++;
-		    else {
-			j = 0;
-			n_filetypes++;
+                    j = (j+1) % flat_file->count;
+                    n_filetypes += (j == 0) ? 1 : 0;
+                    while (flat_file->blocklens[j]==0) {
+                        j = (j+1) % flat_file->count;
+                        n_filetypes += (j == 0) ? 1 : 0;
 		    }
 
 		    off = disp + flat_file->indices[j] + 

@@ -18,6 +18,9 @@
 #include "ad_bgl_pset.h"
 #include "ad_bgl_aggrs.h"
 
+#ifdef AGGREGATION_PROFILE
+#include "mpe.h"
+#endif
 #ifdef PROFILE
 #include "mpe.h"
 #endif
@@ -120,25 +123,25 @@ void ADIOI_BGL_WriteStridedColl(ADIO_File fd, void *buf, int count,
 
     int *buf_idx = NULL;
     ADIO_Offset *len_list = NULL;
-/*
-    double io_time = 0, all_time, max_all_time;
-    double tstep1, max_tstep1;
-    double tstep1_1, max_tstep1_1;
-    double tstep1_2, max_tstep1_2;
-    double tstep1_3, max_tstep1_3;
-    double tstep2, max_tstep2;
-    double tstep3, max_tstep3;
-    double tstep4, max_tstep4;
-    double sum_sz;
-*/
 #if BGL_PROFILE 
     BGLMPIO_T_CIO_RESET( 0, w )
 #endif
-
+#if 0
+    /* From common code - not implemented for bgl.*/
+    int old_error, tmp_error;
+#endif
 #ifdef PROFILE
 	MPE_Log_event(13, 0, "start computation");
 #endif
 
+#if 0
+/*   From common code - not implemented for bgl. */
+     if (fd->hints->cb_pfr != ADIOI_HINT_DISABLE) { 
+	ADIOI_IOStridedColl (fd, buf, count, ADIOI_WRITE, datatype, 
+			file_ptr_type, offset, status, error_code);
+	return;
+    }
+#endif
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
 
@@ -208,7 +211,8 @@ void ADIOI_BGL_WriteStridedColl(ADIO_File fd, void *buf, int count,
 	/* are the accesses of different processes interleaved? */
 	for (i=1; i<nprocs; i++)
       if ((st_offsets[i] < end_offsets[i-1]) &&
-          (st_offsets[i] <= end_offsets[i])) interleave_count++;                   
+                (st_offsets[i] <= end_offsets[i]))
+                interleave_count++;
 	/* This is a rudimentary check for interleaving, but should suffice
 	   for the moment. */
     }
@@ -232,7 +236,7 @@ void ADIOI_BGL_WriteStridedColl(ADIO_File fd, void *buf, int count,
         if (buftype_is_contig && filetype_is_contig) {
 
             if (file_ptr_type == ADIO_EXPLICIT_OFFSET) {
-                off = fd->disp + (fd->etype_size) * offset;
+                off = fd->disp + (ADIO_Offset)(fd->etype_size) * offset;
                 ADIO_WriteContig(fd, buf, count, datatype,
 				 ADIO_EXPLICIT_OFFSET,
 				 off, status, error_code);
@@ -261,7 +265,7 @@ void ADIOI_BGL_WriteStridedColl(ADIO_File fd, void *buf, int count,
     else
     ADIOI_Calc_file_domains(st_offsets, end_offsets, nprocs,
 			    nprocs_for_coll, &min_st_offset,
-			    &fd_start, &fd_end, 
+			    &fd_start, &fd_end,
 			    fd->hints->min_fdomain_size, &fd_size,
 			    fd->hints->striping_unit);   
 
@@ -332,9 +336,50 @@ void ADIOI_BGL_WriteStridedColl(ADIO_File fd, void *buf, int count,
 
     BGLMPIO_T_CIO_REPORT( 0, w, fd, myrank )
 #endif
-	
+#if 0
+    /* From common code - not implemented for bgl.
+     * 
+     * If this collective write is followed by an independent write,
+     * it's possible to have those subsequent writes on other processes
+     * race ahead and sneak in before the read-modify-write completes.
+     * We carry out a collective communication at the end here so no one
+     * can start independent i/o before collective I/O completes. 
+     *
+     * need to do some gymnastics with the error codes so that if something
+     * went wrong, all processes report error, but if a process has a more
+     * specific error code, we can still have that process report the
+     * additional information */
 
+    old_error = *error_code;
+    if (*error_code != MPI_SUCCESS) *error_code = MPI_ERR_IO;
+
+     /* optimization: if only one process performing i/o, we can perform
+     * a less-expensive Bcast  */
+#ifdef ADIOI_MPE_LOGGING
+    MPE_Log_event( ADIOI_MPE_postwrite_a, 0, NULL );
+#endif
+    if (fd->hints->cb_nodes == 1) 
+	    MPI_Bcast(error_code, 1, MPI_INT, 
+			    fd->hints->ranklist[0], fd->comm);
+    else {
+	    tmp_error = *error_code;
+	    MPI_Allreduce(&tmp_error, error_code, 1, MPI_INT, 
+			    MPI_MAX, fd->comm);
+    }
+#ifdef ADIOI_MPE_LOGGING
+    MPE_Log_event( ADIOI_MPE_postwrite_b, 0, NULL );
+#endif
+#ifdef AGGREGATION_PROFILE
+	MPE_Log_event (5012, 0, NULL);
+#endif
+
+    if ( (old_error != MPI_SUCCESS) && (old_error != MPI_ERR_IO) )
+	    *error_code = old_error;
+
+
+#endif
 /* free all memory allocated for collective I/O */
+    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 
     for (i=0; i<nprocs; i++) {
 	if (others_req[i].count) {
@@ -366,6 +411,9 @@ void ADIOI_BGL_WriteStridedColl(ADIO_File fd, void *buf, int count,
 #endif
 
     fd->fp_sys_posn = -1;   /* set it to null. */
+#ifdef AGGREGATION_PROFILE
+	MPE_Log_event (5013, 0, NULL);
+#endif
 }
 
 
@@ -374,7 +422,8 @@ void ADIOI_BGL_WriteStridedColl(ADIO_File fd, void *buf, int count,
  * code is created and returned in error_code.
  */
 static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
-				 datatype, int nprocs, int myrank,
+				 datatype, int nprocs, 
+				 int myrank,
 				 ADIOI_Access
 				 *others_req, ADIO_Offset *offset_list,
 				 ADIO_Offset *len_list, int contig_access_count,
@@ -765,19 +814,26 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         }
     ADIOI_Free(tmp_len);
 
-/* check if there are any holes */
+    /* check if there are any holes. If yes, must do read-modify-write.
+     * holes can be in three places.  'middle' is what you'd expect: the
+     * processes are operating on noncontigous data.  But holes can also show
+     * up at the beginning or end of the file domain (see John Bent ROMIO REQ
+     * #835). Missing these holes would result in us writing more data than
+     * recieved by everyone else. */
     *hole = 0;
-    /* See if there are holes before the first request or after the last request*/
-    if((srt_off[0] > off) || 
-       ((srt_off[sum-1] + srt_len[sum-1]) < (off + size)))
-    {
-       *hole = 1;
-    }
-    else /* See if there are holes between the requests, if there are more than one */
-    for (i=0; i<sum-1; i++)
-	if (srt_off[i]+srt_len[i] < srt_off[i+1]) {
-	    *hole = 1;
-	    break;
+    if (off != srt_off[0]) /* hole at the front */
+        *hole = 1;
+    else { /* coalesce the sorted offset-length pairs */
+        for (i=1; i<sum; i++) {
+            if (srt_off[i] <= srt_off[0] + srt_len[0]) {
+		int new_len = srt_off[i] + srt_len[i] - srt_off[0];
+		if (new_len > srt_len[0]) srt_len[0] = new_len;
+	    }
+            else
+                break;
+        }
+        if (i < sum || size != srt_len[0]) /* hole in middle or end */
+            *hole = 1;
 	}
 
     ADIOI_Free(srt_off);
@@ -828,6 +884,9 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 /* post sends. if buftype_is_contig, data can be directly sent from
    user buf at location given by buf_idx. else use send_buf. */
 
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5032, 0, NULL);
+#endif
     if (buftype_is_contig) {
 	j = 0;
 	for (i=0; i < nprocs; i++) 
@@ -902,6 +961,9 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         MPI_Waitall(nprocs_send+nprocs_recv, requests, statuses);
 #endif
 
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event (5033, 0, NULL);
+#endif
     ADIOI_Free(statuses);
     ADIOI_Free(requests);
     if (!buftype_is_contig && nprocs_send) {
@@ -937,7 +999,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 { \
     while (size) { \
         size_in_buf = ADIOI_MIN(size, flat_buf_sz); \
-  ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)buf) + user_buf_idx) == (ADIO_Offset)(MPIR_Upint)(buf + user_buf_idx)); \
+  ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)buf) + user_buf_idx) == (ADIO_Offset)(MPIR_Upint)((MPIR_Upint)buf + user_buf_idx)); \
   ADIOI_Assert(size_in_buf == (size_t)size_in_buf); \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
                ((char *) buf) + user_buf_idx, size_in_buf); \
