@@ -196,7 +196,6 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
 
         for (j=0; j<count; j++) 
         {
-          int i;
               for (i=0; i<flat_buf->count; i++) {
                   userbuf_off = (ADIO_Offset)j*(ADIO_Offset)buftype_extent + flat_buf->indices[i];
       req_off = off;
