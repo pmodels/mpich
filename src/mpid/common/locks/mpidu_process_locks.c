@@ -14,10 +14,7 @@
 #include <windows.h>
 #endif
 
-/* FIXME: This definition is wrong in two ways.  First, it violates
-   the naming convention for user-visible symbols; a valid user program
-   could reset this value by simply using the value in the user program.
-   Second and more serious, the build scheme for this file is broken,
+/* FIXME: The build scheme for this file is broken,
    and this definition illustrates the problem.  The issue is that some
    files include mpidu_process_locks.h with *different* definitions than
    are used to compile this file!  That shows up when this variable, 
@@ -27,7 +24,7 @@
    defined, but the configure in the mpid/common/locks directory will
    *never* define USE_BUSY_LOCKS */
 /* #ifdef USE_BUSY_LOCKS */
-int g_nLockSpinCount = 100;
+int MPIU_g_nLockSpinCount = 100;
 /* #endif */
 
 /* To make it easier to read the code, the implementation of all of the 

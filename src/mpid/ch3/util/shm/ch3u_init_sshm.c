@@ -117,8 +117,7 @@ int MPIDI_CH3U_Init_sshm(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
    code */
 #ifndef HAVE_WINDOWS_H    /* brad - nShmWaitSpinCount is uninitialized in sshm but probably shouldn't be */
     pgch->nShmWaitSpinCount = 1;
-/* FIXME: g_nLockSpinCount is a non-conforming name (the user can 
-   write a code that changes it) and it is in a different module
+/* FIXME: MPIU_g_nLockSpinCount is in a different module
    (mpid/common/locks) where it is used (and defined) only in some cases. 
    Commenting out this bogus access for now; uncommenting it may cause
    link failures. Update - see FIXME in mpidu_process_locks - there are
@@ -127,7 +126,7 @@ int MPIDI_CH3U_Init_sshm(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
    in mpid/ch3 that include it (like this one) and in mpidu_process_locks.c 
    (!).  For that reason, I've left this statement in the code, but 
    once mpidu_process_locks is fixed, this will need to be as well. */
-    g_nLockSpinCount = 1;
+    MPIU_g_nLockSpinCount = 1;
 #endif
 
     pmi_errno = PMI_Get_size(&pg_size);

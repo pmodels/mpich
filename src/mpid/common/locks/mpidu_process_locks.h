@@ -100,7 +100,7 @@
 #if defined(USE_BUSY_LOCKS)
 typedef volatile long MPIDU_Process_lock_t;
 /* FIXME: This uses an invalid prefix */
-extern int g_nLockSpinCount;
+extern int MPIU_g_nLockSpinCount;
 
 /* We need an atomic "test and set if clear" operation.  The following
    definitions are used to create that.  The operation itself
@@ -199,7 +199,7 @@ static inline void MPIDU_Process_lock( MPIDU_Process_lock_t *lock )
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_PROCESS_LOCK);
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_PROCESS_LOCK);
     for (;;) {
-        for (i=0; i<g_nLockSpinCount; i++) {
+        for (i=0; i<MPIU_g_nLockSpinCount; i++) {
             if (*lock == 0) {
 		if (MPID_ATOMIC_SET_IF_ZERO(lock)) {
                     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_PROCESS_LOCK);
@@ -235,7 +235,7 @@ static inline void MPIDU_Process_lock_busy_wait( MPIDU_Process_lock_t *lock )
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_PROCESS_LOCK_BUSY_WAIT);
     for (;;)
     {
-        for (i=0; i<g_nLockSpinCount; i++)
+        for (i=0; i<MPIU_g_nLockSpinCount; i++)
             if (!*lock)
             {
 		MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_PROCESS_LOCK_BUSY_WAIT);
