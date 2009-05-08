@@ -1173,6 +1173,9 @@ extern MPID_Group MPID_Group_direct[];
        MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
          "Decr group %p ref count to %d",_group,_group->ref_count));}
 
+void MPIR_Group_setup_lpid_list( MPID_Group * );
+int MPIR_GroupCheckVCRSubset( MPID_Group *group_ptr, int vsize, MPID_VCR *vcr, int *idx );
+
 /* ------------------------------------------------------------------------- */
 
 /*E
