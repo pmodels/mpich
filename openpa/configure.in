@@ -153,6 +153,12 @@ if test     "$with_atomic_primitives" = "auto"                 \
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[
     #define OPA_SIZEOF_INT SIZEOF_INT
     #define OPA_SIZEOF_VOID_P SIZEOF_VOID_P
+    #ifndef _opa_inline
+    #define _opa_inline inline
+    #endif
+    #ifndef _opa_restrict
+    #define _opa_restrict restrict
+    #endif
     #include "opa_util.h" /* for ATTRIBUTE and friends */
     #include "primitives/$1"
     ]],[[
