@@ -57,9 +57,9 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int ** striping_info_ptr,
     /* To avoid extent lock conflicts,
      * avail_cb_nodes should divide (stripe_count*CO) exactly,
      * so that each OST is accessed by only one or more constant clients. */
-    avail_cb_nodes = ADIOI_MIN(nprocs_for_coll, stripe_count * CO);
-    if (avail_cb_nodes == nprocs_for_coll) {
-        CO_nodes = stripe_count * CO;
+    CO_nodes = stripe_count * CO;
+    avail_cb_nodes = ADIOI_MIN(nprocs_for_coll, CO_nodes);
+    if (avail_cb_nodes ==  CO_nodes) {
         do {
             /* find the divisor of CO_nodes */
             divisor = 1;
