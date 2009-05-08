@@ -6,6 +6,7 @@
 
 #include "mpichconf.h"
 #include "mpimem.h"
+#include "mpibase.h"
 
 #include <stdio.h>
 #ifdef HAVE_STDARG_H

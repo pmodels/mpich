@@ -5,10 +5,10 @@
  */
 
 #include "mpichconf.h"
+#include "mpibase.h"
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
 #endif
-
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
