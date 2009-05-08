@@ -16,7 +16,7 @@ typedef struct { void * volatile v; ATTRIBUTE((aligned (8))) } OPA_ptr_t;
    these here, which are arch-specific, then use the generic
    implementations from opa_emulated.h */
 
-static inline int OPA_LL_int(OPA_int_t *ptr)
+static _opa_inline int OPA_LL_int(OPA_int_t *ptr)
 {
     int val;
     __asm__ __volatile__ ("lwarx %[val],0,%[ptr]"
@@ -28,7 +28,7 @@ static inline int OPA_LL_int(OPA_int_t *ptr)
 }
 
 /* Returns non-zero if the store was successful, zero otherwise. */
-static inline int OPA_SC_int(OPA_int_t *ptr, int val)
+static _opa_inline int OPA_SC_int(OPA_int_t *ptr, int val)
 {
     int ret;
     __asm__ __volatile__ ("stwcx. %[val],0,%[ptr];\n"
@@ -48,7 +48,7 @@ static inline int OPA_SC_int(OPA_int_t *ptr, int val)
    differing word and pointer widths we can write separate versions.
 */
 
-static inline void *OPA_LL_ptr(OPA_ptr_t *ptr)
+static _opa_inline void *OPA_LL_ptr(OPA_ptr_t *ptr)
 {
     /* need to implement a separate ptr-sized version, although it's not needed
        on the BG/P it might be needed on a different PPC impl */
@@ -58,7 +58,7 @@ static inline void *OPA_LL_ptr(OPA_ptr_t *ptr)
 }
 
 /* Returns non-zero if the store was successful, zero otherwise. */
-static inline int OPA_SC_ptr(OPA_ptr_t *ptr, void *val)
+static _opa_inline int OPA_SC_ptr(OPA_ptr_t *ptr, void *val)
 {
     /* need to implement a separate ptr-sized version, although it's not needed
        on the BG/P it might be needed on a different PPC impl */

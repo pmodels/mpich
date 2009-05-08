@@ -17,52 +17,52 @@
 typedef struct { volatile long v;  } OPA_int_t;
 typedef struct { void * volatile v; } OPA_ptr_t;
 
-static inline int OPA_load(OPA_int_t *ptr)
+static _opa_inline int OPA_load(OPA_int_t *ptr)
 {
     return ((int)ptr->v);
 }
 
-static inline void OPA_store(OPA_int_t *ptr, int val)
+static _opa_inline void OPA_store(OPA_int_t *ptr, int val)
 {
     ptr->v = (long)val;
 }
 
-static inline void *OPA_load_ptr(OPA_ptr_t *ptr)
+static _opa_inline void *OPA_load_ptr(OPA_ptr_t *ptr)
 {
     return ((void *)ptr->v);
 }
 
-static inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
+static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
 {
     ptr->v = val;
 }
 
-static inline void OPA_add(OPA_int_t *ptr, int val)
+static _opa_inline void OPA_add(OPA_int_t *ptr, int val)
 {
     _InterlockedExchangeAdd(&(ptr->v), val);
 }
 
-static inline void OPA_incr(OPA_int_t *ptr)
+static _opa_inline void OPA_incr(OPA_int_t *ptr)
 {
     _InterlockedIncrement(&(ptr->v));
 }
 
-static inline void OPA_decr(OPA_int_t *ptr)
+static _opa_inline void OPA_decr(OPA_int_t *ptr)
 {
     _InterlockedDecrement(&(ptr->v));
 }
 
-static inline int OPA_decr_and_test(OPA_int_t *ptr)
+static _opa_inline int OPA_decr_and_test(OPA_int_t *ptr)
 {
     return (_InterlockedDecrement(&(ptr->v)) == 0);
 }
 
-static inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
+static _opa_inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
 {
     return ((int)_InterlockedExchangeAdd(&(ptr->v), (long)val));
 }
 
-static inline void *OPA_cas_ptr(OPA_ptr_t *ptr, void *oldv, void *newv)
+static _opa_inline void *OPA_cas_ptr(OPA_ptr_t *ptr, void *oldv, void *newv)
 {
 #if (OPA_SIZEOF_VOID_P == 4)
     return ((LONG_PTR) _InterlockedCompareExchange((LONG volatile *)&(ptr->v),
@@ -79,7 +79,7 @@ static inline void *OPA_cas_ptr(OPA_ptr_t *ptr, void *oldv, void *newv)
 #endif
 }
 
-static inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)
+static _opa_inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)
 {
 #if (OPA_SIZEOF_VOID_P == 4)
     return _InterlockedExchange(&(ptr->v), val);
@@ -90,12 +90,12 @@ static inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)
 #endif
 }
 
-static inline int OPA_cas_int(OPA_int_t *ptr, int oldv, int newv)
+static _opa_inline int OPA_cas_int(OPA_int_t *ptr, int oldv, int newv)
 {
     return _InterlockedCompareExchange(&(ptr->v), newv, oldv);
 }
 
-static inline int OPA_swap_int(OPA_int_t *ptr, int val)
+static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 {
     return _InterlockedExchange(&(ptr->v), val);
 }

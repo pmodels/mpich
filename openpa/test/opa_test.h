@@ -41,7 +41,7 @@ typedef void * volatile OPA_ptr_t;
 #define OPA_decr(A) ((void) (--(*(A))))
 
 #define OPA_decr_and_test(A) (0 == --(*(A)))
-static inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
+static _opa_inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
 {
     int prev = *ptr;
     *ptr += val;
@@ -53,7 +53,7 @@ static inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
 #define OPA_cas_ptr(A, B, C) (*(A) == (B) ? (*(A) = (C), (B)) : (A))
 #define OPA_cas_int(A, B, C) (*(A) == (B) ? (*(A) = (C), (B)) : (A))
 
-static inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)
+static _opa_inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)
 {
     void *prev;
     prev = *ptr;
@@ -61,7 +61,7 @@ static inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)
     return prev;
 }
 
-static inline int OPA_swap_int(OPA_int_t *ptr, int val)
+static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 {
     int prev;
     prev = *ptr;

@@ -10,6 +10,18 @@
 #include "opa_config.h"
 #include "opa_util.h"
 
+/* Clean up some of the opa_config.h definitions.  This is a consequence
+   of using the AX_PREFIX_CONFIG_H macro. Autoconf won't define inline
+   or _opa_inline when a real "inline" works.  Since we are
+   unconditionally using _opa_inline we must define it ourselves in this
+   case. */
+#ifndef _opa_inline
+#define _opa_inline inline
+#endif
+#ifndef _opa_restrict
+#define _opa_restrict restrict
+#endif
+
 /*
    Primitive atomic functions
    --------------------------
@@ -29,37 +41,37 @@
 
    The atomic functions that must be ported for each architecture: 
 
-   static inline int   OPA_load(OPA_int_t *ptr);
-   static inline void  OPA_store(OPA_int_t *ptr, int val);
-   static inline void *OPA_load_ptr(OPA_ptr_t *ptr);
-   static inline void  OPA_store_ptr(OPA_ptr_t *ptr, void *val);
+   static _opa_inline int   OPA_load(OPA_int_t *ptr);
+   static _opa_inline void  OPA_store(OPA_int_t *ptr, int val);
+   static _opa_inline void *OPA_load_ptr(OPA_ptr_t *ptr);
+   static _opa_inline void  OPA_store_ptr(OPA_ptr_t *ptr, void *val);
 
-   static inline void OPA_add(OPA_int_t *ptr, int val);
-   static inline void OPA_incr(OPA_int_t *ptr);
-   static inline void OPA_decr(OPA_int_t *ptr);
+   static _opa_inline void OPA_add(OPA_int_t *ptr, int val);
+   static _opa_inline void OPA_incr(OPA_int_t *ptr);
+   static _opa_inline void OPA_decr(OPA_int_t *ptr);
 
-   static inline int OPA_decr_and_test(OPA_int_t *ptr);
-   static inline int OPA_fetch_and_add(OPA_int_t *ptr, int val);
-   static inline int OPA_fetch_and_decr(OPA_int_t *ptr);
-   static inline int OPA_fetch_and_incr(OPA_int_t *ptr);
+   static _opa_inline int OPA_decr_and_test(OPA_int_t *ptr);
+   static _opa_inline int OPA_fetch_and_add(OPA_int_t *ptr, int val);
+   static _opa_inline int OPA_fetch_and_decr(OPA_int_t *ptr);
+   static _opa_inline int OPA_fetch_and_incr(OPA_int_t *ptr);
 
-   static inline void *OPA_cas_ptr(OPA_ptr_t *ptr, void *oldv, void *newv);
-   static inline int   OPA_cas_int(OPA_int_t *ptr, int oldv, int newv);
+   static _opa_inline void *OPA_cas_ptr(OPA_ptr_t *ptr, void *oldv, void *newv);
+   static _opa_inline int   OPA_cas_int(OPA_int_t *ptr, int oldv, int newv);
 
-   static inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val);
-   static inline int   OPA_swap_int(OPA_int_t *ptr, int val);
+   static _opa_inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val);
+   static _opa_inline int   OPA_swap_int(OPA_int_t *ptr, int val);
 
-   static inline void OPA_write_barrier();
-   static inline void OPA_read_barrier();
-   static inline void OPA_read_write_barrier();
+   static _opa_inline void OPA_write_barrier();
+   static _opa_inline void OPA_read_barrier();
+   static _opa_inline void OPA_read_write_barrier();
 
 
    The following need to be ported only for architectures supporting LL/SC:
 
-   static inline int OPA_LL_int(OPA_int_t *ptr);
-   static inline int OPA_SC_int(OPA_int_t *ptr, int val);
-   static inline void *OPA_LL_ptr(OPA_ptr_t *ptr);
-   static inline int OPA_SC_ptr(OPA_ptr_t *ptr, void *val);
+   static _opa_inline int OPA_LL_int(OPA_int_t *ptr);
+   static _opa_inline int OPA_SC_int(OPA_int_t *ptr, int val);
+   static _opa_inline void *OPA_LL_ptr(OPA_ptr_t *ptr);
+   static _opa_inline int OPA_SC_ptr(OPA_ptr_t *ptr, void *val);
 
 */
 
