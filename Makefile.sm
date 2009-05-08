@@ -1,5 +1,5 @@
 # -*- Mode: makefile; -*-
-SUBDIRS = . src @EXTERNAL_SRC_DIRS@ examples
+SUBDIRS = . @EXTERNAL_SRC_DIRS@ src examples
 # Do not include test in the basic build.  
 OTHER_DIRS = test
 DOC_SUBDIRS = doc
