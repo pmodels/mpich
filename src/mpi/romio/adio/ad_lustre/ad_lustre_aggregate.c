@@ -13,7 +13,7 @@
 
 #undef AGG_DEBUG
 
-void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int ** striping_info_ptr,
+void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr,
 				    int mode)
 {
     int *striping_info = NULL;
@@ -50,7 +50,7 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int ** striping_info_ptr,
         /* CO_max: the largest number of IO clients for each ost group */
         CO_max = (nprocs_for_coll - 1)/ stripe_count + 1;
         /* CO also has been validated in ADIOI_LUSTRE_Open(), >0 */
-	CO = fd->hints->fs_hints.lustre.CO;
+	CO = fd->hints->fs_hints.lustre.co_ratio;
 	CO = ADIOI_MIN(CO_max, CO);
     }
     /* Calculate how many IO clients we need */
@@ -124,7 +124,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
 			      int *striping_info, int nprocs,
                               int *count_my_req_procs_ptr,
 			      int **count_my_req_per_proc_ptr,
-			      ADIOI_Access ** my_req_ptr,
+			      ADIOI_Access **my_req_ptr,
 			      int **buf_idx_ptr)
 {
     /* Nothing different from ADIOI_Calc_my_req(), except calling
@@ -295,217 +295,10 @@ int ADIOI_LUSTRE_Docollect(ADIO_File fd, int contig_access_count,
     /* estimate average req_size */
     avg_req_size = (int)(total_req_size / total_access_count);
     /* get hint of big_req_size */
-    big_req_size = fd->hints->fs_hints.lustre.bigsize;
+    big_req_size = fd->hints->fs_hints.lustre.coll_threshold;
     /* Don't perform collective I/O if there are big requests */
     if ((big_req_size > 0) && (avg_req_size > big_req_size))
         docollect = 0;
 
     return docollect;
-}
-
-void ADIOI_LUSTRE_Calc_others_req(ADIO_File fd, int count_my_req_procs,
-				  int *count_my_req_per_proc,
-				  ADIOI_Access * my_req,
-				  int nprocs, int myrank,
-                                  ADIO_Offset start_offset,
-                                  ADIO_Offset end_offset,
-                                  int *striping_info,
-				  int *count_others_req_procs_ptr,
-				  ADIOI_Access ** others_req_ptr)
-{
-    /* what requests of other processes will be accessed by this process */
-
-    /* count_others_req_procs = number of processes whose requests (including
-     * this process itself) will be accessed by this process
-     * count_others_req_per_proc[i] indicates how many separate contiguous
-     * requests of proc. i lie will be accessed by this process.
-     */
-
-    int *count_others_req_per_proc, count_others_req_procs, proc;
-    int i, j, samesize = 0, contiguous = 0;
-    int avail_cb_nodes = striping_info[2];
-    MPI_Request *send_requests, *recv_requests;
-    MPI_Status *statuses;
-    ADIOI_Access *others_req;
-    ADIO_Offset min_st_offset, off, req_len, avail_len, rem_len, *all_lens;
-
-    /* There are two hints, which could reduce some MPI communication overhead,
-     * if the users knows the I/O pattern and set them correctly. */
-    /* They are
-     * contig_data: if the data are contiguous,
-     *              we don't need to do MPI_Alltoall().
-     * samesize: if the data req size is same,
-     *           we can calculate the offset directly
-     */
-    /* hint of contiguous data */
-    contiguous = fd->hints->fs_hints.lustre.contig_data;
-    /* hint of same io size */
-    samesize = fd->hints->fs_hints.lustre.samesize;
-
-    *others_req_ptr = (ADIOI_Access *) ADIOI_Malloc(nprocs *
-                                                    sizeof(ADIOI_Access));
-    others_req = *others_req_ptr;
-
-    /* if the data are contiguous, we can calulate the offset and length
-     * of the other requests simply, instead of MPI_Alltoall() */
-    if (contiguous) {
-        for (i = 0; i < nprocs; i++) {
-            others_req[i].count = 0;
-        }
-        req_len = end_offset - start_offset + 1;
-        all_lens = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
-
-        /* same req size ? */
-        if (samesize == 0) {
-            /* calculate the min_st_offset */
-            MPI_Allreduce(&start_offset, &min_st_offset, 1, MPI_LONG_LONG,
-                          MPI_MIN, fd->comm);
-            /* exchange request length */
-            MPI_Allgather(&req_len, 1, ADIO_OFFSET, all_lens, 1, ADIO_OFFSET,
-                          fd->comm);
-        } else { /* same request size */
-            /* calculate the 1st request's offset */
-            min_st_offset = start_offset - myrank * req_len;
-            /* assign request length to all_lens[] */
-            for (i = 0; i < nprocs; i ++)
-               all_lens[i] = req_len;
-        }
-        if (myrank < avail_cb_nodes) {
-            /* This is a IO client and it will receive data from others */
-            off = min_st_offset;
-            /* calcaulte other_req[i].count */
-            for (i = 0; i < nprocs; i++) {
-                avail_len = all_lens[i];
-                rem_len = avail_len;
-                while (rem_len > 0) {
-	            proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len,
-                                                        striping_info);
-                    if (proc == myrank) {
-                        others_req[i].count ++;
-                    }
-                    off += avail_len;
-                    rem_len -= avail_len;
-                    avail_len = rem_len;
-                }
-            }
-            /* calculate offset and len for each request */
-            off = min_st_offset;
-            for (i = 0; i < nprocs; i++) {
-                if (others_req[i].count) {
-	            others_req[i].offsets = (ADIO_Offset *)
-                                            ADIOI_Malloc(others_req[i].count *
-			                                 sizeof(ADIO_Offset));
-	            others_req[i].lens = (int *)
-                                         ADIOI_Malloc(others_req[i].count *
-                                                      sizeof(int));
-                    others_req[i].mem_ptrs = (MPI_Aint *)
-                                             ADIOI_Malloc(others_req[i].count *
-			                                  sizeof(MPI_Aint));
-                }
-                j = 0;
-                avail_len = all_lens[i];
-                rem_len = avail_len;
-                while (rem_len > 0) {
-	            proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len,
-                                                        striping_info);
-                    if (proc == myrank) {
-                        others_req[i].offsets[j] = off;
-                        others_req[i].lens[j] = (int)avail_len;
-                        j ++;
-                    }
-                    off += avail_len;
-                    rem_len -= avail_len;
-                    avail_len = rem_len;
-                }
-            }
-        }
-        ADIOI_Free(all_lens);
-    } else {
-        /* multiple non-contiguous requests */
-
-        /*
-         * count_others_req_procs:
-         *    number of processes whose requests will be written by
-         *    this process (including this process itself)
-         * count_others_req_per_proc[i]:
-         *    how many separate contiguous requests of proc[i] will be
-         *    written by this process.
-         */
-
-        /* first find out how much to send/recv and from/to whom */
-        count_others_req_per_proc = (int *) ADIOI_Malloc(nprocs * sizeof(int));
-
-        MPI_Alltoall(count_my_req_per_proc, 1, MPI_INT,
-	             count_others_req_per_proc, 1, MPI_INT, fd->comm);
-
-        count_others_req_procs = 0;
-        for (i = 0; i < nprocs; i++) {
-	    if (count_others_req_per_proc[i]) {
-	        others_req[i].count = count_others_req_per_proc[i];
-	        others_req[i].offsets = (ADIO_Offset *)
-                                        ADIOI_Malloc(others_req[i].count *
-			                         sizeof(ADIO_Offset));
-	        others_req[i].lens = (int *)
-		                     ADIOI_Malloc(others_req[i].count *
-                                                  sizeof(int));
-	        others_req[i].mem_ptrs = (MPI_Aint *)
-		                         ADIOI_Malloc(others_req[i].count *
-			                              sizeof(MPI_Aint));
-	        count_others_req_procs++;
-	    } else
-	        others_req[i].count = 0;
-        }
-
-        /* now send the calculated offsets and lengths to respective processes */
-
-        send_requests = (MPI_Request *) ADIOI_Malloc(2 * (count_my_req_procs + 1) *
-                                                     sizeof(MPI_Request));
-        recv_requests = (MPI_Request *) ADIOI_Malloc(2 * (count_others_req_procs+1)*
-	                                             sizeof(MPI_Request));
-        /* +1 to avoid a 0-size malloc */
-
-        j = 0;
-        for (i = 0; i < nprocs; i++) {
-	    if (others_req[i].count) {
-	        MPI_Irecv(others_req[i].offsets, others_req[i].count,
-		          ADIO_OFFSET, i, i + myrank, fd->comm,
-		          &recv_requests[j]);
-	        j++;
-	        MPI_Irecv(others_req[i].lens, others_req[i].count,
-		          MPI_INT, i, i + myrank + 1, fd->comm,
-		          &recv_requests[j]);
-	        j++;
-	    }
-        }
-
-        j = 0;
-        for (i = 0; i < nprocs; i++) {
-	    if (my_req[i].count) {
-	        MPI_Isend(my_req[i].offsets, my_req[i].count,
-		          ADIO_OFFSET, i, i + myrank, fd->comm,
-		          &send_requests[j]);
-	        j++;
-	        MPI_Isend(my_req[i].lens, my_req[i].count,
-		          MPI_INT, i, i + myrank + 1, fd->comm,
-		          &send_requests[j]);
-	        j++;
-	    }
-        }
-
-        statuses = (MPI_Status *)
-                   ADIOI_Malloc((1 + 2 * ADIOI_MAX(count_my_req_procs,
-						   count_others_req_procs)) *
-                                         sizeof(MPI_Status));
-        /* +1 to avoid a 0-size malloc */
-
-        MPI_Waitall(2 * count_my_req_procs, send_requests, statuses);
-        MPI_Waitall(2 * count_others_req_procs, recv_requests, statuses);
-
-        ADIOI_Free(send_requests);
-        ADIOI_Free(recv_requests);
-        ADIOI_Free(statuses);
-        ADIOI_Free(count_others_req_per_proc);
-
-        *count_others_req_procs_ptr = count_others_req_procs;
-    }
 }

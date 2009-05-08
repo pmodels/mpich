@@ -30,16 +30,12 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	MPI_Info_set(fd->info, "direct_write", "false");
 	fd->direct_read = fd->direct_write = 0;
         /* initialize lustre hints */
-	MPI_Info_set(fd->info, "romio_lustre_CO", "1");
-        fd->hints->fs_hints.lustre.CO = 1;
-	MPI_Info_set(fd->info, "romio_lustre_bigsize", "0");
-        fd->hints->fs_hints.lustre.bigsize = 0;
+	MPI_Info_set(fd->info, "romio_lustre_co_ratio", "1");
+        fd->hints->fs_hints.lustre.co_ratio = 1;
+	MPI_Info_set(fd->info, "romio_lustre_coll_threshold", "0");
+        fd->hints->fs_hints.lustre.coll_threshold = 0;
 	MPI_Info_set(fd->info, "romio_lustre_ds_in_coll", "enable");
         fd->hints->fs_hints.lustre.ds_in_coll = ADIOI_HINT_ENABLE;
-	MPI_Info_set(fd->info, "romio_lustre_contig_data", "0");
-        fd->hints->fs_hints.lustre.contig_data = 0;
-	MPI_Info_set(fd->info, "romio_lustre_samesize", "0");
-        fd->hints->fs_hints.lustre.samesize = 0;
 
 	/* has user specified striping or server buffering parameters
            and do they have the same value on all processes? */
@@ -142,39 +138,38 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     if (users_info != MPI_INFO_NULL) {
         /* CO: IO Clients/OST,
          * to keep the load balancing between clients and OSTs */
-        MPI_Info_get(users_info, "romio_lustre_CO", MPI_MAX_INFO_VAL, value,
+        MPI_Info_get(users_info, "romio_lustre_co_ratio", MPI_MAX_INFO_VAL, value,
                      &flag);
 	if (flag && (int_val = atoi(value)) > 0) {
             tmp_val = int_val;
 	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
 	    if (tmp_val != int_val) {
                 MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
-                                                   "romio_lustre_CO",
+                                                   "romio_lustre_co_ratio",
                                                    error_code);
                 ADIOI_Free(value);
 		return;
 	    }
-	    MPI_Info_set(fd->info, "romio_lustre_CO", value);
-            fd->hints->fs_hints.lustre.CO = atoi(value);
+	    MPI_Info_set(fd->info, "romio_lustre_co_ratio", value);
+            fd->hints->fs_hints.lustre.co_ratio = atoi(value);
 	}
-        /* big_req_size:
-         * if the req size is bigger than this,
-         * collective IO may not be performed.
+        /* coll_threshold:
+         * if the req size is bigger than this, collective IO may not be performed.
          */
-	MPI_Info_get(users_info, "romio_lustre_bigsize", MPI_MAX_INFO_VAL, value,
+	MPI_Info_get(users_info, "romio_lustre_coll_threshold", MPI_MAX_INFO_VAL, value,
                      &flag);
 	if (flag && (int_val = atoi(value)) > 0) {
             tmp_val = int_val;
 	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
 	    if (tmp_val != int_val) {
 	        MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
-		                                   "romio_lustre_bigsize",
+		                                   "romio_lustre_coll_threshold",
 	                                           error_code);
                 ADIOI_Free(value);
 	        return;
 	    }
-	    MPI_Info_set(fd->info, "romio_lustre_bigsize", value);
-            fd->hints->fs_hints.lustre.bigsize = atoi(value);
+	    MPI_Info_set(fd->info, "romio_lustre_coll_threshold", value);
+            fd->hints->fs_hints.lustre.coll_threshold = atoi(value);
         }
         /* ds_in_coll: disable data sieving in collective IO */
 	MPI_Info_get(users_info, "romio_lustre_ds_in_coll", MPI_MAX_INFO_VAL,
@@ -192,40 +187,6 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	    }
 	    MPI_Info_set(fd->info, "romio_lustre_ds_in_coll", "disable");
             fd->hints->fs_hints.lustre.ds_in_coll = ADIOI_HINT_DISABLE;
-	}
-        /* contig_data: whether the request data are contiguous */
-	MPI_Info_get(users_info, "romio_lustre_contig_data", MPI_MAX_INFO_VAL,
-	             value, &flag);
-        if (flag && (!strcmp(value, "yes") ||
-                     !strcmp(value, "YES"))) {
-            tmp_val = int_val = 1;
-	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
-	    if (tmp_val != int_val) {
-	        MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
-		                                   "romio_lustre_contig_data",
-						   error_code);
-                ADIOI_Free(value);
-                return;
-	    }
-	    MPI_Info_set(fd->info, "romio_lustre_contig_data", "yes");
-            fd->hints->fs_hints.lustre.contig_data = 1;
-	}
-        /* same_io_size: whether the req size is same */
-	MPI_Info_get(users_info, "romio_lustre_samesize", MPI_MAX_INFO_VAL,
-	             value, &flag);
-        if (flag && (!strcmp(value, "yes") ||
-                     !strcmp(value, "YES"))) {
-            tmp_val = int_val = 1;
-	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
-	    if (tmp_val != int_val) {
-	        MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
-		                                   "romio_lustre_samesize",
-						   error_code);
-                ADIOI_Free(value);
-                return;
-	    }
-	    MPI_Info_set(fd->info, "romio_lustre_samesize", "yes");
-            fd->hints->fs_hints.lustre.samesize = 1;
 	}
     }
     /* set the values for collective I/O and data sieving parameters */

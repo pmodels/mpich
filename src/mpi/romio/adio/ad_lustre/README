@@ -14,8 +14,6 @@ Improved data redistribution
   o Provide hint CO for load balancing to control the number of
     IO clients for each OST
   o Produce stripe-contiguous I/O pattern that Lustre prefers
-  o Reduce the collective overhead by hints contig_data and
-    samesize to remove unnecessary MPI_Alltoall()
   o Control read-modify-write in data sieving in collective IO
     by hint ds_in_coll.
   o Reduce extent lock conflicts by make each OST accessed by one or
