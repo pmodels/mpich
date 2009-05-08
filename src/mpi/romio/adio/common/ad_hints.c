@@ -38,6 +38,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
      * previously initialized
      */
     if (!fd->hints->initialized) {
+
 	/* buffer size for collective I/O */
 	MPI_Info_set(info, "cb_buffer_size", ADIOI_CB_BUFFER_SIZE_DFLT); 
 	fd->hints->cb_buffer_size = atoi(ADIOI_CB_BUFFER_SIZE_DFLT);
@@ -106,6 +107,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	/* still to do: tune this a bit for a variety of file systems. there's
 	 * no good default value so just leave it unset */
 	fd->hints->min_fdomain_size = 0;
+  fd->hints->striping_unit = 0;
 
 	fd->hints->initialized = 1;
 
@@ -487,6 +489,14 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	if ( flag && ((intval = atoi(value)) > 0) ) {
 		MPI_Info_set(info, "romio_min_fdomain_size", value);
 		fd->hints->min_fdomain_size = intval;
+	}
+  /* Now we use striping unit in common code so we should
+     process hints for it. */
+	MPI_Info_get(users_info, "striping_unit", MPI_MAX_INFO_VAL,
+			value, &flag);
+	if ( flag && ((intval = atoi(value)) > 0) ) {
+		MPI_Info_set(info, "striping_unit", value);
+		fd->hints->striping_unit = intval;
 	}
     }
 
