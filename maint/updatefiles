@@ -179,15 +179,29 @@ if [ -n "$autoconfdir" ] ; then
     if [ -x $autoconfdir/autoconf -a -x $autoconfdir/autoheader ] ; then
         autoconf=$autoconfdir/autoconf
         autoheader=$autoconfdir/autoheader
+        # OpenPA uses autoreconf (and consequently aclocal and automake)
+        # but autoreconf uses whatever aclocal/automake is in your path,
+        # not the one from the same autoconf installation as the
+        # autoreconf you are invoking.  So we export ACLOCAL (etc...) so
+        # that it uses the right tools when specifying --with-autoconf.
         autoreconf=$autoconfdir/autoreconf
+        automake=$autoconfdir/automake
+        aclocal=$autoconfdir/aclocal
+        autom4te=$autoconfdir/autom4te
 	# Simplemake looks in environment variables for the autoconf
 	# and autoheader to use
 	AUTOCONF=$autoconf
 	AUTOHEADER=$autoheader
         AUTORECONF=$autoreconf
+        AUTOMAKE=$automake
+        ACLOCAL=$aclocal
+        AUTOM4TE=$autom4te
 	export AUTOCONF
 	export AUTOHEADER
         export AUTORECONF
+        export AUTOMAKE
+        export ACLOCAL
+        export AUTOM4TE
     else
         echo "Could not find executable autoconf and autoheader in $autoconfdir"
 	exit 1
@@ -196,6 +210,9 @@ else
     autoconf=${AUTOCONF:-autoconf}
     autoheader=${AUTOHEADER:-autoheader}
     autoreconf=${AUTORECONF:-autoreconf}
+    automake=${AUTOMAKE:-automake}
+    aclocal=${ACLOCAL:-aclocal}
+    autom4te=${AUTOM4TE:-autom4te}
 fi
 #
 # Check that you have a working autoconf.  Autoconf 2.57 is not compatible with
