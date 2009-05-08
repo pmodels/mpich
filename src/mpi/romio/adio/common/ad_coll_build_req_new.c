@@ -22,8 +22,10 @@
 
 #define DTYPE_SKIP
 
+#ifdef DEBUG3
 static char *off_type_name[MAX_OFF_TYPE] = {"TEMP_OFFSETS",
 				     "REAL_OFFSETS"};
+#endif
 
 /* Simple function to return the size of the view_state. */
 static inline ADIO_Offset view_state_get_cur_sz(view_state *tmp_view_state_p,
