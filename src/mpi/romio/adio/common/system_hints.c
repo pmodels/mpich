@@ -89,7 +89,7 @@ static int find_file(void)
 static int file_to_info(int fd, MPI_Info info)
 {
     char *buffer, *token, *key, *val, *garbage;
-    char *pos1, *pos2;
+    char *pos1=NULL, *pos2=NULL;
     int flag, ret;
     char dummy;
     struct stat statbuf;
