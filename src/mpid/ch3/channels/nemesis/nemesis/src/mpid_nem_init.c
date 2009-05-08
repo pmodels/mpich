@@ -69,10 +69,7 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     MPID_nem_cell_t (*network_cells_p)[MPID_NEM_NUM_CELLS];
     MPID_nem_queue_t *recv_queues_p = NULL;
     MPID_nem_queue_t *free_queues_p = NULL;
-#ifdef USE_ATOMIC_EMULATION
-    MPIDU_Process_lock_t *process_lock;
-#endif
-    
+
     MPIU_CHKPMEM_DECL(9);
 
     /* Make sure the nemesis packet is no larger than the generic
@@ -207,22 +204,9 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
                                      (void **)&MPID_nem_mem_region.barrier_vars);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-#ifdef USE_ATOMIC_EMULATION
-    /* Request process lock region */
-    mpi_errno = MPIDI_CH3I_Seg_alloc(sizeof(MPIDU_Process_lock_t), (void **)&process_lock);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-#endif
-    
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno = MPIDI_CH3I_Seg_commit(&MPID_nem_mem_region.memory, num_local, local_rank);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
-    
-#ifdef USE_ATOMIC_EMULATION
-    /* Init process lock */
-    mpi_errno = MPIDU_Interprocess_lock_init(process_lock, local_rank == 0);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-#endif
 
     /* init shared collectives barrier region */
     mpi_errno = MPID_nem_barrier_vars_init(MPID_nem_mem_region.barrier_vars);
@@ -232,7 +216,6 @@ _MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     mpi_errno = MPID_nem_barrier (num_local, local_rank);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-    
     /* find our cell regions */
     MPID_nem_mem_region.Elements = cells_p[local_rank];
     MPID_nem_mem_region.net_elements = network_cells_p[local_rank];

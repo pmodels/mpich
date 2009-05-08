@@ -127,6 +127,11 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
+#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
+    int ret;
+    int ipc_lock_offset;
+    pthread_mutex_t *ipc_lock;
+#endif
     int key_max_sz;
     int val_max_sz;
     char *key;
@@ -167,6 +172,20 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
     MPIU_Assert(MPID_NEM_CACHE_LINE_LEN >= sizeof(MPID_nem_barrier_t));
     segment_len += MPID_NEM_CACHE_LINE_LEN;
 
+#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
+    /* We have a similar bootstrapping problem when using OpenPA in
+     * lock-based emulation mode.  We use OPA_* functions during the
+     * check_alloc function but we were previously initializing OpenPA
+     * after return from this function.  So we put the emulation lock
+     * right after the barrier var space. */
+
+    /* offset from memory->base_addr to the start of ipc_lock */
+    ipc_lock_offset = MPID_NEM_CACHE_LINE_LEN;
+
+    MPIU_Assert(ipc_lock_offset >= sizeof(pthread_mutex_t));
+    segment_len += MPID_NEM_CACHE_LINE_LEN;
+#endif
+
     memory->segment_len = segment_len;
 
 #ifdef USE_PMI2_API
@@ -180,6 +199,16 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         memory->base_addr = addr;
         current_addr = (char *)(((MPIR_Upint)addr + (MPIR_Upint)MPID_NEM_CACHE_LINE_LEN-1) & (~((MPIR_Upint)MPID_NEM_CACHE_LINE_LEN-1)));
         memory->symmetrical = 0;
+
+        /* must come before barrier_init since we use OPA in that function */
+#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
+        ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE/*isLeader*/);
+        MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
+#endif
+
+        mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *)memory->base_addr, TRUE);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
 
@@ -193,17 +222,29 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
             mpi_errno = MPIU_SHMW_Hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+            /* must come before barrier_init since we use OPA in that function */
+#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
+            ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
+            MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
+#endif
+
             mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *)memory->base_addr, TRUE);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            
+
+            /* The opa and nem barrier initializations must come before we (the
+             * leader) put the sharedFilename attribute.  Since this is a
+             * serializing operation with our peers on the local node this
+             * ensures that these initializations have occurred before any peer
+             * attempts to use the resources. */
             mpi_errno = PMI_Info_PutNodeAttr("sharedFilename", serialized_hnd);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         } else {
             int found = FALSE;
-            
+
             /* Allocate space for pmi key and val */
             MPIU_CHKLMEM_MALLOC(val, char *, PMI_MAX_VALLEN, mpi_errno, "val");
-            
+
             /* get name of shared file */
             mpi_errno = PMI_Info_GetNodeAttr("sharedFilename", val, PMI_MAX_VALLEN, &found, TRUE);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -215,13 +256,27 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
             mpi_errno = MPIU_SHMW_Seg_attach(memory->hnd, memory->segment_len, (char **)&memory->base_addr, 0);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+            /* must come before barrier_init since we use OPA in that function */
+#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
+            ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
+            MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
+
+            /* Right now we rely on the assumption that OPA_Interprocess_lock_init only
+             * needs to be called by the leader and the current process before use by the
+             * current process.  That is, we don't assume that this collective call is
+             * synchronizing and we don't assume that it requires total external
+             * synchronization.  In PMIv2 we don't have a PMI_Barrier operation so we need
+             * this behavior. */
+#endif
+
             mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *)memory->base_addr, FALSE);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
         mpi_errno = MPID_nem_barrier(num_local, local_rank);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    
+
         if (local_rank == 0) {
             mpi_errno = MPIU_SHMW_Seg_remove(memory->hnd);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -229,7 +284,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         current_addr = memory->base_addr;
         memory->symmetrical = 0 ;
     }
-#else
+#else /* we are using PMIv1 */
     /* if there is only one process on this processor, don't use shared memory */
     if (num_local == 1)
     {
@@ -245,7 +300,14 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 	pmi_errno = PMI_Barrier();
         MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
 
-        MPIU_CHKPMEM_COMMIT();
+        /* must come before barrier_init since we use OPA in that function */
+#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
+        ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE/*isLeader*/);
+        MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
+#endif
+        mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *)memory->base_addr, TRUE);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else{
         /* Allocate space for pmi key and val */
@@ -270,12 +332,19 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
             mpi_errno = MPIU_SHMW_Hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
-        
+
             pmi_errno = PMI_KVS_Put (kvs_name, key, serialized_hnd);
             MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put", "**pmi_kvs_put %d", pmi_errno);
 
             pmi_errno = PMI_KVS_Commit (kvs_name);
             MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit", "**pmi_kvs_commit %d", pmi_errno);
+
+            /* must come before barrier_init since we use OPA in that function */
+#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
+            ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
+            MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
+#endif
 
             mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *)memory->base_addr, TRUE);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -298,6 +367,13 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
             mpi_errno = MPIU_SHMW_Seg_attach(memory->hnd, memory->segment_len, (char **)&memory->base_addr, 0);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+
+            /* must come before barrier_init since we use OPA in that function */
+#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
+            ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
+            MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
+#endif
 
             mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *)memory->base_addr, FALSE);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -323,6 +399,12 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
     /* reserve room for shared mem barrier (We used a whole cacheline) */
     current_addr = (char *)current_addr + MPID_NEM_CACHE_LINE_LEN;
     size_left -= MPID_NEM_CACHE_LINE_LEN;
+
+#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
+    /* reserve room for the opa emulation lock */
+    current_addr = (char *)current_addr + MPID_NEM_CACHE_LINE_LEN;
+    size_left -= MPID_NEM_CACHE_LINE_LEN;
+#endif
 
     do
     {
@@ -411,6 +493,8 @@ static int check_alloc(int num_local, int local_rank)
 
     if (asym_check_region_p->base_ptr != MPID_nem_mem_region.memory.base_addr)
         OPA_store(&asym_check_region_p->is_asym, 1);
+
+    OPA_read_write_barrier();
 
     mpi_errno = MPID_nem_barrier(num_local, local_rank);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
