@@ -23,9 +23,6 @@
 #include "adio.h"
 #include <sys/stat.h>
 
-    extern int *aggrsInPset;	/* defined in ad_bgl_aggrs.c */
-
-
 #if !defined(GPFS_SUPER_MAGIC)
   #define GPFS_SUPER_MAGIC (0x47504653)
 #endif
