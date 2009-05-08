@@ -509,11 +509,6 @@ if [ $do_makefiles = yes ] ; then
     fi
 fi
 
-if test -e "openpa" ; then
-    echo "running autoreconf on openpa"
-    (cd openpa && $autoreconf -vif)
-fi
-
 # Create the configure files and run autoheader
 # Eventually, make this a test for find available.  Perhaps
 # find . -name configure.in > /dev/null 2>&1
@@ -571,6 +566,11 @@ if [ $do_build_configure = yes ] ; then
 	        # be used instead of this one when building that configure
 	        continue
             fi
+	    qopenpa=`echo $dir | sed -e 's%.*openpa.*%FOUNDOPENPA%'`
+	    if [ "$qopenpa" = "FOUNDOPENPA" ] ; then
+	        # openpa is updated using autoreconf later in this script
+	        continue
+            fi
 	    if [ -s $dir/Makefile.in ] ; then 
                 #echo "Found $dir/configure.in"
 	        #
@@ -610,10 +610,6 @@ if [ $do_build_configure = yes ] ; then
 		    builtConfigure=yes
 		    (cd $dir && $autoconf $acIncDirFlag . && rm -rf autom4te*.cache)
 		    continue
-                elif [ $dir = "./openpa" ] ; then
-                    # the autoreconf step above created the configure for openpa
-                    echo "openpa configure already created"
-                    continue
 	        fi
 	        # First, check for a configure target in Makefile.in
 	        if grep 'configure:' $dir/Makefile.in >/dev/null 2>&1 ; then
@@ -775,6 +771,13 @@ if [ $do_build_configure = yes ] ; then
     else 
         echo "Skipping creation of configure files"
     fi
+fi
+
+# must come after the above autoreconf-like logic because the above
+# logic will delete the results of this actual autoreconf
+if test -e "openpa" ; then
+    echo "running autoreconf on openpa"
+    (cd openpa && $autoreconf -vif)
 fi
 
 if [ -f src/mpe2/maint/updatefiles -a "$do_build_configure" = "yes" ] ; then
