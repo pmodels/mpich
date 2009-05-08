@@ -110,7 +110,7 @@
 #define MPE_Thread_mutex_lock(mutex_ptr_, err_ptr_)             \
 {                                                               \
     int err__;                                                  \
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Enter MPE_Thread_mutex");      \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Enter MPE_Thread_mutex %p", mutex_ptr_);        \
     err__ = pthread_mutex_lock(mutex_ptr_);                     \
     if ((err_ptr_) != NULL)                                     \
     {                                                           \
@@ -122,7 +122,7 @@
 #define MPE_Thread_mutex_lock(mutex_ptr_, err_ptr_)             \
 {                                                               \
     int err__;                                                  \
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Enter MPE_Thread_mutex");      \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Enter MPE_Thread_mutex %p", mutex_ptr_);      \
     err__ = pthread_mutex_lock(mutex_ptr_);                     \
     if (err__)                                                  \
     {                                                           \
@@ -143,7 +143,7 @@
 {                                                               \
     int err__;                                                  \
                                                                 \
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Exiting MPE_Thread_mutex");    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Exiting MPE_Thread_mutex %p", mutex_ptr_);    \
     err__ = pthread_mutex_unlock(mutex_ptr_);                   \
     if ((err_ptr_) != NULL)                                     \
     {                                                           \
@@ -156,7 +156,7 @@
 {                                                               \
     int err__;                                                  \
                                                                 \
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Exiting MPE_Thread_mutex");    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Exiting MPE_Thread_mutex %p", mutex_ptr_);    \
     err__ = pthread_mutex_unlock(mutex_ptr_);                   \
     if (err__)                                                  \
     {                                                           \
