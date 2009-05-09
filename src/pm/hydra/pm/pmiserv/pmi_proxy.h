@@ -14,8 +14,13 @@
 struct HYD_PMCD_pmi_proxy_params {
     int debug;
 
-    int proxy_port;
-    HYD_Launch_mode_t launch_mode;
+    /* Proxy details */
+    struct {
+        int port;
+        HYD_Launch_mode_t launch_mode;
+        int partition_id;
+    } proxy;
+
     char *wdir;
     char *pmi_port_str;
     HYD_Binding binding;

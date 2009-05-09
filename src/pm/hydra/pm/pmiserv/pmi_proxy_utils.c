@@ -16,8 +16,10 @@ static HYD_Status init_params(void)
 
     HYD_PMCD_pmi_proxy_params.debug = 0;
 
-    HYD_PMCD_pmi_proxy_params.proxy_port = -1;
-    HYD_PMCD_pmi_proxy_params.launch_mode = HYD_LAUNCH_UNSET;
+    HYD_PMCD_pmi_proxy_params.proxy.port = -1;
+    HYD_PMCD_pmi_proxy_params.proxy.launch_mode = HYD_LAUNCH_UNSET;
+    HYD_PMCD_pmi_proxy_params.proxy.partition_id = -1;
+
     HYD_PMCD_pmi_proxy_params.wdir = NULL;
     HYD_PMCD_pmi_proxy_params.pmi_port_str = NULL;
     HYD_PMCD_pmi_proxy_params.binding = HYD_BIND_UNSET;
@@ -67,16 +69,9 @@ static HYD_Status parse_params(char **t_argv)
 
     HYDU_FUNC_ENTER();
 
-    while (++argv && *argv) {
+    for (;*argv; ++argv) {
         if (!strcmp(*argv, "--verbose")) {
             HYD_PMCD_pmi_proxy_params.debug = 1;
-            continue;
-        }
-
-        /* Proxy port */
-        if (!strcmp(*argv, "--proxy-port")) {
-            argv++;
-            HYD_PMCD_pmi_proxy_params.proxy_port = atoi(*argv);
             continue;
         }
 
@@ -252,32 +247,28 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
     status = init_params();
     HYDU_ERR_POP(status, "Error initializing proxy params\n");
 
-    /* For the persistent mode, the parameters are fairly
-     * straightward. For the runtime mode, we call the parse_params()
-     * function to parse through argv and fill in the proxy handle. */
-    ++argv;
-    if (!strcmp(*argv, "--persistent-mode")) {
-        HYD_PMCD_pmi_proxy_params.launch_mode = HYD_LAUNCH_BOOT;
-
-        /* the next argument should be proxy port */
-        ++argv;
-        if (strcmp(*argv, "--proxy-port"))
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "incorrect proxy parameters\n");
-
-        ++argv;
-        HYD_PMCD_pmi_proxy_params.proxy_port = atoi(*argv);
-
-        ++argv;
-        if (*argv) {
-            /* optional argument - don't fork and exit - useful for debugging */
-            if (!strcmp(*argv, "--proxy-foreground")) {
-                HYD_PMCD_pmi_proxy_params.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
-            }
+    while (++argv && *argv) {
+        if (!strcmp(*argv, "--launch-mode")) {
+            ++argv;
+            HYD_PMCD_pmi_proxy_params.proxy.launch_mode = atoi(*argv);
+            continue;
+        }
+        if (!strcmp(*argv, "--proxy-port")) {
+            ++argv;
+            HYD_PMCD_pmi_proxy_params.proxy.port = atoi(*argv);
+            continue;
+        }
+        if (!strcmp(*argv, "--partition-id")) {
+            ++argv;
+            HYD_PMCD_pmi_proxy_params.proxy.partition_id = atoi(*argv);
+            break; /* FIXME: This is a hack for now */
         }
     }
-    else {
-        HYD_PMCD_pmi_proxy_params.launch_mode = HYD_LAUNCH_RUNTIME;
-        status = parse_params(t_argv);
+
+    /* If this is runtime mode, we got the remaining arguments as
+     * well */
+    if (HYD_PMCD_pmi_proxy_params.proxy.launch_mode == HYD_LAUNCH_RUNTIME) {
+        status = parse_params(++argv);
         HYDU_ERR_POP(status, "error parsing proxy params\n");
     }
 

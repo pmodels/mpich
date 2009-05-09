@@ -164,7 +164,7 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode)
         partition->base->proxy_args[arg++] = HYDU_int_to_str(mode);
 
         partition->base->proxy_args[arg++] = HYDU_strdup("--proxy-port");
-        partition->base->proxy_args[arg++] = HYDU_strdup(proxy_port_str);
+        partition->base->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
 
         partition->base->proxy_args[arg++] = HYDU_strdup("--partition-id");
         partition->base->proxy_args[arg++] = HYDU_int_to_str(partition->base->partition_id);
@@ -193,22 +193,11 @@ static HYD_Status fill_in_exec_args(void)
     process_id = 0;
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         arg = 0;
-        i = 0;
-        path_str[i++] = HYDU_strdup(handle.base_path);
-        path_str[i++] = HYDU_strdup("pmi_proxy");
-        path_str[i] = NULL;
-        status = HYDU_str_alloc_and_join(path_str, &partition->base->exec_args[arg++]);
-        HYDU_ERR_POP(status, "unable to join strings\n");
-        HYDU_free_strlist(path_str);
-
         partition->base->exec_args[arg++] = HYDU_strdup("--one-pass-count");
         partition->base->exec_args[arg++] = HYDU_int_to_str(handle.one_pass_count);
 
         partition->base->exec_args[arg++] = HYDU_strdup("--wdir");
         partition->base->exec_args[arg++] = HYDU_strdup(handle.wdir);
-
-        partition->base->exec_args[arg++] = HYDU_strdup("--proxy-port");
-        partition->base->exec_args[arg++] = HYDU_int_to_str(handle.proxy_port);
 
         partition->base->exec_args[arg++] = HYDU_strdup("--pmi-port-str");
         if (handle.pm_env)
@@ -284,11 +273,13 @@ static HYD_Status fill_in_exec_args(void)
 
 static HYD_Status launch_procs_in_runtime_mode(void)
 {
-    struct HYD_Partition *partition;
     HYD_Status status = HYD_SUCCESS;
 
-    status = fill_in_exec_args();
+    status = fill_in_proxy_args(HYD_LAUNCH_RUNTIME);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
+
+    status = fill_in_exec_args();
+    HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
     /* Initialize the bootstrap server and ask it to launch the
      * processes. */
@@ -319,26 +310,15 @@ static HYD_Status boot_proxies(int launch_in_foreground)
 
     /* Create the arguments list for each proxy */
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-        arg = HYDU_strlist_lastidx(partition->base->exec_args);
-        i = 0;
-        path_str[i++] = HYDU_strdup(handle.base_path);
-        path_str[i++] = HYDU_strdup("pmi_proxy");
-        path_str[i] = NULL;
-        status = HYDU_str_alloc_and_join(path_str, &partition->base->exec_args[arg++]);
-        HYDU_ERR_POP(status, "unable to join strings\n");
-        HYDU_free_strlist(path_str);
-
-        partition->base->exec_args[arg++] = HYDU_strdup("--persistent-mode");
-        partition->base->exec_args[arg++] = HYDU_strdup("--proxy-port");
-        partition->base->exec_args[arg++] = HYDU_int_to_str(handle.proxy_port);
-        if (launch_in_foreground) {
-            partition->base->exec_args[arg++] = HYDU_strdup("--proxy-foreground");
-        }
-        partition->base->exec_args[arg++] = NULL;
+        if (launch_in_foreground)
+            status = fill_in_proxy_args(HYD_LAUNCH_BOOT_FOREGROUND);
+        else
+            status = fill_in_proxy_args(HYD_LAUNCH_BOOT);
+        HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
         if (handle.debug) {
             HYDU_Debug("Executable passed to the bootstrap: ");
-            HYDU_print_strlist(partition->base->exec_args);
+            HYDU_print_strlist(partition->base->proxy_args);
         }
     }
 

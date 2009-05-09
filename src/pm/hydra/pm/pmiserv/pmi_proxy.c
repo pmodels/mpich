@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
     status = HYDU_sock_listen(&listenfd, NULL,
-                              (uint16_t *) & HYD_PMCD_pmi_proxy_params.proxy_port);
+                              (uint16_t *) & HYD_PMCD_pmi_proxy_params.proxy.port);
     HYDU_ERR_POP(status, "unable to listen on socket\n");
 
     /* Register the listening socket with the demux engine */
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
      * hierarchy of proxies. */
 
     /* Process launching only happens in the runtime case over here */
-    if (HYD_PMCD_pmi_proxy_params.launch_mode == HYD_LAUNCH_RUNTIME) {
+    if (HYD_PMCD_pmi_proxy_params.proxy.launch_mode == HYD_LAUNCH_RUNTIME) {
         HYD_PMCD_pmi_proxy_params.upstream.out = 1;
         HYD_PMCD_pmi_proxy_params.upstream.err = 2;
         HYD_PMCD_pmi_proxy_params.upstream.in = 0;
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
             ret_status |= HYD_PMCD_pmi_proxy_params.exit_status[i];
     }
     else {      /* Persistent mode */
-        if (HYD_PMCD_pmi_proxy_params.launch_mode != HYD_LAUNCH_BOOT_FOREGROUND) {
+        if (HYD_PMCD_pmi_proxy_params.proxy.launch_mode != HYD_LAUNCH_BOOT_FOREGROUND) {
             /* Spawn a persistent daemon proxy and exit parent proxy */
             status = HYDU_fork_and_exit(-1);
             HYDU_ERR_POP(status, "Error spawning persistent proxy\n");
