@@ -117,7 +117,7 @@ int main(int argc, char **argv)
      * hierarchy of proxies. */
 
     /* Process launching only happens in the runtime case over here */
-    if (HYD_PMCD_pmi_proxy_params.proxy_type == HYD_PMCD_PMI_PROXY_RUNTIME) {
+    if (HYD_PMCD_pmi_proxy_params.launch_mode == HYD_LAUNCH_RUNTIME) {
         HYD_PMCD_pmi_proxy_params.upstream.out = 1;
         HYD_PMCD_pmi_proxy_params.upstream.err = 2;
         HYD_PMCD_pmi_proxy_params.upstream.in = 0;
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
             ret_status |= HYD_PMCD_pmi_proxy_params.exit_status[i];
     }
     else {      /* Persistent mode */
-        if (HYD_PMCD_pmi_proxy_params.proxy_type != HYD_PMCD_PMI_PROXY_PERSISTENT_FG) {
+        if (HYD_PMCD_pmi_proxy_params.launch_mode != HYD_LAUNCH_BOOT_FOREGROUND) {
             /* Spawn a persistent daemon proxy and exit parent proxy */
             status = HYDU_fork_and_exit(-1);
             HYDU_ERR_POP(status, "Error spawning persistent proxy\n");

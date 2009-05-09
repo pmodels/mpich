@@ -11,18 +11,11 @@
 #include "hydra_utils.h"
 #include "pmi_common.h"
 
-typedef enum {
-    HYD_PMCD_PMI_PROXY_UNSET,
-    HYD_PMCD_PMI_PROXY_RUNTIME,
-    HYD_PMCD_PMI_PROXY_PERSISTENT,
-    HYD_PMCD_PMI_PROXY_PERSISTENT_FG
-} HYD_PMCD_pmi_proxy_type;
-
 struct HYD_PMCD_pmi_proxy_params {
     int debug;
 
     int proxy_port;
-    HYD_PMCD_pmi_proxy_type proxy_type;
+    HYD_Launch_mode_t launch_mode;
     char *wdir;
     char *pmi_port_str;
     HYD_Binding binding;

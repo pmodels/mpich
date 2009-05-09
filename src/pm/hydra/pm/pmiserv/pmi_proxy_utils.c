@@ -17,7 +17,7 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.debug = 0;
 
     HYD_PMCD_pmi_proxy_params.proxy_port = -1;
-    HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_UNSET;
+    HYD_PMCD_pmi_proxy_params.launch_mode = HYD_LAUNCH_UNSET;
     HYD_PMCD_pmi_proxy_params.wdir = NULL;
     HYD_PMCD_pmi_proxy_params.pmi_port_str = NULL;
     HYD_PMCD_pmi_proxy_params.binding = HYD_BIND_UNSET;
@@ -257,7 +257,7 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
      * function to parse through argv and fill in the proxy handle. */
     ++argv;
     if (!strcmp(*argv, "--persistent-mode")) {
-        HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_PERSISTENT;
+        HYD_PMCD_pmi_proxy_params.launch_mode = HYD_LAUNCH_BOOT;
 
         /* the next argument should be proxy port */
         ++argv;
@@ -271,12 +271,12 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
         if (*argv) {
             /* optional argument - don't fork and exit - useful for debugging */
             if (!strcmp(*argv, "--proxy-foreground")) {
-                HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_PERSISTENT_FG;
+                HYD_PMCD_pmi_proxy_params.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
             }
         }
     }
     else {
-        HYD_PMCD_pmi_proxy_params.proxy_type = HYD_PMCD_PMI_PROXY_RUNTIME;
+        HYD_PMCD_pmi_proxy_params.launch_mode = HYD_LAUNCH_RUNTIME;
         status = parse_params(t_argv);
         HYDU_ERR_POP(status, "error parsing proxy params\n");
     }
