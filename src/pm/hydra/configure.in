@@ -36,7 +36,7 @@ CFLAGS=$save_cflags
 
 dnl Check if the necessary headers are available
 AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h \
-		 sched.h pthread.h)
+		 sched.h pthread.h sys/stat.h)
 
 # Check for special types
 AC_TYPE_SIZE_T
