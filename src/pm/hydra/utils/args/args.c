@@ -17,10 +17,56 @@ static int exists(char *filename)
     return 1;
 }
 
+HYD_Status HYDU_find_in_path(char *execname, char **path)
+{
+    char *user_path = NULL, *tmp[HYD_NUM_TMP_STRINGS], *path_loc = NULL, *test_loc;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* The executable is somewhere in the user's path. We need to find
+     * it. */
+    if (getenv("PATH")) { /* If the PATH environment exists */
+        user_path = HYDU_strdup(getenv("PATH"));
+        test_loc = strtok(user_path, ";:");
+        do {
+            tmp[0] = test_loc;
+            tmp[1] = "/";
+            tmp[2] = execname;
+            tmp[3] = NULL;
+
+            status = HYDU_str_alloc_and_join(tmp, &path_loc);
+            HYDU_ERR_POP(status, "unable to join strings\n");
+
+            if (exists(path_loc)) {
+                tmp[0] = test_loc;
+                tmp[1] = "/";
+                tmp[2] = NULL;
+
+                status = HYDU_str_alloc_and_join(tmp, path);
+                HYDU_ERR_POP(status, "unable to join strings\n");
+
+                goto fn_exit; /* We are done */
+            }
+        } while ((test_loc = strtok(NULL, ";:")));
+    }
+
+    /* There is either no PATH environment or we could not find the
+     * file in the PATH. Just return an empty path */
+    *path = HYDU_strdup("");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path)
 {
     char *loc, *post;
-    char *user_path = NULL, *tmp[HYD_NUM_TMP_STRINGS], *path_loc = NULL, *test_loc;
+    char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -29,36 +75,9 @@ HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path)
     post = HYDU_strdup(execname);
     loc = strrchr(post, '/');
     if (!loc) { /* If there is no path */
-        /* The executable is somewhere in the user's path. We need to
-         * find it. */
-        if (getenv("PATH")) { /* If the PATH environment exists */
-            user_path = HYDU_strdup(getenv("PATH"));
-            test_loc = strtok(user_path, ";:");
-            do {
-                tmp[0] = test_loc;
-                tmp[1] = "/";
-                tmp[2] = execname;
-                tmp[3] = NULL;
-
-                status = HYDU_str_alloc_and_join(tmp, &path_loc);
-                HYDU_ERR_POP(status, "unable to join strings\n");
-
-                if (exists(path_loc)) {
-                    tmp[0] = test_loc;
-                    tmp[1] = "/";
-                    tmp[2] = NULL;
-
-                    status = HYDU_str_alloc_and_join(tmp, path);
-                    HYDU_ERR_POP(status, "unable to join strings\n");
-
-                    goto fn_exit; /* We are done */
-                }
-            } while ((test_loc = strtok(NULL, ";:")));
-        }
-
-        /* There is either no PATH environment or we could not find
-         * the file in the PATH. Just return an empty path */
-        *path = HYDU_strdup("");
+        *path = NULL;
+        status = HYDU_find_in_path(execname, path);
+        HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
     }
     else {      /* There is a path */
         *(++loc) = 0;
@@ -80,10 +99,6 @@ HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path)
   fn_exit:
     if (post)
         HYDU_FREE(post);
-    if (user_path)
-        HYDU_FREE(user_path);
-    if (path_loc)
-        HYDU_FREE(path_loc);
     HYDU_FUNC_EXIT();
     return status;
 

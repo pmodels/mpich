@@ -127,6 +127,7 @@ int HYDU_Error_printf_simple(const char *str, ...);
 
 
 /* args */
+HYD_Status HYDU_find_in_path(char *execname, char **path);
 HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path);
 
 

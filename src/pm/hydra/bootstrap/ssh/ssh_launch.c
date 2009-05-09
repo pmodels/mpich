@@ -21,10 +21,36 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
 {
     struct HYD_Partition *partition;
     char *client_arg[HYD_NUM_TMP_STRINGS];
+    char *tmp[HYD_NUM_TMP_STRINGS], *path = NULL, *test_path = NULL;
     int i, arg, process_id;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    /*
+     * We use the following priority order for the executable path:
+     *    1. User-specified: handle.bootstrap_exec
+     *    2. Search in path
+     *    3. Hard-coded location
+     */
+    if (handle.bootstrap_exec) {
+        path = HYDU_strdup(handle.bootstrap_exec);
+    }
+    else {
+        status = HYDU_find_in_path("ssh", &test_path);
+        HYDU_ERR_POP(status, "error while searching for executable in user path\n");
+
+        if (test_path) {
+            tmp[0] = test_path;
+            tmp[1] = "ssh";
+            tmp[2] = NULL;
+
+            status = HYDU_str_alloc_and_join(tmp, &path);
+            HYDU_ERR_POP(status, "error joining strings\n");
+        }
+        else
+            client_arg[arg++] = HYDU_strdup("/usr/bin/ssh");
+    }
 
     /* FIXME: Instead of directly reading from the HYD_Handle
      * structure, the upper layers should be able to pass what exactly
@@ -34,10 +60,7 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         /* Setup the executable arguments */
         arg = 0;
-        if (handle.bootstrap_exec)
-            client_arg[arg++] = HYDU_strdup(handle.bootstrap_exec);
-        else
-            client_arg[arg++] = HYDU_strdup("/usr/bin/ssh");
+        client_arg[arg++] = HYDU_strdup(path);
 
         /* Allow X forwarding only if explicitly requested */
         if (handle.enablex == 1)
@@ -70,6 +93,10 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
     }
 
   fn_exit:
+    if (test_path)
+        HYDU_FREE(test_path);
+    if (path)
+        HYDU_FREE(path);
     HYDU_FUNC_EXIT();
     return status;
 
