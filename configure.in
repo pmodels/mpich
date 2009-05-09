@@ -1347,7 +1347,7 @@ if test "$with_pmi" = "uni" -a "$with_pm" = "default" ; then
     with_pm="no"
 fi
 if test "$with_pm" = "default" -o "$with_pm" = "yes" ; then
-    with_pm=mpd,hydra,gforker
+    with_pm=mpd
 fi
 
 # We allow multiple pm names, separated by : or ,
