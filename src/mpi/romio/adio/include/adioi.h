@@ -66,10 +66,8 @@ struct ADIOI_Hints_struct {
 	    } pvfs2;
             struct {
                     int start_iodevice;
-                    int CO;
-                    int bigsize;
-                    int contig_data;
-                    int samesize;
+                    int co_ratio;
+                    int coll_threshold;
                     int ds_in_coll;
             } lustre;
     } fs_hints;
