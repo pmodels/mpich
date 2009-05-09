@@ -150,6 +150,10 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode)
     struct HYD_Partition *partition;
     HYD_Status status = HYD_SUCCESS;
 
+    if (mode != HYD_LAUNCH_RUNTIME && mode != HYD_LAUNCH_BOOT &&
+        mode != HYD_LAUNCH_BOOT_FOREGROUND)
+        goto fn_exit;
+
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         arg = 0;
         i = 0;
@@ -271,156 +275,12 @@ static HYD_Status fill_in_exec_args(void)
     goto fn_exit;
 }
 
-static HYD_Status launch_procs_in_runtime_mode(void)
-{
-    HYD_Status status = HYD_SUCCESS;
-
-    status = fill_in_proxy_args(HYD_LAUNCH_RUNTIME);
-    HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
-
-    status = fill_in_exec_args();
-    HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
-
-    /* Initialize the bootstrap server and ask it to launch the
-     * processes. */
-    status = HYD_BSCI_init(handle.bootstrap);
-    HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
-
-    status = HYD_BSCI_launch_procs();
-    HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_Status boot_proxies(int launch_in_foreground)
-{
-    HYD_Status status = HYD_SUCCESS;
-    int i, arg;
-    char *path_str[HYD_NUM_TMP_STRINGS];
-    struct HYD_Partition *partition;
-
-    handle.one_pass_count = 0;
-    /* For each partition, find the one pass count */
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
-        handle.one_pass_count += partition->one_pass_count;
-
-    /* Create the arguments list for each proxy */
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-        if (launch_in_foreground)
-            status = fill_in_proxy_args(HYD_LAUNCH_BOOT_FOREGROUND);
-        else
-            status = fill_in_proxy_args(HYD_LAUNCH_BOOT);
-        HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
-
-        if (handle.debug) {
-            HYDU_Debug("Executable passed to the bootstrap: ");
-            HYDU_print_strlist(partition->base->proxy_args);
-        }
-    }
-
-    /* Initialize the bootstrap server and ask it to launch the
-     * processes. */
-    status = HYD_BSCI_init(handle.bootstrap);
-    HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
-
-    status = HYD_BSCI_launch_procs();
-    HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_Status shutdown_proxies(void)
+HYD_Status HYD_PMCI_launch_procs(void)
 {
     struct HYD_Partition *partition;
     enum HYD_PMCD_pmi_proxy_cmds cmd;
-    int fd;
-    HYD_Status status = HYD_SUCCESS;
-
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-        status = HYDU_sock_connect(partition->base->name, handle.proxy_port, &fd);
-        if (status != HYD_SUCCESS) {
-            /* Don't abort. Try to shutdown as many proxies as possible */
-            HYDU_Error_printf("Unable to connect to proxy at %s\n", partition->base->name);
-            continue;
-        }
-
-        cmd = PROXY_SHUTDOWN;
-        status = HYDU_sock_write(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
-        HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-        close(fd);
-    }
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_Status launch_procs_in_persistent_mode(void)
-{
-    struct HYD_Partition *partition;
-    int len, id;
+    int fd, len, id;
     struct HYD_Thread_context *thread_context = NULL;
-    HYD_Status status = HYD_SUCCESS;
-
-    status = fill_in_exec_args();
-    HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
-
-    /* Though we don't use the bootstrap server right now, we still
-     * initialize it, as we need to query it for information
-     * sometimes. */
-    status = HYD_BSCI_init(handle.bootstrap);
-    HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
-
-    len = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
-        len++;
-
-    HYDU_CALLOC(thread_context, struct HYD_Thread_context *, len,
-                sizeof(struct HYD_Thread_context), status);
-    if (!thread_context)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "Unable to allocate memory for thread context\n");
-
-    id = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-        HYDU_create_thread(launch_helper, (void *) partition, &thread_context[id]);
-        id++;
-    }
-
-    id = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-        HYDU_join_thread(thread_context[id]);
-
-        status = HYD_DMX_register_fd(1, &partition->control_fd, HYD_STDOUT, partition,
-                                     HYD_PMCD_pmi_serv_control_cb);
-        HYDU_ERR_POP(status, "unable to register control fd\n");
-
-        id++;
-    }
-
-  fn_exit:
-    if (thread_context)
-        HYDU_FREE(thread_context);
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-HYD_Status HYD_PMCI_launch_procs(void)
-{
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -435,25 +295,73 @@ HYD_Status HYD_PMCI_launch_procs(void)
     status = HYD_PMCD_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
+    status = fill_in_proxy_args(handle.launch_mode);
+    HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
+
+    status = HYD_BSCI_init(handle.bootstrap);
+    HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
+
     if (handle.launch_mode == HYD_LAUNCH_RUNTIME) {
 /*         status = create_and_listen_portstr(NULL, &proxy_port_str); */
 /*         HYDU_ERR_POP(status, "unable to create PMI port\n"); */
 
-        status = launch_procs_in_runtime_mode();
-        HYDU_ERR_POP(status, "error launching procs in runtime mode\n");
+        status = fill_in_exec_args();
+        HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
+
+        status = HYD_BSCI_launch_procs();
+        HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (handle.launch_mode == HYD_LAUNCH_BOOT ||
              handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) {
-        status = boot_proxies((handle.launch_mode == HYD_LAUNCH_BOOT) ? 0 : 1);
-        HYDU_ERR_POP(status, "error booting proxies\n");
+        status = HYD_BSCI_launch_procs();
+        HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
-        status = shutdown_proxies();
-        HYDU_ERR_POP(status, "error shutting down proxies\n");
+        FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+            status = HYDU_sock_connect(partition->base->name, handle.proxy_port, &fd);
+            if (status != HYD_SUCCESS) {
+                /* Don't abort. Try to shutdown as many proxies as possible */
+                HYDU_Error_printf("Unable to connect to proxy at %s\n", partition->base->name);
+                continue;
+            }
+
+            cmd = PROXY_SHUTDOWN;
+            status = HYDU_sock_write(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+            HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+            close(fd);
+        }
     }
     else if (handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
-        status = launch_procs_in_persistent_mode();
-        HYDU_ERR_POP(status, "error launching procs in persistent mode\n");
+        status = fill_in_exec_args();
+        HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
+
+        len = 0;
+        FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
+            len++;
+
+        HYDU_CALLOC(thread_context, struct HYD_Thread_context *, len,
+                    sizeof(struct HYD_Thread_context), status);
+        if (!thread_context)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "Unable to allocate memory for thread context\n");
+
+        id = 0;
+        FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+            HYDU_create_thread(launch_helper, (void *) partition, &thread_context[id]);
+            id++;
+        }
+
+        id = 0;
+        FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+            HYDU_join_thread(thread_context[id]);
+
+            status = HYD_DMX_register_fd(1, &partition->control_fd, HYD_STDOUT, partition,
+                                         HYD_PMCD_pmi_serv_control_cb);
+            HYDU_ERR_POP(status, "unable to register control fd\n");
+
+            id++;
+        }
     }
 
   fn_exit:
@@ -461,6 +369,8 @@ HYD_Status HYD_PMCI_launch_procs(void)
         HYDU_FREE(pmi_port_str);
     if (proxy_port_str)
         HYDU_FREE(proxy_port_str);
+    if (thread_context)
+        HYDU_FREE(thread_context);
     HYDU_FUNC_EXIT();
     return status;
 
