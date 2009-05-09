@@ -87,7 +87,7 @@ inline void MPIDI_DCMF_RendezvousTransfer (MPID_Request * rreq)
   /* ---------------------------------------------------------------- */
   /* Get the data from the origin node.                               */
   /* ---------------------------------------------------------------- */
-  DCMF_Callback_t cb = { (void (*)(void *))MPIDI_DCMF_RecvRzvDoneCB, (void *)rreq };
+  DCMF_Callback_t cb = { MPIDI_DCMF_RecvRzvDoneCB, (void *)rreq };
 
   size_t bytes;
   DCMF_Memregion_create(&rreq->dcmf.memregion, &bytes, rcvlen, rcvbuf, 0);

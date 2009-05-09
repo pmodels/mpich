@@ -38,7 +38,7 @@ static int MPIDI_PhysicalCart_checkRect(const MPID_Comm *comm, int minc[], int m
 
     for (i=0; i< comm->local_size; i++)
     {
-        MPIX_rank2torus(comm->vcr[i]->lpid, &c[3], &c[2], &c[1], &c[0]);
+        MPIX_rank2torus(comm->vcr[i], &c[3], &c[2], &c[1], &c[0]);
         for (j=0; j<4; j++) {
             if (c[j] < minc[j]) minc[j] = c[j];
             if (c[j] > maxc[j]) maxc[j] = c[j];

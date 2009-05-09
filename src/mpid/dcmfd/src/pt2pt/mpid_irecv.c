@@ -46,7 +46,6 @@ int MPID_Irecv(void          * buf,
                                     MPI_ERR_OTHER,
                                     "**nomem",
                                     0);
-      MPIU_Object_set_ref(rreq, 1);
       rreq->cc               = 0;
       rreq->kind             = MPID_REQUEST_RECV;
       MPIR_Status_set_procnull(&rreq->status);

@@ -16,14 +16,24 @@
 #ifndef MPICH_MPIDPRE_H_INCLUDED
 #define MPICH_MPIDPRE_H_INCLUDED
 
+#include <mpid_config.h>
+
 /* include message layer stuff */
+#include <defines.h>
 #include <dcmf.h>
 #include <dcmf_globalcollectives.h>
+#ifdef USE_CCMI_COLL
 #include <dcmf_collectives.h>
+#else /* !USE_CCMI_COLL */
+/* objects declared from these types should never be used */
+typedef DCQuad DCMF_Geometry_t[1];
+typedef DCQuad DCMF_CollectiveRequest_t[1];
+typedef DCQuad DCMF_CollectiveProtocol_t[1];
+#endif /* !USE_CCMI_COLL */
 
 /* verify that the version of the installed dcmf library is compatible */
 #if (DCMF_VERSION_RELEASE == 0)
-  #if (DCMF_VERSION_MAJOR == 1)
+  #if (DCMF_VERSION_MAJOR == 3)
     #if (DCMF_VERSION_MINOR < 0)
       #error Incompatible dcmf minor version
     #endif
@@ -60,24 +70,31 @@
 
 #include <mpidthread.h>
 
-typedef struct MPIDI_VC
-{
-  int          handle;
-  volatile int ref_count;
-  int          lpid;
-}
-MPIDI_VC;
-
+typedef int                 MPIDI_VCR;
 typedef struct MPIDI_VCRT * MPID_VCRT;
-typedef struct MPIDI_VC   * MPID_VCR;
+typedef MPIDI_VCR           MPID_VCR;
 #define MPID_GPID_Get(comm_ptr, rank, gpid)     \
 {                                               \
   gpid[0] = 0;                                  \
-  gpid[1] = comm_ptr->vcr[rank]->lpid;          \
+  gpid[1] = comm_ptr->vcr[rank];                \
 }
+/*
+#define MPID_VCR_Get_lpid(_vcr, _lpid_ptr) \
+({ \
+   MPIDI_STATE_DECL(MPID_STATE_MPID_VCR_GET_LPID); \
+   MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCR_GET_LPID); \
+   *(_lpid_ptr) = _vcr; \
+   MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCR_GET_LPID); \
+   MPI_SUCCESS; \
+})
+*/
 
 /** \brief Our progress engine does not require state */
 #define MPID_PROGRESS_STATE_DECL
+
+/** \brief Our device does not support dynamic processes
+ * This is used to speed up comm_create time */
+#define MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 
 /**
  * ******************************************************************
@@ -189,16 +206,12 @@ struct MPIDI_DCMF_MsgInfo_t
     unsigned   MPIrank;     /**< match rank             */
     uint16_t   MPIctxt;     /**< match context          */
 
-    uint16_t   type:8;      /**< message type           */
-    uint16_t   isSelf:1;    /**< message sent to self   */
+    uint16_t   type:4;      /**< message type           */
     uint16_t   isSync:1;    /**< set for sync sends     */
-
-    uint16_t   isRzv:1;     /**< use pt2pt rendezvous   */
+    uint16_t   isRzv :1;    /**< use pt2pt rendezvous   */
 
     /* These are not currently in use : */
-    uint16_t   isResend:1;    /**< Unused: this message is a re-send */
-    uint16_t   isSending:1;   /**< Unused: message is currently being sent */
-    uint16_t   extra_flags:3; /**< Unused */
+    uint16_t   extra:10;    /**< Unused */
 };
 
 typedef union MPIDI_DCMF_MsgInfo
@@ -225,9 +238,8 @@ typedef union
 struct MPIDI_DCMF_Request
 {
   MPIDI_DCMF_MsgEnvelope    envelope;
+  struct MPID_Request     * next;         /**< Link to next req. in queue */
   unsigned                  peerrank;     /**< The other guy's rank       */
-
-  MPIDI_DCMF_CA ca;                       /**< Completion action          */
 
   char                    * userbuf;      /**< User buffer                */
   unsigned                  userbufcount; /**< Userbuf data count         */
@@ -237,14 +249,13 @@ struct MPIDI_DCMF_Request
   MPI_Datatype              datatype;     /**< Data type of message       */
   struct MPID_Datatype    * datatype_ptr; /**< Info about the datatype    */
 
+  int                       isSelf;       /**< message sent to self       */
   int                     cancel_pending; /**< Cancel State               */
   MPIDI_DCMF_REQUEST_STATE  state;        /**< The tranfser state         */
+  MPIDI_DCMF_CA             ca;           /**< Completion action          */
 
   DCMF_Request_t            msg;          /**< The message layer request  */
-
   DCMF_Memregion_t          memregion;    /**< Rendezvous rcv memregion   */
-
-  struct MPID_Request     * next;         /**< Link to next req. in queue */
 };
 /** \brief This defines the portion of MPID_Request that is specific to the DCMF Device */
 #define MPID_DEV_REQUEST_DECL        struct MPIDI_DCMF_Request dcmf;
@@ -253,30 +264,32 @@ struct MPIDI_DCMF_Request
 /** \brief needed by the (stolen) CH3 implementation of dcmf_buffer.c */
 typedef unsigned MPIDI_msg_sz_t;
 
+struct STAR_Tuning_Session;
+
 /** \brief This defines the portion of MPID_Comm that is specific to the DCMF Device */
 struct MPIDI_DCMF_Comm
 {
-  DCMF_Geometry_t geometry; /**< Geometry component for collectives           */
-  DCMF_CollectiveRequest_t barrier; /**< Barrier request for collectives      */
-  unsigned *worldranks;     /**< rank list to be used by collectives          */
-   unsigned *sndlen; /**< lazy alloc alltoall vars */
-   unsigned *rcvlen;
-   unsigned *sdispls;
-   unsigned *rdispls;
-   unsigned *sndcounters;
-   unsigned *rcvcounters;
-   unsigned char allreducetree; /**< Comm specific tree flags */
-   unsigned char allreducepipelinedtree; /**< Comm specific tree flags */
-   unsigned char allreducepipelinedtree_dput; /**< Comm specific tree flags */
-   unsigned char reducetree;
-   unsigned char allreduceccmitree;
-   unsigned char reduceccmitree;
-   unsigned char bcasttree;
-   unsigned char alltoalls;
-   unsigned      bcastiter;   /* async broadcast is only used every 32
-			       * steps to prevent too many unexpected
-			       * messages */
+  DCMF_Geometry_t geometry; /**< Geometry component for collectives      */
+  DCMF_CollectiveRequest_t barrier; /**< Barrier request for collectives */
+  unsigned char comm_shape; /* 0: commworld, 1: rect, 2: irreg */ 
+  unsigned *sndlen; /**< lazy alloc alltoall vars */
+  unsigned *rcvlen;
+  unsigned *sdispls;
+  unsigned *rdispls;
+  unsigned *sndcounters;
+  unsigned *rcvcounters;
+  unsigned last_algorithm;
+  unsigned bcast_iter;   /* async broadcast is only used every 32
+			  * steps to prevent too many unexpected
+			  * messages */
+
+  /* this will hold a list of tuning session for the collective sites */
+  struct STAR_Tuning_Session * tuning_session;
+  
+  /* struct of bits holding info relavant to comm */
+  MPIDO_Embedded_Info_Set properties;
 };
+
 /** \brief This defines the portion of MPID_Comm that is specific to the DCMF Device */
 #define MPID_DEV_COMM_DECL      struct MPIDI_DCMF_Comm dcmf;
 
@@ -285,8 +298,8 @@ struct MPIDI_DCMF_Comm
 #error "Build error - HAVE_DEV_COMM_HOOK defined at least twice!"
 #else
 #define HAVE_DEV_COMM_HOOK
-#define MPID_Dev_comm_create_hook(a)  MPIDI_Comm_create(a)
-#define MPID_Dev_comm_destroy_hook(a) MPIDI_Comm_destroy(a)
+#define MPID_Dev_comm_create_hook(a)  void MPIDI_Comm_create  (MPID_Comm *comm); MPIDI_Comm_create(a)
+#define MPID_Dev_comm_destroy_hook(a) void MPIDI_Comm_destroy (MPID_Comm *comm); MPIDI_Comm_destroy(a)
 #endif
 
 
@@ -349,6 +362,7 @@ struct MPID_Dev_win_decl {
 #define MPID_EPOTYPE_POST       3       /**< MPI_Win_post exposure epoch */
 #define MPID_EPOTYPE_POSTSTART  4       /**< MPI_Win_post+MPI_Win_start access/exposure epoch */
 #define MPID_EPOTYPE_FENCE      5       /**< MPI_Win_fence access/exposure epoch */
+#define MPID_EPOTYPE_REFENCE    6       /**< MPI_Win_fence possible access/exposure epoch */
 /**@}*/
 
 /**

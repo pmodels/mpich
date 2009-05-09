@@ -13,7 +13,6 @@ MPID_Iprobe_rsm(int source,
                 int *flag,
                 MPI_Status * status)
 {
-  MPID_Request * rreq;
   const int context = comm->recvcontext_id + context_offset;
 
   if (source == MPI_PROC_NULL)
@@ -24,19 +23,9 @@ MPID_Iprobe_rsm(int source,
       *flag = TRUE;
       return MPI_SUCCESS;
     }
-  rreq = MPIDI_Recvq_FU(source, tag, context);
-  if (rreq != NULL)
-    {
-      if (status != MPI_STATUS_IGNORE) *status = rreq->status;
-      MPID_Request_release(rreq);
-      *flag = TRUE;
-      return MPI_SUCCESS;
-    }
-  else
-    {
-      MPID_Progress_poke();
-      *flag = FALSE;
-    }
+  *flag = MPIDI_Recvq_FU(source, tag, context, status);
+  if (!(*flag))
+    MPID_Progress_poke();
   return MPI_SUCCESS;
 }
 

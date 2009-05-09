@@ -12,34 +12,32 @@
  *
  * \param[in,out] sreq MPI receive request object
  */
-void MPIDI_DCMF_SendDoneCB (MPID_Request * sreq)
+void MPIDI_DCMF_SendDoneCB (void *clientdata, DCMF_Error_t *err)
 {
+  MPID_Request * sreq = (MPID_Request *)clientdata;
   MPID_assert(sreq != NULL);
 
   if (sreq->dcmf.uebuf)
     MPIU_Free(sreq->dcmf.uebuf);
   sreq->dcmf.uebuf = NULL;
 
-
-  if(sreq->dcmf.cancel_pending == TRUE)
+  if(sreq->status.cancelled == FALSE)
     {
-      if(sreq->dcmf.state==MPIDI_DCMF_REQUEST_DONE_CANCELLED)
-        MPID_Request_complete(sreq);
+      if(MPID_Request_getType(sreq) != MPIDI_DCMF_REQUEST_TYPE_SSEND)
+        {
+          sreq->dcmf.state = MPIDI_DCMF_ACKNOWLEGED;
+          MPID_Request_complete(sreq);
+        }
       else
-        sreq->dcmf.state=MPIDI_DCMF_REQUEST_DONE_CANCELLED;
-    }
-  else if(MPID_Request_getType(sreq) == MPIDI_DCMF_REQUEST_TYPE_SSEND)
-    {
-      if(sreq->dcmf.state == MPIDI_DCMF_ACKNOWLEGED)
-        MPID_Request_complete(sreq);
-      else
-        sreq->dcmf.state = MPIDI_DCMF_SEND_COMPLETE;
+        {
+          if(sreq->dcmf.state == MPIDI_DCMF_ACKNOWLEGED)
+            MPID_Request_complete(sreq);
+          else
+            sreq->dcmf.state = MPIDI_DCMF_SEND_COMPLETE;
+        }
     }
   else
-    {
-      sreq->dcmf.state = MPIDI_DCMF_ACKNOWLEGED;
-      MPID_Request_complete(sreq);
-    }
+    MPID_Request_complete(sreq);
 }
 
 
@@ -49,10 +47,11 @@ void MPIDI_DCMF_SendDoneCB (MPID_Request * sreq)
  *
  * \param[in,out] rreq MPI receive request object
  */
-void MPIDI_DCMF_RecvDoneCB (MPID_Request * rreq)
+void MPIDI_DCMF_RecvDoneCB (void *clientdata, DCMF_Error_t *err)
 {
+  MPID_Request * rreq = (MPID_Request *)clientdata;
   MPID_assert(rreq != NULL);
-  switch (rreq->dcmf.ca)
+  switch (MPID_Request_getCA(rreq))
     {
     case MPIDI_DCMF_CA_UNPACK_UEBUF_AND_COMPLETE:
       {
@@ -120,8 +119,9 @@ void MPIDI_DCMF_RecvDoneCB (MPID_Request * rreq)
  *
  * \param[in,out] rreq MPI receive request object
  */
-void MPIDI_DCMF_RecvRzvDoneCB (MPID_Request * rreq)
+void MPIDI_DCMF_RecvRzvDoneCB (void *clientdata, DCMF_Error_t *err)
 {
+  MPID_Request * rreq = (MPID_Request *)clientdata;
   MPID_assert(rreq != NULL);
 
   /* Is it neccesary to save the original value of the 'type' field ?? */
@@ -130,8 +130,10 @@ void MPIDI_DCMF_RecvRzvDoneCB (MPID_Request * rreq)
   DCMF_Control (&MPIDI_Protocols.control,
                 DCMF_MATCH_CONSISTENCY,
                 rreq->dcmf.peerrank,
-                rreq->dcmf.envelope.envelope.msginfo.quad);
+                &rreq->dcmf.envelope.envelope.msginfo.quad);
   MPID_Request_setType(rreq, original_value);
 
-  MPIDI_DCMF_RecvDoneCB (rreq);
+  DCMF_Memregion_destroy(&rreq->dcmf.memregion);
+
+  MPIDI_DCMF_RecvDoneCB (rreq, NULL);
 }

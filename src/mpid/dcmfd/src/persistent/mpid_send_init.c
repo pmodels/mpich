@@ -23,9 +23,8 @@ MPID_PSendRequest (const void    * buf,
                    int             context_offset,
                    MPID_Request ** request)
 {
-  (*request) = MPID_SendRequest_create();
+  (*request) = MPID_Request_create();
   if ((*request) == NULL) return MPIR_ERR_MEMALLOCFAILED;
-  MPIU_Object_set_ref((*request), 1);
   (*request)->kind                 = MPID_PREQUEST_SEND;
   (*request)->comm                 = comm;
   MPIR_Comm_add_ref(comm);

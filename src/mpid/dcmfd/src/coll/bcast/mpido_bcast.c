@@ -1,329 +1,364 @@
 /*  (C)Copyright IBM Corp.  2007, 2008  */
 /**
- * \file src/coll/bcast/mpido_bcast.c
+ * \file src/mpid/dcmfd/src/coll/bcast/mpido_bcast.c
  * \brief ???
  */
 
 #include "mpido_coll.h"
+#include "mpidi_star.h"
+#include "mpidi_coll_prototypes.h"
+#include "mpix.h"
+
+
+#ifdef USE_CCMI_COLL
 
 #pragma weak PMPIDO_Bcast = MPIDO_Bcast
-/**
- * **************************************************************************
- * \brief "Done" callback for collective broadcast message.
- * **************************************************************************
- */
 
-static void cb_done (void *clientdata)
+int
+MPIDO_Bcast(void *buffer,
+            int count, MPI_Datatype datatype, int root, MPID_Comm * comm)
 {
-   volatile unsigned *work_left = (unsigned *) clientdata;
-   *work_left = 0;
-   MPID_Progress_signal();
-   return;
-}
+  bcast_fptr func = NULL;
+  MPIDO_Embedded_Info_Set *properties = &(comm->dcmf.properties);
 
-
-static int tree_bcast(void * buffer,
-                      int bytes,
-                      int root,
-                      DCMF_Geometry_t * geometry)
-{
-   int rc;
-   DCMF_CollectiveRequest_t request;
-   volatile unsigned active = 1;
-   DCMF_Callback_t callback = { cb_done, (void *) &active };
-   extern int DCMF_TREE_SMP_SHORTCUT;
-if (DCMF_TREE_SMP_SHORTCUT) {
-   rc = DCMF_GlobalBcast(&MPIDI_Protocols.globalbcast,
-			(DCMF_Request_t *)&request,
-			callback,
-			DCMF_MATCH_CONSISTENCY,
-			root,
-			buffer,
-			bytes);
-} else {
-   rc = DCMF_Broadcast(&MPIDI_CollectiveProtocols.broadcast.tree,
-                       &request,
-                       callback,
-                       DCMF_MATCH_CONSISTENCY,
-                       geometry,
-                       root,
-                       buffer,
-                       bytes);
-}
-   MPID_PROGRESS_WAIT_WHILE(active);
-   return rc;
-}
-
-static int async_binom_bcast(void * buffer,
-                             int bytes,
-                             int root,
-                             DCMF_Geometry_t * geometry)
-{
-   int rc;
-   DCMF_CollectiveRequest_t request;
-   volatile unsigned active = 1;
-   DCMF_Callback_t callback = {cb_done, (void *)&active };
-   rc = DCMF_AsyncBroadcast(
-                     &MPIDI_CollectiveProtocols.broadcast.async_binomial,
-                     &request,
-                     callback,
-                     DCMF_MATCH_CONSISTENCY,
-                     geometry,
-                     root,
-                     buffer,
-                     bytes);
-   MPID_PROGRESS_WAIT_WHILE(active);
-
-   return rc;
-}
-
-static int sync_binom_bcast(void * buffer,
-                       int bytes,
-                       int root,
-                       DCMF_Geometry_t * geometry)
-{
-   int rc;
-   DCMF_CollectiveRequest_t request;
-   volatile unsigned active = 1;
-   DCMF_Callback_t callback = { cb_done, (void *) &active };
-   rc = DCMF_Broadcast(&MPIDI_CollectiveProtocols.broadcast.binomial,
-			 &request,
-			 callback,
-			 DCMF_MATCH_CONSISTENCY,
-			 geometry,
-			 root,
-			 buffer,
-			 bytes);
-   MPID_PROGRESS_WAIT_WHILE(active);
-
-   return rc;
-}
-static int async_rect_bcast(void * buffer,
-                            int bytes,
-                            int root,
-                            DCMF_Geometry_t * geometry)
-{
-   int rc;
-   DCMF_CollectiveRequest_t request;
-   volatile unsigned active = 1;
-   DCMF_Callback_t callback = { cb_done, (void *) &active };
-   rc = DCMF_AsyncBroadcast(
-               &MPIDI_CollectiveProtocols.broadcast.async_rectangle,
-			      &request,
-			      callback,
-			      DCMF_MATCH_CONSISTENCY,
-			      geometry,
-			      root,
-			      buffer,
-			      bytes);
-
-     MPID_PROGRESS_WAIT_WHILE(active);
-
-     return rc;
-}
-
-static int sync_rect_bcast(void * buffer,
-                           int bytes,
-                           int root,
-                           DCMF_Geometry_t * geometry)
-{
-   int rc;
-   DCMF_CollectiveRequest_t request;
-   volatile unsigned active = 1;
-   DCMF_Callback_t callback = { cb_done, (void *) &active };
-
-   rc = DCMF_Broadcast(&MPIDI_CollectiveProtocols.broadcast.rectangle,
-			 &request,
-			 callback,
-			 DCMF_MATCH_CONSISTENCY,
-			 geometry,
-			 root,
-			 buffer,
-			 bytes);
-
-   MPID_PROGRESS_WAIT_WHILE(active);
-
-   return rc;
-}
-
-
-int MPIDO_Bcast(void * buffer,
-                int count,
-                MPI_Datatype datatype,
-                int root,
-                MPID_Comm * comm_ptr)
-{
-   int data_sz, dt_contig, rc;
-
-   MPID_Datatype *dt_ptr;
-   MPI_Aint dt_true_lb;
-   MPID_Segment segment;
-
-   char *data_buffer;
-   char *noncontigbuf = NULL;
-
-   unsigned treeavail, binomavail=1, rectavail=1;
-
-   if(comm_ptr->comm_kind != MPID_INTRACOMM || count == 0)
-      return MPIR_Bcast(buffer, count, datatype, root, comm_ptr);
-
-//   assert(comm_ptr->comm_kind != MPID_INTRACOMM);
-
-   treeavail = comm_ptr->dcmf.bcasttree;
-
-   rectavail =
-      MPIDI_CollectiveProtocols.broadcast.userect &&
-         DCMF_Geometry_analyze(&comm_ptr->dcmf.geometry,
-         &MPIDI_CollectiveProtocols.broadcast.rectangle);
-
-   binomavail =
-      MPIDI_CollectiveProtocols.broadcast.usebinom &&
-         DCMF_Geometry_analyze(&comm_ptr->dcmf.geometry,
-         &MPIDI_CollectiveProtocols.broadcast.binomial);
-         
-
-
-
-#warning need benchmark data here
-   int asyncrect = MPIDI_CollectiveProtocols.broadcast.useasyncrect;
-   int asyncbinom = MPIDI_CollectiveProtocols.broadcast.useasyncbinom;
-
-   if(!binomavail && !rectavail && !treeavail && 
-      !asyncrect && !asyncbinom)
-      return MPIR_Bcast(buffer, count, datatype, root, comm_ptr);
-
-
-   MPIDI_Datatype_get_info(count,
-                           datatype,
-                           dt_contig,
-                           data_sz,
-                           dt_ptr,
-                           dt_true_lb);
-
-   MPID_Ensure_Aint_fits_in_pointer ( 
-      (MPI_VOID_PTR_CAST_TO_MPI_AINT buffer + dt_true_lb));
-   data_buffer = (char *)buffer+dt_true_lb;
-
-  /* tree asserts if the data type size is actually 0. should we make
-   * tree deal with a 0-byte bcast? */
-   if(data_sz ==0)
-      treeavail = 0;
-
-   if(!dt_contig)
-   {
-      noncontigbuf = MPIU_Malloc(data_sz);
-      data_buffer = noncontigbuf;
-      if (noncontigbuf == NULL)
-      {
-         fprintf(stderr,
-            "Pack: Tree Bcast cannot allocate local non-contig pack buffer\n");
-         MPID_Dump_stacks();
-         MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
-            "Fatal:  Cannot allocate pack buffer");
-      }
-
-
-      if(comm_ptr->rank == root)
-      {
-         /* Root:  Pack Data */
-         DLOOP_Offset last = data_sz;
-         MPID_Segment_init (buffer, count, datatype, &segment, 0);
-         MPID_Segment_pack (&segment, 0, &last, noncontigbuf);
-      }
-   }
-
-
-   if(treeavail)
-   {
-//      fprintf(stderr,
-//          "tree: root: %d, comm size: %d %d, context_id: %d\n",
-//               root, comm_ptr->local_size,
-//               comm_ptr->remote_size,  comm_ptr->context_id);
-
-      rc = tree_bcast(data_buffer,
-                      data_sz,
-                      comm_ptr->vcr[root]->lpid,
-                      &comm_ptr->dcmf.geometry);
-   }
-
-   else if(rectavail && asyncrect)
-   {
-      if(data_sz < 131072 && comm_ptr->dcmf.bcastiter < 32)
-      {
-         comm_ptr->dcmf.bcastiter++;
-         rc = async_rect_bcast(data_buffer,
-                               data_sz,
-                               comm_ptr->vcr[root]->lpid,
-                               &comm_ptr->dcmf.geometry);
-      }
-      else
-      {
-         if(comm_ptr->dcmf.bcastiter==32)
-            comm_ptr->dcmf.bcastiter = 0;
+  int data_size, data_contig, rc = MPI_ERR_INTERN;
+  char *data_buffer = NULL, *noncontig_buff = NULL;
+  unsigned char userenvset = MPIDO_INFO_ISSET(properties, MPIDO_BCAST_ENVVAR);
+  
+  MPI_Aint data_true_lb = 0;
+  MPID_Datatype *data_ptr;
+  MPID_Segment segment;
      
-         rc = sync_rect_bcast(data_buffer,
-                              data_sz,
-                              comm_ptr->vcr[root]->lpid,
-                              &comm_ptr->dcmf.geometry);
-      }
-   }
-   else if(rectavail)
-   {
-         rc = sync_rect_bcast(data_buffer,
-                              data_sz,
-                              comm_ptr->vcr[root]->lpid,
-                              &comm_ptr->dcmf.geometry);
-   }
-   else if(binomavail && asyncbinom)
-   {
-      if(data_sz < 262144 && comm_ptr->dcmf.bcastiter < 32)
+  if (count==0)
+    return MPI_SUCCESS;
+
+  if (MPIDO_INFO_ISSET(properties, MPIDO_USE_MPICH_BCAST))
+    return MPIR_Bcast(buffer, count, datatype, root, comm);
+
+  MPIDI_Datatype_get_info(count,
+                          datatype,
+                          data_contig, data_size, data_ptr, data_true_lb);
+
+
+  MPIDI_VerifyBuffer(buffer, data_buffer, data_true_lb);
+
+  if (!data_contig)
+  {
+    noncontig_buff = MPIU_Malloc(data_size);
+    data_buffer = noncontig_buff;
+    if (noncontig_buff == NULL)
+    {
+      fprintf(stderr,
+              "Pack: Tree Bcast cannot allocate local non-contig pack"
+              " buffer\n");
+      MPIX_Dump_stacks();
+      MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+                 "Fatal:  Cannot allocate pack buffer");
+    }
+
+    if (comm->rank == root)
+    {
+      DLOOP_Offset last = data_size;
+      MPID_Segment_init(buffer, count, datatype, &segment, 0);
+      MPID_Segment_pack(&segment, 0, &last, noncontig_buff);
+    }
+  }
+  if (!STAR_info.enabled || STAR_info.internal_control_flow ||
+      data_size < STAR_info.bcast_threshold)
+  {
+    if (data_size <= 1024 || userenvset)
+    {
+      if (MPIDO_INFO_ISSET(properties, MPIDO_USE_TREE_BCAST))
       {
-         comm_ptr->dcmf.bcastiter++;
-         rc = async_binom_bcast(data_buffer,
-                                data_sz,
-                                comm_ptr->vcr[root]->lpid,
-                                &comm_ptr->dcmf.geometry);
+        func = MPIDO_Bcast_tree;
+        comm->dcmf.last_algorithm = MPIDO_USE_TREE_BCAST;
       }
-      else
+      
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_RECT_SINGLETH_BCAST) &&
+          data_size > 128)
       {
-         if(comm_ptr->dcmf.bcastiter==32)
-            comm_ptr->dcmf.bcastiter = 0;
-
-         rc = sync_binom_bcast(data_buffer,
-                               data_sz,
-                               comm_ptr->vcr[root]->lpid,
-                               &comm_ptr->dcmf.geometry);
+        func = MPIDO_Bcast_rect_singleth;
+        comm->dcmf.last_algorithm = MPIDO_USE_RECT_SINGLETH_BCAST;
       }
-   }
-   else // if(binomaval)
-   {
-         rc = sync_binom_bcast(data_buffer,
-                               data_sz,
-                               comm_ptr->vcr[root]->lpid,
-                               &comm_ptr->dcmf.geometry);
-
-   }
-
-
-   if(!dt_contig)
-   {
-      if(comm_ptr->rank != root)
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_ARECT_BCAST))
       {
-         int smpi_errno, rmpi_errno;
-         MPIDI_msg_sz_t rcount;
-         MPIDI_DCMF_Buffer_copy (noncontigbuf,
-                                 data_sz,
-                                 MPI_CHAR,
-                                 &smpi_errno,
-                                 buffer,
-                                 count,
-                                 datatype,
-                                 &rcount,
-                                 &rmpi_errno);
+        func = MPIDO_Bcast_rect_async;
+        comm->dcmf.last_algorithm = MPIDO_USE_ARECT_BCAST;
       }
-      MPIU_Free(noncontigbuf);
-      noncontigbuf = NULL;
-   }
-   return rc;
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_ABINOM_BCAST))
+      {
+        func = MPIDO_Bcast_binom_async;
+        comm->dcmf.last_algorithm = MPIDO_USE_ABINOM_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_SCATTER_GATHER_BCAST))
+      {
+        func = MPIDO_Bcast_scatter_gather;
+        comm->dcmf.last_algorithm = MPIDO_USE_SCATTER_GATHER_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_CCMI_TREE_BCAST))
+      {
+        func = MPIDO_Bcast_CCMI_tree;
+        comm->dcmf.last_algorithm = MPIDO_USE_CCMI_TREE_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_CCMI_TREE_DPUT_BCAST))
+      {
+        func = MPIDO_Bcast_CCMI_tree_dput;
+        comm->dcmf.last_algorithm = MPIDO_USE_CCMI_TREE_DPUT_BCAST;
+      }
+    }
 
+    if(!func && (data_size <= 8192 || userenvset))
+    {
+      if (MPIDO_INFO_ISSET(properties, MPIDO_USE_TREE_BCAST))
+      {
+        func = MPIDO_Bcast_tree;
+        comm->dcmf.last_algorithm = MPIDO_USE_TREE_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_RECT_SINGLETH_BCAST))
+      {
+        func = MPIDO_Bcast_rect_singleth;
+        comm->dcmf.last_algorithm = MPIDO_USE_RECT_SINGLETH_BCAST;
+      }
+      if ((!func  || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_RECT_BCAST))
+      {
+        func = MPIDO_Bcast_rect_sync;
+        comm->dcmf.last_algorithm = MPIDO_USE_RECT_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_ABINOM_BCAST))
+      {
+        func = MPIDO_Bcast_binom_async;
+        comm->dcmf.last_algorithm = MPIDO_USE_ABINOM_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_SCATTER_GATHER_BCAST))
+      {
+        func = MPIDO_Bcast_scatter_gather;
+        comm->dcmf.last_algorithm = MPIDO_USE_SCATTER_GATHER_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_CCMI_TREE_BCAST))
+      {
+        func = MPIDO_Bcast_CCMI_tree;
+        comm->dcmf.last_algorithm = MPIDO_USE_CCMI_TREE_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_CCMI_TREE_DPUT_BCAST))
+      {
+        func = MPIDO_Bcast_CCMI_tree_dput;
+        comm->dcmf.last_algorithm = MPIDO_USE_CCMI_TREE_DPUT_BCAST;
+      }
+    }
+
+    if(!func && (data_size <= 65536 || userenvset))
+    {
+      if (MPIDO_INFO_ISSET(properties, MPIDO_USE_TREE_BCAST))
+      {
+        func = MPIDO_Bcast_tree;
+        comm->dcmf.last_algorithm = MPIDO_USE_TREE_BCAST;
+      }
+      if ((!func  || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_RECT_DPUT_BCAST) &&
+          !((unsigned) data_buffer & 0x0F))
+      {
+        func = MPIDO_Bcast_rect_dput;
+        comm->dcmf.last_algorithm = MPIDO_USE_RECT_DPUT_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_RECT_BCAST))
+      {
+        func = MPIDO_Bcast_rect_sync;
+        comm->dcmf.last_algorithm = MPIDO_USE_RECT_BCAST;
+      }
+      if ((!func  || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_BINOM_SINGLETH_BCAST))
+      {
+        func = MPIDO_Bcast_binom_singleth;
+        comm->dcmf.last_algorithm = MPIDO_USE_BINOM_SINGLETH_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_ABINOM_BCAST) &&
+          data_size < 16384)
+      {
+        func = MPIDO_Bcast_binom_async;
+        comm->dcmf.last_algorithm = MPIDO_USE_ABINOM_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_BINOM_BCAST))
+      {
+        func = MPIDO_Bcast_binom_sync;      
+        comm->dcmf.last_algorithm = MPIDO_USE_BINOM_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_SCATTER_GATHER_BCAST))
+      {
+        func = MPIDO_Bcast_scatter_gather;
+        comm->dcmf.last_algorithm = MPIDO_USE_SCATTER_GATHER_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_CCMI_TREE_BCAST))
+      {
+        func = MPIDO_Bcast_CCMI_tree;
+        comm->dcmf.last_algorithm = MPIDO_USE_CCMI_TREE_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_CCMI_TREE_DPUT_BCAST))
+      {
+        func = MPIDO_Bcast_CCMI_tree_dput;
+        comm->dcmf.last_algorithm = MPIDO_USE_CCMI_TREE_DPUT_BCAST;
+      }
+    }
+
+    if(!func && (data_size > 65536 || userenvset))
+    {
+      if (MPIDO_INFO_ISSET(properties, MPIDO_USE_RECT_DPUT_BCAST) &&
+          !((unsigned) data_buffer & 0x0F))
+      {
+        func = MPIDO_Bcast_rect_dput;
+        comm->dcmf.last_algorithm = MPIDO_USE_RECT_DPUT_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_TREE_BCAST))
+      {
+        func = MPIDO_Bcast_tree;
+        comm->dcmf.last_algorithm = MPIDO_USE_TREE_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_RECT_BCAST))
+      {
+        func = MPIDO_Bcast_rect_sync;
+        comm->dcmf.last_algorithm = MPIDO_USE_RECT_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_BINOM_SINGLETH_BCAST))
+      {
+        func = MPIDO_Bcast_binom_singleth;
+        comm->dcmf.last_algorithm = MPIDO_USE_BINOM_SINGLETH_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_BINOM_BCAST))
+      {
+        func = MPIDO_Bcast_binom_sync;
+        comm->dcmf.last_algorithm = MPIDO_USE_BINOM_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_SCATTER_GATHER_BCAST))
+      {
+        func = MPIDO_Bcast_scatter_gather;
+        comm->dcmf.last_algorithm = MPIDO_USE_SCATTER_GATHER_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_CCMI_TREE_BCAST))
+      {
+        func = MPIDO_Bcast_CCMI_tree;
+        comm->dcmf.last_algorithm = MPIDO_USE_CCMI_TREE_BCAST;
+      }
+      if ((!func || userenvset) &&
+          MPIDO_INFO_ISSET(properties, MPIDO_USE_CCMI_TREE_DPUT_BCAST))
+      {
+        func = MPIDO_Bcast_CCMI_tree_dput;
+        comm->dcmf.last_algorithm = MPIDO_USE_CCMI_TREE_DPUT_BCAST;
+      }
+    }
+    
+    if (!func)
+    {
+      comm->dcmf.last_algorithm = MPIDO_USE_MPICH_BCAST;
+      return MPIR_Bcast(buffer, count, datatype, root, comm);
+    }
+    
+    rc = (func) (data_buffer, data_size, root, comm);
+  }
+      
+  else
+  {
+    int id;
+    unsigned char same_callsite = 1;
+
+    STAR_Callsite collective_site;
+
+    void ** tb_ptr = (void **) MPIU_Malloc(sizeof(void *) *
+                                           STAR_info.traceback_levels);
+
+
+    /* set the internal control flow to disable internal star tuning */
+    STAR_info.internal_control_flow = 1;
+
+    /* get backtrace info for caller to this func, use that as callsite_id */
+    backtrace(tb_ptr, STAR_info.traceback_levels);
+    id = (int) tb_ptr[STAR_info.traceback_levels - 1];
+
+
+    /* find out if all participants agree on the callsite id */
+    if (STAR_info.agree_on_callsite)
+    {
+      int tmp[2], result[2];
+      tmp[0] = id;
+      tmp[1] = ~id;
+      MPIDO_Allreduce(tmp, result, 2, MPI_UNSIGNED_LONG, MPI_MAX, comm);
+      if (result[0] != (~result[1]))
+        same_callsite = 0;
+    }
+
+    if (same_callsite)
+    {
+      /* create a signature callsite info for this particular call site */
+      collective_site.call_type = BCAST_CALL;
+      collective_site.comm = comm;
+      collective_site.bytes = data_size;
+      collective_site.op_type_support = MPIDO_SUPPORT_NOT_NEEDED;
+      collective_site.id = id;
+
+      /* decide buffer alignment */
+      collective_site.buff_attributes[3] = 1; /* assume aligned */
+      if ((unsigned)data_buffer & 0x0F)
+        collective_site.buff_attributes[3] = 0; /* set to not aligned */
+
+      rc = STAR_Bcast(data_buffer, root, &collective_site,
+                      STAR_bcast_repository,
+                      STAR_info.bcast_algorithms);
+    }
+
+    if (rc == STAR_FAILURE || !same_callsite)
+    {
+      rc = MPIR_Bcast(buffer, count, datatype, root, comm);
+    }
+    
+    /* unset the internal control flow */
+    STAR_info.internal_control_flow = 0;
+
+    MPIU_Free(tb_ptr);    
+  }
+  if (!data_contig)
+  {
+    if (comm->rank != root)
+    {
+      int smpi_errno, rmpi_errno;
+      MPIDI_msg_sz_t rcount;
+      MPIDI_DCMF_Buffer_copy(noncontig_buff, data_size, MPI_CHAR,
+                             &smpi_errno, buffer, count, datatype,
+                             &rcount, &rmpi_errno);
+    }
+    MPIU_Free(noncontig_buff);
+  }
+
+  return rc;
 }
+
+#else /* !USE_CCMI_COLL */
+
+int
+MPIDO_Bcast(void *buffer,
+            int count, MPI_Datatype datatype, int root, MPID_Comm * comm_ptr)
+{
+  MPID_abort();
+}
+#endif /* !USE_CCMI_COLL */

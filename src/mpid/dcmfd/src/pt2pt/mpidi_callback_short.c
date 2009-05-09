@@ -16,19 +16,23 @@
  * \param[in]  sndbuf     Where the data is stored
  */
 void MPIDI_BG2S_RecvShortCB(void                     * clientdata,
-                            const MPIDI_DCMF_MsgInfo * msginfo,
+                            const DCQuad             * msgquad,
                             unsigned                   count,
-                            unsigned                   senderrank,
+                            size_t                     senderrank,
                             const char               * sndbuf,
-                            unsigned                   sndlen)
+                            size_t                     sndlen)
 {
+  const MPIDI_DCMF_MsgInfo *msginfo = (const MPIDI_DCMF_MsgInfo *)msgquad;
   MPID_Request * rreq = NULL;
   int found;
   int rcvlen = sndlen;
 
   /* Handle cancel requests */
   if (msginfo->msginfo.type == MPIDI_DCMF_REQUEST_TYPE_CANCEL_REQUEST)
-    return MPIDI_DCMF_procCancelReq(msginfo, senderrank);
+    {
+      MPIDI_DCMF_procCancelReq(msginfo, senderrank);
+      return;
+    }
 
   /* -------------------------- */
   /*      match request         */
@@ -128,7 +132,7 @@ void MPIDI_BG2S_RecvShortCB(void                     * clientdata,
           rcvbuf = (char *)rreq->dcmf.userbuf + dt_true_lb;
 
           memcpy(rcvbuf, sndbuf, rcvlen);
-          MPIDI_DCMF_RecvDoneCB(rreq);
+          MPIDI_DCMF_RecvDoneCB(rreq, NULL);
 
           return;
         }
@@ -144,7 +148,7 @@ void MPIDI_BG2S_RecvShortCB(void                     * clientdata,
           rreq->dcmf.uebuflen   = rcvlen ;
           rreq->dcmf.uebuf      = (char *) sndbuf ;
 
-          MPIDI_DCMF_RecvDoneCB(rreq);
+          MPIDI_DCMF_RecvDoneCB(rreq, NULL);
           return;
         }
     }
@@ -177,6 +181,6 @@ void MPIDI_BG2S_RecvShortCB(void                     * clientdata,
   /* Copy the data into the unexpected buffer.        */
   /* ------------------------------------------------ */
   memcpy(rreq->dcmf.uebuf, sndbuf, rreq->dcmf.uebuflen);
-  MPIDI_DCMF_RecvDoneCB(rreq);
+  MPIDI_DCMF_RecvDoneCB(rreq, NULL);
   return;
 }

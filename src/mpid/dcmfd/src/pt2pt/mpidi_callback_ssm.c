@@ -16,12 +16,13 @@
  * \param[in]  sndbuf     Where the data is stored
  */
 void MPIDI_BG2S_SsmCtsCB(void                     * clientdata,
-                         const MPIDI_DCMF_MsgInfo * msginfo,
+                         const DCQuad             * msginfo,
                          unsigned                   count,
-                         unsigned                   senderrank,
+                         size_t                     senderrank,
                          const char               * sndbuf,
-                         unsigned                   sndlen)
+                         size_t                     sndlen)
 {
+  // const MPIDI_DCMF_MsgInfo *m = (const MPIDI_DCMF_MsgInfo *)msginfo;
   SSM_ABORT();
 }
 
@@ -37,12 +38,13 @@ void MPIDI_BG2S_SsmCtsCB(void                     * clientdata,
  * \param[in]  sndbuf     Where the data is stored
  */
 void MPIDI_BG2S_SsmAckCB(void                     * clientdata,
-                         const MPIDI_DCMF_MsgInfo * msginfo,
+                         const DCQuad             * msginfo,
                          unsigned                   count,
-                         unsigned                   senderrank,
+                         size_t                     senderrank,
                          const char               * sndbuf,
-                         unsigned                   sndlen)
+                         size_t                     sndlen)
 {
+  // const MPIDI_DCMF_MsgInfo *m = (const MPIDI_DCMF_MsgInfo *)msginfo;
   SSM_ABORT();
 }
 
@@ -53,7 +55,7 @@ void MPIDI_BG2S_SsmAckCB(void                     * clientdata,
  *
  * \param[in,out] sreq MPI receive request object
  */
-void MPIDI_DCMF_SsmPutDoneCB (MPID_Request * sreq)
+void MPIDI_DCMF_SsmPutDoneCB (void *clientdata, DCMF_Error_t *err)
 {
   SSM_ABORT();
 }

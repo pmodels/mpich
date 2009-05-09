@@ -5,46 +5,13 @@
  */
 
 #include "mpido_coll.h"
+#include "mpidi_star.h"
+#include "mpidi_coll_prototypes.h"
+
+#ifdef USE_CCMI_COLL
+
 
 #pragma weak PMPIDO_Scatter = MPIDO_Scatter
-
-
-int MPIDO_Scatter_Bcast(void *sendbuf,
-                        int nbytes,
-                        void *recvbuf,
-                        int root,
-                        MPID_Comm *comm_ptr)
-{
-   /* Pretty simple - bcast a temp buffer and copy our little chunk out */
-   int rank = comm_ptr->rank;
-   int size = comm_ptr->local_size;
-   char *tempbuf = NULL;
-
-   if(rank == root)
-      tempbuf = sendbuf;
-   else
-   {
-      tempbuf = MPIU_Malloc(nbytes*size);
-      if(!tempbuf)
-         return MPIR_Err_create_code(MPI_SUCCESS,
-                                     MPIR_ERR_RECOVERABLE,
-                                     "MPI_Scatter",
-                                     __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-   }
-
-   MPIDO_Bcast(tempbuf, nbytes*size, MPI_CHAR, root, comm_ptr);
-
-   if(rank == root && recvbuf == MPI_IN_PLACE)
-      return MPI_SUCCESS;
-   else
-      memcpy(recvbuf, tempbuf+(rank*nbytes), nbytes);
-
-   if(rank!=root)
-      MPIU_Free(tempbuf);
-
-   return MPI_SUCCESS;
-}
-
 /* works for simple data types, assumes fast bcast is available */
 
 int MPIDO_Scatter(void *sendbuf,
@@ -54,86 +21,143 @@ int MPIDO_Scatter(void *sendbuf,
                   int recvcount,
                   MPI_Datatype recvtype,
                   int root,
-                  MPID_Comm *comm_ptr)
+                  MPID_Comm * comm)
 {
-   int rank = comm_ptr->rank;
-   int nbytes;
-   MPID_Datatype *dt_ptr;
-   MPI_Aint true_lb=0; 
-   int contig;
+  MPIDO_Embedded_Info_Set * properties = &(comm->dcmf.properties);
+  MPID_Datatype * data_ptr;
+  MPI_Aint true_lb = 0;
+  char *sbuf = sendbuf, *rbuf = recvbuf;
+  int contig, nbytes = 0, rc = 0;
+  int rank = comm->rank;
+  int success = 1;
 
-   /* Pretty much needs tree bcast to beat mpich across the board */
-   int bcastscatter = 
-      MPIDI_CollectiveProtocols.scatter.usebcast && comm_ptr->dcmf.bcasttree;
+  if (rank == root)
+  {
+    if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
+    {
+      MPIDI_Datatype_get_info(sendcount, sendtype, contig,
+                              nbytes, data_ptr, true_lb);
+      if (!contig) success = 0;
+    }
+    else
+      success = 0;
 
-   if(comm_ptr->comm_kind != MPID_INTRACOMM || !bcastscatter)
-      return MPIR_Scatter(sendbuf, sendcount, sendtype,
-                          recvbuf, recvcount, recvtype,
-                          root, comm_ptr);
-
-   /* we can have different arguments on root node but we need to ensure
-    * all nodes do the same thing - optimized or not optimized, so
-    * we have to be pretty harsh on these checks 
-    */
-    /* I could probably pack noncontig types, but that's a good
-     * contrib thing */
-
-   if(rank == root)
-   {
-      MPIDI_Datatype_get_info(sendcount,
-                              sendtype,
-                              contig,
-                              nbytes,
-                              dt_ptr,
-                              true_lb);
-      if(recvtype == MPI_DATATYPE_NULL || recvcount <=0 || !contig)
-         bcastscatter = 0;
-   }
-   else
-   {
-      MPIDI_Datatype_get_info(recvcount,
-                               recvtype,
-                               contig,
-                               nbytes,
-                               dt_ptr,
-                               true_lb);
-      if(sendtype == MPI_DATATYPE_NULL || sendcount <=0 || !contig)
-         bcastscatter = 0;
-   }
-
-   /* we need a allreduce step to make sure the arguments are well behaved.
-    * across all nodes. see also mpido_allgather(v) 
-    */
-   MPIDO_Allreduce(MPI_IN_PLACE,
-                   &bcastscatter,
-                   1,
-                   MPI_INT,
-                   MPI_BAND,
-                   comm_ptr);
-
-
-   if(bcastscatter)
-   {
-      MPID_Ensure_Aint_fits_in_pointer (MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                        true_lb);
-      sendbuf = (char *)sendbuf + true_lb;
-      if(recvbuf != MPI_IN_PLACE)
+    if (success)
+    {
+      if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
       {
-         MPID_Ensure_Aint_fits_in_pointer (MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                        true_lb);
-         recvbuf = (char *)recvbuf + true_lb;
+        MPIDI_Datatype_get_info(recvcount, recvtype, contig,
+                                nbytes, data_ptr, true_lb);
+        if (!contig) success = 0;
       }
+      else success = 0;
+    }
+  }
 
-      return MPIDO_Scatter_Bcast(sendbuf,
-                                 nbytes,
-                                 recvbuf,
-                                 root,
-                                 comm_ptr);
+  else
+  {
+    if (sendtype != MPI_DATATYPE_NULL && sendcount >= 0)
+    {
+      MPIDI_Datatype_get_info(recvcount, recvtype, contig,
+                              nbytes, data_ptr, true_lb);
+      if (!contig) success = 0;
+    }
+    else
+      success = 0;
+  }
+
+  if (MPIDO_INFO_ISSET(properties, MPIDO_USE_MPICH_SCATTER) ||
+      MPIDO_INFO_ISSET(properties, MPIDO_IRREG_COMM) ||
+      (!MPIDO_INFO_ISSET(properties, MPIDO_USE_TREE_BCAST) && nbytes <= 64))
+  {
+    comm->dcmf.last_algorithm = MPIDO_USE_MPICH_SCATTER;
+    return MPIR_Scatter(sendbuf, sendcount, sendtype,
+                        recvbuf, recvcount, recvtype,
+                        root, comm);
+  }
+  /* set the internal control flow to disable internal star tuning */
+  STAR_info.internal_control_flow = 1;
+
+  MPIDO_Allreduce(MPI_IN_PLACE, &success, 1, MPI_INT, MPI_BAND, comm);
+
+  /* reset flag */
+  STAR_info.internal_control_flow = 0;
+
+  if (!success)
+    return MPIR_Scatter(sendbuf, sendcount, sendtype,
+                        recvbuf, recvcount, recvtype,
+                        root, comm);
+
+  MPIDI_VerifyBuffer(sendbuf, sbuf, true_lb);
+  MPIDI_VerifyBuffer(recvbuf, rbuf, true_lb);
+  
+  if (!STAR_info.enabled || STAR_info.internal_control_flow ||
+      STAR_info.scatter_algorithms == 1)
+  {
+    if (MPIDO_INFO_ISSET(properties, MPIDO_USE_BCAST_SCATTER))
+    {
+      comm->dcmf.last_algorithm = MPIDO_USE_BCAST_SCATTER;
+      return MPIDO_Scatter_bcast(sbuf, sendcount, sendtype,
+                                 rbuf, recvcount, recvtype,
+                                 root, comm);
+    }
+  }
+  else
+  {
+    int id;
+    unsigned char same_callsite = 1;
+
+    void ** tb_ptr = (void **) MPIU_Malloc(sizeof(void *) *
+                                           STAR_info.traceback_levels);
+
+    /* set the internal control flow to disable internal star tuning */
+    STAR_info.internal_control_flow = 1;
+
+    /* get backtrace info for caller to this func, use that as callsite_id */
+    backtrace(tb_ptr, STAR_info.traceback_levels);
+
+    id = (int) tb_ptr[STAR_info.traceback_levels - 1];
+
+    /* find out if all participants agree on the callsite id */
+    if (STAR_info.agree_on_callsite)
+    {
+      int tmp[2], result[2];
+      tmp[0] = id;
+      tmp[1] = ~id;
+      MPIDO_Allreduce(tmp, result, 2, MPI_UNSIGNED_LONG, MPI_MAX, comm);
+      if (result[0] != (~result[1]))
+        same_callsite = 0;
+    }
+
+    if (same_callsite)
+    {
+      STAR_Callsite collective_site;
+
+      /* create a signature callsite info for this particular call site */
+      collective_site.call_type = SCATTER_CALL;
+      collective_site.comm = comm;
+      collective_site.bytes = nbytes;
+      collective_site.op_type_support = MPIDO_SUPPORT_NOT_NEEDED;
+      collective_site.id = id;
+	  
+      rc = STAR_Scatter(sbuf, sendcount, sendtype,
+                        rbuf, recvcount, recvtype,
+                        root, &collective_site,
+                        STAR_scatter_repository,
+                        STAR_info.scatter_algorithms);
+    }
       
-   }
-   else
-      return MPIR_Scatter(sendbuf, sendcount, sendtype,
-                          recvbuf, recvcount, recvtype,
-                          root, comm_ptr);
+    if (rc == STAR_FAILURE || !same_callsite)
+      rc = MPIR_Scatter(sendbuf, sendcount, sendtype,
+                        recvbuf, recvcount, recvtype,
+                        root, comm);
+
+    /* unset the internal control flow */
+    STAR_info.internal_control_flow = 0;
+
+    MPIU_Free(tb_ptr);    
+  }
+   return rc;
 }
-      
+
+#endif

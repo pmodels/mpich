@@ -29,13 +29,9 @@ static int mpid_check_post_done(MPID_Win *win) {
                         win->_dev.my_rma_recvs < win->_dev.coll_info[rank].rma_sends)) {
                 return 0;
         }
-        win->_dev.epoch_type = MPID_EPOTYPE_NONE;
         win->_dev.epoch_size = 0;
         win->_dev.epoch_assert = 0;
-        win->_dev.epoch_rma_ok = 0;
-        win->_dev.my_sync_done = 0;
-        win->_dev.my_rma_recvs = 0;
-        win->_dev.coll_info[rank].rma_sends = 0;
+	epoch_clear(win);
         /*
          * Any RMA ops we initiated would be handled in a
          * Win_start/Win_complete epoch and that would have
@@ -104,8 +100,8 @@ int MPID_Win_complete(MPID_Win *win_ptr)
         if (win_ptr->_dev.epoch_type == MPID_EPOTYPE_POSTSTART) {
                 win_ptr->_dev.epoch_type = MPID_EPOTYPE_POST;
         } else {
-                win_ptr->_dev.epoch_type = MPID_EPOTYPE_NONE;
                 win_ptr->_dev.epoch_size = 0;
+                epoch_clear(win_ptr);
                 epoch_end_cb(win_ptr);
         }
 
@@ -234,7 +230,8 @@ int MPID_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_START);
         MPIU_THREADPRIV_GET;
         MPIR_Nest_incr();
-        if (win_ptr->_dev.epoch_type == MPID_EPOTYPE_NONE) {
+        if (win_ptr->_dev.epoch_type == MPID_EPOTYPE_NONE ||
+			win_ptr->_dev.epoch_type == MPID_EPOTYPE_REFENCE) {
                 MPIDU_Spin_lock_free(win_ptr);
                 win_ptr->_dev.epoch_type = MPID_EPOTYPE_START;
                 win_ptr->_dev.epoch_size = group_ptr->size;
@@ -302,7 +299,8 @@ int MPID_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_POST);
         MPIU_THREADPRIV_GET;
         MPIR_Nest_incr();
-        if (win_ptr->_dev.epoch_type != MPID_EPOTYPE_NONE) {
+        if (win_ptr->_dev.epoch_type != MPID_EPOTYPE_NONE &&
+			win_ptr->_dev.epoch_type != MPID_EPOTYPE_REFENCE) {
                 /* --BEGIN ERROR HANDLING-- */
                 MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
                                         goto fn_fail, "**rmasync");
@@ -407,9 +405,7 @@ int MPID_Win_test (MPID_Win *win_ptr, int *flag)
                                 win_ptr->_dev.my_rma_recvs > 0) {
                 /* TBD: handled earlier? */
         }
-        MPID_Progress_start(&dummy_state);
         *flag = (mpid_check_post_done(win_ptr) != 0);
-        MPID_Progress_end(&dummy_state);
 
 fn_exit:
         MPIR_Nest_decr();
@@ -459,11 +455,9 @@ int MPID_Win_wait(MPID_Win *win_ptr)
                                 win_ptr->_dev.my_rma_recvs > 0) {
                 /* TBD: handled earlier? */
         }
-        MPID_Progress_start(&dummy_state);
         while (!mpid_check_post_done(win_ptr)) {
                 DCMF_CriticalSection_cycle(0);
         }
-        MPID_Progress_end(&dummy_state);
 
 fn_exit:
         MPIR_Nest_decr();

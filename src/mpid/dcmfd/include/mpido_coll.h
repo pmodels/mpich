@@ -16,10 +16,11 @@ typedef struct {
   int recv_contig;
   int recv_continuous;
   int largecount;
+  int mediumcount;
 } MPIDO_Coll_config;
 
 /* Helpers */
-unsigned *MPIDI_Comm_worldranks_init(MPID_Comm *comm_ptr);
+int MPIDO_AllocateAlltoallBuffers(MPID_Comm * comm);
 
 int MPIDI_ConvertMPItoDCMF(MPI_Op op,
                            DCMF_Op *dcmf_op,

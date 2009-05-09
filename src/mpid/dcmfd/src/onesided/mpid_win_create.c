@@ -15,7 +15,11 @@
  */
 static void mpid_ctl_init(void) {
         DCMF_Control_Configuration_t ctl_cfg =
-                { DCMF_DEFAULT_CONTROL_PROTOCOL, recv_ctl_cb, NULL};
+                { 
+		  DCMF_DEFAULT_CONTROL_PROTOCOL, 
+		  DCMF_DEFAULT_NETWORK,
+		  recv_ctl_cb, NULL
+		};
         DCMF_Control_register(&bg1s_ct_proto, &ctl_cfg);
 }
 
@@ -34,7 +38,9 @@ static void mpid_lock_init(void) {
  */
 static void mpid_send_init(void) {
         DCMF_Send_Configuration_t send_cfg =
-                { DCMF_DEFAULT_SEND_PROTOCOL, recv_sm_cb, NULL, recv_cb, NULL };
+                { DCMF_DEFAULT_SEND_PROTOCOL, 
+		  DCMF_DEFAULT_NETWORK,
+		  recv_sm_cb, NULL, recv_cb, NULL };
 
         DCMF_Send_register(&bg1s_sn_proto, &send_cfg);
 }
@@ -46,7 +52,7 @@ static void mpid_send_init(void) {
  */
 static void mpid_put_init(void) {
         DCMF_Put_Configuration_t put_cfg =
-                { DCMF_DEFAULT_PUT_PROTOCOL };
+                { DCMF_DEFAULT_PUT_PROTOCOL, DCMF_DEFAULT_NETWORK };
 
         DCMF_Put_register(&bg1s_pt_proto, &put_cfg);
 }
@@ -58,7 +64,7 @@ static void mpid_put_init(void) {
  */
 static void mpid_get_init(void) {
         DCMF_Get_Configuration_t get_cfg =
-                { DCMF_DEFAULT_GET_PROTOCOL };
+                { DCMF_DEFAULT_GET_PROTOCOL, DCMF_DEFAULT_NETWORK };
 
         DCMF_Get_register(&bg1s_gt_proto, &get_cfg);
 }
@@ -251,7 +257,8 @@ int MPID_Win_free(MPID_Win **win_ptr)
         MPIU_THREADPRIV_GET;
         MPIR_Nest_incr();
 
-        MPID_assert(win->_dev.epoch_type == MPID_EPOTYPE_NONE);
+        MPID_assert(win->_dev.epoch_type == MPID_EPOTYPE_NONE ||
+        		win->_dev.epoch_type == MPID_EPOTYPE_REFENCE);
 
         mpi_errno = NMPI_Barrier(win->_dev.comm_ptr->handle);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }

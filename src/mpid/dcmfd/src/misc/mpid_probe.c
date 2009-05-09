@@ -12,7 +12,7 @@ MPID_Probe_rsm(int source,
                int context_offset,
                MPI_Status * status)
 {
-  MPID_Request * rreq;
+  int found;
   MPID_Progress_state state;
   const int context = comm->recvcontext_id + context_offset;
 
@@ -23,17 +23,10 @@ MPID_Probe_rsm(int source,
     }
   for(;;)
     {
-      MPID_Progress_start(&state);
-      rreq = MPIDI_Recvq_FU(source, tag, context);
-      if (rreq == NULL) MPID_Progress_wait(&state);
-      else
-        {
-          if (status != MPI_STATUS_IGNORE) *status = rreq->status;
-
-          MPID_Request_release(rreq);
-          MPID_Progress_end(&state);
-          return MPI_SUCCESS;
-        }
+      found = MPIDI_Recvq_FU(source, tag, context, status);
+      if (found)
+        return MPI_SUCCESS;
+      MPID_Progress_wait(&state);
     }
   return MPI_SUCCESS;
 }

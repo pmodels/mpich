@@ -8,7 +8,7 @@
 # Get the channel from the device_args, and invoke any channel prereq
 echo "Executing mpich2prereq in $devicedir with $device_args"
 if test -z "$device_args" ; then
-    device_args=BGP
+    device_args=none
 fi
 
 if test "$device_args" = "BGP" ; then
@@ -20,6 +20,7 @@ if test "$device_args" = "BGP" ; then
     MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
     MPID_NO_PM=yes
     MPID_NO_PMI=yes
+    INSTALL_FROM_DEVICE=yes
 fi
 
 #Possible values

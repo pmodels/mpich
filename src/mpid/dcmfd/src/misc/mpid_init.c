@@ -4,11 +4,37 @@
  * \brief Normal job startup code
  */
 #include "mpidimpl.h"
+#include "mpidi_star.h"
 #include <limits.h>
 
 MPIDI_Protocol_t MPIDI_Protocols;
 MPIDI_Process_t  MPIDI_Process;
 DCMF_Hardware_t  mpid_hw;
+MPID_Request __totalview_request_dummyvar;
+
+
+void MPIDI_DCMF_Configure(int requested,
+                          int * provided)
+{
+  DCMF_Configure_t dcmf_config;
+  memset(&dcmf_config, 0x00, sizeof(DCMF_Configure_t));
+
+  // When interrupts are on, must use MPI_THREAD_MULTIPLE
+  // so locking is done to interlock between the main
+  // thread and the interrupt handler thread.
+  if ( MPIDI_Process.use_interrupts )
+    dcmf_config.interrupts   = DCMF_INTERRUPTS_ON;
+  else
+    dcmf_config.interrupts   = DCMF_INTERRUPTS_OFF;
+
+  // Attempt to set the same thread level as requestd
+  dcmf_config.thread_level = requested;
+
+  // Get the actual values back
+  DCMF_Messager_configure(&dcmf_config, &dcmf_config);
+  *provided = dcmf_config.thread_level;
+  MPIR_ThreadInfo.thread_provided = *provided;
+}
 
 
 /**
@@ -23,16 +49,18 @@ DCMF_Hardware_t  mpid_hw;
  */
 int MPID_Init(int * argc,
               char *** argv,
-              int requested,
+              int   requested,
               int * provided,
               int * has_args,
               int * has_env)
 {
-  int rank, size, i, rc;
-  int tempthread;
-  MPIDI_VC * vc_table = NULL;
-  MPID_Comm * comm;
-  DCMF_Result dcmf_rc;
+   int rank, size, i, rc;
+   MPID_Comm * comm;
+   DCMF_Result dcmf_rc;
+
+   MPID_Executable_name = "FORTRAN";
+   if (argc && *argv != NULL && *argv[0] != NULL)
+      MPID_Executable_name = *argv[0];
 
   /* ------------------------- */
   /* initialize the statistics */
@@ -54,24 +82,27 @@ int MPID_Init(int * argc,
   /* Initialize messager           */
   /* ----------------------------- */
   DCMF_Messager_initialize();
+#ifdef USE_CCMI_COLL
   DCMF_Collective_initialize();
+#endif /* USE_CCMI_COLL */
   DCMF_Hardware(&mpid_hw);
 
   if (MPIDI_Process.use_ssm)
     {
-      DCMF_Put_Configuration_t ssm_put_config = { DCMF_DEFAULT_PUT_PROTOCOL };
+      DCMF_Put_Configuration_t ssm_put_config = { DCMF_DEFAULT_PUT_PROTOCOL, DCMF_DEFAULT_NETWORK };
       DCMF_Put_register (&MPIDI_Protocols.ssm_put, &ssm_put_config);
       DCMF_Send_Configuration_t ssm_msg_config =
         {
           DCMF_DEFAULT_SEND_PROTOCOL,
+	  DCMF_DEFAULT_NETWORK,
           NULL,
           NULL,
           NULL,
           NULL,
         };
-      ssm_msg_config.cb_recv_short = (DCMF_RecvSendShort) MPIDI_BG2S_SsmCtsCB;
+      ssm_msg_config.cb_recv_short = MPIDI_BG2S_SsmCtsCB;
       DCMF_Send_register (&MPIDI_Protocols.ssm_cts, &ssm_msg_config);
-      ssm_msg_config.cb_recv_short = (DCMF_RecvSendShort) MPIDI_BG2S_SsmAckCB;
+      ssm_msg_config.cb_recv_short = MPIDI_BG2S_SsmAckCB;
       DCMF_Send_register (&MPIDI_Protocols.ssm_ack, &ssm_msg_config);
     }
   else
@@ -82,9 +113,10 @@ int MPID_Init(int * argc,
       DCMF_Send_Configuration_t default_config =
 	{
 	  DCMF_DEFAULT_SEND_PROTOCOL,
-	  (DCMF_RecvSendShort) MPIDI_BG2S_RecvShortCB,
+	  DCMF_DEFAULT_NETWORK,
+	  MPIDI_BG2S_RecvShortCB,
 	  NULL,
-	  (DCMF_RecvSend)      MPIDI_BG2S_RecvCB,
+	  MPIDI_BG2S_RecvCB,
 	  NULL,
 	};
       DCMF_Send_register (&MPIDI_Protocols.send, &default_config);
@@ -95,9 +127,10 @@ int MPID_Init(int * argc,
       DCMF_Send_Configuration_t rzv_config =
 	{
 	  DCMF_RZV_SEND_PROTOCOL,
-	  (DCMF_RecvSendShort) MPIDI_BG2S_RecvShortCB,
+	  DCMF_DEFAULT_NETWORK,
+	  MPIDI_BG2S_RecvShortCB,
 	  NULL,
-	  (DCMF_RecvSend)      MPIDI_BG2S_RecvCB,
+	  MPIDI_BG2S_RecvCB,
 	  NULL,
 	};
       dcmf_rc = DCMF_Send_register (&MPIDI_Protocols.mrzv, &rzv_config);
@@ -110,15 +143,15 @@ int MPID_Init(int * argc,
       /* ---------------------------------- */
       /* Register rzv point-to-point rts    */
       /* ---------------------------------- */
-      default_config.cb_recv_short = (DCMF_RecvSendShort) MPIDI_BG2S_RecvRzvCB;
-      default_config.cb_recv       = (DCMF_RecvSend)      NULL;
+      default_config.cb_recv_short = MPIDI_BG2S_RecvRzvCB;
+      default_config.cb_recv       = NULL;
       DCMF_Send_register (&MPIDI_Protocols.rzv, &default_config);
     }
 
   /* --------------------------- */
   /* Register point-to-point get */
   /* --------------------------- */
-  DCMF_Get_Configuration_t get_config = { DCMF_DEFAULT_GET_PROTOCOL };
+  DCMF_Get_Configuration_t get_config = { DCMF_DEFAULT_GET_PROTOCOL, DCMF_DEFAULT_NETWORK };
   DCMF_Get_register (&MPIDI_Protocols.get, &get_config);
 
   /* ---------------------------------- */
@@ -127,14 +160,20 @@ int MPID_Init(int * argc,
   DCMF_Control_Configuration_t control_config =
     {
       DCMF_DEFAULT_CONTROL_PROTOCOL,
-      (DCMF_RecvControl) MPIDI_BG2S_ControlCB, NULL
+      DCMF_DEFAULT_NETWORK,
+      MPIDI_BG2S_ControlCB, NULL
     };
   DCMF_Control_register (&MPIDI_Protocols.control, &control_config);
 
+/* Set up interrupts and thread level before protocol registration */
+  MPIDI_DCMF_Configure(requested, provided);
+
+#ifdef USE_CCMI_COLL
   /* ---------------------------------- */
   /* Register the collectives           */
   /* ---------------------------------- */
   MPIDI_Coll_register();
+#endif /* USE_CCMI_COLL */
 
   /* ------------------------------------------------------ */
   /* Set process attributes.                                */
@@ -151,19 +190,6 @@ int MPID_Init(int * argc,
   rank = DCMF_Messager_rank();
   size = DCMF_Messager_size();
 
-  /* ------------------------------------ */
-  /*  Initialize Virtual Connection table */
-  /* ------------------------------------ */
-
-  vc_table = MPIU_Malloc(sizeof(MPIDI_VC) * size); /* !!! */
-  MPID_assert(vc_table != NULL);
-
-  for (i = 0; i < size; i++)
-    {
-      vc_table[i].ref_count = 0;
-      vc_table[i].lpid = i;
-    }
-
 
   /* -------------------------------- */
   /* Initialize MPI_COMM_WORLD object */
@@ -177,20 +203,14 @@ int MPID_Init(int * argc,
   rc = MPID_VCRT_Get_ptr(comm->vcrt, &comm->vcr);
   MPID_assert(rc == MPI_SUCCESS);
   for (i=0; i<size; i++)
-    {
-      vc_table[i].ref_count++;
-      comm->vcr[i] = &vc_table[i];
-    }
+    comm->vcr[i] = i;
 
-   /* comm_create for MPI_COMM_WORLD needs this information to ensure no
-    * barriers are done in dual mode with multithreading
-    * We don't get the thread_provided updated until AFTER MPID_Init is
-    * finished so we need to know the requested thread level in comm_create
-    */
-   tempthread = MPIR_ThreadInfo.thread_provided;
-   MPIR_ThreadInfo.thread_provided = requested;
-   MPIDI_Comm_create(comm);
-   MPIR_ThreadInfo.thread_provided = tempthread;
+  /* comm_create for MPI_COMM_WORLD needs this information to ensure no
+   * barriers are done in dual mode with multithreading
+   * We don't get the thread_provided updated until AFTER MPID_Init is
+   * finished so we need to know the requested thread level in comm_create
+   */
+  MPIDI_Comm_create(comm);
 
   /* ------------------------------- */
   /* Initialize MPI_COMM_SELF object */
@@ -203,8 +223,7 @@ int MPID_Init(int * argc,
   MPID_assert(rc == MPI_SUCCESS);
   rc = MPID_VCRT_Get_ptr(comm->vcrt, &comm->vcr);
   MPID_assert(rc == MPI_SUCCESS);
-  vc_table[rank].ref_count++;
-  comm->vcr[0] = &vc_table[rank];
+  comm->vcr[0] = rank;
 
   /* ------------------------------- */
   /* Initialize timer data           */
@@ -216,29 +235,8 @@ int MPID_Init(int * argc,
   *has_env  = TRUE;
 
 
-  {
-    DCMF_Configure_t dcmf_config;
-    memset(&dcmf_config, 0x00, sizeof(DCMF_Configure_t));
-
-    // When interrupts are on, must use MPI_THREAD_MULTIPLE
-    // so locking is done to interlock between the main
-    // thread and the interrupt handler thread.
-    if ( MPIDI_Process.use_interrupts )
-      dcmf_config.interrupts   = DCMF_INTERRUPTS_ON;
-    else
-      dcmf_config.interrupts   = DCMF_INTERRUPTS_OFF;
-
-    // Attempt to set the same thread level as requestd
-    dcmf_config.thread_level = requested;
-
-    // Get the actual values back
-    DCMF_Messager_configure(&dcmf_config, &dcmf_config);
-    *provided = dcmf_config.thread_level;
-  }
-
   return MPI_SUCCESS;
 }
-
 
 /*
  * \brief This is called by MPI to let us know that MPI_Init is done.

@@ -7,7 +7,7 @@
 #include "mpidimpl.h"
 
 #ifdef USE_STATISTICS
-#warning Statistics are ON
+/* #warning Statistics are ON */
 
 MPIDI_Statistics_t MPIDI_Statistics;
 
@@ -17,8 +17,8 @@ MPIDI_Statistics_t MPIDI_Statistics;
   double s1 = s.s1;                                             \
   double s2 = s.s2;                                             \
   printf("%3d: Statistics for \"" #s "\":\n", r);               \
-  printf("     Count    : %u\n", s.s0);                         \
-  printf("     Max      : %u\n", s.max);                        \
+  printf("     Count    : %zu\n", s.s0);                         \
+  printf("     Max      : %zu\n", s.max);                        \
   printf("     Mean     : %g\n", s1/s0);                        \
   printf("     Variance : %g\n", (s0*s2 - s1*s1) / (s0*s0));    \
 })
@@ -38,7 +38,7 @@ void MPIDI_Statistics_finalize()
 }
 
 #else
-#warning Statistic are OFF
+/* #warning Statistic are OFF */
 void MPIDI_Statistics_init()     {}
 void MPIDI_Statistics_finalize() {}
 #endif

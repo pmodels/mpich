@@ -69,32 +69,26 @@ MPID_Request * MPID_Request_create()
   dcmf->cancel_pending           = FALSE;
   dcmf->state                    = MPIDI_DCMF_INITIALIZED;
   MPID_Request_setCA  (req, MPIDI_DCMF_CA_COMPLETE);
+  MPID_Request_setSelf(req, 0);
   MPID_Request_setType(req, MPIDI_DCMF_REQUEST_TYPE_RECV);
 
   return req;
 }
 
-MPID_Request * MPID_SendRequest_create()
+static inline void MPIDI_Request_try_free(MPID_Request *req)
 {
-  MPID_Request *sreq = MPID_Request_create();
-  MPIU_Object_set_ref(sreq, 2);
-  return sreq;
+  if ( (req->ref_count == 0) && (MPID_Request_get_cc(req) == 0) )
+    {
+      if (req->comm)              MPIR_Comm_release(req->comm, 0);
+      if (req->dcmf.datatype_ptr) MPID_Datatype_release(req->dcmf.datatype_ptr);
+      MPIU_Handle_obj_free(&MPID_Request_mem, req);
+    }
 }
+
 
 /* *********************************************************************** */
 /*           destroy a request                                             */
 /* *********************************************************************** */
-
-void MPID_Request_destroy(MPID_Request * req)
-{
-  MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);
-  MPID_assert(req->ref_count == 0);
-
-  if (req->comm)              MPIR_Comm_release(req->comm, 0);
-  if (req->dcmf.datatype_ptr) MPID_Datatype_release(req->dcmf.datatype_ptr);
-
-  MPIU_Handle_obj_free(&MPID_Request_mem, req);
-}
 
 void MPID_Request_release (MPID_Request *req)
 {
@@ -102,7 +96,7 @@ void MPID_Request_release (MPID_Request *req)
   MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);
   MPIU_Object_release_ref(req, &ref_count);
   MPID_assert(req->ref_count >= 0);
-  if (ref_count == 0) MPID_Request_destroy(req);
+  MPIDI_Request_try_free(req);
 }
 
 /* *********************************************************************** */
@@ -114,9 +108,9 @@ void MPID_Request_complete (MPID_Request *req)
   int cc;
   MPID_Request_decrement_cc(req, &cc);
   MPID_assert(cc >= 0);
-  if (cc == 0) /* decrement completion count; if 0, release request */
+  if (cc == 0) /* decrement completion count; if 0, signal progress engine */
     {
-      MPID_Request_release(req);
+      MPIDI_Request_try_free(req);
       MPID_Progress_signal();
     }
 }
@@ -124,5 +118,6 @@ void MPID_Request_complete (MPID_Request *req)
 void MPID_Request_set_completed (MPID_Request *req)
 {
   *(req)->cc_ptr = 0; /* force completion count to 0 */
+  MPIDI_Request_try_free(req);
   MPID_Progress_signal();
 }

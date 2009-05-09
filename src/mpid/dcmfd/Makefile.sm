@@ -1,4 +1,4 @@
-install_INCLUDE = ${srcdir}/include/mpix.h
+install_INCLUDE = ${srcdir}/include/mpix.h ${srcdir}/include/mpido_properties.h
 SUBDIRS = src .
 
 distclean-local:

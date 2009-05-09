@@ -52,7 +52,7 @@ MPIDI_Irecv_rsm(void          * buf,
   rreq->dcmf.userbuf      = buf;
   rreq->dcmf.userbufcount = count;
   rreq->dcmf.datatype     = datatype;
-  rreq->dcmf.ca           = MPIDI_DCMF_CA_COMPLETE;
+  MPID_Request_setCA(rreq, MPIDI_DCMF_CA_COMPLETE);
 
   if (found)
     {
@@ -80,13 +80,12 @@ MPIDI_Irecv_rsm(void          * buf,
                                 datatype,
                                 (MPIDI_msg_sz_t*)&rreq->status.count,
                                 &rreq->status.MPI_ERROR);
-          MPID_Request_set_completed(sreq);
-          MPID_Request_release(sreq);
+          MPID_Request_complete(sreq);
           /* no other thread can possibly be waiting on rreq,
              so it is safe to reset ref_count and cc */
           rreq->cc = 0;
-          MPIU_Object_set_ref(rreq, 1);
-          if (status != MPI_STATUS_IGNORE) *status = rreq->status;
+          if (status != MPI_STATUS_IGNORE)
+            *status = rreq->status;
           *request = rreq;
           return rreq->status.MPI_ERROR;
         }
@@ -150,7 +149,7 @@ MPIDI_Irecv_rsm(void          * buf,
           if(rreq->status.cancelled == FALSE)
             {
               if (rreq->dcmf.uebuf) /* we have an unexpected buffer */
-                rreq->dcmf.ca = MPIDI_DCMF_CA_UNPACK_UEBUF_AND_COMPLETE;
+                MPID_Request_setCA(rreq, MPIDI_DCMF_CA_UNPACK_UEBUF_AND_COMPLETE);
               else /* no unexpected buffer; must be a resend */
                 // MPIDI_DCMF_postFC (rreq, 0); /* send a NAK */
                 MPID_abort();

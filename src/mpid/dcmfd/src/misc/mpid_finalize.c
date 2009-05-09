@@ -4,7 +4,7 @@
  * \brief Normal job termination code
  */
 #include "mpidimpl.h"
-#include "pmi.h"
+extern void STAR_FreeMem(MPID_Comm *);
 
 /**
  * \brief Shut down the system
@@ -14,7 +14,12 @@
 */
 int MPID_Finalize()
 {
+  MPID_Comm * comm;
+  MPID_Comm_get_ptr(MPI_COMM_WORLD, comm);
+
   PMPI_Barrier(MPI_COMM_WORLD);
+
+  STAR_FreeMem(comm);
 
   /* ------------------------- */
   /* shutdown the statistics   */
@@ -25,6 +30,8 @@ int MPID_Finalize()
   /* shutdown request queues   */
   /* ------------------------- */
   MPIDI_Recvq_finalize();
+
+  DCMF_Messager_finalize();
 
   return MPI_SUCCESS;
 }

@@ -73,6 +73,9 @@ int MPID_Get(void *origin_addr, int origin_count,
         MPIU_THREADPRIV_GET;
         MPIR_Nest_incr();
 
+	if (win_ptr->_dev.epoch_type == MPID_EPOTYPE_REFENCE) {
+		win_ptr->_dev.epoch_type = MPID_EPOTYPE_FENCE;
+	}
         if (win_ptr->_dev.epoch_type == MPID_EPOTYPE_NONE ||
                         win_ptr->_dev.epoch_type == MPID_EPOTYPE_POST ||
                         !MPIDU_VALID_RMA_TARGET(win_ptr, target_rank)) {
@@ -119,7 +122,7 @@ int MPID_Get(void *origin_addr, int origin_count,
 		size_t mrcfg_bytes;
 		void * mrcfg_base;
                 int lpid;
-                DCQuad xtra = {0};
+                MPIDU_Onesided_xtra_t xtra = {0};
 
                 lpid = MPIDU_world_rank(win_ptr, target_rank);
                 MPIDI_Datatype_get_info(target_count, target_datatype,
@@ -128,42 +131,58 @@ int MPID_Get(void *origin_addr, int origin_count,
 
                 get_len = (data_sz < t_data_sz ? data_sz : t_data_sz);
 
-                xtra.w0 = (unsigned)&win_ptr->_dev.my_get_pends;
-                if (dt_contig) {
+                xtra.mpid_xtra_w0 = (size_t)&win_ptr->_dev.my_get_pends;
+                if (dt_contig && origin_addr >= win_ptr->base &&
+				origin_addr < win_ptr->base + win_ptr->size) {
+			// get to inside origin window, re-use origin window memregion.
                         buf = origin_addr;
                         cb_send.function = done_rqc_cb;
 			bufmr = &win_ptr->_dev.coll_info[rank].mem_region;
-			s = (char *)((char *)origin_addr -
+			s = (char *)((char *)buf -
 				(char *)win_ptr->base +
 				win_ptr->_dev.coll_info[rank].base_addr);
                 } else {
+			// need memregion, also may need to unpack
 			struct mpid_get_cb_data *get;
-                        MPIDU_MALLOC(buf, char, get_len +
-				sizeof(struct mpid_get_cb_data),
-				mpi_errno, "MPID_Get");
-                        if (buf == NULL) {
-                                MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,
-                                        "Unable to allocate non-"
-                                        "contiguous buffer");
+			if (dt_contig) {
+				buf = origin_addr;
+                        	MPIDU_MALLOC(get, struct mpid_get_cb_data,
+					sizeof(struct mpid_get_cb_data),
+					mpi_errno, "MPID_Get");
+                        	if (get == NULL) {
+                                	MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,
+                                        	"Unable to allocate "
+                                        	"get buffer");
+                        	}
+				get->dtp = NULL; // do not unpack
+			} else {
+                        	MPIDU_MALLOC(buf, char, get_len +
+					sizeof(struct mpid_get_cb_data),
+					mpi_errno, "MPID_Get");
+                        	if (buf == NULL) {
+                                	MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,
+                                        	"Unable to allocate non-"
+                                        	"contiguous buffer");
+                        	}
+				MPID_Datatype_add_ref(dtp);
+				get = (struct mpid_get_cb_data *)buf;
+				buf += sizeof(struct mpid_get_cb_data);
+				get->dtp = dtp;
+				get->addr = origin_addr;
+				get->count = origin_count;
+				get->len = get_len;
+				get->buf = buf;
                         }
-			MPID_Datatype_add_ref(dtp);
-			get = (struct mpid_get_cb_data *)buf;
-			buf += sizeof(struct mpid_get_cb_data);
 			mrcfg_base = buf;
 			mrcfg_bytes = get_len;
 			(void)DCMF_Memregion_create(&get->memreg, &mrcfg_bytes, mrcfg_bytes, mrcfg_base, 0);
 			// check errors?
 			bufmr = &get->memreg;
-			s = (char *)(buf - (unsigned)mrcfg_base);
+			s = (char *)(buf - (size_t)mrcfg_base);
 			get->ref = 0;
 			refp = &get->ref;
-			get->dtp = dtp;
-			get->addr = origin_addr;
-			get->count = origin_count;
-			get->len = get_len;
-			get->buf = buf;
-			xtra.w1 = (unsigned)get;
-			xtra.w2 = (unsigned)get;
+			xtra.mpid_xtra_w1 = (size_t)get; // 'get' struct
+			xtra.mpid_xtra_w2 = (size_t)get; // generic buf to free
                         cb_send.function = done_getfree_rqc_cb;
                 }
                 if (t_dt_contig) {

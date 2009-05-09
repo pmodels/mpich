@@ -24,7 +24,7 @@ MPIDI_DCMF_Send_rsm(MPID_Request  * sreq,
    */
   if ( sndlen==0 || sndlen<MPIDI_Process.eager_limit)
     {
-      cb_done.function   = (void (*)(void *))MPIDI_DCMF_SendDoneCB;
+      cb_done.function   = MPIDI_DCMF_SendDoneCB;
       cb_done.clientdata = sreq;
 
       rc = DCMF_Send (&MPIDI_Protocols.send,
@@ -42,7 +42,7 @@ MPIDI_DCMF_Send_rsm(MPID_Request  * sreq,
    */
   else if ( sndlen < MPIDI_Process.optrzv_limit )
     {
-      cb_done.function   = (void (*)(void *))MPIDI_DCMF_SendDoneCB;
+      cb_done.function   = MPIDI_DCMF_SendDoneCB;
       cb_done.clientdata = sreq;
 
       rc = DCMF_Send (&MPIDI_Protocols.mrzv,

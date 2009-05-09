@@ -14,7 +14,6 @@ MPID_Cancel_recv_rsm(MPID_Request * rreq)
       rreq->status.cancelled = TRUE;
       rreq->status.count = 0;
       MPID_Request_set_completed(rreq);
-      MPID_Request_release(rreq);
     }
   /* This is successful, even if the recv isn't cancelled */
   return MPI_SUCCESS;

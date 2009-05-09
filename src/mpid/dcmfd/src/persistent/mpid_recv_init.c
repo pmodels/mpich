@@ -23,7 +23,6 @@ int MPID_Recv_init(void * buf,
     return MPIR_ERR_MEMALLOCFAILED;
   };
 
-  MPIU_Object_set_ref(rreq, 1);
   rreq->kind = MPID_PREQUEST_RECV;
   rreq->comm = comm;
   MPIR_Comm_add_ref(comm);

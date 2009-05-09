@@ -5,9 +5,11 @@
  */
 #include "mpidimpl.h"
 
-#if MPICH_TIMER_KIND != USE_DEVICE
+#if MPICH_TIMER_KIND == USE_GETTIMEOFDAY
+#warning Compiling dcmfd/src/misc/mpid_time.c when MPICH_TIMER_KIND == USE_GETTIMEOFDAY
+#elif MPICH_TIMER_KIND != USE_DEVICE
 #error "Not using USE_BG_TIMEBASE"
-#endif
+#else
 
 
 void MPID_Wtime( MPID_Time_t *tval )
@@ -30,8 +32,15 @@ void MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
 {
   *t3 += *t1 - *t2;
 }
+/*
+  Return Values:
+  0 on success.  -1 on Failure.  1 means that the timer may not be used
+  until after MPID_Init completes.  This allows the device to set up the
+  timer (first needed for Blue Gene support).
+*/
 int MPID_Wtime_init( void )
 {
-  /* We used to call DCMF_Timer() here, but the messager wasn't created yet */
   return 1;
 }
+
+#endif

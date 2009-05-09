@@ -18,6 +18,7 @@ extern "C" {
 
 
 #include <stdint.h>
+#include "mpido_properties.h"
 
 /**
  * \defgroup MPIX IBM Blue Gene extensions to MPICH2
@@ -145,6 +146,55 @@ extern "C" {
                                   unsigned *z,
                                   unsigned *t);
 
+  /**
+   * \brief Print the current system stack
+   *
+   * The first frame (this function) is discarded to make the trace look nicer.
+   */
+  void     MPIX_Dump_stacks();
+
+  /**
+   * \brief Gets the values of the bits on the communicator
+   *
+   * \param[in]  prop The specific property to retrieve its value
+   * \param[out] array The values of various bits are stored in this array
+   *
+   * \return MPI_SUCCESS
+   */
+  int MPIX_Get_properties(MPI_Comm comm, int * array);
+
+  /**
+   * \brief Get the value (0 or 1) of a given property
+   *
+   * \param[in]  comm The communicator to get the bits values off of
+   * \param[in]  prop The specific property to retrieve its value
+   * \param[out] result The value of this property (0 or 1)
+   *
+   * \return MPI_SUCCESS
+   */
+  int MPIX_Get_property(MPI_Comm comm, int prop, int * result);
+
+  /**
+   * \brief Set the value (0 or 1) of a given property
+   *
+   * \param[in]  comm The communicator to get the bits values off of
+   * \param[in]  prop The specific property to retrieve its value
+   * \param[out] value The value of this property that is to be set
+   *
+   * \return MPI_SUCCESS
+   */
+  int MPIX_Set_property(MPI_Comm comm, int prop, int value);
+  
+  /**
+   * \brief Informs of the collective algorithm used in a collective operation.
+   *
+   * \param[in]  comm The communicator
+   * \param[out]  protocol The string to copy the algorithm into.
+   * \param[in] length The size of the protocol array
+   *
+   * \return MPI_SUCCESS
+   */
+  int MPIX_Get_coll_protocol(MPI_Comm comm, char * protocol, int length);
 
 #if defined(__cplusplus)
 }

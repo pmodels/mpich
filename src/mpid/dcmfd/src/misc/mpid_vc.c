@@ -14,14 +14,13 @@
 /**
  * \brief Virtual connection reference table
  */
-typedef struct MPIDI_VCRT
+struct MPIDI_VCRT
 {
   int handle;              /**< This element is not used, but exists so that we may use the MPIU_Object routines for reference counting */
   volatile int ref_count;  /**< Number of references to this table */
-  int size;                /**< Number of entries inthe table */
-  MPIDI_VC * vcr_table[1]; /**< array of virtual connection references */
-}
-MPIDI_VCRT;
+  int size;                /**< Number of entries in the table */
+  MPIDI_VCR vcr_table[1];  /**< Array of virtual connection references */
+};
 
 
 int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr)
@@ -29,21 +28,8 @@ int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr)
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCR_DUP);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCR_DUP);
-    MPIU_Object_add_ref(orig_vcr);
     *new_vcr = orig_vcr;
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCR_DUP);
-    return MPI_SUCCESS;
-}
-
-int MPID_VCR_Release(MPID_VCR vcr)
-{
-    int count;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_VCR_RELEASE);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCR_RELEASE);
-    MPIU_Object_release_ref(vcr, &count);
-    /* FIXME: if necessary, update number of active VCs in the VC table */
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCR_RELEASE);
     return MPI_SUCCESS;
 }
 
@@ -52,21 +38,20 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr)
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCR_GET_LPID);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCR_GET_LPID);
-    *lpid_ptr = vcr->lpid;
+    *lpid_ptr = vcr;
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCR_GET_LPID);
     return MPI_SUCCESS;
 }
 
-
 int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
 {
-    MPIDI_VCRT * vcrt;
+    struct MPIDI_VCRT * vcrt;
     int result;
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCRT_CREATE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCRT_CREATE);
 
-    vcrt = MPIU_Malloc(sizeof(MPIDI_VCRT) + (size - 1) * sizeof(MPIDI_VC));
+    vcrt = MPIU_Malloc(sizeof(struct MPIDI_VCRT) + (size - 1) * sizeof(MPIDI_VCR));
     if (vcrt != NULL)
     {
         MPIU_Object_set_ref(vcrt, 1);
@@ -101,16 +86,7 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect)
 
     MPIU_Object_release_ref(vcrt, &count);
     if (count == 0)
-    {
-        int i;
-
-        for (i = 0; i < vcrt->size; i++)
-        {
-            MPID_VCR_Release(vcrt->vcr_table[i]);
-        }
-
-        MPIU_Free(vcrt);
-    }
+      MPIU_Free(vcrt);
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCRT_RELEASE);
     return MPI_SUCCESS;
 }

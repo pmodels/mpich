@@ -64,36 +64,24 @@ int MPID_Startall(int count, MPID_Request * requests[])
           }
         case MPIDI_DCMF_REQUEST_TYPE_BSEND:
           {
-            MPID_Request * sreq = MPID_Request_create();
-            if (sreq != NULL)
-              {
-                MPIU_Object_set_ref(sreq, 1);
-                sreq->kind = MPID_REQUEST_SEND;
-                sreq->cc   = 0;
-                sreq->comm = preq->comm;
-                MPIR_Comm_add_ref(sreq->comm);
-                rc = MPIR_Bsend_isend(preq->dcmf.userbuf,
-                                      preq->dcmf.userbufcount,
-                                      preq->dcmf.datatype,
-                                      MPID_Request_getMatchRank(preq),
-                                      MPID_Request_getMatchTag(preq),
-                                      preq->comm,
-                                      BSEND_INIT,
-                                      &preq->partner_request);
-                sreq->status.MPI_ERROR = rc;
-                preq->partner_request = sreq;
-                rc = MPI_SUCCESS;
-              }
-            else
-              {
-                rc = MPIR_Err_create_code(MPI_SUCCESS,
-                                          MPIR_ERR_FATAL,
-                                          "MPID_Startall",
-                                          __LINE__,
-                                          MPI_ERR_OTHER,
-                                      "**nomem",
-                                          0);
-              }
+            rc = MPIR_Bsend_isend(preq->dcmf.userbuf,
+                                  preq->dcmf.userbufcount,
+                                  preq->dcmf.datatype,
+                                  MPID_Request_getMatchRank(preq),
+                                  MPID_Request_getMatchTag(preq),
+                                  preq->comm,
+                                  BSEND_INIT,
+                                  &preq->partner_request);
+            /*
+             * MPICH2 maintains an independant reference to the child,
+             * but doesn't refcount it.  Since they actually call
+             * MPI_Test() on the child request (which will release a
+             * ref iff the request is complete), we have to increment
+             * the ref_count so that it doesn't get freed from under
+             * us.
+             */
+            if (preq->partner_request != NULL)
+              MPIU_Object_add_ref(preq->partner_request);
             break;
           }
 
@@ -107,7 +95,22 @@ int MPID_Startall(int count, MPID_Request * requests[])
       if (rc == MPI_SUCCESS)
       {
         preq->status.MPI_ERROR = MPI_SUCCESS;
-        preq->cc_ptr = &preq->partner_request->cc;
+        if (MPID_Request_getType(preq) == MPIDI_DCMF_REQUEST_TYPE_BSEND)
+          {
+            /*
+             * Complete a persistent Bsend immediately.
+             *
+             * Because the child of a persistent Bsend is just a
+             * normal Isend on a temp buffer, we don't need to wait on
+             * the child when the user calls MPI_Wait on the parent.
+             * Therefore, disconnect the cc_ptr link to the child and
+             * mark the parent complete.
+             */
+            preq->cc = 0;
+            preq->cc_ptr = &preq->cc;
+          }
+        else
+          preq->cc_ptr = &preq->partner_request->cc;
       }
       else
       {

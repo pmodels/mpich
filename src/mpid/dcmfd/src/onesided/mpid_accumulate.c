@@ -108,7 +108,7 @@ static void local_accumulate(MPID_Win *win, char *dst, const char *src,
  */
 void target_accumulate(MPIDU_Onesided_info_t *mi,
                                         const char *src, int lpid) {
-        MPID_Win *win;
+        MPID_Win *win = NULL;
 
         MPID_Win_get_ptr((MPI_Win)mi->mpid_info_w1, win);
         MPID_assert_debug(win != NULL);
@@ -139,16 +139,16 @@ void target_accumulate(MPIDU_Onesided_info_t *mi,
  *
  * \ref msginfo_usage
  */
-void accum_cb(void *v) {
+void accum_cb(void *v, DCMF_Error_t *e) {
         MPIDU_Onesided_info_t *info;
-        DCQuad xtra;
+        MPIDU_Onesided_xtra_t xtra;
         char *buf;
 
         MPIDU_free_req((DCMF_Request_t *)v, &xtra);
-        info = (MPIDU_Onesided_info_t *)xtra.w2;
+        info = (MPIDU_Onesided_info_t *)xtra.mpid_xtra_w2;
         buf = (char *)(info + 1);
 
-        target_accumulate(info, buf, xtra.w3);
+        target_accumulate(info, buf, (int)xtra.mpid_xtra_w3);
         MPIDU_FREE(info, e, "accum_cb");
 }
 
@@ -265,7 +265,7 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
         int i, j;
         char *buf;
         int sent = 0;
-        DCQuad xtra = {0};
+        MPIDU_Onesided_xtra_t xtra = {0};
         int *refp = NULL;
         DCMF_Callback_t cb_send;
         char *s, *dd;
@@ -279,6 +279,9 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
         MPIU_THREADPRIV_GET;
         MPIR_Nest_incr();
 
+        if (win_ptr->_dev.epoch_type == MPID_EPOTYPE_REFENCE) {
+		win_ptr->_dev.epoch_type = MPID_EPOTYPE_FENCE;
+	}
         if (win_ptr->_dev.epoch_type == MPID_EPOTYPE_NONE ||
                         win_ptr->_dev.epoch_type == MPID_EPOTYPE_POST ||
                         !MPIDU_VALID_RMA_TARGET(win_ptr, target_rank)) {
@@ -350,8 +353,8 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
                 put = (struct mpid_put_cb_data *)buf;
                 buf += sizeof(struct mpid_put_cb_data);
                 refp = &put->ref;
-                xtra.w1 = (unsigned)put;
-                xtra.w2 = (unsigned)put; // buf to free
+                xtra.mpid_xtra_w1 = (size_t)put; // 'put' struct
+                xtra.mpid_xtra_w2 = (size_t)put; // generic buf to free
 		put->flag = 0; // no memory region
                 cb_send.function = done_reffree_rqc_cb;
                 *refp = 0;
@@ -367,7 +370,7 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
 	void * mrcfg_base;
 	DCMF_Memregion_query(&win_ptr->_dev.coll_info[target_rank].mem_region,
 			&mrcfg_bytes, &mrcfg_base);
-	dd += (unsigned)mrcfg_base;
+	dd += (size_t)mrcfg_base;
         if (DATATYPE_PREDEFINED(target_datatype)) {
                 if (target_rank == rank) { /* local accumulate */
                         local_accumulate(win_ptr, dd, buf, lpid,
@@ -380,12 +383,12 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
 			} else {
 				data_sz = MPID_Datatype_get_basic_size(target_datatype);
 			}
-                        xtra.w0 = (unsigned)&win_ptr->_dev.my_rma_pends;
+                        xtra.mpid_xtra_w0 = (size_t)&win_ptr->_dev.my_rma_pends;
                         reqp = MPIDU_get_req(&xtra, &info);
                         info->mpid_info_w0 = MPID_MSGTYPE_ACC;
                         info->mpid_info_w1 = win_ptr->_dev.coll_info[target_rank].win_handle;
                         info->mpid_info_w2 = rank;
-                        info->mpid_info_w3 = (unsigned)dd;
+                        info->mpid_info_w3 = (size_t)dd;
                         info->mpid_info_w4 = target_datatype;
                         info->mpid_info_w5 = op;
                         info->mpid_info_w6 = target_count;
@@ -397,7 +400,7 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
                         mpi_errno = DCMF_Send(&bg1s_sn_proto, reqp, cb_send,
                                 consistency, lpid,
                                 target_count * data_sz,
-                                buf, info->info, 2);
+                                buf, info->info, MPIDU_1SINFO_NQUADS);
                         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
                         ++win_ptr->_dev.coll_info[target_rank].rma_sends;
                 } /* ! local accumulate */
@@ -414,12 +417,12 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
 
 					MPIDU_Progress_spin(win_ptr->_dev.my_rma_pends >
 						MPIDI_Process.rma_pending);
-                                        xtra.w0 = (unsigned)&win_ptr->_dev.my_rma_pends;
+                                        xtra.mpid_xtra_w0 = (size_t)&win_ptr->_dev.my_rma_pends;
                                         reqp = MPIDU_get_req(&xtra, &info);
                                         info->mpid_info_w0 = MPID_MSGTYPE_ACC;
                                         info->mpid_info_w1 = win_ptr->_dev.coll_info[target_rank].win_handle;
                                         info->mpid_info_w2 = rank;
-                                        info->mpid_info_w3 = (unsigned)dd + dti.map[i].off;
+                                        info->mpid_info_w3 = (size_t)dd + dti.map[i].off;
                                         info->mpid_info_w4 = dti.map[i].dt;
                                         info->mpid_info_w5 = op;
                                         info->mpid_info_w6 = dti.map[i].num;
@@ -428,7 +431,7 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
                                         ++sent;
                                         cb_send.clientdata = reqp;
                                         mpi_errno = DCMF_Send(&bg1s_sn_proto, reqp, cb_send,
-                                                consistency, lpid, dti.map[i].len, s, info->info, 2);
+                                                consistency, lpid, dti.map[i].len, s, info->info, MPIDU_1SINFO_NQUADS);
                                         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
                                         ++win_ptr->_dev.coll_info[target_rank].rma_sends;
                                 } /* ! local accumulate */
@@ -441,8 +444,8 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
          * TBD: Could return without waiting for sends...
          */
         MPIDU_Progress_spin(win_ptr->_dev.my_rma_pends > 0);
-        if (sent == 0 && xtra.w2) {
-                MPIDU_FREE(xtra.w2, mpi_errno, "MPID_Accumulate");
+        if (sent == 0 && xtra.mpid_xtra_w2) {
+                MPIDU_FREE(xtra.mpid_xtra_w2, mpi_errno, "MPID_Accumulate");
         }
 
 fn_exit:

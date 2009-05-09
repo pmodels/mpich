@@ -16,13 +16,14 @@
  * \param[in]  sndbuf       Where the data is stored
  */
 void MPIDI_BG2S_RecvRzvCB(void                         * clientdata,
-                          const MPIDI_DCMF_MsgEnvelope * envelope,
+                          const DCQuad                 * msgquad,
                           unsigned                       count,
-                          unsigned                       senderrank,
+                          size_t                         senderrank,
                           const char                   * sndbuf,
-                          unsigned                       sndlen)
+                          size_t                         sndlen)
 {
   MPID_Request * rreq = NULL;
+  const MPIDI_DCMF_MsgEnvelope * envelope = (const MPIDI_DCMF_MsgEnvelope *)msgquad;
   MPIDI_DCMF_MsgInfo * msginfo = (MPIDI_DCMF_MsgInfo *)&envelope->envelope.msginfo;
   int found;
 

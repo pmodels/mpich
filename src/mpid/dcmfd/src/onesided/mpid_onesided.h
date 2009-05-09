@@ -32,17 +32,20 @@
 /**
  * \brief structure of DCMF_Control_t as used by RMA ops
  *
- * DCMF_Control_t is assumed to be one quad.
+ * DCMF_Control_t is assumed to be (the equivalent of)
+ * four size_t "words" on all platforms.
  */
+#define MPIDU_1SCTL_NQUADS	(sizeof(DCMF_Control_t) / sizeof(DCQuad))
 typedef union {
         DCMF_Control_t ctl;	/**< access to underlying type */
         struct {
-                unsigned _0w0;	/**< word 0 */
-                unsigned _0w1;	/**< word 1 */
-                unsigned _0w2;	/**< word 2 */
-                unsigned _0w3;	/**< word 3 */
+                size_t _0w0;	/**< word 0 */
+                size_t _0w1;	/**< word 1 */
+                size_t _0w2;	/**< word 2 */
+                size_t _0w3;	/**< word 3 */
         } _c_u;	/**< overlay of DCMF_Control_t */
 } MPIDU_Onesided_ctl_t __attribute__ ((__aligned__ (16)));
+/* assert(sizeof(MPIDU_Onesided_ctl_t._c_u) <= sizeof(MPIDU_Onesided_ctl_t.ctl)); */
 
 #define mpid_ctl_w0	_c_u._0w0	/**< ctl word 0 */
 #define mpid_ctl_w1	_c_u._0w1	/**< ctl word 1 */
@@ -54,18 +57,19 @@ typedef union {
  *
  * We always use 2 quads, just for consistency.
  */
+#define MPIDU_1SINFO_NQUADS	((sizeof(struct _i_u_s) + sizeof(DCQuad) - 1) / sizeof(DCQuad))
 typedef union {
-        DCQuad info[2];		/**< access to underlying type */
-        struct {
-                unsigned _0w0;	/**< word 0 */
-                unsigned _0w1;	/**< word 1 */
-                unsigned _0w2;	/**< word 2 */
-                unsigned _0w3;	/**< word 3 */
-                unsigned _1w0;	/**< word 4 */
-                unsigned _1w1;	/**< word 5 */
-                unsigned _1w2;	/**< word 6 */
-                unsigned _1w3;	/**< word 7 */
+        struct _i_u_s {
+                size_t _0w0;	/**< word 0 */
+                size_t _0w1;	/**< word 1 */
+                size_t _0w2;	/**< word 2 */
+                size_t _0w3;	/**< word 3 */
+                size_t _1w0;	/**< word 4 */
+                size_t _1w1;	/**< word 5 */
+                size_t _1w2;	/**< word 6 */
+                size_t _1w3;	/**< word 7 */
         } _i_u;	/**< overlay of DCQuads */
+        DCQuad info[MPIDU_1SINFO_NQUADS]; /**< access to underlying type */
 } MPIDU_Onesided_info_t __attribute__ ((__aligned__ (16)));
 
 #define mpid_info_w0	_i_u._0w0	/**< info word 0 */
@@ -76,6 +80,16 @@ typedef union {
 #define mpid_info_w5	_i_u._1w1	/**< info word 5 */
 #define mpid_info_w6	_i_u._1w2	/**< info word 6 */
 #define mpid_info_w7	_i_u._1w3	/**< info word 7 */
+
+/**
+ * \brief structure of "extra data" as used in request pool
+ */
+typedef struct {
+        size_t mpid_xtra_w0;	/**< word 0 */
+        size_t mpid_xtra_w1;	/**< word 1 */
+        size_t mpid_xtra_w2;	/**< word 2 */
+        size_t mpid_xtra_w3;	/**< word 3 */
+} MPIDU_Onesided_xtra_t;
 
 #if 0
 /**
@@ -184,10 +198,6 @@ extern MPI_Datatype Coll_info_rma_dt;
 extern MPI_Op Coll_info_rma_op;
 
 /**
- * \brief Dummy, global, MPID_Progress_state since its not used.
- */
-extern MPID_Progress_state dummy_state;
-/**
  * \brief Progress (advance) wait - how to spin and make progress
  *
  * 'expr' is true if must wait, i.e.
@@ -203,14 +213,12 @@ extern MPID_Progress_state dummy_state;
  *			FALSE will terminate loop.
  * \return nothing
  */
-#define MPIDU_Progress_spin(expr) {	\
-        MPID_Progress_start(&dummy_state);\
-        do {				\
-                (void)MPID_Progress_test();\
-                MPID_CS_EXIT();		\
-                MPID_CS_ENTER();	\
-        } while (expr);			\
-        MPID_Progress_end(&dummy_state);\
+#define MPIDU_Progress_spin(expr) {             \
+        do {                                    \
+                (void)MPID_Progress_test();     \
+                MPID_CS_EXIT();                 \
+                MPID_CS_ENTER();                \
+        } while (expr);                         \
 }
 
 /*
@@ -680,11 +688,11 @@ char *mpid_update_rem_dt(int lpid, MPI_Datatype fdt, int dlz);
  * - \e w2 - origin rank
  * - \e w3 - datatype handle on origin
  *
- * \param[in] xt	Pointer to xtra msginfo saved from original message
+ * \param[in] xtra	Pointer to xtra msginfo saved from original message
  * \return	nothing
  *
  */
-void MPID_Recvdone1_rem_dt(const DCQuad *xt);
+void MPID_Recvdone1_rem_dt(MPIDU_Onesided_xtra_t *xtra);
 
 #ifdef NOT_USED
 /**
@@ -698,11 +706,11 @@ void MPID_Recvdone1_rem_dt(const DCQuad *xt);
  * - \e w2 - origin rank
  * - \e w3 - datatype handle on origin
  *
- * \param[in] xt	Pointer to xtra msginfo saved from original message
+ * \param[in] xtra	Pointer to xtra msginfo saved from original message
  * \return	nothing
  *
  */
-void mpid_recvdone2_rem_dt(const DCQuad *xt);
+void mpid_recvdone2_rem_dt(MPIDU_Onesided_xtra_t *xtra);
 #endif /* NOT_USED */
 
 /**
@@ -765,33 +773,33 @@ int MPIDU_check_dt(int lpid, MPI_Datatype dt, mpid_dt_info *dti);
 /**
  * \brief Get a new request object from the resource queue.
  *
- * If 'bgq' is not NULL, copy data into request cache element,
+ * If 'xtra' is not NULL, copy data into request cache element,
  * otherwise zero the field.
  * Returns pointer to the request component of the cache element.
  *
- * \param[in] bgq	Optional pointer to additional info to save
+ * \param[in] xtra	Optional pointer to additional info to save
  * \param[out] info	Optional pointer to private info to use
  * \return Pointer to DCMF request object
  *
  * \ref rqcache_design
  */
-DCMF_Request_t *MPIDU_get_req(const DCQuad *bgq,
+DCMF_Request_t *MPIDU_get_req(MPIDU_Onesided_xtra_t *xtra,
 			MPIDU_Onesided_info_t **info);
 
 /**
  * \brief Release a DCMF request object and retrieve info
  *
  * Locate the request object in the request cache and free it.
- * If 'bgq' is not NULL, copy piggy-back data into 'bgp'.
+ * If 'xtra' is not NULL, copy piggy-back data into 'xtra'.
  * Assumes request object was returned by a call to MPIDU_get_req().
  *
  * \param[in] req	Pointer to DCMF request object being released
- * \param[out] bgq	Optional pointer to receive saved additional info
+ * \param[out] xtra	Optional pointer to receive saved additional info
  * \return nothing
  *
  * \ref rqcache_design
  */
-void MPIDU_free_req(DCMF_Request_t *req, DCQuad *bgq);
+void MPIDU_free_req(DCMF_Request_t *req, MPIDU_Onesided_xtra_t *xtra);
 
 /*
  * * * * * * Callbacks used on request cache objects * * * * *
@@ -815,7 +823,7 @@ void MPIDU_free_req(DCMF_Request_t *req, DCQuad *bgq);
  *
  * \ref rqcache_design
  */
-void done_rqc_cb(void *v);
+void done_rqc_cb(void *v, DCMF_Error_t *);
 
 #ifdef NOT_USED
 /**
@@ -838,7 +846,7 @@ void done_rqc_cb(void *v);
  *
  * \ref rqcache_design
  */
-void done_free_rqc_cb(void *v);
+void done_free_rqc_cb(void *v, DCMF_Error_t *);
 #endif /* NOT_USED */
 
 /**
@@ -849,7 +857,7 @@ void done_free_rqc_cb(void *v);
  * Callback for decrementing a "done" or pending count and
  * freeing malloc() memory, up to two pointers, when ref count goes 0.
  *
- * To use this callback, the "xtra" info (DCQuad) must
+ * To use this callback, the "xtra" info must
  * be filled as follows:
  *
  * - \e w0 - (int *) pending counter
@@ -862,7 +870,7 @@ void done_free_rqc_cb(void *v);
  *
  * \ref rqcache_design
  */
-void done_getfree_rqc_cb(void *v);
+void done_getfree_rqc_cb(void *v, DCMF_Error_t *);
 
 /**
  * \brief Generic request cache done callback with counter decr,
@@ -884,7 +892,7 @@ void done_getfree_rqc_cb(void *v);
  *
  * \ref rqcache_design
  */
-void done_reffree_rqc_cb(void *v);
+void done_reffree_rqc_cb(void *v, DCMF_Error_t *);
 
 #ifdef NOT_USED
 /**
@@ -903,7 +911,7 @@ void done_reffree_rqc_cb(void *v);
  *
  * \ref rqcache_design
  */
-void free_rqc_cb(void *v);
+void free_rqc_cb(void *v, DCMF_Error_t *);
 #endif /* NOT_USED */
 
 /**
@@ -950,7 +958,7 @@ void rma_recvs_cb(MPID_Win *win, int orig, int lpid, int count);
  *
  * \ref rqcache_design
  */
-void rma_rqc_cb(void *v);
+void rma_rqc_cb(void *v, DCMF_Error_t *);
 
 /**
  * \brief Generic callback for request cache
@@ -970,7 +978,7 @@ void rma_rqc_cb(void *v);
  *
  * \ref rqcache_design
  */
-void none_rqc_cb(void *v);
+void none_rqc_cb(void *v, DCMF_Error_t *);
 
 #ifdef NOT_USED
 /**
@@ -984,7 +992,7 @@ void none_rqc_cb(void *v);
  * \param[in] v	Pointer to integer counter to decrement
  * \return nothing
  */
-void done_cb(void *v);
+void done_cb(void *v, DCMF_Error_t *);
 #endif /* NOT_USED */
 
 /**
@@ -993,7 +1001,7 @@ void done_cb(void *v);
  * \param[in] v	Pointer to request object used for transfer
  * \return	nothing
  */
-void dtc1_rqc_cb(void *v);
+void dtc1_rqc_cb(void *v, DCMF_Error_t *);
 
 #ifdef NOT_USED
 /**
@@ -1002,7 +1010,7 @@ void dtc1_rqc_cb(void *v);
  * \param[in] v	Pointer to request object used for transfer
  * \return	nothing
  */
-void dtc2_rqc_cb(void *v);
+void dtc2_rqc_cb(void *v, DCMF_Error_t *);
 #endif /* NOT_USED */
 
 /*
@@ -1035,7 +1043,7 @@ static inline MPID_VCR *MPIDU_world_vcr_c(MPID_Comm *c) {
 static inline int MPIDU_world_rank_c(MPID_Comm *c, int r) {
         MPID_VCR *vc;
         vc = MPIDU_world_vcr_c(c);
-        return vc[r]->lpid;
+        return vc[r];
 }
 
 /**
@@ -1220,8 +1228,8 @@ int MPIDU_valid_group_rank(int lpid, MPID_Group *grp);
  *
  * \ref msginfo_usage
  */
-void recv_sm_cb(void *cd, const DCQuad *_mi, unsigned ct, unsigned or,
-                        const char *sb, const unsigned sl);
+void recv_sm_cb(void *cd, const DCQuad *_mi, unsigned ct, size_t or,
+                        const char *sb, const size_t sl);
 
 /**
  * \brief Callback for DCMF_Control() messages
@@ -1232,7 +1240,7 @@ void recv_sm_cb(void *cd, const DCQuad *_mi, unsigned ct, unsigned or,
  * \param[in] or	Origin node lpid
  * \return	nothing
  */
-void recv_ctl_cb(void *cd, const DCMF_Control_t *ctl, unsigned or);
+void recv_ctl_cb(void *cd, const DCMF_Control_t *ctl, size_t or);
 
 /**
  * \brief Callback for Accumulate recv completion
@@ -1256,7 +1264,7 @@ void recv_ctl_cb(void *cd, const DCMF_Control_t *ctl, unsigned or);
  *
  * \ref msginfo_usage
  */
-void accum_cb(void *v);
+void accum_cb(void *v, DCMF_Error_t *);
 
 /**
  * \brief Receive callback for RMA operations messages
@@ -1281,7 +1289,7 @@ void accum_cb(void *v);
  * \ref msginfo_usage
  */
 DCMF_Request_t *recv_cb(void *cd, const DCQuad *_mi, unsigned ct,
-                        unsigned or, const unsigned sl, unsigned *rl,
+                        size_t or, const size_t sl, size_t *rl,
                         char **rb, DCMF_Callback_t *cb);
 
 void mpidu_init_lock(MPID_Win *win);
@@ -1306,6 +1314,16 @@ void mpidu_free_lock(MPID_Win *win);
  * \ref lock_design
  */
 void lock_cb(const MPIDU_Onesided_ctl_t *info, int lpid);
+
+/**
+ * \brief Reset all counters and indicators related to active RMA epochs
+ *
+ * Assumes all synchronization and wait-for-completion have been done.
+ * Sets epoch type to "NONE". 
+ *
+ * \param[in] win       Window whose epoch is finished
+ */
+void epoch_clear(MPID_Win *win);
 
 /**
  * \brief Epoch End callback.
