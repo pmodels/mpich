@@ -49,7 +49,7 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
             HYDU_ERR_POP(status, "error joining strings\n");
         }
         else
-            client_arg[arg++] = HYDU_strdup("/usr/bin/ssh");
+            path = HYDU_strdup("/usr/bin/ssh");
     }
 
     /* FIXME: Instead of directly reading from the HYD_Handle

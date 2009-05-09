@@ -189,7 +189,6 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode)
 static HYD_Status fill_in_exec_args(void)
 {
     int i, arg, process_id;
-    char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_Env_t *env;
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;
@@ -266,11 +265,7 @@ static HYD_Status fill_in_exec_args(void)
         }
     }
 
-  fn_exit:
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 HYD_Status HYD_PMCI_launch_procs(void)

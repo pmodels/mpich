@@ -269,7 +269,6 @@ HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp)
 HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
 {
     struct HYD_Partition *partition;
-    int fd;
     enum HYD_PMCD_pmi_proxy_cmds cmd;
     HYD_Status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
 
@@ -288,8 +287,6 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
             overall_status = HYD_INTERNAL_ERROR;
             continue;   /* Move on to the next proxy */
         }
-
-        close(fd);
     }
 
     HYDU_FUNC_EXIT();
