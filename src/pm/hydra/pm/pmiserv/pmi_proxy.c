@@ -99,15 +99,6 @@ int main(int argc, char **argv)
     status = HYD_PMCD_pmi_proxy_get_params(argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
-    status = HYDU_sock_listen(&listenfd, NULL,
-                              (uint16_t *) & HYD_PMCD_pmi_proxy_params.proxy.port);
-    HYDU_ERR_POP(status, "unable to listen on socket\n");
-
-    /* Register the listening socket with the demux engine */
-    status = HYD_DMX_register_fd(1, &listenfd, HYD_STDOUT, NULL,
-                                 HYD_PMCD_pmi_proxy_control_connect_cb);
-    HYDU_ERR_POP(status, "unable to register fd\n");
-
     /* FIXME: We do not use the bootstrap server right now, as the
      * current implementation of the bootstrap launch directly reads
      * the executable information from the HYD_Handle structure. Since
@@ -122,8 +113,20 @@ int main(int argc, char **argv)
         HYD_PMCD_pmi_proxy_params.upstream.err = 2;
         HYD_PMCD_pmi_proxy_params.upstream.in = 0;
 
-        status = HYD_PMCD_pmi_proxy_launch_procs();
-        HYDU_ERR_POP(status, "unable to launch procs based on proxy handle info\n");
+        /* Connect back upstream and the socket to a demux engine */
+        status = HYDU_sock_connect(HYD_PMCD_pmi_proxy_params.proxy.server_name,
+                                   HYD_PMCD_pmi_proxy_params.proxy.server_port,
+                                   &HYD_PMCD_pmi_proxy_params.upstream.control);
+        HYDU_ERR_POP(status, "unable to connect to the main server\n");
+
+        status = HYDU_sock_write(HYD_PMCD_pmi_proxy_params.upstream.control,
+                                 &HYD_PMCD_pmi_proxy_params.proxy.partition_id,
+                                 sizeof(HYD_PMCD_pmi_proxy_params.proxy.partition_id));
+        HYDU_ERR_POP(status, "unable to send the partition ID to the server\n");
+
+        status = HYD_DMX_register_fd(1, &HYD_PMCD_pmi_proxy_params.upstream.control,
+                                     HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_control_cmd_cb);
+        HYDU_ERR_POP(status, "unable to register fd\n");
 
         /* Now wait for the processes to finish */
         status = wait_for_procs_to_finish();
@@ -139,6 +142,15 @@ int main(int argc, char **argv)
             status = HYDU_fork_and_exit(-1);
             HYDU_ERR_POP(status, "Error spawning persistent proxy\n");
         }
+
+        status = HYDU_sock_listen(&listenfd, NULL,
+                                  (uint16_t *) & HYD_PMCD_pmi_proxy_params.proxy.server_port);
+        HYDU_ERR_POP(status, "unable to listen on socket\n");
+
+        /* Register the listening socket with the demux engine */
+        status = HYD_DMX_register_fd(1, &listenfd, HYD_STDOUT, NULL,
+                                     HYD_PMCD_pmi_proxy_control_connect_cb);
+        HYDU_ERR_POP(status, "unable to register fd\n");
 
         do {
             /* Wait for the processes to finish. If there are no

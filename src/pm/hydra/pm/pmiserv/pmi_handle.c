@@ -487,9 +487,10 @@ HYD_Status HYD_PMCD_pmi_init(void)
 
     /* Find the number of processes in the PG */
     pg_list->num_subgroups = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         for (exec = partition->exec_list; exec; exec = exec->next)
             pg_list->num_subgroups += exec->proc_count;
+    }
 
     if (handle.ranks_per_proc != -1)
         pg_list->num_procs = pg_list->num_subgroups * handle.ranks_per_proc;

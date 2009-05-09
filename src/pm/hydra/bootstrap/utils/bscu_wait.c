@@ -27,7 +27,7 @@ HYD_Status HYD_BSCU_wait_for_completion(void)
     not_completed = 0;
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
         if (partition->exit_status == -1)
-            not_completed++;
+        not_completed++;
 
     /* We get here only after the I/O sockets have been closed. If the
      * application did not manually close its stdout and stderr

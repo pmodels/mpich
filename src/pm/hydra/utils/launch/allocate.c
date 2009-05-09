@@ -11,8 +11,7 @@ static HYD_Status alloc_partition_base(struct HYD_Partition_base **base)
     static partition_id = 0;
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_MALLOC(*base, struct HYD_Partition_base *, sizeof(struct HYD_Partition_base),
-                status);
+    HYDU_MALLOC(*base, struct HYD_Partition_base *, sizeof(struct HYD_Partition_base), status);
 
     (*base)->name = NULL;
     (*base)->pid = -1;
@@ -25,10 +24,10 @@ static HYD_Status alloc_partition_base(struct HYD_Partition_base **base)
 
     (*base)->next = NULL;
 
-fn_exit:
+  fn_exit:
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

@@ -12,7 +12,7 @@
 HYD_Handle handle;
 struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle;
 
-HYD_Status HYD_PMCD_send_exec_info(struct HYD_Partition *partition)
+HYD_Status HYD_PMCD_pmi_send_exec_info(struct HYD_Partition *partition)
 {
     enum HYD_PMCD_pmi_proxy_cmds cmd;
     int i, list_len, arg_len;

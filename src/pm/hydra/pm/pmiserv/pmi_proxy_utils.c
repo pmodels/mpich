@@ -16,7 +16,8 @@ static HYD_Status init_params(void)
 
     HYD_PMCD_pmi_proxy_params.debug = 0;
 
-    HYD_PMCD_pmi_proxy_params.proxy.port = -1;
+    HYD_PMCD_pmi_proxy_params.proxy.server_name = NULL;
+    HYD_PMCD_pmi_proxy_params.proxy.server_port = -1;
     HYD_PMCD_pmi_proxy_params.proxy.launch_mode = HYD_LAUNCH_UNSET;
     HYD_PMCD_pmi_proxy_params.proxy.partition_id = -1;
 
@@ -69,7 +70,7 @@ static HYD_Status parse_params(char **t_argv)
 
     HYDU_FUNC_ENTER();
 
-    for (;*argv; ++argv) {
+    for (; *argv; ++argv) {
         if (!strcmp(*argv, "--verbose")) {
             HYD_PMCD_pmi_proxy_params.debug = 1;
             continue;
@@ -255,21 +256,20 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
         }
         if (!strcmp(*argv, "--proxy-port")) {
             ++argv;
-            HYD_PMCD_pmi_proxy_params.proxy.port = atoi(*argv);
+            if (HYD_PMCD_pmi_proxy_params.proxy.launch_mode == HYD_LAUNCH_RUNTIME) {
+                HYD_PMCD_pmi_proxy_params.proxy.server_name = HYDU_strdup(strtok(*argv, ":"));
+                HYD_PMCD_pmi_proxy_params.proxy.server_port = atoi(strtok(NULL, ":"));
+            }
+            else {
+                HYD_PMCD_pmi_proxy_params.proxy.server_port = atoi(*argv);
+            }
             continue;
         }
         if (!strcmp(*argv, "--partition-id")) {
             ++argv;
             HYD_PMCD_pmi_proxy_params.proxy.partition_id = atoi(*argv);
-            break; /* FIXME: This is a hack for now */
+            continue;
         }
-    }
-
-    /* If this is runtime mode, we got the remaining arguments as
-     * well */
-    if (HYD_PMCD_pmi_proxy_params.proxy.launch_mode == HYD_LAUNCH_RUNTIME) {
-        status = parse_params(++argv);
-        HYDU_ERR_POP(status, "error parsing proxy params\n");
     }
 
   fn_exit:
@@ -288,6 +288,9 @@ HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    if (HYD_PMCD_pmi_proxy_params.proxy.server_name)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.proxy.server_name);
 
     if (HYD_PMCD_pmi_proxy_params.wdir)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.wdir);

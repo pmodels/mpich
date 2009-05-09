@@ -70,6 +70,12 @@ int HYDU_Error_printf_simple(const char *str, ...);
             HYDU_ERR_SETANDJUMP(status, error, message);                \
     }
 
+#define HYDU_ERR_CHKANDJUMP1(status, chk, error, message, arg1)         \
+    {                                                                   \
+        if ((chk))                                                      \
+            HYDU_ERR_SETANDJUMP1(status, error, message, arg1);         \
+    }
+
 #define HYDU_ERR_SETANDJUMP1(status, error, message, arg1)              \
     {                                                                   \
         status = error;                                                 \
@@ -201,6 +207,7 @@ HYD_Status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen);
 HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count);
 HYD_Status HYDU_sock_writeline(int fd, char *buf, int maxsize);
 HYD_Status HYDU_sock_write(int fd, void *buf, int maxsize);
+HYD_Status HYDU_sock_trywrite(int fd, void *buf, int maxsize);
 HYD_Status HYDU_sock_set_nonblock(int fd);
 HYD_Status HYDU_sock_set_cloexec(int fd);
 HYD_Status HYDU_sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *closed);

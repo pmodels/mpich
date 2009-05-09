@@ -16,7 +16,8 @@ struct HYD_PMCD_pmi_proxy_params {
 
     /* Proxy details */
     struct {
-        int port;
+        char *server_name;
+        int server_port;
         HYD_Launch_mode_t launch_mode;
         int partition_id;
     } proxy;

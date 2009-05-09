@@ -195,6 +195,50 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
 }
 
 
+HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void *userp)
+{
+    int accept_fd, partition_id, count;
+    struct HYD_Partition *partition;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* We got a control socket connection */
+    status = HYDU_sock_accept(fd, &accept_fd);
+    HYDU_ERR_POP(status, "accept error\n");
+
+    /* Read the partition ID */
+    status = HYDU_sock_read(accept_fd, &partition_id, sizeof(int), &count);
+    HYDU_ERR_POP(status, "sock read returned error\n");
+
+    /* Find the partition */
+    FORALL_PARTITIONS(partition, handle.partition_list) {
+        if (partition->base->partition_id == partition_id)
+            break;
+    }
+    HYDU_ERR_CHKANDJUMP1(status, partition == NULL, HYD_INTERNAL_ERROR,
+                         "cannot find partition with ID %d\n", partition_id);
+
+    /* This will be the control socket for this partition */
+    partition->control_fd = accept_fd;
+
+    /* Send out the executable information */
+    status = HYD_PMCD_pmi_send_exec_info(partition);
+    HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
+
+    status =
+        HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, NULL, HYD_PMCD_pmi_serv_control_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
 HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp)
 {
     struct HYD_Partition *partition;
@@ -235,19 +279,12 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
      * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-        /* We only "try" to connect here, since the proxy might have
-         * already exited and the connect might fail. */
-        status = HYDU_sock_tryconnect(partition->base->name, handle.proxy_port, &fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_Warn_printf("unable to connect to the proxy on %s\n", partition->name);
-            overall_status = HYD_INTERNAL_ERROR;
-            continue;   /* Move on to the next proxy */
-        }
-
         cmd = KILL_JOB;
-        status = HYDU_sock_write(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+        status = HYDU_sock_trywrite(partition->control_fd, &cmd,
+                                    sizeof(enum HYD_PMCD_pmi_proxy_cmds));
         if (status != HYD_SUCCESS) {
-            HYDU_Warn_printf("unable to send data to the proxy on %s\n", partition->name);
+            HYDU_Warn_printf("unable to send data to the proxy on %s\n",
+                             partition->base->name);
             overall_status = HYD_INTERNAL_ERROR;
             continue;   /* Move on to the next proxy */
         }

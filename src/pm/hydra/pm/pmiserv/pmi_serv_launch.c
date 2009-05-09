@@ -57,7 +57,7 @@ static void *launch_helper(void *args)
                                &partition->control_fd);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
-    status = HYD_PMCD_send_exec_info(partition);
+    status = HYD_PMCD_pmi_send_exec_info(partition);
     HYDU_ERR_POP(status, "error sending executable info\n");
 
     /* Create an stdout socket */
@@ -97,9 +97,9 @@ static void *launch_helper(void *args)
     goto fn_exit;
 }
 
-static HYD_Status create_and_listen_portstr(
-    HYD_Status(*callback) (int fd, HYD_Event_t events, void *userp),
-    char **port_str)
+static HYD_Status
+create_and_listen_portstr(HYD_Status(*callback) (int fd, HYD_Event_t events, void *userp),
+                          char **port_str)
 {
     int listenfd;
     char *port_range, *sport;
@@ -121,7 +121,7 @@ static HYD_Status create_and_listen_portstr(
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_register_fd(1, &listenfd, HYD_STDOUT, NULL, HYD_PMCD_pmi_connect_cb);
+    status = HYD_DMX_register_fd(1, &listenfd, HYD_STDOUT, NULL, callback);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */
@@ -168,7 +168,10 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode)
         partition->base->proxy_args[arg++] = HYDU_int_to_str(mode);
 
         partition->base->proxy_args[arg++] = HYDU_strdup("--proxy-port");
-        partition->base->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
+        if (mode == HYD_LAUNCH_RUNTIME)
+            partition->base->proxy_args[arg++] = HYDU_strdup(proxy_port_str);
+        else
+            partition->base->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
 
         partition->base->proxy_args[arg++] = HYDU_strdup("--partition-id");
         partition->base->proxy_args[arg++] = HYDU_int_to_str(partition->base->partition_id);
@@ -261,11 +264,6 @@ static HYD_Status fill_in_exec_args(void)
 
             process_id += exec->proc_count;
         }
-
-        if (handle.debug) {
-            HYDU_Debug("Executable passed to the bootstrap: ");
-            HYDU_print_strlist(partition->base->exec_args);
-        }
     }
 
   fn_exit:
@@ -295,15 +293,16 @@ HYD_Status HYD_PMCI_launch_procs(void)
     status = HYD_PMCD_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
-    status = fill_in_proxy_args(handle.launch_mode);
-    HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
-
     status = HYD_BSCI_init(handle.bootstrap);
     HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
 
     if (handle.launch_mode == HYD_LAUNCH_RUNTIME) {
-/*         status = create_and_listen_portstr(NULL, &proxy_port_str); */
-/*         HYDU_ERR_POP(status, "unable to create PMI port\n"); */
+        status = create_and_listen_portstr(HYD_PMCD_pmi_serv_control_connect_cb,
+                                           &proxy_port_str);
+        HYDU_ERR_POP(status, "unable to create PMI port\n");
+
+        status = fill_in_proxy_args(handle.launch_mode);
+        HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
         status = fill_in_exec_args();
         HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
@@ -313,6 +312,9 @@ HYD_Status HYD_PMCI_launch_procs(void)
     }
     else if (handle.launch_mode == HYD_LAUNCH_BOOT ||
              handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) {
+        status = fill_in_proxy_args(handle.launch_mode);
+        HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
+
         status = HYD_BSCI_launch_procs();
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
