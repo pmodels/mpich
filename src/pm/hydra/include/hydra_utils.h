@@ -194,9 +194,8 @@ HYD_Status HYDU_set_common_signals(void (*handler) (int));
 
 /* Sock utilities */
 HYD_Status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port);
-HYD_Status HYDU_sock_gethostbyname(const char *host, struct sockaddr_in *sa, uint16_t port);
-HYD_Status HYDU_sock_connect(struct sockaddr_in sa, int *fd);
-HYD_Status HYDU_sock_tryconnect(struct sockaddr_in sa, int *fd);
+HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd);
+HYD_Status HYDU_sock_tryconnect(const char *host, uint16_t port, int *fd);
 HYD_Status HYDU_sock_accept(int listen_fd, int *fd);
 HYD_Status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen);
 HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count);

@@ -185,7 +185,6 @@ struct HYD_Partition_base {
 /* Partition information */
 struct HYD_Partition {
     struct HYD_Partition_base *base;
-    struct sockaddr_in sa;
 
     char *user_bind_map;
     int one_pass_count;
