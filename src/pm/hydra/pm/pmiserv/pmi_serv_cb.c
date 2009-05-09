@@ -181,6 +181,8 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
     }
 
   fn_exit:
+    if (tbuf)
+        HYDU_FREE(tbuf);
     if (buf)
         HYDU_FREE(buf);
     if (str1)
@@ -249,7 +251,7 @@ HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp)
 
     partition = (struct HYD_Partition *) userp;
 
-    status = HYDU_sock_read(fd, &partition->exit_status, sizeof(int), &count);
+    status = HYDU_sock_read(fd, (void *) &partition->exit_status, sizeof(int), &count);
     HYDU_ERR_POP(status, "unable to read status from proxy\n");
 
     status = HYD_DMX_deregister_fd(fd);

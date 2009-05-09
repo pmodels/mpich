@@ -522,6 +522,9 @@ HYD_Status HYD_PMCD_pmi_finalize(void)
     while (pg) {
         tmp = pg->next;
 
+        if (pg->conn_procs)
+            HYDU_FREE(pg->conn_procs);
+
         status = free_pmi_node_list(pg->node_list);
         HYDU_ERR_POP(status, "unable to free process list\n");
 

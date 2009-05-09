@@ -48,6 +48,9 @@ HYD_Status HYDU_find_in_path(char *execname, char **path)
 
                 goto fn_exit; /* We are done */
             }
+
+            HYDU_FREE(path_loc);
+            path_loc = NULL;
         } while ((test_loc = strtok(NULL, ";:")));
     }
 
@@ -56,6 +59,10 @@ HYD_Status HYDU_find_in_path(char *execname, char **path)
     *path = HYDU_strdup("");
 
   fn_exit:
+    if (user_path)
+        HYDU_FREE(user_path);
+    if (path_loc)
+        HYDU_FREE(path_loc);
     HYDU_FUNC_EXIT();
     return status;
 
