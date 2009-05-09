@@ -20,7 +20,6 @@ static void *launch_helper(void *args)
 {
     struct HYD_Partition *partition = (struct HYD_Partition *) args;
     enum HYD_PMCD_pmi_proxy_cmds cmd;
-    int i, list_len, arg_len;
     HYD_Status status = HYD_SUCCESS;
 
     /*
@@ -58,27 +57,8 @@ static void *launch_helper(void *args)
                                &partition->control_fd);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
-    cmd = PROC_INFO;
-    status = HYDU_sock_write(partition->control_fd, &cmd,
-                             sizeof(enum HYD_PMCD_pmi_proxy_cmds));
-    HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-    /* Check how many arguments we have */
-    list_len = HYDU_strlist_lastidx(partition->base->exec_args);
-    status = HYDU_sock_write(partition->control_fd, &list_len, sizeof(int));
-    HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-    /* Convert the string list to parseable data and send */
-    for (i = 0; partition->base->exec_args[i]; i++) {
-        arg_len = strlen(partition->base->exec_args[i]) + 1;
-
-        status = HYDU_sock_write(partition->control_fd, &arg_len, sizeof(int));
-        HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-        status = HYDU_sock_write(partition->control_fd, partition->base->exec_args[i],
-                                 arg_len);
-        HYDU_ERR_POP(status, "unable to write data to proxy\n");
-    }
+    status = HYD_PMCD_send_exec_info(partition);
+    HYDU_ERR_POP(status, "error sending executable info\n");
 
     /* Create an stdout socket */
     status = HYDU_sock_connect(partition->base->name, handle.proxy_port,
@@ -188,6 +168,8 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode)
 
         partition->base->proxy_args[arg++] = HYDU_strdup("--partition-id");
         partition->base->proxy_args[arg++] = HYDU_int_to_str(partition->base->partition_id);
+
+        partition->base->proxy_args[arg++] = NULL;
     }
 
   fn_exit:
