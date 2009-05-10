@@ -29,7 +29,7 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.global_env = NULL;
 
     HYD_PMCD_pmi_proxy_params.global_core_count = 0;
-    HYD_PMCD_pmi_proxy_params.partition_proc_count = 0;
+    HYD_PMCD_pmi_proxy_params.partition_core_count = 0;
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
 
     HYD_PMCD_pmi_proxy_params.procs_are_launched = 0;
@@ -413,9 +413,9 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    HYD_PMCD_pmi_proxy_params.partition_proc_count = 0;
+    HYD_PMCD_pmi_proxy_params.partition_core_count = 0;
     for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment; segment = segment->next)
-        HYD_PMCD_pmi_proxy_params.partition_proc_count += segment->proc_count;
+        HYD_PMCD_pmi_proxy_params.partition_core_count += segment->proc_count;
 
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
@@ -458,7 +458,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         for (i = 0; i < exec->proc_count; i++) {
 
             pmi_id = HYDU_local_to_global_id(process_id,
-                                             HYD_PMCD_pmi_proxy_params.partition_proc_count,
+                                             HYD_PMCD_pmi_proxy_params.partition_core_count,
                                              HYD_PMCD_pmi_proxy_params.segment_list,
                                              HYD_PMCD_pmi_proxy_params.global_core_count);
 
