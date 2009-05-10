@@ -397,6 +397,11 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
             status = HYD_DMX_wait_for_event(HYDU_time_left(handle.start, handle.timeout));
             HYDU_ERR_POP(status, "error waiting for event\n");
 
+            /* If the timeout expired, raise a SIGINT and kill all the
+             * processes */
+            if (HYDU_time_left(handle.start, handle.timeout) == 0)
+                raise(SIGINT);
+
             /* Check to see if there's any open read socket left; if
              * there are, we will just wait for more events. */
             sockets_open = 0;
