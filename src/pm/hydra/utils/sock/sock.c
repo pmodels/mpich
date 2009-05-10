@@ -268,7 +268,7 @@ HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
         }
         *count += tmp;
 
-        if (flag != HYDU_SOCK_COMM_MSGWAIT || *count == maxlen)
+        if (flag != HYDU_SOCK_COMM_MSGWAIT || *count == maxlen || tmp == 0)
             break;
     };
 
