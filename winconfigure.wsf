@@ -1878,6 +1878,118 @@ Function ReplaceAts( str, use_f77, b64 )
 End Function
 
 
+' FIXME: We should add functionality to add prefixes to AddDefinitions and get rid
+' of common code in AddOPADefinitions
+Sub AddOPADefinitions( fout, filename, b64 )
+    If f.FileExists( filename ) Then
+    Set f2 = f.OpenTextFile( filename )
+    Dim regEx, Match, Matches, define, comment, macroname
+
+    contents = f2.ReadAll()
+
+    Set regEx = New RegExp
+    regEx.Pattern = "/\*([^\*]|\*(?!/))*\*/[\r\n]*#undef(\b).+[\r\n]*"
+    regEx.IgnoreCase = True
+    regEx.Global = True
+    Set Matches = regEx.Execute(contents)
+
+    For Each Match in Matches
+        comment = RegExpFind("/\*(.|[\r\n])*\*/", Match.Value)
+        define = RegExpFind("#undef.*", Match.Value)
+        macroname = RegExpFind("(\s).+", define)
+        macroname = RegExpFind("(\S)+", macroname)
+        fout.WriteLine(comment)
+        Select Case macroname
+            Case "HAVE_ATOMIC_H"
+                fout.WriteLine("/* #undef HAVE_ATOMIC_H */")
+            Case "HAVE_GCC_AND_IA64_ASM"
+                fout.WriteLine("/* #undef HAVE_GCC_AND_IA64_ASM */")
+            Case "HAVE_GCC_AND_POWERPC_ASM"
+                fout.WriteLine("/* #undef HAVE_GCC_AND_POWERPC_ASM */")
+            Case "HAVE_GCC_AND_SICORTEX_ASM"
+                fout.WriteLine("/* #undef HAVE_GCC_AND_SICORTEX_ASM */")
+            Case "HAVE_GCC_ATTRIBUTE"
+                fout.WriteLine("/* #undef HAVE_GCC_ATTRIBUTE */")
+            Case "HAVE_GCC_INTRINSIC_ATOMICS"
+                fout.WriteLine("/* #undef HAVE_GCC_INTRINSIC_ATOMICS */")
+            Case "HAVE_GCC_X86_32_64"
+                fout.WriteLine("/* #undef HAVE_GCC_X86_32_64 */")
+            Case "HAVE_INTRIN_H"
+                fout.WriteLine("/* #undef HAVE_INTRIN_H */")
+            Case "HAVE_INTTYPES_H"
+                fout.WriteLine("/* #undef HAVE_INTTYPES_H */")
+            Case "HAVE_LIBPTHREAD"
+                fout.WriteLine("/* #undef HAVE_LIBPTHREAD */")
+            Case "HAVE_MEMORY_H"
+                fout.WriteLine("/* #undef HAVE_MEMORY_H */")
+            Case "HAVE_NT_INTRINSICS"
+                fout.WriteLine("#define OPA_HAVE_NT_INTRINSICS 1")
+            Case "HAVE_PTHREAD_H"
+                fout.WriteLine("/* #undef HAVE_PTHREAD_H */")
+            Case "HAVE_STDINT_H"
+                fout.WriteLine("/* #undef HAVE_STDINT_H */")
+            Case "HAVE_STDLIB_H"
+                fout.WriteLine("#define OPA_HAVE_STDLIB_H 1")
+            Case "HAVE_STRINGS_H"
+                fout.WriteLine("/* #undef HAVE_STRINGS_H */")
+            Case "HAVE_STRING_H"
+                fout.WriteLine("#define OPA_HAVE_STRING_H 1")
+            Case "STDC_HEADERS"
+                fout.WriteLine("#define OPA_STDC_HEADERS 1")
+            Case "HAVE_SUN_ATOMIC_OPS"
+                fout.WriteLine("/* #undef HAVE_SUN_ATOMIC_OPS */")
+            Case "HAVE_SYS_STAT_H"
+                fout.WriteLine("/* #undef HAVE_SYS_STAT_H */")
+            Case "HAVE_SYS_TYPES_H"
+                fout.WriteLine("#define OPA_HAVE_SYS_TYPES_H 1")
+            Case "HAVE_UNISTD_H"
+                fout.WriteLine("/* #undef HAVE_UNISTD_H */")
+            Case "LIMIT_THREADS"
+                fout.WriteLine("/* #undef LIMIT_THREADS */")
+            Case "NDEBUG"
+                fout.WriteLine("/* #undef NDEBUG */")
+            Case "PACKAGE"
+                fout.WriteLine("#define OPA_PACKAGE ""openpa""")
+            Case "PACKAGE_TARNAME"
+                fout.WriteLine("#define OPA_PACKAGE ""openpa""")
+            Case "PACKAGE_BUGREPORT"
+                fout.WriteLine("#define OPA_PACKAGE_BUGREPORT ""https://trac.mcs.anl.gov/projects/openpa/tickets""")
+            Case "PACKAGE_NAME"
+                fout.WriteLine("#define OPA_PACKAGE_NAME ""OpenPA""")
+            ' FIXME: Find a better way to update the version of OpenPA package
+            Case "PACKAGE_STRING"
+                fout.WriteLine("#define OPA_PACKAGE_STRING ""OpenPA 0.0.1""")
+            Case "PACKAGE_VERSION"
+                fout.WriteLine("#define OPA_PACKAGE_VERSION ""0.0.1""")
+            Case "VERSION"
+                fout.WriteLine("#define OPA_VERSION ""0.0.1""")
+            Case "SIZEOF_INT"
+                fout.WriteLine("#define OPA_SIZEOF_INT 4")
+            Case "SIZEOF_VOID_P"
+                If b64 Then
+                    fout.WriteLine("#define OPA_SIZEOF_VOID_P 8")
+                Else
+                    fout.WriteLine("#define OPA_SIZEOF_VOID_P 4")
+                End If
+            Case "inline"
+                fout.WriteLine("#define inline __inline")
+            Case "restrict"
+                fout.WriteLine("#define restrict")
+            Case "USE_LOCK_BASED_PRIMITIVES"
+                fout.WriteLine("/* #undef USE_LOCK_BASED_PRIMITIVES */")
+            Case Else
+                'MsgBox("Unhandled definition <" & define & ">")
+                If appendUniqueString(unhandled_definitions, macroname) Then
+                    unhandled_definitions_count = unhandled_definitions_count + 1
+                End If
+                unhandled_definitions_instances = unhandled_definitions_instances + 1
+                fout.WriteLine("/* unknown definition: " & macroname & " */")
+            End Select
+            fout.WriteLine("")
+        Next
+    End If
+End Sub
+
 Sub AddDefinitions( fout, filename, b64 )
 	If f.FileExists( filename ) Then
 		Set f2 = f.OpenTextFile( filename )
@@ -4845,6 +4957,32 @@ End If
 '	fout.Close()
 'End If
 
+printMsg "STATUS", "Creating config.h header files for OpenPA..."
+if not f.FolderExists("openpa\src\win32") then
+        printMsg "VERBOSE", "Creating openpa\src\win32 directory"
+	f.CreateFolder("openpa\src\win32")
+end if
+if not f.FolderExists("openpa\src\win64") then
+        printMsg "VERBOSE", "Creating openpa\src\win64 directory"
+	f.CreateFolder("openpa\src\win64")
+end if
+
+If f.FileExists("openpa\src\config.h.in") Then
+	printMsg "VERBOSE", "Creating openpa\src\win32\opa_config.h"
+	Set fout = f.CreateTextFile("openpa\src\win32\opa_config.h")
+	Call WriteHeader(fout, "opa_config_")
+	Call AddOPADefinitions(fout, "openpa\src\config.h.in", false)
+	Call WriteFooter(fout)
+	fout.Close()
+	printMsg "VERBOSE", "Creating openpa\src\win64\opa_config.h"
+	Set fout = f.CreateTextFile("openpa\src\win64\opa_config.h")
+	Call WriteHeader(fout, "opa_config_")
+	Call AddOPADefinitions(fout, "openpa\src\config.h.in", false)
+	Call WriteFooter(fout)
+	fout.Close()
+Else
+	printMsg "VERBOSE", "Skipping file: openpa\src\config.h.in"
+End If
 
 printMsg "STATUS", "Creating *conf.h header files for MPE..."
 If f.FolderExists("src\mpe2") Then
@@ -5725,6 +5863,7 @@ Function GenBuild()
 	mfile.WriteLine("common_cflags = $(common_cflags) \")
 	mfile.WriteLine(" /I..\src\include \")
 	mfile.WriteLine(" /I..\src\util\wrappers \")
+	mfile.WriteLine(" /I..\openpa\src \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\$(CHANNEL)\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\$(CHANNEL)\src \")
@@ -5742,9 +5881,9 @@ Function GenBuild()
 	mfile.WriteLine(" /I..\src\binding\f77")
 	mfile.WriteLine
 	mfile.WriteLine("!IF ""$(CPU)"" == ""i386"" || ""$(CPU)"" == ""x86""")
-	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win32 /I..\src\binding\f90\win32")
+	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win32 /I..\src\binding\f90\win32 /I..\openpa\src\win32")
 	mfile.WriteLine("!ELSE")
-	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win64 /I..\src\binding\f90\win64")
+	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win64 /I..\src\binding\f90\win64 /I..\openpa\src\win64")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
 	mfile.WriteLine("cxxflags = $(common_cflags)")
