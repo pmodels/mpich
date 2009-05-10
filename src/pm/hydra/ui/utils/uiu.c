@@ -22,6 +22,7 @@ void HYD_UIU_init_params(void)
     handle.user_bind_map = NULL;
 
     handle.debug = -1;
+    handle.print_rank_map = 0;
     handle.enablex = -1;
     handle.pm_env = -1;
     handle.wdir = NULL;

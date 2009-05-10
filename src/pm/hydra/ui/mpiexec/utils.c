@@ -56,9 +56,12 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
         }
 
         if (!strcmp(*argv, "--verbose")) {
-            HYDU_ERR_CHKANDJUMP(status, handle.debug != -1, HYD_INTERNAL_ERROR,
-                                "duplicate debug level\n");
             handle.debug = 1;
+            continue;
+        }
+
+        if (!strcmp(*argv, "--print-rank-map")) {
+            handle.print_rank_map = 1;
             continue;
         }
 

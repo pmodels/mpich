@@ -29,6 +29,7 @@ struct HYD_Handle_ {
     char *user_bind_map;
 
     int debug;
+    int print_rank_map;
     int enablex;
     int pm_env;
     char *wdir;

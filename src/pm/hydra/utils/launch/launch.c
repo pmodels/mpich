@@ -167,3 +167,25 @@ HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt)
   fn_fail:
     goto fn_exit;
 }
+
+
+int HYDU_local_to_global_id(int local_id, int local_proc_count,
+                            struct HYD_Partition_segment *segment_list, int one_pass_count)
+{
+    int global_id, rem;
+    struct HYD_Partition_segment *segment;
+
+    global_id = ((local_id / local_proc_count) * one_pass_count);
+    rem = (local_id % local_proc_count);
+
+    for (segment = segment_list; segment; segment = segment->next) {
+        if (rem >= segment->proc_count)
+            rem -= segment->proc_count;
+        else {
+            global_id += segment->start_pid + rem;
+            break;
+        }
+    }
+
+    return global_id;
+}

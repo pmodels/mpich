@@ -403,7 +403,7 @@ HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd)
 
 HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 {
-    int i, j, arg, stdin_fd, process_id, core, pmi_id, rem;
+    int i, j, arg, stdin_fd, process_id, core, pmi_id;
     char *str;
     char *client_args[HYD_NUM_TMP_STRINGS];
     HYD_Env_t *env;
@@ -457,19 +457,10 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next) {
         for (i = 0; i < exec->proc_count; i++) {
 
-            pmi_id = ((process_id / HYD_PMCD_pmi_proxy_params.partition_proc_count) *
-                      HYD_PMCD_pmi_proxy_params.one_pass_count);
-            rem = (process_id % HYD_PMCD_pmi_proxy_params.partition_proc_count);
-
-            for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment;
-                 segment = segment->next) {
-                if (rem >= segment->proc_count)
-                    rem -= segment->proc_count;
-                else {
-                    pmi_id += segment->start_pid + rem;
-                    break;
-                }
-            }
+            pmi_id = HYDU_local_to_global_id(process_id,
+                                             HYD_PMCD_pmi_proxy_params.partition_proc_count,
+                                             HYD_PMCD_pmi_proxy_params.segment_list,
+                                             HYD_PMCD_pmi_proxy_params.one_pass_count);
 
             if (HYD_PMCD_pmi_proxy_params.pmi_port_str) {
                 str = HYDU_int_to_str(pmi_id);

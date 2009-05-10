@@ -53,14 +53,16 @@ static void usage(void)
     printf("\t--ranks-per-proc                 [Assign so many ranks to each process]\n");
     printf("\t--bootstrap-exec                 [Executable to use to bootstrap processes]\n");
     printf("\t--enable/--disable-pm-env        [PM environment settings]\n");
+    printf("\t--print-rank-map                 [Print rank mapping]\n");
 }
 
 
 int main(int argc, char **argv)
 {
     struct HYD_Partition *partition;
-    int exit_status = 0;
-    int timeout;
+    struct HYD_Partition_segment *segment;
+    struct HYD_Partition_exec *exec;
+    int exit_status = 0, timeout, i, process_id;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -110,6 +112,26 @@ int main(int argc, char **argv)
         timeout = -1;   /* Set a negative timeout */
     HYDU_time_set(&handle.timeout, &timeout);
     HYDU_Debug(handle.debug, "Timeout set to %d (-1 means infinite)\n", timeout);
+
+    if (handle.print_rank_map) {
+        FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+            HYDU_Dump("[%s] ", partition->base->name);
+
+            process_id = 0;
+            for (exec = partition->exec_list; exec; exec = exec->next) {
+                for (i = 0; i < exec->proc_count; i++) {
+                    HYDU_Dump("%d", HYDU_local_to_global_id(process_id++,
+                                                            partition->one_pass_count,
+                                                            partition->segment_list,
+                                                            handle.one_pass_count));
+                    if (i < exec->proc_count - 1)
+                        HYDU_Dump(",");
+                }
+            }
+            HYDU_Dump("\n");
+        }
+        HYDU_Dump("\n");
+    }
 
     /* Launch the processes */
     status = HYD_CSI_launch_procs();
