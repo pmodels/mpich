@@ -25,24 +25,23 @@ HYD_Status HYD_BSCU_wait_for_completion(void)
     HYDU_FUNC_ENTER();
 
     not_completed = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         if (partition->exit_status == -1)
-        not_completed++;
+            not_completed++;
+    }
 
     /* We get here only after the I/O sockets have been closed. If the
      * application did not manually close its stdout and stderr
      * sockets, this means that the processes have terminated. In that
      * case the below loop will return almost immediately. If not, we
      * poll for some time, burning CPU. */
-    do {
+    while (not_completed > 0) {
         pid = waitpid(-1, &ret_status, WNOHANG);
         if (pid > 0) {
             /* Find the pid and mark it as complete. */
             FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-                if (partition->base->pid == pid) {
-                    partition->exit_status = WEXITSTATUS(ret_status);
+                if (partition->base->pid == pid)
                     not_completed--;
-                }
             }
         }
         if (HYDU_time_left(handle.start, handle.timeout) == 0)
@@ -54,7 +53,7 @@ HYD_Status HYD_BSCU_wait_for_completion(void)
          * application might exit much quicker. Note that the
          * sched_yield() call is broken on newer linux kernel versions
          * and should not be used. */
-    } while (not_completed > 0);
+    }
 
     if (not_completed)
         status = HYD_INTERNAL_ERROR;

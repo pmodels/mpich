@@ -135,6 +135,19 @@ int main(int argc, char **argv)
         ret_status = 0;
         for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
             ret_status |= HYD_PMCD_pmi_proxy_params.exit_status[i];
+
+        /* Send the exit status upstream */
+        status = HYDU_sock_write(HYD_PMCD_pmi_proxy_params.upstream.control,
+                                 &ret_status, sizeof(int));
+        HYDU_ERR_POP(status, "unable to return exit status upstream\n");
+
+        status = HYD_DMX_deregister_fd(HYD_PMCD_pmi_proxy_params.upstream.control);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+        close(HYD_PMCD_pmi_proxy_params.upstream.control);
+
+        /* cleanup the params structure for the next job */
+        status = HYD_PMCD_pmi_proxy_cleanup_params();
+        HYDU_ERR_POP(status, "unable to cleanup params\n");
     }
     else {      /* Persistent mode */
         if (HYD_PMCD_pmi_proxy_params.proxy.launch_mode != HYD_LAUNCH_BOOT_FOREGROUND) {

@@ -228,8 +228,8 @@ HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void
     status = HYD_PMCD_pmi_send_exec_info(partition);
     HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
 
-    status =
-        HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, NULL, HYD_PMCD_pmi_serv_control_cb);
+    status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, partition,
+                                 HYD_PMCD_pmi_serv_control_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:

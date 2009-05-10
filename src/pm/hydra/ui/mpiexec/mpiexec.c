@@ -184,11 +184,8 @@ int main(int argc, char **argv)
         return -1;
     else {
         if (WIFSIGNALED(exit_status))
-            raise(WTERMSIG(exit_status));
-        else if (WIFEXITED(exit_status))
-            return (WEXITSTATUS(exit_status));
-
-        return exit_status;
+            printf("%s\n", strsignal(exit_status));
+        return (WEXITSTATUS(exit_status));
     }
 
   fn_fail:

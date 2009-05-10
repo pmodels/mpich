@@ -413,33 +413,23 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
             break;
         }
 
-        /* The bootstrap will wait for all processes to terminate */
-        if (handle.launch_mode == HYD_LAUNCH_RUNTIME) {
-            status = HYD_BSCI_wait_for_completion();
-            if (status != HYD_SUCCESS) {
-                status = HYD_PMCD_pmi_serv_cleanup();
-                HYDU_ERR_POP(status, "process manager cannot cleanup processes\n");
-            }
-        }
-        else if (handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
-            do {
-                /* Check if the exit status has already arrived */
-                all_procs_exited = 1;
-                FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-                    if (partition->exit_status == -1) {
-                        all_procs_exited = 0;
-                        break;
-                    }
-                }
-
-                if (all_procs_exited)
+        do {
+            /* Check if the exit status has already arrived */
+            all_procs_exited = 1;
+            FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+                if (partition->exit_status == -1) {
+                    all_procs_exited = 0;
                     break;
+                }
+            }
 
-                /* If not, wait for some event to occur */
-                status = HYD_DMX_wait_for_event(HYDU_time_left(handle.start, handle.timeout));
-                HYDU_ERR_POP(status, "error waiting for event\n");
-            } while (1);
-        }
+            if (all_procs_exited)
+                break;
+
+            /* If not, wait for some event to occur */
+            status = HYD_DMX_wait_for_event(HYDU_time_left(handle.start, handle.timeout));
+            HYDU_ERR_POP(status, "error waiting for event\n");
+        } while (1);
     }
 
   fn_exit:
