@@ -168,6 +168,9 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
+    status = HYDU_sock_set_nonblock(0);
+    HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
+
     handle.stdin_buf_count = 0;
     handle.stdin_buf_offset = 0;
 
