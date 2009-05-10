@@ -33,12 +33,6 @@ int HYDU_Error_printf_simple(const char *str, ...);
     }
 #endif
 
-#if !defined COMPILER_ACCEPTS_VA_ARGS
-#define HYDU_Debug(...)
-#else
-#define HYDU_Debug(...)
-#endif /* COMPILER_ACCEPTS_VA_ARGS */
-
 #define HYDU_ERR_POP(status, message)                                   \
     {                                                                   \
         if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
@@ -108,18 +102,24 @@ int HYDU_Error_printf_simple(const char *str, ...);
 #define HYDU_Warn_printf(...) {}
 #endif /* ENABLE_WARNINGS */
 
+#define HYDU_Dump printf
+#if defined COMPILER_ACCEPTS_VA_ARGS
+#define HYDU_Debug(debug, ...)                  \
+    {                                           \
+        if ((debug))                            \
+            HYDU_Dump(__VA_ARGS__);             \
+    }
+#else
+#define HYDU_Debug(...) {}
+#endif
+
+/* We need to add more information in here later */
 #if !defined ENABLE_DEBUG
-#define HYDU_FUNC_ENTER()
-#define HYDU_FUNC_EXIT()
+#define HYDU_FUNC_ENTER() {}
+#define HYDU_FUNC_EXIT() {}
 #elif defined COMPILER_ACCEPTS_FUNC
-#define HYDU_FUNC_ENTER()                                               \
-    {                                                                   \
-        HYDU_Debug("Entering function %s\n", __func__);                 \
-    }
-#define HYDU_FUNC_EXIT()                                               \
-    {                                                                  \
-        HYDU_Debug("Exiting function %s\n", __func__);                 \
-    }
+#define HYDU_FUNC_ENTER() {}
+#define HYDU_FUNC_EXIT() {}
 #else
 #define HYDU_FUNC_ENTER() {}
 #define HYDU_FUNC_EXIT() {}

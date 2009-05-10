@@ -134,7 +134,6 @@ create_and_listen_portstr(HYD_Status(*callback) (int fd, HYD_Event_t events, voi
     HYDU_snprintf(*port_str, strlen(hostname) + 1 + strlen(sport) + 1,
                   "%s:%s", hostname, sport);
     HYDU_FREE(sport);
-    HYDU_Debug("Listening on port %s\n", *port_str);
 
   fn_exit:
     return status;
@@ -175,6 +174,9 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode)
 
         partition->base->proxy_args[arg++] = HYDU_strdup("--partition-id");
         partition->base->proxy_args[arg++] = HYDU_int_to_str(partition->base->partition_id);
+
+        if (handle.debug)
+            partition->base->proxy_args[arg++] = HYDU_strdup("--debug");
 
         partition->base->proxy_args[arg++] = NULL;
     }
@@ -284,17 +286,19 @@ HYD_Status HYD_PMCI_launch_procs(void)
     /* Initialize PMI */
     status = create_and_listen_portstr(HYD_PMCD_pmi_connect_cb, &pmi_port_str);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
+    HYDU_Debug(handle.debug, "Got a PMI port string of %s\n", pmi_port_str);
 
     status = HYD_PMCD_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
-    status = HYD_BSCI_init(handle.bootstrap);
+    status = HYD_BSCI_init(handle.bootstrap, handle.debug);
     HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
 
     if (handle.launch_mode == HYD_LAUNCH_RUNTIME) {
         status = create_and_listen_portstr(HYD_PMCD_pmi_serv_control_connect_cb,
                                            &proxy_port_str);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
+        HYDU_Debug(handle.debug, "Got a proxy port string of %s\n", proxy_port_str);
 
         status = fill_in_proxy_args(handle.launch_mode);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");

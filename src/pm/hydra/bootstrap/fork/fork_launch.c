@@ -6,6 +6,7 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
+#include "bsci.h"
 #include "bscu.h"
 #include "fork.h"
 
@@ -31,6 +32,11 @@ HYD_Status HYD_BSCD_fork_launch_procs(void)
         for (i = 0; partition->base->proxy_args[i]; i++)
             client_arg[arg++] = HYDU_strdup(partition->base->proxy_args[i]);
         client_arg[arg++] = NULL;
+
+        if (HYD_BSCI_debug) {
+            HYDU_Dump("Launching process: ");
+            HYDU_print_strlist(client_arg);
+        }
 
         /* The stdin pointer will be some value for process_id 0; for
          * everyone else, it's NULL. */

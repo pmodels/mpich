@@ -108,8 +108,8 @@ int main(int argc, char **argv)
         timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
     else
         timeout = -1;   /* Set a negative timeout */
-    HYDU_Debug("Timeout set to %d seconds (negative means infinite)\n", timeout);
     HYDU_time_set(&handle.timeout, &timeout);
+    HYDU_Debug(handle.debug, "Timeout set to %d (-1 means infinite)\n", timeout);
 
     /* Launch the processes */
     status = HYD_CSI_launch_procs();

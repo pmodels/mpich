@@ -71,11 +71,6 @@ static HYD_Status parse_params(char **t_argv)
     HYDU_FUNC_ENTER();
 
     for (; *argv; ++argv) {
-        if (!strcmp(*argv, "--verbose")) {
-            HYD_PMCD_pmi_proxy_params.debug = 1;
-            continue;
-        }
-
         /* Working directory */
         if (!strcmp(*argv, "--wdir")) {
             argv++;
@@ -268,6 +263,10 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
         if (!strcmp(*argv, "--partition-id")) {
             ++argv;
             HYD_PMCD_pmi_proxy_params.proxy.partition_id = atoi(*argv);
+            continue;
+        }
+        if (!strcmp(*argv, "--debug")) {
+            HYD_PMCD_pmi_proxy_params.debug = 1;
             continue;
         }
     }
