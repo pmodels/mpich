@@ -49,7 +49,8 @@ HYD_Status HYD_PMCD_pmi_proxy_control_cmd_cb(int fd, HYD_Event_t events, void *u
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
 
     /* We got a command from upstream */
-    status = HYDU_sock_read(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds), &cmd_len);
+    status = HYDU_sock_read(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds), &cmd_len,
+                            HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading command from launcher\n");
     if (cmd_len == 0) {
         /* The connection has closed */

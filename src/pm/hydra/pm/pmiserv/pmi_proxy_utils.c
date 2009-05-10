@@ -365,18 +365,18 @@ HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd)
     /* Read information about the application to launch into a string
      * array and call parse_params() to interpret it and load it into
      * the proxy handle. */
-    status = HYDU_sock_read(fd, &num_strings, sizeof(int), &recvd);
+    status = HYDU_sock_read(fd, &num_strings, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading data from upstream\n");
 
     HYDU_MALLOC(arglist, char **, (num_strings + 1) * sizeof(char *), status);
 
     for (i = 0; i < num_strings; i++) {
-        status = HYDU_sock_read(fd, &str_len, sizeof(int), &recvd);
+        status = HYDU_sock_read(fd, &str_len, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data from upstream\n");
 
         HYDU_MALLOC(arglist[i], char *, str_len, status);
 
-        status = HYDU_sock_read(fd, arglist[i], str_len, &recvd);
+        status = HYDU_sock_read(fd, arglist[i], str_len, &recvd, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data from upstream\n");
     }
     arglist[num_strings] = NULL;
@@ -487,15 +487,10 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
                                              &HYD_PMCD_pmi_proxy_params.pid[process_id], core);
 
-                status = HYDU_sock_set_nonblock(HYD_PMCD_pmi_proxy_params.in);
-                HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
-
-                stdin_fd = HYD_PMCD_pmi_proxy_params.upstream.in;
-                status = HYDU_sock_set_nonblock(stdin_fd);
-                HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
-
                 HYD_PMCD_pmi_proxy_params.stdin_buf_offset = 0;
                 HYD_PMCD_pmi_proxy_params.stdin_buf_count = 0;
+
+                stdin_fd = HYD_PMCD_pmi_proxy_params.upstream.in;
                 status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, NULL,
                                              HYD_PMCD_pmi_proxy_stdin_cb);
                 HYDU_ERR_POP(status, "unable to register fd\n");

@@ -67,7 +67,7 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
         HYD_PMCD_pmi_handle = HYD_PMCD_pmi_v1;
 
     do {
-        status = HYDU_sock_read(fd, buf, 6, &linelen);
+        status = HYDU_sock_read(fd, buf, 6, &linelen, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read the length of the command");
 
         /* Unexpected termination of connection */
@@ -110,7 +110,7 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
             buf[linelen] = 0;
             cmdlen = atoi(buf);
 
-            status = HYDU_sock_read(fd, buf, cmdlen, &linelen);
+            status = HYDU_sock_read(fd, buf, cmdlen, &linelen, HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "PMI read line error\n");
             buf[linelen] = 0;
         }
@@ -210,7 +210,8 @@ HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void
     HYDU_ERR_POP(status, "accept error\n");
 
     /* Read the partition ID */
-    status = HYDU_sock_read(accept_fd, &partition_id, sizeof(int), &count);
+    status = HYDU_sock_read(accept_fd, &partition_id, sizeof(int), &count,
+                            HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "sock read returned error\n");
 
     /* Find the partition */
@@ -251,7 +252,8 @@ HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp)
 
     partition = (struct HYD_Partition *) userp;
 
-    status = HYDU_sock_read(fd, (void *) &partition->exit_status, sizeof(int), &count);
+    status = HYDU_sock_read(fd, (void *) &partition->exit_status, sizeof(int), &count,
+                            HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read status from proxy\n");
 
     status = HYD_DMX_deregister_fd(fd);

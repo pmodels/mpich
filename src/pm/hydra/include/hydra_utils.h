@@ -202,13 +202,17 @@ HYD_Status HYDU_set_common_signals(void (*handler) (int));
 
 
 /* Sock utilities */
+enum HYDU_sock_comm_flag {
+    HYDU_SOCK_COMM_MSGWAIT = 0x01
+};
+
 HYD_Status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port);
 HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd);
-HYD_Status HYDU_sock_tryconnect(const char *host, uint16_t port, int *fd);
 HYD_Status HYDU_sock_accept(int listen_fd, int *fd);
 HYD_Status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen);
-HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count);
 HYD_Status HYDU_sock_writeline(int fd, char *buf, int maxsize);
+HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
+                          enum HYDU_sock_comm_flag flag);
 HYD_Status HYDU_sock_write(int fd, void *buf, int maxsize);
 HYD_Status HYDU_sock_trywrite(int fd, void *buf, int maxsize);
 HYD_Status HYDU_sock_set_nonblock(int fd);

@@ -152,51 +152,6 @@ HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
 }
 
 
-HYD_Status HYDU_sock_tryconnect(const char *host, uint16_t port, int *fd)
-{
-    struct hostent *ht;
-    struct sockaddr_in sa;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    memset((char *) &sa, 0, sizeof(struct sockaddr_in));
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons(port);
-
-    /* Get the remote host's IP address */
-    pthread_mutex_lock(&mutex);
-    ht = gethostbyname(host);
-    pthread_mutex_unlock(&mutex);
-    if (ht == NULL)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INVALID_PARAM,
-                             "unable to get host address (%s)\n", HYDU_strerror(errno));
-    memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
-
-    /* Create a socket and set the required options */
-    *fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (*fd < 0)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
-                             HYDU_strerror(errno));
-
-    /* Not being able to connect is not an error in all cases. So we
-     * return an error, but only print a warning message. The upper
-     * layer can decide what to do with the return status. */
-    if (connect(*fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
-        HYDU_Warn_printf("connect error (%s)\n", HYDU_strerror(errno));
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
 HYD_Status HYDU_sock_accept(int listen_fd, int *fd)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -266,29 +221,6 @@ HYD_Status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen)
 }
 
 
-HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count)
-{
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    do {
-        *count = read(fd, buf, maxlen);
-    } while (*count < 0 && errno == EINTR);
-
-    if (*count < 0)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "read errno (%s)\n",
-                             HYDU_strerror(errno));
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
 HYD_Status HYDU_sock_writeline(int fd, char *buf, int maxsize)
 {
     int n;
@@ -305,6 +237,43 @@ HYD_Status HYDU_sock_writeline(int fd, char *buf, int maxsize)
 
     if (n < maxsize)
         HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "write error (%s)\n",
+                             HYDU_strerror(errno));
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
+                          enum HYDU_sock_comm_flag flag)
+{
+    int tmp;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    *count = 0;
+    while (1) {
+        do {
+            tmp = read(fd, buf, maxlen);
+        } while (tmp < 0 && errno == EINTR);
+
+        if (tmp < 0) {
+            *count = tmp;
+            break;
+        }
+        *count += tmp;
+
+        if (flag != HYDU_SOCK_COMM_MSGWAIT || *count == maxlen)
+            break;
+    };
+
+    if (*count < 0)
+        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "read errno (%s)\n",
                              HYDU_strerror(errno));
 
   fn_exit:
