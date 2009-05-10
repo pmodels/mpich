@@ -43,7 +43,7 @@ void HYD_UIU_init_params(void)
 
     /* FIXME: Should the timers be initialized? */
 
-    handle.one_pass_count = 0;
+    handle.global_core_count = 0;
     handle.exec_info_list = NULL;
     handle.partition_list = NULL;
 
@@ -213,7 +213,7 @@ HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
     HYDU_FUNC_ENTER();
 
     for (partition = handle.partition_list; partition; partition = partition->next)
-        handle.one_pass_count += partition->one_pass_count;
+        handle.global_core_count += partition->partition_core_count;
 
     for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
         /* The run_count tells us how many processes the partitions
@@ -234,11 +234,11 @@ HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
                 partition->exec_list->exec[i] = NULL;
 
                 partition->exec_list->proc_count =
-                    ((exec_info->exec_proc_count / handle.one_pass_count) *
-                     partition->one_pass_count);
-                rem = (exec_info->exec_proc_count % handle.one_pass_count);
-                if (rem > run_count + partition->one_pass_count)
-                    rem = run_count + partition->one_pass_count;
+                    ((exec_info->exec_proc_count / handle.global_core_count) *
+                     partition->partition_core_count);
+                rem = (exec_info->exec_proc_count % handle.global_core_count);
+                if (rem > run_count + partition->partition_core_count)
+                    rem = run_count + partition->partition_core_count;
                 partition->exec_list->proc_count += (rem > run_count) ? (rem - run_count) : 0;
 
                 partition->exec_list->prop = exec_info->prop;
@@ -257,18 +257,18 @@ HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
                 exec->exec[i] = NULL;
 
                 exec->proc_count =
-                    ((exec_info->exec_proc_count / handle.one_pass_count) *
-                     partition->one_pass_count);
-                rem = (exec_info->exec_proc_count % handle.one_pass_count);
-                if (rem > run_count + partition->one_pass_count)
-                    rem = run_count + partition->one_pass_count;
+                    ((exec_info->exec_proc_count / handle.global_core_count) *
+                     partition->partition_core_count);
+                rem = (exec_info->exec_proc_count % handle.global_core_count);
+                if (rem > run_count + partition->partition_core_count)
+                    rem = run_count + partition->partition_core_count;
                 exec->proc_count += (rem > run_count) ? (rem - run_count) : 0;
 
                 exec->prop = exec_info->prop;
                 exec->prop_env = HYDU_env_list_dup(exec_info->prop_env);
             }
 
-            run_count += partition->one_pass_count;
+            run_count += partition->partition_core_count;
         }
     }
 
@@ -357,7 +357,7 @@ void HYD_UIU_print_params(void)
         HYDU_Dump("      Partition ID: %2d\n", i++);
         HYDU_Dump("      -----------------\n");
         HYDU_Dump("        Partition name: %s\n", partition->base->name);
-        HYDU_Dump("        Process count: %d\n", partition->one_pass_count);
+        HYDU_Dump("        Process count: %d\n", partition->partition_core_count);
         HYDU_Dump("\n");
         HYDU_Dump("        Partition segment list:\n");
         HYDU_Dump("        .......................\n");

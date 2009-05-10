@@ -178,8 +178,8 @@ HYD_Status HYDU_fork_and_exit(int core);
 HYD_Status HYDU_create_thread(void *(*func) (void *), void *args,
                               struct HYD_Thread_context *ctxt);
 HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt);
-int HYDU_local_to_global_id(int local_id, int local_proc_count,
-                            struct HYD_Partition_segment *segment_list, int one_pass_count);
+int HYDU_local_to_global_id(int local_id, int partition_core_count,
+                            struct HYD_Partition_segment *segment_list, int global_core_count);
 
 
 /* signals */

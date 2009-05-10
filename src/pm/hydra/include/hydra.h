@@ -55,7 +55,7 @@ struct HYD_Handle_ {
     HYD_Time start;
     HYD_Time timeout;
 
-    int one_pass_count;
+    int global_core_count;
 
     struct HYD_Exec_info *exec_info_list;
     struct HYD_Partition *partition_list;

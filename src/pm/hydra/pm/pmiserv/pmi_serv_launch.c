@@ -201,8 +201,8 @@ static HYD_Status fill_in_exec_args(void)
     process_id = 0;
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         arg = 0;
-        partition->base->exec_args[arg++] = HYDU_strdup("--one-pass-count");
-        partition->base->exec_args[arg++] = HYDU_int_to_str(handle.one_pass_count);
+        partition->base->exec_args[arg++] = HYDU_strdup("--global-core-count");
+        partition->base->exec_args[arg++] = HYDU_int_to_str(handle.global_core_count);
 
         partition->base->exec_args[arg++] = HYDU_strdup("--wdir");
         partition->base->exec_args[arg++] = HYDU_strdup(handle.wdir);

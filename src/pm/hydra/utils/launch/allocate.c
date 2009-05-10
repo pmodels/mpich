@@ -54,7 +54,7 @@ HYD_Status HYDU_alloc_partition(struct HYD_Partition **partition)
 
     (*partition)->user_bind_map = NULL;
     (*partition)->segment_list = NULL;
-    (*partition)->one_pass_count = 0;
+    (*partition)->partition_core_count = 0;
 
     (*partition)->exit_status = -1;
     (*partition)->control_fd = -1;
@@ -201,7 +201,7 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
         HYDU_ERR_POP(status, "Unable to alloc partition\n");
         (*partition_list)->segment_list = segment;
         (*partition_list)->base->name = HYDU_strdup(name);
-        (*partition_list)->one_pass_count += segment->proc_count;
+        (*partition_list)->partition_core_count += segment->proc_count;
     }
     else {
         partition = *partition_list;
@@ -215,7 +215,7 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
                         s = s->next;
                     s->next = segment;
                 }
-                partition->one_pass_count += segment->proc_count;
+                partition->partition_core_count += segment->proc_count;
                 break;
             }
             else if (partition->next == NULL) {
@@ -223,7 +223,7 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
                 HYDU_ERR_POP(status, "Unable to alloc partition\n");
                 partition->next->segment_list = segment;
                 partition->next->base->name = HYDU_strdup(name);
-                partition->next->one_pass_count += segment->proc_count;
+                partition->next->partition_core_count += segment->proc_count;
                 partition->base->next = partition->next->base;
                 break;
             }
@@ -395,7 +395,7 @@ HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partiti
     if (!strcmp(host_file, "HYDRA_USE_LOCALHOST")) {
         HYDU_alloc_partition(&(*partition_list));
         (*partition_list)->base->name = HYDU_strdup("localhost");
-        (*partition_list)->one_pass_count = 1;
+        (*partition_list)->partition_core_count = 1;
 
         HYDU_alloc_partition_segment(&((*partition_list)->segment_list));
         (*partition_list)->segment_list->start_pid = 0;

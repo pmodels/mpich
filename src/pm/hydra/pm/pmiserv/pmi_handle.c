@@ -373,7 +373,7 @@ static struct HYD_PMCD_pmi_node *find_node(HYD_PMCD_pmi_pg_t * pg, int rank)
     struct HYD_PMCD_pmi_node *node, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
-    srank = rank % handle.one_pass_count;
+    srank = rank % handle.global_core_count;
 
     node_id = 0;
     FORALL_PARTITIONS(partition, handle.partition_list) {

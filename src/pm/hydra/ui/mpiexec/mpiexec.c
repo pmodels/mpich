@@ -121,9 +121,9 @@ int main(int argc, char **argv)
             for (exec = partition->exec_list; exec; exec = exec->next) {
                 for (i = 0; i < exec->proc_count; i++) {
                     HYDU_Dump("%d", HYDU_local_to_global_id(process_id++,
-                                                            partition->one_pass_count,
+                                                            partition->partition_core_count,
                                                             partition->segment_list,
-                                                            handle.one_pass_count));
+                                                            handle.global_core_count));
                     if (i < exec->proc_count - 1)
                         HYDU_Dump(",");
                 }

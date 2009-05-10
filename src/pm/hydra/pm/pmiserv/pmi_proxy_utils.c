@@ -28,7 +28,7 @@ static HYD_Status init_params(void)
 
     HYD_PMCD_pmi_proxy_params.global_env = NULL;
 
-    HYD_PMCD_pmi_proxy_params.one_pass_count = 0;
+    HYD_PMCD_pmi_proxy_params.global_core_count = 0;
     HYD_PMCD_pmi_proxy_params.partition_proc_count = 0;
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
 
@@ -123,9 +123,9 @@ static HYD_Status parse_params(char **t_argv)
         }
 
         /* One-pass Count */
-        if (!strcmp(*argv, "--one-pass-count")) {
+        if (!strcmp(*argv, "--global-core-count")) {
             argv++;
-            HYD_PMCD_pmi_proxy_params.one_pass_count = atoi(*argv);
+            HYD_PMCD_pmi_proxy_params.global_core_count = atoi(*argv);
             continue;
         }
 
@@ -460,7 +460,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
             pmi_id = HYDU_local_to_global_id(process_id,
                                              HYD_PMCD_pmi_proxy_params.partition_proc_count,
                                              HYD_PMCD_pmi_proxy_params.segment_list,
-                                             HYD_PMCD_pmi_proxy_params.one_pass_count);
+                                             HYD_PMCD_pmi_proxy_params.global_core_count);
 
             if (HYD_PMCD_pmi_proxy_params.pmi_port_str) {
                 str = HYDU_int_to_str(pmi_id);

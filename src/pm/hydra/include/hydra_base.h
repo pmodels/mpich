@@ -187,7 +187,7 @@ struct HYD_Partition {
     struct HYD_Partition_base *base;
 
     char *user_bind_map;
-    int one_pass_count;
+    int partition_core_count;
 
     /* Segment list will contain one-pass of the hosts file */
     struct HYD_Partition_segment *segment_list;
