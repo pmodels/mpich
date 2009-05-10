@@ -245,15 +245,22 @@ HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void
 HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp)
 {
     struct HYD_Partition *partition;
-    int count;
+    struct HYD_Partition_exec *exec;
+    int count, proc_count;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     partition = (struct HYD_Partition *) userp;
 
-    status = HYDU_sock_read(fd, (void *) &partition->exit_status, sizeof(int), &count,
-                            HYDU_SOCK_COMM_MSGWAIT);
+    proc_count = 0;
+    for (exec = partition->exec_list; exec; exec = exec->next)
+        proc_count += exec->proc_count;
+
+    HYDU_MALLOC(partition->exit_status, int *, proc_count * sizeof(int), status);
+
+    status = HYDU_sock_read(fd, (void *) partition->exit_status, proc_count * sizeof(int),
+                            &count, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read status from proxy\n");
 
     status = HYD_DMX_deregister_fd(fd);

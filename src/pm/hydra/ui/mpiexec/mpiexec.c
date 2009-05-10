@@ -54,6 +54,7 @@ static void usage(void)
     printf("\t--bootstrap-exec                 [Executable to use to bootstrap processes]\n");
     printf("\t--enable/--disable-pm-env        [PM environment settings]\n");
     printf("\t--print-rank-map                 [Print rank mapping]\n");
+    printf("\t--print-all-exitcodes            [Print exit codes of all processes]\n");
 }
 
 
@@ -62,7 +63,7 @@ int main(int argc, char **argv)
     struct HYD_Partition *partition;
     struct HYD_Partition_segment *segment;
     struct HYD_Partition_exec *exec;
-    int exit_status = 0, timeout, i, process_id;
+    int exit_status = 0, timeout, i, process_id, proc_count;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -184,9 +185,27 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "control system error waiting for completion\n");
 
     /* Check for the exit status for all the processes */
+    if (handle.print_all_exitcodes)
+        HYDU_Dump("Exit codes: ");
     exit_status = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
-        exit_status |= partition->exit_status;
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        proc_count = 0;
+        for (exec = partition->exec_list; exec; exec = exec->next)
+            proc_count += exec->proc_count;
+        for (i = 0; i < proc_count; i++) {
+            if (handle.print_all_exitcodes) {
+                HYDU_Dump("[%d]", HYDU_local_to_global_id(i, partition->partition_core_count,
+                                                          partition->segment_list,
+                                                          handle.global_core_count));
+                HYDU_Dump("%d", WEXITSTATUS(partition->exit_status[i]));
+                if (i < proc_count - 1)
+                    HYDU_Dump(",");
+            }
+            exit_status |= partition->exit_status[i];
+        }
+    }
+    if (handle.print_all_exitcodes)
+        HYDU_Dump("\n");
 
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_CSI_finalize();

@@ -65,6 +65,11 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             continue;
         }
 
+        if (!strcmp(*argv, "--print-all-exitcodes")) {
+            handle.print_all_exitcodes = 1;
+            continue;
+        }
+
         if (!strcmp(*argv, "--enable-x") || !strcmp(*argv, "--disable-x")) {
             HYDU_ERR_CHKANDJUMP(status, handle.enablex != -1, HYD_INTERNAL_ERROR,
                                 "duplicate enable-x\n");

@@ -30,6 +30,7 @@ struct HYD_Handle_ {
 
     int debug;
     int print_rank_map;
+    int print_all_exitcodes;
     int enablex;
     int pm_env;
     char *wdir;

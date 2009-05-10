@@ -198,7 +198,7 @@ struct HYD_Partition {
      * partition, but this can be easily extended later. We will also
      * need to give different ports for the proxies to listen on in
      * that case. */
-    int exit_status;
+    int *exit_status;
     int control_fd;
 
     struct HYD_Partition *next;

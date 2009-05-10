@@ -417,7 +417,7 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
             /* Check if the exit status has already arrived */
             all_procs_exited = 1;
             FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-                if (partition->exit_status == -1) {
+                if (partition->exit_status == NULL) {
                     all_procs_exited = 0;
                     break;
                 }

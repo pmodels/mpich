@@ -56,7 +56,7 @@ HYD_Status HYDU_alloc_partition(struct HYD_Partition **partition)
     (*partition)->segment_list = NULL;
     (*partition)->partition_core_count = 0;
 
-    (*partition)->exit_status = -1;
+    (*partition)->exit_status = NULL;
     (*partition)->control_fd = -1;
 
     (*partition)->exec_list = NULL;
@@ -146,6 +146,9 @@ void HYDU_free_partition_list(struct HYD_Partition *partition_list)
             HYDU_FREE(segment);
             segment = tsegment;
         }
+
+        if (partition->exit_status)
+            HYDU_FREE(partition->exit_status);
 
         exec = partition->exec_list;
         while (exec) {
