@@ -12,6 +12,10 @@ my $version = "";
 my $pack = "";
 my $root = $ENV{PWD};
 
+# This path is the default for the MCS home directory mounts.  Pass
+# --with-autoconf='' to this script to use whatever is in your path.
+my $with_autoconf = "/homes/goodell/autoconf/ac-2.62_am-1.10.2/bin";
+
 my $logfile = "release.log";
 
 sub usage
@@ -25,9 +29,18 @@ sub check_package
     my $pack = shift;
 
     print "===> Checking for package $pack... ";
-    if (`which $pack` eq "") {
-	print "not found\n";
-	exit;
+    if ($with_autoconf and ($pack eq "autoconf" or $pack eq "automake")) {
+        # the user specified a dir where autoconf/automake can be found
+        if (not -x "$with_autoconf/$pack") {
+            print "not found\n";
+            exit;
+        }
+    }
+    else {
+        if (`which $pack` eq "") {
+            print "not found\n";
+            exit;
+        }
     }
     print "done\n";
 }
@@ -90,7 +103,11 @@ sub create_mpich2
     # Create configure
     debug("===> Creating configure in the main package... ");
     chdir("${root}/mpich2-${version}");
-    run_cmd("./maint/updatefiles --with-autoconf=/homes/chan/autoconf/2.62/bin");
+    {
+        my $cmd = "./maint/updatefiles";
+        $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
+        run_cmd($cmd);
+    }
     debug("done\n");
 
     # Remove unnecessary files
@@ -107,7 +124,11 @@ sub create_mpich2
 
     debug("===> Configuring and making the secondary package... ");
     chdir("${root}/mpich2-${version}-tmp");
-    run_cmd("./maint/updatefiles --with-autoconf=/homes/chan/autoconf/2.62/bin");
+    {
+        my $cmd = "./maint/updatefiles";
+        $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
+        run_cmd($cmd);
+    }
     run_cmd("./configure --without-mpe --disable-f90 --disable-f77 --disable-cxx");
     run_cmd("(make mandoc && make htmldoc && make latexdoc)");
     debug("done\n");
@@ -200,6 +221,7 @@ sub create_mpe
 GetOptions(
     "source=s" => \$source,
     "package:s"  => \$pack,
+    "with-autoconf" => \$with_autoconf,
     "help"     => \&usage,
 ) or die "unable to parse options, stopped";
 
