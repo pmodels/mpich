@@ -398,11 +398,13 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
     /* reserve room for shared mem barrier (We used a whole cacheline) */
     current_addr = (char *)current_addr + MPID_NEM_CACHE_LINE_LEN;
+    MPIU_Assert(size_left >= MPID_NEM_CACHE_LINE_LEN);
     size_left -= MPID_NEM_CACHE_LINE_LEN;
 
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
     /* reserve room for the opa emulation lock */
     current_addr = (char *)current_addr + MPID_NEM_CACHE_LINE_LEN;
+    MPIU_Assert(size_left >= MPID_NEM_CACHE_LINE_LEN);
     size_left -= MPID_NEM_CACHE_LINE_LEN;
 #endif
 
@@ -413,12 +415,12 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         ALLOCQ_DEQUEUE(&ep);
 
         *(ep->ptr_p) = current_addr;
+        MPIU_Assert(size_left >= ep->len);
         size_left -= ep->len;
         current_addr = (char *)current_addr + ep->len;
 
         MPIU_Free(ep);
 
-        MPIU_Assert(size_left >= 0);
         MPIU_Assert((char *)current_addr <= (char *)start_addr + segment_len);
     }
     while (!ALLOCQ_EMPTY());
