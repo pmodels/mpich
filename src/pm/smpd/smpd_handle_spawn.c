@@ -294,7 +294,6 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	sprintf(key, "argv%d", i);
 	if (MPIU_Str_get_string_arg(cmd->cmd, key, node.args, SMPD_MAX_EXE_LENGTH) != MPIU_STR_SUCCESS)
 	{
-	    smpd_err_printf("unable to get the %s parameter from the spawn command '%s'.\n", key, cmd->cmd);
 	    node.args[0] = '\0';
 	    /*
 	    smpd_err_printf("unable to get the %s parameter from the spawn command '%s'.\n", key, cmd->cmd);
