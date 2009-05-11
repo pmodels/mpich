@@ -41,6 +41,10 @@ sockconn_t MPID_nem_newtcp_module_g_lstn_sc;
    unused */
 static MPID_nem_newtcp_module_vc_area *dummy_vc_area ATTRIBUTE((unused, used)) = NULL;
 
+#define MAX_SKIP_POLLS_INACTIVE (512) /* something bigger */
+#define MAX_SKIP_POLLS_ACTIVE (128)   /* something smaller */
+static int MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_INACTIVE;
+
 /* Debug function to dump the sockconn table.  This is intended to be
    called from a debugger.  The 'unused' attribute keeps the compiler
    from complaining.  The 'used' attribute makes sure the function is
@@ -840,6 +844,9 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
 
     MPIU_Assert(vc != NULL);
 
+    /* We have an active connection, start polling more often */
+    MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_ACTIVE;    
+
     MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
     if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED) {
@@ -1330,6 +1337,9 @@ static int state_l_cntd_handler(MPIU_SOCKW_Waitset_sock_hnd_t fd_ws_hnd, sockcon
         goto fn_exit;
     }
 
+    /* We have an active connection, start polling more often */
+    MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_ACTIVE;
+
     if(MPIU_SOCKW_Waitset_is_sock_readable(fd_ws_hnd)){
         mpi_errno = recv_id_or_tmpvc_info(sc, &got_sc_eof);
         if (mpi_errno == MPI_SUCCESS) {
@@ -1785,6 +1795,14 @@ Evaluate the need for it by testing and then do it, if needed.
 int MPID_nem_newtcp_module_connpoll()
 {
     int mpi_errno = MPI_SUCCESS, n, i;
+    static int num_skipped_polls = 0;
+
+    /* To improve shared memory performance, we don't call the poll()
+     * systemcall every time. The MPID_nem_tcp_skip_polls value is
+     * changed depending on whether we have any active connections. */
+    if (num_skipped_polls++ < MPID_nem_tcp_skip_polls)
+        goto fn_exit;
+    num_skipped_polls = 0;
 
     /* num_polled is needed b/c the call to it_sc->handler() can change the
        size of the table, which leads to iterating over invalid revents. */
