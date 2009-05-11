@@ -21,13 +21,25 @@ extern HYD_Handle handle;
 	}                                  \
     }
 
+#define IS_HELP(str) \
+    ((!strcmp((str), "-h")) || (!strcmp((str), "-help")) || (!strcmp((str), "--help")))
+
 static void show_version(void)
 {
-    printf("HYDRA Build Details\n");
-    printf("Process Manager: PMI\n");
-    printf("Boot-strap servers available: %s\n", HYDRA_BSS_NAMES);
+    printf("HYDRA build details:\n");
+    printf("    Process Manager: pmi\n");
+    printf("    Boot-strap servers available: %s\n", HYDRA_BSS_NAMES);
+    printf("    Communication sub-systems available: none\n");
 }
 
+static void dump_env_notes(void)
+{
+    printf("Additional generic notes:\n");
+    printf("  * Multiple global env options cannot be used together\n");
+    printf("  * Multiple local env options cannot be used for the same executable\n");
+    printf("  * Local env options override the global options for that executable\n");
+    printf("\n");
+}
 
 HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 {
@@ -45,103 +57,72 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
     status = HYDU_list_global_env(&handle.global_env);
     HYDU_ERR_POP(status, "unable to get the global env list\n");
 
+    if (IS_HELP(argv[1]))
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
+
     while (++argv && *argv) {
-
-        if (!strcmp(*argv, "-h") || !strcmp(*argv, "-help") || !strcmp(*argv, "--help"))
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
-
-        if (!strcmp(*argv, "--version")) {
-            show_version();
-            HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
-        }
-
-        if (!strcmp(*argv, "--verbose")) {
-            handle.debug = 1;
-            continue;
-        }
-
-        if (!strcmp(*argv, "--print-rank-map")) {
-            handle.print_rank_map = 1;
-            continue;
-        }
-
-        if (!strcmp(*argv, "--print-all-exitcodes")) {
-            handle.print_all_exitcodes = 1;
-            continue;
-        }
-
-        if (!strcmp(*argv, "--enable-x") || !strcmp(*argv, "--disable-x")) {
-            HYDU_ERR_CHKANDJUMP(status, handle.enablex != -1, HYD_INTERNAL_ERROR,
-                                "duplicate enable-x\n");
-            handle.enablex = !strcmp(*argv, "--enable-x");
-            continue;
-        }
-
-        if (!strcmp(*argv, "--enable-pm-env") || !strcmp(*argv, "--disable-pm-env")) {
-            HYDU_ERR_CHKANDJUMP(status, handle.pm_env != -1, HYD_INTERNAL_ERROR,
-                                "duplicate enable-pm-env\n");
-            handle.pm_env = !strcmp(*argv, "--enable-pm-env");
-            continue;
-        }
-
-        if (!strcmp(*argv, "--boot-proxies")) {
-            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
-                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
-            handle.launch_mode = HYD_LAUNCH_BOOT;
-            continue;
-        }
-
-        if (!strcmp(*argv, "--boot-foreground-proxies")) {
-            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
-                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
-            handle.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
-            continue;
-        }
-
-        if (!strcmp(*argv, "--shutdown-proxies")) {
-            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
-                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
-            handle.launch_mode = HYD_LAUNCH_SHUTDOWN;
-            continue;
-        }
-
-        if (!strcmp(*argv, "--use-persistent") || !strcmp(*argv, "--use-runtime")) {
-            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
-                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
-
-            if (!strcmp(*argv, "--use-persistent"))
-                handle.launch_mode = HYD_LAUNCH_PERSISTENT;
-            else
-                handle.launch_mode = HYD_LAUNCH_RUNTIME;
-
-            continue;
-        }
 
         if (!strcmp(*argv, "-genvall")) {
             HYDU_ERR_CHKANDJUMP(status, handle.prop != HYD_ENV_PROP_UNSET,
-                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+                                HYD_INTERNAL_ERROR, "duplicate environment setting\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-genvall: All of the ENV is passed to each process (default)\n\n");
+                dump_env_notes();
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             handle.prop = HYD_ENV_PROP_ALL;
             continue;
         }
 
         if (!strcmp(*argv, "-genvnone")) {
             HYDU_ERR_CHKANDJUMP(status, handle.prop != HYD_ENV_PROP_UNSET,
-                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+                                HYD_INTERNAL_ERROR, "duplicate environment setting\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-genvnone: None of the ENV is passed to each process\n\n");
+                dump_env_notes();
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             handle.prop = HYD_ENV_PROP_NONE;
             continue;
         }
 
         if (!strcmp(*argv, "-genvlist")) {
             HYDU_ERR_CHKANDJUMP(status, handle.prop != HYD_ENV_PROP_UNSET,
-                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
-            handle.prop = HYD_ENV_PROP_LIST;
+                                HYD_INTERNAL_ERROR, "duplicate environment setting\n");
 
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-genvlist: A list of ENV variables is passed to each process\n\n");
+                printf("Notes:\n");
+                printf("  * Usage: -genvlist env1,env2,env2\n");
+                printf("  * Values of env1,env2,env3 are taken from the user ENV\n\n");
+                dump_env_notes();
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            handle.prop = HYD_ENV_PROP_LIST;
             INCREMENT_ARGV(status);
             HYDU_comma_list_to_env_list(*argv, &handle.user_env);
             continue;
         }
 
         if (!strcmp(*argv, "-genv")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-genv: Specify an ENV-VALUE pair to be passed to each process\n\n");
+                printf("Notes:\n");
+                printf("  * Usage: -genv env1 val1\n");
+                printf("  * Can be used multiple times for different variables\n\n");
+                dump_env_notes();
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             INCREMENT_ARGV(status);
             env_name = HYDU_strdup(*argv);
             INCREMENT_ARGV(status);
@@ -159,7 +140,15 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
             HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
-                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+                                HYD_INTERNAL_ERROR, "duplicate environment setting\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-envall: All of the ENV is passed to this executable\n\n");
+                dump_env_notes();
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             exec_info->prop = HYD_ENV_PROP_ALL;
             continue;
         }
@@ -169,7 +158,15 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
             HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
-                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+                                HYD_INTERNAL_ERROR, "duplicate environment setting\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-envnone: None of the ENV is passed to this executable\n\n");
+                dump_env_notes();
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             exec_info->prop = HYD_ENV_PROP_NONE;
             continue;
         }
@@ -179,7 +176,18 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
             HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
-                                HYD_INTERNAL_ERROR, "duplicate prop setting\n");
+                                HYD_INTERNAL_ERROR, "duplicate environment setting\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-envlist: A list of ENV variables is passed to this executable\n\n");
+                printf("Notes:\n");
+                printf("  * Usage: -envlist env1,env2,env2\n");
+                printf("  * Values of env1,env2,env3 are taken from the user ENV\n\n");
+                dump_env_notes();
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             exec_info->prop = HYD_ENV_PROP_LIST;
 
             INCREMENT_ARGV(status);
@@ -188,6 +196,16 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
         }
 
         if (!strcmp(*argv, "-env")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-env: Specify an ENV-VALUE pair to be passed to this executable\n\n");
+                printf("Notes:\n");
+                printf("  * Usage: -env env1 val1\n");
+                printf("  * Can be used multiple times for different variables\n\n");
+                dump_env_notes();
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             INCREMENT_ARGV(status);
             env_name = HYDU_strdup(*argv);
             INCREMENT_ARGV(status);
@@ -204,39 +222,201 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
         }
 
         if (!strcmp(*argv, "-wdir")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-wdir: Working directory to use on the compute nodes\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             INCREMENT_ARGV(status);
             handle.wdir = HYDU_strdup(*argv);
             continue;
         }
 
         if (!strcmp(*argv, "-n") || !strcmp(*argv, "-np")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-n: Number of processes to launch\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             INCREMENT_ARGV(status);
 
             status = HYD_UIU_get_current_exec_info(&exec_info);
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
             if (exec_info->exec_proc_count != 0)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate proc count\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate process count\n");
 
             exec_info->exec_proc_count = atoi(*argv);
             continue;
         }
 
         if (!strcmp(*argv, "-f")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-f: Host file containing compute node names\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             INCREMENT_ARGV(status);
             handle.host_file = HYDU_strdup(*argv);
             continue;
         }
 
-        /* The below options allow for "--foo=x" form of argument,
-         * instead of "--foo x" for convenience. */
+        /* The below options are Hydra specific and allow for
+         * "--foo=x" form of argument, instead of "--foo x" for
+         * convenience. */
         for (i = 0; i < 4; i++)
             str[i] = NULL;
 
         status = HYDU_strsplit(*argv, &str[0], &str[1], '=');
         HYDU_ERR_POP(status, "string break returned error\n");
 
+        if (!strcmp(str[0], "--version")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--version: Shows build information\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            show_version();
+            HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+        }
+
+        if (!strcmp(str[0], "--verbose")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--verbose: Prints additional debug information\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            handle.debug = 1;
+            continue;
+        }
+
+        if (!strcmp(str[0], "--print-rank-map")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--print-rank-map: Print what ranks are allocated to what nodes\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            handle.print_rank_map = 1;
+            continue;
+        }
+
+        if (!strcmp(str[0], "--print-all-exitcodes")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--print-all-exitcodes: Print termination codes of all processes\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            handle.print_all_exitcodes = 1;
+            continue;
+        }
+
+        if (!strcmp(str[0], "--enable-x") || !strcmp(str[0], "--disable-x")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.enablex != -1, HYD_INTERNAL_ERROR,
+                                "duplicate --enable-x argument\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--enable-x: Enable X forwarding\n");
+                printf("--disable-x: Disable X forwarding\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            handle.enablex = !strcmp(str[0], "--enable-x");
+            continue;
+        }
+
+        if (!strcmp(str[0], "--enable-pm-env") || !strcmp(str[0], "--disable-pm-env")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.pm_env != -1, HYD_INTERNAL_ERROR,
+                                "duplicate --enable-pm-env argument\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--enable-pm-env: Enable ENV added by the process manager\n");
+                printf("--disable-pm-env: Disable ENV added by the process manager\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            handle.pm_env = !strcmp(str[0], "--enable-pm-env");
+            continue;
+        }
+
+        if (!strcmp(str[0], "--boot-proxies")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--boot-proxies: Launch persistent proxies\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            handle.launch_mode = HYD_LAUNCH_BOOT;
+            continue;
+        }
+
+        if (!strcmp(str[0], "--boot-foreground-proxies")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--boot-foreground-proxies: Launch persistent proxies in foreground\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            handle.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
+            continue;
+        }
+
+        if (!strcmp(str[0], "--shutdown-proxies")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--shutdown-proxies: Shutdown persistent proxies\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            handle.launch_mode = HYD_LAUNCH_SHUTDOWN;
+            continue;
+        }
+
+        if (!strcmp(str[0], "--use-persistent") || !strcmp(str[0], "--use-runtime")) {
+            HYDU_ERR_CHKANDJUMP(status, handle.launch_mode != HYD_LAUNCH_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate launch mode\n");
+
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--use-persistent: Use persistent proxies\n");
+                printf("--use-runtime: Launch proxies at runtime\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            if (!strcmp(str[0], "--use-persistent"))
+                handle.launch_mode = HYD_LAUNCH_PERSISTENT;
+            else
+                handle.launch_mode = HYD_LAUNCH_RUNTIME;
+
+            continue;
+        }
+
         if (!strcmp(str[0], "--bootstrap")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--bootstrap: Bootstrap server to use\n\n");
+                printf("Notes:\n");
+                printf("  * Use the --version option to see what all are compiled in\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             if (!str[1]) {
                 /* Argument could be of the form "--foo x" */
                 INCREMENT_ARGV(status);
@@ -244,12 +424,43 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             }
 
             HYDU_ERR_CHKANDJUMP(status, handle.bootstrap, HYD_INTERNAL_ERROR,
-                                "duplicate bootstrap server\n");
+                                "duplicate --bootstrap option\n");
             handle.bootstrap = str[1];
             HYDU_FREE(str[0]);
             continue;
         }
-        else if (!strcmp(str[0], "--css")) {
+
+        if (!strcmp(str[0], "--bootstrap-exec")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--bootstrap-exec: Bootstrap executable to use\n\n");
+                printf("Notes:\n");
+                printf("  * This is needed only if Hydra cannot automatically find it\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            if (!str[1]) {
+                /* Argument could be of the form "--foo x" */
+                INCREMENT_ARGV(status);
+                str[1] = HYDU_strdup(*argv);
+            }
+
+            HYDU_ERR_CHKANDJUMP(status, handle.bootstrap_exec, HYD_INTERNAL_ERROR,
+                                "duplicate --bootstrap-exec option\n");
+            handle.bootstrap_exec = str[1];
+            HYDU_FREE(str[0]);
+            continue;
+        }
+
+        if (!strcmp(str[0], "--css")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--css: Communication sub-system to use\n\n");
+                printf("Notes:\n");
+                printf("  * Use the --version option to see what all are compiled in\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             if (!str[1]) {
                 /* Argument could be of the form "--foo x" */
                 INCREMENT_ARGV(status);
@@ -257,12 +468,25 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             }
 
             HYDU_ERR_CHKANDJUMP(status, handle.css, HYD_INTERNAL_ERROR,
-                                "duplicate communication sub-system\n");
+                                "duplicate --css option\n");
             handle.css = str[1];
             HYDU_FREE(str[0]);
             continue;
         }
-        else if (!strcmp(str[0], "--binding")) {
+
+        if (!strcmp(str[0], "--binding")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--binding: Process-core binding to use\n\n");
+                printf("Notes:\n");
+                printf("  * Usage: --binding [type]; where [type] can be:\n");
+                printf("        none: no binding\n");
+                printf("        rr: round-robin as OS assigned processor IDs\n");
+                printf("        buddy: order of least shared resources\n");
+                printf("        pack: order of most shared resources\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             if (!str[1]) {
                 /* Argument could be of the form "--foo x" */
                 INCREMENT_ARGV(status);
@@ -295,7 +519,14 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             HYDU_FREE(str[1]);
             continue;
         }
-        else if (!strcmp(str[0], "--proxy-port")) {
+
+        if (!strcmp(str[0], "--proxy-port")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--proxy-port: Port for persistent proxies to listen on\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             if (!str[1]) {
                 /* Argument could be of the form "--foo x" */
                 INCREMENT_ARGV(status);
@@ -303,13 +534,20 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             }
 
             HYDU_ERR_CHKANDJUMP(status, handle.proxy_port != -1, HYD_INTERNAL_ERROR,
-                                "duplicate proxy port\n");
+                                "duplicate --proxy-port option\n");
             handle.proxy_port = atoi(str[1]);
             HYDU_FREE(str[0]);
             HYDU_FREE(str[1]);
             continue;
         }
-        else if (!strcmp(str[0], "--ranks-per-proc")) {
+
+        if (!strcmp(str[0], "--ranks-per-proc")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--ranks-per-proc: MPI ranks to assign per launched process\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
             if (!str[1]) {
                 /* Argument could be of the form "--foo x" */
                 INCREMENT_ARGV(status);
@@ -317,38 +555,25 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             }
 
             HYDU_ERR_CHKANDJUMP(status, handle.ranks_per_proc != -1, HYD_INTERNAL_ERROR,
-                                "duplicate ranks per proc\n");
+                                "duplicate --ranks-per-proc option\n");
             handle.ranks_per_proc = atoi(str[1]);
             HYDU_FREE(str[0]);
             HYDU_FREE(str[1]);
             continue;
         }
-        else if (!strcmp(str[0], "--bootstrap-exec")) {
-            if (!str[1]) {
-                /* Argument could be of the form "--foo x" */
-                INCREMENT_ARGV(status);
-                str[1] = HYDU_strdup(*argv);
-            }
 
-            HYDU_ERR_CHKANDJUMP(status, handle.bootstrap_exec, HYD_INTERNAL_ERROR,
-                                "duplicate communication sub-system\n");
-            handle.bootstrap_exec = str[1];
-            HYDU_FREE(str[0]);
-            continue;
-        }
-        else {
-            /* Not a recognized argument of the form --foo=x OR --foo x */
-            HYDU_FREE(str[0]);
-            if (str[1])
-                HYDU_FREE(str[1]);
-        }
+        /* Not a recognized argument of the form --foo=x OR --foo x */
+        HYDU_FREE(str[0]);
+        if (str[1])
+            HYDU_FREE(str[1]);
 
         /* Prevent strings from being free'd twice */
         for (i = 0; i < 4; i++)
             str[i] = NULL;
 
         if (*argv[0] == '-')
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized argument\n");
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                                 "unrecognized argument %s\n", *argv);
 
         status = HYD_UIU_get_current_exec_info(&exec_info);
         HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
@@ -450,19 +675,19 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 
         /* NULL out variables we don't care about */
         HYDU_ERR_CHKANDJUMP(status, handle.prop != HYD_ENV_PROP_UNSET, HYD_INTERNAL_ERROR,
-                            "environment setting in proxy launch mode\n");
+                            "env setting not required for booting/shutting proxies\n");
         handle.prop = HYD_ENV_PROP_NONE;
 
         HYDU_ERR_CHKANDJUMP(status, handle.binding != HYD_BIND_UNSET, HYD_INTERNAL_ERROR,
-                            "binding setting in proxy launch mode\n");
+                            "binding not allowed while booting/shutting proxies\n");
         handle.binding = HYD_BIND_UNSET;
 
         HYDU_ERR_CHKANDJUMP(status, handle.exec_info_list, HYD_INTERNAL_ERROR,
-                            "executables specified in proxy launch mode\n");
+                            "executables should not be specified while booting/shutting proxies\n");
     }
     else {      /* Application launch */
         if (handle.exec_info_list == NULL)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no local options set\n");
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
 
         /* Check environment for setting binding */
         tmp = getenv("HYDRA_BINDING");

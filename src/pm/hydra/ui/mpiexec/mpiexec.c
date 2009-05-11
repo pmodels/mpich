@@ -18,43 +18,75 @@ static void usage(void)
     printf("\n");
     printf("Usage: ./mpiexec [global opts] [exec1 local opts] : [exec2 local opts] : ...\n\n");
 
-    printf("Global Options (passed to all executables):\n");
-    printf("\t-genv {name} {value}             [Environment variable name and value]\n");
-    printf("\t-genvlist {env1,env2,...}        [Environment variable list to pass]\n");
-    printf("\t-genvnone                        [Do not pass any environment variables]\n");
-    printf("\t-genvall                         [Pass all environment variables (default)]\n");
-    printf("\t-f {name}                        [File containing the host names]\n");
-    printf("\t-wdir {dirname}                  [Working directory to use]\n");
+    printf("Global options (passed to all executables):\n");
 
     printf("\n");
+    printf("  Global environment options:\n");
+    printf("    -genv {name} {value}             environment variable name and value\n");
+    printf("    -genvlist {env1,env2,...}        environment variable list to pass\n");
+    printf("    -genvnone                        do not pass any environment variables\n");
+    printf("    -genvall                         pass all environment variables (default)\n");
 
-    printf("Local Options (passed to individual executables):\n");
-    printf("\t-n/-np {value}                   [Number of processes]\n");
-    printf("\t-env {name} {value}              [Environment variable name and value]\n");
-    printf("\t-envlist {env1,env2,...}         [Environment variable list to pass]\n");
-    printf("\t-envnone                         [Do not pass any environment variables]\n");
-    printf("\t-envall                          [Pass all environment variables (default)]\n");
-    printf("\t{exec_name} {args}               [Executable name to run and arguments]\n");
+    printf("\n");
+    printf("  Other global options:\n");
+    printf("    -f {name}                        file containing the host names\n");
+    printf("    -wdir {dirname}                  working directory to use\n");
 
+    printf("\n");
+    printf("\n");
+
+    printf("Local options (passed to individual executables):\n");
+
+    printf("\n");
+    printf("  Local environment options:\n");
+    printf("    -env {name} {value}              environment variable name and value\n");
+    printf("    -envlist {env1,env2,...}         environment variable list to pass\n");
+    printf("    -envnone                         do not pass any environment variables\n");
+    printf("    -envall                          pass all environment variables (default)\n");
+
+    printf("\n");
+    printf("  Other local options:\n");
+    printf("    -n/-np {value}                   number of processes\n");
+    printf("    {exec_name} {args}               executable name and arguments\n");
+
+    printf("\n");
     printf("\n");
 
     printf("Hydra specific options (treated as global):\n");
-    printf("\t--verbose                        [Verbose mode]\n");
-    printf("\t--version                        [Version information]\n");
-    printf("\t--enable-x/--disable-x           [Enable or disable X forwarding]\n");
-    printf("\t--proxy-port                     [Port on which proxies can listen]\n");
-    printf("\t--bootstrap                      [Bootstrap server to use]\n");
-    printf("\t--css                            [Communication sub-system to use]\n");
-    printf("\t--binding                        [Process binding]\n");
-    printf("\t--boot-proxies                   [Boot proxies to run in persistent mode]\n");
-    printf("\t--boot-foreground-proxies        [Boot foreground proxies (persistent mode)]\n");
-    printf("\t--shutdown-proxies               [Shutdown persistent mode proxies]\n");
-    printf("\t--use-persistent                 [Use persistent mode proxies to launch]\n");
-    printf("\t--ranks-per-proc                 [Assign so many ranks to each process]\n");
-    printf("\t--bootstrap-exec                 [Executable to use to bootstrap processes]\n");
-    printf("\t--enable/--disable-pm-env        [PM environment settings]\n");
-    printf("\t--print-rank-map                 [Print rank mapping]\n");
-    printf("\t--print-all-exitcodes            [Print exit codes of all processes]\n");
+
+    printf("\n");
+    printf("  Bootstrap options:\n");
+    printf("    --bootstrap                      bootstrap server to use\n");
+    printf("    --bootstrap-exec                 executable to use to bootstrap processes\n");
+    printf("    --enable-x/--disable-x           enable or disable X forwarding\n");
+
+    printf("\n");
+    printf("  Proxy options (only needed for persistent mode):\n");
+    printf("    --boot-proxies                   boot proxies to run in persistent mode\n");
+    printf("    --boot-foreground-proxies        boot foreground proxies (persistent mode)\n");
+    printf("    --shutdown-proxies               shutdown persistent mode proxies\n");
+    printf("    --proxy-port                     port for proxies to listen (boot proxies)\n");
+    printf("    --use-persistent                 use persistent mode proxies to launch\n");
+
+    printf("\n");
+    printf("  Communication sub-system options:\n");
+    printf("    --css                            communication sub-system to use\n");
+
+    printf("\n");
+    printf("  Hybrid programming options:\n");
+    printf("    --ranks-per-proc                 assign so many ranks to each process\n");
+    printf("    --enable/--disable-pm-env        process manager environment settings\n");
+
+    printf("\n");
+    printf("  Process-core binding options:\n");
+    printf("    --binding                        process-to-core binding mode\n");
+
+    printf("\n");
+    printf("  Other Hydra options:\n");
+    printf("    --verbose                        verbose mode\n");
+    printf("    --version                        version information\n");
+    printf("    --print-rank-map                 print rank mapping\n");
+    printf("    --print-all-exitcodes            print exit codes of all processes\n");
 }
 
 
