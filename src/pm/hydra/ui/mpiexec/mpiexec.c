@@ -8,7 +8,6 @@
 #include "hydra_utils.h"
 #include "mpiexec.h"
 #include "uiu.h"
-#include "csi.h"
 #include "demux.h"
 
 extern HYD_Handle handle;
@@ -166,8 +165,8 @@ int main(int argc, char **argv)
     }
 
     /* Launch the processes */
-    status = HYD_CSI_launch_procs();
-    HYDU_ERR_POP(status, "control system error launching processes\n");
+    status = HYD_PMCI_launch_procs();
+    HYDU_ERR_POP(status, "process manager returned error launching processes\n");
 
     /* During shutdown, no processes are launched, so there is nothing
      * to wait for. If the launch command didn't return an error, we
@@ -179,8 +178,8 @@ int main(int argc, char **argv)
      * different port and kills the original proxies using them. */
     if (handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
         /* Call finalize functions for lower layers to cleanup their resources */
-        status = HYD_CSI_finalize();
-        HYDU_ERR_POP(status, "control system error on finalize\n");
+        status = HYD_PMCI_finalize();
+        HYDU_ERR_POP(status, "process manager error on finalize\n");
 
         /* Free the mpiexec params */
         HYD_UIU_free_params();
@@ -212,8 +211,8 @@ int main(int argc, char **argv)
 
 
     /* Wait for their completion */
-    status = HYD_CSI_wait_for_completion();
-    HYDU_ERR_POP(status, "control system error waiting for completion\n");
+    status = HYD_PMCI_wait_for_completion();
+    HYDU_ERR_POP(status, "process manager error waiting for completion\n");
 
     /* Check for the exit status for all the processes */
     if (handle.print_all_exitcodes)
@@ -239,8 +238,8 @@ int main(int argc, char **argv)
         HYDU_Dump("\n");
 
     /* Call finalize functions for lower layers to cleanup their resources */
-    status = HYD_CSI_finalize();
-    HYDU_ERR_POP(status, "control system error on finalize\n");
+    status = HYD_PMCI_finalize();
+    HYDU_ERR_POP(status, "process manager error on finalize\n");
 
     /* Free the mpiexec params */
     HYD_UIU_free_params();

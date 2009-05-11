@@ -120,6 +120,34 @@ AC_SUBST(hydra_css_name_array)
 AC_SUBST(hydra_css_init_array)
 
 
+dnl Check what resource management kernel we should use
+AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk        Resource Management Kernel],
+		    [ hydra_rmk=$withval ],
+		    [ hydra_rmk="dummy" ])
+AC_MSG_CHECKING(resource management kernel)
+AC_MSG_RESULT($hydra_rmk)
+hydra_rmk_names="`echo $hydra_rmk | sed -e 's/:/ /g' -e 's/,/ /g'`"
+AC_DEFINE_UNQUOTED(HYDRA_RMK_NAMES,"$hydra_rmk_names",[Enabled resource management kernels])
+AC_SUBST(hydra_rmk_names)
+
+for hydra_rmk_name in ${hydra_rmk_names}; do
+    if test -z "${hydra_default_rmk}" ; then
+       hydra_default_rmk=$hydra_rmk_name
+    fi
+    hydra_rmk_makefiles="$hydra_rmk_makefiles rmk/${hydra_rmk_name}/Makefile"
+    hydra_rmk_init_decl="${hydra_rmk_init_decl}
+HYD_Status HYD_RMKI_${hydra_rmk_name}_init(void);"
+    hydra_rmk_name_array="${hydra_rmk_name_array} \"${hydra_rmk_name}\", "
+    hydra_rmk_init_array="${hydra_rmk_init_array} HYD_RMKI_${hydra_rmk_name}_init, "
+done
+hydra_rmk_name_array="${hydra_rmk_name_array} NULL"
+hydra_rmk_init_array="${hydra_rmk_init_array} NULL"
+AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_RMK,"$hydra_default_rmk",[Default resource management kernel])
+AC_SUBST(hydra_rmk_init_decl)
+AC_SUBST(hydra_rmk_name_array)
+AC_SUBST(hydra_rmk_init_array)
+
+
 dnl Check what process manager we should use
 AC_ARG_WITH(hydra-pm, [  --with-hydra-pm               Process Manager],
 		[ hydra_pm=$withval ],
@@ -135,14 +163,6 @@ AC_ARG_WITH(hydra-ui, [  --with-hydra-ui         User Interface],
 AC_MSG_CHECKING(user interface)
 AC_MSG_RESULT($hydra_ui)
 AC_SUBST(hydra_ui)
-
-dnl Check what control system we should use
-AC_ARG_WITH(hydra-control, [  --with-hydra-control               Control System],
-		[ hydra_control=$withval ],
-		[ hydra_control=consys ])
-AC_MSG_CHECKING(control system)
-AC_MSG_RESULT($hydra_control)
-AC_SUBST(hydra_control)
 
 dnl Check what communication sub-system we should use
 AC_ARG_WITH(hydra-css, [  --with-hydra-css               Communication Sub-system],
@@ -349,9 +369,6 @@ AC_OUTPUT(Makefile \
 	ui/Makefile \
 	ui/utils/Makefile \
 	ui/${hydra_ui}/Makefile \
-	control/Makefile \
-	control/utils/Makefile \
-	control/${hydra_control}/Makefile \
 	pm/Makefile \
 	pm/utils/Makefile \
 	pm/${hydra_pm}/Makefile \
@@ -362,6 +379,12 @@ AC_OUTPUT(Makefile \
 	bootstrap/src/bsci_init.c \
 	bootstrap/include/bsci.h \
 	${hydra_bss_makefiles} \
+	rmk/Makefile \
+	rmk/utils/Makefile \
+	rmk/src/Makefile \
+	rmk/src/rmki_init.c \
+	rmk/include/rmki.h \
+	${hydra_rmk_makefiles} \
 	css/Makefile \
 	css/utils/Makefile \
 	css/src/Makefile \

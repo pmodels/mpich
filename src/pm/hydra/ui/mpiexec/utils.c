@@ -367,7 +367,8 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 
             if (argv[1] && IS_HELP(argv[1])) {
                 printf("\n");
-                printf("--boot-foreground-proxies: Launch persistent proxies in foreground\n\n");
+                printf("--boot-foreground-proxies: ");
+                printf("Launch persistent proxies in foreground\n\n");
                 HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
             }
 

@@ -1,0 +1,24 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2008 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#ifndef RMKI_H_INCLUDED
+#define RMKI_H_INCLUDED
+
+#include "hydra.h"
+
+struct HYD_RMKI_fns {
+    HYD_Status(*query_node_list) (int num_nodes);
+};
+
+extern struct HYD_RMKI_fns HYD_RMKI_fns;
+
+HYD_Status HYD_RMKI_init(char *rmk);
+HYD_Status HYD_RMKI_query_node_list(void);
+
+/* Each resource management kernel has to expose an initialization function */
+@hydra_rmk_init_decl@
+
+#endif /* RMKI_H_INCLUDED */

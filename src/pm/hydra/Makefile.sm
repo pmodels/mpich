@@ -4,7 +4,7 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS = utils control bootstrap css demux pm ui .
+SUBDIRS = utils rmk bootstrap css demux pm ui .
 
 all-preamble:
 	@if [ ! -d lib ] ; then mkdir lib ; fi

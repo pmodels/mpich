@@ -7,7 +7,6 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "mpiexec.h"
-#include "csi.h"
 #include "demux.h"
 
 extern HYD_Handle handle;

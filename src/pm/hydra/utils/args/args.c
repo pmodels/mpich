@@ -11,7 +11,7 @@ static int exists(char *filename)
     struct stat file_stat;
 
     if ((stat(filename, &file_stat) < 0) || !(S_ISREG(file_stat.st_mode))) {
-        return 0; /* no such file, or not a regular file */
+        return 0;       /* no such file, or not a regular file */
     }
 
     return 1;
@@ -26,7 +26,7 @@ HYD_Status HYDU_find_in_path(char *execname, char **path)
 
     /* The executable is somewhere in the user's path. We need to find
      * it. */
-    if (getenv("PATH")) { /* If the PATH environment exists */
+    if (getenv("PATH")) {       /* If the PATH environment exists */
         user_path = HYDU_strdup(getenv("PATH"));
         test_loc = strtok(user_path, ";:");
         do {
@@ -46,7 +46,7 @@ HYD_Status HYDU_find_in_path(char *execname, char **path)
                 status = HYDU_str_alloc_and_join(tmp, path);
                 HYDU_ERR_POP(status, "unable to join strings\n");
 
-                goto fn_exit; /* We are done */
+                goto fn_exit;   /* We are done */
             }
 
             HYDU_FREE(path_loc);

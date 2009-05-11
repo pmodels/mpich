@@ -1,0 +1,45 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2008 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "hydra_base.h"
+#include "rmki.h"
+#include "rmku.h"
+
+struct HYD_RMKI_fns HYD_RMKI_fns;
+
+char *HYD_RMKI_comp_array[] = { @hydra_rmk_name_array@ };
+HYD_Status(*HYD_RMKI_comp_init[])() = { @hydra_rmk_init_array@ };
+
+HYD_Status HYD_RMKI_init(char *rmk)
+{
+    int i;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYD_RMKI_fns.query_node_list = NULL;
+
+    for (i = 0; HYD_RMKI_comp_array[i]; i++) {
+        if (!strcmp(rmk, HYD_RMKI_comp_array[i])) {
+            status = (*HYD_RMKI_comp_init[i])();
+            break;
+        }
+    }
+
+    if (HYD_RMKI_comp_array[i] == NULL)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unrecognized resource management kernel: %s\n", rmk);
+
+    if (HYD_RMKI_fns.query_node_list == NULL)
+        HYD_RMKI_fns.query_node_list = HYD_RMKU_query_node_list;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

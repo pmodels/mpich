@@ -364,13 +364,13 @@ void HYD_UIU_print_params(void)
         HYDU_Dump("        .......................\n");
         for (segment = partition->segment_list; segment; segment = segment->next)
             HYDU_Dump("          Start PID: %d; Process count: %d\n",
-                       segment->start_pid, segment->proc_count);
+                      segment->start_pid, segment->proc_count);
         HYDU_Dump("\n");
         HYDU_Dump("        Partition exec list:\n");
         HYDU_Dump("        ....................\n");
         for (exec = partition->exec_list; exec; exec = exec->next)
             HYDU_Dump("          Exec: %s; Process count: %d\n", exec->exec[0],
-                       exec->proc_count);
+                      exec->proc_count);
     }
 
     HYDU_Dump("\n");
