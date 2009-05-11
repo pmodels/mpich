@@ -36,9 +36,8 @@ sub run_cmd
 {
     my $cmd = shift;
 
-    # FIXME: Allow for verbose output; just have to remove the
-    # redirection to /dev/null
-    system("$cmd 2>&1 | tee -a $root/$logfile > /dev/null");
+    # FIXME: Allow for verbose output
+    system("$cmd 2>&1 >> $root/$logfile");
     if ($?) {
         die "unable to execute ($cmd), \$?=$?.  Stopped";
     }
@@ -222,6 +221,7 @@ check_package("doctext");
 check_package("svn");
 check_package("latex");
 check_package("autoconf");
+check_package("automake");
 debug "\n";
 
 my $current_ver = `svn cat ${source}/maint/Version`;
