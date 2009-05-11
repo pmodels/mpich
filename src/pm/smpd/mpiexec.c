@@ -158,10 +158,7 @@ int main(int argc, char* argv[])
      * local KVS for all singleton clients by default
      */
     putenv("PMI_SMPD_FD=0");
-    /*
     result = PMPI_Init(&argc, &argv);
-    */
-    result = MPI_Init(&argc, &argv);
     /* SMPD_CS_ENTER(); */
     if (result != SMPD_SUCCESS)
     {

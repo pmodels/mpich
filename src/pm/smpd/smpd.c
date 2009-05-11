@@ -55,10 +55,7 @@ int main(int argc, char* argv[])
     /* initialization */
     putenv("PMI_SMPD_FD=0");
     
-    /*
     result = PMPI_Init(&argc, &argv);
-    */
-    result = MPI_Init(&argc, &argv);
     
     /* SMPD_CS_ENTER(); */
     if (result != SMPD_SUCCESS)

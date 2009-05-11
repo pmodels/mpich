@@ -2457,10 +2457,7 @@ int smpd_exit(int exitcode)
     smpd_finalize_drive_maps();
 #endif
     smpd_finalize_printf();
-    /*
     PMPI_Finalize();
-    */
-    MPI_Finalize();
     /* If we're exiting due to a user abort, use the exit code supplied by the abort call */
     if (smpd_process.use_abort_exit_code)
 	exitcode = smpd_process.abort_exit_code;
