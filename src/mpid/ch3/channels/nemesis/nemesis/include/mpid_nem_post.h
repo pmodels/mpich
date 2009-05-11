@@ -17,7 +17,7 @@ extern int (*MPID_nem_local_lmt_progress)(void);
 /* FIXME: Do not export these definitions all the way into mpiimpl.h (which
    will happen if this is included in mpidpost.h or mpidpre.h) */
 int MPID_nem_init(int rank, struct MPIDI_PG *pg_p, int has_parent);
-int _MPID_nem_init(int rank, struct MPIDI_PG *pg_p, int ckpt_restart, int has_parent);
+int MPID_nem_init_ckpt(int rank, struct MPIDI_PG *pg_p, int ckpt_restart, int has_parent);
 int MPID_nem_finalize(void);
 int MPID_nem_ckpt_shutdown(void);
 int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values);

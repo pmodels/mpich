@@ -38,19 +38,23 @@ static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
 
 char *MPID_nem_asymm_base_addr = 0;
 
-int
-MPID_nem_init (int rank, MPIDI_PG_t *pg_p, int has_parent)
-{
-    return  _MPID_nem_init (rank, pg_p, 0, has_parent);
-}
-
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-_MPID_nem_init (int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart, 
-		int has_parent ATTRIBUTE((unused)) )
+MPID_nem_init (int rank, MPIDI_PG_t *pg_p, int has_parent)
+{
+    return  MPID_nem_init_ckpt (rank, pg_p, 0, has_parent);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_init_ckpt
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int
+MPID_nem_init_ckpt(int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
+                   int has_parent ATTRIBUTE((unused)))
 {
     int    mpi_errno       = MPI_SUCCESS;
     int    num_procs       = pg_p->size;

@@ -155,7 +155,9 @@ int MPID_nem_ckpt_maybe_take_checkpoint()
 	    mpi_errno = restore_env (rank);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-	    _MPID_nem_init (0, NULL, &newrank, &newsize, 1);
+            /* This set of arguments is incompatible with the current definition of
+               MPID_nem_init_ckpt (formerly named _MPID_nem_init). */
+	    MPID_nem_init_ckpt (0, NULL, &newrank, &newsize, 1);
 	    MPIU_Assert (newrank == rank);
 	    MPIU_Assert (newsize == num_procs);
 
@@ -266,12 +268,14 @@ MPID_nem_ckpt_got_marker (MPID_nem_cell_ptr_t *cell, int *in_fbox)
 
 	    printf_dd ("%d: cli_on_marker_recv: CLI_CP_RESTART wave = %d\n", rank, marker.checkpoint_wave_number);
 	    restore_env (rank);
-	    printf_dd ("%d: before _MPID_nem_init\n", rank);
-	    _MPID_nem_init (0, NULL, &newrank, &newsize, 1);
-	    printf_dd ("%d: after _MPID_nem_init\n", rank);
+	    printf_dd ("%d: before MPID_nem_init_ckpt\n", rank);
+            /* This set of arguments is incompatible with the current definition of
+               MPID_nem_init_ckpt (formerly named _MPID_nem_init). */
+	    MPID_nem_init_ckpt (0, NULL, &newrank, &newsize, 1);
+	    printf_dd ("%d: after MPID_nem_init_ckpt\n", rank);
 	    MPIU_Assert (newrank == rank);
 	    MPIU_Assert (newsize == num_procs);
-	    printf_dd ("%d: _MPID_nem_init done\n", rank);
+	    printf_dd ("%d: MPID_nem_init_ckpt done\n", rank);
 
             /* we don't use the per_rank_log, so we discard it */
             MPIU_CHKLMEM_MALLOC (per_rank_log, struct cli_emitter_based_message_log *, sizeof (struct cli_emitter_based_message_log) * num_procs, mpi_errno, "per rank log");

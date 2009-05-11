@@ -24,7 +24,7 @@
 void MPIDI_Datatype_dot_printf(MPI_Datatype type, int depth, int header);
 void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p, int depth, int header);
 void MPIDI_Datatype_contents_printf(MPI_Datatype type, int depth, int acount);
-static char *MPIDI_Datatype_depth_spacing(int depth);
+static char *MPIDI_Datatype_depth_spacing(int depth) ATTRIBUTE((unused));
 
 /* note: this isn't really "error handling" per se, but leave these comments
  * because Bill uses them for coverage analysis.

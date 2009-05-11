@@ -9,8 +9,9 @@
     #include "strings.h"
 #endif
 
-MPID_nem_netmod_funcs_t *MPID_nem_netmod_func;
-int MPID_nem_netmod_id;
+/* initialize to prevent the compiler from generating common symbols */
+MPID_nem_netmod_funcs_t *MPID_nem_netmod_func = NULL;
+int MPID_nem_netmod_id = -1;
 
 MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_print_sendq = 0;
 

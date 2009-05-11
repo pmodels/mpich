@@ -133,11 +133,11 @@ void MPIU_dump_dbg_memlog_to_stdout(void);
 void MPIU_dump_dbg_memlog_to_file(const char *filename);
 void MPIU_dump_dbg_memlog(FILE * fp);
 
-extern MPIU_dbg_state_t MPIUI_dbg_state;
-extern FILE * MPIUI_dbg_fp;
+extern MPIU_dbg_state_t MPIU_dbg_state;
+extern FILE * MPIU_dbg_fp;
 #define MPIU_dbglog_flush()				\
 {							\
-    if (MPIUI_dbg_state & MPIU_DBG_STATE_STDOUT)	\
+    if (MPIU_dbg_state & MPIU_DBG_STATE_STDOUT)	\
     {							\
 	fflush(stdout);					\
     }							\

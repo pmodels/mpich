@@ -107,8 +107,8 @@ void mpig_debug_init(void)
     if (timed_levels != NULL) MPIU_Free(timed_levels_uc);
 
     /* XXX: This is a hack to allow the MPIU_dbg_printf to send output to the current logging file */
-    MPIUI_dbg_fp = mpig_debug_handle.file;
-    MPIUI_dbg_state = MPIU_DBG_STATE_FILE;
+    MPIU_dbg_fp = mpig_debug_handle.file;
+    MPIU_dbg_state = MPIU_DBG_STATE_FILE;
 	
     gettimeofday(&tv, NULL);
     mpig_debug_start_tv_sec = tv.tv_sec;

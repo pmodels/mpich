@@ -66,8 +66,8 @@ extern FILE *fdopen(int fd, const char *mode);
 #define MPICH_DBG_MEMLOG_LINE_SIZE 256
 #endif
 
-MPIU_dbg_state_t MPIUI_dbg_state = MPIU_DBG_STATE_UNINIT;
-FILE * MPIUI_dbg_fp = NULL;
+MPIU_dbg_state_t MPIU_dbg_state = MPIU_DBG_STATE_UNINIT;
+FILE * MPIU_dbg_fp = NULL;
 static int dbg_memlog_num_lines = MPICH_DBG_MEMLOG_NUM_LINES;
 static int dbg_memlog_line_size = MPICH_DBG_MEMLOG_LINE_SIZE;
 static char **dbg_memlog = NULL;
@@ -81,23 +81,23 @@ int MPIU_dbg_init(int rank)
 {
     dbg_rank = rank;
 
-    if (MPIUI_dbg_state == MPIU_DBG_STATE_UNINIT)
+    if (MPIU_dbg_state == MPIU_DBG_STATE_UNINIT)
     {
 	dbg_init();
     }
 
     /* If file logging is enable, we need to open a file */
-    if (MPIUI_dbg_state & MPIU_DBG_STATE_FILE)
+    if (MPIU_dbg_state & MPIU_DBG_STATE_FILE)
     {
 	char fn[128];
 
 	/* Only open the file only once in case MPIU_dbg_init is called more 
 	   than once */
-	if (MPIUI_dbg_fp == NULL)
+	if (MPIU_dbg_fp == NULL)
 	{
 	    MPIU_Snprintf(fn, 128, "mpich2-dbg-%d.log", dbg_rank);
-	    MPIUI_dbg_fp = fopen(fn, "w");
-	    setvbuf(MPIUI_dbg_fp, NULL, _IONBF, 0);
+	    MPIU_dbg_fp = fopen(fn, "w");
+	    setvbuf(MPIU_dbg_fp, NULL, _IONBF, 0);
 	}
     }
     
@@ -108,7 +108,7 @@ static void dbg_init(void)
 {
     char * envstr;
     
-    MPIUI_dbg_state = MPIU_DBG_STATE_NONE;
+    MPIU_dbg_state = MPIU_DBG_STATE_NONE;
 
     /* FIXME: This should use MPIU_Param_get_string */
     envstr = getenv("MPICH_DBG_OUTPUT");
@@ -129,22 +129,22 @@ static void dbg_init(void)
      */
     if (strstr(envstr, "stdout"))
     {
-	MPIUI_dbg_state = (MPIU_dbg_state_t)( MPIU_DBG_STATE_STDOUT | 
-					      MPIUI_dbg_state );
+	MPIU_dbg_state = (MPIU_dbg_state_t)( MPIU_DBG_STATE_STDOUT |
+					      MPIU_dbg_state );
     }
     if (strstr(envstr, "memlog"))
     {
-	MPIUI_dbg_state = (MPIU_dbg_state_t)( MPIU_DBG_STATE_MEMLOG |
-					      MPIUI_dbg_state );
+	MPIU_dbg_state = (MPIU_dbg_state_t)( MPIU_DBG_STATE_MEMLOG |
+					      MPIU_dbg_state );
     }
     if (strstr(envstr, "file"))
     {
-	MPIUI_dbg_state = (MPIU_dbg_state_t) ( MPIU_DBG_STATE_FILE |
-					       MPIUI_dbg_state );
+	MPIU_dbg_state = (MPIU_dbg_state_t) ( MPIU_DBG_STATE_FILE |
+					       MPIU_dbg_state );
     }
 
     /* If memlog is enabled, the we need to allocate some memory for it */
-    if (MPIUI_dbg_state & MPIU_DBG_STATE_MEMLOG)
+    if (MPIU_dbg_state & MPIU_DBG_STATE_MEMLOG)
     {
 	dbg_memlog = MPIU_Malloc(dbg_memlog_num_lines * sizeof(char *) +
 				 dbg_memlog_num_lines * dbg_memlog_line_size);
@@ -160,7 +160,7 @@ static void dbg_init(void)
 	}
 	else
 	{
-	    MPIUI_dbg_state = (MPIU_dbg_state_t)( MPIUI_dbg_state & 
+	    MPIU_dbg_state = (MPIU_dbg_state_t)( MPIU_dbg_state &
 						  ~MPIU_DBG_STATE_MEMLOG );
 	}
     }
@@ -171,12 +171,12 @@ int MPIU_dbglog_printf(const char *str, ...)
     int n = 0;
     va_list list;
 
-    if (MPIUI_dbg_state == MPIU_DBG_STATE_UNINIT)
+    if (MPIU_dbg_state == MPIU_DBG_STATE_UNINIT)
     {
 	dbg_init();
     }
 
-    if (MPIUI_dbg_state & MPIU_DBG_STATE_MEMLOG)
+    if (MPIU_dbg_state & MPIU_DBG_STATE_MEMLOG)
     {
 	/* FIXME: put everything on one line until a \n is found */
 	
@@ -208,17 +208,17 @@ int MPIU_dbglog_printf(const char *str, ...)
 	}
     }
 
-    if (MPIUI_dbg_state & MPIU_DBG_STATE_STDOUT)
+    if (MPIU_dbg_state & MPIU_DBG_STATE_STDOUT)
     {
 	va_start(list, str);
 	n = vprintf(str, list);
 	va_end(list);
     }
 
-    if ((MPIUI_dbg_state & MPIU_DBG_STATE_FILE) && MPIUI_dbg_fp != NULL)
+    if ((MPIU_dbg_state & MPIU_DBG_STATE_FILE) && MPIU_dbg_fp != NULL)
     {
 	va_start(list, str);
-	n = vfprintf(MPIUI_dbg_fp, str, list);
+	n = vfprintf(MPIU_dbg_fp, str, list);
 	va_end(list);
     }
 
@@ -230,12 +230,12 @@ int MPIU_dbglog_vprintf(const char *str, va_list ap)
     int n = 0;
     va_list list;
 
-    if (MPIUI_dbg_state == MPIU_DBG_STATE_UNINIT)
+    if (MPIU_dbg_state == MPIU_DBG_STATE_UNINIT)
     {
 	dbg_init();
     }
 
-    if (MPIUI_dbg_state & MPIU_DBG_STATE_MEMLOG)
+    if (MPIU_dbg_state & MPIU_DBG_STATE_MEMLOG)
     {
 	va_copy(list,ap);
 	dbg_memlog[dbg_memlog_next][0] = '\0';
@@ -265,17 +265,17 @@ int MPIU_dbglog_vprintf(const char *str, va_list ap)
 	}
     }
 
-    if (MPIUI_dbg_state & MPIU_DBG_STATE_STDOUT)
+    if (MPIU_dbg_state & MPIU_DBG_STATE_STDOUT)
     {
 	va_copy(list, ap);
 	n = vprintf(str, list);
 	va_copy_end(list);
     }
 
-    if ((MPIUI_dbg_state & MPIU_DBG_STATE_FILE) && MPIUI_dbg_fp != NULL)
+    if ((MPIU_dbg_state & MPIU_DBG_STATE_FILE) && MPIU_dbg_fp != NULL)
     {
 	va_copy(list, ap);
-	n = vfprintf(MPIUI_dbg_fp, str, list);
+	n = vfprintf(MPIU_dbg_fp, str, list);
 	va_end(list);
     }
 
