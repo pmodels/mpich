@@ -11,6 +11,12 @@
 #include "bsci.h"
 #include "demux.h"
 #include "pmi_serv.h"
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if defined( NEEDS_GETHOSTNAME_DECL )
+int gethostname(char *name, size_t len);
+#endif
 
 HYD_Handle handle;
 static char *pmi_port_str = NULL;

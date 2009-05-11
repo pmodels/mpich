@@ -40,6 +40,9 @@
 #ifdef NEEDS_STRSIGNAL_DECL
 extern char *strsignal(int);
 #endif
+#if defined( HAVE_PUTENV ) && defined( NEEDS_PUTENV_DECL )
+extern int putenv(char *string);
+#endif
 
 /* There is only one universe */
 ProcessUniverse pUniv;

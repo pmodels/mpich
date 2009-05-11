@@ -93,7 +93,6 @@ static void usage(void)
 int main(int argc, char **argv)
 {
     struct HYD_Partition *partition;
-    struct HYD_Partition_segment *segment;
     struct HYD_Partition_exec *exec;
     int exit_status = 0, timeout, i, process_id, proc_count;
     HYD_Status status = HYD_SUCCESS;

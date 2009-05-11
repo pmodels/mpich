@@ -267,6 +267,20 @@ if test "$ac_cv_func_strdup" = "yes" ; then
     # Do we need to declare strdup?
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
 fi
+
+# putenv() sets environment variable
+AC_HAVE_FUNCS(putenv)
+if test "$ac_cv_func_putenv" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
+fi
+# gethostname() returns host name
+AC_CHECK_FUNCS(gethostname)
+if test "$ac_cv_func_gethostname" = "yes" ; then
+    # Do we need to declare gethostname?
+    PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
+fi
+
+
 #
 # Check for select and working FD_ZERO 
 AC_CHECK_FUNCS(select)

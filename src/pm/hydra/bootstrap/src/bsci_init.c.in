@@ -7,11 +7,17 @@
 #include "hydra_base.h"
 #include "bsci.h"
 #include "bscu.h"
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if defined( NEEDS_GETHOSTNAME_DECL )
+int gethostname(char *name, size_t len);
+#endif
 
 struct HYD_BSCI_fns HYD_BSCI_fns;
 
 char *HYD_BSCI_comp_array[] = { @hydra_bss_name_array@ };
-HYD_Status(*HYD_BSCI_comp_init[])() = { @hydra_bss_init_array@ };
+HYD_Status(*HYD_BSCI_comp_init[])(void) = { @hydra_bss_init_array@ };
 int HYD_BSCI_debug;
 
 HYD_Status HYD_BSCI_init(char *bootstrap, int debug)

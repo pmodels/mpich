@@ -275,6 +275,14 @@ elif test "$ac_cv_func_signal" = "yes" ; then
     AC_DEFINE(USE_SIGNAL,,[Define if signal should be used to set signals])
 fi
 
+# gethostname() returns host name
+AC_CHECK_FUNCS(gethostname)
+if test "$ac_cv_func_gethostname" = "yes" ; then
+    # Do we need to declare gethostname?
+    PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
+fi
+
+
 dnl Setup non-default variables
 MAKE=${MAKE:-make}
 AC_SUBST(MAKE)

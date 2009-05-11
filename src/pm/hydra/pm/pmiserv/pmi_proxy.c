@@ -93,7 +93,7 @@ static HYD_Status wait_for_procs_to_finish(void)
 
 int main(int argc, char **argv)
 {
-    int i, listenfd;
+    int listenfd;
     HYD_Status status = HYD_SUCCESS;
 
     status = HYD_PMCD_pmi_proxy_get_params(argv);

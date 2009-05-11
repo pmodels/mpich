@@ -16,6 +16,9 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#if defined( HAVE_PUTENV ) && defined( NEEDS_PUTENV_DECL )
+extern int putenv(char *string);
+#endif
 
 #include "mpimem.h"
 #include "process.h"

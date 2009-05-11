@@ -168,8 +168,8 @@ int MPIE_IOLoop( int timeoutSeconds )
 	}
 	if (maxfd < 0) break;
 	
-	DBG_PRINTF(("Calling select with readfds = %x writefds = %x\n",
-		    *(int *)&readfds, *(int*)&writefds));
+	/* DBG_PRINTF(("Calling select with readfds = %x writefds = %x\n", */
+	/* 	    *(int *)&readfds, *(int*)&writefds)); */
 	MPIE_SYSCALL(nfds,select,( maxfd + 1, &readfds, &writefds, 0, &tv ));
 	if (nfds < 0 && (errno == EINTR || errno == 0)) {
 	    /* Continuing through EINTR */

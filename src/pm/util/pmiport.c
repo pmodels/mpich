@@ -34,6 +34,10 @@
 #include "pmiserv.h"
 #include "ioloop.h"
 
+#if defined( NEEDS_GETHOSTNAME_DECL )
+int gethostname(char *name, size_t len);
+#endif
+
 #ifndef MAX_PENDING_CONN
 #define MAX_PENDING_CONN 10
 #endif
