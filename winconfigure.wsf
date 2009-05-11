@@ -2107,6 +2107,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define HAVE_GETHOSTNAME 1")
 				Case "HAVE_PUTENV"
 					fout.WriteLine("#define HAVE_PUTENV 1")
+				Case "HAVE_SETENV"
+					fout.WriteLine("/* #undef HAVE_SETENV */")
 				Case "HAVE_SELECT"
 					fout.WriteLine("#define HAVE_SELECT 1")
 				Case "HAVE_SLEEP"
@@ -2119,6 +2121,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_STRNCASECMP */")
 				Case "HAVE_ERRNO_H"
 					fout.WriteLine("#define HAVE_ERRNO_H 1")
+                                Case "HAVE_MATH_H"
+                                        fout.WriteLine("#define HAVE_MATH_H 1")
 				Case "HAVE_FCNTL_H"
 					fout.WriteLine("#define HAVE_FCNTL_H 1")
 				Case "HAVE_STDLIB_H"
@@ -2156,8 +2160,14 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_PRAGMA_HP_SEC_DEF */")
 				Case "HAVE_PRAGMA_WEAK"
 					fout.WriteLine("/* #undef HAVE_PRAGMA_WEAK */")
+                                Case "HAVE_SIGACTION"
+                                        fout.WriteLine("/* #undef HAVE_SIGACTION */")
 				Case "HAVE_PTHREAD_CREATE"
 					fout.WriteLine("/* #undef HAVE_PTHREAD_CREATE */")
+				Case "USE_PTHREAD_STDIN_REDIRECTION"
+					fout.WriteLine("/* #undef USE_PTHREAD_STDIN_REDIRECTION */")
+                                Case "HAVE_TERMIOS_H"
+                                        fout.WriteLine("/* #undef HAVE_TERMIOS_H */")
 				Case "HAVE_STDINT_H"
 					fout.WriteLine("/* #undef HAVE_STDINT_H */")
 				Case "HAVE_STRINGS_H"
@@ -3229,6 +3239,14 @@ Sub AddDefinitions( fout, filename, b64 )
                                 Case "USE_PMI2_API"
                                         ' SMPD does not support PMI2
                                         fout.WriteLine("/* #undef USE_PMI2_API */")
+                                Case "HAVE_MD5_H"
+                                        fout.WriteLine("/* #undef HAVE_MD5_H */")
+                                Case "HAVE_OPENSSL_MD5_H"
+                                        fout.WriteLine("/* #undef HAVE_OPENSSL_MD5_H */")
+                                Case "HAVE_MD5"
+                                        fout.WriteLine("/* #undef HAVE_MD5 */")
+                                Case "HAVE_MD5_CALC"
+                                        fout.WriteLine("/* #undef HAVE_MD5_CALC */")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
 					If appendUniqueString(unhandled_definitions, macroname) Then
@@ -4961,7 +4979,7 @@ End If
 ' smpdconf.h
 '
 If f.FileExists("src\pm\smpd\smpdconf.h.in") Then
-	cEcho "Creating src\pm\smpd\smpdconf.h"
+	printMsg "VERBOSE", "Creating src\pm\smpd\smpdconf.h"
 	Set fout = f.CreateTextFile("src\pm\smpd\smpdconf.h")
         Call WriteHeader(fout, "smpd_")
 	Call AddDefinitions(fout, "src\pm\smpd\smpdconf.h.in", false)
