@@ -5916,6 +5916,8 @@ Function GenBuild()
 	mfile.WriteLine(" /I..\src\mpi\datatype \")
 	mfile.WriteLine(" /I..\src\mpi\binding\f90 \")
 	mfile.WriteLine(" /I..\src\pm\smpd \")
+	mfile.WriteLine(" /I..\src\pm\smpd\sock\include \")
+	mfile.WriteLine(" /I..\src\pm\smpd\sock\iocp\include \")
 	mfile.WriteLine(" /I..\src\mpi\spawn \")
 	mfile.WriteLine(" /I..\src\binding\f77")
 	mfile.WriteLine
