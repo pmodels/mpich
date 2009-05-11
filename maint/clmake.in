@@ -20,7 +20,7 @@ $rootSrcDir = "";
 	      "cleaning", "sleep", "date", "g77", "f77", "f90", "f95", "pgCC",
 	      "pgf77", "pgf90", "CC", "g95", "g\\+\\+", "c\\+\\+",
 	      "acc\\+\\+", "xlc", "xlf", "xlC", "xlf90", "gfortran", 
-	      "ifort", "ifc", 
+	      "ifort", "ifc", "test",
 	      "true", "false", "/[A-Za-z0-9_\/\.-]*createshlib", 
 	      "/bin/sh\\s+[A-Za-z0-9_\/\.-]*libtool\\s+--mode=\\w+",
 	      "/bin/bash\\s+[A-Za-z0-9_\/\.-]*libtool\\s+--mode=\\w+",
