@@ -163,7 +163,7 @@ static smpd_data_t * smpd_parse_smpd_file()
 		    }
 		    equal_str[0] = '\0';
 		    result = MPIU_Str_get_string(&iter, equal_str, SMPD_MAX_NAME_LENGTH);
-		    while (iter && equal_str[0] != MPIU_STR_DELIM_CHAR)
+		    while (iter && equal_str[0] != SMPD_DELIM_CHAR)
 		    {
 			strcpy(name, equal_str);
 			result = MPIU_Str_get_string(&iter, equal_str, SMPD_MAX_NAME_LENGTH);

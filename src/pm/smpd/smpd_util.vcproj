@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\mpid\common\sock,..\..\mpid\common\sock\iocp,..\..\include,..\..\include\win32"
+				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;.\sock\include;.\sock\iocp\include;."
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;HAVE_WINDOWS_H;USE_WINCONF_H;_WIN32_WINNT=0x0500"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,7 +62,9 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="mpid.lib"
 				OutputFile="..\..\..\lib\smpd_utild.lib"
+				AdditionalLibraryDirectories="..\..\..\lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -108,7 +110,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\mpid\common\sock,..\..\mpid\common\sock\iocp,..\..\include,..\..\include\win32"
+				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;.\sock\include;.\sock\iocp\include;."
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;HAVE_WINDOWS_H;USE_WINCONF_H;_WIN32_WINNT=0x0500"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -129,7 +131,9 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="mpi.lib"
 				OutputFile="..\..\..\lib\smpd_util.lib"
+				AdditionalLibraryDirectories="..\..\..\lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -824,6 +828,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						PreprocessorDefinitions="MPICH_SKIP_MPICXX"
+						ShowIncludes="false"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1103,6 +1108,10 @@
 				RelativePath="smpd_user_data.c"
 				>
 			</File>
+			<File
+				RelativePath=".\sock\iocp\smpd_util_sock.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1110,6 +1119,10 @@
 			>
 			<File
 				RelativePath=".\smpd.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sock\include\smpd_util_sock.h"
 				>
 			</File>
 			<File

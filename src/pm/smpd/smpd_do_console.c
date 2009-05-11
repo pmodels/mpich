@@ -13,8 +13,8 @@ int smpd_do_console()
 {
     int result = -1;
     smpd_context_t *context;
-    MPIDU_Sock_set_t set;
-    MPIDU_Sock_t sock;
+    SMPDU_Sock_set_t set;
+    SMPDU_Sock_t sock;
     SMPD_BOOL no_smpd = SMPD_FALSE;
     int saved_state = 0;
     int exit_code = 0;
@@ -36,10 +36,10 @@ int smpd_do_console()
 	smpd_get_password(smpd_process.passphrase);
     }
 
-    result = MPIDU_Sock_create_set(&set);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_create_set(&set);
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPIDU_Sock_create_set failed,\nsock error: %s\n", get_sock_error_string(result));
+	smpd_err_printf("SMPDU_Sock_create_set failed,\nsock error: %s\n", get_sock_error_string(result));
 	goto quit_job;
     }
     smpd_process.set = set;
@@ -55,15 +55,15 @@ int smpd_do_console()
     }
 
     /* start connecting the tree by posting a connect to the first host */
-    result = smpd_create_context(SMPD_CONTEXT_LEFT_CHILD, set, MPIDU_SOCK_INVALID_SOCK/*sock*/, 1, &context);
+    result = smpd_create_context(SMPD_CONTEXT_LEFT_CHILD, set, SMPDU_SOCK_INVALID_SOCK/*sock*/, 1, &context);
     if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("Unable to create a context.\n");
 	goto quit_job;
     }
 
-    result = MPIDU_Sock_post_connect(set, context, smpd_process.console_host, smpd_process.port, &sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_connect(set, context, smpd_process.console_host, smpd_process.port, &sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("Unable to connect to '%s:%d',\nsock error: %s\n",
 	    smpd_process.console_host, smpd_process.port, get_sock_error_string(result));
@@ -114,11 +114,11 @@ quit_job:
 
     /* finalize */
     /*
-    smpd_dbg_printf("calling MPIDU_Sock_finalize\n");
-    result = MPIDU_Sock_finalize();
-    if (result != MPI_SUCCESS)
+    smpd_dbg_printf("calling SMPDU_Sock_finalize\n");
+    result = SMPDU_Sock_finalize();
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPIDU_Sock_finalize failed,\nsock error: %s\n", get_sock_error_string(result));
+	smpd_err_printf("SMPDU_Sock_finalize failed,\nsock error: %s\n", get_sock_error_string(result));
     }
     */
 

@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\mpid\common\sock,..\..\mpid\common\sock\iocp,..\..\include,..\..\include\win32"
+				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;.\sock\include;.\sock\iocp\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_WINDOWS_H;USE_WINCONF_H"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib ch3sockd.lib sockd.lib pmid.lib dbgd.lib mpich2socksd.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib dbgd.lib smpd_utild.lib mpid.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -125,8 +125,8 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\mpid\common\sock;..\..\mpid\common\sock\iocp;..\..\include;..\..\include\win32;..\..\mpid\ch3\include;..\..\mpid\common\datatype;..\..\mpid\ch3\channels\sock\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_WINDOWS_H;USE_WINCONF_H"
+				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;.\sock\include;.\sock\iocp\include;."
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_WINDOWS_H;USE_WINCONF_H;_WIN32_WINNT=0x0500"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -146,7 +146,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib pmi.lib sock.lib dbg.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib dbg.lib smpd_util.lib mpi.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"

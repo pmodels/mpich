@@ -653,14 +653,14 @@ SMPD_BOOL smpd_verify_version(const char *challenge)
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_challenge_string"
-int smpd_state_reading_challenge_string(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_challenge_string(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     char phrase[SMPD_PASSPHRASE_MAX_LENGTH];
 
     smpd_enter_fn(FCNAME);
 
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the challenge string, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -703,8 +703,8 @@ int smpd_state_reading_challenge_string(smpd_context_t *context, MPIDU_Sock_even
     /* write the response */
     /*smpd_dbg_printf("writing response: %s\n", pszStr);*/
     context->write_state = SMPD_WRITING_CHALLENGE_RESPONSE;
-    result = MPIDU_Sock_post_write(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a write of the encrypted response string,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -717,12 +717,12 @@ int smpd_state_reading_challenge_string(smpd_context_t *context, MPIDU_Sock_even
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_challenge_response"
-int smpd_state_writing_challenge_response(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_challenge_response(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the challenge response, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -731,8 +731,8 @@ int smpd_state_writing_challenge_response(smpd_context_t *context, MPIDU_Sock_ev
     smpd_dbg_printf("wrote challenge response: '%s'\n", context->pszChallengeResponse);
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_CONNECT_RESULT;
-    result = MPIDU_Sock_post_read(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read for the connect response,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -745,12 +745,12 @@ int smpd_state_writing_challenge_response(smpd_context_t *context, MPIDU_Sock_ev
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_connect_result"
-int smpd_state_reading_connect_result(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_connect_result(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the connect result, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -765,8 +765,8 @@ int smpd_state_reading_connect_result(smpd_context_t *context, MPIDU_Sock_event_
 	smpd_dbg_printf("connection rejected, server returned - %s\n", context->pszChallengeResponse);
 	context->read_state = SMPD_IDLE;
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to close sock, error:\n%s\n", get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
@@ -839,8 +839,8 @@ int smpd_state_reading_connect_result(smpd_context_t *context, MPIDU_Sock_event_
 	    strcpy(context->session, SMPD_PROCESS_SESSION_STR);
 	    break;
 	}
-	result = MPIDU_Sock_post_write(context->sock, context->session, SMPD_SESSION_REQUEST_LEN, SMPD_SESSION_REQUEST_LEN, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->session, SMPD_SESSION_REQUEST_LEN, SMPD_SESSION_REQUEST_LEN, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the session request '%s',\nsock error: %s\n",
 		context->session, get_sock_error_string(result));
@@ -854,31 +854,31 @@ int smpd_state_reading_connect_result(smpd_context_t *context, MPIDU_Sock_event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_challenge_string"
-int smpd_state_writing_challenge_string(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_challenge_string(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the challenge string, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
-	result = (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	result = SMPDU_Sock_post_close(context->sock);
+	result = (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	smpd_exit_fn(FCNAME);
 	return result;
     }
     smpd_dbg_printf("wrote challenge string: '%s'\n", context->pszChallengeResponse);
     context->read_state = SMPD_READING_CHALLENGE_RESPONSE;
     context->write_state = SMPD_IDLE;
-    result = MPIDU_Sock_post_read(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("posting a read of the challenge response string failed,\nsock error: %s\n",
 	    get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
-	result = (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	result = SMPDU_Sock_post_close(context->sock);
+	result = (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	smpd_exit_fn(FCNAME);
 	return result;
     }
@@ -888,18 +888,18 @@ int smpd_state_writing_challenge_string(smpd_context_t *context, MPIDU_Sock_even
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_challenge_response"
-int smpd_state_reading_challenge_response(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_challenge_response(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the challenge response, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("read challenge response: '%s'\n", context->pszChallengeResponse);
     context->read_state = SMPD_IDLE;
@@ -916,15 +916,15 @@ int smpd_state_reading_challenge_response(smpd_context_t *context, MPIDU_Sock_ev
     {
 	strcpy(context->pszChallengeResponse, SMPD_AUTHENTICATION_REJECTED_STR);
     }
-    result = MPIDU_Sock_post_write(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a write of the connect result '%s',\nsock error: %s\n",
 	    context->pszChallengeResponse, get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -932,18 +932,18 @@ int smpd_state_reading_challenge_response(smpd_context_t *context, MPIDU_Sock_ev
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_connect_result"
-int smpd_state_writing_connect_result(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_connect_result(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the connect result, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote connect result: '%s'\n", context->pszChallengeResponse);
     context->write_state = SMPD_IDLE;
@@ -951,10 +951,10 @@ int smpd_state_writing_connect_result(smpd_context_t *context, MPIDU_Sock_event_
     {
 	context->state = SMPD_CLOSING;
 	smpd_dbg_printf("connection reject string written, closing sock.\n");
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
-	    smpd_err_printf("MPIDU_Sock_post_close failed, error:\n%s\n", get_sock_error_string(result));
+	    smpd_err_printf("SMPDU_Sock_post_close failed, error:\n%s\n", get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
 	}
@@ -962,14 +962,14 @@ int smpd_state_writing_connect_result(smpd_context_t *context, MPIDU_Sock_event_
 	return SMPD_SUCCESS;
     }
     context->read_state = SMPD_READING_SESSION_REQUEST;
-    result = MPIDU_Sock_post_read(context->sock, context->session, SMPD_SESSION_REQUEST_LEN, SMPD_SESSION_REQUEST_LEN, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->session, SMPD_SESSION_REQUEST_LEN, SMPD_SESSION_REQUEST_LEN, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read for the session header,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -977,16 +977,16 @@ int smpd_state_writing_connect_result(smpd_context_t *context, MPIDU_Sock_event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_stdin"
-int smpd_state_reading_stdin(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_stdin(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_command_t *cmd_ptr;
-    MPIU_Size_t num_read;
+    SMPDU_Size_t num_read;
     char buffer[SMPD_MAX_CMD_LENGTH];
     int num_encoded;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	/*smpd_err_printf("unable to read from stdin, %s.\n", get_sock_error_string(event_ptr->error));*/
 	smpd_exit_fn(FCNAME);
@@ -998,12 +998,12 @@ int smpd_state_reading_stdin(smpd_context_t *context, MPIDU_Sock_event_t *event_
 	smpd_dbg_printf("read from %s\n", smpd_get_context_str(context));
 
 	/* one byte read, attempt to read up to the buffer size */
-	result = MPIDU_Sock_read(context->sock, &context->read_cmd.cmd[1], SMPD_STDIN_PACKET_SIZE-1, &num_read);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_read(context->sock, &context->read_cmd.cmd[1], SMPD_STDIN_PACKET_SIZE-1, &num_read);
+	if (result != SMPD_SUCCESS)
 	{
 	    num_read = 0;
-	    smpd_dbg_printf("MPIDU_Sock_read(%d) failed (%s), assuming %s is closed.\n",
-		MPIDU_Sock_get_sock_id(context->sock), get_sock_error_string(result), smpd_get_context_str(context));
+	    smpd_dbg_printf("SMPDU_Sock_read(%d) failed (%s), assuming %s is closed.\n",
+		SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result), smpd_get_context_str(context));
 	}
 	smpd_dbg_printf("%d bytes read from %s\n", num_read+1, smpd_get_context_str(context));
 	smpd_encode_buffer(buffer, SMPD_MAX_CMD_LENGTH, context->read_cmd.cmd, num_read+1, &num_encoded);
@@ -1038,16 +1038,16 @@ int smpd_state_reading_stdin(smpd_context_t *context, MPIDU_Sock_event_t *event_
     else if (context->type == SMPD_CONTEXT_MPIEXEC_STDIN_RSH)
     {
 	unsigned char *buf;
-	MPIU_Size_t total, num_written;
+	SMPDU_Size_t total, num_written;
 	smpd_dbg_printf("read from %s\n", smpd_get_context_str(context));
 
 	/* one byte read, attempt to read up to the buffer size */
-	result = MPIDU_Sock_read(context->sock, &context->read_cmd.cmd[1], SMPD_STDIN_PACKET_SIZE-1, &num_read);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_read(context->sock, &context->read_cmd.cmd[1], SMPD_STDIN_PACKET_SIZE-1, &num_read);
+	if (result != SMPD_SUCCESS)
 	{
 	    num_read = 0;
-	    smpd_dbg_printf("MPIDU_Sock_read(%d) failed (%s), assuming %s is closed.\n",
-		MPIDU_Sock_get_sock_id(context->sock), get_sock_error_string(result), smpd_get_context_str(context));
+	    smpd_dbg_printf("SMPDU_Sock_read(%d) failed (%s), assuming %s is closed.\n",
+		SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result), smpd_get_context_str(context));
 	}
 	smpd_dbg_printf("%d bytes read from %s\n", num_read+1, smpd_get_context_str(context));
 
@@ -1056,13 +1056,13 @@ int smpd_state_reading_stdin(smpd_context_t *context, MPIDU_Sock_event_t *event_
 	buf = (unsigned char *)context->read_cmd.cmd;
 	while (total > 0)
 	{
-	    result = MPIDU_Sock_write(context->process->in->sock, buf, total, &num_written);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_write(context->process->in->sock, buf, total, &num_written);
+	    if (result != SMPD_SUCCESS)
 	    {
 		num_read = 0;
 		total = 0;
-		smpd_dbg_printf("MPIDU_Sock_write(%d) failed (%s), assuming %s is closed.\n",
-		    MPIDU_Sock_get_sock_id(context->process->in->sock), get_sock_error_string(result), smpd_get_context_str(context));
+		smpd_dbg_printf("SMPDU_Sock_write(%d) failed (%s), assuming %s is closed.\n",
+		    SMPDU_Sock_get_sock_id(context->process->in->sock), get_sock_error_string(result), smpd_get_context_str(context));
 	    }
 	    else
 	    {
@@ -1170,19 +1170,19 @@ int smpd_state_reading_stdin(smpd_context_t *context, MPIDU_Sock_event_t *event_
 	    context->read_cmd.stdin_read_offset++;
 	}
     }
-    result = MPIDU_Sock_post_read(context->sock, &context->read_cmd.cmd[context->read_cmd.stdin_read_offset], 1, 1, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, &context->read_cmd.cmd[context->read_cmd.stdin_read_offset], 1, 1, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	/*
 	if (result != SOCK_EOF)
 	{
-	    smpd_dbg_printf("MPIDU_Sock_post_read failed (%s), assuming %s is closed, calling sock_post_close(%d).\n",
+	    smpd_dbg_printf("SMPDU_Sock_post_read failed (%s), assuming %s is closed, calling sock_post_close(%d).\n",
 		get_sock_error_string(result), smpd_get_context_str(context), sock_getid(context->sock));
 	}
 	*/
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close on a broken %s context.\n", smpd_get_context_str(context));
 	    smpd_exit_fn(FCNAME);
@@ -1195,7 +1195,7 @@ int smpd_state_reading_stdin(smpd_context_t *context, MPIDU_Sock_event_t *event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_smpd_writing_data_to_stdin"
-int smpd_state_smpd_writing_data_to_stdin(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_smpd_writing_data_to_stdin(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_stdin_write_node_t *node;
@@ -1220,9 +1220,9 @@ int smpd_state_smpd_writing_data_to_stdin(smpd_context_t *context, MPIDU_Sock_ev
     if (context->process->stdin_write_list != NULL)
     {
 	context->process->in->write_state = SMPD_WRITING_DATA_TO_STDIN;
-	result = MPIDU_Sock_post_write(context->process->in->sock,
+	result = SMPDU_Sock_post_write(context->process->in->sock,
 	    node->buffer, node->length, node->length, NULL);
-	if (result != MPI_SUCCESS)
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of %d bytes to stdin for rank %d\n",
 		node->length, context->process->rank);
@@ -1240,11 +1240,11 @@ int smpd_state_smpd_writing_data_to_stdin(smpd_context_t *context, MPIDU_Sock_ev
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_stdouterr"
-int smpd_state_reading_stdouterr(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_stdouterr(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_command_t *cmd_ptr;
-    MPIU_Size_t num_read;
+    SMPDU_Size_t num_read;
     char buffer[SMPD_MAX_CMD_LENGTH];
     int num_encoded;
     SMPD_BOOL ends_in_cr = SMPD_FALSE;
@@ -1255,18 +1255,20 @@ int smpd_state_reading_stdouterr(smpd_context_t *context, MPIDU_Sock_event_t *ev
 	smpd_exit_fn(FCNAME);
 	return SMPD_SUCCESS;
     }
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
-	if (MPIR_ERR_GET_CLASS(event_ptr->error) != MPIDU_SOCK_ERR_CONN_CLOSED)
+    /*
+	if (event_ptr->error != SMPDU_SOCK_ERR_CONN_CLOSED)
 	{
 	    smpd_dbg_printf("reading failed(%s), assuming %s is closed.\n",
 		get_sock_error_string(event_ptr->error), smpd_get_context_str(context));
 	}
+    */
 
 	/* Return an error an then handle_sock_op_read will post a close
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close on a broken %s context.\n", smpd_get_context_str(context));
 	    smpd_exit_fn(FCNAME);
@@ -1281,12 +1283,12 @@ int smpd_state_reading_stdouterr(smpd_context_t *context, MPIDU_Sock_event_t *ev
     smpd_dbg_printf("read from %s\n", smpd_get_context_str(context));
 
     /* one byte read, attempt to read up to the buffer size */
-    result = MPIDU_Sock_read(context->sock, &context->read_cmd.cmd[1], (SMPD_MAX_STDOUT_LENGTH/2)-2, &num_read);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_read(context->sock, &context->read_cmd.cmd[1], (SMPD_MAX_STDOUT_LENGTH/2)-2, &num_read);
+    if (result != SMPD_SUCCESS)
     {
 	num_read = 0;
-	smpd_dbg_printf("MPIDU_Sock_read(%d) failed (%s), assuming %s is closed.\n",
-	    MPIDU_Sock_get_sock_id(context->sock), get_sock_error_string(result), smpd_get_context_str(context));
+	smpd_dbg_printf("SMPDU_Sock_read(%d) failed (%s), assuming %s is closed.\n",
+	    SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result), smpd_get_context_str(context));
     }
     /* Use num_read instead of num_read-1 because one byte was already read before increasing the buffer length by one */
     if (context->read_cmd.cmd[num_read] == '\n')
@@ -1401,19 +1403,19 @@ int smpd_state_reading_stdouterr(smpd_context_t *context, MPIDU_Sock_event_t *ev
     }
 
     /* post a read for the next byte of data */
-    result = MPIDU_Sock_post_read(context->sock, &context->read_cmd.cmd, 1, 1, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, &context->read_cmd.cmd, 1, 1, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	/*
 	if (result != SOCK_EOF)
 	{
-	    smpd_dbg_printf("MPIDU_Sock_post_read failed (%s), assuming %s is closed, calling sock_post_close(%d).\n",
-		get_sock_error_string(result), smpd_get_context_str(context), MPIDU_Sock_get_sock_id(context->sock));
+	    smpd_dbg_printf("SMPDU_Sock_post_read failed (%s), assuming %s is closed, calling sock_post_close(%d).\n",
+		get_sock_error_string(result), smpd_get_context_str(context), SMPDU_Sock_get_sock_id(context->sock));
 	}
 	*/
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close on a broken %s context.\n", smpd_get_context_str(context));
 	    smpd_exit_fn(FCNAME);
@@ -1426,21 +1428,21 @@ int smpd_state_reading_stdouterr(smpd_context_t *context, MPIDU_Sock_event_t *ev
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_cmd_header"
-int smpd_state_reading_cmd_header(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_cmd_header(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the cmd header on the %s context, %s.\n",
 	    smpd_get_context_str(context), get_sock_error_string(event_ptr->error));
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -1453,9 +1455,9 @@ int smpd_state_reading_cmd_header(smpd_context_t *context, MPIDU_Sock_event_t *e
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -1463,16 +1465,16 @@ int smpd_state_reading_cmd_header(smpd_context_t *context, MPIDU_Sock_event_t *e
     smpd_dbg_printf("command header read, posting read for data: %d bytes\n", context->read_cmd.length);
     context->read_cmd.state = SMPD_CMD_READING_CMD;
     context->read_state = SMPD_READING_CMD;
-    result = MPIDU_Sock_post_read(context->sock, context->read_cmd.cmd, context->read_cmd.length, context->read_cmd.length, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->read_cmd.cmd, context->read_cmd.length, context->read_cmd.length, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read for the command string,\nsock error: %s\n", get_sock_error_string(result));
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -1483,22 +1485,22 @@ int smpd_state_reading_cmd_header(smpd_context_t *context, MPIDU_Sock_event_t *e
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_cmd"
-int smpd_state_reading_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_cmd(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_command_t *cmd_ptr;
     smpd_host_node_t *left, *right, *host_node;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the command, %s.\n", get_sock_error_string(event_ptr->error));
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -1511,9 +1513,9 @@ int smpd_state_reading_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -1530,9 +1532,9 @@ int smpd_state_reading_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	    if (smpd_process.root_smpd)
 	    {
 		context->state = SMPD_CLOSING;
-		result = MPIDU_Sock_post_close(context->sock);
+		result = SMPDU_Sock_post_close(context->sock);
 		smpd_exit_fn(FCNAME);
-		return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+		return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	    }
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
@@ -1732,9 +1734,9 @@ int smpd_state_reading_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -1745,21 +1747,21 @@ int smpd_state_reading_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_cmd"
-int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_cmd(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_command_t *cmd_ptr, *cmd_iter;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the command, %s.\n", get_sock_error_string(event_ptr->error));
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -1771,9 +1773,9 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -1786,9 +1788,9 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
         /* Written singinit_info ... nothing more to be done... close the socket */
         context->state = SMPD_SINGLETON_DONE;
         smpd_free_command(cmd_ptr);
-        result = MPIDU_Sock_post_close(context->sock);
-        if(result != MPI_SUCCESS){
-            smpd_err_printf("MPIDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
+        result = SMPDU_Sock_post_close(context->sock);
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("SMPDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
             smpd_exit_fn(FCNAME);
             return SMPD_FAIL;
         }
@@ -1801,8 +1803,8 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
         if(context->process){
         if(context->process->pmi){
             smpd_dbg_printf("Closing pmi ...\n");
-            result = MPIDU_Sock_post_close(context->process->pmi->sock);
-            if(result != MPI_SUCCESS){
+            result = SMPDU_Sock_post_close(context->process->pmi->sock);
+            if(result != SMPD_SUCCESS){
                 smpd_err_printf("Unable to post close on pmi sock\n");
             }
         }
@@ -1821,8 +1823,8 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
                 if(context->process){
                 if(context->process->pmi){
                     smpd_dbg_printf("Closing pmi ...\n");
-                    result = MPIDU_Sock_post_close(context->process->pmi->sock);
-                    if(result != MPI_SUCCESS){
+                    result = SMPDU_Sock_post_close(context->process->pmi->sock);
+                    if(result != SMPD_SUCCESS){
                         smpd_err_printf("Unable to post close on pmi sock\n");
                     }
                 }
@@ -1835,10 +1837,10 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
     else if (strcmp(cmd_ptr->cmd_str, "closed") == 0)
     {
 	smpd_dbg_printf("closed command written, posting close of the sock.\n");
-	smpd_dbg_printf("MPIDU_Sock_post_close(%d)\n", MPIDU_Sock_get_sock_id(context->sock));
+	smpd_dbg_printf("SMPDU_Sock_post_close(%d)\n", SMPDU_Sock_get_sock_id(context->sock));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close of the sock after writing a 'closed' command,\nsock error: %s\n",
 		get_sock_error_string(result));
@@ -1854,8 +1856,8 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	    context->state = SMPD_RESTARTING;
 	else
 	    context->state = SMPD_EXITING;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close of the sock after writing a 'down' command,\nsock error: %s\n",
 		get_sock_error_string(result));
@@ -1871,8 +1873,8 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
     {
 	smpd_dbg_printf("done command written, posting a close of the %s context\n", smpd_get_context_str(context));
 	context->state = SMPD_DONE;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close of the sock after writing a 'done' command,\nsock error: %s\n",
 		get_sock_error_string(result));
@@ -1912,9 +1914,9 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	    if (smpd_process.root_smpd)
 	    {
 		context->state = SMPD_CLOSING;
-		result = MPIDU_Sock_post_close(context->sock);
+		result = SMPDU_Sock_post_close(context->sock);
 		smpd_exit_fn(FCNAME);
-		return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+		return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	    }
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
@@ -1925,22 +1927,22 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
     if (cmd_ptr)
     {
 	context->write_state = SMPD_WRITING_CMD;
-	cmd_ptr->iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)cmd_ptr->cmd_hdr_str;
-	cmd_ptr->iov[0].MPID_IOV_LEN = SMPD_CMD_HDR_LENGTH;
-	cmd_ptr->iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)cmd_ptr->cmd;
-	cmd_ptr->iov[1].MPID_IOV_LEN = cmd_ptr->length;
+	cmd_ptr->iov[0].SMPD_IOV_BUF = (SMPD_IOV_BUF_CAST)cmd_ptr->cmd_hdr_str;
+	cmd_ptr->iov[0].SMPD_IOV_LEN = SMPD_CMD_HDR_LENGTH;
+	cmd_ptr->iov[1].SMPD_IOV_BUF = (SMPD_IOV_BUF_CAST)cmd_ptr->cmd;
+	cmd_ptr->iov[1].SMPD_IOV_LEN = cmd_ptr->length;
 	smpd_dbg_printf("smpd_handle_written: posting write(%d bytes) for command: \"%s\"\n",
-	    cmd_ptr->iov[0].MPID_IOV_LEN + cmd_ptr->iov[1].MPID_IOV_LEN, cmd_ptr->cmd);
-	result = MPIDU_Sock_post_writev(context->sock, cmd_ptr->iov, 2, NULL);
-	if (result != MPI_SUCCESS)
+	    cmd_ptr->iov[0].SMPD_IOV_LEN + cmd_ptr->iov[1].SMPD_IOV_LEN, cmd_ptr->cmd);
+	result = SMPDU_Sock_post_writev(context->sock, cmd_ptr->iov, 2, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write for the next command,\nsock error: %s\n", get_sock_error_string(result));
 	    if (smpd_process.root_smpd)
 	    {
 		context->state = SMPD_CLOSING;
-		result = MPIDU_Sock_post_close(context->sock);
+		result = SMPDU_Sock_post_close(context->sock);
 		smpd_exit_fn(FCNAME);
-		return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+		return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	    }
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
@@ -1952,18 +1954,18 @@ int smpd_state_writing_cmd(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 
 #undef FCNAME
 #define FCNAME "smpd_state_smpd_listening"
-int smpd_state_smpd_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr, MPIDU_Sock_set_t set)
+int smpd_state_smpd_listening(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr, SMPDU_Sock_set_t set)
 {
     int result;
-    MPIDU_Sock_t new_sock;
+    SMPDU_Sock_t new_sock;
     smpd_context_t *new_context;
     char phrase[SMPD_PASSPHRASE_MAX_LENGTH];
 
     smpd_enter_fn(FCNAME);
     SMPD_UNREFERENCED_ARG(event_ptr);
 
-    result = MPIDU_Sock_accept(context->sock, set, NULL, &new_sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_accept(context->sock, set, NULL, &new_sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("error accepting socket: %s\n", get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
@@ -1976,9 +1978,9 @@ int smpd_state_smpd_listening(smpd_context_t *context, MPIDU_Sock_event_t *event
 	{
 	    smpd_process.listener_context->state = SMPD_EXITING;
 	    smpd_dbg_printf("closing the listener (state = %s).\n", smpd_get_state_string(smpd_process.listener_context->state));
-	    result = MPIDU_Sock_post_close(smpd_process.listener_context->sock);
+	    result = SMPDU_Sock_post_close(smpd_process.listener_context->sock);
 	    smpd_process.listener_context = NULL;
-	    if (result == MPI_SUCCESS)
+	    if (result == SMPD_SUCCESS)
 	    {
 		smpd_exit_fn(FCNAME);
 		return SMPD_SUCCESS;
@@ -2001,8 +2003,8 @@ int smpd_state_smpd_listening(smpd_context_t *context, MPIDU_Sock_event_t *event
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
-    result = MPIDU_Sock_set_user_ptr(new_sock, new_context);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_set_user_ptr(new_sock, new_context);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to set the user pointer on the newly accepted sock, error:\n%s\n",
 	    get_sock_error_string(result));
@@ -2026,12 +2028,12 @@ int smpd_state_smpd_listening(smpd_context_t *context, MPIDU_Sock_event_t *event
     /* write the challenge string*/
     smpd_dbg_printf("posting a write of the challenge string: %s\n", new_context->pszChallengeResponse);
     new_context->write_state = SMPD_WRITING_CHALLENGE_STRING;
-    result = MPIDU_Sock_post_write(new_sock, new_context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(new_sock, new_context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	new_context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(new_sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(new_sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("posting write of the challenge string failed\n");
 	    smpd_exit_fn(FCNAME);
@@ -2044,25 +2046,25 @@ int smpd_state_smpd_listening(smpd_context_t *context, MPIDU_Sock_event_t *event
 
 #undef FCNAME
 #define FCNAME "smpd_state_pmi_listening"
-int smpd_state_pmi_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr, MPIDU_Sock_set_t set)
+int smpd_state_pmi_listening(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr, SMPDU_Sock_set_t set)
 {
     int result;
-    MPIDU_Sock_t new_sock;
+    SMPDU_Sock_t new_sock;
     smpd_process_t *iter;
 
     smpd_enter_fn(FCNAME);
     SMPD_UNREFERENCED_ARG(event_ptr);
 
-    result = MPIDU_Sock_accept(context->sock, set, NULL, &new_sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_accept(context->sock, set, NULL, &new_sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("error accepting socket: %s\n", get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
     context->state = SMPD_CLOSING;
-    result = MPIDU_Sock_post_close(context->sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_close(context->sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("error closing pmi listener socket: %s\n", get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
@@ -2076,8 +2078,8 @@ int smpd_state_pmi_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_
 	    /* process structure found for this listener */
 	    iter->pmi->sock = new_sock;
 	    iter->context_refcount++;
-	    result = MPIDU_Sock_set_user_ptr(new_sock, iter->pmi);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_set_user_ptr(new_sock, iter->pmi);
+	    if (result != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("unable to set the user pointer on the newly accepted sock, error:\n%s\n",
 		    get_sock_error_string(result));
@@ -2096,8 +2098,8 @@ int smpd_state_pmi_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_
 	}
 	iter = iter->next;
     }
-    result = MPIDU_Sock_post_close(new_sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_close(new_sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("error closing pmi socket not unassociated with any process: %s\n", get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
@@ -2110,17 +2112,17 @@ int smpd_state_pmi_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_pmi_server_listening"
-int smpd_state_pmi_server_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr, MPIDU_Sock_set_t set)
+int smpd_state_pmi_server_listening(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr, SMPDU_Sock_set_t set)
 {
     int result;
-    MPIDU_Sock_t new_sock;
+    SMPDU_Sock_t new_sock;
     smpd_process_t *process;
 
     smpd_enter_fn(FCNAME);
     SMPD_UNREFERENCED_ARG(event_ptr);
 
-    result = MPIDU_Sock_accept(context->sock, set, NULL, &new_sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_accept(context->sock, set, NULL, &new_sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("error accepting socket: %s\n", get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
@@ -2132,8 +2134,8 @@ int smpd_state_pmi_server_listening(smpd_context_t *context, MPIDU_Sock_event_t 
 
     process->pmi->sock = new_sock;
     process->context_refcount++;
-    result = MPIDU_Sock_set_user_ptr(new_sock, process->pmi);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_set_user_ptr(new_sock, process->pmi);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to set the user pointer on the newly accepted sock, error:\n%s\n",
 	    get_sock_error_string(result));
@@ -2153,17 +2155,17 @@ int smpd_state_pmi_server_listening(smpd_context_t *context, MPIDU_Sock_event_t 
 
 #undef FCNAME
 #define FCNAME "smpd_state_mgr_listening"
-int smpd_state_mgr_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr, MPIDU_Sock_set_t set)
+int smpd_state_mgr_listening(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr, SMPDU_Sock_set_t set)
 {
     int result;
-    MPIDU_Sock_t new_sock;
+    SMPDU_Sock_t new_sock;
     smpd_context_t *new_context;
 
     smpd_enter_fn(FCNAME);
     SMPD_UNREFERENCED_ARG(event_ptr);
 
-    result = MPIDU_Sock_accept(context->sock, set, NULL, &new_sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_accept(context->sock, set, NULL, &new_sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("error accepting socket: %s\n", get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
@@ -2177,8 +2179,8 @@ int smpd_state_mgr_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
-    result = MPIDU_Sock_set_user_ptr(new_sock, new_context);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_set_user_ptr(new_sock, new_context);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to set the user pointer on the newly accepted sock, error:\n%s\n",
 	    get_sock_error_string(result));
@@ -2187,8 +2189,8 @@ int smpd_state_mgr_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_
     }
     new_context->access = SMPD_ACCESS_USER_PROCESS;
     new_context->read_state = SMPD_READING_SESSION_HEADER;
-    result = MPIDU_Sock_post_read(new_context->sock, new_context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(new_context->sock, new_context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the session header,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -2197,8 +2199,8 @@ int smpd_state_mgr_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_
     }
     /* close the listener */
     smpd_dbg_printf("closing the mgr listener.\n");
-    result = MPIDU_Sock_post_close(context->sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_close(context->sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a close on the listener sock after accepting the re-connection,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -2211,18 +2213,18 @@ int smpd_state_mgr_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_session_request"
-int smpd_state_reading_session_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_session_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the session request, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("read session request: '%s'\n", context->session);
     context->read_state = SMPD_IDLE;
@@ -2247,15 +2249,15 @@ int smpd_state_reading_session_request(smpd_context_t *context, MPIDU_Sock_event
 		context->write_state = SMPD_WRITING_NO_PWD_REQUEST;
 	    }
 	}
-	result = MPIDU_Sock_post_write(context->sock, context->pwd_request, SMPD_MAX_PWD_REQUEST_LENGTH, SMPD_MAX_PWD_REQUEST_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->pwd_request, SMPD_MAX_PWD_REQUEST_LENGTH, SMPD_MAX_PWD_REQUEST_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the pwd request '%s',\nsock error: %s\n",
 		context->pwd_request, get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
     else if (strcmp(context->session, SMPD_PROCESS_SESSION_STR) == 0)
@@ -2280,15 +2282,15 @@ int smpd_state_reading_session_request(smpd_context_t *context, MPIDU_Sock_event
 	    context->write_state = SMPD_WRITING_NO_CRED_REQUEST;
 	    strcpy(context->cred_request, SMPD_NO_CRED_REQUEST);
 	}
-	result = MPIDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the credential request string '%s',\nsock error: %s\n",
 		context->cred_request, get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
     else if (strcmp(context->session, SMPD_PMI_SESSION_STR) == 0)
@@ -2319,15 +2321,15 @@ int smpd_state_reading_session_request(smpd_context_t *context, MPIDU_Sock_event
 	/* send the id to be used by the pmi context client to send commands */
 	context->write_state = SMPD_WRITING_PMI_ID;
 	snprintf(context->session, SMPD_SESSION_REQUEST_LEN, "%d", process->id);
-	result = MPIDU_Sock_post_write(context->sock, context->session, SMPD_SESSION_REQUEST_LEN, SMPD_SESSION_REQUEST_LEN, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->session, SMPD_SESSION_REQUEST_LEN, SMPD_SESSION_REQUEST_LEN, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the context session id string '%s',\nsock error: %s\n",
 		context->session, get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 
 	/*
@@ -2344,9 +2346,9 @@ int smpd_state_reading_session_request(smpd_context_t *context, MPIDU_Sock_event
     {
 	smpd_err_printf("invalid session request: '%s'\n", context->session);
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -2354,12 +2356,12 @@ int smpd_state_reading_session_request(smpd_context_t *context, MPIDU_Sock_event
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_smpd_session_request"
-int smpd_state_writing_smpd_session_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_smpd_session_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the session request, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -2368,8 +2370,8 @@ int smpd_state_writing_smpd_session_request(smpd_context_t *context, MPIDU_Sock_
     smpd_dbg_printf("wrote smpd session request: '%s'\n", context->session);
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_PWD_REQUEST;
-    result = MPIDU_Sock_post_read(context->sock, context->pwd_request, SMPD_MAX_PWD_REQUEST_LENGTH, SMPD_MAX_PWD_REQUEST_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->pwd_request, SMPD_MAX_PWD_REQUEST_LENGTH, SMPD_MAX_PWD_REQUEST_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the pwd request,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -2382,12 +2384,12 @@ int smpd_state_writing_smpd_session_request(smpd_context_t *context, MPIDU_Sock_
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_process_session_request"
-int smpd_state_writing_process_session_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_process_session_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the process session request, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -2396,8 +2398,8 @@ int smpd_state_writing_process_session_request(smpd_context_t *context, MPIDU_So
     smpd_dbg_printf("wrote process session request: '%s'\n", context->session);
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_CRED_REQUEST;
-    result = MPIDU_Sock_post_read(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the cred request,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -2410,12 +2412,12 @@ int smpd_state_writing_process_session_request(smpd_context_t *context, MPIDU_So
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_pmi_session_request"
-int smpd_state_writing_pmi_session_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_pmi_session_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the pmi session request, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -2424,8 +2426,8 @@ int smpd_state_writing_pmi_session_request(smpd_context_t *context, MPIDU_Sock_e
     smpd_dbg_printf("wrote pmi session request: '%s'\n", context->session);
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_PMI_ID;
-    result = MPIDU_Sock_post_read(context->sock, context->session, SMPD_SESSION_REQUEST_LEN, SMPD_SESSION_REQUEST_LEN, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->session, SMPD_SESSION_REQUEST_LEN, SMPD_SESSION_REQUEST_LEN, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the pmi context id,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -2438,31 +2440,31 @@ int smpd_state_writing_pmi_session_request(smpd_context_t *context, MPIDU_Sock_e
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_pwd_request"
-int smpd_state_writing_pwd_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_pwd_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the pwd request, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote pwd request: '%s'\n", context->pwd_request);
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_SMPD_PASSWORD;
-    result = MPIDU_Sock_post_read(context->sock, context->password, SMPD_MAX_PASSWORD_LENGTH, SMPD_MAX_PASSWORD_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->password, SMPD_MAX_PASSWORD_LENGTH, SMPD_MAX_PASSWORD_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read for the smpd password,\nsock error: %s\n",
 	    get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -2470,31 +2472,31 @@ int smpd_state_writing_pwd_request(smpd_context_t *context, MPIDU_Sock_event_t *
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_no_pwd_request"
-int smpd_state_writing_no_pwd_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_no_pwd_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the no pwd request, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote no pwd request: '%s'\n", context->pwd_request);
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_SESSION_HEADER;
-    result = MPIDU_Sock_post_read(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the session header,\nsock error: %s\n",
 	    get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -2502,30 +2504,30 @@ int smpd_state_writing_no_pwd_request(smpd_context_t *context, MPIDU_Sock_event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_sspi_request"
-int smpd_state_writing_sspi_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_sspi_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the sspi request, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote sspi request: '%s'\n", context->pwd_request);
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_SSPI_HEADER;
-    result = MPIDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the sspi header,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -2533,13 +2535,13 @@ int smpd_state_writing_sspi_request(smpd_context_t *context, MPIDU_Sock_event_t 
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_pwd_request"
-int smpd_state_reading_pwd_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_pwd_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_sspi_type_t type;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the pwd request, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -2553,17 +2555,17 @@ int smpd_state_reading_pwd_request(smpd_context_t *context, MPIDU_Sock_event_t *
 	    /* job keys without passwords cannot be added unless the smpd is sspi protected. */
 	    smpd_err_printf("unable to save a job key because the smpd is not sspi protected.\n");
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    result = (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    result = (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	    smpd_exit_fn(FCNAME);
 	    return result;
 	}
 	/* FIXME: the smpd password needs to be able to be set */
 	strcpy(context->smpd_pwd, SMPD_DEFAULT_PASSWORD);
 	context->write_state = SMPD_WRITING_SMPD_PASSWORD;
-	result = MPIDU_Sock_post_write(context->sock, context->smpd_pwd, SMPD_MAX_PASSWORD_LENGTH, SMPD_MAX_PASSWORD_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->smpd_pwd, SMPD_MAX_PASSWORD_LENGTH, SMPD_MAX_PASSWORD_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the smpd password,\nsock error: %s\n",
 		get_sock_error_string(result));
@@ -2607,8 +2609,8 @@ int smpd_state_reading_pwd_request(smpd_context_t *context, MPIDU_Sock_event_t *
 	    context->read_state = SMPD_IDLE;
 	    context->write_state = SMPD_WRITING_CLIENT_SSPI_HEADER;
 	    MPIU_Snprintf(context->sspi_header, SMPD_SSPI_HEADER_LENGTH, "%d", context->sspi_context->buffer_length);
-	    result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-	    if (result == MPI_SUCCESS)
+	    result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+	    if (result == SMPD_SUCCESS)
 	    {
 		result = SMPD_SUCCESS;
 	    }
@@ -2620,9 +2622,9 @@ int smpd_state_reading_pwd_request(smpd_context_t *context, MPIDU_Sock_event_t *
 #endif
 		smpd_err_printf("unable to post a write of the sspi header,\nsock error: %s\n", get_sock_error_string(result));
 		context->state = SMPD_CLOSING;
-		result = MPIDU_Sock_post_close(context->sock);
+		result = SMPDU_Sock_post_close(context->sock);
 		smpd_exit_fn(FCNAME);
-		result = (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+		result = (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	    }
 	    smpd_exit_fn(FCNAME);
 	    return result;
@@ -2692,9 +2694,9 @@ int smpd_state_reading_pwd_request(smpd_context_t *context, MPIDU_Sock_event_t *
 	/* job keys without passwords cannot be added unless the smpd is sspi protected. */
 	smpd_err_printf("unable to save a job key because the smpd is not sspi protected.\n");
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	result = (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	result = (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	smpd_exit_fn(FCNAME);
 	return result;
     }
@@ -2707,8 +2709,8 @@ int smpd_state_reading_pwd_request(smpd_context_t *context, MPIDU_Sock_event_t *
 	return SMPD_FAIL;
     }
     context->write_state = SMPD_WRITING_SESSION_HEADER;
-    result = MPIDU_Sock_post_write(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a send of the session header,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -2721,18 +2723,18 @@ int smpd_state_reading_pwd_request(smpd_context_t *context, MPIDU_Sock_event_t *
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_smpd_password"
-int smpd_state_reading_smpd_password(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_smpd_password(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the smpd password, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("read smpd password, %d bytes\n", strlen(context->password));
     context->read_state = SMPD_IDLE;
@@ -2741,30 +2743,30 @@ int smpd_state_reading_smpd_password(smpd_context_t *context, MPIDU_Sock_event_t
 	context->access = SMPD_ACCESS_ADMIN;
 	strcpy(context->pwd_request, SMPD_AUTHENTICATION_ACCEPTED_STR);
 	context->write_state = SMPD_WRITING_SESSION_ACCEPT;
-	result = MPIDU_Sock_post_write(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the session accepted message,\nsock error: %s\n",
 		get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
     else
     {
 	strcpy(context->pwd_request, SMPD_AUTHENTICATION_REJECTED_STR);
 	context->write_state = SMPD_WRITING_SESSION_REJECT;
-	result = MPIDU_Sock_post_write(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the session rejected message,\nsock error: %s\n",
 		get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
     smpd_exit_fn(FCNAME);
@@ -2773,31 +2775,31 @@ int smpd_state_reading_smpd_password(smpd_context_t *context, MPIDU_Sock_event_t
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_cred_request"
-int smpd_state_writing_cred_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_cred_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the cred request, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote cred request: '%s'\n", context->cred_request);
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_CRED_ACK;
-    result = MPIDU_Sock_post_read(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the cred ack,\nsock error: %s\n",
 	    get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -2805,18 +2807,18 @@ int smpd_state_writing_cred_request(smpd_context_t *context, MPIDU_Sock_event_t 
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_cred_ack"
-int smpd_state_reading_cred_ack(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_cred_ack(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the cred ack, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("read cred ack: '%s'\n", context->cred_request);
     context->write_state = SMPD_IDLE;
@@ -2824,22 +2826,22 @@ int smpd_state_reading_cred_ack(smpd_context_t *context, MPIDU_Sock_event_t *eve
     {
 	/* jobs_only but the client returned something other than SMPD_CRED_ACK_SSPI_JOB_KEY */
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     if (strcmp(context->cred_request, "yes") == 0)
     {
 	context->read_state = SMPD_READING_ACCOUNT;
-	result = MPIDU_Sock_post_read(context->sock, context->account, SMPD_MAX_ACCOUNT_LENGTH, SMPD_MAX_ACCOUNT_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_read(context->sock, context->account, SMPD_MAX_ACCOUNT_LENGTH, SMPD_MAX_ACCOUNT_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a read of the account credential,\nsock error: %s\n",
 		get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_SUCCESS;
@@ -2855,39 +2857,39 @@ int smpd_state_reading_cred_ack(smpd_context_t *context, MPIDU_Sock_event_t *eve
 	    context->sspi_type = SMPD_SSPI_DELEGATE;
 	}
 	context->read_state = SMPD_READING_SSPI_HEADER;
-	result = MPIDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a read of the sspi header,\nsock error: %s\n", get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_SUCCESS;
     }
     context->state = SMPD_CLOSING;
-    result = MPIDU_Sock_post_close(context->sock);
+    result = SMPDU_Sock_post_close(context->sock);
     smpd_exit_fn(FCNAME);
-    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 }
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_sspi_header"
-int smpd_state_reading_sspi_header(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_sspi_header(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to read the sspi header, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("read sspi header: '%s'\n", context->sspi_header);
     if (context->sspi_context == NULL)
@@ -2905,9 +2907,9 @@ int smpd_state_reading_sspi_header(smpd_context_t *context, MPIDU_Sock_event_t *
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("invalid sspi buffer length %d\n", context->sspi_context->buffer_length);
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     if (context->sspi_context->buffer != NULL)
     {
@@ -2919,21 +2921,21 @@ int smpd_state_reading_sspi_header(smpd_context_t *context, MPIDU_Sock_event_t *
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to allocate a sspi buffer of length %d\n", context->sspi_context->buffer_length);
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     context->read_state = SMPD_READING_SSPI_BUFFER;
-    result = MPIDU_Sock_post_read(context->sock, context->sspi_context->buffer, context->sspi_context->buffer_length, context->sspi_context->buffer_length, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->sspi_context->buffer, context->sspi_context->buffer_length, context->sspi_context->buffer_length, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to post a read of the sspi buffer,\nsock error: %s\n",
 	    get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -2941,7 +2943,7 @@ int smpd_state_reading_sspi_header(smpd_context_t *context, MPIDU_Sock_event_t *
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_sspi_buffer"
-int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_sspi_buffer(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
 #ifdef HAVE_WINDOWS_H
     int result;
@@ -2955,14 +2957,14 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
     double t1, t2;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to read the sspi buffer, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("read sspi buffer\n");
     /* Initialize the security interface */
@@ -2974,9 +2976,9 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
 	{
 	    smpd_err_printf("unable to initialize the sspi interface.\n");
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
     /* Query the max token size so the output buffer can be allocated */
@@ -2990,9 +2992,9 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
 	{
 	    smpd_err_printf("unable to query the security package, error %d.\n", sec_result);
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_dbg_printf("%s package, %s, with: max %d byte token, capabilities bitmask 0x%x\n",
 	    info->Name, info->Comment, info->cbMaxToken, info->fCapabilities);
@@ -3003,9 +3005,9 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
 	{
 	    smpd_err_printf("unable to free the security package info buffer, error %d.\n", sec_result);
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
     if (first_call)
@@ -3019,9 +3021,9 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
 	{
 	    smpd_err_printf("unable to acquire the security package credential, error %d.\n", sec_result);
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
 
@@ -3046,9 +3048,9 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
     {
 	smpd_err_printf("unable to allocate a sspi buffer of length %d\n", context->sspi_context->max_buffer_size);
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     outbound_buffer.pvBuffer = context->sspi_context->out_buffer;
     smpd_dbg_printf("inbound buffer %d bytes, outbound %d bytes\n", inbound_buffer.cbBuffer, outbound_buffer.cbBuffer);
@@ -3089,9 +3091,9 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
 	    smpd_process.sec_fn->FreeCredentialsHandle(&context->sspi_context->credential);
 	    smpd_err_printf("CompleteAuthToken failed with error %d\n", sec_result);
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	if (sec_result_copy == SEC_I_COMPLETE_NEEDED)
 	    break;
@@ -3105,16 +3107,16 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
 	MPIU_Snprintf(context->sspi_header, SMPD_SSPI_HEADER_LENGTH, "%d", outbound_buffer.cbBuffer);
 	context->sspi_context->out_buffer_length = outbound_buffer.cbBuffer;
 	smpd_dbg_printf("continuation buffer of length %d bytes\n", context->sspi_context->out_buffer_length);
-	result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_process.sec_fn->DeleteSecurityContext(&context->sspi_context->context);
 	    smpd_process.sec_fn->FreeCredentialsHandle(&context->sspi_context->credential);
 	    smpd_err_printf("unable to post a write of the sspi header,\nsock error: %s\n", get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_SUCCESS;
@@ -3123,25 +3125,25 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
 	smpd_translate_win_error(sec_result, err_msg, 256, NULL);
 	smpd_err_printf("AcceptSecurityContext failed with error %d: %s\n", sec_result, err_msg);
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     /* sspi iterations finished, query whether or not to delegate */
     context->read_state = SMPD_IDLE;
     context->write_state = SMPD_WRITING_DELEGATE_REQUEST;
     MPIU_Strncpy(context->sspi_header, "delegate", SMPD_SSPI_HEADER_LENGTH);
-    result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_process.sec_fn->DeleteSecurityContext(&context->sspi_context->context);
 	smpd_process.sec_fn->FreeCredentialsHandle(&context->sspi_context->credential);
 	smpd_err_printf("unable to post a write of the delegate request,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_exit_fn(FCNAME);
@@ -3156,19 +3158,19 @@ int smpd_state_reading_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_client_sspi_header"
-int smpd_state_reading_client_sspi_header(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_client_sspi_header(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to read the sspi header, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("read client sspi header: '%s'\n", context->sspi_header);
     if (strcmp(context->sspi_header, "delegate") == 0)
@@ -3203,14 +3205,14 @@ int smpd_state_reading_client_sspi_header(smpd_context_t *context, MPIDU_Sock_ev
 	}
 	context->read_state = SMPD_IDLE;
 	context->write_state = SMPD_WRITING_DELEGATE_REQUEST_RESULT;
-	result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the sspi header,\nsock error: %s\n", get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
     else
@@ -3222,9 +3224,9 @@ int smpd_state_reading_client_sspi_header(smpd_context_t *context, MPIDU_Sock_ev
 	    /* FIXME: Add code to cleanup sspi structures */
 	    smpd_err_printf("invalid sspi buffer length %d\n", context->sspi_context->buffer_length);
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	if (context->sspi_context->buffer != NULL)
 	{
@@ -3236,21 +3238,21 @@ int smpd_state_reading_client_sspi_header(smpd_context_t *context, MPIDU_Sock_ev
 	    /* FIXME: Add code to cleanup sspi structures */
 	    smpd_err_printf("unable to allocate a sspi buffer of length %d\n", context->sspi_context->buffer_length);
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	context->read_state = SMPD_READING_CLIENT_SSPI_BUFFER;
-	result = MPIDU_Sock_post_read(context->sock, context->sspi_context->buffer, context->sspi_context->buffer_length, context->sspi_context->buffer_length, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_read(context->sock, context->sspi_context->buffer, context->sspi_context->buffer_length, context->sspi_context->buffer_length, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    /* FIXME: Add code to cleanup sspi structures */
 	    smpd_err_printf("unable to post a read of the sspi buffer,\nsock error: %s\n",
 		get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
     smpd_exit_fn(FCNAME);
@@ -3259,7 +3261,7 @@ int smpd_state_reading_client_sspi_header(smpd_context_t *context, MPIDU_Sock_ev
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_client_sspi_buffer"
-int smpd_state_reading_client_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_client_sspi_buffer(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_command_t *cmd_ptr;
@@ -3270,14 +3272,14 @@ int smpd_state_reading_client_sspi_buffer(smpd_context_t *context, MPIDU_Sock_ev
     int num_encoded;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to read the sspi buffer, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("read client sspi buffer\n");
 
@@ -3303,15 +3305,15 @@ int smpd_state_reading_client_sspi_buffer(smpd_context_t *context, MPIDU_Sock_ev
 	    /* FIXME: This assumes that the server knows to post a write of the delegate command because it knows that no buffer will be returned by the iter command */
 	    context->write_state = SMPD_IDLE;
 	    context->read_state = SMPD_READING_CLIENT_SSPI_HEADER;
-	    result = MPIDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+	    if (result != SMPD_SUCCESS)
 	    {
 		/* FIXME: Add code to cleanup sspi structures */
 		smpd_err_printf("unable to post a read of the client sspi header,\nsock error: %s\n", get_sock_error_string(result));
 		context->state = SMPD_CLOSING;
-		result = MPIDU_Sock_post_close(context->sock);
+		result = SMPDU_Sock_post_close(context->sock);
 		smpd_exit_fn(FCNAME);
-		return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+		return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	    }
 	}
 	else if (context->sspi_context->buffer_length > 0)
@@ -3319,8 +3321,8 @@ int smpd_state_reading_client_sspi_buffer(smpd_context_t *context, MPIDU_Sock_ev
 	    context->read_state = SMPD_IDLE;
 	    context->write_state = SMPD_WRITING_CLIENT_SSPI_HEADER;
 	    MPIU_Snprintf(context->sspi_header, SMPD_SSPI_HEADER_LENGTH, "%d", context->sspi_context->buffer_length);
-	    result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+	    if (result != SMPD_SUCCESS)
 	    {
 #ifdef HAVE_WINDOWS_H
 		smpd_process.sec_fn->DeleteSecurityContext(&context->sspi_context->context);
@@ -3328,9 +3330,9 @@ int smpd_state_reading_client_sspi_buffer(smpd_context_t *context, MPIDU_Sock_ev
 #endif
 		smpd_err_printf("unable to post a write of the sspi header,\nsock error: %s\n", get_sock_error_string(result));
 		context->state = SMPD_CLOSING;
-		result = MPIDU_Sock_post_close(context->sock);
+		result = SMPDU_Sock_post_close(context->sock);
 		smpd_exit_fn(FCNAME);
-		return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+		return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	    }
 	}
 	else
@@ -3418,12 +3420,12 @@ int smpd_state_reading_client_sspi_buffer(smpd_context_t *context, MPIDU_Sock_ev
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_delegate_request"
-int smpd_state_writing_delegate_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_delegate_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 #ifdef HAVE_WINDOWS_H
 	smpd_process.sec_fn->DeleteSecurityContext(&context->sspi_context->context);
@@ -3431,15 +3433,15 @@ int smpd_state_writing_delegate_request(smpd_context_t *context, MPIDU_Sock_even
 #endif
 	smpd_err_printf("unable to write the delegate request, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_DELEGATE_REQUEST_RESULT;
-    result = MPIDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 #ifdef HAVE_WINDOWS_H
 	smpd_process.sec_fn->DeleteSecurityContext(&context->sspi_context->context);
@@ -3447,9 +3449,9 @@ int smpd_state_writing_delegate_request(smpd_context_t *context, MPIDU_Sock_even
 #endif
 	smpd_err_printf("unable to post a read of the delegate request result,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -3457,7 +3459,7 @@ int smpd_state_writing_delegate_request(smpd_context_t *context, MPIDU_Sock_even
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_delegate_request_result"
-int smpd_state_reading_delegate_request_result(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_delegate_request_result(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
 #ifdef HAVE_WINDOWS_H
     int result;
@@ -3468,15 +3470,15 @@ int smpd_state_reading_delegate_request_result(smpd_context_t *context, MPIDU_So
     BOOL duplicate_result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_process.sec_fn->DeleteSecurityContext(&context->sspi_context->context);
 	smpd_process.sec_fn->FreeCredentialsHandle(&context->sspi_context->credential);
 	smpd_err_printf("unable to read the delegate request result, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("delegate request result: '%s'\n", context->sspi_header);
 
@@ -3503,28 +3505,28 @@ int smpd_state_reading_delegate_request_result(smpd_context_t *context, MPIDU_So
 	    context->read_state = SMPD_IDLE;
 	    context->write_state = SMPD_WRITING_IMPERSONATE_RESULT;
 	    MPIU_Strncpy(context->sspi_header, SMPD_FAIL_STR, SMPD_SSPI_HEADER_LENGTH);
-	    result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+	    if (result != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("unable to post a write of the impersonate result,\nsock error: %s\n", get_sock_error_string(result));
 		context->state = SMPD_CLOSING;
-		result = MPIDU_Sock_post_close(context->sock);
+		result = SMPDU_Sock_post_close(context->sock);
 		smpd_exit_fn(FCNAME);
-		return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+		return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	    }
 
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	context->read_state = SMPD_READING_SSPI_JOB_KEY;
-	result = MPIDU_Sock_post_read(context->sock, context->sspi_job_key, SMPD_SSPI_JOB_KEY_LENGTH, SMPD_SSPI_JOB_KEY_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_read(context->sock, context->sspi_job_key, SMPD_SSPI_JOB_KEY_LENGTH, SMPD_SSPI_JOB_KEY_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a read of the sspi job key,\nsock error: %s\n", get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_SUCCESS;
@@ -3595,18 +3597,18 @@ int smpd_state_reading_delegate_request_result(smpd_context_t *context, MPIDU_So
 	context->read_state = SMPD_IDLE;
 	context->write_state = SMPD_WRITING_IMPERSONATE_RESULT;
 	MPIU_Strncpy(context->sspi_header, result_str, SMPD_SSPI_HEADER_LENGTH);
-	result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the impersonate result,\nsock error: %s\n", get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_dbg_printf("calling QuerySecurityContextToken\n");
@@ -3670,18 +3672,18 @@ int smpd_state_reading_delegate_request_result(smpd_context_t *context, MPIDU_So
     context->read_state = SMPD_IDLE;
     context->write_state = SMPD_WRITING_IMPERSONATE_RESULT;
     MPIU_Strncpy(context->sspi_header, result_str, SMPD_SSPI_HEADER_LENGTH);
-    result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a write of the impersonate result,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_exit_fn(FCNAME);
-    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 #else
     smpd_enter_fn(FCNAME);
     smpd_err_printf("function not implemented.\n");
@@ -3692,22 +3694,22 @@ int smpd_state_reading_delegate_request_result(smpd_context_t *context, MPIDU_So
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_sspi_job_key"
-int smpd_state_reading_sspi_job_key(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_sspi_job_key(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
 #ifdef HAVE_WINDOWS_H
     int result;
     const char *result_str = SMPD_SUCCESS_STR;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_process.sec_fn->DeleteSecurityContext(&context->sspi_context->context);
 	smpd_process.sec_fn->FreeCredentialsHandle(&context->sspi_context->credential);
 	smpd_err_printf("unable to read the delegate request result, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("job key: '%s'\n", context->sspi_job_key);
 
@@ -3728,18 +3730,18 @@ int smpd_state_reading_sspi_job_key(smpd_context_t *context, MPIDU_Sock_event_t 
     context->read_state = SMPD_IDLE;
     context->write_state = SMPD_WRITING_IMPERSONATE_RESULT;
     result = MPIU_Strncpy(context->sspi_header, result_str, SMPD_SSPI_HEADER_LENGTH);
-    result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a write of the impersonate result,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_exit_fn(FCNAME);
-    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 #else
     smpd_enter_fn(FCNAME);
     smpd_err_printf("function not implemented.\n");
@@ -3750,31 +3752,31 @@ int smpd_state_reading_sspi_job_key(smpd_context_t *context, MPIDU_Sock_event_t 
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_delegate_request_result"
-int smpd_state_writing_delegate_request_result(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_delegate_request_result(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the delegate request result, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     if (smpd_process.use_sspi_job_key)
     {
 	context->write_state = SMPD_WRITING_SSPI_JOB_KEY;
-	result = MPIDU_Sock_post_write(context->sock, smpd_process.job_key/*context->sspi_job_key*/, SMPD_SSPI_JOB_KEY_LENGTH, SMPD_SSPI_JOB_KEY_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, smpd_process.job_key/*context->sspi_job_key*/, SMPD_SSPI_JOB_KEY_LENGTH, SMPD_SSPI_JOB_KEY_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the sspi job key,\nsock error: %s\n", get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_SUCCESS;
@@ -3783,14 +3785,14 @@ int smpd_state_writing_delegate_request_result(smpd_context_t *context, MPIDU_So
     /* read the result */
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_IMPERSONATE_RESULT;
-    result = MPIDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the impersonation result,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     
     smpd_exit_fn(FCNAME);
@@ -3799,31 +3801,31 @@ int smpd_state_writing_delegate_request_result(smpd_context_t *context, MPIDU_So
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_sspi_job_key"
-int smpd_state_writing_sspi_job_key(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_sspi_job_key(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the delegate request result, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     /* read the result */
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_IMPERSONATE_RESULT;
-    result = MPIDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the impersonation result,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     
     smpd_exit_fn(FCNAME);
@@ -3832,18 +3834,18 @@ int smpd_state_writing_sspi_job_key(smpd_context_t *context, MPIDU_Sock_event_t 
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_impersonate_result"
-int smpd_state_reading_impersonate_result(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_impersonate_result(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the impersonation result, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_dbg_printf("result of impersonation: %s\n", context->sspi_header);
@@ -3853,13 +3855,13 @@ int smpd_state_reading_impersonate_result(smpd_context_t *context, MPIDU_Sock_ev
 	/* close the context */
 	smpd_dbg_printf("impersonation failed.\n");
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	if (smpd_process.left_context == context)
 	    smpd_process.left_context = NULL;
 	/* abort the job */
 	smpd_post_abort_command("Impersonation failed");
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     else
     {
@@ -3875,8 +3877,8 @@ int smpd_state_reading_impersonate_result(smpd_context_t *context, MPIDU_Sock_ev
 	    }
 	    context->read_state = SMPD_IDLE;
 	    context->write_state = SMPD_WRITING_SESSION_HEADER;
-	    result = MPIDU_Sock_post_write(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_post_write(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+	    if (result != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("unable to post a send of the session header,\nsock error: %s\n",
 		    get_sock_error_string(result));
@@ -3888,8 +3890,8 @@ int smpd_state_reading_impersonate_result(smpd_context_t *context, MPIDU_Sock_ev
 	{
 	    context->write_state = SMPD_IDLE;
 	    context->read_state = SMPD_READING_RECONNECT_REQUEST;
-	    result = MPIDU_Sock_post_read(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_post_read(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
+	    if (result != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("unable to post a read of the re-connect request,\nsock error: %s\n",
 		    get_sock_error_string(result));
@@ -3905,18 +3907,18 @@ int smpd_state_reading_impersonate_result(smpd_context_t *context, MPIDU_Sock_ev
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_impersonate_result"
-int smpd_state_writing_impersonate_result(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_impersonate_result(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the impersonation result, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     if (strcmp(context->sspi_header, SMPD_SUCCESS_STR))
@@ -3925,9 +3927,9 @@ int smpd_state_writing_impersonate_result(smpd_context_t *context, MPIDU_Sock_ev
 	context->read_state = SMPD_IDLE;
 	context->write_state = SMPD_IDLE;
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     if (context->target == SMPD_TARGET_SMPD)
@@ -3944,15 +3946,15 @@ int smpd_state_writing_impersonate_result(smpd_context_t *context, MPIDU_Sock_ev
 	}
 	context->write_state = SMPD_IDLE;
 	context->read_state = SMPD_READING_SESSION_HEADER;
-	result = MPIDU_Sock_post_read(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_read(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a read of the session header,\nsock error: %s\n",
 		get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_SUCCESS;
@@ -3966,11 +3968,11 @@ int smpd_state_writing_impersonate_result(smpd_context_t *context, MPIDU_Sock_ev
 	context->state = SMPD_CLOSING;
 	context->read_state = SMPD_IDLE;
 	context->write_state = SMPD_IDLE;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close for the sock(%d) from a failed win_mgr, error:\n%s\n",
-		MPIDU_Sock_get_sock_id(context->sock), get_sock_error_string(result));
+		SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
 	}
@@ -3983,15 +3985,15 @@ int smpd_state_writing_impersonate_result(smpd_context_t *context, MPIDU_Sock_ev
     /* post a write of the reconnect request */
     smpd_dbg_printf("smpd writing reconnect request: port %s\n", context->port_str);
     context->write_state = SMPD_WRITING_RECONNECT_REQUEST;
-    result = MPIDU_Sock_post_write(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("Unable to post a write of the re-connect port number(%s) back to mpiexec,\nsock error: %s\n",
 	    context->port_str, get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_exit_fn(FCNAME);
@@ -4000,34 +4002,34 @@ int smpd_state_writing_impersonate_result(smpd_context_t *context, MPIDU_Sock_ev
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_sspi_header"
-int smpd_state_writing_sspi_header(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_sspi_header(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to write the sspi header, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_dbg_printf("wrote sspi header: %s.\n", context->sspi_header);
 
     context->read_state = SMPD_IDLE;
     context->write_state = SMPD_WRITING_SSPI_BUFFER;
-    result = MPIDU_Sock_post_write(context->sock, context->sspi_context->out_buffer, context->sspi_context->out_buffer_length, context->sspi_context->out_buffer_length, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->sspi_context->out_buffer, context->sspi_context->out_buffer_length, context->sspi_context->out_buffer_length, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to post a write of the sspi buffer,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -4035,19 +4037,19 @@ int smpd_state_writing_sspi_header(smpd_context_t *context, MPIDU_Sock_event_t *
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_sspi_buffer"
-int smpd_state_writing_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_sspi_buffer(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to write the sspi buffer, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_dbg_printf("wrote sspi buffer.\n");
@@ -4060,15 +4062,15 @@ int smpd_state_writing_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
     }
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_SSPI_HEADER;
-    result = MPIDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to post a read of the sspi header,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -4076,34 +4078,34 @@ int smpd_state_writing_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_client_sspi_header"
-int smpd_state_writing_client_sspi_header(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_client_sspi_header(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to write the client sspi header, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_dbg_printf("wrote client sspi header: %s.\n", context->sspi_header);
 
     context->read_state = SMPD_IDLE;
     context->write_state = SMPD_WRITING_CLIENT_SSPI_BUFFER;
-    result = MPIDU_Sock_post_write(context->sock, context->sspi_context->buffer, context->sspi_context->buffer_length, context->sspi_context->buffer_length, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->sspi_context->buffer, context->sspi_context->buffer_length, context->sspi_context->buffer_length, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to post a write of the client sspi buffer,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -4111,34 +4113,34 @@ int smpd_state_writing_client_sspi_header(smpd_context_t *context, MPIDU_Sock_ev
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_client_sspi_buffer"
-int smpd_state_writing_client_sspi_buffer(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_client_sspi_buffer(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to write the client sspi buffer, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_dbg_printf("wrote sspi buffer.\n");
 
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_CLIENT_SSPI_HEADER;
-    result = MPIDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	/* FIXME: Add code to cleanup sspi structures */
 	smpd_err_printf("unable to post a read of the client sspi header,\nsock error: %s\n", get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -4146,7 +4148,7 @@ int smpd_state_writing_client_sspi_buffer(smpd_context_t *context, MPIDU_Sock_ev
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_cred_ack_sspi"
-int smpd_state_writing_cred_ack_sspi(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_cred_ack_sspi(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_command_t *cmd_ptr;
@@ -4154,13 +4156,13 @@ int smpd_state_writing_cred_ack_sspi(smpd_context_t *context, MPIDU_Sock_event_t
     smpd_context_t *dest_context;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the cred request sspi ack, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_dbg_printf("wrote cred request sspi ack.\n");
@@ -4186,8 +4188,8 @@ int smpd_state_writing_cred_ack_sspi(smpd_context_t *context, MPIDU_Sock_event_t
 	context->read_state = SMPD_IDLE;
 	context->write_state = SMPD_WRITING_CLIENT_SSPI_HEADER;
 	MPIU_Snprintf(context->sspi_header, SMPD_SSPI_HEADER_LENGTH, "%d", context->sspi_context->buffer_length);
-	result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-	if (result == MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+	if (result == SMPD_SUCCESS)
 	{
 	    result = SMPD_SUCCESS;
 	}
@@ -4199,9 +4201,9 @@ int smpd_state_writing_cred_ack_sspi(smpd_context_t *context, MPIDU_Sock_event_t
 #endif
 	    smpd_err_printf("unable to post a write of the sspi header,\nsock error: %s\n", get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    result = (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    result = (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return result;
@@ -4266,7 +4268,7 @@ int smpd_state_writing_cred_ack_sspi(smpd_context_t *context, MPIDU_Sock_event_t
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_cred_ack_sspi_job_key"
-int smpd_state_writing_cred_ack_sspi_job_key(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_cred_ack_sspi_job_key(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_command_t *cmd_ptr;
@@ -4274,13 +4276,13 @@ int smpd_state_writing_cred_ack_sspi_job_key(smpd_context_t *context, MPIDU_Sock
     smpd_context_t *dest_context;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the cred request sspi ack, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_dbg_printf("wrote cred request sspi job key ack.\n");
@@ -4306,8 +4308,8 @@ int smpd_state_writing_cred_ack_sspi_job_key(smpd_context_t *context, MPIDU_Sock
 	context->read_state = SMPD_IDLE;
 	context->write_state = SMPD_WRITING_CLIENT_SSPI_HEADER;
 	MPIU_Snprintf(context->sspi_header, SMPD_SSPI_HEADER_LENGTH, "%d", context->sspi_context->buffer_length);
-	result = MPIDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
-	if (result == MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->sspi_header, SMPD_SSPI_HEADER_LENGTH, SMPD_SSPI_HEADER_LENGTH, NULL);
+	if (result == SMPD_SUCCESS)
 	{
 	    result = SMPD_SUCCESS;
 	}
@@ -4319,9 +4321,9 @@ int smpd_state_writing_cred_ack_sspi_job_key(smpd_context_t *context, MPIDU_Sock
 #endif
 	    smpd_err_printf("unable to post a write of the sspi header,\nsock error: %s\n", get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    result = (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    result = (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return result;
@@ -4387,26 +4389,26 @@ int smpd_state_writing_cred_ack_sspi_job_key(smpd_context_t *context, MPIDU_Sock
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_cred_ack_yes"
-int smpd_state_writing_cred_ack_yes(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_cred_ack_yes(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the cred request yes ack, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_dbg_printf("wrote cred request yes ack.\n");
 
     context->read_state = SMPD_IDLE;
     context->write_state = SMPD_WRITING_ACCOUNT;
-    result = MPIDU_Sock_post_write(context->sock, context->account, SMPD_MAX_ACCOUNT_LENGTH, SMPD_MAX_ACCOUNT_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->account, SMPD_MAX_ACCOUNT_LENGTH, SMPD_MAX_ACCOUNT_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a write of the account '%s',\nsock error: %s\n",
 	    context->account, get_sock_error_string(result));
@@ -4419,19 +4421,19 @@ int smpd_state_writing_cred_ack_yes(smpd_context_t *context, MPIDU_Sock_event_t 
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_cred_ack_no"
-int smpd_state_writing_cred_ack_no(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_cred_ack_no(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     char *host_ptr;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the cred request no ack, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     smpd_dbg_printf("wrote cred request no ack.\n");
@@ -4454,37 +4456,37 @@ int smpd_state_writing_cred_ack_no(smpd_context_t *context, MPIDU_Sock_event_t *
     context->read_state = SMPD_IDLE;
     context->write_state = SMPD_IDLE;
     context->state = SMPD_CLOSING;
-    result = MPIDU_Sock_post_close(context->sock);
+    result = SMPDU_Sock_post_close(context->sock);
     smpd_exit_fn(FCNAME);
-    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 }
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_account"
-int smpd_state_reading_account(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_account(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the account, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("read account: '%s'\n", context->account);
     context->read_state = SMPD_READING_PASSWORD;
-    result = MPIDU_Sock_post_read(context->sock, context->encrypted_password, SMPD_MAX_PASSWORD_LENGTH, SMPD_MAX_PASSWORD_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->encrypted_password, SMPD_MAX_PASSWORD_LENGTH, SMPD_MAX_PASSWORD_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the password credential,\nsock error: %s\n",
 	    get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -4492,7 +4494,7 @@ int smpd_state_reading_account(smpd_context_t *context, MPIDU_Sock_event_t *even
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_password"
-int smpd_state_reading_password(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_password(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     char *iter;
@@ -4500,13 +4502,13 @@ int smpd_state_reading_password(smpd_context_t *context, MPIDU_Sock_event_t *eve
     int length;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the password, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 
     /* decrypt the password */
@@ -4543,30 +4545,30 @@ int smpd_state_reading_password(smpd_context_t *context, MPIDU_Sock_event_t *eve
     {
 	strcpy(context->pwd_request, SMPD_AUTHENTICATION_ACCEPTED_STR);
 	context->write_state = SMPD_WRITING_PROCESS_SESSION_ACCEPT;
-	result = MPIDU_Sock_post_write(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the process session accepted message,\nsock error: %s\n",
 		get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
     else
     {
 	strcpy(context->pwd_request, SMPD_AUTHENTICATION_REJECTED_STR);
 	context->write_state = SMPD_WRITING_PROCESS_SESSION_REJECT;
-	result = MPIDU_Sock_post_write(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the session rejected message,\nsock error: %s\n",
 		get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
 #else
@@ -4574,15 +4576,15 @@ int smpd_state_reading_password(smpd_context_t *context, MPIDU_Sock_event_t *eve
     smpd_dbg_printf("smpd writing noreconnect request\n");
     context->write_state = SMPD_WRITING_NO_RECONNECT_REQUEST;
     strcpy(context->port_str, SMPD_NO_RECONNECT_PORT_STR);
-    result = MPIDU_Sock_post_write(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("Unable to post a write of the re-connect port number(%s) back to mpiexec,\nsock error: %s\n",
 	    context->port_str, get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 #endif
     smpd_exit_fn(FCNAME);
@@ -4591,13 +4593,13 @@ int smpd_state_reading_password(smpd_context_t *context, MPIDU_Sock_event_t *eve
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_account"
-int smpd_state_writing_account(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_account(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     char buffer[SMPD_MAX_PASSWORD_LENGTH];
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the account, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -4620,8 +4622,8 @@ int smpd_state_writing_account(smpd_context_t *context, MPIDU_Sock_event_t *even
 	}
     }
     context->write_state = SMPD_WRITING_PASSWORD;
-    result = MPIDU_Sock_post_write(context->sock, context->encrypted_password, SMPD_MAX_PASSWORD_LENGTH, SMPD_MAX_PASSWORD_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->encrypted_password, SMPD_MAX_PASSWORD_LENGTH, SMPD_MAX_PASSWORD_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a write of the password,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -4634,12 +4636,12 @@ int smpd_state_writing_account(smpd_context_t *context, MPIDU_Sock_event_t *even
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_password"
-int smpd_state_writing_password(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_password(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the password, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -4647,8 +4649,8 @@ int smpd_state_writing_password(smpd_context_t *context, MPIDU_Sock_event_t *eve
     }
     smpd_dbg_printf("wrote password\n");
     context->read_state = SMPD_READING_PROCESS_RESULT;
-    result = MPIDU_Sock_post_read(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the process session result,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -4661,18 +4663,18 @@ int smpd_state_writing_password(smpd_context_t *context, MPIDU_Sock_event_t *eve
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_no_cred_request"
-int smpd_state_writing_no_cred_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_no_cred_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the no cred request, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote no cred request: '%s'\n", context->cred_request);
 #ifdef HAVE_WINDOWS_H
@@ -4683,11 +4685,11 @@ int smpd_state_writing_no_cred_request(smpd_context_t *context, MPIDU_Sock_event
 	context->state = SMPD_CLOSING;
 	context->read_state = SMPD_IDLE;
 	context->write_state = SMPD_IDLE;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close for the sock(%d) from a failed win_mgr, error:\n%s\n",
-		MPIDU_Sock_get_sock_id(context->sock), get_sock_error_string(result));
+		SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
 	}
@@ -4697,30 +4699,30 @@ int smpd_state_writing_no_cred_request(smpd_context_t *context, MPIDU_Sock_event
     /* post a write of the reconnect request */
     smpd_dbg_printf("smpd writing reconnect request: port %s\n", context->port_str);
     context->write_state = SMPD_WRITING_RECONNECT_REQUEST;
-    result = MPIDU_Sock_post_write(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("Unable to post a write of the re-connect port number(%s) back to mpiexec,\nsock error: %s\n",
 	    context->port_str, get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 #else
     /* post a write of the noreconnect request */
     smpd_dbg_printf("smpd writing noreconnect request\n");
     context->write_state = SMPD_WRITING_NO_RECONNECT_REQUEST;
     strcpy(context->port_str, SMPD_NO_RECONNECT_PORT_STR);
-    result = MPIDU_Sock_post_write(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("Unable to post a write of the re-connect port number(%s) back to mpiexec,\nsock error: %s\n",
 	    context->port_str, get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 #endif
     smpd_exit_fn(FCNAME);
@@ -4729,13 +4731,13 @@ int smpd_state_writing_no_cred_request(smpd_context_t *context, MPIDU_Sock_event
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_cred_request"
-int smpd_state_reading_cred_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_cred_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_command_t *cmd_ptr;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the cred request, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -4750,8 +4752,8 @@ int smpd_state_reading_cred_request(smpd_context_t *context, MPIDU_Sock_event_t 
 	    strcpy(context->cred_request, SMPD_CRED_ACK_SSPI);
 	    context->write_state = SMPD_WRITING_CRED_ACK_SSPI;
 	    context->read_state = SMPD_IDLE;
-	    result = MPIDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
+	    if (result != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("unable to post a write of the cred request sspi ack.\nsock error: %s\n",
 		    get_sock_error_string(result));
@@ -4766,8 +4768,8 @@ int smpd_state_reading_cred_request(smpd_context_t *context, MPIDU_Sock_event_t 
 	    strcpy(context->cred_request, SMPD_CRED_ACK_SSPI_JOB_KEY);
 	    context->write_state = SMPD_WRITING_CRED_ACK_SSPI_JOB_KEY;
 	    context->read_state = SMPD_IDLE;
-	    result = MPIDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
+	    if (result != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("unable to post a write of the cred request sspi ack.\nsock error: %s\n",
 		    get_sock_error_string(result));
@@ -4784,7 +4786,7 @@ int smpd_state_reading_cred_request(smpd_context_t *context, MPIDU_Sock_event_t 
 		(!smpd_get_cached_password(context->account, context->password) &&
 		!smpd_read_password_from_registry(smpd_process.user_index, context->account, context->password)))
 	    {
-		if (smpd_process.id > 0 && smpd_process.parent_context && smpd_process.parent_context->sock != MPIDU_SOCK_INVALID_SOCK)
+		if (smpd_process.id > 0 && smpd_process.parent_context && smpd_process.parent_context->sock != SMPDU_SOCK_INVALID_SOCK)
 		{
 		    result = smpd_create_command("cred_request", smpd_process.id, 0, SMPD_TRUE, &cmd_ptr);
 		    if (result != SMPD_SUCCESS)
@@ -4839,7 +4841,7 @@ int smpd_state_reading_cred_request(smpd_context_t *context, MPIDU_Sock_event_t 
 #else
 	if (smpd_process.UserAccount[0] == '\0')
 	{
-	    if (smpd_process.id > 0 && smpd_process.parent_context && smpd_process.parent_context->sock != MPIDU_SOCK_INVALID_SOCK)
+	    if (smpd_process.id > 0 && smpd_process.parent_context && smpd_process.parent_context->sock != SMPDU_SOCK_INVALID_SOCK)
 	    {
 		result = smpd_create_command("cred_request", smpd_process.id, 0, SMPD_TRUE, &cmd_ptr);
 		if (result != SMPD_SUCCESS)
@@ -4897,15 +4899,15 @@ int smpd_state_reading_cred_request(smpd_context_t *context, MPIDU_Sock_event_t 
 	    strcpy(context->cred_request, "no");
 	    context->write_state = SMPD_WRITING_CRED_ACK_NO;
 	    context->read_state = SMPD_IDLE;
-	    result = MPIDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
+	    result = SMPDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	strcpy(context->cred_request, "yes");
 	context->write_state = SMPD_WRITING_CRED_ACK_YES;
 	context->read_state = SMPD_IDLE;
-	result = MPIDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a write of the cred request yes ack.\nsock error: %s\n",
 		get_sock_error_string(result));
@@ -4921,8 +4923,8 @@ int smpd_state_reading_cred_request(smpd_context_t *context, MPIDU_Sock_event_t 
 	    strcpy(context->cred_request, SMPD_CRED_ACK_SSPI_JOB_KEY);
 	    context->write_state = SMPD_WRITING_CRED_ACK_SSPI_JOB_KEY;
 	    context->read_state = SMPD_IDLE;
-	    result = MPIDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
+	    if (result != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("unable to post a write of the cred request sspi ack.\nsock error: %s\n",
 		    get_sock_error_string(result));
@@ -4935,13 +4937,13 @@ int smpd_state_reading_cred_request(smpd_context_t *context, MPIDU_Sock_event_t 
 	strcpy(context->cred_request, "no");
 	context->write_state = SMPD_WRITING_CRED_ACK_NO;
 	context->read_state = SMPD_IDLE;
-	result = MPIDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
+	result = SMPDU_Sock_post_write(context->sock, context->cred_request, SMPD_MAX_CRED_REQUEST_LENGTH, SMPD_MAX_CRED_REQUEST_LENGTH, NULL);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     context->read_state = SMPD_READING_RECONNECT_REQUEST;
-    result = MPIDU_Sock_post_read(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the re-connect request,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -4954,28 +4956,28 @@ int smpd_state_reading_cred_request(smpd_context_t *context, MPIDU_Sock_event_t 
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_reconnect_request"
-int smpd_state_writing_reconnect_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_reconnect_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the re-connect request, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote reconnect request: '%s'\n", context->port_str);
     context->state = SMPD_CLOSING;
     context->read_state = SMPD_IDLE;
     context->write_state = SMPD_IDLE;
-    result = MPIDU_Sock_post_close(context->sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_close(context->sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a close on sock(%d) after reconnect request written, error:\n%s\n",
-	    MPIDU_Sock_get_sock_id(context->sock), get_sock_error_string(result));
+	    SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
@@ -4985,31 +4987,31 @@ int smpd_state_writing_reconnect_request(smpd_context_t *context, MPIDU_Sock_eve
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_no_reconnect_request"
-int smpd_state_writing_no_reconnect_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_no_reconnect_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the no re-connect request, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote no reconnect request: '%s'\n", context->port_str);
 #ifdef HAVE_WINDOWS_H
     context->read_state = SMPD_READING_SESSION_HEADER;
-    result = MPIDU_Sock_post_read(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read for the session header,\nsock error: %s\n",
 	    get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
 #else
     /* fork the manager process */
@@ -5019,11 +5021,11 @@ int smpd_state_writing_no_reconnect_request(smpd_context_t *context, MPIDU_Sock_
 	context->state = SMPD_CLOSING;
 	context->read_state = SMPD_IDLE;
 	context->write_state = SMPD_IDLE;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close for the sock(%d) from a failed unx_mgr, error:\n%s\n",
-		MPIDU_Sock_get_sock_id(context->sock), get_sock_error_string(result));
+		SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
 	}
@@ -5032,26 +5034,26 @@ int smpd_state_writing_no_reconnect_request(smpd_context_t *context, MPIDU_Sock_
     }
     if (smpd_process.root_smpd)
     {
-	smpd_dbg_printf("root closing sock(%d) after fork.\n", MPIDU_Sock_get_sock_id(context->sock));
+	smpd_dbg_printf("root closing sock(%d) after fork.\n", SMPDU_Sock_get_sock_id(context->sock));
 	context->state = SMPD_CLOSING;
 	context->read_state = SMPD_IDLE;
 	context->write_state = SMPD_IDLE;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close for the sock(%d) from a unx_mgr, error:\n%s\n",
-		MPIDU_Sock_get_sock_id(context->sock), get_sock_error_string(result));
+		SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
 	}
     }
     else
     {
-	smpd_dbg_printf("child closing listener sock(%d) after fork.\n", MPIDU_Sock_get_sock_id(smpd_process.listener_context->sock));
+	smpd_dbg_printf("child closing listener sock(%d) after fork.\n", SMPDU_Sock_get_sock_id(smpd_process.listener_context->sock));
 	/* close the listener in the child */
 	smpd_process.listener_context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(smpd_process.listener_context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(smpd_process.listener_context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a close on the listener,\nsock error: %s\n",
 		get_sock_error_string(result));
@@ -5060,15 +5062,15 @@ int smpd_state_writing_no_reconnect_request(smpd_context_t *context, MPIDU_Sock_
 	}
 	/* post a read of the session header */
 	context->read_state = SMPD_READING_SESSION_HEADER;
-	result = MPIDU_Sock_post_read(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_read(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a read for the session header,\nsock error: %s\n",
 		get_sock_error_string(result));
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
     }
 #endif
@@ -5078,12 +5080,12 @@ int smpd_state_writing_no_reconnect_request(smpd_context_t *context, MPIDU_Sock_
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_reconnect_request"
-int smpd_state_reading_reconnect_request(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_reconnect_request(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the re-connect request, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -5097,12 +5099,12 @@ int smpd_state_reading_reconnect_request(smpd_context_t *context, MPIDU_Sock_eve
 
 	smpd_dbg_printf("closing the old socket in the %s context.\n", smpd_get_context_str(context));
 	/* close the old sock */
-	smpd_dbg_printf("MPIDU_Sock_post_close(%d)\n", MPIDU_Sock_get_sock_id(context->sock));
+	smpd_dbg_printf("SMPDU_Sock_post_close(%d)\n", SMPDU_Sock_get_sock_id(context->sock));
 	/*context->state = SMPD_CLOSING;*/ /* don't set it here, set it later after the state has been copied to the new context */
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
-	    smpd_err_printf("MPIDU_Sock_post_close failed,\nsock error: %s\n", get_sock_error_string(result));
+	    smpd_err_printf("SMPDU_Sock_post_close failed,\nsock error: %s\n", get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
 	}
@@ -5116,7 +5118,7 @@ int smpd_state_reading_reconnect_request(smpd_context_t *context, MPIDU_Sock_eve
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
 	}
-	result = smpd_create_context(context->type, context->set, MPIDU_SOCK_INVALID_SOCK, context->id, &rc_context);
+	result = smpd_create_context(context->type, context->set, SMPDU_SOCK_INVALID_SOCK, context->id, &rc_context);
 	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to create a new context for the reconnection.\n");
@@ -5136,8 +5138,8 @@ int smpd_state_reading_reconnect_request(smpd_context_t *context, MPIDU_Sock_eve
 	if (rc_context->type == SMPD_CONTEXT_RIGHT_CHILD)
 	    smpd_process.right_context = rc_context;
 	smpd_dbg_printf("posting a re-connect to %s:%d in %s context.\n", rc_context->connect_to->host, port, smpd_get_context_str(rc_context));
-	result = MPIDU_Sock_post_connect(rc_context->set, rc_context, rc_context->connect_to->host, port, &rc_context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_connect(rc_context->set, rc_context, rc_context->connect_to->host, port, &rc_context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("Unable to post a connect to '%s:%d',\nsock error: %s\n",
 		rc_context->connect_to->host, port, get_sock_error_string(result));
@@ -5159,8 +5161,8 @@ int smpd_state_reading_reconnect_request(smpd_context_t *context, MPIDU_Sock_eve
 	return SMPD_FAIL;
     }
     context->write_state = SMPD_WRITING_SESSION_HEADER;
-    result = MPIDU_Sock_post_write(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a send of the session header,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -5173,20 +5175,20 @@ int smpd_state_reading_reconnect_request(smpd_context_t *context, MPIDU_Sock_eve
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_session_header"
-int smpd_state_reading_session_header(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_session_header(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the session header, %s.\n", get_sock_error_string(event_ptr->error));
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -5199,9 +5201,9 @@ int smpd_state_reading_session_header(smpd_context_t *context, MPIDU_Sock_event_
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -5218,9 +5220,9 @@ int smpd_state_reading_session_header(smpd_context_t *context, MPIDU_Sock_event_
 	if (smpd_process.root_smpd)
 	{
 	    context->state = SMPD_CLOSING;
-	    result = MPIDU_Sock_post_close(context->sock);
+	    result = SMPDU_Sock_post_close(context->sock);
 	    smpd_exit_fn(FCNAME);
-	    return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	    return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
 	}
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
@@ -5231,13 +5233,13 @@ int smpd_state_reading_session_header(smpd_context_t *context, MPIDU_Sock_event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_session_header"
-int smpd_state_writing_session_header(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr, MPIDU_Sock_set_t set)
+int smpd_state_writing_session_header(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr, SMPDU_Sock_set_t set)
 {
     int result;
     smpd_command_t *cmd_ptr;
     smpd_context_t *result_context, *context_in;
-    MPIDU_SOCK_NATIVE_FD stdin_fd;
-    MPIDU_Sock_t insock;
+    SMPDU_SOCK_NATIVE_FD stdin_fd;
+    SMPDU_Sock_t insock;
 #ifdef HAVE_WINDOWS_H
     DWORD dwThreadID;
     SOCKET hWrite;
@@ -5248,7 +5250,7 @@ int smpd_state_writing_session_header(smpd_context_t *context, MPIDU_Sock_event_
     smpd_host_node_t *left, *right, *host_node;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the session header, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -5743,8 +5745,8 @@ int smpd_state_writing_session_header(smpd_context_t *context, MPIDU_Sock_event_
 
 	/* convert the native handle to a sock */
 	/*printf("stdin native sock %d\n", stdin_fd);fflush(stdout);*/
-	result = MPIDU_Sock_native_to_sock(context->set, stdin_fd, NULL, &insock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_native_to_sock(context->set, stdin_fd, NULL, &insock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to create a sock from stdin,\nsock error: %s\n", get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
@@ -5758,7 +5760,7 @@ int smpd_state_writing_session_header(smpd_context_t *context, MPIDU_Sock_event_
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
 	}
-	MPIDU_Sock_set_user_ptr(insock, context_in);
+	SMPDU_Sock_set_user_ptr(insock, context_in);
 
 #ifdef HAVE_WINDOWS_H
 	/* unfortunately, we cannot use stdin directly as a sock.  So, use a thread to read and forward
@@ -5789,8 +5791,8 @@ int smpd_state_writing_session_header(smpd_context_t *context, MPIDU_Sock_event_
 
 	/* post a read for a user command from stdin */
 	context_in->read_state = SMPD_READING_STDIN;
-	result = MPIDU_Sock_post_read(insock, context_in->read_cmd.cmd, 1, 1, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_read(insock, context_in->read_cmd.cmd, 1, 1, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a read on stdin for an incoming user command, error:\n%s\n",
 		get_sock_error_string(result));
@@ -5808,12 +5810,12 @@ int smpd_state_writing_session_header(smpd_context_t *context, MPIDU_Sock_event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_smpd_result"
-int smpd_state_reading_smpd_result(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_smpd_result(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the smpd result, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -5826,8 +5828,8 @@ int smpd_state_reading_smpd_result(smpd_context_t *context, MPIDU_Sock_event_t *
 	smpd_dbg_printf("connection rejected, server returned - %s\n", context->pwd_request);
 	context->read_state = SMPD_IDLE;
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to close sock, error:\n%s\n", get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
@@ -5845,8 +5847,8 @@ int smpd_state_reading_smpd_result(smpd_context_t *context, MPIDU_Sock_event_t *
 	return SMPD_FAIL;
     }
     context->write_state = SMPD_WRITING_SESSION_HEADER;
-    result = MPIDU_Sock_post_write(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a send of the session header,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -5859,12 +5861,12 @@ int smpd_state_reading_smpd_result(smpd_context_t *context, MPIDU_Sock_event_t *
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_process_result"
-int smpd_state_reading_process_result(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_process_result(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the process session result, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -5893,8 +5895,8 @@ int smpd_state_reading_process_result(smpd_context_t *context, MPIDU_Sock_event_
 	smpd_dbg_printf("process session rejected\n");
 	context->read_state = SMPD_IDLE;
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_close(context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to close sock,\nsock error: %s\n", get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
@@ -5920,8 +5922,8 @@ int smpd_state_reading_process_result(smpd_context_t *context, MPIDU_Sock_event_
 	return SMPD_SUCCESS;
     }
     context->read_state = SMPD_READING_RECONNECT_REQUEST;
-    result = MPIDU_Sock_post_read(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the re-connect request,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -5934,30 +5936,30 @@ int smpd_state_reading_process_result(smpd_context_t *context, MPIDU_Sock_event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_session_accept"
-int smpd_state_writing_session_accept(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_session_accept(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the session accept string, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote session accept: '%s'\n", context->pwd_request);
     context->read_state = SMPD_READING_SESSION_HEADER;
-    result = MPIDU_Sock_post_read(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the session header,\nsock error: %s\n",
 	    get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -5965,32 +5967,32 @@ int smpd_state_writing_session_accept(smpd_context_t *context, MPIDU_Sock_event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_session_reject"
-int smpd_state_writing_session_reject(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_session_reject(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the session reject string, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote session reject: '%s'\n", context->pwd_request);
     context->state = SMPD_CLOSING;
     context->read_state = SMPD_IDLE;
     context->write_state = SMPD_IDLE;
-    result = MPIDU_Sock_post_close(context->sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_close(context->sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a close of the sock after writing a reject message,\nsock error: %s\n",
 	    get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -5998,32 +6000,32 @@ int smpd_state_writing_session_reject(smpd_context_t *context, MPIDU_Sock_event_
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_process_session_accept"
-int smpd_state_writing_process_session_accept(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_process_session_accept(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the process session accept string, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote process session accept: '%s'\n", context->pwd_request);
     /* post a write of the reconnect request */
     smpd_dbg_printf("smpd writing reconnect request: port %s\n", context->port_str);
     context->write_state = SMPD_WRITING_RECONNECT_REQUEST;
-    result = MPIDU_Sock_post_write(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_write(context->sock, context->port_str, SMPD_MAX_PORT_STR_LENGTH, SMPD_MAX_PORT_STR_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("Unable to post a write of the re-connect port number(%s) back to mpiexec,\nsock error: %s\n",
 	    context->port_str, get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -6031,32 +6033,32 @@ int smpd_state_writing_process_session_accept(smpd_context_t *context, MPIDU_Soc
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_process_session_reject"
-int smpd_state_writing_process_session_reject(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_process_session_reject(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the process session reject string, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("wrote process session reject: '%s'\n", context->pwd_request);
     context->state = SMPD_CLOSING;
     context->read_state = SMPD_IDLE;
     context->write_state = SMPD_IDLE;
-    result = MPIDU_Sock_post_close(context->sock);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_close(context->sock);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a close of the sock after writing a process session reject message,\nsock error: %s\n",
 	    get_sock_error_string(result));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
@@ -6064,12 +6066,12 @@ int smpd_state_writing_process_session_reject(smpd_context_t *context, MPIDU_Soc
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_smpd_password"
-int smpd_state_writing_smpd_password(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_smpd_password(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the smpd password, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -6078,8 +6080,8 @@ int smpd_state_writing_smpd_password(smpd_context_t *context, MPIDU_Sock_event_t
     smpd_dbg_printf("wrote smpd password.\n");
     context->write_state = SMPD_IDLE;
     context->read_state = SMPD_READING_SMPD_RESULT;
-    result = MPIDU_Sock_post_read(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_post_read(context->sock, context->pwd_request, SMPD_AUTHENTICATION_REPLY_LENGTH, SMPD_AUTHENTICATION_REPLY_LENGTH, NULL);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to post a read of the session request result,\nsock error: %s\n",
 	    get_sock_error_string(result));
@@ -6092,18 +6094,18 @@ int smpd_state_writing_smpd_password(smpd_context_t *context, MPIDU_Sock_event_t
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_pmi_id"
-int smpd_state_reading_pmi_id(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_pmi_id(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the pmi context id, %s.\n", get_sock_error_string(event_ptr->error));
 	context->state = SMPD_CLOSING;
-	result = MPIDU_Sock_post_close(context->sock);
+	result = SMPDU_Sock_post_close(context->sock);
 	smpd_exit_fn(FCNAME);
-	return (result == MPI_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
+	return (result == SMPD_SUCCESS) ? SMPD_SUCCESS : SMPD_FAIL;
     }
     smpd_dbg_printf("read pmi context id: '%s'\n", context->session);
     smpd_exit_fn(FCNAME);
@@ -6112,12 +6114,12 @@ int smpd_state_reading_pmi_id(smpd_context_t *context, MPIDU_Sock_event_t *event
 
 #undef FCNAME
 #define FCNAME "smpd_state_writing_pmi_id"
-int smpd_state_writing_pmi_id(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_writing_pmi_id(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to write the pmi context id, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -6139,14 +6141,14 @@ int smpd_state_writing_pmi_id(smpd_context_t *context, MPIDU_Sock_event_t *event
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_timeout"
-int smpd_state_reading_timeout(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_timeout(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
     SMPD_UNREFERENCED_ARG(context);
 
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the timeout byte, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -6184,14 +6186,14 @@ int smpd_state_reading_timeout(smpd_context_t *context, MPIDU_Sock_event_t *even
 
 #undef FCNAME
 #define FCNAME "smpd_state_reading_mpiexec_abort"
-int smpd_state_reading_mpiexec_abort(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_state_reading_mpiexec_abort(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
     smpd_enter_fn(FCNAME);
     SMPD_UNREFERENCED_ARG(context);
 
-    if (event_ptr->error != MPI_SUCCESS)
+    if (event_ptr->error != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to read the mpiexec abort byte, %s.\n", get_sock_error_string(event_ptr->error));
 	smpd_exit_fn(FCNAME);
@@ -6213,7 +6215,7 @@ int smpd_state_reading_mpiexec_abort(smpd_context_t *context, MPIDU_Sock_event_t
 
 #undef FCNAME
 #define FCNAME "smpd_state_singleton_mpiexec_connecting" 
-int smpd_state_singleton_mpiexec_connecting(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr){
+int smpd_state_singleton_mpiexec_connecting(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr){
     int result;
     smpd_command_t *cmd_ptr=NULL;
     smpd_enter_fn(FCNAME);
@@ -6247,27 +6249,27 @@ int smpd_state_singleton_mpiexec_connecting(smpd_context_t *context, MPIDU_Sock_
 
 #undef FCNAME
 #define FCNAME "smpd_state_singleton_client_listening"
-int smpd_state_singleton_client_listening(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr, MPIDU_Sock_set_t set){
+int smpd_state_singleton_client_listening(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr, SMPDU_Sock_set_t set){
     int result;
-    MPIDU_Sock_t new_sock;
+    SMPDU_Sock_t new_sock;
     smpd_context_t *p_singleton_connected_context;
 
     smpd_enter_fn(FCNAME);
     /* Accept connection */
-    result = MPIDU_Sock_accept(context->sock, set, NULL, &new_sock);
-    if(result != MPI_SUCCESS){
+    result = SMPDU_Sock_accept(context->sock, set, NULL, &new_sock);
+    if(result != SMPD_SUCCESS){
         context->state = SMPD_DONE;
-        smpd_err_printf("MPIDU_Sock_accept failed, error = %s\n", get_sock_error_string(result));
+        smpd_err_printf("SMPDU_Sock_accept failed, error = %s\n", get_sock_error_string(result));
         smpd_exit_fn(FCNAME);
         return SMPD_FAIL;
     }
     context->state = SMPD_SINGLETON_DONE;
 
     /* Close the listen sock and free its context */
-    result = MPIDU_Sock_post_close(context->sock);
-    if(result != MPI_SUCCESS){
+    result = SMPDU_Sock_post_close(context->sock);
+    if(result != SMPD_SUCCESS){
         context->state = SMPD_DONE;
-        smpd_err_printf("MPIDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
+        smpd_err_printf("SMPDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
         smpd_exit_fn(FCNAME);
         return SMPD_FAIL;
     }
@@ -6278,9 +6280,9 @@ int smpd_state_singleton_client_listening(smpd_context_t *context, MPIDU_Sock_ev
         smpd_err_printf("smpd_create_context failed, error = %d\n", result);
         context->state = SMPD_DONE;
         /*
-        result = MPIDU_Sock_post_close(new_sock);
-        if(result != MPI_SUCCESS){
-            smpd_err_printf("MPIDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
+        result = SMPDU_Sock_post_close(new_sock);
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("SMPDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
         }
         */
         /* Let state machine handle close and destroy the context */
@@ -6288,9 +6290,9 @@ int smpd_state_singleton_client_listening(smpd_context_t *context, MPIDU_Sock_ev
         return SMPD_FAIL;
     }
 
-    result = MPIDU_Sock_set_user_ptr(new_sock, p_singleton_connected_context);
-    if(result != MPI_SUCCESS){
-        smpd_err_printf("MPIDU_Sock_set_user_ptr failed, error = %d\n", result);
+    result = SMPDU_Sock_set_user_ptr(new_sock, p_singleton_connected_context);
+    if(result != SMPD_SUCCESS){
+        smpd_err_printf("SMPDU_Sock_set_user_ptr failed, error = %d\n", result);
         p_singleton_connected_context->state = SMPD_DONE;
         context->state = SMPD_DONE;
         /* Let state machine handle close and destroy the context */
@@ -6305,9 +6307,9 @@ int smpd_state_singleton_client_listening(smpd_context_t *context, MPIDU_Sock_ev
     if(result != SMPD_SUCCESS){
         smpd_err_printf("smpd_post_read_command failed, error = %d\n", result);
         context->state = SMPD_DONE;
-        result = MPIDU_Sock_post_close(p_singleton_connected_context->sock);
-        if(result != MPI_SUCCESS){
-            smpd_err_printf("MPIDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
+        result = SMPDU_Sock_post_close(p_singleton_connected_context->sock);
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("SMPDU_Sock_post_close failed, error = %s\n", get_sock_error_string(result));
         }
         smpd_exit_fn(FCNAME);
         return SMPD_FAIL;
@@ -6320,7 +6322,7 @@ int smpd_state_singleton_client_listening(smpd_context_t *context, MPIDU_Sock_ev
 
 #undef FCNAME
 #define FCNAME "smpd_handle_op_read"
-int smpd_handle_op_read(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_handle_op_read(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
 
@@ -6425,7 +6427,7 @@ int smpd_handle_op_read(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
 
 #undef FCNAME
 #define FCNAME "smpd_handle_op_write"
-int smpd_handle_op_write(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr, MPIDU_Sock_set_t set)
+int smpd_handle_op_write(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr, SMPDU_Sock_set_t set)
 {
     int result;
 
@@ -6541,7 +6543,7 @@ int smpd_handle_op_write(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr,
 	result = smpd_state_writing_sspi_job_key(context, event_ptr);
 	break;
     default:
-	if (event_ptr->error != MPI_SUCCESS)
+	if (event_ptr->error != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("sock_op_write failed while context is in state %s, %s\n",
 		smpd_get_state_string(context->write_state), get_sock_error_string(event_ptr->error));
@@ -6560,7 +6562,7 @@ int smpd_handle_op_write(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr,
 
 #undef FCNAME
 #define FCNAME "smpd_handle_op_accept"
-int smpd_handle_op_accept(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr, MPIDU_Sock_set_t set)
+int smpd_handle_op_accept(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr, SMPDU_Sock_set_t set)
 {
     int result;
 
@@ -6594,7 +6596,7 @@ int smpd_handle_op_accept(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr
 
 #undef FCNAME
 #define FCNAME "smpd_handle_op_connect"
-int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_handle_op_connect(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result = SMPD_SUCCESS;
 
@@ -6602,14 +6604,14 @@ int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
     switch (context->state)
     {
     case SMPD_MPIEXEC_CONNECTING_TREE:
-	if (event_ptr->error != MPI_SUCCESS)
+	if (event_ptr->error != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to connect mpiexec tree, %s.\n", get_sock_error_string(event_ptr->error));
 	    result = SMPD_FAIL;
 	    break;
 	}
     case SMPD_CONNECTING:
-	if (event_ptr->error != MPI_SUCCESS)
+	if (event_ptr->error != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to connect an internal tree node, %s.\n", get_sock_error_string(event_ptr->error));
 	    result = SMPD_FAIL;
@@ -6625,8 +6627,8 @@ int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 		return SMPD_FAIL;
 	    }
 	    context->write_state = SMPD_WRITING_SESSION_HEADER;
-	    result = MPIDU_Sock_post_write(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
-	    if (result != MPI_SUCCESS)
+	    result = SMPDU_Sock_post_write(context->sock, context->session_header, SMPD_MAX_SESSION_HEADER_LENGTH, SMPD_MAX_SESSION_HEADER_LENGTH, NULL);
+	    if (result != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("unable to post a send of the session header,\nsock error: %s\n",
 		    get_sock_error_string(result));
@@ -6639,7 +6641,7 @@ int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	/* no break here, not-reconnecting contexts fall through */
     case SMPD_MPIEXEC_CONNECTING_SMPD:
     case SMPD_CONNECTING_RPMI:
-	if (event_ptr->error != MPI_SUCCESS)
+	if (event_ptr->error != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to connect to the smpd, %s.\n", get_sock_error_string(event_ptr->error));
 	    result = SMPD_FAIL;
@@ -6647,8 +6649,8 @@ int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	}
 	smpd_dbg_printf("connect succeeded, posting read of the challenge string\n");
 	context->read_state = SMPD_READING_CHALLENGE_STRING;
-	result = MPIDU_Sock_post_read(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_read(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a read of the challenge string,\nsock error: %s\n",
 		get_sock_error_string(result));
@@ -6658,7 +6660,7 @@ int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	result = SMPD_SUCCESS;
 	break;
     case SMPD_CONNECTING_PMI:
-	if (event_ptr->error != MPI_SUCCESS)
+	if (event_ptr->error != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to connect to the smpd, %s.\n", get_sock_error_string(event_ptr->error));
 	    result = SMPD_FAIL;
@@ -6667,8 +6669,8 @@ int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 	/* 
 	smpd_dbg_printf("connect succeeded, posting read of the next pmi command\n");
 	context->read_state = SMPD_READING_CMD_HEADER;
-	result = MPIDU_Sock_post_read(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_read(context->sock, context->pszChallengeResponse, SMPD_AUTHENTICATION_STR_LEN, SMPD_AUTHENTICATION_STR_LEN, NULL);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to post a read of the challenge string,\nsock error: %s\n",
 		get_sock_error_string(result));
@@ -6687,7 +6689,7 @@ int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
         }
     break;
     default:
-	if (event_ptr->error != MPI_SUCCESS)
+	if (event_ptr->error != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("sock_op_connect failed while %s context is in state %s, %s\n",
 		smpd_get_context_str(context), smpd_get_state_string(context->state),
@@ -6708,7 +6710,7 @@ int smpd_handle_op_connect(smpd_context_t *context, MPIDU_Sock_event_t *event_pt
 
 #undef FCNAME
 #define FCNAME "smpd_handle_op_close"
-int smpd_handle_op_close(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
+int smpd_handle_op_close(smpd_context_t *context, SMPDU_Sock_event_t *event_ptr)
 {
     int result;
     smpd_command_t *cmd_ptr;
@@ -6739,9 +6741,9 @@ int smpd_handle_op_close(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
 	{
 	    smpd_process.listener_context->state = SMPD_EXITING;
 	    smpd_dbg_printf("closing the listener (state = %s).\n", smpd_get_state_string(smpd_process.listener_context->state));
-	    result = MPIDU_Sock_post_close(smpd_process.listener_context->sock);
+	    result = SMPDU_Sock_post_close(smpd_process.listener_context->sock);
 	    smpd_process.listener_context = NULL;
-	    if (result == MPI_SUCCESS)
+	    if (result == SMPD_SUCCESS)
 	    {
 		break;
 	    }
@@ -6786,8 +6788,8 @@ int smpd_handle_op_close(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
 		    context->process->in = NULL;
 		    in_context->state = SMPD_CLOSING;
 		    in_context->process = NULL; /* NULL this out so the closing of the stdin context won't access it after it has been freed */
-		    result = MPIDU_Sock_post_close(in_context->sock);
-		    if (result != MPI_SUCCESS)
+		    result = SMPDU_Sock_post_close(in_context->sock);
+		    if (result != SMPD_SUCCESS)
 		    {
 			smpd_free_context(in_context);
 		    }
@@ -7019,8 +7021,8 @@ int smpd_handle_op_close(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
 		{
 		    smpd_dbg_printf("all contexts closed, closing the listener.\n");
 		    smpd_process.listener_context->state = SMPD_EXITING;
-		    result = MPIDU_Sock_post_close(smpd_process.listener_context->sock);
-		    if (result == MPI_SUCCESS)
+		    result = SMPDU_Sock_post_close(smpd_process.listener_context->sock);
+		    if (result == SMPD_SUCCESS)
 		    {
 			break;
 		    }
@@ -7074,8 +7076,8 @@ int smpd_handle_op_close(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
 		    {
 			smpd_dbg_printf("all contexts closed, closing the listener.\n");
 			smpd_process.listener_context->state = SMPD_EXITING;
-			result = MPIDU_Sock_post_close(smpd_process.listener_context->sock);
-			if (result == MPI_SUCCESS)
+			result = SMPDU_Sock_post_close(smpd_process.listener_context->sock);
+			if (result == SMPD_SUCCESS)
 			{
 			    break;
 			}
@@ -7104,12 +7106,12 @@ int smpd_handle_op_close(smpd_context_t *context, MPIDU_Sock_event_t *event_ptr)
 
 #undef FCNAME
 #define FCNAME "smpd_enter_at_state"
-int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
+int smpd_enter_at_state(SMPDU_Sock_set_t set, smpd_state_t state)
 {
     int result;
-    MPIDU_Sock_event_t event;
+    SMPDU_Sock_event_t event;
     smpd_context_t *context;
-    char error_msg[MPI_MAX_ERROR_STRING];
+    char error_msg[SMPD_MAX_ERROR_LEN];
     int len;
 
     smpd_enter_fn(FCNAME);
@@ -7117,29 +7119,29 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 
     for (;;)
     {
-	event.error = MPI_SUCCESS;
+	event.error = SMPD_SUCCESS;
 	smpd_dbg_printf("sock_waiting for the next event.\n");
-	result = MPIDU_Sock_wait(set, MPIDU_SOCK_INFINITE_TIME, &event);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_wait(set, SMPDU_SOCK_INFINITE_TIME, &event);
+	if (result != SMPD_SUCCESS)
 	{
 	    /*
 	    if (result == SOCK_ERR_TIMEOUT)
 	    {
-		smpd_err_printf("Warning: MPIDU_Sock_wait returned SOCK_ERR_TIMEOUT when infinite time was passed in.\n");
+		smpd_err_printf("Warning: SMPDU_Sock_wait returned SOCK_ERR_TIMEOUT when infinite time was passed in.\n");
 		continue;
 	    }
 	    */
-	    if (event.error != MPI_SUCCESS)
+	    if (event.error != SMPD_SUCCESS)
 		result = event.error;
-	    smpd_err_printf("MPIDU_Sock_wait failed,\nsock error: %s\n", get_sock_error_string(result));
+	    smpd_err_printf("SMPDU_Sock_wait failed,\nsock error: %s\n", get_sock_error_string(result));
 	    smpd_exit_fn(FCNAME);
 	    return result;
 	}
 	context = event.user_ptr;
 	if (context == NULL)
 	{
-	    smpd_err_printf("MPIDU_Sock_wait returned an event with a NULL user pointer.\n");
-	    if (event.error != MPI_SUCCESS)
+	    smpd_err_printf("SMPDU_Sock_wait returned an event with a NULL user pointer.\n");
+	    if (event.error != SMPD_SUCCESS)
 	    {
 		smpd_exit_fn(FCNAME);
 		return SMPD_FAIL;
@@ -7148,12 +7150,12 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 	}
 	switch (event.op_type)
 	{
-	case MPIDU_SOCK_OP_READ:
+	case SMPDU_SOCK_OP_READ:
 	    smpd_dbg_printf("SOCK_OP_READ\n");
-	    if (event.error != MPI_SUCCESS)
-	    {
-		/* don't print EOF errors because they usually aren't errors */
-		/*if (event.error != SOCK_EOF)*/
+	    if (event.error != SMPD_SUCCESS)
+        {
+		    /* don't print EOF errors because they usually aren't errors */
+		    /*if (event.error != SOCK_EOF)*/
 		{
 		    /* don't print errors from the pmi context because processes that don't 
 		       call PMI_Finalize will get read errors that don't need to be printed.
@@ -7164,7 +7166,8 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 			context->type != SMPD_CONTEXT_MPIEXEC_STDIN_RSH &&
 			context->type != SMPD_CONTEXT_MPIEXEC_STDIN)
 		    {
-			if (!((context->type == SMPD_CONTEXT_STDOUT || context->type == SMPD_CONTEXT_STDERR) && event.error == MPIDU_SOCK_ERR_CONN_CLOSED))
+			/* FIXME: Reintroduce event.error == SMPDU_SOCK_ERR_CONN_CLOSED once we have a better error code */
+            if (!((context->type == SMPD_CONTEXT_STDOUT || context->type == SMPD_CONTEXT_STDERR) /*&& event.error == SMPDU_SOCK_ERR_CONN_CLOSED */))
 			{
 			    if (!smpd_process.closing)
 			    {
@@ -7180,7 +7183,7 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 		smpd_exit_fn(FCNAME);
 		return SMPD_SUCCESS;
 	    }
-	    if (result != SMPD_SUCCESS || event.error != MPI_SUCCESS)
+	    if (result != SMPD_SUCCESS || event.error != SMPD_SUCCESS)
 	    {
 		if (context->type == SMPD_CONTEXT_PARENT && smpd_process.root_smpd != SMPD_TRUE)
 		{
@@ -7224,12 +7227,12 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 		{
 		    /* An error occurred and a close was not successfully posted, post one here */
 		    context->state = SMPD_CLOSING;
-		    result = MPIDU_Sock_post_close(context->sock);
-		    if (result != MPI_SUCCESS)
+		    result = SMPDU_Sock_post_close(context->sock);
+		    if (result != SMPD_SUCCESS)
 		    {
-			len = MPI_MAX_ERROR_STRING;
+			len = SMPD_MAX_ERROR_LEN;
 			result = PMPI_Error_string(result, error_msg, &len);
-			if (result == MPI_SUCCESS)
+			if (result == SMPD_SUCCESS)
 			{
 			    smpd_err_printf("unable to post a close on a broken %s context, error: %s\n", smpd_get_context_str(context), error_msg);
 			}
@@ -7253,9 +7256,9 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 		}
 	    }
 	    break;
-	case MPIDU_SOCK_OP_WRITE:
+	case SMPDU_SOCK_OP_WRITE:
 	    smpd_dbg_printf("SOCK_OP_WRITE\n");
-	    if (event.error != MPI_SUCCESS)
+	    if (event.error != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("op_write error on %s context: %s\n", smpd_get_context_str(context), get_sock_error_string(event.error));
 	    }
@@ -7265,14 +7268,14 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 		smpd_exit_fn(FCNAME);
 		return SMPD_SUCCESS;
 	    }
-	    if (result != SMPD_SUCCESS || event.error != MPI_SUCCESS)
+	    if (result != SMPD_SUCCESS || event.error != SMPD_SUCCESS)
 	    {
 		smpd_dbg_printf("SOCK_OP_WRITE failed, closing %s context.\n", smpd_get_context_str(context));
 		if (context->state != SMPD_CLOSING)
 		{
 		    context->state = SMPD_CLOSING;
-		    result = MPIDU_Sock_post_close(context->sock);
-		    if (result != MPI_SUCCESS)
+		    result = SMPDU_Sock_post_close(context->sock);
+		    if (result != SMPD_SUCCESS)
 		    {
 			smpd_err_printf("unable to post a close on a broken %s context.\n", smpd_get_context_str(context));
 			if (smpd_process.root_smpd != SMPD_TRUE)
@@ -7286,16 +7289,16 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 		}
 	    }
 	    break;
-	case MPIDU_SOCK_OP_ACCEPT:
+	case SMPDU_SOCK_OP_ACCEPT:
 	    smpd_dbg_printf("SOCK_OP_ACCEPT\n");
-	    if (event.error != MPI_SUCCESS)
+	    if (event.error != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("error listening and accepting socket: %s\n", get_sock_error_string(event.error));
 		smpd_exit_fn(FCNAME);
 		return SMPD_FAIL;
 	    }
 	    result = smpd_handle_op_accept(context, &event, set);
-	    if (result != SMPD_SUCCESS || event.error != MPI_SUCCESS)
+	    if (result != SMPD_SUCCESS || event.error != SMPD_SUCCESS)
 	    {
 		if (result != SMPD_SUCCESS)
 		    smpd_dbg_printf("SOCK_OP_ACCEPT failed, result = %d, closing %s context.\n", result, smpd_get_context_str(context));
@@ -7304,8 +7307,8 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 		if (context->state != SMPD_CLOSING)
 		{
 		    context->state = SMPD_CLOSING;
-		    result = MPIDU_Sock_post_close(context->sock);
-		    if (result != MPI_SUCCESS)
+		    result = SMPDU_Sock_post_close(context->sock);
+		    if (result != SMPD_SUCCESS)
 		    {
 			smpd_err_printf("unable to post a close on a broken %s context.\n", smpd_get_context_str(context));
 			if (smpd_process.root_smpd != SMPD_TRUE)
@@ -7319,9 +7322,9 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 		}
 	    }
 	    break;
-	case MPIDU_SOCK_OP_CONNECT:
+	case SMPDU_SOCK_OP_CONNECT:
 	    smpd_dbg_printf("SOCK_OP_CONNECT\n");
-	    if (event.error != MPI_SUCCESS)
+	    if (event.error != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("op_connect error: %s\n", get_sock_error_string(event.error));
 	    }
@@ -7331,24 +7334,24 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 		smpd_exit_fn(FCNAME);
 		return SMPD_SUCCESS;
 	    }
-	    if (result != SMPD_SUCCESS || event.error != MPI_SUCCESS)
+	    if (result != SMPD_SUCCESS || event.error != SMPD_SUCCESS)
 	    {
 		smpd_process.state_machine_ret_val = (result != SMPD_SUCCESS) ? result : event.error;
 		smpd_dbg_printf("SOCK_OP_CONNECT failed, closing %s context.\n", smpd_get_context_str(context));
 		if (context->state != SMPD_CLOSING)
 		{
 		    context->state = SMPD_CLOSING;
-		    result = MPIDU_Sock_post_close(context->sock);
+		    result = SMPDU_Sock_post_close(context->sock);
 		}
 		else
 		{
-		    result = MPI_SUCCESS;
+		    result = SMPD_SUCCESS;
 		}
 		if (context->connect_to)
 		    smpd_post_abort_command("unable to connect to %s", context->connect_to->host);
 		else
 		    smpd_post_abort_command("connect failure");
-		if (result != MPI_SUCCESS)
+		if (result != SMPD_SUCCESS)
 		{
 		    smpd_err_printf("unable to post a close on a broken %s context.\n", smpd_get_context_str(context));
 		    smpd_exit_fn(FCNAME);
@@ -7356,13 +7359,13 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 		}
 	    }
 	    break;
-	case MPIDU_SOCK_OP_CLOSE:
+	case SMPDU_SOCK_OP_CLOSE:
 	    smpd_dbg_printf("SOCK_OP_CLOSE\n"); fflush(stdout);
-	    if (event.error != MPI_SUCCESS)
+	    if (event.error != SMPD_SUCCESS)
 		smpd_err_printf("error closing the %s context socket: %s\n", smpd_get_context_str(context), get_sock_error_string(event.error));
 	    result = smpd_handle_op_close(context, &event);
 	    /*
-	    if (event.error != MPI_SUCCESS)
+	    if (event.error != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("unable to close the %s context.\n", smpd_get_context_str(context));
 		smpd_exit_fn(FCNAME);
@@ -7383,7 +7386,7 @@ int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state)
 	    break;
 	default:
 	    smpd_dbg_printf("SOCK_OP_UNKNOWN\n");
-	    smpd_err_printf("MPIDU_Sock_wait returned unknown sock event type: %d\n", event.op_type);
+	    smpd_err_printf("SMPDU_Sock_wait returned unknown sock event type: %d\n", event.op_type);
 	    break;
 	}
     }

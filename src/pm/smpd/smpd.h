@@ -6,6 +6,8 @@
 #ifndef SMPD_H
 #define SMPD_H
 
+#include "smpdconf.h"
+
 #ifdef HAVE_WINDOWS_H
 #include <winsock2.h>
 #include <windows.h>
@@ -15,9 +17,8 @@
 #include <io.h>
 #define SECURITY_WIN32
 #include <security.h>
-#else
-#include "smpdconf.h"
 #endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_SYS_TYPES_H
@@ -53,14 +54,15 @@
 #include <sys/select.h>
 #endif
 #endif
-#include "mpi.h"
-#include "mpidu_sock.h"
+
+#include "mpichconf.h"
 #include "mpimem.h"
-#include "mpierror.h"
 #include "smpd_database.h"
 #include "pmi.h"
 
 #include "smpd_version.h"
+#include "smpd_iov.h"
+#include "smpd_util_sock.h"
 #define SMPD_VERSION_FAILURE "version_failure"
 
 #define SMPD_LISTENER_PORT               8676
@@ -73,6 +75,22 @@
 #define SMPD_EXIT                           4
 #define SMPD_DBS_RETURN                     5
 #define SMPD_ABORT                          6
+
+/* #define SMPD_LAST_RETVAL                    7 */
+
+/* FIXME: Use an enum instead
+enum SMPD_RetVal{
+    SMPD_ERR_INVALID_USER=-3,
+    SMPD_ABORT,
+    SMPD_FAIL,
+    SMPD_SUCCESS,
+    SMPD_DBS_RETURN,
+    SMPD_CONNECTED,
+    SMPD_CLOSE,
+    SMPD_EXIT,
+    SMPD_LAST_RETVAL
+};
+*/
 
 typedef int SMPD_BOOL;
 #define SMPD_TRUE                           1
@@ -188,6 +206,23 @@ typedef int SMPD_BOOL;
 #define smpd_get_last_error GetLastError
 #else
 #define smpd_get_last_error() errno
+#endif
+
+/* FIXME: Do something sensible like mpitypedefs.h */
+#define SMPDU_Size_t    int
+
+#define SMPDU_Assert(a_)    {                                       \
+    if(!(a_)){                                                      \
+        smpd_err_printf("Assertion failed in file %s at line %d\n", \
+            __FILE__, __LINE__);                                    \
+        exit(-1);                                                   \
+    }                                                               \
+}
+
+#ifdef HAVE_WINDOWS_H
+#   define SMPDU_UNREFERENCED_ARG(a_)   a_
+#else
+#   define SMPDU_UNREFERENCED_ARG(a_)
 #endif
 
 #define SMPD_ERR_SETPRINTANDJUMP(msg, errcode) {smpd_err_printf("%s", msg); retval = errcode; goto fn_fail; }
@@ -332,7 +367,7 @@ typedef struct smpd_command_t
     char cmd_hdr_str[SMPD_CMD_HDR_LENGTH];
     char cmd_str[SMPD_MAX_CMD_STR_LENGTH];
     char cmd[SMPD_MAX_CMD_LENGTH];
-    MPID_IOV iov[2];
+    SMPD_IOV iov[2];
     int length;
     int src, dest, tag;
     int wait;
@@ -410,8 +445,8 @@ typedef struct smpd_context_t
     char host[SMPD_MAX_HOST_LENGTH];
     int id, rank;
     smpd_pwait_t wait;
-    MPIDU_Sock_set_t set;
-    MPIDU_Sock_t sock;
+    SMPDU_Sock_set_t set;
+    SMPDU_Sock_t sock;
     smpd_state_t state;
     smpd_state_t read_state;
     smpd_command_t read_cmd;
@@ -624,7 +659,7 @@ typedef struct smpd_global_t
     smpd_process_t *process_list;
     int  closing;
     int  root_smpd;
-    MPIDU_Sock_set_t set;
+    SMPDU_Sock_set_t set;
     char host[SMPD_MAX_HOST_LENGTH];
     char pszExe[SMPD_MAX_EXE_LENGTH];
     int  bService;
@@ -721,8 +756,8 @@ typedef struct smpd_global_t
 #endif
 #endif
     int timeout;
-    MPIDU_Sock_t timeout_sock;
-    MPIDU_Sock_t mpiexec_abort_sock;
+    SMPDU_Sock_t timeout_sock;
+    SMPDU_Sock_t mpiexec_abort_sock;
     SMPD_BOOL use_pmi_server;
     char *mpiexec_argv0;
     char encrypt_prefix[SMPD_MAX_PASSWORD_LENGTH];
@@ -762,14 +797,14 @@ HANDLE smpd_decode_handle(char *str);
 #endif
 void smpd_print_options(void);
 int smpd_entry_point(void);
-int smpd_enter_at_state(MPIDU_Sock_set_t set, smpd_state_t state);
+int smpd_enter_at_state(SMPDU_Sock_set_t set, smpd_state_t state);
 int smpd_wait_process(smpd_pwait_t wait, int *exit_code_ptr);
 int smpd_init_process(void);
 int smpd_init_printf(void);
 int smpd_finalize_printf(void);
-int smpd_init_context(smpd_context_t *context, smpd_context_type_t type, MPIDU_Sock_set_t set, MPIDU_Sock_t sock, int id);
+int smpd_init_context(smpd_context_t *context, smpd_context_type_t type, SMPDU_Sock_set_t set, SMPDU_Sock_t sock, int id);
 int smpd_init_command(smpd_command_t *cmd);
-int smpd_create_context(smpd_context_type_t type, MPIDU_Sock_set_t set, MPIDU_Sock_t sock, int id, smpd_context_t **context_pptr);
+int smpd_create_context(smpd_context_type_t type, SMPDU_Sock_set_t set, SMPDU_Sock_t sock, int id, smpd_context_t **context_pptr);
 int smpd_create_command(char *cmd_str, int src, int dest, int want_reply, smpd_command_t **cmd_pptr);
 int smpd_create_command_copy(smpd_command_t *src_ptr, smpd_command_t **cmd_pptr);
 int smpd_free_command(smpd_command_t *cmd_ptr);
@@ -781,10 +816,10 @@ int smpd_parse_command(smpd_command_t *cmd_ptr);
 int smpd_post_read_command(smpd_context_t *context);
 int smpd_post_write_command(smpd_context_t *context, smpd_command_t *cmd);
 int smpd_package_command(smpd_command_t *cmd);
-int smpd_read_string(MPIDU_Sock_t sock, char *str, int maxlen);
-int smpd_write_string(MPIDU_Sock_t sock, char *str);
-int smpd_read(MPIDU_Sock_t sock, void *buf, MPIDU_Sock_size_t len);
-int smpd_write(MPIDU_Sock_t sock, void *buf, MPIDU_Sock_size_t len);
+int smpd_read_string(SMPDU_Sock_t sock, char *str, int maxlen);
+int smpd_write_string(SMPDU_Sock_t sock, char *str);
+int smpd_read(SMPDU_Sock_t sock, void *buf, SMPDU_Sock_size_t len);
+int smpd_write(SMPDU_Sock_t sock, void *buf, SMPDU_Sock_size_t len);
 int smpd_dbg_printf(char *str, ...);
 int smpd_err_printf(char *str, ...);
 int smpd_enter_fn(char *fcname);
@@ -802,8 +837,8 @@ int smpd_getpid(void);
 char * get_sock_error_string(int error);
 void smpd_get_password(char *password);
 void smpd_get_account_and_password(char *account, char *password);
-int smpd_get_credentials_from_parent(MPIDU_Sock_set_t set, MPIDU_Sock_t sock);
-int smpd_get_smpd_password_from_parent(MPIDU_Sock_set_t set, MPIDU_Sock_t sock);
+int smpd_get_credentials_from_parent(SMPDU_Sock_set_t set, SMPDU_Sock_t sock);
+int smpd_get_smpd_password_from_parent(SMPDU_Sock_set_t set, SMPDU_Sock_t sock);
 int smpd_get_opt(int *argc, char ***argv, char * flag);
 int smpd_get_opt_int(int *argc, char ***argv, char * flag, int *n);
 int smpd_get_opt_long(int *argc, char ***argv, char * flag, long *n);
@@ -822,7 +857,7 @@ int smpd_generate_session_header(char *str, int session_id);
 int smpd_interpret_session_header(char *str);
 int smpd_command_destination(int dest, smpd_context_t **dest_context);
 int smpd_forward_command(smpd_context_t *src, smpd_context_t *dest);
-int smpd_launch_process(smpd_process_t *process, int priorityClass, int priority, int dbg, MPIDU_Sock_set_t set);
+int smpd_launch_process(smpd_process_t *process, int priorityClass, int priority, int dbg, SMPDU_Sock_set_t set);
 int smpd_encode_buffer(char *dest, int dest_length, const char *src, int src_length, int *num_encoded);
 int smpd_decode_buffer(const char *str, char *dest, int length, int *num_decoded);
 int smpd_create_process_struct(int rank, smpd_process_t **process_ptr);

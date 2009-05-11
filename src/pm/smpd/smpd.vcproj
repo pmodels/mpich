@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\mpid\common\sock,..\..\mpid\common\sock\iocp,..\..\include,..\..\include\win32"
+				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;.\sock\include;.\sock\iocp\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_WINDOWS_H;USE_WINCONF_H"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socksd.lib ch3sockd.lib smpd_utild.lib dbgd.lib sockd.lib pmid.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib dbgd.lib pmid.lib smpd_utild.lib mpid.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -124,7 +124,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\mpid\common\sock;..\..\mpid\common\sock\iocp;..\..\include;..\..\include\win32;..\..\mpid\ch3\include;..\..\mpid\common\datatype;..\..\mpid\ch3\channels\sock\include"
+				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;.\sock\include;.\sock\iocp\include;."
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_WINDOWS_H;USE_WINCONF_H"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib dbg.lib smpd_util.lib mpi.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"

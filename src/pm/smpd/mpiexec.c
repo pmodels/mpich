@@ -7,21 +7,24 @@
 #include <stdio.h>
 #include "mpiexec.h"
 #include "smpd.h"
+#include "mpi.h"
+/*
 #include "smpd_implthread.h"
+*/
 
 #ifdef HAVE_WINDOWS_H
 void timeout_thread(void *p)
 {
-    MPIU_Size_t num_written;
+    SMPDU_Size_t num_written;
     char ch = -1;
 
     SMPD_UNREFERENCED_ARG(p);
 
     Sleep(smpd_process.timeout * 1000);
     smpd_err_printf("\nmpiexec terminated job due to %d second timeout.\n", smpd_process.timeout);
-    if (smpd_process.timeout_sock != MPIDU_SOCK_INVALID_SOCK)
+    if (smpd_process.timeout_sock != SMPDU_SOCK_INVALID_SOCK)
     {
-	MPIDU_Sock_write(smpd_process.timeout_sock, &ch, 1, &num_written);
+	SMPDU_Sock_write(smpd_process.timeout_sock, &ch, 1, &num_written);
 	Sleep(30000); /* give the engine 30 seconds to shutdown and then force an exit */
     }
     ExitProcess((UINT)-1);
@@ -30,16 +33,16 @@ void timeout_thread(void *p)
 #ifdef SIGALRM
 void timeout_function(int signo)
 {
-    MPIU_Size_t num_written;
+    SMPDU_Size_t num_written;
     char ch = -1;
     static int alarmed = 0;
     if (signo == SIGALRM)
     {
-	if (smpd_process.timeout_sock != MPIDU_SOCK_INVALID_SOCK && alarmed == 0)
+	if (smpd_process.timeout_sock != SMPDU_SOCK_INVALID_SOCK && alarmed == 0)
 	{
 	    alarmed = 1;
 	    smpd_err_printf("\nmpiexec terminated job due to %d second timeout.\n", smpd_process.timeout);
-	    MPIDU_Sock_write(smpd_process.timeout_sock, &ch, 1, &num_written);
+	    SMPDU_Sock_write(smpd_process.timeout_sock, &ch, 1, &num_written);
 	    alarm(30); /* give the engine 30 seconds to shutdown and then force an exit */
 	}
 	else
@@ -56,13 +59,13 @@ void timeout_function(int signo)
 #ifdef HAVE_PTHREAD_H
 void *timeout_thread(void *p)
 {
-    MPIU_Size_t num_written;
+    SMPDU_Size_t num_written;
     char ch = -1;
     sleep(smpd_process.timeout);
     smpd_err_printf("\nmpiexec terminated job due to %d second timeout.\n", smpd_process.timeout);
-    if (smpd_process.timeout_sock != MPIDU_SOCK_INVALID_SOCK)
+    if (smpd_process.timeout_sock != SMPDU_SOCK_INVALID_SOCK)
     {
-	MPIDU_Sock_write(smpd_process.timeout_sock, &ch, 1, &num_written);
+	SMPDU_Sock_write(smpd_process.timeout_sock, &ch, 1, &num_written);
 	sleep(30); /* give the engine 30 seconds to shutdown and then force an exit */
     }
     exit(-1);
@@ -76,7 +79,7 @@ BOOL WINAPI mpiexec_ctrl_handler(DWORD dwCtrlType)
 {
     static int first = 1;
     char ch = -1;
-    MPIU_Size_t num_written;
+    SMPDU_Size_t num_written;
 
     /* This handler could be modified to send the event to the remote processes instead of killing the job. */
     /* Doing so would require new command types for smpd */
@@ -94,7 +97,7 @@ BOOL WINAPI mpiexec_ctrl_handler(DWORD dwCtrlType)
     case CTRL_BREAK_EVENT:
     case CTRL_CLOSE_EVENT:
     case CTRL_SHUTDOWN_EVENT:
-	if (smpd_process.mpiexec_abort_sock != MPIDU_SOCK_INVALID_SOCK)
+	if (smpd_process.mpiexec_abort_sock != SMPDU_SOCK_INVALID_SOCK)
 	{
 	    if (first == 1)
 	    {
@@ -102,7 +105,7 @@ BOOL WINAPI mpiexec_ctrl_handler(DWORD dwCtrlType)
 		first = 0;
 		printf("mpiexec aborting job...\n");fflush(stdout);
 		num_written = 0;
-		MPIDU_Sock_write(smpd_process.mpiexec_abort_sock, &ch, 1, &num_written);
+		SMPDU_Sock_write(smpd_process.mpiexec_abort_sock, &ch, 1, &num_written);
 		if (num_written == 1)
 		    return TRUE;
 	    }
@@ -135,8 +138,8 @@ int main(int argc, char* argv[])
     smpd_host_node_t *host_node_ptr;
     smpd_launch_node_t *launch_node_ptr;
     smpd_context_t *context;
-    MPIDU_Sock_set_t set;
-    MPIDU_Sock_t sock = MPIDU_SOCK_INVALID_SOCK;
+    SMPDU_Sock_set_t set;
+    SMPDU_Sock_t sock = SMPDU_SOCK_INVALID_SOCK;
     smpd_state_t state;
 
     smpd_enter_fn("main");
@@ -151,20 +154,26 @@ int main(int argc, char* argv[])
     smpd_process.mpiexec_argv0 = argv[0];
 
     /* initialize */
+    /* FIXME: Get rid of this hack - we already create 
+     * local KVS for all singleton clients by default
+     */
     putenv("PMI_SMPD_FD=0");
+    /*
     result = PMPI_Init(&argc, &argv);
-    SMPD_CS_ENTER();
-    if (result != MPI_SUCCESS)
+    */
+    result = MPI_Init(&argc, &argv);
+    /* SMPD_CS_ENTER(); */
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPI_Init failed,\nerror: %d\n", result);
+	smpd_err_printf("SMPD_Init failed,\nerror: %d\n", result);
 	smpd_exit_fn("main");
 	return result;
     }
-    /* Initialization now done by [P]MPI_Init above
-    result = MPIDU_Sock_init();
-    if (result != MPI_SUCCESS)
+
+    result = SMPDU_Sock_init();
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPIDU_Sock_init failed,\nsock error: %s\n",
+	smpd_err_printf("SMPDU_Sock_init failed,\nsock error: %s\n",
 		      get_sock_error_string(result));
 	smpd_exit_fn("main");
 	return result;
@@ -176,7 +185,6 @@ int main(int argc, char* argv[])
 	smpd_err_printf("smpd_init_process failed.\n");
 	goto quit_job;
     }
-    */
 
     smpd_process.dbg_state = SMPD_DBG_STATE_ERROUT;
 
@@ -217,10 +225,10 @@ int main(int argc, char* argv[])
     /* set the id of the mpiexec node to zero */
     smpd_process.id = 0;
 
-    result = MPIDU_Sock_create_set(&set);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_create_set(&set);
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPIDU_Sock_create_set failed,\nsock error: %s\n", get_sock_error_string(result));
+	smpd_err_printf("SMPDU_Sock_create_set failed,\nsock error: %s\n", get_sock_error_string(result));
 	goto quit_job;
     }
     smpd_process.set = set;
@@ -301,8 +309,8 @@ int main(int argc, char* argv[])
     {
 #endif
 	/* start connecting the tree by posting a connect to the first host */
-	result = MPIDU_Sock_post_connect(set, context, smpd_process.host_list->host, smpd_process.port, &sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_connect(set, context, smpd_process.host_list->host, smpd_process.port, &sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("Unable to connect to '%s:%d',\nsock error: %s\n",
 		smpd_process.host_list->host, smpd_process.port, get_sock_error_string(result));
@@ -348,7 +356,7 @@ int main(int argc, char* argv[])
 	    smpd_err_printf("Invalid reconnect port read: %d\n", port);
 	    goto quit_job;
 	}
-	result = smpd_create_context(context->type, context->set, MPIDU_SOCK_INVALID_SOCK, context->id, &rc_context);
+	result = smpd_create_context(context->type, context->set, SMPDU_SOCK_INVALID_SOCK, context->id, &rc_context);
 	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to create a new context for the reconnection.\n");
@@ -363,8 +371,8 @@ int main(int argc, char* argv[])
 	strcpy(rc_context->host, context->host);
 	smpd_process.left_context = rc_context;
 	smpd_dbg_printf("posting a re-connect to %s:%d in %s context.\n", rc_context->connect_to->host, port, smpd_get_context_str(rc_context));
-	result = MPIDU_Sock_post_connect(rc_context->set, rc_context, rc_context->connect_to->host, port, &rc_context->sock);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_post_connect(rc_context->set, rc_context, rc_context->connect_to->host, port, &rc_context->sock);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("Unable to post a connect to '%s:%d',\nsock error: %s\n",
 		rc_context->connect_to->host, port, get_sock_error_string(result));
@@ -379,8 +387,8 @@ int main(int argc, char* argv[])
     {
 #endif
 	smpd_process.left_context = context;
-	result = MPIDU_Sock_set_user_ptr(sock, context);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_set_user_ptr(sock, context);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to set the smpd sock user pointer,\nsock error: %s\n",
 		get_sock_error_string(result));
@@ -394,15 +402,15 @@ int main(int argc, char* argv[])
     {
 	/* Create a break handler and a socket to handle aborting the job when mpiexec receives break signals */
 	smpd_context_t *reader_context;
-	MPIDU_Sock_t sock_reader;
-	MPIDU_SOCK_NATIVE_FD reader, writer;
+	SMPDU_Sock_t sock_reader;
+	SMPDU_SOCK_NATIVE_FD reader, writer;
 
 	smpd_make_socket_loop((SOCKET*)&reader, (SOCKET*)&writer);
-	result = MPIDU_Sock_native_to_sock(set, reader, NULL, &sock_reader);
-	result = MPIDU_Sock_native_to_sock(set, writer, NULL, &smpd_process.mpiexec_abort_sock);
+	result = SMPDU_Sock_native_to_sock(set, reader, NULL, &sock_reader);
+	result = SMPDU_Sock_native_to_sock(set, writer, NULL, &smpd_process.mpiexec_abort_sock);
 	result = smpd_create_context(SMPD_CONTEXT_MPIEXEC_ABORT, set, sock_reader, -1, &reader_context);
 	reader_context->read_state = SMPD_READING_MPIEXEC_ABORT;
-	result = MPIDU_Sock_post_read(sock_reader, &reader_context->read_cmd.cmd, 1, 1, NULL);
+	result = SMPDU_Sock_post_read(sock_reader, &reader_context->read_cmd.cmd, 1, 1, NULL);
 
 	if (!SetConsoleCtrlHandler(mpiexec_ctrl_handler, TRUE))
 	{
@@ -428,20 +436,20 @@ quit_job:
     }
 
     /* finalize */
-    /*
-    smpd_dbg_printf("calling MPIDU_Sock_finalize\n");
-    result = MPIDU_Sock_finalize();
-    if (result != MPI_SUCCESS)
+
+    smpd_dbg_printf("calling SMPDU_Sock_finalize\n");
+    result = SMPDU_Sock_finalize();
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPIDU_Sock_finalize failed,\nsock error: %s\n", get_sock_error_string(result));
+	smpd_err_printf("SMPDU_Sock_finalize failed,\nsock error: %s\n", get_sock_error_string(result));
     }
-    */
-    /* MPI_Finalize called in smpd_exit()
-    smpd_dbg_printf("calling MPI_Finalize\n");
+
+    /* SMPD_Finalize called in smpd_exit()
+    smpd_dbg_printf("calling SMPD_Finalize\n");
     result = PMPI_Finalize();
-    if (result != MPI_SUCCESS)
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPI_Finalize failed,\nerror: %d\n", result);
+	smpd_err_printf("SMPD_Finalize failed,\nerror: %d\n", result);
     }
     */
 
@@ -467,7 +475,7 @@ quit_job:
     smpd_cancel_stdin_thread();
 #endif
     smpd_exit_fn("main");
-    SMPD_CS_EXIT();
+    /* SMPD_CS_EXIT(); */
     return smpd_exit(smpd_process.mpiexec_exit_code);
 }
 

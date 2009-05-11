@@ -4957,6 +4957,27 @@ End If
 '	fout.Close()
 'End If
 
+'
+' smpdconf.h
+'
+If f.FileExists("src\pm\smpd\smpdconf.h.in") Then
+	cEcho "Creating src\pm\smpd\smpdconf.h"
+	Set fout = f.CreateTextFile("src\pm\smpd\smpdconf.h")
+        Call WriteHeader(fout, "smpd_")
+	Call AddDefinitions(fout, "src\pm\smpd\smpdconf.h.in", false)
+	fout.WriteLine("#define HAVE_WINDOWS_H")
+	fout.WriteLine("#define HAVE_SNPRINTF")
+	fout.WriteLIne("#define HAVE_STRDUP")
+'   Use human readable tokens in MPIU String funcs
+'   - should be consistent with settings in mpichconf.h used in
+'     compilation of string funcs, argstr.c
+	fout.WriteLine("#define USE_HUMAN_READABLE_TOKENS")
+	Call WriteFooter(fout)
+	fout.Close()
+Else
+	cEcho "Skipping file: smpdconf.h"
+End If
+
 printMsg "STATUS", "Creating config.h header files for OpenPA..."
 if not f.FolderExists("openpa\src\win32") then
         printMsg "VERBOSE", "Creating openpa\src\win32 directory"

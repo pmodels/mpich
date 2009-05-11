@@ -27,7 +27,9 @@
 #endif
 
 #include "pmi.h"
+/*
 #include "mpidu_sock.h"
+*/
 #include "smpd.h"
 #include "mpi.h"
 

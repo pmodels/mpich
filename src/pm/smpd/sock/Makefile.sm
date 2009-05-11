@@ -1,0 +1,4 @@
+INCLUDES = -I../../../include -I${master_top_srcdir}/src/include
+SUBDIRS_smpd_sock_name = iocp poll
+SUBDIRS = @smpd_sock_name@ .
+NOTSIMPLEMAKE_SUBDIRS = iocp

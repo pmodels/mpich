@@ -7,7 +7,7 @@
 #define MPIEXEC_H
 
 #include "smpd.h"
-#include "mpidu_sock.h"
+/* #include "mpidu_sock.h" */
 #include <stdio.h>
 #if !defined(SIGALRM) && defined (HAVE_PTHREAD_H)
 #include <pthread.h>

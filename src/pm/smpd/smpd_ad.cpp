@@ -173,7 +173,7 @@ static int smpd_build_spn_list()
     }
     initialized = 1;
 
-    t1 = PMPI_Wtime();
+    /* t1 = PMPI_Wtime(); */
 
     CoInitialize(NULL);
 
@@ -391,8 +391,9 @@ Cleanup:
     }
     CoUninitialize();
 
-    t2 = PMPI_Wtime();
+    /* t2 = PMPI_Wtime();
     smpd_dbg_printf("build_spn_list took %0.6f seconds\n", t2-t1);
+    */
 
     return SMPD_SUCCESS;
 }

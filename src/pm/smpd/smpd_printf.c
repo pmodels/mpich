@@ -55,21 +55,30 @@ char * get_sock_error_string(int error)
 {
     static char str[1024];
 
-    if (error == MPIDU_SOCK_SUCCESS)
-	return "operation completed successfully";
+    if (error == SMPD_SUCCESS){
+	    return "operation completed successfully";
+    }
+    else{
+        /* FIXME : For now ... translate correctly later */
+        MPIU_Snprintf(str, 1024, "Error = %d\n", error);
+        return str;
+    }
 
     str[0] = '\0';
-    MPIR_Err_get_string(error, str, 1024, MPIDU_Sock_get_error_class_string);
     /*
-    MPIR_Err_get_string_ext(error, str, 1024, MPIDU_Sock_get_error_class_string);
-    if (MPIR_Err_print_stack_flag)
+    SMPDR_Err_get_string(error, str, 1024, SMPDU_Sock_get_error_class_string);
+    */
+    smpd_translate_win_error(error, str, 1024, "(error =", error, ") ");
+    /*
+    SMPDR_Err_get_string_ext(error, str, 1024, SMPDU_Sock_get_error_class_string);
+    if (SMPDR_Err_print_stack_flag)
     {
 	char *str2;
 	int len;
 	strcat(str, "\n");
 	len = (int)strlen(str);
 	str2 = str + len;
-	MPIR_Err_print_stack_string_ext(error, str2, 1024-len, MPIDU_Sock_get_error_class_string);
+	SMPDR_Err_print_stack_string_ext(error, str2, 1024-len, SMPDU_Sock_get_error_class_string);
     }
     */
 

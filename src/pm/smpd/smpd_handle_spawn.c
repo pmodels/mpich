@@ -490,7 +490,7 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	    /* nompi */
 	    if (strcmp(info[j].key, "nompi") == 0)
 	    {
-		/* FIXME: Tell MPICH that the spawned processes will not make any MPI calls, including MPI_Init - so don't to a comm_accept or it will hang! */
+		/* FIXME: Tell MPICH that the spawned processes will not make any SMPD calls, including SMPD_Init - so don't to a comm_accept or it will hang! */
 	    }
 	    /* etc */
 	}

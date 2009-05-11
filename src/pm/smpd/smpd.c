@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include "smpd.h"
 #include "mpi.h"
+/*
 #include "smpd_implthread.h"
+*/
 #ifdef HAVE_WINDOWS_H
 #include "smpd_service.h"
 #endif
@@ -47,22 +49,30 @@ int main(int argc, char* argv[])
 
     smpd_enter_fn(FCNAME);
 
+    /* FIXME: Get rid of this hack - we already create 
+     * local KVS for all singleton clients by default
+     */
     /* initialization */
     putenv("PMI_SMPD_FD=0");
+    
+    /*
     result = PMPI_Init(&argc, &argv);
-    SMPD_CS_ENTER();
-    if (result != MPI_SUCCESS)
+    */
+    result = MPI_Init(&argc, &argv);
+    
+    /* SMPD_CS_ENTER(); */
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPI_Init failed,\n error: %d\n", result);
+	smpd_err_printf("SMPD_Init failed,\n error: %d\n", result);
 	smpd_exit_fn(FCNAME);
 	return result;
     }
 
-    /* Initialization now done by MPI_Init above.
-    result = MPIDU_Sock_init();
-    if (result != MPI_SUCCESS)
+
+    result = SMPDU_Sock_init();
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPIDU_Sock_init failed,\nsock error: %s\n", get_sock_error_string(result));
+	smpd_err_printf("SMPDU_Sock_init failed,\nsock error: %s\n", get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
 	return result;
     }
@@ -74,7 +84,6 @@ int main(int argc, char* argv[])
 	smpd_exit_fn(FCNAME);
 	return result;
     }
-    */
 
     /* parse the command line */
     result = smpd_parse_command_args(&argc, &argv);
@@ -168,7 +177,13 @@ int main(int argc, char* argv[])
 
     smpd_finalize_printf();
 
-    SMPD_CS_EXIT();
+    smpd_dbg_printf("calling SMPDU_Sock_finalize\n");
+    result = SMPDU_Sock_finalize();
+    if (result != SMPD_SUCCESS){
+	    smpd_err_printf("SMPDU_Sock_finalize failed,\nsock error: %s\n", get_sock_error_string(result));
+    }
+
+    /* SMPD_CS_EXIT(); */
     smpd_exit(result);
     smpd_exit_fn(FCNAME);
     return result;
@@ -179,8 +194,8 @@ int main(int argc, char* argv[])
 int smpd_entry_point()
 {
     int result;
-    MPIDU_Sock_set_t set;
-    MPIDU_Sock_t listener;
+    SMPDU_Sock_set_t set;
+    SMPDU_Sock_t listener;
     SMPD_BOOL print_port = SMPD_FALSE;
 
     /* This function is called by main or by smpd_service_main in the case of a Windows service */
@@ -213,22 +228,22 @@ int smpd_entry_point()
 	smpd_set_smpd_data("binary", smpd_process.pszExe);
     }
 
-    result = MPIDU_Sock_create_set(&set);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_create_set(&set);
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPIDU_Sock_create_set failed,\nsock error: %s\n", get_sock_error_string(result));
+	smpd_err_printf("SMPDU_Sock_create_set failed,\nsock error: %s\n", get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
 	return result;
     }
     smpd_process.set = set;
-    smpd_dbg_printf("created a set for the listener: %d\n", MPIDU_Sock_get_sock_set_id(set));
+    smpd_dbg_printf("created a set for the listener: %d\n", SMPDU_Sock_get_sock_set_id(set));
     if (smpd_process.port == 0)
 	print_port = SMPD_TRUE;
-    result = MPIDU_Sock_listen(set, NULL, &smpd_process.port, &listener); 
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_listen(set, NULL, &smpd_process.port, &listener); 
+    if (result != SMPD_SUCCESS)
     {
 	/* If another smpd is running and listening on this port, tell it to shutdown or restart? */
-	smpd_err_printf("MPIDU_Sock_listen failed,\nsock error: %s\n", get_sock_error_string(result));
+	smpd_err_printf("SMPDU_Sock_listen failed,\nsock error: %s\n", get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
 	return result;
     }
@@ -246,10 +261,10 @@ int smpd_entry_point()
 	smpd_exit_fn(FCNAME);
 	return result;
     }
-    result = MPIDU_Sock_set_user_ptr(listener, smpd_process.listener_context);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_set_user_ptr(listener, smpd_process.listener_context);
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPIDU_Sock_set_user_ptr failed,\nsock error: %s\n", get_sock_error_string(result));
+	smpd_err_printf("SMPDU_Sock_set_user_ptr failed,\nsock error: %s\n", get_sock_error_string(result));
 	smpd_exit_fn(FCNAME);
 	return result;
     }
@@ -326,18 +341,18 @@ int smpd_entry_point()
     if (smpd_process.root_smpd)
 	smpd_remove_from_dynamic_hosts();
 
-    result = MPIDU_Sock_destroy_set(set);
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_destroy_set(set);
+    if (result != SMPD_SUCCESS)
     {
 	smpd_err_printf("unable to destroy the set, error:\n%s\n",
 	    get_sock_error_string(result));
     }
 
     /*
-    result = MPIDU_Sock_finalize();
-    if (result != MPI_SUCCESS)
+    result = SMPDU_Sock_finalize();
+    if (result != SMPD_SUCCESS)
     {
-	smpd_err_printf("MPIDU_Sock_finalize failed,\nsock error: %s\n", get_sock_error_string(result));
+	smpd_err_printf("SMPDU_Sock_finalize failed,\nsock error: %s\n", get_sock_error_string(result));
     }
     */
 

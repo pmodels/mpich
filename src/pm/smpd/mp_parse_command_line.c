@@ -737,7 +737,7 @@ int mp_parse_command_args(int *argcp, char **argvp[])
      * -hosts <n host1 m1 host2 m2 ... hostn mn>
      * -machinefile <filename> - one host per line, #commented
      * -localonly <numprocs>
-     * -nompi - don't require processes to be MPI processes (don't have to call MPI_Init or PMI_Init)
+     * -nompi - don't require processes to be SMPD processes (don't have to call SMPD_Init or PMI_Init)
      * -exitcodes - print the exit codes of processes as they exit
      * -verbose - same as setting environment variable to SMPD_DBG_OUTPUT=stdout
      * -quiet_abort - minimize the output when a job is aborted

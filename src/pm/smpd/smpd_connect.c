@@ -51,7 +51,7 @@ smpd_global_t smpd_process =
       NULL,             /* process_list           */
       SMPD_FALSE,       /* closing                */
       SMPD_FALSE,       /* root_smpd              */
-      MPIDU_SOCK_INVALID_SET, /* set                    */
+      SMPDU_SOCK_INVALID_SET, /* set                    */
       "",               /* host                   */
       "",               /* pszExe                 */
       SMPD_FALSE,       /* bService               */
@@ -166,8 +166,8 @@ smpd_global_t smpd_process =
 #endif
 #endif
       -1,               /* timeout                 */
-      MPIDU_SOCK_INVALID_SOCK, /* timeout_sock     */
-      MPIDU_SOCK_INVALID_SOCK, /* mpiexec_abort_sock */
+      SMPDU_SOCK_INVALID_SOCK, /* timeout_sock     */
+      SMPDU_SOCK_INVALID_SOCK, /* mpiexec_abort_sock */
       SMPD_TRUE,        /* use_pmi_server          */
       NULL,             /* mpiexec_argv0           */
       "dummy",          /* encrypt_prefix          */
@@ -561,7 +561,7 @@ int smpd_init_process(void)
     smpd_process.left_context = NULL;
     smpd_process.right_context = NULL;
     smpd_process.parent_context = NULL;
-    smpd_process.set = MPIDU_SOCK_INVALID_SET;
+    smpd_process.set = SMPDU_SOCK_INVALID_SET;
 
     /* local data */
 #ifdef HAVE_WINDOWS_H
@@ -636,7 +636,7 @@ int smpd_init_process(void)
 
 #undef FCNAME
 #define FCNAME "smpd_init_context"
-int smpd_init_context(smpd_context_t *context, smpd_context_type_t type, MPIDU_Sock_set_t set, MPIDU_Sock_t sock, int id)
+int smpd_init_context(smpd_context_t *context, smpd_context_type_t type, SMPDU_Sock_set_t set, SMPDU_Sock_t sock, int id)
 {
     int result;
 
@@ -690,10 +690,10 @@ int smpd_init_context(smpd_context_t *context, smpd_context_type_t type, MPIDU_S
     context->first_output_stderr = SMPD_TRUE;
     context->first_output_stdout = SMPD_TRUE;
 
-    if (sock != MPIDU_SOCK_INVALID_SOCK)
+    if (sock != SMPDU_SOCK_INVALID_SOCK)
     {
-	result = MPIDU_Sock_set_user_ptr(sock, context);
-	if (result != MPI_SUCCESS)
+	result = SMPDU_Sock_set_user_ptr(sock, context);
+	if (result != SMPD_SUCCESS)
 	{
 	    smpd_err_printf("unable to set the sock user ptr while initializing context,\nsock error: %s\n",
 		get_sock_error_string(result));
@@ -966,7 +966,7 @@ void smpd_get_account_and_password(char *account, char *password)
 
 #undef FCNAME
 #define FCNAME "smpd_get_credentials_from_parent"
-int smpd_get_credentials_from_parent(MPIDU_Sock_set_t set, MPIDU_Sock_t sock)
+int smpd_get_credentials_from_parent(SMPDU_Sock_set_t set, SMPDU_Sock_t sock)
 {
     smpd_enter_fn(FCNAME);
     SMPD_UNREFERENCED_ARG(set);
@@ -977,7 +977,7 @@ int smpd_get_credentials_from_parent(MPIDU_Sock_set_t set, MPIDU_Sock_t sock)
 
 #undef FCNAME
 #define FCNAME "smpd_get_smpd_password_from_parent"
-int smpd_get_smpd_password_from_parent(MPIDU_Sock_set_t set, MPIDU_Sock_t sock)
+int smpd_get_smpd_password_from_parent(SMPDU_Sock_set_t set, SMPDU_Sock_t sock)
 {
     smpd_enter_fn(FCNAME);
     SMPD_UNREFERENCED_ARG(set);

@@ -358,7 +358,7 @@ int smpd_create_process_struct(int rank, smpd_process_t **process_ptr)
     p->clique[0] = '\0';
     p->err_msg[0] = '\0';
     p->stdin_write_list = NULL;
-    result = smpd_create_context(SMPD_CONTEXT_STDIN, smpd_process.set, MPIDU_SOCK_INVALID_SOCK, -1, &p->in);
+    result = smpd_create_context(SMPD_CONTEXT_STDIN, smpd_process.set, SMPDU_SOCK_INVALID_SOCK, -1, &p->in);
     if (result != SMPD_SUCCESS)
     {
 	MPIU_Free(p);
@@ -367,7 +367,7 @@ int smpd_create_process_struct(int rank, smpd_process_t **process_ptr)
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
-    result = smpd_create_context(SMPD_CONTEXT_STDOUT, smpd_process.set, MPIDU_SOCK_INVALID_SOCK, -1, &p->out);
+    result = smpd_create_context(SMPD_CONTEXT_STDOUT, smpd_process.set, SMPDU_SOCK_INVALID_SOCK, -1, &p->out);
     if (result != SMPD_SUCCESS)
     {
 	MPIU_Free(p);
@@ -376,7 +376,7 @@ int smpd_create_process_struct(int rank, smpd_process_t **process_ptr)
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
-    result = smpd_create_context(SMPD_CONTEXT_STDERR, smpd_process.set, MPIDU_SOCK_INVALID_SOCK, -1, &p->err);
+    result = smpd_create_context(SMPD_CONTEXT_STDERR, smpd_process.set, SMPDU_SOCK_INVALID_SOCK, -1, &p->err);
     if (result != SMPD_SUCCESS)
     {
 	MPIU_Free(p);
@@ -385,7 +385,7 @@ int smpd_create_process_struct(int rank, smpd_process_t **process_ptr)
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
-    result = smpd_create_context(SMPD_CONTEXT_PMI, smpd_process.set, MPIDU_SOCK_INVALID_SOCK, -1, &p->pmi);
+    result = smpd_create_context(SMPD_CONTEXT_PMI, smpd_process.set, SMPDU_SOCK_INVALID_SOCK, -1, &p->pmi);
     if (result != SMPD_SUCCESS)
     {
 	MPIU_Free(p);

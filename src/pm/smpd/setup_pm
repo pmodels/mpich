@@ -16,4 +16,4 @@ echo "RUNNING SETUP FOR THE SMPD PROCESS MANAGER"
 # $ac_configure_args - all arguments passed to configure
 #
 
-. ${master_top_srcdir}/src/mpid/common/sock/setup
+. ${master_top_srcdir}/src/pm/smpd/sock/setup

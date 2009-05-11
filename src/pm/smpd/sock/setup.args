@@ -1,0 +1,10 @@
+if test -z "${smpd_sock_name}" ; then
+    smpd_sock_name=poll
+fi
+for arg in $ac_configure_args ; do
+    case $arg in 
+        -with-smpd-sock=* | --with-smpd-sock=*)
+	    smpd_sock_name=`echo $arg | sed 's/-*with-smpd-sock=//'`
+    esac
+done
+
