@@ -11,7 +11,7 @@
 #define OPA_QUOTE2(x_) #x_
 
 #if defined(OPA_HAVE_GCC_ATTRIBUTE)
-#  define OPA_ATTRIBUTE(x_) __attribute__ (x)
+#  define OPA_ATTRIBUTE(x_) __attribute__ (x_)
 #else
 #  define OPA_ATTRIBUTE(x_)
 #endif

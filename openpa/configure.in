@@ -151,16 +151,19 @@ if test     "$with_atomic_primitives" = "auto"                 \
     SAVE_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS -I${srcdir}/src"
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-    #define OPA_SIZEOF_INT SIZEOF_INT
-    #define OPA_SIZEOF_VOID_P SIZEOF_VOID_P
-    #ifndef _opa_inline
-    #define _opa_inline inline
-    #endif
-    #ifndef _opa_restrict
-    #define _opa_restrict restrict
-    #endif
-    #include "opa_util.h" /* for ATTRIBUTE and friends */
-    #include "primitives/$1"
+#define OPA_SIZEOF_INT SIZEOF_INT
+#define OPA_SIZEOF_VOID_P SIZEOF_VOID_P
+#ifndef _opa_inline
+#define _opa_inline inline
+#endif
+#ifndef _opa_restrict
+#define _opa_restrict restrict
+#endif
+#ifdef HAVE_GCC_ATTRIBUTE
+#define OPA_HAVE_GCC_ATTRIBUTE 1
+#endif
+#include "opa_util.h" /* for OPA_ATTRIBUTE and friends */
+#include "primitives/$1"
     ]],[[
     OPA_int_t a, b;
     int c;

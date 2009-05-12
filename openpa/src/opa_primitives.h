@@ -61,6 +61,7 @@
    static _opa_inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val);
    static _opa_inline int   OPA_swap_int(OPA_int_t *ptr, int val);
 
+   (the memory barriers may be macros instead of inline functions)
    static _opa_inline void OPA_write_barrier();
    static _opa_inline void OPA_read_barrier();
    static _opa_inline void OPA_read_write_barrier();

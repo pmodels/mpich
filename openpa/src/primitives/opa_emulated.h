@@ -14,6 +14,89 @@
    another atomic.
 */
 
+/* Emulating using LL/SC */
+#if defined(OPA_LL_SC_SUPPORTED)
+static _opa_inline int OPA_fetch_and_add_by_llsc(OPA_int_t *ptr, int val)
+{
+    int prev;
+    do {
+        prev = OPA_LL_int(ptr);
+    } while (!OPA_SC_int(ptr, prev + val));
+    return prev;
+}
+
+
+static _opa_inline void OPA_add_by_llsc(OPA_int_t *ptr, int val)
+{
+    OPA_fetch_and_add_by_llsc(ptr, val);
+}
+
+static _opa_inline void OPA_incr_by_llsc(OPA_int_t *ptr)
+{
+    OPA_add_by_llsc(ptr, 1);
+}
+
+static _opa_inline void OPA_decr_by_llsc(OPA_int_t *ptr)
+{
+    OPA_add_by_llsc(ptr, -1);
+}
+
+
+static _opa_inline int OPA_fetch_and_decr_by_llsc(OPA_int_t *ptr)
+{
+    return OPA_fetch_and_add_by_llsc(ptr, -1);
+}
+
+static _opa_inline int OPA_fetch_and_incr_by_llsc(OPA_int_t *ptr)
+{
+    return OPA_fetch_and_add_by_llsc(ptr, 1);
+}
+
+static _opa_inline int OPA_decr_and_test_by_llsc(OPA_int_t *ptr)
+{
+    int prev = OPA_fetch_and_decr_by_llsc(ptr);
+    return prev == 1;
+}
+
+static _opa_inline void *OPA_cas_ptr_by_llsc(OPA_ptr_t *ptr, void *oldv, void *newv)
+{
+    void *prev;
+    do {
+        prev = OPA_LL_ptr(ptr);
+    } while (prev == oldv && !OPA_SC_ptr(ptr, newv));
+    return prev;
+}
+
+static _opa_inline int OPA_cas_int_by_llsc(OPA_int_t *ptr, int oldv, int newv)
+{
+    int prev;
+    do {
+        prev = OPA_LL_int(ptr);
+    } while (prev == oldv && !OPA_SC_int(ptr, newv));
+    return prev;
+}
+
+
+static _opa_inline void *OPA_swap_ptr_by_llsc(OPA_ptr_t *ptr, void *val)
+{
+    void *prev;
+    do {
+        prev = OPA_LL_ptr(ptr);
+    } while (!OPA_SC_ptr(ptr, val));
+    return prev;
+}
+
+static _opa_inline int OPA_swap_int_by_llsc(OPA_int_t *ptr, int val)
+{
+    int prev;
+    do {
+        prev = OPA_LL_int(ptr);
+    } while (!OPA_SC_int(ptr, val));
+    return prev;
+}
+
+#endif /* OPA_LL_SC_SUPPORTED */
+
 static _opa_inline int OPA_fetch_and_add_by_cas(OPA_int_t *ptr, int val)
 {
     int cmp;
@@ -105,91 +188,5 @@ static _opa_inline int OPA_swap_int_by_cas(OPA_int_t *ptr, int val)
 
     return prev;
 }
-
-
-/* Emulating using LL/SC */
-
-#if defined(OPA_LL_SC_SUPPORTED)
-static _opa_inline int OPA_fetch_and_add_by_llsc(OPA_int_t *ptr, int val)
-{
-    int prev;
-    do {
-        prev = OPA_LL_int(ptr);
-    } while (!OPA_SC_int(ptr, prev + val));
-    return prev;
-}
-
-
-static _opa_inline void OPA_add_by_llsc(int *ptr, int val)
-{
-    OPA_fetch_and_add_by_llsc(ptr, val);
-}
-
-static _opa_inline void OPA_incr_by_llsc(OPA_int_t *ptr)
-{
-    OPA_add_by_llsc(ptr, 1);
-}
-
-static _opa_inline void OPA_decr_by_llsc(OPA_int_t *ptr)
-{
-    OPA_add_by_llsc(ptr, -1);
-}
-
-
-static _opa_inline int OPA_fetch_and_decr_by_llsc(OPA_int_t *ptr)
-{
-    return OPA_fetch_and_add_by_llsc(ptr, -1);
-}
-
-static _opa_inline int OPA_fetch_and_incr_by_llsc(OPA_int_t *ptr)
-{
-    return OPA_fetch_and_add_by_llsc(ptr, 1);
-}
-
-static _opa_inline int OPA_decr_and_test_by_llsc(OPA_int_t *ptr)
-{
-    int prev = OPA_fetch_and_decr_by_llsc(ptr);
-    return prev == 1;
-}
-
-static _opa_inline int *OPA_cas_ptr_by_llsc(OPA_ptr_t *ptr, int *oldv, int *newv)
-{
-    int *prev;
-    do {
-        prev = OPA_LL_ptr(ptr);
-    } while (prev == oldv && !OPA_SC_ptr(ptr, newv));
-    return prev;
-}
-
-static _opa_inline int OPA_cas_int_by_llsc(OPA_int_t *ptr, int oldv, int newv)
-{
-    int prev;
-    do {
-        prev = OPA_LL_int(ptr);
-    } while (prev == oldv && !OPA_SC_int(ptr, newv));
-    return prev;
-}
-
-
-static _opa_inline int *OPA_swap_ptr_by_llsc(int * volatile *ptr, int *val)
-{
-    int *prev;
-    do {
-        prev = OPA_LL_ptr(ptr);
-    } while (!OPA_SC_ptr(ptr, val));
-    return prev;
-}
-
-static _opa_inline int OPA_swap_int_by_llsc(OPA_int_t *ptr, int val)
-{
-    int prev;
-    do {
-        prev = OPA_LL_int(ptr);
-    } while (!OPA_SC_int(ptr, val));
-    return prev;
-}
-
-#endif /* OPA_LL_SC_SUPPORTED */
-
 
 #endif /* OPA_EMULATED_H_INCLUDED */

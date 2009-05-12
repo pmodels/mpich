@@ -66,6 +66,9 @@ typedef struct {
     OPA_int_t   *n1;            /* # of times faa returned 1 */
 } faa_ret_t;
 
+/* Definitions for test_threaded_fai_fad */
+/* Uses definitions from test_threaded_incr_decr */
+
 
 /*-------------------------------------------------------------------------
  * Function: test_simple_loadstore_int
@@ -703,8 +706,10 @@ static int test_threaded_incr_decr(void)
     unsigned            i;
 
     /* Must use an odd number of threads */
-    if(!(nthreads & 1))
+    if(nthreads == 2)
         nthreads++;
+    else if(!(nthreads & 1))
+        nthreads--;
 
     TESTING("incr and decr", nthreads);
 
@@ -1318,6 +1323,157 @@ error:
 } /* end test_threaded_faa_ret() */
 
 
+#if defined(OPA_HAVE_PTHREAD_H)
+/*-------------------------------------------------------------------------
+ * Function: threaded_fai_helper
+ *
+ * Purpose: Helper (thread) routine for test_threaded_fai_fad
+ *
+ * Return: NULL
+ *
+ * Programmer: Neil Fortner
+ *             Friday, May 8, 2009
+ *
+ * Modifications:
+ *
+ *-------------------------------------------------------------------------
+ */
+static void *threaded_fai_helper(void *_shared_val)
+{
+    OPA_int_t           *shared_val = (OPA_int_t *)_shared_val;
+    unsigned            niter = INCR_DECR_NITER;
+    unsigned            i;
+
+    /* Main loop */
+    for(i=0; i<niter; i++)
+        /* Add the unique value to the shared value */
+        (void) OPA_fetch_and_incr(shared_val);
+
+    /* Exit */
+    pthread_exit(NULL);
+} /* end threaded_fai_helper() */
+
+
+/*-------------------------------------------------------------------------
+ * Function: threaded_fad_helper
+ *
+ * Purpose: Helper (thread) routine for test_threaded_fai_fad
+ *
+ * Return: NULL
+ *
+ * Programmer: Neil Fortner
+ *             Friday, May 8, 2009
+ *
+ * Modifications:
+ *
+ *-------------------------------------------------------------------------
+ */
+static void *threaded_fad_helper(void *_shared_val)
+{
+    OPA_int_t           *shared_val = (OPA_int_t *)_shared_val;
+    unsigned            niter = INCR_DECR_NITER;
+    unsigned            i;
+
+    /* Main loop */
+    for(i=0; i<niter; i++)
+        /* Add the unique value to the shared value */
+        (void) OPA_fetch_and_decr(shared_val);
+
+    /* Exit */
+    pthread_exit(NULL);
+} /* end threaded_fad_helper() */
+#endif /* OPA_HAVE_PTHREAD_H */
+
+
+/*-------------------------------------------------------------------------
+ * Function: test_threaded_fai_fad
+ *
+ * Purpose: Tests atomicity of OPA_fetch_and_incr and OPA_fetch_and_decr.
+ *          Launches nthreads threads, each of which repeatedly either
+ *          increments or decrements a shared variable.  Does not test
+ *          return values.
+ *
+ * Return: Success: 0
+ *         Failure: 1
+ *
+ * Programmer: Neil Fortner
+ *             Friday, May 8, 2009
+ *
+ * Modifications:
+ *
+ *-------------------------------------------------------------------------
+ */
+static int test_threaded_fai_fad(void)
+{
+#if defined(OPA_HAVE_PTHREAD_H)
+    pthread_t           *threads = NULL; /* Threads */
+    pthread_attr_t      ptattr;         /* Thread attributes */
+    OPA_int_t           shared_val;     /* Integer shared between threads */
+    unsigned            nthreads = num_threads[curr_test];
+    unsigned            i;
+
+    /* Must use an odd number of threads */
+    if(nthreads == 2)
+        nthreads++;
+    else if(!(nthreads & 1))
+        nthreads--;
+
+    TESTING("fetch and incr/decr", nthreads);
+
+    /* Allocate array of threads */
+    if(NULL == (threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t))))
+        TEST_ERROR;
+
+    /* Set threads to be joinable */
+    pthread_attr_init(&ptattr);
+    pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
+
+    /* Set the initial state of the shared value (0) */
+    OPA_store(&shared_val, 0);
+
+    /* Create the threads.  All the unique values must add up to 0. */
+    for(i=0; i<nthreads; i++) {
+        if(i & 1) {
+            if(pthread_create(&threads[i], &ptattr, threaded_fad_helper,
+                    &shared_val)) TEST_ERROR;
+        } else
+            if(pthread_create(&threads[i], &ptattr, threaded_fai_helper,
+                    &shared_val)) TEST_ERROR;
+    } /* end for */
+
+    /* Free the attribute */
+    if(pthread_attr_destroy(&ptattr)) TEST_ERROR;
+
+    /* Join the threads */
+    for (i=0; i<nthreads; i++)
+        if(pthread_join(threads[i], NULL)) TEST_ERROR;
+
+    /* Verify that the shared value contains the expected result (0) */
+    if(OPA_load(&shared_val) != INCR_DECR_EXPECTED)
+        FAIL_OP_ERROR(printf("    Unexpected result: %d expected: %d\n",
+                OPA_load(&shared_val), INCR_DECR_EXPECTED));
+
+    /* Free memory */
+    free(threads);
+
+    PASSED();
+
+#else /* OPA_HAVE_PTHREAD_H */
+    TESTING("incr and decr", 0);
+    SKIPPED();
+    puts("    pthread.h not available");
+#endif /* OPA_HAVE_PTHREAD_H */
+
+    return 0;
+
+#if defined(OPA_HAVE_PTHREAD_H)
+error:
+    if(threads) free(threads);
+    return 1;
+#endif /* OPA_HAVE_PTHREAD_H */
+} /* end test_threaded_fai_fad() */
+
+
 /*-------------------------------------------------------------------------
  * Function:    main
  *
@@ -1359,6 +1515,7 @@ int main(int argc, char **argv)
         nerrors += test_threaded_decr_and_test();
         nerrors += test_threaded_faa();
         nerrors += test_threaded_faa_ret();
+        nerrors += test_threaded_fai_fad();
     }
 
     if(nerrors)

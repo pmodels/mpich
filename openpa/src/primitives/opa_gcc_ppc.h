@@ -8,8 +8,33 @@
 #define OPA_GCC_PPC_H_INCLUDED
 
 /* these need to be aligned on an 8-byte boundary to work on a BG/P */
-typedef struct { volatile int v;    ATTRIBUTE((aligned (8))) } OPA_int_t;
-typedef struct { void * volatile v; ATTRIBUTE((aligned (8))) } OPA_ptr_t;
+typedef struct { volatile int v    OPA_ATTRIBUTE((aligned (8))); } OPA_int_t;
+typedef struct { void * volatile v OPA_ATTRIBUTE((aligned (8))); } OPA_ptr_t;
+
+/* Aligned loads and stores are atomic. */
+static _opa_inline int OPA_load(OPA_int_t *ptr)
+{
+    return ptr->v;
+}
+
+/* Aligned loads and stores are atomic. */
+static _opa_inline void OPA_store(OPA_int_t *ptr, int val)
+{
+    ptr->v = val;
+}
+
+/* Aligned loads and stores are atomic. */
+static _opa_inline void *OPA_load_ptr(OPA_ptr_t *ptr)
+{
+    return ptr->v;
+}
+
+/* Aligned loads and stores are atomic. */
+static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
+{
+    ptr->v = val;
+}
+
 
 /*
    load-link/store-conditional (LL/SC) primitives.  We LL/SC implement
