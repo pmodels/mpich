@@ -447,7 +447,7 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *bu
         /* If we are still here, we need to refill our temporary buffer */
         count = read(stdin_fd, buf, HYD_TMPBUF_SIZE);
         if (count < 0) {
-            if (errno == EINTR || errno == EAGAIN) {
+            if (errno == EINTR || errno == EAGAIN || errno == ENOTCONN) {
                 /* This call was interrupted or there was no data to read; just break out. */
                 *closed = 1;
                 break;
