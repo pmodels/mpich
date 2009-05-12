@@ -209,7 +209,7 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 	 * used for a memory copy */
 	MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) +
 					 rel_off + offsetarray[curblock]);
- 	cbufp = (char*) paramp->userbuf + rel_off + offsetarray[curblock];
+	cbufp = (char*) paramp->userbuf + rel_off + offsetarray[curblock];
 
 	if (blocklen > blocks_left) blocklen = blocks_left;
 
