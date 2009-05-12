@@ -69,10 +69,6 @@ extern char **environ;
 #include <sys/socket.h>
 #endif
 
-#if !defined size_t
-#define size_t unsigned int
-#endif /* size_t */
-
 #if defined(HAVE_PUTENV) && defined(NEEDS_PUTENV_DECL)
 extern int putenv(char *string);
 #endif
