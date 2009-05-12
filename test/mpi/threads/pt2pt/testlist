@@ -2,8 +2,8 @@ threaded_sr 2
 alltoall 4
 sendselfth 1
 multisend 2
-# multisend2 5
-# multisend3 5
-# multisend4 5
+multisend2 5
+multisend3 5
+multisend4 5
 greq_wait 1
 greq_test 1
