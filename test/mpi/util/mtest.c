@@ -32,6 +32,15 @@ static void MTestRMACleanup( void );
 static int dbgflag = 0;         /* Flag used for debugging */
 static int wrank = -1;          /* World rank */
 static int verbose = 0;         /* Message level (0 is none) */
+
+/* Provide backward portability to MPI 1 */
+#ifndef MPI_VERSION
+#define MPI_VERSION 1
+#endif
+#if MPI_VERSION < 2
+#define MPI_THREAD_SINGLE 0
+#endif
+
 /* 
  * Initialize and Finalize MTest
  */
@@ -45,14 +54,19 @@ static int verbose = 0;         /* Message level (0 is none) */
   verbose output.  This is used by the routine 'MTestPrintfMsg'
 
 */
-void MTest_Init( int *argc, char ***argv )
+void MTest_Init_thread( int *argc, char ***argv, int required, int *provided )
 {
     int flag;
     char *envval = 0;
 
     MPI_Initialized( &flag );
     if (!flag) {
+#if MPI_VERSION >= 2
+	MPI_Init_thread( argc, argv, required, provided );
+#else
 	MPI_Init( argc, argv );
+	*provided = -1;
+#endif
     }
     /* Check for debugging control */
     if (getenv( "MPITEST_DEBUG" )) {
@@ -82,6 +96,11 @@ void MTest_Init( int *argc, char ***argv )
 	    }
 	}
     }
+}
+void MTest_Init( int *argc, char ***argv )
+{
+    int provided;
+    MTest_Init_thread( argc, argv, MPI_THREAD_SINGLE, &provided );
 }
 
 /*

@@ -13,6 +13,7 @@
  * Init and finalize test 
  */
 void MTest_Init( int *, char *** );
+void MTest_Init_thread( int *, char ***, int, int * );
 void MTest_Finalize( int );
 void MTestPrintError( int );
 void MTestPrintErrorMsg( const char [], int );
