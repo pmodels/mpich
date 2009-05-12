@@ -792,7 +792,7 @@ fi
 
 # must come after the above autoreconf-like logic because the above
 # logic will delete the results of this actual autoreconf
-if test -e "openpa" ; then
+if [ -d "openpa" -o -L "openpa" ] ; then
     echo "running autoreconf on openpa"
     (cd openpa && $autoreconf -vif) || exit 1
 fi
