@@ -5,13 +5,6 @@
  */
 
 #include "hydra_utils.h"
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
-#if defined( HAVE_PUTENV ) && defined( NEEDS_PUTENV_DECL )
-extern int putenv(char *string);
-#endif
 
 static HYD_Status env_to_str(HYD_Env_t * env, char **str)
 {
