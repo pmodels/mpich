@@ -17,7 +17,7 @@
 #endif
 /* -- End Profiling Symbol Block */
 
-PMPI_LOCAL inline int MPIR_Barrier_or_coll_fn(MPID_Comm *comm_ptr );
+PMPI_LOCAL int MPIR_Barrier_or_coll_fn(MPID_Comm *comm_ptr );
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
@@ -224,11 +224,13 @@ int MPIR_Barrier( MPID_Comm *comm_ptr )
 
 /* A simple utility function to that calls the comm_ptr->coll_fns->Barrier
 override if it exists or else it calls MPIR_Barrier with the same arguments. */
+/* Note that this function must *not* be inline - if weak symbols are not 
+   available, this function must be a global symbol. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Barrier_or_coll_fn
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-PMPI_LOCAL inline int MPIR_Barrier_or_coll_fn(MPID_Comm *comm_ptr )
+PMPI_LOCAL int MPIR_Barrier_or_coll_fn(MPID_Comm *comm_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
 
