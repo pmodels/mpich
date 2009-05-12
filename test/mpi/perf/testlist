@@ -4,3 +4,6 @@ twovec 1
 dtpack 1
 non_zero_root 4
 timer 1
+# The commcreatep test looks at how communicator creation scales with group
+# size.
+commcreatep 64

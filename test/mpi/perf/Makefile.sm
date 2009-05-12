@@ -9,6 +9,7 @@ sendrecvl_SOURCES       = sendrecvl.c
 twovec_SOURCES          = twovec.c
 dtpack_SOURCES          = dtpack.c
 allredtrace_SOURCES     = allredtrace.c
+commcreatep_SOURCES     = commcreatep.c
 timer_SOURCES		= timer.c
 
 ../util/mtest.o:
