@@ -5,19 +5,18 @@
  */
 
 #include "hydra_base.h"
-#include "bsci.h"
-#include "bscu.h"
+#include "rmki.h"
 
-struct HYD_BSCI_fns HYD_BSCI_fns;
+struct HYD_RMKI_fns HYD_RMKI_fns;
 
-HYD_Status HYD_BSCI_get_usize(int *size)
+HYD_Status HYD_RMKI_query_node_list(int num_nodes, struct HYD_Partition **partition_list)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_BSCI_fns.get_usize(size);
-    HYDU_ERR_POP(status, "bootstrap device returned error getting usize\n");
+    status = HYD_RMKI_fns.query_node_list(num_nodes, partition_list);
+    HYDU_ERR_POP(status, "RMK device returned error while querying node list\n");
 
 fn_exit:
     HYDU_FUNC_EXIT();

@@ -7,7 +7,8 @@
 HYDRA_LIB_PATH = ../../lib
 
 libhydra_a_DIR = ${HYDRA_LIB_PATH}
-libhydra_a_SOURCES = bsci_init.c bsci_finalize.c bsci_usize.c bsci_wait.c bsci_launch.c
+libhydra_a_SOURCES = bsci_init.c bsci_finalize.c bsci_usize.c bsci_wait.c bsci_launch.c \
+	bsci_query_node_list.c
 INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../../../include \
 	-I../../include \

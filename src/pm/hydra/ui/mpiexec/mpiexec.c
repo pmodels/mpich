@@ -7,6 +7,7 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "mpiexec.h"
+#include "rmki.h"
 #include "uiu.h"
 #include "demux.h"
 
@@ -72,6 +73,10 @@ static void usage(void)
     printf("    --css                            communication sub-system to use\n");
 
     printf("\n");
+    printf("  Resource management kernel options:\n");
+    printf("    --rmk                            resource management kernel to use\n");
+
+    printf("\n");
     printf("  Hybrid programming options:\n");
     printf("    --ranks-per-proc                 assign so many ranks to each process\n");
     printf("    --enable/--disable-pm-env        process manager environment settings\n");
@@ -107,9 +112,30 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    /* Convert the host file to a host list */
-    status = HYDU_create_host_list(handle.host_file, &handle.partition_list);
-    HYDU_ERR_POP(status, "unable to create host list\n");
+    status = HYD_RMKI_init(handle.rmk);
+    HYDU_ERR_POP(status, "unable to initialize RMK\n");
+
+    if (handle.host_file == NULL) {
+        /* User did not provide any host file. Query the RMK. We pass
+         * a zero node count, so the RMK will give us all the nodes it
+         * already has and won't try to allocate any more. */
+        status = HYD_RMKI_query_node_list(0, &handle.partition_list);
+        HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
+
+        /* We don't have an allocation capability yet, but when we do,
+         * we should try it here. */
+
+        if (handle.partition_list == NULL) {
+            /* The RMK didn't give us anything back; use localhost */
+            handle.host_file = HYDU_strdup("HYDRA_USE_LOCALHOST");
+        }
+    }
+
+    if (handle.host_file) {
+        /* Use the user specified host file */
+        status = HYDU_create_node_list_from_file(handle.host_file, &handle.partition_list);
+        HYDU_ERR_POP(status, "unable to create host list\n");
+    }
 
     /* Consolidate the environment list that we need to propagate */
     status = HYD_UIU_create_env_list();

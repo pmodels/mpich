@@ -9,6 +9,7 @@
 
 #include "hydra_base.h"
 
+HYD_Status HYD_BSCU_query_node_list(int num_nodes, struct HYD_Partition **partition_list);
 HYD_Status HYD_BSCU_finalize(void);
 HYD_Status HYD_BSCU_get_usize(int *size);
 HYD_Status HYD_BSCU_wait_for_completion(void);

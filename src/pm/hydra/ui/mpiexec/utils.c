@@ -453,6 +453,28 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             continue;
         }
 
+        if (!strcmp(str[0], "--rmk")) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("--rmk: Resource management kernel to use\n\n");
+                printf("Notes:\n");
+                printf("  * Use the --version option to see what all are compiled in\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            if (!str[1]) {
+                /* Argument could be of the form "--foo x" */
+                INCREMENT_ARGV(status);
+                str[1] = HYDU_strdup(*argv);
+            }
+
+            HYDU_ERR_CHKANDJUMP(status, handle.rmk, HYD_INTERNAL_ERROR,
+                                "duplicate --rmk option\n");
+            handle.rmk = str[1];
+            HYDU_FREE(str[0]);
+            continue;
+        }
+
         if (!strcmp(str[0], "--css")) {
             if (argv[1] && IS_HELP(argv[1])) {
                 printf("\n");
@@ -626,11 +648,15 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
     if (handle.css == NULL)
         handle.css = HYDU_strdup(HYDRA_DEFAULT_CSS);
 
+    tmp = getenv("HYDRA_RMK");
+    if (handle.rmk == NULL && tmp)
+        handle.rmk = HYDU_strdup(tmp);
+    if (handle.rmk == NULL)
+        handle.rmk = HYDU_strdup(HYDRA_DEFAULT_RMK);
+
     tmp = getenv("HYDRA_HOST_FILE");
     if (handle.host_file == NULL && tmp)
         handle.host_file = HYDU_strdup(tmp);
-    if (handle.host_file == NULL)
-        handle.host_file = HYDU_strdup("HYDRA_USE_LOCALHOST");
 
     tmp = getenv("HYDRA_PROXY_PORT");
     if (handle.proxy_port == -1 && tmp)

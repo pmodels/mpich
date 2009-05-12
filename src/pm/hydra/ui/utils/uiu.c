@@ -18,6 +18,7 @@ void HYD_UIU_init_params(void)
 
     handle.bootstrap = NULL;
     handle.css = NULL;
+    handle.rmk = NULL;
     handle.binding = HYD_BIND_UNSET;
     handle.user_bind_map = NULL;
 
@@ -64,6 +65,9 @@ void HYD_UIU_free_params(void)
 
     if (handle.css)
         HYDU_FREE(handle.css);
+
+    if (handle.rmk)
+        HYDU_FREE(handle.rmk);
 
     if (handle.wdir)
         HYDU_FREE(handle.wdir);

@@ -262,6 +262,18 @@ This can also be controlled by using the HYDRA_CSS environment
 variable.
 
 
+Resource Manager integration
+----------------------------
+Hydra provides capability to integrate with different resource
+managers. The default is "dummy", which means no resource manager. You
+can pick these through the mpiexec option --rmk:
+
+ $ mpiexec --rmk lsf -f hosts -n 4 ./app
+
+This can also be controlled by using the HYDRA_RMK environment
+variable.
+
+
 Hydra in hybrid environments
 ----------------------------
 Hydra can be used to launch other process managers as well, such as a

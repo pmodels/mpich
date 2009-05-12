@@ -5,24 +5,20 @@
  */
 
 #include "hydra_base.h"
-#include "bsci.h"
+#include "hydra_utils.h"
 #include "bscu.h"
 
-struct HYD_BSCI_fns HYD_BSCI_fns;
-
-HYD_Status HYD_BSCI_get_usize(int *size)
+HYD_Status HYD_BSCU_query_node_list(int num_nodes, struct HYD_Partition **partition_list)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_BSCI_fns.get_usize(size);
-    HYDU_ERR_POP(status, "bootstrap device returned error getting usize\n");
+    /* We don't know anything about nodes or resources. Just return
+     * NULL. */
+    *partition_list = NULL;
 
-fn_exit:
     HYDU_FUNC_EXIT();
-    return status;
 
-fn_fail:
-    goto fn_exit;
+    return status;
 }

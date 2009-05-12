@@ -25,6 +25,7 @@ struct HYD_Handle_ {
 
     char *bootstrap;
     char *css;
+    char *rmk;
     HYD_Binding binding;
     char *user_bind_map;
 

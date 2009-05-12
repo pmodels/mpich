@@ -297,9 +297,6 @@ HYD_Status HYD_PMCI_launch_procs(void)
     status = HYD_PMCD_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
-    status = HYD_BSCI_init(handle.bootstrap, handle.debug);
-    HYDU_ERR_POP(status, "bootstrap server initialization failed\n");
-
     if (handle.launch_mode == HYD_LAUNCH_RUNTIME) {
         status = create_and_listen_portstr(HYD_PMCD_pmi_serv_control_connect_cb,
                                            &proxy_port_str);

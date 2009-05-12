@@ -8,10 +8,12 @@ mpiexec_SOURCES = mpiexec.c utils.c callback.c
 mpiexec_LDADD = -L../../lib -lhydra -L../../../util -lmpiexec -L../../../../../lib -lmpich
 mpiexec_DEPADD = ../../../util/libmpiexec.a
 INCLUDES = -I${abs_srcdir}/../../include \
-	-I${abs_srcdir}/../../../../include \
 	-I../../include \
+	-I${abs_srcdir}/../../../../include \
 	-I../../../../include \
 	-I${abs_srcdir}/../utils \
+	-I${abs_srcdir}/../../rmk/include \
+	-I../../rmk/include \
 	-I${abs_srcdir}/../../demux
 install_BIN = mpiexec
 

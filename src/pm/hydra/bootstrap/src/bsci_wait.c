@@ -17,8 +17,12 @@ HYD_Status HYD_BSCI_wait_for_completion(void)
     HYDU_FUNC_ENTER();
 
     status = HYD_BSCI_fns.wait_for_completion();
+    HYDU_ERR_POP(status, "bootstrap device returned error waiting for completion\n");
 
+fn_exit:
     HYDU_FUNC_EXIT();
-
     return status;
+
+fn_fail:
+    goto fn_exit;
 }

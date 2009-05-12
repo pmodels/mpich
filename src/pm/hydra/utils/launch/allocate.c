@@ -384,7 +384,8 @@ HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec)
 }
 
 
-HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partition_list)
+HYD_Status HYDU_create_node_list_from_file(char *host_file,
+                                           struct HYD_Partition **partition_list)
 {
     FILE *fp = NULL;
     char line[HYD_TMP_STRLEN], *hostname, *procs, **arg_list;

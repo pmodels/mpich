@@ -171,7 +171,8 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
 HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
                                         struct HYD_Partition **partition_list);
 HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec);
-HYD_Status HYDU_create_host_list(char *host_file, struct HYD_Partition **partition_list);
+HYD_Status HYDU_create_node_list_from_file(char *host_file,
+                                           struct HYD_Partition **partition_list);
 HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
                                int *in, int *out, int *err, int *pid, int core);
 HYD_Status HYDU_fork_and_exit(int core);
