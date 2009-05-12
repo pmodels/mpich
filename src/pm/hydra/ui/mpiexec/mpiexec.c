@@ -8,6 +8,7 @@
 #include "hydra_utils.h"
 #include "mpiexec.h"
 #include "rmki.h"
+#include "pmci.h"
 #include "uiu.h"
 #include "demux.h"
 

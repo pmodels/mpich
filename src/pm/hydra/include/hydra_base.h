@@ -40,14 +40,6 @@
 
 #include <errno.h>
 
-#if defined(HAVE_PUTENV) && defined(NEEDS_PUTENV_DECL)
-extern int putenv(char *string);
-#endif
-
-#if defined(NEEDS_GETHOSTNAME_DECL)
-int gethostname(char *name, size_t len);
-#endif
-
 #if defined HAVE_GETTIMEOFDAY
 /* FIXME: Is time.h available everywhere? We should probably have
  * multiple timer options. */
@@ -81,6 +73,13 @@ extern char **environ;
 #define size_t unsigned int
 #endif /* size_t */
 
+#if defined(HAVE_PUTENV) && defined(NEEDS_PUTENV_DECL)
+extern int putenv(char *string);
+#endif
+
+#if defined(NEEDS_GETHOSTNAME_DECL)
+int gethostname(char *name, size_t len);
+#endif
 
 #define HYD_DEFAULT_PROXY_PORT 9899
 

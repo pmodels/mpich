@@ -14,6 +14,8 @@ INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../utils \
 	-I${abs_srcdir}/../../rmk/include \
 	-I../../rmk/include \
+	-I${abs_srcdir}/../../pm/include \
+	-I../../pm/include \
 	-I${abs_srcdir}/../../demux
 install_BIN = mpiexec
 

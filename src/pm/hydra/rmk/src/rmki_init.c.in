@@ -7,11 +7,12 @@
 #include "hydra_base.h"
 #include "rmki.h"
 #include "rmku.h"
+#include "bsci.h"
 
 struct HYD_RMKI_fns HYD_RMKI_fns;
 
 char *HYD_RMKI_comp_array[] = { @hydra_rmk_name_array@ };
-HYD_Status(*HYD_RMKI_comp_init[])() = { @hydra_rmk_init_array@ };
+HYD_Status(*HYD_RMKI_comp_init[])(void) = { @hydra_rmk_init_array@ };
 
 HYD_Status HYD_RMKI_init(char *rmk)
 {

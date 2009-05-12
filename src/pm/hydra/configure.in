@@ -43,7 +43,13 @@ AC_TYPE_SIZE_T
 
 dnl Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca snprintf unsetenv \
-	       strerror strsignal)
+	       strerror strsignal putenv)
+
+# putenv() sets environment variable
+AC_HAVE_FUNCS(putenv)
+if test "$ac_cv_func_putenv" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
+fi
 
 dnl Check what we need to do about the environ extern
 AC_CACHE_CHECK([for environ in unistd.h],pac_cv_environ_in_unistd,
