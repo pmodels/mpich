@@ -36,7 +36,7 @@ int HYDU_Error_printf_simple(const char *str, ...);
 #define HYDU_ERR_POP(status, message)                                   \
     {                                                                   \
         if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (strcmp(message, ""))                                    \
+            if (strlen(message))                                        \
                 HYDU_Error_printf(message);                             \
             goto fn_fail;                                               \
         }                                                               \
@@ -49,7 +49,7 @@ int HYDU_Error_printf_simple(const char *str, ...);
     {                                                                   \
         status = error;                                                 \
         if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (strcmp(message, ""))                                    \
+            if (strlen(message))                                        \
                 HYDU_Error_printf(message);                             \
             goto fn_fail;                                               \
         }                                                               \
@@ -74,7 +74,7 @@ int HYDU_Error_printf_simple(const char *str, ...);
     {                                                                   \
         status = error;                                                 \
         if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (strcmp(message, ""))                                    \
+            if (strlen(message))                                        \
                 HYDU_Error_printf(message, arg1);                       \
             goto fn_fail;                                               \
         }                                                               \
@@ -87,7 +87,7 @@ int HYDU_Error_printf_simple(const char *str, ...);
     {                                                                   \
         status = error;                                                 \
         if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
-            if (strcmp(message, ""))                                    \
+            if (strlen(message))                                        \
                 HYDU_Error_printf(message, arg1, arg2);                 \
             goto fn_fail;                                               \
         }                                                               \
