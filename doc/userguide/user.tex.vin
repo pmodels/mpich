@@ -1437,10 +1437,10 @@ for a description of the options to \texttt{mpiexec}.
 \appendix
 
 \section{Frequently Asked Questions}
-This is the content of the online FAQ, as of June 23, 2006.
 
-% The FAQ builder is able to generate clean LaTeX that can be used immediately.
-\input{faqsum.tex}
+The frequently asked questions are maintained online
+here:\linebreak[0]
+http://wiki.mcs.anl.gov/\linebreak[0]mpich2/\linebreak[0]index.php/\linebreak[0]Frequently\_Asked\_Questions
 
 \bibliographystyle{plain}
 \bibliography{user}
