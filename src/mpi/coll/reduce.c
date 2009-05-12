@@ -723,10 +723,7 @@ int MPIR_Reduce (
     int comm_size, is_commutative, type_size, pof2;
     MPID_Op *op_ptr;
     MPIU_THREADPRIV_DECL;
-#ifdef HAVE_CXX_BINDING
-    int is_cxx_uop = 0;
-#endif
-    
+
     if (count == 0) return MPI_SUCCESS;
 
     MPIU_THREADPRIV_GET;
