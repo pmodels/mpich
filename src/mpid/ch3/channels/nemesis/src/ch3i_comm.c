@@ -68,10 +68,10 @@ int MPIDI_CH3I_comm_destroy (MPID_Comm *comm)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
-    if (comm->ch.barrier_vars && OPA_fetch_and_decr(&comm->ch.barrier_vars->usage_cnt) == 1)
+    if (comm->ch.barrier_vars && OPA_fetch_and_decr_int(&comm->ch.barrier_vars->usage_cnt) == 1)
     {
         OPA_write_barrier();
-        OPA_store(&comm->ch.barrier_vars->context_id, NULL_CONTEXT_ID);
+        OPA_store_int(&comm->ch.barrier_vars->context_id, NULL_CONTEXT_ID);
     }
     if (comm->ch.local_size)
         MPIU_Free (comm->ch.local_ranks);
@@ -99,7 +99,7 @@ static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars)
         {
             *vars = &MPID_nem_mem_region.barrier_vars[i];
 	    OPA_write_barrier();
-            OPA_incr(&(*vars)->usage_cnt);
+            OPA_incr_int(&(*vars)->usage_cnt);
             goto fn_exit;
         }
     }
@@ -207,19 +207,19 @@ static int barrier (MPID_Comm *comm_ptr)
         int prev;
         int sense;
 
-        sense = OPA_load(&barrier_vars->sig);
+        sense = OPA_load_int(&barrier_vars->sig);
         OPA_read_barrier();
 
-        prev = OPA_fetch_and_incr(&barrier_vars->cnt);
+        prev = OPA_fetch_and_incr_int(&barrier_vars->cnt);
         if (prev == local_size - 1)
         {
-            OPA_store(&barrier_vars->cnt, 0);
+            OPA_store_int(&barrier_vars->cnt, 0);
             OPA_write_barrier();
-            OPA_store(&barrier_vars->sig, 1 - sense);
+            OPA_store_int(&barrier_vars->sig, 1 - sense);
         }
         else
         {
-            while (OPA_load(&barrier_vars->sig) == sense)
+            while (OPA_load_int(&barrier_vars->sig) == sense)
                 MPIDU_Yield();
         }
 
@@ -236,7 +236,7 @@ static int barrier (MPID_Comm *comm_ptr)
 
         /* wait for local procs to reach barrier */
         if (local_size > 1)
-            while (OPA_load(&barrier_vars->sig0) == 0)
+            while (OPA_load_int(&barrier_vars->sig0) == 0)
                 MPIDU_Yield();
 
         /* now do a barrier with external processes */
@@ -246,10 +246,10 @@ static int barrier (MPID_Comm *comm_ptr)
         /* reset ctr and release local procs */
         if (local_size > 1)
         {
-            OPA_store(&barrier_vars->sig0, 0);
-            OPA_store(&barrier_vars->cnt, 0);
+            OPA_store_int(&barrier_vars->sig0, 0);
+            OPA_store_int(&barrier_vars->cnt, 0);
 	    OPA_write_barrier();
-	    OPA_store(&barrier_vars->sig, 1 - OPA_load(&barrier_vars->sig));
+	    OPA_store_int(&barrier_vars->sig, 1 - OPA_load_int(&barrier_vars->sig));
         }
     }
     else
@@ -259,17 +259,17 @@ static int barrier (MPID_Comm *comm_ptr)
            root.  Then, wait on signal variable. */
         int prev;
         int sense;
-        sense = OPA_load(&barrier_vars->sig);
+        sense = OPA_load_int(&barrier_vars->sig);
         OPA_read_barrier();
 
-        prev = OPA_fetch_and_incr(&barrier_vars->cnt);
+        prev = OPA_fetch_and_incr_int(&barrier_vars->cnt);
         if (prev == local_size - 2)  /* - 2 because it's the value before we added 1 and we're not waiting for root */
 	{
 	    OPA_write_barrier();
-	    OPA_store(&barrier_vars->sig0, 1);
+	    OPA_store_int(&barrier_vars->sig0, 1);
 	}
 
-        while (OPA_load(&barrier_vars->sig) == sense)
+        while (OPA_load_int(&barrier_vars->sig) == sense)
             MPIDU_Yield();
     }
 
@@ -295,11 +295,11 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
     if (MPID_nem_mem_region.local_rank == 0)
         for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i)
         {
-            OPA_store(&barrier_region[i].context_id, NULL_CONTEXT_ID);
-            OPA_store(&barrier_region[i].usage_cnt, 0);
-            OPA_store(&barrier_region[i].cnt, 0);
-            OPA_store(&barrier_region[i].sig0, 0);
-            OPA_store(&barrier_region[i].sig, 0);
+            OPA_store_int(&barrier_region[i].context_id, NULL_CONTEXT_ID);
+            OPA_store_int(&barrier_region[i].usage_cnt, 0);
+            OPA_store_int(&barrier_region[i].cnt, 0);
+            OPA_store_int(&barrier_region[i].sig0, 0);
+            OPA_store_int(&barrier_region[i].sig, 0);
         }
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_BARRIER_VARS_INIT);

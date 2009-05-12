@@ -4,12 +4,9 @@
 #      See COPYRIGHT in top-level directory.
 # 
 
-# FIXME what do we do about windows?  Do we require autotools?  MPICH2 doesn't
-# currently require this...
-
 AC_PREREQ(2.62)
 
-AC_INIT([OpenPA], [0.0.1], [https://trac.mcs.anl.gov/projects/openpa/newticket])
+AC_INIT([OpenPA], [1.0.0], [https://trac.mcs.anl.gov/projects/openpa/newticket])
 dnl Set the directory that contains support scripts such as install-sh and
 dnl config.guess.  It also contains autoconf macro files.
 AC_CONFIG_AUX_DIR(confdb)
@@ -168,21 +165,21 @@ if test     "$with_atomic_primitives" = "auto"                 \
     OPA_int_t a, b;
     int c;
 
-    OPA_store(&a, 0);
-    OPA_store(&b, 1);
-    c = OPA_load(&a);
+    OPA_store_int(&a, 0);
+    OPA_store_int(&b, 1);
+    c = OPA_load_int(&a);
 
-    OPA_add(&a, 10);
-    OPA_incr(&a);
-    OPA_decr(&a);
+    OPA_add_int(&a, 10);
+    OPA_incr_int(&a);
+    OPA_decr_int(&a);
 
-    c = OPA_decr_and_test(&a);
-    c = OPA_fetch_and_add(&a, 10);
-    c = OPA_fetch_and_incr(&a);
-    c = OPA_fetch_and_decr(&a);
+    c = OPA_decr_and_test_int(&a);
+    c = OPA_fetch_and_add_int(&a, 10);
+    c = OPA_fetch_and_incr_int(&a);
+    c = OPA_fetch_and_decr_int(&a);
 
     c = OPA_cas_int(&a, 10, 11);
-    c = OPA_swap_int(&a, OPA_load(&b));
+    c = OPA_swap_int(&a, OPA_load_int(&b));
 
     OPA_write_barrier();
     OPA_read_barrier();

@@ -16,13 +16,13 @@ typedef struct { volatile int v;  } OPA_int_t;
 typedef struct { int * volatile v; } OPA_ptr_t;
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline int OPA_load(OPA_int_t *ptr)
+static _opa_inline int OPA_load_int(OPA_int_t *ptr)
 {
     return ptr->v;
 }
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline void OPA_store(OPA_int_t *ptr, int val)
+static _opa_inline void OPA_store_int(OPA_int_t *ptr, int val)
 {
     ptr->v = val;
 }
@@ -332,7 +332,7 @@ static _opa_inline long int OPA_shmemi_cswap_8(volatile long int * v, long int e
         return result;
 }
 
-static _opa_inline void OPA_add(OPA_int_t *ptr, int val)
+static _opa_inline void OPA_add_int(OPA_int_t *ptr, int val)
 {
     OPA_shmemi_fetch_add_4(&ptr->v, val);
 }
@@ -353,33 +353,33 @@ static _opa_inline int OPA_cas_int(OPA_int_t *ptr, int oldv, int newv)
     return(OPA_shmemi_cswap_4(&ptr->v, oldv, newv));
 }
 
-static _opa_inline void OPA_decr(OPA_int_t *ptr)
+static _opa_inline void OPA_decr_int(OPA_int_t *ptr)
 {
     OPA_shmemi_fetch_add_4(&ptr->v, -1);
 }
 
-static _opa_inline int OPA_decr_and_test(OPA_int_t *ptr)
+static _opa_inline int OPA_decr_and_test_int(OPA_int_t *ptr)
 {
     int old = OPA_shmemi_fetch_add_4(&ptr->v, -1);
     return (old == 1);
 }
 
-static _opa_inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
+static _opa_inline int OPA_fetch_and_add_int(OPA_int_t *ptr, int val)
 {
     return(OPA_shmemi_fetch_add_4(&ptr->v, val));
 }
 
-static _opa_inline int OPA_fetch_and_decr(OPA_int_t *ptr)
+static _opa_inline int OPA_fetch_and_decr_int(OPA_int_t *ptr)
 {
     return(OPA_shmemi_fetch_add_4(&ptr->v, -1));
 }
 
-static _opa_inline int OPA_fetch_and_incr(OPA_int_t *ptr)
+static _opa_inline int OPA_fetch_and_incr_int(OPA_int_t *ptr)
 {
     return(OPA_shmemi_fetch_add_4(&ptr->v, 1));
 }
 
-static _opa_inline void OPA_incr(OPA_int_t *ptr)
+static _opa_inline void OPA_incr_int(OPA_int_t *ptr)
 {
     OPA_shmemi_fetch_add_4(&ptr->v, 1);
 }

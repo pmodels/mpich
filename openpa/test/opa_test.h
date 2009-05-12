@@ -31,24 +31,24 @@
 typedef volatile int OPA_int_t;
 typedef void * volatile OPA_ptr_t;
 
-#define OPA_load(A) (*(A))
-#define OPA_store(A, B) ((void) (*(A) = (B)))
+#define OPA_load_int(A) (*(A))
+#define OPA_store_int(A, B) ((void) (*(A) = (B)))
 #define OPA_load_ptr(A) (*(A))
 #define OPA_store_ptr(A, B) ((void) (*(A) = (B)))
 
-#define OPA_add(A, B) ((void) (*(A) += (B)))
-#define OPA_incr(A) ((void) (++(*(A))))
-#define OPA_decr(A) ((void) (--(*(A))))
+#define OPA_add_int(A, B) ((void) (*(A) += (B)))
+#define OPA_incr_int(A) ((void) (++(*(A))))
+#define OPA_decr_int(A) ((void) (--(*(A))))
 
-#define OPA_decr_and_test(A) (0 == --(*(A)))
-static _opa_inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
+#define OPA_decr_and_test_int(A) (0 == --(*(A)))
+static _opa_inline int OPA_fetch_and_add_int(OPA_int_t *ptr, int val)
 {
     int prev = *ptr;
     *ptr += val;
     return prev;
 }
-#define OPA_fetch_and_incr(A) ((*(A))++)
-#define OPA_fetch_and_decr(A) ((*(A))--)
+#define OPA_fetch_and_incr_int(A) ((*(A))++)
+#define OPA_fetch_and_decr_int(A) ((*(A))--)
 
 #define OPA_cas_ptr(A, B, C) (*(A) == (B) ? (*(A) = (C), (B)) : (A))
 #define OPA_cas_int(A, B, C) (*(A) == (B) ? (*(A) = (C), (B)) : (A))
@@ -75,8 +75,8 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 
 /* For LL/SC only use load/store.  This is more naive than the above
  * implementation for CAS */
-#define OPA_LL_int OPA_load
-#define OPA_SC_int OPA_store
+#define OPA_LL_int OPA_load_int
+#define OPA_SC_int OPA_store_int
 #define OPA_LL_ptr OPA_load_ptr
 #define OPA_SC_ptr OPA_store_ptr
 

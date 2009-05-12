@@ -73,7 +73,7 @@ typedef struct {
 /*-------------------------------------------------------------------------
  * Function: test_simple_loadstore_int
  *
- * Purpose: Tests basic functionality of OPA_load and OPA_store with a
+ * Purpose: Tests basic functionality of OPA_load_int and OPA_store_int with a
  *          single thread.  Does not test atomicity of operations.
  *
  * Return: Success: 0
@@ -93,22 +93,22 @@ static int test_simple_loadstore_int(void)
     TESTING("simple integer load/store functionality", 0);
 
     /* Store 0 in a, -1 in b.  Verify that these values are returned by
-     * OPA_load. */
-    OPA_store(&a, 0);
-    if(0 != OPA_load(&a)) TEST_ERROR;
-    OPA_store(&b, -1);
-    if(-1 != OPA_load(&b)) TEST_ERROR;
-    if(0 != OPA_load(&a)) TEST_ERROR;
-    if(-1 != OPA_load(&b)) TEST_ERROR;
+     * OPA_load_int. */
+    OPA_store_int(&a, 0);
+    if(0 != OPA_load_int(&a)) TEST_ERROR;
+    OPA_store_int(&b, -1);
+    if(-1 != OPA_load_int(&b)) TEST_ERROR;
+    if(0 != OPA_load_int(&a)) TEST_ERROR;
+    if(-1 != OPA_load_int(&b)) TEST_ERROR;
 
     /* Store INT_MIN in a and INT_MAX in b.  Verify that these values are
-     * returned by OPA_LOAD. */
-    OPA_store(&a, INT_MIN);
-    if(INT_MIN != OPA_load(&a)) TEST_ERROR;
-    OPA_store(&b, INT_MAX);
-    if(INT_MAX != OPA_load(&b)) TEST_ERROR;
-    if(INT_MIN != OPA_load(&a)) TEST_ERROR;
-    if(INT_MAX != OPA_load(&b)) TEST_ERROR;
+     * returned by OPA_load_int. */
+    OPA_store_int(&a, INT_MIN);
+    if(INT_MIN != OPA_load_int(&a)) TEST_ERROR;
+    OPA_store_int(&b, INT_MAX);
+    if(INT_MAX != OPA_load_int(&b)) TEST_ERROR;
+    if(INT_MIN != OPA_load_int(&a)) TEST_ERROR;
+    if(INT_MAX != OPA_load_int(&b)) TEST_ERROR;
 
     PASSED();
     return 0;
@@ -145,10 +145,10 @@ static void *threaded_loadstore_int_helper(void *_udata)
     /* Main loop */
     for(i=0; i<niter; i++) {
         /* Store the unique value into the shared value */
-        OPA_store(udata->shared_val, udata->unique_val);
+        OPA_store_int(udata->shared_val, udata->unique_val);
 
         /* Load the shared_value, and check if it is valid */
-        if((loaded_val = OPA_load(udata->shared_val)) % LOADSTORE_INT_DIFF) {
+        if((loaded_val = OPA_load_int(udata->shared_val)) % LOADSTORE_INT_DIFF) {
             printf("    Unexpected load: %d is not a multiple of %d\n",
                     loaded_val, LOADSTORE_INT_DIFF);
             nerrors++;
@@ -164,7 +164,7 @@ static void *threaded_loadstore_int_helper(void *_udata)
 /*-------------------------------------------------------------------------
  * Function: test_threaded_loadstore_int
  *
- * Purpose: Tests atomicity of OPA_load and OPA_store.  Launches nthreads
+ * Purpose: Tests atomicity of OPA_load_int and OPA_store_int.  Launches nthreads
  *          threads, each of which repeatedly loads and stores a shared
  *          variable.
  *
@@ -253,7 +253,7 @@ error:
 /*-------------------------------------------------------------------------
  * Function: test_simple_loadstore_ptr
  *
- * Purpose: Tests basic functionality of OPA_load and OPA_store with a
+ * Purpose: Tests basic functionality of OPA_load_int and OPA_store_int with a
  *          single thread.  Does not test atomicity of operations.
  *
  * Return: Success: 0
@@ -273,7 +273,7 @@ static int test_simple_loadstore_ptr(void)
     TESTING("simple pointer load/store functionality", 0);
 
     /* Store 0 in a, 1 in b.  Verify that these values are returned by
-     * OPA_load. */
+     * OPA_load_int. */
     OPA_store_ptr(&a, (void *) 0);
     if((void *) 0 != OPA_load_ptr(&a)) TEST_ERROR;
     OPA_store_ptr(&b, (void *) 1);
@@ -282,7 +282,7 @@ static int test_simple_loadstore_ptr(void)
     if((void *) 1 != OPA_load_ptr(&b)) TEST_ERROR;
 
     /* Store -1 in a and -2 in b.  Verify that these values are returned by
-     * OPA_LOAD. */
+     * OPA_load_int. */
     OPA_store_ptr(&a, (void *) -2);
     if((void *) -2 != OPA_load_ptr(&a)) TEST_ERROR;
     OPA_store_ptr(&b, (void *) -1);
@@ -344,7 +344,7 @@ static void *threaded_loadstore_ptr_helper(void *_udata)
 /*-------------------------------------------------------------------------
  * Function: test_threaded_loadstore_ptr
  *
- * Purpose: Tests atomicity of OPA_load and OPA_store.  Launches nthreads
+ * Purpose: Tests atomicity of OPA_load_int and OPA_store_int.  Launches nthreads
  *          threads, each of which repeatedly loads and stores a shared
  *          variable.
  *
@@ -433,8 +433,9 @@ error:
 /*-------------------------------------------------------------------------
  * Function: test_simple_add_incr_decr
  *
- * Purpose: Tests basic functionality of OPA_add, OPA_incr and OPA_decr
- *          with a single thread.  Does not test atomicity of operations.
+ * Purpose: Tests basic functionality of OPA_add_int, OPA_incr_int and
+ *          OPA_decr_int with a single thread.  Does not test atomicity
+ *          of operations.
  *
  * Return: Success: 0
  *         Failure: 1
@@ -454,40 +455,40 @@ static int test_simple_add_incr_decr(void)
     TESTING("simple add/incr/decr functionality", 0);
 
     /* Store 0 in a */
-    OPA_store(&a, 0);
+    OPA_store_int(&a, 0);
 
     /* Add INT_MIN */
-    OPA_add(&a, INT_MIN);
+    OPA_add_int(&a, INT_MIN);
 
     /* Increment */
-    OPA_incr(&a);
+    OPA_incr_int(&a);
 
     /* Add INT_MAX */
-    OPA_add(&a, INT_MAX);
+    OPA_add_int(&a, INT_MAX);
 
     /* Decrement */
-    OPA_decr(&a);
+    OPA_decr_int(&a);
 
     /* Load the result, verify it is correct */
-    if(OPA_load(&a) != INT_MIN + 1 + INT_MAX - 1) TEST_ERROR;
+    if(OPA_load_int(&a) != INT_MIN + 1 + INT_MAX - 1) TEST_ERROR;
 
     /* Store 0 in a */
-    OPA_store(&a, 0);
+    OPA_store_int(&a, 0);
 
     /* Add INT_MAX */
-    OPA_add(&a, INT_MAX);
+    OPA_add_int(&a, INT_MAX);
 
     /* Decrement */
-    OPA_decr(&a);
+    OPA_decr_int(&a);
 
     /* Add INT_MIN */
-    OPA_add(&a, INT_MIN);
+    OPA_add_int(&a, INT_MIN);
 
     /* Increment */
-    OPA_incr(&a);
+    OPA_incr_int(&a);
 
     /* Load the result, verify it is correct */
-    if(OPA_load(&a) != INT_MAX - 1 + INT_MIN + 1) TEST_ERROR;
+    if(OPA_load_int(&a) != INT_MAX - 1 + INT_MIN + 1) TEST_ERROR;
 
     PASSED();
     return 0;
@@ -521,7 +522,7 @@ static void *threaded_add_helper(void *_udata)
     /* Main loop */
     for(i=0; i<niter; i++)
         /* Add the unique value to the shared value */
-        OPA_add(udata->shared_val, udata->unique_val);
+        OPA_add_int(udata->shared_val, udata->unique_val);
 
     /* Exit */
     pthread_exit(NULL);
@@ -532,8 +533,9 @@ static void *threaded_add_helper(void *_udata)
 /*-------------------------------------------------------------------------
  * Function: test_threaded_add
  *
- * Purpose: Tests atomicity of OPA_add.  Launches nthreads threads, each
- *          of which repeatedly adds a unique number to a shared variable.
+ * Purpose: Tests atomicity of OPA_add_int.  Launches nthreads threads
+ *          each of which repeatedly adds a unique number to a shared
+ *          variable.
  *
  * Return: Success: 0
  *         Failure: 1
@@ -570,7 +572,7 @@ static int test_threaded_add(void)
     pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
 
     /* Set the initial state of the shared value (0) */
-    OPA_store(&shared_val, 0);
+    OPA_store_int(&shared_val, 0);
 
     /* Create the threads.  All the unique values must add up to 0. */
     for(i=0; i<nthreads; i++) {
@@ -590,9 +592,9 @@ static int test_threaded_add(void)
         if(pthread_join(threads[i], NULL)) TEST_ERROR;
 
     /* Verify that the shared value contains the expected result (0) */
-    if(OPA_load(&shared_val) != ADD_EXPECTED)
+    if(OPA_load_int(&shared_val) != ADD_EXPECTED)
         FAIL_OP_ERROR(printf("    Unexpected result: %d expected: %d\n",
-                OPA_load(&shared_val), ADD_EXPECTED));
+                OPA_load_int(&shared_val), ADD_EXPECTED));
 
     /* Free memory */
     free(threads);
@@ -641,7 +643,7 @@ static void *threaded_incr_helper(void *_shared_val)
     /* Main loop */
     for(i=0; i<niter; i++)
         /* Add the unique value to the shared value */
-        OPA_incr(shared_val);
+        OPA_incr_int(shared_val);
 
     /* Exit */
     pthread_exit(NULL);
@@ -671,7 +673,7 @@ static void *threaded_decr_helper(void *_shared_val)
     /* Main loop */
     for(i=0; i<niter; i++)
         /* Add the unique value to the shared value */
-        OPA_decr(shared_val);
+        OPA_decr_int(shared_val);
 
     /* Exit */
     pthread_exit(NULL);
@@ -682,9 +684,9 @@ static void *threaded_decr_helper(void *_shared_val)
 /*-------------------------------------------------------------------------
  * Function: test_threaded_incr_decr
  *
- * Purpose: Tests atomicity of OPA_incr and OPA_decr.  Launches nthreads
- *          threads, each of which repeatedly either increments or
- *          decrements a shared variable.
+ * Purpose: Tests atomicity of OPA_incr_int and OPA_decr_int.  Launches
+ *          nthreads threads, each of which repeatedly either increments
+ *          or decrements a shared variable.
  *
  * Return: Success: 0
  *         Failure: 1
@@ -722,7 +724,7 @@ static int test_threaded_incr_decr(void)
     pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
 
     /* Set the initial state of the shared value (0) */
-    OPA_store(&shared_val, 0);
+    OPA_store_int(&shared_val, 0);
 
     /* Create the threads.  All the unique values must add up to 0. */
     for(i=0; i<nthreads; i++) {
@@ -742,9 +744,9 @@ static int test_threaded_incr_decr(void)
         if(pthread_join(threads[i], NULL)) TEST_ERROR;
 
     /* Verify that the shared value contains the expected result (0) */
-    if(OPA_load(&shared_val) != INCR_DECR_EXPECTED)
+    if(OPA_load_int(&shared_val) != INCR_DECR_EXPECTED)
         FAIL_OP_ERROR(printf("    Unexpected result: %d expected: %d\n",
-                OPA_load(&shared_val), INCR_DECR_EXPECTED));
+                OPA_load_int(&shared_val), INCR_DECR_EXPECTED));
 
     /* Free memory */
     free(threads);
@@ -770,8 +772,8 @@ error:
 /*-------------------------------------------------------------------------
  * Function: test_simple_decr_and_test
  *
- * Purpose: Tests basic functionality of OPA_decr_and_test with a single
- *          thread.  Does not test atomicity of operations.
+ * Purpose: Tests basic functionality of OPA_decr_and_test_int with a
+ *          single thread.  Does not test atomicity of operations.
  *
  * Return: Success: 0
  *         Failure: 1
@@ -791,13 +793,13 @@ static int test_simple_decr_and_test(void)
     TESTING("simple decr and test functionality", 0);
 
     /* Store 10 in a */
-    OPA_store(&a, 10);
+    OPA_store_int(&a, 10);
 
     for(i = 0; i<20; i++)
-        if(OPA_decr_and_test(&a))
+        if(OPA_decr_and_test_int(&a))
             if(i != 9) TEST_ERROR;
 
-    if(OPA_load(&a) != -10) TEST_ERROR;
+    if(OPA_load_int(&a) != -10) TEST_ERROR;
 
     PASSED();
     return 0;
@@ -830,7 +832,7 @@ static void *threaded_decr_and_test_helper(void *_udata)
     /* Main loop */
     for(i=0; i<DECR_AND_TEST_NITER_INNER; i++)
         /* Add the unique value to the shared value */
-        if(OPA_decr_and_test(udata->shared_val))
+        if(OPA_decr_and_test_int(udata->shared_val))
             udata->ntrue++;
 
     /* Exit */
@@ -842,7 +844,7 @@ static void *threaded_decr_and_test_helper(void *_udata)
 /*-------------------------------------------------------------------------
  * Function: test_threaded_decr_and_test
  *
- * Purpose: Tests atomicity of OPA_add and OPA_store.  Launches nthreads
+ * Purpose: Tests atomicity of OPA_decr_and_test_int.  Launches nthreads
  *          threads, each of which repeatedly adds a unique number to a
  *          shared variable.
  *
@@ -896,7 +898,7 @@ static int test_threaded_decr_and_test(void)
     /* Outer loop (perform the threaded test multiple times */
     for(i=0; i<niter; i++) {
         /* Set the initial state of the shared value (INCR_DECR_EXPECTED) */
-        OPA_store(&shared_val, starting_val);
+        OPA_store_int(&shared_val, starting_val);
 
         /* Create the threads.  Initialize each thread's "ntrue" field. */
         for(j=0; j<nthreads; j++) {
@@ -911,9 +913,9 @@ static int test_threaded_decr_and_test(void)
             /* Join thread j */
             if(pthread_join(threads[j], NULL)) TEST_ERROR;
 
-            /* Verify that OPA_decr_and_test returned true at most once */
+            /* Verify that OPA_decr_and_test_int returned true at most once */
             if(thread_data[j].ntrue > 1) {
-                printf("\n    Unexpected return from thread %u: OPA_decr_and_test returned true %u times",
+                printf("\n    Unexpected return from thread %u: OPA_decr_and_test_int returned true %u times",
                         j, thread_data[j].ntrue);
                 nerrors++;
             } /* end if */
@@ -923,18 +925,18 @@ static int test_threaded_decr_and_test(void)
             ntrue_total += thread_data[j].ntrue;
         } /* end for */
 
-        /* Verify that OPA_decr_and_test returned true exactly once over all the
-         * threads. */
+        /* Verify that OPA_decr_and_test_int returned true exactly once over all
+         * the threads. */
         if(ntrue_total != 1) {
-            printf("\n    Unexpected result: OPA_decr_and_test returned true %u times total",
+            printf("\n    Unexpected result: OPA_decr_and_test_int returned true %u times total",
                     ntrue_total);
             nerrors++;
         } /* end if */
 
         /* Verify that the shared value contains the expected result */
-        if(OPA_load(&shared_val) != -starting_val) {
+        if(OPA_load_int(&shared_val) != -starting_val) {
             printf("\n    Unexpected result: %d expected: %d",
-                    OPA_load(&shared_val), -starting_val);
+                    OPA_load_int(&shared_val), -starting_val);
             nerrors++;
         } /* end if */
     } /* end for */
@@ -973,9 +975,9 @@ error:
 /*-------------------------------------------------------------------------
  * Function: test_simple_faa_fai_fad
  *
- * Purpose: Tests basic functionality of OPA_fetch_and_add,
- *          OPA_fetch_and_incr and OPA_fetch_and_decr with a single
- *          thread.  Does not test atomicity of operations.
+ * Purpose: Tests basic functionality of OPA_fetch_and_add_int,
+ *          OPA_fetch_and_incr_int and OPA_fetch_and_decr_int with a 
+ *          single thread.  Does not test atomicity of operations.
  *
  * Return: Success: 0
  *         Failure: 1
@@ -996,58 +998,58 @@ static int test_simple_faa_fai_fad(void)
     TESTING("simple fetch and add/incr/decr functionality", 0);
 
     /* Store 0 in a */
-    OPA_store(&a, 0);
+    OPA_store_int(&a, 0);
     expected = 0;
 
     /* Add INT_MIN */
-    result = OPA_fetch_and_add(&a, INT_MIN);
+    result = OPA_fetch_and_add_int(&a, INT_MIN);
     if(result != expected) TEST_ERROR;
     expected += INT_MIN;
 
     /* Increment */
-    result = OPA_fetch_and_incr(&a);
+    result = OPA_fetch_and_incr_int(&a);
     if(result != expected) TEST_ERROR;
     expected++;
 
     /* Add INT_MAX */
-    result = OPA_fetch_and_add(&a, INT_MAX);
+    result = OPA_fetch_and_add_int(&a, INT_MAX);
     if(result != expected) TEST_ERROR;
     expected += INT_MAX;
 
     /* Decrement */
-    result = OPA_fetch_and_decr(&a);
+    result = OPA_fetch_and_decr_int(&a);
     if(result != expected) TEST_ERROR;
     expected--;
 
     /* Load the result, verify it is correct */
-    if(OPA_load(&a) != INT_MIN + 1 + INT_MAX - 1) TEST_ERROR;
+    if(OPA_load_int(&a) != INT_MIN + 1 + INT_MAX - 1) TEST_ERROR;
 
     /* Store 0 in a */
-    OPA_store(&a, 0);
+    OPA_store_int(&a, 0);
     expected = 0;
 
     /* Add INT_MAX */
-    result = OPA_fetch_and_add(&a, INT_MAX);
+    result = OPA_fetch_and_add_int(&a, INT_MAX);
     if(result != expected) TEST_ERROR;
     expected += INT_MAX;
 
     /* Decrement */
-    result = OPA_fetch_and_decr(&a);
+    result = OPA_fetch_and_decr_int(&a);
     if(result != expected) TEST_ERROR;
     expected--;
 
     /* Add INT_MIN */
-    result = OPA_fetch_and_add(&a, INT_MIN);
+    result = OPA_fetch_and_add_int(&a, INT_MIN);
     if(result != expected) TEST_ERROR;
     expected += INT_MIN;
 
     /* Increment */
-    result = OPA_fetch_and_incr(&a);
+    result = OPA_fetch_and_incr_int(&a);
     if(result != expected) TEST_ERROR;
     expected++;
 
     /* Load the result, verify it is correct */
-    if(OPA_load(&a) != INT_MAX - 1 + INT_MIN + 1) TEST_ERROR;
+    if(OPA_load_int(&a) != INT_MAX - 1 + INT_MIN + 1) TEST_ERROR;
 
     PASSED();
     return 0;
@@ -1081,7 +1083,7 @@ static void *threaded_faa_helper(void *_udata)
     /* Main loop */
     for(i=0; i<niter; i++)
         /* Add the unique value to the shared value */
-        (void) OPA_fetch_and_add(udata->shared_val, udata->unique_val);
+        (void) OPA_fetch_and_add_int(udata->shared_val, udata->unique_val);
 
     /* Exit */
     pthread_exit(NULL);
@@ -1092,10 +1094,10 @@ static void *threaded_faa_helper(void *_udata)
 /*-------------------------------------------------------------------------
  * Function: test_threaded_faa
  *
- * Purpose: Tests atomicity of OPA_fetch_and_add.  Launches nthreads
+ * Purpose: Tests atomicity of OPA_fetch_and_add_int.  Launches nthreads
  *          threads, each of which repeatedly adds a unique number to a
  *          shared variable.  Does not test return value of
- *          OPA_fetch_and_add.  This is basically a copy of
+ *          OPA_fetch_and_add_int.  This is basically a copy of
  *          test_threaded_add.
  *
  * Return: Success: 0
@@ -1133,7 +1135,7 @@ static int test_threaded_faa(void)
     pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
 
     /* Set the initial state of the shared value (0) */
-    OPA_store(&shared_val, 0);
+    OPA_store_int(&shared_val, 0);
 
     /* Create the threads.  All the unique values must add up to 1. */
     for(i=0; i<nthreads; i++) {
@@ -1153,9 +1155,9 @@ static int test_threaded_faa(void)
         if(pthread_join(threads[i], NULL)) TEST_ERROR;
 
     /* Verify that the shared value contains the expected result (0) */
-    if(OPA_load(&shared_val) != ADD_EXPECTED)
+    if(OPA_load_int(&shared_val) != ADD_EXPECTED)
         FAIL_OP_ERROR(printf("    Unexpected result: %d expected: %d\n",
-                OPA_load(&shared_val), ADD_EXPECTED));
+                OPA_load_int(&shared_val), ADD_EXPECTED));
 
     /* Free memory */
     free(threads);
@@ -1205,17 +1207,17 @@ static void *threaded_faa_ret_helper(void *_udata)
     /* Main loop */
     for(i=0; i<niter; i++) {
         /* Add -1 to the shared value */
-        ret = OPA_fetch_and_add(udata->shared_val, -1);
+        ret = OPA_fetch_and_add_int(udata->shared_val, -1);
 
         /* Verify that the value returned is less than the previous return */
         if(ret >= prev) {
             printf("\n    Unexpected return: %d is not less than %d  ", ret, prev);
-            OPA_incr(udata->nerrors);
+            OPA_incr_int(udata->nerrors);
         } /* end if */
 
         /* Check if the return value is 1 */
         if(ret == 1)
-            OPA_incr(udata->n1);
+            OPA_incr_int(udata->n1);
 
         /* update prev */
         prev - ret;
@@ -1230,7 +1232,7 @@ static void *threaded_faa_ret_helper(void *_udata)
 /*-------------------------------------------------------------------------
  * Function: test_threaded_faa_ret
  *
- * Purpose: Tests atomicity of OPA_fetch_and_add.  Launches nthreads
+ * Purpose: Tests atomicity of OPA_fetch_and_add_int.  Launches nthreads
  *          threads, each of which repeatedly adds -1 to a shared
  *          variable.  Verifies that the value returned is always
  *          decreasing, and that it returns 1 exactly once.
@@ -1264,9 +1266,9 @@ static int test_threaded_faa_ret(void)
         TEST_ERROR;
 
     /* Initialize thread data struct */
-    OPA_store(&shared_val, FAA_RET_NITER);
-    OPA_store(&nerrors, 0);
-    OPA_store(&n1, 0);
+    OPA_store_int(&shared_val, FAA_RET_NITER);
+    OPA_store_int(&nerrors, 0);
+    OPA_store_int(&n1, 0);
     thread_data.shared_val = &shared_val;
     thread_data.nerrors = &nerrors;
     thread_data.n1 = &n1;
@@ -1288,19 +1290,19 @@ static int test_threaded_faa_ret(void)
         if(pthread_join(threads[i], NULL)) TEST_ERROR;
 
     /* Verify that no errors were reported */
-    if(OPA_load(&nerrors))
-        FAIL_OP_ERROR(printf("    %d unexpected returns from OPA_fetch_and_add\n",
-                OPA_load(&nerrors)));
+    if(OPA_load_int(&nerrors))
+        FAIL_OP_ERROR(printf("    %d unexpected returns from OPA_fetch_and_add_int\n",
+                OPA_load_int(&nerrors)));
 
-    /* Verify that OPA_fetch_and_add returned 1 expactly once */
-    if(OPA_load(&n1) != 1)
-        FAIL_OP_ERROR(printf("    OPA_fetch_and_add returned 1 %d times.  Expected: 1\n",
-                OPA_load(&n1)));
+    /* Verify that OPA_fetch_and_add_int returned 1 expactly once */
+    if(OPA_load_int(&n1) != 1)
+        FAIL_OP_ERROR(printf("    OPA_fetch_and_add_int returned 1 %d times.  Expected: 1\n",
+                OPA_load_int(&n1)));
 
     /* Verify that the shared value contains the expected result (0) */
-    if(OPA_load(&shared_val) != FAA_RET_EXPECTED)
+    if(OPA_load_int(&shared_val) != FAA_RET_EXPECTED)
         FAIL_OP_ERROR(printf("    Unexpected result: %d expected: %d\n",
-                OPA_load(&shared_val), FAA_RET_EXPECTED));
+                OPA_load_int(&shared_val), FAA_RET_EXPECTED));
 
     /* Free memory */
     free(threads);
@@ -1347,7 +1349,7 @@ static void *threaded_fai_helper(void *_shared_val)
     /* Main loop */
     for(i=0; i<niter; i++)
         /* Add the unique value to the shared value */
-        (void) OPA_fetch_and_incr(shared_val);
+        (void) OPA_fetch_and_incr_int(shared_val);
 
     /* Exit */
     pthread_exit(NULL);
@@ -1377,7 +1379,7 @@ static void *threaded_fad_helper(void *_shared_val)
     /* Main loop */
     for(i=0; i<niter; i++)
         /* Add the unique value to the shared value */
-        (void) OPA_fetch_and_decr(shared_val);
+        (void) OPA_fetch_and_decr_int(shared_val);
 
     /* Exit */
     pthread_exit(NULL);
@@ -1388,10 +1390,10 @@ static void *threaded_fad_helper(void *_shared_val)
 /*-------------------------------------------------------------------------
  * Function: test_threaded_fai_fad
  *
- * Purpose: Tests atomicity of OPA_fetch_and_incr and OPA_fetch_and_decr.
- *          Launches nthreads threads, each of which repeatedly either
- *          increments or decrements a shared variable.  Does not test
- *          return values.
+ * Purpose: Tests atomicity of OPA_fetch_and_incr_int and
+ *          OPA_fetch_and_decr_int.  Launches nthreads threads, each of
+ *          which repeatedly either increments or decrements a shared
+ *          variable.  Does not test return values.
  *
  * Return: Success: 0
  *         Failure: 1
@@ -1429,7 +1431,7 @@ static int test_threaded_fai_fad(void)
     pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
 
     /* Set the initial state of the shared value (0) */
-    OPA_store(&shared_val, 0);
+    OPA_store_int(&shared_val, 0);
 
     /* Create the threads.  All the unique values must add up to 0. */
     for(i=0; i<nthreads; i++) {
@@ -1449,9 +1451,9 @@ static int test_threaded_fai_fad(void)
         if(pthread_join(threads[i], NULL)) TEST_ERROR;
 
     /* Verify that the shared value contains the expected result (0) */
-    if(OPA_load(&shared_val) != INCR_DECR_EXPECTED)
+    if(OPA_load_int(&shared_val) != INCR_DECR_EXPECTED)
         FAIL_OP_ERROR(printf("    Unexpected result: %d expected: %d\n",
-                OPA_load(&shared_val), INCR_DECR_EXPECTED));
+                OPA_load_int(&shared_val), INCR_DECR_EXPECTED));
 
     /* Free memory */
     free(threads);

@@ -14,13 +14,13 @@ typedef struct { volatile int v;    } OPA_int_t;
 typedef struct { void * volatile v; } OPA_ptr_t;
 
 /* Aligned loads and stores are atomic on ia64. */
-static _opa_inline int OPA_load(OPA_int_t *ptr)
+static _opa_inline int OPA_load_int(OPA_int_t *ptr)
 {
     return ptr->v;
 }
 
 /* Aligned loads and stores are atomic on ia64. */
-static _opa_inline void OPA_store(OPA_int_t *ptr, int val)
+static _opa_inline void OPA_store_int(OPA_int_t *ptr, int val)
 {
     ptr->v = val;
 }
@@ -37,13 +37,13 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
     ptr->v = val;
 }
 
-#define OPA_add_by_faa OPA_add 
-#define OPA_incr_by_faa OPA_incr 
-#define OPA_decr_by_faa OPA_decr 
-#define OPA_fetch_and_decr_by_faa OPA_fetch_and_decr
-#define OPA_fetch_and_incr_by_faa OPA_fetch_and_incr
+#define OPA_add_int_by_faa OPA_add_int
+#define OPA_incr_int_by_faa OPA_incr_int
+#define OPA_decr_int_by_faa OPA_decr_int
+#define OPA_fetch_and_decr_int_by_faa OPA_fetch_and_decr_int
+#define OPA_fetch_and_incr_int_by_faa OPA_fetch_and_incr_int
 
-static _opa_inline int OPA_decr_and_test(OPA_int_t *ptr)
+static _opa_inline int OPA_decr_and_test_int(OPA_int_t *ptr)
 {
     int val;
     __asm__ __volatile__ ("fetchadd4.rel %0=[%2],%3"
@@ -73,8 +73,8 @@ static _opa_inline int OPA_cas_int(OPA_int_t *ptr, int oldv, int newv)
 #else
 #error OPA_SIZEOF_INT is not 4 or 8
 #endif
-    
-    return prev;   
+
+    return prev;
 }
 
 /* IA64 has a fetch-and-add instruction that only accepts immediate
@@ -90,7 +90,7 @@ static _opa_inline int OPA_cas_int(OPA_int_t *ptr, int oldv, int newv)
     break
 
 
-static _opa_inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
+static _opa_inline int OPA_fetch_and_add_int(OPA_int_t *ptr, int val)
 {
     switch (val)
     {
@@ -105,13 +105,13 @@ static _opa_inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
     default:
         {
             int cmp;
-            int prev = OPA_load(ptr);
-            
+            int prev = OPA_load_int(ptr);
+
             do {
                 cmp = prev;
                 prev = OPA_cas_int(ptr, cmp, val);
             } while (prev != cmp);
-            
+
             return prev;
         }
     }
@@ -126,7 +126,7 @@ static _opa_inline void *OPA_cas_ptr(OPA_ptr_t *ptr, void *oldv, void *newv)
                           "cmpxchg8.rel %0=[%3],%4,ar.ccv"
                           : "=r"(prev), "=m"(ptr->v)
                           : "rO"(oldv), "r"(&ptr->v), "r"(newv));
-    return prev;   
+    return prev;
 }
 
 static _opa_inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)

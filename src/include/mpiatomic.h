@@ -45,7 +45,7 @@ static inline void MPIDU_Ref_add(OPA_int_t *ptr)
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_REF_ADD);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_REF_ADD);
-    OPA_incr(ptr);
+    OPA_incr_int(ptr);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_REF_ADD);
 }
 
@@ -65,7 +65,7 @@ static inline int MPIDU_Ref_release_and_test(OPA_int_t *ptr)
 #if defined(ATOMIC_DECR_AND_TEST_IS_EMULATED) && !defined(ATOMIC_FETCH_AND_DECR_IS_EMULATED)
     {
         int prev;
-        prev = OPA_fetch_and_decr(ptr);
+        prev = OPA_fetch_and_decr_int(ptr);
         retval = (1 == prev);
         goto fn_exit;
     }
@@ -73,19 +73,19 @@ static inline int MPIDU_Ref_release_and_test(OPA_int_t *ptr)
     {
         int oldv, newv;
         do {
-            oldv = OPA_load(ptr);
+            oldv = OPA_load_int(ptr);
             newv = oldv - 1;
         } while (oldv != OPA_cas_int(ptr, oldv, newv));
         retval = (0 == newv);
         goto fn_exit;
     }
 #else
-    retval = OPA_decr_and_test(ptr);
+    retval = OPA_decr_and_test_int(ptr);
     goto fn_exit;
 #endif
 
 fn_exit:
-    MPIU_Assert(OPA_load(ptr) >= 0); /* help find add/release mismatches */
+    MPIU_Assert(OPA_load_int(ptr) >= 0); /* help find add/release mismatches */
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_REF_RELEASE_AND_TEST);
     return retval;
 }
@@ -141,7 +141,7 @@ static inline void MPIDU_Owner_init(MPIDU_Owner_info *info)
 
     /* It's OK if multiple processes call this on the same bit of shared_info
        because of the restriction given in the comment above. */
-    OPA_store(&info->id, MPIDU_OWNER_ID_NONE);
+    OPA_store_int(&info->id, MPIDU_OWNER_ID_NONE);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_OWNER_INIT);
 }
@@ -167,7 +167,7 @@ MPIDU_Owner_result MPIDU_Owner_try_acquire(MPIDU_Owner_info *info,
     MPIU_DBG_MSG_D(ALL, VERBOSE, "... my_id=%d", my_id);
     MPIU_DBG_MSG_P(ALL, VERBOSE, "... &info->id=%p", &info->id);
 
-    prev_id = OPA_cas_int(&info->id, MPIDU_OWNER_ID_NONE, my_id);
+    prev_id = OPA_cas_int_int(&info->id, MPIDU_OWNER_ID_NONE, my_id);
     if (after_owner) *after_owner = my_id;
 
     if (my_id == prev_id) {
@@ -248,7 +248,7 @@ MPIDU_Owner_result MPIDU_Owner_release(MPIDU_Owner_info *info,
 static inline
 int MPIDU_Owner_peek(MPIDU_Owner_info *info)
 {
-    return OPA_load(&info->id);
+    return OPA_load_int(&info->id);
 }
 
 
@@ -442,7 +442,7 @@ int MPIDU_Alloc_create_pool(volatile void *buf,
     (*pool)->buf = ptr;
 
     for (i = 0; i < (*pool)->count; ++i) {
-        OPA_store(&(*pool)->entries[i], MPIDU_ALLOC_NULL_ID);
+        OPA_store_int(&(*pool)->entries[i], MPIDU_ALLOC_NULL_ID);
         if (initializer != NULL) {
             mpi_errno = (*initializer)(&ptr[i*(*pool)->elt_size]);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -521,9 +521,9 @@ int MPIDU_Shm_barrier_init(MPIDU_Shm_barrier_t *barrier)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SHM_BARRIER_INIT);
 
-    OPA_store(&barrier->num_waiting, 0);
-    OPA_store(&barrier->sig, 0);
-    OPA_store(&barrier->sig_boss, 0);
+    OPA_store_int(&barrier->num_waiting, 0);
+    OPA_store_int(&barrier->sig, 0);
+    OPA_store_int(&barrier->sig_boss, 0);
     OPA_write_barrier();
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SHM_BARRIER_INIT);
@@ -557,20 +557,20 @@ int MPIDU_Shm_barrier_simple(MPIDU_Shm_barrier_t *barrier, int num_processes, in
     /* not strictly needed, but not checking it is a bug waiting to happen */
     MPIU_Assert(rank < num_processes);
 
-    cur_sig = OPA_load(&barrier->sig);
+    cur_sig = OPA_load_int(&barrier->sig);
 
-    prev_waiting = OPA_fetch_and_incr(&barrier->num_waiting);
+    prev_waiting = OPA_fetch_and_incr_int(&barrier->num_waiting);
 
     if ((num_processes - 1) == prev_waiting) {
         /* we are the last one to enter the barrier, so we are responsible for
            releasing everyone from it */
-        OPA_store(&barrier->num_waiting, 0);
+        OPA_store_int(&barrier->num_waiting, 0);
         OPA_write_barrier();
-        OPA_store(&barrier->sig, cur_sig + 1); /* must come last to avoid race */
+        OPA_store_int(&barrier->sig, cur_sig + 1); /* must come last to avoid race */
     }
     else {
         /* wait for the last arriving process to release us from the barrier */
-        while (OPA_load(&barrier->sig) == cur_sig) {
+        while (OPA_load_int(&barrier->sig) == cur_sig) {
             OPA_busy_wait();
         }
     }
@@ -603,22 +603,22 @@ int MPIDU_Shm_barrier_enter(MPIDU_Shm_barrier_t *barrier,
     if (1 == num_processes) goto fn_exit; /* trivial barrier */
 
     if (rank == boss_rank) {
-        while (0 == OPA_load(&barrier->sig_boss))
-            OPA_busy_wait();
+        while (0 == OPA_load_int(&barrier->sig_boss))
+            OPA_busy_wait_int();
     }
     else {
-        cur_sig = OPA_load(&barrier->sig);
+        cur_sig = OPA_load_int(&barrier->sig);
         OPA_read_barrier();
 
-        prev = OPA_fetch_and_incr(&barrier->num_waiting);
+        prev = OPA_fetch_and_incr_int(&barrier->num_waiting);
         /* -2 because it's the value before we added 1 and we're not waiting for the boss */
         if ((num_processes - 2) == prev) {
             OPA_write_barrier();
-            OPA_store(&barrier->sig_boss, 1);
+            OPA_store_int(&barrier->sig_boss, 1);
         }
 
         /* wait to be released by the boss */
-        while (OPA_load(&barrier->sig) == cur_sig)
+        while (OPA_load_int(&barrier->sig) == cur_sig)
             OPA_busy_wait();
     }
 
@@ -647,10 +647,10 @@ int MPIDU_Shm_barrier_release(MPIDU_Shm_barrier_t *barrier,
 
     /* makes this safe to use outside of a conditional */
     if (rank == boss_rank) {
-        OPA_store(&barrier->sig_boss, 0);
-        OPA_store(&barrier->num_waiting, 0);
+        OPA_store_int(&barrier->sig_boss, 0);
+        OPA_store_int(&barrier->num_waiting, 0);
         OPA_write_barrier();
-        OPA_incr(&barrier->sig);
+        OPA_incr_int(&barrier->sig);
     }
 
 fn_exit:

@@ -84,74 +84,74 @@ static int test_barriers_sanity(void)
     TESTING("memory barrier sanity", 0);
 
     /* Store 0 in a and b */
-    OPA_store(&a, 0);
+    OPA_store_int(&a, 0);
     OPA_write_barrier();
     b = 0;
 
     OPA_read_write_barrier();
 
     /* Add INT_MIN */
-    OPA_add(&a, INT_MIN);
+    OPA_add_int(&a, INT_MIN);
     OPA_read_write_barrier();
     b += INT_MIN;
 
     OPA_read_write_barrier();
 
     /* Increment */
-    OPA_incr(&a);
+    OPA_incr_int(&a);
     OPA_read_write_barrier();
     b++;
 
     OPA_read_write_barrier();
 
     /* Add INT_MAX */
-    OPA_add(&a, INT_MAX);
+    OPA_add_int(&a, INT_MAX);
     OPA_read_write_barrier();
     b += INT_MAX;
 
     OPA_read_write_barrier();
 
     /* Decrement */
-    OPA_decr(&a);
+    OPA_decr_int(&a);
     OPA_read_write_barrier();
     b--;
 
     OPA_read_write_barrier();
 
     /* Load the result, verify it is correct */
-    if(OPA_load(&a) != INT_MIN + 1 + INT_MAX - 1) TEST_ERROR;
+    if(OPA_load_int(&a) != INT_MIN + 1 + INT_MAX - 1) TEST_ERROR;
     OPA_read_barrier();
-    if(b != OPA_load(&a)) TEST_ERROR;
+    if(b != OPA_load_int(&a)) TEST_ERROR;
 
     OPA_read_write_barrier();
 
     /* Barriers are now the opposite of what they were before */
 
     /* Store 0 in a */
-    OPA_store(&a, 0);
+    OPA_store_int(&a, 0);
     OPA_read_barrier();
     b = 0;
 
     /* Add INT_MAX */
-    OPA_add(&a, INT_MAX);
+    OPA_add_int(&a, INT_MAX);
     b += INT_MAX;
 
     /* Decrement */
-    OPA_decr(&a);
+    OPA_decr_int(&a);
     b--;
 
     /* Add INT_MIN */
-    OPA_add(&a, INT_MIN);
+    OPA_add_int(&a, INT_MIN);
     b += INT_MIN;
 
     /* Increment */
-    OPA_incr(&a);
+    OPA_incr_int(&a);
     b++;
 
     /* Load the result, verify it is correct */
-    if(OPA_load(&a) != INT_MAX - 1 + INT_MIN + 1) TEST_ERROR;
+    if(OPA_load_int(&a) != INT_MAX - 1 + INT_MIN + 1) TEST_ERROR;
     OPA_write_barrier();
-    if(b != OPA_load(&a)) TEST_ERROR;
+    if(b != OPA_load_int(&a)) TEST_ERROR;
 
     PASSED();
     return 0;
@@ -189,7 +189,7 @@ static void *test_barriers_linear_array_write(void *_shared_array)
     for(i=0; i<niter; i++)
         for(j=0; j<LINEAR_ARRAY_LEN; j++) {
             /* Increment the value in the array */
-            OPA_incr(&shared_array[j]);
+            OPA_incr_int(&shared_array[j]);
 
             /* Write barrier */
             OPA_write_barrier();
@@ -231,7 +231,7 @@ static void *test_barriers_linear_array_read(void *_shared_array)
         /* Load the values from the array into the read buffer in reverse
          * order */
         for(j = LINEAR_ARRAY_LEN - 1; j >= 0; j--) {
-            read_buffer[j] = OPA_load(&shared_array[j]);
+            read_buffer[j] = OPA_load_int(&shared_array[j]);
 
             /* Read barrier */
             OPA_read_barrier();
@@ -293,7 +293,7 @@ static int test_barriers_linear_array(void)
 
     /* Initialize shared array */
     for(i=0; i<LINEAR_ARRAY_LEN; i++)
-        OPA_store(&shared_array[i], 0);
+        OPA_store_int(&shared_array[i], 0);
 
     /* Create the threads. */
     for(i=0; i<nthreads; i++) {
@@ -381,25 +381,25 @@ static void *test_barriers_variables_write(void *_udata)
     /* Main loop */
     for(i=0; i<niter; i++) {
         /* Incrememnt the variables in forward order */
-        OPA_incr(v_0);
+        OPA_incr_int(v_0);
         OPA_write_barrier();
-        OPA_incr(v_1);
+        OPA_incr_int(v_1);
         OPA_write_barrier();
-        OPA_incr(v_2);
+        OPA_incr_int(v_2);
         OPA_write_barrier();
-        OPA_incr(v_3);
+        OPA_incr_int(v_3);
         OPA_write_barrier();
-        OPA_incr(v_4);
+        OPA_incr_int(v_4);
         OPA_write_barrier();
-        OPA_incr(v_5);
+        OPA_incr_int(v_5);
         OPA_write_barrier();
-        OPA_incr(v_6);
+        OPA_incr_int(v_6);
         OPA_write_barrier();
-        OPA_incr(v_7);
+        OPA_incr_int(v_7);
         OPA_write_barrier();
-        OPA_incr(v_8);
+        OPA_incr_int(v_8);
         OPA_write_barrier();
-        OPA_incr(v_9);
+        OPA_incr_int(v_9);
         OPA_write_barrier();
     } /* end for */
 
@@ -452,25 +452,25 @@ static void *test_barriers_variables_read(void *_udata)
     for(i=0; i<niter; i++) {
         /* Load the values from the array into the read buffer in reverse
          * order*/
-        read_buffer[9] = OPA_load(v_9);
+        read_buffer[9] = OPA_load_int(v_9);
         OPA_read_barrier();
-        read_buffer[8] = OPA_load(v_8);
+        read_buffer[8] = OPA_load_int(v_8);
         OPA_read_barrier();
-        read_buffer[7] = OPA_load(v_7);
+        read_buffer[7] = OPA_load_int(v_7);
         OPA_read_barrier();
-        read_buffer[6] = OPA_load(v_6);
+        read_buffer[6] = OPA_load_int(v_6);
         OPA_read_barrier();
-        read_buffer[5] = OPA_load(v_5);
+        read_buffer[5] = OPA_load_int(v_5);
         OPA_read_barrier();
-        read_buffer[4] = OPA_load(v_4);
+        read_buffer[4] = OPA_load_int(v_4);
         OPA_read_barrier();
-        read_buffer[3] = OPA_load(v_3);
+        read_buffer[3] = OPA_load_int(v_3);
         OPA_read_barrier();
-        read_buffer[2] = OPA_load(v_2);
+        read_buffer[2] = OPA_load_int(v_2);
         OPA_read_barrier();
-        read_buffer[1] = OPA_load(v_1);
+        read_buffer[1] = OPA_load_int(v_1);
         OPA_read_barrier();
-        read_buffer[0] = OPA_load(v_0);
+        read_buffer[0] = OPA_load_int(v_0);
         OPA_read_barrier();
 
         /* Verify that the values never increase when read back in forward
@@ -529,16 +529,16 @@ static int test_barriers_variables(void)
     pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
 
     /* Initialize shared variables */
-    OPA_store(&v_0, 0);
-    OPA_store(&v_1, 0);
-    OPA_store(&v_2, 0);
-    OPA_store(&v_3, 0);
-    OPA_store(&v_4, 0);
-    OPA_store(&v_5, 0);
-    OPA_store(&v_6, 0);
-    OPA_store(&v_7, 0);
-    OPA_store(&v_8, 0);
-    OPA_store(&v_9, 0);
+    OPA_store_int(&v_0, 0);
+    OPA_store_int(&v_1, 0);
+    OPA_store_int(&v_2, 0);
+    OPA_store_int(&v_3, 0);
+    OPA_store_int(&v_4, 0);
+    OPA_store_int(&v_5, 0);
+    OPA_store_int(&v_6, 0);
+    OPA_store_int(&v_7, 0);
+    OPA_store_int(&v_8, 0);
+    OPA_store_int(&v_9, 0);
 
     /* Initialize udata struct */
     udata.v_0 = &v_0;
@@ -639,7 +639,7 @@ static int test_barriers_scattered_array(void)
 
     /* Initialize shared variables */
     for(i=0; i<VARIABLES_NVAR; i++)
-        OPA_store(&shared_array[shared_locs[i]], 0);
+        OPA_store_int(&shared_array[shared_locs[i]], 0);
 
     /* Initialize udata struct */
     udata.v_0 = &shared_array[shared_locs[0]];

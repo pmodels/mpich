@@ -487,21 +487,21 @@ static int check_alloc(int num_local, int local_rank)
 
     if (local_rank == 0) {
         asym_check_region_p->base_ptr = MPID_nem_mem_region.memory.base_addr;
-        OPA_store(&asym_check_region_p->is_asym, 0);
+        OPA_store_int(&asym_check_region_p->is_asym, 0);
     }
 
     mpi_errno = MPID_nem_barrier(num_local, local_rank);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (asym_check_region_p->base_ptr != MPID_nem_mem_region.memory.base_addr)
-        OPA_store(&asym_check_region_p->is_asym, 1);
+        OPA_store_int(&asym_check_region_p->is_asym, 1);
 
     OPA_read_write_barrier();
 
     mpi_errno = MPID_nem_barrier(num_local, local_rank);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    if (OPA_load(&asym_check_region_p->is_asym))
+    if (OPA_load_int(&asym_check_region_p->is_asym))
     {
 	MPID_nem_mem_region.memory.symmetrical = 0;
 	MPID_nem_asymm_base_addr = MPID_nem_mem_region.memory.base_addr;

@@ -178,7 +178,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_co
         for (i = 0; i < NUM_BUFS; ++i)
             vc_ch->lmt_copy_buf->len[i].val = 0;
 
-        OPA_store(&vc_ch->lmt_copy_buf->owner_info.val.rank, NO_OWNER);
+        OPA_store_int(&vc_ch->lmt_copy_buf->owner_info.val.rank, NO_OWNER);
         vc_ch->lmt_copy_buf->owner_info.val.remote_req_id = MPI_REQUEST_NULL;
         DBG_LMT(vc_ch->lmt_copy_buf->owner_info.val.ctr = 0);
     }
@@ -399,7 +399,7 @@ static int get_next_req(MPIDI_VC_t *vc)
         /* found request, clear remote_req_id field to prevent this buffer from matching future reqs */
         copy_buf->owner_info.val.remote_req_id = MPI_REQUEST_NULL;
 
-        OPA_store(&vc_ch->lmt_copy_buf->owner_info.val.rank, IN_USE);
+        OPA_store_int(&vc_ch->lmt_copy_buf->owner_info.val.rank, IN_USE);
     }
 
     req = vc_ch->lmt_active_lmt->req;
@@ -654,7 +654,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "completed request local_req=%d", req->handle);
     OPA_write_barrier();
-    OPA_store(&copy_buf->owner_info.val.rank, NO_OWNER);
+    OPA_store_int(&copy_buf->owner_info.val.rank, NO_OWNER);
 
     *done = TRUE;
     MPIDI_CH3U_Request_complete(req);

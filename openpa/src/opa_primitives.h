@@ -41,19 +41,19 @@
 
    The atomic functions that must be ported for each architecture: 
 
-   static _opa_inline int   OPA_load(OPA_int_t *ptr);
-   static _opa_inline void  OPA_store(OPA_int_t *ptr, int val);
+   static _opa_inline int   OPA_load_int(OPA_int_t *ptr);
+   static _opa_inline void  OPA_store_int(OPA_int_t *ptr, int val);
    static _opa_inline void *OPA_load_ptr(OPA_ptr_t *ptr);
    static _opa_inline void  OPA_store_ptr(OPA_ptr_t *ptr, void *val);
 
-   static _opa_inline void OPA_add(OPA_int_t *ptr, int val);
-   static _opa_inline void OPA_incr(OPA_int_t *ptr);
-   static _opa_inline void OPA_decr(OPA_int_t *ptr);
+   static _opa_inline void OPA_add_int(OPA_int_t *ptr, int val);
+   static _opa_inline void OPA_incr_int(OPA_int_t *ptr);
+   static _opa_inline void OPA_decr_int(OPA_int_t *ptr);
 
-   static _opa_inline int OPA_decr_and_test(OPA_int_t *ptr);
-   static _opa_inline int OPA_fetch_and_add(OPA_int_t *ptr, int val);
-   static _opa_inline int OPA_fetch_and_decr(OPA_int_t *ptr);
-   static _opa_inline int OPA_fetch_and_incr(OPA_int_t *ptr);
+   static _opa_inline int OPA_decr_and_test_int(OPA_int_t *ptr);
+   static _opa_inline int OPA_fetch_and_add_int(OPA_int_t *ptr, int val);
+   static _opa_inline int OPA_fetch_and_incr_int(OPA_int_t *ptr);
+   static _opa_inline int OPA_fetch_and_decr_int(OPA_int_t *ptr);
 
    static _opa_inline void *OPA_cas_ptr(OPA_ptr_t *ptr, void *oldv, void *newv);
    static _opa_inline int   OPA_cas_int(OPA_int_t *ptr, int oldv, int newv);

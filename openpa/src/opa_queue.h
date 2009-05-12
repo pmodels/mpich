@@ -36,7 +36,7 @@ int OPA_Shm_asymm_init(char *base);
 #define OPA_SHM_IS_REL_NULL(rel_ptr) (OPA_load_ptr(&(rel_ptr).offset) == OPA_SHM_REL_NULL)
 #define OPA_SHM_SET_REL_NULL(rel_ptr) (OPA_store_ptr(&(rel_ptr).offset, OPA_SHM_REL_NULL))
 #define OPA_SHM_REL_ARE_EQUAL(rel_ptr1, rel_ptr2) \
-    (OPA_load(&(rel_ptr1).offset) == OPA_load(&(rel_ptr2).offset))
+    (OPA_load_int(&(rel_ptr1).offset) == OPA_load_int(&(rel_ptr2).offset))
 
 /* This structure exists such that it is possible to expand the expressiveness
    of a relative address at some point in the future.  It also provides a

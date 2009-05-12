@@ -17,12 +17,12 @@
 typedef struct { volatile long v;  } OPA_int_t;
 typedef struct { void * volatile v; } OPA_ptr_t;
 
-static _opa_inline int OPA_load(OPA_int_t *ptr)
+static _opa_inline int OPA_load_int(OPA_int_t *ptr)
 {
     return ((int)ptr->v);
 }
 
-static _opa_inline void OPA_store(OPA_int_t *ptr, int val)
+static _opa_inline void OPA_store_int(OPA_int_t *ptr, int val)
 {
     ptr->v = (long)val;
 }
@@ -37,27 +37,27 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
     ptr->v = val;
 }
 
-static _opa_inline void OPA_add(OPA_int_t *ptr, int val)
+static _opa_inline void OPA_add_int(OPA_int_t *ptr, int val)
 {
     _InterlockedExchangeAdd(&(ptr->v), val);
 }
 
-static _opa_inline void OPA_incr(OPA_int_t *ptr)
+static _opa_inline void OPA_incr_int(OPA_int_t *ptr)
 {
     _InterlockedIncrement(&(ptr->v));
 }
 
-static _opa_inline void OPA_decr(OPA_int_t *ptr)
+static _opa_inline void OPA_decr_int(OPA_int_t *ptr)
 {
     _InterlockedDecrement(&(ptr->v));
 }
 
-static _opa_inline int OPA_decr_and_test(OPA_int_t *ptr)
+static _opa_inline int OPA_decr_and_test_int(OPA_int_t *ptr)
 {
     return (_InterlockedDecrement(&(ptr->v)) == 0);
 }
 
-static _opa_inline int OPA_fetch_and_add(OPA_int_t *ptr, int val)
+static _opa_inline int OPA_fetch_and_add_int(OPA_int_t *ptr, int val)
 {
     return ((int)_InterlockedExchangeAdd(&(ptr->v), (long)val));
 }
@@ -101,8 +101,8 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 }
 
 /* Implement fetch_and_incr/decr using fetch_and_add (*_faa) */
-#define OPA_fetch_and_incr OPA_fetch_and_incr_by_faa
-#define OPA_fetch_and_decr OPA_fetch_and_decr_by_faa
+#define OPA_fetch_and_incr_int_by_faa OPA_fetch_and_incr_int
+#define OPA_fetch_and_decr_int_by_faa OPA_fetch_and_decr_int
 
 #define OPA_write_barrier()      _WriteBarrier()
 #define OPA_read_barrier()       _ReadBarrier()

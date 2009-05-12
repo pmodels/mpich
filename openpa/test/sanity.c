@@ -21,15 +21,15 @@ int main(int argc, char **argv)
     OPA_Interprocess_lock_init(&shm_lock, 1/*isLeader*/);
 #endif
 
-    OPA_store(&a, 0);
-    OPA_store(&b, 1);
-    OPA_add(&a, 10);
-    assert(10 == OPA_load(&a));
+    OPA_store_int(&a, 0);
+    OPA_store_int(&b, 1);
+    OPA_add_int(&a, 10);
+    assert(10 == OPA_load_int(&a));
     c = OPA_cas_int(&a, 10, 11);
     assert(10 == c);
-    c = OPA_swap_int(&a, OPA_load(&b));
+    c = OPA_swap_int(&a, OPA_load_int(&b));
     assert(11 == c);
-    assert(1 == OPA_load(&a));
+    assert(1 == OPA_load_int(&a));
 
     printf("success!\n");
 
