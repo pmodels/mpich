@@ -337,7 +337,7 @@ int MPID_nem_tcp_vc_destroy(MPIDI_VC_t *vc)
 
     /* currently do nothing */
 #if 0
-    pollfd_t *plfd;
+    struct pollfd *plfd;
     sockconn_t *sc;
 
     sc = VC_FIELD(vc, sc);

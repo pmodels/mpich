@@ -1029,7 +1029,7 @@ static int cleanup_sc(sockconn_t *sc)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
-    pollfd_t *plfd = NULL;
+    struct pollfd *plfd = NULL;
     freenode_t *node;
     MPIU_CHKPMEM_DECL(1);
     if (sc == NULL)

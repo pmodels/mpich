@@ -126,10 +126,9 @@ extern const char *const CONN_STATE_STR[];
 
 struct MPID_nem_new_tcp_sockconn;
 typedef struct MPID_nem_new_tcp_sockconn sockconn_t;
-typedef struct pollfd pollfd_t;
 
 /* FIXME: should plfd really be const const?  Some handlers may need to change the plfd entry. */
-typedef int (*handler_func_t) (pollfd_t *const plfd, sockconn_t *const conn);
+typedef int (*handler_func_t) (struct pollfd *const plfd, sockconn_t *const conn);
 
 struct MPID_nem_new_tcp_sockconn{
     int fd;

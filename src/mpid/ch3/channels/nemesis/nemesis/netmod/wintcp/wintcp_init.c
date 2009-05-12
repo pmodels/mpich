@@ -32,7 +32,7 @@ MPID_nem_queue_ptr_t MPID_nem_newtcp_module_free_queue = 0;
 MPID_nem_queue_ptr_t MPID_nem_process_recv_queue = 0;
 MPID_nem_queue_ptr_t MPID_nem_process_free_queue = 0;
 extern sockconn_t MPID_nem_newtcp_module_g_lstn_sc;
-extern pollfd_t g_lstn_plfd;
+extern struct pollfd g_lstn_plfd;
 
 static MPID_nem_queue_t _free_queue;
 

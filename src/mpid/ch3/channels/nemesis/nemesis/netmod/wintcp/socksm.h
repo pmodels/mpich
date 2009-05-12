@@ -122,7 +122,6 @@ extern const char *const CONN_STATE_STR[];
 
 struct MPID_nem_new_tcp_module_sockconn;
 typedef struct MPID_nem_new_tcp_module_sockconn sockconn_t;
-typedef struct pollfd pollfd_t;
 
 /* FIXME: should plfd really be const const?  Some handlers may need to change the plfd entry. */
 /* Note that a conn can potentially be associated with multiple waitSets - hence we need to pass the 

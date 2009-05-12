@@ -17,9 +17,9 @@
 #include "socksm.h"
 
 /* globals */
-extern pollfd_t *MPID_nem_tcp_plfd_tbl;
+extern struct pollfd *MPID_nem_tcp_plfd_tbl;
 extern sockconn_t MPID_nem_tcp_g_lstn_sc;
-extern pollfd_t MPID_nem_tcp_g_lstn_plfd;
+extern struct pollfd MPID_nem_tcp_g_lstn_plfd;
 
 #define MPID_NEM_TCP_VC_STATE_DISCONNECTED 0
 #define MPID_NEM_TCP_VC_STATE_CONNECTED 1
@@ -76,7 +76,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll);
 int MPID_nem_tcp_sm_init(void);
 int MPID_nem_tcp_sm_finalize(void);
 int MPID_nem_tcp_set_sockopts(int fd);
-MPID_NEM_TCP_SOCK_STATUS_t MPID_nem_tcp_check_sock_status(const pollfd_t *const plfd);
+MPID_NEM_TCP_SOCK_STATUS_t MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd);
 int MPID_nem_tcp_send_finalize(void);
 int MPID_nem_tcp_bind(int sockfd);
 int MPID_nem_tcp_conn_est(MPIDI_VC_t *vc);
@@ -85,7 +85,7 @@ int MPID_nem_tcp_get_vc_from_conninfo(char *pg_id, int pg_rank, struct MPIDI_VC 
 int MPID_nem_tcp_is_sock_connected(int fd);
 int MPID_nem_tcp_disconnect(struct MPIDI_VC *const vc);
 int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc);
-int MPID_nem_tcp_state_listening_handler(pollfd_t *const l_plfd, sockconn_t *const l_sc);
+int MPID_nem_tcp_state_listening_handler(struct pollfd *const l_plfd, sockconn_t *const l_sc);
 int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc);
 
 int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz);

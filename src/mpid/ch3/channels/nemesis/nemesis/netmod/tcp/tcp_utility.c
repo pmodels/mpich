@@ -140,7 +140,7 @@ actually done now in this function.
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 MPID_NEM_TCP_SOCK_STATUS_t 
-MPID_nem_tcp_check_sock_status(const pollfd_t *const plfd)
+MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
 {
     int rc = MPID_NEM_TCP_SOCK_NOEVENT;
 
