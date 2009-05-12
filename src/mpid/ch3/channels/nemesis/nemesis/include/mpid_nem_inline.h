@@ -22,7 +22,7 @@ static inline void MPID_nem_mpich2_dequeue_fastbox (int local_rank);
 static inline void MPID_nem_mpich2_enqueue_fastbox (int local_rank);
 static inline int MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
 static inline int MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead);
-static inline int MPID_nem_mpich2_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox);
+static inline int MPID_nem_mpich2_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);
 static inline int MPID_nem_mpich2_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox);
 static inline int MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 static inline int MPID_nem_mpich2_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc);
@@ -876,7 +876,7 @@ MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int
-MPID_nem_mpich2_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox)
+MPID_nem_mpich2_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress)
 {
     int mpi_errno = MPI_SUCCESS;
     
@@ -901,7 +901,7 @@ MPID_nem_mpich2_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox)
 
     if (MPID_nem_num_netmods)
     {
-	mpi_errno = MPID_nem_network_poll();
+	mpi_errno = MPID_nem_network_poll(in_blocking_progress);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
 
@@ -968,7 +968,7 @@ MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int tim
 
     if (MPID_nem_num_netmods)
     {
-	mpi_errno = MPID_nem_network_poll();
+	mpi_errno = MPID_nem_network_poll(TRUE /* blocking */);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
 
@@ -1055,7 +1055,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 
     if (MPID_nem_num_netmods)
     {
-	mpi_errno = MPID_nem_network_poll();
+	mpi_errno = MPID_nem_network_poll(TRUE /* blocking */);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
 
@@ -1070,7 +1070,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 
 	if (MPID_nem_num_netmods)
 	{            
-	    mpi_errno = MPID_nem_network_poll();
+	    mpi_errno = MPID_nem_network_poll(TRUE /* blocking */);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
             if (completions != MPIDI_CH3I_progress_completion_count || MPID_nem_local_lmt_pending || MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]

@@ -144,7 +144,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             }
             else
             {
-                mpi_errno = MPID_nem_mpich2_test_recv(&cell, &in_fbox);
+                mpi_errno = MPID_nem_mpich2_test_recv(&cell, &in_fbox, is_blocking);
             }
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 

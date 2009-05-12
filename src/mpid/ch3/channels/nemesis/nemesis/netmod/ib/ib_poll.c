@@ -165,7 +165,7 @@ uint32_t MPID_nem_ib_refill_srq(
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 
-int MPID_nem_ib_poll()
+int MPID_nem_ib_poll(int in_blocking_poll)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;

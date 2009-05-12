@@ -123,7 +123,7 @@ MPID_nem_elan_recv( void )
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_elan_poll()
+MPID_nem_elan_poll(int in_blocking_poll)
 {
    int mpi_errno = MPI_SUCCESS;
    

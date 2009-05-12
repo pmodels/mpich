@@ -22,7 +22,7 @@ MPID_nem_psm_finalize()
 	
 	while(MPID_nem_module_psm_pendings_sends > 0)
         {
-              MPID_nem_psm_poll(MPID_NEM_POLL_OUT);
+              MPID_nem_psm_poll(FALSE);
         }
         ret = psm_mq_finalize(MPID_nem_module_psm_mq);
 	MPIU_ERR_CHKANDJUMP1 (ret != PSM_OK, mpi_errno, MPI_ERR_OTHER, "**psm_mq_finalize", "**psm_mq_finalize %s", psm_error_get_string (ret));

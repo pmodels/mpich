@@ -310,7 +310,7 @@ int MPID_nem_mx_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mx_poll(void)
+MPID_nem_mx_poll(int in_blocking_poll)
 {
    int           mpi_errno = MPI_SUCCESS;
    mx_status_t   status;
@@ -398,7 +398,7 @@ MPID_nem_mx_poll(void)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mx_poll(void)
+MPID_nem_mx_poll(int in_blocking_progress)
 {
    int           mpi_errno = MPI_SUCCESS;
    mx_status_t   status;

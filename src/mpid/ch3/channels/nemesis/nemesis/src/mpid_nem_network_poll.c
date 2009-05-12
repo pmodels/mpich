@@ -11,7 +11,7 @@
 #define FUNCNAME MPID_nem_network_poll
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_network_poll(void)
+int MPID_nem_network_poll(int in_blocking_progress)
 {
-    return MPID_nem_netmod_func->poll();
+    return MPID_nem_netmod_func->poll(in_blocking_progress);
 }

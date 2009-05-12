@@ -78,7 +78,7 @@ int MPID_nem_ib_init (MPID_nem_queue_ptr_t proc_recv_queue,
                              char **bc_val_p, 
                              int *val_max_sz_p);
 int MPID_nem_ib_finalize (void);
-int MPID_nem_ib_poll();
+int MPID_nem_ib_poll(int in_blocking_progress);
 int MPID_nem_ib_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen);
 int MPID_nem_ib_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_ib_ckpt_shutdown (void);

@@ -21,7 +21,7 @@ MPID_nem_elan_finalize()
      {
 	 while ( !MPID_nem_elan_event_queue_empty(MPID_nem_module_elan_pending_event_queue))
 	  {
-	     MPID_nem_elan_poll(MPID_NEM_POLL_OUT);
+	     MPID_nem_elan_poll(FALSE);
 	  }
 
 #ifdef LIBELAN_HAVE_FINI

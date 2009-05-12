@@ -43,8 +43,8 @@ pollfd_t MPID_nem_tcp_g_lstn_plfd = {0};
    unused */
 static MPID_nem_tcp_vc_area *dummy_vc_area ATTRIBUTE((unused, used)) = NULL;
 
-#define MAX_SKIP_POLLS_INACTIVE (512) /* something bigger */
-#define MAX_SKIP_POLLS_ACTIVE (128)   /* something smaller */
+#define MAX_SKIP_POLLS_INACTIVE 512 /* something bigger */
+#define MAX_SKIP_POLLS_ACTIVE   128 /* something smaller */
 static int MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_INACTIVE;
 
 /* Debug function to dump the sockconn table.  This is intended to be
@@ -1628,7 +1628,7 @@ Evaluate the need for it by testing and then do it, if needed.
 #define FUNCNAME MPID_nem_tcp_connpoll
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_connpoll()
+int MPID_nem_tcp_connpoll(int in_blocking_poll)
 {
     int mpi_errno = MPI_SUCCESS, n, i;
     static int num_skipped_polls = 0;
@@ -1638,9 +1638,12 @@ int MPID_nem_tcp_connpoll()
     int num_polled = g_tbl_size;
 
     /* To improve shared memory performance, we don't call the poll()
-     * systemcall every time. The MPID_nem_tcp_skip_polls value is
-     * changed depending on whether we have any active connections. */
-    if (num_skipped_polls++ < MPID_nem_tcp_skip_polls)
+     * system call every time. The MPID_nem_tcp_skip_polls value is
+     * changed depending on whether we have any active connections.
+     * We only skip polls when we're in a blocking progress loop in
+     * order to avoid poor performance if the user does a "MPI_Test();
+     * compute();" loop waiting for a req to complete. */
+    if (in_blocking_poll && num_skipped_polls++ < MPID_nem_tcp_skip_polls)
         goto fn_exit;
     num_skipped_polls = 0;
 

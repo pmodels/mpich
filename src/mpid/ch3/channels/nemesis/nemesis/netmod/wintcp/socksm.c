@@ -1792,7 +1792,7 @@ Evaluate the need for it by testing and then do it, if needed.
 #define FUNCNAME MPID_nem_newtcp_module_connpoll
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_connpoll()
+int MPID_nem_newtcp_module_connpoll(int in_blocking_poll)
 {
     int mpi_errno = MPI_SUCCESS, n, i;
     static int num_skipped_polls = 0;
@@ -1800,7 +1800,7 @@ int MPID_nem_newtcp_module_connpoll()
     /* To improve shared memory performance, we don't call the poll()
      * systemcall every time. The MPID_nem_tcp_skip_polls value is
      * changed depending on whether we have any active connections. */
-    if (num_skipped_polls++ < MPID_nem_tcp_skip_polls)
+    if (in_blocking_poll && num_skipped_polls++ < MPID_nem_tcp_skip_polls)
         goto fn_exit;
     num_skipped_polls = 0;
 

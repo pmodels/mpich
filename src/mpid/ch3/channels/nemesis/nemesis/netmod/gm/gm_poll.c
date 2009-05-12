@@ -243,7 +243,7 @@ MPID_nem_gm_recv_poll( void )
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_gm_poll()
+MPID_nem_gm_poll(int in_blocking_poll)
 {
     int mpi_errno = MPI_SUCCESS;
     

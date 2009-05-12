@@ -103,7 +103,7 @@ int MPID_nem_mpich2_sendv_header(MPID_IOV **iov, int *n_iov, struct MPIDI_VC *vc
 void MPID_nem_mpich2_send_seg(MPID_Segment segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_sz, struct MPIDI_VC *vc, int *again);
 void MPID_nem_mpich2_send_seg_header(MPID_Segment segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
                                      void *header, MPIDI_msg_sz_t header_sz, struct MPIDI_VC *vc, int *again);
-int MPID_nem_mpich2_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox);
+int MPID_nem_mpich2_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);
 int MPID_nem_mpich2_test_recv_wait(MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 int MPID_nem_recv_seqno_matches(MPID_nem_queue_ptr_t qhead) ;
 int MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox);

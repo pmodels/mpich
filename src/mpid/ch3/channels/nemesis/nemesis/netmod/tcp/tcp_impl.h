@@ -72,7 +72,7 @@ int MPID_nem_tcp_put (void *target_p, int target_node, void *source_p, int len, 
 
 int MPID_nem_tcp_send_init(void);
 int MPID_nem_tcp_connect(struct MPIDI_VC *const vc);
-int MPID_nem_tcp_connpoll(void);
+int MPID_nem_tcp_connpoll(int in_blocking_poll);
 int MPID_nem_tcp_sm_init(void);
 int MPID_nem_tcp_sm_finalize(void);
 int MPID_nem_tcp_set_sockopts(int fd);
