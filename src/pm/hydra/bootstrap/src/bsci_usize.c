@@ -19,10 +19,10 @@ HYD_Status HYD_BSCI_get_usize(int *size)
     status = HYD_BSCI_fns.get_usize(size);
     HYDU_ERR_POP(status, "bootstrap device returned error getting usize\n");
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

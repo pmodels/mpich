@@ -18,10 +18,10 @@ HYD_Status HYD_BSCI_launch_procs(void)
     status = HYD_BSCI_fns.launch_procs();
     HYDU_ERR_POP(status, "bootstrap device returned error while launching processes\n");
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

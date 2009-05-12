@@ -18,10 +18,10 @@ HYD_Status HYD_RMKI_query_node_list(int num_nodes, struct HYD_Partition **partit
     status = HYD_RMKI_fns.query_node_list(num_nodes, partition_list);
     HYDU_ERR_POP(status, "RMK device returned error while querying node list\n");
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

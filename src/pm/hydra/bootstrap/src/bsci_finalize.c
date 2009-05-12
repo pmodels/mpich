@@ -19,10 +19,10 @@ HYD_Status HYD_BSCI_finalize(void)
     status = HYD_BSCI_fns.finalize();
     HYDU_ERR_POP(status, "bootstrap device returned error while finalizing\n");
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
