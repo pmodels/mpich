@@ -127,7 +127,7 @@ extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
    was created; that handler will try to delete the storage associated
    with that value. */
 #define MPIR_ReleasePerThread { \
-	if (MPIU_IS_THREADED()) { \
+	if (MPIU_ISTHREADED()) { \
          MPICH_PerThread_t *pt_; \
          MPIR_GetOrInitThreadPriv( &pt_ ); MPIU_Free( pt_ ); \
          MPID_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,(void *)0);} }
