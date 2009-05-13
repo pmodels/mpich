@@ -123,7 +123,7 @@
 				RelativePath=".\PROJECTNAME.cxx">
 			</File>
 			<File
-				RelativePath="..\util\mtest.cxx">
+				RelativePath="DOTDOTScxx\util\mtest.cxx">
 			</File>
 		</Filter>
 		<Filter
