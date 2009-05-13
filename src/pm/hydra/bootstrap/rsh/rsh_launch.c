@@ -89,8 +89,7 @@ HYD_Status HYD_BSCD_rsh_launch_procs(char **global_args, char *partition_id_str)
                                      &partition->base->pid, -1);
         HYDU_ERR_POP(status, "create process returned error\n");
 
-        for (arg = 0; client_arg[arg]; arg++)
-            HYDU_FREE(client_arg[arg]);
+        HYDU_free_strlist(client_arg);
 
         process_id++;
     }

@@ -52,14 +52,16 @@ HYD_Status HYD_BSCI_init(char *bootstrap, int debug)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "mandatory bootstrap launch function undefined\n");
 
+    if (HYD_BSCI_fns.finalize == NULL)
+        HYD_BSCI_fns.finalize = HYD_BSCU_finalize;
+    if (HYD_BSCI_fns.wait_for_completion == NULL)
+        HYD_BSCI_fns.wait_for_completion = HYD_BSCU_wait_for_completion;
     if (HYD_BSCI_fns.query_node_list == NULL)
         HYD_BSCI_fns.query_node_list = HYD_BSCU_query_node_list;
     if (HYD_BSCI_fns.get_usize == NULL)
         HYD_BSCI_fns.get_usize = HYD_BSCU_get_usize;
-    if (HYD_BSCI_fns.wait_for_completion == NULL)
-        HYD_BSCI_fns.wait_for_completion = HYD_BSCU_wait_for_completion;
-    if (HYD_BSCI_fns.finalize == NULL)
-        HYD_BSCI_fns.finalize = HYD_BSCU_finalize;
+    if (HYD_BSCI_fns.query_partition_id == NULL)
+        HYD_BSCI_fns.query_partition_id = HYD_BSCU_query_partition_id;
 
   fn_exit:
     HYDU_FUNC_EXIT();

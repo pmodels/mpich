@@ -216,26 +216,31 @@ int main(int argc, char **argv)
     }
 
     /* Setup stdout/stderr/stdin handlers */
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-        status = HYD_DMX_register_fd(1, &partition->base->out, HYD_STDOUT, NULL,
-                                     HYD_UII_mpx_stdout_cb);
-        HYDU_ERR_POP(status, "demux returned error registering fd\n");
-
-        status = HYD_DMX_register_fd(1, &partition->base->err, HYD_STDOUT, NULL,
-                                     HYD_UII_mpx_stderr_cb);
-        HYDU_ERR_POP(status, "demux returned error registering fd\n");
-    }
-
     status = HYDU_sock_set_nonblock(0);
     HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
     handle.stdin_buf_count = 0;
     handle.stdin_buf_offset = 0;
 
-    status = HYD_DMX_register_fd(1, &handle.partition_list->base->in, HYD_STDIN, NULL,
-                                 HYD_UII_mpx_stdin_cb);
-    HYDU_ERR_POP(status, "demux returned error registering fd\n");
+    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        if (partition->base->out != -1) {
+            status = HYD_DMX_register_fd(1, &partition->base->out, HYD_STDOUT, NULL,
+                                         HYD_UII_mpx_stdout_cb);
+            HYDU_ERR_POP(status, "demux returned error registering fd\n");
+        }
 
+        if (partition->base->err != -1) {
+            status = HYD_DMX_register_fd(1, &partition->base->err, HYD_STDOUT, NULL,
+                                         HYD_UII_mpx_stderr_cb);
+            HYDU_ERR_POP(status, "demux returned error registering fd\n");
+        }
+
+        if (partition->base->in != -1) {
+            status = HYD_DMX_register_fd(1, &partition->base->in, HYD_STDIN, NULL,
+                                         HYD_UII_mpx_stdin_cb);
+            HYDU_ERR_POP(status, "demux returned error registering fd\n");
+        }
+    }
 
     /* Wait for their completion */
     status = HYD_PMCI_wait_for_completion();

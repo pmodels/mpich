@@ -5,19 +5,17 @@
  */
 
 #include "hydra_base.h"
-#include "bsci.h"
-#include "slurm.h"
+#include "hydra_utils.h"
+#include "bscu.h"
 
-struct HYD_BSCI_fns HYD_BSCI_fns;
-
-HYD_Status HYD_BSCI_slurm_init(void)
+HYD_Status HYD_BSCU_query_partition_id(int *partition_id)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_BSCI_fns.launch_procs = HYD_BSCD_slurm_launch_procs;
-    HYD_BSCI_fns.query_partition_id = HYD_BSCD_slurm_query_partition_id;
+    /* We don't know anything about partition IDs by default. */
+    *partition_id = -1;
 
     HYDU_FUNC_EXIT();
 

@@ -17,7 +17,7 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_st
     struct HYD_Partition *partition;
     char *client_arg[HYD_NUM_TMP_STRINGS];
     char *tmp[HYD_NUM_TMP_STRINGS], *path = NULL, *test_path = NULL;
-    int i, arg, process_id;
+    int i, arg, num_nodes;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -47,51 +47,49 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_st
             path = HYDU_strdup("/usr/bin/srun");
     }
 
+    arg = 0;
+    client_arg[arg++] = HYDU_strdup(path);
+    client_arg[arg++] = HYDU_strdup("--nodelist");
+
     /* FIXME: Instead of directly reading from the HYD_Handle
      * structure, the upper layers should be able to pass what exactly
      * they want launched. Without this functionality, the proxy
      * cannot use this and will have to perfom its own launch. */
-    process_id = 0;
+    i = 0;
+    num_nodes = 0;
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-        /* Setup the executable arguments */
-        arg = 0;
-        client_arg[arg++] = HYDU_strdup(path);
-
-        /* Currently, we do not support any partition names other than
-         * host names */
-        client_arg[arg++] = HYDU_strdup(partition->base->name);
-
-        for (i = 0; global_args[i]; i++)
-            client_arg[arg++] = HYDU_strdup(global_args[i]);
-
-        if (partition_id_str) {
-            client_arg[arg++] = HYDU_strdup(partition_id_str);
-            client_arg[arg++] = HYDU_int_to_str(partition->base->partition_id);
-        }
-
-        client_arg[arg++] = NULL;
-
-        if (HYD_BSCI_debug) {
-            HYDU_Dump("Launching process: ");
-            HYDU_print_strlist(client_arg);
-        }
-
-        /* The stdin pointer will be some value for process_id 0; for
-         * everyone else, it's NULL. */
-        status = HYDU_create_process(client_arg, NULL,
-                                     (process_id == 0 ? &partition->base->in : NULL),
-                                     &partition->base->out, &partition->base->err,
-                                     &partition->base->pid, -1);
-        if (status != HYD_SUCCESS) {
-            HYDU_Error_printf("bootstrap spawn process returned error\n");
-            goto fn_fail;
-        }
-
-        for (arg = 0; client_arg[arg]; arg++)
-            HYDU_FREE(client_arg[arg]);
-
-        process_id++;
+        tmp[i++] = partition->base->name;
+        if (partition->next && partition->next->base->active)
+            tmp[i++] = ",";
+        num_nodes++;
     }
+    tmp[i++] = NULL;
+    status = HYDU_str_alloc_and_join(tmp, &client_arg[arg]);
+    HYDU_ERR_POP(status, "error joining strings\n");
+
+    arg++;
+
+    client_arg[arg++] = HYDU_strdup("-N");
+    client_arg[arg++] = HYDU_int_to_str(num_nodes);
+
+    for (i = 0; global_args[i]; i++)
+        client_arg[arg++] = HYDU_strdup(global_args[i]);
+
+    client_arg[arg++] = NULL;
+
+    if (HYD_BSCI_debug) {
+        HYDU_Dump("Launching process: ");
+        HYDU_print_strlist(client_arg);
+    }
+
+    status = HYDU_create_process(client_arg, NULL,
+                                 &handle.partition_list->base->in,
+                                 &handle.partition_list->base->out,
+                                 &handle.partition_list->base->err,
+                                 &handle.partition_list->base->pid, -1);
+    HYDU_ERR_POP(status, "bootstrap spawn process returned error\n");
+
+    HYDU_free_strlist(client_arg);
 
   fn_exit:
     HYDU_FUNC_EXIT();

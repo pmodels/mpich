@@ -175,6 +175,9 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode, char **proxy_args)
         if (handle.debug)
             proxy_args[arg++] = HYDU_strdup("--debug");
 
+        proxy_args[arg++] = HYDU_strdup("--bootstrap");
+        proxy_args[arg++] = HYDU_strdup(handle.bootstrap);
+
         proxy_args[arg++] = NULL;
     }
 

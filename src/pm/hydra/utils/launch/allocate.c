@@ -15,6 +15,7 @@ static HYD_Status alloc_partition_base(struct HYD_Partition_base **base)
 
     (*base)->name = NULL;
     (*base)->pid = -1;
+    (*base)->in = -1;
     (*base)->out = -1;
     (*base)->err = -1;
 

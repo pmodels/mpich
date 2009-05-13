@@ -10,5 +10,6 @@
 #include "hydra_base.h"
 
 HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_str);
+HYD_Status HYD_BSCD_slurm_query_partition_id(int *partition_id);
 
 #endif /* SLURM_H_INCLUDED */
