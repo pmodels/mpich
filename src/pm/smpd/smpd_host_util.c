@@ -326,6 +326,15 @@ int smpd_parse_extra_machinefile_options(const char *line, smpd_host_node_t *nod
 	MPIU_Strncpy(node->alt_host, p, SMPD_MAX_HOST_LENGTH);
     }
 
+    flag = strstr(line, "ifhn=");
+    if (flag != NULL)
+    {
+	p = flag + 5;
+	while (isspace(*p))
+	    p++;
+	MPIU_Strncpy(node->alt_host, p, SMPD_MAX_HOST_LENGTH);
+    }
+
     flag = strstr(line, "-ifip");
     if (flag != NULL)
     {
