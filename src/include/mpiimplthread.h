@@ -119,7 +119,7 @@ extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
    is still a pointer but it was already allocated in InitThread */
 #ifdef HAVE_RUNTIME_THREADCHECK
 #define MPIR_GetPerThread(pt_) {\
- if (MPIR_ThreadInfo.isThreaded) { MPIR_GetOrInitThreadPriv( pt_ ); } \
+ if (MPIU_ISTHREADED()) { MPIR_GetOrInitThreadPriv( pt_ ); } \
  else { *(pt_) = &MPIR_ThreadSingle; } \
  }
 /* Note that we set the value on the thread_storage key to zero.  This
@@ -127,7 +127,7 @@ extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
    was created; that handler will try to delete the storage associated
    with that value. */
 #define MPIR_ReleasePerThread { \
-	if (MPIR_ThreadInfo.isThreaded) { \
+	if (MPIU_IS_THREADED()) { \
          MPICH_PerThread_t *pt_; \
          MPIR_GetOrInitThreadPriv( &pt_ ); MPIU_Free( pt_ ); \
          MPID_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,(void *)0);} }
@@ -228,12 +228,20 @@ int MPIR_Thread_CS_Finalize( void );
 #ifdef HAVE_RUNTIME_THREADCHECK
 #define MPIU_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
 #define MPIU_THREAD_CHECK_END   }  
+/* This macro used to take an argument of one or more statements that
+ * would be wrapped in a conditional.  However it was not used anywhere
+ * in part because it looked unnatural.  This version takes no arguments
+ * and evaluates to a boolean expression that is true if MPICH2 is
+ * threaded (including any runtime check if needed) and false otherwise.
+ * MPIU_THREAD_CHECK_{BEGIN,END} should probably still be used if you
+ * don't have any other conditions that you need to check in order to
+ * completely eliminate unnecessary if's. */
+#define MPIU_ISTHREADED() (MPIR_ThreadInfo.isThreaded)
 #else
 #define MPIU_THREAD_CHECK_BEGIN
 #define MPIU_THREAD_CHECK_END
+#define MPIU_ISTHREADED() (1)
 #endif /* HAVE_RUNTIME_THREADCHECK */
-
-#define MPIU_ISTHREADED(_s) { MPIU_THREAD_CHECK_BEGIN _s MPIU_THREAD_CHECK_END }
 
 /* SINGLE_CS_DECL needs to take over the decl used by MPID_CS_xxx when that
    is removed */
@@ -270,7 +278,7 @@ int MPIR_Thread_CS_Finalize( void );
 
 #else
 /* MPICH user routines are single-threaded */
-#define MPIU_ISTHREADED(_s) 
+#define MPIU_ISTHREADED() (0)
 #define MPIU_THREAD_SINGLE_CS_DECL
 #define MPIU_THREAD_SINGLE_CS_INITIALIZE
 #define MPIU_THREAD_SINGLE_CS_FINALIZE
@@ -333,16 +341,6 @@ M*/
   These use a private critical section called INITFLAG
   M*/
 
-#ifdef HAVE_RUNTIME_THREADCHECK
-#define MPIU_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
-#define MPIU_THREAD_CHECK_END   }  
-#else
-#define MPIU_THREAD_CHECK_BEGIN
-#define MPIU_THREAD_CHECK_END
-#endif
-
-#define MPIU_ISTHREADED(_s) { MPIU_THREAD_CHECK_BEGIN _s MPIU_THREAD_CHECK_END }
-
 #undef MPIU_THREADSAFE_INIT_DECL
 #undef MPIU_THREADSAFE_INIT_STMT
 #undef MPIU_THREADSAFE_INIT_BLOCK_BEGIN
@@ -371,10 +369,6 @@ M*/
 #define MPIU_THREADSAFE_INIT_CLEAR(_var) _var=0
 #define MPIU_THREADSAFE_INIT_BLOCK_END(_var) 
 
-#define MPIU_THREAD_CHECK_BEGIN
-#define MPIU_THREAD_CHECK_END
-#define MPIU_ISTHREADED(_s) 
-
 #endif  /* MPICH_IS_THREADED */
 #endif  /* !defined(MPID_DEFINES_MPID_CS) */
 
@@ -383,14 +377,10 @@ M*/
 
 /* Helper definitions */
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
-/*#define MPIU_THREAD_CHECKNEST(_name)*/
-/* XXX DJG temporarily disabled for the paper... this breaks our CS_EXIT(ALLFUNC) in sock_wait.i */
-/* #if 0 */
 #define MPIU_THREAD_CHECKNEST(_name)				\
     MPIU_THREADPRIV_DECL;                                       \
     MPIU_THREADPRIV_GET;                                        \
     if (MPIR_Nest_value() == 0)	
-/* #endif */
 
 #define MPIU_THREAD_CHECKDEPTH(_name,_value)
 #define MPIU_THREAD_UPDATEDEPTH(_name,_value)				
