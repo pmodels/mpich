@@ -641,8 +641,22 @@ line.  Extra options can be specified.  The number of desired processes to
 launch on a specific host can be specified with a colon followed by a number
 after the host name: \texttt{hostname:n}.  This is usefull for multi-CPU hosts.
 If you want to specify the interface that should be used for MPI communication
-to the host you can add the \texttt{-ifhn} flag.  Here is an example:
-\texttt{hostname:4 -ifhn 192.168.1.100}
+to the host you can add the \texttt{-ifhn} flag. A sample machinefile is provided
+below for reference.
+\begin{verbatim}
+    # Comment line
+    # Run two procs on hostname1
+    hostname1:2
+    # Run four procs on hostname2 but use 192.168.1.100
+    # as the interface
+    hostname2:4 -ifhn 192.168.1.100
+\end{verbatim}
+The interface can also be specified using the \texttt{ifhn=} option. The following
+line is valid in a machinefile.
+\begin{verbatim}
+    #Using ifhn= option to specify the interface
+    hostname1:2 ifhn=192.168.1.101
+\end{verbatim}
 
 \item \texttt{-map drive:$\backslash$$\backslash$host$\backslash$share}
 Specify a network mapped drive to create on the hosts before launching the 
