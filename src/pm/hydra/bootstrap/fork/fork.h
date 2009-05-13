@@ -9,6 +9,6 @@
 
 #include "hydra_base.h"
 
-HYD_Status HYD_BSCD_fork_launch_procs(void);
+HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, char *partition_id_str);
 
 #endif /* FORK_H_INCLUDED */

@@ -12,7 +12,7 @@
 
 extern HYD_Handle handle;
 
-HYD_Status HYD_BSCD_slurm_launch_procs(void)
+HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_str)
 {
     struct HYD_Partition *partition;
     char *client_arg[HYD_NUM_TMP_STRINGS];
@@ -55,19 +55,19 @@ HYD_Status HYD_BSCD_slurm_launch_procs(void)
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         /* Setup the executable arguments */
         arg = 0;
-
-        /* FIXME: Get the path to srun */
-        if (handle.bootstrap_exec)
-            client_arg[arg++] = HYDU_strdup(handle.bootstrap_exec);
-        else
-            client_arg[arg++] = HYDU_strdup("srun");
+        client_arg[arg++] = HYDU_strdup(path);
 
         /* Currently, we do not support any partition names other than
          * host names */
         client_arg[arg++] = HYDU_strdup(partition->base->name);
 
-        for (i = 0; partition->base->proxy_args[i]; i++)
-            client_arg[arg++] = HYDU_strdup(partition->base->proxy_args[i]);
+        for (i = 0; global_args[i]; i++)
+            client_arg[arg++] = HYDU_strdup(global_args[i]);
+
+        if (partition_id_str) {
+            client_arg[arg++] = HYDU_strdup(partition_id_str);
+            client_arg[arg++] = HYDU_int_to_str(partition->base->partition_id);
+        }
 
         client_arg[arg++] = NULL;
 

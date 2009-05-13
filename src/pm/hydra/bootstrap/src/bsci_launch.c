@@ -9,13 +9,13 @@
 
 struct HYD_BSCI_fns HYD_BSCI_fns;
 
-HYD_Status HYD_BSCI_launch_procs(void)
+HYD_Status HYD_BSCI_launch_procs(char **global_args, char *partition_id_str)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_BSCI_fns.launch_procs();
+    status = HYD_BSCI_fns.launch_procs(global_args, partition_id_str);
     HYDU_ERR_POP(status, "bootstrap device returned error while launching processes\n");
 
   fn_exit:

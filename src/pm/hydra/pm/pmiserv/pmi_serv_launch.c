@@ -142,7 +142,7 @@ create_and_listen_portstr(HYD_Status(*callback) (int fd, HYD_Event_t events, voi
     goto fn_exit;
 }
 
-static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode)
+static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode, char **proxy_args)
 {
     int i, arg;
     char *path_str[HYD_NUM_TMP_STRINGS];
@@ -159,26 +159,23 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode)
         path_str[i++] = HYDU_strdup(handle.base_path);
         path_str[i++] = HYDU_strdup("pmi_proxy");
         path_str[i] = NULL;
-        status = HYDU_str_alloc_and_join(path_str, &partition->base->proxy_args[arg++]);
+        status = HYDU_str_alloc_and_join(path_str, &proxy_args[arg++]);
         HYDU_ERR_POP(status, "unable to join strings\n");
         HYDU_free_strlist(path_str);
 
-        partition->base->proxy_args[arg++] = HYDU_strdup("--launch-mode");
-        partition->base->proxy_args[arg++] = HYDU_int_to_str(mode);
+        proxy_args[arg++] = HYDU_strdup("--launch-mode");
+        proxy_args[arg++] = HYDU_int_to_str(mode);
 
-        partition->base->proxy_args[arg++] = HYDU_strdup("--proxy-port");
+        proxy_args[arg++] = HYDU_strdup("--proxy-port");
         if (mode == HYD_LAUNCH_RUNTIME)
-            partition->base->proxy_args[arg++] = HYDU_strdup(proxy_port_str);
+            proxy_args[arg++] = HYDU_strdup(proxy_port_str);
         else
-            partition->base->proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
-
-        partition->base->proxy_args[arg++] = HYDU_strdup("--partition-id");
-        partition->base->proxy_args[arg++] = HYDU_int_to_str(partition->base->partition_id);
+            proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
 
         if (handle.debug)
-            partition->base->proxy_args[arg++] = HYDU_strdup("--debug");
+            proxy_args[arg++] = HYDU_strdup("--debug");
 
-        partition->base->proxy_args[arg++] = NULL;
+        proxy_args[arg++] = NULL;
     }
 
   fn_exit:
@@ -276,6 +273,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
     enum HYD_PMCD_pmi_proxy_cmds cmd;
     int fd, len, id;
     struct HYD_Thread_context *thread_context = NULL;
+    char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -297,21 +295,21 @@ HYD_Status HYD_PMCI_launch_procs(void)
         HYDU_ERR_POP(status, "unable to create PMI port\n");
         HYDU_Debug(handle.debug, "Got a proxy port string of %s\n", proxy_port_str);
 
-        status = fill_in_proxy_args(handle.launch_mode);
+        status = fill_in_proxy_args(handle.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
         status = fill_in_exec_args();
         HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-        status = HYD_BSCI_launch_procs();
+        status = HYD_BSCI_launch_procs(proxy_args, "--partition-id");
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (handle.launch_mode == HYD_LAUNCH_BOOT ||
              handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) {
-        status = fill_in_proxy_args(handle.launch_mode);
+        status = fill_in_proxy_args(handle.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-        status = HYD_BSCI_launch_procs();
+        status = HYD_BSCI_launch_procs(proxy_args, "--partition-id");
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
@@ -369,6 +367,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
         HYDU_FREE(proxy_port_str);
     if (thread_context)
         HYDU_FREE(thread_context);
+    HYDU_free_strlist(proxy_args);
     HYDU_FUNC_EXIT();
     return status;
 

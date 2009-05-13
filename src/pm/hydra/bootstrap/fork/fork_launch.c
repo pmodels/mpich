@@ -12,7 +12,7 @@
 
 extern HYD_Handle handle;
 
-HYD_Status HYD_BSCD_fork_launch_procs(void)
+HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, char *partition_id_str)
 {
     struct HYD_Partition *partition;
     char *client_arg[HYD_NUM_TMP_STRINGS];
@@ -29,8 +29,15 @@ HYD_Status HYD_BSCD_fork_launch_procs(void)
     FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
         /* Setup the executable arguments */
         arg = 0;
-        for (i = 0; partition->base->proxy_args[i]; i++)
-            client_arg[arg++] = HYDU_strdup(partition->base->proxy_args[i]);
+
+        for (i = 0; global_args[i]; i++)
+            client_arg[arg++] = HYDU_strdup(global_args[i]);
+
+        if (partition_id_str) {
+            client_arg[arg++] = HYDU_strdup(partition_id_str);
+            client_arg[arg++] = HYDU_int_to_str(partition->base->partition_id);
+        }
+
         client_arg[arg++] = NULL;
 
         if (HYD_BSCI_debug) {

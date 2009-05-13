@@ -18,7 +18,7 @@ extern HYD_Handle handle;
  * environment variables. We fork a worker process that sets the
  * environment and execvp's this executable.
  */
-HYD_Status HYD_BSCD_ssh_launch_procs(void)
+HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, char *partition_id_str)
 {
     struct HYD_Partition *partition;
     char *client_arg[HYD_NUM_TMP_STRINGS];
@@ -74,8 +74,13 @@ HYD_Status HYD_BSCD_ssh_launch_procs(void)
         /* ssh does not support any partition names other than host names */
         client_arg[arg++] = HYDU_strdup(partition->base->name);
 
-        for (i = 0; partition->base->proxy_args[i]; i++)
-            client_arg[arg++] = HYDU_strdup(partition->base->proxy_args[i]);
+        for (i = 0; global_args[i]; i++)
+            client_arg[arg++] = HYDU_strdup(global_args[i]);
+
+        if (partition_id_str) {
+            client_arg[arg++] = HYDU_strdup(partition_id_str);
+            client_arg[arg++] = HYDU_int_to_str(partition->base->partition_id);
+        }
 
         client_arg[arg++] = NULL;
 
