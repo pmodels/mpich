@@ -40,6 +40,7 @@ AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/s
 
 # Check for special types
 AC_TYPE_SIZE_T
+PAC_C_GNU_ATTRIBUTE
 
 dnl Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca snprintf unsetenv \

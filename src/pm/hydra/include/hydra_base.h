@@ -165,6 +165,14 @@ struct HYD_Partition_exec {
 
 #define dprintf(...)
 
+#ifndef ATTRIBUTE
+#ifdef HAVE_GCC_ATTRIBUTE
+#define ATTRIBUTE(a_) __attribute__(a_)
+#else
+#define ATTRIBUTE(a_)
+#endif
+#endif
+
 struct HYD_Thread_context {
     pthread_t thread;
 };

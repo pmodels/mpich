@@ -1,8 +1,7 @@
 #include "mpid_nem_impl.h"
 #include "mpid_nem_datatypes.h"
 
-/* here to prevent "has no symbols" warnings from ranlib on OS X */
-static int dummy ATTRIBUTE((unused,used)) = 0;
+MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 /* TODO there might be a better way to do this, the current system will lead to
    an unresolved symbols link error if dma is chosen and knem_io.h can't be

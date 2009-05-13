@@ -1,8 +1,7 @@
 #include "mpid_nem_impl.h"
 #include "mpid_nem_datatypes.h"
 
-/* here to prevent "has no symbols" warnings from ranlib on OS X */
-static int dummy ATTRIBUTE((unused,used)) = 0;
+MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if defined(HAVE_VMSPLICE)
 
