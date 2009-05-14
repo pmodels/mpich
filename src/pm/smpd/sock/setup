@@ -16,12 +16,9 @@ echo "RUNNING SETUP FOR THE SMPD SOCK INTERFACE"
 # $ac_configure_args - all arguments passed to configure
 #
 
-if test -z "$CONFIGURE_SOCK_SETUP_SOURCED" ; then
-    CONFIGURE_SOCK_SETUP_SOURCED="sourced"
+. $master_top_srcdir/src/pm/smpd/sock/setup.args
 
-    . $master_top_srcdir/src/pm/smpd/sock/setup.args
-
-    devsubsystems="$devsubsystems src/pm/smpd/sock"
+devsubsystems="$devsubsystems src/pm/smpd/sock"
 
 #    pathlist=""
 #    pathlist="$pathlist src/pm/smpd/sock"
@@ -31,4 +28,3 @@ if test -z "$CONFIGURE_SOCK_SETUP_SOURCED" ; then
 #    	#CPPFLAGS="$CPPFLAGS -I${master_top_srcdir}/${path}"
 #        MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 #    done
-fi
