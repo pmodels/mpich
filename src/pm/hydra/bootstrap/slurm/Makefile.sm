@@ -7,7 +7,8 @@
 HYDRA_LIB_PATH = ../../lib
 
 libhydra_a_DIR = ${HYDRA_LIB_PATH}
-libhydra_a_SOURCES = slurm_launch.c slurm_init.c slurm_query_partition_id.c
+libhydra_a_SOURCES = slurm_launch.c slurm_init.c slurm_query_partition_id.c \
+	slurm_query_node_list.c
 INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../../../include \
 	-I../../include \

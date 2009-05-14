@@ -5,6 +5,7 @@
  */
 
 #include "pmi_proxy.h"
+#include "bsci.h"
 #include "demux.h"
 #include "hydra_utils.h"
 

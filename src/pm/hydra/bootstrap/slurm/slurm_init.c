@@ -18,6 +18,7 @@ HYD_Status HYD_BSCI_slurm_init(void)
 
     HYD_BSCI_fns.launch_procs = HYD_BSCD_slurm_launch_procs;
     HYD_BSCI_fns.query_partition_id = HYD_BSCD_slurm_query_partition_id;
+    HYD_BSCI_fns.query_node_list = HYD_BSCD_slurm_query_node_list;
 
     HYDU_FUNC_EXIT();
 
