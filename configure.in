@@ -5999,6 +5999,8 @@ dnl updated values.  Here's an attempt at a fix
 	else 
 	    AC_MSG_ERROR([Configure of $subsys failed!])
 	fi
+    else
+        AC_MSG_ERROR([Expected to configure $subsys but did not find configure or mpich2setup])
     fi
 
     # Check for any localdefs files.  These may be created, so we look in
