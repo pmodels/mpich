@@ -132,9 +132,12 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 		}
 		sreq->kind = MPID_REQUEST_SEND;
 		sreq->cc = 0;
-		/* FIXME: Create an appropriate error message based on the 
-		   return value */
-		sreq->status.MPI_ERROR = MPI_ERR_INTERN;
+		sreq->status.MPI_ERROR = MPIR_Err_create_code( rc,
+			       MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
+			       MPI_ERR_INTERN, "**ch3|sock|writefailed",
+			       "**ch3|sock|writefailed %d", rc );
+		/* Make sure that the caller sees this error */
+		mpi_errno = sreq->status.MPI_ERROR;
 	    }
 	    /* --END ERROR HANDLING-- */
 	}
@@ -196,9 +199,13 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	}
 	sreq->kind = MPID_REQUEST_SEND;
-	sreq->cc = 0;
-	/* TODO: Create an appropriate error message */
-	sreq->status.MPI_ERROR = MPI_ERR_INTERN;
+	sreq->cc   = 0;
+	
+	sreq->status.MPI_ERROR = MPIR_Err_create_code( MPI_SUCCESS,
+		       MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
+		       MPI_ERR_INTERN, "**ch3|sock|connectionfailed",0 );
+	/* Make sure that the caller sees this error */
+	mpi_errno = sreq->status.MPI_ERROR;
     }
     /* --END ERROR HANDLING-- */
 

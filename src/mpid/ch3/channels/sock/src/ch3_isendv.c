@@ -171,11 +171,14 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 		/* FIXME: Shouldn't the vc->state also change? */
 
 		vcch->state = MPIDI_CH3I_VC_STATE_FAILED;
-		/* TODO: Create an appropriate error message based on the 
-		   return value (rc) */
-		sreq->status.MPI_ERROR = MPI_ERR_INTERN;
+		sreq->status.MPI_ERROR = MPIR_Err_create_code( rc,
+			       MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
+			       MPI_ERR_INTERN, "**ch3|sock|writefailed", 
+			       "**ch3|sock|writefailed %d", rc );
 		 /* MT - CH3U_Request_complete performs write barrier */
 		MPIDI_CH3U_Request_complete(sreq);
+		/* FIXME: TEMP */
+		mpi_errno = sreq->status.MPI_ERROR;
 	    }
 	    /* --END ERROR HANDLING-- */
 	}

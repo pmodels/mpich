@@ -1,0 +1,3 @@
+**ch3|sock|connectionfailed:Connection failed for virtual channel
+**ch3|sock|writefailed:Write to socket failed
+**ch3|sock|writefailed %d:Write to socket failed with code %d
