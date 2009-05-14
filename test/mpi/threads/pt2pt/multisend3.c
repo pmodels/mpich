@@ -25,6 +25,7 @@
 #define MAX_NTHREAD 128
 
 static int ownerWaits = 0;
+static int nthreads = -1;
 
 void run_test_send(void *arg)
 {
@@ -43,11 +44,11 @@ void run_test_send(void *arg)
 
 	/* Wait for all senders to be ready */
 	for (j=0; j<wsize; j++) r[j] = MPI_REQUEST_NULL;
-	MTest_thread_barrier(-1);
+	MTest_thread_barrier(nthreads);
 
 	t = MPI_Wtime();
 	for (j=0; j<MAX_LOOP; j++) {
-	    MTest_thread_barrier(-1);
+	    MTest_thread_barrier(nthreads);
 	    MPI_Isend( buf, cnt, MPI_INT, thread_num, cnt, MPI_COMM_WORLD,
 		       &r[thread_num-1]);
 	    if (ownerWaits) {
@@ -55,7 +56,7 @@ void run_test_send(void *arg)
 	    }
 	    else {
 		/* Wait for all threads to start the sends */
-		MTest_thread_barrier(-1);
+		MTest_thread_barrier(nthreads);
 		if (thread_num == 1) 
 		    MPI_Waitall( wsize-1, r, MPI_STATUSES_IGNORE );
 	    }
@@ -109,6 +110,7 @@ int main(int argc, char ** argv)
     }
     MPI_Barrier( MPI_COMM_WORLD );
     if (rank == 0) {
+	nthreads = nprocs - 1;
 	for (i=1; i<nprocs; i++) 
 	    MTest_Start_thread( run_test_send,  (void *)i );
 

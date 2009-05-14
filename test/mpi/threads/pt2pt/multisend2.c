@@ -20,6 +20,8 @@
 #define MAX_CNT 660000
 #define MAX_LOOP 200 
 
+static int nthreads = -1;
+
 void run_test_send(void *arg)
 {
     int    cnt, j, *buf;
@@ -30,7 +32,7 @@ void run_test_send(void *arg)
 	buf = (int *)malloc( cnt * sizeof(int) );
 
 	/* Wait for all senders to be ready */
-	MTest_thread_barrier(-1);
+	MTest_thread_barrier(nthreads);
 
 	t = MPI_Wtime();
 	for (j=0; j<MAX_LOOP; j++)
@@ -83,6 +85,7 @@ int main(int argc, char ** argv)
     }
     MPI_Barrier( MPI_COMM_WORLD );
     if (rank == 0) {
+	nthreads = nprocs-1;
 	for (i=1; i<nprocs; i++) 
 	    MTest_Start_thread( run_test_send,  (void *)i );
 	MTest_Join_threads( );

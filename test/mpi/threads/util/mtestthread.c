@@ -123,6 +123,42 @@ int MTest_thread_lock_free( MTEST_THREAD_LOCK_TYPE *lock )
 }
 #endif
 
+#if defined(HAVE_PTHREAD_BARRIER_INIT) && defined(USE_PTHREADS)
+static MTEST_THREAD_LOCK_TYPE barrierLock;
+static pthread_barrier_t barrier;
+static int bcount = -1;
+int MTest_thread_barrier_init( void )
+{
+    return MTest_thread_lock_create( &barrierLock );
+}
+int MTest_thread_barrier_free( void )
+{
+    MTest_thread_lock_free( &barrierLock );
+    return pthread_barrier_destroy( &barrier );
+}
+int MTest_thread_barrier( int nt )
+{
+    int err;
+    if (nt < 0) nt = nthreads;
+    if (bcount != nt) {
+	/* One thread needs to initialize the barrier */
+	MTest_thread_lock( &barrierLock );
+	/* Test again in case another thread already fixed the problem */
+	if (bcount != nt) {
+	    if (bcount > 0) {
+		err = pthread_barrier_destroy( &barrier );
+		if (err) return err;
+	    }
+	    err = pthread_barrier_init( &barrier, NULL, nt );
+	    if (err) return err;
+	    bcount = nt;
+	}
+	err = MTest_thread_unlock( &barrierLock );
+	if (err) return err;
+    }
+    return pthread_barrier_wait( &barrier );
+}
+#else
 static MTEST_THREAD_LOCK_TYPE barrierLock;
 static int   phase=0;
 static int   c[2] = {-1,-1};
@@ -154,4 +190,4 @@ int MTest_thread_barrier( int nt )
     
     return err;
 }
-
+#endif /* Default barrier routine */
