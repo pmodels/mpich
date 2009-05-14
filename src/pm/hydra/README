@@ -1,9 +1,9 @@
 General
 -------
 Hydra is a process management system for starting parallel jobs. Hydra
-is designed to natively work with multiple daemons such as ssh, pbs,
-slurm and sge. However, in the current release, only ssh and fork are
-supported.
+is designed to natively work with multiple daemons such as ssh, rsh,
+pbs, slurm and sge. However, in the current release, only ssh, rsh and
+fork are supported, with a preliminary version of slurm available.
 
 More detailed documentation of the internal workings of Hydra are
 available here:
