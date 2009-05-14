@@ -76,8 +76,8 @@ static HYD_Status group_to_individual_nodes(char *str, char **list)
     }
 
     arg = 0;
-    if (nodes == NULL) {
-        list[arg++] = pre;
+    if (pre == NULL) {
+        list[arg++] = nodes;
     }
     else {
         start_node = atoi(strtok(nodes, "-"));
