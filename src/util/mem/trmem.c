@@ -25,6 +25,7 @@
 #ifndef USE_MEMORY_TRACING
 int MPIU_trvalid( const char str[] );
 #endif
+int MPIU_trvalid_unsafe(const char str[]);
 
 /* Temporary.  sig values will change */
 /* style: allow:malloc:3 sig:0 */
@@ -112,7 +113,7 @@ typedef struct TRSPACE {
     int             freed_lineno;
     char            freed_fname[TR_FNAME_LEN];
     char            fname[TR_FNAME_LEN];
-    struct TRSPACE *next, *prev;
+    struct TRSPACE * volatile next, *prev;
     unsigned long   cookie;        /* Cookie is always the last element 
 				      inorder to catch the off-by-one
 				      errors */
@@ -129,11 +130,11 @@ typedef union TrSPACE {
  * this information.
  */
 static int     world_rank = -1;
-static long    allocated = 0, frags = 0;
-static TRSPACE *TRhead = 0;
-static int     TRid = 0;
-static int     TRidSet = 0;
-static int     TRlevel = 0;
+static volatile long allocated = 0, frags = 0;
+static TRSPACE * volatile TRhead = 0;
+static volatile int     TRid = 0;
+static volatile int     TRidSet = 0;
+static volatile int     TRlevel = 0;
 static unsigned char  TRDefaultByte = 0xda;
 static unsigned char  TRFreedByte = 0xfc;
 #define MAX_TR_STACK 20
@@ -142,10 +143,10 @@ static int     TRdebugLevel = 0;
 #define TR_FREE   0x2
 
 /* Used to keep track of allocations */
-static long    TRMaxMem = 0;
-static long    TRMaxMemId = 0;
+static volatile long    TRMaxMem = 0;
+static volatile long    TRMaxMemId = 0;
 /* Used to limit allocation */
-static long    TRMaxMemAllow = 0;
+static volatile long    TRMaxMemAllow = 0;
 
 /*
  * Printing of addresses.  
@@ -207,17 +208,21 @@ void MPIU_trinit( int rank )
 void *MPIU_trmalloc( unsigned int a, int lineno, const char fname[] )
 {
     TRSPACE          *head;
-    char             *new;
+    char             *new = NULL;
     unsigned long    *nend;
     unsigned int     nsize;
     int              l;
+
+    /* Synchronization is needed because the TRhead and associated
+     * structures are global and they are modified by this function. */
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
 
     if (TRdebugLevel > 0) {
 	char buf[256];
 	MPIU_Snprintf( buf, 256, 
 		       "Invalid MALLOC arena detected at line %d in %s\n", 
 		       lineno, fname );
-	if (MPIU_trvalid( buf )) return 0;
+	if (MPIU_trvalid_unsafe( buf )) goto fn_exit;
     }
 
     nsize = a;
@@ -229,11 +234,11 @@ void *MPIU_trmalloc( unsigned int a, int lineno, const char fname[] )
 	   so the fact that this does not go through the regular error 
 	   message system is not a problem. */
 	MPIU_Error_printf( "Exceeded allowed memory! \n" );
-	return 0;
+        goto fn_exit;
     }
 
     new = malloc( (unsigned)( nsize + sizeof(TrSPACE) + sizeof(unsigned long) ) );
-    if (!new) return 0;
+    if (!new) goto fn_exit;
 
     memset( new, TRDefaultByte, 
 	    nsize + sizeof(TrSPACE) + sizeof(unsigned long) );
@@ -286,6 +291,8 @@ void *MPIU_trmalloc( unsigned int a, int lineno, const char fname[] )
     VALGRIND_MAKE_MEM_NOACCESS(head, sizeof(TrSPACE)); 
     VALGRIND_MAKE_MEM_NOACCESS(nend, sizeof(unsigned long)); 
 #endif
+fn_exit:
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
     return (void *)new;
 }
 
@@ -309,8 +316,12 @@ void MPIU_trfree( void *a_ptr, int line, const char file[] )
 /* Don't try to handle empty blocks */
     if (!a) return;
 
+    /* Synchronization is needed because the TRhead and associated
+     * structures are global and they are modified by this function. */
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+
     if (TRdebugLevel > 0) {
-	if (MPIU_trvalid( "Invalid MALLOC arena detected by FREE" )) return;
+	if (MPIU_trvalid_unsafe( "Invalid MALLOC arena detected by FREE" )) goto fn_exit;
     }
 
     ahead = a;
@@ -334,7 +345,7 @@ void MPIU_trfree( void *a_ptr, int line, const char file[] )
 		     "[%d] Block at address %8p is corrupted; cannot free;\n\
 may be block not allocated with MPIU_trmalloc or MALLOC\n\
 called in %s at line %d\n", world_rank, a, file, line );
-	return;
+	goto fn_exit;
     }
     nend = (unsigned long *)(ahead + head->size);
 /* Check that nend is properly aligned */
@@ -344,7 +355,7 @@ called in %s at line %d\n", world_rank, a, file, line );
  "[%d] Block at address %lx is corrupted (invalid address or header)\n\
 called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE), 
 		 file, line );
-	return;
+	goto fn_exit;
     }
 
 #if defined(USE_VALGRIND_MACROS)
@@ -371,7 +382,7 @@ called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE),
 	    MPIU_Error_printf(
 		     "[%d] Block allocated at %s[%d]\n", 
 		     world_rank, head->fname, head->lineno );
-	    return;
+	    goto fn_exit;
 	}
 	else {
 	    /* Damaged tail */
@@ -447,36 +458,14 @@ called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE),
 	memset( ahead + 2 * sizeof(int), TRFreedByte, nset );
     }
     free( a );
+fn_exit:
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 
-/*+C
-   MPIU_trvalid - test the allocated blocks for validity.  This can be used to
-   check for memory overwrites.
-
-   Input Parameter:
-.  str - string to write out only if an error is detected.
-
-   Return value:
-   The number of errors detected.
-   
-   Output Effect:
-   Error messages are written to stdout.  These have the form of either
-
-$   Block [id=%d(%d)] at address %lx is corrupted (probably write past end)
-$   Block allocated in <filename>[<linenumber>]
-
-   if the sentinal at the end of the block has been corrupted, and
-
-$   Block at address %lx is corrupted
-
-   if the sentinal at the begining of the block has been corrupted.
-
-   The address is the actual address of the block.  The id is the
-   value of TRID.
-
-   No output is generated if there are no problems detected.
-+*/
-int MPIU_trvalid( const char str[] )
+/* The real implementation of MPIU_trvalid but does not acquire any
+ * critical sections.  For use by functions that already hold the
+ * MEMALLOC critical section. */
+int MPIU_trvalid_unsafe(const char str[])
 {
     TRSPACE *head;
     char    *a;
@@ -502,7 +491,7 @@ int MPIU_trvalid( const char str[] )
 	    /* Must stop because if head is invalid, then the data in the
 	       head is probably also invalid, and using could lead to 
 	       SEGV or BUS  */
-	    return errs;
+	    goto fn_exit;
 	}
 	a    = (char *)(((TrSPACE*)head) + 1);
 	nend = (unsigned long *)(a + head->size);
@@ -536,7 +525,44 @@ int MPIU_trvalid( const char str[] )
 #endif
 	head = head->next;
     }
+fn_exit:
     return errs;
+}
+
+/*+C
+   MPIU_trvalid - test the allocated blocks for validity.  This can be used to
+   check for memory overwrites.
+
+   Input Parameter:
+.  str - string to write out only if an error is detected.
+
+   Return value:
+   The number of errors detected.
+   
+   Output Effect:
+   Error messages are written to stdout.  These have the form of either
+
+$   Block [id=%d(%d)] at address %lx is corrupted (probably write past end)
+$   Block allocated in <filename>[<linenumber>]
+
+   if the sentinal at the end of the block has been corrupted, and
+
+$   Block at address %lx is corrupted
+
+   if the sentinal at the begining of the block has been corrupted.
+
+   The address is the actual address of the block.  The id is the
+   value of TRID.
+
+   No output is generated if there are no problems detected.
++*/
+int MPIU_trvalid( const char str[] )
+{
+    int retval;
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    retval = MPIU_trvalid_unsafe(str);
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    return retval;
 }
 
 /*+C
@@ -548,11 +574,15 @@ int MPIU_trvalid( const char str[] )
  +*/
 void MPIU_trspace( int *space, int *fr )
 {
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+
     /* We use ints because systems without prototypes will usually
        allow calls with ints instead of longs, leading to unexpected
        behavior */
     *space = (int)allocated;
     *fr    = (int)frags;
+
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 
 /*+C
@@ -567,6 +597,10 @@ void MPIU_trdump( FILE *fp, int minid )
 {
     TRSPACE *head;
     char    hexstring[MAX_ADDRESS_CHARS];
+
+    /* Synchronization is needed because the TRhead and associated
+     * structures are global and they are modified by this function. */
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
 
     if (fp == 0) fp = stderr;
     head = TRhead;
@@ -592,6 +626,8 @@ void MPIU_trdump( FILE *fp, int minid )
     msg_fprintf( fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n", 
 	     world_rank, TRMaxMem, TRMaxMemId );
  */
+
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 
 /* Configure will set HAVE_SEARCH for these systems.  We assume that
@@ -611,7 +647,7 @@ static int IntCompare( TRINFO *a, TRINFO *b )
     return a->id - b->id;
 }
 
-static FILE *TRFP = 0;
+static volatile FILE *TRFP = 0;
 /*ARGSUSED*/
 static void PrintSum( TRINFO **a, VISIT order, int level )
 { 
@@ -636,6 +672,8 @@ void MPIU_trSummary( FILE *fp, int minid )
     TRSPACE *head;
     TRINFO  *root, *key, **fnd;
     TRINFO  nspace[1000];
+
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
 
     if (fp == 0) fp = stderr;
     root = 0;
@@ -670,14 +708,17 @@ void MPIU_trSummary( FILE *fp, int minid )
       msg_fprintf( fp, "# [%d] The maximum space allocated was %d bytes [%d]\n", 
       world_rank, TRMaxMem, TRMaxMemId );
     */
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 #else
 void MPIU_trSummary( FILE *fp, int minid )
 {
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
     if (fp == 0) fp = stderr;
     FPRINTF( fp, 
 		 "# [%d] The maximum space allocated was %ld bytes [%ld]\n", 
 		 world_rank, TRMaxMem, TRMaxMemId );
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }	
 #endif
 
@@ -686,9 +727,13 @@ void MPIU_trSummary( FILE *fp, int minid )
  +*/
 void MPIU_trid( int id )
 {
+    /* Synchronization is needed because the TRhead and associated
+     * structures are global and they are modified by this function. */
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
     TRid    = id;
     TRidSet = 1;   /* Recall whether we ever use this feature to 
 		      help clean up output */
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 
 /*+C
@@ -704,7 +749,9 @@ void MPIU_trid( int id )
  +*/
 void MPIU_trlevel( int level )
 {
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
     TRlevel = level;
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 
 
@@ -718,7 +765,9 @@ void MPIU_trlevel( int level )
 +*/
 void MPIU_trDebugLevel( int level )
 {
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
     TRdebugLevel = level;
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 
 /*+C
@@ -880,6 +929,7 @@ static TRSPACE *MPIU_trImerge( TRSPACE *l1, TRSPACE *l2 )
     return head;
 }
 /* Sort head with n elements, returning the head */
+/* assumes that the MEMALLOC critical section is currently held */
 static TRSPACE *MPIU_trIsort( TRSPACE *head, int n )
 {
     TRSPACE *p, *l1, *l2;
@@ -899,6 +949,7 @@ static TRSPACE *MPIU_trIsort( TRSPACE *head, int n )
     return MPIU_trImerge( l1, l2 );
 }
 
+/* assumes that the MEMALLOC critical section is currently held */
 static void MPIU_trSortBlocks( void )
 {
     TRSPACE *head;
@@ -921,6 +972,8 @@ void MPIU_trdumpGrouped( FILE *fp, int minid )
     
     if (fp == 0) fp = stderr;
     
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+
     MPIU_trSortBlocks();
     head = TRhead;
     cur  = 0;
@@ -944,11 +997,15 @@ void MPIU_trdumpGrouped( FILE *fp, int minid )
 	head = cur;
     }
     fflush( fp );
+
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 
 void MPIU_TrSetMaxMem( int size )
 {
+    MPIU_THREAD_CS_ENTER(MEMALLOC,);
     TRMaxMemAllow = size;
+    MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 
 static void addrToHex( void *addr, char string[MAX_ADDRESS_CHARS] )

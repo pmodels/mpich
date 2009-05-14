@@ -86,6 +86,8 @@ typedef struct MPICH_ThreadInfo_t {
 # if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
     MPID_Thread_mutex_t global_mutex;
 # endif
+
+    MPID_Thread_mutex_t memalloc_mutex; /* for MPIU_{Malloc,Free,Calloc} */
 } MPICH_ThreadInfo_t;
 extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
 
@@ -467,6 +469,44 @@ typedef struct MPIU_ThreadDebug {
     }								\
 }
 
+/* Some locks (such as the memory allocation locks) are needed to
+ * bootstrap the lock checking code.  These macros provide a similar
+ * interface to the MPIU_THREAD_CS_{ENTER,EXIT}_LOCKNAME macros but
+ * without the bootstrapping issue. */
+#define MPIU_THREAD_CS_ENTER_LOCKNAME_NOCHECK(_name)                  \
+    do {                                                              \
+        MPIU_DBG_MSG(THREAD,TYPICAL,"Enter critical section "#_name " (checking disabled)"); \
+        MPID_Thread_mutex_lock(&MPIR_ThreadInfo._name);               \
+    } while (0)
+#define MPIU_THREAD_CS_EXIT_LOCKNAME_NOCHECK(_name)                  \
+    do {                                                             \
+        MPIU_DBG_MSG(THREAD,TYPICAL,"Exit critical section "#_name " (checking disabled)"); \
+        MPID_Thread_mutex_unlock(&MPIR_ThreadInfo._name);            \
+    } while (0)
+
+
+#if defined(USE_MEMORY_TRACING)
+    /* These are defined for all levels of thread granularity due to the
+     * bootstrapping issue mentioned above */
+#   define MPIU_THREAD_CS_ENTER_MEMALLOC(_context)                  \
+        do {                                                        \
+            MPIU_THREAD_CHECK_BEGIN                                 \
+            MPIU_THREAD_CS_ENTER_LOCKNAME_NOCHECK(memalloc_mutex);  \
+            MPIU_THREAD_CHECK_END                                   \
+        } while(0)
+#   define MPIU_THREAD_CS_EXIT_MEMALLOC(_context)                   \
+        do {                                                        \
+            MPIU_THREAD_CHECK_BEGIN                                 \
+            MPIU_THREAD_CS_EXIT_LOCKNAME_NOCHECK(memalloc_mutex);   \
+            MPIU_THREAD_CHECK_END                                   \
+        } while(0)
+#else
+    /* we don't need these macros when using the system malloc */
+#   define MPIU_THREAD_CS_ENTER_MEMALLOC(_context) do {} while (0)
+#   define MPIU_THREAD_CS_EXIT_MEMALLOC(_context) do {} while (0)
+#endif
+
+
 /* Definitions of the thread support for various levels of thread granularity */
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
@@ -486,7 +526,6 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_EXIT_INITFLAG(_context)
 #define MPIU_THREAD_CS_ENTER_PMI(_context) 
 #define MPIU_THREAD_CS_EXIT_PMI(_context) 
-
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL
 /* There is a single, global lock, held only when needed */
 #define MPIU_THREAD_CS_ENTER_ALLFUNC(_context)

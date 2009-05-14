@@ -113,6 +113,10 @@ int MPIR_Thread_CS_Init( void )
 {
     MPID_Thread_tls_create(MPIR_CleanupThreadStorage, 
 			   &MPIR_ThreadInfo.thread_storage, NULL);  
+
+    /* we create this at all granularities right now */
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.memalloc_mutex, NULL);
+
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.global_mutex, NULL);
