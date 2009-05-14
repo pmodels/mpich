@@ -674,7 +674,7 @@ if ($do_dependencies eq "static") {
 sub ReadMfile {
     my $Mfile = $_[0];
     my $linecount = 0;
-    open (MFILE,"<$Mfile" ) || die "Could not open $Mfile\n";
+    open (MFILE,"<$Mfile" ) || die "Could not open $Mfile in $curdir\n";
     &ClearVars;
     while (<MFILE>) {
 	$linecount++;
