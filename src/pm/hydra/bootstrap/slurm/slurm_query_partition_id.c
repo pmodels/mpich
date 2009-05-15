@@ -4,13 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
 #include "slurm.h"
-
-extern HYD_Handle handle;
 
 HYD_Status HYD_BSCD_slurm_query_partition_id(int *partition_id)
 {

@@ -173,6 +173,13 @@ struct HYD_Partition_exec {
 #endif
 #endif
 
+#define FORALL_ACTIVE_PARTITIONS(partition, partition_list)    \
+    for ((partition) = (partition_list); (partition) && (partition)->base->active; \
+         (partition) = (partition)->next)
+
+#define FORALL_PARTITIONS(partition, partition_list)    \
+    for ((partition) = (partition_list); (partition); (partition) = (partition)->next)
+
 struct HYD_Thread_context {
     pthread_t thread;
 };

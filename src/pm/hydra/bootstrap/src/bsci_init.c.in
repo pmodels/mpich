@@ -4,23 +4,17 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_base.h"
+#include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#if defined( NEEDS_GETHOSTNAME_DECL )
-int gethostname(char *name, size_t len);
-#endif
 
 struct HYD_BSCI_fns HYD_BSCI_fns;
 
 char *HYD_BSCI_comp_array[] = { @hydra_bss_name_array@ };
 HYD_Status(*HYD_BSCI_comp_init[])(void) = { @hydra_bss_init_array@ };
-int HYD_BSCI_debug;
+struct HYD_BSCI_info HYD_BSCI_info;
 
-HYD_Status HYD_BSCI_init(char *bootstrap, int debug)
+HYD_Status HYD_BSCI_init(char *bootstrap, char *bootstrap_exec, int enablex, int debug)
 {
     int i;
     HYD_Status status = HYD_SUCCESS;
@@ -40,8 +34,10 @@ HYD_Status HYD_BSCI_init(char *bootstrap, int debug)
         }
     }
 
-    /* Set the appropriate debug level */
-    HYD_BSCI_debug = debug;
+    /* Set the appropriate info */
+    HYD_BSCI_info.bootstrap_exec = bootstrap_exec;
+    HYD_BSCI_info.enablex = enablex;
+    HYD_BSCI_info.debug = debug;
 
     if (HYD_BSCI_comp_array[i] == NULL)
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,

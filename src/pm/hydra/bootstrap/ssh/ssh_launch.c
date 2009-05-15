@@ -4,13 +4,12 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
 #include "ssh.h"
 
-extern HYD_Handle handle;
+struct HYD_BSCI_info HYD_BSCI_info;
 
 /*
  * HYD_BSCD_ssh_launch_procs: For each process, we create an
@@ -18,7 +17,8 @@ extern HYD_Handle handle;
  * environment variables. We fork a worker process that sets the
  * environment and execvp's this executable.
  */
-HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, char *partition_id_str)
+HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, char *partition_id_str,
+                                     struct HYD_Partition *partition_list)
 {
     struct HYD_Partition *partition;
     char *client_arg[HYD_NUM_TMP_STRINGS];
@@ -30,12 +30,12 @@ HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, char *partition_id_str)
 
     /*
      * We use the following priority order for the executable path:
-     *    1. User-specified: handle.bootstrap_exec
+     *    1. User-specified
      *    2. Search in path
      *    3. Hard-coded location
      */
-    if (handle.bootstrap_exec) {
-        path = HYDU_strdup(handle.bootstrap_exec);
+    if (HYD_BSCI_info.bootstrap_exec) {
+        path = HYDU_strdup(HYD_BSCI_info.bootstrap_exec);
     }
     else {
         status = HYDU_find_in_path("ssh", &test_path);
@@ -53,20 +53,16 @@ HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, char *partition_id_str)
             path = HYDU_strdup("/usr/bin/ssh");
     }
 
-    /* FIXME: Instead of directly reading from the HYD_Handle
-     * structure, the upper layers should be able to pass what exactly
-     * they want launched. Without this functionality, the proxy
-     * cannot use this and will have to perfom its own launch. */
     process_id = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    FORALL_ACTIVE_PARTITIONS(partition, partition_list) {
         /* Setup the executable arguments */
         arg = 0;
         client_arg[arg++] = HYDU_strdup(path);
 
         /* Allow X forwarding only if explicitly requested */
-        if (handle.enablex == 1)
+        if (HYD_BSCI_info.enablex == 1)
             client_arg[arg++] = HYDU_strdup("-X");
-        else if (handle.enablex == 0)
+        else if (HYD_BSCI_info.enablex == 0)
             client_arg[arg++] = HYDU_strdup("-x");
         else    /* default mode is disable X */
             client_arg[arg++] = HYDU_strdup("-x");
@@ -84,7 +80,7 @@ HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, char *partition_id_str)
 
         client_arg[arg++] = NULL;
 
-        if (HYD_BSCI_debug) {
+        if (HYD_BSCI_info.debug) {
             HYDU_Dump("Launching process: ");
             HYDU_print_strlist(client_arg);
         }

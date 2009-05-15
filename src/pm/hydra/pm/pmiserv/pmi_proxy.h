@@ -12,17 +12,18 @@
 #include "pmi_common.h"
 
 struct HYD_PMCD_pmi_proxy_params {
-    int debug;
-
     /* Proxy details */
     struct {
         char *server_name;
         int server_port;
         HYD_Launch_mode_t launch_mode;
         int partition_id;
+        char *bootstrap;
+        char *bootstrap_exec;
+        int enablex;
+        int debug;
     } proxy;
 
-    char *bootstrap;
     char *wdir;
     char *pmi_port_str;
     HYD_Binding binding;

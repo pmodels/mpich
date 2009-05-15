@@ -15,14 +15,15 @@ static HYD_Status init_params(void)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYD_PMCD_pmi_proxy_params.debug = 0;
-
     HYD_PMCD_pmi_proxy_params.proxy.server_name = NULL;
     HYD_PMCD_pmi_proxy_params.proxy.server_port = -1;
     HYD_PMCD_pmi_proxy_params.proxy.launch_mode = HYD_LAUNCH_UNSET;
     HYD_PMCD_pmi_proxy_params.proxy.partition_id = -1;
+    HYD_PMCD_pmi_proxy_params.proxy.bootstrap = NULL;
+    HYD_PMCD_pmi_proxy_params.proxy.bootstrap_exec = NULL;
+    HYD_PMCD_pmi_proxy_params.proxy.debug = 0;
+    HYD_PMCD_pmi_proxy_params.proxy.enablex = -1;
 
-    HYD_PMCD_pmi_proxy_params.bootstrap = NULL;
     HYD_PMCD_pmi_proxy_params.wdir = NULL;
     HYD_PMCD_pmi_proxy_params.pmi_port_str = NULL;
     HYD_PMCD_pmi_proxy_params.binding = HYD_BIND_UNSET;
@@ -268,18 +269,33 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
             continue;
         }
         if (!strcmp(*argv, "--debug")) {
-            HYD_PMCD_pmi_proxy_params.debug = 1;
+            HYD_PMCD_pmi_proxy_params.proxy.debug = 1;
+            continue;
+        }
+        if (!strcmp(*argv, "--enable-x")) {
+            HYD_PMCD_pmi_proxy_params.proxy.enablex = 1;
+            continue;
+        }
+        if (!strcmp(*argv, "--disable-x")) {
+            HYD_PMCD_pmi_proxy_params.proxy.enablex = 0;
             continue;
         }
         if (!strcmp(*argv, "--bootstrap")) {
             ++argv;
-            HYD_PMCD_pmi_proxy_params.bootstrap = HYDU_strdup(*argv);
+            HYD_PMCD_pmi_proxy_params.proxy.bootstrap = HYDU_strdup(*argv);
+            continue;
+        }
+        if (!strcmp(*argv, "--bootstrap-exec")) {
+            ++argv;
+            HYD_PMCD_pmi_proxy_params.proxy.bootstrap_exec = HYDU_strdup(*argv);
             continue;
         }
     }
 
-    status = HYD_BSCI_init(HYD_PMCD_pmi_proxy_params.bootstrap,
-                           HYD_PMCD_pmi_proxy_params.debug);
+    status = HYD_BSCI_init(HYD_PMCD_pmi_proxy_params.proxy.bootstrap,
+                           HYD_PMCD_pmi_proxy_params.proxy.bootstrap_exec,
+                           HYD_PMCD_pmi_proxy_params.proxy.enablex,
+                           HYD_PMCD_pmi_proxy_params.proxy.debug);
     HYDU_ERR_POP(status, "proxy unable to initialize bootstrap\n");
 
     if (HYD_PMCD_pmi_proxy_params.proxy.partition_id == -1) {
@@ -309,8 +325,11 @@ HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
     if (HYD_PMCD_pmi_proxy_params.proxy.server_name)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.proxy.server_name);
 
-    if (HYD_PMCD_pmi_proxy_params.bootstrap)
-        HYDU_FREE(HYD_PMCD_pmi_proxy_params.bootstrap);
+    if (HYD_PMCD_pmi_proxy_params.proxy.bootstrap)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.proxy.bootstrap);
+
+    if (HYD_PMCD_pmi_proxy_params.proxy.bootstrap_exec)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.proxy.bootstrap_exec);
 
     if (HYD_PMCD_pmi_proxy_params.wdir)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.wdir);

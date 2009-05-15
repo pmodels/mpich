@@ -4,15 +4,15 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
 #include "fork.h"
 
-extern HYD_Handle handle;
+struct HYD_BSCI_info HYD_BSCI_info;
 
-HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, char *partition_id_str)
+HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, char *partition_id_str,
+                                      struct HYD_Partition *partition_list)
 {
     struct HYD_Partition *partition;
     char *client_arg[HYD_NUM_TMP_STRINGS];
@@ -21,12 +21,8 @@ HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, char *partition_id_str
 
     HYDU_FUNC_ENTER();
 
-    /* FIXME: Instead of directly reading from the HYD_Handle
-     * structure, the upper layers should be able to pass what exactly
-     * they want launched. Without this functionality, the proxy
-     * cannot use this and will have to perfom its own launch. */
     process_id = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    FORALL_ACTIVE_PARTITIONS(partition, partition_list) {
         /* Setup the executable arguments */
         arg = 0;
 
@@ -40,7 +36,7 @@ HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, char *partition_id_str
 
         client_arg[arg++] = NULL;
 
-        if (HYD_BSCI_debug) {
+        if (HYD_BSCI_info.debug) {
             HYDU_Dump("Launching process: ");
             HYDU_print_strlist(client_arg);
         }

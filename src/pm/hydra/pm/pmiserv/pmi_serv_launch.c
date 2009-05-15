@@ -175,8 +175,18 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode, char **proxy_args)
         if (handle.debug)
             proxy_args[arg++] = HYDU_strdup("--debug");
 
+        if (handle.enablex != -1) {
+            proxy_args[arg++] = HYDU_strdup("--enable-x");
+            proxy_args[arg++] = HYDU_int_to_str(handle.enablex);
+        }
+
         proxy_args[arg++] = HYDU_strdup("--bootstrap");
         proxy_args[arg++] = HYDU_strdup(handle.bootstrap);
+
+        if (handle.bootstrap_exec) {
+            proxy_args[arg++] = HYDU_strdup("--bootstrap-exec");
+            proxy_args[arg++] = HYDU_strdup(handle.bootstrap_exec);
+        }
 
         proxy_args[arg++] = NULL;
     }
@@ -304,7 +314,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
         status = fill_in_exec_args();
         HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-        status = HYD_BSCI_launch_procs(proxy_args, "--partition-id");
+        status = HYD_BSCI_launch_procs(proxy_args, "--partition-id", handle.partition_list);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (handle.launch_mode == HYD_LAUNCH_BOOT ||
@@ -312,7 +322,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
         status = fill_in_proxy_args(handle.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-        status = HYD_BSCI_launch_procs(proxy_args, "--partition-id");
+        status = HYD_BSCI_launch_procs(proxy_args, "--partition-id", handle.partition_list);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {

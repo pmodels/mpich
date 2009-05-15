@@ -4,15 +4,15 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
 #include "slurm.h"
 
-extern HYD_Handle handle;
+struct HYD_BSCI_info HYD_BSCI_info;
 
-HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_str)
+HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_str,
+                                       struct HYD_Partition *partition_list)
 {
     struct HYD_Partition *partition;
     char *client_arg[HYD_NUM_TMP_STRINGS];
@@ -24,12 +24,12 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_st
 
     /*
      * We use the following priority order for the executable path:
-     *    1. User-specified: handle.bootstrap_exec
+     *    1. User-specified
      *    2. Search in path
      *    3. Hard-coded location
      */
-    if (handle.bootstrap_exec) {
-        path = HYDU_strdup(handle.bootstrap_exec);
+    if (HYD_BSCI_info.bootstrap_exec) {
+        path = HYDU_strdup(HYD_BSCI_info.bootstrap_exec);
     }
     else {
         status = HYDU_find_in_path("srun", &test_path);
@@ -51,13 +51,9 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_st
     client_arg[arg++] = HYDU_strdup(path);
     client_arg[arg++] = HYDU_strdup("--nodelist");
 
-    /* FIXME: Instead of directly reading from the HYD_Handle
-     * structure, the upper layers should be able to pass what exactly
-     * they want launched. Without this functionality, the proxy
-     * cannot use this and will have to perfom its own launch. */
     i = 0;
     num_nodes = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    FORALL_ACTIVE_PARTITIONS(partition, partition_list) {
         tmp[i++] = partition->base->name;
         if (partition->next && partition->next->base->active)
             tmp[i++] = ",";
@@ -77,16 +73,16 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_st
 
     client_arg[arg++] = NULL;
 
-    if (HYD_BSCI_debug) {
+    if (HYD_BSCI_info.debug) {
         HYDU_Dump("Launching process: ");
         HYDU_print_strlist(client_arg);
     }
 
     status = HYDU_create_process(client_arg, NULL,
-                                 &handle.partition_list->base->in,
-                                 &handle.partition_list->base->out,
-                                 &handle.partition_list->base->err,
-                                 &handle.partition_list->base->pid, -1);
+                                 &partition_list->base->in,
+                                 &partition_list->base->out,
+                                 &partition_list->base->err,
+                                 &partition_list->base->pid, -1);
     HYDU_ERR_POP(status, "bootstrap spawn process returned error\n");
 
     HYDU_free_strlist(client_arg);

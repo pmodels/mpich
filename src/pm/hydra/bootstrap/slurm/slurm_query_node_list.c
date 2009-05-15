@@ -4,13 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
 #include "slurm.h"
-
-extern HYD_Handle handle;
 
 static void full_str_to_groups(char *str, char **list)
 {

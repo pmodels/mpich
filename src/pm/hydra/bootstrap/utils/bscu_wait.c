@@ -4,19 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
 #include "hydra_utils.h"
 #include "bscu.h"
 
-extern HYD_Handle handle;
-
-/*
- * HYD_BSCU_wait_for_completion: We first wait for communication
- * events from the available processes till all connections have
- * closed. In the meanwhile, the SIGCHLD handler keeps track of all
- * the terminated processes.
- */
-HYD_Status HYD_BSCU_wait_for_completion(void)
+HYD_Status HYD_BSCU_wait_for_completion(struct HYD_Partition *partition_list)
 {
     int pid, ret_status, not_completed;
     struct HYD_Partition *partition;
@@ -26,7 +17,7 @@ HYD_Status HYD_BSCU_wait_for_completion(void)
     HYDU_FUNC_ENTER();
 
     not_completed = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    FORALL_ACTIVE_PARTITIONS(partition, partition_list) {
         if (partition->exit_status == NULL) {
             for (exec = partition->exec_list; exec; exec = exec->next)
                 not_completed += exec->proc_count;
@@ -42,20 +33,11 @@ HYD_Status HYD_BSCU_wait_for_completion(void)
         pid = waitpid(-1, &ret_status, WNOHANG);
         if (pid > 0) {
             /* Find the pid and mark it as complete. */
-            FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+            FORALL_ACTIVE_PARTITIONS(partition, partition_list) {
                 if (partition->base->pid == pid)
                     not_completed--;
             }
         }
-        if (HYDU_time_left(handle.start, handle.timeout) == 0)
-            break;
-
-        /* FIXME: If we did not break out yet, add a small usleep to
-         * yield CPU here. We can not just sleep for the remaining
-         * time, as the timeout value might be large and the
-         * application might exit much quicker. Note that the
-         * sched_yield() call is broken on newer linux kernel versions
-         * and should not be used. */
     }
 
     if (not_completed)

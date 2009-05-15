@@ -7,12 +7,17 @@
 #ifndef BSCI_H_INCLUDED
 #define BSCI_H_INCLUDED
 
-#include "hydra.h"
+struct HYD_BSCI_info {
+    char *bootstrap_exec;
+    int  enablex;
+    int  debug;
+};
 
 struct HYD_BSCI_fns {
-    HYD_Status(*launch_procs) (char **global_args, char *partition_id_str);
+    HYD_Status(*launch_procs) (char **global_args, char *partition_id_str,
+                               struct HYD_Partition *partition_list);
     HYD_Status(*finalize) (void);
-    HYD_Status(*wait_for_completion) (void);
+    HYD_Status(*wait_for_completion) (struct HYD_Partition *partition_list);
     HYD_Status(*query_node_list) (int num_nodes, struct HYD_Partition **partition_list);
     HYD_Status(*get_usize) (int *size);
     HYD_Status(*query_partition_id) (int *partition_id);
@@ -20,10 +25,11 @@ struct HYD_BSCI_fns {
 
 extern struct HYD_BSCI_fns HYD_BSCI_fns;
 
-HYD_Status HYD_BSCI_init(char *bootstrap, int debug);
-HYD_Status HYD_BSCI_launch_procs(char **global_args, char *partition_id_str);
+HYD_Status HYD_BSCI_init(char *bootstrap, char *bootstrap_exec, int enablex, int debug);
+HYD_Status HYD_BSCI_launch_procs(char **global_args, char *partition_id_str,
+                                 struct HYD_Partition *partition_list);
 HYD_Status HYD_BSCI_finalize(void);
-HYD_Status HYD_BSCI_wait_for_completion(void);
+HYD_Status HYD_BSCI_wait_for_completion(struct HYD_Partition *partition_list);
 HYD_Status HYD_BSCI_query_node_list(int num_nodes, struct HYD_Partition **partition_list);
 HYD_Status HYD_BSCI_get_usize(int *size);
 HYD_Status HYD_BSCI_query_partition_id(int *partition_id);
@@ -31,7 +37,6 @@ HYD_Status HYD_BSCI_query_partition_id(int *partition_id);
 /* Each bootstrap server has to expose an initialization function */
 @hydra_bss_init_decl@
 
-/* Debug level */
-extern int HYD_BSCI_debug;
+extern struct HYD_BSCI_info HYD_BSCI_info;
 
 #endif /* BSCI_H_INCLUDED */
