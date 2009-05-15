@@ -589,6 +589,13 @@ if [ $do_build_configure = yes ] ; then
 	        # openpa is updated using autoreconf later in this script
 	        continue
             fi
+            qopenpa=`echo $dir | sed -e 's%.*openpa.*%FOUNDOPENPA%'`
+            if [ "$qopenpa" = "FOUNDOPENPA" ] ; then
+                # this is the old openpa location (in the root of the package)
+                # this clause exists because SVN won't delete the old directory
+                # when you run "svn update".
+                continue
+            fi
 	    if [ -s $dir/Makefile.in ] ; then 
                 #echo "Found $dir/configure.in"
 	        #
