@@ -2164,6 +2164,10 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef HAVE_SIGACTION */")
 				Case "HAVE_PTHREAD_CREATE"
 					fout.WriteLine("/* #undef HAVE_PTHREAD_CREATE */")
+                                Case "HAVE_PTHREAD_BARRIER_INIT"
+					fout.WriteLine("/* #undef HAVE_PTHREAD_BARRIER_INIT */")
+                                Case "HAVE_PTHREAD_BARRIER_WAIT"
+					fout.WriteLine("/* #undef HAVE_PTHREAD_BARRIER_WAIT */")
 				Case "USE_PTHREAD_STDIN_REDIRECTION"
 					fout.WriteLine("/* #undef USE_PTHREAD_STDIN_REDIRECTION */")
                                 Case "HAVE_TERMIOS_H"
@@ -4997,30 +5001,30 @@ Else
 End If
 
 printMsg "STATUS", "Creating config.h header files for OpenPA..."
-if not f.FolderExists("openpa\src\win32") then
-        printMsg "VERBOSE", "Creating openpa\src\win32 directory"
-	f.CreateFolder("openpa\src\win32")
+if not f.FolderExists("src\openpa\src\win32") then
+        printMsg "VERBOSE", "Creating src\openpa\src\win32 directory"
+	f.CreateFolder("src\openpa\src\win32")
 end if
-if not f.FolderExists("openpa\src\win64") then
-        printMsg "VERBOSE", "Creating openpa\src\win64 directory"
-	f.CreateFolder("openpa\src\win64")
+if not f.FolderExists("src\openpa\src\win64") then
+        printMsg "VERBOSE", "Creating src\openpa\src\win64 directory"
+	f.CreateFolder("src\openpa\src\win64")
 end if
 
-If f.FileExists("openpa\src\config.h.in") Then
-	printMsg "VERBOSE", "Creating openpa\src\win32\opa_config.h"
-	Set fout = f.CreateTextFile("openpa\src\win32\opa_config.h")
+If f.FileExists("src\openpa\src\config.h.in") Then
+	printMsg "VERBOSE", "Creating src\openpa\src\win32\opa_config.h"
+	Set fout = f.CreateTextFile("src\openpa\src\win32\opa_config.h")
 	Call WriteHeader(fout, "opa_config_")
-	Call AddOPADefinitions(fout, "openpa\src\config.h.in", false)
+	Call AddOPADefinitions(fout, "src\openpa\src\config.h.in", false)
 	Call WriteFooter(fout)
 	fout.Close()
-	printMsg "VERBOSE", "Creating openpa\src\win64\opa_config.h"
-	Set fout = f.CreateTextFile("openpa\src\win64\opa_config.h")
+	printMsg "VERBOSE", "Creating src\openpa\src\win64\opa_config.h"
+	Set fout = f.CreateTextFile("src\openpa\src\win64\opa_config.h")
 	Call WriteHeader(fout, "opa_config_")
-	Call AddOPADefinitions(fout, "openpa\src\config.h.in", false)
+	Call AddOPADefinitions(fout, "src\openpa\src\config.h.in", false)
 	Call WriteFooter(fout)
 	fout.Close()
 Else
-	printMsg "VERBOSE", "Skipping file: openpa\src\config.h.in"
+	printMsg "VERBOSE", "Skipping file: src\openpa\src\config.h.in"
 End If
 
 printMsg "STATUS", "Creating *conf.h header files for MPE..."
@@ -5905,7 +5909,7 @@ Function GenBuild()
 	mfile.WriteLine("common_cflags = $(common_cflags) \")
 	mfile.WriteLine(" /I..\src\include \")
 	mfile.WriteLine(" /I..\src\util\wrappers \")
-	mfile.WriteLine(" /I..\openpa\src \")
+	mfile.WriteLine(" /I..\src\openpa\src \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\$(CHANNEL)\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\$(CHANNEL)\src \")
@@ -5925,9 +5929,9 @@ Function GenBuild()
 	mfile.WriteLine(" /I..\src\binding\f77")
 	mfile.WriteLine
 	mfile.WriteLine("!IF ""$(CPU)"" == ""i386"" || ""$(CPU)"" == ""x86""")
-	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win32 /I..\src\binding\f90\win32 /I..\openpa\src\win32")
+	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win32 /I..\src\binding\f90\win32 /I..\src\openpa\src\win32")
 	mfile.WriteLine("!ELSE")
-	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win64 /I..\src\binding\f90\win64 /I..\openpa\src\win64")
+	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win64 /I..\src\binding\f90\win64 /I..\src\openpa\src\win64")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
 	mfile.WriteLine("cxxflags = $(common_cflags)")
