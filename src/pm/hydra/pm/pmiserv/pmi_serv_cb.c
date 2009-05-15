@@ -47,12 +47,18 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
     char *str1 = NULL, *str2 = NULL;
     struct HYD_PMCD_pmi_handle_fns *h;
     HYD_Status status = HYD_SUCCESS;
+    int buflen = 0;
+    char *bufptr;
 
     HYDU_FUNC_ENTER();
 
     /* We got a PMI command */
-    HYDU_MALLOC(buf, char *, HYD_TMPBUF_SIZE, status);
 
+    buflen = HYD_TMPBUF_SIZE;
+
+    HYDU_MALLOC(buf, char *, buflen, status);
+    bufptr = buf;
+    
     /*
      * FIXME: This is a big hack. We temporarily initialize to
      * PMI-v1. If the incoming message is an "init", it will
@@ -67,8 +73,11 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
         HYD_PMCD_pmi_handle = HYD_PMCD_pmi_v1;
 
     do {
-        status = HYDU_sock_read(fd, buf, 6, &linelen, HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, bufptr, 6, &linelen, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read the length of the command");
+        buflen -= linelen;
+        bufptr += linelen;
+        
 
         /* Unexpected termination of connection */
         if (linelen == 0)
@@ -78,14 +87,16 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
          * format (or a PMI-2 command that is backward compatible). */
         if (!strncmp(buf, "cmd=", strlen("cmd="))) {
             /* PMI-1 format command; read the rest of it */
-            status = HYDU_sock_readline(fd, buf + 6, HYD_TMPBUF_SIZE, &linelen);
+            status = HYDU_sock_readline(fd, bufptr, buflen, &linelen);
             HYDU_ERR_POP(status, "PMI read line error\n");
+            buflen -= linelen;
+            bufptr += linelen;
 
             /* Unexpected termination of connection */
             if (linelen == 0)
                 break;
-            else
-                buf[linelen + 5] = 0;
+            else 
+                *(bufptr-1) = '\0';
 
             /* Here we only get PMI-1 commands or backward compatible
              * PMI-2 commands, so we always explicitly use the PMI-1
@@ -107,7 +118,7 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
             }
         }
         else {  /* PMI-2 command */
-            buf[linelen] = 0;
+            *bufptr = '\0';
             cmdlen = atoi(buf);
 
             status = HYDU_sock_read(fd, buf, cmdlen, &linelen, HYDU_SOCK_COMM_MSGWAIT);
