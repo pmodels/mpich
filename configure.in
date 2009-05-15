@@ -936,16 +936,16 @@ fi
 # FIXME TODO eventually delete the src/mpid/common/locks directory
 subsystems="$subsystems src/mpid/common/locks"
 
-opadir="${use_top_srcdir}/openpa"
+opadir="${use_top_srcdir}/src/openpa"
 if test -e "$opadir" ; then
-    EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS openpa"
+    EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS src/openpa"
     # this must go in CPPFLAGS intead of MPICH2_INCLUDE_FLAGS because we need it
     # to be available to lower-level configure scripts
-    CPPFLAGS="$CPPFLAGS -I${use_top_srcdir}/openpa/src -I${master_top_builddir}/openpa/src"
+    CPPFLAGS="$CPPFLAGS -I${use_top_srcdir}/src/openpa/src -I${master_top_builddir}/src/openpa/src"
     # openpa needs to go at the front of the devsubsystems because it needs to
     # be configured before the device itself (e.g. nemesis).
-    devsubsystems="openpa $devsubsystems"
-    other_install_dirs="$other_install_dirs openpa"
+    devsubsystems="src/openpa $devsubsystems"
+    other_install_dirs="$other_install_dirs src/openpa"
 fi
 
 # ----------------------------------------------------------------------------
@@ -6307,7 +6307,7 @@ if test -z "$libbuild_dir" ; then
     libbuild_dir=`pwd`/lib
 fi
 if test -z "$opalibbuild_dir" ; then
-    opalibbuild_dir=`pwd`/openpa/src
+    opalibbuild_dir=`pwd`/src/openpa/src
 fi
 if test -z "$modincbuild_dir" ; then
    # The include files may be in a different directory from the mpif.h file
