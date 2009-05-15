@@ -56,9 +56,11 @@ void run_test_sendrecv(void *arg)
 		MPI_Waitall( 2, &r[myrloc], MPI_STATUSES_IGNORE );
 	    }
 	    else {
-		MTest_thread_barrier(nthreads);
 		if (thread_num == 1) 
 		    MPI_Waitall( 2*wsize, r, MPI_STATUSES_IGNORE );
+
+                /* can't free the buffers until the requests are completed */
+		MTest_thread_barrier(nthreads);
 	    }
 	}
 	t = MPI_Wtime() - t;
