@@ -177,7 +177,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 			       "**ch3|sock|writefailed %d", rc );
 		 /* MT - CH3U_Request_complete performs write barrier */
 		MPIDI_CH3U_Request_complete(sreq);
-		/* FIXME: TEMP */
+		/* Return error to calling routine */
 		mpi_errno = sreq->status.MPI_ERROR;
 	    }
 	    /* --END ERROR HANDLING-- */
