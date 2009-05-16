@@ -38,6 +38,11 @@ void run_test_sendrecv(void *arg)
     MPI_Comm_size( MPI_COMM_WORLD, &wsize );
     if (wsize >= MAX_NTHREAD) wsize = MAX_NTHREAD;
     
+    /* Sanity check */
+    if (nthreads != wsize) 
+	fprintf( stderr, "Panic wsize = %d nthreads = %d\n", 
+		 wsize, nthreads );
+
     for (cnt=1; cnt < MAX_CNT; cnt = 2*cnt) {
 	buf = (int *)malloc( 2*cnt * sizeof(int) );
 
@@ -56,14 +61,16 @@ void run_test_sendrecv(void *arg)
 		MPI_Waitall( 2, &r[myrloc], MPI_STATUSES_IGNORE );
 	    }
 	    else {
+		/* Wait for all threads to create their requests */
+		MTest_thread_barrier(nthreads);
 		if (thread_num == 1) 
 		    MPI_Waitall( 2*wsize, r, MPI_STATUSES_IGNORE );
 
-                /* can't free the buffers until the requests are completed */
-		MTest_thread_barrier(nthreads);
 	    }
 	}
 	t = MPI_Wtime() - t;
+	/* can't free the buffers until the requests are completed */
+	MTest_thread_barrier(nthreads);
 	free( buf );
 	if (thread_num == 1) 
 	    MTestPrintfMsg( 1, "buf size %d: time %f\n", cnt, t / MAX_LOOP );
