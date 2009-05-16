@@ -273,9 +273,9 @@ F90_COMPILE     = $(F90) $(F90FLAGS) $(F90INCLUDES)',
 	    'c:lo'   => 'CC_SHL          = @CC_SHL@
 C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)',
 	    'f:lo'   => 'FC_SHL          = @FC_SHL@
-F77_COMPILE_SHL = $(FC_SHL) $(FFLAGS)',
+F77_COMPILE_SHL = $(FC_SHL) $(FFLAGS) $(F77INCLUDES)',
 	    'f90:lo'   => 'F90_SHL          = @F90_SHL@
-F90_COMPILE_SHL = $(F90_SHL) $(F90FLAGS)',
+F90_COMPILE_SHL = $(F90_SHL) $(F90FLAGS) $(F90INCLUDES)',
 	    'cxx:lo' => 'CXX_SHL         = @CXX_SHL@
 CXX_COMPILE_SHL = $(CXX_SHL) $(DEFS) $(INCLUDES) $(CXXFLAGS) $(CPPFLAGS)',
 	    'cpp:lo' => 'CXX_SHL         = @CXX_SHL@
@@ -2552,7 +2552,7 @@ sub TargetAll {
 #		my $libloc = &GetLibLoc( $lib );
 #		my $fullname = "${libloc}lib$proflib.a";
 #		print FD "\t    \${MAKE} $fullname ; \\\n";
-		print FD "\t    \${MAKE} $libstamp ; \\\n";
+		print FD "\t    \${MAKE} $libstamp || exit 1; \\\n";
 	    }
 	    print FD "\tfi";
 	}
@@ -2616,7 +2616,7 @@ sub TargetAllCommandsForSharedLibs {
 	    if (defined($libnum{$libbase})) {
 		$libstamp = ".libstamp" . $libnum{$libbase};
 	    }
-	    print FD "\t    \${MAKE} $libstamp ; \\\n";
+	    print FD "\t    \${MAKE} $libstamp || exit 1; \\\n";
 	}
 	if ($found_profilelib) {
 	    print FD "\t    if [ -n \"\@NO_WEAK_SYM\@\" ] ; then \\\n";
@@ -2625,7 +2625,7 @@ sub TargetAllCommandsForSharedLibs {
 		my $libloc = &GetLibLoc( $lib );
 		my $fullname = "${libloc}lib$proflib.la";
 		my $libstamp = ".libstamp" . $libnum{$proflib.".la"};
-		print FD "\t        \${MAKE} $libstamp ; \\\n";
+		print FD "\t        \${MAKE} $libstamp || exit 1; \\\n";
 #		print FD "\t        \${MAKE} $fullname ; \\\n";
 	    }
 	    print FD "\t    fi ; \\\n";
@@ -2648,7 +2648,7 @@ sub TargetAllCommandsForDLLLibs {
 	    if (defined($libnum{$libbase})) {
 		$libstamp = ".libstamp" . $libnum{$libbase};
 	    }
-	    print FD "\t    \${MAKE} $libstamp ; \\\n";
+	    print FD "\t    \${MAKE} $libstamp || exit 1; \\\n";
 	}
 	print FD "\tfi\n";
     }
