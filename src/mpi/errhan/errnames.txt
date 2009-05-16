@@ -249,8 +249,11 @@ be in the range 0 to %d
 **unknowngpid:Internal MPI error: Unknown gpid
 **unknowngpid %d %d:Internal MPI error: Unknown gpid (%d)%d
 **request:Invalid MPI_Request
+**request %d:Invalid MPI_Request in array element %d (from 0)
 **request_invalid_kind:The supplied request was invalid
 **request_invalid_kind %d:The supplied request was invalid (kind=%d)
+**request_invalid_kind %d %d:The supplied request in array element %d was \
+ invalid (kind=%d)
 **requestnull:Null MPI_Request 
 **requestnotpersist:Request is not persistent in MPI_Start or MPI_Startall.
 **requestpersistactive:Persistent request passed to MPI_Start or MPI_Startall is already active.

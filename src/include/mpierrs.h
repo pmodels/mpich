@@ -304,7 +304,20 @@
         MPIR_ERRTEST_VALID_HANDLE((request_), MPID_REQUEST, (err_), MPI_ERR_REQUEST, "**request");	\
     }									\
 }
-
+/* This macro does *NOT* jump to fn_fail - all uses check mpi_errno */
+#define MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(request_, i_, err_)		\
+{									\
+    if ((request_) != MPI_REQUEST_NULL)					\
+    {									\
+    if (HANDLE_GET_MPI_KIND(request_) != MPID_REQUEST) {                \
+        MPIU_ERR_SETANDSTMT2(err_,MPI_ERR_REQUEST,;,			\
+               "**request_invalid_kind","**request_invalid_kind %d %d", \
+               i_, HANDLE_GET_MPI_KIND(request_) );                     \
+    } else if (HANDLE_GET_KIND(request_) == HANDLE_KIND_INVALID) {      \
+        MPIU_ERR_SETANDSTMT1(err_,MPI_ERR_REQUEST,;,			\
+               "**request","**request %d", i_ );                        \
+    }}									\
+}
 #define MPIR_ERRTEST_ERRHANDLER(errhandler_,err_)			\
     if (errhandler_ == MPI_ERRHANDLER_NULL) {				\
         MPIU_ERR_SETANDSTMT(err_,MPI_ERR_ARG,;,"**errhandlernull");	\

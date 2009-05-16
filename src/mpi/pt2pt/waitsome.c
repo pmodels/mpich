@@ -121,7 +121,8 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
 
 	    for (i = 0; i < incount; i++)
 	    {
-		MPIR_ERRTEST_REQUEST_OR_NULL(array_of_requests[i], mpi_errno);
+		MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(array_of_requests[i], 
+						  i, mpi_errno);
 	    }
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
