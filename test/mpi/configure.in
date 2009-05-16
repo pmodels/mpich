@@ -147,9 +147,6 @@ AC_SUBST(errordir)
 # Only run the threads tests if multiple is specified
 if test "$enable_threads" = "multiple" -o "$enable_threads" = "runtime" ; then
     threadsdir="threads"
-    # Check for needed threads headers and needed and optional routines
-    AC_CHECK_HEADERS(pthread.h)
-    AC_CHECK_FUNCS(pthread_create pthread_yield pthread_barrier_init pthread_barrier_wait)
 fi
 
 PAC_LOAD_BASE_CACHE
@@ -366,6 +363,13 @@ PAC_C_RESTRICT
 
 # General headers
 AC_CHECK_HEADERS(unistd.h stdarg.h string.h stdlib.h memory.h)
+
+# Headers needed for threads tests
+if test "$threadsdir" = "threads" ; then
+    # Check for needed threads headers and needed and optional routines
+    AC_CHECK_HEADERS(pthread.h)
+    AC_CHECK_FUNCS(pthread_create pthread_yield pthread_barrier_init pthread_barrier_wait)
+fi
 
 
 # Define functionality that we support
