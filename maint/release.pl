@@ -50,7 +50,7 @@ sub run_cmd
     my $cmd = shift;
 
     # FIXME: Allow for verbose output
-    system("$cmd 2>&1 >> $root/$logfile");
+    system("$cmd >> $root/$logfile 2>&1");
     if ($?) {
         die "unable to execute ($cmd), \$?=$?.  Stopped";
     }
