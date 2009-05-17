@@ -190,6 +190,7 @@ AC_SUBST(CC_SHL)
 AC_SUBST(C_LINK_SHL)
 AC_SUBST(ENABLE_SHLIB)
 AC_SUBST(master_top_srcdir)
+AC_SUBST(master_top_builddir)
 dnl
 dnl Dependency handling
 AC_SUBST(MAKE_DEPEND_C)

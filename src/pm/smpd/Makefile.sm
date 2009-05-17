@@ -1,4 +1,4 @@
-EXTRA_DIRS = ${master_top_srcdir}/src/pm/smpd/sock ${master_top_srcdir}/src/util/mem
+EXTRA_DIRS = ../../util/mem ./sock
 SUBDIRS = sock .
 lib${MPILIBNAME}_a_SOURCES = smpd_hash.c smpd_authenticate.c smpd_printf.c \
  smpd_read_write.c smpd_user_data.c smpd_connect.c smpd_get_opt.c \
@@ -9,7 +9,7 @@ win_sources = smpd_job.c smpd_mapdrive.c smpd_register.c smpd_ad.cpp
 #mpiexec_SOURCES = mpiexec.c mp_parse_command_line.c
 #smpd_SOURCES = smpd.c smpd_cmd_args.c smpd_watchprocs.c
 
-INCLUDES = -I${master_top_srcdir}/src/include -I${master_top_srcdir}/src/pmi/smpd -I${master_top_srcdir}/src/pm/smpd/sock/include -I${master_top_srcdir}/src/pm/smpd/sock/@smpd_sock_name@
+INCLUDES = -I${master_top_srcdir}/src/include -I${master_top_srcdir}/src/pmi/smpd -I${master_top_srcdir}/src/pm/smpd/sock/include -I${master_top_srcdir}/src/pm/smpd/sock/@smpd_sock_name@ -I${top_builddir}/src/include -I${top_builddir}/src/pm/smpd -I${top_builddir}/src/pm/smpd/sock/@smpd_sock_name@ 
 
 #mpiexec_LDADD = -L../../../lib -L${master_top_srcdir}/lib -lmpich
 #mpiexec_DEPADD = ../../../lib/lib${MPILIBNAME}.a
