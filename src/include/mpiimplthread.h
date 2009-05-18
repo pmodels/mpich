@@ -87,7 +87,9 @@ typedef struct MPICH_ThreadInfo_t {
     MPID_Thread_mutex_t global_mutex;
 # endif
 
+#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)    
     MPID_Thread_mutex_t memalloc_mutex; /* for MPIU_{Malloc,Free,Calloc} */
+#endif
 } MPICH_ThreadInfo_t;
 extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
 
