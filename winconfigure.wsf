@@ -2051,6 +2051,12 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "_UINT64_T"
 					' Needed only for SOLARIS machines
 					fout.WriteLine("/* #undef _UINT64_T */")
+				Case "POINTERINT_t"
+					If b64 Then
+						fout.WriteLine("#define POINTERINT_t __int64")
+					Else
+						fout.WriteLine("#define POINTERINT_t __int32")
+					End If
 				Case "MPIR_Pint"
 					If b64 Then
 						fout.WriteLine("#define MPIR_Pint __int64")
