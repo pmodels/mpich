@@ -8,8 +8,6 @@
 #include "rmki.h"
 #include "rmk_dummy.h"
 
-struct HYD_RMKI_fns HYD_RMKI_fns;
-
 HYD_Status HYD_RMKI_dummy_init(void)
 {
     HYD_Status status = HYD_SUCCESS;

@@ -8,11 +8,10 @@
 #include "bsci.h"
 #include "bscu.h"
 
-struct HYD_BSCI_fns HYD_BSCI_fns;
-
+struct HYD_BSCI_fns HYD_BSCI_fns = { 0 };
 char *HYD_BSCI_comp_array[] = { @hydra_bss_name_array@ };
 HYD_Status(*HYD_BSCI_comp_init[])(void) = { @hydra_bss_init_array@ };
-struct HYD_BSCI_info HYD_BSCI_info;
+struct HYD_BSCI_info HYD_BSCI_info = { 0 };
 
 HYD_Status HYD_BSCI_init(char *bootstrap, char *bootstrap_exec, int enablex, int debug)
 {
@@ -20,11 +19,6 @@ HYD_Status HYD_BSCI_init(char *bootstrap, char *bootstrap_exec, int enablex, int
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    HYD_BSCI_fns.launch_procs = NULL;
-    HYD_BSCI_fns.get_usize = NULL;
-    HYD_BSCI_fns.wait_for_completion = NULL;
-    HYD_BSCI_fns.finalize = NULL;
 
     for (i = 0; HYD_BSCI_comp_array[i]; i++) {
         if (!strcmp(bootstrap, HYD_BSCI_comp_array[i])) {

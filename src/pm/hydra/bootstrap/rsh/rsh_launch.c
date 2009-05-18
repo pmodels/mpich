@@ -9,8 +9,6 @@
 #include "bscu.h"
 #include "rsh.h"
 
-struct HYD_BSCI_info HYD_BSCI_info;
-
 /*
  * HYD_BSCD_rsh_launch_procs: For each process, we create an
  * executable which reads like "rsh exec args" and the list of

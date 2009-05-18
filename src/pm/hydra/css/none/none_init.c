@@ -8,8 +8,6 @@
 #include "cssi.h"
 #include "none.h"
 
-struct HYD_CSSI_fns HYD_CSSI_fns;
-
 HYD_Status HYD_CSSI_none_init(void)
 {
     HYD_Status status = HYD_SUCCESS;

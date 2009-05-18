@@ -64,6 +64,6 @@ struct HYD_Handle_ {
 
 typedef struct HYD_Handle_ HYD_Handle;
 
-extern HYD_Handle handle;
+extern HYD_Handle HYD_handle;
 
 #endif /* HYDRA_H_INCLUDED */

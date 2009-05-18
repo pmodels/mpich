@@ -99,14 +99,6 @@ int main(int argc, char **argv)
     status = HYD_PMCD_pmi_proxy_get_params(argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
-    /* FIXME: We do not use the bootstrap server right now, as the
-     * current implementation of the bootstrap launch directly reads
-     * the executable information from the HYD_Handle structure. Since
-     * we are a different process, we don't share this
-     * structure. Without the bootstrap server, we can only launch
-     * local processes. That is, we can only have a single-level
-     * hierarchy of proxies. */
-
     /* Process launching only happens in the runtime case over here */
     if (HYD_PMCD_pmi_proxy_params.proxy.launch_mode == HYD_LAUNCH_RUNTIME) {
         HYD_PMCD_pmi_proxy_params.upstream.out = 1;

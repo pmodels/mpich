@@ -8,93 +8,91 @@
 #include "hydra_utils.h"
 #include "uiu.h"
 
-HYD_Handle handle;
-
 void HYD_UIU_init_params(void)
 {
-    handle.base_path = NULL;
-    handle.proxy_port = -1;
-    handle.launch_mode = HYD_LAUNCH_UNSET;
+    HYD_handle.base_path = NULL;
+    HYD_handle.proxy_port = -1;
+    HYD_handle.launch_mode = HYD_LAUNCH_UNSET;
 
-    handle.bootstrap = NULL;
-    handle.css = NULL;
-    handle.rmk = NULL;
-    handle.binding = HYD_BIND_UNSET;
-    handle.user_bind_map = NULL;
+    HYD_handle.bootstrap = NULL;
+    HYD_handle.css = NULL;
+    HYD_handle.rmk = NULL;
+    HYD_handle.binding = HYD_BIND_UNSET;
+    HYD_handle.user_bind_map = NULL;
 
-    handle.debug = -1;
-    handle.print_rank_map = 0;
-    handle.print_all_exitcodes = 0;
-    handle.enablex = -1;
-    handle.pm_env = -1;
-    handle.wdir = NULL;
-    handle.host_file = NULL;
+    HYD_handle.debug = -1;
+    HYD_handle.print_rank_map = 0;
+    HYD_handle.print_all_exitcodes = 0;
+    HYD_handle.enablex = -1;
+    HYD_handle.pm_env = -1;
+    HYD_handle.wdir = NULL;
+    HYD_handle.host_file = NULL;
 
-    handle.ranks_per_proc = -1;
-    handle.bootstrap_exec = NULL;
+    HYD_handle.ranks_per_proc = -1;
+    HYD_handle.bootstrap_exec = NULL;
 
-    handle.global_env = NULL;
-    handle.system_env = NULL;
-    handle.user_env = NULL;
-    handle.prop = HYD_ENV_PROP_UNSET;
-    handle.prop_env = NULL;
+    HYD_handle.global_env = NULL;
+    HYD_handle.system_env = NULL;
+    HYD_handle.user_env = NULL;
+    HYD_handle.prop = HYD_ENV_PROP_UNSET;
+    HYD_handle.prop_env = NULL;
 
-    handle.stdin_cb = NULL;
-    handle.stdout_cb = NULL;
-    handle.stderr_cb = NULL;
+    HYD_handle.stdin_cb = NULL;
+    HYD_handle.stdout_cb = NULL;
+    HYD_handle.stderr_cb = NULL;
 
     /* FIXME: Should the timers be initialized? */
 
-    handle.global_core_count = 0;
-    handle.exec_info_list = NULL;
-    handle.partition_list = NULL;
+    HYD_handle.global_core_count = 0;
+    HYD_handle.exec_info_list = NULL;
+    HYD_handle.partition_list = NULL;
 
-    handle.func_depth = 0;
-    handle.stdin_buf_offset = 0;
-    handle.stdin_buf_count = 0;
+    HYD_handle.func_depth = 0;
+    HYD_handle.stdin_buf_offset = 0;
+    HYD_handle.stdin_buf_count = 0;
 }
 
 
 void HYD_UIU_free_params(void)
 {
-    if (handle.base_path)
-        HYDU_FREE(handle.base_path);
+    if (HYD_handle.base_path)
+        HYDU_FREE(HYD_handle.base_path);
 
-    if (handle.bootstrap)
-        HYDU_FREE(handle.bootstrap);
+    if (HYD_handle.bootstrap)
+        HYDU_FREE(HYD_handle.bootstrap);
 
-    if (handle.css)
-        HYDU_FREE(handle.css);
+    if (HYD_handle.css)
+        HYDU_FREE(HYD_handle.css);
 
-    if (handle.rmk)
-        HYDU_FREE(handle.rmk);
+    if (HYD_handle.rmk)
+        HYDU_FREE(HYD_handle.rmk);
 
-    if (handle.wdir)
-        HYDU_FREE(handle.wdir);
+    if (HYD_handle.wdir)
+        HYDU_FREE(HYD_handle.wdir);
 
-    if (handle.host_file)
-        HYDU_FREE(handle.host_file);
+    if (HYD_handle.host_file)
+        HYDU_FREE(HYD_handle.host_file);
 
-    if (handle.bootstrap_exec)
-        HYDU_FREE(handle.bootstrap_exec);
+    if (HYD_handle.bootstrap_exec)
+        HYDU_FREE(HYD_handle.bootstrap_exec);
 
-    if (handle.global_env)
-        HYDU_env_free_list(handle.global_env);
+    if (HYD_handle.global_env)
+        HYDU_env_free_list(HYD_handle.global_env);
 
-    if (handle.system_env)
-        HYDU_env_free_list(handle.system_env);
+    if (HYD_handle.system_env)
+        HYDU_env_free_list(HYD_handle.system_env);
 
-    if (handle.user_env)
-        HYDU_env_free_list(handle.user_env);
+    if (HYD_handle.user_env)
+        HYDU_env_free_list(HYD_handle.user_env);
 
-    if (handle.prop_env)
-        HYDU_env_free_list(handle.prop_env);
+    if (HYD_handle.prop_env)
+        HYDU_env_free_list(HYD_handle.prop_env);
 
-    if (handle.exec_info_list)
-        HYDU_free_exec_info_list(handle.exec_info_list);
+    if (HYD_handle.exec_info_list)
+        HYDU_free_exec_info_list(HYD_handle.exec_info_list);
 
-    if (handle.partition_list)
-        HYDU_free_partition_list(handle.partition_list);
+    if (HYD_handle.partition_list)
+        HYDU_free_partition_list(HYD_handle.partition_list);
 
     /* Re-initialize everything to default values */
     HYD_UIU_init_params();
@@ -109,39 +107,39 @@ HYD_Status HYD_UIU_create_env_list(void)
 
     HYDU_FUNC_ENTER();
 
-    if (handle.prop == HYD_ENV_PROP_ALL) {
-        handle.prop_env = HYDU_env_list_dup(handle.global_env);
-        for (env = handle.user_env; env; env = env->next) {
-            status = HYDU_append_env_to_list(*env, &handle.prop_env);
+    if (HYD_handle.prop == HYD_ENV_PROP_ALL) {
+        HYD_handle.prop_env = HYDU_env_list_dup(HYD_handle.global_env);
+        for (env = HYD_handle.user_env; env; env = env->next) {
+            status = HYDU_append_env_to_list(*env, &HYD_handle.prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
     }
-    else if (handle.prop == HYD_ENV_PROP_NONE) {
-        for (env = handle.user_env; env; env = env->next) {
-            status = HYDU_append_env_to_list(*env, &handle.prop_env);
+    else if (HYD_handle.prop == HYD_ENV_PROP_NONE) {
+        for (env = HYD_handle.user_env; env; env = env->next) {
+            status = HYDU_append_env_to_list(*env, &HYD_handle.prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
     }
-    else if (handle.prop == HYD_ENV_PROP_LIST) {
-        for (env = handle.user_env; env; env = env->next) {
-            run = HYDU_env_lookup(*env, handle.global_env);
+    else if (HYD_handle.prop == HYD_ENV_PROP_LIST) {
+        for (env = HYD_handle.user_env; env; env = env->next) {
+            run = HYDU_env_lookup(*env, HYD_handle.global_env);
             if (run) {
-                status = HYDU_append_env_to_list(*run, &handle.prop_env);
+                status = HYDU_append_env_to_list(*run, &HYD_handle.prop_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
     }
-    else if (handle.prop == HYD_ENV_PROP_UNSET) {
-        for (env = handle.user_env; env; env = env->next) {
-            status = HYDU_append_env_to_list(*env, &handle.prop_env);
+    else if (HYD_handle.prop == HYD_ENV_PROP_UNSET) {
+        for (env = HYD_handle.user_env; env; env = env->next) {
+            status = HYDU_append_env_to_list(*env, &HYD_handle.prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
     }
 
-    exec_info = handle.exec_info_list;
+    exec_info = HYD_handle.exec_info_list;
     while (exec_info) {
         if (exec_info->prop == HYD_ENV_PROP_ALL) {
-            exec_info->prop_env = HYDU_env_list_dup(handle.global_env);
+            exec_info->prop_env = HYDU_env_list_dup(HYD_handle.global_env);
             for (env = exec_info->user_env; env; env = env->next) {
                 status = HYDU_append_env_to_list(*env, &exec_info->prop_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
@@ -155,7 +153,7 @@ HYD_Status HYD_UIU_create_env_list(void)
         }
         else if (exec_info->prop == HYD_ENV_PROP_LIST) {
             for (env = exec_info->user_env; env; env = env->next) {
-                run = HYDU_env_lookup(*env, handle.global_env);
+                run = HYDU_env_lookup(*env, HYD_handle.global_env);
                 if (run) {
                     status = HYDU_append_env_to_list(*run, &exec_info->prop_env);
                     HYDU_ERR_POP(status, "unable to add env to list\n");
@@ -187,12 +185,12 @@ HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **info)
 
     HYDU_FUNC_ENTER();
 
-    if (handle.exec_info_list == NULL) {
-        status = HYDU_alloc_exec_info(&handle.exec_info_list);
+    if (HYD_handle.exec_info_list == NULL) {
+        status = HYDU_alloc_exec_info(&HYD_handle.exec_info_list);
         HYDU_ERR_POP(status, "unable to allocate exec_info\n");
     }
 
-    exec_info = handle.exec_info_list;
+    exec_info = HYD_handle.exec_info_list;
     while (exec_info->next)
         exec_info = exec_info->next;
 
@@ -217,14 +215,14 @@ HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
 
     HYDU_FUNC_ENTER();
 
-    for (partition = handle.partition_list; partition; partition = partition->next)
-        handle.global_core_count += partition->partition_core_count;
+    for (partition = HYD_handle.partition_list; partition; partition = partition->next)
+        HYD_handle.global_core_count += partition->partition_core_count;
 
-    for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
+    for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
         /* The run_count tells us how many processes the partitions
          * before us can host */
         run_count = 0;
-        for (partition = handle.partition_list; partition; partition = partition->next) {
+        for (partition = HYD_handle.partition_list; partition; partition = partition->next) {
             if (run_count >= exec_info->exec_proc_count)
                 break;
 
@@ -239,9 +237,9 @@ HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
                 partition->exec_list->exec[i] = NULL;
 
                 partition->exec_list->proc_count =
-                    ((exec_info->exec_proc_count / handle.global_core_count) *
+                    ((exec_info->exec_proc_count / HYD_handle.global_core_count) *
                      partition->partition_core_count);
-                rem = (exec_info->exec_proc_count % handle.global_core_count);
+                rem = (exec_info->exec_proc_count % HYD_handle.global_core_count);
                 if (rem > run_count + partition->partition_core_count)
                     rem = run_count + partition->partition_core_count;
                 partition->exec_list->proc_count += (rem > run_count) ? (rem - run_count) : 0;
@@ -262,9 +260,9 @@ HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
                 exec->exec[i] = NULL;
 
                 exec->proc_count =
-                    ((exec_info->exec_proc_count / handle.global_core_count) *
+                    ((exec_info->exec_proc_count / HYD_handle.global_core_count) *
                      partition->partition_core_count);
-                rem = (exec_info->exec_proc_count % handle.global_core_count);
+                rem = (exec_info->exec_proc_count % HYD_handle.global_core_count);
                 if (rem > run_count + partition->partition_core_count)
                     rem = run_count + partition->partition_core_count;
                 exec->proc_count += (rem > run_count) ? (rem - run_count) : 0;
@@ -303,33 +301,33 @@ void HYD_UIU_print_params(void)
     HYDU_Dump("\n");
     HYDU_Dump("mpiexec options:\n");
     HYDU_Dump("----------------\n");
-    HYDU_Dump("  Base path: %s\n", handle.base_path);
-    HYDU_Dump("  Proxy port: %d\n", handle.proxy_port);
-    HYDU_Dump("  Bootstrap server: %s\n", handle.bootstrap);
-    HYDU_Dump("  Debug level: %d\n", handle.debug);
-    HYDU_Dump("  Enable X: %d\n", handle.enablex);
-    HYDU_Dump("  Working dir: %s\n", handle.wdir);
-    HYDU_Dump("  Host file: %s\n", handle.host_file);
+    HYDU_Dump("  Base path: %s\n", HYD_handle.base_path);
+    HYDU_Dump("  Proxy port: %d\n", HYD_handle.proxy_port);
+    HYDU_Dump("  Bootstrap server: %s\n", HYD_handle.bootstrap);
+    HYDU_Dump("  Debug level: %d\n", HYD_handle.debug);
+    HYDU_Dump("  Enable X: %d\n", HYD_handle.enablex);
+    HYDU_Dump("  Working dir: %s\n", HYD_handle.wdir);
+    HYDU_Dump("  Host file: %s\n", HYD_handle.host_file);
 
     HYDU_Dump("\n");
     HYDU_Dump("  Global environment:\n");
     HYDU_Dump("  -------------------\n");
-    for (env = handle.global_env; env; env = env->next)
+    for (env = HYD_handle.global_env; env; env = env->next)
         HYDU_Dump("    %s=%s\n", env->env_name, env->env_value);
 
-    if (handle.system_env) {
+    if (HYD_handle.system_env) {
         HYDU_Dump("\n");
         HYDU_Dump("  Hydra internal environment:\n");
         HYDU_Dump("  ---------------------------\n");
-        for (env = handle.system_env; env; env = env->next)
+        for (env = HYD_handle.system_env; env; env = env->next)
             HYDU_Dump("    %s=%s\n", env->env_name, env->env_value);
     }
 
-    if (handle.user_env) {
+    if (HYD_handle.user_env) {
         HYDU_Dump("\n");
         HYDU_Dump("  User set environment:\n");
         HYDU_Dump("  ---------------------\n");
-        for (env = handle.user_env; env; env = env->next)
+        for (env = HYD_handle.user_env; env; env = env->next)
             HYDU_Dump("    %s=%s\n", env->env_name, env->env_value);
     }
 
@@ -338,7 +336,7 @@ void HYD_UIU_print_params(void)
     HYDU_Dump("    Executable information:\n");
     HYDU_Dump("    **********************\n");
     i = 1;
-    for (exec_info = handle.exec_info_list; exec_info; exec_info = exec_info->next) {
+    for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
         HYDU_Dump("      Executable ID: %2d\n", i++);
         HYDU_Dump("      -----------------\n");
         HYDU_Dump("        Process count: %d\n", exec_info->exec_proc_count);
@@ -358,7 +356,7 @@ void HYD_UIU_print_params(void)
     HYDU_Dump("    Partition information:\n");
     HYDU_Dump("    *********************\n");
     i = 1;
-    for (partition = handle.partition_list; partition; partition = partition->next) {
+    for (partition = HYD_handle.partition_list; partition; partition = partition->next) {
         HYDU_Dump("      Partition ID: %2d\n", i++);
         HYDU_Dump("      -----------------\n");
         HYDU_Dump("        Partition name: %s\n", partition->base->name);

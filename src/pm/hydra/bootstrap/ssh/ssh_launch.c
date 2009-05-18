@@ -9,8 +9,6 @@
 #include "bscu.h"
 #include "ssh.h"
 
-struct HYD_BSCI_info HYD_BSCI_info;
-
 /*
  * HYD_BSCD_ssh_launch_procs: For each process, we create an
  * executable which reads like "ssh exec args" and the list of

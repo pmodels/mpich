@@ -8,8 +8,6 @@
 #include "bsci.h"
 #include "ssh.h"
 
-struct HYD_BSCI_fns HYD_BSCI_fns;
-
 HYD_Status HYD_BSCI_ssh_init(void)
 {
     HYD_Status status = HYD_SUCCESS;

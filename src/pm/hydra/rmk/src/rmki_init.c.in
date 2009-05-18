@@ -9,7 +9,8 @@
 #include "rmku.h"
 #include "bsci.h"
 
-struct HYD_RMKI_fns HYD_RMKI_fns;
+/* initialize to avoid common symbols */
+struct HYD_RMKI_fns HYD_RMKI_fns = { 0 };
 
 char *HYD_RMKI_comp_array[] = { @hydra_rmk_name_array@ };
 HYD_Status(*HYD_RMKI_comp_init[])(void) = { @hydra_rmk_init_array@ };
@@ -38,8 +39,8 @@ HYD_Status HYD_RMKI_init(char *rmk)
     if (HYD_RMKI_fns.query_node_list == NULL)
         HYD_RMKI_fns.query_node_list = HYD_RMKU_query_node_list;
 
-    status = HYD_BSCI_init(handle.bootstrap, handle.bootstrap_exec, handle.enablex,
-                           handle.debug);
+    status = HYD_BSCI_init(HYD_handle.bootstrap, HYD_handle.bootstrap_exec, HYD_handle.enablex,
+                           HYD_handle.debug);
     HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
 
   fn_exit:

@@ -12,7 +12,7 @@
 #include "uiu.h"
 #include "demux.h"
 
-extern HYD_Handle handle;
+HYD_Handle HYD_handle = { 0 };
 
 static void usage(void)
 {
@@ -113,28 +113,28 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    status = HYD_RMKI_init(handle.rmk);
+    status = HYD_RMKI_init(HYD_handle.rmk);
     HYDU_ERR_POP(status, "unable to initialize RMK\n");
 
-    if (handle.host_file == NULL) {
+    if (HYD_handle.host_file == NULL) {
         /* User did not provide any host file. Query the RMK. We pass
          * a zero node count, so the RMK will give us all the nodes it
          * already has and won't try to allocate any more. */
-        status = HYD_RMKI_query_node_list(0, &handle.partition_list);
+        status = HYD_RMKI_query_node_list(0, &HYD_handle.partition_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
         /* We don't have an allocation capability yet, but when we do,
          * we should try it here. */
 
-        if (handle.partition_list == NULL) {
+        if (HYD_handle.partition_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
-            handle.host_file = HYDU_strdup("HYDRA_USE_LOCALHOST");
+            HYD_handle.host_file = HYDU_strdup("HYDRA_USE_LOCALHOST");
         }
     }
 
-    if (handle.host_file) {
+    if (HYD_handle.host_file) {
         /* Use the user specified host file */
-        status = HYDU_create_node_list_from_file(handle.host_file, &handle.partition_list);
+        status = HYDU_create_node_list_from_file(HYD_handle.host_file, &HYD_handle.partition_list);
         HYDU_ERR_POP(status, "unable to create host list\n");
     }
 
@@ -145,34 +145,34 @@ int main(int argc, char **argv)
     status = HYD_UIU_merge_exec_info_to_partition();
     HYDU_ERR_POP(status, "unable to merge exec info\n");
 
-    if (handle.debug)
+    if (HYD_handle.debug)
         HYD_UIU_print_params();
 
     /* Figure out what the active partitions are: in RUNTIME and
      * PERSISTENT modes, only partitions which have an executable are
      * active. In BOOT, BOOT_FOREGROUND and SHUTDOWN modes, all
      * partitions are active. */
-    if (handle.launch_mode == HYD_LAUNCH_RUNTIME ||
-        handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
-        for (partition = handle.partition_list; partition && partition->exec_list;
+    if (HYD_handle.launch_mode == HYD_LAUNCH_RUNTIME ||
+        HYD_handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
+        for (partition = HYD_handle.partition_list; partition && partition->exec_list;
              partition = partition->next)
             partition->base->active = 1;
     }
     else {
-        for (partition = handle.partition_list; partition; partition = partition->next)
+        for (partition = HYD_handle.partition_list; partition; partition = partition->next)
             partition->base->active = 1;
     }
 
-    HYDU_time_set(&handle.start, NULL); /* NULL implies right now */
+    HYDU_time_set(&HYD_handle.start, NULL); /* NULL implies right now */
     if (getenv("MPIEXEC_TIMEOUT"))
         timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
     else
         timeout = -1;   /* Set a negative timeout */
-    HYDU_time_set(&handle.timeout, &timeout);
-    HYDU_Debug(handle.debug, "Timeout set to %d (-1 means infinite)\n", timeout);
+    HYDU_time_set(&HYD_handle.timeout, &timeout);
+    HYDU_Debug(HYD_handle.debug, "Timeout set to %d (-1 means infinite)\n", timeout);
 
-    if (handle.print_rank_map) {
-        FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    if (HYD_handle.print_rank_map) {
+        FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
             HYDU_Dump("[%s] ", partition->base->name);
 
             process_id = 0;
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
                     HYDU_Dump("%d", HYDU_local_to_global_id(process_id++,
                                                             partition->partition_core_count,
                                                             partition->segment_list,
-                                                            handle.global_core_count));
+                                                            HYD_handle.global_core_count));
                     if (i < exec->proc_count - 1)
                         HYDU_Dump(",");
                 }
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
      * instead of assuming this. For example, it is possible to have a
      * PM implementation that launches separate "new" proxies on a
      * different port and kills the original proxies using them. */
-    if (handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
+    if (HYD_handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
         /* Call finalize functions for lower layers to cleanup their resources */
         status = HYD_PMCI_finalize();
         HYDU_ERR_POP(status, "process manager error on finalize\n");
@@ -219,10 +219,10 @@ int main(int argc, char **argv)
     status = HYDU_sock_set_nonblock(0);
     HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
-    handle.stdin_buf_count = 0;
-    handle.stdin_buf_offset = 0;
+    HYD_handle.stdin_buf_count = 0;
+    HYD_handle.stdin_buf_offset = 0;
 
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
         if (partition->base->out != -1) {
             status = HYD_DMX_register_fd(1, &partition->base->out, HYD_STDOUT, NULL,
                                          HYD_UII_mpx_stdout_cb);
@@ -247,18 +247,18 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "process manager error waiting for completion\n");
 
     /* Check for the exit status for all the processes */
-    if (handle.print_all_exitcodes)
+    if (HYD_handle.print_all_exitcodes)
         HYDU_Dump("Exit codes: ");
     exit_status = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
         proc_count = 0;
         for (exec = partition->exec_list; exec; exec = exec->next)
             proc_count += exec->proc_count;
         for (i = 0; i < proc_count; i++) {
-            if (handle.print_all_exitcodes) {
+            if (HYD_handle.print_all_exitcodes) {
                 HYDU_Dump("[%d]", HYDU_local_to_global_id(i, partition->partition_core_count,
                                                           partition->segment_list,
-                                                          handle.global_core_count));
+                                                          HYD_handle.global_core_count));
                 HYDU_Dump("%d", WEXITSTATUS(partition->exit_status[i]));
                 if (i < proc_count - 1)
                     HYDU_Dump(",");
@@ -266,7 +266,7 @@ int main(int argc, char **argv)
             exit_status |= partition->exit_status[i];
         }
     }
-    if (handle.print_all_exitcodes)
+    if (HYD_handle.print_all_exitcodes)
         HYDU_Dump("\n");
 
     /* Call finalize functions for lower layers to cleanup their resources */

@@ -7,8 +7,6 @@
 #include "hydra_utils.h"
 #include "cssi.h"
 
-struct HYD_CSSI_fns HYD_CSSI_fns;
-
 HYD_Status HYD_CSSI_finalize(void)
 {
     HYD_Status status = HYD_SUCCESS;

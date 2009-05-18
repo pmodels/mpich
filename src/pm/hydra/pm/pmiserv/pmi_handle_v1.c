@@ -11,9 +11,6 @@
 #include "pmi_handle.h"
 #include "pmi_handle_v1.h"
 
-HYD_Handle handle;
-HYD_PMCD_pmi_pg_t *pg_list;
-
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
 static struct HYD_PMCD_pmi_handle_fns pmi_v1_handle_fns_foo[] = {
     {"initack", HYD_PMCD_pmi_handle_v1_initack},
@@ -46,7 +43,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=initack\ncmd=set size=");
-    tmp[i++] = HYDU_int_to_str(pg_list->num_procs);
+    tmp[i++] = HYDU_int_to_str(HYD_pg_list->num_procs);
     tmp[i++] = HYDU_strdup("\ncmd=set rank=");
 
     status = HYD_PMCD_pmi_id_to_rank(id, &rank);
@@ -54,7 +51,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
     tmp[i++] = HYDU_int_to_str(rank);
 
     tmp[i++] = HYDU_strdup("\ncmd=set debug=");
-    tmp[i++] = HYDU_int_to_str(handle.debug);
+    tmp[i++] = HYDU_int_to_str(HYD_handle.debug);
     tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
@@ -69,7 +66,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
 
     HYDU_FREE(cmd);
 
-    run = pg_list;
+    run = HYD_pg_list;
     while (run->next)
         run = run->next;
 

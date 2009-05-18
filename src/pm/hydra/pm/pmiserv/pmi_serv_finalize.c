@@ -20,7 +20,7 @@ HYD_Status HYD_PMCI_finalize(void)
     status = HYD_PMCD_pmi_finalize();
     HYDU_ERR_POP(status, "unable to finalize process manager utils\n");
 
-    if (handle.launch_mode == HYD_LAUNCH_RUNTIME) {
+    if (HYD_handle.launch_mode == HYD_LAUNCH_RUNTIME) {
         status = HYD_BSCI_finalize();
         HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
     }

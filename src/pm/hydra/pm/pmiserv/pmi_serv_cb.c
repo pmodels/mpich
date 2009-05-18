@@ -14,9 +14,6 @@
 #include "demux.h"
 #include "pmi_serv.h"
 
-HYD_Handle handle;
-struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle;
-
 HYD_Status HYD_PMCD_pmi_connect_cb(int fd, HYD_Event_t events, void *userp)
 {
     int accept_fd;
@@ -226,7 +223,7 @@ HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void
     HYDU_ERR_POP(status, "sock read returned error\n");
 
     /* Find the partition */
-    FORALL_PARTITIONS(partition, handle.partition_list) {
+    FORALL_PARTITIONS(partition, HYD_handle.partition_list) {
         if (partition->base->partition_id == partition_id)
             break;
     }
@@ -299,7 +296,7 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
     /* FIXME: Instead of doing this from this process itself, fork a
      * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
         cmd = KILL_JOB;
         status = HYDU_sock_trywrite(partition->control_fd, &cmd,
                                     sizeof(enum HYD_PMCD_pmi_proxy_cmds));

@@ -9,8 +9,6 @@
 #include "mpiexec.h"
 #include "demux.h"
 
-extern HYD_Handle handle;
-
 static HYD_Status close_fd(int fd)
 {
     struct HYD_Partition *partition;
@@ -23,8 +21,8 @@ static HYD_Status close_fd(int fd)
     HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
     close(fd);
 
-    /* Find the FD in the handle and remove it. */
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    /* Find the FD in the HYD_handle and remove it. */
+    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
         if (partition->base->out == fd) {
             partition->base->out = -1;
             goto fn_exit;
@@ -106,8 +104,8 @@ HYD_Status HYD_UII_mpx_stdin_cb(int fd, HYD_Event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_stdin_cb(fd, events, 0, handle.stdin_tmp_buf,
-                                &handle.stdin_buf_count, &handle.stdin_buf_offset, &closed);
+    status = HYDU_sock_stdin_cb(fd, events, 0, HYD_handle.stdin_tmp_buf,
+                                &HYD_handle.stdin_buf_count, &HYD_handle.stdin_buf_offset, &closed);
     HYDU_ERR_POP(status, "stdin callback error\n");
 
     if (closed) {

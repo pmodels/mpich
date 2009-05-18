@@ -83,7 +83,7 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
 HYD_Status HYD_PMCD_pmi_init(void);
 HYD_Status HYD_PMCD_pmi_finalize(void);
 
-extern HYD_PMCD_pmi_pg_t *pg_list;
+extern HYD_PMCD_pmi_pg_t *HYD_pg_list;
 
 struct HYD_PMCD_pmi_handle_fns {
     char *cmd;

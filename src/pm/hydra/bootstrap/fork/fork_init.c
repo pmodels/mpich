@@ -8,8 +8,6 @@
 #include "bsci.h"
 #include "fork.h"
 
-struct HYD_BSCI_fns HYD_BSCI_fns;
-
 HYD_Status HYD_BSCI_fork_init(void)
 {
     HYD_Status status = HYD_SUCCESS;

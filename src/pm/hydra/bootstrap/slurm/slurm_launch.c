@@ -9,8 +9,6 @@
 #include "bscu.h"
 #include "slurm.h"
 
-struct HYD_BSCI_info HYD_BSCI_info;
-
 HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_str,
                                        struct HYD_Partition *partition_list)
 {

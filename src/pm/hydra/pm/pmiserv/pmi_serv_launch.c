@@ -12,7 +12,6 @@
 #include "demux.h"
 #include "pmi_serv.h"
 
-HYD_Handle handle;
 static char *pmi_port_str = NULL;
 static char *proxy_port_str = NULL;
 
@@ -53,7 +52,7 @@ static void *launch_helper(void *args)
      *    work.
      */
 
-    status = HYDU_sock_connect(partition->base->name, handle.proxy_port,
+    status = HYDU_sock_connect(partition->base->name, HYD_handle.proxy_port,
                                &partition->control_fd);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
@@ -61,7 +60,7 @@ static void *launch_helper(void *args)
     HYDU_ERR_POP(status, "error sending executable info\n");
 
     /* Create an stdout socket */
-    status = HYDU_sock_connect(partition->base->name, handle.proxy_port,
+    status = HYDU_sock_connect(partition->base->name, HYD_handle.proxy_port,
                                &partition->base->out);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
@@ -70,7 +69,7 @@ static void *launch_helper(void *args)
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* Create an stderr socket */
-    status = HYDU_sock_connect(partition->base->name, handle.proxy_port,
+    status = HYDU_sock_connect(partition->base->name, HYD_handle.proxy_port,
                                &partition->base->err);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
@@ -80,7 +79,7 @@ static void *launch_helper(void *args)
 
     /* If rank 0 is here, create an stdin socket */
     if (partition->base->partition_id == 0) {
-        status = HYDU_sock_connect(partition->base->name, handle.proxy_port,
+        status = HYDU_sock_connect(partition->base->name, HYD_handle.proxy_port,
                                    &partition->base->in);
         HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
@@ -153,10 +152,10 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode, char **proxy_args)
         mode != HYD_LAUNCH_BOOT_FOREGROUND)
         goto fn_exit;
 
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
         arg = 0;
         i = 0;
-        path_str[i++] = HYDU_strdup(handle.base_path);
+        path_str[i++] = HYDU_strdup(HYD_handle.base_path);
         path_str[i++] = HYDU_strdup("pmi_proxy");
         path_str[i] = NULL;
         status = HYDU_str_alloc_and_join(path_str, &proxy_args[arg++]);
@@ -170,22 +169,22 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode, char **proxy_args)
         if (mode == HYD_LAUNCH_RUNTIME)
             proxy_args[arg++] = HYDU_strdup(proxy_port_str);
         else
-            proxy_args[arg++] = HYDU_int_to_str(handle.proxy_port);
+            proxy_args[arg++] = HYDU_int_to_str(HYD_handle.proxy_port);
 
-        if (handle.debug)
+        if (HYD_handle.debug)
             proxy_args[arg++] = HYDU_strdup("--debug");
 
-        if (handle.enablex != -1) {
+        if (HYD_handle.enablex != -1) {
             proxy_args[arg++] = HYDU_strdup("--enable-x");
-            proxy_args[arg++] = HYDU_int_to_str(handle.enablex);
+            proxy_args[arg++] = HYDU_int_to_str(HYD_handle.enablex);
         }
 
         proxy_args[arg++] = HYDU_strdup("--bootstrap");
-        proxy_args[arg++] = HYDU_strdup(handle.bootstrap);
+        proxy_args[arg++] = HYDU_strdup(HYD_handle.bootstrap);
 
-        if (handle.bootstrap_exec) {
+        if (HYD_handle.bootstrap_exec) {
             proxy_args[arg++] = HYDU_strdup("--bootstrap-exec");
-            proxy_args[arg++] = HYDU_strdup(handle.bootstrap_exec);
+            proxy_args[arg++] = HYDU_strdup(HYD_handle.bootstrap_exec);
         }
 
         proxy_args[arg++] = NULL;
@@ -209,24 +208,24 @@ static HYD_Status fill_in_exec_args(void)
 
     /* Create the arguments list for each proxy */
     process_id = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
         arg = 0;
         partition->base->exec_args[arg++] = HYDU_strdup("--global-core-count");
-        partition->base->exec_args[arg++] = HYDU_int_to_str(handle.global_core_count);
+        partition->base->exec_args[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
 
         partition->base->exec_args[arg++] = HYDU_strdup("--wdir");
-        partition->base->exec_args[arg++] = HYDU_strdup(handle.wdir);
+        partition->base->exec_args[arg++] = HYDU_strdup(HYD_handle.wdir);
 
         partition->base->exec_args[arg++] = HYDU_strdup("--pmi-port-str");
-        if (handle.pm_env)
+        if (HYD_handle.pm_env)
             partition->base->exec_args[arg++] = HYDU_strdup(pmi_port_str);
         else
             partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
         partition->base->exec_args[arg++] = HYDU_strdup("--binding");
-        partition->base->exec_args[arg++] = HYDU_int_to_str(handle.binding);
-        if (handle.user_bind_map)
-            partition->base->exec_args[arg++] = HYDU_strdup(handle.user_bind_map);
+        partition->base->exec_args[arg++] = HYDU_int_to_str(HYD_handle.binding);
+        if (HYD_handle.user_bind_map)
+            partition->base->exec_args[arg++] = HYDU_strdup(HYD_handle.user_bind_map);
         else if (partition->user_bind_map)
             partition->base->exec_args[arg++] = HYDU_strdup(partition->user_bind_map);
         else
@@ -235,12 +234,12 @@ static HYD_Status fill_in_exec_args(void)
         /* Pass the global environment separately, instead of for each
          * executable, as an optimization */
         partition->base->exec_args[arg++] = HYDU_strdup("--global-env");
-        for (i = 0, env = handle.system_env; env; env = env->next, i++);
-        for (env = handle.prop_env; env; env = env->next, i++);
+        for (i = 0, env = HYD_handle.system_env; env; env = env->next, i++);
+        for (env = HYD_handle.prop_env; env; env = env->next, i++);
         partition->base->exec_args[arg++] = HYDU_int_to_str(i);
         partition->base->exec_args[arg++] = NULL;
-        HYDU_list_append_env_to_str(handle.system_env, partition->base->exec_args);
-        HYDU_list_append_env_to_str(handle.prop_env, partition->base->exec_args);
+        HYDU_list_append_env_to_str(HYD_handle.system_env, partition->base->exec_args);
+        HYDU_list_append_env_to_str(HYD_handle.prop_env, partition->base->exec_args);
 
         /* Pass the segment information */
         for (segment = partition->segment_list; segment; segment = segment->next) {
@@ -297,37 +296,37 @@ HYD_Status HYD_PMCI_launch_procs(void)
     /* Initialize PMI */
     status = create_and_listen_portstr(HYD_PMCD_pmi_connect_cb, &pmi_port_str);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
-    HYDU_Debug(handle.debug, "Got a PMI port string of %s\n", pmi_port_str);
+    HYDU_Debug(HYD_handle.debug, "Got a PMI port string of %s\n", pmi_port_str);
 
     status = HYD_PMCD_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
-    if (handle.launch_mode == HYD_LAUNCH_RUNTIME) {
+    if (HYD_handle.launch_mode == HYD_LAUNCH_RUNTIME) {
         status = create_and_listen_portstr(HYD_PMCD_pmi_serv_control_connect_cb,
                                            &proxy_port_str);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
-        HYDU_Debug(handle.debug, "Got a proxy port string of %s\n", proxy_port_str);
+        HYDU_Debug(HYD_handle.debug, "Got a proxy port string of %s\n", proxy_port_str);
 
-        status = fill_in_proxy_args(handle.launch_mode, proxy_args);
+        status = fill_in_proxy_args(HYD_handle.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
         status = fill_in_exec_args();
         HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-        status = HYD_BSCI_launch_procs(proxy_args, "--partition-id", handle.partition_list);
+        status = HYD_BSCI_launch_procs(proxy_args, "--partition-id", HYD_handle.partition_list);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
-    else if (handle.launch_mode == HYD_LAUNCH_BOOT ||
-             handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) {
-        status = fill_in_proxy_args(handle.launch_mode, proxy_args);
+    else if (HYD_handle.launch_mode == HYD_LAUNCH_BOOT ||
+             HYD_handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) {
+        status = fill_in_proxy_args(HYD_handle.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-        status = HYD_BSCI_launch_procs(proxy_args, "--partition-id", handle.partition_list);
+        status = HYD_BSCI_launch_procs(proxy_args, "--partition-id", HYD_handle.partition_list);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
-    else if (handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
-        FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
-            status = HYDU_sock_connect(partition->base->name, handle.proxy_port, &fd);
+    else if (HYD_handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
+        FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
+            status = HYDU_sock_connect(partition->base->name, HYD_handle.proxy_port, &fd);
             if (status != HYD_SUCCESS) {
                 /* Don't abort. Try to shutdown as many proxies as possible */
                 HYDU_Error_printf("Unable to connect to proxy at %s\n", partition->base->name);
@@ -341,12 +340,12 @@ HYD_Status HYD_PMCI_launch_procs(void)
             close(fd);
         }
     }
-    else if (handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
+    else if (HYD_handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
         status = fill_in_exec_args();
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
         len = 0;
-        FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list)
+        FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list)
             len++;
 
         HYDU_CALLOC(thread_context, struct HYD_Thread_context *, len,
@@ -356,13 +355,13 @@ HYD_Status HYD_PMCI_launch_procs(void)
                                 "Unable to allocate memory for thread context\n");
 
         id = 0;
-        FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
             HYDU_create_thread(launch_helper, (void *) partition, &thread_context[id]);
             id++;
         }
 
         id = 0;
-        FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+        FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
             HYDU_join_thread(thread_context[id]);
 
             status = HYD_DMX_register_fd(1, &partition->control_fd, HYD_STDOUT, partition,
@@ -397,31 +396,31 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
 
     HYDU_FUNC_ENTER();
 
-    if ((handle.launch_mode == HYD_LAUNCH_BOOT) || (handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
+    if ((HYD_handle.launch_mode == HYD_LAUNCH_BOOT) || (HYD_handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
         status = HYD_SUCCESS;
     }
     else {
         while (1) {
             /* Wait for some event to occur */
-            status = HYD_DMX_wait_for_event(HYDU_time_left(handle.start, handle.timeout));
+            status = HYD_DMX_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
             HYDU_ERR_POP(status, "error waiting for event\n");
 
             /* If the timeout expired, raise a SIGINT and kill all the
              * processes */
-            if (HYDU_time_left(handle.start, handle.timeout) == 0)
+            if (HYDU_time_left(HYD_handle.start, HYD_handle.timeout) == 0)
                 raise(SIGINT);
 
             /* Check to see if there's any open read socket left; if
              * there are, we will just wait for more events. */
             sockets_open = 0;
-            FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+            FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
                 if (partition->base->out != -1 || partition->base->err != -1) {
                     sockets_open++;
                     break;
                 }
             }
 
-            if (sockets_open && HYDU_time_left(handle.start, handle.timeout))
+            if (sockets_open && HYDU_time_left(HYD_handle.start, HYD_handle.timeout))
                 continue;
 
             break;
@@ -430,7 +429,7 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
         do {
             /* Check if the exit status has already arrived */
             all_procs_exited = 1;
-            FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+            FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
                 if (partition->exit_status == NULL) {
                     all_procs_exited = 0;
                     break;
@@ -441,7 +440,7 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
                 break;
 
             /* If not, wait for some event to occur */
-            status = HYD_DMX_wait_for_event(HYDU_time_left(handle.start, handle.timeout));
+            status = HYD_DMX_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
             HYDU_ERR_POP(status, "error waiting for event\n");
         } while (1);
     }

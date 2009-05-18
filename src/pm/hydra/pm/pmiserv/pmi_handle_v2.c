@@ -11,9 +11,6 @@
 #include "pmi_handle.h"
 #include "pmi_handle_v2.h"
 
-HYD_Handle handle;
-HYD_PMCD_pmi_pg_t *pg_list;
-
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
 static struct HYD_PMCD_pmi_handle_fns pmi_v2_handle_fns_foo[] = {
     {"fullinit", HYD_PMCD_pmi_handle_v2_fullinit},
@@ -239,7 +236,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_fullinit(int fd, char *args[])
     tmp[i++] = HYDU_int_to_str(rank);
 
     tmp[i++] = HYDU_strdup(";size=");
-    tmp[i++] = HYDU_int_to_str(pg_list->num_procs);
+    tmp[i++] = HYDU_int_to_str(HYD_pg_list->num_procs);
     tmp[i++] = HYDU_strdup(";appnum=0;debugged=FALSE;pmiverbose=0;rc=0;");
     tmp[i++] = NULL;
 
@@ -254,7 +251,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_fullinit(int fd, char *args[])
 
     HYDU_FREE(cmd);
 
-    run = pg_list;
+    run = HYD_pg_list;
     while (run->next)
         run = run->next;
 

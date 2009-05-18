@@ -10,9 +10,6 @@
 #include "pmi_handle_v1.h"
 #include "pmi_handle_v2.h"
 
-struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v1;
-struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v2;
-
 HYD_Status HYD_PMCD_pmi_handle_init(int fd, char *args[])
 {
     int pmi_version, pmi_subversion;

@@ -8,8 +8,6 @@
 #include "bsci.h"
 #include "bscu.h"
 
-struct HYD_BSCI_fns HYD_BSCI_fns;
-
 HYD_Status HYD_BSCI_finalize(void)
 {
     HYD_Status status = HYD_SUCCESS;

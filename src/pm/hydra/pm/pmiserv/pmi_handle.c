@@ -9,11 +9,8 @@
 #include "pmi_handle_v1.h"
 #include "pmi_handle_v2.h"
 
-HYD_Handle handle;
-HYD_PMCD_pmi_pg_t *pg_list = NULL;
-
-struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v1;
-struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_v2;
+HYD_PMCD_pmi_pg_t *HYD_pg_list = NULL;
+struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle = { 0 };
 
 struct segment {
     int start_pid;
@@ -208,13 +205,13 @@ HYD_Status HYD_PMCD_pmi_id_to_rank(int id, int *rank)
 
     HYDU_FUNC_ENTER();
 
-    if (handle.ranks_per_proc == -1) {
+    if (HYD_handle.ranks_per_proc == -1) {
         /* If multiple procs per rank is not defined, use ID as the rank */
         *rank = id;
     }
     else {
-        *rank = (id * handle.ranks_per_proc) + pg_list->conn_procs[id];
-        pg_list->conn_procs[id]++;
+        *rank = (id * HYD_handle.ranks_per_proc) + HYD_pg_list->conn_procs[id];
+        HYD_pg_list->conn_procs[id]++;
     }
 
     HYDU_FUNC_EXIT();
@@ -239,7 +236,7 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
 
     seglist_head = NULL;
     node_id = -1;
-    FORALL_PARTITIONS(partition, handle.partition_list) {
+    FORALL_PARTITIONS(partition, HYD_handle.partition_list) {
         node_id++;
         for (segment = partition->segment_list; segment; segment = segment->next) {
             HYDU_MALLOC(seg, struct segment *, sizeof(struct segment), status);
@@ -373,10 +370,10 @@ static struct HYD_PMCD_pmi_node *find_node(HYD_PMCD_pmi_pg_t * pg, int rank)
     struct HYD_PMCD_pmi_node *node, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
-    srank = rank % handle.global_core_count;
+    srank = rank % HYD_handle.global_core_count;
 
     node_id = 0;
-    FORALL_PARTITIONS(partition, handle.partition_list) {
+    FORALL_PARTITIONS(partition, HYD_handle.partition_list) {
         for (segment = partition->segment_list; segment; segment = segment->next) {
             if ((srank >= segment->start_pid) &&
                 (srank < (segment->start_pid + segment->proc_count))) {
@@ -460,7 +457,7 @@ HYD_PMCD_pmi_process_t *HYD_PMCD_pmi_find_process(int fd)
     HYD_PMCD_pmi_node_t *node;
     HYD_PMCD_pmi_process_t *process = NULL;
 
-    for (pg = pg_list; pg; pg = pg->next) {
+    for (pg = HYD_pg_list; pg; pg = pg->next) {
         for (node = pg->node_list; node; node = node->next) {
             for (process = node->process_list; process; process = process->next) {
                 if (process->fd == fd)
@@ -482,25 +479,25 @@ HYD_Status HYD_PMCD_pmi_init(void)
 
     HYDU_FUNC_ENTER();
 
-    status = create_pg(&pg_list, 0);
+    status = create_pg(&HYD_pg_list, 0);
     HYDU_ERR_POP(status, "unable to create pg\n");
 
     /* Find the number of processes in the PG */
-    pg_list->num_subgroups = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, handle.partition_list) {
+    HYD_pg_list->num_subgroups = 0;
+    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
         for (exec = partition->exec_list; exec; exec = exec->next)
-            pg_list->num_subgroups += exec->proc_count;
+            HYD_pg_list->num_subgroups += exec->proc_count;
     }
 
-    if (handle.ranks_per_proc != -1)
-        pg_list->num_procs = pg_list->num_subgroups * handle.ranks_per_proc;
+    if (HYD_handle.ranks_per_proc != -1)
+        HYD_pg_list->num_procs = HYD_pg_list->num_subgroups * HYD_handle.ranks_per_proc;
     else
-        pg_list->num_procs = pg_list->num_subgroups;
+        HYD_pg_list->num_procs = HYD_pg_list->num_subgroups;
 
     /* Allocate and initialize the connected ranks */
-    HYDU_MALLOC(pg_list->conn_procs, int *, pg_list->num_subgroups * sizeof(int), status);
-    for (i = 0; i < pg_list->num_subgroups; i++)
-        pg_list->conn_procs[i] = 0;
+    HYDU_MALLOC(HYD_pg_list->conn_procs, int *, HYD_pg_list->num_subgroups * sizeof(int), status);
+    for (i = 0; i < HYD_pg_list->num_subgroups; i++)
+        HYD_pg_list->conn_procs[i] = 0;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -518,7 +515,7 @@ HYD_Status HYD_PMCD_pmi_finalize(void)
 
     HYDU_FUNC_ENTER();
 
-    pg = pg_list;
+    pg = HYD_pg_list;
     while (pg) {
         tmp = pg->next;
 
