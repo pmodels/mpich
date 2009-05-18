@@ -1542,7 +1542,7 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MPICH2 64-bit"
-        "ProductCode" = "8:{81373F7F-E58B-4677-B534-09047DA7123B}"
+        "ProductCode" = "8:{EA349AD6-E964-44DB-908B-67796F0E9E7D}"
         "PackageCode" = "8:{7EC045F0-2834-4E22-A49C-DBC9CB31CE93}"
         "UpgradeCode" = "8:{6DAF2FEB-EFB3-4F95-8118-36EA8C9FEF20}"
         "RestartWWWService" = "11:FALSE"
