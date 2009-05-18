@@ -1289,6 +1289,8 @@ int smpd_state_reading_stdouterr(smpd_context_t *context, SMPDU_Sock_event_t *ev
 	num_read = 0;
 	smpd_dbg_printf("SMPDU_Sock_read(%d) failed (%s), assuming %s is closed.\n",
 	    SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result), smpd_get_context_str(context));
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
     }
     /* Use num_read instead of num_read-1 because one byte was already read before increasing the buffer length by one */
     if (context->read_cmd.cmd[num_read] == '\n')
@@ -7151,7 +7153,7 @@ int smpd_enter_at_state(SMPDU_Sock_set_t set, smpd_state_t state)
 	switch (event.op_type)
 	{
 	case SMPDU_SOCK_OP_READ:
-	    smpd_dbg_printf("SOCK_OP_READ\n");
+	    smpd_dbg_printf("SOCK_OP_READ event.error = %d, result = %d, context->type=%d\n", event.error, result, context->type);
 	    if (event.error != SMPD_SUCCESS)
         {
 		    /* don't print EOF errors because they usually aren't errors */

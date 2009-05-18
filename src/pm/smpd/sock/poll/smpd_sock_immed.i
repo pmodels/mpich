@@ -294,6 +294,7 @@ int SMPDU_Sock_read(SMPDU_Sock_t sock, void * buf, SMPDU_Sock_size_t len,
 	    pollinfo->sock_set->id, pollinfo->sock_id);
         */
         smpd_err_printf("Trying to read from a closed socket, errno = %d (%s)\n", errno, strerror(errno));
+        result = SMPD_FAIL;
 	
 	if (SMPDU_SOCKI_POLLFD_OP_ISSET(pollfd, pollinfo, POLLOUT))
 	{ 
