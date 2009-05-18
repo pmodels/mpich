@@ -20,12 +20,14 @@
 - OVERALL: Support for BlueGene/P through the DCMF library (thanks to
   IBM for the patch).
 
+- OVERALL: Experimental support for fine-grained multithreading
+
 - OVERALL: Added dynamic processes support for Nemesis.
 
 - OVERALL: Added automatic as well as statically runtime configurable
   receive timeout variation for MPD (thanks to OSU for the patch).
 
-- OVERALL: Improved performance for MPI_Allgatherv and MPI_Gatherv.
+- OVERALL: Improved performance for MPI_Allgatherv, MPI_Gatherv, and MPI_Alltoall.
 
 - PM/PMI: Initial support for the new Hydra process management
   framework (current support is for ssh, rsh, fork and a preliminary
