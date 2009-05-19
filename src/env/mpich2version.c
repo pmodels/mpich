@@ -9,6 +9,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* FIXME: We really should consider internationalizing the output from this
+   program */
+/* style: allow:fprintf:1 sig:0 */
+/* style: allow:printf:8 sig:0 */
+
 /*
  * This program reports on properties of the MPICH library, such as the
  * version, device, and what patches have been applied.  This is available
