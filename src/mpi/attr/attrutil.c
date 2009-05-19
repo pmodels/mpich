@@ -183,7 +183,8 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
 
         if(!flag)
             continue;
-        /* If flag was returned as true, then insert this attribute into the new list (new_attr) */
+        /* If flag was returned as true, then insert this attribute into the 
+	   new list (new_attr) */
 
         /* duplicate the attribute by creating new storage, copying the
         attribute value, and invoking the copy function */
