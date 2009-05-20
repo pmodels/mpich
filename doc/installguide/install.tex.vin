@@ -220,7 +220,9 @@ Build MPICH2:
     make |& tee make.log
 \end{verbatim}
 This step should succeed if there were no problems with the preceding
-step.  Check \texttt{make.log}.  If there were problems, send
+step.  Check \texttt{make.log}.  If there were problems, run make
+again with \texttt{VERBOSE=1} (\texttt{make 
+VERBOSE=1 |\& tee make.log}) and then send
 \texttt{configure.log} and \texttt{make.log} to
 \texttt{mpich2-maint@mcs.anl.gov}.
 
