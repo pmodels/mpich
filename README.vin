@@ -112,8 +112,12 @@ later, in the section "Alternative configurations".
       make 2>&1 | tee m.txt
 
     This step should succeed if there were no problems with the
-    preceding step.  Check file m.txt.  If there were problems, send
-    m.txt to mpich2-maint@mcs.anl.gov.
+    preceding step.  Check file m.txt. If there were problems, run
+    make again with VERBOSE=1 
+      make VERBOSE=1 |& tee m.txt       (for csh and tcsh)
+      OR
+      make VERBOSE=1 2>&1 | tee m.txt   (for bash and sh)
+    and than send m.txt and c.txt to mpich2-maint@mcs.anl.gov.
 
 6.  Install the MPICH2 commands:
 
