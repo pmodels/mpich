@@ -202,14 +202,14 @@ the \texttt{configure} script in the source directory:
 \begin{verbatim}
     cd  /tmp/you/mpich2-%VERSION%
     /home/you/libraries/mpich2-%VERSION%/configure \
-            -prefix=/home/you/mpich2-install |& tee configure.log
+            -prefix=/home/you/mpich2-install |& tee c.txt
 \end{verbatim}
 where the \texttt{$\backslash$} means that this is really one line.  (On
-\texttt{sh} and its derivatives, use \verb+2>&1 | tee configure.log+
-instead of \verb+|& tee configure.log+).  Other configure options are
-described below.  Check the \texttt{configure.log} file to make sure
+\texttt{sh} and its derivatives, use \verb+2>&1 | tee c.txt+
+instead of \verb+|& tee c.txt+).  Other configure options are
+described below.  Check the \texttt{c.txt} file to make sure
 everything went well.  Problems should be self-explanatory, but if not,
-send \texttt{configure.log} to \texttt{mpich2-maint@mcs.anl.gov}.
+send \texttt{c.txt} to \texttt{mpich2-maint@mcs.anl.gov}.
 The file \texttt{config.log} is created by \texttt{configure} and
 contains a record of the tests that \texttt{configure} performed.  It
 is normal for some tests recorded in \texttt{config.log} to fail.  
@@ -217,19 +217,25 @@ is normal for some tests recorded in \texttt{config.log} to fail.
 \item
 Build MPICH2:
 \begin{verbatim}
-    make |& tee make.log
+    make |& tee m.txt                 (for csh and tcsh)
+      OR
+    make 2>&1 | tee m.txt   (for bash and sh)
 \end{verbatim}
 This step should succeed if there were no problems with the preceding
-step.  Check \texttt{make.log}.  If there were problems, run make
-again with \texttt{VERBOSE=1} (\texttt{make 
-VERBOSE=1 |\& tee make.log}) and then send
-\texttt{configure.log} and \texttt{make.log} to
+step.  Check file \texttt{m.txt}. If there were problems,
+do a \texttt{make clean} and then run make again with \texttt{VERBOSE=1}
+\begin{verbatim}
+    make VERBOSE=1 |& tee m.txt       (for csh and tcsh)
+      OR
+    make VERBOSE=1 2>&1 | tee m.txt   (for bash and sh)
+\end{verbatim}
+and then send \texttt{m.txt} and \texttt{c.txt} to 
 \texttt{mpich2-maint@mcs.anl.gov}.
 
 \item
 Install the MPICH2 commands:
 \begin{verbatim}
-    make install |& tee install.log
+    make install |& tee mi.txt
 \end{verbatim}
 This step collects all required executables and scripts in the \texttt{bin}
 subdirectory of the directory specified by the prefix argument to
