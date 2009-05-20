@@ -55,6 +55,7 @@ cleanlibs:
 	rm -f lib/lib${PMPILIBNAME}.@SHLIB_EXT@*
 	rm -f lib/lib${MPICXXLIBNAME}.@SHLIB_EXT@* 
 	rm -f lib/libf${MPILIBNAME}.@SHLIB_EXT@* 
+	rm -f lib/lib${MPILIBNAME}f90.@SHLIB_EXT@* 
 	rm -f lib/lib${MPILIBNAME}.*.@SHLIB_EXT@* 
 	rm -f lib/lib${PMPILIBNAME}.*.@SHLIB_EXT@*
 	rm -f lib/lib${MPICXXLIBNAME}.*.@SHLIB_EXT@* 
@@ -162,6 +163,8 @@ optinstall_SHLIB = lib/lib${PMPILIBNAME}.@SHLIB_EXT@
 optinstall_INCLUDE = src/mpi/romio/include/mpiof.h src/mpi/romio/include/mpio.h
 optinstall_LIB = lib/libf${MPILIBNAME}.a
 optinstall_SHLIB = lib/libf${MPILIBNAME}.@SHLIB_EXT@
+optinstall_LIB = lib/lib${MPILIBNAME}f90.a
+optinstall_SHLIB = lib/lib${MPILIBNAME}f90.@SHLIB_EXT@
 optinstall_SHLIB = lib/lib${MPICXXLIBNAME}.@SHLIB_EXT@
 
 # Some of the subsidiary packages may need to be installed.  This target will

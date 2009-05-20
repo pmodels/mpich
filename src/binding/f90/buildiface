@@ -646,8 +646,8 @@ profilelib_\${MPILIBNAME} = p\${MPILIBNAME}\
 INCLUDES = -I../../include -I\${master_top_srcdir}/src/include\n";
 
 # Add the MPI module objects to the f90 library
+#lib\${MPILIBNAME}f90_a_NOSHARED
 print MAKEFD "\
-lib\${MPILIBNAME}f90_a_NOSHARED
 lib\${MPILIBNAME}f90_a_SOURCES = mpi.o mpi_constants.o mpi_sizeofs.o mpi_base.o\n";
 
 print MAKEFD "all-preamble: \$(MPIMOD).\$(MOD)\n";
@@ -707,12 +707,16 @@ mpifnoext.h: ../f77/mpif.h
 		-e '/DOUBLE PRECISION/d' \\
 		-e '/MPI_WTICK/d' ../f77/mpif.h > mpifnoext.h
 ";
+
+# We include a copy of the shared library sources if they exist
 print MAKEFD "
 # To ensure that f90 can be used before a make-install step, we copy
 # the library to the build directory (just like we do with the module files)
 all-postamble:
 	if [ -s lib\${MPILIBNAME}f90.a ] ; then \\
 	   cp -p lib\${MPILIBNAME}f90.a ../../../lib ; fi
+	if [ -s lib\${MPILIBNAME}f90.la ] ; then \\
+	   cp -p lib\${MPILIBNAME}f90.la ../../../lib ; fi
 ";
 
 print MAKEFD "clean-local:\n";

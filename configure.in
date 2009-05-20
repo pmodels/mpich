@@ -2293,51 +2293,64 @@ EOF
     rm -f conftest.txt
     # End of checking for F90 compiler vendor
 
-    case "$ENABLE_SHLIB" in
-    gcc)
-    if test "$pac_cv_f90_vendor" = gnu -o "$F90" = "g95" ; then
-        # If we have the GNU Fortran 95 compiler (untested)
-        F90_SHL="$F90 -shared -fpic"
-        F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
-    else
-        case "$pac_cv_f90_vendor" in 
-	    absoft)
-	    F90_SHL="$F90 -fpic"
-            F90_LINKPATH_SHL="-X -rpath -X "
-	    ;;
-
-	    intel)
-	    # Intel implements the GNU options
-	    F90_SHL="$F90 -shared -fpic"
+    if test "$ENABLE_SHLIB" != none ; then
+        AC_MSG_CHECKING([for how to build shared libraries for Fortran 90])
+        case "$ENABLE_SHLIB" in
+	 gcc-osx|osx-gcc)
+	 F90_SHL="$F90 -fPIC"
+	 F90_LINKPATH_SHL=""
+	 ;;
+         gcc)
+         if test "$pac_cv_f90_vendor" = gnu -o "$F90" = "g95" ; then
+            # If we have the GNU Fortran 95 compiler (untested)
+            F90_SHL="$F90 -shared -fpic"
             F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
-	    ;;
+         else
+            case "$pac_cv_f90_vendor" in 
+	        absoft)
+	        F90_SHL="$F90 -fpic"
+                F90_LINKPATH_SHL="-X -rpath -X "
+	        ;;
 
-	    pgi)
-	    # Portland Group implements the GNU options
-	    F90_SHL="$F90 -shared -fpic"
-            F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
-	    ;;
+	        intel)
+	        # Intel implements the GNU options
+	        F90_SHL="$F90 -shared -fpic"
+                F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
+	        ;;
 
-	    *)
-	    # Unknown, ignore
-	    AC_MSG_WARN([Unable to determine how to link Fortran 90 compiler with shared libraries])
-	    ;;
+	        pgi)
+	        # Portland Group implements the GNU options
+	        F90_SHL="$F90 -shared -fpic"
+                F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
+	        ;;
+
+	        *)
+	        # Unknown, ignore
+	        ;;
+            esac
+            fi
+            ;;
+         solaris|solaris-cc)
+            # Assume the Solaris F90 compiler, in 32-bit mode
+            F90_SHL="$F90 -xcode=pic32"
+            F90_LINKPATH_SHL=-R
+         ;;
+         *)
+           # Unknown, ignore
+         ;;
         esac
+	if test -n "$F90_SHL" ; then 
+	    AC_MSG_RESULT([Compile with $F90_SHL and link using path argument $F90_LINKPATH_SHL])
+        else
+            AC_MSG_WARN([Unable to determine how to link Fortran 90 compiler with shared libraries])
+	fi
     fi
-    ;;
-    solaris|solaris-cc)
-        # Assume the Solaris F90 compiler, in 32-bit mode
-        F90_SHL="$F90 -xcode=pic32"
-        F90_LINKPATH_SHL=-R
-    ;;
-    *)
-       # Unknown, ignore
-    ;;
-    esac
-    if test "$ENABLE_SHLIB" != "none" -a -z "$F90_LINKPATH_SHL" -a \
-        -n "$C_LINKPATH_SHL" ; then
-        AC_MSG_WARN([Unable to determine how to pass the shared-library link patth to the Fortran 90 compiler $F90.  Set the environment variable F90_LINKPATH_SHL and rerun configure (the corresponding value for the C compiler is $C_LINKPATH_SHL)])
-    fi
+
+dnl  Some systems don't require or accept linkpath arguments.
+dnl    if test "$ENABLE_SHLIB" != "none" -a -z "$F90_LINKPATH_SHL" -a \
+dnl        -n "$C_LINKPATH_SHL" ; then
+dnl        AC_MSG_WARN([Unable to determine how to pass the shared-library link patth to the Fortran 90 compiler $F90.  Set the environment variable F90_LINKPATH_SHL and rerun configure (the corresponding value for the C compiler is $C_LINKPATH_SHL)])
+dnl    fi
     # ------------------------------------------------
 fi
 
@@ -5970,7 +5983,9 @@ dnl updated values.  Here's an attempt at a fix
 	ac_sub_configure_args="$ac_sub_configure_args 'CPPFLAGS=$CPPFLAGS'"
         ;;
 
-        dnl FIXME isn't this a duplication of the *) case a few lines above? [goodell@]
+        dnl Isn't this a duplication of the *) case a few lines above? [goodell@]
+	dnl No, the case above is -*; this is for the case of environment 
+	dnl variable assignments on the configure line (such as CC=icc) [WDG]
     	*) 
 	    ac_sub_configure_args="$ac_sub_configure_args $ac_arg" ;;
 	    esac
@@ -6190,8 +6205,43 @@ if test "$enable_f77" = yes -a "$enable_f90" = yes ; then
     export F77
     export F90
     echo "Running Configure for F90 Type routines"
+    # Include any options passed to the top-level configure
+    ac_sub_configure_args=""
+    # Strip off the args that we need to update
+    for ac_arg in $ac_configure_args ; do
+	# Remove any quotes around the args (added by configure)
+	ac_narg=`expr x$ac_arg : 'x'"'"'\(.*\)'"'"`
+	if test -n "$ac_narg" ; then ac_arg=$ac_narg ; fi	    
+	case $ac_arg in 
+	    -cache-file=* | --cache-file=* | --cache-fil=* | --cache-fi=* \
+               | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* \
+               | --c=*) ;;
+               --config-cache | -C)
+	    ;;
+            -srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*) ;;
+	    -prefix=* | --prefix=* | --prefi=* | --pref=* | --pre=* | --pr=* | --p=*)
+    	    ;;
+	-*)
+        ac_sub_configure_args="$ac_sub_configure_args $ac_arg" 
+	;;
+
+dnl Here's the problem.  If the user sets a few of the special variables
+dnl such as CPPFLAGS, those original settings will override the
+dnl updated values.  Here's an attempt at a fix
+        CPPFLAGS=*)
+	ac_sub_configure_args="$ac_sub_configure_args 'CPPFLAGS=$CPPFLAGS'"
+        ;;
+
+    	*) 
+	    ac_sub_configure_args="$ac_sub_configure_args $ac_arg" ;;
+	    esac
+        done
+
+	# add in the correct prefix argument
+        ac_sub_configure_args="--prefix=$prefix $ac_sub_configure_args"
+    
     (cd src/binding/f90 && \
-    $master_top_srcdir/src/binding/f90/configure )
+    $master_top_srcdir/src/binding/f90/configure $ac_sub_configure_args )
     rc=$?
     if test $rc = 0 ; then
         AC_DEFINE(HAVE_F90_TYPE_ROUTINES,1,[Define if F90 type routines available])
