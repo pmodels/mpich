@@ -217,7 +217,7 @@ is normal for some tests recorded in \texttt{config.log} to fail.
 \item
 Build MPICH2:
 \begin{verbatim}
-    make |& tee m.txt                 (for csh and tcsh)
+    make |& tee m.txt       (for csh and tcsh)
       OR
     make 2>&1 | tee m.txt   (for bash and sh)
 \end{verbatim}
@@ -243,8 +243,8 @@ configure.
 
 (For users who want an install directory structure compliant to
 GNU coding standards (i.e., documentation files go to
-\$\{datarootdir\}/doc/\$\{PACKAGE\}, architecture independent
-read-only files go to \$\{datadir\}/\$\{PACKAGE\}), replace
+\texttt{\$\{datarootdir\}/doc/\$\{PACKAGE\}}, architecture independent
+read-only files go to \texttt{\$\{datadir\}/\$\{PACKAGE\}}), replace
 \texttt{make install} by
 
 \begin{verbatim}
