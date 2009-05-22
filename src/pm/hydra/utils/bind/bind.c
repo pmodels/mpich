@@ -6,6 +6,9 @@
 
 #include "hydra_utils.h"
 
+#include "plpa.h"
+#include "plpa_internal.h"
+
 static struct bind_info {
     int supported;
     int num_procs;
