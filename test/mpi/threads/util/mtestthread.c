@@ -60,7 +60,6 @@ int MTest_Join_threads( void ){
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE (*fn)(void *p),void *arg)
 {
     int err;
-    pthread_t thread;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
@@ -71,7 +70,13 @@ int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE (*fn)(void *p),void *arg)
 	return 1;
     }
     err = pthread_create(threads+nthreads, &attr, fn, arg);
-    if (!err) nthreads++;
+    if (!err) {
+        nthreads++;
+    }
+    else {
+        fprintf(stderr, "Failed to create thread calling func %p with arg %p\n", fn, arg);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
     pthread_attr_destroy(&attr);
     return err;
 }
