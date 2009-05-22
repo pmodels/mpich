@@ -1192,8 +1192,13 @@ int MPIDI_CH3I_Progress_finalize(void);
    counter through a pointer.  Others could use this to provide
    more complex operations */
 #ifndef MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT
-#define MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT \
-        MPIDI_CH3I_progress_completion_count++
+#define MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT                                \
+    do {                                                                         \
+        ++MPIDI_CH3I_progress_completion_count;                                  \
+        MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,                                     \
+                     "just incremented MPIDI_CH3I_progress_completion_count=%d", \
+                     MPIDI_CH3I_progress_completion_count);                      \
+    } while (0)
 #endif
 
 /* The following is part of an implementation of a control of a 

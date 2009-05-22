@@ -75,6 +75,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS);
+    MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,"before outer while loop, completions=%d",completions);
 
     do
     {
@@ -365,6 +366,8 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             mpi_errno = MPID_nem_local_lmt_progress();
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
+
+        MPIU_DBG_MSG_FMT(CH3_PROGRESS,VERBOSE,(MPIU_DBG_FDEST,"end of outer while loop, completions=%d MPIDI_CH3I_progress_completion_count=%d",completions,MPIDI_CH3I_progress_completion_count));
     }
     while (completions == MPIDI_CH3I_progress_completion_count && is_blocking);
 
@@ -663,6 +666,14 @@ int MPIDI_CH3I_Progress_init(void)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
+
+    MPIU_THREAD_CHECK_BEGIN
+#   if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
+    {
+	MPID_Thread_cond_create(&MPIDI_CH3I_progress_completion_cond, NULL);
+    }
+#   endif
+    MPIU_THREAD_CHECK_END
 
     for (i = 0; i < CH3_NUM_QUEUES; ++i)
     {
