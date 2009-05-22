@@ -114,6 +114,9 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
 	}
 	    
 	MPIDI_Request_set_msg_type(rreq, MPIDI_REQUEST_SELF_MSG);
+
+        /* kick the progress engine in case another thread that is performing a
+           blocking recv or probe is waiting in the progress engine */
 	MPIDI_CH3_Progress_signal_completion();
     }
 
