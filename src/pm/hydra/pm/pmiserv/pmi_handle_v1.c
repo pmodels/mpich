@@ -415,7 +415,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get_usize(int fd, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_BSCI_get_usize(&usize);
+    status = HYD_BSCI_query_usize(&usize);
     HYDU_ERR_POP(status, "unable to get bootstrap universe size\n");
 
     i = 0;

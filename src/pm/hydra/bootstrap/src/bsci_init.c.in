@@ -48,8 +48,8 @@ HYD_Status HYD_BSCI_init(char *bootstrap, char *bootstrap_exec, int enablex, int
         HYD_BSCI_fns.wait_for_completion = HYD_BSCU_wait_for_completion;
     if (HYD_BSCI_fns.query_node_list == NULL)
         HYD_BSCI_fns.query_node_list = HYD_BSCU_query_node_list;
-    if (HYD_BSCI_fns.get_usize == NULL)
-        HYD_BSCI_fns.get_usize = HYD_BSCU_get_usize;
+    if (HYD_BSCI_fns.query_usize == NULL)
+        HYD_BSCI_fns.query_usize = HYD_BSCU_query_usize;
     if (HYD_BSCI_fns.query_partition_id == NULL)
         HYD_BSCI_fns.query_partition_id = HYD_BSCU_query_partition_id;
 
