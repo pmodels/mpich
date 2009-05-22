@@ -57,41 +57,41 @@ static void usage(void)
 
     printf("\n");
     printf("  Bootstrap options:\n");
-    printf("    --bootstrap                      bootstrap server to use\n");
-    printf("    --bootstrap-exec                 executable to use to bootstrap processes\n");
-    printf("    --enable-x/--disable-x           enable or disable X forwarding\n");
+    printf("    -bootstrap                       bootstrap server to use\n");
+    printf("    -bootstrap-exec                  executable to use to bootstrap processes\n");
+    printf("    -enable-x/-disable-x             enable or disable X forwarding\n");
 
     printf("\n");
     printf("  Proxy options (only needed for persistent mode):\n");
-    printf("    --boot-proxies                   boot proxies to run in persistent mode\n");
-    printf("    --boot-foreground-proxies        boot foreground proxies (persistent mode)\n");
-    printf("    --shutdown-proxies               shutdown persistent mode proxies\n");
-    printf("    --proxy-port                     port for proxies to listen (boot proxies)\n");
-    printf("    --use-persistent                 use persistent mode proxies to launch\n");
+    printf("    -boot-proxies                    boot proxies to run in persistent mode\n");
+    printf("    -boot-foreground-proxies         boot foreground proxies (persistent mode)\n");
+    printf("    -shutdown-proxies                shutdown persistent mode proxies\n");
+    printf("    -proxy-port                      port for proxies to listen (boot proxies)\n");
+    printf("    -use-persistent                  use persistent mode proxies to launch\n");
 
     printf("\n");
     printf("  Communication sub-system options:\n");
-    printf("    --css                            communication sub-system to use\n");
+    printf("    -css                             communication sub-system to use\n");
 
     printf("\n");
     printf("  Resource management kernel options:\n");
-    printf("    --rmk                            resource management kernel to use\n");
+    printf("    -rmk                             resource management kernel to use\n");
 
     printf("\n");
     printf("  Hybrid programming options:\n");
-    printf("    --ranks-per-proc                 assign so many ranks to each process\n");
-    printf("    --enable/--disable-pm-env        process manager environment settings\n");
+    printf("    -ranks-per-proc                  assign so many ranks to each process\n");
+    printf("    -enable/-disable-pm-env          process manager environment settings\n");
 
     printf("\n");
     printf("  Process-core binding options:\n");
-    printf("    --binding                        process-to-core binding mode\n");
+    printf("    -binding                         process-to-core binding mode\n");
 
     printf("\n");
     printf("  Other Hydra options:\n");
-    printf("    --verbose                        verbose mode\n");
-    printf("    --version                        version information\n");
-    printf("    --print-rank-map                 print rank mapping\n");
-    printf("    --print-all-exitcodes            print exit codes of all processes\n");
+    printf("    -verbose                         verbose mode\n");
+    printf("    -version                         version information\n");
+    printf("    -print-rank-map                  print rank mapping\n");
+    printf("    -print-all-exitcodes             print exit codes of all processes\n");
 }
 
 

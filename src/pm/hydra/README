@@ -86,13 +86,13 @@ HYDRA_PROXY_PORT: The port to use for the proxies.
 Bootstrap servers
 -----------------
 Hydra supports SSH and FORK bootstrap servers to launch processes. You
-can pick these through the mpiexec option --bootstrap:
+can pick these through the mpiexec option -bootstrap:
 
- $ mpiexec --bootstrap ssh -f hosts -n 4 ./app
+ $ mpiexec -bootstrap ssh -f hosts -n 4 ./app
 
  (or)
 
- $ mpiexec --bootstrap fork -f hosts -n 4 ./app
+ $ mpiexec -bootstrap fork -f hosts -n 4 ./app
 
 This can also be controlled by using the HYDRA_BOOTSTRAP environment
 variable.
@@ -100,9 +100,9 @@ variable.
 The default bootstrap server is ssh.
 
 The executable to use as the bootstrap server can be specified using
-the option --bootstrap-exec:
+the option -bootstrap-exec:
 
- $ mpiexec --bootstrap ssh --bootstrap-exec /usr/bin/ssh -f hosts -n 4 ./app
+ $ mpiexec -bootstrap ssh -bootstrap-exec /usr/bin/ssh -f hosts -n 4 ./app
 
 This can also be specified using the HYDRA_BOOTSTRAP_EXEC environment
 variable. If the bootstrap executable is not specified, the default
@@ -112,7 +112,7 @@ path (specific to each bootstrap server) is chosen.
 Process-core binding
 --------------------
 To configure hydra with process-core binding support, use the
-configure option --enable-hydra-procbind.
+configure option -enable-hydra-procbind.
 
 We support three models of allocation strategies:
 
@@ -141,11 +141,11 @@ The modes of process-core binding are: round-robin ("rr"),
 buddy-allocation ("buddy"), closest packing ("pack") and user-defined
 ("user"). These can be selected as follows:
 
- $ mpiexec --binding rr -f hosts -n 8 ./app
+ $ mpiexec -binding rr -f hosts -n 8 ./app
 
  ... or ...
 
- $ mpiexec --binding pack -f hosts -n 8 ./app
+ $ mpiexec -binding pack -f hosts -n 8 ./app
 
 Consider the following layout of processing elements in the system
 (e.g., two nodes, each with two processors, and each processor with
@@ -175,7 +175,7 @@ Within the user-defined binding, two modes are supported: command-line
 and host-file based. The command-line based mode can be used as
 follows:
 
- $ mpiexec --binding user:0,3 -f hosts -n 4 ./app
+ $ mpiexec -binding user:0,3 -f hosts -n 4 ./app
 
 If a machine has 4 processing elements, and only two bindings are
 provided (as in the above example), the rest are padded with (-1),
@@ -208,9 +208,9 @@ X Forwarding
 ------------
 X-forwarding is specific to each bootstrap server. Some servers do it
 by default, while some don't. For ssh, this is disabled by default. To
-enable it, you should use the option --enable-x to mpiexec.
+enable it, you should use the option -enable-x to mpiexec.
 
- $ mpiexec --enable-x -f hosts -n 4 ./app
+ $ mpiexec -enable-x -f hosts -n 4 ./app
 
 
 Persistent-mode Proxies
@@ -219,30 +219,30 @@ Hydra also supports proxies to be launched in persistent mode on the
 system (e.g., by a system administrator). To launch in persistent
 mode, use:
 
- $ mpiexec --boot-proxies -f hosts
+ $ mpiexec -boot-proxies -f hosts
 
- $ mpiexec --use-persistent -f hosts -n 4 ./app1
+ $ mpiexec -use-persistent -f hosts -n 4 ./app1
 
- $ mpiexec --use-persistent -f hosts -n 4 ./app2
+ $ mpiexec -use-persistent -f hosts -n 4 ./app2
 
- $ mpiexec --use-persistent -f hosts -n 4 ./app3
+ $ mpiexec -use-persistent -f hosts -n 4 ./app3
 
- $ mpiexec --shutdown-proxies -f hosts
+ $ mpiexec -shutdown-proxies -f hosts
 
 Persistent mode can also be picked using the environment setting
 HYDRA_LAUNCH_MODE=persistent.
 
-The option "--boot-foreground-proxies" can be used to prevent
+The option "-boot-foreground-proxies" can be used to prevent
 persistent proxies from spawning a child process and exiting.
 This option is useful for debugging. This option can also be
 picked using the environment setting
 HYDRA_BOOT_FOREGROUND_PROXIES=1
 
- $ mpiexec --boot-foreground-proxies -f hosts
+ $ mpiexec -boot-foreground-proxies -f hosts
 
- $ mpiexec --use-persistent -f hosts -n 4 ./app1
+ $ mpiexec -use-persistent -f hosts -n 4 ./app1
 
- $ mpiexec --shutdown-proxies -f hosts
+ $ mpiexec -shutdown-proxies -f hosts
 
 
 Communication sub-systems
@@ -250,13 +250,13 @@ Communication sub-systems
 Hydra supports different communication sub-systems to connect proxies
 in the persistent mode. The default is "none", which means that the
 proxies are not connected. You can pick these through the mpiexec
-option --css:
+option -css:
 
- $ mpiexec --css ib -f hosts -n 4 ./app
+ $ mpiexec -css ib -f hosts -n 4 ./app
 
  (or)
 
- $ mpiexec --css mx -f hosts -n 4 ./app
+ $ mpiexec -css mx -f hosts -n 4 ./app
 
 This can also be controlled by using the HYDRA_CSS environment
 variable.
@@ -266,9 +266,9 @@ Resource Manager integration
 ----------------------------
 Hydra provides capability to integrate with different resource
 managers. The default is "dummy", which means no resource manager. You
-can pick these through the mpiexec option --rmk:
+can pick these through the mpiexec option -rmk:
 
- $ mpiexec --rmk lsf -f hosts -n 4 ./app
+ $ mpiexec -rmk lsf -f hosts -n 4 ./app
 
 This can also be controlled by using the HYDRA_RMK environment
 variable.
@@ -279,18 +279,18 @@ Hydra in hybrid environments
 Hydra can be used to launch other process managers as well, such as a
 UPC launcher, for example:
 
- $ mpiexec -n 2 --ranks-per-proc=4 upcrun -n 4 ./app
+ $ mpiexec -n 2 -ranks-per-proc=4 upcrun -n 4 ./app
 
 This launches two instances of upcrun, each of which is expected to
 launch 4 application processes (two subgroups of processes). Hydra
-needs the --ranks-per-proc argument to tell it how many MPI ranks it
+needs the -ranks-per-proc argument to tell it how many MPI ranks it
 needs to allocate to each group of processes.
 
 If the internal nested environment also needs to use Hydra as a
 launcher, but not as a process manager, this can be set using:
 
- $ mpiexec -n 2 --ranks-per-proc=4 mpiexec -n 4 --disable-pm-env ./app
+ $ mpiexec -n 2 -ranks-per-proc=4 mpiexec -n 4 -disable-pm-env ./app
 
  (or)
 
- $ mpiexec -n 2 --ranks-per-proc=4 HYDRA_PM_ENV=0 mpiexec -n 4 ./app
+ $ mpiexec -n 2 -ranks-per-proc=4 HYDRA_PM_ENV=0 mpiexec -n 4 ./app
