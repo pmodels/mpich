@@ -505,7 +505,7 @@ static int SMPDU_Socki_handle_read(struct pollfd * const pollfd, struct pollinfo
     {
 	int event_result;
 	
-        smpd_err_printf("Connection closed while trying to read on socket, sock_set->id = %d, sock_id = %d\n",
+        smpd_dbg_printf("Connection closed while trying to read on socket, sock_set->id = %d, sock_id = %d\n",
                             pollinfo->sock_set->id, pollinfo->sock_id);
 	if (SMPDU_SOCKI_POLLFD_OP_ISSET(pollfd, pollinfo, POLLOUT))
 	{ 
