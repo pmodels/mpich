@@ -3163,11 +3163,11 @@ sub TargetProfileLibraries {
 	    # so we explicitly list the source file
 	    print FD "$obj: $sourcefile$newline";
 	    # COMMAND PRINTING
-	    &PrintVerboseOptionCommand( "\$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj", "-", "  CC             \${srcdir}/$sourcefile" );
+	    &PrintVerboseOptionCommand( "\$(C_COMPILE) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj", "-", "  CC             -D<profiling> \${srcdir}/$sourcefile" );
 	    if ($do_sharedlibs) {
 		$obj =~ s/\.o/.lo/;
 	        print FD "$obj: $sourcefile$newline";
-	        print FD "\t\$(C_COMPILE_SHL) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj$newline";
+	        &PrintVerboseOptionCommand( "\$(C_COMPILE_SHL) -c \@PROFILE_DEF_MPI\@ \$(srcdir)/$sourcefile -o $obj", "-", " CC           -D<profiling> \$(srcdir)/$sourcefile" );
 	    }
         }
     } # foreach lib
