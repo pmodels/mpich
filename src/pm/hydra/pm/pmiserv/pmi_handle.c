@@ -332,8 +332,10 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
     }
     else if (type == HYD_PMCD_pmi_vector) {
         i = 0;
+        tmp[i++] = HYDU_strdup("(");
         tmp[i++] = HYDU_strdup("vector,");
         for (block = blocklist_head; block; block = block->next) {
+            tmp[i++] = HYDU_strdup("(");
             tmp[i++] = HYDU_int_to_str(block->start_node_id);
             tmp[i++] = HYDU_strdup(",");
             tmp[i++] = HYDU_int_to_str(block->num_blocks);
@@ -341,7 +343,9 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
             tmp[i++] = HYDU_int_to_str(block->block_size);
             if (block->next)
                 tmp[i++] = HYDU_strdup(",");
+            tmp[i++] = HYDU_strdup(")");
         }
+        tmp[i++] = HYDU_strdup(")");
         tmp[i++] = NULL;
 
         status = HYDU_str_alloc_and_join(tmp, process_mapping_str);
