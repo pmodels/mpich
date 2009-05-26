@@ -3966,10 +3966,28 @@ sub AddFwrapBuild {
 	$basename =~ s/\.c//;
 	# Some versions of make won't figure out the $< in this case,
 	# so we use the explicit version
+	# To conform to the newer format of output produced by simplemake,
+	# we output the same set of commands to shorten the output lines
+	# (it seems wierd to optimize make output which is too long to 
+        # watch manually anyway, but this seems to be the current expected
+        # practice). (Note that CC is the C++ compiler on some systems; 
+	# this use of CC is apparently supposed to be a shorthand for \$(CC), 
+	# which may not be correct either.
 	print MAKEFD "_w$basename.o: $name\n";
-	print MAKEFD "\t\$(C_COMPILE) -o _w$basename.o -c -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES \$(srcdir)/$basename.c\n";
+	print MAKEFD "	\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\
+	  echo \"  CC             -o _w$basename.o -c -D... \$(srcdir)/$basename.c\" ; \\
+	else \\
+	  echo \"\$(C_COMPILE) -o _w$basename.o -c -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES \$(srcdir)/$basename.c\" ; \\
+	fi\n";
+	print MAKEFD "\t\@\$(C_COMPILE) -o _w$basename.o -c -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES \$(srcdir)/$basename.c\n";
+
 	print MAKEFD "_w$basename.lo: $name\n";
-	print MAKEFD "\t\$(C_COMPILE_SHL) -o _sw$basename.o -c -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES \$(srcdir)/$basename.c\n";
+	print MAKEFD "	\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\
+	  echo \"  CC             -o _sw$basename.o -c -D... \$(srcdir)/$basename.c\" ; \\
+	else \\
+	  echo \"\$(C_COMPILE_SHL) -o _sw$basename.o -c -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES \$(srcdir)/$basename.c\" ; \\
+	fi\n";
+	print MAKEFD "\t\@\$(C_COMPILE_SHL) -o _sw$basename.o -c -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES \$(srcdir)/$basename.c\n";
 	print MAKEFD "\t\@mv -f _sw$basename.o _w$basename.lo\n";
     }
 }
