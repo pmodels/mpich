@@ -371,7 +371,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
     }
     while (completions == MPIDI_CH3I_progress_completion_count && is_blocking);
 
-#if MPICH_IS_THREADED
+#ifdef MPICH_IS_THREADED
     MPIU_THREAD_CHECK_BEGIN;
     {
         if (is_blocking)

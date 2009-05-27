@@ -367,7 +367,9 @@ static int setDBGClass( const char * );
 static int SetDBGLevel( const char *, const char *(names[]) );
 static int MPIU_DBG_Get_filename(char *filename, int len);
 
+#ifdef MPICH_IS_THREADED
 static MPID_Thread_tls_t dbg_tls_key;
+#endif
 
 static FILE *static_dbg_fp = 0;
 

@@ -34,7 +34,10 @@
    really work for us right now.  Also, because it has some inline assembly it's
    not really a fair comparison for studying the impact of atomic instructions.
    [goodell@ 2009-01-16] */
-#include "mpid_thread.h"
+
+#if !defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
+ #include "mpid_thread.h" 
+#endif
 
 #define MPID_NEM_OFFSETOF(struc, field) ((int)(&((struc *)0)->field))
 #define MPID_NEM_CACHE_LINE_LEN 64

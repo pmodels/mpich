@@ -185,7 +185,9 @@ void MPIDU_Process_lock_init( MPIDU_Process_lock_t *lock )
 {
     /* should be called by one process only */
     int err;
+#ifdef HAVE_PTHREAD_MUTEXATTR_INIT
     pthread_mutexattr_t attr;
+#endif
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_PROCESS_LOCK_INIT);
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_PROCESS_LOCK_INIT);
 #ifdef HAVE_PTHREAD_MUTEXATTR_INIT
