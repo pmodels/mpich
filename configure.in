@@ -737,7 +737,7 @@ case "$enable_error_messages" in
 esac
 AC_DEFINE_UNQUOTED(MPICH_ERROR_MSG_LEVEL,$error_message_kind,[define to enable error messages])
 
-# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 #
 # enable-timing and with-logging
 #
@@ -1598,7 +1598,7 @@ if test "$ENABLE_SHLIB" != "none" -o "$enable_debuginfo" != "no" ; then
    CREATESHLIB=`pwd`/src/util/createshlib
 fi
 AC_SUBST(CREATESHLIB)
-# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Basic properties of the C compiler; some are needed for the language 
 # bindings tests.
 # Set CFLAGS for enable strict if necessary.  Do this *first* because
@@ -1676,7 +1676,7 @@ AC_SUBST(NO_WEAK_SYM)
 AC_SUBST(NO_WEAK_SYM_TARGET)
 AC_SUBST(PROFILE_DEF_MPI)
 
-# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Support for the language bindings: Fortran 77, Fortran 90, and C++
 #
 # First, we handle the case of no explicit enable/disable option.  In that
@@ -2897,7 +2897,7 @@ if test -z "$PMPIFLIBNAME" ; then
     PMPIFLIBNAME=$PMPILIBNAME
 fi
 
-# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # 
 # Add the steps for debugger support
 BUILD_TVDLL=no
@@ -3139,7 +3139,7 @@ if test "$pac_cv_cc_has___func__" != "yes" ; then
 pac_cv_cc_has___FUNCTION__=no)])
 fi
 
-# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Attempt to support dependency handling
 # ----------------------------------------------------------------------------
 # Set a default for MAKE_DEPEND_C
@@ -3742,7 +3742,7 @@ if test -n "$MPIR_INTEGER16_CTYPE" ; then
    AC_DEFINE_UNQUOTED(MPIR_INTEGER16_CTYPE,$MPIR_INTEGER16_CTYPE,[C type to use for MPI_INTEGER16])
 fi
 
-# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # We can now create the Fortran versions of the datatype values, along with
 # some of the other datatype-dependent sizes
 
@@ -4798,61 +4798,12 @@ int main(int argc, char **argv )
     fi
 fi
 
-
-# ----------------------------------------------------------------------------
 # Get the size for the bsendoverhead
-rm -f conftestval
-# FIXME This should really use code from bsendutil.c.  Types
-# defined in the mpiimpl.h file or in mpi.h have been replaced here. 
-# The sizeof(void*)-1 allows us to force the first byte of the 
-# buffer to be aligned.
-#
-# In the cross compilation case, set CROSS_BSEND_OVERHEAD to the size of the
-# struct BsendData used by the internal bsend code.
-bsend_overheaddefault=128
-if test -n "$CROSS_BSEND_OVERHEAD" ; then
-    bsend_overheaddefault=$CROSS_BSEND_OVERHEAD
-fi
-AC_CACHE_CHECK([for size of MPI_BSEND_OVERHEAD],pac_cv_mpi_bsend_overhead,[
-AC_TRY_RUN([
-#include "confdefs.h"
-#include <stdio.h>
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-/* BsendData describes a bsend request */
-typedef struct BsendData {
-    int              size;             /* size that is available for data */
-    int              total_size;       /* total size of this segment */
-    struct BsendData *next, *prev;
-    int          kind;
-    void         *request;
-    struct {
-    void         *msgbuf;
-    int          count;
-    int          dtype;
-    int          tag;
-    void         *comm_ptr;
-    int          dest;
-    double       alignpad;
-    } msg;
-} BsendData_t;
-int main( int argc, char *argv[] ){
-  FILE *f=fopen("conftestval", "w");
-  if (!f) exit(1);
-  fprintf(f, "%d\n", sizeof(BsendData_t)+sizeof(void*)-1);
-  exit(0);
-}
-],pac_cv_mpi_bsend_overhead=`cat conftestval`,pac_cv_mpi_bsend_overhead=-1,pac_cv_mpi_bsend_overhead=-1)
-])
-if test "$pac_cv_mpi_bsend_overhead" -le 0 ; then
-    if test -n "$bsend_overheaddefault" ; then
-        pac_cv_mpi_bsend_overhead=$bsend_overheaddefault
-    else
-        AC_MSG_ERROR([Unable to determine the size of BSEND_OVERHEAD])
-    fi
-fi
-BSEND_OVERHEAD=$pac_cv_mpi_bsend_overhead
+AC_CHECK_SIZEOF(MPIR_Bsend_data_t,128,[
+#define MPI_Datatype int
+#include "${master_top_srcdir}/src/include/mpibsend.h"]
+)
+BSEND_OVERHEAD=$ac_cv_sizeof_MPIR_Bsend_data_t
 export BSEND_OVERHEAD
 AC_SUBST(BSEND_OVERHEAD)
 
@@ -5184,7 +5135,7 @@ if test "$ac_cv_func_putenv" = "yes" ; then
 fi
 
 
-# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Support for timers.  The following code processes the 
 #  --enable-timer-type=name argument and selects the timer based on 
 # both that field and what configure is able to determine is available.
@@ -5653,7 +5604,7 @@ export LDFLAGS
 export F77
 export F90
 #
-# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Configure threads first.  This is necessary to obtain all required
 # definitions, flags, and libraries that the other subsystems will need
 #
