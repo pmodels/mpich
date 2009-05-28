@@ -126,6 +126,7 @@ HYD_Status HYDU_fork_and_exit(int core)
     goto fn_exit;
 }
 
+#if defined HAVE_THREAD_SUPPORT
 HYD_Status HYDU_create_thread(void *(*func) (void *), void *args,
                               struct HYD_Thread_context *ctxt)
 {
@@ -147,7 +148,6 @@ HYD_Status HYDU_create_thread(void *(*func) (void *), void *args,
     goto fn_exit;
 }
 
-
 HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt)
 {
     int ret;
@@ -167,7 +167,7 @@ HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt)
   fn_fail:
     goto fn_exit;
 }
-
+#endif /* HAVE_THREAD_SUPPORT */
 
 int HYDU_local_to_global_id(int local_id, int partition_core_count,
                             struct HYD_Partition_segment *segment_list, int global_core_count)

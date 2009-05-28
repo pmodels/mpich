@@ -284,7 +284,9 @@ HYD_Status HYD_PMCI_launch_procs(void)
     struct HYD_Partition *partition;
     enum HYD_PMCD_pmi_proxy_cmds cmd;
     int fd, len, id;
+#if defined HAVE_THREAD_SUPPORT
     struct HYD_Thread_context *thread_context = NULL;
+#endif /* HAVE_THREAD_SUPPORT */
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
     HYD_Status status = HYD_SUCCESS;
 
@@ -348,21 +350,29 @@ HYD_Status HYD_PMCI_launch_procs(void)
         FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list)
             len++;
 
+#if defined HAVE_THREAD_SUPPORT
         HYDU_CALLOC(thread_context, struct HYD_Thread_context *, len,
                     sizeof(struct HYD_Thread_context), status);
         if (!thread_context)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "Unable to allocate memory for thread context\n");
+#endif /* HAVE_THREAD_SUPPORT */
 
         id = 0;
         FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
+#if defined HAVE_THREAD_SUPPORT
             HYDU_create_thread(launch_helper, (void *) partition, &thread_context[id]);
+#else
+            launch_helper(partition);
+#endif /* HAVE_THREAD_SUPPORT */
             id++;
         }
 
         id = 0;
         FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
+#if defined HAVE_THREAD_SUPPORT
             HYDU_join_thread(thread_context[id]);
+#endif /* HAVE_THREAD_SUPPORT */
 
             status = HYD_DMX_register_fd(1, &partition->control_fd, HYD_STDOUT, partition,
                                          HYD_PMCD_pmi_serv_control_cb);
@@ -377,8 +387,10 @@ HYD_Status HYD_PMCI_launch_procs(void)
         HYDU_FREE(pmi_port_str);
     if (proxy_port_str)
         HYDU_FREE(proxy_port_str);
+#if defined HAVE_THREAD_SUPPORT
     if (thread_context)
         HYDU_FREE(thread_context);
+#endif /* HAVE_THREAD_SUPPORT */
     HYDU_free_strlist(proxy_args);
     HYDU_FUNC_EXIT();
     return status;

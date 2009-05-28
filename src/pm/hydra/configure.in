@@ -46,6 +46,11 @@ dnl Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca snprintf unsetenv \
 	       strerror strsignal putenv)
 
+dnl Check if the upper-level enabled threads support
+if test "$MPICH2_THREAD_PACKAGE" != "none" ; then
+   AC_DEFINE(HAVE_THREAD_SUPPORT,1,[Define thread support])
+fi
+
 # putenv() sets environment variable
 AC_HAVE_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then

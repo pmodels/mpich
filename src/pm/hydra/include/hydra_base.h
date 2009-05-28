@@ -180,10 +180,6 @@ struct HYD_Partition_exec {
 #define FORALL_PARTITIONS(partition, partition_list)    \
     for ((partition) = (partition_list); (partition); (partition) = (partition)->next)
 
-struct HYD_Thread_context {
-    pthread_t thread;
-};
-
 struct HYD_Partition_base {
     char *name;
     char *exec_args[HYD_NUM_TMP_STRINGS];       /* Full argument list */

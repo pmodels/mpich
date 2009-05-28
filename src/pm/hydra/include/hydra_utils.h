@@ -159,6 +159,12 @@ HYD_Status HYDU_comma_list_to_env_list(char *str, HYD_Env_t ** env_list);
 
 
 /* launch */
+#if defined HAVE_THREAD_SUPPORT
+struct HYD_Thread_context {
+    pthread_t thread;
+};
+#endif /* HAVE_THREAD_SUPPORT */
+
 HYD_Status HYDU_alloc_partition(struct HYD_Partition **partition);
 void HYDU_free_partition_list(struct HYD_Partition *partition);
 HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info);
@@ -174,9 +180,11 @@ HYD_Status HYDU_create_node_list_from_file(char *host_file,
 HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
                                int *in, int *out, int *err, int *pid, int core);
 HYD_Status HYDU_fork_and_exit(int core);
+#if defined HAVE_THREAD_SUPPORT
 HYD_Status HYDU_create_thread(void *(*func) (void *), void *args,
                               struct HYD_Thread_context *ctxt);
 HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt);
+#endif /* HAVE_THREAD_SUPPORT */
 int HYDU_local_to_global_id(int local_id, int partition_core_count,
                             struct HYD_Partition_segment *segment_list, int global_core_count);
 
