@@ -2107,6 +2107,12 @@ Sub AddDefinitions( fout, filename, b64 )
 					End If
 				Case "SIZEOF_WCHAR_T"
 					fout.WriteLine("#define SIZEOF_WCHAR_T 2")
+                                Case "SIZEOF_MPIR_BSEND_DATA_T"
+                                        If b64 Then
+                                            fout.WriteLine("#define SIZEOF_MPIR_BSEND_DATA_T " + BSEND_OVERHEAD64)
+                                        Else
+                                            fout.WriteLine("#define SIZEOF_MPIR_BSEND_DATA_T " + BSEND_OVERHEAD32)
+                                        End If
 				Case "HAVE_GETCWD"
 					fout.WriteLine("#define HAVE_GETCWD 1")
 				Case "HAVE_GETHOSTNAME"
