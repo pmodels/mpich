@@ -58,6 +58,8 @@ int MPIR_Gatherv (
     MPI_Comm comm;
     MPI_Aint       extent;
     int            i, reqs;
+    int min_procs;
+    char *min_procs_str;
     MPI_Request *reqarray;
     MPI_Status *starray;
     MPIU_CHKLMEM_DECL(2);
@@ -127,7 +129,13 @@ int MPIR_Gatherv (
                irrelevant here. */
             comm_size = comm_ptr->local_size;
 
-            if (comm_size >= MPIR_GATHERV_MIN_PROCS) {
+            min_procs_str = getenv("MPICH2_GATHERV_MIN_PROCS");
+            if (min_procs_str != NULL)
+                min_procs = atoi(min_procs_str);
+            else
+                min_procs = MPIR_GATHERV_MIN_PROCS;
+
+            if (comm_size >= min_procs) {
                 mpi_errno = MPIC_Ssend(sendbuf, sendcnt, sendtype, root, 
                                        MPIR_GATHERV_TAG, comm);
             }
