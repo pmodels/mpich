@@ -347,6 +347,9 @@ static void ADIO_FileSysType_fncall(char *filename, int *fstype, int *error_code
 # endif
 
 /*#if defined(LINUX) && defined(ROMIO_LUSTRE)*/
+#if 0
+    /* disable lustre auto-detection until we figure out why collective i/o
+     * broken */
 #ifdef ROMIO_LUSTRE
 #define LL_SUPER_MAGIC 0x0BD00BD0
     if (fsbuf.f_type == LL_SUPER_MAGIC) {
@@ -354,6 +357,7 @@ static void ADIO_FileSysType_fncall(char *filename, int *fstype, int *error_code
 	return;
     }
 # endif
+#endif
 
 # ifdef PAN_KERNEL_FS_CLIENT_SUPER_MAGIC
     if (fsbuf.f_type == PAN_KERNEL_FS_CLIENT_SUPER_MAGIC) {
