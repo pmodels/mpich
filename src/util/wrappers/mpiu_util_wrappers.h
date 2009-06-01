@@ -48,8 +48,8 @@ static inline int MPIU_OSW_Get_uniq_str(char *str, int strlen)
 {
     LARGE_INTEGER perfCnt;
     QueryPerformanceCounter(&perfCnt);
-    return(MPIU_Snprintf(str, strlen, "%u", 
-            (perfCnt.LowPart)));
+    return(MPIU_Snprintf(str, strlen, "MPICH_NEM_%d_%I64d", 
+            GetCurrentThreadId(), (perfCnt.QuadPart)));
 }
 #endif
 
