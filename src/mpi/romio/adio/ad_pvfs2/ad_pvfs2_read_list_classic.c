@@ -392,7 +392,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, int count,
 	    file_list_count = extra_blks;
 	    if(!i) {
 	        file_offsets[0] = offset;
-		file_lengths[0] = st_frd_size;
+		file_lengths[0] = ADIOI_MIN(st_frd_size, bufsize);
 	    }
 	    for (k=0; k<extra_blks; k++) {
 	        if(i || k) {
@@ -874,20 +874,38 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, int count,
 	ADIOI_Free(mem_offsets);
 	ADIOI_Free(mem_lengths);
     }
-    ADIOI_Free(file_offsets);
-    ADIOI_Free(file_lengths);
-    
     /* Other ADIO routines will convert absolute bytes into counts of datatypes */
     /* when incrementing fp_ind, need to also take into account the file type:
      * consider an N-element 1-d subarray with a lb and ub: ( |---xxxxx-----|
      * if we wrote N elements, offset needs to point at beginning of type, not
      * at empty region at offset N+1) */
     if (file_ptr_type == ADIO_INDIVIDUAL) {
-	/* this is closer, but still incorrect for the cases where a small
-	 * amount of a file type is "leftover" after a write */
-	fd->fp_ind = disp + flat_file->indices[j] + 
+	ADIO_Offset next_piece_start=0, read_end=0, piece_end=0;
+	next_piece_start = disp + flat_file->indices[j] + 
 	    ((ADIO_Offset)n_filetypes)*filetype_extent;
+	read_end = file_offsets[file_list_count-1] +
+	    file_lengths[file_list_count-1];
+	if (j == 0 ) {
+	    ADIOI_Assert(n_filetypes != 0);
+	    piece_end = disp + flat_file->indices[flat_file->count-1] +
+		flat_file->blocklens[flat_file->count-1] + 
+		((ADIO_Offset)n_filetypes-1)*filetype_extent;
+	} else {
+	    piece_end = disp + flat_file->indices[j-1] + 
+		flat_file->blocklens[j-1] +
+		((ADIO_Offset)n_filetypes)*filetype_extent;
+	}
+	/* we have to be careful if there is a small amount of a file 
+	 * type "leftover" */
+	if (read_end < piece_end) 
+	    fd->fp_ind = read_end;
+	else
+	    fd->fp_ind = next_piece_start;
+
     }
+    ADIOI_Free(file_offsets);
+    ADIOI_Free(file_lengths);
+    
     if (err_flag == 0) *error_code = MPI_SUCCESS;
 
 error_state:
