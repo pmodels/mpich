@@ -935,30 +935,15 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, void *buf, int count,
     /* when incrementing fp_ind, need to also take into account the file type:
      * consider an N-element 1-d subarray with a lb and ub: ( |---xxxxx-----|
      * if we wrote N elements, offset needs to point at beginning of type, not
-     * at empty region at offset N+1) */
+     * at empty region at offset N+1).  
+     *
+     * As we discussed on mpich-discuss in may/june 2009, the code below might
+     * look wierd, but by putting fp_ind at the last byte written, the next
+     * time we run through the strided code we'll update the fp_ind to the
+     * right location. */
     if (file_ptr_type == ADIO_INDIVIDUAL) {
-        ADIO_Offset next_piece_start=0, write_end=0, piece_end=0;
-	next_piece_start = disp + flat_file->indices[j] + 
- 	    ((ADIO_Offset)n_filetypes)*filetype_extent;
-	write_end = file_offsets[file_list_count-1] +
+	fd->fp_ind = file_offsets[file_list_count-1]+
 	    file_lengths[file_list_count-1];
-	if (j == 0 ) {
-	    ADIOI_Assert(n_filetypes != 0);
-	    piece_end = disp + flat_file->indices[flat_file->count-1] +
-		flat_file->blocklens[flat_file->count-1] + 
-		((ADIO_Offset)n_filetypes-1)*filetype_extent;
-	} else {
-	    piece_end = disp + flat_file->indices[j-1] + 
-		flat_file->blocklens[j-1] +
-		((ADIO_Offset)n_filetypes)*filetype_extent;
-	}
-	/* we have to be careful if there is a small amount of a file 
-	 * type "leftover" */
-	if (write_end < piece_end) 
-	    fd->fp_ind = write_end;
-	else
-	    fd->fp_ind = next_piece_start;
-
     }
     ADIOI_Free(file_offsets);
     ADIOI_Free(file_lengths);
