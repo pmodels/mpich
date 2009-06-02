@@ -42,11 +42,11 @@
 - Many other bug fixes, memory leak fixes and code cleanup. A full
   list of changes is available using:
 
-  svn log -r813:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.1rc1
+  svn log -r813:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.1
 
   ... or at the following link:
 
-  https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.1rc1?action=follow_copy&rev=HEAD&stop_rev=813&mode=follow_copy
+  https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.1?action=follow_copy&rev=HEAD&stop_rev=813&mode=follow_copy
 
 
 ===============================================================================
