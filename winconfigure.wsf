@@ -1328,7 +1328,6 @@ Function GetMPICH2NumVersion(ver)
 	numVer = majorVer & minorVer & revNum & ext & extNum
 	GetMPICH2NumVersion = 0 + numVer
 	printMsg "VERBOSE", " MPICH2 NUM VERSION " & numVer
-	printMsg "ERROR", " MPICH2 NUM VERSION " & numVer
 End Function
 
 mpich2Version = GetMPICH2Version()
