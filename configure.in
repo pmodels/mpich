@@ -5518,8 +5518,8 @@ for type in int long long_long short ; do
         break
     fi
 done
-AC_DEFINE_UNQUOTED(MPIR_Pint,$MPIR_PINT,[MPIR_PINT is a pointer-sized integer])
-AC_DEFINE_UNQUOTED(MPIR_Upint,unsigned $MPIR_PINT,[MPIR_PUINT is an unsigned pointer-sized integer])
+AC_DEFINE_UNQUOTED(MPIR_Pint,$MPIR_PINT,[MPIR_Pint is a pointer-sized integer])
+AC_DEFINE_UNQUOTED(MPIR_Upint,unsigned $MPIR_PINT,[MPIR_Upint is an unsigned pointer-sized integer])
 #
 # define MPIU_Size_t - used to express the size of objects
 # This is used in src/include/mpitypedefs.h to define MPIU_SIZE_T, 
