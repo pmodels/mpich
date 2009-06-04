@@ -479,7 +479,11 @@ class MPDSock(object):
                 while 1:
                     try:
 		        mpd_signum = 0
-                        (readyToRecv,unused1,unused2) = select.select([self.sock],[],[],timeout)
+                        if timeout == -1:
+                            # use -1 to indicate indefinite timeout
+                            (readyToRecv,unused1,unused2) = select.select([self.sock],[],[])
+                        else:
+                            (readyToRecv,unused1,unused2) = select.select([self.sock],[],[],timeout)
                         break;
                     except os.error, errinfo:
                         if errinfo[0] == EINTR:
