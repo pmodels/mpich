@@ -823,31 +823,3 @@ Compilation options for development:
                   MPICH2 developers for internal low-level timing.
                   Normal users should not use these as they are not
                   guaranteed to be accurate in certain situations.
-
-
-
-Status of MPI-2 Features in MPICH2
-==================================
-
-MPICH2 includes all of MPI-1 and the following parts of MPI-2:
-
-MPI-I/O, except for the external data representations (e.g., MPICH2
-includes all of ROMIO)
-
-Active-target one-sided communication is implemented. Passive target
-one-sided communication (with MPI_Win_lock and MPI_Win_unlock) is
-implemented but relies on MPI functions at the target for progress to
-occur (the function could well be MPI_Win_free).
-
-The dynamic process management routines (MPI_Comm_spawn,
-MPI_Comm_Connect, and MPI_Comm_Accept, and their relations) are
-supported, but only for the nemesis, sock and ssm channels.
-
-The "singleton init" feature, whereby a process not started by mpiexec
-can become an MPI process, is supported under the mpd and smpd process
-managers.
-
-Some routines, such as the intercommunicator extensions to the
-collective routines, have not been extensively tested.
-
-Only the sock and nemesis channels support MPI_THREAD_MULTIPLE. 
