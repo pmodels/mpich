@@ -10,12 +10,14 @@ CC                   = @CC@
 CC_SHL               = @CC_SHL@
 CLINKER              = @CLINKER@
 MPI_CC               = @MPI_CC@
+MPI_F77              = @MPI_F77@
 MPI_CLINKER          = $(MPI_CC)
 AR                   = @AR@
 ARFLAGS              = cr
 RANLIB               = @RANLIB@
 MAKE                 = @MAKE@
 MPI_CFLAGS           = @MPI_CFLAGS@
+MPI_FFLAGS           = @MPI_FFLAGS@
 MPI_LIBS             = @MPI_LIBS@
 INCLUDE_DIR          = -I.. -I${top_srcdir}/include \
                        -I${includebuild_dir} \
@@ -58,6 +60,7 @@ CC_LDFLAGS       = $(LDFLAGS) $(CFLAGS) $(MPE_LDOPTS)
 # MPE include path, x_INCS, goes in front of MPI include path, MPI_xFLAGS,
 # in case MPI include path is in MPI_xFLAGS containing old MPE include path.
 MPICC_FLAGS      = $(INCLUDE_DIR) $(MPI_CFLAGS) $(MPE_COPTS)
+MPIFC_FLAGS      = $(MPI_FFLAGS) $(MPE_FOPTS)
 MPICC_LDFLAGS    = $(LDFLAGS) $(MPI_CFLAGS) $(MPE_LDOPTS)
 
 MPE_CSOURCES     =
@@ -69,10 +72,13 @@ MPE_WOBJECTS     = $(MPE_WSOURCES:.c=.@OBJEXT@)
 MPE_SHLCOBJECTS  = $(MPE_COBJECTS:.@OBJEXT@=.lo)
 MPE_SHLWOBJECTS  = $(MPE_WOBJECTS:.@OBJEXT@=.lo)
 
-.SUFFIXES: .c .@OBJEXT@ .lo .a @EXEEXT@
+.SUFFIXES: .c .f .@OBJEXT@ .lo .a @EXEEXT@
 
 .c.@OBJEXT@:
 	$(MPI_CC) $(MPICC_FLAGS) -c $<
+
+.f.@OBJEXT@:
+	$(MPI_F77) $(MPIFC_FLAGS) -c $<
 
 # Allow compilers that do not allow -o for renaming object files
 .c.lo:
@@ -120,8 +126,8 @@ ${libbuild_dir}/lib$(TRACE_LIBNAME).a: trace_mpi_core.@OBJEXT@
 	$(AR) $(ARFLAGS) $@ trace_mpi_core.@OBJEXT@
 	$(RANLIB) $@
 
-${libbuild_dir}/lib$(F2CMPI_LIBNAME).a: mpe_proff.@OBJEXT@
-	$(AR) $(ARFLAGS) $@ mpe_proff.@OBJEXT@
+${libbuild_dir}/lib$(F2CMPI_LIBNAME).a: mpi_f2c_consts.@OBJEXT@ mpe_proff.@OBJEXT@
+	$(AR) $(ARFLAGS) $@ mpi_f2c_consts.@OBJEXT@ mpe_proff.@OBJEXT@
 	$(RANLIB) $@
 
 ${libbuild_dir}/mpe_prof.@OBJEXT@: mpe_prof.@OBJEXT@

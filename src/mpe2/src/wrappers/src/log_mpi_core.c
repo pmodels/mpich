@@ -3786,6 +3786,22 @@ int * resultlen;
 }
 
 /*
+int is_mpe_f2c = 0;
+int MPE_Init_mpi( int *argc, char ***argv );
+int MPE_Init_mpi( int *argc, char ***argv )
+{
+    if ( is_mpe_f2c ) {
+        MPI_Fint ierr;
+        printf( "calling fortran pmpi_init_()\n" );
+        pmpi_init_( &ierr );
+        return (int) ierr;
+    }
+    else
+        return PMPI_Init( argc, argv );
+}
+*/
+
+/*
  * Replacement for MPI_Init.  Initializes logging and sets up basic
  * state definitions, including default color/pattern values
  */
@@ -3808,6 +3824,9 @@ char  ***argv;
     MPE_LOG_OFF
 #endif
 
+    /*
+    returnVal = MPE_Init_mpi( argc, argv );
+    */
     returnVal = PMPI_Init( argc, argv );
 
     MPE_Init_log();

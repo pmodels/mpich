@@ -774,63 +774,65 @@ dnl (same test done in graphics's configure.in)
                    [Define if MPI_Comm_f2c and c2f available] )
     fi
 
-#   Determine MPI_STATUS_SIZE (this is the INTEGER status size for Fortran)
-    mpe_tmpfile=mpe_mpistatusvalue
-    AC_MSG_CHECKING( [for the value of MPI_STATUS_SIZE] )
-    if test "$cross_compiling" = "yes" -o "$cross_compiling" = 1 ; then
-        if test "X$CROSS_MPI_STATUS_SIZE" != "X" ; then
-            mpe_MPI_STATUS_SIZE="$CROSS_MPI_STATUS_SIZE"
-            AC_DEFINE_UNQUOTED( MPI_STATUS_SIZE, $mpe_MPI_STATUS_SIZE,
-                                [Define as the size of MPI_STATUS_SIZE] )
-            AC_MSG_RESULT( [${mpe_MPI_STATUS_SIZE}] )
-        else
-            PAC_MSG_ERROR( $enable_softerror,
-                           [Undefined CROSS_MPI_STATUS_SIZE! Exiting...] )
-        fi
-    else
-dnl    PAC_MPI_RUN_F77_PGM( $MPI_F77, [$MPI_FFLAGS],
-dnl                         $F77, $FFLAGS, $LIBS, [
-dnl      program get_mpi_status_size
-dnl      include 'mpif.h'
-dnl      open(10, file="$mpe_tmpfile", status='unknown')
-dnl      rewind(10)
-dnl      write(10,*) MPI_STATUS_SIZE
-dnl      close(10)
-dnl      end
-dnl                         ], [ mpe_run_ok=yes ], [ mpe_run_ok=no ] )
-        PAC_MPI_RUN_CC_PGM( $MPI_CC, [$MPI_CFLAGS],
-                            $CC, $CFLAGS, $LIBS, [
-#include <stdio.h>
-#include "mpi.h"
-main()
-{
-    FILE *mpe_file = fopen( "$mpe_tmpfile", "w" );
-    if ( ! mpe_file ) exit( 1 );
-    fprintf( mpe_file, "%d\n",
-             sizeof( MPI_Status )/sizeof( ${MPI_FINT_TYPE} ) );
-    fclose( mpe_file );
-    exit( 0 );
-}
-                            ], [ mpe_run_ok=yes ], [ mpe_run_ok=no ] )
-        if test "$mpe_run_ok" = "yes" ; then
-            mpe_MPI_STATUS_SIZE="`cat ${mpe_tmpfile} | sed -e 's/ //g'`"
-            AC_DEFINE_UNQUOTED( MPI_STATUS_SIZE, $mpe_MPI_STATUS_SIZE,
-                                [Define as the size of MPI_STATUS_SIZE] )
-            AC_MSG_RESULT( [${mpe_MPI_STATUS_SIZE}] )
-            rm -f ${mpe_tmpfile}
-        else
-            if test "X$CROSS_MPI_STATUS_SIZE" != "X" ; then
-                mpe_MPI_STATUS_SIZE="$CROSS_MPI_STATUS_SIZE"
-                AC_DEFINE_UNQUOTED( MPI_STATUS_SIZE, $mpe_MPI_STATUS_SIZE,
-                                    [Define as the size of MPI_STATUS_SIZE] )
-                AC_MSG_RESULT( [use supplied value: ${mpe_MPI_STATUS_SIZE}] )
-            else
-                PAC_MSG_ERROR( $enable_softerror, [could NOT determine!] )
-            fi
-        fi
-    fi
+dnl #   Determine MPI_STATUS_SIZE (this is the INTEGER status size for Fortran)
+dnl     mpe_tmpfile=mpe_mpistatusvalue
+dnl     AC_MSG_CHECKING( [for the value of MPI_STATUS_SIZE] )
+dnl     if test "$cross_compiling" = "yes" -o "$cross_compiling" = 1 ; then
+dnl         if test "X$CROSS_MPI_STATUS_SIZE" != "X" ; then
+dnl             mpe_MPI_STATUS_SIZE="$CROSS_MPI_STATUS_SIZE"
+dnl             AC_DEFINE_UNQUOTED( MPI_STATUS_SIZE, $mpe_MPI_STATUS_SIZE,
+dnl                                 [Define as the size of MPI_STATUS_SIZE] )
+dnl             AC_MSG_RESULT( [${mpe_MPI_STATUS_SIZE}] )
+dnl         else
+dnl             PAC_MSG_ERROR( $enable_softerror,
+dnl                            [Undefined CROSS_MPI_STATUS_SIZE! Exiting...] )
+dnl         fi
+dnl     else
+dnl dnl    PAC_MPI_RUN_F77_PGM( $MPI_F77, [$MPI_FFLAGS],
+dnl dnl                         $F77, $FFLAGS, $LIBS, [
+dnl dnl      program get_mpi_status_size
+dnl dnl      include 'mpif.h'
+dnl dnl      open(10, file="$mpe_tmpfile", status='unknown')
+dnl dnl      rewind(10)
+dnl dnl      write(10,*) MPI_STATUS_SIZE
+dnl dnl      close(10)
+dnl dnl      end
+dnl dnl                         ], [ mpe_run_ok=yes ], [ mpe_run_ok=no ] )
+dnl         PAC_MPI_RUN_CC_PGM( $MPI_CC, [$MPI_CFLAGS],
+dnl                             $CC, $CFLAGS, $LIBS, [
+dnl #include <stdio.h>
+dnl #include "mpi.h"
+dnl main()
+dnl {
+dnl     FILE *mpe_file = fopen( "$mpe_tmpfile", "w" );
+dnl     if ( ! mpe_file ) exit( 1 );
+dnl     fprintf( mpe_file, "%d\n",
+dnl              sizeof( MPI_Status )/sizeof( ${MPI_FINT_TYPE} ) );
+dnl     fclose( mpe_file );
+dnl     exit( 0 );
+dnl }
+dnl                             ], [ mpe_run_ok=yes ], [ mpe_run_ok=no ] )
+dnl         if test "$mpe_run_ok" = "yes" ; then
+dnl             mpe_MPI_STATUS_SIZE="`cat ${mpe_tmpfile} | sed -e 's/ //g'`"
+dnl             AC_DEFINE_UNQUOTED( MPI_STATUS_SIZE, $mpe_MPI_STATUS_SIZE,
+dnl                                 [Define as the size of MPI_STATUS_SIZE] )
+dnl             AC_MSG_RESULT( [${mpe_MPI_STATUS_SIZE}] )
+dnl             rm -f ${mpe_tmpfile}
+dnl         else
+dnl             if test "X$CROSS_MPI_STATUS_SIZE" != "X" ; then
+dnl                 mpe_MPI_STATUS_SIZE="$CROSS_MPI_STATUS_SIZE"
+dnl                 AC_DEFINE_UNQUOTED( MPI_STATUS_SIZE, $mpe_MPI_STATUS_SIZE,
+dnl                                     [Define as the size of MPI_STATUS_SIZE] )
+dnl                 AC_MSG_RESULT( [use supplied value: ${mpe_MPI_STATUS_SIZE}] )
+dnl             else
+dnl                 PAC_MSG_ERROR( $enable_softerror, [could NOT determine!] )
+dnl             fi
+dnl         fi
+dnl     fi
 
 #   Determmine if MPI_Status_f2c() and MPI_Status_c2f() are there
+#   Make mpe_MPI_STATUS_SIZE >> real sizeof(MPI_Status)/sizeof(MPI_Fint)
+    mpe_MPI_STATUS_SIZE=100
     AC_MSG_CHECKING( [for MPI_Status_c2f() and MPI_Status_f2c()] )
     PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [[
@@ -925,87 +927,87 @@ main()
     fi
 
 
-#   Determine the Fortran logical values, .TRUE. & .FALSE. in MPI C program
-    if test "$cross_compiling" = "yes" -o "$cross_compiling" = 1 ; then
-        AC_MSG_CHECKING( [for the Fortran .TRUE. values in MPI C program] )
-        if test "X$CROSS_FORTRAN2C_TRUE" != "X" ; then
-            AC_DEFINE_UNQUOTED( MPE_F77_TRUE_VALUE, $CROSS_FORTRAN2C_TRUE,
-                                [Define as the value for Fortran logical true] )
-            AC_MSG_RESULT( [${CROSS_FORTRAN2C_TRUE}] )
-        else
-            PAC_MSG_ERROR( $enable_softerror,
-                           [Undefined CROSS_FORTRAN2C_TRUE! Exiting...] )
-        fi
-        AC_MSG_CHECKING( [for the Fortran .FALSE. values in MPI C program] )
-        if test "X$CROSS_FORTRAN2C_FALSE" != "X" ; then
-            AC_DEFINE_UNQUOTED( MPE_F77_FALSE_VALUE, $CROSS_FORTRAN2C_FALSE,
-                               [Define as the value for Fortran logical false] )
-            AC_MSG_RESULT( [${CROSS_FORTRAN2C_FALSE}] )
-        else
-            PAC_MSG_ERROR( $enable_softerror,
-                           [Undefined CROSS_FORTRAN2C_FALSE! Exiting...] )
-        fi
-    else
-        AC_MSG_CHECKING( [for the Fortran logical values in MPI C program] )
-        mpe_tmpfile=mpe_f77logicals
-        PAC_MPI_RUN_F77_FUNC_FROM_C( $F77, $FFLAGS,
-                                     $MPI_CC, [-I../.. $MPI_CFLAGS],
-                                     $CC, [$CFLAGS], $LIBS, [
-      subroutine ftest( itrue, ifalse )
-      logical itrue, ifalse
-      itrue  = .TRUE.
-      ifalse = .FALSE.
-      return
-      end
-                                 ], [
-/* mpe_conf.h defines the needed F77_NAME_XXX, and is located in -I../.. */
-#include "mpe_conf.h"
-#ifdef F77_NAME_UPPER
-#define ftest_ FTEST
-#elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
-#define ftest_ ftest
-#endif
-#include <stdio.h>
-#include "mpi.h"
-int main()
-{
-    ${MPI_FINT_TYPE} itrue, ifalse;
-    FILE *mpe_file = fopen( "$mpe_tmpfile", "w" );
-    if ( ! mpe_file ) exit( 1 );
-    ftest_( &itrue, &ifalse );
-    fprintf( mpe_file, "%d %d\n", itrue, ifalse );
-    fclose( mpe_file );
-    exit( 0 );
-}
-                                     ],
-                                     [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
-        if test "$mpe_run_ok" = "yes" ; then
-            mpe_f77logicals="`cat ${mpe_tmpfile}`"
-            true_val="`echo ${mpe_f77logicals} | sed -e 's/ .*//g'`"
-            false_val="`echo ${mpe_f77logicals} | sed -e 's/.*  *//g'`"
-            if test -n "$true_val" -a -n "$false_val" ; then
-                AC_DEFINE_UNQUOTED( MPE_F77_TRUE_VALUE, $true_val,
-                          [Define as the value for Fortran logical true] )
-                AC_DEFINE_UNQUOTED( MPE_F77_FALSE_VALUE, $false_val,
-                          [Define as the value for Fortran logical false] )
-                AC_MSG_RESULT( [True=$true_val and False=$false_val] )
-            else
-                PAC_MSG_ERROR( $enable_softerror, [could NOT determine!] )
-            fi
-            rm -f ${mpe_tmpfile}
-        else
-            if test "X$CROSS_FORTRAN2C_TRUE" != "X" \
-                 -a "X$CROSS_FORTRAN2C_FALSE" != "X" ; then
-                AC_DEFINE_UNQUOTED( MPE_F77_TRUE_VALUE, $CROSS_FORTRAN2C_TRUE,
-                          [Define as the value for Fortran logical true] )
-                AC_DEFINE_UNQUOTED( MPE_F77_FALSE_VALUE, $CROSS_FORTRAN2C_FALSE,
-                          [Define as the value for Fortran logical false] )
-                AC_MSG_RESULT( [use supplied values: True=$CROSS_FORTRAN2C_TRUE and False=$CROSS_FORTRAN2C_FALSE] )
-            else
-                PAC_MSG_ERROR( $enable_softerror, [could NOT determine!] )
-            fi
-        fi
-    fi
+dnl #   Determine the Fortran logical values, .TRUE. & .FALSE. in MPI C program
+dnl     if test "$cross_compiling" = "yes" -o "$cross_compiling" = 1 ; then
+dnl         AC_MSG_CHECKING( [for the Fortran .TRUE. values in MPI C program] )
+dnl         if test "X$CROSS_FORTRAN2C_TRUE" != "X" ; then
+dnl             AC_DEFINE_UNQUOTED( MPE_F77_TRUE_VALUE, $CROSS_FORTRAN2C_TRUE,
+dnl                                 [Define as the value for Fortran logical true] )
+dnl             AC_MSG_RESULT( [${CROSS_FORTRAN2C_TRUE}] )
+dnl         else
+dnl             PAC_MSG_ERROR( $enable_softerror,
+dnl                            [Undefined CROSS_FORTRAN2C_TRUE! Exiting...] )
+dnl         fi
+dnl         AC_MSG_CHECKING( [for the Fortran .FALSE. values in MPI C program] )
+dnl         if test "X$CROSS_FORTRAN2C_FALSE" != "X" ; then
+dnl             AC_DEFINE_UNQUOTED( MPE_F77_FALSE_VALUE, $CROSS_FORTRAN2C_FALSE,
+dnl                                [Define as the value for Fortran logical false] )
+dnl             AC_MSG_RESULT( [${CROSS_FORTRAN2C_FALSE}] )
+dnl         else
+dnl             PAC_MSG_ERROR( $enable_softerror,
+dnl                            [Undefined CROSS_FORTRAN2C_FALSE! Exiting...] )
+dnl         fi
+dnl     else
+dnl         AC_MSG_CHECKING( [for the Fortran logical values in MPI C program] )
+dnl         mpe_tmpfile=mpe_f77logicals
+dnl         PAC_MPI_RUN_F77_FUNC_FROM_C( $F77, $FFLAGS,
+dnl                                      $MPI_CC, [-I../.. $MPI_CFLAGS],
+dnl                                      $CC, [$CFLAGS], $LIBS, [
+dnl       subroutine ftest( itrue, ifalse )
+dnl       logical itrue, ifalse
+dnl       itrue  = .TRUE.
+dnl       ifalse = .FALSE.
+dnl       return
+dnl       end
+dnl                                  ], [
+dnl /* mpe_conf.h defines the needed F77_NAME_XXX, and is located in -I../.. */
+dnl #include "mpe_conf.h"
+dnl #ifdef F77_NAME_UPPER
+dnl #define ftest_ FTEST
+dnl #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
+dnl #define ftest_ ftest
+dnl #endif
+dnl #include <stdio.h>
+dnl #include "mpi.h"
+dnl int main()
+dnl {
+dnl     ${MPI_FINT_TYPE} itrue, ifalse;
+dnl     FILE *mpe_file = fopen( "$mpe_tmpfile", "w" );
+dnl     if ( ! mpe_file ) exit( 1 );
+dnl     ftest_( &itrue, &ifalse );
+dnl     fprintf( mpe_file, "%d %d\n", itrue, ifalse );
+dnl     fclose( mpe_file );
+dnl     exit( 0 );
+dnl }
+dnl                                      ],
+dnl                                      [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+dnl         if test "$mpe_run_ok" = "yes" ; then
+dnl             mpe_f77logicals="`cat ${mpe_tmpfile}`"
+dnl             true_val="`echo ${mpe_f77logicals} | sed -e 's/ .*//g'`"
+dnl             false_val="`echo ${mpe_f77logicals} | sed -e 's/.*  *//g'`"
+dnl             if test -n "$true_val" -a -n "$false_val" ; then
+dnl                 AC_DEFINE_UNQUOTED( MPE_F77_TRUE_VALUE, $true_val,
+dnl                           [Define as the value for Fortran logical true] )
+dnl                 AC_DEFINE_UNQUOTED( MPE_F77_FALSE_VALUE, $false_val,
+dnl                           [Define as the value for Fortran logical false] )
+dnl                 AC_MSG_RESULT( [True=$true_val and False=$false_val] )
+dnl             else
+dnl                 PAC_MSG_ERROR( $enable_softerror, [could NOT determine!] )
+dnl             fi
+dnl             rm -f ${mpe_tmpfile}
+dnl         else
+dnl             if test "X$CROSS_FORTRAN2C_TRUE" != "X" \
+dnl                  -a "X$CROSS_FORTRAN2C_FALSE" != "X" ; then
+dnl                 AC_DEFINE_UNQUOTED( MPE_F77_TRUE_VALUE, $CROSS_FORTRAN2C_TRUE,
+dnl                           [Define as the value for Fortran logical true] )
+dnl                 AC_DEFINE_UNQUOTED( MPE_F77_FALSE_VALUE, $CROSS_FORTRAN2C_FALSE,
+dnl                           [Define as the value for Fortran logical false] )
+dnl                 AC_MSG_RESULT( [use supplied values: True=$CROSS_FORTRAN2C_TRUE and False=$CROSS_FORTRAN2C_FALSE] )
+dnl             else
+dnl                 PAC_MSG_ERROR( $enable_softerror, [could NOT determine!] )
+dnl             fi
+dnl         fi
+dnl     fi
 
 dnl endif test "${F2CMPI_LIBS}" = "-l${F2CMPI_LIBNAME}"
 dnl         -a "$MPI_IMPL" != "MPICH2" ; then

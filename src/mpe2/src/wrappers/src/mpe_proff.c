@@ -91,9 +91,18 @@ char *alloca ();
 #define DEBUG_ALL
 #endif
 
+/* Set MPER_F_Initialized is false before initialization */
+int       MPER_F_Initialized = 0;
+/* Fortran value for MPI_IN_PLACE */
+void     *MPER_F_MPI_IN_PLACE;
+/* Fortran value for MPI_STATUS(ES)_IGNORE */
+MPI_Fint *MPER_F_MPI_STATUS_IGNORE;
+MPI_Fint *MPER_F_MPI_STATUSES_IGNORE;
+/* size of MPI_Status in MPI_Fint */
+MPI_Fint  MPER_F_MPI_STATUS_SIZE;
 /* Fortran logical values */
-MPI_Fint MPER_F_TRUE = MPE_F77_TRUE_VALUE;
-MPI_Fint MPER_F_FALSE = MPE_F77_FALSE_VALUE;
+MPI_Fint  MPER_F_TRUE;
+MPI_Fint  MPER_F_FALSE;
 
 /* Fortran logical values */
 #if defined( WITH_CRAY_FCD_LOGICAL )
@@ -180,6 +189,13 @@ int MPER_Err_setmsg();
 #endif
 
 #ifdef F77_NAME_UPPER
+#if defined( MPICH2 )
+#define mpirinitf_ MPIRINITF
+#endif
+#define fsub_mpi_fconsts_ FSUB_MPI_FCONSTS
+#define csub_mpi_in_place_ CSUB_MPI_IN_PLACE
+#define csub_mpi_status_ignore_ CSUB_MPI_STATUS_IGNORE
+#define csub_mpi_statuses_ignore_ CSUB_MPI_STATUSES_IGNORE
 #define mpi_init_ MPI_INIT
 #define mpi_init_thread_ MPI_INIT_THREAD
 #define mpi_pcontrol_ MPI_PCONTROL
@@ -261,6 +277,15 @@ int MPER_Err_setmsg();
 #define mpi_scatterv_ MPI_SCATTERV
 #define mpi_finalize_ MPI_FINALIZE
 #elif defined(F77_NAME_LOWER_2USCORE)
+/*
+#if defined( MPICH2 )
+#define mpirinitf_ mpirinitf__
+#endif
+*/
+#define fsub_mpi_fconsts_ fsub_mpi_fconsts__
+#define csub_mpi_in_place_ csub_mpi_in_place__
+#define csub_mpi_status_ignore_ csub_mpi_status_ignore__
+#define csub_mpi_statuses_ignore_ csub_mpi_statuses_ignore__
 #define mpi_init_ mpi_init__
 #define mpi_init_thread_ mpi_init_thread__
 #define mpi_pcontrol_ mpi_pcontrol__
@@ -342,6 +367,13 @@ int MPER_Err_setmsg();
 #define mpi_scatterv_ mpi_scatterv__
 #define mpi_finalize_ mpi_finalize__
 #elif defined(F77_NAME_LOWER)
+#if defined( MPICH2 )
+#define mpirinitf_ mpirinitf
+#endif
+#define fsub_mpi_fconsts_ fsub_mpi_fconsts
+#define csub_mpi_in_place_ csub_mpi_in_place
+#define csub_mpi_status_ignore_ csub_mpi_status_ignore
+#define csub_mpi_statuses_ignore_ csub_mpi_statuses_ignore
 #define mpi_init_ mpi_init
 #define mpi_init_thread_ mpi_init_thread
 #define mpi_pcontrol_ mpi_pcontrol
@@ -424,6 +456,51 @@ int MPER_Err_setmsg();
 #define mpi_finalize_ mpi_finalize
 #endif
 
+/* This fortran subroutine the C function */
+void fsub_mpi_fconsts_( MPI_Fint *status_size_ptr,
+                        MPI_Fint *itrue_ptr, MPI_Fint *ifalse_ptr );
+
+void csub_mpi_in_place_( void *arg4inplace );
+void csub_mpi_in_place_( void *arg4inplace )
+{ MPER_F_MPI_IN_PLACE = arg4inplace; }
+
+void csub_mpi_status_ignore_( void *arg4statusignore );
+void csub_mpi_status_ignore_( void *arg4statusignore )
+{ MPER_F_MPI_STATUS_IGNORE = (MPI_Fint *) arg4statusignore; }
+
+void csub_mpi_statuses_ignore_( void *arg4statusesignore );
+void csub_mpi_statuses_ignore_( void *arg4statusesignore )
+{ MPER_F_MPI_STATUSES_IGNORE = (MPI_Fint *) arg4statusesignore; }
+
+#if defined( MPICH2 )
+/* Provide a prototype for the mpirinitf function */
+extern void mpirinitf_( void );
+#endif
+
+void mper_fconsts_init( void );
+void mper_fconsts_init( void )
+{
+    /*
+       Set MPI_STATUS_SIZE, fortran logicals,
+           MPI_IN_PLACE, MPI_STATUS(ES)_IGNORE
+    */
+#if defined( MPICH2 )
+    mpirinitf_();
+#endif
+    fsub_mpi_fconsts_( &MPER_F_MPI_STATUS_SIZE, &MPER_F_TRUE, &MPER_F_FALSE );
+#if defined( HAVE_MPI_F_STATUS_IGNORE )
+    MPER_F_MPI_STATUS_IGNORE = MPI_F_STATUS_IGNORE;
+#endif
+#if defined( HAVE_MPI_F_STATUSES_IGNORE )
+    MPER_F_MPI_STATUSES_IGNORE = MPI_F_STATUSES_IGNORE;
+#endif
+    printf( "f2c(MPI_IN_PLACE) = %p\n", MPER_F_MPI_IN_PLACE );
+    printf( "f2c(MPI_STATUS_IGNORE) = %p\n", MPER_F_MPI_STATUS_IGNORE );
+    printf( "f2c(MPI_STATUSES_IGNORE) = %p\n", MPER_F_MPI_STATUSES_IGNORE );
+    printf( "f2c(MPI_STATUS_SIZE) = %d\n", MPER_F_MPI_STATUS_SIZE );
+    printf( ".TRUE. = %d, .FALSE. = %d\n", MPER_F_TRUE, MPER_F_FALSE );
+}
+
 /*
  * Define prototypes next to the fortran2c wrapper to keep the compiler happy
  */
@@ -457,6 +534,10 @@ va_dcl
 
 
 /****************************************************************************/
+
+/*
+extern int is_mpe_f2c;
+*/
 
 void mpi_init_( MPI_Fint * );
 void mpi_init_( MPI_Fint *ierr )
@@ -495,7 +576,12 @@ void mpi_init_( MPI_Fint *ierr )
         }
     }
 
+    /*
+    is_mpe_f2c = 1;
+    */
     *ierr = MPI_Init( &Argc, &Argv );
+    mper_fconsts_init(); MPER_F_Initialized = 1;
+    
     
     /* Recover space */
     for (i=0; i<ArgcSave; i++) {
@@ -510,6 +596,7 @@ void mpi_init_thread_( MPI_Fint *required, MPI_Fint *provided, MPI_Fint *ierr );
 void mpi_init_thread_( MPI_Fint *required, MPI_Fint *provided, MPI_Fint *ierr )
 {
     *ierr = MPI_Init_thread( NULL, NULL, *required, provided );
+    mper_fconsts_init(); MPER_F_Initialized = 1;
 }
 #endif
 
@@ -626,6 +713,8 @@ void mpi_cart_create_( MPI_Fint *comm_old, MPI_Fint *ndims, MPI_Fint *dims,
     int        is_malloced;
     int        i;
 
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+
     is_malloced = 0;
     if ( *ndims > 20 ) {
 #if ! defined( HAVE_ALLOCA )
@@ -681,6 +770,8 @@ void mpi_cart_sub_( MPI_Fint *comm, MPI_Fint *remain_dims,
     int       *lremain_dims;
     int        ndims, i;
 
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+
     MPI_Cartdim_get( MPI_Comm_f2c(*comm), &ndims );
 
     is_malloced = 0;
@@ -718,6 +809,8 @@ void mpi_graph_create_( MPI_Fint *comm_old, MPI_Fint *nnodes,
                         MPI_Fint *comm_graph, MPI_Fint *__ierr )
 {
     MPI_Comm lcomm_graph;
+
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
 
     if (sizeof(MPI_Fint) == sizeof(int))
 #if defined(_TWO_WORD_FCD)
@@ -905,12 +998,12 @@ void mpi_iprobe_( MPI_Fint *source, MPI_Fint *tag, MPI_Fint *comm,
     int lflag;
     MPI_Status c_status;
 
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+
     *__ierr = MPI_Iprobe((int)*source,(int)*tag,MPI_Comm_f2c(*comm),
                          &lflag,&c_status);
     *flag = MPIR_TO_FLOG(lflag);
-#if defined( HAVE_MPI_F_STATUS_IGNORE )
-    if ( status != MPI_F_STATUS_IGNORE )
-#endif
+    if ( status != MPER_F_MPI_STATUS_IGNORE )
         MPI_Status_c2f(&c_status, status);
 }
 
@@ -1002,11 +1095,11 @@ void mpi_probe_( MPI_Fint *source, MPI_Fint *tag, MPI_Fint *comm,
 {
     MPI_Status c_status;
 
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+
     *__ierr = MPI_Probe((int)*source, (int)*tag, MPI_Comm_f2c(*comm),
                         &c_status);
-#if defined( HAVE_MPI_F_STATUS_IGNORE )
-    if ( status != MPI_F_STATUS_IGNORE )
-#endif
+    if ( status != MPER_F_MPI_STATUS_IGNORE )
         MPI_Status_c2f(&c_status, status);
 }
 
@@ -1019,12 +1112,12 @@ void mpi_recv_( void *buf, MPI_Fint *count, MPI_Fint *datatype,
 {
     MPI_Status c_status;
 
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+
     *__ierr = MPI_Recv(MPIR_F_PTR(buf), (int)*count,MPI_Type_f2c(*datatype),
                        (int)*source, (int)*tag,
                        MPI_Comm_f2c(*comm), &c_status);
-#if defined( HAVE_MPI_F_STATUS_IGNORE )
-    if ( status != MPI_F_STATUS_IGNORE )
-#endif
+    if ( status != MPER_F_MPI_STATUS_IGNORE )
         MPI_Status_c2f(&c_status, status);
 }
 
@@ -1074,15 +1167,15 @@ void mpi_sendrecv_( void *sendbuf, MPI_Fint *sendcount, MPI_Fint *sendtype,
 {
     MPI_Status c_status;
 
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+
     *__ierr = MPI_Sendrecv(MPIR_F_PTR(sendbuf), (int)*sendcount,
                            MPI_Type_f2c(*sendtype), (int)*dest,
                            (int)*sendtag, MPIR_F_PTR(recvbuf),
                            (int)*recvcount, MPI_Type_f2c(*recvtype),
                            (int)*source, (int)*recvtag,
                            MPI_Comm_f2c(*comm), &c_status);
-#if defined( HAVE_MPI_F_STATUS_IGNORE )
-    if ( status != MPI_F_STATUS_IGNORE )
-#endif
+    if ( status != MPER_F_MPI_STATUS_IGNORE )
         MPI_Status_c2f(&c_status, status);
 }
 
@@ -1098,13 +1191,13 @@ void mpi_sendrecv_replace_( void *buf, MPI_Fint *count, MPI_Fint *datatype,
 {
     MPI_Status c_status;
 
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+
     *__ierr = MPI_Sendrecv_replace(MPIR_F_PTR(buf), (int)*count,
                                    MPI_Type_f2c(*datatype), (int)*dest,
                                    (int)*sendtag, (int)*source, (int)*recvtag,
                                    MPI_Comm_f2c(*comm), &c_status );
-#if defined( HAVE_MPI_F_STATUS_IGNORE )
-    if ( status != MPI_F_STATUS_IGNORE )
-#endif
+    if ( status != MPER_F_MPI_STATUS_IGNORE )
         MPI_Status_c2f(&c_status, status);
 }
 
@@ -1175,10 +1268,10 @@ void mpi_start_( MPI_Fint *request, MPI_Fint *__ierr )
 }
 
 void mpi_testall_ ( MPI_Fint *, MPI_Fint [], MPI_Fint *,
-                    MPI_Fint [][MPI_STATUS_SIZE], MPI_Fint * );
+                    MPI_Fint *, MPI_Fint * );
 void mpi_testall_( MPI_Fint *count, MPI_Fint array_of_requests[],
                    MPI_Fint *flag,
-                   MPI_Fint array_of_statuses[][MPI_STATUS_SIZE],
+                   MPI_Fint *array_of_statuses,
                    MPI_Fint *__ierr )
 {
     int lflag;
@@ -1187,6 +1280,9 @@ void mpi_testall_( MPI_Fint *count, MPI_Fint array_of_requests[],
     MPI_Request local_lrequest[MPIR_USE_LOCAL_ARRAY];
     MPI_Status *c_status = 0;
     MPI_Status local_c_status[MPIR_USE_LOCAL_ARRAY];
+    MPI_Fint   *f_status = 0;
+
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
 
     if ((int)*count > 0) {
         if ((int)*count > MPIR_USE_LOCAL_ARRAY) {
@@ -1219,14 +1315,16 @@ void mpi_testall_( MPI_Fint *count, MPI_Fint array_of_requests[],
     *flag = MPIR_TO_FLOG(lflag);
     /* We must only copy for those elements that corresponded to non-null
        requests, and only if there is a change */
-#if defined( HAVE_MPI_F_STATUSES_IGNORE )
-    if ( (MPI_Fint *) array_of_statuses != MPI_F_STATUSES_IGNORE )
-#endif
+    if ( array_of_statuses != MPER_F_MPI_STATUSES_IGNORE )
+    {
         if (lflag) {
+            f_status = array_of_statuses;
             for (i=0; i<(int)*count; i++) {
-                MPI_Status_c2f( &c_status[i], &(array_of_statuses[i][0]) );
+                MPI_Status_c2f( &c_status[i], f_status );
+                f_status += MPER_F_MPI_STATUS_SIZE;
             }
         }
+    }
 
     if ((int)*count > MPIR_USE_LOCAL_ARRAY) {
         FREE( lrequest );
@@ -1246,6 +1344,8 @@ void mpi_testany_( MPI_Fint *count, MPI_Fint array_of_requests[],
     MPI_Request local_lrequest[MPIR_USE_LOCAL_ARRAY];
     MPI_Status c_status;
     int i;
+
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
 
     if ((int)*count > 0) {
         if ((int)*count > MPIR_USE_LOCAL_ARRAY) {
@@ -1280,9 +1380,7 @@ void mpi_testany_( MPI_Fint *count, MPI_Fint array_of_requests[],
     if ((int)*index >= 0)
         *index = *index + 1;
 
-#if defined( HAVE_MPI_F_STATUS_IGNORE )
-    if ( status != MPI_F_STATUS_IGNORE )
-#endif
+    if ( status != MPER_F_MPI_STATUS_IGNORE )
         MPI_Status_c2f(&c_status, status);
 }
 
@@ -1291,6 +1389,8 @@ void mpi_test_cancelled_(MPI_Fint *status, MPI_Fint *flag, MPI_Fint *__ierr)
 {
     int lflag;
     MPI_Status c_status;
+
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
 
     MPI_Status_f2c(status, &c_status);
     *__ierr = MPI_Test_cancelled(&c_status, &lflag);
@@ -1303,27 +1403,26 @@ void mpi_test_ ( MPI_Fint *request, MPI_Fint *flag, MPI_Fint *status,
 {
     int        l_flag;
     MPI_Status c_status;
-    MPI_Request lrequest = MPI_Request_f2c(*request);
+    MPI_Request lrequest;
 
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+
+    lrequest = MPI_Request_f2c(*request);
     *__ierr = MPI_Test( &lrequest, &l_flag, &c_status);
     *request = MPI_Request_c2f(lrequest);
 
     *flag = MPIR_TO_FLOG(l_flag);
 
-#if defined( HAVE_MPI_F_STATUS_IGNORE )
-    if ( status != MPI_F_STATUS_IGNORE )
-#endif
+    if ( status != MPER_F_MPI_STATUS_IGNORE )
         if (l_flag)
             MPI_Status_c2f(&c_status, status);
 }
 
 void mpi_testsome_ ( MPI_Fint *, MPI_Fint [], MPI_Fint *,
-                     MPI_Fint [], MPI_Fint [][MPI_STATUS_SIZE],
-                     MPI_Fint * );
+                     MPI_Fint [], MPI_Fint *, MPI_Fint * );
 void mpi_testsome_( MPI_Fint *incount, MPI_Fint array_of_requests[],
                     MPI_Fint *outcount, MPI_Fint array_of_indices[], 
-                    MPI_Fint array_of_statuses[][MPI_STATUS_SIZE],
-                    MPI_Fint *__ierr )
+                    MPI_Fint *array_of_statuses, MPI_Fint *__ierr )
 {
     int i,j,found;
     int loutcount;
@@ -1333,6 +1432,9 @@ void mpi_testsome_( MPI_Fint *incount, MPI_Fint array_of_requests[],
     MPI_Request local_lrequest[MPIR_USE_LOCAL_ARRAY];
     MPI_Status *c_status = 0;
     MPI_Status local_c_status[MPIR_USE_LOCAL_ARRAY];
+    MPI_Fint   *f_status = 0;
+
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
 
     if ((int)*incount > 0) {
         if ((int)*incount > MPIR_USE_LOCAL_ARRAY) {
@@ -1384,11 +1486,13 @@ void mpi_testsome_( MPI_Fint *incount, MPI_Fint array_of_requests[],
         *__ierr = MPI_Testsome( (int)*incount, (MPI_Request *)0, &loutcount, 
                                 l_indices, c_status );
 
+    f_status = array_of_statuses;
     for (i=0; i<loutcount; i++) {
-#if defined( HAVE_MPI_F_STATUSES_IGNORE )
-        if ( (MPI_Fint *) array_of_statuses != MPI_F_STATUSES_IGNORE )
-#endif
-            MPI_Status_c2f(&c_status[i], &(array_of_statuses[i][0]) );
+        if ( array_of_statuses != MPER_F_MPI_STATUSES_IGNORE )
+        {
+            MPI_Status_c2f(&c_status[i], f_status );
+            f_status += MPER_F_MPI_STATUS_SIZE;
+        }
         if (l_indices[i] >= 0)
             array_of_indices[i] = l_indices[i] + 1;
     }
@@ -1680,16 +1784,18 @@ void mpi_unpack_ ( void *inbuf, MPI_Fint *insize, MPI_Fint *position,
 }
 
 void mpi_waitall_ ( MPI_Fint *, MPI_Fint [],
-                    MPI_Fint [][MPI_STATUS_SIZE], MPI_Fint *);
+                    MPI_Fint *, MPI_Fint *);
 void mpi_waitall_( MPI_Fint *count, MPI_Fint array_of_requests[],
-                   MPI_Fint array_of_statuses[][MPI_STATUS_SIZE],
-                   MPI_Fint *__ierr )
+                   MPI_Fint *array_of_statuses, MPI_Fint *__ierr )
 {
     int i;
     MPI_Request *lrequest = 0;
     MPI_Request local_lrequest[MPIR_USE_LOCAL_ARRAY];
     MPI_Status *c_status = 0;
     MPI_Status local_c_status[MPIR_USE_LOCAL_ARRAY];
+    MPI_Fint   *f_status = 0;
+
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
 
     if ((int)*count > 0) {
         if ((int)*count > MPIR_USE_LOCAL_ARRAY) {
@@ -1719,11 +1825,14 @@ void mpi_waitall_( MPI_Fint *count, MPI_Fint array_of_requests[],
     else 
         *__ierr = MPI_Waitall((int)*count,(MPI_Request *)0, c_status );
 
-#if defined( HAVE_MPI_F_STATUSES_IGNORE )
-    if ( (MPI_Fint *) array_of_statuses != MPI_F_STATUSES_IGNORE )
-#endif
-        for (i=0; i<(int)*count; i++) 
-            MPI_Status_c2f(&(c_status[i]), &(array_of_statuses[i][0]) );
+    if ( array_of_statuses != MPER_F_MPI_STATUSES_IGNORE )
+    {
+        f_status = array_of_statuses;
+        for (i=0; i<(int)*count; i++) {
+            MPI_Status_c2f(&(c_status[i]), f_status );
+            f_status += MPER_F_MPI_STATUS_SIZE;
+        }
+    }
     
     if ((int)*count > MPIR_USE_LOCAL_ARRAY) {
         FREE( lrequest );
@@ -1742,6 +1851,8 @@ void mpi_waitany_( MPI_Fint *count, MPI_Fint array_of_requests[],
     MPI_Request local_lrequest[MPIR_USE_LOCAL_ARRAY];
     MPI_Status c_status;
     int i;
+
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
 
     if ((int)*count > 0) {
         if ((int)*count > MPIR_USE_LOCAL_ARRAY) {
@@ -1776,9 +1887,7 @@ void mpi_waitany_( MPI_Fint *count, MPI_Fint array_of_requests[],
        are from 1, not zero */
     *index = (MPI_Fint)lindex;
     if ((int)*index >= 0) *index = (MPI_Fint)*index + 1;
-#if defined( HAVE_MPI_F_STATUS_IGNORE )
-    if ( status != MPI_F_STATUS_IGNORE )
-#endif
+    if ( status != MPER_F_MPI_STATUS_IGNORE )
         MPI_Status_c2f(&c_status, status);
 }
 
@@ -1788,22 +1897,21 @@ void mpi_wait_ ( MPI_Fint *request, MPI_Fint *status, MPI_Fint *__ierr )
     MPI_Request lrequest;
     MPI_Status c_status;
 
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+
     lrequest = MPI_Request_f2c(*request);
     *__ierr = MPI_Wait(&lrequest, &c_status);
     *request = MPI_Request_c2f(lrequest);
 
-#if defined( HAVE_MPI_F_STATUS_IGNORE )
-    if ( status != MPI_F_STATUS_IGNORE )
-#endif
+    if ( status != MPER_F_MPI_STATUS_IGNORE )
         MPI_Status_c2f(&c_status, status);
 }
 
 void mpi_waitsome_ ( MPI_Fint *, MPI_Fint [], MPI_Fint *,
-                     MPI_Fint [], MPI_Fint [][MPI_STATUS_SIZE],
-                     MPI_Fint * );
+                     MPI_Fint [], MPI_Fint *, MPI_Fint * );
 void mpi_waitsome_( MPI_Fint *incount, MPI_Fint array_of_requests[],
                     MPI_Fint *outcount, MPI_Fint array_of_indices[], 
-                    MPI_Fint array_of_statuses[][MPI_STATUS_SIZE],
+                    MPI_Fint *array_of_statuses,
                     MPI_Fint *__ierr )
 {
     int i,j,found;
@@ -1812,8 +1920,11 @@ void mpi_waitsome_( MPI_Fint *incount, MPI_Fint array_of_requests[],
     int local_l_indices[MPIR_USE_LOCAL_ARRAY];
     MPI_Request *lrequest = 0;
     MPI_Request local_lrequest[MPIR_USE_LOCAL_ARRAY];
-    MPI_Status * c_status = 0;
+    MPI_Status *c_status = 0;
     MPI_Status local_c_status[MPIR_USE_LOCAL_ARRAY];
+    MPI_Fint   *f_status = 0;
+
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
 
     if ((int)*incount > 0) {
         if ((int)*incount > MPIR_USE_LOCAL_ARRAY) {
@@ -1870,14 +1981,15 @@ void mpi_waitsome_( MPI_Fint *incount, MPI_Fint array_of_requests[],
         *__ierr = MPI_Waitsome( (int)*incount, (MPI_Request *)0, &loutcount,
                                 l_indices, c_status );
 
+    f_status = array_of_statuses;
     for (i=0; i<loutcount; i++) {
-#if defined( HAVE_MPI_F_STATUSES_IGNORE )
-        if ( (MPI_Fint *) array_of_statuses != MPI_F_STATUSES_IGNORE )
-#endif
-            MPI_Status_c2f( &c_status[i], &(array_of_statuses[i][0]) );
+        if ( array_of_statuses != MPER_F_MPI_STATUSES_IGNORE )
+        {
+            MPI_Status_c2f( &c_status[i], f_status );
+            f_status += MPER_F_MPI_STATUS_SIZE;
+        }
         if (l_indices[i] >= 0)
             array_of_indices[i] = l_indices[i] + 1;
-
     }
     *outcount = (MPI_Fint)loutcount;
     if ((int)*incount > MPIR_USE_LOCAL_ARRAY) {
@@ -1894,6 +2006,9 @@ void mpi_allgather_ ( void *sendbuf, MPI_Fint *sendcount, MPI_Fint *sendtype,
                       void *recvbuf, MPI_Fint *recvcount, MPI_Fint *recvtype,
                       MPI_Fint *comm, MPI_Fint *__ierr )
 {
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+    if ( sendbuf == MPER_F_MPI_IN_PLACE ) sendbuf = MPI_IN_PLACE;
+
     *__ierr = MPI_Allgather(MPIR_F_PTR(sendbuf), (int)*sendcount,
                             MPI_Type_f2c(*sendtype),
                             MPIR_F_PTR(recvbuf),
@@ -1909,6 +2024,9 @@ void mpi_allgatherv_ ( void *sendbuf, MPI_Fint *sendcount,  MPI_Fint *sendtype,
                        void *recvbuf, MPI_Fint *recvcounts, MPI_Fint *displs,
                        MPI_Fint *recvtype, MPI_Fint *comm, MPI_Fint *__ierr )
 {
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+    if ( sendbuf == MPER_F_MPI_IN_PLACE ) sendbuf = MPI_IN_PLACE;
+
     if (sizeof(MPI_Fint) == sizeof(int))
         *__ierr = MPI_Allgatherv(MPIR_F_PTR(sendbuf), *sendcount,
                                  MPI_Type_f2c(*sendtype),
@@ -1950,6 +2068,9 @@ void mpi_allreduce_ ( void *sendbuf, void *recvbuf, MPI_Fint *count,
                       MPI_Fint *datatype, MPI_Fint *op, MPI_Fint *comm,
                       MPI_Fint *__ierr )
 {
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+    if ( sendbuf == MPER_F_MPI_IN_PLACE ) sendbuf = MPI_IN_PLACE;
+
     *__ierr = MPI_Allreduce(MPIR_F_PTR(sendbuf),MPIR_F_PTR(recvbuf),
                             (int)*count, MPI_Type_f2c(*datatype),
                             MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
@@ -2049,6 +2170,9 @@ void mpi_gather_ ( void *sendbuf, MPI_Fint *sendcnt, MPI_Fint *sendtype,
                    void *recvbuf, MPI_Fint *recvcount, MPI_Fint *recvtype,
                    MPI_Fint *root, MPI_Fint *comm, MPI_Fint *__ierr )
 {
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+    if ( sendbuf == MPER_F_MPI_IN_PLACE ) sendbuf = MPI_IN_PLACE;
+
     *__ierr = MPI_Gather(MPIR_F_PTR(sendbuf), (int)*sendcnt,
                          MPI_Type_f2c(*sendtype), MPIR_F_PTR(recvbuf),
                          (int)*recvcount, MPI_Type_f2c(*recvtype),
@@ -2063,6 +2187,8 @@ void mpi_gatherv_ ( void *sendbuf, MPI_Fint *sendcnt, MPI_Fint *sendtype,
                     MPI_Fint *recvtype, MPI_Fint *root, MPI_Fint *comm,
                     MPI_Fint *__ierr )
 {
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+    if ( sendbuf == MPER_F_MPI_IN_PLACE ) sendbuf = MPI_IN_PLACE;
 
     if (sizeof(MPI_Fint) == sizeof(int))
         *__ierr = MPI_Gatherv(MPIR_F_PTR(sendbuf), *sendcnt,
@@ -2116,6 +2242,8 @@ void mpi_op_create_(
 
     MPI_Op l_op;
 
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+
 #ifdef FORTRAN_SPECIAL_FUNCTION_PTR
     *__ierr = MPI_Op_create(*function,MPIR_FROM_FLOG((int)*commute),
                             &l_op);
@@ -2143,6 +2271,8 @@ void mpi_reduce_scatter_ ( void *sendbuf, void *recvbuf,
                            MPI_Fint *recvcnts, MPI_Fint *datatype,
                            MPI_Fint *op, MPI_Fint *comm, MPI_Fint *__ierr )
 {
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+    if ( sendbuf == MPER_F_MPI_IN_PLACE ) sendbuf = MPI_IN_PLACE;
 
     if (sizeof(MPI_Fint) == sizeof(int))
         *__ierr = MPI_Reduce_scatter(MPIR_F_PTR(sendbuf),
@@ -2177,6 +2307,9 @@ void mpi_reduce_ ( void *sendbuf, void *recvbuf, MPI_Fint *count,
                    MPI_Fint *datatype, MPI_Fint *op, MPI_Fint *root,
                    MPI_Fint *comm, MPI_Fint *__ierr )
 {
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+    if ( sendbuf == MPER_F_MPI_IN_PLACE ) sendbuf = MPI_IN_PLACE;
+
     *__ierr = MPI_Reduce(MPIR_F_PTR(sendbuf), MPIR_F_PTR(recvbuf),
                          (int)*count, MPI_Type_f2c(*datatype),
                          MPI_Op_f2c(*op), (int)*root,
@@ -2189,6 +2322,9 @@ void mpi_scan_ ( void *sendbuf, void *recvbuf, MPI_Fint *count,
                  MPI_Fint *datatype, MPI_Fint *op, MPI_Fint *comm,
                  MPI_Fint *__ierr )
 {
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+    if ( sendbuf == MPER_F_MPI_IN_PLACE ) sendbuf = MPI_IN_PLACE;
+
     *__ierr = MPI_Scan(MPIR_F_PTR(sendbuf), MPIR_F_PTR(recvbuf),
                        (int)*count, MPI_Type_f2c(*datatype),
                        MPI_Op_f2c(*op), MPI_Comm_f2c(*comm));
@@ -2201,6 +2337,9 @@ void mpi_scatter_ ( void *sendbuf, MPI_Fint *sendcnt, MPI_Fint *sendtype,
                     void *recvbuf, MPI_Fint *recvcnt, MPI_Fint *recvtype,
                     MPI_Fint *root, MPI_Fint *comm, MPI_Fint *__ierr )
 {
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+    if ( sendbuf == MPER_F_MPI_IN_PLACE ) sendbuf = MPI_IN_PLACE;
+
     *__ierr = MPI_Scatter(MPIR_F_PTR(sendbuf), (int)*sendcnt,
                           MPI_Type_f2c(*sendtype), MPIR_F_PTR(recvbuf),
                           (int)*recvcnt, MPI_Type_f2c(*recvtype),
@@ -2216,6 +2355,9 @@ void mpi_scatterv_ ( void *sendbuf, MPI_Fint *sendcnts,
                      MPI_Fint *recvtype, MPI_Fint *root,
                      MPI_Fint *comm, MPI_Fint *__ierr )
 {
+    if ( !MPER_F_Initialized ) { mper_fconsts_init(); MPER_F_Initialized = 1; }
+    if ( sendbuf == MPER_F_MPI_IN_PLACE ) sendbuf = MPI_IN_PLACE;
+
     if (sizeof(MPI_Fint) == sizeof(int))
         *__ierr = MPI_Scatterv(MPIR_F_PTR(sendbuf), sendcnts, displs,
                                MPI_Type_f2c(*sendtype), MPIR_F_PTR(recvbuf),
