@@ -1,37 +1,48 @@
 			MPICH2 Release %VERSION%
 
-MPICH2 is an all-new implementation of MPI from the group at Argonne
-National Laboratory.  It shares many goals with the original MPICH but
-no actual code.  It is a portable, high-performance implementation of
-the entire MPI 2.1 standard. This release has all MPI 2.1 functions and
-features required by the standard with the exception of support for the
-"external32" portable I/O format and user-defined data representations 
-for I/O. 
+MPICH2 is a high-performance and widely portable implementation of the
+MPI-2.1 standard from the Argonne National Laboratory. This release
+has all MPI 2.1 functions and features required by the standard with
+the exception of support for the "external32" portable I/O format and
+user-defined data representations for I/O.
 
 The distribution has been tested by us on a variety of machines in our
 own environments. If you have problems, please report them to
 mpich2-maint@mcs.anl.gov.
 
 This README file should contain enough information to get you started
-with MPICH2.  More extensive installation and user guides can be found
+with MPICH2. More extensive installation and user guides can be found
 in the doc/installguide/install.pdf and doc/userguide/user.pdf files
-respectively.  Additional information regarding the contents of the
-release can be found at the end of this README under "Status of MPI-2
-Features in MPICH2", in the CHANGES file in the top-level directory, and
-in the RELEASE_NOTES file, where certain restrictions are detailed.
-Finally, the MPICH2 web site, http://www.mcs.anl.gov/mpi/mpich2,
-contains information on bug fixes and new releases.
+respectively. Additional information regarding the contents of the
+release can be found in the CHANGES file in the top-level directory,
+and in the RELEASE_NOTES file, where certain restrictions are
+detailed. Finally, the MPICH2 web site,
+http://www.mcs.anl.gov/research/projects/mpich2, contains information
+on bug fixes and new releases.
+
   
-Windows users should see the file README.windows in this directory. 
+I.    Getting Started
+II.   Alternate Configure Options
+III.  Compiler Flags
+IV.   Alternate Channels and Devices
+V.    Alternate Process Managers
+VI.   VPATH Builds
+VII.  Shared Libraries
+VIII. Other Features
+IX.   Developer Builds
+X.    Building ROMIO into MPICH2
+XI.   Testing the MPICH2 installation
+XII.  Installing MPICH2 on windows
 
 
-Getting Started
-===============
+-------------------------------------------------------------------------
+
+I. Getting Started
+==================
 
 The following instructions take you through a sequence of steps to get
-the default configuration (TCP communication, MPD process management) of
-MPICH2 up and running.  Alternate configuration options are described
-later, in the section "Alternative configurations".  
+the default configuration (ch3 device, nemesis channel (with TCP and
+shared memory), MPD process management) of MPICH2 up and running.
 
 1.  You will need the following prerequisites.
 
@@ -54,7 +65,7 @@ later, in the section "Alternative configurations".
       use those routines, however, the MPI module does not contain
       interface specifications for them. If you have trouble with the
       configuration step and do not need Fortran 90, configure with
-      --disable-f90 . 
+      --disable-f90 .
 
     Configure will check for these prerequisites and try to work around
     deficiencies if possible.  (If you don't have Fortran, you will
@@ -169,12 +180,12 @@ later, in the section "Alternative configurations".
     duplicate this directory on your other machines if it is not
     in a shared file system such as NFS.
 
-8.  MPICH2, unlike MPICH, uses an external process manager for scalable
-    startup of large MPI jobs.  The default process manager is called
-    MPD, which is a ring of daemons on the machines where you will run
-    your MPI programs.  In the next few steps, you will get his ring up
-    and tested.  More details on interacting with MPD can be found in
-    the README file in mpich2-%VERSION%/src/pm/mpd, such as how to list
+8.  MPICH2 uses an external process manager for scalable startup of
+    large MPI jobs.  The default process manager is called MPD, which
+    is a ring of daemons on the machines where you will run your MPI
+    programs.  In the next few steps, you will get his ring up and
+    tested.  More details on interacting with MPD can be found in the
+    README file in mpich2-%VERSION%/src/pm/mpd, such as how to list
     running jobs, kill, suspend, or otherwise signal them, and how to
     debug programs with "mpiexec -gdb".
 
@@ -349,44 +360,46 @@ the doc subdirectory.  Also in the User's Guide you will find help on
 debugging.  MPICH2 has some some support for the TotalView debugger, as
 well as some other approaches described there.
 
+-------------------------------------------------------------------------
 
-Alternatives
-============
+II. Alternate Configure Options
+===============================
 
 The above steps utilized the MPICH2 defaults, which included choosing
-TCP and shared memory for communication (via the "nemesis" channel) and
-the MPD process manager.  Other alternatives are available.  You can
-find out about configuration alternatives with
+TCP and shared memory for communication (via the "nemesis" channel)
+and the MPD process manager.  Other alternatives are available.  You
+can find out about configuration alternatives with
 
    ./configure --help
 
 in the mpich2 directory.  The alternatives described below are
 configured by adding arguments to the configure step.
 
+-------------------------------------------------------------------------
 
-Compiler Flags
-==============
+III. Compiler Flags
+===================
 
-MPICH2 can be configured with two sets of compiler flags:
-CFLAGS, CXXFLAGS, FFLAGS, F90FLAGS (abbreviated as xFLAGS) and
-MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS, MPICH2LIB_FFLAGS, MPICH2LIB_F90FLAGS
-(abbreviated as MPICH2LIB_xFLAGS) for compilation;
+MPICH2 can be configured with two sets of compiler flags: CFLAGS,
+CXXFLAGS, FFLAGS, F90FLAGS (abbreviated as xFLAGS) and
+MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS, MPICH2LIB_FFLAGS,
+MPICH2LIB_F90FLAGS (abbreviated as MPICH2LIB_xFLAGS) for compilation;
 LDFLAGS and MPICH2LIB_LDFLAGS for linking. All these flags can be set
 as part of configure command or through environment variables.
 (CPPFLAGS stands for C preprocessor flags, which should NOT be set)
 
 Both xFLAGS and MPICH2LIB_xFLAGS affect the compilation of the MPICH2
-libraries. However, only xFLAGS is appended to MPI wrapper scripts, mpicc
-and friends.
+libraries. However, only xFLAGS are appended to MPI wrapper scripts,
+mpicc and friends.
 
 MPICH2 libraries are built with default compiler optimization, -O2,
-which can be modified by --enable-fast configure option.  For instance,
---disable-fast disables the default optimization option.
---enable-fast=O<n> sets default compiler optimization as -O<n>.
-For more details of --enable-fast, see the output of "configure --help".
-Any other complicated optimization flags for MPICH2 libraries have
-to be set throught MPICH2LIB_xFLAGS.  CFLAGS and friends
-are empty by default.
+which can be modified by --enable-fast configure option.  For
+instance, --disable-fast disables the default optimization option.
+--enable-fast=O<n> sets default compiler optimization as -O<n>.  For
+more details of --enable-fast, see the output of "configure --help".
+Any other complicated optimization flags for MPICH2 libraries have to
+be set throught MPICH2LIB_xFLAGS.  CFLAGS and friends are empty by
+default.
 
 For example, to build a "production" MPICH2 environment with -O3 for all
 language bindings, one can simply do
@@ -401,7 +414,7 @@ This will cause the MPICH2 libraries to be built with -O3, and -O3 will
 not be included in the mpicc and other MPI wrapper script.
 
 There are certain compiler flags that should not be used with MPICH2's
-configure, e.g. gcc's -Werror which would confuse configure and cause
+configure, e.g. gcc's -Werror, which would confuse configure and cause
 certain configure tests to fail to detect the correct system features.
 To use -Werror in building MPICH2 libraries, you can pass the compiler
 flags during the make step through the Makefile variable
@@ -409,12 +422,232 @@ MPICH2_MAKE_CFLAGS as follows:
 
   make VERBOSE=1 MPICH2_MAKE_CFLAGS="-Wall -Werror"
 
-(assume CC is set to gcc). The content of MPICH2_MAKE_CFLAGS
-is appended to the CFLAGS in almost all Makefiles.
+(assuming CC is set to gcc). The content of MPICH2_MAKE_CFLAGS is
+appended to the CFLAGS in almost all Makefiles.
+
+-------------------------------------------------------------------------
+
+IV. Alternate Channels and Devices
+==================================
+
+The communication mechanisms in MPICH2 are called "devices". MPICH2
+supports several internal devices including ch3 (default), dcmfd (for
+Blue Gene/P) and globus (for Globus), as well as many third-party
+devices that are released and maintained by other institutes such as
+osu_ch3 (from Ohio State University for InfiniBand and iWARP), ch_mx
+(from Myricom for Myrinet MX), etc.
+
+                   *************************************
+
+ch3 device
+**********
+The ch3 device contains different internal communication options
+called "channels". We currently support nemesis (default), sock, ssm,
+and shm channels, and experimentally provide a dllchan channel within
+the ch3 device.
+
+nemesis channel
+---------------
+Nemesis provides communication using different networks (tcp, mx) as
+well as various shared-memory optimizations. To configure MPICH2 with
+nemesis, you can use the following configure option:
+
+  --with-device=ch3:nemesis
+
+The TCP network module gets configured in by default. To specify a
+different network module such as MX, you can use:
+
+  --with-device=ch3:nemesis:mx
+
+If the MX include files and libraries are not in the normal search
+paths, you can specify them with the following options:
+
+  --with-mx-include= and --with-mx-lib=
+
+... or the if lib/ and include/ are in the same directory, you can use
+the following option:
+
+  --with-mx=
+
+If the MX libraries are shared libraries, they need to be in the
+shared library search path. This can be done by adding the path to
+/etc/ld.so.conf, or by setting the LD_LIBRARY_PATH variable in your
+.bashrc (or .tcshrc) file.  It's also possible to set the shared
+library search path in the binary. If you're using gcc, you can do this by adding
+
+  LD_LIBRARY_PATH=/path/to/lib
+
+  (and)
+
+  LDFLAGS="-Wl,-rpath -Wl,/path/to/lib"
+
+... as arguments to configure.
 
 
-Alternative Process Managers
-============================
+Shared-memory optimizations are enabled by default to improve
+performance for multi-processor/multi-core platforms. They can be
+disabled (at the cost of performance) either by setting the
+environment variable MPICH_NO_LOCAL to 1, or using the following
+configure option:
+
+  --enable-nemesis-dbg-nolocal
+
+The --with-shared-memory= configure option allows you to choose how
+Nemesis allocates shared memory.  The options are "auto", "sysv", and
+"mmap".  Using "sysv" will allocate shared memory using the System V
+shmget(), shmat(), etc. functions.  Using "mmap" will allocate shared
+memory by creating a file (in /dev/shm if it exists, otherwise /tmp),
+then mmap() the file.  The default is "auto". Note that System V
+shared memory has limits on the size of shared memory segments so
+using this for Nemesis may limit the number of processes that can be
+started on a single node.
+
+
+sock channel
+------------
+sock is the traditional TCP sockets based communication channel. It
+uses TCP/IP sockets for all communication including intra-node
+communication. So, though the performance of this channel is worse
+than that of nemesis, it should work on almost every platform. This
+channel can be configured using the following option:
+
+  --with-device=ch3:sock
+
+ssm and shm channels
+--------------------
+shm (shared memory) channel is for use on platforms that only use
+shared-memory communication. ssm (sockets and shared memory) is for
+use on clusters of shared-memory machines. They can be configured
+using:
+
+  --with-device=ch3:ssm
+
+  (or)
+
+  --with-device=ch3:shm
+
+These two channels are being deprecated and will be removed starting
+the 1.2 release series of MPICH2. The nemesis channel provides all the
+functionality supported by these channels and more.
+
+dllchan
+-------
+
+dllchan is a new *experimental* channel for supporting dynamic loading
+of other channels. To use this channel, configure with:
+
+  --with-device=ch3:dllchan:sock,shm,ssm
+
+This provides the sock, shm, and ssm channels as options, with sock
+being the default. In addition, you must specify the shared library
+type; under Linux and when using gcc (or compilers that mimic gcc for
+shared-library construction) add:
+
+  --enable-sharedlibs=gcc
+
+On Mac OSX, use:
+
+  --enable-sharedlibs=gcc-osx
+
+On Solaris, use:
+
+  --enable-sharedlibs=solaris-cc
+
+To select a channel other than the default channel, set the
+environment variable MPICH_CH3CHANNEL to the channel name (i.e., sock,
+shm, or ssm).
+
+There are known problems with this channel, particularly during the
+make step. You may find that some symbols are not found when loading
+the libraries. If you want to try this experimental channel, please
+let us know what does and does not work.
+
+sctp channel
+------------
+The SCTP channel is a new channel using the Stream Control
+Transmission Protocol (SCTP). This channel supports regular MPI-1
+operations as well as dynamic processes and RMA from MPI-2; it
+currently does not offer support for multiple threads.
+
+Configure the sctp channel by using the following option:
+
+  --with-device=ch3:sctp
+
+If the SCTP include files and libraries are not in the normal search
+paths, you can specify them with the --with-sctp-include= and
+--with-sctp-lib= options, or the --with-sctp= option if lib/ and
+include/ are in the same directory.
+
+SCTP stack specific instructions:
+
+  For FreeBSD 7 and onward, SCTP comes with CURRENT and is enabled with
+  the "option SCTP" in the kernel configuration file.  The sctp_xxx()
+  calls are contained within libc so to compile ch3:sctp, make a soft-link
+  named libsctp.a to the target libc.a, then pass the path of the 
+  libsctp.a soft-link to --with-sctp-lib.
+  
+  For FreeBSD 6.x, kernel patches and instructions can be downloaded at
+  http://www.sctp.org/download.html .  These kernels place libsctp and
+  headers in /usr, so nothing needs to be specified for --with-sctp
+  since /usr is often in the default search path.
+
+  For Mac OS X, the SCTP Network Kernel Extension (NKE) can be
+  downloaded at http://sctp.fh-muenster.de/sctp-nke.html .  This places
+  the lib and include in /usr, so nothing needs to be specified for
+  --with-sctp since /usr is often in the default search path.
+
+  For Linux, SCTP comes with the default kernel from 2.4.23 and later as
+  a module.  This module can be loaded as root using "modprobe sctp".
+  After this is loaded,  you can verify it is loaded using "lsmod".
+  Once loaded, the SCTP socket lib and include files must be downloaded
+  and installed from http://lksctp.sourceforge.net/ .  The prefix 
+  location must then be passed into --with-sctp.  This bundle is called 
+  lksctp-tools and is available for download off their website.
+
+  For Solaris, SCTP comes with the default Solaris 10 kernel; the lib
+  and include in /usr, so nothing needs to be specified for --with-sctp
+  since /usr is often in the default search path.  In order to compile
+  under Solaris, MPICH2LIB_CFLAGS must have
+  -DMPICH_SCTP_CONCATENATES_IOVS set when running MPICH2's configure
+  script.
+
+                   *************************************
+
+IBM Blue Gene/P device
+**********************
+MPICH2 also supports the IBM Blue Gene/P systems. Since BG/P's
+front-end uses a different architecture than the actual compute nodes,
+MPICH2 has to be cross-compiled for this platform. The configuration
+of MPICH2 on BG/P relies on the availability of the DCMF driver stack
+and cross compiler binaries on the system. These are packaged by IBM
+in their driver releases (default installation path is
+/bgsys/drivers/ppcfloor) and are not released with MPICH2.
+
+Assuming DRIVER_PATH points to the driver installation path (e.g.,
+/bgsys/drivers/ppcfloor), the following is an example configure
+command-line for MPICH2:
+
+  GCC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gcc \
+  CC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gcc \
+  CXX=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-g++ \
+  F77=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
+  F90=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
+  CFLAGS="-mcpu=450fp2" \
+  CXXFLAGS="-mcpu=450fp2" \
+  FFLAGS="-mcpu=450fp2" \
+  F90FLAGS="-mcpu=450fp2" \
+  AR=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-ar \
+  LD=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-ld \
+  MSGLAYER_INCLUDE="-I${DRIVER_PATH}/comm/include" \
+  MSGLAYER_LIB="-L${DRIVER_PATH}/comm/lib -ldcmfcoll.cnk -ldcmf.cnk -lpthread -lrt -L$DRIVER_PATH/runtime/SPI -lSPI.cna" \
+  ./configure --with-device=dcmfd:BGP --with-pmi=no --with-pm=no --with-file-system=bgl \
+  	      --enable-timer-type=device --with-cross=src/mpid/dcmfd/cross \
+	      --host=powerpc-bgp-linux --target=powerpc-bgp-linux --build=powerpc64-linux-gnu
+
+-------------------------------------------------------------------------
+
+V. Alternate Process Managers
+=============================
 
 mpd
 ---
@@ -451,234 +684,12 @@ MPICH2. However, we provide configure options that allow integration
 with SLURM. To enable this support, use "--with-pmi=slurm
 --with-pm=no" option with configure.
 
+-------------------------------------------------------------------------
 
-Alternative Channels and Devices
-================================
-
-nemesis, sock and ssm
----------------------
-The communication mechanisms in MPICH2 are called "devices", paired with
-specific "channels".  The most thoroughly tested device is the "ch3"
-device.  The default configuration chooses the "nemesis" channel in the ch3
-device (communication over shared memory and TCP or other network), which would be
-specified explicitly by putting
-
-  --with-device=ch3:nemesis
-
-on the configure command line.  The ch3 device has three other
-channels which are rigorously tested: "sock" which is the traditional
-TCP sockets based communication channel, "shm" (shared memory) for use
-on SMPs (all communication goes through shared memory instead of over
-TCP sockets) and "ssm" (sockets and shared memory) for use on clusters
-of SMPs (communication between processes on the same machine goes
-through shared memory; communication between processes on different
-machines goes over sockets).  Configure these by putting
-
-  --with-device=ch3:sock
-
-or 
-
-  --with-device=ch3:ssm
-
-on the configure command line.
-
-For the best performance, the "nemesis" channel should be picked
-unless one of the following cases is true:
-
- * The target platform is not an Intel 32-bit or Intel/AMD 64-bit
-(x86_64) machine.
-
- * The target operating systems is not Linux.
-
-
-dllchan
--------
-A new channel supports the dynamic loading of other channels.  To use this
-channel, configure with
-
-  --with-device=ch3:dllchan:sock,shm,ssm 
-
-(This provides the sock, shm, and ssm channels as options, with sock
-being the default.)  In addition, you must specify the shared library
-type; under Linux and when using gcc (or compilers that mimic gcc for
-shared-library construction) add
-
-   --enable-sharedlibs=gcc
-
-On Mac OSX, use
-
-   --enable-sharedlibs=gcc-osx
-
-This is an experimental channel in the current release.  To select a
-channel other than the default channel, set the environment variable
-MPICH_CH3CHANNEL to the channel name (i.e., sock, shm, or ssm).  If
-the process manager is gforker, you can also use a commandline option
-to mpiexec; specify -channel=name, as in
-
-    mpiexec -n 4 -channel=shm a.out
-
-There are known problems with this channel, particularly during the make step.
-You may find that some symbols are not found when loading the libraries.  
-If you want to try this experimental channel, please let us know what does
-and does not work.  The next release will have a more robust, 
-ready-for-production, version of this channel.
-
-
-nemesis network modules
------------------------
-The Nemesis channel is a low-latency channel that uses shared memory
-for intra-node communication and various networks for inter-node
-communication.  It currently supports TCP, GM, MX and Qsnet/Elan
-networks.  Other networks will be supported in the future.  The
-Nemesis channel may be selected using the --with-device=ch3:nemesis
-configure option.  The default network is TCP.
-
-  To use the GM network, use the --with-device=ch3:nemesis:gm
-  configure option.  If the GM include files and libraries are not in
-  the normal search paths, you can specify them with the
-  --with-gm-include= and --with-gm-lib= options, or the --with-gm=
-  option if lib/ and include/ are in the same directory.
-
-  To use the MX network, use the --with-device=ch3:nemesis:mx
-  configure option.  If the MX include files and libraries are not in
-  the normal search paths, you can specify them with the
-  --with-mx-include= and --with-mx-lib= options, or the --with-mx=
-  option if lib/ and include/ are in the same directory.
-  (Note : There are known performance issues with this module.)
-
-  To use the Qsnet/Elan network, use the --with-device=ch3:elan 
-  configure option. Specific paths can be specified with:
-  --with-elan-include= (path to the elan include files),
-  --with-elan-lib= (path to the elan libs) and (if needed)
-  --with-qsnet-include= (path to the qsnet include files).
-  (Note : This module is still in *experimental* state. It has not 
-  been thoroughly tested and performance issues remain.)
-
-  Note that if the GM, MX or Elan libraries are shared libraries, they
-  need to be in the shared library search path.  This can be done by
-  adding the path to /etc/ld.so.conf, or by setting the
-  LD_LIBRARY_PATH variable in your .bashrc (or .tcshrc) file.  It's
-  also possible to set the shared library search path in the binary.
-  If you're using gcc, you can do this by adding 
-    LD_LIBRARY_PATH=/path/to/lib 
-  and
-    LDFLAGS="-Wl,-rpath -Wl,/path/to/lib"
-  as arguments to configure.
-
-  Using the --enable-fast configure option significantly improves
-  intra-node performance.
-
-  The --with-shared-memory= configure option allows you to choose how
-  Nemesis allocates shared memory.  The options are "auto", "sysv",
-  and "mmap".  Using "sysv" will allocate shared memory using the
-  System V shmget(), shmat(), etc. functions.  Using "mmap" will
-  allocate shared memory by creating a file (in /dev/shm if it exists,
-  otherwise /tmp), then mmap() the file.  The default is "auto".  Note
-  that System V shared memory has limits on the size of shared memory
-  segments so using this for Nemesis may limit the number of processes
-  that can be started on a single node.
-
-
-sctp channel
-------------
-The SCTP channel is a new channel using the Stream Control
-Transmission Protocol.  SCTP is a new transport protocol available on
-most operating systems using standard commodity hardware.  For some
-background, this article answers "Why is SCTP needed given TCP and UDP
-are widely available?" :
-http://www.isoc.org/briefings/017/index.shtml
-
-This channel supports regular MPI-1 operations as well as dynamic
-processes and RMA from MPI-2; it currently does not offer support for
-multiple threads.
-
-Configure the sctp channel by putting
-
---with-device=ch3:sctp
-
-on the configure command line.
-
-If the SCTP include files and libraries are not in the normal search
-paths, you can specify them with the --with-sctp-include= and
---with-sctp-lib= options, or the --with-sctp=  option if lib/ and
-include/ are in the same directory.
-
-SCTP stack specific instructions:
-
-  For FreeBSD 7 and onward, SCTP comes with CURRENT and is enabled with
-  the "option SCTP" in the kernel configuration file.  The sctp_xxx()
-  calls are contained within libc so to compile ch3:sctp, make a soft-link
-  named libsctp.a to the target libc.a, then pass the path of the 
-  libsctp.a soft-link to --with-sctp-lib.
-  
-  For FreeBSD 6.x, kernel patches and instructions can be downloaded at
-  http://www.sctp.org/download.html .  These kernels place libsctp and
-  headers in /usr, so nothing needs to be specified for --with-sctp
-  since /usr is often in the default search path.
-
-  For Mac OS X, the SCTP Network Kernel Extension (NKE) can be
-  downloaded at http://sctp.fh-muenster.de/sctp-nke.html .  This places
-  the lib and include in /usr, so nothing needs to be specified for
-  --with-sctp since /usr is often in the default search path.
-
-  For Linux, SCTP comes with the default kernel from 2.4.23 and later as
-  a module.  This module can be loaded as root using "modprobe sctp".
-  After this is loaded,  you can verify it is loaded using "lsmod".
-  Once loaded, the SCTP socket lib and include files must be downloaded
-  and installed from http://lksctp.sourceforge.net/ .  The prefix 
-  location must then be passed into --with-sctp.  This bundle is called 
-  lksctp-tools and is available for download off their website.
-
-  For Solaris, SCTP comes with the default Solaris 10 kernel; the lib
-  and include in /usr, so nothing needs to be specified for --with-sctp
-  since /usr is often in the default search path.  In order to compile
-  under Solaris, MPICH2LIB_CFLAGS must have
-  -DMPICH_SCTP_CONCATENATES_IOVS set when running MPICH2's configure
-  script.
-
-In the SCTP channel, all MPI features except multithreading are
-supported. Some performance optimizations could surely exist for this
-channel and will be investigated for future releases.
-
-
-IBM Blue Gene/P device
-----------------------
-Starting from the 1.1 release series, MPICH2 also supports the IBM
-Blue Gene/P systems. Since BG/P's front-end uses a different
-architecture than the actual compute nodes, MPICH2 has to be
-cross-compiled for this platform. The configuration of MPICH2 on BG/P
-relies on the availability of the DCMF driver stack and cross compiler
-binaries on the system. These are packaged by IBM in their driver
-releases (default installation path is /bgsys/drivers/ppcfloor) and
-are not released with MPICH2.
-
-Assuming DRIVER_PATH points to the driver installation path (e.g.,
-/bgsys/drivers/ppcfloor), the following is an example configure
-command-line for MPICH2:
-
-  GCC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gcc \
-  CC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gcc \
-  CXX=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-g++ \
-  F77=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
-  F90=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
-  CFLAGS="-mcpu=450fp2" \
-  CXXFLAGS="-mcpu=450fp2" \
-  FFLAGS="-mcpu=450fp2" \
-  F90FLAGS="-mcpu=450fp2" \
-  AR=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-ar \
-  LD=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-ld \
-  MSGLAYER_INCLUDE="-I${DRIVER_PATH}/comm/include" \
-  MSGLAYER_LIB="-L${DRIVER_PATH}/comm/lib -ldcmfcoll.cnk -ldcmf.cnk -lpthread -lrt -L$DRIVER_PATH/runtime/SPI -lSPI.cna" \
-  ./configure --with-device=dcmfd:BGP --with-pmi=no --with-pm=no --with-file-system=bgl \
-  	      --enable-timer-type=device --with-cross=src/mpid/dcmfd/cross \
-	      --host=powerpc-bgp-linux --target=powerpc-bgp-linux --build=powerpc64-linux-gnu
-
-
-VPATH Builds
-============
-
+VI. VPATH Builds
+================
 MPICH2 supports building MPICH in a different directory tree than the
-one where the MPICH2 source is installed.  This often allows faster
+one where the MPICH2 source is installed. This often allows faster
 building, as the sources can be placed in a shared filesystem and the
 builds done in a local (and hence usually much faster) filesystem.  To
 make this clear, the following example assumes that the sources are
@@ -686,36 +697,35 @@ placed in /home/me/mpich2-<VERSION>, the build is done in
 /tmp/me/mpich2, and the installed version goes into
 /usr/local/mpich2-<VERSION>:
 
-  cd /home/me
-  tar xzf mpich2-<VERSION>.tar.gz
-  cd /tmp/me
-  # Assume /tmp/me already exists
-  mkdir mpich2
-  cd mpich2
-  /home/me/mpich2-<VERSION>/configure --prefix=/usr/local/mpich2-<VERSION>
-  make
-  make install
+  shell$ cd /home/me
+  shell$ tar xzf mpich2-<VERSION>.tar.gz
+  shell$ cd /tmp/me
 
+  shell$ mkdir mpich2
+  shell$ cd mpich2
+  shell$ /home/me/mpich2-<VERSION>/configure --prefix=/usr/local/mpich2-<VERSION>
+  shell$ make
+  shell$ make install
 
+-------------------------------------------------------------------------
 
-Shared Libraries
-================
-
-Shared libraries are currently only supported for gcc on Linux and
-Mac and for cc on Solaris. To have shared libraries created when
-MPICH2 is built, specify the following when MPICH2 is configured:
+VII. Shared Libraries
+=====================
+Shared libraries are currently only supported for gcc on Linux and Mac
+and for cc on Solaris. To have shared libraries created when MPICH2 is
+built, specify the following when MPICH2 is configured:
 
     configure --enable-sharedlibs=gcc         (on Linux)
     configure --enable-sharedlibs=osx-gcc     (on Mac OS X)
     configure --enable-sharedlibs=solaris-cc  (on Solaris)
 
+-------------------------------------------------------------------------
 
+VIII. Other Features
+====================
 
-Optional Features
-=================
-
-MPICH2 has a number of optional features.  If you are exploring MPICH2
-as part of a development project the following configure options are
+MPICH2 has a number of other features. If you are exploring MPICH2 as
+part of a development project the following configure options are
 important:
 
 Performance Options:
@@ -823,3 +833,118 @@ Compilation options for development:
                   MPICH2 developers for internal low-level timing.
                   Normal users should not use these as they are not
                   guaranteed to be accurate in certain situations.
+
+-------------------------------------------------------------------------
+
+IX. Developer Builds
+====================
+For MPICH2 developers who want to directly work on the svn, there are
+a few additional steps involved (people using the release tarballs do
+not have to follow these steps). Details about these steps can be
+found here:
+http://wiki.mcs.anl.gov/mpich2/index.php/Getting_And_Building_MPICH2
+
+-------------------------------------------------------------------------
+
+X. Building ROMIO into MPICH2
+=============================
+By default, ROMIO, an implementation of the I/O portion of MPI-2 will
+be built as a part of MPICH2. The file systems to be built can be
+speicified by passing them in a '+'-delimited list to the
+--with-file-system configure option. For example:
+
+  --with-file-system="pvfs+nfs+ufs"
+
+If you have installed version 2 of the PVFS file system, you can use
+the '--with-pvfs2=<prefix>' configure option to specify where
+libraries, headers, and utilities have been installed. If you have
+added the pvfs utilities to your PATH, then ROMIO will detect this and
+build support for PVFS automatically.
+
+-------------------------------------------------------------------------
+
+XI. Testing the MPICH2 installation
+===================================
+To test MPICH2, use the following options after installing mpich2.
+These will assume that mpich2 is installed into /usr/local/mpich2.
+
+1. MPICH2 test suite:
+
+   shell$ make testing
+
+The results summary will be placed in test/summary.xml 
+
+-------------------------------------------------------------------------
+
+XII. Installing MPICH2 on Windows
+=================================
+
+Here are the instructions for setting up MPICH2 on a Windows machine:
+
+0) Install:
+    Microsoft Developer Studio 2003 or later
+    Intel Fortran 8.0 or later
+    cygwin
+	choose the dos file format option
+	install perl and cvs
+
+1) Checkout mpich2:
+
+    Bring up a command prompt.
+    (replace "yourname" with your MCS login name):
+    svn co https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk mpich2
+
+2) Generate *.h.in
+
+    Bring up a cygwin bash shell.
+    cd mpich2
+    maint/updatefiles
+    exit
+
+3) Execute winconfigure.wsf
+
+4) Open Developer Studio
+
+    open mpich2\mpich2.sln
+    build the ch3sockDebug mpich2 solution
+    build the ch3sockDebug mpich2s project
+    build the ch3sockRelease mpich2 solution
+    build the ch3sockRelease mpich2s project
+    build the Debug mpich2 solution
+    build the Release mpich2 solution
+    build the fortDebug mpich2 solution
+    build the fortRelease mpich2 solution
+    build the gfortDebug mpich2 solution
+    build the gfortRelease mpich2 solution
+    build the sfortDebug mpich2 solution
+    build the sfortRelease mpich2 solution
+
+5) Open a command prompt
+
+    cd to mpich2\maint
+    execute "makegcclibs.bat"
+
+6) Open another Developer Studio instance
+
+    open mpich2\examples\examples.sln
+    build the Release target of the cpi project
+
+7) Return to Developer Studio with the mpich2 solution
+
+    set the version numbers in the Installer project
+    build the Installer mpich2 solution
+
+8) Test and distribute mpich2\maint\ReleaseMSI\mpich2.msi
+
+    mpich2.msi can be renamed, eg mpich2-1.1.msi
+
+9) To install the launcher:
+
+    Copy smpd.exe to a local directory on all the nodes.
+    Log on to each node as an administrator and execute "smpd.exe -install"
+
+10) Compile and run an MPI application:
+
+    Compile an mpi application.  Use mpi.h from mpich2\src\include\win32 and mpi.lib in mpich2\lib
+    Place your executable along with the mpich2 dlls somewhere accessable to all the machines.
+    Execute a job by running something like: mpiexec -n 3 myapp.exe
