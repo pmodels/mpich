@@ -85,7 +85,7 @@ mpdroot.o: ${srcdir}/mpdroot.c ${srcdir}/mpdroot.h mpdconf.h
 clean: 
 	@-rm -f *.o *.dep *~ ${EXAMPLES} core* *.1 *.pyc
 	@-rm -f *.gcno *.gcda *.bb *.bbg
-	@-rm -f ${srcdir}/*.gcno ${scrdir}/*.gcda
+	@-rm -f ${srcdir}/*.gcno ${srcdir}/*.gcda
 
 # echo "some of the following might be executables you want to remove"
 # ls -l | grep rwx
