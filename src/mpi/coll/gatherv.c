@@ -133,7 +133,12 @@ int MPIR_Gatherv (
             if (min_procs_str != NULL)
                 min_procs = atoi(min_procs_str);
             else
-                min_procs = MPIR_GATHERV_MIN_PROCS;
+                min_procs = comm_size + 1; /* Disable ssend if env not set */
+
+            if (min_procs == -1)
+                min_procs = comm_size + 1; /* Disable ssend */
+            else if (min_procs == 0)
+                min_procs = MPIR_GATHERV_MIN_PROCS; /* Use the default value */
 
             if (comm_size >= min_procs) {
                 mpi_errno = MPIC_Ssend(sendbuf, sendcnt, sendtype, root, 
