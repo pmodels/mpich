@@ -166,7 +166,44 @@ void MPIR_Nest_decr_export( void )
     MPIU_THREADPRIV_GET;
     MPIU_THREADPRIV_FIELD(nest_count) = MPIU_THREADPRIV_FIELD(nest_count) - 1;
 }
+#ifdef MPICH_DEBUG_NESTING
+void MPIR_Nest_incr_export_dbg( const char *srcfile, int srcline )
+{
+    MPIU_THREADPRIV_DECL;
+    MPIU_THREADPRIV_GET;
 
+    printf( "incr from %d at %s:%d\n", MPIU_THREADPRIV_FIELD(nest_count), srcfile, srcline );
+    if (MPIU_THREADPRIV_FIELD(nest_count) >= MPICH_MAX_NESTINFO) { 
+	MPIU_Internal_error_printf("nest stack exceeded at %s:%d\n",
+				   srcfile, srcline );
+    }
+    else {
+	MPIU_Strncpy(MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file,srcfile, MPICH_MAX_NESTFILENAME);
+	MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line=srcline;
+    }
+     MPIU_THREADPRIV_FIELD(nest_count)++; 
+}
+void MPIR_Nest_decr_export_dbg( const char *srcfile, int srcline )
+{
+    MPIU_THREADPRIV_DECL;
+    MPIU_THREADPRIV_GET;
+    printf( "decr from %d at %s:%d\n", MPIU_THREADPRIV_FIELD(nest_count), srcfile, srcline );
+    if (MPIU_THREADPRIV_FIELD(nest_count) >= 0) {
+	MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line=-srcline;}
+     MPIU_THREADPRIV_FIELD(nest_count)--;
+     if (MPIU_THREADPRIV_FIELD(nest_count) < MPICH_MAX_NESTINFO && 
+	 strcmp(MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file,srcfile) != 0) {
+         MPIU_Msg_printf( "Decremented nest count in file %s:%d but incremented in different file (%s:%d)\n", 
+                          srcfile, srcline,
+                          MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file, \
+                          MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line);\
+     }
+     else if (MPIU_THREADPRIV_FIELD(nest_count) < 0) {
+	 MPIU_Msg_printf("Decremented nest count in file %s:%d is negative\n", 
+			 srcfile,srcline);
+     }
+}
+#endif
 /* ------------------------------------------------------------------------- */
 /* These routines are called on error exit from most top-level MPI routines
    to invoke the appropriate error handler.  Also included is the routine

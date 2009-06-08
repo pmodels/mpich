@@ -2286,6 +2286,11 @@ void MPIR_Nest_incr_export(void);
 void MPIR_Nest_decr_export(void);
 
 #ifdef MPICH_DEBUG_NESTING
+/* These two routines export the versions of the nest macros that
+   provide the file/line where the nest value changes, also for use in ROMIO */
+void MPIR_Nest_incr_export_dbg(const char *, int);
+void MPIR_Nest_decr_export_dbg(const char *, int);
+
 /* FIXME: We should move the initialization and error reporting into
    routines that can be called when necessary */
 #define MPIR_Nest_init() {\
@@ -2302,10 +2307,15 @@ void MPIR_Nest_decr_export(void);
                   MPICH_MAX_NESTFILENAME);\
      MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line=__LINE__;}\
      MPIU_THREADPRIV_FIELD(nest_count)++; }
-#define MPIR_Nest_decr() {MPIU_THREADPRIV_FIELD(nest_count)--; \
+/* Set the line for the current entry to - the old line - this can help
+   identify increments that did not set the fields */
+#define MPIR_Nest_decr() {\
+    if (MPIU_THREADPRIV_FIELD(nest_count) >= 0) {\
+	MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line=-__LINE__;} \
+     MPIU_THREADPRIV_FIELD(nest_count)--; \
      if (MPIU_THREADPRIV_FIELD(nest_count) < MPICH_MAX_NESTINFO && \
     strcmp(MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file,__FILE__) != 0) {\
-         MPIU_Msg_printf( "Decremented nest count int file %s:%d but incremented in different file (%s:%d)\n",\
+         MPIU_Msg_printf( "Decremented nest count in file %s:%d but incremented in different file (%s:%d)\n",\
                           __FILE__,__LINE__,\
                           MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file,\
                           MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line);\
