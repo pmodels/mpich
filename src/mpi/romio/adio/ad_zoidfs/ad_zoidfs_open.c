@@ -93,6 +93,7 @@ void ADIOI_ZOIDFS_Open(ADIO_File fd, int *error_code)
     if (*error_code != MPI_SUCCESS)
     {
 	/* ADIOI_ZOIDFS_INIT handles creating error codes on its own */
+	ADIOI_Free(zoidfs_obj_ptr);
 	return;
     }
 

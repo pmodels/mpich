@@ -30,7 +30,8 @@ void ADIOI_ZOIDFS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
      * syncronization point is reached */
 
     if (rank == fd->hints->ranklist[0]) {
-	ret = zoidfs_resize(zoidfs_obj_ptr, size);
+        NO_STALE(ret, fd, zoidfs_obj_ptr,
+                 zoidfs_resize(zoidfs_obj_ptr, size));
 	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     } else  {
 	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
