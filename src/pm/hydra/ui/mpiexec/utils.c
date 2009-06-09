@@ -55,7 +55,7 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
     status = HYDU_list_global_env(&HYD_handle.global_env);
     HYDU_ERR_POP(status, "unable to get the global env list\n");
 
-    if (IS_HELP(argv[1]))
+    if (argv[1] == NULL || IS_HELP(argv[1]))
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
 
     while (++argv && *argv) {
