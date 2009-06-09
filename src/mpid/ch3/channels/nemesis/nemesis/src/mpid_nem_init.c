@@ -83,10 +83,10 @@ MPID_nem_init_ckpt(int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     MPIU_Assert(sizeof(MPIDI_CH3_nem_pkt_t) <= sizeof(MPIDI_CH3_PktGeneric_t));
 
     /* The MPID_nem_cell_rel_ptr_t defined in mpid_nem_datatypes.h
-     * should only contain a pointer. Also, we don't support compilers
-     * which add random padding to the start of the structure. The
-     * below assert should blow up if any of these happens. */
-    MPIU_Assert(sizeof(MPID_nem_cell_rel_ptr_t) == SIZEOF_VOID_P);
+       should only contain a OPA_ptr_t.  This is to check that
+       absolute pointers are exactly the same size as relative
+       pointers. */
+    MPIU_Assert(sizeof(MPID_nem_cell_rel_ptr_t) == sizeof(OPA_ptr_t));
 
     /* Make sure the cell structure looks like it should */
     MPIU_Assert(MPID_NEM_CELL_PAYLOAD_LEN + MPID_NEM_CELL_HEAD_LEN == sizeof(MPID_nem_cell_t));
