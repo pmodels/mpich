@@ -343,12 +343,12 @@ int
 MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
 {
     MPIDI_CH3I_VC           *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
-    char                     business_card[MPID_NEM_NMAD_MAX_SIZE];
+    char                     business_card[4096];
     int                      mpi_errno = MPI_SUCCESS;   
     int                      ret;
     int                      index;
 
-    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, MPID_NEM_NMAD_MAX_SIZE, vc->pg);
+    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, 4096, vc->pg);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
        
     (((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->area) =
