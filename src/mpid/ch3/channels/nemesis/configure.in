@@ -174,7 +174,7 @@ fi,)
 AC_ARG_WITH(newmad, [--with-newmad=path - specify path where pm2 software can be found],
 if test "${with_newmad}" != "yes" -a "${with_newmad}" != "no" ; then
     LDFLAGS="$LDFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
-    CPPFLAGS="`${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
+    CPPFLAGS="$CPPFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
     LIBS="$LIBS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
 fi,)
 
