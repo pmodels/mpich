@@ -205,12 +205,58 @@ HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **info)
 }
 
 
+static HYD_Status add_exec_info_to_partition(struct HYD_Exec_info *exec_info,
+                                             struct HYD_Partition *partition,
+                                             int num_procs)
+{
+    int i;
+    struct HYD_Partition_exec *exec;
+    HYD_Status status = HYD_SUCCESS;
+
+    if (partition->exec_list == NULL) {
+        status = HYDU_alloc_partition_exec(&partition->exec_list);
+        HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+
+        partition->exec_list->pgid = 0; /* This is the COMM_WORLD exec */
+
+        for (i = 0; exec_info->exec[i]; i++)
+            partition->exec_list->exec[i] = HYDU_strdup(exec_info->exec[i]);
+        partition->exec_list->exec[i] = NULL;
+
+        partition->exec_list->proc_count = num_procs;
+        partition->exec_list->prop = exec_info->prop;
+        partition->exec_list->prop_env = HYDU_env_list_dup(exec_info->prop_env);
+    }
+    else {
+        for (exec = partition->exec_list; exec->next; exec = exec->next);
+        status = HYDU_alloc_partition_exec(&exec->next);
+        HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+
+        exec = exec->next;
+        exec->pgid = 0; /* This is the COMM_WORLD exec */
+
+        for (i = 0; exec_info->exec[i]; i++)
+            exec->exec[i] = HYDU_strdup(exec_info->exec[i]);
+        exec->exec[i] = NULL;
+
+        exec->proc_count = num_procs;
+        exec->prop = exec_info->prop;
+        exec->prop_env = HYDU_env_list_dup(exec_info->prop_env);
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
 HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
 {
-    int run_count, i, rem;
+    int partition_rem_procs, exec_rem_procs;
     struct HYD_Partition *partition;
     struct HYD_Exec_info *exec_info;
-    struct HYD_Partition_exec *exec;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -218,60 +264,33 @@ HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
     for (partition = HYD_handle.partition_list; partition; partition = partition->next)
         HYD_handle.global_core_count += partition->partition_core_count;
 
-    for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
-        /* The run_count tells us how many processes the partitions
-         * before us can host */
-        run_count = 0;
-        for (partition = HYD_handle.partition_list; partition; partition = partition->next) {
-            if (run_count >= exec_info->exec_proc_count)
+    partition = HYD_handle.partition_list;
+    exec_info = HYD_handle.exec_info_list;
+    partition_rem_procs = partition->partition_core_count;
+    exec_rem_procs = exec_info->exec_proc_count;
+    while (1) {
+        if (exec_rem_procs <= partition_rem_procs) {
+            status = add_exec_info_to_partition(exec_info, partition, exec_rem_procs);
+            HYDU_ERR_POP(status, "unable to add executable to partition\n");
+
+            partition_rem_procs -= exec_info->exec_proc_count;
+            if (partition_rem_procs == 0)
+                partition = HYD_handle.partition_list;
+
+            exec_info = exec_info->next;
+            if (exec_info == NULL)
                 break;
+        }
+        else {
+            status = add_exec_info_to_partition(exec_info, partition, partition_rem_procs);
+            HYDU_ERR_POP(status, "unable to add executable to partition\n");
 
-            if (partition->exec_list == NULL) {
-                status = HYDU_alloc_partition_exec(&partition->exec_list);
-                HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+            exec_rem_procs -= partition_rem_procs;
 
-                partition->exec_list->pgid = 0; /* This is the COMM_WORLD exec */
-
-                for (i = 0; exec_info->exec[i]; i++)
-                    partition->exec_list->exec[i] = HYDU_strdup(exec_info->exec[i]);
-                partition->exec_list->exec[i] = NULL;
-
-                partition->exec_list->proc_count =
-                    ((exec_info->exec_proc_count / HYD_handle.global_core_count) *
-                     partition->partition_core_count);
-                rem = (exec_info->exec_proc_count % HYD_handle.global_core_count);
-                if (rem > run_count + partition->partition_core_count)
-                    rem = run_count + partition->partition_core_count;
-                partition->exec_list->proc_count += (rem > run_count) ? (rem - run_count) : 0;
-
-                partition->exec_list->prop = exec_info->prop;
-                partition->exec_list->prop_env = HYDU_env_list_dup(exec_info->prop_env);
-            }
-            else {
-                for (exec = partition->exec_list; exec->next; exec = exec->next);
-                status = HYDU_alloc_partition_exec(&exec->next);
-                HYDU_ERR_POP(status, "unable to allocate partition exec\n");
-
-                exec = exec->next;
-                exec->pgid = 0; /* This is the COMM_WORLD exec */
-
-                for (i = 0; exec_info->exec[i]; i++)
-                    exec->exec[i] = HYDU_strdup(exec_info->exec[i]);
-                exec->exec[i] = NULL;
-
-                exec->proc_count =
-                    ((exec_info->exec_proc_count / HYD_handle.global_core_count) *
-                     partition->partition_core_count);
-                rem = (exec_info->exec_proc_count % HYD_handle.global_core_count);
-                if (rem > run_count + partition->partition_core_count)
-                    rem = run_count + partition->partition_core_count;
-                exec->proc_count += (rem > run_count) ? (rem - run_count) : 0;
-
-                exec->prop = exec_info->prop;
-                exec->prop_env = HYDU_env_list_dup(exec_info->prop_env);
-            }
-
-            run_count += partition->partition_core_count;
+            partition = partition->next;
+            if (partition == NULL)
+                partition = HYD_handle.partition_list;
+            partition_rem_procs = partition->partition_core_count;
         }
     }
 
