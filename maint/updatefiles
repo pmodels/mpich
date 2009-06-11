@@ -47,6 +47,8 @@ stepsCleared=no
 
 # Options for some steps
 autoconfdir=""
+automakedir=""
+autotoolsdir=""
 #
 # Extract the arguments intended for updatefiles.  Any others are
 # given to simplemake.  
@@ -115,6 +117,12 @@ for arg in "$@" ; do
     # Select a location for a different autoconf
     autoconfdir=`echo "A$arg" | sed -e 's/.*=//'`
     ;;
+    -with-automake=*|--with-automake=*)
+    automakedir=`echo "A$arg" | sed -e 's/.*=//'`
+    ;;
+    -with-autotools=*|--with-autotools=*)
+    autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
+    ;;
 
     -distrib)
     do_depend=no
@@ -124,14 +132,18 @@ for arg in "$@" ; do
 
     -help|--help|-usage|--usage)
     cat <<EOF
-    updatefiles [ --with-autoconf=dir ] [ -do=stepname ]
+    updatefiles [ --with-autoconf=dir ] [ --with-automake=dir ] \\
+                [ --with-autotools=dir ] [ -do=stepname ]       \\
                 [ args for simplemake ] 
     Update the files in the MPICH2 build tree.  This file builds the 
     configure files, creates the Makefile.in files (using the simplemake
     program), extracts the error messages.
 
     You can use --with-autoconf=dir to specify a directory that contains
-    an alternate autoconf and autoheader.  
+    an alternate autoconf and autoheader.  Similarly --with-automake can
+    be used to specify the location of automake and aclocal.  If
+    autoconf and automake are installed in the same location, they can
+    be specified by the --with-autotools option.
 
     Use -do=stepname to update only a single step.  For example, 
     -do=build_configure only updates the configure scripts.  The available
@@ -145,6 +157,27 @@ EOF
     ;;
     esac
 done
+
+if [ -n "$autotoolsdir" ] ; then
+    if [ -n "$autoconfdir" -o -n "$automakedir" ] ; then
+        # Don't permit --with-autotools together with either --with-autoconf or
+        # --with-automake because which argument takes precedence is not obvious
+        # without immediate explanation.  --with-autotools is really only
+        # present to make life a little easier for those who preferred the old
+        # behavior where --with-autoconf was used to specify the location of
+        # both autoconf and automake.
+        cat <<EOT
+Error: --with-autotools was specified together with either
+--with-autoconf or --with-automake.  --with-autotools is incompatible
+with the other two options.  Please specify only one set or the other.
+EOT
+        exit 1
+    else
+        autoconfdir=$autotoolsdir
+        automakedir=$autotoolsdir
+    fi
+fi
+
 # Reset the arguments.  Note that this doesn't handle arguments that contain
 # blanks.  I hope that we don't need those.
 set -- $temp_args
@@ -180,28 +213,17 @@ if [ -n "$autoconfdir" ] ; then
     if [ -x $autoconfdir/autoconf -a -x $autoconfdir/autoheader ] ; then
         autoconf=$autoconfdir/autoconf
         autoheader=$autoconfdir/autoheader
-        # OpenPA uses autoreconf (and consequently aclocal and automake)
-        # but autoreconf uses whatever aclocal/automake is in your path,
-        # not the one from the same autoconf installation as the
-        # autoreconf you are invoking.  So we export ACLOCAL (etc...) so
-        # that it uses the right tools when specifying --with-autoconf.
         autoreconf=$autoconfdir/autoreconf
-        automake=$autoconfdir/automake
-        aclocal=$autoconfdir/aclocal
         autom4te=$autoconfdir/autom4te
 	# Simplemake looks in environment variables for the autoconf
 	# and autoheader to use
 	AUTOCONF=$autoconf
 	AUTOHEADER=$autoheader
         AUTORECONF=$autoreconf
-        AUTOMAKE=$automake
-        ACLOCAL=$aclocal
         AUTOM4TE=$autom4te
 	export AUTOCONF
 	export AUTOHEADER
         export AUTORECONF
-        export AUTOMAKE
-        export ACLOCAL
         export AUTOM4TE
     else
         echo "Could not find executable autoconf and autoheader in $autoconfdir"
@@ -211,10 +233,30 @@ else
     autoconf=${AUTOCONF:-autoconf}
     autoheader=${AUTOHEADER:-autoheader}
     autoreconf=${AUTORECONF:-autoreconf}
-    automake=${AUTOMAKE:-automake}
-    aclocal=${ACLOCAL:-aclocal}
     autom4te=${AUTOM4TE:-autom4te}
 fi
+if [ -n "$automakedir" ] ; then
+    if [ -x "$automakedir/aclocal" -a -x "$automakedir/automake" ] ; then
+        # OpenPA uses autoreconf (and consequently aclocal and automake)
+        # but autoreconf uses whatever aclocal/automake is in your path,
+        # not the one from the same autoconf installation as the
+        # autoreconf you are invoking.  So we export ACLOCAL (etc...) so
+        # that it uses the right tools when specifying --with-automake.
+        automake=$automakedir/automake
+        aclocal=$automakedir/aclocal
+        AUTOMAKE=$automake
+        ACLOCAL=$aclocal
+        export AUTOMAKE
+        export ACLOCAL
+    else
+        echo "could not find executable aclocal and automake in $automakedir"
+        exit 1
+    fi
+else
+    automake=${AUTOMAKE:-automake}
+    aclocal=${ACLOCAL:-aclocal}
+fi
+
 #
 # Check that you have a working autoconf.  Autoconf 2.57 is not compatible with
 # previous versions of autoconf (!!), even 2.52 (!!!).  
