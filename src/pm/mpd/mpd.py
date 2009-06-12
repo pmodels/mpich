@@ -943,9 +943,13 @@ class MPD(object):
 
             # send to all mpdman's for the jobid embedded in the msg
             jobid = msg['jobid']
-            for manPid in self.activeJobs[jobid]:
-                manSock = self.activeJobs[jobid][manPid]['socktoman']
-                manSock.send_dict_msg(msg)
+
+            # there may be no entry for jobid in the activeJobs table if there
+            # weren't any processes from that job actually launched on our host
+            if self.activeJobs.has_key(jobid):
+                for manPid in self.activeJobs[jobid].keys():
+                    manSock = self.activeJobs[jobid][manPid]['socktoman']
+                    manSock.send_dict_msg(msg)
         elif msg['cmd'] == 'mpdtrace_info':
             if msg['dest'] == self.myId:
                 if self.conSock:
