@@ -74,7 +74,7 @@ void MPIDI_CH3U_Buffer_copy(
     if (sdt_contig && rdt_contig)
     {
 	MPIDI_FUNC_ENTER(MPID_STATE_MEMCPY);
-	memcpy((char *)rbuf + rdt_true_lb, (const char *)sbuf + sdt_true_lb, sdata_sz);
+	MPIU_Memcpy((char *)rbuf + rdt_true_lb, (const char *)sbuf + sdt_true_lb, sdata_sz);
 	MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY);
 	*rsz = sdata_sz;
     }

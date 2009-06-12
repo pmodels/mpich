@@ -443,7 +443,7 @@ rect_queue *q;
     q->r = (rect *) realloc( q->r, sizeof( rect ) * q->size * 2 );
 				/* get a bigger queue */
     if (q->tail < q->head) {
-      memcpy( q->r + q->size, q->r, q->tail * sizeof( rect ) );
+      MPIU_Memcpy( q->r + q->size, q->r, q->tail * sizeof( rect ) );
 				/* copy over any data that needs to be moved */
       q->tail += q->size;
     }

@@ -29,7 +29,7 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
 
     fprintf(stdout,"iSendContig ========> Sending ADI msg  for req %p (match is %lx) \n",sreq,match_info);
 
-    memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
     mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
     mad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
     if(data_sz)
@@ -81,7 +81,7 @@ int MPID_nem_newmad_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
     fprintf(stdout,"StartcontigMsg ========> Sending ADI msg  for req %p (match is %lx) \n",sreq,match_info);
 #endif
 
-    memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
     mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
     mad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
     if (data_sz)
@@ -138,7 +138,7 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
 #ifdef DEBUG
     fprintf(stdout,"SendNonContig ========> Sending ADI msg  for req %p (match is %lx) \n",sreq,match_info);
 #endif
-    memcpy(&(sreq->dev.pending_pkt),(char *)header,sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)header,sizeof(MPIDI_CH3_PktGeneric_t));
     mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
     mad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
 
@@ -362,7 +362,7 @@ int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype
         MPIU_Assert(sreq->dev.tmpbuf);
 	for(index = last_entry; index < n_iov; index++)
 	{
-	    memcpy((char *)(sreq->dev.tmpbuf) + offset, iov[index].MPID_IOV_BUF, iov[index].MPID_IOV_LEN);
+	    MPIU_Memcpy((char *)(sreq->dev.tmpbuf) + offset, iov[index].MPID_IOV_BUF, iov[index].MPID_IOV_LEN);
 	    offset += iov[index].MPID_IOV_LEN;
 	}
         (*mad_iov)[NMAD_IOV_MAX_DEPTH-1].iov_base = sreq->dev.tmpbuf;

@@ -495,8 +495,8 @@ int MPID_nem_psm_exchange_endpoints(void)
 /*             goto fn_exit; */
 /*         } */
 
-/*         memcpy(uuid_val, MPID_nem_module_psm_uuid, size-1); */
-/*         memcpy(uuid_val+size, &zero, 1); */
+/*         MPIU_Memcpy(uuid_val, MPID_nem_module_psm_uuid, size-1); */
+/*         MPIU_Memcpy(uuid_val+size, &zero, 1); */
 
 /*         for(index = 0;index<size-1;index++) */
 /*         { */

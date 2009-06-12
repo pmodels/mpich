@@ -507,7 +507,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
     if (initialize_context_mask) {
 	MPIR_Init_contextid();
     }
-    memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
+    MPIU_Memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
 
     /* Note that this is the unthreaded version */
     MPIU_THREADPRIV_GET;
@@ -596,7 +596,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	       "In in-use, set lowestContextId to %d", lowestContextId );
 	}
 	else {
-	    memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
+	    MPIU_Memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
 	    mask_in_use     = 1;
 	    own_mask        = 1;
 	    lowestContextId = comm_ptr->context_id;

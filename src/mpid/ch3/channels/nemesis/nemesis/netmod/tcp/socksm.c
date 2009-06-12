@@ -158,8 +158,8 @@ static int alloc_sc_plfd_tbls (void)
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
 
     MPIU_Assert(0 == index); /* assumed in other parts of this file */
-    MPID_NEM_MEMCPY (&g_sc_tbl[index], &MPID_nem_tcp_g_lstn_sc, sizeof(MPID_nem_tcp_g_lstn_sc));
-    MPID_NEM_MEMCPY (&MPID_nem_tcp_plfd_tbl[index], &MPID_nem_tcp_g_lstn_plfd, sizeof(MPID_nem_tcp_g_lstn_plfd));
+    MPIU_Memcpy (&g_sc_tbl[index], &MPID_nem_tcp_g_lstn_sc, sizeof(MPID_nem_tcp_g_lstn_sc));
+    MPIU_Memcpy (&MPID_nem_tcp_plfd_tbl[index], &MPID_nem_tcp_g_lstn_plfd, sizeof(MPID_nem_tcp_g_lstn_plfd));
     MPIU_Assert(MPID_nem_tcp_plfd_tbl[index].fd == g_sc_tbl[index].fd);
     MPIU_Assert(MPID_nem_tcp_plfd_tbl[index].events == POLLIN);
 
@@ -210,8 +210,8 @@ static int expand_sc_plfd_tbls (void)
     MPIU_CHKPMEM_MALLOC (new_plfd_tbl, struct pollfd *, new_capacity * sizeof(struct pollfd), 
                          mpi_errno, "expanded pollfd table");
 
-    MPID_NEM_MEMCPY (new_sc_tbl, g_sc_tbl, g_tbl_capacity * sizeof(sockconn_t));
-    MPID_NEM_MEMCPY (new_plfd_tbl, MPID_nem_tcp_plfd_tbl, g_tbl_capacity * sizeof(struct pollfd));
+    MPIU_Memcpy (new_sc_tbl, g_sc_tbl, g_tbl_capacity * sizeof(sockconn_t));
+    MPIU_Memcpy (new_plfd_tbl, MPID_nem_tcp_plfd_tbl, g_tbl_capacity * sizeof(struct pollfd));
 
     /* VCs have pointers to entries in the sc table.  These
        are updated here after the expand. */

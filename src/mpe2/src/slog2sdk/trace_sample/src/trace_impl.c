@@ -650,7 +650,7 @@ int TRACE_Get_next_category( const TRACE_file fp,
         if ( legend_len > 0 ) {
             if ( *legend_pos >= legend_max )
                 return 21;
-            memcpy( &(legend_base[ *legend_pos ]), type->legend,
+            MPIU_Memcpy( &(legend_base[ *legend_pos ]), type->legend,
                     sizeof( char ) * legend_len );
             *num_legend  = legend_len;
             *legend_pos += *num_legend;
@@ -664,7 +664,7 @@ int TRACE_Get_next_category( const TRACE_file fp,
         if ( label_len > 0 ) {
             if ( *label_pos >= label_max )
                 return 23;
-            memcpy( &(label_base[ *label_pos ]), type->label,
+            MPIU_Memcpy( &(label_base[ *label_pos ]), type->label,
                     sizeof( char ) * label_len );
             *num_label  = label_len;
             *label_pos += *num_label;
@@ -676,7 +676,7 @@ int TRACE_Get_next_category( const TRACE_file fp,
     if ( type->num_methods > 0 ) {
         if ( *method_pos >= method_max )
             return 25;
-        memcpy( &(method_base[ *method_pos ]), type->methods,
+        MPIU_Memcpy( &(method_base[ *method_pos ]), type->methods,
                 sizeof( int ) * type->num_methods );
         *num_methods = type->num_methods;
         *method_pos += *num_methods;
@@ -843,7 +843,7 @@ int TRACE_Get_next_ycoordmap( TRACE_file fp,
 
     if ( *coordmap_pos >= coordmap_max )
         return 63;
-    memcpy( &(coordmap_base[ *coordmap_pos ]), ymap->elems,
+    MPIU_Memcpy( &(coordmap_base[ *coordmap_pos ]), ymap->elems,
             sizeof( int ) * ymap->num_rows * ymap->num_columns );
     *coordmap_sz   = ymap->num_rows * ymap->num_columns;
     *coordmap_pos += *coordmap_sz;
@@ -853,7 +853,7 @@ int TRACE_Get_next_ycoordmap( TRACE_file fp,
     if ( ymap->num_methods > 0 ) {
         if ( *method_pos >= method_max )
             return 65;
-        memcpy( &(method_base[ *method_pos ]), ymap->methods,
+        MPIU_Memcpy( &(method_base[ *method_pos ]), ymap->methods,
                 sizeof( int ) * ymap->num_methods );
         *num_methods = ymap->num_methods;
         *method_pos += *num_methods;
@@ -973,7 +973,7 @@ int TRACE_Peek_next_primitive( const  TRACE_file fp,
     if ( *num_bytes > 0 ) {
         prime->num_info  = *num_bytes;
         prime->info      = (char *) malloc( prime->num_info * sizeof(char) );
-        memcpy( prime->info, infovals, prime->num_info );
+        MPIU_Memcpy( prime->info, infovals, prime->num_info );
 #if ! defined( WORDS_BIGENDIAN )
         bswp_byteswap( 2, sizeof( int ), prime->info );
 #endif
@@ -1015,7 +1015,7 @@ int TRACE_Get_next_primitive( const TRACE_file fp,
     if ( prime->num_info > 0 ) {
         if ( *byte_pos >= byte_max )
             return 31;
-        memcpy( &(byte_base[ *byte_pos ]), prime->info,
+        MPIU_Memcpy( &(byte_base[ *byte_pos ]), prime->info,
                 sizeof( char ) * prime->num_info );
         *num_bytes = prime->num_info;
         *byte_pos += *num_bytes;
@@ -1025,7 +1025,7 @@ int TRACE_Get_next_primitive( const TRACE_file fp,
 
     if ( *tcoord_pos >= tcoord_max )
         return 33;
-    memcpy( &(tcoord_base[ *tcoord_pos ]), prime->tcoords,
+    MPIU_Memcpy( &(tcoord_base[ *tcoord_pos ]), prime->tcoords,
             sizeof( double ) * prime->num_tcoords );
     *num_tcoords = prime->num_tcoords;
     *tcoord_pos += *num_tcoords;
@@ -1034,7 +1034,7 @@ int TRACE_Get_next_primitive( const TRACE_file fp,
 
     if ( *ycoord_pos >= ycoord_max )
         return 35;
-    memcpy( &(ycoord_base[ *ycoord_pos ]), prime->ycoords,
+    MPIU_Memcpy( &(ycoord_base[ *ycoord_pos ]), prime->ycoords,
             sizeof( int ) * prime->num_ycoords );
     *num_ycoords = prime->num_ycoords;
     *ycoord_pos += *num_ycoords;
@@ -1118,7 +1118,7 @@ int TRACE_Peek_next_composite( const TRACE_file fp,
     if ( *num_bytes > 0 ) {
         cmplx->num_info  = *num_bytes;
         cmplx->info      = (char *) malloc( cmplx->num_info * sizeof(char) );
-        memcpy( cmplx->info, infovals, cmplx->num_info );
+        MPIU_Memcpy( cmplx->info, infovals, cmplx->num_info );
 #if ! defined( WORDS_BIGENDIAN )
         bswp_byteswap( 2, sizeof( int ), cmplx->info );
 #endif
@@ -1163,7 +1163,7 @@ int TRACE_Get_next_composite( const TRACE_file fp,
     if ( cmplx->num_info > 0 ) {
         if ( *byte_pos >= byte_max )
             return 41;
-        memcpy( &(byte_base[ *byte_pos ]), cmplx->info,
+        MPIU_Memcpy( &(byte_base[ *byte_pos ]), cmplx->info,
                 sizeof( char ) * cmplx->num_info );
         *num_bytes = cmplx->num_info;
         *byte_pos += *num_bytes;

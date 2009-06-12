@@ -975,7 +975,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	}
 	if (len)
 	{
-	    memcpy(str, begin, len);
+	    MPIU_Memcpy(str, begin, len);
 	    str += len;
 	    maxlen -= len;
 	}

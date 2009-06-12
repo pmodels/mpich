@@ -140,7 +140,7 @@ LRESULT CALLBACK BootstrapQWndProc(
 	    bsmsg_ptr = MPIU_Malloc(sizeof(bootstrap_msg));
 	    if (bsmsg_ptr != NULL)
 	    {
-		memcpy(bsmsg_ptr->buffer, p->lpData, p->cbData);
+		MPIU_Memcpy(bsmsg_ptr->buffer, p->lpData, p->cbData);
 		bsmsg_ptr->length = p->cbData;
 		bsmsg_ptr->next = NULL;
 		msg_iter = s_queue->msg_list;
@@ -1018,7 +1018,7 @@ int MPIDI_CH3I_BootstrapQ_send_msg(MPIDI_CH3I_BootstrapQ queue, void *buffer, in
     msg.mtype = 100;
 #endif
     MPIDI_FUNC_ENTER(MPID_STATE_MEMCPY);
-    memcpy(msg.data, buffer, length);
+    MPIU_Memcpy(msg.data, buffer, length);
     MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY);
     MPIU_DBG_PRINTF(("sending message %d on queue %d\n", msg.mtype, queue->id));
 #ifdef USE_POSIX_MQ
@@ -1145,7 +1145,7 @@ int MPIDI_CH3I_BootstrapQ_recv_msg(MPIDI_CH3I_BootstrapQ queue, void *buffer, in
 	return mpi_errno;
     }
     MPIDI_FUNC_ENTER(MPID_STATE_MEMCPY);
-    memcpy(buffer, msg.data, nb);
+    MPIU_Memcpy(buffer, msg.data, nb);
     MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY);
     *num_bytes_ptr = nb;
     MPIU_DBG_PRINTF(("message %d received: %d bytes\n", msg.mtype, nb));
@@ -1169,7 +1169,7 @@ int MPIDI_CH3I_BootstrapQ_recv_msg(MPIDI_CH3I_BootstrapQ queue, void *buffer, in
     if (msg)
     {
 	MPIDI_FUNC_ENTER(MPID_STATE_MEMCPY);
-	memcpy(buffer, msg->buffer, min(length, msg->length));
+	MPIU_Memcpy(buffer, msg->buffer, min(length, msg->length));
 	MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY);
 	*num_bytes_ptr = min(length, msg->length);
 	MPIU_Free(msg);

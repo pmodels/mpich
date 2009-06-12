@@ -147,18 +147,18 @@ static void MPE_Log_Output( inBuffer, outBuffer, mesgtag, srcs, fp, parent )
       fflush( debug_file );
 #endif
     }
-    memcpy( outBuffer->p, inBuffer->p, recLen*sizeof(int) );
+    MPIU_Memcpy( outBuffer->p, inBuffer->p, recLen*sizeof(int) );
       /* copy data from inBuffer to outBuffer */
     outBuffer->p += recLen;
   }
   else {			 /* if process 0 */
 				 /* Repack the buffer */
     if (recHdr->event != MPE_Log_EVENT_SYNC) {
-      memcpy( recordBuf, inBuffer->p, sizeof(MPE_Log_HEADER) );
+      MPIU_Memcpy( recordBuf, inBuffer->p, sizeof(MPE_Log_HEADER) );
         /* copy header to temp area */
       ((MPE_Log_HEADER *)recordBuf)->len--;
         /* cut out the procid that was inserted */
-      memcpy( recordBuf + MPE_Log_HEADERSIZE, inBuffer->p +
+      MPIU_Memcpy( recordBuf + MPE_Log_HEADERSIZE, inBuffer->p +
 	     MPE_Log_HEADERSIZE + 1,
 	     (recHdr->len - MPE_Log_HEADERSIZE) * sizeof(int) );
         /* copy the log entry data to the temp area */
@@ -291,13 +291,13 @@ fprintf( stderr, "[%d] reloading %d\n", MPE_Log_procid, h->event );
       if (readHdr->event <= MAX_HEADER_EVT && readHdr->event >= MIN_HEADER_EVT)
 	/* Reserved header events have all times set to zero */
 	MPE_Log_ZEROTIME(readHdr);
-      memcpy( writePtr, readPtr, sizeof(MPE_Log_HEADER) );
+      MPIU_Memcpy( writePtr, readPtr, sizeof(MPE_Log_HEADER) );
 				 /* copy header */
       ((MPE_Log_HEADER *)writePtr)->len = readHdr->len + 1;
 				 /* increase record length by 1 */
       writePtr[MPE_Log_HEADERSIZE] = MPE_Log_procid;
 				 /* insert procid */
-      memcpy( writePtr + MPE_Log_HEADERSIZE + 1, readPtr + MPE_Log_HEADERSIZE, 
+      MPIU_Memcpy( writePtr + MPE_Log_HEADERSIZE + 1, readPtr + MPE_Log_HEADERSIZE, 
 	     (readHdr->len - MPE_Log_HEADERSIZE) * sizeof(int) );
 				/* copy all the fields */
       /* Increment the lengths (writePtr includes the procid) */

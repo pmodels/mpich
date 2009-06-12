@@ -224,7 +224,7 @@ int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     if (sendtype_iscontig && recvtype_iscontig)
     {    
-        memcpy(((char *) recvbuf + recvtype_true_lb), 
+        MPIU_Memcpy(((char *) recvbuf + recvtype_true_lb), 
                ((char *) sendbuf + sendtype_true_lb), 
                copy_sz);
     }

@@ -245,7 +245,7 @@ int MPIDI_CH3I_mqshm_send(const int id, const void *buffer, const int length, co
 	       "send: writing %d bytes to index %d with tag %d", 
 						  length, index, tag));
 
-	    memcpy(q_ptr->msg[index].data, buffer, length);
+	    MPIU_Memcpy(q_ptr->msg[index].data, buffer, length);
 	    q_ptr->msg[index].tag = tag;
 	    q_ptr->msg[index].length = length;
 	    q_ptr->msg[index].next = MQSHM_END;
@@ -370,7 +370,7 @@ int MPIDI_CH3I_mqshm_receive(const int id, const int tag, void *buffer, const in
 		    }
 		}
 		/* copy the message */
-		memcpy(buffer, q_ptr->msg[index].data, q_ptr->msg[index].length);
+		MPIU_Memcpy(buffer, q_ptr->msg[index].data, q_ptr->msg[index].length);
 		*length = q_ptr->msg[index].length;
 		/* add the node to the free list */
 		q_ptr->msg[index].next = q_ptr->next_free;

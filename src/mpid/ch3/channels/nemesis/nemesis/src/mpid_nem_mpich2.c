@@ -148,7 +148,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPID_IOV *iov, in
 
     iov_data_copied = 0;
     for (i = 0; i < data_n_iov; ++i) {
-        MPID_NEM_MEMCPY((char*) sreq->dev.tmpbuf + iov_data_copied, data_iov[i].MPID_IOV_BUF, data_iov[i].MPID_IOV_LEN);
+        MPIU_Memcpy((char*) sreq->dev.tmpbuf + iov_data_copied, data_iov[i].MPID_IOV_BUF, data_iov[i].MPID_IOV_LEN);
         iov_data_copied += data_iov[i].MPID_IOV_LEN;
     }
 

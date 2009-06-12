@@ -40,7 +40,7 @@ RLOG_BOOL PackQuadChar(char *str, int *length, char *base, int *pos, const int m
     if (*pos + (int)strlen(str) > max)
 	return RLOG_FALSE;
     *length = strlen(str);
-    memcpy(&base[*pos], str, *length);
+    MPIU_Memcpy(&base[*pos], str, *length);
     *pos += *length;
     return RLOG_TRUE;
 }

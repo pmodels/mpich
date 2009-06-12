@@ -30,7 +30,7 @@ static int cm_post_ud_packet(
     memset(&wr, 0, sizeof(struct ibv_send_wr));
     memset(&list, 0, sizeof(struct ibv_sge));
 
-    memcpy((void *) ((char *)
+    MPIU_Memcpy((void *) ((char *)
                 MPID_nem_ib_cm_ctxt_ptr->cm_send_buf +
                 MPID_nem_ib_cm_param_ptr->ud_overhead),
             msg, sizeof(MPID_nem_ib_cm_msg_t));
@@ -103,7 +103,7 @@ static int cm_create_rc_qp(struct ibv_qp **qp)
 
     memset(&init_attr, 0, sizeof(init_attr));
 
-    memcpy(&init_attr, &(MPID_nem_ib_cm_ctxt_ptr->rc_qp_init_attr),
+    MPIU_Memcpy(&init_attr, &(MPID_nem_ib_cm_ctxt_ptr->rc_qp_init_attr),
             sizeof(struct ibv_qp_init_attr));
 
     *qp = ibv_create_qp(MPID_nem_ib_cm_ctxt_ptr->prot_domain,
@@ -123,7 +123,7 @@ static int cm_create_rc_qp(struct ibv_qp **qp)
 
     memset(&attr, 0, sizeof(attr));
 
-    memcpy(&attr, &(MPID_nem_ib_cm_ctxt_ptr->rc_qp_attr_to_init),
+    MPIU_Memcpy(&attr, &(MPID_nem_ib_cm_ctxt_ptr->rc_qp_attr_to_init),
             sizeof(struct ibv_qp_attr));
 
     ret = ibv_modify_qp(*qp, &attr,
@@ -157,7 +157,7 @@ static int cm_enable_qp_init_to_rtr(struct ibv_qp *qp,
 
     memset(&attr, 0, sizeof(attr));
 
-    memcpy(&attr, &MPID_nem_ib_cm_ctxt_ptr->rc_qp_attr_to_rtr,
+    MPIU_Memcpy(&attr, &MPID_nem_ib_cm_ctxt_ptr->rc_qp_attr_to_rtr,
             sizeof(struct ibv_qp_attr));
 
     attr.dest_qp_num = dqpn;
@@ -190,7 +190,7 @@ static int cm_enable_qp_rtr_to_rts(struct ibv_qp *qp)
 
     memset(&attr, 0, sizeof(attr));
 
-    memcpy(&attr, &MPID_nem_ib_cm_ctxt_ptr->rc_qp_attr_to_rts,
+    MPIU_Memcpy(&attr, &MPID_nem_ib_cm_ctxt_ptr->rc_qp_attr_to_rts,
             sizeof(struct ibv_qp_attr));
 
     ret = ibv_modify_qp(qp, &attr,
@@ -292,7 +292,7 @@ static int cm_pending_init(MPID_nem_ib_cm_pending_ptr_t pending,
 
     pending->packet = MPIU_Malloc(sizeof(MPID_nem_ib_cm_packet_t));
 
-    memcpy(&(pending->packet->payload), msg, sizeof(MPID_nem_ib_cm_msg_t));
+    MPIU_Memcpy(&(pending->packet->payload), msg, sizeof(MPID_nem_ib_cm_msg_t));
 
 fn_exit:
     return mpi_errno;

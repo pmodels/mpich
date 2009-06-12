@@ -200,7 +200,7 @@ static int MPID_Segment_contig_pack_external32_to_buf(DLOOP_Offset *blocks_p,
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1))
     {
-        memcpy(paramp->u.pack.pack_buffer,
+        MPIU_Memcpy(paramp->u.pack.pack_buffer,
 	       ((char *) bufp) + rel_off, *blocks_p);
     }
     else if (is_float_type(el_type))
@@ -263,7 +263,7 @@ static int MPID_Segment_contig_unpack_external32_to_buf(DLOOP_Offset *blocks_p,
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1))
     {
-        memcpy(((char *)bufp) + rel_off,
+        MPIU_Memcpy(((char *)bufp) + rel_off,
 	       paramp->u.unpack.unpack_buffer, *blocks_p);
     }
     else if (is_float_type(el_type))

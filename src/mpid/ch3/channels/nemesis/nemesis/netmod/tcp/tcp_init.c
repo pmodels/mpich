@@ -174,7 +174,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 		ifaddr->type = -1;
 	    }
 	    else
-		memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
+		MPIU_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
 	}
     }
 

@@ -822,7 +822,7 @@ void CLOG_Buffer_save_cargoevt( CLOG_Buffer_t *buffer,
         cargoevt->etype       = etype;
 
         if ( bytes )
-            memcpy( cargoevt->bytes, bytes, sizeof(CLOG_Str_Bytes_t) );
+            MPIU_Memcpy( cargoevt->bytes, bytes, sizeof(CLOG_Str_Bytes_t) );
 
         blkdata->ptr          = cargoevt->end;
     }
@@ -904,7 +904,7 @@ void CLOG_Buffer_save_commevt( CLOG_Buffer_t *buffer,
         commevt->icomm        = icomm;
         commevt->rank         = comm_rank;
         commevt->wrank        = world_rank;
-        memcpy( commevt->gcomm, guid, CLOG_UUID_SIZE );
+        MPIU_Memcpy( commevt->gcomm, guid, CLOG_UUID_SIZE );
         blkdata->ptr          = commevt->end;
     }
     else if ( buffer->status == CLOG_UNINIT ) {

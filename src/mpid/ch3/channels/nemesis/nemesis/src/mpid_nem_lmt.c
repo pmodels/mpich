@@ -224,7 +224,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
             MPIU_CHKPMEM_MALLOC(rreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, char *, rts_pkt->cookie_len, mpi_errno, "tmp cookie buf");
             rreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = rts_pkt->cookie_len;
         
-            MPID_NEM_MEMCPY(rreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, data_buf, rts_pkt->cookie_len);
+            MPIU_Memcpy(rreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, data_buf, rts_pkt->cookie_len);
             *buflen = sizeof(MPIDI_CH3_Pkt_t) + rts_pkt->cookie_len;
             *rreqp = NULL;
         }

@@ -13,7 +13,6 @@
 #include "mpid_nem_net_module_defs.h"
 #include "mpid_nem_atomics.h"
 #include "mpid_nem_defs.h"
-#include "mpid_nem_memdefs.h"
 #include "mpid_nem_fbox.h"
 #include "mpid_nem_nets.h"
 #include "mpid_nem_queue.h"

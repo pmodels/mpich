@@ -99,7 +99,7 @@ mx_unexp_handler_action_t MPID_nem_mx_get_adi_msg(void *context, mx_endpoint_add
       
       remote_nic_id = *((uint64_t *)data);
       remote_endpoint_id = *((uint32_t *)((char *)data+sizeof(uint64_t)));
-      memcpy(pg_id,(char *)data+sizeof(uint64_t)+sizeof(uint32_t),length-sizeof(uint64_t)-sizeof(uint32_t));
+      MPIU_Memcpy(pg_id,(char *)data+sizeof(uint64_t)+sizeof(uint32_t),length-sizeof(uint64_t)-sizeof(uint32_t));
       
       MPIDI_PG_Find (pg_id, &pg);
       NEM_MX_MATCH_GET_PGRANK(match_info,pg_rank);
@@ -170,7 +170,7 @@ if(type == NEM_MX_DIRECT_TYPE)
 	
 	remote_nic_id = *((uint64_t *)data);
 	remote_endpoint_id = *((uint32_t *)((char *)data+sizeof(uint64_t)));
-	memcpy(pg_id,(char *)data+sizeof(uint64_t)+sizeof(uint32_t),length-sizeof(uint64_t)-sizeof(uint32_t));   
+	MPIU_Memcpy(pg_id,(char *)data+sizeof(uint64_t)+sizeof(uint32_t),length-sizeof(uint64_t)-sizeof(uint32_t));   
 	
 	fprintf(stdout,"[%i]=== NOT NULL VC : Receiver Unex Got infos from  Sender (in data) ..%li %i %s vc is %p\n", 
 		MPID_nem_mem_region.rank,remote_nic_id,remote_endpoint_id,pg_id,vc);

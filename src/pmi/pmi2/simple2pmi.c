@@ -1258,7 +1258,7 @@ static int create_keyval(PMI_Keyvalpair **kv, const char *key, const char *val, 
     MPIU_Strncpy(key_p, key, PMI_MAX_KEYLEN+1);
     
     MPIU_CHKPMEM_MALLOC(value_p, char *, vallen+1, mpi_errno, "value");
-    memcpy(value_p, val, vallen);
+    MPIU_Memcpy(value_p, val, vallen);
     value_p[vallen] = '\0';
     
     (*kv)->key = key_p;
@@ -1388,7 +1388,7 @@ int PMIi_ReadCommand( int fd, PMI_Command *cmd )
     
         command = MPIU_Malloc(vallen+1);
         if (!command) { MPIU_CHKMEM_SETERR(mpi_errno, vallen+1, "command"); goto fn_exit; }
-        memcpy(command, val, vallen);
+        MPIU_Memcpy(command, val, vallen);
         val[vallen] = '\0';
 
         nPairs = num_pairs-1;  /* num_pairs-1 because the first pair is the command */
@@ -1564,7 +1564,7 @@ int PMIi_WriteSimpleCommand( int fd, PMI_Command *resp, const char cmd[], PMI_Ke
     ret = MPIU_Snprintf(cmdlenbuf, sizeof(cmdlenbuf), "%d", cmdlen);
     MPIU_ERR_CHKANDJUMP1(ret >= PMII_COMMANDLEN_SIZE, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "Command length won't fit in length buffer");
 
-    memcpy(cmdbuf, cmdlenbuf, ret);
+    MPIU_Memcpy(cmdbuf, cmdlenbuf, ret);
 
     printf_d("PMI sending: %s\n", cmdbuf);
     
@@ -1718,9 +1718,9 @@ static int PMII_Connect_to_pm( char *hostname, int portnum )
     memset( (void *)&sa, 0, sizeof(sa) );
     /* POSIX might define h_addr_list only and node define h_addr */
 #ifdef HAVE_H_ADDR_LIST
-    memcpy( (void *)&sa.sin_addr, (void *)hp->h_addr_list[0], hp->h_length);
+    MPIU_Memcpy( (void *)&sa.sin_addr, (void *)hp->h_addr_list[0], hp->h_length);
 #else
-    memcpy( (void *)&sa.sin_addr, (void *)hp->h_addr, hp->h_length);
+    MPIU_Memcpy( (void *)&sa.sin_addr, (void *)hp->h_addr, hp->h_length);
 #endif
     sa.sin_family = hp->h_addrtype;
     sa.sin_port   = htons( (unsigned short) portnum );

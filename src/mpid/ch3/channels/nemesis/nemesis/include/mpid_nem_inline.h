@@ -158,7 +158,7 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 	((uint32_t *)(el->pkt.mpich2.payload))[9] = ((uint32_t *)buf)[9];
     }
 #else /*1 */
-    MPID_NEM_MEMCPY (el->pkt.mpich2.payload, buf, size);
+    MPIU_Memcpy (el->pkt.mpich2.payload, buf, size);
 #endif /*1 */
     DO_PAPI (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues11));
 
@@ -272,7 +272,7 @@ MPID_nem_mpich2_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     while (*n_iov && payload_len >= (*iov)->MPID_IOV_LEN)
     {
 	int _iov_len = (*iov)->MPID_IOV_LEN;
-	MPID_NEM_MEMCPY (cell_buf, (*iov)->MPID_IOV_BUF, _iov_len);
+	MPIU_Memcpy (cell_buf, (*iov)->MPID_IOV_BUF, _iov_len);
 	payload_len -= _iov_len;
 	cell_buf += _iov_len;
 	--(*n_iov);
@@ -281,7 +281,7 @@ MPID_nem_mpich2_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     
     if (*n_iov && payload_len > 0)
     {
-	MPID_NEM_MEMCPY (cell_buf, (*iov)->MPID_IOV_BUF, payload_len);
+	MPIU_Memcpy (cell_buf, (*iov)->MPID_IOV_BUF, payload_len);
 	(*iov)->MPID_IOV_BUF = (char *)(*iov)->MPID_IOV_BUF + payload_len;
 	(*iov)->MPID_IOV_LEN -= payload_len;
  	payload_len = 0;
@@ -395,7 +395,7 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
 		payload_32[8] = buf_32[8];
 		payload_32[9] = buf_32[9];
 	    }
-	    MPID_NEM_MEMCPY ((char *)pbox->cell.pkt.mpich2.payload +sizeof(MPIDI_CH3_Pkt_t), (*iov)[1].MPID_IOV_BUF, (*iov)[1].MPID_IOV_LEN);
+	    MPIU_Memcpy ((char *)pbox->cell.pkt.mpich2.payload +sizeof(MPIDI_CH3_Pkt_t), (*iov)[1].MPID_IOV_BUF, (*iov)[1].MPID_IOV_LEN);
 	    OPA_write_barrier();
 	    pbox->flag.value = 1;
 	    *n_iov = 0;
@@ -455,7 +455,7 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
     while (*n_iov && payload_len >= (*iov)->MPID_IOV_LEN)
     {
 	int _iov_len = (*iov)->MPID_IOV_LEN;
-	MPID_NEM_MEMCPY (cell_buf, (*iov)->MPID_IOV_BUF, _iov_len);
+	MPIU_Memcpy (cell_buf, (*iov)->MPID_IOV_BUF, _iov_len);
 	payload_len -= _iov_len;
 	cell_buf += _iov_len;
 	--(*n_iov);
@@ -464,7 +464,7 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
     
     if (*n_iov && payload_len > 0)
     {
-	MPID_NEM_MEMCPY (cell_buf, (*iov)->MPID_IOV_BUF, payload_len);
+	MPIU_Memcpy (cell_buf, (*iov)->MPID_IOV_BUF, payload_len);
 	(*iov)->MPID_IOV_BUF = (char *)(*iov)->MPID_IOV_BUF + payload_len;
 	(*iov)->MPID_IOV_LEN -= payload_len;
 	payload_len = 0;
@@ -575,7 +575,7 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
             MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
 
             /* copy header */
-            MPID_NEM_MEMCPY((char *)pbox->cell.pkt.mpich2.payload, header, header_sz);
+            MPIU_Memcpy((char *)pbox->cell.pkt.mpich2.payload, header, header_sz);
 
             /* copy data */
             last = segment_size;
@@ -621,7 +621,7 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
 #endif /*PREFETCH_CELL */
 
     /* copy header */
-    MPID_NEM_MEMCPY(el->pkt.mpich2.payload, header, header_sz);
+    MPIU_Memcpy(el->pkt.mpich2.payload, header, header_sz);
     
     /* copy data */
     if (segment_size - *segment_first <= MPID_NEM_MPICH2_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t))

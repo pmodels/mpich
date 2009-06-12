@@ -79,7 +79,7 @@ MPID_nem_gm_lmt_pre (struct iovec *iov, size_t n_iov, MPIDI_VC_t *remote_vc, str
 	ret = -1;
 	goto error_exit;
     }
-    MPID_NEM_MEMCPY (iov_copy, iov, sizeof (struct iovec) * n_iov);
+    MPIU_Memcpy (iov_copy, iov, sizeof (struct iovec) * n_iov);
     cookie->iov_base = iov_copy;
     cookie->iov_len = sizeof (struct iovec) * n_iov;
 

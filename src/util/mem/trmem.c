@@ -846,7 +846,7 @@ may be block not allocated with MPIU_trmalloc or MALLOC\n",
     if (p && pnew) {
 	nsize = size;
 	if (head->size < (unsigned long)nsize) nsize = (int)(head->size);
-	memcpy( pnew, p, nsize );
+	MPIU_Memcpy( pnew, p, nsize );
 	MPIU_trfree( p, lineno, fname );
     }
 
@@ -873,7 +873,7 @@ void *MPIU_trstrdup( const char *str, int lineno, const char fname[] )
 
     p = MPIU_trmalloc( len, lineno, (char *)fname );
     if (p) {
-	memcpy( p, str, len );
+	MPIU_Memcpy( p, str, len );
     }
     return p;
 }

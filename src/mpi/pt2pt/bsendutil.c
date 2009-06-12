@@ -217,7 +217,7 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
        no copying.
 
        We may want to decide here whether we need to pack at all 
-       or if we can just use (a memcpy) of the buffer.
+       or if we can just use (a MPIU_Memcpy) of the buffer.
     */
 
     MPIU_THREADPRIV_GET;
@@ -256,7 +256,7 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
 	    /* Pack the data into the buffer */
 	    /* We may want to optimize for the special case of
 	       either primative or contiguous types, and just
-	       use memcpy and the provided datatype */
+	       use MPIU_Memcpy and the provided datatype */
 	    msg->count = 0;
             if (dtype != MPI_PACKED)
             {
@@ -265,7 +265,7 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
             }
             else
             {
-                memcpy(p->msg.msgbuf, buf, count);
+                MPIU_Memcpy(p->msg.msgbuf, buf, count);
                 p->msg.count = count;
             }
 	    /* Try to send the message.  We must use MPID_Isend

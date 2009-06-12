@@ -25,12 +25,12 @@
     MPIU_Object_set_ref(sreq, 2); \
     sreq->kind = MPID_REQUEST_SEND; \
     MPIDI_FUNC_ENTER(MPID_STATE_MEMCPY); \
-    memcpy(sreq->dev.iov, iov, count * sizeof(MPID_IOV)); \
+    MPIU_Memcpy(sreq->dev.iov, iov, count * sizeof(MPID_IOV)); \
     MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY); \
     /*for (i = 0; i < count; i++) { sreq->dev.iov[i] = iov[i]; }*/ \
     if (offset == 0) \
     { \
-	/* memcpy(&sreq->dev.pending_pkt, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN); */ \
+	/* MPIU_Memcpy(&sreq->dev.pending_pkt, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN); */ \
 	/*MPIU_Assert(iov[0].MPID_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));*/ \
 	sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *) iov[0].MPID_IOV_BUF; \
 	sreq->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) &sreq->dev.pending_pkt; \

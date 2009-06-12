@@ -135,7 +135,7 @@ int IRLOG_GetNextRecord(IRLOG_IOStruct *pInput)
     {
 	num_valid = (int)(pInput->pEnd - pInput->pCurHeader);
 	if (pInput->pCurHeader != pInput->buffer)
-	    memcpy(pInput->buffer, pInput->pCurHeader, num_valid);
+	    MPIU_Memcpy(pInput->buffer, pInput->pCurHeader, num_valid);
 	ReadFileData(pInput->buffer + num_valid, sizeof(RLOG_HEADER) - num_valid, pInput->f);
 	pInput->pCurHeader = pInput->buffer;
 	pInput->pNextHeader = pInput->buffer;
@@ -143,7 +143,7 @@ int IRLOG_GetNextRecord(IRLOG_IOStruct *pInput)
     }
 
     /* copy the current header into a temporary variable so the bytes can be manipulated */
-    memcpy(&pInput->header, pInput->pCurHeader, sizeof(RLOG_HEADER));
+    MPIU_Memcpy(&pInput->header, pInput->pCurHeader, sizeof(RLOG_HEADER));
     /*
     CLOGByteSwapDouble(&(header.timestamp), 1);
     CLOGByteSwapInt(&(header.rectype), 1);
@@ -154,7 +154,7 @@ int IRLOG_GetNextRecord(IRLOG_IOStruct *pInput)
     {
 	num_valid = (int)(pInput->pEnd - pInput->pCurHeader);
 	if (pInput->pCurHeader != pInput->buffer)
-	    memcpy(pInput->buffer, pInput->pCurHeader, num_valid);
+	    MPIU_Memcpy(pInput->buffer, pInput->pCurHeader, num_valid);
 	num_read = (int)fread(pInput->buffer + num_valid, 1, RLOG_BUFFSIZE - num_valid, pInput->f);
 	if (num_read == 0)
 	{
@@ -177,16 +177,16 @@ int IRLOG_GetNextRecord(IRLOG_IOStruct *pInput)
 	return 1;
 	break;
     case RLOG_EVENT_TYPE:
-	memcpy(&pInput->record.event, pInput->pCurHeader + sizeof(RLOG_HEADER), sizeof(RLOG_EVENT));
+	MPIU_Memcpy(&pInput->record.event, pInput->pCurHeader + sizeof(RLOG_HEADER), sizeof(RLOG_EVENT));
 	break;
     case RLOG_IARROW_TYPE:
-	memcpy(&pInput->record.iarrow, pInput->pCurHeader + sizeof(RLOG_HEADER), sizeof(RLOG_IARROW));
+	MPIU_Memcpy(&pInput->record.iarrow, pInput->pCurHeader + sizeof(RLOG_HEADER), sizeof(RLOG_IARROW));
 	break;
     case RLOG_STATE_TYPE:
-	memcpy(&pInput->record.state, pInput->pCurHeader + sizeof(RLOG_HEADER), sizeof(RLOG_STATE));
+	MPIU_Memcpy(&pInput->record.state, pInput->pCurHeader + sizeof(RLOG_HEADER), sizeof(RLOG_STATE));
 	break;
     case RLOG_COMM_TYPE:
-	memcpy(&pInput->record.comm, pInput->pCurHeader + sizeof(RLOG_HEADER), sizeof(RLOG_COMM));
+	MPIU_Memcpy(&pInput->record.comm, pInput->pCurHeader + sizeof(RLOG_HEADER), sizeof(RLOG_COMM));
 	break;
     default:
 	MPIU_Error_printf("RLOG Error: unknown record type %d.\n", pInput->header.type);
@@ -206,7 +206,7 @@ int IRLOG_WriteRecord(RLOG_HEADER *pRecord, IRLOG_IOStruct *pOutput)
     }
 
     /* copy the record into the output buffer */
-    memcpy(pOutput->pCurHeader, pRecord, pRecord->length);
+    MPIU_Memcpy(pOutput->pCurHeader, pRecord, pRecord->length);
     /* advance the current position pointer */
     pOutput->pCurHeader = pOutput->pCurHeader + pRecord->length;
 

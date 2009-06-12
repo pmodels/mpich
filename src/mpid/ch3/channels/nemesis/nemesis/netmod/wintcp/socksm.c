@@ -127,7 +127,7 @@ static int alloc_sc_tbl(void)
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
 
     MPIU_Assert(0 == index); /* assumed in other parts of this file */
-    MPID_NEM_MEMCPY (&g_sc_tbl[index], &MPID_nem_newtcp_module_g_lstn_sc, sizeof(MPID_nem_newtcp_module_g_lstn_sc));
+    MPIU_Memcpy (&g_sc_tbl[index], &MPID_nem_newtcp_module_g_lstn_sc, sizeof(MPID_nem_newtcp_module_g_lstn_sc));
 
     mpi_errno = MPIU_SOCKW_Waitset_add_sock(MPID_nem_newtcp_module_waitset_hnd,
                     MPID_nem_newtcp_module_g_lstn_sc.fd, MPIU_SOCKW_FLAG_WAITON_RD, 
@@ -184,7 +184,7 @@ static int expand_sc_tbl (void)
     MPIU_CHKPMEM_MALLOC (new_sc_tbl, sockconn_t *, new_capacity * sizeof(sockconn_t), 
                          mpi_errno, "expanded connection table");
 
-    MPID_NEM_MEMCPY (new_sc_tbl, g_sc_tbl, g_sc_tbl_capacity * sizeof(sockconn_t));
+    MPIU_Memcpy (new_sc_tbl, g_sc_tbl, g_sc_tbl_capacity * sizeof(sockconn_t));
 
     for(i = 0; i < g_sc_tbl_capacity; i++){
         if(new_sc_tbl[i].fd != MPIU_SOCKW_SOCKFD_INVALID){

@@ -82,6 +82,9 @@
 /* assert function */
 #define DLOOP_Assert MPIU_Assert
 
+/* memory copy function */
+#define DLOOP_Memcpy MPIU_Memcpy
+
 /* Include dataloop_parts.h at the end to get the rest of the prototypes
  * and defines, in terms of the prefixes and types above.
  */

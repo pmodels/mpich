@@ -162,7 +162,7 @@ int MPID_nem_tcp_module_lmt_start_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_
         memset (&saddr, sizeof(saddr), 0);
         saddr.sin_family = AF_INET;
         saddr.sin_port   = htons (r_port);
-        MPID_NEM_MEMCPY (&saddr.sin_addr, hp->h_addr, hp->h_length);
+        MPIU_Memcpy (&saddr.sin_addr, hp->h_addr, hp->h_length);
 
         set_sockopts (vc_ch->net.tcp.lmt_desc);
 

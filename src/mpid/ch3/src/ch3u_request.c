@@ -245,7 +245,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq,
 
 	iov_data_copied = 0;
 	for (i = 0; i < *iov_n; i++) {
-	    memcpy((char*) sreq->dev.tmpbuf + iov_data_copied, 
+	    MPIU_Memcpy((char*) sreq->dev.tmpbuf + iov_data_copied, 
 		   iov[i].MPID_IOV_BUF, iov[i].MPID_IOV_LEN);
 	    iov_data_copied += iov[i].MPID_IOV_LEN;
 	}
@@ -605,7 +605,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPID_Request * rreq)
 	       would last = unpack?  If not we should return an error 
 	       (unless configured with --enable-fast) */
 	    MPIDI_FUNC_ENTER(MPID_STATE_MEMCPY);
-	    memcpy((char *)rreq->dev.user_buf + dt_true_lb, rreq->dev.tmpbuf,
+	    MPIU_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, rreq->dev.tmpbuf,
 		   unpack_sz);
 	    MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY);
 	}

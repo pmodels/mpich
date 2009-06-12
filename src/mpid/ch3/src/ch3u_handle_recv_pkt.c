@@ -146,7 +146,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
         {
             MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"Copying contiguous data to user buffer");
             /* copy data out of the receive buffer */
-            memcpy((char*)(rreq->dev.user_buf) + dt_true_lb, buf, data_sz);
+            MPIU_Memcpy((char*)(rreq->dev.user_buf) + dt_true_lb, buf, data_sz);
             *buflen = data_sz;
             *complete = TRUE;
         }
@@ -255,7 +255,7 @@ int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg
        now, otherwise build an iov and let the channel copy it */
     if (rreq->dev.recv_data_sz <= *buflen)
     {
-        memcpy(rreq->dev.tmpbuf, buf, rreq->dev.recv_data_sz);
+        MPIU_Memcpy(rreq->dev.tmpbuf, buf, rreq->dev.recv_data_sz);
         *buflen = rreq->dev.recv_data_sz;
         rreq->dev.recv_pending_count = 1;
         *complete = TRUE;

@@ -220,7 +220,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 		ifaddr->type = -1;
 	    }
 	    else
-		memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
+		MPIU_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
 	}
     }
 
@@ -636,14 +636,14 @@ static int GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 		if (nfound == 0) {
 		    myifaddr.type = AF_INET;
 		    myifaddr.len  = 4;
-		    memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
+		    MPIU_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
 		}
 	    }
 	    else {
 		nfound++;
 		myifaddr.type = AF_INET;
 		myifaddr.len  = 4;
-		memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
+		MPIU_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
 	    }
 	}
 	else {

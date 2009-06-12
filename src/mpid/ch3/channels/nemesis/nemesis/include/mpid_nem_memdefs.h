@@ -10,15 +10,14 @@
 #include <mpimem.h>
 
 #if defined(HAVE_GCC_AND_PENTIUM_ASM)
-#define asm_memcpy(dst, src, n) ({                                                      \
-            const char *p = (char *)(src);                                              \
-            char *q = (char *)(dst);                                                    \
-            size_t nl = (size_t)(n) >> 2;                                               \
-            __asm__ __volatile__ ("cld ; rep ; movsl ; movl %3,%0 ; rep ; movsb"	\
-                                  : "+c" (nl), "+S" (p), "+D" (q)			\
-                                  : "r" (n & 3) /* : "memory" is this needed?*/);	\
-            (void *)(dst);                                                              \
-        })
+#define asm_memcpy(dst, src, n) do {                                                    \
+        const char *_p = (char *)(src);                                                 \
+        char *_q = (char *)(dst);                                                       \
+        size_t _nl = (size_t)(n) >> 2;                                                  \
+        __asm__ __volatile__ ("cld ; rep ; movsl ; movl %3,%0 ; rep ; movsb"            \
+                              : "+c" (_nl), "+S" (_p), "+D" (_q)                        \
+                              : "r" ((n) & 3) /* : "memory" is this needed?*/);         \
+    } while (0)
 
 /*
    nt_memcpy (dst, src, len)
@@ -48,9 +47,8 @@
    
  */
 
-static inline void *nt_memcpy (volatile void *dst, volatile void *src, size_t len)
+static inline void nt_memcpy (volatile void *dst, volatile const void *src, size_t len)
 {
-    void *orig_dst = (void *)dst;
     void *dummy_dst;
     void *dummy_src;
     
@@ -192,30 +190,30 @@ static inline void *nt_memcpy (volatile void *dst, volatile void *src, size_t le
     /* copy leftover */
     n = len & (128 - 1);
     if (n)
-	asm_memcpy (dst, src, n);
-    
-    return orig_dst;
+	asm_memcpy (dst, src, n);    
 }
 
 #define MPID_NEM_MEMCPY_CROSSOVER (63*1024)
 
-#define MPID_NEM_MEMCPY(a,b,c)  ((((c)) >= MPID_NEM_MEMCPY_CROSSOVER)	\
-                                 ? nt_memcpy (a, b, c)			\
-                                 : asm_memcpy (a, b, c))
+#define MPIU_Memcpy(a,b,c)  do {                                                                \
+        if (((c)) >= MPID_NEM_MEMCPY_CROSSOVER)                                                 \
+            nt_memcpy (a, b, c);                                                                \
+        else                                                                                    \
+            asm_memcpy (a, b, c);                                                               \
+    } while (0)
 
 #elif 0 && defined(HAVE_GCC_AND_X86_64_ASM)
 
-#define asm_memcpy(dst, src, n) ({                                                              \
-            const char *p = (char *)(src);                                                      \
-            char *q = (char *)(dst);                                                            \
-            size_t nq = n >> 3;                                                                 \
-            __asm__ __volatile__ ("cld ; rep ; movsq ; movl %3,%%ecx ; rep ; movsb"             \
-                                  : "+c" (nq), "+S" (p), "+D" (q)                               \
-                                  : "r" ((uint32_t)(n & 7)) /* : "memory" is this needed? */);	\
-            (void *)(dst);                                                                      \
-        })
+#define asm_memcpy(dst, src, n)  do {                                                            \
+        const char *_p = (char *)(src);                                                          \
+        char *_q = (char *)(dst);                                                                \
+        size_t _nq = n >> 3;                                                                     \
+        __asm__ __volatile__ ("cld ; rep ; movsq ; movl %3,%%ecx ; rep ; movsb"                  \
+                              : "+c" (_nq), "+S" (_p), "+D" (_q)                                 \
+                              : "r" ((uint32_t)((n) & 7)) /* : "memory" is this needed? */);     \
+    } while (0)
 
-static inline void amd64_cpy_nt (volatile void *dst, volatile void *src, size_t n)
+static inline void amd64_cpy_nt (volatile void *dst, const volatile void *src, size_t n)
 {
     size_t n32 = (n) >> 5;
     size_t nleft = (n) & (32-1);
@@ -249,19 +247,24 @@ static inline void amd64_cpy_nt (volatile void *dst, volatile void *src, size_t 
 }
 
 static inline
-void *volatile_memcpy (volatile void *dst, volatile void *src, size_t n)
+void volatile_memcpy (volatile void *restrict dst, volatile const void *restrict src, size_t n)
 {
-    return memcpy ((void *)dst, (void *)src, n);
+    MPIUI_Memcpy ((void *)dst, (const void *)src, n);
 }
 
 #define MPID_NEM_MEMCPY_CROSSOVER (32*1024)
-#define MPID_NEM_MEMCPY(a,b,c) (((c) >= MPID_NEM_MEMCPY_CROSSOVER) ? amd64_cpy_nt(a, b, c) : volatile_memcpy(a, b, c))
+#define MPIU_Memcpy(a,b,c) do {                 \
+        if ((c) >= MPID_NEM_MEMCPY_CROSSOVER)   \
+            amd64_cpy_nt(a, b, c);              \
+        else                                    \
+            volatile_memcpy(a, b, c);           \
+    } while (0)
 /* #define MPID_NEM_MEMCPY(a,b,c) (((c) < MPID_NEM_MEMCPY_CROSSOVER) ? memcpy(a, b, c) : amd64_cpy_nt(a, b, c)) */
 /* #define MPID_NEM_MEMCPY(a,b,c) amd64_cpy_nt(a, b, c) */
 /* #define MPID_NEM_MEMCPY(a,b,c) memcpy (a, b, c) */
 
 #else
-#define MPID_NEM_MEMCPY(dst, src, n) do { volatile void *d = (dst); volatile void *s = (src); memcpy((void *)d, (void *)s, n); }while (0)
+#define MPIU_Memcpy(dst, src, n) do { volatile void * restrict d = (dst); volatile const void *restrict s = (src); MPIUI_Memcpy((void *)d, (const void *)s, n); }while (0)
 #endif
 
 #endif /* MPID_MEMDEFS_H */

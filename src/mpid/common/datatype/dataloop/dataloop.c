@@ -107,7 +107,7 @@ void PREPEND_PREFIX(Dataloop_copy)(void *dest,
 #endif
 
     /* copy region first */
-    memcpy(dest, src, size);
+    DLOOP_Memcpy(dest, src, size);
 
     /* Calculate difference in starting locations. DLOOP_Dataloop_update()
      * then traverses the new structure and updates internal pointers by

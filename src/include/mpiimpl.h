@@ -105,6 +105,14 @@
 /* FIXME: ... to do ... */
 #include "mpitypedefs.h"
 
+/* This is the default implementation of MPIU_Memcpy.  We define this
+   before including mpidpre.h so that it can be used when a device or
+   channel can use it if it's overriding MPIU_Memcpy.  */
+static inline void MPIUI_Memcpy(void * restrict dst, const void * restrict src, size_t len)
+{
+    memcpy(dst, src, len);
+}
+
 /* Include definitions from the device which must exist before items in this
    file (mpiimpl.h) can be defined. mpidpre.h must be included before any
    files that allow the device to override or extend any terms; this includes
@@ -112,6 +120,20 @@
 /* ------------------------------------------------------------------------- */
 #include "mpidpre.h"
 /* ------------------------------------------------------------------------- */
+
+/* Overriding memcpy:
+   Devices and channels can override the default implementation of
+   MPIU_Memcpy by defining the MPIU_Memcpy macro.  The implementation
+   can call MPIUI_Memcpy for the default memcpy implementation.   
+   Note that MPIU_Memcpy and MPIUI_Memcpy return void rather than a
+   pointer to the destination buffer.  This is different from C89
+   memcpy.
+*/
+#ifndef MPIU_Memcpy
+#define MPIU_Memcpy(dst, src, len) MPIUI_Memcpy(dst, src, len)
+#endif
+#define memcpy(a, b, c) Error_use_MPIU_Memcpy
+
 
 #include "mpiimplthread.h"
 /* #include "mpiu_monitors.h" */
