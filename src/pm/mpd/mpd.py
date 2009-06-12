@@ -834,46 +834,61 @@ class MPD(object):
         # mapping_dict maps ranks => hostnames
         ranks = list(mapping_dict.keys())
         ranks.sort()
-        host_to_ranks = {}
+
+        # assign node ids based in first-come-first-serve order when iterating
+        # over the ranks in increasing order
+        next_id = 0
+        node_ids = {}
         for rank in ranks:
             host = mapping_dict[rank]
-            if not host_to_ranks.has_key(host):
-                host_to_ranks[host] = set([])
-            host_to_ranks[host].add(rank)
+            if not node_ids.has_key(host):
+                node_ids[host] = next_id
+                next_id += 1
+
+
+        # maps {node_id_A: set([rankX,rankY,...]), node_id_B:...}
+        node_to_ranks = {}
+        for rank in ranks:
+            node_id = node_ids[mapping_dict[rank]]
+            if not node_to_ranks.has_key(node_id):
+                node_to_ranks[node_id] = set([])
+            node_to_ranks[node_id].add(rank)
 
         # we only handle two cases for now:
         # 1. block regular
         # 2. round-robin regular
         # we do handle a "remainder node" that might not be full
         delta = -1
-        max_ranks_per_host = 0
-        first_host = mapping_dict[0]
-        for host in host_to_ranks.keys():
+        max_ranks_per_node = 0
+        for node_id in node_to_ranks.keys():
             last_rank = -1
-            if len(host_to_ranks[host]) > max_ranks_per_host:
-                max_ranks_per_host = len(host_to_ranks[host])
-            ranks = list(host_to_ranks[host])
+            if len(node_to_ranks[node_id]) > max_ranks_per_node:
+                max_ranks_per_node = len(node_to_ranks[node_id])
+            ranks = list(node_to_ranks[node_id])
             ranks.sort()
             for rank in ranks:
                 if last_rank != -1:
                     if delta == -1:
-                        if host == first_host:
+                        if node_id == 0:
                             delta = rank - last_rank
                         else:
-                            # irregular case detected, such as [0:A,1:B,2:B]
+                            # irregular case detected such as {0:A,1:B,2:B}
+                            mpd_print(1, "irregular case A detected")
                             return ''
                     elif (rank - last_rank) != delta:
-                        # we have detected an irregular case, bail
+                        # irregular such as {0:A,1:B,2:A,3:A,4:B}
+                        mpd_print(1, "irregular case B detected")
                         return ''
                 last_rank = rank
 
-        num_hosts = len(host_to_ranks.keys())
+        num_nodes = len(node_to_ranks.keys())
         if delta == 1:
-            return '(vector,(%d,%d,%d))' % (0,max_ranks_per_host,num_hosts)
+            return '(vector,(%d,%d,%d))' % (0,num_nodes,max_ranks_per_node)
         else:
-            # either we are truly block regular or there is only one process per
-            # node (delta == -1), either way results in the same mapping spec
-            return '(vector,(%d,%d,%d))' % (0,1,num_hosts)
+            # either we are round-robin-regular (delta > 1) or there is only one
+            # process per node (delta == -1), either way results in the same
+            # mapping spec
+            return '(vector,(%d,%d,%d))' % (0,num_nodes,1)
 
     def handle_lhs_input(self,sock):
         msg = self.ring.lhsSock.recv_dict_msg()
