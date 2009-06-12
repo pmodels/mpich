@@ -1660,8 +1660,8 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
         {
             /* We could check for POLLHUP here, but HUP/HUP+EOF is not erroneous
              * on many platforms, including modern Linux. */
-            MPIU_Assert ((it_plfd->revents & POLLERR) == 0);
-            MPIU_Assert ((it_sc->state.cstate == CONN_STATE_TS_D_QUIESCENT) || ((it_plfd->revents & POLLNVAL) == 0));
+            MPIU_ERR_CHKANDJUMP(it_plfd->revents & POLLERR, mpi_errno, MPI_ERR_OTHER, "**comm_fail");
+            MPIU_ERR_CHKANDJUMP(it_sc->state.cstate != CONN_STATE_TS_D_QUIESCENT && (it_plfd->revents & POLLNVAL), mpi_errno, MPI_ERR_OTHER, "**comm_fail");
             
             mpi_errno = it_sc->handler(it_plfd, it_sc);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno); 

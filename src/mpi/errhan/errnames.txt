@@ -797,6 +797,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **readv:readv failed
 **readv %d %s:readv failed - errno %d (%s)
 
+**comm_fail:Communication error
+
 #
 # mpi functions
 #
