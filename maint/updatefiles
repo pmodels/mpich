@@ -39,6 +39,7 @@ do_smpdversion=yes
 MAKE=${MAKE-make}
 
 openpa_dir="src/openpa"
+mpl_dir="src/pm/hydra/mpl"
 
 # List of steps that we will consider
 # (We do not include depend because the values for depend are not just yes/no)
@@ -626,6 +627,11 @@ if [ $do_build_configure = yes ] ; then
 	        # be used instead of this one when building that configure
 	        continue
             fi
+	    qmpl=`echo $dir | sed -e 's%.*'"$mpl_dir"'.*%FOUNDMPL%'`
+	    if [ "$qmpl" = "FOUNDMPL" ] ; then
+	        # mpl is updated using autoreconf later in this script
+	        continue
+            fi
 	    qopenpa=`echo $dir | sed -e 's%.*'"$openpa_dir"'.*%FOUNDOPENPA%'`
 	    if [ "$qopenpa" = "FOUNDOPENPA" ] ; then
 	        # openpa is updated using autoreconf later in this script
@@ -845,6 +851,10 @@ fi
 if [ -d "$openpa_dir" -o -L "$openpa_dir" ] ; then
     echo "running autoreconf in $openpa_dir"
     (cd $openpa_dir && $autoreconf -vif) || exit 1
+fi
+if [ -d "$mpl_dir" -o -L "$mpl_dir" ] ; then
+    echo "running autoreconf in $mpl_dir"
+    (cd $mpl_dir && $autoreconf -vif) || exit 1
 fi
 
 if [ -f src/mpe2/maint/updatefiles -a "$do_build_configure" = "yes" ] ; then
