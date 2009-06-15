@@ -172,7 +172,6 @@ void MPIR_Nest_incr_export_dbg( const char *srcfile, int srcline )
     MPIU_THREADPRIV_DECL;
     MPIU_THREADPRIV_GET;
 
-    printf( "incr from %d at %s:%d\n", MPIU_THREADPRIV_FIELD(nest_count), srcfile, srcline );
     if (MPIU_THREADPRIV_FIELD(nest_count) >= MPICH_MAX_NESTINFO) { 
 	MPIU_Internal_error_printf("nest stack exceeded at %s:%d\n",
 				   srcfile, srcline );
@@ -187,7 +186,7 @@ void MPIR_Nest_decr_export_dbg( const char *srcfile, int srcline )
 {
     MPIU_THREADPRIV_DECL;
     MPIU_THREADPRIV_GET;
-    printf( "decr from %d at %s:%d\n", MPIU_THREADPRIV_FIELD(nest_count), srcfile, srcline );
+
     if (MPIU_THREADPRIV_FIELD(nest_count) >= 0) {
 	MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line=-srcline;}
      MPIU_THREADPRIV_FIELD(nest_count)--;
