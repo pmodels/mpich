@@ -4,7 +4,7 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS = utils rmk bootstrap css demux pm ui .
+SUBDIRS = mpl utils rmk bootstrap css demux pm ui .
 NOTSIMPLEMAKE_SUBDIRS = mpl
 
 all-preamble:

@@ -18,8 +18,8 @@ INCLUDES = -I${abs_srcdir}/../../include \
 	-I${abs_srcdir}/../../demux
 
 pmi_proxy_SOURCES = pmi_proxy.c pmi_proxy_utils.c pmi_proxy_cb.c
-pmi_proxy_LDADD = -L../../lib -lhydra -L../../../util -lmpiexec -L../../../../../lib -lmpich
-pmi_proxy_DEPADD = ../../../util/libmpiexec.a
+pmi_proxy_LDADD = -L../../lib -lhydra -L../../mpl -lmpl
+pmi_proxy_DEPADD = ../../mpl/libmpl.a
 install_BIN = pmi_proxy
 
 # Use the mpich2-build-install target to include mpiexec in the build bin
