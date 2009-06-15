@@ -9,8 +9,8 @@ mpiexec_LDADD = -L../../lib -lhydra -L../../../util -lmpiexec -L../../../../../l
 mpiexec_DEPADD = ../../../util/libmpiexec.a
 INCLUDES = -I${abs_srcdir}/../../include \
 	-I../../include \
-	-I${abs_srcdir}/../../../../include \
-	-I../../../../include \
+	-I${abs_srcdir}/../../mpl/include \
+	-I../../mpl/include \
 	-I${abs_srcdir}/../utils \
 	-I${abs_srcdir}/../../rmk/include \
 	-I../../rmk/include \

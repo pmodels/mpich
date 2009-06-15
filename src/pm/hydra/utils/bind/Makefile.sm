@@ -12,5 +12,5 @@ INCLUDES = -I${abs_srcdir}/../../include \
 	-I../../include \
 	-I${abs_srcdir}/../plpa \
 	-I../plpa \
-	-I${abs_srcdir}/../../../../include \
-	-I../../../../include
+	-I${abs_srcdir}/../../mpl/include \
+	-I../../mpl/include

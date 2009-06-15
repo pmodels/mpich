@@ -8,7 +8,7 @@
 #define HYDRA_UTILS_H_INCLUDED
 
 #include "hydra_base.h"
-#include "mpimem.h"
+#include "mpl.h"
 
 int HYDU_Error_printf_simple(const char *str, ...);
 
@@ -232,15 +232,17 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *bu
 /* Memory utilities */
 #include <ctype.h>
 
-#ifndef INSIDE_MPICH2
-#define MPIU_Malloc malloc
-#define MPIU_Calloc calloc
-#define MPIU_Free free
-#endif
+/* FIXME: This should eventually become MPL_malloc and friends */
+#define HYDU_malloc malloc
+#define HYDU_calloc calloc
+#define HYDU_free   free
+
+#define HYDU_snprintf MPL_snprintf
+#define HYDU_strdup MPL_strdup
 
 #define HYDU_MALLOC(p, type, size, status)                              \
     {                                                                   \
-        (p) = (type) MPIU_Malloc((size));                               \
+        (p) = (type) HYDU_malloc((size));                               \
         if ((p) == NULL)                                                \
             HYDU_ERR_SETANDJUMP1((status), HYD_NO_MEM,                  \
                                  "failed to allocate %d bytes\n",       \
@@ -249,7 +251,7 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *bu
 
 #define HYDU_CALLOC(p, type, num, size, status)                         \
     {                                                                   \
-        (p) = (type) MPIU_Calloc((num), (size));                        \
+        (p) = (type) HYDU_calloc((num), (size));                        \
         if ((p) == NULL)                                                \
             HYDU_ERR_SETANDJUMP1((status), HYD_NO_MEM,                  \
                                  "failed to allocate %d bytes\n",       \
@@ -258,11 +260,8 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *bu
 
 #define HYDU_FREE(p)                            \
     {                                           \
-        MPIU_Free(p);                           \
+        HYDU_free(p);                           \
     }
-
-#define HYDU_snprintf MPIU_Snprintf
-#define HYDU_strdup MPIU_Strdup
 
 HYD_Status HYDU_list_append_strlist(char **exec, char **client_arg);
 HYD_Status HYDU_print_strlist(char **args);

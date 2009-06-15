@@ -9,7 +9,7 @@
 #ifndef HAVE_SNPRINTF
 /* FIXME: This is an approximate form, which works for most cases, but
  * might not work for all. */
-int MPL_Snprintf(char *str, size_t size, const char *format, ...)
+int MPL_snprintf(char *str, size_t size, const char *format, ...)
 {
     int n;
     const char *p;
@@ -157,15 +157,15 @@ int MPL_Snprintf(char *str, size_t size, const char *format, ...)
 
 
 #ifndef HAVE_STRDUP
-#ifdef MPL_Strdup
-#undef MPL_Strdup
+#ifdef MPL_strdup
+#undef MPL_strdup
 #endif
 /*@
-  MPL_Strdup - Duplicate a string
+  MPL_strdup - Duplicate a string
 
   Synopsis:
 .vb
-    char *MPL_Strdup(const char *str)
+    char *MPL_strdup(const char *str)
 .ve
 
   Input Parameter:
@@ -178,9 +178,9 @@ int MPL_Snprintf(char *str, size_t size, const char *format, ...)
   Module:
   Utility
   @*/
-char *MPL_Strdup(const char *str)
+char *MPL_strdup(const char *str)
 {
-    char *restrict p = (char *) MPL_Malloc(strlen(str) + 1);
+    char *restrict p = (char *) malloc(strlen(str) + 1);
     const char *restrict in_p = str;
     char *save_p;
 

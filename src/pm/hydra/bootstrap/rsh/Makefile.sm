@@ -9,9 +9,9 @@ HYDRA_LIB_PATH = ../../lib
 libhydra_a_DIR = ${HYDRA_LIB_PATH}
 libhydra_a_SOURCES = rsh_launch.c rsh_init.c
 INCLUDES = -I${abs_srcdir}/../../include \
-	-I${abs_srcdir}/../../../../include \
 	-I../../include \
-	-I../../../../include \
+	-I${abs_srcdir}/../../mpl/include \
+	-I../../mpl/include \
 	-I${abs_srcdir}/../../pm/utils \
 	-I${abs_srcdir}/../include \
 	-I../include \

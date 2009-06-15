@@ -1678,9 +1678,9 @@ dnl     Try linking with C compiler
                 fobjtype="`${FILE} conftestf.${ac_objext} | sed -e \"s|conftestf\.${ac_objext}||g\"`"
                 cobjtype="`${FILE} conftestc.${ac_objext} | sed -e \"s|conftestc\.${ac_objext}||g\"`"
                 if test "$fobjtype" != "$cobjtype" ; then
-                    AC_MSG_WARN([****  Incompatible Fortran and C Object File Types!  ****
-F77 Object File Type : ${fobjtype}.
- C  Object File Type : ${cobjtype}.])
+                    AC_MSG_ERROR([****  Incompatible Fortran and C Object File Types!  ****
+F77 Object File Type produced by \"${F77} ${FFLAGS}\" is : ${fobjtype}.
+ C  Object File Type produced by \"${CC} ${CFLAGS}\" is : ${cobjtype}.])
                 fi
             fi
         fi

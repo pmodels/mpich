@@ -17,13 +17,13 @@ extern "C" {
 
 /* Provide a fallback snprintf for systems that do not have one */
 #ifdef HAVE_SNPRINTF
-#define MPL_Snprintf snprintf
+#define MPL_snprintf snprintf
 /* Sometimes systems don't provide prototypes for snprintf */
 #ifdef NEEDS_SNPRINTF_DECL
 extern int snprintf(char *, size_t, const char *, ...) ATTRIBUTE((format(printf,3,4)));
 #endif
 #else
-int MPL_Snprintf(char *str, size_t size, const char *format, ...)
+int MPL_snprintf(char *str, size_t size, const char *format, ...)
     ATTRIBUTE((format(printf,3,4)));
 #endif /* HAVE_SNPRINTF */
 
@@ -32,10 +32,10 @@ int MPL_Snprintf(char *str, size_t size, const char *format, ...)
 # if defined(NEEDS_STRDUP_DECL) && !defined(strdup)
 extern char *strdup(const char *);
 # endif
-#define MPL_Strdup(a)    strdup(a)
+#define MPL_strdup(a)    strdup(a)
 #else
-/* Don't define MPL_Strdup, provide it ourselves */
-char *MPL_Strdup(const char *);
+/* Don't define MPL_strdup, provide it ourselves */
+char *MPL_strdup(const char *);
 #endif /* HAVE_STRDUP */
 
 /* *INDENT-ON* */
