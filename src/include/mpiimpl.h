@@ -132,7 +132,6 @@ static inline void MPIUI_Memcpy(void * restrict dst, const void * restrict src, 
 #ifndef MPIU_Memcpy
 #define MPIU_Memcpy(dst, src, len) MPIUI_Memcpy(dst, src, len)
 #endif
-#define memcpy(a, b, c) Error_use_MPIU_Memcpy
 
 
 #include "mpiimplthread.h"
