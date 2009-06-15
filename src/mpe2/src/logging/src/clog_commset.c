@@ -354,7 +354,7 @@ CLOG_CommSet_add_intercomm(       CLOG_CommSet_t *commset,
        copy the content of input intracommIDs pointer to a local buffer.
     */
     orig_intracommIDs = &intracommIDs_val;
-    MPIU_Memcpy( orig_intracommIDs, intracommIDs, sizeof(CLOG_CommIDs_t) );
+    memcpy( orig_intracommIDs, intracommIDs, sizeof(CLOG_CommIDs_t) );
 
     /* Set the next available table entry in CLOG_CommSet_t with intercomm */
     intercommIDs         = CLOG_CommSet_get_new_IDs( commset, 3 );
@@ -572,7 +572,7 @@ void CLOG_CommSet_merge( CLOG_CommSet_t *commset )
     */
 
     if ( comm_world_rank == 0 )
-        MPIU_Memcpy( recv_table, commset->table, recv_table_size );
+        memcpy( recv_table, commset->table, recv_table_size );
     PMPI_Bcast( recv_table, recv_table_size, MPI_CHAR, 0, MPI_COMM_WORLD );
 
     /* Make local_IDs in CLOG_CommSet_t's table[] to globally unique integers */
@@ -655,11 +655,11 @@ int CLOG_CommSet_write( const CLOG_CommSet_t *commset, int fd,
     /* Save the CLOG_CommIDs_t[] in the order the entries were created */
     for ( idx = 0; idx < commset->count; idx++ ) {
         commIDs = &( commset->table[idx] );
-        MPIU_Memcpy( ptr, commIDs->global_ID, CLOG_UUID_SIZE );
+        memcpy( ptr, commIDs->global_ID, CLOG_UUID_SIZE );
         ptr += CLOG_UUID_SIZE;
-        MPIU_Memcpy( ptr, &(commIDs->local_ID), sizeof(CLOG_CommLID_t) );
+        memcpy( ptr, &(commIDs->local_ID), sizeof(CLOG_CommLID_t) );
         ptr += sizeof(CLOG_CommLID_t);
-        MPIU_Memcpy( ptr, &(commIDs->kind), sizeof(CLOG_int32_t) );
+        memcpy( ptr, &(commIDs->kind), sizeof(CLOG_int32_t) );
         ptr += sizeof(CLOG_int32_t);
     }
 

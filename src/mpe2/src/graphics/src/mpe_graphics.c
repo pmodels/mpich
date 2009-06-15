@@ -1216,7 +1216,7 @@ int newItem;
       fprintf( stderr, "Ran out of memory packing pixels.\n" );
       return 1;
     } else {
-      MPIU_Memcpy( tmp, listPtr->list, sizeof(int) * listPtr->size / 2 );
+      memcpy( tmp, listPtr->list, sizeof(int) * listPtr->size / 2 );
       free( listPtr->list );
       listPtr->list = tmp;
     }

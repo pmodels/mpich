@@ -184,8 +184,8 @@ int MPER_Err_setmsg();
 #define MPI_Errhandler_f2c(errhandler) (MPI_Errhandler)(errhandler)
 #endif
 #ifndef HAVE_MPI_STATUS_F2C
-#define MPI_Status_f2c(f_status,c_status) MPIU_Memcpy(c_status,f_status,sizeof(MPI_Status))
-#define MPI_Status_c2f(c_status,f_status) MPIU_Memcpy(f_status,c_status,sizeof(MPI_Status))
+#define MPI_Status_f2c(f_status,c_status) memcpy(c_status,f_status,sizeof(MPI_Status))
+#define MPI_Status_c2f(c_status,f_status) memcpy(f_status,c_status,sizeof(MPI_Status))
 #endif
 
 #ifdef F77_NAME_UPPER

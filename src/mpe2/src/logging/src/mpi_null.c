@@ -369,7 +369,7 @@ int PMPI_Scatter( void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                   int root, MPI_Comm comm )
 {
     if ( sendbuf != recvbuf )
-        MPIU_Memcpy( recvbuf, sendbuf, sendcnt*sendtype );
+        memcpy( recvbuf, sendbuf, sendcnt*sendtype );
     return MPI_SUCCESS;
 }
 
@@ -378,7 +378,7 @@ int PMPI_Gather( void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                  int root, MPI_Comm comm )
 {
     if ( sendbuf != recvbuf )
-        MPIU_Memcpy( recvbuf, sendbuf, sendcnt*sendtype );
+        memcpy( recvbuf, sendbuf, sendcnt*sendtype );
     return MPI_SUCCESS;
 }
 
@@ -386,7 +386,7 @@ int PMPI_Scan( void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, MPI_Comm comm )
 {
     if ( sendbuf != recvbuf )
-        MPIU_Memcpy( recvbuf, sendbuf, count*datatype );
+        memcpy( recvbuf, sendbuf, count*datatype );
     return MPI_SUCCESS;
 }
 
@@ -394,6 +394,6 @@ int PMPI_Allreduce( void *sendbuf, void *recvbuf, int count,
                     MPI_Datatype datatype, MPI_Op op, MPI_Comm comm )
 {
     if ( sendbuf != recvbuf )
-        MPIU_Memcpy( recvbuf, sendbuf, count*datatype );
+        memcpy( recvbuf, sendbuf, count*datatype );
     return MPI_SUCCESS;
 }

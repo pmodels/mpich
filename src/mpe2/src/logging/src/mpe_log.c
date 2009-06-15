@@ -920,7 +920,7 @@ int MPE_Log_pack( MPE_LOG_BYTES bytebuf, int *position,
                 CLOG_Util_swap_bytes( vptr, sizeof( CLOG_int16_t ) , 1 );
 #endif
                 vptr = (void *)( (char *) vptr + sizeof( CLOG_int16_t ) );
-                MPIU_Memcpy( vptr, data, count );
+                memcpy( vptr, data, count );
                 *position += tot_sz;
                 return MPE_LOG_OK;
             }
@@ -928,7 +928,7 @@ int MPE_Log_pack( MPE_LOG_BYTES bytebuf, int *position,
         case 'h':  /* INT2 */
             tot_sz = count * 2;
             if ( *position + tot_sz <= sizeof( MPE_LOG_BYTES ) ) {
-                MPIU_Memcpy( vptr, data, tot_sz );
+                memcpy( vptr, data, tot_sz );
 #if !defined( WORDS_BIGENDIAN ) 
                 CLOG_Util_swap_bytes( vptr, 2 , count );
 #endif
@@ -941,7 +941,7 @@ int MPE_Log_pack( MPE_LOG_BYTES bytebuf, int *position,
         case 'e': /* FLT4 */
             tot_sz = count * 4;
             if ( *position + tot_sz <= sizeof( MPE_LOG_BYTES ) ) {
-                MPIU_Memcpy( vptr, data, tot_sz );
+                memcpy( vptr, data, tot_sz );
 #if !defined( WORDS_BIGENDIAN )
                 CLOG_Util_swap_bytes( vptr, 4, count );
 #endif
@@ -954,7 +954,7 @@ int MPE_Log_pack( MPE_LOG_BYTES bytebuf, int *position,
         case 'E': /* FLT8 */
             tot_sz = count * 8;
             if ( *position + tot_sz <= sizeof( MPE_LOG_BYTES ) ) {
-                MPIU_Memcpy( vptr, data, tot_sz );
+                memcpy( vptr, data, tot_sz );
 #if !defined( WORDS_BIGENDIAN )
                 CLOG_Util_swap_bytes( vptr, 8, count );
 #endif

@@ -612,7 +612,7 @@ int RLOG_GetFileHeader(RLOG_IOStruct *pInput, RLOG_FILE_HEADER *pHeader)
 {
     if (pInput == NULL)
 	return -1;
-    MPIU_Memcpy(pHeader, &pInput->header, sizeof(RLOG_FILE_HEADER));
+    memcpy(pHeader, &pInput->header, sizeof(RLOG_FILE_HEADER));
     return 0;
 }
 

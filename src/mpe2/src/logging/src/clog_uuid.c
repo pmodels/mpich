@@ -82,18 +82,18 @@ void CLOG_Uuid_generate( CLOG_Uuid_t uuid )
     PMPI_Get_processor_name( processor_name, &namelen );
 
     ptr  = &uuid[0];
-    MPIU_Memcpy( ptr, &random_number, sizeof(CLOG_int32_t) );
+    memcpy( ptr, &random_number, sizeof(CLOG_int32_t) );
     ptr += sizeof(CLOG_int32_t);
-    MPIU_Memcpy( ptr, &time, sizeof(double) );
+    memcpy( ptr, &time, sizeof(double) );
     ptr += sizeof(double);
     if ( namelen < CLOG_UUID_NAME_SIZE ) {
-        MPIU_Memcpy( ptr, processor_name, namelen );
+        memcpy( ptr, processor_name, namelen );
         /* pad the rest of uuid with 0 */
         ptr += namelen;
-        MPIU_Memcpy( ptr, CLOG_UUID_NULL_NAME, CLOG_UUID_NAME_SIZE-namelen );
+        memcpy( ptr, CLOG_UUID_NULL_NAME, CLOG_UUID_NAME_SIZE-namelen );
     }
     else /* if ( namelen >= CLOG_UUID_NAME_SIZE ) */
-        MPIU_Memcpy( ptr, processor_name, CLOG_UUID_NAME_SIZE );
+        memcpy( ptr, processor_name, CLOG_UUID_NAME_SIZE );
 }
 
 /*
@@ -108,11 +108,11 @@ void CLOG_Uuid_sprint( CLOG_Uuid_t uuid, char *str )
     char         *ptr;
 
     ptr  = &uuid[0];
-    MPIU_Memcpy( &random_number, ptr, sizeof(CLOG_int32_t) );
+    memcpy( &random_number, ptr, sizeof(CLOG_int32_t) );
     ptr += sizeof(CLOG_int32_t);
-    MPIU_Memcpy( &time, ptr, sizeof(double) );
+    memcpy( &time, ptr, sizeof(double) );
     ptr += sizeof(double);
-    MPIU_Memcpy( &name, ptr, CLOG_UUID_NAME_SIZE );
+    memcpy( &name, ptr, CLOG_UUID_NAME_SIZE );
     sprintf( str, i32fmt"-%f-%s", random_number, time, name );
 }
 
@@ -131,7 +131,7 @@ int  CLOG_Uuid_compare( const void *obj1, const void *obj2 )
 
 void CLOG_Uuid_copy( const CLOG_Uuid_t src_uuid, CLOG_Uuid_t dest_uuid )
 {
-    MPIU_Memcpy( dest_uuid, src_uuid, CLOG_UUID_SIZE );
+    memcpy( dest_uuid, src_uuid, CLOG_UUID_SIZE );
 }
 
 void CLOG_Uuid_swap_bytes( CLOG_Uuid_t uuid )

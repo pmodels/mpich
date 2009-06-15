@@ -282,7 +282,7 @@ void CLOG_Merger_save_rec( CLOG_Merger_t *merger, const CLOG_Rec_Header_t *hdr )
     /* CLOG_Rec_print( hdr, stdout ); */
     /* Save the CLOG record into the sorted buffer */
     reclen = CLOG_Rec_size( hdr->rectype );
-    MPIU_Memcpy( sorted_blk->ptr, hdr, reclen );
+    memcpy( sorted_blk->ptr, hdr, reclen );
     sorted_blk->ptr += reclen;
 }
 

@@ -448,7 +448,7 @@ void CLOG_Cache_put_rec( CLOG_Cache_t *cache, const CLOG_Rec_Header_t *hdr )
 
     /* Save the CLOG record into the CLOG_BlockData_t */
     reclen = CLOG_Rec_size( hdr->rectype );
-    MPIU_Memcpy( blkdata->ptr, hdr, reclen );
+    memcpy( blkdata->ptr, hdr, reclen );
     blkdata->ptr += reclen;
 }
 

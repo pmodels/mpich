@@ -94,7 +94,7 @@ if (size > 4)   record is:
     v->len      = (sizeof(MPE_Log_VFIELD) / sizeof(int)) + (n-1);\
     b->len      += v->len;\
     v->dtype    = MPE_Log_INT;\
-    MPIU_Memcpy(v->other,i,n*sizeof(int) ); \
+    memcpy(v->other,i,n*sizeof(int) ); \
     MPE_Log_i   += v->len;  }
 
 #define MPE_Log_ADDSTRING(b,v,str) \
@@ -105,7 +105,7 @@ if (size > 4)   record is:
     v->len      = (sizeof(MPE_Log_VFIELD) / sizeof(int)) + ln4 - 1;\
     b->len      += v->len;\
     v->dtype    = MPE_Log_CHAR;\
-    MPIU_Memcpy( v->other, str, ln );\
+    memcpy( v->other, str, ln );\
     MPE_Log_i   += v->len;}
 
 #define MPE_Log_ZEROTIME(b) { double x=0; MOVEDBL( &b->time, &x); }
@@ -126,7 +126,7 @@ if (size > 4)   record is:
     newRecHdr=(MPE_Log_HEADER *)(newLogBlk+1); \
 				/* go to after the block header */ \
   } \
-  MPIU_Memcpy (newRecHdr, readRecHdr, readRecHdr->len*sizeof(int)); \
+  memcpy (newRecHdr, readRecHdr, readRecHdr->len*sizeof(int)); \
 				/* copy record */ \
   newLogBlk->size += readRecHdr->len; /* update block length */ \
   newRecHdr = (MPE_Log_HEADER*)((int*)newRecHdr+readRecHdr->len); \

@@ -30,7 +30,7 @@ static FILE *debug_file;
 #endif
 
 /* need to put doubles at non-aligned locations */
-#define MOVEDBL( dest, src ) {MPIU_Memcpy( dest, src, sizeof( double ) );}
+#define MOVEDBL( dest, src ) {memcpy( dest, src, sizeof( double ) );}
 
 MPE_Log_BLOCK *MPE_Log_GetBuf (void)
   /* get another block of memory (or the first block) */
