@@ -70,7 +70,7 @@ static HYD_Status send_command(int fd, char *cmd)
 
     HYDU_FUNC_ENTER();
 
-    MPIU_Snprintf(cmdlen, 7, "%6d", strlen(cmd));
+    HYDU_snprintf(cmdlen, 7, "%6d", strlen(cmd));
     status = HYDU_sock_write(fd, cmdlen, 6);
     HYDU_ERR_POP(status, "error writing PMI line\n");
 

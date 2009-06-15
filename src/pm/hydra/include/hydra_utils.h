@@ -232,6 +232,12 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *bu
 /* Memory utilities */
 #include <ctype.h>
 
+#ifndef INSIDE_MPICH2
+#define MPIU_Malloc malloc
+#define MPIU_Calloc calloc
+#define MPIU_Free free
+#endif
+
 #define HYDU_MALLOC(p, type, size, status)                              \
     {                                                                   \
         (p) = (type) MPIU_Malloc((size));                               \

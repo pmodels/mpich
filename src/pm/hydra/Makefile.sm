@@ -5,6 +5,7 @@
 #
 
 SUBDIRS = utils rmk bootstrap css demux pm ui .
+NOTSIMPLEMAKE_SUBDIRS = mpl
 
 all-preamble:
 	@if [ ! -d lib ] ; then mkdir lib ; fi
