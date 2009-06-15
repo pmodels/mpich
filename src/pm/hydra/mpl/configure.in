@@ -8,16 +8,17 @@ AC_INIT([MPL], [0.1])
 AC_CONFIG_AUX_DIR(confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
+AC_CONFIG_HEADER(include/mplconf.h)
+AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
+
 dnl Enable better caching control
 PAC_ARG_CACHING
 
 AC_PROG_CC
 AC_PROG_RANLIB
 
-AC_CONFIG_HEADER(include/mplconf.h)
-
 dnl Check if the necessary headers are available
-AC_CHECK_HEADERS(stdio.h stdlib.h string.h math.h)
+AC_CHECK_HEADERS(stdio.h stdlib.h string.h math.h stdarg.h)
 
 dnl Check for strdup
 AC_CHECK_FUNCS(strdup)

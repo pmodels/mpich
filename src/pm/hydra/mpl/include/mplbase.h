@@ -7,22 +7,26 @@
 #ifndef MPLBASE_H_INCLUDED
 #define MPLBASE_H_INCLUDED
 
-#include "mplconf.h"
+#include "mplconfig.h"
 
-#if defined HAVE_STDIO_H
+#if defined MPL_HAVE_STDIO_H
 #include <stdio.h>
-#endif /* HAVE_STDIO_H */
+#endif /* MPL_HAVE_STDIO_H */
 
-#if defined HAVE_STDLIB_H
+#if defined MPL_HAVE_STDLIB_H
 #include <stdlib.h>
-#endif /* HAVE_STDLIB_H */
+#endif /* MPL_HAVE_STDLIB_H */
 
-#if defined HAVE_STRING_H
+#if defined MPL_HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
+#endif /* MPL_HAVE_STRING_H */
 
-#if defined HAVE_MATH_H
+#if defined MPL_HAVE_MATH_H
 #include <math.h>
-#endif /* HAVE_MATH_H */
+#endif /* MPL_HAVE_MATH_H */
+
+#if defined MPL_HAVE_STDARG_H
+#include <stdarg.h>
+#endif /* MPL_HAVE_STDARGS_H */
 
 #endif /* MPLBASE_H_INCLUDED */
