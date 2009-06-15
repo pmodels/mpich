@@ -789,7 +789,7 @@ fi)
 ])
 dnl
 dnl/*D 
-dnl PAC_PROG_C_WEAK_SYMBOLS - Test whether C supports weak symbols.
+dnl PAC_PROG_C_WEAK_SYMBOLS - Test whether C supports weak alias symbols.
 dnl
 dnl Synopsis
 dnl PAC_PROG_C_WEAK_SYMBOLS(action-if-true,action-if-false)
@@ -807,11 +807,14 @@ dnl    HAVE_WEAK_ATTRIBUTE
 dnl.ve
 dnl if functions can be declared as 'int foo(...) __attribute__ ((weak));'
 dnl sets the shell variable pac_cv_attr_weak to yes.
+dnl Also checks for __attribute__((weak_import)) which is supported by
+dnl Apple in Mac OSX (at least in Darwin).  Note that this provides only
+dnl weak symbols, not weak aliases
 dnl 
 dnl D*/
 AC_DEFUN(PAC_PROG_C_WEAK_SYMBOLS,[
 pragma_extra_message=""
-AC_CACHE_CHECK([for type of weak symbol support],
+AC_CACHE_CHECK([for type of weak symbol alias support],
 pac_cv_prog_c_weak_symbols,[
 # Test for weak symbol support...
 # We can't put # in the message because it causes autoconf to generate
@@ -932,6 +935,12 @@ AC_CACHE_CHECK([whether __attribute__ ((weak)) allowed],
 pac_cv_attr_weak,[
 AC_TRY_COMPILE([int foo(int) __attribute__ ((weak));],[int a;],
 pac_cv_attr_weak=yes,pac_cv_attr_weak=no)])
+# Note that being able to compile with weak_import doesn't mean that 
+# it works.
+AC_CACHE_CHECK([whether __attribute ((weak_import)) allowed],
+pac_cv_attr_weak_import,[
+AC_TRY_COMPILE([int foo(int) __attribute__ ((weak_import));],[int a;],
+pac_cv_attr_weak_import=yes,pac_cv_attr_weak_import=no)])
 ])
 
 #
