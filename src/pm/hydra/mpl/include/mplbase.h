@@ -29,12 +29,12 @@
 #include <stdarg.h>
 #endif /* MPL_HAVE_STDARGS_H */
 
-#ifndef ATTRIBUTE
-#ifdef HAVE_GCC_ATTRIBUTE
-#define ATTRIBUTE(a_) __attribute__(a_)
+#ifndef MPL_ATTRIBUTE
+#ifdef MPL_HAVE_GCC_ATTRIBUTE
+#define MPL_ATTRIBUTE(a_) __attribute__(a_)
 #else /* HAVE_GCC_ATTRIBUTE */
-#define ATTRIBUTE(a_)
+#define MPL_ATTRIBUTE(a_)
 #endif /* HAVE_GCC_ATTRIBUTE */
-#endif /* ATTRIBUTE */
+#endif /* MPL_ATTRIBUTE */
 
 #endif /* MPLBASE_H_INCLUDED */

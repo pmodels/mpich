@@ -20,11 +20,11 @@ extern "C" {
 #define MPL_snprintf snprintf
 /* Sometimes systems don't provide prototypes for snprintf */
 #ifdef MPL_NEEDS_SNPRINTF_DECL
-extern int snprintf(char *, size_t, const char *, ...) ATTRIBUTE((format(printf,3,4)));
+extern int snprintf(char *, size_t, const char *, ...) MPL_ATTRIBUTE((format(printf,3,4)));
 #endif
 #else
 int MPL_snprintf(char *str, size_t size, const char *format, ...)
-    ATTRIBUTE((format(printf,3,4)));
+    MPL_ATTRIBUTE((format(printf,3,4)));
 #endif /* HAVE_SNPRINTF */
 
 #ifdef MPL_HAVE_STRDUP

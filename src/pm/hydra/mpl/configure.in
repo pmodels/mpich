@@ -8,6 +8,14 @@ AC_INIT([MPL], [0.1])
 AC_CONFIG_AUX_DIR(confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
+dnl The MPICH2 top-level configure adds a bunch of flags to the
+dnl user-defined CFLAGS by processing different configure command-line
+dnl arguments (--enable-g, --enable-default-optimization). These updated
+dnl flags are passed down as a separate flag. Here, we don't care about
+dnl the user-defined flags, but rather this updated flags, so we just
+dnl overwrite CFLAGS with them.
+PAC_SUBCONFIG_INIT()
+
 AC_CONFIG_HEADER(include/mplconf.h)
 AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
 
@@ -34,6 +42,9 @@ fi
 
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
+
+dnl Place holder macro for finalization
+PAC_SUBCONFIG_FINALIZE()
 
 dnl Final output
 AC_OUTPUT(Makefile)
