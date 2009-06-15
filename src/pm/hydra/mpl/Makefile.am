@@ -5,4 +5,6 @@
 #
 
 ACLOCAL_AMFLAGS = -I confdb
-SUBDIRS = src/string
+
+lib_LIBRARIES = libmpl.a
+libmpl_a_SOURCES = src/string/mplstr.c

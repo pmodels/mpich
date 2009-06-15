@@ -35,5 +35,4 @@ dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
 
 dnl Final output
-AC_OUTPUT(Makefile
-	src/string/Makefile)
+AC_OUTPUT(Makefile)
