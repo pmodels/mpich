@@ -56,7 +56,7 @@ int MPID_nem_newmad_anysource_matched(MPID_Request *rreq);
 void MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info);
 void MPID_nem_newmad_get_rreq(nm_sr_event_t event, const nm_sr_event_info_t*info);
 void MPID_nem_newmad_handle_sreq(nm_sr_event_t event, const nm_sr_event_info_t*info);
-
+int MPID_nem_newmad_post_init(void);
 
 /* Dtype management */
 int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype,  MPID_Datatype * dt_ptr, const void *buf, 
@@ -70,6 +70,14 @@ int MPID_nem_newmad_send_conn_info (MPIDI_VC_t *vc);
 #define MPID_NEM_NMAD_MAX_NETS 4
 #define MPID_NEM_NMAD_MAX_SIZE MPID_NEM_MAX_NETMOD_STRING_LEN
 typedef nm_gate_t mpid_nem_newmad_p_gate_t;
+
+typedef struct MPID_nem_newmad_init_req
+{
+   nm_sr_request_t           init_request;
+   mpid_nem_newmad_p_gate_t  p_gate;
+   int                       process_no;
+}
+MPID_nem_newmad_init_req_t;
 
 typedef struct MPID_nem_newmad_vc_area_internal
 {
