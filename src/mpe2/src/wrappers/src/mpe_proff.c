@@ -484,16 +484,21 @@ void mper_fconsts_init( void )
        Set MPI_STATUS_SIZE, fortran logicals,
            MPI_IN_PLACE, MPI_STATUS(ES)_IGNORE
     */
+/*
 #if defined( MPICH2 )
     mpirinitf_();
 #endif
+*/
     fsub_mpi_fconsts_( &MPER_F_MPI_STATUS_SIZE, &MPER_F_TRUE, &MPER_F_FALSE );
+/* Use the determined values and ignore MPI_F_* from mpi.h */
+/*
 #if defined( HAVE_MPI_F_STATUS_IGNORE )
     MPER_F_MPI_STATUS_IGNORE = MPI_F_STATUS_IGNORE;
 #endif
 #if defined( HAVE_MPI_F_STATUSES_IGNORE )
     MPER_F_MPI_STATUSES_IGNORE = MPI_F_STATUSES_IGNORE;
 #endif
+*/
     printf( "f2c(MPI_IN_PLACE) = %p\n", MPER_F_MPI_IN_PLACE );
     printf( "f2c(MPI_STATUS_IGNORE) = %p\n", MPER_F_MPI_STATUS_IGNORE );
     printf( "f2c(MPI_STATUSES_IGNORE) = %p\n", MPER_F_MPI_STATUSES_IGNORE );
