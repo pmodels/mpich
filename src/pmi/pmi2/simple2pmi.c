@@ -1141,7 +1141,7 @@ static int getvalptr(PMI_Keyvalpair *const pairs[], int npairs, const char *key,
     if (vallen == 0)
         return -1;
 
-    *val_ = (void *)(unsigned int)strtoll(value, &endptr, 0);
+    *val_ = (void *)(MPIR_Pint)strtoll(value, &endptr, 0);
     if (endptr - value != vallen)
         return -1;
     
