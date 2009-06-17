@@ -984,7 +984,7 @@ dnl Synopsis:
 dnl  PAC_PROG_F90_INT_KIND(variable-to-set,number-of-bytes,[cross-size])
 dnl
 dnl D*/
-AC_DEFUN(PAC_PROG_F90_INT_KIND,[
+AC_DEFUN([PAC_PROG_F90_INT_KIND],[
 # Set the default
 $1=-1
 if test "$pac_cv_prog_f90_cross" = "yes" ; then
@@ -1103,7 +1103,7 @@ AC_DEFUN([PAC_PROG_F90],[AC_PROG_F90])
 AC_DEFUN([PAC_LANG_FORTRAN90],[AC_LANG_PUSH(Fortran 90)])
 dnl Internal routine for testing F90
 dnl PAC_PROG_F90_WORKS()
-AC_DEFUN(PAC_PROG_F90_WORKS,
+AC_DEFUN([PAC_PROG_F90_WORKS],
 [AC_MSG_CHECKING([for extension for Fortran 90 programs])
 pac_cv_f90_ext="f90"
 cat > conftest.$pac_cv_f90_ext <<EOF
@@ -1233,7 +1233,7 @@ dnl
 dnl Synopsis:
 dnl   PAC_PROG_F90_HAS_POINTER(action-if-true,action-if-false)
 dnl D*/
-AC_DEFUN(PAC_PROG_F90_HAS_POINTER,[
+AC_DEFUN([PAC_PROG_F90_HAS_POINTER],[
 AC_CACHE_CHECK([whether Fortran 90 has Cray-style pointer declaration],
 pac_cv_prog_f90_has_pointer,[
 AC_LANG_PUSH(Fortran 90)

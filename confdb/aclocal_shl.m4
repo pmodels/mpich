@@ -51,7 +51,7 @@ dnl Shared libraries are only partially implemented.  Additional symbols
 dnl will probably be defined, including symbols to specify how shared library
 dnl search paths are specified and how shared library names are set.
 dnl D*/
-AC_DEFUN(PAC_ARG_SHAREDLIBS,[
+AC_DEFUN([PAC_ARG_SHAREDLIBS],[
 AC_ARG_ENABLE(sharedlibs,
 [--enable-sharedlibs=kind - Enable shared libraries.  kind may be
     gcc     - Standard gcc and GNU ld options for creating shared libraries
@@ -217,7 +217,7 @@ dnl
 dnl Synopsis
 dnl PAC_CC_SHAREDLIBS(type,CCvar,CLINKvar)
 dnl D*/
-AC_DEFUN(PAC_CC_SHAREDLIBS,
+AC_DEFUN([PAC_CC_SHAREDLIBS],
 [
 pac_kinds=$1
 ifelse($1,,[
@@ -282,7 +282,7 @@ dnl made by any subdirectory configure (which may simply SUBST the
 dnl necessary values rather than trying to determine them from scratch)
 dnl This is a more robust (and, in the case of libtool, only 
 dnl managable) method.
-AC_DEFUN(PAC_CC_SUBDIR_SHLIBS,[
+AC_DEFUN([PAC_CC_SUBDIR_SHLIBS],[
 	AC_SUBST(CC_SHL)
         AC_SUBST(C_LINK_SHL)
         AC_SUBST(LIBTOOL)

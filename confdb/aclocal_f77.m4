@@ -299,7 +299,7 @@ dnl If the 'cross-size' argument is not given, 'autoconf' will issue an error
 dnl message.  You can use '0' to specify undetermined.
 dnl
 dnl D*/
-AC_DEFUN(PAC_PROG_F77_CHECK_SIZEOF,[
+AC_DEFUN([PAC_PROG_F77_CHECK_SIZEOF],[
 changequote(<<, >>)dnl
 dnl The name to #define.
 dnl If the arg value contains a variable, we need to update that
@@ -376,7 +376,7 @@ dnl This is necessary because some compilers provide shared libraries
 dnl that are not within the default linker paths (e.g., our installation
 dnl of the Portland Group compilers)
 dnl
-AC_DEFUN(PAC_PROG_F77_CHECK_SIZEOF_EXT,[
+AC_DEFUN([PAC_PROG_F77_CHECK_SIZEOF_EXT],[
 changequote(<<,>>)dnl
 dnl The name to #define.
 dnl If the arg value contains a variable, we need to update that
@@ -479,7 +479,7 @@ dnl file contains an error in the handling of Fortran programs in
 dnl 'AC_TRY_COMPILE' (fixed in our local version).
 dnl
 dnl D*/
-AC_DEFUN(PAC_PROG_F77_EXCLAIM_COMMENTS,[
+AC_DEFUN([PAC_PROG_F77_EXCLAIM_COMMENTS],[
 AC_CACHE_CHECK([whether Fortran accepts ! for comments],
 pac_cv_prog_f77_exclaim_comments,[
 AC_LANG_SAVE
@@ -517,7 +517,7 @@ dnl
 dnl Because this is a long script, we have ensured that you can pass a 
 dnl variable containing the option name as the first argument.
 dnl D*/
-AC_DEFUN(PAC_F77_CHECK_COMPILER_OPTION,[
+AC_DEFUN([PAC_F77_CHECK_COMPILER_OPTION],[
 AC_MSG_CHECKING([whether Fortran 77 compiler accepts option $1])
 ac_result="no"
 save_FFLAGS="$FFLAGS"
@@ -640,7 +640,7 @@ dnl    extern char **__libc_argv;
 dnl    extern int  __libc_argc;
 dnl    f_setarg( __libc_argc, __libc_argv );
 dnl
-AC_DEFUN(PAC_PROG_F77_CMDARGS,[
+AC_DEFUN([PAC_PROG_F77_CMDARGS],[
 found_cached="yes"
 AC_MSG_CHECKING([for routines to access the command line from Fortran 77])
 AC_CACHE_VAL(pac_cv_prog_f77_cmdarg,
@@ -993,7 +993,7 @@ dnl
 dnl An earlier version of this only tried the arguments without using
 dnl a library.  This failed when the HP compiler complained about the
 dnl arguments, but produced an executable anyway.  
-AC_DEFUN(PAC_PROG_F77_LIBRARY_DIR_FLAG,[
+AC_DEFUN([PAC_PROG_F77_LIBRARY_DIR_FLAG],[
 if test "X$F77_LIBDIR_LEADER" = "X" ; then
 AC_CACHE_CHECK([for Fortran 77 flag for library directories],
 pac_cv_prog_f77_library_dir_flag,
@@ -1057,7 +1057,7 @@ dnl If directory does not exist, it will be created.  In that case, the
 dnl directory should be a direct descendant of the current directory.
 dnl
 dnl D*/ 
-AC_DEFUN(PAC_PROG_F77_HAS_INCDIR,[
+AC_DEFUN([PAC_PROG_F77_HAS_INCDIR],[
 checkdir=$1
 AC_CACHE_CHECK([for include directory flag for Fortran],
 pac_cv_prog_f77_has_incdir,[
@@ -1100,7 +1100,7 @@ dnl Syntax:
 dnl   PAC_PROG_F77_ALLOWS_UNUSED_EXTERNALS(action-if-true,action-if-false)
 dnl
 dnl D*/
-AC_DEFUN(PAC_PROG_F77_ALLOWS_UNUSED_EXTERNALS,[
+AC_DEFUN([PAC_PROG_F77_ALLOWS_UNUSED_EXTERNALS],[
 AC_CACHE_CHECK([whether Fortran allows unused externals],
 pac_cv_prog_f77_allows_unused_externals,[
 AC_LANG_SAVE
@@ -1144,7 +1144,7 @@ dnl
 dnl Synopsis:
 dnl   PAC_PROG_F77_HAS_POINTER(action-if-true,action-if-false)
 dnl D*/
-AC_DEFUN(PAC_PROG_F77_HAS_POINTER,[
+AC_DEFUN([PAC_PROG_F77_HAS_POINTER],[
 AC_CACHE_CHECK([whether Fortran has pointer declaration],
 pac_cv_prog_f77_has_pointer,[
 AC_LANG_SAVE
@@ -1171,7 +1171,7 @@ dnl                               cross-action )
 dnl Fortran routine MUST be named ftest unless you include code
 dnl to select the appropriate Fortran name.
 dnl 
-AC_DEFUN(PAC_PROG_F77_RUN_PROC_FROM_C,[
+AC_DEFUN([PAC_PROG_F77_RUN_PROC_FROM_C],[
 # This is needed for Mac OSX 10.5
 rm -rf conftest.dSYM
 rm -f conftest*
@@ -1222,7 +1222,7 @@ dnl doesn't handle this, either by detecting the use of -rpath or
 dnl by trying to *run* a trivial program.  It only checks for *linking*.
 dnl 
 dnl
-AC_DEFUN(PAC_PROG_F77_IN_C_LIBS,[
+AC_DEFUN([PAC_PROG_F77_IN_C_LIBS],[
 AC_MSG_CHECKING([for which Fortran libraries are needed to link C with Fortran])
 F77_IN_C_LIBS="$FLIBS"
 # This is needed for Mac OSX 10.5
@@ -1369,7 +1369,7 @@ dnl
 dnl Check to see if a C program can be linked when using the libraries
 dnl needed by C programs
 dnl
-AC_DEFUN(PAC_PROG_F77_CHECK_FLIBS,
+AC_DEFUN([PAC_PROG_F77_CHECK_FLIBS],
 [AC_MSG_CHECKING([whether C can link with $FLIBS])
 # Try to link a C program with all of these libraries
 save_LIBS="$LIBS"
@@ -1406,7 +1406,7 @@ dnl Check to see if Fortran supports the new-style character declarations.
 dnl Some compilers issue warnings for the old-style, so we may want to 
 dnl use the new form if it is available.
 dnl
-AC_DEFUN(PAC_PROG_F77_NEW_CHAR_DECL,[
+AC_DEFUN([PAC_PROG_F77_NEW_CHAR_DECL],[
 AC_CACHE_CHECK([whether Fortran supports new-style character declarations],
 pac_cv_prog_f77_new_char_decl,[
 AC_LANG_SAVE
@@ -1592,7 +1592,7 @@ dnl
 dnl
 dnl
 dnl
-AC_DEFUN(PAC_PROG_F77_OBJ_LINKS_WITH_C,[
+AC_DEFUN([PAC_PROG_F77_OBJ_LINKS_WITH_C],[
 AC_MSG_CHECKING([whether Fortran 77 and C objects are compatible])
 dnl
 rm -rf conftestc.dSYM
