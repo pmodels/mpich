@@ -38,7 +38,7 @@ dnl used as the "Fortran 77" compiler).  This is not yet solved.
 dnl
 dnl D*/
 dnl
-AC_DEFUN(PAC_PROG_F77_NAME_MANGLE,[
+AC_DEFUN([PAC_PROG_F77_NAME_MANGLE],[
 AC_CACHE_CHECK([for Fortran 77 name mangling],
 pac_cv_prog_f77_name_mangle,
 [
