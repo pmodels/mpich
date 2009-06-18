@@ -6,7 +6,7 @@ AC_PREREQ(2.62)
 
 AC_INIT([Hydra], [0.1])
 AC_CONFIG_AUX_DIR(confdb)
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
 
 dnl When built as a subconfigure, pull in FLAGS from above
 PAC_SUBCONFIG_INIT()
