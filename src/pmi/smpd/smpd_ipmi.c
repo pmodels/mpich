@@ -2050,8 +2050,8 @@ int iPMI_KVS_Get(const char kvsname[], const char key[], char value[], int lengt
     }
     if (strcmp(str, DBS_SUCCESS_STR))
     {
-	/* FIXME: If we are going to use pmi for the publish/lookup interface then gets should be allowed to fail without printing errors */
-	pmi_err_printf("PMI_KVS_Get failed: '%s'\n", str);
+        /* Unable to find the keyval in db. The caller should handle this error */
+	pmi_dbg_printf("PMI_KVS_Get failed: '%s'\n", str);
 	return PMI_FAIL;
     }
     if (MPIU_Str_get_string_arg(pmi_process.context->read_cmd.cmd, "value", value, length) != MPIU_STR_SUCCESS)
