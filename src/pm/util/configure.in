@@ -87,8 +87,10 @@ ENABLE_SHLIB=none
 AC_SUBST(ENABLE_SHLIB)
 dnl
 dnl     check for compiler characteristics
+
 dnl Set CFLAGS for enable strict if necessary
-PAC_CC_STRICT
+AC_ARG_ENABLE(strict,[--enable-strict - Turn on strict debugging with gcc],,enable_strict=no)
+PAC_CC_STRICT($enable_strict)
 AC_C_CONST
 PAC_C_VOLATILE
 PAC_C_RESTRICT
