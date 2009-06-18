@@ -2,7 +2,7 @@ dnl
 dnl PAC_APPEND_UNIQ_TOKEN( VARIABLE_NAME, TOKEN )
 dnl token is defined as string without any blank space in it.
 dnl
-AC_DEFUN(PAC_APPEND_UNIQ_TOKEN,[
+AC_DEFUN([PAC_APPEND_UNIQ_TOKEN],[
 dnl Since PAC_APPEND_UNIQ_TOKEN may be called by PAC_MAKE_UNIQ_STRING
 dnl saved IFS should be in a different variable than MAKE_UNIQ_STRING's.
 dnl Otherwise bad thing will happen.
@@ -49,7 +49,7 @@ dnl                 On output, VARIABLE will contain no duplicated substring.
 dnl REMOVED_NAME  - name of the (optional) variable containing the elminated
 dnl                 duplicated substings.
 dnl
-AC_DEFUN(PAC_MAKE_UNIQ_STRING, [
+AC_DEFUN([PAC_MAKE_UNIQ_STRING], [
 saveIFS="$IFS"
 dnl eval inflags=\$$1
 inflags="[$]$1"

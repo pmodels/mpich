@@ -52,7 +52,7 @@ dnl directories listed.  This is an extension to the 'autoconf' version of
 dnl this macro. 
 dnl D*/
 undefine([AC_CONFIG_AUX_DIRS])
-AC_DEFUN(AC_CONFIG_AUX_DIRS,
+AC_DEFUN([AC_CONFIG_AUX_DIRS],
 [if test -f $CONFIG_AUX_DIR/install-sh ; then ac_aux_dir=$CONFIG_AUX_DIR 
 else
 ac_aux_dir=
@@ -95,7 +95,7 @@ dnl failed, the compiler accepts it (this avoids some of the "evaluation
 dnl copy" problems.
 dnl 
 dnl undefine([AC_CHECK_HEADER])
-AC_DEFUN(PAC_OLD_CHECK_HEADER,
+AC_DEFUN([PAC_OLD_CHECK_HEADER],
 [dnl Do the transliteration at runtime so arg 1 can be a shell variable.
 ac_safe=`echo "$1" | sed 'y%./+-%__p_%'`
 AC_MSG_CHECKING([for $1])

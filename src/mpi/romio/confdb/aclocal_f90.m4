@@ -4,7 +4,7 @@ dnl
 dnl We'd like to have a PAC_LANG_FORTRAN90 that worked with AC_TRY_xxx, but
 dnl that would require too many changes to autoconf macros.
 dnl
-AC_DEFUN(PAC_LANG_FORTRAN90,
+AC_DEFUN([PAC_LANG_FORTRAN90],
 [AC_REQUIRE([PAC_PROG_F90])
 define([AC_LANG], [FORTRAN90])dnl
 ac_ext=$pac_cv_f90_ext
@@ -19,7 +19,7 @@ dnl cross_compiling=$pac_cv_prog_f90_cross
 dnl
 dnl This is an addition for AC_TRY_COMPILE, but for f90.  If the current 
 dnl language is not f90, it does a save/restore
-AC_DEFUN(PAC_TRY_F90_COMPILE,
+AC_DEFUN([PAC_TRY_F90_COMPILE],
 [AC_REQUIRE([PAC_LANG_FORTRAN90])
 ifelse(AC_LANG, FORTRAN90,,[AC_LANG_SAVE
 PAC_LANG_FORTRAN90
@@ -58,7 +58,7 @@ dnl -  pac_cv_f90_module_case - case of name for created module (where the
 dnl      module name in the source file is lowercase).  One
 dnl      of unknown, lower, upper
 dnl D*/
-AC_DEFUN(PAC_F90_MODULE_EXT,
+AC_DEFUN([PAC_F90_MODULE_EXT],
 [AC_CACHE_CHECK([for Fortran 90 module extension],
 pac_cv_f90_module_ext,[
 # aclocal_f90.m4 version
@@ -133,7 +133,7 @@ dnl
 dnl PAC_F90_MODULE_INCFLAG - Determine the compiler flags for specifying 
 dnl directories that contain compiled Fortran 90 modules
 dnl
-AC_DEFUN(PAC_F90_MODULE_INCFLAG,[
+AC_DEFUN([PAC_F90_MODULE_INCFLAG],[
 AC_CACHE_CHECK([for Fortran 90 module include flag],
 pac_cv_f90_module_incflag,[
 AC_REQUIRE([PAC_F90_MODULE_EXT])
@@ -226,11 +226,11 @@ rm -f work.pc work.pcl
 AC_SUBST(F90MODINCFLAG)
 F90MODINCFLAG=$pac_cv_f90_module_incflag
 ])
-AC_DEFUN(PAC_F90_MODULE,[
+AC_DEFUN([PAC_F90_MODULE],[
 PAC_F90_MODULE_EXT
 PAC_F90_MODULE_INCFLAG
 ])
-AC_DEFUN(PAC_F90_EXT,[
+AC_DEFUN([PAC_F90_EXT],[
 AC_CACHE_CHECK([whether Fortran 90 accepts f90 suffix],
 pac_cv_f90_ext_f90,[
 save_ac_f90ext=$ac_f90ext
@@ -248,7 +248,7 @@ dnl Synopsis:
 dnl  PAC_PROG_F90_INT_KIND(variable-to-set,number-of-bytes,[cross-size])
 dnl
 dnl D*/
-AC_DEFUN(PAC_PROG_F90_INT_KIND,[
+AC_DEFUN([PAC_PROG_F90_INT_KIND],[
 # Set the default
 $1=-1
 if test "$pac_cv_prog_f90_cross" = "yes" ; then
@@ -324,7 +324,7 @@ dnl f90/f95 - Miscellaneous compilers, including NAG, Solaris, IRIX
 # ifort is another name for the Inten f90 compiler
 # efc - An older Intel compiler (?)
 # ifc - An older Intel compiler
-AC_DEFUN(PAC_PROG_F90,[
+AC_DEFUN([PAC_PROG_F90],[
 if test -z "$F90" ; then
     AC_CHECK_PROGS(F90,f90 xlf90 pgf90 ifort epcf90 f95 fort xlf95 lf95 pathf95 pathf90 g95 gfortran ifc efc)
     test -z "$F90" && AC_MSG_WARN([no acceptable Fortran 90 compiler found in \$PATH])
@@ -352,7 +352,7 @@ fi
 ])
 dnl Internal routine for testing F90
 dnl PAC_PROG_F90_WORKS()
-AC_DEFUN(PAC_PROG_F90_WORKS,
+AC_DEFUN([PAC_PROG_F90_WORKS],
 [AC_MSG_CHECKING([for extension for Fortran 90 programs])
 pac_cv_f90_ext="f90"
 cat > conftest.$pac_cv_f90_ext <<EOF
@@ -433,7 +433,7 @@ dnl that are not within the default linker paths (e.g., our installation
 dnl of the Portland Group compilers).
 dnl We assume a naming convention consistent with the Fortran 77 one.
 dnl
-AC_DEFUN(PAC_PROG_F90_CHECK_SIZEOF,[
+AC_DEFUN([PAC_PROG_F90_CHECK_SIZEOF],[
 changequote(<<,>>)dnl
 dnl The name to #define.
 dnl If the arg value contains a variable, we need to update that
@@ -587,7 +587,7 @@ dnl
 dnl Synopsis:
 dnl   PAC_PROG_F90_HAS_POINTER(action-if-true,action-if-false)
 dnl D*/
-AC_DEFUN(PAC_PROG_F90_HAS_POINTER,[
+AC_DEFUN([PAC_PROG_F90_HAS_POINTER],[
 AC_CACHE_CHECK([whether Fortran 90 has Cray-style pointer declaration],
 pac_cv_prog_f90_has_pointer,[
 AC_LANG_SAVE
@@ -628,7 +628,7 @@ dnl
 dnl Because this is a long script, we have ensured that you can pass a 
 dnl variable containing the option name as the first argument.
 dnl D*/
-AC_DEFUN(PAC_F90_CHECK_COMPILER_OPTION,[
+AC_DEFUN([PAC_F90_CHECK_COMPILER_OPTION],[
 AC_MSG_CHECKING([whether Fortran 90 compiler accepts option $1])
 ac_result="no"
 save_F90FLAGS="$F90FLAGS"

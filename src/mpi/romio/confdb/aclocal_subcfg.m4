@@ -2,7 +2,7 @@ dnl
 dnl PAC_MPICH2_INIT - Initialization routine for top-level mpich2 configure.in.
 dnl                   Call before invocation of mpich2's subpackage configure
 dnl
-AC_DEFUN(PAC_MPICH2_INIT,[
+AC_DEFUN([PAC_MPICH2_INIT],[
 # Exporting the MPICH2_INTERNAL_xFLAGS with modified xFLAGS
 # before calling subconfigure.
 # Check if the env variable MPICH2_UNIQ_XFLAGS is set to no.
@@ -31,7 +31,7 @@ dnl
 dnl PAC_SUBCONFIG_INIT - Initialization routine for subpackge configure.in
 dnl                      Called after AC_INIT before any of xFLAGS is accessed.
 dnl
-AC_DEFUN(PAC_SUBCONFIG_INIT,[
+AC_DEFUN([PAC_SUBCONFIG_INIT],[
 # Initialize xFLAGS with MPICH2_INTERNAL_xFLAGS.
     CFLAGS="$MPICH2_INTERNAL_CFLAGS"
     CXXFLAGS="$MPICH2_INTERNAL_CXXFLAGS"
@@ -41,7 +41,7 @@ AC_DEFUN(PAC_SUBCONFIG_INIT,[
 dnl
 dnl Do we need PAC_SUBCONFIG_FINALIZE or PAC_MPICH2_FINALIZE ?
 dnl 
-AC_DEFUN(PAC_SUBCONFIG_FINALIZE,[
+AC_DEFUN([PAC_SUBCONFIG_FINALIZE],[
 ])dnl
-AC_DEFUN(PAC_MPICH2_FINALIZE,[
+AC_DEFUN([PAC_MPICH2_FINALIZE],[
 ])dnl
