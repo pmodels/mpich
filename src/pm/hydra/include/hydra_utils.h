@@ -14,10 +14,22 @@ int HYDU_Error_printf_simple(const char *str, ...);
 
 #if !defined COMPILER_ACCEPTS_VA_ARGS
 #define HYDU_Error_printf HYDU_Error_printf_simple
-#elif defined COMPILER_ACCEPTS_FUNC && defined __LINE__
+#elif defined HAVE__FUNC__ && defined __LINE__
 #define HYDU_Error_printf(...)                            \
     {                                                     \
         fprintf(stderr, "%s (%d): ", __func__, __LINE__); \
+        HYDU_Error_printf_simple(__VA_ARGS__);            \
+    }
+#elif defined HAVE_CAP__FUNC__ && defined __LINE__
+#define HYDU_Error_printf(...)                            \
+    {                                                     \
+        fprintf(stderr, "%s (%d): ", __FUNC__, __LINE__); \
+        HYDU_Error_printf_simple(__VA_ARGS__);            \
+    }
+#elif defined HAVE__FUNCTION__ && defined __LINE__
+#define HYDU_Error_printf(...)                            \
+    {                                                     \
+        fprintf(stderr, "%s (%d): ", __FUNCTION__, __LINE__); \
         HYDU_Error_printf_simple(__VA_ARGS__);            \
     }
 #elif defined __FILE__ && defined __LINE__
@@ -115,9 +127,6 @@ int HYDU_Error_printf_simple(const char *str, ...);
 
 /* We need to add more information in here later */
 #if !defined ENABLE_DEBUG
-#define HYDU_FUNC_ENTER() {}
-#define HYDU_FUNC_EXIT() {}
-#elif defined COMPILER_ACCEPTS_FUNC
 #define HYDU_FUNC_ENTER() {}
 #define HYDU_FUNC_EXIT() {}
 #else

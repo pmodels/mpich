@@ -22,7 +22,17 @@ AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
 dnl Enable better caching control
 PAC_ARG_CACHING
 
+dnl Strict compile support
+PAC_CC_STRICT
+if test -n "$pac_cc_strict_flags" ; then
+    CFLAGS="$CFLAGS $pac_cc_strict_flags"
+fi
+
+dnl Bug in autoconf adds -O2 and -g by default. Make sure we only get
+dnl the flags we want.
+save_cflags=$CFLAGS
 AC_PROG_CC
+CFLAGS=$save_cflags
 AC_PROG_RANLIB
 
 dnl Check if the necessary headers are available

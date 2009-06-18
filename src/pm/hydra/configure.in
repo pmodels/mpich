@@ -16,6 +16,12 @@ AC_CONFIG_HEADER(include/hydra_config.h)
 dnl Enable better caching control
 PAC_ARG_CACHING
 
+dnl Strict compile support
+PAC_CC_STRICT
+if test -n "$pac_cc_strict_flags" ; then
+    CFLAGS="$CFLAGS $pac_cc_strict_flags"
+fi
+
 dnl Bug in autoconf adds -O2 and -g by default. Make sure we only get
 dnl the flags we want.
 save_cflags=$CFLAGS
@@ -276,22 +282,8 @@ fi
 AM_CONDITIONAL([hydra_procbind], [test "${PROC_BINDING}" = "yes"])
 AC_SUBST(opt_utils)
 
-dnl Check if __func__ is defined by the compiler
-AC_MSG_CHECKING([whether the compiler allows __func__])
-rm -f conftest.c
-cat > conftest.c <<EOF
-#include <stdio.h>
-int main()
-{
-    printf("%s\n", __func__);
-    return 0;
-}
-EOF
-pac_tmp_compile='$CC $CFLAGS conftest.c -o conftest'
-if AC_TRY_EVAL(pac_tmp_compile) && test -s conftest ; then
-   AC_DEFINE(COMPILER_ACCEPTS_FUNC,1,[Define if compiler supports __func__])
-fi
-rm -f conftest*
+dnl Check if __func__ and friends are defined
+PAC_CC_FUNCTION_NAME_SYMBOL
 
 dnl Check if __VA_ARGS__ is defined by the compiler
 AC_MSG_CHECKING([whether the compiler allows __VA_ARGS__])
