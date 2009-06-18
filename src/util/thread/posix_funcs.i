@@ -60,7 +60,7 @@
  */
 
 /* FIXME: using constant initializer if available */
-#if !defined(MPICH_DEBUG_MUTEX) || !defined(PTHREAD_MUTEX_ERRORCHECK_NP)
+#if !defined(MPICH_DEBUG_MUTEX) || !defined(PTHREAD_MUTEX_ERRORCHECK_VALUE)
 #define MPE_Thread_mutex_create(mutex_ptr_, err_ptr_)                   \
 {                                                                       \
     int err__;                                                          \
