@@ -179,15 +179,6 @@ int MPI_Finalize( void )
 	}
     }
 
-    /* At this point, we end the critical section for the Finalize call.
-       Since we've set MPIR_Process.initialized value to POST_FINALIZED, 
-       if the user erroneously calls Finalize from another thread, an
-       error message will be issued. */
-    /* We put this here to avoid nesting problems with the callbacks - 
-       however, an erroneous user program could cause problems here if if
-       makes its own MPI calls. */
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
-    
     /* FIXME: Why is this not one of the finalize callbacks?.  Do we need
        pre and post MPID_Finalize callbacks? */
     MPIU_Timer_finalize();
@@ -248,6 +239,7 @@ int MPI_Finalize( void )
     }
 #endif
 
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     MPIR_Process.initialized = MPICH_POST_FINALIZED;
 
     MPID_CS_FINALIZE();
@@ -316,7 +308,9 @@ int MPI_Finalize( void )
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    if (MPIR_Process.initialized < MPICH_POST_FINALIZED) {
+        MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    }
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
