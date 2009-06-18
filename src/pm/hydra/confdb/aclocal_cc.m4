@@ -1129,7 +1129,7 @@ if test "$enable_strict_done" != "yes" ; then
     if test -z "CC" ; then
         AC_CHECK_PROGS(CC,gcc)
     fi
-    case "$enable_strict" in 
+    case "$1" in 
 	yes)
         enable_strict_done="yes"
         if test "$CC" = "gcc" ; then 
@@ -1199,8 +1199,8 @@ if test "$enable_strict_done" != "yes" ; then
 	;;
 	*)
 	# Silently accept blank values for enable strict
-	if test -n "$enable_strict" ; then
-  	    AC_MSG_WARN([Unrecognized value for enable-strict:$enable_strict])
+	if test -n "$1" ; then
+  	    AC_MSG_WARN([Unrecognized value for enable-strict:$1])
 	fi
 	;;
     esac
@@ -1229,7 +1229,7 @@ if test "$enable_strict_done" != "yes" ; then
         AC_CHECK_PROGS(CC,gcc)
     fi
     pac_cc_strict_flags=""
-    case "$enable_strict" in 
+    case "$1" in 
         yes)
         enable_strict_done="yes"
         if test "$ac_cv_prog_gcc" = "yes" ; then 
@@ -1379,8 +1379,8 @@ if test "$enable_strict_done" != "yes" ; then
         :
         ;;
         *)
-        if test -n "$enable_strict" ; then
-            AC_MSG_WARN([Unrecognized value for enable-strict:$enable_strict])
+        if test -n "$1" ; then
+            AC_MSG_WARN([Unrecognized value for enable-strict:$1])
         fi
         ;;
     esac

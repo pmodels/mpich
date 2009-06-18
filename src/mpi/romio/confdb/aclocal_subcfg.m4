@@ -33,10 +33,12 @@ dnl                      Called after AC_INIT before any of xFLAGS is accessed.
 dnl
 AC_DEFUN([PAC_SUBCONFIG_INIT],[
 # Initialize xFLAGS with MPICH2_INTERNAL_xFLAGS.
+  if test "$FROM_MPICH2" = "yes" ; then
     CFLAGS="$MPICH2_INTERNAL_CFLAGS"
     CXXFLAGS="$MPICH2_INTERNAL_CXXFLAGS"
     FFLAGS="$MPICH2_INTERNAL_FFLAGS"
     F90FLAGS="$MPICH2_INTERNAL_F90FLAGS"
+  fi
 ])dnl
 dnl
 dnl Do we need PAC_SUBCONFIG_FINALIZE or PAC_MPICH2_FINALIZE ?

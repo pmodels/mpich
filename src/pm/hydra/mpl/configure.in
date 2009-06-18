@@ -6,7 +6,7 @@ AC_PREREQ(2.62)
 
 AC_INIT([MPL], [0.1])
 AC_CONFIG_AUX_DIR(confdb)
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
 
 dnl The MPICH2 top-level configure adds a bunch of flags to the
 dnl user-defined CFLAGS by processing different configure command-line
@@ -23,6 +23,7 @@ dnl Enable better caching control
 PAC_ARG_CACHING
 
 dnl Strict compile support
+AC_ARG_ENABLE(strict,[--enable-strict - Turn on strict debugging with gcc],,enable_strict=no)
 PAC_CC_STRICT
 if test -n "$pac_cc_strict_flags" ; then
     CFLAGS="$CFLAGS $pac_cc_strict_flags"
