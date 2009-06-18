@@ -4,39 +4,24 @@ AC_PREREQ(2.62)
 #     See COPYRIGHT in top-level directory.
 #
 
-dnl Caching is usually WRONG for systems with cross-mounted file systems
-dnl (the cache file may correspond to a different system).  Since configure
-dnl is not on a performance-critical path, go for robustness over speed.
-define([AC_CACHE_LOAD],)
-define([AC_CACHE_SAVE],)
+AC_INIT([Hydra], [0.1])
+AC_CONFIG_AUX_DIR(confdb)
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
-AC_INIT()
-
-dnl The MPICH2 top-level configure adds a bunch of flags to the
-dnl user-defined CFLAGS by processing different configure command-line
-dnl arguments (--enable-g, --enable-default-optimization). These updated
-dnl flags are passed down as a separate flag. Here, we don't care about
-dnl the user-defined flags, but rather this updated flags, so we just
-dnl overwrite CFLAGS with them.
+dnl When built as a subconfigure, pull in FLAGS from above
 PAC_SUBCONFIG_INIT()
 
 AC_CONFIG_HEADER(include/hydra_config.h)
 
-dnl Set the directory that contains support scripts such as install-sh and
-dnl config.guess
-AC_CONFIG_AUX_DIR(confdb)
-dnl
-echo "RUNNING CONFIGURE FOR THE HYDRA PM"
+dnl Enable better caching control
+PAC_ARG_CACHING
 
 dnl Bug in autoconf adds -O2 and -g by default. Make sure we only get
 dnl the flags we want.
 save_cflags=$CFLAGS
 AC_PROG_CC
 CFLAGS=$save_cflags
-
-if test "$FROM_MPICH2" = "yes" ; then
-   AC_DEFINE(INSIDE_MPICH2,1,[Define if compiling within MPICH2])
-fi
+AC_PROG_RANLIB
 
 dnl Check if the necessary headers are available
 AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h \
@@ -88,8 +73,13 @@ AC_MSG_CHECKING(boot-strap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
 AC_DEFINE_UNQUOTED(HYDRA_BSS_NAMES,"$hydra_bss_names",[Definition of enabled bootstrap servers])
+AM_SUBST_NOTMAKE(hydra_bss_names)
 AC_SUBST(hydra_bss_names)
 
+hydra_bss_ssh=false
+hydra_bss_rsh=false
+hydra_bss_fork=false
+hydra_bss_slurm=false
 for hydra_bss_name in ${hydra_bss_names}; do
     if test -z "${hydra_default_bss}" ; then
        hydra_default_bss=$hydra_bss_name
@@ -99,13 +89,38 @@ for hydra_bss_name in ${hydra_bss_names}; do
 HYD_Status HYD_BSCI_${hydra_bss_name}_init(void);"
     hydra_bss_name_array="${hydra_bss_name_array} \"${hydra_bss_name}\", "
     hydra_bss_init_array="${hydra_bss_init_array} HYD_BSCI_${hydra_bss_name}_init, "
+
+    case "$hydra_bss_name" in
+    	ssh)
+		hydra_bss_ssh=true
+		;;		
+	rsh)
+		hydra_bss_rsh=true
+		;;
+	fork)
+		hydra_bss_fork=true
+		;;
+	slurm)
+		hydra_bss_slurm=true
+		;;
+	*)
+		;;
+    esac
+
 done
 hydra_bss_name_array="${hydra_bss_name_array} NULL"
 hydra_bss_init_array="${hydra_bss_init_array} NULL"
 AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BSS,"$hydra_default_bss",[Default bootstrap server])
+AM_SUBST_NOTMAKE(hydra_bss_init_decl)
+AM_SUBST_NOTMAKE(hydra_bss_name_array)
+AM_SUBST_NOTMAKE(hydra_bss_init_array)
 AC_SUBST(hydra_bss_init_decl)
 AC_SUBST(hydra_bss_name_array)
 AC_SUBST(hydra_bss_init_array)
+AM_CONDITIONAL([hydra_bss_ssh], [$hydra_bss_ssh])
+AM_CONDITIONAL([hydra_bss_rsh], [$hydra_bss_rsh])
+AM_CONDITIONAL([hydra_bss_fork], [$hydra_bss_fork])
+AM_CONDITIONAL([hydra_bss_slurm], [$hydra_bss_slurm])
 
 
 dnl Check what communication sub-system we should use
@@ -116,8 +131,10 @@ AC_MSG_CHECKING(communication subsystem)
 AC_MSG_RESULT($hydra_css)
 hydra_css_names="`echo $hydra_css | sed -e 's/:/ /g' -e 's/,/ /g'`"
 AC_DEFINE_UNQUOTED(HYDRA_CSS_NAMES,"$hydra_css_names",[Definition of enabled communication systems])
+AM_SUBST_NOTMAKE(hydra_css_names)
 AC_SUBST(hydra_css_names)
 
+hydra_css_none=false
 for hydra_css_name in ${hydra_css_names}; do
     if test -z "${hydra_default_css}" ; then
        hydra_default_css=$hydra_css_name
@@ -127,13 +144,26 @@ for hydra_css_name in ${hydra_css_names}; do
 HYD_Status HYD_CSSI_${hydra_css_name}_init(void);"
     hydra_css_name_array="${hydra_css_name_array} \"${hydra_css_name}\", "
     hydra_css_init_array="${hydra_css_init_array} HYD_CSSI_${hydra_css_name}_init, "
+
+    case "$hydra_css_name" in
+    	dummy)
+		hydra_css_none=true
+		;;		
+	*)
+		;;
+    esac
+
 done
 hydra_css_name_array="${hydra_css_name_array} NULL"
 hydra_css_init_array="${hydra_css_init_array} NULL"
 AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_CSS,"$hydra_default_css",[Default communication sub-system])
+AM_SUBST_NOTMAKE(hydra_css_init_decl)
+AM_SUBST_NOTMAKE(hydra_css_name_array)
+AM_SUBST_NOTMAKE(hydra_css_init_array)
 AC_SUBST(hydra_css_init_decl)
 AC_SUBST(hydra_css_name_array)
 AC_SUBST(hydra_css_init_array)
+AM_CONDITIONAL([hydra_css_none], [$hydra_css_none])
 
 
 dnl Check what resource management kernel we should use
@@ -144,8 +174,10 @@ AC_MSG_CHECKING(resource management kernel)
 AC_MSG_RESULT($hydra_rmk)
 hydra_rmk_names="`echo $hydra_rmk | sed -e 's/:/ /g' -e 's/,/ /g'`"
 AC_DEFINE_UNQUOTED(HYDRA_RMK_NAMES,"$hydra_rmk_names",[Enabled resource management kernels])
+AM_SUBST_NOTMAKE(hydra_rmk_names)
 AC_SUBST(hydra_rmk_names)
 
+hydra_rmk_dummy=false
 for hydra_rmk_name in ${hydra_rmk_names}; do
     if test -z "${hydra_default_rmk}" ; then
        hydra_default_rmk=$hydra_rmk_name
@@ -155,13 +187,26 @@ for hydra_rmk_name in ${hydra_rmk_names}; do
 HYD_Status HYD_RMKI_${hydra_rmk_name}_init(void);"
     hydra_rmk_name_array="${hydra_rmk_name_array} \"${hydra_rmk_name}\", "
     hydra_rmk_init_array="${hydra_rmk_init_array} HYD_RMKI_${hydra_rmk_name}_init, "
+
+    case "$hydra_rmk_name" in
+    	dummy)
+		hydra_rmk_dummy=true
+		;;		
+	*)
+		;;
+    esac
+
 done
 hydra_rmk_name_array="${hydra_rmk_name_array} NULL"
 hydra_rmk_init_array="${hydra_rmk_init_array} NULL"
 AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_RMK,"$hydra_default_rmk",[Default resource management kernel])
+AM_SUBST_NOTMAKE(hydra_rmk_init_decl)
+AM_SUBST_NOTMAKE(hydra_rmk_name_array)
+AM_SUBST_NOTMAKE(hydra_rmk_init_array)
 AC_SUBST(hydra_rmk_init_decl)
 AC_SUBST(hydra_rmk_name_array)
 AC_SUBST(hydra_rmk_init_array)
+AM_CONDITIONAL([hydra_rmk_dummy], [$hydra_rmk_dummy])
 
 
 dnl Check what process manager we should use
@@ -171,6 +216,8 @@ AC_ARG_WITH(hydra-pm, [  --with-hydra-pm               Process Manager],
 AC_MSG_CHECKING(process manager)
 AC_MSG_RESULT($hydra_pm)
 AC_SUBST(hydra_pm)
+AM_CONDITIONAL([hydra_pm_pmiserv], [test $hydra_pm = "pmiserv"])
+
 
 dnl Check what UI we should use
 AC_ARG_WITH(hydra-ui, [  --with-hydra-ui         User Interface],
@@ -179,6 +226,7 @@ AC_ARG_WITH(hydra-ui, [  --with-hydra-ui         User Interface],
 AC_MSG_CHECKING(user interface)
 AC_MSG_RESULT($hydra_ui)
 AC_SUBST(hydra_ui)
+AM_CONDITIONAL([hydra_ui_mpiexec], [test $hydra_ui = "mpiexec"])
 
 dnl Check what communication sub-system we should use
 AC_ARG_WITH(hydra-css, [  --with-hydra-css               Communication Sub-system],
@@ -225,6 +273,7 @@ if test "$PROC_BINDING" = "yes"; then
    opt_utils_makefiles="${opt_utils_makefiles} utils/plpa/Makefile utils/bind/Makefile"
    opt_utils="${opt_utils} plpa bind"
 fi
+AM_CONDITIONAL([hydra_procbind], [test "${PROC_BINDING}" = "yes"])
 AC_SUBST(opt_utils)
 
 dnl Check if __func__ is defined by the compiler
@@ -271,7 +320,7 @@ if test "$ac_cv_func_strsignal" = "yes" ; then
 fi
 AC_CHECK_FUNCS(snprintf)
 AC_CHECK_FUNCS(strdup)
-dnl 
+
 dnl Check for signal handlers
 AC_CHECK_FUNCS(sigaction signal sigset)
 sigaction_ok=no
@@ -335,65 +384,22 @@ AC_SUBST(C_LINK_SHL)
 
 ENABLE_SHLIB=none
 AC_SUBST(ENABLE_SHLIB)
-
-AC_PROG_INSTALL
-PAC_PROG_MKDIR_P
-PAC_PROG_MAKE
-
 AC_SUBST(RANLIB)
-
-MPILIBNAME=${MPILIBNAME:-"mpich"}
-AC_SUBST(MPILIBNAME)
-
-if test -z "$master_top_srcdir" ; then
-   master_top_srcdir='${srcdir}/../../..'
-fi
-
-AC_SUBST(master_top_srcdir)
-
-dnl Dependency handling
 AC_SUBST(MAKE_DEPEND_C)
 
-AC_CONFIG_SUBDIRS(../util mpl)
+AC_PROG_INSTALL
+
+AC_CONFIG_SUBDIRS(mpl)
 
 dnl Place holder macro for finalization
 PAC_SUBCONFIG_FINALIZE()
 
 dnl Final output
-AC_OUTPUT(Makefile \
-	utils/Makefile \
-	utils/args/Makefile \
-	utils/dbg/Makefile \
-	utils/env/Makefile \
-	utils/launch/Makefile \
-	utils/signals/Makefile \
-	utils/sock/Makefile \
-	utils/string/Makefile \
-	utils/timer/Makefile \
-	${opt_utils_makefiles} \
-	ui/Makefile \
-	ui/utils/Makefile \
-	ui/${hydra_ui}/Makefile \
-	pm/Makefile \
-	pm/utils/Makefile \
-	pm/${hydra_pm}/Makefile \
-	demux/Makefile \
-	bootstrap/Makefile \
-	bootstrap/utils/Makefile \
-	bootstrap/src/Makefile \
-	bootstrap/src/bsci_init.c \
-	bootstrap/include/bsci.h \
-	${hydra_bss_makefiles} \
-	rmk/Makefile \
-	rmk/utils/Makefile \
-	rmk/src/Makefile \
-	rmk/src/rmki_init.c \
-	rmk/include/rmki.h \
-	${hydra_rmk_makefiles} \
-	css/Makefile \
-	css/utils/Makefile \
-	css/src/Makefile \
-	css/src/cssi_init.c \
-	css/include/cssi.h \
-	${hydra_css_makefiles}
+AC_OUTPUT(Makefile
+	bootstrap/src/bsci_init.c
+	bootstrap/include/bsci.h
+	rmk/src/rmki_init.c
+	rmk/include/rmki.h
+	css/src/cssi_init.c
+	css/include/cssi.h
 )

@@ -1,8 +1,0 @@
-# -*- Mode: Makefile; -*-
-#
-# (C) 2008 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
-
-SUBDIRS_opt_utils = plpa bind .
-SUBDIRS = args dbg env launch signals sock string timer @opt_utils@

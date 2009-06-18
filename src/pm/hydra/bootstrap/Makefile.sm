@@ -1,8 +1,0 @@
-# -*- Mode: Makefile; -*-
-#
-# (C) 2008 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
-
-SUBDIRS_hydra_bss_names = ssh rsh fork slurm
-SUBDIRS = utils src @hydra_bss_names@ .

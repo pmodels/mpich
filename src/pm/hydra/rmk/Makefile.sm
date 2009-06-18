@@ -1,8 +1,0 @@
-# -*- Mode: Makefile; -*-
-#
-# (C) 2008 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
-
-SUBDIRS_hydra_rmk_names = dummy
-SUBDIRS = utils src @hydra_rmk_names@ .
