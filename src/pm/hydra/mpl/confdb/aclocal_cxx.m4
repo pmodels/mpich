@@ -10,7 +10,7 @@ dnl the University of Notre Dame.
 dnl PAC_PROG_CXX_TEMPLATE_DIR(dirname)
 dnl sets dirname to the name of the template directory, or to empty
 dnl if it can not be determined.
-AC_DEFUN(PAC_PROG_CXX_TEMPLATE_DIR,[
+AC_DEFUN([PAC_PROG_CXX_TEMPLATE_DIR],[
 AC_CACHE_CHECK([for C++ template repository directory name],
 pac_cv_cxx_template_dir,[
 mkdir conftest_dir
@@ -96,7 +96,7 @@ $1="$pac_cv_cxx_template_dir_name"
 # (later configure macros look for the .o file, not just success from the
 # compiler, but they should not HAVE to
 #
-AC_DEFUN(PAC_PROG_CXX_WORKS,
+AC_DEFUN([PAC_PROG_CXX_WORKS],
 [AC_PROG_CXX_WORKS
 AC_MSG_CHECKING([whether the C++ compiler sets its return status correctly])
 AC_LANG_SAVE
@@ -231,7 +231,7 @@ dnl
 dnl Because this is a long script, we have ensured that you can pass a 
 dnl variable containing the option name as the first argument.
 dnl D*/
-AC_DEFUN(PAC_CXX_CHECK_COMPILER_OPTION,[
+AC_DEFUN([PAC_CXX_CHECK_COMPILER_OPTION],[
 AC_MSG_CHECKING([whether C++ compiler accepts option $1])
 save_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$1 $CXXFLAGS"

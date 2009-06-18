@@ -19,7 +19,7 @@ dnl would set the variables
 dnl HAVE_ENABLE_G_G=yes
 dnl HAVE_ENABLE_G_MEM=trace
 dnl
-AC_DEFUN(PAC_ARG_ENABLE_PARSE,[
+AC_DEFUN([PAC_ARG_ENABLE_PARSE],[
     eval ac_e_parse=${enable}_$1
     save_IFS="$IFS"
     IFS=","

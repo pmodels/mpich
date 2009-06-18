@@ -17,7 +17,7 @@ dnl   /target:module
 dnl   /debug
 dnl   /optimize
 dnl   /unsafe   (allow unsafe code)
-AC_DEFUN(PAC_LANG_CSHARP,
+AC_DEFUN([PAC_LANG_CSHARP],
 [AC_REQUIRE([PAC_PROG_CSHARP])
 define([AC_LANG], [CSHARP])dnl
 ac_ext=$pac_cv_csharp_ext
@@ -29,7 +29,7 @@ dnl restore it (in the case where one compiler claims to be a cross compiler
 dnl and another does not)
 dnl cross_compiling=$pac_cv_prog_csharp_cross
 ])
-AC_DEFUN(PAC_PROG_CSHARP,[
+AC_DEFUN([PAC_PROG_CSHARP],[
 if test -z "$CSHARP" ; then
     AC_CHECK_PROGS(CSHARP,csc)
     test -z "$CSHARP" && AC_MSG_WARN([no acceptable C# compiler found in \$PATH])

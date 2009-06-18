@@ -22,7 +22,7 @@ dnl
 dnl D*/
 dnl 2.52 doesn't have AC_PROG_CC_GNU
 ifdef([AC_PROG_CC_GNU],,[AC_DEFUN([AC_PROG_CC_GNU],)])
-AC_DEFUN(PAC_PROG_CC,[
+AC_DEFUN([PAC_PROG_CC],[
 AC_PROVIDE([AC_PROG_CC])
 AC_CHECK_PROGS(CC, cc xlC xlc pgcc icc pathcc gcc )
 test -z "$CC" && AC_MSG_ERROR([no acceptable cc found in \$PATH])
@@ -56,7 +56,7 @@ dnl
 dnl Because this is a long script, we have ensured that you can pass a 
 dnl variable containing the option name as the first argument.
 dnl D*/
-AC_DEFUN(PAC_C_CHECK_COMPILER_OPTION,[
+AC_DEFUN([PAC_C_CHECK_COMPILER_OPTION],[
 AC_MSG_CHECKING([whether C compiler accepts option $1])
 save_CFLAGS="$CFLAGS"
 CFLAGS="$1 $CFLAGS"
@@ -144,7 +144,7 @@ dnl course), and then falling back to some common defaults.
 dnl Note that many compilers will complain about -g and aggressive
 dnl optimization.  
 dnl D*/
-AC_DEFUN(PAC_C_OPTIMIZATION,[
+AC_DEFUN([PAC_C_OPTIMIZATION],[
     for copt in "-O4 -Ofast" "-Ofast" "-fast" "-O3" "-xO3" "-O" ; do
         PAC_C_CHECK_COMPILER_OPTION($copt,found_opt=yes,found_opt=no)
         if test "$found_opt" = "yes" ; then
@@ -220,7 +220,7 @@ dnl
 dnl Eventually, we can add an option to the C_DEPEND_MV to strip system
 dnl includes, such as /usr/xxxx and /opt/xxxx
 dnl
-AC_DEFUN(PAC_C_DEPENDS,[
+AC_DEFUN([PAC_C_DEPENDS],[
 AC_SUBST(C_DEPEND_OPT)AM_IGNORE(C_DEPEND_OPT)
 AC_SUBST(C_DEPEND_OUT)AM_IGNORE(C_DEPEND_OUT)
 AC_SUBST(C_DEPEND_MV)AM_IGNORE(C_DEPEND_MV)
@@ -324,7 +324,7 @@ dnl Synopsis:
 dnl PAC_C_PROTOTYPES([action if true],[action if false])
 dnl
 dnl D*/
-AC_DEFUN(PAC_C_PROTOTYPES,[
+AC_DEFUN([PAC_C_PROTOTYPES],[
 AC_CACHE_CHECK([whether $CC supports function prototypes],
 pac_cv_c_prototypes,[
 AC_TRY_COMPILE([int f(double a){return 0;}],[return 0];,
@@ -349,7 +349,7 @@ dnl Sets 'SEMCTL_NEEDS_SEMUN' if a 'union semun' type must be passed as the
 dnl fourth argument to 'semctl'.
 dnl D*/ 
 dnl Check for semctl and arguments
-AC_DEFUN(PAC_FUNC_SEMCTL,[
+AC_DEFUN([PAC_FUNC_SEMCTL],[
 AC_CHECK_FUNC(semctl)
 if test "$ac_cv_func_semctl" = "yes" ; then
     AC_CACHE_CHECK([for union semun],
@@ -388,7 +388,7 @@ dnl Output Effect:
 dnl Defines 'volatile' as empty if volatile is not available.
 dnl
 dnl D*/
-AC_DEFUN(PAC_C_VOLATILE,[
+AC_DEFUN([PAC_C_VOLATILE],[
 AC_CACHE_CHECK([for volatile],
 pac_cv_c_volatile,[
 AC_TRY_COMPILE(,[volatile int a;],pac_cv_c_volatile="yes",
@@ -408,7 +408,7 @@ dnl Output Effect:
 dnl Defines 'inline' as empty if inline is not available.
 dnl
 dnl D*/
-AC_DEFUN(PAC_C_INLINE,[
+AC_DEFUN([PAC_C_INLINE],[
 AC_CACHE_CHECK([for inline],
 pac_cv_c_inline,[
 AC_TRY_COMPILE([inline int a( int b ){return b+1;}],[int a;],
@@ -510,7 +510,7 @@ dnl Output Effects:
 dnl Invokes the true or false action
 dnl
 dnl D*/
-AC_DEFUN(PAC_C_CPP_CONCAT,[
+AC_DEFUN([PAC_C_CPP_CONCAT],[
 pac_pound="#"
 AC_CACHE_CHECK([whether the compiler $CC accepts $ac_pound$ac_pound for concatenation in cpp],
 pac_cv_c_cpp_concat,[
@@ -534,7 +534,7 @@ dnl Notes:
 dnl One version of Solaris accepted only one argument.
 dnl
 dnl D*/
-AC_DEFUN(PAC_FUNC_GETTIMEOFDAY,[
+AC_DEFUN([PAC_FUNC_GETTIMEOFDAY],[
 AC_CACHE_CHECK([whether gettimeofday takes 2 arguments],
 pac_cv_func_gettimeofday,[
 AC_TRY_COMPILE([#include <sys/time.h>],[struct timeval tp;
@@ -564,7 +564,7 @@ dnl Note that some compilers accept restrict only with additional options.
 dnl DEC/Compaq/HP Alpha Unix (Tru64 etc.) -accept restrict_keyword
 dnl
 dnl D*/
-AC_DEFUN(PAC_C_RESTRICT,[
+AC_DEFUN([PAC_C_RESTRICT],[
 AC_CACHE_CHECK([for restrict],
 pac_cv_c_restrict,[
 AC_TRY_COMPILE(,[int * restrict a;],pac_cv_c_restrict="restrict",
@@ -612,7 +612,7 @@ dnl Instead, we try to find a clean compile version, using our special
 dnl PAC_C_TRY_COMPILE_CLEAN command.
 dnl
 dnl D*/
-AC_DEFUN(PAC_HEADER_STDARG,[
+AC_DEFUN([PAC_HEADER_STDARG],[
 AC_CHECK_HEADER(stdarg.h)
 dnl Sets ac_cv_header_stdarg_h
 if test "$ac_cv_header_stdarg_h" = "yes" ; then
@@ -691,7 +691,7 @@ dnl The 'flagvar' is set to 0 (clean), 1 (dirty but success ok), or 2
 dnl (failed).
 dnl
 dnl D*/
-AC_DEFUN(PAC_C_TRY_COMPILE_CLEAN,[
+AC_DEFUN([PAC_C_TRY_COMPILE_CLEAN],[
 $3=2
 dnl Get the compiler output to test against
 if test -z "$pac_TRY_COMPLILE_CLEAN" ; then
@@ -752,7 +752,7 @@ dnl
 dnl Notes:
 dnl 'action-if-unknown' is used in the case of cross-compilation.
 dnl D*/
-AC_DEFUN(PAC_PROG_C_UNALIGNED_DOUBLES,[
+AC_DEFUN([PAC_PROG_C_UNALIGNED_DOUBLES],[
 AC_CACHE_CHECK([whether C compiler allows unaligned doubles],
 pac_cv_prog_c_unaligned_doubles,[
 AC_TRY_RUN([
@@ -812,7 +812,7 @@ dnl Apple in Mac OSX (at least in Darwin).  Note that this provides only
 dnl weak symbols, not weak aliases
 dnl 
 dnl D*/
-AC_DEFUN(PAC_PROG_C_WEAK_SYMBOLS,[
+AC_DEFUN([PAC_PROG_C_WEAK_SYMBOLS],[
 pragma_extra_message=""
 AC_CACHE_CHECK([for type of weak symbol alias support],
 pac_cv_prog_c_weak_symbols,[
@@ -952,7 +952,7 @@ dnl --- insert 2.52 compatibility here ---
 dnl 2.52 does not have AC_PROG_CC_WORKS
 ifdef([AC_PROG_CC_WORKS],,[AC_DEFUN([AC_PROG_CC_WORKS],)])
 dnl
-AC_DEFUN(PAC_PROG_CC_WORKS,
+AC_DEFUN([PAC_PROG_CC_WORKS],
 [AC_PROG_CC_WORKS
 AC_MSG_CHECKING([whether the C compiler sets its return status correctly])
 AC_LANG_SAVE
@@ -974,7 +974,7 @@ dnl PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(action-if-true,action-if-false)
 dnl
 dnl 
 dnl D*/
-AC_DEFUN(PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS,[
+AC_DEFUN([PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS],[
 AC_CACHE_CHECK([for multiple weak symbol support],
 pac_cv_prog_c_multiple_weak_symbols,[
 # Test for multiple weak symbol support...
@@ -1033,7 +1033,7 @@ dnl We test by looking for a missing crypt by defining our own
 dnl incompatible one and trying to compile it.
 dnl Defines NEED_CRYPT_PROTOTYPE if no prototype is found.
 dnl D*/
-AC_DEFUN(PAC_FUNC_CRYPT,[
+AC_DEFUN([PAC_FUNC_CRYPT],[
 AC_CACHE_CHECK([whether crypt defined in unistd.h],
 pac_cv_func_crypt_defined,[
 AC_TRY_COMPILE([
@@ -1120,7 +1120,7 @@ dnl IRIX
 dnl  -ansi -DEBUG:trap_uninitialized=ON:varargs_interface_check=ON:verbose_runtime=ON
 dnl
 dnl D*/
-AC_DEFUN(PAC_ARG_STRICT,[
+AC_DEFUN([PAC_ARG_STRICT],[
 AC_ARG_ENABLE(strict,
 [--enable-strict  - Turn on strict compilation testing when using gcc])
 saveCFLAGS="$CFLAGS"
@@ -1220,7 +1220,7 @@ dnl compile program with a invalid set of options
 dnl (-D __STRICT_ANSI__-trigraphs)
 dnl
 dnl 
-AC_DEFUN(PAC_CC_STRICT,[
+AC_DEFUN([PAC_CC_STRICT],[
 export enable_strict_done
 if test "$enable_strict_done" != "yes" ; then
     # We must know the compiler type
@@ -1420,7 +1420,7 @@ dnl IFS="$SaveIFS"
 dnl.ve
 dnl
 dnl D*/
-AC_DEFUN(PAC_ARG_CC_G,[
+AC_DEFUN([PAC_ARG_CC_G],[
 AC_ARG_ENABLE(g,
 [--enable-g  - Turn on debugging of the package (typically adds -g to COPTIONS)])
 export COPTIONS
@@ -1436,7 +1436,7 @@ fi
 dnl
 dnl Simple version for both options
 dnl
-AC_DEFUN(PAC_ARG_CC_COMMON,[
+AC_DEFUN([PAC_ARG_CC_COMMON],[
 PAC_ARG_CC_G
 PAC_ARG_STRICT
 ])
@@ -1475,7 +1475,7 @@ dnl If so, add -fno-common to CFLAGS
 dnl An alternative is to use, on some systems, ranlib -c to force 
 dnl the system to find common symbols.
 dnl
-AC_DEFUN(PAC_PROG_C_BROKEN_COMMON,[
+AC_DEFUN([PAC_PROG_C_BROKEN_COMMON],[
 AC_CACHE_CHECK([whether global variables handled properly],
 ac_cv_prog_cc_globals_work,[
 AC_REQUIRE([AC_PROG_RANLIB])
@@ -1556,7 +1556,7 @@ dnl
 dnl In addition, a "Could not determine alignment" and a 
 dnl "Multiple cases:" return is possible.  
 dnl
-AC_DEFUN(PAC_C_STRUCT_ALIGNMENT,[
+AC_DEFUN([PAC_C_STRUCT_ALIGNMENT],[
 AC_CACHE_CHECK([for C struct alignment],pac_cv_c_struct_align,[
 AC_TRY_RUN([
 #include <stdio.h>
@@ -1757,7 +1757,7 @@ dnl	eight
 dnl
 dnl In addition, a "Could not determine alignment" and a "error!"
 dnl return is possible.  
-AC_DEFUN(PAC_C_MAX_INTEGER_ALIGN,[
+AC_DEFUN([PAC_C_MAX_INTEGER_ALIGN],[
 AC_CACHE_CHECK([for max C struct integer alignment],
 pac_cv_c_max_integer_align,[
 AC_TRY_RUN([
@@ -1889,7 +1889,7 @@ dnl     sixteen
 dnl
 dnl In addition, a "Could not determine alignment" and a "error!"
 dnl return is possible.  
-AC_DEFUN(PAC_C_MAX_FP_ALIGN,[
+AC_DEFUN([PAC_C_MAX_FP_ALIGN],[
 AC_CACHE_CHECK([for max C struct floating point alignment],
 pac_cv_c_max_fp_align,[
 AC_TRY_RUN([
@@ -2004,7 +2004,7 @@ dnl	eight
 dnl
 dnl In addition, a "Could not determine alignment" and a "error!"
 dnl return is possible.  
-AC_DEFUN(PAC_C_MAX_DOUBLE_FP_ALIGN,[
+AC_DEFUN([PAC_C_MAX_DOUBLE_FP_ALIGN],[
 AC_CACHE_CHECK([for max C struct alignment of structs with doubles],
 pac_cv_c_max_double_fp_align,[
 AC_TRY_RUN([
@@ -2075,7 +2075,7 @@ if test -z "$pac_cv_c_max_double_fp_align" ; then
     pac_cv_c_max_double_fp_align="unknown"
 fi
 ])
-AC_DEFUN(PAC_C_MAX_LONGDOUBLE_FP_ALIGN,[
+AC_DEFUN([PAC_C_MAX_LONGDOUBLE_FP_ALIGN],[
 AC_CACHE_CHECK([for max C struct floating point alignment with long doubles],
 pac_cv_c_max_longdouble_fp_align,[
 AC_TRY_RUN([
@@ -2162,7 +2162,7 @@ dnl Puts result in pac_cv_c_double_alignment_exception.
 dnl
 dnl Possible values currently include no and four.
 dnl
-AC_DEFUN(PAC_C_DOUBLE_ALIGNMENT_EXCEPTION,[
+AC_DEFUN([PAC_C_DOUBLE_ALIGNMENT_EXCEPTION],[
 AC_CACHE_CHECK([if double alignment breaks rules, find actual alignment],
 pac_cv_c_double_alignment_exception,[
 AC_TRY_RUN([
@@ -2219,7 +2219,7 @@ dnl Search for "Power alignment mode" for more details.
 dnl
 dnl Possible values include yes, no, and unknown.
 dnl
-AC_DEFUN(PAC_C_DOUBLE_POS_ALIGN,[
+AC_DEFUN([PAC_C_DOUBLE_POS_ALIGN],[
 AC_CACHE_CHECK([if alignment of structs with doubles is based on position],
 pac_cv_c_double_pos_align,[
 AC_TRY_RUN([
@@ -2263,7 +2263,7 @@ dnl Search for "Power alignment mode" for more details.
 dnl
 dnl Possible values include yes, no, and unknown.
 dnl
-AC_DEFUN(PAC_C_LLINT_POS_ALIGN,[
+AC_DEFUN([PAC_C_LLINT_POS_ALIGN],[
 AC_CACHE_CHECK([if alignment of structs with long long ints is based on position],
 pac_cv_c_llint_pos_align,[
 AC_TRY_RUN([
@@ -2326,7 +2326,7 @@ dnl fail on implicitly defined functions, then this test will always
 dnl fail.
 dnl 
 dnl D*/
-AC_DEFUN(PAC_FUNC_NEEDS_DECL,[
+AC_DEFUN([PAC_FUNC_NEEDS_DECL],[
 AC_CACHE_CHECK([whether $2 needs a declaration],
 pac_cv_func_decl_$2,[
 AC_TRY_COMPILE([$1
@@ -2350,7 +2350,7 @@ dnl Like AC_CHECK_SIZEOF, but handles arbitrary types.
 dnl Unlike AC_CHECK_SIZEOF, does not define SIZEOF_xxx (because
 dnl autoheader can''t handle this case)
 dnl D*/
-AC_DEFUN(PAC_CHECK_SIZEOF_DERIVED,[
+AC_DEFUN([PAC_CHECK_SIZEOF_DERIVED],[
 changequote(<<,>>)dnl
 define(<<AC_TYPE_NAME>>,translit(sizeof_$1,[a-z *], [A-Z_P]))dnl
 define(<<AC_CV_NAME>>,translit(pac_cv_sizeof_$1,[ *], [_p]))dnl
@@ -2380,7 +2380,7 @@ dnl Like AC_CHECK_SIZEOF, but handles pairs of types.
 dnl Unlike AC_CHECK_SIZEOF, does not define SIZEOF_xxx (because
 dnl autoheader can''t handle this case)
 dnl D*/
-AC_DEFUN(PAC_CHECK_SIZEOF_2TYPES,[
+AC_DEFUN([PAC_CHECK_SIZEOF_2TYPES],[
 changequote(<<,>>)dnl
 define(<<AC_TYPE_NAME>>,translit(sizeof_$1,[a-z *], [A-Z_P]))dnl
 define(<<AC_CV_NAME>>,translit(pac_cv_sizeof_$1,[ *], [_p]))dnl

@@ -37,12 +37,12 @@ dnl
 dnl Newer versions of autoconf support AC_EXEEXT and AC_OBJEXT.
 dnl If these are not available, just set them as empty
 ifdef([AC_EXEEXT],,[
-AC_DEFUN(AC_EXEEXT,[
+AC_DEFUN([AC_EXEEXT],[
 EXEEXT=
 AC_SUBST(EXEEXT)
 ])])
 ifdef([AC_OBJEXT],,[
-AC_DEFUN(AC_OBJEXT,[
+AC_DEFUN([AC_OBJEXT],[
 OBJEXT=
 AC_SUBST(OBJEXT)
 ])])
@@ -73,7 +73,7 @@ dnl There is a bug in AC_OUTPUT_SUBDIRS that is tickled by this
 dnl code.  There is no step to create any of the intermediate
 dnl directories in the case that this is a vpath build.  
 dnl
-AC_DEFUN(PAC_CONFIG_SUBDIRS_IMMEDIATE,
+AC_DEFUN([PAC_CONFIG_SUBDIRS_IMMEDIATE],
 [AC_REQUIRE([AC_CONFIG_AUX_DIR_DEFAULT])dnl
 SAVE_subdirs="$subdirs"
 subdirs="$1"
@@ -104,7 +104,7 @@ INSTALL="$SAVE_INSTALL"
 dnl
 dnl Find something to use for mkdir -p.  Eventually, this will 
 dnl have a script for backup
-AC_DEFUN(PAC_PROG_MKDIR_P,[
+AC_DEFUN([PAC_PROG_MKDIR_P],[
 AC_CACHE_CHECK([whether mkdir -p works],
 pac_cv_mkdir_p,[
 pac_cv_mkdir_p=no

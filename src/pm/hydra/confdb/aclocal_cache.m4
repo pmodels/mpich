@@ -173,7 +173,7 @@ dnl D*/
 dnl Add this call to the other ARG_ENABLE calls.  Note that the values
 dnl set here are redundant; the LOAD_CACHE call relies on the way autoconf
 dnl initially processes ARG_ENABLE commands.
-AC_DEFUN(PAC_ARG_CACHING,[
+AC_DEFUN([PAC_ARG_CACHING],[
 AC_ARG_ENABLE(cache,
 [--enable-cache  - Turn on configure caching],
 enable_cache="$enableval",enable_cache="notgiven")
@@ -226,8 +226,8 @@ dnl We can't use OUTPUT_COMMANDS to remove the cache file, because those
 dnl commands are executed *before* the subdir configures.
 dnl
 dnl D*/
-AC_DEFUN(PAC_SUBDIR_CACHE,[])
-AC_DEFUN(PAC_SUBDIR_CACHE_OLD,[
+AC_DEFUN([PAC_SUBDIR_CACHE],[])
+AC_DEFUN([PAC_SUBDIR_CACHE_OLD],[
 if test "x$1" = "xalways" -o \( "$cache_file" = "/dev/null" -a "X$real_enable_cache" = "Xnotgiven" \) ; then
     # Use an absolute directory to help keep the subdir configures from getting
     # lost
@@ -312,8 +312,8 @@ export CXX
 export FFLAGS
 export CCFLAGS
 ])
-AC_DEFUN(PAC_SUBDIR_CACHE_CLEANUP,[])
-AC_DEFUN(PAC_SUBDIR_CACHE_CLEANUP_OLD,[
+AC_DEFUN([PAC_SUBDIR_CACHE_CLEANUP],[])
+AC_DEFUN([PAC_SUBDIR_CACHE_CLEANUP_OLD],[
 if test "$cache_file" != "/dev/null" -a "X$real_enable_cache" = "Xnotgiven" ; then
    rm -f $cache_file
    cache_file=/dev/null

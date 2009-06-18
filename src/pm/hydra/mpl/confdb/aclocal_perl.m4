@@ -1,7 +1,7 @@
 dnl
 dnl
 dnl Find perl5
-AC_DEFUN(PAC_PROG_PERL5,[
+AC_DEFUN([PAC_PROG_PERL5],[
 AC_CACHE_VAL(pac_cv_prog_perl,
 [
 AC_PATH_PROGS(PERL,perl5 perl)

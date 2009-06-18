@@ -9,7 +9,7 @@ dnl is given, it uses '${prefix}/www'.
 dnl
 dnl D*/
 dnl 
-AC_DEFUN(PAC_ARG_WWWDIR,[
+AC_DEFUN([PAC_ARG_WWWDIR],[
 AC_ARG_WITH([wwwdir],[
 --with-wwwdir=directory - Specify the root directory for HTML documentation],
 wwwdir=$withval,wwwdir='${prefix}/www')

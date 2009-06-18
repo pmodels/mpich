@@ -17,7 +17,7 @@ dnl
 dnl
 dnl
 dnl Find a make program if none is defined.
-AC_DEFUN(PAC_PROG_MAKE_PROGRAM,[true
+AC_DEFUN([PAC_PROG_MAKE_PROGRAM],[true
 if test "X$MAKE" = "X" ; then
    AC_CHECK_PROGS(MAKE,make gnumake nmake pmake smake)
 fi
@@ -40,7 +40,7 @@ dnl See also:
 dnl PAC_PROG_MAKE
 dnl D*/
 dnl
-AC_DEFUN(PAC_PROG_MAKE_ECHOS_DIR,[
+AC_DEFUN([PAC_PROG_MAKE_ECHOS_DIR],[
 if test "$MAKE_MAY_PRINT_DIR" != "yes" ; then
     AC_CACHE_CHECK([whether make echos directory changes],
 pac_cv_prog_make_echos_dir,
@@ -96,7 +96,7 @@ dnl  PAC_PROG_MAKE
 dnl
 dnl D*/
 dnl
-AC_DEFUN(PAC_PROG_MAKE_INCLUDE,[
+AC_DEFUN([PAC_PROG_MAKE_INCLUDE],[
 AC_CACHE_CHECK([whether make supports include],pac_cv_prog_make_include,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
 rm -f conftest
@@ -140,7 +140,7 @@ dnl See Also:
 dnl  PAC_PROG_MAKE
 dnl D*/
 dnl
-AC_DEFUN(PAC_PROG_MAKE_ALLOWS_COMMENTS,[
+AC_DEFUN([PAC_PROG_MAKE_ALLOWS_COMMENTS],[
 AC_CACHE_CHECK([whether make allows comments in actions],
 pac_cv_prog_make_allows_comments,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
@@ -194,7 +194,7 @@ dnl PAC_PROG_MAKE
 dnl
 dnl D*/
 dnl
-AC_DEFUN(PAC_PROG_MAKE_VPATH,[
+AC_DEFUN([PAC_PROG_MAKE_VPATH],[
 AC_SUBST(VPATH)AM_IGNORE(VPATH)
 AC_CACHE_CHECK([for virtual path format],
 pac_cv_prog_make_vpath,[
@@ -258,7 +258,7 @@ dnl
 dnl See Also:
 dnl PAC_PROG_MAKE
 dnl D*/
-AC_DEFUN(PAC_PROG_MAKE_SET_CFLAGS,[
+AC_DEFUN([PAC_PROG_MAKE_SET_CFLAGS],[
 AC_CACHE_CHECK([whether make sets CFLAGS],
 pac_cv_prog_make_set_cflags,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
@@ -289,7 +289,7 @@ dnl
 dnl Effect:
 dnl Sets the cache variable 'pac_cv_prog_make_found_clock_skew' to yes or no
 dnl D*/
-AC_DEFUN(PAC_PROG_MAKE_CLOCK_SKEW,[
+AC_DEFUN([PAC_PROG_MAKE_CLOCK_SKEW],[
 AC_CACHE_CHECK([whether clock skew breaks make],
 pac_cv_prog_make_found_clock_skew,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
@@ -338,7 +338,7 @@ dnl See Also:
 dnl PAC_PROG_MAKE
 dnl 
 dnl D*/
-AC_DEFUN(PAC_PROG_MAKE_HAS_PATTERN_RULES,[
+AC_DEFUN([PAC_PROG_MAKE_HAS_PATTERN_RULES],[
 AC_CACHE_CHECK([whether make has pattern rules],
 pac_cv_prog_make_has_patterns,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
@@ -396,7 +396,7 @@ dnl directories.  This was done to make the build process behave more
 dnl like other builds that do not work around this behavior in gnumake.
 dnl D*/
 dnl
-AC_DEFUN(PAC_PROG_MAKE,[
+AC_DEFUN([PAC_PROG_MAKE],[
 PAC_PROG_MAKE_PROGRAM
 PAC_PROG_MAKE_CLOCK_SKEW
 dnl PAC_PROG_MAKE_ECHOS_DIR

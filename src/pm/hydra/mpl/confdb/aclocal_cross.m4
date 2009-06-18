@@ -61,7 +61,7 @@ dnl us to test the cross-compilation branches of the code, and to use
 dnl compilers that can both cross-compile and build code for the current
 dnl platform
 dnl 
-AC_DEFUN(PAC_LANG_PUSH_COMPILERS,[
+AC_DEFUN([PAC_LANG_PUSH_COMPILERS],[
 if test "X$pac_save_level" = "X" ; then
     pac_save_CC="$CC"
     pac_save_CXX="$CXX"
@@ -177,7 +177,7 @@ dnl
 dnl See also:
 dnl PAC_LANG_PUSH_COMPILERS
 dnl D*/
-AC_DEFUN(PAC_LANG_POP_COMPILERS,[
+AC_DEFUN([PAC_LANG_POP_COMPILERS],[
 pac_save_level=`expr $pac_save_level - 1`
 if test "X$pac_save_level" = "X0" ; then
     CC="$pac_save_CC"
@@ -192,7 +192,7 @@ if test "X$pac_save_level" = "X0" ; then
     pac_save_level=""
 fi
 ])
-AC_DEFUN(PAC_PROG_TESTCPP,[
+AC_DEFUN([PAC_PROG_TESTCPP],[
 if test -z "$TESTCPP"; then
   AC_CACHE_VAL(pac_cv_prog_TESTCPP,[
   rm -f conftest.*
