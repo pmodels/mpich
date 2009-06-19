@@ -403,12 +403,12 @@ int
 MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
 {
     MPIDI_CH3I_VC           *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
-    char                     business_card[4*(MPID_NEM_NMAD_MAX_SIZE)];
+    char                     business_card[MPID_NEM_NMAD_MAX_SIZE];
     int                      mpi_errno = MPI_SUCCESS;   
     int                      ret;
     int                      index;
 
-    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, 4*(MPID_NEM_NMAD_MAX_SIZE), vc->pg);
+    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card,MPID_NEM_NMAD_MAX_SIZE, vc->pg);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
        
     (((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->area) =
@@ -433,35 +433,6 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
 	    ret = nm_core_gate_connect(mpid_nem_newmad_pcore,VC_FIELD(vc, p_gate), drv_id[index], VC_FIELD(vc, url[index]));
 	}
     }
-   
-   if (vc->lpid > mpid_nem_newmad_myrank)
-   {
-      nm_sr_irecv_with_ref(mpid_nem_newmad_pcore,
-			   init_reqs[vc->lpid].p_gate,
-			   0xfffffffc,
-			   &(init_reqs[vc->lpid].process_no),
-			   sizeof(int),
-			   &(init_reqs[vc->lpid].init_request),
-			   (void *)&(init_reqs[vc->lpid]));
-      
-      nm_sr_request_monitor(mpid_nem_newmad_pcore,&(init_reqs[vc->lpid].init_request),NM_SR_EVENT_RECV_COMPLETED,
-			    &MPID_nem_newmad_recv_init_msg);
-   }
-   else if (vc->lpid < mpid_nem_newmad_myrank)
-   {
-      nm_gate_ref_set(init_reqs[vc->lpid].p_gate,(void*)vc);
-      VC_FIELD(vc, p_gate) = init_reqs[vc->lpid].p_gate;
-      
-      nm_sr_isend(mpid_nem_newmad_pcore,
-		  init_reqs[vc->lpid].p_gate,
-		  0xfffffffc,
-		  &mpid_nem_newmad_myrank,
-		  sizeof(int),
-		  &(init_reqs[vc->lpid].init_request));
-      
-      nm_sr_request_monitor(mpid_nem_newmad_pcore,&(init_reqs[vc->lpid].init_request),NM_SR_EVENT_SEND_COMPLETED,
-			    &MPID_nem_newmad_send_init_msg);
-   }
 
    vc->eager_max_msg_sz = 32768;
    vc->rndvSend_fn      = NULL;
@@ -483,6 +454,40 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_newmad_post_init(void)
 {
+   MPIDI_PG_t *pg_p;
+   int         index;
+
+   pg_p = MPIDI_Process.my_pg;
+   for (index = 0; index < pg_p->size ; index++)
+   {
+      if((index != mpid_nem_newmad_myrank) && !(MPID_NEM_IS_LOCAL(index))) 
+      {
+	 MPIDI_VC_t *vc;
+	 MPIDI_PG_Get_vc_set_active(pg_p, index, &vc);
+
+	 if (vc->lpid > mpid_nem_newmad_myrank)
+	 {
+	    nm_sr_irecv_with_ref(mpid_nem_newmad_pcore,init_reqs[vc->lpid].p_gate,0xfffffffc,
+				 &(init_reqs[vc->lpid].process_no),sizeof(int),&(init_reqs[vc->lpid].init_request),
+				 (void *)&(init_reqs[vc->lpid]));
+	      
+	    nm_sr_request_monitor(mpid_nem_newmad_pcore,&(init_reqs[vc->lpid].init_request),NM_SR_EVENT_RECV_COMPLETED,
+				  &MPID_nem_newmad_recv_init_msg);
+	 }
+	 else if (vc->lpid < mpid_nem_newmad_myrank)
+	 {
+	    nm_gate_ref_set(init_reqs[vc->lpid].p_gate,(void*)vc);
+	    VC_FIELD(vc, p_gate) = init_reqs[vc->lpid].p_gate;
+	    
+	    nm_sr_isend(mpid_nem_newmad_pcore,init_reqs[vc->lpid].p_gate,0xfffffffc,&mpid_nem_newmad_myrank,sizeof(int),
+			&(init_reqs[vc->lpid].init_request));
+	    
+	    nm_sr_request_monitor(mpid_nem_newmad_pcore,&(init_reqs[vc->lpid].init_request),NM_SR_EVENT_SEND_COMPLETED,
+				  &MPID_nem_newmad_send_init_msg);
+	 }
+      }
+   }
+   
    while((num_recv_req > 0) || (num_send_req > 0))
      nm_schedule(mpid_nem_newmad_pcore);
    MPIU_Free(init_reqs);
