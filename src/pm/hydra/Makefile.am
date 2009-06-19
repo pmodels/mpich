@@ -6,7 +6,7 @@
 
 SUBDIRS = mpl .
 
-ACLOCAL_AMFLAGS = -I confdb
+ACLOCAL_AMFLAGS = -I mpl/confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/mpl/include \
 	-I$(top_builddir)/mpl/include \
 	-I$(top_srcdir)/bootstrap/include -I$(top_builddir)/bootstrap/include \
