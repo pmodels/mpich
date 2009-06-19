@@ -38,12 +38,12 @@ datadir=@datadir@
 docdir=@docdir@
 htmldir=@htmldir@
 mandir=@mandir@
-# Since autoconf < 2.60 does not set docdir and htmldir,
-# check if they are set.  If not, set them accordingly.
-if [ "$docdir" != "@docdir@" ] ; then
+# Since autoconf < 2.60 does not set @docdir@ and @htmldir@,
+# If not set, docdir=@docdir@ remains, set them accordingly.
+if [ "$docdir" = "@docdir@" ] ; then
     docdir=${datadir}/doc/${PACKAGE}
 fi
-if [ "$htmldir" != "@htmldir@" ] ; then
+if [ "$htmldir" = "@htmldir@" ] ; then
     htmldir=${docdir}
 fi
 
@@ -438,12 +438,12 @@ if [ "$prefix_override" = 1 -o "$package_override" = 1 ] ; then
     docdir=@docdir@
     htmldir=@htmldir@
     mandir=@mandir@
-    # Since autoconf < 2.60 does not set docdir and htmldir,
-    # check if they are set.  If not, set them accordingly.
-    if [ "$docdir" != "@docdir@" ] ; then
+    # Since autoconf < 2.60 does not set @docdir@ and @htmldir@,
+    # If not set, docdir=@docdir@ remains, set them accordingly.
+    if [ "$docdir" = "@docdir@" ] ; then
         docdir=${datadir}/doc/${PACKAGE}
     fi
-    if [ "$htmldir" != "@htmldir@" ] ; then
+    if [ "$htmldir" = "@htmldir@" ] ; then
         htmldir=${docdir}
     fi
     if [ $appendUninstall = 0 ] ; then
