@@ -508,8 +508,10 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
         HYD_PMCD_pmi_proxy_params.exit_status[i] = -1;
 
+#if defined HAVE_PROC_BINDING
     status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.user_bind_map);
     HYDU_ERR_POP(status, "unable to initialize process binding\n");
+#endif /* HAVE_PROC_BINDING */
 
     /* Spawn the processes */
     process_id = 0;
@@ -570,7 +572,11 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                 client_args[arg++] = HYDU_strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
+#if defined HAVE_PROC_BINDING
             core = HYDU_bind_get_core_id(process_id, HYD_PMCD_pmi_proxy_params.binding);
+#else
+            core = -1;
+#endif /* HAVE_PROC_BINDING */
             if (pmi_id == 0) {
                 status = HYDU_create_process(client_args, prop_env,
                                              &HYD_PMCD_pmi_proxy_params.in,

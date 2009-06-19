@@ -269,7 +269,7 @@ AC_ARG_ENABLE(hydra-procbind, [  --enable-hydra-procbind       Process Binding],
 AC_MSG_CHECKING(process binding)
 AC_MSG_RESULT($PROC_BINDING)
 if test "$PROC_BINDING" = "yes"; then
-   AC_DEFINE(PROC_BINDING,1,[Define if process binding is enabled])
+   AC_DEFINE(HAVE_PROC_BINDING,1,[Define if process binding is enabled])
    opt_utils_makefiles="${opt_utils_makefiles} utils/plpa/Makefile utils/bind/Makefile"
    opt_utils="${opt_utils} plpa bind"
 fi

@@ -58,10 +58,12 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
             HYDU_ERR_POP(status, "unable to putenv\n");
         }
 
+#if defined HAVE_PROC_BINDING
         if (core >= 0) {
             status = HYDU_bind_process(core);
             HYDU_ERR_POP(status, "bind process failed\n");
         }
+#endif /* HAVE_PROC_BINDING */
 
         if (execvp(client_arg[0], client_arg) < 0) {
             HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "execvp error (%s)\n",
@@ -109,10 +111,12 @@ HYD_Status HYDU_fork_and_exit(int core)
         close(1);
         close(2);
 
+#if defined HAVE_PROC_BINDING
         if (core >= 0) {
             status = HYDU_bind_process(core);
             HYDU_ERR_POP(status, "bind process failed\n");
         }
+#endif /* HAVE_PROC_BINDING */
     }
     else {      /* Parent process */
         exit(0);
