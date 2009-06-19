@@ -83,9 +83,7 @@ AC_OBJEXT
 dnl Find a C compiler (choose gcc first)
 AC_PROG_CC
 
-dnl Set CFLAGS for enable strict if necessary
-AC_ARG_ENABLE(strict,[--enable-strict - Turn on strict debugging with gcc],,enable_strict=no)
-PAC_CC_STRICT($enable_strict)
+PAC_ARG_STRICT
 AC_PROG_INSTALL
 PAC_PROG_MKDIR_P
 PAC_PROG_MAKE
