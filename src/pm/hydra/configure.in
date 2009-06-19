@@ -32,7 +32,7 @@ AC_TYPE_SIZE_T
 PAC_C_GNU_ATTRIBUTE
 
 dnl Check for necessary functions
-AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca snprintf unsetenv \
+AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
 	       strerror strsignal putenv)
 
 dnl Check if the upper-level enabled threads support
@@ -304,8 +304,6 @@ AC_CHECK_FUNCS(strsignal)
 if test "$ac_cv_func_strsignal" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strsignal)
 fi
-AC_CHECK_FUNCS(snprintf)
-AC_CHECK_FUNCS(strdup)
 
 dnl Check for signal handlers
 AC_CHECK_FUNCS(sigaction signal sigset)
