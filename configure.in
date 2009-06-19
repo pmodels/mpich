@@ -1807,6 +1807,75 @@ information to configure with the F90FLAGS environment variable.])
 	    AC_MSG_ERROR([Aborting configure because of mixed case names in Fortran.  Either select --disable-f77 or set FFLAGS to force the compiler to select monocase names])
 	fi
     fi
+
+    # The MPI standard requires that MPI_Init in any language initialize
+    # MPI in all languages.  This can be a problem when objects produced 
+    # by the Fortran compiler require symbols from the Fortran runtime
+    # (making linking C-only programs unnecessarily difficult).  What we test 
+    # here is whether the much more restricted needs of the Fortran 
+    # initialize can be met with no special use of the Fortran runtime
+    pac_f_init_works_with_c=unknown
+    AC_MSG_CHECKING([whether Fortran init will work with C])
+    rm -f conftest*
+    cat > conftestc.c <<EOF
+#include <stdio.h>
+#include "confdefs.h"
+#ifdef F77_NAME_UPPER
+#define minit_ MINIT
+#elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
+#define minit_ minit
+#endif
+int main( int argc, char *argv )
+{
+    minit_();
+    return 0;
+}
+char *v1 = 0;
+char *vc2 = 0;
+int  v2 = 0;
+minitc_( char *dv1, int d, char *dv2, int d2, int dv3 )
+{
+v1 = dv1;
+v2 = dv3;
+vc2 = dv2;
+*vc2 = ' ';
+}
+EOF
+    cat > conftestf.f <<EOF
+       subroutine minit()
+       common /m1/ vc, vc2
+       character *1 vc(1,1), vc2(1)
+       common /m2/ vd
+       integer vd
+       save /m1/, /m2/
+       call minitc( vc, vc2, vd )
+       end
+EOF
+   myfcompile='${F77-f77} -c $FFLAGS conftestf.f 1>&AC_FD_CC'
+   myccompile='${CC-cc} -c $CFLAGS conftestc.c 1>&AC_FD_CC'
+   if AC_TRY_EVAL(myfcompile) && test -s conftestf.o ; then
+       :
+   else 
+	echo "configure: failed program was:" >&AC_FD_CC
+        cat conftestf.f >&AC_FD_CC
+   fi
+   if AC_TRY_EVAL(myccompile) && test -s conftestc.o ; then
+       :
+   else 
+	echo "configure: failed program was:" >&AC_FD_CC
+        cat conftestc.c >&AC_FD_CC
+   fi
+   # Now try the link step
+   myclink='${CC-cc} $CFLAGS -o conftest conftestc.o conftestf.o $LDFLAGS >conftest.out 2>&1'
+   if AC_TRY_EVAL(myclink) && test -x conftest${ac_exeext} ; then
+      pac_f_init_works_with_c=yes
+   else
+      pac_f_init_works_with_c=no
+   fi
+   AC_MSG_RESULT($pac_f_init_works_with_c)
+   if test "$pac_f_init_works_with_c" = "yes" ; then
+       AC_DEFINE(HAVE_MPI_F_INIT_WORKS_WITH_C,1,[Define if the Fortran init code for MPI works from C programs without special libraries])
+   fi
 fi
 
 # F90 requires F77 as well.  If the user disabled f77, do not run the
@@ -4276,9 +4345,10 @@ int main( int argc, char **argv ){
 	fullf77var="MPI_F77_$var"
         eval fullvarvalue=\$$fullvar
         #echo "$fullvar = $fullvarvalue"
-	if test "x$fullvarvalue" = "x" ; then
+	if test "x$fullvarvalue" = "x" -o \
+	        "x$fullvarvalue" = "xMPI_DATATYPE_NULL" ; then
              eval $fullf77var="MPI_DATATYPE_NULL"
-             continue
+ 	     continue
         fi
         value=0
         fullvarvalue=`echo $fullvarvalue | sed -e 's/..\(.*\)/\1/'`
