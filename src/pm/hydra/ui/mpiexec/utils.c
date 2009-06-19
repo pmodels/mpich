@@ -52,8 +52,8 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 
     HYD_UIU_init_params();
 
-    status = HYDU_list_global_env(&HYD_handle.global_env);
-    HYDU_ERR_POP(status, "unable to get the global env list\n");
+    status = HYDU_list_inherited_env(&HYD_handle.inherited_env);
+    HYDU_ERR_POP(status, "unable to get the inherited env list\n");
 
     if (argv[1] == NULL || IS_HELP(argv[1]))
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
@@ -763,7 +763,7 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
         if (HYD_handle.binding == HYD_BIND_UNSET)
             HYD_handle.binding = HYD_BIND_NONE;
 
-        /* Check environment for setting the global environment */
+        /* Check environment for setting the inherited environment */
         tmp = getenv("HYDRA_ENV");
         if (HYD_handle.prop == HYD_ENV_PROP_UNSET && tmp)
             HYD_handle.prop = !strcmp(tmp, "all") ? HYD_ENV_PROP_ALL : HYD_ENV_PROP_NONE;

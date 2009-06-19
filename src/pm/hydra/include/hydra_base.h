@@ -154,7 +154,7 @@ struct HYD_Partition_exec {
     char *exec[HYD_NUM_TMP_STRINGS];
     int proc_count;
     HYD_Env_prop_t prop;
-    HYD_Env_t *prop_env;
+    HYD_Env_t *user_env;
 
     int pgid;                   /* All executables with the same PGID belong to the same
                                  * job. */
@@ -229,7 +229,6 @@ struct HYD_Exec_info {
     /* Local environment */
     HYD_Env_t *user_env;
     HYD_Env_prop_t prop;
-    HYD_Env_t *prop_env;
 
     struct HYD_Exec_info *next;
 };

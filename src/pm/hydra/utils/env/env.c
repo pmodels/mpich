@@ -114,7 +114,7 @@ HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list)
 }
 
 
-HYD_Status HYDU_list_global_env(HYD_Env_t ** env_list)
+HYD_Status HYDU_list_inherited_env(HYD_Env_t ** env_list)
 {
     HYD_Env_t *env;
     char *env_str;

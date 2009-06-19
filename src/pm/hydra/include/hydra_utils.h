@@ -155,7 +155,7 @@ int HYDU_bind_get_core_id(int id, HYD_Binding binding);
 /* env */
 HYD_Env_t *HYDU_str_to_env(char *str);
 HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list);
-HYD_Status HYDU_list_global_env(HYD_Env_t ** env_list);
+HYD_Status HYDU_list_inherited_env(HYD_Env_t ** env_list);
 HYD_Env_t *HYDU_env_list_dup(HYD_Env_t * env);
 HYD_Status HYDU_env_create(HYD_Env_t ** env, char *env_name, char *env_value);
 HYD_Status HYDU_env_free(HYD_Env_t * env);

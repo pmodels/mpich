@@ -98,7 +98,6 @@ HYD_Status HYDU_bind_init(char *user_bind_map)
             if (!str || i >= num_cores * num_sockets)
                 break;
             bind_info.user_bind_map[i++] = atoi(str);
-            fflush(stdout);
             str = strtok(NULL, ",");
         } while (1);
     }

@@ -231,15 +231,30 @@ static HYD_Status fill_in_exec_args(void)
         else
             partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
-        /* Pass the global environment separately, instead of for each
-         * executable, as an optimization */
-        partition->base->exec_args[arg++] = HYDU_strdup("--global-env");
+        partition->base->exec_args[arg++] = HYDU_strdup("--inherited-env");
+        for (i = 0, env = HYD_handle.inherited_env; env; env = env->next, i++);
+        partition->base->exec_args[arg++] = HYDU_int_to_str(i);
+        partition->base->exec_args[arg++] = NULL;
+        HYDU_list_append_env_to_str(HYD_handle.inherited_env, partition->base->exec_args);
+
+        arg = HYDU_strlist_lastidx(partition->base->exec_args);
+        partition->base->exec_args[arg++] = HYDU_strdup("--user-env");
+        for (i = 0, env = HYD_handle.user_env; env; env = env->next, i++);
+        partition->base->exec_args[arg++] = HYDU_int_to_str(i);
+        partition->base->exec_args[arg++] = NULL;
+        HYDU_list_append_env_to_str(HYD_handle.user_env, partition->base->exec_args);
+
+        arg = HYDU_strlist_lastidx(partition->base->exec_args);
+        partition->base->exec_args[arg++] = HYDU_strdup("--system-env");
         for (i = 0, env = HYD_handle.system_env; env; env = env->next, i++);
-        for (env = HYD_handle.prop_env; env; env = env->next, i++);
         partition->base->exec_args[arg++] = HYDU_int_to_str(i);
         partition->base->exec_args[arg++] = NULL;
         HYDU_list_append_env_to_str(HYD_handle.system_env, partition->base->exec_args);
-        HYDU_list_append_env_to_str(HYD_handle.prop_env, partition->base->exec_args);
+
+        arg = HYDU_strlist_lastidx(partition->base->exec_args);
+        partition->base->exec_args[arg++] = HYDU_strdup("--genv-prop");
+        partition->base->exec_args[arg++] = HYDU_int_to_str(HYD_handle.prop);
+        partition->base->exec_args[arg++] = NULL;
 
         /* Pass the segment information */
         for (segment = partition->segment_list; segment; segment = segment->next) {
@@ -261,14 +276,17 @@ static HYD_Status fill_in_exec_args(void)
 
             partition->base->exec_args[arg++] = HYDU_strdup("--exec-proc-count");
             partition->base->exec_args[arg++] = HYDU_int_to_str(exec->proc_count);
-            partition->base->exec_args[arg++] = NULL;
 
-            arg = HYDU_strlist_lastidx(partition->base->exec_args);
             partition->base->exec_args[arg++] = HYDU_strdup("--exec-local-env");
-            for (i = 0, env = exec->prop_env; env; env = env->next, i++);
+            for (i = 0, env = exec->user_env; env; env = env->next, i++);
             partition->base->exec_args[arg++] = HYDU_int_to_str(i);
             partition->base->exec_args[arg++] = NULL;
-            HYDU_list_append_env_to_str(exec->prop_env, partition->base->exec_args);
+            HYDU_list_append_env_to_str(exec->user_env, partition->base->exec_args);
+
+            arg = HYDU_strlist_lastidx(partition->base->exec_args);
+            partition->base->exec_args[arg++] = HYDU_strdup("--exec-env-prop");
+            partition->base->exec_args[arg++] = HYDU_int_to_str(exec->prop);
+            partition->base->exec_args[arg++] = NULL;
 
             HYDU_list_append_strlist(exec->exec, partition->base->exec_args);
 

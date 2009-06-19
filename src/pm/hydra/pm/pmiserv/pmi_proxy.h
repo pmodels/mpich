@@ -29,7 +29,10 @@ struct HYD_PMCD_pmi_proxy_params {
     HYD_Binding binding;
     char *user_bind_map;
 
-    HYD_Env_t *global_env;
+    HYD_Env_t *system_env;
+    HYD_Env_t *user_env;
+    HYD_Env_t *inherited_env;
+    HYD_Env_prop_t genv_prop;
 
     int global_core_count;
     int partition_core_count;
