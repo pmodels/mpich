@@ -1056,157 +1056,7 @@ elif test "$pac_cv_func_crypt_defined" = "no" ; then
     AC_DEFINE(NEED_CRYPT_PROTOTYPE,1,[if a prototype for crypt is needed])
 fi
 ])dnl
-dnl/*D
-dnl PAC_ARG_STRICT - Add --enable-strict to configure.  
-dnl
-dnl Synopsis:
-dnl PAC_ARG_STRICT
-dnl 
-dnl Output effects:
-dnl Adds '--enable-strict' to the command line.  If this is enabled, then
-dnl if no compiler has been set, set 'CC' to 'gcc'.
-dnl If the compiler is 'gcc', 'COPTIONS' is set to include
-dnl.vb
-dnl	-O -Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Werror=pointer-arith -DGCC_WALL -std=c89
-dnl.ve
-dnl This makes using a void * with pointer arithmetic an error, not a warning.
-dnl We do this because pointer arithmetic with void * is not valid C but
-dnl gcc accepts this unless these particular optiones are used.
-dnl Grr. -Werror=name is a recent addition to gcc, so we can't require it yet.
-dnl
-dnl -std=c89 is used to select the C89 version of the ANSI/ISO C standard.
-dnl As of this writing, many C compilers still accepted only this version,
-dnl not the later C99 version.  When all compilers accept C99, this 
-dnl should be changed to the appropriate standard level.  Note that we've
-dnl had trouble with gcc 2.95.3 accepting -std=c89 but then trying to 
-dnl compile program with a invalid set of options 
-dnl (-D __STRICT_ANSI__-trigraphs)
-dnl
-dnl If the value 'all' is given to '--enable-strict', additional warning
-dnl options are included.  These are
-dnl.vb
-dnl -Wunused -Wshadow -Wmissing-declarations -Wno-long-long
-dnl.ve
-dnl 
-dnl If the value 'noopt' is given to '--enable-strict', no optimization
-dnl options are set.  For some compilers (including gcc), this may 
-dnl cause some strict complication tests to be skipped (typically, these are
-dnl tests for unused variables or variables used before they are defined).
-dnl
-dnl If the value 'posix' is given to '--enable-strict', POSIX is selected
-dnl as the C dialect (including the definition for the POSIX level)
-dnl
-dnl If the value 'all' is given to '--enable-strict', use the "GNU" Unix
-dnl dialect.  This permits the use of stricter checking for declarations of
-dnl system functions (note that fsync is not defined in strict, non-real-time
-dnl POSIX).  This level includes
-dnl .vb
-dnl -Werror-implicit-function-declaration
-dnl .ve
-dnl 
-dnl This only works where 'gcc' is available.
-dnl In addition, it exports the variable 'enable_strict_done'. This
-dnl ensures that subsidiary 'configure's do not add the above flags to
-dnl 'COPTIONS' once the top level 'configure' sees '--enable-strict'.  To ensure
-dnl this, 'COPTIONS' is also exported.
-dnl
-dnl Not yet available: options when using other compilers.  However, 
-dnl here are some possible choices
-dnl Solaris cc
-dnl  -fd -v -Xc
-dnl -Xc is strict ANSI (some version) and does not allow "long long", for 
-dnl example
-dnl IRIX
-dnl  -ansi -DEBUG:trap_uninitialized=ON:varargs_interface_check=ON:verbose_runtime=ON
-dnl
-dnl D*/
-AC_DEFUN([PAC_ARG_STRICT],[
-AC_ARG_ENABLE(strict,
-[--enable-strict  - Turn on strict compilation testing when using gcc])
-saveCFLAGS="$CFLAGS"
-if test "$enable_strict_done" != "yes" ; then
-    if test -z "$GCC_OPTFLAG" ; then GCC_OPTFLAG="-O2" ; fi
-    if test -z "CC" ; then
-        AC_CHECK_PROGS(CC,gcc)
-    fi
-    case "$1" in 
-	yes)
-        enable_strict_done="yes"
-        if test "$CC" = "gcc" ; then 
-            COPTIONS="${COPTIONS} -Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -DGCC_WALL -std=c89"
-        fi
-	;;
-	all)
-        enable_strict_done="yes"
-        if test "$CC" = "gcc" ; then 
-	    # Note that -Wall does not include all of the warnings that
-	    # the gcc documentation claims that it does; in particular,
-	    # the -Wunused-parameter option is *not* part of -Wall
-	    # -Wextra (if available) adds some to -Wall (!)
-	    # -Wsystem-headers removed because of too many warning messages
-	    # that are unfixable by the user of this option (the warnings
-	    # often show benign but real problems)
-	    # -Wunreachable-code has a serious bug and falsely reports 
-	    # labels as unreachable code.  This makes that option useless
-	    # for the MPICH2 code, for example
-            COPTIONS="${COPTIONS} -Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wredundant-decls -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
-        fi
-	;;
 
-	# The MPICH2 code has several modules that have duplicate 
-	# function declarations.  The resulting list of warnings is
-	# swamped by those duplicates, rendering the output nearly
-	# useless.  This temporary option choice is the same as
-	# --enable-strict=all, but without that one option
-	allbutdupdefs)
-        enable_strict_done="yes"
-        if test "$CC" = "gcc" ; then 
-	    # Note that -Wall does not include all of the warnings that
-	    # the gcc documentation claims that it does; in particular,
-	    # the -Wunused-parameter option is *not* part of -Wall
-	    # -Wextra (if available) adds some to -Wall (!)
-	    # -Wsystem-headers removed because of too many warning messages
-	    # that are unfixable by the user of this option (the warnings
-	    # often show benign but real problems)
-	    # -Wunreachable-code has a serious bug and falsely reports 
-	    # labels as unreachable code.  This makes that option useless
-	    # for the MPICH2 code, for example
-            COPTIONS="${COPTIONS} -Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
-        fi
-	;;
-
-	posix)
-	# fsync is a part of POSIX only in the real-time extensions, 
-	# apparently, so code that used include <unistd.h> and POSIX
-	# and expects fsync to be defined is in trouble.  Because of that
-	# we're not including the -W option to error if a function is
-	# not prototyped.
-	enable_strict_done="yes"
-        if test "$CC" = "gcc" ; then
-            COPTIONS="${COPTIONS} -Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -D_POSIX_C_SOURCE=199506L -std=c89"
-    	fi
- 	;;	
-	
-	noopt)
-        enable_strict_done="yes"
-        if test "$CC" = "gcc" ; then 
-            COPTIONS="${COPTIONS} -Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -DGCC_WALL -std=c89"
-        fi
-	;;
-	no)
-	# Accept and ignore this value
-	:
-	;;
-	*)
-	# Silently accept blank values for enable strict
-	if test -n "$1" ; then
-  	    AC_MSG_WARN([Unrecognized value for enable-strict:$1])
-	fi
-	;;
-    esac
-fi
-export enable_strict_done
-])
 dnl
 dnl Use the value of enable-strict to update CFLAGS
 dnl pac_cc_strict_flags contains the strict flags.
@@ -1386,6 +1236,78 @@ if test "$enable_strict_done" != "yes" ; then
     esac
 fi
 ])
+
+dnl/*D
+dnl PAC_ARG_STRICT - Add --enable-strict to configure.  
+dnl
+dnl Synopsis:
+dnl PAC_ARG_STRICT
+dnl 
+dnl Output effects:
+dnl Adds '--enable-strict' to the command line.  If this is enabled, then
+dnl if no compiler has been set, set 'CC' to 'gcc'.
+dnl If the compiler is 'gcc', 'COPTIONS' is set to include
+dnl.vb
+dnl	-O -Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Werror=pointer-arith -DGCC_WALL -std=c89
+dnl.ve
+dnl This makes using a void * with pointer arithmetic an error, not a warning.
+dnl We do this because pointer arithmetic with void * is not valid C but
+dnl gcc accepts this unless these particular optiones are used.
+dnl Grr. -Werror=name is a recent addition to gcc, so we can't require it yet.
+dnl
+dnl -std=c89 is used to select the C89 version of the ANSI/ISO C standard.
+dnl As of this writing, many C compilers still accepted only this version,
+dnl not the later C99 version.  When all compilers accept C99, this 
+dnl should be changed to the appropriate standard level.  Note that we've
+dnl had trouble with gcc 2.95.3 accepting -std=c89 but then trying to 
+dnl compile program with a invalid set of options 
+dnl (-D __STRICT_ANSI__-trigraphs)
+dnl
+dnl If the value 'all' is given to '--enable-strict', additional warning
+dnl options are included.  These are
+dnl.vb
+dnl -Wunused -Wshadow -Wmissing-declarations -Wno-long-long
+dnl.ve
+dnl 
+dnl If the value 'noopt' is given to '--enable-strict', no optimization
+dnl options are set.  For some compilers (including gcc), this may 
+dnl cause some strict complication tests to be skipped (typically, these are
+dnl tests for unused variables or variables used before they are defined).
+dnl
+dnl If the value 'posix' is given to '--enable-strict', POSIX is selected
+dnl as the C dialect (including the definition for the POSIX level)
+dnl
+dnl If the value 'all' is given to '--enable-strict', use the "GNU" Unix
+dnl dialect.  This permits the use of stricter checking for declarations of
+dnl system functions (note that fsync is not defined in strict, non-real-time
+dnl POSIX).  This level includes
+dnl .vb
+dnl -Werror-implicit-function-declaration
+dnl .ve
+dnl 
+dnl This only works where 'gcc' is available.
+dnl In addition, it exports the variable 'enable_strict_done'. This
+dnl ensures that subsidiary 'configure's do not add the above flags to
+dnl 'COPTIONS' once the top level 'configure' sees '--enable-strict'.  To ensure
+dnl this, 'COPTIONS' is also exported.
+dnl
+dnl Not yet available: options when using other compilers.  However, 
+dnl here are some possible choices
+dnl Solaris cc
+dnl  -fd -v -Xc
+dnl -Xc is strict ANSI (some version) and does not allow "long long", for 
+dnl example
+dnl IRIX
+dnl  -ansi -DEBUG:trap_uninitialized=ON:varargs_interface_check=ON:verbose_runtime=ON
+dnl
+dnl D*/
+AC_DEFUN([PAC_ARG_STRICT],[
+AC_ARG_ENABLE(strict,
+[--enable-strict  - Turn on strict compilation testing when using gcc])
+PAC_CC_STRICT($enable_strict)
+CFLAGS="$CFLAGS $pac_cc_strict_flags"
+])
+
 dnl/*D
 dnl PAC_ARG_CC_G - Add debugging flags for the C compiler
 dnl
