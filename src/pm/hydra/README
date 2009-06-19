@@ -112,7 +112,7 @@ path (specific to each bootstrap server) is chosen.
 Process-core binding
 --------------------
 To configure hydra with process-core binding support, use the
-configure option -enable-hydra-procbind.
+configure option --enable-hydra-procbind.
 
 We support three models of allocation strategies:
 
