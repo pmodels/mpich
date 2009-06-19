@@ -475,7 +475,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         HYD_PMCD_pmi_proxy_params.exit_status[i] = -1;
 
     /* For local spawning, set the global environment here itself */
-    status = HYDU_putenv_list(HYD_PMCD_pmi_proxy_params.global_env);
+    status = HYDU_putenv_list(HYD_PMCD_pmi_proxy_params.global_env, HYD_ENV_OVERWRITE_FALSE);
     HYDU_ERR_POP(status, "putenv returned error\n");
 
     status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.user_bind_map);
@@ -488,7 +488,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         status = HYDU_env_create(&env, "PMI_PORT", str);
         HYDU_ERR_POP(status, "unable to create env\n");
         HYDU_FREE(str);
-        status = HYDU_putenv(env);
+        status = HYDU_putenv(env, HYD_ENV_OVERWRITE_FALSE);
         HYDU_ERR_POP(status, "putenv failed\n");
     }
 
@@ -507,7 +507,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                 status = HYDU_env_create(&env, "PMI_ID", str);
                 HYDU_ERR_POP(status, "unable to create env\n");
                 HYDU_FREE(str);
-                status = HYDU_putenv(env);
+                status = HYDU_putenv(env, HYD_ENV_OVERWRITE_TRUE);
                 HYDU_ERR_POP(status, "putenv failed\n");
             }
 

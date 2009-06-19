@@ -120,6 +120,11 @@ typedef struct HYD_Env {
     struct HYD_Env *next;
 } HYD_Env_t;
 
+typedef enum HYD_Env_overwrite {
+    HYD_ENV_OVERWRITE_TRUE,
+    HYD_ENV_OVERWRITE_FALSE
+} HYD_Env_overwrite_t;
+
 typedef enum {
     HYD_ENV_PROP_UNSET,
     HYD_ENV_PROP_ALL,

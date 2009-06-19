@@ -54,7 +54,7 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
         }
 
         if (env_list) {
-            status = HYDU_putenv_list(env_list);
+            status = HYDU_putenv_list(env_list, HYD_ENV_OVERWRITE_FALSE);
             HYDU_ERR_POP(status, "unable to putenv\n");
         }
 

@@ -308,13 +308,17 @@ HYD_Status HYDU_append_env_to_list(HYD_Env_t env, HYD_Env_t ** env_list)
 }
 
 
-HYD_Status HYDU_putenv(HYD_Env_t * env)
+HYD_Status HYDU_putenv(HYD_Env_t * env, HYD_Env_overwrite_t overwrite)
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *str;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    /* If the overwrite flag is false, just exit */
+    if (getenv(env->env_name) && (overwrite == HYD_ENV_OVERWRITE_FALSE))
+        goto fn_exit;
 
     i = 0;
     tmp[i++] = HYDU_strdup(env->env_name);
@@ -338,7 +342,7 @@ HYD_Status HYDU_putenv(HYD_Env_t * env)
 }
 
 
-HYD_Status HYDU_putenv_list(HYD_Env_t * env_list)
+HYD_Status HYDU_putenv_list(HYD_Env_t * env_list, HYD_Env_overwrite_t overwrite)
 {
     HYD_Env_t *env;
     HYD_Status status = HYD_SUCCESS;
@@ -346,7 +350,7 @@ HYD_Status HYDU_putenv_list(HYD_Env_t * env_list)
     HYDU_FUNC_ENTER();
 
     for (env = env_list; env; env = env->next) {
-        status = HYDU_putenv(env);
+        status = HYDU_putenv(env, overwrite);
         HYDU_ERR_POP(status, "putenv failed\n");
     }
 

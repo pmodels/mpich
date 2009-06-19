@@ -162,8 +162,8 @@ HYD_Status HYDU_env_free(HYD_Env_t * env);
 HYD_Status HYDU_env_free_list(HYD_Env_t * env);
 HYD_Env_t *HYDU_env_lookup(HYD_Env_t env, HYD_Env_t * env_list);
 HYD_Status HYDU_append_env_to_list(HYD_Env_t env, HYD_Env_t ** env_list);
-HYD_Status HYDU_putenv(HYD_Env_t * env);
-HYD_Status HYDU_putenv_list(HYD_Env_t * env_list);
+HYD_Status HYDU_putenv(HYD_Env_t * env, HYD_Env_overwrite_t overwrite);
+HYD_Status HYDU_putenv_list(HYD_Env_t * env_list, HYD_Env_overwrite_t overwrite);
 HYD_Status HYDU_comma_list_to_env_list(char *str, HYD_Env_t ** env_list);
 
 
