@@ -267,8 +267,8 @@ HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
     partition = HYD_handle.partition_list;
     exec_info = HYD_handle.exec_info_list;
     partition_rem_procs = partition->partition_core_count;
-    exec_rem_procs = exec_info->exec_proc_count;
-    while (1) {
+    exec_rem_procs = exec_info ? exec_info->exec_proc_count : 0;
+    while (exec_info) {
         if (exec_rem_procs <= partition_rem_procs) {
             status = add_exec_info_to_partition(exec_info, partition, exec_rem_procs);
             HYDU_ERR_POP(status, "unable to add executable to partition\n");
@@ -278,8 +278,6 @@ HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
                 partition = HYD_handle.partition_list;
 
             exec_info = exec_info->next;
-            if (exec_info == NULL)
-                break;
         }
         else {
             status = add_exec_info_to_partition(exec_info, partition, partition_rem_procs);
