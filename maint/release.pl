@@ -13,8 +13,10 @@ my $pack = "";
 my $root = $ENV{PWD};
 
 # This path is the default for the MCS home directory mounts.  Pass
-# --with-autoconf='' to this script to use whatever is in your path.
-my $with_autoconf = "/homes/goodell/autoconf/ac-2.62_am-1.10.2/bin";
+# --with-autoconf='' and --with-automake='' options to this script to
+# use whatever is in your path.
+my $with_autoconf = "/homes/balaji/projects/autotools/install/bin";
+my $with_automake = "/homes/balaji/projects/autotools/install/bin";
 
 my $logfile = "release.log";
 
@@ -29,9 +31,16 @@ sub check_package
     my $pack = shift;
 
     print "===> Checking for package $pack... ";
-    if ($with_autoconf and ($pack eq "autoconf" or $pack eq "automake")) {
-        # the user specified a dir where autoconf/automake can be found
+    if ($with_autoconf and ($pack eq "autoconf")) {
+        # the user specified a dir where autoconf can be found
         if (not -x "$with_autoconf/$pack") {
+            print "not found\n";
+            exit;
+        }
+    }
+    if ($with_automake and ($pack eq "automake")) {
+        # the user specified a dir where automake can be found
+        if (not -x "$with_automake/$pack") {
             print "not found\n";
             exit;
         }
@@ -106,6 +115,7 @@ sub create_mpich2
     {
         my $cmd = "./maint/updatefiles";
         $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
+        $cmd .= " --with-automake=$with_automake" if $with_automake;
         run_cmd($cmd);
     }
     debug("done\n");
@@ -127,6 +137,7 @@ sub create_mpich2
     {
         my $cmd = "./maint/updatefiles";
         $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
+        $cmd .= " --with-automake=$with_automake" if $with_automake;
         run_cmd($cmd);
     }
     run_cmd("./configure --without-mpe --disable-f90 --disable-f77 --disable-cxx");
@@ -201,7 +212,12 @@ sub create_mpe
 
     debug("===> Creating configure... ");
     chdir("${root}/mpe2");
-    run_cmd("./maint/updatefiles --with-autoconf=/homes/chan/autoconf/2.62/bin");
+    {
+        my $cmd = "./maint/updatefiles";
+        $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
+        $cmd .= " --with-automake=$with_automake" if $with_automake;
+        run_cmd($cmd);
+    }
     debug("done\n");
 
     debug("===> Creating MPE docs... ");
@@ -222,6 +238,7 @@ GetOptions(
     "source=s" => \$source,
     "package:s"  => \$pack,
     "with-autoconf" => \$with_autoconf,
+    "with-automake" => \$with_automake,
     "help"     => \&usage,
 ) or die "unable to parse options, stopped";
 
