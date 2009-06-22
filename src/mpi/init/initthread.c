@@ -45,6 +45,23 @@ MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE = 0;
    how MPICH2 was configured. */
 extern const char MPIR_Version_device[];
 
+/* Make sure the Fortran symbols are initialized unless it will cause problems
+   for C programs linked with the C compilers (i.e., not using the 
+   compilation scripts).  These provide the declarations for the initialization
+   routine and the variable used to indicate whether the init needs to be
+   called. */
+#if defined(HAVE_FORTRAN_BINDING) && defined(HAVE_MPI_F_INIT_WORKS_WITH_C)
+#ifdef F77_NAME_UPPER
+#define mpirinitf_ MPIRINITF
+#elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
+#define mpirinitf_ mpirinitf
+#endif
+void mpirinitf_(void);
+/* Note that we don't include MPIR_F_NeedInit because we unconditionally
+   call mpirinitf in this case, and the Fortran binding routines 
+   do not test MPIR_F_NeedInit when HAVE_MPI_F_INIT_WORKS_WITH_C is set */
+#endif
+
 #ifdef HAVE_WINDOWS_H
 /* User-defined abort hook function.  Exiting here will prevent the system from
  * bringing up an error dialog box.
@@ -411,12 +428,17 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
 		   MPIR_Process.comm_world->rank );
 #endif
 
-    /* FIXME: There is no code for this comment */
-    /* We now initialize the Fortran symbols from within the Fortran 
+    /* Initialize the C versions of the Fortran link-time constants.
+       
+       We now initialize the Fortran symbols from within the Fortran 
        interface in the routine that first needs the symbols.
        This fixes a problem with symbols added by a Fortran compiler that 
        are not part of the C runtime environment (the Portland group
-       compilers would do this) */
+       compilers would do this) 
+    */
+#if defined(HAVE_FORTRAN_BINDING) && defined(HAVE_MPI_F_INIT_WORKS_WITH_C)
+    mpirinitf_();
+#endif
 
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)

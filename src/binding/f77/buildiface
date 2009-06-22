@@ -82,9 +82,17 @@ $prototype_file = "../../include/mpi.h.in";
 # compiler, forcing user programs that are entirely C to link with the 
 # Fortran runtime.  Thus, we must check whether the values are initialized
 # before any use in any routine.
+#
+# Having said the above, however, if the environment (specifically, the
+# C and Fortran compilers) makes it easy for the C init routines to initialize
+# the Fortran environment, then we should make that easy.  This is indicated
+# by the CPP name HAVE_MPI_F_INIT_WORKS_WITH_C.  If that is defined, then
+# there is no lazy initialization of these values.
 $specialInitAdded = 0;
 $specialInitString = "\
-    if (MPIR_F_NeedInit){ mpirinitf_(); MPIR_F_NeedInit = 0; }";
+#ifndef HAVE_MPI_F_INIT_WORKS_WITH_C
+    if (MPIR_F_NeedInit){ mpirinitf_(); MPIR_F_NeedInit = 0; }
+#endif";
 
 # Process arguments
 #
