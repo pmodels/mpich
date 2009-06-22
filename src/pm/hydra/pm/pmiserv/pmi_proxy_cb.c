@@ -102,8 +102,10 @@ HYD_Status HYD_PMCD_pmi_proxy_control_cmd_cb(int fd, HYD_Event_t events, void *u
             (HYD_PMCD_pmi_proxy_params.upstream.out != -1) &&
             (HYD_PMCD_pmi_proxy_params.upstream.err != -1))
             if ((HYD_PMCD_pmi_proxy_params.segment_list->start_pid != 0) ||
-                (HYD_PMCD_pmi_proxy_params.upstream.in != -1))
-                HYD_PMCD_pmi_proxy_launch_procs();
+                (HYD_PMCD_pmi_proxy_params.upstream.in != -1)) {
+                status = HYD_PMCD_pmi_proxy_launch_procs();
+                HYDU_ERR_POP(status, "HYD_PMCD_pmi_proxy_launch_procs returned error\n");
+            }
 
   fn_exit:
     HYDU_FUNC_EXIT();

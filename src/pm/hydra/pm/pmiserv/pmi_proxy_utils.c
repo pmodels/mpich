@@ -598,7 +598,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                                              &HYD_PMCD_pmi_proxy_params.err[process_id],
                                              &HYD_PMCD_pmi_proxy_params.pid[process_id], core);
             }
-            HYDU_ERR_POP(status, "spawn process returned error\n");
+            HYDU_ERR_POP(status, "create process returned error\n");
 
             process_id++;
         }
@@ -625,6 +625,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
   fn_exit:
     return status;
+
   fn_fail:
     goto fn_exit;
 }
