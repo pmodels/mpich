@@ -50,6 +50,16 @@ stepsCleared=no
 autoconfdir=""
 automakedir=""
 autotoolsdir=""
+# Extract defaults from the environment
+if [ "x$MPICH2_AUTOCONF_DIR" != "x" ] ; then 
+    autoconfdir=$MPICH2_AUTOCONF_DIR
+fi
+if [ "x$MPICH2_AUTOMAKE_DIR" != "x" ] ; then 
+    automakedir=$MPICH2_AUTOMAKE_DIR
+fi
+if [ "x$MPICH2_AUTOTOOLS_DIR" != "x" ] ; then 
+    autotoolsdir=$MPICH2_AUTOTOOLS_DIR
+fi
 #
 # Extract the arguments intended for updatefiles.  Any others are
 # given to simplemake.  
