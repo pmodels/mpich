@@ -6780,8 +6780,7 @@ Function GenBuild()
 	mfile.WriteLine("    $(cc) $(cflags) /DUSE_STDARG  /I..\src\mpe2\include /I..\src\mpe2\src\logging\include /I..\src\mpe2\src\wrappers\include /Fo""$(MPE_WRAP_OUTDIR)\\"" /Fd""$(MPE_WRAP_OUTDIR)\\"" $**")
 	mfile.WriteLine
 	mfile.WriteLine("mpe_wrap_objs = \")
-	mfile.WriteLine("	$(MPE_WRAP_OUTDIR)\log_mpi_core.obj \")
-	mfile.WriteLine("	$(MPE_WRAP_OUTDIR)\mpe_proff.obj")
+	mfile.WriteLine("	$(MPE_WRAP_OUTDIR)\log_mpi_core.obj")
 	mfile.WriteLine
 	mfile.WriteLine("$(MPE_WRAP_OUTDIR)\mpich2mpe$(D).dll: $(mpe_wrap_objs)")
 	mfile.WriteLine("	$(link) $(dlllflags) $(mpe_wrap_objs) $(MPI_OUTDIR)\mpi$(D).lib $(MPE_OUTDIR)\mpe$(D).lib $(common_libs) /DEF:..\src\mpe2\src\wrappers\mpewrap.def -out:$(MPE_WRAP_OUTDIR)\mpich2mpe$(D).dll /IMPLIB:$(MPE_WRAP_OUTDIR)\mpich2mpe$(D).lib")

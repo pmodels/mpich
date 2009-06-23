@@ -1043,10 +1043,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\wrappers\src\mpe_proff.c"
-				>
-			</File>
-			<File
 				RelativePath=".\src\wrappers\mpewrap.def"
 				>
 			</File>
