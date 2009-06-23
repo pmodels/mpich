@@ -61,12 +61,17 @@ Posix timer (where available)
 \item \texttt{gettimeofday} -
 Most Unix systems
 \item \texttt{linux86\_cycle} -
-Linux x86; uses cycle counts to approximate time in seconds
+Linux x86 cycle counter*
 \item \texttt{linuxalpha\_cycle} -
-Like linux86\_cycle, but for Linux Alpha
+Like linux86\_cycle, but for Linux Alpha*
 \item \texttt{gcc\_ia64\_cycle} -
-IPF ar.itc timer
+IA64 cycle counter*
 \end{itemize}
+* Note that CPU cycle counters count cycles, not elapsed time.
+Because processor frequencies are variable, especially with modern
+power-aware hardware, these are not always reliable for timing and so
+should only be used if you're sure you know what you're doing.
+
 \end{description}
 
 Here is an example:
@@ -74,7 +79,7 @@ Here is an example:
 mpich2/configure
     --enable-timing=log
     --with-logging=rlog
-    --enable-timer-type=linux86_cycle
+    --enable-timer-type=gettimeofday
     ...
 \end{verbatim}
 
