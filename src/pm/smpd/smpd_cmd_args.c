@@ -442,6 +442,10 @@ int smpd_parse_command_args(int *argcp, char **argvp[])
 	    result = GetLastError();
 	    smpd_dbg_printf("unable to set the ctrl handler for the smpd manager, error %d.\n", result);
 	}
+#ifdef HAVE_WINDOWS_H
+    /* FIXME: smpd_init_affinity_table() Does not return error codes if it fails */
+    smpd_init_affinity_table();
+#endif
 
 	smpd_process.bService = SMPD_FALSE;
 	if (!smpd_get_opt_string(argcp, argvp, "-read", read_handle_str, 20))

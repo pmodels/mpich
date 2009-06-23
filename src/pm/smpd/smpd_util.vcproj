@@ -1021,6 +1021,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\smpd_affinitize.c"
+				>
+			</File>
+			<File
 				RelativePath="smpd_authenticate.c"
 				>
 			</File>

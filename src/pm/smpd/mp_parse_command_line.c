@@ -100,6 +100,9 @@ void mp_print_extra_options(void)
     printf("-hosts n host1 m1 host2 m2 ... hostn mn\n");
     printf("  launch on the specified hosts\n");
     printf("  In the second version the number of processes = m1 + m2 + ... + mn\n");
+    printf("-binding proc_binding_scheme\n");
+    printf("  Set the proc nbinding for each of the launched processes to a single core.\n");
+    printf("  Currently only \"auto\" is supported as the proc_binding_scheme \n"); 
     printf("-map drive:\\\\host\\share\n");
     printf("  map a drive on all the nodes\n");
     printf("  this mapping will be removed when the processes exit\n");
@@ -1012,6 +1015,22 @@ configfile_loop:
 		smpd_parse_machine_file(machine_file_name);
 		num_args_to_strip = 2;
 	    }
+#ifdef HAVE_WINDOWS_H
+        else if (strcmp(&(*argvp)[1][1], "binding") == 0)
+        {
+            if(strcmp(&(*argvp)[2][0], "auto") == 0)
+            {
+                smpd_process.set_affinity = TRUE;
+            }
+            else
+            {
+                printf("Error: Only process binding scheme supported is \"auto\"\n");
+                smpd_exit_fn(FCNAME);
+                return SMPD_FAIL;
+            }
+            num_args_to_strip = 2;
+        }
+#endif
 	    else if (strcmp(&(*argvp)[1][1], "map") == 0)
 	    {
 		if (argc < 3)

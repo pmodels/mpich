@@ -97,6 +97,9 @@ smpd_global_t smpd_process =
       0,                /* nproc_launched         */
       0,                /* nproc_exited           */
       SMPD_FALSE,       /* verbose                */
+#ifdef HAVE_WINDOWS_H
+      SMPD_FALSE,       /* set_affinity             */
+#endif
       /*SMPD_FALSE,*/       /* shutdown               */
       /*SMPD_FALSE,*/       /* restart                */
       /*SMPD_FALSE,*/       /* validate               */

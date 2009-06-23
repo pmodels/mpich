@@ -521,6 +521,12 @@ Associate the current user token with the specified job on the local or specifie
 host.  The current user must match the user specifed by the \texttt{-add\_job job\_name username}
 command.
 
+\item \texttt{-binding process\_binding\_scheme}
+Specify a process binding scheme for the MPI processes. Currently only \texttt{auto}
+is the supported binding scheme. Using \texttt{auto} as the process binding scheme
+the process manager will choose the process binding scheme automatically taking into 
+account the load on system resources like caches.
+
 \item \texttt{-channel channel\_name}
 This option is only available under Windows and allows the user to select which
 channel implementation of MPICH2 to select at runtime.  The current channels

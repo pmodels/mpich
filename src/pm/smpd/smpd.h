@@ -702,6 +702,9 @@ typedef struct smpd_global_t
     int use_process_session;
     int nproc, nproc_launched, nproc_exited;
     SMPD_BOOL verbose;
+#ifdef HAVE_WINDOWS_H
+    SMPD_BOOL set_affinity;
+#endif
     /*SMPD_BOOL shutdown, restart, validate, do_status;*/ /* built in commands */
     smpd_builtin_commands_t builtin_cmd;
 #ifdef HAVE_WINDOWS_H
@@ -966,6 +969,11 @@ int smpd_parse_map_string(const char *str, smpd_map_drive_node_t **list);
 int smpd_delayed_spawn_enqueue(smpd_context_t *context);
 int smpd_delayed_spawn_dequeue(smpd_context_t **context);
 int smpd_handle_delayed_spawn_command(void);
+
+#ifdef HAVE_WINDOWS_H
+    DWORD_PTR smpd_get_next_process_affinity_mask(void );
+    void smpd_init_affinity_table(void );
+#endif
 
 #if defined(__cplusplus)
 }

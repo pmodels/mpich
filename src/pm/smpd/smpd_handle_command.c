@@ -734,6 +734,17 @@ int smpd_launch_processes(smpd_launch_node_t *launch_list, char *kvs_name, char 
 	    smpd_err_printf("unable to add the domain name('%s') to the launch command\n", domain_name);
 	    goto launch_failure;
 	}
+#ifdef HAVE_WINDOWS_H
+    if(smpd_process.set_affinity)
+    {
+        result = smpd_add_command_int_arg(cmd_ptr, "af", 1);
+        if(result != SMPD_SUCCESS)
+        {
+            smpd_err_printf("Unable to add the affinity flag to the launch command\n");
+            goto launch_failure;
+        }
+    }
+#endif
 	if (launch_node_ptr->priority_class != SMPD_DEFAULT_PRIORITY_CLASS)
 	{
 	    result = smpd_add_command_int_arg(cmd_ptr, "pc", launch_node_ptr->priority_class);
@@ -2250,6 +2261,9 @@ int smpd_handle_launch_command(smpd_context_t *context)
     MPIU_Str_get_int_arg(cmd->cmd, "a", &process->appnum);
     MPIU_Str_get_int_arg(cmd->cmd, "pc", &priority_class);
     MPIU_Str_get_int_arg(cmd->cmd, "pt", &priority_thread);
+#ifdef HAVE_WINDOWS_H
+    MPIU_Str_get_int_arg(cmd->cmd, "af", &smpd_process.set_affinity);
+#endif
     /* parse the -m drive mapping options */
     nmaps = 0;
     MPIU_Str_get_int_arg(cmd->cmd, "mn", &nmaps);

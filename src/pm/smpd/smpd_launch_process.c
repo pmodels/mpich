@@ -1286,6 +1286,20 @@ int smpd_launch_process(smpd_process_t *process, int priorityClass, int priority
 	bSuccess = FALSE;
     }
 
+#ifdef HAVE_WINDOWS_H
+    if(smpd_process.set_affinity)
+    {
+        ULONG_PTR mask = smpd_get_next_process_affinity_mask();
+        if(mask != NULL)
+        {
+            /* FIXME: The return vals of these functions are not checked ! */
+            smpd_dbg_printf("Setting the process/thread affinity (mask=%ul)\n", mask);
+            SetProcessAffinityMask(psInfo.hProcess, mask);
+            SetThreadAffinityMask(psInfo.hThread, mask);
+        }
+    }
+#endif
+
     FreeEnvironmentStrings((TCHAR*)pEnv);
     SetCurrentDirectory(tSavedPath);
     RemoveEnvironmentVariables(process->env);
