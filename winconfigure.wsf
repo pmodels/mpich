@@ -2240,6 +2240,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/*#define HAVE_PTHREAD_MUTEXATTR_INIT 1*/")
 				Case "HAVE_PTHREAD_MUTEXATTR_SETPSHARED"
 					fout.WriteLine("/*#define HAVE_PTHREAD_MUTEXATTR_SETPSHARED 1*/")
+                                Case "PTHREAD_MUTEX_ERRORCHECK_VALUE"
+                                        fout.WriteLine("/* #undef PTHREAD_MUTEX_ERRORCHECK_VALUE */")
 				Case "HAVE_SCHED_YIELD"
 					fout.WriteLine("/*#define HAVE_SCHED_YIELD 1*/")
 				Case "HAVE_SHMAT"
@@ -2757,6 +2759,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define HAVE_MPI_STATUS_IGNORE 1")
 				Case "HAVE_MPI_TYPE_F2C"
 					fout.WriteLine("#define HAVE_MPI_TYPE_F2C 1")
+                                Case "HAVE_MPI_F_INIT_WORKS_WITH_C"
+                                        fout.WriteLine("/* #undef HAVE_MPI_F_INIT_WORKS_WITH_C */")
 				Case "HAVE_NO_MPIO_REQUEST"
 					fout.WriteLine("/* #undef HAVE_NO_MPIO_REQUEST */")
 				Case "HAVE_PROTOTYPES"
