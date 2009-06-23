@@ -328,14 +328,14 @@ void SaveState(RLOG_STATE *pState)
 	if (pIter->state.event == pState->event)
 	{
 	    /* replace old with new */
-	    MPIU_Memcpy(&pIter->state, pState, sizeof(RLOG_STATE));
+	    memcpy(&pIter->state, pState, sizeof(RLOG_STATE));
 	    return;
 	}
 	pIter = pIter->next;
     }
 
     pIter = (RLOG_State_list*)MPIU_Malloc(sizeof(RLOG_State_list));
-    MPIU_Memcpy(&pIter->state, pState, sizeof(RLOG_STATE));
+    memcpy(&pIter->state, pState, sizeof(RLOG_STATE));
     pIter->next = g_pList;
     g_pList = pIter;
 }
@@ -349,7 +349,7 @@ FILE *OpenRlogFile(char *filename)
     pExt = strstr(filename, ".irlog");
     if (pExt)
     {
-	MPIU_Memcpy(out_filename, filename, pExt-filename);
+	memcpy(out_filename, filename, pExt-filename);
 	strcpy(&out_filename[pExt-filename], ".rlog");
 	MPIU_Msg_printf("out_filename: %s\n", out_filename);
     }
