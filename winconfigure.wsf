@@ -221,7 +221,7 @@ bf77_name_lower_uscore = False
 bf77_name_lower_2uscore = False
 bf77_name_upper = True
 bf77_name_mixed = False
-b77_name_mixed_uscore = False
+bf77_name_mixed_uscore = False
 unhandled_definitions = ""
 unhandled_definitions_count = 0
 unhandled_definitions_instances = 0
@@ -319,7 +319,7 @@ For arg = 0 To argCount - 1
   ElseIf argValue = "--f77_name_mixed" Then
 	bf77_name_mixed = True
   ElseIf argValue = "--f77_name_mixed_uscore" Then
-	b77_name_mixed_uscore = True
+	bf77_name_mixed_uscore = True
   ElseIf argValue = "--defmsg" Then
     GenerateDefmsg()
 	printMsgFlush()
@@ -2538,7 +2538,7 @@ Sub AddDefinitions( fout, filename, b64 )
 						fout.WriteLine("/* #undef F77_NAME_LOWER */")
 					End If
 				Case "F77_NAME_LOWER_USCORE"
-					If b77_name_lower_uscore Then
+					If bf77_name_lower_uscore Then
 						fout.WriteLine("#define F77_NAME_LOWER_USCORE")
 					Else
 						fout.WriteLine("/* #undef F77_NAME_LOWER_USCORE */")
@@ -2550,19 +2550,19 @@ Sub AddDefinitions( fout, filename, b64 )
 						fout.WriteLine("/* #undef F77_NAME_LOWER_2USCORE */")
 					End If
 				Case "F77_NAME_UPPER"
-					if b77_name_upper Then
+					if bf77_name_upper Then
 						fout.WriteLine("#define F77_NAME_UPPER")
 					Else
 						fout.WriteLine("/* #undef F77_NAME_UPPER */")
 					End If
 				Case "F77_NAME_MIXED"
-					if b77_name_mixed Then
+					if bf77_name_mixed Then
 						fout.WriteLine("#define F77_NAME_MIXED 1")
 					Else
 						fout.WriteLine("/* #undef F77_NAME_MIXED */")
 					End If
 				Case "F77_NAME_MIXED_USCORE"
-					if b77_name_mixed_uscore Then
+					if bf77_name_mixed_uscore Then
 						fout.WriteLine("#define F77_NAME_MIXED_USCORE 1")
 					Else
 						fout.WriteLine("/* #undef F77_NAME_MIXED_USCORE */")
