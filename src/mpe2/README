@@ -347,6 +347,11 @@ MPE_WRAPPERS_ADD_LDFLAGS: The variable tells MPE wrappers, mpecc/mpefc
                           The default is yes.  User can override it by
                           setting it to "no" or "false".
 
+MPE_USE_FCONSTS_IN_MPIH : The boolean value determines if MPI_F_* constants
+                          from mpi.h will be used.  By default, MPE computes
+                          the MPI_F_* constants instead of reading from mpi.h.
+                          The affected constants are MPI_F_STATUS(ES)_IGNORE.
+
 Possible boolean values are "true", "false", "yes" and "no" in either
 all lower or upper cases.
 

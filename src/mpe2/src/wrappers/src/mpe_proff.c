@@ -477,33 +477,48 @@ void csub_mpi_statuses_ignore_( void *arg4statusesignore )
 extern void mpirinitf_( void );
 #endif
 
+/* Copy of CLOG_Util_getenvbool() in log_mpi_util.c */
+int MPE_Util_getenvbool( char *env_var, int default_value );
+
 void mper_fconsts_init( void );
 void mper_fconsts_init( void )
 {
+    int  world_rank;
+    int  use_mpih;
     /*
        Set MPI_STATUS_SIZE, fortran logicals,
            MPI_IN_PLACE, MPI_STATUS(ES)_IGNORE
     */
-/*
+
+    /* Default MPE_USE_FCONSTS_IN_MPIH = false */
+    use_mpih = MPE_Util_getenvbool( "MPE_USE_FCONSTS_IN_MPIH", 0 );
+    /* Let everyone in MPI_COMM_WORLD know what root has */
+    PMPI_Bcast( &use_mpih, 1, MPI_INT, 0, MPI_COMM_WORLD );
 #if defined( MPICH2 )
-    mpirinitf_();
+    if ( use_mpih ) {
+        mpirinitf_();
+    }
 #endif
-*/
     fsub_mpi_fconsts_( &MPER_F_MPI_STATUS_SIZE, &MPER_F_TRUE, &MPER_F_FALSE );
 /* Use the determined values and ignore MPI_F_* from mpi.h */
-/*
 #if defined( HAVE_MPI_F_STATUS_IGNORE )
-    MPER_F_MPI_STATUS_IGNORE = MPI_F_STATUS_IGNORE;
+    if ( use_mpih ) {
+        MPER_F_MPI_STATUS_IGNORE = MPI_F_STATUS_IGNORE;
+    }
 #endif
 #if defined( HAVE_MPI_F_STATUSES_IGNORE )
-    MPER_F_MPI_STATUSES_IGNORE = MPI_F_STATUSES_IGNORE;
+    if ( use_mpih ) {
+        MPER_F_MPI_STATUSES_IGNORE = MPI_F_STATUSES_IGNORE;
+    }
 #endif
-*/
-    printf( "f2c(MPI_IN_PLACE) = %p\n", MPER_F_MPI_IN_PLACE );
-    printf( "f2c(MPI_STATUS_IGNORE) = %p\n", MPER_F_MPI_STATUS_IGNORE );
-    printf( "f2c(MPI_STATUSES_IGNORE) = %p\n", MPER_F_MPI_STATUSES_IGNORE );
-    printf( "f2c(MPI_STATUS_SIZE) = %d\n", MPER_F_MPI_STATUS_SIZE );
-    printf( ".TRUE. = %d, .FALSE. = %d\n", MPER_F_TRUE, MPER_F_FALSE );
+    PMPI_Comm_rank( MPI_COMM_WORLD, &world_rank );
+    if ( world_rank == 0 ) {
+        printf( "f2c(MPI_IN_PLACE) = %p\n", MPER_F_MPI_IN_PLACE );
+        printf( "f2c(MPI_STATUS_IGNORE) = %p\n", MPER_F_MPI_STATUS_IGNORE );
+        printf( "f2c(MPI_STATUSES_IGNORE) = %p\n", MPER_F_MPI_STATUSES_IGNORE );
+        printf( "f2c(MPI_STATUS_SIZE) = %d\n", MPER_F_MPI_STATUS_SIZE );
+        printf( ".TRUE. = %d, .FALSE. = %d\n", MPER_F_TRUE, MPER_F_FALSE );
+    }
 }
 
 /*

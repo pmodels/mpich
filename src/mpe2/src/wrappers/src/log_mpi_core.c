@@ -3554,33 +3554,8 @@ MPI_Errhandler errhandler;
 
 #define MAKE_PROCNAME_FILE 1
 
-/* Copy of CLOG_Util_getenvbool() */
-static int MPE_Util_getenvbool( char *env_var, int default_value )
-{
-    char *env_val;
-
-    env_val = (char *) getenv( env_var );
-    if ( env_val != NULL ) {
-        if (    strcmp( env_val, "true" ) == 0
-             || strcmp( env_val, "TRUE" ) == 0
-             || strcmp( env_val, "yes" ) == 0
-             || strcmp( env_val, "YES" ) == 0 )
-            return 1;
-        else if (    strcmp( env_val, "false" ) == 0
-                  || strcmp( env_val, "FALSE" ) == 0
-                  || strcmp( env_val, "no" ) == 0
-                  || strcmp( env_val, "NO" ) == 0 )
-            return 0;
-        else {
-            fprintf( stderr, __FILE__":MPE_Util_getenvbool() - \n"
-                             "\t""Environment variable %s has invalid boolean "
-                             "value %s and will be set to %d.\n",
-                             env_var, env_val, default_value );
-            fflush( stderr );
-        }
-    }
-    return default_value;
-}
+/* Copy of CLOG_Util_getenvbool() in log_mpi_util.c */
+int MPE_Util_getenvbool( char *env_var, int default_value );
 
 int  MPI_Finalize( )
 {

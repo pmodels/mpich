@@ -63,14 +63,15 @@ MPICC_FLAGS      = $(INCLUDE_DIR) $(MPI_CFLAGS) $(MPE_COPTS)
 MPIFC_FLAGS      = $(MPI_FFLAGS) $(MPE_FOPTS)
 MPICC_LDFLAGS    = $(LDFLAGS) $(MPI_CFLAGS) $(MPE_LDOPTS)
 
-MPE_CSOURCES     =
-MPE_COBJECTS     = $(MPE_CSOURCES:.c=.@OBJEXT@)
+MPE_LOG_CSRC     = log_mpi_util.c log_mpi_core.c
+MPE_LOG_OBJS     = $(MPE_LOG_CSRC:.c=.@OBJEXT@)
 
-MPE_WSOURCES     =
-MPE_WOBJECTS     = $(MPE_WSOURCES:.c=.@OBJEXT@)
+MPE_F2C_CSRC     = log_mpi_util.c mpe_proff.c
+MPE_F2C_FSRC     = mpi_f2c_consts.f
+MPE_F2C_OBJS     = $(MPE_F2C_FSRC:.f=.@OBJEXT@) $(MPE_F2C_CSRC:.c=.@OBJEXT@)
 
-MPE_SHLCOBJECTS  = $(MPE_COBJECTS:.@OBJEXT@=.lo)
-MPE_SHLWOBJECTS  = $(MPE_WOBJECTS:.@OBJEXT@=.lo)
+MPE_LOG_SHLOBJS  = $(MPE_LOG_OBJS:.@OBJEXT@=.lo)
+MPE_F2C_SHLOBJS  = $(MPE_F2C_OBJS:.@OBJEXT@=.lo)
 
 .SUFFIXES: .c .f .@OBJEXT@ .lo .a @EXEEXT@
 
@@ -118,16 +119,16 @@ default:
 # is done once (e.g., a blip in the filesystem time can't be 
 # responsible if make works as Sun documents it).  To fix this, we
 # add all the objects to the library, not just the "recent" ones.
-${libbuild_dir}/lib$(LOG_LIBNAME).a: log_mpi_core.@OBJEXT@
-	$(AR) $(ARFLAGS) $@ log_mpi_core.@OBJEXT@
+${libbuild_dir}/lib$(LOG_LIBNAME).a: $(MPE_LOG_OBJS)
+	$(AR) $(ARFLAGS) $@ $(MPE_LOG_OBJS)
 	$(RANLIB) $@
 
 ${libbuild_dir}/lib$(TRACE_LIBNAME).a: trace_mpi_core.@OBJEXT@
 	$(AR) $(ARFLAGS) $@ trace_mpi_core.@OBJEXT@
 	$(RANLIB) $@
 
-${libbuild_dir}/lib$(F2CMPI_LIBNAME).a: mpi_f2c_consts.@OBJEXT@ mpe_proff.@OBJEXT@
-	$(AR) $(ARFLAGS) $@ mpi_f2c_consts.@OBJEXT@ mpe_proff.@OBJEXT@
+${libbuild_dir}/lib$(F2CMPI_LIBNAME).a: $(MPE_F2C_OBJS)
+	$(AR) $(ARFLAGS) $@ $(MPE_F2C_OBJS)
 	$(RANLIB) $@
 
 ${libbuild_dir}/mpe_prof.@OBJEXT@: mpe_prof.@OBJEXT@

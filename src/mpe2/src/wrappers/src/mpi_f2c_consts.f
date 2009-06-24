@@ -1,3 +1,7 @@
+! 
+!  (C) 2001 by Argonne National Laboratory.
+!      See COPYRIGHT in top-level directory.
+!
       subroutine fsub_mpi_fconsts( F_MPI_STATUS_SIZE, itrue, ifalse )
       implicit none
       include "mpif.h"
