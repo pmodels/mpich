@@ -1751,6 +1751,7 @@ sub DefaultRules {
     # ToDo: we could control the subdirectories over which the recursion
     # is applied.
     &RecursiveOp( "apply" );
+    &TargetPostamble( "apply" );
     
     # Clean targets
     &TargetClean;
@@ -2761,6 +2762,7 @@ sub TargetClean {
 
     # Finally, execute make clean in any subdirs
     &RecursiveOp( "clean" );
+    &TargetPostamble( "clean" );
 
     # --------------------------------------------
     # distclean target
@@ -2770,6 +2772,8 @@ sub TargetClean {
 	print FD " distclean-local";
     }
     print FD " distclean-xxx remove-makefile";
+    &TargetPostamble( "distclean" );
+
     print FD "$newline";
     
     print FD "distclean-xxx:$newline";
@@ -2843,6 +2847,7 @@ sub TargetClean {
 	    print FD " maintainer-clean-local";
 	}
 	print FD " distclean-xxx remove-genmakefiles";
+	&TargetPostamble( "maintainer-clean" );
 	print FD "$newline";
 
 	# For any extensions, handle the clean actions
@@ -4016,6 +4021,7 @@ sub TargetInstall {
 	    print FD "\t(cd $extradir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) install)$newline";
 	}
     }
+    &TargetPostamble( "install" );
     print FD "$newline";
 
     # Install documentation
@@ -4073,6 +4079,7 @@ sub TargetInstall {
     if ($#install_subdirs >= 0) {
 	&RecursiveOp( "uninstall", "install_subdirs" );
     }
+    &TargetPostamble( "uninstall" );
 
     # also add the recursive installcheck target
     &TargetInit( "installcheck" );
@@ -4835,6 +4842,7 @@ sub TargetGcov {
 	print FD "\t\tgcov -b -f \$\$file ; done$newline";
     }
     &RecursiveOp( "coverage" );
+    &TargetPostamble( "coverage" );
 }
 # 
 # ----------------------------------------------------------------------------
