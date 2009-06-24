@@ -2698,6 +2698,9 @@ export MPICH2_EXTRA_FFLAGS
 export MPICH2_EXTRA_F90FLAGS
 
 # Copy the mpicxx.h file to the main include directory
+# Move a working version of the mpicxx script to the bin directory
+# Create an alias mpic++ for mpicxx (BOOST, at least, makes invalid assumptions
+# about the name of the MPI C++ compilation script)
 AC_OUTPUT_COMMANDS([if test $enable_cxx = yes ; then 
 if test "$bashWorks" = yes ; then cp -f src/env/mpicxx.bash src/env/mpicxx ; fi
 chmod a+x src/env/mpicxx 
@@ -2708,6 +2711,7 @@ sed -e 's%includedir=.*%includedir='$includebuild_dir% \
     -e 's%^opalibdir=.*%opalibdir='$opalibbuild_dir% \
     src/env/mpicxx > bin/mpicxx ;
 chmod a+x bin/mpicxx
+ln -sf bin/mpicxx bin/mpic++
 else
     rm -f src/env/mpicxx src/env/mpicxx.conf
 fi

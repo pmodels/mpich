@@ -13,3 +13,10 @@ install_BIN = mpich2version
 install_ETC = mpixxx_opts.conf mpicc.conf
 optinstall_SCRIPT = mpicxx mpif77 mpif90
 optinstall_ETC = mpicxx.conf mpif77.conf mpif90.conf
+# Provide an alias for mpicxx to support tools that assume that mpicxx is
+# called mpic++
+install-postamble:
+	if [ -x ${DESTDIR}${bindir}/mpicxx ] ; then \
+	    cd ${DESTDIR}${bindir} && ln -sf mpicxx mpic++ ; fi
+uninstall-postamble:
+	rm -f ${DESTDIR}${bindir}/mpic++
