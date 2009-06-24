@@ -176,30 +176,30 @@ AC_DEFINE( CLOG_IMPL, 1,
            [The configuration header enables CLOG2 implementation related API] )
 
 dnl   -- Check if byteswapping needs to be done.
-if test "$cross_compiling" = "yes" -o "$cross_compiling" = 1 ; then
-    AC_MSG_CHECKING([for byte ordering])
-    if test "X$CROSS_BIGENDIAN" != "X" ; then
-        if test "$CROSS_BIGENDIAN" = "true" \
-             -o "$CROSS_BIGENDIAN" = "false" ; then
-            if test "$CROSS_BIGENDIAN" = "true" ; then
-                AC_DEFINE( WORDS_BIGENDIAN, 1,
-                           [Define if byte order is bigendian] )
-                AC_MSG_RESULT( [defined to be big endian] )
-            else
-                AC_MSG_RESULT( [defined to be little endian] )
-            fi
-        else
-            AC_DEFINE( WORDS_BIGENDIAN, 1,
-                       [Define if byte order is bigendian] )
-            AC_MSG_RESULT( [Unknown CROSS_BIGENDIAN, $CROSS_BIGENDIAN! Assumed big endian] )
-        fi
-    else
-        AC_DEFINE( WORDS_BIGENDIAN, 1, [Define if byte order is bigendian] )
-        AC_MSG_RESULT( [Undefined CROSS_BIGENDIAN! Assumed big endian] )
-    fi
-else
+dnl if test "$cross_compiling" = "yes" -o "$cross_compiling" = 1 ; then
+dnl     AC_MSG_CHECKING([for byte ordering])
+dnl     if test "X$CROSS_BIGENDIAN" != "X" ; then
+dnl         if test "$CROSS_BIGENDIAN" = "true" \
+dnl              -o "$CROSS_BIGENDIAN" = "false" ; then
+dnl             if test "$CROSS_BIGENDIAN" = "true" ; then
+dnl                 AC_DEFINE( WORDS_BIGENDIAN, 1,
+dnl                            [Define if byte order is bigendian] )
+dnl                 AC_MSG_RESULT( [defined to be big endian] )
+dnl             else
+dnl                 AC_MSG_RESULT( [defined to be little endian] )
+dnl             fi
+dnl         else
+dnl             AC_DEFINE( WORDS_BIGENDIAN, 1,
+dnl                        [Define if byte order is bigendian] )
+dnl             AC_MSG_RESULT( [Unknown CROSS_BIGENDIAN, $CROSS_BIGENDIAN! Assumed big endian] )
+dnl         fi
+dnl     else
+dnl         AC_DEFINE( WORDS_BIGENDIAN, 1, [Define if byte order is bigendian] )
+dnl         AC_MSG_RESULT( [Undefined CROSS_BIGENDIAN! Assumed big endian] )
+dnl     fi
+dnl else
     AC_C_BIGENDIAN
-fi
+dnl fi
 
 AC_CHECK_HEADERS(stdio.h stdlib.h string.h unistd.h sys/time.h sys/types.h sys/bitypes.h sys/stat.h fcntl.h)
 
