@@ -43,7 +43,7 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 {
     int i, local_env_set;
     char **argv = t_argv, *tmp;
-    char *env_name, *env_value, *str[4] = { 0 }, *progname = *argv, *pwd;
+    char *env_name, *env_value, *str[4] = { 0 }, *progname = *argv;
     HYD_Env_t *env;
     struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
@@ -713,21 +713,10 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 
     /* Get the base path for the proxy */
     if (HYD_handle.wdir == NULL) {
-        /* We first check for the PWD environment and only for systems
-         * where this is not set, we rely on getcwd. This is because
-         * some systems use a common symbolic link from different
-         * mount points. Then getcwd() would return the mount point,
-         * not the logical CWD, which is different for each system. */
-        pwd = getenv("PWD");
-        if (pwd && (pwd[0] == '/')) {
-            HYD_handle.wdir = HYDU_strdup(pwd);
-        }
-        else {
-            HYDU_MALLOC(HYD_handle.wdir, char *, HYDRA_MAX_PATH, status);
-            if (getcwd(HYD_handle.wdir, HYDRA_MAX_PATH) == NULL)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                    "allocated space is too small for absolute path\n");
-        }
+        HYDU_MALLOC(HYD_handle.wdir, char *, HYDRA_MAX_PATH, status);
+        if (getcwd(HYD_handle.wdir, HYDRA_MAX_PATH) == NULL)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "allocated space is too small for absolute path\n");
     }
     status = HYDU_get_base_path(progname, HYD_handle.wdir, &HYD_handle.base_path);
     HYDU_ERR_POP(status, "unable to get base path\n");
