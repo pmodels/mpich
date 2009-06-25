@@ -108,7 +108,7 @@
 /* This is the default implementation of MPIU_Memcpy.  We define this
    before including mpidpre.h so that it can be used when a device or
    channel can use it if it's overriding MPIU_Memcpy.  */
-static inline void MPIUI_Memcpy(void * restrict dst, const void * restrict src, size_t len)
+static inline void MPIUI_Memcpy(void * dst, const void * src, size_t len)
 {
     memcpy(dst, src, len);
 }
