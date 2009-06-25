@@ -13,7 +13,7 @@ C
 
       errs = 0
 
-      call MPI_Init(ierr)
+      call mtest_init( ierr )
 C
 C Check each Fortran datatype, including the size-specific ones
 C See the C version (typename.c) for the relevant MPI sections
@@ -199,11 +199,6 @@ C     &              name(1:namelen)
 C          endif
 C      endif
 
-      if (errs .gt. 0) then
-          print *, ' Found ', errs, ' errors'
-      else
-          print *, ' No Errors'
-      endif
-
+      call mtest_finalize( errs )
       call MPI_Finalize( ierr )
       end

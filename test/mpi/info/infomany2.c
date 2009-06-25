@@ -8,6 +8,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -26,14 +27,14 @@
 #define DBGPRINTF(a)
 #endif
 
-int main( int arg, char *argv[] )
+int main( int argc, char *argv[] )
 {
     MPI_Info infos[MAX_INFOS];
     char key[64], value[64];
     int  errs = 0;
     int  i, j;
 
-    MPI_Init( 0, 0 );
+    MTest_Init( &argc, &argv );
 
     /* We create max_info items, then delete the middle third of them,
        then recreate them, then check them, then 
@@ -125,13 +126,8 @@ int main( int arg, char *argv[] )
     for (i=0; i<MAX_INFOS; i++) {
 	MPI_Info_free( &infos[i] );
     }
-    if (errs) {
-	printf( " Found %d errors\n", errs );
-    }
-    else {
-	printf( " No Errors\n" );
-    }
     
+    MTest_Finalize( errs );
     MPI_Finalize( );
     return 0;
 }

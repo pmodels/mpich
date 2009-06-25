@@ -5,6 +5,7 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 /* Set verbose to 1 to see the error message */
 static int verbose = 0;
@@ -14,7 +15,7 @@ int main( int argc, char *argv[] )
     int ierr, errs=0;
     MPI_Comm newcomm = MPI_COMM_NULL;
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
 
     MPI_Comm_set_errhandler( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
     ierr = MPI_Comm_connect( "myhost:27", MPI_INFO_NULL, 0, 
@@ -39,12 +40,7 @@ int main( int argc, char *argv[] )
     }
     fflush(stdout);
 
-    if (errs) {
-	printf( " Found %d errors\n", errs );
-    }
-    else
-	printf( " No Errors\n" );
-
+    MTest_Finalize( errs );
     MPI_Finalize();
 
     return 0;

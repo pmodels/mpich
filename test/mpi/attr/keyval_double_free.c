@@ -7,6 +7,7 @@
 #include <mpi.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 /* tests multiple invocations of Keyval_free on the same keyval */
 
@@ -20,7 +21,9 @@ int main (int argc, char **argv)
     MPI_Comm duped;
     int keyval = MPI_KEYVAL_INVALID;
     int keyval_copy = MPI_KEYVAL_INVALID;
-    MPI_Init(&argc, &argv);
+    int errs=0;
+
+    MTest_Init( &argc, &argv );
     MPI_Comm_dup(MPI_COMM_SELF, &duped);
 
     MPI_Keyval_create(MPI_NULL_COPY_FN, delete_fn,  &keyval, NULL);
@@ -32,7 +35,7 @@ int main (int argc, char **argv)
     MPI_Comm_free(&duped);         /* first MPI_Keyval_free */
     MPI_Keyval_free(&keyval);      /* second MPI_Keyval_free */
     MPI_Keyval_free(&keyval_copy); /* third MPI_Keyval_free */
-    printf(" No Errors\n");
+    MTest_Finalize( errs );
     MPI_Finalize();                /* fourth MPI_Keyval_free */
     return 0;
 }

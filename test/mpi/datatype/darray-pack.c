@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "mpitest.h"
 
 /* 
    The default behavior of the test routines should be to briefly indicate
@@ -30,9 +31,8 @@ static int pack_and_unpack(char *typebuf,
 int main(int argc, char **argv)
 {
     int err, errs = 0;
-    int toterrs, rank;
 
-    MPI_Init(&argc, &argv); /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
+    MTest_Init( &argc, &argv );
     parse_args(argc, argv);
 
     /* To improve reporting of problems about operations, we
@@ -54,16 +54,8 @@ int main(int argc, char **argv)
     /* Allow the use of more than one process - some MPI implementations
        (including IBM's) check that the number of processes given to 
        Type_create_darray is no larger than MPI_COMM_WORLD */
-    MPI_Reduce( &errs, &toterrs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    if (rank == 0) {
-	if (toterrs) {
-	    fprintf(stderr, "Found %d errors\n", toterrs);
-	}
-	else {
-	    printf(" No Errors\n");
-	}
-    }
+
+    MTest_Finalize( errs );
     MPI_Finalize();
     return 0;
 }

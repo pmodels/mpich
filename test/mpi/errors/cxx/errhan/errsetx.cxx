@@ -4,8 +4,8 @@
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#include "mpi.h"
 #include "mpitestconf.h"
+#include "mpi.h"
 #ifdef HAVE_IOSTREAM
 // Not all C++ compilers have iostream instead of iostream.h
 #include <iostream>
@@ -23,8 +23,6 @@ using namespace std;
 #endif
 #include "mpitestcxx.h"
 
-static int verbose = 0;
-
 static int ncalls = 0;
 void efn( MPI::Comm &comm, int *code, ... )
 {
@@ -34,13 +32,11 @@ void efn( MPI::Comm &comm, int *code, ... )
 int main( int argc, char *argv[] )
 {
     MPI::Errhandler eh;
-    char *filename;
     int size;
     bool foundMsg;
-    int errs = 0, toterrs, rank;
-    int sawErr;
+    int errs = 0;
 
-    MPI::Init();
+    MTest_Init( );
 
     size = MPI::COMM_WORLD.Get_size();
 
@@ -51,7 +47,6 @@ int main( int argc, char *argv[] )
 
     eh = MPI::Comm::Create_errhandler( efn );
     MPI::COMM_WORLD.Set_errhandler( eh );
-    sawErr = 0;
     try {
 	foundMsg = MPI::COMM_WORLD.Iprobe( size, 0 );
     } catch (MPI::Exception ex) {
@@ -61,7 +56,6 @@ int main( int argc, char *argv[] )
 	    errs++;
 	    cout << "Unexpected error from Iprobe" << endl;
 	}
-	sawErr = 1;
     }
     if (ncalls != 1) {
 	errs++;
@@ -69,16 +63,8 @@ int main( int argc, char *argv[] )
     }
 
     // Find out how many errors we saw
-    MPI::COMM_WORLD.Allreduce( &errs, &toterrs, 1, MPI::INT, MPI::SUM );
-    if (MPI::COMM_WORLD.Get_rank() == 0) {
-	if (toterrs == 0) {
-	    cout << " No Errors" << endl;
-	}
-	else {
-	    cout << " Saw " << toterrs << " errors" << endl;
-	}
-    }
 
+    MTest_Finalize( errs );
     MPI::Finalize();
 
     return 0;

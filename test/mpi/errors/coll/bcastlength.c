@@ -5,6 +5,7 @@
  */
 #include <stdio.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /* Very simple test that Bcast handled mismatched lengths (while not a 
    common user error, we've seen it several times, so good handling of 
@@ -20,7 +21,7 @@ int main( int argc, char *argv[] )
     char      str[MPI_MAX_ERROR_STRING+1];
     int       slen;
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
     
     MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
@@ -73,15 +74,7 @@ int main( int argc, char *argv[] )
 
     MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL );
 
-    MPI_Allreduce( &errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
-    if (rank == 0) {
-	if (toterrs == 0) {
-	    printf( " No Errors\n" );
-	}
-	else {
-	    printf( " Found %d errors\n", toterrs );
-	}
-    }
+    MTest_Finalize( errs );
     MPI_Finalize( );
     return 0;
 }

@@ -3,6 +3,8 @@ DEPADD = @MPILIBLOC@
 smvar_do_sharedlibs = 0
 
 errgetx_SOURCES   = errgetx.cxx
+errgetx_LDADD     = ../../../cxx/util/mtest.o
 errsetx_SOURCES   = errsetx.cxx
+errsetx_LDADD     = ../../../cxx/util/mtest.o
 throwtest_SOURCES = throwtest.cxx
 

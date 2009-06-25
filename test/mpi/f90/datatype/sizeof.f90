@@ -21,7 +21,7 @@
 
       verbose = .false.
       errs = 0
-      call mpi_init ( ierr )
+      call mtest_init ( ierr )
       call mpi_comm_rank( MPI_COMM_WORLD, rank, ierr )
 
 !
@@ -73,15 +73,7 @@
               size
       endif
 
-      if (rank .eq. 0) then
-         if (errs == 0) then
-            print*,' No Errors'
-         else
-            print*,'**',errs,' errors found.'
-         endif
-      endif
-
+      call mtest_finalize( errs )
       call mpi_finalize( ierr )
 
       end
-      

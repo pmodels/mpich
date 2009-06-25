@@ -28,6 +28,7 @@ simple-size-extent_SOURCES = simple-size-extent.c
 slice-pack_SOURCES = slice-pack.c
 
 struct-no-real-types_SOURCES = struct-no-real-types.c
+struct-no-real-types_LDADD = ../util/mtest.o
 
 slice-pack-external_SOURCES = slice-pack-external.c
 
@@ -41,6 +42,7 @@ lots-of-types_LDADD = ../util/mtest.o
 simple-pack-external_SOURCES = simple-pack-external.c
 
 darray-pack_SOURCES = darray-pack.c
+darray-pack_LDADD = ../util/mtest.o
 
 subarray-pack_SOURCES = subarray-pack.c
 
@@ -65,10 +67,12 @@ struct-ezhov_SOURCES = struct-ezhov.c
 pairtype-size-extent_SOURCES = pairtype-size-extent.c
 
 struct-derived-zeros_SOURCES = struct-derived-zeros.c
+struct-derived-zeros_LDADD = ../util/mtest.o
 
 localpack_SOURCES = localpack.c
 
 lbub_SOURCES = lbub.c
+lbub_LDADD = ../util/mtest.o
 
 unpack_SOURCES = unpack.c
 unpack_LDADD = ../util/mtest.o

@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 {
     int err, errs = 0;
 
-    MPI_Init(&argc, &argv); /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
+    MTest_Init( &argc, &argv );
     parse_args(argc, argv);
 
     /* To improve reporting of problems about operations, we
@@ -87,13 +87,7 @@ int main(int argc, char **argv)
     if (err && verbose) fprintf(stderr, "found %d errors in negstrided negextent vector test\n", err);
     errs += err;
 
-    /* print message and exit */
-    if (errs) {
-	fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
-	printf(" No Errors\n");
-    }
+    MTest_Finalize( errs );
     MPI_Finalize();
     return 0;
 }
@@ -1310,6 +1304,7 @@ int vector_blklen_negstride_negextent_of_int_with_lb_ub_test(void)
     return errs;
 }
 
+#if 0
 /* Use this unless mtest is included. */
 void MTestPrintError( int errcode )
 {
@@ -1321,3 +1316,4 @@ void MTestPrintError( int errcode )
     printf( "Error class %d (%s)\n", errclass, string );
     fflush( stdout );
 }
+#endif

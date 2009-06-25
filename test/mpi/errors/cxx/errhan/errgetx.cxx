@@ -12,8 +12,10 @@
   value as was set.
 */
 
+#include "mpitestconf.h"
 #include <mpi.h>
 #include <iostream>
+#include "mpitestcxx.h"
 
 /* #define VERBOSE */
 
@@ -63,7 +65,7 @@ int main( int argc, char *argv[] )
     MPI::Win win = MPI::WIN_NULL;
     MPI::File file = MPI::FILE_NULL;
 
-    MPI::Init();
+    MTest_Init( );
 
     const unsigned int rank = MPI::COMM_WORLD.Get_rank();
 
@@ -78,12 +80,7 @@ int main( int argc, char *argv[] )
         errs += testRetrieveErrhandler(file);
     }
 
-    if (errs == 0) {
-        std::cout << " No Errors" << std::endl;
-    }
-    else {
-        std::cout << " Found " << errs << " errors" << std::endl;
-    }
+    MTest_Finalize( errs );
 
     win.Free();
     file.Close();

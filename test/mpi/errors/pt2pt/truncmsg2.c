@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include <mpi.h>
+#include "mpitest.h"
 
 #define BUFSIZE 128
 
@@ -59,7 +60,7 @@ main (int argc, char *argv[])
     int contig_indexed_inner_type = MPI_INT;
     int contig_indexed_type;
 
-    ret = MPI_Init(&argc, &argv);
+    MTest_Init( &argc, &argv );
     ret = MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     ret = MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -119,9 +120,6 @@ main (int argc, char *argv[])
 	    printf( "MPI_Recv succeeded with non-matching datatype signature\n" );
 	    errs++;
 	}
-	else {
-	    printf( " No Errors\n" );
-	}
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -132,6 +130,7 @@ main (int argc, char *argv[])
     MPI_Free_mem(src);
     MPI_Free_mem(sendrec);
 
+    MTest_Finalize( errs );
     MPI_Finalize( );
 
     return 0;

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "mpitest.h"
 
 #define ROOT      0
 #define NUM_REPS  5
@@ -20,7 +21,7 @@ int main( int argc, char **argv)
     int sizes[NUM_SIZES] = { 100, 64*1024, 128*1024 };
     int num_errors=0, tot_errors;
     
-    MPI_Init(&argc, &argv);
+    MTest_Init( &argc, &argv );
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (argc > 1)
@@ -94,16 +95,9 @@ int main( int argc, char **argv)
 	}
     }
     
-    /* printf("Node %d done\n", rank); */
-    MPI_Reduce( &num_errors, &tot_errors, 1, MPI_INT, MPI_SUM, 0, 
-		MPI_COMM_WORLD );
-    if (rank == 0 && tot_errors == 0) 
-	printf(" No Errors\n");
-
-    fflush(stdout);
-
     free(buf);
 
+    MTest_Finalize( num_errors );
     MPI_Finalize();
     return 0;
 }

@@ -5,6 +5,7 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define MAX_PROCESSES 10
 
@@ -13,11 +14,11 @@ int main( int argc, char **argv )
     int              rank, size, i,j;
     int              table[MAX_PROCESSES][MAX_PROCESSES];
     int              row[MAX_PROCESSES];
-    int              errors=0, toterrs = 0;
+    int              errors=0;
     int              participants;
     MPI_Comm         comm;
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
 
@@ -49,18 +50,11 @@ int main( int argc, char **argv )
 	/* Now see if our row looks right */
 	for (i=0; i<MAX_PROCESSES; i++) 
 	    if ( row[i] != i+rank ) errors++;
-
-	MPI_Allreduce( &errors, &toterrs, 1, MPI_INT, MPI_SUM, comm );
     } 
     
     MPI_Comm_free( &comm );
 
+    MTest_Finalize( errors );
     MPI_Finalize();
-    if (errors)
-      printf( "[%d] done with ERRORS(%d)!\n", rank, errors );
-    else {
-	if (rank == 0 && toterrs == 0) 
-	    printf( " No Errors\n");
-    }
     return errors;
 }

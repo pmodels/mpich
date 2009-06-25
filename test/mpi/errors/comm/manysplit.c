@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 /* Test that comm_split fails gracefully when the number of communicators
    is exhausted.  Original version submitted by Paul Sack.
@@ -18,9 +19,10 @@ int main(int argc, char* argv[])
 {
   int i, rank;
   int rc, maxcomm;
+  int errs = 0;
   MPI_Comm comm[MAX_COMMS];
 
-  MPI_Init (&argc, &argv);
+  MTest_Init( &argc, &argv );
   MPI_Comm_rank ( MPI_COMM_WORLD, &rank );
   MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
 
@@ -46,9 +48,7 @@ int main(int argc, char* argv[])
     MPI_Comm_free( &comm[i] );
   }
   /* If we complete, there are no errors */
-  if (rank == 0) {
-      printf( " No Errors\n" );
-  }
+  MTest_Finalize( errs );
   MPI_Finalize();
   return 0;
 }

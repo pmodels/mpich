@@ -6,6 +6,7 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 /*
  * Test whether invalid handles to group routines are detected 
@@ -15,14 +16,14 @@ int verbose = 0;
 
 int main( int argc, char *argv[] )
 {
-    int errs = 0, toterrs;
+    int errs = 0;
     int rc;
-    int ranks[2], rank;
+    int ranks[2];
     MPI_Group ng;
     char      str[MPI_MAX_ERROR_STRING+1];
     int       slen;
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
     /* Set errors return */
     MPI_Comm_set_errhandler( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
 
@@ -40,17 +41,7 @@ int main( int argc, char *argv[] )
 	}
     }
 
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    MPI_Allreduce( &errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
-    if (rank == 0) {
-	if (toterrs == 0) {
-	    printf( " No Errors\n" );
-	}
-	else {
-	    printf( " Found %d errors\n", toterrs );
-	}
-    }
-
+    MTest_Finalize( errs );
     MPI_Finalize( );
     return 0;
 }

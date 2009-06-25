@@ -28,9 +28,9 @@ int main( int argc, char *argv[] )
     MPI_File fh;
     MPI_Errhandler eh;
     char filename[10];
-    int errs = 0, toterrs, rank, rc;
+    int errs = 0, rc;
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
 
     /* Test that the default error handler is errors return for files */
     strncpy( filename, "t1", sizeof(filename) );
@@ -50,6 +50,7 @@ int main( int argc, char *argv[] )
     rc = MPI_File_open(MPI_COMM_WORLD, filename, 
 		       MPI_MODE_RDWR, MPI_INFO_NULL, &fh );
     if (rc) {
+        errs++;
 	printf( "Returned error from open (should have called error handler instead)\n");
     }
     if (ncalls != 1) {
@@ -58,17 +59,8 @@ int main( int argc, char *argv[] )
     }
     
     /* Find out how many errors we saw */
-    MPI_Allreduce( &errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    if (rank == 0) {
-	if (toterrs == 0) {
-	    printf( " No Errors\n" );
-	}
-	else {
-	    printf( " Saw %d errors\n", toterrs );
-	}
-    }
 
+    MTest_Finalize( errs );
     MPI_Finalize();
 
     return 0;

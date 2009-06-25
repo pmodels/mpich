@@ -14,11 +14,11 @@ int main( int argc, char *argv[] )
     MPI_Request r[3];
     MPI_Status  s[3];
     int *buf0, *buf1, *buf2;
-    int rank, size, src, dest, flag, errs = 0, toterrs;
+    int rank, size, src, dest, flag, errs = 0;
     int n0, n1, n2;
     MPI_Comm comm;
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
 
     MPI_Comm_size( MPI_COMM_WORLD, &size );
     if (size < 2) {
@@ -131,17 +131,7 @@ int main( int argc, char *argv[] )
 	MPI_Barrier( comm );
     }
 
-    MPI_Reduce( &errs, &toterrs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
-    if (rank == 0) {
-	if (toterrs) { 
-	    printf( " Found %d errors\n", toterrs );
-	}
-	else {
-	    printf( " No Errors\n" );
-	}
-	fflush(stdout);
-    }
-
+    MTest_Finalize( errs );
     MPI_Finalize();
 
     return 0;

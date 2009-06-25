@@ -37,6 +37,8 @@ shpositionf_LDADD     = ../util/mtestf.o
 
 atomicityf_SOURCES    = atomicityf.f
 miscfilef_SOURCES     = miscfilef.f
+miscfilef_LDADD     = ../util/mtestf.o
+
 setviewcurf_SOURCES   = setviewcurf.f
 setviewcurf_LDADD     = ../util/mtestf.o
 

@@ -8,9 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 int count, size, rank;
-int cerrcnt, gerrcnt;
+int cerrcnt;
 
 struct int_test { int a; int b; };
 struct long_test { long a; int b; };
@@ -280,7 +281,7 @@ struct double_test { double a; int b; };
 
 int main( int argc, char **argv )
 {
-    MPI_Init(&argc, &argv);
+    MTest_Init( &argc, &argv );
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -329,15 +330,7 @@ int main( int argc, char **argv )
     minloc_test(struct float_test, MPI_FLOAT_INT);
     minloc_test(struct double_test, MPI_DOUBLE_INT);
 
-    MPI_Allreduce(&cerrcnt, &gerrcnt, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (gerrcnt)
-            printf(" Found %d errors\n", gerrcnt);
-        else
-            printf(" No Errors\n");
-        fflush(stdout);
-    }
-
+    MTest_Finalize( cerrcnt );
     MPI_Finalize();
     return 0;
 }

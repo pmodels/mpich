@@ -1,10 +1,10 @@
       program main
       include 'mpif.h'
       integer ierr
-      integer errs, toterrs, wrank
+      integer errs, wrank
       integer f2ctype
 C
-      call mpi_init( ierr )
+      call mtest_init( ierr )
       call mpi_comm_rank( MPI_COMM_WORLD, wrank, ierr )
 C
       errs = 0
@@ -38,16 +38,7 @@ C
 C
 C Summarize the errors
 C
-      call mpi_allreduce( errs, toterrs, 1, MPI_INTEGER, MPI_SUM,
-     $     MPI_COMM_WORLD, ierr )
-      if (wrank .eq. 0) then
-         if (toterrs .eq. 0) then
-            print *, ' No Errors'
-         else
-            print *, ' Found ', toterrs, ' errors'
-         endif
-      endif
-
+      call mtest_finalize( errs )
       call mpi_finalize( ierr )
 
       end 

@@ -7,7 +7,6 @@
         integer ierr
         integer errs
         integer nints, nadds, ndtypes, combiner
-        integer rank
         integer nparms(2), dummy(1)
         integer (kind=MPI_ADDRESS_KIND) adummy(1)
         integer ntype1, nsize, ntype2, ntype3, i
@@ -15,7 +14,7 @@
 !       Test the Type_create_f90_xxx routines
 !
         errs = 0
-        call mpi_init( ierr )
+        call mtest_init( ierr )
 
 ! integers with upto 9 are 4 bytes integers; r of 4 are 2 byte,
 ! and r of 2 is 1 byte
@@ -63,15 +62,7 @@
            call mpi_type_create_f90_integer( 8, ntype3, ierr )
         enddo
 
-        call mpi_comm_rank( MPI_COMM_WORLD, rank, ierr )
-        if (rank .eq. 0) then
-           if (errs .eq. 0) then
-              print *, " No Errors"
-           else
-              print *, " Found ", errs, " Errors"
-           endif
-        endif
-
+        call mtest_finalize( errs )
         call mpi_finalize( ierr )
         
         end

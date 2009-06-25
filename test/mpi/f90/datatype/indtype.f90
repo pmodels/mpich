@@ -17,9 +17,13 @@
       logical verbose
 
       verbose = .false. 
-      call mpi_init ( ierr )
+      call mtest_init ( ierr )
       call mpi_comm_size( MPI_COMM_WORLD, size, ierr )
       call mpi_comm_rank( MPI_COMM_WORLD, rank, ierr )
+      if (size .lt. 2) then
+         print *, "Must have at least 2 processes"
+         call MPI_Abort( 1, MPI_COMM_WORLD, ierr )
+      endif
 
       errs = 0
       allocate(sndbuf(7,100))
@@ -103,16 +107,10 @@
               endif
            enddo
         enddo
-
-!
-         if (errs .eq. 0) then
-            print*,' No Errors'
-         else
-            print*,'**',errs,' errors found.'
-         endif
       endif
-
+!
       call mpi_type_free( type, ierr )
+      call mtest_finalize( errs )
       call mpi_finalize( ierr )
 
       end

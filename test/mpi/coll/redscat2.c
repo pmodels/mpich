@@ -15,6 +15,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 int err = 0;
 
@@ -66,7 +67,6 @@ void nc_sum(void *a, void *b, int *count, MPI_Datatype *type)
 
 int main( int argc, char **argv )
 {
-    int      toterr;
     int      *sendbuf, *recvcounts;
     int      block_size;
     int      *recvbuf;
@@ -74,7 +74,7 @@ int main( int argc, char **argv )
     MPI_Comm comm;
     MPI_Op left_op, right_op, nc_sum_op;
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
     comm = MPI_COMM_WORLD;
 
     MPI_Comm_size( comm, &size );
@@ -114,20 +114,12 @@ int main( int argc, char **argv )
         free(sendbuf);
     }
 
-    MPI_Allreduce( &err, &toterr, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
-    if (rank == 0) {
-        if (toterr == 0) {
-            printf( " No Errors\n" );
-        }
-        else {
-            printf( "found %d errors\n", toterr );
-        }
-    }
-
     MPI_Op_free(&left_op);
     MPI_Op_free(&right_op);
     MPI_Op_free(&nc_sum_op);
+
+    MTest_Finalize( err );
     MPI_Finalize( );
 
-    return toterr;
+    return err;
 }

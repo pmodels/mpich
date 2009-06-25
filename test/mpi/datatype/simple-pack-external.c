@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -24,7 +25,7 @@ int main(int argc, char **argv)
 {
     int err, errs = 0;
 
-    MPI_Init(&argc, &argv); /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
+    MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
     /* To improve reporting of problems about operations, we
@@ -52,13 +53,7 @@ int main(int argc, char **argv)
 				"%d errors in struct of basics test.\n", err);
     errs += err;
 
-    /* print message and exit */
-    if (errs) {
-	fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
-	printf(" No Errors\n");
-    }
+    MTest_Finalize( errs );
     MPI_Finalize();
     return 0;
 }

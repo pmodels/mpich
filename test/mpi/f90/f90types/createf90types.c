@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 static char MTEST_Descrip[] = "Test the routines to access the Fortran 90 datatypes from C";
 
@@ -90,7 +91,7 @@ int main( int argc, char *argv[] )
     int i, nLoop = 1;
     MPI_Datatype newtype;
 
-    MPI_Init(0,0);
+    MTest_Init(0,0);
 
     if (argc > 1) {
 	nLoop = atoi( argv[1] );
@@ -142,13 +143,7 @@ int main( int argc, char *argv[] )
 			   err, newtype );
     }
 
-    if (errs == 0) {
-	printf( " No Errors\n" );
-    }
-    else {
-	printf( " Found %d errors\n", errs );
-    }
-
+    MTest_Finalize( errs );
     MPI_Finalize();
     return 0;
 }

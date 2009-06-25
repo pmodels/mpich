@@ -5,6 +5,7 @@
  */
 #include <stdio.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /* Very simple test that Allreduce detects invalid (datatype,operation)
    pair */
@@ -13,12 +14,11 @@ int verbose = 0;
 
 int main( int argc, char *argv[] )
 {
-    int a, b, ierr, errs=0, toterrs;
-    int rank;
+    int a, b, ierr, errs=0;
     char      str[MPI_MAX_ERROR_STRING+1];
     int       slen;
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
     
     MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
     
@@ -36,16 +36,7 @@ int main( int argc, char *argv[] )
 
     MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL );
 
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    MPI_Allreduce( &errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
-    if (rank == 0) {
-	if (toterrs == 0) {
-	    printf( " No Errors\n" );
-	}
-	else {
-	    printf( " Found %d errors\n", toterrs );
-	}
-    }
+    MTest_Finalize( errs );
     MPI_Finalize( );
     return 0;
 }

@@ -1,6 +1,7 @@
 # We don't use a general LDADD for mtestf.o because c2fmult is a C-only
 # program
-DEPADD = @MPILIBLOC@ ../util/mtestf.o
+INCLUDES = -I../../include -I${srcdir}/../../include
+DEPADD = @MPILIBLOC@ ../util/mtestf.o ../../util/mtest.o
 smvar_do_sharedlibs = 0
 
 # allocmemf is an "extra" program because it requires a Fortran extension
@@ -14,6 +15,13 @@ c2f2c_CFLAGSADD = -I../../include
 ctypesinf_SOURCES = ctypesinf.f ctypesfromc.c
 ctypesinf_LDADD = ../util/mtestf.o
 c2fmult_SOURCES = c2fmult.c
+c2fmult_LDADD = ../../util/mtest.o
+
+# need to add this to get it to appear in ../../f90/ext/Makefile.sm
+c2f90mult_LDADD = ../../util/mtest.o
 
 ../util/mtestf.o: 
 	(cd ../util && $(MAKE) mtestf.o)
+
+../util/mtest.o:
+	(cd ../../util && $(MAKE))

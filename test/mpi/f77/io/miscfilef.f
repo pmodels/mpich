@@ -13,7 +13,7 @@ C iodisp.h declares disp as an MPI_Offset integer
       include 'iodisp.h'
       integer rank, size
       integer fh, i, group, worldgroup, result
-      integer ierr, errs, toterrs
+      integer ierr, errs
       integer BUFSIZE
       parameter (BUFSIZE=1024)
       integer buf(BUFSIZE)
@@ -25,7 +25,7 @@ C iodisp.h declares disp as an MPI_Offset integer
       integer integer_size, type_size
 C      
       errs = 0
-      call mpi_init( ierr )
+      call mtest_init( ierr )
       call mpi_comm_rank( MPI_COMM_WORLD, rank, ierr )
       call mpi_comm_size( MPI_COMM_WORLD, size, ierr )
 C
@@ -202,19 +202,9 @@ C Make sure we use the expected position in the next step.
       if (rank .eq. 0) then
          call MPI_File_delete(filename, MPI_INFO_NULL, ierr )
       endif
-C
-C Get error summary
-      call MPI_Allreduce( errs, toterrs, 1, MPI_INTEGER, MPI_SUM,         &
-     &     MPI_COMM_WORLD, ierr )
-      if (rank .eq. 0) then
-         if( toterrs .gt. 0) then
-            print *, "Found ", toterrs, " errors"
-         else 
-            print *, " No Errors"
-         endif
-      endif
 
       call mpi_type_free( newtype, ierr )
 
+      call mtest_finalize( errs )
       call mpi_finalize( ierr )
       end
