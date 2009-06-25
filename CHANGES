@@ -1,4 +1,33 @@
 ===============================================================================
+                               Changes in 1.1.1
+===============================================================================
+
+ # OVERALL: Improved support for Boost MPI.
+
+ # ROMIO: Several fixes and improvements to the collective I/O
+   routines in the Lustre ADIO driver.
+
+ # PM/PMI: Improved startup time with MPD.
+
+ # PM/PMI: Improved support for hybrid MPI-UPC program launching with
+   Hydra.
+
+ # PM/PMI: Improved support for process-core binding with Hydra.
+
+ # PM/PMI: Preliminary support for PMI-2. Currently supported only
+   with Hydra.
+
+ # Many other bug fixes, memory leak fixes and code cleanup. A full
+   list of changes is available using:
+
+  svn log -r4655:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.1.1
+
+  ... or at the following link:
+
+  https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.1.1?action=follow_copy&rev=HEAD&stop_rev=4655&mode=follow_copy
+
+
+===============================================================================
                                Changes in 1.1
 ===============================================================================
 

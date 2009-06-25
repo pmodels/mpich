@@ -30,6 +30,7 @@ AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 AH_BOTTOM([#endif])
 
 echo "RUNNING CONFIGURE FOR THE SHARED MEMORY CHANNEL"
+echo "WARNING: THIS CHANNEL IS DEPRECATED AND WILL BE REMOVED IN FUTURE RELEASES OF MPICH2"
 
 dnl
 dnl First check that we have a clean build if we are doing a VPATH build
