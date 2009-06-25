@@ -235,7 +235,9 @@ HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
 
             partition_rem_procs -= exec_rem_procs;
             if (partition_rem_procs == 0) {
-                partition = HYD_handle.partition_list;
+                partition = partition->next;
+                if (partition == NULL)
+                    partition = HYD_handle.partition_list;
                 partition_rem_procs = partition->partition_core_count;
             }
 
