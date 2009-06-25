@@ -64,6 +64,9 @@ int MPI_Unpack(void *inbuf, int insize, int *position,
     MPI_Aint first, last;
     MPID_Comm *comm_ptr = NULL;
     MPID_Segment *segp;
+    int contig;
+    MPI_Aint dt_true_lb;
+    MPI_Aint data_sz;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_UNPACK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -123,6 +126,27 @@ int MPI_Unpack(void *inbuf, int insize, int *position,
 	goto fn_exit;
     }
 
+    /* Handle contig case quickly */
+    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+        contig     = TRUE;
+        dt_true_lb = 0;
+        data_sz    = outcount * MPID_Datatype_get_basic_size(datatype);
+    } else {
+        MPID_Datatype *dt_ptr;
+        MPID_Datatype_get_ptr(datatype, dt_ptr);
+	contig     = dt_ptr->is_contig;
+        dt_true_lb = dt_ptr->true_lb;
+        data_sz    = outcount * dt_ptr->size;
+    }
+
+    if (contig) {
+        MPIU_Memcpy((char *) outbuf + dt_true_lb, (char *)inbuf + *position, data_sz);
+        *position = (int)((MPI_Aint)*position + data_sz);
+        goto fn_exit;
+    }
+    
+
+    /* non-contig case */
     segp = MPID_Segment_alloc();
     MPIU_ERR_CHKANDJUMP1((segp == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
     MPID_Segment_init(outbuf, outcount, datatype, segp, 0);
