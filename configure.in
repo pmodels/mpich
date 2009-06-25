@@ -2711,7 +2711,7 @@ sed -e 's%includedir=.*%includedir='$includebuild_dir% \
     -e 's%^opalibdir=.*%opalibdir='$opalibbuild_dir% \
     src/env/mpicxx > bin/mpicxx ;
 chmod a+x bin/mpicxx
-ln -sf bin/mpicxx bin/mpic++
+ln -sf mpicxx bin/mpic++
 else
     rm -f src/env/mpicxx src/env/mpicxx.conf
 fi
