@@ -4,9 +4,6 @@
 
  # OVERALL: Improved support for Boost MPI.
 
- # ROMIO: Several fixes and improvements to the collective I/O
-   routines in the Lustre ADIO driver.
-
  # PM/PMI: Improved startup time with MPD.
 
  # PM/PMI: Improved support for hybrid MPI-UPC program launching with
