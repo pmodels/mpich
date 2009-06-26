@@ -129,8 +129,10 @@ HYD_Status HYDU_fork_and_exit(int core)
     HYDU_FUNC_EXIT();
     return status;
 
+#if defined HAVE_PROC_BINDING
   fn_fail:
     goto fn_exit;
+#endif /* HAVE_PROC_BINDING */
 }
 
 #if defined HAVE_THREAD_SUPPORT
