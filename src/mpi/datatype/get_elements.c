@@ -386,9 +386,15 @@ int MPI_Get_elements(MPI_Status *status, MPI_Datatype datatype, int *elements)
 							  datatype_ptr->eltype);
 	}
 	else {
-	    *elements = MPIR_Type_get_basic_type_elements(&byte_count,
-							  -1,
-							  datatype);
+	    /* Behaves just like MPI_Get_Count in the predefined case */
+	    int size;
+	    MPID_Datatype_get_size_macro(datatype, size);
+            if ((byte_count % size) != 0)
+                *elements = MPI_UNDEFINED;
+            else
+                *elements = MPIR_Type_get_basic_type_elements(&byte_count,
+							      -1,
+							      datatype);
 	}
 	MPIU_Assert(byte_count >= 0);
     }
