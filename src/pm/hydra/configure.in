@@ -264,16 +264,27 @@ fi
 
 dnl Process Binding
 AC_ARG_ENABLE(hydra-procbind, [  --enable-hydra-procbind       Process Binding],
-			      [ PROC_BINDING=$enableval ],
-			      [ PROC_BINDING=no ])
+			      [ procbind=$enableval ],
+			      [ procbind=default ])
 AC_MSG_CHECKING(process binding)
-AC_MSG_RESULT($PROC_BINDING)
-if test "$PROC_BINDING" = "yes"; then
+
+if test "$procbind" = "default" ; then
+   old_CFLAGS=$CFLAGS
+   CFLAGS="$CFLAGS -I${srcdir}/utils/plpa"
+   AC_TRY_COMPILE([#include <plpa_internal.h>],[PLPA_NAME(api_type_t) p; PLPA_NAME(api_probe) (&p);],plpa_works=yes,plpa_works=no)
+   CFLAGS=$old_CFLAGS
+   if test "$plpa_works" = "yes" ; then
+      procbind=yes
+   fi
+fi
+
+AC_MSG_RESULT($procbind)
+if test "$procbind" = "yes"; then
    AC_DEFINE(HAVE_PROC_BINDING,1,[Define if process binding is enabled])
    opt_utils_makefiles="${opt_utils_makefiles} utils/plpa/Makefile utils/bind/Makefile"
    opt_utils="${opt_utils} plpa bind"
 fi
-AM_CONDITIONAL([hydra_procbind], [test "${PROC_BINDING}" = "yes"])
+AM_CONDITIONAL([hydra_procbind], [test "${procbind}" = "yes"])
 AC_SUBST(opt_utils)
 
 dnl Check if __func__ and friends are defined
