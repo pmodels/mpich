@@ -275,6 +275,8 @@ if test "$procbind" = "default" ; then
    CFLAGS=$old_CFLAGS
    if test "$plpa_works" = "yes" ; then
       procbind=yes
+   else
+      procbind=no
    fi
 fi
 
