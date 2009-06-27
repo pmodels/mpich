@@ -46,6 +46,8 @@ if test "$MAKE_MAY_PRINT_DIR" != "yes" ; then
 pac_cv_prog_make_echos_dir,
 [
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest
 cat > conftest <<.
 SHELL=/bin/sh
@@ -68,6 +70,8 @@ if test "$str" != "success" ; then
 else
     pac_cv_prog_make_echos_dir="no"
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest
 str=""
 ])
@@ -99,6 +103,8 @@ dnl
 AC_DEFUN([PAC_PROG_MAKE_INCLUDE],[
 AC_CACHE_CHECK([whether make supports include],pac_cv_prog_make_include,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest
 cat > conftest <<.
 ALL:
@@ -108,6 +114,8 @@ cat > conftest1 <<.
 include conftest
 .
 pac_str=`$MAKE -f conftest1 2>&1`
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest conftest1
 if test "$pac_str" != "success" ; then
     pac_cv_prog_make_include="no"
@@ -144,6 +152,8 @@ AC_DEFUN([PAC_PROG_MAKE_ALLOWS_COMMENTS],[
 AC_CACHE_CHECK([whether make allows comments in actions],
 pac_cv_prog_make_allows_comments,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest
 cat > conftest <<.
 SHELL=/bin/sh
@@ -152,6 +162,8 @@ ALL:
 	@echo "success"
 .
 pac_str=`$MAKE -f conftest 2>&1`
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest 
 if test "$pac_str" != "success" ; then
     pac_cv_prog_make_allows_comments="no"
@@ -262,6 +274,8 @@ AC_DEFUN([PAC_PROG_MAKE_SET_CFLAGS],[
 AC_CACHE_CHECK([whether make sets CFLAGS],
 pac_cv_prog_make_set_cflags,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest
 cat > conftest <<EOF
 SHELL=/bin/sh
@@ -269,6 +283,8 @@ ALL:
 	@echo X[\$]{CFLAGS}X
 EOF
 pac_str=`$MAKE -f conftest 2>&1`
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest 
 if test "$pac_str" = "XX" ; then
     pac_cv_prog_make_set_cflags="no"
