@@ -268,6 +268,19 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *bu
         HYDU_free(p);                           \
     }
 
+#define HYDU_STRLIST_CONSOLIDATE(strlist, i, status)                    \
+    {                                                                   \
+        char *out;                                                      \
+        if ((i) >= (HYD_NUM_TMP_STRINGS / 2)) {                         \
+            (strlist)[(i)] = NULL;                                      \
+            (status) = HYDU_str_alloc_and_join((strlist), &out);        \
+            HYDU_ERR_POP((status), "unable to join strings\n");         \
+            HYDU_free_strlist((strlist));                               \
+            strlist[0] = out;                                           \
+            (i) = 1;                                                    \
+        }                                                               \
+    }
+
 HYD_Status HYDU_list_append_strlist(char **exec, char **client_arg);
 HYD_Status HYDU_print_strlist(char **args);
 void HYDU_free_strlist(char **args);

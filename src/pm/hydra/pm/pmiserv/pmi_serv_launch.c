@@ -145,50 +145,47 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode, char **proxy_args)
 {
     int i, arg;
     char *path_str[HYD_NUM_TMP_STRINGS];
-    struct HYD_Partition *partition;
     HYD_Status status = HYD_SUCCESS;
 
     if (mode != HYD_LAUNCH_RUNTIME && mode != HYD_LAUNCH_BOOT &&
         mode != HYD_LAUNCH_BOOT_FOREGROUND)
         goto fn_exit;
 
-    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
-        arg = 0;
-        i = 0;
-        path_str[i++] = HYDU_strdup(HYD_handle.base_path);
-        path_str[i++] = HYDU_strdup("pmi_proxy");
-        path_str[i] = NULL;
-        status = HYDU_str_alloc_and_join(path_str, &proxy_args[arg++]);
-        HYDU_ERR_POP(status, "unable to join strings\n");
-        HYDU_free_strlist(path_str);
+    arg = 0;
+    i = 0;
+    path_str[i++] = HYDU_strdup(HYD_handle.base_path);
+    path_str[i++] = HYDU_strdup("pmi_proxy");
+    path_str[i] = NULL;
+    status = HYDU_str_alloc_and_join(path_str, &proxy_args[arg++]);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(path_str);
 
-        proxy_args[arg++] = HYDU_strdup("--launch-mode");
-        proxy_args[arg++] = HYDU_int_to_str(mode);
+    proxy_args[arg++] = HYDU_strdup("--launch-mode");
+    proxy_args[arg++] = HYDU_int_to_str(mode);
 
-        proxy_args[arg++] = HYDU_strdup("--proxy-port");
-        if (mode == HYD_LAUNCH_RUNTIME)
-            proxy_args[arg++] = HYDU_strdup(proxy_port_str);
-        else
-            proxy_args[arg++] = HYDU_int_to_str(HYD_handle.proxy_port);
+    proxy_args[arg++] = HYDU_strdup("--proxy-port");
+    if (mode == HYD_LAUNCH_RUNTIME)
+        proxy_args[arg++] = HYDU_strdup(proxy_port_str);
+    else
+        proxy_args[arg++] = HYDU_int_to_str(HYD_handle.proxy_port);
 
-        if (HYD_handle.debug)
-            proxy_args[arg++] = HYDU_strdup("--debug");
+    if (HYD_handle.debug)
+        proxy_args[arg++] = HYDU_strdup("--debug");
 
-        if (HYD_handle.enablex != -1) {
-            proxy_args[arg++] = HYDU_strdup("--enable-x");
-            proxy_args[arg++] = HYDU_int_to_str(HYD_handle.enablex);
-        }
-
-        proxy_args[arg++] = HYDU_strdup("--bootstrap");
-        proxy_args[arg++] = HYDU_strdup(HYD_handle.bootstrap);
-
-        if (HYD_handle.bootstrap_exec) {
-            proxy_args[arg++] = HYDU_strdup("--bootstrap-exec");
-            proxy_args[arg++] = HYDU_strdup(HYD_handle.bootstrap_exec);
-        }
-
-        proxy_args[arg++] = NULL;
+    if (HYD_handle.enablex != -1) {
+        proxy_args[arg++] = HYDU_strdup("--enable-x");
+        proxy_args[arg++] = HYDU_int_to_str(HYD_handle.enablex);
     }
+
+    proxy_args[arg++] = HYDU_strdup("--bootstrap");
+    proxy_args[arg++] = HYDU_strdup(HYD_handle.bootstrap);
+
+    if (HYD_handle.bootstrap_exec) {
+        proxy_args[arg++] = HYDU_strdup("--bootstrap-exec");
+        proxy_args[arg++] = HYDU_strdup(HYD_handle.bootstrap_exec);
+    }
+
+    proxy_args[arg++] = NULL;
 
   fn_exit:
     return status;

@@ -322,6 +322,7 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
             tmp[i++] = HYDU_int_to_str(process_mapping[j]);
             if (j < k - 1)
                 tmp[i++] = HYDU_strdup(",");
+            HYDU_STRLIST_CONSOLIDATE(tmp, i, status);
         }
         tmp[i++] = NULL;
 
@@ -344,6 +345,7 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
             if (block->next)
                 tmp[i++] = HYDU_strdup(",");
             tmp[i++] = HYDU_strdup(")");
+            HYDU_STRLIST_CONSOLIDATE(tmp, i, status);
         }
         tmp[i++] = HYDU_strdup(")");
         tmp[i++] = NULL;
