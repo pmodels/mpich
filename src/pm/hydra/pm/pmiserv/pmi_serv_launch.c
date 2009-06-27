@@ -197,6 +197,9 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode, char **proxy_args)
 static HYD_Status fill_in_exec_args(void)
 {
     int i, arg, process_id;
+    int inherited_env_count, user_env_count, system_env_count;
+    int segment_count, exec_count, total_args;
+    static proxy_count = 0;
     HYD_Env_t *env;
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;
@@ -206,6 +209,36 @@ static HYD_Status fill_in_exec_args(void)
     /* Create the arguments list for each proxy */
     process_id = 0;
     FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
+        for (inherited_env_count = 0, env = HYD_handle.inherited_env; env;
+             env = env->next, inherited_env_count++);
+        for (user_env_count = 0, env = HYD_handle.user_env; env;
+             env = env->next, user_env_count++);
+        for (system_env_count = 0, env = HYD_handle.system_env; env;
+             env = env->next, system_env_count++);
+
+        for (segment_count = 0, segment = partition->segment_list; segment;
+             segment = segment->next)
+            segment_count++;
+
+        for (exec_count = 0, exec = partition->exec_list; exec; exec = exec->next)
+            exec_count++;
+
+        total_args = HYD_NUM_TMP_STRINGS; /* For the basic arguments */
+
+        /* Environments */
+        total_args += inherited_env_count;
+        total_args += user_env_count;
+        total_args += system_env_count;
+
+        /* For each segment add a few strings */
+        total_args += (segment_count * HYD_NUM_TMP_STRINGS);
+
+        /* For each exec add a few strings */
+        total_args += (exec_count * HYD_NUM_TMP_STRINGS);
+
+        HYDU_MALLOC(partition->base->exec_args, char **, total_args * sizeof(char *),
+                    status);
+
         arg = 0;
         partition->base->exec_args[arg++] = HYDU_strdup("--global-core-count");
         partition->base->exec_args[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
@@ -297,8 +330,9 @@ static HYD_Status fill_in_exec_args(void)
         }
 
         if (HYD_handle.debug) {
-            printf("Arguments being passed to proxy:\n");
+            printf("Arguments being passed to proxy %d:\n", proxy_count++);
             HYDU_print_strlist(partition->base->exec_args);
+            printf("\n");
         }
     }
 

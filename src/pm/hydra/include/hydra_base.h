@@ -187,7 +187,7 @@ struct HYD_Partition_exec {
 
 struct HYD_Partition_base {
     char *name;
-    char *exec_args[HYD_NUM_TMP_STRINGS];       /* Full argument list */
+    char **exec_args;       /* Full argument list */
 
     int partition_id;
     int active;
