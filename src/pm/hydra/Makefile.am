@@ -33,3 +33,11 @@ include pm/Makefile.mk
 
 # Build the UI
 include ui/Makefile.mk
+
+# Use the mpich2-build-install target to include mpiexec in the build bin
+# directory (all pm's require these targets)
+mpich2-build-install: install
+mpich2-build-uninstall: uninstall
+
+# A special alternate installation target when using multiple process managers
+install-alt: install-alt-ui install-alt-pm
