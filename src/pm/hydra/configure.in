@@ -39,6 +39,7 @@ dnl Check if the upper-level enabled threads support
 if test "$MPICH2_THREAD_PACKAGE" != "none" ; then
    AC_DEFINE(HAVE_THREAD_SUPPORT,1,[Define thread support])
 fi
+AM_CONDITIONAL([hydra_include_pthread], [test $MPICH2_THREAD_PACKAGE != "none"])
 
 # putenv() sets environment variable
 AC_HAVE_FUNCS(putenv)

@@ -10,8 +10,11 @@ mpiexec_SOURCES = $(top_srcdir)/ui/mpiexec/callback.c \
 	$(top_srcdir)/ui/mpiexec/mpiexec.c \
 	$(top_srcdir)/ui/mpiexec/utils.c
 mpiexec_LDADD = libui.a libpm.a libhydra.a
-mpiexec_LDFLAGS = -lpthread
 mpiexec_CFLAGS = -I$(top_srcdir)/ui/utils
+
+if hydra_include_pthread
+mpiexec_LDFLAGS = -lpthread
+endif
 
 # Use the mpich2-build-install target to include mpiexec in the build bin
 # directory (all pm's require these targets)
