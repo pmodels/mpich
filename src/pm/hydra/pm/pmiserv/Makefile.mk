@@ -11,10 +11,6 @@ pmi_proxy_SOURCES = $(top_srcdir)/pm/pmiserv/pmi_proxy.c \
 	$(top_srcdir)/pm/pmiserv/pmi_proxy_utils.c
 pmi_proxy_LDADD = libhydra.a
 
-if hydra_include_pthread
-pmi_proxy_LDFLAGS = -lpthread
-endif
-
 libpm_a_SOURCES += $(top_srcdir)/pm/pmiserv/pmi_handle.c \
 	$(top_srcdir)/pm/pmiserv/pmi_handle_common.c \
 	$(top_srcdir)/pm/pmiserv/pmi_handle_v1.c \

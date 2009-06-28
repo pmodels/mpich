@@ -12,10 +12,6 @@ mpiexec_SOURCES = $(top_srcdir)/ui/mpiexec/callback.c \
 mpiexec_LDADD = libui.a libpm.a libhydra.a
 mpiexec_CFLAGS = -I$(top_srcdir)/ui/utils
 
-if hydra_include_pthread
-mpiexec_LDFLAGS = -lpthread
-endif
-
 install-alt-ui: mpiexec
 	@if [ ! -d $(DESTDIR)${bindir} ] ; then \
 	    echo "$(mkdir_p) $(DESTDIR)${bindir} " ;\

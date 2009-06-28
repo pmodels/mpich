@@ -33,15 +33,19 @@ dnl Check if the necessary headers are available
 AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h \
 		 sched.h pthread.h sys/stat.h)
 
+dnl Check if the pthread library is present. Apparently, just checking
+dnl for pthread.h is not sufficient.
+AC_CHECK_LIB(pthread,pthread_create,pthread_lib_exists=yes,pthread_lib_exists=no)
+
+dnl Check if the upper-level enabled threads support
+if test "$MPICH2_THREAD_PACKAGE" != "none" -a "$pthread_lib_exists" = "yes" ; then
+   AC_DEFINE(HAVE_THREAD_SUPPORT,1,[Define thread support])
+   LDFLAGS="$LDFLAGS -lpthread"
+fi
+
 dnl Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
 	       strerror strsignal putenv)
-
-dnl Check if the upper-level enabled threads support
-if test "$MPICH2_THREAD_PACKAGE" != "none" ; then
-   AC_DEFINE(HAVE_THREAD_SUPPORT,1,[Define thread support])
-fi
-AM_CONDITIONAL([hydra_include_pthread], [test "$MPICH2_THREAD_PACKAGE" != "none"])
 
 # putenv() sets environment variable
 AC_HAVE_FUNCS(putenv)
