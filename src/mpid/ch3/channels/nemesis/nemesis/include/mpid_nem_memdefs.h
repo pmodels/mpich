@@ -264,7 +264,8 @@ void volatile_memcpy (volatile void *restrict dst, volatile const void *restrict
 /* #define MPID_NEM_MEMCPY(a,b,c) memcpy (a, b, c) */
 
 #else
-#define MPIU_Memcpy(dst, src, n) do { volatile void * restrict d = (dst); volatile const void *restrict s = (src); MPIUI_Memcpy((void *)d, (const void *)s, n); }while (0)
+/* #define MPIU_Memcpy(dst, src, n) do { volatile void * restrict d = (dst); volatile const void *restrict s = (src); MPIUI_Memcpy((void *)d, (const void *)s, n); }while (0) */
+#define MPIU_Memcpy(dst, src, n) MPIUI_Memcpy(dst, src, n)
 #endif
 
 #endif /* MPID_MEMDEFS_H */
