@@ -3158,7 +3158,12 @@ AC_SUBST(DOCTEXTSTYLE)
 AC_C_CONST
 PAC_C_VOLATILE
 PAC_C_RESTRICT
+
+saveCFLAGS=$CFLAGS
+CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
 AC_C_INLINE
+CFLAGS=$saveCFLAGS
+
 PAC_C_GNU_ATTRIBUTE
 # We need to check for the endianess in order to implement the
 # "external32" representations.  This defines "WORDS_BIGENDIAN when
@@ -5084,8 +5089,11 @@ AC_CHECK_FUNCS(setitimer alarm)
 AC_CHECK_FUNCS(vsnprintf vsprintf)
 if test "$ac_cv_func_vsnprintf" = "yes" ; then
     # vsnprintf may be declared in stdio.h and may need stdarg.h 
+    saveCFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>
 #include <stdarg.h>],vsnprintf)
+    CFLAGS=$saveCFLAGS
 fi
 # We would like to use strerror in the file namepublisher; it is also used
 # in MPIU_Strerror (whose implementation is broken if strerror is not found)
@@ -5094,7 +5102,10 @@ AC_CHECK_FUNCS(strerror strncasecmp)
 # Use snprintf if possible when creating messages
 AC_CHECK_FUNCS(snprintf)
 if test "$ac_cv_func_snprintf" = "yes" ; then
+    saveCFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
+    CFLAGS=$saveCFLAGS
 fi
 # if we are using stdarg, we may need va_copy .  Test to see if we have it
 # Since it may be a built-in instead of a function, we must try to 
@@ -5103,6 +5114,8 @@ fi
 # debugging routine.  We may want to withdraw this (saving the
 # test in confdb/aclocal_cc.m4).
 AC_CACHE_CHECK([for va_copy],pac_cv_func_va_copy,[
+saveCFLAGS=$CFLAGS
+CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
 AC_TRY_LINK([
 #include <stdarg.h>
 void foo1( char *fmt, ... ) {
@@ -5113,12 +5126,14 @@ void foo1( char *fmt, ... ) {
     va_end(ap);
 }
 ],[foo1("a test %d", 3);],pac_cv_func_va_copy=yes,pac_cv_func_va_copy=no)])
+CFLAGS=$saveCFLAGS
+
 if test "$pac_cv_func_va_copy" = "yes" ; then
     AC_DEFINE(HAVE_VA_COPY,1,[Define if we have va_copy])
-fi
-# We might have __va_copy...
-if test "$pac_cv_func_va_copy" != "yes" ; then 
+else
     AC_CACHE_CHECK([for __va_copy],pac_cv_func___va_copy,[
+    saveCFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     AC_TRY_LINK([
 #include <stdarg.h>
 void foo1( char *fmt, ... ) {
@@ -5129,8 +5144,9 @@ void foo1( char *fmt, ... ) {
     va_end(ap);
 }
 ],[foo1("a test %d", 3);],pac_cv_func___va_copy=yes,pac_cv_func___va_copy=no)])
+    CFLAGS=$saveCFLAGS
     if test "$pac_cv_func___va_copy" = "yes" ; then
-    AC_DEFINE(HAVE___VA_COPY,1,[Define if we have __va_copy])
+        AC_DEFINE(HAVE___VA_COPY,1,[Define if we have __va_copy])
     fi
 fi
 
@@ -5164,7 +5180,10 @@ if test "$enable_g_mem" != "yes" ; then
     AC_CHECK_FUNCS(strdup)
     if test "$ac_cv_func_strdup" = "yes" ; then
         # Do we need to declare strdup?
+	saveCFLAGS=$CFLAGS
+	CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
         PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
+	CFLAGS=$saveCFLAGS
     fi
 else
     # search.h is used for fancier output from trmem.  Disabled for now,
@@ -5195,17 +5214,26 @@ fi
 # mkstemp() is a better replacement for mktemp()
 AC_HAVE_FUNCS(mkstemp)
 if test "$ac_cv_func_mkstemp" = "yes" ; then
+    saveCFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
+    CFLAGS=$saveCFLAGS
 fi
 # fdopen() converts from an fd to a FILE*
 AC_HAVE_FUNCS(fdopen)
 if test "$ac_cv_func_fdopen" = "yes" ; then
+    saveCFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],fdopen)
+    CFLAGS=$saveCFLAGS
 fi
 # putenv() sets environment variable
 AC_HAVE_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
+    saveCFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
+    CFLAGS=$saveCFLAGS
 fi
 
 
