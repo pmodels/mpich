@@ -1057,183 +1057,59 @@ elif test "$pac_cv_func_crypt_defined" = "no" ; then
 fi
 ])dnl
 
-dnl
 dnl Use the value of enable-strict to update CFLAGS
 dnl pac_cc_strict_flags contains the strict flags.
 dnl
 dnl -std=c89 is used to select the C89 version of the ANSI/ISO C standard.
 dnl As of this writing, many C compilers still accepted only this version,
-dnl not the later C99 version.  When all compilers accept C99, this 
+dnl not the later C99 version. When all compilers accept C99, this 
 dnl should be changed to the appropriate standard level.  Note that we've
 dnl had trouble with gcc 2.95.3 accepting -std=c89 but then trying to 
 dnl compile program with a invalid set of options 
 dnl (-D __STRICT_ANSI__-trigraphs)
-dnl
-dnl 
 AC_DEFUN([PAC_CC_STRICT],[
 export enable_strict_done
 if test "$enable_strict_done" != "yes" ; then
-    # We must know the compiler type
-    if test -z "$GCC_OPTFLAG" ; then GCC_OPTFLAG="-O2" ; fi
-    if test -z "CC" ; then
-        AC_CHECK_PROGS(CC,gcc)
-    fi
     pac_cc_strict_flags=""
     case "$1" in 
-        yes)
-        enable_strict_done="yes"
-        if test "$ac_cv_prog_gcc" = "yes" ; then 
-            pac_cc_strict_flags="-Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL"
-            CFLAGS="$CFLAGS $pac_cc_strict_flags"
-            AC_MSG_RESULT([Adding strict check arguments to CFLAGS])
-            AC_MSG_CHECKING([whether we can add -std=c89])
-            # See if we can add -std=c89
-            savCFLAGS=$CFLAGS
-            CFLAGS="$CFLAGS -std=c89"
-            AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[int a;])],
-                  stdc_ok=yes,
-                  stdc_ok=no)
-            AC_MSG_RESULT($stdc_ok)
-            if test "$stdc_ok" != yes ; then
-                CFLAGS="$savCFLAGS"
-            else
-                pac_cc_strict_flags="$pac_cc_strict_flags -std=c89"
-            fi
-        else 
-            AC_MSG_WARN([enable strict supported only for gcc])
-        fi
-        ;;
-
-        all)
-        enable_strict_done="yes"
-        if test "$ac_cv_prog_gcc" = "yes" ; then 
-	    # -Wsystem-headers removed because of too many warning messages
-	    # that are unfixable by the user of this option (the warnings
-	    # often show benign but real problems)
-	    # -Wunreachable-code has a serious bug and falsely reports 
-	    # labels as unreachable code.  This makes that option useless
-	    # for the MPICH2 code, for example
-	    # The next line was the original set of options; this 
-	    # worked with gcc version 2.x
-#            pac_cc_strict_flags="-Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wunused-parameter -Wunused-value -Wno-long-long -Werror-implicit-function-declaration"
-            pac_cc_strict_flags="-Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value  -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wredundant-decls -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros"
-            CFLAGS="$CFLAGS $pac_cc_strict_flags"
-            AC_MSG_CHECKING([whether we can add -std=c89])
-            # See if we can add -std=c89
-            savCFLAGS=$CFLAGS
-            CFLAGS="$CFLAGS -std=c89"
-            AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[int a;])],
-                  stdc_ok=yes,
-                  stdc_ok=no)
-            AC_MSG_RESULT($stdc_ok)
-            if test "$stdc_ok" != yes ; then
-                CFLAGS="$savCFLAGS"
-            else
-                pac_cc_strict_flags="$pac_cc_strict_flags -std=c89"
-            fi
-        else 
-            AC_MSG_WARN([enable strict supported only for gcc])
-        fi
-        ;;
-
-	# The MPICH2 code has several modules that have duplicate 
-	# function declarations.  The resulting list of warnings is
-	# swamped by those duplicates, rendering the output nearly
-	# useless.  This temporary option choice is the same as
-	# --enable-strict=all, but without that one option
-	allbutdupdefs)
-        enable_strict_done="yes"
-        if test "$ac_cv_prog_gcc" = "yes" ; then 
-	    # -Wsystem-headers removed because of too many warning messages
-	    # that are unfixable by the user of this option (the warnings
-	    # often show benign but real problems)
-	    # -Wunreachable-code has a serious bug and falsely reports 
-	    # labels as unreachable code.  This makes that option useless
-	    # for the MPICH2 code, for example
-	    # This next line contains the options used with gcc version 2.x
-#            pac_cc_strict_flags="-Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wunused-parameter -Wunused-value -Wno-long-long -Werror-implicit-function-declaration"
-            pac_cc_strict_flags="-Wall -Wextra $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value  -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
-            CFLAGS="$CFLAGS $pac_cc_strict_flags"
-            AC_MSG_CHECKING([whether we can add -std=c89])
-            # See if we can add -std=c89
-            savCFLAGS=$CFLAGS
-            CFLAGS="$CFLAGS -std=c89"
-            AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[int a;])],
-                  stdc_ok=yes,
-                  stdc_ok=no)
-            AC_MSG_RESULT($stdc_ok)
-            if test "$stdc_ok" != yes ; then
-                CFLAGS="$savCFLAGS"
-            else
-                pac_cc_strict_flags="$pac_cc_strict_flags -std=c89"
-            fi
-        else 
-            AC_MSG_WARN([enable strict supported only for gcc])
-        fi
+        yes|all)
+		enable_strict_done="yes"
+		pac_cc_strict_flags="-O2 -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value  -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wredundant-decls -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
         ;;
 
         posix)
-	# fsync is a part of POSIX only in the real-time extensions, 
-	# apparently, so code that used include <unistd.h> and POSIX
-	# and expects fsync to be defined is in trouble.  Because of that
-	# we're not including the -W option to error if a function is
-	# not prototyped.
-        enable_strict_done="yes"
-        if test "$ac_cv_prog_gcc" = "yes" ; then 
-            pac_cc_strict_flags="-Wall $GCC_OPTFLAG -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL -D_POSIX_C_SOURCE=199506L"
-            CFLAGS="$CFLAGS $pac_cc_strict_flags"
-            AC_MSG_RESULT([Adding strict check arguments (POSIX flavor) to CFLAGS])
-            AC_MSG_CHECKING([whether we can add -std=c89])
-            # See if we can add -std=c89
-            savCFLAGS=$CFLAGS
-            CFLAGS="$CFLAGS -std=c89"
-            AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[int a;])],
-                  stdc_ok=yes,
-                  stdc_ok=no)
-            AC_MSG_RESULT($stdc_ok)
-            if test "$stdc_ok" != yes ; then
-                CFLAGS="$savCFLAGS"
-            else
-                pac_cc_strict_flags="$pac_cc_strict_flags -std=c89"
-            fi
-        else 
-            AC_MSG_WARN([enable strict supported only for gcc])
-        fi
+		# fsync is a part of POSIX only in the real-time
+		# extensions, apparently, so code that used include
+		# <unistd.h> and POSIX and expects fsync to be defined
+		# is in trouble.  Because of that we're not including
+		# the -W option to error if a function is not
+		# prototyped.
+		enable_strict_done="yes"
+		pac_cc_strict_flags="-O2 -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Werror-implicit-function-declaration -Wno-long-long -Wunused-parameter -Wunused-value  -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wpadded -Wredundant-decls -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89 -D_POSIX_C_SOURCE=199506L"
         ;;
         
-        noopt)
-        enable_strict_done="yes"
-        if test "$ac_cv_prog_gcc" = "yes" ; then 
-            pac_cc_strict_flags="-Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi -DGCC_WALL"
-            CFLAGS="$CFLAGS $pac_cc_strict_flags"
-            AC_MSG_RESULT([Adding strict check arguments to CFLAGS])
-            AC_MSG_CHECKING([whether we can add -std=c89])
-            # See if we can add -std=c89
-            savCFLAGS=$CFLAGS
-            CFLAGS="$CFLAGS -std=c89"
-            AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[int a;])],
-                  stdc_ok=yes,
-                  stdc_ok=no)
-            AC_MSG_RESULT($stdc_ok)
-            if test "$stdc_ok" != yes ; then
-                CFLAGS="$savCFLAGS"
-            else
-                pac_cc_strict_flags="$pac_cc_strict_flags -std=c89"
-            fi
-        else 
-            AC_MSG_WARN([enable strict supported only for gcc])
-        fi
-        ;;
         no)
-        # Accept and ignore this value
-        :
+		# Accept and ignore this value
+		:
         ;;
+
         *)
-        if test -n "$1" ; then
-            AC_MSG_WARN([Unrecognized value for enable-strict:$1])
-        fi
+		if test -n "$1" ; then
+		   AC_MSG_WARN([Unrecognized value for enable-strict:$1])
+		fi
         ;;
+
     esac
+
+    # See if the above options work with the compiler
+    accepted_flags=""
+    for flag in $pac_cc_strict_flags ; do
+    	old_CFLAGS=$CFLAGS
+	CFLAGS="$CFLAGS $accepted_flags $flag"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[int a;])],accepted_flags="$accepted_flags $flag",)
+	CFLAGS="$old_CFLAGS"
+    done
+    pac_cc_strict_flags=$accepted_flags
 fi
 ])
 
@@ -1244,61 +1120,7 @@ dnl Synopsis:
 dnl PAC_ARG_STRICT
 dnl 
 dnl Output effects:
-dnl Adds '--enable-strict' to the command line.  If this is enabled, then
-dnl if no compiler has been set, set 'CC' to 'gcc'.
-dnl If the compiler is 'gcc', 'COPTIONS' is set to include
-dnl.vb
-dnl	-O -Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Werror=pointer-arith -DGCC_WALL -std=c89
-dnl.ve
-dnl This makes using a void * with pointer arithmetic an error, not a warning.
-dnl We do this because pointer arithmetic with void * is not valid C but
-dnl gcc accepts this unless these particular optiones are used.
-dnl Grr. -Werror=name is a recent addition to gcc, so we can't require it yet.
-dnl
-dnl -std=c89 is used to select the C89 version of the ANSI/ISO C standard.
-dnl As of this writing, many C compilers still accepted only this version,
-dnl not the later C99 version.  When all compilers accept C99, this 
-dnl should be changed to the appropriate standard level.  Note that we've
-dnl had trouble with gcc 2.95.3 accepting -std=c89 but then trying to 
-dnl compile program with a invalid set of options 
-dnl (-D __STRICT_ANSI__-trigraphs)
-dnl
-dnl If the value 'all' is given to '--enable-strict', additional warning
-dnl options are included.  These are
-dnl.vb
-dnl -Wunused -Wshadow -Wmissing-declarations -Wno-long-long
-dnl.ve
-dnl 
-dnl If the value 'noopt' is given to '--enable-strict', no optimization
-dnl options are set.  For some compilers (including gcc), this may 
-dnl cause some strict complication tests to be skipped (typically, these are
-dnl tests for unused variables or variables used before they are defined).
-dnl
-dnl If the value 'posix' is given to '--enable-strict', POSIX is selected
-dnl as the C dialect (including the definition for the POSIX level)
-dnl
-dnl If the value 'all' is given to '--enable-strict', use the "GNU" Unix
-dnl dialect.  This permits the use of stricter checking for declarations of
-dnl system functions (note that fsync is not defined in strict, non-real-time
-dnl POSIX).  This level includes
-dnl .vb
-dnl -Werror-implicit-function-declaration
-dnl .ve
-dnl 
-dnl This only works where 'gcc' is available.
-dnl In addition, it exports the variable 'enable_strict_done'. This
-dnl ensures that subsidiary 'configure's do not add the above flags to
-dnl 'COPTIONS' once the top level 'configure' sees '--enable-strict'.  To ensure
-dnl this, 'COPTIONS' is also exported.
-dnl
-dnl Not yet available: options when using other compilers.  However, 
-dnl here are some possible choices
-dnl Solaris cc
-dnl  -fd -v -Xc
-dnl -Xc is strict ANSI (some version) and does not allow "long long", for 
-dnl example
-dnl IRIX
-dnl  -ansi -DEBUG:trap_uninitialized=ON:varargs_interface_check=ON:verbose_runtime=ON
+dnl Adds '--enable-strict' to the command line.
 dnl
 dnl D*/
 AC_DEFUN([PAC_ARG_STRICT],[
@@ -1306,6 +1128,7 @@ AC_ARG_ENABLE(strict,
 [--enable-strict  - Turn on strict compilation testing when using gcc])
 PAC_CC_STRICT($enable_strict)
 CFLAGS="$CFLAGS $pac_cc_strict_flags"
+export CFLAGS
 ])
 
 dnl/*D
