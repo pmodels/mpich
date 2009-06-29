@@ -31,7 +31,8 @@ PAC_CC_FUNCTION_NAME_SYMBOL
 
 dnl Check if the necessary headers are available
 AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h \
-		 sched.h pthread.h sys/stat.h)
+		 sched.h pthread.h sys/stat.h sys/param.h netinet/in.h netinet/tcp.h \
+		 sys/un.h netdb.h)
 
 dnl Check if the pthread library is present. Apparently, just checking
 dnl for pthread.h is not sufficient.
@@ -42,6 +43,9 @@ if test "$MPICH2_THREAD_PACKAGE" != "none" -a "$pthread_lib_exists" = "yes" ; th
    AC_DEFINE(HAVE_THREAD_SUPPORT,1,[Define thread support])
    LDFLAGS="$LDFLAGS -lpthread"
 fi
+
+AC_SEARCH_LIBS(socket,socket,LDFLAGS="$LDFLAGS -lsocket",)
+AC_SEARCH_LIBS(gethostbyname,nsl,LDFLAGS="$LDFLAGS -lnsl",)
 
 dnl Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
@@ -272,13 +276,16 @@ fi
 dnl Process Binding
 AC_ARG_ENABLE(hydra-procbind, [  --enable-hydra-procbind       Process Binding],
 			      [ procbind=$enableval ],
-			      [ procbind=no ])
+			      [ procbind=auto ])
 AC_MSG_CHECKING(process binding)
 
 if test "$procbind" = "auto" ; then
    old_CFLAGS=$CFLAGS
    CFLAGS="$CFLAGS -I${srcdir}/utils/plpa"
-   AC_TRY_COMPILE([#include <plpa_internal.h>],[PLPA_NAME(api_type_t) p; PLPA_NAME(api_probe) (&p);],plpa_works=yes,plpa_works=no)
+   AC_TRY_LINK([#include <plpa_internal.h>],[
+PLPA_NAME(api_type_t) p;
+PLPA_NAME(api_probe)(&p);
+],plpa_works=yes,plpa_works=no)
    CFLAGS=$old_CFLAGS
    if test "$plpa_works" = "yes" ; then
       procbind=yes
