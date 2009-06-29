@@ -44,8 +44,8 @@ if test "$MPICH2_THREAD_PACKAGE" != "none" -a "$pthread_lib_exists" = "yes" ; th
    LDFLAGS="$LDFLAGS -lpthread"
 fi
 
-AC_SEARCH_LIBS(socket,socket,LDFLAGS="$LDFLAGS -lsocket",)
-AC_SEARCH_LIBS(gethostbyname,nsl,LDFLAGS="$LDFLAGS -lnsl",)
+AC_CHECK_LIB(socket,socket,LDFLAGS="$LDFLAGS -lsocket",)
+AC_CHECK_LIB(gethostbyname,nsl,LDFLAGS="$LDFLAGS -lnsl",)
 
 dnl Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
