@@ -293,10 +293,10 @@ if [ "$linking" = yes ] ; then
         # Prepend the path for the shared libraries to the library list
         mpilibs="$FC_LINKPATH_SHL$libdir $mpilibs"
     fi
-    $Show $FC $FFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir -L$opalibdir $mpilibs $MPI_OTHERLIBS
+    $Show $FC $MPICH2_MPIF77_FLAGS $FFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir -L$opalibdir $MPICH2_LDFLAGS $mpilibs $MPI_OTHERLIBS
     rc=$?
 else
-    $Show $FC $FFLAGS "${allargs[@]}" -I$includedir
+    $Show $FC $MPICH2_MPIF77_FLAGS $FFLAGS "${allargs[@]}" -I$includedir
     rc=$?
 fi
 if [ -n "$rmfiles" ] ; then

@@ -254,10 +254,10 @@ if [ "$linking" = yes ] ; then
         # Prepend the path for the shared libraries to the library list
         shllibpath="$CXX_LINKPATH_SHL$libdir"
     fi
-    $Show $CXX $CXXFLAGS $LDFLAGS $allargs -I$includedir -L$libdir -L$opalibdir $shllibpath $cxxlibs $mpilibs $MPI_OTHERLIBS
+    $Show $CXX $MPICH2_MPICXX_FLAGS $CXXFLAGS $LDFLAGS $allargs -I$includedir -L$libdir -L$opalibdir $shllibpath $MPICH2_LDFLAGS $cxxlibs $mpilibs $MPI_OTHERLIBS
     rc=$?
 else
-    $Show $CXX $CXXFLAGS $allargs -I$includedir
+    $Show $CXX $MPICH2_MPICXX_FLAGS $CXXFLAGS $allargs -I$includedir
     rc=$?
 fi
 

@@ -380,38 +380,103 @@ configured by adding arguments to the configure step.
 III. Compiler Flags
 ===================
 
-MPICH2 can be configured with two sets of compiler flags: CFLAGS,
-CXXFLAGS, FFLAGS, F90FLAGS (abbreviated as xFLAGS) and
-MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS, MPICH2LIB_FFLAGS,
-MPICH2LIB_F90FLAGS (abbreviated as MPICH2LIB_xFLAGS) for compilation;
-LDFLAGS and MPICH2LIB_LDFLAGS for linking. All these flags can be set
-as part of configure command or through environment variables.
-(CPPFLAGS stands for C preprocessor flags, which should NOT be set)
+MPICH2 allows several sets of compiler flags to be used. The first
+three sets are configure-time options for MPICH2, while the fourth is
+only relevant when compiling applications with mpicc and friends.
 
-Both xFLAGS and MPICH2LIB_xFLAGS affect the compilation of the MPICH2
-libraries. However, only xFLAGS are appended to MPI wrapper scripts,
-mpicc and friends.
+1. CFLAGS, CXXFLAGS, FFLAGS, F90FLAGS and LDFLAGS (abbreviated as
+xFLAGS): Setting these flags would result in the MPICH2 library being
+compiled/linked with these flags and the flags internally being used
+in mpicc and friends.
 
-MPICH2 libraries are built with default compiler optimization, -O2,
-which can be modified by --enable-fast configure option.  For
-instance, --disable-fast disables the default optimization option.
---enable-fast=O<n> sets default compiler optimization as -O<n>.  For
-more details of --enable-fast, see the output of "configure --help".
-Any other complicated optimization flags for MPICH2 libraries have to
-be set throught MPICH2LIB_xFLAGS.  CFLAGS and friends are empty by
-default.
+2. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS, MPICH2LIB_FFLAGS,
+MPICH2LIB_F90FLAGS and MPICH2LIB_LDFLAGS (abbreviated as
+MPICH2LIB_xFLAGS): Setting these flags would result in the MPICH2
+library being compiled/linked with these flags. However, these flags
+will *not* be used by mpicc and friends.
 
-For example, to build a "production" MPICH2 environment with -O3 for all
-language bindings, one can simply do
+3. MPICH2_MAKE_CFLAGS: Setting these flags would result in MPICH2's
+configure tests to not use these flags, but the makefile's to use
+them. This is a temporary hack for certain cases that advanced
+developers might be interested in which break existing configure tests
+(e.g., -Werror) and are not recommended for regular users.
+
+4. MPICH2_MPICC_FLAGS, MPICH2_MPICXX_FLAGS, MPICH2_MPIF77_FLAGS,
+MPICH2_MPIF90_FLAGS and MPICH2_LDFLAGS (abbreviated as
+MPICH2_MPIX_FLAGS): These flags do *not* affect the compilation of the
+MPICH2 library itself, but will be internally used by mpicc and
+friends.
+
+
+  +--------------------------------------------------------------------+
+  |                    |                      |                        |
+  |                    |    MPICH2 library    |    mpicc and friends   |
+  |                    |                      |                        |
+  +--------------------+----------------------+------------------------+
+  |                    |                      |                        |
+  |     xFLAGS         |         Yes          |           Yes          |
+  |                    |                      |                        |
+  +--------------------+----------------------+------------------------+
+  |                    |                      |                        |
+  |  MPICH2LIB_xFLAGS  |         Yes          |           No           |
+  |                    |                      |                        |
+  +--------------------+----------------------+------------------------+
+  |                    |                      |                        |
+  | MPICH2_MAKE_xFLAGS |         Yes          |           No           |
+  |                    |                      |                        |
+  +--------------------+----------------------+------------------------+
+  |                    |                      |                        |
+  | MPICH2_MPIX_FLAGS  |         No           |           Yes          |
+  |                    |                      |                        |
+  +--------------------+----------------------+------------------------+
+
+
+All these flags can be set as part of configure command or through
+environment variables. (CPPFLAGS stands for C preprocessor flags,
+which should NOT be set)
+
+
+Default flags
+--------------
+By default, MPICH2 automatically adds certain compiler optimizations
+to MPICH2LIB_CFLAGS. The currently used optimization level is -O2.
+
+** IMPORTANT NOTE: Remember that this only affects the compilation of
+the MPICH2 library and is not used in the wrappers (mpicc and friends)
+that are used to compile your applications or other libraries.
+
+This optimization level can be changed with the --enable-fast option
+passed to configure. For example, to build an MPICH2 environment with
+-O3 for all language bindings, one can simply do:
 
   ./configure --enable-fast=O3
 
-or
+Or to disable all compiler optimizations, one can do:
+
+  ./configure --disable-fast
+
+For more details of --enable-fast, see the output of "configure
+--help".
+
+
+Examples
+--------
+
+Example 1:
 
   ./configure --disable-fast MPICH2LIB_CFLAGS=-O3 MPICH2LIB_FFLAGS=-O3 MPICH2LIB_CXXFLAGS=-O3 MPICH2LIB_F90FLAGS=-O3
 
-This will cause the MPICH2 libraries to be built with -O3, and -O3 will
-not be included in the mpicc and other MPI wrapper script.
+This will cause the MPICH2 libraries to be built with -O3, and -O3
+will *not* be included in the mpicc and other MPI wrapper script.
+
+Example 2:
+
+  ./configure --disable-fast CFLAGS=-O3 FFLAGS=-O3 CXXFLAGS=-O3 F90FLAGS=-O3
+
+This will cause the MPICH2 libraries to be built with -O3, and -O3
+will be included in the mpicc and other MPI wrapper script.
+
+Example 3:
 
 There are certain compiler flags that should not be used with MPICH2's
 configure, e.g. gcc's -Werror, which would confuse configure and cause
@@ -420,10 +485,10 @@ To use -Werror in building MPICH2 libraries, you can pass the compiler
 flags during the make step through the Makefile variable
 MPICH2_MAKE_CFLAGS as follows:
 
-  make VERBOSE=1 MPICH2_MAKE_CFLAGS="-Wall -Werror"
+  make MPICH2_MAKE_CFLAGS="-Wall -Werror"
 
-(assuming CC is set to gcc). The content of MPICH2_MAKE_CFLAGS is
-appended to the CFLAGS in almost all Makefiles.
+The content of MPICH2_MAKE_CFLAGS is appended to the CFLAGS in all
+relevant Makefiles.
 
 -------------------------------------------------------------------------
 
