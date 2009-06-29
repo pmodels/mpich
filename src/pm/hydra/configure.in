@@ -272,10 +272,10 @@ fi
 dnl Process Binding
 AC_ARG_ENABLE(hydra-procbind, [  --enable-hydra-procbind       Process Binding],
 			      [ procbind=$enableval ],
-			      [ procbind=default ])
+			      [ procbind=no ])
 AC_MSG_CHECKING(process binding)
 
-if test "$procbind" = "default" ; then
+if test "$procbind" = "auto" ; then
    old_CFLAGS=$CFLAGS
    CFLAGS="$CFLAGS -I${srcdir}/utils/plpa"
    AC_TRY_COMPILE([#include <plpa_internal.h>],[PLPA_NAME(api_type_t) p; PLPA_NAME(api_probe) (&p);],plpa_works=yes,plpa_works=no)
