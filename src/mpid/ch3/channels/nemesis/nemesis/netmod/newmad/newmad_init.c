@@ -427,13 +427,15 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
 	VC_FIELD(vc, drv_id[index]) = drv_id[index];
 	
 	if (vc->lpid > mpid_nem_newmad_myrank){
-	    ret = nm_core_gate_accept(mpid_nem_newmad_pcore,VC_FIELD(vc, p_gate), drv_id[index], NULL);
+	    ret = nm_core_gate_accept(mpid_nem_newmad_pcore,init_reqs[vc->lpid].p_gate, drv_id[index], NULL);
 	}
 	else if (vc->lpid < mpid_nem_newmad_myrank){
-	    ret = nm_core_gate_connect(mpid_nem_newmad_pcore,VC_FIELD(vc, p_gate), drv_id[index], VC_FIELD(vc, url[index]));
+	    ret = nm_core_gate_connect(mpid_nem_newmad_pcore,init_reqs[vc->lpid].p_gate, drv_id[index], VC_FIELD(vc, url[index]));
 	}
     }
 
+   MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
+   
    vc->eager_max_msg_sz = 32768;
    vc->rndvSend_fn      = NULL;
    vc->sendNoncontig_fn = MPID_nem_newmad_SendNoncontig;
