@@ -943,18 +943,15 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	     * Just let it sign extend.
 	     */
             paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp +
-		rel_off + offsetarray[last_idx+1];
-	    paramp->blklens[last_idx+1] = size;
+		rel_off + offsetarray[i];
+	    paramp->blklens[last_idx+1] = size; /* these blocks are in bytes */
 	    paramp->index++;
 	}
-
-	rel_off += offsetarray[i];
     }
 
     /* if we get here then we processed ALL the blocks; don't need to update
      * blocks_p
      */
-
     DLOOP_Assert(blocks_left == 0);
     return 0;
 }
