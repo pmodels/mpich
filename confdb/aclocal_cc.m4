@@ -1096,14 +1096,14 @@ if test "$enable_strict_done" != "yes" ; then
     pac_common_strict_flags="-O2 -Wall -Wextra -Wno-missing-field-initializers -Wno-type-limits -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wno-unused-parameter -Wno-unused-label -Wshadow -Wmissing-declarations -Wno-long-long -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
     pac_cc_strict_flags=""
     case "$1" in 
-        yes|all)
-		enable_strict_done="yes"
-		pac_cc_strict_flags="$pac_common_strict_flags"
-        ;;
-
-        posix)
+        yes|all|posix)
 		enable_strict_done="yes"
 		pac_cc_strict_flags="$pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
+        ;;
+
+        noposix)
+		enable_strict_done="yes"
+		pac_cc_strict_flags="$pac_common_strict_flags"
         ;;
         
         no)
