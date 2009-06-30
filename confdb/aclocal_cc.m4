@@ -1086,6 +1086,9 @@ if test "$enable_strict_done" != "yes" ; then
     #   -Wno-unused-label -- We add fn_exit: and fn_fail: on all functions, 
     #	    but fn_fail may not be used if the function doesn't return an 
     #	    error.
+    #   -Wno-sign-compare -- read() and write() return bytes read/written
+    #       as a signed value, but we often compare this to size_t (or
+    #	    msg_sz_t) variables.
     # These were removed to reduce warnings:
     #   -Wcast-qual -- Sometimes we need to cast "volatile char*" to 
     #	    "char*", e.g., for memcpy.
@@ -1093,7 +1096,7 @@ if test "$enable_strict_done" != "yes" ; then
     #   -Wredundant-decls -- Having redundant declarations is benign and the 
     #	    code already has some.
 
-    pac_common_strict_flags="-O2 -Wall -Wextra -Wno-missing-field-initializers -Wno-type-limits -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wno-unused-parameter -Wno-unused-label -Wshadow -Wmissing-declarations -Wno-long-long -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
+    pac_common_strict_flags="-O2 -Wall -Wextra -Wno-missing-field-initializers -Wno-type-limits -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wno-unused-parameter -Wno-unused-label -Wshadow -Wmissing-declarations -Wno-long-long -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings -Wno-sign-compare -Waggregate-return -Wold-style-definition -Wmissing-noreturn -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wnested-externs -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
     pac_cc_strict_flags=""
     case "$1" in 
         yes|all|posix)
