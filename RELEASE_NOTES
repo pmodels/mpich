@@ -45,12 +45,6 @@
 
 ### Other configure options
 
- * The "--enable-strict" configure option is broken when using
-   sigaction and friends; this causes some of the process managers
-   (e.g., hydra, remshell) to not work
-   correctly. "--enable-strict=posix" is the recommended configure
-   option.
-
  * --enable-sharedlibs=gcc does not work on Solaris because of
    difference between the GNU ld program and the Solaris ld program.
 
