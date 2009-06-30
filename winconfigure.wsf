@@ -6883,8 +6883,8 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("# impgen")
 	mfile.WriteLine
-	mfile.WriteLine("$(GCC_OUTDIR)\gccimpgen.obj: ..\maint\gccimpgen.c")
-	mfile.WriteLine("	$(cc) $(cflags) /Fo""$(GCC_OUTDIR)\\"" /Fd""$(GCC_OUTDIR)\\"" ..\maint\gccimpgen.c")
+	mfile.WriteLine("$(GCC_OUTDIR)\gccimpgen.obj: ..\maint\gccimpgen.cpp")
+	mfile.WriteLine("	$(cc) $(cflags) /Fo""$(GCC_OUTDIR)\\"" /Fd""$(GCC_OUTDIR)\\"" ..\maint\gccimpgen.cpp")
 	mfile.WriteLine
 	mfile.WriteLine("$(GCC_OUTDIR)\impgen.exe: $(GCC_OUTDIR)\gccimpgen.obj")
 	mfile.WriteLine("	$(link) $(conlflags) $(GCC_OUTDIR)\gccimpgen.obj $(common_libs) -out:$(GCC_OUTDIR)\impgen.exe")
