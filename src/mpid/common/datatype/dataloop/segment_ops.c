@@ -788,7 +788,7 @@ static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
                                             DLOOP_Offset *offsetarray,
                                             DLOOP_Type el_type,
                                             DLOOP_Offset rel_off,
-                                            void *bufp ATTRIBUTE((unused)),
+                                            void *bufp,
                                             void *v_paramp)
 {
     int i, size, blocks_left;
@@ -881,7 +881,7 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 					   DLOOP_Offset *offsetarray,
 					   DLOOP_Type el_type,
 					   DLOOP_Offset rel_off,
-					   void *bufp ATTRIBUTE((unused)),
+					   void *bufp,
 					   void *v_paramp)
 {
     int i, size, blocks_left;
