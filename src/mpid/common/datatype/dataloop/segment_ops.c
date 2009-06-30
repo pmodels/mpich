@@ -930,11 +930,6 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	     * the end of the last one.
 	     */
 	    *blocks_p -= (blocks_left + (size / (int) el_size));
-#ifdef MPID_SP_VERBOSE
-	    MPIU_dbg_printf("\t[vector to vec exiting (1): next ind = %d, " MPI_AINT_FMT_DEC_SPEC " blocks processed.\n",
-			    paramp->u.pack_vector.index,
-			    *blocks_p);
-#endif
 	    return 1;
 	}
         else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off)))
@@ -943,23 +938,18 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	    paramp->blklens[last_idx] += size;
 	}
 	else {
-	    /* Since bufp can be a displacement and can be negative, we cannot use
-	     * MPI_VOID_PTR_CAST_TO_MPI_AINT to cast the sum to a pointer.  Just let it
-	     * sign extend.
+	    /* Since bufp can be a displacement and can be negative, we cannot
+	     * use MPI_VOID_PTR_CAST_TO_MPI_AINT to cast the sum to a pointer.
+	     * Just let it sign extend.
 	     */
-            paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp + rel_off + offsetarray[last_idx+1];
+            paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp +
+		rel_off + offsetarray[last_idx+1];
 	    paramp->blklens[last_idx+1] = size;
 	    paramp->index++;
 	}
 
 	rel_off += offsetarray[i];
     }
-
-#ifdef MPID_SP_VERBOSE
-    MPIU_dbg_printf("\t[vector to vec exiting (2): next ind = %d, " MPI_AINT_FMT_DEC_SPEC " blocks processed.\n",
-		    paramp->u.pack_vector.index,
-		    *blocks_p);
-#endif
 
     /* if we get here then we processed ALL the blocks; don't need to update
      * blocks_p
