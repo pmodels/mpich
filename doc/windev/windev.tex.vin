@@ -750,6 +750,9 @@ must be available since it is used to set the appropriate environment variables
 and then start the application.  The remote shell command can be changed using
 the environment variable MPIEXEC\_RSH.  Any command can be used that takes a 
 host name and then everything after that as the user command to be launched.
+Note that you need to specify a fully qualified file name of the executable when running
+your job with the \texttt{-rsh} option. If you like to use relative paths set the working
+directory for the job using the \texttt{-wdir} option of mpiexec.
 
 \item \texttt{-smpdfile filename}
 Specify the location of the smpd configuration file.  The default is \texttt{\~/.smpd}.
