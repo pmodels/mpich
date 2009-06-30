@@ -1070,8 +1070,31 @@ dnl (-D __STRICT_ANSI__-trigraphs)
 AC_DEFUN([PAC_CC_STRICT],[
 export enable_strict_done
 if test "$enable_strict_done" != "yes" ; then
+
+    # Some comments on strict warning options.
+    # These were added to reduce warnings:
+    #   -Wno-missing-field-initializers  -- We want to allow a struct to be 
+    #       initialized to zero using "struct x y = {0};" and not require 
+    #       each field to be initialized individually.
+    #   -Wno-type-limits -- There are places where we compare an unsigned to 
+    #	    a constant that happens to be zero e.g., if x is unsigned and 
+    #	    MIN_VAL is zero, we'd like to do "MPIU_Assert(x >= MIN_VAL);".
+    #       Note this option is not supported by gcc 4.2.
+    #   -Wno-unused-parameter -- For portability, some parameters go unused
+    #	    when we have different implementations of functions for 
+    #	    different platforms
+    #   -Wno-unused-label -- We add fn_exit: and fn_fail: on all functions, 
+    #	    but fn_fail may not be used if the function doesn't return an 
+    #	    error.
+    # These were removed to reduce warnings:
+    #   -Wcast-qual -- Sometimes we need to cast "volatile char*" to 
+    #	    "char*", e.g., for memcpy.
+    #   -Wpadded -- We catch struct padding with asserts when we need to
+    #   -Wredundant-decls -- Having redundant declarations is benign and the 
+    #	    code already has some.
+
+    pac_common_strict_flags="-O2 -Wall -Wextra -Wno-missing-field-initializers -Wno-type-limits -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wno-unused-parameter -Wno-unused-label -Wshadow -Wmissing-declarations -Wno-long-long -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
     pac_cc_strict_flags=""
-    pac_common_strict_flags="-O2 -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wunused -Wshadow -Wmissing-declarations -Wno-long-long -Wunused-value -Wno-unused-parameter -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wsign-compare -Waggregate-return -Wold-style-definition -Wmissing-field-initializers -Wmissing-noreturn -Wmissing-format-attribute -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wnested-externs -Winline -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
     case "$1" in 
         yes|all)
 		enable_strict_done="yes"
@@ -1079,12 +1102,6 @@ if test "$enable_strict_done" != "yes" ; then
         ;;
 
         posix)
-		# fsync is a part of POSIX only in the real-time
-		# extensions, apparently, so code that used include
-		# <unistd.h> and POSIX and expects fsync to be defined
-		# is in trouble.  Because of that we're not including
-		# the -W option to error if a function is not
-		# prototyped.
 		enable_strict_done="yes"
 		pac_cc_strict_flags="$pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
         ;;
