@@ -1095,8 +1095,10 @@ if test "$enable_strict_done" != "yes" ; then
     #   -Wpadded -- We catch struct padding with asserts when we need to
     #   -Wredundant-decls -- Having redundant declarations is benign and the 
     #	    code already has some.
+    #   -Wno-format-zero-length -- this warning is irritating and useless, since
+    #                              a zero-length format string is very well defined
 
-    pac_common_strict_flags="-O2 -Wall -Wextra -Wno-missing-field-initializers -Wno-type-limits -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wno-unused-parameter -Wno-unused-label -Wshadow -Wmissing-declarations -Wno-long-long -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings -Wno-sign-compare -Waggregate-return -Wold-style-definition -Wmissing-noreturn -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wnested-externs -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89"
+    pac_common_strict_flags="-O2 -Wall -Wextra -Wno-missing-field-initializers -Wno-type-limits -Wstrict-prototypes -Wmissing-prototypes -DGCC_WALL -Wno-unused-parameter -Wno-unused-label -Wshadow -Wmissing-declarations -Wno-long-long -Wfloat-equal -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings -Wno-sign-compare -Waggregate-return -Wold-style-definition -Wmissing-noreturn -Wno-multichar -Wno-deprecated-declarations -Wpacked -Wnested-externs -Winvalid-pch -Wno-pointer-sign -Wvariadic-macros -std=c89 -Wno-format-zero-length"
     pac_cc_strict_flags=""
     case "$1" in 
         yes|all|posix)
