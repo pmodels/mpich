@@ -371,7 +371,6 @@ int PREPEND_PREFIX(Dataloop_create_struct)(int count,
 	else
 	{
 	    DLOOP_Dataloop *old_loop_ptr;
-	    int old_loop_sz;
 	    DLOOP_Offset old_extent;
 
 	    DLOOP_Handle_get_loopptr_macro(oldtypes[i], old_loop_ptr, flag);

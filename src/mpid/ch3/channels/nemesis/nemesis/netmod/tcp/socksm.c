@@ -1555,7 +1555,7 @@ static int state_d_quiescent_handler(struct pollfd *const plfd, sockconn_t *cons
 #define FUNCNAME MPID_nem_tcp_sm_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_sm_init()
+int MPID_nem_tcp_sm_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKPMEM_DECL(1);
@@ -1600,7 +1600,7 @@ int MPID_nem_tcp_sm_init()
 #define FUNCNAME MPID_nem_tcp_sm_finalize
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_sm_finalize()
+int MPID_nem_tcp_sm_finalize(void)
 {
     freenode_t *node;
 

@@ -154,7 +154,8 @@ int MPID_nem_tcp_socksm_init(void);
 
 S*/
 typedef struct MPIDU_Sock_ifaddr_t {
-    int len, type;
+    unsigned int len;
+    int type;
     unsigned char ifaddr[16];
 } MPIDU_Sock_ifaddr_t;
 int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found );

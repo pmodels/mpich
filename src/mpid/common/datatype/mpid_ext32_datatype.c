@@ -59,7 +59,7 @@ static external32_basic_size_t external32_basic_size_array[] =
 MPI_Aint MPIDI_Datatype_get_basic_size_external32(MPI_Datatype el_type)
 {
     MPI_Aint ret = (MPI_Aint) 0;
-    int i = 0;
+    unsigned int i = 0;
     for(i = 0; i < (sizeof(external32_basic_size_array) /
                     sizeof(external32_basic_size_t)); i++)
     {

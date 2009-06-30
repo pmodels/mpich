@@ -126,12 +126,6 @@ int PREPEND_PREFIX(Dataloop_create_contiguous)(int icount,
 	}
 	else
 	{
-	    DLOOP_Dataloop *old_loop_ptr;
-	    int old_loop_sz = 0;
-
-	    DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
-	    DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);
-
 	    /* allocate space for new loop including copy of old */
 	    PREPEND_PREFIX(Dataloop_alloc_and_copy)(DLOOP_KIND_CONTIG,
 						    count,

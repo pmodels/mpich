@@ -14,7 +14,7 @@
 #define FUNCNAME MPID_nem_finalize
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_finalize()
+int MPID_nem_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -76,7 +76,7 @@ int MPID_nem_finalize()
 #define FUNCNAME MPID_nem_ckpt_shutdown
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ckpt_shutdown()
+int MPID_nem_ckpt_shutdown(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_CKPT_SHUTDOWN);

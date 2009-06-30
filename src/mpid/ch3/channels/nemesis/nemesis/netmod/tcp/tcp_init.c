@@ -231,29 +231,27 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
             MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
         }
     }
-
+    
+    if (ifaddr.len > 0 && ifaddr.type == AF_INET)
     {
-	char ifname[256];
-	unsigned char *p;
-	if (ifaddr.len > 0 && ifaddr.type == AF_INET)
+        unsigned char *p;
+        p = (unsigned char *)(ifaddr.ifaddr);
+        MPIU_Snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", p[0], p[1], p[2], p[3] );
+        MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"ifname = %s",ifname );
+        mpi_errno = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_IFNAME_KEY, ifname);
+        if (mpi_errno != MPIU_STR_SUCCESS)
         {
-	    p = (unsigned char *)(ifaddr.ifaddr);
-	    MPIU_Snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", p[0], p[1], p[2], p[3] );
-	    MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"ifname = %s",ifname );
-	    mpi_errno = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_IFNAME_KEY, ifname);
-	    if (mpi_errno != MPIU_STR_SUCCESS)
+            if (mpi_errno == MPIU_STR_NOMEM)
             {
-		if (mpi_errno == MPIU_STR_NOMEM)
-                {
-		    MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard_len");
-		}
-		else
-                {
-		    MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
-		}
-	    }
-	}
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+            }
+            else
+            {
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
+            }
+        }
     }
+    
 
     /*     printf("MPID_nem_tcp_get_business_card. port=%d\n", sock_id.sin_port); */
 

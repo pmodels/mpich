@@ -48,7 +48,7 @@ int send_queued (MPIDI_VC_t *vc);
 #define FUNCNAME MPID_nem_tcp_send_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_send_init()
+int MPID_nem_tcp_send_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -186,7 +186,7 @@ int MPID_nem_tcp_send_queued (MPIDI_VC_t *vc)
 #define FUNCNAME MPID_nem_tcp_send_finalize
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_send_finalize()
+int MPID_nem_tcp_send_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 

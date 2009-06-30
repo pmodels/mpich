@@ -759,7 +759,7 @@ static inline int lmt_shm_progress_vc(MPIDI_VC_t *vc, int *done)
 #define FUNCNAME MPID_nem_lmt_shm_progress
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_lmt_shm_progress()
+int MPID_nem_lmt_shm_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
     lmt_shm_prog_element_t *pe;
