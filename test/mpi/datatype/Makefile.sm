@@ -2,6 +2,7 @@ LDADD =
 INCLUDES = -I../include -I${srcdir}/../include
 smvar_do_sharedlibs = 0
 
+typecommit_SOURCES = typecommit.c
 typename_SOURCES = typename.c
 typefree_SOURCES = typefree.c
 typefree_LDADD = ../util/mtest.o

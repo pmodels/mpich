@@ -6,6 +6,7 @@ simple-pack 1
 transpose-pack 1
 slice-pack 1
 struct-pack 1
+typecommit 1
 typename 1
 typefree 1
 zeroparms 1
