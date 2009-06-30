@@ -7,14 +7,18 @@ srcdir      = @srcdir@
 CC_SHL      = @CC_SHL@
 SHLIBNAME   = @SHLIBNAME@
 
-INCLUDE_DIR = -I@MPI_INCLUDE_DIR@ -I${srcdir}/../include -I../include \
+#DEFS            = @DEFS@ -I. -I${srcdir}
+CPPFLAGS        = @CPPFLAGS@
+INCLUDES = -I@MPI_INCLUDE_DIR@ -I${srcdir}/../include -I../include \
 	-I../../include -I${srcdir}/../../../../../src/include \
 	-I../../../../../src/include
-CFLAGS      = @CPPFLAGS@ @CFLAGS@ $(INCLUDE_DIR) 
-
-top_builddir  = @master_topbuild_dir@
-LIBTOOL       = @LIBTOOL@
-C_COMPILE_SHL = $(CC_SHL) 
+#CFLAGS      = @CPPFLAGS@ @CFLAGS@ $(INCLUDES) 
+CFLAGS          = @CFLAGS@
+top_builddir    = @master_topbuild_dir@
+LIBTOOL         = @LIBTOOL@
+C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
+C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
+#C_COMPILE_SHL = $(CC_SHL) 
 
 @VPATH@
 
@@ -41,10 +45,24 @@ all: $(LIBNAME)
 
 .SUFFIXES: $(SUFFIXES) .p .lo
 
+#	$(CC) $(CFLAGS) $(INC) -c $<
 .c.o:
-	$(CC) $(CFLAGS) $(INC) -c $<
+	@if [ "x$(VERBOSE)" != "x1" ] ; then \
+	  echo "  CC              $<" ; \
+	else \
+	  echo $(C_COMPILE) -c $< ; \
+	fi
+	@$(C_COMPILE) -c $<
+#	$(C_COMPILE_SHL) $(CFLAGS) -c $< -o _s$*.o
+#	@mv -f _s$*.o $*.lo
 .c.lo:
-	$(C_COMPILE_SHL) $(CFLAGS) -c $< -o _s$*.o
+	@if [ "x$(VERBOSE)" != "x1" ] ; then \
+	  echo "  CC              $<" ; \
+	else \
+	  echo $(C_COMPILE_SHL) -c $< -o _s$*.o ; \
+	  echo mv -f _s$*.o $*.lo ; \
+	fi
+	@$(C_COMPILE_SHL) -c $< -o _s$*.o
 	@mv -f _s$*.o $*.lo
 
 $(LIBNAME): $(AD_OBJECTS)
@@ -55,6 +73,10 @@ AD_LOOBJECTS = $(AD_OBJECTS:.o=.lo)
 
 $(SHLIBNAME).la: $(AD_LOOBJECTS)
 	$(AR) $(SHLIBNAME).la $(AD_LOOBJECTS)
+
+coverage:
+	-@for file in  ${AD_OBJECTS:.o=.c} ; do \
+		gcov -b -f $$file ; done
 
 clean:
 	@rm -f *.o *.lo *.gcno *.gcda *.bb *.bbg

@@ -5,10 +5,10 @@ srcdir      = @srcdir@
 CC_SHL      = @CC_SHL@
 SHLIBNAME   = @SHLIBNAME@
 
-INCLUDE_DIR = -I@MPI_INCLUDE_DIR@ -I${srcdir}/../include -I../include -I../../include  -I${srcdir}/../../../../include -I../../../../include @CPPFLAGS@
-CFLAGS      = @CFLAGS@ $(INCLUDE_DIR) -DBGL_OPTIM_STEP1_2=1 -DBGL_OPTIM_STEP1_1=1
+INCLUDES = -I@MPI_INCLUDE_DIR@ -I${srcdir}/../include -I../include -I../../include  -I${srcdir}/../../../../include -I../../../../include @CPPFLAGS@
+CFLAGS      = @CFLAGS@ $(INCLUDES) -DBGL_OPTIM_STEP1_2=1 -DBGL_OPTIM_STEP1_1=1
 
-C_COMPILE_SHL = $(CC_SHL) @CFLAGS@ $(INCLUDE_DIR)
+C_COMPILE_SHL = $(CC_SHL) @CFLAGS@ $(INCLUDES)
 
 @VPATH@
 

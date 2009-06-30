@@ -6,12 +6,13 @@ srcdir      = @srcdir@
 CC_SHL      = @CC_SHL@
 SHLIBNAME   = @SHLIBNAME@
 
-INCLUDE_DIR = -I@MPI_INCLUDE_DIR@ -I../../include -I${srcdir}/../../adio/include -I../../adio/include -I${srcdir}/..
-CFLAGS      = -DMPIO_FORTRAN_SRC @CFLAGS@ $(MPIOPROFILE) $(INCLUDE_DIR)
+INCLUDES    = -I@MPI_INCLUDE_DIR@ -I../../include -I${srcdir}/../../adio/include -I../../adio/include -I${srcdir}/..
+CFLAGS      = -DMPIO_FORTRAN_SRC @CFLAGS@ $(MPIOPROFILE) 
 
 top_builddir  = @master_topbuild_dir@
 LIBTOOL       = @LIBTOOL@
-C_COMPILE_SHL = $(CC_SHL)
+C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
+C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 
 @VPATH@
 
@@ -65,10 +66,21 @@ all: $(LIBNAME)
 .SUFFIXES: $(SUFFIXES) .p .sp .lo
 
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	@if [ "x$(VERBOSE)" != "x1" ] ; then \
+	  echo "  CC              $<" ; \
+	else \
+	  echo $(C_COMPILE) -c $< ; \
+	fi
+	@$(C_COMPILE) -c $<
 
 .c.lo:
-	$(C_COMPILE_SHL) $(CFLAGS) -c $< -o _s$*.o
+	@if [ "x$(VERBOSE)" != "x1" ] ; then \
+	  echo "  CC              $<" ; \
+	else \
+	  echo $(C_COMPILE_SHL) -c $< -o _s$*.o ; \
+	  echo mv -f _s$*.o $*.lo ; \
+	fi
+	@$(C_COMPILE_SHL) -c $< -o _s$*.o
 	@mv -f _s$*.o $*.lo
 
 .c.p:

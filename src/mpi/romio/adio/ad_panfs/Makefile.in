@@ -6,8 +6,8 @@ srcdir      = @srcdir@
 CC_SHL      = @CC_SHL@
 SHLIBNAME   = @SHLIBNAME@
 
-INCLUDE_DIR = -I@MPI_INCLUDE_DIR@ -I${srcdir}/../include -I../include -I../../include -I${srcdir}/../../../../include -I../../../../include -I/opt/panfs/include
-CFLAGS      = @CFLAGS@ $(INCLUDE_DIR)
+INCLUDES    = -I@MPI_INCLUDE_DIR@ -I${srcdir}/../include -I../include -I../../include -I${srcdir}/../../../../include -I../../../../include -I/opt/panfs/include
+CFLAGS      = @CFLAGS@ $(INCLUDES)
 
 C_COMPILE_SHL = $(CC_SHL)
 
