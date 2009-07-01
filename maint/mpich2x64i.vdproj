@@ -27,6 +27,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_16898359DEFD4ED5A9AA75F627C67BFF"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_18D946452B7F4DBB81818445A0BC79D1"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -261,6 +267,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_B4E7F878516042FF8E2767782EB8741D"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_B4EC134AF8714714BD63B0EFC384A59B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -469,6 +481,26 @@
             "TargetName" = "8:clog2TOslog2.jar"
             "Tag" = "8:"
             "Folder" = "8:_CB4581DB084E4E7E8C5A128FA780483C"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_16898359DEFD4ED5A9AA75F627C67BFF"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\gfortran\\fmpich2g.lib"
+            "TargetName" = "8:fmpich2g.lib"
+            "Tag" = "8:"
+            "Folder" = "8:_21FB2EC726254C54839F05E4290C1045"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1249,6 +1281,26 @@
             "TargetName" = "8:clog_commset.h"
             "Tag" = "8:"
             "Folder" = "8:_40F589E2DCCB433E88F7946F0C0C75C5"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B4E7F878516042FF8E2767782EB8741D"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\gfortran\\fmpich2g.dll"
+            "TargetName" = "8:fmpich2g.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_C25C11E398284C2EAFD99160D8C6EA71"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"

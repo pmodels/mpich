@@ -6603,13 +6603,6 @@ Function GenBuild()
         mfile.WriteLine
         mfile.WriteLine("mpi_mod: $(FORT_OUTDIR) $(mpi_mod_objs)")
         mfile.WriteLine
-	mfile.WriteLine("!IF ""$(CPU)"" != ""x86""")
-	mfile.WriteLine("# Only one calling convention for Win64 so gfort and sfort are not necessary")
-	mfile.WriteLine("gfort: $(GFORT_OUTDIR)")
-	mfile.WriteLine
-	mfile.WriteLine("sfort: $(SFORT_OUTDIR)")
-	mfile.WriteLine
-	mfile.WriteLine("!ELSE")
 	outdir = "GFORT_OUTDIR"
 	extra_flags = "$(gfcflags)"
 	fort_prefix = "g"
@@ -6621,6 +6614,11 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("gfort: $(GFORT_OUTDIR) $(GFORT_OUTDIR)\fmpich2g$(D).dll")
 	mfile.WriteLine
+	mfile.WriteLine("!IF ""$(CPU)"" != ""x86""")
+	mfile.WriteLine("# We don't build sfort for non-x86 platforms")
+	mfile.WriteLine("sfort: $(SFORT_OUTDIR)")
+	mfile.WriteLine
+	mfile.WriteLine("!ELSE")
 	outdir = "SFORT_OUTDIR"
 	extra_flags = "$(sfcflags)"
 	fort_prefix = "s"
