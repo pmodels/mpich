@@ -483,7 +483,6 @@ int MPE_Util_getenvbool( char *env_var, int default_value );
 void mper_fconsts_init( void );
 void mper_fconsts_init( void )
 {
-    int  world_rank;
     int  use_mpih;
     /*
        Set MPI_STATUS_SIZE, fortran logicals,
@@ -511,6 +510,9 @@ void mper_fconsts_init( void )
         MPER_F_MPI_STATUSES_IGNORE = MPI_F_STATUSES_IGNORE;
     }
 #endif
+/*
+{
+    int  world_rank;
     PMPI_Comm_rank( MPI_COMM_WORLD, &world_rank );
     if ( world_rank == 0 ) {
         printf( "f2c(MPI_IN_PLACE) = %p\n", MPER_F_MPI_IN_PLACE );
@@ -519,6 +521,8 @@ void mper_fconsts_init( void )
         printf( "f2c(MPI_STATUS_SIZE) = %d\n", MPER_F_MPI_STATUS_SIZE );
         printf( ".TRUE. = %d, .FALSE. = %d\n", MPER_F_TRUE, MPER_F_FALSE );
     }
+}
+*/
 }
 
 /*
