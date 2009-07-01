@@ -2,4 +2,6 @@
 #
 #  MPICH2 module for use with 'environment-modules' package:
 # 
-prepend-path 		PATH 		@datadir@/bin
+setenv        prefix  @prefix@
+prepend-path  PATH    @datadir@/bin
+prepend-path  MANPATH @mandir@
