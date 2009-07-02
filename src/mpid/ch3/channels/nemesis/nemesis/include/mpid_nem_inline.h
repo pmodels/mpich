@@ -575,11 +575,7 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
             MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
 
             /* copy header */
-            {
-                void * p = (void *)pbox->cell.pkt.mpich2.payload;
-                MPIU_Memcpy(p, header, header_sz);
-            /* MPIU_Memcpy((void *)pbox->cell.pkt.mpich2.payload, header, header_sz); */
-            }
+            MPIU_Memcpy((void *)pbox->cell.pkt.mpich2.payload, header, header_sz);
             
             /* copy data */
             last = segment_size;
