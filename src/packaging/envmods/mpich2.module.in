@@ -2,6 +2,13 @@
 #
 #  MPICH2 module for use with 'environment-modules' package:
 # 
-setenv        prefix  @prefix@
-prepend-path  PATH    @datadir@/bin
-prepend-path  MANPATH @mandir@
+
+# Define prefix so PATH and MANPATH can be updated.
+setenv        prefix        @prefix@
+setenv        exec_prefix   @exec_prefix@
+prepend-path  PATH          @bindir@
+prepend-path  MANPATH       @mandir@
+
+# Undefine prefix and exec_prefix which are too generic environment variables.
+unsetenv      prefix
+unsetenv      exec_prefix
