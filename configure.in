@@ -6316,8 +6316,10 @@ dnl updated values.  Here's an attempt at a fix
 	# add in the correct prefix argument
         ac_sub_configure_args="--prefix=$prefix $ac_sub_configure_args"
     
+    # The eval below is needed to properly quote the sub-configure arguments.
+    # Thanks to Steve Oyanagi at Cray for spotting it when it was missing.
     (cd src/binding/f90 && \
-    $master_top_srcdir/src/binding/f90/configure $ac_sub_configure_args )
+     eval $master_top_srcdir/src/binding/f90/configure $ac_sub_configure_args)
     rc=$?
     if test $rc = 0 ; then
         AC_DEFINE(HAVE_F90_TYPE_ROUTINES,1,[Define if F90 type routines available])
