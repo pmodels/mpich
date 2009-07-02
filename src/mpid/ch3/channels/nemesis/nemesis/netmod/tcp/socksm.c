@@ -1003,23 +1003,23 @@ int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc)
 static int state_tc_c_cnting_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_NEM_TCP_SOCK_STATUS_t stat;
+    MPID_NEM_TCP_SOCK_STATUS_t status;
     MPIDI_STATE_DECL(MPID_STATE_STATE_TC_C_CNTING_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_TC_C_CNTING_HANDLER);
    
-    stat = MPID_nem_tcp_check_sock_status(plfd);
+    status = MPID_nem_tcp_check_sock_status(plfd);
 
-    if (stat == MPID_NEM_TCP_SOCK_CONNECTED) {
+    if (status == MPID_NEM_TCP_SOCK_CONNECTED) {
         CHANGE_STATE(sc, CONN_STATE_TC_C_CNTD);
     }
-    else if (stat == MPID_NEM_TCP_SOCK_ERROR_EOF) {
+    else if (status == MPID_NEM_TCP_SOCK_ERROR_EOF) {
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_tc_c_cnting_handler(): changing to "
               "quiescent"));
         CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
         /* FIXME: retry 'n' number of retries before signalling an error to VC layer. */
     }
-    else { /* stat == MPID_NEM_TCP_SOCK_NOEVENT */
+    else { /* status == MPID_NEM_TCP_SOCK_NOEVENT */
         /*
           Still connecting... let it. While still connecting, even if
           a duplicate connection exists and this connection can be closed, it can get
@@ -1182,14 +1182,14 @@ static int state_c_tmpvcsent_handler(struct pollfd *const plfd, sockconn_t *cons
 static int state_l_cntd_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_NEM_TCP_SOCK_STATUS_t stat;
+    MPID_NEM_TCP_SOCK_STATUS_t status;
     int got_sc_eof = 0;
     MPIDI_STATE_DECL(MPID_STATE_STATE_L_CNTD_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_L_CNTD_HANDLER);
 
-    stat = MPID_nem_tcp_check_sock_status(plfd);
-    if (stat == MPID_NEM_TCP_SOCK_ERROR_EOF) {
+    status = MPID_nem_tcp_check_sock_status(plfd);
+    if (status == MPID_NEM_TCP_SOCK_ERROR_EOF) {
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_l_cntd_handler() 1: changing to "
             "quiescent"));
         CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
@@ -1278,15 +1278,15 @@ static int do_i_win(sockconn_t *rmt_sc)
 static int state_l_rankrcvd_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_NEM_TCP_SOCK_STATUS_t stat;
+    MPID_NEM_TCP_SOCK_STATUS_t status;
     sockconn_t *fnd_sc = NULL;
     int snd_nak = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_STATE_L_RANKRCVD_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_L_RANKRCVD_HANDLER);
 
-    stat = MPID_nem_tcp_check_sock_status(plfd);
-    if (stat == MPID_NEM_TCP_SOCK_ERROR_EOF) {
+    status = MPID_nem_tcp_check_sock_status(plfd);
+    if (status == MPID_NEM_TCP_SOCK_ERROR_EOF) {
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_l_rankrcvd_handler() 1: changing to quiescent"));
         CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
         goto fn_exit;
@@ -1335,14 +1335,14 @@ static int state_l_rankrcvd_handler(struct pollfd *const plfd, sockconn_t *const
 static int state_l_tmpvcrcvd_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_NEM_TCP_SOCK_STATUS_t stat;
+    MPID_NEM_TCP_SOCK_STATUS_t status;
     int snd_nak = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_STATE_L_TMPVCRCVD_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_L_TMPVCRCVD_HANDLER);
 
-    stat = MPID_nem_tcp_check_sock_status(plfd);
-    if (stat == MPID_NEM_TCP_SOCK_ERROR_EOF) {
+    status = MPID_nem_tcp_check_sock_status(plfd);
+    if (status == MPID_NEM_TCP_SOCK_ERROR_EOF) {
         CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
         goto fn_exit;
     }

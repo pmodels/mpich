@@ -10,7 +10,7 @@
 #define FUNCNAME MPIDI_CH3_Finalize
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_Finalize()
+int MPIDI_CH3_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_FINALIZE);

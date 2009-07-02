@@ -310,7 +310,7 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
 #define FUNCNAME MPID_nem_barrier_vars_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_coll_barrier_init ()
+int MPID_nem_coll_barrier_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_COLL_BARRIER_INIT);

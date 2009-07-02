@@ -105,6 +105,25 @@ typedef union MPIDI_CH3_nem_pkt
     MPID_nem_pkt_lmt_cookie_t lmt_cookie;
 } MPIDI_CH3_nem_pkt_t;
 
+
+/* MPID_PKT_DECL_CAST(pkt_u_var, s_pkt_type, s_pkt_p_var)
+   To avoid strict aliasing warnings when doing something like:
+       pkt_t upkt;
+       rts_pkt_t * const rts_pkt = (rts_pkt_t *)&upkt;
+   this macro does the same but through a union.
+
+   pkt_u_var -- variable name of the packet union
+   s_pkt_type -- type of the sub-packet
+   s_pkt_p_var -- variable name of the sub-packet pointer
+ */
+#define MPID_PKT_DECL_CAST(pkt_u_var, s_pkt_type, s_pkt_p_var)  \
+    union                                                       \
+    {                                                           \
+        MPIDI_CH3_Pkt_t p;                                      \
+        s_pkt_type s;                                           \
+    } pkt_u_var;                                                \
+    s_pkt_type * const s_pkt_p_var = &pkt_u_var.s
+
     
 
 /*  Macros for sending lmt messages from inside network modules.
@@ -152,8 +171,7 @@ typedef union MPIDI_CH3_nem_pkt
     } while (0)
 
 #define MPID_nem_lmt_send_CTS(vc, rreq, r_cookie_buf, r_cookie_len) do {                                \
-        MPIDI_CH3_Pkt_t _upkt;                                                                          \
-        MPID_nem_pkt_lmt_cts_t * const _cts_pkt = (MPID_nem_pkt_lmt_cts_t *)&_upkt;                     \
+        MPID_PKT_DECL_CAST(_upkt, MPID_nem_pkt_lmt_cts_t, _cts_pkt);                                    \
         MPID_Request *_cts_req;                                                                         \
         MPID_IOV _iov[2];                                                                               \
                                                                                                         \
@@ -186,8 +204,7 @@ static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
                                            void *cookie_buf, MPI_Aint cookie_len)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3_Pkt_t _upkt;
-    MPID_nem_pkt_lmt_cookie_t * const cookie_pkt = (MPID_nem_pkt_lmt_cookie_t *)&_upkt;
+    MPID_PKT_DECL_CAST(_upkt, MPID_nem_pkt_lmt_cookie_t, cookie_pkt);
     MPID_Request *cookie_req;
     MPID_IOV iov[2];
 
@@ -231,15 +248,14 @@ fn_fail:
 }
         
 #define MPID_nem_lmt_send_DONE(vc, rreq) do {                                                                   \
-        MPIDI_CH3_Pkt_t _upkt;                                                                                  \
-        MPID_nem_pkt_lmt_done_t * const _done_pkt = (MPID_nem_pkt_lmt_done_t *)&_upkt;                          \
+        MPID_PKT_DECL_CAST(_upkt, MPID_nem_pkt_lmt_done_t, _done_pkt);                                          \
         MPID_Request *_done_req;                                                                                \
                                                                                                                 \
         MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv DONE packet");                                             \
         MPIDI_Pkt_init(_done_pkt, MPIDI_NEM_PKT_LMT_DONE);                                                      \
         _done_pkt->req_id = (rreq)->ch.lmt_req_id;                                                              \
                                                                                                                 \
-        mpi_errno = MPIDI_CH3_iStartMsg((vc), _done_pkt, sizeof(*_done_pkt), &_done_req);                        \
+        mpi_errno = MPIDI_CH3_iStartMsg((vc), _done_pkt, sizeof(*_done_pkt), &_done_req);                       \
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**donepkt");                                  \
         if (_done_req != NULL)                                                                                  \
         {                                                                                                       \

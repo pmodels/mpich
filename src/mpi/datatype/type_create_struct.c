@@ -74,7 +74,7 @@ int MPI_Type_create_struct(int count,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    int i;
+	    int j;
 	    MPID_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count,mpi_errno);
@@ -87,14 +87,14 @@ int MPI_Type_create_struct(int count,
 		if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    }
 
-	    for (i=0; i < count; i++) {
-		MPIR_ERRTEST_ARGNEG(array_of_blocklengths[i], "blocklen", mpi_errno);
-		MPIR_ERRTEST_DATATYPE(array_of_types[i], "datatype[i]",
+	    for (j=0; j < count; j++) {
+		MPIR_ERRTEST_ARGNEG(array_of_blocklengths[j], "blocklen", mpi_errno);
+		MPIR_ERRTEST_DATATYPE(array_of_types[j], "datatype[j]",
 				      mpi_errno);
 		if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 			
-		if (array_of_types[i] != MPI_DATATYPE_NULL && HANDLE_GET_KIND(array_of_types[i]) != HANDLE_KIND_BUILTIN) {
-		    MPID_Datatype_get_ptr(array_of_types[i], datatype_ptr);
+		if (array_of_types[j] != MPI_DATATYPE_NULL && HANDLE_GET_KIND(array_of_types[j]) != HANDLE_KIND_BUILTIN) {
+		    MPID_Datatype_get_ptr(array_of_types[j], datatype_ptr);
 		    MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
 		    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 		}

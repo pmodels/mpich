@@ -1126,7 +1126,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Wno-sign-compare
         -Waggregate-return
         -Wold-style-definition
-        -Wmissing-noreturn
         -Wno-multichar
         -Wno-deprecated-declarations
         -Wpacked

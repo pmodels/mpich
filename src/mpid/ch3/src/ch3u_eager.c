@@ -384,7 +384,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		   to fix this, but it will require a sweep of the code */
 	    }
 	    else {
-		MPIDI_msg_sz_t data_sz, last;
+		MPIDI_msg_sz_t recv_data_sz, last;
 		/* user buffer is not contiguous.  Use the segment
 		   code to unpack it, handling various errors and 
 		   exceptional cases */
@@ -396,11 +396,11 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
 				  rreq->dev.datatype, rreq->dev.segment_ptr, 0);
 
-		data_sz = rreq->dev.recv_data_sz;
-		last    = data_sz;
+		recv_data_sz = rreq->dev.recv_data_sz;
+		last    = recv_data_sz;
 		MPID_Segment_unpack( rreq->dev.segment_ptr, 0, 
 				     &last, eagershort_pkt->data );
-		if (last != data_sz) {
+		if (last != recv_data_sz) {
 		    /* --BEGIN ERROR HANDLING-- */
 		    /* There are two cases:  a datatype mismatch (could
 		       not consume all data) or a too-short buffer. We
@@ -416,7 +416,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	    }
 	}
 	else {
-	    MPIDI_msg_sz_t data_sz;
+	    MPIDI_msg_sz_t recv_data_sz;
 	    /* This is easy; copy the data into a temporary buffer.
 	       To begin with, we use the same temporary location as
 	       is used in receiving eager unexpected data.
@@ -428,14 +428,14 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	       have a free-buffer-pointer, which can be null if it isn't
                a buffer that we've allocated). */
 	    /* printf( "Allocating into tmp\n" ); fflush(stdout); */
-	    data_sz = rreq->dev.recv_data_sz;
-	    rreq->dev.tmpbuf = MPIU_Malloc(data_sz);
+	    recv_data_sz = rreq->dev.recv_data_sz;
+	    rreq->dev.tmpbuf = MPIU_Malloc(recv_data_sz);
 	    if (!rreq->dev.tmpbuf) {
 		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	    }
-	    rreq->dev.tmpbuf_sz = data_sz;
- 	    /* Copy the payload. We could optimize this if data_sz & 0x3 == 0 
-	       (copy (data_sz >> 2) ints, inline that since data size is 
+	    rreq->dev.tmpbuf_sz = recv_data_sz;
+ 	    /* Copy the payload. We could optimize this if recv_data_sz & 0x3 == 0 
+	       (copy (recv_data_sz >> 2) ints, inline that since data size is 
 	       currently limited to 4 ints */
 	    {
 		unsigned char const * restrict p = 
@@ -443,7 +443,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		unsigned char * restrict bufp = 
 		    (unsigned char *)rreq->dev.tmpbuf;
 		int i;
-		for (i=0; i<data_sz; i++) {
+		for (i=0; i<recv_data_sz; i++) {
 		    *bufp++ = *p++;
 		}
 	    }

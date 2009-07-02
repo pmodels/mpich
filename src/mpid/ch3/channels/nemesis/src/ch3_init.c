@@ -309,7 +309,7 @@ int MPID_nem_register_initcomp_cb(int (* callback)(void))
 #define FUNCNAME MPIDI_CH3_InitCompleted
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_InitCompleted()
+int MPIDI_CH3_InitCompleted(void)
 {
     int mpi_errno = MPI_SUCCESS;
     initcomp_cb_t *ep;

@@ -1311,7 +1311,8 @@ static int PMII_singinit(void)
 {
     int pid, rc;
     int singinit_listen_sock, stdin_sock, stdout_sock, stderr_sock;
-    char *newargv[8], charpid[8], port_c[8];
+    const char *newargv[8];
+    char charpid[8], port_c[8];
     struct sockaddr_in sin;
     socklen_t len;
 
@@ -1345,7 +1346,7 @@ static int PMII_singinit(void)
 	MPIU_Snprintf(charpid, sizeof(charpid), "%d",getpid());
 	newargv[5] = charpid;
 	newargv[6] = NULL;
-	rc = execvp(newargv[0],newargv);
+	rc = execvp(newargv[0], (char **)newargv);
 	perror("PMII_singinit: execv failed");
 	PMIU_printf(1, "  This singleton init program attempted to access some feature\n");
 	PMIU_printf(1, "  for which process manager support was required, e.g. spawn or universe_size.\n");

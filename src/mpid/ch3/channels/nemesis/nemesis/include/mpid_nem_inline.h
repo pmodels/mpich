@@ -536,7 +536,7 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
                                  void *header, MPIDI_msg_sz_t header_sz, MPIDI_VC_t *vc, int *again)
 {
     MPID_nem_cell_ptr_t el;
-    MPIDI_msg_sz_t datalen;    
+    MPIDI_msg_sz_t datalen;
     int my_rank;
     MPIDI_msg_sz_t last;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
@@ -575,8 +575,12 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
             MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
 
             /* copy header */
-            MPIU_Memcpy((char *)pbox->cell.pkt.mpich2.payload, header, header_sz);
-
+            {
+                void * p = (void *)pbox->cell.pkt.mpich2.payload;
+                MPIU_Memcpy(p, header, header_sz);
+            /* MPIU_Memcpy((void *)pbox->cell.pkt.mpich2.payload, header, header_sz); */
+            }
+            
             /* copy data */
             last = segment_size;
             MPID_Segment_pack(segment, *segment_first, &last, (char *)pbox->cell.pkt.mpich2.payload + sizeof(MPIDI_CH3_Pkt_t));
@@ -621,7 +625,7 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
 #endif /*PREFETCH_CELL */
 
     /* copy header */
-    MPIU_Memcpy(el->pkt.mpich2.payload, header, header_sz);
+    MPIU_Memcpy((void *)el->pkt.mpich2.payload, header, header_sz);
     
     /* copy data */
     if (segment_size - *segment_first <= MPID_NEM_MPICH2_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t))

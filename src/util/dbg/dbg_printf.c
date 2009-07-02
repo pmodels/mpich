@@ -352,8 +352,8 @@ int MPIU_DBG_MaxLevel      = MPIU_DBG_TYPICAL;
 static enum {MPIU_DBG_UNINIT, MPIU_DBG_PREINIT, MPIU_DBG_INITIALIZED}
     mpiu_dbg_initialized = MPIU_DBG_UNINIT;
 static char filePatternBuf[MAXPATHLEN] = "";
-static char *filePattern = "-stdout-"; /* "log%d.log"; */
-static char *defaultFilePattern = "dbg@W%w-@%d@T-%t@.log";
+static const char *filePattern = "-stdout-"; /* "log%d.log"; */
+static const char *defaultFilePattern = "dbg@W%w-@%d@T-%t@.log";
 static char temp_filename[MAXPATHLEN] = "";
 static int worldNum  = 0;
 static int worldRank = -1;
@@ -906,7 +906,8 @@ static int MPIU_DBG_Get_filename(char *filename, int len)
     int nThread = 1;
 #endif
     static char worldNumAsChar[10] = "0";
-    char *pDest, *p;
+    char *pDest;
+    const char *p;
 
     /* FIXME: This is a hack to handle the common case of two worlds */
     if (MPIR_Process.comm_parent != NULL) {

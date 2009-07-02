@@ -474,7 +474,6 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 	    MPI_Aint first, last;
 	    int vec_len, i, type_size, count;
 	    MPI_Datatype type;
-	    MPID_Datatype *dtp;
 	    MPI_Aint true_lb, true_extent, extent;
 	    void *tmp_buf=NULL, *source_buf, *target_buf;
 	    
