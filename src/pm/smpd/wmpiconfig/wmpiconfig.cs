@@ -75,8 +75,8 @@ namespace wmpiconfig
 			// set defaults
 			hash["log"] = new Setting("log", "", "no", "yes,no");
 			hash["logfile"] = new Setting("logfile", "", "none", @"filename (example: c:\temp\smpd.log)");
-			hash["channel"] = new Setting("channel", "", "sock", "sock,mt,ssm,essm,shm,sshm,ib,auto");
-			hash["internode_channel"] = new Setting("internode_channel", "", "ssm", "sock,mt,ssm,essm,ib");
+			hash["channel"] = new Setting("channel", "", "sock", "nemesis,sock,mt,ssm,shm,auto");
+			hash["internode_channel"] = new Setting("internode_channel", "", "ssm", "nemesis,sock,mt,ssm");
 			hash["phrase"] = new Setting("phrase", "", "", "");
 			hash["hosts"] = new Setting("hosts", "", "localhost", "list of hostnames (example: foo bar bazz)");
 			hash["max_logfile_size"] = new Setting("max_logfile_size", "", "unlimited", "max number of bytes");

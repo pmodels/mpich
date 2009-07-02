@@ -381,11 +381,9 @@ namespace wmpiexec
 			this.channel_comboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.channel_comboBox.Items.AddRange(new object[] {
 																  "sock",
+																  "nemesis",
 																  "shm",
-																  "sshm",
 																  "ssm",
-																  "essm",
-																  "ib",
 																  "mt",
 																  "default",
 																  "auto"});
