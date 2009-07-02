@@ -40,156 +40,94 @@ typedef struct MPIR_longdoubleint_loctype {
 } MPIR_longdoubleint_loctype;
 #endif
 
+/* Note a subtlety in these two macros which avoids compiler warnings.
+   The compiler complains about using == on floats, but the standard
+   requires that we set loc to min of the locs if the two values are
+   equal.  So we do "if a>b {} else if a>=b Y" which is the same as
+   "if a>b X else if a==b Y" but avoids the warning. */
+#define MPIR_MINLOC_C_CASE(c_type_) {                   \
+        c_type_ *a = (c_type_ *)inoutvec;               \
+        c_type_ *b = (c_type_ *)invec;                  \
+        for (i=0; i<len; i++) {                         \
+            if (a[i].value > b[i].value) {              \
+                a[i].value = b[i].value;                \
+                a[i].loc   = b[i].loc;                  \
+            } else if (a[i].value >= b[i].value)        \
+                a[i].loc = MPIR_MIN(a[i].loc,b[i].loc); \
+        }                                               \
+    }                                                   \
+    break
+
+#define MPIR_MINLOC_F_CASE(f_type_) {                   \
+        f_type_ *a = (f_type_ *)inoutvec;               \
+        f_type_ *b = (f_type_ *)invec;                  \
+        for ( i=0; i<flen; i+=2 ) {                     \
+            if (a[i] > b[i]) {                          \
+                a[i]   = b[i];                          \
+                a[i+1] = b[i+1];                        \
+            } else if (a[i] >= b[i])                    \
+                a[i+1] = MPIR_MIN(a[i+1],b[i+1]);       \
+        }                                               \
+    }                                                   \
+    break
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_MINLOC
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPIR_MINLOC( 
 	void *invec, 
 	void *inoutvec, 
 	int *Len, 
 	MPI_Datatype *type )
 {
-    static const char FCNAME[] = "MPIR_MINLOC";
+    int mpi_errno = MPI_SUCCESS;
     int i, len = *Len, flen;
-
+    
     flen = len * 2; /* used for Fortran types */
 
     switch (*type) {
     /* first the C types */
-    case MPI_2INT: {
-        MPIR_2int_loctype *a = (MPIR_2int_loctype *)inoutvec;
-        MPIR_2int_loctype *b = (MPIR_2int_loctype *)invec;
-        for (i=0; i<len; i++) {
-            if (a[i].value == b[i].value)
-                a[i].loc = MPIR_MIN(a[i].loc,b[i].loc);
-            else if (a[i].value > b[i].value) {
-                a[i].value = b[i].value;
-                a[i].loc   = b[i].loc;
-            }
-        }
-        break;
-    }
-    case MPI_FLOAT_INT: {
-        MPIR_floatint_loctype *a = (MPIR_floatint_loctype *)inoutvec;
-        MPIR_floatint_loctype *b = (MPIR_floatint_loctype *)invec;
-        for (i=0; i<len; i++) {
-            if (a[i].value == b[i].value)
-                a[i].loc = MPIR_MIN(a[i].loc,b[i].loc);
-            else if (a[i].value > b[i].value) {
-                a[i].value = b[i].value;
-                a[i].loc   = b[i].loc;
-            }
-        }
-        break;
-    }
-    case MPI_LONG_INT: {
-        MPIR_longint_loctype *a = (MPIR_longint_loctype *)inoutvec;
-        MPIR_longint_loctype *b = (MPIR_longint_loctype *)invec;
-        for (i=0; i<len; i++) {
-            if (a[i].value == b[i].value)
-                a[i].loc = MPIR_MIN(a[i].loc,b[i].loc);
-            else if (a[i].value > b[i].value) {
-                a[i].value = b[i].value;
-                a[i].loc   = b[i].loc;
-            }
-        }
-        break;
-    }
-    case MPI_SHORT_INT: {
-        MPIR_shortint_loctype *a = (MPIR_shortint_loctype *)inoutvec;
-        MPIR_shortint_loctype *b = (MPIR_shortint_loctype *)invec;
-        for (i=0; i<len; i++) {
-            if (a[i].value == b[i].value)
-                a[i].loc = MPIR_MIN(a[i].loc,b[i].loc);
-            else if (a[i].value > b[i].value) {
-                a[i].value = b[i].value;
-                a[i].loc   = b[i].loc;
-            }
-        }
-        break;
-    }
-    case MPI_DOUBLE_INT: {
-        MPIR_doubleint_loctype *a = (MPIR_doubleint_loctype *)inoutvec;
-        MPIR_doubleint_loctype *b = (MPIR_doubleint_loctype *)invec;
-        for (i=0; i<len; i++) {
-            if (a[i].value == b[i].value)
-                a[i].loc = MPIR_MIN(a[i].loc,b[i].loc);
-            else if (a[i].value > b[i].value) {
-                a[i].value = b[i].value;
-                a[i].loc   = b[i].loc;
-            }
-        }
-        break;
-    }
+    case MPI_2INT:       MPIR_MINLOC_C_CASE(MPIR_2int_loctype);        
+    case MPI_FLOAT_INT:  MPIR_MINLOC_C_CASE(MPIR_floatint_loctype);
+    case MPI_LONG_INT:   MPIR_MINLOC_C_CASE(MPIR_longint_loctype);
+    case MPI_SHORT_INT:  MPIR_MINLOC_C_CASE(MPIR_shortint_loctype);
+    case MPI_DOUBLE_INT: MPIR_MINLOC_C_CASE(MPIR_doubleint_loctype);
 #if defined(HAVE_LONG_DOUBLE)
-    case MPI_LONG_DOUBLE_INT: {
-        MPIR_longdoubleint_loctype *a = (MPIR_longdoubleint_loctype *)inoutvec;
-        MPIR_longdoubleint_loctype *b = (MPIR_longdoubleint_loctype *)invec;
-        for (i=0; i<len; i++) {
-            if (a[i].value == b[i].value)
-                a[i].loc = MPIR_MIN(a[i].loc,b[i].loc);
-            else if (a[i].value > b[i].value) {
-                a[i].value = b[i].value;
-                a[i].loc   = b[i].loc;
-            }
-        }
-        break;
-    }
+    case MPI_LONG_DOUBLE_INT: MPIR_MINLOC_C_CASE(MPIR_longdoubleint_loctype);
 #endif
 
     /* now the Fortran types */
 #ifdef HAVE_FORTRAN_BINDING
 #ifndef HAVE_NO_FORTRAN_MPI_TYPES_IN_C
-    case MPI_2INTEGER: {
-        int *a = (int *)inoutvec; int *b = (int *)invec;
-        for ( i=0; i<flen; i+=2 ) {
-            if (a[i] == b[i])
-                a[i+1] = MPIR_MIN(a[i+1],b[i+1]);
-            else if (a[i] > b[i]) {
-                a[i]   = b[i];
-                a[i+1] = b[i+1];
-            }
-        }
-        break;
-    }
-    case MPI_2REAL: {
-        float *a = (float *)inoutvec; float *b = (float *)invec;
-        for ( i=0; i<flen; i+=2 ) {
-            if (a[i] == b[i])
-                a[i+1] = MPIR_MIN(a[i+1],b[i+1]);
-            else if (a[i] > b[i]) {
-                a[i]   = b[i];
-                a[i+1] = b[i+1];
-            }
-        }
-        break;
-    }
-    case MPI_2DOUBLE_PRECISION: {
-        double *a = (double *)inoutvec; double *b = (double *)invec;
-        for ( i=0; i<flen; i+=2 ) {
-            if (a[i] == b[i])
-                a[i+1] = MPIR_MIN(a[i+1],b[i+1]);
-            else if (a[i] > b[i]) {
-                a[i]   = b[i];
-                a[i+1] = b[i+1];
-            }
-        }
-        break;
-    }
+    case MPI_2INTEGER:          MPIR_MINLOC_F_CASE(int);
+    case MPI_2REAL:             MPIR_MINLOC_F_CASE(float);
+    case MPI_2DOUBLE_PRECISION: MPIR_MINLOC_F_CASE(double);
 #endif
 #endif
 	/* --BEGIN ERROR HANDLING-- */
     default: {
 	MPIU_THREADPRIV_DECL;
 	MPIU_THREADPRIV_GET;
-        MPIU_THREADPRIV_FIELD(op_errno) = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_MINLOC" );
+        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_MINLOC" );
+        MPIU_THREADPRIV_FIELD(op_errno) = mpi_errno;
         break;
     }
 	/* --END ERROR HANDLING-- */
     }
+
 }
 
 
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_MINLOC_check_dtype
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_MINLOC_check_dtype( MPI_Datatype type )
 {
-    static const char FCNAME[] = "MPIR_MINLOC_check_dtype";
+    int mpi_errno = MPI_SUCCESS;
     
     switch (type) {
     /* first the C types */
@@ -209,10 +147,10 @@ int MPIR_MINLOC_check_dtype( MPI_Datatype type )
     case MPI_2DOUBLE_PRECISION: 
 #endif
 #endif
-        return MPI_SUCCESS;
-	/* --BEGIN ERROR HANDLING-- */
-    default: 
-        return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_MINLOC" );
-	/* --END ERROR HANDLING-- */
+        break;
+
+    default: MPIU_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_MINLOC");
     }
+    
+    return mpi_errno;
 }
