@@ -120,7 +120,7 @@ int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset off,
  * (including this one)
  */
 void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
-			      int *len_list, int contig_access_count,
+			      ADIO_Offset *len_list, int contig_access_count,
 			      int *striping_info, int nprocs,
                               int *count_my_req_procs_ptr,
 			      int **count_my_req_per_proc_ptr,
@@ -273,7 +273,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
 }
 
 int ADIOI_LUSTRE_Docollect(ADIO_File fd, int contig_access_count,
-			   int *len_list, int nprocs)
+			   ADIO_Offset *len_list, int nprocs)
 {
     /* If the processes are non-interleaved, we will check the req_size.
      *   if (avg_req_size > big_req_size) {
