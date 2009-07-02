@@ -17,7 +17,7 @@ static int exists(char *filename)
     return 1;
 }
 
-HYD_Status HYDU_find_in_path(char *execname, char **path)
+HYD_Status HYDU_find_in_path(const char *execname, char **path)
 {
     char *user_path = NULL, *tmp[HYD_NUM_TMP_STRINGS], *path_loc = NULL, *test_loc;
     HYD_Status status = HYD_SUCCESS;
@@ -30,21 +30,23 @@ HYD_Status HYDU_find_in_path(char *execname, char **path)
         user_path = HYDU_strdup(getenv("PATH"));
         test_loc = strtok(user_path, ";:");
         do {
-            tmp[0] = test_loc;
-            tmp[1] = "/";
-            tmp[2] = execname;
+            tmp[0] = HYDU_strdup(test_loc);
+            tmp[1] = HYDU_strdup("/");
+            tmp[2] = HYDU_strdup(execname);
             tmp[3] = NULL;
 
             status = HYDU_str_alloc_and_join(tmp, &path_loc);
             HYDU_ERR_POP(status, "unable to join strings\n");
+            HYDU_free_strlist(tmp);
 
             if (exists(path_loc)) {
-                tmp[0] = test_loc;
-                tmp[1] = "/";
+                tmp[0] = HYDU_strdup(test_loc);
+                tmp[1] = HYDU_strdup("/");
                 tmp[2] = NULL;
 
                 status = HYDU_str_alloc_and_join(tmp, path);
                 HYDU_ERR_POP(status, "unable to join strings\n");
+                HYDU_free_strlist(tmp);
 
                 goto fn_exit;   /* We are done */
             }
@@ -70,7 +72,7 @@ HYD_Status HYDU_find_in_path(char *execname, char **path)
     goto fn_exit;
 }
 
-HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path)
+HYD_Status HYDU_get_base_path(const char *execname, char *wdir, char **path)
 {
     char *loc, *post;
     char *tmp[HYD_NUM_TMP_STRINGS];
@@ -91,12 +93,13 @@ HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path)
 
         /* Check if its absolute or relative */
         if (post[0] != '/') {   /* relative */
-            tmp[0] = wdir;
-            tmp[1] = "/";
-            tmp[2] = post;
+            tmp[0] = HYDU_strdup(wdir);
+            tmp[1] = HYDU_strdup("/");
+            tmp[2] = HYDU_strdup(post);
             tmp[3] = NULL;
             status = HYDU_str_alloc_and_join(tmp, path);
             HYDU_ERR_POP(status, "unable to join strings\n");
+            HYDU_free_strlist(tmp);
         }
         else {  /* absolute */
             *path = HYDU_strdup(post);

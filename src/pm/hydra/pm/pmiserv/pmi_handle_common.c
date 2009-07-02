@@ -13,7 +13,7 @@
 HYD_Status HYD_PMCD_pmi_handle_init(int fd, char *args[])
 {
     int pmi_version, pmi_subversion;
-    char *tmp;
+    const char *tmp;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

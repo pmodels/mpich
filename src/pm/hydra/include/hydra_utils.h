@@ -136,8 +136,8 @@ int HYDU_Error_printf_simple(const char *str, ...);
 
 
 /* args */
-HYD_Status HYDU_find_in_path(char *execname, char **path);
-HYD_Status HYDU_get_base_path(char *execname, char *wdir, char **path);
+HYD_Status HYDU_find_in_path(const char *execname, char **path);
+HYD_Status HYDU_get_base_path(const char *execname, char *wdir, char **path);
 
 
 /* bind */
@@ -153,7 +153,7 @@ HYD_Env_t *HYDU_str_to_env(char *str);
 HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list);
 HYD_Status HYDU_list_inherited_env(HYD_Env_t ** env_list);
 HYD_Env_t *HYDU_env_list_dup(HYD_Env_t * env);
-HYD_Status HYDU_env_create(HYD_Env_t ** env, char *env_name, char *env_value);
+HYD_Status HYDU_env_create(HYD_Env_t ** env, const char *env_name, char *env_value);
 HYD_Status HYDU_env_free(HYD_Env_t * env);
 HYD_Status HYDU_env_free_list(HYD_Env_t * env);
 HYD_Env_t *HYDU_env_lookup(HYD_Env_t env, HYD_Env_t * env_list);
@@ -222,11 +222,11 @@ HYD_Status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port);
 HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd);
 HYD_Status HYDU_sock_accept(int listen_fd, int *fd);
 HYD_Status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen);
-HYD_Status HYDU_sock_writeline(int fd, char *buf, int maxsize);
+HYD_Status HYDU_sock_writeline(int fd, const char *buf, int maxsize);
 HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
                           enum HYDU_sock_comm_flag flag);
-HYD_Status HYDU_sock_write(int fd, void *buf, int maxsize);
-HYD_Status HYDU_sock_trywrite(int fd, void *buf, int maxsize);
+HYD_Status HYDU_sock_write(int fd, const void *buf, int maxsize);
+HYD_Status HYDU_sock_trywrite(int fd, const void *buf, int maxsize);
 HYD_Status HYDU_sock_set_nonblock(int fd);
 HYD_Status HYDU_sock_set_cloexec(int fd);
 HYD_Status HYDU_sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *closed);

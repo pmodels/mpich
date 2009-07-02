@@ -173,7 +173,7 @@ HYD_Env_t *HYDU_env_list_dup(HYD_Env_t * env)
 }
 
 
-HYD_Status HYDU_env_create(HYD_Env_t ** env, char *env_name, char *env_value)
+HYD_Status HYDU_env_create(HYD_Env_t ** env, const char *env_name, char *env_value)
 {
     HYD_Status status = HYD_SUCCESS;
 

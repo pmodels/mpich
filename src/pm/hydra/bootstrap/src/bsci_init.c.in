@@ -9,7 +9,7 @@
 #include "bscu.h"
 
 struct HYD_BSCI_fns HYD_BSCI_fns = { 0 };
-char *HYD_BSCI_comp_array[] = { @hydra_bss_name_array@ };
+const char *HYD_BSCI_comp_array[] = { @hydra_bss_name_array@ };
 HYD_Status(*HYD_BSCI_comp_init[])(void) = { @hydra_bss_init_array@ };
 struct HYD_BSCI_info HYD_BSCI_info = { 0 };
 

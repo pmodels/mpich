@@ -199,7 +199,7 @@ static HYD_Status fill_in_exec_args(void)
     int i, arg, process_id;
     int inherited_env_count, user_env_count, system_env_count;
     int segment_count, exec_count, total_args;
-    static proxy_count = 0;
+    static int proxy_count = 0;
     HYD_Env_t *env;
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;

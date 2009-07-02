@@ -12,7 +12,7 @@
 /* initialize to avoid common symbols */
 struct HYD_RMKI_fns HYD_RMKI_fns = { 0 };
 
-char *HYD_RMKI_comp_array[] = { @hydra_rmk_name_array@ };
+const char *HYD_RMKI_comp_array[] = { @hydra_rmk_name_array@ };
 HYD_Status(*HYD_RMKI_comp_init[])(void) = { @hydra_rmk_init_array@ };
 
 HYD_Status HYD_RMKI_init(char *rmk)

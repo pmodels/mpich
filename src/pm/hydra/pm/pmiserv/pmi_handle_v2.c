@@ -55,8 +55,9 @@ static void print_attr_reqs(void)
         dprintf("%d:%d(", areq->fd, areq->type);
         for (i = 0; areq->req[i]; i++) {
             dprintf("%s", areq->req[i]);
-            if (areq->req[i + 1])
+            if (areq->req[i + 1]) {
                 dprintf(",");
+            }
         }
         dprintf(") ");
     }
@@ -196,7 +197,7 @@ static HYD_Status poke_progress(void)
 }
 
 
-static char *find_token_keyval(struct token *tokens, int count, char *key)
+static char *find_token_keyval(struct token *tokens, int count, const char *key)
 {
     int i;
 
@@ -394,7 +395,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
     int i, found;
     HYD_PMCD_pmi_process_t *process;
     HYD_PMCD_pmi_kvs_pair_t *run;
-    char *key, *wait, *thrid;
+    char *key, *waitval, *thrid;
     char *tmp[HYD_NUM_TMP_STRINGS] = { 0 }, *cmd;
     struct token *tokens;
     int token_count;
@@ -408,7 +409,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
     key = find_token_keyval(tokens, token_count, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
-    wait = find_token_keyval(tokens, token_count, "wait");
+    waitval = find_token_keyval(tokens, token_count, "wait");
     thrid = find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
@@ -430,7 +431,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
         if (progress_nest_count)
             goto fn_exit;
 
-        if (wait && !strcmp(wait, "TRUE")) {
+        if (waitval && !strcmp(waitval, "TRUE")) {
             /* queue up */
             status = queue_outstanding_req(fd, GET_NODE_ATTR, args);
             HYDU_ERR_POP(status, "unable to queue outstanding request\n");

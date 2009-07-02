@@ -9,7 +9,7 @@
 
 #include "hydra_base.h"
 
-HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, char *partition_id_str,
+HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, const char *partition_id_str,
                                       struct HYD_Partition *partition_list);
 
 #endif /* FORK_H_INCLUDED */

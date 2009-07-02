@@ -57,9 +57,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "error while joining strings\n");
-
-    for (i = 0; tmp[i]; i++)
-        HYDU_FREE(tmp[i]);
+    HYDU_free_strlist(tmp);
 
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
@@ -103,9 +101,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get_maxes(int fd, char *args[])
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
-
-    for (i = 0; tmp[i]; i++)
-        HYDU_FREE(tmp[i]);
+    HYDU_free_strlist(tmp);
 
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
@@ -142,9 +138,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get_appnum(int fd, char *args[])
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
-
-    for (i = 0; tmp[i]; i++)
-        HYDU_FREE(tmp[i]);
+    HYDU_free_strlist(tmp);
 
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
@@ -175,13 +169,14 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get_my_kvsname(int fd, char *args[])
                              "unable to find process structure for fd %d\n", fd);
 
     i = 0;
-    tmp[i++] = "cmd=my_kvsname kvsname=";
-    tmp[i++] = process->node->pg->kvs->kvs_name;
-    tmp[i++] = "\n";
+    tmp[i++] = HYDU_strdup("cmd=my_kvsname kvsname=");
+    tmp[i++] = HYDU_strdup(process->node->pg->kvs->kvs_name);
+    tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
@@ -200,7 +195,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_barrier_in(int fd, char *args[])
 {
     HYD_PMCD_pmi_process_t *process, *prun;
     HYD_PMCD_pmi_node_t *node;
-    char *cmd;
+    const char *cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -271,30 +266,31 @@ HYD_Status HYD_PMCD_pmi_handle_v1_put(int fd, char *args[])
     key_pair->next = NULL;
 
     i = 0;
-    tmp[i++] = "cmd=put_result rc=";
+    tmp[i++] = HYDU_strdup("cmd=put_result rc=");
     if (process->node->pg->kvs->key_pair == NULL) {
         process->node->pg->kvs->key_pair = key_pair;
-        tmp[i++] = "0 msg=success";
+        tmp[i++] = HYDU_strdup("0 msg=success");
     }
     else {
         run = process->node->pg->kvs->key_pair;
         while (run->next) {
             if (!strcmp(run->key, key_pair->key)) {
-                tmp[i++] = "-1 msg=duplicate_key";
+                tmp[i++] = HYDU_strdup("-1 msg=duplicate_key");
                 key_pair_str = HYDU_strdup(key_pair->key);
-                tmp[i++] = key_pair_str;
+                tmp[i++] = HYDU_strdup(key_pair_str);
                 break;
             }
             run = run->next;
         }
         run->next = key_pair;
-        tmp[i++] = "0 msg=success";
+        tmp[i++] = HYDU_strdup("0 msg=success");
     }
-    tmp[i++] = "\n";
+    tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
@@ -338,17 +334,17 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get(int fd, char *args[])
                              kvsname, process->node->pg->kvs->kvs_name);
 
     i = 0;
-    tmp[i++] = "cmd=get_result rc=";
+    tmp[i++] = HYDU_strdup("cmd=get_result rc=");
     if (process->node->pg->kvs->key_pair == NULL) {
-        tmp[i++] = "-1 msg=key_";
-        tmp[i++] = key;
-        tmp[i++] = "_not_found value=unknown";
+        tmp[i++] = HYDU_strdup("-1 msg=key_");
+        tmp[i++] = HYDU_strdup(key);
+        tmp[i++] = HYDU_strdup("_not_found value=unknown");
     }
     else {
         run = process->node->pg->kvs->key_pair;
         while (run) {
             if (!strcmp(run->key, key)) {
-                tmp[i++] = "0 msg=success value=";
+                tmp[i++] = HYDU_strdup("0 msg=success value=");
                 key_val_str = HYDU_strdup(run->val);
                 tmp[i++] = key_val_str;
                 break;
@@ -356,21 +352,21 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get(int fd, char *args[])
             run = run->next;
         }
         if (run == NULL) {
-            tmp[i++] = "-1 msg=key_";
-            tmp[i++] = key;
-            tmp[i++] = "_not_found value=unknown";
+            tmp[i++] = HYDU_strdup("-1 msg=key_");
+            tmp[i++] = HYDU_strdup(key);
+            tmp[i++] = HYDU_strdup("_not_found value=unknown");
         }
     }
-    tmp[i++] = "\n";
+    tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
-    HYDU_FREE(key_val_str);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -383,7 +379,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get(int fd, char *args[])
 
 HYD_Status HYD_PMCD_pmi_handle_v1_finalize(int fd, char *args[])
 {
-    char *cmd;
+    const char *cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -419,13 +415,14 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get_usize(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to get bootstrap universe size\n");
 
     i = 0;
-    tmp[i++] = "cmd=universe_size size=";
+    tmp[i++] = HYDU_strdup("cmd=universe_size size=");
     tmp[i++] = HYDU_int_to_str(usize);
-    tmp[i++] = "\n";
+    tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");

@@ -221,7 +221,7 @@ HYD_Status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen)
 }
 
 
-HYD_Status HYDU_sock_writeline(int fd, char *buf, int maxsize)
+HYD_Status HYDU_sock_writeline(int fd, const char *buf, int maxsize)
 {
     int n;
     HYD_Status status = HYD_SUCCESS;
@@ -285,7 +285,7 @@ HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
 }
 
 
-HYD_Status HYDU_sock_write(int fd, void *buf, int maxsize)
+HYD_Status HYDU_sock_write(int fd, const void *buf, int maxsize)
 {
     int n;
     HYD_Status status = HYD_SUCCESS;
@@ -309,7 +309,7 @@ HYD_Status HYDU_sock_write(int fd, void *buf, int maxsize)
 }
 
 
-HYD_Status HYDU_sock_trywrite(int fd, void *buf, int maxsize)
+HYD_Status HYDU_sock_trywrite(int fd, const void *buf, int maxsize)
 {
     int n;
     HYD_Status status = HYD_SUCCESS;

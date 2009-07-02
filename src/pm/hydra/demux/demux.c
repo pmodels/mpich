@@ -98,7 +98,7 @@ HYD_Status HYD_DMX_deregister_fd(int fd)
 }
 
 
-HYD_Status HYD_DMX_wait_for_event(int time)
+HYD_Status HYD_DMX_wait_for_event(int wtime)
 {
     int total_fds, i, j, events, ret;
     HYD_DMXI_callback_t *run;
@@ -131,7 +131,7 @@ HYD_Status HYD_DMX_wait_for_event(int time)
     total_fds = i;
 
     while (1) {
-        ret = poll(pollfds, total_fds, time);
+        ret = poll(pollfds, total_fds, wtime);
         if (ret < 0) {
             if (errno == EINTR) {
                 /* We were interrupted by a system call; this is not

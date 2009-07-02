@@ -9,7 +9,7 @@
 #include "bscu.h"
 #include "slurm.h"
 
-HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_str,
+HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *partition_id_str,
                                        struct HYD_Partition *partition_list)
 {
     struct HYD_Partition *partition;
@@ -34,12 +34,14 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_st
         HYDU_ERR_POP(status, "error while searching for executable in user path\n");
 
         if (test_path) {
-            tmp[0] = test_path;
-            tmp[1] = "srun";
+            tmp[0] = HYDU_strdup(test_path);
+            tmp[1] = HYDU_strdup("srun");
             tmp[2] = NULL;
 
             status = HYDU_str_alloc_and_join(tmp, &path);
             HYDU_ERR_POP(status, "error joining strings\n");
+
+            HYDU_free_strlist(tmp);
         }
         else
             path = HYDU_strdup("/usr/bin/srun");
@@ -52,14 +54,16 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, char *partition_id_st
     i = 0;
     num_nodes = 0;
     FORALL_ACTIVE_PARTITIONS(partition, partition_list) {
-        tmp[i++] = partition->base->name;
+        tmp[i++] = HYDU_strdup(partition->base->name);
         if (partition->next && partition->next->base->active)
-            tmp[i++] = ",";
+            tmp[i++] = HYDU_strdup(",");
         num_nodes++;
     }
     tmp[i++] = NULL;
     status = HYDU_str_alloc_and_join(tmp, &client_arg[arg]);
     HYDU_ERR_POP(status, "error joining strings\n");
+
+    HYDU_free_strlist(tmp);
 
     arg++;
 

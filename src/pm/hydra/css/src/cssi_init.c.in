@@ -9,7 +9,7 @@
 
 struct HYD_CSSI_fns HYD_CSSI_fns = { 0 };
 
-char *HYD_CSSI_comp_array[] = { @hydra_css_name_array@ };
+const char *HYD_CSSI_comp_array[] = { @hydra_css_name_array@ };
 HYD_Status(*HYD_CSSI_comp_init[])(void) = { @hydra_css_init_array@ };
 
 HYD_Status HYD_CSSI_init(char *css)

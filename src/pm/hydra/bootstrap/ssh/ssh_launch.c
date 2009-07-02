@@ -15,7 +15,7 @@
  * environment variables. We fork a worker process that sets the
  * environment and execvp's this executable.
  */
-HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, char *partition_id_str,
+HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, const char *partition_id_str,
                                      struct HYD_Partition *partition_list)
 {
     struct HYD_Partition *partition;
@@ -40,12 +40,14 @@ HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, char *partition_id_str,
         HYDU_ERR_POP(status, "error while searching for executable in user path\n");
 
         if (test_path) {
-            tmp[0] = test_path;
-            tmp[1] = "ssh";
+            tmp[0] = HYDU_strdup(test_path);
+            tmp[1] = HYDU_strdup("ssh");
             tmp[2] = NULL;
 
             status = HYDU_str_alloc_and_join(tmp, &path);
             HYDU_ERR_POP(status, "error joining strings\n");
+
+            HYDU_free_strlist(tmp);
         }
         else
             path = HYDU_strdup("/usr/bin/ssh");

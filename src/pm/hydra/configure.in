@@ -13,13 +13,11 @@ PAC_SUBCONFIG_INIT()
 
 AC_CONFIG_HEADER(include/hydra_config.h)
 
-# Check for special types
-AC_TYPE_SIZE_T
-
 dnl Bug in autoconf adds -O2 and -g by default. Make sure we only get
 dnl the flags we want.
 save_cflags=$CFLAGS
 AC_PROG_CC
+AC_TYPE_SIZE_T
 CFLAGS=$save_cflags
 
 AM_PROG_MKDIR_P
@@ -253,15 +251,14 @@ AC_SUBST(hydra_css)
 
 dnl Debugging support
 AC_ARG_ENABLE(g, [  --enable-g              Enable Debugging],
-		 [ DEBUG=$enableval ],
-		 [ DEBUG=no ])
+		 [ debug=$enableval ],
+		 [ debug=no ])
 AC_MSG_CHECKING(debugging support)
-AC_MSG_RESULT($DEBUG)
-if test "$DEBUG" = "yes"; then
-   EXTRA_CFLAGS="$EXTRA_CFLAGS -g"
+AC_MSG_RESULT($debug)
+if test "$debug" = "yes"; then
+   CFLAGS="$CFLAGS -g"
    AC_DEFINE(ENABLE_DEBUG,1,[Define if debugging support is enabled])
 fi
-AC_SUBST(EXTRA_CFLAGS)
 
 dnl Warning messages
 AC_ARG_ENABLE(warnings, [  --enable-warnings              Enable warnings],

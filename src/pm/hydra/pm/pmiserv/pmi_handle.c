@@ -157,7 +157,7 @@ static struct HYD_PMCD_pmi_node *allocate_node(HYD_PMCD_pmi_pg_t * pg, int node_
 }
 
 
-HYD_Status HYD_PMCD_pmi_add_kvs(char *key, char *val, HYD_PMCD_pmi_kvs_t * kvs,
+HYD_Status HYD_PMCD_pmi_add_kvs(const char *key, char *val, HYD_PMCD_pmi_kvs_t * kvs,
                                 char **key_pair_str, int *ret)
 {
     HYD_PMCD_pmi_kvs_pair_t *key_pair, *run;

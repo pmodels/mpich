@@ -242,7 +242,7 @@ HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment
 }
 
 
-static int count_elements(char *str, char *delim)
+static int count_elements(char *str, const char *delim)
 {
     int count;
 
@@ -259,7 +259,7 @@ static int count_elements(char *str, char *delim)
 }
 
 
-static char *pad_string(char *str, char *pad, int count)
+static char *pad_string(char *str, const char *pad, int count)
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *out;
     int i, j;
