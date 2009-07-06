@@ -1004,6 +1004,8 @@ int smpd_state_reading_stdin(smpd_context_t *context, SMPDU_Sock_event_t *event_
 	    num_read = 0;
 	    smpd_dbg_printf("SMPDU_Sock_read(%d) failed (%s), assuming %s is closed.\n",
 		SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result), smpd_get_context_str(context));
+            smpd_exit_fn(FCNAME);
+            return SMPD_FAIL;
 	}
 	smpd_dbg_printf("%d bytes read from %s\n", num_read+1, smpd_get_context_str(context));
 	smpd_encode_buffer(buffer, SMPD_MAX_CMD_LENGTH, context->read_cmd.cmd, num_read+1, &num_encoded);
@@ -1048,6 +1050,8 @@ int smpd_state_reading_stdin(smpd_context_t *context, SMPDU_Sock_event_t *event_
 	    num_read = 0;
 	    smpd_dbg_printf("SMPDU_Sock_read(%d) failed (%s), assuming %s is closed.\n",
 		SMPDU_Sock_get_sock_id(context->sock), get_sock_error_string(result), smpd_get_context_str(context));
+            smpd_exit_fn(FCNAME);
+            return SMPD_FAIL;
 	}
 	smpd_dbg_printf("%d bytes read from %s\n", num_read+1, smpd_get_context_str(context));
 
