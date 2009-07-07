@@ -1665,7 +1665,7 @@ static void add_environment_variables(char *str, char **vars, char *bEnv)
 static void child_exited(int signo)
 {
     pid_t pid;
-    int status = WNOHANG;
+    int status;
     smpd_process_t *iter;
 
     /*
@@ -1680,9 +1680,9 @@ static void child_exited(int signo)
 	smpd_dbg_printf("SIGCHLD received\n");
 	for (;;)
 	{
-	    status = WNOHANG;
-	    pid = wait(&status);
-	    if (pid == -1)
+	    status = 0;
+	    pid = waitpid(-1, &status, WNOHANG);
+	    if (pid <= 0)
 		break;
 
 	    smpd_dbg_printf("SIGCHILD pid = %d\n", pid);
