@@ -115,3 +115,40 @@ HYD_Status HYDU_get_base_path(const char *execname, char *wdir, char **path)
   fn_fail:
     goto fn_exit;
 }
+
+
+char *HYDU_getcwd(void)
+{
+    char *pwdval, *cwdval, *retval = NULL;
+    HYD_Status status = HYD_SUCCESS;
+#if defined HAVE_STAT
+    struct stat spwd, scwd;
+#endif /* HAVE_STAT */
+
+    pwdval = getenv("PWD");
+    HYDU_MALLOC(cwdval, char *, HYDRA_MAX_PATH, status);
+    if (getcwd(cwdval, HYDRA_MAX_PATH) == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "allocated space is too small for absolute path\n");
+
+#if defined HAVE_STAT
+    if (pwdval && stat(pwdval, &spwd) != -1 && stat(cwdval, &scwd) != -1 &&
+        spwd.st_dev == scwd.st_dev && spwd.st_ino == scwd.st_ino) {
+        /* PWD and getcwd() match; use the PWD value */
+        retval = HYDU_strdup(pwdval);
+        HYDU_free(cwdval);
+    }
+    else
+#endif /* HAVE_STAT */
+    {
+        /* PWD and getcwd() don't match; use the getcwd value and hope
+         * for the best. */
+        retval = cwdval;
+    }
+
+fn_exit:
+    return retval;
+
+fn_fail:
+    goto fn_exit;
+}

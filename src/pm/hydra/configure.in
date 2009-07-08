@@ -47,7 +47,7 @@ AC_CHECK_LIB(gethostbyname,nsl,LDFLAGS="$LDFLAGS -lnsl",)
 
 dnl Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
-	       strerror strsignal putenv)
+	       strerror strsignal putenv stat)
 
 # putenv() sets environment variable
 AC_HAVE_FUNCS(putenv)

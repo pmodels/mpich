@@ -9,8 +9,6 @@
 #include "mpiexec.h"
 #include "uiu.h"
 
-#define HYDRA_MAX_PATH 4096
-
 #define INCREMENT_ARGV(status)             \
     {                                      \
 	if (!(++argv)) {                   \
@@ -713,10 +711,9 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 
     /* Get the base path for the proxy */
     if (HYD_handle.wdir == NULL) {
-        HYDU_MALLOC(HYD_handle.wdir, char *, HYDRA_MAX_PATH, status);
-        if (getcwd(HYD_handle.wdir, HYDRA_MAX_PATH) == NULL)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "allocated space is too small for absolute path\n");
+        HYD_handle.wdir = HYDU_getcwd();
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.wdir == NULL, HYD_INTERNAL_ERROR,
+                            "unable to get current working directory\n");
     }
     status = HYDU_get_base_path(progname, HYD_handle.wdir, &HYD_handle.base_path);
     HYDU_ERR_POP(status, "unable to get base path\n");

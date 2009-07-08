@@ -53,6 +53,8 @@
 #define MAX_HOSTNAME_LEN 256
 #endif /* MAXHOSTNAMELEN */
 
+#define HYDRA_MAX_PATH 4096
+
 #if defined MANUAL_EXTERN_ENVIRON
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
