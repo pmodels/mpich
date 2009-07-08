@@ -1126,7 +1126,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Wno-sign-compare
         -Waggregate-return
         -Wold-style-definition
-        -Wmissing-noreturn
         -Wno-multichar
         -Wno-deprecated-declarations
         -Wpacked
@@ -1165,10 +1164,7 @@ if test "$enable_strict_done" != "yes" ; then
     # See if the above options work with the compiler
     accepted_flags=""
     for flag in $pac_cc_strict_flags ; do
-    	old_CFLAGS=$CFLAGS
-	CFLAGS="$CFLAGS $accepted_flags $flag"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[int a;])],accepted_flags="$accepted_flags $flag",)
-	CFLAGS="$old_CFLAGS"
+	PAC_C_CHECK_COMPILER_OPTION($flag,accepted_flags="$accepted_flags $flag",)
     done
     pac_cc_strict_flags=$accepted_flags
 fi
