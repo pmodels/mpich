@@ -125,7 +125,9 @@ HYD_Status HYDU_fork_and_exit(int core)
         exit(0);
     }
 
+#if defined HAVE_PROC_BINDING
   fn_exit:
+#endif /* HAVE_PROC_BINDING */
     HYDU_FUNC_EXIT();
     return status;
 
