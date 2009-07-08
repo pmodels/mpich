@@ -96,7 +96,7 @@ static HYD_Status parse_params(char **t_argv)
         /* Working directory */
         if (!strcmp(*argv, "--binding")) {
             argv++;
-            HYD_PMCD_pmi_proxy_params.binding = (HYD_Binding) atoi(*argv);
+            HYD_PMCD_pmi_proxy_params.binding = (HYD_Binding) (unsigned int) atoi(*argv);
             argv++;
             if (!strcmp(*argv, "HYDRA_NULL"))
                 HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
@@ -142,7 +142,8 @@ static HYD_Status parse_params(char **t_argv)
         /* Global environment type */
         if (!strcmp(*argv, "--genv-prop")) {
             argv++;
-            HYD_PMCD_pmi_proxy_params.genv_prop = (HYD_Env_prop_t) atoi(*argv);
+            HYD_PMCD_pmi_proxy_params.genv_prop =
+                (HYD_Env_prop_t) (unsigned int) atoi(*argv);
             continue;
         }
 
@@ -234,7 +235,7 @@ static HYD_Status parse_params(char **t_argv)
         /* Global environment type */
         if (!strcmp(*argv, "--exec-env-prop")) {
             argv++;
-            exec->prop = (HYD_Env_prop_t) atoi(*argv);
+            exec->prop = (HYD_Env_prop_t) (unsigned int) atoi(*argv);
             continue;
         }
 
@@ -277,7 +278,8 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
     while (++argv && *argv) {
         if (!strcmp(*argv, "--launch-mode")) {
             ++argv;
-            HYD_PMCD_pmi_proxy_params.proxy.launch_mode = (HYD_Launch_mode_t) atoi(*argv);
+            HYD_PMCD_pmi_proxy_params.proxy.launch_mode =
+                (HYD_Launch_mode_t) (unsigned int) atoi(*argv);
             continue;
         }
         if (!strcmp(*argv, "--proxy-port")) {
