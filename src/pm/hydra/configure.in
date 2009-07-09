@@ -287,14 +287,15 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
     	plpa)
 		AC_MSG_CHECKING(if plpa works correctly)
 		old_CFLAGS=$CFLAGS
+		old_LDFLAGS=$LDFLAGS
 		CFLAGS="$CFLAGS -I${srcdir}/utils/bind/plpa/plpa"
+		LDFLAGS="$LDFLAGS ${srcdir}/utils/bind/plpa/plpa/plpa_api_probe.c"
 		AC_TRY_COMPILE([#include <plpa_internal.h>],[
 				PLPA_NAME(api_type_t) p;
 				PLPA_NAME(api_probe)(&p);
-				PLPA_NAME(have_topology_information)(NULL);
-				PLPA_NAME(get_processor_data)(PLPA_NAME_CAPS(COUNT_ALL),NULL,NULL);
 				],plpa_works=yes,plpa_works=no)
 		CFLAGS=$old_CFLAGS
+		LDFLAGS=$old_LDFLAGS
 		AC_MSG_RESULT($plpa_works)
 		if test "$plpa_works" = "yes" ; then
 		   have_plpa=yes
