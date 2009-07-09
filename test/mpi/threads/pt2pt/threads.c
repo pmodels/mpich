@@ -9,9 +9,11 @@
 #include <pthread.h>
 
 #define MAX_THREADS 4
-#define LOOPS 10000
+/* #define LOOPS 10000 */
+#define LOOPS 1000
 #define WINDOW 16
-#define MAX_MSG_SIZE 16384
+/* #define MAX_MSG_SIZE 16384 */
+#define MAX_MSG_SIZE 4096
 #define HOP 4
 
 /* Emulated thread private storage */
