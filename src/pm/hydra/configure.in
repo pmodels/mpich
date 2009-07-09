@@ -279,6 +279,9 @@ AC_MSG_RESULT($hydra_bindlib)
 
 have_plpa=no
 hydra_bindlib_names="`echo $hydra_bindlib | sed -e 's/:/ /g' -e 's/,/ /g'`"
+AC_DEFINE_UNQUOTED(HYDRA_BINDLIB_NAMES,"$hydra_bindlib_names",
+		[Definition of enabled binding libraries])
+
 for hydra_bindlib_name in ${hydra_bindlib_names}; do
     case "$hydra_bindlib_name" in
     	plpa)

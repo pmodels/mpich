@@ -90,7 +90,7 @@ static void usage(void)
     printf("\n");
     printf("  Other Hydra options:\n");
     printf("    -verbose                         verbose mode\n");
-    printf("    -version                         version information\n");
+    printf("    -info                            build information\n");
     printf("    -print-rank-map                  print rank mapping\n");
     printf("    -print-all-exitcodes             print exit codes of all processes\n");
 }

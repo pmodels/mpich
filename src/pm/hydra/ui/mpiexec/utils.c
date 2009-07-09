@@ -20,12 +20,13 @@
 #define IS_HELP(str) \
     ((!strcmp((str), "-h")) || (!strcmp((str), "-help")) || (!strcmp((str), "--help")))
 
-static void show_version(void)
+static void show_info(void)
 {
     printf("HYDRA build details:\n");
     printf("    Process Manager: pmi\n");
     printf("    Boot-strap servers available: %s\n", HYDRA_BSS_NAMES);
     printf("    Communication sub-systems available: none\n");
+    printf("    Binding libraries available: %s\n", HYDRA_BINDLIB_NAMES);
 }
 
 static void dump_env_notes(void)
@@ -290,14 +291,14 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
         status = HYDU_strsplit(*argv, &str[0], &str[1], '=');
         HYDU_ERR_POP(status, "string break returned error\n");
 
-        if ((!strcmp(str[0], "-version")) || (!strcmp(str[0], "--version"))) {
+        if ((!strcmp(str[0], "-info")) || (!strcmp(str[0], "--info"))) {
             if (argv[1] && IS_HELP(argv[1])) {
                 printf("\n");
-                printf("-version: Shows build information\n\n");
+                printf("-info: Shows build information\n\n");
                 HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
             }
 
-            show_version();
+            show_info();
             HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
         }
 
@@ -445,7 +446,7 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
                 printf("\n");
                 printf("-bootstrap: Bootstrap server to use\n\n");
                 printf("Notes:\n");
-                printf("  * Use the -version option to see what all are compiled in\n\n");
+                printf("  * Use the -info option to see what all are compiled in\n\n");
                 HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
             }
 
@@ -487,7 +488,7 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
                 printf("\n");
                 printf("-rmk: Resource management kernel to use\n\n");
                 printf("Notes:\n");
-                printf("  * Use the -version option to see what all are compiled in\n\n");
+                printf("  * Use the -info option to see what all are compiled in\n\n");
                 HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
             }
 
@@ -508,7 +509,7 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
                 printf("\n");
                 printf("-css: Communication sub-system to use\n\n");
                 printf("Notes:\n");
-                printf("  * Use the -version option to see what all are compiled in\n\n");
+                printf("  * Use the -info option to see what all are compiled in\n\n");
                 HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
             }
 
@@ -574,7 +575,7 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
                 printf("\n");
                 printf("-bindlib: Binding library to use\n\n");
                 printf("Notes:\n");
-                printf("  * Use the -version option to see what all are compiled in\n\n");
+                printf("  * Use the -info option to see what all are compiled in\n\n");
                 HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
             }
 
