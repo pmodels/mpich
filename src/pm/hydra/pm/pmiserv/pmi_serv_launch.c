@@ -252,7 +252,6 @@ static HYD_Status fill_in_exec_args(void)
         else
             partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
-#if defined HAVE_PROC_BINDING
         partition->base->exec_args[arg++] = HYDU_strdup("--binding");
         partition->base->exec_args[arg++] = HYDU_int_to_str(HYD_handle.binding);
         if (HYD_handle.user_bind_map)
@@ -261,11 +260,6 @@ static HYD_Status fill_in_exec_args(void)
             partition->base->exec_args[arg++] = HYDU_strdup(partition->user_bind_map);
         else
             partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
-#else
-        if (HYD_handle.binding != HYD_BIND_UNSET && HYD_handle.binding != HYD_BIND_NONE)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "Hydra not configured with process binding\n");
-#endif /* HAVE_PROC_BINDING */
 
         partition->base->exec_args[arg++] = HYDU_strdup("--inherited-env");
         for (i = 0, env = HYD_handle.inherited_env; env; env = env->next, i++);

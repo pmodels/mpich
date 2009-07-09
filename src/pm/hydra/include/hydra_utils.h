@@ -142,11 +142,9 @@ HYD_Status HYDU_get_base_path(const char *execname, char *wdir, char **path);
 
 
 /* bind */
-#if defined HAVE_PROC_BINDING
 HYD_Status HYDU_bind_init(char *user_bind_map);
 HYD_Status HYDU_bind_process(int core);
 int HYDU_bind_get_core_id(int id, HYD_Binding binding);
-#endif /* HAVE_PROC_BINDING */
 
 
 /* env */

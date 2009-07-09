@@ -302,10 +302,6 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		;;
     esac
 done
-
-if test "$have_plpa" = "yes"; then
-   AC_DEFINE(HAVE_PROC_BINDING,1,[Define if process binding is enabled])
-fi
 AM_CONDITIONAL([hydra_have_plpa], [test "${have_plpa}" = "yes"])
 
 dnl Check if __VA_ARGS__ is defined by the compiler

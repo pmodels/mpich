@@ -58,12 +58,10 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
             HYDU_ERR_POP(status, "unable to putenv\n");
         }
 
-#if defined HAVE_PROC_BINDING
         if (core >= 0) {
             status = HYDU_bind_process(core);
             HYDU_ERR_POP(status, "bind process failed\n");
         }
-#endif /* HAVE_PROC_BINDING */
 
         if (execvp(client_arg[0], client_arg) < 0) {
             /* The child process should never get back to the proxy
@@ -114,27 +112,21 @@ HYD_Status HYDU_fork_and_exit(int core)
         close(1);
         close(2);
 
-#if defined HAVE_PROC_BINDING
         if (core >= 0) {
             status = HYDU_bind_process(core);
             HYDU_ERR_POP(status, "bind process failed\n");
         }
-#endif /* HAVE_PROC_BINDING */
     }
     else {      /* Parent process */
         exit(0);
     }
 
-#if defined HAVE_PROC_BINDING
   fn_exit:
-#endif /* HAVE_PROC_BINDING */
     HYDU_FUNC_EXIT();
     return status;
 
-#if defined HAVE_PROC_BINDING
   fn_fail:
     goto fn_exit;
-#endif /* HAVE_PROC_BINDING */
 }
 
 #if defined HAVE_THREAD_SUPPORT
