@@ -12,8 +12,4 @@ include utils/signals/Makefile.mk
 include utils/sock/Makefile.mk
 include utils/string/Makefile.mk
 include utils/timer/Makefile.mk
-
-if hydra_procbind
 include utils/bind/Makefile.mk
-include utils/plpa/Makefile.mk
-endif

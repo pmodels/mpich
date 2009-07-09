@@ -277,14 +277,14 @@ AC_ARG_WITH(hydra-bindlib, [  --enable-hydra-procbind       Process Binding Libr
 AC_MSG_CHECKING(process binding library)
 AC_MSG_RESULT($hydra_bindlib)
 
-procbind=no
+have_plpa=no
 hydra_bindlib_names="`echo $hydra_bindlib | sed -e 's/:/ /g' -e 's/,/ /g'`"
 for hydra_bindlib_name in ${hydra_bindlib_names}; do
     case "$hydra_bindlib_name" in
     	plpa)
 		AC_MSG_CHECKING(if plpa works correctly)
 		old_CFLAGS=$CFLAGS
-		CFLAGS="$CFLAGS -I${srcdir}/utils/plpa"
+		CFLAGS="$CFLAGS -I${srcdir}/utils/bind/plpa/plpa"
 		AC_TRY_COMPILE([#include <plpa_internal.h>],[
 				PLPA_NAME(api_type_t) p;
 				PLPA_NAME(api_probe)(&p);
@@ -294,7 +294,7 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		CFLAGS=$old_CFLAGS
 		AC_MSG_RESULT($plpa_works)
 		if test "$plpa_works" = "yes" ; then
-		   procbind=yes
+		   have_plpa=yes
 		   AC_DEFINE(HAVE_PLPA,1,[Define if plpa is available])
 		fi
 		;;		
@@ -303,10 +303,10 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
     esac
 done
 
-if test "$procbind" = "yes"; then
+if test "$have_plpa" = "yes"; then
    AC_DEFINE(HAVE_PROC_BINDING,1,[Define if process binding is enabled])
 fi
-AM_CONDITIONAL([hydra_procbind], [test "${procbind}" = "yes"])
+AM_CONDITIONAL([hydra_have_plpa], [test "${have_plpa}" = "yes"])
 
 dnl Check if __VA_ARGS__ is defined by the compiler
 AC_MSG_CHECKING([whether the compiler allows __VA_ARGS__])

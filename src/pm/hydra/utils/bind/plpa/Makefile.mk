@@ -5,3 +5,5 @@
 #
 
 libhydra_a_SOURCES += $(top_srcdir)/utils/bind/plpa/bind_plpa.c
+
+include $(top_srcdir)/utils/bind/plpa/plpa/Makefile.mk
