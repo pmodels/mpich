@@ -290,7 +290,9 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		old_LDFLAGS=$LDFLAGS
 		CFLAGS="$CFLAGS -I${srcdir}/utils/bind/plpa/plpa"
 		LDFLAGS="$LDFLAGS ${srcdir}/utils/bind/plpa/plpa/plpa_api_probe.c"
-		AC_TRY_COMPILE([#include <plpa_internal.h>],[
+		LDFLAGS="$LDFLAGS ${srcdir}/utils/bind/plpa/plpa/plpa_runtime.c"
+		LDFLAGS="$LDFLAGS ${srcdir}/utils/bind/plpa/plpa/plpa_map.c"
+		AC_TRY_LINK([#include <plpa_internal.h>],[
 				PLPA_NAME(api_type_t) p;
 				PLPA_NAME(api_probe)(&p);
 				],plpa_works=yes,plpa_works=no)
