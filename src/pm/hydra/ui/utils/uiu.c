@@ -18,6 +18,7 @@ void HYD_UIU_init_params(void)
     HYD_handle.css = NULL;
     HYD_handle.rmk = NULL;
     HYD_handle.binding = HYD_BIND_UNSET;
+    HYD_handle.bindlib = HYD_BINDLIB_UNSET;
     HYD_handle.user_bind_map = NULL;
 
     HYD_handle.debug = -1;

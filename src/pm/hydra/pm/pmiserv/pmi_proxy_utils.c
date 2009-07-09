@@ -27,6 +27,7 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.wdir = NULL;
     HYD_PMCD_pmi_proxy_params.pmi_port_str = NULL;
     HYD_PMCD_pmi_proxy_params.binding = HYD_BIND_UNSET;
+    HYD_PMCD_pmi_proxy_params.bindlib = HYD_BINDLIB_UNSET;
     HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
 
     HYD_PMCD_pmi_proxy_params.system_env = NULL;
@@ -93,15 +94,22 @@ static HYD_Status parse_params(char **t_argv)
             continue;
         }
 
-        /* Working directory */
+        /* Binding */
         if (!strcmp(*argv, "--binding")) {
             argv++;
-            HYD_PMCD_pmi_proxy_params.binding = (HYD_Binding) (unsigned int) atoi(*argv);
+            HYD_PMCD_pmi_proxy_params.binding = (HYD_Binding_t) (unsigned int) atoi(*argv);
             argv++;
             if (!strcmp(*argv, "HYDRA_NULL"))
                 HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
             else
                 HYD_PMCD_pmi_proxy_params.user_bind_map = HYDU_strdup(*argv);
+            continue;
+        }
+
+        /* Binding library */
+        if (!strcmp(*argv, "--bindlib")) {
+            argv++;
+            HYD_PMCD_pmi_proxy_params.bindlib = (HYD_Bindlib_t) (unsigned int) atoi(*argv);
             continue;
         }
 
@@ -510,7 +518,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
         HYD_PMCD_pmi_proxy_params.exit_status[i] = -1;
 
-    status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.user_bind_map);
+    status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.bindlib,
+                            HYD_PMCD_pmi_proxy_params.user_bind_map);
     HYDU_ERR_POP(status, "unable to initialize process binding\n");
 
     /* Spawn the processes */

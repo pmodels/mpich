@@ -13,7 +13,7 @@
 
 struct HYDU_bind_info HYDU_bind_info;
 
-HYD_Status HYDU_bind_init(char *user_bind_map)
+HYD_Status HYDU_bind_init(HYD_Bindlib_t bindlib, char *user_bind_map)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -22,8 +22,10 @@ HYD_Status HYDU_bind_init(char *user_bind_map)
     HYDU_bind_info.supported = 0;
 
 #if defined HAVE_PLPA
-    status = HYDU_bind_plpa_init(user_bind_map, &HYDU_bind_info.supported);
-    HYDU_ERR_POP(status, "unable to initialize plpa\n");
+    if (bindlib == HYD_BINDLIB_PLPA) {
+        status = HYDU_bind_plpa_init(user_bind_map, &HYDU_bind_info.supported);
+        HYDU_ERR_POP(status, "unable to initialize plpa\n");
+    }
 #endif /* HAVE_PLPA */
 
   fn_exit:
@@ -56,7 +58,7 @@ HYD_Status HYDU_bind_process(int core)
 }
 
 
-int HYDU_bind_get_core_id(int id, HYD_Binding binding)
+int HYDU_bind_get_core_id(int id, HYD_Binding_t binding)
 {
     int socket = 0, core = 0, curid, realid;
 

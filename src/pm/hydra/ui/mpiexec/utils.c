@@ -569,6 +569,27 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             continue;
         }
 
+        if ((!strcmp(str[0], "-bindlib")) || (!strcmp(str[0], "--bindlib"))) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-bindlib: Binding library to use\n\n");
+                printf("Notes:\n");
+                printf("  * Use the -version option to see what all are compiled in\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            if (!str[1]) {
+                INCREMENT_ARGV(status);
+                str[1] = HYDU_strdup(*argv);
+            }
+
+            HYDU_ERR_CHKANDJUMP(status, HYD_handle.bindlib, HYD_INTERNAL_ERROR,
+                                "duplicate -bindlib option\n");
+            HYD_handle.css = str[1];
+            HYDU_FREE(str[0]);
+            continue;
+        }
+
         if ((!strcmp(str[0], "-proxy-port")) || (!strcmp(str[0], "--proxy-port"))) {
             if (argv[1] && IS_HELP(argv[1])) {
                 printf("\n");
@@ -732,8 +753,12 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
                             "binding not allowed while booting/shutting proxies\n");
         HYD_handle.binding = HYD_BIND_UNSET;
 
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.bindlib != HYD_BINDLIB_UNSET, HYD_INTERNAL_ERROR,
+                            "binding not allowed while booting/shutting proxies\n");
+        HYD_handle.bindlib = HYD_BINDLIB_UNSET;
+
         HYDU_ERR_CHKANDJUMP(status, HYD_handle.exec_info_list, HYD_INTERNAL_ERROR,
-                            "executables should not be specified while booting/shutting proxies\n");
+                            "execs should not be specified while booting/shutting proxies\n");
     }
     else {      /* Application launch */
         if (HYD_handle.exec_info_list == NULL)
@@ -748,6 +773,14 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
                 !strcmp(tmp, "pack") ? HYD_BIND_PACK : HYD_BIND_USER;
         if (HYD_handle.binding == HYD_BIND_UNSET)
             HYD_handle.binding = HYD_BIND_NONE;
+
+        tmp = getenv("HYDRA_BINDLIB");
+        if (HYD_handle.bindlib == HYD_BINDLIB_UNSET && tmp) {
+            if (!strcmp(tmp, "plpa"))
+                HYD_handle.bindlib = HYD_BINDLIB_PLPA;
+        }
+        if (HYD_handle.bindlib == HYD_BINDLIB_UNSET)
+            HYD_handle.bindlib = HYD_BINDLIB_PLPA; /* By default, we use PLPA */
 
         /* Check environment for setting the inherited environment */
         tmp = getenv("HYDRA_ENV");

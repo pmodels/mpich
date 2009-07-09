@@ -261,6 +261,9 @@ static HYD_Status fill_in_exec_args(void)
         else
             partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
+        partition->base->exec_args[arg++] = HYDU_strdup("--bindlib");
+        partition->base->exec_args[arg++] = HYDU_int_to_str(HYD_handle.bindlib);
+
         partition->base->exec_args[arg++] = HYDU_strdup("--inherited-env");
         for (i = 0, env = HYD_handle.inherited_env; env; env = env->next, i++);
         partition->base->exec_args[arg++] = HYDU_int_to_str(i);

@@ -141,7 +141,12 @@ typedef enum {
     HYD_BIND_BUDDY,
     HYD_BIND_PACK,
     HYD_BIND_USER
-} HYD_Binding;
+} HYD_Binding_t;
+
+typedef enum {
+    HYD_BINDLIB_UNSET,
+    HYD_BINDLIB_PLPA
+} HYD_Bindlib_t;
 
 /* List of contiguous segments of processes on a partition */
 struct HYD_Partition_segment {

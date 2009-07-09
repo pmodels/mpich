@@ -85,6 +85,7 @@ static void usage(void)
     printf("\n");
     printf("  Process-core binding options:\n");
     printf("    -binding                         process-to-core binding mode\n");
+    printf("    -bindlib                         process-to-core binding library (plpa)\n");
 
     printf("\n");
     printf("  Other Hydra options:\n");

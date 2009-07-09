@@ -19,7 +19,8 @@ struct HYD_Handle_ {
     char *bootstrap;
     char *css;
     char *rmk;
-    HYD_Binding binding;
+    HYD_Binding_t binding;
+    HYD_Bindlib_t bindlib;
     char *user_bind_map;
 
     int debug;
