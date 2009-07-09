@@ -271,29 +271,37 @@ if test "$WARNINGS" = "yes"; then
 fi
 
 dnl Process Binding
-AC_ARG_ENABLE(hydra-procbind, [  --enable-hydra-procbind       Process Binding],
-			      [ procbind=$enableval ],
-			      [ procbind=auto ])
-AC_MSG_CHECKING(process binding)
+AC_ARG_WITH(hydra-bindlib, [  --enable-hydra-procbind       Process Binding Library],
+			   [ hydra_bindlib=$withval ],
+			   [ hydra_bindlib=plpa ])
+AC_MSG_CHECKING(process binding library)
+AC_MSG_RESULT($hydra_bindlib)
 
-if test "$procbind" = "auto" ; then
-   old_CFLAGS=$CFLAGS
-   CFLAGS="$CFLAGS -I${srcdir}/utils/plpa"
-   AC_TRY_COMPILE([#include <plpa_internal.h>],[
-PLPA_NAME(api_type_t) p;
-PLPA_NAME(api_probe)(&p);
-PLPA_NAME(have_topology_information)(NULL);
-PLPA_NAME(get_processor_data)(PLPA_NAME_CAPS(COUNT_ALL),NULL,NULL);
-],plpa_works=yes,plpa_works=no)
-   CFLAGS=$old_CFLAGS
-   if test "$plpa_works" = "yes" ; then
-      procbind=yes
-   else
-      procbind=no
-   fi
-fi
+procbind=no
+hydra_bindlib_names="`echo $hydra_bindlib | sed -e 's/:/ /g' -e 's/,/ /g'`"
+for hydra_bindlib_name in ${hydra_bindlib_names}; do
+    case "$hydra_bindlib_name" in
+    	plpa)
+		AC_MSG_CHECKING(working plpa)
+		old_CFLAGS=$CFLAGS
+		CFLAGS="$CFLAGS -I${srcdir}/utils/plpa"
+		AC_TRY_COMPILE([#include <plpa_internal.h>],[
+				PLPA_NAME(api_type_t) p;
+				PLPA_NAME(api_probe)(&p);
+				PLPA_NAME(have_topology_information)(NULL);
+				PLPA_NAME(get_processor_data)(PLPA_NAME_CAPS(COUNT_ALL),NULL,NULL);
+				],plpa_works=yes,plpa_works=no)
+		CFLAGS=$old_CFLAGS
+		AC_MSG_RESULT($plpa_works)
+		if test "$plpa_works" = "yes" ; then
+		   procbind=yes
+		fi
+		;;		
+	*)
+		;;
+    esac
+done
 
-AC_MSG_RESULT($procbind)
 if test "$procbind" = "yes"; then
    AC_DEFINE(HAVE_PROC_BINDING,1,[Define if process binding is enabled])
 fi
