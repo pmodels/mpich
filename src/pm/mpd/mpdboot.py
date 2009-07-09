@@ -43,6 +43,12 @@ usage:  mpdboot --totalnum=<n_to_start> [--file=<hostsfile>]  [--help] \
 --maxbranch indicates the maximum number of mpds to enter the ring under another;
   the default is 4
 """
+
+# workaround to suppress deprecated module warnings in python2.6
+# see https://trac.mcs.anl.gov/projects/mpich2/ticket/362 for tracking
+import warnings
+warnings.filterwarnings('ignore', '.*the popen2 module is deprecated.*', DeprecationWarning)
+
 from time import ctime
 __author__ = "Ralph Butler and Rusty Lusk"
 __date__ = ctime()

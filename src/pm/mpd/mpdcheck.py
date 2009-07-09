@@ -53,6 +53,12 @@ The three major modes of operation for this program are:
         runs a client on another (or same) host; connects to the specifed
         host/port where you previously started the server
 """
+
+# workaround to suppress deprecated module warnings in python2.6
+# see https://trac.mcs.anl.gov/projects/mpich2/ticket/362 for tracking
+import warnings
+warnings.filterwarnings('ignore', '.*the popen2 module is deprecated.*', DeprecationWarning)
+
 from time import ctime
 __author__ = "Ralph Butler and Rusty Lusk"
 __date__ = ctime()
