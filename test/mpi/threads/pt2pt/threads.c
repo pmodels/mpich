@@ -181,6 +181,10 @@ int main(int argc, char ** argv)
         loops();
     }
 
+    if (rank == 0) {
+	printf( " No Errors\n" );
+    }
+
     MPI_Finalize();
 
     return 0;
