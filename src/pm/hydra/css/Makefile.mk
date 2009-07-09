@@ -4,6 +4,8 @@
 #     See COPYRIGHT in top-level directory.
 #
 
+AM_CPPFLAGS += -I$(top_srcdir)/css/include -I$(top_builddir)/css/include
+
 include css/src/Makefile.mk
 include css/utils/Makefile.mk
 

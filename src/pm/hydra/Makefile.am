@@ -8,12 +8,7 @@ SUBDIRS = mpl .
 
 ACLOCAL_AMFLAGS = -I mpl/confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/mpl/include \
-	-I$(top_builddir)/mpl/include \
-	-I$(top_srcdir)/bootstrap/include -I$(top_builddir)/bootstrap/include \
-	-I$(top_srcdir)/bootstrap/utils \
-	-I$(top_srcdir)/rmk/include -I$(top_builddir)/rmk/include -I$(top_srcdir)/rmk/utils \
-	-I$(top_srcdir)/css/include -I$(top_builddir)/css/include -I$(top_srcdir)/css/utils \
-	-I$(top_srcdir)/demux -I$(top_srcdir)/pm/include -I$(top_srcdir)/utils/plpa
+	-I$(top_builddir)/mpl/include
 
 noinst_LIBRARIES = libhydra.a libpm.a libui.a
 bin_PROGRAMS =

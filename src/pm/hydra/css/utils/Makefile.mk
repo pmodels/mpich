@@ -4,4 +4,6 @@
 #     See COPYRIGHT in top-level directory.
 #
 
+AM_CPPFLAGS += -I$(top_srcdir)/css/utils
+
 libhydra_a_SOURCES += $(top_srcdir)/css/utils/cssu_tmp.c

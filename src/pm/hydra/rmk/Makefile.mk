@@ -4,6 +4,8 @@
 #     See COPYRIGHT in top-level directory.
 #
 
+AM_CPPFLAGS += -I$(top_srcdir)/rmk/include -I$(top_builddir)/rmk/include
+
 include rmk/src/Makefile.mk
 include rmk/utils/Makefile.mk
 

@@ -282,7 +282,7 @@ hydra_bindlib_names="`echo $hydra_bindlib | sed -e 's/:/ /g' -e 's/,/ /g'`"
 for hydra_bindlib_name in ${hydra_bindlib_names}; do
     case "$hydra_bindlib_name" in
     	plpa)
-		AC_MSG_CHECKING(working plpa)
+		AC_MSG_CHECKING(if plpa works correctly)
 		old_CFLAGS=$CFLAGS
 		CFLAGS="$CFLAGS -I${srcdir}/utils/plpa"
 		AC_TRY_COMPILE([#include <plpa_internal.h>],[
