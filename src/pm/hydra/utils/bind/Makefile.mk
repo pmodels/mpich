@@ -4,4 +4,8 @@
 #     See COPYRIGHT in top-level directory.
 #
 
+AM_CPPFLAGS += -I$(top_srcdir)/utils/bind
+
 libhydra_a_SOURCES += $(top_srcdir)/utils/bind/bind.c
+
+include utils/bind/plpa/Makefile.mk

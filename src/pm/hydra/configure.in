@@ -295,6 +295,7 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		AC_MSG_RESULT($plpa_works)
 		if test "$plpa_works" = "yes" ; then
 		   procbind=yes
+		   AC_DEFINE(HAVE_PLPA,1,[Define if plpa is available])
 		fi
 		;;		
 	*)
