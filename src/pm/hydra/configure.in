@@ -279,9 +279,11 @@ AC_MSG_CHECKING(process binding)
 if test "$procbind" = "auto" ; then
    old_CFLAGS=$CFLAGS
    CFLAGS="$CFLAGS -I${srcdir}/utils/plpa"
-   AC_TRY_LINK([#include <plpa_internal.h>],[
+   AC_TRY_COMPILE([#include <plpa_internal.h>],[
 PLPA_NAME(api_type_t) p;
 PLPA_NAME(api_probe)(&p);
+PLPA_NAME(have_topology_information)(NULL);
+PLPA_NAME(get_processor_data)(PLPA_NAME_CAPS(COUNT_ALL),NULL,NULL);
 ],plpa_works=yes,plpa_works=no)
    CFLAGS=$old_CFLAGS
    if test "$plpa_works" = "yes" ; then
@@ -294,11 +296,8 @@ fi
 AC_MSG_RESULT($procbind)
 if test "$procbind" = "yes"; then
    AC_DEFINE(HAVE_PROC_BINDING,1,[Define if process binding is enabled])
-   opt_utils_makefiles="${opt_utils_makefiles} utils/plpa/Makefile utils/bind/Makefile"
-   opt_utils="${opt_utils} plpa bind"
 fi
 AM_CONDITIONAL([hydra_procbind], [test "${procbind}" = "yes"])
-AC_SUBST(opt_utils)
 
 dnl Check if __VA_ARGS__ is defined by the compiler
 AC_MSG_CHECKING([whether the compiler allows __VA_ARGS__])
