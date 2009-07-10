@@ -503,7 +503,7 @@ static int SMPDU_Socki_handle_read(struct pollfd * const pollfd, struct pollinfo
     /* --BEGIN ERROR HANDLING-- */
     else if (nb == 0)
     {
-	int event_result;
+	int event_result=SMPD_FAIL;
 	
         smpd_dbg_printf("Connection closed while trying to read on socket, sock_set->id = %d, sock_id = %d\n",
                             pollinfo->sock_set->id, pollinfo->sock_id);
