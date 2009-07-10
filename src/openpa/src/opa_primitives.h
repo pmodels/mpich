@@ -81,6 +81,8 @@
 #include "primitives/opa_gcc_ppc.h"
 #elif defined(OPA_HAVE_GCC_X86_32_64)
 #include "primitives/opa_gcc_intel_32_64.h"
+#elif defined(OPA_HAVE_GCC_X86_32_64_P3)
+#include "primitives/opa_gcc_intel_32_64_p3.h"
 #elif defined(OPA_HAVE_GCC_AND_IA64_ASM)
 #include "primitives/opa_gcc_ia64.h"
 #elif defined(OPA_HAVE_GCC_AND_SICORTEX_ASM)

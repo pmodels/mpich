@@ -1,4 +1,4 @@
-# -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
+# -*- Mode: c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
 #  
 #  (C) 2008 by Argonne National Laboratory.
 #      See COPYRIGHT in top-level directory.
@@ -31,6 +31,13 @@ dnl installation and include it in installed headers.
 AX_PREFIX_CONFIG_H([src/opa_config.h],[OPA])
 
 ########################################################################
+
+# check if we're cross compiling
+if test "$build_alias" = "$host_alias" ; then
+  CROSS_COMPILING="no"
+else
+  CROSS_COMPILING="yes"
+fi
 
 AC_PROG_CC
 AC_PROG_RANLIB
@@ -134,20 +141,7 @@ dnl is set to yes in OPA_TRY_PRIMITIVE_HEADER when a primitive
 dnl matching $with_atomic_primitives is checked
 checked_specified_primitive=no
 
-dnl OPA_TRY_PRIMITIVE_HEADER([header file from src/ dir], [HAVE_ macro suffix], [feature description])
-dnl FIXME should probably change this to do an AC_TRY_RUN with the existing code
-dnl used as a fallback when cross-compiling.  This will provide us with a
-dnl stronger guarantee that the code really works on the given platform.
-AC_DEFUN([OPA_TRY_PRIMITIVE_HEADER],[
-if test     "$with_atomic_primitives" = "auto"                 \
-         -o "$with_atomic_primitives" = "auto_allow_emulation" \
-         -o "$with_atomic_primitives" = "$1"
-    then
-    checked_specified_primitive=yes
-    AC_MSG_CHECKING([for support for $3])
-    SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -I${srcdir}/src"
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+AC_DEFUN([OPA_PRIMITIVE_TEST_PGM], [AC_LANG_PROGRAM([[
 #define OPA_SIZEOF_INT SIZEOF_INT
 #define OPA_SIZEOF_VOID_P SIZEOF_VOID_P
 #ifndef _opa_inline
@@ -185,12 +179,56 @@ if test     "$with_atomic_primitives" = "auto"                 \
     OPA_read_barrier();
     OPA_read_write_barrier();
      ]])]
-    ,
+)
+
+dnl OPA_TRY_PRIMITIVE_HEADER([header file from src/ dir], [HAVE_ macro suffix], [feature description])
+dnl Does an AC_LINK_IFELSE() to see if the header file works
+AC_DEFUN([OPA_TRY_PRIMITIVE_HEADER],[
+if test     "$with_atomic_primitives" = "auto"                 \
+         -o "$with_atomic_primitives" = "auto_allow_emulation" \
+         -o "$with_atomic_primitives" = "$1"
+    then
+    checked_specified_primitive=yes
+    AC_MSG_CHECKING([for support for $3])
+    SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS -I${srcdir}/src"
+    AC_LINK_IFELSE(OPA_PRIMITIVE_TEST_PGM($1),
         AC_DEFINE(HAVE_$2, 1, [define to 1 if we have support for $3])
         non_emulated_primitives_available=yes
         AC_MSG_RESULT([yes])
     ,
         AC_MSG_RESULT([no])
+    )
+    CFLAGS="$SAVE_CFLAGS"
+fi
+])
+
+dnl OPA_TRY_RUN_PRIMITIVE_HEADER([header file from src/ dir], [HAVE_ macro suffix], [feature description])
+dnl Does an AC_RUN_IFELSE() to see if the header file works, but falls back to AC_LINK_IFELSE() 
+dnl if we're cross-compiling
+AC_DEFUN([OPA_TRY_RUN_PRIMITIVE_HEADER],[
+if test     "$with_atomic_primitives" = "auto"                 \
+         -o "$with_atomic_primitives" = "auto_allow_emulation" \
+         -o "$with_atomic_primitives" = "$1"
+then
+    checked_specified_primitive=yes
+    AC_MSG_CHECKING([for support for $3])
+    SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS -I${srcdir}/src"
+    AC_RUN_IFELSE(OPA_PRIMITIVE_TEST_PGM($1),
+        AC_DEFINE(HAVE_$2, 1, [define to 1 if we have support for $3])
+        non_emulated_primitives_available=yes
+        AC_MSG_RESULT([yes])
+    ,
+        AC_MSG_RESULT([no])
+    ,
+        [AC_LINK_IFELSE(OPA_PRIMITIVE_TEST_PGM($1),
+            AC_DEFINE(HAVE_$2, 1, [define to 1 if we have support for $3])
+            non_emulated_primitives_available=yes
+            AC_MSG_RESULT([yes])
+        ,
+            AC_MSG_RESULT([no])
+        )]
     )
     CFLAGS="$SAVE_CFLAGS"
 fi
@@ -211,7 +249,13 @@ dnl If the compiler can't tell that it's getting bad assembly, we have
 dnl no hope of being able to check what asm statements are supported
 dnl without AC_TRY_RUN().
     if test "$compiler_rejects_bogus_asm" = "yes"  ; then 
-        OPA_TRY_PRIMITIVE_HEADER([opa_gcc_intel_32_64.h], [GCC_X86_32_64], [gcc x86/x86_64 bit primitives])
+        # if we're cross compiling, don't try the gcc_intel_32_64
+        # test, since it uses fence operations which are not supported
+        # on pre Pentium 4 machines, but it may still compile and link
+        if test "$CROSS_COMPILING" = "no" ; then
+            OPA_TRY_RUN_PRIMITIVE_HEADER([opa_gcc_intel_32_64.h], [GCC_X86_32_64], [gcc x86/x86_64 bit primitives])
+        fi
+        OPA_TRY_RUN_PRIMITIVE_HEADER([opa_gcc_intel_32_64_p3.h], [GCC_X86_32_64_P3], [gcc x86 bit primitives for pre-Pentium 4])
         OPA_TRY_PRIMITIVE_HEADER([opa_gcc_ia64.h], [GCC_AND_IA64_ASM], [gcc ia64 primitives])
         OPA_TRY_PRIMITIVE_HEADER([opa_gcc_ppc.h], [GCC_AND_POWERPC_ASM], [gcc PowerPC atomics])
         OPA_TRY_PRIMITIVE_HEADER([opa_gcc_sicortex.h], [GCC_AND_SICORTEX_ASM], [gcc SiCortex atomics])

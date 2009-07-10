@@ -1,4 +1,4 @@
-# -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
+# -*- Mode: c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
 #  
 #  (C) 2008 by Argonne National Laboratory.
 #      See COPYRIGHT in top-level directory.
@@ -18,5 +18,10 @@ prettycheck:
 		      | highlight --color=yellow 'WARN(ING)?' \
 		      | highlight --color=cyan -- '-SKIP-'
 
-.PHONY: prettycheck
+# This target exists to smooth the integration with MPICH2's upcoming build
+# system changes to support parallel make (i.e. "make -j 4").  It serves no
+# other purpose, but should _not_ be removed unless you know what you are doing.
+all-executable:
 
+
+.PHONY: prettycheck all-executable

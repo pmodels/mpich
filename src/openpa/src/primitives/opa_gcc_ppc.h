@@ -55,7 +55,7 @@ static _opa_inline int OPA_LL_int(OPA_int_t *ptr)
 /* Returns non-zero if the store was successful, zero otherwise. */
 static _opa_inline int OPA_SC_int(OPA_int_t *ptr, int val)
 {
-    int ret;
+    int ret = 1; /* init to non-zero, will be reset to 0 if SC was successful */
     __asm__ __volatile__ ("stwcx. %[val],0,%[ptr];\n"
                           "beq 1f;\n"
                           "li %[ret], 0;\n"
