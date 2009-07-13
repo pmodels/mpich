@@ -10,8 +10,17 @@
 
 #include "mpe_log.h"
 
+#define MPE_NULL_EVENTID  -99999
+
+int MPE_Log_hasBeenInit   = 0;
+int MPE_Log_hasBeenClosed = 0;
+
 int MPE_Init_log( void )
-{ return MPE_LOG_OK; }
+{
+  MPE_Log_hasBeenInit   = 1;
+  MPE_Log_hasBeenClosed = 0;
+  return MPE_LOG_OK;
+}
 
 int MPE_Start_log( void )
 { return MPE_LOG_OK; }
@@ -20,7 +29,7 @@ int MPE_Stop_log( void )
 { return MPE_LOG_OK; }
 
 int MPE_Initialized_logging( void )
-{ return MPE_LOG_OK; }
+{ return MPE_Log_hasBeenInit + MPE_Log_hasBeenClosed; }
 
 int MPE_Describe_comm_state( MPI_Comm comm, int start_etype, int final_etype,
                              const char *name, const char *color,
@@ -50,13 +59,20 @@ int MPE_Describe_event( int event, const char *name, const char *color )
 { return MPE_LOG_OK; }
 
 int MPE_Log_get_event_number( void )
-{ return -99999; }
+{ return MPE_NULL_EVENTID; }
 
 int MPE_Log_get_solo_eventID( int *eventdef_eventID )
-{ return -99999; }
+{
+  if (eventdef_eventID) *eventdef_eventID = MPE_NULL_EVENTID; 
+  return MPE_LOG_OK;
+}
 
 int MPE_Log_get_state_eventIDs( int *statedef_startID, int *statedef_finalID )
-{ return -99999; }
+{
+  if (statedef_startID) *statedef_startID = MPE_NULL_EVENTID;
+  if (statedef_finalID) *statedef_finalID = MPE_NULL_EVENTID; 
+  return MPE_LOG_OK;
+}
 
 int MPE_Log_comm_send( MPI_Comm comm, int receiver, int tag, int size )
 { return MPE_LOG_OK; }
@@ -90,7 +106,10 @@ int MPE_Log_sync_clocks( void )
 { return MPE_LOG_OK; }
 
 int MPE_Finish_log( const char *filename )
-{ return MPE_LOG_OK; }
+{
+  MPE_Log_hasBeenClosed = 1;
+  return MPE_LOG_OK;
+}
 
 const char *MPE_Log_merged_logfilename( void )
 { return NULL; }
