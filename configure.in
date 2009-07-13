@@ -246,19 +246,18 @@ AC_ARG_ENABLE(coverage,
 enable_coverage=no)
 dnl
 AC_ARG_ENABLE(dynamiclibs,
-[--enable-dynamiclibs - Enable the use of dynamic libraries by the devices that support them],,enable_dynamiclibs=no)
+[--enable-dynamiclibs - Enable the use of dynamic libraries by the devices
+                       that support them],,enable_dynamiclibs=no)
 dnl
 AC_ARG_ENABLE(error-checking,
 [--enable-error-checking=level - Control the amount of error checking.  
-level may be 
     no        - no error checking
     runtime   - error checking controllable at runtime through environment 
                 variables
     all       - error checking always enabled],,enable_error_checking=all)
 dnl
 AC_ARG_ENABLE(error-messages,
-[--enable-error-messages=level - Control the amount of detail in error 
-  messages.  Level may be
+[--enable-error-messages=level - Control the amount of detail in error messages.
     all       - Maximum amount of information
     generic   - Only generic messages (no information about the specific
                 instance)
@@ -266,16 +265,17 @@ AC_ARG_ENABLE(error-messages,
     none      - No messages],,enable_error_messages=all)
 dnl
 AC_ARG_ENABLE(timing,
-[--enable-timing=level - Control the amount of timing information 
-collected by the MPICH implementation.  level may be
-    none    - Collect no data
+[--enable-timing=level - Control the amount of timing information
+                        collected by the MPICH implementation.
+    none    - Collect no data (default)
     all     - Collect lots of data
-    runtime - Runtime control of data collected
-The default is none.],,enable_timing=default)
+    runtime - Runtime control of data collected]
+  ,,enable_timing=default)
 dnl
 AC_ARG_ENABLE(g,
-[--enable-g=option - Control the level of debugging support in the MPICH
-implementation.  option is a list of comma separated names including
+[--enable-g=option - Control the level of debugging support in the
+                    MPICH implementation.  option is a list of comma
+                    separated names including
     none     - No debugging
     handle   - Trace handle operations
     handlealloc - Trace hancle allocations
@@ -290,7 +290,6 @@ implementation.  option is a list of comma separated names including
     mutexnesting - Check for non-nesting of mutexes
     nesting  - Check for proper nesting values
     fine-grain-nesting - Perform a fine-grain nesting check on exit
-    
     all      - All of the above choices],,enable_g=none)
 dnl
 dnl We may want to force MPI_Aint to be the same size as MPI_Offset, 
@@ -307,25 +306,30 @@ dnl  Not yet supported])
 dnl
 dnl --enable-fast
 AC_ARG_ENABLE(fast,
-[--enable-fast=option - Control the level of fast execution in the MPICH
-implementation.   option is a list of comma separated names including 
+[--enable-fast=option - Control the level of fast execution in the
+                       MPICH implementation.  option is a list of
+                       comma separated names including
+    defopt   - Default compiler optimization -O2 for all language bindings,
+               i.e. --enable-fast=O2, when neither --enable-fast
+               nor --disable-fast is specified. (default)
     O<n>     - Appends default optimization flags, -O<n>, to all internal
                compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
                MPICH2LIB_FFLAGS, and MPICH2LIB_F90FLAGS.
-    defopt   - Default compiler optimization -O2 for all language bindings,
-               i.e. --enable-fast=O2, when neither --enable-fast
-               nor --disable-fast is specified.
     nochkmsg - No error checking, i.e. --disable-error-checking
     notiming - No timing collection, i.e. --disable-timing.
     ndebug   - Appends -DNDEBUG to internal CFLAGS, i.e. MPICH2LIB_CFLAGS.
     all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
                when --enable-fast is specified without any option.
-    none     - None of above options, i.e. --disable-fast.
+    none     - None of above options, i.e. --disable-fast.  Note that 
+    	       --enable-strict will add the -O2 option even if
+	       --enable-fast=none is given.
 ],,enable_fast=defopt)
 
 AC_ARG_ENABLE(check-compiler-flags,
-[--enable-check-compiler-flags -- enable the checks for all compiler options,
-xxxFLAGS, MPICH2_xxxFLAGS.  Default is on.],,enable_check_compiler_flags=yes)
+[--enable-check-compiler-flags -- enable the checks for all compiler
+                                 options, xxxFLAGS, MPICH2_xxxFLAGS.
+                                 Default is on.]
+    ,,enable_check_compiler_flags=yes)
 
 dnl
 dnl We enable f77 and f90 if we can find compilers for them.
@@ -355,8 +359,7 @@ if test $smpcoll = "yes" ; then
 fi
 
 dnl Check for pipelined collectives
-AC_ARG_ENABLE(pipecoll,
-	[--enable-pipecoll - Enable support for pipelined collectives],
+AC_ARG_ENABLE(pipecoll, [--enable-pipecoll - Enable support for pipelined collectives],
 	pipecoll=$enableval,
 	pipecoll=yes)
 
@@ -370,9 +373,11 @@ dnl default name of the library that the debugger will load to access the
 dnl MPICH2 internal data structures.
 dnl
 AC_ARG_ENABLE(nmpi-as-mpi,
-[--enable-nmpi-as-mpi - Use MPI rather than PMPI routines for MPI routines,
- such as the collectives, that may be implemented in terms of other MPI 
- routines],,enable_nmpi_as_mpi=no)
+[--enable-nmpi-as-mpi - Use MPI rather than PMPI routines for MPI
+                       routines, such as the collectives, that may be
+                       implemented in terms of other MPI routines]
+  ,,enable_nmpi_as_mpi=no)
+
 dnl
 dnl With options
 dnl "default" is a special device that allows MPICH to choose one based on 
@@ -384,14 +389,17 @@ dnl
 AC_ARG_WITH(pmi, [--with-pmi=name - Specify the pmi interface for MPICH.],,
 with_pmi=default)
 dnl
-AC_ARG_WITH(pm, [--with-pm=name - Specify the process manager for MPICH.
-      Multiple process managers may be specified as long as they all use
-      the same pmi interface by separating them with colons.  The 
-      mpiexec for the first named process manager will be installed.
-      Example: --with-pm=gforker:mpd:remshell builds the three process 
-      managers gforker, mpd, and remshell; only the mpiexec from gforker
-      is installed into the bin directory.],,
-with_pm=default)
+AC_ARG_WITH(pm, 
+[--with-pm=name - Specify the process manager for MPICH.  Multiple
+                 process managers may be specified as long as they all
+                 use the same pmi interface by separating them with
+                 colons.  The mpiexec for the first named process
+                 manager will be installed.  Example:
+                 --with-pm=gforker:mpd:remshell builds the three
+                 process managers gforker, mpd, and remshell; only the
+                 mpiexec from gforker is installed into the bin
+                 directory.]
+    ,,with_pm=default)
 dnl
 AC_ARG_WITH(logging,
 [--with-logging=name - Specify the logging library for MPICH.],
@@ -411,45 +419,60 @@ fi
 dnl
 AC_ARG_ENABLE(threads,
 [--enable-threads=level - Control the level of thread support in the 
-MPICH implementation.  The following levels are supported.
-    single - No threads (MPI_THREAD_SINGLE)
-    funneled - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
-    serialized - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
+                         MPICH implementation.  The following levels
+                         are supported.
+    default         - Choose thread level at runtime based on parameters 
+                      passed to MPI_Init_thread (default)
+    single          - No threads (MPI_THREAD_SINGLE)
+    funneled        - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
+    serialized      - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
     multiple(:impl) - Fully multi-threaded (MPI_THREAD_MULTIPLE)
-The following implementations are supported.
-    global_mutex - a single global lock guards access to all MPI functions.
-The default implementation is global_mutex.
-For the ch3:sock channel, a separate build is no longer needed for thread-multiple. 
-It is compiled by default and is selectable at run time with MPI_Init_thread. 
-If MPI_Init_thread is not called, the default is funneled .
-For other channels, the --enable-threads option is not supported currently, and 
-the default is funneled.],,
-enable_threads=default)
+      The following implementations are supported.
+          global_mutex - a single global lock guards access to all 
+	                 MPI functions.
+      The default implementation is global_mutex.
+
+    For the ch3:sock and ch3:nemesis channels, a separate build is no
+    longer needed for thread-multiple.  It is compiled by default and
+    is selectable at run time with MPI_Init_thread.  If
+    MPI_Init_thread is not called, the default is funneled.  For
+    other channels, the --enable-threads option is not supported
+    currently, and the default is funneled.]
+    ,
+    , 
+    enable_threads=default)
+
 dnl
 AC_ARG_ENABLE(thread-cs,
-[--enable-thread-cs=type - Choose the method used for critical sections and 
- other atomic updates when multiple threads are present.  Values may be
- global (default), brief-global, per-object, lock-free],,
- enable_thread_cs=global)
+[--enable-thread-cs=type - Choose the method used for critical
+                          sections and other atomic updates when
+                          multiple threads are present.  Values may
+                          be global (default), brief-global,
+                          per-object, lock-free]
+ , , enable_thread_cs=global)
+
 AC_ARG_ENABLE(refcount,
-[--enable-refcount=type - Choose the method for ensuring atomic updates to
-the reference counts for MPI objects.  Values may be lock, lock-free, none.
-The default depends on the thread-cs choice; for global it is none (because
-none is required), for brief-global and per-object it is lock, and for
-lock-free it is lock-free],,enable_refcount=default)
-AC_ARG_ENABLE(mutex-timing, [--enable-mutex-timing - calculate the
-			    time spent waiting on mutexes.  For best
-			    results, use with
-			    --enable-timer-type=linux86_cycle],
-	      AC_DEFINE(MPIU_MUTEX_WAIT_TIME,1,[Define to enable timing mutexes])
-	      )
+[--enable-refcount=type - Choose the method for ensuring atomic
+                         updates to the reference counts for MPI
+                         objects.  Values may be lock, lock-free,
+                         none.  The default depends on the thread-cs
+                         choice; for global it is none (because none
+                         is required), for brief-global and per-object
+                         it is lock, and for lock-free it is
+                         lock-free]
+    ,,enable_refcount=default)
+
+AC_ARG_ENABLE(mutex-timing, [--enable-mutex-timing - calculate the time spent waiting on mutexes.],
+    AC_DEFINE(MPIU_MUTEX_WAIT_TIME,1,[Define to enable timing mutexes])
+ )
+
 AC_ARG_ENABLE(handle-allocation,
-              [--enable-handle-allocation=type - Choose the method used for
-              allocating MPI object handles.  Values may be 'tls' for
-              thread-local storage or 'mutex' for simple locking.  'mutex' is
-              the default.],
-              ,
-              enable_handle_allocation=default)
+[--enable-handle-allocation=type - Choose the method used for
+                                  allocating MPI object handles.
+                                  Values may be 'tls' for thread-local
+                                  storage or 'mutex' for simple
+                                  locking.  'mutex' is the default.]
+    ,, enable_handle_allocation=default)
 
 dnl 
 dnl
@@ -461,7 +484,8 @@ dnl
 dnl
 AC_ARG_WITH(cross,
 [--with-cross=file - Specify the values of variables that configure cannot
-determine in a cross-compilation environment],,with_cross=no)
+                    determine in a cross-compilation environment]
+    ,,with_cross=no)
 dnl
 AC_ARG_WITH(namepublisher,
 [--with-namepublisher=name - Choose the system that will support 
@@ -489,8 +513,9 @@ AC_SUBST(PMPIFLIBNAME)
 dnl
 dnl The default is a special wrapper library
 AC_ARG_WITH(fwrapname,
-[--with-fwrapname=name  - Specify name of library containing Fortran interface
-routines],[FWRAPNAME=$withval;set_FWRAPNAME="yes"],FWRAPNAME=fmpich)
+[--with-fwrapname=name - Specify name of library containing Fortran interface
+                        routines]
+    ,[FWRAPNAME=$withval;set_FWRAPNAME="yes"],FWRAPNAME=fmpich)
 AC_SUBST(FWRAPNAME)
 dnl
 #
@@ -5269,20 +5294,23 @@ dnl    Linux-x86 cycle counter
 dnl    Linux-alpha cycle counter
 dnl
 dnl We also allow --enable-timer-type=name to select a timer type
-AC_ARG_ENABLE(timer-type,[--enable-timer-type=name - Select the timer to use
-for MPI_Wtime and internal timestamps.  name may be one of
-    gethrtime - Solaris timer (Solaris systems only)
-    clock_gettime - Posix timer (where available)
-    gettimeofday - Most Unix systems
-    linux86_cycle - Linux x86; returns cycle counts, not time in seconds*
+AC_ARG_ENABLE(timer-type,
+
+[--enable-timer-type=name - Select the timer to use for MPI_Wtime and
+                           internal timestamps.
+    gethrtime        - Solaris timer (Solaris systems only)
+    clock_gettime    - Posix timer (where available)
+    gettimeofday     - Most Unix systems
+    linux86_cycle    - Linux x86; returns cycle counts, not time in seconds*
     linuxalpha_cycle - Like linux86_cycle, but for Linux Alpha*
-    gcc_ia64_cycle - IPF ar.itc timer*
+    gcc_ia64_cycle   - IPF ar.itc timer*
     device - The timer is provided by the device
-       *Note that the cycle timers are intended to be used by MPICH2
-        developers for internal low-level timing.  Normal users should
-        not use these as they are not guaranteed to be accurate in
-        certain situations.
-    ],timer_type=$enable_timer_type)
+
+    *Note that the cycle timers are intended to be used by MPICH2
+     developers for internal low-level timing.  Normal users should
+     not use these as they are not guaranteed to be accurate in
+     certain situations.]
+,timer_type=$enable_timer_type)
 
 if test -z "$timer_type" ; then 
     # Try to pick a timer based on what is available
@@ -5716,13 +5744,15 @@ MPE_THREAD_DEFAULT=${MPE_THREAD_DEFAULT-posix}
 
 AC_ARG_WITH(thread-package,
 [--with-thread-package=package - Thread package to use.  Supported thread
-packages include:
+                                packages include:
     posix or pthreads - POSIX threads
     solaris - Solaris threads (Solaris OS only)
     none - no threads
-If the option is not specified, the default package is ${MPE_THREAD_DEFAULT}.
-If the option is specified, but a package is not given, then the default
-is posix.],,
+
+    If the option is not specified, the default package is
+    ${MPE_THREAD_DEFAULT}.  If the option is specified, but a package
+    is not given, then the default is posix.]
+,,
 with_thread_package=${MPE_THREAD_DEFAULT})
 
 if test "$with_thread_package" = "yes" ; then
