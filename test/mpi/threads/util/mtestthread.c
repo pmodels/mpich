@@ -32,30 +32,73 @@ int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE (*fn)(void *p),void *arg)
 		 MTEST_MAX_THREADS );
 	return 1;
     }
-    threads[nthreads] = CreateThread(NULL, 0, 
-		     (LPTHREAD_START_ROUTINE)fn, (LPVOID)arg, 0, NULL);
-    if (threads[nthreads] == NULL)
-    {
-	return GetLastError();
+    threads[nthreads] = CreateThread(NULL, 0,(LPTHREAD_START_ROUTINE)fn, (LPVOID)arg, 0, NULL);
+    if (threads[nthreads] == NULL){
+        return GetLastError();
     }
-    else 
-	nthreads++;
-    
+    else{ 
+        nthreads++;
+    }
     return 0;
 }
+
 int MTest_Join_threads( void ){
     int i, err = 0;
     for (i=0; i<nthreads; i++) {
-	if(WaitForSingleObject(threads[i], INFINITE) == WAIT_FAILED){
-	    DEBUG(printf("Error WaitForSingleObject() \n"));
-	    err = GetLastError();
-	}
-	else 
-	    CloseHandle(threads[i]);
+        if(threads[i] != INVALID_HANDLE_VALUE){
+            if(WaitForSingleObject(threads[i], INFINITE) == WAIT_FAILED){
+                err = GetLastError();
+                fprintf(stderr, "Error WaitForSingleObject(), err = %d\n", err);
+            }
+            else{ 
+                CloseHandle(threads[i]);
+            }
+        }
     }
     nthreads = 0;
     return err;
 }
+
+int MTest_thread_lock_create( MTEST_THREAD_LOCK_TYPE *lock )
+{
+    if(lock == NULL) return -1;
+
+    /* Create an unnamed uninheritable mutex */
+    *lock = CreateMutex(NULL, FALSE, NULL);
+    if(*lock == NULL) return -1;
+
+    return 0;
+}
+
+int MTest_thread_lock( MTEST_THREAD_LOCK_TYPE *lock )
+{
+    if(lock == NULL) return -1;
+
+    /* Wait infinitely for the mutex */
+    if(WaitForSingleObject(*lock, INFINITE) != WAIT_OBJECT_0){
+        return -1;
+    }
+    return 0;
+}
+
+int MTest_thread_unlock( MTEST_THREAD_LOCK_TYPE *lock )
+{
+    if(lock == NULL) return -1;
+    if(ReleaseMutex(*lock) == 0){
+        return -1;
+    }
+    return 0;
+}
+int MTest_thread_lock_free( MTEST_THREAD_LOCK_TYPE *lock )
+{
+    if(lock != NULL){
+        if(CloseHandle(*lock) == 0){
+            return -1;
+        }
+    }
+    return 0;
+}
+
 #else
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE (*fn)(void *p),void *arg)
 {
@@ -84,8 +127,8 @@ int MTest_Join_threads( void )
 {
     int i, rc, err = 0;
     for (i=0; i<nthreads; i++) {
-	rc = pthread_join(threads[i], 0);
-	if (rc) err = rc;
+        rc = pthread_join(threads[i], 0);
+        if (rc) err = rc;
     }
     nthreads = 0;
     return err;

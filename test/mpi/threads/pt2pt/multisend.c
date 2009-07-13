@@ -6,8 +6,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
+#ifdef HAVE_PTHREAD_H
+    #include <pthread.h>
+#endif
 #include "mpi.h"
+#include "mpithreadtest.h"
 
 int rank;
 
@@ -35,7 +38,6 @@ void run_test(void * arg)
 
 int main(int argc, char ** argv)
 {
-    pthread_t thread;
     int i, zero = 0, pmode, nprocs;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
@@ -52,9 +54,9 @@ int main(int argc, char ** argv)
 	MPI_Abort(MPI_COMM_WORLD, -1);
     }
 
-    pthread_create(&thread, NULL, (void*) run_test, NULL);
+    MTest_Start_thread(run_test, NULL);
     run_test(&zero);
-    pthread_join(thread, NULL);
+    MTest_Join_threads();
 
     MPI_Finalize();
 
