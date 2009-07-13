@@ -33,15 +33,27 @@ EOF
     fi
 done
 
-# Set JAVA environment
-JVM=@JVM@
+# Set JAVA runtime through env variables:
+# JAVA_HOME, JRE_HOME, JVM, or the value determined by configure.
+if [ -n "${JAVA_HOME}" -a -x "${JAVA_HOME}/bin/java" ] ; then
+    JVM="${JAVA_HOME}/bin/java"
+elif [ -n "${JRE_HOME}" -a -x "${JRE_HOME}/bin/java" ] ; then
+    JVM="${JRE_HOME}/bin/java"
+else
+    JVM=${JVM:-"@JVM@"}
+fi
 JVMOPTS="@NONGUI_JVMFLAGS@ @JVMFLAGS@"
 # Assume user's environmental JVMFLAGS is better than what configure found.
 JVMFLAGS=${JVMFLAGS:-${JVMOPTS}}
 
-# Set PATH to the jar needed by the print program
-GUI_LIBDIR=@libbuild_dir@
-GUI_HOME=${GUI_LIBDIR}/..
+# Set PATH to the jar needed by the convertor program
+# The default path libbuild_dir will be modified by sed -e "^GUI_LIBDIR=..."
+GUI_LIBDIR="@libbuild_dir@"
+GUI_HOME="${GUI_LIBDIR}/.."
+if [ -n "${SLOG2_HOME}" -a -d "${SLOG2_HOME}/lib" ] ; then
+    GUI_LIBDIR="${SLOG2_HOME}/lib"
+    GUI_HOME="${SLOG2_HOME}"
+fi
 MAIN_LIB=${GUI_LIBDIR}/clogTOslog2.jar
 
 
