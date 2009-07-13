@@ -4,7 +4,8 @@
 
  # OVERALL: Improved support for Boost MPI.
 
- # PM/PMI: Improved startup time with MPD.
+ # PM/PMI: Significantly improved time taken by MPI_Init with Nemesis and MPD on
+   large numbers of processes.
 
  # PM/PMI: Improved support for hybrid MPI-UPC program launching with
    Hydra.
