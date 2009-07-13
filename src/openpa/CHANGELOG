@@ -1,0 +1,41 @@
+=============
+OpenPA v1.0.1
+=============
+
+Major Changes:
+      * Fix for x86/x86_64 machines that don't support SSE2 and therefore lfence/mfence.
+      * Fix major bug in SC on PPC.  Fixes ticket #8.
+
+Individual Change Summary By Developer:
+
+buntinas (2):
+      * Work around PGI compiler bug by rearranging input parameters
+      * check for pre-Pentium 4 machines which don't support mfence and lfence
+
+fortnern (2):
+      * Add/improve tests for fetch_and_{incr,decr}_int and fetch_and_add_int.
+      * Add some tests for OPA_cas_int.  Also fix a bug in the fetch and * tests.
+
+goodell (6):
+      * Remove erroneous "C" mode from some emacs modelines.
+      * Fix Darius' email address in the COPYRIGHT file.
+      * Update the README version number to match configure.in.
+      * Add an "all-executable" target to support parallel make in MPICH2.
+      * Fix major bug in SC on PPC.  Fixes ticket #8.
+      * Add new header files to the appropriate automake variables.
+
+
+=============
+OpenPA v1.0.0
+=============
+
+everyone:
+      * This is the initial release of OpenPA.
+      * support for GCC + x86/x86_64
+      * support for GCC + IA64
+      * support for GCC intrinsic atomic operations
+      * support for GCC + PPC450 (IBM Blue Gene/P compute nodes)
+      * support for GCC + MIPS (specifically, SiCortex compute nodes)
+      * support for SUN Solaris' atomic operations library
+      * support for Windows NT intrinsic atomic operations
+      * Includes a partially completed test suite covering a substantial portion of the API.

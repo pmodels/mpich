@@ -1,4 +1,4 @@
-OpenPA v1.0.0
+OpenPA v1.0.1
 -------------
 
 The goal of this project is to provide an open source, highly-portable
@@ -61,14 +61,14 @@ Known Issues
 ------------
 
 * One known issue is that the gcc atomic intrinsics aren't supported by
-  compilers prior to GCC 4.1.  In particular the Mac OS X compiler is
+  compilers prior to GCC 4.1.  In particular the default Mac OS X compiler is
   gcc 4.0.1 so these result in a linker error when using this set of
   primitives.  The good news is that on OSX/intel we use native inline
   assembly anyway, so this isn't a big problem.
-* The PGI compilers currently are not supported.  They accept a
-  gcc-style inline assembly but with slightly different register
-  constraints that are not compatible with the current gcc primitives.
-  This issue should be rectified in an upcoming release.
+* The PGI compilers currently are not supported.  There is at least one known
+  bug in the PGI compiler's handling of of inline assembly for which we are
+  awaiting a fix from PGI.  Once a fixed version of the compiler is available
+  this issue should be rectified in an upcoming release.
 * As mentioned earlier, Windows is supported but the build system is not
   yet present.
 
