@@ -105,7 +105,25 @@ fi
 AC_DEFINE_UNQUOTED(CH3_RANK_BITS,$rankbits,[Define the number of CH3_RANK_BITS])
 
 AC_CHECK_HEADERS(assert.h limits.h string.h sys/types.h sys/uio.h uuid/uuid.h \
-    time.h ctype.h unistd.h arpa/inet.h sys/socket.h net/if.h)
+    time.h ctype.h unistd.h arpa/inet.h sys/socket.h)
+
+# net/if.h requires special handling on darwin.  The following code is
+# straight out of the autoconf-2.63 manual.  Also, sys/socket.h (above)
+# is a prerequisite.
+AC_CHECK_HEADERS([net/if.h], [], [],
+[#include <stdio.h>
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+])
 
 # Check for special types
 AC_TYPE_PID_T
