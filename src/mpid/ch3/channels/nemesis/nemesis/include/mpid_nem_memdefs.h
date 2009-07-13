@@ -16,7 +16,7 @@
         size_t _nl = (size_t)(n) >> 2;                                                  \
         __asm__ __volatile__ ("cld ; rep ; movsl ; movl %3,%0 ; rep ; movsb"            \
                               : "+c" (_nl), "+S" (_p), "+D" (_q)                        \
-                              : "r" ((n) & 3) /* : "memory" is this needed?*/);         \
+                              : "r" ((n) & 3) : "memory" );                             \
     } while (0)
 
 /*
@@ -116,7 +116,7 @@ static inline void nt_memcpy (volatile void *dst, volatile const void *src, size
 		      "emms\n"
 		      : "=D" (dummy_dst), "=S" (dummy_src)
 		      : "0" (dst), "1" (src), "g" (n >> 3)
-		      : "eax", "edx", "ecx"/* , "memory" is this needed? */);
+		      : "eax", "edx", "ecx", "memory" );
 
 	src = (char *)src + n;
 	dst = (char *)dst + n;
@@ -182,7 +182,7 @@ static inline void nt_memcpy (volatile void *dst, volatile const void *src, size
 		      "emms\n"
 		      : "=D" (dummy_dst), "=S" (dummy_src) 
 		      : "0" (dst), "1" (src), "g" (n >> 3)
-		      : "eax", "edx", "ecx" /* , "memory" is this needed? */);
+		      : "eax", "edx", "ecx", "memory" );
 	src = (char *)src + n;
 	dst = (char *)dst + n;
     }
@@ -210,7 +210,7 @@ static inline void nt_memcpy (volatile void *dst, volatile const void *src, size
         size_t _nq = n >> 3;                                                                     \
         __asm__ __volatile__ ("cld ; rep ; movsq ; movl %3,%%ecx ; rep ; movsb"                  \
                               : "+c" (_nq), "+S" (_p), "+D" (_q)                                 \
-                              : "r" ((uint32_t)((n) & 7)) /* : "memory" is this needed? */);     \
+                              : "r" ((uint32_t)((n) & 7)) : "memory" );                          \
     } while (0)
 
 static inline void amd64_cpy_nt (volatile void *dst, const volatile void *src, size_t n)
@@ -237,7 +237,7 @@ static inline void amd64_cpy_nt (volatile void *dst, const volatile void *src, s
 		      "sfence  \n"
 		      "mfence  \n"
 		      : "+a" (n32), "+S" (src), "+D" (dst)
-		      : : "r8", "r9" /*, "memory" is this needed? */);
+		      : : "r8", "r9", "memory" );
     }
     
     if (nleft)

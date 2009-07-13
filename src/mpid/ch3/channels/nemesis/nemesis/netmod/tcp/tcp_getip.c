@@ -178,14 +178,14 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 		if (nfound == 0) {
 		    myifaddr.type = AF_INET;
 		    myifaddr.len  = 4;
-		    MPIUI_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
+		    MPIU_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
 		}
 	    }
 	    else {
 		nfound++;
 		myifaddr.type = AF_INET;
 		myifaddr.len  = 4;
-		MPIUI_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
+		MPIU_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
 	    }
 	}
 	else {
