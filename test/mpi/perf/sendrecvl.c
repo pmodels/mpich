@@ -251,11 +251,11 @@ int main( int argc, char *argv[] )
 	    }
 	    len *= 2;
 	}
-	if (nPerfErrors > 6) { 
+	if (nPerfErrors > 8) { 
 	    /* Allow for 1-2 errors for eager-rendezvous shifting
 	     * point and cache effects. There should be a better way
 	     * of doing this. */
-	    printf( " Found %d errors\n", nPerfErrors );
+	    printf( " Found %d performance errors\n", nPerfErrors );
 	}
 	else {
 	    printf( " No Errors\n" );
