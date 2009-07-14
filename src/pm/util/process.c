@@ -112,6 +112,7 @@ int MPIE_ForkProcesses( ProcessWorld *pWorld, char *envp[],
     int          nProcess = 0;
 
     app = pWorld->apps;
+
     while (app) {
 	/* Allocate process state if necessary */
 	if (!app->pState) {
@@ -234,7 +235,7 @@ int MPIE_ProcessGetExitStatus( int *signaled )
 #ifndef MAXPATHLEN
 #define MAXPATHLEN 1024
 #endif
-#define MAX_CLIENT_ARG 50
+#define MAX_CLIENT_ARG 258 /* handle exename + 256 args + null terminator */
 #define MAX_CLIENT_ENV 200
 /* MAXNAMELEN is used for sizing the char arrays used for 
  * defining environment variables */
@@ -254,8 +255,10 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
     char env_appnum[MAXNAMELEN];
     char env_universesize[MAXNAMELEN];
     char pathstring[MAXPATHLEN+10];
-    char *(client_env[MAX_CLIENT_ENV]);
-    char *(client_arg[MAX_CLIENT_ARG]);
+    /* We allocate these on the heap to help catch array overrun errors
+       such as those in ticket #719.  */
+    char **client_env = MPIU_Malloc(MAX_CLIENT_ENV * sizeof(char *));
+    char **client_arg = MPIU_Malloc(MAX_CLIENT_ARG * sizeof(char *));
 
     app = pState->app;
 
@@ -327,6 +330,11 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
     }
 
     DBG_PRINTF( ( "Setup command-line args\n" ) );
+    if ((app->nArgs + 2) > MAX_CLIENT_ARG) { /* +1 for exename, +1 for null */
+        MPIU_Error_printf("Too many command-line arguments: requested=%d maximum=%d\n",
+                          app->nArgs, MAX_CLIENT_ARG - 2);
+        exit(1);
+    }
     /* Set up the command-line arguments */
     client_arg[0] = (char *)app->exename;
     for (j=0; j<app->nArgs; j++) {
@@ -358,6 +366,8 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
 					app->exename );
 	exit( 1 );
     }
+
+    /* we should never get here */
     return 0;
 }
 
@@ -450,7 +460,7 @@ void MPIE_ProcessSetExitStatus( ProcessState *pState, int prog_stat )
  * Because signals are not queued, this handler processes all completed
  * processes.  
  *
- * We must perform the wait in the handler because if we do not, we loose 
+ * We must perform the wait in the handler because if we do not, we lose 
  * the exit status information (it is no longer available after the
  * signal handler exits).
  */
