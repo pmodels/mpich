@@ -14,6 +14,7 @@ sendselfth_SOURCES   = sendselfth.c
 greq_wait_SOURCES    = greq_wait.c
 greq_test_SOURCES    = greq_test.c
 multisend_SOURCES    = multisend.c
+multisend_LDADD = ../util/mtestthread.o
 multisend2_SOURCES   = multisend2.c
 multisend2_LDADD = ../util/mtestthread.o
 multisend3_SOURCES   = multisend3.c
