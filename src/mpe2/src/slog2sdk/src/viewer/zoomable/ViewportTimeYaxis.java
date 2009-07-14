@@ -17,6 +17,7 @@ import javax.swing.event.*;
 import base.drawable.Drawable;
 import viewer.common.Dialogs;
 import viewer.common.Parameters;
+import viewer.common.Routines;
 
 public class ViewportTimeYaxis extends ViewportTime
                                implements AdjustmentListener
@@ -389,7 +390,7 @@ public class ViewportTimeYaxis extends ViewportTime
             Point  vport_click;
 
             super.mouseClicked( mouse_evt );
-            if ( SwingUtilities.isLeftMouseButton( mouse_evt ) ) {
+            if ( Routines.isLeftMouseButton( mouse_evt ) ) {
                 if ( ! super.isLeftMouseClick4Zoom ) {  // Hand Mode
                     vport_click    = mouse_evt.getPoint();
                     searching_time = super.coord_xform.convertPixelToTime(
@@ -414,7 +415,7 @@ public class ViewportTimeYaxis extends ViewportTime
             Point  vport_click;
 
             super.mousePressed( mouse_evt );
-            if ( SwingUtilities.isLeftMouseButton( mouse_evt ) ) {
+            if ( Routines.isLeftMouseButton( mouse_evt ) ) {
                 if ( ! super.isLeftMouseClick4Zoom ) {  // Hand Mode
                     vport_click          = mouse_evt.getPoint();
                     mouse_last_Yloc      = vport_click.y;
@@ -430,7 +431,7 @@ public class ViewportTimeYaxis extends ViewportTime
             int    y_change, sb_change;
 
             super.mouseDragged( mouse_evt );
-            if ( SwingUtilities.isLeftMouseButton( mouse_evt ) ) {
+            if ( Routines.isLeftMouseButton( mouse_evt ) ) {
                 if ( ! super.isLeftMouseClick4Zoom ) {  // Hand Mode
                     vport_click = mouse_evt.getPoint();
                     y_change    = mouse_last_Yloc - vport_click.y; 
@@ -449,7 +450,7 @@ public class ViewportTimeYaxis extends ViewportTime
             int    y_change, sb_change;
 
             super.mouseReleased( mouse_evt );
-            if ( SwingUtilities.isLeftMouseButton( mouse_evt ) ) {
+            if ( Routines.isLeftMouseButton( mouse_evt ) ) {
                 if ( ! super.isLeftMouseClick4Zoom ) {
                     vport_click = mouse_evt.getPoint();
                     y_change  = mouse_last_Yloc - vport_click.y; 

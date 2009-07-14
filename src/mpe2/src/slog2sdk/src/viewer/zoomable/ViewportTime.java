@@ -581,7 +581,7 @@ public class ViewportTime extends JViewport
         {
             Point  vport_click;
             double focus_time;
-            if ( SwingUtilities.isLeftMouseButton( mouse_evt ) ) {
+            if ( Routines.isLeftMouseButton( mouse_evt ) ) {
                 if ( isLeftMouseClick4Zoom ) {  // Zoom Mode
                     vport_click = mouse_evt.getPoint();
                     focus_time  = coord_xform.convertPixelToTime(
@@ -616,7 +616,9 @@ public class ViewportTime extends JViewport
         private double                    mouse_pressed_time;
         private int                       mouse_pressed_Xloc;
         private int                       mouse_last_Xloc;
+        /*
         private boolean                   hasControlKeyBeenPressed = false; 
+        */
 
         public void mousePressed( MouseEvent mouse_evt )
         {
@@ -624,10 +626,12 @@ public class ViewportTime extends JViewport
             double click_time;
 
             // Ignore all mouse events when Control or Escape key is pressed
+            /*
             if ( mouse_evt.isControlDown() ) {
                 hasControlKeyBeenPressed  = true;
                 return;
             }
+            */
 
             vport_timebox.setEarliestTime( time_model.getTimeViewPosition() );
             vport_timebox.setLatestFromEarliest(
@@ -635,7 +639,7 @@ public class ViewportTime extends JViewport
             coord_xform.resetTimeBounds( vport_timebox );
             vport_click = mouse_evt.getPoint();
             click_time  = coord_xform.convertPixelToTime( vport_click.x );
-            if ( SwingUtilities.isLeftMouseButton( mouse_evt ) ) {
+            if ( Routines.isLeftMouseButton( mouse_evt ) ) {
                 if ( isLeftMouseClick4Zoom ) {  // Zoom Mode
                     zoom_timebox = new TimeBoundingBox();
                     zoom_timebox.setZeroDuration( click_time );
@@ -645,7 +649,7 @@ public class ViewportTime extends JViewport
                 else  // Hand Mode
                     super.setCursor( CustomCursor.HandClose );
             }
-            else if ( SwingUtilities.isRightMouseButton( mouse_evt ) ) {
+            else if ( Routines.isRightMouseButton( mouse_evt ) ) {
                 info_timebox = new TimeBoundingBox();
                 info_timebox.setZeroDuration( click_time );
                 this.repaint();
@@ -662,10 +666,12 @@ public class ViewportTime extends JViewport
             double focus_time;
 
             // Ignore all mouse events when Control key is pressed
+            /*
             if ( mouse_evt.isControlDown() || hasControlKeyBeenPressed ) {
                 hasControlKeyBeenPressed  = true;
                 return;
             }
+            */
 
             if ( mouse_evt.isShiftDown() )
                 if ( super.getCursor() == CustomCursor.ZoomMinus )
@@ -673,7 +679,7 @@ public class ViewportTime extends JViewport
 
             vport_click = mouse_evt.getPoint();
             click_time  = coord_xform.convertPixelToTime( vport_click.x );
-            if ( SwingUtilities.isLeftMouseButton( mouse_evt ) ) {
+            if ( Routines.isLeftMouseButton( mouse_evt ) ) {
                 if ( isLeftMouseClick4Zoom ) {  // Zoom Mode
                     if ( zoom_timebox != null ) { 
                         // i.e., Zoom has NOT been cancelled yet
@@ -693,7 +699,7 @@ public class ViewportTime extends JViewport
                     }
                 }
             }
-            else if ( SwingUtilities.isRightMouseButton( mouse_evt ) ) {
+            else if ( Routines.isRightMouseButton( mouse_evt ) ) {
                 if ( click_time > mouse_pressed_time )
                     info_timebox.setLatestTime( click_time );
                 else
@@ -711,14 +717,16 @@ public class ViewportTime extends JViewport
             double            click_time, focus_time;
 
             // Ignore all mouse events when Control key is pressed
+            /*
             if ( mouse_evt.isControlDown() || hasControlKeyBeenPressed ) {
                 hasControlKeyBeenPressed  = false;
                 return;
             }
+            */
 
             vport_click = mouse_evt.getPoint();
             click_time  = coord_xform.convertPixelToTime( vport_click.x );
-            if ( SwingUtilities.isLeftMouseButton( mouse_evt ) ) {
+            if ( Routines.isLeftMouseButton( mouse_evt ) ) {
                 if ( isLeftMouseClick4Zoom ) {  // Zoom Mode
                     if ( zoom_timebox != null ) {
                         // i.e., Zoom has NOT been cancelled yet
@@ -753,7 +761,7 @@ public class ViewportTime extends JViewport
                     super.setCursor( CustomCursor.HandOpen );
                 }
             }
-            else if ( SwingUtilities.isRightMouseButton( mouse_evt ) ) {
+            else if ( Routines.isRightMouseButton( mouse_evt ) ) {
                 if ( click_time > mouse_pressed_time )
                     info_timebox.setLatestTime( click_time );
                 else

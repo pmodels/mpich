@@ -11,9 +11,11 @@ package viewer.common;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.event.MouseEvent;
 import java.net.URL;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
 
 public class Routines
 {
@@ -171,5 +173,18 @@ public class Routines
         return new Color( Math.max( (int)(color.getRed()  *COLOR_FACTOR), 0),
                           Math.max( (int)(color.getGreen()*COLOR_FACTOR), 0),
                           Math.max( (int)(color.getBlue() *COLOR_FACTOR), 0) );
+    }
+
+    public static boolean isLeftMouseButton( MouseEvent mouse_evt )
+    {
+        return    SwingUtilities.isLeftMouseButton( mouse_evt )
+               && (! mouse_evt.isControlDown() );
+    }
+
+    public static boolean isRightMouseButton( MouseEvent mouse_evt )
+    {
+        return    SwingUtilities.isRightMouseButton( mouse_evt )
+               || ( SwingUtilities.isLeftMouseButton( mouse_evt )
+                 && mouse_evt.isControlDown() );
     }
 }
