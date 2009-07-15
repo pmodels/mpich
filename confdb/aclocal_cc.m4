@@ -1166,12 +1166,12 @@ if test "$enable_strict_done" != "yes" ; then
     # See if the above options work with the compiler
     accepted_flags=""
     for flag in $pac_cc_strict_flags ; do
+    	save_CFLAGS=$CFLAGS
+	CFLAGS="$CFLAGS $accepted_flags"
 	PAC_C_CHECK_COMPILER_OPTION($flag,accepted_flags="$accepted_flags $flag",)
+	CFLAGS=$save_CFLAGS
     done
     pac_cc_strict_flags=$accepted_flags
-dnl We either need to test these flags cumulatively, or we at the very least
-dnl need a sanity check that these flags all work together at the end.  See
-dnl ticket #729 for tracking.
 fi
 ])
 
