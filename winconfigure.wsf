@@ -1938,6 +1938,8 @@ Sub AddOPADefinitions( fout, filename, b64 )
                 fout.WriteLine("/* #undef HAVE_GCC_INTRINSIC_ATOMICS */")
             Case "HAVE_GCC_X86_32_64"
                 fout.WriteLine("/* #undef HAVE_GCC_X86_32_64 */")
+            Case "HAVE_GCC_X86_32_64_P3"
+                fout.WriteLine("/* #undef HAVE_GCC_X86_32_64_P3 */")
             Case "HAVE_INTRIN_H"
                 fout.WriteLine("/* #undef HAVE_INTRIN_H */")
             Case "HAVE_INTTYPES_H"
@@ -3291,6 +3293,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef HAVE_MD5 */")
                                 Case "HAVE_MD5_CALC"
                                         fout.WriteLine("/* #undef HAVE_MD5_CALC */")
+                                Case "AC_APPLE_UNIVERSAL_BUILD"
+                                        fout.WriteLine("/* #undef AC_APPLE_UNIVERSAL_BUILD */")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
 					If appendUniqueString(unhandled_definitions, macroname) Then
