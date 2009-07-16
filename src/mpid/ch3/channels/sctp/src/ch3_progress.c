@@ -1265,9 +1265,10 @@ int MPIDU_Sctp_wait(int fd, int timeout, MPIDU_Sctp_event_t * event)
 	/* WRITE LOOP ends */
 
 	/* can't spin forever */
-	if(!SPIN(timeout))
+	if(!SPIN(timeout)) {
+            MPIDU_Sctp_event_dequeue(event);
 	    break;
-
+        }
     } 
 
 
