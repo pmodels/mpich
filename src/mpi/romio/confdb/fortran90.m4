@@ -1019,8 +1019,8 @@ if AC_TRY_EVAL(ac_compile) ; then
        fi
     fi
 else
-    echo "configure: failed program was:" >&AC_FD_CC
-    cat conftest.$ac_ext >&AC_FD_CC
+    echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+    cat conftest.$ac_ext >&AS_MESSAGE_LOG_FD
     pac_cv_f90_module_ext="unknown"
 fi
 AC_LANG_POP
@@ -1066,12 +1066,12 @@ if AC_TRY_EVAL(ac_compile) ; then
 	rm -f work.pcl
     else
 	AC_MSG_WARN([Unable to build a simple F90 module])
-        echo "configure: failed program was:" >&AC_FD_CC
-        cat conftest.$ac_ext >&AC_FD_CC
+        echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+        cat conftest.$ac_ext >&AS_MESSAGE_LOG_FD
     fi
 else
-    echo "configure: failed program was:" >&AC_FD_CC
-    cat conftest.$ac_ext >&AC_FD_CC
+    echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+    cat conftest.$ac_ext >&AS_MESSAGE_LOG_FD
 fi
 rm -f conftest.$ac_ext
 cat >conftest.$ac_ext <<EOF
@@ -1079,20 +1079,20 @@ cat >conftest.$ac_ext <<EOF
         use conf
         end
 EOF
-if ${F90-f90} -c $F90FLAGS -Iconftestdir conftest.$ac_ext 1>&AC_FD_CC 2>&1 && \
+if ${F90-f90} -c $F90FLAGS -Iconftestdir conftest.$ac_ext 1>&AS_MESSAGE_LOG_FD 2>&1 && \
 	test -s conftest.o ; then
     pac_cv_f90_module_incflag="-I"
-elif ${F90-f90} -c $F90FLAGS -Mconftestdir conftest.$ac_ext 1>&AC_FD_CC 2>&1 && \
+elif ${F90-f90} -c $F90FLAGS -Mconftestdir conftest.$ac_ext 1>&AS_MESSAGE_LOG_FD 2>&1 && \
 	test -s conftest.o ; then
     pac_cv_f90_module_incflag="-M"
-elif ${F90-f90} -c $F90FLAGS -pconftestdir conftest.$ac_ext 1>&AC_FD_CC 2>&1 && \
+elif ${F90-f90} -c $F90FLAGS -pconftestdir conftest.$ac_ext 1>&AS_MESSAGE_LOG_FD 2>&1 && \
 	test -s conftest.o ; then
     pac_cv_f90_module_incflag="-p"
 elif test -s work.pc ; then 
      mv conftest.pc conftestdir/mpimod.pc
      echo "mpimod.pc" > conftestdir/mpimod.pcl
      echo "`pwd`/conftestdir/mpimod.pc" >> conftestdir/mpimod.pcl
-     if ${F90-f90} -c $F90FLAGS -cl,conftestdir/mpimod.pcl conftest.$ac_ext 1>&AC_FD_CC 2>&1 && test -s conftest.o ; then
+     if ${F90-f90} -c $F90FLAGS -cl,conftestdir/mpimod.pcl conftest.$ac_ext 1>&AS_MESSAGE_LOG_FD 2>&1 && test -s conftest.o ; then
          pac_cv_f90_module_incflag='-cl,'
 	# Not quite right; see the comments that follow
          AC_MSG_RESULT([-cl,filename where filename contains a list of files and directories])
@@ -1167,8 +1167,8 @@ rm -rf conftest.dSYM
 rm -f conftest*
 if test -z "$ac_ext_f90" -a -n "$pac_cv_f90_ext" ; then ac_ext_f90=$pac_cv_f90_ext ; fi
 # Define the two language-specific steps
-link_f90='${F90-f90} -o conftest${ac_exeext} $F90FLAGS $LDFLAGS conftest1.$ac_ext_f90 conftest2.o $LIBS 1>&AC_FD_CC'
-compile_f77='${F77-f77} -c $FFLAGS conftest2.f 1>&AC_FD_CC'
+link_f90='${F90-f90} -o conftest${ac_exeext} $F90FLAGS $LDFLAGS conftest1.$ac_ext_f90 conftest2.o $LIBS 1>&AS_MESSAGE_LOG_FD'
+compile_f77='${F77-f77} -c $FFLAGS conftest2.f 1>&AS_MESSAGE_LOG_FD'
 # Create test programs
 pacTestRoutine=t1_2
 # eval the assignment in case the argument is a variable.
@@ -1195,11 +1195,11 @@ if AC_TRY_EVAL(compile_f77) ; then
         pac_cv_f90_and_f77="yes"
     else 
         pac_cv_f90_and_f77="no"
-	echo "Failed to link a F77 and F90 program" >&AC_FD_CC
-	echo "F77 Program:" >&AD_FD_CC
-	cat conftest2.f >&AD_FD_CC
-	echo "F90 Program:" >&AC_FD_CC
-	cat conftest.$ac_ext_f90 >&AC_FD_CC
+	echo "Failed to link a F77 and F90 program" >&AS_MESSAGE_LOG_FD
+	echo "F77 Program:" >&AS_MESSAGE_LOG_FD
+	cat conftest2.f >&AS_MESSAGE_LOG_FD
+	echo "F90 Program:" >&AS_MESSAGE_LOG_FD
+	cat conftest.$ac_ext_f90 >&AS_MESSAGE_LOG_FD
 	echo "Output from the link step is"
 	# We re-run this for the output
 	eval $link_f90 2>&1
@@ -1226,7 +1226,7 @@ cat > conftest.$pac_cv_f90_ext <<EOF
       program conftest
       end
 EOF
-ac_compile='${F90-f90} -c $F90FLAGS conftest.$pac_cv_f90_ext 1>&AC_FD_CC'
+ac_compile='${F90-f90} -c $F90FLAGS conftest.$pac_cv_f90_ext 1>&AS_MESSAGE_LOG_FD'
 if AC_TRY_EVAL(ac_compile) ; then
     AC_MSG_RESULT([f90])
 else
@@ -1254,8 +1254,8 @@ dnl define(ifdef([_AC_LANG],[_AC_LANG],[AC_LANG]), [FORTRAN90])dnl
 ifdef([_AC_LANG],[define([_AC_LANG],FORTRAN90)],[define([AC_LANG],FORTRAN90)])
 dnl define([AC_LANG], [FORTRAN90])dnl
 ac_ext=$pac_cv_f90_ext
-ac_compile='${F90-f90} -c $F90FLAGS conftest.$ac_ext 1>&AC_FD_CC'
-ac_link='${F90-f90} -o conftest${ac_exeext} $F90FLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&AC_FD_CC'
+ac_compile='${F90-f90} -c $F90FLAGS conftest.$ac_ext 1>&AS_MESSAGE_LOG_FD'
+ac_link='${F90-f90} -o conftest${ac_exeext} $F90FLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&AS_MESSAGE_LOG_FD'
 dnl cross_compiling no longer maintained by autoconf as part of the
 dnl AC_LANG changes.  If we set it here, a later AC_LANG may not 
 dnl restore it (in the case where one compiler claims to be a cross compiler
@@ -1276,8 +1276,8 @@ if AC_TRY_EVAL(ac_link) && test -s conftest${ac_exeext} ; then
         pac_cv_prog_f90_cross="yes"
     fi
 else
-  echo "configure: failed program was:" >&AC_FD_CC
-  cat conftest.$ac_ext >&AC_FD_CC
+  echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+  cat conftest.$ac_ext >&AS_MESSAGE_LOG_FD
   pac_cv_prog_f90_works="no"
 fi
 # This is needed for Mac OSX 10.5
@@ -1353,27 +1353,27 @@ EOF
 int $confname( int a )
 { printf( "The answer is %d\n", a ); fflush(stdout); return 0; }
 EOF
-    tmpcmd='${CC-cc} -c $CFLAGS conftestc.c 1>&AC_FD_CC'
+    tmpcmd='${CC-cc} -c $CFLAGS conftestc.c 1>&AS_MESSAGE_LOG_FD'
     if AC_TRY_EVAL(tmpcmd) && test -s conftestc.o ; then
         :
     else
-        echo "configure: failed program was:" >&AC_FD_CC
-        cat conftestc.c >&AC_FD_CC 
+        echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+        cat conftestc.c >&AS_MESSAGE_LOG_FD 
     fi
 
-    tmpcmd='${F90-f90} $F90FLAGS -o conftest conftest.$f90_ext conftestc.o 1>&AC_FD_CC'
+    tmpcmd='${F90-f90} $F90FLAGS -o conftest conftest.$f90_ext conftestc.o 1>&AS_MESSAGE_LOG_FD'
     if AC_TRY_EVAL(tmpcmd) && test -x conftest ; then
          pac_cv_prog_f90_and_c_stdio_libs=none
     else
          # Try again with -lSystemStubs
-         tmpcmd='${F90-f90} $F90FLAGS -o conftest conftest.$f90_ext conftestc.o -lSystemStubs 1>&AC_FD_CC'
+         tmpcmd='${F90-f90} $F90FLAGS -o conftest conftest.$f90_ext conftestc.o -lSystemStubs 1>&AS_MESSAGE_LOG_FD'
          if AC_TRY_EVAL(tmpcmd) && test -x conftest ; then
              pac_cv_prog_f90_and_c_stdio_libs="-lSystemStubs"
 	 else 
-	     echo "configure: failed program was:" >&AC_FD_CC
-	     cat conftestc.c >&AC_FD_CC 
-	     echo "configure: with Fortran 90 program:" >&AC_FD_CC
-	     cat conftest.$f90_ext >&AC_FD_CC
+	     echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+	     cat conftestc.c >&AS_MESSAGE_LOG_FD 
+	     echo "configure: with Fortran 90 program:" >&AS_MESSAGE_LOG_FD
+	     cat conftest.$f90_ext >&AS_MESSAGE_LOG_FD
          fi
     fi
 
@@ -1441,35 +1441,35 @@ if AC_TRY_EVAL(ac_fscompilelink) && test -x conftest ; then
                if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
                   ac_result="yes"
                else 
-                  echo "configure: Compiler output differed in two cases" >&AC_FD_CC
-                  diff -b conftest.out conftest.bas >&AC_FD_CC
+                  echo "configure: Compiler output differed in two cases" >&AS_MESSAGE_LOG_FD
+                  diff -b conftest.out conftest.bas >&AS_MESSAGE_LOG_FD
                fi
             else
-               echo "configure: failed program was:" >&AC_FD_CC
-               cat conftest.$ac_f90ext >&AC_FD_CC
+               echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+               cat conftest.$ac_f90ext >&AS_MESSAGE_LOG_FD
             fi
           else
-            echo "configure: failed program was:" >&AC_FD_CC
-            cat conftest2.$ac_f90ext >&AC_FD_CC
+            echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+            cat conftest2.$ac_f90ext >&AS_MESSAGE_LOG_FD
           fi
       else
         # diff
-        echo "configure: Compiler output differed in two cases" >&AC_FD_CC
-        diff -b conftest.out conftest.bas >&AC_FD_CC
+        echo "configure: Compiler output differed in two cases" >&AS_MESSAGE_LOG_FD
+        diff -b conftest.out conftest.bas >&AS_MESSAGE_LOG_FD
       fi
    else
       # try_eval(fscompilelink2)
-      echo "configure: failed program was:" >&AC_FD_CC
-      cat conftest.$ac_f90ext >&AC_FD_CC
+      echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+      cat conftest.$ac_f90ext >&AS_MESSAGE_LOG_FD
    fi
    if test "$ac_result" != "yes" -a -s conftest.out ; then
-        cat conftest.out >&AC_FD_CC
+        cat conftest.out >&AS_MESSAGE_LOG_FD
    fi
 else
     # Could not compile without the option!
-    echo "configure: Could not compile program" >&AC_FD_CC
-    cat conftest.$ac_f90ext >&AC_FD_CC
-    cat conftest.bas >&AC_FD_CC
+    echo "configure: Could not compile program" >&AS_MESSAGE_LOG_FD
+    cat conftest.$ac_f90ext >&AS_MESSAGE_LOG_FD
+    cat conftest.bas >&AS_MESSAGE_LOG_FD
 fi
 # Restore F90FLAGS before 2nd/3rd argument commands are executed,
 # # as 2nd/3rd argument command could be modifying F90FLAGS.

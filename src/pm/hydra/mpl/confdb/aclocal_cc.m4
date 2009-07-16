@@ -1076,10 +1076,6 @@ if test "$enable_strict_done" != "yes" ; then
     #   -Wno-missing-field-initializers  -- We want to allow a struct to be 
     #       initialized to zero using "struct x y = {0};" and not require 
     #       each field to be initialized individually.
-    #   -Wno-type-limits -- There are places where we compare an unsigned to 
-    #	    a constant that happens to be zero e.g., if x is unsigned and 
-    #	    MIN_VAL is zero, we'd like to do "MPIU_Assert(x >= MIN_VAL);".
-    #       Note this option is not supported by gcc 4.2.
     #   -Wno-unused-parameter -- For portability, some parameters go unused
     #	    when we have different implementations of functions for 
     #	    different platforms
@@ -1097,6 +1093,13 @@ if test "$enable_strict_done" != "yes" ; then
     #	    code already has some.
     #   -Wno-format-zero-length -- this warning is irritating and useless, since
     #                              a zero-length format string is very well defined
+    #
+    # This was removed because it doesn't seem to reliably detected by gcc as an
+    # invalid option (see ticket #729):
+    #   -Wno-type-limits -- There are places where we compare an unsigned to 
+    #	    a constant that happens to be zero e.g., if x is unsigned and 
+    #	    MIN_VAL is zero, we'd like to do "MPIU_Assert(x >= MIN_VAL);".
+    #       Note this option is not supported by gcc 4.2.
 
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
@@ -1106,7 +1109,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Wall
         -Wextra
         -Wno-missing-field-initializers
-        -Wno-type-limits
         -Wstrict-prototypes
         -Wmissing-prototypes
         -DGCC_WALL
@@ -1164,7 +1166,10 @@ if test "$enable_strict_done" != "yes" ; then
     # See if the above options work with the compiler
     accepted_flags=""
     for flag in $pac_cc_strict_flags ; do
+    	save_CFLAGS=$CFLAGS
+	CFLAGS="$CFLAGS $accepted_flags"
 	PAC_C_CHECK_COMPILER_OPTION($flag,accepted_flags="$accepted_flags $flag",)
+	CFLAGS=$save_CFLAGS
     done
     pac_cc_strict_flags=$accepted_flags
 fi
