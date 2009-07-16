@@ -1594,9 +1594,9 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MPICH2 64-bit"
-        "ProductCode" = "8:{EA349AD6-E964-44DB-908B-67796F0E9E7D}"
-        "PackageCode" = "8:{7EC045F0-2834-4E22-A49C-DBC9CB31CE93}"
-        "UpgradeCode" = "8:{6DAF2FEB-EFB3-4F95-8118-36EA8C9FEF20}"
+        "ProductCode" = "8:{B91EB9DA-98D2-4241-87EA-3D889B58D564}"
+        "PackageCode" = "8:{FC1CFDFF-31DC-498F-A5C1-176E2BF54DC1}"
+        "UpgradeCode" = "8:{BF0FD554-60B4-4E75-9BFB-8EF602F4939F}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
