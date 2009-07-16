@@ -8,6 +8,10 @@
 #include "ad_xfs.h"
 #include "adio_extern.h"
 
+#ifndef HAVE_LSEEK64
+#define lseek64 lseek
+#endif
+
 void ADIOI_XFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct, int *error_code)
 {
     int i, err;
