@@ -1289,13 +1289,23 @@ int smpd_launch_process(smpd_process_t *process, int priorityClass, int priority
 #ifdef HAVE_WINDOWS_H
     if(smpd_process.set_affinity)
     {
-        ULONG_PTR mask = smpd_get_next_process_affinity_mask();
-        if(mask != NULL)
-        {
+        DWORD_PTR mask;
+        if(process->binding_proc != -1){
+            /* Get affinity mask corresponding to the binding proc */
+            mask = smpd_get_processor_affinity_mask(process->binding_proc);
+        }
+        else{
+            /* Get affinity mask decided by smpd - auto binding */
+            mask = smpd_get_next_process_affinity_mask();
+        }
+        if(mask != NULL){
             /* FIXME: The return vals of these functions are not checked ! */
-            smpd_dbg_printf("Setting the process/thread affinity (mask=%ul)\n", mask);
+            smpd_dbg_printf("Setting the process/thread affinity (mask=%lu)\n", mask);
             SetProcessAffinityMask(psInfo.hProcess, mask);
             SetThreadAffinityMask(psInfo.hThread, mask);
+		}
+        else{
+            smpd_dbg_printf("Unable to set process/thread affinity (mask=%lu)\n", mask);
         }
     }
 #endif

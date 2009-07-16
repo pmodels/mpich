@@ -348,6 +348,7 @@ int smpd_create_process_struct(int rank, smpd_process_t **process_ptr)
     }
     p->id = cur_id++; /* MT - If smpd is to be thread safe, this will have to be changed */
     p->rank = rank;
+    p->binding_proc = -1;
     p->nproc = 1;
     p->kvs_name[0] = '\0';
     p->domain_name[0] = '\0';

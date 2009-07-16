@@ -511,6 +511,7 @@ typedef struct smpd_process_t
     char path[SMPD_MAX_PATH_LENGTH];
     char clique[SMPD_MAX_CLIQUE_LENGTH];
     int rank;
+    int binding_proc;
     int nproc;
     smpd_pwait_t wait;
     int exitcode;
@@ -539,6 +540,7 @@ typedef struct smpd_launch_node_t
     char hostname[SMPD_MAX_HOST_LENGTH];
     char alt_hostname[SMPD_MAX_HOST_LENGTH];
     int iproc;
+    int binding_proc;
     int nproc;
     int appnum;
     int priority_class, priority_thread;
@@ -703,7 +705,11 @@ typedef struct smpd_global_t
     int nproc, nproc_launched, nproc_exited;
     SMPD_BOOL verbose;
 #ifdef HAVE_WINDOWS_H
+    /* set_affinity is TRUE if the user explicitly specifies MPI process binding */
     SMPD_BOOL set_affinity;
+    /* The affinity map contains the user defined MPI process affinity map, if any */
+    int *affinity_map;
+    int affinity_map_sz;
 #endif
     /*SMPD_BOOL shutdown, restart, validate, do_status;*/ /* built in commands */
     smpd_builtin_commands_t builtin_cmd;
@@ -971,8 +977,9 @@ int smpd_delayed_spawn_dequeue(smpd_context_t **context);
 int smpd_handle_delayed_spawn_command(void);
 
 #ifdef HAVE_WINDOWS_H
-    DWORD_PTR smpd_get_next_process_affinity_mask(void );
-    void smpd_init_affinity_table(void );
+DWORD_PTR smpd_get_next_process_affinity_mask(void );
+DWORD_PTR smpd_get_processor_affinity_mask(int proc_num);
+void smpd_init_affinity_table(void );
 #endif
 
 #if defined(__cplusplus)

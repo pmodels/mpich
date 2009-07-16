@@ -329,3 +329,29 @@ fn_exit:
     free(pInfo);
 }
 
+/* This function returns an affinity mask corresponding to the logical processor
+ * id, proc_num, specified. In the case of an error a NULL mask, 0x0, is returned.
+ */
+DWORD_PTR smpd_get_processor_affinity_mask(int proc_num)
+{
+    BOOL fSucc;
+    DWORD_PTR system_mask, usable_processor_mask, mask;
+
+    if(proc_num < 0){
+        smpd_err_printf("Invalid processor num specified\n");
+        return NULL;
+    }
+
+    /* Get the proc affinity mask for the process/system */
+    fSucc = GetProcessAffinityMask(GetCurrentProcess(), &usable_processor_mask, &system_mask);
+    if(!fSucc){
+        smpd_err_printf("Unable to get proc affinity mask\n");
+        return NULL;
+    }
+
+    mask = 0x1 << (proc_num % ( 8 * sizeof(DWORD_PTR)));
+    mask &= system_mask;
+
+    return mask;
+}
+

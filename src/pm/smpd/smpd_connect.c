@@ -99,6 +99,8 @@ smpd_global_t smpd_process =
       SMPD_FALSE,       /* verbose                */
 #ifdef HAVE_WINDOWS_H
       SMPD_FALSE,       /* set_affinity             */
+      NULL,             /* affinity_map             */
+      0,                /* affinity_map_sz          */
 #endif
       /*SMPD_FALSE,*/       /* shutdown               */
       /*SMPD_FALSE,*/       /* restart                */

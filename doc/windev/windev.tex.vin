@@ -522,10 +522,31 @@ host.  The current user must match the user specifed by the \texttt{-add\_job jo
 command.
 
 \item \texttt{-binding process\_binding\_scheme}
-Specify a process binding scheme for the MPI processes. Currently only \texttt{auto}
-is the supported binding scheme. Using \texttt{auto} as the process binding scheme
-the process manager will choose the process binding scheme automatically taking into 
-account the load on system resources like caches.
+This option is currently available only under Windows. It allows the user to
+specify a process binding scheme for the MPI processes. Currently \texttt{auto} and
+\texttt{user} are the supported binding schemes. Using \texttt{auto} as the process 
+binding scheme the process manager will choose the process binding scheme automatically 
+taking into account the load on system resources like caches. The \texttt{user} binding
+scheme can be used to provide a user defined binding for the MPI processes. The supported
+formats for specifying the binding schemes are provided below.
+
+\texttt{-binding auto}
+
+\texttt{-binding user:core1,core2}
+
+where \texttt{core1} and \texttt{core2} represent the logical processor ids. The logical
+processor ids specified are used in a round robin fashion to bind the MPI processes to the
+logical processors. Some examples are provided below.
+
+\texttt{mpiexec -n 4 -binding auto cpi.exe}
+
+In the above example the process manager binds the MPI processes to the available 
+cores automatically as mentioned above.
+
+\texttt{mpiexec -n 3 -binding user:1,3 cpi.exe}
+
+In the example above the process manager binds MPI process with rank 0 to logical 
+processor 1, rank 1 to logical processor 3, rank 2 to logical processor 1.
 
 \item \texttt{-channel channel\_name}
 This option is only available under Windows and allows the user to select which

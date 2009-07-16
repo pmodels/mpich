@@ -101,8 +101,8 @@ void mp_print_extra_options(void)
     printf("  launch on the specified hosts\n");
     printf("  In the second version the number of processes = m1 + m2 + ... + mn\n");
     printf("-binding proc_binding_scheme\n");
-    printf("  Set the proc nbinding for each of the launched processes to a single core.\n");
-    printf("  Currently only \"auto\" is supported as the proc_binding_scheme \n"); 
+    printf("  Set the proc binding for each of the launched processes to a single core.\n");
+    printf("  Currently \"auto\" and \"user\" are supported as the proc_binding_schemes \n"); 
     printf("-map drive:\\\\host\\share\n");
     printf("  map a drive on all the nodes\n");
     printf("  this mapping will be removed when the processes exit\n");
@@ -317,6 +317,74 @@ static int mpiexec_assert_hook( int reportType, char *message, int *returnValue 
 	exit(*returnValue);
     exit(-1);
 }
+
+/* This function reads the user binding option and sets the affinity map.
+ * The user option is of the form "user:a,b,c" where a, b, c are integers denoting
+ * the cores in the affinity map
+ */
+static int read_user_affinity_map(char *option)
+{
+    char *p = NULL, *q = NULL, *context = NULL;
+    int i=0, map_sz = 0;
+
+    if(smpd_process.affinity_map != NULL){
+        printf("Error: duplicate user affinity map option\n");
+        return SMPD_FAIL;
+    }
+    if(option == NULL){
+        printf("Error: NULL user affinity option\n");
+        return SMPD_FAIL;
+    }
+
+    /* option = "user:1,2,3" */
+    p = option;
+    p = strtok_s(p, ":", &context);
+    if(p == NULL){
+        printf("Error parsing user affinity map\n");
+        return SMPD_FAIL;
+    }
+    p = strtok_s(NULL, ":", &context);
+    if(p == NULL){
+        printf("Error parsing user affinity map\n");
+        return SMPD_FAIL;
+    }
+
+    /* p should now point to the affinity map separated by comma's */
+    map_sz = 1;
+    q = p;
+    /* parse to find the number of elements in the map */
+    while(*q != '\0'){
+        if(*q == ','){
+            map_sz++;
+        }
+        q++;
+    }
+
+    /* Allocate the mem for map */
+    smpd_process.affinity_map = (int *)MPIU_Malloc(sizeof(int) * map_sz);
+    if(smpd_process.affinity_map == NULL){
+        printf("Unable to allocate memory for affinity map\n");
+        return SMPD_FAIL;
+    }
+    smpd_process.affinity_map_sz = map_sz;
+
+    context = NULL;
+    p = strtok_s(p, ",", &context);
+    i = 0;
+    while(p != NULL){
+        /* FIXME: We don't detect overflow case in atoi */
+        smpd_process.affinity_map[i++] = atoi(p);
+        p = strtok_s(NULL, ",", &context);
+    }
+
+    smpd_dbg_printf("The user affinity map is : [ ");
+    for(i=0; i<map_sz; i++){
+        smpd_dbg_printf(" %d ,",smpd_process.affinity_map[i]);
+    }
+    smpd_dbg_printf(" ] \n");
+
+    return SMPD_SUCCESS;
+}
 #endif
 
 #undef FCNAME
@@ -324,6 +392,7 @@ static int mpiexec_assert_hook( int reportType, char *message, int *returnValue 
 int mp_parse_command_args(int *argcp, char **argvp[])
 {
     int cur_rank;
+    int affinity_map_index;
     int argc, next_argc;
     char **next_argv;
     char *exe_ptr;
@@ -768,6 +837,7 @@ int mp_parse_command_args(int *argcp, char **argvp[])
     smpd_get_default_hosts(); 
 
     cur_rank = 0;
+    affinity_map_index = 0;
     gdrive_map_list = NULL;
     genv_list = NULL;
     gwdir[0] = '\0';
@@ -1021,10 +1091,21 @@ configfile_loop:
             if(strcmp(&(*argvp)[2][0], "auto") == 0)
             {
                 smpd_process.set_affinity = TRUE;
+                smpd_process.affinity_map = NULL;
+                smpd_process.affinity_map_sz = 0;
+            }
+            else if(strncmp(&(*argvp)[2][0], "user", 4) == 0)
+            {
+                smpd_process.set_affinity = TRUE;
+                if(read_user_affinity_map(&(*argvp)[2][0]) != SMPD_SUCCESS)
+                {
+                    printf("Error parsing user binding scheme\n");
+                    smpd_exit_fn(FCNAME);
+                }
             }
             else
             {
-                printf("Error: Only process binding scheme supported is \"auto\"\n");
+                printf("Error: Process binding schemes supported are \"auto\", \"user\" \n");
                 smpd_exit_fn(FCNAME);
                 return SMPD_FAIL;
             }
@@ -2090,6 +2171,16 @@ configfile_loop:
 	    launch_node->clique[0] = '\0';
 	    smpd_get_next_host(&host_list, launch_node);
 	    launch_node->iproc = cur_rank++;
+#ifdef HAVE_WINDOWS_H
+        if(smpd_process.affinity_map_sz > 0){
+            launch_node->binding_proc =
+                smpd_process.affinity_map[affinity_map_index % smpd_process.affinity_map_sz];
+            affinity_map_index++;
+        }
+        else{
+            launch_node->binding_proc = -1;
+        }
+#endif
 	    launch_node->appnum = appnum;
 	    launch_node->priority_class = n_priority_class;
 	    launch_node->priority_thread = n_priority;
@@ -2207,12 +2298,12 @@ configfile_loop:
 	    **argvp = exe_ptr;
     } while (*next_argv);
 
-    /* add nproc to all the launch nodes */
     launch_node_iter = smpd_process.launch_list;
     while (launch_node_iter)
     {
-	launch_node_iter->nproc = cur_rank;
-	launch_node_iter = launch_node_iter->next;
+        /* add nproc to all the launch nodes */
+        launch_node_iter->nproc = cur_rank;
+    	launch_node_iter = launch_node_iter->next;
     }
 
     /* create the cliques */

@@ -743,6 +743,14 @@ int smpd_launch_processes(smpd_launch_node_t *launch_list, char *kvs_name, char 
             smpd_err_printf("Unable to add the affinity flag to the launch command\n");
             goto launch_failure;
         }
+        if(launch_node_ptr->binding_proc != -1){
+            result = smpd_add_command_int_arg(cmd_ptr, "afp", launch_node_ptr->binding_proc);
+            if(result != SMPD_SUCCESS)
+            {
+                smpd_err_printf("Unable to add the binding proc to the launch command\n");
+                goto launch_failure;
+            }
+        }
     }
 #endif
 	if (launch_node_ptr->priority_class != SMPD_DEFAULT_PRIORITY_CLASS)
@@ -2263,6 +2271,7 @@ int smpd_handle_launch_command(smpd_context_t *context)
     MPIU_Str_get_int_arg(cmd->cmd, "pt", &priority_thread);
 #ifdef HAVE_WINDOWS_H
     MPIU_Str_get_int_arg(cmd->cmd, "af", &smpd_process.set_affinity);
+    MPIU_Str_get_int_arg(cmd->cmd, "afp", &process->binding_proc);
 #endif
     /* parse the -m drive mapping options */
     nmaps = 0;
