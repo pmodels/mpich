@@ -9,7 +9,7 @@
 
 /* Prototypes for picky compilers */
 void SetData ( double *, double *, int, int, int, int, int, int );
-int CheckData ( double *, int, int, int, int, int );
+int CheckData ( double *, int, int, int, int, int, int );
 /*
    This is an example of using scatterv to send a matrix from one
    process to all others, with the matrix stored in Fortran order.
@@ -46,7 +46,8 @@ void SetData( double *sendbuf, double *recvbuf, int nx, int ny,
 }
 
 int CheckData( double *recvbuf,
-               int nx, int ny, int myrow, int mycol, int nrow )
+               int nx, int ny, int myrow, int mycol, int nrow,
+               int expect_no_value )
 {
     int coldim, m, k;
     double *p, val;
@@ -56,7 +57,13 @@ int CheckData( double *recvbuf,
     p      = recvbuf;
     for (m=0; m<ny; m++) {
         for (k=0; k<nx; k++) {
-            val = 1000 * mycol + 100 * myrow + m * nx + k;
+            /* If expect_no_value is true then we assume that the pre-scatterv
+             * value should remain in the recvbuf for our portion of the array.
+             * This is the case for the root process when using MPI_IN_PLACE. */
+            if (expect_no_value)
+                val = -1.0;
+            else
+                val = 1000 * mycol + 100 * myrow + m * nx + k;
 
             if (p[k] != val) {
                 errs++;
@@ -76,7 +83,7 @@ int CheckData( double *recvbuf,
 
 int main( int argc, char **argv )
 {
-    int rank, size, myrow, mycol, nx, ny, stride, cnt, i, j, errs, tot_errs;
+    int rank, size, myrow, mycol, nx, ny, stride, cnt, i, j, errs, errs_in_place, tot_errs;
     double    *sendbuf, *recvbuf;
     MPI_Datatype vec, block, types[2];
     MPI_Aint displs[2];
@@ -148,9 +155,20 @@ int main( int argc, char **argv )
     SetData( sendbuf, recvbuf, nx, ny, myrow, mycol, dims[0], dims[1] );
     MPI_Scatterv( sendbuf, sendcounts, scdispls, block,
                   recvbuf, nx * ny, MPI_DOUBLE, 0, comm2d );
-    if((errs = CheckData( recvbuf, nx, ny, myrow, mycol, dims[0] ))) {
+    if((errs = CheckData( recvbuf, nx, ny, myrow, mycol, dims[0], 0 ))) {
         fprintf( stdout, "Failed to transfer data\n" );
     }
+
+    /* once more, but this time passing MPI_IN_PLACE for the root */
+    SetData( sendbuf, recvbuf, nx, ny, myrow, mycol, dims[0], dims[1] );
+    MPI_Scatterv( sendbuf, sendcounts, scdispls, block,
+                  (rank == 0 ? MPI_IN_PLACE : recvbuf), nx * ny, MPI_DOUBLE, 0, comm2d );
+    errs_in_place = CheckData( recvbuf, nx, ny, myrow, mycol, dims[0], (rank == 0) );
+    if(errs_in_place) {
+        fprintf( stdout, "Failed to transfer data (MPI_IN_PLACE)\n" );
+    }
+
+    errs += errs_in_place;
     MPI_Allreduce( &errs, &tot_errs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
     if (rank == 0) {
         if (tot_errs == 0)

@@ -93,7 +93,7 @@ int MPIR_Scatterv (
         for (i = 0; i < comm_size; i++) {
             if (sendcnts[i]) {
                 if ((comm_ptr->comm_kind == MPID_INTRACOMM) && (i == rank)) {
-                    if (sendbuf != MPI_IN_PLACE) {
+                    if (recvbuf != MPI_IN_PLACE) {
                         mpi_errno = MPIR_Localcopy(((char *)sendbuf+displs[rank]*extent), 
                                                    sendcnts[rank], sendtype, 
                                                    recvbuf, recvcnt, recvtype);
