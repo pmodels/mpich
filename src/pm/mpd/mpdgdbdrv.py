@@ -103,7 +103,7 @@ if __name__ == '__main__':    # so I can be imported by pydoc
         gdb_line = ''
         while not gdb_line.startswith('Breakpoint'):
             try:
-                (readyFDs,unused1,unused2) = select([gdb_sout_serr_fileno],[],[],3)
+                (readyFDs,unused1,unused2) = select([gdb_sout_serr_fileno],[],[],10)
             except error, data:
                 if data[0] == EINTR:    # interrupted by timeout for example
                     continue
