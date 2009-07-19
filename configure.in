@@ -426,7 +426,10 @@ AC_ARG_ENABLE(threads,
     single          - No threads (MPI_THREAD_SINGLE)
     funneled        - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
     serialized      - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
-    multiple(:impl) - Fully multi-threaded (MPI_THREAD_MULTIPLE)
+    multiple(:impl) - Fully multi-threaded (MPI_THREAD_MULTIPLE). DO NOT
+                      select this option. The default option is more
+                      efficient and also supports thread_multiple.
+
       The following implementations are supported.
           global_mutex - a single global lock guards access to all 
 	                 MPI functions.
