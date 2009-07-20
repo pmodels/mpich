@@ -155,7 +155,7 @@ int MPIU_Msg_printf(const char *str, ...)
     n = vfprintf(stdout, format_str, list);
     va_end(list);
 
-    fflush(stderr);
+    fflush(stdout);
 
     return n;
 }
