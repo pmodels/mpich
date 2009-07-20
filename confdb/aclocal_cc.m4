@@ -2361,3 +2361,169 @@ if test "$pac_cv_have__function__" = "yes" ; then
 fi
 
 ])
+
+
+dnl Check structure alignment
+AC_DEFUN([PAC_STRUCT_ALIGNMENT],[
+	# Initialize alignment checks
+	is_packed=1
+	is_two=1
+	is_four=1
+	is_eight=1
+	is_largest=1
+
+	# See if long double exists
+	AC_TRY_COMPILE(,[long double a;],have_long_double=yes,have_long_double=no)
+
+	# Get sizes of regular types
+	AC_CHECK_SIZEOF(char)
+	AC_CHECK_SIZEOF(int)
+	AC_CHECK_SIZEOF(short)
+	AC_CHECK_SIZEOF(long)
+	AC_CHECK_SIZEOF(float)
+	AC_CHECK_SIZEOF(double)
+	AC_CHECK_SIZEOF(long double)
+
+	# char_int comparison
+	AC_CHECK_SIZEOF(char_int, 0, [typedef struct { char a; int b; } char_int; ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_int`
+	extent=$ac_cv_sizeof_char_int
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_int`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_int" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_short comparison
+	AC_CHECK_SIZEOF(char_short, 0, [typedef struct { char a; short b; } char_short; ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_short`
+	extent=$ac_cv_sizeof_char_short
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_short`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "$ac_cv_sizeof_short" = "4" -a "`expr $extent % 4`" != "0" ; then
+	   is_four=0
+	fi
+	if test "$ac_cv_sizeof_short" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_long comparison
+	AC_CHECK_SIZEOF(char_long, 0, [typedef struct { char a; long b; } char_long; ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_long`
+	extent=$ac_cv_sizeof_char_long
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_long`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_long" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_float comparison
+	AC_CHECK_SIZEOF(char_float, 0, [typedef struct { char a; float b; } char_float; ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_float`
+	extent=$ac_cv_sizeof_char_float
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_float`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_float" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_double comparison
+	AC_CHECK_SIZEOF(char_double, 0, [typedef struct { char a; double b; } char_double; ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_double`
+	extent=$ac_cv_sizeof_char_double
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_double`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_double" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_long_double comparison
+	if test "$have_long_double" = "yes"; then
+	AC_CHECK_SIZEOF(char_long_double, 0, [
+				       typedef struct {
+				       	       char a;
+					       long double b;
+				       } char_long_double;
+				       ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_long_double`
+	extent=$ac_cv_sizeof_char_long_double
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_long_double`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_long_double" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+	fi
+
+	# char_int_char comparison
+	AC_CHECK_SIZEOF(char_int_char, 0, [
+				       typedef struct {
+				       	       char a;
+					       int b;
+					       char c;
+				       } char_int_char;
+				       ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_int + $ac_cv_sizeof_char`
+	extent=$ac_cv_sizeof_char_int_char
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_int`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_int" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_short_char comparison
+	AC_CHECK_SIZEOF(char_short_char, 0, [
+				       typedef struct {
+				       	       char a;
+					       short b;
+					       char c;
+				       } char_short_char;
+				       ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_short + $ac_cv_sizeof_char`
+	extent=$ac_cv_sizeof_char_short_char
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_short`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "$ac_cv_sizeof_short" = "4" -a "`expr $extent % 4`" != "0" ; then
+	   is_four=0
+	fi
+	if test "$ac_cv_sizeof_short" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# If aligned mod 8, it will be aligned mod 4
+	if test $is_eight = 1 ; then is_four=0 ; is_two=0 ; fi
+	if test $is_four = 1 ; then is_two=0 ; fi
+
+	# Largest supersedes 8
+	if test $is_largest = 1 ; then is_eight=0 ; fi
+
+	# Find the alignment
+	if test "`expr $is_packed + $is_largest + $is_two + $is_four + $is_eight`" = "0" ; then
+	   pac_cv_struct_alignment="unknown"
+	elif test "`expr $is_packed + $is_largest + $is_two + $is_four + $is_eight`" != "1" ; then
+	   pac_cv_struct_alignment="unknown"
+	elif test $is_packed = 1 ; then
+	   pac_cv_struct_alignment="packed"
+	elif test $is_largest = 1 ; then
+	   pac_cv_struct_alignment="largest"
+	elif test $is_two = 1 ; then
+	   pac_cv_struct_alignment="two"
+	elif test $is_four = 1 ; then
+	   pac_cv_struct_alignment="four"
+	elif test $is_eight = 1 ; then
+	   pac_cv_struct_alignment="eight"
+	fi
+])
