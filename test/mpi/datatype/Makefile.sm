@@ -20,6 +20,7 @@ struct-empty-el_SOURCES = struct-empty-el.c
 simple-resized_SOURCES = simple-resized.c
 
 triangular-pack_SOURCES = triangular-pack.c
+triangular-pack_LDADD = ../util/mtest.o
 
 get-elements-pairtype_SOURCES = get-elements-pairtype.c
 
@@ -44,6 +45,7 @@ lots-of-types_SOURCES = lots-of-types.c
 lots-of-types_LDADD = ../util/mtest.o 
 
 simple-pack-external_SOURCES = simple-pack-external.c
+simple-pack-external_LDADD = ../util/mtest.o
 
 darray-pack_SOURCES = darray-pack.c
 darray-pack_LDADD = ../util/mtest.o
