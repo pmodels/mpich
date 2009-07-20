@@ -42,7 +42,7 @@ dnl INT64             - returned int64_t.
 dnl
 AC_DEFUN( [PAC_GET_BASIC_INT_TYPES], [
 #   dnl Determine the sizeof(char)
-    AC_CHECK_SIZEOF( char, $CROSS_SIZEOF_CHAR )
+    AC_CHECK_SIZEOF(char)
     if test "$ac_cv_sizeof_char" = 1 ; then
         $1="char"
     else
@@ -51,7 +51,7 @@ AC_DEFUN( [PAC_GET_BASIC_INT_TYPES], [
     fi
 
 #   dnl Determine the sizeof(short)
-    AC_CHECK_SIZEOF( short, $CROSS_SIZEOF_SHORT )
+    AC_CHECK_SIZEOF(short)
     if test "$ac_cv_sizeof_short" = 2 ; then
         $2="short"
     else
@@ -59,7 +59,7 @@ AC_DEFUN( [PAC_GET_BASIC_INT_TYPES], [
                        [sizeof(short) isn't 2! Aborting...] )     fi
 
 #   dnl Determine the sizeof(int)
-    AC_CHECK_SIZEOF( int, $CROSS_SIZEOF_INT )
+    AC_CHECK_SIZEOF(int)
     if test "$ac_cv_sizeof_int" = 4 ; then
         $3="int"
     else
@@ -68,8 +68,8 @@ AC_DEFUN( [PAC_GET_BASIC_INT_TYPES], [
     fi
 
 #   dnl Determine the sizeof(long) and sizeof(long long)
-    AC_CHECK_SIZEOF( long, $CROSS_SIZEOF_LONG )
-    AC_CHECK_SIZEOF( long long, $CROSS_SIZEOF_LONG_LONG )
+    AC_CHECK_SIZEOF(long)
+    AC_CHECK_SIZEOF(long long)
     if test "$ac_cv_sizeof_long" = 8 ; then
         $4=long
     else

@@ -132,11 +132,11 @@ AC_C_CONST
 dnl SIZEOF_VOID_P, SIZEOF_LONG, SIZEOF_LONG_LONG and SIZEOF__INT64 created
 dnl by AC_CHECK_SIZEOF( *, * ) are needed to compile
 dnl slog2sdk/src/logformat/trace/logformat_trace_InputLog.c
-AC_CHECK_SIZEOF( void *, $CROSS_SIZEOF_VOID_P )
-AC_CHECK_SIZEOF( int, $CROSS_SIZEOF_INT )
-AC_CHECK_SIZEOF( long, $CROSS_SIZEOF_LONG )
-AC_CHECK_SIZEOF( long long, $CROSS_SIZEOF_LONG_LONG )
-AC_CHECK_SIZEOF( __int64, $CROSS_SIZEOF___INT64 )
+AC_CHECK_SIZEOF(void *)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(long long)
+AC_CHECK_SIZEOF(__int64)
 dnl   -- Check if byteswapping needs to be done.
 if test "$cross_compiling" = "yes" -o "$cross_compiling" = 1 ; then
     AC_MSG_CHECKING([for byte ordering])

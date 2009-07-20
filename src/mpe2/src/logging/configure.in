@@ -283,7 +283,7 @@ fi
 dnl Since sizeof(MPI_Aint) >= sizeof(void *), cannot use MPI_Aint.
 dnl Define CLOG_Pint, where sizeof(CLOG_Pint) == sizeof(void *).
 dnl Define CLOG_Pint to be used by MPI_Comm_xxx_attr in clog_commset.c.
-AC_CHECK_SIZEOF( void *, $CROSS_SIZEOF_VOID_P )
+AC_CHECK_SIZEOF(void *)
 CLOG_PINT=mpe_int64_t
 AC_MSG_CHECKING( [for address-sized integer] )
 for bytelen in 8 16 32 64 ; do

@@ -3,30 +3,6 @@
 
 int main( int argc, char *argv[] )
 {
-    typedef struct { float a; int b; } floatint;
-    typedef struct { double a; int b; } doubleint;
-    typedef struct { long a; int b; } longint;
-    typedef struct { short a; int b; } shortint;
-    typedef struct { int a; int b; } twoint;
-    typedef struct { long double a; int b; } longdoubleint;
-
-    printf( "CROSS_SIZEOF_SHORT=%d\n", sizeof(short) );
-    printf( "CROSS_SIZEOF_INT=%d\n", sizeof(int) );
-    printf( "CROSS_SIZEOF_LONG=%d\n", sizeof(long) );
-    printf( "CROSS_SIZEOF_LONG_LONG=%d\n", sizeof(long long) );
-    printf( "CROSS_SIZEOF_FLOAT=%d\n", sizeof(float) );
-    printf( "CROSS_SIZEOF_DOUBLE=%d\n", sizeof(double) );
-    printf( "CROSS_SIZEOF_LONG_DOUBLE=%d\n", sizeof(long double) );
-    printf( "CROSS_SIZEOF_WCHAR_T=%d\n", sizeof(wchar_t) );
-    printf( "CROSS_SIZEOF_FLOAT_INT=%d\n", sizeof(floatint) );
-    printf( "CROSS_SIZEOF_DOUBLE_INT=%d\n", sizeof(doubleint) );
-    printf( "CROSS_SIZEOF_LONG_INT=%d\n", sizeof(longint) );
-    printf( "CROSS_SIZEOF_SHORT_INT=%d\n", sizeof(shortint) );
-    printf( "CROSS_SIZEOF_2_INT=%d\n", sizeof(twoint) );
-    printf( "CROSS_SIZEOF_LONG_DOUBLE_INT=%d\n", sizeof(longdoubleint) );
-    printf( "CROSS_SIZEOF_VOID_P=%d\n", sizeof(void *) );    
-    /* printf( "CROSS_SIZEOF_=%d\n", sizeof() ); */
-
     /* The following code attempts to determine the structure alignment */
     {
 #define DBG(a,b,c)

@@ -3366,60 +3366,35 @@ fi
 
 # Get the size of the C types for encoding in the basic datatypes and for
 # the specific-sized integers
-AC_CHECK_SIZEOF(char,$CROSS_SIZEOF_CHAR)
-AC_CHECK_SIZEOF(unsigned char,$CROSS_SIZEOF_UCHAR)
-AC_CHECK_SIZEOF(short,$CROSS_SIZEOF_SHORT)
-AC_CHECK_SIZEOF(unsigned short,$CROSS_SIZEOF_USHORT)
-AC_CHECK_SIZEOF(int,$CROSS_SIZEOF_INT)
-AC_CHECK_SIZEOF(unsigned int,$CROSS_SIZEOF_UINT)
-AC_CHECK_SIZEOF(long,$CROSS_SIZEOF_LONG)
-AC_CHECK_SIZEOF(unsigned long,$CROSS_SIZEOF_ULONG)
-AC_CHECK_SIZEOF(long long,$CROSS_SIZEOF_LONG_LONG)
-AC_CHECK_SIZEOF(unsigned long long,$CROSS_SIZEOF_ULONG_LONG)
-AC_CHECK_SIZEOF(float,$CROSS_SIZEOF_FLOAT)
-AC_CHECK_SIZEOF(double,$CROSS_SIZEOF_DOUBLE)
-AC_CHECK_SIZEOF(long double,$CROSS_SIZEOF_LONG_DOUBLE)
-AC_CHECK_SIZEOF(wchar_t,$CROSS_SIZEOF_WCHAR_T)
-# wchar_t is sometimes defined in stddef.h.  If we got a zero for its
-# size, and we have stddef.h, try again with an explicit test
-if test "$ac_cv_sizeof_wchar_t" = 0 ; then 
-    # See if we have stddef
-    AC_CHECK_HEADERS(stddef.h)
-    if test "$ac_cv_header_stddef_h" = yes ; then
-        # Do not use cache check since we don't want to use 
-	# any cached value
-	AC_MSG_CHECKING([for sizeof wchar_t])
-        rm -f conftestval 
-        AC_TRY_RUN([#include <stdio.h>
-#include <stddef.h>
-main()
-{
-  wchar_t a;
-  FILE *f=fopen("conftestval", "w");
-  if (!f) exit(1);
-  fprintf(f, "%d\n", sizeof(a));
-  exit(0);
-}],ac_cv_sizeof_wchar_t=`cat conftestval`,ac_cv_sizeof_wchar_t=0,ac_cv_sizeof_wchar_t=$CROSS_SIZEOF_WCHAR_T)
-        AC_MSG_RESULT($ac_cv_sizeof_wchar_t)
-        rm -f conftestval
-    fi
-fi
-AC_CHECK_SIZEOF(void *,$CROSS_SIZEOF_VOID_P)
-PAC_CHECK_SIZEOF_2TYPES(float int, float, int, $CROSS_SIZEOF_FLOAT_INT)
-PAC_CHECK_SIZEOF_2TYPES(double int, double, int, $CROSS_SIZEOF_DOUBLE_INT)
-PAC_CHECK_SIZEOF_2TYPES(long int, long, int, $CROSS_SIZEOF_LONG_INT)
-PAC_CHECK_SIZEOF_2TYPES(short int, short, int, $CROSS_SIZEOF_SHORT_INT)
-PAC_CHECK_SIZEOF_2TYPES(2 int, int, int, $CROSS_SIZEOF_2_INT)
-PAC_CHECK_SIZEOF_2TYPES(long double int, long double, int, $CROSS_SIZEOF_LONG_DOUBLE_INT)
+AC_CHECK_SIZEOF(char)
+AC_CHECK_SIZEOF(unsigned char)
+AC_CHECK_SIZEOF(short)
+AC_CHECK_SIZEOF(unsigned short)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(unsigned int)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(unsigned long)
+AC_CHECK_SIZEOF(long long)
+AC_CHECK_SIZEOF(unsigned long long)
+AC_CHECK_SIZEOF(float)
+AC_CHECK_SIZEOF(double)
+AC_CHECK_SIZEOF(long double)
+AC_CHECK_SIZEOF(void *)
 
-dnl # The following code is correct for the EXTENT, but not the size, 
-dnl # of these types.
-dnl PAC_CHECK_SIZEOF_DERIVED(float int,[struct { float a; int b; }],$CROSS_EXTENTOF_FLOAT_INT)
-dnl PAC_CHECK_SIZEOF_DERIVED(double int,[struct { double a; int b; }],$CROSS_EXTENTOF_DOUBLE_INT)
-dnl PAC_CHECK_SIZEOF_DERIVED(long int,[struct { long a; int b; }],$CROSS_EXTENTOF_LONG_INT) 
-dnl PAC_CHECK_SIZEOF_DERIVED(short int,[struct { short a; int b; }],$CROSS_EXTENTOF_SHORT_INT)
-dnl PAC_CHECK_SIZEOF_DERIVED(2 int,[struct { int a; int b; }],$CROSS_EXTENTOF_2_INT)
-dnl PAC_CHECK_SIZEOF_DERIVED(long double int,[struct { long double a; int b; }],$CROSS_EXTENTOF_LONG_DOUBLE_INT)
+AC_HEADER_STDC
+AC_CHECK_HEADERS([stddef.h])
+AC_CHECK_SIZEOF(wchar_t, 0, [
+#ifdef HAVE_STDDEF_H
+#include <stddef.h>
+#endif
+])
+
+AC_CHECK_SIZEOF(float_int, 0, [typedef struct { float a; int b; } float_int; ])
+AC_CHECK_SIZEOF(double_int, 0, [typedef struct { double a; int b; } double_int; ])
+AC_CHECK_SIZEOF(long_int, 0, [typedef struct { long a; int b; } long_int; ])
+AC_CHECK_SIZEOF(short_int, 0, [typedef struct { short a; int b; } short_int; ])
+AC_CHECK_SIZEOF(two_int, 0, [typedef struct { int a; int b; } two_int; ])
+AC_CHECK_SIZEOF(long_double_int, 0, [typedef struct { long double a; int b;} long_double_int; ])
 
 # sys/bitypes.h defines the int16_t etc. on some systems (e.g., OSF1).
 # Include it when testing for these types
@@ -3477,12 +3452,12 @@ fi
 
 # Generate a hex version of the size of each type
 for type in short int long long_long float double long_double wchar_t \
-    float_int double_int long_int short_int 2_int long_double_int ; do
+    float_int double_int long_int short_int two_int long_double_int ; do
     eval len=\$ac_cv_sizeof_$type
     if test -z "$len" ; then 
        len=0
        # Check for sizes from the CHECK_SIZEOF_DERIVED macro
-       eval pclen=\$pac_cv_sizeof_$type
+       eval pclen=\$ac_cv_sizeof_$type
        if test -n "$pclen" ; then
            len=$pclen
        else
@@ -3561,7 +3536,7 @@ MPI_UB="0x4c000011"
 # These should define the mixed types *only* for contiguous data.
 # For example, MPI_SHORT_INT may have a gap; it will need to be defined
 # as a derived type instead.  For IA32, this only affects short_int.
-MPI_2INT="0x4c00${len_2_int}16"
+MPI_2INT="0x4c00${len_two_int}16"
 #
 # For now we aren't being too clever about figuring out which of these
 # are in fact contiguous, so these are all allocated as "real" types.

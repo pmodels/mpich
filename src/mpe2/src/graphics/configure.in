@@ -174,7 +174,7 @@ fi
 AC_HEADER_STDC
 AC_C_CONST
 
-AC_CHECK_SIZEOF( void *, $CROSS_SIZEOF_VOID_P )
+AC_CHECK_SIZEOF(void *)
 AC_MSG_CHECKING(for long pointer)
 if test "$ac_cv_sizeof_void_p" -gt 4 ; then
     AC_DEFINE( POINTER_64_BITS, 1, [Define if pointers are 64 bits] )

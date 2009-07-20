@@ -723,10 +723,8 @@ AC_C_INLINE
 AC_PROG_CPP
 AC_CHECK_HEADERS(unistd.h fcntl.h malloc.h stddef.h)
 #
-CROSS_SIZEOF_INT=${CROSS_SIZEOF_INT:-0}
-CROSS_SIZEOF_VOID_P=${CROSS_SIZEOF_VOID_P:-0}
-AC_CHECK_SIZEOF(int,$CROSS_SIZEOF_INT)
-AC_CHECK_SIZEOF(void *,$CROSS_SIZEOF_VOID_P)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(void *)
 AC_CACHE_CHECK([for int large enough for pointers],
 pac_cv_int_hold_pointer,[
 if test "$ac_cv_sizeof_int" = "0" -o \
@@ -743,14 +741,10 @@ if test "$pac_cv_int_hold_pointer" != yes ; then
     dnl Switch to a conforming name (start with HAVE or USE)
     AC_DEFINE(HAVE_INT_LT_POINTER,1,[Define if int smaller than pointer])
 fi
-#
-dnl The original ROMIO configure used a set of complex tests here; this
-dnl is a partial reworking using the autoconf2 sizeof macros, and allowing
-dnl for the standardized CROSS_xxx varaibles for cross-compilation environments
+
 # LL is the printf-style format name for output of a MPI_Offset.
 # We have to match this to the type that we use for MPI_Offset.
-CROSS_SIZEOF_LONG_LONG=${CROSS_SIZEOF_LONG_LONG:-0}
-AC_CHECK_SIZEOF(long long,$CROSS_SIZEOF_LONG_LONG)
+AC_CHECK_SIZEOF(long long)
 if test "$ac_cv_sizeof_long_long" != 0 ; then
     if test "$ac_cv_sizeof_long_long" = "8" ; then
        AC_DEFINE(HAVE_LONG_LONG_64,1,[Define if long long is 64 bits])

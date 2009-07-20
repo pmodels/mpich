@@ -76,15 +76,15 @@ AC_CHECK_TYPES(bool bool_t)
 #
 # get sizes for intrinsic C types
 #
-AC_CHECK_SIZEOF(char,$CROSS_SIZEOF_CHAR)
-AC_CHECK_SIZEOF(short,$CROSS_SIZEOF_SHORT)
-AC_CHECK_SIZEOF(int,$CROSS_SIZEOF_INT)
-AC_CHECK_SIZEOF(long,$CROSS_SIZEOF_LONG)
-AC_CHECK_SIZEOF(long long,$CROSS_SIZEOF_LONG_LONG)
-AC_CHECK_SIZEOF(float,$CROSS_SIZEOF_FLOAT)
-AC_CHECK_SIZEOF(double,$CROSS_SIZEOF_DOUBLE)
-AC_CHECK_SIZEOF(long double,$CROSS_SIZEOF_LONG_DOUBLE)
-AC_CHECK_SIZEOF(void *,$CROSS_SIZEOF_VOID_P)
+AC_CHECK_SIZEOF(char)
+AC_CHECK_SIZEOF(short)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(long long)
+AC_CHECK_SIZEOF(float)
+AC_CHECK_SIZEOF(double)
+AC_CHECK_SIZEOF(long double)
+AC_CHECK_SIZEOF(void *)
 
 #
 # create a mapping from integer types to printf integer conversion length modifiers

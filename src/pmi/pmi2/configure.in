@@ -119,7 +119,7 @@ if test "$pac_cv_have_haddr_list" = "yes" ; then
     AC_DEFINE(HAVE_H_ADDR_LIST,1,[Define if struct hostent contains h_addr_list])
 fi
 
-AC_CHECK_SIZEOF(void *,$CROSS_SIZEOF_VOID_P)
+AC_CHECK_SIZEOF(void *)
 
 
 AC_SUBST(AR)

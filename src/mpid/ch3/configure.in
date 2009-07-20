@@ -239,10 +239,10 @@ if test "$pac_found_struct_ifconf" = "yes" ; then
 fi
 #
 # We need to know whether to use %d or %ld for writing out MPI_Aint values
-AC_CHECK_SIZEOF(int,$CROSS_SIZEOF_INT)
-AC_CHECK_SIZEOF(long,$CROSS_SIZEOF_LONG)
-AC_CHECK_SIZEOF(long long,$CROSS_SIZEOF_LONG)
-AC_CHECK_SIZEOF(void *,$CROSS_SIZEOF_VOID_P)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(long long)
+AC_CHECK_SIZEOF(void *)
 if test "$ac_cv_sizeof_int" = "$ac_cv_sizeof_void_p" ; then
     :
 elif test "$ac_cv_sizeof_long" = "$ac_cv_sizeof_void_p" ; then
