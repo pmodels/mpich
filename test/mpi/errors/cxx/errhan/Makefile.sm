@@ -7,4 +7,5 @@ errgetx_LDADD     = ../../../cxx/util/mtest.o
 errsetx_SOURCES   = errsetx.cxx
 errsetx_LDADD     = ../../../cxx/util/mtest.o
 throwtest_SOURCES = throwtest.cxx
+throwtest_LDADD   = ../../../cxx/util/mtest.o
 
