@@ -2951,6 +2951,11 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef SPPUX */")
 				Case "SX4"
 					fout.WriteLine("/* #undef SX4 */")
+                                Case "HAVE_LSEEK64"
+                                        ' lseeki64 is available on windows
+                                        fout.WriteLine("/* #undef HAVE_LSEEK64 */")
+                                Case "NEEDS_LSEEK64_DECL"
+                                        fout.WriteLine("/* #undef NEEDS_LSEEK64_DECL */")
 				Case "USE_DBG_LOGGING"
 					fout.WriteLine("/* #undef USE_DBG_LOGGING */")
 				Case "HAVE_CFUUIDCREATE"
