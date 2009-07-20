@@ -2146,78 +2146,8 @@ changequote([, ])dnl
     AC_DEFINE_UNQUOTED(PAC_FUNC_NAME,1,[Define if $2 needs a declaration])
 undefine([PAC_FUNC_NAME])
 fi
-])dnl
-dnl
-dnl /*D
-dnl PAC_CHECK_SIZEOF_DERIVED - Get the size of a user-defined type,
-dnl such as a struct
-dnl
-dnl PAC_CHECK_SIZEOF_DERIVED(shortname,definition,defaultsize)
-dnl Like AC_CHECK_SIZEOF, but handles arbitrary types.
-dnl Unlike AC_CHECK_SIZEOF, does not define SIZEOF_xxx (because
-dnl autoheader can''t handle this case)
-dnl D*/
-AC_DEFUN([PAC_CHECK_SIZEOF_DERIVED],[
-changequote(<<,>>)dnl
-define(<<AC_TYPE_NAME>>,translit(sizeof_$1,[a-z *], [A-Z_P]))dnl
-define(<<AC_CV_NAME>>,translit(pac_cv_sizeof_$1,[ *], [_p]))dnl
-changequote([,])dnl
-rm -f conftestval
-AC_MSG_CHECKING([for size of $1])
-AC_CACHE_VAL(AC_CV_NAME,
-[AC_TRY_RUN([#include <stdio.h>
-main()
-{
-  $2 a;
-  FILE *f=fopen("conftestval", "w");
-  if (!f) exit(1);
-  fprintf(f, "%d\n", sizeof(a));
-  exit(0);
-}],AC_CV_NAME=`cat conftestval`,AC_CV_NAME=0,ifelse([$3],,,AC_CV_NAME=$3))])
-AC_MSG_RESULT($AC_CV_NAME)
-dnl AC_DEFINE_UNQUOTED(AC_TYPE_NAME,$AC_CV_NAME)
-undefine([AC_TYPE_NAME])undefine([AC_CV_NAME])
-])
-dnl
-dnl /*D
-dnl PAC_CHECK_SIZEOF_2TYPES - Get the size of a pair of types
-dnl
-dnl PAC_CHECK_SIZEOF_2TYPES(shortname,type1,type2,defaultsize)
-dnl Like AC_CHECK_SIZEOF, but handles pairs of types.
-dnl Unlike AC_CHECK_SIZEOF, does not define SIZEOF_xxx (because
-dnl autoheader can''t handle this case)
-dnl D*/
-AC_DEFUN([PAC_CHECK_SIZEOF_2TYPES],[
-changequote(<<,>>)dnl
-define(<<AC_TYPE_NAME>>,translit(sizeof_$1,[a-z *], [A-Z_P]))dnl
-define(<<AC_CV_NAME>>,translit(pac_cv_sizeof_$1,[ *], [_p]))dnl
-changequote([,])dnl
-rm -f conftestval
-AC_MSG_CHECKING([for size of $1])
-AC_CACHE_VAL(AC_CV_NAME,
-[AC_TRY_RUN([#include <stdio.h>
-main()
-{
-  $2 a;
-  $3 b;
-  FILE *f=fopen("conftestval", "w");
-  if (!f) return 1; /* avoid exit */
-  fprintf(f, "%d\n", (int)(sizeof(a) + sizeof(b)));
-  return 0;
-}],AC_CV_NAME=`cat conftestval`,AC_CV_NAME=0,ifelse([$4],,,AC_CV_NAME=$4))])
-if test "X$AC_CV_NAME" = "X" ; then
-    # We have a problem.  The test returned a zero status, but no output,
-    # or we're cross-compiling (or think we are) and have no value for 
-    # this object
-    :
-fi
-rm -f conftestval
-AC_MSG_RESULT($AC_CV_NAME)
-dnl AC_DEFINE_UNQUOTED(AC_TYPE_NAME,$AC_CV_NAME)
-undefine([AC_TYPE_NAME])undefine([AC_CV_NAME])
 ])
 
-dnl
 dnl PAC_C_GNU_ATTRIBUTE - See if the GCC __attribute__ specifier is allow.
 dnl Use the following
 dnl #ifndef HAVE_GCC_ATTRIBUTE
