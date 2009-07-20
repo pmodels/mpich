@@ -279,7 +279,9 @@ AC_ARG_ENABLE(g,
     none     - No debugging
     handle   - Trace handle operations
     handlealloc - Trace hancle allocations
-    dbg      - Add compiler flag, -g, to CFLAGS, CXXFLAGS FFLAGS and F90FLAGS.
+    dbg      - Add compiler flag, -g, to all internal
+               compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
+               MPICH2LIB_FFLAGS, and MPICH2LIB_F90FLAGS.
     debug    - Synonym for dbg
     log      - Enable debug event logging
     mem      - Memory usage tracing
@@ -317,7 +319,7 @@ AC_ARG_ENABLE(fast,
                MPICH2LIB_FFLAGS, and MPICH2LIB_F90FLAGS.
     nochkmsg - No error checking, i.e. --disable-error-checking
     notiming - No timing collection, i.e. --disable-timing.
-    ndebug   - Appends -DNDEBUG to internal CFLAGS, i.e. MPICH2LIB_CFLAGS.
+    ndebug   - Appends -DNDEBUG to MPICH2LIB_CFLAGS.
     all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
                when --enable-fast is specified without any option.
     none     - None of above options, i.e. --disable-fast.  Note that 
@@ -531,12 +533,10 @@ WRAPPER_CFLAGS=$CFLAGS
 WRAPPER_CXXFLAGS=$CXXFLAGS
 WRAPPER_FFLAGS=$FFLAGS
 WRAPPER_F90FLAGS=$F90FLAGS
-WRAPPER_LDFLAGS=$LDFLAGS
 export WRAPPER_CFLAGS
 export WRAPPER_CXXFLAGS
 export WRAPPER_FFLAGS
 export WRAPPER_F90FLAGS
-export WRAPPER_LDFLAGS
 
 # -----------------------------------------------------------------------------
 # First check that we have a clean build if we are doing a VPATH build
@@ -1217,33 +1217,17 @@ for option in $enable_g ; do
 done
 IFS="$save_IFS"
 
-# MPICH2_EXTRA_xFLAGS contains MPICH2LIB_xFLAGS and 
-# all the extra compiler flags added by MPICH2.
-# Initial all MPICH2_EXTRA_xFLAGS to empty string.
-MPICH2_EXTRA_CFLAGS=""
-MPICH2_EXTRA_CXXFLAGS=""
-MPICH2_EXTRA_FFLAGS=""
-MPICH2_EXTRA_F90FLAGS=""
-
 if test "$enable_append_g" = "yes" ; then
     CFLAGS="$CFLAGS -g"
     CXXFLAGS="$CXXFLAGS -g"
     FFLAGS="$FFLAGS -g"
     F90FLAGS="$F90FLAGS -g"
-    MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -g"
-    MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -g"
-    MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -g"
-    MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -g"
 fi
 if test "$enable_append_ndebug" = "yes" ; then
     CFLAGS="$CFLAGS -DNDEBUG"
     CXXFLAGS="$CXXFLAGS -DNDEBUG"
     FFLAGS="$FFLAGS -DNDEBUG"
     F90FLAGS="$F90FLAGS -DNDEBUG"
-    MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -DNDEBUG"
-    MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -DNDEBUG"
-    MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -DNDEBUG"
-    MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -DNDEBUG"
 fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
@@ -1633,7 +1617,7 @@ AC_SUBST(CREATESHLIB)
 AC_ARG_ENABLE(strict,[--enable-strict - Turn on strict debugging with gcc],,enable_strict=no)
 PAC_CC_STRICT($enable_strict)
 if test -n "$pac_cc_strict_flags" ; then
-    MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $pac_cc_strict_flags"
+    CFLAGS="$CFLAGS $pac_cc_strict_flags"
 fi
 # Check for whether the compiler defines a symbol that contains the 
 # function name.  The MPICH2 code, for greater portability, defines
@@ -1650,27 +1634,9 @@ if test "$enable_default_optimize" = "yes" \
     if test "$enable_check_compiler_flags" = "yes" ; then
         PAC_C_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_COPTS], [
         CFLAGS="$CFLAGS $MPI_DEFAULT_COPTS"
-        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $MPI_DEFAULT_COPTS"
                                    ] )
     else
         CFLAGS="$CFLAGS $MPI_DEFAULT_COPTS"
-        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $MPI_DEFAULT_COPTS"
-    fi
-fi
-# Up till here, MPICH2_EXTRA_CFLAGS contains only flags added by MPICH2.
-# Check with "grep -n MPICH2_EXTRA_CFLAGS configure.in"
-# Remove duplicated flags from MPICH2_EXTRA_CFLAGS.
-PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_CFLAGS])
-# Check if $MPICH2LIB_CFLAGS is valid with $CC
-if test -n "$MPICH2LIB_CFLAGS" ; then
-    if test "$enable_check_compiler_flags" = "yes" ; then
-        PAC_C_CHECK_COMPILER_OPTION( [$MPICH2LIB_CFLAGS], [
-        CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
-        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $MPICH2LIB_CFLAGS"
-                                   ] )
-    else
-        CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
-        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS $MPICH2LIB_CFLAGS"
     fi
 fi
 
@@ -1761,27 +1727,9 @@ if test "$enable_f77" = yes ; then
         if test "$enable_check_compiler_flags" = "yes" ; then
             PAC_F77_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_FOPTS], [
             FFLAGS="$FFLAGS $MPI_DEFAULT_FOPTS"
-            MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS $MPI_DEFAULT_FOPTS"
                                          ] )
         else
             FFLAGS="$FFLAGS $MPI_DEFAULT_FOPTS"
-            MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS $MPI_DEFAULT_FOPTS"
-        fi
-    fi
-    # Up till here, MPICH2_EXTRA_FFLAGS contains only flags added by MPICH2.
-    # Check with "grep -n MPICH2_EXTRA_FFLAGS configure.in"
-    # Remove duplicated flags from MPICH2_EXTRA_FFLAGS.
-    PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_FFLAGS])
-    # Check if $MPICH2LIB_FFLAGS is valid with $F77
-    if test -n "$MPICH2LIB_FFLAGS" ; then
-        if test "$enable_check_compiler_flags" = "yes" ; then
-            PAC_F77_CHECK_COMPILER_OPTION( [$MPICH2LIB_FFLAGS], [
-            FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
-            MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS $MPICH2LIB_FFLAGS"
-                                         ] )
-        else
-            FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
-            MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS $MPICH2LIB_FFLAGS"
         fi
     fi
 fi
@@ -2262,31 +2210,12 @@ if test "$enable_f90" = "yes" ; then
         if test "$enable_check_compiler_flags" = "yes" ; then
             PAC_F90_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_F90OPTS], [
             F90FLAGS="$F90FLAGS $MPI_DEFAULT_F90OPTS"
-            MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS $MPI_DEFAULT_F90OPTS"
                                      ] )
         else
             F90FLAGS="$F90FLAGS $MPI_DEFAULT_F90OPTS"
-            MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS $MPI_DEFAULT_F90OPTS"
-        fi
-    fi
-    # Up till here, MPICH2_EXTRA_F90FLAGS contains only flags added by MPICH2.
-    # Check with "grep -n MPICH2_EXTRA_F90FLAGS configure.in"
-    # Remove duplicated flags from MPICH2_EXTRA_F90FLAGS.
-    PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_F90FLAGS])
-    # Check if $MPICH2LIB_F90FLAGS works with $F90
-    if test -n "$MPICH2LIB_F90FLAGS" ; then
-        if test "$enable_check_compiler_flags" = "yes" ; then
-            PAC_F90_CHECK_COMPILER_OPTION( [$MPICH2LIB_F90FLAGS], [
-            F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"
-            MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS $MPICH2LIB_F90FLAGS"
-                                     ] )
-        else
-            F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"
-            MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS $MPICH2LIB_F90FLAGS"
         fi
     fi
 
-    #
     # Most systems allow the Fortran compiler to process .F and .F90 files
     # using the C preprocessor.  However, some systems either do not
     # allow this or have serious bugs (OSF Fortran compilers have a bug
@@ -2695,35 +2624,12 @@ if test "$enable_cxx" = yes; then
         if test "$enable_check_compiler_flags" = "yes" ; then
             PAC_CXX_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_CXXOPTS], [
             CXXFLAGS="$CXXFLAGS $MPI_DEFAULT_CXXOPTS"
-            MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS $MPI_DEFAULT_CXXOPTS"
                                      ] )
         else
             CXXFLAGS="$CXXFLAGS $MPI_DEFAULT_CXXOPTS"
-            MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS $MPI_DEFAULT_CXXOPTS"
-        fi
-    fi
-    # Up till here, MPICH2_EXTRA_CXXFLAGS contains only flags added by MPICH2.
-    # Check with "grep -n MPICH2_EXTRA_CXXFLAGS configure.in"
-    # Remove duplicated flags from MPICH2_EXTRA_CXXFLAGS.
-    PAC_MAKE_UNIQ_STRING([MPICH2_EXTRA_CXXFLAGS])
-    # Check if $MPICH2LIB_CXXFLAGS is valid with $CXX
-    if test -n "$MPICH2LIB_CXXFLAGS" ; then
-        if test "$enable_check_compiler_flags" = "yes" ; then
-            PAC_CXX_CHECK_COMPILER_OPTION( [$MPICH2LIB_CXXFLAGS], [
-            CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
-            MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS $MPICH2LIB_CXXFLAGS"
-                                     ] )
-        else
-            CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
-            MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS $MPICH2LIB_CXXFLAGS"
         fi
     fi
 fi
-
-export MPICH2_EXTRA_CFLAGS
-export MPICH2_EXTRA_CXXFLAGS
-export MPICH2_EXTRA_FFLAGS
-export MPICH2_EXTRA_F90FLAGS
 
 # Copy the mpicxx.h file to the main include directory
 # Move a working version of the mpicxx script to the bin directory
@@ -3186,11 +3092,7 @@ AC_SUBST(DOCTEXTSTYLE)
 AC_C_CONST
 PAC_C_VOLATILE
 PAC_C_RESTRICT
-
-saveCFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
 AC_C_INLINE
-CFLAGS=$saveCFLAGS
 
 PAC_C_GNU_ATTRIBUTE
 # We need to check for the endianess in order to implement the
@@ -5016,14 +4918,12 @@ fi
 if test "$enable_coverage" = "yes" ; then
     if test "$ac_cv_prog_gcc" = "yes" ; then
         CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
-        MPICH2_EXTRA_CFLAGS="$MPICH2_EXTRA_CFLAGS -fprofile-arcs -ftest-coverage"
     else
         AC_MSG_WARN([--enable-coverage only supported for GCC])
     fi
     if test "$enable_cxx" = "yes" ; then
         if test "$ac_cv_cxx_compiler_gnu" = "yes" ; then
             CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage"
-            MPICH2_EXTRA_CXXFLAGS="$MPICH2_EXTRA_CXXFLAGS -fprofile-arcs -ftest-coverage"
         else
             AC_MSG_WARN([--enable-coverage only supported for GCC])
         fi
@@ -5033,7 +4933,6 @@ if test "$enable_coverage" = "yes" ; then
     if test "$enable_f77" = yes ; then
         if test "$ac_cv_f77_compiler_gnu" = "yes" ; then
              FFLAGS="$FFLAGS -fprofile-arcs -ftest-coverage"
-             MPICH2_EXTRA_FFLAGS="$MPICH2_EXTRA_FFLAGS -fprofile-arcs -ftest-coverage"
         else
             AC_MSG_WARN([--enable-coverage only supported for G77/GFORTRAN])
         fi
@@ -5041,7 +4940,6 @@ if test "$enable_coverage" = "yes" ; then
     if test "$enable_f90" = yes ; then
         if test "$ac_cv_f90_compiler_gnu" = "yes" ; then
              F90FLAGS="$F90FLAGS -fprofile-arcs -ftest-coverage"
-             MPICH2_EXTRA_F90FLAGS="$MPICH2_EXTRA_F90FLAGS -fprofile-arcs -ftest-coverage"
         else
             AC_MSG_WARN([--enable-coverage only supported for GFORTRAN])
         fi
@@ -5117,11 +5015,8 @@ AC_CHECK_FUNCS(setitimer alarm)
 AC_CHECK_FUNCS(vsnprintf vsprintf)
 if test "$ac_cv_func_vsnprintf" = "yes" ; then
     # vsnprintf may be declared in stdio.h and may need stdarg.h 
-    saveCFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>
 #include <stdarg.h>],vsnprintf)
-    CFLAGS=$saveCFLAGS
 fi
 # We would like to use strerror in the file namepublisher; it is also used
 # in MPIU_Strerror (whose implementation is broken if strerror is not found)
@@ -5130,10 +5025,7 @@ AC_CHECK_FUNCS(strerror strncasecmp)
 # Use snprintf if possible when creating messages
 AC_CHECK_FUNCS(snprintf)
 if test "$ac_cv_func_snprintf" = "yes" ; then
-    saveCFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
-    CFLAGS=$saveCFLAGS
 fi
 # if we are using stdarg, we may need va_copy .  Test to see if we have it
 # Since it may be a built-in instead of a function, we must try to 
@@ -5142,8 +5034,6 @@ fi
 # debugging routine.  We may want to withdraw this (saving the
 # test in confdb/aclocal_cc.m4).
 AC_CACHE_CHECK([for va_copy],pac_cv_func_va_copy,[
-saveCFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
 AC_TRY_LINK([
 #include <stdarg.h>
 void foo1( char *fmt, ... ) {
@@ -5154,14 +5044,11 @@ void foo1( char *fmt, ... ) {
     va_end(ap);
 }
 ],[foo1("a test %d", 3);],pac_cv_func_va_copy=yes,pac_cv_func_va_copy=no)])
-CFLAGS=$saveCFLAGS
 
 if test "$pac_cv_func_va_copy" = "yes" ; then
     AC_DEFINE(HAVE_VA_COPY,1,[Define if we have va_copy])
 else
     AC_CACHE_CHECK([for __va_copy],pac_cv_func___va_copy,[
-    saveCFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     AC_TRY_LINK([
 #include <stdarg.h>
 void foo1( char *fmt, ... ) {
@@ -5172,7 +5059,6 @@ void foo1( char *fmt, ... ) {
     va_end(ap);
 }
 ],[foo1("a test %d", 3);],pac_cv_func___va_copy=yes,pac_cv_func___va_copy=no)])
-    CFLAGS=$saveCFLAGS
     if test "$pac_cv_func___va_copy" = "yes" ; then
         AC_DEFINE(HAVE___VA_COPY,1,[Define if we have __va_copy])
     fi
@@ -5208,10 +5094,7 @@ if test "$enable_g_mem" != "yes" ; then
     AC_CHECK_FUNCS(strdup)
     if test "$ac_cv_func_strdup" = "yes" ; then
         # Do we need to declare strdup?
-	saveCFLAGS=$CFLAGS
-	CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
         PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
-	CFLAGS=$saveCFLAGS
     fi
 else
     # search.h is used for fancier output from trmem.  Disabled for now,
@@ -5242,26 +5125,17 @@ fi
 # mkstemp() is a better replacement for mktemp()
 AC_HAVE_FUNCS(mkstemp)
 if test "$ac_cv_func_mkstemp" = "yes" ; then
-    saveCFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
-    CFLAGS=$saveCFLAGS
 fi
 # fdopen() converts from an fd to a FILE*
 AC_HAVE_FUNCS(fdopen)
 if test "$ac_cv_func_fdopen" = "yes" ; then
-    saveCFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],fdopen)
-    CFLAGS=$saveCFLAGS
 fi
 # putenv() sets environment variable
 AC_HAVE_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
-    saveCFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MPICH2_EXTRA_CFLAGS"
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
-    CFLAGS=$saveCFLAGS
 fi
 
 
@@ -5361,13 +5235,12 @@ case "$timer_type" in
 
     clock_gettime)
     missing_function=no
-    # Solaris places clock_gettime in the rt library
-    AC_CHECK_FUNC(clock_gettime,,[missing_function=yes])
+    # FIXME: We are blindly adding the flag into LDFLAGS without
+    # checking if someone else added it as well, so there might be a
+    # duplication.
+    AC_CHECK_LIB(rt,clock_gettime,LDFLAGS="$LDFLAGS -lrt",missing_function=yes)
     if test "$missing_function" = yes ; then
-        AC_SEARCH_LIBS(clock_gettime,rt,missing_function=no)
-	if test "$missing_function" = yes ; then
-             AC_MSG_ERROR([Requested timer clock_gettime (POSIX) is not available])
-        fi
+       AC_MSG_ERROR([Requested timer clock_gettime (POSIX) is not available])
     fi
     AC_CHECK_FUNC(clock_getres,,[missing_function=yes])
     if test "$missing_function" = yes ; then
@@ -5755,11 +5628,10 @@ AC_ARG_WITH(thread-package,
     If the option is not specified, the default package is
     ${MPE_THREAD_DEFAULT}.  If the option is specified, but a package
     is not given, then the default is posix.]
-,,
-with_thread_package=${MPE_THREAD_DEFAULT})
+,,with_thread_package=${MPE_THREAD_DEFAULT})
 
 if test "$with_thread_package" = "yes" ; then
-    with_thread_package=posix
+   with_thread_package=posix
 fi
 
 MPICH2_THREAD_PACKAGE=none
@@ -5768,45 +5640,16 @@ case $with_thread_package in
 	with_thread_package=posix
 	AC_CHECK_HEADERS(pthread.h)
 	AC_CHECK_FUNCS(pthread_yield)
-	# OSF1 has __pthread_create but not pthread_create (because of 
-	# inconsistencies in the pthread spec).  Thus, we look for pthread_key_create
-	AC_SEARCH_LIBS(pthread_key_create,pthread,found=yes,found=no)
-	if test "$found" != "yes" ; then
-	   AC_MSG_ERROR([unable to find pthreads library])
-        elif test "$ac_cv_search_pthread_key_create" = "none required" ; then
-	    # Solaris provides a pthread library that does't work
-	    # in libc; you must link with -lpthread to get correct 
-	    # behavior.  Here is a simple test, based on a failure that
-	    # we observed
-	    AC_MSG_CHECKING([whether pthread routines without explicit lib are broken])
-	    AC_TRY_RUN([#include<pthread.h>
-int main() {
-    pthread_t id = pthread_self();
-    int       rc;
-    rc = pthread_equal( id, id );
-    if (rc) return 0;
-    return 1;}
-],pac_cv_lib_pthread_broken=no,pac_cv_lib_pthread_broken=yes,pac_cv_lib_pthread_broken=unknown)
-  	    AC_MSG_RESULT($pac_cv_lib_pthread_broken)
-	    if test "$pac_cv_lib_pthread_broken" = yes ; then
-                # Try again with -lpthread
-	        AC_MSG_CHECKING([whether pthread routines with explicit lib are broken])
-		saveLIBS=$LIBS
-		LIBS="$LIBS -lpthread"
-	        AC_TRY_RUN([#include<pthread.h>
-int main() {
-    pthread_t id = pthread_self();
-    int       rc;
-    rc = pthread_equal( id, id );
-    if (rc) return 0;
-    return 1;}
-],pac_cv_lib_pthread_broken_explicit=no,pac_cv_lib_pthread_broken_explicit=yes,pac_cv_lib_pthread_broken_explicit=unknown)
-  	    AC_MSG_RESULT($pac_cv_lib_pthread_broken_explicit)
-	    if test "$pac_cv_lib_pthread_broken_explicit" != no ; then
-	        LIBS=$saveLIBS
-            fi
-	fi
-	fi
+
+	# If pthreads library is found, just include it. We don't try
+	# to test if the compiler needs it or not, since though MPICH2
+	# itself might not need it, other applications (e.g., those
+	# compiled with the C++ or Fortran compilers) might.
+	# FIXME: We are blindly adding the flag into LDFLAGS without
+	# checking if someone else added it as well, so there might be
+	# a duplication.
+	AC_CHECK_LIB(pthread,pthread_key_create,LDFLAGS="$LDFLAGS -lpthread",)
+
 	# Check for a routine that specify a routine to call on 
 	# thread exit.  We can use this to release memory that may
 	# be allocated by the MPICH2 library in the thread.  
@@ -5872,7 +5715,6 @@ void f1(void *a) { return; }],
                       [Define to an expression that will result in an error checking mutex type.])
         fi
 
-	THR_LIBS="$THR_LIBS -lpthread"
 	MPICH2_THREAD_PACKAGE=pthreads
 	;;
     solaris)
@@ -6383,7 +6225,8 @@ AC_SUBST(MPI_MAX_PROCESSOR_NAME)
 #
 # Unlike WRAPPER_CFLAGS, the linker flags will always be needed to ensure that 
 # all of the required libraries are present.
-WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS $LDFLAGS $THR_LDFLAGS"
+WRAPPER_LDFLAGS="$LDFLAGS $THR_LDFLAGS"
+export WRAPPER_LDFLAGS
 AC_SUBST(WRAPPER_CFLAGS)
 AC_SUBST(WRAPPER_CXXFLAGS)
 AC_SUBST(WRAPPER_FFLAGS)
