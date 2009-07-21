@@ -406,7 +406,7 @@ Next
   len_double_int      = "10"
   len_long_int        = "08"
   len_short_int       = "08"
-  len_2_int           = "08"
+  len_two_int         = "08"
   len_long_double_int = "10"
 ' Fortran datatype sizes
   len_integer64         = "08"
@@ -456,8 +456,8 @@ Function CreateDtypeDictionary(byref types, str, b64)
 					dtype_val_str = Replace(dtype_val_str, size_str, len_long_int)
 				Case "${len_short_int}"
 					dtype_val_str = Replace(dtype_val_str, size_str, len_short_int)
-				Case "${len_2_int}"
-					dtype_val_str = Replace(dtype_val_str, size_str, len_2_int)
+				Case "${len_two_int}"
+					dtype_val_str = Replace(dtype_val_str, size_str, len_two_int)
 				Case "${len_long_double_int}"
 					dtype_val_str = Replace(dtype_val_str, size_str, len_long_double_int)
 				Case "${len_double}"
@@ -554,7 +554,7 @@ CreateDtypeDictionary dtypes64, contents, false
 'MPI_DOUBLE_INT        = "0x" + mpi_datatype_prefix + len_double_int      + "13"
 'MPI_LONG_INT          = "0x" + mpi_datatype_prefix + len_long_int        + "14"
 'MPI_SHORT_INT         = "0x" + mpi_datatype_prefix + len_short_int       + "15"
-'MPI_2INT              = "0x" + mpi_datatype_prefix + len_2_int           + "16"
+'MPI_2INT              = "0x" + mpi_datatype_prefix + len_two_int           + "16"
 'MPI_LONG_DOUBLE_INT   = "0x" + mpi_datatype_prefix + len_long_double_int + "17"
 'MPI_CHARACTER         = "0x" + mpi_datatype_prefix                + "011a"
 'MPI_INTEGER           = "0x" + mpi_datatype_prefix + len_integer    + "1b"
@@ -835,7 +835,7 @@ if dtypes.Exists("MPI_2INT") then
 	MPI_2INT = dtypes.Item("MPI_2INT")
 else
 	missing_datatypes = missing_datatypes & "MPI_2INT" & vbCrLf
-	MPI_2INT              = "0x" + mpi_datatype_prefix + len_2_int           + "16"
+	MPI_2INT              = "0x" + mpi_datatype_prefix + len_two_int          + "16"
 end if
 if dtypes.Exists("MPI_LONG_DOUBLE_INT") then
 	MPI_LONG_DOUBLE_INT = dtypes.Item("MPI_LONG_DOUBLE_INT")
@@ -2133,6 +2133,21 @@ Sub AddDefinitions( fout, filename, b64 )
 					End If
 				Case "SIZEOF_WCHAR_T"
 					fout.WriteLine("#define SIZEOF_WCHAR_T 2")
+                                ' Now autoconf handles non-built-in types too. So we need to
+                                ' define the sizeof these types here
+                                Case "SIZEOF_DOUBLE_INT"
+                                        fout.WriteLine("#define SIZEOF_DOUBLE_INT " + len_double_int)
+                                Case "SIZEOF_FLOAT_INT"
+                                        fout.WriteLine("#define SIZEOF_FLOAT_INT " + len_float_int)
+                                Case "SIZEOF_LONG_DOUBLE_INT"
+                                        fout.WriteLine("#define SIZEOF_LONG_DOUBLE_INT " + len_long_double_int)
+                                Case "SIZEOF_LONG_INT"
+                                        fout.WriteLine("#define SIZEOF_LONG_INT " + len_long_int)
+                                Case "SIZEOF_SHORT_INT"
+                                        fout.WriteLine("#define SIZEOF_SHORT_INT " + len_short_int)
+                                Case "SIZEOF_TWO_INT"
+                                        fout.WriteLine("#define SIZEOF_TWO_INT " + len_two_int)
+                                ' FIXME: Ugly hack - the sizeof MPIR_Bsend_data_t can change !
                                 Case "SIZEOF_MPIR_BSEND_DATA_T"
                                         If b64 Then
                                             fout.WriteLine("#define SIZEOF_MPIR_BSEND_DATA_T " + BSEND_OVERHEAD64)
