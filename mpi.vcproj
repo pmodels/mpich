@@ -145,7 +145,7 @@
 				OutputFile="lib/mpich2mpi.dll"
 				LinkIncremental="1"
 				ModuleDefinitionFile=".\mpi.def"
-				GenerateDebugInformation="true"
+				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

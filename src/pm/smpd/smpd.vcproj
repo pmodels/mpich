@@ -149,7 +149,7 @@
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
-				GenerateDebugInformation="true"
+				GenerateDebugInformation="false"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
