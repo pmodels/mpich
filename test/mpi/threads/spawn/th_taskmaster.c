@@ -63,11 +63,15 @@ int main(int argc, char *argv[])
     MPI_Comm * child;
 #endif /* USE_THREADS */
 
+#ifdef USE_THREADS
     CHECK_SUCCESS(MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided));
     if (provided != MPI_THREAD_MULTIPLE) {
 	fprintf(stderr, "MPI does not provide THREAD_MULTIPLE support\n");
 	MPI_Abort(MPI_COMM_WORLD, -1);
     }
+#else
+    MPI_Init(&argc, &argv);
+#endif
 
     CHECK_SUCCESS(MPI_Comm_get_parent(&parent));
 
