@@ -58,33 +58,33 @@ dnl variable containing the option name as the first argument.
 dnl D*/
 AC_DEFUN([PAC_C_CHECK_COMPILER_OPTION],[
 AC_MSG_CHECKING([whether C compiler accepts option $1])
-save_CFLAGS="$CFLAGS"
+pccco_save_CFLAGS="$CFLAGS"
 CFLAGS="$1 $CFLAGS"
 rm -f conftest.out
 echo 'int foo(void);int foo(void){return 0;}' > conftest2.c
 echo 'int main(void);int main(void){return 0;}' > conftest.c
-if ${CC-cc} $save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
+if ${CC-cc} $pccco_save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
    if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.out 2>&1 ; then
       if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
          AC_MSG_RESULT(yes)
          AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled without $1])       
          rm -f conftest.out
          rm -f conftest.bas
-         if ${CC-cc} -c $save_CFLAGS $CPPFLAGS conftest2.c >conftest2.out 2>&1 ; then
+         if ${CC-cc} -c $pccco_save_CFLAGS $CPPFLAGS conftest2.c >conftest2.out 2>&1 ; then
             if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest2.o conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
                if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest2.o conftest.c $LDFLAGS >conftest.out 2>&1 ; then
                   if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
 	             AC_MSG_RESULT(yes)	  
-		     CFLAGS="$save_CFLAGS"
+                     CFLAGS="$pccco_save_CFLAGS"
                      ifelse($2,,COPTIONS="$COPTIONS $1",$2)
                   elif test -s conftest.out ; then
 	             cat conftest.out >&AC_FD_CC
 	             AC_MSG_RESULT(no)
-                     CFLAGS="$save_CFLAGS"
+                     CFLAGS="$pccco_save_CFLAGS"
 	             $3
                   else
                      AC_MSG_RESULT(no)
-                     CFLAGS="$save_CFLAGS"
+                     CFLAGS="$pccco_save_CFLAGS"
 	             $3
                   fi  
                else
@@ -92,7 +92,7 @@ if ${CC-cc} $save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas
 	             cat conftest.out >&AC_FD_CC
 	          fi
                   AC_MSG_RESULT(no)
-                  CFLAGS="$save_CFLAGS"
+                  CFLAGS="$pccco_save_CFLAGS"
                   $3
                fi
 	    else
@@ -104,20 +104,20 @@ if ${CC-cc} $save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas
                cat conftest2.out >&AC_FD_CC
             fi
 	    AC_MSG_RESULT(no)
-            CFLAGS="$save_CFLAGS"
+            CFLAGS="$pccco_save_CFLAGS"
 	    $3
          fi
       else
          cat conftest.out >&AC_FD_CC
          AC_MSG_RESULT(no)
          $3
-         CFLAGS="$save_CFLAGS"         
+         CFLAGS="$pccco_save_CFLAGS"
       fi
    else
       AC_MSG_RESULT(no)
       $3
       if test -s conftest.out ; then cat conftest.out >&AC_FD_CC ; fi    
-      CFLAGS="$save_CFLAGS"
+      CFLAGS="$pccco_save_CFLAGS"
    fi
 else
     # Could not compile without the option!
@@ -1166,10 +1166,13 @@ if test "$enable_strict_done" != "yes" ; then
     # See if the above options work with the compiler
     accepted_flags=""
     for flag in $pac_cc_strict_flags ; do
-    	save_CFLAGS=$CFLAGS
+        # the save_CFLAGS variable must be namespaced, otherwise they
+        # may not actually be saved if an invoked macro also uses
+        # save_CFLAGS
+        pcs_save_CFLAGS=$CFLAGS
 	CFLAGS="$CFLAGS $accepted_flags"
 	PAC_C_CHECK_COMPILER_OPTION($flag,accepted_flags="$accepted_flags $flag",)
-	CFLAGS=$save_CFLAGS
+        CFLAGS=$pcs_save_CFLAGS
     done
     pac_cc_strict_flags=$accepted_flags
 fi
