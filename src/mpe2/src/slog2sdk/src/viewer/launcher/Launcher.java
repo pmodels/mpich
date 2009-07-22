@@ -43,7 +43,6 @@ public class Launcher
     private static void initializeSystemProperties()
     {
         Properties       sys_pptys;
-        String           ppty_str;
 
         sys_pptys  = System.getProperties();
 

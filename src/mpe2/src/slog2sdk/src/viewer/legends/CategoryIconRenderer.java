@@ -22,6 +22,8 @@ import javax.swing.table.TableCellRenderer;
 public class CategoryIconRenderer extends JLabel
                                   implements TableCellRenderer
 {
+    private static final long   serialVersionUID = 2100L;
+
     private static final Color  CELL_BACKCOLOR
                                 = Const.CELL_BACKCOLOR;
     private static final Color  CELL_FORECOLOR

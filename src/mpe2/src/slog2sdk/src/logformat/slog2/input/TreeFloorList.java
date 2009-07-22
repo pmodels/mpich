@@ -241,7 +241,7 @@ public class TreeFloorList
     {
         Drawable.Order  dobj_order  = Drawable.INCRE_STARTTIME_ORDER;
         boolean         isComposite = true;
-        boolean         isNestable  = true;
+        // boolean         isNestable  = true;
         StringBuffer rep = new StringBuffer();
         Iterator dobjs, sobjs;
         int idx;

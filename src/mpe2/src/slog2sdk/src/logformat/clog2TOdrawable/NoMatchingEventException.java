@@ -11,6 +11,8 @@ package logformat.clog2TOdrawable;
 
 class NoMatchingEventException extends Exception 
 {
+    private static final long  serialVersionUID = 300L;
+
     public NoMatchingEventException( String str )
     {
         super( str );

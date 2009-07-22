@@ -12,7 +12,6 @@ package viewer.zoomable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Stack;
 import java.net.URL;
 import java.awt.*;
 import java.awt.event.*;
@@ -32,6 +31,8 @@ public class ViewportTime extends JViewport
                                      KeyListener
 //                                     HierarchyBoundsListener
 {
+    private static final long    serialVersionUID = 3700L;
+
     private static final Color   INFO_LINE_COLOR  = Color.green;
     private static final Color   INFO_AREA_COLOR  = new Color(255,255,  0,64);
     private static final Color   ZOOM_LINE_COLOR  = Color.white;
@@ -663,7 +664,6 @@ public class ViewportTime extends JViewport
         {
             Point  vport_click;
             double click_time;
-            double focus_time;
 
             // Ignore all mouse events when Control key is pressed
             /*

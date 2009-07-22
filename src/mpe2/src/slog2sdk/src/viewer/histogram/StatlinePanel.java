@@ -10,10 +10,8 @@
 package viewer.histogram;
 
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
-import javax.swing.event.*;
 
 import base.drawable.TimeBoundingBox;
 import base.statistics.BufForTimeAveBoxes;
@@ -35,6 +33,8 @@ import viewer.zoomable.RowAdjustments;
 
 public class StatlinePanel extends JPanel
 {
+    private static final long       serialVersionUID = 12700L;
+
     private Window                  root_window;
     private TimeBoundingBox         timebox;
     private BufForTimeAveBoxes      buf4statboxes;

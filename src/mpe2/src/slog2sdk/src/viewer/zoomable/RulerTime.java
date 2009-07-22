@@ -12,9 +12,9 @@ package viewer.zoomable;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
+// import java.awt.event.*;
+// import javax.swing.*;
+// import javax.swing.event.*;
 
 import base.drawable.TimeBoundingBox;
 import viewer.common.Const;
@@ -22,6 +22,8 @@ import viewer.common.Routines;
 
 public class RulerTime extends ScrollableObject
 {
+    private static final   long  serialVersionUID  = 4500L;
+
     private static final   Font  FONT              = Const.FONT;
     private static final   int   FONT_SIZE         = FONT.getSize();
     private static final   int   TICKMARK_HEIGHT   = 10;
@@ -33,12 +35,12 @@ public class RulerTime extends ScrollableObject
     private double         tIncrement;
     private DecimalFormat  fmt;
 
-    private ModelTime      time_model;
+    // private ModelTime      time_model;
 
     public RulerTime( ModelTime model )
     {
         super( model );
-        time_model  = model;
+        // time_model  = model;
         tRange      = 0.0d;
         tIncrement  = 0.0d;
         fmt         = (DecimalFormat) NumberFormat.getInstance();

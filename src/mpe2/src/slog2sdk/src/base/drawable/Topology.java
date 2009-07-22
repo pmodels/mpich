@@ -52,24 +52,24 @@ public class Topology implements DataIO
 
     public boolean isEvent()
     {
-        return index == this.EVENT_ID;
+        return index == Topology.EVENT_ID;
     }
 
     public boolean isState()
     {
-        return index == this.STATE_ID;
+        return index == Topology.STATE_ID;
     }
 
     public boolean isArrow()
     {
-        return index == this.ARROW_ID;
+        return index == Topology.ARROW_ID;
     }
 
     public boolean isPrimitive()
     {
-        return    index == this.STATE_ID
-               || index == this.ARROW_ID
-               || index == this.EVENT_ID;
+        return    index == Topology.STATE_ID
+               || index == Topology.ARROW_ID
+               || index == Topology.EVENT_ID;
     }
 
     public void writeObject( DataOutput outs )

@@ -20,6 +20,8 @@ import viewer.common.TopWindow;
 
 public class FirstMenuBar extends JMenuBar
 {
+    private static final long      serialVersionUID = 14200L;
+
     private        boolean         isApplet;
     private        FirstPanel      first_panel;
 

@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.lang.reflect.*;
-import java.io.*;
 
 import base.drawable.*;
 import logformat.clog.*;
@@ -45,7 +44,6 @@ public class InputLog extends logformat.clog.InputLog
 
     private Topo_Arrow             arrowform;
     private Topo_State             stateform;
-    private ObjMethod              obj_fn;
     private Object[]               arglist;
 
     private boolean                isFirstPeekForCategory;

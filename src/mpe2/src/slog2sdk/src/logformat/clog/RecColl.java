@@ -22,7 +22,7 @@ public class RecColl
     public         int      comm;        // communicator
     public         int      size;        // length in bytes 
     public         int      srcloc;      // id of source location 
-    private static int      pad;
+    // private static int      pad;
  
     public int readFromDataStream( DataInputStream in )
     {
@@ -32,7 +32,8 @@ public class RecColl
             comm    = in.readInt();
             size    = in.readInt();
             srcloc  = in.readInt();
-            pad     = in.readInt();
+            // pad     = in.readInt();
+            in.skipBytes( 4 );
         } catch ( IOException ioerr ) {
             ioerr.printStackTrace();
             return 0;

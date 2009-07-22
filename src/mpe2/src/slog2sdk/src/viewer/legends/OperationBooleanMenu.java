@@ -17,7 +17,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JPopupMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JTable;
-import javax.swing.table.TableModel;
 
 import viewer.common.Const;
 /*
@@ -25,6 +24,8 @@ import viewer.common.Const;
 */
 public class OperationBooleanMenu extends JPopupMenu
 {
+    private static final long  serialVersionUID = 2700L;
+
     private static String     toggle_selected_icon_path
                               = Const.IMG_PATH + "checkbox/ToggleSelected.gif";
     private static String     enable_selected_icon_path

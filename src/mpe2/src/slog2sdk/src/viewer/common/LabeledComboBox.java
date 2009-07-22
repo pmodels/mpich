@@ -10,16 +10,18 @@
 package viewer.common;
 
 import java.awt.Font;
-import java.awt.FontMetrics;
+// import java.awt.FontMetrics;
 import java.awt.Dimension;
 import java.awt.Component;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+// import java.awt.event.ItemEvent;
+// import java.awt.event.ItemListener;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 
 public class LabeledComboBox extends JPanel
 {
+    private static final   long    serialVersionUID = 1400L;
+
     private static final   int     TEXT_HEIGHT = 20;
     private static         Font    FONT        = null;
 
@@ -117,6 +119,6 @@ public class LabeledComboBox extends JPanel
     {
         return new Dimension( Short.MAX_VALUE,
                               lst.getPreferredSize().height
-                            + this.TEXT_HEIGHT );
+                            + LabeledComboBox.TEXT_HEIGHT );
     }
 }

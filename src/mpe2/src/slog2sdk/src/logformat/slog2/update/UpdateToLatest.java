@@ -390,7 +390,6 @@ public class UpdateToLatest
         } catch ( NumberFormatException numerr ) {
             if ( err_msg.length() > 0 )
                 System.err.println( err_msg.toString() );
-            String idx_order_str = indexOrderStr( idx );
             System.err.println( "Error occurs after option "
                               + argv[ idx-1 ] + ", " + indexOrderStr( idx )
                               + " command line argument.  It needs a number." );

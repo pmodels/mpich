@@ -19,7 +19,7 @@ public class RecHeader
     public         int    rectype;
     public         int    length;	
     public         int    taskID;   // i.e. procid, = rank in MPI_COMM_WORLD
-    private static int    pad;
+    // private static int    pad;
 
     public RecHeader()
     {
@@ -27,7 +27,7 @@ public class RecHeader
         rectype    = Const.INVALID_int;
         length     = Const.INVALID_int;
         taskID     = Const.INVALID_int;
-        pad        = Const.INVALID_int;
+        // pad        = Const.INVALID_int;
     }
 
     public RecHeader( DataInputStream istm )
@@ -42,7 +42,8 @@ public class RecHeader
             rectype    = istm.readInt();
             length     = istm.readInt();
             taskID     = istm.readInt();
-            pad        = istm.readInt();
+            // pad        = istm.readInt();
+            istm.skipBytes( 4 );
         } catch ( IOException ioerr ) {
             ioerr.printStackTrace();
             return 0;
@@ -71,7 +72,7 @@ public class RecHeader
         cp.rectype    = this.rectype;
         cp.length     = this.length;
         cp.taskID     = this.taskID;
-        cp.pad        = this.pad;
+        // cp.pad        = this.pad;
         return cp;
     }
 

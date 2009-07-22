@@ -17,13 +17,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Collections;
 
 import base.drawable.TimeBoundingBox;
 import base.drawable.Topology;
-import base.drawable.Category;
+// import base.drawable.Category;
 import base.drawable.Drawable;
-import base.drawable.Primitive;
+// import base.drawable.Primitive;
 import base.drawable.Shadow;
 import base.drawable.CoordPixelXform;
 import base.topology.SummaryState;
@@ -273,7 +272,7 @@ public class BufForTimeAveBoxes extends TimeBoundingBox
         Map.Entry          entry;
         Object[]           key;
         Iterator           entries;
-        Topology           topo;
+        // Topology           topo;
         TimeAveBox         avebox;
         float              rStart, rFinal, avebox_hgt;
         int                rowID, count;
@@ -289,7 +288,7 @@ public class BufForTimeAveBoxes extends TimeBoundingBox
             key       = ( (List) entry.getKey() ).toArray();
             avebox    = (TimeAveBox) entry.getValue();
 
-            topo      = (Topology) key[0];
+            // topo      = (Topology) key[0];
             rowID     = ( (Integer) key[1] ).intValue();
 
             rStart    = (float) rowID - init_state_height_ftr / 2.0f; 
@@ -307,7 +306,7 @@ public class BufForTimeAveBoxes extends TimeBoundingBox
         Map.Entry          entry;
         Object[]           key;
         Iterator           entries;
-        Topology           topo;
+        // Topology           topo;
         TimeAveBox         avebox;
         int                rowID1, rowID2;
         float              rStart, rFinal;
@@ -323,7 +322,7 @@ public class BufForTimeAveBoxes extends TimeBoundingBox
             key       = ( (List) entry.getKey() ).toArray();
             avebox    = (TimeAveBox) entry.getValue();
 
-            topo      = (Topology) key[0];
+            // topo      = (Topology) key[0];
             rowID1    = ( (Integer) key[1] ).intValue();
             rowID2    = ( (Integer) key[2] ).intValue();
 

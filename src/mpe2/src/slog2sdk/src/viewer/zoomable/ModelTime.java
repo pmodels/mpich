@@ -43,6 +43,8 @@ import viewer.common.Dialogs;
 public class ModelTime extends DefaultBoundedRangeModel
                        implements AdjustmentListener
 {
+    private static final long serialVersionUID = 3500L;
+
     // private int    MAX_SCROLLBAR_PIXELS = Integer.MAX_VALUE;
     /*
         If DefaultBoundedRangeModel is used,
@@ -65,7 +67,7 @@ public class ModelTime extends DefaultBoundedRangeModel
     // the zoom focus in user coodinates along the time axis of the viewport
     private double tZoom_focus;
     // the zoom focus in graphics pixel coodinates
-    private int    iZoom_focus;
+    // private int    iZoom_focus;
 
     // pixel coordinates of the time axis of the viewport
     // are buried inside the superclass DefaultBoundedRangeModel

@@ -13,7 +13,6 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.BasicStroke;
 import java.awt.Insets;
-import java.awt.Color;
 import java.awt.Point;
 import java.util.Arrays;
 import java.util.Set;
@@ -498,7 +497,6 @@ public class Shadow extends Primitive
         TimeBoundingBox.readObject( this, ins );
         num_real_objs = ins.readLong();
 
-        CategoryWeight  twgt;
         int             Nentries, ientry;
 
         Nentries   = ins.readInt();
@@ -669,9 +667,11 @@ public class Shadow extends Primitive
     public  boolean isPixelInState( CoordPixelXform coord_xform,
                                     Map map_line2row, Point pix_pt )
     {
+        /*
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
         final_vtx = this.getFinalVertex();
+        */
 
         double tStart, tFinal;
         tStart = super.getEarliestTime();    /* different from Primitive */

@@ -24,6 +24,8 @@ import javax.swing.*;
 
 public class LabeledTextField extends JPanel
 {
+    private   static final   long    serialVersionUID = 1200L;
+
     private   static final   int     TEXT_HEIGHT = 20;
     protected static         Font    FONT        = null;
 
@@ -249,7 +251,7 @@ public class LabeledTextField extends JPanel
         // return new Dimension( Short.MAX_VALUE, preferred_height );
         return new Dimension( Short.MAX_VALUE, 
                               fld.getPreferredSize().height
-                            + this.TEXT_HEIGHT );
+                            + LabeledTextField.TEXT_HEIGHT );
     }
 
     public void fireActionPerformed()

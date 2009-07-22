@@ -10,14 +10,16 @@
 package viewer.zoomable;
 
 import java.awt.*;
-import java.awt.event.*;
+// import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.border.*;
+// import javax.swing.border.*;
 
 import viewer.common.Const;
 
 public class ScrollbarTime extends JScrollBar
 {
+    private static final long  serialVersionUID = 4200L;
+
     private ModelTime   model;
     private Dimension   min_size;
 

@@ -9,8 +9,6 @@
 
 package logformat.trace;
 
-import java.util.StringTokenizer;
-
 import base.drawable.Category;
 import base.drawable.Topology;
 import base.drawable.ColorAlpha;

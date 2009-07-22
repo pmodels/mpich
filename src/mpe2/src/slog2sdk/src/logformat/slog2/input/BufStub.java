@@ -9,11 +9,11 @@
 
 package logformat.slog2.input;
 
-import java.util.List;
-import java.util.ArrayList;
+// import java.util.List;
+// import java.util.ArrayList;
 import java.util.Iterator;
-import java.io.DataInput;
-import java.io.DataOutput;
+// import java.io.DataInput;
+// import java.io.DataOutput;
 
 import base.drawable.TimeBoundingBox;
 import base.drawable.Primitive;

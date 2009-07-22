@@ -10,11 +10,10 @@
 package viewer.zoomable;
 
 import java.awt.*;
-import java.awt.event.*;
+// import java.awt.event.*;
 import javax.swing.*;
 
 import base.drawable.TimeBoundingBox;
-import viewer.common.CustomCursor;
 
 public abstract class ScrollableObject extends JComponent
                                        implements ScrollableView
@@ -205,6 +204,7 @@ public abstract class ScrollableObject extends JComponent
             return img_idx + 1;
     }
 
+    /*
     private int getNearImageIndex( int img_idx, int dir )
     {
         if ( dir < 0 )
@@ -212,6 +212,7 @@ public abstract class ScrollableObject extends JComponent
         else
             return getNearFutureImageIndex( img_idx );
     }
+    */
 
     //  Given a graphic context, create an offscreen image of specified size.
     private Image createImage( Dimension image_sz )

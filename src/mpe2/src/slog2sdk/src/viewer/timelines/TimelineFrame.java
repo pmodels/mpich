@@ -9,18 +9,18 @@
 
 package viewer.timelines;
 
-import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
 import logformat.slog2.input.InputLog;
-import viewer.common.Routines;
 import viewer.common.Dialogs;
 import viewer.common.TopWindow;
 import viewer.common.Parameters;
 
 public class TimelineFrame extends JFrame
 {
+    private static final  long    serialVersionUID = 13700L;
+
     private static String         in_filename;      // For main()
     private static int            in_view_ID  = 0;  // For main()
 
@@ -166,7 +166,6 @@ public class TimelineFrame extends JFrame
         } catch ( NumberFormatException numerr ) {  // Not needed at this moment
             if ( err_msg.length() > 0 )
                 System.err.println( err_msg.toString() );
-            String idx_order_str = indexOrderStr( idx );
             System.err.println( "Error occurs after option "
                               + argv[ idx-1 ] + ", " + indexOrderStr( idx )
                               + " command line argument.  It needs a number." );            // System.err.println( help_msg );

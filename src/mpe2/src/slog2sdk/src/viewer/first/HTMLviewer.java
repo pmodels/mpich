@@ -25,6 +25,8 @@ import viewer.common.TopWindow;
 public class HTMLviewer extends JDialog
                         implements HyperlinkListener
 {
+    private static final long  serialVersionUID = 14000L;
+
     private JTextField   input_fld;
     private JEditorPane  html_panel;
 

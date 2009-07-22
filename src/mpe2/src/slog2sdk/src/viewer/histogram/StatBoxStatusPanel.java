@@ -9,7 +9,6 @@
 
 package viewer.histogram;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JComboBox;
@@ -19,10 +18,11 @@ import javax.swing.BoxLayout;
 
 import base.statistics.BufForTimeAveBoxes;
 import viewer.common.Const;
-import viewer.common.LabeledTextField;
+// import viewer.common.LabeledTextField;
 
 public class StatBoxStatusPanel extends JPanel
 {
+    private static final long    serialVersionUID = 12500L;
     private static final String  DRAW_STATES = "States Only";
     private static final String  DRAW_ARROWS = "Arrows Only";
     private static final String  DRAW_ALL    = "All";

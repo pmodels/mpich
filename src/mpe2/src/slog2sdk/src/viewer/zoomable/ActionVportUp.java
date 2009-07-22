@@ -9,10 +9,9 @@
 
 package viewer.zoomable;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.net.*;
-import javax.swing.*;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import javax.swing.JScrollBar;
 
 public class ActionVportUp implements ActionListener
 {

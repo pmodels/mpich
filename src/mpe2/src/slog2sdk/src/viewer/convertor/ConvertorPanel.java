@@ -33,12 +33,12 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import java.util.Properties;
+// import java.util.Properties;
 import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.IOException;
+// import java.io.InputStream;
+// import java.io.InputStreamReader;
+// import java.io.BufferedReader;
+// import java.io.IOException;
 import java.net.URL;
 
 import logformat.slog2.input.InputLog;
@@ -53,6 +53,8 @@ import viewer.common.RuntimeExecCommand;
 public class ConvertorPanel extends JPanel
                             implements WaitingContainer
 {
+    private static final long  serialVersionUID = 11200L;
+
     private JComboBox          cmd_pulldown;
     private ActableTextField   cmd_infile;
     private JButton            infile_btn;
@@ -75,7 +77,7 @@ public class ConvertorPanel extends JPanel
 
     private Window             top_window;
     private LogFileChooser     file_chooser;
-    private String             file_sep, path_sep;
+    // private String             file_sep, path_sep;
     private String             err_msg;
 
     private SwingProcessWorker logconv_worker;
@@ -142,13 +144,13 @@ public class ConvertorPanel extends JPanel
         //  Setup all relevant Dimension of various components
         Dimension   row_pref_sz;   // for typical row JPanel
         Dimension   lbl_pref_sz;   // for all JLabel
-        Dimension   fld_pref_sz;   // for all JTextField
+        // Dimension   fld_pref_sz;   // for all JTextField
         Dimension   pfld_pref_sz;  // for JProgressBar
         Dimension   pbar_pref_sz;  // for JTextField of Output File Size
         row_pref_sz  = new Dimension( 410, 30 );
         lbl_pref_sz  = new Dimension( 130, 26 );
-        fld_pref_sz  = new Dimension( row_pref_sz.width - lbl_pref_sz.width,
-                                      lbl_pref_sz.height );
+        // fld_pref_sz  = new Dimension( row_pref_sz.width - lbl_pref_sz.width,
+        //                               lbl_pref_sz.height );
         pfld_pref_sz = new Dimension( lbl_pref_sz.width,
                                       2 * lbl_pref_sz.height );
         pbar_pref_sz = new Dimension( row_pref_sz.width,
@@ -309,8 +311,8 @@ public class ConvertorPanel extends JPanel
 
         row_pref_sz  = new Dimension( 410, 27 );
         lbl_pref_sz  = new Dimension( 130, 25 );
-        fld_pref_sz  = new Dimension( row_pref_sz.width - lbl_pref_sz.width,
-                                      lbl_pref_sz.height );
+        // fld_pref_sz  = new Dimension( row_pref_sz.width - lbl_pref_sz.width,
+        //                               lbl_pref_sz.height );
 
             JPanel  lower_panel = new JPanel();
             lower_panel.setAlignmentX( Component.CENTER_ALIGNMENT );

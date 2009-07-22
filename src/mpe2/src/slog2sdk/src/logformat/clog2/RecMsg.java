@@ -22,7 +22,7 @@ public class RecMsg
     private        int       rank;        // remote rank, src/dest in send/recv
     public         int       tag;         // message tag 
     public         int       size;        // length in bytes 
-    private static int       pad;         // byte padding
+    // private static int       pad;         // byte padding
 
   
 
@@ -34,7 +34,8 @@ public class RecMsg
             rank     = in.readInt();
             tag      = in.readInt();
             size     = in.readInt();
-            pad      = in.readInt();
+            // pad      = in.readInt();
+            in.skipBytes( 4 );
         } catch ( IOException ioerr ) {
             ioerr.printStackTrace();
             return 0;

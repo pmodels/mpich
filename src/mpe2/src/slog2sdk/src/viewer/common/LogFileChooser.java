@@ -16,6 +16,8 @@ import java.io.File;
 
 public class LogFileChooser extends JFileChooser
 {
+    private static final long serialVersionUID = 1700L;
+
     private boolean  isApplet;
 
     public LogFileChooser( boolean isTopApplet )

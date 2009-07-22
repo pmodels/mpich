@@ -14,7 +14,7 @@ import java.io.InputStreamReader;
 import java.io.BufferedReader;
 
 import base.drawable.*;
-import logformat.slog2.*;
+// import logformat.slog2.*;
 import logformat.slog2.input.InputLog;
 
 public class Navigator
@@ -34,7 +34,6 @@ public class Navigator
     public static final void main( String[] args )
     {
         InputLog          slog_ins;
-        CategoryMap       objdefs;
         TreeTrunk         treetrunk;
         TreeNode          treeroot;
         TimeBoundingBox   timeframe_root, timeframe_old, timeframe;
@@ -288,7 +287,6 @@ public class Navigator
         } catch ( NumberFormatException numerr ) {
             if ( err_msg.length() > 0 )
                 System.err.println( err_msg.toString() );
-            String idx_order_str = indexOrderStr( idx );
             System.err.println( "Error occurs after option "
                               + argv[ idx-1 ] + ", " + indexOrderStr( idx )
                               + " input argument.  It needs a number." );
@@ -360,8 +358,6 @@ public class Navigator
 
     private static void parseCmdLineArgs( String argv[] )
     {
-        String        arg_str;
-        StringBuffer  err_msg = new StringBuffer();
         int           idx = 0;
 
             while ( idx < argv.length ) {

@@ -20,6 +20,8 @@ import viewer.zoomable.InitializableDialog;
 
 public class StatlineDialog extends InitializableDialog
 {
+    private static final long serialVersionUID = 12800L;
+
     private StatlinePanel  top_panel;
 
     public StatlineDialog( final Dialog              ancestor_dialog,

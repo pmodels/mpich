@@ -12,7 +12,6 @@ package viewer.zoomable;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 
 import base.drawable.TimeBoundingBox;
@@ -21,6 +20,8 @@ import viewer.common.Routines;
 
 public class InfoDialogForDuration extends InfoDialog
 {
+    private static final long            serialVersionUID = 3900L;
+
     private static final String          FORMAT = Const.INFOBOX_TIME_FORMAT;
     private static       DecimalFormat   fmt    = null;
     private static       TimeFormat      tfmt   = null;

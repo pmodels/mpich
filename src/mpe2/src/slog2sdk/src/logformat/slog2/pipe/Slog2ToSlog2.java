@@ -15,7 +15,7 @@ import base.drawable.Category;
 import base.drawable.Drawable;
 import base.drawable.Primitive;
 import base.drawable.Composite;
-import base.drawable.YCoordMap;
+// import base.drawable.YCoordMap;
 import logformat.slog2.LineIDMap;
 import logformat.slog2.CategoryMap;
 import logformat.slog2.LineIDMapList;
@@ -390,7 +390,6 @@ public class Slog2ToSlog2
         } catch ( NumberFormatException numerr ) {
             if ( err_msg.length() > 0 )
                 System.err.println( err_msg.toString() );
-            String idx_order_str = indexOrderStr( idx );
             System.err.println( "Error occurs after option "
                               + argv[ idx-1 ] + ", " + indexOrderStr( idx )
                               + " command line argument.  It needs a number." );

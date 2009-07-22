@@ -11,7 +11,6 @@ package logformat.slog2;
 
 import java.util.Iterator;
 
-import base.drawable.TimeBoundingBox;
 import base.drawable.Drawable;
 
 

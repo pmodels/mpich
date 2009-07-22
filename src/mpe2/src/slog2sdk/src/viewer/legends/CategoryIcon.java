@@ -18,8 +18,6 @@ import javax.swing.Icon;
 import base.drawable.Category;
 import base.drawable.Topology;
 import base.drawable.ColorAlpha;
-import base.topology.StateBorder;
-import viewer.common.Dialogs;
 import viewer.common.Parameters;
 
 public class CategoryIcon implements Icon
@@ -170,7 +168,7 @@ public class CategoryIcon implements Icon
 
     private void paintEventIcon( Graphics g, int x, int y )
     {
-        int x1, y1, x2, y2, x3, y3;
+        int x1, y1, x2, y2;
 
         // g.setColor( Color.black );
         g.setColor( (Color) Parameters.BACKGROUND_COLOR.toValue() );

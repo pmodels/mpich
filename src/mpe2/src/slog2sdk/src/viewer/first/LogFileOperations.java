@@ -13,7 +13,7 @@ import java.awt.Window;
 import javax.swing.JTextField;
 import java.util.List;
 import java.io.File;
-import java.io.FileNotFoundException;
+// import java.io.FileNotFoundException;
 
 import logformat.slog2.input.InputLog;
 import viewer.common.SwingWorker;

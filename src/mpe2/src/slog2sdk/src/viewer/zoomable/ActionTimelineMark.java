@@ -11,8 +11,8 @@ package viewer.zoomable;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.net.*;
-import javax.swing.*;
+// import java.net.*;
+// import javax.swing.*;
 import javax.swing.tree.*;
 
 import viewer.common.Dialogs;
@@ -22,7 +22,7 @@ public class ActionTimelineMark implements ActionListener
     private Window             root_window;
     private ToolBarStatus      toolbar;
     private YaxisTree          tree;
-    private DefaultTreeModel   tree_model;
+    // private DefaultTreeModel   tree_model;
 
     public ActionTimelineMark( Window           parent_window,
                                ToolBarStatus    in_toolbar,
@@ -31,7 +31,7 @@ public class ActionTimelineMark implements ActionListener
         root_window  = parent_window;
         toolbar      = in_toolbar;
         tree         = in_tree;
-        tree_model   = (DefaultTreeModel) tree.getModel();
+        // tree_model   = (DefaultTreeModel) tree.getModel();
     }
 
     public void actionPerformed( ActionEvent event )

@@ -11,15 +11,13 @@ package viewer.zoomable;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.net.*;
-import javax.swing.*;
 
 import viewer.common.Dialogs;
 
 public class ActionYaxisTreeCommit implements ActionListener
 {
     private Window             root_window;
-    private ToolBarStatus      toolbar;
+    // private ToolBarStatus      toolbar;
     private ViewportTimeYaxis  canvas_vport;
     private YaxisMaps          y_maps;
     private RowAdjustments     row_adjs;
@@ -31,7 +29,7 @@ public class ActionYaxisTreeCommit implements ActionListener
                                   RowAdjustments     in_row_adjs )
     {
         root_window   = parent_window;
-        toolbar       = in_toolbar;
+        // toolbar       = in_toolbar;
         canvas_vport  = in_canvas_vport;
         y_maps        = in_maps;
         row_adjs      = in_row_adjs;

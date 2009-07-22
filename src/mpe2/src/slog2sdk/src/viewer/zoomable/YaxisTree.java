@@ -22,8 +22,10 @@ import java.util.Enumeration;
 
 public class YaxisTree extends JTree
 {
+    private static final long       serialVersionUID = 3200L;
+
     private DefaultMutableTreeNode  tree_root;
-    private TreePath                root_path;
+    // private TreePath                root_path;
 
     private List[]                  leveled_paths;
     private int                     max_level;
@@ -36,7 +38,7 @@ public class YaxisTree extends JTree
     {
         super( in_root );
         tree_root = in_root;
-        root_path = new TreePath( tree_root );
+        // root_path = new TreePath( tree_root );
         super.putClientProperty("JTree.lineStyle", "Angled");
         // this.setRootVisible( false );
         // this.setEditable( true );

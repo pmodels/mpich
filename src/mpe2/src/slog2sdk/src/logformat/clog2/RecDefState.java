@@ -26,7 +26,7 @@ public class RecDefState
     public         int     stateID;        // integer identifier for the state
     public         Integer startetype;     // beginning event for the state 
     public         Integer finaletype;     // ending event for the state 
-    private static int     pad;
+    // private static int     pad;
     public         String  color;          // string describing color
     public         String  name;           // naming the state
     public         String  format;         // format string for the state
@@ -38,7 +38,8 @@ public class RecDefState
             stateID      = in.readInt();
             startetype   = new Integer( in.readInt() );
             finaletype   = new Integer( in.readInt() );
-            pad          = in.readInt();
+            // pad          = in.readInt();
+            in.skipBytes( 4 );
             color        = in.readString( StrColor.BYTESIZE );
             name         = in.readString( StrDesc.BYTESIZE );
             format       = in.readString( StrFormat.BYTESIZE );

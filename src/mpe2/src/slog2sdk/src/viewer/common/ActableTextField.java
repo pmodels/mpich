@@ -13,6 +13,8 @@ import javax.swing.JTextField;
 
 public class ActableTextField extends JTextField
 {
+    private static final long serialVersionUID = 1100L;
+
     public ActableTextField()
     { super(); }
 

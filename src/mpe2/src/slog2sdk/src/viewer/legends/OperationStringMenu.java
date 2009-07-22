@@ -17,7 +17,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JPopupMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JTable;
-import javax.swing.table.TableModel;
+// import javax.swing.table.TableModel;
 
 import viewer.common.Const;
 /*
@@ -25,12 +25,15 @@ import viewer.common.Const;
 */
 public class OperationStringMenu extends JPopupMenu
 {
+    private static final long  serialVersionUID = 2600L;
+
     private static String     index_order_icon_path
                               = Const.IMG_PATH
                               + "checkbox/IndexOrder.gif";
     private static String     case_sensitive_topo_order_icon_path
                               = Const.IMG_PATH
                               + "checkbox/CaseSensitiveTopoOrder.gif";
+    /*
     private static String     case_insensitive_topo_order_icon_path
                               = Const.IMG_PATH
                               + "checkbox/CaseInsensitiveTopoOrder.gif";
@@ -43,6 +46,7 @@ public class OperationStringMenu extends JPopupMenu
     private static String     reverse_order_icon_path
                               = Const.IMG_PATH
                               + "checkbox/ReverseOrder.gif";
+    */
 
     private JTable            table_view;
     private LegendTableModel  table_model;

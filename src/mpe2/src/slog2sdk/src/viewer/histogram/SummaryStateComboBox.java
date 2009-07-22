@@ -23,6 +23,8 @@ import viewer.common.Parameters;
 
 public class SummaryStateComboBox extends JComboBox
 {
+    private static final long  serialVersionUID = 12000L;
+
     private JButton          canvas_redraw_btn;
     // private PreferenceFrame  pref_frame;
 

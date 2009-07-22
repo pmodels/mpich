@@ -19,6 +19,8 @@ import base.drawable.Topology;
 
 public class CategoryLabel extends JLabel
 {
+    private static final long  serialVersionUID = 2000L;
+
     public CategoryLabel( final Category objdef )
     {
         super( objdef.getName(), new CategoryIcon( objdef ),

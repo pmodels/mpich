@@ -10,7 +10,7 @@ package viewer.legends;
 
 import java.util.Comparator;
 
-import base.drawable.Topology;
+// import base.drawable.Topology;
 import base.drawable.Category;
 import viewer.common.Parameters;
 

@@ -21,7 +21,7 @@ import viewer.common.LogFileChooser;
 
 public class ConvertorDialog extends JDialog
 {
-    private static String          in_filename;      // For main()
+    private static final long      serialVersionUID = 11100L;
 
     private        ConvertorPanel  top_panel;
 

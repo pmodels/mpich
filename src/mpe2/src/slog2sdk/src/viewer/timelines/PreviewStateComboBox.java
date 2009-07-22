@@ -22,6 +22,8 @@ import viewer.common.PreferenceFrame;
 
 public class PreviewStateComboBox extends JComboBox
 {
+    private static final long  serialVersionUID = 13000L;
+
     private JButton          canvas_redraw_btn;
     private PreferenceFrame  pref_frame;
 

@@ -12,8 +12,6 @@ package viewer.histogram;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.event.*;
-import java.util.*;
 import java.net.URL;
 
 import viewer.common.Const;
@@ -46,6 +44,8 @@ import viewer.zoomable.ActionPptyStop;
 public class StatlineToolBar extends JToolBar
                              implements ToolBarStatus
 {
+    private static final long       serialVersionUID = 12600L;
+
     private Window                  root_window;
     private ViewportTimeYaxis       canvas_vport;
     private JScrollBar              y_scrollbar;

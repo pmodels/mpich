@@ -9,18 +9,18 @@
 
 package viewer.legends;
 
-import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
-import logformat.slog2.CategoryMap;
 import logformat.slog2.input.InputLog;
 import viewer.common.TopWindow;
 
 public class LegendPanel extends JPanel
                          implements ActionListener
 {
+    private static final long   serialVersionUID = 2900L;
+
     private LegendTable  legend_table;
 
     private JButton      all_btn;
@@ -32,8 +32,7 @@ public class LegendPanel extends JPanel
         super();
         super.setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
 
-        Border  raised_border, lowered_border, empty_border, etched_border;
-        raised_border  = BorderFactory.createRaisedBevelBorder();
+        Border  lowered_border, empty_border, etched_border;
         lowered_border = BorderFactory.createLoweredBevelBorder();
         empty_border   = BorderFactory.createEmptyBorder( 4, 4, 4 ,4 );
         etched_border  = BorderFactory.createEtchedBorder();

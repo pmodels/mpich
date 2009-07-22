@@ -38,6 +38,8 @@ import base.io.MixedDataOutputStream;
 public class LineIDMap extends TreeMap
                        implements MixedDataIO
 {
+    private static final long  serialVersionUID = 500L;
+
     private int       num_treenodes;
     private String    title_label;
     private String[]  column_labels;
@@ -309,7 +311,7 @@ public class LineIDMap extends TreeMap
         String     io_str = args[ 0 ].trim();
         boolean    isWriting = io_str.equals( "write" );
 
-        int        Nlevels, Nchilds, Nentries;
+        int        Nlevels, Nchilds;
         int[]      icfg;
         Integer[]  ocfg;
         List       cfglist = new ArrayList();

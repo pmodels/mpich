@@ -23,8 +23,6 @@ import base.drawable.TimeBoundingBox;
 import base.drawable.Category;
 import base.drawable.CategoryWeight;
 import base.drawable.Drawable;
-import base.drawable.Composite;
-import base.drawable.Primitive;
 import base.drawable.Shadow;
 
 public class TimeAveBox extends TimeBoundingBox
@@ -96,7 +94,6 @@ public class TimeAveBox extends TimeBoundingBox
 
     public void mergeWithShadow( final Shadow  shade )
     {
-        TimeBoundingBox   timeblock;
         Category          sobj_type;
         CategoryWeightF   this_twgf;
         CategoryWeight    sobj_twgt;
@@ -138,7 +135,6 @@ public class TimeAveBox extends TimeBoundingBox
 
     public void mergeWithTimeAveBox( final TimeAveBox  avebox )
     {
-        TimeBoundingBox   timeblock;
         Category          abox_type;
         CategoryWeightF   abox_twgf, this_twgf;
         Iterator          abox_twgfs;
@@ -146,7 +142,6 @@ public class TimeAveBox extends TimeBoundingBox
         float             box_overlap_ratio;
         double            abox_overlap_ratio;
         double            ave_num_real_objs;
-        int               idx;
 
         overlap_duration   = super.getIntersectionDuration( avebox );
         box_overlap_ratio  = (float) (overlap_duration / box_duration);

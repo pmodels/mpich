@@ -10,7 +10,6 @@
 package base.drawable;
 
 import java.awt.Graphics2D;
-import java.awt.Color;
 import java.awt.Point;
 import java.util.Map;
 import java.util.List;

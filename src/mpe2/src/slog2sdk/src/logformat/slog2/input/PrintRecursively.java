@@ -10,7 +10,6 @@
 package logformat.slog2.input;
 
 import base.drawable.*;
-import logformat.slog2.*;
 import logformat.slog2.input.InputLog;
 
 
@@ -26,7 +25,7 @@ public class PrintRecursively
     public static final void main( String[] args )
     {
         InputLog         slog_ins;
-        CategoryMap      objdefs;
+        // CategoryMap      objdefs;
         TreeTrunk        treetrunk;
         TreeNode         treeroot;
         TimeBoundingBox  timebounds;
@@ -158,7 +157,6 @@ public class PrintRecursively
         } catch ( NumberFormatException numerr ) {
             if ( err_msg.length() > 0 )
                 System.err.println( err_msg.toString() );
-            String idx_order_str = indexOrderStr( idx );
             System.err.println( "Error occurs after option "
                               + argv[ idx-1 ] + ", " + indexOrderStr( idx )
                               + " command line argument.  It needs a number." );            // System.err.println( help_msg );

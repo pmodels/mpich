@@ -12,8 +12,6 @@ package viewer.timelines;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.event.*;
-import java.util.*;
 import java.net.URL;
 
 import viewer.common.Const;
@@ -50,6 +48,8 @@ import viewer.zoomable.ActionPptyStop;
 public class TimelineToolBar extends JToolBar
                              implements ToolBarStatus
 {
+    private static final long       serialVersionUID = 13600L;
+ 
     private Window                  root_window;
     private ViewportTimeYaxis       canvas_vport;
     private JScrollBar              y_scrollbar;

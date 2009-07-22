@@ -13,12 +13,13 @@ import java.awt.*;
 import javax.swing.BoxLayout;
 import javax.swing.JTree;
 
-import base.drawable.CategoryWeight;
 import base.statistics.Summarizable;
 import viewer.zoomable.InfoDialog;
 
 public class InfoDialogForSummary extends InfoDialog
 {
+    private static final long  serialVersionUID  = 12200L;
+
     public InfoDialogForSummary( final Dialog        dialog, 
                                  final double        clicked_time,
                                  final JTree         tree_view,

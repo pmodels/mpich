@@ -11,7 +11,6 @@ package viewer.zoomable;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.net.*;
 import javax.swing.*;
 
 import viewer.common.Const;

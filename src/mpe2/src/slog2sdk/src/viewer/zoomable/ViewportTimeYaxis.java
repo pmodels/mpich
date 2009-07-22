@@ -12,7 +12,7 @@ package viewer.zoomable;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.event.*;
+// import javax.swing.event.*;
 
 import base.drawable.Drawable;
 import viewer.common.Dialogs;
@@ -22,6 +22,8 @@ import viewer.common.Routines;
 public class ViewportTimeYaxis extends ViewportTime
                                implements AdjustmentListener
 {
+    private static final long     serialVersionUID        = 4300L;
+
     private static final Color    SEARCH_LINE_COLOR       = Color.yellow;
     private static final int      SEARCH_ARROW_HALF_ANGLE = 15;          // deg
     private static final double   SEARCH_ARROW_ANGLE      = Math.PI/6.0; // rad
@@ -116,7 +118,6 @@ public class ViewportTimeYaxis extends ViewportTime
 
     private void drawMarkerForSearchedDrawable( Graphics g )
     {
-        Stroke     orig_stroke;
         Rectangle  dobj_rect;
         Color      dobj_color, dobj_brighter_color, dobj_darker_color;
         int        vport_width, vport_height;

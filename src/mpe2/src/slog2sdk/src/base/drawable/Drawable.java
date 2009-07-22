@@ -9,7 +9,7 @@
 
 package base.drawable;
 
-import java.util.Comparator;
+// import java.util.Comparator;
 import java.util.Map;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -210,9 +210,12 @@ public abstract class Drawable extends InfoBox
                                        Map              map_line2row,
                                        NestingStacks    nesting_stacks )
     {
-        Coord  start_vtx, final_vtx;
+        Coord  start_vtx;
         start_vtx = this.getStartVertex();
-        // final_vtx = this.getFinalVertex();
+        /*
+        Coord  final_vtx;
+        final_vtx = this.getFinalVertex();
+        */
 
         row_ID  = ( (Integer)
                     map_line2row.get( new Integer(start_vtx.lineID) )

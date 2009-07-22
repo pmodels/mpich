@@ -10,7 +10,7 @@
 package logformat.clog2;
 
 import java.io.*;
-import java.util.*;
+// import java.util.*;
 
 
 // Class corresponds to CLOG_Rec_ConstDef

@@ -10,10 +10,10 @@
 package viewer.common;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
+// import java.awt.image.BufferedImage;
 import java.awt.event.MouseEvent;
-import java.net.URL;
-import javax.swing.ImageIcon;
+// import java.net.URL;
+// import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 

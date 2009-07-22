@@ -12,8 +12,7 @@ package base.topology;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.Color;
-import java.awt.Point;
-import java.awt.geom.Line2D;
+// import java.awt.geom.Line2D;
 import base.drawable.CoordPixelXform;
 import base.drawable.DrawnBox;
 

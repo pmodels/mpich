@@ -9,12 +9,11 @@
 
 package viewer.first;
 
-import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
 // import java.util.Properties;
-import java.util.Enumeration;
+// import java.util.Enumeration;
 
 import viewer.common.Dialogs;
 import viewer.common.TopWindow;
@@ -23,6 +22,8 @@ import viewer.common.TopControl;
 public class FirstFrame extends JFrame
                         implements TopControl
 {
+    private static final long     serialVersionUID = 14300L;
+
     private static boolean        isApplet = false;
     private static String         filename = null;
     private static int            view_ID  = -1;
@@ -174,7 +175,6 @@ public class FirstFrame extends JFrame
         } catch ( NumberFormatException numerr ) {  // Not needed at this moment
             if ( err_msg.length() > 0 )
                 System.err.println( err_msg.toString() );
-            String idx_order_str = indexOrderStr( idx );
             System.err.println( "Error occurs after option "
                               + argv[ idx-1 ] + ", " + indexOrderStr( idx )
                               + " command line argument.  It needs a number." );            // System.err.println( help_msg );

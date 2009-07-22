@@ -9,10 +9,10 @@
 
 package viewer.common;
 
-import java.awt.Font;
+// import java.awt.Font;
 import java.util.Properties;
-import java.io.InputStream;
-import java.io.OutputStream;
+// import java.io.InputStream;
+// import java.io.OutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;

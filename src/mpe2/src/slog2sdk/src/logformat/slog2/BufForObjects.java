@@ -9,7 +9,7 @@
 
 package logformat.slog2;
 
-import java.util.Comparator;
+// import java.util.Comparator;
 import java.util.Collection;
 import java.util.Iterator;
 import java.io.DataOutput;

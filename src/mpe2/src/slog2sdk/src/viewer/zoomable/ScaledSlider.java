@@ -15,9 +15,9 @@ import java.util.Enumeration;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseAdapter;
+// import java.awt.event.MouseEvent;
+// import java.awt.event.MouseListener;
+// import java.awt.event.MouseAdapter;
 
 import java.awt.Font;
 import java.awt.Color;
@@ -30,6 +30,8 @@ import viewer.common.Const;
 
 public class ScaledSlider extends JSlider
 {
+    private static final long      serialVersionUID = 4700L;
+
     private static final Font      FONT        = Const.FONT;
     private static final  int      MODEL_MIN   = 0;
     private static final  int      MODEL_MAX   = 1000000000;
@@ -103,10 +105,12 @@ public class ScaledSlider extends JSlider
         return (int) Math.round( fmodel_val );
     }
 
+    /*
     private double getModel2LabelInterval( int model_intvl )
     {
         return ratio_label2model * model_intvl;
     }
+    */
 
     private int    getLabel2ModelInterval( double label_intvl )
     {
@@ -251,6 +255,7 @@ public class ScaledSlider extends JSlider
         // this.simulateMouseClicked();
     }
 
+    /*
     private MouseEvent  simulated_click = null;
 
     private void simulateMouseClicked()
@@ -271,6 +276,7 @@ public class ScaledSlider extends JSlider
              listener.mouseReleased( simulated_click );
         }
     }
+    */
 
     public void fireStateChanged()
     {

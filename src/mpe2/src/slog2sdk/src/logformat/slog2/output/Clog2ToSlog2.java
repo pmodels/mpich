@@ -13,7 +13,7 @@ import java.util.*;
 import java.io.File;
 
 import base.drawable.*;
-import logformat.clog2TOdrawable.*;
+// import logformat.clog2TOdrawable.*;
 import logformat.slog2.*;
 
 public class Clog2ToSlog2
@@ -36,7 +36,7 @@ public class Clog2ToSlog2
         LineIDMapList                       lineIDmaps;
         LineIDMap                           lineIDmap;
         Primitive                           prime_obj;
-        Composite                           cmplx_obj;
+        // Composite                           cmplx_obj;
         long                                Nobjs;
 
         double                              prev_dobj_endtime;
@@ -304,7 +304,6 @@ public class Clog2ToSlog2
         } catch ( NumberFormatException numerr ) {
             if ( err_msg.length() > 0 )
                 System.err.println( err_msg.toString() );
-            String idx_order_str = indexOrderStr( idx );
             System.err.println( "Error occurs after option "
                               + argv[ idx-1 ] + ", " + indexOrderStr( idx )
                               + " command line argument.  It needs a number." );

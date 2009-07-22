@@ -9,7 +9,6 @@
 
 package logformat.clog2TOdrawable;
 
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -33,6 +32,8 @@ import base.drawable.YCoordMap;
 */
 public class CommProcThdIDMap extends TreeMap
 {
+    private static final long serialVersionUID  = 300L;
+
     private int  max_thread_count;
 
     public CommProcThdIDMap( int max_thread_count )

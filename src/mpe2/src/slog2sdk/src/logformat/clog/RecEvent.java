@@ -19,14 +19,15 @@ public class RecEvent
     private static final int BYTESIZE = 2 * 4
                                       + StrDesc.BYTESIZE;
     public         Integer     etype;            // event
-    private static int         pad;              // pad 
+    // private static int         pad;              // pad 
     public         String      description;      // string describing event
   
     public int readFromDataStream( MixedDataInputStream in )
     {
         try {
             etype        = new Integer( in.readInt() );
-            pad          = in.readInt();
+            // pad          = in.readInt();
+            in.skipBytes( 4 );
             description  = in.readString( StrDesc.BYTESIZE );
         } catch ( IOException ioerr ) {
             ioerr.printStackTrace();

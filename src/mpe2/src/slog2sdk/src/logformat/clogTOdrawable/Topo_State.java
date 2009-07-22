@@ -12,7 +12,7 @@ package logformat.clogTOdrawable;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
-import java.lang.reflect.*;
+// import java.lang.reflect.*;
 
 import logformat.clog.RecHeader;
 import logformat.clog.RecRaw;

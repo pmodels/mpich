@@ -23,7 +23,7 @@ public class RecDefEvent
                                       + StrDesc.BYTESIZE
                                       + StrFormat.BYTESIZE;
     public         Integer     etype;            // event
-    private static int         pad;              // pad 
+    // private static int         pad;              // pad 
     public         String      color;            // string for color
     public         String      name;             // string describing event
     public         String      format;           // format string for the event
@@ -32,7 +32,8 @@ public class RecDefEvent
     {
         try {
             etype        = new Integer( in.readInt() );
-            pad          = in.readInt();
+            // pad          = in.readInt();
+            in.skipBytes( 4 );
             color        = in.readString( StrColor.BYTESIZE );
             name         = in.readString( StrDesc.BYTESIZE );
             format       = in.readString( StrFormat.BYTESIZE );

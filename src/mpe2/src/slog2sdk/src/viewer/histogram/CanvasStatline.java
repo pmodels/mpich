@@ -11,17 +11,13 @@ package viewer.histogram;
 
 import java.util.Date;
 import java.util.Map;
-import java.util.Iterator;
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.tree.TreePath;
 
 import base.drawable.TimeBoundingBox;
 import base.statistics.Summarizable;
 import base.statistics.BufForTimeAveBoxes;
-import logformat.slog2.LineIDMap;
 import viewer.common.Dialogs;
 import viewer.common.Routines;
 import viewer.common.Parameters;
@@ -37,9 +33,13 @@ import viewer.zoomable.ScrollableObject;
 
 public class CanvasStatline extends ScrollableObject
 {
+    private static final long           serialVersionUID      = 12400L;
+
+    /*
     private static final int            MIN_VISIBLE_ROW_COUNT = 2;
     private static final boolean        IS_INCRE_STARTTIME    = true;
     private static       GradientPaint  BackgroundPaint       = null;
+    */
 
     private BufForTimeAveBoxes buf4statboxes;
     private YaxisMaps          y_maps;

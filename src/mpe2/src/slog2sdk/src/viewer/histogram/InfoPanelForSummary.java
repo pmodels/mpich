@@ -23,13 +23,14 @@ import base.statistics.Summarizable;
 import base.topology.SummaryState;
 import viewer.common.Const;
 import viewer.common.Routines;
-import viewer.common.Parameters;
 import viewer.legends.CategoryLabel;
 import viewer.zoomable.TimeFormat;
 
 
 public class InfoPanelForSummary extends JPanel
 {
+    private static final long           serialVersionUID = 12100L;
+
     private static final Component      STRUT = Box.createHorizontalStrut( 10 );
     private static final Component      GLUE  = Box.createHorizontalGlue();
 

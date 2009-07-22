@@ -20,7 +20,7 @@ public class Preamble
     // BYTESIZE corresponds to CLOG_PREAMBLE_SIZE
     private final static int      BYTESIZE     = 1024;
     // VERSIONSIZE corresponds to CLOG_VERSION_STRLEN;
-    private final static int      VERSIONSIZE  = 12;
+    // private final static int      VERSIONSIZE  = 12;
 
     private              String   version;
     //  this correspond to CLOG_Premable_t.is_big_endian

@@ -22,7 +22,7 @@ public class RecRaw
     public         Integer etype;                      // raw event
     public         int     data;                       // uninterpreted data
     public         int     srcloc;                     // id of source location
-    private static int     pad;
+    // private static int     pad;
     public         String  string;                     // uninterpreted string
 
     private        int     msg_tag  = Const.INVALID_int; // MPI message tag
@@ -35,7 +35,8 @@ public class RecRaw
             etype   = new Integer( in.readInt() );
             data    = in.readInt();
             srcloc  = in.readInt();
-            pad     = in.readInt();
+            // pad     = in.readInt();
+            in.skipBytes( 4 );
             string  = in.readString( StrDesc.BYTESIZE );
         } catch ( IOException ioerr ) {
             ioerr.printStackTrace();
@@ -88,7 +89,7 @@ public class RecRaw
         cp.etype   = this.etype;
         cp.data    = this.data;
         cp.srcloc  = this.srcloc;
-        cp.pad     = this.pad;
+        // cp.pad     = this.pad;
         cp.string  = this.string;
         return cp;
     }

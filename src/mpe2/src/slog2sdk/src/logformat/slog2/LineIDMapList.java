@@ -19,6 +19,8 @@ import base.io.MixedDataIO;
 public class LineIDMapList extends ArrayList
                            implements MixedDataIO
 {
+    private static final long serialVersionUID = 600L;
+
     public LineIDMapList()
     {
         super();

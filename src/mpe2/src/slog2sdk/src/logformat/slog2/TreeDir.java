@@ -9,7 +9,7 @@
 
 package logformat.slog2;
 
-import java.util.Set;
+// import java.util.Set;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Iterator;
@@ -26,6 +26,8 @@ import base.io.MixedDataIO;
 public class TreeDir extends TreeMap
                      implements DataIO, MixedDataIO
 {
+    private static final long serialVersionUID = 400L;
+
     private TreeNodeID  root;
 
     public TreeDir()

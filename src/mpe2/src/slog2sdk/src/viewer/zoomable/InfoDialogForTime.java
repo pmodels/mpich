@@ -12,7 +12,6 @@ package viewer.zoomable;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 
 import viewer.common.Const;
@@ -20,6 +19,8 @@ import viewer.common.Routines;
 
 public class InfoDialogForTime extends InfoDialog
 {
+    private static final long           serialVersionUID = 4000L;
+
     private static final String         FORMAT = Const.INFOBOX_TIME_FORMAT;
     private static       DecimalFormat  fmt = null;
 

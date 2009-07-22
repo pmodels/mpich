@@ -15,6 +15,8 @@ import java.util.StringTokenizer;
 //  A class facilitates the construction of String[] to Runtime.exec( String[] )
 public class RuntimeExecCommand extends ArrayList
 {
+    private static final long serialVersionUID = 1000L;
+
     private String[]  cmd_ary;
 
     public RuntimeExecCommand()

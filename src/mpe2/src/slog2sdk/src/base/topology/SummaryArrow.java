@@ -96,7 +96,7 @@ public class SummaryArrow
         CategoryTimeBox[]  typeboxes;
         CategoryTimeBox    typebox;
         boolean            isInclusive;
-        double             prev_time, interval, duration;
+        double             interval, duration;
         int                idx;
 
         // exclusive ratio is alway zero for summary arrow
@@ -114,7 +114,7 @@ public class SummaryArrow
     }
 
 
-    private static Stroke    Line_Stroke  = new BasicStroke( 3.0f );
+    // private static Stroke    Line_Stroke  = new BasicStroke( 3.0f );
 
     private static long      Arrow_Log_Base = 10;
     private static Stroke[]  Line_Strokes;

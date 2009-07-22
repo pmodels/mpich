@@ -28,6 +28,8 @@ public class CategoryIconEditor extends DefaultCellEditor
                                 implements TableCellEditor,
                                            ActionListener
 {
+    private static final long  serialVersionUID = 2200L;
+
     private JButton      delegate_btn;
     private ColorAlpha   saved_color;
     private Color        prev_color;

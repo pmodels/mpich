@@ -13,7 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.ArrayList;
-import java.net.URL;
 import java.awt.Window;
 import javax.swing.*;
 
@@ -24,6 +23,8 @@ import viewer.common.LabeledTextField;
 public class ModelTimePanel extends JPanel
                             implements TimeListener
 {
+    private static final long serialVersionUID = 3600L;
+
     private ModelTime         model = null;
 
     private LabeledTextField  fld_iZoom_level;
@@ -270,7 +271,8 @@ public class ModelTimePanel extends JPanel
                 return;
             }
             
-            double   tView_init, tView_final, tView_extent, tView_focus;
+            double   tView_init /*, tView_final */;
+            double   tView_extent, tView_focus;
 
             tView_extent = time_model.computeTimeViewExtent(
                                              fld_time_pixel.getDouble() );

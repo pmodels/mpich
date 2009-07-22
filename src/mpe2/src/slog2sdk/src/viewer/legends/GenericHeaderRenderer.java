@@ -14,18 +14,22 @@ import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import javax.swing.Icon;
-import javax.swing.border.Border;
-import javax.swing.BorderFactory;
+// import javax.swing.border.Border;
+// import javax.swing.BorderFactory;
 import javax.swing.SwingConstants;
 import javax.swing.JTable;
-import javax.swing.table.TableModel;
+// import javax.swing.table.TableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.DefaultTableCellRenderer;
 
 public class GenericHeaderRenderer extends DefaultTableCellRenderer
 {
+    private static final long   serialVersionUID = 2400L;
+
+    /*
     private static final Border BORDER
                                 = BorderFactory.createEmptyBorder( 1,3,1,3 );
+    */
 
     private JTable             table_view;
     private int                renderer_column;

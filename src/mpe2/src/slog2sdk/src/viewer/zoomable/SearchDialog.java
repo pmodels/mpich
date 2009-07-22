@@ -13,12 +13,13 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-import base.drawable.Drawable;
 import viewer.common.TopWindow;
 
 public class SearchDialog extends JDialog 
                           implements ActionListener
 {
+    private static final long  serialVersionUID = 4400L;
+
     private Window             root_window;
     private ViewportTimeYaxis  viewport;
 

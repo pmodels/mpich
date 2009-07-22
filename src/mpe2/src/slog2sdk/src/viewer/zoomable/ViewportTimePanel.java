@@ -10,7 +10,7 @@
 package viewer.zoomable;
 
 import java.awt.*;
-import java.awt.event.*;
+// import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
@@ -18,6 +18,8 @@ import viewer.common.Routines;
 
 public class ViewportTimePanel extends JPanel
 {
+    private static final long  serialVersionUID = 4600L;
+
     private ViewportTime   viewport;
 
     private static Border  border;

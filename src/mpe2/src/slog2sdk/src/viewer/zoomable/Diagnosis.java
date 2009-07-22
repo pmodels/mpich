@@ -17,7 +17,7 @@ public class Diagnosis
     private static final String  UnitIndentStr    = "    ";
 
     private boolean       isOn             = false;
-    private String        filename         = null;
+    // private String        filename         = null;
     private int           ilevel           = 0;
     private boolean       isLineHead       = true;
     private StringBuffer  strbuf           = null;
@@ -27,7 +27,7 @@ public class Diagnosis
     public Diagnosis()
     {
         isOn             = false;
-        filename         = null;
+        // filename         = null;
         ilevel           = 0;
         isLineHead       = true;
         strbuf           = new StringBuffer();
@@ -68,7 +68,7 @@ public class Diagnosis
     public void setFilename( String in_name )
     throws IOException
     {
-        filename = new String( in_name );
+        // filename = new String( in_name );
         System.setOut( new PrintStream( new FileOutputStream(in_name) ) );
     }
 

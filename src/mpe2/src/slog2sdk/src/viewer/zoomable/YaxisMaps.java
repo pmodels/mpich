@@ -236,6 +236,7 @@ public class YaxisMaps
         return isOK;
     }
 
+    /*
     private static String stringForSetOfUserObjs( final TreeSet set_userpath )
     {
         Integer[]  iary;
@@ -251,6 +252,7 @@ public class YaxisMaps
         }
         return rep.toString();
     }
+    */
 
     public static String stringFromYaxisRoot( final YaxisTreeNode  treeroot )
     {

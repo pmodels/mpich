@@ -9,7 +9,7 @@
 
 package logformat.slog2;
 
-import java.util.TreeMap;
+// import java.util.TreeMap;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -23,6 +23,8 @@ import base.drawable.Category;
 public class CategoryMap extends HashMap
                          implements MixedDataIO
 {
+    private static final long serialVersionUID = 700L;
+
     public CategoryMap()
     {
         super();

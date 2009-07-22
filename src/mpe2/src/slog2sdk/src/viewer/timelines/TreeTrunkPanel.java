@@ -13,12 +13,13 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 import logformat.slog2.input.TreeTrunk;
-import viewer.common.Const;
 import viewer.common.LabeledTextField;
 
 public class TreeTrunkPanel extends JPanel
                             implements ChangeListener
 {
+    private static final long  serialVersionUID = 13400L;
+
     private TreeTrunk               treetrunk;
     private LabeledTextField        fld_low2max_depth;
     private short                   max_depth;

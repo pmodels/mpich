@@ -18,6 +18,8 @@ import viewer.zoomable.InfoDialog;
 
 public class InfoDialogForDrawable extends InfoDialog
 {
+    private static final  long  serialVersionUID = 13200L;
+
     public InfoDialogForDrawable( final Frame     frame, 
                                   final double    clicked_time,
                                   final Map       map_line2treenodes,

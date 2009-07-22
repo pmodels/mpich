@@ -10,7 +10,7 @@
 package logformat.clog2;
 
 import java.io.*;
-import java.util.*;
+// import java.util.*;
 
 
 public class UUID

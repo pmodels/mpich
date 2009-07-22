@@ -54,7 +54,7 @@ public class Method implements DataIO
 
     public boolean isConnectCompositeState()
     {
-        return index == this.CONNECT_COMPOSITE_STATE_ID;
+        return index == Method.CONNECT_COMPOSITE_STATE_ID;
     }
 
     public void writeObject( DataOutput outs )

@@ -10,12 +10,10 @@
 package viewer.timelines;
 
 import java.util.Iterator;
-import java.util.Map;
 
 import base.drawable.TimeBoundingBox;
 import base.drawable.Drawable;
 import base.drawable.Shadow;
-import base.drawable.Category;
 import base.statistics.BufForTimeAveBoxes;
 import logformat.slog2.input.TreeTrunk;
 import viewer.zoomable.YaxisTree;

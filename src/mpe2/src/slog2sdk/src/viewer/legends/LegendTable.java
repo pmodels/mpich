@@ -9,33 +9,31 @@
 
 package viewer.legends;
 
-import java.util.Map;
 import java.awt.Insets;
-import java.awt.Color;
+// import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
-import javax.swing.SwingConstants;
 import javax.swing.JComponent;
-import javax.swing.Icon;
-import javax.swing.JLabel;
-import javax.swing.JCheckBox;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.UIManager;
+// import javax.swing.table.DefaultTableCellRenderer;
+// import javax.swing.UIManager;
 
-import base.drawable.Category;
+// import base.drawable.Category;
 import logformat.slog2.CategoryMap;
 
 public class LegendTable extends JTable
 {
+    private static final long   serialVersionUID = 2500L;
+
     private static final Insets EMPTY_INSETS
                                 = new Insets( 0, 0, 0, 0 );
+    /*
     private static final Color  CELL_BACKCOLOR
                                 = Const.CELL_BACKCOLOR;
     private static final Color  CELL_FORECOLOR
@@ -44,6 +42,7 @@ public class LegendTable extends JTable
                                 = Const.CELL_BACKCOLOR_SELECTED;
     private static final Color  CELL_FORECOLOR_SELECTED
                                 = Const.CELL_FORECOLOR_SELECTED;
+    */
 
     private LegendTableModel    table_model;
     private TableColumnModel    column_model;
@@ -78,7 +77,6 @@ public class LegendTable extends JTable
         TableCellRenderer  renderer;
         JPopupMenu         pop_menu;
         MouseAdapter       handler;
-        Color              bg_color;
         int                column_count;
 
         column_count  = table_model.getColumnCount();
@@ -127,7 +125,6 @@ public class LegendTable extends JTable
         Component          component;
         TableColumn        column; 
         Dimension          intercell_gap;
-        Object             header_value;
         Dimension          header_size;
         Insets             header_insets;
         int                header_width;

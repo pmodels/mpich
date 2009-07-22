@@ -18,7 +18,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JPopupMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JTable;
-import javax.swing.table.TableModel;
 
 import viewer.common.Const;
 /*
@@ -26,6 +25,8 @@ import viewer.common.Const;
 */
 public class OperationNumberMenu extends JPopupMenu
 {
+    private static final long  serialVersionUID = 2800L;
+
     private static String     count_order_icon_path
                               = Const.IMG_PATH
                               + "checkbox/CountOrder.gif";

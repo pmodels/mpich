@@ -9,8 +9,8 @@
 
 package logformat.clog2;
 
-import java.io.*;
-import java.util.*;
+// import java.io.*;
+// import java.util.*;
 
 
 public class LineID

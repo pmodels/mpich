@@ -12,10 +12,10 @@ package logformat.slog2.output;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashMap;
+// import java.util.HashMap;
 import java.util.Iterator;
 
-import base.io.MixedDataInput;
+// import base.io.MixedDataInput;
 import base.io.MixedDataOutput;
 import base.drawable.*;
 import logformat.slog2.*;
@@ -229,7 +229,6 @@ public class TreeNode extends BufForDrawables
     //  This is only applicable to the ROOT treenode.
     public void summarizeCategories()
     {
-        BufForShadows   buf;
         // Assume shiftHorizontalShadowBuf() has just been called,
         // so shadowbuf == null, otherwise this function needs to call
         // this.shiftHorizontalShadowBuf()

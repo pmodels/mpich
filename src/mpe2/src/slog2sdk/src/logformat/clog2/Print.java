@@ -9,7 +9,7 @@
 
 package logformat.clog2;
 
-import java.io.*;
+// import java.io.*;
 
 // This program prints the CLOG file format.
 public class Print

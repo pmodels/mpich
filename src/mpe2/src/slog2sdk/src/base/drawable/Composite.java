@@ -10,7 +10,6 @@
 package base.drawable;
 
 import java.awt.Graphics2D;
-import java.awt.Color;
 import java.awt.Point;
 import java.util.Map;
 import java.util.Set;
@@ -18,9 +17,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Iterator;
 import java.util.Arrays;
-import java.io.ByteArrayInputStream;
 
-import base.io.MixedDataInputStream;
 import base.io.MixedDataInput;
 import base.io.MixedDataOutput;
 import base.io.MixedDataIO;

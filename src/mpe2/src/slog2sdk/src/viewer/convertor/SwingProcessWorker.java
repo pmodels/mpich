@@ -9,7 +9,6 @@
 
 package viewer.convertor;
 
-import java.awt.Component;
 import java.awt.event.ActionListener;
 import javax.swing.Timer;
 

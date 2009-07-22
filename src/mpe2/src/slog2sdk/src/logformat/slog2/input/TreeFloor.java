@@ -9,7 +9,7 @@
 
 package logformat.slog2.input;
 
-import java.util.SortedMap;
+// import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -26,6 +26,8 @@ import logformat.slog2.*;
 */
 public class TreeFloor extends TreeMap
 {
+    private static final long  serialVersionUID = 800L;
+
     private short              depth;
     private TimeBoundingBox    timebounds;
     private boolean            isIncreTimeOrdered;

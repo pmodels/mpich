@@ -14,6 +14,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 public class YaxisTreeNode extends DefaultMutableTreeNode
 {
+    private static final long serialVersionUID = 3100L;
+
     public YaxisTreeNode( Object user_obj )
     {
         super( user_obj );

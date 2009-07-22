@@ -20,17 +20,18 @@ import javax.swing.border.*;
 import java.net.URL;
 
 import base.drawable.TimeBoundingBox;
-import logformat.slog2.LineIDMap;
+// import logformat.slog2.LineIDMap;
 import viewer.common.Const;
 import viewer.common.Parameters;
 import viewer.common.SwingWorker;
 
 public class OperationDurationPanel extends JPanel
 {
+    private static final long                serialVersionUID = 4100;
+
     private static final Component           GLUE  = Box.createHorizontalGlue();
 
     private static       Border              Normal_Border = null;
-    private              JButton             stat_btn;
 
     private              TimeBoundingBox     timebox;
     private              SummarizableView    summarizable;

@@ -9,11 +9,12 @@
 
 package viewer.zoomable;
 
-import java.io.*;
 import java.util.*;
 
 public class named_vector extends Vector
 {
+    private static final long  serialVersionUID = 3300L;
+
     private String name;
 
     public named_vector( String in_name )

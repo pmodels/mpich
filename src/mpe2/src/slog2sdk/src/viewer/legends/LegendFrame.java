@@ -9,7 +9,6 @@
 
 package viewer.legends;
 
-import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
@@ -19,6 +18,8 @@ import viewer.common.Dialogs;
 
 public class LegendFrame extends JFrame
 {
+    private static final long     serialVersionUID = 3000L;
+
     private static String         in_filename;      // For main()
 
     private        LegendPanel    top_panel;
@@ -107,7 +108,6 @@ public class LegendFrame extends JFrame
 
     private static void parseCmdLineArgs( String argv[] )
     {
-        String        arg_str;
         StringBuffer  err_msg = new StringBuffer();
         int idx = 0;
         try {  // Unnecessary try block
@@ -137,7 +137,6 @@ public class LegendFrame extends JFrame
         } catch ( NumberFormatException numerr ) {  // Not needed at this moment
             if ( err_msg.length() > 0 )
                 System.err.println( err_msg.toString() );
-            String idx_order_str = indexOrderStr( idx );
             System.err.println( "Error occurs after option "
                               + argv[ idx-1 ] + ", " + indexOrderStr( idx )
                               + " command line argument.  It needs a number." );            // System.err.println( help_msg );

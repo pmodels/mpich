@@ -9,16 +9,18 @@
 
 package viewer.common;
 
-import java.awt.Dimension;
+// import java.awt.Dimension;
 import java.awt.Component;
 import javax.swing.*;
 
 import base.topology.StateBorder;
 import base.topology.PreviewState;
-import base.topology.SummaryState;
+// import base.topology.SummaryState;
 
 public class PreferencePanel extends JPanel
 {
+    private static final long             serialVersionUID    = 1500L;
+
     private static int                    VERTICAL_GAP_HEIGHT = 10;
 
     // Options: Zoomable window reinitialization (requires window restart)

@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.lang.reflect.*;
-import java.io.*;
 
 import base.drawable.*;
 import logformat.clog2.*;
@@ -236,7 +235,7 @@ private class ContentIterator implements Iterator
     private Topo_Event             eventform;
     private Topo_Arrow             arrowform;
     private Topo_State             stateform;
-    private ObjMethod              obj_fn;
+    // private ObjMethod              obj_fn;
     private Object[]               arglist;
 
     public ContentIterator( int kindID )
@@ -348,7 +347,6 @@ private class ContentIterator implements Iterator
     public boolean hasNext()
     {
         ObjMethod       evt_pairing, obj_meth1, obj_meth2;
-        CommProcThdID   commlineID;
         int             bytes_read;
         int             bare_etype, cargo_etype, msg_etype;
         int             rectype;

@@ -10,7 +10,7 @@
 package logformat.clog2;
 
 import java.io.*;
-import java.util.*;
+// import java.util.*;
 
 
 // Class corresponds to CLOG_Rec_CargoEvt
@@ -20,7 +20,7 @@ public class RecCargo
     private static final int BYTESIZE = 4 + 4 
                                       + StrBytes.BYTESIZE;
     public         Integer etype;                  // bare event number
-    private static int     pad;                    // bare event number
+    // private static int     pad;
     public         byte[]  bytes;                  // byte data
 
     //read the record from the given input stream
@@ -28,7 +28,8 @@ public class RecCargo
     {
         try {
             etype   = new Integer( in.readInt() );
-            pad     = in.readInt();
+            // pad     = in.readInt();
+            in.skipBytes( 4 );
             bytes   = new byte[ StrBytes.BYTESIZE ];
             in.readFully( bytes );
         } catch ( IOException ioerr ) {

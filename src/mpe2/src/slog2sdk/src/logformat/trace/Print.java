@@ -18,7 +18,8 @@ public class Print
         System.loadLibrary( "TraceInput" );
     }
 
-    private static String   in_filename, out_filename;
+    private static String   in_filename;
+    // private static String   out_filename;
     private static boolean  enable_endtime_check;
 
     public static final void main( String[] args )
@@ -176,7 +177,6 @@ public class Print
 
     private static void parseCmdLineArgs( String argv[] )
     {
-        String        arg_str;
         int           idx;
         StringBuffer  err_msg       = new StringBuffer();
         StringBuffer  filespec_buf  = new StringBuffer();
@@ -219,7 +219,6 @@ public class Print
         } catch ( NumberFormatException numerr ) {
             if ( err_msg.length() > 0 )
                 System.err.println( err_msg.toString() );
-            String idx_order_str = indexOrderStr( idx );
             System.err.println( "Error occurs after option "
                               + argv[ idx-1 ] + ", " + indexOrderStr( idx )
                               + " command line argument.  It needs a number." );

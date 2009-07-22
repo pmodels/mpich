@@ -10,7 +10,7 @@
 package logformat.clog2;
 
 import java.io.*;
-import java.util.*;
+// import java.util.*;
 
 
 // Class corresponds to CLOG_Rec_BareEvt
@@ -20,14 +20,15 @@ public class RecBare
     private static final int BYTESIZE = 4 + 4;
 
     public         Integer etype;                  // bare event number
-    private static int     pad;
+    // private static int     pad;
 
     //read the record from the given input stream
     public int readFromDataStream( MixedDataInputStream in )
     {
         try {
             etype   = new Integer( in.readInt() );
-            pad     = in.readInt();
+            // pad     = in.readInt();
+            in.skipBytes( 4 );
         } catch ( IOException ioerr ) {
             ioerr.printStackTrace();
             return 0;

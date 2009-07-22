@@ -36,7 +36,6 @@ public class PrintSerially
     public static final void main( String[] args )
     {
         InputLog         slog_ins;
-        CategoryMap      objdefs;
         TreeDir          treedir;
         TimeBoundingBox  timeframe;
         String           err_msg;
@@ -114,6 +113,7 @@ public class PrintSerially
         slog_ins.close();
     }
 
+/*
     private static void printClogArrowMessageSize( Drawable dobj )
     {
         // Test code to extract InfoValue in Drawable
@@ -126,6 +126,7 @@ public class PrintSerially
             }
         }
     }
+*/
 
     private static void scaleTimeBounds( TimeBoundingBox endtimes )
     {
@@ -270,7 +271,6 @@ public class PrintSerially
         } catch ( NumberFormatException numerr ) {
             if ( err_msg.length() > 0 )
                 System.err.println( err_msg.toString() );
-            String idx_order_str = indexOrderStr( idx );
             System.err.println( "Error occurs after option "
                               + argv[ idx-1 ] + ", " + indexOrderStr( idx )
                               + " command line argument.  It needs a number." );            // System.err.println( help_msg );

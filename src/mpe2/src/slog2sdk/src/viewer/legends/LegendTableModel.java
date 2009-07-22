@@ -9,7 +9,6 @@
 
 package viewer.legends;
 
-import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -18,9 +17,8 @@ import java.util.Collections;
 
 import java.awt.Color;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.ListSelectionModel;
+// import javax.swing.ListSelectionModel;
 // import javax.swing.event.ListSelectionListener;
 // import javax.swing.event.ListSelectionEvent;
 
@@ -31,6 +29,8 @@ import logformat.slog2.CategoryMap;
 public class LegendTableModel extends AbstractTableModel
 //                              implements ListSelectionListener
 {
+    private static final long       serialVersionUID       = 2300L;
+
     public  static final int        ICON_COLUMN            = 0;
     public  static final int        NAME_COLUMN            = 1;
     public  static final int        VISIBILITY_COLUMN      = 2;

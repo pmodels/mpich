@@ -10,13 +10,15 @@
 package viewer.zoomable;
 
 import java.awt.*;
-import java.awt.event.*;
+// import java.awt.event.*;
 import javax.swing.*;
 
-import viewer.common.Dialogs;
+// import viewer.common.Dialogs;
 
 public class InfoDialog extends JDialog
 {
+    private static final long  serialVersionUID = 3800L;
+
     private JPanel   btn_panel;
     private JButton  close_btn;
     private double   clicked_time;
@@ -78,6 +80,7 @@ public class InfoDialog extends JDialog
         this.toFront();
     }
 
+    /*
     private class InfoDialogWindowListener extends WindowAdapter
     {
         private InfoDialog  info_popup;
@@ -93,4 +96,5 @@ public class InfoDialog extends JDialog
             Dialogs.info( info_popup, "Use the CLOSE button please!", null );
         }
     }
+    */
 }

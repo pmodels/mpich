@@ -12,10 +12,10 @@ package base.drawable;
 import java.awt.Color;
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+// import java.io.DataInputStream;
+// import java.io.DataOutputStream;
+// import java.io.FileInputStream;
+// import java.io.FileOutputStream;
 import java.util.Arrays;
 
 import base.io.DataIO;
@@ -23,6 +23,8 @@ import base.io.DataIO;
 public class ColorAlpha extends Color
                         implements Comparable, DataIO
 {
+    private static final long       serialVersionUID = 100L;
+
     public static final int         BYTESIZE         = 5;
 
     public static final int         OPAQUE           = 255;
@@ -139,7 +141,6 @@ public class ColorAlpha extends Color
     */
     private static void initDefaultColors()
     {
-        ColorAlpha  color;
         int         ired, igreen, iblue;
         int         vals_length, colors_length, idx;
         int         vals[] = { 0x0, 0x33, 0x66, 0x99, 0xCC, 0xFF };

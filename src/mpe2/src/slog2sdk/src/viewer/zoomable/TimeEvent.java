@@ -18,7 +18,10 @@ import java.util.EventObject;
  *
  * @author Anthony Chan
  */
-public class TimeEvent extends EventObject {
+public class TimeEvent extends EventObject
+{
+    private static final long serialVersionUID = 3400L;
+
     /**
      * Constructs a TimeEvent object.
      *

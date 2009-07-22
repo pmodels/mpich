@@ -10,10 +10,8 @@
 package viewer.timelines;
 
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
-import javax.swing.event.*;
 
 import base.drawable.Drawable;
 import base.drawable.Method;
@@ -38,6 +36,8 @@ import viewer.zoomable.RowAdjustments;
 
 public class TimelinePanel extends JPanel
 {
+    private static final long       serialVersionUID = 13500L;
+
     private Window                  root_window;
     private InputLog                slog_ins;
     private TreeTrunk               treetrunk;

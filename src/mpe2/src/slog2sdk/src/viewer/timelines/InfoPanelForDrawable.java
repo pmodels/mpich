@@ -16,7 +16,6 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.tree.TreeNode;
 import java.util.Map;
-import java.util.Iterator;
 
 import base.drawable.Coord;
 import base.drawable.Topology;
@@ -38,6 +37,8 @@ import viewer.zoomable.YaxisTreeNode;
 
 public class InfoPanelForDrawable extends SearchPanel // SearchPanel is JPanel
 {
+    private static final long           serialVersionUID = 13100L;
+
     private static final Component      STRUT = Box.createHorizontalStrut( 10 );
     private static final Component      GLUE  = Box.createHorizontalGlue();
 

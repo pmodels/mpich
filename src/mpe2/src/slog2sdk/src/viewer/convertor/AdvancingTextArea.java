@@ -13,6 +13,8 @@ import javax.swing.JTextArea;
 
 public class AdvancingTextArea extends JTextArea
 {
+    private static final long serialVersionUID = 11000L;
+
     public AdvancingTextArea()
     { super(); }
 

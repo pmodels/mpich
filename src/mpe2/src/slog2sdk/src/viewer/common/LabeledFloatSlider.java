@@ -24,6 +24,8 @@ public class LabeledFloatSlider extends LabeledTextField
                                 implements ChangeListener,
                                            ActionListener
 {
+    private static final  long  serialVersionUID = 1300L;
+
     private static final  int   SLIDER_MIN    = 0;
     private static final  int   SLIDER_MAX    = 10000;
     private static final  int   SLIDER_EXTENT = SLIDER_MAX - SLIDER_MIN;

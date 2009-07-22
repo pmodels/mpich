@@ -29,6 +29,8 @@ import viewer.common.ActableTextField;
 
 public class FirstPanel extends JPanel
 {
+    private static final long    serialVersionUID = 14100L;
+
     private static String        about_str = "Jumpshot-4, the SLOG-2 viewer.\n"
                                            + "bug-reports/questions:\n"
                                            + "            chan@mcs.anl.gov";
@@ -172,9 +174,11 @@ public class FirstPanel extends JPanel
 
     private JToolBar createToolBarAndButtons( int orientation )
     {
+        /*
         Border    raised_border, empty_border;
         raised_border   = BorderFactory.createRaisedBevelBorder();
         empty_border    = BorderFactory.createEmptyBorder();
+        */
 
         JToolBar  toolbar;
         toolbar         = new JToolBar( orientation );

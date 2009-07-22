@@ -10,7 +10,7 @@
 package base.topology;
 
 import java.awt.Graphics2D;
-import java.awt.Insets;
+// import java.awt.Insets;
 import java.awt.Color;
 import java.awt.Point;
 import java.util.Arrays;
@@ -23,8 +23,8 @@ import base.statistics.TimeAveBox;
 public class SummaryState
 {
     // private static StateBorder BorderStyle = StateBorder.COLOR_XOR_BORDER;
+    // private static StateBorder BackBorder  = StateBorder.COLOR_XOR_BORDER;
     private static StateBorder BorderStyle  = StateBorder.WHITE_RAISED_BORDER;
-    private static StateBorder BackBorder   = StateBorder.COLOR_XOR_BORDER;
     private static Color       BackColor    = Color.black;
     public  static Color       ForeColor    = Color.white;
 
@@ -92,6 +92,7 @@ public class SummaryState
         return    DisplayType == CUMULATIVE_EXCLUSION_ID;
     }
 
+/*
     private static        int    MinCategoryHeight          = 2;  
     private static        int    MinCategorySeparation      = 4;  
 
@@ -99,6 +100,7 @@ public class SummaryState
     {
         MinCategoryHeight  = new_min_category_height;
     }
+*/
 
     /*
         Draw a Rectangle between left-upper vertex (start_time, start_ypos) 
