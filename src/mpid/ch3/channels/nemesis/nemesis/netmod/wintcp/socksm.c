@@ -41,9 +41,17 @@ sockconn_t MPID_nem_newtcp_module_g_lstn_sc;
    unused */
 static MPID_nem_newtcp_module_vc_area *dummy_vc_area ATTRIBUTE((unused, used)) = NULL;
 
-#define MAX_SKIP_POLLS_INACTIVE (512) /* something bigger */
+#define MIN_SKIP_POLLS_INACTIVE (512)
+#define SKIP_POLLS_INC_CNT  (512)
+#define MAX_SKIP_POLLS_INACTIVE (2048)
+#define SKIP_POLLS_INC(cnt) (                               \
+    (cnt >= MAX_SKIP_POLLS_INACTIVE)                        \
+    ? (cnt = MIN_SKIP_POLLS_INACTIVE)                       \
+    : (cnt += SKIP_POLLS_INC_CNT)                           \
+)
+
 #define MAX_SKIP_POLLS_ACTIVE (128)   /* something smaller */
-static int MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_INACTIVE;
+static int MPID_nem_tcp_skip_polls = MIN_SKIP_POLLS_INACTIVE;
 
 /* Debug function to dump the sockconn table.  This is intended to be
    called from a debugger.  The 'unused' attribute keeps the compiler
@@ -1800,8 +1808,10 @@ int MPID_nem_newtcp_module_connpoll(int in_blocking_poll)
     /* To improve shared memory performance, we don't call the poll()
      * systemcall every time. The MPID_nem_tcp_skip_polls value is
      * changed depending on whether we have any active connections. */
-    if (in_blocking_poll && num_skipped_polls++ < MPID_nem_tcp_skip_polls)
+    if (in_blocking_poll && num_skipped_polls++ < MPID_nem_tcp_skip_polls){
         goto fn_exit;
+    }
+    SKIP_POLLS_INC(MPID_nem_tcp_skip_polls);
     num_skipped_polls = 0;
 
     /* num_polled is needed b/c the call to it_sc->handler() can change the
