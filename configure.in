@@ -538,6 +538,30 @@ export WRAPPER_CXXFLAGS
 export WRAPPER_FFLAGS
 export WRAPPER_F90FLAGS
 
+
+dnl Deal with the MPICH2LIB_xFLAGS variables.  These must come after the
+dnl WRAPPER_xFLAGS variables are set but before we attempt to add more flags to
+dnl xFLAGS via macros like PAC_CC_STRICT.  We don't attempt to validate the user's
+dnl flags but we do generally attempt to validate flags that we add ourselves.  If
+dnl flags specified by the user conflict with flags that we add, the user-specified
+dnl flags should generally be preferred.  Hence the user-specified flags must come
+dnl before such macros.
+dnl
+dnl (this is a dnl comment because maint/updatefiles complains about finding the
+dnl  string "PAC_" in a generated configure script)
+if test -n "$MPICH2LIB_CFLAGS" ; then
+    CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
+fi
+if test -n "$MPICH2LIB_FFLAGS" ; then
+    FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
+fi
+if test -n "$MPICH2LIB_F90FLAGS" ; then
+    F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"
+fi
+if test -n "$MPICH2LIB_CXXFLAGS" ; then
+    CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
+fi
+
 # -----------------------------------------------------------------------------
 # First check that we have a clean build if we are doing a VPATH build
 PAC_VPATH_CHECK(src/include/mpi.h src/env/mpicc src/env/mpicc.conf,lib)
