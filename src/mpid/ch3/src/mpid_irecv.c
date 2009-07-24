@@ -79,7 +79,10 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 		if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    }
 
-            MPIDI_Request_recv_pending(rreq, &recv_pending);
+            /* the request was found in the unexpected queue, so it has a
+               recv_pending_count of at least 1 */
+            MPIDI_Request_decr_pending(rreq);
+            MPIDI_Request_check_pending(rreq, &recv_pending);
 	    if (!recv_pending)
 	    {
 		/* All of the data has arrived, we need to copy the data and 

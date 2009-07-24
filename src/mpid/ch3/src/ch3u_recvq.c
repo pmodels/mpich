@@ -509,6 +509,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 	int mpi_errno=0;
 	MPIDI_Request_create_rreq( rreq, mpi_errno, 
 				   found=FALSE;goto lock_exit );
+        rreq->dev.recv_pending_count = 1;
 	rreq->dev.match	= *match;
 	rreq->dev.next	= NULL;
 	if (recvq_unexpected_tail != NULL) {

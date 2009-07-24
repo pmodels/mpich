@@ -447,11 +447,17 @@ extern MPIDI_Process_t MPIDI_Process;
     (req_)->dev.cancel_pending = TRUE;			\
 }
 
-/* FIXME: Why does this have a side effect? */
-#define MPIDI_Request_recv_pending(req_, recv_pending_)	\
-    {								\
- 	*(recv_pending_) = --(req_)->dev.recv_pending_count;	\
-    }
+/* the following two macros were formerly a single confusing macro with side
+   effects named MPIDI_Request_recv_pending() */
+#define MPIDI_Request_check_pending(req_, recv_pending_)   \
+    do {                                                   \
+        *(recv_pending_) = (req_)->dev.recv_pending_count; \
+    } while (0)
+
+#define MPIDI_Request_decr_pending(req_)    \
+    do {                                    \
+        --(req_)->dev.recv_pending_count;   \
+    } while (0)
 
 /* MPIDI_Request_fetch_and_clear_rts_sreq() - atomically fetch current 
    partner RTS sreq and nullify partner request */

@@ -244,6 +244,8 @@ typedef struct MPIDI_Request {
 
     unsigned int   state;
     int            cancel_pending;
+    /* FIXME the precise meaning of this field is unclear, comments/docs
+       about it should be added */
     int            recv_pending_count;
 
     /* The next 8 are for RMA */
