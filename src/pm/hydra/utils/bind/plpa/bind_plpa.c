@@ -16,9 +16,7 @@ HYD_Status HYDU_bind_plpa_init(char *user_bind_map, HYDU_bind_support_level_t *s
 {
     PLPA_NAME(api_type_t) p;
     int ret, i, j;
-    int num_procs, max_proc_id;
-    int num_sockets = -1, max_socket_id;
-    int num_cores = -1, max_core_id;
+    int max_proc_id, max_socket_id, max_core_id;
     int socket, core;
     char *str;
     HYD_Status status = HYD_SUCCESS;
@@ -90,7 +88,7 @@ HYD_Status HYDU_bind_plpa_init(char *user_bind_map, HYDU_bind_support_level_t *s
             HYDU_bind_info.bind_map[i][j] = -1;
     }
 
-    for (i = 0; i < num_sockets * num_cores; i++) {
+    for (i = 0; i < HYDU_bind_info.num_procs; i++) {
         ret = PLPA_NAME(map_to_socket_core) (i, &socket, &core);
         if (ret) {
             /* Unable to get number of cores */
