@@ -101,9 +101,6 @@ int HYDU_bind_get_core_id(int id, HYD_Binding_t binding)
                 return HYDU_bind_info.user_bind_map[realid];
         }
     }
-    else {
-        HYDU_Error_printf("Process-core binding is not supported on this platform\n");
-    }
 
     HYDU_FUNC_EXIT();
     return -1;
