@@ -185,7 +185,7 @@ elif test "$V4" = "p" ; then
 fi
 if test "$V5" -le 9 ; then V5=0$V5 ; fi
 
-NUMVERSION=$V1$V2$V3$V4$V5
+NUMVERSION=`expr $V1$V2$V3$V4$V5 + 0`
 AC_SUBST(NUMVERSION)
 AC_SUBST(VERSION)
 
