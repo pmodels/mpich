@@ -1,4 +1,4 @@
-AC_PREREQ(2.59)
+dnl AC_PREREQ(2.59)
 AC_INIT(configure.in)
 
 dnl The MPICH2 top-level configure adds a bunch of flags to the

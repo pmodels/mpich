@@ -4,7 +4,7 @@ dnl aclocal_cache.m4, included by sowing/confdb/aclocal.m4, fixes
 dnl bugs in autoconf caching.
 dnl
 dnl The file name here refers to a file in the source being configured
-AC_PREREQ(2.59)
+dnl AC_PREREQ(2.59)
 AC_INIT(simple_pmi.c)
 
 dnl The MPICH2 top-level configure adds a bunch of flags to the

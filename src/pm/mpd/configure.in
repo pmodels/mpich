@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 # Autoconf initialization:
 AC_INIT(mpdroot.h)
-AC_PREREQ(2.59)
+dnl AC_PREREQ(2.59)
 
 dnl The MPICH2 top-level configure adds a bunch of flags to the
 dnl user-defined CFLAGS by processing different configure command-line

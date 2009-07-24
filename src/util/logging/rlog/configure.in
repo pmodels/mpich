@@ -1,4 +1,4 @@
-AC_PREREQ(2.59)
+dnl AC_PREREQ(2.59)
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl The file name here refers to a file in the source being configured
