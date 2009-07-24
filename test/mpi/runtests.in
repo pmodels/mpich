@@ -67,6 +67,8 @@ $depth = 0;              # This is used to manage multiple open list files
 $remove_this_pgm = 0;
 $clean_pgms      = 1;
 
+my $program_wrapper = '';
+
 #---------------------------------------------------------------------------
 # Get some arguments from the environment
 #   Currently, only the following are understood:
@@ -76,6 +78,9 @@ $clean_pgms      = 1;
 #   RUNTESTS_SHOWPROGRESS
 #   MPITEST_STOPTEST
 #   MPITEST_TIMEOUT
+#   MPITEST_PROGRAM_WRAPPER (Value is added after -np but before test
+#                            executable.  Tools like valgrind may be inserted
+#                            this way.)
 #---------------------------------------------------------------------------
 if ( defined($ENV{"VERBOSE"}) || defined($ENV{"RUNTESTS_VERBOSE"}) ) {
     $verbose = 1;
@@ -100,6 +105,9 @@ if (defined($ENV{'NOXMLCLOSE'}) && $ENV{'NOXMLCLOSE'} eq 'YES') {
     $closeXMLOutput = 0;
 }
 
+if (defined($ENV{'MPITEST_PROGRAM_WRAPPER'})) {
+    $program_wrapper = $ENV{'MPITEST_PROGRAM_WRAPPER'};
+}
 
 #---------------------------------------------------------------------------
 # Process arguments and override any defaults
@@ -426,7 +434,7 @@ sub RunMPIProgram {
 	&$InitForTest();
     }
     print STDOUT "Env includes $progEnv\n" if $verbose;
-    print STDOUT "$mpiexec $np_arg $np ./$programname $progArgs\n" if $verbose;
+    print STDOUT "$mpiexec $np_arg $np $program_wrapper ./$programname $progArgs\n" if $verbose;
     print STDOUT "." if $showProgress;
     # Save and restore the environment if necessary before running mpiexec.
     if ($progEnv ne "") {
@@ -440,7 +448,7 @@ sub RunMPIProgram {
 	    }
 	}
     }
-    open ( MPIOUT, "$mpiexec $np_arg $np $mpiexecArgs ./$programname $progArgs 2>&1 |" ) ||
+    open ( MPIOUT, "$mpiexec $np_arg $np $mpiexecArgs $program_wrapper ./$programname $progArgs 2>&1 |" ) ||
 	 die "Could not run ./$programname\n";
     if ($progEnv ne "") {
 	%ENV = %saveEnv;
@@ -451,7 +459,7 @@ sub RunMPIProgram {
     }
     else {
 	if ($verbose) {
-	    $inline = "$mpiexec $np_arg $np ./$programname\n";
+	    $inline = "$mpiexec $np_arg $np $program_wrapper ./$programname\n";
 	}
 	else {
 	    $inline = "";
