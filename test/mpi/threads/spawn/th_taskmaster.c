@@ -25,7 +25,7 @@ int comm_world_size;
 
 void process_spawn(MPI_Comm * comm, int thread_id)
 {
-    CHECK_SUCCESS(MPI_Comm_spawn("./taskmaster", (char **) NULL, 1, MPI_INFO_NULL, 0,
+    CHECK_SUCCESS(MPI_Comm_spawn("./th_taskmaster", (char **) NULL, 1, MPI_INFO_NULL, 0,
 				 MPI_COMM_WORLD, comm, NULL));
 }
 
