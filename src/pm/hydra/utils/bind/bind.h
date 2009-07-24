@@ -9,8 +9,14 @@
 
 #include "hydra_utils.h"
 
+typedef enum {
+    HYDU_BIND_NONE = 0,
+    HYDU_BIND_BASIC,
+    HYDU_BIND_TOPO
+} HYDU_bind_support_level_t;
+
 struct HYDU_bind_info {
-    int supported;
+    HYDU_bind_support_level_t support_level;
     int num_procs;
     int num_sockets;
     int num_cores;

@@ -19,11 +19,11 @@ HYD_Status HYDU_bind_init(HYD_Bindlib_t bindlib, char *user_bind_map)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_bind_info.supported = 0;
+    HYDU_bind_info.support_level = HYDU_BIND_NONE;
 
 #if defined HAVE_PLPA
     if (bindlib == HYD_BINDLIB_PLPA) {
-        status = HYDU_bind_plpa_init(user_bind_map, &HYDU_bind_info.supported);
+        status = HYDU_bind_plpa_init(user_bind_map, &HYDU_bind_info.support_level);
         HYDU_ERR_POP(status, "unable to initialize plpa\n");
     }
 #endif /* HAVE_PLPA */
@@ -43,10 +43,8 @@ HYD_Status HYDU_bind_process(int core)
     HYDU_FUNC_ENTER();
 
 #if defined HAVE_PLPA
-    if (HYDU_bind_info.supported) {
-        status = HYDU_bind_plpa_process(core);
-        HYDU_ERR_POP(status, "PLPA failure binding process to core\n");
-    }
+    status = HYDU_bind_plpa_process(core);
+    HYDU_ERR_POP(status, "PLPA failure binding process to core\n");
 #endif /* HAVE_PLPA */
 
   fn_exit:
@@ -64,41 +62,51 @@ int HYDU_bind_get_core_id(int id, HYD_Binding_t binding)
 
     HYDU_FUNC_ENTER();
 
-    if (HYDU_bind_info.supported) {
-        realid = (id % (HYDU_bind_info.num_cores * HYDU_bind_info.num_sockets));
+    if (HYDU_bind_info.support_level != HYDU_BIND_NONE) {
+        realid = (id % HYDU_bind_info.num_procs);
 
-        if (binding == HYD_BIND_RR) {
-            return realid;
-        }
-        else if (binding == HYD_BIND_BUDDY) {
-            /* If we reached the maximum, loop around */
-            curid = 0;
-            for (core = 0; core < HYDU_bind_info.num_cores; core++) {
-                for (socket = 0; socket < HYDU_bind_info.num_sockets; socket++) {
-                    if (curid == realid)
-                        return HYDU_bind_info.bind_map[socket][core];
-                    curid++;
-                }
-            }
-        }
-        else if (binding == HYD_BIND_PACK) {
-            curid = 0;
-            for (socket = 0; socket < HYDU_bind_info.num_sockets; socket++) {
-                for (core = 0; core < HYDU_bind_info.num_cores; core++) {
-                    if (curid == realid)
-                        return HYDU_bind_info.bind_map[socket][core];
-                    curid++;
-                }
-            }
-        }
-        else if (binding == HYD_BIND_NONE) {
+        /* NONE, RR and USER are supported at the basic binding
+         * level */
+        if (binding == HYD_BIND_NONE) {
             return -1;
+        }
+        else if (binding == HYD_BIND_RR) {
+            return realid;
         }
         else if (binding == HYD_BIND_USER) {
             if (!HYDU_bind_info.user_bind_valid)
                 return -1;
             else
                 return HYDU_bind_info.user_bind_map[realid];
+        }
+
+        /* If we reached here, the user requested for topology aware
+         * binding. */
+        if (HYDU_bind_info.support_level == HYDU_BIND_TOPO) {
+            if (binding == HYD_BIND_BUDDY) {
+                /* If we reached the maximum, loop around */
+                curid = 0;
+                for (core = 0; core < HYDU_bind_info.num_cores; core++) {
+                    for (socket = 0; socket < HYDU_bind_info.num_sockets; socket++) {
+                        if (curid == realid)
+                            return HYDU_bind_info.bind_map[socket][core];
+                        curid++;
+                    }
+                }
+            }
+            else if (binding == HYD_BIND_PACK) {
+                curid = 0;
+                for (socket = 0; socket < HYDU_bind_info.num_sockets; socket++) {
+                    for (core = 0; core < HYDU_bind_info.num_cores; core++) {
+                        if (curid == realid)
+                            return HYDU_bind_info.bind_map[socket][core];
+                        curid++;
+                    }
+                }
+            }
+        }
+        else {
+            HYDU_Error_printf("Topology-aware binding is not supported on this platform\n");
         }
     }
 
