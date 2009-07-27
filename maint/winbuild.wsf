@@ -1,0 +1,214 @@
+<package>
+<job id="winbuild">
+    <runtime>
+        <description> Build MPICH2 on windows using windows makefile </description>
+        <unnamed
+            name = "--with-cpu"
+            helpstring = "Specify the target CPU. Supports x86, x64. Eg: --with-cpu=x86"
+            required = "false"
+        />
+        <unnamed
+            name = "--build"
+            helpstring = "Specify the build type. Supports Release, Debug. Eg: --build=Release"
+            required = "false"
+        />
+        <unnamed
+            name = "--with-appver"
+            helpstring = "Specify the appver. Eg: --with-appver=0x502"
+            required = "false"
+        />
+        <unnamed
+            name = "--build-dir"
+            helpstring = "Specify the directory containing the windows makefile. Eg: --build-dir=c:\jay\downloads\mpich2\winbuild. The default is the current directory."
+            required = "false"
+        />
+        <unnamed
+            name = "--with-channel"
+            helpstring = "Specify the channels to build. Supported channels are shm, ssm, sock, nemesis. Eg: --with-channel=nemesis,sock. By default all channels are built."
+            required = "false"
+        />
+        <unnamed
+            name = "--disable-profiling"
+            helpstring = "Specify to disable building profiled dlls. Eg: --disable-profiling"
+            required = "false"
+        />
+        <unnamed
+            name = "--disable-fortran"
+            helpstring = "Specify to disable building fortran interface files. Eg: --disable-fortran"
+            required = "false"
+        />
+        <unnamed
+            name = "--disable-gcc"
+            helpstring = "Specify to disable building gcc libs. Eg: --disable-gcc"
+            required = "false"
+        />
+        <unnamed
+            name = "--verbose"
+            helpstring = "Specify to enable verbose output. Eg: --verbose"
+            required = "false"
+        />
+        <example> Usage: cscript winbuild.wsf [--with-cpu=x86|x64] [--build=Release|Debug] [--with-appver=APPVER_NUM] [--build-dir=DIR_WITH_MAKEFILE] [--with-channel=...] [--disable-fortran] [--disable-gcc] </example>
+    </runtime>
+
+    <script language="VBScript">
+        Option Explicit
+        'Init vars
+        Dim cpu_type, build_type, appver, build_dir
+        Dim default_channel_array, user_channel_array 
+        Dim misc_targets_array, gcc_targets_array, fort_targets_array
+        Dim disable_profiling, disable_fortran, disable_gcc
+        Dim verbose_output
+        Dim vs_shell, cmd, cmd_output
+        Dim nmake_cmd_prefix, nmake_cmd_suffix
+
+        Dim i, arg, arg_cnt, arg_val, arg_option, tmp_str_array
+        Dim fso, tmp_build_script, TMP_BUILDSCRIPT_NAME
+    
+
+        TMP_BUILDSCRIPT_NAME = "build_tmp_01.bat"
+        
+        default_channel_array = Array("nemesis", "sock", "mt", "ssm", "shm")
+        misc_targets_array = Array("cxx", "sfort", "irlog2rlog", "TraceInput")
+        gcc_targets_array = Array("gcc_libs")
+        fort_targets_array = Array("fort", "mpi_mod", "gfort")
+
+        disable_profiling = False
+        disable_fortran = False
+        disable_gcc = False
+
+        verbose_output = False
+        
+        ' Parse the Arguments
+        arg_cnt = WScript.Arguments.Count
+        For arg = 0 To arg_cnt - 1
+            arg_val = WScript.Arguments(arg)
+            arg_option = Split(arg_val, "=", -1, 1)
+
+            If arg_option(0) = "--with-cpu" Then
+                If UBound(arg_option, 1) <> 1 Then
+                    WScript.Echo "Invalid format for --with-cpu option"
+                    WScript.Quit(-1)
+                Else
+                    cpu_type = arg_option(1)
+                End If
+            ElseIf arg_option(0) = "--build" Then
+                If UBound(arg_option, 1) <> 1 Then
+                    WScript.Echo "Invalid format for --with-build option"
+                    WScript.Quit(-1)
+                Else
+                    If (arg_option(0) = "Release") Or (arg_option(0) = "Debug") Then
+                        build_type = arg_option(0)
+                    Else
+                        WScript.Echo "Invalid format for --build"
+                        WScript.Quit(-1)
+                    End If
+                End If
+            ElseIf arg_option(0) = "--with-appver" Then
+                If UBound(arg_option, 1) <> 1 Then
+                    WScript.Echo "Invalid format for --with-appver option"
+                    WScript.Quit(-1)
+                Else
+                    appver = arg_option(1)
+                End If
+            ElseIf arg_option(0) = "--build-dir" Then
+                If UBound(arg_option, 1) <> 1 Then
+                    WScript.Echo "Invalid format for --build-dir option"
+                    WScript.Quit(-1)
+                Else
+                    build_dir = arg_option(1)
+                End If
+            ElseIf arg_option(0) = "--with-channel" Then
+                If UBound(arg_option, 1) <> 1 Then
+                    WScript.Echo "Invalid format for --with-channel option"
+                    WScript.Quit(-1)
+                Else
+                    user_channel_array = Split(arg_option(1), ",", -1, 1)
+                    ' FIXME: We don't validate the channel names
+                End If
+            ElseIf arg_option(0) = "--disable-profiling" Then
+                disable_profiling = True
+            ElseIf arg_option(0) = "--disable-fortran" Then
+                disable_fortran = True
+            ElseIf arg_option(0) = "--disable-gcc" Then
+                disable_gcc = True
+            Else
+                WScript.Echo "Unknown option: " & arg_option(0)
+                WScript.Quit(-1)
+            End If
+        Next
+
+        ' Create temp build script
+        Set fso = CreateObject("Scripting.FileSystemObject")
+        Set tmp_build_script = fso.CreateTextFile(TMP_BUILDSCRIPT_NAME, True)
+
+        nmake_cmd_prefix="nmake"
+        nmake_cmd_suffix=" > make.log 2>&1"
+
+        If Not IsEmpty(cpu_type) Then
+            nmake_cmd_prefix = nmake_cmd_prefix & " CPU=" & cpu_type
+        End If
+        If Not IsEmpty(build_type) Then
+            If build_type = "Release" Then
+                nmake_cmd_prefix = nmake_cmd_prefix & " NODEBUG=1"
+            End If
+        End If
+        If Not IsEmpty(appver) Then
+            nmake_cmd_prefix = nmake_cmd_prefix & " APPVER=" & appver
+        End If
+
+        ' Write default target
+        tmp_build_script.WriteLine(nmake_cmd_prefix & nmake_cmd_suffix)
+
+        If IsEmpty(user_channel_array) Then
+            For i=0 to UBound(default_channel_array, 1)
+                tmp_build_script.WriteLine(nmake_cmd_prefix & " CHANNEL=" & default_channel_array(i) & " " & nmake_cmd_suffix)
+                If Not disable_profiling Then
+                    tmp_build_script.WriteLine(nmake_cmd_prefix & " CHANNEL=" & default_channel_array(i) & " RLOG=1 " & nmake_cmd_suffix)
+                End If
+            Next
+        Else
+            For i=0 to UBound(user_channel_array, 1)
+                tmp_build_script.WriteLine(nmake_cmd_prefix & " CHANNEL=" & user_channel_array(i) & " " & nmake_cmd_suffix)
+                If Not disable_profiling Then
+                    tmp_build_script.WriteLine(nmake_cmd_prefix & " CHANNEL=" & user_channel_array(i) & " RLOG=1 " & nmake_cmd_suffix)
+                End If
+            Next
+        End If
+
+        ' Add misc targets
+        For i=0 to UBound(misc_targets_array, 1)
+            tmp_build_script.WriteLine(nmake_cmd_prefix & " " & misc_targets_array(i))
+        Next
+
+        If Not disable_fortran Then
+            For i=0 to UBound(fort_targets_array, 1)
+                tmp_build_script.WriteLine(nmake_cmd_prefix & " " & fort_targets_array(i))
+            Next
+        End If
+
+        If Not disable_gcc Then
+            For i=0 to UBound(gcc_targets_array, 1)
+                tmp_build_script.WriteLine(nmake_cmd_prefix & " " & gcc_targets_array(i))
+            Next
+        End If
+
+        tmp_build_script.Close()
+
+        ' Execute the build script
+
+        Set vs_shell = WScript.CreateObject("WScript.Shell")
+        'Set vs_env = vs_shell.Environment("PROCESS")
+
+        ' Call nmake on targets
+        'cmd = "nmake > make.log 2>&1 "
+        cmd = TMP_BUILDSCRIPT_NAME
+        vs_shell.Run cmd, 0, True
+        'Do While cmd_output.status = 0
+        '    WScript.Sleep 10
+        'Loop
+        'WScript.Echo cmd_output.StdOut.ReadAll, cmd_output.StdErr.ReadAll
+
+    </script>
+
+</job>
+</package>
