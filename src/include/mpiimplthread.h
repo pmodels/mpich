@@ -35,6 +35,7 @@
 #define MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL 2
 #define MPIU_THREAD_GRANULARITY_PER_OBJECT 3
 #define MPIU_THREAD_GRANULARITY_LOCK_FREE 4
+#define MPIU_THREAD_GRANULARITY_SINGLE 5
 
 /*
  * Define possible thread implementations that could be selected at 
