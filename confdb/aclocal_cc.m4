@@ -55,15 +55,23 @@ dnl that complain about poor code are in effect.
 dnl
 dnl Because this is a long script, we have ensured that you can pass a 
 dnl variable containing the option name as the first argument.
+dnl
+dnl gcc 4.2.4 on 32-bit does not complain about the -Wno-type-limits option 
+dnl even though it doesn't support it.  However, when another warning is 
+dnl triggered, it gives an error that the option is not recognized.  So we 
+dnl need to test with a conftest file that will generate warnings
 dnl D*/
 AC_DEFUN([PAC_C_CHECK_COMPILER_OPTION],[
 AC_MSG_CHECKING([whether C compiler accepts option $1])
 pccco_save_CFLAGS="$CFLAGS"
 CFLAGS="$1 $CFLAGS"
 rm -f conftest.out
+dnl conftest3.c has an invalid prototype to ensure we generate warnings
+echo 'int main(){}' > conftest3.c
 echo 'int foo(void);int foo(void){return 0;}' > conftest2.c
 echo 'int main(void);int main(void){return 0;}' > conftest.c
-if ${CC-cc} $pccco_save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
+if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest3.c $LDFLAGS >/dev/null 2>&1 &&
+   ${CC-cc} $pccco_save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
    if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.out 2>&1 ; then
       if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
          AC_MSG_RESULT(yes)
@@ -1085,22 +1093,21 @@ if test "$enable_strict_done" != "yes" ; then
     #   -Wno-sign-compare -- read() and write() return bytes read/written
     #       as a signed value, but we often compare this to size_t (or
     #	    msg_sz_t) variables.
+    #   -Wno-format-zero-length -- this warning is irritating and useless, since
+    #                              a zero-length format string is very well defined
+    #   -Wno-type-limits -- There are places where we compare an unsigned to 
+    #	    a constant that happens to be zero e.g., if x is unsigned and 
+    #	    MIN_VAL is zero, we'd like to do "MPIU_Assert(x >= MIN_VAL);".
+    #       Note this option is not supported by gcc 4.2.  This needs to be added 
+    #	    after most other warning flags, so that we catch a gcc bug on 32-bit 
+    #	    that doesn't give a warning that this is unsupported, unless another
+    #	    warning is triggered, and then if gives an error.
     # These were removed to reduce warnings:
     #   -Wcast-qual -- Sometimes we need to cast "volatile char*" to 
     #	    "char*", e.g., for memcpy.
     #   -Wpadded -- We catch struct padding with asserts when we need to
     #   -Wredundant-decls -- Having redundant declarations is benign and the 
     #	    code already has some.
-    #   -Wno-format-zero-length -- this warning is irritating and useless, since
-    #                              a zero-length format string is very well defined
-    #
-    # This was removed because it doesn't seem to reliably detected by gcc as an
-    # invalid option (see ticket #729):
-    #   -Wno-type-limits -- There are places where we compare an unsigned to 
-    #	    a constant that happens to be zero e.g., if x is unsigned and 
-    #	    MIN_VAL is zero, we'd like to do "MPIU_Assert(x >= MIN_VAL);".
-    #       Note this option is not supported by gcc 4.2.
-
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
@@ -1137,6 +1144,7 @@ if test "$enable_strict_done" != "yes" ; then
         -Wvariadic-macros
         -std=c89
         -Wno-format-zero-length
+	-Wno-type-limits
     "
     pac_cc_strict_flags=""
     case "$1" in 
