@@ -10,24 +10,24 @@
  * Threads
  */
 
-/* MPE_Thread_create() defined in mpe_thread_win.c */
+/* MPIU_Thread_create() defined in mpiu_thread.c */
 
-#define MPE_Thread_exit()			\
+#define MPIU_Thread_exit()			\
 {						\
     ExitThread(0);				\
 }
 
-#define MPE_Thread_self(id_)			\
+#define MPIU_Thread_self(id_)			\
 {						\
     *(id_) = GetCurrentThread();		\
 }
 
-#define MPE_Thread_same(id1_, id2_, same_)		\
+#define MPIU_Thread_same(id1_, id2_, same_)		\
 {							\
     *(same_) = (*(id1_) == *(id2_)) ? TRUE : FALSE;	\
 }
 
-#define MPE_Thread_yield()				\
+#define MPIU_Thread_yield()				\
 {							\
     Sleep(0);						\
 }
@@ -37,7 +37,7 @@
  *    Mutexes
  */
 
-#define MPE_Thread_mutex_create(mutex_ptr_, err_ptr_)		\
+#define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)		\
 {								\
     *(mutex_ptr_) = CreateMutex(NULL, FALSE, NULL);		\
     if ((err_ptr_) != NULL)                                     \
@@ -48,12 +48,12 @@
         }							\
         else                                                    \
         {                                                       \
-            *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;        \        
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \        
         }                                                       \
     }                                                           \
 }
 
-#define MPE_Thread_mutex_destroy(mutex_ptr_, err_ptr_)		\
+#define MPIU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)		\
 {								\
     BOOL err__;							\
 								\
@@ -62,7 +62,7 @@
     {								\
         if (err__)                                              \
         {                                                       \
-	    *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;	\
+	    *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;	\
 	}                                                       \
 	else                                                    \
 	{                                                       \
@@ -71,7 +71,7 @@
     }								\
 }
 
-#define MPE_Thread_mutex_lock(mutex_ptr_, err_ptr_)		\
+#define MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_)		\
 {								\
     DWORD err__;						\
 								\
@@ -80,7 +80,7 @@
     {								\
         if (err__ == WAIT_OBJECT_0)                             \
         {                                                       \
-            *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;        \
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \
         }                                                       \
         else                                                    \
         {                                                       \
@@ -92,7 +92,7 @@
     }								\
 }
 
-#define MPE_Thread_mutex_unlock(mutex_ptr_, err_ptr_)		\
+#define MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_)		\
 {								\
     BOOL result__;						\
 								\
@@ -100,13 +100,13 @@
     if ((err_ptr_) != NULL)					\
     {								\
         if (result__)                                           \
-	    *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;	\
+	    *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;	\
 	else                                                    \
 	    *(int *)(err_ptr_) = GetLastError();                \
     }								\
 }
 
-#define MPE_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)		\
+#define MPIU_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)		\
 {										\
     DWORD err__;						\
 								\
@@ -115,7 +115,7 @@
     {                                                           \
         *(flag_ptr_) = TRUE;                                    \
         if ((err_ptr_) != NULL)                                 \
-            *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;        \
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \
     }                                                           \
     else                                                        \
     {                                                           \
@@ -124,7 +124,7 @@
         {                                                       \
             if (err__ == WAIT_TIMEOUT)                          \
             {                                                   \
-                *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;    \
+                *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;    \
             }                                                   \
             else                                                \
             {                                                   \
@@ -142,45 +142,45 @@
  * Condition Variables
  */
 
-#define MPE_Thread_cond_create(cond_ptr_, err_ptr_)		\
+#define MPIU_Thread_cond_create(cond_ptr_, err_ptr_)		\
 {								\
     *(cond_ptr_) = 0;	                                        \
     if ((err_ptr_) != NULL)					\
     {								\
-        *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;            \        
+        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \        
     }								\
 }
 
-#define MPE_Thread_cond_destroy(cond_ptr_, err_ptr_)		\
+#define MPIU_Thread_cond_destroy(cond_ptr_, err_ptr_)		\
 {								\
     *(cond_ptr_) = -1;	                                        \
     if ((err_ptr_) != NULL)					\
     {								\
-        *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;            \        
+        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \        
     }								\
 }
 
-#define MPE_Thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)	\
+#define MPIU_Thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)	\
 {								\
     if ((err_ptr_) != NULL)					\
     {								\
-        *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;            \        
+        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \        
     }								\
 }
 
-#define MPE_Thread_cond_broadcast(cond_ptr_, err_ptr_)		\
+#define MPIU_Thread_cond_broadcast(cond_ptr_, err_ptr_)		\
 {								\
     if ((err_ptr_) != NULL)					\
     {								\
-        *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;            \        
+        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \        
     }								\
 }
 
-#define MPE_Thread_cond_signal(cond_ptr_, err_ptr_)		\
+#define MPIU_Thread_cond_signal(cond_ptr_, err_ptr_)		\
 {								\
     if ((err_ptr_) != NULL)					\
     {								\
-        *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;            \        
+        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \        
     }                                                           \
 }
 
@@ -189,7 +189,7 @@
  * Thread Local Storage
  */
 
-#define MPE_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)	\
+#define MPIU_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)	\
 {									\
     *(tls_ptr_) = TlsAlloc();		                                \
     if ((err_ptr_) != NULL)                                             \
@@ -200,12 +200,12 @@
         }								\
         else                                                            \
         {                                                               \
-            *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;                \
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;                \
         }                                                               \
     }
 }
 
-#define MPE_Thread_tls_destroy(tls_ptr_, err_ptr_)		\
+#define MPIU_Thread_tls_destroy(tls_ptr_, err_ptr_)		\
 {								\
     BOOL result__;                                              \
     result__ = TlsFree(*(tls_ptr_));                            \
@@ -213,7 +213,7 @@
     {                                                           \
         if (result__)                                           \
         {                                                       \
-            *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;        \        
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \        
         }                                                       \
         else                                                    \
         {							\
@@ -222,7 +222,7 @@
     }                                                           \
 }
 
-#define MPE_Thread_tls_set(tls_ptr_, value_, err_ptr_)		\
+#define MPIU_Thread_tls_set(tls_ptr_, value_, err_ptr_)		\
 {								\
     BOOL result__;                                              \
     result__ = TlsSetValue(*(tls_ptr_), (value_));		\
@@ -230,7 +230,7 @@
     {                                                           \
         if (result__)                                           \
         {                                                       \
-            *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;        \        
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \        
         }                                                       \
         else                                                    \
         {							\
@@ -239,7 +239,7 @@
     }                                                           \
 }
 
-#define MPE_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)	\
+#define MPIU_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)	\
 {								\
     *(value_ptr_) = TlsGetValue(*(tls_ptr_));		        \
     if ((err_ptr_) != NULL)                                     \
@@ -250,7 +250,7 @@
         }							\
         else                                                    \
         {                                                       \
-            *(int *)(err_ptr_) = MPE_THREAD_ERR_SUCCESS;        \        
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \        
         }                                                       \
     }                                                           \
 }

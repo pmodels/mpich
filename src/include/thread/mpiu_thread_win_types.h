@@ -16,18 +16,18 @@
 
 #include <windows.h>
 
-typedef HANDLE MPE_Thread_mutex_t;
-typedef HANDLE MPE_Thread_id_t;
-typedef DWORD MPE_Thread_tls_t;
+typedef HANDLE MPIU_Thread_mutex_t;
+typedef HANDLE MPIU_Thread_id_t;
+typedef DWORD MPIU_Thread_tls_t;
 
-typedef struct MPE_Thread_cond_fifo_t
+typedef struct MPIU_Thread_cond_fifo_t
 {
     HANDLE event;
-    struct MPE_Thread_cond_fifo_t *next;
-} MPE_Thread_cond_fifo_t;
-typedef struct MPE_Thread_cond_t
+    struct MPIU_Thread_cond_fifo_t *next;
+} MPIU_Thread_cond_fifo_t;
+typedef struct MPIU_Thread_cond_t
 {
-    MPE_Thread_tls_t tls;
-    MPE_Thread_mutex_t fifo_mutex;
-    MPE_Thread_cond_fifo_t *fifo_head, *fifo_tail;
-} MPE_Thread_cond_t;
+    MPIU_Thread_tls_t tls;
+    MPIU_Thread_mutex_t fifo_mutex;
+    MPIU_Thread_cond_fifo_t *fifo_head, *fifo_tail;
+} MPIU_Thread_cond_t;

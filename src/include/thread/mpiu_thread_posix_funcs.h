@@ -23,29 +23,29 @@
 #error 'Unable to determine pthrad mutex recursive value'
 #endif /* pthread mutex recursive value */
 
-/* MPE_Thread_create() defined in mpe_thread_posix.c */
+/* MPIU_Thread_create() defined in mpiu_thread.c */
 
-#define MPE_Thread_exit()			\
+#define MPIU_Thread_exit()			\
 {						\
     pthread_exit(NULL);				\
 }
 
-#define MPE_Thread_self(id_)			\
+#define MPIU_Thread_self(id_)			\
 {						\
     *(id_) = pthread_self();			\
 }
 
-#define MPE_Thread_same(id1_, id2_, same_)			\
+#define MPIU_Thread_same(id1_, id2_, same_)			\
 {								\
     *(same_) = pthread_equal(*(id1_), *(id2_)) ? TRUE : FALSE;	\
 }
 
-#define MPE_Thread_yield()						\
+#define MPIU_Thread_yield()						\
 {									\
     /* FIXME: need to check for different types of yield */	\
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"enter MPE_Thread_yield");    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"enter MPIU_Thread_yield");    \
     sched_yield();							\
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"exit MPE_Thread_yield");    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"exit MPIU_Thread_yield");    \
 }
 
 
@@ -61,20 +61,20 @@
 
 /* FIXME: using constant initializer if available */
 #if !defined(MPICH_DEBUG_MUTEX) || !defined(PTHREAD_MUTEX_ERRORCHECK_VALUE)
-#define MPE_Thread_mutex_create(mutex_ptr_, err_ptr_)                   \
+#define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                   \
 {                                                                       \
     int err__;                                                          \
                                                                         \
     err__ = pthread_mutex_init((mutex_ptr_), NULL);			\
     if ((err_ptr_) != NULL)                                             \
     {                                                                   \
-	/* FIXME: convert error to an MPE_THREAD_ERR value */           \
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */           \
 	*(int *)(err_ptr_) = err__;                                     \
     }                                                                   \
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPE_Thread_mutex %p", (mutex_ptr_));    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_));    \
 }
 #else /* MPICH_DEBUG_MUTEX */
-#define MPE_Thread_mutex_create(mutex_ptr_, err_ptr_)                   \
+#define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                   \
 {                                                                       \
     int err__;                                                          \
     pthread_mutexattr_t attr__;                                         \
@@ -91,44 +91,44 @@
                                        "    %s:%d\n", __FILE__, __LINE__);\
     if ((err_ptr_) != NULL)                                              \
     {                                                                    \
-	/* FIXME: convert error to an MPE_THREAD_ERR value */            \
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */            \
 	*(int *)(err_ptr_) = err__;                                      \
     }                                                                    \
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPE_Thread_mutex %p", (mutex_ptr_));    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_));    \
 }
 #endif
 
-#define MPE_Thread_mutex_destroy(mutex_ptr_, err_ptr_)		\
+#define MPIU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)		\
 {								\
     int err__;							\
 								\
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPE_Thread_mutex %p", (mutex_ptr_));    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPIU_Thread_mutex %p", (mutex_ptr_));    \
     err__ = pthread_mutex_destroy(mutex_ptr_);			\
     if ((err_ptr_) != NULL)					\
     {								\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */	\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */	\
 	*(int *)(err_ptr_) = err__;				\
     }								\
 }
 
 #ifndef MPICH_DEBUG_MUTEX
-#define MPE_Thread_mutex_lock(mutex_ptr_, err_ptr_)             \
+#define MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_)             \
 {                                                               \
     int err__;                                                  \
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"enter MPE_Thread_mutex_lock %p", (mutex_ptr_));      \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
     err__ = pthread_mutex_lock(mutex_ptr_);                     \
     if ((err_ptr_) != NULL)                                     \
     {                                                           \
-	/* FIXME: convert error to an MPE_THREAD_ERR value */   \
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */   \
 	*(int *)(err_ptr_) = err__;                             \
     }                                                           \
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"exit MPE_Thread_mutex_lock %p", (mutex_ptr_));      \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
 }
 #else /* MPICH_DEBUG_MUTEX */
-#define MPE_Thread_mutex_lock(mutex_ptr_, err_ptr_)             \
+#define MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_)             \
 {                                                               \
     int err__;                                                  \
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"enter MPE_Thread_mutex_lock %p", (mutex_ptr_));      \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
     err__ = pthread_mutex_lock(mutex_ptr_);                     \
     if (err__)                                                  \
     {                                                           \
@@ -138,32 +138,32 @@
     }                                                          \
     if ((err_ptr_) != NULL)                                    \
     {                                                          \
-	/* FIXME: convert error to an MPE_THREAD_ERR value */  \
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */  \
 	*(int *)(err_ptr_) = err__;                            \
     }                                                          \
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"exit MPE_Thread_mutex_lock %p", (mutex_ptr_));      \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
 }
 #endif
 
 #ifndef MPICH_DEBUG_MUTEX
-#define MPE_Thread_mutex_unlock(mutex_ptr_, err_ptr_)           \
+#define MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_)           \
 {                                                               \
     int err__;                                                  \
                                                                 \
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"MPE_Thread_mutex_unlock %p", (mutex_ptr_));    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"MPIU_Thread_mutex_unlock %p", (mutex_ptr_));    \
     err__ = pthread_mutex_unlock(mutex_ptr_);                   \
     if ((err_ptr_) != NULL)                                     \
     {                                                           \
-	/* FIXME: convert error to an MPE_THREAD_ERR value */   \
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */   \
 	*(int *)(err_ptr_) = err__;                             \
     }                                                           \
 }
 #else /* MPICH_DEBUG_MUTEX */
-#define MPE_Thread_mutex_unlock(mutex_ptr_, err_ptr_)           \
+#define MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_)           \
 {                                                               \
     int err__;                                                  \
                                                                 \
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"MPE_Thread_mutex_unlock %p", (mutex_ptr_));    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"MPIU_Thread_mutex_unlock %p", (mutex_ptr_));    \
     err__ = pthread_mutex_unlock(mutex_ptr_);                   \
     if (err__)                                                  \
     {                                                           \
@@ -173,28 +173,28 @@
     }                                                           \
     if ((err_ptr_) != NULL)                                     \
     {                                                           \
-	/* FIXME: convert error to an MPE_THREAD_ERR value */   \
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */   \
 	*(int *)(err_ptr_) = err__;                             \
     }                                                           \
 }
 #endif
 
 #ifndef MPICH_DEBUG_MUTEX
-#define MPE_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)    \
+#define MPIU_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)    \
 {                                                                    \
     int err__;                                                       \
                                                                      \
     err__ = pthread_mutex_trylock(mutex_ptr_);                       \
     *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                      \
-    MPIU_DBG_MSG_FMT(THREAD,TYPICAL,(MPIU_DBG_FDEST, "MPE_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure")));    \
+    MPIU_DBG_MSG_FMT(THREAD,TYPICAL,(MPIU_DBG_FDEST, "MPIU_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure")));    \
     if ((err_ptr_) != NULL)                                          \
     {                                                                \
-	*(int *)(err_ptr_) = (err__ == EBUSY) : MPE_THREAD_SUCCESS ? err__;\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */        \
+	*(int *)(err_ptr_) = (err__ == EBUSY) : MPIU_THREAD_SUCCESS ? err__;\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */        \
     }                                                                \
 }
 #else /* MPICH_DEBUG_MUTEX */
-#define MPE_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)    \
+#define MPIU_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)    \
 {                                                                    \
     int err__;                                                       \
                                                                      \
@@ -206,11 +206,11 @@
                                        "    %s:%d\n", __FILE__, __LINE__);\
     }                                                                \
     *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                      \
-    MPIU_DBG_MSG_FMT(THREAD,TYPICAL,(MPIU_DBG_FDEST, "MPE_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure")));    \
+    MPIU_DBG_MSG_FMT(THREAD,TYPICAL,(MPIU_DBG_FDEST, "MPIU_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure")));    \
     if ((err_ptr_) != NULL)                                          \
     {                                                                \
-	*(int *)(err_ptr_) = (err__ == EBUSY) : MPE_THREAD_SUCCESS ? err__;\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */        \
+	*(int *)(err_ptr_) = (err__ == EBUSY) : MPIU_THREAD_SUCCESS ? err__;\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */        \
     }                                                                \
 }
 #endif
@@ -219,33 +219,33 @@
  * Condition Variables
  */
 
-#define MPE_Thread_cond_create(cond_ptr_, err_ptr_)		\
+#define MPIU_Thread_cond_create(cond_ptr_, err_ptr_)		\
 {								\
     int err__;							\
     								\
     err__ = pthread_cond_init((cond_ptr_), NULL);		\
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPE_Thread_cond %p", (cond_ptr_));    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_cond %p", (cond_ptr_));    \
     if ((err_ptr_) != NULL)					\
     {								\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */	\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */	\
 	*(int *)(err_ptr_) = err__;				\
     }								\
 }
 
-#define MPE_Thread_cond_destroy(cond_ptr_, err_ptr_)		\
+#define MPIU_Thread_cond_destroy(cond_ptr_, err_ptr_)		\
 {								\
     int err__;							\
     								\
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPE_Thread_cond %p", (cond_ptr_));    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPIU_Thread_cond %p", (cond_ptr_));    \
     err__ = pthread_cond_destroy(cond_ptr_);			\
     if ((err_ptr_) != NULL)					\
     {								\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */	\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */	\
 	*(int *)(err_ptr_) = err__;				\
     }								\
 }
 
-#define MPE_Thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)		\
+#define MPIU_Thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)		\
 {									\
     int err__;								\
     									\
@@ -261,7 +261,7 @@
 									\
     if ((err_ptr_) != NULL)						\
     {									\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */		\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */		\
 	*(int *)(err_ptr_) = err__;					\
         if (err__) {                                                    \
             MPIU_DBG_MSG_FMT(THREAD,TYPICAL,(MPIU_DBG_FDEST,"error in cond_wait on cond=%p mutex=%p err__=%d",(cond_ptr_),(mutex_ptr_), err__)) \
@@ -270,30 +270,30 @@
     MPIU_DBG_MSG_FMT(THREAD,TYPICAL,(MPIU_DBG_FDEST,"Exit cond_wait on cond=%p mutex=%p",(cond_ptr_),(mutex_ptr_))) \
 }
 
-#define MPE_Thread_cond_broadcast(cond_ptr_, err_ptr_)		\
+#define MPIU_Thread_cond_broadcast(cond_ptr_, err_ptr_)		\
 {								\
     int err__;							\
     								\
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to cond_broadcast on MPE_Thread_cond %p", (cond_ptr_));    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to cond_broadcast on MPIU_Thread_cond %p", (cond_ptr_));    \
     err__ = pthread_cond_broadcast(cond_ptr_);			\
 								\
     if ((err_ptr_) != NULL)					\
     {								\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */	\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */	\
 	*(int *)(err_ptr_) = err__;				\
     }								\
 }
 
-#define MPE_Thread_cond_signal(cond_ptr_, err_ptr_)		\
+#define MPIU_Thread_cond_signal(cond_ptr_, err_ptr_)		\
 {								\
     int err__;							\
 								\
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to cond_signal on MPE_Thread_cond %p", (cond_ptr_));    \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to cond_signal on MPIU_Thread_cond %p", (cond_ptr_));    \
     err__ = pthread_cond_signal(cond_ptr_);			\
 								\
     if ((err_ptr_) != NULL)					\
     {								\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */	\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */	\
 	*(int *)(err_ptr_) = err__;				\
     }								\
 }
@@ -303,7 +303,7 @@
  * Thread Local Storage
  */
 
-#define MPE_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)	\
+#define MPIU_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)	\
 {									\
     int err__;								\
     									\
@@ -311,12 +311,12 @@
 									\
     if ((err_ptr_) != NULL)						\
     {									\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */		\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */		\
 	*(int *)(err_ptr_) = err__;					\
     }									\
 }
 
-#define MPE_Thread_tls_destroy(tls_ptr_, err_ptr_)		\
+#define MPIU_Thread_tls_destroy(tls_ptr_, err_ptr_)		\
 {								\
     int err__;							\
     								\
@@ -324,12 +324,12 @@
 								\
     if ((err_ptr_) != NULL)					\
     {								\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */	\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */	\
 	*(int *)(err_ptr_) = err__;				\
     }								\
 }
 
-#define MPE_Thread_tls_set(tls_ptr_, value_, err_ptr_)		\
+#define MPIU_Thread_tls_set(tls_ptr_, value_, err_ptr_)		\
 {								\
     int err__;							\
 								\
@@ -337,18 +337,18 @@
 								\
     if ((err_ptr_) != NULL)					\
     {								\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */	\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */	\
 	*(int *)(err_ptr_) = err__;				\
     }								\
 }
 
-#define MPE_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)	\
+#define MPIU_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)	\
 {								\
     *(value_ptr_) = pthread_getspecific(*(tls_ptr_));		\
 								\
     if ((err_ptr_) != NULL)					\
     {								\
-	/* FIXME: convert error to an MPE_THREAD_ERR value */	\
-	*(int *)(err_ptr_) = MPE_THREAD_SUCCESS;		\
+	/* FIXME: convert error to an MPIU_THREAD_ERR value */	\
+	*(int *)(err_ptr_) = MPIU_THREAD_SUCCESS;		\
     }								\
 }

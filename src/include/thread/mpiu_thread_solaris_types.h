@@ -8,7 +8,7 @@
 #include <thread.h>
 #include <synch.h>
 
-typedef mutex_t MPE_Thread_mutex_t;
-typedef cond_t MPE_Thread_cond_t;
-typedef thread_t MPE_Thread_id_t;
-typedef thread_key_t MPE_Thread_key_t;
+typedef mutex_t MPIU_Thread_mutex_t;
+typedef cond_t MPIU_Thread_cond_t;
+typedef thread_t MPIU_Thread_id_t;
+typedef thread_key_t MPIU_Thread_key_t;

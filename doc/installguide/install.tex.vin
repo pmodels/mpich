@@ -1542,10 +1542,9 @@ Optional Packages:
     posix or pthreads - POSIX threads
     solaris - Solaris threads (Solaris OS only)
     none - no threads
-
-    If the option is not specified, the default package is
-    ${MPE_THREAD_DEFAULT}.  If the option is specified, but a package
-    is not given, then the default is posix.
+If the option is not specified, the default package is ${MPIU_THREAD_DEFAULT}.
+If the option is specified, but a package is not given, then the default
+is posix.
 \end{verbatim}
 \end{small}
 

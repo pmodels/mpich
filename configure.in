@@ -1119,9 +1119,9 @@ export MPICH_THREAD_IMPL
 AC_DEFINE_UNQUOTED(USE_THREAD_IMPL,$MPICH_THREAD_IMPL,[Multi-threaded implementation selected at compile time])
 
 if test "$thread_pkg_required" = "no" ; then
-    MPE_THREAD_DEFAULT=${MPE_THREAD_DEFAULT:-none}
+    MPIU_THREAD_DEFAULT=${MPIU_THREAD_DEFAULT:-none}
 fi
-export MPE_THREAD_DEFAULT
+export MPIU_THREAD_DEFAULT
 
 # Check for value thread_cs choice; set the refcount default if necessary
 thread_granularity=0
@@ -5615,7 +5615,7 @@ export F90
 #
 # 
 # -----------------------------------------------------------------------------
-MPE_THREAD_DEFAULT=${MPE_THREAD_DEFAULT:-posix}
+MPIU_THREAD_DEFAULT=${MPIU_THREAD_DEFAULT:-posix}
 
 AC_ARG_WITH([thread-package],
 [AS_HELP_STRING([--with-thread-package=package],
@@ -5624,15 +5624,15 @@ AC_ARG_WITH([thread-package],
     solaris - Solaris threads (Solaris OS only)
     win - windows threads
     none - no threads
-If the option is not specified, the default package is ${MPE_THREAD_DEFAULT}.  If the option is specified, but a package is not given, then the default is posix.])],,
-with_thread_package=${MPE_THREAD_DEFAULT})
+If the option is not specified, the default package is ${MPIU_THREAD_DEFAULT}.  If the option is specified, but a package is not given, then the default is posix.])],,
+with_thread_package=${MPIU_THREAD_DEFAULT})
 
 if test "$with_thread_package" = "yes" ; then
    with_thread_package=posix
 fi
 
 MPICH2_THREAD_PACKAGE=none
-MPE_THREAD_PACKAGE_NAME=MPE_THREAD_PACKAGE_INVALID
+MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_INVALID
 case $with_thread_package in 
     posix|pthreads)
 	with_thread_package=posix
@@ -5714,7 +5714,7 @@ void f1(void *a) { return; }],
         fi
 
 	MPICH2_THREAD_PACKAGE=pthreads
-        MPE_THREAD_PACKAGE_NAME=MPE_THREAD_PACKAGE_POSIX
+        MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_POSIX
 	;;
     solaris)
 	AC_CHECK_HEADERS(thread.h)
@@ -5725,17 +5725,17 @@ void f1(void *a) { return; }],
 	fi
 	# FIXME: need to add -mt if using solaris compilers
 	MPICH2_THREAD_PACKAGE=solaris
-        MPE_THREAD_PACKAGE_NAME=MPE_THREAD_PACKAGE_SOLARIS
+        MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_SOLARIS
 	;;
     win|windows)
         with_thread_package=win
         MPICH2_THREAD_PACKAGE=win
-        MPE_THREAD_PACKAGE_NAME=MPE_THREAD_PACKAGE_WIN
+        MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_WIN
         AC_MSG_ERROR([The 'win' thread package is not supported via autoconf builds at this time.])
         ;;
     no|none)
 	with_thread_package=none
-        MPE_THREAD_PACKAGE_NAME=MPE_THREAD_PACKAGE_NONE
+        MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_NONE
 	;;
     *)
 	AC_MSG_ERROR([The specified thread package, $with_thread_package, is not supported.]) 
@@ -5745,7 +5745,7 @@ esac
 # Define and export the selected thread library so that other packages, 
 # such as MPE, will know what's used in MPICH2
 export MPICH2_THREAD_PACKAGE
-AC_DEFINE_UNQUOTED([MPE_THREAD_PACKAGE_NAME],[$MPE_THREAD_PACKAGE_NAME],[set to the name of the thread package])
+AC_DEFINE_UNQUOTED([MPIU_THREAD_PACKAGE_NAME],[$MPIU_THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
 AC_CHECK_FUNCS(sched_yield yield usleep sleep select getpid)
 
@@ -5810,8 +5810,8 @@ if test "$with_thread_package" != "none" ; then
     fi
 fi
 
-MPE_THREAD_LIB_NAME=${MPILIBNAME}
-AC_SUBST(MPE_THREAD_LIB_NAME)
+MPIU_THREAD_LIB_NAME=${MPILIBNAME}
+AC_SUBST(MPIU_THREAD_LIB_NAME)
 
 # -----------------------------------------------------------------------------
 # End of thread configure

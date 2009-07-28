@@ -16,7 +16,7 @@
 
 /* MPIU_PW_SCHED_YIELD() - Yield the processor to OS scheduler */
 /* FIXME: Currently this functionality is also implemented in 
- * mpidu_process_locks.h . Should we use MPE_Thread_yield() ?
+ * mpidu_process_locks.h . Should we use MPIU_Thread_yield() ?
  */
 /* FIXME: Allow fallbacks with sleep/select */
 #if defined(HAVE_SWITCHTOTHREAD)
