@@ -2,13 +2,12 @@
 /*
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
- *
- *  Only edit the mpe_thread.h.in version of this file:
- *  @configure_input@
  */
 
 #if !defined(MPE_THREAD_H_INCLUDED)
 #define MPE_THREAD_H_INCLUDED
+
+#include "mpichconf.h" /* defines MPE_THREAD_PACKAGE_NAME */
 
 #if !defined(TRUE)
 #define TRUE 1
@@ -17,15 +16,34 @@
 #define FALSE 0
 #endif
 
+/* _INVALID exists to avoid accidental macro evaluations to 0 */
+#define MPE_THREAD_PACKAGE_INVALID 0
+#define MPE_THREAD_PACKAGE_NONE    1
+#define MPE_THREAD_PACKAGE_POSIX   2
+#define MPE_THREAD_PACKAGE_SOLARIS 3
+#define MPE_THREAD_PACKAGE_WIN     4
+
+#if defined(MPE_THREAD_PACKAGE_NAME) && (MPE_THREAD_PACKAGE_NAME == MPE_THREAD_PACKAGE_POSIX)
+#  include "thread/mpe_thread_posix_types.h"
+#elif defined(MPE_THREAD_PACKAGE_NAME) && (MPE_THREAD_PACKAGE_NAME == MPE_THREAD_PACKAGE_SOLARIS)
+#  include "thread/mpe_thread_solaris_types.h"
+#elif defined(MPE_THREAD_PACKAGE_NAME) && (MPE_THREAD_PACKAGE_NAME == MPE_THREAD_PACKAGE_WIN)
+#  include "thread/mpe_thread_win_types.h"
+#elif defined(MPE_THREAD_PACKAGE_NAME) && (MPE_THREAD_PACKAGE_NAME == MPE_THREAD_PACKAGE_NONE)
+typedef int MPE_Thread_mutex_t;
+typedef int MPE_Thread_cond_t;
+typedef int MPE_Thread_id_t;
+typedef int MPE_Thread_tls_t;
+#else
+#  error "thread package not defined or unknown"
+#endif
+
 
 /*
- * Implementation specific type definitions
- */
-@MPE_THREAD_TYPEDEFS@
-
-
-/*
- * Threads
+ * threading function prototypes
+ *
+ * Typically some or all of these are actually implemented as macros
+ * rather than actual or even inline functions.
  */
 
 typedef void (* MPE_Thread_func_t)(void * data);
@@ -257,19 +275,22 @@ void MPE_Thread_tls_set(MPE_Thread_tls_t * tls, void * value, int * err);
 @*/
 void MPE_Thread_tls_get(MPE_Thread_tls_t * tls, void ** value, int * err);
 
-
-/*
- * Error values
- */
+/* Error values */
 #define MPE_THREAD_SUCCESS MPE_THREAD_ERR_SUCCESS
 #define MPE_THREAD_ERR_SUCCESS 0
 /* FIXME: Define other error codes.  For now, any non-zero value is an error. */
 
-
-/*
- * Implementation specific function definitions (usually in the form of macros)
- */
-@MPE_THREAD_FUNCS@
-
+/* Implementation specific function definitions (usually in the form of macros) */
+#if defined(MPE_THREAD_PACKAGE_NAME) && (MPE_THREAD_PACKAGE_NAME == MPE_THREAD_PACKAGE_POSIX)
+#  include "thread/mpe_thread_posix_funcs.h"
+#elif defined(MPE_THREAD_PACKAGE_NAME) && (MPE_THREAD_PACKAGE_NAME == MPE_THREAD_PACKAGE_SOLARIS)
+#  include "thread/mpe_thread_solaris_funcs.h"
+#elif defined(MPE_THREAD_PACKAGE_NAME) && (MPE_THREAD_PACKAGE_NAME == MPE_THREAD_PACKAGE_WIN)
+#  include "thread/mpe_thread_win_funcs.h"
+#elif defined(MPE_THREAD_PACKAGE_NAME) && (MPE_THREAD_PACKAGE_NAME == MPE_THREAD_PACKAGE_NONE)
+/* do nothing */
+#else
+#  error "thread package not defined or unknown"
+#endif
 
 #endif /* !defined(MPE_THREAD_H_INCLUDED) */

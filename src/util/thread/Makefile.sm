@@ -3,12 +3,6 @@ lib${MPE_THREAD_LIB_NAME}_a_DIR = ROOTDIR/lib
 lib${MPE_THREAD_LIB_NAME}_a_SOURCES = mpe_thread.c
 INCLUDES = -I../../include -I${top_srcdir}/src/include
 
-mpe_thread.c: mpe_thread_posix.c mpe_thread_none.c mpe_thread_solaris.c \
-	      mpe_thread_win.c 
-	      (cd ../../.. && CONFIG_FILES= && export CONFIG_FILES \
-	      CONFIG_HEADERS= && export CONFIG_HEADERS \
-	      && ./config.status)
-
 distclean-local:
 	-@rm -f mpe_thread.h ../../include/mpe_thread.h
 	-@rm -f mpe_thread.c

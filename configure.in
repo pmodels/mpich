@@ -5615,25 +5615,24 @@ export F90
 #
 # 
 # -----------------------------------------------------------------------------
-MPE_THREAD_DEFAULT=${MPE_THREAD_DEFAULT-posix}
+MPE_THREAD_DEFAULT=${MPE_THREAD_DEFAULT:-posix}
 
-AC_ARG_WITH(thread-package,
-[--with-thread-package=package - Thread package to use.  Supported thread
-                                packages include:
+AC_ARG_WITH([thread-package],
+[AS_HELP_STRING([--with-thread-package=package],
+[Thread package to use.  Supported thread packages include:
     posix or pthreads - POSIX threads
     solaris - Solaris threads (Solaris OS only)
+    win - windows threads
     none - no threads
-
-    If the option is not specified, the default package is
-    ${MPE_THREAD_DEFAULT}.  If the option is specified, but a package
-    is not given, then the default is posix.]
-,,with_thread_package=${MPE_THREAD_DEFAULT})
+If the option is not specified, the default package is ${MPE_THREAD_DEFAULT}.  If the option is specified, but a package is not given, then the default is posix.])],,
+with_thread_package=${MPE_THREAD_DEFAULT})
 
 if test "$with_thread_package" = "yes" ; then
    with_thread_package=posix
 fi
 
 MPICH2_THREAD_PACKAGE=none
+MPE_THREAD_PACKAGE_NAME=MPE_THREAD_PACKAGE_INVALID
 case $with_thread_package in 
     posix|pthreads)
 	with_thread_package=posix
@@ -5715,6 +5714,7 @@ void f1(void *a) { return; }],
         fi
 
 	MPICH2_THREAD_PACKAGE=pthreads
+        MPE_THREAD_PACKAGE_NAME=MPE_THREAD_PACKAGE_POSIX
 	;;
     solaris)
 	AC_CHECK_HEADERS(thread.h)
@@ -5725,9 +5725,17 @@ void f1(void *a) { return; }],
 	fi
 	# FIXME: need to add -mt if using solaris compilers
 	MPICH2_THREAD_PACKAGE=solaris
+        MPE_THREAD_PACKAGE_NAME=MPE_THREAD_PACKAGE_SOLARIS
 	;;
+    win|windows)
+        with_thread_package=win
+        MPICH2_THREAD_PACKAGE=win
+        MPE_THREAD_PACKAGE_NAME=MPE_THREAD_PACKAGE_WIN
+        AC_MSG_ERROR([The 'win' thread package is not supported via autoconf builds at this time.])
+        ;;
     no|none)
 	with_thread_package=none
+        MPE_THREAD_PACKAGE_NAME=MPE_THREAD_PACKAGE_NONE
 	;;
     *)
 	AC_MSG_ERROR([The specified thread package, $with_thread_package, is not supported.]) 
@@ -5737,6 +5745,7 @@ esac
 # Define and export the selected thread library so that other packages, 
 # such as MPE, will know what's used in MPICH2
 export MPICH2_THREAD_PACKAGE
+AC_DEFINE_UNQUOTED([MPE_THREAD_PACKAGE_NAME],[$MPE_THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
 AC_CHECK_FUNCS(sched_yield yield usleep sleep select getpid)
 
@@ -5801,66 +5810,9 @@ if test "$with_thread_package" != "none" ; then
     fi
 fi
 
-use_thread_pkg="MPICH_THREAD_PKG_`echo $with_thread_package | \
-    tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`"
-AC_DEFINE_UNQUOTED(USE_THREAD_PKG,$use_thread_pkg,[Thread package selected at configure time])
-
-MPE_THREAD_TYPEDEFS="${srcdir}/src/util/thread/${with_thread_package}_types.i"
-MPE_THREAD_FUNCS="${srcdir}/src/util/thread/${with_thread_package}_funcs.i"
-AC_SUBST_FILE(MPE_THREAD_TYPEDEFS)
-AC_SUBST_FILE(MPE_THREAD_FUNCS)
-
-# FIXME:
-#   Any thread definitions need to be added to correct places for builds, 
-#   without breaking the configure tests.  
-# DEFS="$DEFS $THR_DEFS"
-# CFLAGS="$CFLAGS $THR_CFLAGS"
-# LDFLAGS="$LDFLAGS $THR_LDFLAGS"
-# Changing LIBS changes the tests that are performed (e.g., any such
-# library must exist when the assignment is made)
-# LIBS="$LIBS -lmpe_thread $THR_LIBS"
-
-AC_SUBST(THR_DEFS)
-AC_SUBST(THR_CFLAGS)
-AC_SUBST(THR_CPPFLAGS)
-AC_SUBST(THR_LDFLAGS)
-AC_SUBST(THR_LIBS)
-
 MPE_THREAD_LIB_NAME=${MPILIBNAME}
 AC_SUBST(MPE_THREAD_LIB_NAME)
 
-dnl
-dnl Copy source files into the build directory when config.status is run
-dnl
-MPE_THREAD_SOURCE_FILES="src/util/thread/mpe_thread.c:$srcdir/src/util/thread/mpe_thread_${with_thread_package}.c"
-AC_OUTPUT_COMMANDS([
-    for entry in $MPE_THREAD_SOURCE_FILES ; do
-	destfile="`echo $entry | sed -e 's/:.*$//'`"
-	srcfile="`echo $entry | sed -e 's/^.*://'`"
-	echo "copying $srcfile to $destfile"
-	rm -f $destfile
-	cat >$destfile <<END
-/*
- * WARNING: DO NOT EDIT!  This file is a copy of $srcfile.
- */
-
-END
-	cat $srcfile >>$destfile
-	chmod a-w $destfile
-    done
-    if test -f src/util/thread/mpe_thread.h ; then
-        echo "moving mpe_thread.h to src/include"
-        mv -f src/util/thread/mpe_thread.h src/include/mpe_thread.h
-    fi
-],[
-    MPE_THREAD_SOURCE_FILES=$MPE_THREAD_SOURCE_FILES
-])
-
-if test -f src/util/thread/localdefs ; then
-    . src/util/thread/localdefs
-elif test -f $use_top_srcdir/src/util/thread/localdefs ; then
-    . $use_top_srcdir/src/util/thread/localdefs
-fi
 # -----------------------------------------------------------------------------
 # End of thread configure
 # -----------------------------------------------------------------------------
@@ -6508,7 +6460,6 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
 	  src/util/info/Makefile \
 	  src/util/instrm/Makefile \
 	  src/util/thread/Makefile \
-	  src/util/thread/mpe_thread.h \
 	  src/util/mem/Makefile \
 	  src/util/msgs/Makefile \
 	  src/util/param/Makefile \

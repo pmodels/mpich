@@ -387,7 +387,7 @@ static FILE *get_fp(void)
      * only be one thread in here until then */
     if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED && MPIU_ISTHREADED()) {
         FILE *fp;
-        MPID_Thread_tls_get(&dbg_tls_key, &fp);
+        MPID_Thread_tls_get(&dbg_tls_key, (void **)&fp);
         return fp;
     }
     else
