@@ -62,11 +62,8 @@
         Dim nmake_cmd_prefix, nmake_cmd_suffix
 
         Dim i, arg, arg_cnt, arg_val, arg_option, tmp_str_array
-        Dim fso, tmp_build_script, TMP_BUILDSCRIPT_NAME
+        Dim fso, tmp_build_script, tmp_fname
     
-
-        TMP_BUILDSCRIPT_NAME = "build_tmp_01.bat"
-        
         default_channel_array = Array("nemesis", "sock", "mt", "ssm", "shm")
         misc_targets_array = Array("cxx", "sfort", "irlog2rlog", "TraceInput")
         gcc_targets_array = Array("gcc_libs")
@@ -139,7 +136,11 @@
 
         ' Create temp build script
         Set fso = CreateObject("Scripting.FileSystemObject")
-        Set tmp_build_script = fso.CreateTextFile(TMP_BUILDSCRIPT_NAME, True)
+        ' Does GetTempName() fail ?
+        tmp_fname = fso.GetTempName()
+        ' Give the temp filename a batch file extn
+        tmp_fname = Replace(tmp_fname, ".", "_") & ".cmd"
+        Set tmp_build_script = fso.CreateTextFile(tmp_fname, True)
 
         nmake_cmd_prefix="nmake"
         nmake_cmd_suffix=" > make.log 2>&1"
@@ -201,12 +202,16 @@
 
         ' Call nmake on targets
         'cmd = "nmake > make.log 2>&1 "
-        cmd = TMP_BUILDSCRIPT_NAME
+        cmd = tmp_fname
         vs_shell.Run cmd, 0, True
         'Do While cmd_output.status = 0
         '    WScript.Sleep 10
         'Loop
         'WScript.Echo cmd_output.StdOut.ReadAll, cmd_output.StdErr.ReadAll
+
+        ' Remove the temp build script
+        Set tmp_build_script = fso.GetFile(tmp_fname)
+        tmp_build_script.Delete()
 
     </script>
 
