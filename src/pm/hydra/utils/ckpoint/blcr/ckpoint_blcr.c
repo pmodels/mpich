@@ -6,6 +6,7 @@
 
 #include "hydra_utils.h"
 #include "ckpoint.h"
+#include "libcr.h"
 
 HYD_Status HYDU_ckpoint_blcr_suspend(void)
 {

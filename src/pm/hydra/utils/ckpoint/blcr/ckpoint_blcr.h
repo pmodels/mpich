@@ -7,10 +7,6 @@
 #ifndef CKPOINT_BLCR_H_INCLUDED
 #define CKPOINT_BLCR_H_INCLUDED
 
-#if defined HAVE_BLCR
-#include "libcr.h"
-#endif /* HAVE_BLCR */
-
 HYD_Status HYDU_ckpoint_blcr_suspend(void);
 HYD_Status HYDU_ckpoint_blcr_restart(void);
 
