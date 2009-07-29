@@ -438,8 +438,8 @@ HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *bu
             count = write(fd, buf + *buf_offset, *buf_count);
             if (count < 0)
                 HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR, "write error on %d (%s)\n",
-                                     fd, HYDU_strerror(errno))
-                    * buf_offset += count;
+                                     fd, HYDU_strerror(errno));
+            *buf_offset += count;
             *buf_count -= count;
             break;
         }
