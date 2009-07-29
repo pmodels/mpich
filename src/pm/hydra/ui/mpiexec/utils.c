@@ -20,6 +20,36 @@
 #define IS_HELP(str) \
     ((!strcmp((str), "-h")) || (!strcmp((str), "-help")) || (!strcmp((str), "--help")))
 
+#define FIND_BINDING_ENUM(bind_str, bind_enum, bindmap, status) \
+    {                                                           \
+        char *x, *y;                                            \
+        if (!strcmp((bind_str), "none"))                        \
+            bind_enum = HYD_BIND_NONE;                          \
+        else if (!strcmp(bind_str, "rr"))                       \
+            bind_enum = HYD_BIND_RR;                            \
+        else if (!strcmp(bind_str, "buddy"))                    \
+            bind_enum = HYD_BIND_BUDDY;                         \
+        else if (!strcmp(bind_str, "pack"))                     \
+            bind_enum = HYD_BIND_PACK;                          \
+        else {                                                          \
+            /* Check if the user wants to specify her own mapping */    \
+            status = HYDU_strsplit((bind_str), &x, &y, ':');            \
+            HYDU_ERR_POP(status, "string break returned error\n");      \
+                                                                        \
+            if (!strcmp(x, "user")) {                                   \
+                bind_enum = HYD_BIND_USER;                              \
+                if (y)                                                  \
+                    (bindmap) = y;                                      \
+                HYDU_FREE(x);                                           \
+            }                                                           \
+            else {                                                      \
+                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,        \
+                                     "unrecognized binding option %s\n", x); \
+            }                                                           \
+        }                                                               \
+    }
+
+
 static void show_info(void)
 {
     printf("HYDRA build details:\n");
@@ -27,6 +57,7 @@ static void show_info(void)
     printf("    Boot-strap servers available: %s\n", HYDRA_BSS_NAMES);
     printf("    Communication sub-systems available: none\n");
     printf("    Binding libraries available: %s\n", HYDRA_BINDLIB_NAMES);
+    printf("    Checkpointing libraries available: %s\n", HYDRA_CKPOINTLIB_NAMES);
 }
 
 static void dump_env_notes(void)
@@ -545,26 +576,10 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 
             HYDU_ERR_CHKANDJUMP(status, HYD_handle.binding != HYD_BIND_UNSET,
                                 HYD_INTERNAL_ERROR, "duplicate binding\n");
-            if (!strcmp(str[1], "none"))
-                HYD_handle.binding = HYD_BIND_NONE;
-            else if (!strcmp(str[1], "rr"))
-                HYD_handle.binding = HYD_BIND_RR;
-            else if (!strcmp(str[1], "buddy"))
-                HYD_handle.binding = HYD_BIND_BUDDY;
-            else if (!strcmp(str[1], "pack"))
-                HYD_handle.binding = HYD_BIND_PACK;
-            else {
-                /* Check if the user wants to specify her own mapping */
-                status = HYDU_strsplit(str[1], &str[2], &str[3], ':');
-                HYDU_ERR_POP(status, "string break returned error\n");
 
-                if (!strcmp(str[2], "user")) {
-                    HYD_handle.binding = HYD_BIND_USER;
-                    if (str[3])
-                        HYD_handle.user_bind_map = str[3];
-                    HYDU_FREE(str[2]);
-                }
-            }
+            FIND_BINDING_ENUM(str[1], HYD_handle.binding, HYD_handle.user_bind_map,
+                              status);
+
             HYDU_FREE(str[0]);
             HYDU_FREE(str[1]);
             continue;
@@ -584,10 +599,64 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
                 str[1] = HYDU_strdup(*argv);
             }
 
-            HYDU_ERR_CHKANDJUMP(status, HYD_handle.bindlib, HYD_INTERNAL_ERROR,
-                                "duplicate -bindlib option\n");
-            HYD_handle.css = str[1];
+            HYDU_ERR_CHKANDJUMP(status, HYD_handle.bindlib != HYD_BINDLIB_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate -bindlib option\n");
+
+            if (!strcmp(str[1], "plpa"))
+                HYD_handle.bindlib = HYD_BINDLIB_PLPA;
+            else {
+                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                                     "unrecognized binding library %s\n", str[1]);
+            }
+
             HYDU_FREE(str[0]);
+            HYDU_FREE(str[1]);
+            continue;
+        }
+
+        if ((!strcmp(str[0], "-ckpointlib")) || (!strcmp(str[0], "--ckpointlib"))) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-ckpointlib: Checkpointing library to use\n\n");
+                printf("Notes:\n");
+                printf("  * Use the -info option to see what all are compiled in\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            if (!str[1]) {
+                INCREMENT_ARGV(status);
+                str[1] = HYDU_strdup(*argv);
+            }
+
+            HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpointlib != HYD_CKPOINTLIB_UNSET,
+                                HYD_INTERNAL_ERROR, "duplicate -ckpointlib option\n");
+
+            if (!strcmp(str[1], "blcr"))
+                HYD_handle.ckpointlib = HYD_CKPOINTLIB_BLCR;
+
+            HYDU_FREE(str[0]);
+            HYDU_FREE(str[1]);
+            continue;
+        }
+
+        if ((!strcmp(str[0], "-ckpoint-interval")) ||
+            (!strcmp(str[0], "--ckpoint-interval"))) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-ckpoint-interval: Checkpointing interval\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            if (!str[1]) {
+                INCREMENT_ARGV(status);
+                str[1] = HYDU_strdup(*argv);
+            }
+
+            HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpoint_int != -1,
+                                HYD_INTERNAL_ERROR, "duplicate -ckpoint-interval option\n");
+            HYD_handle.ckpoint_int = atoi(str[1]);
+            HYDU_FREE(str[0]);
+            HYDU_FREE(str[1]);
             continue;
         }
 
@@ -767,11 +836,10 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 
         /* Check environment for setting binding */
         tmp = getenv("HYDRA_BINDING");
-        if (HYD_handle.binding == HYD_BIND_UNSET && tmp)
-            HYD_handle.binding = !strcmp(tmp, "none") ? HYD_BIND_NONE :
-                !strcmp(tmp, "rr") ? HYD_BIND_RR :
-                !strcmp(tmp, "buddy") ? HYD_BIND_BUDDY :
-                !strcmp(tmp, "pack") ? HYD_BIND_PACK : HYD_BIND_USER;
+        if (HYD_handle.binding == HYD_BIND_UNSET && tmp) {
+            FIND_BINDING_ENUM(tmp, HYD_handle.binding, HYD_handle.user_bind_map,
+                              status);
+        }
         if (HYD_handle.binding == HYD_BIND_UNSET)
             HYD_handle.binding = HYD_BIND_NONE;
 

@@ -88,6 +88,11 @@ static void usage(void)
     printf("    -bindlib                         process-to-core binding library (plpa)\n");
 
     printf("\n");
+    printf("  Checkpoint/Restart options:\n");
+    printf("    -ckpoint-interval                checkpoint interval\n");
+    printf("    -ckpointlib                      checkpointing library (blcr)\n");
+
+    printf("\n");
     printf("  Other Hydra options:\n");
     printf("    -verbose                         verbose mode\n");
     printf("    -info                            build information\n");

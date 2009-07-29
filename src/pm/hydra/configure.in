@@ -305,11 +305,11 @@ AC_ARG_WITH(hydra-bindlib, [  --enable-hydra-procbind       Process Binding Libr
 AC_MSG_CHECKING(process binding library)
 AC_MSG_RESULT($hydra_bindlib)
 
-have_plpa=no
 hydra_bindlib_names="`echo $hydra_bindlib | sed -e 's/:/ /g' -e 's/,/ /g'`"
 AC_DEFINE_UNQUOTED(HYDRA_BINDLIB_NAMES,"$hydra_bindlib_names",
 		[Definition of enabled binding libraries])
 
+have_plpa=no
 for hydra_bindlib_name in ${hydra_bindlib_names}; do
     case "$hydra_bindlib_name" in
     	plpa)
@@ -337,6 +337,33 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
     esac
 done
 AM_CONDITIONAL([hydra_have_plpa], [test "${have_plpa}" = "yes"])
+
+
+#########################################################################
+# Checkpoint/Restart
+#########################################################################
+AC_ARG_WITH(hydra-ckpointlib, [  --enable-hydra-ckpointlib   Checkpointing Library],
+			   [ hydra_ckpointlib=$withval ],
+			   [ hydra_ckpointlib=none ])
+AC_MSG_CHECKING(checkpointing library)
+AC_MSG_RESULT($hydra_ckpointlib)
+
+hydra_ckpointlib_names="`echo $hydra_ckpointlib | sed -e 's/:/ /g' -e 's/,/ /g'`"
+AC_DEFINE_UNQUOTED(HYDRA_CKPOINTLIB_NAMES,"$hydra_ckpointlib_names",
+		[Definition of enabled checkpointing libraries])
+
+have_blcr=no
+for hydra_ckpointlib_name in ${hydra_ckpointlib_names}; do
+    case "$hydra_ckpointlib_name" in
+    	blcr)
+		AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
+		have_blcr=yes
+		;;		
+	*)
+		;;
+    esac
+done
+AM_CONDITIONAL([hydra_have_blcr], [test "${have_blcr}" = "yes"])
 
 
 #########################################################################

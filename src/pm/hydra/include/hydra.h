@@ -23,6 +23,9 @@ struct HYD_Handle_ {
     HYD_Bindlib_t bindlib;
     char *user_bind_map;
 
+    HYD_Ckpointlib_t ckpointlib;
+    int ckpoint_int;
+
     int debug;
     int print_rank_map;
     int print_all_exitcodes;

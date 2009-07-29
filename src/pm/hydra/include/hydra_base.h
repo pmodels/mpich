@@ -148,6 +148,11 @@ typedef enum {
     HYD_BINDLIB_PLPA
 } HYD_Bindlib_t;
 
+typedef enum {
+    HYD_CKPOINTLIB_UNSET,
+    HYD_CKPOINTLIB_BLCR
+} HYD_Ckpointlib_t;
+
 /* List of contiguous segments of processes on a partition */
 struct HYD_Partition_segment {
     int start_pid;

@@ -21,6 +21,9 @@ void HYD_UIU_init_params(void)
     HYD_handle.bindlib = HYD_BINDLIB_UNSET;
     HYD_handle.user_bind_map = NULL;
 
+    HYD_handle.ckpointlib = HYD_CKPOINTLIB_UNSET;
+    HYD_handle.ckpoint_int = -1;
+
     HYD_handle.debug = -1;
     HYD_handle.print_rank_map = 0;
     HYD_handle.print_all_exitcodes = 0;

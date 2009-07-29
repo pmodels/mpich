@@ -13,3 +13,4 @@ include utils/sock/Makefile.mk
 include utils/string/Makefile.mk
 include utils/timer/Makefile.mk
 include utils/bind/Makefile.mk
+include utils/ckpoint/Makefile.mk
