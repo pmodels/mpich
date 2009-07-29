@@ -63,7 +63,9 @@ MEMLIBS          = @DEBUG_LIBS@
 .c.lo:
 	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -c $<
 
-ALL: $(libbuild_dir)/$(LIB_TRACE) $(binbuild_dir)/$(PGM_PRINT) $(binbuild_dir)/$(PGM_CHECK)
+ALL: $(libbuild_dir)/$(LIB_TRACE)
+	$(MAKE) $(MAKEOPTS) $(binbuild_dir)/$(PGM_PRINT)
+	$(MAKE) $(MAKEOPTS) $(binbuild_dir)/$(PGM_CHECK)
 
 $(libbuild_dir)/$(LIB_TRACE): $(LOBJ)
 	if [ "$(EXPORT_SYMBOLS)" = "yes" ] ; then \

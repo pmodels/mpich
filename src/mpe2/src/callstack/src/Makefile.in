@@ -81,9 +81,9 @@ profile_all:
 
 #
 default:
-	$(MAKE) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a
-	$(MAKE) ${libbuild_dir}/lib$(PROF_LIBNAME).a
-	$(MAKE) $(EXECS)
+	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a
+	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME).a
+	$(MAKE) $(MAKEOPTS) $(EXECS)
 
 #
 # It is tempting here to use ... libmpe.a($(MPE_OBJECTS)) as the dependency,
