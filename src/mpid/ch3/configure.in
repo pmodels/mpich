@@ -292,6 +292,7 @@ export SHLIB_EXT
 export ENABLE_SHLIB
 export LIBTOOL
 
+# FIXME shouldn't put var in _SUBDIRS
 AC_CONFIG_SUBDIRS(channels/${channel_name})
 
 # Add the MPICH2 include flags to CPPFLAGS.  See the discussion above about
