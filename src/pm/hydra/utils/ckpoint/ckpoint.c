@@ -7,6 +7,10 @@
 #include "hydra_utils.h"
 #include "ckpoint.h"
 
+#if defined HAVE_BLCR
+#include "blcr/ckpoint_blcr.h"
+#endif /* HAVE_BLCR */
+
 HYD_Status HYDU_ckpoint_suspend(void)
 {
     HYD_Status status = HYD_SUCCESS;
