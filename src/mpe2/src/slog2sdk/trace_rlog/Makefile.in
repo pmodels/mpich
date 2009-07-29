@@ -4,7 +4,7 @@ SHELL        = @SHELL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 
 all:	
-	cd src && $(MAKE)
+	cd src && $(MAKE) $(MAKEOPTS)
 
 install:
 	@if [ -n "$(PREFIX)" ] ; then \
@@ -17,7 +17,7 @@ uninstall:
 	@-./sbin/uninstall-viewer
 
 clean:
-	-cd src && $(MAKE) clean
+	-cd src && $(MAKE) $(MAKEOPTS) clean
 
 rmprog:
 	@-for file in bin/* sbin/* ; do \
@@ -28,7 +28,7 @@ rmprog:
 	  done
 
 distclean: rmprog
-	@-cd src && $(MAKE) distclean
+	@-cd src && $(MAKE) $(MAKEOPTS) distclean
 	@-$(RM) sbin/install-package
 	@-$(RM) Makefile libtool
 	@-$(RM) trace_impl.h

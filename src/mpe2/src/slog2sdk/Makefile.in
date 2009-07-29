@@ -10,7 +10,7 @@ all:
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
 	          echo "Making $$pkg" ; \
-	          ( cd $$pkg && $(MAKE) ) ; \
+	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) ) ; \
 	      fi ; \
 	  done
 
@@ -27,7 +27,7 @@ uninstall:
 clean:
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
-	          ( cd $$pkg && $(MAKE) clean ) ; \
+	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) clean ) ; \
 	      fi ; \
 	  done
 
@@ -49,21 +49,21 @@ distclean-misc:
 distclean: rmprog distclean-misc
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
-	          ( cd $$pkg && $(MAKE) distclean ) ; \
+	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) distclean ) ; \
 	      fi ; \
 	  done
 
 maintainer-clean: rmprog distclean-misc
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
-	          ( cd $$pkg && $(MAKE) maintainer-clean ) ; \
+	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) maintainer-clean ) ; \
 	      fi ; \
 	  done
 
 owner-clean: rmprog distclean-misc
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
-	          ( cd $$pkg && $(MAKE) owner-clean ) ; \
+	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) owner-clean ) ; \
 	      fi ; \
 	  done
 	@-$(RM) configure

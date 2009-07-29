@@ -99,13 +99,13 @@ profile_all:
 # by src/wrappers/configure, to be fulfilled to guarantee that libmpe_f2cmpi.a
 # is needed and all the pre-requisites of libmpe_f2cmpi.a are met.
 default:
-	 $(MAKE) ${libbuild_dir}/lib$(LOG_LIBNAME).a
-	 $(MAKE) ${libbuild_dir}/lib$(TRACE_LIBNAME).a
+	 $(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(LOG_LIBNAME).a
+	 $(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(TRACE_LIBNAME).a
 	@if [    "$(MPE_BUILD_FORTRAN2C)" = "yes" \
 	      -a "${F2CMPI_LIBS}" = "-l${F2CMPI_LIBNAME}" ] ; then \
-	     $(MAKE) ${libbuild_dir}/lib$(F2CMPI_LIBNAME).a ; \
+	     $(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(F2CMPI_LIBNAME).a ; \
 	 fi
-	 $(MAKE) ${libbuild_dir}/mpe_prof.@OBJEXT@
+	 $(MAKE) $(MAKEOPTS) ${libbuild_dir}/mpe_prof.@OBJEXT@
 
 #
 # It is tempting here to use ... libmpe.a($(MPE_OBJECTS)) as the dependency,

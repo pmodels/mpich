@@ -28,7 +28,8 @@ MPE_HEADERS          = mpe.h mpe_misc.h mpe_callstack.h mpe_log.h mpe_graphics.h
 PKGS = "" @subdirs@
 
 all-redirect: 
-all: build_include build_lib_bin
+all: build_include
+	$(MAKE) $(MAKEOPTS) build_lib_bin
 
 #######  Building from the source
 build_include:
@@ -52,7 +53,7 @@ build_lib_bin:
 	@for pkg in $(PKGS) ; do \
 	     if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
 	         echo ; echo "**** Making $$pkg ...." ; \
-	         ( cd $$pkg && $(MAKE) ) ; \
+	         ( cd $$pkg && $(MAKE) $(MAKEOPTS) ) ; \
                  sleep 1 ; \
 	     fi ; \
 	 done
@@ -136,7 +137,7 @@ clean_etc:
 clean: clean_lib
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
-	          ( cd $$pkg && $(MAKE) clean ) ; \
+	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) clean ) ; \
 	      fi ; \
 	  done
 	@-$(RM) -f work.pc work.pcl
@@ -154,14 +155,14 @@ distclean-misc: clean_include clean_etc
 distclean: clean_bin clean_lib distclean-misc
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
-	          ( cd $$pkg && $(MAKE) distclean ) ; \
+	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) distclean ) ; \
 	      fi ; \
 	  done
 
 maintainer-clean: clean_bin clean_lib distclean-misc
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
-	          ( cd $$pkg && $(MAKE) maintainer-clean ) ; \
+	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) maintainer-clean ) ; \
 	      fi ; \
 	  done
 	@-$(RM) -f mpe_conf.h.in
@@ -169,7 +170,7 @@ maintainer-clean: clean_bin clean_lib distclean-misc
 owner-clean: clean_bin clean_lib distclean-misc
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
-	          ( cd $$pkg && $(MAKE) owner-clean ) ; \
+	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) owner-clean ) ; \
 	      fi ; \
 	  done
 	@-$(RM) -f mpe_conf.h.in

@@ -208,7 +208,10 @@ if test "$enable_g" = "yes" -a "$FROM_MPICH2" != "yes" ; then
            *" -g "*)
               ;;  # Avoid duplication, do nothing
            *)
-              eval $flagname=\"\$flagvalue -g\"
+              # Split eval command into 2 lines so
+              # vi's hightlight mode won't get confused. 
+              flagcmd="$flagname=\"$flagvalue -g\""
+              eval flagcmd
               ;;
         esac
     done
@@ -296,300 +299,7 @@ AC_ARG_WITH( mpilibs,
                                      e.g. -L/opt/MPI/lib -lpmpich -lmpich.],
 MPI_LIBS="$withval" )
 
-AC_ARG_VAR( MPI_CC, [C compiler for MPI program, e.g. mpixlc_r for BG/P MPI, or mpicc from MPICHx, Open-MPI, or LAM-MPI.  Setting MPI_CC to MPI wrapper means no need to set MPI_INC and MPI_LIBS.] )
-AC_ARG_VAR( MPI_F77, [Fortran compiler for MPI program, e.g. mpixlf77_r for BG/P MPI, or mpif77 from MPICHx, Open-MPI, or LAM-MPI.  Setting MPI_F77 to MPI wrapper means no need to set MPI_INC and MPI_LIBS.] )
-AC_ARG_VAR( MPI_INC, [MPI include path prefixed with -I.  It specifies MPI header files location, where mpi.h and mpif.h are located, e.g. -I/pkgs/MPI/include. This flag will be added to MPI_CFLAGS and MPI_FFLAGS, i.e. the MPI include path can be explicitly set in MPI_CFLAGS and MPI_FFLAGS without setting MPI_INC.] )
-AC_ARG_VAR( MPI_CFLAGS, [MPI C compiler flags to compile MPI program.] )
-AC_ARG_VAR( MPI_FFLAGS, [MPI Fortran compiler flags to compile MPI Fortran program.] )
-AC_ARG_VAR( MPI_LIBS, [MPI library flags with -L and -l. It specifies the location of the MPI libraries.  The flags contains library path prefixed with -L and MPI libraries name prefixed with -l, e.g. -L/opt/MPI/lib -lpmpich -lmpich.] )
-dnl AC_ARG_VAR( MPI_LDFLAGS, [MPI linker flags used with MPI_CC or MPI_F77 during linking.] )
-AC_ARG_VAR( MPERUN, [MPI application launch command.  This variable is necessary only if user wants to run "make check", "make installcheck-all" or "$sbindir/mpecheckinstall -run" when the default MPERUN value, "$bindir/mpiexec -n 4", is not correct.] )
-
-# Prepend/Append '"' before/after MPERUN.
-if test "x$MPERUN" != "x" ; then
-    MPERUN="\"$MPERUN\""
-fi
-
-# Preppend MPI_INC to MPI_CFLAGS/MPI_FFLAGS
-if test "x$MPI_INC" != "x" ; then
-    MPI_CFLAGS="$MPI_INC $MPI_CFLAGS"
-    MPI_FFLAGS="$MPI_INC $MPI_FFLAGS"
-fi
-
 dnl
-AC_ARG_WITH( cross-spec,
-[--with-cross-spec=file             - Specify the values of variables that
-                                     configure cannot determine in a
-                                     cross-compilation environment through
-                                     a file], ,
-with_cross_spec=no )
-dnl
-pac_cross_compiling=no
-if test "$with_cross_spec" != "no" ; then
-    if test -s "$with_cross_spec" ; then
-        AC_MSG_RESULT([Reading the cross-compilation file $with_cross_spec])
-        . $with_cross_spec
-        # Autoconf 2.52 no longer sets cross_compiling except with the
-        # awkward "targethost" options.
-        pac_cross_compiling=yes
-        cross_compiling=yes
-        ac_cv_prog_cc_cross=yes
-        ac_cv_prog_f77_cross=yes
-        ac_cv_prog_f90_cross=yes
-        ac_cv_prog_cxx_cross=yes
-        export cross_compiling
-        # Export all the variables in cross_spec/cross_spec.txt
-        # i.e. CROSS_xxx, MPI_xxx and friends...
-        cross_spec_vars=`grep -v '^#' $with_cross_spec | sed -e 's/=.*//g'`
-        for var in $cross_spec_vars ; do
-            eval value=\$"$var"
-            echo "Exporting $var=$value ..."
-            export $var
-        done
-    fi
-fi
-
-
-AC_PROG_CC
-dnl Check for broken handling of common symbols
-dnl PAC_PROG_C_BROKEN_COMMON
-
-dnl Adding --enable-strict flags to CFLAGS if needed.
-dnl No space should be added after "(" and before ")", otherwise invalid
-dnl statement, like 'CFLAGS  ="$CFLAGS ..."', will be resulted in configure.
-dnl Also, PAC_GET_GCC_STRICT_FLAGS should be called after AC_PROG_CC.
-if test "$FROM_MPICH2" != "yes" ; then
-    MPE_COPTION=""
-    PAC_GET_GCC_STRICT_FLAGS([MPE_COPTION])
-    if test "x$MPE_COPTION" != "x" ; then
-        CFLAGS="$CFLAGS $MPE_COPTION"
-        MPI_CFLAGS="$MPI_CFLAGS $MPE_COPTION"
-    fi
-fi
-
-dnl  MPI_CC is only use for MPI programs.  
-dnl  CC should be the same compiler that is used within the MPI_CC
-dnl  environment.  MPI_LIBS should also be set for linking MPI programs
-AC_MSG_CHECKING( whether MPI_CC has been set )
-if test -z "$MPI_CC" ; then
-    MPI_CC="$CC $MPICPPFLAGS"
-fi
-AC_MSG_RESULT( $MPI_CC )
-
-if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
-    AC_PROG_F77
-    if test "x$F77" = "x" ; then
-        MPE_BUILD_FORTRAN2C=no
-    fi
-    AC_MSG_CHECKING( whether MPI_F77 has been set )
-    if test -z "$MPI_F77" ; then
-        # FIXME: Temporary for F77 accepting the same flags as CC for 
-        # file includes
-        MPI_F77="$F77 $MPICPPFLAGS"
-    fi
-    AC_MSG_RESULT( $MPI_F77 )
-fi
-
-# Determine the name of the various library being built
-if test -z "$MPE_LIBNAME" ; then
-    MPE_LIBNAME=mpe
-fi
-
-
-
-dnl
-dnl  Check if MPI_CC, MPI_CFLAGS, and MPI_LIBS together provide
-dnl  a linkable environment for a simple MPI program
-dnl
-if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
-    if test "$enable_checkMPI" = "yes" ; then
-        AC_MSG_CHECKING( [for the linkage of the supplied MPI C definitions] )
-        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, , , ,
-                              [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
-        if test "$mpe_link_ok" = "yes" ; then
-            AC_MSG_RESULT(yes)
-        else
-            AC_MSG_RESULT(no)
-            PAC_MSG_ERROR( $enable_softerror,
-                           [Cannot link with basic MPI C program!
-	Check your MPI include paths, MPI libraries and MPI CC compiler] )
-        fi
-    fi
-    if test "$enable_checkMPI" = "yes" -a "$MPE_BUILD_FORTRAN2C" = "yes" ; then
-        AC_MSG_CHECKING( [for the linkage of the supplied MPI F77 definitions] )
-        PAC_MPI_LINK_F77_FUNC( $MPI_F77, [$MPI_FFLAGS], $MPI_LIBS, [
-        integer mytid
-        integer ierr
-        ], [
-        call MPI_Comm_rank( MPI_COMM_WORLD, mytid, ierr )
-        ],
-        [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
-        if test "$mpe_link_ok" = "yes" ; then
-            AC_MSG_RESULT(yes)
-        else
-            AC_MSG_RESULT(no)
-            PAC_MSG_ERROR( $enable_softerror,
-                           [Cannot link with basic MPI F77 program!
-	Check your MPI include paths, MPI libraries and MPI F77 compiler ] )
-        fi
-    fi
-
-    dnl
-    dnl Some MPI's seem to have trouble with
-    dnl MPI_Wtime, PMPI_Wtime, and MPI_Attr_get
-    dnl (Fujitsu for MPI_Wtime and MPI_Attr_get; IBM's PMPI_Wtime returned 0)
-    dnl Check at least that we can link with MPI_Wtime and MPI_Attr_get
-    dnl
-    if test "$enable_checkMPI" = "yes" -a "$enable_checkMPIwtime" = "yes" ; then
-        AC_MSG_CHECKING( [for the C version of MPI_Wtime()] )
-        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
-                              [ double d ],
-                              [ d=MPI_Wtime() ],
-                              [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
-        if test "$mpe_link_ok" = "yes" ; then
-            AC_MSG_RESULT(yes)
-            AC_DEFINE( HAVE_MPI_WTIME,1,[Define if MPI_Wtime available] )
-        else
-            AC_MSG_RESULT(no)
-            PAC_MSG_ERROR( $enable_softerror, [Cannot link with MPI_Wtime()!
-	Check your MPI include paths, MPI libraries and MPI CC compiler ] )
-        fi
-    fi
-fi
-
-if test -z "$CC" -o -z "$MPI_CC"; then
-    PAC_MSG_ERROR( $enable_softerror,
-                   [You must configure MPE with a specific MPI] )
-fi
- 
-if test -n "$F77" -a "$MPE_BUILD_FORTRAN2C" = "yes" ; then 
-    FLIBS_save="$FLIBS"
-    FLIBS=""
-    AC_F77_LIBRARY_LDFLAGS
-    # The autoconf macro for finding FLIBS sometimes makes mistakes
-    # (particularly with the Fujitsu frt compiler).  This next step
-    # first sees if the FLIBS is valid with the Fortran compiler
-    PAC_PROG_F77_FLIBS_VALID
-    # Now see if FLIBS works with the C compiler
-    PAC_PROG_F77_CHECK_FLIBS
-
-    PAC_PROG_F77_LINKER_WITH_C
-    PAC_PROG_F77_OBJ_LINKS_WITH_C
-    # For name mangle, we need the library flags
-    PAC_PROG_F77_NAME_MANGLE
-    # Check whether additional libraries are needed when linking with C
-    PAC_PROG_F77_AND_C_STDIO_LIBS
-    AC_SUBST(F77_OTHER_LIBS)
-
-    PAC_PROG_F77_LIBRARY_DIR_FLAG
-    if test -z "$FLIB_PATH_LEADER" ; then
-        FLIB_PATH_LEADER=$F77_LIBDIR_LEADER
-    fi
-    PAC_PROG_F77_HAS_INCDIR(f77tmpdir)
-    FINC_PATH_LEADER=$F77_INCDIR
-fi
-
-dnl  We need to check that this has worked.  The autoconf macro is broken
-AC_PROG_CPP
-if test "$CPP" = "/lib/cpp" -a ! -x /lib/cpp ; then
-    AC_MSG_ERROR( [configure could not find a working C preprocessor] )
-fi
-
-dnl  check for "ln -s" exists.  It is for install program, mpeinstall
-AC_PROG_LN_S
-
-dnl checking for working INSTALL
-AC_PROG_INSTALL
-PAC_PROG_CHECK_INSTALL_WORKS
-PAC_PROG_INSTALL_BREAKS_LIBS
-
-dnl
-dnl MPE_CFLAGS/MPE_FFLAGS are used to pass MPE-modified CFLAGS/FFLAGS
-dnl to other subpackages.  Can't use CFLAGS to pass this info because
-dnl user may have set CFLAGS in the environment.  In that scenario,
-dnl env variable CFLAGS can't be set! So subpackages cannot get the
-dnl MPE-modified CFLAGS.
-dnl
-MPE_CFLAGS="$CFLAGS"
-if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
-    MPE_FFLAGS="$FFLAGS"
-fi
-
-dnl Determine if this is "UserSupplied" MPI implmentation.
-dnl If so, build mpecc and mpefc.
-dnl    MPE_CLINKER/MPE_FLINKER need to sync with sbin/mpeinstall
-if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
-    mpe_compilers=bin/mpecc
-    if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
-        mpe_compilers="$mpe_compilers bin/mpefc"
-    fi
-    MPE_CLINKER="$binbuild_dir/mpecc -"
-    MPE_FLINKER="$binbuild_dir/mpefc -"
-else dnl This is MPICH2.
-    MPE_CLINKER="$MPI_CC -mpe="
-    MPE_FLINKER="$MPI_F77 -mpe="
-fi
-
-dnl The following does not work as expected because
-dnl AC_CONFIG_SUBDIRS sets the "precious" variables like CFLAGS from the
-dnl settings recorded at the top of the configure. That means CFLAGS cannot
-dnl be inherit from the mpich2's configure enviroment.
-dnl
-dnl Include --enable-strict option only if this isn't part of MPICHx build.
-dnl MPE does not even need to check enable_strict_done passed down by MPICH2.
-dnl if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
-dnl     MPE_CFLAGS="$MPE_CFLAGS $STRICT_COPTS"
-dnl fi
-dnl
-if test -z "$CLINKER" ; then CLINKER="$CC" ; fi
-if test -z "$FLINKER" ; then FLINKER="$F77" ; fi
-AC_SUBST(MPI_IMPL)
-AC_SUBST(MPE_LIBNAME)
-AC_SUBST(MPE_BUILD_FORTRAN2C)
-AC_SUBST(CC)
-AC_SUBST(CLINKER)
-AC_SUBST(MPE_CFLAGS)
-AC_SUBST(MPI_CC)
-AC_SUBST(MPI_CFLAGS)
-AC_SUBST(MPE_CLINKER)
-AC_SUBST(F77)
-AC_SUBST(FLINKER)
-AC_SUBST(MPE_FFLAGS)
-AC_SUBST(MPI_F77)
-AC_SUBST(MPI_FFLAGS)
-AC_SUBST(MPE_FLINKER)
-AC_SUBST(MPI_LIBS)
-AC_SUBST(LDFLAGS)
-AC_SUBST(MPERUN)
-
-dnl  Make the directories that do not contain Makefiles (should they?) but 
-dnl  are needed for the subsequent directories.
-$RM -f $srcdir/mpe_conf.h
-
-export MPI_IMPL
-export MPE_LIBNAME
-export MPE_BUILD_FORTRAN2C
-export CC
-export CLINKER
-export MPI_CC
-export MPI_CFLAGS
-export MPE_CLINKER
-export MPE_CFLAGS
-export F77
-export FLINKER
-export MPI_F77
-export MPI_FFLAGS
-export MPE_FLINKER
-export MPE_FFLAGS
-export MPI_LIBS
-export LDFLAGS
-export FINC_PATH_LEADER
-export FLIB_PATH_LEADER
-
-mpe_enable_softerror=yes
-export mpe_enable_softerror
-
-
 misc_dirname="src/misc"
 callstack_dirname="src/callstack"
 logging_dirname="src/logging"
@@ -771,6 +481,345 @@ dnl if test "$enable_threadlogging" = "yes" ; then
 dnl     enable_safePMPI=no
 dnl     export enable_safePMPI
 dnl fi
+
+
+AC_ARG_VAR( MPI_CC, [C compiler for MPI program, e.g. mpixlc_r for BG/P MPI, or mpicc from MPICHx, Open-MPI, or LAM-MPI.  Setting MPI_CC to MPI wrapper means no need to set MPI_INC and MPI_LIBS.] )
+AC_ARG_VAR( MPI_F77, [Fortran compiler for MPI program, e.g. mpixlf77_r for BG/P MPI, or mpif77 from MPICHx, Open-MPI, or LAM-MPI.  Setting MPI_F77 to MPI wrapper means no need to set MPI_INC and MPI_LIBS.] )
+AC_ARG_VAR( MPI_INC, [MPI include path prefixed with -I.  It specifies MPI header files location, where mpi.h and mpif.h are located, e.g. -I/pkgs/MPI/include. This flag will be added to MPI_CFLAGS and MPI_FFLAGS, i.e. the MPI include path can be explicitly set in MPI_CFLAGS and MPI_FFLAGS without setting MPI_INC.] )
+AC_ARG_VAR( MPI_CFLAGS, [MPI C compiler flags to compile MPI program.] )
+AC_ARG_VAR( MPI_FFLAGS, [MPI Fortran compiler flags to compile MPI Fortran program.] )
+AC_ARG_VAR( MPI_LIBS, [MPI library flags with -L and -l. It specifies the location of the MPI libraries.  The flags contains library path prefixed with -L and MPI libraries name prefixed with -l, e.g. -L/opt/MPI/lib -lpmpich -lmpich.] )
+dnl AC_ARG_VAR( MPI_LDFLAGS, [MPI linker flags used with MPI_CC or MPI_F77 during linking.] )
+AC_ARG_VAR( MPERUN, [MPI application launch command.  This variable is necessary only if user wants to run "make check", "make installcheck-all" or "$sbindir/mpecheckinstall -run" when the default MPERUN value, "$bindir/mpiexec -n 4", is not correct.] )
+
+# Prepend/Append '"' before/after MPERUN.
+if test "x$MPERUN" != "x" ; then
+    MPERUN="\"$MPERUN\""
+fi
+
+# Preppend MPI_INC to MPI_CFLAGS/MPI_FFLAGS
+if test "x$MPI_INC" != "x" ; then
+    MPI_CFLAGS="$MPI_INC $MPI_CFLAGS"
+    MPI_FFLAGS="$MPI_INC $MPI_FFLAGS"
+fi
+
+dnl
+AC_ARG_WITH( cross-spec,
+[--with-cross-spec=file             - Specify the values of variables that
+                                     configure cannot determine in a
+                                     cross-compilation environment through
+                                     a file], ,
+with_cross_spec=no )
+dnl
+pac_cross_compiling=no
+if test "$with_cross_spec" != "no" ; then
+    if test -s "$with_cross_spec" ; then
+        AC_MSG_RESULT([Reading the cross-compilation file $with_cross_spec])
+        . $with_cross_spec
+        # Autoconf 2.52 no longer sets cross_compiling except with the
+        # awkward "targethost" options.
+        pac_cross_compiling=yes
+        cross_compiling=yes
+        ac_cv_prog_cc_cross=yes
+        ac_cv_prog_f77_cross=yes
+        ac_cv_prog_f90_cross=yes
+        ac_cv_prog_cxx_cross=yes
+        export cross_compiling
+        # Export all the variables in cross_spec/cross_spec.txt
+        # i.e. CROSS_xxx, MPI_xxx and friends...
+        cross_spec_vars=`grep -v '^#' $with_cross_spec | sed -e 's/=.*//g'`
+        for var in $cross_spec_vars ; do
+            eval value=\$"$var"
+            echo "Exporting $var=$value ..."
+            export $var
+        done
+    fi
+fi
+
+
+dnl
+AC_ARG_WITH( config-args,
+[--with-config-args=filename        - Specify configure argument file that
+                                     contains the values of variables that
+                                     configure reads, e.g. CC, CFLAGS, 
+                                     F77, FFLAGS, MPI_CC, MPI_F77....
+                                     If the filename does not begin with
+                                     / (absolute path), . or .. (relative path),
+                                     the filename will be assumed to be
+                                     $top_srcdir/configargs/<filename>.cfg.], ,
+with_config_args=no )
+dnl
+if test "$with_config_args" != "no" ; then
+    case "$with_config_args" in
+        /*|../*|./*)
+            config_args_file="$with_config_args"
+            ;;
+        *)
+            config_args_file="$srcdir/configargs/${with_config_args}.cfg"
+            ;;
+    esac
+    if test -s "$config_args_file" ; then
+        AC_MSG_RESULT([Reading the configure arguments in ${config_args_file}.])
+        . $config_args_file
+        # Export all the variables in $config_args_file
+        # i.e. CC, F77, CFLAGS, FFLAGS and friends...
+        config_args_vars=`grep -v '^#' $config_args_file | sed -e 's/=.*//g'`
+        for var in $config_args_vars ; do
+            eval value=\$"$var"
+            echo "Exporting $var=$value ..."
+            export $var
+        done
+    else
+        AC_MSG_WARN([Non-existent ${config_args_file}.])
+    fi
+fi
+
+
+AC_PROG_CC
+dnl Check for broken handling of common symbols
+dnl PAC_PROG_C_BROKEN_COMMON
+
+dnl Adding --enable-strict flags to CFLAGS if needed.
+dnl No space should be added after "(" and before ")", otherwise invalid
+dnl statement, like 'CFLAGS  ="$CFLAGS ..."', will be resulted in configure.
+dnl Also, PAC_GET_GCC_STRICT_FLAGS should be called after AC_PROG_CC.
+if test "$FROM_MPICH2" != "yes" ; then
+    MPE_COPTION=""
+    PAC_GET_GCC_STRICT_FLAGS([MPE_COPTION])
+    if test "x$MPE_COPTION" != "x" ; then
+        CFLAGS="$CFLAGS $MPE_COPTION"
+        MPI_CFLAGS="$MPI_CFLAGS $MPE_COPTION"
+    fi
+fi
+
+dnl  MPI_CC is only use for MPI programs.  
+dnl  CC should be the same compiler that is used within the MPI_CC
+dnl  environment.  MPI_LIBS should also be set for linking MPI programs
+AC_MSG_CHECKING( whether MPI_CC has been set )
+if test -z "$MPI_CC" ; then
+    MPI_CC="$CC $MPICPPFLAGS"
+fi
+AC_MSG_RESULT( $MPI_CC )
+
+if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
+    AC_PROG_F77
+    if test "x$F77" = "x" ; then
+        MPE_BUILD_FORTRAN2C=no
+    fi
+    AC_MSG_CHECKING( whether MPI_F77 has been set )
+    if test -z "$MPI_F77" ; then
+        # FIXME: Temporary for F77 accepting the same flags as CC for 
+        # file includes
+        MPI_F77="$F77 $MPICPPFLAGS"
+    fi
+    AC_MSG_RESULT( $MPI_F77 )
+fi
+
+# Determine the name of the various library being built
+if test -z "$MPE_LIBNAME" ; then
+    MPE_LIBNAME=mpe
+fi
+
+
+
+dnl
+dnl  Check if MPI_CC, MPI_CFLAGS, and MPI_LIBS together provide
+dnl  a linkable environment for a simple MPI program
+dnl
+if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+    if test "$enable_checkMPI" = "yes" ; then
+        AC_MSG_CHECKING( [for the linkage of the supplied MPI C definitions] )
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, , , ,
+                              [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+        if test "$mpe_link_ok" = "yes" ; then
+            AC_MSG_RESULT(yes)
+        else
+            AC_MSG_RESULT(no)
+            PAC_MSG_ERROR( $enable_softerror,
+                           [Cannot link with basic MPI C program!
+	Check your MPI include paths, MPI libraries and MPI CC compiler] )
+        fi
+    fi
+    if test "$enable_checkMPI" = "yes" -a "$MPE_BUILD_FORTRAN2C" = "yes" ; then
+        AC_MSG_CHECKING( [for the linkage of the supplied MPI F77 definitions] )
+        PAC_MPI_LINK_F77_FUNC( $MPI_F77, [$MPI_FFLAGS], $MPI_LIBS, [
+        integer mytid
+        integer ierr
+        ], [
+        call MPI_Comm_rank( MPI_COMM_WORLD, mytid, ierr )
+        ],
+        [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+        if test "$mpe_link_ok" = "yes" ; then
+            AC_MSG_RESULT(yes)
+        else
+            AC_MSG_RESULT(no)
+            PAC_MSG_ERROR( $enable_softerror,
+                           [Cannot link with basic MPI F77 program!
+	Check your MPI include paths, MPI libraries and MPI F77 compiler ] )
+        fi
+    fi
+
+    dnl
+    dnl Some MPI's seem to have trouble with
+    dnl MPI_Wtime, PMPI_Wtime, and MPI_Attr_get
+    dnl (Fujitsu for MPI_Wtime and MPI_Attr_get; IBM's PMPI_Wtime returned 0)
+    dnl Check at least that we can link with MPI_Wtime and MPI_Attr_get
+    dnl
+    if test "$enable_checkMPI" = "yes" -a "$enable_checkMPIwtime" = "yes" ; then
+        AC_MSG_CHECKING( [for the C version of MPI_Wtime()] )
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
+                              [ double d ],
+                              [ d=MPI_Wtime() ],
+                              [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+        if test "$mpe_link_ok" = "yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_DEFINE( HAVE_MPI_WTIME,1,[Define if MPI_Wtime available] )
+        else
+            AC_MSG_RESULT(no)
+            PAC_MSG_ERROR( $enable_softerror, [Cannot link with MPI_Wtime()!
+	Check your MPI include paths, MPI libraries and MPI CC compiler ] )
+        fi
+    fi
+fi
+
+if test -z "$CC" -o -z "$MPI_CC"; then
+    PAC_MSG_ERROR( $enable_softerror,
+                   [You must configure MPE with a specific MPI] )
+fi
+ 
+if test -n "$F77" -a "$MPE_BUILD_FORTRAN2C" = "yes" ; then 
+    FLIBS_save="$FLIBS"
+    FLIBS=""
+    AC_F77_LIBRARY_LDFLAGS
+    # The autoconf macro for finding FLIBS sometimes makes mistakes
+    # (particularly with the Fujitsu frt compiler).  This next step
+    # first sees if the FLIBS is valid with the Fortran compiler
+    PAC_PROG_F77_FLIBS_VALID
+    # Now see if FLIBS works with the C compiler
+    PAC_PROG_F77_CHECK_FLIBS
+
+    PAC_PROG_F77_LINKER_WITH_C
+    PAC_PROG_F77_OBJ_LINKS_WITH_C
+    # For name mangle, we need the library flags
+    PAC_PROG_F77_NAME_MANGLE
+    # Check whether additional libraries are needed when linking with C
+    PAC_PROG_F77_AND_C_STDIO_LIBS
+    AC_SUBST(F77_OTHER_LIBS)
+
+    PAC_PROG_F77_LIBRARY_DIR_FLAG
+    if test -z "$FLIB_PATH_LEADER" ; then
+        FLIB_PATH_LEADER=$F77_LIBDIR_LEADER
+    fi
+    PAC_PROG_F77_HAS_INCDIR(f77tmpdir)
+    FINC_PATH_LEADER=$F77_INCDIR
+
+    # Replace all -I in MPI_FFLAGS by $FINC_PATH_LEADER
+    MPI_FFLAGS=`echo "$MPI_FFLAGS" | sed -e "s|-I|$FINC_PATH_LEADER|g"`
+    # If there is MPI_FLIBS, to replace -L by $FLIB_PATH_LEADER
+fi
+
+dnl  We need to check that this has worked.  The autoconf macro is broken
+AC_PROG_CPP
+if test "$CPP" = "/lib/cpp" -a ! -x /lib/cpp ; then
+    AC_MSG_ERROR( [configure could not find a working C preprocessor] )
+fi
+
+dnl  check for "ln -s" exists.  It is for install program, mpeinstall
+AC_PROG_LN_S
+
+dnl checking for working INSTALL
+AC_PROG_INSTALL
+PAC_PROG_CHECK_INSTALL_WORKS
+PAC_PROG_INSTALL_BREAKS_LIBS
+
+dnl
+dnl MPE_CFLAGS/MPE_FFLAGS are used to pass MPE-modified CFLAGS/FFLAGS
+dnl to other subpackages.  Can't use CFLAGS to pass this info because
+dnl user may have set CFLAGS in the environment.  In that scenario,
+dnl env variable CFLAGS can't be set! So subpackages cannot get the
+dnl MPE-modified CFLAGS.
+dnl
+MPE_CFLAGS="$CFLAGS"
+if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
+    MPE_FFLAGS="$FFLAGS"
+fi
+
+dnl Determine if this is "UserSupplied" MPI implmentation.
+dnl If so, build mpecc and mpefc.
+dnl    MPE_CLINKER/MPE_FLINKER need to sync with sbin/mpeinstall
+if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+    mpe_compilers=bin/mpecc
+    if test "$MPE_BUILD_FORTRAN2C" = "yes" ; then
+        mpe_compilers="$mpe_compilers bin/mpefc"
+    fi
+    MPE_CLINKER="$binbuild_dir/mpecc -"
+    MPE_FLINKER="$binbuild_dir/mpefc -"
+else dnl This is MPICH2.
+    MPE_CLINKER="$MPI_CC -mpe="
+    MPE_FLINKER="$MPI_F77 -mpe="
+fi
+
+dnl The following does not work as expected because
+dnl AC_CONFIG_SUBDIRS sets the "precious" variables like CFLAGS from the
+dnl settings recorded at the top of the configure. That means CFLAGS cannot
+dnl be inherit from the mpich2's configure enviroment.
+dnl
+dnl Include --enable-strict option only if this isn't part of MPICHx build.
+dnl MPE does not even need to check enable_strict_done passed down by MPICH2.
+dnl if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+dnl     MPE_CFLAGS="$MPE_CFLAGS $STRICT_COPTS"
+dnl fi
+dnl
+if test -z "$CLINKER" ; then CLINKER="$CC" ; fi
+if test -z "$FLINKER" ; then FLINKER="$F77" ; fi
+AC_SUBST(MPI_IMPL)
+AC_SUBST(MPE_LIBNAME)
+AC_SUBST(MPE_BUILD_FORTRAN2C)
+dnl "precious" AC_SUBST(CC)
+AC_SUBST(CLINKER)
+AC_SUBST(MPE_CFLAGS)
+dnl "precious" AC_SUBST(MPI_CC)
+dnl "precious" AC_SUBST(MPI_CFLAGS)
+AC_SUBST(MPE_CLINKER)
+AC_SUBST(F77)
+AC_SUBST(FLINKER)
+AC_SUBST(MPE_FFLAGS)
+dnl "precious" AC_SUBST(MPI_F77)
+dnl "precious" AC_SUBST(MPI_FFLAGS)
+AC_SUBST(MPE_FLINKER)
+dnl "precious" AC_SUBST(MPI_LIBS)
+dnl "precious" AC_SUBST(LDFLAGS)
+dnl "precious" AC_SUBST(MPERUN)
+
+dnl  Make the directories that do not contain Makefiles (should they?) but 
+dnl  are needed for the subsequent directories.
+$RM -f $srcdir/mpe_conf.h
+
+export MPI_IMPL
+export MPE_LIBNAME
+export MPE_BUILD_FORTRAN2C
+export CC
+export CLINKER
+export MPI_CC
+export MPI_CFLAGS
+export MPE_CLINKER
+export MPE_CFLAGS
+export F77
+export FLINKER
+export MPI_F77
+export MPI_FFLAGS
+export MPE_FLINKER
+export MPE_FFLAGS
+export MPI_LIBS
+export LDFLAGS
+export FINC_PATH_LEADER
+export FLIB_PATH_LEADER
+
+mpe_enable_softerror=yes
+export mpe_enable_softerror
+
+
+
 
 AC_OUTPUT_COMMANDS( [
 if test ! -x ./sbin/mpeinstall -a -s ./sbin/mpeinstall ; then

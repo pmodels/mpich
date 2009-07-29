@@ -24,7 +24,9 @@ MPI_IMPL             = @MPI_IMPL@
 MPE_HEADERS          = mpe_graphics.h mpe_graphicsf.h
 
 # Assumption: This Makefile won't be created if X is not available
-all: build_include build_lib_bin build_etc linktest_all
+all: build_include build_etc
+	$(MAKE) $(MAKEOPTS) build_lib_bin
+	$(MAKE) $(MAKEOPTS) linktest_all
 
 #######  Building from the source
 build_include:
@@ -41,7 +43,7 @@ build_include:
 	  fi
 
 build_lib_bin:
-	@( cd src && $(MAKE) )
+	@( cd src && $(MAKE) $(MAKEOPTS) )
 
 build_etc:
 	@-for file in ./etc/*.conf ; do \
@@ -49,19 +51,21 @@ build_etc:
 	  done
 
 ########  Linkage Tests
-linktest_all: linktest_C linktest_F77
+linktest_all:
+	$(MAKE) $(MAKEOPTS) linktest_C
+	$(MAKE) $(MAKEOPTS) linktest_F77
 
 linktest_C:
 	@if [    "$(MPI_IMPL)" != "MPICH" \
 	      -a "$(MPI_IMPL)" != "MPICH2" ] ; then \
-	     ( cd contrib/test && $(MAKE) linktest_C ) ; \
+	     ( cd contrib/test && $(MAKE) $(MAKEOPTS) linktest_C ) ; \
 	 fi
 
 linktest_F77:
 	@if [ "$(MPE_BUILD_FORTRAN2C)" = "yes" ] ; then \
 	     if [    "$(MPI_IMPL)" != "MPICH" \
 	          -a "$(MPI_IMPL)" != "MPICH2" ] ; then \
-	         ( cd contrib/test && $(MAKE) linktest_F77 ) ; \
+	         ( cd contrib/test && $(MAKE) $(MAKEOPTS) linktest_F77 ) ; \
 	     fi ; \
          fi
 	@echo
@@ -82,10 +86,10 @@ clean_etc:
 	@-$(RM) -f ./etc/*.conf
 
 clean: clean_bin clean_lib
-	@( cd src && $(MAKE) clean )
+	@( cd src && $(MAKE) $(MAKEOPTS) clean )
 
 distclean: clean_include clean_bin clean_lib clean_etc
-	@-( cd src && $(MAKE) distclean )
+	@-( cd src && $(MAKE) $(MAKEOPTS) distclean )
 	@-$(RM) -f mpe_graphics_conf.h
 	@-$(RM) -f Makefile contrib/*/Makefile
 	@-$(RM) -f config.log config.status

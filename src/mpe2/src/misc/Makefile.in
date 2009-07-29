@@ -22,7 +22,8 @@ MPI_IMPL             = @MPI_IMPL@
 # MPE header files that are needed by endusers
 MPE_HEADERS          = mpe_misc.h
 
-all: build_include build_lib_bin
+all: build_include
+	$(MAKE) $(MAKEOPTS) build_lib_bin
 
 #######  Building from the source
 build_include:
@@ -39,7 +40,7 @@ build_include:
 	  fi
 
 build_lib_bin:
-	@( cd src && $(MAKE) )
+	@( cd src && $(MAKE) $(MAKEOPTS) )
 
 ########  Linkage Tests
 linktest_all: linktest_C linktest_F77
@@ -61,10 +62,10 @@ clean_lib:
 clean_bin:
 
 clean: clean_bin clean_lib
-	@( cd src && $(MAKE) clean )
+	@( cd src && $(MAKE) $(MAKEOPTS) clean )
 
 distclean: clean_include clean_bin clean_lib
-	@-( cd src && $(MAKE) distclean )
+	@-( cd src && $(MAKE) $(MAKEOPTS) distclean )
 	@-$(RM) -f mpe_misc_conf.h
 	@-$(RM) -f Makefile
 	@-$(RM) -f config.log config.status

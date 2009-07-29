@@ -99,9 +99,9 @@ profile_all:
 
 #
 default:
-	 $(MAKE) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a 
-	 $(MAKE) ${libbuild_dir}/lib$(PROF_LIBNAME).a 
-	 $(MAKE) ${libbuild_dir}/lib$(ANIM_LIBNAME).a
+	 $(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a 
+	 $(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME).a 
+	 $(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(ANIM_LIBNAME).a
 
 #
 # It is tempting here to use ... libmpe.a($(MPE_OBJECTS)) as the dependency,
@@ -118,7 +118,7 @@ default:
 ${libbuild_dir}/lib$(PROF_LIBNAME).a: $(MPE_P_COBJECTS)
 	$(AR) $(ARFLAGS) $@ $(MPE_P_COBJECTS)
 	@if [ "$(MPE_BUILD_FORTRAN2C)" = "yes" ] ; then \
-	     $(MAKE) $(MPE_P_WOBJECTS) ; \
+	     $(MAKE) $(MAKEOPTS) $(MPE_P_WOBJECTS) ; \
 	     $(AR) $(ARFLAGS) $@ $(MPE_P_WOBJECTS) ; \
 	 fi
 	$(RANLIB) $@

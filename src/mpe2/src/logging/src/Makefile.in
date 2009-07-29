@@ -107,11 +107,11 @@ profile_all:
 
 #
 default:
-	$(MAKE) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a
-	$(MAKE) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi_null.a
-	$(MAKE) ${libbuild_dir}/lib$(PROF_LIBNAME)_null.a
-	$(MAKE) ${libbuild_dir}/lib$(PROF_LIBNAME).a
-	$(MAKE) $(EXECS)
+	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a
+	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi_null.a
+	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME)_null.a
+	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME).a
+	$(MAKE) $(MAKEOPTS) $(EXECS)
 
 #
 # It is tempting here to use ... libmpe.a($(MPE_OBJECTS)) as the dependency,
@@ -128,7 +128,7 @@ default:
 ${libbuild_dir}/lib$(PROF_LIBNAME).a: $(MPE_P_COBJECTS)
 	$(AR) $(ARFLAGS) $@ $(MPE_P_COBJECTS)
 	@if [ "$(MPE_BUILD_FORTRAN2C)" = "yes" ] ; then \
-	     $(MAKE) $(MPE_P_WOBJECTS) ; \
+	     $(MAKE) $(MAKEOPTS) $(MPE_P_WOBJECTS) ; \
 	     $(AR) $(ARFLAGS) $@ $(MPE_P_WOBJECTS) ; \
 	 fi
 	$(RANLIB) $@
@@ -136,7 +136,7 @@ ${libbuild_dir}/lib$(PROF_LIBNAME).a: $(MPE_P_COBJECTS)
 ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a: $(MPE_N_ZOBJECTS) $(MPE_N_COBJECTS)
 	$(AR) $(ARFLAGS) $@ $(MPE_N_ZOBJECTS) $(MPE_N_COBJECTS)
 	@if [ "$(MPE_BUILD_FORTRAN2C)" = "yes" ] ; then \
-	     $(MAKE) $(MPE_N_WOBJECTS) ; \
+	     $(MAKE) $(MAKEOPTS) $(MPE_N_WOBJECTS) ; \
 	     $(AR) $(ARFLAGS) $@ $(MPE_N_WOBJECTS) ; \
 	 fi
 	$(RANLIB) $@
@@ -145,7 +145,7 @@ ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a: $(MPE_N_ZOBJECTS) $(MPE_N_COBJECTS)
 ${libbuild_dir}/lib$(PROF_LIBNAME)_null.a: $(MPE_P_XOBJECTS)
 	$(AR) $(ARFLAGS) $@ $(MPE_P_XOBJECTS)
 	@if [ "$(MPE_BUILD_FORTRAN2C)" = "yes" ] ; then \
-	     $(MAKE) $(MPE_P_WOBJECTS) ; \
+	     $(MAKE) $(MAKEOPTS) $(MPE_P_WOBJECTS) ; \
 	     $(AR) $(ARFLAGS) $@ $(MPE_P_WOBJECTS) ; \
 	 fi
 	$(RANLIB) $@
@@ -154,7 +154,7 @@ ${libbuild_dir}/lib$(PROF_LIBNAME)_null.a: $(MPE_P_XOBJECTS)
 ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi_null.a: $(MPE_N_ZOBJECTS) $(MPE_N_XOBJECTS)
 	$(AR) $(ARFLAGS) $@ $(MPE_N_ZOBJECTS) $(MPE_N_XOBJECTS)
 	@if [ "$(MPE_BUILD_FORTRAN2C)" = "yes" ] ; then \
-	     $(MAKE) $(MPE_N_WOBJECTS) ; \
+	     $(MAKE) $(MAKEOPTS) $(MPE_N_WOBJECTS) ; \
 	     $(AR) $(ARFLAGS) $@ $(MPE_N_WOBJECTS) ; \
 	 fi
 	$(RANLIB) $@
@@ -162,22 +162,22 @@ ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi_null.a: $(MPE_N_ZOBJECTS) $(MPE_N_XOBJE
 # Link with *.o instead of *.no
 # as NEC SX-8's cross-compiler refuses to link with *.no
 ${binbuild_dir}/clog2_print@EXEEXT@: clog_print.n@OBJEXT@
-	$(CP) -f clog_print.n@OBJEXT@ mpe2tmp.@OBJEXT@
-	$(CLINKER) $(CC_LDFLAGS) -o $@ mpe2tmp.@OBJEXT@ \
+	$(CP) -f clog_print.n@OBJEXT@ mpe2tmp1.@OBJEXT@
+	$(CLINKER) $(CC_LDFLAGS) -o $@ mpe2tmp1.@OBJEXT@ \
 	                         -L${libbuild_dir} -l$(PROF_LIBNAME)_nompi
-	@-$(RM) -f mpe2tmp.@OBJEXT@
+	@-$(RM) -f mpe2tmp1.@OBJEXT@
 
 ${binbuild_dir}/clog2_join@EXEEXT@: clog_join.n@OBJEXT@
-	$(CP) -f clog_join.n@OBJEXT@ mpe2tmp.@OBJEXT@
-	$(CLINKER) $(CC_LDFLAGS) -o $@ mpe2tmp.@OBJEXT@ \
+	$(CP) -f clog_join.n@OBJEXT@ mpe2tmp2.@OBJEXT@
+	$(CLINKER) $(CC_LDFLAGS) -o $@ mpe2tmp2.@OBJEXT@ \
 	                         -L${libbuild_dir} -l$(PROF_LIBNAME)_nompi
-	@-$(RM) -f mpe2tmp.@OBJEXT@
+	@-$(RM) -f mpe2tmp2.@OBJEXT@
 
 ${binbuild_dir}/clog2_repair@EXEEXT@: clog_repair.n@OBJEXT@
-	$(CP) -f clog_repair.n@OBJEXT@ mpe2tmp.@OBJEXT@
-	$(CLINKER) $(CC_LDFLAGS) -o $@ mpe2tmp.@OBJEXT@ \
+	$(CP) -f clog_repair.n@OBJEXT@ mpe2tmp3.@OBJEXT@
+	$(CLINKER) $(CC_LDFLAGS) -o $@ mpe2tmp3.@OBJEXT@ \
 	                         -L${libbuild_dir} -l$(PROF_LIBNAME)_nompi
-	@-$(RM) -f mpe2tmp.@OBJEXT@
+	@-$(RM) -f mpe2tmp3.@OBJEXT@
 
 #
 # Remove the old libraries before rebuilding (in case they came from another

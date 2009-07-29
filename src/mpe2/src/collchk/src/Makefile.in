@@ -113,23 +113,23 @@ MPI_RMA_OBJ  = $(MPI_RMA_SRC:.c=.@OBJEXT@)
 	$(MPI_CC) $(MPICC_FLAGS) -c $<
 
 default:
-	$(MAKE) ${libbuild_dir}/lib$(COLLCHK_LIBNAME).a
+	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(COLLCHK_LIBNAME).a
 
 ${libbuild_dir}/lib$(COLLCHK_LIBNAME).a: $(UTIL_OBJ) $(MPI_CORE_OBJ)
 	@if [ "${COLLCHK_BUILD_EXSCAN}" = "yes" ] ; then \
-	     $(MAKE) $(MPI_EXSCAN_OBJ) ; \
+	     $(MAKE) $(MAKEOPTS) $(MPI_EXSCAN_OBJ) ; \
 	 fi
 	@if [ "${COLLCHK_BUILD_ALLW}" = "yes" ] ; then \
-	     $(MAKE) $(MPI_ALLW_OBJ) ; \
+	     $(MAKE) $(MAKEOPTS) $(MPI_ALLW_OBJ) ; \
 	 fi
 	@if [ "${COLLCHK_BUILD_IO}" = "yes" ] ; then \
-	     $(MAKE) $(MPI_IO_OBJ) ; \
+	     $(MAKE) $(MAKEOPTS) $(MPI_IO_OBJ) ; \
 	 fi
 	@if [ "${COLLCHK_BUILD_RMA}" = "yes" ] ; then \
-	     $(MAKE) $(MPI_RMA_OBJ) ; \
+	     $(MAKE) $(MAKEOPTS) $(MPI_RMA_OBJ) ; \
 	 fi
 	@if [ "${COLLCHK_BUILD_COMMS}" = "yes" ] ; then \
-	     $(MAKE) $(MPI_COMM_OBJ) ; \
+	     $(MAKE) $(MAKEOPTS) $(MPI_COMM_OBJ) ; \
 	 fi
 	$(AR) $(ARFLAGS) $@ *.@OBJEXT@
 	$(RANLIB) $@
