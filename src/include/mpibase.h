@@ -29,6 +29,16 @@
 #endif
 #endif
 
+/* These macros can be used to prevent inlining for utility functions
+ * where it might make debugging easier. */
+#if defined(HAVE_ERROR_CHECKING)
+#define MPIU_DBG_ATTRIBUTE_NOINLINE ATTRIBUTE((__noinline__))
+#define MPIU_DBG_INLINE_KEYWORD
+#else
+#define MPIU_DBG_ATTRIBUTE_NOINLINE
+#define MPIU_DBG_INLINE_KEYWORD inline
+#endif
+
 /* These routines are used to ensure that messages are sent to the
    appropriate output and (eventually) are properly internationalized */
 int MPIU_Usage_printf( const char *str, ... ) ATTRIBUTE((format(printf,1,2)));
