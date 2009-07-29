@@ -388,7 +388,12 @@ DLOOP_Count PREPEND_PREFIX(Type_indexed_count_contig)(DLOOP_Count count,
         for (first = 0; first < count; ++first)
             if ((DLOOP_Count) blocklength_array[first])
                 break;
-        
+
+        if (first == count) { /* avoid invalid reads later on */
+            contig_count = 0;
+            return contig_count;
+        }
+
         cur_blklen = (DLOOP_Count) blocklength_array[first];
         if (!dispinbytes)
         {
