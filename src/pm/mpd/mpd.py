@@ -80,6 +80,13 @@ from  mpdlib      import  mpd_set_my_id, mpd_check_python_version, mpd_sockpair,
                           MPDStreamHandler, MPDRing, MPDParmDB
 from  mpdman      import  MPDMan
 
+# fix for ticket #753 where the set() builtin isn't available in python2.3
+try:
+    set
+except NameError:
+    from sets import Set as set
+
+
 try:
     import pwd
     pwd_module_available = 1
