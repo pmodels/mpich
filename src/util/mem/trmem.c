@@ -10,17 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(MPICH_DEBUG_MEMINIT)
-#  if defined(HAVE_VALGRIND_H) && defined(HAVE_MEMCHECK_H)
-#    include <valgrind.h>
-#    include <memcheck.h>
-#    define USE_VALGRIND_MACROS 1
-#  elif defined(HAVE_VALGRIND_VALGRIND_H) && defined(HAVE_VALGRIND_MEMCHECK_H)
-#    include <valgrind/valgrind.h>
-#    include <valgrind/memcheck.h>
-#    define USE_VALGRIND_MACROS 1
-#  endif
-#endif
+#include "mpiu_valgrind.h"
 
 #ifndef USE_MEMORY_TRACING
 int MPIU_trvalid( const char str[] );
@@ -246,13 +236,9 @@ void *MPIU_trmalloc( unsigned int a, int lineno, const char fname[] )
     new  += sizeof(TrSPACE);
 
     if (TRhead) {
-#if defined(USE_VALGRIND_MACROS)
-        VALGRIND_MAKE_MEM_DEFINED(&TRhead->prev, sizeof(TRhead->prev)); 
+        MPIU_VG_MAKE_MEM_DEFINED(&TRhead->prev, sizeof(TRhead->prev));
 	TRhead->prev = head;
-        VALGRIND_MAKE_MEM_NOACCESS(&TRhead->prev, sizeof(TRhead->prev)); 
-#else
-	TRhead->prev = head;
-#endif
+        MPIU_VG_MAKE_MEM_NOACCESS(&TRhead->prev, sizeof(TRhead->prev));
     }
     head->next     = TRhead;
     TRhead         = head;
@@ -282,15 +268,13 @@ void *MPIU_trmalloc( unsigned int a, int lineno, const char fname[] )
 		     world_rank, a, new, fname, lineno );
     }
 
-#if defined(USE_VALGRIND_MACROS)
     /* Without these macros valgrind actually catches far fewer errors when
        using --enable-g=mem. Note that it would be nice to use
-       VALGRIND_MALLOCLIKE_BLOCK and friends, but they don't work when the
+       MPIU_VG_MALLOCLIKE_BLOCK and friends, but they don't work when the
        underlying source of the memory is malloc/free. */
-    VALGRIND_MAKE_MEM_UNDEFINED(new, nsize); 
-    VALGRIND_MAKE_MEM_NOACCESS(head, sizeof(TrSPACE)); 
-    VALGRIND_MAKE_MEM_NOACCESS(nend, sizeof(unsigned long)); 
-#endif
+    MPIU_VG_MAKE_MEM_UNDEFINED(new, nsize);
+    MPIU_VG_MAKE_MEM_NOACCESS(head, sizeof(TrSPACE));
+    MPIU_VG_MAKE_MEM_NOACCESS(nend, sizeof(unsigned long));
 fn_exit:
     MPIU_THREAD_CS_EXIT(MEMALLOC,);
     return (void *)new;
@@ -328,14 +312,12 @@ void MPIU_trfree( void *a_ptr, int line, const char file[] )
     a     = a - sizeof(TrSPACE);
     head  = (TRSPACE *)a;
 
-#if defined(USE_VALGRIND_MACROS)
     /* We need to mark the memory as defined before performing our own error
        checks or valgrind will flag the trfree function as erroneous.  The real
        free() at the end of this function will mark the whole block as NOACCESS
        again.  See the corresponding block in the trmalloc function for more
        info. */
-    VALGRIND_MAKE_MEM_DEFINED(a, sizeof(TrSPACE));
-#endif
+    MPIU_VG_MAKE_MEM_DEFINED(a, sizeof(TrSPACE));
 
     if (head->cookie != COOKIE_VALUE) {
 	/* Damaged header */
@@ -358,9 +340,7 @@ called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE),
 	goto fn_exit;
     }
 
-#if defined(USE_VALGRIND_MACROS)
-    VALGRIND_MAKE_MEM_DEFINED(nend, sizeof(*nend)); 
-#endif
+    MPIU_VG_MAKE_MEM_DEFINED(nend, sizeof(*nend));
     if (*nend != COOKIE_VALUE) {
 	if (*nend == ALREADY_FREED) {
 	    addrToHex( (char *)a + sizeof(TrSPACE), hexstring );
@@ -413,26 +393,18 @@ called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE),
     allocated -= head->size;
     frags     --;
     if (head->prev) {
-#if defined(USE_VALGRIND_MACROS)
-        VALGRIND_MAKE_MEM_DEFINED(&head->prev->next, sizeof(head->prev->next)); 
+        MPIU_VG_MAKE_MEM_DEFINED(&head->prev->next, sizeof(head->prev->next));
 	head->prev->next = head->next;
-        VALGRIND_MAKE_MEM_NOACCESS(&head->prev->next, sizeof(head->prev->next)); 
-#else
-	head->prev->next = head->next;
-#endif
+        MPIU_VG_MAKE_MEM_NOACCESS(&head->prev->next, sizeof(head->prev->next));
     }
     else {
 	TRhead = head->next;
     }
 
     if (head->next) {
-#if defined(USE_VALGRIND_MACROS)
-        VALGRIND_MAKE_MEM_DEFINED(&head->next->prev, sizeof(head->next->prev)); 
+        MPIU_VG_MAKE_MEM_DEFINED(&head->next->prev, sizeof(head->next->prev));
 	head->next->prev = head->prev;
-        VALGRIND_MAKE_MEM_NOACCESS(&head->next->prev, sizeof(head->next->prev)); 
-#else
-	head->next->prev = head->prev;
-#endif
+        MPIU_VG_MAKE_MEM_NOACCESS(&head->next->prev, sizeof(head->next->prev));
     }
 
     if (TRlevel & TR_FREE) {
@@ -448,13 +420,11 @@ called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE),
     /* FIXME why do we skip the first few ints? [goodell@] */
     nset = head->size -  2 * sizeof(int);
     if (nset > 0)  {
-#if defined(USE_VALGRIND_MACROS)
         /* If an upper layer (like the handle allocation code) ever used the
-           VALGRIND_MAKE_MEM_NOACCESS macro on part/all of the data we gave
+           MPIU_VG_MAKE_MEM_NOACCESS macro on part/all of the data we gave
            them then our memset will elicit "invalid write" errors from
            valgrind.  Mark it as accessible but undefined here to prevent this. */
-        VALGRIND_MAKE_MEM_UNDEFINED(ahead + 2 * sizeof(int), nset); 
-#endif
+        MPIU_VG_MAKE_MEM_UNDEFINED(ahead + 2 * sizeof(int), nset);
 	memset( ahead + 2 * sizeof(int), TRFreedByte, nset );
     }
     free( a );
@@ -475,19 +445,15 @@ int MPIU_trvalid_unsafe(const char str[])
 
     head = TRhead;
     while (head) {
-#if defined(USE_VALGRIND_MACROS)
         /* mark defined before accessing head contents */
-        VALGRIND_MAKE_MEM_DEFINED(head, sizeof(*head));
-#endif
+        MPIU_VG_MAKE_MEM_DEFINED(head, sizeof(*head));
 	if (head->cookie != COOKIE_VALUE) {
 	    if (!errs) MPIU_Error_printf( "%s\n", str );
 	    errs++;
 	    addrToHex( head, hexstring );
 	    MPIU_Error_printf( "[%d] Block at address %s is corrupted (invalid cookie in head)\n", 
 			 world_rank, hexstring );
-#if defined(USE_VALGRIND_MACROS)
-            VALGRIND_MAKE_MEM_NOACCESS(head, sizeof(*head));
-#endif
+            MPIU_VG_MAKE_MEM_NOACCESS(head, sizeof(*head));
 	    /* Must stop because if head is invalid, then the data in the
 	       head is probably also invalid, and using could lead to 
 	       SEGV or BUS  */
@@ -495,10 +461,10 @@ int MPIU_trvalid_unsafe(const char str[])
 	}
 	a    = (char *)(((TrSPACE*)head) + 1);
 	nend = (unsigned long *)(a + head->size);
-#if defined(USE_VALGRIND_MACROS)
+
         /* mark defined before accessing nend contents */
-        VALGRIND_MAKE_MEM_DEFINED(nend, sizeof(*nend));
-#endif
+        MPIU_VG_MAKE_MEM_DEFINED(nend, sizeof(*nend));
+
 	if (nend[0] != COOKIE_VALUE) {
 	    if (!errs) MPIU_Error_printf( "%s\n", str );
 	    errs++;
@@ -518,11 +484,10 @@ int MPIU_trvalid_unsafe(const char str[])
 			 "[%d] Block allocated in %s[%d]\n", 
 			 world_rank, head->fname, head->lineno );
 	}
-#if defined(USE_VALGRIND_MACROS)
+
         /* set both regions back to NOACCESS */
-        VALGRIND_MAKE_MEM_NOACCESS(head, sizeof(*head));
-        VALGRIND_MAKE_MEM_NOACCESS(nend, sizeof(*nend));
-#endif
+        MPIU_VG_MAKE_MEM_NOACCESS(head, sizeof(*head));
+        MPIU_VG_MAKE_MEM_NOACCESS(nend, sizeof(*nend));
 	head = head->next;
     }
 fn_exit:
@@ -821,9 +786,7 @@ void *MPIU_trrealloc( void *p, int size, int lineno, const char fname[] )
     if (p) {
 	pa   = (char *)p;
 	head = (TRSPACE *)(pa - sizeof(TrSPACE));
-#if defined(USE_VALGRIND_MACROS)
-        VALGRIND_MAKE_MEM_DEFINED(head, sizeof(*head)); /* mark defined before accessing contents */
-#endif
+        MPIU_VG_MAKE_MEM_DEFINED(head, sizeof(*head)); /* mark defined before accessing contents */
 	if (head->cookie != COOKIE_VALUE) {
 	    /* Damaged header */
 	    addrToHex( pa, hexstring );
@@ -836,12 +799,10 @@ may be block not allocated with MPIU_trmalloc or MALLOC\n",
     }
     pnew = MPIU_trmalloc( (unsigned)size, lineno, fname );
 
-#if defined(USE_VALGRIND_MACROS)
     /* If trmalloc failed, p should be left alone and will not be freed.  So we
        need to mark the head as NOACCESS before returning. */
     if (!pnew)
-        VALGRIND_MAKE_MEM_NOACCESS(head, sizeof(*head));
-#endif
+        MPIU_VG_MAKE_MEM_NOACCESS(head, sizeof(*head));
 
     if (p && pnew) {
 	nsize = size;

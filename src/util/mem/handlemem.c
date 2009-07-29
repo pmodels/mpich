@@ -7,17 +7,7 @@
 #include "mpiimpl.h"
 #include <stdio.h>
 
-#if defined(MPICH_DEBUG_MEMINIT)
-#  if defined(HAVE_VALGRIND_H) && defined(HAVE_MEMCHECK_H)
-#    include <valgrind.h>
-#    include <memcheck.h>
-#    define USE_VALGRIND_MACROS 1
-#  elif defined(HAVE_VALGRIND_VALGRIND_H) && defined(HAVE_VALGRIND_MEMCHECK_H)
-#    include <valgrind/valgrind.h>
-#    include <valgrind/memcheck.h>
-#    define USE_VALGRIND_MACROS 1
-#  endif
-#endif
+#include "mpiu_valgrind.h"
 
 #ifdef NEEDS_PRINT_HANDLE
 static void MPIU_Print_handle( int handle );
@@ -365,13 +355,9 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
        0xda as the byte in the memset)
     */
     if (ptr) {
-#if defined(USE_VALGRIND_MACROS)
-        VALGRIND_MAKE_MEM_DEFINED(&ptr->ref_count, objmem->size - sizeof(int));
+        MPIU_VG_MAKE_MEM_DEFINED(&ptr->ref_count, objmem->size - sizeof(int));
 	memset( (void*)&ptr->ref_count, 0xef, objmem->size-sizeof(int));
-        VALGRIND_MAKE_MEM_UNDEFINED(&ptr->ref_count, objmem->size - sizeof(int));
-#else
-	memset( (void*)&ptr->ref_count, 0xef, objmem->size-sizeof(int));
-#endif
+        MPIU_VG_MAKE_MEM_UNDEFINED(&ptr->ref_count, objmem->size - sizeof(int));
     }
 #endif /* USE_MEMORY_TRACING */
 
@@ -394,10 +380,10 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
     MPIU_Handle_common *obj = (MPIU_Handle_common *)object;
 
     MPIU_THREAD_CS_ENTER(HANDLEALLOC,);
-#if defined(USE_VALGRIND_MACROS)
-    VALGRIND_MAKE_MEM_NOACCESS(&obj->ref_count, objmem->size - sizeof(int));
-    VALGRIND_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
-#endif
+
+    MPIU_VG_MAKE_MEM_NOACCESS(&obj->ref_count, objmem->size - sizeof(int));
+    MPIU_VG_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
+
     /* printf( "Freeing %p in %d\n", object, objmem->kind ); */
     obj->next	        = objmem->avail;
     objmem->avail	= obj;
