@@ -44,10 +44,12 @@ int main( int argc, char **argv )
 
       /* Gather everybody's result together - sort of like an */
       /* inefficient allgather */
-      for (i=0; i<participants; i++)
-	MPI_Gather(&table[begin_row][0], send_count, MPI_INT, 
+      for (i=0; i<participants; i++) {
+        void *sendbuf = (i == rank ? MPI_IN_PLACE : &table[begin_row][0]);
+	MPI_Gather(sendbuf,              send_count, MPI_INT,
 		   &table[0][0],         recv_count, MPI_INT, i, 
 		   MPI_COMM_WORLD );
+      }
 
       /* Everybody should have the same table now,  */
       /* This test does not in any way guarantee there are no errors */
