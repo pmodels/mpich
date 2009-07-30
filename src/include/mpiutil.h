@@ -82,6 +82,89 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
     }								\
 }
 
+/* Define the MPIU_Assert_fmt_msg macro.  This macro takes two arguments.  The
+ * first is the condition to assert.  The second is a parenthesized list of
+ * arguments suitable for passing directly to printf that will yield a relevant
+ * error message.  The macro will first evaluate the condition.  If it evaluates
+ * to false the macro will take four steps:
+ *
+ * 1) It will emit an "Assertion failed..." message in the valgrind output with
+ *    a backtrace, if valgrind client requests are available and the process is
+ *    running under valgrind.  It will also evaluate and print the supplied
+ *    message.
+ * 2) It will emit an "Assertion failed..." message via MPIU_Internal_error_printf.
+ *    The supplied error message will also be evaluated and printed.
+ * 3) It will similarly emit the assertion failure and caller supplied messages
+ *    to the debug log, if enabled, via MPIU_DBG_MSG_FMT.
+ * 4) It will invoke MPID_Abort, just like the other MPIU_Assert* macros.
+ *
+ * If the compiler doesn't support (...)/__VA_ARGS__ in macros then the user
+ * message will not be evaluated or printed.  If NDEBUG is defined or
+ * HAVE_ERROR_CHECKING is undefined, this macro will expand to nothing, just
+ * like MPIU_Assert.
+ *
+ * Example usage:
+ *
+ * MPIU_Assert_fmg_msg(foo > bar,("foo is larger than bar: foo=%d bar=%d",foo,bar));
+ */
+#if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
+#  if defined(HAVE_MACRO_VA_ARGS)
+
+#  include "mpiu_valgrind.h" /* for MPIU_VG_ macros */
+
+#  define MPIU_ASSERT_FMT_MSG_MAX_SIZE 2048
+/* newlines are added internally by this macro, callers do not need to include them */
+#    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                                 \
+    do {                                                                               \
+        if (!(cond_)) {                                                                \
+            char *msg_ = MPIU_Malloc(MPIU_ASSERT_FMT_MSG_MAX_SIZE);                    \
+            MPIU_Assert_fmt_msg_snprintf_##fmt_arg_parens_;                            \
+            MPIU_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",   \
+                                       __FILE__, __LINE__, MPIU_QUOTE(a_));            \
+            MPIU_VG_PRINTF_BACKTRACE("%s\n", msg_);                                    \
+            MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", \
+                                       __FILE__, __LINE__, MPIU_QUOTE(a_));            \
+            MPIU_Internal_error_printf("%s\n", msg_);                                  \
+            MPIU_DBG_MSG_FMT(ALL, TERSE,                                               \
+                             (MPIU_DBG_FDEST,                                          \
+                              "Assertion failed in file %s at line %d: %s\n",          \
+                              __FILE__, __LINE__, MPIU_QUOTE(a_)));                    \
+            MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST,"%s\n",msg_));                \
+            MPIU_Free(msg_);                                                           \
+            MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);                                    \
+        }                                                                              \
+    } while (0)
+/* NOTE: tightly coupled to the above macro, make changes in either one carefullly! */
+#    define MPIU_Assert_fmt_msg_snprintf_(...) \
+    MPIU_Snprintf(msg_, MPIU_ASSERT_FMT_MSG_MAX_SIZE,__VA_ARGS__)
+
+#  else /* defined(HAVE_MACRO_VA_ARGS) */
+
+#    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                                 \
+    do {                                                                               \
+        if (!(cond_)) {                                                                \
+            const char *unable_msg_ =                                                  \
+                "macro __VA_ARGS__ not supported, unable to print user message";       \
+            MPIU_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",   \
+                                       __FILE__, __LINE__, MPIU_QUOTE(a_));            \
+            MPIU_VG_PRINTF_BACKTRACE("%s\n", unable_msg_);                             \
+            MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", \
+                                       __FILE__, __LINE__, MPIU_QUOTE(a_));            \
+            MPIU_Internal_error_printf("%s\n", unable_msg_);                           \
+            MPIU_DBG_MSG_FMT(ALL, TERSE,                                               \
+                             (MPIU_DBG_FDEST,                                          \
+                              "Assertion failed in file %s at line %d: %s\n",          \
+                              __FILE__, __LINE__, MPIU_QUOTE(a_)));                    \
+            MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST,"%s\n",unable_msg_));         \
+            MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);                                    \
+        }                                                                              \
+    } while (0)
+
+#  endif
+#else /* !defined(NDEBUG) && defined(HAVE_ERROR_CHECKING) */
+#    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)
+#endif
+
 /*
  * Ensure an MPI_Aint value fits into a signed int.
  * Useful for detecting overflow when MPI_Aint is larger than an int.
