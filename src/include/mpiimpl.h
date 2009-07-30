@@ -89,7 +89,6 @@
 /* Include some basic (and easily shared) definitions */
 #include "mpibase.h"
 
-
 /* FIXME: The code base should not define two of these */
 /* This is used to quote a name in a definition (see FUNCNAME/FCNAME below) */
 #ifndef MPIDI_QUOTE
@@ -132,15 +131,17 @@ static MPIU_DBG_INLINE_KEYWORD void MPIUI_Memcpy(void * dst, const void * src, s
    memcpy.
 */
 #ifndef MPIU_Memcpy
-#define MPIU_Memcpy(dst, src, len) MPIUI_Memcpy(dst, src, len)
+#define MPIU_Memcpy(dst, src, len)                \
+    do {                                          \
+        MPIU_MEM_CHECK_MEMCPY((dst),(src),(len)); \
+        MPIUI_Memcpy((dst), (src), (len));        \
+    } while (0)
 #endif
-
 
 #include "mpiimplthread.h"
 /* #include "mpiu_monitors.h" */
 
 #include "mpiutil.h"
-
 
 /* ------------------------------------------------------------------------- */
 /* mpidebug.h */

@@ -196,6 +196,7 @@ static inline void nt_memcpy (volatile void *dst, volatile const void *src, size
 #define MPID_NEM_MEMCPY_CROSSOVER (63*1024)
 
 #define MPIU_Memcpy(a,b,c)  do {                                                                \
+        MPIU_MEM_CHECK_MEMCPY((a),(b),(c));                                                     \
         if (((c)) >= MPID_NEM_MEMCPY_CROSSOVER)                                                 \
             nt_memcpy (a, b, c);                                                                \
         else                                                                                    \
@@ -254,6 +255,7 @@ void volatile_memcpy (volatile void *restrict dst, volatile const void *restrict
 
 #define MPID_NEM_MEMCPY_CROSSOVER (32*1024)
 #define MPIU_Memcpy(a,b,c) do {                 \
+        MPIU_MEM_CHECK_MEMCPY((a),(b),(c));     \
         if ((c) >= MPID_NEM_MEMCPY_CROSSOVER)   \
             amd64_cpy_nt(a, b, c);              \
         else                                    \
@@ -265,7 +267,11 @@ void volatile_memcpy (volatile void *restrict dst, volatile const void *restrict
 
 #else
 /* #define MPIU_Memcpy(dst, src, n) do { volatile void * restrict d = (dst); volatile const void *restrict s = (src); MPIUI_Memcpy((void *)d, (const void *)s, n); }while (0) */
-#define MPIU_Memcpy(dst, src, n) MPIUI_Memcpy(dst, src, n)
+#define MPIU_Memcpy(dst, src, n)                \
+    do {                                        \
+        MPIU_MEM_CHECK_MEMCPY((dst),(src),(n)); \
+        MPIUI_Memcpy(dst, src, n);              \
+    } while (0)
 #endif
 
 #endif /* MPID_MEMDEFS_H */

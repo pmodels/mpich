@@ -434,6 +434,37 @@ int MPIU_Snprintf( char *str, size_t size, const char *format, ... )
 */
 void MPIU_Basename(char *path, char **basename);
 
+/* May be used to perform sanity and range checking on memcpy and mempcy-like
+   function calls.  This macro will bail out much like an MPIU_Assert if any of
+   the checks fail. */
+#if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
+
+#include "mpiu_valgrind.h"
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#define MPIU_MEM_CHECK_MEMCPY(dst_,src_,len_)                                                               \
+    do {                                                                                                    \
+        MPIU_Assert((dst_) != NULL);                                                                        \
+        MPIU_Assert((src_) != NULL);                                                                        \
+        MPIU_VG_CHECK_MEM_IS_ADDRESSABLE((dst_),(len_));                                                    \
+        MPIU_VG_CHECK_MEM_IS_ADDRESSABLE((src_),(len_));                                                    \
+        if (((char *)(dst_) >= (char *)(src_) && ((char *)(dst_) < ((char *)(src_) + (len_)))) ||           \
+            ((char *)(src_) >= (char *)(dst_) && ((char *)(src_) < ((char *)(dst_) + (len_)))))             \
+        {                                                                                                   \
+            MPIU_Assert_fmt_msg(FALSE,("memcpy argument memory ranges overlap, dst_=%p src_=%p len_=%ld\n", \
+                                       (dst_), (src_), (long)(len_)));                                      \
+        }                                                                                                   \
+    } while (0)
+#else
+#define MPIU_MEM_CHECK_MEMCPY(dst_,src_,len_) do {} while(0)
+#endif
+
 /* ------------------------------------------------------------------------- */
 /* end of mpimem.h */
 /* ------------------------------------------------------------------------- */
