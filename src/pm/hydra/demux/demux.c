@@ -160,6 +160,9 @@ HYD_Status HYD_DMX_wait_for_event(int wtime)
                 if (pollfds[i].revents & POLLIN)
                     events |= HYD_STDOUT;
 
+                if (run->callback == NULL)
+                    HYDU_ERR_POP(status, "no registered callback found for socket\n");
+
                 status = run->callback(pollfds[i].fd, events, run->userp);
                 HYDU_ERR_POP(status, "callback returned error status\n");
             }
