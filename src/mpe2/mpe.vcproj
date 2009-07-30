@@ -1198,7 +1198,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\util\thread\mpe_thread_win.c"
+				RelativePath="..\util\thread\mpiu_thread.c"
 				>
 			</File>
 		</Filter>

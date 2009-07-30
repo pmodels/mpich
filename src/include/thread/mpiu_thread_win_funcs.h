@@ -48,7 +48,7 @@
         }							\
         else                                                    \
         {                                                       \
-            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \        
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \
         }                                                       \
     }                                                           \
 }
@@ -147,7 +147,7 @@
     *(cond_ptr_) = 0;	                                        \
     if ((err_ptr_) != NULL)					\
     {								\
-        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \        
+        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \
     }								\
 }
 
@@ -156,7 +156,7 @@
     *(cond_ptr_) = -1;	                                        \
     if ((err_ptr_) != NULL)					\
     {								\
-        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \        
+        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \
     }								\
 }
 
@@ -164,7 +164,7 @@
 {								\
     if ((err_ptr_) != NULL)					\
     {								\
-        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \        
+        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \
     }								\
 }
 
@@ -172,7 +172,7 @@
 {								\
     if ((err_ptr_) != NULL)					\
     {								\
-        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \        
+        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \
     }								\
 }
 
@@ -180,7 +180,7 @@
 {								\
     if ((err_ptr_) != NULL)					\
     {								\
-        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \        
+        *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;            \
     }                                                           \
 }
 
@@ -202,7 +202,7 @@
         {                                                               \
             *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;                \
         }                                                               \
-    }
+    }                                                                   \
 }
 
 #define MPIU_Thread_tls_destroy(tls_ptr_, err_ptr_)		\
@@ -213,7 +213,7 @@
     {                                                           \
         if (result__)                                           \
         {                                                       \
-            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \        
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \
         }                                                       \
         else                                                    \
         {							\
@@ -230,7 +230,7 @@
     {                                                           \
         if (result__)                                           \
         {                                                       \
-            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \        
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \
         }                                                       \
         else                                                    \
         {							\
@@ -250,8 +250,9 @@
         }							\
         else                                                    \
         {                                                       \
-            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \        
+            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \
         }                                                       \
     }                                                           \
 }
+
 #endif

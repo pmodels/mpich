@@ -5878,10 +5878,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\util\thread\mpe_thread_win.c"
-				>
-			</File>
-			<File
 				RelativePath=".\mpich2.def"
 				>
 			</File>
@@ -5995,6 +5991,10 @@
 			</File>
 			<File
 				RelativePath=".\src\mpi\romio\mpi-io\mpiu_greq.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\util\thread\mpiu_thread.c"
 				>
 			</File>
 			<File

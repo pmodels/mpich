@@ -265,18 +265,11 @@ mpi_dll_spec_definition = "#ifdef USE_MPI_STATIC_LIBRARY" + vbCrLf + "# define M
 
 set f = WScript.CreateObject("Scripting.FileSystemObject")
 
-Set fin = f.OpenTextFile("src\util\thread\win_types.i")
-mpe_thread_typedefs = fin.ReadAll()
-fin.Close()
-Set fin = f.OpenTextFile("src\util\thread\win_funcs.i")
-mpe_thread_funcs = fin.ReadAll()
-fin.Close()
 Set fin = f.OpenTextFile("src\mpid\common\thread\mpe_types.i")
 mpid_thread_typedefs = fin.ReadAll()
 fin.Close()
 Set fin = f.OpenTextFile("src\mpid\common\thread\mpe_funcs.i")
 mpid_thread_funcs = fin.ReadAll()
-mpid_thread_funcs = Replace(mpid_thread_funcs, "sched_yield()", "Sleep(0)")
 fin.Close()
 
 ' Process arguments
@@ -1780,10 +1773,6 @@ Function ReplaceAts( str, use_f77, b64 )
 				'str = Replace(str, "@configure_input@", "")
 			Case "@DLLIMPORT@"
 				str = Replace(str, "@DLLIMPORT@", "CDEC$ ATTRIBUTES DLLIMPORT::/MPIPRIV1/" & vbNewLine & "CDEC$ ATTRIBUTES DLLIMPORT::/MPIPRIV2/" & vbNewLine & "CDEC$ ATTRIBUTES DLLIMPORT::/MPIPRIVC/")
-			Case "@MPE_THREAD_TYPEDEFS@"
-				str = Replace(str, "@MPE_THREAD_TYPEDEFS@", mpe_thread_typedefs)
-			Case "@MPE_THREAD_FUNCS@"
-				str = Replace(str, "@MPE_THREAD_FUNCS@", mpe_thread_funcs)
 			Case "@MPID_THREAD_TYPEDEFS@"
 				str = Replace(str, "@MPID_THREAD_TYPEDEFS@", mpid_thread_typedefs)
 			Case "@MPID_THREAD_FUNCS@"
@@ -2680,18 +2669,18 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#else")
 					fout.WriteLine("#define MPICH_THREAD_LEVEL MPI_THREAD_SINGLE")
 					fout.WriteLine("#endif")
-				Case "USE_THREAD_IMPL"
-					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
-					fout.WriteLine("#define USE_THREAD_IMPL MPICH_THREAD_IMPL_GLOBAL_MUTEX")
-					fout.WriteLine("#else")
-					fout.WriteLine("#define USE_THREAD_IMPL MPICH_THREAD_IMPL_NONE")
-					fout.WriteLine("#endif")
-				Case "USE_THREAD_PKG"
-					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
-					fout.WriteLine("#define USE_THREAD_PKG MPICH_THREAD_PKG_POSIX /* MPICH_THREAD_PKG_WINTHREADS */")
-					fout.WriteLine("#else")
-					fout.WriteLine("#define USE_THREAD_PKG MPICH_THREAD_PKG_NONE")
-					fout.WriteLine("#endif")
+                                Case "USE_THREAD_IMPL"
+                                        fout.WriteLine("#ifdef MPICH_MULTITHREADED")
+                                        fout.WriteLine("#define USE_THREAD_IMPL MPICH_THREAD_IMPL_GLOBAL_MUTEX")
+                                        fout.WriteLine("#else")
+                                        fout.WriteLine("#define USE_THREAD_IMPL MPICH_THREAD_IMPL_NONE")
+                                        fout.WriteLine("#endif")
+                                Case "MPIU_THREAD_PACKAGE_NAME"
+                                        fout.WriteLine("#ifdef MPICH_MULTITHREADED")
+                                        fout.WriteLine("#define MPIU_THREAD_PACKAGE_NAME MPIU_THREAD_PACKAGE_WIN")
+                                        fout.WriteLine("#else")
+                                        fout.WriteLine("#define MPIU_THREAD_PACKAGE_NAME MPIU_THREAD_PACKAGE_NONE")
+                                        fout.WriteLine("#endif")
 				Case "MPIU_THREAD_REFCOUNT"
 					fout.WriteLine("#ifdef MPICH_MULTITHREADED")
 					fout.WriteLine("#define MPIU_THREAD_REFCOUNT MPIU_REFCOUNT_NONE")
@@ -3748,29 +3737,6 @@ If f.FolderExists("src\mpe2\src\logging\include") Then
 		fin.Close()
 		fout.Close()	
 	End If
-End If
-'
-' mpe_thread.h
-'
-If f.FileExists("src\util\thread\mpe_thread.h.in") Then
-	printMsg "VERBOSE", "Creating src\include\win32\mpe_thread.h"
-	Set fout = f.CreateTextFile("src\include\win32\mpe_thread.h")
-	Set fin = f.OpenTextFile("src\util\thread\mpe_thread.h.in")
-	contents = fin.ReadAll()
-	contents = ReplaceAts(contents, false, false)
-	fout.Write(contents)
-	fin.Close()
-	fout.Close()
-	printMsg "VERBOSE", "Creating src\include\win64\mpe_thread.h"
-	Set fout = f.CreateTextFile("src\include\win64\mpe_thread.h")
-	Set fin = f.OpenTextFile("src\util\thread\mpe_thread.h.in")
-	contents = fin.ReadAll()
-	contents = ReplaceAts(contents, false, true)
-	fout.Write(contents)
-	fin.Close()
-	fout.Close()
-Else
-	printMsg "VERBOSE", "Skipping file: mpe_thread.h"
 End If
 
 printMsg "STATUS", "Creating IO header files..."
@@ -5214,27 +5180,6 @@ If f.FolderExists("src\mpe2") Then
 End If
 
 '
-' mpe_thread_conf.h
-'
-If f.FileExists("src\util\thread\mpe_thread_conf.h.in") Then
-	printMsg "VERBOSE", "Creating src\include\win32\mpe_thread_conf.h"
-	Set fout = f.CreateTextFile("src\include\win32\mpe_thread_conf.h")
-	Call WriteHeader(fout, "mpe_thread_")
-	Call AddDefinitions(fout, "src\util\thread\mpe_thread_conf.h.in", false)
-	Call WriteFooter(fout)
-	fout.Close()
-	printMsg "VERBOSE", "Creating src\include\win64\mpe_thread_conf.h"
-	Set fout = f.CreateTextFile("src\include\win64\mpe_thread_conf.h")
-	Call WriteHeader(fout, "mpe_thread_")
-	Call AddDefinitions(fout, "src\util\thread\mpe_thread_conf.h.in", true)
-	Call WriteFooter(fout)
-	fout.Close()
-Else
-	printMsg "VERBOSE", "Skipping file: mpe_thread_conf.h"
-End If
-
-
-'
 ' mpe_callstack_conf.h
 '
 If f.FileExists("src\mpe2\src\callstack\mpe_callstack_conf.h.in") Then
@@ -6430,7 +6375,7 @@ Function GenBuild()
 	CreateObjs "ch3mt", f.GetFolder("src\mpid\ch3\channels\sock"), trimlength, true, false
 	CreateObjs "ch3mt", f.GetFolder("src\mpid\ch3\util\sock"), trimlength, false, false
 	'CreateObjs "ch3mt", f.GetFolder("src\util\events"), trimlength, false, false
-	mfile.WriteLine(" \" & vbCrLf & "	$(MT_OUTDIR)\mpe_thread_win.obj")
+	mfile.WriteLine(" \" & vbCrLf & "	$(MT_OUTDIR)\mpiu_thread.obj")
 
 	mfile.WriteLine
 	mfile.WriteLine("# ch3nemesis")
@@ -6447,7 +6392,7 @@ Function GenBuild()
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength, false, false
 '	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength, false, false
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength, false, false
-	mfile.WriteLine(" \" & vbCrLf & "	$(NEMESIS_OUTDIR)\mpe_thread_win.obj")
+	mfile.WriteLine(" \" & vbCrLf & "	$(NEMESIS_OUTDIR)\mpiu_thread.obj")
 
 	mfile.WriteLine
 	mfile.WriteLine("# ch3ssm")
@@ -6732,7 +6677,7 @@ Function GenBuild()
 	mfile.WriteLine("{..\src\mpe2\src\callstack\src}.c{$(MPE_OUTDIR)}.obj:")
 	mfile.WriteLine("    $(cc) $(cflags) $(mpe_cflags) /DMPE_EXPORTS /Fo""$(MPE_OUTDIR)\\"" /Fd""$(MPE_OUTDIR)\\"" $**")
 	mfile.WriteLine
-	mfile.WriteLine("$(MPE_OUTDIR)\mpe_thread_win.obj: ..\src\util\thread\mpe_thread_win.c")
+	mfile.WriteLine("$(MPE_OUTDIR)\mpiu_thread.obj: ..\src\util\thread\mpiu_thread.c")
 	mfile.WriteLine("    $(cc) $(cflags) $(mpe_cflags) /DMPE_EXPORTS /Fo""$(MPE_OUTDIR)\\"" /Fd""$(MPE_OUTDIR)\\"" $**")
 	mfile.WriteLine
 	mfile.WriteLine("mpe_objs = \")
@@ -6751,7 +6696,7 @@ Function GenBuild()
 	mfile.WriteLine("	$(MPE_OUTDIR)\clog_cache.obj \")
 	mfile.WriteLine("	$(MPE_OUTDIR)\clog_joiner.obj \")
 	mfile.WriteLine("	$(MPE_OUTDIR)\mpe_logf.obj \")
-	mfile.WriteLine("	$(MPE_OUTDIR)\mpe_thread_win.obj \")
+	mfile.WriteLine("	$(MPE_OUTDIR)\mpiu_thread.obj \")
 	mfile.WriteLine("	$(MPE_OUTDIR)\fancyprint.obj \")
 	mfile.WriteLine("	$(MPE_OUTDIR)\iterator.obj \")
 	mfile.WriteLine("	$(MPE_OUTDIR)\mpe_log.obj")
@@ -6762,7 +6707,7 @@ Function GenBuild()
 	mfile.WriteLine("{..\src\mpe2\src\callstack\src}.c{$(MPE_OUTDIR)}.obj:")
 	mfile.WriteLine("    $(cc) $(cflags) $(mpe_cflags) /DMPE_EXPORTS /Fo""$(MPE_OUTDIR)\\"" /Fd""$(MPE_OUTDIR)\\"" $**")
 	mfile.WriteLine
-	mfile.WriteLine("$(FMPE_OUTDIR)\mpe_thread_win.obj: ..\src\util\thread\mpe_thread_win.c")
+	mfile.WriteLine("$(FMPE_OUTDIR)\mpiu_thread.obj: ..\src\util\thread\mpiu_thread.c")
 	mfile.WriteLine("    $(cc) $(cflags) $(mpe_cflags) /DMPE_EXPORTS /DF77_NAME_UPPER /Fo""$(FMPE_OUTDIR)\\"" /Fd""$(FMPE_OUTDIR)\\"" $**")
 	mfile.WriteLine
 	mfile.WriteLine("fmpe_objs = \")
@@ -6781,7 +6726,7 @@ Function GenBuild()
 	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_cache.obj \")
 	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_joiner.obj \")
 	mfile.WriteLine("	$(FMPE_OUTDIR)\mpe_logf.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\mpe_thread_win.obj \")
+	mfile.WriteLine("	$(FMPE_OUTDIR)\mpiu_thread.obj \")
 	mfile.WriteLine("	$(MPE_OUTDIR)\fancyprint.obj \")
 	mfile.WriteLine("	$(MPE_OUTDIR)\iterator.obj \")
 	mfile.WriteLine("	$(FMPE_OUTDIR)\mpe_log.obj")
