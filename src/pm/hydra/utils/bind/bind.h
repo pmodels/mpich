@@ -15,13 +15,27 @@ typedef enum {
     HYDU_BIND_TOPO
 } HYDU_bind_support_level_t;
 
+typedef struct {
+    int processor_id;
+
+    int socket_rank;
+    int socket_id;
+
+    int core_rank;
+    int core_id;
+
+    int thread_rank;
+    int thread_id;
+} HYDU_bind_map_t;
+
 struct HYDU_bind_info {
     HYDU_bind_support_level_t support_level;
     int num_procs;
     int num_sockets;
     int num_cores;
+    int num_threads;
 
-    int **bind_map;
+    HYDU_bind_map_t *bind_map;
 
     int user_bind_valid;
     int *user_bind_map;

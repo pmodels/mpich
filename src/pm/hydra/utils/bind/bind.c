@@ -20,6 +20,7 @@ HYD_Status HYDU_bind_init(HYD_Bindlib_t bindlib, char *user_bind_map)
     HYDU_FUNC_ENTER();
 
     HYDU_bind_info.support_level = HYDU_BIND_NONE;
+    HYDU_bind_info.bind_map = NULL;
 
 #if defined HAVE_PLPA
     if (bindlib == HYD_BINDLIB_PLPA) {
@@ -58,7 +59,7 @@ HYD_Status HYDU_bind_process(int core)
 
 int HYDU_bind_get_core_id(int id, HYD_Binding_t binding)
 {
-    int socket = 0, core = 0, curid, realid;
+    int socket, core, thread, i, realid;
 
     HYDU_FUNC_ENTER();
 
@@ -71,7 +72,7 @@ int HYDU_bind_get_core_id(int id, HYD_Binding_t binding)
             return -1;
         }
         else if (binding == HYD_BIND_RR) {
-            return realid;
+            return HYDU_bind_info.bind_map[realid].processor_id;
         }
         else if (binding == HYD_BIND_USER) {
             if (!HYDU_bind_info.user_bind_valid)
@@ -84,24 +85,27 @@ int HYDU_bind_get_core_id(int id, HYD_Binding_t binding)
          * binding. */
         if (HYDU_bind_info.support_level == HYDU_BIND_TOPO) {
             if (binding == HYD_BIND_BUDDY) {
-                /* If we reached the maximum, loop around */
-                curid = 0;
-                for (core = 0; core < HYDU_bind_info.num_cores; core++) {
-                    for (socket = 0; socket < HYDU_bind_info.num_sockets; socket++) {
-                        if (curid == realid)
-                            return HYDU_bind_info.bind_map[socket][core];
-                        curid++;
-                    }
-                }
+                thread = realid / (HYDU_bind_info.num_sockets * HYDU_bind_info.num_cores);
+
+                core = realid % (HYDU_bind_info.num_sockets * HYDU_bind_info.num_cores);
+                core /= HYDU_bind_info.num_sockets;
+
+                socket = realid % HYDU_bind_info.num_sockets;
             }
             else if (binding == HYD_BIND_PACK) {
-                curid = 0;
-                for (socket = 0; socket < HYDU_bind_info.num_sockets; socket++) {
-                    for (core = 0; core < HYDU_bind_info.num_cores; core++) {
-                        if (curid == realid)
-                            return HYDU_bind_info.bind_map[socket][core];
-                        curid++;
-                    }
+                socket = realid / (HYDU_bind_info.num_cores * HYDU_bind_info.num_threads);
+
+                core = realid % (HYDU_bind_info.num_cores * HYDU_bind_info.num_threads);
+                core /= HYDU_bind_info.num_threads;
+
+                thread = realid % HYDU_bind_info.num_threads;
+            }
+
+            for (i = 0; i < HYDU_bind_info.num_procs; i++) {
+                if (HYDU_bind_info.bind_map[i].socket_rank == socket &&
+                    HYDU_bind_info.bind_map[i].core_rank == core &&
+                    HYDU_bind_info.bind_map[i].thread_rank == thread) {
+                    return HYDU_bind_info.bind_map[i].processor_id;
                 }
             }
         }
