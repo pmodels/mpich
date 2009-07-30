@@ -79,6 +79,13 @@ HYD_Status HYDU_bind_plpa_init(char *user_bind_map, HYDU_bind_support_level_t *s
         goto fn_exit;
     }
 
+    if (HYDU_bind_info.num_procs !=
+        (HYDU_bind_info.num_sockets * HYDU_bind_info.num_cores)) {
+        /* Processor ID count doesn't match with sockets and cores */
+        HYDU_Warn_printf("processor ID count does not match socket/core count\n");
+        goto fn_exit;
+    }
+
     HYDU_MALLOC(HYDU_bind_info.bind_map, int **,
                 HYDU_bind_info.num_sockets * sizeof(int *), status);
     for (i = 0; i < HYDU_bind_info.num_sockets; i++) {
