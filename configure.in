@@ -5063,8 +5063,7 @@ void foo1( char *fmt, ... ) {
     fi
 fi
 
-# check for variable argument list macro functionality
-AC_MSG_CHECKING(["for variable argument list macro functionality"])
+AC_MSG_CHECKING([for variable argument list macro functionality])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([
 #include <stdio.h>
 #define conftest_va_arg_macro(...) printf(__VA_ARGS__)
