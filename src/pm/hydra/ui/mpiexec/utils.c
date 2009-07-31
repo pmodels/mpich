@@ -639,6 +639,25 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             continue;
         }
 
+        if ((!strcmp(str[0], "-ckpoint-prefix")) || (!strcmp(str[0], "--ckpoint-prefix"))) {
+            if (argv[1] && IS_HELP(argv[1])) {
+                printf("\n");
+                printf("-ckpoint-prefix: Checkpoint file prefix to use\n\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+            }
+
+            if (!str[1]) {
+                INCREMENT_ARGV(status);
+                str[1] = HYDU_strdup(*argv);
+            }
+
+            HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpoint_prefix, HYD_INTERNAL_ERROR,
+                                "duplicate -ckpoint-prefix option\n");
+            HYD_handle.ckpoint_prefix = str[1];
+            HYDU_FREE(str[0]);
+            continue;
+        }
+
         if ((!strcmp(str[0], "-ckpoint-interval")) ||
             (!strcmp(str[0], "--ckpoint-interval"))) {
             if (argv[1] && IS_HELP(argv[1])) {

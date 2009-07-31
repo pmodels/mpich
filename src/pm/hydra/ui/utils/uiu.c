@@ -23,6 +23,7 @@ void HYD_UIU_init_params(void)
 
     HYD_handle.ckpointlib = HYD_CKPOINTLIB_UNSET;
     HYD_handle.ckpoint_int = -1;
+    HYD_handle.ckpoint_prefix = NULL;
 
     HYD_handle.debug = -1;
     HYD_handle.print_rank_map = 0;
@@ -72,6 +73,9 @@ void HYD_UIU_free_params(void)
 
     if (HYD_handle.user_bind_map)
         HYDU_FREE(HYD_handle.user_bind_map);
+
+    if (HYD_handle.ckpoint_prefix)
+        HYDU_FREE(HYD_handle.ckpoint_prefix);
 
     if (HYD_handle.wdir)
         HYDU_FREE(HYD_handle.wdir);

@@ -25,6 +25,7 @@ struct HYD_Handle_ {
 
     HYD_Ckpointlib_t ckpointlib;
     int ckpoint_int;
+    char *ckpoint_prefix;
 
     int debug;
     int print_rank_map;

@@ -90,6 +90,7 @@ static void usage(void)
     printf("\n");
     printf("  Checkpoint/Restart options:\n");
     printf("    -ckpoint-interval                checkpoint interval\n");
+    printf("    -ckpoint-prefix                  checkpoint file prefix\n");
     printf("    -ckpointlib                      checkpointing library (blcr)\n");
 
     printf("\n");
