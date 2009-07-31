@@ -966,12 +966,12 @@ static inline int MPIU_SOCKW_Waitset_sock_hnd_set_user_ptr(
         : 0                                                         \
     )
 
+    #pragma warning( default : 4127 )
 #else
     typedef int MPIU_SOCKW_Sockfd_t;
 #   define MPIU_SOCKW_SOCKFD_INVALID    -1
 #   define MPIU_SOCKW_EINTR EINTR
 
-    #pragma warning( default : 4127 )
 #endif /* USE_NT_SOCK */
 
 #undef FUNCNAME
