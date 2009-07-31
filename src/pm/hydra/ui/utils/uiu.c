@@ -70,6 +70,9 @@ void HYD_UIU_free_params(void)
     if (HYD_handle.rmk)
         HYDU_FREE(HYD_handle.rmk);
 
+    if (HYD_handle.user_bind_map)
+        HYDU_FREE(HYD_handle.user_bind_map);
+
     if (HYD_handle.wdir)
         HYDU_FREE(HYD_handle.wdir);
 
