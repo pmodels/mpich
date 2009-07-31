@@ -76,6 +76,9 @@ int MPID_nem_newtcp_module_send_init()
 int MPID_nem_newtcp_module_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIU_UNREFERENCED_ARG(vc);
+    MPIU_UNREFERENCED_ARG(cell);
+    MPIU_UNREFERENCED_ARG(datalen);
     MPIU_Assert(0);
     return mpi_errno;
 }

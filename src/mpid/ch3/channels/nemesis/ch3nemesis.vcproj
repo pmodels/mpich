@@ -310,7 +310,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;USE_WINCONF_H;_WIN32_WINNT=0x0500;ENABLE_NO_MACRO_VARARG_NAME;HAVE_DOUBLEUNDERSCORE_INLINE;MPICH_MULTITHREADED"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="true"
-				WarningLevel="0"
+				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 			/>
 			<Tool

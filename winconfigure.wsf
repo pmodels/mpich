@@ -4515,6 +4515,8 @@ fout.WriteLine("#define HAVE_NT_INTRINSICS")
 fout.WriteLine("#define HAVE_NT_SHARED_MEM")
 fout.WriteLine("#define USE_NT_SHM	1")
 fout.WriteLine("#define USE_NT_SOCK 1")
+' Disable warnings for unsecure versions, eg: snprintf instead of snprintf_s, of funcs
+fout.WriteLine("#pragma warning( disable : 4996 )") 
 ' Define so that we can test whether the mpichconf.h file has been included 
 fout.WriteLine(" /* Define so that we can test whether the mpichconf.h has been included */")
 fout.WriteLine("#define HAVE_MPICHCONF 1")
@@ -4585,6 +4587,8 @@ fout.WriteLine("#define HAVE_NT_INTRINSICS")
 fout.WriteLine("#define HAVE_NT_SHARED_MEM")
 fout.WriteLine("#define USE_NT_SHM	1")
 fout.WriteLine("#define USE_NT_SOCK 1")
+' Disable warnings for unsecure versions, eg: snprintf instead of snprintf_s, of funcs
+fout.WriteLine("#pragma warning( disable : 4996 )") 
 ' Define so that we can test whether the mpichconf.h file has been included 
 fout.WriteLine(" /* Define so that we can test whether the mpichconf.h has been included */")
 fout.WriteLine("#define HAVE_MPICHCONF 1")
@@ -5018,13 +5022,15 @@ If f.FileExists("src\pm\smpd\smpdconf.h.in") Then
 	Set fout = f.CreateTextFile("src\pm\smpd\smpdconf.h")
         Call WriteHeader(fout, "smpd_")
 	Call AddDefinitions(fout, "src\pm\smpd\smpdconf.h.in", false)
-	fout.WriteLine("#define HAVE_WINDOWS_H")
-	fout.WriteLine("#define HAVE_SNPRINTF")
-	fout.WriteLIne("#define HAVE_STRDUP")
+        fout.WriteLine("#ifndef HAVE_WINDOWS_H")
+	fout.WriteLine("    #define HAVE_WINDOWS_H")
+        fout.WriteLine("#endif")
 '   Use human readable tokens in MPIU String funcs
 '   - should be consistent with settings in mpichconf.h used in
 '     compilation of string funcs, argstr.c
-	fout.WriteLine("#define USE_HUMAN_READABLE_TOKENS")
+        fout.WriteLine("#ifndef USE_HUMAN_READABLE_TOKENS")
+	fout.WriteLine("    #define USE_HUMAN_READABLE_TOKENS")
+        fout.WriteLine("#endif")
 	Call WriteFooter(fout)
 	fout.Close()
 Else

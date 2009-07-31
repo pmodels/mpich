@@ -111,7 +111,7 @@
 				InlineFunctionExpansion="1"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;.\sock\include;.\sock\iocp\include;."
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;HAVE_WINDOWS_H;USE_WINCONF_H;_WIN32_WINNT=0x0500"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_WINCONF_H;_WIN32_WINNT=0x0500"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -1115,6 +1115,14 @@
 			<File
 				RelativePath=".\sock\iocp\smpd_util_sock.c"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ShowIncludes="false"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter

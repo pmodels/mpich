@@ -164,7 +164,7 @@ static int smpd_build_spn_list()
     char temp_str[SMPD_MAX_NAME_LENGTH];
     char temp_str2[SMPD_MAX_NAME_LENGTH];
     smpd_host_spn_node_t *iter;
-    double t1, t2;
+    /* double t1, t2; */
     static int initialized = 0;
 
     if (initialized)

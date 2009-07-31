@@ -170,6 +170,7 @@ static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
                     /*
 		            result = SMPDR_Err_create_code(SMPD_SUCCESS, SMPDR_ERR_RECOVERABLE, FCNAME, __LINE__, SMPDU_SOCK_ERR_FAIL, "**socket", 0);
                     */
+                    result = SMPD_FAIL;
                     smpd_err_printf("Error binding socket to given port range, %s (%d)\n", get_err_string(result), result);
 		            return result;
 		        }
@@ -484,6 +485,7 @@ int SMPDU_Sock_init(){
     	result = SMPDR_Err_create_code(SMPD_SUCCESS, SMPDR_ERR_FATAL, FCNAME, __LINE__, SMPDU_SOCK_ERR_FAIL, "**wsasock", "**wsasock %s %d", get_error_string(err), err);
     	smpd_exit_fn(FCNAME);
         */
+        result = SMPD_FAIL;
         smpd_err_printf("Error initializing winsock, %s (%d)\n", get_err_string(result), result);
         smpd_exit_fn(FCNAME);
         return result;
@@ -564,7 +566,6 @@ int SMPDU_Sock_init(){
 #define FCNAME SMPDI_QUOTE(FUNCNAME)
 int SMPDU_Sock_finalize()
 {
-    int result;
     sock_state_t *iter;
 
     smpd_enter_fn(FCNAME);
@@ -1409,7 +1410,6 @@ int SMPDU_Sock_post_connect(SMPDU_Sock_set_t set, void * user_ptr, char * host_d
 #define FCNAME SMPDI_QUOTE(FUNCNAME)
 int SMPDU_Sock_set_user_ptr(SMPDU_Sock_t sock, void * user_ptr)
 {
-    int result;
     smpd_enter_fn(FCNAME);
     if (!g_init_called){
         smpd_err_printf("Attempting to use sock functions without initializing sock\n");
@@ -1777,7 +1777,7 @@ int SMPDU_Sock_wait(SMPDU_Sock_set_t set, int timeout, SMPDU_Sock_event_t * out)
     sock_state_t *sock, *iter;
     OVERLAPPED *ovl;
     DWORD dwFlags = 0;
-    char error_msg[1024];
+    /* char error_msg[1024]; */
 
     smpd_enter_fn(FCNAME);
 

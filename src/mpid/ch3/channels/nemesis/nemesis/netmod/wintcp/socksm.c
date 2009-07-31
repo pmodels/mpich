@@ -233,7 +233,9 @@ static int expand_sc_tbl (void)
 
     for (i = 0; i < g_sc_tbl_capacity; ++i)
     {
+        /*
         sockconn_t *dbg_sc = g_sc_tbl[i].vc ? VC_FIELD(g_sc_tbl[i].vc, sc) : (sockconn_t*)(-1);
+        */
 
         /* The state is only valid if the FD is valid.  The VC field is only
            valid if the state is valid and COMMRDY. */
@@ -1036,8 +1038,6 @@ fn_fail:
 static int cleanup_sc(sockconn_t *sc)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rc;
-    struct pollfd *plfd = NULL;
     freenode_t *node;
     MPIU_CHKPMEM_DECL(1);
     if (sc == NULL)
@@ -1802,7 +1802,7 @@ Evaluate the need for it by testing and then do it, if needed.
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_newtcp_module_connpoll(int in_blocking_poll)
 {
-    int mpi_errno = MPI_SUCCESS, n, i;
+    int mpi_errno = MPI_SUCCESS;
     static int num_skipped_polls = 0;
 
     /* To improve shared memory performance, we don't call the poll()

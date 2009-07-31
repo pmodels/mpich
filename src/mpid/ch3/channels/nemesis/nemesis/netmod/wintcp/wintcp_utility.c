@@ -58,8 +58,7 @@ int MPID_nem_newtcp_module_get_vc_from_conninfo (char *pg_id, int pg_rank, struc
 int MPID_nem_newtcp_module_set_sockopts (int fd)
 {
     int mpi_errno = MPI_SUCCESS;
-    int option, flags;
-    int ret;
+    int option;
     socklen_t len;
 
     /* I heard you have to read the options after setting them in some implementations */
