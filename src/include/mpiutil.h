@@ -118,7 +118,7 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
     do {                                                                               \
         if (!(cond_)) {                                                                \
             char *msg_ = MPIU_Malloc(MPIU_ASSERT_FMT_MSG_MAX_SIZE);                    \
-            MPIU_Assert_fmt_msg_snprintf_##fmt_arg_parens_;                            \
+            MPIU_Assert_fmt_msg_snprintf_ fmt_arg_parens_;                             \
             MPIU_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",   \
                                        __FILE__, __LINE__, MPIU_QUOTE(a_));            \
             MPIU_VG_PRINTF_BACKTRACE("%s\n", msg_);                                    \
