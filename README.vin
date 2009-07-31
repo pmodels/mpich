@@ -7,8 +7,10 @@ the exception of support for the "external32" portable I/O format and
 user-defined data representations for I/O.
 
 The distribution has been tested by us on a variety of machines in our
-own environments. If you have problems, please report them to
-mpich2-maint@mcs.anl.gov.
+own environments. If you have problems, please report them at the
+MPICH2 bug tracking system
+(http://wiki.mcs.anl.gov/mpich2/index.php/Creating_New_Bug_Tickets) or
+send an email to mpich2-maint@mcs.anl.gov.
 
 This README file should contain enough information to get you started
 with MPICH2. More extensive installation and user guides can be found
@@ -109,8 +111,8 @@ shared memory), MPD process management) of MPICH2 up and running.
     generated configure command and is useful for diagnosis if something
     goes wrong.  Other configure options are described below.  You might
     also prefer to do a VPATH build (see below).  Check the c.txt file
-    to make sure everything went will.  Problems should be self-explanatory,
-    but if not, sent c.txt to mpich2-maint@mcs.anl.gov.
+    to make sure everything went well.  Problems should be self-explanatory,
+    but if not, please attach c.txt to your bug report.
 
 5.  Build MPICH2:
 
@@ -125,10 +127,14 @@ shared memory), MPD process management) of MPICH2 up and running.
     This step should succeed if there were no problems with the
     preceding step.  Check file m.txt. If there were problems,
     do a "make clean" and then run make again with VERBOSE=1 
+
       make VERBOSE=1 |& tee m.txt       (for csh and tcsh)
+
       OR
+
       make VERBOSE=1 2>&1 | tee m.txt   (for bash and sh)
-    and than send m.txt and c.txt to mpich2-maint@mcs.anl.gov.
+
+    and then attach m.txt and c.txt to your bug report.
 
 6.  Install the MPICH2 commands:
 
