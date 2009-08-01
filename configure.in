@@ -5648,16 +5648,20 @@ case $with_thread_package in
     posix|pthreads)
 	with_thread_package=posix
 	AC_CHECK_HEADERS(pthread.h)
-	AC_CHECK_FUNCS(pthread_yield)
 
-	# If pthreads library is found, just include it. We don't try
-	# to test if the compiler needs it or not, since though MPICH2
-	# itself might not need it, other applications (e.g., those
-	# compiled with the C++ or Fortran compilers) might.
-	# FIXME: We are blindly adding the flag into LDFLAGS without
-	# checking if someone else added it as well, so there might be
-	# a duplication.
-	AC_CHECK_LIB(pthread,pthread_key_create,LDFLAGS="$LDFLAGS -lpthread",)
+        # If pthreads library is found, just include it on the link line. We don't try
+        # to test if the C compiler needs it or not, since the C++ or Fortran
+        # compilers might need it even if the C compiler doesn't
+        # (nvcc with gfortran, for example).
+        #
+        # OSF1 has __pthread_create but not pthread_create (because of
+        # inconsistencies in the pthread spec).  Thus, we look for pthread_key_create
+        AC_CHECK_LIB([pthread],[pthread_key_create],[PAC_APPEND_FLAG([-lpthread],[LIBS])],[])
+
+        AC_CHECK_FUNCS(pthread_yield)
+
+        # this check should come after the AC_CHECK_LIB for -lpthread
+        AC_CHECK_FUNC([pthread_key_create],[],[AC_MSG_ERROR([unable to find pthreads library])])
 
 	# Check for a routine that specify a routine to call on 
 	# thread exit.  We can use this to release memory that may

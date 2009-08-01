@@ -37,13 +37,12 @@ AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/s
 
 # Check if the pthread library is present. Apparently, just checking
 # for pthread.h is not sufficient.
-AC_CHECK_LIB(pthread,pthread_create,pthread_lib_exists=yes,pthread_lib_exists=no)
-
+AC_CHECK_LIB([pthread],[pthread_key_create],[pthread_lib_exists=yes],[pthread_lib_exists=no])
 
 # Check if the upper-level enabled threads support
 if test "$MPICH2_THREAD_PACKAGE" != "none" -a "$pthread_lib_exists" = "yes" ; then
    AC_DEFINE(HAVE_THREAD_SUPPORT,1,[Define thread support])
-   LDFLAGS="$LDFLAGS -lpthread"
+   PAC_APPEND_FLAG([-lpthread],[LIBS])
 fi
 
 AC_CHECK_LIB(socket,socket,LDFLAGS="$LDFLAGS -lsocket",)

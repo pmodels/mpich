@@ -4,5 +4,5 @@
 if test -s src/mpid/ch3/channels/nemesis/nemesis/localdefs ; then
     . src/mpid/ch3/channels/nemesis/nemesis/localdefs
 fi
-LIBS="$LIBS @LIBS@"
-LDFLAGS="$LDFLAGS @LDFLAGS@"
+LIBS="@LIBS@"
+LDFLAGS="@LDFLAGS@"
