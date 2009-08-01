@@ -55,36 +55,44 @@ dnl that complain about poor code are in effect.
 dnl
 dnl Because this is a long script, we have ensured that you can pass a 
 dnl variable containing the option name as the first argument.
+dnl
+dnl gcc 4.2.4 on 32-bit does not complain about the -Wno-type-limits option 
+dnl even though it doesn't support it.  However, when another warning is 
+dnl triggered, it gives an error that the option is not recognized.  So we 
+dnl need to test with a conftest file that will generate warnings
 dnl D*/
 AC_DEFUN([PAC_C_CHECK_COMPILER_OPTION],[
 AC_MSG_CHECKING([whether C compiler accepts option $1])
-save_CFLAGS="$CFLAGS"
+pccco_save_CFLAGS="$CFLAGS"
 CFLAGS="$1 $CFLAGS"
 rm -f conftest.out
+dnl conftest3.c has an invalid prototype to ensure we generate warnings
+echo 'int main(){}' > conftest3.c
 echo 'int foo(void);int foo(void){return 0;}' > conftest2.c
 echo 'int main(void);int main(void){return 0;}' > conftest.c
-if ${CC-cc} $save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
+if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest3.c $LDFLAGS >/dev/null 2>&1 &&
+   ${CC-cc} $pccco_save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
    if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.out 2>&1 ; then
       if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
          AC_MSG_RESULT(yes)
          AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled without $1])       
          rm -f conftest.out
          rm -f conftest.bas
-         if ${CC-cc} -c $save_CFLAGS $CPPFLAGS conftest2.c >conftest2.out 2>&1 ; then
+         if ${CC-cc} -c $pccco_save_CFLAGS $CPPFLAGS conftest2.c >conftest2.out 2>&1 ; then
             if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest2.o conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
                if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest2.o conftest.c $LDFLAGS >conftest.out 2>&1 ; then
                   if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
 	             AC_MSG_RESULT(yes)	  
-		     CFLAGS="$save_CFLAGS"
+                     CFLAGS="$pccco_save_CFLAGS"
                      ifelse($2,,COPTIONS="$COPTIONS $1",$2)
                   elif test -s conftest.out ; then
 	             cat conftest.out >&AC_FD_CC
 	             AC_MSG_RESULT(no)
-                     CFLAGS="$save_CFLAGS"
+                     CFLAGS="$pccco_save_CFLAGS"
 	             $3
                   else
                      AC_MSG_RESULT(no)
-                     CFLAGS="$save_CFLAGS"
+                     CFLAGS="$pccco_save_CFLAGS"
 	             $3
                   fi  
                else
@@ -92,7 +100,7 @@ if ${CC-cc} $save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas
 	             cat conftest.out >&AC_FD_CC
 	          fi
                   AC_MSG_RESULT(no)
-                  CFLAGS="$save_CFLAGS"
+                  CFLAGS="$pccco_save_CFLAGS"
                   $3
                fi
 	    else
@@ -104,20 +112,20 @@ if ${CC-cc} $save_CFLAGS $CPPFLAGS -o conftest conftest.c $LDFLAGS >conftest.bas
                cat conftest2.out >&AC_FD_CC
             fi
 	    AC_MSG_RESULT(no)
-            CFLAGS="$save_CFLAGS"
+            CFLAGS="$pccco_save_CFLAGS"
 	    $3
          fi
       else
          cat conftest.out >&AC_FD_CC
          AC_MSG_RESULT(no)
          $3
-         CFLAGS="$save_CFLAGS"         
+         CFLAGS="$pccco_save_CFLAGS"
       fi
    else
       AC_MSG_RESULT(no)
       $3
       if test -s conftest.out ; then cat conftest.out >&AC_FD_CC ; fi    
-      CFLAGS="$save_CFLAGS"
+      CFLAGS="$pccco_save_CFLAGS"
    fi
 else
     # Could not compile without the option!
@@ -1085,22 +1093,21 @@ if test "$enable_strict_done" != "yes" ; then
     #   -Wno-sign-compare -- read() and write() return bytes read/written
     #       as a signed value, but we often compare this to size_t (or
     #	    msg_sz_t) variables.
+    #   -Wno-format-zero-length -- this warning is irritating and useless, since
+    #                              a zero-length format string is very well defined
+    #   -Wno-type-limits -- There are places where we compare an unsigned to 
+    #	    a constant that happens to be zero e.g., if x is unsigned and 
+    #	    MIN_VAL is zero, we'd like to do "MPIU_Assert(x >= MIN_VAL);".
+    #       Note this option is not supported by gcc 4.2.  This needs to be added 
+    #	    after most other warning flags, so that we catch a gcc bug on 32-bit 
+    #	    that doesn't give a warning that this is unsupported, unless another
+    #	    warning is triggered, and then if gives an error.
     # These were removed to reduce warnings:
     #   -Wcast-qual -- Sometimes we need to cast "volatile char*" to 
     #	    "char*", e.g., for memcpy.
     #   -Wpadded -- We catch struct padding with asserts when we need to
     #   -Wredundant-decls -- Having redundant declarations is benign and the 
     #	    code already has some.
-    #   -Wno-format-zero-length -- this warning is irritating and useless, since
-    #                              a zero-length format string is very well defined
-    #
-    # This was removed because it doesn't seem to reliably detected by gcc as an
-    # invalid option (see ticket #729):
-    #   -Wno-type-limits -- There are places where we compare an unsigned to 
-    #	    a constant that happens to be zero e.g., if x is unsigned and 
-    #	    MIN_VAL is zero, we'd like to do "MPIU_Assert(x >= MIN_VAL);".
-    #       Note this option is not supported by gcc 4.2.
-
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
@@ -1137,6 +1144,7 @@ if test "$enable_strict_done" != "yes" ; then
         -Wvariadic-macros
         -std=c89
         -Wno-format-zero-length
+	-Wno-type-limits
     "
     pac_cc_strict_flags=""
     case "$1" in 
@@ -1166,10 +1174,13 @@ if test "$enable_strict_done" != "yes" ; then
     # See if the above options work with the compiler
     accepted_flags=""
     for flag in $pac_cc_strict_flags ; do
-    	save_CFLAGS=$CFLAGS
+        # the save_CFLAGS variable must be namespaced, otherwise they
+        # may not actually be saved if an invoked macro also uses
+        # save_CFLAGS
+        pcs_save_CFLAGS=$CFLAGS
 	CFLAGS="$CFLAGS $accepted_flags"
 	PAC_C_CHECK_COMPILER_OPTION($flag,accepted_flags="$accepted_flags $flag",)
-	CFLAGS=$save_CFLAGS
+        CFLAGS=$pcs_save_CFLAGS
     done
     pac_cc_strict_flags=$accepted_flags
 fi
@@ -2360,4 +2371,170 @@ if test "$pac_cv_have__function__" = "yes" ; then
     AC_DEFINE(HAVE__FUNCTION__,,[define if the compiler defines __FUNCTION__])
 fi
 
+])
+
+
+dnl Check structure alignment
+AC_DEFUN([PAC_STRUCT_ALIGNMENT],[
+	# Initialize alignment checks
+	is_packed=1
+	is_two=1
+	is_four=1
+	is_eight=1
+	is_largest=1
+
+	# See if long double exists
+	AC_TRY_COMPILE(,[long double a;],have_long_double=yes,have_long_double=no)
+
+	# Get sizes of regular types
+	AC_CHECK_SIZEOF(char)
+	AC_CHECK_SIZEOF(int)
+	AC_CHECK_SIZEOF(short)
+	AC_CHECK_SIZEOF(long)
+	AC_CHECK_SIZEOF(float)
+	AC_CHECK_SIZEOF(double)
+	AC_CHECK_SIZEOF(long double)
+
+	# char_int comparison
+	AC_CHECK_SIZEOF(char_int, 0, [typedef struct { char a; int b; } char_int; ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_int`
+	extent=$ac_cv_sizeof_char_int
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_int`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_int" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_short comparison
+	AC_CHECK_SIZEOF(char_short, 0, [typedef struct { char a; short b; } char_short; ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_short`
+	extent=$ac_cv_sizeof_char_short
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_short`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "$ac_cv_sizeof_short" = "4" -a "`expr $extent % 4`" != "0" ; then
+	   is_four=0
+	fi
+	if test "$ac_cv_sizeof_short" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_long comparison
+	AC_CHECK_SIZEOF(char_long, 0, [typedef struct { char a; long b; } char_long; ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_long`
+	extent=$ac_cv_sizeof_char_long
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_long`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_long" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_float comparison
+	AC_CHECK_SIZEOF(char_float, 0, [typedef struct { char a; float b; } char_float; ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_float`
+	extent=$ac_cv_sizeof_char_float
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_float`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_float" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_double comparison
+	AC_CHECK_SIZEOF(char_double, 0, [typedef struct { char a; double b; } char_double; ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_double`
+	extent=$ac_cv_sizeof_char_double
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_double`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_double" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_long_double comparison
+	if test "$have_long_double" = "yes"; then
+	AC_CHECK_SIZEOF(char_long_double, 0, [
+				       typedef struct {
+				       	       char a;
+					       long double b;
+				       } char_long_double;
+				       ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_long_double`
+	extent=$ac_cv_sizeof_char_long_double
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_long_double`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_long_double" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+	fi
+
+	# char_int_char comparison
+	AC_CHECK_SIZEOF(char_int_char, 0, [
+				       typedef struct {
+				       	       char a;
+					       int b;
+					       char c;
+				       } char_int_char;
+				       ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_int + $ac_cv_sizeof_char`
+	extent=$ac_cv_sizeof_char_int_char
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_int`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "`expr $extent % 4`" != "0" ; then is_four=0 ; fi
+	if test "$ac_cv_sizeof_int" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# char_short_char comparison
+	AC_CHECK_SIZEOF(char_short_char, 0, [
+				       typedef struct {
+				       	       char a;
+					       short b;
+					       char c;
+				       } char_short_char;
+				       ])
+	size=`expr $ac_cv_sizeof_char + $ac_cv_sizeof_short + $ac_cv_sizeof_char`
+	extent=$ac_cv_sizeof_char_short_char
+	if test "$size" != "$extent" ; then is_packed=0 ; fi
+	if test "`expr $extent % $ac_cv_sizeof_short`" != "0" ; then is_largest=0 ; fi
+	if test "`expr $extent % 2`" != "0" ; then is_two=0 ; fi
+	if test "$ac_cv_sizeof_short" = "4" -a "`expr $extent % 4`" != "0" ; then
+	   is_four=0
+	fi
+	if test "$ac_cv_sizeof_short" = "8" -a "`expr $extent % 8`" != "0" ; then
+	   is_eight=0
+	fi
+
+	# If aligned mod 8, it will be aligned mod 4
+	if test $is_eight = 1 ; then is_four=0 ; is_two=0 ; fi
+	if test $is_four = 1 ; then is_two=0 ; fi
+
+	# Largest supersedes 8
+	if test $is_largest = 1 ; then is_eight=0 ; fi
+
+	# Find the alignment
+	if test "`expr $is_packed + $is_largest + $is_two + $is_four + $is_eight`" = "0" ; then
+	   pac_cv_struct_alignment="unknown"
+	elif test "`expr $is_packed + $is_largest + $is_two + $is_four + $is_eight`" != "1" ; then
+	   pac_cv_struct_alignment="unknown"
+	elif test $is_packed = 1 ; then
+	   pac_cv_struct_alignment="packed"
+	elif test $is_largest = 1 ; then
+	   pac_cv_struct_alignment="largest"
+	elif test $is_two = 1 ; then
+	   pac_cv_struct_alignment="two"
+	elif test $is_four = 1 ; then
+	   pac_cv_struct_alignment="four"
+	elif test $is_eight = 1 ; then
+	   pac_cv_struct_alignment="eight"
+	fi
 ])
