@@ -9,12 +9,6 @@ define([AC_CACHE_SAVE], )dnl
 dnl
 dnl
 AC_INIT()
-dnl Strictly speaking slog2sdk/src does not need 2.52, but since the parent
-dnl package, slog2sdk or mpe2, require 2.5x, which allows environment
-dnl variables set in configure command not allowed in 2.13.  Because of
-dnl that reason, it is safer to use 2.5x here in this package so mpe2's
-dnl or slog2sdk configure can complete successfully.
-dnl AC_PREREQ(2.52)
 AC_CONFIG_AUX_DIR([..])
  
 AC_ARG_ENABLE(echo, 

@@ -6,8 +6,6 @@
 # XXX: INSERT POINTER TO OFFICIAL COPYRIGHT TEXT
 # 
 
-dnl AC_PREREQ(2.59)
-
 AC_INIT(configure.in)
 
 notice_msg=`echo "start of configure for the ${device_name} device" | tr '[a-z]' '[A-Z]'`

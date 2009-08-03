@@ -2,7 +2,6 @@ dnl
 dnl This configure is used ONLY to determine the Fortran 90 features
 dnl that are needed to implement the create_type_xxx routines.
 AC_INIT(Makefile.in)
-dnl AC_PREREQ(2.59)
 
 dnl The MPICH2 top-level configure adds a bunch of flags to the
 dnl user-defined CFLAGS by processing different configure command-line

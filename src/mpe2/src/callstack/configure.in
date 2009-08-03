@@ -8,7 +8,6 @@ define([AC_CACHE_SAVE], )dnl
 dnl
 dnl
 AC_INIT()
-dnl AC_PREREQ(2.52)
 AC_CONFIG_HEADER( mpe_callstack_conf.h )
 dnl
 echo "Configuring MPE CallStack Library with $ac_configure_args"

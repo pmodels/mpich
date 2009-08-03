@@ -49,7 +49,6 @@ AH_BOTTOM([
 #endif    /* OPEN */
 ])
 AC_INIT()
-dnl AC_PREREQ(2.52)
 AC_CONFIG_HEADER( mpe_logging_conf.h )
 dnl
 echo "Configuring MPE Logging Library and Tools with $ac_configure_args"
