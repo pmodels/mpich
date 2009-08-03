@@ -862,7 +862,6 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
     if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED) {
         struct sockaddr_in *sock_addr;
         struct in_addr addr;
-        int rc = 0;
 
         MPIU_Assert(VC_FIELD(vc, sc) == NULL);
         mpi_errno = find_free_entry(&index);
@@ -1538,6 +1537,8 @@ static int MPID_nem_newtcp_module_recv_handler (MPIU_SOCKW_Waitset_sock_hnd_t fd
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_RECV_HANDLER);
 
+    MPIU_UNREFERENCED_ARG(fd_ws_hnd);
+
     if (((MPIDI_CH3I_VC *)sc->vc->channel_private)->recv_active == NULL)
     {
         /* receive a new message */
@@ -1685,6 +1686,8 @@ static int state_d_quiescent_handler(MPIU_SOCKW_Waitset_sock_hnd_t fd_ws_hnd, so
     MPIDI_STATE_DECL(MPID_STATE_STATE_D_QUIESCENT_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_D_QUIESCENT_HANDLER);
+
+    MPIU_UNREFERENCED_ARG(fd_ws_hnd);
 
     mpi_errno = cleanup_sc(sc);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -1887,6 +1890,9 @@ int MPID_nem_newtcp_module_state_listening_handler(MPIU_SOCKW_Waitset_sock_hnd_t
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_STATE_LISTENING_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_STATE_LISTENING_HANDLER);
+
+    MPIU_UNREFERENCED_ARG(unused_1);
+    MPIU_UNREFERENCED_ARG(unused_2);
 
     while (1) {
         l_sc = &g_sc_tbl[0];  /* N3 Important */

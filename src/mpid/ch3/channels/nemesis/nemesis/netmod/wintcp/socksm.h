@@ -80,6 +80,9 @@ typedef enum MPID_nem_newtcp_module_Listen_State {LISTEN_STATE_, LISTEN_STATE_SI
 typedef enum MPID_nem_newtcp_module_Conn_State {CONN_STATE_, CONN_STATE_SIZE} 
     MPID_nem_newtcp_module_Conn_State_t;
 
+#define CONN_STATE_TO_STRING(_cstate) \
+    (( (_cstate) >= CONN_STATE_TS_CLOSED && (_cstate) < CONN_STATE_SIZE ) ? CONN_STATE_STR[_cstate] : "out_of_range")
+
 /*
   Note: event numbering starts from 1, as 0 is assumed to be the state of all-events cleared
  */
