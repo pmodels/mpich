@@ -960,7 +960,7 @@ SMPD_BOOL smpd_unmap_user_drives(char *pszMap);
 void smpd_finalize_drive_maps(void);
 int smpd_append_env_option(char *str, int maxlen, const char *env_name, const char *env_val);
 #ifdef HAVE_WINDOWS_H
-int smpd_get_network_drives(char *pMapList, int mapListLen)
+int smpd_get_network_drives(char *pMapList, int mapListLen);
 int smpd_add_job_key(const char *key, const char *username, const char *domain, const char *full_domain);
 int smpd_add_job_key_and_handle(const char *key, const char *username, const char *domain, const char *full_domain, HANDLE hUser);
 int smpd_remove_job_key(const char *key);
