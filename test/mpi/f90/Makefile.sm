@@ -4,5 +4,5 @@ SUBDIRS = util timer attr coll datatype pt2pt info comm rma spawn topo io ext \
 # A special testing target to simplify testing just the Fortran 90 code
 testing:
 	../runtests -srcdir=$(srcdir) -tests=testlist \
-		   -mpiexec=$(bindir)/mpiexec \
+		   -mpiexec=@MPIEXEC@ \
 		   -xmlfile=summary.xml

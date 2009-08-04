@@ -6,6 +6,8 @@
 #include <mpi.h>
 #include <stdio.h>
 
+/* FIXME: This behavior of this test is implementation specific. */
+
 static int verbose = 0;
 
 int main(int argc, char** argv) {

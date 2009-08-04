@@ -104,6 +104,7 @@ int darray_2d_c_test1(void)
 			"error in MPI_Type_create_darray call; aborting after %d errors\n",
 			errs);
 	    }
+	    MTestPrintError( err );
 	    return errs;
 	}
 	
@@ -183,6 +184,7 @@ int darray_4d_c_test1(void)
 			"error in MPI_Type_create_darray call; aborting after %d errors\n",
 			errs);
 	    }
+	    MTestPrintError( err );
 	    return errs;
 	}
 
@@ -261,6 +263,7 @@ static int pack_and_unpack(char *typebuf,
 		    "error in MPI_Type_size call; aborting after %d errors\n",
 		    errs);
 	}
+	MTestPrintError( err );
 	return errs;
     }
 
@@ -274,6 +277,7 @@ static int pack_and_unpack(char *typebuf,
 		    "error in MPI_Pack_size call; aborting after %d errors\n",
 		    errs);
 	}
+	MTestPrintError( err );
 	return errs;
     }
     packbuf = (char *) malloc(pack_size);
@@ -318,6 +322,7 @@ static int pack_and_unpack(char *typebuf,
 		    "error in MPI_Unpack call; aborting after %d errors\n",
 		    errs);
 	}
+	MTestPrintError( err );
 	return errs;
     }
     free(packbuf);

@@ -34,7 +34,7 @@ concurrent_spawns_SOURCES = concurrent_spawns.c
 
 testing:
 	../runtests -srcdir=$(srcdir) -tests=testlist \
-			-mpiexec=$(bindir)/mpiexec \
+			-mpiexec=@MPIEXEC@ \
 		   	-xmlfile=summary.xml
 clean-local:
 	-rm -f summary.xml

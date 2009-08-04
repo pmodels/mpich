@@ -134,7 +134,7 @@ exscan2_LDADD = ../util/mtest.o
 # A special testing target to simplify running just the collective tests
 testing:
 	../runtests -srcdir=$(srcdir) -tests=testlist \
-		   -mpiexec=$(bindir)/mpiexec \
+		   -mpiexec=@MPIEXEC@ \
 		   -xmlfile=summary.xml
 clean-local:
 	-rm -f summary.xml

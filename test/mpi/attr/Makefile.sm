@@ -24,7 +24,7 @@ keyval_double_free_SOURCES = keyval_double_free.c
 	(cd ../util && $(MAKE) mtest.o)
 testing:
 	../runtests -srcdir=$(srcdir) -tests=testlist \
-			-mpiexec=$(bindir)/mpiexec \
+			-mpiexec=@MPIEXEC@ \
 		   	-xmlfile=summary.xml
 clean-local:
 	-rm -f summary.xml

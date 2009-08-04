@@ -5,7 +5,7 @@ SUBDIRS = util pt2pt comm init spawn
 # A special testing target to simplify running just the thread tests
 testing:
 	../runtests -srcdir=$(srcdir) -tests=testlist \
-		   -mpiexec=$(bindir)/mpiexec \
+		   -mpiexec=@MPIEXEC@ \
 		   -xmlfile=summary.xml
 clean-local:
 	-rm -f summary.xml

@@ -17,5 +17,5 @@ EXTRA_PROGRAMS = errcode errring errstring
 
 testing:
 	../runtests -srcdir=$(srcdir) -tests=testlist \
-			-mpiexec=$(bindir)/mpiexec \
+			-mpiexec=@MPIEXEC@ \
 		   	-xmlfile=summary.xml

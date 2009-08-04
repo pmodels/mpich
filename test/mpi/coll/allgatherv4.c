@@ -16,6 +16,7 @@
 
 #define START_BUF (1)
 #define LARGE_BUF (256 * 1024)
+/* FIXME: MAX_BUF is too large */
 #define MAX_BUF   (128 * 1024 * 1024)
 #define LOOPS 10
 
@@ -56,7 +57,11 @@ int main(int argc, char ** argv)
     recvcounts = (void *) malloc(comm_size * sizeof(int));
     displs = (void *) malloc(comm_size * sizeof(int));
     if (!recvcounts || !displs || !sbuf || !rbuf) {
-        fprintf(stderr, "Unable to allocate memory\n");
+        fprintf(stderr, "Unable to allocate memory:\n");
+	if (!sbuf) fprintf(stderr,"\tsbuf of %d bytes\n", MAX_BUF );
+	if (!rbuf) fprintf(stderr,"\trbuf of %d bytes\n", MAX_BUF );
+	if (!recvcounts) fprintf(stderr,"\trecvcounts of %d bytes\n", comm_size * sizeof(int) );
+	if (!displs) fprintf(stderr,"\tdispls of %d bytes\n", comm_size * sizeof(int) );
         fflush(stderr);
         MPI_Abort(MPI_COMM_WORLD, -1);
     }

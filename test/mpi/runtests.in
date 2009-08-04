@@ -38,7 +38,7 @@
 #
 
 # Global variables
-$mpiexec = "mpiexec";    # Name of mpiexec program (including path, if necessary)
+$mpiexec = "@MPIEXEC@";    # Name of mpiexec program (including path, if necessary)
 $np_arg  = "-n";         # Name of argument to specify the number of processes
 $err_count = 0;          # Number of programs that failed.
 $total_count = 0;        # Number of programs tested

@@ -21,5 +21,5 @@ graphcr2_SOURCES = graphcr2.c
 
 testing:
 	../runtests -srcdir=$(srcdir) -tests=testlist \
-			-mpiexec=$(bindir)/mpiexec \
+			-mpiexec=@MPIEXEC@ \
 		   	-xmlfile=summary.xml

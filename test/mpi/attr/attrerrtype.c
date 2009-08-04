@@ -116,10 +116,13 @@ int test_attrs( void )
 	errs++;
 	printf( "copy function return code was MPI_SUCCESS in dup\n" );
     }
+#ifndef USE_STRICT_MPI
+    /* Another interpretation is to leave d2 unchanged on error */
     if (err && d2 != MPI_DATATYPE_NULL) {
 	errs++;
 	printf( "dup did not return MPI_DATATYPE_NULL on error\n" );
     }
+#endif
 
     delete_flag  = 1;
     deleteCalled = 0;

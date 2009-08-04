@@ -418,13 +418,14 @@ int MTestCheckRecv( MPI::Status &status, MTestDatatype *recvtype )
     int count;
     int errs = 0;
 
-    if (status != MPI_STATUS_IGNORE) {
-	count = status.Get_count( recvtype->datatype );
-	
-	/* Check count against expected count */
-	if (count != recvtype->count) {
-	    errs ++;
-	}
+    /* Note that status may not be MPI_STATUS_IGNORE; C++ doesn't include 
+       MPI_STATUS_IGNORE, instead using different function prototypes that
+       do not include the status argument */
+    count = status.Get_count( recvtype->datatype );
+    
+    /* Check count against expected count */
+    if (count != recvtype->count) {
+	errs ++;
     }
 
     /* Check received data */

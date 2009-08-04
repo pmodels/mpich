@@ -21,7 +21,7 @@ finalized_SOURCES = finalized.c
 # A special testing target to simplify running just the init tests
 testing:
 	../runtests -srcdir=$(srcdir) -tests=testlist \
-		   -mpiexec=$(bindir)/mpiexec \
+		   -mpiexec=@MPIEXEC@ \
 		   -xmlfile=summary.xml
 clean-local:
 	-rm -f summary.xml

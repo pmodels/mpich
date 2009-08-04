@@ -77,6 +77,7 @@ int no_real_types_test(void)
 	    fprintf(stderr,
 		    "error creating struct type no_real_types_test()\n");
 	}
+	MTestPrintError( err );
 	errs++;
     }
 
@@ -86,6 +87,7 @@ int no_real_types_test(void)
 	    fprintf(stderr,
 		    "error obtaining type size in no_real_types_test()\n");
 	}
+	MTestPrintError( err );
 	errs++;
     }
     
@@ -103,6 +105,7 @@ int no_real_types_test(void)
 	    fprintf(stderr,
 		    "error obtaining type extent in no_real_types_test()\n");
 	}
+	MTestPrintError( err );
 	errs++;
     }
     
