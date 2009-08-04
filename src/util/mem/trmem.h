@@ -6,6 +6,10 @@
 #ifndef _TRMEM_H_INCLUDED
 #define _TRMEM_H_INCLUDED
 
+/* FIXME: Consider an option of specifying __attribute__((malloc)) for 
+   gcc - this lets gcc-style compilers know that the returned pointer 
+   does not alias any pointer prior to the call.
+ */
 void MPIU_trinit( int );
 void *MPIU_trmalloc( unsigned int, int, const char [] );
 void MPIU_trfree( void *, int, const char [] );
