@@ -346,20 +346,21 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
     }
 
     MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
-				     "Allocating handle %p (0x%08x)\n",
+                                     "Allocating object ptr %p (handle val 0x%08x)\n",
 				     ptr, ptr->handle));
 
+    if (ptr) {
 #ifdef USE_MEMORY_TRACING
     /* We set the object to an invalid pattern.  This is similar to 
        what is done by MPIU_trmalloc by default (except that trmalloc uses
        0xda as the byte in the memset)
     */
-    if (ptr) {
         MPIU_VG_MAKE_MEM_DEFINED(&ptr->ref_count, objmem->size - sizeof(int));
 	memset( (void*)&ptr->ref_count, 0xef, objmem->size-sizeof(int));
+#endif /* USE_MEMORY_TRACING */
+        /* mark the mem as addressable yet undefined if valgrind is available */
         MPIU_VG_MAKE_MEM_UNDEFINED(&ptr->ref_count, objmem->size - sizeof(int));
     }
-#endif /* USE_MEMORY_TRACING */
 
     return ptr;
 }
@@ -384,7 +385,10 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
     MPIU_VG_MAKE_MEM_NOACCESS(&obj->ref_count, objmem->size - sizeof(int));
     MPIU_VG_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
 
-    /* printf( "Freeing %p in %d\n", object, objmem->kind ); */
+    MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
+                                     "Freeing object ptr %p (handle val 0x%08x)\n",
+                                     obj, obj->handle));
+
     obj->next	        = objmem->avail;
     objmem->avail	= obj;
     MPIU_THREAD_CS_EXIT(HANDLEALLOC,);
