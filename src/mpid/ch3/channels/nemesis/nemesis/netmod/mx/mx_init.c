@@ -146,7 +146,8 @@ MPID_nem_mx_init (MPID_nem_queue_ptr_t proc_recv_queue,
 {   
    int mpi_errno = MPI_SUCCESS ;
    
-   init_mx(pg_p);
+   mpi_errno = init_mx(pg_p);
+   if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
    mpi_errno = MPID_nem_mx_get_business_card (pg_rank, bc_val_p, val_max_sz_p);
    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
