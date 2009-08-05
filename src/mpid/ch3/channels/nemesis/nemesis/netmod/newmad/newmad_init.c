@@ -176,7 +176,7 @@ static int init_mad( MPIDI_PG_t *pg_p )
 #endif /* TCP */                                                                                                                         
 #endif  
     
-   nm_ns_init(mpid_nem_newmad_pcore);
+   nm_sr_init(mpid_nem_newmad_pcore);
    
    init_reqs = (MPID_nem_newmad_init_req_t *)MPIU_Malloc(MPID_nem_mem_region.num_procs*sizeof(MPID_nem_newmad_init_req_t));
    for (index = 0; index < MPID_nem_mem_region.num_procs ; index ++)
