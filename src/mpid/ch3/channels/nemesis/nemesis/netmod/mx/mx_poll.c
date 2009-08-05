@@ -218,7 +218,12 @@ if(type == NEM_MX_DIRECT_TYPE)
 	iov.segment_ptr = (char*)(rreq->dev.tmpbuf);
       }
       iov.segment_length = length;
-      
+
+#ifdef TRACE_TRAFIC
+      recv_num_bytes[vc->lpid] += (uint64_t)(length- sizeof(MPIDI_CH3_PktGeneric_t));
+      recv_num_bytes_inter += (uint64_t)(length- sizeof(MPIDI_CH3_PktGeneric_t));
+#endif       
+
       ret = mx_irecv(MPID_nem_mx_local_endpoint,&iov,1,match_info,NEM_MX_MATCH_FULL_MASK,(void *)rreq,&mx_request);
       MPIU_Assert(ret == MX_SUCCESS);
       
@@ -500,11 +505,13 @@ MPID_nem_mx_handle_sreq(MPID_Request *req)
       int complete   = 0;
       mpi_errno = reqFn(vc, req, &complete);
       if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-      if(complete)
+      /*
+      if(!complete)
       {		   
 	MPIDI_CH3U_Request_complete(req);
 	MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
       }
+      */
     }
     MPID_nem_mx_pending_send_req--;
  fn_exit:
@@ -603,6 +610,12 @@ MPID_nem_mx_handle_rreq(MPID_Request *req, mx_status_t status)
     fprintf(stdout,"[%i]=== Connected 2  on recv  with %i ... %p \n", MPID_nem_mem_region.rank,vc->lpid,vc);
   }
 #endif
+   
+#ifdef TRACE_TRAFIC
+  recv_num_bytes[vc->lpid] += (uint64_t)data_sz;
+  recv_num_bytes_inter += (uint64_t)data_sz;
+#endif
+   
   MPIDI_CH3U_Handle_recv_req(vc, req, &complete);
   MPIU_Assert(complete == TRUE);	       	    
  fn_exit:
