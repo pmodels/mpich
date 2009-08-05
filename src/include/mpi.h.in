@@ -85,6 +85,27 @@ typedef int MPI_Datatype;
 #define MPI_INTEGER8          ((MPI_Datatype)@MPI_INTEGER8@)
 #define MPI_INTEGER16         ((MPI_Datatype)@MPI_INTEGER16@)
 
+/* C99 fixed-width datatypes */
+#define MPI_INT8_T            ((MPI_Datatype)@MPI_INT8_T@)
+#define MPI_INT16_T           ((MPI_Datatype)@MPI_INT16_T@)
+#define MPI_INT32_T           ((MPI_Datatype)@MPI_INT32_T@)
+#define MPI_INT64_T           ((MPI_Datatype)@MPI_INT64_T@)
+#define MPI_UINT8_T           ((MPI_Datatype)@MPI_UINT8_T@)
+#define MPI_UINT16_T          ((MPI_Datatype)@MPI_UINT16_T@)
+#define MPI_UINT32_T          ((MPI_Datatype)@MPI_UINT32_T@)
+#define MPI_UINT64_T          ((MPI_Datatype)@MPI_UINT64_T@)
+
+/* other C99 types */
+#define MPI_C_BOOL                 ((MPI_Datatype)@MPI_C_BOOL@)
+#define MPI_C_FLOAT_COMPLEX        ((MPI_Datatype)@MPI_C_FLOAT_COMPLEX@)
+#define MPI_C_COMPLEX              MPI_C_FLOAT_COMPLEX
+#define MPI_C_DOUBLE_COMPLEX       ((MPI_Datatype)@MPI_C_DOUBLE_COMPLEX@)
+#define MPI_C_LONG_DOUBLE_COMPLEX  ((MPI_Datatype)@MPI_C_LONG_DOUBLE_COMPLEX@)
+
+/* address/offset types */
+#define MPI_AINT          ((MPI_Datatype)@MPI_AINT_DATATYPE@)
+#define MPI_OFFSET        ((MPI_Datatype)@MPI_OFFSET_DATATYPE@)
+
 /* typeclasses */
 #define MPI_TYPECLASS_REAL 1
 #define MPI_TYPECLASS_INTEGER 2

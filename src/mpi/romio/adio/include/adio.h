@@ -112,16 +112,6 @@
 #  define ADIO_OFFSET MPI_LONG
 #endif
 
-#ifndef SX4
-#   define MPI_AINT MPI_LONG    /* may need to change this later */
-#else
-#   if (defined(_SX) && !defined(_LONG64))
-#       define MPI_AINT MPI_LONG_LONG_INT
-#   else
-#       define MPI_AINT MPI_LONG
-#   endif
-#endif
-
 #define ADIO_Status MPI_Status   
 
 #ifndef MPIO_INCLUDE

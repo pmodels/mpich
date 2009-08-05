@@ -33,6 +33,10 @@ static int MPIR_DatatypeAttrFinalizeCallback(void *dummy );
    (character string, set with MPI_Type_set_name) associated with a
    predefined name, then the structures must be allocated.
 */
+/* FIXME does the order of this list need to correspond to anything in
+   particular?  There are several lists of predefined types sprinkled throughout
+   the codebase and it's unclear which (if any) of them must match exactly.
+   [goodell@ 2009-03-17] */
 static MPI_Datatype mpi_dtypes[] = {
     MPI_CHAR,
     MPI_UNSIGNED_CHAR,
@@ -54,7 +58,26 @@ static MPI_Datatype mpi_dtypes[] = {
     MPI_LB,
     MPI_UB,
     MPI_2INT,
-/* Fortran types */
+
+    /* C99 types */
+    MPI_INT8_T,
+    MPI_INT16_T,
+    MPI_INT32_T,
+    MPI_INT64_T,
+    MPI_UINT8_T,
+    MPI_UINT16_T,
+    MPI_UINT32_T,
+    MPI_UINT64_T,
+    MPI_C_BOOL,
+    MPI_C_FLOAT_COMPLEX,
+    MPI_C_DOUBLE_COMPLEX,
+    MPI_C_LONG_DOUBLE_COMPLEX,
+
+    /* address/offset types */
+    MPI_AINT,
+    MPI_OFFSET,
+
+    /* Fortran types */
     MPI_COMPLEX,
     MPI_DOUBLE_COMPLEX,
     MPI_LOGICAL,
@@ -68,9 +91,9 @@ static MPI_Datatype mpi_dtypes[] = {
     MPI_2DOUBLE_PRECISION,
     MPI_CHARACTER,
 #ifdef HAVE_FORTRAN_BINDING
-/* Size-specific types; these are in section 10.2.4 (Extended Fortran Support)
-   as well as optional in MPI-1
-*/
+    /* Size-specific types; these are in section 10.2.4 (Extended Fortran Support)
+       as well as optional in MPI-1
+    */
     MPI_REAL4,
     MPI_REAL8,
     MPI_REAL16,

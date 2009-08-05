@@ -30,6 +30,8 @@ static mpi_names_t mpi_names[] = {
     { MPI_UNSIGNED_LONG, "MPI_UNSIGNED_LONG" },
     { MPI_FLOAT, "MPI_FLOAT" },
     { MPI_DOUBLE, "MPI_DOUBLE" },
+    { MPI_AINT, "MPI_AINT" },
+    { MPI_OFFSET, "MPI_OFFSET" },
 
     { MPI_PACKED, "MPI_PACKED" },
     { MPI_LB, "MPI_LB" },
@@ -79,6 +81,17 @@ static mpi_names_t mpi_names[] = {
        this ifdef allows the test to be built and run. */
     { MPI_INTEGER16, "MPI_INTEGER16" },
 #endif
+    { MPI_INT8_T,   "MPI_INT8_T"   },
+    { MPI_INT16_T,  "MPI_INT16_T"  },
+    { MPI_INT32_T,  "MPI_INT32_T"  },
+    { MPI_INT64_T,  "MPI_INT64_T"  },
+    { MPI_UINT8_T,  "MPI_UINT8_T"  },
+    { MPI_UINT16_T, "MPI_UINT16_T" },
+    { MPI_UINT32_T, "MPI_UINT32_T" },
+    { MPI_UINT64_T, "MPI_UINT64_T" },
+    { MPI_C_BOOL, "MPI_C_BOOL" },
+    { MPI_C_FLOAT_COMPLEX,  "MPI_C_FLOAT_COMPLEX"  },
+    { MPI_C_DOUBLE_COMPLEX, "MPI_C_DOUBLE_COMPLEX" },
     /* Semi-optional types - if the compiler doesn't support long double
        of long long, these might be MPI_DATATYPE_NULL */
     { MPI_LONG_DOUBLE, "MPI_LONG_DOUBLE" },
@@ -86,6 +99,7 @@ static mpi_names_t mpi_names[] = {
     { MPI_LONG_LONG, "MPI_LONG_LONG" },
     { MPI_UNSIGNED_LONG_LONG, "MPI_UNSIGNED_LONG_LONG" }, 
     { MPI_LONG_DOUBLE_INT, "MPI_LONG_DOUBLE_INT" },
+    { MPI_C_LONG_DOUBLE_COMPLEX, "MPI_C_LONG_DOUBLE_COMPLEX" },
     { 0, (char *)0 },  /* Sentinal used to indicate the last element */
 };
 

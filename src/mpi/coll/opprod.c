@@ -39,7 +39,6 @@ void MPIR_PROD (
         MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
 
         /* complex multiplication is slightly different than scalar multiplication */
-        /* adding the C99 {float,double} _Complex types will require redefining an additional macro */
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_)          \
         case (mpi_type_): {                             \
@@ -53,9 +52,14 @@ void MPIR_PROD (
             }                                           \
             break;                                      \
         }
+#undef MPIR_OP_C_COMPLEX_TYPE_MACRO
+#define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_,c_type_,MPIR_LPROD)
         MPIR_OP_TYPE_GROUP(COMPLEX)
         MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)
+        /* put things back where we found them */
 #undef MPIR_OP_TYPE_MACRO
+#undef MPIR_OP_C_COMPLEX_TYPE_MACRO
+#define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
         /* --BEGIN ERROR HANDLING-- */
         default: {
             MPIU_THREADPRIV_DECL;

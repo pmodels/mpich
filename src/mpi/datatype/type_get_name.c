@@ -92,6 +92,24 @@ static mpi_names_t mpi_names[] = {
     type_name_entry(MPI_INTEGER8),
     type_name_entry(MPI_INTEGER16),
 
+    /* C99 types */
+    type_name_entry(MPI_INT8_T),
+    type_name_entry(MPI_INT16_T),
+    type_name_entry(MPI_INT32_T),
+    type_name_entry(MPI_INT64_T),
+    type_name_entry(MPI_UINT8_T),
+    type_name_entry(MPI_UINT16_T),
+    type_name_entry(MPI_UINT32_T),
+    type_name_entry(MPI_UINT64_T),
+    type_name_entry(MPI_C_BOOL),
+    type_name_entry(MPI_C_FLOAT_COMPLEX),
+    type_name_entry(MPI_C_DOUBLE_COMPLEX),
+    type_name_entry(MPI_C_LONG_DOUBLE_COMPLEX),
+
+    /* address/offset types */
+    type_name_entry(MPI_AINT),
+    type_name_entry(MPI_OFFSET),
+
     { 0, (char *) 0 },  /* Sentinel used to indicate the last element */
 };
 

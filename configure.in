@@ -3474,9 +3474,20 @@ if test "$ac_cv_c_uint64_t" != no ; then
     AC_DEFINE(HAVE_UINT64_T,1,[Define if uint64_t is supported by the C compiler])
 fi
 
+# Other C99 types.  stdbool.h and complex.h are not needed for the raw _Bool
+# and _Complex types, only to get the macros "bool" and "complex".
+AC_CHECK_SIZEOF([_Bool])
+AC_CHECK_SIZEOF([float _Complex])
+AC_CHECK_SIZEOF([double _Complex])
+AC_CHECK_SIZEOF([long double _Complex])
+# we need really could just use the result of AC_CHECK_SIZEOF, but having a
+# HAVE_typename macro is useful for consistency
+AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
+
 # Generate a hex version of the size of each type
 for type in short int long long_long float double long_double wchar_t \
-    float_int double_int long_int short_int two_int long_double_int ; do
+    float_int double_int long_int short_int two_int long_double_int     \
+    _Bool float__Complex double__Complex long_double__Complex ; do
     eval len=\$ac_cv_sizeof_$type
     if test -z "$len" ; then 
        len=0
@@ -3486,8 +3497,13 @@ for type in short int long long_long float double long_double wchar_t \
            len=$pclen
        else
            # check for a non-optional type
-	   if test $type != long_long -a $type != long_double -a \
-	           $type != long_double_int ; then 
+           if test $type != long_long -a \
+                   $type != long_double -a \
+                   $type != long_double_int -a \
+                   $type != _Bool \
+                   $type != float__Complex \
+                   $type != double__Complex \
+                   $type != long_double__Complex ; then
                AC_MSG_ERROR([Configure was unable to determine the size of $type ; if cross compiling,
 use the environment variables CROSS_SIZEOF_typename, e.g., CROSS_SIZEOF_SHORT,
 or use the --with-cross=file configure option to specify a file containing
@@ -3750,6 +3766,74 @@ if test -n "$MPIR_INTEGER16_CTYPE" ; then
 fi
 
 # ----------------------------------------------------------------------------
+
+# C99 types
+# The predefined types must be distinct types (as opposed to aliases to MPI_INT
+# or MPI_WHATEVER) in order to correctly support MPI_Type_{get,set}_name.
+#
+# FIXME the "basic id" portion should be automatically assigned.  It's too easy
+# to have a conflict when this is done by hand.
+#
+# Because we make up a matching type for the fixed-width types if one doesn't
+# exist, we don't ever set these to MPI_DATATYPE_NULL.  If we come across a
+# platform where 64-bit sizes aren't supported just add a test like the other
+# types.
+MPI_INT8_T=0x4c000137
+MPI_INT16_T=0x4c000238
+MPI_INT32_T=0x4c000439
+MPI_INT64_T=0x4c00083a
+MPI_UINT8_T=0x4c00013b
+MPI_UINT16_T=0x4c00023c
+MPI_UINT32_T=0x4c00043d
+MPI_UINT64_T=0x4c00083e
+
+# The compiler may or may not support these types, depending on its level of C99
+# compliance.  We check for each one individually before assigning a handle
+# number.
+MPI_C_BOOL=$MPI_DATATYPE_NULL
+MPI_C_FLOAT_COMPLEX=$MPI_DATATYPE_NULL
+MPI_C_DOUBLE_COMPLEX=$MPI_DATATYPE_NULL
+MPI_C_LONG_DOUBLE_COMPLEX=$MPI_DATATYPE_NULL
+if test ${len__Bool} != 0 ; then
+    MPI_C_BOOL=0x4c00${len__Bool}3f
+fi
+if test ${len_float__Complex} != 0 ; then
+    MPI_C_FLOAT_COMPLEX=0x4c00${len_float__Complex}40
+fi
+if test ${len_double__Complex} != 0 ; then
+    MPI_C_DOUBLE_COMPLEX=0x4c00${len_double__Complex}41
+fi
+if test ${len_long_double__Complex} != 0 ; then
+    MPI_C_LONG_DOUBLE_COMPLEX=0x4c00${len_long_double__Complex}42
+fi
+
+AC_SUBST(MPI_INT8_T)
+AC_SUBST(MPI_INT16_T)
+AC_SUBST(MPI_INT32_T)
+AC_SUBST(MPI_INT64_T)
+AC_SUBST(MPI_UINT8_T)
+AC_SUBST(MPI_UINT16_T)
+AC_SUBST(MPI_UINT32_T)
+AC_SUBST(MPI_UINT64_T)
+AC_SUBST(MPI_C_BOOL)
+AC_SUBST(MPI_C_FLOAT_COMPLEX)
+AC_SUBST(MPI_C_DOUBLE_COMPLEX)
+AC_SUBST(MPI_C_LONG_DOUBLE_COMPLEX)
+export MPI_INT8_T
+export MPI_INT16_T
+export MPI_INT32_T
+export MPI_INT64_T
+export MPI_UINT8_T
+export MPI_UINT16_T
+export MPI_UINT32_T
+export MPI_UINT64_T
+export MPI_C_BOOL
+export MPI_C_FLOAT_COMPLEX
+export MPI_C_DOUBLE_COMPLEX
+export MPI_C_LONG_DOUBLE_COMPLEX
+
+
+# ----------------------------------------------------------------------------
 # We can now create the Fortran versions of the datatype values, along with
 # some of the other datatype-dependent sizes
 
@@ -3763,7 +3847,7 @@ fi
 #
 # In addition, we need to look at a few additional constants that depend
 # on how the compiler sizes some datatypes.  These are:
-#    STATIS_SIZE, ADDRESS_KIND, and OFFSET_KIND
+#    STATUS_SIZE, ADDRESS_KIND, and OFFSET_KIND
 # 
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = yes ; then
@@ -4271,14 +4355,17 @@ int main( int argc, char **argv ){
     fi
     AC_SUBST(MPI_STATUS_SIZE)
 
-    #
     # We must convert all hex values to decimal (!).
     # This is for the C types so they are also available in Fortran
     for var in CHAR SIGNED_CHAR UNSIGNED_CHAR WCHAR SHORT \
 		  UNSIGNED_SHORT INT UNSIGNED_INT LONG UNSIGNED_LONG \
 		  FLOAT DOUBLE LONG_DOUBLE LONG_LONG_INT \
 		  UNSIGNED_LONG_LONG LONG_LONG FLOAT_INT DOUBLE_INT \
-		  LONG_INT SHORT_INT "2INT" LONG_DOUBLE_INT ; do
+		  LONG_INT SHORT_INT "2INT" LONG_DOUBLE_INT \
+                  INT8_T INT16_T INT32_T INT64_T            \
+                  UINT8_T UINT16_T UINT32_T UINT64_T        \
+                  C_BOOL C_FLOAT_COMPLEX C_DOUBLE_COMPLEX   \
+                  C_LONG_DOUBLE_COMPLEX ; do
         fullvar="MPI_$var"
 	fullf77var="MPI_F77_$var"
         eval fullvarvalue=\$$fullvar
@@ -4347,6 +4434,22 @@ int main( int argc, char **argv ){
     AC_SUBST(MPI_F77_SHORT_INT)
     AC_SUBST(MPI_F77_2INT)
     AC_SUBST(MPI_F77_LONG_DOUBLE_INT)
+    AC_SUBST(MPI_F77_INT8_T)
+    AC_SUBST(MPI_F77_INT16_T)
+    AC_SUBST(MPI_F77_INT32_T)
+    AC_SUBST(MPI_F77_INT64_T)
+    AC_SUBST(MPI_F77_UINT8_T)
+    AC_SUBST(MPI_F77_UINT16_T)
+    AC_SUBST(MPI_F77_UINT32_T)
+    AC_SUBST(MPI_F77_UINT64_T)
+    AC_SUBST(MPI_F77_C_BOOL)
+    AC_SUBST(MPI_F77_C_FLOAT_COMPLEX)
+    AC_SUBST(MPI_F77_C_DOUBLE_COMPLEX)
+    AC_SUBST(MPI_F77_C_LONG_DOUBLE_COMPLEX)
+    # these two are not yet defined, but AC_SUBST only cares about them at AC_OUTPUT-time
+    AC_SUBST(MPI_F77_AINT_DATATYPE)
+    AC_SUBST(MPI_F77_OFFSET_DATATYPE)
+
     # Try and compute the values of .true. and .false. in Fortran
     # This code has been removed because the Fortran binding code does
     # not yet support it.  
@@ -4487,9 +4590,13 @@ EOF
     if test -n "$F90" ; then
         PAC_LANG_PUSH_COMPILERS
         PAC_LANG_FORTRAN90
+
         # Offset kind should be for 8 bytes if possible (Romio prefers that)
         # address should be sizeof void *
-        # FIXME: make offset kind match the length of MPI_Offset.
+        # FIXME in the current configure implementation OFFSET_KIND and
+        # MPI_Offset won't always agree, but generally will.  The MPI Standard
+        # implies that these types must have identical size, so this is a bug
+        # waiting to happen.
         testsize=$ac_cv_sizeof_void_p
         if test "$testsize" = 0 ; then
             # Set a default
@@ -5536,7 +5643,31 @@ for type in int long long_long short ; do
 done
 AC_DEFINE_UNQUOTED(MPIR_Pint,$MPIR_PINT,[MPIR_Pint is a pointer-sized integer])
 AC_DEFINE_UNQUOTED(MPIR_Upint,unsigned $MPIR_PINT,[MPIR_Upint is an unsigned pointer-sized integer])
-#
+
+# ----------------------------------------------------------------------------
+# MPI_AINT datatype
+# ----------------------------------------------------------------------------
+# Must be done after MPI_Aint type determination but before subconfigures.
+
+# convert to 2-char hex size
+case "$MPI_SIZEOF_AINT" in
+    4)    len_mpi_aint=04 ;;
+    8)    len_mpi_aint=08 ;;
+    16)   len_mpi_aint=10 ;;
+    *)    AC_MSG_ERROR([Unable to convert MPI_SIZEOF_AINT to a hex string.  This is either because we are building on a very strange platform or there is a bug somewhere in configure.]) ;;
+esac
+# MPI_AINT and MPI_OFFSET are already taken, appending a _DATATYPE prefix
+MPI_AINT_DATATYPE=0x4c00${len_mpi_aint}43
+AC_SUBST(MPI_AINT_DATATYPE)
+export MPI_AINT_DATATYPE
+
+# 0x4c000043 is 1275068483 in decimal, add ($MPI_SIZEOF_AINT * 256) and you get
+# the decimal equivalent of the hex number
+MPI_F77_AINT_DATATYPE=`expr 1275068483 '+' '(' 256 '*' $MPI_SIZEOF_AINT ')'`
+AC_SUBST(MPI_F77_AINT_DATATYPE)
+export MPI_F77_AINT_DATATYPE
+# ----------------------------------------------------------------------------
+
 # define MPIU_Size_t - used to express the size of objects
 # This is used in src/include/mpitypedefs.h to define MPIU_SIZE_T, 
 # and is used in various parts of ch3 and mpid/common/sock.  
@@ -6057,15 +6188,15 @@ else
         MPI_OFFSET="long"
 	# Make the size of this type available to other configures
 	MPI_SIZEOF_OFFSET=8
-	export MPI_SIZEOF_OFFSET
     elif test "$ac_cv_sizeof_long_long" = 8 ; then
         MPI_OFFSET="long long"
 	# Make the size of this type available to other configures
 	MPI_SIZEOF_OFFSET=8
-	export MPI_SIZEOF_OFFSET
     else
         MPI_OFFSET=long
+        MPI_SIZEOF_OFFSET=$ac_cv_sizeof_long
     fi
+    export MPI_SIZEOF_OFFSET
 fi
 AC_SUBST(MPI_OFFSET)
 #
@@ -6107,6 +6238,28 @@ recommend that you set both F77 and F90 to the same compiler and reconfigure.])
 fi
 AC_SUBST(FORTRAN_MPI_OFFSET)
 #
+
+# ----------------------------------------------------------------------------
+# MPI_OFFSET datatype
+# ----------------------------------------------------------------------------
+# must be done after ROMIO configure step
+case "$MPI_SIZEOF_OFFSET" in
+    4)    len_mpi_offset=04 ;;
+    8)    len_mpi_offset=08 ;;
+    16)   len_mpi_offset=10 ;;
+    *)    AC_MSG_ERROR([Unable to convert MPI_SIZEOF_OFFSET to a hex string.  This is either because we are building on a very strange platform or there is a bug somewhere in configure.]) ;;
+esac
+MPI_OFFSET_DATATYPE=0x4c00${len_mpi_offset}44
+AC_SUBST(MPI_OFFSET_DATATYPE)
+export MPI_OFFSET_DATATYPE
+
+# 0x4c000044 is 1275068484 in decimal, add ($MPI_SIZEOF_OFFSET * 256) and you get
+# the decimal equivalent of the hex number
+MPI_F77_OFFSET_DATATYPE=`expr 1275068483 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
+AC_SUBST(MPI_F77_OFFSET_DATATYPE)
+export MPI_F77_OFFSET_DATATYPE
+# ----------------------------------------------------------------------------
+
 dnl Extra status information, from device subsystem, to be included in the
 dnl declaration of MPI_Status in mpi.h.in
 AC_SUBST(EXTRA_STATUS_DECL)
