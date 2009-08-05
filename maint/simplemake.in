@@ -1266,14 +1266,18 @@ sub DefaultVariables {
 	    # libtool to provide the shared library.
 	    printMakeVariable( FD, "LIBTOOL", "\@LIBTOOL\@" );
 	    printMakeVariable( FD, "CREATESHLIB", "\@CREATESHLIB\@" );
+	    printMakeVariable( FD, "LIBS", "\@LIBS\@" );
+	    printMakeVariable( FD, "LDFLAGS", "\@LDFLAGS\@" );
 	    print FD "$shlibdefs{'c'}$newline";
 	}
 	elsif ($found_sharedlib) {
-	    # No install target, but a shared library is begin built
+	    # No install target, but a shared library is being built
 	    # Add the definition of libtool incase we're using
 	    # libtool to provide the shared library.
 	    printMakeVariable( FD, "LIBTOOL", "\@LIBTOOL\@" );
 	    printMakeVariable( FD, "CREATESHLIB", "\@CREATESHLIB\@" );
+	    printMakeVariable( FD, "LIBS", "\@LIBS\@" );
+	    printMakeVariable( FD, "LDFLAGS", "\@LDFLAGS\@" );
 	    print FD "$shlibdefs{'c'}$newline";
 	    printMakeVariable( FD, "MKDIR_P", "\@MKDIR_P\@" );
 	}
@@ -3319,7 +3323,7 @@ library, or new library name)\n" if $debug;
     if (!defined($usertargets{"$libdir/$newlibname"})) {
 	print FD "# Build the shared library from the shared object files\n";
 	print FD "$libdir/$newlibname: $libdir/$libname
-\t(cd $libdir && \$(CREATESHLIB) --mode=link -version-info \"\@ABIVERSION\@\" -o $libname $exports -rpath \$(libdir) $otherlibs)\n";
+\t(cd $libdir && \$(CREATESHLIB) --mode=link -version-info \"\@ABIVERSION\@\" -o $libname $exports -rpath \$(libdir) $otherlibs -ldflags \"\$(LDFLAGS)\" \$(LIBS))\n";
     }
     # If there is a profiling library, we need to build it
     # now, as part of this target, to handle the case where the

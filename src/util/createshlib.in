@@ -38,6 +38,7 @@ destdir=""
 Show=eval
 exportDefs=""
 dependentLibs=""
+ldflags=""
 #
 # Check for options from the environment
 if [ "$CREATESHLIB_ECHO" = "yes" ] ; then
@@ -54,6 +55,9 @@ for arg in "$@" ; do
 	   ;;
 	   -rpath)
 	   destdir=$arg
+	   ;;
+	   -ldflags)
+	   ldflags=$arg
 	   ;;
 	   -export)
 	   # The libtool option is -export-symbols, and the file is
@@ -79,6 +83,15 @@ for arg in "$@" ; do
    case $arg in 
        --mode=*) mode=$option ;;
        -o|-rpath|-export|-version-info) # next arg is value for this option
+       nextarg=$arg
+       ;;
+       # NOTE: -ldflags is not present in libtool.  Instead it assumes that any
+       # linker options will be passed directly on the command line and will be
+       # understood by libtool (such as -L/path/to/search).  Since the MPICH2
+       # $LDFLAGS might contain other options that we won't understand we
+       # provide this mechanism to ensure that the flags end up on the link
+       # line.
+       -ldflags) # next arg is value for this option
        nextarg=$arg
        ;;
        -echo) set -x ;;
@@ -260,8 +273,8 @@ if [ $mode = link ] ; then
 	    abssrclibdir=`(cd $srclibdir && pwd)`
 	    destlibname="$abssrclibdir/$realName"
 	fi
-	$Show ${C_LINK_SHL} -o $realName \
-	    $minorVersionArg -install_name $destlibname .tmp/*.o
+	$Show ${C_LINK_SHL} $ldflags -o $realName \
+	    $minorVersionArg -install_name $destlibname .tmp/*.o $dependentLibs
 	;;		
 
 	cygwin|cygwin-gcc)
@@ -273,7 +286,7 @@ if [ $mode = link ] ; then
 	# will cause only those symbols to be exported.
 	# Note that we include any dependent libs because these are needed
 	# for Windows-style dlls
-	$Show ${C_LINK_SHL} -o $realName $exportDefs \
+	$Show ${C_LINK_SHL} $ldflags -o $realName $exportDefs \
 	    -Wl,--out-implib,$srclibbase.a \
 	    .tmp/*.o $dependentLibs
 	# Create the import library
@@ -293,8 +306,7 @@ if [ $mode = link ] ; then
         # Typically -Wl,-h,$soName
 	# FIXME: C_LINK_SHL knows the options for shared libraries,
 	# but not the args for setting the soname.
-	$Show ${C_LINK_SHL} -o $realName -Wl,-h,$soName .tmp/*.o 
-	# Do we need to add $dependentLibs ?
+	$Show ${C_LINK_SHL} $ldflags -o $realName -Wl,-h,$soName .tmp/*.o $dependentLibs
 	;;
     esac
     if [ -n "$altNames" ] ; then
