@@ -80,13 +80,15 @@ PYTHON=$with_python
 # echo "GOT PYTHON", $PYTHON
 if test -z "$PYTHON" ; then  ## user did not give us a python; find one
     dnl Find a Python
+    AC_CHECK_PROG(PY26, python2.6, python2.6)
     AC_CHECK_PROG(PY25, python2.5, python2.5)
     AC_CHECK_PROG(PY24, python2.4, python2.4)
     AC_CHECK_PROG(PY23, python2.3, python2.3)
     AC_CHECK_PROG(PY22, python2.2, python2.2)
     AC_CHECK_PROG(PY2,  python2, python2)
     AC_CHECK_PROG(PY,   python, python)
-    if test -z "$PY25"  -a  \
+    if test -z "$PY26"  -a  \
+            -z "$PY25"  -a  \
             -z "$PY24"  -a  \
             -z "$PY23"  -a  \
             -z "$PY22"  -a  \
@@ -95,7 +97,7 @@ if test -z "$PYTHON" ; then  ## user did not give us a python; find one
         AC_MSG_WARN([Could not find a python executable in path: $PATH]) 
     fi
     dnl See if one of the pythons has the right modules
-    for pypgm in $PY25 $PY24 $PY23 $PY22 $PY2 $PY ; do \
+    for pypgm in $PY26 $PY25 $PY24 $PY23 $PY22 $PY2 $PY ; do \
         AC_MSG_CHECKING([that $pypgm is a valid python version])
         changequote(,)dnl
         py_version=`$pypgm -c "import sys;print sys.version_info[0]"`
