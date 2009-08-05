@@ -87,7 +87,7 @@ int MPID_nem_tcp_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
 #define FUNCNAME MPID_nem_tcp_send_queued
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_send_queued (MPIDI_VC_t *vc)
+int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq;
@@ -117,6 +117,7 @@ int MPID_nem_tcp_send_queued (MPIDI_VC_t *vc)
             {
                 offset = 0;
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "EAGAIN");
+                break;
             }
             else
                 MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
@@ -318,10 +319,21 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
     
     MPIU_Assert(sreq->dev.iov_count >= 1 && sreq->dev.iov[0].MPID_IOV_LEN > 0);
 
-    if (SENDQ_EMPTY(VC_FIELD(vc, send_queue)) && MPID_nem_tcp_vc_is_connected(vc))
-        SET_PLFD(vc);
-    SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
-
+    if (MPID_nem_tcp_vc_is_connected(vc)) {
+        if (SENDQ_EMPTY(VC_FIELD(vc, send_queue))) {
+            /* this will be the first send on the queue: queue it and set the write flag on the pollfd */
+            SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
+            SET_PLFD(vc);
+        } else {
+            /* there are other sends in the queue before this one: try to send from the queue */
+            SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
+            mpi_errno = MPID_nem_tcp_send_queued(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    } else {
+        SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
+    }
+    
     *sreq_ptr = sreq;
     
  fn_exit:
@@ -441,10 +453,21 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
 
-    if (SENDQ_EMPTY(VC_FIELD(vc, send_queue)) && MPID_nem_tcp_vc_is_connected(vc))
-        SET_PLFD(vc);
-    SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
-
+    if (MPID_nem_tcp_vc_is_connected(vc)) {
+        if (SENDQ_EMPTY(VC_FIELD(vc, send_queue))) {
+            /* this will be the first send on the queue: queue it and set the write flag on the pollfd */
+            SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
+            SET_PLFD(vc);
+        } else {
+            /* there are other sends in the queue before this one: try to send from the queue */
+            SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
+            mpi_errno = MPID_nem_tcp_send_queued(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    } else {
+        SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
+    }
+    
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_ISENDCONTIGMSG);
     return mpi_errno;
@@ -558,10 +581,21 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
         
-    if (SENDQ_EMPTY(VC_FIELD(vc, send_queue)) && MPID_nem_tcp_vc_is_connected(vc))
-        SET_PLFD(vc);
-    SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
-
+    if (MPID_nem_tcp_vc_is_connected(vc)) {
+        if (SENDQ_EMPTY(VC_FIELD(vc, send_queue))) {
+            /* this will be the first send on the queue: queue it and set the write flag on the pollfd */
+            SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
+            SET_PLFD(vc);
+        } else {
+            /* there are other sends in the queue before this one: try to send from the queue */
+            SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
+            mpi_errno = MPID_nem_tcp_send_queued(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    } else {
+        SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
+    }
+    
  fn_exit:
     return mpi_errno;
  fn_fail:

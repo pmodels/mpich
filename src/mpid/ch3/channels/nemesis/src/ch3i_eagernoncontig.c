@@ -30,7 +30,8 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 
     if (!MPIDI_CH3I_SendQ_empty(CH3_NORMAL_QUEUE)) /* MT */
     {
-        /* send queue is not empty, just enqueue this request */
+        /* send queue is not empty, enqueue the request then check to
+           see if we can send any now */
 
         MPIDI_DBG_PRINTF((55, FCNAME, "enqueuing"));
 
@@ -38,7 +39,10 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         sreq->ch.noncontig    = TRUE;
         sreq->ch.header_sz    = hdr_sz;
 	sreq->ch.vc           = vc;
-	MPIDI_CH3I_SendQ_enqueue (sreq, CH3_NORMAL_QUEUE);
+
+        MPIDI_CH3I_SendQ_enqueue(sreq, CH3_NORMAL_QUEUE);
+        mpi_errno = MPIDI_CH3_Progress_test();
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         goto fn_exit;
     }
 
