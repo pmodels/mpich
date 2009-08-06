@@ -8,6 +8,7 @@ smvar_do_sharedlibs = 0
 EXTRA_PROGRAMS       = 
 
 threads_SOURCES      = threads.c
+threads_LDADD        = ../util/mtestthread.o
 threaded_sr_SOURCES  = threaded_sr.c
 alltoall_SOURCES     = alltoall.c
 sendselfth_SOURCES   = sendselfth.c

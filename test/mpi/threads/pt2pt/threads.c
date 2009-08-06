@@ -4,7 +4,9 @@
  *  (C) 2003 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
+
 #include "mpi.h"
+#include "mpitest.h"
 #include <stdio.h>
 #include <pthread.h>
 
@@ -25,10 +27,10 @@ struct tp {
     double latency;
 } tp[MAX_THREADS];
 
-pthread_barrier_t pbarrier;
 int size, rank;
 char sbuf[MAX_MSG_SIZE], rbuf[MAX_MSG_SIZE];
 static int verbose = 0;
+static int num_threads;
 
 void *run_test(void *arg)
 {
@@ -42,7 +44,7 @@ void *run_test(void *arg)
         peer = MPI_PROC_NULL;
     else
         peer = (rank % 2) ? rank - 1 : rank + 1;
-    pthread_barrier_wait(&pbarrier);
+    MTest_thread_barrier(num_threads);
 
     start = MPI_Wtime();
 
@@ -78,7 +80,7 @@ void *run_test(void *arg)
     end = MPI_Wtime();
     tp[thread_id].latency = 1000000.0 * (end - start) / (LOOPS * WINDOW);
 
-    pthread_barrier_wait(&pbarrier);
+    MTest_thread_barrier(num_threads);
 }
 
 void loops(void)
@@ -89,16 +91,17 @@ void loops(void)
     double latency, mrate, avg_latency, agg_mrate;
 
     for (nt = 1; nt <= MAX_THREADS; nt++) {
+        num_threads = nt;
         MPI_Barrier(MPI_COMM_WORLD);
-        pthread_barrier_init(&pbarrier, NULL, nt);
+        MTest_thread_barrier_init();
 
         for (i = 1; i < nt; i++)
             pthread_create(&thread[i], NULL, (void*) run_test, (void *) i);
         run_test((void *) 0);
         for (i = 1; i < nt; i++)
             pthread_join(thread[i], &retval[i]);
-            
-        pthread_barrier_destroy(&pbarrier);
+
+        MTest_thread_barrier_free();
 
         latency = 0;
         for (i = 0; i < nt; i++)
