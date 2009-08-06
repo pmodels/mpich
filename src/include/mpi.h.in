@@ -543,7 +543,7 @@ typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
 @INCLUDE_MPIDDEFS_H@
 
 /*
- * Normally, we provide prototypes for all MPI routines.  In a few wierd
+ * Normally, we provide prototypes for all MPI routines.  In a few weird
  * cases, we need to suppress the prototypes.
  */
 #ifndef MPICH_SUPPRESS_PROTOTYPES
