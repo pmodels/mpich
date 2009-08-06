@@ -1,4 +1,38 @@
 ===============================================================================
+                               Changes in 1.1.1p1
+===============================================================================
+ - OVERALL: Fixed an invalid read in the dataloop code for zero count types.
+
+ - OVERALL: Fixed several bugs in ch3:nemesis:mx (tickets #744,#760;
+   also change r5126).
+
+ - BUILD SYSTEM: Several fixes for functionality broken in 1.1.1 release,
+   including MPICH2LIB_xFLAGS and extra libraries living in $LIBS instead of
+   $LDFLAGS.  Also, '-lpthread' should no longer be duplicated in link lines.
+
+ - BUILD SYSTEM: MPICH2 shared libraries are now compatible with glibc versioned
+   symbols on Linux, such as those present in the MX shared libraries.
+
+ - BUILD SYSTEM: Minor tweaks to improve compilation under the nvcc CUDA
+   compiler.
+
+ - PM/PMI: Fix mpd incompatibility with python2.3 introduced in mpich2-1.1.1.
+
+ - PM/PMI: Several fixes to hydra, including memory leak fixes and process
+   binding issues.
+
+ - TEST SUITE: Correct invalid arguments in the coll2 and coll3 tests.
+
+ - Several other minor bug fixes, memory leak fixes, and code cleanup.  A full
+   list of changes is available using:
+
+     svn log -r5032:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.1.1p1
+
+     ... or at the following link:
+
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.1.1p1?action=follow_copy&rev=HEAD&stop_rev=5032&mode=follow_copy
+
+===============================================================================
                                Changes in 1.1.1
 ===============================================================================
 
