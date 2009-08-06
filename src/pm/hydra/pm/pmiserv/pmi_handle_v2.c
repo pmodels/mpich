@@ -676,7 +676,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_kvs_put(int fd, char *args[])
 
 HYD_Status HYD_PMCD_pmi_handle_v2_kvs_get(int fd, char *args[])
 {
-    int i, found;
+    int i, found, node_count;
     HYD_PMCD_pmi_process_t *process, *prun;
     HYD_PMCD_pmi_node_t *node;
     HYD_PMCD_pmi_kvs_pair_t *run;
@@ -716,7 +716,9 @@ HYD_Status HYD_PMCD_pmi_handle_v2_kvs_get(int fd, char *args[])
             goto fn_exit;
 
         consistent_epoch = 1;
+        node_count = 0;
         for (node = process->node->pg->node_list; node; node = node->next) {
+            node_count++;
             for (prun = node->process_list; prun; prun = prun->next) {
                 if (prun->epoch != process->epoch) {
                     /* The epochs are not consistent */
@@ -726,7 +728,8 @@ HYD_Status HYD_PMCD_pmi_handle_v2_kvs_get(int fd, char *args[])
             }
         }
 
-        if (consistent_epoch == 0) {
+        if (consistent_epoch == 0 ||
+            ((process->epoch > 0) && (node_count != HYD_pg_list->num_procs))) {
             /* queue up */
             status = queue_outstanding_req(fd, KVS_GET, args);
             HYDU_ERR_POP(status, "unable to queue outstanding request\n");
@@ -735,6 +738,8 @@ HYD_Status HYD_PMCD_pmi_handle_v2_kvs_get(int fd, char *args[])
             goto fn_exit;
         }
     }
+    else if (progress_nest_count)
+        req_complete = 1;
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=kvs-get-response;");
@@ -794,8 +799,6 @@ HYD_Status HYD_PMCD_pmi_handle_v2_kvs_fence(int fd, char *args[])
                              "unable to find process structure for fd %d\n", fd);
 
     process->epoch++;   /* We have reached the next epoch */
-
-    process->node->pg->barrier_count++;
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=kvs-fence-response;");
