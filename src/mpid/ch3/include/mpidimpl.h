@@ -678,6 +678,12 @@ typedef struct MPIDI_Comm_ops
     
     int (*cancel_send)(struct MPIDI_VC *vc,  struct MPID_Request *sreq);
     int (*cancel_recv)(struct MPIDI_VC *vc,  struct MPID_Request *rreq);
+    
+    int (*probe)(struct MPIDI_VC *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
+		                  MPI_Status *status);
+    int (*iprobe)(struct MPIDI_VC *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
+		  int *flag, MPI_Status *status);
+   
 } MPIDI_Comm_ops_t;
 #endif
 
