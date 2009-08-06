@@ -233,10 +233,10 @@ HYD_Status HYD_PMCD_pmi_handle_v1_barrier_in(int fd, char *args[])
 
 HYD_Status HYD_PMCD_pmi_handle_v1_put(int fd, char *args[])
 {
-    int i;
+    int i, ret;
     HYD_PMCD_pmi_process_t *process;
     HYD_PMCD_pmi_kvs_pair_t *key_pair, *run;
-    char *kvsname, *key, *val, *key_pair_str = NULL;
+    char *kvsname, *key, *val;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_Status status = HYD_SUCCESS;
 
@@ -260,30 +260,18 @@ HYD_Status HYD_PMCD_pmi_handle_v1_put(int fd, char *args[])
                              "kvsname (%s) does not match this process' kvs space (%s)\n",
                              kvsname, process->node->pg->kvs->kvs_name);
 
-    HYDU_MALLOC(key_pair, HYD_PMCD_pmi_kvs_pair_t *, sizeof(HYD_PMCD_pmi_kvs_pair_t), status);
-    HYDU_snprintf(key_pair->key, MAXKEYLEN, "%s", key);
-    HYDU_snprintf(key_pair->val, MAXVALLEN, "%s", val);
-    key_pair->next = NULL;
+    status = HYD_PMCD_pmi_add_kvs(key, val, process->node->pg->kvs, &ret);
+    HYDU_ERR_POP(status, "unable to add keypair to kvs\n");
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=put_result rc=");
-    if (process->node->pg->kvs->key_pair == NULL) {
-        process->node->pg->kvs->key_pair = key_pair;
-        tmp[i++] = HYDU_strdup("0 msg=success");
+    tmp[i++] = HYDU_int_to_str(ret);
+    if (ret == 0) {
+        tmp[i++] = HYDU_strdup(" msg=success");
     }
     else {
-        run = process->node->pg->kvs->key_pair;
-        while (run->next) {
-            if (!strcmp(run->key, key_pair->key)) {
-                tmp[i++] = HYDU_strdup("-1 msg=duplicate_key");
-                key_pair_str = HYDU_strdup(key_pair->key);
-                tmp[i++] = HYDU_strdup(key_pair_str);
-                break;
-            }
-            run = run->next;
-        }
-        run->next = key_pair;
-        tmp[i++] = HYDU_strdup("0 msg=success");
+        tmp[i++] = HYDU_strdup(" msg=duplicate_key");
+        tmp[i++] = HYDU_strdup(key);
     }
     tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
@@ -295,7 +283,6 @@ HYD_Status HYD_PMCD_pmi_handle_v1_put(int fd, char *args[])
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
-    HYDU_FREE(key_pair_str);
 
   fn_exit:
     HYDU_FUNC_EXIT();

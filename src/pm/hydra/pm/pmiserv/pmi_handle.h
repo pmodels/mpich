@@ -76,7 +76,7 @@ HYD_Status HYD_PMCD_pmi_add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd, int ra
 HYD_Status HYD_PMCD_pmi_id_to_rank(int id, int *rank);
 HYD_PMCD_pmi_process_t *HYD_PMCD_pmi_find_process(int fd);
 HYD_Status HYD_PMCD_pmi_add_kvs(const char *key, char *val, HYD_PMCD_pmi_kvs_t * kvs,
-                                char **key_pair_str, int *ret);
+                                int *ret);
 HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
                                         enum HYD_PMCD_pmi_process_mapping_type type,
                                         char **process_mapping);

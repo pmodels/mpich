@@ -158,7 +158,7 @@ static struct HYD_PMCD_pmi_node *allocate_node(HYD_PMCD_pmi_pg_t * pg, int node_
 
 
 HYD_Status HYD_PMCD_pmi_add_kvs(const char *key, char *val, HYD_PMCD_pmi_kvs_t * kvs,
-                                char **key_pair_str, int *ret)
+                                int *ret)
 {
     HYD_PMCD_pmi_kvs_pair_t *key_pair, *run;
     HYD_Status status = HYD_SUCCESS;
@@ -170,7 +170,6 @@ HYD_Status HYD_PMCD_pmi_add_kvs(const char *key, char *val, HYD_PMCD_pmi_kvs_t *
     HYDU_snprintf(key_pair->val, MAXVALLEN, "%s", val);
     key_pair->next = NULL;
 
-    key_pair_str = NULL;
     *ret = 0;
 
     if (kvs->key_pair == NULL) {
@@ -181,7 +180,6 @@ HYD_Status HYD_PMCD_pmi_add_kvs(const char *key, char *val, HYD_PMCD_pmi_kvs_t *
         while (run->next) {
             if (!strcmp(run->key, key_pair->key)) {
                 /* duplicate key found */
-                *key_pair_str = HYDU_strdup(key_pair->key);
                 *ret = -1;
                 break;
             }

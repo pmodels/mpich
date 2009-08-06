@@ -324,7 +324,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_job_getid(int fd, char *args[])
 
 HYD_Status HYD_PMCD_pmi_handle_v2_info_putnodeattr(int fd, char *args[])
 {
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *key_pair_str;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     char *key, *val, *thrid;
     int i, ret;
     HYD_PMCD_pmi_process_t *process;
@@ -352,7 +352,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_putnodeattr(int fd, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
-    status = HYD_PMCD_pmi_add_kvs(key, val, process->node->kvs, &key_pair_str, &ret);
+    status = HYD_PMCD_pmi_add_kvs(key, val, process->node->kvs, &ret);
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
     i = 0;
@@ -497,7 +497,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
     HYD_PMCD_pmi_process_t *process;
     HYD_PMCD_pmi_kvs_pair_t *run;
     char *key, *thrid;
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *node_list, *key_pair_str;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *node_list;
     struct token *tokens;
     int token_count, found;
     HYD_Status status = HYD_SUCCESS;
@@ -544,7 +544,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
                                     "key value larger than maximum allowed\n");
 
             status = HYD_PMCD_pmi_add_kvs("process-mapping-vector", node_list,
-                                          process->node->pg->kvs, &key_pair_str, &ret);
+                                          process->node->pg->kvs, &ret);
             HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
         }
         else if (strcmp(key, "process-mapping-explicit") == 0) {
@@ -556,7 +556,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
                                     "key value larger than maximum allowed\n");
 
             status = HYD_PMCD_pmi_add_kvs("process-mapping-explicit", node_list,
-                                          process->node->pg->kvs, &key_pair_str, &ret);
+                                          process->node->pg->kvs, &ret);
             HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
         }
 
@@ -608,7 +608,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
 
 HYD_Status HYD_PMCD_pmi_handle_v2_kvs_put(int fd, char *args[])
 {
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *key_pair_str;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     char *key, *val, *thrid;
     int i, ret;
     HYD_PMCD_pmi_process_t *process;
@@ -636,7 +636,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_kvs_put(int fd, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
-    status = HYD_PMCD_pmi_add_kvs(key, val, process->node->pg->kvs, &key_pair_str, &ret);
+    status = HYD_PMCD_pmi_add_kvs(key, val, process->node->pg->kvs, &ret);
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
     i = 0;
