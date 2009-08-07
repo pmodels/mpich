@@ -145,6 +145,8 @@ MPID_nem_mx_init (MPID_nem_queue_ptr_t proc_recv_queue,
 		  char **bc_val_p, int *val_max_sz_p)
 {   
    int mpi_errno = MPI_SUCCESS ;
+
+   MPID_nem_mx_internal_req_queue_init();
    
    mpi_errno = init_mx(pg_p);
    if (mpi_errno) MPIU_ERR_POP(mpi_errno);

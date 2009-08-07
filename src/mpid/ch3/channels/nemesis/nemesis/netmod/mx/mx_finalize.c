@@ -26,6 +26,8 @@ MPID_nem_mx_finalize()
     ret = mx_finalize();
     MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_finalize", "**mx_finalize %s", mx_strerror (ret));   
 
+    MPID_nem_mx_internal_req_queue_destroy();
+   
    fn_exit:
      return mpi_errno;
    fn_fail:

@@ -1,4 +1,3 @@
-              
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
  *  (C) 2006 by Argonne National Laboratory.
@@ -52,12 +51,7 @@ static mpid_nem_mx_hash_t *mpid_nem_mx_connreqs ATTRIBUTE((unused, used))= NULL;
 static int MPID_nem_mx_handle_sreq(MPID_Request *sreq);
 static int MPID_nem_mx_handle_rreq(MPID_Request *rreq, mx_status_t status);
 
-/* For a very mysterious reason the MPID_nem_handle_pkt routine can NOT be called        */
-/* from inside the MX callback: I suspect that when the RecvQ is manipulated (through    */
-/* the pkt_handler func) it is somehow corrupted. This results in having a SEND req as   */
-/* head of the  Posted RecvQ !!                                                          */ 
-/* Edit : handling the packet in the callback when the data is present or latter doesn't */
-/* impact latency much so that's OK.                                                     */
+/* This routine cannot manipulate MPI message queues or request queues */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mx_get_adi_msg
 #undef FCNAME
@@ -73,7 +67,6 @@ mx_unexp_handler_action_t MPID_nem_mx_get_adi_msg(void *context, mx_endpoint_add
   int16_t type;	    
   NEM_MX_MATCH_GET_TYPE(match_info,type);    
 #endif
-
 
 #ifdef ONDEMAND
   mx_get_endpoint_addr_context(source,(void **)(&vc));	    
@@ -93,7 +86,6 @@ mx_unexp_handler_action_t MPID_nem_mx_get_adi_msg(void *context, mx_endpoint_add
       int           pg_rank;
       char          pg_id[MPID_NEM_MAX_NETMOD_STRING_LEN];
       MPIDI_PG_t   *pg;
-      /*mx_request_t *mx_request = MPIU_Malloc(sizeof(mx_request_t)); */
       mx_request_t  mx_request;
       mx_status_t   status;
       
@@ -152,10 +144,10 @@ if(type == NEM_MX_DIRECT_TYPE)
     if (type == NEM_MX_INTRA_TYPE)
 #endif
     {
-      MPID_Request  *rreq;
-      mx_request_t  mx_request;
-      mx_segment_t  iov;
-      mx_return_t   ret;			    
+      MPID_nem_mx_internal_req_t *rreq;
+      mx_request_t                mx_request;
+      mx_segment_t                iov;
+      mx_return_t                 ret;			    
       
 #ifdef ONDEMAND
       if (VC_FIELD(vc, remote_connected) == 0)
@@ -201,21 +193,21 @@ if(type == NEM_MX_DIRECT_TYPE)
 	return MX_RECV_FINISHED;		
       }
 #endif
-      rreq = MPID_Request_create();
-      MPIU_Assert (rreq != NULL);
-      MPIU_Object_set_ref (rreq, 1);
+
+      MPID_nem_mx_internal_req_dequeue(&rreq);
       rreq->kind = MPID_REQUEST_RECV;	
+      rreq->vc = vc;
       mx_get_endpoint_addr_context(source,(void **)(&vc));	    
-      rreq->ch.vc = vc;
-      
+
+
       if(length <=  sizeof(MPIDI_CH3_PktGeneric_t)) {
-	iov.segment_ptr = (char*)&(rreq->dev.pending_pkt);
+	iov.segment_ptr = (char*)&(rreq->pending_pkt);
       }
       else{
-	rreq->dev.tmpbuf = MPIU_Malloc(length);
-	MPIU_Assert(rreq->dev.tmpbuf);
-	rreq->dev.tmpbuf_sz = length;		    
-	iov.segment_ptr = (char*)(rreq->dev.tmpbuf);
+	rreq->tmpbuf = MPIU_Malloc(length);
+	MPIU_Assert(rreq->tmpbuf);
+	rreq->tmpbuf_sz = length;		    
+	iov.segment_ptr = (char*)(rreq->tmpbuf);
       }
       iov.segment_length = length;
 
@@ -322,24 +314,30 @@ MPID_nem_mx_poll(int in_blocking_poll)
    MPIU_Assert(ret == MX_SUCCESS);
    if ((ret == MX_SUCCESS) && (result > 0))
    {
-     MPID_Request *req = (MPID_Request *)(status.context);
-     if ((req->kind == MPID_REQUEST_SEND) || (req->kind == MPID_PREQUEST_SEND))
+     MPID_nem_mx_unified_req_t *myreq = (MPID_nem_mx_unified_req_t *)(status.context);
+     MPID_Request              *req   = &(myreq->mpi_req);
+     MPID_Request_kind_t        kind  = req->kind;
+
+     if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
      {	   
        MPID_nem_mx_handle_sreq(req);
      }
-     else if (req->kind == MPID_REQUEST_RECV)	       
+     else if (kind == MPID_REQUEST_RECV)	       
      {
+       MPID_nem_mx_internal_req_t *adi_req = &(myreq->nem_mx_req);
        MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       	
        if (status.msg_length <= sizeof(MPIDI_CH3_PktGeneric_t))
        {
-	 MPID_nem_handle_pkt(req->ch.vc,(char *)&(req->dev.pending_pkt),(MPIDI_msg_sz_t)(status.msg_length));
+	 MPID_nem_handle_pkt(adi_req->vc,(char *)&(adi_req->pending_pkt),(MPIDI_msg_sz_t)(status.msg_length));
        }
        else
        {
-	 MPID_nem_handle_pkt(req->ch.vc,(char *)(req->dev.tmpbuf),(MPIDI_msg_sz_t)(req->dev.tmpbuf_sz));
-	 MPIU_Free(req->dev.tmpbuf);
+	 MPID_nem_handle_pkt(adi_req->vc,(char *)(adi_req->tmpbuf),(MPIDI_msg_sz_t)(adi_req->tmpbuf_sz));
+	 MPIU_Free(adi_req->tmpbuf);
        }
-       MPIDI_CH3_Request_destroy(req);
+       mx_disable_progression(MPID_nem_mx_local_endpoint);
+       MPID_nem_mx_internal_req_enqueue(adi_req);
+       mx_reenable_progression(MPID_nem_mx_local_endpoint);
      }
      else
      {
@@ -355,12 +353,12 @@ MPID_nem_mx_poll(int in_blocking_poll)
    {
      MPID_Request *req = (MPID_Request *)(status.context);
      
-     if ((req->kind == MPID_REQUEST_SEND) || (req->kind == MPID_PREQUEST_SEND))
+     if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
      {	   
        MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
        MPID_nem_mx_handle_sreq(req);
      }
-     else if ((req->kind == MPID_REQUEST_RECV) || (req->kind == MPID_PREQUEST_RECV))
+     else if ((kind == MPID_REQUEST_RECV) || (kind == MPID_PREQUEST_RECV))
      {
        int found = FALSE;
        mx_request_t *mx_request = NULL;
@@ -409,29 +407,36 @@ MPID_nem_mx_poll(int in_blocking_progress)
    MPIU_Assert(ret == MX_SUCCESS);
    if ((ret == MX_SUCCESS) && (result > 0))
    {
-     MPIR_Context_id_t ctxt;
-     MPID_Request     *req = (MPID_Request *)(status.context);
+     MPID_nem_mx_unified_req_t *myreq = (MPID_nem_mx_unified_req_t *)(status.context);
+     MPID_Request              *req   = &(myreq->mpi_req);
+     MPID_Request_kind_t        kind  = req->kind;
+     MPIR_Context_id_t          ctxt;
+
      NEM_MX_MATCH_GET_CTXT(status.match_info, ctxt);
      
      if(ctxt == NEM_MX_INTRA_CTXT)     
      { 
-       if ((req->kind == MPID_REQUEST_SEND) || (req->kind == MPID_PREQUEST_SEND))
-       {	   
+       if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
+       {
+	 
 	 MPID_nem_mx_handle_sreq(req);
        }
-       else if (req->kind == MPID_REQUEST_RECV)	       
-       {
+       else if (kind == MPID_REQUEST_RECV)	       
+      {
+      	 MPID_nem_mx_internal_req_t *adi_req = &(myreq->nem_mx_req);
 	 MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       	
 	 if (status.msg_length <= sizeof(MPIDI_CH3_PktGeneric_t))
 	 {
-	   MPID_nem_handle_pkt(req->ch.vc,(char *)&(req->dev.pending_pkt),(MPIDI_msg_sz_t)(status.msg_length));
+	   MPID_nem_handle_pkt(adi_req->vc,(char *)&(adi_req->pending_pkt),(MPIDI_msg_sz_t)(status.msg_length));
 	 }
 	 else
 	 {
-	   MPID_nem_handle_pkt(req->ch.vc,(char *)(req->dev.tmpbuf),(MPIDI_msg_sz_t)(req->dev.tmpbuf_sz));
-	   MPIU_Free(req->dev.tmpbuf);
+	   MPID_nem_handle_pkt(adi_req->vc,(char *)(adi_req->tmpbuf),(MPIDI_msg_sz_t)(adi_req->tmpbuf_sz));
+	   MPIU_Free(adi_req->tmpbuf);
 	 }
-	 MPIDI_CH3_Request_destroy(req);
+	 mx_disable_progression(MPID_nem_mx_local_endpoint);
+	 MPID_nem_mx_internal_req_enqueue(adi_req);
+	 mx_reenable_progression(MPID_nem_mx_local_endpoint);
        }
        else
        {
@@ -440,12 +445,12 @@ MPID_nem_mx_poll(int in_blocking_progress)
      }
      else
      {
-       if ((req->kind == MPID_REQUEST_SEND) || (req->kind == MPID_PREQUEST_SEND))
+       if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
        {	   
 	 MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
 	 MPID_nem_mx_handle_sreq(req);
        }
-       else if ((req->kind == MPID_REQUEST_RECV) || (req->kind == MPID_PREQUEST_RECV))
+       else if ((kind == MPID_REQUEST_RECV) || (kind == MPID_PREQUEST_RECV))
        {
 	 int found = FALSE;
 	 mx_request_t *mx_request = NULL;
