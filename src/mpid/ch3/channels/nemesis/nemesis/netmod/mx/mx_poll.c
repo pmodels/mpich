@@ -196,9 +196,8 @@ if(type == NEM_MX_DIRECT_TYPE)
 
       MPID_nem_mx_internal_req_dequeue(&rreq);
       rreq->kind = MPID_REQUEST_RECV;	
-      rreq->vc = vc;
       mx_get_endpoint_addr_context(source,(void **)(&vc));	    
-
+      rreq->vc = vc;
 
       if(length <=  sizeof(MPIDI_CH3_PktGeneric_t)) {
 	iov.segment_ptr = (char*)&(rreq->pending_pkt);
@@ -316,7 +315,7 @@ MPID_nem_mx_poll(int in_blocking_poll)
    {
      MPID_nem_mx_unified_req_t *myreq = (MPID_nem_mx_unified_req_t *)(status.context);
      MPID_Request              *req   = &(myreq->mpi_req);
-     MPID_Request_kind_t        kind  = req->kind;
+     MPID_Request_kind_t        kind  = adi_req->kind;
 
      if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
      {	   
@@ -351,7 +350,9 @@ MPID_nem_mx_poll(int in_blocking_poll)
    MPIU_Assert(ret == MX_SUCCESS);
    if ((ret == MX_SUCCESS) && (result > 0))
    {
-     MPID_Request *req = (MPID_Request *)(status.context);
+     MPID_nem_mx_unified_req_t *myreq = (MPID_nem_mx_unified_req_t *)(status.context);
+     MPID_Request              *req   = &(myreq->mpi_req);
+     MPID_Request_kind_t        kind  = req->kind;
      
      if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
      {	   
