@@ -315,7 +315,7 @@ MPID_nem_mx_poll(int in_blocking_poll)
    {
      MPID_nem_mx_unified_req_t *myreq = (MPID_nem_mx_unified_req_t *)(status.context);
      MPID_Request              *req   = &(myreq->mpi_req);
-     MPID_Request_kind_t        kind  = adi_req->kind;
+     MPID_Request_kind_t        kind  = req->kind;
 
      if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
      {	   
