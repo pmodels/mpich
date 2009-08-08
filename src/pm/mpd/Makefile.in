@@ -67,9 +67,6 @@ all: Makefile ${PROGRAMS}
 .SUFFIXES:
 .SUFFIXES: .o .dep .c 
 
-etags:  ${HEADERS} ${SOURCES}
-	etags ${HEADERS} ${SOURCES}
-
 mpdroot: ${mpdroot_OBJECTS}
 	$(C_LINK) -o mpdroot ${mpdroot_OBJECTS} $(LIBS)
 

@@ -2712,45 +2712,6 @@ fi
 # need it nor provide it)
 AC_CHECK_PROGS(RANLIB,ranlib,true)
 
-# Check for etags.  Note that different versions of etags take
-# different arguments for specifying the language to use in parsing a 
-# file.  Older versions only accept -l c or --language c as a way to 
-# *change* the interpretation of the following files; newer versions 
-# allow --langmap=c:+.i to add a file extension to those that are C 
-# programs.  New versions might want --language-force=c.
-AC_CHECK_PROGS(ETAGS,etags,true)
-if test -n "$ETAGS" -a "$ETAGS" != true ; then
-    # Check for the --langmap argument
-    AC_MSG_CHECKING([for etags argument to specify language])
-    cat >>conftest.c <<EOF
-int footest = 0;
-EOF
-    if $ETAGS --langmap=c:+.i -o conftesttags conftest.c >/dev/null 2>&1 ; then 
-        ETAGSADD="--langmap=c:+.i"
-    else
-        if $ETAGS --language=c -o conftesttags conftest.c >/dev/null 2>&1 ; then
-	    ETAGSADD="--language=c"
-        else
-            if $ETAGS --language-force=c -o conftesttags conftest.c >/dev/null 2>&1 ; then
-	        ETAGSADD="--language-force=c"
-            else
-	        ETAGS=true
-	        AC_MSG_WARN([Could not find working etags])
-            fi
-        fi
-    fi
-    if test -n "$ETAGSADD" ; then
-        AC_MSG_RESULT($ETAGSADD)
-    fi
-     # This is needed for Mac OSX 10.5
-    rm -rf conftest.dSYM
-    rm -f conftest*
-fi
-AC_SUBST(ETAGS)
-AC_SUBST(ETAGSADD)
-export ETAGS
-export ETAGSADD
-
 # Check for the killall program; this can be used in some of the tests
 # in test/commands
 AC_CHECK_PROGS(KILLALL,killall,true)

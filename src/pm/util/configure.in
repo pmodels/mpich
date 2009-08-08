@@ -376,14 +376,7 @@ AC_SUBST(master_top_srcdir)
 dnl
 dnl Dependency handling
 AC_SUBST(MAKE_DEPEND_C)
-dnl
-dnl Etags
-AC_CHECK_PROGS(ETAGS,etags,true)
-AC_SUBST(ETAGS)
-AC_SUBST(ETAGSADD)
-export ETAGS
-export ETAGSADD
-dnl
+
 dnl We don't want the library in this directory to be shared, but we
 dnl do want to avoid unsubstituted autoconf variables.
 AC_SUBST(LIBTOOL)

@@ -68,8 +68,6 @@ hellow: hellow.o
 	$(C_LINK) -o hellow hellow.o   -L. -lMylib ${LIBS}
 # Dependencies
 SOURCES =  util.c mysrc.c hellow.c goodbye.c
-TAGS:${HEADERS} ${SOURCES}
-	etags -o /TAGS --append ${HEADERS} ${SOURCES}
 ---------------
 Note that this builds the targets in the order in which they are encountered
 in the source file, and that targets for common operations such as 'clean' 

@@ -1014,14 +1014,6 @@ dnl the location of the source of the MPI implementation into the XML
 dnl summary file
 AC_SUBST(MPI_SOURCE)
 
-dnl
-dnl Etags
-AC_CHECK_PROGS(ETAGS,etags,true)
-AC_SUBST(ETAGS)
-AC_SUBST(ETAGSADD)
-export ETAGS
-export ETAGSADD
-
 AC_OUTPUT_COMMANDS([chmod a+x maint/testmerge])
 AC_OUTPUT_COMMANDS([chmod a+x runtests])
 AC_OUTPUT_COMMANDS([chmod a+x manual/manyconnect])
