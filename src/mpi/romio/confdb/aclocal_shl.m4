@@ -275,8 +275,7 @@ ifelse($2,,CC_SHL=$pac_cc_sharedlibs,$2=$pac_cc_sharedlibs)
 ifelse($3,,C_LINK_SHL=$pac_clink_sharedlibs,$3=$pac_clink_sharedlibs)
 ifelse($4,,SHAREDLIB_TYPE=$pac_type_sharedlibs,$4=$pac_type_sharedlibs)
 ])
-dnl
-dnl
+
 dnl This macro ensures that all of the necessary substitutions are 
 dnl made by any subdirectory configure (which may simply SUBST the
 dnl necessary values rather than trying to determine them from scratch)
@@ -294,11 +293,9 @@ AC_DEFUN([PAC_CC_SUBDIR_SHLIBS],[
             fi
 	fi
 ])
-dnl
-dnl
+
 dnl PAC_CC_SHLIB_EXT - get the extension for shared libraries
 dnl Set the variable SHLIB_EXT if it is other than unknown.
-dnl
 AC_DEFUN([PAC_CC_SHLIB_EXT],[
 # Not all systems use .so as the extension for shared libraries (cygwin
 # and OSX are two important examples).  If we did not set the SHLIB_EXT,

@@ -207,7 +207,8 @@ dnl
 dnl D*/
 dnl
 AC_DEFUN([PAC_PROG_MAKE_VPATH],[
-AC_SUBST(VPATH)AM_IGNORE(VPATH)
+AC_SUBST(VPATH)
+AM_IGNORE(VPATH)
 AC_CACHE_CHECK([for virtual path format],
 pac_cv_prog_make_vpath,[
 AC_REQUIRE([PAC_PROG_MAKE_PROGRAM])
@@ -423,7 +424,8 @@ dnl
 dnl We're not using patterns any more, and Compaq/DEC OSF-1 sometimes hangs
 dnl at this test
 dnl PAC_PROG_MAKE_HAS_PATTERN_RULES
-AC_SUBST(SET_CFLAGS)AM_IGNORE(SET_CFLAGS)
+AC_SUBST(SET_CFLAGS)
+AM_IGNORE(SET_CFLAGS)
 PAC_PROG_MAKE_SET_CFLAGS([SET_CFLAGS='CFLAGS='])
 if test "$pac_cv_prog_make_echos_dir" = "no" ; then
     AC_PROG_MAKE_SET
