@@ -66,12 +66,16 @@ MPICC_LDFLAGS    = $(LDFLAGS) $(MPI_CFLAGS) $(MPE_LDOPTS)
 MPE_LOG_CSRC     = log_mpi_util.c log_mpi_core.c
 MPE_LOG_OBJS     = $(MPE_LOG_CSRC:.c=.@OBJEXT@)
 
+MPE_TRACE_CSRC   = trace_mpi_core.c
+MPE_TRACE_OBJS   = $(MPE_TRACE_CSRC:.c=.@OBJEXT@)
+
 MPE_F2C_CSRC     = log_mpi_util.c mpe_proff.c
 MPE_F2C_FSRC     = mpi_f2c_consts.f
 MPE_F2C_OBJS     = $(MPE_F2C_FSRC:.f=.@OBJEXT@) $(MPE_F2C_CSRC:.c=.@OBJEXT@)
 
 MPE_LOG_SHLOBJS  = $(MPE_LOG_OBJS:.@OBJEXT@=.lo)
 MPE_F2C_SHLOBJS  = $(MPE_F2C_OBJS:.@OBJEXT@=.lo)
+MPE_TRACE_SHLOBJS= $(MPE_TRACE_OBJS:.@OBJEXT@=.lo)
 
 .SUFFIXES: .c .f .@OBJEXT@ .lo .a @EXEEXT@
 
@@ -98,7 +102,7 @@ profile_all:
 # configure, src/wrappers needs, "${F2CMPI_LIBS}" = "-l${F2CMPI_LIBNAME}" set
 # by src/wrappers/configure, to be fulfilled to guarantee that libmpe_f2cmpi.a
 # is needed and all the pre-requisites of libmpe_f2cmpi.a are met.
-default:
+default: $(MPE_LOG_OBJS) $(MPE_TRACE_OBJS)
 	 $(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(LOG_LIBNAME).a
 	 $(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(TRACE_LIBNAME).a
 	@if [    "$(MPE_BUILD_FORTRAN2C)" = "yes" \
@@ -123,8 +127,8 @@ ${libbuild_dir}/lib$(LOG_LIBNAME).a: $(MPE_LOG_OBJS)
 	$(AR) $(ARFLAGS) $@ $(MPE_LOG_OBJS)
 	$(RANLIB) $@
 
-${libbuild_dir}/lib$(TRACE_LIBNAME).a: trace_mpi_core.@OBJEXT@
-	$(AR) $(ARFLAGS) $@ trace_mpi_core.@OBJEXT@
+${libbuild_dir}/lib$(TRACE_LIBNAME).a: $(MPE_TRACE_OBJS)
+	$(AR) $(ARFLAGS) $@ $(MPE_TRACE_OBJS)
 	$(RANLIB) $@
 
 ${libbuild_dir}/lib$(F2CMPI_LIBNAME).a: $(MPE_F2C_OBJS)

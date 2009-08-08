@@ -27,6 +27,7 @@ LIB_PATH             = $(MPI_LIBS)
 PROF_LIBS            = -L$(MPE_LIBDIR) @PROF_LIBS@ $(MPI_LIBS)
 LDFLAGS              = @LDFLAGS@
 MPE_BUILD_FORTRAN2C  = @MPE_BUILD_FORTRAN2C@
+CC_DOES_C_O          = @CC_DOES_C_O@
 
 ### End User configurable options ###
 
@@ -86,12 +87,20 @@ MPE_SHLWOBJECTS  = $(MPE_WOBJECTS:.@OBJEXT@=.lo)
 .SUFFIXES: .c .@OBJEXT@ .p@OBJEXT@ .n@OBJEXT@ .lo .a @EXEEXT@
 
 .c.p@OBJEXT@:
-	$(MPI_CC) $(MPICC_FLAGS) -c $<
-	$(MV) $*.@OBJEXT@ $*.p@OBJEXT@
+	@if [ "$(CC_DOES_C_O)" = "yes" ]; then \
+	     cmd="$(MPI_CC) $(MPICC_FLAGS) -o $@ -c $<" ; \
+	 else \
+	     cmd="$(MPI_CC) $(MPICC_FLAGS) -c $< ; $(MV) $*.@OBJEXT@ $*.p@OBJEXT@" ; \
+	 fi ; \
+	 echo "$${cmd}" ; $${cmd}
 
 .c.n@OBJEXT@:
-	$(CC) $(CC_FLAGS) -DCLOG_NOMPI -c $<
-	$(MV) $*.@OBJEXT@ $*.n@OBJEXT@
+	@if [ "$(CC_DOES_C_O)" = "yes" ]; then \
+	     cmd="$(CC) $(CC_FLAGS) -DCLOG_NOMPI -o $@ -c $<" ; \
+	 else \
+	     cmd="$(CC) $(CC_FLAGS) -DCLOG_NOMPI -c $< ; $(MV) $*.@OBJEXT@ $*.n@OBJEXT@" ; \
+	 fi ; \
+	 echo "$${cmd}" ; $${cmd}
 
 # Allow compilers that do not allow -o for renaming object files
 .c.lo:
@@ -106,7 +115,7 @@ default_all: default
 profile_all: 
 
 #
-default:
+default: $(MPE_N_ZOBJECTS) $(MPE_N_COBJECTS) $(MPE_N_ZOBJECTS) $(MPE_N_XOBJECTS) $(MPE_P_XOBJECTS) $(MPE_P_COBJECTS)
 	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a
 	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi_null.a
 	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME)_null.a

@@ -27,6 +27,7 @@ LDFLAGS              = @LDFLAGS@
 MPI_IMPL             = @MPI_IMPL@
 MPE_BUILD_FORTRAN2C  = @MPE_BUILD_FORTRAN2C@
 MPEDBG               = @MPEDBG@
+CC_DOES_C_O          = @CC_DOES_C_O@
 
 ### End User configurable options ###
 
@@ -78,12 +79,20 @@ MPE_SHLWOBJECTS  = $(MPE_WOBJECTS:.@OBJEXT@=.lo)
 .SUFFIXES: .c .@OBJEXT@ .p@OBJEXT@ .n@OBJEXT@ .lo .a @EXEEXT@
 
 .c.p@OBJEXT@:
-	$(MPI_CC) $(MPICC_FLAGS) -c $<
-	$(MV) $*.@OBJEXT@ $*.p@OBJEXT@
+	@if [ "$(CC_DOES_C_O)" = "yes" ]; then \
+	     cmd="$(MPI_CC) $(MPICC_FLAGS) -o $@ -c $<" ; \
+	 else \
+	     cmd="$(MPI_CC) $(MPICC_FLAGS) -c $< ; $(MV) $*.@OBJEXT@ $*.p@OBJEXT@" ; \
+	 fi ; \
+	 echo "$${cmd}" ; $${cmd}
 
 .c.n@OBJEXT@:
-	$(CC) $(CC_FLAGS) -DMPE_NOMPI -c $<
-	$(MV) $*.@OBJEXT@ $*.n@OBJEXT@
+	@if [ "$(CC_DOES_C_O)" = "yes" ]; then \
+	     cmd="$(CC) $(CC_FLAGS) -DMPE_NOMPI -o $@ -c $<" ; \
+	 else \
+	     cmd="$(CC) $(CC_FLAGS) -DMPE_NOMPI -c $< ; $(MV) $*.@OBJEXT@ $*.n@OBJEXT@" ; \
+	 fi ; \
+	 echo "$${cmd}" ; $${cmd}
 
 # Allow compilers that do not allow -o for renaming object files
 .c.lo:

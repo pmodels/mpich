@@ -27,6 +27,7 @@ LIB_PATH             = $(MPI_LIBS)
 PROF_LIBS            = -L$(MPE_LIBDIR) @PROF_LIBS@ $(MPI_LIBS)
 LDFLAGS              = @LDFLAGS@
 MPE_BUILD_FORTRAN2C  = @MPE_BUILD_FORTRAN2C@
+CC_DOES_C_O          = @CC_DOES_C_O@
 
 ### End User configurable options ###
 
@@ -65,12 +66,20 @@ MPE_N_COBJECTS   = $(MPE_CSOURCES:.c=.n@OBJEXT@)
 .SUFFIXES: .c .@OBJEXT@ .p@OBJEXT@ .n@OBJEXT@ .a @EXEEXT@
 
 .c.p@OBJEXT@:
-	$(MPI_CC) $(MPICC_FLAGS) -c $<
-	$(MV) $*.@OBJEXT@ $*.p@OBJEXT@
+	@if [ "$(CC_DOES_C_O)" = "yes" ]; then \
+	     cmd="$(MPI_CC) $(MPICC_FLAGS) -o $@ -c $<" ; \
+	 else \
+	     cmd="$(MPI_CC) $(MPICC_FLAGS) -c $< ; $(MV) $*.@OBJEXT@ $*.p@OBJEXT@" ; \
+	 fi ; \
+	 echo "$${cmd}" ; $${cmd}
 
 .c.n@OBJEXT@:
-	$(CC) $(CC_FLAGS) -c $<
-	$(MV) $*.@OBJEXT@ $*.n@OBJEXT@
+	@if [ "$(CC_DOES_C_O)" = "yes" ]; then \
+	     cmd="$(CC) $(CC_FLAGS) -o $@ -c $<" ; \
+	 else \
+	     cmd="$(CC) $(CC_FLAGS) -c $< ; $(MV) $*.@OBJEXT@ $*.n@OBJEXT@" ; \
+	 fi ; \
+	 echo "$${cmd}" ; $${cmd}
 
 # default_all is the same as default, but without the RANLIB.  This
 # can speed up the build (ranlibs can take a LONG time).  profile_all
@@ -80,7 +89,7 @@ default_all: default
 profile_all:
 
 #
-default:
+default: $(MPE_P_COBJECTS) $(MPE_N_COBJECTS)
 	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME)_nompi.a
 	$(MAKE) $(MAKEOPTS) ${libbuild_dir}/lib$(PROF_LIBNAME).a
 	$(MAKE) $(MAKEOPTS) $(EXECS)
