@@ -57,12 +57,12 @@ static int InitSharedProcesses(MPIDI_PG_t *pg, int nRank)
 	    if (i == 0)
 	    {
 		while (pSharedProcess[i].nRank != ZERO_RANK)
-		    MPIU_Yield();
+		    MPIDU_Yield();
 	    }
 	    else
 	    {
 		while (pSharedProcess[i].nRank != i)
-		    MPIU_Yield();
+		    MPIDU_Yield();
 	    }
 #ifdef HAVE_WINDOWS_H
             /*MPIU_DBG_PRINTF(("Opening process[%d]: %d\n", i, pSharedProcess[i].nPid));*/
@@ -101,7 +101,7 @@ static int InitSharedProcesses(MPIDI_PG_t *pg, int nRank)
         for (i=1; i<nProc; i++)
         {
             while (pSharedProcess[i].bFinished != TRUE)
-                MPIU_Yield();
+                MPIDU_Yield();
 	}
 	/* Why are the fields erased here? */
 	for (i=1; i<nProc; i++)
@@ -118,7 +118,7 @@ static int InitSharedProcesses(MPIDI_PG_t *pg, int nRank)
     {
         pSharedProcess[nRank].bFinished = TRUE;
         while (pSharedProcess[0].bFinished == FALSE)
-            MPIU_Yield();
+            MPIDU_Yield();
     }
     return MPI_SUCCESS;
 }

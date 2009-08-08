@@ -1085,7 +1085,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 	if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
 	{
 	    pollcount = 0;
-	    MPIU_Yield();
+	    MPIDU_Yield();
 	}
 	++pollcount;
 #endif

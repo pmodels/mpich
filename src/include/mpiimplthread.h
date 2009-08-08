@@ -198,9 +198,16 @@ int MPIR_Thread_CS_Finalize( void );
 #endif /* !defined(MPID_DEFINES_MPID_CS) */
 
 
-/* Define MPID_Thread_yield to MPIU_Yield for now. We can let the
- * devices override this if needed. */
-#define MPID_Thread_yield MPIU_Yield
+#if defined(HAVE_THR_YIELD)
+#undef MPID_Thread_yield
+#define MPID_Thread_yield() thr_yield()
+#elif defined(HAVE_SCHED_YIELD)
+#undef MPID_Thread_yield
+#define MPID_Thread_yield() sched_yield()
+#elif defined(HAVE_YIELD)
+#undef MPID_Thread_yield
+#define MPID_Thread_yield() yield()
+#endif
 
 /*
  * New Thread Interface and Macros

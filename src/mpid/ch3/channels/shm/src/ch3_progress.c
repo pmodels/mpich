@@ -220,7 +220,7 @@ int MPIDI_CH3I_Progress(int is_blocking, MPID_Progress_state *state)
     int spin_count = 1;
     unsigned completions = MPIDI_CH3I_progress_completion_count;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS);
-    MPIDI_STATE_DECL(MPID_STATE_MPIU_YIELD);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDU_YIELD);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS);
 
@@ -239,9 +239,9 @@ int MPIDI_CH3I_Progress(int is_blocking, MPID_Progress_state *state)
 	    pgch = (MPIDI_CH3I_PG *)MPIDI_Process.my_pg->channel_private;
 	    if (spin_count >= pgch->nShmWaitSpinCount)
 	    {
-		MPIDI_FUNC_ENTER(MPID_STATE_MPIU_YIELD);
-		MPIU_Yield();
-		MPIDI_FUNC_EXIT(MPID_STATE_MPIU_YIELD);
+		MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_YIELD);
+		MPIDU_Yield();
+		MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_YIELD);
 		spin_count = 0;
 	    }
 	    spin_count++;

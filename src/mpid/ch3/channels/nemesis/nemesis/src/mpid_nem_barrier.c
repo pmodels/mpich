@@ -61,7 +61,7 @@ int MPID_nem_barrier (int num_processes, int rank)
     {
 	/* wait */
 	while (OPA_load_int(&MPID_nem_mem_region.barrier->wait) == sense)
-            MPIU_Yield(); /* skip */
+            MPIDU_Yield(); /* skip */
     }
     sense = 1 - sense;
 

@@ -75,7 +75,7 @@ post_new_bufs:  pthread_spin_lock(
 
                 if (0 == post_new) {
                     NEM_IB_DBG("Posting ZERO buffers");
-                    MPIU_Yield();
+                    MPIDU_Yield();
                     goto post_new_bufs;
                 }
 

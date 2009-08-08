@@ -12,25 +12,6 @@ struct MPID_Comm;
 int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
 #endif
 
-#ifdef HAVE_YIELD
-#define MPIU_Yield() yield()
-#elif defined(HAVE_WIN32_SLEEP)
-#define MPIU_Yield() Sleep(0)
-#elif defined (HAVE_SCHED_YIELD)
-#ifdef HAVE_SCHED_H
-#include <sched.h>
-#endif
-#define MPIU_Yield() sched_yield()
-#elif defined (HAVE_SELECT)
-#define MPIU_Yield() { struct timeval t; t.tv_sec = 0; t.tv_usec = 0; select(0,0,0,0,&t); }
-#elif defined (HAVE_USLEEP)
-#define MPIU_Yield() usleep(0)
-#elif defined (HAVE_SLEEP)
-#define MPIU_Yield() sleep(0)
-#else
-#error *** No yield function specified ***
-#endif
-
 /*
  * MPIU_Sterror()
  *
