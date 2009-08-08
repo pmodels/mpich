@@ -1935,10 +1935,6 @@ fi
 if test "$enable_f77" = "yes" ; then
     AC_LANG_FORTRAN77
     PAC_PROG_F77_EXCLAIM_COMMENTS(has_exclaim="yes",has_exclaim="no")
-dnl    The following can be used to check whether len=* or (*) form
-dnl    should be used for character declarations
-dnl    PAC_PROG_F77_NEW_CHAR_DECL(CHARDECL="(LEN=*)",CHARDECL="*(*)")
-dnl    AC_SUBST(CHARDECL)
     PAC_PROG_F77_HAS_INCDIR(src)
     if test -n "$F77_INCDIR" ; then
         # For building the Fortran files, add the directory where we are building 
@@ -2767,19 +2763,6 @@ if test "$xargs_out" != "0" ; then
 fi
 AC_SUBST(XARGS_NODATA_OPT)
 
-# Check for broken handling of common symbols.  There are two fixes:
-# Force ranlib to handle correctly (ranlib -c on some BSD and MAC OS platforms)
-# or force gcc to not generate common symbols if using gcc (-fno-common).
-# This autoconf macro checks for this.
-
-# Note that if an option is added to CFLAGS, that option MUST NOT appear
-# in WRAPPER_CFLAGS (i.e., the options used in mpicc)
-
-# Also note that it should not be necessary to use this option - it 
-# is almost always possible to avoid "common" symbols, and this approach
-# is gcc-specific (if it needs to choose -fno-common), which we want to avoid.
-dnl PAC_PROG_C_BROKEN_COMMON
-#
 AC_PROG_INSTALL
 PAC_PROG_CHECK_INSTALL_WORKS
 #
