@@ -62,7 +62,7 @@ require "$maintdir/extractstrings";
                     # MPICH2 internal implementation routines
                     'MPID_STATE_UPDATE_REQUEST' => 'update_request',
                     'MPID_STATE_CREATE_REQUEST' => 'create_request',
-                    'MPID_STATE_MPIDU_YIELD'       => 'MPIDU_Yield',
+                    'MPID_STATE_MPIU_YIELD'       => 'MPIU_Yield',
                     'MPID_STATE_MPIDU_SLEEP_YIELD' => 'MPIDU_Sleep_yield',
                     'MPID_STATE_GETQUEUEDCOMPLETIONSTATUS' => 
                                          'GetQueuedCompletionStatus',

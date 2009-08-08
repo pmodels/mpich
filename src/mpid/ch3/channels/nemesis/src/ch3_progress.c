@@ -109,7 +109,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
         {
             pollcount = 0;
-            MPIDU_Yield();
+            MPIU_Yield();
         }
         ++pollcount;
 #endif

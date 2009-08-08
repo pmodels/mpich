@@ -64,28 +64,6 @@
 #define USE_INLINE_LOCKS
 #endif
 
-/* 
- * Define MPIDU_Yield() 
- * This is always defined as a macro for now
- */
-#ifdef HAVE_YIELD
-#define MPIDU_Yield() yield()
-#elif defined(HAVE_WIN32_SLEEP)
-#define MPIDU_Yield() Sleep(0)
-#elif defined (HAVE_SCHED_YIELD)
-#ifdef HAVE_SCHED_H
-#include <sched.h>
-#endif
-#define MPIDU_Yield() sched_yield()
-#elif defined (HAVE_SELECT)
-#define MPIDU_Yield() { struct timeval t; t.tv_sec = 0; t.tv_usec = 0; select(0,0,0,0,&t); }
-#elif defined (HAVE_USLEEP)
-#define MPIDU_Yield() usleep(0)
-#elif defined (HAVE_SLEEP)
-#define MPIDU_Yield() sleep(0)
-#else
-#error *** No yield function specified ***
-#endif
 
 /* There are several cases.
  * First, inline or routine.  If inline, define them here.
@@ -207,7 +185,7 @@ static inline void MPIDU_Process_lock( MPIDU_Process_lock_t *lock )
                 }
             }
         }
-        MPIDU_Yield();
+        MPIU_Yield();
     }
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_PROCESS_LOCK);
 }
@@ -241,7 +219,7 @@ static inline void MPIDU_Process_lock_busy_wait( MPIDU_Process_lock_t *lock )
 		MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_PROCESS_LOCK_BUSY_WAIT);
                 return;
             }
-        MPIDU_Yield();
+        MPIU_Yield();
     }
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_PROCESS_LOCK_BUSY_WAIT);
 }

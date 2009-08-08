@@ -281,7 +281,7 @@ int MPIDI_CH3I_mqshm_send(const int id, const void *buffer, const int length, co
 	q_ptr->inuse = 0;
 #endif
 	MPIDU_Process_unlock(&q_ptr->lock);
-	MPIDU_Yield();
+	MPIU_Yield();
     } while (blocking);
     *num_sent = 0;
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_MQSHM_SEND);
@@ -395,7 +395,7 @@ int MPIDI_CH3I_mqshm_receive(const int id, const int tag, void *buffer, const in
 #endif
 	MPIDU_Process_unlock(&q_ptr->lock);
 	/*printf("<%d>", MPIR_Process.comm_world->rank);*/
-	MPIDU_Yield();
+	MPIU_Yield();
     } while (blocking);
     *length = 0; /* zero length signals no message received? */
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_MQSHM_RECEIVE);

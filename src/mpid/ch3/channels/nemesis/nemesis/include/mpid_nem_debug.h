@@ -9,7 +9,7 @@
 
 /*#define YIELD_IN_SKIP*/
 #ifdef YIELD_IN_SKIP
-#define SKIP MPIDU_Yield()
+#define SKIP MPIU_Yield()
 #warning "SKIP is yield"
 #else /* YIELD_IN_SKIP */
 #define SKIP do{}while(0)

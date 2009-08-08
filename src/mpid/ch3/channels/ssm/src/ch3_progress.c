@@ -54,7 +54,7 @@ int MPIDI_CH3I_Progress(int is_blocking, MPID_Progress_state *state)
     static int spin_count = 1;
     static int msg_queue_count = 0;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS);
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_YIELD);
+    MPIDI_STATE_DECL(MPID_STATE_MPIU_YIELD);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS);
 
@@ -123,15 +123,15 @@ int MPIDI_CH3I_Progress(int is_blocking, MPID_Progress_state *state)
 	pgch = (MPIDI_CH3I_PG *)MPIDI_Process.my_pg->channel_private;
 	if (spin_count >= pgch->nShmWaitSpinCount)
 	{
-	    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_YIELD);
-	    MPIDU_Yield();
-	    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_YIELD);
+	    MPIDI_FUNC_ENTER(MPID_STATE_MPIU_YIELD);
+	    MPIU_Yield();
+	    MPIDI_FUNC_EXIT(MPID_STATE_MPIU_YIELD);
 	    spin_count = 1;
 	}
 	else {
-	    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_YIELD);
-	    MPIDU_Yield();
-	    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_YIELD);
+	    MPIDI_FUNC_ENTER(MPID_STATE_MPIU_YIELD);
+	    MPIU_Yield();
+	    MPIDI_FUNC_EXIT(MPID_STATE_MPIU_YIELD);
 	}
 	spin_count++;
 
@@ -157,9 +157,9 @@ int MPIDI_CH3I_Progress(int is_blocking, MPID_Progress_state *state)
 		    goto fn_exit;
 		}
 		mpi_errno = MPI_SUCCESS;
-		MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_YIELD);
-		MPIDU_Yield();
-		MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_YIELD);
+		MPIDI_FUNC_ENTER(MPID_STATE_MPIU_YIELD);
+		MPIU_Yield();
+		MPIDI_FUNC_EXIT(MPID_STATE_MPIU_YIELD);
 	    }
 	}
 
@@ -401,7 +401,7 @@ int MPIDI_CH3_Progress_wait(MPID_Progress_state *state)
     static int sockTotalReps = 0;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PROGRESS_WAIT);
-    /*MPIDI_STATE_DECL(MPID_STATE_MPIDU_YIELD);*/
+    /*MPIDI_STATE_DECL(MPID_STATE_MPIU_YIELD);*/
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PROGRESS_WAIT);
 
@@ -489,9 +489,9 @@ int MPIDI_CH3_Progress_wait(MPID_Progress_state *state)
 		    vc_ptr = vc_ptr->ch.shm_next_writer;
 		}
 	    }
-	    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_YIELD);
-	    MPIDU_Yield();
-	    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_YIELD);
+	    MPIDI_FUNC_ENTER(MPID_STATE_MPIU_YIELD);
+	    MPIU_Yield();
+	    MPIDI_FUNC_EXIT(MPID_STATE_MPIU_YIELD);
 	}
 after_shm_loop:
 	if (shmIter == shmReps)
@@ -531,9 +531,9 @@ skip_shm_loop:
 		}
 		/* comment out this line to test the error functions */
 		mpi_errno = MPI_SUCCESS;
-		MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_YIELD);
-		MPIDU_Yield();
-		MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_YIELD);
+		MPIDI_FUNC_ENTER(MPID_STATE_MPIU_YIELD);
+		MPIU_Yield();
+		MPIDI_FUNC_EXIT(MPID_STATE_MPIU_YIELD);
 	    }
 	    if (completions != MPIDI_CH3I_progress_completion_count)
 	    {
@@ -714,7 +714,7 @@ int MPIDI_CH3I_Progress(int is_blocking, MPID_Progress_state *state)
     static int sockTotalReps = 0;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PROGRESS);
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_YIELD);
+    MPIDI_STATE_DECL(MPID_STATE_MPIU_YIELD);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PROGRESS);
 
@@ -808,9 +808,9 @@ int MPIDI_CH3I_Progress(int is_blocking, MPID_Progress_state *state)
 		    vc_ptr = vc_ptr->ch.shm_next_writer;
 		}
 	    }
-	    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_YIELD);
-	    MPIDU_Yield();
-	    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_YIELD);
+	    MPIDI_FUNC_ENTER(MPID_STATE_MPIU_YIELD);
+	    MPIU_Yield();
+	    MPIDI_FUNC_EXIT(MPID_STATE_MPIU_YIELD);
 	}
 after_shm_loop:
 	if (shmIter == shmReps)
@@ -849,9 +849,9 @@ skip_shm_loop:
 		    goto fn_exit;
 		}
 		mpi_errno = MPI_SUCCESS;
-		MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_YIELD);
-		MPIDU_Yield();
-		MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_YIELD);
+		MPIDI_FUNC_ENTER(MPID_STATE_MPIU_YIELD);
+		MPIU_Yield();
+		MPIDI_FUNC_EXIT(MPID_STATE_MPIU_YIELD);
 	    }
 	    if (completions != MPIDI_CH3I_progress_completion_count)
 	    {
