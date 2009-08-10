@@ -66,7 +66,8 @@ AC_MSG_CHECKING([whether C compiler accepts option $1])
 pccco_save_CFLAGS="$CFLAGS"
 CFLAGS="$1 $CFLAGS"
 rm -f conftest.out
-dnl conftest3.c has an invalid prototype to ensure we generate warnings
+pac_success=no
+# conftest3.c has an invalid prototype to ensure we generate warnings
 echo 'int main(){}' > conftest3.c
 echo 'int foo(void);int foo(void){return 0;}' > conftest2.c
 echo 'int main(void);int main(void){return 0;}' > conftest.c
@@ -82,54 +83,40 @@ if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest3.c $LDFLAGS >/dev/null 2>&1 &
             if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest2.o conftest.c $LDFLAGS >conftest.bas 2>&1 ; then
                if ${CC-cc} $CFLAGS $CPPFLAGS -o conftest conftest2.o conftest.c $LDFLAGS >conftest.out 2>&1 ; then
                   if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
-	             AC_MSG_RESULT(yes)	  
-                     CFLAGS="$pccco_save_CFLAGS"
-                     ifelse($2,,COPTIONS="$COPTIONS $1",$2)
-                  elif test -s conftest.out ; then
-	             cat conftest.out >&AC_FD_CC
-	             AC_MSG_RESULT(no)
-                     CFLAGS="$pccco_save_CFLAGS"
-	             $3
+		     pac_success=yes
                   else
-                     AC_MSG_RESULT(no)
-                     CFLAGS="$pccco_save_CFLAGS"
-	             $3
+		     :
                   fi  
                else
-	          if test -s conftest.out ; then
-	             cat conftest.out >&AC_FD_CC
-	          fi
-                  AC_MSG_RESULT(no)
-                  CFLAGS="$pccco_save_CFLAGS"
-                  $3
+                  :
                fi
 	    else
                # Could not link with the option!
-               AC_MSG_RESULT(no)
+	       :
             fi
          else
             if test -s conftest2.out ; then
                cat conftest2.out >&AC_FD_CC
             fi
-	    AC_MSG_RESULT(no)
-            CFLAGS="$pccco_save_CFLAGS"
-	    $3
          fi
       else
-         cat conftest.out >&AC_FD_CC
-         AC_MSG_RESULT(no)
-         $3
-         CFLAGS="$pccco_save_CFLAGS"
+         :
       fi
    else
-      AC_MSG_RESULT(no)
-      $3
-      if test -s conftest.out ; then cat conftest.out >&AC_FD_CC ; fi    
-      CFLAGS="$pccco_save_CFLAGS"
+       :
    fi
 else
     # Could not compile without the option!
-    AC_MSG_RESULT(no)
+    :
+fi
+CFLAGS="$pccco_save_CFLAGS"
+if test "$pac_success" = yes ; then
+   AC_MSG_RESULT(yes)	  
+   ifelse($2,,COPTIONS="$COPTIONS $1",$2)
+else
+   AC_MSG_RESULT(no)
+   if test -s conftest.out ; then cat conftest.out >&AC_FD_CC ; fi    
+   $3
 fi
 # This is needed for Mac OSX 10.5
 rm -rf conftest.dSYM
@@ -164,7 +151,7 @@ AC_DEFUN([PAC_C_OPTIMIZATION],[
 	for copt in "-fomit-frame-pointer" "-finline-functions" \
 		 "-funroll-loops" ; do
 	    PAC_C_CHECK_COMPILER_OPTION($copt,found_opt=yes,found_opt=no)
-	    if test $found_opt = "yes" ; then
+	    if test "$found_opt" = "yes" ; then
 	        ifelse($1,,COPTIONS="$COPTIONS $copt",$1)
 	        # no break because we're trying to add them all
 	    fi
