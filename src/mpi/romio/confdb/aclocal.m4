@@ -14,6 +14,7 @@ builtin(include,aclocal_make.m4)
 builtin(include,aclocal_mpi.m4)
 builtin(include,aclocal_shl.m4)
 builtin(include,fortran90.m4)
+builtin(include,aclocal_libs.m4)
 
 dnl PAC_MKDIRS(path)
 dnl Create any missing directories in the path
