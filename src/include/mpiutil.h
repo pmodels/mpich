@@ -120,15 +120,15 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
             char *msg_ = MPIU_Malloc(MPIU_ASSERT_FMT_MSG_MAX_SIZE);                    \
             MPIU_Assert_fmt_msg_snprintf_ fmt_arg_parens_;                             \
             MPIU_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",   \
-                                       __FILE__, __LINE__, MPIU_QUOTE(a_));            \
+                                       __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
             MPIU_VG_PRINTF_BACKTRACE("%s\n", msg_);                                    \
             MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", \
-                                       __FILE__, __LINE__, MPIU_QUOTE(a_));            \
+                                       __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
             MPIU_Internal_error_printf("%s\n", msg_);                                  \
             MPIU_DBG_MSG_FMT(ALL, TERSE,                                               \
                              (MPIU_DBG_FDEST,                                          \
                               "Assertion failed in file %s at line %d: %s\n",          \
-                              __FILE__, __LINE__, MPIU_QUOTE(a_)));                    \
+                              __FILE__, __LINE__, MPIU_QUOTE(cond_)));                 \
             MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST,"%s\n",msg_));                \
             MPIU_Free(msg_);                                                           \
             MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);                                    \
@@ -146,15 +146,15 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
             const char *unable_msg_ =                                                  \
                 "macro __VA_ARGS__ not supported, unable to print user message";       \
             MPIU_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",   \
-                                       __FILE__, __LINE__, MPIU_QUOTE(a_));            \
+                                       __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
             MPIU_VG_PRINTF_BACKTRACE("%s\n", unable_msg_);                             \
             MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", \
-                                       __FILE__, __LINE__, MPIU_QUOTE(a_));            \
+                                       __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
             MPIU_Internal_error_printf("%s\n", unable_msg_);                           \
             MPIU_DBG_MSG_FMT(ALL, TERSE,                                               \
                              (MPIU_DBG_FDEST,                                          \
                               "Assertion failed in file %s at line %d: %s\n",          \
-                              __FILE__, __LINE__, MPIU_QUOTE(a_)));                    \
+                              __FILE__, __LINE__, MPIU_QUOTE(cond_)));                 \
             MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST,"%s\n",unable_msg_));         \
             MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);                                    \
         }                                                                              \
