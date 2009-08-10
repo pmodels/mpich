@@ -341,7 +341,7 @@ AM_CONDITIONAL([hydra_have_plpa], [test "${have_plpa}" = "yes"])
 #########################################################################
 # Checkpoint/Restart
 #########################################################################
-AC_ARG_WITH(hydra-ckpointlib, [  --with-hydra-ckpointlib   Checkpointing Library],
+AC_ARG_WITH(hydra-ckpointlib, [  --with-hydra-ckpointlib[=lib]   Checkpointing Library],
 			   [ hydra_ckpointlib=$withval ],
 			   [ hydra_ckpointlib=none ])
 AC_MSG_CHECKING(checkpointing library)
@@ -351,23 +351,18 @@ hydra_ckpointlib_names="`echo $hydra_ckpointlib | sed -e 's/:/ /g' -e 's/,/ /g'`
 AC_DEFINE_UNQUOTED(HYDRA_CKPOINTLIB_NAMES,"$hydra_ckpointlib_names",
 		[Definition of enabled checkpointing libraries])
 
-AC_ARG_WITH(blcr, [  --with-blcr           Path to the BLCR library],
-		  [ blcr_path=$withval ],)
-AC_MSG_CHECKING(blcr library path)
-AC_MSG_RESULT($blcr_path)
+PAC_SET_HEADER_LIB_PATH(blcr)
 
 have_blcr=no
 for hydra_ckpointlib_name in ${hydra_ckpointlib_names}; do
     case "$hydra_ckpointlib_name" in
     	blcr)
-		# FIXME: Test if BLCR is specified and works correctly
-		CFLAGS="$CFLAGS -I${blcr_path}/include"
-		LDFLAGS="$LDFLAGS -L${blcr_path}/lib"
-		AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
-		have_blcr=yes
-		;;		
+	    PAC_CHECK_HEADER_LIB(blcr, libcr.h, cr, cr_init)
+	    AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
+	    have_blcr=yes
+	    ;;		
 	*)
-		;;
+	    ;;
     esac
 done
 AM_CONDITIONAL([hydra_have_blcr], [test "${have_blcr}" = "yes"])
