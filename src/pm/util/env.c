@@ -281,7 +281,7 @@ int MPIE_EnvInitData( EnvData *elist, int getValue )
 /*
  * Add an enviroinment variable to the global list of variables
  */
-int MPIE_Putenv( ProcessWorld *pWorld, char *env_string )
+int MPIE_Putenv( ProcessWorld *pWorld, const char *env_string )
 {
     EnvInfo *genv;
     EnvData *p;

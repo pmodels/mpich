@@ -96,7 +96,7 @@ static int PMIUBufferedReadLine( PMIProcess *, char *, int );
  * the command.  New PMI commands can be added by updating this table.
  */
 typedef struct {
-    char *cmdName;
+    const char *cmdName;
     int (*handler)( PMIProcess * );
 } PMICmdMap;
 

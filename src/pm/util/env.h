@@ -26,7 +26,7 @@ typedef struct EnvInfo {
 int MPIE_ArgsCheckForEnv( int, char *[], ProcessWorld *, EnvInfo ** );
 int MPIE_EnvSetup( ProcessState *, char *[], char *[], int );
 int MPIE_EnvInitData( EnvData *, int );
-int MPIE_Putenv( ProcessWorld *, char * );
+int MPIE_Putenv( ProcessWorld *, const char * );
 int MPIE_UnsetAllEnv( char *[] );
 
 #endif
