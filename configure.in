@@ -297,7 +297,7 @@ dnl
 dnl We may want to force MPI_Aint to be the same size as MPI_Offset, 
 dnl particularly on 32 bit systems with large (64 bit) file systems.
 AC_ARG_WITH(aint-size,
-[--with-aint-size - Override the size of MPI_AINT],,with_aint_size=0)
+[--with-aint-size - Override the size of MPI_AINT (in bytes)],,with_aint_size=0)
 dnl
 dnl
 dnl --enable-sharedlibs=kind is set with the PAC_ARG_SHAREDLIBS macro 
@@ -5626,6 +5626,9 @@ export MPI_F77_AINT_DATATYPE
 MPIU_SIZE_T="unsigned $MPI_AINT"
 AC_DEFINE_UNQUOTED(MPIU_SIZE_T,$MPIU_SIZE_T,[Set to a type that can express the size of the entire address space]) 
 
+if test "$ac_cv_sizeof_void_p" -lt "$aint_size" ; then
+    AC_DEFINE(USE_AINT_FOR_ATTRVAL,1,[Define if MPI_Aint should be used instead of void * for storing attribute values])
+fi
 #
 # If it is necessary for the device to update some of the variables,
 # this step allows that to happen.  Possible variables to update are
