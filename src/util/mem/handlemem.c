@@ -346,7 +346,7 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
     }
 
     MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
-                                     "Allocating object ptr %p (handle val 0x%08x)\n",
+                                     "Allocating object ptr %p (handle val 0x%08x)",
 				     ptr, ptr->handle));
 
     if (ptr) {
@@ -386,7 +386,7 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
     MPIU_VG_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
 
     MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
-                                     "Freeing object ptr %p (handle val 0x%08x)\n",
+                                     "Freeing object ptr %p (handle val 0x%08x)",
                                      obj, obj->handle));
 
     obj->next	        = objmem->avail;
