@@ -152,35 +152,35 @@ MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
 
 /* C99 fixed-width types */
 #if defined(HAVE_INT8_T)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_INT8_T(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_INT8_T
 #  define MPIR_OP_TYPE_MACRO_HAVE_INT8_T(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 #if defined(HAVE_INT16_T)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_INT16_T(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_INT16_T
 #  define MPIR_OP_TYPE_MACRO_HAVE_INT16_T(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 #if defined(HAVE_INT32_T)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_INT32_T(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_INT32_T
 #  define MPIR_OP_TYPE_MACRO_HAVE_INT32_T(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 #if defined(HAVE_INT64_T)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_INT64_T(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_INT64_T
 #  define MPIR_OP_TYPE_MACRO_HAVE_INT64_T(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 #if defined(HAVE_UINT8_T)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_UINT8_T(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_UINT8_T
 #  define MPIR_OP_TYPE_MACRO_HAVE_UINT8_T(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 #if defined(HAVE_UINT16_T)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_UINT16_T(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_UINT16_T
 #  define MPIR_OP_TYPE_MACRO_HAVE_UINT16_T(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 #if defined(HAVE_UINT32_T)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_UINT32_T(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_UINT32_T
 #  define MPIR_OP_TYPE_MACRO_HAVE_UINT32_T(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 #if defined(HAVE_UINT64_T)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_UINT64_T(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_UINT64_T
 #  define MPIR_OP_TYPE_MACRO_HAVE_UINT64_T(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 
@@ -198,15 +198,15 @@ MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
 #undef MPIR_OP_C_COMPLEX_TYPE_MACRO
 #define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #if defined(HAVE_FLOAT__COMPLEX)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_C_FLOAT_COMPLEX(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_C_FLOAT_COMPLEX
 #  define MPIR_OP_TYPE_MACRO_HAVE_C_FLOAT_COMPLEX(mpi_type_,c_type_) MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 #if defined(HAVE_DOUBLE__COMPLEX)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_C_DOUBLE_COMPLEX(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_C_DOUBLE_COMPLEX
 #  define MPIR_OP_TYPE_MACRO_HAVE_C_DOUBLE_COMPLEX(mpi_type_,c_type_) MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 #if defined(HAVE_LONG_DOUBLE__COMPLEX)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_C_LONG_DOUBLE_COMPLEX(mpi_type_,c_type_)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_C_LONG_DOUBLE_COMPLEX
 #  define MPIR_OP_TYPE_MACRO_HAVE_C_LONG_DOUBLE_COMPLEX(mpi_type_,c_type_) MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 
