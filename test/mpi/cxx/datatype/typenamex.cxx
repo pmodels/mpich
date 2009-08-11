@@ -144,8 +144,7 @@ void InitMPINames (void) {
 	{ MPI::TWOREAL, "MPI_2REAL" },
 	{ MPI::TWODOUBLE_PRECISION, "MPI_2DOUBLE_PRECISION" },
 	{ MPI::CHARACTER, "MPI_CHARACTER" },
-#endif
-    /* Size-specific types */
+    /* Size-specific (Fortran) types */
 	{ MPI::REAL4, "MPI_REAL4" },
 	{ MPI::REAL8, "MPI_REAL8" },
 	{ MPI::REAL16, "MPI_REAL16" },
@@ -157,6 +156,7 @@ void InitMPINames (void) {
 	{ MPI::INTEGER4, "MPI_INTEGER4" },
 	{ MPI::INTEGER8, "MPI_INTEGER8" },
 	{ MPI::INTEGER16, "MPI_INTEGER16" },
+#endif
 	/* C++ only types */
 	{ MPI::BOOL, "MPI::BOOL" },
 	{ MPI::COMPLEX, "MPI::COMPLEX" },
