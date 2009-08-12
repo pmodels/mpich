@@ -801,9 +801,10 @@ may be block not allocated with MPIU_trmalloc or MALLOC\n",
 
     /* If trmalloc failed, p should be left alone and will not be freed.  So we
        need to mark the head as NOACCESS before returning. */
-    if (!pnew)
+    if (!pnew) {
         MPIU_VG_MAKE_MEM_NOACCESS(head, sizeof(*head));
-
+    }
+    
     if (p && pnew) {
 	nsize = size;
 	if (head->size < (unsigned long)nsize) nsize = (int)(head->size);

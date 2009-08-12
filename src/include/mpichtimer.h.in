@@ -14,16 +14,17 @@
  * is needed only to build the function versions of the timers.
  */
 /* Include the appropriate files */
-#define USE_GETHRTIME 1
-#define USE_CLOCK_GETTIME 2
-#define USE_GETTIMEOFDAY 3
-#define USE_LINUX86_CYCLE 4
-#define USE_LINUXALPHA_CYCLE 5
+#define USE_GETHRTIME               1
+#define USE_CLOCK_GETTIME           2
+#define USE_GETTIMEOFDAY            3
+#define USE_LINUX86_CYCLE           4
+#define USE_LINUXALPHA_CYCLE        5
 #define USE_QUERYPERFORMANCECOUNTER 6
-#define USE_WIN86_CYCLE 7
-#define USE_GCC_IA64_CYCLE 8
+#define USE_WIN86_CYCLE             7
+#define USE_GCC_IA64_CYCLE          8
 /* The value "USE_DEVICE" means that the ADI device provides the timer */
-#define USE_DEVICE 9
+#define USE_DEVICE                  9
+#define USE_WIN64_CYCLE             10
 #define MPICH_TIMER_KIND @MPICH_TIMER_KIND@
 
 #if MPICH_TIMER_KIND == USE_GETHRTIME 

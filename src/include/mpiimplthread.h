@@ -110,7 +110,7 @@ extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
 /* Define a macro to acquire or create the thread private storage */
 #define MPIR_GetOrInitThreadPriv( pt_ ) \
 {									\
-    MPID_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, (void **)(pt_));	\
+    MPID_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, (pt_));	\
     if (*(pt_) == NULL)							\
     {									\
 	*(pt_) = (MPICH_PerThread_t *) MPIU_Calloc(1, sizeof(MPICH_PerThread_t));	\

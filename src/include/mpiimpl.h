@@ -492,20 +492,20 @@ M*/
    defined above, and adds an additional sanity check for the refcounts
 */
 #define MPIU_Object_set_ref(objptr,val)                \
-    {((MPIU_Handle_head*)(objptr))->ref_count = val;   \
+    {((objptr))->ref_count = val;   \
     MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,   \
             "set %p (0x%08x) refcount to %d",          \
        (objptr), (objptr)->handle, val));              \
     }
 #define MPIU_Object_add_ref(objptr)                    \
-    {((MPIU_Handle_head*)(objptr))->ref_count++;       \
+    {((objptr))->ref_count++;       \
     MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,   \
       "incr %p (0x%08x) refcount to %d",	       \
      (objptr), (objptr)->handle, (objptr)->ref_count));\
     MPIU_HANDLE_CHECK_REFCOUNT(objptr,"incr");         \
     }
 #define MPIU_Object_release_ref(objptr,inuse_ptr)             \
-    {*(inuse_ptr)=--((MPIU_Handle_head*)(objptr))->ref_count; \
+    {*(inuse_ptr)=--((objptr))->ref_count; \
 	MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,      \
         "decr %p (0x%08x) refcount to %d",                    \
         (objptr), (objptr)->handle, (objptr)->ref_count));    \
