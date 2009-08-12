@@ -291,7 +291,8 @@ int main(int argc, char **argv)
         return -1;
     else {
         if (WIFSIGNALED(exit_status))
-            printf("%s\n", strsignal(exit_status));
+            printf("%s (signal %d)\n", strsignal(WTERMSIG(exit_status)),
+                   WTERMSIG(exit_status));
         return (WEXITSTATUS(exit_status));
     }
 
