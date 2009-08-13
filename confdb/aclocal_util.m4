@@ -1,21 +1,38 @@
-dnl NOTE: do not use these macros recursively, you will be very sad
-dnl FIXME this probably should be modified to take a namespacing parameter
-AC_DEFUN([PAC_SAVE_FLAGS],[
-	pac_save_CFLAGS=$CFLAGS
-	pac_save_CXXFLAGS=$CXXFLAGS
-	pac_save_FFLAGS=$FFLAGS
-	pac_save_F90FLAGS=$F90FLAGS
-	pac_save_LDFLAGS=$LDFLAGS
+dnl Nesting safe macros for saving variables
+dnl Usage: PAC_PUSH_VAR(CFLAGS)
+AC_DEFUN([PAC_PUSH_VAR],[
+	if test -z "${pac_save_$1_nesting}" ; then
+	   pac_save_$1_nesting=0
+	fi
+	eval pac_save_$1_${pac_save_$1_nesting}='"$$1"'
+	pac_save_$1_nesting=`expr ${pac_save_$1_nesting} + 1`
 ])
 
-dnl NOTE: do not use these macros recursively, you will be very sad
-dnl FIXME this probably should be modified to take a namespacing parameter
+dnl Usage: PAC_POP_VAR(CFLAGS)
+AC_DEFUN([PAC_POP_VAR],[
+	pac_save_$1_nesting=`expr ${pac_save_$1_nesting} - 1`
+	eval $1="\$pac_save_$1_${pac_save_$1_nesting}"
+	eval pac_save_$1_${pac_save_$1_nesting}=""
+])
+
+dnl Usage: PAC_SAVE_FLAGS
+AC_DEFUN([PAC_SAVE_FLAGS],[
+	PAC_PUSH_VAR(CFLAGS)
+	PAC_PUSH_VAR(CXXFLAGS)
+	PAC_PUSH_VAR(FFLAGS)
+	PAC_PUSH_VAR(F90FLAGS)
+	PAC_PUSH_VAR(LDFLAGS)
+	PAC_PUSH_VAR(LIBS)
+])
+
+dnl Usage: PAC_RESTORE_FLAGS
 AC_DEFUN([PAC_RESTORE_FLAGS],[
-	CFLAGS=$pac_save_CFLAGS
-	CXXFLAGS=$pac_save_CXXFLAGS
-	FFLAGS=$pac_save_FFLAGS
-	F90FLAGS=$pac_save_F90FLAGS
-	LDFLAGS=$pac_save_LDFLAGS
+	PAC_POP_VAR(CFLAGS)
+	PAC_POP_VAR(CXXFLAGS)
+	PAC_POP_VAR(FFLAGS)
+	PAC_POP_VAR(F90FLAGS)
+	PAC_POP_VAR(LDFLAGS)
+	PAC_POP_VAR(LIBS)
 ])
 
 dnl Usage: PAC_APPEND_FLAG([-02], [$CFLAGS])
