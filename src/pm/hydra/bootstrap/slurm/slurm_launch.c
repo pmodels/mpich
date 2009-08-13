@@ -58,6 +58,17 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *partition
         if (partition->next && partition->next->base->active)
             tmp[i++] = HYDU_strdup(",");
         num_nodes++;
+
+        /* If we used up more than half of the array elements, merge
+         * what we have so far */
+        if (i > (HYD_NUM_TMP_STRINGS / 2)) {
+            tmp[i++] = NULL;
+            status = HYDU_str_alloc_and_join(tmp, &client_arg[arg]);
+            HYDU_ERR_POP(status, "error joining strings\n");
+
+            i = 0;
+            tmp[i++] = client_arg[arg];
+        }
     }
     tmp[i++] = NULL;
     status = HYDU_str_alloc_and_join(tmp, &client_arg[arg]);
@@ -68,6 +79,9 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *partition
     arg++;
 
     client_arg[arg++] = HYDU_strdup("-N");
+    client_arg[arg++] = HYDU_int_to_str(num_nodes);
+
+    client_arg[arg++] = HYDU_strdup("-n");
     client_arg[arg++] = HYDU_int_to_str(num_nodes);
 
     for (i = 0; global_args[i]; i++)
