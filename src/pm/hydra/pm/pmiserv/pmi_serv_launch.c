@@ -253,7 +253,10 @@ static HYD_Status fill_in_exec_args(void)
             partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
         partition->base->exec_args[arg++] = HYDU_strdup("--binding");
-        partition->base->exec_args[arg++] = HYDU_int_to_str(HYD_handle.binding);
+        if (HYD_handle.binding)
+            partition->base->exec_args[arg++] = HYDU_strdup(HYD_handle.binding);
+        else
+            partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
         if (HYD_handle.user_bind_map)
             partition->base->exec_args[arg++] = HYDU_strdup(HYD_handle.user_bind_map);
         else if (partition->user_bind_map)
@@ -262,7 +265,10 @@ static HYD_Status fill_in_exec_args(void)
             partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
         partition->base->exec_args[arg++] = HYDU_strdup("--bindlib");
-        partition->base->exec_args[arg++] = HYDU_int_to_str(HYD_handle.bindlib);
+        if (HYD_handle.bindlib)
+            partition->base->exec_args[arg++] = HYDU_strdup(HYD_handle.bindlib);
+        else
+            partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
         partition->base->exec_args[arg++] = HYDU_strdup("--global-inherited-env");
         for (i = 0, env = HYD_handle.inherited_env; env; env = env->next, i++);

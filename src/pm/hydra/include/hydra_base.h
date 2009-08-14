@@ -134,25 +134,6 @@ typedef enum {
     HYD_ENV_PROP_LIST
 } HYD_Env_prop_t;
 
-typedef enum {
-    HYD_BIND_UNSET,
-    HYD_BIND_NONE,
-    HYD_BIND_RR,
-    HYD_BIND_BUDDY,
-    HYD_BIND_PACK,
-    HYD_BIND_USER
-} HYD_Binding_t;
-
-typedef enum {
-    HYD_BINDLIB_UNSET,
-    HYD_BINDLIB_PLPA
-} HYD_Bindlib_t;
-
-typedef enum {
-    HYD_CKPOINTLIB_UNSET,
-    HYD_CKPOINTLIB_BLCR
-} HYD_Ckpointlib_t;
-
 /* List of contiguous segments of processes on a partition */
 struct HYD_Partition_segment {
     int start_pid;

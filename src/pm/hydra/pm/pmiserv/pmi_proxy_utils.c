@@ -26,8 +26,8 @@ static HYD_Status init_params(void)
 
     HYD_PMCD_pmi_proxy_params.wdir = NULL;
     HYD_PMCD_pmi_proxy_params.pmi_port_str = NULL;
-    HYD_PMCD_pmi_proxy_params.binding = HYD_BIND_UNSET;
-    HYD_PMCD_pmi_proxy_params.bindlib = HYD_BINDLIB_UNSET;
+    HYD_PMCD_pmi_proxy_params.binding = NULL;
+    HYD_PMCD_pmi_proxy_params.bindlib = NULL;
     HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
 
     HYD_PMCD_pmi_proxy_params.system_env = NULL;
@@ -97,7 +97,11 @@ static HYD_Status parse_params(char **t_argv)
         /* Binding */
         if (!strcmp(*argv, "--binding")) {
             argv++;
-            HYD_PMCD_pmi_proxy_params.binding = (HYD_Binding_t) (unsigned int) atoi(*argv);
+            if (!strcmp(*argv, "HYDRA_NULL"))
+                HYD_PMCD_pmi_proxy_params.binding = NULL;
+            else
+                HYD_PMCD_pmi_proxy_params.binding = HYDU_strdup(*argv);
+
             argv++;
             if (!strcmp(*argv, "HYDRA_NULL"))
                 HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
@@ -109,7 +113,10 @@ static HYD_Status parse_params(char **t_argv)
         /* Binding library */
         if (!strcmp(*argv, "--bindlib")) {
             argv++;
-            HYD_PMCD_pmi_proxy_params.bindlib = (HYD_Bindlib_t) (unsigned int) atoi(*argv);
+            if (!strcmp(*argv, "HYDRA_NULL"))
+                HYD_PMCD_pmi_proxy_params.bindlib = NULL;
+            else
+                HYD_PMCD_pmi_proxy_params.bindlib = HYDU_strdup(*argv);
             continue;
         }
 
@@ -375,6 +382,12 @@ HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
     if (HYD_PMCD_pmi_proxy_params.pmi_port_str)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.pmi_port_str);
 
+    if (HYD_PMCD_pmi_proxy_params.binding)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.binding);
+
+    if (HYD_PMCD_pmi_proxy_params.bindlib)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.bindlib);
+
     if (HYD_PMCD_pmi_proxy_params.user_bind_map)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.user_bind_map);
 
@@ -518,8 +531,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++)
         HYD_PMCD_pmi_proxy_params.exit_status[i] = -1;
 
-    status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.bindlib,
-                            HYD_PMCD_pmi_proxy_params.user_bind_map);
+    status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.binding,
+                            HYD_PMCD_pmi_proxy_params.bindlib);
     HYDU_ERR_POP(status, "unable to initialize process binding\n");
 
     /* Spawn the processes */
@@ -598,7 +611,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                 client_args[arg++] = HYDU_strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
-            core = HYDU_bind_get_core_id(process_id, HYD_PMCD_pmi_proxy_params.binding);
+            core = HYDU_bind_get_core_id(process_id);
             if (pmi_id == 0) {
                 status = HYDU_create_process(client_args, prop_env,
                                              &HYD_PMCD_pmi_proxy_params.in,

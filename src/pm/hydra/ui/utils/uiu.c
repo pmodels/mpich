@@ -17,11 +17,11 @@ void HYD_UIU_init_params(void)
     HYD_handle.bootstrap = NULL;
     HYD_handle.css = NULL;
     HYD_handle.rmk = NULL;
-    HYD_handle.binding = HYD_BIND_UNSET;
-    HYD_handle.bindlib = HYD_BINDLIB_UNSET;
+    HYD_handle.binding = NULL;
+    HYD_handle.bindlib = NULL;
     HYD_handle.user_bind_map = NULL;
 
-    HYD_handle.ckpointlib = HYD_CKPOINTLIB_UNSET;
+    HYD_handle.ckpointlib = NULL;
     HYD_handle.ckpoint_int = -1;
     HYD_handle.ckpoint_prefix = NULL;
 
@@ -71,8 +71,17 @@ void HYD_UIU_free_params(void)
     if (HYD_handle.rmk)
         HYDU_FREE(HYD_handle.rmk);
 
+    if (HYD_handle.binding)
+        HYDU_FREE(HYD_handle.binding);
+
+    if (HYD_handle.bindlib)
+        HYDU_FREE(HYD_handle.bindlib);
+
     if (HYD_handle.user_bind_map)
         HYDU_FREE(HYD_handle.user_bind_map);
+
+    if (HYD_handle.ckpointlib)
+        HYDU_FREE(HYD_handle.ckpointlib);
 
     if (HYD_handle.ckpoint_prefix)
         HYDU_FREE(HYD_handle.ckpoint_prefix);

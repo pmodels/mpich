@@ -12,36 +12,6 @@
 #define IS_HELP(str) \
     ((!strcmp((str), "-h")) || (!strcmp((str), "-help")) || (!strcmp((str), "--help")))
 
-#define FIND_BINDING_ENUM(bind_str, bind_enum, bindmap, status) \
-    {                                                           \
-        char *x, *y;                                            \
-        if (!strcmp((bind_str), "none"))                        \
-            bind_enum = HYD_BIND_NONE;                          \
-        else if (!strcmp(bind_str, "rr"))                       \
-            bind_enum = HYD_BIND_RR;                            \
-        else if (!strcmp(bind_str, "buddy"))                    \
-            bind_enum = HYD_BIND_BUDDY;                         \
-        else if (!strcmp(bind_str, "pack"))                     \
-            bind_enum = HYD_BIND_PACK;                          \
-        else {                                                          \
-            /* Check if the user wants to specify her own mapping */    \
-            status = HYDU_strsplit((bind_str), &x, &y, ':');            \
-            HYDU_ERR_POP(status, "string break returned error\n");      \
-                                                                        \
-            if (!strcmp(x, "user")) {                                   \
-                bind_enum = HYD_BIND_USER;                              \
-                if (y)                                                  \
-                    (bindmap) = y;                                      \
-                HYDU_FREE(x);                                           \
-            }                                                           \
-            else {                                                      \
-                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,        \
-                                     "unrecognized binding option %s\n", x); \
-            }                                                           \
-        }                                                               \
-    }
-
-
 static void dump_env_notes(void)
 {
     printf("Additional generic notes:\n");
@@ -658,8 +628,8 @@ static HYD_Status binding_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.binding != HYD_BIND_UNSET,
-                        HYD_INTERNAL_ERROR, "duplicate binding\n");
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.binding, HYD_INTERNAL_ERROR,
+                        "duplicate binding\n");
 
     if (**argv == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no binding specified\n");
@@ -669,14 +639,15 @@ static HYD_Status binding_fn(char *arg, char ***argv)
         printf("-binding: Process-core binding to use\n\n");
         printf("Notes:\n");
         printf("  * Usage: -binding [type]; where [type] can be:\n");
-        printf("        none: no binding\n");
-        printf("        rr: round-robin as OS assigned processor IDs\n");
-        printf("        buddy: order of least shared resources\n");
-        printf("        pack: order of most shared resources\n\n");
+        printf("        none -- no binding\n");
+        printf("        rr   -- round-robin as OS assigned processor IDs\n");
+        printf("        buddy -- order of least shared resources\n");
+        printf("        pack  -- order of most shared resources\n\n");
+        printf("        user:0,1,3,2 -- user specified binding\n");
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    FIND_BINDING_ENUM(**argv, HYD_handle.binding, HYD_handle.user_bind_map, status);
+    HYD_handle.binding = HYDU_strdup(**argv);
     (*argv)++;
 
   fn_exit:
@@ -690,8 +661,8 @@ static HYD_Status bindlib_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.bindlib != HYD_BINDLIB_UNSET,
-                        HYD_INTERNAL_ERROR, "duplicate -bindlib option\n");
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.bindlib, HYD_INTERNAL_ERROR,
+                        "duplicate -bindlib option\n");
 
     if (**argv == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no bindlib specified\n");
@@ -704,11 +675,7 @@ static HYD_Status bindlib_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    if (!strcmp(**argv, "plpa"))
-        HYD_handle.bindlib = HYD_BINDLIB_PLPA;
-    else
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "unrecognized binding library %s\n", **argv);
+    HYD_handle.bindlib = HYDU_strdup(**argv);
     (*argv)++;
 
   fn_exit:
@@ -774,8 +741,8 @@ static HYD_Status ckpointlib_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpointlib != HYD_CKPOINTLIB_UNSET,
-                        HYD_INTERNAL_ERROR, "duplicate -ckpointlib option\n");
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpointlib, HYD_INTERNAL_ERROR,
+                        "duplicate -ckpointlib option\n");
 
     if (**argv == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no ckpointlib specified\n");
@@ -788,11 +755,7 @@ static HYD_Status ckpointlib_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    if (!strcmp(**argv, "blcr"))
-        HYD_handle.ckpointlib = HYD_CKPOINTLIB_BLCR;
-    else
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "unrecognized checkpoint library %s\n", **argv);
+    HYD_handle.ckpointlib = HYDU_strdup(**argv);
     (*argv)++;
 
   fn_exit:
@@ -1027,10 +990,9 @@ static HYD_Status verify_arguments()
                             "env setting not required for booting/shutting proxies\n");
 
         /* No binding */
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.binding != HYD_BIND_UNSET, HYD_INTERNAL_ERROR,
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.binding, HYD_INTERNAL_ERROR,
                             "binding not allowed while booting/shutting proxies\n");
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.bindlib != HYD_BINDLIB_UNSET,
-                            HYD_INTERNAL_ERROR,
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.bindlib, HYD_INTERNAL_ERROR,
                             "binding not allowed while booting/shutting proxies\n");
 
         /* No executables */
@@ -1132,19 +1094,12 @@ static HYD_Status set_default_values()
 
     /* Check environment for setting binding */
     tmp = getenv("HYDRA_BINDING");
-    if (HYD_handle.binding == HYD_BIND_UNSET && tmp) {
-        FIND_BINDING_ENUM(tmp, HYD_handle.binding, HYD_handle.user_bind_map, status);
-    }
-    if (HYD_handle.binding == HYD_BIND_UNSET)
-        HYD_handle.binding = HYD_BIND_NONE;
+    if (HYD_handle.binding == NULL && tmp)
+        HYD_handle.binding = HYDU_strdup(tmp);
 
     tmp = getenv("HYDRA_BINDLIB");
-    if (HYD_handle.bindlib == HYD_BINDLIB_UNSET && tmp) {
-        if (!strcmp(tmp, "plpa"))
-            HYD_handle.bindlib = HYD_BINDLIB_PLPA;
-    }
-    if (HYD_handle.bindlib == HYD_BINDLIB_UNSET)
-        HYD_handle.bindlib = HYD_BINDLIB_PLPA;  /* By default, we use PLPA */
+    if (HYD_handle.bindlib == NULL && tmp)
+        HYD_handle.bindlib = HYDU_strdup(tmp);
 
     /* Check environment for setting the inherited environment */
     tmp = getenv("HYDRA_ENV");

@@ -312,6 +312,9 @@ have_plpa=no
 for hydra_bindlib_name in ${hydra_bindlib_names}; do
     case "$hydra_bindlib_name" in
     	plpa)
+		if test -z "${hydra_default_bindlib}" ; then
+		   hydra_default_bindlib=$hydra_bindlib_name
+		fi
 		AC_MSG_CHECKING(if plpa works correctly)
 		old_CFLAGS=$CFLAGS
 		old_LDFLAGS=$LDFLAGS
@@ -335,6 +338,8 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		;;
     esac
 done
+AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BINDLIB,"$hydra_default_bindlib",
+	[Default binding library])
 AM_CONDITIONAL([hydra_have_plpa], [test "${have_plpa}" = "yes"])
 
 
