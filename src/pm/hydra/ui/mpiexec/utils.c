@@ -765,6 +765,28 @@ static HYD_Status ckpointlib_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static HYD_Status ckpoint_restart_fn(char *arg, char ***argv)
+{
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpoint_restart != -1,
+                        HYD_INTERNAL_ERROR, "duplicate launch mode\n");
+
+    if (**argv && IS_HELP(**argv)) {
+        printf("\n");
+        printf("-ckpoint-restart: Restart checkpointed application\n\n");
+        HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+    }
+
+    HYD_handle.ckpoint_restart = 1;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_Status verbose_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
@@ -919,6 +941,7 @@ static struct match_table_fns match_table[] = {
     {"ckpoint-interval", ckpoint_interval_fn},
     {"ckpoint-prefix", ckpoint_prefix_fn},
     {"ckpointlib", ckpointlib_fn},
+    {"ckpoint-restart", ckpoint_restart_fn},
 
     /* Other hydra options */
     {"verbose", verbose_fn},
@@ -980,7 +1003,7 @@ static HYD_Status verify_arguments()
     struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
 
-    /* Proxy launch */
+    /* Proxy launch or checkpoint restart */
     if ((HYD_handle.launch_mode == HYD_LAUNCH_BOOT) ||
         (HYD_handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) ||
         (HYD_handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
@@ -1000,6 +1023,15 @@ static HYD_Status verify_arguments()
                             "execs should not be specified while booting/shutting proxies\n");
     }
     else {      /* Application launch */
+        /* On a checkpoint restart, we set the prefix as the application */
+        if (HYD_handle.ckpoint_restart == 1) {
+            status = HYD_UIU_get_current_exec_info(&exec_info);
+            HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
+
+            exec_info->exec[0] = HYDU_strdup(HYD_handle.ckpoint_prefix);
+            exec_info->exec[1] = NULL;
+        }
+
         if (HYD_handle.exec_info_list == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
 
@@ -1023,6 +1055,7 @@ static HYD_Status verify_arguments()
 static HYD_Status set_default_values()
 {
     char *tmp;
+    struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
 
     if (HYD_handle.print_rank_map == -1)

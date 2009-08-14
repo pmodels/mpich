@@ -24,6 +24,7 @@ void HYD_UIU_init_params(void)
     HYD_handle.ckpointlib = NULL;
     HYD_handle.ckpoint_int = -1;
     HYD_handle.ckpoint_prefix = NULL;
+    HYD_handle.ckpoint_restart = 0;
 
     HYD_handle.debug = -1;
     HYD_handle.print_rank_map = -1;

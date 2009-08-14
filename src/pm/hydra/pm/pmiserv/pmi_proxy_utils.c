@@ -32,6 +32,7 @@ static HYD_Status init_params(void)
 
     HYD_PMCD_pmi_proxy_params.ckpointlib = NULL;
     HYD_PMCD_pmi_proxy_params.ckpoint_prefix = NULL;
+    HYD_PMCD_pmi_proxy_params.ckpoint_restart = 0;
 
     HYD_PMCD_pmi_proxy_params.system_env = NULL;
     HYD_PMCD_pmi_proxy_params.user_env = NULL;
@@ -139,6 +140,11 @@ static HYD_Status parse_params(char **t_argv)
                 HYD_PMCD_pmi_proxy_params.ckpoint_prefix = NULL;
             else
                 HYD_PMCD_pmi_proxy_params.ckpoint_prefix = HYDU_strdup(*argv);
+            continue;
+        }
+
+        if (!strcmp(*argv, "--ckpoint-restart")) {
+            HYD_PMCD_pmi_proxy_params.ckpoint_restart = 1;
             continue;
         }
 
@@ -567,6 +573,11 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                                HYD_PMCD_pmi_proxy_params.ckpoint_prefix);
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
+    if (HYD_PMCD_pmi_proxy_params.ckpoint_restart) {
+        HYDU_ckpoint_restart(0, NULL);
+        goto fn_exit;
+    }
+
     /* Spawn the processes */
     process_id = 0;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next) {
@@ -685,12 +696,10 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                                  HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_stderr_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
+  fn_exit:
     /* Indicate that the processes have been launched */
     HYD_PMCD_pmi_proxy_params.procs_are_launched = 1;
-
     HYDU_FUNC_EXIT();
-
-  fn_exit:
     return status;
 
   fn_fail:

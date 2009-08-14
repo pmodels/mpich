@@ -33,6 +33,7 @@ struct HYD_PMCD_pmi_proxy_params {
 
     char *ckpointlib;
     char *ckpoint_prefix;
+    int ckpoint_restart;
 
     HYD_Env_t *system_env;
     HYD_Env_t *user_env;
