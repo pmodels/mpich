@@ -1155,6 +1155,9 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             HYDU_ERR_POP(status, "argument matching returned error\n");
         }
 
+        if (!(*argv))
+            break;
+
         /* Get the executable information */
         /* Read the executable till you hit the end of a ":" */
         do {
@@ -1174,9 +1177,6 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
             exec_info->exec[i] = HYDU_strdup(*argv);
             exec_info->exec[i + 1] = NULL;
         } while (++argv && *argv);
-
-        if (!(*argv))
-            break;
     } while (1);
 
     status = verify_arguments();
