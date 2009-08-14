@@ -312,9 +312,6 @@ have_plpa=no
 for hydra_bindlib_name in ${hydra_bindlib_names}; do
     case "$hydra_bindlib_name" in
     	plpa)
-		if test -z "${hydra_default_bindlib}" ; then
-		   hydra_default_bindlib=$hydra_bindlib_name
-		fi
 		AC_MSG_CHECKING(if plpa works correctly)
 		old_CFLAGS=$CFLAGS
 		old_LDFLAGS=$LDFLAGS
@@ -330,6 +327,9 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		LDFLAGS=$old_LDFLAGS
 		AC_MSG_RESULT($plpa_works)
 		if test "$plpa_works" = "yes" ; then
+		   if test -z "${hydra_default_bindlib}" ; then
+		      hydra_default_bindlib=$hydra_bindlib_name
+		   fi
 		   have_plpa=yes
 		   AC_DEFINE(HAVE_PLPA,1,[Define if plpa is available])
 		fi
@@ -360,13 +360,15 @@ have_blcr=no
 for hydra_ckpointlib_name in ${hydra_ckpointlib_names}; do
     case "$hydra_ckpointlib_name" in
     	blcr)
-	    if test -z "${hydra_default_ckpointlib}" ; then
-	       hydra_default_ckpointlib=$hydra_ckpointlib_name
-	    fi
 	    PAC_SET_HEADER_LIB_PATH(blcr)
-	    PAC_CHECK_HEADER_LIB(blcr, libcr.h, cr, cr_init)
-	    AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
-	    have_blcr=yes
+	    PAC_CHECK_HEADER_LIB(blcr, libcr.h, cr, cr_init, have_blcr=yes, have_blcr=no)
+	    # BLCR works
+	    if test "$have_blcr" = "yes" ; then
+	       AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
+	       if test -z "${hydra_default_ckpointlib}" ; then
+	       	  hydra_default_ckpointlib=$hydra_ckpointlib_name
+	       fi
+	    fi
 	    ;;		
 	*)
 	    ;;
