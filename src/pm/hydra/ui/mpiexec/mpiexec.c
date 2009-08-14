@@ -92,6 +92,7 @@ static void usage(void)
     printf("    -ckpoint-interval                checkpoint interval\n");
     printf("    -ckpoint-prefix                  checkpoint file prefix\n");
     printf("    -ckpointlib                      checkpointing library (blcr)\n");
+    printf("    -ckpoint-restart                 restart a checkpointed application\n");
 
     printf("\n");
     printf("  Other Hydra options:\n");
