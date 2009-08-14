@@ -28,15 +28,26 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
 ])
 
 
-dnl PAC_CHECK_HEADER_LIB(with_option, header.h, libname, function)
+dnl PAC_CHECK_HEADER_LIB(with_option, header.h, libname, function, action-if-yes, action-if-no)
 dnl This macro checks for a header and lib.  It is assumed that the
 dnl user can specify a path to the includes and libs using --with-xxx=.
 dnl The xxx is specified in the "with_option" parameter.
 AC_DEFUN([PAC_CHECK_HEADER_LIB],[
-    AC_CHECK_HEADER([$2], , [
-        AC_MSG_ERROR(['$2 not found.  Did you specify --with-$1= or --with-$1-include=?'])
-    ])
-    AC_CHECK_LIB($3, $4, , [
-        AC_MSG_ERROR(['$3 library not found.  Did you specify --with-$1= or --with-$1-lib=?'])
-    ])
+    failure=no
+    AC_CHECK_HEADER([$2],,failure=yes)
+    AC_CHECK_LIB($3,$4,,failure=yes)
+    if test "$failure" = "no" ; then
+       $5
+    else
+       $6
+    fi
+])
+
+dnl PAC_CHECK_HEADER_LIB_FATAL(with_option, header.h, libname, function)
+dnl Similar to PAC_CHECK_HEADER_LIB, but errors out on failure
+AC_DEFUN([PAC_CHECK_HEADER_LIB_FATAL],[
+	PAC_CHECK_HEADER_LIB($1,$2,$3,$4,success=yes,success=no)
+	if test "$success" = "no" ; then
+	   AC_MSG_ERROR(['$2 or lib$3 library not found. Did you specify --with-$1= or --with-$1-include= or --with-$1-lib=?'])
+	fi
 ])
