@@ -244,15 +244,8 @@ struct double_test { double a; int b; };
         STRUCT_ALLREDUCE_AND_FREE(mpi_type, MPI_MINLOC, in, out, sol);  \
     }
 
-#define test_types_set1(op, post)                                   \
-    {                                                               \
-        op##_test##post(int, MPI_INT);                              \
-        op##_test##post(long, MPI_LONG);                            \
-        op##_test##post(short, MPI_SHORT);                          \
-        op##_test##post(unsigned short, MPI_UNSIGNED_SHORT);        \
-        op##_test##post(unsigned, MPI_UNSIGNED);                    \
-        op##_test##post(unsigned long, MPI_UNSIGNED_LONG);          \
-        op##_test##post(unsigned char, MPI_UNSIGNED_CHAR);          \
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+#define test_types_set_mpi_2_2_integer(op,post) do {                \
         op##_test##post(int8_t, MPI_INT8_T);                        \
         op##_test##post(int16_t, MPI_INT16_T);                      \
         op##_test##post(int32_t, MPI_INT32_T);                      \
@@ -263,6 +256,21 @@ struct double_test { double a; int b; };
         op##_test##post(uint64_t, MPI_UINT64_T);                    \
         op##_test##post(MPI_Aint, MPI_AINT);                        \
         op##_test##post(MPI_Offset, MPI_OFFSET);                    \
+    } while (0)
+#else
+#define test_types_set_mpi_2_2_integer(op,post) do { } while (0)
+#endif
+
+#define test_types_set1(op, post)                                   \
+    {                                                               \
+        op##_test##post(int, MPI_INT);                              \
+        op##_test##post(long, MPI_LONG);                            \
+        op##_test##post(short, MPI_SHORT);                          \
+        op##_test##post(unsigned short, MPI_UNSIGNED_SHORT);        \
+        op##_test##post(unsigned, MPI_UNSIGNED);                    \
+        op##_test##post(unsigned long, MPI_UNSIGNED_LONG);          \
+        op##_test##post(unsigned char, MPI_UNSIGNED_CHAR);          \
+        test_types_set_mpi_2_2_integer(op,post);                    \
     }
 
 #define test_types_set2(op, post)               \
@@ -277,6 +285,7 @@ struct double_test { double a; int b; };
         op##_test##post(unsigned char, MPI_BYTE);                   \
     }
 
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
 #define test_types_set4(op, post)                                         \
     do {                                                                  \
         op##_test##post(float _Complex, MPI_C_FLOAT_COMPLEX);             \
@@ -288,6 +297,11 @@ struct double_test { double a; int b; };
     do {                                    \
         op##_test##post(_Bool, MPI_C_BOOL); \
     } while (0)
+
+#else
+#define test_types_set4(op, post) do { } while (0)
+#define test_types_set5(op, post) do { } while (0)
+#endif
 
 int main( int argc, char **argv )
 {
