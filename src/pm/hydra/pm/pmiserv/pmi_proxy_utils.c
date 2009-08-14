@@ -117,20 +117,14 @@ static HYD_Status parse_params(char **t_argv)
         /* Binding library */
         if (!strcmp(*argv, "--bindlib")) {
             argv++;
-            if (!strcmp(*argv, "HYDRA_NULL"))
-                HYD_PMCD_pmi_proxy_params.bindlib = NULL;
-            else
-                HYD_PMCD_pmi_proxy_params.bindlib = HYDU_strdup(*argv);
+            HYD_PMCD_pmi_proxy_params.bindlib = HYDU_strdup(*argv);
             continue;
         }
 
         /* Checkpointing library */
         if (!strcmp(*argv, "--ckpointlib")) {
             argv++;
-            if (!strcmp(*argv, "HYDRA_NULL"))
-                HYD_PMCD_pmi_proxy_params.ckpointlib = NULL;
-            else
-                HYD_PMCD_pmi_proxy_params.ckpointlib = HYDU_strdup(*argv);
+            HYD_PMCD_pmi_proxy_params.ckpointlib = HYDU_strdup(*argv);
             continue;
         }
 

@@ -1133,21 +1133,23 @@ static HYD_Status set_default_values()
     tmp = getenv("HYDRA_BINDLIB");
     if (HYD_handle.bindlib == NULL && tmp)
         HYD_handle.bindlib = HYDU_strdup(tmp);
-    if (HYD_handle.bindlib == NULL)
+    if (HYD_handle.bindlib == NULL && strcmp(HYDRA_DEFAULT_BINDLIB, ""))
         HYD_handle.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
+    if (HYD_handle.bindlib == NULL)
+        HYD_handle.bindlib = HYDU_strdup("none");
 
     /* Check environment for checkpointing */
     tmp = getenv("HYDRA_CKPOINTLIB");
     if (HYD_handle.ckpointlib == NULL && tmp)
         HYD_handle.ckpointlib = HYDU_strdup(tmp);
-    if (HYD_handle.ckpointlib == NULL)
+    if (HYD_handle.ckpointlib == NULL && strcmp(HYDRA_DEFAULT_CKPOINTLIB, ""))
         HYD_handle.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
+    if (HYD_handle.ckpointlib == NULL)
+        HYD_handle.ckpointlib = HYDU_strdup("none");
 
     tmp = getenv("HYDRA_CKPOINT_PREFIX");
     if (HYD_handle.ckpoint_prefix == NULL && tmp)
         HYD_handle.ckpoint_prefix = HYDU_strdup(tmp);
-    if (HYD_handle.ckpoint_prefix == NULL)
-        HYD_handle.ckpoint_prefix = HYDU_strdup(HYD_handle.wdir);
 
     /* Check environment for setting the inherited environment */
     tmp = getenv("HYDRA_ENV");

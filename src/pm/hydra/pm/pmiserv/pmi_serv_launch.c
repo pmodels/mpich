@@ -265,16 +265,10 @@ static HYD_Status fill_in_exec_args(void)
             partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
         partition->base->exec_args[arg++] = HYDU_strdup("--bindlib");
-        if (HYD_handle.bindlib)
-            partition->base->exec_args[arg++] = HYDU_strdup(HYD_handle.bindlib);
-        else
-            partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
+        partition->base->exec_args[arg++] = HYDU_strdup(HYD_handle.bindlib);
 
         partition->base->exec_args[arg++] = HYDU_strdup("--ckpointlib");
-        if (HYD_handle.ckpointlib)
-            partition->base->exec_args[arg++] = HYDU_strdup(HYD_handle.ckpointlib);
-        else
-            partition->base->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
+        partition->base->exec_args[arg++] = HYDU_strdup(HYD_handle.ckpointlib);
 
         partition->base->exec_args[arg++] = HYDU_strdup("--ckpoint-prefix");
         if (HYD_handle.ckpoint_prefix)
