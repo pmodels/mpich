@@ -75,6 +75,31 @@ HYD_Env_t *HYDU_str_to_env(char *str)
     env_value = strtok(NULL, "=");
     env->env_name = HYDU_strdup(env_name);
     env->env_value = env_value ? HYDU_strdup(env_value) : NULL;
+    env->next = NULL;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return env;
+
+  fn_fail:
+    if (env)
+        HYDU_FREE(env);
+    env = NULL;
+    goto fn_exit;
+}
+
+
+HYD_Env_t *HYDU_str_pair_to_env(char *env_name, char *env_value)
+{
+    HYD_Env_t *env;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(env, HYD_Env_t *, sizeof(HYD_Env_t), status);
+    env->env_name = HYDU_strdup(env_name);
+    env->env_value = env_value ? HYDU_strdup(env_value) : NULL;
+    env->next = NULL;
 
   fn_exit:
     HYDU_FUNC_EXIT();

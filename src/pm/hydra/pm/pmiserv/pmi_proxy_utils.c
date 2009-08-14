@@ -568,8 +568,19 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
     if (HYD_PMCD_pmi_proxy_params.ckpoint_restart) {
-        HYDU_ckpoint_restart(0, NULL);
-        /* FIXME: We need the fd's from the respawned processes */
+        /* See if we have PMI_ID 0 */
+        pmi_id = HYDU_local_to_global_id(0, HYD_PMCD_pmi_proxy_params.partition_core_count,
+                                         HYD_PMCD_pmi_proxy_params.segment_list,
+                                         HYD_PMCD_pmi_proxy_params.global_core_count);
+
+        env = HYDU_str_pair_to_env("PMI_PORT", HYD_PMCD_pmi_proxy_params.pmi_port_str);
+        if (env == NULL)
+            HYDU_ERR_POP(status, "unable to create env\n");
+
+        status = HYDU_ckpoint_restart(env, pmi_id ? NULL : &HYD_PMCD_pmi_proxy_params.in,
+                                      HYD_PMCD_pmi_proxy_params.out,
+                                      HYD_PMCD_pmi_proxy_params.err);
+        HYDU_ERR_POP(status, "checkpoint restart failure\n");
         goto fn_spawn_complete;
     }
 
@@ -618,10 +629,10 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         /* Set the PMI port string to connect to. We currently just
          * use the global PMI port. */
         if (HYD_PMCD_pmi_proxy_params.pmi_port_str) {
-            str = HYDU_strdup(HYD_PMCD_pmi_proxy_params.pmi_port_str);
-            status = HYDU_env_create(&env, "PMI_PORT", str);
-            HYDU_ERR_POP(status, "unable to create env\n");
-            HYDU_FREE(str);
+            env = HYDU_str_pair_to_env("PMI_PORT", HYD_PMCD_pmi_proxy_params.pmi_port_str);
+            if (env == NULL)
+                HYDU_ERR_POP(status, "unable to create env\n");
+
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }

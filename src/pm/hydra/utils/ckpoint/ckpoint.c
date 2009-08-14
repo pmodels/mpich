@@ -64,7 +64,7 @@ fn_fail:
     goto fn_exit;
 }
 
-HYD_Status HYDU_ckpoint_restart(int num_vars, const char **env_vars)
+HYD_Status HYDU_ckpoint_restart(HYD_Env_t *envlist, int *in, int *out, int *err)
 {
     HYD_Status status = HYD_SUCCESS;
 
