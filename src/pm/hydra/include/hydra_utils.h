@@ -301,11 +301,11 @@ typedef struct timeval HYD_Time;
 void HYDU_time_set(HYD_Time * time, int *val);
 int HYDU_time_left(HYD_Time start, HYD_Time timeout);
 
-/* checkpointing */
 
-HYD_Status HYDU_ckpoint_init(void);
-HYD_Status HYDU_ckpoint_suspend(const char *prefix);
-HYD_Status HYDU_ckpoint_restart(const char *prefix, int num_vars, const char **env_vars);
+/* checkpointing */
+HYD_Status HYDU_ckpoint_init(char *ckpointlib, char *ckpoint_prefix);
+HYD_Status HYDU_ckpoint_suspend(void);
+HYD_Status HYDU_ckpoint_restart(int num_vars, const char **env_vars);
 
 
 #endif /* HYDRA_UTILS_H_INCLUDED */

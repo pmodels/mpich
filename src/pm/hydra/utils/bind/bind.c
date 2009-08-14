@@ -35,10 +35,7 @@ HYD_Status HYDU_bind_init(char *binding, char *bindlib)
     else
         user_bind_map = NULL;
 
-    if (bindlib == NULL)
-        HYDU_bind_info.bindlib = HYDRA_DEFAULT_BINDLIB;
-    else
-        HYDU_bind_info.bindlib = bindlib;
+    HYDU_bind_info.bindlib = bindlib;
 
 #if defined HAVE_PLPA
     if (!strcmp(HYDU_bind_info.bindlib, "plpa")) {

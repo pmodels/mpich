@@ -356,12 +356,14 @@ hydra_ckpointlib_names="`echo $hydra_ckpointlib | sed -e 's/:/ /g' -e 's/,/ /g'`
 AC_DEFINE_UNQUOTED(HYDRA_CKPOINTLIB_NAMES,"$hydra_ckpointlib_names",
 		[Definition of enabled checkpointing libraries])
 
-PAC_SET_HEADER_LIB_PATH(blcr)
-
 have_blcr=no
 for hydra_ckpointlib_name in ${hydra_ckpointlib_names}; do
     case "$hydra_ckpointlib_name" in
     	blcr)
+	    if test -z "${hydra_default_ckpointlib}" ; then
+	       hydra_default_ckpointlib=$hydra_ckpointlib_name
+	    fi
+	    PAC_SET_HEADER_LIB_PATH(blcr)
 	    PAC_CHECK_HEADER_LIB(blcr, libcr.h, cr, cr_init)
 	    AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
 	    have_blcr=yes
@@ -370,6 +372,8 @@ for hydra_ckpointlib_name in ${hydra_ckpointlib_names}; do
 	    ;;
     esac
 done
+AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_CKPOINTLIB,"$hydra_default_ckpointlib",
+	[Default checkpointing library])
 AM_CONDITIONAL([hydra_have_blcr], [test "${have_blcr}" = "yes"])
 
 

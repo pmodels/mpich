@@ -11,15 +11,22 @@
 #include "blcr/ckpoint_blcr.h"
 #endif /* HAVE_BLCR */
 
-HYD_Status HYDU_ckpoint_init(void)
+struct HYDU_ckpoint_info HYDU_ckpoint_info;
+
+HYD_Status HYDU_ckpoint_init(char *ckpointlib, char *ckpoint_prefix)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
+    HYDU_ckpoint_info.ckpointlib = ckpointlib;
+    HYDU_ckpoint_info.ckpoint_prefix = ckpoint_prefix;
+
 #if defined HAVE_BLCR
-    status = HYDU_ckpoint_blcr_init();
-    HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
+    if (!strcmp(HYDU_ckpoint_info.ckpointlib, "blcr")) {
+        status = HYDU_ckpoint_blcr_init();
+        HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
+    }
 #endif /* HAVE_BLCR */
 
 fn_exit:
@@ -30,15 +37,17 @@ fn_fail:
     goto fn_exit;
 }
 
-HYD_Status HYDU_ckpoint_suspend(const char *prefix)
+HYD_Status HYDU_ckpoint_suspend()
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
 #if defined HAVE_BLCR
-    status = HYDU_ckpoint_blcr_suspend(prefix);
-    HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
+    if (!strcmp(HYDU_ckpoint_info.ckpointlib, "blcr")) {
+        status = HYDU_ckpoint_blcr_suspend(HYDU_ckpoint_info.ckpoint_prefix);
+        HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
+    }
 #endif /* HAVE_BLCR */
 
 fn_exit:
@@ -49,15 +58,18 @@ fn_fail:
     goto fn_exit;
 }
 
-HYD_Status HYDU_ckpoint_restart(const char *prefix, int num_vars, const char **env_vars)
+HYD_Status HYDU_ckpoint_restart(int num_vars, const char **env_vars)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
 #if defined HAVE_BLCR
-    status = HYDU_ckpoint_blcr_restart(prefix, num_vars, env_vars);
-    HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
+    if (!strcmp(HYDU_ckpoint_info.ckpointlib, "blcr")) {
+        status = HYDU_ckpoint_blcr_restart(HYDU_ckpoint_info.ckpoint_prefix,
+                                           num_vars, env_vars);
+        HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
+    }
 #endif /* HAVE_BLCR */
 
 fn_exit:

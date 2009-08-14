@@ -88,6 +88,9 @@ HYD_Status HYD_PMCD_pmi_proxy_control_cmd_cb(int fd, HYD_Event_t events, void *u
          * them before exiting. */
         exit(-1);
     }
+    else if (cmd == CKPOINT) {
+        status = HYDU_ckpoint_suspend();
+    }
     else {
         status = HYD_INTERNAL_ERROR;
     }

@@ -30,6 +30,9 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.bindlib = NULL;
     HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
 
+    HYD_PMCD_pmi_proxy_params.ckpointlib = NULL;
+    HYD_PMCD_pmi_proxy_params.ckpoint_prefix = NULL;
+
     HYD_PMCD_pmi_proxy_params.system_env = NULL;
     HYD_PMCD_pmi_proxy_params.user_env = NULL;
     HYD_PMCD_pmi_proxy_params.inherited_env = NULL;
@@ -117,6 +120,25 @@ static HYD_Status parse_params(char **t_argv)
                 HYD_PMCD_pmi_proxy_params.bindlib = NULL;
             else
                 HYD_PMCD_pmi_proxy_params.bindlib = HYDU_strdup(*argv);
+            continue;
+        }
+
+        /* Checkpointing library */
+        if (!strcmp(*argv, "--ckpointlib")) {
+            argv++;
+            if (!strcmp(*argv, "HYDRA_NULL"))
+                HYD_PMCD_pmi_proxy_params.ckpointlib = NULL;
+            else
+                HYD_PMCD_pmi_proxy_params.ckpointlib = HYDU_strdup(*argv);
+            continue;
+        }
+
+        if (!strcmp(*argv, "--ckpoint-prefix")) {
+            argv++;
+            if (!strcmp(*argv, "HYDRA_NULL"))
+                HYD_PMCD_pmi_proxy_params.ckpoint_prefix = NULL;
+            else
+                HYD_PMCD_pmi_proxy_params.ckpoint_prefix = HYDU_strdup(*argv);
             continue;
         }
 
@@ -391,6 +413,12 @@ HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
     if (HYD_PMCD_pmi_proxy_params.user_bind_map)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.user_bind_map);
 
+    if (HYD_PMCD_pmi_proxy_params.ckpointlib)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.ckpointlib);
+
+    if (HYD_PMCD_pmi_proxy_params.ckpoint_prefix)
+        HYDU_FREE(HYD_PMCD_pmi_proxy_params.ckpoint_prefix);
+
     if (HYD_PMCD_pmi_proxy_params.system_env)
         HYDU_env_free_list(HYD_PMCD_pmi_proxy_params.system_env);
 
@@ -534,6 +562,10 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.binding,
                             HYD_PMCD_pmi_proxy_params.bindlib);
     HYDU_ERR_POP(status, "unable to initialize process binding\n");
+
+    status = HYDU_ckpoint_init(HYD_PMCD_pmi_proxy_params.ckpointlib,
+                               HYD_PMCD_pmi_proxy_params.ckpoint_prefix);
+    HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
     /* Spawn the processes */
     process_id = 0;

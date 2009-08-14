@@ -1100,6 +1100,21 @@ static HYD_Status set_default_values()
     tmp = getenv("HYDRA_BINDLIB");
     if (HYD_handle.bindlib == NULL && tmp)
         HYD_handle.bindlib = HYDU_strdup(tmp);
+    if (HYD_handle.bindlib == NULL)
+        HYD_handle.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
+
+    /* Check environment for checkpointing */
+    tmp = getenv("HYDRA_CKPOINTLIB");
+    if (HYD_handle.ckpointlib == NULL && tmp)
+        HYD_handle.ckpointlib = HYDU_strdup(tmp);
+    if (HYD_handle.ckpointlib == NULL)
+        HYD_handle.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
+
+    tmp = getenv("HYDRA_CKPOINT_PREFIX");
+    if (HYD_handle.ckpoint_prefix == NULL && tmp)
+        HYD_handle.ckpoint_prefix = HYDU_strdup(tmp);
+    if (HYD_handle.ckpoint_prefix == NULL)
+        HYD_handle.ckpoint_prefix = HYDU_strdup(HYD_handle.wdir);
 
     /* Check environment for setting the inherited environment */
     tmp = getenv("HYDRA_ENV");
@@ -1167,9 +1182,6 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
     status = verify_arguments();
     HYDU_ERR_POP(status, "argument verification failed\n");
 
-    status = set_default_values();
-    HYDU_ERR_POP(status, "setting default values failed\n");
-
     /* Get the base path for the proxy */
     if (HYD_handle.wdir == NULL) {
         HYD_handle.wdir = HYDU_getcwd();
@@ -1178,6 +1190,9 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
     }
     status = HYDU_get_base_path(progname, HYD_handle.wdir, &HYD_handle.base_path);
     HYDU_ERR_POP(status, "unable to get base path\n");
+
+    status = set_default_values();
+    HYDU_ERR_POP(status, "setting default values failed\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

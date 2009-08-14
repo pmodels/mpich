@@ -14,7 +14,8 @@ enum HYD_PMCD_pmi_proxy_cmds {
     PROXY_SHUTDOWN,
     USE_AS_STDOUT,
     USE_AS_STDERR,
-    USE_AS_STDIN
+    USE_AS_STDIN,
+    CKPOINT
 };
 
 /* FIXME: This structure only provides the PMI_ID, as we currently
