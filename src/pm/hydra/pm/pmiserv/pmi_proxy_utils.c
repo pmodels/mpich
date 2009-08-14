@@ -114,9 +114,9 @@ static HYD_Status parse_params(char **t_argv)
         }
 
         /* Global env */
-        if ((!strcmp(*argv, "--inherited-env")) ||
-            (!strcmp(*argv, "--system-env")) ||
-            (!strcmp(*argv, "--user-env"))) {
+        if ((!strcmp(*argv, "--global-inherited-env")) ||
+            (!strcmp(*argv, "--global-system-env")) ||
+            (!strcmp(*argv, "--global-user-env"))) {
 
             argtype = *argv;
 
@@ -135,11 +135,11 @@ static HYD_Status parse_params(char **t_argv)
                 }
                 env = HYDU_str_to_env(str);
 
-                if (!strcmp(argtype, "--inherited-env"))
+                if (!strcmp(argtype, "--global-inherited-env"))
                     HYDU_append_env_to_list(*env, &HYD_PMCD_pmi_proxy_params.inherited_env);
-                else if (!strcmp(argtype, "--system-env"))
+                else if (!strcmp(argtype, "--global-system-env"))
                     HYDU_append_env_to_list(*env, &HYD_PMCD_pmi_proxy_params.system_env);
-                else if (!strcmp(argtype, "--user-env"))
+                else if (!strcmp(argtype, "--global-user-env"))
                     HYDU_append_env_to_list(*env, &HYD_PMCD_pmi_proxy_params.user_env);
 
                 HYDU_FREE(env);
@@ -526,22 +526,39 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     process_id = 0;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next) {
 
-        /* The priority order is: (1) system env, (2) local executable
-         * env, (3) global executable env and (4) inherited env. */
-        if (exec->prop == HYD_ENV_PROP_UNSET || exec->prop == HYD_ENV_PROP_ALL) {
+        /*
+         * Increasing priority order:
+         *    - Global inherited env
+         *    - Global user env
+         *    - Local user env
+         *    - System env
+         */
+
+        /* Global inherited env is set when either genvall or envall
+         * is specified. */
+        if ((exec->prop != HYD_ENV_PROP_NONE) &&
+            ((exec->prop == HYD_ENV_PROP_ALL) ||
+             (exec->prop == HYD_ENV_PROP_UNSET &&
+              HYD_PMCD_pmi_proxy_params.genv_prop == HYD_ENV_PROP_ALL))) {
             for (env = HYD_PMCD_pmi_proxy_params.inherited_env; env; env = env->next) {
                 status = HYDU_append_env_to_list(*env, &prop_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
-            for (env = HYD_PMCD_pmi_proxy_params.user_env; env; env = env->next) {
-                status = HYDU_append_env_to_list(*env, &prop_env);
-                HYDU_ERR_POP(status, "unable to add env to list\n");
-            }
         }
+
+        /* Next priority order is the global user env */
+        for (env = HYD_PMCD_pmi_proxy_params.user_env; env; env = env->next) {
+            status = HYDU_append_env_to_list(*env, &prop_env);
+            HYDU_ERR_POP(status, "unable to add env to list\n");
+        }
+
+        /* Next priority order is the local user env */
         for (env = exec->user_env; env; env = env->next) {
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
+
+        /* Highest priority is the system env */
         for (env = HYD_PMCD_pmi_proxy_params.system_env; env; env = env->next) {
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");

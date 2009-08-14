@@ -26,8 +26,8 @@ void HYD_UIU_init_params(void)
     HYD_handle.ckpoint_prefix = NULL;
 
     HYD_handle.debug = -1;
-    HYD_handle.print_rank_map = 0;
-    HYD_handle.print_all_exitcodes = 0;
+    HYD_handle.print_rank_map = -1;
+    HYD_handle.print_all_exitcodes = -1;
     HYD_handle.enablex = -1;
     HYD_handle.pm_env = -1;
     HYD_handle.wdir = NULL;

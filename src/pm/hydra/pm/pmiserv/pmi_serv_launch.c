@@ -264,21 +264,21 @@ static HYD_Status fill_in_exec_args(void)
         partition->base->exec_args[arg++] = HYDU_strdup("--bindlib");
         partition->base->exec_args[arg++] = HYDU_int_to_str(HYD_handle.bindlib);
 
-        partition->base->exec_args[arg++] = HYDU_strdup("--inherited-env");
+        partition->base->exec_args[arg++] = HYDU_strdup("--global-inherited-env");
         for (i = 0, env = HYD_handle.inherited_env; env; env = env->next, i++);
         partition->base->exec_args[arg++] = HYDU_int_to_str(i);
         partition->base->exec_args[arg++] = NULL;
         HYDU_list_append_env_to_str(HYD_handle.inherited_env, partition->base->exec_args);
 
         arg = HYDU_strlist_lastidx(partition->base->exec_args);
-        partition->base->exec_args[arg++] = HYDU_strdup("--user-env");
+        partition->base->exec_args[arg++] = HYDU_strdup("--global-user-env");
         for (i = 0, env = HYD_handle.user_env; env; env = env->next, i++);
         partition->base->exec_args[arg++] = HYDU_int_to_str(i);
         partition->base->exec_args[arg++] = NULL;
         HYDU_list_append_env_to_str(HYD_handle.user_env, partition->base->exec_args);
 
         arg = HYDU_strlist_lastidx(partition->base->exec_args);
-        partition->base->exec_args[arg++] = HYDU_strdup("--system-env");
+        partition->base->exec_args[arg++] = HYDU_strdup("--global-system-env");
         for (i = 0, env = HYD_handle.system_env; env; env = env->next, i++);
         partition->base->exec_args[arg++] = HYDU_int_to_str(i);
         partition->base->exec_args[arg++] = NULL;
