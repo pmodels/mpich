@@ -575,7 +575,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
     if (HYD_PMCD_pmi_proxy_params.ckpoint_restart) {
         HYDU_ckpoint_restart(0, NULL);
-        goto fn_exit;
+        /* FIXME: We need the fd's from the respawned processes */
+        goto fn_spawn_complete;
     }
 
     /* Spawn the processes */
@@ -685,6 +686,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         prop_env = NULL;
     }
 
+fn_spawn_complete:
     /* Everything is spawned, register the required FDs  */
     status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.exec_proc_count,
                                  HYD_PMCD_pmi_proxy_params.out,
@@ -696,9 +698,10 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                                  HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_stderr_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-  fn_exit:
     /* Indicate that the processes have been launched */
     HYD_PMCD_pmi_proxy_params.procs_are_launched = 1;
+
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
