@@ -15,7 +15,7 @@ struct HYDU_bind_info HYDU_bind_info;
 
 HYD_Status HYDU_bind_init(char *binding, char *bindlib)
 {
-    char *user_bind_map, *real_bindlib;
+    char *user_bind_map;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -36,12 +36,12 @@ HYD_Status HYDU_bind_init(char *binding, char *bindlib)
         user_bind_map = NULL;
 
     if (bindlib == NULL)
-        real_bindlib = HYDRA_DEFAULT_BINDLIB;
+        HYDU_bind_info.bindlib = HYDRA_DEFAULT_BINDLIB;
     else
-        real_bindlib = bindlib;
+        HYDU_bind_info.bindlib = bindlib;
 
 #if defined HAVE_PLPA
-    if (!strcmp(real_bindlib, "plpa")) {
+    if (!strcmp(HYDU_bind_info.bindlib, "plpa")) {
         status = HYDU_bind_plpa_init(user_bind_map, &HYDU_bind_info.support_level);
         HYDU_ERR_POP(status, "unable to initialize plpa\n");
     }
@@ -62,8 +62,10 @@ HYD_Status HYDU_bind_process(int core)
     HYDU_FUNC_ENTER();
 
 #if defined HAVE_PLPA
-    status = HYDU_bind_plpa_process(core);
-    HYDU_ERR_POP(status, "PLPA failure binding process to core\n");
+    if (!strcmp(HYDU_bind_info.bindlib, "plpa")) {
+        status = HYDU_bind_plpa_process(core);
+        HYDU_ERR_POP(status, "PLPA failure binding process to core\n");
+    }
 #endif /* HAVE_PLPA */
 
   fn_exit:

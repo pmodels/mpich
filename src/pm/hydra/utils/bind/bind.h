@@ -36,6 +36,7 @@ struct HYDU_bind_info {
     int num_threads;
 
     char *binding;
+    char *bindlib;
     HYDU_bind_map_t *bind_map;
 
     int user_bind_valid;
