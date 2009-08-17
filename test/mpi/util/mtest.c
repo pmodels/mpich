@@ -1078,15 +1078,21 @@ int MTestGetIntracommGeneral( MPI_Comm *comm, int min_size, int allowSmaller )
 		done = 1;
 	    else {
 		/* Try again */
-		if (!isBasic) {
-		    merr = MPI_Comm_free( comm );
-		    if (merr) MTestPrintError( merr );
-		}
 		intraCommIdx++;
 	    }
 	}
-	else
-	    done = 1;
+        else {
+            done = 1;
+        }
+
+        /* we are only done if all processes are done */
+        MPI_Allreduce(MPI_IN_PLACE, &done, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+
+        if (!done && !isBasic && *comm != MPI_COMM_NULL) {
+            /* avoid leaking communicators */
+            merr = MPI_Comm_free(comm);
+            if (merr) MTestPrintError(merr);
+        }
     }
 
     intraCommIdx++;
@@ -1317,8 +1323,18 @@ int MTestGetIntercomm( MPI_Comm *comm, int *isLeftGroup, int min_size )
 	    if (merr) MTestPrintError( merr );
 	    if (size + remsize >= min_size) done = 1;
 	}
-	else
+	else {
 	    done = 1;
+        }
+
+        /* we are only done if all processes are done */
+        MPI_Allreduce(MPI_IN_PLACE, &done, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+
+        if (!done && *comm != MPI_COMM_NULL) {
+            /* avoid leaking communicators */
+            merr = MPI_Comm_free(comm);
+            if (merr) MTestPrintError(merr);
+        }
     }
 
     interCommIdx++;
