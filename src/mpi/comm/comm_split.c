@@ -283,7 +283,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	mpi_errno = MPIR_Comm_create( &newcomm_ptr );
 	if (mpi_errno) goto fn_fail;
 
-	newcomm_ptr->context_id	    = new_context_id;
+	newcomm_ptr->recvcontext_id = new_context_id;
 	newcomm_ptr->local_size	    = new_size;
 	newcomm_ptr->comm_kind	    = comm_ptr->comm_kind;
 	/* Other fields depend on whether this is an intercomm or intracomm */
@@ -352,7 +352,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 			      &newcomm_ptr->vcr[i] );
 	    }
 
-	    newcomm_ptr->recvcontext_id = remote_context_id;
+	    newcomm_ptr->context_id     = remote_context_id;
 	    newcomm_ptr->remote_size    = new_remote_size;
 	    newcomm_ptr->local_comm     = 0;
 	    newcomm_ptr->is_low_group   = comm_ptr->is_low_group;
@@ -360,7 +360,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	}
 	else {
 	    /* INTRA Communicator */
-	    newcomm_ptr->recvcontext_id = new_context_id;
+	    newcomm_ptr->context_id     = newcomm_ptr->recvcontext_id;
 	    newcomm_ptr->remote_size    = new_size;
 	    MPID_VCRT_Create( new_size, &newcomm_ptr->vcrt );
 	    MPID_VCRT_Get_ptr( newcomm_ptr->vcrt, &newcomm_ptr->vcr );

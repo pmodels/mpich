@@ -250,7 +250,7 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
 	mpi_errno = MPIR_Comm_create( &newcomm_ptr );
 	if (mpi_errno) goto fn_fail;
 
-	newcomm_ptr->context_id	    = new_context_id;
+	newcomm_ptr->recvcontext_id = new_context_id;
 	newcomm_ptr->rank	    = group_ptr->rank;
 	newcomm_ptr->comm_kind	    = comm_ptr->comm_kind;
 	/* Since the group has been provided, let the new communicator know
@@ -262,7 +262,7 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
 	if (comm_ptr->comm_kind == MPID_INTRACOMM) {
 	    newcomm_ptr->remote_group   = group_ptr;
 	    MPIR_Group_add_ref( group_ptr );
-	    newcomm_ptr->recvcontext_id = new_context_id;
+	    newcomm_ptr->context_id     = newcomm_ptr->recvcontext_id;
 	    newcomm_ptr->remote_size    = newcomm_ptr->local_size = n;
 	}
 	else { /* comm_ptr->comm_kind == MPID_INTERCOMM */ 
@@ -286,7 +286,7 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
 					  rinfo, 2, MPI_INT,
 					  0, 0, comm, MPI_STATUS_IGNORE );
 		if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }
-		newcomm_ptr->recvcontext_id = rinfo[0];
+		newcomm_ptr->context_id     = rinfo[0];
 		remote_size                 = rinfo[1];
 		    
 		MPIU_CHKLMEM_MALLOC(remote_mapping,int*,
@@ -314,7 +314,7 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
                 MPIR_Nest_incr();
 		NMPI_Bcast( rinfo, 2, MPI_INT, 0, 
 			    comm_ptr->local_comm->handle );
-		newcomm_ptr->recvcontext_id = rinfo[0];
+		newcomm_ptr->context_id     = rinfo[0];
 		remote_size                 = rinfo[1];
 		MPIU_CHKLMEM_MALLOC(remote_mapping,int*,
 				    remote_size*sizeof(int),

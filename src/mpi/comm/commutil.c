@@ -769,6 +769,10 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *contex
     MPIR_Nest_decr();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+    /* The recvcontext_id must be the one that was allocated out of the local
+     * group, not the remote group.  Otherwise we could end up posting two
+     * MPI_ANY_SOURCE,MPI_ANY_TAG recvs on the same context IDs even though we
+     * are attempting to post them for two separate communicators. */
     *context_id     = remote_context_id;
     *recvcontext_id = mycontext_id;
  fn_fail:
@@ -1021,9 +1025,6 @@ int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
                     MPIR_Comm_release(comm_ptr->local_comm, isDisconnect );
             }
 
-	    /* Free the context value */
-	    MPIR_Free_contextid( comm_ptr->recvcontext_id );
-
 	    /* Free the local and remote groups, if they exist */
             if (comm_ptr->local_group)
                 MPIR_Group_release(comm_ptr->local_group);
@@ -1039,6 +1040,15 @@ int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
                 MPIU_Free(comm_ptr->intranode_table);
             if (comm_ptr->internode_table != NULL)
                 MPIU_Free(comm_ptr->internode_table);
+
+            /* Free the context value.  This should come after freeing the
+             * intra/inter-node communicators since those free calls won't
+             * release this context ID and releasing this before then could lead
+             * to races once we make threading finer grained. */
+            /* This must be the recvcontext_id (i.e. not the (send)context_id)
+             * because in the case of intercommunicators the send context ID is
+             * allocated out of the remote group's bit vector, not ours. */
+            MPIR_Free_contextid( comm_ptr->recvcontext_id );
 
 	    /* We need to release the error handler */
 	    if (comm_ptr->errhandler && 
