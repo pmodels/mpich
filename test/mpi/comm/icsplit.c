@@ -32,6 +32,9 @@ int main( int argc, char *argv[] )
 
     while (MTestGetIntercomm( &intercomm, &isLeft, 2 )) {
 	int key, color;
+
+        if (intercomm == MPI_COMM_NULL) continue;
+
 	/* Split this intercomm.  The new intercomms contain the 
 	   processes that had odd (resp even) rank in their local group
 	   in the original intercomm */

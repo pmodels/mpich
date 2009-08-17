@@ -36,6 +36,8 @@ int main( int argc, char *argv[] )
     while (count++ < 1 && MTestGetIntercomm( &intercomm, &isLeft, 2 )) {
 	int ranks[10], nranks, result;
 
+        if (intercomm == MPI_COMM_NULL) continue;
+
         MPI_Comm_group( intercomm, &oldgroup );
 	ranks[0] = 0;
 	nranks   = 1;
