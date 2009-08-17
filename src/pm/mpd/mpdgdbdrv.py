@@ -113,6 +113,7 @@ if __name__ == '__main__':    # so I can be imported by pydoc
                 mpd_print(1, 'timed out waiting for initial Breakpoint response')
                 exit(-1)
             gdb_line = gdb_sout_serr.readline()  # drain breakpoint response
+            gdb_line = gdb_line.strip()
             mpd_print(0000, "gdb_line=|%s|" % (gdb_line.rstrip()))
         if not gdb_line.startswith('Breakpoint'):
             mpd_print(1, 'expecting "Breakpoint", got :%s:' % (gdb_line) )
