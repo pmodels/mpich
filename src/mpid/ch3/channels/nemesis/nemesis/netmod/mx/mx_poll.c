@@ -358,7 +358,7 @@ MPID_nem_mx_poll(int in_blocking_poll)
      {	   
        MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
        mpi_errno = MPID_nem_mx_handle_sreq(req);
-       MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       	
+       if (mpi_errno) MPIU_ERR_POP(mpi_errno);
      }
      else if ((kind == MPID_REQUEST_RECV) || (kind == MPID_PREQUEST_RECV))
      {
@@ -375,7 +375,7 @@ MPID_nem_mx_poll(int in_blocking_poll)
        found = MPIDI_CH3U_Recvq_DP(req);
        if(found){
 	 mpi_errno = MPID_nem_mx_handle_rreq(req, status);
-	 MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       		  
+	  if (mpi_errno) MPIU_ERR_POP(mpi_errno);
        }
        MPIU_THREAD_CS_EXIT(MSGQUEUE,req);
      }
@@ -451,7 +451,7 @@ MPID_nem_mx_poll(int in_blocking_progress)
        {	   
 	 MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
 	 mpi_errno = MPID_nem_mx_handle_sreq(req);
-	 MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       		  
+	 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
        }
        else if ((kind == MPID_REQUEST_RECV) || (kind == MPID_PREQUEST_RECV))
        {
@@ -468,7 +468,7 @@ MPID_nem_mx_poll(int in_blocking_progress)
 	 found = MPIDI_CH3U_Recvq_DP(req);
 	 if(found){
 	   mpi_errno = MPID_nem_mx_handle_rreq(req, status);
-	   MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       		    
+	   if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	 }
 	 MPIU_THREAD_CS_EXIT(MSGQUEUE,req);
        }
