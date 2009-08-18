@@ -358,11 +358,9 @@ void HYD_PMCD_pmi_serv_signal_cb(int sig)
         exit(-1);
     }
     else {
-#if defined SIGTSTP
-        if (sig == SIGTSTP) {
+        if (sig == SIGUSR1) {
             HYD_PMCD_pmi_serv_ckpoint();
         }
-#endif /* SIGTSTP */
         /* Ignore other signals for now */
     }
 
