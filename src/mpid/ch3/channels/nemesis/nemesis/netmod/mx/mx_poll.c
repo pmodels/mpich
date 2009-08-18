@@ -743,7 +743,11 @@ c");
   rreq->dev.segment_first = 0;
   rreq->dev.segment_size = data_sz;
   last = rreq->dev.segment_size;
-  iov = MPIU_Malloc(iov_num_ub*sizeof(MPID_IOV));
+  if(n_iov <= 0)
+  {
+     n_iov = rreq->dev.user_count * dt_ptr->n_elements;
+  }   
+  iov = MPIU_Malloc(n_iov*sizeof(MPID_IOV));
   MPID_Segment_unpack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, iov, &n_iov);
   MPIU_Assert(last == rreq->dev.segment_size);
   

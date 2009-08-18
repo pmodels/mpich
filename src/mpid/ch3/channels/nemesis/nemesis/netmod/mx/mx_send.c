@@ -409,8 +409,11 @@ int MPID_nem_mx_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype,  M
     sreq->dev.segment_first = 0;
     sreq->dev.segment_size = data_sz;
     last = sreq->dev.segment_size;
-    iov = MPIU_Malloc(iov_num_ub*sizeof(MPID_IOV));
-    
+    if(n_iov <= 0)
+    {	
+       n_iov = count * dt_ptr->n_elements;
+    }   
+    iov = MPIU_Malloc(n_iov*sizeof(MPID_IOV));    
     MPID_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, iov, &n_iov);
     MPIU_Assert(last == sreq->dev.segment_size);    
     

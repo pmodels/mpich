@@ -52,7 +52,7 @@ int MPID_nem_mx_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int
     
  fn_exit:
     return mpi_errno;
- fn_fail:
+ fn_fail: ATTRIBUTE((unused))
     goto fn_exit;
 }
 
@@ -107,7 +107,7 @@ int MPID_nem_mx_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, in
 	
  fn_exit:
     return mpi_errno;
- fn_fail:
+ fn_fail: ATTRIBUTE((unused))
     goto fn_exit;
 }
 
