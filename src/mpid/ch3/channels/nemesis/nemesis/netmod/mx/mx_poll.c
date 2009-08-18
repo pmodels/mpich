@@ -357,13 +357,13 @@ MPID_nem_mx_poll(int in_blocking_poll)
      if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
      {	   
        MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
-       MPID_nem_mx_handle_sreq(req);
+       mpi_errno = MPID_nem_mx_handle_sreq(req);
+       MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       	
      }
      else if ((kind == MPID_REQUEST_RECV) || (kind == MPID_PREQUEST_RECV))
      {
        int found = FALSE;
        mx_request_t *mx_request = NULL;
-       MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       	
        MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
        MPIU_THREAD_CS_ENTER(MSGQUEUE,req);	   	 
        MPID_NEM_MX_GET_REQ_FROM_HASH(req,mx_request);
@@ -374,7 +374,8 @@ MPID_nem_mx_poll(int in_blocking_poll)
        }
        found = MPIDI_CH3U_Recvq_DP(req);
        if(found){
-	 MPID_nem_mx_handle_rreq(req, status);
+	 mpi_errno = MPID_nem_mx_handle_rreq(req, status);
+	 MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       		  
        }
        MPIU_THREAD_CS_EXIT(MSGQUEUE,req);
      }
@@ -449,13 +450,13 @@ MPID_nem_mx_poll(int in_blocking_progress)
        if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
        {	   
 	 MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
-	 MPID_nem_mx_handle_sreq(req);
+	 mpi_errno = MPID_nem_mx_handle_sreq(req);
+	 MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       		  
        }
        else if ((kind == MPID_REQUEST_RECV) || (kind == MPID_PREQUEST_RECV))
        {
 	 int found = FALSE;
 	 mx_request_t *mx_request = NULL;
-	 MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       	
 	 MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);		   
 	 MPIU_THREAD_CS_ENTER(MSGQUEUE,req);	   	 
 	 MPID_NEM_MX_GET_REQ_FROM_HASH(req,mx_request);
@@ -466,7 +467,8 @@ MPID_nem_mx_poll(int in_blocking_progress)
 	 }
 	 found = MPIDI_CH3U_Recvq_DP(req);
 	 if(found){
-	   MPID_nem_mx_handle_rreq(req, status);
+	   mpi_errno = MPID_nem_mx_handle_rreq(req, status);
+	   MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       		    
 	 }
 	 MPIU_THREAD_CS_EXIT(MSGQUEUE,req);
        }
@@ -545,7 +547,7 @@ MPID_nem_mx_handle_rreq(MPID_Request *req, mx_status_t status)
   MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype, dt_contig, userbuf_sz, dt_ptr, dt_true_lb);
   /*fprintf(stdout," ===> userbuf_size is %i, msg_length is %i, xfer_length is %i\n",userbuf_sz,status.msg_length,status.xfer_length); */
   
-  if (status.xfer_length <=  userbuf_sz) {
+  if (status.msg_length <=  userbuf_sz) {
     data_sz = req->dev.recv_data_sz;
   }
   else
@@ -687,6 +689,7 @@ int MPID_nem_mx_anysource_matched(MPID_Request *rreq)
   uint32_t    result;
   int matched = FALSE;
 
+   
   MPID_NEM_MX_GET_REQ_FROM_HASH(rreq,mx_request);
   if(mx_request != NULL)
   {
@@ -701,7 +704,8 @@ int MPID_nem_mx_anysource_matched(MPID_Request *rreq)
 	  ret = mx_test(MPID_nem_mx_local_endpoint,mx_request,&status,&result);
 	}while((result == 0) && (ret == MX_SUCCESS));
 	MPIU_Assert(ret == MX_SUCCESS);
-	MPID_nem_mx_handle_rreq(rreq, status);
+	mpi_errno = MPID_nem_mx_handle_rreq(rreq, status);
+	/* FIXME : how can we report MPI_ERR_TRUNC in this case?*/ 
 	matched = TRUE;
       }
       else
