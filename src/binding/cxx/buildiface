@@ -2172,7 +2172,7 @@ print $OUTFD "\
     }\n";
 
     # Keyval and attribute routines
-    print $OUTFD "
+    print $OUTFD <<EOT;
 #include \"mpihandlemem.h\"
 #include \"mpi_attr.h\"
 #include \"mpi_lang.h\"
@@ -2284,15 +2284,17 @@ int Comm::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, void 
     int keyval;
 
     if (cf == MPI::Comm::NULL_COPY_FN) cf = 0;
-    if (df == MPI::Comm::NULL_DELETE_FN) df = 0;\n";
+    if (df == MPI::Comm::NULL_DELETE_FN) df = 0;
+EOT
     &printCoverageStart( $OUTFD, "Comm_create_keyval", 3 );
-    print $OUTFD "\
+    print $OUTFD <<EOT;
     MPIX_CALL( MPI_Comm_create_keyval( (MPI_Comm_copy_attr_function *)cf, 
 				       (MPI_Comm_delete_attr_function *)df,
 				      &keyval, extra_state ) );
-    MPIR_Keyval_set_proxy( keyval, MPIR_Comm_copy_attr_cxx_proxy, MPIR_Comm_delete_attr_cxx_proxy );\n";
+    MPIR_Keyval_set_proxy( keyval, MPIR_Comm_copy_attr_cxx_proxy, MPIR_Comm_delete_attr_cxx_proxy );
+EOT
     &printCoverageEnd( $OUTFD, "Comm_create_keyval", 3 );
-    print $OUTFD "\
+    print $OUTFD <<EOT;
     return keyval;
 }
 
@@ -2352,15 +2354,17 @@ int Datatype::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, v
     int keyval;
 
     if (cf == MPI::Datatype::NULL_COPY_FN) cf = 0;
-    if (df == MPI::Datatype::NULL_DELETE_FN) df = 0;\n";
+    if (df == MPI::Datatype::NULL_DELETE_FN) df = 0;
+EOT
     &printCoverageStart( $OUTFD, "Type_create_keyval", 3 );
-    print $OUTFD "\
+    print $OUTFD <<EOT;
     MPIX_CALL( MPI_Type_create_keyval( (MPI_Type_copy_attr_function *)cf, 
 				       (MPI_Type_delete_attr_function *)df,
 				      &keyval, extra_state ) );
-    MPIR_Keyval_set_proxy( keyval, MPIR_Type_copy_attr_cxx_proxy, MPIR_Type_delete_attr_cxx_proxy );\n";
+    MPIR_Keyval_set_proxy( keyval, MPIR_Type_copy_attr_cxx_proxy, MPIR_Type_delete_attr_cxx_proxy );
+EOT
     &printCoverageEnd( $OUTFD, "Type_create_keyval", 3 );
-    print $OUTFD "\
+    print $OUTFD <<EOT;
     return keyval;
 }
 
@@ -2420,25 +2424,28 @@ int Win::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, void *
     int keyval;
 
     if (cf == MPI::Win::NULL_COPY_FN) cf = 0;
-    if (df == MPI::Win::NULL_DELETE_FN) df = 0;\n";
+    if (df == MPI::Win::NULL_DELETE_FN) df = 0;
+EOT
     &printCoverageStart( $OUTFD, "Win_create_keyval", 3 );
-    print $OUTFD "\
+    print $OUTFD <<EOT;
     MPIX_CALL( MPI_Win_create_keyval( (MPI_Win_copy_attr_function *)cf, 
 				       (MPI_Win_delete_attr_function *)df,
 				      &keyval, extra_state ) );
-    MPIR_Keyval_set_proxy( keyval, MPIR_Win_copy_attr_cxx_proxy, MPIR_Win_delete_attr_cxx_proxy );\n";
+    MPIR_Keyval_set_proxy( keyval, MPIR_Win_copy_attr_cxx_proxy, MPIR_Win_delete_attr_cxx_proxy );
+EOT
     &printCoverageEnd( $OUTFD, "Win_create_keyval", 3 );
-    print $OUTFD "\
+    print $OUTFD <<EOT;
     return keyval;
 }
-";
 
-print $OUTFD "\
+EOT
+
+print $OUTFD <<EOT;
 // Provide a C routine that can call the C++ error handler, handling
 // any calling-sequence change.  
 extern \"C\" void MPIR_Errhandler_set_cxx( MPI_Errhandler, void (*)(void) );
 extern \"C\" 
-void MPIR_Call_errhandler_fn( int kind, int *handle, int *errcode, 
+void MPIR_Call_errhandler_function( int kind, int *handle, int *errcode, 
 			      void (*cxxfn)(void) )
 {
     // Use horrible casts to get the correct routine signature
@@ -2447,7 +2454,7 @@ void MPIR_Call_errhandler_fn( int kind, int *handle, int *errcode,
 	    {
 		MPI_Comm *ch = (MPI_Comm *)handle;
 		int flag;
-		MPI::Comm::Errhandler_fn *f = (MPI::Comm::Errhandler_fn *)cxxfn;
+		MPI::Comm::Errhandler_function *f = (MPI::Comm::Errhandler_function *)cxxfn;
 		// Make an actual Comm (inter or intra-comm)
 		MPI_Comm_test_inter( *ch, &flag );
 		if (flag) {
@@ -2464,7 +2471,7 @@ void MPIR_Call_errhandler_fn( int kind, int *handle, int *errcode,
     case 1: // file
 	    {
 		MPI::File fh = (MPI_File)*(MPI_File*)handle;
-		MPI::File::Errhandler_fn *f = (MPI::File::Errhandler_fn *)cxxfn;
+		MPI::File::Errhandler_function *f = (MPI::File::Errhandler_function *)cxxfn;
 		(*f)( fh, errcode );
 	    }
 	    break;
@@ -2472,41 +2479,41 @@ void MPIR_Call_errhandler_fn( int kind, int *handle, int *errcode,
     case 2: // win
 	    {
 		MPI::Win fh = (MPI_Win)*(MPI_Win*)handle;
-		MPI::Win::Errhandler_fn *f = (MPI::Win::Errhandler_fn *)cxxfn;
+		MPI::Win::Errhandler_function *f = (MPI::Win::Errhandler_function *)cxxfn;
 		(*f)( fh, errcode );
 	    }
 	    break;
     }
 }
 #ifdef MPI_MODE_RDONLY
-Errhandler File::Create_errhandler( Errhandler_fn *f )
+Errhandler File::Create_errhandler( Errhandler_function *f )
 {
     MPI_Errhandler eh;
     MPI::Errhandler e1;
-    MPI_File_create_errhandler( (MPI_File_errhandler_fn *)f, &eh );
+    MPI_File_create_errhandler( (MPI_File_errhandler_function *)f, &eh );
     MPIR_Errhandler_set_cxx( eh, 
-			     (mpircallback)MPIR_Call_errhandler_fn );
+			     (mpircallback)MPIR_Call_errhandler_function );
     e1.the_real_errhandler = eh;
     return e1;
 }
 #endif // IO
-Errhandler Comm::Create_errhandler( Errhandler_fn *f )
+Errhandler Comm::Create_errhandler( Errhandler_function *f )
 {
     MPI_Errhandler eh;
     MPI::Errhandler e1;
-    MPI_Comm_create_errhandler( (MPI_Comm_errhandler_fn *)f, &eh );
+    MPI_Comm_create_errhandler( (MPI_Comm_errhandler_function *)f, &eh );
     MPIR_Errhandler_set_cxx( eh, 
-			     (mpircallback)MPIR_Call_errhandler_fn );
+			     (mpircallback)MPIR_Call_errhandler_function );
     e1.the_real_errhandler = eh;
     return e1;
 }
-Errhandler Win::Create_errhandler( Errhandler_fn *f )
+Errhandler Win::Create_errhandler( Errhandler_function *f )
 {
     MPI_Errhandler eh;
     MPI::Errhandler e1;
-    MPI_Win_create_errhandler( (MPI_Win_errhandler_fn *)f, &eh );
+    MPI_Win_create_errhandler( (MPI_Win_errhandler_function *)f, &eh );
     MPIR_Errhandler_set_cxx( eh, 
-			     (mpircallback)MPIR_Call_errhandler_fn );
+			     (mpircallback)MPIR_Call_errhandler_function );
     e1.the_real_errhandler = eh;
     return e1;
 }
@@ -2540,7 +2547,8 @@ void File::Call_errhandler( int errorcode ) const
 }
 #endif // IO
 
-\n";
+
+EOT
 
     # The data rep conversion functions need to be wrapped in C code
     # Only define this routine when MPI-IO is available (this is the same
@@ -3250,10 +3258,11 @@ sub Comm_methods {
     print $OUTFD "    virtual Comm &Clone(void) const = 0;\n";
 
     # Typedefs
-    print $OUTFD  "
+    print $OUTFD <<EOT;
     typedef int Copy_attr_function(const Comm& oldcomm, int comm_keyval, void* extra_state, void* attribute_val_in, void* attribute_val_out, bool& flag); 
     typedef int Delete_attr_function(Comm& comm, int comm_keyval, void* attribute_val, void* extra_state); 
-    typedef void Errhandler_fn(Comm &, int *, ... );
+    typedef void Errhandler_function(Comm &, int *, ... );
+    typedef Errhandler_function Errhandler_fn;
 
     static int Create_keyval( Copy_attr_function *, Delete_attr_function *,
                               void * );
@@ -3265,27 +3274,31 @@ sub Comm_methods {
     static int DUP_FN( const Comm &oldcomm, int keyval, void *ex,
     void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
     *(void **)attr_out = attr_in; return 0;} 
-    static Errhandler Create_errhandler( Errhandler_fn * );
-\n";
+    static Errhandler Create_errhandler( Errhandler_function * );
+
+EOT
 }
 sub File_methods {
     my $OUTFD = $_[0];
 
     # Typedefs
-    print $OUTFD "\
-    typedef void Errhandler_fn(File &, int *, ... );
+    print $OUTFD <<EOT;
+    typedef void Errhandler_function(File &, int *, ... );
+    typedef Errhandler_function Errhandler_fn;
 
-    static Errhandler Create_errhandler( Errhandler_fn * );
-\n";
+    static Errhandler Create_errhandler( Errhandler_function * );
+
+EOT
 }
 sub Win_methods {
     my $OUTFD = $_[0];
 
     # Typedefs
-    print $OUTFD "\
-    typedef void Errhandler_fn(Win &, int *, ... );
+    print $OUTFD <<EOT;
+    typedef void Errhandler_function(Win &, int *, ... );
+    typedef Errhandler_function Errhandler_fn;
 
-    static Errhandler Create_errhandler( Errhandler_fn * );
+    static Errhandler Create_errhandler( Errhandler_function * );
 
     typedef int Copy_attr_function(const Win& oldwin, int win_keyval, void* extra_state, void* attribute_val_in, void* attribute_val_out, bool& flag); 
     typedef int Delete_attr_function(Win& win, int win_keyval, void* attribute_val, void* extra_state); 
@@ -3302,7 +3315,8 @@ sub Win_methods {
     void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
     *(void **)attr_out = attr_in; return 0;} 
 
-\n";
+
+EOT
 }
 sub Nullcomm_methods {
     my $OUTFD = $_[0];

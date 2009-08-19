@@ -39,9 +39,9 @@ $gDebug = 0;
 	     'bool' => 'LOGICAL',
 	     'bool[]' => 'LOGICAL %name%(*)',
 	     'MPI_Handler_function*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
-	     'MPI_Win_errhandler_fn*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
-	     'MPI_Comm_errhandler_fn*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
-	     'MPI_File_errhandler_fn*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+	     'MPI_Win_errhandler_function*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+	     'MPI_Comm_errhandler_function*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+	     'MPI_File_errhandler_function*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
 	     # These other functions have <choice> (really void*) arguments
 	     # and so an interface spec is very hard to do in Fortran 90.
 	     'MPI_Comm_copy_attr_function*' => 'EXTERNAL',

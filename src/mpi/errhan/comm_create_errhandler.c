@@ -46,7 +46,7 @@
 .N MPI_ERR_COMM
 .N MPI_ERR_OTHER
 @*/
-int MPI_Comm_create_errhandler(MPI_Comm_errhandler_fn *function, 
+int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *function, 
                                MPI_Errhandler *errhandler)
 {
     static const char FCNAME[] = "MPI_Comm_create_errhandler";

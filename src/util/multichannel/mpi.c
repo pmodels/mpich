@@ -339,10 +339,10 @@ static struct fn_table
     int (*MPI_Win_set_attr)(MPI_Win, int, void *);
     int (*MPI_Win_set_name)(MPI_Win, char *);
     int (*MPI_Alloc_mem)(MPI_Aint, MPI_Info info, void *baseptr);
-    int (*MPI_Comm_create_errhandler)(MPI_Comm_errhandler_fn *, MPI_Errhandler *);
+    int (*MPI_Comm_create_errhandler)(MPI_Comm_errhandler_function *, MPI_Errhandler *);
     int (*MPI_Comm_get_errhandler)(MPI_Comm, MPI_Errhandler *);
     int (*MPI_Comm_set_errhandler)(MPI_Comm, MPI_Errhandler);
-    int (*MPI_File_create_errhandler)(MPI_File_errhandler_fn *, MPI_Errhandler *);
+    int (*MPI_File_create_errhandler)(MPI_File_errhandler_function *, MPI_Errhandler *);
     int (*MPI_File_get_errhandler)(MPI_File, MPI_Errhandler *);
     int (*MPI_File_set_errhandler)(MPI_File, MPI_Errhandler);
     int (*MPI_Finalized)(int *);
@@ -372,7 +372,7 @@ static struct fn_table
     int (*MPI_Type_get_extent)(MPI_Datatype, MPI_Aint *, MPI_Aint *);
     int (*MPI_Type_get_true_extent)(MPI_Datatype, MPI_Aint *, MPI_Aint *);
     int (*MPI_Unpack_external)(char *, void *, MPI_Aint, MPI_Aint *, void *, int, MPI_Datatype); 
-    int (*MPI_Win_create_errhandler)(MPI_Win_errhandler_fn *, MPI_Errhandler *);
+    int (*MPI_Win_create_errhandler)(MPI_Win_errhandler_function *, MPI_Errhandler *);
     int (*MPI_Win_get_errhandler)(MPI_Win, MPI_Errhandler *);
     int (*MPI_Win_set_errhandler)(MPI_Win, MPI_Errhandler);
     int (*MPI_Type_create_f90_integer)( int, MPI_Datatype * );
@@ -644,10 +644,10 @@ static struct fn_table
     int (*PMPI_Type_create_f90_real)( int, int, MPI_Datatype * );
     int (*PMPI_Type_create_f90_complex)( int, int, MPI_Datatype * );
     int (*PMPI_Alloc_mem)(MPI_Aint, MPI_Info info, void *baseptr);
-    int (*PMPI_Comm_create_errhandler)(MPI_Comm_errhandler_fn *, MPI_Errhandler *);
+    int (*PMPI_Comm_create_errhandler)(MPI_Comm_errhandler_function *, MPI_Errhandler *);
     int (*PMPI_Comm_get_errhandler)(MPI_Comm, MPI_Errhandler *);
     int (*PMPI_Comm_set_errhandler)(MPI_Comm, MPI_Errhandler);
-    int (*PMPI_File_create_errhandler)(MPI_File_errhandler_fn *, MPI_Errhandler *);
+    int (*PMPI_File_create_errhandler)(MPI_File_errhandler_function *, MPI_Errhandler *);
     int (*PMPI_File_get_errhandler)(MPI_File, MPI_Errhandler *);
     int (*PMPI_File_set_errhandler)(MPI_File, MPI_Errhandler);
     int (*PMPI_Finalized)(int *);
@@ -677,7 +677,7 @@ static struct fn_table
     int (*PMPI_Type_get_extent)(MPI_Datatype, MPI_Aint *, MPI_Aint *);
     int (*PMPI_Type_get_true_extent)(MPI_Datatype, MPI_Aint *, MPI_Aint *);
     int (*PMPI_Unpack_external)(char *, void *, MPI_Aint, MPI_Aint *, void *, int, MPI_Datatype); 
-    int (*PMPI_Win_create_errhandler)(MPI_Win_errhandler_fn *, MPI_Errhandler *);
+    int (*PMPI_Win_create_errhandler)(MPI_Win_errhandler_function *, MPI_Errhandler *);
     int (*PMPI_Win_get_errhandler)(MPI_Win, MPI_Errhandler *);
     int (*PMPI_Win_set_errhandler)(MPI_Win, MPI_Errhandler);
     double (*PMPI_Wtime)(void);
@@ -1272,14 +1272,14 @@ static BOOL LoadFunctions(const char *dll_name, const char *wrapper_dll_name)
     if (fn.MPI_Win_set_name == NULL) fn.MPI_Win_set_name = (int (*)(MPI_Win, char *))GetProcAddress(hPMPIModule, "MPI_Win_set_name");
     fn.MPI_Alloc_mem = (int (*)(MPI_Aint, MPI_Info info, void *baseptr))GetProcAddress(hMPIModule, "MPI_Alloc_mem");
     if (fn.MPI_Alloc_mem == NULL) fn.MPI_Alloc_mem = (int (*)(MPI_Aint, MPI_Info info, void *baseptr))GetProcAddress(hPMPIModule, "MPI_Alloc_mem");
-    fn.MPI_Comm_create_errhandler = (int (*)(MPI_Comm_errhandler_fn *, MPI_Errhandler *))GetProcAddress(hMPIModule, "MPI_Comm_create_errhandler");
-    if (fn.MPI_Comm_create_errhandler == NULL) fn.MPI_Comm_create_errhandler = (int (*)(MPI_Comm_errhandler_fn *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "MPI_Comm_create_errhandler");
+    fn.MPI_Comm_create_errhandler = (int (*)(MPI_Comm_errhandler_function *, MPI_Errhandler *))GetProcAddress(hMPIModule, "MPI_Comm_create_errhandler");
+    if (fn.MPI_Comm_create_errhandler == NULL) fn.MPI_Comm_create_errhandler = (int (*)(MPI_Comm_errhandler_function *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "MPI_Comm_create_errhandler");
     fn.MPI_Comm_get_errhandler = (int (*)(MPI_Comm, MPI_Errhandler *))GetProcAddress(hMPIModule, "MPI_Comm_get_errhandler");
     if (fn.MPI_Comm_get_errhandler == NULL) fn.MPI_Comm_get_errhandler = (int (*)(MPI_Comm, MPI_Errhandler *))GetProcAddress(hPMPIModule, "MPI_Comm_get_errhandler");
     fn.MPI_Comm_set_errhandler = (int (*)(MPI_Comm, MPI_Errhandler))GetProcAddress(hMPIModule, "MPI_Comm_set_errhandler");
     if (fn.MPI_Comm_set_errhandler == NULL) fn.MPI_Comm_set_errhandler = (int (*)(MPI_Comm, MPI_Errhandler))GetProcAddress(hPMPIModule, "MPI_Comm_set_errhandler");
-    fn.MPI_File_create_errhandler = (int (*)(MPI_File_errhandler_fn *, MPI_Errhandler *))GetProcAddress(hMPIModule, "MPI_File_create_errhandler");
-    if (fn.MPI_File_create_errhandler == NULL) fn.MPI_File_create_errhandler = (int (*)(MPI_File_errhandler_fn *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "MPI_File_create_errhandler");
+    fn.MPI_File_create_errhandler = (int (*)(MPI_File_errhandler_function *, MPI_Errhandler *))GetProcAddress(hMPIModule, "MPI_File_create_errhandler");
+    if (fn.MPI_File_create_errhandler == NULL) fn.MPI_File_create_errhandler = (int (*)(MPI_File_errhandler_function *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "MPI_File_create_errhandler");
     fn.MPI_File_get_errhandler = (int (*)(MPI_File, MPI_Errhandler *))GetProcAddress(hMPIModule, "MPI_File_get_errhandler");
     if (fn.MPI_File_get_errhandler == NULL) fn.MPI_File_get_errhandler = (int (*)(MPI_File, MPI_Errhandler *))GetProcAddress(hPMPIModule, "MPI_File_get_errhandler");
     fn.MPI_File_set_errhandler = (int (*)(MPI_File, MPI_Errhandler))GetProcAddress(hMPIModule, "MPI_File_set_errhandler");
@@ -1338,8 +1338,8 @@ static BOOL LoadFunctions(const char *dll_name, const char *wrapper_dll_name)
     if (fn.MPI_Type_get_true_extent == NULL) fn.MPI_Type_get_true_extent = (int (*)(MPI_Datatype, MPI_Aint *, MPI_Aint *))GetProcAddress(hPMPIModule, "MPI_Type_get_true_extent");
     fn.MPI_Unpack_external = (int (*)(char *, void *, MPI_Aint, MPI_Aint *, void *, int, MPI_Datatype))GetProcAddress(hMPIModule, "MPI_Unpack_external"); 
     if (fn.MPI_Unpack_external == NULL) fn.MPI_Unpack_external = (int (*)(char *, void *, MPI_Aint, MPI_Aint *, void *, int, MPI_Datatype))GetProcAddress(hPMPIModule, "MPI_Unpack_external"); 
-    fn.MPI_Win_create_errhandler = (int (*)(MPI_Win_errhandler_fn *, MPI_Errhandler *))GetProcAddress(hMPIModule, "MPI_Win_create_errhandler");
-    if (fn.MPI_Win_create_errhandler == NULL) fn.MPI_Win_create_errhandler = (int (*)(MPI_Win_errhandler_fn *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "MPI_Win_create_errhandler");
+    fn.MPI_Win_create_errhandler = (int (*)(MPI_Win_errhandler_function *, MPI_Errhandler *))GetProcAddress(hMPIModule, "MPI_Win_create_errhandler");
+    if (fn.MPI_Win_create_errhandler == NULL) fn.MPI_Win_create_errhandler = (int (*)(MPI_Win_errhandler_function *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "MPI_Win_create_errhandler");
     fn.MPI_Win_get_errhandler = (int (*)(MPI_Win, MPI_Errhandler *))GetProcAddress(hMPIModule, "MPI_Win_get_errhandler");
     if (fn.MPI_Win_get_errhandler == NULL) fn.MPI_Win_get_errhandler = (int (*)(MPI_Win, MPI_Errhandler *))GetProcAddress(hPMPIModule, "MPI_Win_get_errhandler");
     fn.MPI_Win_set_errhandler = (int (*)(MPI_Win, MPI_Errhandler))GetProcAddress(hMPIModule, "MPI_Win_set_errhandler");
@@ -1615,10 +1615,10 @@ static BOOL LoadFunctions(const char *dll_name, const char *wrapper_dll_name)
     fn.PMPI_Win_set_attr = (int (*)(MPI_Win, int, void *))GetProcAddress(hPMPIModule, "PMPI_Win_set_attr");
     fn.PMPI_Win_set_name = (int (*)(MPI_Win, char *))GetProcAddress(hPMPIModule, "PMPI_Win_set_name");
     fn.PMPI_Alloc_mem = (int (*)(MPI_Aint, MPI_Info info, void *baseptr))GetProcAddress(hPMPIModule, "PMPI_Alloc_mem");
-    fn.PMPI_Comm_create_errhandler = (int (*)(MPI_Comm_errhandler_fn *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "PMPI_Comm_create_errhandler");
+    fn.PMPI_Comm_create_errhandler = (int (*)(MPI_Comm_errhandler_function *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "PMPI_Comm_create_errhandler");
     fn.PMPI_Comm_get_errhandler = (int (*)(MPI_Comm, MPI_Errhandler *))GetProcAddress(hPMPIModule, "PMPI_Comm_get_errhandler");
     fn.PMPI_Comm_set_errhandler = (int (*)(MPI_Comm, MPI_Errhandler))GetProcAddress(hPMPIModule, "PMPI_Comm_set_errhandler");
-    fn.PMPI_File_create_errhandler = (int (*)(MPI_File_errhandler_fn *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "PMPI_File_create_errhandler");
+    fn.PMPI_File_create_errhandler = (int (*)(MPI_File_errhandler_function *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "PMPI_File_create_errhandler");
     fn.PMPI_File_get_errhandler = (int (*)(MPI_File, MPI_Errhandler *))GetProcAddress(hPMPIModule, "PMPI_File_get_errhandler");
     fn.PMPI_File_set_errhandler = (int (*)(MPI_File, MPI_Errhandler))GetProcAddress(hPMPIModule, "PMPI_File_set_errhandler");
     fn.PMPI_Finalized = (int (*)(int *))GetProcAddress(hPMPIModule, "PMPI_Finalized");
@@ -1648,7 +1648,7 @@ static BOOL LoadFunctions(const char *dll_name, const char *wrapper_dll_name)
     fn.PMPI_Type_get_extent = (int (*)(MPI_Datatype, MPI_Aint *, MPI_Aint *))GetProcAddress(hPMPIModule, "PMPI_Type_get_extent");
     fn.PMPI_Type_get_true_extent = (int (*)(MPI_Datatype, MPI_Aint *, MPI_Aint *))GetProcAddress(hPMPIModule, "PMPI_Type_get_true_extent");
     fn.PMPI_Unpack_external = (int (*)(char *, void *, MPI_Aint, MPI_Aint *, void *, int, MPI_Datatype))GetProcAddress(hPMPIModule, "PMPI_Unpack_external"); 
-    fn.PMPI_Win_create_errhandler = (int (*)(MPI_Win_errhandler_fn *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "PMPI_Win_create_errhandler");
+    fn.PMPI_Win_create_errhandler = (int (*)(MPI_Win_errhandler_function *, MPI_Errhandler *))GetProcAddress(hPMPIModule, "PMPI_Win_create_errhandler");
     fn.PMPI_Win_get_errhandler = (int (*)(MPI_Win, MPI_Errhandler *))GetProcAddress(hPMPIModule, "PMPI_Win_get_errhandler");
     fn.PMPI_Win_set_errhandler = (int (*)(MPI_Win, MPI_Errhandler))GetProcAddress(hPMPIModule, "PMPI_Win_set_errhandler");
     fn.PMPI_Type_create_f90_integer = (int (*)( int, MPI_Datatype * ))GetProcAddress(hPMPIModule, "PMPI_Type_create_f90_integer");
@@ -2856,7 +2856,7 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 
 #undef FCNAME
 #define FCNAME MPI_Comm_create_errhandler
-int MPI_Comm_create_errhandler(MPI_Comm_errhandler_fn *function, 
+int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *function,
                                MPI_Errhandler *errhandler)
 {
     MPICH_CHECK_INIT(FCNAME);
@@ -2938,7 +2938,7 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 
 #undef FCNAME
 #define FCNAME MPI_File_create_errhandler
-int MPI_File_create_errhandler(MPI_File_errhandler_fn *function, 
+int MPI_File_create_errhandler(MPI_File_errhandler_function *function,
                                MPI_Errhandler *errhandler)
 {
     MPICH_CHECK_INIT(FCNAME);
@@ -2971,7 +2971,7 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 
 #undef FCNAME
 #define FCNAME MPI_Win_create_errhandler
-int MPI_Win_create_errhandler(MPI_Win_errhandler_fn *function, 
+int MPI_Win_create_errhandler(MPI_Win_errhandler_function *function,
 			      MPI_Errhandler *errhandler)
 {
     MPICH_CHECK_INIT(FCNAME);
@@ -5420,7 +5420,7 @@ int PMPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 
 #undef FCNAME
 #define FCNAME PMPI_Comm_create_errhandler
-int PMPI_Comm_create_errhandler(MPI_Comm_errhandler_fn *function, 
+int PMPI_Comm_create_errhandler(MPI_Comm_errhandler_function *function,
                                MPI_Errhandler *errhandler)
 {
     MPICH_CHECK_INIT(FCNAME);
@@ -5502,7 +5502,7 @@ int PMPI_File_call_errhandler(MPI_File fh, int errorcode)
 
 #undef FCNAME
 #define FCNAME PMPI_File_create_errhandler
-int PMPI_File_create_errhandler(MPI_File_errhandler_fn *function, 
+int PMPI_File_create_errhandler(MPI_File_errhandler_function *function,
                                MPI_Errhandler *errhandler)
 {
     MPICH_CHECK_INIT(FCNAME);
@@ -5535,7 +5535,7 @@ int PMPI_Win_call_errhandler(MPI_Win win, int errorcode)
 
 #undef FCNAME
 #define FCNAME PMPI_Win_create_errhandler
-int PMPI_Win_create_errhandler(MPI_Win_errhandler_fn *function, 
+int PMPI_Win_create_errhandler(MPI_Win_errhandler_function *function,
 			      MPI_Errhandler *errhandler)
 {
     MPICH_CHECK_INIT(FCNAME);
