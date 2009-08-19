@@ -378,6 +378,7 @@ int  MPID_nem_mx_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MPI_Da
     MPID_nem_mx_pending_send_req++;
 
  fn_exit:
+   *request = sreq;
    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MX_DIRECTSSEND);
    return mpi_errno;
  fn_fail:
