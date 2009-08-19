@@ -197,7 +197,7 @@ sub OutputWebpage {
     }
     &OutputWebbody;
     if ($wwwFullpage) {
-	print $OUTFD "<\body>\n<\html>\r\n";
+	print $OUTFD "</body>\n</html>\r\n";
     }
 }
 

@@ -70,8 +70,8 @@ for arg in "$@" ; do
 	set -x
 	;;
 	
-    -do=*)
-    opt=`echo A$arg | sed -e 's/A-do=//'`
+    -do=*|--do=*)
+    opt=`echo A$arg | sed -e 's/^A--*do=//'`
     # Handle some synonyms
     case $opt in 
 	build-configure|configure) opt=build_configure ;;
@@ -144,7 +144,7 @@ for arg in "$@" ; do
     -help|--help|-usage|--usage)
     cat <<EOF
     updatefiles [ --with-autoconf=dir ] [ --with-automake=dir ] \\
-                [ --with-autotools=dir ] [ -do=stepname ]       \\
+                [ --with-autotools=dir ] [ --do=stepname ]       \\
                 [ args for simplemake ] 
     Update the files in the MPICH2 build tree.  This file builds the 
     configure files, creates the Makefile.in files (using the simplemake
@@ -156,11 +156,14 @@ for arg in "$@" ; do
     autoconf and automake are installed in the same location, they can
     be specified by the --with-autotools option.
 
-    Use -do=stepname to update only a single step.  For example, 
-    -do=build_configure only updates the configure scripts.  The available
-    steps are
-    $AllSteps
+    Use --do=stepname to update only a single step.  For example, 
+    --do=build_configure only updates the configure scripts.  The available
+    steps are:
 EOF
+    for step in $AllSteps
+    do
+       echo "        $step"
+    done
     exit
     ;;
     *)
@@ -856,15 +859,17 @@ if [ $do_build_configure = yes ] ; then
     fi
 fi
 
-# must come after the above autoreconf-like logic because the above
-# logic will delete the results of this actual autoreconf
-if [ -d "$openpa_dir" -o -L "$openpa_dir" ] ; then
-    echo "running autoreconf in $openpa_dir"
-    (cd $openpa_dir && $autoreconf -vif) || exit 1
-fi
-if [ -d "$hydra_dir" -o -L "$hydra_dir" ] ; then
-    echo "running autoreconf in $hydra_dir"
-    (cd $hydra_dir && $autoreconf -vif) || exit 1
+if [ "$do_build_configure" = "yes" -o "$do_makefiles" = "yes" ] ; then
+    # must come after the above autoreconf-like logic because the above
+    # logic will delete the results of this actual autoreconf
+    if [ -d "$openpa_dir" -o -L "$openpa_dir" ] ; then
+        echo "running autoreconf in $openpa_dir"
+        (cd $openpa_dir && $autoreconf -vif) || exit 1
+    fi
+    if [ -d "$hydra_dir" -o -L "$hydra_dir" ] ; then
+        echo "running autoreconf in $hydra_dir"
+        (cd $hydra_dir && $autoreconf -vif) || exit 1
+    fi
 fi
 
 if [ -f src/mpe2/maint/updatefiles -a "$do_build_configure" = "yes" ] ; then
