@@ -98,7 +98,7 @@ sub create_mpich2
     # Remove packages that are not being released
     debug("===> Removing packages that are not being released... ");
     chdir("${root}/mpich2-${version}");
-    run_cmd("rm -rf src/mpid/globus doc/notes src/pm/mpd/Zeroconf.py src/pmi/pmi2");
+    run_cmd("rm -rf src/mpid/globus doc/notes src/pm/mpd/Zeroconf.py");
 
     chdir("${root}/mpich2-${version}/src/mpid/ch3/channels/nemesis/nemesis/netmod");
     my @nem_modules = qw(elan ib psm);
