@@ -2790,9 +2790,9 @@ extern \"C\" int MPIR_Grequest_call_cancel_fn( void *extra_data, int done )
     err = (d->cancel_fn)( d->orig_extra_data, done ? true : false );
     return err;
 }
-Grequest Grequest::Start( Grequest::Query_function query_fn,
-                          Grequest::Free_function free_fn,
-                          Grequest::Cancel_function cancel_fn,
+Grequest Grequest::Start( Grequest::Query_function  *query_fn,
+                          Grequest::Free_function   *free_fn,
+                          Grequest::Cancel_function *cancel_fn,
                           void *extra_state ) 
 {
     MPI::Grequest req;
@@ -3418,12 +3418,13 @@ sub Grequest_methods {
     typedef int Free_function( void * );
     typedef int Cancel_function( void *, bool );
 ";
-    print $OUTFD "
-    Grequest Start( Query_function query_fn,
-                    Free_function free_fn,
-                    Cancel_function cancel_fn,
+    print $OUTFD <<EOT;
+
+    Grequest Start( Query_function  *query_fn,
+                    Free_function   *free_fn,
+                    Cancel_function *cancel_fn,
                     void *extra_state );
-";
+EOT
 }
     
 #
