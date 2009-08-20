@@ -892,14 +892,24 @@ if [ "$do_smpdversion" = yes ] ; then
 EOF
 fi
 
-echo "Updating README's version ID."
 VERSION=`cat maint/Version`
-sed -e "s/%VERSION%/${VERSION}/g" README.vin > README
+if [ -f README.vin ] ; then
+    echo "Updating README's version ID."
+    sed -e "s/%VERSION%/${VERSION}/g" README.vin > README
+else
+    echo "README.vin file not present, unable to update README version number (perhaps we are running in a release tarball source tree?)"
+fi
 
-BASIC_VERSION=`expr $VERSION : '\([0-9]*\.[0-9]*[\.]*[0-9]*\)[a-zA-Z]*[0-9]*'`
-VERSION_EXT=`expr $VERSION : '[0-9]*\.[0-9]*[\.]*[0-9]*\([a-zA-Z]*[0-9]*\)'`
-sed -e "s/%BASIC_VERSION%/${BASIC_VERSION}/g" -e "s/%VERSION_EXT%/${VERSION_EXT}/g" \
-    src/packaging/spec/fedora.spec.vin > src/packaging/spec/fedora.spec
+fedora_spec=src/packaging/spec/fedora.spec
+if [ -f ${fedora_spec}.vin ] ; then
+    echo "Updating fedora spec file's version numbers"
+    BASIC_VERSION=`expr $VERSION : '\([0-9]*\.[0-9]*[\.]*[0-9]*\)[a-zA-Z]*[0-9]*'`
+    VERSION_EXT=`expr $VERSION : '[0-9]*\.[0-9]*[\.]*[0-9]*\([a-zA-Z]*[0-9]*\)'`
+    sed -e "s/%BASIC_VERSION%/${BASIC_VERSION}/g" -e "s/%VERSION_EXT%/${VERSION_EXT}/g" \
+        ${fedora_spec}.vin > ${fedora_spec}
+else
+    echo "fedora.spec.vin not present, unable to update fedora.spec version numbers"
+fi
 
 #
 # The following must be the last statements executed
