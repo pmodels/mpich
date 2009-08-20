@@ -33,7 +33,7 @@
    MPI_Request_get_status - Nondestructive test for the completion of a Request
 
 Input Parameter:
-.  request - request (handle)
+.  request - request (handle).  May be 'MPI_REQUEST_NULL'.
 
 Output Parameters:
 +  flag - true if operation has completed (logical)
@@ -67,7 +67,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_REQUEST(request, mpi_errno);
+	    MPIR_ERRTEST_REQUEST_OR_NULL(request, mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
 	    /* NOTE: MPI_STATUS_IGNORE != NULL */
 	    MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
@@ -76,7 +76,14 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
         MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
-    
+
+    /* If this is a null request handle, then return an empty status */
+    if (request == MPI_REQUEST_NULL) {
+        *flag = 1;
+        MPIR_Status_set_empty(status);
+        goto fn_exit;
+    }
+
     /* Convert MPI object handles to object pointers */
     MPID_Request_get_ptr( request, request_ptr );
 

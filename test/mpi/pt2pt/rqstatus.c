@@ -27,7 +27,33 @@ int main( int argc, char *argv[] )
     MPI_Comm_size( comm, &size );
     source = 0;
     dest   = size - 1;
-	
+
+
+    /* Handling MPI_REQUEST_NULL in MPI_Request_get_status was only required
+       starting with MPI-2.2. */
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+    MPI_Request_get_status( MPI_REQUEST_NULL, &flag, &status );
+    if (!flag) {
+        errs++;
+        fprintf( stderr, "flag not true for MPI_REQUEST_NULL, flag=%d\n", flag );
+    }
+    if ((status.MPI_SOURCE != MPI_ANY_SOURCE) ||
+        (status.MPI_TAG != MPI_ANY_TAG) ||
+        (status.MPI_ERROR != MPI_SUCCESS))
+    {
+        errs++;
+        fprintf( stderr, "non-empty MPI_Status returned for MPI_REQUEST_NULL\n" );
+    }
+
+    /* also pass MPI_STATUS_IGNORE to make sure the implementation doesn't
+     * blow up when it is passed as the status argument */
+    MPI_Request_get_status( MPI_REQUEST_NULL, &flag, MPI_STATUS_IGNORE );
+    if (!flag) {
+        errs++;
+        fprintf( stderr, "flag not true for MPI_REQUEST_NULL with MPI_STATUS_IGNORE, flag=%d\n", flag );
+    }
+#endif
+
     if (rank == source) {
 	buf[0] = size;
 	buf[1] = 3;
