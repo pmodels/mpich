@@ -77,10 +77,11 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 
     /* ... body of routine ...  */
     
-    /* Look for attribute.  They are ordered by keyval handle.  This uses 
+    /* CHANGE FOR MPI 2.2:  Look for attribute.  They are ordered by when they
+       were added, with the most recent first. This uses 
        a simple linear list algorithm because few applications use more than a 
        handful of attributes */
-
+    
     /* printf( "Setting attr val to %x\n", attribute_val ); */
     old_p = &comm_ptr->attributes;
     p     = comm_ptr->attributes;
@@ -98,23 +99,10 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    /* Does not change the reference count on the keyval */
 	    break;
 	}
-	else if (p->keyval->handle > keyval_ptr->handle) {
-	    MPID_Attribute *new_p = MPID_Attr_alloc();
-	    MPIU_ERR_CHKANDJUMP(!new_p,mpi_errno,MPI_ERR_OTHER,"**nomem");
-	    new_p->keyval	 = keyval_ptr;
-	    new_p->attrType      = attrType;
-	    new_p->pre_sentinal	 = 0;
-	    new_p->value	 = attribute_val;
-	    new_p->post_sentinal = 0;
-	    new_p->next		 = p->next;
-	    MPIR_Keyval_add_ref( keyval_ptr );
-	    p->next		 = new_p;
-	    /* printf( "Adding attr at %x\n", &p->value ); */
-	    break;
-	}
 	old_p = &p->next;
 	p = p->next;
     }
+    /* CHANGE FOR MPI 2.2: If not found, add at the beginning */
     if (!p) {
 	MPID_Attribute *new_p = MPID_Attr_alloc();
 	MPIU_ERR_CHKANDJUMP(!new_p,mpi_errno,MPI_ERR_OTHER,"**nomem");
@@ -124,9 +112,9 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	new_p->pre_sentinal  = 0;
 	new_p->value	     = attribute_val;
 	new_p->post_sentinal = 0;
-	new_p->next	     = 0;
+	new_p->next	     = comm_ptr->attributes;
 	MPIR_Keyval_add_ref( keyval_ptr );
-	*old_p		     = new_p;
+	comm_ptr->attributes = new_p;
 	/* printf( "Creating attr at %x\n", &new_p->value ); */
     }
     

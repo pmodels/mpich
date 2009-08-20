@@ -5,6 +5,7 @@ smvar_do_sharedlibs = 0
 
 attrt_SOURCES = attrt.c
 attrend_SOURCES = attrend.c
+attrend2_SOURCES = attrend2.c
 attric_SOURCES = attric.c
 attrerr_SOURCES = attrerr.c
 attrerrcomm_SOURCES = attrerrcomm.c
