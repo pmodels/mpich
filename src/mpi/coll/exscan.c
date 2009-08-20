@@ -164,8 +164,8 @@ int MPIR_Exscan (
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
-    mpi_errno = MPIR_Localcopy(sendbuf, count, datatype,
-                              partial_scan, count, datatype);
+    mpi_errno = MPIR_Localcopy((sendbuf == MPI_IN_PLACE ? recvbuf : sendbuf), count, datatype,
+                               partial_scan, count, datatype);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* check if multiple threads are calling this collective function */
@@ -187,7 +187,8 @@ int MPIR_Exscan (
             if (rank > dst) {
                 call_uop(tmp_buf, partial_scan, count, datatype);
 
-                /* On rank 0, recvbuf is not defined.
+                /* On rank 0, recvbuf is not defined.  For sendbuf==MPI_IN_PLACE
+                   recvbuf must not change (per MPI-2.2).
                    On rank 1, recvbuf is to be set equal to the value
                    in sendbuf on rank 0.
                    On others, recvbuf is the scan of values in the
@@ -327,9 +328,6 @@ int MPI_Exscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 
             rank = comm_ptr->rank;
 
-            /* no in_place allowed */
-
-            MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, count, mpi_errno);
             MPIR_ERRTEST_USERBUFFER(sendbuf,count,datatype,mpi_errno);
 
             if (rank != 0) {

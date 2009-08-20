@@ -57,6 +57,33 @@ int main( int argc, char *argv[] )
 		    }
 		}
 	    }
+
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+            /* now try the MPI_IN_PLACE flavor */
+            for (i=0; i<count; i++) {
+                sendbuf[i] = -1; /* unused */
+                recvbuf[i] = rank + i * size;
+            }
+
+            MPI_Exscan( MPI_IN_PLACE, recvbuf, count, MPI_INT, MPI_SUM, comm );
+
+            /* Check the results.  rank 0's data must remain unchanged */
+            for (i=0; i<count; i++) {
+                int result;
+                if (rank == 0)
+                    result = rank + i * size;
+                else
+                    result = rank * i * size + ((rank) * (rank-1))/2;
+                if (recvbuf[i] != result) {
+                    errs++;
+                    if (errs < 10) {
+                        fprintf( stderr, "Error in recvbuf[%d] = %d on %d, expected %d\n",
+                                 i, recvbuf[i], rank, result );
+                    }
+                }
+            }
+#endif
+
 	    free( sendbuf );
 	    free( recvbuf );
 	}
