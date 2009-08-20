@@ -1,0 +1,163 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *
+ *  (C) 2009 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "mpiimpl.h"
+
+/* -- Begin Profiling Symbol Block for routine MPI_Reduce_local */
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_Reduce_local = PMPI_Reduce_local
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_Reduce_local  MPI_Reduce_local
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_Reduce_local as PMPI_Reduce_local
+#endif
+/* -- End Profiling Symbol Block */
+
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Reduce_local
+#define MPI_Reduce_local PMPI_Reduce_local
+/* any utility functions should go here, usually prefixed with PMPI_LOCAL to
+ * correctly handle weak symbols and the profiling interface */
+#endif
+
+/*@
+
+MPI_Reduce_local - Applies a reduction operator to local arguments.
+
+Input Parameters:
++ inbuf - address of the input buffer (choice)
+. count - number of elements in each buffer (integer)
+. datatype - data type of elements in the buffers (handle)
+- op - reduction operation (handle)
+
+Output Parameter:
+. inoutbuf - address of input-output buffer (choice)
+
+.N ThreadSafe
+
+.N Fortran
+
+.N collops
+
+.N Errors
+.N MPI_SUCCESS
+.N MPI_ERR_COUNT
+.N MPI_ERR_TYPE
+.N MPI_ERR_BUFFER
+.N MPI_ERR_BUFFER_ALIAS
+
+@*/
+#undef FUNCNAME
+#define FUNCNAME MPI_Reduce_local
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPI_Reduce_local(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_User_function *uop;
+    MPID_Op *op_ptr;
+#ifdef HAVE_CXX_BINDING
+    int is_cxx_uop = 0;
+#endif
+    MPIU_THREADPRIV_DECL;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE_LOCAL);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_COLL_FUNC_ENTER(MPID_STATE_MPI_REDUCE_LOCAL);
+
+    /* Validate parameters */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+            MPIR_ERRTEST_OP(op, mpi_errno);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+            if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
+                MPID_Op_get_ptr(op, op_ptr);
+                MPID_Op_valid_ptr( op_ptr, mpi_errno );
+            }
+            if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+                mpi_errno = (*MPIR_Op_check_dtype_table[op%16 - 1])(datatype);
+            }
+            if (count != 0) {
+                MPIR_ERRTEST_ALIAS_COLL(inbuf, inoutbuf, mpi_errno);
+            }
+            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+        }
+        MPID_END_ERROR_CHECKS;
+    }
+#   endif /* HAVE_ERROR_CHECKING */
+
+
+    /* ... body of routine ...  */
+
+    if (count == 0) goto fn_exit;
+
+    MPIU_THREADPRIV_GET;
+    MPIU_THREADPRIV_FIELD(op_errno) = MPI_SUCCESS;
+
+    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+        /* get the function by indexing into the op table */
+        uop = MPIR_Op_table[op%16 - 1];
+    }
+    else {
+        MPID_Op_get_ptr(op, op_ptr);
+
+#ifdef HAVE_CXX_BINDING
+        if (op_ptr->language == MPID_LANG_CXX) {
+            uop = (MPI_User_function *) op_ptr->function.c_function;
+            is_cxx_uop = 1;
+        }
+        else
+#endif
+        {
+            if ((op_ptr->language == MPID_LANG_C))
+                uop = (MPI_User_function *) op_ptr->function.c_function;
+            else
+                uop = (MPI_User_function *) op_ptr->function.f77_function;
+        }
+    }
+
+    /* actually perform the reduction */
+#ifdef HAVE_CXX_BINDING
+    if (is_cxx_uop) {
+        (*MPIR_Process.cxx_call_op_fn)(inbuf, inoutbuf, count, datatype, uop);
+    }
+    else
+#endif
+    {
+        (*uop)(inbuf, inoutbuf, &count, &datatype);
+    }
+    /* ... end of body of routine ... */
+
+  fn_exit:
+    if (MPIU_THREADPRIV_FIELD(op_errno))
+        mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
+
+    MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_REDUCE_LOCAL);
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    return mpi_errno;
+
+  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        mpi_errno = MPIR_Err_create_code(
+            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_reduce_local",
+            "**mpi_reduce_local %p %p %d %D %O", inbuf, inoutbuf, count, datatype, op);
+    }
+#   endif
+    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+

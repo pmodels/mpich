@@ -464,7 +464,10 @@ $specialReturnType{"intra-Dup"} = "Intracomm";
 		    'Accept' => 'MPI_Comm',
 		     'Connect' => 'MPI_Comm',
 		     );
-%class_mpi2op = ();
+%class_mpi2op = (
+                 'Is_commutative' => '2;bool',
+                 'Reduce_local'   => '0',
+                );
 %class_mpi2preq = ();
 %class_mpi2req = ();
 # Start requires C++ to C function interposers (like errhandlers)
@@ -827,7 +830,7 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 # The friends are the full class names
 %class_friends = ( 'comm' => 'Cartcomm,Intercomm,Intracomm,Graphcomm,Nullcomm,Datatype,Win,File',
 		   'cart' => '',
-		   'dtype' => 'Comm,Status,Intracomm,Intercomm,Win,File',
+		   'dtype' => 'Comm,Status,Intracomm,Intercomm,Win,File,Op',
 		   'errh' => 'Comm,File,Win',
 		   'graph' => '',
 		   'group' => 'Comm,Intracomm,Intercomm,Win,File',
@@ -966,6 +969,8 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 	     'graph-Get_neighbors_count' => 'Graph_neighbors_count',
 	     'graph-Get_dims' => 'Graphdims_get',
 	     'graph-Dup' => 'Comm_dup',
+             'op-Is_commutative' => 'Op_commutative',
+             'op-Reduce_local' => 'Reduce_local',
 	     );
 
 # These routines must be defered because their implementations need 
@@ -2917,7 +2922,7 @@ sub PrintClassHead {
 	}
     }
     if ($lcclass eq $lctopclass) {
-	print $OUTFD "\		
+	print $OUTFD "\
   protected:
     $mpi_type the_real_$lcclass;\n";
 	# Check for special declarations

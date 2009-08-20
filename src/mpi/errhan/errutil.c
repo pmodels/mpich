@@ -233,7 +233,8 @@ int MPIR_Err_is_fatal(int errcode)
 
 /*
  * This is the routine that is invoked by most MPI routines to 
- * report an error 
+ * report an error.  It is legitimate to pass NULL for comm_ptr in order to get
+ * the default (MPI_COMM_WORLD) error handling.
  */
 int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[], 
 			  int errcode )

@@ -932,10 +932,14 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_op_create %p %d %p:MPI_Op_create(fn=%p, commute=%d, op=%p) failed
 **mpi_op_free:MPI_Op_free failed
 **mpi_op_free %p:MPI_Op_free(op=%p) failed
+**mpi_op_commutative:MPI_Op_commutative failed
+**mpi_op_commutative %O %p:MPI_Op_commutative(op=%O, commute=%p) failed
 **mpi_allreduce:MPI_Allreduce failed
 **mpi_allreduce %p %p %d %D %O %C:MPI_Allreduce(sbuf=%p, rbuf=%p, count=%d, %D, %O, %C) failed
 **mpi_reduce_scatter:MPI_Reduce_scatter failed
 **mpi_reduce_scatter %p %p %p %D %O %C:MPI_Reduce_scatter(sbuf=%p, rbuf=%p, rcnts=%p, %D, %O, %C) failed
+**mpi_reduce_local:MPI_Reduce_local failed
+**mpi_reduce_local %p %p %d %D %O:MPI_Reduce_local(inbuf=%p, inoutbuf=%p, count=%d, %D, %O) failed
 **mpi_scan:MPI_Scan failed
 **mpi_scan %p %p %d %D %O %C:MPI_Scan(sbuf=%p, rbuf=%p, count=%d, %D, %O, %C) failed
 **mpi_group_size:MPI_Group_size failed

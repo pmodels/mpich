@@ -165,6 +165,7 @@ $gDebug = 0;
 		  'Win_test-2' => 'bool',
 		  'Type_create_hindexed-2' => 'int[]',
 		  'Type_create_hindexed-3' => 'MPI_Aint[]',
+		  'Op_commutative-2' => 'bool',
 		);
 
 # Some routines must be skipped (custom code is provided for them)
