@@ -29,27 +29,18 @@ void abortMsg( const char *str, int code )
 
 int main( int argc, char *argv[] )
 {
-  MPI_Comm  evencomm, lowcomm, newcomm, dupWorld;
+    MPI_Comm  dupWorld;
     int       wrank, wsize, gsize, key, err, errs = 0;
-    int       ranges[1][3], mygrank;
+    int       ranges[1][3];
     MPI_Group wGroup, godd, ghigh, geven;
-   
+
     MTest_Init( &argc, &argv );
 
     MPI_Comm_size( MPI_COMM_WORLD, &wsize );
     MPI_Comm_rank( MPI_COMM_WORLD, &wrank );
 
-    /* Create some communicators */
-    MPI_Comm_split( MPI_COMM_WORLD, wrank % 2, wrank, &evencomm );
-    MPI_Comm_split( MPI_COMM_WORLD, wrank < wsize/2, wsize-wrank, &lowcomm );
-    /* 
-    MPI_Comm_set_errhandler( evencomm, MPI_ERRORS_RETURN );
-    MPI_Comm_set_errhandler( lowcomm, MPI_ERRORS_RETURN );
-    */
     /* Create some groups */
     MPI_Comm_group( MPI_COMM_WORLD, &wGroup );
-
-    /* MPI_Comm_set_errhandler( MPI_COMM_WORLD, MPI_ERRORS_RETURN ); */
 
     MTestPrintfMsg( 2, "Creating groups\n" );
     ranges[0][0] = 2*(wsize/2)-1;
@@ -64,7 +55,7 @@ int main( int argc, char *argv[] )
 		 wsize/2 );
 	errs++;
     }
-	
+
     ranges[0][0] = wsize/2+1;
     ranges[0][1] = wsize-1;
     ranges[0][2] = 1;
@@ -87,9 +78,16 @@ int main( int argc, char *argv[] )
     errs += BuildComm( dupWorld, godd, "godd" );
     errs += BuildComm( dupWorld, geven, "geven" );
 
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+    /* check that we can create multiple communicators from a single collective
+     * call to MPI_Comm_create as long as the groups are all disjoint */
+    errs += BuildComm( MPI_COMM_WORLD, (wrank % 2 ? godd : geven), "godd+geven" );
+    errs += BuildComm( dupWorld,       (wrank % 2 ? godd : geven), "godd+geven" );
+    errs += BuildComm( MPI_COMM_WORLD, MPI_GROUP_EMPTY, "MPI_GROUP_EMPTY" );
+    errs += BuildComm( dupWorld,       MPI_GROUP_EMPTY, "MPI_GROUP_EMPTY" );
+#endif
+
     MPI_Comm_free( &dupWorld );
-    MPI_Comm_free( &lowcomm );
-    MPI_Comm_free( &evencomm );
     MPI_Group_free( &ghigh );
     MPI_Group_free( &godd );
     MPI_Group_free( &geven );

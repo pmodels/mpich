@@ -20,12 +20,14 @@ int main( int argc, char *argv[] )
 {
     int errs = 0;
     int size, isLeft, wrank;
+    int lsize, lrank;
     int count = 0;
+    int ranges[1][3];
     MPI_Comm intercomm, newcomm;
     MPI_Group oldgroup, newgroup;
-    
+
     MTest_Init( &argc, &argv );
-    
+
     MPI_Comm_size( MPI_COMM_WORLD, &size );
     if (size < 4) {
 	printf( "This test requires at least 4 processes\n" );
@@ -33,7 +35,7 @@ int main( int argc, char *argv[] )
     }
     MPI_Comm_rank( MPI_COMM_WORLD, &wrank );
 
-    while (count++ < 1 && MTestGetIntercomm( &intercomm, &isLeft, 2 )) {
+    while (MTestGetIntercomm( &intercomm, &isLeft, 2 )) {
 	int ranks[10], nranks, result;
 
         if (intercomm == MPI_COMM_NULL) continue;
@@ -47,7 +49,7 @@ int main( int argc, char *argv[] )
 
 	/* Make sure that the new communicator has the appropriate pieces */
 	if (newcomm != MPI_COMM_NULL) {
-	    int new_rsize, new_size, flag, commok = 1;;
+	    int new_rsize, new_size, flag, commok = 1;
 
 	    MPI_Comm_set_name( newcomm, "Single rank in each group" );
 	    MPI_Comm_test_inter( intercomm, &flag );
@@ -108,8 +110,8 @@ int main( int argc, char *argv[] )
 	    errs += TestIntercomm( newcomm );
 	}
 
-	MPI_Group_free( &oldgroup );
 	MPI_Comm_free( &newcomm );
+	MPI_Group_free( &oldgroup );
 	MPI_Comm_free( &intercomm );
     }
 
@@ -133,8 +135,9 @@ int TestIntercomm( MPI_Comm comm )
     MPI_Comm_rank( comm, &rank );
     MPI_Comm_get_name( comm, commname, &nsize );
 
-    MTestPrintfMsg( 1, "Testing communication on intercomm %s\n", commname );
-    
+    MTestPrintfMsg( 1, "Testing communication on intercomm '%s', remote_size=%d\n",
+                    commname, remote_size );
+
     reqs = (MPI_Request *)malloc( remote_size * sizeof(MPI_Request) );
     if (!reqs) {
 	printf( "[%d] Unable to allocated %d requests for testing intercomm %s\n", 
@@ -160,12 +163,15 @@ int TestIntercomm( MPI_Comm comm )
     /* Each process sends a message containing its own rank and the
        rank of the destination with a nonblocking send.  Because we're using
        nonblocking sends, we need to use different buffers for each isend */
+    /* NOTE: the send buffer access restriction was relaxed in MPI-2.2, although
+       it doesn't really hurt to keep separate buffers for our purposes */
     for (j=0; j<remote_size; j++) {
 	bufs[j]    = &bufmem[2*j];
 	bufs[j][0] = rank;
 	bufs[j][1] = j;
 	MPI_Isend( bufs[j], 2, MPI_INT, j, 0, comm, &reqs[j] );
     }
+    MTestPrintfMsg( 2, "isends posted, about to recv\n" );
 
     for (j=0; j<remote_size; j++) {
 	MPI_Recv( rbuf, 2, MPI_INT, j, 0, comm, MPI_STATUS_IGNORE );
@@ -182,6 +188,7 @@ int TestIntercomm( MPI_Comm comm )
     }
     if (errs) 
 	fflush(stdout);
+    MTestPrintfMsg( 2, "my recvs completed, about to waitall\n" );
     MPI_Waitall( remote_size, reqs, MPI_STATUSES_IGNORE );
 
     free( reqs );
