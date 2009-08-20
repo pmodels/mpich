@@ -286,7 +286,12 @@ int MPID_nem_mx_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
       ret = mx_irecv(MPID_nem_mx_local_endpoint,mx_iov,num_seg,match_info,match_mask,(void *)rreq, &(REQ_FIELD(rreq,mx_request)));
       MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_irecv", "**mx_irecv %s", mx_strerror (ret));
   }
-  
+  else
+  {
+    /* Fixme : this might not work in the case of multiple netmods */ 
+    memset((&(REQ_FIELD(rreq,mx_request))),0,sizeof(mx_request_t));
+  }
+   
  fn_exit:
   MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MX_DIRECTRECV);
   return mpi_errno;
