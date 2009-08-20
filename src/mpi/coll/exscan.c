@@ -23,6 +23,26 @@
 #undef MPI_Exscan
 #define MPI_Exscan PMPI_Exscan
 
+/* NOTE: copied from red_scat.c, if we use this one more time we need to
+ * refactor it into a common location */
+#ifdef HAVE_CXX_BINDING
+/* NOTE: assumes 'uop' is the operator function pointer and
+   that 'is_cxx_uop' is is a boolean indicating the obvious */
+#define call_uop(in_, inout_, count_, datatype_)                                     \
+do {                                                                                 \
+    if (is_cxx_uop) {                                                                \
+        (*MPIR_Process.cxx_call_op_fn)((in_), (inout_), (count_), (datatype_), uop); \
+    }                                                                                \
+    else {                                                                           \
+        (*uop)((in_), (inout_), &(count_), &(datatype_));                            \
+    }                                                                                \
+} while (0)
+
+#else
+#define call_uop(in_, inout_, count_, datatype_)      \
+    (*uop)((in_), (inout_), &(count_), &(datatype_))
+#endif
+
 /* This is the default implementation of exscan. The algorithm is:
    
    Algorithm: MPI_Exscan
@@ -87,6 +107,7 @@ int MPIR_Exscan (
     MPI_User_function *uop;
     MPID_Op *op_ptr;
     MPI_Comm comm;
+    MPIU_CHKLMEM_DECL(2);
     MPIU_THREADPRIV_DECL;
 #ifdef HAVE_CXX_BINDING
     int is_cxx_uop = 0;
@@ -130,45 +151,22 @@ int MPIR_Exscan (
     /* need to allocate temporary buffer to store partial scan*/
     mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb,
                                           &true_extent);
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno)
-    {
-	mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-	return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     MPID_Datatype_get_extent_macro( datatype, extent );
 
-    partial_scan = MPIU_Malloc(count*(MPIR_MAX(true_extent,extent)));
-    /* --BEGIN ERROR HANDLING-- */
-    if (!partial_scan) {
-        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
+    MPIU_CHKLMEM_MALLOC(partial_scan, void *, (count*(MPIR_MAX(true_extent,extent))), mpi_errno, "partial_scan");
     /* adjust for potential negative lower bound in datatype */
     partial_scan = (void *)((char*)partial_scan - true_lb);
-    
+
     /* need to allocate temporary buffer to store incoming data*/
-    tmp_buf = MPIU_Malloc(count*(MPIR_MAX(true_extent,extent)));
-    /* --BEGIN ERROR HANDLING-- */
-    if (!tmp_buf) {
-        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
+    MPIU_CHKLMEM_MALLOC(tmp_buf, void *, (count*(MPIR_MAX(true_extent,extent))), mpi_errno, "tmp_buf");
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
-    
+
     mpi_errno = MPIR_Localcopy(sendbuf, count, datatype,
                               partial_scan, count, datatype);
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno)
-    {
-	mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-	return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
@@ -184,23 +182,11 @@ int MPIR_Exscan (
                                       count, datatype, dst,
                                       MPIR_EXSCAN_TAG, comm,
                                       &status);
-	    /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno)
-	    {
-		mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-		return mpi_errno;
-	    }
-	    /* --END ERROR HANDLING-- */
-            
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
             if (rank > dst) {
-#ifdef HAVE_CXX_BINDING
-		if (is_cxx_uop) {
-		    (*MPIR_Process.cxx_call_op_fn)( tmp_buf, partial_scan, 
-				     count, datatype, uop );
-		}
-		else 
-#endif
-                (*uop)(tmp_buf, partial_scan, &count, &datatype);
+                call_uop(tmp_buf, partial_scan, count, datatype);
+
                 /* On rank 0, recvbuf is not defined.
                    On rank 1, recvbuf is to be set equal to the value
                    in sendbuf on rank 0.
@@ -211,73 +197,43 @@ int MPIR_Exscan (
                         /* simply copy data recd from rank 0 into recvbuf */
                         mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                    recvbuf, count, datatype);
-			/* --BEGIN ERROR HANDLING-- */
-                        if (mpi_errno)
-			{
-			    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-			    return mpi_errno;
-			}
-			/* --END ERROR HANDLING-- */
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
                         flag = 1;
                     }
                     else {
-#ifdef HAVE_CXX_BINDING
-                        if (is_cxx_uop) {
-                            (*MPIR_Process.cxx_call_op_fn)( tmp_buf, recvbuf, 
-                                                            count, datatype, uop );
-                        }
-                        else 
-#endif
-                            (*uop)(tmp_buf, recvbuf, &count, &datatype);
+                        call_uop(tmp_buf, recvbuf, count, datatype);
                     }
                 }
             }
             else {
                 if (is_commutative) {
-#ifdef HAVE_CXX_BINDING
-		    if (is_cxx_uop) {
-			(*MPIR_Process.cxx_call_op_fn)( tmp_buf, partial_scan, 
-					 count, datatype, uop );
-		    }
-		    else 
-#endif
-                    (*uop)(tmp_buf, partial_scan, &count, &datatype);
+                    call_uop(tmp_buf, partial_scan, count, datatype);
 		}
                 else {
-#ifdef HAVE_CXX_BINDING
-		    if (is_cxx_uop) {
-			(*MPIR_Process.cxx_call_op_fn)( partial_scan, tmp_buf,
-					 count, datatype, uop );
-		    }
-		    else 
-#endif
-                    (*uop)(partial_scan, tmp_buf, &count, &datatype);
+                    call_uop(partial_scan, tmp_buf, count, datatype);
+
                     mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                partial_scan,
                                                count, datatype);
-		    /* --BEGIN ERROR HANDLING-- */
-                    if (mpi_errno)
-		    {
-			mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-			return mpi_errno;
-		    }
-		    /* --END ERROR HANDLING-- */
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
             }
         }
         mask <<= 1;
     }
-    
-    MPIU_Free((char *)partial_scan+true_lb); 
-    MPIU_Free((char *)tmp_buf+true_lb); 
-    
+
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-    
+
     if (MPIU_THREADPRIV_FIELD(op_errno)) 
 	mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
 
+fn_exit:
+    MPIU_CHKLMEM_FREEALL();
     return (mpi_errno);
+fn_fail:
+    goto fn_exit;
 }
 /* end:nested */
 #endif
