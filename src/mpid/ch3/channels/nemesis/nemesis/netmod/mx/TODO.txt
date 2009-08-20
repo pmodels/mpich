@@ -1,0 +1,33 @@
+* Cancellation of requests
+Currently, cancellation of requests is implemented in the module
+itself but needs to be propagated at the ADI level.
+The code snipets are included in mx_cancel.c.
+However, since MX does not support the cancellation of send requests,
+it's unlikely that the MX module will.
+Note that for recv request cancellation, the VC is need only to find 
+the module function. It's therefore MPI_ANY_SOURCE ready.
+
+* Probe Support
+The same applies to probe/Iprobe: the some code needs to be integrated
+into the corresponding ADI routines in order to support these features
+for the MX module. If the code snipets in mx_probe.c are used, it
+should work probe/iprobing messages coming from a known source.
+In the case of MPI_ANY_SOURCE, more work is need since a function
+not depending on a VC is to be called and some communication 
+has to be enforced between the MX module and Nemesis (handling) the
+shared-memory requests.
+
+* On demand connections
+Currently, all connections are established on start-up. Some framework
+for on-demand connection is implemented but not yet functionnal.
+
+* Maximum tag length.
+Currently, the MX module only supports tags that are at most 31-bits long.
+Support for full, 32-bits tags is implemented but some work need to be
+done at higher level. The current fix is the following :
+1- Uncomment the /* #define USE_CTXT_AS_MARK  */ line in the mx_impl.h file 
+2- Replace line 439 in the  src/mpi/comm/commutil.c file : 
+   	   context_mask[0] = 0xFFFFFFF8;
+   with the following code: 
+     	   context_mask[0] = 0xFFFFFFF0;
+
