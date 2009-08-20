@@ -11,11 +11,11 @@ the module function. It's therefore MPI_ANY_SOURCE ready.
 The same applies to probe/Iprobe: the some code needs to be integrated
 into the corresponding ADI routines in order to support these features
 for the MX module. If the code snipets in mx_probe.c are used, it
-should work probe/iprobing messages coming from a known source.
-In the case of MPI_ANY_SOURCE, more work is need since a function
-not depending on a VC is to be called and some communication 
-has to be enforced between the MX module and Nemesis (handling) the
-shared-memory requests.
+should work when probing/iprobing messages coming from a known source.
+In the case of MPI_ANY_SOURCE, more work is needed since 
+1- a function not depending on a VC is to be called and 
+2- some communication has to be enforced between the MX module and 
+Nemesis handling the shared-memory requests.
 
 * On demand connections
 Currently, all connections are established on start-up. Some framework
