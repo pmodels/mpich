@@ -54,17 +54,29 @@ scatterv 4
 icbcast 4
 icbcast 10
 icallreduce 5
+icallreduce 7
 icreduce 5
+icreduce 7
 icscatter 5
+icscatter 7
 icgather 5
+icgather 7
 icallgather 5
+icallgather 7
 icbarrier 5
+icbarrier 7
 icallgatherv 5
+icallgatherv 7
 icgatherv 5
+icgatherv 7
 icscatterv 5
+icscatterv 7
 icalltoall 5
+icalltoall 7
 icalltoallv 5
+icalltoallv 7
 icalltoallw 5
+icalltoallw 7
 # the opxxx tests look at optional types, and are included for MPICH2 testing.
 # MPI implementations may instead signal errors for these types
 opland 4

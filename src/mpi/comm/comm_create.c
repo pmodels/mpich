@@ -355,6 +355,8 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
 
         newcomm_ptr->local_size   = group_ptr->size;
         newcomm_ptr->remote_group = 0;
+
+        newcomm_ptr->is_low_group = comm_ptr->is_low_group;
     }
 
     /* There is an additional step.  We must communicate the information
