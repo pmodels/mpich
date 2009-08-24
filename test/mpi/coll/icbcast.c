@@ -24,6 +24,9 @@ int main( int argc, char *argv[] )
     datatype = MPI_INT;
     /* Get an intercommunicator */
     while (MTestGetIntercomm( &comm, &leftGroup, 4 )) {
+        if (comm == MPI_COMM_NULL)
+            continue;
+
 	MPI_Comm_rank( comm, &rank );
 
 	/* To improve reporting of problems about operations, we

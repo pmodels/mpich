@@ -163,11 +163,8 @@ int MPIR_Comm_create( MPID_Comm **newcomm_ptr )
     return mpi_errno;
 }
 
-/* Create a local intra communicator from the local group of the 
+/* Create a local intra communicator from the local group of the
    specified intercomm. */
-/* FIXME : 
-   For the context id, use the intercomm's context id + 2.  (?)
- */
 /* FIXME this is an alternative constructor that doesn't use MPIR_Comm_create! */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Setup_intercomm_localcomm

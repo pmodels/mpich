@@ -25,8 +25,11 @@ int main( int argc, char *argv[] )
     MTest_Init( &argc, &argv );
 
     datatype = MPI_INT;
+    /* Get an intercommunicator */
     while (MTestGetIntercomm( &comm, &leftGroup, 4 )) {
-	/* Get an intercommunicator */
+        if (comm == MPI_COMM_NULL)
+            continue;
+
 	/* To improve reporting of problems about operations, we
 	   change the error handler to errors return */
 	MPI_Comm_set_errhandler( comm, MPI_ERRORS_RETURN );

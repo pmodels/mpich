@@ -1129,6 +1129,10 @@ int MTestGetIntercomm( MPI_Comm *comm, int *isLeftGroup, int min_size )
        MPI_COMM_NULL is always considered large enough.  The size is
        the sum of the sizes of the local and remote groups */
     while (!done) {
+        *comm = MPI_COMM_NULL;
+        *isLeftGroup = 0;
+        interCommName = "MPI_COMM_NULL";
+
 	switch (interCommIdx) {
 	case 0:
 	    /* Split comm world in half */
@@ -1396,7 +1400,6 @@ int MTestGetIntercomm( MPI_Comm *comm, int *isLeftGroup, int min_size )
 
 	default:
 	    *comm = MPI_COMM_NULL;
-	    interCommName = "MPI_COMM_NULL";
 	    interCommIdx = -1;
 	    break;
 	}
@@ -1409,11 +1412,17 @@ int MTestGetIntercomm( MPI_Comm *comm, int *isLeftGroup, int min_size )
 	    if (size + remsize >= min_size) done = 1;
 	}
 	else {
+	    interCommName = "MPI_COMM_NULL";
 	    done = 1;
         }
 
         /* we are only done if all processes are done */
         MPI_Allreduce(MPI_IN_PLACE, &done, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+
+        /* Advance the comm index whether we are done or not, otherwise we could
+         * spin forever trying to allocate a too-small communicator over and
+         * over again. */
+        interCommIdx++;
 
         if (!done && *comm != MPI_COMM_NULL) {
             /* avoid leaking communicators */
@@ -1432,7 +1441,6 @@ int MTestGetIntercomm( MPI_Comm *comm, int *isLeftGroup, int min_size )
         }
     }
 
-    interCommIdx++;
     return interCommIdx;
 }
 /* Return the name of an intercommunicator */
