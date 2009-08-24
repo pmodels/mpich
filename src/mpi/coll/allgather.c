@@ -81,7 +81,7 @@ int MPIR_Allgather (
 {
     int        comm_size, rank;
     int        mpi_errno = MPI_SUCCESS;
-    MPI_Aint   recvtype_extent;
+    MPI_Aint   recvtype_extent, tot_bytes;
     MPI_Aint recvtype_true_extent, recvbuf_extent, recvtype_true_lb;
     int        j, i, pof2, src, rem;
     static const char FCNAME[] = "MPIR_Allgather";
@@ -123,9 +123,9 @@ int MPIR_Allgather (
 
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-    
-    if ((recvcount*comm_size*type_size < MPIR_ALLGATHER_LONG_MSG) &&
-        (comm_size_is_pof2 == 1)) {
+
+    tot_bytes = (MPI_Aint)recvcount * comm_size * type_size;
+    if ((tot_bytes < MPIR_ALLGATHER_LONG_MSG) && (comm_size_is_pof2 == 1)) {
 
         /* Short or medium size message and power-of-two no. of processes. Use
          * recursive doubling algorithm */   
@@ -429,7 +429,7 @@ int MPIR_Allgather (
 #endif /* MPID_HAS_HETERO */
     }
 
-    else if (recvcount*comm_size*type_size < MPIR_ALLGATHER_SHORT_MSG) {
+    else if (tot_bytes < MPIR_ALLGATHER_SHORT_MSG) {
         /* Short message and non-power-of-two no. of processes. Use
          * Bruck algorithm (see description above). */
 
