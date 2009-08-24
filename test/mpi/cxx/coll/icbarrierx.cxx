@@ -24,6 +24,7 @@ int main( int argc, char *argv[] )
 
     datatype = MPI::INT;
     while (MTestGetIntercomm( comm, leftGroup, 4 )) {
+        if (comm == MPI::COMM_NULL) continue;
 	/* Get an intercommunicator */
 	if (leftGroup) {
 	    try

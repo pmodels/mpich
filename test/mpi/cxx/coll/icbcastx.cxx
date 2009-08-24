@@ -22,6 +22,7 @@ int main( int argc, char *argv[] )
 
     datatype = MPI::INT;
     while (MTestGetIntercomm( comm, leftGroup, 4 )) {
+        if (comm == MPI::COMM_NULL) continue;
 	for (count = 1; count < 65000; count = 2 * count) {
 	    buf = new int [count];
 	    /* Get an intercommunicator */

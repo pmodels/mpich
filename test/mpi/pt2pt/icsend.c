@@ -20,6 +20,8 @@ int main( int argc, char *argv[] )
     MTest_Init( &argc, &argv );
 
     while (MTestGetIntercomm( &comm, &leftGroup, 4 )) {
+        if (comm == MPI_COMM_NULL) continue;
+
 	if (leftGroup) {
 	    MPI_Comm_rank( comm, &rank );
 	    buf = rank;
