@@ -295,11 +295,11 @@ HYD_Status HYD_PMCD_pmi_handle_v1_put(int fd, char *args[])
 
 HYD_Status HYD_PMCD_pmi_handle_v1_get(int fd, char *args[])
 {
-    int i;
+    int i, found, ret;
     HYD_PMCD_pmi_process_t *process;
     HYD_PMCD_pmi_kvs_pair_t *run;
-    char *kvsname, *key;
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *key_val_str = NULL;
+    char *kvsname, *key, *node_list;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -320,29 +320,51 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get(int fd, char *args[])
                              "kvsname (%s) does not match this process' kvs space (%s)\n",
                              kvsname, process->node->pg->kvs->kvs_name);
 
+    /* Try to find the key */
+    found = 0;
+    for (run = process->node->pg->kvs->key_pair; run; run = run->next) {
+        if (!strcmp(run->key, key)) {
+            found = 1;
+            break;
+        }
+    }
+
+    if (found == 0) {
+        /* Didn't find the job attribute; see if we know how to
+         * generate it */
+        if (strcmp(key, "process-mapping") == 0) {
+            /* Create a vector format */
+            status = HYD_PMCD_pmi_process_mapping(process, HYD_PMCD_pmi_vector, &node_list);
+            HYDU_ERR_POP(status, "Unable to get process mapping information\n");
+
+            if (strlen(node_list) > MAXVALLEN)
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "key value larger than maximum allowed\n");
+
+            status = HYD_PMCD_pmi_add_kvs("process-mapping", node_list,
+                                          process->node->pg->kvs, &ret);
+            HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
+        }
+
+        /* Search for the key again */
+        for (run = process->node->pg->kvs->key_pair; run; run = run->next) {
+            if (!strcmp(run->key, key)) {
+                found = 1;
+                break;
+            }
+        }
+    }
+
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=get_result rc=");
-    if (process->node->pg->kvs->key_pair == NULL) {
+    if (found) {
+        tmp[i++] = HYDU_strdup("0 msg=success value=");
+        tmp[i++] = HYDU_strdup(run->val);
+    }
+    else {
         tmp[i++] = HYDU_strdup("-1 msg=key_");
         tmp[i++] = HYDU_strdup(key);
         tmp[i++] = HYDU_strdup("_not_found value=unknown");
-    }
-    else {
-        run = process->node->pg->kvs->key_pair;
-        while (run) {
-            if (!strcmp(run->key, key)) {
-                tmp[i++] = HYDU_strdup("0 msg=success value=");
-                key_val_str = HYDU_strdup(run->val);
-                tmp[i++] = key_val_str;
-                break;
-            }
-            run = run->next;
-        }
-        if (run == NULL) {
-            tmp[i++] = HYDU_strdup("-1 msg=key_");
-            tmp[i++] = HYDU_strdup(key);
-            tmp[i++] = HYDU_strdup("_not_found value=unknown");
-        }
     }
     tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
