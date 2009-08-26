@@ -518,10 +518,6 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
-    /* If no format is specified, use the default values */
-    if (strcmp(key, "process-mapping") == 0)
-        key = "process-mapping-vector";
-
     /* Try to find the key */
     found = 0;
     for (run = process->node->pg->kvs->key_pair; run; run = run->next) {
@@ -534,7 +530,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
     if (found == 0) {
         /* Didn't find the job attribute; see if we know how to
          * generate it */
-        if (strcmp(key, "process-mapping-vector") == 0) {
+        if (strcmp(key, "process-mapping") == 0) {
             /* Create a vector format */
             status = HYD_PMCD_pmi_process_mapping(process, HYD_PMCD_pmi_vector, &node_list);
             HYDU_ERR_POP(status, "Unable to get process mapping information\n");
@@ -543,19 +539,7 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                     "key value larger than maximum allowed\n");
 
-            status = HYD_PMCD_pmi_add_kvs("process-mapping-vector", node_list,
-                                          process->node->pg->kvs, &ret);
-            HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
-        }
-        else if (strcmp(key, "process-mapping-explicit") == 0) {
-            status = HYD_PMCD_pmi_process_mapping(process, HYD_PMCD_pmi_explicit, &node_list);
-            HYDU_ERR_POP(status, "Unable to get process mapping information\n");
-
-            if (strlen(node_list) > MAXVALLEN)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                    "key value larger than maximum allowed\n");
-
-            status = HYD_PMCD_pmi_add_kvs("process-mapping-explicit", node_list,
+            status = HYD_PMCD_pmi_add_kvs("process-mapping", node_list,
                                           process->node->pg->kvs, &ret);
             HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
         }

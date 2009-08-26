@@ -303,33 +303,7 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
         }
     }
 
-    if (type == HYD_PMCD_pmi_explicit) {
-        /* Explicit process mapping */
-        HYDU_MALLOC(process_mapping, int *, process->node->pg->num_procs * sizeof(int),
-                    status);
-
-        k = 0;
-        for (block = blocklist_head; block; block = block->next)
-            for (i = 0; i < block->num_blocks; i++)
-                for (j = 0; j < block->block_size; j++)
-                    process_mapping[k++] = block->start_node_id + i;
-
-        i = 0;
-        tmp[i++] = HYDU_strdup("explicit,");
-        for (j = 0; j < k; j++) {
-            tmp[i++] = HYDU_int_to_str(process_mapping[j]);
-            if (j < k - 1)
-                tmp[i++] = HYDU_strdup(",");
-            HYDU_STRLIST_CONSOLIDATE(tmp, i, status);
-        }
-        tmp[i++] = NULL;
-
-        status = HYDU_str_alloc_and_join(tmp, process_mapping_str);
-        HYDU_ERR_POP(status, "error while joining strings\n");
-
-        HYDU_free_strlist(tmp);
-    }
-    else if (type == HYD_PMCD_pmi_vector) {
+    if (type == HYD_PMCD_pmi_vector) {
         i = 0;
         tmp[i++] = HYDU_strdup("(");
         tmp[i++] = HYDU_strdup("vector,");

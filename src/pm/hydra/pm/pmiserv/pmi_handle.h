@@ -68,7 +68,6 @@ struct HYD_PMCD_pmi_pg {
 };
 
 enum HYD_PMCD_pmi_process_mapping_type {
-    HYD_PMCD_pmi_explicit,
     HYD_PMCD_pmi_vector
 };
 
