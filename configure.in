@@ -392,15 +392,14 @@ AC_ARG_WITH(pmi, [--with-pmi=name - Specify the pmi interface for MPICH.],,
 with_pmi=default)
 dnl
 AC_ARG_WITH(pm, 
-[--with-pm=name - Specify the process manager for MPICH.  Multiple
-                 process managers may be specified as long as they all
-                 use the same pmi interface by separating them with
-                 colons.  The mpiexec for the first named process
-                 manager will be installed.  Example:
-                 --with-pm=gforker:mpd:remshell builds the three
-                 process managers gforker, mpd, and remshell; only the
-                 mpiexec from gforker is installed into the bin
-                 directory.]
+[--with-pm=name - Specify the process manager for MPICH.  "no" or "none" are
+                  valid values.  Multiple process managers may be specified as
+                  long as they all use the same pmi interface by separating them
+                  with colons.  The mpiexec for the first named process manager
+                  will be installed.  Example: "--with-pm=gforker:mpd:remshell"
+                  builds the three process managers gforker, mpd, and remshell;
+                  only the mpiexec from gforker is installed into the bin
+                  directory.]
     ,,with_pm=default)
 dnl
 AC_ARG_WITH(logging,
@@ -1367,6 +1366,10 @@ fi
 AC_SUBST(device_name)
 #
 # with-pm
+if test "$with_pm" = "none" ; then
+    # add "none" as synonym for "no" to agree with older erroneous docs
+    with_pm="no"
+fi
 if test "$MPID_NO_PM" = yes ; then
     if test "$with_pm" != "default" -a "$with_pm" != no ; then
         AC_MSG_ERROR([The PM chosen ($with_pm) is is not valid for the selected device ($with_device)])
