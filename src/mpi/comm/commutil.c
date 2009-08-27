@@ -436,9 +436,11 @@ static void MPIR_Init_contextid(void)
     context_mask[0] = 0xFFFFFFF8; 
     initialize_context_mask = 0;
 }
+
 /* Return the context id corresponding to the first set bit in the mask.
-   Return 0 if no bit found */
-static int MPIR_Find_context_bit( uint32_t local_mask[] ) {
+   Return 0 if no bit found.  This function does _not_ alter local_mask. */
+static int MPIR_Locate_context_bit(uint32_t local_mask[])
+{
     int i, j, context_id = 0;
     for (i=0; i<MPIR_MAX_CONTEXT_MASK; i++) {
 	if (local_mask[i]) {
@@ -472,19 +474,53 @@ static int MPIR_Find_context_bit( uint32_t local_mask[] ) {
 		j += 2;
 		val = nval;
 	    }
-	    if (val & 0xAAAAAAAA) { 
+	    if (val & 0xAAAAAAAA) {
 		j += 1;
 	    }
-	    context_mask[i] &= ~(1<<j);
-	    context_id = (32 * i + j) << MPID_CONTEXT_PREFIX_SHIFT;
-	    MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST,
-                    "allocating contextid = %d, (mask[%d], bit %d)", 
-		    context_id, i, j ) ); 
+	    context_id = (MPIR_CONTEXT_INT_BITS * i + j) << MPID_CONTEXT_PREFIX_SHIFT;
 	    return context_id;
 	}
     }
     return 0;
 }
+
+/* Allocates a context ID from the given mask by clearing the bit
+ * corresponding to the the given id.  Returns 0 on failure, id on
+ * success. */
+static int MPIR_Allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
+{
+    int raw_prefix, idx, bitpos;
+    raw_prefix = MPID_CONTEXT_READ_FIELD(PREFIX,id);
+    idx    = raw_prefix / MPIR_CONTEXT_INT_BITS;
+    bitpos = raw_prefix % MPIR_CONTEXT_INT_BITS;
+
+    /* the bit should not already be cleared (allocated) */
+    MPIU_Assert(mask[idx] & (1<<bitpos));
+
+    /* clear the bit */
+    mask[idx] &= ~(1<<bitpos);
+
+    MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST,
+            "allocating contextid = %d, (mask=%p, mask[%d], bit %d)",
+            id, mask, idx, bitpos));
+    return id;
+}
+
+/* Allocates the first available context ID from context_mask based on the available
+ * bits given in local_mask.  This function will clear the corresponding bit in
+ * context_mask if allocation was successful.
+ *
+ * Returns 0 on failure.  Returns the allocated context ID on success. */
+static int MPIR_Find_and_allocate_context_id(uint32_t local_mask[])
+{
+    MPIR_Context_id_t context_id;
+    context_id = MPIR_Locate_context_bit(local_mask);
+    if (context_id != 0) {
+        context_id = MPIR_Allocate_context_bit(context_mask, context_id);
+    }
+    return context_id;
+}
+
 #ifndef MPICH_IS_THREADED
 /* Unthreaded (only one MPI call active at any time) */
 
@@ -515,10 +551,10 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
     mpi_errno = NMPI_Allreduce( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK, 
 				MPI_INT, MPI_BAND, comm_ptr->handle );
     MPIR_Nest_decr();
-    /* FIXME: We should return the error code upward */
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    *context_id = MPIR_Find_context_bit( local_mask );
+    *context_id = MPIR_Find_and_allocate_context_id(local_mask);
+    MPIU_ERR_CHKANDJUMP(!(*context_id), mpi_errno, MPIR_ERR_RECOVERABLE, "**toomanycomm");
 
 fn_exit:
     MPIU_DBG_MSG_S(COMM,VERBOSE,"Context mask = %s",MPIR_ContextMaskToStr());
@@ -616,8 +652,8 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	if (own_mask) {
 	    /* There is a chance that we've found a context id */
 	    MPIU_THREAD_CS_ENTER(CONTEXTID,);
-	    /* Find_context_bit updates the context array if it finds a match */
-	    *context_id = MPIR_Find_context_bit( local_mask );
+	    /* Find_and_allocate_context_id updates the context_mask if it finds a match */
+	    *context_id = MPIR_Find_and_allocate_context_id(local_mask);
 	    MPIU_DBG_MSG_D( COMM, VERBOSE, 
 			    "Context id is now %hd", *context_id );
 	    if (*context_id > 0) {
@@ -668,7 +704,7 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	    int hasNoId, totalHasNoId;
 	    /* We don't need to lock on this because we're just looking for
 	       zero or nonzero */
-	    hasNoId = MPIR_Find_context_bit( context_mask ) == 0;
+	    hasNoId = MPIR_Locate_context_bit(context_mask) == 0;
 	    mpi_errno = NMPI_Allreduce( &hasNoId, &totalHasNoId, 1, MPI_INT, 
 			    MPI_MAX, comm_ptr->handle );
 	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -677,10 +713,11 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 		if (own_mask) {
 		    mask_in_use = 0;
 		}
-		MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm" );
+		MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm");
 	    }
 	    else { /* reinitialize testCount */
 		testCount = 10;
+                MPIU_DBG_MSG_D(COMM, VERBOSE, "reinitialized testCount to %d", testCount);
 	    }
 	}
     }

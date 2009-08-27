@@ -8,6 +8,7 @@ smvar_do_sharedlibs = 0
 EXTRA_PROGRAMS       = 
 
 ctxdup_SOURCES  = ctxdup.c
+dup_leak_test_SOURCES  = dup_leak_test.c
 
 ../../util/mtest.o:
 	(cd ../../util && $(MAKE) mtest.o)
