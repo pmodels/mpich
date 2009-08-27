@@ -1014,7 +1014,7 @@ int MTestGetIntracommGeneral( MPI_Comm *comm, int min_size, int allowSmaller )
 	    if (merr) MTestPrintError( merr );
 	    merr = MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 	    if (merr) MTestPrintError( merr );
-	    merr = MPI_Comm_split( MPI_COMM_WORLD, (rank < size/2), 
+	    merr = MPI_Comm_split( MPI_COMM_WORLD, ((rank < size/2) ? 1 : MPI_UNDEFINED),
 				   size-rank, comm );
 	    if (merr) MTestPrintError( merr );
 	    intraCommName = "Rank reverse of half of MPI_COMM_WORLD";
@@ -1055,8 +1055,6 @@ int MTestGetIntracommGeneral( MPI_Comm *comm, int min_size, int allowSmaller )
 	    else {
 		/* Act like default */
 		*comm = MPI_COMM_NULL;
-		isBasic = 1;
-		intraCommName = "MPI_COMM_NULL";
 		intraCommIdx = -1;
 	    }
 	}
@@ -1065,8 +1063,6 @@ int MTestGetIntracommGeneral( MPI_Comm *comm, int min_size, int allowSmaller )
 	    /* Other ideas: dup of self, cart comm, graph comm */
 	default:
 	    *comm = MPI_COMM_NULL;
-	    isBasic = 1;
-	    intraCommName = "MPI_COMM_NULL";
 	    intraCommIdx = -1;
 	    break;
 	}
@@ -1074,19 +1070,22 @@ int MTestGetIntracommGeneral( MPI_Comm *comm, int min_size, int allowSmaller )
 	if (*comm != MPI_COMM_NULL) {
 	    merr = MPI_Comm_size( *comm, &size );
 	    if (merr) MTestPrintError( merr );
-	    if (size >= min_size) 
+	    if (size >= min_size)
 		done = 1;
-	    else {
-		/* Try again */
-		intraCommIdx++;
-	    }
 	}
         else {
+            intraCommName = "MPI_COMM_NULL";
+            isBasic = 1;
             done = 1;
         }
 
         /* we are only done if all processes are done */
         MPI_Allreduce(MPI_IN_PLACE, &done, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+
+        /* Advance the comm index whether we are done or not, otherwise we could
+         * spin forever trying to allocate a too-small communicator over and
+         * over again. */
+        intraCommIdx++;
 
         if (!done && !isBasic && *comm != MPI_COMM_NULL) {
             /* avoid leaking communicators */
@@ -1095,7 +1094,6 @@ int MTestGetIntracommGeneral( MPI_Comm *comm, int min_size, int allowSmaller )
         }
     }
 
-    intraCommIdx++;
     return intraCommIdx;
 }
 
