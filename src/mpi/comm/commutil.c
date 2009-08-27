@@ -424,6 +424,23 @@ static char *MPIR_ContextMaskToStr( void )
 }
 #endif
 
+#ifdef MPICH_DEBUG_HANDLEALLOC
+static int MPIU_CheckContextIDsOnFinalize(void *context_mask_ptr)
+{
+    int i;
+    uint32_t *mask = context_mask_ptr;
+    /* the predefined communicators should be freed by this point, so we don't
+     * need to special case bits 0,1, and 2 */
+    for (i = 0; i < MPIR_MAX_CONTEXT_MASK; ++i) {
+        if (~mask[i]) {
+            /* some bits were still cleared */
+            printf("leaked context IDs detected: mask=%p mask[%d]=%#x\n", mask, i, (int)mask[i]);
+        }
+    }
+    return MPI_SUCCESS;
+}
+#endif
+
 static void MPIR_Init_contextid(void)
 {
     int i;
@@ -435,6 +452,13 @@ static void MPIR_Init_contextid(void)
        and the internal-only copy of comm_world) */
     context_mask[0] = 0xFFFFFFF8; 
     initialize_context_mask = 0;
+
+#ifdef MPICH_DEBUG_HANDLEALLOC
+    /* check for context ID leaks in MPI_Finalize.  Use (_PRIO-1) to make sure
+     * that we run after MPID_Finalize. */
+    MPIR_Add_finalize(MPIU_CheckContextIDsOnFinalize, context_mask,
+                      MPIR_FINALIZE_CALLBACK_PRIO - 1);
+#endif
 }
 
 /* Return the context id corresponding to the first set bit in the mask.
