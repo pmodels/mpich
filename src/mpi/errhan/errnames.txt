@@ -938,6 +938,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_allreduce %p %p %d %D %O %C:MPI_Allreduce(sbuf=%p, rbuf=%p, count=%d, %D, %O, %C) failed
 **mpi_reduce_scatter:MPI_Reduce_scatter failed
 **mpi_reduce_scatter %p %p %p %D %O %C:MPI_Reduce_scatter(sbuf=%p, rbuf=%p, rcnts=%p, %D, %O, %C) failed
+**mpi_reduce_scatter_block:MPI_Reduce_scatter_block failed
+**mpi_reduce_scatter_block %p %p %d %D %O %C:MPI_Reduce_scatter_block(sbuf=%p, rbuf=%p, recvcount=%d, %D, %O, %C) failed
 **mpi_reduce_local:MPI_Reduce_local failed
 **mpi_reduce_local %p %p %d %D %O:MPI_Reduce_local(inbuf=%p, inoutbuf=%p, count=%d, %D, %O) failed
 **mpi_scan:MPI_Scan failed

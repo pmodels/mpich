@@ -73,6 +73,7 @@ comm-Gather void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype , )
 comm-Gatherv void (in:const , ,in:constref:Datatype , ,in:const ,in:const ,in:constref:Datatype , ) const
 comm-Reduce void (in:const , , ,in:constref:Datatype ,in:constref:Op , ) const
 comm-Reduce_scatter void (in:const , , ,in:constref:Datatype ,in:constref:Op, ) const
+comm-Reduce_scatter_block void (in:const , , ,in:constref:Datatype ,in:constref:Op, ) const
 comm-Scatter void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype , ) const
 comm-Scatterv void (in:const ,in:const ,in:const ,in:constref:Datatype , , ,in:constref:Datatype , ) const
 # FIXME: this entry confuses buildiface, which groups it with
