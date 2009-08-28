@@ -173,6 +173,110 @@ int MPIC_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     return mpi_errno;
 }
 
+/* NOTE: for regular collectives (as opposed to irregular collectives) calling
+ * this function repeatedly will almost always be slower than performing the
+ * equivalent inline because of the overhead of the repeated malloc/free */
+#undef FUNCNAME
+#define FUNCNAME MPIC_Sendrecv_replace
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
+                          int dest, int sendtag,
+                          int source, int recvtag,
+                          MPI_Comm comm, MPI_Status *status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Context_id_t context_id_offset;
+    MPID_Request *sreq;
+    MPID_Request *rreq;
+    void *tmpbuf = NULL;
+    int tmpbuf_size = 0;
+    int tmpbuf_count = 0;
+    MPID_Comm *comm_ptr;
+    MPIU_THREADPRIV_DECL;
+    MPIU_CHKLMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_MPIC_SENDRECV_REPLACE);
+
+    MPIDI_PT2PT_FUNC_ENTER_BOTH(MPID_STATE_MPIC_SENDRECV_REPLACE);
+
+    MPIU_THREADPRIV_GET;
+
+    MPID_Comm_get_ptr( comm, comm_ptr );
+    context_id_offset = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
+        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+
+    if (count > 0 && dest != MPI_PROC_NULL)
+    {
+        MPIR_Nest_incr();
+        mpi_errno = NMPI_Pack_size(count, datatype, comm, &tmpbuf_size);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        MPIU_CHKLMEM_MALLOC(tmpbuf, void *, tmpbuf_size, mpi_errno, "temporary send buffer");
+
+        mpi_errno = NMPI_Pack(buf, count, datatype, tmpbuf, tmpbuf_size, &tmpbuf_count, comm);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIR_Nest_decr();
+    }
+
+    mpi_errno = MPID_Irecv(buf, count, datatype, source, recvtag,
+                           comm_ptr, context_id_offset, &rreq);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPID_Isend(tmpbuf, tmpbuf_count, MPI_PACKED, dest,
+                           sendtag, comm_ptr, context_id_offset,
+                           &sreq);
+    if (mpi_errno != MPI_SUCCESS)
+    {
+        /* --BEGIN ERROR HANDLING-- */
+        /* FIXME: should we cancel the pending (possibly completed) receive request or wait for it to complete? */
+        MPID_Request_release(rreq);
+        MPIU_ERR_POP(mpi_errno);
+        /* --END ERROR HANDLING-- */
+    }
+
+    if (*sreq->cc_ptr != 0 || *rreq->cc_ptr != 0)
+    {
+        MPID_Progress_state progress_state;
+
+        MPID_Progress_start(&progress_state);
+        while (*sreq->cc_ptr != 0 || *rreq->cc_ptr != 0)
+        {
+            mpi_errno = MPID_Progress_wait(&progress_state);
+            if (mpi_errno != MPI_SUCCESS)
+            {
+                /* --BEGIN ERROR HANDLING-- */
+                MPID_Progress_end(&progress_state);
+                MPIU_ERR_POP(mpi_errno);
+                /* --END ERROR HANDLING-- */
+            }
+        }
+        MPID_Progress_end(&progress_state);
+    }
+
+    if (status != MPI_STATUS_IGNORE) {
+        *status = rreq->status;
+    }
+
+    if (mpi_errno == MPI_SUCCESS) {
+        mpi_errno = rreq->status.MPI_ERROR;
+
+        if (mpi_errno == MPI_SUCCESS) {
+            mpi_errno = sreq->status.MPI_ERROR;
+        }
+    }
+
+    MPID_Request_release(sreq);
+    MPID_Request_release(rreq);
+
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    MPIDI_PT2PT_FUNC_EXIT_BOTH(MPID_STATE_MPIC_SENDRECV_REPLACE);
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Localcopy

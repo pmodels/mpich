@@ -81,13 +81,51 @@ int main( int argc, char **argv )
 	  }
 	}
       }
-      
+
       free( sdispls );
+      free( sendcounts );
+      free( sbuf );
+
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+      /* check MPI_IN_PLACE, added in MPI-2.2 */
+      free( rbuf );
+      rbuf = (int *)malloc( size * (2 * size) * sizeof(int) );
+      if (!rbuf) {
+        fprintf( stderr, "Could not reallocate rbuf!\n" );
+        MPI_Abort( comm, 1 );
+      }
+
+      /* Load up the buffers */
+      for (i = 0; i < size; i++) {
+        recvcounts[i] = i + rank;
+        rdispls[i]    = i * (2 * size);
+      }
+      memset(rbuf, -1, size * (2 * size) * sizeof(int));
+      for (i=0; i < size; i++) {
+        p = rbuf + rdispls[i];
+        for (j = 0; j < recvcounts[i]; ++j) {
+          p[j] = 100 * rank + 10 * i + j;
+        }
+      }
+      MPI_Alltoallv( MPI_IN_PLACE, NULL, NULL, MPI_INT,
+                     rbuf, recvcounts, rdispls, MPI_INT, comm );
+      /* Check rbuf */
+      for (i=0; i<size; i++) {
+        p = rbuf + rdispls[i];
+        for (j=0; j<recvcounts[i]; j++) {
+          int expected = 100 * i + 10 * rank + j;
+          if (p[j] != expected) {
+            fprintf(stderr, "[%d] got %d expected %d for block=%d, element=%dth\n",
+                    rank, p[j], expected, i, j);
+            ++err;
+          }
+        }
+      }
+#endif
+
       free( rdispls );
       free( recvcounts );
-      free( sendcounts );
       free( rbuf );
-      free( sbuf );
       MTestFreeComm( &comm );
     }
 

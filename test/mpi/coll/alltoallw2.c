@@ -89,13 +89,55 @@ int main( int argc, char **argv )
       }
 
       free(sendtypes);
-      free(recvtypes);
-      free( sdispls );
-      free( rdispls );
-      free( recvcounts );
-      free( sendcounts );
+      free(sdispls);
+      free(sendcounts);
+      free(sbuf);
+
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+      /* check MPI_IN_PLACE, added in MPI-2.2 */
       free( rbuf );
-      free( sbuf );
+      rbuf = (int *)malloc( size * (2 * size) * sizeof(int) );
+      if (!rbuf) {
+        fprintf( stderr, "Could not reallocate rbuf!\n" );
+        MPI_Abort( comm, 1 );
+      }
+
+      /* Load up the buffers */
+      for (i = 0; i < size; i++) {
+        /* alltoallw displs are in bytes, not in type extents */
+        rdispls[i]    = i * (2 * size) * sizeof(int);
+        recvtypes[i]  = MPI_INT;
+        recvcounts[i] = i + rank;
+      }
+      memset(rbuf, -1, size * (2 * size) * sizeof(int));
+      for (i=0; i < size; i++) {
+        p = rbuf + (rdispls[i] / sizeof(int));
+        for (j = 0; j < recvcounts[i]; ++j) {
+          p[j] = 100 * rank + 10 * i + j;
+        }
+      }
+
+      MPI_Alltoallw( MPI_IN_PLACE, NULL, NULL, NULL,
+                     rbuf, recvcounts, rdispls, recvtypes, comm );
+
+      /* Check rbuf */
+      for (i=0; i<size; i++) {
+        p = rbuf + (rdispls[i] / sizeof(int));
+        for (j=0; j<recvcounts[i]; j++) {
+          int expected = 100 * i + 10 * rank + j;
+          if (p[j] != expected) {
+            fprintf(stderr, "[%d] got %d expected %d for block=%d, element=%dth\n",
+                    rank, p[j], expected, i, j);
+            ++err;
+          }
+        }
+      }
+#endif
+
+      free(recvtypes);
+      free(rdispls);
+      free(recvcounts);
+      free(rbuf);
       MTestFreeComm( &comm );
     }
 

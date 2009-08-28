@@ -60,7 +60,7 @@ int main( int argc, char *argv[] )
 		    *p++ = j * size + rank + i;
 		}
 	    }
-	    
+
 	    MPI_Alltoall( sendbuf, sendcount, sendtype,
 			  recvbuf, recvcount, recvtype, comm );
 
@@ -70,8 +70,8 @@ int main( int argc, char *argv[] )
 		    if (*p != rank * size + j + i) {
 			errs++;
 			if (errs < 10) {
-			    fprintf( stderr, "Error with communicator %s and count %d\n", 
-				     MTestGetIntracommName(), count );
+			    fprintf( stderr, "Error with communicator %s and size=%d count=%d\n",
+				     MTestGetIntracommName(), size, count );
 			    fprintf( stderr, "recvbuf[%d,%d] = %d, should %d\n",
 				     j,i, *p, rank * size + j + i );
 			}
@@ -79,6 +79,34 @@ int main( int argc, char *argv[] )
 		    p++;
 		}
 	    }
+
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+            /* check MPI_IN_PLACE, added in MPI-2.2 */
+            p = recvbuf;
+            for (j=0; j<size; j++) {
+                for (i=0; i<count; i++) {
+                    *p++ = j * size + rank + i;
+                }
+            }
+            MPI_Alltoall( MPI_IN_PLACE, 0/*ignored*/, MPI_INT/*ignored*/,
+                          recvbuf, recvcount, recvtype, comm );
+            p = recvbuf;
+            for (j=0; j<size; j++) {
+                for (i=0; i<count; i++) {
+                    if (*p != rank * size + j + i) {
+                        errs++;
+                        if (errs < 10) {
+                            fprintf( stderr, "Error (MPI_IN_PLACE) with communicator %s and size=%d count=%d\n",
+                                     MTestGetIntracommName(), size, count );
+                            fprintf(stderr, "recvbuf[%d,%d] = %d, should be %d\n",
+                                    j,i, *p, rank * size + j + i );
+                        }
+                    }
+                    p++;
+                }
+            }
+#endif
+
 	    free( recvbuf );
 	    free( sendbuf );
 	}

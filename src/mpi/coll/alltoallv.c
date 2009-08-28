@@ -40,6 +40,10 @@
    *** Modification: We post only a small number of isends and irecvs 
    at a time and wait on them as suggested by Tony Ladd. ***
 
+   For MPI_IN_PLACE we use a completely different algorithm.  We perform
+   pair-wise exchanges among all processes using sendrecv_replace.  This
+   conserves memory usage at the expense of time performance.
+
    Possible improvements: 
 
    End Algorithm: MPI_Alltoallv
@@ -59,10 +63,11 @@ int MPIR_Alltoallv (
 	MPID_Comm *comm_ptr )
 {
     static const char FCNAME[] = "MPIR_Alltoallv";
-    int        comm_size, i;
+    int        comm_size, i, j;
     MPI_Aint   send_extent, recv_extent;
     int        mpi_errno = MPI_SUCCESS;
     MPI_Status *starray;
+    MPI_Status status;
     MPI_Request *reqarray;
     int dst, rank, req_cnt;
     MPI_Comm comm;
@@ -81,56 +86,92 @@ int MPIR_Alltoallv (
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
-    bblock = MPIR_ALLTOALL_THROTTLE;
-    if (bblock == 0) bblock = comm_size;
-
-    MPIU_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray");
-    MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request*, 2*bblock*sizeof(MPI_Request), mpi_errno, "reqarray");
-
-    /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
-    for (ii=0; ii<comm_size; ii+=bblock) {
-        req_cnt = 0;
-        ss = comm_size-ii < bblock ? comm_size-ii : bblock;
-
-        /* do the communication -- post ss sends and receives: */
-        for ( i=0; i<ss; i++ ) { 
-            dst = (rank+i+ii) % comm_size;
-            if (recvcnts[dst]) {
-                MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                                 rdispls[dst]*recv_extent);
-                mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst]*recv_extent, 
-                                       recvcnts[dst], recvtype, dst,
-                                       MPIR_ALLTOALLV_TAG, comm,
-                                       &reqarray[req_cnt]);
-                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }  
-                req_cnt++;
+    if (sendbuf == MPI_IN_PLACE) {
+        /* We use pair-wise sendrecv_replace in order to conserve memory usage,
+         * which is keeping with the spirit of the MPI-2.2 Standard.  But
+         * because of this approach all processes must agree on the global
+         * schedule of sendrecv_replace operations to avoid deadlock.
+         *
+         * Note that this is not an especially efficient algorithm in terms of
+         * time and there will be multiple repeated malloc/free's rather than
+         * maintaining a single buffer across the whole loop.  Something like
+         * MADRE is probably the best solution for the MPI_IN_PLACE scenario. */
+        for (i = 0; i < comm_size; ++i) {
+            /* start inner loop at i to avoid re-exchanging data */
+            for (j = i; j < comm_size; ++j) {
+                if (rank == i) {
+                    /* also covers the (rank == i && rank == j) case */
+                    mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[j]*recv_extent),
+                                                      recvcnts[j], recvtype,
+                                                      j, MPIR_ALLTOALL_TAG,
+                                                      j, MPIR_ALLTOALL_TAG,
+                                                      comm, &status);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                }
+                else if (rank == j) {
+                    /* same as above with i/j args reversed */
+                    mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[i]*recv_extent),
+                                                      recvcnts[i], recvtype,
+                                                      i, MPIR_ALLTOALL_TAG,
+                                                      i, MPIR_ALLTOALL_TAG,
+                                                      comm, &status);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                }
             }
         }
+    }
+    else {
+        bblock = MPIR_ALLTOALL_THROTTLE;
+        if (bblock == 0) bblock = comm_size;
 
-        for ( i=0; i<ss; i++ ) { 
-            dst = (rank-i-ii+comm_size) % comm_size;
-            if (sendcnts[dst]) {
-                MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                                 sdispls[dst]*send_extent);
-                mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst]*send_extent, 
-                                       sendcnts[dst], sendtype, dst,
-                                       MPIR_ALLTOALLV_TAG, comm,
-                                       &reqarray[req_cnt]);
-                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }  
-                req_cnt++;
+        MPIU_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray");
+        MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request*, 2*bblock*sizeof(MPI_Request), mpi_errno, "reqarray");
+
+        /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
+        for (ii=0; ii<comm_size; ii+=bblock) {
+            req_cnt = 0;
+            ss = comm_size-ii < bblock ? comm_size-ii : bblock;
+
+            /* do the communication -- post ss sends and receives: */
+            for ( i=0; i<ss; i++ ) { 
+                dst = (rank+i+ii) % comm_size;
+                if (recvcnts[dst]) {
+                    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+                                                     rdispls[dst]*recv_extent);
+                    mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst]*recv_extent, 
+                                           recvcnts[dst], recvtype, dst,
+                                           MPIR_ALLTOALLV_TAG, comm,
+                                           &reqarray[req_cnt]);
+                    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }  
+                    req_cnt++;
+                }
             }
-        }
 
-        mpi_errno = NMPI_Waitall(req_cnt, reqarray, starray);
-
-        /* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno == MPI_ERR_IN_STATUS) {
-            for (i=0; i<req_cnt; i++) {
-                if (starray[i].MPI_ERROR != MPI_SUCCESS) 
-                    mpi_errno = starray[i].MPI_ERROR;
+            for ( i=0; i<ss; i++ ) { 
+                dst = (rank-i-ii+comm_size) % comm_size;
+                if (sendcnts[dst]) {
+                    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+                                                     sdispls[dst]*send_extent);
+                    mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst]*send_extent, 
+                                           sendcnts[dst], sendtype, dst,
+                                           MPIR_ALLTOALLV_TAG, comm,
+                                           &reqarray[req_cnt]);
+                    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }  
+                    req_cnt++;
+                }
             }
+
+            mpi_errno = NMPI_Waitall(req_cnt, reqarray, starray);
+
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno == MPI_ERR_IN_STATUS) {
+                for (i=0; i<req_cnt; i++) {
+                    if (starray[i].MPI_ERROR != MPI_SUCCESS) 
+                        mpi_errno = starray[i].MPI_ERROR;
+                }
+            }
+            /* --END ERROR HANDLING-- */
         }
-        /* --END ERROR HANDLING-- */
     }
 
 fn_exit:    
@@ -314,22 +355,29 @@ int MPI_Alltoallv(void *sendbuf, int *sendcnts, int *sdispls,
         {
 	    MPID_Datatype *sendtype_ptr=NULL, *recvtype_ptr=NULL;
             int i, comm_size;
-	    
+            int check_send = (comm_ptr->comm_kind == MPID_INTRACOMM && sendbuf != MPI_IN_PLACE);
+
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            if (comm_ptr->comm_kind == MPID_INTRACOMM) 
+            if (comm_ptr->comm_kind == MPID_INTRACOMM)
                 comm_size = comm_ptr->local_size;
             else
                 comm_size = comm_ptr->remote_size;
 
+            if (comm_ptr->comm_kind == MPID_INTERCOMM && sendbuf == MPI_IN_PLACE) {
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPIR_ERR_RECOVERABLE, "**sendbuf_inplace");
+            }
+
             for (i=0; i<comm_size; i++) {
-                MPIR_ERRTEST_COUNT(sendcnts[i], mpi_errno);
+                if (check_send) {
+                    MPIR_ERRTEST_COUNT(sendcnts[i], mpi_errno);
+                    MPIR_ERRTEST_DATATYPE(sendtype, "sendtype", mpi_errno);
+                }
                 MPIR_ERRTEST_COUNT(recvcnts[i], mpi_errno);
-                MPIR_ERRTEST_DATATYPE(sendtype, "sendtype", mpi_errno);
                 MPIR_ERRTEST_DATATYPE(recvtype, "recvtype", mpi_errno);
-	    }
-            if (HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
+            }
+            if (check_send && HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype_get_ptr(sendtype, sendtype_ptr);
                 MPID_Datatype_valid_ptr( sendtype_ptr, mpi_errno );
                 MPID_Datatype_committed_ptr( sendtype_ptr, mpi_errno );
@@ -340,12 +388,9 @@ int MPI_Alltoallv(void *sendbuf, int *sendcnts, int *sdispls,
                 MPID_Datatype_committed_ptr( recvtype_ptr, mpi_errno );
             }
 
-            
-            for (i=0; i<comm_size; i++) {
+            for (i=0; i<comm_size && check_send; i++) {
                 if (sendcnts[i] > 0) {
-                    MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, sendcnts[i], mpi_errno);
-                    MPIR_ERRTEST_USERBUFFER(sendbuf,sendcnts[i],sendtype,mpi_errno); 
-                    break;
+                    MPIR_ERRTEST_USERBUFFER(sendbuf,sendcnts[i],sendtype,mpi_errno);
                 }
             }
             for (i=0; i<comm_size; i++) {

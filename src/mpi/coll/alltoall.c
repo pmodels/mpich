@@ -96,23 +96,57 @@ int MPIR_Alltoall(
     int last_recv_cnt, mask, tmp_mask, tree_root, nprocs_completed;
 #endif
 
-    if (sendcount == 0) return MPI_SUCCESS;
-    
+    if (recvcount == 0) return MPI_SUCCESS;
+
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
-    
+
     /* Get extent of send and recv types */
     MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPID_Datatype_get_extent_macro(sendtype, sendtype_extent);
 
     MPID_Datatype_get_size_macro(sendtype, sendtype_size);
     nbytes = sendtype_size * sendcount;
-    
+
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-    
-    if ((nbytes <= MPIR_ALLTOALL_SHORT_MSG) && (comm_size >= 8)) {
+
+    if (sendbuf == MPI_IN_PLACE) {
+        /* We use pair-wise sendrecv_replace in order to conserve memory usage,
+         * which is keeping with the spirit of the MPI-2.2 Standard.  But
+         * because of this approach all processes must agree on the global
+         * schedule of sendrecv_replace operations to avoid deadlock.
+         *
+         * Note that this is not an especially efficient algorithm in terms of
+         * time and there will be multiple repeated malloc/free's rather than
+         * maintaining a single buffer across the whole loop.  Something like
+         * MADRE is probably the best solution for the MPI_IN_PLACE scenario. */
+        for (i = 0; i < comm_size; ++i) {
+            /* start inner loop at i to avoid re-exchanging data */
+            for (j = i; j < comm_size; ++j) {
+                if (rank == i) {
+                    /* also covers the (rank == i && rank == j) case */
+                    mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + j*recvcount*recvtype_extent),
+                                                      recvcount, recvtype,
+                                                      j, MPIR_ALLTOALL_TAG,
+                                                      j, MPIR_ALLTOALL_TAG,
+                                                      comm, &status);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                }
+                else if (rank == j) {
+                    /* same as above with i/j args reversed */
+                    mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + i*recvcount*recvtype_extent),
+                                                      recvcount, recvtype,
+                                                      i, MPIR_ALLTOALL_TAG,
+                                                      i, MPIR_ALLTOALL_TAG,
+                                                      comm, &status);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                }
+            }
+        }
+    }
+    else if ((nbytes <= MPIR_ALLTOALL_SHORT_MSG) && (comm_size >= 8)) {
 
         /* use the indexing algorithm by Jehoshua Bruck et al,
          * IEEE TPDS, Nov. 97 */ 
@@ -544,7 +578,7 @@ int MPIR_Alltoall_inter(
     
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-    
+
     /* Do the pairwise exchanges */
     max_size = MPIR_MAX(local_size, remote_size);
     MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
@@ -669,8 +703,10 @@ int MPI_Alltoall(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 MPID_Datatype_valid_ptr( recvtype_ptr, mpi_errno );
                 MPID_Datatype_committed_ptr( recvtype_ptr, mpi_errno );
             }
- 
-            MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, sendcount, mpi_errno);
+
+            if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+                MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, sendcount, mpi_errno);
+            }
             MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, recvcount, mpi_errno);
             MPIR_ERRTEST_USERBUFFER(sendbuf,sendcount,sendtype,mpi_errno);
 	    MPIR_ERRTEST_USERBUFFER(recvbuf,recvcount,recvtype,mpi_errno);
