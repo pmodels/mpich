@@ -317,7 +317,7 @@ if (!(pointer_)) { \
 }}
 #else
 #define MPIU_CHKLMEM_DECL(n_) \
- void *(mpiu_chklmem_stk_[n_]);\
+ void *(mpiu_chklmem_stk_[n_]) = {0};\
  int mpiu_chklmem_stk_sp_=0;\
  MPIU_AssertDeclValue(const int mpiu_chklmem_stk_sz_,n_)
 
