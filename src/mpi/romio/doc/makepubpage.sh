@@ -17,7 +17,7 @@ bibtex2html -t "Papers using ROMIO" \
 	-r -d -both pubs.bib
 
 if [ $? -eq 0 ] ; then
-	"scp pubs* ${WEB_HOST}:${WEB_DIR}"
+	scp pubs* ${WEB_HOST}:${WEB_DIR}
 else
-	"error running bibtex2html.  website not updated"
+	echo "error running bibtex2html.  website not updated"
 fi
