@@ -37,7 +37,7 @@ MPI_Reduce_scatter_block - Combines values and scatters the results
 Input Parameters:
 + sendbuf - starting address of send buffer (choice)
 . recvcount - element count per block (non-negative integer)
-. datatype - data type of elements of input buffer (handle)
+. datatype - datatype of elements of send and receive buffers (handle)
 . op - operation (handle)
 - comm - communicator (handle)
 
@@ -151,7 +151,7 @@ int MPI_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount,
     MPIU_CHKLMEM_MALLOC(tmp_buf, void *, true_extent * recvcount * comm_ptr->local_size, mpi_errno, "tmp_buf");
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
-    mpi_errno = NMPI_Reduce(sendbuf, tmp_buf,
+    mpi_errno = NMPI_Reduce((sendbuf == MPI_IN_PLACE ? recvbuf : sendbuf), tmp_buf,
                             (recvcount * comm_ptr->local_size), datatype, op,
                             0/*root*/, comm);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
