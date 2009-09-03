@@ -61,7 +61,9 @@ void MTest_Init_thread( int *argc, char ***argv, int required, int *provided )
 
     MPI_Initialized( &flag );
     if (!flag) {
-#if MPI_VERSION >= 2
+	/* Permit an MPI that claims only MPI 1 but includes the 
+	   MPI_Init_thread routine (e.g., IBM MPI) */
+#if MPI_VERSION >= 2 || defined(HAVE_MPI_INIT_THREAD)
 	MPI_Init_thread( argc, argv, required, provided );
 #else
 	MPI_Init( argc, argv );
@@ -100,6 +102,7 @@ void MTest_Init_thread( int *argc, char ***argv, int required, int *provided )
 void MTest_Init( int *argc, char ***argv )
 {
     int provided;
+    
     MTest_Init_thread( argc, argv, MPI_THREAD_SINGLE, &provided );
 }
 
