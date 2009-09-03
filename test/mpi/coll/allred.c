@@ -309,6 +309,11 @@ int main( int argc, char **argv )
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (size < 2) {
+	fprintf( stderr, "At least 2 processes required\n" );
+	MPI_Abort( MPI_COMM_WORLD, 1 );
+    }
     count = 10;
 
     test_types_set2(sum, 1);
