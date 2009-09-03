@@ -110,7 +110,10 @@ C as defined.  To test them, we simply call them here
          print *, " Flag was false after MPI_WIN_DUP_FN"
       else if (valout .ne. 7001) then
          errs = errs + 1
-         print *, " output attr value was not copied in MPI_WIN_DUP_FN" 
+         if (valout .eq. -1 ) then
+          print *, " output attr value was not copied in MPI_WIN_DUP_FN" 
+         endif
+         print *, " value was ", valout, " but expected 7001"
       else if (ierr .ne. MPI_SUCCESS) then
          errs = errs + 1
          print *, " MPI_WIN_DUP_FN did not return MPI_SUCCESS"

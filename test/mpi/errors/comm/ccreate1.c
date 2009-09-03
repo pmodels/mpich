@@ -102,9 +102,11 @@ int main( int argc, char *argv[] )
 	/* evencomm is the comm of even-ranked processed in comm world */
 	err = MPI_Comm_create( evencomm, godd, &newcomm );
 	MPI_Group_rank( godd, &mygrank );
-	if (err == MPI_SUCCESS && mygrank != MPI_UNDEFINED) {
-	    errs++;
-	    fprintf( stderr, "Did not detect group of odd ranks in even comm\n" );
+	if (err == MPI_SUCCESS) {
+	    if (mygrank != MPI_UNDEFINED) {
+		errs++;
+		fprintf( stderr, "Did not detect group of odd ranks in even comm\n" );
+	    }
 	    MPI_Comm_free( &newcomm );
 	}
     }
@@ -112,9 +114,11 @@ int main( int argc, char *argv[] )
 	/* printf( "low comm...\n" ); */
 	err = MPI_Comm_create( lowcomm, ghigh, &newcomm );
 	MPI_Group_rank( ghigh, &mygrank );
-	if (err == MPI_SUCCESS && mygrank != MPI_UNDEFINED) {
-	    errs++;
-	    fprintf( stderr, "Did not detect group of high ranks in low comm\n" );
+	if (err == MPI_SUCCESS) {
+	    if (mygrank != MPI_UNDEFINED) {
+		errs++;
+		fprintf( stderr, "Did not detect group of high ranks in low comm\n" );
+	    }
 	    MPI_Comm_free( &newcomm );
 	}
     }
