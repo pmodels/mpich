@@ -124,6 +124,7 @@ sub create_mpich2
     debug("===> Removing unnecessary files in the main package... ");
     chdir("${root}/mpich2-${version}");
     run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt autom4te.cache src/mpe2/src/slog2sdk/doc/jumpshot-4/tex");
+    run_cmd("find . -name autom4te.cache -exec rm -rf {} \;");
     debug("done\n");
 
     # Get docs
