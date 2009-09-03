@@ -23,6 +23,8 @@ int main( int argc, char *argv[] )
     int      errs = 0;
     int      buf[1];
     MPI_Request cRequest;
+    MPI_Status st;
+    int        tFlag;
 
     MTest_Init( &argc, &argv );
 
@@ -41,7 +43,15 @@ int main( int argc, char *argv[] )
 	}
     }
     MPI_Cancel( &cRequest );
-    MPI_Request_free( &cRequest );
+    MPI_Test( &cRequest, &tFlag, &st );
+    MPI_Test_cancelled( &st, &tFlag );
+    if (!tFlag) {
+	errs++;
+	printf( "Unable to cancel MPI_Irecv request\n" );
+    }
+    /* Using MPI_Request_free should be ok, but some MPI implementations
+       object to it imediately after the cancel and that isn't essential to
+       this test */
 
     MTest_Finalize( errs );
     MPI_Finalize();
