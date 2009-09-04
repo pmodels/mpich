@@ -671,7 +671,10 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
                 HYD_PMCD_pmi_proxy_params.stdin_buf_offset = 0;
                 HYD_PMCD_pmi_proxy_params.stdin_buf_count = 0;
 
-                stdin_fd = HYD_PMCD_pmi_proxy_params.upstream.in;
+                status = HYDU_sock_set_nonblock(HYD_PMCD_pmi_proxy_params.upstream.in);
+                HYDU_ERR_POP(status, "unable to set upstream stdin fd to nonblocking\n");
+
+                stdin_fd = HYD_PMCD_pmi_proxy_params.in;
                 status = HYD_DMX_register_fd(1, &stdin_fd, HYD_STDIN, NULL,
                                              HYD_PMCD_pmi_proxy_stdin_cb);
                 HYDU_ERR_POP(status, "unable to register fd\n");
