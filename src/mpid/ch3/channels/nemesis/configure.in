@@ -89,85 +89,12 @@ if test "$enable_fast" = "yes" ; then
     AC_DEFINE(ENABLE_NO_YIELD,1,[Define to remove yield()s in polling loops])
 fi
 
-# Check for gm options
-AC_ARG_WITH(gm, [--with-gm=path - specify path where gm include directory and lib directory can be found],
-if test "${with_gm}" != "yes" -a "${with_gm}" != "no" ; then
-    LDFLAGS="$LDFLAGS -L${with_gm}/lib64 -L${with_gm}/lib"
-    CPPFLAGS="$CPPFLAGS -I${with_gm}/include"
-fi,)
-AC_ARG_WITH(gm-include, [--with-gm-include=path - specify path to gm include directory],
-if test "${with_gm_include}" != "yes" -a "${with_gm_include}" != "no" ; then
-    CPPFLAGS="$CPPFLAGS -I${with_gm_include}"
-fi,)
-AC_ARG_WITH(gm-lib, [--with-gm-lib=path - specify path to gm lib directory],
-if test "${with_gm_lib}" != "yes" -a "${with_gm_lib}" != "no" ; then
-    LDFLAGS="$LDFLAGS -L${with_gm_lib}"
-fi,)
-
-# Check for ib options
-AC_ARG_WITH(ib, [--with-ib=path - specify path where InfiniBand include directory and lib directory can be found],
-if test "${with_ib}" != "yes" -a "${with_ib}" != "no" ; then
-    LDFLAGS="$LDFLAGS -L${with_ib}/lib64 -L${with_ib}/lib"
-    CPPFLAGS="$CPPFLAGS -I${with_ib}/include -I${with_ib}/include/infiniband"
-fi,)
-AC_ARG_WITH(ib-include, [--with-ib-include=path - specify path to InfiniBand include directory],
-if test "${with_ib_include}" != "yes" -a "${with_ib_include}" != "no" ; then
-    CPPFLAGS="$CPPFLAGS -I${with_ib_include}"
-fi,)
-AC_ARG_WITH(ib-lib, [--with-ib-lib=path - specify path to InfiniBand lib directory],
-if test "${with_ib_lib}" != "yes" -a "${with_ib_lib}" != "no" ; then
-    LDFLAGS="$LDFLAGS -L${with_ib_lib}"
-fi,)
-
-# Check for mx options
-AC_ARG_WITH(mx, [--with-mx=path - specify path where mx include directory and lib directory can be found],
-if test "${with_mx}" != "yes" -a "${with_mx}" != "no" ; then
-    LDFLAGS="$LDFLAGS -L${with_mx}/lib64 -L${with_mx}/lib"
-    CPPFLAGS="$CPPFLAGS -I${with_mx}/include"
-fi,)
-AC_ARG_WITH(mx-include, [--with-mx-include=path - specify path to mx include directory],
-if test "${with_mx_include}" != "yes" -a "${with_mx_include}" != "no" ; then
-    CPPFLAGS="$CPPFLAGS -I${with_mx_include}"
-fi,)
-AC_ARG_WITH(mx-lib, [--with-mx-lib=path - specify path to mx lib directory],
-if test "${with_mx_lib}" != "yes" -a "${with_mx_lib}" != "no" ; then
-    LDFLAGS="$LDFLAGS -L${with_mx_lib}"
-fi,)
-
-
-# Check for elan options
-AC_ARG_WITH(elan, [--with-elan=path - specify path where elan include directory and lib directory can be found],
-if test "${with_elan}" != "yes" -a "${with_elan}" != "no" ; then
-    LDFLAGS="$LDFLAGS -L${with_elan}/lib64 -L${with_elan}/lib"
-    CPPFLAGS="$CPPFLAGS -I${with_elan}/include"	
-fi,)
-AC_ARG_WITH(elan-include, [--with-elan-include=path - specify path to elan include directory],
-if test "${with_elan_include}" != "yes" -a "${with_elan_include}" != "no" ; then
-    CPPFLAGS="$CPPFLAGS -I${with_elan_include}"
-fi,)
-AC_ARG_WITH(elan-lib, [--with-elan-lib=path - specify path to elan lib directory],
-if test "${with_elan_lib}" != "yes" -a "${with_elan_lib}" != "no" ; then
-    LDFLAGS="$LDFLAGS -L${with_elan_lib}"
-fi,)
-AC_ARG_WITH(qsnet-include, [--with-qsnet-include=path - specify path to qsnet include directory],
-if test "${with_qsnet_include}" != "yes" -a "${with_qsnet_include}" != "no" ; then
-    CPPFLAGS="$CPPFLAGS -I${with_qsnet_include}"
-fi,)
-    
-# Check for psm options
-AC_ARG_WITH(psm, [--with-psm=path - specify path where psm include directory and lib directory can be found],
-if test "${with_psm}" != "yes" -a "${with_psm}" != "no" ; then
-    LDFLAGS="$LDFLAGS -L${with_psm}/lib64 -L${with_psm}/lib"
-    CPPFLAGS="$CPPFLAGS -I${with_psm}/include"
-fi,)
-AC_ARG_WITH(psm-include, [--with-psm-include=path - specify path to psm include directory],
-if test "${with_psm_include}" != "yes" -a "${with_psm_include}" != "no" ; then
-    CPPFLAGS="$CPPFLAGS -I${with_psm_include}"
-fi,)
-AC_ARG_WITH(psm-lib, [--with-psm-lib=path - specify path to psm lib directory],
-if test "${with_psm_lib}" != "yes" -a "${with_psm_lib}" != "no" ; then
-    LDFLAGS="$LDFLAGS -L${with_psm_lib}"
-fi,)
+# Check for gm, ib, mx, elan, psm options
+PAC_SET_HEADER_LIB_PATH(gm)
+PAC_SET_HEADER_LIB_PATH(ib)
+PAC_SET_HEADER_LIB_PATH(mx)
+PAC_SET_HEADER_LIB_PATH(elan)
+PAC_SET_HEADER_LIB_PATH(psm)
 
 #check for NewMadeleine options 
 AC_ARG_WITH(newmad, [--with-newmad=path - specify path where pm2 software can be found],
@@ -230,41 +157,29 @@ for net in $nemesis_networks ; do
 
     net_index=`expr $net_index + 1`
 
-    if test "${net}" = "gm" ; then 
-        AC_CHECK_HEADER([gm.h], , [
-            AC_MSG_ERROR(['gm.h not found.  Did you specify --with-gm= or --with-gm-include=?'])
-    	    ])
-        AC_CHECK_LIB(gm, gm_init, , [
-            AC_MSG_ERROR(['gm library not found.  Did you specify --with-gm= or --with-gm-lib=?'])
-    	    ])
+    if test "${net}" = "gm" ; then
+       PAC_CHECK_HEADER_LIB_FATAL(gm, gm.h, gm, gm_init)
+    elif test "${net}" = "ib" ; then 
+       PAC_CHECK_HEADER_LIB_FATAL(ib, verbs.h, ibverbs, ibv_open_device)
+    elif test "${net}" = "elan" ; then 
+       echo "=== You're about to use the experimental Nemesis/Elan network module." 
+       echo "=== This module has not been thoroughly tested and some performance issues remain."
+       PAC_CHECK_HEADER_LIB_FATAL(elan, elan/elan.h, elan, elan_baseInit)
+    elif test "${net}" = "psm" ; then 
+       PAC_CHECK_HEADER_LIB_FATAL(psm, psm.h, psm_infinipath, psm_init)
     fi
 
-    if test "${net}" = "ib" ; then 
-        AC_CHECK_HEADER([verbs.h], , [
-            AC_MSG_ERROR(['verbs.h not found.  Did you specify --with-ib= or --with-ib-include=?'])
-        ])
-        AC_CHECK_LIB(ibverbs, ibv_open_device, , [
-            AC_MSG_ERROR(['InfiniBand library not found.  Did you specify --with-ib= or --with-ib-lib=?'])
-        ])
-    fi;
-
     if test "${net}" = "mx" ; then
-        AC_CHECK_HEADER([myriexpress.h], , [
-            AC_MSG_ERROR(['myriexpress.h not found.  Did you specify --with-mx= or --with-mx-include=?'])
-        ])
-        AC_CHECK_HEADER([mx_extensions.h], , [
-            AC_MSG_ERROR(['mx_extensions.h not found. Are you running a recent version of MX (al least 1.2.1)?'])
-        ])
-        #mx_init is a macro, switch to mx_finalize to find the symbol                                                                   
-	AC_CHECK_LIB(myriexpress, mx_finalize, , [
-            AC_MSG_ERROR(['myriexpress library not found.  Did you specify --with-mx= or --with-mx-lib=?'])
+       PAC_CHECK_HEADER_LIB_FATAL(mx, myriexpress.h, myriexpress, mx_finalize)
+       AC_CHECK_HEADER([mx_extensions.h], , [
+       		AC_MSG_ERROR(['mx_extensions.h not found. Are you running a recent version of MX (at least 1.2.1)?'])
         ])
         AC_TRY_COMPILE([
         #include "myriexpress.h"
-        #include "mx_extensions.h"                                                                                          
+        #include "mx_extensions.h"
 	#if MX_API < 0x301             
 	#error You need at least MX 1.2.1 (MX_API >= 0x301)
-        #endif],                                                                                                                         
+        #endif],
         [int a=0;],
         mx_api_version=yes,
         mx_api_version=no)
@@ -291,26 +206,6 @@ for net in $nemesis_networks ; do
        fi	  	  
        AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions]) 
     fi; 
-
-    if test "${net}" == "elan" ; then
-    echo "=== You're about to use the experimental Nemesis/Elan network module." 
-    echo "=== This module has not been thoroughly tested and some performance issues remain."
-        AC_CHECK_HEADER([elan/elan.h], , [
-	    AC_MSG_ERROR(['elan.h not found.  Did you specify --with-elan= or --with-elan-include= or --with-qsnet-include=?'])
-        ])
-        AC_CHECK_LIB(elan, elan_baseInit, , [
-            AC_MSG_ERROR(['elan library not found.  Did you specify --with-elan= or --with-elan-lib= or --with-qsnet-include=?'])
-        ])
-    fi;
-
-    if test "${net}" = "psm" ; then
-        AC_CHECK_HEADER([psm.h], , [
-            AC_MSG_ERROR(['psm.h not found.  Did you specify --with-psm= or --with-psm-include=?'])
-    ])
-        AC_CHECK_LIB(psm_infinipath, psm_init, , [
-            AC_MSG_ERROR(['psm_infinipath library not found.  Did you specify --with-psm= or --with-psm-lib=?'])
-        ])
-    fi;
 
 done
 nemesis_nets_array_sz=$net_index
