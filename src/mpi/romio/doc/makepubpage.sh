@@ -12,8 +12,13 @@ WEB_HOST=login3.mcs.anl.gov
 WEB_DIR=/mcs/web/research/projects/romio
 
 bibtex2html -t "Papers using ROMIO" \
-	--header "Please help us keep this list up to date. Contact romio-maint@mcs.anl.gov for any corrections or additions.<p>" \
-	--footer "<p> <a href=papers-old.html>Older papers</a>" \
+	--header "Please help us keep this list up to date. Contact romio-maint@mcs.anl.gov for any corrections or additions.<p><h2>Recent publications</h2><p>" \
+	--footer "<p><h2>Other publications</h2><p>
+	<ul>
+	<li><a href='http://cucis.ece.northwestern.edu/publications/subject.html#Scalable I/O'>Northwestern University CUCIS group</a>
+	<li><a href='http://www.eng.auburn.edu/~wkyu/'>Weikuan Yu</a>
+	<li><a href='http://www.umcs.maine.edu/~dickens/pubs.html'>Phillip Dickens</a>
+	<li><a href=apers-old.html>Older ROMIO papers</a>" \
 	-r -d -both pubs.bib
 
 if [ $? -eq 0 ] ; then
