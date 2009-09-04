@@ -355,7 +355,6 @@ void HYD_PMCD_pmi_serv_signal_cb(int sig)
 ) {
         /* There's nothing we can do with the return value for now. */
         HYD_PMCD_pmi_serv_cleanup();
-        exit(-1);
     }
     else {
         if (sig == SIGUSR1) {
