@@ -484,7 +484,8 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
 
     HYDU_FUNC_ENTER();
 
-    if ((HYD_handle.launch_mode == HYD_LAUNCH_BOOT) || (HYD_handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
+    if ((HYD_handle.launch_mode == HYD_LAUNCH_BOOT) ||
+        (HYD_handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
         status = HYD_SUCCESS;
     }
     else {
@@ -532,6 +533,9 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
             HYDU_ERR_POP(status, "error waiting for event\n");
         } while (1);
     }
+
+    status = HYD_BSCI_wait_for_completion(HYD_handle.partition_list);
+    HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
