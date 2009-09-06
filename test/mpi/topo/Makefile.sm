@@ -15,6 +15,7 @@ topotest_SOURCES = topotest.c
 topodup_SOURCES = topodup.c
 graphcr_SOURCES = graphcr.c
 graphcr2_SOURCES = graphcr2.c
+distgraph1_SOURCES = distgraph1.c
 
 ../util/mtest.o: 
 	(cd ../util && make mtest.o)
