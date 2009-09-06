@@ -34,8 +34,8 @@ int main(int argc, char *argv[])
 {
     int errs = 0;
     int rank, i, j, k;
-    int indegree, outdegree;
-    int *sources, *sweights, *destinations, *dweights;
+    int indegree, outdegree, reorder;
+    int *sources, *sweights, *destinations, *dweights, *degrees;
     MPI_Comm comm;
 
     MTest_Init(&argc, &argv);
@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
     sweights = (int *) malloc(size * sizeof(int));
     destinations = (int *) malloc(size * sizeof(int));
     dweights = (int *) malloc(size * sizeof(int));
+    degrees = (int *) malloc(size * sizeof(int));
 
     for (i = 0; i < NUM_GRAPHS; i++) {
         create_graph_layout(i);
@@ -75,13 +76,49 @@ int main(int argc, char *argv[])
                 dweights[k++] = layout[rank][j];
             }
 
-        MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, indegree, sources, sweights,
-                                       outdegree, destinations, dweights, MPI_INFO_NULL,
-                                       (i % 2), &comm);
+        for (reorder = 0; reorder <= 1; reorder++) {
+            MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, indegree, sources, sweights,
+                                           outdegree, destinations, dweights, MPI_INFO_NULL,
+                                           reorder, &comm);
+            MPI_Barrier(comm);
+            MPI_Comm_free(&comm);
+        }
 
-        MPI_Barrier(comm);
+        /* MPI_Dist_graph_create() where each process specifies its
+         * outgoing edges */
+        sources[0] = rank;
+        k = 0;
+        for (j = 0; j < size; j++) {
+            if (layout[rank][j]) {
+                destinations[k] = j;
+                dweights[k++] = layout[rank][j];
+            }
+        }
+        degrees[0] = k;
+        for (reorder = 0; reorder <= 1; reorder++) {
+            MPI_Dist_graph_create(MPI_COMM_WORLD, 1, sources, degrees, destinations, dweights,
+                                  MPI_INFO_NULL, reorder, &comm);
+            MPI_Barrier(comm);
+            MPI_Comm_free(&comm);
+        }
 
-        MPI_Comm_free(&comm);
+        /* MPI_Dist_graph_create() where each process specifies its
+         * incoming edges */
+        k = 0;
+        for (j = 0; j < size; j++) {
+            if (layout[j][rank]) {
+                sources[k] = j;
+                sweights[k] = layout[j][rank];
+                degrees[k] = 1;
+                destinations[k++] = rank;
+            }
+        }
+        for (reorder = 0; reorder <= 1; reorder++) {
+            MPI_Dist_graph_create(MPI_COMM_WORLD, 1, sources, degrees, destinations, sweights,
+                                  MPI_INFO_NULL, reorder, &comm);
+            MPI_Barrier(comm);
+            MPI_Comm_free(&comm);
+        }
     }
 
     for (i = 0; i < size; i++)
