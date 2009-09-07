@@ -112,6 +112,9 @@ int main(int argc, char **argv)
 
     HYDU_FUNC_ENTER();
 
+    status = HYDU_dbg_init("mpiexec");
+    HYDU_ERR_POP(status, "unable to initialization debugging\n");
+
     status = HYD_UII_mpx_get_parameters(argv);
     if (status == HYD_GRACEFUL_ABORT) {
         exit(0);

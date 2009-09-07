@@ -10,38 +10,37 @@
 #include "hydra_base.h"
 #include "mpl.h"
 
-int HYDU_Error_printf_simple(const char *str, ...);
 
 #if !defined COMPILER_ACCEPTS_VA_ARGS
-#define HYDU_Error_printf HYDU_Error_printf_simple
+#define HYDU_Error_printf HYDU_error_printf_simple
 #elif defined HAVE__FUNC__ && defined __LINE__
 #define HYDU_Error_printf(...)                            \
     {                                                     \
         fprintf(stderr, "%s (%d): ", __func__, __LINE__); \
-        HYDU_Error_printf_simple(__VA_ARGS__);            \
+        HYDU_error_printf_simple(__VA_ARGS__);            \
     }
 #elif defined HAVE_CAP__FUNC__ && defined __LINE__
 #define HYDU_Error_printf(...)                            \
     {                                                     \
         fprintf(stderr, "%s (%d): ", __FUNC__, __LINE__); \
-        HYDU_Error_printf_simple(__VA_ARGS__);            \
+        HYDU_error_printf_simple(__VA_ARGS__);            \
     }
 #elif defined HAVE__FUNCTION__ && defined __LINE__
 #define HYDU_Error_printf(...)                            \
     {                                                     \
         fprintf(stderr, "%s (%d): ", __FUNCTION__, __LINE__); \
-        HYDU_Error_printf_simple(__VA_ARGS__);            \
+        HYDU_error_printf_simple(__VA_ARGS__);            \
     }
 #elif defined __FILE__ && defined __LINE__
 #define HYDU_Error_printf(...)                            \
     {                                                     \
         fprintf(stderr, "%s (%d): ", __FILE__, __LINE__); \
-        HYDU_Error_printf_simple(__VA_ARGS__);            \
+        HYDU_error_printf_simple(__VA_ARGS__);            \
     }
 #else
 #define HYDU_Error_printf(...)                  \
     {                                           \
-        HYDU_Error_printf_simple(__VA_ARGS__);  \
+        HYDU_error_printf_simple(__VA_ARGS__);  \
     }
 #endif
 
@@ -145,6 +144,12 @@ HYD_Status HYDU_get_base_path(const char *execname, char *wdir, char **path);
 HYD_Status HYDU_bind_init(char *binding, char *bindlib);
 HYD_Status HYDU_bind_process(int core);
 int HYDU_bind_get_core_id(int id);
+
+
+/* debug */
+HYD_Status HYDU_dbg_init(const char *str);
+int HYDU_error_printf_simple(const char *str, ...);
+int HYDU_dump(FILE *fp, const char *str, ...);
 
 
 /* env */

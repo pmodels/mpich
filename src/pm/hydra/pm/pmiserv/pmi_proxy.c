@@ -96,6 +96,9 @@ int main(int argc, char **argv)
     int listenfd;
     HYD_Status status = HYD_SUCCESS;
 
+    status = HYDU_dbg_init("proxy");
+    HYDU_ERR_POP(status, "unable to initialization debugging\n");
+
     status = HYD_PMCD_pmi_proxy_get_params(argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
