@@ -158,10 +158,9 @@ int main(int argc, char *argv[])
                                            outdegree, destinations, dweights, MPI_INFO_NULL,
                                            reorder, &comm);
             MPI_Barrier(comm);
+            verify_comm(comm);
             MPI_Comm_free(&comm);
         }
-
-        verify_comm(comm);
 
 
         /* MPI_Dist_graph_create() where each process specifies its
@@ -179,10 +178,10 @@ int main(int argc, char *argv[])
             MPI_Dist_graph_create(MPI_COMM_WORLD, 1, sources, degrees, destinations, dweights,
                                   MPI_INFO_NULL, reorder, &comm);
             MPI_Barrier(comm);
+            verify_comm(comm);
             MPI_Comm_free(&comm);
         }
 
-        verify_comm(comm);
 
         /* MPI_Dist_graph_create() where each process specifies its
          * incoming edges */
@@ -199,10 +198,10 @@ int main(int argc, char *argv[])
             MPI_Dist_graph_create(MPI_COMM_WORLD, 1, sources, degrees, destinations, sweights,
                                   MPI_INFO_NULL, reorder, &comm);
             MPI_Barrier(comm);
+            verify_comm(comm);
             MPI_Comm_free(&comm);
         }
 
-        verify_comm(comm);
 
         /* MPI_Dist_graph_create() where rank 0 specifies the entire
          * graph */
@@ -221,10 +220,10 @@ int main(int argc, char *argv[])
             MPI_Dist_graph_create(MPI_COMM_WORLD, (rank == 0) ? p : 0, sources, degrees,
                                   destinations, sweights, MPI_INFO_NULL, reorder, &comm);
             MPI_Barrier(comm);
+            verify_comm(comm);
             MPI_Comm_free(&comm);
         }
 
-        verify_comm(comm);
 
         /* MPI_Dist_graph_create() with no graph */
         for (reorder = 0; reorder <= 1; reorder++) {
