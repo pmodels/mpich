@@ -33,7 +33,7 @@ static void create_graph_layout(int seed)
 int main(int argc, char *argv[])
 {
     int errs = 0;
-    int rank, i, j, k;
+    int rank, i, j, k, p;
     int indegree, outdegree, reorder;
     int *sources, *sweights, *destinations, *dweights, *degrees;
     MPI_Comm comm;
@@ -117,6 +117,33 @@ int main(int argc, char *argv[])
             MPI_Dist_graph_create(MPI_COMM_WORLD, 1, sources, degrees, destinations, sweights,
                                   MPI_INFO_NULL, reorder, &comm);
             MPI_Barrier(comm);
+            MPI_Comm_free(&comm);
+        }
+
+        /* MPI_Dist_graph_create() where rank 0 specifies the entire
+         * graph */
+        p = 0;
+        for (j = 0; j < size; j++) {
+            for (k = 0; k < size; k++) {
+                if (layout[j][k]) {
+                    sources[p] = j;
+                    sweights[p] = layout[j][k];
+                    degrees[p] = 1;
+                    destinations[p++] = k;
+                }
+            }
+        }
+        for (reorder = 0; reorder <= 1; reorder++) {
+            MPI_Dist_graph_create(MPI_COMM_WORLD, (rank == 0) ? p : 0, sources, degrees,
+                                  destinations, sweights, MPI_INFO_NULL, reorder, &comm);
+            MPI_Barrier(comm);
+            MPI_Comm_free(&comm);
+        }
+
+        /* MPI_Dist_graph_create() with no graph */
+        for (reorder = 0; reorder <= 1; reorder++) {
+            MPI_Dist_graph_create(MPI_COMM_WORLD, 0, sources, degrees,
+                                  destinations, sweights, MPI_INFO_NULL, reorder, &comm);
             MPI_Comm_free(&comm);
         }
     }
