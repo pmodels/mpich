@@ -8,30 +8,30 @@
 
 static char *dbg_prefix;
 
-int HYDU_dump(FILE *fp, const char *str, ...)
+void HYDU_dump_prefix(FILE *fp)
 {
-    int n;
-    va_list list;
-
-    va_start(list, str);
     fprintf(fp, "[%s] ", dbg_prefix);
-    n = vfprintf(fp, str, list);
     fflush(fp);
-    va_end(list);
-
-    return n;
 }
 
-int HYDU_error_printf_simple(const char *str, ...)
+void HYDU_dump_noprefix(FILE *fp, const char *str, ...)
 {
-    int n;
     va_list list;
 
     va_start(list, str);
-    n = HYDU_dump(stderr, str, list);
+    vfprintf(fp, str, list);
+    fflush(fp);
     va_end(list);
+}
 
-    return n;
+void HYDU_dump(FILE *fp, const char *str, ...)
+{
+    va_list list;
+
+    va_start(list, str);
+    HYDU_dump_prefix(fp);
+    HYDU_dump_noprefix(fp, str, list);
+    va_end(list);
 }
 
 HYD_Status HYDU_dbg_init(const char *str)

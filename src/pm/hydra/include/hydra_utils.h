@@ -10,37 +10,35 @@
 #include "hydra_base.h"
 #include "mpl.h"
 
+#if defined HAVE__FUNC__
+#define HYDU_FUNC __func__
+#elif defined HAVE_CAP__FUNC__
+#define HYDU_FUNC __FUNC__
+#elif defined HAVE__FUNCTION__
+#define HYDU_FUNC __FUNCTION__
+#endif
 
 #if !defined COMPILER_ACCEPTS_VA_ARGS
-#define HYDU_Error_printf HYDU_error_printf_simple
-#elif defined HAVE__FUNC__ && defined __LINE__
-#define HYDU_Error_printf(...)                            \
-    {                                                     \
-        fprintf(stderr, "%s (%d): ", __func__, __LINE__); \
-        HYDU_error_printf_simple(__VA_ARGS__);            \
+#define HYDU_Error_printf printf
+#elif defined __FILE__ && defined HYDU_FUNC
+#define HYDU_Error_printf(...)                                          \
+    {                                                                   \
+        HYDU_dump_prefix(stderr);                                       \
+        HYDU_dump_noprefix(stderr, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
+        HYDU_dump_noprefix(stderr, __VA_ARGS__);                        \
     }
-#elif defined HAVE_CAP__FUNC__ && defined __LINE__
+#elif defined __FILE__
 #define HYDU_Error_printf(...)                            \
     {                                                     \
-        fprintf(stderr, "%s (%d): ", __FUNC__, __LINE__); \
-        HYDU_error_printf_simple(__VA_ARGS__);            \
-    }
-#elif defined HAVE__FUNCTION__ && defined __LINE__
-#define HYDU_Error_printf(...)                            \
-    {                                                     \
-        fprintf(stderr, "%s (%d): ", __FUNCTION__, __LINE__); \
-        HYDU_error_printf_simple(__VA_ARGS__);            \
-    }
-#elif defined __FILE__ && defined __LINE__
-#define HYDU_Error_printf(...)                            \
-    {                                                     \
-        fprintf(stderr, "%s (%d): ", __FILE__, __LINE__); \
-        HYDU_error_printf_simple(__VA_ARGS__);            \
+        HYDU_dump_prefix(stderr);                                       \
+        HYDU_dump_noprefix(stderr, "%s (%d): ", __FILE__, __LINE__);    \
+        HYDU_dump_noprefix(stderr, __VA_ARGS__);                        \
     }
 #else
-#define HYDU_Error_printf(...)                  \
-    {                                           \
-        HYDU_error_printf_simple(__VA_ARGS__);  \
+#define HYDU_Error_printf(...)                                          \
+    {                                                                   \
+        HYDU_dump_prefix(stderr);                                       \
+        HYDU_dump_noprefix(stderr, __VA_ARGS__);                        \
     }
 #endif
 
@@ -148,8 +146,9 @@ int HYDU_bind_get_core_id(int id);
 
 /* debug */
 HYD_Status HYDU_dbg_init(const char *str);
-int HYDU_error_printf_simple(const char *str, ...);
-int HYDU_dump(FILE *fp, const char *str, ...);
+void HYDU_dump_prefix(FILE *fp);
+void HYDU_dump_noprefix(FILE *fp, const char *str, ...);
+void HYDU_dump(FILE *fp, const char *str, ...);
 
 
 /* env */
