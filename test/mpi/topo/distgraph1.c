@@ -15,7 +15,7 @@
 #define MAX_WEIGHT 100
 
 /* Maybe use a bit vector instead? */
-int **layout, size;
+int **layout, size, rank;
 
 static void create_graph_layout(int seed)
 {
@@ -30,10 +30,84 @@ static void create_graph_layout(int seed)
             layout[i][j] = rand() % MAX_WEIGHT;
 }
 
+static void verify_comm(MPI_Comm comm)
+{
+    int i, j;
+    int indegree, outdegree, weighted;
+    int *sources, *sweights, *destinations, *dweights;
+
+    sources = (int *) malloc(size * sizeof(int));
+    sweights = (int *) malloc(size * sizeof(int));
+    destinations = (int *) malloc(size * sizeof(int));
+    dweights = (int *) malloc(size * sizeof(int));
+
+    MPI_Dist_graph_neighbors_count(comm, &indegree, &outdegree, &weighted);
+
+    j = 0;
+    for (i = 0; i < size; i++)
+        if (layout[i][rank])
+            j++;
+    if (j != indegree)
+        fprintf(stderr, "indegree does not match\n");
+
+    j = 0;
+    for (i = 0; i < size; i++)
+        if (layout[rank][i])
+            j++;
+    if (j != outdegree)
+        fprintf(stderr, "outdegree does not match\n");
+
+    if (weighted == 0)
+        fprintf(stderr, "MPI_Dist_graph_neighbors_count thinks the graph is not weighted\n");
+
+
+    MPI_Dist_graph_neighbors(comm, size, sources, sweights, size, destinations, dweights);
+
+    /* For each incoming and outgoing edge in the matrix, search if
+     * the query function listed it in the sources. */
+    for (i = 0; i < size; i++) {
+        if (layout[i][rank]) {
+            for (j = 0; j < indegree; j++) {
+                if (sources[j] == i)
+                    break;
+            }
+            if (sources[j] != i)
+                fprintf(stderr, "no edge from %d to %d specified\n", i, rank);
+            if (sweights[j] != layout[i][rank])
+                fprintf(stderr, "incorrect weight for edge (%d,%d): %d instead of %d\n",
+                        i, rank, sweights[j], layout[i][rank]);
+        }
+        if (layout[rank][i]) {
+            for (j = 0; j < outdegree; j++) {
+                if (destinations[j] == i)
+                    break;
+            }
+            if (destinations[j] != i)
+                fprintf(stderr, "no edge from %d to %d specified\n", rank, i);
+            if (dweights[j] != layout[rank][i])
+                fprintf(stderr, "incorrect weight for edge (%d,%d): %d instead of %d\n",
+                        rank, i, dweights[j], layout[rank][i]);
+        }
+    }
+
+    /* For each incoming and outgoing edge in the sources, we should
+     * have an entry in the matrix */
+    for (i = 0; i < indegree; i++) {
+        if (layout[sources[i]][rank] != sweights[i])
+            fprintf(stderr, "edge (%d,%d) has a weight %d instead of %d", i, rank,
+                    sweights[i], layout[sources[i]][rank]);
+    }
+    for (i = 0; i < outdegree; i++) {
+        if (layout[rank][destinations[i]] != dweights[i])
+            fprintf(stderr, "edge (%d,%d) has a weight %d instead of %d", rank, i,
+                    dweights[i], layout[rank][destinations[i]]);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     int errs = 0;
-    int rank, i, j, k, p;
+    int i, j, k, p;
     int indegree, outdegree, reorder;
     int *sources, *sweights, *destinations, *dweights, *degrees;
     MPI_Comm comm;
@@ -58,23 +132,26 @@ int main(int argc, char *argv[])
     for (i = 0; i < NUM_GRAPHS; i++) {
         create_graph_layout(i);
 
+        /* MPI_Dist_graph_create_adjacent */
         indegree = 0;
         k = 0;
-        for (j = 0; j < size; j++)
+        for (j = 0; j < size; j++) {
             if (layout[j][rank]) {
                 indegree++;
                 sources[k] = j;
                 sweights[k++] = layout[j][rank];
             }
+        }
 
         outdegree = 0;
         k = 0;
-        for (j = 0; j < size; j++)
+        for (j = 0; j < size; j++) {
             if (layout[rank][j]) {
                 outdegree++;
                 destinations[k] = j;
                 dweights[k++] = layout[rank][j];
             }
+        }
 
         for (reorder = 0; reorder <= 1; reorder++) {
             MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, indegree, sources, sweights,
@@ -83,6 +160,9 @@ int main(int argc, char *argv[])
             MPI_Barrier(comm);
             MPI_Comm_free(&comm);
         }
+
+        verify_comm(comm);
+
 
         /* MPI_Dist_graph_create() where each process specifies its
          * outgoing edges */
@@ -102,6 +182,8 @@ int main(int argc, char *argv[])
             MPI_Comm_free(&comm);
         }
 
+        verify_comm(comm);
+
         /* MPI_Dist_graph_create() where each process specifies its
          * incoming edges */
         k = 0;
@@ -119,6 +201,8 @@ int main(int argc, char *argv[])
             MPI_Barrier(comm);
             MPI_Comm_free(&comm);
         }
+
+        verify_comm(comm);
 
         /* MPI_Dist_graph_create() where rank 0 specifies the entire
          * graph */
@@ -139,6 +223,8 @@ int main(int argc, char *argv[])
             MPI_Barrier(comm);
             MPI_Comm_free(&comm);
         }
+
+        verify_comm(comm);
 
         /* MPI_Dist_graph_create() with no graph */
         for (reorder = 0; reorder <= 1; reorder++) {
