@@ -89,7 +89,9 @@ HYD_Status HYD_PMCD_pmi_proxy_control_cmd_cb(int fd, HYD_Event_t events, void *u
         exit(-1);
     }
     else if (cmd == CKPOINT) {
+        HYDU_dump(stdout, "requesting checkpoint\n");
         status = HYDU_ckpoint_suspend();
+        HYDU_dump(stdout, "checkpoint completed\n");
     }
     else {
         status = HYD_INTERNAL_ERROR;
