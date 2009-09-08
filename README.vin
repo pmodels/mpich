@@ -7,8 +7,12 @@ the exception of support for the "external32" portable I/O format and
 user-defined data representations for I/O.
 
 The distribution has been tested by us on a variety of machines in our
-own environments. If you have problems, please report them at the
-MPICH2 bug tracking system
+environments as well as our partner institutes. If you have problems
+with the installation or usage of MPICH2, please send an email to
+mpich-discuss@mcs.anl.gov (you need to subscribe to this list
+(https://lists.mcs.anl.gov/mailman/listinfo/mpich-discuss) before
+sending an email). If you have found a bug in MPICH2, we request that
+you report it at our bug tracking system
 (http://wiki.mcs.anl.gov/mpich2/index.php/Creating_New_Bug_Tickets) or
 send an email to mpich2-maint@mcs.anl.gov.
 
