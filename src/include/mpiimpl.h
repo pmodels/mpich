@@ -3599,6 +3599,8 @@ posted at once. */
 #define MPIR_LOCALCOPY_TAG            23
 #define MPIR_EXSCAN_TAG               24
 #define MPIR_ALLTOALLW_TAG            25
+#define MPIR_TOPO_A_TAG               26
+#define MPIR_TOPO_B_TAG               27
 
 /* These functions are used in the implementation of collective
    operations. They are wrappers around MPID send/recv functions. They do

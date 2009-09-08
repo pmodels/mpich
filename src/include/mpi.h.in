@@ -199,9 +199,10 @@ typedef int MPI_Op;
 #define MPI_BSEND_OVERHEAD @BSEND_OVERHEAD@
 
 /* Topology types */
-typedef enum MPIR_Topo_type { MPI_GRAPH=1, MPI_CART=2 } MPIR_Topo_type;
+typedef enum MPIR_Topo_type { MPI_GRAPH=1, MPI_CART=2, MPI_DIST_GRAPH=3 } MPIR_Topo_type;
 
 #define MPI_BOTTOM      (void *)0
+#define MPI_UNWEIGHTED  ((void *)0)
 
 #define MPI_PROC_NULL   (-1)
 #define MPI_ANY_SOURCE 	(-2)
@@ -864,6 +865,10 @@ int MPI_Type_create_f90_complex( int, int, MPI_Datatype * );
 int MPI_Reduce_local(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op);
 int MPI_Op_commutative(MPI_Op op, int *commute);
 int MPI_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
+int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, int [], int [], int outdegree, int [], int [], MPI_Info info, int reorder, MPI_Comm *comm_dist_graph);
+int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int [], int [], int [], int [], MPI_Info info, int reorder, MPI_Comm *comm_dist_graph);
+int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted);
+int MPI_Dist_graph_neighbors(MPI_Comm comm, int maxindegree, int [], int [], int maxoutdegree, int [], int []);
 
 /* End Prototypes */
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
@@ -1146,6 +1151,10 @@ int PMPI_Win_set_errhandler(MPI_Win, MPI_Errhandler);
 int PMPI_Reduce_local(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op);
 int PMPI_Op_commutative(MPI_Op op, int *commute);
 int PMPI_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
+int PMPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, int [], int [], int outdegree, int [], int [], MPI_Info info, int reorder, MPI_Comm *comm_dist_graph);
+int PMPI_Dist_graph_create(MPI_Comm comm_old, int n, int [], int [], int [], int [], MPI_Info info, int reorder, MPI_Comm *comm_dist_graph);
+int PMPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted);
+int PMPI_Dist_graph_neighbors(MPI_Comm comm, int maxindegree, int [], int [], int maxoutdegree, int [], int []);
 #endif  /* MPI_BUILD_PROFILING */
 /* End of MPI bindings */
 

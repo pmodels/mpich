@@ -38,7 +38,9 @@ also the value at index %d
 **notcarttopo:No Cartesian topology associated with this communicator
 **dimszero:Communicator associated with zero-dimensional cartesian topology
 **notgraphtopo:No Graph topology associated with this communicator
+**notdistgraphtopo:No Distributed Graph topology associated with this communicator
 **notopology:No topology associated with this communicator
+**unweightedboth:Must specify MPI_UNWEIGHTED for both or neither weight arguments
 **dimsmany:Number of dimensions is too large 
 **dimsmany %d %d:Number of dimensions %d is too large (maximum is %d)
 **dimspartition:Cannot partition nodes as requested 
@@ -1265,6 +1267,14 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_win_set_errhandler %W %E:MPI_Win_set_errhandler(%W, %E) failed
 **mpi_register_datarep:MPI_Register_datarep failed
 **mpi_register_datarep %s %p %p %p %p:MPI_Register_datarep(datarep=%s, read_conversion_fn=%p, write_conversion_fn=%p, dtype_file_extent_fn=%p, extra_state=%p) failed
+**mpi_dist_graph_create: MPI_Dist_graph_create failed
+**mpi_dist_graph_create %C %d %p %p %p %p %I %d %p: MPI_Dist_graph_create(%C, n=%d, sources=%p, degrees=%p, destinations=%p, weights=%p, info=%I, reorder=%d, comm_dist_graph=%p) failed
+**mpi_dist_graph_create_adjacent: MPI_Dist_graph_create_adjacent failed
+**mpi_dist_graph_create_adjacent %C %d %p %p %d %p %p %I %d %p: MPI_Dist_graph_create_adjacent(%C, indegree=%d, sources=%p, sourceweights=%p, outdegree=%d, destinations=%p, destweights=%p, %I, %d, comm_dist_graph=%p) failed
+**mpi_dist_graph_neighbors_count: MPI_Dist_graph_neighbors_count failed
+**mpi_dist_graph_neighbors_count %C %p %p %p: MPI_Dist_graph_neighbors_count(%C, indegree=%p, outdegree=%p, weighted=%p) failed
+**mpi_dist_graph_neighbors: MPI_Dist_graph_neighbors failed
+**mpi_dist_graph_neighbors %C %d %p %p %d %p %p: MPI_Dist_graph_neighbors(%C, maxindegree=%d, sources=%p, sourceweights=%p, maxoutdegree=%d, destinations=%p, destweights=%p) failed
 
 # pmi2 errors
 **bad_keyval:PMI2 received malformed key-value pair

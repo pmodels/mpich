@@ -20,11 +20,21 @@ typedef struct MPIR_Cart_topology {
   int *position;
 } MPIR_Cart_topology;
 
+typedef struct MPIR_Dist_graph_topology {
+    int indegree;
+    int *in;
+    int *in_weights;
+    int outdegree;
+    int *out;
+    int *out_weights;
+} MPIR_Dist_graph_topology;
+
 typedef struct MPIR_Topology { 
   MPIR_Topo_type kind;
   union topo { 
     MPIR_Graph_topology graph;
     MPIR_Cart_topology  cart;
+    MPIR_Dist_graph_topology dist_graph;
   } topo;
 } MPIR_Topology;
 
