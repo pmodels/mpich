@@ -401,6 +401,23 @@ if (!(pointer_)) { \
     stmt_;\
 }}
 
+/* provides a easy way to use realloc safely and avoid the temptation to use
+ * realloc unsafely (direct ptr assignment) */
+#define MPIU_REALLOC_OR_FREE_AND_JUMP(ptr_,size_,rc_) do { \
+    void *realloc_tmp_ = MPIU_Realloc((ptr_), (size_)); \
+    if (!realloc_tmp_) { \
+        MPIU_Free(ptr_); \
+        MPIU_ERR_SETANDJUMP2(rc_,MPIU_CHKMEM_ISFATAL,"**nomem2","**nomem2 %d %s",(size_),MPIU_QUOTE(ptr_)); \
+    } \
+    (ptr_) = realloc_tmp_; \
+} while (0)
+/* this version does not free ptr_ */
+#define MPIU_REALLOC_ORJUMP(ptr_,size_,rc_) do { \
+    void *realloc_tmp_ = MPIU_Realloc((ptr_), (size_)); \
+    MPIU_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,MPIU_CHKMEM_ISFATAL,"**nomem2","**nomem2 %d %s",(size_),MPIU_QUOTE(ptr_)); \
+    (ptr_) = realloc_tmp_; \
+} while (0)
+
 /* Define attribute as empty if it has no definition */
 #ifndef ATTRIBUTE
 #define ATTRIBUTE(a)
