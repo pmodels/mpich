@@ -171,15 +171,15 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
      * rout is an array of comm_size containing pointers to arrays of
      * rout_sizes[x].  rout[x] is the locally known number of edges out of this
      * process to rank x. */
-    MPIU_CHKLMEM_MALLOC(rout,       int **, comm_size*sizeof(int), mpi_errno, "rout");
-    MPIU_CHKLMEM_MALLOC(rin,        int **, comm_size*sizeof(int), mpi_errno, "rin");
+    MPIU_CHKLMEM_MALLOC(rout,       int **, comm_size*sizeof(int*), mpi_errno, "rout");
+    MPIU_CHKLMEM_MALLOC(rin,        int **, comm_size*sizeof(int*), mpi_errno, "rin");
     MPIU_CHKLMEM_MALLOC(rin_sizes,  int *, comm_size*sizeof(int), mpi_errno, "rin_sizes");
     MPIU_CHKLMEM_MALLOC(rout_sizes, int *, comm_size*sizeof(int), mpi_errno, "rout_sizes");
     MPIU_CHKLMEM_MALLOC(rin_idx,    int *, comm_size*sizeof(int), mpi_errno, "rin_idx");
     MPIU_CHKLMEM_MALLOC(rout_idx,   int *, comm_size*sizeof(int), mpi_errno, "rout_idx");
 
-    memset(rout,       0, comm_size*sizeof(int));
-    memset(rin,        0, comm_size*sizeof(int));
+    memset(rout,       0, comm_size*sizeof(int*));
+    memset(rin,        0, comm_size*sizeof(int*));
     memset(rin_sizes,  0, comm_size*sizeof(int));
     memset(rout_sizes, 0, comm_size*sizeof(int));
     memset(rin_idx,    0, comm_size*sizeof(int));
