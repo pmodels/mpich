@@ -769,8 +769,7 @@ static HYD_Status ckpoint_restart_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpoint_restart != -1,
-                        HYD_INTERNAL_ERROR, "duplicate launch mode\n");
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpoint_restart, HYD_INTERNAL_ERROR, "duplicate restart mode\n");
 
     if (**argv && IS_HELP(**argv)) {
         printf("\n");
@@ -998,7 +997,7 @@ static HYD_Status match_arg(char ***argv_p)
     goto fn_exit;
 }
 
-static HYD_Status verify_arguments()
+static HYD_Status verify_arguments(void)
 {
     struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
@@ -1052,10 +1051,9 @@ static HYD_Status verify_arguments()
     goto fn_exit;
 }
 
-static HYD_Status set_default_values()
+static HYD_Status set_default_values(void)
 {
     char *tmp;
-    struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
 
     if (HYD_handle.print_rank_map == -1)

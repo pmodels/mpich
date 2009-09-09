@@ -153,7 +153,7 @@ void HYDU_dump(FILE *fp, const char *str, ...);
 
 /* env */
 HYD_Env_t *HYDU_str_to_env(char *str);
-HYD_Env_t *HYDU_str_pair_to_env(char *env_name, char *env_value);
+HYD_Env_t *HYDU_str_pair_to_env(const char *env_name, const char *env_value);
 HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list);
 HYD_Status HYDU_list_inherited_env(HYD_Env_t ** env_list);
 HYD_Env_t *HYDU_env_list_dup(HYD_Env_t * env);
@@ -310,7 +310,7 @@ int HYDU_time_left(HYD_Time start, HYD_Time timeout);
 /* checkpointing */
 HYD_Status HYDU_ckpoint_init(char *ckpointlib, char *ckpoint_prefix);
 HYD_Status HYDU_ckpoint_suspend(void);
-HYD_Status HYDU_ckpoint_restart(HYD_Env_t *envlist, int *in, int *out, int *err);
+HYD_Status HYDU_ckpoint_restart(HYD_Env_t *envlist, int num_ranks, int ranks[], int *in, int *out, int *err);
 
 
 #endif /* HYDRA_UTILS_H_INCLUDED */

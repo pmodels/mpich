@@ -71,7 +71,7 @@ static HYD_Status send_command(int fd, char *cmd)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_snprintf(cmdlen, 7, "%6d", strlen(cmd));
+    HYDU_snprintf(cmdlen, 7, "%6u", (unsigned)strlen(cmd));
     status = HYDU_sock_write(fd, cmdlen, 6);
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
@@ -496,7 +496,8 @@ HYD_Status HYD_PMCD_pmi_handle_v2_info_getjobattr(int fd, char *args[])
     int i, ret;
     HYD_PMCD_pmi_process_t *process;
     HYD_PMCD_pmi_kvs_pair_t *run;
-    char *key, *thrid;
+    const char *key;
+    char *thrid;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *node_list;
     struct token *tokens;
     int token_count, found;

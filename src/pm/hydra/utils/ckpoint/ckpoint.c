@@ -40,15 +40,14 @@ fn_fail:
     goto fn_exit;
 }
 
-HYD_Status HYDU_ckpoint_suspend()
+HYD_Status HYDU_ckpoint_suspend(void)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (HYDU_ckpoint_info.ckpoint_prefix == NULL)
-        goto fn_exit;
-
+    HYDU_ERR_CHKANDJUMP(status, HYDU_ckpoint_info.ckpoint_prefix == NULL, HYD_INTERNAL_ERROR, "no checkpoint prefix defined\n");
+    
 #if defined HAVE_BLCR
     if (!strcmp(HYDU_ckpoint_info.ckpointlib, "blcr")) {
         status = HYDU_ckpoint_blcr_suspend(HYDU_ckpoint_info.ckpoint_prefix);
@@ -64,19 +63,17 @@ fn_fail:
     goto fn_exit;
 }
 
-HYD_Status HYDU_ckpoint_restart(HYD_Env_t *envlist, int *in, int *out, int *err)
+HYD_Status HYDU_ckpoint_restart(HYD_Env_t *envlist, int num_ranks, int ranks[], int *in, int *out, int *err)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (HYDU_ckpoint_info.ckpoint_prefix == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no checkpoint prefix defined\n");
+    HYDU_ERR_CHKANDJUMP(status, HYDU_ckpoint_info.ckpoint_prefix == NULL, HYD_INTERNAL_ERROR, "no checkpoint prefix defined\n");
 
 #if defined HAVE_BLCR
     if (!strcmp(HYDU_ckpoint_info.ckpointlib, "blcr")) {
-        status = HYDU_ckpoint_blcr_restart(HYDU_ckpoint_info.ckpoint_prefix,
-                                           num_vars, env_vars);
+        status = HYDU_ckpoint_blcr_restart(HYDU_ckpoint_info.ckpoint_prefix, envlist, num_ranks, ranks, in, out, err);
         HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
     }
 #endif /* HAVE_BLCR */

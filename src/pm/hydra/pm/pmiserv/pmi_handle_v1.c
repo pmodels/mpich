@@ -235,7 +235,6 @@ HYD_Status HYD_PMCD_pmi_handle_v1_put(int fd, char *args[])
 {
     int i, ret;
     HYD_PMCD_pmi_process_t *process;
-    HYD_PMCD_pmi_kvs_pair_t *key_pair, *run;
     char *kvsname, *key, *val;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_Status status = HYD_SUCCESS;

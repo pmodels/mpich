@@ -89,7 +89,7 @@ HYD_Env_t *HYDU_str_to_env(char *str)
 }
 
 
-HYD_Env_t *HYDU_str_pair_to_env(char *env_name, char *env_value)
+HYD_Env_t *HYDU_str_pair_to_env(const char *env_name, const char *env_value)
 {
     HYD_Env_t *env;
     HYD_Status status = HYD_SUCCESS;

@@ -535,6 +535,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     struct HYD_Partition_segment *segment;
     struct HYD_Partition_exec *exec;
     HYD_Status status = HYD_SUCCESS;
+    int *pmi_ids;
 
     HYDU_FUNC_ENTER();
 
@@ -546,6 +547,14 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
         HYD_PMCD_pmi_proxy_params.exec_proc_count += exec->proc_count;
 
+    HYDU_MALLOC(pmi_ids, int *, HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
+    for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++) {
+        pmi_ids[i] = HYDU_local_to_global_id(i,
+                                             HYD_PMCD_pmi_proxy_params.partition_core_count,
+                                             HYD_PMCD_pmi_proxy_params.segment_list,
+                                             HYD_PMCD_pmi_proxy_params.global_core_count);
+    }
+    
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.out, int *,
                 HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.err, int *,
@@ -568,16 +577,16 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
     if (HYD_PMCD_pmi_proxy_params.ckpoint_restart) {
-        /* See if we have PMI_ID 0 */
-        pmi_id = HYDU_local_to_global_id(0, HYD_PMCD_pmi_proxy_params.partition_core_count,
-                                         HYD_PMCD_pmi_proxy_params.segment_list,
-                                         HYD_PMCD_pmi_proxy_params.global_core_count);
 
         env = HYDU_str_pair_to_env("PMI_PORT", HYD_PMCD_pmi_proxy_params.pmi_port_str);
         if (env == NULL)
             HYDU_ERR_POP(status, "unable to create env\n");
 
-        status = HYDU_ckpoint_restart(env, pmi_id ? NULL : &HYD_PMCD_pmi_proxy_params.in,
+
+        /* Restart the partition.  Specify stdin fd only if pmi_id 0 is in this partition. */
+        status = HYDU_ckpoint_restart(env, HYD_PMCD_pmi_proxy_params.exec_proc_count,
+                                      pmi_ids,
+                                      pmi_ids[0] ? NULL : &HYD_PMCD_pmi_proxy_params.in,
                                       HYD_PMCD_pmi_proxy_params.out,
                                       HYD_PMCD_pmi_proxy_params.err);
         HYDU_ERR_POP(status, "checkpoint restart failure\n");

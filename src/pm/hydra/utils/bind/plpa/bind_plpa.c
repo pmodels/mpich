@@ -6,6 +6,7 @@
 
 #include "hydra_utils.h"
 #include "bind.h"
+#include "bind_plpa.h"
 
 struct HYDU_bind_info HYDU_bind_info;
 
@@ -16,7 +17,7 @@ HYD_Status HYDU_bind_plpa_init(char *user_bind_map, HYDU_bind_support_level_t *s
 {
     PLPA_NAME(api_type_t) p;
     int ret, i, j, max, id;
-    int processor, socket, core, thread;
+    int processor, sock, core, thread;
     char *str;
     HYD_Status status = HYD_SUCCESS;
 
@@ -107,19 +108,19 @@ HYD_Status HYDU_bind_plpa_init(char *user_bind_map, HYDU_bind_support_level_t *s
     /* Find the socket and core IDs for all processor IDs */
     for (i = 0; i < HYDU_bind_info.num_procs; i++) {
         ret = PLPA_NAME(map_to_socket_core) (HYDU_bind_info.bind_map[i].processor_id,
-                                             &socket, &core);
+                                             &sock, &core);
         if (ret) {
             /* Unable to get number of cores */
             HYDU_Warn_printf("plpa unable to map socket to core\n");
             goto fn_fail;
         }
 
-        HYDU_bind_info.bind_map[i].socket_id = socket;
+        HYDU_bind_info.bind_map[i].socket_id = sock;
         HYDU_bind_info.bind_map[i].core_id = core;
 
         thread = -1;
         for (j = 0; j < i; j++)
-            if (HYDU_bind_info.bind_map[j].socket_id == socket &&
+            if (HYDU_bind_info.bind_map[j].socket_id == sock &&
                 HYDU_bind_info.bind_map[j].core_id == core)
                 thread = HYDU_bind_info.bind_map[j].thread_id;
         thread++;

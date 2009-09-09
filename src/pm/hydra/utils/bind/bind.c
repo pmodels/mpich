@@ -76,7 +76,7 @@ HYD_Status HYDU_bind_process(int core)
 
 int HYDU_bind_get_core_id(int id)
 {
-    int socket, core, thread, i, realid;
+    int sock, core, thread, i, realid;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -108,10 +108,10 @@ int HYDU_bind_get_core_id(int id)
                 core = realid % (HYDU_bind_info.num_sockets * HYDU_bind_info.num_cores);
                 core /= HYDU_bind_info.num_sockets;
 
-                socket = realid % HYDU_bind_info.num_sockets;
+                sock = realid % HYDU_bind_info.num_sockets;
             }
             else if (!strcmp(HYDU_bind_info.binding, "pack")) {
-                socket = realid / (HYDU_bind_info.num_cores * HYDU_bind_info.num_threads);
+                sock = realid / (HYDU_bind_info.num_cores * HYDU_bind_info.num_threads);
 
                 core = realid % (HYDU_bind_info.num_cores * HYDU_bind_info.num_threads);
                 core /= HYDU_bind_info.num_threads;
@@ -123,7 +123,7 @@ int HYDU_bind_get_core_id(int id)
             }
 
             for (i = 0; i < HYDU_bind_info.num_procs; i++) {
-                if (HYDU_bind_info.bind_map[i].socket_rank == socket &&
+                if (HYDU_bind_info.bind_map[i].socket_rank == sock &&
                     HYDU_bind_info.bind_map[i].core_rank == core &&
                     HYDU_bind_info.bind_map[i].thread_rank == thread) {
                     return HYDU_bind_info.bind_map[i].processor_id;
