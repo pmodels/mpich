@@ -7,11 +7,7 @@
 #include "hydra_utils.h"
 #include "ckpoint.h"
 #include "ckpoint_blcr.h"
-#include <stdio.h>
 #include <libcr.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 static int my_callback(void* arg)
 {
