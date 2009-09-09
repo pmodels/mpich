@@ -45,13 +45,6 @@ AC_DEFUN([PAC_PROG_CHECK_INSTALL_WORKS],[
 if test -z "$INSTALL" ; then
     AC_MSG_RESULT([No install program available])
 else
-    # first make any "confdb/install-sh -c" into an absolute path
-    # this is a hack, but it's still much cleaner than anything else I could
-    # come up with (see tt#1007) [goodell@]
-    AS_CASE(["$INSTALL"],
-            [/*],[:],
-            [*install-sh*],[INSTALL="$master_top_srcdir/$INSTALL"])
-
     # Check that this install really works
     rm -f conftest
     echo "Test file" > conftest

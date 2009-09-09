@@ -1,0 +1,54 @@
+AC_PREREQ(2.62)
+#
+# (C) 2006 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+
+AC_INIT([MPL], [0.1])
+AC_CONFIG_AUX_DIR(confdb)
+AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
+
+dnl The MPICH2 top-level configure adds a bunch of flags to the
+dnl user-defined CFLAGS by processing different configure command-line
+dnl arguments (--enable-g, --enable-default-optimization). These updated
+dnl flags are passed down as a separate flag. Here, we don't care about
+dnl the user-defined flags, but rather this updated flags, so we just
+dnl overwrite CFLAGS with them.
+PAC_SUBCONFIG_INIT()
+
+AC_CONFIG_HEADER(include/mplconf.h)
+AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
+
+PAC_ARG_CACHING
+PAC_ARG_STRICT
+
+dnl Bug in autoconf adds -O2 and -g by default. Make sure we only get
+dnl the flags we want.
+save_cflags=$CFLAGS
+AC_PROG_CC
+CFLAGS=$save_cflags
+AC_PROG_RANLIB
+
+dnl Check if the necessary headers are available
+AC_CHECK_HEADERS(stdio.h stdlib.h string.h math.h stdarg.h)
+
+dnl Check for strdup
+AC_CHECK_FUNCS(strdup)
+if test "$ac_cv_func_strdup" = "yes" ; then
+   PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
+fi
+
+dnl Check for snprintf
+AC_CHECK_FUNCS(snprintf)
+if test "$ac_cv_func_snprintf" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
+fi
+
+dnl Check for ATTRIBUTE
+PAC_C_GNU_ATTRIBUTE
+
+dnl Place holder macro for finalization
+PAC_SUBCONFIG_FINALIZE()
+
+dnl Final output
+AC_OUTPUT(Makefile)
