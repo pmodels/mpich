@@ -1,6 +1,40 @@
 ===============================================================================
+                               Changes in 1.2rc1
+===============================================================================
+
+ # OVERALL: Support for MPI-2.2
+
+ # OVERALL: Experimental support for BLCR checkpoint/restart (using
+   Hydra).
+
+ # OVERALL: Several fixes to Nemesis/MX.
+
+ # WINDOWS: Performance improvements to Nemesis/windows.
+
+ # PM/PMI: Scalability and performance improvements to Hydra using
+   PMI-1.1 process-mapping features.
+
+ # PM/PMI: Support for process-binding for hyperthreading enabled
+   systems in Hydra.
+
+ # PM/PMI: PMI2 client code is now officially included in the release.
+
+ # TEST SUITE: Support to run the MPICH2 test suite through valgrind.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available using:
+
+     svn log -r5025:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.2rc1
+
+     ... or at the following link:
+
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.2rc1?action=follow_copy&rev=HEAD&stop_rev=5025&mode=follow_copy
+
+
+===============================================================================
                                Changes in 1.1.1p1
 ===============================================================================
+
  - OVERALL: Fixed an invalid read in the dataloop code for zero count types.
 
  - OVERALL: Fixed several bugs in ch3:nemesis:mx (tickets #744,#760;
@@ -31,6 +65,7 @@
      ... or at the following link:
 
      https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.1.1p1?action=follow_copy&rev=HEAD&stop_rev=5032&mode=follow_copy
+
 
 ===============================================================================
                                Changes in 1.1.1
