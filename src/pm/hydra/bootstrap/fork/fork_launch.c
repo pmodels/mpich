@@ -35,7 +35,7 @@ HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, const char *partition_
         client_arg[arg++] = NULL;
 
         if (HYD_BSCI_info.debug) {
-            HYDU_Dump("Launching process: ");
+            HYDU_dump(stdout, "Launching process: ");
             HYDU_print_strlist(client_arg);
         }
 

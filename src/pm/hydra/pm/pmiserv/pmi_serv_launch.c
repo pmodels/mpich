@@ -374,7 +374,8 @@ HYD_Status HYD_PMCI_launch_procs(void)
     /* Initialize PMI */
     status = create_and_listen_portstr(HYD_PMCD_pmi_connect_cb, &pmi_port_str);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
-    HYDU_Debug(HYD_handle.debug, "Got a PMI port string of %s\n", pmi_port_str);
+    if (HYD_handle.debug)
+        HYDU_dump(stdout, "Got a PMI port string of %s\n", pmi_port_str);
 
     status = HYD_PMCD_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
@@ -383,7 +384,8 @@ HYD_Status HYD_PMCI_launch_procs(void)
         status = create_and_listen_portstr(HYD_PMCD_pmi_serv_control_connect_cb,
                                            &proxy_port_str);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
-        HYDU_Debug(HYD_handle.debug, "Got a proxy port string of %s\n", proxy_port_str);
+        if (HYD_handle.debug)
+            HYDU_dump(stdout, "Got a proxy port string of %s\n", proxy_port_str);
 
         status = fill_in_proxy_args(HYD_handle.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");

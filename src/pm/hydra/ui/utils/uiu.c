@@ -298,90 +298,90 @@ void HYD_UIU_print_params(void)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_Dump("\n");
-    HYDU_Dump("=================================================");
-    HYDU_Dump("=================================================");
-    HYDU_Dump("\n");
-    HYDU_Dump("mpiexec options:\n");
-    HYDU_Dump("----------------\n");
-    HYDU_Dump("  Base path: %s\n", HYD_handle.base_path);
-    HYDU_Dump("  Proxy port: %d\n", HYD_handle.proxy_port);
-    HYDU_Dump("  Bootstrap server: %s\n", HYD_handle.bootstrap);
-    HYDU_Dump("  Debug level: %d\n", HYD_handle.debug);
-    HYDU_Dump("  Enable X: %d\n", HYD_handle.enablex);
-    HYDU_Dump("  Working dir: %s\n", HYD_handle.wdir);
-    HYDU_Dump("  Host file: %s\n", HYD_handle.host_file);
+    HYDU_dump(stdout, "\n");
+    HYDU_dump(stdout, "=================================================");
+    HYDU_dump(stdout, "=================================================");
+    HYDU_dump(stdout, "\n");
+    HYDU_dump(stdout, "mpiexec options:\n");
+    HYDU_dump(stdout, "----------------\n");
+    HYDU_dump(stdout, "  Base path: %s\n", HYD_handle.base_path);
+    HYDU_dump(stdout, "  Proxy port: %d\n", HYD_handle.proxy_port);
+    HYDU_dump(stdout, "  Bootstrap server: %s\n", HYD_handle.bootstrap);
+    HYDU_dump(stdout, "  Debug level: %d\n", HYD_handle.debug);
+    HYDU_dump(stdout, "  Enable X: %d\n", HYD_handle.enablex);
+    HYDU_dump(stdout, "  Working dir: %s\n", HYD_handle.wdir);
+    HYDU_dump(stdout, "  Host file: %s\n", HYD_handle.host_file);
 
-    HYDU_Dump("\n");
-    HYDU_Dump("  Global environment:\n");
-    HYDU_Dump("  -------------------\n");
+    HYDU_dump(stdout, "\n");
+    HYDU_dump(stdout, "  Global environment:\n");
+    HYDU_dump(stdout, "  -------------------\n");
     for (env = HYD_handle.inherited_env; env; env = env->next)
-        HYDU_Dump("    %s=%s\n", env->env_name, env->env_value);
+        HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
 
     if (HYD_handle.system_env) {
-        HYDU_Dump("\n");
-        HYDU_Dump("  Hydra internal environment:\n");
-        HYDU_Dump("  ---------------------------\n");
+        HYDU_dump(stdout, "\n");
+        HYDU_dump(stdout, "  Hydra internal environment:\n");
+        HYDU_dump(stdout, "  ---------------------------\n");
         for (env = HYD_handle.system_env; env; env = env->next)
-            HYDU_Dump("    %s=%s\n", env->env_name, env->env_value);
+            HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
     }
 
     if (HYD_handle.user_env) {
-        HYDU_Dump("\n");
-        HYDU_Dump("  User set environment:\n");
-        HYDU_Dump("  ---------------------\n");
+        HYDU_dump(stdout, "\n");
+        HYDU_dump(stdout, "  User set environment:\n");
+        HYDU_dump(stdout, "  ---------------------\n");
         for (env = HYD_handle.user_env; env; env = env->next)
-            HYDU_Dump("    %s=%s\n", env->env_name, env->env_value);
+            HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
     }
 
-    HYDU_Dump("\n\n");
+    HYDU_dump(stdout, "\n\n");
 
-    HYDU_Dump("    Executable information:\n");
-    HYDU_Dump("    **********************\n");
+    HYDU_dump(stdout, "    Executable information:\n");
+    HYDU_dump(stdout, "    **********************\n");
     i = 1;
     for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
-        HYDU_Dump("      Executable ID: %2d\n", i++);
-        HYDU_Dump("      -----------------\n");
-        HYDU_Dump("        Process count: %d\n", exec_info->exec_proc_count);
-        HYDU_Dump("        Executable: ");
+        HYDU_dump(stdout, "      Executable ID: %2d\n", i++);
+        HYDU_dump(stdout, "      -----------------\n");
+        HYDU_dump(stdout, "        Process count: %d\n", exec_info->exec_proc_count);
+        HYDU_dump(stdout, "        Executable: ");
         HYDU_print_strlist(exec_info->exec);
-        HYDU_Dump("\n");
+        HYDU_dump(stdout, "\n");
 
         if (exec_info->user_env) {
-            HYDU_Dump("\n");
-            HYDU_Dump("        User set environment:\n");
-            HYDU_Dump("        .....................\n");
+            HYDU_dump(stdout, "\n");
+            HYDU_dump(stdout, "        User set environment:\n");
+            HYDU_dump(stdout, "        .....................\n");
             for (env = exec_info->user_env; env; env = env->next)
-                HYDU_Dump("          %s=%s\n", env->env_name, env->env_value);
+                HYDU_dump(stdout, "          %s=%s\n", env->env_name, env->env_value);
         }
     }
 
-    HYDU_Dump("    Partition information:\n");
-    HYDU_Dump("    *********************\n");
+    HYDU_dump(stdout, "    Partition information:\n");
+    HYDU_dump(stdout, "    *********************\n");
     i = 1;
     for (partition = HYD_handle.partition_list; partition; partition = partition->next) {
-        HYDU_Dump("      Partition ID: %2d\n", i++);
-        HYDU_Dump("      -----------------\n");
-        HYDU_Dump("        Partition name: %s\n", partition->base->name);
-        HYDU_Dump("        Process count: %d\n", partition->partition_core_count);
-        HYDU_Dump("\n");
-        HYDU_Dump("        Partition segment list:\n");
-        HYDU_Dump("        .......................\n");
+        HYDU_dump(stdout, "      Partition ID: %2d\n", i++);
+        HYDU_dump(stdout, "      -----------------\n");
+        HYDU_dump(stdout, "        Partition name: %s\n", partition->base->name);
+        HYDU_dump(stdout, "        Process count: %d\n", partition->partition_core_count);
+        HYDU_dump(stdout, "\n");
+        HYDU_dump(stdout, "        Partition segment list:\n");
+        HYDU_dump(stdout, "        .......................\n");
         for (segment = partition->segment_list; segment; segment = segment->next)
-            HYDU_Dump("          Start PID: %d; Process count: %d\n",
+            HYDU_dump(stdout, "          Start PID: %d; Process count: %d\n",
                       segment->start_pid, segment->proc_count);
-        HYDU_Dump("\n");
-        HYDU_Dump("        Partition exec list:\n");
-        HYDU_Dump("        ....................\n");
+        HYDU_dump(stdout, "\n");
+        HYDU_dump(stdout, "        Partition exec list:\n");
+        HYDU_dump(stdout, "        ....................\n");
         for (exec = partition->exec_list; exec; exec = exec->next)
-            HYDU_Dump("          Exec: %s; Process count: %d\n", exec->exec[0],
+            HYDU_dump(stdout, "          Exec: %s; Process count: %d\n", exec->exec[0],
                       exec->proc_count);
     }
 
-    HYDU_Dump("\n");
-    HYDU_Dump("=================================================");
-    HYDU_Dump("=================================================");
-    HYDU_Dump("\n\n");
+    HYDU_dump(stdout, "\n");
+    HYDU_dump(stdout, "=================================================");
+    HYDU_dump(stdout, "=================================================");
+    HYDU_dump(stdout, "\n\n");
 
     HYDU_FUNC_EXIT();
 

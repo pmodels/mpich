@@ -180,26 +180,27 @@ int main(int argc, char **argv)
     else
         timeout = -1;   /* Set a negative timeout */
     HYDU_time_set(&HYD_handle.timeout, &timeout);
-    HYDU_Debug(HYD_handle.debug, "Timeout set to %d (-1 means infinite)\n", timeout);
+    if (HYD_handle.debug)
+        HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
 
     if (HYD_handle.print_rank_map) {
         FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
-            HYDU_Dump("[%s] ", partition->base->name);
+            HYDU_dump(stdout, "[%s] ", partition->base->name);
 
             process_id = 0;
             for (exec = partition->exec_list; exec; exec = exec->next) {
                 for (i = 0; i < exec->proc_count; i++) {
-                    HYDU_Dump("%d", HYDU_local_to_global_id(process_id++,
+                    HYDU_dump(stdout, "%d", HYDU_local_to_global_id(process_id++,
                                                             partition->partition_core_count,
                                                             partition->segment_list,
                                                             HYD_handle.global_core_count));
                     if (i < exec->proc_count - 1)
-                        HYDU_Dump(",");
+                        HYDU_dump(stdout, ",");
                 }
             }
-            HYDU_Dump("\n");
+            HYDU_dump(stdout, "\n");
         }
-        HYDU_Dump("\n");
+        HYDU_dump(stdout, "\n");
     }
 
     /* Launch the processes */
@@ -259,7 +260,7 @@ int main(int argc, char **argv)
 
     /* Check for the exit status for all the processes */
     if (HYD_handle.print_all_exitcodes)
-        HYDU_Dump("Exit codes: ");
+        HYDU_dump(stdout, "Exit codes: ");
     exit_status = 0;
     FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
         proc_count = 0;
@@ -267,18 +268,18 @@ int main(int argc, char **argv)
             proc_count += exec->proc_count;
         for (i = 0; i < proc_count; i++) {
             if (HYD_handle.print_all_exitcodes) {
-                HYDU_Dump("[%d]", HYDU_local_to_global_id(i, partition->partition_core_count,
+                HYDU_dump(stdout, "[%d]", HYDU_local_to_global_id(i, partition->partition_core_count,
                                                           partition->segment_list,
                                                           HYD_handle.global_core_count));
-                HYDU_Dump("%d", WEXITSTATUS(partition->exit_status[i]));
+                HYDU_dump(stdout, "%d", WEXITSTATUS(partition->exit_status[i]));
                 if (i < proc_count - 1)
-                    HYDU_Dump(",");
+                    HYDU_dump(stdout, ",");
             }
             exit_status |= partition->exit_status[i];
         }
     }
     if (HYD_handle.print_all_exitcodes)
-        HYDU_Dump("\n");
+        HYDU_dump(stdout, "\n");
 
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_PMCI_finalize();

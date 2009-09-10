@@ -111,17 +111,6 @@
 #define HYDU_Warn_printf(...) {}
 #endif /* ENABLE_WARNINGS */
 
-#define HYDU_Dump printf
-#if defined COMPILER_ACCEPTS_VA_ARGS
-#define HYDU_Debug(debug, ...)                  \
-    {                                           \
-        if ((debug))                            \
-            HYDU_Dump(__VA_ARGS__);             \
-    }
-#else
-#define HYDU_Debug(...) {}
-#endif
-
 /* We need to add more information in here later */
 #if !defined ENABLE_DEBUG
 #define HYDU_FUNC_ENTER() {}
