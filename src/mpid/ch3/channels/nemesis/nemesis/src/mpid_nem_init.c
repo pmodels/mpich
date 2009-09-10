@@ -43,18 +43,7 @@ char *MPID_nem_asymm_base_addr = 0;
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_init (int rank, MPIDI_PG_t *pg_p, int has_parent)
-{
-    return  MPID_nem_init_ckpt (rank, pg_p, 0, has_parent);
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_init_ckpt
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int
-MPID_nem_init_ckpt(int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
-                   int has_parent ATTRIBUTE((unused)))
+MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 {
     int    mpi_errno       = MPI_SUCCESS;
     int    num_procs       = pg_p->size;
@@ -217,7 +206,7 @@ MPID_nem_init_ckpt(int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     /* local procs barrier */
-    mpi_errno = MPID_nem_barrier (num_local, local_rank);
+    mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     /* find our cell regions */
@@ -255,7 +244,7 @@ MPID_nem_init_ckpt(int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
                                                MPID_nem_mem_region.net_elements,
                                                MPID_NEM_NUM_CELLS,
                                                &net_free_queue,
-                                               ckpt_restart, pg_p, pg_rank,
+                                               FALSE, pg_p, pg_rank,
                                                &bc_val, &val_max_remaining);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -290,7 +279,7 @@ MPID_nem_init_ckpt(int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
 
     
     /* local barrier */
-    mpi_errno = MPID_nem_barrier(num_local, local_rank);
+    mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     
@@ -341,17 +330,16 @@ MPID_nem_init_ckpt(int pg_rank, MPIDI_PG_t *pg_p, int ckpt_restart,
     MPIU_Free(publish_bc_orig);
 
 
-    mpi_errno = MPID_nem_barrier(num_local, local_rank);
+    mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPID_nem_mpich2_init(ckpt_restart);
+    mpi_errno = MPID_nem_mpich2_init(FALSE);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPID_nem_barrier(num_local, local_rank);
+    mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-#ifdef ENABLED_CHECKPOINTING
-    MPID_nem_ckpt_init(ckpt_restart);
+#ifdef ENABLE_CHECKPOINTING
+    mpi_errno = MPIDI_nem_ckpt_init();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 #endif
-
 
 #ifdef PAPI_MONITOR
     my_papi_start( pg_rank );

@@ -221,7 +221,7 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
                                         enum HYD_PMCD_pmi_process_mapping_type type,
                                         char **process_mapping_str)
 {
-    int i, j, k, node_id, *process_mapping;
+    int i, node_id;
     char *tmp[HYD_NUM_TMP_STRINGS];
     struct HYD_Partition *partition;
     struct HYD_Partition_segment *segment;

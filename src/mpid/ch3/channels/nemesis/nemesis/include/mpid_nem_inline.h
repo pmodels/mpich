@@ -143,23 +143,7 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 #endif
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
     
-#if 1
-    ((uint32_t *)(el->pkt.mpich2.payload))[0] = ((uint32_t *)buf)[0];
-    ((uint32_t *)(el->pkt.mpich2.payload))[1] = ((uint32_t *)buf)[1];
-    ((uint32_t *)(el->pkt.mpich2.payload))[2] = ((uint32_t *)buf)[2];
-    ((uint32_t *)(el->pkt.mpich2.payload))[3] = ((uint32_t *)buf)[3];
-    ((uint32_t *)(el->pkt.mpich2.payload))[4] = ((uint32_t *)buf)[4];
-    ((uint32_t *)(el->pkt.mpich2.payload))[5] = ((uint32_t *)buf)[5];
-    ((uint32_t *)(el->pkt.mpich2.payload))[6] = ((uint32_t *)buf)[6];
-    ((uint32_t *)(el->pkt.mpich2.payload))[7] = ((uint32_t *)buf)[7];
-    if (sizeof(MPIDI_CH3_Pkt_t) == 40) /* This conditional should be optimized out */
-    {
-	((uint32_t *)(el->pkt.mpich2.payload))[8] = ((uint32_t *)buf)[8];
-	((uint32_t *)(el->pkt.mpich2.payload))[9] = ((uint32_t *)buf)[9];
-    }
-#else /*1 */
-    MPIU_Memcpy (el->pkt.mpich2.payload, buf, size);
-#endif /*1 */
+    MPIU_Memcpy((void *)el->pkt.mpich2.payload, buf, size);
     DO_PAPI (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues11));
 
     MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent queue");
@@ -433,19 +417,7 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
     MPID_nem_queue_dequeue (MPID_nem_mem_region.my_freeQ, &el);
 #endif /*PREFETCH_CELL */
 
-    ((uint32_t *)(el->pkt.mpich2.payload))[0] = ((uint32_t *)(*iov)->MPID_IOV_BUF)[0];
-    ((uint32_t *)(el->pkt.mpich2.payload))[1] = ((uint32_t *)(*iov)->MPID_IOV_BUF)[1];
-    ((uint32_t *)(el->pkt.mpich2.payload))[2] = ((uint32_t *)(*iov)->MPID_IOV_BUF)[2];
-    ((uint32_t *)(el->pkt.mpich2.payload))[3] = ((uint32_t *)(*iov)->MPID_IOV_BUF)[3];
-    ((uint32_t *)(el->pkt.mpich2.payload))[4] = ((uint32_t *)(*iov)->MPID_IOV_BUF)[4];
-    ((uint32_t *)(el->pkt.mpich2.payload))[5] = ((uint32_t *)(*iov)->MPID_IOV_BUF)[5];
-    ((uint32_t *)(el->pkt.mpich2.payload))[6] = ((uint32_t *)(*iov)->MPID_IOV_BUF)[6];
-    ((uint32_t *)(el->pkt.mpich2.payload))[7] = ((uint32_t *)(*iov)->MPID_IOV_BUF)[7];
-    if (sizeof(MPIDI_CH3_Pkt_t) == 40) /* This conditional should be optimized out */
-    {
-	((uint32_t *)(el->pkt.mpich2.payload))[8] = ((uint32_t *)(*iov)->MPID_IOV_BUF)[8];
-	((uint32_t *)(el->pkt.mpich2.payload))[9] = ((uint32_t *)(*iov)->MPID_IOV_BUF)[9];
-    }
+    MPIU_Memcpy((void *)el->pkt.mpich2.payload, (*iov)->MPID_IOV_BUF, sizeof(MPIDI_CH3_Pkt_t));
 
     cell_buf = (char *)(el->pkt.mpich2.payload) + sizeof(MPIDI_CH3_Pkt_t);
     ++(*iov);

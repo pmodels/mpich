@@ -19,7 +19,7 @@ int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_BARRIER_INIT);
-
+    
     MPID_nem_mem_region.barrier = barrier_region;
     if (init_values) {
         OPA_store_int(&MPID_nem_mem_region.barrier->val, 0);
@@ -39,14 +39,14 @@ int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 /* FIXME: this is not a scalable algorithm because everyone is polling on the same cacheline */
-int MPID_nem_barrier (int num_processes, int rank)
+int MPID_nem_barrier(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_BARRIER);
 
-    if (num_processes == 1)
+    if (MPID_nem_mem_region.num_local == 1)
         goto fn_exit;
 
     MPIU_ERR_CHKANDJUMP1 (!barrier_init, mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "barrier not initialized");

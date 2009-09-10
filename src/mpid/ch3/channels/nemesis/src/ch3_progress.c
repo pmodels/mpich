@@ -466,7 +466,7 @@ void MPIDI_CH3I_Progress_wakeup(void)
 int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *rreq;
+    MPID_Request *rreq = NULL;
     int complete;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_HANDLE_PKT);

@@ -274,7 +274,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = MPID_nem_barrier(num_local, local_rank);
+        mpi_errno = MPID_nem_barrier();
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         if (local_rank == 0) {
@@ -379,7 +379,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = MPID_nem_barrier(num_local, local_rank);
+        mpi_errno = MPID_nem_barrier();
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
         if (local_rank == 0)
@@ -490,7 +490,7 @@ static int check_alloc(int num_local, int local_rank)
         OPA_store_int(&asym_check_region_p->is_asym, 0);
     }
 
-    mpi_errno = MPID_nem_barrier(num_local, local_rank);
+    mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (asym_check_region_p->base_ptr != MPID_nem_mem_region.memory.base_addr)
@@ -498,7 +498,7 @@ static int check_alloc(int num_local, int local_rank)
 
     OPA_read_write_barrier();
 
-    mpi_errno = MPID_nem_barrier(num_local, local_rank);
+    mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (OPA_load_int(&asym_check_region_p->is_asym))
