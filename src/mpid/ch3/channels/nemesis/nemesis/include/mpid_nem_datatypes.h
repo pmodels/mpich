@@ -60,9 +60,6 @@
    | -------------------- |
    ------------------------
 
-   There's also a ckpt packet in addition to the mpich2 pkt, but we
-   can ignore this for this discussion.
-
    For optimization, we want the cell to start at a cacheline boundary
    and the cell length to be a multiple of cacheline size.  This will
    avoid false sharing.  We also want payload to start at an 8-byte
@@ -158,22 +155,10 @@ typedef struct MPID_nem_pkt_mpich2
     char payload[MPID_NEM_MPICH2_DATA_LEN];
 } MPID_nem_pkt_mpich2_t;
 
-#ifdef ENABLED_CHECKPOINTING
-/* checkpoint marker */
-typedef struct MPID_nem_pkt_ckpt
-{
-    MPID_NEM_PKT_HEADER_FIELDS;
-    unsigned short wave;
-} MPID_nem_pkt_ckpt_t;
-#endif
-
 typedef union
 {
     MPID_nem_pkt_header_t      header;
     MPID_nem_pkt_mpich2_t      mpich2;
-#ifdef ENABLED_CHECKPOINTING
-    MPID_nem_pkt_ckpt_t        ckpt;
-#endif
 } MPID_nem_pkt_t;
 
 /* Nemesis cells which are to be used in shared memory need to use

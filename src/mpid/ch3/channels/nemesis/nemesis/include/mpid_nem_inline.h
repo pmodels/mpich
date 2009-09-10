@@ -47,14 +47,6 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
 
-#ifdef ENABLED_CHECKPOINTING
-    if (MPID_nem_ckpt_sending_markers)
-    {
-	MPID_nem_ckpt_send_markers();
-        goto return_again;
-    }
-#endif
-    
     /*DO_PAPI (PAPI_reset (PAPI_EventSet)); */
 
     MPIU_Assert (size == sizeof(MPIDI_CH3_Pkt_t));
@@ -76,10 +68,6 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 	    pbox->cell.pkt.mpich2.datalen = size;
 	    pbox->cell.pkt.mpich2.seqno   = vc_ch->send_seqno++;
 
-#ifdef ENABLED_CHECKPOINTING
-	    pbox->cell.pkt.mpich2.datalen = size;
-	    pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2;
-#endif /* ENABLED_CHECKPOINTING */
             MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
 
 	    payload_32[0] = buf_32[0];
@@ -138,9 +126,6 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     el->pkt.mpich2.dest    = vc->lpid;
     el->pkt.mpich2.datalen = size;
     el->pkt.mpich2.seqno   = vc_ch->send_seqno++;
-#ifdef ENABLED_CHECKPOINTING
-    el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2;
-#endif
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
     
     MPIU_Memcpy((void *)el->pkt.mpich2.payload, buf, size);
@@ -215,14 +200,6 @@ MPID_nem_mpich2_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 
     MPIU_Assert (*n_iov > 0 && (*iov)->MPID_IOV_LEN > 0);
     
-#ifdef ENABLED_CHECKPOINTING
-    if (MPID_nem_ckpt_sending_markers)
-    {
-	MPID_nem_ckpt_send_markers();
-        goto return_again;
-    }
-#endif
-    
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
     my_rank = MPID_nem_mem_region.rank;
@@ -275,9 +252,6 @@ MPID_nem_mpich2_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     el->pkt.mpich2.dest    = vc->lpid;
     el->pkt.mpich2.datalen = MPID_NEM_MPICH2_DATA_LEN - payload_len;
     el->pkt.mpich2.seqno   = vc_ch->send_seqno++;
-#ifdef ENABLED_CHECKPOINTING
-    el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2;
-#endif
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2);
 
     MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent queue");
@@ -333,13 +307,6 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_SENDV_HEADER);
 
-#ifdef ENABLED_CHECKPOINTING
-    if (MPID_nem_ckpt_sending_markers)
-    {
-	MPID_nem_ckpt_send_markers();
-        goto return_again;
-    }
-#endif
     
     DO_PAPI (PAPI_reset (PAPI_EventSet));
     MPIU_Assert (*n_iov > 0 && (*iov)->MPID_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
@@ -360,10 +327,6 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
 	    pbox->cell.pkt.mpich2.source  = MPID_nem_mem_region.local_rank;
 	    pbox->cell.pkt.mpich2.datalen = (*iov)[1].MPID_IOV_LEN + sizeof(MPIDI_CH3_Pkt_t);
 	    pbox->cell.pkt.mpich2.seqno   = vc_ch->send_seqno++;
-#ifdef ENABLED_CHECKPOINTING
-	    pbox->cell.pkt.mpich2.datalen = (*iov)[1].MPID_IOV_LEN + sizeof(MPIDI_CH3_Pkt_t);
-	    pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2;
-#endif
             MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
 
 	    payload_32[0] = buf_32[0];
@@ -446,9 +409,6 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
     el->pkt.mpich2.dest    = vc->lpid;
     el->pkt.mpich2.datalen = MPID_NEM_MPICH2_DATA_LEN - payload_len;
     el->pkt.mpich2.seqno   = vc_ch->send_seqno++;
-#ifdef ENABLED_CHECKPOINTING
-    el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2;
-#endif
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
 
     MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent queue");
@@ -517,13 +477,6 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
     MPIU_Assert(header_sz <= sizeof(MPIDI_CH3_Pkt_t));
     MPIU_Assert(*segment_first == 0); /* this routine is only called for new messages */
     
-#ifdef ENABLED_CHECKPOINTING
-    if (MPID_nem_ckpt_sending_markers)
-    {
-	MPID_nem_ckpt_send_markers();
-        goto return_again;
-    }
-#endif
     
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
@@ -541,9 +494,6 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
 	    pbox->cell.pkt.mpich2.source  = MPID_nem_mem_region.local_rank;
 	    pbox->cell.pkt.mpich2.datalen = sizeof(MPIDI_CH3_Pkt_t) + segment_size;
 	    pbox->cell.pkt.mpich2.seqno   = vc_ch->send_seqno++;
-#ifdef ENABLED_CHECKPOINTING
-	    pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2;
-#endif
             MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
 
             /* copy header */
@@ -609,9 +559,6 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
     el->pkt.mpich2.dest    = vc->lpid;
     el->pkt.mpich2.datalen = datalen;
     el->pkt.mpich2.seqno   = vc_ch->send_seqno++;
-#ifdef ENABLED_CHECKPOINTING
-    el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2;
-#endif
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
 
     MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent queue");
@@ -652,15 +599,7 @@ MPID_nem_mpich2_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, 
     MPIDI_msg_sz_t last;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
 
-    MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */
-    
-#ifdef ENABLED_CHECKPOINTING
-    if (MPID_nem_ckpt_sending_markers)
-    {
-	MPID_nem_ckpt_send_markers();
-        goto return_again;
-    }
-#endif
+    MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */    
     
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
@@ -703,9 +642,6 @@ MPID_nem_mpich2_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, 
     el->pkt.mpich2.dest    = vc->lpid;
     el->pkt.mpich2.datalen = datalen;
     el->pkt.mpich2.seqno   = vc_ch->send_seqno++;
-#ifdef ENABLED_CHECKPOINTING
-    el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2;
-#endif
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, el->pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
 
     MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent queue");
@@ -854,19 +790,6 @@ MPID_nem_mpich2_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocki
     
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
-#ifdef ENABLED_CHECKPOINTING
-    MPID_nem_ckpt_maybe_take_checkpoint();
-
-    if (MPID_nem_ckpt_message_log)
-    {
-	MPID_nem_ckpt_replay_message (cell);
-	MPIU_Assert ((*cell)->pkt.mpich2.seqno == MPID_nem_recv_seqno[(*cell)->pkt.mpich2.source]);
-	++MPID_nem_recv_seqno[(*cell)->pkt.mpich2.source];
-	*in_fbox = 0;
-	goto fn_exit;
-    }
-#endif
-    
 #ifdef USE_FASTBOX
     if (poll_fboxes(cell)) goto fbox_l;
 #endif/* USE_FASTBOX     */
@@ -892,12 +815,6 @@ MPID_nem_mpich2_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocki
     *in_fbox = 0;
 
  fn_exit:
-#ifdef ENABLED_CHECKPOINTING
-    if ((*cell)->pkt.header.type == MPID_NEM_PKT_CKPT)
-	MPID_nem_ckpt_got_marker (cell, in_fbox);
-    else if (MPID_nem_ckpt_logging_messages)
-	MPID_nem_ckpt_log_message (*cell);
-#endif
     DO_PAPI (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues6));
     
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, {
@@ -1006,21 +923,6 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 #endif
 #endif
 
-#ifdef ENABLED_CHECKPOINTING
-    MPID_nem_ckpt_maybe_take_checkpoint();
-
- top_l:
-    if (MPID_nem_ckpt_message_log)
-    {
-	MPID_nem_ckpt_replay_message (cell);
-	MPIU_Assert ((*cell)->pkt.mpich2.seqno == MPID_nem_recv_seqno[(*cell)->pkt.mpich2.source]);
-	++MPID_nem_recv_seqno[(*cell)->pkt.mpich2.source];
-	*in_fbox = 0;
-	return mpi_errno;
-    }
-#endif
-    
-    
 #ifdef USE_FASTBOX
     if (poll_fboxes(cell)) goto fbox_l;
 #endif /*USE_FASTBOX */
@@ -1070,19 +972,6 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 
  exit_l:    
 
-#ifdef ENABLED_CHECKPOINTING
-    if (*cell)
-    {
-        if ((*cell)->pkt.header.type == MPID_NEM_PKT_CKPT)
-        {
-            MPID_nem_ckpt_got_marker (cell, in_fbox);
-            goto top_l;
-        }
-        else if (MPID_nem_ckpt_logging_messages)
-            MPID_nem_ckpt_log_message (*cell);
-    }
-#endif
-
     DO_PAPI (PAPI_accum_var (PAPI_EventSet,PAPI_vvalues8));
     
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, {
@@ -1116,15 +1005,6 @@ MPID_nem_mpich2_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
     DO_PAPI (PAPI_reset (PAPI_EventSet));
-#ifdef ENABLED_CHECKPOINTING
-    if (cell->pkt.header.type == MPID_NEM_PKT_CKPT_REPLAY)
-    {
-	if (!MPID_nem_ckpt_message_log)
-	    /* this is the last replayed message */
-	    MPID_nem_ckpt_free_msg_log();
-	return mpi_errno;
-    }
-#endif
     MPID_nem_queue_enqueue (vc_ch->free_queue, cell);
     DO_PAPI (PAPI_accum_var (PAPI_EventSet,PAPI_vvalues9));
     return mpi_errno;

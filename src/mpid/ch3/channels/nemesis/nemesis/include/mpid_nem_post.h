@@ -17,9 +17,7 @@ extern int (*MPID_nem_local_lmt_progress)(void);
 /* FIXME: Do not export these definitions all the way into mpiimpl.h (which
    will happen if this is included in mpidpost.h or mpidpre.h) */
 int MPID_nem_init(int rank, struct MPIDI_PG *pg_p, int has_parent);
-int MPID_nem_init_ckpt(int rank, struct MPIDI_PG *pg_p, int ckpt_restart, int has_parent);
 int MPID_nem_finalize(void);
-int MPID_nem_ckpt_shutdown(void);
 int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values);
 int MPID_nem_barrier(void);
 int MPID_nem_vc_init(struct MPIDI_VC *vc);
@@ -30,18 +28,6 @@ int MPID_nem_lmt_shm_progress(void);
 int MPID_nem_lmt_dma_progress(void);
 int MPID_nem_lmt_vmsplice_progress(void);
 int MPID_nem_vc_terminate(struct MPIDI_VC *vc);
-
-#ifdef ENABLED_CHECKPOINTING
-int MPID_nem_ckpt_init (int ckpt_restart);
-void MPID_nem_ckpt_finalize (void);
-void MPID_nem_ckpt_maybe_take_checkpoint (void);
-void MPID_nem_ckpt_got_marker (MPID_nem_cell_ptr_t *cell, int *in_fbox);
-void MPID_nem_ckpt_log_message (MPID_nem_cell_ptr_t cell);
-void MPID_nem_ckpt_send_markers (void);
-int MPID_nem_ckpt_replay_message (MPID_nem_cell_ptr_t *cell);
-void MPID_nem_ckpt_free_msg_log (void);
-#endif
-
 
 /* one-sided */
 
@@ -96,7 +82,6 @@ int MPID_nem_mpich2_getv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *
 
 
 #if !defined (MPID_NEM_INLINE) || !MPID_NEM_INLINE
-int MPID_nem_mpich2_send_ckpt_marker(unsigned short wave, struct MPIDI_VC *vc, int *again);
 int MPID_nem_mpich2_send_header(void* buf, int size, struct MPIDI_VC *vc, int *again);
 int MPID_nem_mpich2_sendv(MPID_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
 int MPID_nem_mpich2_sendv_header(MPID_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);

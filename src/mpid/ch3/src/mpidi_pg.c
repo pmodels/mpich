@@ -671,6 +671,10 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 /* The "KVS" versions are for the process group to which the calling 
    process belongs.  These use the PMI_KVS routines to access the
    process information */
+#undef FUNCNAME
+#define FUNCNAME getConnInfoKVS
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 {
 #ifdef USE_PMI2_API

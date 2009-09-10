@@ -244,7 +244,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
                                                MPID_nem_mem_region.net_elements,
                                                MPID_NEM_NUM_CELLS,
                                                &net_free_queue,
-                                               FALSE, pg_p, pg_rank,
+                                               pg_p, pg_rank,
                                                &bc_val, &val_max_remaining);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -332,7 +332,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPID_nem_mpich2_init(FALSE);
+    mpi_errno = MPID_nem_mpich2_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);

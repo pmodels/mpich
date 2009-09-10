@@ -36,12 +36,3 @@ int MPID_nem_tcp_finalize(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_ckpt_shutdown
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_ckpt_shutdown(void)
-{
-    return MPID_nem_tcp_finalize();
-}
-

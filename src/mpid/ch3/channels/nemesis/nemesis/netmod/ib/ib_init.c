@@ -396,10 +396,6 @@ fn_fail:
  * @module_free_queue: pointer to the free queue for 
  *  this module. The process will return elements to
  *  this queue
- * @ckpt_restart: true if this is a restart from a 
- *  checkpoint. In a restart, the network needs to
- *  be brought up again, but we want to keep things 
- *  like sequence numbers.
  * @pg_p: MPICH2 process group pointer
  * @pg_rank: Rank in the process group
  * @bc_val_p: Pointer to business card pointer
@@ -418,7 +414,6 @@ int MPID_nem_ib_init (MPID_nem_queue_ptr_t proc_recv_queue,
         MPID_nem_cell_ptr_t module_elements, 
         int num_module_elements,
         MPID_nem_queue_ptr_t *module_free_queue, 
-        int ckpt_restart,
         MPIDI_PG_t *pg_p, 
         int pg_rank, 
         char **bc_val_p, 

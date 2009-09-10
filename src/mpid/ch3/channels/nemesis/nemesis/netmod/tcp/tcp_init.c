@@ -14,7 +14,6 @@
 MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
     MPID_nem_tcp_init,
     MPID_nem_tcp_finalize,
-    MPID_nem_tcp_ckpt_shutdown,
     MPID_nem_tcp_connpoll,
     MPID_nem_tcp_send,
     MPID_nem_tcp_get_business_card,
@@ -29,16 +28,51 @@ MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
 #define MPIDI_CH3I_IFNAME_KEY "ifname"
 
 #undef FUNCNAME
+#define FUNCNAME set_up_listener
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int set_up_listener(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ret;
+    MPIDI_STATE_DECL(MPID_STATE_SET_UP_LISTENER);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_SET_UP_LISTENER);
+
+    MPID_nem_tcp_g_lstn_plfd.fd = MPID_nem_tcp_g_lstn_sc.fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    MPIU_ERR_CHKANDJUMP2(MPID_nem_tcp_g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror(errno), errno);
+
+    mpi_errno = MPID_nem_tcp_set_sockopts(MPID_nem_tcp_g_lstn_sc.fd);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    MPID_nem_tcp_g_lstn_plfd.events = POLLIN;
+    mpi_errno = MPID_nem_tcp_bind(MPID_nem_tcp_g_lstn_sc.fd);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    ret = listen(MPID_nem_tcp_g_lstn_sc.fd, SOMAXCONN);	      
+    MPIU_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", MPIU_Strerror(errno), errno);  
+    MPID_nem_tcp_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
+    MPID_nem_tcp_g_lstn_sc.handler = MPID_nem_tcp_state_listening_handler;
+
+fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_SET_UP_LISTENER);
+    return mpi_errno;
+fn_fail:
+
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_tcp_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_t proc_free_queue,
                                  MPID_nem_cell_ptr_t proc_elements, int num_proc_elements, MPID_nem_cell_ptr_t module_elements,
                                  int num_module_elements, MPID_nem_queue_ptr_t *module_free_queue,
-                                 int ckpt_restart, MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
+                                 MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int ret;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_INIT);
@@ -49,22 +83,9 @@ int MPID_nem_tcp_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_
     MPIU_Assert(sizeof(MPID_nem_tcp_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
 
     /* set up listener socket */
-/*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
-    MPID_nem_tcp_g_lstn_plfd.fd = MPID_nem_tcp_g_lstn_sc.fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    MPIU_ERR_CHKANDJUMP2 (MPID_nem_tcp_g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror (errno), errno);
-
-    mpi_errno = MPID_nem_tcp_set_sockopts (MPID_nem_tcp_g_lstn_sc.fd);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
-    MPID_nem_tcp_g_lstn_plfd.events = POLLIN;
-    mpi_errno = MPID_nem_tcp_bind (MPID_nem_tcp_g_lstn_sc.fd);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
-    ret = listen (MPID_nem_tcp_g_lstn_sc.fd, SOMAXCONN);	      
-    MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", errno, MPIU_Strerror (errno));  
-    MPID_nem_tcp_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
-    MPID_nem_tcp_g_lstn_sc.handler = MPID_nem_tcp_state_listening_handler;
-
+    mpi_errno = set_up_listener();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
     /* create business card */
     mpi_errno = MPID_nem_tcp_get_business_card(pg_rank, bc_val_p, val_max_sz_p);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);

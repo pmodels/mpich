@@ -34,7 +34,7 @@ extern MPID_nem_queue_ptr_t MPID_nem_process_free_queue;
 
 int MPID_nem_gm_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_t proc_free_queue, MPID_nem_cell_ptr_t proc_elements,
                              int num_proc_elements, MPID_nem_cell_ptr_t module_elements, int num_module_elements,
-                             MPID_nem_queue_ptr_t *module_free_queue, int ckpt_restart,
+                             MPID_nem_queue_ptr_t *module_free_queue,
                              MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_gm_finalize (void);
 int MPID_nem_gm_ckpt_shutdown (void);

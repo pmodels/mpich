@@ -124,8 +124,6 @@ static int init_mx( MPIDI_PG_t *pg_p )
        num_proc_elements -- number of process' queue elements
        module_elements -- pointer to queue elements to be used by this module
        num_module_elements -- number of queue elements for this module
-       ckpt_restart -- true if this is a restart from a checkpoint.  In a restart, the network needs to be brought up again, but
-                       we want to keep things like sequence numbers.
    OUT
        free_queue -- pointer to the free queue for this module.  The process will return elements to
                      this queue
@@ -140,7 +138,7 @@ MPID_nem_mx_init (MPID_nem_queue_ptr_t proc_recv_queue,
 		  MPID_nem_queue_ptr_t proc_free_queue, 
 		  MPID_nem_cell_ptr_t proc_elements,   int num_proc_elements,
 		  MPID_nem_cell_ptr_t module_elements, int num_module_elements, 
-		  MPID_nem_queue_ptr_t *module_free_queue, int ckpt_restart,
+		  MPID_nem_queue_ptr_t *module_free_queue,
 		  MPIDI_PG_t *pg_p, int pg_rank,
 		  char **bc_val_p, int *val_max_sz_p)
 {   

@@ -22,8 +22,6 @@
 
 extern char MPID_nem_hostname[MAX_HOSTNAME_LEN];
 
-/* #define ENABLED_CHECKPOINTING */
-
 #define MPID_NEM_RET_OK       1
 #define MPID_NEM_RET_NG      -1
 #define MPID_NEM_KEY          632236
