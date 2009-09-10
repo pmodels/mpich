@@ -298,7 +298,11 @@ int main(int argc, char **argv)
         if (WIFSIGNALED(exit_status))
             printf("%s (signal %d)\n", strsignal(WTERMSIG(exit_status)),
                    WTERMSIG(exit_status));
-        return (WEXITSTATUS(exit_status));
+        else if (WIFEXITED(exit_status))
+            return (WEXITSTATUS(exit_status));
+        else if (WIFSTOPPED(exit_status))
+            return (WSTOPSIG(exit_status));
+        return exit_status;
     }
 
   fn_fail:

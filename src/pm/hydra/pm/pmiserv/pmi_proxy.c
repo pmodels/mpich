@@ -48,18 +48,11 @@ static HYD_Status wait_for_procs_to_finish(void)
         }
     }
 
-    /* FIXME: If we did not break out yet, add a small usleep to yield
-     * CPU here. We can not just sleep for the remaining time, as the
-     * timeout value might be large and the application might exit
-     * much quicker. Note that the sched_yield() call is broken on
-     * newer linux kernel versions and should not be used. */
-    /* Once all the sockets are closed, wait for all the processes to
-     * finish. We poll here, but hopefully not for too long. */
     do {
         if (HYD_PMCD_pmi_proxy_params.procs_are_launched == 0)
             break;
 
-        pid = waitpid(-1, &ret_status, WNOHANG);
+        pid = waitpid(-1, &ret_status, 0);
 
         /* Find the pid and mark it as complete. */
         if (pid > 0)
