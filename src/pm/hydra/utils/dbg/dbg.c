@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 
-static char *dbg_prefix;
+static char *dbg_prefix = "unknown";
 
 void HYDU_dump_prefix(FILE *fp)
 {
@@ -30,7 +30,8 @@ void HYDU_dump(FILE *fp, const char *str, ...)
 
     va_start(list, str);
     HYDU_dump_prefix(fp);
-    HYDU_dump_noprefix(fp, str, list);
+    vfprintf(fp, str, list);
+    fflush(fp);
     va_end(list);
 }
 
