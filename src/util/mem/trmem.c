@@ -797,6 +797,17 @@ may be block not allocated with MPIU_trmalloc or MALLOC\n",
 	    return 0;
 	}
     }
+
+    /* Per the POSIX Standard, realloc() with zero size has two possible
+     * results.  In both cases the given pointer (p) is freed, and the function
+     * will either return NULL or a unique value that can safely be passed to
+     * free().  We return NULL here because that is more likely to catch
+     * programming errors at higher levels. */
+    if (!size) {
+        MPIU_trfree(p, lineno, fname);
+        return NULL;
+    }
+
     pnew = MPIU_trmalloc( (unsigned)size, lineno, fname );
 
     /* If trmalloc failed, p should be left alone and will not be freed.  So we
