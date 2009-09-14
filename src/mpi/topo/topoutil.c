@@ -94,7 +94,15 @@ static int MPIR_Topology_finalize( void *p ATTRIBUTE((unused)) )
 
 static int *MPIR_Copy_array( int n, const int a[], int *err )
 {
-    int *new_p = (int *)MPIU_Malloc( n * sizeof(int) );
+    int *new_p;
+
+    /* the copy of NULL is NULL */
+    if (a == NULL) {
+        MPIU_Assert(n == 0);
+        return NULL;
+    }
+
+    new_p = (int *)MPIU_Malloc( n * sizeof(int) );
 
     /* --BEGIN ERROR HANDLING-- */
     if (!new_p) {
@@ -107,7 +115,7 @@ static int *MPIR_Copy_array( int n, const int a[], int *err )
 }
 
 /* The keyval copy and delete functions must handle copying and deleting 
-   the assoicated topology structures 
+   the associated topology structures 
    
    We can reduce the number of allocations by making a single allocation
    of enough integers for all fields (including the ones in the structure)
