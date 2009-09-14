@@ -131,7 +131,7 @@ static void verify_comm(MPI_Comm comm)
         if (j != outdegree)
             fprintf(stderr, "outdegree does not match, expected=%d got=%d, layout='%s'\n", outdegree, j, graph_layout_name);
 
-        if (weighted == 0)
+        if ((indegree || outdegree) && (weighted == 0))
             fprintf(stderr, "MPI_Dist_graph_neighbors_count thinks the graph is not weighted\n");
 
 
