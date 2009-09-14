@@ -22,6 +22,7 @@ blockindexed-zero-count 1
 blockindexed-misc 1
 indexed-misc 1
 subarray-pack 1
+subarray 2
 darray-pack 1
 darray-pack 9
 # darray-pack 72
