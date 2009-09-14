@@ -154,10 +154,12 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
     }
 
     *mapping_out = mapping;
+    MPIU_CHKPMEM_COMMIT();
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
     return mpi_errno;
 fn_fail:
+    MPIU_CHKPMEM_REAP();
     goto fn_exit;
 }
 
