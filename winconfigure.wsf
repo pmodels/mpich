@@ -413,6 +413,20 @@ Next
   len_double_complex		= "10"
   len_long_double_complex	= "20"
 
+' C99 types - These types are not supported by VS, however
+' C++ pgms use the same types. So we use the C++ type sizes here
+' Also since _Complex is an alias for float _Complex we don't need
+' to handle it here
+  len__Bool                 = "01"
+  len_float__Complex         = "08"
+  len_double__Complex        = "10"
+  len_long_double__Complex   = "10"
+
+  len_mpi_aint64        = "08"
+  len_mpi_aint32        = "04"
+
+  len_mpi_offset        = "08"
+
 Function CreateDtypeDictionary(byref types, str, b64)
 	dim regEx, Match, Matches
 	set regEx = New RegExp
@@ -431,6 +445,7 @@ Function CreateDtypeDictionary(byref types, str, b64)
 		size_str = RegExpFind("\$\{len.*\}", Match.Value)
 		dtype_str = RegExpFind("MPI_[^=]*", Match.Value)
 		dtype_val_str = RegExpFind("0x4c00.*[0-9a-f][0-9a-f]", Match.Value)
+                ' If size_str is empty then the datatype handle is hardcoded
 		if size_str <> "" then
 			Select Case size_str
 				Case "${len_int}"
@@ -473,6 +488,22 @@ Function CreateDtypeDictionary(byref types, str, b64)
 					dtype_val_str = Replace(dtype_val_str, size_str, len_wchar_t)
 				Case "${len_wchar}"
 					dtype_val_str = Replace(dtype_val_str, size_str, len_wchar)
+                                Case "${len__Bool}"
+                                        dtype_val_str = Replace(dtype_val_str, size_str, len__Bool)
+                                Case "${len_float__Complex}"
+                                        dtype_val_str = Replace(dtype_val_str, size_str, len_float__Complex)
+                                Case "${len_double__Complex}"
+                                        dtype_val_str = Replace(dtype_val_str, size_str, len_double__Complex)
+                                Case "${len_long_double__Complex}"
+                                        dtype_val_str = Replace(dtype_val_str, size_str, len_long_double__Complex)
+                                Case "${len_mpi_aint}"
+                                        If b64 Then
+                                            dtype_val_str = Replace(dtype_val_str, size_str, len_mpi_aint64)
+                                        Else
+                                            dtype_val_str = Replace(dtype_val_str, size_str, len_mpi_aint32)
+                                        End If
+                                Case "${len_mpi_offset}"
+                                        dtype_val_str = Replace(dtype_val_str, size_str, len_mpi_offset)
 				Case Else
 					unmatched_size_strs = unmatched_size_strs & " " & size_str & vbCrLf
 			End Select
@@ -936,6 +967,102 @@ MPIR_CXX_BOOL 			= "0x" + mpi_datatype_prefix + len_bool 		+ "33"
 MPIR_CXX_COMPLEX		= "0x" + mpi_datatype_prefix + len_complex		+ "34"
 MPIR_CXX_DOUBLE_COMPLEX 	= "0x" + mpi_datatype_prefix + len_double_complex	+ "35"
 MPIR_CXX_LONG_DOUBLE_COMPLEX	= "0x" + mpi_datatype_prefix + len_long_double_complex	+ "36"
+
+' Fixed width types
+if dtypes.Exists("MPI_INT8_T") then
+    MPI_INT8_T = dtypes.Item("MPI_INT8_T")
+else
+    missing_datatypes = missing_datatypes & "MPI_INT8_T" & vbCrLf
+    MPI_INT8_T = "0x" + mpi_datatype_prefix + "01" + "37"
+end if
+if dtypes.Exists("MPI_INT16_T") then
+    MPI_INT16_T = dtypes.Item("MPI_INT16_T")
+else
+    missing_datatypes = missing_datatypes & "MPI_INT16_T" & vbCrLf
+    MPI_INT16_T = "0x" + mpi_datatype_prefix + "02" + "38"
+end if
+if dtypes.Exists("MPI_INT32_T") then
+    MPI_INT32_T = dtypes.Item("MPI_INT32_T")
+else
+    missing_datatypes = missing_datatypes & "MPI_INT32_T" & vbCrLf
+    MPI_INT32_T = "0x" + mpi_datatype_prefix + "04" + "39"
+end if
+if dtypes.Exists("MPI_INT64_T") then
+    MPI_INT64_T = dtypes.Item("MPI_INT64_T")
+else
+    missing_datatypes = missing_datatypes & "MPI_INT64_T" & vbCrLf
+    MPI_INT64_T = "0x" + mpi_datatype_prefix + "08" + "3a"
+end if
+if dtypes.Exists("MPI_UINT8_T") then
+    MPI_UINT8_T = dtypes.Item("MPI_UINT8_T")
+else
+    missing_datatypes = missing_datatypes & "MPI_UINT8_T" & vbCrLf
+    MPI_UINT8_T = "0x" + mpi_datatype_prefix + "01" + "3b"
+end if
+if dtypes.Exists("MPI_UINT16_T") then
+    MPI_UINT16_T = dtypes.Item("MPI_UINT16_T")
+else
+    missing_datatypes = missing_datatypes & "MPI_UINT16_T" & vbCrLf
+    MPI_UINT16_T = "0x" + mpi_datatype_prefix + "02" + "3c"
+end if
+if dtypes.Exists("MPI_UINT32_T") then
+    MPI_UINT32_T = dtypes.Item("MPI_UINT32_T")
+else
+    missing_datatypes = missing_datatypes & "MPI_UINT32_T" & vbCrLf
+    MPI_UINT32_T = "0x" + mpi_datatype_prefix + "04" + "3d"
+end if
+if dtypes.Exists("MPI_UINT64_T") then
+    MPI_UINT64_T = dtypes.Item("MPI_UINT64_T")
+else
+    missing_datatypes = missing_datatypes & "MPI_UINT64_T" & vbCrLf
+    MPI_UINT64_T = "0x" + mpi_datatype_prefix + "08" + "3e"
+end if
+' C99 types
+if dtypes.Exists("MPI_C_BOOL") then
+    MPI_C_BOOL = dtypes.Item("MPI_C_BOOL")
+else
+    missing_datatypes = missing_datatypes & "MPI_C_BOOL" & vbCrLf
+    MPI_C_BOOL = "0x" + mpi_datatype_prefix + len__Bool + "3f"
+end if
+if dtypes.Exists("MPI_C_FLOAT_COMPLEX") then
+    MPI_C_FLOAT_COMPLEX = dtypes.Item("MPI_C_FLOAT_COMPLEX")
+else
+    missing_datatypes = missing_datatypes & "MPI_C_FLOAT_COMPLEX" & vbCrLf
+    MPI_C_FLOAT_COMPLEX = "0x" + mpi_datatype_prefix + len_float__Complex + "40"
+end if
+if dtypes.Exists("MPI_C_DOUBLE_COMPLEX") then
+    MPI_C_DOUBLE_COMPLEX = dtypes.Item("MPI_C_DOUBLE_COMPLEX")
+else
+    missing_datatypes = missing_datatypes & "MPI_C_DOUBLE_COMPLEX" & vbCrLf
+    MPI_C_DOUBLE_COMPLEX = "0x" + mpi_datatype_prefix + len_double__Complex + "41"
+end if
+if dtypes.Exists("MPI_C_LONG_DOUBLE_COMPLEX") then
+    MPI_C_LONG_DOUBLE_COMPLEX = dtypes.Item("MPI_C_LONG_DOUBLE_COMPLEX")
+else
+    missing_datatypes = missing_datatypes & "MPI_C_LONG_DOUBLE_COMPLEX" & vbCrLf
+    MPI_C_LONG_DOUBLE_COMPLEX = "0x" + mpi_datatype_prefix + len_long_double__Complex + "42"
+end if
+' Note that in configure.in MPI_AINT is named as MPI_AINT_DATATYPE - due to name collision
+if dtypes.Exists("MPI_AINT_DATATYPE") then
+    MPI_AINT_W32 = dtypes.Item("MPI_AINT_DATATYPE")
+else
+    missing_datatypes = missing_datatypes & "MPI_AINT" & vbCrLf
+    MPI_AINT_W32 = "0x" + mpi_datatype_prefix + len_mpi_aint32 + "43"
+end if
+if dtypes64.Exists("MPI_AINT_DATATYPE") then
+    MPI_AINT_W64 = dtypes64.Item("MPI_AINT_DATATYPE")
+else
+    missing_datatypes = missing_datatypes & "MPI_AINT" & vbCrLf
+    MPI_AINT_W64 = "0x" + mpi_datatype_prefix + len_mpi_aint64 + "43"
+end if
+' Note that in configure.in MPI_OFFSET is named as MPI_OFFSET_DATATYPE - due to name collision
+if dtypes.Exists("MPI_OFFSET_DATATYPE") then
+    MPI_OFFSET_W64 = dtypes.Item("MPI_OFFSET_DATATYPE")
+else
+    missing_datatypes = missing_datatypes & "MPI_OFFSET" & vbCrLf
+    MPI_OFFSET_W64 = "0x" + mpi_datatype_prefix + len_mpi_offset + "44"
+end if
+
 
 if missing_datatypes <> "" then
 	printMsg "ERROR", "Missing datatypes:" & vbCrLf & missing_datatypes
@@ -1547,6 +1674,12 @@ Function ReplaceAts( str, use_f77, b64 )
 				else
 					str = Replace(str, "@MPI_AINT@", MPI_AINT32)
 				end if
+			Case "@MPI_AINT_DATATYPE@"
+				if b64 then
+					str = Replace(str, "@MPI_AINT_DATATYPE@", MPI_AINT_W64)
+				else
+					str = Replace(str, "@MPI_AINT_DATATYPE@", MPI_AINT_W32)
+				end if
 			Case "@MPI_AINT_FMT_DEC_SPEC@"
 				if b64 then
 					str = Replace(str, "@MPI_AINT_FMT_DEC_SPEC@", MPI_AINT64_FMT_DEC_SPEC)
@@ -1563,8 +1696,34 @@ Function ReplaceAts( str, use_f77, b64 )
 				str = Replace(str, "@MPI_FINT@", MPI_FINT)
 			Case "@MPI_OFFSET@"
 				str = Replace(str, "@MPI_OFFSET@", MPI_OFFSET)
+			Case "@MPI_OFFSET_DATATYPE@"
+				str = Replace(str, "@MPI_OFFSET_DATATYPE@", MPI_OFFSET_W64)
 			Case "@MPI_OFFSET_TYPEDEF@"
 				str = Replace(str, "@MPI_OFFSET_TYPEDEF@", MPI_OFFSET_TYPEDEF)
+                        Case "@MPI_INT8_T@"
+                                str = Replace(str, "@MPI_INT8_T@", MPI_INT8_T)
+                        Case "@MPI_INT16_T@"
+                                str = Replace(str, "@MPI_INT16_T@", MPI_INT16_T)
+                        Case "@MPI_INT32_T@"
+                                str = Replace(str, "@MPI_INT32_T@", MPI_INT32_T)
+                        Case "@MPI_INT64_T@"
+                                str = Replace(str, "@MPI_INT64_T@", MPI_INT64_T)
+                        Case "@MPI_UINT8_T@"
+                                str = Replace(str, "@MPI_UINT8_T@", MPI_UINT8_T)
+                        Case "@MPI_UINT16_T@"
+                                str = Replace(str, "@MPI_UINT16_T@", MPI_UINT16_T)
+                        Case "@MPI_UINT32_T@"
+                                str = Replace(str, "@MPI_UINT32_T@", MPI_UINT32_T)
+                        Case "@MPI_UINT64_T@"
+                                str = Replace(str, "@MPI_UINT64_T@", MPI_UINT64_T)
+                        Case "@MPI_C_BOOL@"
+                                str = Replace(str, "@MPI_C_BOOL@", MPI_C_BOOL)
+                        Case "@MPI_C_FLOAT_COMPLEX@"
+                                str = Replace(str, "@MPI_C_FLOAT_COMPLEX@", MPI_C_FLOAT_COMPLEX)
+                        Case "@MPI_C_DOUBLE_COMPLEX@"
+                                str = Replace(str, "@MPI_C_DOUBLE_COMPLEX@", MPI_C_DOUBLE_COMPLEX)
+                        Case "@MPI_C_LONG_DOUBLE_COMPLEX@"
+                                str = Replace(str, "@MPI_C_LONG_DOUBLE_COMPLEX@", MPI_C_LONG_DOUBLE_COMPLEX)
 			Case "@EXTRA_STATUS_DECL@"
 				str = Replace(str, "@EXTRA_STATUS_DECL@", EXTRA_STATUS_DECL)
 			Case "@HAVE_ROMIO@"
