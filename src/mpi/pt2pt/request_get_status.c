@@ -81,6 +81,9 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
     if (request == MPI_REQUEST_NULL) {
         *flag = 1;
         MPIR_Status_set_empty(status);
+        /* the above macro doesn't set MPI_ERROR */
+        if (status != MPI_STATUS_IGNORE)
+            status->MPI_ERROR = MPI_SUCCESS;
         goto fn_exit;
     }
 
