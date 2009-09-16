@@ -12,9 +12,8 @@ with the installation or usage of MPICH2, please send an email to
 mpich-discuss@mcs.anl.gov (you need to subscribe to this list
 (https://lists.mcs.anl.gov/mailman/listinfo/mpich-discuss) before
 sending an email). If you have found a bug in MPICH2, we request that
-you report it at our bug tracking system
-(http://wiki.mcs.anl.gov/mpich2/index.php/Creating_New_Bug_Tickets) or
-send an email to mpich2-maint@mcs.anl.gov.
+you report it at our bug tracking system:
+(https://trac.mcs.anl.gov/projects/mpich2/newticket).
 
 This README file should contain enough information to get you started
 with MPICH2. More extensive installation and user guides can be found

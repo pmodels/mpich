@@ -3251,7 +3251,7 @@ elif test "$pac_cv_c_max_fp_align" = "eight" ; then
 elif test "$pac_cv_c_max_fp_align" = "sixteen" ; then
     pac_cv_c_fp_align_nr=16
 elif test "$pac_cv_c_max_fp_align" = "largest" ; then
-    AC_MSG_ERROR([Configure detected unsupported structure alignment rules.  Please email mpich2-maint@mcs.anl.gov with complete configure output and information on architecture.])
+    AC_MSG_ERROR([Configure detected unsupported structure alignment rules.])
 fi
 
 if test -n "$pac_cv_c_fp_align_nr" ; then
@@ -4591,7 +4591,7 @@ EOF
     # enabled.
     if test "$enable_f90" = "yes" ; then
         if test "$ADDRESS_KIND" -le 0 -o "$OFFSET_KIND" -le 0 ; then
-	    AC_MSG_ERROR([Unable to determine Fortran integer kinds for MPI types.  If you do not need Fortran 90, add --disable-f90 to the configure options.  If you need Fortran 90, please send the output of configure and the file config.log to mpich2-maint@mcs.anl.gov .])
+	    AC_MSG_ERROR([Unable to determine Fortran integer kinds for MPI types.  If you do not need Fortran 90, add --disable-f90 to the configure options.])
 	    # If the above is converted to a warning, you need to change 
 	    # enable_f90 and remote f90 from the bindings
 	    enable_f90=no

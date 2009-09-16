@@ -76,6 +76,6 @@ Files:
 Contact:
 
 MPI-specific suggestions and bug reports should
-be sent to 'mpich2-maint@mcs.anl.gov'.
+be sent to 'mpich-discuss@mcs.anl.gov'.
 
 D*/

@@ -105,7 +105,7 @@ run MPI applications.  Some particular features are different
 if you have system administration privileges (can become ``root'' on a
 Unix system), and these are explained here.  It is not necessary to have
 such privileges to build and install MPICH2.  In the event of problems,
-send mail to \texttt{mpich2-maint@mcs.anl.gov}.  Once MPICH2 is
+send mail to \texttt{mpich-discuss@mcs.anl.gov}.  Once MPICH2 is
 installed, details on how to run MPI jobs are covered in the \emph{MPICH2
 User's Guide}, found in this same \texttt{doc} subdirectory.
 
@@ -209,7 +209,7 @@ where the \texttt{$\backslash$} means that this is really one line.  (On
 instead of \verb+|& tee c.txt+).  Other configure options are
 described below.  Check the \texttt{c.txt} file to make sure
 everything went well.  Problems should be self-explanatory, but if not,
-send \texttt{c.txt} to \texttt{mpich2-maint@mcs.anl.gov}.
+send \texttt{c.txt} to \texttt{mpich-discuss@mcs.anl.gov}.
 The file \texttt{config.log} is created by \texttt{configure} and
 contains a record of the tests that \texttt{configure} performed.  It
 is normal for some tests recorded in \texttt{config.log} to fail.  
@@ -230,7 +230,7 @@ do a \texttt{make clean} and then run make again with \texttt{VERBOSE=1}
     make VERBOSE=1 2>&1 | tee m.txt   (for bash and sh)
 \end{verbatim}
 and then send \texttt{m.txt} and \texttt{c.txt} to 
-\texttt{mpich2-maint@mcs.anl.gov}.
+\texttt{mpich-discuss@mcs.anl.gov}.
 
 \item
 Install the MPICH2 commands:
