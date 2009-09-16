@@ -211,7 +211,7 @@ if test "$enable_g" = "yes" -a "$FROM_MPICH2" != "yes" ; then
               # Split eval command into 2 lines so
               # vi's hightlight mode won't get confused. 
               flagcmd="$flagname=\"$flagvalue -g\""
-              eval flagcmd
+              eval ${flagcmd}
               ;;
         esac
     done
