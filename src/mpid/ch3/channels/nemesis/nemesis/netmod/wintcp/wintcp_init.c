@@ -44,7 +44,6 @@ static int GetIPInterface( MPIDU_Sock_ifaddr_t *, int * );
 MPID_nem_netmod_funcs_t MPIDI_nem_newtcp_module_funcs = {
     MPID_nem_newtcp_module_init,
     MPID_nem_newtcp_module_finalize,
-    MPID_nem_newtcp_module_ckpt_shutdown,
     MPID_nem_newtcp_module_poll,
     MPID_nem_newtcp_module_send,
     MPID_nem_newtcp_module_get_business_card,
@@ -65,7 +64,7 @@ MPID_nem_netmod_funcs_t MPIDI_nem_newtcp_module_funcs = {
 int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_t proc_free_queue,
                                  MPID_nem_cell_ptr_t proc_elements, int num_proc_elements, MPID_nem_cell_ptr_t module_elements,
                                  int num_module_elements, MPID_nem_queue_ptr_t *module_free_queue,
-                                 int ckpt_restart, MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
+                                 MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -74,7 +73,6 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_INIT);
 
     MPIU_UNREFERENCED_ARG(pg_p);
-    MPIU_UNREFERENCED_ARG(ckpt_restart);
     MPIU_UNREFERENCED_ARG(proc_elements);
     MPIU_UNREFERENCED_ARG(num_proc_elements);
 
