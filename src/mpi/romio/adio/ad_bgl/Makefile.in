@@ -29,7 +29,7 @@ default: $(LIBNAME)
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 .c.lo:
-	$(C_COMPILE_SHL) -c $<
+	$(C_COMPILE_SHL) $(CFLAGS) -c $<
 	@mv -f $*.o $*.lo
 
 $(LIBNAME): $(AD_BGL_OBJECTS)
