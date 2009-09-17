@@ -394,14 +394,22 @@ EXPORTS
 	MPI_Get_version
 	PMPI_Graph_create
 	MPI_Graph_create
+	PMPI_Dist_graph_create
+	MPI_Dist_graph_create
+	PMPI_Dist_graph_create_adjacent
+	MPI_Dist_graph_create_adjacent
 	PMPI_Graph_get
 	MPI_Graph_get
 	PMPI_Graph_map
 	MPI_Graph_map
 	PMPI_Graph_neighbors
 	MPI_Graph_neighbors
+	PMPI_Dist_graph_neighbors
+	MPI_Dist_graph_neighbors
 	PMPI_Graph_neighbors_count
 	MPI_Graph_neighbors_count
+	PMPI_Dist_graph_neighbors_count
+	MPI_Dist_graph_neighbors_count
 	PMPI_Graphdims_get
 	MPI_Graphdims_get
 	PMPI_Grequest_complete
@@ -484,6 +492,8 @@ EXPORTS
 	MPI_Op_create
 	PMPI_Op_free
 	MPI_Op_free
+	PMPI_Op_commutative
+	MPI_Op_commutative
 	PMPI_Open_port
 	MPI_Open_port
 	PMPI_Pack
@@ -510,8 +520,12 @@ EXPORTS
 	MPI_Recv_init
 	PMPI_Reduce
 	MPI_Reduce
+	PMPI_Reduce_local
+	MPI_Reduce_local
 	PMPI_Reduce_scatter
 	MPI_Reduce_scatter
+	PMPI_Reduce_scatter_block
+	MPI_Reduce_scatter_block
 	PMPI_Register_datarep
 	MPI_Register_datarep
 	PMPI_Request_free

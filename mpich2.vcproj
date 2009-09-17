@@ -4846,6 +4846,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\mpi\topo\dist_gr_create.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\topo\dist_gr_create_adj.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\topo\dist_gr_neighb.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\topo\dist_gr_neighb_count.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mpi\attr\dup_fn.c"
 				>
 			</File>
@@ -5995,6 +6011,10 @@
 			</File>
 			<File
 				RelativePath=".\src\util\thread\mpiu_thread.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\op_commutative.c"
 				>
 			</File>
 			<File
@@ -7436,7 +7456,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\mpi\coll\red_scat_block.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mpi\coll\reduce.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\reduce_local.c"
 				>
 			</File>
 			<File
