@@ -39,7 +39,7 @@ all: mpio
 mpio:
 	$(MAKE) mpiolib
 	@if [ "$(NOPROFILE)" = 0 ] ; then\
-            $(MAKE) profile; \
+            $(MAKE) profile || exit 1; \
         fi;\
 	$(RANLIB) $(LIBNAME)
 	@if [ "$(WITHIN_KNOWN_MPI_IMPL)" = no ] ; then \
@@ -84,7 +84,7 @@ mpiolib:
             echo " " ;\
             echo compiling ROMIO in directory $$dir ;\
 	    sleep 1;\
-            (cd $$dir && $(MAKE) ;) ;\
+            (cd $$dir && $(MAKE);) || exit 1 ;\
             if [ $$? != 0 ] ; then \
                 echo "Make failed in directory $$dir" ; exit 1 ;\
             fi ;\
@@ -99,7 +99,7 @@ profile:
                echo building profiling interface in directory $$dir ;\
                sleep 1;\
                (cd $$dir && \
-                $(MAKE) profile MPIOPROFILE="-DMPIO_BUILD_PROFILING";) ;\
+                $(MAKE) profile MPIOPROFILE="-DMPIO_BUILD_PROFILING";) || exit 1;\
                 if [ $$? != 0 ] ; then \
                     echo "Make failed in directory $$dir" ; exit 1 ;\
                 fi ;\
