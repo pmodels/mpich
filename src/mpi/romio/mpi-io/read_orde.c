@@ -40,6 +40,7 @@ int MPI_File_read_ordered_end(MPI_File mpi_fh, void *buf, MPI_Status *status)
     int error_code=MPI_SUCCESS;
     ADIO_File fh;
     static char myname[] = "MPI_FILE_READ_ORDERED_END";
+    MPIU_THREADPRIV_DECL;
 
     MPIU_UNREFERENCED_ARG(buf);
 

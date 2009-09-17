@@ -46,6 +46,7 @@ int MPI_Info_create( MPI_Info *info )
     MPID_Info *info_ptr;
     static const char FCNAME[] = "MPI_Info_create";
     int mpi_errno = MPI_SUCCESS;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

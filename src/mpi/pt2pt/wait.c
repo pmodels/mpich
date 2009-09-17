@@ -56,6 +56,7 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
     MPID_Request * request_ptr = NULL;
     int active_flag;
     int mpi_errno = MPI_SUCCESS;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WAIT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

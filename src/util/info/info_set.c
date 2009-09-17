@@ -52,6 +52,7 @@ int MPI_Info_set( MPI_Info info, char *key, char *value )
     static const char FCNAME[] = "MPI_Info_set";
     int mpi_errno = MPI_SUCCESS;
     MPID_Info *info_ptr=0, *curr_ptr, *prev_ptr;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_SET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

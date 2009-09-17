@@ -58,6 +58,7 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler)
     MPI_Errhandler eh;
     MPID_Errhandler *e;
 #endif
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_FILE_GET_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

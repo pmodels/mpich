@@ -57,6 +57,7 @@ int MPI_Comm_accept(char *port_name, MPI_Info info, int root, MPI_Comm comm,
     MPID_Comm *comm_ptr = NULL;
     MPID_Comm *newcomm_ptr = NULL;
     MPID_Info *info_ptr = NULL;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_ACCEPT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

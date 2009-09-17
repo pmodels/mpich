@@ -599,6 +599,7 @@ int MPI_Allreduce ( void *sendbuf, void *recvbuf, int count,
     static const char FCNAME[] = "MPI_Allreduce";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ALLREDUCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -731,7 +732,6 @@ int MPI_Allreduce ( void *sendbuf, void *recvbuf, int count,
 
 		/* now broadcast the result among local processes */
                 if (comm_ptr->node_comm != NULL) {
-		    MPIU_THREADPRIV_DECL;
 		    MPIU_THREADPRIV_GET;
 		    
 		    MPIR_Nest_incr();

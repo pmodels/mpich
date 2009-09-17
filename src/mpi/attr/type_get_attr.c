@@ -36,6 +36,7 @@ int MPIR_TypeGetAttr( MPI_Datatype type, int type_keyval, void *attribute_val,
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *type_ptr = NULL;
     MPID_Attribute *p;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TYPE_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

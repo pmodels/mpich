@@ -54,6 +54,7 @@ int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
     static const char FCNAME[] = "MPI_Probe";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_PROBE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

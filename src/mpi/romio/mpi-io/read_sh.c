@@ -47,6 +47,7 @@ int MPI_File_read_shared(MPI_File mpi_fh, void *buf, int count,
     int datatype_size, incr;
     ADIO_Offset off, shared_fp;
     ADIO_File fh;
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();

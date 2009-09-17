@@ -44,6 +44,7 @@ int MPI_File_read_ordered_begin(MPI_File mpi_fh, void *buf, int count,
     ADIO_Offset shared_fp;
     ADIO_File fh;
     static char myname[] = "MPI_FILE_READ_ORDERED_BEGIN";
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();

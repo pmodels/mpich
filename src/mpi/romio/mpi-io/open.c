@@ -47,7 +47,7 @@ int MPI_File_open(MPI_Comm comm, char *filename, int amode,
     MPI_Comm dupcomm;
     ADIOI_Fns *fsops;
     static char myname[] = "MPI_FILE_OPEN";
-
+    MPIU_THREADPRIV_DECL;
 #ifdef MPI_hpux
     int fl_xmpi;
 

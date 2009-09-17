@@ -75,6 +75,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     MPIR_Topology *topo_ptr = NULL;
     MPIR_Dist_graph_topology *dist_graph_ptr = NULL;
     MPIU_CHKPMEM_DECL(5);
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

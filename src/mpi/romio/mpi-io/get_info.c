@@ -39,6 +39,7 @@ int MPI_File_get_info(MPI_File mpi_fh, MPI_Info *info_used)
     int error_code;
     ADIO_File fh;
     static char myname[] = "MPI_FILE_GET_INFO";
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();

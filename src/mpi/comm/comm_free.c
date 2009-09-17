@@ -68,6 +68,7 @@ int MPI_Comm_free(MPI_Comm *comm)
     static const char FCNAME[] = "MPI_Comm_free";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

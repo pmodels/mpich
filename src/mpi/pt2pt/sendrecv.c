@@ -73,6 +73,7 @@ int MPI_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPID_Comm *comm_ptr = NULL;
     MPID_Request * sreq;
     MPID_Request * rreq;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SENDRECV);
     
     MPIR_ERRTEST_INITIALIZED_ORDIE();

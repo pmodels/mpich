@@ -64,6 +64,7 @@ int MPI_Cancel(MPI_Request *request)
     static const char FCNAME[] = "MPI_Cancel";
     int mpi_errno = MPI_SUCCESS;
     MPID_Request * request_ptr;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_CANCEL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -117,7 +118,6 @@ int MPI_Cancel(MPI_Request *request)
 		else
 		{
 		    /* This is needed for persistent Bsend requests */
-		    MPIU_THREADPRIV_DECL;
 		    MPIU_THREADPRIV_GET;
 		    MPIR_Nest_incr();
 		    {
@@ -155,7 +155,6 @@ int MPI_Cancel(MPI_Request *request)
 
 	case MPID_UREQUEST:
 	{
-	    MPIU_THREADPRIV_DECL;
 	    MPIU_THREADPRIV_GET;
 	    MPIR_Nest_incr();
 	    {

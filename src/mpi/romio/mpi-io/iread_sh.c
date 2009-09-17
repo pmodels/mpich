@@ -51,6 +51,7 @@ int MPI_File_iread_shared(MPI_File mpi_fh, void *buf, int count,
     MPI_Status status;
     ADIO_Offset off, shared_fp;
     MPI_Offset nbytes=0;
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();

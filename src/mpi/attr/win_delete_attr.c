@@ -54,6 +54,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
     MPID_Win *win_ptr = NULL;
     MPID_Attribute *p, **old_p;
     MPID_Keyval *keyval_ptr=0;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_DELETE_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

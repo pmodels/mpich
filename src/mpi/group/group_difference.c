@@ -62,6 +62,7 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
     MPID_Group *group_ptr2 = NULL;
     MPID_Group *new_group_ptr;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_DIFFERENCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

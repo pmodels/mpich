@@ -93,6 +93,7 @@ int MPI_Buffer_detach(void *buffer, int *size)
 {
     static const char FCNAME[] = "MPI_Buffer_detach";
     int mpi_errno = MPI_SUCCESS;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_BUFFER_DETACH);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

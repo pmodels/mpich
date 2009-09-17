@@ -59,6 +59,7 @@ int MPI_Info_get(MPI_Info info, char *key, int valuelen, char *value,
 #endif
     MPID_Info *curr_ptr, *info_ptr=0;
     int mpi_errno = MPI_SUCCESS;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_GET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

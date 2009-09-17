@@ -63,6 +63,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, int *ranks1,
     MPID_Group *group_ptr1 = NULL;
     MPID_Group *group_ptr2 = NULL;
     int i, g2_idx, l1_pid, l2_pid;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

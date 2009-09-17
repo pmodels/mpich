@@ -40,7 +40,7 @@ int MPI_File_seek(MPI_File mpi_fh, MPI_Offset offset, int whence)
     ADIO_File fh;
     static char myname[] = "MPI_FILE_SEEK";
     MPI_Offset curr_offset, eof_offset;
-
+    MPIU_THREADPRIV_DECL;
 #ifdef MPI_hpux
     int fl_xmpi;
 

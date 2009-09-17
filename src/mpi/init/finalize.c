@@ -117,6 +117,7 @@ int MPI_Finalize( void )
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     int rank=0;
 #endif
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_FINALIZE_STATE_DECL(MPID_STATE_MPI_FINALIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -220,8 +221,6 @@ int MPI_Finalize( void )
 	parmFound = MPIU_GetEnvBool( "MPICH_NESTCHECK", &parmValue );
 	if (!parmFound) parmValue = 1;
 	if (parmValue) {
-	    MPIU_THREADPRIV_DECL;
-	    
 	    MPIU_THREADPRIV_GET;
 	    /* Check for an error in the nesting level */
 	    if (MPIR_Nest_value()) {

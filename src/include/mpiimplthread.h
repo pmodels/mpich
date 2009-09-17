@@ -172,7 +172,6 @@ int MPIR_Thread_CS_Finalize( void );
  */
 #define MPID_CS_ENTER()						\
 {								\
-    MPIU_THREADPRIV_DECL;                                       \
     MPIU_THREADPRIV_GET;                                        \
     if (MPIR_Nest_value() == 0)					\
     { 								\
@@ -183,7 +182,6 @@ int MPIR_Thread_CS_Finalize( void );
 }
 #define MPID_CS_EXIT()						\
 {								\
-    MPIU_THREADPRIV_DECL;                                       \
     MPIU_THREADPRIV_GET;                                        \
     if (MPIR_Nest_value() == 0)					\
     { 								\
@@ -383,7 +381,6 @@ M*/
 /* Helper definitions */
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 #define MPIU_THREAD_CHECKNEST(_name)				\
-    MPIU_THREADPRIV_DECL;                                       \
     MPIU_THREADPRIV_GET;                                        \
     if (MPIR_Nest_value() == 0)	
 
@@ -646,7 +643,7 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_EXIT(_name,_context)
 #define MPIU_THREAD_CS_YIELD(_name,_context)
 #endif /* MPICH_IS_THREADED */
-#endif /* !defined(MPID_DEFINES_MPID_CS)a */
+#endif /* !defined(MPID_DEFINES_MPID_CS) */
 
 #endif /* !defined(MPIIMPLTHREAD_H_INCLUDED) */
 

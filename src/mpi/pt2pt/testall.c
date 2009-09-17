@@ -86,6 +86,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
     int rc;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(1);
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TESTALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

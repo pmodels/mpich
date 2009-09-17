@@ -60,6 +60,7 @@ int MPI_Type_free(MPI_Datatype *datatype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *datatype_ptr = NULL;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

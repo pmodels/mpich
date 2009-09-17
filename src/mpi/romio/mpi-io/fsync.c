@@ -37,6 +37,7 @@ int MPI_File_sync(MPI_File mpi_fh)
     int error_code;
     ADIO_File fh;
     static char myname[] = "MPI_FILE_SYNC";
+    MPIU_THREADPRIV_DECL;
 #ifdef MPI_hpux
     int fl_xmpi;
 

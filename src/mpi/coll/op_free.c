@@ -58,6 +58,7 @@ int MPI_Op_free(MPI_Op *op)
     MPID_Op *op_ptr = NULL;
     int     in_use;
     int     mpi_errno = MPI_SUCCESS;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_OP_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

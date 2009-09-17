@@ -57,6 +57,7 @@ int MPI_Register_datarep(char *name,
     int error_code;
     ADIOI_Datarep *datarep;
     static char myname[] = "MPI_REGISTER_DATAREP";
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 

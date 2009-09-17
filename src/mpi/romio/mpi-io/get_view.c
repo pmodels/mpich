@@ -51,7 +51,7 @@ int MPI_File_get_view(MPI_File mpi_fh,
     static char myname[] = "MPI_FILE_GET_VIEW";
     int i, j, k, combiner;
     MPI_Datatype copy_etype, copy_filetype;
-
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();

@@ -50,6 +50,7 @@ int MPI_File_iwrite_shared(MPI_File mpi_fh, void *buf, int count,
     ADIO_Status status;
     ADIO_Offset off, shared_fp;
     static char myname[] = "MPI_FILE_IWRITE_SHARED";
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();

@@ -45,6 +45,7 @@ int MPI_File_iread(MPI_File mpi_fh, void *buf, int count,
 {
     int error_code=MPI_SUCCESS;
     static char myname[] = "MPI_FILE_IREAD";
+    MPIU_THREADPRIV_DECL;
 #ifdef MPI_hpux
     int fl_xmpi;
 

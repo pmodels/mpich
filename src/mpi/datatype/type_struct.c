@@ -103,6 +103,7 @@ int MPI_Type_struct(int count,
     static const char FCNAME[] = "MPI_Type_struct";
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(1);
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_STRUCT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

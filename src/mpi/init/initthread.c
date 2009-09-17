@@ -503,6 +503,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
     static const char FCNAME[] = "MPI_Init_thread";
     int mpi_errno = MPI_SUCCESS;
     int rc;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT_THREAD);
 
     rc = MPID_Wtime_init();

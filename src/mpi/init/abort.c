@@ -60,6 +60,7 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     /* FIXME: 100 is arbitrary and may not be long enough */
     char abort_str[100], comm_name[MPI_MAX_OBJECT_NAME];
     int len = MPI_MAX_OBJECT_NAME;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ABORT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

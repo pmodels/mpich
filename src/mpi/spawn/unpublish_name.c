@@ -53,6 +53,7 @@ int MPI_Unpublish_name(char *service_name, MPI_Info info, char *port_name)
     static const char FCNAME[] = "MPI_Unpublish_name";
     int mpi_errno = MPI_SUCCESS;
     MPID_Info *info_ptr = NULL;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_UNPUBLISH_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

@@ -59,6 +59,7 @@ int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info,
     MPID_Win *win_ptr = NULL;
     MPID_Comm *comm_ptr = NULL;
     MPID_Info *info_ptr = NULL;
+    MPIU_THREADPRIV_DECL;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_CREATE);
 

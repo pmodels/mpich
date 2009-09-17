@@ -52,6 +52,7 @@ int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
     int       nkeys;
     static const char FCNAME[] = "MPI_Info_get_nthkey";
     int mpi_errno = MPI_SUCCESS;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_GET_NTHKEY);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

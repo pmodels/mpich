@@ -42,6 +42,7 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
     MPID_Comm *comm_ptr = NULL;
     static PreDefined_attrs attr_copy;    /* Used to provide a copy of the
 					     predefined attributes */
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

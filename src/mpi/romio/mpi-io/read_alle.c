@@ -55,6 +55,7 @@ int MPIOI_File_read_all_end(MPI_File mpi_fh,
 {
     int error_code;
     ADIO_File fh;
+    MPIU_THREADPRIV_DECL;
 
     MPIU_UNREFERENCED_ARG(buf);
 

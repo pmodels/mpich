@@ -49,6 +49,7 @@ int MPI_Win_wait(MPI_Win win)
     static const char FCNAME[] = "MPI_Win_wait";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_WAIT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

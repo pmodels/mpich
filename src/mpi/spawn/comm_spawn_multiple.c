@@ -70,6 +70,7 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
     MPID_Comm *intercomm_ptr = NULL;
     MPID_Info **array_of_info_ptrs = NULL;
     MPIU_CHKLMEM_DECL(1);
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPAWN_MULTIPLE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
