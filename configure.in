@@ -4539,19 +4539,25 @@ EOF
         PAC_LANG_FORTRAN90
 
         # Offset kind should be for 8 bytes if possible (Romio prefers that)
-        # address should be sizeof void *
+        # address should be sizeof void * (unless --with-aint-size has
+        # been set)
         # FIXME in the current configure implementation OFFSET_KIND and
         # MPI_Offset won't always agree, but generally will.  The MPI Standard
         # implies that these types must have identical size, so this is a bug
         # waiting to happen.
-        testsize=$ac_cv_sizeof_void_p
+	if test "$with_aint_size" -gt 0 -a \
+	        "$with_aint_size" -gt "$ac_cv_sizeof_void_p" ; then
+	    testsize=$with_aint_size
+        else
+            testsize=$ac_cv_sizeof_void_p
+        fi
         if test "$testsize" = 0 ; then
             # Set a default
             testsize=4
         fi  
         dnl Using the {} around testsize helps the comments work correctly
         PAC_PROG_F90_INT_KIND(ADDRESS_KIND,${testsize},$CROSS_F90_ADDRESS_KIND)
-        if test "$ac_cv_sizeof_void_p" = 8 ; then
+        if test "$testsize" = 8 ; then
             OFFSET_KIND=$ADDRESS_KIND
         else
             PAC_PROG_F90_INT_KIND(OFFSET_KIND,8,$CROSS_F90_OFFSET_KIND)
