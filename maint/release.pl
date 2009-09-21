@@ -8,6 +8,7 @@ use Getopt::Long;
 
 my $arg = 0;
 my $source = "";
+my $psource = "";
 my $version = "";
 my $pack = "";
 my $root = $ENV{PWD};
@@ -22,7 +23,23 @@ my $logfile = "release.log";
 
 sub usage
 {
-    print "Usage: $0 [--source source] {--package package} [version]\n";
+    print "Usage: $0 [OPTIONS]\n\n";
+    print "OPTIONS:\n";
+
+    # Source svn repository from where the package needs to be downloaded from
+    print "\t--source     source svn repository (required)\n";
+
+    # svn repository for the previous source in this series to ensure ABI compliance
+    print "\t--psource    source repo for the previous version for ABI compliance (required)\n";
+
+    # what package we are creating (mpich2, romio, mpe)
+    print "\t--package    package to create (optional)\n";
+
+    # version number associated with the tarball
+    print "\t--version    tarball version (required)\n";
+
+    print "\n";
+
     exit;
 }
 
@@ -237,23 +254,23 @@ sub create_mpe
 
 GetOptions(
     "source=s" => \$source,
+    "psource=s" => \$psource,
     "package:s"  => \$pack,
+    "version=s" => \$version,
     "with-autoconf" => \$with_autoconf,
     "with-automake" => \$with_automake,
     "help"     => \&usage,
 ) or die "unable to parse options, stopped";
 
-if (scalar(@ARGV) != 1) {
+if (scalar(@ARGV) != 0) {
     usage();
 }
-
-$version = $ARGV[0];
 
 if (!$pack) {
     $pack = "mpich2";
 }
 
-if (!$source || !$version) {
+if (!$source || !$version || !$psource) {
     usage();
 }
 
@@ -268,6 +285,15 @@ my $current_ver = `svn cat ${source}/maint/Version`;
 
 if ("$current_ver" ne "$version\n") {
     debug("\n\tWARNING: Version mismatch\n\n");
+}
+
+if ($psource) {
+    # Check diff
+    my $d = `svn diff ${psource}/src/include/mpi.h.in ${source}/src/include/mpi.h.in`;
+    $d .= `svn diff ${psource}/src/binding ${source}/src/binding`;
+    if ("$d" ne "") {
+	debug("\n\tWARNING: ABI mismatch\n\n");
+    }
 }
 
 system("rm -f ${root}/$logfile");

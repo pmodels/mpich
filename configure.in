@@ -161,11 +161,11 @@ fi
 # Numeric version will have 1 digit for MAJ, 2 digits for MIN,
 # 2 digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER.
 changequote(<<,>>)
-V1=`expr $VERSION : '\([0-9]*\)\.[0-9]*[\.]*[0-9]*[a-zA-Z]*[0-9]*'`
-V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)[\.]*[0-9]*[a-zA-Z]*[0-9]*'`
-V3=`expr $VERSION : '[0-9]*\.[0-9]*[\.]*\([0-9]*\)[a-zA-Z]*[0-9]*'`
-V4=`expr $VERSION : '[0-9]*\.[0-9]*[\.]*[0-9]*\([a-zA-Z]*\)[0-9]*'`
-V5=`expr $VERSION : '[0-9]*\.[0-9]*[\.]*[0-9]*[a-zA-Z]*\([0-9]*\)'`
+V1=`expr $VERSION : '\([0-9]*\)\.[0-9]*\.*[0-9]*[a-zA-Z]*[0-9]*'`
+V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)\.*[0-9]*[a-zA-Z]*[0-9]*'`
+V3=`expr $VERSION : '[0-9]*\.[0-9]*\.*\([0-9]*\)[a-zA-Z]*[0-9]*'`
+V4=`expr $VERSION : '[0-9]*\.[0-9]*\.*[0-9]*\([a-zA-Z]*\)[0-9]*'`
+V5=`expr $VERSION : '[0-9]*\.[0-9]*\.*[0-9]*[a-zA-Z]*\([0-9]*\)'`
 changequote([,])
 
 if test "$V2" -le 9 ; then V2=0$V2 ; fi
@@ -189,7 +189,7 @@ NUMVERSION=`expr $V1$V2$V3$V4$V5 + 0`
 AC_SUBST(NUMVERSION)
 AC_SUBST(VERSION)
 
-#
+
 # ABIVERSION is incremented when there are changes in the ABI.  This is 
 # used to let a shared library describe how compatible it is with executables
 # that were linked against it.  In our use, the version number is x:y, where
@@ -201,9 +201,14 @@ AC_SUBST(VERSION)
 # Makefile.sm to pass the ABIVERSION to the createshlib script.
 # We use libtool-style version numbers (see --version-info in the 
 # libtool manual) 
-ABIVERSION="1:1"
+changequote(<<,>>)
+V1=`expr $VERSION : '\([0-9]*\)\.[0-9]*\.*[0-9]*[a-zA-Z]*[0-9]*'`
+V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)\.*[0-9]*[a-zA-Z]*[0-9]*'`
+changequote([,])
+ABIVERSION="${V1}:${V2}:1"
 AC_SUBST(ABIVERSION)
-dnl
+
+
 CONFIGURE_ARGUMENTS="$ac_configure_args"
 AC_SUBST(CONFIGURE_ARGUMENTS)
 if test -n "$ac_configure_args" ; then
