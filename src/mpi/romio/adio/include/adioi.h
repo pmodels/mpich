@@ -327,10 +327,10 @@ void ADIOI_Flatten(MPI_Datatype type, ADIOI_Flatlist_node *flat,
 void ADIOI_Delete_flattened(MPI_Datatype datatype);
 int ADIOI_Count_contiguous_blocks(MPI_Datatype type, int *curr_index);
 void ADIOI_Complete_async(int *error_code);
-void *ADIOI_Malloc_fn(size_t size, int lineno, char *fname);
-void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, char *fname);
-void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, char *fname);
-void ADIOI_Free_fn(void *ptr, int lineno, char *fname);
+void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname);
+void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname);
+void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname);
+void ADIOI_Free_fn(void *ptr, int lineno, const char *fname);
 void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag);
 void ADIOI_Get_position(ADIO_File fd, ADIO_Offset *offset);
 void ADIOI_Get_eof_offset(ADIO_File fd, ADIO_Offset *eof_offset);
