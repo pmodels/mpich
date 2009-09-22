@@ -56,8 +56,8 @@ void MPIDI_DCMF_Buffer_copy(
     /* --BEGIN ERROR HANDLING-- */
     if (sdata_sz > rdata_sz)
     {
-        sdata_sz = rdata_sz;
         *rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPIDI_DCMF_Buffer_copy", __LINE__, MPI_ERR_TRUNCATE, "**truncate", "**truncate %d %d", sdata_sz, rdata_sz );
+        sdata_sz = rdata_sz;
     }
     /* --END ERROR HANDLING-- */
 
