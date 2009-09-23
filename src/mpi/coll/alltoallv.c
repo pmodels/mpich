@@ -72,6 +72,7 @@ int MPIR_Alltoallv (
     int dst, rank, req_cnt;
     MPI_Comm comm;
     int ii, ss, bblock;
+    int type_size;
 
     MPIU_CHKLMEM_DECL(2);
 
@@ -136,28 +137,34 @@ int MPIR_Alltoallv (
             for ( i=0; i<ss; i++ ) { 
                 dst = (rank+i+ii) % comm_size;
                 if (recvcnts[dst]) {
-                    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                                     rdispls[dst]*recv_extent);
-                    mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst]*recv_extent, 
-                                           recvcnts[dst], recvtype, dst,
-                                           MPIR_ALLTOALLV_TAG, comm,
-                                           &reqarray[req_cnt]);
-                    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }  
-                    req_cnt++;
+                    MPID_Datatype_get_size_macro(recvtype, type_size);
+                    if (type_size) {
+                        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+                                                         rdispls[dst]*recv_extent);
+                        mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst]*recv_extent,
+                                               recvcnts[dst], recvtype, dst,
+                                               MPIR_ALLTOALLV_TAG, comm,
+                                               &reqarray[req_cnt]);
+                        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+                        req_cnt++;
+                    }
                 }
             }
 
             for ( i=0; i<ss; i++ ) { 
                 dst = (rank-i-ii+comm_size) % comm_size;
                 if (sendcnts[dst]) {
-                    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                                     sdispls[dst]*send_extent);
-                    mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst]*send_extent, 
-                                           sendcnts[dst], sendtype, dst,
-                                           MPIR_ALLTOALLV_TAG, comm,
-                                           &reqarray[req_cnt]);
-                    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }  
-                    req_cnt++;
+                    MPID_Datatype_get_size_macro(sendtype, type_size);
+                    if (type_size) {
+                        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+                                                         sdispls[dst]*send_extent);
+                        mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst]*send_extent,
+                                               sendcnts[dst], sendtype, dst,
+                                               MPIR_ALLTOALLV_TAG, comm,
+                                               &reqarray[req_cnt]);
+                        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+                        req_cnt++;
+                    }
                 }
             }
 

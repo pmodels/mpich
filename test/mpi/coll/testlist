@@ -12,6 +12,10 @@ alltoallv 10
 alltoallv0 10
 alltoallw1 10
 alltoallw2 10
+alltoallw_zeros 1
+alltoallw_zeros 2
+alltoallw_zeros 5
+alltoallw_zeros 8
 allgather2 10
 allgather3 10
 allgatherv2 10

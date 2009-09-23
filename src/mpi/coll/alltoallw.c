@@ -67,6 +67,7 @@ int MPIR_Alltoallw (
     MPI_Comm comm;
     int outstanding_requests;
     int ii, ss, bblock;
+    int type_size;
 
     MPIU_CHKLMEM_DECL(2);
     
@@ -127,26 +128,32 @@ int MPIR_Alltoallw (
             for ( i=0; i<ss; i++ ) { 
                 dst = (rank+i+ii) % comm_size;
                 if (recvcnts[dst]) {
-                    mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst], 
-                                           recvcnts[dst], recvtypes[dst], dst,
-                                           MPIR_ALLTOALLW_TAG, comm,
-                                           &reqarray[outstanding_requests]);
-                    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }  
-                    
-                    outstanding_requests++;
+                    MPID_Datatype_get_size_macro(recvtypes[dst], type_size);
+                    if (type_size) {
+                        mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst],
+                                               recvcnts[dst], recvtypes[dst], dst,
+                                               MPIR_ALLTOALLW_TAG, comm,
+                                               &reqarray[outstanding_requests]);
+                        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+                        outstanding_requests++;
+                    }
                 }
             }
 
             for ( i=0; i<ss; i++ ) { 
                 dst = (rank-i-ii+comm_size) % comm_size;
                 if (sendcnts[dst]) {
-                    mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst], 
-                                           sendcnts[dst], sendtypes[dst], dst,
-                                           MPIR_ALLTOALLW_TAG, comm,
-                                           &reqarray[outstanding_requests]);
-                    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }  
-                    
-                    outstanding_requests++;
+                    MPID_Datatype_get_size_macro(sendtypes[dst], type_size);
+                    if (type_size) {
+                        mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst],
+                                               sendcnts[dst], sendtypes[dst], dst,
+                                               MPIR_ALLTOALLW_TAG, comm,
+                                               &reqarray[outstanding_requests]);
+                        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+                        outstanding_requests++;
+                    }
                 }
             }
 
