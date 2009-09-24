@@ -11,6 +11,12 @@
 #include "mpi_fortlogical.h"
 #endif
 
+/* We have enabled extensive warnings when using gcc for certain builds.
+   For this file, this generates many specious warnings */
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2)
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+
 /*
  * In MPI-2.1, this operation is valid only for C integer and Logical
  * types (5.9.2 Predefined reduce operations)
