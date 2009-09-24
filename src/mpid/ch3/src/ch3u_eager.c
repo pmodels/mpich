@@ -384,7 +384,8 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		   to fix this, but it will require a sweep of the code */
 	    }
 	    else {
-		MPIDI_msg_sz_t recv_data_sz, last;
+		MPIDI_msg_sz_t recv_data_sz;
+		MPI_Aint last;
 		/* user buffer is not contiguous.  Use the segment
 		   code to unpack it, handling various errors and 
 		   exceptional cases */

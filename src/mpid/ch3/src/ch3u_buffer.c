@@ -81,7 +81,7 @@ void MPIDI_CH3U_Buffer_copy(
     else if (sdt_contig)
     {
 	MPID_Segment seg;
-	MPIDI_msg_sz_t last;
+	MPI_Aint last;
 
 	MPID_Segment_init(rbuf, rcount, rdt, &seg, 0);
 	last = sdata_sz;
@@ -102,7 +102,7 @@ void MPIDI_CH3U_Buffer_copy(
     else if (rdt_contig)
     {
 	MPID_Segment seg;
-	MPIDI_msg_sz_t last;
+	MPI_Aint last;
 
 	MPID_Segment_init(sbuf, scount, sdt, &seg, 0);
 	last = sdata_sz;
@@ -150,7 +150,7 @@ void MPIDI_CH3U_Buffer_copy(
 	
 	for(;;)
 	{
-	    MPIDI_msg_sz_t last;
+	    MPI_Aint last;
 	    char * buf_end;
 
 	    if (sdata_sz - sfirst > MPIDI_COPY_BUFFER_SZ - buf_off)

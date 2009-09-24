@@ -86,7 +86,7 @@ static void free_pmi_keyvals(PMI_keyval_t **kv, int size, int *counts)
 	for (j=0; j<counts[i]; j++)
 	{
 	    if (kv[i][j].key != NULL)
-		MPIU_Free(kv[i][j].key);
+		MPIU_Free((char *)kv[i][j].key);
 	    if (kv[i][j].val != NULL)
 		MPIU_Free(kv[i][j].val);
 	}

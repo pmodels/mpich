@@ -189,7 +189,7 @@ void MPIDI_CH3_Request_destroy(MPID_Request * req)
 int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq, 
 				     MPID_IOV * const iov, int * const iov_n)
 {
-    MPIDI_msg_sz_t last;
+    MPI_Aint last;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_SEND_IOV);
 
@@ -297,7 +297,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq,
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 {
-    MPIDI_msg_sz_t last;
+    MPI_Aint last;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_RECV_IOV);
 
@@ -485,7 +485,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_unpack_srbuf(MPID_Request * rreq)
 {
-    MPIDI_msg_sz_t last;
+    MPI_Aint last;
     int tmpbuf_last;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_REQUEST_UNPACK_SRBUF);
@@ -612,7 +612,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPID_Request * rreq)
 	else
 	{
 	    MPID_Segment seg;
-	    MPIDI_msg_sz_t last;
+	    MPI_Aint last;
 
 	    MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
 			      rreq->dev.datatype, &seg, 0);

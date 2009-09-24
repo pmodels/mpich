@@ -694,7 +694,7 @@ static int do_accumulate_op(MPID_Request *rreq)
             return mpi_errno;
         }
 	/* --END ERROR HANDLING-- */
-        
+
         MPID_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
         
         type = dtp->eltype;
