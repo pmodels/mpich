@@ -100,7 +100,7 @@ int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
 	nkeys++;
     }
 
-    /* very that n is valid */
+    /* verify that n is valid */
     MPIU_ERR_CHKANDJUMP2((!curr_ptr), mpi_errno, MPI_ERR_ARG, "**infonkey", "**infonkey %d %d", n, nkeys);
 
     MPIU_Strncpy( key, curr_ptr->key, MPI_MAX_INFO_KEY+1 );
