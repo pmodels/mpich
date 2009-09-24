@@ -697,6 +697,10 @@ if [ $do_build_configure = yes ] ; then
 	        if grep 'configure:' $dir/Makefile.in >/dev/null 2>&1 ; then
  	            # The make -q checks whether the target is upto date first;
 	            # if it isn't, we remake it.
+		    # The make target should be for ${srcdir}/configure,
+		    # so in the make line, the target needs to be ./configure
+		    # Using just "configure" is incorrect and will fail with
+		    # some makes.
 		    rm -f $dir/mf.out 
 		    rm -f $dir/mf.newer
 		    date > $dir/mf.newer
@@ -705,10 +709,10 @@ if [ $do_build_configure = yes ] ; then
 		        -e "s%@srcdir@%.%g" \
 		        -e '/include .*alldeps/d' \
 		        -e '/@SET_MAKE@/d' Makefile.in > mf.tmp ;\
-		        if ${MAKE} -q -f mf.tmp configure >mf.out 2>&1 ; then \
+		        if ${MAKE} -q -f mf.tmp ./configure >mf.out 2>&1 ; then \
                     : ; else \
 	            echo "Found $dir/configure.in; executing make configure target" ; \
-	            ${MAKE} -f mf.tmp configure ; fi ; \
+	            ${MAKE} -f mf.tmp ./configure ; fi ; \
 			if [ -s configure ] ; then rm -f mf.tmp ; \
 			else echo "See `pwd`/mf.tmp for Makefile that failed" ;\
                         fi ;\
