@@ -107,7 +107,8 @@ int main(int argc, char **argv)
 {
     struct HYD_Partition *partition;
     struct HYD_Partition_exec *exec;
-    int exit_status = 0, timeout, i, process_id, proc_count;
+    struct HYD_Exec_info *exec_info;
+    int exit_status = 0, timeout, i, process_id, proc_count, num_nodes = 0;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -131,7 +132,7 @@ int main(int argc, char **argv)
         /* User did not provide any host file. Query the RMK. We pass
          * a zero node count, so the RMK will give us all the nodes it
          * already has and won't try to allocate any more. */
-        status = HYD_RMKI_query_node_list(0, &HYD_handle.partition_list);
+        status = HYD_RMKI_query_node_list(&num_nodes, &HYD_handle.partition_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
         /* We don't have an allocation capability yet, but when we do,
@@ -147,6 +148,17 @@ int main(int argc, char **argv)
         /* Use the user specified host file */
         status = HYDU_create_node_list_from_file(HYD_handle.host_file, &HYD_handle.partition_list);
         HYDU_ERR_POP(status, "unable to create host list\n");
+    }
+
+    /* If the number of processes is not given, we allocate all the
+     * available nodes to each executable */
+    for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
+        if (exec_info->exec_proc_count == 0) {
+            if (num_nodes == 0)
+                exec_info->exec_proc_count = 1;
+            else
+                exec_info->exec_proc_count = num_nodes;
+        }
     }
 
     /* Consolidate the environment list that we need to propagate */

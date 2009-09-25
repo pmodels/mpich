@@ -10,7 +10,7 @@
 #include "hydra.h"
 
 struct HYD_RMKI_fns {
-    HYD_Status(*query_node_list) (int num_nodes, struct HYD_Partition **partition_list);
+    HYD_Status(*query_node_list) (int *num_nodes, struct HYD_Partition **partition_list);
 };
 
 extern struct HYD_RMKI_fns HYD_RMKI_fns;
@@ -18,7 +18,7 @@ extern struct HYD_RMKI_fns HYD_RMKI_fns;
 HYD_Status HYD_RMKI_init(char *rmk);
 
 /* Non-zero nodes means that the RMK should allocate the nodes if needed */
-HYD_Status HYD_RMKI_query_node_list(int num_nodes, struct HYD_Partition **partition_list);
+HYD_Status HYD_RMKI_query_node_list(int *num_nodes, struct HYD_Partition **partition_list);
 
 /* Each resource management kernel has to expose an initialization function */
 @hydra_rmk_init_decl@

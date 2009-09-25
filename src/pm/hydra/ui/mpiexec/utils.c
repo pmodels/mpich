@@ -1038,9 +1038,6 @@ static HYD_Status verify_arguments(void)
         for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
             if (exec_info->exec[0] == NULL)
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
-
-            if (exec_info->exec_proc_count == 0)
-                exec_info->exec_proc_count = 1;
         }
     }
 

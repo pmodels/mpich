@@ -8,7 +8,7 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCI_query_node_list(int num_nodes, struct HYD_Partition **partition_list)
+HYD_Status HYD_BSCI_query_node_list(int *num_nodes, struct HYD_Partition **partition_list)
 {
     HYD_Status status = HYD_SUCCESS;
 

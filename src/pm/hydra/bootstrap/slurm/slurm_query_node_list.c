@@ -99,13 +99,13 @@ static HYD_Status group_to_individual_nodes(char *str, char **list)
     goto fn_exit;
 }
 
-HYD_Status HYD_BSCD_slurm_query_node_list(int num_nodes,
+HYD_Status HYD_BSCD_slurm_query_node_list(int *num_nodes,
                                           struct HYD_Partition **partition_list)
 {
     char *str, *num_procs;
     char *tmp1[HYD_NUM_TMP_STRINGS], *tmp2[HYD_NUM_TMP_STRINGS];
     struct HYD_Partition_segment *segment;
-    int total_count, i, j;
+    int i, j;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -120,7 +120,7 @@ HYD_Status HYD_BSCD_slurm_query_node_list(int num_nodes,
         full_str_to_groups(str, tmp1);
         num_procs = strtok(num_procs, "(");
 
-        total_count = 0;
+        *num_nodes = 0;
         for (i = 0; tmp1[i]; i++) {
             status = group_to_individual_nodes(tmp1[i], tmp2);
             HYDU_ERR_POP(status, "unable to parse node list\n");
@@ -129,13 +129,13 @@ HYD_Status HYD_BSCD_slurm_query_node_list(int num_nodes,
                 status = HYDU_alloc_partition_segment(&segment);
                 HYDU_ERR_POP(status, "Unable to allocate partition segment\n");
 
-                segment->start_pid = total_count;
+                segment->start_pid = *num_nodes;
                 segment->proc_count = atoi(num_procs);
 
                 status = HYDU_merge_partition_segment(tmp2[j], segment, partition_list);
                 HYDU_ERR_POP(status, "merge partition segment failed\n");
 
-                total_count += atoi(num_procs);
+                *num_nodes += atoi(num_procs);
             }
         }
     }

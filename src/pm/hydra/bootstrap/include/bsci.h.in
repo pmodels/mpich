@@ -18,7 +18,7 @@ struct HYD_BSCI_fns {
                                struct HYD_Partition *partition_list);
     HYD_Status(*finalize) (void);
     HYD_Status(*wait_for_completion) (struct HYD_Partition *partition_list);
-    HYD_Status(*query_node_list) (int num_nodes, struct HYD_Partition **partition_list);
+    HYD_Status(*query_node_list) (int *num_nodes, struct HYD_Partition **partition_list);
     HYD_Status(*query_usize) (int *size);
     HYD_Status(*query_partition_id) (int *partition_id);
 };
@@ -30,7 +30,7 @@ HYD_Status HYD_BSCI_launch_procs(char **global_args, const char *partition_id_st
                                  struct HYD_Partition *partition_list);
 HYD_Status HYD_BSCI_finalize(void);
 HYD_Status HYD_BSCI_wait_for_completion(struct HYD_Partition *partition_list);
-HYD_Status HYD_BSCI_query_node_list(int num_nodes, struct HYD_Partition **partition_list);
+HYD_Status HYD_BSCI_query_node_list(int *num_nodes, struct HYD_Partition **partition_list);
 HYD_Status HYD_BSCI_query_usize(int *size);
 HYD_Status HYD_BSCI_query_partition_id(int *partition_id);
 

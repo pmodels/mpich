@@ -12,7 +12,7 @@
 HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *partition_id_str,
                                        struct HYD_Partition *partition_list);
 HYD_Status HYD_BSCD_slurm_query_partition_id(int *partition_id);
-HYD_Status HYD_BSCD_slurm_query_node_list(int num_nodes,
+HYD_Status HYD_BSCD_slurm_query_node_list(int *num_nodes,
                                           struct HYD_Partition **partition_list);
 
 #endif /* SLURM_H_INCLUDED */

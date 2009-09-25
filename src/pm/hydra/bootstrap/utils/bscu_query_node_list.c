@@ -8,7 +8,7 @@
 #include "hydra_utils.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCU_query_node_list(int num_nodes, struct HYD_Partition **partition_list)
+HYD_Status HYD_BSCU_query_node_list(int *num_nodes, struct HYD_Partition **partition_list)
 {
     HYD_Status status = HYD_SUCCESS;
 
@@ -16,6 +16,7 @@ HYD_Status HYD_BSCU_query_node_list(int num_nodes, struct HYD_Partition **partit
 
     /* We don't know anything about nodes or resources. Just return
      * NULL. */
+    *num_nodes = 0;
     *partition_list = NULL;
 
     HYDU_FUNC_EXIT();
