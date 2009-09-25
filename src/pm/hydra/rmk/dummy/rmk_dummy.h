@@ -9,6 +9,4 @@
 
 #include "hydra_base.h"
 
-/* HYD_Status HYD_RMKD_dummy_launch_procs(void); */
-
 #endif /* RMK_DUMMY_H_INCLUDED */

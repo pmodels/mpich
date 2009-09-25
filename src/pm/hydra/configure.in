@@ -189,7 +189,7 @@ AM_CONDITIONAL([hydra_css_none], [$hydra_css_none])
 #########################################################################
 AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk        Resource Management Kernel],
 		    [ hydra_rmk=$withval ],
-		    [ hydra_rmk="dummy" ])
+		    [ hydra_rmk="dummy,pbs" ])
 AC_MSG_CHECKING(resource management kernel)
 AC_MSG_RESULT($hydra_rmk)
 hydra_rmk_names="`echo $hydra_rmk | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -211,7 +211,10 @@ HYD_Status HYD_RMKI_${hydra_rmk_name}_init(void);"
     case "$hydra_rmk_name" in
     	dummy)
 		hydra_rmk_dummy=true
-		;;		
+		;;
+	pbs)
+		hydra_rmk_pbs=true
+		;;
 	*)
 		;;
     esac
@@ -227,6 +230,7 @@ AC_SUBST(hydra_rmk_init_decl)
 AC_SUBST(hydra_rmk_name_array)
 AC_SUBST(hydra_rmk_init_array)
 AM_CONDITIONAL([hydra_rmk_dummy], [$hydra_rmk_dummy])
+AM_CONDITIONAL([hydra_rmk_pbs], [$hydra_rmk_pbs])
 
 
 #########################################################################
