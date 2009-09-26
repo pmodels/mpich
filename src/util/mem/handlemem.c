@@ -147,7 +147,8 @@ void *MPIU_Handle_direct_init(void *direct,
 	    (handle_type << HANDLE_MPI_KIND_SHIFT) | i;
     }
 
-    hptr->next = 0;
+    if (hptr)
+        hptr->next = 0;
     return direct;
 }
 
