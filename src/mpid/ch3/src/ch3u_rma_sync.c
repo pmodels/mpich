@@ -527,6 +527,9 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 	MPIDI_FUNC_ENTER(MPID_STATE_MEMCPY);
         MPIU_Memcpy(*dataloop, target_dtp->dataloop, target_dtp->dataloop_size);
 	MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY);
+        /* the dataloop can have undefined padding sections, so we need to let
+         * valgrind know that it is OK to pass this data to writev later on */
+        MPIU_VG_MAKE_MEM_DEFINED(*dataloop, target_dtp->dataloop_size);
 
         if (rma_op->type == MPIDI_RMA_PUT)
 	{
@@ -752,6 +755,10 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
         MPIU_Memcpy(*dataloop, dtp->dataloop, dtp->dataloop_size);
 	MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY);
 
+        /* the dataloop can have undefined padding sections, so we need to let
+         * valgrind know that it is OK to pass this data to writev later on */
+        MPIU_VG_MAKE_MEM_DEFINED(*dataloop, dtp->dataloop_size);
+
         get_pkt->dataloop_size = dtp->dataloop_size;
 
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)get_pkt;
@@ -760,7 +767,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
         iov[1].MPID_IOV_LEN = sizeof(*dtype_info);
         iov[2].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)*dataloop;
         iov[2].MPID_IOV_LEN = dtp->dataloop_size;
-        
+
 	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
         mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsgv(vc, iov, 3, &req));
 	MPIU_THREAD_CS_EXIT(CH3COMM,vc);

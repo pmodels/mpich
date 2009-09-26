@@ -1430,6 +1430,10 @@ static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *sc)
         MPID_IOV *iov = &rreq->dev.iov[rreq->dev.iov_offset];
         int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
 
+        MPIU_Assert(rreq->dev.iov_count > 0);
+        MPIU_Assert(rreq->dev.iov_offset >= 0);
+        MPIU_Assert(rreq->dev.iov_count + rreq->dev.iov_offset <= MPID_IOV_LIMIT);
+
         CHECK_EINTR(bytes_recvd, readv(sc->fd, iov, rreq->dev.iov_count));
         if (bytes_recvd <= 0)
         {
