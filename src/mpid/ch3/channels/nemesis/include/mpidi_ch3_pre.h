@@ -33,26 +33,27 @@ MPIDI_CH3I_VC_state_t;
 #define MPID_NEM_VC_NETMOD_AREA_LEN 128
 #define MPID_NEM_REQ_NETMOD_AREA_LEN 64
 
+struct MPIDI_CH3I_Request
+{
+    struct MPIDI_VC     *vc;
+    int                  noncontig;
+    MPIDI_msg_sz_t       header_sz;
+
+    MPI_Request          lmt_req_id;     /* request id of remote side */
+    struct MPID_Request *lmt_req;        /* pointer to original send/recv request */
+    MPIDI_msg_sz_t       lmt_data_sz;    /* data size to be transferred, after checking for truncation */
+    MPID_IOV             lmt_tmp_cookie; /* temporary storage for received cookie */
+
+    struct
+    {
+        char padding[MPID_NEM_REQ_NETMOD_AREA_LEN];
+    } netmod_area;
+};
+
 /*
  * MPIDI_CH3_REQUEST_DECL (additions to MPID_Request)
  */
-#define MPIDI_CH3_REQUEST_DECL                                                                                  \
-    struct MPIDI_CH3I_Request                                                                                   \
-    {                                                                                                           \
-        struct MPIDI_VC     *vc;                                                                                \
-        int                  noncontig;                                                                         \
-        MPIDI_msg_sz_t       header_sz;                                                                         \
-                                                                                                                \
-        MPI_Request          lmt_req_id;     /* request id of remote side */                                    \
-        struct MPID_Request *lmt_req;        /* pointer to original send/recv request */                        \
-        MPIDI_msg_sz_t       lmt_data_sz;    /* data size to be transferred, after checking for truncation */   \
-        MPID_IOV             lmt_tmp_cookie; /* temporary storage for received cookie */                        \
-                                                                                                                \
-        struct                                                                                                  \
-        {                                                                                                       \
-            char padding[MPID_NEM_REQ_NETMOD_AREA_LEN];                                                         \
-        } netmod_area;                                                                                          \
-    } ch;
+#define MPIDI_CH3_REQUEST_DECL struct MPIDI_CH3I_Request ch;
 
 
 #if 0
