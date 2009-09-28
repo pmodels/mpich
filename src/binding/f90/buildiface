@@ -4,13 +4,28 @@ use warnings;
 
 # binding.sub provides the routines for reading the prototype file
 # and extracting the function definitions.
-require "binding.sub";
+
+# Allow this program to be invoked from a different directory
+$mydir = ".";
+if ( ! -s "binding.sub" ) {
+    $mydir = $0;
+    $mydir =~ s/\/buildiface//;
+}
+
+require "$mydir/binding.sub";
 
 $arg_string = join( ' ', @ARGV );
-$prototype_file = "../../include/mpi.h.in";
 $gDebug = 0;
+
+$prototype_file = "../../include/mpi.h.in";
+$is_MPI = 1;
+$routine_prefix = "MPI_";
+$routine_pattern = "[A-Z][a-z0-9]*";
+$out_prefix="MPI_";
+$outfile_prefix = "mpi";
+%CtoFName = ();
 %mpi_routines = ();
-%NeedConstants = ();   # constants needed for declaration, hased by routine
+%NeedConstants = ();   # constants needed for declaration, hashed by routine
 
 #
 # ToDo: Fortran 90 allows some additional checks not possible in Fortran 77.
@@ -211,6 +226,10 @@ foreach $_ (@ARGV) {
 	# type (e.g., an integer).  By default, we leave these out.
 	$buildScalarVector = 1;
     }
+    elsif (/deffile=(.*)/) {
+	$definition_file = $1;
+	$is_MPI = 0;
+    }
     else {
 	print STDERR "Unrecognized argument $_\n";
 	exit 2;
@@ -218,9 +237,16 @@ foreach $_ (@ARGV) {
 }
 
 #
+# Load any definition file
+if ($definition_file) {
+    require $definition_file;
+}
+$ucoutfile_prefix = uc( $outfile_prefix );
+
+#
 # Read the interface file (e.g., mpi.h.in) and file in the various 
 # data structures (they're in global variables)
-&ReadInterface( $prototype_file, "MPI_", "[A-Z][a-z_0-9]*", "mpi_routines" );
+&ReadInterface( $prototype_file, $routine_prefix, $routine_pattern, "mpi_routines" );
 
 #
 # For some MPI routines, we need to distinguish between arguments that are 
@@ -232,7 +258,7 @@ foreach $_ (@ARGV) {
 # Generate the module for the routines
 # First pass.  Ignore the issue of choice routines
 # Print header
-open (MPIFD, ">mpi.f90.new" ) || die "Could not open mpi.f90.new\n";
+open (MPIFD, ">${outfile_prefix}.f90.new" ) || die "Could not open ${outfile_prefix}.f90.new\n";
 
 # Was 
 #       USE MPI_CONSTANTS,                                               &
@@ -240,29 +266,34 @@ open (MPIFD, ">mpi.f90.new" ) || die "Could not open mpi.f90.new\n";
 # but this caused problems with the pg compiler.  Need to understand and fix
 print MPIFD "!  (C) 2008 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
-       MODULE MPI
+       MODULE $ucoutfile_prefix
 !      This module was created by the script buildiface
-       USE MPI_CONSTANTS
-       USE MPI_SIZEOFS
-       USE MPI_BASE
-       END MODULE MPI\n";
+       USE ${ucoutfile_prefix}_CONSTANTS
+       USE ${ucoutfile_prefix}_SIZEOFS
+       USE ${ucoutfile_prefix}_BASE
+       END MODULE $ucoutfile_prefix\n";
   
 close (MPIFD);
-&ReplaceIfDifferent( "mpi.f90", "mpi.f90.new" );
+&ReplaceIfDifferent( "${outfile_prefix}.f90", "${outfile_prefix}.f90.new" );
 
 # ----------------------------------------------------------------------------
 # This is the file for the routines that have no "choice" arguments.
 # An example of a choice argument is a "void *buf" input argument to 
 # MPI_Send, which allows any buffer address, both numeric and character.
-open ( MPIBASEFD, ">mpi_base.f90.new" ) || die "Could not open mpi_base.f90.new\n";
+open ( MPIBASEFD, ">${outfile_prefix}_base.f90.new" ) || die "Could not open ${outfile_prefix}_base.f90.new\n";
 print MPIBASEFD "!  (C) 2008 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.       
-       MODULE MPI_BASE
+       MODULE ${ucoutfile_prefix}_BASE
        IMPLICIT NONE
 !      This module was created by the script buildiface
        INTERFACE\n";
 
 foreach $routine (keys(%mpi_routines)) {
+    # Permit each package to define a new name for the Fortran version of the 
+    # routine
+    if (defined($CtoFName{$routine})) {
+	$routine = $CtoFName{$routine};
+    }
     $ucname = uc($routine);
     $args   = $mpi_routines{$routine};
     @parms  = split(/,/, $args );
@@ -285,13 +316,13 @@ foreach $routine (keys(%mpi_routines)) {
 	print "Skipping $routine because of void argument\n" if $gDebug;
 	next;
     }
-    print MPIBASEFD "       SUBROUTINE MPI_$ucname(";
+    print MPIBASEFD "       SUBROUTINE $out_prefix$ucname(";
     for ($i=0; $i<=$#parms; $i++) {
 	print MPIBASEFD "v$i,";
     }
     print MPIBASEFD "ierror)\n";
     &PrintArgDecls( $routine, 0, "" );
-    print MPIBASEFD "       END SUBROUTINE MPI_$ucname\n\n";
+    print MPIBASEFD "       END SUBROUTINE $out_prefix$ucname\n\n";
 }
 
 # Add special routines (e.g., the ones with unusual arguments)
@@ -303,7 +334,8 @@ foreach $routine (keys(%mpi_routines)) {
 # a standard-conforming file.  The top-level configure (in mpich2/configure)
 # will replace DOUBLE PRECISION with REAL*8 if the Fortran compiler 
 # supports REAL*8.
-print MPIBASEFD "
+if ($is_MPI) {
+    print MPIBASEFD "
         SUBROUTINE MPI_INIT(ierror)
         INTEGER ierror
         END SUBROUTINE MPI_INIT
@@ -403,7 +435,7 @@ print MPIBASEFD "
         END SUBROUTINE MPI_WIN_NULL_COPY_FN
 
 ";
-
+}
 # Here's where we need to place the interface definitions for the functions
 # that take vector or scalar arguments (startall, testall/any/some, 
 # waitall/any/some, group_translate_ranks, etc.)
@@ -474,19 +506,19 @@ if ($buildScalarVector) {
     }
 }
 
-print MPIBASEFD "       END MODULE MPI_BASE\n";
+print MPIBASEFD "       END MODULE ${ucoutfile_prefix}_BASE\n";
 close MPIBASEFD;
-&ReplaceIfDifferent( "mpi_base.f90", "mpi_base.f90.new" );
+&ReplaceIfDifferent( "${outfile_prefix}_base.f90", "${outfile_prefix}_base.f90.new" );
 
-open ( MPIFD, ">mpi_constants.f90.new" ) || die "Cannot open mpi_constants.f90.new\n";
+open ( MPIFD, ">${outfile_prefix}_constants.f90.new" ) || die "Cannot open ${outfile_prefix}_constants.f90.new\n";
 print MPIFD "!  (C) 2008 by Argonne National Laboratory.
 !       See COPYRIGHT in top-level directory.
-        MODULE MPI_CONSTANTS
+        MODULE ${ucoutfile_prefix}_CONSTANTS
         IMPLICIT NONE
         INCLUDE 'mpifnoext.h'
-        END MODULE MPI_CONSTANTS\n";
+        END MODULE ${ucoutfile_prefix}_CONSTANTS\n";
 close MPIFD;
-&ReplaceIfDifferent( "mpi_constants.f90", "mpi_constants.f90.new" );
+&ReplaceIfDifferent( "${outfile_prefix}_constants.f90", "${outfile_prefix}_constants.f90.new" );
 
 #
 # Generate the choice argument routines
@@ -510,10 +542,10 @@ close MPIFD;
 # For scalar arguments, <dims> should be empty.
 # Finally, the module name needs to be distinct for each choice of
 # <type>, <dims>, <type1>, and <dims1>
-open( MPIFD, ">mpi_t1.f90.new" ) || die "Cannot open mpi_t1.f90.new\n";
+open( MPIFD, ">${outfile_prefix}_t1.f90.new" ) || die "Cannot open ${outfile_prefix}_t1.f90.new\n";
 print MPIFD "!  (C) 2008 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
-        MODULE MPI_t1_s
+        MODULE ${ucoutfile_prefix}_t1_s
         IMPLICIT NONE
         PRIVATE\n";
 
@@ -607,12 +639,13 @@ foreach $routine (keys(%mpi_choice_routines)) {
 
 # The base sizeof's are handled separately now in their own file
 
-print MPIFD "        END MODULE MPI_t1_s\n";
+print MPIFD "        END MODULE ${ucoutfile_prefix}_t1_s\n";
 close MPIFD;
-&ReplaceIfDifferent( "mpi_t1.f90", "mpi_t1.f90.new" );
+&ReplaceIfDifferent( "${outfile_prefix}_t1.f90", "${outfile_prefix}_t1.f90.new" );
 
 # -----------------------------------------------------------------------------
 # This block can be used to create the Makefile
+if ($is_MPI) {
 open ( MAKEFD, ">Makefile.sm.new" ) || die "Cannot create Makefile.sm.new";
 print MAKEFD "# DO NOT EDIT\n# This file created by buildiface $arg_string\n";
 
@@ -649,7 +682,7 @@ INCLUDES = -I../../include -I\${master_top_srcdir}/src/include\n";
 # Add the MPI module objects to the f90 library
 #lib\${MPILIBNAME}f90_a_NOSHARED
 print MAKEFD "\
-lib\${MPILIBNAME}f90_a_SOURCES = mpi.o mpi_constants.o mpi_sizeofs.o mpi_base.o\n";
+lib\${MPILIBNAME}f90_a_SOURCES = mpi.o mpi_constants.o mpi_sizeofs.o ${outfile_prefix}_base.o\n";
 
 print MAKEFD "all-preamble: \$(MPIMOD).\$(MOD)\n";
 
@@ -692,8 +725,9 @@ print MAKEFD "\$(MPICONSTMOD).\$(MOD): \$(srcdir)/mpi_constants.f90 mpifnoext.h\
 print MAKEFD "\$(MPISIZEOFMOD).\$(MOD): mpi_sizeofs.f90 mpifnoext.h\n";
 &createModSteps( "mpi_sizeofs.f90" );
 
-print MAKEFD "\$(MPIBASEMOD).\$(MOD): \$(srcdir)/mpi_base.f90\n";
-&createModSteps( '$(srcdir)/mpi_base.f90' );
+print MAKEFD "\$(MPIBASEMOD).\$(MOD): \$(srcdir)/${outfile_prefix}_base.f90\n";
+# Evalutate ${outfile_prefix}
+&createModSteps( '$(srcdir)/' . $outfile_prefix . '_base.f90' );
 
 print MAKEFD "\
 # We need a free-format version of mpif.h with no external commands,
@@ -767,6 +801,7 @@ print MAKEFD "\trm -f ../../../src/include/\$(MPISIZEOFMOD).\$(MOD)\n";
 
 close( MAKEFD );
 &ReplaceIfDifferent( "Makefile.sm", "Makefile.sm.new" );
+}
 #
 # Still to do
 # make sure that we fit within the Fortran line length rules
