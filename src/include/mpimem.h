@@ -458,8 +458,6 @@ void MPIU_Basename(char *path, char **basename);
    the checks fail. */
 #if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
 
-#include "mpiu_valgrind.h"
-
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -485,6 +483,8 @@ void MPIU_Basename(char *path, char **basename);
 #else
 #define MPIU_MEM_CHECK_MEMCPY(dst_,src_,len_) do {} while(0)
 #endif
+
+#include "mpiu_valgrind.h"
 
 /* ------------------------------------------------------------------------- */
 /* end of mpimem.h */
