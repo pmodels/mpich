@@ -85,7 +85,10 @@ typedef MPIU_SIZE_T MPIU_Size_t;
 #ifdef HAVE_PTRTOAINT
 #define MPIU_PtrToAint(a) ((MPI_Aint)(INT_PTR) (a) )
 #else
-#define MPIU_PtrToAint(a) (MPI_Aint)(a)
+/* An MPI_Aint may be *larger* than a pointer.  By using 2 casts, we can 
+   keep some compilers from complaining about converting a pointer to an 
+   integer of a different size */
+#define MPIU_PtrToAint(a) ((MPI_Aint)(MPIR_Upint)(a))
 #endif
 /* LongToPtr converts a long to a pointer type, extending bits if necessary */
 #ifdef HAVE_LONGTOPTR
