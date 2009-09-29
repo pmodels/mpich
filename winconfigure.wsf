@@ -2197,6 +2197,16 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_INT32_T */")
 				Case "HAVE_UINT64_T"
 					fout.WriteLine("/* #undef HAVE_INT64_T */")
+                                Case "HAVE__BOOL"
+                                        fout.WriteLine("/* #undef HAVE__BOOL */")
+                                Case "HAVE__COMPLEX"
+                                        fout.WriteLine("/* #undef HAVE__COMPLEX */")
+                                Case "HAVE_FLOAT__COMPLEX"
+                                        fout.WriteLine("/* #undef HAVE_FLOAT__COMPLEX */")
+                                Case "HAVE_DOUBLE__COMPLEX"
+                                        fout.WriteLine("/* #undef HAVE_DOUBLE__COMPLEX */")
+                                Case "HAVE_LONG_DOUBLE__COMPLEX"
+                                        fout.WriteLine("/* #undef HAVE_LONG_DOUBLE__COMPLEX */")
 				Case "int8_t"
 					fout.WriteLine("#define int8_t __int8")
 				Case "int16_t"
@@ -2295,6 +2305,14 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("#define SIZEOF_SHORT_INT " + len_short_int)
                                 Case "SIZEOF_TWO_INT"
                                         fout.WriteLine("#define SIZEOF_TWO_INT " + len_two_int)
+                                Case "SIZEOF__BOOL"
+                                        fout.WriteLine("#define SIZEOF__BOOL " + len__Bool)
+                                Case "SIZEOF_FLOAT__COMPLEX"
+                                        fout.WriteLine("#define SIZEOF__COMPLEX " + len_float__Complex)
+                                Case "SIZEOF_DOUBLE__COMPLEX"
+                                        fout.WriteLine("#define SIZEOF_DOUBLE__COMPLEX " + len_double__Complex)
+                                Case "SIZEOF_LONG_DOUBLE__COMPLEX"
+                                        fout.WriteLine("#define SIZEOF_LONG_DOUBLE__COMPLEX " + len_long_double__Complex)
                                 ' FIXME: Ugly hack - the sizeof MPIR_Bsend_data_t can change !
                                 Case "SIZEOF_MPIR_BSEND_DATA_T"
                                         If b64 Then
@@ -3461,8 +3479,19 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef HAVE_MD5 */")
                                 Case "HAVE_MD5_CALC"
                                         fout.WriteLine("/* #undef HAVE_MD5_CALC */")
+                                Case "HAVE_MACRO_VA_ARGS"
+                                        fout.WriteLine("#define HAVE_MACRO_VA_ARGS")
+                                ' On windows sizeof(void *p) == sizeof(aint) . So we don't
+                                '  have to rely on aint to store attrval
+                                Case "USE_AINT_FOR_ATTRVAL"
+                                        fout.WriteLine("/* #undef USE_AINT_FOR_ATTRVAL */")
                                 Case "AC_APPLE_UNIVERSAL_BUILD"
                                         fout.WriteLine("/* #undef AC_APPLE_UNIVERSAL_BUILD */")
+                                ' The following option is related to unix build system, whether
+                                '  it accepts -c -o
+                                ' Not applicable on windows
+                                Case "NO_MINUS_C_MINUS_O"
+                                        fout.WriteLine("/* #undef NO_MINUS_C_MINUS_O */")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
 					If appendUniqueString(unhandled_definitions, macroname) Then
