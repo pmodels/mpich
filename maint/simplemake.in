@@ -413,8 +413,8 @@ $top_builddir_name =         "top_builddir    = \@master_top_builddir\@";
 %install_methods = ( 'LIB'     => '$(INSTALL_DATA)',
 		     'BIN'     => '$(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG)',
 		     'SCRIPT'  => '$(INSTALL_SCRIPT)',
-		     'SHLIB'   => '$(CREATESHLIB) --mode=install',
-		     'DLLLIB'  => '$(CREATESHLIB) --mode=install',
+		     'SHLIB'   => '$(CREATESHLIB) -version-info $(ABIVERSION) --mode=install',
+		     'DLLLIB'  => '$(CREATESHLIB) -version-info $(ABIVERSION) --mode=install',
 		     'INCLUDE' => '$(INSTALL_DATA)',
 		     'MAN'     => '$(INSTALL_DATA)',
 		     'HTML'    => '$(INSTALL_DATA)',
@@ -1266,6 +1266,7 @@ sub DefaultVariables {
 	    # libtool to provide the shared library.
 	    printMakeVariable( FD, "LIBTOOL", "\@LIBTOOL\@" );
 	    printMakeVariable( FD, "CREATESHLIB", "\@CREATESHLIB\@" );
+	    printMakeVariable( FD, "ABIVERSION", "\@ABIVERSION\@" );
 	    printMakeVariable( FD, "LIBS", "\@LIBS\@" );
 	    printMakeVariable( FD, "LDFLAGS", "\@LDFLAGS\@" );
 	    print FD "$shlibdefs{'c'}$newline";
