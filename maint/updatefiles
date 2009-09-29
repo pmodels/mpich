@@ -303,9 +303,10 @@ rm -f .tmp/configure.in .tmp/configure
 if [ "$acSubversion" -gt 0 ] ; then
     acVersion="2.$acSubversion"
     echo "You have autoconf version $acVersion or greater."
-    if [ "$acSubversion" -lt 63 ] ; then 
+    # this used to be a check for >=63, but we only work with exactly 2.63 right now
+    if [ "$acSubversion" -ne 63 ] ; then
        cat <<EOF
-autoconf version 2.63 or later is required for MPICH2.
+autoconf version 2.63 (exactly) is required
 EOF
        if [ "$do_build_configure" = yes ] ; then 
             echo "Exiting updatefiles...."
