@@ -56,11 +56,13 @@ cleanlibs:
 	rm -f lib/lib${MPICXXLIBNAME}.@SHLIB_EXT@* 
 	rm -f lib/libf${MPILIBNAME}.@SHLIB_EXT@* 
 	rm -f lib/lib${MPILIBNAME}f90.@SHLIB_EXT@* 
+	rm -f lib/lib${MPILIBNAME}f90.*.@SHLIB_EXT@* 
 	rm -f lib/lib${MPILIBNAME}.*.@SHLIB_EXT@* 
 	rm -f lib/lib${PMPILIBNAME}.*.@SHLIB_EXT@*
 	rm -f lib/lib${MPICXXLIBNAME}.*.@SHLIB_EXT@* 
 	rm -f lib/libf${MPILIBNAME}.*.@SHLIB_EXT@* 
 	rm -f lib/lib${MPILIBNAME}.la* lib/lib${PMPILIBNAME}.la*
+	rm -f lib/lib${MPILIBNAME}f90.la*
 	rm -f lib/lib${MPICXXLIBNAME}.la* 
 	rm -f lib/libf${MPILIBNAME}.la* 
 
