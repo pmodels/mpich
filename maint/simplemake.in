@@ -2788,6 +2788,11 @@ sub TargetClean {
     # Add clean of local libraries
     foreach $lib (keys(%extra_libs)) {
 	print FD "\t-${quietLine}rm -f $lib$newline";
+	if ($do_sharedlibs && !defined($libNotShared{$lib})) {
+	    my $libshared = $lib;
+	    $libshared =~ s/\.a/.la/;
+	    print FD "\t-${quietLine}rm -f $libshared$newline";
+	}
     }
 
     # Remove any local files last (in case this file is one of them)
