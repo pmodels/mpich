@@ -100,7 +100,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 		goto fn_fail;
 	    }
 	    /* --END ERROR HANDLING-- */
-	    p->value = attribute_val;
+	    p->value = (MPID_AttrVal_t)attribute_val;
 	    /* Does not change the reference count on the keyval */
 	    break;
 	}
@@ -111,7 +111,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	    new_p->keyval	 = keyval_ptr;
 	    new_p->attrType      = attrType;
 	    new_p->pre_sentinal	 = 0;
-	    new_p->value	 = attribute_val;
+	    new_p->value	 = (MPID_AttrVal_t)attribute_val;
 	    new_p->post_sentinal = 0;
 	    new_p->next		 = p->next;
 	    MPIR_Keyval_add_ref( keyval_ptr );
@@ -130,7 +130,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	new_p->attrType      = attrType;
 	new_p->keyval	     = keyval_ptr;
 	new_p->pre_sentinal  = 0;
-	new_p->value	     = attribute_val;
+	new_p->value	     = (MPID_AttrVal_t)attribute_val;
 	new_p->post_sentinal = 0;
 	new_p->next	     = 0;
 	MPIR_Keyval_add_ref( keyval_ptr );

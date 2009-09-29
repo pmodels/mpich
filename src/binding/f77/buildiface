@@ -161,6 +161,7 @@ foreach $_ (@ARGV) {
 	   'MPI_Info' => 'MPI_Fint *',
 	   'MPI_Errhandler' => 'MPI_Fint *',
 	   'MPI_Aint' => 'MPI_Fint *',   # Should be MPIR_FAint
+	   'MPI_FAintp' => 'MPI_Aint *', # Used to force an MPI_Aint*
 	   'MPI_Offset' => 'MPI_Offset *', # Should be MPIR_FOint
 	   'int' => 'MPI_Fint *',
 	   'int[]' => 'MPI_Fint',        # no * because we'll use array form
@@ -633,9 +634,11 @@ if ("$buildMakefile") {
     open ( MAKEFD, ">Makefile.sm.new" ) || die "Cannot create Makefile.sm.new";
     print MAKEFD "# DO NOT EDIT\n# This file created by buildiface $arg_string\n";
 
+    # FIXME: Find out what happened to the code here and either restore/fix
+    # it or remove this block
     # Check to see if autoconf works.  Autoconf 2.13 has a bug in the Fortran 
     # language support that will break this module.  Since some sites have 
-    # corrected the bug in autoconf 2.13, CheckAutoconf test for this bug.
+    # corrected the bug in autoconf 2.13, CheckAutoconfs test for this bug.
     if (&CheckAutoconf) {
 	# Autoconf does not work
 	# This isn't quite right, because any updates will be broken
@@ -1513,8 +1516,7 @@ sub addraint_in_decl {
 }
 sub addraint_in_arg {
     my $count = $_[0];
-    # FIXME: This has far too many redundant casts
-    print $OUTFD "(void *)(MPI_Aint)((MPI_Aint)*(MPI_Aint *)v$count)";
+    print $OUTFD "(void *)(*(MPI_Aint *)v$count)";
 }
 
 sub attraint_ctof {
@@ -2774,9 +2776,7 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1)
     $filename = "getaddressf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
-    $args = "void *, MPI_Aint *";
-    $saveAINT = $tof77{"MPI_Aint*"};
-    undef $tof77{"MPI_Aint*"};
+    $args = "void *, MPI_FAintp";
     &print_header( "MPI_Get_address", "get_address", $args );
     # Add the definitions needed for error reporting
     # (We could use mpiimpl.h, but mpierrs.h should be sufficient)
@@ -2800,7 +2800,6 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1)
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
     &AddPrototype( "get_address", $args );
-    $tof77{"MPI_Aint*"} =  $saveAINT;
 
     $OUTFD = "WTIMEFD";
     $filename = "wtimef.c";
@@ -3285,7 +3284,7 @@ sub ReadAndProcessInterface {
 	    # For C++, we may create similar files by looking up 
 	    # the corresponding routines.
 	    if (defined($special_routines{$routine_name})) {
-		print "Skiping $routine_name\n" if $debug;
+		print "Skipping $routine_name\n" if $debug;
 	    }
 	    else {
 		# Check for duplicates in the list of routines
@@ -3601,7 +3600,11 @@ sub WriteAttrDefaults {
     my $filename = "dup_${prefix}fnf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
-    $args = "MPI_Fint, MPI_Fint *, void *, void **, void **, MPI_Fint *";
+    # The dup functions with a prefix in Fortran take an MPI_Aint * as
+    # the argument, not a void *.  When sizeof(MPI_Aint) > sizeof(void *),
+    # its important to use an MPI_Aint * instead of a void **
+#    $args = "MPI_Fint, MPI_Fint *, void *, void **, void **, MPI_Fint *";
+    $args = "MPI_Fint, MPI_Fint *, void *, MPI_FAintp, MPI_FAintp, MPI_Fint *";
     &print_header( "mpi_${prefix}dup_fn", "${prefix}dup_fn", $args,
 	   "#ifdef MPI_${ucprefix}DUP_FN\n#undef MPI_${ucprefix}DUP_FN\n#endif\n" );
     &print_routine_type_decl( $OUTFD, "${prefix}dup_fn" );
@@ -3620,7 +3623,7 @@ sub WriteAttrDefaults {
     $filename = "null_${prefix}del_fnf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
-    $args = "MPI_Fint *, MPI_Fint *, void *, void *";
+    $args = "MPI_Fint *, MPI_Fint *, MPI_FAintp, MPI_FAintp";
     &print_header( "mpi_${prefix}null_delete_fn", "${prefix}null_delete_fn", $args,
 	   "#ifdef MPI_${ucprefix}NULL_DELETE_FN\n#undef MPI_${ucprefix}NULL_DELETE_FN\n#endif\n" );
     &print_routine_type_decl( $OUTFD, "${prefix}null_delete_fn" );
@@ -3637,7 +3640,7 @@ sub WriteAttrDefaults {
     $filename = "null_${prefix}copy_fnf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
-    $args = "MPI_Fint *, MPI_Fint *, void *, void *, void *, int *";
+    $args = "MPI_Fint *, MPI_Fint *, MPI_FAintp, MPI_FAintp, MPI_FAintp, int *";
     &print_header( "mpi_${prefix}null_copy_fn", "${prefix}null_copy_fn", $args,
 	   "#ifdef MPI_${ucprefix}NULL_COPY_FN\n#undef MPI_${ucprefix}NULL_COPY_FN\n#endif\n" );
     &print_routine_type_decl( $OUTFD, "${prefix}null_copy_fn" );

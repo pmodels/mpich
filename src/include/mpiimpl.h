@@ -1029,6 +1029,18 @@ typedef struct MPID_Keyval {
          "Decr keyval %p ref count to %d",_keyval,_keyval->ref_count)); \
     } while(0)
 
+
+/* Attribute values in C/C++ are void * and in Fortran are ADDRESS_SIZED
+   integers.  Normally, these are the same size, but in at least one 
+   case, the address-sized integers was selected as longer than void *
+   to work with the datatype code used in the I/O library.  While this
+   is really a limitation in the current Datatype implementation. */
+#ifdef USE_AINT_FOR_ATTRVAL
+typedef MPI_Aint MPID_AttrVal_t;
+#else
+typedef void * MPID_AttrVal_t;
+#endif
+
 /* Attributes need no ref count or handle, but since we want to use the
    common block allocator for them, we must provide those elements 
 */
@@ -1079,7 +1091,9 @@ typedef struct MPID_Attribute {
     MPIR_AttrType attrType;         /* Type of the attribute */
     long        pre_sentinal;       /* Used to detect user errors in accessing
 				       the value */
-    void *      value;              /* Stored value */
+    MPID_AttrVal_t value;           /* Stored value. An Aint must be at least
+				       as large as an address - some builds
+				       may make an Aint larger than a void * */
     long        post_sentinal;      /* Like pre_sentinal */
     /* other, device-specific information */
 #ifdef MPID_DEV_ATTR_DECL
