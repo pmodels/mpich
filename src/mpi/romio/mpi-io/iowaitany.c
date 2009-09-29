@@ -32,6 +32,7 @@ int MPIO_Waitany(int count, MPIO_Request requests[], int *index,
 		 MPI_Status *status)
 {
     int i, flag, err; 
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 

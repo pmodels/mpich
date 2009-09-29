@@ -32,6 +32,7 @@ int MPIO_Testany(int count, MPIO_Request requests[], int *index,
 		 int *flag, MPI_Status *status)
 {
     int i, err; 
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 

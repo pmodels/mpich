@@ -38,6 +38,7 @@ int MPI_File_set_errhandler(MPI_File mpi_fh, MPI_Errhandler errhandler)
     int error_code = MPI_SUCCESS;
     static char myname[] = "MPI_FILE_SET_ERRHANDLER";
     ADIO_File fh;
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 

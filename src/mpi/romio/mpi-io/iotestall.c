@@ -32,7 +32,7 @@ int MPIO_Testall(int count, MPIO_Request requests[], int *flag,
 		 MPI_Status statuses[])
 {
     int done, i, err; 
-
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     if (count == 1)  {

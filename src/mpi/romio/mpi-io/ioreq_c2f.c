@@ -47,6 +47,7 @@ MPI_Fint MPIO_Request_c2f(MPIO_Request request)
     return (MPI_Fint) request;
 #else
     int i;
+    MPIU_THREADPRIV_DECL;
 
     /* We can make this test outside of the ALLFUNC mutex because it does
        not access any shared data */

@@ -43,6 +43,7 @@ MPIO_Request MPIO_Request_f2c(MPI_Fint request)
 {
     int error_code;
     static char myname[] = "MPIO_REQUEST_F2C";
+    MPIU_THREADPRIV_DECL;
 
 #ifndef INT_LT_POINTER
     return (MPIO_Request) request;

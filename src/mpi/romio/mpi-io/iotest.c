@@ -47,6 +47,7 @@ int MPIO_Test(MPIO_Request *request, int *flag, MPI_Status *status)
 {
     int error_code;
     static char myname[] = "MPIO_TEST";
+    MPIU_THREADPRIV_DECL;
 #ifdef MPI_hpux
     int fl_xmpi;
 

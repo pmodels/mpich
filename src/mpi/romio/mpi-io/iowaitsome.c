@@ -32,6 +32,7 @@ int MPIO_Waitsome(int count, MPIO_Request requests[], int *outcount,
 		  int indices[], MPI_Status *statuses)
 {
     int i, flag, err; 
+    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
