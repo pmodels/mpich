@@ -62,8 +62,7 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    /* FIXME: Why does this routine have a CS_ENTER? */
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    /* Note that this routine does not require a CS_ENTER/EXIT */
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GRAPH_NEIGHBORS_COUNT);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -115,7 +114,6 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GRAPH_NEIGHBORS_COUNT);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:
