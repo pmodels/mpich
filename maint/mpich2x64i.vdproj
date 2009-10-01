@@ -1596,7 +1596,7 @@
         "ProductName" = "8:MPICH2 64-bit"
         "ProductCode" = "8:{B91EB9DA-98D2-4241-87EA-3D889B58D564}"
         "PackageCode" = "8:{FC1CFDFF-31DC-498F-A5C1-176E2BF54DC1}"
-        "UpgradeCode" = "8:{BF0FD554-60B4-4E75-9BFB-8EF602F4939F}"
+        "UpgradeCode" = "8:{21589BA9-9DA4-4BEC-BA26-0CB4A9CD78BC}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
