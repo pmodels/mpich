@@ -4,9 +4,6 @@
 
  # OVERALL: Support for MPI-2.2
 
- # OVERALL: Experimental support for BLCR checkpoint/restart (using
-   Hydra).
-
  # OVERALL: Several fixes to Nemesis/MX.
 
  # WINDOWS: Performance improvements to Nemesis/windows.
@@ -16,6 +13,9 @@
 
  # PM/PMI: Support for process-binding for hyperthreading enabled
    systems in Hydra.
+
+ # PM/PMI: Initial support for PBS as a resource management kernel in
+   Hydra.
 
  # PM/PMI: PMI2 client code is now officially included in the release.
 
