@@ -14,6 +14,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#include <assert.h>
 
 /*
  * This test tests the disconnect code for processes that span process groups.
@@ -31,6 +32,45 @@
 #define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
 
 static char MTEST_Descrip[] = "A simple test of Comm_connect/accept/disconnect";
+
+/*
+ * Reverse the order of the ranks in a communicator
+ *
+ * Thanks to Edric Ellis for contributing this portion of the test program.
+ */
+void checkReverseMergedComm( MPI_Comm comm ) {
+    MPI_Group origGroup;
+    MPI_Group newGroup;
+    MPI_Comm newComm;
+    int buf = 5;
+    int *newGroupRanks = NULL;
+    int ii;
+    int merged_size;
+
+    assert(comm != MPI_COMM_NULL);
+    /* try a bcast as a weak sanity check that the communicator works */
+    MPI_Bcast(&buf, 1, MPI_INT, 0, comm);
+
+    MPI_Comm_size(comm, &merged_size);
+    newGroupRanks = calloc(merged_size, sizeof(int));
+    for ( ii = 0; ii < merged_size; ++ii ) {
+        newGroupRanks[ii] = merged_size - ii - 1;
+    }
+    MPI_Comm_group( comm, &origGroup );
+    MPI_Group_incl( origGroup, merged_size, newGroupRanks, &newGroup );
+    free( newGroupRanks );
+    MPI_Comm_create( comm, newGroup, &newComm );
+
+    assert(newComm != MPI_COMM_NULL);
+    /* try a bcast as a weak sanity check that the communicator works */
+    MPI_Bcast(&buf, 1, MPI_INT, 0, newComm);
+
+    MPI_Group_free( &origGroup );
+    MPI_Group_free( &newGroup );
+    MPI_Comm_free( &newComm );
+}
+
+
 
 int main(int argc, char *argv[])
 {
@@ -85,6 +125,8 @@ int main(int argc, char *argv[])
 	intercomm = parentcomm;
 	MPI_Intercomm_merge(intercomm, 1, &intracomm);
     }
+
+    checkReverseMergedComm(intracomm);
 
     /* We now have a valid intracomm containing all processes */
 

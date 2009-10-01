@@ -42,6 +42,12 @@ PMPI_LOCAL int MPIR_Comm_create_create_and_map_vcrt(int n,
 PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr, MPI_Comm *newcomm);
 PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr, MPI_Comm *newcomm);
 
+/* This function allocates and calculates an array (*mapping_out) such that
+ * (*mapping_out)[i] is the rank in (*mapping_vcr_out) corresponding to local
+ * rank i in the given group_ptr.
+ *
+ * Ownership of the (*mapping_out) array is transferred to the caller who is
+ * responsible for freeing it. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_create_calculate_mapping
 #undef FCNAME
@@ -64,18 +70,10 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
 
     *mapping_out = NULL;
+    *mapping_vcr_out = NULL;
 
     n = group_ptr->size;
     MPIU_CHKPMEM_MALLOC(mapping,int*,n*sizeof(int),mpi_errno,"mapping");
-
-    if (comm_ptr->comm_kind == MPID_INTERCOMM) {
-        vcr      = comm_ptr->local_vcr;
-        vcr_size = comm_ptr->local_size;
-    }
-    else {
-        vcr      = comm_ptr->vcr;
-        vcr_size = comm_ptr->remote_size;
-    }
 
     /* Make sure that the processes for this group are contained within
        the input communicator.  Also identify the mapping from the ranks of
@@ -90,12 +88,14 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
        exactly the same as the ranks in comm world.
     */
 
+    /* we examine the group's lpids in both the intracomm and non-comm_world cases */
+    MPIR_Group_setup_lpid_list( group_ptr );
+
     /* Optimize for groups contained within MPI_COMM_WORLD. */
     if (comm_ptr->comm_kind == MPID_INTRACOMM) {
         int wsize;
         subsetOfWorld = 1;
         wsize         = MPIR_Process.comm_world->local_size;
-        MPIR_Group_setup_lpid_list( group_ptr );
         for (i=0; i<n; i++) {
             int g_lpid = group_ptr->lrank_to_lpid[i].lpid;
 
@@ -116,7 +116,8 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
     MPIU_DBG_MSG_D(COMM,VERBOSE, "subsetOfWorld=%d", subsetOfWorld );
     if (subsetOfWorld) {
         /* Override the vcr to be used with the mapping array. */
-        *mapping_vcr_out = MPIR_Process.comm_world->vcr;
+        vcr = MPIR_Process.comm_world->vcr;
+        vcr_size = MPIR_Process.comm_world->local_size;
 #           ifdef HAVE_ERROR_CHECKING
         {
             MPID_BEGIN_ERROR_CHECKS;
@@ -130,14 +131,26 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
 #           endif
     }
     else {
+        /* N.B. For intracomms only the comm_ptr->vcr is valid and populated,
+         * however local_size and remote_size are always set to the same value for
+         * intracomms.  For intercomms both are valid and populated, with the
+         * local_vcr holding VCs corresponding to the local_group, local_comm, and
+         * local_size.
+         *
+         * For this mapping calculation we always want the logically local vcr,
+         * regardless of whether it is stored in the "plain" vcr or local_vcr. */
+        if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+            vcr      = comm_ptr->local_vcr;
+            vcr_size = comm_ptr->local_size;
+        }
+        else {
+            vcr      = comm_ptr->vcr;
+            vcr_size = comm_ptr->remote_size;
+        }
+
         for (i=0; i<n; i++) {
             /* mapping[i] is the rank in the communicator of the process
                that is the ith element of the group */
-            /* We use the appropriate vcr, depending on whether this is
-               an intercomm (use the local vcr) or an intracomm
-               (remote vcr)
-               Note that this is really the local mapping for intercomm
-               and remote mapping for the intracomm */
             /* FIXME : BUBBLE SORT */
             mapping[i] = -1;
             for (j=0; j<vcr_size; j++) {
@@ -153,7 +166,13 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
         }
     }
 
-    *mapping_out = mapping;
+    MPIU_Assert(vcr != NULL);
+    MPIU_Assert(mapping != NULL);
+    *mapping_vcr_out = vcr;
+    *mapping_out     = mapping;
+    MPIU_VG_CHECK_MEM_IS_DEFINED(*mapping_vcr_out, vcr_size * sizeof(**mapping_vcr_out));
+    MPIU_VG_CHECK_MEM_IS_DEFINED(*mapping_out, n * sizeof(**mapping_out));
+
     MPIU_CHKPMEM_COMMIT();
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
@@ -164,7 +183,7 @@ fn_fail:
 }
 
 /* This function creates a new VCRT and assigns it to out_vcrt, creates a new
- * vcr and assigns it to out_vcr, then and populates it from the mapping_vcr
+ * vcr and assigns it to out_vcr, and then populates it from the mapping_vcr
  * array according to the rank mapping table provided.
  *
  * mapping[i] is the index in the old vcr of index i in the new vcr */
@@ -187,8 +206,8 @@ PMPI_LOCAL int MPIR_Comm_create_create_and_map_vcrt(int         n,
     vcr = *out_vcr;
     for (i=0; i<n; i++) {
         MPIU_DBG_MSG_FMT(COMM,VERBOSE,
-                         (MPIU_DBG_FDEST, "dupping from old_vcr=%p rank=%d into new_rank=%d in new_vcr=%p",
-                          mapping_vcr, mapping[i], i, vcr));
+                         (MPIU_DBG_FDEST, "dupping from mapping_vcr=%p rank=%d into new_rank=%d/%d in new_vcr=%p",
+                          mapping_vcr, mapping[i], i, n, vcr));
         mpi_errno = MPID_VCR_Dup(mapping_vcr[mapping[i]], &vcr[i]);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -232,9 +251,6 @@ PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr
 
     if (group_ptr->rank != MPI_UNDEFINED) {
         MPID_VCR *mapping_vcr = NULL;
-
-        /* Default choice of mapping vcr */
-        mapping_vcr = comm_ptr->local_vcr;
 
         mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr, &mapping_vcr, &mapping);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -305,8 +321,8 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
     int *remote_mapping = NULL;
     int remote_size = -1;
     int rinfo[2];
-    MPID_VCR *mapping_vcr = 0;
-    MPID_VCR *remote_mapping_vcr = 0;
+    MPID_VCR *mapping_vcr = NULL;
+    MPID_VCR *remote_mapping_vcr = NULL;
 
     MPIU_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(1);
@@ -334,8 +350,6 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
     MPIU_Assert(new_context_id != 0);
     MPIU_Assert(new_context_id != comm_ptr->recvcontext_id);
 
-    /* Default choice of mapping vcr */
-    mapping_vcr        = comm_ptr->local_vcr;
     remote_mapping_vcr = comm_ptr->vcr;
 
     mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr, &mapping_vcr, &mapping);
