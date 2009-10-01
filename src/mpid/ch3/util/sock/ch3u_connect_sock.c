@@ -434,13 +434,13 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDU_Sock_ifaddr_t ifaddr;
-    char ifname[MAX_HOST_DESCRIPTION_LEN];
+    char ifnamestr[MAX_HOST_DESCRIPTION_LEN];
     char *bc_orig = *bc_val_p;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_GET_BUSINESS_CARD_SOCK);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_GET_BUSINESS_CARD_SOCK);
 
-    MPIDU_CH3U_GetSockInterfaceAddr( myRank, ifname, sizeof(ifname), &ifaddr );
+    MPIDU_CH3U_GetSockInterfaceAddr( myRank, ifnamestr, sizeof(ifnamestr), &ifaddr );
 
     mpi_errno = MPIU_Str_add_int_arg(bc_val_p, val_max_sz_p, 
 			     MPIDI_CH3I_PORT_KEY, MPIDI_CH3I_listener_port);
@@ -457,7 +457,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
     /* --END ERROR HANDLING-- */
     
     mpi_errno = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p, 
-			   MPIDI_CH3I_HOST_DESCRIPTION_KEY, ifname );
+			   MPIDI_CH3I_HOST_DESCRIPTION_KEY, ifnamestr );
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPIU_STR_SUCCESS)
     {
@@ -536,11 +536,8 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 	    }
 	}
     }
-    
-    if (0) {
-	fprintf( stdout, "business card is %s\n", bc_orig );
-	fflush(stdout);
-    }
+
+    MPIU_DBG_MSG_S(CH3_CONNECT,TYPICAL,"business card is %s\n", bc_orig );
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_GET_BUSINESS_CARD_SOCK);
