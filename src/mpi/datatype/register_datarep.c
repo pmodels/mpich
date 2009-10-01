@@ -55,6 +55,7 @@ int MPI_Register_datarep(char *datarep,
 {
     static const char FCNAME[] = "MPI_Register_datarep";
     int mpi_errno = MPI_SUCCESS;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REGISTER_DATAREP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
