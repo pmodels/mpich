@@ -77,7 +77,10 @@
 */
 
 /* Include the appropriate header for the architecture */
-#if   defined(OPA_HAVE_GCC_AND_POWERPC_ASM)
+#if defined(OPA_USE_UNSAFE_PRIMITIVES)
+/* comes first to permit user overrides in the style of NDEBUG */
+#include "primitives/opa_unsafe.h"
+#elif   defined(OPA_HAVE_GCC_AND_POWERPC_ASM)
 #include "primitives/opa_gcc_ppc.h"
 #elif defined(OPA_HAVE_GCC_X86_32_64)
 #include "primitives/opa_gcc_intel_32_64.h"

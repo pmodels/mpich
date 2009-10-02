@@ -53,6 +53,15 @@ dnl Check for presence of the pthreads library.  This is needed by the test
 dnl suite.
 AC_CHECK_LIB(pthread, pthread_create)
 
+dnl Check for presence of pthread_yield.  If not present, check for sched_yield.
+dnl These are used by the test suite.
+AC_CHECK_FUNCS(pthread_yield,
+    ,
+    [AC_CHECK_HEADER(sched.h,
+        [AC_CHECK_FUNCS(sched_yield)]
+    )]
+)
+
 if test "$ac_cv_lib_pthread_pthread_create" = yes; then
 AC_MSG_CHECKING([if 100 threads can be run at once])
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[
@@ -66,10 +75,10 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
     }
 ]], [[
     int i;
-    pthread_t threads[100];
+    pthread_t threads[99];
     pthread_mutex_init(&mutexus_maximus, NULL);
     pthread_mutex_lock(&mutexus_maximus);
-    for(i=0; i<100; i++)
+    for(i=0; i<99; i++)
         if(pthread_create(&threads[i], NULL, thread_func, NULL)) {
             pthread_mutex_unlock(&mutexus_maximus);
             return 1;
@@ -77,9 +86,38 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
     pthread_mutex_unlock(&mutexus_maximus);
     return 0;
 ]])],
-AC_MSG_RESULT([yes]),
+AC_MSG_RESULT([yes])
+AC_DEFINE(MAX_NTHREADS, 100, [define to the maximum number of simultaneous threads]),
 AC_MSG_RESULT([no])
-AC_DEFINE(LIMIT_THREADS, 1, [define to 1 to skip tests with 100 threads]),
+dnl We cannot run 100 threads, check if we can run 10
+    AC_MSG_CHECKING([if 10 threads can be run at once])
+    AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+        #include <stddef.h>
+        #include <pthread.h>
+        pthread_mutex_t mutexus_maximus;
+        void *thread_func(void *udata) {
+            pthread_mutex_lock(&mutexus_maximus);
+            pthread_mutex_unlock(&mutexus_maximus);
+            return NULL;
+        }
+    ]], [[[
+        int i;
+        pthread_t threads[9];
+        pthread_mutex_init(&mutexus_maximus, NULL);
+        pthread_mutex_lock(&mutexus_maximus);
+        for(i=0; i<9; i++)
+            if(pthread_create(&threads[i], NULL, thread_func, NULL)) {
+                pthread_mutex_unlock(&mutexus_maximus);
+                return 1;
+            }
+        pthread_mutex_unlock(&mutexus_maximus);
+        return 0;
+    ]]])],
+    AC_MSG_RESULT([yes])
+    AC_DEFINE(MAX_NTHREADS, 10, [define to the maximum number of simultaneous threads]),
+    AC_MSG_RESULT([no])
+    AC_DEFINE(MAX_NTHREADS, 4, [define to the maximum number of simultaneous threads]),
+    AC_MSG_RESULT([N/A])),
 AC_MSG_RESULT([N/A]))
 fi
 
@@ -128,17 +166,18 @@ AC_ARG_WITH(atomic-primitives, AC_HELP_STRING([--with-atomic-primitives],
      primitives.  A value of 'auto_allow_emulation' will attempt to detect
      native primitives and will fall back to lock-based emulation if none are
      available.  Note that using locks to implement atomic primitives will have
-     a substantial impact on performance and is intended for testing only.]),
-    if test "$with_atomic_primitives" = "yes" ; then with_atomic_primitives=auto; fi
-    , 
-    with_atomic_primitives=auto
+     a substantial impact on performance and is intended for testing only.  A
+     value of 'unsafe' will use a non-atomic version of the primitives for performance
+     in single-threaded code and meta-testing.]),
+    AS_IF([test "$with_atomic_primitives" = "yes"], [with_atomic_primitives=auto]),
+    [with_atomic_primitives=auto]
 )
 
 
-dnl is set to yes by the macro below if any test ever succeeds
+# is set to yes by the macro below if any test ever succeeds
 non_emulated_primitives_available=no
-dnl is set to yes in OPA_TRY_PRIMITIVE_HEADER when a primitive
-dnl matching $with_atomic_primitives is checked
+# is set to yes in OPA_TRY_PRIMITIVE_HEADER when a primitive
+# matching $with_atomic_primitives is checked
 checked_specified_primitive=no
 
 AC_DEFUN([OPA_PRIMITIVE_TEST_PGM], [AC_LANG_PROGRAM([[
@@ -234,8 +273,13 @@ then
 fi
 ])
 
+using_emulated_primitives=no
+using_unsafe_primitives=no
+
 if test "$with_atomic_primitives" = "no" ; then
     using_emulated_primitives=yes
+elif test "$with_atomic_primitives" = "unsafe" ; then
+    using_unsafe_primitives=yes
 else
 dnl We currently test for support of each platform or implementation by
 dnl attempting to compile the associated primitives header file.  This doesn't
@@ -294,6 +338,36 @@ Use this only for testing.
 ===================================================])
     AC_DEFINE(USE_LOCK_BASED_PRIMITIVES, 1, [define to 1 to force using lock-based atomic primitives])
 fi
+
+if test "$using_unsafe_primitives" = "yes" ; then
+    AC_MSG_WARN([
+===================================================
+Using *UNSAFE*, *NON-ATOMIC* primitive operations.
+Use this for only for testing or for performance
+reasons in non-concurrent code.
+
+Consider yourself warned!
+===================================================])
+    AC_DEFINE([USE_UNSAFE_PRIMITIVES],[1],[define to 1 if unsafe (non-atomic) primitives should be used])
+fi
+
+dnl Check to see if we should enable strict fairness checks
+AC_MSG_CHECKING([whether to enable strict fairness checks])
+AC_ARG_ENABLE(strict-fairness-checks,
+    [AC_HELP_STRING([--enable-strict-fairness-checks],
+        [Enable stricter checks of the "fairness" of atomic operations in the
+         test suite (default is no).  A value of 'yes' will remove the calls to
+         pthread_yield() from these test routines.])],
+    [strict_fairness_checks=$enableval],
+    [strict_fairness_checks=no])
+if test "${strict_fairness_checks}" = "yes"; then
+    AC_MSG_RESULT([yes])
+    AC_DEFINE([HAVE_STRICT_FAIRNESS_CHECKS], [1],
+        [Define if strict checking of atomic operation fairness is desired])
+else
+    AC_MSG_RESULT([no])
+fi
+
 
 AC_CONFIG_FILES([Makefile src/Makefile test/Makefile])
 AC_OUTPUT

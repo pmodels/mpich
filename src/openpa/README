@@ -22,10 +22,11 @@ Building
 If you checked out the project from source control then you will need to
 generate configure files and makefiles with autoreconf:
 
+% autoreconf -vif
+
 Otherwise, the build procedure is basically the same as any other
 autoconfiscated software:
 
-% autoreconf -vif
 % ./configure [configure_args]
 % make
 % make install
@@ -56,6 +57,27 @@ opa_sun_atomic_ops.h  - Solaris support.  This uses Solaris' built-in
                         atomic operations library.  Tested on a Niagara
                         (T5240) machine with Solaris (s10s_u4wos_12b).
 
+We also support two pseudo-platforms:
+
+opa_by_lock.h - Used when you specify "--with-atomic-primitives=no" or when
+                auto-detecting the primitive implementation and lock-based fall
+                back is selected.  This uses pthread mutexes to emulate the
+                atomic behavior.  This option typically has dramatically slower
+                performance on most platforms where native primitives are
+                available.  You should usually only use it for testing or on
+                platforms where pthreads are available but no native primitives
+                are currently implemented.  The library initialization function
+                *must* be called when using this primitives implementation.
+opa_unsafe.h  - Used when you specify "--with-atomic-primitives=unsafe".  This
+                can be used to improve performance in code that uses OPA already
+                and is conditionally compiled to be single-threaded without
+                having to modify said code.  It is also potentially useful for
+                meta-testing to ensure that any threading tests you might have
+                will catch bugs when you have a broken atomics implementation.
+                The OPA test suite itself fails spectacularly when compiled this
+                way.  This header can also be used by defining the preprocessor
+                macro OPA_USE_UNSAFE_PRIMITIVES prior to including
+                opa_primitives.h.
 
 Known Issues
 ------------
@@ -63,7 +85,7 @@ Known Issues
 * One known issue is that the gcc atomic intrinsics aren't supported by
   compilers prior to GCC 4.1.  In particular the default Mac OS X compiler is
   gcc 4.0.1 so these result in a linker error when using this set of
-  primitives.  The good news is that on OSX/intel we use native inline
+  primitives.  The good news is that on OSX/Intel we use native inline
   assembly anyway, so this isn't a big problem.
 * The PGI compilers currently are not supported.  There is at least one known
   bug in the PGI compiler's handling of of inline assembly for which we are
@@ -71,4 +93,8 @@ Known Issues
   this issue should be rectified in an upcoming release.
 * As mentioned earlier, Windows is supported but the build system is not
   yet present.
+* We've had reports of trouble with older IA64 machines running GCC 3.2.2.
+  Unfortunately we don't have access to a machine with this configuration so we
+  have been unable to debug and fix the problem.  Patches and detailed bug
+  reports on this issue are very welcome.
 

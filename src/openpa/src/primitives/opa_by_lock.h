@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef OPA_ATOMICS_BY_LOCK_H_INCLUDED
-#define OPA_ATOMICS_BY_LOCK_H_INCLUDED
+#ifndef OPA_BY_LOCK_H_INCLUDED
+#define OPA_BY_LOCK_H_INCLUDED
 
 /* FIXME For now we rely on pthreads for our IPC locks.  This is fairly
    portable, although it is obviously not 100% portable.  Some day when we

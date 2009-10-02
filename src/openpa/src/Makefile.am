@@ -21,4 +21,5 @@ nobase_include_HEADERS = primitives/opa_by_lock.h                   \
                          primitives/opa_gcc_ppc.h                   \
                          primitives/opa_gcc_sicortex.h              \
                          primitives/opa_nt_intrinsics.h             \
-                         primitives/opa_sun_atomic_ops.h
+                         primitives/opa_sun_atomic_ops.h            \
+                         primitives/opa_unsafe.h

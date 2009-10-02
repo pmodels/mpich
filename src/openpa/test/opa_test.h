@@ -21,6 +21,16 @@
 #include <pthread.h>
 #endif /* HAVE_PTHREAD_H */
 
+/* Define the macro to use for yielding the current thread (to others) */
+#if defined(OPA_HAVE_PTHREAD_YIELD)
+#define OPA_TEST_YIELD() pthread_yield()
+#elif defined(OPA_HAVE_SCHED_YIELD)
+#include <sched.h>
+#define OPA_TEST_YIELD() (void) sched_yield()
+#else
+#define OPA_TEST_YIELD() (void) 0
+#endif
+
 /*
  * Naive redefinition of OPA functions as simple C operations.  These should
  * pass all the "simple" tests, but fail on the threaded tests (with >1 thread),
@@ -125,9 +135,11 @@ do {                                                                           \
  * Array of number of threads.  Each threaded test is run once for each entry in
  * this array.  Remove the last test if OPA_LIMIT_THREADS is defined.
  */
-static const unsigned num_threads[] = {1, 2, 10, 100};
+static const unsigned num_threads[] = {1, 2, 4, 10, 100};
 static const unsigned num_thread_tests = sizeof(num_threads) / sizeof(num_threads[0])
-#ifdef OPA_LIMIT_THREADS
+#if OPA_MAX_NTHREADS < 10
+- 2
+#elif OPA_MAX_NTHREADS < 100
 - 1
 #endif /* OPA_LIMIT_THREADS */
 ;
@@ -136,7 +148,7 @@ static const unsigned num_thread_tests = sizeof(num_threads) / sizeof(num_thread
  * Factor to reduce the number of iterations by for each test.  Must be the same
  * size as num_threads.
  */
-static const unsigned iter_reduction[] = {1, 1, 1, 10};
+static const unsigned iter_reduction[] = {1, 1, 1, 1, 10};
 
 /*
  * Other global variables.

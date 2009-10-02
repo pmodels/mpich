@@ -7,9 +7,11 @@
 #ifndef OPA_GCC_PPC_H_INCLUDED
 #define OPA_GCC_PPC_H_INCLUDED
 
-/* these need to be aligned on an 8-byte boundary to work on a BG/P */
-typedef struct { volatile int v    OPA_ATTRIBUTE((aligned (8))); } OPA_int_t;
-typedef struct { void * volatile v OPA_ATTRIBUTE((aligned (8))); } OPA_ptr_t;
+/* these only need to be aligned on an 8-byte boundary to work on a BG/P, but
+ * they need to be aligned on a 16-byte boundary to work on many PPC970
+ * processors (according to the PPC970MP manual, at least). */
+typedef struct { volatile int v    OPA_ATTRIBUTE((aligned (16))); } OPA_int_t;
+typedef struct { void * volatile v OPA_ATTRIBUTE((aligned (16))); } OPA_ptr_t;
 
 /* Aligned loads and stores are atomic. */
 static _opa_inline int OPA_load_int(OPA_int_t *ptr)
@@ -67,30 +69,45 @@ static _opa_inline int OPA_SC_int(OPA_int_t *ptr, int val)
 }
 
 
-/*
-   Pointer versions of LL/SC.  For now we implement them in terms of the integer
-   versions with some casting.  If/when we encounter a platform with LL/SC and
-   differing word and pointer widths we can write separate versions.
-*/
+/* Pointer versions of LL/SC. */
+
+/* Set OPA_SS (Size Suffix) which is used to choose between lwarx/stwcx and
+ * ldarx/stdcx when using 4 or 8 byte pointer operands */
+#if OPA_SIZEOF_VOID_P == 4
+#define OPA_SS "w"
+#elif OPA_SIZEOF_VOID_P == 8
+#define OPA_SS "d"
+#else
+#error OPA_SIZEOF_VOID_P is not 4 or 8
+#endif
+
 
 static _opa_inline void *OPA_LL_ptr(OPA_ptr_t *ptr)
 {
-    /* need to implement a separate ptr-sized version, although it's not needed
-       on the BG/P it might be needed on a different PPC impl */
-    OPA_COMPILE_TIME_ASSERT(sizeof(int) == sizeof(void *)); 
-    OPA_COMPILE_TIME_ASSERT(sizeof(OPA_int_t) == sizeof(OPA_ptr_t));
-    return (void *) OPA_LL_int((OPA_int_t *)ptr);
+    void *val;
+    __asm__ __volatile__ ("l"OPA_SS"arx %[val],0,%[ptr]"
+                          : [val] "=r" (val)
+                          : [ptr] "r" (&ptr->v)
+                          : "cc");
+
+    return val;
 }
 
 /* Returns non-zero if the store was successful, zero otherwise. */
 static _opa_inline int OPA_SC_ptr(OPA_ptr_t *ptr, void *val)
 {
-    /* need to implement a separate ptr-sized version, although it's not needed
-       on the BG/P it might be needed on a different PPC impl */
-    OPA_COMPILE_TIME_ASSERT(sizeof(int) == sizeof(void *)); 
-    OPA_COMPILE_TIME_ASSERT(sizeof(OPA_int_t) == sizeof(OPA_ptr_t));
-    return OPA_SC_int((OPA_int_t *)ptr, (int)val);
+    int ret = 1; /* init to non-zero, will be reset to 0 if SC was successful */
+    __asm__ __volatile__ ("st"OPA_SS"cx. %[val],0,%[ptr];\n"
+                          "beq 1f;\n"
+                          "li %[ret], 0;\n"
+                          "1: ;\n"
+                          : [ret] "=r" (ret)
+                          : [ptr] "r" (&ptr->v), [val] "r" (val), "0" (ret)
+                          : "cc", "memory");
+    return ret;
 }
+
+#undef OPA_SS
 
 /* necessary to enable LL/SC emulation support */
 #define OPA_LL_SC_SUPPORTED 1
