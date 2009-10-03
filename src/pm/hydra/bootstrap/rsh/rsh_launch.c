@@ -62,9 +62,6 @@ HYD_Status HYD_BSCD_rsh_launch_procs(char **global_args, const char *partition_i
         /* rsh does not support any partition names other than host names */
         client_arg[arg++] = HYDU_strdup(partition->base->name);
 
-        /* Add -- to hide hydra parameters from rsh from inetutils */
-        client_arg[arg++] = HYDU_strdup("--");
-
         for (i = 0; global_args[i]; i++)
             client_arg[arg++] = HYDU_strdup(global_args[i]);
 
