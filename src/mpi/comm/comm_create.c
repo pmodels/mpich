@@ -72,6 +72,23 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
     *mapping_out = NULL;
     *mapping_vcr_out = NULL;
 
+    /* N.B. For intracomms only the comm_ptr->vcr is valid and populated,
+     * however local_size and remote_size are always set to the same value for
+     * intracomms.  For intercomms both are valid and populated, with the
+     * local_vcr holding VCs corresponding to the local_group, local_comm, and
+     * local_size.
+     *
+     * For this mapping calculation we always want the logically local vcr,
+     * regardless of whether it is stored in the "plain" vcr or local_vcr. */
+    if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+        vcr      = comm_ptr->local_vcr;
+        vcr_size = comm_ptr->local_size;
+    }
+    else {
+        vcr      = comm_ptr->vcr;
+        vcr_size = comm_ptr->remote_size;
+    }
+
     n = group_ptr->size;
     MPIU_CHKPMEM_MALLOC(mapping,int*,n*sizeof(int),mpi_errno,"mapping");
 
@@ -115,9 +132,6 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
     }
     MPIU_DBG_MSG_D(COMM,VERBOSE, "subsetOfWorld=%d", subsetOfWorld );
     if (subsetOfWorld) {
-        /* Override the vcr to be used with the mapping array. */
-        vcr = MPIR_Process.comm_world->vcr;
-        vcr_size = MPIR_Process.comm_world->local_size;
 #           ifdef HAVE_ERROR_CHECKING
         {
             MPID_BEGIN_ERROR_CHECKS;
@@ -129,25 +143,11 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
             MPID_END_ERROR_CHECKS;
         }
 #           endif
+        /* Override the vcr to be used with the mapping array. */
+        vcr = MPIR_Process.comm_world->vcr;
+        vcr_size = MPIR_Process.comm_world->local_size;
     }
     else {
-        /* N.B. For intracomms only the comm_ptr->vcr is valid and populated,
-         * however local_size and remote_size are always set to the same value for
-         * intracomms.  For intercomms both are valid and populated, with the
-         * local_vcr holding VCs corresponding to the local_group, local_comm, and
-         * local_size.
-         *
-         * For this mapping calculation we always want the logically local vcr,
-         * regardless of whether it is stored in the "plain" vcr or local_vcr. */
-        if (comm_ptr->comm_kind == MPID_INTERCOMM) {
-            vcr      = comm_ptr->local_vcr;
-            vcr_size = comm_ptr->local_size;
-        }
-        else {
-            vcr      = comm_ptr->vcr;
-            vcr_size = comm_ptr->remote_size;
-        }
-
         for (i=0; i<n; i++) {
             /* mapping[i] is the rank in the communicator of the process
                that is the ith element of the group */
@@ -226,8 +226,8 @@ fn_fail:
 PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr, MPI_Comm *newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t new_context_id;
-    MPID_Comm *newcomm_ptr;
+    MPIR_Context_id_t new_context_id = 0;
+    MPID_Comm *newcomm_ptr = NULL;
     int *mapping = NULL;
     int n;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTRA);
@@ -237,6 +237,7 @@ PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
 
     n = group_ptr->size;
+    *newcomm = MPI_COMM_NULL;
 
     /* Create a new communicator from the specified group members */
 
@@ -281,6 +282,7 @@ PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr
                                                          mapping_vcr,
                                                          &newcomm_ptr->vcrt,
                                                          &newcomm_ptr->vcr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         /* Notify the device of this new communicator */
         MPID_Dev_comm_create_hook( newcomm_ptr );
@@ -292,7 +294,7 @@ PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr
     else {
         /* This process is not in the group */
         MPIR_Free_contextid( new_context_id );
-        *newcomm = MPI_COMM_NULL;
+        new_context_id = 0;
     }
 
 fn_exit:
@@ -302,6 +304,14 @@ fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTRA);
     return mpi_errno;
 fn_fail:
+    if (newcomm_ptr != NULL) {
+        MPIR_Comm_release(newcomm_ptr, 0/*isDisconnect*/);
+        new_context_id = 0; /* MPIR_Comm_release frees the new ctx id */
+    }
+    if (new_context_id != 0)
+        MPIR_Free_contextid(new_context_id);
+    *newcomm = MPI_COMM_NULL;
+
     goto fn_exit;
 }
 
