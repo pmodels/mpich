@@ -1,7 +1,7 @@
                       MPE (Multi-Processing Environment)
                       ----------------------------------
 
-                          Version 2.4.6. March, 2008
+                          Version 2.5.0. Oct, 2009
 
                     Mathematics and Computer Science Division
                            Argonne National Laboratory
@@ -19,6 +19,16 @@ This file describes the Cross-Compilation build instructions for MPE.
 If you don't need cross-compilation support or you don't know what
 cross-compilation is, you probably don't need to read this.  INSTALL
 is all you need to know.
+
+**** The following is NO longer true in this MPE release ****
+This release of MPE has better support of cross-compilation and does
+not require a 2-step process, i.e. no cross-spec file is needed.
+Cross compilation is similar to native compilation except the addition
+of --host and --build as required by autoconf(i.e. configure).
+In short, cross-compile requires specification of CC/F77/MPI_CC/MPI_F77,
+--host and --build as part of configure command.
+More documentation will be added later.
+**************************************************************
 
 For those who need cross-compilation support, 7 to 10 variables are
 needed.  These variables are determined through some runtime tests on
