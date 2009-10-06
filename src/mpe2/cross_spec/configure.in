@@ -8,6 +8,7 @@ define([AC_CACHE_SAVE], )dnl
 dnl
 dnl
 AC_INIT()
+AC_PREREQ(2.52)
 AC_CONFIG_AUX_DIR([..])
 AC_CONFIG_HEADER(cross_conf.h)
 #

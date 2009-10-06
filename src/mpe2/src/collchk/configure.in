@@ -8,6 +8,7 @@ define([AC_CACHE_SAVE], )dnl
 dnl
 dnl
 AC_INIT()
+AC_PREREQ(2.52)
 AC_CONFIG_HEADER(mpe_collchk_conf.h)
 dnl
 echo "Configuring MPE Collective and Datatype Checking Library with $ac_configure_args"
