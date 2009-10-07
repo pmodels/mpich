@@ -2098,8 +2098,14 @@ Sub AddOPADefinitions( fout, filename, b64 )
                 fout.WriteLine("/* #undef HAVE_MEMORY_H */")
             Case "HAVE_NT_INTRINSICS"
                 fout.WriteLine("#define OPA_HAVE_NT_INTRINSICS 1")
+            Case "USE_UNSAFE_PRIMITIVES"
+                fout.WriteLine("/* #undef USE_UNSAFE_PRIMITIVES */")
             Case "HAVE_PTHREAD_H"
                 fout.WriteLine("/* #undef HAVE_PTHREAD_H */")
+            Case "HAVE_PTHREAD_YIELD"
+                fout.WriteLine("/* #undef HAVE_PTHREAD_YIELD */")
+            Case "HAVE_SCHED_YIELD"
+                fout.WriteLine("/* #undef HAVE_SCHED_YIELD */")
             Case "HAVE_STDINT_H"
                 fout.WriteLine("/* #undef HAVE_STDINT_H */")
             Case "HAVE_STDLIB_H"
@@ -2120,8 +2126,15 @@ Sub AddOPADefinitions( fout, filename, b64 )
                 fout.WriteLine("/* #undef HAVE_UNISTD_H */")
             Case "LIMIT_THREADS"
                 fout.WriteLine("/* #undef LIMIT_THREADS */")
+            ' Just using the default value in the unix build for max nthreads
+            Case "MAX_NTHREADS"
+                fout.WriteLine("#define MAX_NTHREADS 100")
             Case "NDEBUG"
                 fout.WriteLine("/* #undef NDEBUG */")
+            ' By default allow threads to yield
+            ' FIXME: However OPA_TEST_YIELD() is not defined on windows...
+            Case "HAVE_STRICT_FAIRNESS_CHECKS"
+                fout.WriteLine("/* #undef HAVE_STRICT_FAIRNESS_CHECKS */")
             Case "PACKAGE"
                 fout.WriteLine("#define OPA_PACKAGE ""openpa""")
             Case "PACKAGE_TARNAME"
