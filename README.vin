@@ -1,8 +1,8 @@
 			MPICH2 Release %VERSION%
 
 MPICH2 is a high-performance and widely portable implementation of the
-MPI-2.1 standard from the Argonne National Laboratory. This release
-has all MPI 2.1 functions and features required by the standard with
+MPI-2.2 standard from the Argonne National Laboratory. This release
+has all MPI 2.2 functions and features required by the standard with
 the exception of support for the "external32" portable I/O format and
 user-defined data representations for I/O.
 
