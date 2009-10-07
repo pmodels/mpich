@@ -130,7 +130,7 @@ sub create_mpich2
     debug("===> Creating configure in the main package... ");
     chdir("${root}/mpich2-${version}");
     {
-        my $cmd = "./maint/updatefiles -distrib";
+        my $cmd = "./maint/updatefiles";
         $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
         $cmd .= " --with-automake=$with_automake" if $with_automake;
         run_cmd($cmd);
@@ -140,8 +140,8 @@ sub create_mpich2
     # Remove unnecessary files
     debug("===> Removing unnecessary files in the main package... ");
     chdir("${root}/mpich2-${version}");
-    run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt autom4te.cache src/mpe2/src/slog2sdk/doc/jumpshot-4/tex");
-    run_cmd("find . -name autom4te.cache -exec rm -rf {} \;");
+    run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt src/mpe2/src/slog2sdk/doc/jumpshot-4/tex");
+    run_cmd("find . -name autom4te.cache | xargs rm -rf");
     debug("done\n");
 
     # Get docs
