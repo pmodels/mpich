@@ -11,11 +11,6 @@
 
  * ch3:nemesis:mx does not support dynamic processes at this time.
 
- * ch3:nemesis:mx does not typically work with greater than 8 processes
-   on a node (initialization failures will occur).  This is an MX
-   limitation due to limited SRAM on the Myrinet NICs, not an inherent
-   limitation of MPICH2/Nemesis.
-
  * ch3:ssm and ch3:shm do not support thread safety.
 
  * ch3:shm does not support dynamic processes (e.g., MPI_Comm_spawn).

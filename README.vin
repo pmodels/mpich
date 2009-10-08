@@ -547,7 +547,8 @@ If the MX libraries are shared libraries, they need to be in the
 shared library search path. This can be done by adding the path to
 /etc/ld.so.conf, or by setting the LD_LIBRARY_PATH variable in your
 .bashrc (or .tcshrc) file.  It's also possible to set the shared
-library search path in the binary. If you're using gcc, you can do this by adding
+library search path in the binary. If you're using gcc, you can do
+this by adding
 
   LD_LIBRARY_PATH=/path/to/lib
 
@@ -557,6 +558,12 @@ library search path in the binary. If you're using gcc, you can do this by addin
 
 ... as arguments to configure.
 
+By default, MX allows for only eight endpoints per node causing
+ch3:nemesis:mx to give initialization errors with greater than 8
+processes on the same node (this is an MX error and not an inherent
+limitation in the MPICH2/Nemesis design). If needed, this can be set
+to a higher number when MX is loaded. We recommend the user to contact
+help@myri.com for details on how to do this.
 
 Shared-memory optimizations are enabled by default to improve
 performance for multi-processor/multi-core platforms. They can be
