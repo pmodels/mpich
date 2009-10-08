@@ -692,8 +692,8 @@ int MPID_nem_mx_anysource_matched(MPID_Request *rreq)
   mx_request_t *mx_request = NULL;
   mx_return_t ret;
   uint32_t    result;
-  int matched = FALSE;
-
+  int matched   = FALSE;
+  int mpi_errno = MPI_SUCCESS;
    
   MPID_NEM_MX_GET_REQ_FROM_HASH(rreq,mx_request);
   if(mx_request != NULL)
@@ -734,8 +734,8 @@ int MPID_nem_mx_process_rdtype(MPID_Request **rreq_p, MPID_Datatype * dt_ptr, MP
   MPID_IOV  *iov;
   MPIDI_msg_sz_t last;
   int num_entries = MX_MAX_SEGMENTS;
-  int iov_num_ub  = rreq->dev.user_count * dt_ptr->max_contig_blocks;
-  int n_iov       = iov_num_ub;
+  //int iov_num_ub  = rreq->dev.user_count * dt_ptr->max_contig_blocks;
+  int n_iov       = 0 ; //iov_num_ub;
   int mpi_errno   = MPI_SUCCESS;
   int index;
   
@@ -752,10 +752,17 @@ c");
   rreq->dev.segment_first = 0;
   rreq->dev.segment_size = data_sz;
   last = rreq->dev.segment_size;
+   
+  MPID_Segment_count_contig_blocks(sreq->dev.segment_ptr ,first,&last,&n_iov);
+  MPIU_Assert(n_iov > 0);
+   
+  /* 
   if(n_iov <= 0)
   {
      n_iov = rreq->dev.user_count * dt_ptr->n_elements;
-  }   
+  } 
+  */
+   
   iov = MPIU_Malloc(n_iov*sizeof(MPID_IOV));
   MPID_Segment_unpack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, iov, &n_iov);
   MPIU_Assert(last == rreq->dev.segment_size);
