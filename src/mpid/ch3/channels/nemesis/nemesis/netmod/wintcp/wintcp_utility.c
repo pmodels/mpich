@@ -82,12 +82,6 @@ int MPID_nem_newtcp_module_set_sockopts (MPIU_SOCKW_Sockfd_t fd)
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     
     option = 1;
-    len = sizeof(int);
-
-    mpi_errno = MPIU_SOCKW_Sock_setopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, len);
-    if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
-    option = 1;
     mpi_errno = MPIU_SOCKW_Sock_cntrl_nb(fd, option);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
