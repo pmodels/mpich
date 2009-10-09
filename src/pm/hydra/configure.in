@@ -14,6 +14,8 @@ PAC_SUBCONFIG_INIT()
 
 AC_CONFIG_HEADER(include/hydra_config.h)
 
+# Non-verbose make
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Bug in autoconf adds -O2 and -g by default. Make sure we only get
 # the flags we want.
