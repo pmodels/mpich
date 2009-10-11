@@ -28,7 +28,6 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.pmi_port_str = NULL;
     HYD_PMCD_pmi_proxy_params.binding = NULL;
     HYD_PMCD_pmi_proxy_params.bindlib = NULL;
-    HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
 
     HYD_PMCD_pmi_proxy_params.ckpointlib = NULL;
     HYD_PMCD_pmi_proxy_params.ckpoint_prefix = NULL;
@@ -39,7 +38,7 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.global_env.inherited = NULL;
 
     HYD_PMCD_pmi_proxy_params.global_core_count = 0;
-    HYD_PMCD_pmi_proxy_params.proxy_core_count = 0;
+    HYD_PMCD_pmi_proxy_params.core_count = 0;
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
 
     HYD_PMCD_pmi_proxy_params.procs_are_launched = 0;
@@ -106,11 +105,6 @@ static HYD_Status parse_params(char **t_argv)
             else
                 HYD_PMCD_pmi_proxy_params.binding = HYDU_strdup(*argv);
 
-            argv++;
-            if (!strcmp(*argv, "HYDRA_NULL"))
-                HYD_PMCD_pmi_proxy_params.user_bind_map = NULL;
-            else
-                HYD_PMCD_pmi_proxy_params.user_bind_map = HYDU_strdup(*argv);
             continue;
         }
 
@@ -420,9 +414,6 @@ HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
     if (HYD_PMCD_pmi_proxy_params.bindlib)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.bindlib);
 
-    if (HYD_PMCD_pmi_proxy_params.user_bind_map)
-        HYDU_FREE(HYD_PMCD_pmi_proxy_params.user_bind_map);
-
     if (HYD_PMCD_pmi_proxy_params.ckpointlib)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.ckpointlib);
 
@@ -442,10 +433,6 @@ HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
         segment = HYD_PMCD_pmi_proxy_params.segment_list;
         while (segment) {
             tsegment = segment->next;
-            if (segment->mapping) {
-                HYDU_free_strlist(segment->mapping);
-                HYDU_FREE(segment->mapping);
-            }
             HYDU_FREE(segment);
             segment = tsegment;
         }
@@ -549,9 +536,9 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    HYD_PMCD_pmi_proxy_params.proxy_core_count = 0;
+    HYD_PMCD_pmi_proxy_params.core_count = 0;
     for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment; segment = segment->next)
-        HYD_PMCD_pmi_proxy_params.proxy_core_count += segment->proc_count;
+        HYD_PMCD_pmi_proxy_params.core_count += segment->proc_count;
 
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
@@ -560,7 +547,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     HYDU_MALLOC(pmi_ids, int *, HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
     for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++) {
         pmi_ids[i] = HYDU_local_to_global_id(i,
-                                             HYD_PMCD_pmi_proxy_params.proxy_core_count,
+                                             HYD_PMCD_pmi_proxy_params.core_count,
                                              HYD_PMCD_pmi_proxy_params.segment_list,
                                              HYD_PMCD_pmi_proxy_params.global_core_count);
     }
@@ -671,7 +658,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
         for (i = 0; i < exec->proc_count; i++) {
             pmi_id = HYDU_local_to_global_id(process_id,
-                                             HYD_PMCD_pmi_proxy_params.proxy_core_count,
+                                             HYD_PMCD_pmi_proxy_params.core_count,
                                              HYD_PMCD_pmi_proxy_params.segment_list,
                                              HYD_PMCD_pmi_proxy_params.global_core_count);
 

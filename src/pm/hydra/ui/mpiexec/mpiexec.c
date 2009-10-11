@@ -128,10 +128,11 @@ int main(int argc, char **argv)
     status = HYD_RMKI_init(HYD_handle.rmk);
     HYDU_ERR_POP(status, "unable to initialize RMK\n");
 
-    if (HYD_handle.host_file == NULL) {
-        /* User did not provide any host file. Query the RMK. We pass
-         * a zero node count, so the RMK will give us all the nodes it
-         * already has and won't try to allocate any more. */
+    if (HYD_handle.proxy_list == NULL) {
+        /* Proxy list is not created yet. The user might not have
+         * provided the host file. Query the RMK. We pass a zero node
+         * count, so the RMK will give us all the nodes it already has
+         * and won't try to allocate any more. */
         status = HYD_RMKI_query_node_list(&num_nodes, &HYD_handle.proxy_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
@@ -140,14 +141,9 @@ int main(int argc, char **argv)
 
         if (HYD_handle.proxy_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
-            HYD_handle.host_file = HYDU_strdup("HYDRA_USE_LOCALHOST");
+            status = HYD_UII_mpx_init_proxy_list("localhost", 1);
+            HYDU_ERR_POP(status, "unable to initialize proxy\n");
         }
-    }
-
-    if (HYD_handle.host_file) {
-        /* Use the user specified host file */
-        status = HYDU_create_node_list_from_file(HYD_handle.host_file, &HYD_handle.proxy_list);
-        HYDU_ERR_POP(status, "unable to create host list\n");
     }
 
     /* If the number of processes is not given, we allocate all the
@@ -199,7 +195,7 @@ int main(int argc, char **argv)
             for (exec = proxy->exec_list; exec; exec = exec->next) {
                 for (i = 0; i < exec->proc_count; i++) {
                     HYDU_dump(stdout, "%d", HYDU_local_to_global_id(process_id++,
-                                                            proxy->proxy_core_count,
+                                                            proxy->core_count,
                                                             proxy->segment_list,
                                                             HYD_handle.global_core_count));
                     if (i < exec->proc_count - 1)
@@ -276,7 +272,7 @@ int main(int argc, char **argv)
             proc_count += exec->proc_count;
         for (i = 0; i < proc_count; i++) {
             if (HYD_handle.print_all_exitcodes) {
-                HYDU_dump(stdout, "[%d]", HYDU_local_to_global_id(i, proxy->proxy_core_count,
+                HYDU_dump(stdout, "[%d]", HYDU_local_to_global_id(i, proxy->core_count,
                                                           proxy->segment_list,
                                                           HYD_handle.global_core_count));
                 HYDU_dump(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));

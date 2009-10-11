@@ -168,7 +168,6 @@ struct HYD_Env_global {
 struct HYD_Proxy_segment {
     int start_pid;
     int proc_count;
-    char **mapping;
     struct HYD_Proxy_segment *next;
 };
 
@@ -198,8 +197,7 @@ struct HYD_Proxy {
     int  out;
     int  err;
 
-    char *user_bind_map;
-    int proxy_core_count;
+    int core_count;
 
     /* Segment list will contain one-pass of the hosts file */
     struct HYD_Proxy_segment *segment_list;

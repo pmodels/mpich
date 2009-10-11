@@ -152,3 +152,53 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
+
+
+HYD_Status HYDU_parse_hostfile(char *hostfile,
+                               HYD_Status(*process_token) (char *token, int newline))
+{
+    char line[HYD_TMP_STRLEN], **tokens;
+    FILE *fp;
+    int i;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if ((fp = fopen(hostfile, "r")) == NULL)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unable to open host file: %s\n", hostfile);
+
+    while (fgets(line, HYD_TMP_STRLEN, fp)) {
+        char *linep = NULL;
+
+        linep = line;
+
+        strtok(linep, "#");
+        while (isspace(*linep))
+            linep++;
+
+        /* Ignore blank lines & comments */
+        if ((*linep == '#') || (*linep == '\0'))
+            continue;
+
+        tokens = HYDU_str_to_strlist(linep);
+        if (!tokens)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "Unable to convert host file entry to strlist\n");
+
+        for (i = 0; tokens[i]; i++) {
+            status = process_token(tokens[i], !i);
+            HYDU_ERR_POP(status, "unable to process token\n");
+        }
+    }
+
+    fclose(fp);
+
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

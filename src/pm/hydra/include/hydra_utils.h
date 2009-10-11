@@ -125,6 +125,8 @@
 HYD_Status HYDU_find_in_path(const char *execname, char **path);
 char *HYDU_getcwd(void);
 HYD_Status HYDU_get_base_path(const char *execname, char *wdir, char **path);
+HYD_Status HYDU_parse_hostfile(char *hostfile,
+                               HYD_Status(*process_token) (char *token, int newline));
 
 
 /* bind */
@@ -169,11 +171,7 @@ void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list);
 HYD_Status HYDU_alloc_proxy_segment(struct HYD_Proxy_segment **segment);
 HYD_Status HYDU_merge_proxy_segment(char *name, struct HYD_Proxy_segment *segment,
                                         struct HYD_Proxy **proxy_list);
-HYD_Status HYDU_merge_proxy_mapping(char *name, char *map, int num_procs,
-                                        struct HYD_Proxy **proxy_list);
 HYD_Status HYDU_alloc_proxy_exec(struct HYD_Proxy_exec **exec);
-HYD_Status HYDU_create_node_list_from_file(char *host_file,
-                                           struct HYD_Proxy **proxy_list);
 HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
                                int *in, int *out, int *err, int *pid, int core);
 HYD_Status HYDU_fork_and_exit(int core);
@@ -182,7 +180,7 @@ HYD_Status HYDU_create_thread(void *(*func) (void *), void *args,
                               struct HYD_Thread_context *ctxt);
 HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt);
 #endif /* HAVE_THREAD_SUPPORT */
-int HYDU_local_to_global_id(int local_id, int proxy_core_count,
+int HYDU_local_to_global_id(int local_id, int core_count,
                             struct HYD_Proxy_segment *segment_list, int global_core_count);
 
 

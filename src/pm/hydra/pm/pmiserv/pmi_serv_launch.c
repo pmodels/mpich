@@ -257,12 +257,6 @@ static HYD_Status fill_in_exec_args(void)
             proxy->exec_args[arg++] = HYDU_strdup(HYD_handle.binding);
         else
             proxy->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
-        if (HYD_handle.user_bind_map)
-            proxy->exec_args[arg++] = HYDU_strdup(HYD_handle.user_bind_map);
-        else if (proxy->user_bind_map)
-            proxy->exec_args[arg++] = HYDU_strdup(proxy->user_bind_map);
-        else
-            proxy->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
 
         proxy->exec_args[arg++] = HYDU_strdup("--bindlib");
         proxy->exec_args[arg++] = HYDU_strdup(HYD_handle.bindlib);

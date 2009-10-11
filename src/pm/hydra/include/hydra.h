@@ -22,7 +22,6 @@ struct HYD_Handle_ {
 
     char *binding;
     char *bindlib;
-    char *user_bind_map;
 
     char *ckpointlib;
     int ckpoint_int;
@@ -35,7 +34,6 @@ struct HYD_Handle_ {
     int enablex;
     int pm_env;
     char *wdir;
-    char *host_file;
 
     int ranks_per_proc;
     char *bootstrap_exec;

@@ -12,6 +12,8 @@
 #define IS_HELP(str) \
     ((!strcmp((str), "-h")) || (!strcmp((str), "-help")) || (!strcmp((str), "--help")))
 
+HYD_Handle HYD_handle;
+
 static void dump_env_notes(void)
 {
     printf("Additional generic notes:\n");
@@ -148,11 +150,101 @@ static HYD_Status genvall_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+HYD_Status HYD_UII_mpx_init_proxy_list(char *hostname, int num_procs)
+{
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_alloc_proxy(&HYD_handle.proxy_list);
+    HYDU_ERR_POP(status, "unable to allocate proxy\n");
+
+    HYD_handle.proxy_list->hostname = HYDU_strdup(hostname);
+
+    status = HYDU_alloc_proxy_segment(&HYD_handle.proxy_list->segment_list);
+    HYDU_ERR_POP(status, "unable to allocate proxy segment\n");
+
+    HYD_handle.proxy_list->segment_list->start_pid = 0;
+    HYD_handle.proxy_list->segment_list->proc_count = num_procs;
+
+    HYD_handle.proxy_list->core_count += num_procs;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+static HYD_Status process_mfile_token(char *token, int newline)
+{
+    static int pid = 0;
+    int num_procs;
+    char *hostname, *procs;
+    struct HYD_Proxy *proxy;
+    struct HYD_Proxy_segment *proxy_segment;
+    HYD_Status status = HYD_SUCCESS;
+
+    if (newline) { /* The first entry gives the hostname and processes */
+        hostname = strtok(token, ":");
+        procs = strtok(NULL, ":");
+        num_procs = procs ? atoi(procs) : 1;
+
+        if (HYD_handle.proxy_list == NULL) {
+            status = HYD_UII_mpx_init_proxy_list(hostname, num_procs);
+            HYDU_ERR_POP(status, "unable to initialize proxy\n");
+        }
+        else {
+            for (proxy = HYD_handle.proxy_list;
+                 proxy->next && strcmp(proxy->hostname, hostname); proxy = proxy->next);
+
+            if (strcmp(proxy->hostname, hostname)) {
+                /* If the hostname does not match, create a new proxy */
+                status = HYDU_alloc_proxy(&proxy->next);
+                HYDU_ERR_POP(status, "unable to allocate proxy\n");
+
+                proxy = proxy->next;
+            }
+
+            for (proxy_segment = proxy->segment_list; proxy_segment->next;
+                 proxy_segment = proxy_segment->next);
+
+            /* If this segment is a continuation, just increment the
+             * size of the previous segment */
+            if (proxy_segment->start_pid + proxy_segment->proc_count == pid)
+                proxy_segment->proc_count += num_procs;
+            else {
+                status = HYDU_alloc_proxy_segment(&proxy_segment->next);
+                HYDU_ERR_POP(status, "unable to allocate proxy segment\n");
+
+                proxy_segment->next->start_pid = pid;
+                proxy_segment->next->proc_count = num_procs;
+            }
+
+            HYD_handle.proxy_list->core_count += num_procs;
+        }
+
+        pid += num_procs;
+    }
+    else { /* Not a new line */
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "token %s not supported at this time\n", token);
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_Status mfile_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.host_file, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.proxy_list, HYD_INTERNAL_ERROR,
                         "duplicate host file setting\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -161,7 +253,15 @@ static HYD_Status mfile_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.host_file = HYDU_strdup(**argv);
+    if (strcmp(**argv, "HYDRA_USE_LOCALHOST")) {
+        status = HYDU_parse_hostfile(**argv, process_mfile_token);
+        HYDU_ERR_POP(status, "error parsing hostfile\n");
+    }
+    else {
+        status = HYD_UII_mpx_init_proxy_list("localhost", 1);
+        HYDU_ERR_POP(status, "unable to initialize proxy\n");
+    }
+
     (*argv)++;
 
   fn_exit:
@@ -1094,8 +1194,10 @@ static HYD_Status set_default_values(void)
         HYD_handle.rmk = HYDU_strdup(HYDRA_DEFAULT_RMK);
 
     tmp = getenv("HYDRA_HOST_FILE");
-    if (HYD_handle.host_file == NULL && tmp)
-        HYD_handle.host_file = HYDU_strdup(tmp);
+    if (HYD_handle.proxy_list == NULL && tmp) {
+        status = HYDU_parse_hostfile(tmp, process_mfile_token);
+        HYDU_ERR_POP(status, "error parsing hostfile\n");
+    }
 
     tmp = getenv("HYDRA_PROXY_PORT");
     if (HYD_handle.proxy_port == -1 && tmp)

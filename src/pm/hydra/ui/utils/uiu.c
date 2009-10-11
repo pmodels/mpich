@@ -19,7 +19,6 @@ void HYD_UIU_init_params(void)
     HYD_handle.rmk = NULL;
     HYD_handle.binding = NULL;
     HYD_handle.bindlib = NULL;
-    HYD_handle.user_bind_map = NULL;
 
     HYD_handle.ckpointlib = NULL;
     HYD_handle.ckpoint_int = -1;
@@ -32,7 +31,6 @@ void HYD_UIU_init_params(void)
     HYD_handle.enablex = -1;
     HYD_handle.pm_env = -1;
     HYD_handle.wdir = NULL;
-    HYD_handle.host_file = NULL;
 
     HYD_handle.ranks_per_proc = -1;
     HYD_handle.bootstrap_exec = NULL;
@@ -78,9 +76,6 @@ void HYD_UIU_free_params(void)
     if (HYD_handle.bindlib)
         HYDU_FREE(HYD_handle.bindlib);
 
-    if (HYD_handle.user_bind_map)
-        HYDU_FREE(HYD_handle.user_bind_map);
-
     if (HYD_handle.ckpointlib)
         HYDU_FREE(HYD_handle.ckpointlib);
 
@@ -89,9 +84,6 @@ void HYD_UIU_free_params(void)
 
     if (HYD_handle.wdir)
         HYDU_FREE(HYD_handle.wdir);
-
-    if (HYD_handle.host_file)
-        HYDU_FREE(HYD_handle.host_file);
 
     if (HYD_handle.bootstrap_exec)
         HYDU_FREE(HYD_handle.bootstrap_exec);
@@ -201,11 +193,11 @@ HYD_Status HYD_UIU_merge_exec_info_to_proxy(void)
     HYDU_FUNC_ENTER();
 
     for (proxy = HYD_handle.proxy_list; proxy; proxy = proxy->next)
-        HYD_handle.global_core_count += proxy->proxy_core_count;
+        HYD_handle.global_core_count += proxy->core_count;
 
     proxy = HYD_handle.proxy_list;
     exec_info = HYD_handle.exec_info_list;
-    proxy_rem_procs = proxy->proxy_core_count;
+    proxy_rem_procs = proxy->core_count;
     exec_rem_procs = exec_info ? exec_info->process_count : 0;
     while (exec_info) {
         if (exec_rem_procs <= proxy_rem_procs) {
@@ -217,7 +209,7 @@ HYD_Status HYD_UIU_merge_exec_info_to_proxy(void)
                 proxy = proxy->next;
                 if (proxy == NULL)
                     proxy = HYD_handle.proxy_list;
-                proxy_rem_procs = proxy->proxy_core_count;
+                proxy_rem_procs = proxy->core_count;
             }
 
             exec_info = exec_info->next;
@@ -232,7 +224,7 @@ HYD_Status HYD_UIU_merge_exec_info_to_proxy(void)
             proxy = proxy->next;
             if (proxy == NULL)
                 proxy = HYD_handle.proxy_list;
-            proxy_rem_procs = proxy->proxy_core_count;
+            proxy_rem_procs = proxy->core_count;
         }
     }
 
@@ -268,7 +260,6 @@ void HYD_UIU_print_params(void)
     HYDU_dump(stdout, "  Debug level: %d\n", HYD_handle.debug);
     HYDU_dump(stdout, "  Enable X: %d\n", HYD_handle.enablex);
     HYDU_dump(stdout, "  Working dir: %s\n", HYD_handle.wdir);
-    HYDU_dump(stdout, "  Host file: %s\n", HYD_handle.host_file);
 
     HYDU_dump(stdout, "\n");
     HYDU_dump(stdout, "  Global environment:\n");
@@ -321,7 +312,7 @@ void HYD_UIU_print_params(void)
         HYDU_dump(stdout, "      Proxy ID: %2d\n", i++);
         HYDU_dump(stdout, "      -----------------\n");
         HYDU_dump(stdout, "        Proxy name: %s\n", proxy->hostname);
-        HYDU_dump(stdout, "        Process count: %d\n", proxy->proxy_core_count);
+        HYDU_dump(stdout, "        Process count: %d\n", proxy->core_count);
         HYDU_dump(stdout, "\n");
         HYDU_dump(stdout, "        Proxy segment list:\n");
         HYDU_dump(stdout, "        .......................\n");
