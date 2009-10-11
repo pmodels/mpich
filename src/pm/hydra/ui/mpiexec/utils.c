@@ -63,7 +63,7 @@ static HYD_Status genv_fn(char *arg, char ***argv)
     status = HYDU_env_create(&env, env_name, env_value);
     HYDU_ERR_POP(status, "unable to create env struct\n");
 
-    HYDU_append_env_to_list(*env, &HYD_handle.user_env);
+    HYDU_append_env_to_list(*env, &HYD_handle.global_env.user);
 
   fn_exit:
     return status;
@@ -74,9 +74,10 @@ static HYD_Status genv_fn(char *arg, char ***argv)
 
 static HYD_Status genvlist_fn(char *arg, char ***argv)
 {
+    int len;
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.prop != HYD_ENV_PROP_UNSET,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.global_env.prop,
                         HYD_INTERNAL_ERROR, "duplicate environment setting\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -89,8 +90,9 @@ static HYD_Status genvlist_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.prop = HYD_ENV_PROP_LIST;
-    HYDU_comma_list_to_env_list(**argv, &HYD_handle.user_env);
+    len = strlen("list:") + strlen(**argv) + 1;
+    HYDU_MALLOC(HYD_handle.global_env.prop, char *, len, status);
+    HYDU_snprintf(HYD_handle.global_env.prop, len, "list:%s", **argv);
     (*argv)++;
 
   fn_exit:
@@ -104,7 +106,7 @@ static HYD_Status genvnone_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.prop != HYD_ENV_PROP_UNSET,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.global_env.prop,
                         HYD_INTERNAL_ERROR, "duplicate environment setting\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -114,7 +116,7 @@ static HYD_Status genvnone_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.prop = HYD_ENV_PROP_NONE;
+    HYD_handle.global_env.prop = HYDU_strdup("none");
 
   fn_exit:
     return status;
@@ -127,7 +129,7 @@ static HYD_Status genvall_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.prop != HYD_ENV_PROP_UNSET,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.global_env.prop,
                         HYD_INTERNAL_ERROR, "duplicate environment setting\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -137,7 +139,7 @@ static HYD_Status genvall_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.prop = HYD_ENV_PROP_ALL;
+    HYD_handle.global_env.prop = HYDU_strdup("all");
 
   fn_exit:
     return status;
@@ -243,14 +245,15 @@ static HYD_Status env_fn(char *arg, char ***argv)
 
 static HYD_Status envlist_fn(char *arg, char ***argv)
 {
+    int len;
     struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
 
     status = HYD_UIU_get_current_exec_info(&exec_info);
     HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-    HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
-                        HYD_INTERNAL_ERROR, "duplicate environment setting\n");
+    HYDU_ERR_CHKANDJUMP(status, exec_info->env_prop, HYD_INTERNAL_ERROR,
+                        "duplicate environment setting\n");
 
     if (**argv && IS_HELP(**argv)) {
         printf("\n");
@@ -262,8 +265,9 @@ static HYD_Status envlist_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    exec_info->prop = HYD_ENV_PROP_LIST;
-    HYDU_comma_list_to_env_list(**argv, &exec_info->user_env);
+    len = strlen("list:") + strlen(**argv) + 1;
+    HYDU_MALLOC(exec_info->env_prop, char *, len, status);
+    HYDU_snprintf(exec_info->env_prop, len, "list:%s", **argv);
     (*argv)++;
 
   fn_exit:
@@ -281,8 +285,8 @@ static HYD_Status envnone_fn(char *arg, char ***argv)
     status = HYD_UIU_get_current_exec_info(&exec_info);
     HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-    HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
-                        HYD_INTERNAL_ERROR, "duplicate environment setting\n");
+    HYDU_ERR_CHKANDJUMP(status, exec_info->env_prop, HYD_INTERNAL_ERROR,
+                        "duplicate environment setting\n");
 
     if (**argv && IS_HELP(**argv)) {
         printf("\n");
@@ -291,7 +295,7 @@ static HYD_Status envnone_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    exec_info->prop = HYD_ENV_PROP_NONE;
+    exec_info->env_prop = HYDU_strdup("none");
 
   fn_exit:
     return status;
@@ -308,8 +312,8 @@ static HYD_Status envall_fn(char *arg, char ***argv)
     status = HYD_UIU_get_current_exec_info(&exec_info);
     HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-    HYDU_ERR_CHKANDJUMP(status, exec_info->prop != HYD_ENV_PROP_UNSET,
-                        HYD_INTERNAL_ERROR, "duplicate environment setting\n");
+    HYDU_ERR_CHKANDJUMP(status, exec_info->env_prop, HYD_INTERNAL_ERROR,
+                        "duplicate environment setting\n");
 
     if (**argv && IS_HELP(**argv)) {
         printf("\n");
@@ -318,7 +322,7 @@ static HYD_Status envall_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    exec_info->prop = HYD_ENV_PROP_ALL;
+    exec_info->env_prop = HYDU_strdup("all");
 
   fn_exit:
     return status;
@@ -1008,7 +1012,7 @@ static HYD_Status verify_arguments(void)
         (HYD_handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
 
         /* No environment */
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.prop != HYD_ENV_PROP_UNSET, HYD_INTERNAL_ERROR,
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.global_env.prop, HYD_INTERNAL_ERROR,
                             "env setting not required for booting/shutting proxies\n");
 
         /* No binding */
@@ -1148,12 +1152,13 @@ static HYD_Status set_default_values(void)
 
     /* Check environment for setting the inherited environment */
     tmp = getenv("HYDRA_ENV");
-    if (HYD_handle.prop == HYD_ENV_PROP_UNSET && tmp)
-        HYD_handle.prop = !strcmp(tmp, "all") ? HYD_ENV_PROP_ALL : HYD_ENV_PROP_NONE;
+    if (HYD_handle.global_env.prop == NULL && tmp)
+        HYD_handle.global_env.prop =
+            !strcmp(tmp, "all") ? HYDU_strdup("all") : HYDU_strdup("none");
 
     /* If no global environment is set, use the default */
-    if (HYD_handle.prop == HYD_ENV_PROP_UNSET)
-        HYD_handle.prop = HYD_ENV_PROP_ALL;
+    if (HYD_handle.global_env.prop == NULL)
+        HYD_handle.global_env.prop = HYDU_strdup("all");
 
   fn_exit:
     return status;
@@ -1174,7 +1179,7 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 
     HYD_UIU_init_params();
 
-    status = HYDU_list_inherited_env(&HYD_handle.inherited_env);
+    status = HYDU_list_inherited_env(&HYD_handle.global_env.inherited);
     HYDU_ERR_POP(status, "unable to get the inherited env list\n");
 
     argv++;

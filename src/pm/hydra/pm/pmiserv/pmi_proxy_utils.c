@@ -34,9 +34,9 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.ckpoint_prefix = NULL;
     HYD_PMCD_pmi_proxy_params.ckpoint_restart = 0;
 
-    HYD_PMCD_pmi_proxy_params.system_env = NULL;
-    HYD_PMCD_pmi_proxy_params.user_env = NULL;
-    HYD_PMCD_pmi_proxy_params.inherited_env = NULL;
+    HYD_PMCD_pmi_proxy_params.global_env.system = NULL;
+    HYD_PMCD_pmi_proxy_params.global_env.user = NULL;
+    HYD_PMCD_pmi_proxy_params.global_env.inherited = NULL;
 
     HYD_PMCD_pmi_proxy_params.global_core_count = 0;
     HYD_PMCD_pmi_proxy_params.partition_core_count = 0;
@@ -165,11 +165,14 @@ static HYD_Status parse_params(char **t_argv)
                 env = HYDU_str_to_env(str);
 
                 if (!strcmp(argtype, "--global-inherited-env"))
-                    HYDU_append_env_to_list(*env, &HYD_PMCD_pmi_proxy_params.inherited_env);
+                    HYDU_append_env_to_list(*env,
+                                            &HYD_PMCD_pmi_proxy_params.global_env.inherited);
                 else if (!strcmp(argtype, "--global-system-env"))
-                    HYDU_append_env_to_list(*env, &HYD_PMCD_pmi_proxy_params.system_env);
+                    HYDU_append_env_to_list(*env,
+                                            &HYD_PMCD_pmi_proxy_params.global_env.system);
                 else if (!strcmp(argtype, "--global-user-env"))
-                    HYDU_append_env_to_list(*env, &HYD_PMCD_pmi_proxy_params.user_env);
+                    HYDU_append_env_to_list(*env,
+                                            &HYD_PMCD_pmi_proxy_params.global_env.user);
 
                 HYDU_FREE(env);
             }
@@ -179,8 +182,10 @@ static HYD_Status parse_params(char **t_argv)
         /* Global environment type */
         if (!strcmp(*argv, "--genv-prop")) {
             argv++;
-            HYD_PMCD_pmi_proxy_params.genv_prop =
-                (HYD_Env_prop_t) (unsigned int) atoi(*argv);
+            if (strcmp(*argv, "HYDRA_NULL"))
+                HYD_PMCD_pmi_proxy_params.global_env.prop = HYDU_strdup(*argv);
+            else
+                HYD_PMCD_pmi_proxy_params.global_env.prop = NULL;
             continue;
         }
 
@@ -272,7 +277,10 @@ static HYD_Status parse_params(char **t_argv)
         /* Global environment type */
         if (!strcmp(*argv, "--exec-env-prop")) {
             argv++;
-            exec->prop = (HYD_Env_prop_t) (unsigned int) atoi(*argv);
+            if (strcmp(*argv, "HYDRA_NULL"))
+                exec->env_prop = HYDU_strdup(*argv);
+            else
+                exec->env_prop = NULL;
             continue;
         }
 
@@ -419,14 +427,14 @@ HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
     if (HYD_PMCD_pmi_proxy_params.ckpoint_prefix)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.ckpoint_prefix);
 
-    if (HYD_PMCD_pmi_proxy_params.system_env)
-        HYDU_env_free_list(HYD_PMCD_pmi_proxy_params.system_env);
+    if (HYD_PMCD_pmi_proxy_params.global_env.system)
+        HYDU_env_free_list(HYD_PMCD_pmi_proxy_params.global_env.system);
 
-    if (HYD_PMCD_pmi_proxy_params.user_env)
-        HYDU_env_free_list(HYD_PMCD_pmi_proxy_params.user_env);
+    if (HYD_PMCD_pmi_proxy_params.global_env.user)
+        HYDU_env_free_list(HYD_PMCD_pmi_proxy_params.global_env.user);
 
-    if (HYD_PMCD_pmi_proxy_params.inherited_env)
-        HYDU_env_free_list(HYD_PMCD_pmi_proxy_params.inherited_env);
+    if (HYD_PMCD_pmi_proxy_params.global_env.inherited)
+        HYDU_env_free_list(HYD_PMCD_pmi_proxy_params.global_env.inherited);
 
     if (HYD_PMCD_pmi_proxy_params.segment_list) {
         segment = HYD_PMCD_pmi_proxy_params.segment_list;
@@ -529,7 +537,7 @@ HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd)
 HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 {
     int i, j, arg, stdin_fd, process_id, core, pmi_id;
-    char *str;
+    char *str, *envstr, *list;
     char *client_args[HYD_NUM_TMP_STRINGS];
     HYD_Env_t *env, *prop_env = NULL;
     struct HYD_Partition_segment *segment;
@@ -605,20 +613,37 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
          *    - System env
          */
 
-        /* Global inherited env is set when either genvall or envall
-         * is specified. */
-        if ((exec->prop != HYD_ENV_PROP_NONE) &&
-            ((exec->prop == HYD_ENV_PROP_ALL) ||
-             (exec->prop == HYD_ENV_PROP_UNSET &&
-              HYD_PMCD_pmi_proxy_params.genv_prop == HYD_ENV_PROP_ALL))) {
-            for (env = HYD_PMCD_pmi_proxy_params.inherited_env; env; env = env->next) {
+        /* Global inherited env */
+        if ((exec->env_prop && !strcmp(exec->env_prop, "all")) ||
+            (!exec->env_prop && !strcmp(HYD_PMCD_pmi_proxy_params.global_env.prop, "all"))) {
+            for (env = HYD_PMCD_pmi_proxy_params.global_env.inherited; env; env = env->next) {
                 status = HYDU_append_env_to_list(*env, &prop_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
+        else if ((exec->env_prop && !strncmp(exec->env_prop, "list", strlen("list"))) ||
+                 (!exec->env_prop &&
+                  !strncmp(HYD_PMCD_pmi_proxy_params.global_env.prop, "list",
+                           strlen("list")))) {
+            if (exec->env_prop)
+                list = HYDU_strdup(exec->env_prop + strlen("list:"));
+            else
+                list = HYDU_strdup(HYD_PMCD_pmi_proxy_params.global_env.prop + strlen("list:"));
+
+            envstr = strtok(list, ",");
+            while (envstr) {
+                for (env = HYD_PMCD_pmi_proxy_params.global_env.inherited;
+                     env && strcmp(env->env_name, envstr); env = env->next);
+                if (env) {
+                    status = HYDU_append_env_to_list(*env, &prop_env);
+                    HYDU_ERR_POP(status, "unable to add env to list\n");
+                }
+                envstr = strtok(NULL, ",");
+            }
+        }
 
         /* Next priority order is the global user env */
-        for (env = HYD_PMCD_pmi_proxy_params.user_env; env; env = env->next) {
+        for (env = HYD_PMCD_pmi_proxy_params.global_env.user; env; env = env->next) {
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
@@ -630,7 +655,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         }
 
         /* Highest priority is the system env */
-        for (env = HYD_PMCD_pmi_proxy_params.system_env; env; env = env->next) {
+        for (env = HYD_PMCD_pmi_proxy_params.global_env.system; env; env = env->next) {
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }

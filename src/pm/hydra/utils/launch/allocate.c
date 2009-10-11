@@ -83,7 +83,7 @@ HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info)
     (*exec_info)->exec_proc_count = 0;
     (*exec_info)->exec[0] = NULL;
     (*exec_info)->user_env = NULL;
-    (*exec_info)->prop = HYD_ENV_PROP_UNSET;
+    (*exec_info)->env_prop = NULL;
     (*exec_info)->next = NULL;
 
   fn_exit:
@@ -105,6 +105,9 @@ void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list)
     while (exec_info) {
         run = exec_info->next;
         HYDU_free_strlist(exec_info->exec);
+
+        if (exec_info->env_prop)
+            HYDU_FREE(exec_info->env_prop);
 
         HYDU_env_free_list(exec_info->user_env);
         exec_info->user_env = NULL;
@@ -154,6 +157,8 @@ void HYDU_free_partition_list(struct HYD_Partition *partition_list)
             HYDU_free_strlist(exec->exec);
             if (exec->user_env)
                 HYDU_env_free(exec->user_env);
+            if (exec->env_prop)
+                HYDU_FREE(exec->env_prop);
             HYDU_FREE(exec);
             exec = texec;
         }
@@ -369,7 +374,7 @@ HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec)
     HYDU_MALLOC(*exec, struct HYD_Partition_exec *, sizeof(struct HYD_Partition_exec), status);
     (*exec)->exec[0] = NULL;
     (*exec)->proc_count = 0;
-    (*exec)->prop = HYD_ENV_PROP_UNSET;
+    (*exec)->env_prop = NULL;
     (*exec)->user_env = NULL;
     (*exec)->next = NULL;
 

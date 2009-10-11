@@ -40,11 +40,7 @@ struct HYD_Handle_ {
     int ranks_per_proc;
     char *bootstrap_exec;
 
-    /* Global environment */
-    HYD_Env_t *system_env;
-    HYD_Env_t *user_env;
-    HYD_Env_t *inherited_env;
-    HYD_Env_prop_t prop;
+    struct HYD_Env_global global_env;
 
      HYD_Status(*stdin_cb) (int fd, HYD_Event_t events, void *userp);
      HYD_Status(*stdout_cb) (int fd, HYD_Event_t events, void *userp);

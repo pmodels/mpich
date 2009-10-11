@@ -37,10 +37,10 @@ void HYD_UIU_init_params(void)
     HYD_handle.ranks_per_proc = -1;
     HYD_handle.bootstrap_exec = NULL;
 
-    HYD_handle.inherited_env = NULL;
-    HYD_handle.system_env = NULL;
-    HYD_handle.user_env = NULL;
-    HYD_handle.prop = HYD_ENV_PROP_UNSET;
+    HYD_handle.global_env.inherited = NULL;
+    HYD_handle.global_env.system = NULL;
+    HYD_handle.global_env.user = NULL;
+    HYD_handle.global_env.prop = NULL;
 
     HYD_handle.stdin_cb = NULL;
     HYD_handle.stdout_cb = NULL;
@@ -96,14 +96,17 @@ void HYD_UIU_free_params(void)
     if (HYD_handle.bootstrap_exec)
         HYDU_FREE(HYD_handle.bootstrap_exec);
 
-    if (HYD_handle.inherited_env)
-        HYDU_env_free_list(HYD_handle.inherited_env);
+    if (HYD_handle.global_env.inherited)
+        HYDU_env_free_list(HYD_handle.global_env.inherited);
 
-    if (HYD_handle.system_env)
-        HYDU_env_free_list(HYD_handle.system_env);
+    if (HYD_handle.global_env.system)
+        HYDU_env_free_list(HYD_handle.global_env.system);
 
-    if (HYD_handle.user_env)
-        HYDU_env_free_list(HYD_handle.user_env);
+    if (HYD_handle.global_env.user)
+        HYDU_env_free_list(HYD_handle.global_env.user);
+
+    if (HYD_handle.global_env.prop)
+        HYDU_FREE(HYD_handle.global_env.prop);
 
     if (HYD_handle.exec_info_list)
         HYDU_free_exec_info_list(HYD_handle.exec_info_list);
@@ -113,49 +116,6 @@ void HYD_UIU_free_params(void)
 
     /* Re-initialize everything to default values */
     HYD_UIU_init_params();
-}
-
-
-HYD_Status HYD_UIU_create_env_list(void)
-{
-    struct HYD_Exec_info *exec_info;
-    HYD_Env_t *env, *run;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (HYD_handle.prop == HYD_ENV_PROP_LIST) {
-        for (env = HYD_handle.user_env; env; env = env->next) {
-            run = HYDU_env_lookup(*env, HYD_handle.inherited_env);
-            if (run) {
-                /* Dump back the updated environment to the user list */
-                status = HYDU_append_env_to_list(*run, &HYD_handle.user_env);
-                HYDU_ERR_POP(status, "unable to add env to list\n");
-            }
-        }
-    }
-
-    exec_info = HYD_handle.exec_info_list;
-    while (exec_info) {
-        if (exec_info->prop == HYD_ENV_PROP_LIST) {
-            for (env = exec_info->user_env; env; env = env->next) {
-                run = HYDU_env_lookup(*env, HYD_handle.inherited_env);
-                if (run) {
-                    /* Dump back the updated environment to the user list */
-                    status = HYDU_append_env_to_list(*run, &exec_info->user_env);
-                    HYDU_ERR_POP(status, "unable to add env to list\n");
-                }
-            }
-        }
-        exec_info = exec_info->next;
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -205,7 +165,8 @@ static HYD_Status add_exec_info_to_partition(struct HYD_Exec_info *exec_info,
         partition->exec_list->exec[i] = NULL;
 
         partition->exec_list->proc_count = num_procs;
-        partition->exec_list->prop = exec_info->prop;
+        partition->exec_list->env_prop = exec_info->env_prop ?
+            HYDU_strdup(exec_info->env_prop) : NULL;
         partition->exec_list->user_env = HYDU_env_list_dup(exec_info->user_env);
     }
     else {
@@ -221,7 +182,7 @@ static HYD_Status add_exec_info_to_partition(struct HYD_Exec_info *exec_info,
         exec->exec[i] = NULL;
 
         exec->proc_count = num_procs;
-        exec->prop = exec_info->prop;
+        exec->env_prop = exec_info->env_prop ? HYDU_strdup(exec_info->env_prop) : NULL;
         exec->user_env = HYDU_env_list_dup(exec_info->user_env);
     }
 
@@ -315,22 +276,22 @@ void HYD_UIU_print_params(void)
     HYDU_dump(stdout, "\n");
     HYDU_dump(stdout, "  Global environment:\n");
     HYDU_dump(stdout, "  -------------------\n");
-    for (env = HYD_handle.inherited_env; env; env = env->next)
+    for (env = HYD_handle.global_env.inherited; env; env = env->next)
         HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
 
-    if (HYD_handle.system_env) {
+    if (HYD_handle.global_env.system) {
         HYDU_dump(stdout, "\n");
         HYDU_dump(stdout, "  Hydra internal environment:\n");
         HYDU_dump(stdout, "  ---------------------------\n");
-        for (env = HYD_handle.system_env; env; env = env->next)
+        for (env = HYD_handle.global_env.system; env; env = env->next)
             HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
     }
 
-    if (HYD_handle.user_env) {
+    if (HYD_handle.global_env.user) {
         HYDU_dump(stdout, "\n");
         HYDU_dump(stdout, "  User set environment:\n");
         HYDU_dump(stdout, "  ---------------------\n");
-        for (env = HYD_handle.user_env; env; env = env->next)
+        for (env = HYD_handle.global_env.user; env; env = env->next)
             HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
     }
 

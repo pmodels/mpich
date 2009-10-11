@@ -134,6 +134,13 @@ typedef enum {
     HYD_ENV_PROP_LIST
 } HYD_Env_prop_t;
 
+struct HYD_Env_global {
+    HYD_Env_t *system;
+    HYD_Env_t *user;
+    HYD_Env_t *inherited;
+    char      *prop;
+};
+
 /* List of contiguous segments of processes on a partition */
 struct HYD_Partition_segment {
     int start_pid;
@@ -146,8 +153,8 @@ struct HYD_Partition_segment {
 struct HYD_Partition_exec {
     char *exec[HYD_NUM_TMP_STRINGS];
     int proc_count;
-    HYD_Env_prop_t prop;
     HYD_Env_t *user_env;
+    char *env_prop;
 
     int pgid;                   /* All executables with the same PGID belong to the same
                                  * job. */
@@ -221,7 +228,7 @@ struct HYD_Exec_info {
 
     /* Local environment */
     HYD_Env_t *user_env;
-    HYD_Env_prop_t prop;
+    char *env_prop;
 
     struct HYD_Exec_info *next;
 };

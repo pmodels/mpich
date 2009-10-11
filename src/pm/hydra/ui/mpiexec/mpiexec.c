@@ -161,10 +161,6 @@ int main(int argc, char **argv)
         }
     }
 
-    /* Consolidate the environment list that we need to propagate */
-    status = HYD_UIU_create_env_list();
-    HYDU_ERR_POP(status, "unable to create env list\n");
-
     status = HYD_UIU_merge_exec_info_to_partition();
     HYDU_ERR_POP(status, "unable to merge exec info\n");
 

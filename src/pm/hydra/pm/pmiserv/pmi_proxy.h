@@ -35,10 +35,7 @@ struct HYD_PMCD_pmi_proxy_params {
     char *ckpoint_prefix;
     int ckpoint_restart;
 
-    HYD_Env_t *system_env;
-    HYD_Env_t *user_env;
-    HYD_Env_t *inherited_env;
-    HYD_Env_prop_t genv_prop;
+    struct HYD_Env_global global_env;
 
     int global_core_count;
     int partition_core_count;
