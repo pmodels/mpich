@@ -17,6 +17,6 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void);
 HYD_Status HYD_PMCD_pmi_serv_ckpoint(void);
 void HYD_PMCD_pmi_serv_signal_cb(int signal);
 
-HYD_Status HYD_PMCD_pmi_send_exec_info(struct HYD_Partition *partition);
+HYD_Status HYD_PMCD_pmi_send_exec_info(struct HYD_Proxy *proxy);
 
 #endif /* PMI_SERV_H_INCLUDED */

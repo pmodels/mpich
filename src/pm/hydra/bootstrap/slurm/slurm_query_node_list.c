@@ -100,11 +100,11 @@ static HYD_Status group_to_individual_nodes(char *str, char **list)
 }
 
 HYD_Status HYD_BSCD_slurm_query_node_list(int *num_nodes,
-                                          struct HYD_Partition **partition_list)
+                                          struct HYD_Proxy **proxy_list)
 {
     char *str, *num_procs;
     char *tmp1[HYD_NUM_TMP_STRINGS], *tmp2[HYD_NUM_TMP_STRINGS];
-    struct HYD_Partition_segment *segment;
+    struct HYD_Proxy_segment *segment;
     int i, j;
     HYD_Status status = HYD_SUCCESS;
 
@@ -114,7 +114,7 @@ HYD_Status HYD_BSCD_slurm_query_node_list(int *num_nodes,
     num_procs = getenv("SLURM_JOB_CPUS_PER_NODE");
 
     if (str == NULL || num_procs == NULL) {
-        *partition_list = NULL;
+        *proxy_list = NULL;
     }
     else {
         full_str_to_groups(str, tmp1);
@@ -126,14 +126,14 @@ HYD_Status HYD_BSCD_slurm_query_node_list(int *num_nodes,
             HYDU_ERR_POP(status, "unable to parse node list\n");
 
             for (j = 0; tmp2[j]; j++) {
-                status = HYDU_alloc_partition_segment(&segment);
-                HYDU_ERR_POP(status, "Unable to allocate partition segment\n");
+                status = HYDU_alloc_proxy_segment(&segment);
+                HYDU_ERR_POP(status, "Unable to allocate proxy segment\n");
 
                 segment->start_pid = *num_nodes;
                 segment->proc_count = atoi(num_procs);
 
-                status = HYDU_merge_partition_segment(tmp2[j], segment, partition_list);
-                HYDU_ERR_POP(status, "merge partition segment failed\n");
+                status = HYDU_merge_proxy_segment(tmp2[j], segment, proxy_list);
+                HYDU_ERR_POP(status, "merge proxy segment failed\n");
 
                 *num_nodes += atoi(num_procs);
             }

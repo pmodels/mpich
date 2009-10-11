@@ -345,10 +345,10 @@ static HYD_Status np_fn(char *arg, char ***argv)
     status = HYD_UIU_get_current_exec_info(&exec_info);
     HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-    if (exec_info->exec_proc_count != 0)
+    if (exec_info->process_count != 0)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate process count\n");
 
-    exec_info->exec_proc_count = atoi(**argv);
+    exec_info->process_count = atoi(**argv);
     (*argv)++;
 
   fn_exit:

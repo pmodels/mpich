@@ -55,7 +55,7 @@ struct HYD_Handle_ {
     int global_core_count;
 
     struct HYD_Exec_info *exec_info_list;
-    struct HYD_Partition *partition_list;
+    struct HYD_Proxy *proxy_list;
 
     /* Random parameters used for internal code */
     int func_depth;

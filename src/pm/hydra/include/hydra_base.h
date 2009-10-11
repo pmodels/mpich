@@ -141,27 +141,6 @@ struct HYD_Env_global {
     char      *prop;
 };
 
-/* List of contiguous segments of processes on a partition */
-struct HYD_Partition_segment {
-    int start_pid;
-    int proc_count;
-    char **mapping;
-    struct HYD_Partition_segment *next;
-};
-
-/* Executables on a partition */
-struct HYD_Partition_exec {
-    char *exec[HYD_NUM_TMP_STRINGS];
-    int proc_count;
-    HYD_Env_t *user_env;
-    char *env_prop;
-
-    int pgid;                   /* All executables with the same PGID belong to the same
-                                 * job. */
-
-    struct HYD_Partition_exec *next;
-};
-
 #if !defined HAVE_PTHREAD_H
 #error "pthread.h needed"
 #else
@@ -178,52 +157,62 @@ struct HYD_Partition_exec {
 #endif
 #endif
 
-#define FORALL_ACTIVE_PARTITIONS(partition, partition_list)    \
-    for ((partition) = (partition_list); (partition) && (partition)->base->active; \
-         (partition) = (partition)->next)
+#define FORALL_ACTIVE_PROXIES(proxy, proxy_list)    \
+    for ((proxy) = (proxy_list); (proxy) && (proxy)->active; \
+         (proxy) = (proxy)->next)
 
-#define FORALL_PARTITIONS(partition, partition_list)    \
-    for ((partition) = (partition_list); (partition); (partition) = (partition)->next)
+#define FORALL_PROXIES(proxy, proxy_list)    \
+    for ((proxy) = (proxy_list); (proxy); (proxy) = (proxy)->next)
 
-struct HYD_Partition_base {
-    char *name;
-    char **exec_args;       /* Full argument list */
-
-    int partition_id;
-    int active;
-
-    int pid;
-    int in;                     /* stdin is only valid for partition_id 0 */
-    int out;
-    int err;
-
-    struct HYD_Partition_base *next;    /* Unused */
+/* List of contiguous segments of processes on a proxy */
+struct HYD_Proxy_segment {
+    int start_pid;
+    int proc_count;
+    char **mapping;
+    struct HYD_Proxy_segment *next;
 };
 
-/* Partition information */
-struct HYD_Partition {
-    struct HYD_Partition_base *base;
+/* Executables on a proxy */
+struct HYD_Proxy_exec {
+    char *exec[HYD_NUM_TMP_STRINGS];
+    int proc_count;
+    HYD_Env_t *user_env;
+    char *env_prop;
+
+    int pgid;                   /* All executables with the same PGID belong to the same
+                                 * job. */
+
+    struct HYD_Proxy_exec *next;
+};
+
+/* Proxy information */
+struct HYD_Proxy {
+    char *hostname;
+    char **exec_args;
+
+    int  proxy_id;
+    int  active;
+
+    int  pid;
+    int  in;  /* stdin is only valid for proxy_id 0 */
+    int  out;
+    int  err;
 
     char *user_bind_map;
-    int partition_core_count;
+    int proxy_core_count;
 
     /* Segment list will contain one-pass of the hosts file */
-    struct HYD_Partition_segment *segment_list;
-    struct HYD_Partition_exec *exec_list;
+    struct HYD_Proxy_segment *segment_list;
+    struct HYD_Proxy_exec *exec_list;
 
-    /* Spawn information: each partition can have one or more
-     * proxies. For the time being, we only support one proxy per
-     * partition, but this can be easily extended later. We will also
-     * need to give different ports for the proxies to listen on in
-     * that case. */
     int *exit_status;
     int control_fd;
 
-    struct HYD_Partition *next;
+    struct HYD_Proxy *next;
 };
 
 struct HYD_Exec_info {
-    int exec_proc_count;
+    int process_count;
     char *exec[HYD_NUM_TMP_STRINGS];
 
     /* Local environment */

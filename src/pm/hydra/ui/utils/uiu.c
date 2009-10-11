@@ -50,7 +50,7 @@ void HYD_UIU_init_params(void)
 
     HYD_handle.global_core_count = 0;
     HYD_handle.exec_info_list = NULL;
-    HYD_handle.partition_list = NULL;
+    HYD_handle.proxy_list = NULL;
 
     HYD_handle.func_depth = 0;
     HYD_handle.stdin_buf_offset = 0;
@@ -111,17 +111,16 @@ void HYD_UIU_free_params(void)
     if (HYD_handle.exec_info_list)
         HYDU_free_exec_info_list(HYD_handle.exec_info_list);
 
-    if (HYD_handle.partition_list)
-        HYDU_free_partition_list(HYD_handle.partition_list);
+    if (HYD_handle.proxy_list)
+        HYDU_free_proxy_list(HYD_handle.proxy_list);
 
     /* Re-initialize everything to default values */
     HYD_UIU_init_params();
 }
 
 
-HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **info)
+HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **exec_info)
 {
-    struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -131,11 +130,9 @@ HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **info)
         HYDU_ERR_POP(status, "unable to allocate exec_info\n");
     }
 
-    exec_info = HYD_handle.exec_info_list;
-    while (exec_info->next)
-        exec_info = exec_info->next;
-
-    *info = exec_info;
+    *exec_info = HYD_handle.exec_info_list;
+    while ((*exec_info)->next)
+        *exec_info = (*exec_info)->next;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -146,33 +143,33 @@ HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **info)
 }
 
 
-static HYD_Status add_exec_info_to_partition(struct HYD_Exec_info *exec_info,
-                                             struct HYD_Partition *partition,
-                                             int num_procs)
+static HYD_Status add_exec_info_to_proxy(struct HYD_Exec_info *exec_info,
+                                         struct HYD_Proxy *proxy,
+                                         int num_procs)
 {
     int i;
-    struct HYD_Partition_exec *exec;
+    struct HYD_Proxy_exec *exec;
     HYD_Status status = HYD_SUCCESS;
 
-    if (partition->exec_list == NULL) {
-        status = HYDU_alloc_partition_exec(&partition->exec_list);
-        HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+    if (proxy->exec_list == NULL) {
+        status = HYDU_alloc_proxy_exec(&proxy->exec_list);
+        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
 
-        partition->exec_list->pgid = 0; /* This is the COMM_WORLD exec */
+        proxy->exec_list->pgid = 0; /* This is the COMM_WORLD exec */
 
         for (i = 0; exec_info->exec[i]; i++)
-            partition->exec_list->exec[i] = HYDU_strdup(exec_info->exec[i]);
-        partition->exec_list->exec[i] = NULL;
+            proxy->exec_list->exec[i] = HYDU_strdup(exec_info->exec[i]);
+        proxy->exec_list->exec[i] = NULL;
 
-        partition->exec_list->proc_count = num_procs;
-        partition->exec_list->env_prop = exec_info->env_prop ?
+        proxy->exec_list->proc_count = num_procs;
+        proxy->exec_list->env_prop = exec_info->env_prop ?
             HYDU_strdup(exec_info->env_prop) : NULL;
-        partition->exec_list->user_env = HYDU_env_list_dup(exec_info->user_env);
+        proxy->exec_list->user_env = HYDU_env_list_dup(exec_info->user_env);
     }
     else {
-        for (exec = partition->exec_list; exec->next; exec = exec->next);
-        status = HYDU_alloc_partition_exec(&exec->next);
-        HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+        for (exec = proxy->exec_list; exec->next; exec = exec->next);
+        status = HYDU_alloc_proxy_exec(&exec->next);
+        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
 
         exec = exec->next;
         exec->pgid = 0; /* This is the COMM_WORLD exec */
@@ -194,48 +191,48 @@ static HYD_Status add_exec_info_to_partition(struct HYD_Exec_info *exec_info,
 }
 
 
-HYD_Status HYD_UIU_merge_exec_info_to_partition(void)
+HYD_Status HYD_UIU_merge_exec_info_to_proxy(void)
 {
-    int partition_rem_procs, exec_rem_procs;
-    struct HYD_Partition *partition;
+    int proxy_rem_procs, exec_rem_procs;
+    struct HYD_Proxy *proxy;
     struct HYD_Exec_info *exec_info;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    for (partition = HYD_handle.partition_list; partition; partition = partition->next)
-        HYD_handle.global_core_count += partition->partition_core_count;
+    for (proxy = HYD_handle.proxy_list; proxy; proxy = proxy->next)
+        HYD_handle.global_core_count += proxy->proxy_core_count;
 
-    partition = HYD_handle.partition_list;
+    proxy = HYD_handle.proxy_list;
     exec_info = HYD_handle.exec_info_list;
-    partition_rem_procs = partition->partition_core_count;
-    exec_rem_procs = exec_info ? exec_info->exec_proc_count : 0;
+    proxy_rem_procs = proxy->proxy_core_count;
+    exec_rem_procs = exec_info ? exec_info->process_count : 0;
     while (exec_info) {
-        if (exec_rem_procs <= partition_rem_procs) {
-            status = add_exec_info_to_partition(exec_info, partition, exec_rem_procs);
-            HYDU_ERR_POP(status, "unable to add executable to partition\n");
+        if (exec_rem_procs <= proxy_rem_procs) {
+            status = add_exec_info_to_proxy(exec_info, proxy, exec_rem_procs);
+            HYDU_ERR_POP(status, "unable to add executable to proxy\n");
 
-            partition_rem_procs -= exec_rem_procs;
-            if (partition_rem_procs == 0) {
-                partition = partition->next;
-                if (partition == NULL)
-                    partition = HYD_handle.partition_list;
-                partition_rem_procs = partition->partition_core_count;
+            proxy_rem_procs -= exec_rem_procs;
+            if (proxy_rem_procs == 0) {
+                proxy = proxy->next;
+                if (proxy == NULL)
+                    proxy = HYD_handle.proxy_list;
+                proxy_rem_procs = proxy->proxy_core_count;
             }
 
             exec_info = exec_info->next;
-            exec_rem_procs = exec_info ? exec_info->exec_proc_count : 0;
+            exec_rem_procs = exec_info ? exec_info->process_count : 0;
         }
         else {
-            status = add_exec_info_to_partition(exec_info, partition, partition_rem_procs);
-            HYDU_ERR_POP(status, "unable to add executable to partition\n");
+            status = add_exec_info_to_proxy(exec_info, proxy, proxy_rem_procs);
+            HYDU_ERR_POP(status, "unable to add executable to proxy\n");
 
-            exec_rem_procs -= partition_rem_procs;
+            exec_rem_procs -= proxy_rem_procs;
 
-            partition = partition->next;
-            if (partition == NULL)
-                partition = HYD_handle.partition_list;
-            partition_rem_procs = partition->partition_core_count;
+            proxy = proxy->next;
+            if (proxy == NULL)
+                proxy = HYD_handle.proxy_list;
+            proxy_rem_procs = proxy->proxy_core_count;
         }
     }
 
@@ -252,9 +249,9 @@ void HYD_UIU_print_params(void)
 {
     HYD_Env_t *env;
     int i;
-    struct HYD_Partition *partition;
-    struct HYD_Partition_segment *segment;
-    struct HYD_Partition_exec *exec;
+    struct HYD_Proxy *proxy;
+    struct HYD_Proxy_segment *segment;
+    struct HYD_Proxy_exec *exec;
     struct HYD_Exec_info *exec_info;
 
     HYDU_FUNC_ENTER();
@@ -303,7 +300,7 @@ void HYD_UIU_print_params(void)
     for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
         HYDU_dump(stdout, "      Executable ID: %2d\n", i++);
         HYDU_dump(stdout, "      -----------------\n");
-        HYDU_dump(stdout, "        Process count: %d\n", exec_info->exec_proc_count);
+        HYDU_dump(stdout, "        Process count: %d\n", exec_info->process_count);
         HYDU_dump(stdout, "        Executable: ");
         HYDU_print_strlist(exec_info->exec);
         HYDU_dump(stdout, "\n");
@@ -317,24 +314,24 @@ void HYD_UIU_print_params(void)
         }
     }
 
-    HYDU_dump(stdout, "    Partition information:\n");
+    HYDU_dump(stdout, "    Proxy information:\n");
     HYDU_dump(stdout, "    *********************\n");
     i = 1;
-    for (partition = HYD_handle.partition_list; partition; partition = partition->next) {
-        HYDU_dump(stdout, "      Partition ID: %2d\n", i++);
+    for (proxy = HYD_handle.proxy_list; proxy; proxy = proxy->next) {
+        HYDU_dump(stdout, "      Proxy ID: %2d\n", i++);
         HYDU_dump(stdout, "      -----------------\n");
-        HYDU_dump(stdout, "        Partition name: %s\n", partition->base->name);
-        HYDU_dump(stdout, "        Process count: %d\n", partition->partition_core_count);
+        HYDU_dump(stdout, "        Proxy name: %s\n", proxy->hostname);
+        HYDU_dump(stdout, "        Process count: %d\n", proxy->proxy_core_count);
         HYDU_dump(stdout, "\n");
-        HYDU_dump(stdout, "        Partition segment list:\n");
+        HYDU_dump(stdout, "        Proxy segment list:\n");
         HYDU_dump(stdout, "        .......................\n");
-        for (segment = partition->segment_list; segment; segment = segment->next)
+        for (segment = proxy->segment_list; segment; segment = segment->next)
             HYDU_dump(stdout, "          Start PID: %d; Process count: %d\n",
                       segment->start_pid, segment->proc_count);
         HYDU_dump(stdout, "\n");
-        HYDU_dump(stdout, "        Partition exec list:\n");
+        HYDU_dump(stdout, "        Proxy exec list:\n");
         HYDU_dump(stdout, "        ....................\n");
-        for (exec = partition->exec_list; exec; exec = exec->next)
+        for (exec = proxy->exec_list; exec; exec = exec->next)
             HYDU_dump(stdout, "          Exec: %s; Process count: %d\n", exec->exec[0],
                       exec->proc_count);
     }

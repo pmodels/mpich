@@ -8,16 +8,14 @@
 #include "hydra_utils.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCU_query_node_list(int *num_nodes, struct HYD_Proxy **proxy_list)
+HYD_Status HYD_BSCU_query_proxy_id(int *proxy_id)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /* We don't know anything about nodes or resources. Just return
-     * NULL. */
-    *num_nodes = 0;
-    *proxy_list = NULL;
+    /* We don't know anything about proxy IDs by default. */
+    *proxy_id = -1;
 
     HYDU_FUNC_EXIT();
 

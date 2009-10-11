@@ -7,19 +7,19 @@
 #include "hydra_utils.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCU_wait_for_completion(struct HYD_Partition *partition_list)
+HYD_Status HYD_BSCU_wait_for_completion(struct HYD_Proxy *proxy_list)
 {
     int pid, ret_status, not_completed;
-    struct HYD_Partition *partition;
-    struct HYD_Partition_exec *exec;
+    struct HYD_Proxy *proxy;
+    struct HYD_Proxy_exec *exec;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     not_completed = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, partition_list) {
-        if (partition->exit_status == NULL) {
-            for (exec = partition->exec_list; exec; exec = exec->next)
+    FORALL_ACTIVE_PROXIES(proxy, proxy_list) {
+        if (proxy->exit_status == NULL) {
+            for (exec = proxy->exec_list; exec; exec = exec->next)
                 not_completed += exec->proc_count;
         }
     }
@@ -33,8 +33,8 @@ HYD_Status HYD_BSCU_wait_for_completion(struct HYD_Partition *partition_list)
         pid = waitpid(-1, &ret_status, WNOHANG);
         if (pid > 0) {
             /* Find the pid and mark it as complete. */
-            FORALL_ACTIVE_PARTITIONS(partition, partition_list) {
-                if (partition->base->pid == pid)
+            FORALL_ACTIVE_PROXIES(proxy, proxy_list) {
+                if (proxy->pid == pid)
                     not_completed--;
             }
         }

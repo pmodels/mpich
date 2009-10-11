@@ -105,8 +105,8 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-    struct HYD_Partition *partition;
-    struct HYD_Partition_exec *exec;
+    struct HYD_Proxy *proxy;
+    struct HYD_Proxy_exec *exec;
     struct HYD_Exec_info *exec_info;
     int exit_status = 0, timeout, i, process_id, proc_count, num_nodes = 0;
     HYD_Status status = HYD_SUCCESS;
@@ -132,13 +132,13 @@ int main(int argc, char **argv)
         /* User did not provide any host file. Query the RMK. We pass
          * a zero node count, so the RMK will give us all the nodes it
          * already has and won't try to allocate any more. */
-        status = HYD_RMKI_query_node_list(&num_nodes, &HYD_handle.partition_list);
+        status = HYD_RMKI_query_node_list(&num_nodes, &HYD_handle.proxy_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
         /* We don't have an allocation capability yet, but when we do,
          * we should try it here. */
 
-        if (HYD_handle.partition_list == NULL) {
+        if (HYD_handle.proxy_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
             HYD_handle.host_file = HYDU_strdup("HYDRA_USE_LOCALHOST");
         }
@@ -146,40 +146,40 @@ int main(int argc, char **argv)
 
     if (HYD_handle.host_file) {
         /* Use the user specified host file */
-        status = HYDU_create_node_list_from_file(HYD_handle.host_file, &HYD_handle.partition_list);
+        status = HYDU_create_node_list_from_file(HYD_handle.host_file, &HYD_handle.proxy_list);
         HYDU_ERR_POP(status, "unable to create host list\n");
     }
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
     for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
-        if (exec_info->exec_proc_count == 0) {
+        if (exec_info->process_count == 0) {
             if (num_nodes == 0)
-                exec_info->exec_proc_count = 1;
+                exec_info->process_count = 1;
             else
-                exec_info->exec_proc_count = num_nodes;
+                exec_info->process_count = num_nodes;
         }
     }
 
-    status = HYD_UIU_merge_exec_info_to_partition();
+    status = HYD_UIU_merge_exec_info_to_proxy();
     HYDU_ERR_POP(status, "unable to merge exec info\n");
 
     if (HYD_handle.debug)
         HYD_UIU_print_params();
 
-    /* Figure out what the active partitions are: in RUNTIME and
-     * PERSISTENT modes, only partitions which have an executable are
+    /* Figure out what the active proxys are: in RUNTIME and
+     * PERSISTENT modes, only proxys which have an executable are
      * active. In BOOT, BOOT_FOREGROUND and SHUTDOWN modes, all
-     * partitions are active. */
+     * proxys are active. */
     if (HYD_handle.launch_mode == HYD_LAUNCH_RUNTIME ||
         HYD_handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
-        for (partition = HYD_handle.partition_list; partition && partition->exec_list;
-             partition = partition->next)
-            partition->base->active = 1;
+        for (proxy = HYD_handle.proxy_list; proxy && proxy->exec_list;
+             proxy = proxy->next)
+            proxy->active = 1;
     }
     else {
-        for (partition = HYD_handle.partition_list; partition; partition = partition->next)
-            partition->base->active = 1;
+        for (proxy = HYD_handle.proxy_list; proxy; proxy = proxy->next)
+            proxy->active = 1;
     }
 
     HYDU_time_set(&HYD_handle.start, NULL); /* NULL implies right now */
@@ -192,15 +192,15 @@ int main(int argc, char **argv)
         HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
 
     if (HYD_handle.print_rank_map) {
-        FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
-            HYDU_dump(stdout, "[%s] ", partition->base->name);
+        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+            HYDU_dump(stdout, "[%s] ", proxy->hostname);
 
             process_id = 0;
-            for (exec = partition->exec_list; exec; exec = exec->next) {
+            for (exec = proxy->exec_list; exec; exec = exec->next) {
                 for (i = 0; i < exec->proc_count; i++) {
                     HYDU_dump(stdout, "%d", HYDU_local_to_global_id(process_id++,
-                                                            partition->partition_core_count,
-                                                            partition->segment_list,
+                                                            proxy->proxy_core_count,
+                                                            proxy->segment_list,
                                                             HYD_handle.global_core_count));
                     if (i < exec->proc_count - 1)
                         HYDU_dump(stdout, ",");
@@ -242,21 +242,21 @@ int main(int argc, char **argv)
     HYD_handle.stdin_buf_count = 0;
     HYD_handle.stdin_buf_offset = 0;
 
-    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
-        if (partition->base->out != -1) {
-            status = HYD_DMX_register_fd(1, &partition->base->out, HYD_STDOUT, NULL,
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+        if (proxy->out != -1) {
+            status = HYD_DMX_register_fd(1, &proxy->out, HYD_STDOUT, NULL,
                                          HYD_UII_mpx_stdout_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
 
-        if (partition->base->err != -1) {
-            status = HYD_DMX_register_fd(1, &partition->base->err, HYD_STDOUT, NULL,
+        if (proxy->err != -1) {
+            status = HYD_DMX_register_fd(1, &proxy->err, HYD_STDOUT, NULL,
                                          HYD_UII_mpx_stderr_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
 
-        if (partition->base->in != -1) {
-            status = HYD_DMX_register_fd(1, &partition->base->in, HYD_STDIN, NULL,
+        if (proxy->in != -1) {
+            status = HYD_DMX_register_fd(1, &proxy->in, HYD_STDIN, NULL,
                                          HYD_UII_mpx_stdin_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
@@ -270,20 +270,20 @@ int main(int argc, char **argv)
     if (HYD_handle.print_all_exitcodes)
         HYDU_dump(stdout, "Exit codes: ");
     exit_status = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
         proc_count = 0;
-        for (exec = partition->exec_list; exec; exec = exec->next)
+        for (exec = proxy->exec_list; exec; exec = exec->next)
             proc_count += exec->proc_count;
         for (i = 0; i < proc_count; i++) {
             if (HYD_handle.print_all_exitcodes) {
-                HYDU_dump(stdout, "[%d]", HYDU_local_to_global_id(i, partition->partition_core_count,
-                                                          partition->segment_list,
+                HYDU_dump(stdout, "[%d]", HYDU_local_to_global_id(i, proxy->proxy_core_count,
+                                                          proxy->segment_list,
                                                           HYD_handle.global_core_count));
-                HYDU_dump(stdout, "%d", WEXITSTATUS(partition->exit_status[i]));
+                HYDU_dump(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));
                 if (i < proc_count - 1)
                     HYDU_dump(stdout, ",");
             }
-            exit_status |= partition->exit_status[i];
+            exit_status |= proxy->exit_status[i];
         }
     }
     if (HYD_handle.print_all_exitcodes)

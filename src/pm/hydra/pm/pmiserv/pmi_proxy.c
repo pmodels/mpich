@@ -108,9 +108,9 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "unable to connect to the main server\n");
 
         status = HYDU_sock_write(HYD_PMCD_pmi_proxy_params.upstream.control,
-                                 &HYD_PMCD_pmi_proxy_params.proxy.partition_id,
-                                 sizeof(HYD_PMCD_pmi_proxy_params.proxy.partition_id));
-        HYDU_ERR_POP(status, "unable to send the partition ID to the server\n");
+                                 &HYD_PMCD_pmi_proxy_params.proxy.proxy_id,
+                                 sizeof(HYD_PMCD_pmi_proxy_params.proxy.proxy_id));
+        HYDU_ERR_POP(status, "unable to send the proxy ID to the server\n");
 
         status = HYD_DMX_register_fd(1, &HYD_PMCD_pmi_proxy_params.upstream.control,
                                      HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_control_cmd_cb);

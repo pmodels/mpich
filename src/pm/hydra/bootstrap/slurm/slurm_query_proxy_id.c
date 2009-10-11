@@ -9,18 +9,18 @@
 #include "bscu.h"
 #include "slurm.h"
 
-HYD_Status HYD_BSCD_slurm_query_partition_id(int *partition_id)
+HYD_Status HYD_BSCD_slurm_query_proxy_id(int *proxy_id)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     if (getenv("SLURM_NODEID")) {
-        *partition_id = atoi(getenv("SLURM_NODEID"));
+        *proxy_id = atoi(getenv("SLURM_NODEID"));
     }
     else {
-        *partition_id = -1;
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot find slurm partition ID\n");
+        *proxy_id = -1;
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot find slurm proxy ID\n");
     }
 
   fn_exit:

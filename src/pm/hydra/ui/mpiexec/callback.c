@@ -11,7 +11,7 @@
 
 static HYD_Status close_fd(int fd)
 {
-    struct HYD_Partition *partition;
+    struct HYD_Proxy *proxy;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -22,13 +22,13 @@ static HYD_Status close_fd(int fd)
     close(fd);
 
     /* Find the FD in the HYD_handle and remove it. */
-    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
-        if (partition->base->out == fd) {
-            partition->base->out = -1;
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+        if (proxy->out == fd) {
+            proxy->out = -1;
             goto fn_exit;
         }
-        if (partition->base->err == fd) {
-            partition->base->err = -1;
+        if (proxy->err == fd) {
+            proxy->err = -1;
             goto fn_exit;
         }
     }

@@ -6,63 +6,34 @@
 
 #include "hydra_utils.h"
 
-static HYD_Status alloc_partition_base(struct HYD_Partition_base **base)
+HYD_Status HYDU_alloc_proxy(struct HYD_Proxy **proxy)
 {
-    static int partition_id = 0;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_MALLOC(*base, struct HYD_Partition_base *, sizeof(struct HYD_Partition_base), status);
-
-    (*base)->name = NULL;
-    (*base)->pid = -1;
-    (*base)->in = -1;
-    (*base)->out = -1;
-    (*base)->err = -1;
-
-    (*base)->partition_id = partition_id++;
-    (*base)->active = 0;
-    (*base)->exec_args = NULL;
-
-    (*base)->next = NULL;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static void free_partition_base(struct HYD_Partition_base *base)
-{
-    if (base->name)
-        HYDU_FREE(base->name);
-    if (base->exec_args) {
-        HYDU_free_strlist(base->exec_args);
-        HYDU_FREE(base->exec_args);
-    }
-
-    HYDU_FREE(base);
-}
-
-HYD_Status HYDU_alloc_partition(struct HYD_Partition **partition)
-{
+    static int proxy_id = 0;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*partition, struct HYD_Partition *, sizeof(struct HYD_Partition), status);
+    HYDU_MALLOC(*proxy, struct HYD_Proxy *, sizeof(struct HYD_Proxy), status);
 
-    alloc_partition_base(&((*partition)->base));
+    (*proxy)->hostname = NULL;
+    (*proxy)->pid = -1;
+    (*proxy)->in = -1;
+    (*proxy)->out = -1;
+    (*proxy)->err = -1;
 
-    (*partition)->user_bind_map = NULL;
-    (*partition)->segment_list = NULL;
-    (*partition)->partition_core_count = 0;
+    (*proxy)->proxy_id = proxy_id++;
+    (*proxy)->active = 0;
+    (*proxy)->exec_args = NULL;
 
-    (*partition)->exit_status = NULL;
-    (*partition)->control_fd = -1;
+    (*proxy)->user_bind_map = NULL;
+    (*proxy)->segment_list = NULL;
+    (*proxy)->proxy_core_count = 0;
 
-    (*partition)->exec_list = NULL;
-    (*partition)->next = NULL;
+    (*proxy)->exit_status = NULL;
+    (*proxy)->control_fd = -1;
+
+    (*proxy)->exec_list = NULL;
+    (*proxy)->next = NULL;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -80,7 +51,7 @@ HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info)
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(*exec_info, struct HYD_Exec_info *, sizeof(struct HYD_Exec_info), status);
-    (*exec_info)->exec_proc_count = 0;
+    (*exec_info)->process_count = 0;
     (*exec_info)->exec[0] = NULL;
     (*exec_info)->user_env = NULL;
     (*exec_info)->env_prop = NULL;
@@ -120,24 +91,29 @@ void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list)
 }
 
 
-void HYDU_free_partition_list(struct HYD_Partition *partition_list)
+void HYDU_free_proxy_list(struct HYD_Proxy *proxy_list)
 {
-    struct HYD_Partition *partition, *tpartition;
-    struct HYD_Partition_segment *segment, *tsegment;
-    struct HYD_Partition_exec *exec, *texec;
+    struct HYD_Proxy *proxy, *tproxy;
+    struct HYD_Proxy_segment *segment, *tsegment;
+    struct HYD_Proxy_exec *exec, *texec;
 
     HYDU_FUNC_ENTER();
 
-    partition = partition_list;
-    while (partition) {
-        tpartition = partition->next;
+    proxy = proxy_list;
+    while (proxy) {
+        tproxy = proxy->next;
 
-        free_partition_base(partition->base);
+        if (proxy->hostname)
+            HYDU_FREE(proxy->hostname);
+        if (proxy->exec_args) {
+            HYDU_free_strlist(proxy->exec_args);
+            HYDU_FREE(proxy->exec_args);
+        }
 
-        if (partition->user_bind_map)
-            HYDU_FREE(partition->user_bind_map);
+        if (proxy->user_bind_map)
+            HYDU_FREE(proxy->user_bind_map);
 
-        segment = partition->segment_list;
+        segment = proxy->segment_list;
         while (segment) {
             tsegment = segment->next;
             if (segment->mapping) {
@@ -148,10 +124,10 @@ void HYDU_free_partition_list(struct HYD_Partition *partition_list)
             segment = tsegment;
         }
 
-        if (partition->exit_status)
-            HYDU_FREE(partition->exit_status);
+        if (proxy->exit_status)
+            HYDU_FREE(proxy->exit_status);
 
-        exec = partition->exec_list;
+        exec = proxy->exec_list;
         while (exec) {
             texec = exec->next;
             HYDU_free_strlist(exec->exec);
@@ -163,22 +139,22 @@ void HYDU_free_partition_list(struct HYD_Partition *partition_list)
             exec = texec;
         }
 
-        HYDU_FREE(partition);
-        partition = tpartition;
+        HYDU_FREE(proxy);
+        proxy = tproxy;
     }
 
     HYDU_FUNC_EXIT();
 }
 
 
-HYD_Status HYDU_alloc_partition_segment(struct HYD_Partition_segment **segment)
+HYD_Status HYDU_alloc_proxy_segment(struct HYD_Proxy_segment **segment)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*segment, struct HYD_Partition_segment *,
-                sizeof(struct HYD_Partition_segment), status);
+    HYDU_MALLOC(*segment, struct HYD_Proxy_segment *,
+                sizeof(struct HYD_Proxy_segment), status);
     (*segment)->start_pid = -1;
     (*segment)->proc_count = 0;
     (*segment)->mapping = NULL;
@@ -193,48 +169,47 @@ HYD_Status HYDU_alloc_partition_segment(struct HYD_Partition_segment **segment)
 }
 
 
-HYD_Status HYDU_merge_partition_segment(char *name, struct HYD_Partition_segment *segment,
-                                        struct HYD_Partition **partition_list)
+HYD_Status HYDU_merge_proxy_segment(char *hostname, struct HYD_Proxy_segment *segment,
+                                        struct HYD_Proxy **proxy_list)
 {
-    struct HYD_Partition *partition;
-    struct HYD_Partition_segment *s;
+    struct HYD_Proxy *proxy;
+    struct HYD_Proxy_segment *s;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (*partition_list == NULL) {
-        status = HYDU_alloc_partition(partition_list);
-        HYDU_ERR_POP(status, "Unable to alloc partition\n");
-        (*partition_list)->segment_list = segment;
-        (*partition_list)->base->name = HYDU_strdup(name);
-        (*partition_list)->partition_core_count += segment->proc_count;
+    if (*proxy_list == NULL) {
+        status = HYDU_alloc_proxy(proxy_list);
+        HYDU_ERR_POP(status, "Unable to alloc proxy\n");
+        (*proxy_list)->segment_list = segment;
+        (*proxy_list)->hostname = HYDU_strdup(hostname);
+        (*proxy_list)->proxy_core_count += segment->proc_count;
     }
     else {
-        partition = *partition_list;
-        while (partition) {
-            if (strcmp(partition->base->name, name) == 0) {
-                if (partition->segment_list == NULL)
-                    partition->segment_list = segment;
+        proxy = *proxy_list;
+        while (proxy) {
+            if (strcmp(proxy->hostname, hostname) == 0) {
+                if (proxy->segment_list == NULL)
+                    proxy->segment_list = segment;
                 else {
-                    s = partition->segment_list;
+                    s = proxy->segment_list;
                     while (s->next)
                         s = s->next;
                     s->next = segment;
                 }
-                partition->partition_core_count += segment->proc_count;
+                proxy->proxy_core_count += segment->proc_count;
                 break;
             }
-            else if (partition->next == NULL) {
-                status = HYDU_alloc_partition(&partition->next);
-                HYDU_ERR_POP(status, "Unable to alloc partition\n");
-                partition->next->segment_list = segment;
-                partition->next->base->name = HYDU_strdup(name);
-                partition->next->partition_core_count += segment->proc_count;
-                partition->base->next = partition->next->base;
+            else if (proxy->next == NULL) {
+                status = HYDU_alloc_proxy(&proxy->next);
+                HYDU_ERR_POP(status, "Unable to alloc proxy\n");
+                proxy->next->segment_list = segment;
+                proxy->next->hostname = HYDU_strdup(hostname);
+                proxy->next->proxy_core_count += segment->proc_count;
                 break;
             }
             else {
-                partition = partition->next;
+                proxy = proxy->next;
             }
         }
     }
@@ -292,37 +267,37 @@ static char *pad_string(char *str, const char *pad, int count)
 }
 
 
-HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
-                                        struct HYD_Partition **partition_list)
+HYD_Status HYDU_merge_proxy_mapping(char *hostname, char *map, int num_procs,
+                                        struct HYD_Proxy **proxy_list)
 {
-    struct HYD_Partition *partition;
+    struct HYD_Proxy *proxy;
     char *tmp[HYD_NUM_TMP_STRINGS], *x;
     int i, count;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (*partition_list == NULL) {
-        HYDU_alloc_partition(partition_list);
-        (*partition_list)->base->name = HYDU_strdup(name);
+    if (*proxy_list == NULL) {
+        HYDU_alloc_proxy(proxy_list);
+        (*proxy_list)->hostname = HYDU_strdup(hostname);
 
         x = HYDU_strdup(map);
         count = num_procs - count_elements(x, ",");
         HYDU_FREE(x);
 
-        (*partition_list)->user_bind_map = pad_string(map, ",-1", count);
+        (*proxy_list)->user_bind_map = pad_string(map, ",-1", count);
     }
     else {
-        partition = *partition_list;
-        while (partition) {
-            if (strcmp(partition->base->name, name) == 0) {
-                /* Found a partition with the same name; append */
-                if (partition->user_bind_map == NULL) {
+        proxy = *proxy_list;
+        while (proxy) {
+            if (strcmp(proxy->hostname, hostname) == 0) {
+                /* Found a proxy with the same hostname; append */
+                if (proxy->user_bind_map == NULL) {
                     x = HYDU_strdup(map);
                     count = num_procs - count_elements(x, ",");
                     HYDU_FREE(x);
 
-                    partition->user_bind_map = pad_string(map, ",-1", count);
+                    proxy->user_bind_map = pad_string(map, ",-1", count);
                 }
                 else {
                     x = HYDU_strdup(map);
@@ -330,28 +305,27 @@ HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
                     HYDU_FREE(x);
 
                     i = 0;
-                    tmp[i++] = HYDU_strdup(partition->user_bind_map);
+                    tmp[i++] = HYDU_strdup(proxy->user_bind_map);
                     tmp[i++] = HYDU_strdup(",");
                     tmp[i++] = pad_string(map, ",-1", count);
                     tmp[i++] = NULL;
 
-                    HYDU_FREE(partition->user_bind_map);
-                    status = HYDU_str_alloc_and_join(tmp, &partition->user_bind_map);
+                    HYDU_FREE(proxy->user_bind_map);
+                    status = HYDU_str_alloc_and_join(tmp, &proxy->user_bind_map);
                     HYDU_ERR_POP(status, "unable to join strings\n");
 
                     HYDU_free_strlist(tmp);
                 }
                 break;
             }
-            else if (partition->next == NULL) {
-                HYDU_alloc_partition(&partition->next);
-                partition->base->next = partition->next->base;
-                partition->next->base->name = HYDU_strdup(name);
-                partition->next->user_bind_map = HYDU_strdup(map);
+            else if (proxy->next == NULL) {
+                HYDU_alloc_proxy(&proxy->next);
+                proxy->next->hostname = HYDU_strdup(hostname);
+                proxy->next->user_bind_map = HYDU_strdup(map);
                 break;
             }
             else {
-                partition = partition->next;
+                proxy = proxy->next;
             }
         }
     }
@@ -365,13 +339,13 @@ HYD_Status HYDU_merge_partition_mapping(char *name, char *map, int num_procs,
 }
 
 
-HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec)
+HYD_Status HYDU_alloc_proxy_exec(struct HYD_Proxy_exec **exec)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*exec, struct HYD_Partition_exec *, sizeof(struct HYD_Partition_exec), status);
+    HYDU_MALLOC(*exec, struct HYD_Proxy_exec *, sizeof(struct HYD_Proxy_exec), status);
     (*exec)->exec[0] = NULL;
     (*exec)->proc_count = 0;
     (*exec)->env_prop = NULL;
@@ -388,25 +362,25 @@ HYD_Status HYDU_alloc_partition_exec(struct HYD_Partition_exec **exec)
 
 
 HYD_Status HYDU_create_node_list_from_file(char *host_file,
-                                           struct HYD_Partition **partition_list)
+                                           struct HYD_Proxy **proxy_list)
 {
     FILE *fp = NULL;
     char line[HYD_TMP_STRLEN], *hostname, *procs, **arg_list;
     char *str[2] = { NULL };
     int num_procs, total_count, arg, i;
-    struct HYD_Partition_segment *segment;
+    struct HYD_Proxy_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     if (!strcmp(host_file, "HYDRA_USE_LOCALHOST")) {
-        HYDU_alloc_partition(&(*partition_list));
-        (*partition_list)->base->name = HYDU_strdup("localhost");
-        (*partition_list)->partition_core_count = 1;
+        HYDU_alloc_proxy(&(*proxy_list));
+        (*proxy_list)->hostname = HYDU_strdup("localhost");
+        (*proxy_list)->proxy_core_count = 1;
 
-        HYDU_alloc_partition_segment(&((*partition_list)->segment_list));
-        (*partition_list)->segment_list->start_pid = 0;
-        (*partition_list)->segment_list->proc_count = 1;
+        HYDU_alloc_proxy_segment(&((*proxy_list)->segment_list));
+        (*proxy_list)->segment_list->start_pid = 0;
+        (*proxy_list)->segment_list->proc_count = 1;
     }
     else {
         fp = fopen(host_file, "r");
@@ -438,15 +412,15 @@ HYD_Status HYDU_create_node_list_from_file(char *host_file,
             procs = strtok(NULL, ":");
             num_procs = procs ? atoi(procs) : 1;
 
-            /* Try to find an existing partition with this name and
-             * add this segment in. If there is no existing partition
+            /* Try to find an existing proxy with this name and
+             * add this segment in. If there is no existing proxy
              * with this name, we create a new one. */
-            status = HYDU_alloc_partition_segment(&segment);
-            HYDU_ERR_POP(status, "Unable to allocate partition segment\n");
+            status = HYDU_alloc_proxy_segment(&segment);
+            HYDU_ERR_POP(status, "Unable to allocate proxy segment\n");
             segment->start_pid = total_count;
             segment->proc_count = num_procs;
-            status = HYDU_merge_partition_segment(hostname, segment, partition_list);
-            HYDU_ERR_POP(status, "merge partition segment failed\n");
+            status = HYDU_merge_proxy_segment(hostname, segment, proxy_list);
+            HYDU_ERR_POP(status, "merge proxy segment failed\n");
 
             total_count += num_procs;
 
@@ -458,9 +432,9 @@ HYD_Status HYDU_create_node_list_from_file(char *host_file,
                 HYDU_ERR_POP(status, "unable to split string\n");
 
                 if (!strcmp(str[0], "map")) {
-                    status = HYDU_merge_partition_mapping(hostname, str[1], num_procs,
-                                                          partition_list);
-                    HYDU_ERR_POP(status, "merge partition mapping failed\n");
+                    status = HYDU_merge_proxy_mapping(hostname, str[1], num_procs,
+                                                          proxy_list);
+                    HYDU_ERR_POP(status, "merge proxy mapping failed\n");
                 }
                 if (str[0])
                     HYDU_FREE(str[0]);

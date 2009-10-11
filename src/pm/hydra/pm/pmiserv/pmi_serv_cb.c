@@ -206,8 +206,8 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
 
 HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void *userp)
 {
-    int accept_fd, partition_id, count;
-    struct HYD_Partition *partition;
+    int accept_fd, proxy_id, count;
+    struct HYD_Proxy *proxy;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -216,27 +216,27 @@ HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void
     status = HYDU_sock_accept(fd, &accept_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
-    /* Read the partition ID */
-    status = HYDU_sock_read(accept_fd, &partition_id, sizeof(int), &count,
+    /* Read the proxy ID */
+    status = HYDU_sock_read(accept_fd, &proxy_id, sizeof(int), &count,
                             HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "sock read returned error\n");
 
-    /* Find the partition */
-    FORALL_PARTITIONS(partition, HYD_handle.partition_list) {
-        if (partition->base->partition_id == partition_id)
+    /* Find the proxy */
+    FORALL_PROXIES(proxy, HYD_handle.proxy_list) {
+        if (proxy->proxy_id == proxy_id)
             break;
     }
-    HYDU_ERR_CHKANDJUMP1(status, partition == NULL, HYD_INTERNAL_ERROR,
-                         "cannot find partition with ID %d\n", partition_id);
+    HYDU_ERR_CHKANDJUMP1(status, proxy == NULL, HYD_INTERNAL_ERROR,
+                         "cannot find proxy with ID %d\n", proxy_id);
 
-    /* This will be the control socket for this partition */
-    partition->control_fd = accept_fd;
+    /* This will be the control socket for this proxy */
+    proxy->control_fd = accept_fd;
 
     /* Send out the executable information */
-    status = HYD_PMCD_pmi_send_exec_info(partition);
+    status = HYD_PMCD_pmi_send_exec_info(proxy);
     HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
 
-    status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, partition,
+    status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, proxy,
                                  HYD_PMCD_pmi_serv_control_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
@@ -251,22 +251,22 @@ HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void
 
 HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp)
 {
-    struct HYD_Partition *partition;
-    struct HYD_Partition_exec *exec;
+    struct HYD_Proxy *proxy;
+    struct HYD_Proxy_exec *exec;
     int count, proc_count;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    partition = (struct HYD_Partition *) userp;
+    proxy = (struct HYD_Proxy *) userp;
 
     proc_count = 0;
-    for (exec = partition->exec_list; exec; exec = exec->next)
+    for (exec = proxy->exec_list; exec; exec = exec->next)
         proc_count += exec->proc_count;
 
-    HYDU_MALLOC(partition->exit_status, int *, proc_count * sizeof(int), status);
+    HYDU_MALLOC(proxy->exit_status, int *, proc_count * sizeof(int), status);
 
-    status = HYDU_sock_read(fd, (void *) partition->exit_status, proc_count * sizeof(int),
+    status = HYDU_sock_read(fd, (void *) proxy->exit_status, proc_count * sizeof(int),
                             &count, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read status from proxy\n");
 
@@ -286,7 +286,7 @@ HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp)
 
 HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
 {
-    struct HYD_Partition *partition;
+    struct HYD_Proxy *proxy;
     enum HYD_PMCD_pmi_proxy_cmds cmd;
     HYD_Status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
 
@@ -295,13 +295,13 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
     /* FIXME: Instead of doing this from this process itself, fork a
      * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
-    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
         cmd = KILL_JOB;
-        status = HYDU_sock_trywrite(partition->control_fd, &cmd,
+        status = HYDU_sock_trywrite(proxy->control_fd, &cmd,
                                     sizeof(enum HYD_PMCD_pmi_proxy_cmds));
         if (status != HYD_SUCCESS) {
             HYDU_Warn_printf("unable to send data to the proxy on %s\n",
-                             partition->base->name);
+                             proxy->hostname);
             overall_status = HYD_INTERNAL_ERROR;
             continue;   /* Move on to the next proxy */
         }
@@ -315,7 +315,7 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
 
 HYD_Status HYD_PMCD_pmi_serv_ckpoint(void)
 {
-    struct HYD_Partition *partition;
+    struct HYD_Proxy *proxy;
     enum HYD_PMCD_pmi_proxy_cmds cmd;
     HYD_Status status = HYD_SUCCESS;
 
@@ -324,9 +324,9 @@ HYD_Status HYD_PMCD_pmi_serv_ckpoint(void)
     /* FIXME: Instead of doing this from this process itself, fork a
      * bunch of processes to do this. */
     /* Connect to all proxies and send the checkpoint command */
-    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
         cmd = CKPOINT;
-        status = HYDU_sock_write(partition->control_fd, &cmd,
+        status = HYDU_sock_write(proxy->control_fd, &cmd,
                                     sizeof(enum HYD_PMCD_pmi_proxy_cmds));
         HYDU_ERR_POP(status, "unable to send checkpoint message\n");
     }

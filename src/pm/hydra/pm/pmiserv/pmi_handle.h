@@ -42,7 +42,7 @@ struct HYD_PMCD_pmi_process {
 };
 
 struct HYD_PMCD_pmi_node {
-    int node_id;                /* This corresponds to the partition ID of the
+    int node_id;                /* This corresponds to the proxy ID of the
                                  * launched processes */
     struct HYD_PMCD_pmi_pg *pg; /* Back pointer to the group */
     struct HYD_PMCD_pmi_process *process_list;

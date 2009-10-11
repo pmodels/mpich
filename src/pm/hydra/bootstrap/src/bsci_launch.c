@@ -7,14 +7,14 @@
 #include "hydra_utils.h"
 #include "bsci.h"
 
-HYD_Status HYD_BSCI_launch_procs(char **global_args, const char *partition_id_str,
-                                 struct HYD_Partition *partition_list)
+HYD_Status HYD_BSCI_launch_procs(char **global_args, const char *proxy_id_str,
+                                 struct HYD_Proxy *proxy_list)
 {
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_BSCI_fns.launch_procs(global_args, partition_id_str, partition_list);
+    status = HYD_BSCI_fns.launch_procs(global_args, proxy_id_str, proxy_list);
     HYDU_ERR_POP(status, "bootstrap device returned error while launching processes\n");
 
   fn_exit:

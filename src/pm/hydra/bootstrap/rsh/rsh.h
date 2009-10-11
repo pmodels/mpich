@@ -9,7 +9,7 @@
 
 #include "hydra_base.h"
 
-HYD_Status HYD_BSCD_rsh_launch_procs(char **global_args, const char *partition_id_str,
-                                     struct HYD_Partition *partition_list);
+HYD_Status HYD_BSCD_rsh_launch_procs(char **global_args, const char *proxy_id_str,
+                                     struct HYD_Proxy *proxy_list);
 
 #endif /* RSH_H_INCLUDED */

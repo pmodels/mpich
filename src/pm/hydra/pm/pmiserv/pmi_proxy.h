@@ -17,7 +17,7 @@ struct HYD_PMCD_pmi_proxy_params {
         char *server_name;
         int server_port;
         HYD_Launch_mode_t launch_mode;
-        int partition_id;
+        int proxy_id;
         char *bootstrap;
         char *bootstrap_exec;
         int enablex;
@@ -38,14 +38,14 @@ struct HYD_PMCD_pmi_proxy_params {
     struct HYD_Env_global global_env;
 
     int global_core_count;
-    int partition_core_count;
+    int proxy_core_count;
     int exec_proc_count;
 
     int procs_are_launched;
 
-    /* Process segmentation information for this partition */
-    struct HYD_Partition_segment *segment_list;
-    struct HYD_Partition_exec *exec_list;
+    /* Process segmentation information for this proxy */
+    struct HYD_Proxy_segment *segment_list;
+    struct HYD_Proxy_exec *exec_list;
 
     struct {
         int out;

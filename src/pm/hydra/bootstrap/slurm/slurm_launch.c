@@ -9,10 +9,10 @@
 #include "bscu.h"
 #include "slurm.h"
 
-HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *partition_id_str,
-                                       struct HYD_Partition *partition_list)
+HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *proxy_id_str,
+                                       struct HYD_Proxy *proxy_list)
 {
-    struct HYD_Partition *partition;
+    struct HYD_Proxy *proxy;
     char *client_arg[HYD_NUM_TMP_STRINGS];
     char *tmp[HYD_NUM_TMP_STRINGS], *path = NULL, *test_path = NULL;
     int i, arg, num_nodes;
@@ -53,9 +53,9 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *partition
 
     i = 0;
     num_nodes = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, partition_list) {
-        tmp[i++] = HYDU_strdup(partition->base->name);
-        if (partition->next && partition->next->base->active)
+    FORALL_ACTIVE_PROXIES(proxy, proxy_list) {
+        tmp[i++] = HYDU_strdup(proxy->hostname);
+        if (proxy->next && proxy->next->active)
             tmp[i++] = HYDU_strdup(",");
         num_nodes++;
 
@@ -95,10 +95,10 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *partition
     }
 
     status = HYDU_create_process(client_arg, NULL,
-                                 &partition_list->base->in,
-                                 &partition_list->base->out,
-                                 &partition_list->base->err,
-                                 &partition_list->base->pid, -1);
+                                 &proxy_list->in,
+                                 &proxy_list->out,
+                                 &proxy_list->err,
+                                 &proxy_list->pid, -1);
     HYDU_ERR_POP(status, "bootstrap spawn process returned error\n");
 
     HYDU_free_strlist(client_arg);

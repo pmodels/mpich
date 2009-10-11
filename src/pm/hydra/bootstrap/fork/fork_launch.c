@@ -9,10 +9,10 @@
 #include "bscu.h"
 #include "fork.h"
 
-HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, const char *partition_id_str,
-                                      struct HYD_Partition *partition_list)
+HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, const char *proxy_id_str,
+                                      struct HYD_Proxy *proxy_list)
 {
-    struct HYD_Partition *partition;
+    struct HYD_Proxy *proxy;
     char *client_arg[HYD_NUM_TMP_STRINGS];
     int i, arg, process_id;
     HYD_Status status = HYD_SUCCESS;
@@ -20,16 +20,16 @@ HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, const char *partition_
     HYDU_FUNC_ENTER();
 
     process_id = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, partition_list) {
+    FORALL_ACTIVE_PROXIES(proxy, proxy_list) {
         /* Setup the executable arguments */
         arg = 0;
 
         for (i = 0; global_args[i]; i++)
             client_arg[arg++] = HYDU_strdup(global_args[i]);
 
-        if (partition_id_str) {
-            client_arg[arg++] = HYDU_strdup(partition_id_str);
-            client_arg[arg++] = HYDU_int_to_str(partition->base->partition_id);
+        if (proxy_id_str) {
+            client_arg[arg++] = HYDU_strdup(proxy_id_str);
+            client_arg[arg++] = HYDU_int_to_str(proxy->proxy_id);
         }
 
         client_arg[arg++] = NULL;
@@ -42,9 +42,9 @@ HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, const char *partition_
         /* The stdin pointer will be some value for process_id 0; for
          * everyone else, it's NULL. */
         status = HYDU_create_process(client_arg, NULL,
-                                     (process_id == 0 ? &partition->base->in : NULL),
-                                     &partition->base->out, &partition->base->err,
-                                     &partition->base->pid, -1);
+                                     (process_id == 0 ? &proxy->in : NULL),
+                                     &proxy->out, &proxy->err,
+                                     &proxy->pid, -1);
         HYDU_ERR_POP(status, "create process returned error\n");
 
         HYDU_free_strlist(client_arg);

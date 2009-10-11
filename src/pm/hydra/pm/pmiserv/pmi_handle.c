@@ -223,8 +223,8 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
 {
     int i, node_id;
     char *tmp[HYD_NUM_TMP_STRINGS];
-    struct HYD_Partition *partition;
-    struct HYD_Partition_segment *segment;
+    struct HYD_Proxy *proxy;
+    struct HYD_Proxy_segment *segment;
     struct segment *seglist_head, *seglist_tail = NULL, *seg;
     struct block *blocklist_head, *blocklist_tail = NULL, *block;
     int done;
@@ -234,9 +234,9 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
 
     seglist_head = NULL;
     node_id = -1;
-    FORALL_PARTITIONS(partition, HYD_handle.partition_list) {
+    FORALL_PROXIES(proxy, HYD_handle.proxy_list) {
         node_id++;
-        for (segment = partition->segment_list; segment; segment = segment->next) {
+        for (segment = proxy->segment_list; segment; segment = segment->next) {
             HYDU_MALLOC(seg, struct segment *, sizeof(struct segment), status);
             seg->start_pid = segment->start_pid;
             seg->proc_count = segment->proc_count;
@@ -343,16 +343,16 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
 static struct HYD_PMCD_pmi_node *find_node(HYD_PMCD_pmi_pg_t * pg, int rank)
 {
     int found = 0, node_id, srank;
-    struct HYD_Partition *partition;
-    struct HYD_Partition_segment *segment;
+    struct HYD_Proxy *proxy;
+    struct HYD_Proxy_segment *segment;
     struct HYD_PMCD_pmi_node *node, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
     srank = rank % HYD_handle.global_core_count;
 
     node_id = 0;
-    FORALL_PARTITIONS(partition, HYD_handle.partition_list) {
-        for (segment = partition->segment_list; segment; segment = segment->next) {
+    FORALL_PROXIES(proxy, HYD_handle.proxy_list) {
+        for (segment = proxy->segment_list; segment; segment = segment->next) {
             if ((srank >= segment->start_pid) &&
                 (srank < (segment->start_pid + segment->proc_count))) {
                 /* We found our rank */
@@ -450,8 +450,8 @@ HYD_PMCD_pmi_process_t *HYD_PMCD_pmi_find_process(int fd)
 
 HYD_Status HYD_PMCD_pmi_init(void)
 {
-    struct HYD_Partition *partition;
-    struct HYD_Partition_exec *exec;
+    struct HYD_Proxy *proxy;
+    struct HYD_Proxy_exec *exec;
     int i;
     HYD_Status status = HYD_SUCCESS;
 
@@ -462,8 +462,8 @@ HYD_Status HYD_PMCD_pmi_init(void)
 
     /* Find the number of processes in the PG */
     HYD_pg_list->num_subgroups = 0;
-    FORALL_ACTIVE_PARTITIONS(partition, HYD_handle.partition_list) {
-        for (exec = partition->exec_list; exec; exec = exec->next)
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+        for (exec = proxy->exec_list; exec; exec = exec->next)
             HYD_pg_list->num_subgroups += exec->proc_count;
     }
 

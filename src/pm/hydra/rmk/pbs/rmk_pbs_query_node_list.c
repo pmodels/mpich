@@ -8,12 +8,12 @@
 #include "rmki.h"
 #include "rmk_pbs.h"
 
-HYD_Status HYD_RMKD_pbs_query_node_list(int *num_nodes, struct HYD_Partition **partition_list)
+HYD_Status HYD_RMKD_pbs_query_node_list(int *num_nodes, struct HYD_Proxy **proxy_list)
 {
     char *host_file, *hostname, line[HYD_TMP_STRLEN], **arg_list;
     int num_procs;
     FILE *fp;
-    struct HYD_Partition_segment *segment;
+    struct HYD_Proxy_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -21,7 +21,7 @@ HYD_Status HYD_RMKD_pbs_query_node_list(int *num_nodes, struct HYD_Partition **p
     host_file = getenv("PBS_NODEFILE");
 
     if (host_file == NULL || host_file == NULL) {
-        *partition_list = NULL;
+        *proxy_list = NULL;
     }
     else {
         fp = fopen(host_file, "r");
@@ -52,15 +52,15 @@ HYD_Status HYD_RMKD_pbs_query_node_list(int *num_nodes, struct HYD_Partition **p
             hostname = arg_list[0];
             num_procs = 1;
 
-            /* Try to find an existing partition with this name and
-             * add this segment in. If there is no existing partition
+            /* Try to find an existing proxy with this name and
+             * add this segment in. If there is no existing proxy
              * with this name, we create a new one. */
-            status = HYDU_alloc_partition_segment(&segment);
-            HYDU_ERR_POP(status, "Unable to allocate partition segment\n");
+            status = HYDU_alloc_proxy_segment(&segment);
+            HYDU_ERR_POP(status, "Unable to allocate proxy segment\n");
             segment->start_pid = *num_nodes;
             segment->proc_count = num_procs;
-            status = HYDU_merge_partition_segment(hostname, segment, partition_list);
-            HYDU_ERR_POP(status, "merge partition segment failed\n");
+            status = HYDU_merge_proxy_segment(hostname, segment, proxy_list);
+            HYDU_ERR_POP(status, "merge proxy segment failed\n");
 
             *num_nodes += num_procs;
 

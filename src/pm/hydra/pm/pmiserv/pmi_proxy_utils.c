@@ -18,7 +18,7 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.proxy.server_name = NULL;
     HYD_PMCD_pmi_proxy_params.proxy.server_port = -1;
     HYD_PMCD_pmi_proxy_params.proxy.launch_mode = HYD_LAUNCH_UNSET;
-    HYD_PMCD_pmi_proxy_params.proxy.partition_id = -1;
+    HYD_PMCD_pmi_proxy_params.proxy.proxy_id = -1;
     HYD_PMCD_pmi_proxy_params.proxy.bootstrap = NULL;
     HYD_PMCD_pmi_proxy_params.proxy.bootstrap_exec = NULL;
     HYD_PMCD_pmi_proxy_params.proxy.debug = 0;
@@ -39,7 +39,7 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.global_env.inherited = NULL;
 
     HYD_PMCD_pmi_proxy_params.global_core_count = 0;
-    HYD_PMCD_pmi_proxy_params.partition_core_count = 0;
+    HYD_PMCD_pmi_proxy_params.proxy_core_count = 0;
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
 
     HYD_PMCD_pmi_proxy_params.procs_are_launched = 0;
@@ -74,8 +74,8 @@ static HYD_Status parse_params(char **t_argv)
     char **argv = t_argv, *str, *argtype;
     int arg, i, count;
     HYD_Env_t *env;
-    struct HYD_Partition_exec *exec = NULL;
-    struct HYD_Partition_segment *segment = NULL;
+    struct HYD_Proxy_exec *exec = NULL;
+    struct HYD_Proxy_segment *segment = NULL;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -200,14 +200,14 @@ static HYD_Status parse_params(char **t_argv)
         /* New segment */
         if (!strcmp(*argv, "--segment")) {
             if (HYD_PMCD_pmi_proxy_params.segment_list == NULL) {
-                status = HYDU_alloc_partition_segment(&HYD_PMCD_pmi_proxy_params.segment_list);
-                HYDU_ERR_POP(status, "unable to allocate partition segment\n");
+                status = HYDU_alloc_proxy_segment(&HYD_PMCD_pmi_proxy_params.segment_list);
+                HYDU_ERR_POP(status, "unable to allocate proxy segment\n");
             }
             else {
                 for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment->next;
                      segment = segment->next);
-                status = HYDU_alloc_partition_segment(&segment->next);
-                HYDU_ERR_POP(status, "unable to allocate partition segment\n");
+                status = HYDU_alloc_proxy_segment(&segment->next);
+                HYDU_ERR_POP(status, "unable to allocate proxy segment\n");
             }
             continue;
         }
@@ -233,14 +233,14 @@ static HYD_Status parse_params(char **t_argv)
         /* New executable */
         if (!strcmp(*argv, "--exec")) {
             if (HYD_PMCD_pmi_proxy_params.exec_list == NULL) {
-                status = HYDU_alloc_partition_exec(&HYD_PMCD_pmi_proxy_params.exec_list);
-                HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+                status = HYDU_alloc_proxy_exec(&HYD_PMCD_pmi_proxy_params.exec_list);
+                HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
             }
             else {
                 for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec->next;
                      exec = exec->next);
-                status = HYDU_alloc_partition_exec(&exec->next);
-                HYDU_ERR_POP(status, "unable to allocate partition exec\n");
+                status = HYDU_alloc_proxy_exec(&exec->next);
+                HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
             }
             continue;
         }
@@ -340,9 +340,9 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
             }
             continue;
         }
-        if (!strcmp(*argv, "--partition-id")) {
+        if (!strcmp(*argv, "--proxy-id")) {
             ++argv;
-            HYD_PMCD_pmi_proxy_params.proxy.partition_id = atoi(*argv);
+            HYD_PMCD_pmi_proxy_params.proxy.proxy_id = atoi(*argv);
             continue;
         }
         if (!strcmp(*argv, "--debug")) {
@@ -375,11 +375,11 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
                            HYD_PMCD_pmi_proxy_params.proxy.debug);
     HYDU_ERR_POP(status, "proxy unable to initialize bootstrap\n");
 
-    if (HYD_PMCD_pmi_proxy_params.proxy.partition_id == -1) {
-        /* We didn't get a partition ID during launch; query the
+    if (HYD_PMCD_pmi_proxy_params.proxy.proxy_id == -1) {
+        /* We didn't get a proxy ID during launch; query the
          * bootstrap server for it. */
-        status = HYD_BSCI_query_partition_id(&HYD_PMCD_pmi_proxy_params.proxy.partition_id);
-        HYDU_ERR_POP(status, "unable to query bootstrap server for partition ID\n");
+        status = HYD_BSCI_query_proxy_id(&HYD_PMCD_pmi_proxy_params.proxy.proxy_id);
+        HYDU_ERR_POP(status, "unable to query bootstrap server for proxy ID\n");
     }
 
   fn_exit:
@@ -393,8 +393,8 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
 
 HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
 {
-    struct HYD_Partition_segment *segment, *tsegment;
-    struct HYD_Partition_exec *exec, *texec;
+    struct HYD_Proxy_segment *segment, *tsegment;
+    struct HYD_Proxy_exec *exec, *texec;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -542,16 +542,16 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     char *str, *envstr, *list;
     char *client_args[HYD_NUM_TMP_STRINGS];
     HYD_Env_t *env, *prop_env = NULL;
-    struct HYD_Partition_segment *segment;
-    struct HYD_Partition_exec *exec;
+    struct HYD_Proxy_segment *segment;
+    struct HYD_Proxy_exec *exec;
     HYD_Status status = HYD_SUCCESS;
     int *pmi_ids;
 
     HYDU_FUNC_ENTER();
 
-    HYD_PMCD_pmi_proxy_params.partition_core_count = 0;
+    HYD_PMCD_pmi_proxy_params.proxy_core_count = 0;
     for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment; segment = segment->next)
-        HYD_PMCD_pmi_proxy_params.partition_core_count += segment->proc_count;
+        HYD_PMCD_pmi_proxy_params.proxy_core_count += segment->proc_count;
 
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
@@ -560,7 +560,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     HYDU_MALLOC(pmi_ids, int *, HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
     for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++) {
         pmi_ids[i] = HYDU_local_to_global_id(i,
-                                             HYD_PMCD_pmi_proxy_params.partition_core_count,
+                                             HYD_PMCD_pmi_proxy_params.proxy_core_count,
                                              HYD_PMCD_pmi_proxy_params.segment_list,
                                              HYD_PMCD_pmi_proxy_params.global_core_count);
     }
@@ -591,7 +591,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         status = HYDU_env_create(&env, "PMI_PORT", HYD_PMCD_pmi_proxy_params.pmi_port_str);
         HYDU_ERR_POP(status, "unable to create env\n");
 
-        /* Restart the partition.  Specify stdin fd only if pmi_id 0 is in this partition. */
+        /* Restart the proxy.  Specify stdin fd only if pmi_id 0 is in this proxy. */
         status = HYDU_ckpoint_restart(env, HYD_PMCD_pmi_proxy_params.exec_proc_count,
                                       pmi_ids,
                                       pmi_ids[0] ? NULL : &HYD_PMCD_pmi_proxy_params.in,
@@ -671,7 +671,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
         for (i = 0; i < exec->proc_count; i++) {
             pmi_id = HYDU_local_to_global_id(process_id,
-                                             HYD_PMCD_pmi_proxy_params.partition_core_count,
+                                             HYD_PMCD_pmi_proxy_params.proxy_core_count,
                                              HYD_PMCD_pmi_proxy_params.segment_list,
                                              HYD_PMCD_pmi_proxy_params.global_core_count);
 
