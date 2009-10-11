@@ -162,7 +162,8 @@ static HYD_Status parse_params(char **t_argv)
                     str++;
                     str[strlen(str) - 1] = 0;
                 }
-                env = HYDU_str_to_env(str);
+                status = HYDU_str_to_env(str, &env);
+                HYDU_ERR_POP(status, "error converting string to env\n");
 
                 if (!strcmp(argtype, "--global-inherited-env"))
                     HYDU_append_env_to_list(*env,
@@ -267,7 +268,8 @@ static HYD_Status parse_params(char **t_argv)
                     str++;
                     str[strlen(str) - 1] = 0;
                 }
-                env = HYDU_str_to_env(str);
+                status = HYDU_str_to_env(str, &env);
+                HYDU_ERR_POP(status, "error converting string to env\n");
                 HYDU_append_env_to_list(*env, &exec->user_env);
                 HYDU_FREE(env);
             }
@@ -586,10 +588,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
     if (HYD_PMCD_pmi_proxy_params.ckpoint_restart) {
 
-        env = HYDU_str_pair_to_env("PMI_PORT", HYD_PMCD_pmi_proxy_params.pmi_port_str);
-        if (env == NULL)
-            HYDU_ERR_POP(status, "unable to create env\n");
-
+        status = HYDU_env_create(&env, "PMI_PORT", HYD_PMCD_pmi_proxy_params.pmi_port_str);
+        HYDU_ERR_POP(status, "unable to create env\n");
 
         /* Restart the partition.  Specify stdin fd only if pmi_id 0 is in this partition. */
         status = HYDU_ckpoint_restart(env, HYD_PMCD_pmi_proxy_params.exec_proc_count,
@@ -632,8 +632,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
             envstr = strtok(list, ",");
             while (envstr) {
-                for (env = HYD_PMCD_pmi_proxy_params.global_env.inherited;
-                     env && strcmp(env->env_name, envstr); env = env->next);
+                env = HYDU_env_lookup(envstr, HYD_PMCD_pmi_proxy_params.global_env.inherited);
                 if (env) {
                     status = HYDU_append_env_to_list(*env, &prop_env);
                     HYDU_ERR_POP(status, "unable to add env to list\n");
@@ -663,9 +662,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         /* Set the PMI port string to connect to. We currently just
          * use the global PMI port. */
         if (HYD_PMCD_pmi_proxy_params.pmi_port_str) {
-            env = HYDU_str_pair_to_env("PMI_PORT", HYD_PMCD_pmi_proxy_params.pmi_port_str);
-            if (env == NULL)
-                HYDU_ERR_POP(status, "unable to create env\n");
+            status = HYDU_env_create(&env, "PMI_PORT", HYD_PMCD_pmi_proxy_params.pmi_port_str);
+            HYDU_ERR_POP(status, "unable to create env\n");
 
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");

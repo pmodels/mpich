@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 
-static HYD_Status env_to_str(HYD_Env_t * env, char **str)
+HYD_Status HYDU_env_to_str(HYD_Env_t * env, char **str)
 {
     int i;
     char *tmp[HYD_NUM_TMP_STRINGS];
@@ -37,6 +37,32 @@ static HYD_Status env_to_str(HYD_Env_t * env, char **str)
 }
 
 
+HYD_Status HYDU_str_to_env(char *str, HYD_Env_t **env)
+{
+    char *env_name, *env_value;
+    HYD_Status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC((*env), HYD_Env_t *, sizeof(HYD_Env_t), status);
+    env_name = strtok(str, "=");
+    env_value = strtok(NULL, "=");
+    (*env)->env_name = HYDU_strdup(env_name);
+    (*env)->env_value = env_value ? HYDU_strdup(env_value) : NULL;
+    (*env)->next = NULL;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    if (*env)
+        HYDU_FREE(*env);
+    *env = NULL;
+    goto fn_exit;
+}
+
+
 static HYD_Env_t *env_dup(HYD_Env_t env)
 {
     HYD_Env_t *tenv;
@@ -62,83 +88,6 @@ static HYD_Env_t *env_dup(HYD_Env_t env)
 }
 
 
-HYD_Env_t *HYDU_str_to_env(char *str)
-{
-    HYD_Env_t *env;
-    char *env_name, *env_value;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(env, HYD_Env_t *, sizeof(HYD_Env_t), status);
-    env_name = strtok(str, "=");
-    env_value = strtok(NULL, "=");
-    env->env_name = HYDU_strdup(env_name);
-    env->env_value = env_value ? HYDU_strdup(env_value) : NULL;
-    env->next = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return env;
-
-  fn_fail:
-    if (env)
-        HYDU_FREE(env);
-    env = NULL;
-    goto fn_exit;
-}
-
-
-HYD_Env_t *HYDU_str_pair_to_env(const char *env_name, const char *env_value)
-{
-    HYD_Env_t *env;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(env, HYD_Env_t *, sizeof(HYD_Env_t), status);
-    env->env_name = HYDU_strdup(env_name);
-    env->env_value = env_value ? HYDU_strdup(env_value) : NULL;
-    env->next = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return env;
-
-  fn_fail:
-    if (env)
-        HYDU_FREE(env);
-    env = NULL;
-    goto fn_exit;
-}
-
-
-HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list)
-{
-    int i;
-    HYD_Env_t *env;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    i = HYDU_strlist_lastidx(str_list);
-    env = env_list;
-    while (env) {
-        status = env_to_str(env, &str_list[i++]);
-        HYDU_ERR_POP(status, "HYDU_env_to_str returned error\n");
-        env = env->next;
-    }
-    str_list[i++] = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
 HYD_Status HYDU_list_inherited_env(HYD_Env_t ** env_list)
 {
     HYD_Env_t *env;
@@ -153,7 +102,8 @@ HYD_Status HYDU_list_inherited_env(HYD_Env_t ** env_list)
     while (environ[i]) {
         env_str = HYDU_strdup(environ[i]);
 
-        env = HYDU_str_to_env(env_str);
+        status = HYDU_str_to_env(env_str, &env);
+        HYDU_ERR_POP(status, "error converting string to env\n");
 
         status = HYDU_append_env_to_list(*env, env_list);
         HYDU_ERR_POP(status, "unable to add env to list\n");
@@ -254,7 +204,7 @@ HYD_Status HYDU_env_free_list(HYD_Env_t * env)
 }
 
 
-HYD_Env_t *HYDU_env_lookup(HYD_Env_t env, HYD_Env_t * env_list)
+HYD_Env_t *HYDU_env_lookup(char *env_name, HYD_Env_t * env_list)
 {
     HYD_Env_t *run;
 
@@ -262,7 +212,7 @@ HYD_Env_t *HYDU_env_lookup(HYD_Env_t env, HYD_Env_t * env_list)
 
     run = env_list;
     while (run->next) {
-        if (!strcmp(run->env_name, env.env_name))
+        if (!strcmp(run->env_name, env_name))
             goto fn_exit;
         run = run->next;
     }

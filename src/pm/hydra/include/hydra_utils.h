@@ -141,15 +141,14 @@ void HYDU_dump(FILE *fp, const char *str, ...);
 
 
 /* env */
-HYD_Env_t *HYDU_str_to_env(char *str);
-HYD_Env_t *HYDU_str_pair_to_env(const char *env_name, const char *env_value);
-HYD_Status HYDU_list_append_env_to_str(HYD_Env_t * env_list, char **str_list);
+HYD_Status HYDU_env_to_str(HYD_Env_t * env, char **str);
+HYD_Status HYDU_str_to_env(char *str, HYD_Env_t **env);
 HYD_Status HYDU_list_inherited_env(HYD_Env_t ** env_list);
 HYD_Env_t *HYDU_env_list_dup(HYD_Env_t * env);
 HYD_Status HYDU_env_create(HYD_Env_t ** env, const char *env_name, char *env_value);
 HYD_Status HYDU_env_free(HYD_Env_t * env);
 HYD_Status HYDU_env_free_list(HYD_Env_t * env);
-HYD_Env_t *HYDU_env_lookup(HYD_Env_t env, HYD_Env_t * env_list);
+HYD_Env_t *HYDU_env_lookup(char *env_name, HYD_Env_t * env_list);
 HYD_Status HYDU_append_env_to_list(HYD_Env_t env, HYD_Env_t ** env_list);
 HYD_Status HYDU_putenv(HYD_Env_t * env, HYD_Env_overwrite_t overwrite);
 HYD_Status HYDU_putenv_list(HYD_Env_t * env_list, HYD_Env_overwrite_t overwrite);

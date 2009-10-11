@@ -282,25 +282,34 @@ static HYD_Status fill_in_exec_args(void)
         partition->base->exec_args[arg++] = HYDU_strdup("--global-inherited-env");
         for (i = 0, env = HYD_handle.global_env.inherited; env; env = env->next, i++);
         partition->base->exec_args[arg++] = HYDU_int_to_str(i);
+
+        for (env = HYD_handle.global_env.inherited; env; env = env->next) {
+            status = HYDU_env_to_str(env, &partition->base->exec_args[arg++]);
+            HYDU_ERR_POP(status, "error converting env to string\n");
+        }
         partition->base->exec_args[arg++] = NULL;
-        HYDU_list_append_env_to_str(HYD_handle.global_env.inherited,
-                                    partition->base->exec_args);
 
         arg = HYDU_strlist_lastidx(partition->base->exec_args);
         partition->base->exec_args[arg++] = HYDU_strdup("--global-user-env");
         for (i = 0, env = HYD_handle.global_env.user; env; env = env->next, i++);
         partition->base->exec_args[arg++] = HYDU_int_to_str(i);
+
+        for (env = HYD_handle.global_env.user; env; env = env->next) {
+            status = HYDU_env_to_str(env, &partition->base->exec_args[arg++]);
+            HYDU_ERR_POP(status, "error converting env to string\n");
+        }
         partition->base->exec_args[arg++] = NULL;
-        HYDU_list_append_env_to_str(HYD_handle.global_env.user,
-                                    partition->base->exec_args);
 
         arg = HYDU_strlist_lastidx(partition->base->exec_args);
         partition->base->exec_args[arg++] = HYDU_strdup("--global-system-env");
         for (i = 0, env = HYD_handle.global_env.system; env; env = env->next, i++);
         partition->base->exec_args[arg++] = HYDU_int_to_str(i);
+
+        for (env = HYD_handle.global_env.system; env; env = env->next) {
+            status = HYDU_env_to_str(env, &partition->base->exec_args[arg++]);
+            HYDU_ERR_POP(status, "error converting env to string\n");
+        }
         partition->base->exec_args[arg++] = NULL;
-        HYDU_list_append_env_to_str(HYD_handle.global_env.system,
-                                    partition->base->exec_args);
 
         arg = HYDU_strlist_lastidx(partition->base->exec_args);
         partition->base->exec_args[arg++] = HYDU_strdup("--genv-prop");
@@ -331,8 +340,12 @@ static HYD_Status fill_in_exec_args(void)
             partition->base->exec_args[arg++] = HYDU_strdup("--exec-local-env");
             for (i = 0, env = exec->user_env; env; env = env->next, i++);
             partition->base->exec_args[arg++] = HYDU_int_to_str(i);
+
+            for (env = exec->user_env; env; env = env->next) {
+                status = HYDU_env_to_str(env, &partition->base->exec_args[arg++]);
+                HYDU_ERR_POP(status, "error converting env to string\n");
+            }
             partition->base->exec_args[arg++] = NULL;
-            HYDU_list_append_env_to_str(exec->user_env, partition->base->exec_args);
 
             arg = HYDU_strlist_lastidx(partition->base->exec_args);
             partition->base->exec_args[arg++] = HYDU_strdup("--exec-env-prop");
