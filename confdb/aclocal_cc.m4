@@ -546,7 +546,6 @@ if test "$enable_strict_done" != "yes" ; then
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
     pac_common_strict_flags="
-        -O2
         -Wall
         -Wextra
         -Wno-missing-field-initializers
@@ -584,13 +583,18 @@ if test "$enable_strict_done" != "yes" ; then
     case "$1" in 
         yes|all|posix)
 		enable_strict_done="yes"
-		pac_cc_strict_flags="$pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
+		pac_cc_strict_flags="-O2 $pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
         ;;
 
         noposix)
 		enable_strict_done="yes"
-		pac_cc_strict_flags="$pac_common_strict_flags"
+		pac_cc_strict_flags="-O2 $pac_common_strict_flags"
         ;;
+
+	noopt)
+		enable_strict_done="yes"
+		pac_cc_strict_flags="$pac_common_strict_flags"
+	;;
         
         no)
 		# Accept and ignore this value
