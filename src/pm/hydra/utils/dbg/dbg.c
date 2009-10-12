@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 
-static char *dbg_prefix = "unknown";
+static char *dbg_prefix = (char *) "unknown";
 
 void HYDU_dump_prefix(FILE *fp)
 {

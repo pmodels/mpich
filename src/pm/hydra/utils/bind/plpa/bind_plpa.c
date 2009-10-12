@@ -18,7 +18,6 @@ HYD_Status HYDU_bind_plpa_init(HYDU_bind_support_level_t *support_level)
     PLPA_NAME(api_type_t) p;
     int ret, i, j, max, id;
     int processor, sock, core, thread;
-    char *str;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

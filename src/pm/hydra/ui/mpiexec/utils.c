@@ -260,7 +260,7 @@ static HYD_Status mfile_fn(char *arg, char ***argv)
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
     else {
-        status = HYD_UII_mpx_init_proxy_list("localhost", 1);
+        status = HYD_UII_mpx_init_proxy_list((char *) "localhost", 1);
         HYDU_ERR_POP(status, "unable to initialize proxy\n");
     }
 

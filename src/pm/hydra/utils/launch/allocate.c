@@ -213,51 +213,6 @@ HYD_Status HYDU_merge_proxy_segment(char *hostname, struct HYD_Proxy_segment *se
 }
 
 
-static int count_elements(char *str, const char *delim)
-{
-    int count;
-
-    HYDU_FUNC_ENTER();
-
-    strtok(str, delim);
-    count = 1;
-    while (strtok(NULL, delim))
-        count++;
-
-    HYDU_FUNC_EXIT();
-
-    return count;
-}
-
-
-static char *pad_string(char *str, const char *pad, int count)
-{
-    char *tmp[HYD_NUM_TMP_STRINGS], *out;
-    int i, j;
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    i = 0;
-    tmp[i++] = HYDU_strdup(str);
-    for (j = 0; j < count; j++)
-        tmp[i++] = HYDU_strdup(pad);
-    tmp[i] = NULL;
-
-    status = HYDU_str_alloc_and_join(tmp, &out);
-    HYDU_ERR_POP(status, "unable to join strings\n");
-
-    HYDU_free_strlist(tmp);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return out;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
 HYD_Status HYDU_alloc_proxy_exec(struct HYD_Proxy_exec **exec)
 {
     HYD_Status status = HYD_SUCCESS;
