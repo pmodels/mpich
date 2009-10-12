@@ -593,7 +593,7 @@ if test "$enable_strict_done" != "yes" ; then
 
 	noopt)
 		enable_strict_done="yes"
-		pac_cc_strict_flags="$pac_common_strict_flags"
+		pac_cc_strict_flags="$pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
 	;;
         
         no)
