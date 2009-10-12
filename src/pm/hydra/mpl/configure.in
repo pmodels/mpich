@@ -22,6 +22,9 @@ AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
 PAC_ARG_CACHING
 PAC_ARG_STRICT
 
+# Non-verbose make
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
 dnl Bug in autoconf adds -O2 and -g by default. Make sure we only get
 dnl the flags we want.
 save_cflags=$CFLAGS
