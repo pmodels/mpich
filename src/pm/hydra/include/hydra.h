@@ -50,10 +50,11 @@ struct HYD_Handle_ {
     HYD_Time start;
     HYD_Time timeout;
 
+    struct HYD_Proxy *proxy_list;
     int global_core_count;
 
     struct HYD_Exec_info *exec_info_list;
-    struct HYD_Proxy *proxy_list;
+    int global_process_count;
 
     /* Random parameters used for internal code */
     int func_depth;

@@ -157,19 +157,14 @@ int main(int argc, char **argv)
         }
     }
 
-    status = HYD_UIU_merge_exec_info_to_proxy();
-    HYDU_ERR_POP(status, "unable to merge exec info\n");
-
-    if (HYD_handle.debug)
-        HYD_UIU_print_params();
-
     /* Figure out what the active proxys are: in RUNTIME and
      * PERSISTENT modes, only proxys which have an executable are
      * active. In BOOT, BOOT_FOREGROUND and SHUTDOWN modes, all
      * proxys are active. */
     if (HYD_handle.launch_mode == HYD_LAUNCH_RUNTIME ||
         HYD_handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
-        for (proxy = HYD_handle.proxy_list; proxy && proxy->exec_list;
+        for (proxy = HYD_handle.proxy_list;
+             proxy && (proxy->segment_list->start_pid <= HYD_handle.global_process_count);
              proxy = proxy->next)
             proxy->active = 1;
     }
@@ -177,6 +172,12 @@ int main(int argc, char **argv)
         for (proxy = HYD_handle.proxy_list; proxy; proxy = proxy->next)
             proxy->active = 1;
     }
+
+    status = HYD_UIU_merge_exec_info_to_proxy();
+    HYDU_ERR_POP(status, "unable to merge exec info\n");
+
+    if (HYD_handle.debug)
+        HYD_UIU_print_params();
 
     HYDU_time_set(&HYD_handle.start, NULL); /* NULL implies right now */
     if (getenv("MPIEXEC_TIMEOUT"))

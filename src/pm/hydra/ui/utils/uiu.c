@@ -46,9 +46,10 @@ void HYD_UIU_init_params(void)
 
     /* FIXME: Should the timers be initialized? */
 
+    HYD_handle.proxy_list = NULL;
     HYD_handle.global_core_count = 0;
     HYD_handle.exec_info_list = NULL;
-    HYD_handle.proxy_list = NULL;
+    HYD_handle.global_process_count = 0;
 
     HYD_handle.func_depth = 0;
     HYD_handle.stdin_buf_offset = 0;
@@ -191,9 +192,6 @@ HYD_Status HYD_UIU_merge_exec_info_to_proxy(void)
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    for (proxy = HYD_handle.proxy_list; proxy; proxy = proxy->next)
-        HYD_handle.global_core_count += proxy->core_count;
 
     proxy = HYD_handle.proxy_list;
     exec_info = HYD_handle.exec_info_list;

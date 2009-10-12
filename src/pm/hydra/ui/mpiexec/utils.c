@@ -168,6 +168,7 @@ HYD_Status HYD_UII_mpx_init_proxy_list(char *hostname, int num_procs)
     HYD_handle.proxy_list->segment_list->proc_count = num_procs;
 
     HYD_handle.proxy_list->core_count += num_procs;
+    HYD_handle.global_core_count += num_procs;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -224,6 +225,7 @@ static HYD_Status process_mfile_token(char *token, int newline)
             }
 
             HYD_handle.proxy_list->core_count += num_procs;
+            HYD_handle.global_core_count += num_procs;
         }
 
         pid += num_procs;
@@ -449,6 +451,7 @@ static HYD_Status np_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate process count\n");
 
     exec_info->process_count = atoi(**argv);
+    HYD_handle.global_process_count += exec_info->process_count;
     (*argv)++;
 
   fn_exit:

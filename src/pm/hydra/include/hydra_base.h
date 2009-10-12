@@ -157,9 +157,11 @@ struct HYD_Env_global {
 #endif
 #endif
 
+#define PROXY_IS_ACTIVE(proxy, total_procs) \
+    ((proxy)->segment_list->start_pid <= (total_procs))
+
 #define FORALL_ACTIVE_PROXIES(proxy, proxy_list)    \
-    for ((proxy) = (proxy_list); (proxy) && (proxy)->active; \
-         (proxy) = (proxy)->next)
+    for ((proxy) = (proxy_list); (proxy) && (proxy)->active; (proxy) = (proxy)->next)
 
 #define FORALL_PROXIES(proxy, proxy_list)    \
     for ((proxy) = (proxy_list); (proxy); (proxy) = (proxy)->next)
