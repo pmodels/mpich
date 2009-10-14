@@ -172,24 +172,3 @@ HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt)
     goto fn_exit;
 }
 #endif /* HAVE_THREAD_SUPPORT */
-
-int HYDU_local_to_global_id(int local_id, int core_count,
-                            struct HYD_Proxy_segment *segment_list, int global_core_count)
-{
-    int global_id, rem;
-    struct HYD_Proxy_segment *segment;
-
-    global_id = ((local_id / core_count) * global_core_count);
-    rem = (local_id % core_count);
-
-    for (segment = segment_list; segment; segment = segment->next) {
-        if (rem >= segment->proc_count)
-            rem -= segment->proc_count;
-        else {
-            global_id += segment->start_pid + rem;
-            break;
-        }
-    }
-
-    return global_id;
-}

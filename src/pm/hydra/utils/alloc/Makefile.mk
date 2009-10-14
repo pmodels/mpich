@@ -4,4 +4,4 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-libhydra_a_SOURCES += $(top_srcdir)/utils/launch/launch.c
+libhydra_a_SOURCES += $(top_srcdir)/utils/alloc/alloc.c
