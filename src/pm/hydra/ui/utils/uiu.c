@@ -12,33 +12,33 @@ void HYD_UIU_init_params(void)
 {
     HYD_handle.base_path = NULL;
     HYD_handle.proxy_port = -1;
-    HYD_handle.launch_mode = HYD_LAUNCH_UNSET;
+    HYD_handle.user_global.launch_mode = HYD_LAUNCH_UNSET;
 
-    HYD_handle.bootstrap = NULL;
+    HYD_handle.user_global.bootstrap = NULL;
     HYD_handle.css = NULL;
     HYD_handle.rmk = NULL;
-    HYD_handle.binding = NULL;
-    HYD_handle.bindlib = NULL;
+    HYD_handle.user_global.binding = NULL;
+    HYD_handle.user_global.bindlib = NULL;
 
-    HYD_handle.ckpointlib = NULL;
+    HYD_handle.user_global.ckpointlib = NULL;
     HYD_handle.ckpoint_int = -1;
-    HYD_handle.ckpoint_prefix = NULL;
-    HYD_handle.ckpoint_restart = 0;
+    HYD_handle.user_global.ckpoint_prefix = NULL;
+    HYD_handle.user_global.ckpoint_restart = 0;
 
-    HYD_handle.debug = -1;
+    HYD_handle.user_global.debug = -1;
     HYD_handle.print_rank_map = -1;
     HYD_handle.print_all_exitcodes = -1;
-    HYD_handle.enablex = -1;
+    HYD_handle.user_global.enablex = -1;
     HYD_handle.pm_env = -1;
-    HYD_handle.wdir = NULL;
+    HYD_handle.user_global.wdir = NULL;
 
     HYD_handle.ranks_per_proc = -1;
-    HYD_handle.bootstrap_exec = NULL;
+    HYD_handle.user_global.bootstrap_exec = NULL;
 
-    HYD_handle.global_env.inherited = NULL;
-    HYD_handle.global_env.system = NULL;
-    HYD_handle.global_env.user = NULL;
-    HYD_handle.global_env.prop = NULL;
+    HYD_handle.user_global.global_env.inherited = NULL;
+    HYD_handle.user_global.global_env.system = NULL;
+    HYD_handle.user_global.global_env.user = NULL;
+    HYD_handle.user_global.global_env.prop = NULL;
 
     HYD_handle.stdin_cb = NULL;
     HYD_handle.stdout_cb = NULL;
@@ -62,8 +62,8 @@ void HYD_UIU_free_params(void)
     if (HYD_handle.base_path)
         HYDU_FREE(HYD_handle.base_path);
 
-    if (HYD_handle.bootstrap)
-        HYDU_FREE(HYD_handle.bootstrap);
+    if (HYD_handle.user_global.bootstrap)
+        HYDU_FREE(HYD_handle.user_global.bootstrap);
 
     if (HYD_handle.css)
         HYDU_FREE(HYD_handle.css);
@@ -71,35 +71,35 @@ void HYD_UIU_free_params(void)
     if (HYD_handle.rmk)
         HYDU_FREE(HYD_handle.rmk);
 
-    if (HYD_handle.binding)
-        HYDU_FREE(HYD_handle.binding);
+    if (HYD_handle.user_global.binding)
+        HYDU_FREE(HYD_handle.user_global.binding);
 
-    if (HYD_handle.bindlib)
-        HYDU_FREE(HYD_handle.bindlib);
+    if (HYD_handle.user_global.bindlib)
+        HYDU_FREE(HYD_handle.user_global.bindlib);
 
-    if (HYD_handle.ckpointlib)
-        HYDU_FREE(HYD_handle.ckpointlib);
+    if (HYD_handle.user_global.ckpointlib)
+        HYDU_FREE(HYD_handle.user_global.ckpointlib);
 
-    if (HYD_handle.ckpoint_prefix)
-        HYDU_FREE(HYD_handle.ckpoint_prefix);
+    if (HYD_handle.user_global.ckpoint_prefix)
+        HYDU_FREE(HYD_handle.user_global.ckpoint_prefix);
 
-    if (HYD_handle.wdir)
-        HYDU_FREE(HYD_handle.wdir);
+    if (HYD_handle.user_global.wdir)
+        HYDU_FREE(HYD_handle.user_global.wdir);
 
-    if (HYD_handle.bootstrap_exec)
-        HYDU_FREE(HYD_handle.bootstrap_exec);
+    if (HYD_handle.user_global.bootstrap_exec)
+        HYDU_FREE(HYD_handle.user_global.bootstrap_exec);
 
-    if (HYD_handle.global_env.inherited)
-        HYDU_env_free_list(HYD_handle.global_env.inherited);
+    if (HYD_handle.user_global.global_env.inherited)
+        HYDU_env_free_list(HYD_handle.user_global.global_env.inherited);
 
-    if (HYD_handle.global_env.system)
-        HYDU_env_free_list(HYD_handle.global_env.system);
+    if (HYD_handle.user_global.global_env.system)
+        HYDU_env_free_list(HYD_handle.user_global.global_env.system);
 
-    if (HYD_handle.global_env.user)
-        HYDU_env_free_list(HYD_handle.global_env.user);
+    if (HYD_handle.user_global.global_env.user)
+        HYDU_env_free_list(HYD_handle.user_global.global_env.user);
 
-    if (HYD_handle.global_env.prop)
-        HYDU_FREE(HYD_handle.global_env.prop);
+    if (HYD_handle.user_global.global_env.prop)
+        HYDU_FREE(HYD_handle.user_global.global_env.prop);
 
     if (HYD_handle.exec_info_list)
         HYDU_free_exec_info_list(HYD_handle.exec_info_list);
@@ -254,30 +254,30 @@ void HYD_UIU_print_params(void)
     HYDU_dump(stdout, "----------------\n");
     HYDU_dump(stdout, "  Base path: %s\n", HYD_handle.base_path);
     HYDU_dump(stdout, "  Proxy port: %d\n", HYD_handle.proxy_port);
-    HYDU_dump(stdout, "  Bootstrap server: %s\n", HYD_handle.bootstrap);
-    HYDU_dump(stdout, "  Debug level: %d\n", HYD_handle.debug);
-    HYDU_dump(stdout, "  Enable X: %d\n", HYD_handle.enablex);
-    HYDU_dump(stdout, "  Working dir: %s\n", HYD_handle.wdir);
+    HYDU_dump(stdout, "  Bootstrap server: %s\n", HYD_handle.user_global.bootstrap);
+    HYDU_dump(stdout, "  Debug level: %d\n", HYD_handle.user_global.debug);
+    HYDU_dump(stdout, "  Enable X: %d\n", HYD_handle.user_global.enablex);
+    HYDU_dump(stdout, "  Working dir: %s\n", HYD_handle.user_global.wdir);
 
     HYDU_dump(stdout, "\n");
     HYDU_dump(stdout, "  Global environment:\n");
     HYDU_dump(stdout, "  -------------------\n");
-    for (env = HYD_handle.global_env.inherited; env; env = env->next)
+    for (env = HYD_handle.user_global.global_env.inherited; env; env = env->next)
         HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
 
-    if (HYD_handle.global_env.system) {
+    if (HYD_handle.user_global.global_env.system) {
         HYDU_dump(stdout, "\n");
         HYDU_dump(stdout, "  Hydra internal environment:\n");
         HYDU_dump(stdout, "  ---------------------------\n");
-        for (env = HYD_handle.global_env.system; env; env = env->next)
+        for (env = HYD_handle.user_global.global_env.system; env; env = env->next)
             HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
     }
 
-    if (HYD_handle.global_env.user) {
+    if (HYD_handle.user_global.global_env.user) {
         HYDU_dump(stdout, "\n");
         HYDU_dump(stdout, "  User set environment:\n");
         HYDU_dump(stdout, "  ---------------------\n");
-        for (env = HYD_handle.global_env.user; env; env = env->next)
+        for (env = HYD_handle.user_global.global_env.user; env; env = env->next)
             HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
     }
 

@@ -12,33 +12,21 @@
 #include "hydra_utils.h"
 
 struct HYD_Handle_ {
+    struct HYD_User_global user_global;
+
     char *base_path;
     int proxy_port;
-    HYD_Launch_mode_t launch_mode;
 
-    char *bootstrap;
     char *css;
     char *rmk;
 
-    char *binding;
-    char *bindlib;
-
-    char *ckpointlib;
     int ckpoint_int;
-    char *ckpoint_prefix;
-    int ckpoint_restart;
 
-    int debug;
     int print_rank_map;
     int print_all_exitcodes;
-    int enablex;
     int pm_env;
-    char *wdir;
 
     int ranks_per_proc;
-    char *bootstrap_exec;
-
-    struct HYD_Env_global global_env;
 
      HYD_Status(*stdin_cb) (int fd, HYD_Event_t events, void *userp);
      HYD_Status(*stdout_cb) (int fd, HYD_Event_t events, void *userp);

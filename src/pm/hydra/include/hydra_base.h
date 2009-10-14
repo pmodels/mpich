@@ -55,11 +55,6 @@
 
 #define HYDRA_MAX_PATH 4096
 
-#if defined MANUAL_EXTERN_ENVIRON
-extern char **environ;
-#endif /* MANUAL_EXTERN_ENVIRON */
-
-
 /* sockets required headers */
 #include <poll.h>
 #include <fcntl.h>
@@ -71,25 +66,43 @@ extern char **environ;
 #include <sys/socket.h>
 #endif
 
-#if defined(HAVE_PUTENV) && defined(NEEDS_PUTENV_DECL)
-extern int putenv(char *string);
-#endif
-
-#if defined(NEEDS_GETHOSTNAME_DECL)
-int gethostname(char *name, size_t len);
-#endif
-
 #define HYD_DEFAULT_PROXY_PORT 9899
 
 #define HYD_STDOUT  (1)
 #define HYD_STDIN   (2)
 
-typedef unsigned short HYD_Event_t;
-
 #define HYD_TMPBUF_SIZE (64 * 1024)
 #define HYD_TMP_STRLEN  1024
 #define HYD_NUM_TMP_STRINGS 200
 
+#if !defined HAVE_PTHREAD_H
+#error "pthread.h needed"
+#else
+#include <pthread.h>
+#endif
+
+#define dprintf(...)
+
+#ifndef ATTRIBUTE
+#ifdef HAVE_GCC_ATTRIBUTE
+#define ATTRIBUTE(a_) __attribute__(a_)
+#else
+#define ATTRIBUTE(a_)
+#endif
+#endif
+
+#define PROXY_IS_ACTIVE(proxy, total_procs) \
+    ((proxy)->segment_list->start_pid <= (total_procs))
+
+#define FORALL_ACTIVE_PROXIES(proxy, proxy_list)    \
+    for ((proxy) = (proxy_list); (proxy) && (proxy)->active; (proxy) = (proxy)->next)
+
+#define FORALL_PROXIES(proxy, proxy_list)    \
+    for ((proxy) = (proxy_list); (proxy); (proxy) = (proxy)->next)
+
+#if defined MANUAL_EXTERN_ENVIRON
+extern char **environ;
+#endif /* MANUAL_EXTERN_ENVIRON */
 
 /* Status information */
 typedef enum {
@@ -100,7 +113,6 @@ typedef enum {
     HYD_INVALID_PARAM,
     HYD_INTERNAL_ERROR
 } HYD_Status;
-
 
 /* Proxy type */
 typedef enum {
@@ -114,6 +126,15 @@ typedef enum {
     HYD_LAUNCH_PERSISTENT
 } HYD_Launch_mode_t;
 
+#if defined(HAVE_PUTENV) && defined(NEEDS_PUTENV_DECL)
+extern int putenv(char *string);
+#endif
+
+#if defined(NEEDS_GETHOSTNAME_DECL)
+int gethostname(char *name, size_t len);
+#endif
+
+typedef unsigned short HYD_Event_t;
 
 /* Environment information */
 typedef struct HYD_Env {
@@ -140,31 +161,6 @@ struct HYD_Env_global {
     HYD_Env_t *inherited;
     char      *prop;
 };
-
-#if !defined HAVE_PTHREAD_H
-#error "pthread.h needed"
-#else
-#include <pthread.h>
-#endif
-
-#define dprintf(...)
-
-#ifndef ATTRIBUTE
-#ifdef HAVE_GCC_ATTRIBUTE
-#define ATTRIBUTE(a_) __attribute__(a_)
-#else
-#define ATTRIBUTE(a_)
-#endif
-#endif
-
-#define PROXY_IS_ACTIVE(proxy, total_procs) \
-    ((proxy)->segment_list->start_pid <= (total_procs))
-
-#define FORALL_ACTIVE_PROXIES(proxy, proxy_list)    \
-    for ((proxy) = (proxy_list); (proxy) && (proxy)->active; (proxy) = (proxy)->next)
-
-#define FORALL_PROXIES(proxy, proxy_list)    \
-    for ((proxy) = (proxy_list); (proxy); (proxy) = (proxy)->next)
 
 /* List of contiguous segments of processes on a proxy */
 struct HYD_Proxy_segment {
@@ -220,6 +216,29 @@ struct HYD_Exec_info {
     char *env_prop;
 
     struct HYD_Exec_info *next;
+};
+
+/* Global user parameters */
+struct HYD_User_global {
+    /* Bootstrap server */
+    char *bootstrap;
+    char *bootstrap_exec;
+
+    /* Process binding */
+    char *binding;
+    char *bindlib;
+
+    /* Checkpoint restart */
+    char *ckpointlib;
+    char *ckpoint_prefix;
+    int ckpoint_restart;
+
+    /* Other random parameters */
+    int enablex;
+    int debug;
+    char *wdir;
+    HYD_Launch_mode_t launch_mode;
+    struct HYD_Env_global global_env;
 };
 
 #endif /* HYDRA_BASE_H_INCLUDED */

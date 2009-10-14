@@ -12,56 +12,55 @@
 #include "pmi_common.h"
 
 struct HYD_PMCD_pmi_proxy_params {
-    /* Proxy details */
+    struct HYD_User_global user_global;
+
     struct {
+        int global_core_count;
+
+        /* PMI */
+        char *pmi_port_str;
+    } system_global; /* Global system parameters */
+
+    struct {
+        /* Upstream server contact information */
         char *server_name;
         int server_port;
-        HYD_Launch_mode_t launch_mode;
-        int proxy_id;
-        char *bootstrap;
-        char *bootstrap_exec;
-        int enablex;
-        int debug;
-    } proxy;
 
-    char *wdir;
-    char *pmi_port_str;
-
-    char *binding;
-    char *bindlib;
-
-    char *ckpointlib;
-    char *ckpoint_prefix;
-    int ckpoint_restart;
-
-    struct HYD_Env_global global_env;
-
-    int global_core_count;
-    int proxy_core_count;
-    int exec_proc_count;
-
-    int procs_are_launched;
-
-    /* Process segmentation information for this proxy */
-    struct HYD_Proxy_segment *segment_list;
-    struct HYD_Proxy_exec *exec_list;
-
-    struct {
         int out;
         int err;
         int in;
         int control;
     } upstream;
 
-    int *pid;
-    int *out;
-    int *err;
-    int *exit_status;
-    int in;
+    /* Currently our downstream only consists of actual MPI
+     * processes */
+    struct {
+        int *out;
+        int *err;
+        int in;
 
-    int stdin_buf_offset;
-    int stdin_buf_count;
-    char stdin_tmp_buf[HYD_TMPBUF_SIZE];
+        int *pid;
+        int *exit_status;
+    } downstream;
+
+    /* Proxy details */
+    struct {
+        int  id;
+        int  core_count;
+        int  process_count;
+
+        /* Flag to tell whether the processes are launched */
+        int  procs_are_launched;
+
+        /* stdin related variables */
+        int stdin_buf_offset;
+        int stdin_buf_count;
+        char stdin_tmp_buf[HYD_TMPBUF_SIZE];
+    } local;
+
+    /* Process segmentation information for this proxy */
+    struct HYD_Proxy_segment *segment_list;
+    struct HYD_Proxy_exec *exec_list;
 };
 
 extern struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;

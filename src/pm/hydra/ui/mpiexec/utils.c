@@ -65,7 +65,7 @@ static HYD_Status genv_fn(char *arg, char ***argv)
     status = HYDU_env_create(&env, env_name, env_value);
     HYDU_ERR_POP(status, "unable to create env struct\n");
 
-    HYDU_append_env_to_list(*env, &HYD_handle.global_env.user);
+    HYDU_append_env_to_list(*env, &HYD_handle.user_global.global_env.user);
 
   fn_exit:
     return status;
@@ -79,7 +79,7 @@ static HYD_Status genvlist_fn(char *arg, char ***argv)
     int len;
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.global_env.prop,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.global_env.prop,
                         HYD_INTERNAL_ERROR, "duplicate environment setting\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -93,8 +93,8 @@ static HYD_Status genvlist_fn(char *arg, char ***argv)
     }
 
     len = strlen("list:") + strlen(**argv) + 1;
-    HYDU_MALLOC(HYD_handle.global_env.prop, char *, len, status);
-    HYDU_snprintf(HYD_handle.global_env.prop, len, "list:%s", **argv);
+    HYDU_MALLOC(HYD_handle.user_global.global_env.prop, char *, len, status);
+    HYDU_snprintf(HYD_handle.user_global.global_env.prop, len, "list:%s", **argv);
     (*argv)++;
 
   fn_exit:
@@ -108,7 +108,7 @@ static HYD_Status genvnone_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.global_env.prop,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.global_env.prop,
                         HYD_INTERNAL_ERROR, "duplicate environment setting\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -118,7 +118,7 @@ static HYD_Status genvnone_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.global_env.prop = HYDU_strdup("none");
+    HYD_handle.user_global.global_env.prop = HYDU_strdup("none");
 
   fn_exit:
     return status;
@@ -131,7 +131,7 @@ static HYD_Status genvall_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.global_env.prop,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.global_env.prop,
                         HYD_INTERNAL_ERROR, "duplicate environment setting\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -141,7 +141,7 @@ static HYD_Status genvall_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.global_env.prop = HYDU_strdup("all");
+    HYD_handle.user_global.global_env.prop = HYDU_strdup("all");
 
   fn_exit:
     return status;
@@ -277,7 +277,7 @@ static HYD_Status wdir_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.wdir, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.wdir, HYD_INTERNAL_ERROR,
                         "duplicate wdir setting\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -286,7 +286,7 @@ static HYD_Status wdir_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.wdir = HYDU_strdup(**argv);
+    HYD_handle.user_global.wdir = HYDU_strdup(**argv);
     (*argv)++;
 
   fn_exit:
@@ -465,7 +465,7 @@ static HYD_Status bootstrap_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.bootstrap, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.bootstrap, HYD_INTERNAL_ERROR,
                         "duplicate -bootstrap option\n");
 
     if (**argv == NULL)
@@ -479,7 +479,7 @@ static HYD_Status bootstrap_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.bootstrap = HYDU_strdup(**argv);
+    HYD_handle.user_global.bootstrap = HYDU_strdup(**argv);
     (*argv)++;
 
   fn_exit:
@@ -493,7 +493,7 @@ static HYD_Status bootstrap_exec_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.bootstrap_exec, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.bootstrap_exec, HYD_INTERNAL_ERROR,
                         "duplicate -bootstrap-exec option\n");
 
     if (**argv == NULL)
@@ -507,7 +507,7 @@ static HYD_Status bootstrap_exec_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.bootstrap_exec = HYDU_strdup(**argv);
+    HYD_handle.user_global.bootstrap_exec = HYDU_strdup(**argv);
     (*argv)++;
 
   fn_exit:
@@ -521,7 +521,7 @@ static HYD_Status enablex_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.enablex != -1, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.enablex != -1, HYD_INTERNAL_ERROR,
                         "duplicate -enable-x argument\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -532,9 +532,9 @@ static HYD_Status enablex_fn(char *arg, char ***argv)
     }
 
     if (!strcmp(arg, "enable-x"))
-        HYD_handle.enablex = 1;
+        HYD_handle.user_global.enablex = 1;
     else
-        HYD_handle.enablex = 0;
+        HYD_handle.user_global.enablex = 0;
 
   fn_exit:
     return status;
@@ -547,7 +547,7 @@ static HYD_Status boot_proxies_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.launch_mode != HYD_LAUNCH_UNSET,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.launch_mode != HYD_LAUNCH_UNSET,
                         HYD_INTERNAL_ERROR, "duplicate launch mode\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -560,11 +560,11 @@ static HYD_Status boot_proxies_fn(char *arg, char ***argv)
     }
 
     if (!strcmp(arg, "boot-proxies"))
-        HYD_handle.launch_mode = HYD_LAUNCH_BOOT;
+        HYD_handle.user_global.launch_mode = HYD_LAUNCH_BOOT;
     else if (!strcmp(arg, "boot-foreground-proxies"))
-        HYD_handle.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
+        HYD_handle.user_global.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
     else if (!strcmp(arg, "shutdown-proxies"))
-        HYD_handle.launch_mode = HYD_LAUNCH_SHUTDOWN;
+        HYD_handle.user_global.launch_mode = HYD_LAUNCH_SHUTDOWN;
 
   fn_exit:
     return status;
@@ -603,7 +603,7 @@ static HYD_Status use_persistent_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.launch_mode != HYD_LAUNCH_UNSET,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.launch_mode != HYD_LAUNCH_UNSET,
                         HYD_INTERNAL_ERROR, "duplicate launch mode\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -614,9 +614,9 @@ static HYD_Status use_persistent_fn(char *arg, char ***argv)
     }
 
     if (!strcmp(arg, "use-persistent"))
-        HYD_handle.launch_mode = HYD_LAUNCH_PERSISTENT;
+        HYD_handle.user_global.launch_mode = HYD_LAUNCH_PERSISTENT;
     else
-        HYD_handle.launch_mode = HYD_LAUNCH_RUNTIME;
+        HYD_handle.user_global.launch_mode = HYD_LAUNCH_RUNTIME;
 
   fn_exit:
     return status;
@@ -735,7 +735,7 @@ static HYD_Status binding_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.binding, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.binding, HYD_INTERNAL_ERROR,
                         "duplicate binding\n");
 
     if (**argv == NULL)
@@ -754,7 +754,7 @@ static HYD_Status binding_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.binding = HYDU_strdup(**argv);
+    HYD_handle.user_global.binding = HYDU_strdup(**argv);
     (*argv)++;
 
   fn_exit:
@@ -768,7 +768,7 @@ static HYD_Status bindlib_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.bindlib, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.bindlib, HYD_INTERNAL_ERROR,
                         "duplicate -bindlib option\n");
 
     if (**argv == NULL)
@@ -782,7 +782,7 @@ static HYD_Status bindlib_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.bindlib = HYDU_strdup(**argv);
+    HYD_handle.user_global.bindlib = HYDU_strdup(**argv);
     (*argv)++;
 
   fn_exit:
@@ -822,7 +822,7 @@ static HYD_Status ckpoint_prefix_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpoint_prefix, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.ckpoint_prefix, HYD_INTERNAL_ERROR,
                         "duplicate -ckpoint-prefix option\n");
 
     if (**argv == NULL)
@@ -834,7 +834,7 @@ static HYD_Status ckpoint_prefix_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.ckpoint_prefix = HYDU_strdup(**argv);
+    HYD_handle.user_global.ckpoint_prefix = HYDU_strdup(**argv);
     (*argv)++;
 
   fn_exit:
@@ -848,7 +848,7 @@ static HYD_Status ckpointlib_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpointlib, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.ckpointlib, HYD_INTERNAL_ERROR,
                         "duplicate -ckpointlib option\n");
 
     if (**argv == NULL)
@@ -862,7 +862,7 @@ static HYD_Status ckpointlib_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.ckpointlib = HYDU_strdup(**argv);
+    HYD_handle.user_global.ckpointlib = HYDU_strdup(**argv);
     (*argv)++;
 
   fn_exit:
@@ -876,7 +876,8 @@ static HYD_Status ckpoint_restart_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.ckpoint_restart, HYD_INTERNAL_ERROR, "duplicate restart mode\n");
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.ckpoint_restart,
+                        HYD_INTERNAL_ERROR, "duplicate restart mode\n");
 
     if (**argv && IS_HELP(**argv)) {
         printf("\n");
@@ -884,7 +885,7 @@ static HYD_Status ckpoint_restart_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.ckpoint_restart = 1;
+    HYD_handle.user_global.ckpoint_restart = 1;
 
   fn_exit:
     return status;
@@ -897,7 +898,7 @@ static HYD_Status verbose_fn(char *arg, char ***argv)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.debug != -1, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.debug != -1, HYD_INTERNAL_ERROR,
                         "duplicate verbose setting\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -906,7 +907,7 @@ static HYD_Status verbose_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYD_handle.debug = 1;
+    HYD_handle.user_global.debug = 1;
 
   fn_exit:
     return status;
@@ -1110,18 +1111,18 @@ static HYD_Status verify_arguments(void)
     HYD_Status status = HYD_SUCCESS;
 
     /* Proxy launch or checkpoint restart */
-    if ((HYD_handle.launch_mode == HYD_LAUNCH_BOOT) ||
-        (HYD_handle.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) ||
-        (HYD_handle.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
+    if ((HYD_handle.user_global.launch_mode == HYD_LAUNCH_BOOT) ||
+        (HYD_handle.user_global.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) ||
+        (HYD_handle.user_global.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
 
         /* No environment */
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.global_env.prop, HYD_INTERNAL_ERROR,
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.global_env.prop, HYD_INTERNAL_ERROR,
                             "env setting not required for booting/shutting proxies\n");
 
         /* No binding */
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.binding, HYD_INTERNAL_ERROR,
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.binding, HYD_INTERNAL_ERROR,
                             "binding not allowed while booting/shutting proxies\n");
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.bindlib, HYD_INTERNAL_ERROR,
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.bindlib, HYD_INTERNAL_ERROR,
                             "binding not allowed while booting/shutting proxies\n");
 
         /* No executables */
@@ -1130,11 +1131,11 @@ static HYD_Status verify_arguments(void)
     }
     else {      /* Application launch */
         /* On a checkpoint restart, we set the prefix as the application */
-        if (HYD_handle.ckpoint_restart == 1) {
+        if (HYD_handle.user_global.ckpoint_restart == 1) {
             status = HYD_UIU_get_current_exec_info(&exec_info);
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
-            exec_info->exec[0] = HYDU_strdup(HYD_handle.ckpoint_prefix);
+            exec_info->exec[0] = HYDU_strdup(HYD_handle.user_global.ckpoint_prefix);
             exec_info->exec[1] = NULL;
         }
 
@@ -1167,10 +1168,10 @@ static HYD_Status set_default_values(void)
         HYD_handle.print_all_exitcodes = 0;
 
     tmp = getenv("HYDRA_DEBUG");
-    if (HYD_handle.debug == -1 && tmp)
-        HYD_handle.debug = atoi(tmp) ? 1 : 0;
-    if (HYD_handle.debug == -1)
-        HYD_handle.debug = 0;
+    if (HYD_handle.user_global.debug == -1 && tmp)
+        HYD_handle.user_global.debug = atoi(tmp) ? 1 : 0;
+    if (HYD_handle.user_global.debug == -1)
+        HYD_handle.user_global.debug = 0;
 
     tmp = getenv("HYDRA_PM_ENV");
     if (HYD_handle.pm_env == -1 && tmp)
@@ -1179,10 +1180,10 @@ static HYD_Status set_default_values(void)
         HYD_handle.pm_env = 1;  /* Default is to pass the PM environment */
 
     tmp = getenv("HYDRA_BOOTSTRAP");
-    if (HYD_handle.bootstrap == NULL && tmp)
-        HYD_handle.bootstrap = HYDU_strdup(tmp);
-    if (HYD_handle.bootstrap == NULL)
-        HYD_handle.bootstrap = HYDU_strdup(HYDRA_DEFAULT_BSS);
+    if (HYD_handle.user_global.bootstrap == NULL && tmp)
+        HYD_handle.user_global.bootstrap = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.bootstrap == NULL)
+        HYD_handle.user_global.bootstrap = HYDU_strdup(HYDRA_DEFAULT_BSS);
 
     tmp = getenv("HYDRA_CSS");
     if (HYD_handle.css == NULL && tmp)
@@ -1209,61 +1210,61 @@ static HYD_Status set_default_values(void)
         HYD_handle.proxy_port = HYD_DEFAULT_PROXY_PORT;
 
     tmp = getenv("HYDRA_LAUNCH_MODE");
-    if (HYD_handle.launch_mode == HYD_LAUNCH_UNSET && tmp) {
+    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_UNSET && tmp) {
         if (!strcmp(tmp, "persistent"))
-            HYD_handle.launch_mode = HYD_LAUNCH_PERSISTENT;
+            HYD_handle.user_global.launch_mode = HYD_LAUNCH_PERSISTENT;
         else if (!strcmp(tmp, "runtime"))
-            HYD_handle.launch_mode = HYD_LAUNCH_RUNTIME;
+            HYD_handle.user_global.launch_mode = HYD_LAUNCH_RUNTIME;
     }
-    if (HYD_handle.launch_mode == HYD_LAUNCH_UNSET)
-        HYD_handle.launch_mode = HYD_LAUNCH_RUNTIME;
+    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_UNSET)
+        HYD_handle.user_global.launch_mode = HYD_LAUNCH_RUNTIME;
 
     tmp = getenv("HYDRA_BOOT_FOREGROUND_PROXIES");
-    if (HYD_handle.launch_mode == HYD_LAUNCH_UNSET && tmp) {
+    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_UNSET && tmp) {
         if (atoi(tmp) == 1) {
-            HYD_handle.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
+            HYD_handle.user_global.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
         }
     }
 
     tmp = getenv("HYDRA_BOOTSTRAP_EXEC");
-    if (HYD_handle.bootstrap_exec == NULL && tmp)
-        HYD_handle.bootstrap_exec = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.bootstrap_exec == NULL && tmp)
+        HYD_handle.user_global.bootstrap_exec = HYDU_strdup(tmp);
 
     /* Check environment for setting binding */
     tmp = getenv("HYDRA_BINDING");
-    if (HYD_handle.binding == NULL && tmp)
-        HYD_handle.binding = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.binding == NULL && tmp)
+        HYD_handle.user_global.binding = HYDU_strdup(tmp);
 
     tmp = getenv("HYDRA_BINDLIB");
-    if (HYD_handle.bindlib == NULL && tmp)
-        HYD_handle.bindlib = HYDU_strdup(tmp);
-    if (HYD_handle.bindlib == NULL && strcmp(HYDRA_DEFAULT_BINDLIB, ""))
-        HYD_handle.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
-    if (HYD_handle.bindlib == NULL)
-        HYD_handle.bindlib = HYDU_strdup("none");
+    if (HYD_handle.user_global.bindlib == NULL && tmp)
+        HYD_handle.user_global.bindlib = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.bindlib == NULL && strcmp(HYDRA_DEFAULT_BINDLIB, ""))
+        HYD_handle.user_global.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
+    if (HYD_handle.user_global.bindlib == NULL)
+        HYD_handle.user_global.bindlib = HYDU_strdup("none");
 
     /* Check environment for checkpointing */
     tmp = getenv("HYDRA_CKPOINTLIB");
-    if (HYD_handle.ckpointlib == NULL && tmp)
-        HYD_handle.ckpointlib = HYDU_strdup(tmp);
-    if (HYD_handle.ckpointlib == NULL && strcmp(HYDRA_DEFAULT_CKPOINTLIB, ""))
-        HYD_handle.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
-    if (HYD_handle.ckpointlib == NULL)
-        HYD_handle.ckpointlib = HYDU_strdup("none");
+    if (HYD_handle.user_global.ckpointlib == NULL && tmp)
+        HYD_handle.user_global.ckpointlib = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.ckpointlib == NULL && strcmp(HYDRA_DEFAULT_CKPOINTLIB, ""))
+        HYD_handle.user_global.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
+    if (HYD_handle.user_global.ckpointlib == NULL)
+        HYD_handle.user_global.ckpointlib = HYDU_strdup("none");
 
     tmp = getenv("HYDRA_CKPOINT_PREFIX");
-    if (HYD_handle.ckpoint_prefix == NULL && tmp)
-        HYD_handle.ckpoint_prefix = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.ckpoint_prefix == NULL && tmp)
+        HYD_handle.user_global.ckpoint_prefix = HYDU_strdup(tmp);
 
     /* Check environment for setting the inherited environment */
     tmp = getenv("HYDRA_ENV");
-    if (HYD_handle.global_env.prop == NULL && tmp)
-        HYD_handle.global_env.prop =
+    if (HYD_handle.user_global.global_env.prop == NULL && tmp)
+        HYD_handle.user_global.global_env.prop =
             !strcmp(tmp, "all") ? HYDU_strdup("all") : HYDU_strdup("none");
 
     /* If no global environment is set, use the default */
-    if (HYD_handle.global_env.prop == NULL)
-        HYD_handle.global_env.prop = HYDU_strdup("all");
+    if (HYD_handle.user_global.global_env.prop == NULL)
+        HYD_handle.user_global.global_env.prop = HYDU_strdup("all");
 
   fn_exit:
     return status;
@@ -1284,7 +1285,7 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
 
     HYD_UIU_init_params();
 
-    status = HYDU_list_inherited_env(&HYD_handle.global_env.inherited);
+    status = HYDU_list_inherited_env(&HYD_handle.user_global.global_env.inherited);
     HYDU_ERR_POP(status, "unable to get the inherited env list\n");
 
     argv++;
@@ -1323,12 +1324,12 @@ HYD_Status HYD_UII_mpx_get_parameters(char **t_argv)
     HYDU_ERR_POP(status, "argument verification failed\n");
 
     /* Get the base path for the proxy */
-    if (HYD_handle.wdir == NULL) {
-        HYD_handle.wdir = HYDU_getcwd();
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.wdir == NULL, HYD_INTERNAL_ERROR,
+    if (HYD_handle.user_global.wdir == NULL) {
+        HYD_handle.user_global.wdir = HYDU_getcwd();
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.wdir == NULL, HYD_INTERNAL_ERROR,
                             "unable to get current working directory\n");
     }
-    status = HYDU_get_base_path(progname, HYD_handle.wdir, &HYD_handle.base_path);
+    status = HYDU_get_base_path(progname, HYD_handle.user_global.wdir, &HYD_handle.base_path);
     HYDU_ERR_POP(status, "unable to get base path\n");
 
     status = set_default_values();

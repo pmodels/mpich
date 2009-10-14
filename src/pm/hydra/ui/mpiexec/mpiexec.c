@@ -12,7 +12,7 @@
 #include "uiu.h"
 #include "demux.h"
 
-HYD_Handle HYD_handle = { 0 };
+HYD_Handle HYD_handle = { { 0 } };
 
 static void usage(void)
 {
@@ -161,8 +161,8 @@ int main(int argc, char **argv)
      * PERSISTENT modes, only proxys which have an executable are
      * active. In BOOT, BOOT_FOREGROUND and SHUTDOWN modes, all
      * proxys are active. */
-    if (HYD_handle.launch_mode == HYD_LAUNCH_RUNTIME ||
-        HYD_handle.launch_mode == HYD_LAUNCH_PERSISTENT) {
+    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_RUNTIME ||
+        HYD_handle.user_global.launch_mode == HYD_LAUNCH_PERSISTENT) {
         for (proxy = HYD_handle.proxy_list;
              proxy && (proxy->segment_list->start_pid <= HYD_handle.global_process_count);
              proxy = proxy->next)
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
     status = HYD_UIU_merge_exec_info_to_proxy();
     HYDU_ERR_POP(status, "unable to merge exec info\n");
 
-    if (HYD_handle.debug)
+    if (HYD_handle.user_global.debug)
         HYD_UIU_print_params();
 
     HYDU_time_set(&HYD_handle.start, NULL); /* NULL implies right now */
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
     else
         timeout = -1;   /* Set a negative timeout */
     HYDU_time_set(&HYD_handle.timeout, &timeout);
-    if (HYD_handle.debug)
+    if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
 
     if (HYD_handle.print_rank_map) {
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
      * instead of assuming this. For example, it is possible to have a
      * PM implementation that launches separate "new" proxies on a
      * different port and kills the original proxies using them. */
-    if (HYD_handle.launch_mode == HYD_LAUNCH_SHUTDOWN) {
+    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_SHUTDOWN) {
         /* Call finalize functions for lower layers to cleanup their resources */
         status = HYD_PMCI_finalize();
         HYDU_ERR_POP(status, "process manager error on finalize\n");

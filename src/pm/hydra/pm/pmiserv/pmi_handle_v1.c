@@ -51,7 +51,7 @@ HYD_Status HYD_PMCD_pmi_handle_v1_initack(int fd, char *args[])
     tmp[i++] = HYDU_int_to_str(rank);
 
     tmp[i++] = HYDU_strdup("\ncmd=set debug=");
-    tmp[i++] = HYDU_int_to_str(HYD_handle.debug);
+    tmp[i++] = HYDU_int_to_str(HYD_handle.user_global.debug);
     tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
