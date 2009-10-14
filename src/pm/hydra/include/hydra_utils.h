@@ -121,6 +121,16 @@
 #endif
 
 
+/* alloc */
+void HYDU_init_user_global(struct HYD_User_global *user_global);
+void HYDU_init_global_env(struct HYD_Env_global*global_env);
+HYD_Status HYDU_alloc_proxy(struct HYD_Proxy **proxy);
+HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info);
+void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list);
+void HYDU_free_proxy_list(struct HYD_Proxy *proxy_list);
+HYD_Status HYDU_alloc_proxy_segment(struct HYD_Proxy_segment **segment);
+HYD_Status HYDU_alloc_proxy_exec(struct HYD_Proxy_exec **exec);
+
 /* args */
 HYD_Status HYDU_find_in_path(const char *execname, char **path);
 char *HYDU_getcwd(void);
@@ -128,19 +138,16 @@ HYD_Status HYDU_get_base_path(const char *execname, char *wdir, char **path);
 HYD_Status HYDU_parse_hostfile(char *hostfile,
                                HYD_Status(*process_token) (char *token, int newline));
 
-
 /* bind */
 HYD_Status HYDU_bind_init(char *binding, char *bindlib);
 HYD_Status HYDU_bind_process(int core);
 int HYDU_bind_get_core_id(int id);
-
 
 /* debug */
 HYD_Status HYDU_dbg_init(const char *str);
 void HYDU_dump_prefix(FILE *fp);
 void HYDU_dump_noprefix(FILE *fp, const char *str, ...);
 void HYDU_dump(FILE *fp, const char *str, ...);
-
 
 /* env */
 HYD_Status HYDU_env_to_str(HYD_Env_t * env, char **str);
@@ -156,7 +163,6 @@ HYD_Status HYDU_putenv(HYD_Env_t * env, HYD_Env_overwrite_t overwrite);
 HYD_Status HYDU_putenv_list(HYD_Env_t * env_list, HYD_Env_overwrite_t overwrite);
 HYD_Status HYDU_comma_list_to_env_list(char *str, HYD_Env_t ** env_list);
 
-
 /* launch */
 #if defined HAVE_THREAD_SUPPORT
 struct HYD_Thread_context {
@@ -164,14 +170,6 @@ struct HYD_Thread_context {
 };
 #endif /* HAVE_THREAD_SUPPORT */
 
-HYD_Status HYDU_alloc_proxy(struct HYD_Proxy **proxy);
-void HYDU_free_proxy_list(struct HYD_Proxy *proxy);
-HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info);
-void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list);
-HYD_Status HYDU_alloc_proxy_segment(struct HYD_Proxy_segment **segment);
-HYD_Status HYDU_merge_proxy_segment(char *name, struct HYD_Proxy_segment *segment,
-                                        struct HYD_Proxy **proxy_list);
-HYD_Status HYDU_alloc_proxy_exec(struct HYD_Proxy_exec **exec);
 HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
                                int *in, int *out, int *err, int *pid, int core);
 HYD_Status HYDU_fork_and_exit(int core);
@@ -180,9 +178,12 @@ HYD_Status HYDU_create_thread(void *(*func) (void *), void *args,
                               struct HYD_Thread_context *ctxt);
 HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt);
 #endif /* HAVE_THREAD_SUPPORT */
+
+/* others */
+HYD_Status HYDU_merge_proxy_segment(char *name, struct HYD_Proxy_segment *segment,
+                                        struct HYD_Proxy **proxy_list);
 int HYDU_local_to_global_id(int local_id, int core_count,
                             struct HYD_Proxy_segment *segment_list, int global_core_count);
-
 
 /* signals */
 #ifdef NEEDS_POSIX_FOR_SIGACTION
@@ -201,7 +202,6 @@ extern char *strsignal(int);
 
 HYD_Status HYDU_set_signal(int signum, void (*handler) (int));
 HYD_Status HYDU_set_common_signals(void (*handler) (int));
-
 
 /* Sock utilities */
 enum HYDU_sock_comm_flag {
@@ -222,7 +222,6 @@ HYD_Status HYDU_sock_set_cloexec(int fd);
 HYD_Status HYDU_sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *closed);
 HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *buf,
                               int *buf_count, int *buf_offset, int *closed);
-
 
 /* Memory utilities */
 #include <ctype.h>
@@ -282,7 +281,6 @@ char *HYDU_strerror(int error);
 int HYDU_strlist_lastidx(char **strlist);
 char **HYDU_str_to_strlist(char *str);
 
-
 /* Timer utilities */
 /* FIXME: HYD_Time should be OS specific */
 #ifdef HAVE_TIME
@@ -292,11 +290,10 @@ typedef struct timeval HYD_Time;
 void HYDU_time_set(HYD_Time * time, int *val);
 int HYDU_time_left(HYD_Time start, HYD_Time timeout);
 
-
 /* checkpointing */
 HYD_Status HYDU_ckpoint_init(char *ckpointlib, char *ckpoint_prefix);
 HYD_Status HYDU_ckpoint_suspend(void);
-HYD_Status HYDU_ckpoint_restart(HYD_Env_t *envlist, int num_ranks, int ranks[], int *in, int *out, int *err);
-
+HYD_Status HYDU_ckpoint_restart(HYD_Env_t *envlist, int num_ranks, int ranks[], int *in,
+                                int *out, int *err);
 
 #endif /* HYDRA_UTILS_H_INCLUDED */

@@ -10,35 +10,21 @@
 
 void HYD_UIU_init_params(void)
 {
+    HYDU_init_user_global(&HYD_handle.user_global);
+
     HYD_handle.base_path = NULL;
     HYD_handle.proxy_port = -1;
-    HYD_handle.user_global.launch_mode = HYD_LAUNCH_UNSET;
 
-    HYD_handle.user_global.bootstrap = NULL;
     HYD_handle.css = NULL;
     HYD_handle.rmk = NULL;
-    HYD_handle.user_global.binding = NULL;
-    HYD_handle.user_global.bindlib = NULL;
 
-    HYD_handle.user_global.ckpointlib = NULL;
     HYD_handle.ckpoint_int = -1;
-    HYD_handle.user_global.ckpoint_prefix = NULL;
-    HYD_handle.user_global.ckpoint_restart = 0;
 
-    HYD_handle.user_global.debug = -1;
     HYD_handle.print_rank_map = -1;
     HYD_handle.print_all_exitcodes = -1;
-    HYD_handle.user_global.enablex = -1;
     HYD_handle.pm_env = -1;
-    HYD_handle.user_global.wdir = NULL;
 
     HYD_handle.ranks_per_proc = -1;
-    HYD_handle.user_global.bootstrap_exec = NULL;
-
-    HYD_handle.user_global.global_env.inherited = NULL;
-    HYD_handle.user_global.global_env.system = NULL;
-    HYD_handle.user_global.global_env.user = NULL;
-    HYD_handle.user_global.global_env.prop = NULL;
 
     HYD_handle.stdin_cb = NULL;
     HYD_handle.stdout_cb = NULL;

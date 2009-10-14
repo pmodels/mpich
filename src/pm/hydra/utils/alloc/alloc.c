@@ -6,6 +6,34 @@
 
 #include "hydra_utils.h"
 
+void HYDU_init_user_global(struct HYD_User_global *user_global)
+{
+    user_global->bootstrap = NULL;
+    user_global->bootstrap_exec = NULL;
+
+    user_global->binding = NULL;
+    user_global->bindlib = NULL;
+
+    user_global->ckpointlib = NULL;
+    user_global->ckpoint_prefix = NULL;
+    user_global->ckpoint_restart = 0;
+
+    user_global->enablex = -1;
+    user_global->debug = -1;
+    user_global->wdir = NULL;
+    user_global->launch_mode = HYD_LAUNCH_UNSET;
+
+    HYDU_init_global_env(&user_global->global_env);
+}
+
+void HYDU_init_global_env(struct HYD_Env_global *global_env)
+{
+    global_env->system = NULL;
+    global_env->user = NULL;
+    global_env->inherited = NULL;
+    global_env->prop = NULL;
+}
+
 HYD_Status HYDU_alloc_proxy(struct HYD_Proxy **proxy)
 {
     static int proxy_id = 0;

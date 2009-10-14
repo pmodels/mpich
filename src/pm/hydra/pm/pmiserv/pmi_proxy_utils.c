@@ -15,38 +15,13 @@ static HYD_Status init_params(void)
 {
     HYD_Status status = HYD_SUCCESS;
 
-    HYD_PMCD_pmi_proxy_params.user_global.bootstrap = NULL;
-    HYD_PMCD_pmi_proxy_params.user_global.bootstrap_exec = NULL;
-    HYD_PMCD_pmi_proxy_params.user_global.launch_mode = HYD_LAUNCH_UNSET;
+    HYDU_init_user_global(&HYD_PMCD_pmi_proxy_params.user_global);
+
+    HYD_PMCD_pmi_proxy_params.system_global.global_core_count = 0;
+    HYD_PMCD_pmi_proxy_params.system_global.pmi_port_str = NULL;
 
     HYD_PMCD_pmi_proxy_params.upstream.server_name = NULL;
     HYD_PMCD_pmi_proxy_params.upstream.server_port = -1;
-    HYD_PMCD_pmi_proxy_params.local.id = -1;
-    HYD_PMCD_pmi_proxy_params.user_global.debug = 0;
-    HYD_PMCD_pmi_proxy_params.user_global.enablex = -1;
-
-    HYD_PMCD_pmi_proxy_params.user_global.wdir = NULL;
-    HYD_PMCD_pmi_proxy_params.system_global.pmi_port_str = NULL;
-    HYD_PMCD_pmi_proxy_params.user_global.binding = NULL;
-    HYD_PMCD_pmi_proxy_params.user_global.bindlib = NULL;
-
-    HYD_PMCD_pmi_proxy_params.user_global.ckpointlib = NULL;
-    HYD_PMCD_pmi_proxy_params.user_global.ckpoint_prefix = NULL;
-    HYD_PMCD_pmi_proxy_params.user_global.ckpoint_restart = 0;
-
-    HYD_PMCD_pmi_proxy_params.user_global.global_env.system = NULL;
-    HYD_PMCD_pmi_proxy_params.user_global.global_env.user = NULL;
-    HYD_PMCD_pmi_proxy_params.user_global.global_env.inherited = NULL;
-
-    HYD_PMCD_pmi_proxy_params.system_global.global_core_count = 0;
-    HYD_PMCD_pmi_proxy_params.local.core_count = 0;
-    HYD_PMCD_pmi_proxy_params.local.process_count = 0;
-
-    HYD_PMCD_pmi_proxy_params.local.procs_are_launched = 0;
-
-    HYD_PMCD_pmi_proxy_params.segment_list = NULL;
-    HYD_PMCD_pmi_proxy_params.exec_list = NULL;
-
     HYD_PMCD_pmi_proxy_params.upstream.out = -1;
     HYD_PMCD_pmi_proxy_params.upstream.err = -1;
     HYD_PMCD_pmi_proxy_params.upstream.in = -1;
@@ -58,9 +33,16 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.downstream.pid = NULL;
     HYD_PMCD_pmi_proxy_params.downstream.exit_status = NULL;
 
+    HYD_PMCD_pmi_proxy_params.local.id = -1;
+    HYD_PMCD_pmi_proxy_params.local.core_count = 0;
+    HYD_PMCD_pmi_proxy_params.local.process_count = 0;
+    HYD_PMCD_pmi_proxy_params.local.procs_are_launched = 0;
     HYD_PMCD_pmi_proxy_params.local.stdin_buf_offset = 0;
     HYD_PMCD_pmi_proxy_params.local.stdin_buf_count = 0;
     HYD_PMCD_pmi_proxy_params.local.stdin_tmp_buf[0] = '\0';
+
+    HYD_PMCD_pmi_proxy_params.segment_list = NULL;
+    HYD_PMCD_pmi_proxy_params.exec_list = NULL;
 
     return status;
 }
