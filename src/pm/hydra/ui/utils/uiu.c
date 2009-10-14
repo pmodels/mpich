@@ -148,8 +148,6 @@ static HYD_Status add_exec_info_to_proxy(struct HYD_Exec_info *exec_info,
         status = HYDU_alloc_proxy_exec(&proxy->exec_list);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
 
-        proxy->exec_list->pgid = 0; /* This is the COMM_WORLD exec */
-
         for (i = 0; exec_info->exec[i]; i++)
             proxy->exec_list->exec[i] = HYDU_strdup(exec_info->exec[i]);
         proxy->exec_list->exec[i] = NULL;
@@ -165,7 +163,6 @@ static HYD_Status add_exec_info_to_proxy(struct HYD_Exec_info *exec_info,
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
 
         exec = exec->next;
-        exec->pgid = 0; /* This is the COMM_WORLD exec */
 
         for (i = 0; exec_info->exec[i]; i++)
             exec->exec[i] = HYDU_strdup(exec_info->exec[i]);

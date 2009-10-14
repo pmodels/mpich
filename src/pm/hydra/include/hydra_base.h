@@ -176,9 +176,6 @@ struct HYD_Proxy_exec {
     HYD_Env_t *user_env;
     char *env_prop;
 
-    int pgid;                   /* All executables with the same PGID belong to the same
-                                 * job. */
-
     struct HYD_Proxy_exec *next;
 };
 
