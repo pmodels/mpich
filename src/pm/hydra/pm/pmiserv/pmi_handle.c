@@ -314,9 +314,9 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
             tmp[i++] = HYDU_int_to_str(block->num_blocks);
             tmp[i++] = HYDU_strdup(",");
             tmp[i++] = HYDU_int_to_str(block->block_size);
+            tmp[i++] = HYDU_strdup(")");
             if (block->next)
                 tmp[i++] = HYDU_strdup(",");
-            tmp[i++] = HYDU_strdup(")");
             HYDU_STRLIST_CONSOLIDATE(tmp, i, status);
         }
         tmp[i++] = HYDU_strdup(")");

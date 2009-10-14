@@ -545,12 +545,13 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
         HYD_PMCD_pmi_proxy_params.local.process_count += exec->proc_count;
 
-    HYDU_MALLOC(pmi_ids, int *, HYD_PMCD_pmi_proxy_params.local.process_count * sizeof(int), status);
+    HYDU_MALLOC(pmi_ids, int *, HYD_PMCD_pmi_proxy_params.local.process_count * sizeof(int),
+                status);
     for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.process_count; i++) {
-        pmi_ids[i] = HYDU_local_to_global_id(i,
-                                             HYD_PMCD_pmi_proxy_params.local.core_count,
-                                             HYD_PMCD_pmi_proxy_params.segment_list,
-                                             HYD_PMCD_pmi_proxy_params.system_global.global_core_count);
+        pmi_ids[i] =
+            HYDU_local_to_global_id(i, HYD_PMCD_pmi_proxy_params.local.core_count,
+                                    HYD_PMCD_pmi_proxy_params.segment_list,
+                                    HYD_PMCD_pmi_proxy_params.system_global.global_core_count);
     }
     
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.downstream.out, int *,

@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 
         if (HYD_handle.proxy_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
-            status = HYD_UII_mpx_init_proxy_list((char *) "localhost", 1);
+            status = HYD_UII_mpx_add_to_proxy_list((char *) "localhost", 1);
             HYDU_ERR_POP(status, "unable to initialize proxy\n");
         }
     }
