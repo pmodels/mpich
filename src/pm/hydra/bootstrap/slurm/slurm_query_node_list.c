@@ -99,8 +99,7 @@ static HYD_Status group_to_individual_nodes(char *str, char **list)
     goto fn_exit;
 }
 
-HYD_Status HYD_BSCD_slurm_query_node_list(int *num_nodes,
-                                          struct HYD_Proxy **proxy_list)
+HYD_Status HYD_BSCD_slurm_query_node_list(int *num_nodes, struct HYD_Proxy **proxy_list)
 {
     char *str, *num_procs;
     char *tmp1[HYD_NUM_TMP_STRINGS], *tmp2[HYD_NUM_TMP_STRINGS];

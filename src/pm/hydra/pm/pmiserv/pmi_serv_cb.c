@@ -55,7 +55,7 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
 
     HYDU_MALLOC(buf, char *, buflen, status);
     bufptr = buf;
-    
+
     /*
      * FIXME: This is a big hack. We temporarily initialize to
      * PMI-v1. If the incoming message is an "init", it will
@@ -91,8 +91,8 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
             /* Unexpected termination of connection */
             if (linelen == 0)
                 break;
-            else 
-                *(bufptr-1) = '\0';
+            else
+                *(bufptr - 1) = '\0';
 
             /* Here we only get PMI-1 commands or backward compatible
              * PMI-2 commands, so we always explicitly use the PMI-1
@@ -217,8 +217,7 @@ HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void
     HYDU_ERR_POP(status, "accept error\n");
 
     /* Read the proxy ID */
-    status = HYDU_sock_read(accept_fd, &proxy_id, sizeof(int), &count,
-                            HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_read(accept_fd, &proxy_id, sizeof(int), &count, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "sock read returned error\n");
 
     /* Find the proxy */
@@ -300,8 +299,7 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
         status = HYDU_sock_trywrite(proxy->control_fd, &cmd,
                                     sizeof(enum HYD_PMCD_pmi_proxy_cmds));
         if (status != HYD_SUCCESS) {
-            HYDU_Warn_printf("unable to send data to the proxy on %s\n",
-                             proxy->hostname);
+            HYDU_Warn_printf("unable to send data to the proxy on %s\n", proxy->hostname);
             overall_status = HYD_INTERNAL_ERROR;
             continue;   /* Move on to the next proxy */
         }
@@ -327,16 +325,16 @@ HYD_Status HYD_PMCD_pmi_serv_ckpoint(void)
     FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
         cmd = CKPOINT;
         status = HYDU_sock_write(proxy->control_fd, &cmd,
-                                    sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+                                 sizeof(enum HYD_PMCD_pmi_proxy_cmds));
         HYDU_ERR_POP(status, "unable to send checkpoint message\n");
     }
 
     HYDU_FUNC_EXIT();
 
-fn_exit:
+  fn_exit:
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

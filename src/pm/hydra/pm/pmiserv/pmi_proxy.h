@@ -19,7 +19,7 @@ struct HYD_PMCD_pmi_proxy_params {
 
         /* PMI */
         char *pmi_port_str;
-    } system_global; /* Global system parameters */
+    } system_global;            /* Global system parameters */
 
     struct {
         /* Upstream server contact information */
@@ -45,12 +45,12 @@ struct HYD_PMCD_pmi_proxy_params {
 
     /* Proxy details */
     struct {
-        int  id;
-        int  core_count;
-        int  process_count;
+        int id;
+        int core_count;
+        int process_count;
 
         /* Flag to tell whether the processes are launched */
-        int  procs_are_launched;
+        int procs_are_launched;
 
         /* stdin related variables */
         int stdin_buf_offset;

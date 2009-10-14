@@ -157,8 +157,7 @@ static struct HYD_PMCD_pmi_node *allocate_node(HYD_PMCD_pmi_pg_t * pg, int node_
 }
 
 
-HYD_Status HYD_PMCD_pmi_add_kvs(const char *key, char *val, HYD_PMCD_pmi_kvs_t * kvs,
-                                int *ret)
+HYD_Status HYD_PMCD_pmi_add_kvs(const char *key, char *val, HYD_PMCD_pmi_kvs_t * kvs, int *ret)
 {
     HYD_PMCD_pmi_kvs_pair_t *key_pair, *run;
     HYD_Status status = HYD_SUCCESS;
@@ -482,7 +481,8 @@ HYD_Status HYD_PMCD_pmi_init(void)
         HYD_pg_list->num_procs = HYD_pg_list->num_subgroups;
 
     /* Allocate and initialize the connected ranks */
-    HYDU_MALLOC(HYD_pg_list->conn_procs, int *, HYD_pg_list->num_subgroups * sizeof(int), status);
+    HYDU_MALLOC(HYD_pg_list->conn_procs, int *, HYD_pg_list->num_subgroups * sizeof(int),
+                status);
     for (i = 0; i < HYD_pg_list->num_subgroups; i++)
         HYD_pg_list->conn_procs[i] = 0;
 

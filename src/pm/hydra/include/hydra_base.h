@@ -159,7 +159,7 @@ struct HYD_Env_global {
     HYD_Env_t *system;
     HYD_Env_t *user;
     HYD_Env_t *inherited;
-    char      *prop;
+    char *prop;
 };
 
 /* List of contiguous segments of processes on a proxy */
@@ -184,13 +184,13 @@ struct HYD_Proxy {
     char *hostname;
     char **exec_args;
 
-    int  proxy_id;
-    int  active;
+    int proxy_id;
+    int active;
 
-    int  pid;
-    int  in;  /* stdin is only valid for proxy_id 0 */
-    int  out;
-    int  err;
+    int pid;
+    int in;                     /* stdin is only valid for proxy_id 0 */
+    int out;
+    int err;
 
     int proxy_core_count;
 

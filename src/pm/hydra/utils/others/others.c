@@ -7,7 +7,7 @@
 #include "hydra_utils.h"
 
 HYD_Status HYDU_merge_proxy_segment(char *hostname, struct HYD_Proxy_segment *segment,
-                                        struct HYD_Proxy **proxy_list)
+                                    struct HYD_Proxy **proxy_list)
 {
     struct HYD_Proxy *proxy;
     struct HYD_Proxy_segment *s;

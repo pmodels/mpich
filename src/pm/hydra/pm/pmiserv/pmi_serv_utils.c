@@ -18,8 +18,7 @@ HYD_Status HYD_PMCD_pmi_send_exec_info(struct HYD_Proxy *proxy)
     HYDU_FUNC_ENTER();
 
     cmd = PROC_INFO;
-    status = HYDU_sock_write(proxy->control_fd, &cmd,
-                             sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+    status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* Check how many arguments we have */
@@ -34,8 +33,7 @@ HYD_Status HYD_PMCD_pmi_send_exec_info(struct HYD_Proxy *proxy)
         status = HYDU_sock_write(proxy->control_fd, &arg_len, sizeof(int));
         HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
-        status = HYDU_sock_write(proxy->control_fd, proxy->exec_args[i],
-                                 arg_len);
+        status = HYDU_sock_write(proxy->control_fd, proxy->exec_args[i], arg_len);
         HYDU_ERR_POP(status, "unable to write data to proxy\n");
     }
 

@@ -105,7 +105,8 @@ HYD_Status HYD_UII_mpx_stdin_cb(int fd, HYD_Event_t events, void *userp)
     HYDU_FUNC_ENTER();
 
     status = HYDU_sock_stdin_cb(fd, events, 0, HYD_handle.stdin_tmp_buf,
-                                &HYD_handle.stdin_buf_count, &HYD_handle.stdin_buf_offset, &closed);
+                                &HYD_handle.stdin_buf_count, &HYD_handle.stdin_buf_offset,
+                                &closed);
     HYDU_ERR_POP(status, "stdin callback error\n");
 
     if (closed) {

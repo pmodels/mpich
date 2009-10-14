@@ -193,7 +193,7 @@ HYD_Status HYD_UII_mpx_add_to_proxy_list(char *hostname, int num_procs)
             proxy->segment_list->start_pid = pid;
             proxy->segment_list->proc_count = num_procs;
         }
-        else { /* hostname matches */
+        else {  /* hostname matches */
             for (segment = proxy->segment_list; segment->next; segment = segment->next);
 
             /* If this segment is a continuation, just increment the
@@ -229,7 +229,7 @@ static HYD_Status process_mfile_token(char *token, int newline)
     char *hostname, *procs;
     HYD_Status status = HYD_SUCCESS;
 
-    if (newline) { /* The first entry gives the hostname and processes */
+    if (newline) {      /* The first entry gives the hostname and processes */
         hostname = strtok(token, ":");
         procs = strtok(NULL, ":");
         num_procs = procs ? atoi(procs) : 1;
@@ -237,7 +237,7 @@ static HYD_Status process_mfile_token(char *token, int newline)
         status = HYD_UII_mpx_add_to_proxy_list(hostname, num_procs);
         HYDU_ERR_POP(status, "unable to initialize proxy\n");
     }
-    else { /* Not a new line */
+    else {      /* Not a new line */
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "token %s not supported at this time\n", token);
     }

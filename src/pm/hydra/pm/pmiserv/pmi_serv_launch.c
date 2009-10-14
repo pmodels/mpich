@@ -52,16 +52,14 @@ static void *launch_helper(void *args)
      *    work.
      */
 
-    status = HYDU_sock_connect(proxy->hostname, HYD_handle.proxy_port,
-                               &proxy->control_fd);
+    status = HYDU_sock_connect(proxy->hostname, HYD_handle.proxy_port, &proxy->control_fd);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
     status = HYD_PMCD_pmi_send_exec_info(proxy);
     HYDU_ERR_POP(status, "error sending executable info\n");
 
     /* Create an stdout socket */
-    status = HYDU_sock_connect(proxy->hostname, HYD_handle.proxy_port,
-                               &proxy->out);
+    status = HYDU_sock_connect(proxy->hostname, HYD_handle.proxy_port, &proxy->out);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
     cmd = USE_AS_STDOUT;
@@ -69,8 +67,7 @@ static void *launch_helper(void *args)
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* Create an stderr socket */
-    status = HYDU_sock_connect(proxy->hostname, HYD_handle.proxy_port,
-                               &proxy->err);
+    status = HYDU_sock_connect(proxy->hostname, HYD_handle.proxy_port, &proxy->err);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
     cmd = USE_AS_STDERR;
@@ -79,13 +76,11 @@ static void *launch_helper(void *args)
 
     /* If rank 0 is here, create an stdin socket */
     if (proxy->proxy_id == 0) {
-        status = HYDU_sock_connect(proxy->hostname, HYD_handle.proxy_port,
-                                   &proxy->in);
+        status = HYDU_sock_connect(proxy->hostname, HYD_handle.proxy_port, &proxy->in);
         HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
         cmd = USE_AS_STDIN;
-        status = HYDU_sock_write(proxy->in, &cmd,
-                                 sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+        status = HYDU_sock_write(proxy->in, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
         HYDU_ERR_POP(status, "unable to write data to proxy\n");
     }
 
@@ -223,7 +218,7 @@ static HYD_Status fill_in_exec_args(void)
         for (exec_count = 0, exec = proxy->exec_list; exec; exec = exec->next)
             exec_count++;
 
-        total_args = HYD_NUM_TMP_STRINGS; /* For the basic arguments */
+        total_args = HYD_NUM_TMP_STRINGS;       /* For the basic arguments */
 
         /* Environments */
         total_args += inherited_env_count;
@@ -236,8 +231,7 @@ static HYD_Status fill_in_exec_args(void)
         /* For each exec add a few strings */
         total_args += (exec_count * HYD_NUM_TMP_STRINGS);
 
-        HYDU_MALLOC(proxy->exec_args, char **, total_args * sizeof(char *),
-                    status);
+        HYDU_MALLOC(proxy->exec_args, char **, total_args * sizeof(char *), status);
 
         arg = 0;
         proxy->exec_args[arg++] = HYDU_strdup("--global-core-count");
@@ -274,7 +268,8 @@ static HYD_Status fill_in_exec_args(void)
             proxy->exec_args[arg++] = HYDU_strdup("--ckpoint-restart");
 
         proxy->exec_args[arg++] = HYDU_strdup("--global-inherited-env");
-        for (i = 0, env = HYD_handle.user_global.global_env.inherited; env; env = env->next, i++);
+        for (i = 0, env = HYD_handle.user_global.global_env.inherited; env;
+             env = env->next, i++);
         proxy->exec_args[arg++] = HYDU_int_to_str(i);
 
         for (env = HYD_handle.user_global.global_env.inherited; env; env = env->next) {
@@ -504,7 +499,8 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
     else {
         while (1) {
             /* Wait for some event to occur */
-            status = HYD_DMX_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
+            status =
+                HYD_DMX_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
             HYDU_ERR_POP(status, "error waiting for event\n");
 
             /* If the timeout expired, raise a SIGINT and kill all the
@@ -542,7 +538,8 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
                 break;
 
             /* If not, wait for some event to occur */
-            status = HYD_DMX_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
+            status =
+                HYD_DMX_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
             HYDU_ERR_POP(status, "error waiting for event\n");
         } while (1);
     }

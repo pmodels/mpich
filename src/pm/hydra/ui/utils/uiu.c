@@ -123,8 +123,7 @@ HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **exec_info)
 
 
 static HYD_Status add_exec_info_to_proxy(struct HYD_Exec_info *exec_info,
-                                         struct HYD_Proxy *proxy,
-                                         int num_procs)
+                                         struct HYD_Proxy *proxy, int num_procs)
 {
     int i;
     struct HYD_Proxy_exec *exec;

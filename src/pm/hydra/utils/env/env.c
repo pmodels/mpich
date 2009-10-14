@@ -37,7 +37,7 @@ HYD_Status HYDU_env_to_str(HYD_Env_t * env, char **str)
 }
 
 
-HYD_Status HYDU_str_to_env(char *str, HYD_Env_t **env)
+HYD_Status HYDU_str_to_env(char *str, HYD_Env_t ** env)
 {
     char *env_name, *env_value;
     HYD_Status status = HYD_SUCCESS;

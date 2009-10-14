@@ -43,8 +43,7 @@ HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, const char *proxy_id_s
          * everyone else, it's NULL. */
         status = HYDU_create_process(client_arg, NULL,
                                      (process_id == 0 ? &proxy->in : NULL),
-                                     &proxy->out, &proxy->err,
-                                     &proxy->pid, -1);
+                                     &proxy->out, &proxy->err, &proxy->pid, -1);
         HYDU_ERR_POP(status, "create process returned error\n");
 
         HYDU_free_strlist(client_arg);

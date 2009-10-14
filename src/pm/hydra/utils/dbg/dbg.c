@@ -8,13 +8,13 @@
 
 static char *dbg_prefix = (char *) "unknown";
 
-void HYDU_dump_prefix(FILE *fp)
+void HYDU_dump_prefix(FILE * fp)
 {
     fprintf(fp, "[%s] ", dbg_prefix);
     fflush(fp);
 }
 
-void HYDU_dump_noprefix(FILE *fp, const char *str, ...)
+void HYDU_dump_noprefix(FILE * fp, const char *str, ...)
 {
     va_list list;
 
@@ -24,7 +24,7 @@ void HYDU_dump_noprefix(FILE *fp, const char *str, ...)
     va_end(list);
 }
 
-void HYDU_dump(FILE *fp, const char *str, ...)
+void HYDU_dump(FILE * fp, const char *str, ...)
 {
     va_list list;
 
@@ -45,8 +45,7 @@ HYD_Status HYDU_dbg_init(const char *str)
                              "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
 
     HYDU_MALLOC(dbg_prefix, char *, strlen(hostname) + 1 + strlen(str) + 1, status);
-    HYDU_snprintf(dbg_prefix, strlen(hostname) + 1 + strlen(str) + 1,
-                  "%s@%s", str, hostname);
+    HYDU_snprintf(dbg_prefix, strlen(hostname) + 1 + strlen(str) + 1, "%s@%s", str, hostname);
 
   fn_exit:
     HYDU_FUNC_EXIT();

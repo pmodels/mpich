@@ -123,7 +123,7 @@
 
 /* alloc */
 void HYDU_init_user_global(struct HYD_User_global *user_global);
-void HYDU_init_global_env(struct HYD_Env_global*global_env);
+void HYDU_init_global_env(struct HYD_Env_global *global_env);
 HYD_Status HYDU_alloc_proxy(struct HYD_Proxy **proxy);
 HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info);
 void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list);
@@ -146,13 +146,13 @@ int HYDU_bind_get_core_id(int id);
 
 /* debug */
 HYD_Status HYDU_dbg_init(const char *str);
-void HYDU_dump_prefix(FILE *fp);
-void HYDU_dump_noprefix(FILE *fp, const char *str, ...);
-void HYDU_dump(FILE *fp, const char *str, ...);
+void HYDU_dump_prefix(FILE * fp);
+void HYDU_dump_noprefix(FILE * fp, const char *str, ...);
+void HYDU_dump(FILE * fp, const char *str, ...);
 
 /* env */
 HYD_Status HYDU_env_to_str(HYD_Env_t * env, char **str);
-HYD_Status HYDU_str_to_env(char *str, HYD_Env_t **env);
+HYD_Status HYDU_str_to_env(char *str, HYD_Env_t ** env);
 HYD_Status HYDU_list_inherited_env(HYD_Env_t ** env_list);
 HYD_Env_t *HYDU_env_list_dup(HYD_Env_t * env);
 HYD_Status HYDU_env_create(HYD_Env_t ** env, const char *env_name, char *env_value);
@@ -182,7 +182,7 @@ HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt);
 
 /* others */
 HYD_Status HYDU_merge_proxy_segment(char *name, struct HYD_Proxy_segment *segment,
-                                        struct HYD_Proxy **proxy_list);
+                                    struct HYD_Proxy **proxy_list);
 int HYDU_local_to_global_id(int local_id, int core_count,
                             struct HYD_Proxy_segment *segment_list, int global_core_count);
 
@@ -294,7 +294,7 @@ int HYDU_time_left(HYD_Time start, HYD_Time timeout);
 /* checkpointing */
 HYD_Status HYDU_ckpoint_init(char *ckpointlib, char *ckpoint_prefix);
 HYD_Status HYDU_ckpoint_suspend(void);
-HYD_Status HYDU_ckpoint_restart(HYD_Env_t *envlist, int num_ranks, int ranks[], int *in,
+HYD_Status HYDU_ckpoint_restart(HYD_Env_t * envlist, int num_ranks, int ranks[], int *in,
                                 int *out, int *err);
 
 #endif /* HYDRA_UTILS_H_INCLUDED */

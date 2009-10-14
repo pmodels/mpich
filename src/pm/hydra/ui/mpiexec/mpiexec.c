@@ -12,7 +12,8 @@
 #include "uiu.h"
 #include "demux.h"
 
-HYD_Handle HYD_handle = { { 0 } };
+HYD_Handle HYD_handle = { {0}
+};
 
 static void usage(void)
 {
@@ -179,7 +180,7 @@ int main(int argc, char **argv)
     if (HYD_handle.user_global.debug)
         HYD_UIU_print_params();
 
-    HYDU_time_set(&HYD_handle.start, NULL); /* NULL implies right now */
+    HYDU_time_set(&HYD_handle.start, NULL);     /* NULL implies right now */
     if (getenv("MPIEXEC_TIMEOUT"))
         timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
     else
@@ -196,9 +197,10 @@ int main(int argc, char **argv)
             for (exec = proxy->exec_list; exec; exec = exec->next) {
                 for (i = 0; i < exec->proc_count; i++) {
                     HYDU_dump(stdout, "%d", HYDU_local_to_global_id(process_id++,
-                                                            proxy->proxy_core_count,
-                                                            proxy->segment_list,
-                                                            HYD_handle.global_core_count));
+                                                                    proxy->proxy_core_count,
+                                                                    proxy->segment_list,
+                                                                    HYD_handle.
+                                                                    global_core_count));
                     if (i < exec->proc_count - 1)
                         HYDU_dump(stdout, ",");
                 }
@@ -253,8 +255,7 @@ int main(int argc, char **argv)
         }
 
         if (proxy->in != -1) {
-            status = HYD_DMX_register_fd(1, &proxy->in, HYD_STDIN, NULL,
-                                         HYD_UII_mpx_stdin_cb);
+            status = HYD_DMX_register_fd(1, &proxy->in, HYD_STDIN, NULL, HYD_UII_mpx_stdin_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
     }
@@ -274,8 +275,9 @@ int main(int argc, char **argv)
         for (i = 0; i < proc_count; i++) {
             if (HYD_handle.print_all_exitcodes) {
                 HYDU_dump(stdout, "[%d]", HYDU_local_to_global_id(i, proxy->proxy_core_count,
-                                                          proxy->segment_list,
-                                                          HYD_handle.global_core_count));
+                                                                  proxy->segment_list,
+                                                                  HYD_handle.
+                                                                  global_core_count));
                 HYDU_dump(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));
                 if (i < proc_count - 1)
                     HYDU_dump(stdout, ",");

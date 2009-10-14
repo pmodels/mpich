@@ -146,10 +146,10 @@ char *HYDU_getcwd(void)
         retval = cwdval;
     }
 
-fn_exit:
+  fn_exit:
     return retval;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

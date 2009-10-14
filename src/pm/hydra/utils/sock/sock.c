@@ -259,7 +259,7 @@ HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
     *count = 0;
     while (1) {
         do {
-            tmp = read(fd, (char *)buf + *count, maxlen - *count);
+            tmp = read(fd, (char *) buf + *count, maxlen - *count);
         } while (tmp < 0 && errno == EINTR);
 
         if (tmp < 0) {

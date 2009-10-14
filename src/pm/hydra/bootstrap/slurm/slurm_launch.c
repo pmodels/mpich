@@ -96,9 +96,7 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *proxy_id_
 
     status = HYDU_create_process(client_arg, NULL,
                                  &proxy_list->in,
-                                 &proxy_list->out,
-                                 &proxy_list->err,
-                                 &proxy_list->pid, -1);
+                                 &proxy_list->out, &proxy_list->err, &proxy_list->pid, -1);
     HYDU_ERR_POP(status, "bootstrap spawn process returned error\n");
 
     HYDU_free_strlist(client_arg);

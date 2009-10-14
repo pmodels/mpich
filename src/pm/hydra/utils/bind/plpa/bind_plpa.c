@@ -13,7 +13,7 @@ struct HYDU_bind_info HYDU_bind_info;
 #include "plpa.h"
 #include "plpa_internal.h"
 
-HYD_Status HYDU_bind_plpa_init(HYDU_bind_support_level_t *support_level)
+HYD_Status HYDU_bind_plpa_init(HYDU_bind_support_level_t * support_level)
 {
     PLPA_NAME(api_type_t) p;
     int ret, i, j, max, id;
