@@ -225,8 +225,8 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
     char *tmp[HYD_NUM_TMP_STRINGS];
     struct HYD_Proxy *proxy;
     struct HYD_Proxy_segment *segment;
-    struct segment *seglist_head, *seglist_tail = NULL, *seg;
-    struct block *blocklist_head, *blocklist_tail = NULL, *block;
+    struct segment *seglist_head, *seglist_tail = NULL, *seg, *nseg;
+    struct block *blocklist_head, *blocklist_tail = NULL, *block, *nblock;
     int done;
     HYD_Status status = HYD_SUCCESS;
 
@@ -329,6 +329,15 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
     }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized process mapping\n");
+    }
+
+    for (seg = seglist_head; seg; seg = nseg) {
+        nseg = seg->next;
+        HYDU_FREE(seg);
+    }
+    for (block = blocklist_head; block; block = nblock) {
+        nblock = block->next;
+        HYDU_FREE(block);
     }
 
   fn_exit:

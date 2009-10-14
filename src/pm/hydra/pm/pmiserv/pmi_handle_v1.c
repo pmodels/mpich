@@ -343,6 +343,8 @@ HYD_Status HYD_PMCD_pmi_handle_v1_get(int fd, char *args[])
             status = HYD_PMCD_pmi_add_kvs("process-mapping", node_list,
                                           process->node->pg->kvs, &ret);
             HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
+
+            HYDU_FREE(node_list);
         }
 
         /* Search for the key again */
