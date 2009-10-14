@@ -203,6 +203,7 @@ int smpd_entry_point()
     /* prevent the os from bringing up debug message boxes if this process crashes */
     if (smpd_process.bService)
     {
+    char port[SMPD_MAX_PORT_STR_LENGTH];
 	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
 	if (!smpd_report_status_to_sc_mgr(SERVICE_RUNNING, NO_ERROR, 0))
 	{
@@ -213,6 +214,8 @@ int smpd_entry_point()
 	}
 	smpd_clear_process_registry();
     smpd_get_smpd_data("phrase", smpd_process.passphrase, SMPD_PASSPHRASE_MAX_LENGTH);
+    smpd_get_smpd_data("port", port, SMPD_MAX_PORT_STR_LENGTH);
+    smpd_process.port = atoi(port);
     }
 #endif
 

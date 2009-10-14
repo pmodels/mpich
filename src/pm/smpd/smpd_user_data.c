@@ -742,6 +742,12 @@ int smpd_get_smpd_data_default(const char *key, char *value, int value_len)
 	smpd_exit_fn(FCNAME);
 	return SMPD_SUCCESS;
     }
+    if(strcmp(key, "port") == 0)
+    {
+    snprintf(value, value_len, "%d", SMPD_LISTENER_PORT);
+    smpd_exit_fn(FCNAME);
+    return SMPD_SUCCESS;
+    }
 #endif
     if (strcmp(key, "log") == 0)
     {
