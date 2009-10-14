@@ -140,6 +140,7 @@ HYD_Status HYDU_parse_hostfile(char *hostfile,
 
 /* bind */
 HYD_Status HYDU_bind_init(char *binding, char *bindlib);
+void HYDU_bind_finalize(void);
 HYD_Status HYDU_bind_process(int core);
 int HYDU_bind_get_core_id(int id);
 

@@ -132,6 +132,18 @@ HYD_Status HYDU_bind_init(char *binding, char *bindlib)
     goto fn_exit;
 }
 
+void HYDU_bind_finalize(void)
+{
+    if (HYDU_bind_info.bindmap)
+        HYDU_FREE(HYDU_bind_info.bindmap);
+
+    if (HYDU_bind_info.bindlib)
+        HYDU_FREE(HYDU_bind_info.bindlib);
+
+    if (HYDU_bind_info.topology)
+        HYDU_FREE(HYDU_bind_info.topology);
+}
+
 HYD_Status HYDU_bind_process(int core)
 {
     HYD_Status status = HYD_SUCCESS;

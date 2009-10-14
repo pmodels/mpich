@@ -445,6 +445,8 @@ HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
     if (HYD_PMCD_pmi_proxy_params.downstream.exit_status)
         HYDU_FREE(HYD_PMCD_pmi_proxy_params.downstream.exit_status);
 
+    HYDU_bind_finalize();
+
     /* Reinitialize all params to set everything to "NULL" or
      * equivalent. */
     status = init_params();
@@ -527,8 +529,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
         HYD_PMCD_pmi_proxy_params.local.process_count += exec->proc_count;
 
-    HYDU_MALLOC(pmi_ids, int *, HYD_PMCD_pmi_proxy_params.local.process_count * sizeof(int),
-                status);
+    HYDU_MALLOC(pmi_ids, int *, HYD_PMCD_pmi_proxy_params.local.process_count *
+                sizeof(int), status);
     for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.process_count; i++) {
         pmi_ids[i] =
             HYDU_local_to_global_id(i, HYD_PMCD_pmi_proxy_params.local.core_count,
@@ -558,7 +560,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
     if (HYD_PMCD_pmi_proxy_params.user_global.ckpoint_restart) {
-        status = HYDU_env_create(&env, "PMI_PORT", HYD_PMCD_pmi_proxy_params.system_global.pmi_port_str);
+        status = HYDU_env_create(&env, "PMI_PORT",
+                                 HYD_PMCD_pmi_proxy_params.system_global.pmi_port_str);
         HYDU_ERR_POP(status, "unable to create env\n");
 
         /* Restart the proxy.  Specify stdin fd only if pmi_id 0 is in this proxy. */
@@ -586,8 +589,10 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
         /* Global inherited env */
         if ((exec->env_prop && !strcmp(exec->env_prop, "all")) ||
-            (!exec->env_prop && !strcmp(HYD_PMCD_pmi_proxy_params.user_global.global_env.prop, "all"))) {
-            for (env = HYD_PMCD_pmi_proxy_params.user_global.global_env.inherited; env; env = env->next) {
+            (!exec->env_prop && !strcmp(HYD_PMCD_pmi_proxy_params.user_global.global_env.prop,
+                                        "all"))) {
+            for (env = HYD_PMCD_pmi_proxy_params.user_global.global_env.inherited; env;
+                 env = env->next) {
                 status = HYDU_append_env_to_list(*env, &prop_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
@@ -599,7 +604,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
             if (exec->env_prop)
                 list = HYDU_strdup(exec->env_prop + strlen("list:"));
             else
-                list = HYDU_strdup(HYD_PMCD_pmi_proxy_params.user_global.global_env.prop + strlen("list:"));
+                list = HYDU_strdup(HYD_PMCD_pmi_proxy_params.user_global.global_env.prop +
+                                   strlen("list:"));
 
             envstr = strtok(list, ",");
             while (envstr) {
@@ -613,7 +619,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         }
 
         /* Next priority order is the global user env */
-        for (env = HYD_PMCD_pmi_proxy_params.user_global.global_env.user; env; env = env->next) {
+        for (env = HYD_PMCD_pmi_proxy_params.user_global.global_env.user; env;
+             env = env->next) {
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
@@ -625,7 +632,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         }
 
         /* Highest priority is the system env */
-        for (env = HYD_PMCD_pmi_proxy_params.user_global.global_env.system; env; env = env->next) {
+        for (env = HYD_PMCD_pmi_proxy_params.user_global.global_env.system; env;
+             env = env->next) {
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
@@ -700,7 +708,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         prop_env = NULL;
     }
 
-fn_spawn_complete:
+  fn_spawn_complete:
     /* Everything is spawned, register the required FDs  */
     status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.local.process_count,
                                  HYD_PMCD_pmi_proxy_params.downstream.out,
@@ -716,6 +724,8 @@ fn_spawn_complete:
     HYD_PMCD_pmi_proxy_params.local.procs_are_launched = 1;
 
   fn_exit:
+    if (pmi_ids)
+        HYDU_FREE(pmi_ids);
     HYDU_FUNC_EXIT();
     return status;
 
