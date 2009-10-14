@@ -37,7 +37,7 @@ struct HYD_PMCD_pmi_proxy_params {
     struct HYD_Env_global global_env;
 
     int global_core_count;
-    int core_count;
+    int proxy_core_count;
     int exec_proc_count;
 
     int procs_are_launched;

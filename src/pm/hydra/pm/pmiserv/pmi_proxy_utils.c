@@ -38,7 +38,7 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.global_env.inherited = NULL;
 
     HYD_PMCD_pmi_proxy_params.global_core_count = 0;
-    HYD_PMCD_pmi_proxy_params.core_count = 0;
+    HYD_PMCD_pmi_proxy_params.proxy_core_count = 0;
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
 
     HYD_PMCD_pmi_proxy_params.procs_are_launched = 0;
@@ -536,9 +536,9 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    HYD_PMCD_pmi_proxy_params.core_count = 0;
+    HYD_PMCD_pmi_proxy_params.proxy_core_count = 0;
     for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment; segment = segment->next)
-        HYD_PMCD_pmi_proxy_params.core_count += segment->proc_count;
+        HYD_PMCD_pmi_proxy_params.proxy_core_count += segment->proc_count;
 
     HYD_PMCD_pmi_proxy_params.exec_proc_count = 0;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
@@ -547,7 +547,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     HYDU_MALLOC(pmi_ids, int *, HYD_PMCD_pmi_proxy_params.exec_proc_count * sizeof(int), status);
     for (i = 0; i < HYD_PMCD_pmi_proxy_params.exec_proc_count; i++) {
         pmi_ids[i] = HYDU_local_to_global_id(i,
-                                             HYD_PMCD_pmi_proxy_params.core_count,
+                                             HYD_PMCD_pmi_proxy_params.proxy_core_count,
                                              HYD_PMCD_pmi_proxy_params.segment_list,
                                              HYD_PMCD_pmi_proxy_params.global_core_count);
     }
@@ -658,7 +658,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
         for (i = 0; i < exec->proc_count; i++) {
             pmi_id = HYDU_local_to_global_id(process_id,
-                                             HYD_PMCD_pmi_proxy_params.core_count,
+                                             HYD_PMCD_pmi_proxy_params.proxy_core_count,
                                              HYD_PMCD_pmi_proxy_params.segment_list,
                                              HYD_PMCD_pmi_proxy_params.global_core_count);
 

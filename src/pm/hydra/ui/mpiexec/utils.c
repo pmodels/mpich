@@ -167,7 +167,7 @@ HYD_Status HYD_UII_mpx_init_proxy_list(char *hostname, int num_procs)
     HYD_handle.proxy_list->segment_list->start_pid = 0;
     HYD_handle.proxy_list->segment_list->proc_count = num_procs;
 
-    HYD_handle.proxy_list->core_count += num_procs;
+    HYD_handle.proxy_list->proxy_core_count += num_procs;
     HYD_handle.global_core_count += num_procs;
 
   fn_exit:
@@ -224,7 +224,7 @@ static HYD_Status process_mfile_token(char *token, int newline)
                 proxy_segment->next->proc_count = num_procs;
             }
 
-            HYD_handle.proxy_list->core_count += num_procs;
+            HYD_handle.proxy_list->proxy_core_count += num_procs;
             HYD_handle.global_core_count += num_procs;
         }
 

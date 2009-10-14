@@ -199,7 +199,7 @@ struct HYD_Proxy {
     int  out;
     int  err;
 
-    int core_count;
+    int proxy_core_count;
 
     /* Segment list will contain one-pass of the hosts file */
     struct HYD_Proxy_segment *segment_list;

@@ -26,7 +26,7 @@ HYD_Status HYDU_alloc_proxy(struct HYD_Proxy **proxy)
     (*proxy)->exec_args = NULL;
 
     (*proxy)->segment_list = NULL;
-    (*proxy)->core_count = 0;
+    (*proxy)->proxy_core_count = 0;
 
     (*proxy)->exit_status = NULL;
     (*proxy)->control_fd = -1;
@@ -174,7 +174,7 @@ HYD_Status HYDU_merge_proxy_segment(char *hostname, struct HYD_Proxy_segment *se
         HYDU_ERR_POP(status, "Unable to alloc proxy\n");
         (*proxy_list)->segment_list = segment;
         (*proxy_list)->hostname = HYDU_strdup(hostname);
-        (*proxy_list)->core_count += segment->proc_count;
+        (*proxy_list)->proxy_core_count += segment->proc_count;
     }
     else {
         proxy = *proxy_list;
@@ -188,7 +188,7 @@ HYD_Status HYDU_merge_proxy_segment(char *hostname, struct HYD_Proxy_segment *se
                         s = s->next;
                     s->next = segment;
                 }
-                proxy->core_count += segment->proc_count;
+                proxy->proxy_core_count += segment->proc_count;
                 break;
             }
             else if (proxy->next == NULL) {
@@ -196,7 +196,7 @@ HYD_Status HYDU_merge_proxy_segment(char *hostname, struct HYD_Proxy_segment *se
                 HYDU_ERR_POP(status, "Unable to alloc proxy\n");
                 proxy->next->segment_list = segment;
                 proxy->next->hostname = HYDU_strdup(hostname);
-                proxy->next->core_count += segment->proc_count;
+                proxy->next->proxy_core_count += segment->proc_count;
                 break;
             }
             else {

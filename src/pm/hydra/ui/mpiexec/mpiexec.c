@@ -196,7 +196,7 @@ int main(int argc, char **argv)
             for (exec = proxy->exec_list; exec; exec = exec->next) {
                 for (i = 0; i < exec->proc_count; i++) {
                     HYDU_dump(stdout, "%d", HYDU_local_to_global_id(process_id++,
-                                                            proxy->core_count,
+                                                            proxy->proxy_core_count,
                                                             proxy->segment_list,
                                                             HYD_handle.global_core_count));
                     if (i < exec->proc_count - 1)
@@ -273,7 +273,7 @@ int main(int argc, char **argv)
             proc_count += exec->proc_count;
         for (i = 0; i < proc_count; i++) {
             if (HYD_handle.print_all_exitcodes) {
-                HYDU_dump(stdout, "[%d]", HYDU_local_to_global_id(i, proxy->core_count,
+                HYDU_dump(stdout, "[%d]", HYDU_local_to_global_id(i, proxy->proxy_core_count,
                                                           proxy->segment_list,
                                                           HYD_handle.global_core_count));
                 HYDU_dump(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));
