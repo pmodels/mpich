@@ -4,10 +4,10 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-AM_CPPFLAGS += -I$(top_srcdir)/utils/bind
+AM_CPPFLAGS += -I$(top_srcdir)/tools/bind
 
-libhydra_a_SOURCES += $(top_srcdir)/utils/bind/bind.c
+libhydra_a_SOURCES += $(top_srcdir)/tools/bind/bind.c
 
 if hydra_have_plpa
-include utils/bind/plpa/Makefile.mk
+include tools/bind/plpa/Makefile.mk
 endif

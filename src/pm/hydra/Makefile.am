@@ -19,9 +19,8 @@ libui_a_SOURCES =
 # The below directories contribute to libhydra.a
 include utils/Makefile.mk
 include rmk/Makefile.mk
-include bootstrap/Makefile.mk
 include css/Makefile.mk
-include demux/Makefile.mk
+include tools/Makefile.mk
 
 # Build the PM
 include pm/Makefile.mk

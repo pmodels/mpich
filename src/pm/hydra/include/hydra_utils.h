@@ -137,12 +137,6 @@ HYD_Status HYDU_get_base_path(const char *execname, char *wdir, char **path);
 HYD_Status HYDU_parse_hostfile(char *hostfile,
                                HYD_Status(*process_token) (char *token, int newline));
 
-/* bind */
-HYD_Status HYDU_bind_init(char *binding, char *bindlib);
-void HYDU_bind_finalize(void);
-HYD_Status HYDU_bind_process(int core);
-int HYDU_bind_get_core_id(int id);
-
 /* debug */
 HYD_Status HYDU_dbg_init(const char *str);
 void HYDU_dump_prefix(FILE * fp);
@@ -289,11 +283,5 @@ char **HYDU_str_to_strlist(char *str);
 typedef struct timeval HYD_Time;
 void HYDU_time_set(HYD_Time * time, int *val);
 int HYDU_time_left(HYD_Time start, HYD_Time timeout);
-
-/* checkpointing */
-HYD_Status HYDU_ckpoint_init(char *ckpointlib, char *ckpoint_prefix);
-HYD_Status HYDU_ckpoint_suspend(void);
-HYD_Status HYDU_ckpoint_restart(HYD_Env_t * envlist, int num_ranks, int ranks[], int *in,
-                                int *out, int *err);
 
 #endif /* HYDRA_UTILS_H_INCLUDED */

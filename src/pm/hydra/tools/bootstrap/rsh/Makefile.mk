@@ -4,5 +4,5 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-libhydra_a_SOURCES += $(top_srcdir)/bootstrap/rsh/rsh_init.c \
-	$(top_srcdir)/bootstrap/rsh/rsh_launch.c
+libhydra_a_SOURCES += $(top_srcdir)/tools/bootstrap/rsh/rsh_init.c \
+	$(top_srcdir)/tools/bootstrap/rsh/rsh_launch.c

@@ -8,6 +8,7 @@
 #include "bsci.h"
 #include "demux.h"
 #include "hydra_utils.h"
+#include "hydra_tools.h"
 
 struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
 

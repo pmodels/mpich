@@ -5,6 +5,7 @@
  */
 
 #include "hydra_utils.h"
+#include "hydra_tools.h"
 
 HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
                                int *in, int *out, int *err, int *pid, int core)

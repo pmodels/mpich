@@ -321,10 +321,10 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		AC_MSG_CHECKING(if plpa works correctly)
 		old_CFLAGS=$CFLAGS
 		old_LDFLAGS=$LDFLAGS
-		CFLAGS="$CFLAGS -I${srcdir}/utils/bind/plpa/plpa"
-		LDFLAGS="$LDFLAGS ${srcdir}/utils/bind/plpa/plpa/plpa_api_probe.c"
-		LDFLAGS="$LDFLAGS ${srcdir}/utils/bind/plpa/plpa/plpa_runtime.c"
-		LDFLAGS="$LDFLAGS ${srcdir}/utils/bind/plpa/plpa/plpa_map.c"
+		CFLAGS="$CFLAGS -I${srcdir}/tools/bind/plpa/plpa"
+		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/plpa_api_probe.c"
+		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/plpa_runtime.c"
+		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/plpa_map.c"
 		AC_TRY_LINK([#include <plpa_internal.h>],[
 				PLPA_NAME(api_type_t) p;
 				PLPA_NAME(api_probe)(&p);
@@ -485,8 +485,8 @@ PAC_SUBCONFIG_FINALIZE()
 
 # Final output
 AC_OUTPUT(Makefile
-	bootstrap/src/bsci_init.c
-	bootstrap/include/bsci.h
+	tools/bootstrap/src/bsci_init.c
+	tools/bootstrap/include/bsci.h
 	rmk/src/rmki_init.c
 	rmk/include/rmki.h
 	css/src/cssi_init.c

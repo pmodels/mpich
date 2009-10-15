@@ -4,6 +4,6 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-libhydra_a_SOURCES += $(top_srcdir)/utils/bind/plpa/bind_plpa.c
+AM_CPPFLAGS += -I$(top_srcdir)/tools/demux
 
-include $(top_srcdir)/utils/bind/plpa/plpa/Makefile.mk
+libhydra_a_SOURCES += $(top_srcdir)/tools/demux/demux.c

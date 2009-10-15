@@ -4,10 +4,10 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-AM_CPPFLAGS += -I$(top_srcdir)/utils/ckpoint
+AM_CPPFLAGS += -I$(top_srcdir)/tools/ckpoint
 
-libhydra_a_SOURCES += $(top_srcdir)/utils/ckpoint/ckpoint.c
+libhydra_a_SOURCES += $(top_srcdir)/tools/ckpoint/ckpoint.c
 
 if hydra_have_blcr
-include utils/ckpoint/blcr/Makefile.mk
+include tools/ckpoint/blcr/Makefile.mk
 endif

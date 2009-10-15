@@ -4,5 +4,4 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-libhydra_a_SOURCES += $(top_srcdir)/bootstrap/ssh/ssh_init.c \
-	$(top_srcdir)/bootstrap/ssh/ssh_launch.c
+libhydra_a_SOURCES += $(top_srcdir)/tools/ckpoint/blcr/ckpoint_blcr.c

@@ -6,6 +6,7 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
+#include "hydra_tools.h"
 #include "pmi_proxy.h"
 #include "demux.h"
 
