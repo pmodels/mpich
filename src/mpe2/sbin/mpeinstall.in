@@ -476,14 +476,25 @@ fi
 # Install utility programs
 if [ -n "$binbuild_dir" ] ; then
     if [ -d $binbuild_dir ] ; then
-         echo "Installing $pkgname utility programs to $DESTDIR$bindir"
-         InstallDirRecur $binbuild_dir $bindir $XMODE
-         if [ -s $binbuild_dir/mpecc -a -x $binbuild_dir/mpecc ] ; then
-             FixInstallFile $binbuild_dir/mpecc $bindir/mpecc $XMODE
-         fi
-         if [ -s $binbuild_dir/mpefc -a -x $binbuild_dir/mpefc ] ; then
-             FixInstallFile $binbuild_dir/mpefc $bindir/mpefc $XMODE
-         fi
+        echo "Installing $pkgname utility programs to $DESTDIR$bindir"
+        # InstallDirRecur $binbuild_dir $bindir $XMODE
+        MkDir $bindir
+        cd $binbuild_dir
+        for file in * ; do
+            case "$file" in 
+                *.in)
+                    ;;
+                *)
+                    InstallFile $binbuild_dir/$file $bindir/$file $XMODE
+                    ;;
+            esac
+        done
+        if [ -s $binbuild_dir/mpecc -a -x $binbuild_dir/mpecc ] ; then
+            FixInstallFile $binbuild_dir/mpecc $bindir/mpecc $XMODE
+        fi
+        if [ -s $binbuild_dir/mpefc -a -x $binbuild_dir/mpefc ] ; then
+            FixInstallFile $binbuild_dir/mpefc $bindir/mpefc $XMODE
+        fi
     fi
 fi
 
