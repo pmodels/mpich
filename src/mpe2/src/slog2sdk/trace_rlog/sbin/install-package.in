@@ -219,10 +219,17 @@ if [ -n "$1" -a -n "$2" ] ; then
         # & set it as the original PWD before "cd $1"
         set $1 $2 ${3:-"$MODE"} `pwd`
         cd $1
+        # Install everything but *.in file(that includes mpecc.in/Makefile.in)
         for file in * ; do
-            if [ -f $file ] ; then
-                InstallFile $file $2/$file $3
-            fi
+            case "$file" in
+                *.in)
+                    ;;
+                *)
+                    if [ -f $file ] ; then
+                        InstallFile $file $2/$file $3
+                    fi
+                    ;;
+            esac
         done
         for dir in * ; do
             if [ -d $dir \
