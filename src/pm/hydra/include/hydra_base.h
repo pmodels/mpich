@@ -162,13 +162,6 @@ struct HYD_Env_global {
     char *prop;
 };
 
-/* List of contiguous segments of processes on a proxy */
-struct HYD_Proxy_segment {
-    int start_pid;
-    int proc_count;
-    struct HYD_Proxy_segment *next;
-};
-
 /* Executables on a proxy */
 struct HYD_Proxy_exec {
     char *exec[HYD_NUM_TMP_STRINGS];
@@ -182,7 +175,7 @@ struct HYD_Proxy_exec {
 /* Proxy information */
 struct HYD_Proxy {
     char *hostname;
-    char **exec_args;
+    char **exec_launch_info;
 
     int proxy_id;
     int active;
@@ -192,10 +185,10 @@ struct HYD_Proxy {
     int out;
     int err;
 
+    int start_pid;
     int proxy_core_count;
+    int proxy_process_count;
 
-    /* Segment list will contain one-pass of the hosts file */
-    struct HYD_Proxy_segment *segment_list;
     struct HYD_Proxy_exec *exec_list;
 
     int *exit_status;

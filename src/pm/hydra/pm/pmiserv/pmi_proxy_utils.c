@@ -34,14 +34,14 @@ static HYD_Status init_params(void)
     HYD_PMCD_pmi_proxy_params.downstream.exit_status = NULL;
 
     HYD_PMCD_pmi_proxy_params.local.id = -1;
-    HYD_PMCD_pmi_proxy_params.local.core_count = 0;
-    HYD_PMCD_pmi_proxy_params.local.process_count = 0;
+    HYD_PMCD_pmi_proxy_params.local.proxy_core_count = 0;
+    HYD_PMCD_pmi_proxy_params.local.proxy_process_count = 0;
     HYD_PMCD_pmi_proxy_params.local.procs_are_launched = 0;
     HYD_PMCD_pmi_proxy_params.local.stdin_buf_offset = 0;
     HYD_PMCD_pmi_proxy_params.local.stdin_buf_count = 0;
     HYD_PMCD_pmi_proxy_params.local.stdin_tmp_buf[0] = '\0';
 
-    HYD_PMCD_pmi_proxy_params.segment_list = NULL;
+    HYD_PMCD_pmi_proxy_params.start_pid = -1;
     HYD_PMCD_pmi_proxy_params.exec_list = NULL;
 
     return status;
@@ -57,7 +57,6 @@ static HYD_Status parse_params(char **t_argv)
     int arg, i, count;
     HYD_Env_t *env;
     struct HYD_Proxy_exec *exec = NULL;
-    struct HYD_Proxy_segment *segment = NULL;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -176,36 +175,17 @@ static HYD_Status parse_params(char **t_argv)
             continue;
         }
 
-        /* New segment */
-        if (!strcmp(*argv, "--segment")) {
-            if (HYD_PMCD_pmi_proxy_params.segment_list == NULL) {
-                status = HYDU_alloc_proxy_segment(&HYD_PMCD_pmi_proxy_params.segment_list);
-                HYDU_ERR_POP(status, "unable to allocate proxy segment\n");
-            }
-            else {
-                for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment->next;
-                     segment = segment->next);
-                status = HYDU_alloc_proxy_segment(&segment->next);
-                HYDU_ERR_POP(status, "unable to allocate proxy segment\n");
-            }
+        /* Process count */
+        if (!strcmp(*argv, "--proxy-core-count")) {
+            argv++;
+            HYD_PMCD_pmi_proxy_params.local.proxy_core_count = atoi(*argv);
             continue;
         }
 
         /* Process count */
-        if (!strcmp(*argv, "--segment-proc-count")) {
+        if (!strcmp(*argv, "--start-pid")) {
             argv++;
-            for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment->next;
-                 segment = segment->next);
-            segment->proc_count = atoi(*argv);
-            continue;
-        }
-
-        /* Process count */
-        if (!strcmp(*argv, "--segment-start-pid")) {
-            argv++;
-            for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment->next;
-                 segment = segment->next);
-            segment->start_pid = atoi(*argv);
+            HYD_PMCD_pmi_proxy_params.start_pid = atoi(*argv);
             continue;
         }
 
@@ -373,7 +353,6 @@ HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv)
 
 HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
 {
-    struct HYD_Proxy_segment *segment, *tsegment;
     struct HYD_Proxy_exec *exec, *texec;
     HYD_Status status = HYD_SUCCESS;
 
@@ -414,15 +393,6 @@ HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void)
 
     if (HYD_PMCD_pmi_proxy_params.user_global.global_env.inherited)
         HYDU_env_free_list(HYD_PMCD_pmi_proxy_params.user_global.global_env.inherited);
-
-    if (HYD_PMCD_pmi_proxy_params.segment_list) {
-        segment = HYD_PMCD_pmi_proxy_params.segment_list;
-        while (segment) {
-            tsegment = segment->next;
-            HYDU_FREE(segment);
-            segment = tsegment;
-        }
-    }
 
     if (HYD_PMCD_pmi_proxy_params.exec_list) {
         exec = HYD_PMCD_pmi_proxy_params.exec_list;
@@ -517,41 +487,36 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
     char *str, *envstr, *list;
     char *client_args[HYD_NUM_TMP_STRINGS];
     HYD_Env_t *env, *prop_env = NULL;
-    struct HYD_Proxy_segment *segment;
     struct HYD_Proxy_exec *exec;
     HYD_Status status = HYD_SUCCESS;
     int *pmi_ids;
 
     HYDU_FUNC_ENTER();
 
-    HYD_PMCD_pmi_proxy_params.local.core_count = 0;
-    for (segment = HYD_PMCD_pmi_proxy_params.segment_list; segment; segment = segment->next)
-        HYD_PMCD_pmi_proxy_params.local.core_count += segment->proc_count;
-
-    HYD_PMCD_pmi_proxy_params.local.process_count = 0;
+    HYD_PMCD_pmi_proxy_params.local.proxy_process_count = 0;
     for (exec = HYD_PMCD_pmi_proxy_params.exec_list; exec; exec = exec->next)
-        HYD_PMCD_pmi_proxy_params.local.process_count += exec->proc_count;
+        HYD_PMCD_pmi_proxy_params.local.proxy_process_count += exec->proc_count;
 
-    HYDU_MALLOC(pmi_ids, int *, HYD_PMCD_pmi_proxy_params.local.process_count *
+    HYDU_MALLOC(pmi_ids, int *, HYD_PMCD_pmi_proxy_params.local.proxy_process_count *
                 sizeof(int), status);
-    for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.process_count; i++) {
+    for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.proxy_process_count; i++) {
         pmi_ids[i] =
-            HYDU_local_to_global_id(i, HYD_PMCD_pmi_proxy_params.local.core_count,
-                                    HYD_PMCD_pmi_proxy_params.segment_list,
+            HYDU_local_to_global_id(i, HYD_PMCD_pmi_proxy_params.start_pid,
+                                    HYD_PMCD_pmi_proxy_params.local.proxy_core_count,
                                     HYD_PMCD_pmi_proxy_params.system_global.global_core_count);
     }
 
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.downstream.out, int *,
-                HYD_PMCD_pmi_proxy_params.local.process_count * sizeof(int), status);
+                HYD_PMCD_pmi_proxy_params.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.downstream.err, int *,
-                HYD_PMCD_pmi_proxy_params.local.process_count * sizeof(int), status);
+                HYD_PMCD_pmi_proxy_params.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.downstream.pid, int *,
-                HYD_PMCD_pmi_proxy_params.local.process_count * sizeof(int), status);
+                HYD_PMCD_pmi_proxy_params.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC(HYD_PMCD_pmi_proxy_params.downstream.exit_status, int *,
-                HYD_PMCD_pmi_proxy_params.local.process_count * sizeof(int), status);
+                HYD_PMCD_pmi_proxy_params.local.proxy_process_count * sizeof(int), status);
 
     /* Initialize the exit status */
-    for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.process_count; i++)
+    for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.proxy_process_count; i++)
         HYD_PMCD_pmi_proxy_params.downstream.exit_status[i] = -1;
 
     status = HYDU_bind_init(HYD_PMCD_pmi_proxy_params.user_global.binding,
@@ -568,7 +533,7 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
         HYDU_ERR_POP(status, "unable to create env\n");
 
         /* Restart the proxy.  Specify stdin fd only if pmi_id 0 is in this proxy. */
-        status = HYDU_ckpoint_restart(env, HYD_PMCD_pmi_proxy_params.local.process_count,
+        status = HYDU_ckpoint_restart(env, HYD_PMCD_pmi_proxy_params.local.proxy_process_count,
                                       pmi_ids,
                                       pmi_ids[0] ? NULL :
                                       &HYD_PMCD_pmi_proxy_params.downstream.in,
@@ -656,8 +621,8 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
         for (i = 0; i < exec->proc_count; i++) {
             pmi_id = HYDU_local_to_global_id(process_id,
-                                             HYD_PMCD_pmi_proxy_params.local.core_count,
-                                             HYD_PMCD_pmi_proxy_params.segment_list,
+                                             HYD_PMCD_pmi_proxy_params.start_pid,
+                                             HYD_PMCD_pmi_proxy_params.local.proxy_core_count,
                                              HYD_PMCD_pmi_proxy_params.system_global.
                                              global_core_count);
 
@@ -720,12 +685,12 @@ HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void)
 
   fn_spawn_complete:
     /* Everything is spawned, register the required FDs  */
-    status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.local.process_count,
+    status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.local.proxy_process_count,
                                  HYD_PMCD_pmi_proxy_params.downstream.out,
                                  HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_stdout_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.local.process_count,
+    status = HYD_DMX_register_fd(HYD_PMCD_pmi_proxy_params.local.proxy_process_count,
                                  HYD_PMCD_pmi_proxy_params.downstream.err,
                                  HYD_STDOUT, NULL, HYD_PMCD_pmi_proxy_stderr_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
@@ -751,7 +716,7 @@ void HYD_PMCD_pmi_proxy_killjob(void)
     HYDU_FUNC_ENTER();
 
     /* Send the kill signal to all processes */
-    for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.process_count; i++) {
+    for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.proxy_process_count; i++) {
         if (HYD_PMCD_pmi_proxy_params.downstream.pid[i] != -1) {
             kill(HYD_PMCD_pmi_proxy_params.downstream.pid[i], SIGTERM);
             kill(HYD_PMCD_pmi_proxy_params.downstream.pid[i], SIGKILL);

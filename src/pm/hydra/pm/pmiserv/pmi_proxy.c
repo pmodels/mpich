@@ -25,7 +25,7 @@ static HYD_Status wait_for_procs_to_finish(void)
          * are, we will just wait for more events. */
         out_count = 0;
         err_count = 0;
-        for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.process_count; i++) {
+        for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.proxy_process_count; i++) {
             if (HYD_PMCD_pmi_proxy_params.downstream.out[i] != -1)
                 out_count++;
             if (HYD_PMCD_pmi_proxy_params.downstream.err[i] != -1)
@@ -56,13 +56,13 @@ static HYD_Status wait_for_procs_to_finish(void)
 
         /* Find the pid and mark it as complete. */
         if (pid > 0)
-            for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.process_count; i++)
+            for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.proxy_process_count; i++)
                 if (HYD_PMCD_pmi_proxy_params.downstream.pid[i] == pid)
                     HYD_PMCD_pmi_proxy_params.downstream.exit_status[i] = ret_status;
 
         /* Check how many more processes are pending */
         count = 0;
-        for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.process_count; i++) {
+        for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.proxy_process_count; i++) {
             if (HYD_PMCD_pmi_proxy_params.downstream.exit_status[i] == -1) {
                 count++;
                 break;
@@ -123,7 +123,8 @@ int main(int argc, char **argv)
         /* Send the exit status upstream */
         status = HYDU_sock_write(HYD_PMCD_pmi_proxy_params.upstream.control,
                                  HYD_PMCD_pmi_proxy_params.downstream.exit_status,
-                                 HYD_PMCD_pmi_proxy_params.local.process_count * sizeof(int));
+                                 HYD_PMCD_pmi_proxy_params.local.proxy_process_count *
+                                 sizeof(int));
         HYDU_ERR_POP(status, "unable to return exit status upstream\n");
 
         status = HYD_DMX_deregister_fd(HYD_PMCD_pmi_proxy_params.upstream.control);
@@ -164,7 +165,7 @@ int main(int argc, char **argv)
                 /* Send the exit status upstream */
                 status = HYDU_sock_write(HYD_PMCD_pmi_proxy_params.upstream.control,
                                          HYD_PMCD_pmi_proxy_params.downstream.exit_status,
-                                         HYD_PMCD_pmi_proxy_params.local.process_count *
+                                         HYD_PMCD_pmi_proxy_params.local.proxy_process_count *
                                          sizeof(int));
                 HYDU_ERR_POP(status, "unable to return exit status upstream\n");
 

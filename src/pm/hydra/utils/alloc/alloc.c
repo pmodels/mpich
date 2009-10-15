@@ -51,10 +51,11 @@ HYD_Status HYDU_alloc_proxy(struct HYD_Proxy **proxy)
 
     (*proxy)->proxy_id = proxy_id++;
     (*proxy)->active = 0;
-    (*proxy)->exec_args = NULL;
+    (*proxy)->exec_launch_info = NULL;
 
-    (*proxy)->segment_list = NULL;
+    (*proxy)->start_pid = -1;
     (*proxy)->proxy_core_count = 0;
+    (*proxy)->proxy_process_count = 0;
 
     (*proxy)->exit_status = NULL;
     (*proxy)->control_fd = -1;
@@ -121,7 +122,6 @@ void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list)
 void HYDU_free_proxy_list(struct HYD_Proxy *proxy_list)
 {
     struct HYD_Proxy *proxy, *tproxy;
-    struct HYD_Proxy_segment *segment, *tsegment;
     struct HYD_Proxy_exec *exec, *texec;
 
     HYDU_FUNC_ENTER();
@@ -132,16 +132,9 @@ void HYDU_free_proxy_list(struct HYD_Proxy *proxy_list)
 
         if (proxy->hostname)
             HYDU_FREE(proxy->hostname);
-        if (proxy->exec_args) {
-            HYDU_free_strlist(proxy->exec_args);
-            HYDU_FREE(proxy->exec_args);
-        }
-
-        segment = proxy->segment_list;
-        while (segment) {
-            tsegment = segment->next;
-            HYDU_FREE(segment);
-            segment = tsegment;
+        if (proxy->exec_launch_info) {
+            HYDU_free_strlist(proxy->exec_launch_info);
+            HYDU_FREE(proxy->exec_launch_info);
         }
 
         if (proxy->exit_status)
@@ -164,27 +157,6 @@ void HYDU_free_proxy_list(struct HYD_Proxy *proxy_list)
     }
 
     HYDU_FUNC_EXIT();
-}
-
-
-HYD_Status HYDU_alloc_proxy_segment(struct HYD_Proxy_segment **segment)
-{
-    HYD_Status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(*segment, struct HYD_Proxy_segment *,
-                sizeof(struct HYD_Proxy_segment), status);
-    (*segment)->start_pid = -1;
-    (*segment)->proc_count = 0;
-    (*segment)->next = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 

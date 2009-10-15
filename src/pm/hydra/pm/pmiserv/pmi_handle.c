@@ -223,10 +223,8 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
     int i, node_id;
     char *tmp[HYD_NUM_TMP_STRINGS];
     struct HYD_Proxy *proxy;
-    struct HYD_Proxy_segment *segment;
     struct segment *seglist_head, *seglist_tail = NULL, *seg, *nseg;
     struct block *blocklist_head, *blocklist_tail = NULL, *block, *nblock;
-    int done;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -235,46 +233,21 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
     node_id = -1;
     FORALL_PROXIES(proxy, HYD_handle.proxy_list) {
         node_id++;
-        for (segment = proxy->segment_list; segment; segment = segment->next) {
-            HYDU_MALLOC(seg, struct segment *, sizeof(struct segment), status);
-            seg->start_pid = segment->start_pid;
-            seg->proc_count = segment->proc_count;
-            seg->node_id = node_id;
-            seg->next = NULL;
 
-            if (seglist_head == NULL) {
-                seglist_head = seg;
-                seglist_tail = seg;
-            }
-            else {
-                seglist_tail->next = seg;
-                seglist_tail = seg;
-            }
+        HYDU_MALLOC(seg, struct segment *, sizeof(struct segment), status);
+        seg->start_pid = proxy->start_pid;
+        seg->proc_count = proxy->proxy_core_count;
+        seg->node_id = node_id;
+        seg->next = NULL;
+
+        if (seglist_head == NULL) {
+            seglist_head = seg;
+            seglist_tail = seg;
         }
-    }
-
-    /* Sort the segment list */
-    done = 1;
-    while (1) {
-        for (seg = seglist_head; seg; seg = seg->next) {
-            if (seg->next && (seg->start_pid > seg->next->start_pid)) {
-                seg->start_pid = seg->start_pid + seg->next->start_pid;
-                seg->next->start_pid = seg->start_pid - seg->next->start_pid;
-                seg->start_pid = seg->start_pid - seg->next->start_pid;
-
-                seg->proc_count = seg->proc_count + seg->next->proc_count;
-                seg->next->proc_count = seg->proc_count - seg->next->proc_count;
-                seg->proc_count = seg->proc_count - seg->next->proc_count;
-
-                seg->node_id = seg->node_id + seg->next->node_id;
-                seg->next->node_id = seg->node_id - seg->next->node_id;
-                seg->node_id = seg->node_id - seg->next->node_id;
-
-                done = 0;
-            }
+        else {
+            seglist_tail->next = seg;
+            seglist_tail = seg;
         }
-        if (done)
-            break;
     }
 
     /* Create a block list off the segment list */
@@ -350,9 +323,8 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
 
 static struct HYD_PMCD_pmi_node *find_node(HYD_PMCD_pmi_pg_t * pg, int rank)
 {
-    int found = 0, node_id, srank;
+    int node_id, srank;
     struct HYD_Proxy *proxy;
-    struct HYD_Proxy_segment *segment;
     struct HYD_PMCD_pmi_node *node, *tmp;
     HYD_Status status = HYD_SUCCESS;
 
@@ -360,15 +332,8 @@ static struct HYD_PMCD_pmi_node *find_node(HYD_PMCD_pmi_pg_t * pg, int rank)
 
     node_id = 0;
     FORALL_PROXIES(proxy, HYD_handle.proxy_list) {
-        for (segment = proxy->segment_list; segment; segment = segment->next) {
-            if ((srank >= segment->start_pid) &&
-                (srank < (segment->start_pid + segment->proc_count))) {
-                /* We found our rank */
-                found = 1;
-                break;
-            }
-        }
-        if (found)
+        if ((srank >= proxy->start_pid) &&
+            (srank < (proxy->start_pid + proxy->proxy_core_count)))
             break;
         node_id++;
     }

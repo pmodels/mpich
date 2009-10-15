@@ -128,7 +128,6 @@ HYD_Status HYDU_alloc_proxy(struct HYD_Proxy **proxy);
 HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info);
 void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list);
 void HYDU_free_proxy_list(struct HYD_Proxy *proxy_list);
-HYD_Status HYDU_alloc_proxy_segment(struct HYD_Proxy_segment **segment);
 HYD_Status HYDU_alloc_proxy_exec(struct HYD_Proxy_exec **exec);
 
 /* args */
@@ -181,10 +180,10 @@ HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt);
 #endif /* HAVE_THREAD_SUPPORT */
 
 /* others */
-HYD_Status HYDU_merge_proxy_segment(char *name, struct HYD_Proxy_segment *segment,
+HYD_Status HYDU_merge_proxy_segment(char *name, int start_pid, int core_count,
                                     struct HYD_Proxy **proxy_list);
-int HYDU_local_to_global_id(int local_id, int core_count,
-                            struct HYD_Proxy_segment *segment_list, int global_core_count);
+int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,
+                            int global_core_count);
 
 /* signals */
 #ifdef NEEDS_POSIX_FOR_SIGACTION

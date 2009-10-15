@@ -157,6 +157,7 @@ static HYD_Status add_exec_info_to_proxy(struct HYD_Exec_info *exec_info,
         exec->env_prop = exec_info->env_prop ? HYDU_strdup(exec_info->env_prop) : NULL;
         exec->user_env = HYDU_env_list_dup(exec_info->user_env);
     }
+    proxy->proxy_process_count += num_procs;
 
   fn_exit:
     return status;
@@ -222,7 +223,6 @@ void HYD_UIU_print_params(void)
     HYD_Env_t *env;
     int i;
     struct HYD_Proxy *proxy;
-    struct HYD_Proxy_segment *segment;
     struct HYD_Proxy_exec *exec;
     struct HYD_Exec_info *exec_info;
 
@@ -293,12 +293,7 @@ void HYD_UIU_print_params(void)
         HYDU_dump(stdout, "      -----------------\n");
         HYDU_dump(stdout, "        Proxy name: %s\n", proxy->hostname);
         HYDU_dump(stdout, "        Process count: %d\n", proxy->proxy_core_count);
-        HYDU_dump(stdout, "\n");
-        HYDU_dump(stdout, "        Proxy segment list:\n");
-        HYDU_dump(stdout, "        .......................\n");
-        for (segment = proxy->segment_list; segment; segment = segment->next)
-            HYDU_dump(stdout, "          Start PID: %d; Process count: %d\n",
-                      segment->start_pid, segment->proc_count);
+        HYDU_dump(stdout, "        Start PID: %d\n", proxy->start_pid);
         HYDU_dump(stdout, "\n");
         HYDU_dump(stdout, "        Proxy exec list:\n");
         HYDU_dump(stdout, "        ....................\n");

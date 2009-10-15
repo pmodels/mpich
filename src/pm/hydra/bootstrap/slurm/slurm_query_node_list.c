@@ -103,7 +103,6 @@ HYD_Status HYD_BSCD_slurm_query_node_list(int *num_nodes, struct HYD_Proxy **pro
 {
     char *str, *num_procs;
     char *tmp1[HYD_NUM_TMP_STRINGS], *tmp2[HYD_NUM_TMP_STRINGS];
-    struct HYD_Proxy_segment *segment;
     int i, j;
     HYD_Status status = HYD_SUCCESS;
 
@@ -125,13 +124,8 @@ HYD_Status HYD_BSCD_slurm_query_node_list(int *num_nodes, struct HYD_Proxy **pro
             HYDU_ERR_POP(status, "unable to parse node list\n");
 
             for (j = 0; tmp2[j]; j++) {
-                status = HYDU_alloc_proxy_segment(&segment);
-                HYDU_ERR_POP(status, "Unable to allocate proxy segment\n");
-
-                segment->start_pid = *num_nodes;
-                segment->proc_count = atoi(num_procs);
-
-                status = HYDU_merge_proxy_segment(tmp2[j], segment, proxy_list);
+                status = HYDU_merge_proxy_segment(tmp2[j], *num_nodes, atoi(num_procs),
+                                                  proxy_list);
                 HYDU_ERR_POP(status, "merge proxy segment failed\n");
 
                 *num_nodes += atoi(num_procs);

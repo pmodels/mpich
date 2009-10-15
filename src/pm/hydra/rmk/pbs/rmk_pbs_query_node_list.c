@@ -13,7 +13,6 @@ HYD_Status HYD_RMKD_pbs_query_node_list(int *num_nodes, struct HYD_Proxy **proxy
     char *host_file, *hostname, line[HYD_TMP_STRLEN], **arg_list;
     int num_procs;
     FILE *fp;
-    struct HYD_Proxy_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -55,11 +54,7 @@ HYD_Status HYD_RMKD_pbs_query_node_list(int *num_nodes, struct HYD_Proxy **proxy
             /* Try to find an existing proxy with this name and
              * add this segment in. If there is no existing proxy
              * with this name, we create a new one. */
-            status = HYDU_alloc_proxy_segment(&segment);
-            HYDU_ERR_POP(status, "Unable to allocate proxy segment\n");
-            segment->start_pid = *num_nodes;
-            segment->proc_count = num_procs;
-            status = HYDU_merge_proxy_segment(hostname, segment, proxy_list);
+            status = HYDU_merge_proxy_segment(hostname, *num_nodes, num_procs, proxy_list);
             HYDU_ERR_POP(status, "merge proxy segment failed\n");
 
             *num_nodes += num_procs;

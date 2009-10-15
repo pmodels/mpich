@@ -251,21 +251,15 @@ HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void
 HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp)
 {
     struct HYD_Proxy *proxy;
-    struct HYD_Proxy_exec *exec;
-    int count, proc_count;
+    int count;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     proxy = (struct HYD_Proxy *) userp;
 
-    proc_count = 0;
-    for (exec = proxy->exec_list; exec; exec = exec->next)
-        proc_count += exec->proc_count;
-
-    HYDU_MALLOC(proxy->exit_status, int *, proc_count * sizeof(int), status);
-
-    status = HYDU_sock_read(fd, (void *) proxy->exit_status, proc_count * sizeof(int),
+    status = HYDU_sock_read(fd, (void *) proxy->exit_status,
+                            proxy->proxy_process_count * sizeof(int),
                             &count, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read status from proxy\n");
 

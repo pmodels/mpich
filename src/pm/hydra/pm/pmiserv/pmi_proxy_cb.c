@@ -103,10 +103,10 @@ HYD_Status HYD_PMCD_pmi_proxy_control_cmd_cb(int fd, HYD_Event_t events, void *u
      * since they can arrive in any order. */
     if ((cmd == PROC_INFO) || (cmd == USE_AS_STDOUT) || (cmd == USE_AS_STDERR) ||
         (cmd == USE_AS_STDIN))
-        if ((HYD_PMCD_pmi_proxy_params.segment_list != NULL) &&
+        if ((HYD_PMCD_pmi_proxy_params.start_pid != -1) &&
             (HYD_PMCD_pmi_proxy_params.upstream.out != -1) &&
             (HYD_PMCD_pmi_proxy_params.upstream.err != -1))
-            if ((HYD_PMCD_pmi_proxy_params.segment_list->start_pid != 0) ||
+            if ((HYD_PMCD_pmi_proxy_params.start_pid != 0) ||
                 (HYD_PMCD_pmi_proxy_params.upstream.in != -1)) {
                 status = HYD_PMCD_pmi_proxy_launch_procs();
                 HYDU_ERR_POP(status, "HYD_PMCD_pmi_proxy_launch_procs returned error\n");
@@ -135,7 +135,7 @@ HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events, void *userp)
         status = HYD_DMX_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
-        for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.process_count; i++)
+        for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.proxy_process_count; i++)
             if (HYD_PMCD_pmi_proxy_params.downstream.out[i] == fd)
                 HYD_PMCD_pmi_proxy_params.downstream.out[i] = -1;
 
@@ -166,7 +166,7 @@ HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events, void *userp)
         status = HYD_DMX_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
-        for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.process_count; i++)
+        for (i = 0; i < HYD_PMCD_pmi_proxy_params.local.proxy_process_count; i++)
             if (HYD_PMCD_pmi_proxy_params.downstream.err[i] == fd)
                 HYD_PMCD_pmi_proxy_params.downstream.err[i] = -1;
 

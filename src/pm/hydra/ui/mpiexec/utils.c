@@ -154,7 +154,6 @@ HYD_Status HYD_UII_mpx_add_to_proxy_list(char *hostname, int num_procs)
 {
     static int pid = 0;
     struct HYD_Proxy *proxy;
-    struct HYD_Proxy_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -165,18 +164,12 @@ HYD_Status HYD_UII_mpx_add_to_proxy_list(char *hostname, int num_procs)
 
         HYD_handle.proxy_list->hostname = HYDU_strdup(hostname);
 
-        status = HYDU_alloc_proxy_segment(&HYD_handle.proxy_list->segment_list);
-        HYDU_ERR_POP(status, "unable to allocate proxy segment\n");
-
-        HYD_handle.proxy_list->segment_list->start_pid = 0;
-        HYD_handle.proxy_list->segment_list->proc_count = num_procs;
-
-        HYD_handle.proxy_list->proxy_core_count += num_procs;
+        HYD_handle.proxy_list->start_pid = 0;
+        HYD_handle.proxy_list->proxy_core_count = num_procs;
         HYD_handle.global_core_count += num_procs;
     }
     else {
-        for (proxy = HYD_handle.proxy_list;
-             proxy->next && strcmp(proxy->hostname, hostname); proxy = proxy->next);
+        for (proxy = HYD_handle.proxy_list; proxy->next; proxy = proxy->next);
 
         if (strcmp(proxy->hostname, hostname)) {
             /* If the hostname does not match, create a new proxy */
@@ -187,26 +180,7 @@ HYD_Status HYD_UII_mpx_add_to_proxy_list(char *hostname, int num_procs)
 
             proxy->hostname = HYDU_strdup(hostname);
 
-            status = HYDU_alloc_proxy_segment(&proxy->segment_list);
-            HYDU_ERR_POP(status, "unable to allocate proxy segment\n");
-
-            proxy->segment_list->start_pid = pid;
-            proxy->segment_list->proc_count = num_procs;
-        }
-        else {  /* hostname matches */
-            for (segment = proxy->segment_list; segment->next; segment = segment->next);
-
-            /* If this segment is a continuation, just increment the
-             * size of the previous segment */
-            if (segment->start_pid + segment->proc_count == pid)
-                segment->proc_count += num_procs;
-            else {
-                status = HYDU_alloc_proxy_segment(&segment->next);
-                HYDU_ERR_POP(status, "unable to allocate proxy segment\n");
-
-                segment->next->start_pid = pid;
-                segment->next->proc_count = num_procs;
-            }
+            proxy->start_pid = pid;
         }
 
         proxy->proxy_core_count += num_procs;

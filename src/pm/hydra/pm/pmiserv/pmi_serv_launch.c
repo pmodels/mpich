@@ -189,16 +189,15 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode, char **proxy_args)
     goto fn_exit;
 }
 
-static HYD_Status fill_in_exec_args(void)
+static HYD_Status fill_in_exec_launch_info(void)
 {
     int i, arg, process_id;
     int inherited_env_count, user_env_count, system_env_count;
-    int segment_count, exec_count, total_args;
+    int exec_count, total_args;
     static int proxy_count = 0;
     HYD_Env_t *env;
     struct HYD_Proxy *proxy;
     struct HYD_Proxy_exec *exec;
-    struct HYD_Proxy_segment *segment;
     HYD_Status status = HYD_SUCCESS;
 
     /* Create the arguments list for each proxy */
@@ -211,10 +210,6 @@ static HYD_Status fill_in_exec_args(void)
         for (system_env_count = 0, env = HYD_handle.user_global.global_env.system; env;
              env = env->next, system_env_count++);
 
-        for (segment_count = 0, segment = proxy->segment_list; segment;
-             segment = segment->next)
-            segment_count++;
-
         for (exec_count = 0, exec = proxy->exec_list; exec; exec = exec->next)
             exec_count++;
 
@@ -225,131 +220,124 @@ static HYD_Status fill_in_exec_args(void)
         total_args += user_env_count;
         total_args += system_env_count;
 
-        /* For each segment add a few strings */
-        total_args += (segment_count * HYD_NUM_TMP_STRINGS);
-
         /* For each exec add a few strings */
         total_args += (exec_count * HYD_NUM_TMP_STRINGS);
 
-        HYDU_MALLOC(proxy->exec_args, char **, total_args * sizeof(char *), status);
+        /* Add a few strings for the remaining arguments */
+        total_args += HYD_NUM_TMP_STRINGS;
+
+        HYDU_MALLOC(proxy->exec_launch_info, char **, total_args * sizeof(char *), status);
 
         arg = 0;
-        proxy->exec_args[arg++] = HYDU_strdup("--global-core-count");
-        proxy->exec_args[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-core-count");
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
 
-        proxy->exec_args[arg++] = HYDU_strdup("--wdir");
-        proxy->exec_args[arg++] = HYDU_strdup(HYD_handle.user_global.wdir);
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--wdir");
+        proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.wdir);
 
-        proxy->exec_args[arg++] = HYDU_strdup("--pmi-port-str");
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-port-str");
         if (HYD_handle.pm_env)
-            proxy->exec_args[arg++] = HYDU_strdup(pmi_port_str);
+            proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_port_str);
         else
-            proxy->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
+            proxy->exec_launch_info[arg++] = HYDU_strdup("HYDRA_NULL");
 
-        proxy->exec_args[arg++] = HYDU_strdup("--binding");
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--binding");
         if (HYD_handle.user_global.binding)
-            proxy->exec_args[arg++] = HYDU_strdup(HYD_handle.user_global.binding);
+            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.binding);
         else
-            proxy->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
+            proxy->exec_launch_info[arg++] = HYDU_strdup("HYDRA_NULL");
 
-        proxy->exec_args[arg++] = HYDU_strdup("--bindlib");
-        proxy->exec_args[arg++] = HYDU_strdup(HYD_handle.user_global.bindlib);
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--bindlib");
+        proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.bindlib);
 
-        proxy->exec_args[arg++] = HYDU_strdup("--ckpointlib");
-        proxy->exec_args[arg++] = HYDU_strdup(HYD_handle.user_global.ckpointlib);
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpointlib");
+        proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.ckpointlib);
 
-        proxy->exec_args[arg++] = HYDU_strdup("--ckpoint-prefix");
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-prefix");
         if (HYD_handle.user_global.ckpoint_prefix)
-            proxy->exec_args[arg++] = HYDU_strdup(HYD_handle.user_global.ckpoint_prefix);
+            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.ckpoint_prefix);
         else
-            proxy->exec_args[arg++] = HYDU_strdup("HYDRA_NULL");
+            proxy->exec_launch_info[arg++] = HYDU_strdup("HYDRA_NULL");
 
         if (HYD_handle.user_global.ckpoint_restart)
-            proxy->exec_args[arg++] = HYDU_strdup("--ckpoint-restart");
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-restart");
 
-        proxy->exec_args[arg++] = HYDU_strdup("--global-inherited-env");
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-inherited-env");
         for (i = 0, env = HYD_handle.user_global.global_env.inherited; env;
              env = env->next, i++);
-        proxy->exec_args[arg++] = HYDU_int_to_str(i);
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
 
         for (env = HYD_handle.user_global.global_env.inherited; env; env = env->next) {
-            status = HYDU_env_to_str(env, &proxy->exec_args[arg++]);
+            status = HYDU_env_to_str(env, &proxy->exec_launch_info[arg++]);
             HYDU_ERR_POP(status, "error converting env to string\n");
         }
-        proxy->exec_args[arg++] = NULL;
+        proxy->exec_launch_info[arg++] = NULL;
 
-        arg = HYDU_strlist_lastidx(proxy->exec_args);
-        proxy->exec_args[arg++] = HYDU_strdup("--global-user-env");
+        arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-user-env");
         for (i = 0, env = HYD_handle.user_global.global_env.user; env; env = env->next, i++);
-        proxy->exec_args[arg++] = HYDU_int_to_str(i);
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
 
         for (env = HYD_handle.user_global.global_env.user; env; env = env->next) {
-            status = HYDU_env_to_str(env, &proxy->exec_args[arg++]);
+            status = HYDU_env_to_str(env, &proxy->exec_launch_info[arg++]);
             HYDU_ERR_POP(status, "error converting env to string\n");
         }
-        proxy->exec_args[arg++] = NULL;
+        proxy->exec_launch_info[arg++] = NULL;
 
-        arg = HYDU_strlist_lastidx(proxy->exec_args);
-        proxy->exec_args[arg++] = HYDU_strdup("--global-system-env");
+        arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-system-env");
         for (i = 0, env = HYD_handle.user_global.global_env.system; env; env = env->next, i++);
-        proxy->exec_args[arg++] = HYDU_int_to_str(i);
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
 
         for (env = HYD_handle.user_global.global_env.system; env; env = env->next) {
-            status = HYDU_env_to_str(env, &proxy->exec_args[arg++]);
+            status = HYDU_env_to_str(env, &proxy->exec_launch_info[arg++]);
             HYDU_ERR_POP(status, "error converting env to string\n");
         }
-        proxy->exec_args[arg++] = NULL;
+        proxy->exec_launch_info[arg++] = NULL;
 
-        arg = HYDU_strlist_lastidx(proxy->exec_args);
-        proxy->exec_args[arg++] = HYDU_strdup("--genv-prop");
-        proxy->exec_args[arg++] = HYDU_strdup(HYD_handle.user_global.global_env.prop);
-        proxy->exec_args[arg++] = NULL;
+        arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--genv-prop");
+        proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.global_env.prop);
 
-        /* Pass the segment information */
-        for (segment = proxy->segment_list; segment; segment = segment->next) {
-            arg = HYDU_strlist_lastidx(proxy->exec_args);
-            proxy->exec_args[arg++] = HYDU_strdup("--segment");
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--start-pid");
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(proxy->start_pid);
 
-            proxy->exec_args[arg++] = HYDU_strdup("--segment-start-pid");
-            proxy->exec_args[arg++] = HYDU_int_to_str(segment->start_pid);
-
-            proxy->exec_args[arg++] = HYDU_strdup("--segment-proc-count");
-            proxy->exec_args[arg++] = HYDU_int_to_str(segment->proc_count);
-            proxy->exec_args[arg++] = NULL;
-        }
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--proxy-core-count");
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(proxy->proxy_core_count);
+        proxy->exec_launch_info[arg++] = NULL;
 
         /* Now pass the local executable information */
         for (exec = proxy->exec_list; exec; exec = exec->next) {
-            arg = HYDU_strlist_lastidx(proxy->exec_args);
-            proxy->exec_args[arg++] = HYDU_strdup("--exec");
+            arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec");
 
-            proxy->exec_args[arg++] = HYDU_strdup("--exec-proc-count");
-            proxy->exec_args[arg++] = HYDU_int_to_str(exec->proc_count);
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-proc-count");
+            proxy->exec_launch_info[arg++] = HYDU_int_to_str(exec->proc_count);
 
-            proxy->exec_args[arg++] = HYDU_strdup("--exec-local-env");
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-local-env");
             for (i = 0, env = exec->user_env; env; env = env->next, i++);
-            proxy->exec_args[arg++] = HYDU_int_to_str(i);
+            proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
 
             for (env = exec->user_env; env; env = env->next) {
-                status = HYDU_env_to_str(env, &proxy->exec_args[arg++]);
+                status = HYDU_env_to_str(env, &proxy->exec_launch_info[arg++]);
                 HYDU_ERR_POP(status, "error converting env to string\n");
             }
-            proxy->exec_args[arg++] = NULL;
+            proxy->exec_launch_info[arg++] = NULL;
 
-            arg = HYDU_strlist_lastidx(proxy->exec_args);
-            proxy->exec_args[arg++] = HYDU_strdup("--exec-env-prop");
-            proxy->exec_args[arg++] = exec->env_prop ? HYDU_strdup(exec->env_prop) :
+            arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-env-prop");
+            proxy->exec_launch_info[arg++] = exec->env_prop ? HYDU_strdup(exec->env_prop) :
                 HYDU_strdup("HYDRA_NULL");
-            proxy->exec_args[arg++] = NULL;
+            proxy->exec_launch_info[arg++] = NULL;
 
-            HYDU_list_append_strlist(exec->exec, proxy->exec_args);
+            HYDU_list_append_strlist(exec->exec, proxy->exec_launch_info);
 
             process_id += exec->proc_count;
         }
 
         if (HYD_handle.user_global.debug) {
             printf("Arguments being passed to proxy %d:\n", proxy_count++);
-            HYDU_print_strlist(proxy->exec_args);
+            HYDU_print_strlist(proxy->exec_launch_info);
             printf("\n");
         }
     }
@@ -396,7 +384,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
         status = fill_in_proxy_args(HYD_handle.user_global.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-        status = fill_in_exec_args();
+        status = fill_in_exec_launch_info();
         HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
         status = HYD_BSCI_launch_procs(proxy_args, "--proxy-id", HYD_handle.proxy_list);
@@ -427,7 +415,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
         }
     }
     else if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_PERSISTENT) {
-        status = fill_in_exec_args();
+        status = fill_in_exec_launch_info();
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
         len = 0;

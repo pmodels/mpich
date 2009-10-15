@@ -165,7 +165,7 @@ int main(int argc, char **argv)
     if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_RUNTIME ||
         HYD_handle.user_global.launch_mode == HYD_LAUNCH_PERSISTENT) {
         for (proxy = HYD_handle.proxy_list;
-             proxy && (proxy->segment_list->start_pid <= HYD_handle.global_process_count);
+             proxy && (proxy->start_pid <= HYD_handle.global_process_count);
              proxy = proxy->next)
             proxy->active = 1;
     }
@@ -196,11 +196,11 @@ int main(int argc, char **argv)
             process_id = 0;
             for (exec = proxy->exec_list; exec; exec = exec->next) {
                 for (i = 0; i < exec->proc_count; i++) {
-                    HYDU_dump(stdout, "%d", HYDU_local_to_global_id(process_id++,
-                                                                    proxy->proxy_core_count,
-                                                                    proxy->segment_list,
-                                                                    HYD_handle.
-                                                                    global_core_count));
+                    HYDU_dump(stdout, "%d",
+                              HYDU_local_to_global_id(process_id++,
+                                                      proxy->start_pid,
+                                                      proxy->proxy_core_count,
+                                                      HYD_handle.global_core_count));
                     if (i < exec->proc_count - 1)
                         HYDU_dump(stdout, ",");
                 }
@@ -209,6 +209,10 @@ int main(int argc, char **argv)
         }
         HYDU_dump(stdout, "\n");
     }
+
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list)
+        HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int),
+                    status);
 
     /* Launch the processes */
     status = HYD_PMCI_launch_procs();
@@ -274,19 +278,19 @@ int main(int argc, char **argv)
             proc_count += exec->proc_count;
         for (i = 0; i < proc_count; i++) {
             if (HYD_handle.print_all_exitcodes) {
-                HYDU_dump(stdout, "[%d]", HYDU_local_to_global_id(i, proxy->proxy_core_count,
-                                                                  proxy->segment_list,
-                                                                  HYD_handle.
-                                                                  global_core_count));
-                HYDU_dump(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));
+                HYDU_dump_noprefix(stdout, "[%d]",
+                                   HYDU_local_to_global_id(i, proxy->start_pid,
+                                                           proxy->proxy_core_count,
+                                                           HYD_handle.global_core_count));
+                HYDU_dump_noprefix(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));
                 if (i < proc_count - 1)
-                    HYDU_dump(stdout, ",");
+                    HYDU_dump_noprefix(stdout, ",");
             }
             exit_status |= proxy->exit_status[i];
         }
     }
     if (HYD_handle.print_all_exitcodes)
-        HYDU_dump(stdout, "\n");
+        HYDU_dump_noprefix(stdout, "\n");
 
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_PMCI_finalize();

@@ -46,8 +46,8 @@ struct HYD_PMCD_pmi_proxy_params {
     /* Proxy details */
     struct {
         int id;
-        int core_count;
-        int process_count;
+        int proxy_core_count;
+        int proxy_process_count;
 
         /* Flag to tell whether the processes are launched */
         int procs_are_launched;
@@ -59,7 +59,7 @@ struct HYD_PMCD_pmi_proxy_params {
     } local;
 
     /* Process segmentation information for this proxy */
-    struct HYD_Proxy_segment *segment_list;
+    int start_pid;
     struct HYD_Proxy_exec *exec_list;
 };
 
