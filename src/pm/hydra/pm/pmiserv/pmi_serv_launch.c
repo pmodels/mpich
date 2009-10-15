@@ -255,7 +255,8 @@ static HYD_Status fill_in_exec_launch_info(void)
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-prefix");
         if (HYD_handle.user_global.ckpoint_prefix)
-            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.ckpoint_prefix);
+            proxy->exec_launch_info[arg++] =
+                HYDU_strdup(HYD_handle.user_global.ckpoint_prefix);
         else
             proxy->exec_launch_info[arg++] = HYDU_strdup("HYDRA_NULL");
 

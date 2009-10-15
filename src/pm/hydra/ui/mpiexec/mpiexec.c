@@ -211,8 +211,7 @@ int main(int argc, char **argv)
     }
 
     FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list)
-        HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int),
-                    status);
+    HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
 
     /* Launch the processes */
     status = HYD_PMCI_launch_procs();

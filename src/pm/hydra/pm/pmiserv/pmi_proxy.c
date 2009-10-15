@@ -137,8 +137,8 @@ int main(int argc, char **argv)
     }
     else {      /* Persistent mode */
         status = HYDU_sock_listen(&listenfd, NULL,
-                                  (uint16_t *) & HYD_PMCD_pmi_proxy_params.upstream.
-                                  server_port);
+                                  (uint16_t *) & HYD_PMCD_pmi_proxy_params.
+                                  upstream.server_port);
         HYDU_ERR_POP(status, "unable to listen on socket\n");
 
         /* Register the listening socket with the demux engine */

@@ -25,7 +25,7 @@ HYD_Status HYDU_merge_proxy_segment(char *hostname, int start_pid, int core_coun
         /* Run to the last proxy */
         for (proxy = *proxy_list; proxy->next; proxy = proxy->next);
 
-        if (strcmp(proxy->hostname, hostname)) { /* hostname doesn't match */
+        if (strcmp(proxy->hostname, hostname)) {        /* hostname doesn't match */
             status = HYDU_alloc_proxy(&proxy->next);
             HYDU_ERR_POP(status, "unable to alloc proxy\n");
             proxy->next->hostname = HYDU_strdup(hostname);
@@ -42,9 +42,7 @@ HYD_Status HYDU_merge_proxy_segment(char *hostname, int start_pid, int core_coun
     goto fn_exit;
 }
 
-int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,
-                            int global_core_count)
+int HYDU_local_to_global_id(int local_id, int start_pid, int core_count, int global_core_count)
 {
-    return ((local_id / core_count) * global_core_count) + (local_id % core_count) +
-        start_pid;
+    return ((local_id / core_count) * global_core_count) + (local_id % core_count) + start_pid;
 }
