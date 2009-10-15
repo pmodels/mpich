@@ -1,3 +1,13 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2009 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+/* 
+ * Test code provided by Guruprasad H. Kora
+ */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
