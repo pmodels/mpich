@@ -2483,7 +2483,7 @@ int iPMI_Spawn_multiple(int count,
                         return PMI_FAIL;
                     }
                     *(--iter2) = '\0';
-                    sprintf(key, "%d", j);
+                    sprintf(key, "%d", j++);
                     result = MPIU_Str_add_string_arg(&iter, &maxlen, key, keyval_buf);
                     if(result != MPIU_STR_SUCCESS){
                         pmi_err_printf("unable to add %s=%s to the spawn command\n", key, keyval_buf);
@@ -2492,6 +2492,30 @@ int iPMI_Spawn_multiple(int count,
                     info_keyval_sizes[i]++;
                 }
             }
+#ifdef HAVE_WINDOWS_H
+            /* FIXME: We don't support user environment infos for spawn() */
+            if(pmi_process.rpmi == PMI_TRUE){
+                /* Add channel environment for rpmi/singleton_init procs */
+                char *env, env_str[SMPD_MAX_ENV_LENGTH];
+                env = getenv("MPICH2_CHANNEL");
+                if(env != NULL){
+                    snprintf(env_str, SMPD_MAX_ENV_LENGTH, "MPICH2_CHANNEL=%s", env);
+                    keyval_buf[0] = '\0';
+                    iter2 = keyval_buf;
+                    maxlen2 = SMPD_MAX_CMD_LENGTH;
+                    result = MPIU_Str_add_string_arg(&iter2, &maxlen2, "env", env_str);
+                    iter2--;
+                    *iter2 = '\0';
+                    sprintf(key, "%d", j++);
+                    result = MPIU_Str_add_string_arg(&iter, &maxlen, key, keyval_buf);
+                    if (result != MPIU_STR_SUCCESS){
+                        pmi_err_printf("unable to add %s=%s to the spawn command.\n", key, keyval_buf);
+                        return PMI_FAIL;
+                    }
+                    info_keyval_sizes[i]++;
+                }
+            }
+#endif
             if (iter != buffer){
                 iter--;
                 *iter = '\0'; /* remove the trailing space */
