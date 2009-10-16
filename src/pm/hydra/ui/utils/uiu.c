@@ -228,84 +228,84 @@ void HYD_uiu_print_params(void)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_dump(stdout, "\n");
-    HYDU_dump(stdout, "=================================================");
-    HYDU_dump(stdout, "=================================================");
-    HYDU_dump(stdout, "\n");
-    HYDU_dump(stdout, "mpiexec options:\n");
-    HYDU_dump(stdout, "----------------\n");
-    HYDU_dump(stdout, "  Base path: %s\n", HYD_handle.base_path);
-    HYDU_dump(stdout, "  Proxy port: %d\n", HYD_handle.proxy_port);
-    HYDU_dump(stdout, "  Bootstrap server: %s\n", HYD_handle.user_global.bootstrap);
-    HYDU_dump(stdout, "  Debug level: %d\n", HYD_handle.user_global.debug);
-    HYDU_dump(stdout, "  Enable X: %d\n", HYD_handle.user_global.enablex);
-    HYDU_dump(stdout, "  Working dir: %s\n", HYD_handle.user_global.wdir);
+    HYDU_dump_noprefix(stdout, "\n");
+    HYDU_dump_noprefix(stdout, "=================================================");
+    HYDU_dump_noprefix(stdout, "=================================================");
+    HYDU_dump_noprefix(stdout, "\n");
+    HYDU_dump_noprefix(stdout, "mpiexec options:\n");
+    HYDU_dump_noprefix(stdout, "----------------\n");
+    HYDU_dump_noprefix(stdout, "  Base path: %s\n", HYD_handle.base_path);
+    HYDU_dump_noprefix(stdout, "  Proxy port: %d\n", HYD_handle.proxy_port);
+    HYDU_dump_noprefix(stdout, "  Bootstrap server: %s\n", HYD_handle.user_global.bootstrap);
+    HYDU_dump_noprefix(stdout, "  Debug level: %d\n", HYD_handle.user_global.debug);
+    HYDU_dump_noprefix(stdout, "  Enable X: %d\n", HYD_handle.user_global.enablex);
+    HYDU_dump_noprefix(stdout, "  Working dir: %s\n", HYD_handle.user_global.wdir);
 
-    HYDU_dump(stdout, "\n");
-    HYDU_dump(stdout, "  Global environment:\n");
-    HYDU_dump(stdout, "  -------------------\n");
+    HYDU_dump_noprefix(stdout, "\n");
+    HYDU_dump_noprefix(stdout, "  Global environment:\n");
+    HYDU_dump_noprefix(stdout, "  -------------------\n");
     for (env = HYD_handle.user_global.global_env.inherited; env; env = env->next)
-        HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
+        HYDU_dump_noprefix(stdout, "    %s=%s\n", env->env_name, env->env_value);
 
     if (HYD_handle.user_global.global_env.system) {
-        HYDU_dump(stdout, "\n");
-        HYDU_dump(stdout, "  Hydra internal environment:\n");
-        HYDU_dump(stdout, "  ---------------------------\n");
+        HYDU_dump_noprefix(stdout, "\n");
+        HYDU_dump_noprefix(stdout, "  Hydra internal environment:\n");
+        HYDU_dump_noprefix(stdout, "  ---------------------------\n");
         for (env = HYD_handle.user_global.global_env.system; env; env = env->next)
-            HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
+            HYDU_dump_noprefix(stdout, "    %s=%s\n", env->env_name, env->env_value);
     }
 
     if (HYD_handle.user_global.global_env.user) {
-        HYDU_dump(stdout, "\n");
-        HYDU_dump(stdout, "  User set environment:\n");
-        HYDU_dump(stdout, "  ---------------------\n");
+        HYDU_dump_noprefix(stdout, "\n");
+        HYDU_dump_noprefix(stdout, "  User set environment:\n");
+        HYDU_dump_noprefix(stdout, "  ---------------------\n");
         for (env = HYD_handle.user_global.global_env.user; env; env = env->next)
-            HYDU_dump(stdout, "    %s=%s\n", env->env_name, env->env_value);
+            HYDU_dump_noprefix(stdout, "    %s=%s\n", env->env_name, env->env_value);
     }
 
-    HYDU_dump(stdout, "\n\n");
+    HYDU_dump_noprefix(stdout, "\n\n");
 
-    HYDU_dump(stdout, "    Executable information:\n");
-    HYDU_dump(stdout, "    **********************\n");
+    HYDU_dump_noprefix(stdout, "    Executable information:\n");
+    HYDU_dump_noprefix(stdout, "    **********************\n");
     i = 1;
     for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
-        HYDU_dump(stdout, "      Executable ID: %2d\n", i++);
-        HYDU_dump(stdout, "      -----------------\n");
-        HYDU_dump(stdout, "        Process count: %d\n", exec_info->process_count);
-        HYDU_dump(stdout, "        Executable: ");
+        HYDU_dump_noprefix(stdout, "      Executable ID: %2d\n", i++);
+        HYDU_dump_noprefix(stdout, "      -----------------\n");
+        HYDU_dump_noprefix(stdout, "        Process count: %d\n", exec_info->process_count);
+        HYDU_dump_noprefix(stdout, "        Executable: ");
         HYDU_print_strlist(exec_info->exec);
-        HYDU_dump(stdout, "\n");
+        HYDU_dump_noprefix(stdout, "\n");
 
         if (exec_info->user_env) {
-            HYDU_dump(stdout, "\n");
-            HYDU_dump(stdout, "        User set environment:\n");
-            HYDU_dump(stdout, "        .....................\n");
+            HYDU_dump_noprefix(stdout, "\n");
+            HYDU_dump_noprefix(stdout, "        User set environment:\n");
+            HYDU_dump_noprefix(stdout, "        .....................\n");
             for (env = exec_info->user_env; env; env = env->next)
-                HYDU_dump(stdout, "          %s=%s\n", env->env_name, env->env_value);
+                HYDU_dump_noprefix(stdout, "          %s=%s\n", env->env_name, env->env_value);
         }
     }
 
-    HYDU_dump(stdout, "    Proxy information:\n");
-    HYDU_dump(stdout, "    *********************\n");
+    HYDU_dump_noprefix(stdout, "    Proxy information:\n");
+    HYDU_dump_noprefix(stdout, "    *********************\n");
     i = 1;
     for (proxy = HYD_handle.proxy_list; proxy; proxy = proxy->next) {
-        HYDU_dump(stdout, "      Proxy ID: %2d\n", i++);
-        HYDU_dump(stdout, "      -----------------\n");
-        HYDU_dump(stdout, "        Proxy name: %s\n", proxy->hostname);
-        HYDU_dump(stdout, "        Process count: %d\n", proxy->proxy_core_count);
-        HYDU_dump(stdout, "        Start PID: %d\n", proxy->start_pid);
-        HYDU_dump(stdout, "\n");
-        HYDU_dump(stdout, "        Proxy exec list:\n");
-        HYDU_dump(stdout, "        ....................\n");
+        HYDU_dump_noprefix(stdout, "      Proxy ID: %2d\n", i++);
+        HYDU_dump_noprefix(stdout, "      -----------------\n");
+        HYDU_dump_noprefix(stdout, "        Proxy name: %s\n", proxy->hostname);
+        HYDU_dump_noprefix(stdout, "        Process count: %d\n", proxy->proxy_core_count);
+        HYDU_dump_noprefix(stdout, "        Start PID: %d\n", proxy->start_pid);
+        HYDU_dump_noprefix(stdout, "\n");
+        HYDU_dump_noprefix(stdout, "        Proxy exec list:\n");
+        HYDU_dump_noprefix(stdout, "        ....................\n");
         for (exec = proxy->exec_list; exec; exec = exec->next)
-            HYDU_dump(stdout, "          Exec: %s; Process count: %d\n", exec->exec[0],
-                      exec->proc_count);
+            HYDU_dump_noprefix(stdout, "          Exec: %s; Process count: %d\n",
+                               exec->exec[0], exec->proc_count);
     }
 
-    HYDU_dump(stdout, "\n");
-    HYDU_dump(stdout, "=================================================");
-    HYDU_dump(stdout, "=================================================");
-    HYDU_dump(stdout, "\n\n");
+    HYDU_dump_noprefix(stdout, "\n");
+    HYDU_dump_noprefix(stdout, "=================================================");
+    HYDU_dump_noprefix(stdout, "=================================================");
+    HYDU_dump_noprefix(stdout, "\n\n");
 
     HYDU_FUNC_EXIT();
 
