@@ -62,9 +62,26 @@ static mpi_names_t mpi_names[] = {
     { MPI_2DOUBLE_PRECISION, "MPI_2DOUBLE_PRECISION" },
     { MPI_CHARACTER, "MPI_CHARACTER" },
 #endif
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+    /* these C99 types were added in MPI-2.2 */
+    { MPI_INT8_T,   "MPI_INT8_T"   },
+    { MPI_INT16_T,  "MPI_INT16_T"  },
+    { MPI_INT32_T,  "MPI_INT32_T"  },
+    { MPI_INT64_T,  "MPI_INT64_T"  },
+    { MPI_UINT8_T,  "MPI_UINT8_T"  },
+    { MPI_UINT16_T, "MPI_UINT16_T" },
+    { MPI_UINT32_T, "MPI_UINT32_T" },
+    { MPI_UINT64_T, "MPI_UINT64_T" },
+    { MPI_C_BOOL, "MPI_C_BOOL" },
+    { MPI_C_FLOAT_COMPLEX,  "MPI_C_FLOAT_COMPLEX"  },
+    { MPI_C_DOUBLE_COMPLEX, "MPI_C_DOUBLE_COMPLEX" },
+    { MPI_AINT, "MPI_AINT" },
+    { MPI_OFFSET, "MPI_OFFSET" },
+#endif
     /* Size-specific types */
     /* Do not move MPI_REAL4 - this is used to indicate the very first 
-       optional type */
+       optional type.  In addition, you must not add any required types
+       after this type */
     /* See MPI 2.1, Section 16.2.  These are required, predefined types. 
        If the type is not available (e.g., *only* because the Fortran
        compiler does not support it), the value may be MPI_DATATYPE_NULL */
@@ -83,20 +100,6 @@ static mpi_names_t mpi_names[] = {
        and some implementations omit it.  An error will be reported, but
        this ifdef allows the test to be built and run. */
     { MPI_INTEGER16, "MPI_INTEGER16" },
-#endif
-#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
-    /* these C99 types were added in MPI-2.2 */
-    { MPI_INT8_T,   "MPI_INT8_T"   },
-    { MPI_INT16_T,  "MPI_INT16_T"  },
-    { MPI_INT32_T,  "MPI_INT32_T"  },
-    { MPI_INT64_T,  "MPI_INT64_T"  },
-    { MPI_UINT8_T,  "MPI_UINT8_T"  },
-    { MPI_UINT16_T, "MPI_UINT16_T" },
-    { MPI_UINT32_T, "MPI_UINT32_T" },
-    { MPI_UINT64_T, "MPI_UINT64_T" },
-    { MPI_C_BOOL, "MPI_C_BOOL" },
-    { MPI_C_FLOAT_COMPLEX,  "MPI_C_FLOAT_COMPLEX"  },
-    { MPI_C_DOUBLE_COMPLEX, "MPI_C_DOUBLE_COMPLEX" },
 #endif
     /* Semi-optional types - if the compiler doesn't support long double
        or long long, these might be MPI_DATATYPE_NULL */
@@ -151,6 +154,7 @@ int main( int argc, char **argv )
 		     mpi_names[i].name );
 	    continue;
 	}
+	MTestPrintfMsg( 10, "Checking type %s\n", mpi_names[i].name );
 	name[0] = 0;
 	MPI_Type_get_name( mpi_names[i].dtype, name, &namelen );
 	if (strncmp( name, mpi_names[i].name, namelen )) {
