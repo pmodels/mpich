@@ -4317,7 +4317,7 @@ int main( int argc, char **argv ){
                   INT8_T INT16_T INT32_T INT64_T            \
                   UINT8_T UINT16_T UINT32_T UINT64_T        \
                   C_BOOL C_FLOAT_COMPLEX C_DOUBLE_COMPLEX   \
-                  C_LONG_DOUBLE_COMPLEX ; do
+                  C_LONG_DOUBLE_COMPLEX AINT OFFSET ; do
         fullvar="MPI_$var"
 	fullf77var="MPI_F77_$var"
         eval fullvarvalue=\$$fullvar
@@ -4396,11 +4396,15 @@ int main( int argc, char **argv ){
     AC_SUBST(MPI_F77_UINT64_T)
     AC_SUBST(MPI_F77_C_BOOL)
     AC_SUBST(MPI_F77_C_FLOAT_COMPLEX)
+    # C_COMPLEX is an alias for FLOAT_COMPLEX
+    MPI_F77_C_COMPLEX=$MPI_F77_C_FLOAT_COMPLEX
+    AC_SUBST(MPI_F77_C_COMPLEX)
     AC_SUBST(MPI_F77_C_DOUBLE_COMPLEX)
     AC_SUBST(MPI_F77_C_LONG_DOUBLE_COMPLEX)
-    # these two are not yet defined, but AC_SUBST only cares about them at AC_OUTPUT-time
-    AC_SUBST(MPI_F77_AINT_DATATYPE)
-    AC_SUBST(MPI_F77_OFFSET_DATATYPE)
+    # these two are not yet defined, but AC_SUBST only cares about them at 
+    # AC_OUTPUT-time
+    AC_SUBST(MPI_F77_AINT)
+    AC_SUBST(MPI_F77_OFFSET)
 
     # Try and compute the values of .true. and .false. in Fortran
     # This code has been removed because the Fortran binding code does
@@ -5621,9 +5625,9 @@ export MPI_AINT_DATATYPE
 
 # 0x4c000043 is 1275068483 in decimal, add ($MPI_SIZEOF_AINT * 256) and you get
 # the decimal equivalent of the hex number
-MPI_F77_AINT_DATATYPE=`expr 1275068483 '+' '(' 256 '*' $MPI_SIZEOF_AINT ')'`
-AC_SUBST(MPI_F77_AINT_DATATYPE)
-export MPI_F77_AINT_DATATYPE
+MPI_F77_AINT=`expr 1275068483 '+' '(' 256 '*' $MPI_SIZEOF_AINT ')'`
+AC_SUBST(MPI_F77_AINT)
+export MPI_F77_AINT
 # ----------------------------------------------------------------------------
 
 # define MPIU_Size_t - used to express the size of objects
@@ -6216,9 +6220,9 @@ export MPI_OFFSET_DATATYPE
 
 # 0x4c000044 is 1275068484 in decimal, add ($MPI_SIZEOF_OFFSET * 256) and you get
 # the decimal equivalent of the hex number
-MPI_F77_OFFSET_DATATYPE=`expr 1275068483 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
-AC_SUBST(MPI_F77_OFFSET_DATATYPE)
-export MPI_F77_OFFSET_DATATYPE
+MPI_F77_OFFSET=`expr 1275068484 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
+AC_SUBST(MPI_F77_OFFSET)
+export MPI_F77_OFFSET
 # ----------------------------------------------------------------------------
 
 dnl Extra status information, from device subsystem, to be included in the

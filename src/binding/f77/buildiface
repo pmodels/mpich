@@ -2420,6 +2420,13 @@ if ($write_mpif) {
 	print MPIFFD "       INTEGER MPI_$key\n";
 	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
     }
+    # C types added in MPI 2.2
+    foreach $key (INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, 
+		  UINT32_T, UINT64_T, C_BOOL, C_FLOAT_COMPLEX, C_COMPLEX,
+		  C_DOUBLE_COMPLEX, C_LONG_DOUBLE_COMPLEX, AINT, OFFSET) {
+	print MPIFFD "       INTEGER MPI_$key\n";
+	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
+    }
     # Datatype combiners
     foreach $key (NAMED, DUP, CONTIGUOUS, VECTOR, HVECTOR_INTEGER, HVECTOR, 
                   INDEXED, HINDEXED_INTEGER, HINDEXED, INDEXED_BLOCK, 
