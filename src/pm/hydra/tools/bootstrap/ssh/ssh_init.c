@@ -8,13 +8,13 @@
 #include "bsci.h"
 #include "ssh.h"
 
-HYD_Status HYD_BSCI_ssh_init(void)
+HYD_status HYDT_bsci_ssh_init(void)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_BSCI_fns.launch_procs = HYD_BSCD_ssh_launch_procs;
+    HYDT_bsci_fns.launch_procs = HYDT_bscd_ssh_launch_procs;
 
     HYDU_FUNC_EXIT();
 

@@ -112,7 +112,7 @@ typedef enum {
     HYD_SOCK_ERROR,
     HYD_INVALID_PARAM,
     HYD_INTERNAL_ERROR
-} HYD_Status;
+} HYD_status;
 
 /* Proxy type */
 typedef enum {
@@ -124,7 +124,7 @@ typedef enum {
     HYD_LAUNCH_BOOT_FOREGROUND,
     HYD_LAUNCH_SHUTDOWN,
     HYD_LAUNCH_PERSISTENT
-} HYD_Launch_mode_t;
+} HYD_launch_mode_t;
 
 #if defined(HAVE_PUTENV) && defined(NEEDS_PUTENV_DECL)
 extern int putenv(char *string);
@@ -134,46 +134,46 @@ extern int putenv(char *string);
 int gethostname(char *name, size_t len);
 #endif
 
-typedef unsigned short HYD_Event_t;
+typedef unsigned short HYD_event_t;
 
 /* Environment information */
-typedef struct HYD_Env {
+typedef struct HYD_env {
     char *env_name;
     char *env_value;
-    struct HYD_Env *next;
-} HYD_Env_t;
+    struct HYD_env *next;
+} HYD_env_t;
 
-typedef enum HYD_Env_overwrite {
+typedef enum HYD_env_overwrite {
     HYD_ENV_OVERWRITE_TRUE,
     HYD_ENV_OVERWRITE_FALSE
-} HYD_Env_overwrite_t;
+} HYD_env_overwrite_t;
 
 typedef enum {
     HYD_ENV_PROP_UNSET,
     HYD_ENV_PROP_ALL,
     HYD_ENV_PROP_NONE,
     HYD_ENV_PROP_LIST
-} HYD_Env_prop_t;
+} HYD_env_prop_t;
 
-struct HYD_Env_global {
-    HYD_Env_t *system;
-    HYD_Env_t *user;
-    HYD_Env_t *inherited;
+struct HYD_env_global {
+    HYD_env_t *system;
+    HYD_env_t *user;
+    HYD_env_t *inherited;
     char *prop;
 };
 
 /* Executables on a proxy */
-struct HYD_Proxy_exec {
+struct HYD_proxy_exec {
     char *exec[HYD_NUM_TMP_STRINGS];
     int proc_count;
-    HYD_Env_t *user_env;
+    HYD_env_t *user_env;
     char *env_prop;
 
-    struct HYD_Proxy_exec *next;
+    struct HYD_proxy_exec *next;
 };
 
 /* Proxy information */
-struct HYD_Proxy {
+struct HYD_proxy {
     char *hostname;
     char **exec_launch_info;
 
@@ -189,27 +189,27 @@ struct HYD_Proxy {
     int proxy_core_count;
     int proxy_process_count;
 
-    struct HYD_Proxy_exec *exec_list;
+    struct HYD_proxy_exec *exec_list;
 
     int *exit_status;
     int control_fd;
 
-    struct HYD_Proxy *next;
+    struct HYD_proxy *next;
 };
 
-struct HYD_Exec_info {
+struct HYD_exec_info {
     int process_count;
     char *exec[HYD_NUM_TMP_STRINGS];
 
     /* Local environment */
-    HYD_Env_t *user_env;
+    HYD_env_t *user_env;
     char *env_prop;
 
-    struct HYD_Exec_info *next;
+    struct HYD_exec_info *next;
 };
 
 /* Global user parameters */
-struct HYD_User_global {
+struct HYD_user_global {
     /* Bootstrap server */
     char *bootstrap;
     char *bootstrap_exec;
@@ -227,8 +227,8 @@ struct HYD_User_global {
     int enablex;
     int debug;
     char *wdir;
-    HYD_Launch_mode_t launch_mode;
-    struct HYD_Env_global global_env;
+    HYD_launch_mode_t launch_mode;
+    struct HYD_env_global global_env;
 };
 
 #endif /* HYDRA_BASE_H_INCLUDED */

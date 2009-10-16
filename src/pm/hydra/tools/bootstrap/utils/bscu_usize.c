@@ -8,9 +8,9 @@
 #include "hydra_utils.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCU_query_usize(int *size)
+HYD_status HYDT_bscu_query_usize(int *size)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

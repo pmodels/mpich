@@ -8,9 +8,9 @@
 #include "cssi.h"
 #include "none.h"
 
-HYD_Status HYD_CSSD_none_query_string(char *str)
+HYD_status HYD_cssd_none_query_string(char *str)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

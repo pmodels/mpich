@@ -7,7 +7,7 @@
 #ifndef BIND_PLPA_H_INCLUDED
 #define BIND_PLPA_H_INCLUDED
 
-HYD_Status HYDU_bind_plpa_init(HYDU_bind_support_level_t * support_level);
-HYD_Status HYDU_bind_plpa_process(int core);
+HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level);
+HYD_status HYDT_bind_plpa_process(int core);
 
 #endif /* BIND_PLPA_H_INCLUDED */

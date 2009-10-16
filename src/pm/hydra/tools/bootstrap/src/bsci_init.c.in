@@ -8,50 +8,50 @@
 #include "bsci.h"
 #include "bscu.h"
 
-struct HYD_BSCI_fns HYD_BSCI_fns = { 0 };
-const char *HYD_BSCI_comp_array[] = { @hydra_bss_name_array@ };
-HYD_Status(*HYD_BSCI_comp_init[])(void) = { @hydra_bss_init_array@ };
-struct HYD_BSCI_info HYD_BSCI_info = { 0 };
+struct HYDT_bsci_fns HYDT_bsci_fns = { 0 };
+const char *HYDT_bsci_comp_array[] = { @hydra_bss_name_array@ };
+HYD_status(*HYDT_bsci_comp_init[])(void) = { @hydra_bss_init_array@ };
+struct HYDT_bsci_info HYDT_bsci_info = { 0 };
 
-HYD_Status HYD_BSCI_init(char *bootstrap, char *bootstrap_exec, int enablex, int debug)
+HYD_status HYDT_bsci_init(char *bootstrap, char *bootstrap_exec, int enablex, int debug)
 {
     int i;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    for (i = 0; HYD_BSCI_comp_array[i]; i++) {
-        if (!strcmp(bootstrap, HYD_BSCI_comp_array[i])) {
-            status = (*HYD_BSCI_comp_init[i])();
+    for (i = 0; HYDT_bsci_comp_array[i]; i++) {
+        if (!strcmp(bootstrap, HYDT_bsci_comp_array[i])) {
+            status = (*HYDT_bsci_comp_init[i])();
             HYDU_ERR_POP(status, "bootstrap device returned error initializing\n");
             break;
         }
     }
 
     /* Set the appropriate info */
-    HYD_BSCI_info.bootstrap_exec = bootstrap_exec;
-    HYD_BSCI_info.enablex = enablex;
-    HYD_BSCI_info.debug = debug;
+    HYDT_bsci_info.bootstrap_exec = bootstrap_exec;
+    HYDT_bsci_info.enablex = enablex;
+    HYDT_bsci_info.debug = debug;
 
-    if (HYD_BSCI_comp_array[i] == NULL)
+    if (HYDT_bsci_comp_array[i] == NULL)
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unrecognized bootstrap server: %s\n", bootstrap);
 
     /* This function is mandatory */
-    if (HYD_BSCI_fns.launch_procs == NULL)
+    if (HYDT_bsci_fns.launch_procs == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "mandatory bootstrap launch function undefined\n");
 
-    if (HYD_BSCI_fns.finalize == NULL)
-        HYD_BSCI_fns.finalize = HYD_BSCU_finalize;
-    if (HYD_BSCI_fns.wait_for_completion == NULL)
-        HYD_BSCI_fns.wait_for_completion = HYD_BSCU_wait_for_completion;
-    if (HYD_BSCI_fns.query_node_list == NULL)
-        HYD_BSCI_fns.query_node_list = HYD_BSCU_query_node_list;
-    if (HYD_BSCI_fns.query_usize == NULL)
-        HYD_BSCI_fns.query_usize = HYD_BSCU_query_usize;
-    if (HYD_BSCI_fns.query_proxy_id == NULL)
-        HYD_BSCI_fns.query_proxy_id = HYD_BSCU_query_proxy_id;
+    if (HYDT_bsci_fns.finalize == NULL)
+        HYDT_bsci_fns.finalize = HYDT_bscu_finalize;
+    if (HYDT_bsci_fns.wait_for_completion == NULL)
+        HYDT_bsci_fns.wait_for_completion = HYDT_bscu_wait_for_completion;
+    if (HYDT_bsci_fns.query_node_list == NULL)
+        HYDT_bsci_fns.query_node_list = HYDT_bscu_query_node_list;
+    if (HYDT_bsci_fns.query_usize == NULL)
+        HYDT_bsci_fns.query_usize = HYDT_bscu_query_usize;
+    if (HYDT_bsci_fns.query_proxy_id == NULL)
+        HYDT_bsci_fns.query_proxy_id = HYDT_bscu_query_proxy_id;
 
   fn_exit:
     HYDU_FUNC_EXIT();

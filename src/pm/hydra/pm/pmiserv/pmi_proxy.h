@@ -11,8 +11,8 @@
 #include "hydra_utils.h"
 #include "pmi_common.h"
 
-struct HYD_PMCD_pmi_proxy_params {
-    struct HYD_User_global user_global;
+struct HYD_pmcd_pmi_proxy_params {
+    struct HYD_user_global user_global;
 
     struct {
         int global_core_count;
@@ -60,23 +60,23 @@ struct HYD_PMCD_pmi_proxy_params {
 
     /* Process segmentation information for this proxy */
     int start_pid;
-    struct HYD_Proxy_exec *exec_list;
+    struct HYD_proxy_exec *exec_list;
 };
 
-extern struct HYD_PMCD_pmi_proxy_params HYD_PMCD_pmi_proxy_params;
+extern struct HYD_pmcd_pmi_proxy_params HYD_pmcd_pmi_proxy_params;
 
 /* utils */
-HYD_Status HYD_PMCD_pmi_proxy_get_params(char **t_argv);
-HYD_Status HYD_PMCD_pmi_proxy_cleanup_params(void);
-HYD_Status HYD_PMCD_pmi_proxy_procinfo(int fd);
-HYD_Status HYD_PMCD_pmi_proxy_launch_procs(void);
-void HYD_PMCD_pmi_proxy_killjob(void);
+HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv);
+HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void);
+HYD_status HYD_pmcd_pmi_proxy_procinfo(int fd);
+HYD_status HYD_pmcd_pmi_proxy_launch_procs(void);
+void HYD_pmcd_pmi_proxy_killjob(void);
 
 /* callback */
-HYD_Status HYD_PMCD_pmi_proxy_control_connect_cb(int fd, HYD_Event_t events, void *userp);
-HYD_Status HYD_PMCD_pmi_proxy_control_cmd_cb(int fd, HYD_Event_t events, void *userp);
-HYD_Status HYD_PMCD_pmi_proxy_stdout_cb(int fd, HYD_Event_t events, void *userp);
-HYD_Status HYD_PMCD_pmi_proxy_stderr_cb(int fd, HYD_Event_t events, void *userp);
-HYD_Status HYD_PMCD_pmi_proxy_stdin_cb(int fd, HYD_Event_t events, void *userp);
+HYD_status HYD_pmcd_pmi_proxy_control_connect_cb(int fd, HYD_event_t events, void *userp);
+HYD_status HYD_pmcd_pmi_proxy_control_cmd_cb(int fd, HYD_event_t events, void *userp);
+HYD_status HYD_pmcd_pmi_proxy_stdout_cb(int fd, HYD_event_t events, void *userp);
+HYD_status HYD_pmcd_pmi_proxy_stderr_cb(int fd, HYD_event_t events, void *userp);
+HYD_status HYD_pmcd_pmi_proxy_stdin_cb(int fd, HYD_event_t events, void *userp);
 
 #endif /* PMI_PROXY_H_INCLUDED */

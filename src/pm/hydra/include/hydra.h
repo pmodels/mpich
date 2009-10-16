@@ -11,8 +11,8 @@
 #include "hydra_base.h"
 #include "hydra_utils.h"
 
-struct HYD_Handle_ {
-    struct HYD_User_global user_global;
+struct HYD_handle {
+    struct HYD_user_global user_global;
 
     char *base_path;
     int proxy_port;
@@ -28,20 +28,20 @@ struct HYD_Handle_ {
 
     int ranks_per_proc;
 
-     HYD_Status(*stdin_cb) (int fd, HYD_Event_t events, void *userp);
-     HYD_Status(*stdout_cb) (int fd, HYD_Event_t events, void *userp);
-     HYD_Status(*stderr_cb) (int fd, HYD_Event_t events, void *userp);
+     HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp);
+     HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp);
+     HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp);
 
     /* Start time and timeout. These are filled in by the launcher,
      * but are utilized by the demux engine and the boot-strap server
      * to decide how long we need to wait for. */
-    HYD_Time start;
-    HYD_Time timeout;
+    HYD_time start;
+    HYD_time timeout;
 
-    struct HYD_Proxy *proxy_list;
+    struct HYD_proxy *proxy_list;
     int global_core_count;
 
-    struct HYD_Exec_info *exec_info_list;
+    struct HYD_exec_info *exec_info_list;
     int global_process_count;
 
     /* Random parameters used for internal code */
@@ -51,8 +51,6 @@ struct HYD_Handle_ {
     int stdin_buf_count;
 };
 
-typedef struct HYD_Handle_ HYD_Handle;
-
-extern HYD_Handle HYD_handle;
+extern struct HYD_handle HYD_handle;
 
 #endif /* HYDRA_H_INCLUDED */

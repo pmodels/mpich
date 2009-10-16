@@ -8,14 +8,14 @@
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-HYD_Status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
+HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 {
     struct sockaddr_in sa;
     int one = 1;
     uint16_t low_port, high_port;
     char *port_str;
     uint16_t i;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -107,11 +107,11 @@ HYD_Status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 }
 
 
-HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
+HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
 {
     struct hostent *ht;
     struct sockaddr_in sa;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -138,7 +138,7 @@ HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
      * return an error, but only print a warning message. The upper
      * layer can decide what to do with the return status. */
     if (connect(*fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
-        HYDU_Error_printf("connect error (%s)\n", HYDU_strerror(errno));
+        HYDU_error_printf("connect error (%s)\n", HYDU_strerror(errno));
         status = HYD_SOCK_ERROR;
         goto fn_fail;
     }
@@ -152,9 +152,9 @@ HYD_Status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
 }
 
 
-HYD_Status HYDU_sock_accept(int listen_fd, int *fd)
+HYD_status HYDU_sock_accept(int listen_fd, int *fd)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -172,13 +172,13 @@ HYD_Status HYDU_sock_accept(int listen_fd, int *fd)
 }
 
 
-/* HYD_Sock_readline: Return the next newline-terminated string of
+/* HYD_sock_readline: Return the next newline-terminated string of
  * maximum length maxlen.  This is a buffered version, and reads from
  * fd as necessary. */
-HYD_Status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen)
+HYD_status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen)
 {
     int n;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -221,10 +221,10 @@ HYD_Status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen)
 }
 
 
-HYD_Status HYDU_sock_writeline(int fd, const char *buf, int maxsize)
+HYD_status HYDU_sock_writeline(int fd, const char *buf, int maxsize)
 {
     int n;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -248,11 +248,11 @@ HYD_Status HYDU_sock_writeline(int fd, const char *buf, int maxsize)
 }
 
 
-HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
+HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
                           enum HYDU_sock_comm_flag flag)
 {
     int tmp;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -285,10 +285,10 @@ HYD_Status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
 }
 
 
-HYD_Status HYDU_sock_write(int fd, const void *buf, int maxsize)
+HYD_status HYDU_sock_write(int fd, const void *buf, int maxsize)
 {
     int n;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -309,10 +309,10 @@ HYD_Status HYDU_sock_write(int fd, const void *buf, int maxsize)
 }
 
 
-HYD_Status HYDU_sock_trywrite(int fd, const void *buf, int maxsize)
+HYD_status HYDU_sock_trywrite(int fd, const void *buf, int maxsize)
 {
     int n;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -321,7 +321,7 @@ HYD_Status HYDU_sock_trywrite(int fd, const void *buf, int maxsize)
     } while (n < 0 && errno == EINTR);
 
     if (n < maxsize) {
-        HYDU_Warn_printf("write error (%s)\n", HYDU_strerror(errno));
+        HYDU_warn_printf("write error (%s)\n", HYDU_strerror(errno));
         status = HYD_SOCK_ERROR;
         goto fn_fail;
     }
@@ -335,10 +335,10 @@ HYD_Status HYDU_sock_trywrite(int fd, const void *buf, int maxsize)
 }
 
 
-HYD_Status HYDU_sock_set_nonblock(int fd)
+HYD_status HYDU_sock_set_nonblock(int fd)
 {
     int flags;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -357,10 +357,10 @@ HYD_Status HYDU_sock_set_nonblock(int fd)
 }
 
 
-HYD_Status HYDU_sock_set_cloexec(int fd)
+HYD_status HYDU_sock_set_cloexec(int fd)
 {
     int flags;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -376,11 +376,11 @@ HYD_Status HYDU_sock_set_cloexec(int fd)
 }
 
 
-HYD_Status HYDU_sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *closed)
+HYD_status HYDU_sock_stdout_cb(int fd, HYD_event_t events, int stdout_fd, int *closed)
 {
     int count, written, ret;
     char buf[HYD_TMPBUF_SIZE];
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -419,11 +419,11 @@ HYD_Status HYDU_sock_stdout_cb(int fd, HYD_Event_t events, int stdout_fd, int *c
 }
 
 
-HYD_Status HYDU_sock_stdin_cb(int fd, HYD_Event_t events, int stdin_fd, char *buf,
+HYD_status HYDU_sock_stdin_cb(int fd, HYD_event_t events, int stdin_fd, char *buf,
                               int *buf_count, int *buf_offset, int *closed)
 {
     int count;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

@@ -36,9 +36,9 @@ static int my_callback(void *arg)
     return 0;
 }
 
-static HYD_Status create_fifo(const char *fname_template, int rank, int *fd)
+static HYD_status create_fifo(const char *fname_template, int rank, int *fd)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
     char filename[256];
     int ret;
 
@@ -61,10 +61,10 @@ static HYD_Status create_fifo(const char *fname_template, int rank, int *fd)
 }
 
 
-static HYD_Status create_stdinouterr_fifos(int num_ranks, int ranks[], int *in, int *out,
+static HYD_status create_stdinouterr_fifos(int num_ranks, int ranks[], int *in, int *out,
                                            int *err)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
     int r;
 
     for (r = 0; r < num_ranks; ++r) {
@@ -94,12 +94,12 @@ static HYD_Status create_stdinouterr_fifos(int num_ranks, int ranks[], int *in, 
 }
 
 
-static HYD_Status create_env_file(const HYD_Env_t * envlist, int num_ranks, int *ranks)
+static HYD_status create_env_file(const HYD_env_t * envlist, int num_ranks, int *ranks)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
     char filename[256];
     FILE *f;
-    const HYD_Env_t *e;
+    const HYD_env_t *e;
     int ret;
     int r;
 
@@ -130,9 +130,9 @@ static HYD_Status create_env_file(const HYD_Env_t * envlist, int num_ranks, int 
     goto fn_exit;
 }
 
-HYD_Status HYDU_ckpoint_blcr_suspend(const char *prefix)
+HYD_status HYDT_ckpoint_blcr_suspend(const char *prefix)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
     int ret;
     int fd;
     cr_checkpoint_args_t my_args;
@@ -201,10 +201,10 @@ HYD_Status HYDU_ckpoint_blcr_suspend(const char *prefix)
     goto fn_exit;
 }
 
-HYD_Status HYDU_ckpoint_blcr_restart(const char *prefix, HYD_Env_t * envlist, int num_ranks,
+HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, HYD_env_t * envlist, int num_ranks,
                                      int ranks[], int *in, int *out, int *err)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
     pid_t mypid;
     int ret;
     int context_fd;
@@ -252,9 +252,9 @@ HYD_Status HYDU_ckpoint_blcr_restart(const char *prefix, HYD_Env_t * envlist, in
     goto fn_exit;
 }
 
-HYD_Status HYDU_ckpoint_blcr_init(void)
+HYD_status HYDT_ckpoint_blcr_init(void)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
     int rc;
     cr_client_id_t client_id;
     cr_callback_id_t callback_id;

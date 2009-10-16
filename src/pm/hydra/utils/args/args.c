@@ -17,10 +17,10 @@ static int exists(char *filename)
     return 1;
 }
 
-HYD_Status HYDU_find_in_path(const char *execname, char **path)
+HYD_status HYDU_find_in_path(const char *execname, char **path)
 {
     char *user_path = NULL, *tmp[HYD_NUM_TMP_STRINGS], *path_loc = NULL, *test_loc;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -72,11 +72,11 @@ HYD_Status HYDU_find_in_path(const char *execname, char **path)
     goto fn_exit;
 }
 
-HYD_Status HYDU_get_base_path(const char *execname, char *wdir, char **path)
+HYD_status HYDU_get_base_path(const char *execname, char *wdir, char **path)
 {
     char *loc, *post;
     char *tmp[HYD_NUM_TMP_STRINGS];
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -120,7 +120,7 @@ HYD_Status HYDU_get_base_path(const char *execname, char *wdir, char **path)
 char *HYDU_getcwd(void)
 {
     char *pwdval, *cwdval, *retval = NULL;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 #if defined HAVE_STAT
     struct stat spwd, scwd;
 #endif /* HAVE_STAT */
@@ -154,13 +154,13 @@ char *HYDU_getcwd(void)
 }
 
 
-HYD_Status HYDU_parse_hostfile(char *hostfile,
-                               HYD_Status(*process_token) (char *token, int newline))
+HYD_status HYDU_parse_hostfile(char *hostfile,
+                               HYD_status(*process_token) (char *token, int newline))
 {
     char line[HYD_TMP_STRLEN], **tokens;
     FILE *fp;
     int i;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

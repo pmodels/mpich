@@ -8,7 +8,7 @@
 #include "hydra_utils.h"
 #include "uiu.h"
 
-void HYD_UIU_init_params(void)
+void HYD_uiu_init_params(void)
 {
     HYDU_init_user_global(&HYD_handle.user_global);
 
@@ -43,7 +43,7 @@ void HYD_UIU_init_params(void)
 }
 
 
-void HYD_UIU_free_params(void)
+void HYD_uiu_free_params(void)
 {
     if (HYD_handle.base_path)
         HYDU_FREE(HYD_handle.base_path);
@@ -94,13 +94,13 @@ void HYD_UIU_free_params(void)
         HYDU_free_proxy_list(HYD_handle.proxy_list);
 
     /* Re-initialize everything to default values */
-    HYD_UIU_init_params();
+    HYD_uiu_init_params();
 }
 
 
-HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **exec_info)
+HYD_status HYD_uiu_get_current_exec_info(struct HYD_exec_info **exec_info)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -122,12 +122,12 @@ HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **exec_info)
 }
 
 
-static HYD_Status add_exec_info_to_proxy(struct HYD_Exec_info *exec_info,
-                                         struct HYD_Proxy *proxy, int num_procs)
+static HYD_status add_exec_info_to_proxy(struct HYD_exec_info *exec_info,
+                                         struct HYD_proxy *proxy, int num_procs)
 {
     int i;
-    struct HYD_Proxy_exec *exec;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_proxy_exec *exec;
+    HYD_status status = HYD_SUCCESS;
 
     if (proxy->exec_list == NULL) {
         status = HYDU_alloc_proxy_exec(&proxy->exec_list);
@@ -167,12 +167,12 @@ static HYD_Status add_exec_info_to_proxy(struct HYD_Exec_info *exec_info,
 }
 
 
-HYD_Status HYD_UIU_merge_exec_info_to_proxy(void)
+HYD_status HYD_uiu_merge_exec_info_to_proxy(void)
 {
     int proxy_rem_procs, exec_rem_procs;
-    struct HYD_Proxy *proxy;
-    struct HYD_Exec_info *exec_info;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_proxy *proxy;
+    struct HYD_exec_info *exec_info;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -218,13 +218,13 @@ HYD_Status HYD_UIU_merge_exec_info_to_proxy(void)
 }
 
 
-void HYD_UIU_print_params(void)
+void HYD_uiu_print_params(void)
 {
-    HYD_Env_t *env;
+    HYD_env_t *env;
     int i;
-    struct HYD_Proxy *proxy;
-    struct HYD_Proxy_exec *exec;
-    struct HYD_Exec_info *exec_info;
+    struct HYD_proxy *proxy;
+    struct HYD_proxy_exec *exec;
+    struct HYD_exec_info *exec_info;
 
     HYDU_FUNC_ENTER();
 

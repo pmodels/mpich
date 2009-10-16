@@ -9,10 +9,10 @@
 
 #include "hydra.h"
 
-void HYD_UIU_init_params(void);
-void HYD_UIU_free_params(void);
-HYD_Status HYD_UIU_merge_exec_info_to_proxy(void);
-HYD_Status HYD_UIU_get_current_exec_info(struct HYD_Exec_info **info);
-void HYD_UIU_print_params(void);
+void HYD_uiu_init_params(void);
+void HYD_uiu_free_params(void);
+HYD_status HYD_uiu_merge_exec_info_to_proxy(void);
+HYD_status HYD_uiu_get_current_exec_info(struct HYD_exec_info **info);
+void HYD_uiu_print_params(void);
 
 #endif /* UIU_H_INCLUDED */

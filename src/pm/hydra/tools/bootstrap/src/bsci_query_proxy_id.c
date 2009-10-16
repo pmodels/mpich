@@ -8,13 +8,13 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCI_query_proxy_id(int *proxy_id)
+HYD_status HYDT_bsci_query_proxy_id(int *proxy_id)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_BSCI_fns.query_proxy_id(proxy_id);
+    status = HYDT_bsci_fns.query_proxy_id(proxy_id);
     HYDU_ERR_POP(status, "bootstrap device returned error while querying proxy ID\n");
 
   fn_exit:

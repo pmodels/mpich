@@ -14,10 +14,10 @@
 #include "demux.h"
 #include "pmi_serv.h"
 
-HYD_Status HYD_PMCD_pmi_connect_cb(int fd, HYD_Event_t events, void *userp)
+HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
 {
     int accept_fd;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -25,7 +25,7 @@ HYD_Status HYD_PMCD_pmi_connect_cb(int fd, HYD_Event_t events, void *userp)
     status = HYDU_sock_accept(fd, &accept_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
-    status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, NULL, HYD_PMCD_pmi_cmd_cb);
+    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_STDOUT, NULL, HYD_pmcd_pmi_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
@@ -37,13 +37,13 @@ HYD_Status HYD_PMCD_pmi_connect_cb(int fd, HYD_Event_t events, void *userp)
 }
 
 
-HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
+HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     int linelen, i, cmdlen;
     char *buf = NULL, *tbuf = NULL, *cmd, *args[HYD_NUM_TMP_STRINGS];
     char *str1 = NULL, *str2 = NULL;
-    struct HYD_PMCD_pmi_handle_fns *h;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_pmcd_pmi_handle_fns *h;
+    HYD_status status = HYD_SUCCESS;
     int buflen = 0;
     char *bufptr;
 
@@ -66,8 +66,8 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
      * vs. PMI-2. But the simple PMI client-side code is so hacked up,
      * that commands can arrive out-of-order and this is necessary.
      */
-    if (HYD_PMCD_pmi_handle == NULL)
-        HYD_PMCD_pmi_handle = HYD_PMCD_pmi_v1;
+    if (HYD_pmcd_pmi_handle == NULL)
+        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v1;
 
     do {
         status = HYDU_sock_read(fd, bufptr, 6, &linelen, HYDU_SOCK_COMM_MSGWAIT);
@@ -100,16 +100,16 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
              * PMI-2 commands interleaved with regular PMI-2
              * commands. */
             tbuf = HYDU_strdup(buf);
-            cmd = strtok(tbuf, HYD_PMCD_pmi_v1->delim);
+            cmd = strtok(tbuf, HYD_pmcd_pmi_v1->delim);
             for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
-                args[i] = strtok(NULL, HYD_PMCD_pmi_v1->delim);
+                args[i] = strtok(NULL, HYD_pmcd_pmi_v1->delim);
                 if (args[i] == NULL)
                     break;
             }
 
             if (!strcmp("cmd=init", cmd)) {
                 /* Init is generic to all PMI implementations */
-                status = HYD_PMCD_pmi_handle_init(fd, args);
+                status = HYD_pmcd_pmi_handle_init(fd, args);
                 goto fn_exit;
             }
         }
@@ -127,16 +127,16 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
         /* This is not a clean close. If a finalize was called, we
          * would have deregistered this socket. The application might
          * have aborted. Just cleanup all the processes */
-        status = HYD_PMCD_pmi_serv_cleanup();
+        status = HYD_pmcd_pmi_serv_cleanup();
         if (status != HYD_SUCCESS) {
-            HYDU_Warn_printf("bootstrap server returned error cleaning up processes\n");
+            HYDU_warn_printf("bootstrap server returned error cleaning up processes\n");
             status = HYD_SUCCESS;
             goto fn_fail;
         }
 
-        status = HYD_DMX_deregister_fd(fd);
+        status = HYDT_dmx_deregister_fd(fd);
         if (status != HYD_SUCCESS) {
-            HYDU_Warn_printf("unable to deregister fd %d\n", fd);
+            HYDU_warn_printf("unable to deregister fd %d\n", fd);
             status = HYD_SUCCESS;
             goto fn_fail;
         }
@@ -151,9 +151,9 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
      * PMI-1, so we will use that delimited even for PMI-2 for this
      * one command. From the next command onward, we will use the
      * PMI-2 specific delimiter. */
-    cmd = strtok(buf, HYD_PMCD_pmi_handle->delim);
+    cmd = strtok(buf, HYD_pmcd_pmi_handle->delim);
     for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
-        args[i] = strtok(NULL, HYD_PMCD_pmi_handle->delim);
+        args[i] = strtok(NULL, HYD_pmcd_pmi_handle->delim);
         if (args[i] == NULL)
             break;
     }
@@ -166,7 +166,7 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
         status = HYDU_strsplit(cmd, &str1, &str2, '=');
         HYDU_ERR_POP(status, "string split returned error\n");
 
-        h = HYD_PMCD_pmi_handle->handle_fns;
+        h = HYD_pmcd_pmi_handle->handle_fns;
         while (h->handler) {
             if (!strcmp(str2, h->cmd)) {
                 status = h->handler(fd, args);
@@ -177,12 +177,12 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
         }
         if (!h->handler) {
             /* We don't understand the command */
-            HYDU_Error_printf("Unrecognized PMI command: %s | cleaning up processes\n", cmd);
+            HYDU_error_printf("Unrecognized PMI command: %s | cleaning up processes\n", cmd);
 
             /* Cleanup all the processes and return. We don't need to
              * check the return status since we are anyway returning
              * an error */
-            HYD_PMCD_pmi_serv_cleanup();
+            HYD_pmcd_pmi_serv_cleanup();
             HYDU_ERR_SETANDJUMP(status, HYD_SUCCESS, "");
         }
     }
@@ -204,11 +204,11 @@ HYD_Status HYD_PMCD_pmi_cmd_cb(int fd, HYD_Event_t events, void *userp)
 }
 
 
-HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void *userp)
+HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void *userp)
 {
     int accept_fd, proxy_id, count;
-    struct HYD_Proxy *proxy;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_proxy *proxy;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -232,11 +232,11 @@ HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void
     proxy->control_fd = accept_fd;
 
     /* Send out the executable information */
-    status = HYD_PMCD_pmi_send_exec_info(proxy);
+    status = HYD_pmcd_pmi_send_exec_info(proxy);
     HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
 
-    status = HYD_DMX_register_fd(1, &accept_fd, HYD_STDOUT, proxy,
-                                 HYD_PMCD_pmi_serv_control_cb);
+    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_STDOUT, proxy,
+                                  HYD_pmcd_pmi_serv_control_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
@@ -248,22 +248,22 @@ HYD_Status HYD_PMCD_pmi_serv_control_connect_cb(int fd, HYD_Event_t events, void
 }
 
 
-HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp)
+HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
 {
-    struct HYD_Proxy *proxy;
+    struct HYD_proxy *proxy;
     int count;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    proxy = (struct HYD_Proxy *) userp;
+    proxy = (struct HYD_proxy *) userp;
 
     status = HYDU_sock_read(fd, (void *) proxy->exit_status,
                             proxy->proxy_process_count * sizeof(int),
                             &count, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read status from proxy\n");
 
-    status = HYD_DMX_deregister_fd(fd);
+    status = HYDT_dmx_deregister_fd(fd);
     HYDU_ERR_POP(status, "error deregistering fd\n");
 
     close(fd);
@@ -277,11 +277,11 @@ HYD_Status HYD_PMCD_pmi_serv_control_cb(int fd, HYD_Event_t events, void *userp)
 }
 
 
-HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
+HYD_status HYD_pmcd_pmi_serv_cleanup(void)
 {
-    struct HYD_Proxy *proxy;
-    enum HYD_PMCD_pmi_proxy_cmds cmd;
-    HYD_Status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
+    struct HYD_proxy *proxy;
+    enum HYD_pmcd_pmi_proxy_cmds cmd;
+    HYD_status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -291,9 +291,9 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
     FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
         cmd = KILL_JOB;
         status = HYDU_sock_trywrite(proxy->control_fd, &cmd,
-                                    sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+                                    sizeof(enum HYD_pmcd_pmi_proxy_cmds));
         if (status != HYD_SUCCESS) {
-            HYDU_Warn_printf("unable to send data to the proxy on %s\n", proxy->hostname);
+            HYDU_warn_printf("unable to send data to the proxy on %s\n", proxy->hostname);
             overall_status = HYD_INTERNAL_ERROR;
             continue;   /* Move on to the next proxy */
         }
@@ -305,11 +305,11 @@ HYD_Status HYD_PMCD_pmi_serv_cleanup(void)
 }
 
 
-HYD_Status HYD_PMCD_pmi_serv_ckpoint(void)
+HYD_status HYD_pmcd_pmi_serv_ckpoint(void)
 {
-    struct HYD_Proxy *proxy;
-    enum HYD_PMCD_pmi_proxy_cmds cmd;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_proxy *proxy;
+    enum HYD_pmcd_pmi_proxy_cmds cmd;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -319,7 +319,7 @@ HYD_Status HYD_PMCD_pmi_serv_ckpoint(void)
     FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
         cmd = CKPOINT;
         status = HYDU_sock_write(proxy->control_fd, &cmd,
-                                 sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+                                 sizeof(enum HYD_pmcd_pmi_proxy_cmds));
         HYDU_ERR_POP(status, "unable to send checkpoint message\n");
     }
 
@@ -333,7 +333,7 @@ HYD_Status HYD_PMCD_pmi_serv_ckpoint(void)
 }
 
 
-void HYD_PMCD_pmi_serv_signal_cb(int sig)
+void HYD_pmcd_pmi_serv_signal_cb(int sig)
 {
     HYDU_FUNC_ENTER();
 
@@ -346,11 +346,11 @@ void HYD_PMCD_pmi_serv_signal_cb(int sig)
 #endif /* SIGSTOP */
 ) {
         /* There's nothing we can do with the return value for now. */
-        HYD_PMCD_pmi_serv_cleanup();
+        HYD_pmcd_pmi_serv_cleanup();
     }
     else {
         if (sig == SIGUSR1) {
-            HYD_PMCD_pmi_serv_ckpoint();
+            HYD_pmcd_pmi_serv_ckpoint();
         }
         /* Ignore other signals for now */
     }

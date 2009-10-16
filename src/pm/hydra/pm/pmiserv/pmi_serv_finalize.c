@@ -11,21 +11,21 @@
 #include "demux.h"
 #include "pmi_serv.h"
 
-HYD_Status HYD_PMCI_finalize(void)
+HYD_status HYD_pmci_finalize(void)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_PMCD_pmi_finalize();
+    status = HYD_pmcd_pmi_finalize();
     HYDU_ERR_POP(status, "unable to finalize process manager utils\n");
 
     if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_RUNTIME) {
-        status = HYD_BSCI_finalize();
+        status = HYDT_bsci_finalize();
         HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
     }
 
-    status = HYD_DMX_finalize();
+    status = HYDT_dmx_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
 
   fn_exit:

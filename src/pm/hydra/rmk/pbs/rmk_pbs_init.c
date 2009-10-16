@@ -8,13 +8,13 @@
 #include "rmki.h"
 #include "rmk_pbs.h"
 
-HYD_Status HYD_RMKI_pbs_init(void)
+HYD_status HYD_rmki_pbs_init(void)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_RMKI_fns.query_node_list = HYD_RMKD_pbs_query_node_list;
+    HYD_rmki_fns.query_node_list = HYD_rmkd_pbs_query_node_list;
 
     HYDU_FUNC_EXIT();
 

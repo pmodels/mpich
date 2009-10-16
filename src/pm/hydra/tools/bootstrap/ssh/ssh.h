@@ -9,7 +9,7 @@
 
 #include "hydra_base.h"
 
-HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, const char *proxy_id_str,
-                                     struct HYD_Proxy *proxy_list);
+HYD_status HYDT_bscd_ssh_launch_procs(char **global_args, const char *proxy_id_str,
+                                      struct HYD_proxy *proxy_list);
 
 #endif /* SSH_H_INCLUDED */

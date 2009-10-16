@@ -8,7 +8,7 @@
 #define PMI_COMMON_H_INCLUDED
 
 /* The set of commands supported */
-enum HYD_PMCD_pmi_proxy_cmds {
+enum HYD_pmcd_pmi_proxy_cmds {
     PROC_INFO,
     KILL_JOB,
     PROXY_SHUTDOWN,
@@ -22,7 +22,7 @@ enum HYD_PMCD_pmi_proxy_cmds {
  * only support single job environments with no dynamic
  * processes. When there are multiple jobs or dynamic processes, we
  * will need a process group ID as well. */
-struct HYD_PMCD_pmi_header {
+struct HYD_pmcd_pmi_header {
     int pmi_id;
 };
 

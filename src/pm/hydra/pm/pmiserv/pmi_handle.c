@@ -9,8 +9,8 @@
 #include "pmi_handle_v1.h"
 #include "pmi_handle_v2.h"
 
-HYD_PMCD_pmi_pg_t *HYD_pg_list = NULL;
-struct HYD_PMCD_pmi_handle *HYD_PMCD_pmi_handle = { 0 };
+HYD_pmcd_pmi_pg_t *HYD_pg_list = NULL;
+struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle = { 0 };
 
 struct segment {
     int start_pid;
@@ -26,13 +26,13 @@ struct block {
     struct block *next;
 };
 
-static HYD_Status allocate_kvs(HYD_PMCD_pmi_kvs_t ** kvs, int pgid)
+static HYD_status allocate_kvs(HYD_pmcd_pmi_kvs_t ** kvs, int pgid)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*kvs, HYD_PMCD_pmi_kvs_t *, sizeof(HYD_PMCD_pmi_kvs_t), status);
+    HYDU_MALLOC(*kvs, HYD_pmcd_pmi_kvs_t *, sizeof(HYD_pmcd_pmi_kvs_t), status);
     HYDU_snprintf((*kvs)->kvs_name, MAXNAMELEN, "kvs_%d_%d", (int) getpid(), pgid);
     (*kvs)->key_pair = NULL;
 
@@ -45,13 +45,13 @@ static HYD_Status allocate_kvs(HYD_PMCD_pmi_kvs_t ** kvs, int pgid)
 }
 
 
-static HYD_Status create_pg(HYD_PMCD_pmi_pg_t ** pg, int pgid)
+static HYD_status create_pg(HYD_pmcd_pmi_pg_t ** pg, int pgid)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*pg, HYD_PMCD_pmi_pg_t *, sizeof(HYD_PMCD_pmi_pg_t), status);
+    HYDU_MALLOC(*pg, HYD_pmcd_pmi_pg_t *, sizeof(HYD_pmcd_pmi_pg_t), status);
     (*pg)->id = pgid;
     (*pg)->num_procs = 0;
     (*pg)->num_subgroups = 0;
@@ -73,10 +73,10 @@ static HYD_Status create_pg(HYD_PMCD_pmi_pg_t ** pg, int pgid)
 }
 
 
-static HYD_Status free_pmi_process_list(HYD_PMCD_pmi_process_t * process_list)
+static HYD_status free_pmi_process_list(HYD_pmcd_pmi_process_t * process_list)
 {
-    HYD_PMCD_pmi_process_t *process, *tmp;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_pmcd_pmi_process_t *process, *tmp;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -92,10 +92,10 @@ static HYD_Status free_pmi_process_list(HYD_PMCD_pmi_process_t * process_list)
 }
 
 
-static HYD_Status free_pmi_kvs_list(HYD_PMCD_pmi_kvs_t * kvs_list)
+static HYD_status free_pmi_kvs_list(HYD_pmcd_pmi_kvs_t * kvs_list)
 {
-    HYD_PMCD_pmi_kvs_pair_t *key_pair, *tmp;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_pmcd_pmi_kvs_pair_t *key_pair, *tmp;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -112,10 +112,10 @@ static HYD_Status free_pmi_kvs_list(HYD_PMCD_pmi_kvs_t * kvs_list)
 }
 
 
-static HYD_Status free_pmi_node_list(HYD_PMCD_pmi_node_t * node_list)
+static HYD_status free_pmi_node_list(HYD_pmcd_pmi_node_t * node_list)
 {
-    HYD_PMCD_pmi_node_t *node, *tmp;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_pmcd_pmi_node_t *node, *tmp;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -133,14 +133,14 @@ static HYD_Status free_pmi_node_list(HYD_PMCD_pmi_node_t * node_list)
 }
 
 
-static struct HYD_PMCD_pmi_node *allocate_node(HYD_PMCD_pmi_pg_t * pg, int node_id)
+static struct HYD_pmcd_pmi_node *allocate_node(HYD_pmcd_pmi_pg_t * pg, int node_id)
 {
-    struct HYD_PMCD_pmi_node *node;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_pmcd_pmi_node *node;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(node, HYD_PMCD_pmi_node_t *, sizeof(HYD_PMCD_pmi_node_t), status);
+    HYDU_MALLOC(node, HYD_pmcd_pmi_node_t *, sizeof(HYD_pmcd_pmi_node_t), status);
     node->node_id = node_id;
     node->pg = pg;
     node->process_list = NULL;
@@ -157,14 +157,14 @@ static struct HYD_PMCD_pmi_node *allocate_node(HYD_PMCD_pmi_pg_t * pg, int node_
 }
 
 
-HYD_Status HYD_PMCD_pmi_add_kvs(const char *key, char *val, HYD_PMCD_pmi_kvs_t * kvs, int *ret)
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, HYD_pmcd_pmi_kvs_t * kvs, int *ret)
 {
-    HYD_PMCD_pmi_kvs_pair_t *key_pair, *run;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_pmcd_pmi_kvs_pair_t *key_pair, *run;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(key_pair, HYD_PMCD_pmi_kvs_pair_t *, sizeof(HYD_PMCD_pmi_kvs_pair_t), status);
+    HYDU_MALLOC(key_pair, HYD_pmcd_pmi_kvs_pair_t *, sizeof(HYD_pmcd_pmi_kvs_pair_t), status);
     HYDU_snprintf(key_pair->key, MAXKEYLEN, "%s", key);
     HYDU_snprintf(key_pair->val, MAXVALLEN, "%s", val);
     key_pair->next = NULL;
@@ -196,9 +196,9 @@ HYD_Status HYD_PMCD_pmi_add_kvs(const char *key, char *val, HYD_PMCD_pmi_kvs_t *
 }
 
 
-HYD_Status HYD_PMCD_pmi_id_to_rank(int id, int *rank)
+HYD_status HYD_pmcd_pmi_id_to_rank(int id, int *rank)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -216,16 +216,16 @@ HYD_Status HYD_PMCD_pmi_id_to_rank(int id, int *rank)
 }
 
 
-HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
-                                        enum HYD_PMCD_pmi_process_mapping_type type,
+HYD_status HYD_pmcd_pmi_process_mapping(HYD_pmcd_pmi_process_t * process,
+                                        enum HYD_pmcd_pmi_process_mapping_type type,
                                         char **process_mapping_str)
 {
     int i, node_id;
     char *tmp[HYD_NUM_TMP_STRINGS];
-    struct HYD_Proxy *proxy;
+    struct HYD_proxy *proxy;
     struct segment *seglist_head, *seglist_tail = NULL, *seg, *nseg;
     struct block *blocklist_head, *blocklist_tail = NULL, *block, *nblock;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -275,7 +275,7 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
         }
     }
 
-    if (type == HYD_PMCD_pmi_vector) {
+    if (type == HYD_pmcd_pmi_vector) {
         i = 0;
         tmp[i++] = HYDU_strdup("(");
         tmp[i++] = HYDU_strdup("vector,");
@@ -321,12 +321,12 @@ HYD_Status HYD_PMCD_pmi_process_mapping(HYD_PMCD_pmi_process_t * process,
 }
 
 
-static struct HYD_PMCD_pmi_node *find_node(HYD_PMCD_pmi_pg_t * pg, int rank)
+static struct HYD_pmcd_pmi_node *find_node(HYD_pmcd_pmi_pg_t * pg, int rank)
 {
     int node_id, srank;
-    struct HYD_Proxy *proxy;
-    struct HYD_PMCD_pmi_node *node, *tmp;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_proxy *proxy;
+    struct HYD_pmcd_pmi_node *node, *tmp;
+    HYD_status status = HYD_SUCCESS;
 
     srank = rank % HYD_handle.global_core_count;
 
@@ -366,11 +366,11 @@ static struct HYD_PMCD_pmi_node *find_node(HYD_PMCD_pmi_pg_t * pg, int rank)
     goto fn_exit;
 }
 
-HYD_Status HYD_PMCD_pmi_add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd, int rank)
+HYD_status HYD_pmcd_pmi_add_process_to_pg(HYD_pmcd_pmi_pg_t * pg, int fd, int rank)
 {
-    HYD_PMCD_pmi_process_t *process, *tmp;
-    struct HYD_PMCD_pmi_node *node;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_pmcd_pmi_process_t *process, *tmp;
+    struct HYD_pmcd_pmi_node *node;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -378,7 +378,7 @@ HYD_Status HYD_PMCD_pmi_add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd, int ra
     node = find_node(pg, rank);
 
     /* Add process to the node */
-    HYDU_MALLOC(process, HYD_PMCD_pmi_process_t *, sizeof(HYD_PMCD_pmi_process_t), status);
+    HYDU_MALLOC(process, HYD_pmcd_pmi_process_t *, sizeof(HYD_pmcd_pmi_process_t), status);
     process->fd = fd;
     process->rank = rank;
     process->epoch = 0;
@@ -402,11 +402,11 @@ HYD_Status HYD_PMCD_pmi_add_process_to_pg(HYD_PMCD_pmi_pg_t * pg, int fd, int ra
 }
 
 
-HYD_PMCD_pmi_process_t *HYD_PMCD_pmi_find_process(int fd)
+HYD_pmcd_pmi_process_t *HYD_pmcd_pmi_find_process(int fd)
 {
-    HYD_PMCD_pmi_pg_t *pg;
-    HYD_PMCD_pmi_node_t *node;
-    HYD_PMCD_pmi_process_t *process = NULL;
+    HYD_pmcd_pmi_pg_t *pg;
+    HYD_pmcd_pmi_node_t *node;
+    HYD_pmcd_pmi_process_t *process = NULL;
 
     for (pg = HYD_pg_list; pg; pg = pg->next) {
         for (node = pg->node_list; node; node = node->next) {
@@ -421,12 +421,12 @@ HYD_PMCD_pmi_process_t *HYD_PMCD_pmi_find_process(int fd)
 }
 
 
-HYD_Status HYD_PMCD_pmi_init(void)
+HYD_status HYD_pmcd_pmi_init(void)
 {
-    struct HYD_Proxy *proxy;
-    struct HYD_Proxy_exec *exec;
+    struct HYD_proxy *proxy;
+    struct HYD_proxy_exec *exec;
     int i;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -460,10 +460,10 @@ HYD_Status HYD_PMCD_pmi_init(void)
 }
 
 
-HYD_Status HYD_PMCD_pmi_finalize(void)
+HYD_status HYD_pmcd_pmi_finalize(void)
 {
-    HYD_PMCD_pmi_pg_t *pg, *tmp;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_pmcd_pmi_pg_t *pg, *tmp;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

@@ -7,11 +7,11 @@
 #include "hydra_utils.h"
 #include "hydra_tools.h"
 
-HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
+HYD_status HYDU_create_process(char **client_arg, HYD_env_t * env_list,
                                int *in, int *out, int *err, int *pid, int core)
 {
     int inpipe[2], outpipe[2], errpipe[2], tpid;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -60,7 +60,7 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
         }
 
         if (core >= 0) {
-            status = HYDU_bind_process(core);
+            status = HYDT_bind_process(core);
             HYDU_ERR_POP(status, "bind process failed\n");
         }
 
@@ -68,7 +68,7 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
             /* The child process should never get back to the proxy
              * code; if there is an error, just throw it here and
              * exit. */
-            HYDU_Error_printf("execvp error on file %s (%s)\n", client_arg[0],
+            HYDU_error_printf("execvp error on file %s (%s)\n", client_arg[0],
                               HYDU_strerror(errno));
             exit(-1);
         }
@@ -100,10 +100,10 @@ HYD_Status HYDU_create_process(char **client_arg, HYD_Env_t * env_list,
 }
 
 
-HYD_Status HYDU_fork_and_exit(int core)
+HYD_status HYDU_fork_and_exit(int core)
 {
     pid_t tpid;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -115,7 +115,7 @@ HYD_Status HYDU_fork_and_exit(int core)
         close(2);
 
         if (core >= 0) {
-            status = HYDU_bind_process(core);
+            status = HYDT_bind_process(core);
             HYDU_ERR_POP(status, "bind process failed\n");
         }
     }
@@ -132,11 +132,11 @@ HYD_Status HYDU_fork_and_exit(int core)
 }
 
 #if defined HAVE_THREAD_SUPPORT
-HYD_Status HYDU_create_thread(void *(*func) (void *), void *args,
-                              struct HYD_Thread_context *ctxt)
+HYD_status HYDU_create_thread(void *(*func) (void *), void *args,
+                              struct HYD_thread_context *ctxt)
 {
     int ret;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -153,10 +153,10 @@ HYD_Status HYDU_create_thread(void *(*func) (void *), void *args,
     goto fn_exit;
 }
 
-HYD_Status HYDU_join_thread(struct HYD_Thread_context ctxt)
+HYD_status HYDU_join_thread(struct HYD_thread_context ctxt)
 {
     int ret;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

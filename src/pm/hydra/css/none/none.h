@@ -9,7 +9,7 @@
 
 #include "hydra_base.h"
 
-HYD_Status HYD_CSSD_none_query_string(char *str);
-HYD_Status HYD_CSSD_none_finalize(void);
+HYD_status HYD_cssd_none_query_string(char *str);
+HYD_status HYD_cssd_none_finalize(void);
 
 #endif /* NONE_H_INCLUDED */

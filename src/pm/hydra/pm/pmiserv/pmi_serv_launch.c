@@ -17,9 +17,9 @@ static char *proxy_port_str = NULL;
 
 static void *launch_helper(void *args)
 {
-    struct HYD_Proxy *proxy = (struct HYD_Proxy *) args;
-    enum HYD_PMCD_pmi_proxy_cmds cmd;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_proxy *proxy = (struct HYD_proxy *) args;
+    enum HYD_pmcd_pmi_proxy_cmds cmd;
+    HYD_status status = HYD_SUCCESS;
 
     /*
      * Here are the steps we will follow:
@@ -55,7 +55,7 @@ static void *launch_helper(void *args)
     status = HYDU_sock_connect(proxy->hostname, HYD_handle.proxy_port, &proxy->control_fd);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
-    status = HYD_PMCD_pmi_send_exec_info(proxy);
+    status = HYD_pmcd_pmi_send_exec_info(proxy);
     HYDU_ERR_POP(status, "error sending executable info\n");
 
     /* Create an stdout socket */
@@ -63,7 +63,7 @@ static void *launch_helper(void *args)
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
     cmd = USE_AS_STDOUT;
-    status = HYDU_sock_write(proxy->out, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+    status = HYDU_sock_write(proxy->out, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds));
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* Create an stderr socket */
@@ -71,7 +71,7 @@ static void *launch_helper(void *args)
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
     cmd = USE_AS_STDERR;
-    status = HYDU_sock_write(proxy->err, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+    status = HYDU_sock_write(proxy->err, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds));
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* If rank 0 is here, create an stdin socket */
@@ -80,7 +80,7 @@ static void *launch_helper(void *args)
         HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
         cmd = USE_AS_STDIN;
-        status = HYDU_sock_write(proxy->in, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+        status = HYDU_sock_write(proxy->in, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds));
         HYDU_ERR_POP(status, "unable to write data to proxy\n");
     }
 
@@ -91,15 +91,15 @@ static void *launch_helper(void *args)
     goto fn_exit;
 }
 
-static HYD_Status
-create_and_listen_portstr(HYD_Status(*callback) (int fd, HYD_Event_t events, void *userp),
+static HYD_status
+create_and_listen_portstr(HYD_status(*callback) (int fd, HYD_event_t events, void *userp),
                           char **port_str)
 {
     int listenfd;
     char *port_range, *sport;
     uint16_t port;
     char hostname[MAX_HOSTNAME_LEN];
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     /* Check if the user wants us to use a port within a certain
      * range. */
@@ -115,7 +115,7 @@ create_and_listen_portstr(HYD_Status(*callback) (int fd, HYD_Event_t events, voi
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYD_DMX_register_fd(1, &listenfd, HYD_STDOUT, NULL, callback);
+    status = HYDT_dmx_register_fd(1, &listenfd, HYD_STDOUT, NULL, callback);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */
@@ -136,11 +136,11 @@ create_and_listen_portstr(HYD_Status(*callback) (int fd, HYD_Event_t events, voi
     goto fn_exit;
 }
 
-static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode, char **proxy_args)
+static HYD_status fill_in_proxy_args(HYD_launch_mode_t mode, char **proxy_args)
 {
     int i, arg;
     char *path_str[HYD_NUM_TMP_STRINGS];
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     if (mode != HYD_LAUNCH_RUNTIME && mode != HYD_LAUNCH_BOOT &&
         mode != HYD_LAUNCH_BOOT_FOREGROUND)
@@ -189,16 +189,16 @@ static HYD_Status fill_in_proxy_args(HYD_Launch_mode_t mode, char **proxy_args)
     goto fn_exit;
 }
 
-static HYD_Status fill_in_exec_launch_info(void)
+static HYD_status fill_in_exec_launch_info(void)
 {
     int i, arg, process_id;
     int inherited_env_count, user_env_count, system_env_count;
     int exec_count, total_args;
     static int proxy_count = 0;
-    HYD_Env_t *env;
-    struct HYD_Proxy *proxy;
-    struct HYD_Proxy_exec *exec;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_env_t *env;
+    struct HYD_proxy *proxy;
+    struct HYD_proxy_exec *exec;
+    HYD_status status = HYD_SUCCESS;
 
     /* Create the arguments list for each proxy */
     process_id = 0;
@@ -350,33 +350,33 @@ static HYD_Status fill_in_exec_launch_info(void)
     goto fn_exit;
 }
 
-HYD_Status HYD_PMCI_launch_procs(void)
+HYD_status HYD_pmci_launch_procs(void)
 {
-    struct HYD_Proxy *proxy;
-    enum HYD_PMCD_pmi_proxy_cmds cmd;
+    struct HYD_proxy *proxy;
+    enum HYD_pmcd_pmi_proxy_cmds cmd;
     int fd, len, id;
 #if defined HAVE_THREAD_SUPPORT
-    struct HYD_Thread_context *thread_context = NULL;
+    struct HYD_thread_context *thread_context = NULL;
 #endif /* HAVE_THREAD_SUPPORT */
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_set_common_signals(HYD_PMCD_pmi_serv_signal_cb);
+    status = HYDU_set_common_signals(HYD_pmcd_pmi_serv_signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
 
     /* Initialize PMI */
-    status = create_and_listen_portstr(HYD_PMCD_pmi_connect_cb, &pmi_port_str);
+    status = create_and_listen_portstr(HYD_pmcd_pmi_connect_cb, &pmi_port_str);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "Got a PMI port string of %s\n", pmi_port_str);
 
-    status = HYD_PMCD_pmi_init();
+    status = HYD_pmcd_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
     if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_RUNTIME) {
-        status = create_and_listen_portstr(HYD_PMCD_pmi_serv_control_connect_cb,
+        status = create_and_listen_portstr(HYD_pmcd_pmi_serv_control_connect_cb,
                                            &proxy_port_str);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
         if (HYD_handle.user_global.debug)
@@ -388,7 +388,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
         status = fill_in_exec_launch_info();
         HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-        status = HYD_BSCI_launch_procs(proxy_args, "--proxy-id", HYD_handle.proxy_list);
+        status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.proxy_list);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_BOOT ||
@@ -396,7 +396,7 @@ HYD_Status HYD_PMCI_launch_procs(void)
         status = fill_in_proxy_args(HYD_handle.user_global.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-        status = HYD_BSCI_launch_procs(proxy_args, "--proxy-id", HYD_handle.proxy_list);
+        status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.proxy_list);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_SHUTDOWN) {
@@ -404,12 +404,12 @@ HYD_Status HYD_PMCI_launch_procs(void)
             status = HYDU_sock_connect(proxy->hostname, HYD_handle.proxy_port, &fd);
             if (status != HYD_SUCCESS) {
                 /* Don't abort. Try to shutdown as many proxies as possible */
-                HYDU_Error_printf("Unable to connect to proxy at %s\n", proxy->hostname);
+                HYDU_error_printf("Unable to connect to proxy at %s\n", proxy->hostname);
                 continue;
             }
 
             cmd = PROXY_SHUTDOWN;
-            status = HYDU_sock_write(fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+            status = HYDU_sock_write(fd, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds));
             HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
             close(fd);
@@ -424,8 +424,8 @@ HYD_Status HYD_PMCI_launch_procs(void)
             len++;
 
 #if defined HAVE_THREAD_SUPPORT
-        HYDU_CALLOC(thread_context, struct HYD_Thread_context *, len,
-                    sizeof(struct HYD_Thread_context), status);
+        HYDU_CALLOC(thread_context, struct HYD_thread_context *, len,
+                    sizeof(struct HYD_thread_context), status);
         if (!thread_context)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "Unable to allocate memory for thread context\n");
@@ -447,8 +447,8 @@ HYD_Status HYD_PMCI_launch_procs(void)
             HYDU_join_thread(thread_context[id]);
 #endif /* HAVE_THREAD_SUPPORT */
 
-            status = HYD_DMX_register_fd(1, &proxy->control_fd, HYD_STDOUT, proxy,
-                                         HYD_PMCD_pmi_serv_control_cb);
+            status = HYDT_dmx_register_fd(1, &proxy->control_fd, HYD_STDOUT, proxy,
+                                          HYD_pmcd_pmi_serv_control_cb);
             HYDU_ERR_POP(status, "unable to register control fd\n");
 
             id++;
@@ -473,11 +473,11 @@ HYD_Status HYD_PMCI_launch_procs(void)
 }
 
 
-HYD_Status HYD_PMCI_wait_for_completion(void)
+HYD_status HYD_pmci_wait_for_completion(void)
 {
-    struct HYD_Proxy *proxy;
+    struct HYD_proxy *proxy;
     int sockets_open, all_procs_exited;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -489,7 +489,7 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
         while (1) {
             /* Wait for some event to occur */
             status =
-                HYD_DMX_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
+                HYDT_dmx_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
             HYDU_ERR_POP(status, "error waiting for event\n");
 
             /* If the timeout expired, raise a SIGINT and kill all the
@@ -528,12 +528,12 @@ HYD_Status HYD_PMCI_wait_for_completion(void)
 
             /* If not, wait for some event to occur */
             status =
-                HYD_DMX_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
+                HYDT_dmx_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
             HYDU_ERR_POP(status, "error waiting for event\n");
         } while (1);
     }
 
-    status = HYD_BSCI_wait_for_completion(HYD_handle.proxy_list);
+    status = HYDT_bsci_wait_for_completion(HYD_handle.proxy_list);
     HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
 
   fn_exit:

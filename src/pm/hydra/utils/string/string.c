@@ -6,10 +6,10 @@
 
 #include "hydra_utils.h"
 
-HYD_Status HYDU_list_append_strlist(char **src_strlist, char **dest_strlist)
+HYD_status HYDU_list_append_strlist(char **src_strlist, char **dest_strlist)
 {
     int i, j;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -23,10 +23,10 @@ HYD_Status HYDU_list_append_strlist(char **src_strlist, char **dest_strlist)
 }
 
 
-HYD_Status HYDU_print_strlist(char **strlist)
+HYD_status HYDU_print_strlist(char **strlist)
 {
     int arg;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -52,10 +52,10 @@ void HYDU_free_strlist(char **strlist)
 }
 
 
-HYD_Status HYDU_str_alloc_and_join(char **strlist, char **strjoin)
+HYD_status HYDU_str_alloc_and_join(char **strlist, char **strjoin)
 {
     int len = 0, i, count;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -81,10 +81,10 @@ HYD_Status HYDU_str_alloc_and_join(char **strlist, char **strjoin)
 }
 
 
-HYD_Status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
+HYD_status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
 {
     int i;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -110,10 +110,10 @@ HYD_Status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
 }
 
 
-HYD_Status HYDU_strdup_list(char *src[], char **dest[])
+HYD_status HYDU_strdup_list(char *src[], char **dest[])
 {
     int i, count;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -137,7 +137,7 @@ char *HYDU_int_to_str(int x)
 {
     int len = 1, max = 10, y;
     char *str;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -195,7 +195,7 @@ char **HYDU_str_to_strlist(char *str)
     int argc = 0, i;
     char **strlist = NULL;
     char *p;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

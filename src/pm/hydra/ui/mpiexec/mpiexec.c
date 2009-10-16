@@ -12,8 +12,7 @@
 #include "uiu.h"
 #include "demux.h"
 
-HYD_Handle HYD_handle = { {0}
-};
+struct HYD_handle HYD_handle = { {0} };
 
 static void usage(void)
 {
@@ -106,18 +105,18 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-    struct HYD_Proxy *proxy;
-    struct HYD_Proxy_exec *exec;
-    struct HYD_Exec_info *exec_info;
+    struct HYD_proxy *proxy;
+    struct HYD_proxy_exec *exec;
+    struct HYD_exec_info *exec_info;
     int exit_status = 0, timeout, i, process_id, proc_count, num_nodes = 0;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     status = HYDU_dbg_init("mpiexec");
     HYDU_ERR_POP(status, "unable to initialization debugging\n");
 
-    status = HYD_UII_mpx_get_parameters(argv);
+    status = HYD_uii_mpx_get_parameters(argv);
     if (status == HYD_GRACEFUL_ABORT) {
         exit(0);
     }
@@ -126,7 +125,7 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    status = HYD_RMKI_init(HYD_handle.rmk);
+    status = HYD_rmki_init(HYD_handle.rmk);
     HYDU_ERR_POP(status, "unable to initialize RMK\n");
 
     if (HYD_handle.proxy_list == NULL) {
@@ -134,7 +133,7 @@ int main(int argc, char **argv)
          * provided the host file. Query the RMK. We pass a zero node
          * count, so the RMK will give us all the nodes it already has
          * and won't try to allocate any more. */
-        status = HYD_RMKI_query_node_list(&num_nodes, &HYD_handle.proxy_list);
+        status = HYD_rmki_query_node_list(&num_nodes, &HYD_handle.proxy_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
         /* We don't have an allocation capability yet, but when we do,
@@ -142,7 +141,7 @@ int main(int argc, char **argv)
 
         if (HYD_handle.proxy_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
-            status = HYD_UII_mpx_add_to_proxy_list((char *) "localhost", 1);
+            status = HYD_uii_mpx_add_to_proxy_list((char *) "localhost", 1);
             HYDU_ERR_POP(status, "unable to initialize proxy\n");
         }
     }
@@ -174,11 +173,11 @@ int main(int argc, char **argv)
             proxy->active = 1;
     }
 
-    status = HYD_UIU_merge_exec_info_to_proxy();
+    status = HYD_uiu_merge_exec_info_to_proxy();
     HYDU_ERR_POP(status, "unable to merge exec info\n");
 
     if (HYD_handle.user_global.debug)
-        HYD_UIU_print_params();
+        HYD_uiu_print_params();
 
     HYDU_time_set(&HYD_handle.start, NULL);     /* NULL implies right now */
     if (getenv("MPIEXEC_TIMEOUT"))
@@ -214,7 +213,7 @@ int main(int argc, char **argv)
     HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
 
     /* Launch the processes */
-    status = HYD_PMCI_launch_procs();
+    status = HYD_pmci_launch_procs();
     HYDU_ERR_POP(status, "process manager returned error launching processes\n");
 
     /* During shutdown, no processes are launched, so there is nothing
@@ -227,11 +226,11 @@ int main(int argc, char **argv)
      * different port and kills the original proxies using them. */
     if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_SHUTDOWN) {
         /* Call finalize functions for lower layers to cleanup their resources */
-        status = HYD_PMCI_finalize();
+        status = HYD_pmci_finalize();
         HYDU_ERR_POP(status, "process manager error on finalize\n");
 
         /* Free the mpiexec params */
-        HYD_UIU_free_params();
+        HYD_uiu_free_params();
 
         exit_status = 0;
         goto fn_exit;
@@ -246,25 +245,26 @@ int main(int argc, char **argv)
 
     FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
         if (proxy->out != -1) {
-            status = HYD_DMX_register_fd(1, &proxy->out, HYD_STDOUT, NULL,
-                                         HYD_UII_mpx_stdout_cb);
+            status = HYDT_dmx_register_fd(1, &proxy->out, HYD_STDOUT, NULL,
+                                          HYD_uii_mpx_stdout_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
 
         if (proxy->err != -1) {
-            status = HYD_DMX_register_fd(1, &proxy->err, HYD_STDOUT, NULL,
-                                         HYD_UII_mpx_stderr_cb);
+            status = HYDT_dmx_register_fd(1, &proxy->err, HYD_STDOUT, NULL,
+                                          HYD_uii_mpx_stderr_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
 
         if (proxy->in != -1) {
-            status = HYD_DMX_register_fd(1, &proxy->in, HYD_STDIN, NULL, HYD_UII_mpx_stdin_cb);
+            status =
+                HYDT_dmx_register_fd(1, &proxy->in, HYD_STDIN, NULL, HYD_uii_mpx_stdin_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
     }
 
     /* Wait for their completion */
-    status = HYD_PMCI_wait_for_completion();
+    status = HYD_pmci_wait_for_completion();
     HYDU_ERR_POP(status, "process manager error waiting for completion\n");
 
     /* Check for the exit status for all the processes */
@@ -292,11 +292,11 @@ int main(int argc, char **argv)
         HYDU_dump_noprefix(stdout, "\n");
 
     /* Call finalize functions for lower layers to cleanup their resources */
-    status = HYD_PMCI_finalize();
+    status = HYD_pmci_finalize();
     HYDU_ERR_POP(status, "process manager error on finalize\n");
 
     /* Free the mpiexec params */
-    HYD_UIU_free_params();
+    HYD_uiu_free_params();
 
   fn_exit:
     HYDU_FUNC_EXIT();

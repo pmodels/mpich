@@ -9,15 +9,15 @@
 #include "mpiexec.h"
 #include "demux.h"
 
-static HYD_Status close_fd(int fd)
+static HYD_status close_fd(int fd)
 {
-    struct HYD_Proxy *proxy;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_proxy *proxy;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     /* Deregister the FD with the demux engine and close it. */
-    status = HYD_DMX_deregister_fd(fd);
+    status = HYDT_dmx_deregister_fd(fd);
     HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
     close(fd);
 
@@ -42,10 +42,10 @@ static HYD_Status close_fd(int fd)
 }
 
 
-HYD_Status HYD_UII_mpx_stdout_cb(int fd, HYD_Event_t events, void *userp)
+HYD_status HYD_uii_mpx_stdout_cb(int fd, HYD_event_t events, void *userp)
 {
     int closed;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -69,10 +69,10 @@ HYD_Status HYD_UII_mpx_stdout_cb(int fd, HYD_Event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_Status HYD_UII_mpx_stderr_cb(int fd, HYD_Event_t events, void *userp)
+HYD_status HYD_uii_mpx_stderr_cb(int fd, HYD_event_t events, void *userp)
 {
     int closed;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -97,10 +97,10 @@ HYD_Status HYD_UII_mpx_stderr_cb(int fd, HYD_Event_t events, void *userp)
 }
 
 
-HYD_Status HYD_UII_mpx_stdin_cb(int fd, HYD_Event_t events, void *userp)
+HYD_status HYD_uii_mpx_stdin_cb(int fd, HYD_event_t events, void *userp)
 {
     int closed;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

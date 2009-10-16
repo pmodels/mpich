@@ -8,12 +8,12 @@
 #include "rmki.h"
 #include "rmk_pbs.h"
 
-HYD_Status HYD_RMKD_pbs_query_node_list(int *num_nodes, struct HYD_Proxy **proxy_list)
+HYD_status HYD_rmkd_pbs_query_node_list(int *num_nodes, struct HYD_proxy **proxy_list)
 {
     char *host_file, *hostname, line[HYD_TMP_STRLEN], **arg_list;
     int num_procs;
     FILE *fp;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

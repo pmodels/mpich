@@ -7,12 +7,12 @@
 #include "hydra_utils.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCU_wait_for_completion(struct HYD_Proxy *proxy_list)
+HYD_status HYDT_bscu_wait_for_completion(struct HYD_proxy *proxy_list)
 {
     int pid, ret_status, not_completed;
-    struct HYD_Proxy *proxy;
-    struct HYD_Proxy_exec *exec;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_proxy *proxy;
+    struct HYD_proxy_exec *exec;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

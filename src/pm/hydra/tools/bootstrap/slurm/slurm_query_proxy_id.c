@@ -9,9 +9,9 @@
 #include "bscu.h"
 #include "slurm.h"
 
-HYD_Status HYD_BSCD_slurm_query_proxy_id(int *proxy_id)
+HYD_status HYDT_bscd_slurm_query_proxy_id(int *proxy_id)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

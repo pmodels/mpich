@@ -9,10 +9,10 @@
 
 #include "hydra_base.h"
 
-HYD_Status HYD_BSCU_finalize(void);
-HYD_Status HYD_BSCU_wait_for_completion(struct HYD_Proxy *proxy_list);
-HYD_Status HYD_BSCU_query_node_list(int *num_nodes, struct HYD_Proxy **proxy_list);
-HYD_Status HYD_BSCU_query_usize(int *size);
-HYD_Status HYD_BSCU_query_proxy_id(int *proxy_id);
+HYD_status HYDT_bscu_finalize(void);
+HYD_status HYDT_bscu_wait_for_completion(struct HYD_proxy *proxy_list);
+HYD_status HYDT_bscu_query_node_list(int *num_nodes, struct HYD_proxy **proxy_list);
+HYD_status HYDT_bscu_query_usize(int *size);
+HYD_status HYDT_bscu_query_proxy_id(int *proxy_id);
 
 #endif /* BSCU_H_INCLUDED */

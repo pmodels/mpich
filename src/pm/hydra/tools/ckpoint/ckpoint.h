@@ -9,11 +9,11 @@
 
 #include "hydra_utils.h"
 
-struct HYDU_ckpoint_info {
+struct HYDT_ckpoint_info {
     char *ckpointlib;
     char *ckpoint_prefix;
 };
 
-extern struct HYDU_ckpoint_info HYDU_ckpoint_info;
+extern struct HYDT_ckpoint_info HYDT_ckpoint_info;
 
 #endif /* CKPOINT_H_INCLUDED */

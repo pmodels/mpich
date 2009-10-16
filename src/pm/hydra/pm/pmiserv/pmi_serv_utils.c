@@ -9,16 +9,16 @@
 #include "pmi_serv.h"
 #include "demux.h"
 
-HYD_Status HYD_PMCD_pmi_send_exec_info(struct HYD_Proxy *proxy)
+HYD_status HYD_pmcd_pmi_send_exec_info(struct HYD_proxy *proxy)
 {
-    enum HYD_PMCD_pmi_proxy_cmds cmd;
+    enum HYD_pmcd_pmi_proxy_cmds cmd;
     int i, list_len, arg_len;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     cmd = PROC_INFO;
-    status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_PMCD_pmi_proxy_cmds));
+    status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds));
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* Check how many arguments we have */

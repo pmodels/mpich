@@ -8,9 +8,9 @@
 #include "hydra_utils.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCU_finalize(void)
+HYD_status HYDT_bscu_finalize(void)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

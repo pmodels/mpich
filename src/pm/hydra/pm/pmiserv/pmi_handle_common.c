@@ -10,11 +10,11 @@
 #include "pmi_handle_v1.h"
 #include "pmi_handle_v2.h"
 
-HYD_Status HYD_PMCD_pmi_handle_init(int fd, char *args[])
+HYD_status HYD_pmcd_pmi_handle_init(int fd, char *args[])
 {
     int pmi_version, pmi_subversion;
     const char *tmp;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -27,13 +27,13 @@ HYD_Status HYD_PMCD_pmi_handle_init(int fd, char *args[])
         tmp = "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
         status = HYDU_sock_writeline(fd, tmp, strlen(tmp));
         HYDU_ERR_POP(status, "error writing PMI line\n");
-        HYD_PMCD_pmi_handle = HYD_PMCD_pmi_v1;
+        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v1;
     }
     else if (pmi_version == 2 && pmi_subversion == 0) {
         tmp = "cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n";
         status = HYDU_sock_writeline(fd, tmp, strlen(tmp));
         HYDU_ERR_POP(status, "error writing PMI line\n");
-        HYD_PMCD_pmi_handle = HYD_PMCD_pmi_v2;
+        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v2;
     }
     else {
         /* PMI version mismatch */

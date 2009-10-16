@@ -8,13 +8,13 @@
 #include "bsci.h"
 #include "fork.h"
 
-HYD_Status HYD_BSCI_fork_init(void)
+HYD_status HYDT_bsci_fork_init(void)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_BSCI_fns.launch_procs = HYD_BSCD_fork_launch_procs;
+    HYDT_bsci_fns.launch_procs = HYDT_bscd_fork_launch_procs;
 
     HYDU_FUNC_EXIT();
 

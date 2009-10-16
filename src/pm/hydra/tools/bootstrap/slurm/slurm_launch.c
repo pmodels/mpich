@@ -9,14 +9,14 @@
 #include "bscu.h"
 #include "slurm.h"
 
-HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *proxy_id_str,
-                                       struct HYD_Proxy *proxy_list)
+HYD_status HYDT_bscd_slurm_launch_procs(char **global_args, const char *proxy_id_str,
+                                        struct HYD_proxy *proxy_list)
 {
-    struct HYD_Proxy *proxy;
+    struct HYD_proxy *proxy;
     char *client_arg[HYD_NUM_TMP_STRINGS];
     char *tmp[HYD_NUM_TMP_STRINGS], *path = NULL, *test_path = NULL;
     int i, arg, num_nodes;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -26,8 +26,8 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *proxy_id_
      *    2. Search in path
      *    3. Hard-coded location
      */
-    if (HYD_BSCI_info.bootstrap_exec) {
-        path = HYDU_strdup(HYD_BSCI_info.bootstrap_exec);
+    if (HYDT_bsci_info.bootstrap_exec) {
+        path = HYDU_strdup(HYDT_bsci_info.bootstrap_exec);
     }
     else {
         status = HYDU_find_in_path("srun", &test_path);
@@ -89,7 +89,7 @@ HYD_Status HYD_BSCD_slurm_launch_procs(char **global_args, const char *proxy_id_
 
     client_arg[arg++] = NULL;
 
-    if (HYD_BSCI_info.debug) {
+    if (HYDT_bsci_info.debug) {
         HYDU_dump(stdout, "Launching process: ");
         HYDU_print_strlist(client_arg);
     }

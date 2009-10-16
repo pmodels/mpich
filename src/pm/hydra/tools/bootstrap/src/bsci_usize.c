@@ -8,13 +8,13 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCI_query_usize(int *size)
+HYD_status HYDT_bsci_query_usize(int *size)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_BSCI_fns.query_usize(size);
+    status = HYDT_bsci_fns.query_usize(size);
     HYDU_ERR_POP(status, "bootstrap device returned error querying usize\n");
 
   fn_exit:

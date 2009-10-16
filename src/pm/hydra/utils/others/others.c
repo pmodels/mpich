@@ -6,11 +6,11 @@
 
 #include "hydra_utils.h"
 
-HYD_Status HYDU_merge_proxy_segment(char *hostname, int start_pid, int core_count,
-                                    struct HYD_Proxy **proxy_list)
+HYD_status HYDU_merge_proxy_segment(char *hostname, int start_pid, int core_count,
+                                    struct HYD_proxy **proxy_list)
 {
-    struct HYD_Proxy *proxy;
-    HYD_Status status = HYD_SUCCESS;
+    struct HYD_proxy *proxy;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

@@ -7,13 +7,13 @@
 #include "hydra_utils.h"
 #include "cssi.h"
 
-HYD_Status HYD_CSSI_query_string(char *str)
+HYD_status HYD_cssi_query_string(char *str)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_CSSI_fns.query_string(str);
+    status = HYD_cssi_fns.query_string(str);
 
     HYDU_FUNC_EXIT();
 

@@ -10,19 +10,19 @@
 #include "ssh.h"
 
 /*
- * HYD_BSCD_ssh_launch_procs: For each process, we create an
+ * HYDT_bscd_ssh_launch_procs: For each process, we create an
  * executable which reads like "ssh exec args" and the list of
  * environment variables. We fork a worker process that sets the
  * environment and execvp's this executable.
  */
-HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, const char *proxy_id_str,
-                                     struct HYD_Proxy *proxy_list)
+HYD_status HYDT_bscd_ssh_launch_procs(char **global_args, const char *proxy_id_str,
+                                      struct HYD_proxy *proxy_list)
 {
-    struct HYD_Proxy *proxy;
+    struct HYD_proxy *proxy;
     char *client_arg[HYD_NUM_TMP_STRINGS];
     char *tmp[HYD_NUM_TMP_STRINGS], *path = NULL, *test_path = NULL;
     int i, arg, process_id;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -32,8 +32,8 @@ HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, const char *proxy_id_st
      *    2. Search in path
      *    3. Hard-coded location
      */
-    if (HYD_BSCI_info.bootstrap_exec) {
-        path = HYDU_strdup(HYD_BSCI_info.bootstrap_exec);
+    if (HYDT_bsci_info.bootstrap_exec) {
+        path = HYDU_strdup(HYDT_bsci_info.bootstrap_exec);
     }
     else {
         status = HYDU_find_in_path("ssh", &test_path);
@@ -60,9 +60,9 @@ HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, const char *proxy_id_st
         client_arg[arg++] = HYDU_strdup(path);
 
         /* Allow X forwarding only if explicitly requested */
-        if (HYD_BSCI_info.enablex == 1)
+        if (HYDT_bsci_info.enablex == 1)
             client_arg[arg++] = HYDU_strdup("-X");
-        else if (HYD_BSCI_info.enablex == 0)
+        else if (HYDT_bsci_info.enablex == 0)
             client_arg[arg++] = HYDU_strdup("-x");
         else    /* default mode is disable X */
             client_arg[arg++] = HYDU_strdup("-x");
@@ -79,7 +79,7 @@ HYD_Status HYD_BSCD_ssh_launch_procs(char **global_args, const char *proxy_id_st
 
         client_arg[arg++] = NULL;
 
-        if (HYD_BSCI_info.debug) {
+        if (HYDT_bsci_info.debug) {
             HYDU_dump(stdout, "Launching process: ");
             HYDU_print_strlist(client_arg);
         }

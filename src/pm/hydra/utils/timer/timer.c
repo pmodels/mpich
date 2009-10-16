@@ -8,7 +8,7 @@
 
 /* FIXME: Here we assume that the timer is gettimeofday. */
 
-void HYDU_time_set(HYD_Time * time_p, int *val)
+void HYDU_time_set(HYD_time * time_p, int *val)
 {
     if (val == NULL) {
         /* Set time to right now */
@@ -21,9 +21,9 @@ void HYDU_time_set(HYD_Time * time_p, int *val)
 }
 
 
-int HYDU_time_left(HYD_Time start, HYD_Time timeout)
+int HYDU_time_left(HYD_time start, HYD_time timeout)
 {
-    HYD_Time now;
+    HYD_time now;
     int time_left;
 
     HYDU_FUNC_ENTER();

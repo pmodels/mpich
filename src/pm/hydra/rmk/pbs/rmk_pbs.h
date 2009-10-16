@@ -9,6 +9,6 @@
 
 #include "hydra_base.h"
 
-HYD_Status HYD_RMKD_pbs_query_node_list(int *num_nodes, struct HYD_Proxy **proxy_list);
+HYD_status HYD_rmkd_pbs_query_node_list(int *num_nodes, struct HYD_proxy **proxy_list);
 
 #endif /* RMK_PBS_H_INCLUDED */

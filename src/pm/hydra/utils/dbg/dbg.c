@@ -35,10 +35,10 @@ void HYDU_dump(FILE * fp, const char *str, ...)
     va_end(list);
 }
 
-HYD_Status HYDU_dbg_init(const char *str)
+HYD_status HYDU_dbg_init(const char *str)
 {
     char hostname[MAX_HOSTNAME_LEN];
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
         HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR,

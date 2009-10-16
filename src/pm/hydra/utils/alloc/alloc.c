@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 
-void HYDU_init_user_global(struct HYD_User_global *user_global)
+void HYDU_init_user_global(struct HYD_user_global *user_global)
 {
     user_global->bootstrap = NULL;
     user_global->bootstrap_exec = NULL;
@@ -26,7 +26,7 @@ void HYDU_init_user_global(struct HYD_User_global *user_global)
     HYDU_init_global_env(&user_global->global_env);
 }
 
-void HYDU_init_global_env(struct HYD_Env_global *global_env)
+void HYDU_init_global_env(struct HYD_env_global *global_env)
 {
     global_env->system = NULL;
     global_env->user = NULL;
@@ -34,14 +34,14 @@ void HYDU_init_global_env(struct HYD_Env_global *global_env)
     global_env->prop = NULL;
 }
 
-HYD_Status HYDU_alloc_proxy(struct HYD_Proxy **proxy)
+HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy)
 {
     static int proxy_id = 0;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*proxy, struct HYD_Proxy *, sizeof(struct HYD_Proxy), status);
+    HYDU_MALLOC(*proxy, struct HYD_proxy *, sizeof(struct HYD_proxy), status);
 
     (*proxy)->hostname = NULL;
     (*proxy)->pid = -1;
@@ -72,13 +72,13 @@ HYD_Status HYDU_alloc_proxy(struct HYD_Proxy **proxy)
 }
 
 
-HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info)
+HYD_status HYDU_alloc_exec_info(struct HYD_exec_info **exec_info)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*exec_info, struct HYD_Exec_info *, sizeof(struct HYD_Exec_info), status);
+    HYDU_MALLOC(*exec_info, struct HYD_exec_info *, sizeof(struct HYD_exec_info), status);
     (*exec_info)->process_count = 0;
     (*exec_info)->exec[0] = NULL;
     (*exec_info)->user_env = NULL;
@@ -94,9 +94,9 @@ HYD_Status HYDU_alloc_exec_info(struct HYD_Exec_info **exec_info)
 }
 
 
-void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list)
+void HYDU_free_exec_info_list(struct HYD_exec_info *exec_info_list)
 {
-    struct HYD_Exec_info *exec_info, *run;
+    struct HYD_exec_info *exec_info, *run;
 
     HYDU_FUNC_ENTER();
 
@@ -119,10 +119,10 @@ void HYDU_free_exec_info_list(struct HYD_Exec_info *exec_info_list)
 }
 
 
-void HYDU_free_proxy_list(struct HYD_Proxy *proxy_list)
+void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
 {
-    struct HYD_Proxy *proxy, *tproxy;
-    struct HYD_Proxy_exec *exec, *texec;
+    struct HYD_proxy *proxy, *tproxy;
+    struct HYD_proxy_exec *exec, *texec;
 
     HYDU_FUNC_ENTER();
 
@@ -160,13 +160,13 @@ void HYDU_free_proxy_list(struct HYD_Proxy *proxy_list)
 }
 
 
-HYD_Status HYDU_alloc_proxy_exec(struct HYD_Proxy_exec **exec)
+HYD_status HYDU_alloc_proxy_exec(struct HYD_proxy_exec **exec)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*exec, struct HYD_Proxy_exec *, sizeof(struct HYD_Proxy_exec), status);
+    HYDU_MALLOC(*exec, struct HYD_proxy_exec *, sizeof(struct HYD_proxy_exec), status);
     (*exec)->exec[0] = NULL;
     (*exec)->proc_count = 0;
     (*exec)->env_prop = NULL;

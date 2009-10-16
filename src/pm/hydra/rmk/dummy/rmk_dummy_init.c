@@ -8,9 +8,9 @@
 #include "rmki.h"
 #include "rmk_dummy.h"
 
-HYD_Status HYD_RMKI_dummy_init(void)
+HYD_status HYD_rmki_dummy_init(void)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

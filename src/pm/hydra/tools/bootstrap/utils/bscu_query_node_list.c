@@ -8,9 +8,9 @@
 #include "hydra_utils.h"
 #include "bscu.h"
 
-HYD_Status HYD_BSCU_query_node_list(int *num_nodes, struct HYD_Proxy **proxy_list)
+HYD_status HYDT_bscu_query_node_list(int *num_nodes, struct HYD_proxy **proxy_list)
 {
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 

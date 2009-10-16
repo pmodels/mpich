@@ -9,13 +9,13 @@
 #include "bscu.h"
 #include "fork.h"
 
-HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, const char *proxy_id_str,
-                                      struct HYD_Proxy *proxy_list)
+HYD_status HYDT_bscd_fork_launch_procs(char **global_args, const char *proxy_id_str,
+                                       struct HYD_proxy *proxy_list)
 {
-    struct HYD_Proxy *proxy;
+    struct HYD_proxy *proxy;
     char *client_arg[HYD_NUM_TMP_STRINGS];
     int i, arg, process_id;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -34,7 +34,7 @@ HYD_Status HYD_BSCD_fork_launch_procs(char **global_args, const char *proxy_id_s
 
         client_arg[arg++] = NULL;
 
-        if (HYD_BSCI_info.debug) {
+        if (HYDT_bsci_info.debug) {
             HYDU_dump(stdout, "Launching process: ");
             HYDU_print_strlist(client_arg);
         }

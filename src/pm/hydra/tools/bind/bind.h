@@ -10,13 +10,13 @@
 #include "hydra_utils.h"
 
 typedef enum {
-    HYDU_BIND_NONE = 0,
-    HYDU_BIND_BASIC,
-    HYDU_BIND_TOPO
-} HYDU_bind_support_level_t;
+    HYDT_BIND_NONE = 0,
+    HYDT_BIND_BASIC,
+    HYDT_BIND_TOPO
+} HYDT_bind_support_level_t;
 
-struct HYDU_bind_info {
-    HYDU_bind_support_level_t support_level;
+struct HYDT_bind_info {
+    HYDT_bind_support_level_t support_level;
 
     int num_procs;
     int num_sockets;
@@ -26,7 +26,7 @@ struct HYDU_bind_info {
     int *bindmap;
     char *bindlib;
 
-    struct HYDU_topology {
+    struct HYDT_topology {
         int processor_id;
 
         int socket_rank;
@@ -40,6 +40,6 @@ struct HYDU_bind_info {
     } *topology;
 };
 
-extern struct HYDU_bind_info HYDU_bind_info;
+extern struct HYDT_bind_info HYDT_bind_info;
 
 #endif /* BIND_H_INCLUDED */

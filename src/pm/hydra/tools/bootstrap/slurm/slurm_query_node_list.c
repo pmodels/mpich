@@ -43,13 +43,13 @@ static void full_str_to_groups(char *str, char **list)
     list[arg++] = NULL;
 }
 
-static HYD_Status group_to_individual_nodes(char *str, char **list)
+static HYD_status group_to_individual_nodes(char *str, char **list)
 {
     char *pre = NULL, *nodes = NULL, *tmp;
     int start_node, end_node;
     char new[MAX_HOSTNAME_LEN], *node_str[MAX_HOSTNAME_LEN];
     int arg, i;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     tmp = str;
     i = 0;
@@ -99,12 +99,12 @@ static HYD_Status group_to_individual_nodes(char *str, char **list)
     goto fn_exit;
 }
 
-HYD_Status HYD_BSCD_slurm_query_node_list(int *num_nodes, struct HYD_Proxy **proxy_list)
+HYD_status HYDT_bscd_slurm_query_node_list(int *num_nodes, struct HYD_proxy **proxy_list)
 {
     char *str, *num_procs;
     char *tmp1[HYD_NUM_TMP_STRINGS], *tmp2[HYD_NUM_TMP_STRINGS];
     int i, j;
-    HYD_Status status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
