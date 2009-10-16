@@ -11,7 +11,7 @@
 #include "hydra_utils.h"
 #include "pmi_common.h"
 
-struct HYD_pmcd_pmi_proxy_params {
+struct HYD_pmcd_pmip {
     struct HYD_user_global user_global;
 
     struct {
@@ -63,7 +63,7 @@ struct HYD_pmcd_pmi_proxy_params {
     struct HYD_proxy_exec *exec_list;
 };
 
-extern struct HYD_pmcd_pmi_proxy_params HYD_pmcd_pmi_proxy_params;
+extern struct HYD_pmcd_pmip HYD_pmcd_pmip;
 
 /* utils */
 HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv);
