@@ -2402,125 +2402,107 @@ int iPMI_Spawn_multiple(int count,
     }
 
     /* add the keyvals */
-    if (info_keyval_sizes && info_keyval_vectors)
-    {
-	for (i=0; i<count; i++)
-	{
-	    path_specified = 0;
-	    wdir_specified = 0;
-	    buffer[0] = '\0';
-	    iter = buffer;
-	    maxlen = SMPD_MAX_CMD_LENGTH;
-	    for (j=0; j<info_keyval_sizes[i]; j++)
-	    {
-		keyval_buf[0] = '\0';
-		iter2 = keyval_buf;
-		maxlen2 = SMPD_MAX_CMD_LENGTH;
-		if (strcmp(info_keyval_vectors[i][j].key, "path") == 0)
-		{
-		    size_t val2len;
-		    char *val2;
-		    val2len = sizeof(char) * strlen(info_keyval_vectors[i][j].val) + 1 + strlen(path) + 1;
-		    val2 = (char*)MPIU_Malloc(val2len);
-		    if (val2 == NULL)
-		    {
-			pmi_err_printf("unable to allocate memory for the path key.\n");
-			return PMI_FAIL;
-		    }
-		    /*printf("creating path %d: <%s>;<%s>\n", val2len, info_keyval_vectors[i][j].val, path);fflush(stdout);*/
-		    MPIU_Snprintf(val2, val2len, "%s;%s", info_keyval_vectors[i][j].val, path);
-		    result = MPIU_Str_add_string_arg(&iter2, &maxlen2, info_keyval_vectors[i][j].key, val2);
-		    if (result != MPIU_STR_SUCCESS)
-		    {
-			pmi_err_printf("unable to add %s=%s to the spawn command.\n", info_keyval_vectors[i][j].key, val2);
-			MPIU_Free(val2);
-			return PMI_FAIL;
-		    }
-		    MPIU_Free(val2);
-		    path_specified = 1;
-		}
-		else
-		{
-		    if(strcmp(info_keyval_vectors[i][j].key, "wdir") == 0)
-		    {
-		        wdir_specified = 1;
-		    }
-		    result = MPIU_Str_add_string_arg(&iter2, &maxlen2, info_keyval_vectors[i][j].key, info_keyval_vectors[i][j].val);
-		    if (result != MPIU_STR_SUCCESS)
-		    {
-			pmi_err_printf("unable to add %s=%s to the spawn command.\n", info_keyval_vectors[i][j].key, info_keyval_vectors[i][j].val);
-			return PMI_FAIL;
-		    }
-		}
-		if (iter2 > keyval_buf)
-		{
-		    iter2--;
-		    *iter2 = '\0'; /* remove the trailing space */
-		}
-		sprintf(key, "%d", j);
-		result = MPIU_Str_add_string_arg(&iter, &maxlen, key, keyval_buf);
-		if (result != MPIU_STR_SUCCESS)
-		{
-		    pmi_err_printf("unable to add %s=%s to the spawn command.\n", key, keyval_buf);
-		    return PMI_FAIL;
-		}
-	    }
-	    /* add the current directory as the default path if a path has not been specified */
-	    if (!path_specified)
-	    {
-		keyval_buf[0] = '\0';
-		iter2 = keyval_buf;
-		maxlen2 = SMPD_MAX_CMD_LENGTH;
-		result = MPIU_Str_add_string_arg(&iter2, &maxlen2, "path", path);
-		iter2--;
-		*iter2 = '\0';
-		sprintf(key, "%d", j++);
-		result = MPIU_Str_add_string_arg(&iter, &maxlen, key, keyval_buf);
-		if (result != MPIU_STR_SUCCESS)
-		{
-		    pmi_err_printf("unable to add %s=%s to the spawn command.\n", key, keyval_buf);
-		    return PMI_FAIL;
-		}
-		info_keyval_sizes[i]++;
-	    }
-	    if(!wdir_specified)
-	    {
-		char wdir[SMPD_MAX_DIR_LENGTH];
-		if(getcwd(wdir, SMPD_MAX_DIR_LENGTH))
-		{
-	            keyval_buf[0] = '\0';
-		    iter2 = keyval_buf;
-		    maxlen2 = SMPD_MAX_CMD_LENGTH;
-		    result = MPIU_Str_add_string_arg(&iter2, &maxlen2, "wdir", wdir);
-		    if(result != MPIU_STR_SUCCESS)
-		    {
-			pmi_err_printf("Unable to add wdir to keyval_buf\n");
-			return PMI_FAIL;
-		    }
-		    *(--iter2) = '\0';
-		    sprintf(key, "%d", j);
-		    result = MPIU_Str_add_string_arg(&iter, &maxlen, key, keyval_buf);
-		    if(result != MPIU_STR_SUCCESS)
-		    {
-			pmi_err_printf("unable to add %s=%s to the spawn command\n", key, keyval_buf);
-			return PMI_FAIL;
-		    }
-		    info_keyval_sizes[i]++;
-		}
-	    }
-	    if (iter != buffer)
-	    {
-		iter--;
-		*iter = '\0'; /* remove the trailing space */
-	    }
-	    sprintf(key, "keyvals%d", i);
-	    result = smpd_add_command_arg(cmd_ptr, key, buffer);
-	    if (result != SMPD_SUCCESS)
-	    {
-		pmi_err_printf("unable to add %s(%s) to the spawn command.\n", key, buffer);
-		return PMI_FAIL;
-	    }
-	}
+    if (info_keyval_sizes && info_keyval_vectors){
+        for (i=0; i<count; i++){
+            path_specified = 0;
+            wdir_specified = 0;
+            buffer[0] = '\0';
+            iter = buffer;
+            maxlen = SMPD_MAX_CMD_LENGTH;
+	    
+            for (j=0; j<info_keyval_sizes[i]; j++){
+                keyval_buf[0] = '\0';
+                iter2 = keyval_buf;
+                maxlen2 = SMPD_MAX_CMD_LENGTH;
+                if (strcmp(info_keyval_vectors[i][j].key, "path") == 0){
+                    size_t val2len;
+                    char *val2;
+                    val2len = sizeof(char) * strlen(info_keyval_vectors[i][j].val) + 1 + strlen(path) + 1;
+                    val2 = (char*)MPIU_Malloc(val2len);
+                    if (val2 == NULL){
+                        pmi_err_printf("unable to allocate memory for the path key.\n");
+                        return PMI_FAIL;
+                    }
+                    /*printf("creating path %d: <%s>;<%s>\n", val2len, info_keyval_vectors[i][j].val, path);fflush(stdout);*/
+                    MPIU_Snprintf(val2, val2len, "%s;%s", info_keyval_vectors[i][j].val, path);
+                    result = MPIU_Str_add_string_arg(&iter2, &maxlen2, info_keyval_vectors[i][j].key, val2);
+                    if (result != MPIU_STR_SUCCESS){
+                        pmi_err_printf("unable to add %s=%s to the spawn command.\n", info_keyval_vectors[i][j].key, val2);
+                        MPIU_Free(val2);
+                        return PMI_FAIL;
+                    }
+                    MPIU_Free(val2);
+                    path_specified = 1;
+                }
+                else{
+                    if(strcmp(info_keyval_vectors[i][j].key, "wdir") == 0){
+                        wdir_specified = 1;
+                    }
+                    result = MPIU_Str_add_string_arg(&iter2, &maxlen2, info_keyval_vectors[i][j].key, info_keyval_vectors[i][j].val);
+                    if (result != MPIU_STR_SUCCESS){
+                        pmi_err_printf("unable to add %s=%s to the spawn command.\n", info_keyval_vectors[i][j].key, info_keyval_vectors[i][j].val);
+                        return PMI_FAIL;
+                    }
+                }
+                if (iter2 > keyval_buf){
+                    iter2--;
+                    *iter2 = '\0'; /* remove the trailing space */
+                }
+                sprintf(key, "%d", j);
+                result = MPIU_Str_add_string_arg(&iter, &maxlen, key, keyval_buf);
+                if (result != MPIU_STR_SUCCESS){
+                    pmi_err_printf("unable to add %s=%s to the spawn command.\n", key, keyval_buf);
+                    return PMI_FAIL;
+                }
+            }
+            /* add the current directory as the default path if a path has not been specified */
+            if (!path_specified){
+                keyval_buf[0] = '\0';
+                iter2 = keyval_buf;
+                maxlen2 = SMPD_MAX_CMD_LENGTH;
+                result = MPIU_Str_add_string_arg(&iter2, &maxlen2, "path", path);
+                iter2--;
+                *iter2 = '\0';
+                sprintf(key, "%d", j++);
+                result = MPIU_Str_add_string_arg(&iter, &maxlen, key, keyval_buf);
+                if (result != MPIU_STR_SUCCESS){
+                    pmi_err_printf("unable to add %s=%s to the spawn command.\n", key, keyval_buf);
+                    return PMI_FAIL;
+                }
+                info_keyval_sizes[i]++;
+            }
+            if(!wdir_specified){
+                char wdir[SMPD_MAX_DIR_LENGTH];
+                if(getcwd(wdir, SMPD_MAX_DIR_LENGTH)){
+                    keyval_buf[0] = '\0';
+                    iter2 = keyval_buf;
+                    maxlen2 = SMPD_MAX_CMD_LENGTH;
+                    result = MPIU_Str_add_string_arg(&iter2, &maxlen2, "wdir", wdir);
+                    if(result != MPIU_STR_SUCCESS){
+                        pmi_err_printf("Unable to add wdir to keyval_buf\n");
+                        return PMI_FAIL;
+                    }
+                    *(--iter2) = '\0';
+                    sprintf(key, "%d", j);
+                    result = MPIU_Str_add_string_arg(&iter, &maxlen, key, keyval_buf);
+                    if(result != MPIU_STR_SUCCESS){
+                        pmi_err_printf("unable to add %s=%s to the spawn command\n", key, keyval_buf);
+                        return PMI_FAIL;
+                    }
+                    info_keyval_sizes[i]++;
+                }
+            }
+            if (iter != buffer){
+                iter--;
+                *iter = '\0'; /* remove the trailing space */
+            }
+            sprintf(key, "keyvals%d", i);
+            result = smpd_add_command_arg(cmd_ptr, key, buffer);
+            if (result != SMPD_SUCCESS){
+                pmi_err_printf("unable to add %s(%s) to the spawn command.\n", key, buffer);
+                return PMI_FAIL;
+            }
+        }
     }
     else
     {
@@ -2644,6 +2626,7 @@ int iPMI_Spawn_multiple(int count,
 	smpd_get_context_str(pmi_process.context), SMPDU_Sock_get_sock_id(pmi_process.context->sock), cmd_ptr->cmd);
     fflush(stdout);
     */
+    
     result = smpd_post_write_command(pmi_process.context, cmd_ptr);
     if (result != SMPD_SUCCESS)
     {
