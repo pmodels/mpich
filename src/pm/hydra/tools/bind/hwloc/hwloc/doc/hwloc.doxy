@@ -1,0 +1,331 @@
+/*
+ * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+ * See COPYING in top-level directory.
+ */
+
+/*! \mainpage hwloc
+
+<h1 class="sub">Portable abstraction of hierarchical architectures for high-performance computing</h1>
+
+<hr>
+
+\htmlonly
+<div class="section" id="introduction">
+\endhtmlonly
+\section Introduction
+
+hwloc provides a portable abstraction (across OS, versions, architectures,
+...) of the hierarchical topology of modern architectures. It primarily aims at
+helping high-performance computing applications with gathering information about
+the hardware so as to exploit it accordingly and efficiently.
+
+hwloc provides a hierarchical view of the machine, NUMA memory nodes,
+sockets, shared caches, cores and simultaneous multithreading. It also gathers
+various attributes such as cache and memory information.
+
+hwloc supports the following operating systems:
+
+<ul>
+  <li> Linux (including old kernels not having sysfs topology information, with
+  knowledge of cpusets, offline cpus, and Kerrighed support)
+  <li> Solaris
+  <li> AIX
+  <li> Darwin
+  <li> OSF/1 (aka. Tru64)
+  <li> HP-UX
+  <li> Windows
+  <li> For other OSes, only the number of processors is available for now.
+</ul>
+
+For development and debugging purposes, hwloc also offers the ability to
+work on fake topologies:
+
+<ul>
+  <li> Symmetrical tree of resources generated from a list of level arities
+  <li> Remote machine simulation through the gathering of Linux sysfs topology files
+</ul>
+
+hwloc may also display the topology in a convenient format, either in
+graphical mode, or by exporting in PDF, PNG, FIG, ... format, or in text mode
+(see Examples below).
+
+hwloc offers a programming interface for manipulating topologies and
+objects. It also brings a powerful cpu bitmap API that is used to describe
+topology objects location on physical/logical processors. See the \ref interface
+below. It may also be used to binding applications onto certain cores or
+memory nodes. Several utility programs are also provided to ease command-line
+manipulation of topology objects, binding of processes, ...
+
+\htmlonly
+</div><div class="section" id="installation">
+\endhtmlonly
+\section installation Installation
+
+hwloc (http://www.open-mpi.org/projects/hwloc/) is available under the BSD license.
+It is hosted by Open MPI (http://www.open-mpi.org/).
+The current SVN snapshot can be fetched with:
+
+<ul>
+ <li>svn checkout http://svn.open-mpi.org/svn/hwloc/trunk hwloc-trunk
+ <li>cd hwloc-trunk
+ <li>./autogen.sh
+</ul>
+
+Note that autoconf >=2.60, automake >=1.10 and libtool >=2.2.6 are required in that case.
+
+Installation by itself is as usual:
+
+<ul>
+ <li>./configure --prefix=...
+ <li>make
+ <li>make install
+</ul>
+
+Lstopo's fig support is always available. To get support for pdf, ps and png
+support, cairo is needed. To get support for xml, libxml2 is needed.
+
+\htmlonly
+</div><div class="section" id="examples">
+\endhtmlonly
+\section examples Examples
+
+ On a 4-socket 2-core machine with hyperthreading, the \c lstopo tool may
+ show the following outputs:
+
+\image html dudley.png
+\image latex dudley.png width=\textwidth
+
+\code
+System(15GB)
+  Socket#0 + L3(4096KB)
+    L2(1024KB) + L1(16KB) + Core#0
+      P#0
+      P#8
+    L2(1024KB) + L1(16KB) + Core#1
+      P#4
+      P#12
+  Socket#1 + L3(4096KB)
+    L2(1024KB) + L1(16KB) + Core#0
+      P#1
+      P#9
+    L2(1024KB) + L1(16KB) + Core#1
+      P#5
+      P#13
+  Socket#2 + L3(4096KB)
+    L2(1024KB) + L1(16KB) + Core#0
+      P#2
+      P#10
+    L2(1024KB) + L1(16KB) + Core#1
+      P#6
+      P#14
+  Socket#3 + L3(4096KB)
+    L2(1024KB) + L1(16KB) + Core#0
+      P#3
+      P#11
+    L2(1024KB) + L1(16KB) + Core#1
+      P#7
+      P#15
+\endcode
+
+ On a 4-socket 2-core Opteron NUMA machine, the \c lstopo tool may
+ show the following outputs:
+
+\image html hagrid.png
+\image latex hagrid.png width=\textwidth
+
+\code
+System(62GB)
+  Node#0(8190MB) + Socket#0
+    L2(1024KB) + L1(64KB) + Core#0 + P#0
+    L2(1024KB) + L1(64KB) + Core#1 + P#1
+  Node#1(8192MB) + Socket#1
+    L2(1024KB) + L1(64KB) + Core#0 + P#2
+    L2(1024KB) + L1(64KB) + Core#1 + P#3
+  Node#2(8192MB) + Socket#2
+    L2(1024KB) + L1(64KB) + Core#0 + P#4
+    L2(1024KB) + L1(64KB) + Core#1 + P#5
+  Node#3(8192MB) + Socket#3
+    L2(1024KB) + L1(64KB) + Core#0 + P#6
+    L2(1024KB) + L1(64KB) + Core#1 + P#7
+  Node#4(8192MB) + Socket#4
+    L2(1024KB) + L1(64KB) + Core#0 + P#8
+    L2(1024KB) + L1(64KB) + Core#1 + P#9
+  Node#5(8192MB) + Socket#5
+    L2(1024KB) + L1(64KB) + Core#0 + P#10
+    L2(1024KB) + L1(64KB) + Core#1 + P#11
+  Node#6(8192MB) + Socket#6
+    L2(1024KB) + L1(64KB) + Core#0 + P#12
+    L2(1024KB) + L1(64KB) + Core#1 + P#13
+  Node#7(8192MB) + Socket#7
+    L2(1024KB) + L1(64KB) + Core#0 + P#14
+    L2(1024KB) + L1(64KB) + Core#1 + P#15
+\endcode
+
+ On a 2-socket quad-core Xeon (pre-Nehalem ones assembling 2 dual-core dies into each socket):
+
+\image html emmett.png
+\image latex emmett.png width=\textwidth
+
+\code
+System(15GB)
+  Socket#0
+    L2(4096KB)
+      L1(32KB) + Core#0 + P#0
+      L1(32KB) + Core#1 + P#4
+    L2(4096KB)
+      L1(32KB) + Core#2 + P#2
+      L1(32KB) + Core#3 + P#6
+  Socket#1
+    L2(4096KB)
+      L1(32KB) + Core#0 + P#1
+      L1(32KB) + Core#1 + P#5
+    L2(4096KB)
+      L1(32KB) + Core#2 + P#3
+      L1(32KB) + Core#3 + P#7
+\endcode
+
+\htmlonly
+</div><div class="section" id="interface">
+\endhtmlonly
+
+\section interface Programming interface
+
+The basic interface is available in hwloc.h . It mostly offers low-level
+routines for advanced programmers that want to manually manipulate objects
+and follow links between them. Most users should look at hwloc/helper.h
+which provides a lot of interesting higher-level traversal examples.
+
+Each object contains a cpuset which describes the list of processors
+that it contains. These cpusets may be used for \ref hwlocality_binding.
+hwloc offers an extensive cpuset manipulation interface in hwloc/cpuset.h .
+
+Moreover, hwloc also comes with additional helpers for interoperability
+with several commonly used environments. For Linux, some specific helpers
+are available in hwloc/linux.h , and hwloc/linux-libnuma.h if using libnuma.
+On glibc-based systems, additional helpers are available in hwloc/glibc-sched.h .
+For systems with the Infiniband Verbs library, some dedicated helpers are
+provided in hwloc/ibverbs.h .
+
+To precisely define the vocabulary used by hwloc, a \ref glossary is
+available and should probably be read first.
+
+Further documentation is available in html, manual pages, and pdf format
+in the source tarball in doc/doxygen-doc/ (after doxygen compilation
+for svn checkouts) and are installed in $prefix/share/doc/hwloc/ and
+the usual manual repository.
+
+The following section presents an example of API usage.
+
+\section interface_example Interface example
+
+This section shows how to use hwloc with an small example \c hwloc-hello.c
+that just prints the topology and binds itself to the first processor of the
+second core of the machine.
+
+Hardware Location provides a pkg-config object, so compiling the example boils down to
+
+\verbatim
+CFLAGS+=$(pkg-config --cflags hwloc)
+LDLIBS+=$(pkg-config --libs hwloc)
+cc hwloc-hello.c $(CFLAGS) -o hwloc-hello $(LDLIBS)
+\endverbatim
+
+\include hwloc-hello.c
+
+\htmlonly
+</div><div class="section" id="bugs">
+\endhtmlonly
+\section bugs Questions and bugs
+
+Questions should be sent to the devel mailing
+list (http://www.open-mpi.org/community/lists/hwloc.php).
+Bug reports should be reported in the tracker
+(https://svn.open-mpi.org/trac/hwloc/).
+
+\htmlonly
+</div><div class="section" id="credits">
+\endhtmlonly
+\section history History / credits
+
+hwloc is the evolution and merger of the libtopology
+(http://runtime.bordeaux.inria.fr/libtopology/) project and the Portable
+Linux Processor Affinity (PLPA) (http://www.open-mpi.org/projects/plpa/)
+project. Because of functional and ideological overlap, these two code bases
+and ideas were merged and released under the name "hwloc" as an Open MPI
+sub-project.
+
+libtopology was initially developed by the INRIA Runtime Team-Project
+(http://runtime.bordeaux.inria.fr/) (headed by Raymond Namyst
+(http://dept-info.labri.fr/~namyst/)). PLPA was initially developed by
+the Open MPI development team as a sub-project. Both are now deprecated
+in favor of hwloc, which is distributed as an Open MPI sub-project.
+
+\htmlonly
+</div>
+\endhtmlonly
+
+\page glossary Glossary
+
+<dl>
+
+<dt>Object</dt>
+  <dd>Interesting kind of part of the system, such as a Core, a Cache, a Memory
+  node, etc. The different types detected by hwloc are detailed in the
+  ::hwloc_obj_type_e enumeration.
+  
+  They are topologically sorted by CPU set into a tree whose root is the System object which always exists.
+  </dd>
+
+<dt>CPU set</dt>
+  <dd>The set of logical processors logically included in an object, if any</dd>
+
+<dt>Father object</dt>
+  <dd>The object logically containing the current object, for instance because
+  its CPU set includes the CPU set of the current object.
+  </dd>
+
+<dt>Children objects</dt>
+  <dd>The object contained in the current object because their CPU set is
+  included in the CPU set of the current object.</dd>
+
+<dt>Arity</dt>
+  <dd>The number of children of an object</dd>
+
+<dt>Sibling objects</dt>
+  <dd>Objects of the same type which have the same father</dd>
+
+<dt>Sibling rank</dt>
+  <dd>Index to uniquely identify objecst of the same type which have the same
+  father, numbered from 0 to the arity of the father minus one.</dd>
+
+<dt>Cousin objects</dt>
+  <dd>Objects of the same type as the current object</dd>
+
+<dt>Level</dt>
+  <dd>Set of objects of the same type</dd>
+
+<dt>OS index</dt>
+  <dd>The index that the OS uses to identify the object. This may sometimes be
+  completely arbitrary or depend on the BIOS configuration.</dd>
+
+<dt>Depth</dt>
+  <dd>Nesting level in the object tree, starting from the System object.</dd>
+
+<dt>Logical index</dt>
+  <dd>Index to uniquely identify objects of the same type. This index is always
+  linear from 0 to the number of objects of the level for that type, to express
+  proximity.  It could also be called cousin rank.</dd>
+
+</dl>
+
+The following diagram can help to understand the vocabulary of the relationships
+by showing the example of a machine with two dual core non-SMT sockets, thus a
+topology with 4 levels.
+
+\image html diagram.png
+\image latex diagram.eps width=\textwidth
+
+It can be noticed that for Processor objects, the logical index, computed
+linearly by hwloc, is not the same as the OS index.
+
+*/

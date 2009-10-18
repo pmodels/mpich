@@ -1,0 +1,58 @@
+\hypertarget{group__hwlocality__conversion}{
+\section{Object/String Conversion}
+\label{group__hwlocality__conversion}\index{Object/String Conversion@{Object/String Conversion}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+const char $\ast$ \hyperlink{group__hwlocality__conversion_g5ca0bf94bbbb080d0eff17a57bd90422}{hwloc\_\-obj\_\-type\_\-string} (\hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type)
+\begin{CompactList}\small\item\em Return a stringified topology object type. \item\end{CompactList}\item 
+\hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} \hyperlink{group__hwlocality__conversion_g8a1eee67a1de115d264719157c109a20}{hwloc\_\-obj\_\-type\_\-of\_\-string} (const char $\ast$string)
+\begin{CompactList}\small\item\em Return an object type from the string. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__conversion_g612dc210053b65d2466ac7ad39db92a4}{hwloc\_\-obj\_\-snprintf} (char $\ast$restrict string, size\_\-t size, \hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} obj, const char $\ast$restrict indexprefix, int verbose)
+\begin{CompactList}\small\item\em Stringify a given topology object into a human-readable form. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__conversion_ge001fafdeda3a67695d406affde1ab0d}{hwloc\_\-obj\_\-cpuset\_\-snprintf} (char $\ast$restrict str, size\_\-t size, size\_\-t nobj, const \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} $\ast$restrict objs)
+\begin{CompactList}\small\item\em Stringify the cpuset containing a set of objects. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__conversion_ge001fafdeda3a67695d406affde1ab0d}{
+\index{hwlocality\_\-conversion@{hwlocality\_\-conversion}!hwloc\_\-obj\_\-cpuset\_\-snprintf@{hwloc\_\-obj\_\-cpuset\_\-snprintf}}
+\index{hwloc\_\-obj\_\-cpuset\_\-snprintf@{hwloc\_\-obj\_\-cpuset\_\-snprintf}!hwlocality_conversion@{hwlocality\_\-conversion}}
+\subsubsection[{hwloc\_\-obj\_\-cpuset\_\-snprintf}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-obj\_\-cpuset\_\-snprintf (char $\ast$restrict {\em str}, \/  size\_\-t {\em size}, \/  size\_\-t {\em nobj}, \/  const {\bf hwloc\_\-obj\_\-t} $\ast$restrict {\em objs})}}
+\label{group__hwlocality__conversion_ge001fafdeda3a67695d406affde1ab0d}
+
+
+Stringify the cpuset containing a set of objects. 
+
+\begin{Desc}
+\item[Returns:]how many characters were actually written (not including the ending $\backslash$0). \end{Desc}
+\hypertarget{group__hwlocality__conversion_g612dc210053b65d2466ac7ad39db92a4}{
+\index{hwlocality\_\-conversion@{hwlocality\_\-conversion}!hwloc\_\-obj\_\-snprintf@{hwloc\_\-obj\_\-snprintf}}
+\index{hwloc\_\-obj\_\-snprintf@{hwloc\_\-obj\_\-snprintf}!hwlocality_conversion@{hwlocality\_\-conversion}}
+\subsubsection[{hwloc\_\-obj\_\-snprintf}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-obj\_\-snprintf (char $\ast$restrict {\em string}, \/  size\_\-t {\em size}, \/  {\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-obj\_\-t} {\em obj}, \/  const char $\ast$restrict {\em indexprefix}, \/  int {\em verbose})}}
+\label{group__hwlocality__conversion_g612dc210053b65d2466ac7ad39db92a4}
+
+
+Stringify a given topology object into a human-readable form. 
+
+\begin{Desc}
+\item[Returns:]how many characters were actually written (not including the ending $\backslash$0). \end{Desc}
+\hypertarget{group__hwlocality__conversion_g8a1eee67a1de115d264719157c109a20}{
+\index{hwlocality\_\-conversion@{hwlocality\_\-conversion}!hwloc\_\-obj\_\-type\_\-of\_\-string@{hwloc\_\-obj\_\-type\_\-of\_\-string}}
+\index{hwloc\_\-obj\_\-type\_\-of\_\-string@{hwloc\_\-obj\_\-type\_\-of\_\-string}!hwlocality_conversion@{hwlocality\_\-conversion}}
+\subsubsection[{hwloc\_\-obj\_\-type\_\-of\_\-string}]{\setlength{\rightskip}{0pt plus 5cm}{\bf hwloc\_\-obj\_\-type\_\-t} hwloc\_\-obj\_\-type\_\-of\_\-string (const char $\ast$ {\em string})}}
+\label{group__hwlocality__conversion_g8a1eee67a1de115d264719157c109a20}
+
+
+Return an object type from the string. 
+
+\hypertarget{group__hwlocality__conversion_g5ca0bf94bbbb080d0eff17a57bd90422}{
+\index{hwlocality\_\-conversion@{hwlocality\_\-conversion}!hwloc\_\-obj\_\-type\_\-string@{hwloc\_\-obj\_\-type\_\-string}}
+\index{hwloc\_\-obj\_\-type\_\-string@{hwloc\_\-obj\_\-type\_\-string}!hwlocality_conversion@{hwlocality\_\-conversion}}
+\subsubsection[{hwloc\_\-obj\_\-type\_\-string}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ hwloc\_\-obj\_\-type\_\-string ({\bf hwloc\_\-obj\_\-type\_\-t} {\em type})}}
+\label{group__hwlocality__conversion_g5ca0bf94bbbb080d0eff17a57bd90422}
+
+
+Return a stringified topology object type. 
+

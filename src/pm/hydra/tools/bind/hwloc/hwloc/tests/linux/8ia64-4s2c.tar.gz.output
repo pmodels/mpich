@@ -1,0 +1,53 @@
+System(0KB HP=0*0kB  )
+  Socket#6147
+      L3Cache(9216KB)
+        L2Cache(256KB)
+          L1Cache(16KB)
+          Core#0
+            P#0
+      L3Cache(9216KB)
+        L2Cache(256KB)
+          L1Cache(16KB)
+          Core#1
+            P#4
+  Socket#6144
+      L3Cache(9216KB)
+        L2Cache(256KB)
+          L1Cache(16KB)
+          Core#1
+            P#1
+      L3Cache(9216KB)
+        L2Cache(256KB)
+          L1Cache(16KB)
+          Core#0
+            P#5
+  Socket#6145
+      L3Cache(9216KB)
+        L2Cache(256KB)
+          L1Cache(16KB)
+          Core#1
+            P#2
+      L3Cache(9216KB)
+        L2Cache(256KB)
+          L1Cache(16KB)
+          Core#0
+            P#6
+  Socket#6146
+      L3Cache(9216KB)
+        L2Cache(256KB)
+          L1Cache(16KB)
+          Core#1
+            P#3
+      L3Cache(9216KB)
+        L2Cache(256KB)
+          L1Cache(16KB)
+          Core#0
+            P#7
+depth 0:	1 System (type #0)
+ depth 1:	4 Sockets (type #3)
+  depth 2:	8 Caches (type #4)
+   depth 3:	8 Caches (type #4)
+    depth 4:	8 Caches (type #4)
+     depth 5:	8 Cores (type #5)
+      depth 6:	8 Procs (type #6)
+Topology not from this system

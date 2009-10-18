@@ -1,0 +1,33 @@
+\hypertarget{group__hwlocality__helper__types}{
+\section{Object Type Helpers}
+\label{group__hwlocality__helper__types}\index{Object Type Helpers@{Object Type Helpers}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+static \_\-\_\-inline unsigned \hyperlink{group__hwlocality__helper__types_ga0835c86ef2ce8c62637d61a1cf134f9}{hwloc\_\-get\_\-type\_\-or\_\-below\_\-depth} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type)
+\begin{CompactList}\small\item\em Returns the depth of objects of type {\tt type} or below. \item\end{CompactList}\item 
+static \_\-\_\-inline unsigned \hyperlink{group__hwlocality__helper__types_g65a1d8f1012cb500817893ef848bc3f1}{hwloc\_\-get\_\-type\_\-or\_\-above\_\-depth} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type)
+\begin{CompactList}\small\item\em Returns the depth of objects of type {\tt type} or above. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__helper__types_g65a1d8f1012cb500817893ef848bc3f1}{
+\index{hwlocality\_\-helper\_\-types@{hwlocality\_\-helper\_\-types}!hwloc\_\-get\_\-type\_\-or\_\-above\_\-depth@{hwloc\_\-get\_\-type\_\-or\_\-above\_\-depth}}
+\index{hwloc\_\-get\_\-type\_\-or\_\-above\_\-depth@{hwloc\_\-get\_\-type\_\-or\_\-above\_\-depth}!hwlocality_helper_types@{hwlocality\_\-helper\_\-types}}
+\subsubsection[{hwloc\_\-get\_\-type\_\-or\_\-above\_\-depth}]{\setlength{\rightskip}{0pt plus 5cm}static \_\-\_\-inline unsigned hwloc\_\-get\_\-type\_\-or\_\-above\_\-depth ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-obj\_\-type\_\-t} {\em type})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__helper__types_g65a1d8f1012cb500817893ef848bc3f1}
+
+
+Returns the depth of objects of type {\tt type} or above. 
+
+If no object of this type is present on the underlying architecture, the function returns the depth of the first \char`\"{}present\char`\"{} object typically containing {\tt type}. \hypertarget{group__hwlocality__helper__types_ga0835c86ef2ce8c62637d61a1cf134f9}{
+\index{hwlocality\_\-helper\_\-types@{hwlocality\_\-helper\_\-types}!hwloc\_\-get\_\-type\_\-or\_\-below\_\-depth@{hwloc\_\-get\_\-type\_\-or\_\-below\_\-depth}}
+\index{hwloc\_\-get\_\-type\_\-or\_\-below\_\-depth@{hwloc\_\-get\_\-type\_\-or\_\-below\_\-depth}!hwlocality_helper_types@{hwlocality\_\-helper\_\-types}}
+\subsubsection[{hwloc\_\-get\_\-type\_\-or\_\-below\_\-depth}]{\setlength{\rightskip}{0pt plus 5cm}static \_\-\_\-inline unsigned hwloc\_\-get\_\-type\_\-or\_\-below\_\-depth ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-obj\_\-type\_\-t} {\em type})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__helper__types_ga0835c86ef2ce8c62637d61a1cf134f9}
+
+
+Returns the depth of objects of type {\tt type} or below. 
+
+If no object of this type is present on the underlying architecture, the function returns the depth of the first \char`\"{}present\char`\"{} object typically found inside {\tt type}. 

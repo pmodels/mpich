@@ -1,0 +1,137 @@
+\hypertarget{group__hwlocality__configuration}{
+\section{Configure Topology Detection}
+\label{group__hwlocality__configuration}\index{Configure Topology Detection@{Configure Topology Detection}}
+}
+\subsection*{Enumerations}
+\begin{CompactItemize}
+\item 
+enum \hyperlink{group__hwlocality__configuration_gda025d3ec20b4b420f8038d23d6e7bde}{hwloc\_\-topology\_\-flags\_\-e} \{ \hyperlink{group__hwlocality__configuration_ggda025d3ec20b4b420f8038d23d6e7bde129b4fea1300be22bbaf0bb0958994c8}{HWLOC\_\-TOPOLOGY\_\-FLAG\_\-WHOLE\_\-SYSTEM} =  (1$<$$<$0), 
+\hyperlink{group__hwlocality__configuration_ggda025d3ec20b4b420f8038d23d6e7bde6ecb6abc6a0bb75e81564f8bca85783b}{HWLOC\_\-TOPOLOGY\_\-FLAG\_\-IS\_\-THISSYSTEM} =  (1$<$$<$1)
+ \}
+\begin{CompactList}\small\item\em Flags to be set onto a topology context before load. \item\end{CompactList}\end{CompactItemize}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+int \hyperlink{group__hwlocality__configuration_gfcf30842e8cb47b4c3dcaebecea31e17}{hwloc\_\-topology\_\-ignore\_\-type} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type)
+\begin{CompactList}\small\item\em Ignore an object type. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__configuration_g1f987bca941d6949faf7b1554dd7bc12}{hwloc\_\-topology\_\-ignore\_\-type\_\-keep\_\-structure} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type)
+\begin{CompactList}\small\item\em Ignore an object type if it does not bring any structure. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__configuration_g7c9cf147442d65d755c664ccde3bb3ef}{hwloc\_\-topology\_\-ignore\_\-all\_\-keep\_\-structure} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology)
+\begin{CompactList}\small\item\em Ignore all objects that do not bring any structure. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__configuration_gaeed4df656979e5f16befea9d29b814b}{hwloc\_\-topology\_\-set\_\-flags} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, unsigned long flags)
+\begin{CompactList}\small\item\em Set OR'ed flags to non-yet-loaded topology. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__configuration_g45a6b5dd59be36879a64a7f73e0363c2}{hwloc\_\-topology\_\-set\_\-fsroot} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} restrict topology, const char $\ast$restrict fsroot\_\-path)
+\begin{CompactList}\small\item\em Change the file-system root path when building the topology from sysfs/procfs. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__configuration_g5c11f6e454ebd5f4089670269e097a1e}{hwloc\_\-topology\_\-set\_\-synthetic} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} restrict topology, const char $\ast$restrict description)
+\begin{CompactList}\small\item\em Enable synthetic topology. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__configuration_g29b8ebec1b85b324af18fdf5040806bf}{hwloc\_\-topology\_\-set\_\-xml} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} restrict topology, const char $\ast$restrict xmlpath)
+\begin{CompactList}\small\item\em Enable XML-file based topology. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+These functions can optionally be called between \hyperlink{group__hwlocality__creation_g03fd4a16d8b9ee1ffc32b25fd2f6bdfa}{hwloc\_\-topology\_\-init()} and \hyperlink{group__hwlocality__creation_gbdf58d87ad77f6615fccdfe0535ff826}{hwloc\_\-topology\_\-load()} to configure how the detection should be performed, e.g. to ignore some objects types, define a synthetic topology, etc.
+
+If none of them is called, the default is to detect all the objects of the machine that the caller is allowed to access. 
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{group__hwlocality__configuration_gda025d3ec20b4b420f8038d23d6e7bde}{
+\index{hwlocality\_\-configuration@{hwlocality\_\-configuration}!hwloc\_\-topology\_\-flags\_\-e@{hwloc\_\-topology\_\-flags\_\-e}}
+\index{hwloc\_\-topology\_\-flags\_\-e@{hwloc\_\-topology\_\-flags\_\-e}!hwlocality_configuration@{hwlocality\_\-configuration}}
+\subsubsection[{hwloc\_\-topology\_\-flags\_\-e}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf hwloc\_\-topology\_\-flags\_\-e}}}
+\label{group__hwlocality__configuration_gda025d3ec20b4b420f8038d23d6e7bde}
+
+
+Flags to be set onto a topology context before load. 
+
+Flags should be given to \hyperlink{group__hwlocality__configuration_gaeed4df656979e5f16befea9d29b814b}{hwloc\_\-topology\_\-set\_\-flags()}. \begin{Desc}
+\item[Enumerator: ]\par
+\begin{description}
+\index{HWLOC\_\-TOPOLOGY\_\-FLAG\_\-WHOLE\_\-SYSTEM@{HWLOC\_\-TOPOLOGY\_\-FLAG\_\-WHOLE\_\-SYSTEM}!hwlocality\_\-configuration@{hwlocality\_\-configuration}}\index{hwlocality\_\-configuration@{hwlocality\_\-configuration}!HWLOC\_\-TOPOLOGY\_\-FLAG\_\-WHOLE\_\-SYSTEM@{HWLOC\_\-TOPOLOGY\_\-FLAG\_\-WHOLE\_\-SYSTEM}}\item[{\em 
+\hypertarget{group__hwlocality__configuration_ggda025d3ec20b4b420f8038d23d6e7bde129b4fea1300be22bbaf0bb0958994c8}{
+HWLOC\_\-TOPOLOGY\_\-FLAG\_\-WHOLE\_\-SYSTEM}
+\label{group__hwlocality__configuration_ggda025d3ec20b4b420f8038d23d6e7bde129b4fea1300be22bbaf0bb0958994c8}
+}]\index{HWLOC\_\-TOPOLOGY\_\-FLAG\_\-IS\_\-THISSYSTEM@{HWLOC\_\-TOPOLOGY\_\-FLAG\_\-IS\_\-THISSYSTEM}!hwlocality\_\-configuration@{hwlocality\_\-configuration}}\index{hwlocality\_\-configuration@{hwlocality\_\-configuration}!HWLOC\_\-TOPOLOGY\_\-FLAG\_\-IS\_\-THISSYSTEM@{HWLOC\_\-TOPOLOGY\_\-FLAG\_\-IS\_\-THISSYSTEM}}\item[{\em 
+\hypertarget{group__hwlocality__configuration_ggda025d3ec20b4b420f8038d23d6e7bde6ecb6abc6a0bb75e81564f8bca85783b}{
+HWLOC\_\-TOPOLOGY\_\-FLAG\_\-IS\_\-THISSYSTEM}
+\label{group__hwlocality__configuration_ggda025d3ec20b4b420f8038d23d6e7bde6ecb6abc6a0bb75e81564f8bca85783b}
+}]\end{description}
+\end{Desc}
+
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__configuration_g7c9cf147442d65d755c664ccde3bb3ef}{
+\index{hwlocality\_\-configuration@{hwlocality\_\-configuration}!hwloc\_\-topology\_\-ignore\_\-all\_\-keep\_\-structure@{hwloc\_\-topology\_\-ignore\_\-all\_\-keep\_\-structure}}
+\index{hwloc\_\-topology\_\-ignore\_\-all\_\-keep\_\-structure@{hwloc\_\-topology\_\-ignore\_\-all\_\-keep\_\-structure}!hwlocality_configuration@{hwlocality\_\-configuration}}
+\subsubsection[{hwloc\_\-topology\_\-ignore\_\-all\_\-keep\_\-structure}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-topology\_\-ignore\_\-all\_\-keep\_\-structure ({\bf hwloc\_\-topology\_\-t} {\em topology})}}
+\label{group__hwlocality__configuration_g7c9cf147442d65d755c664ccde3bb3ef}
+
+
+Ignore all objects that do not bring any structure. 
+
+Ignore all objects that do not bring any structure: Each ignored object should have a single children or be the only child of its father. \hypertarget{group__hwlocality__configuration_gfcf30842e8cb47b4c3dcaebecea31e17}{
+\index{hwlocality\_\-configuration@{hwlocality\_\-configuration}!hwloc\_\-topology\_\-ignore\_\-type@{hwloc\_\-topology\_\-ignore\_\-type}}
+\index{hwloc\_\-topology\_\-ignore\_\-type@{hwloc\_\-topology\_\-ignore\_\-type}!hwlocality_configuration@{hwlocality\_\-configuration}}
+\subsubsection[{hwloc\_\-topology\_\-ignore\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-topology\_\-ignore\_\-type ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-obj\_\-type\_\-t} {\em type})}}
+\label{group__hwlocality__configuration_gfcf30842e8cb47b4c3dcaebecea31e17}
+
+
+Ignore an object type. 
+
+Ignore all objects from the given type. The top-level type HWLOC\_\-OBJ\_\-SYSTEM and bottom-level type HWLOC\_\-OBJ\_\-PROC may not be ignored. \hypertarget{group__hwlocality__configuration_g1f987bca941d6949faf7b1554dd7bc12}{
+\index{hwlocality\_\-configuration@{hwlocality\_\-configuration}!hwloc\_\-topology\_\-ignore\_\-type\_\-keep\_\-structure@{hwloc\_\-topology\_\-ignore\_\-type\_\-keep\_\-structure}}
+\index{hwloc\_\-topology\_\-ignore\_\-type\_\-keep\_\-structure@{hwloc\_\-topology\_\-ignore\_\-type\_\-keep\_\-structure}!hwlocality_configuration@{hwlocality\_\-configuration}}
+\subsubsection[{hwloc\_\-topology\_\-ignore\_\-type\_\-keep\_\-structure}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-topology\_\-ignore\_\-type\_\-keep\_\-structure ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-obj\_\-type\_\-t} {\em type})}}
+\label{group__hwlocality__configuration_g1f987bca941d6949faf7b1554dd7bc12}
+
+
+Ignore an object type if it does not bring any structure. 
+
+Ignore all objects from the given type as long as they do not bring any structure: Each ignored object should have a single children or be the only child of its father. The top-level type HWLOC\_\-OBJ\_\-SYSTEM and bottom-level type HWLOC\_\-OBJ\_\-PROC may not be ignored. \hypertarget{group__hwlocality__configuration_gaeed4df656979e5f16befea9d29b814b}{
+\index{hwlocality\_\-configuration@{hwlocality\_\-configuration}!hwloc\_\-topology\_\-set\_\-flags@{hwloc\_\-topology\_\-set\_\-flags}}
+\index{hwloc\_\-topology\_\-set\_\-flags@{hwloc\_\-topology\_\-set\_\-flags}!hwlocality_configuration@{hwlocality\_\-configuration}}
+\subsubsection[{hwloc\_\-topology\_\-set\_\-flags}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-topology\_\-set\_\-flags ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  unsigned long {\em flags})}}
+\label{group__hwlocality__configuration_gaeed4df656979e5f16befea9d29b814b}
+
+
+Set OR'ed flags to non-yet-loaded topology. 
+
+Set a OR'ed set of hwloc\_\-topology\_\-flags\_\-e onto a topology that was not yet loaded. \hypertarget{group__hwlocality__configuration_g45a6b5dd59be36879a64a7f73e0363c2}{
+\index{hwlocality\_\-configuration@{hwlocality\_\-configuration}!hwloc\_\-topology\_\-set\_\-fsroot@{hwloc\_\-topology\_\-set\_\-fsroot}}
+\index{hwloc\_\-topology\_\-set\_\-fsroot@{hwloc\_\-topology\_\-set\_\-fsroot}!hwlocality_configuration@{hwlocality\_\-configuration}}
+\subsubsection[{hwloc\_\-topology\_\-set\_\-fsroot}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-topology\_\-set\_\-fsroot ({\bf hwloc\_\-topology\_\-t} restrict {\em topology}, \/  const char $\ast$restrict {\em fsroot\_\-path})}}
+\label{group__hwlocality__configuration_g45a6b5dd59be36879a64a7f73e0363c2}
+
+
+Change the file-system root path when building the topology from sysfs/procfs. 
+
+On Linux system, use sysfs and procfs files as if they were mounted on the given {\tt fsroot\_\-path} instead of the main file-system root. Not using the main file-system root causes hwloc\_\-topology\_\-is\_\-thissystem field to return 0.
+
+\begin{Desc}
+\item[Note:]For conveniency, this backend provides empty binding hooks which just return success. To have hwloc still actually call OS-specific hooks, the HWLOC\_\-TOPOLOGY\_\-FLAG\_\-IS\_\-THISSYSTEM has to be set to assert that the loaded file is really the underlying system. \end{Desc}
+\hypertarget{group__hwlocality__configuration_g5c11f6e454ebd5f4089670269e097a1e}{
+\index{hwlocality\_\-configuration@{hwlocality\_\-configuration}!hwloc\_\-topology\_\-set\_\-synthetic@{hwloc\_\-topology\_\-set\_\-synthetic}}
+\index{hwloc\_\-topology\_\-set\_\-synthetic@{hwloc\_\-topology\_\-set\_\-synthetic}!hwlocality_configuration@{hwlocality\_\-configuration}}
+\subsubsection[{hwloc\_\-topology\_\-set\_\-synthetic}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-topology\_\-set\_\-synthetic ({\bf hwloc\_\-topology\_\-t} restrict {\em topology}, \/  const char $\ast$restrict {\em description})}}
+\label{group__hwlocality__configuration_g5c11f6e454ebd5f4089670269e097a1e}
+
+
+Enable synthetic topology. 
+
+Gather topology information from the given {\tt description} which should be a comma separated string of numbers describing the arity of each level. Each number may be prefixed with a type and a colon to enforce the type of a level.
+
+\begin{Desc}
+\item[Note:]For conveniency, this backend provides empty binding hooks which just return success. \end{Desc}
+\hypertarget{group__hwlocality__configuration_g29b8ebec1b85b324af18fdf5040806bf}{
+\index{hwlocality\_\-configuration@{hwlocality\_\-configuration}!hwloc\_\-topology\_\-set\_\-xml@{hwloc\_\-topology\_\-set\_\-xml}}
+\index{hwloc\_\-topology\_\-set\_\-xml@{hwloc\_\-topology\_\-set\_\-xml}!hwlocality_configuration@{hwlocality\_\-configuration}}
+\subsubsection[{hwloc\_\-topology\_\-set\_\-xml}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-topology\_\-set\_\-xml ({\bf hwloc\_\-topology\_\-t} restrict {\em topology}, \/  const char $\ast$restrict {\em xmlpath})}}
+\label{group__hwlocality__configuration_g29b8ebec1b85b324af18fdf5040806bf}
+
+
+Enable XML-file based topology. 
+
+Gather topology information the XML file given at {\tt xmlpath}. This file may have been generated earlier with lstopo file.xml.
+
+\begin{Desc}
+\item[Note:]For conveniency, this backend provides empty binding hooks which just return success. To have hwloc still actually call OS-specific hooks, the HWLOC\_\-TOPOLOGY\_\-FLAG\_\-IS\_\-THISSYSTEM has to be set to assert that the loaded file is really the underlying system. \end{Desc}

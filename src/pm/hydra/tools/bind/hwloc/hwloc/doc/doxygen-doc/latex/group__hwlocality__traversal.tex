@@ -1,0 +1,33 @@
+\hypertarget{group__hwlocality__traversal}{
+\section{Retrieve Objects}
+\label{group__hwlocality__traversal}\index{Retrieve Objects@{Retrieve Objects}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+\hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} \hyperlink{group__hwlocality__traversal_g75e8ae1463be35a0fb82f2f7f73b8170}{hwloc\_\-get\_\-obj\_\-by\_\-depth} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, unsigned depth, unsigned index)
+\begin{CompactList}\small\item\em Returns the topology object at index {\tt index} from depth {\tt depth}. \item\end{CompactList}\item 
+static inline \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} \hyperlink{group__hwlocality__traversal_g0ed52dae74f311185210e7a19dbf44c5}{hwloc\_\-get\_\-obj\_\-by\_\-type} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type, unsigned index)
+\begin{CompactList}\small\item\em Returns the topology object at index {\tt index} with type {\tt type}. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__traversal_g75e8ae1463be35a0fb82f2f7f73b8170}{
+\index{hwlocality\_\-traversal@{hwlocality\_\-traversal}!hwloc\_\-get\_\-obj\_\-by\_\-depth@{hwloc\_\-get\_\-obj\_\-by\_\-depth}}
+\index{hwloc\_\-get\_\-obj\_\-by\_\-depth@{hwloc\_\-get\_\-obj\_\-by\_\-depth}!hwlocality_traversal@{hwlocality\_\-traversal}}
+\subsubsection[{hwloc\_\-get\_\-obj\_\-by\_\-depth}]{\setlength{\rightskip}{0pt plus 5cm}{\bf hwloc\_\-obj\_\-t} hwloc\_\-get\_\-obj\_\-by\_\-depth ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  unsigned {\em depth}, \/  unsigned {\em index})}}
+\label{group__hwlocality__traversal_g75e8ae1463be35a0fb82f2f7f73b8170}
+
+
+Returns the topology object at index {\tt index} from depth {\tt depth}. 
+
+\hypertarget{group__hwlocality__traversal_g0ed52dae74f311185210e7a19dbf44c5}{
+\index{hwlocality\_\-traversal@{hwlocality\_\-traversal}!hwloc\_\-get\_\-obj\_\-by\_\-type@{hwloc\_\-get\_\-obj\_\-by\_\-type}}
+\index{hwloc\_\-get\_\-obj\_\-by\_\-type@{hwloc\_\-get\_\-obj\_\-by\_\-type}!hwlocality_traversal@{hwlocality\_\-traversal}}
+\subsubsection[{hwloc\_\-get\_\-obj\_\-by\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static inline {\bf hwloc\_\-obj\_\-t} hwloc\_\-get\_\-obj\_\-by\_\-type ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-obj\_\-type\_\-t} {\em type}, \/  unsigned {\em index})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__traversal_g0ed52dae74f311185210e7a19dbf44c5}
+
+
+Returns the topology object at index {\tt index} with type {\tt type}. 
+
+If no object for that type exists, {\tt NULL} is returned. If there are several levels with objects of that type, {\tt NULL} is returned and ther caller may fallback to \hyperlink{group__hwlocality__traversal_g75e8ae1463be35a0fb82f2f7f73b8170}{hwloc\_\-get\_\-obj\_\-by\_\-depth()}. 

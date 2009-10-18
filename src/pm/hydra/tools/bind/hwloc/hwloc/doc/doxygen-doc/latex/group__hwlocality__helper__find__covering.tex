@@ -1,0 +1,36 @@
+\hypertarget{group__hwlocality__helper__find__covering}{
+\section{Finding a single Object covering at least CPU set}
+\label{group__hwlocality__helper__find__covering}\index{Finding a single Object covering at least CPU set@{Finding a single Object covering at least CPU set}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+static \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} \hyperlink{group__hwlocality__helper__find__covering_ge5124e202a86121b45c28ac6d67b5e5b}{hwloc\_\-get\_\-child\_\-covering\_\-cpuset} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} set, \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} father)
+\begin{CompactList}\small\item\em Get the child covering at least CPU set {\tt set}. \item\end{CompactList}\item 
+static \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} \hyperlink{group__hwlocality__helper__find__covering_gbbbc2201adff148989b2faf532de3a5f}{hwloc\_\-get\_\-obj\_\-covering\_\-cpuset} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} set)
+\begin{CompactList}\small\item\em Get the lowest object covering at least CPU set {\tt set}. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__helper__find__covering_ge5124e202a86121b45c28ac6d67b5e5b}{
+\index{hwlocality\_\-helper\_\-find\_\-covering@{hwlocality\_\-helper\_\-find\_\-covering}!hwloc\_\-get\_\-child\_\-covering\_\-cpuset@{hwloc\_\-get\_\-child\_\-covering\_\-cpuset}}
+\index{hwloc\_\-get\_\-child\_\-covering\_\-cpuset@{hwloc\_\-get\_\-child\_\-covering\_\-cpuset}!hwlocality_helper_find_covering@{hwlocality\_\-helper\_\-find\_\-covering}}
+\subsubsection[{hwloc\_\-get\_\-child\_\-covering\_\-cpuset}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf hwloc\_\-obj\_\-t} hwloc\_\-get\_\-child\_\-covering\_\-cpuset ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em set}, \/  {\bf hwloc\_\-obj\_\-t} {\em father})\hspace{0.3cm}{\tt  \mbox{[}inline, static\mbox{]}}}}
+\label{group__hwlocality__helper__find__covering_ge5124e202a86121b45c28ac6d67b5e5b}
+
+
+Get the child covering at least CPU set {\tt set}. 
+
+\begin{Desc}
+\item[Returns:]{\tt NULL} if no child matches. \end{Desc}
+\hypertarget{group__hwlocality__helper__find__covering_gbbbc2201adff148989b2faf532de3a5f}{
+\index{hwlocality\_\-helper\_\-find\_\-covering@{hwlocality\_\-helper\_\-find\_\-covering}!hwloc\_\-get\_\-obj\_\-covering\_\-cpuset@{hwloc\_\-get\_\-obj\_\-covering\_\-cpuset}}
+\index{hwloc\_\-get\_\-obj\_\-covering\_\-cpuset@{hwloc\_\-get\_\-obj\_\-covering\_\-cpuset}!hwlocality_helper_find_covering@{hwlocality\_\-helper\_\-find\_\-covering}}
+\subsubsection[{hwloc\_\-get\_\-obj\_\-covering\_\-cpuset}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf hwloc\_\-obj\_\-t} hwloc\_\-get\_\-obj\_\-covering\_\-cpuset ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em set})\hspace{0.3cm}{\tt  \mbox{[}inline, static\mbox{]}}}}
+\label{group__hwlocality__helper__find__covering_gbbbc2201adff148989b2faf532de3a5f}
+
+
+Get the lowest object covering at least CPU set {\tt set}. 
+
+\begin{Desc}
+\item[Returns:]{\tt NULL} if no object matches. \end{Desc}

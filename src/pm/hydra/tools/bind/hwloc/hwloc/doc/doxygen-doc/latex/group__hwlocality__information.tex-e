@@ -1,0 +1,110 @@
+\hypertarget{group__hwlocality__information}{
+\section{Get some Topology Information}
+\label{group__hwlocality__information}\index{Get some Topology Information@{Get some Topology Information}}
+}
+\subsection*{Defines}
+\begin{CompactItemize}
+\item 
+\#define \hyperlink{group__hwlocality__information_g9e86ce528f626330de2da7adb6c4e02e}{HWLOC\_\-TYPE\_\-DEPTH\_\-UNKNOWN}~-1
+\begin{CompactList}\small\item\em No object of given type exists in the topology. \item\end{CompactList}\item 
+\#define \hyperlink{group__hwlocality__information_g64c80d3e0501b321d217b1642d68e23d}{HWLOC\_\-TYPE\_\-DEPTH\_\-MULTIPLE}~-2
+\begin{CompactList}\small\item\em Objects of given type exist at different depth in the topology. \item\end{CompactList}\end{CompactItemize}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+unsigned \hyperlink{group__hwlocality__information_g3cc2255e237b751a6c8efa8703b3daf5}{hwloc\_\-topology\_\-get\_\-depth} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} \_\-\_\-hwloc\_\-restrict topology)
+\begin{CompactList}\small\item\em Get the depth of the hierachical tree of objects. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__information_g8bec782e21be313750da70cf7428b374}{hwloc\_\-get\_\-type\_\-depth} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type)
+\begin{CompactList}\small\item\em Returns the depth of objects of type {\tt type}. \item\end{CompactList}\item 
+\hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} \hyperlink{group__hwlocality__information_g8cc04ad9eb03b0b74d420adf8cc11ad2}{hwloc\_\-get\_\-depth\_\-type} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, unsigned depth)
+\begin{CompactList}\small\item\em Returns the type of objects at depth {\tt depth}. \item\end{CompactList}\item 
+unsigned \hyperlink{group__hwlocality__information_gb17065e3d53455973844568d9f21c72c}{hwloc\_\-get\_\-nbobjs\_\-by\_\-depth} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, unsigned depth)
+\begin{CompactList}\small\item\em Returns the width of level at depth {\tt depth}. \item\end{CompactList}\item 
+static \_\-\_\-inline int \hyperlink{group__hwlocality__information_gd86a90c0d3501d90410fb1a4eb36f5d0}{hwloc\_\-get\_\-nbobjs\_\-by\_\-type} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type)
+\begin{CompactList}\small\item\em Returns the width of level type {\tt type}. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__information_g29cdfde981aafc92eb89639a36b1ff9b}{hwloc\_\-topology\_\-is\_\-thissystem} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} \_\-\_\-hwloc\_\-restrict topology)
+\begin{CompactList}\small\item\em Does the topology context come from this system? \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Define Documentation}
+\hypertarget{group__hwlocality__information_g64c80d3e0501b321d217b1642d68e23d}{
+\index{hwlocality\_\-information@{hwlocality\_\-information}!HWLOC\_\-TYPE\_\-DEPTH\_\-MULTIPLE@{HWLOC\_\-TYPE\_\-DEPTH\_\-MULTIPLE}}
+\index{HWLOC\_\-TYPE\_\-DEPTH\_\-MULTIPLE@{HWLOC\_\-TYPE\_\-DEPTH\_\-MULTIPLE}!hwlocality_information@{hwlocality\_\-information}}
+\subsubsection[{HWLOC\_\-TYPE\_\-DEPTH\_\-MULTIPLE}]{\setlength{\rightskip}{0pt plus 5cm}\#define HWLOC\_\-TYPE\_\-DEPTH\_\-MULTIPLE~-2}}
+\label{group__hwlocality__information_g64c80d3e0501b321d217b1642d68e23d}
+
+
+Objects of given type exist at different depth in the topology. 
+
+\hypertarget{group__hwlocality__information_g9e86ce528f626330de2da7adb6c4e02e}{
+\index{hwlocality\_\-information@{hwlocality\_\-information}!HWLOC\_\-TYPE\_\-DEPTH\_\-UNKNOWN@{HWLOC\_\-TYPE\_\-DEPTH\_\-UNKNOWN}}
+\index{HWLOC\_\-TYPE\_\-DEPTH\_\-UNKNOWN@{HWLOC\_\-TYPE\_\-DEPTH\_\-UNKNOWN}!hwlocality_information@{hwlocality\_\-information}}
+\subsubsection[{HWLOC\_\-TYPE\_\-DEPTH\_\-UNKNOWN}]{\setlength{\rightskip}{0pt plus 5cm}\#define HWLOC\_\-TYPE\_\-DEPTH\_\-UNKNOWN~-1}}
+\label{group__hwlocality__information_g9e86ce528f626330de2da7adb6c4e02e}
+
+
+No object of given type exists in the topology. 
+
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__information_g8cc04ad9eb03b0b74d420adf8cc11ad2}{
+\index{hwlocality\_\-information@{hwlocality\_\-information}!hwloc\_\-get\_\-depth\_\-type@{hwloc\_\-get\_\-depth\_\-type}}
+\index{hwloc\_\-get\_\-depth\_\-type@{hwloc\_\-get\_\-depth\_\-type}!hwlocality_information@{hwlocality\_\-information}}
+\subsubsection[{hwloc\_\-get\_\-depth\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}{\bf hwloc\_\-obj\_\-type\_\-t} hwloc\_\-get\_\-depth\_\-type ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  unsigned {\em depth})}}
+\label{group__hwlocality__information_g8cc04ad9eb03b0b74d420adf8cc11ad2}
+
+
+Returns the type of objects at depth {\tt depth}. 
+
+\hypertarget{group__hwlocality__information_gb17065e3d53455973844568d9f21c72c}{
+\index{hwlocality\_\-information@{hwlocality\_\-information}!hwloc\_\-get\_\-nbobjs\_\-by\_\-depth@{hwloc\_\-get\_\-nbobjs\_\-by\_\-depth}}
+\index{hwloc\_\-get\_\-nbobjs\_\-by\_\-depth@{hwloc\_\-get\_\-nbobjs\_\-by\_\-depth}!hwlocality_information@{hwlocality\_\-information}}
+\subsubsection[{hwloc\_\-get\_\-nbobjs\_\-by\_\-depth}]{\setlength{\rightskip}{0pt plus 5cm}unsigned hwloc\_\-get\_\-nbobjs\_\-by\_\-depth ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  unsigned {\em depth})}}
+\label{group__hwlocality__information_gb17065e3d53455973844568d9f21c72c}
+
+
+Returns the width of level at depth {\tt depth}. 
+
+\hypertarget{group__hwlocality__information_gd86a90c0d3501d90410fb1a4eb36f5d0}{
+\index{hwlocality\_\-information@{hwlocality\_\-information}!hwloc\_\-get\_\-nbobjs\_\-by\_\-type@{hwloc\_\-get\_\-nbobjs\_\-by\_\-type}}
+\index{hwloc\_\-get\_\-nbobjs\_\-by\_\-type@{hwloc\_\-get\_\-nbobjs\_\-by\_\-type}!hwlocality_information@{hwlocality\_\-information}}
+\subsubsection[{hwloc\_\-get\_\-nbobjs\_\-by\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static \_\-\_\-inline int hwloc\_\-get\_\-nbobjs\_\-by\_\-type ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-obj\_\-type\_\-t} {\em type})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__information_gd86a90c0d3501d90410fb1a4eb36f5d0}
+
+
+Returns the width of level type {\tt type}. 
+
+If no object for that type exists, 0 is returned. If there are several levels with objects of that type, -1 is returned. \hypertarget{group__hwlocality__information_g8bec782e21be313750da70cf7428b374}{
+\index{hwlocality\_\-information@{hwlocality\_\-information}!hwloc\_\-get\_\-type\_\-depth@{hwloc\_\-get\_\-type\_\-depth}}
+\index{hwloc\_\-get\_\-type\_\-depth@{hwloc\_\-get\_\-type\_\-depth}!hwlocality_information@{hwlocality\_\-information}}
+\subsubsection[{hwloc\_\-get\_\-type\_\-depth}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-get\_\-type\_\-depth ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-obj\_\-type\_\-t} {\em type})}}
+\label{group__hwlocality__information_g8bec782e21be313750da70cf7428b374}
+
+
+Returns the depth of objects of type {\tt type}. 
+
+If no object of this type is present on the underlying architecture, or if the OS doesn't provide this kind of information, the function returns HWLOC\_\-TYPE\_\-DEPTH\_\-UNKNOWN.
+
+If type is absent but a similar type is acceptable, see also \hyperlink{group__hwlocality__helper__types_ga0835c86ef2ce8c62637d61a1cf134f9}{hwloc\_\-get\_\-type\_\-or\_\-below\_\-depth()} and \hyperlink{group__hwlocality__helper__types_g65a1d8f1012cb500817893ef848bc3f1}{hwloc\_\-get\_\-type\_\-or\_\-above\_\-depth()}. \hypertarget{group__hwlocality__information_g3cc2255e237b751a6c8efa8703b3daf5}{
+\index{hwlocality\_\-information@{hwlocality\_\-information}!hwloc\_\-topology\_\-get\_\-depth@{hwloc\_\-topology\_\-get\_\-depth}}
+\index{hwloc\_\-topology\_\-get\_\-depth@{hwloc\_\-topology\_\-get\_\-depth}!hwlocality_information@{hwlocality\_\-information}}
+\subsubsection[{hwloc\_\-topology\_\-get\_\-depth}]{\setlength{\rightskip}{0pt plus 5cm}unsigned hwloc\_\-topology\_\-get\_\-depth ({\bf hwloc\_\-topology\_\-t} \_\-\_\-hwloc\_\-restrict {\em topology})}}
+\label{group__hwlocality__information_g3cc2255e237b751a6c8efa8703b3daf5}
+
+
+Get the depth of the hierachical tree of objects. 
+
+This is the depth of HWLOC\_\-OBJ\_\-PROC objects plus one. \hypertarget{group__hwlocality__information_g29cdfde981aafc92eb89639a36b1ff9b}{
+\index{hwlocality\_\-information@{hwlocality\_\-information}!hwloc\_\-topology\_\-is\_\-thissystem@{hwloc\_\-topology\_\-is\_\-thissystem}}
+\index{hwloc\_\-topology\_\-is\_\-thissystem@{hwloc\_\-topology\_\-is\_\-thissystem}!hwlocality_information@{hwlocality\_\-information}}
+\subsubsection[{hwloc\_\-topology\_\-is\_\-thissystem}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-topology\_\-is\_\-thissystem ({\bf hwloc\_\-topology\_\-t} \_\-\_\-hwloc\_\-restrict {\em topology})}}
+\label{group__hwlocality__information_g29cdfde981aafc92eb89639a36b1ff9b}
+
+
+Does the topology context come from this system? 
+
+\begin{Desc}
+\item[Returns:]1 if this topology context was built using the system running this program. 
+
+0 instead (for instance if using another file-system root, a XML topology file, or a synthetic topology). \end{Desc}

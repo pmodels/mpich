@@ -31,6 +31,8 @@ PAC_ARG_STRICT
 PAC_C_GNU_ATTRIBUTE
 PAC_CC_FUNCTION_NAME_SYMBOL
 
+# Find the full path of the source dir (for VPATH builds)
+abs_srcdir=`(cd $srcdir && pwd)`
 
 # Check if the necessary headers are available
 AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h \
@@ -304,7 +306,7 @@ fi
 #########################################################################
 # Process Binding
 #########################################################################
-AC_ARG_WITH(hydra-bindlib, [  --with-hydra-procbind       Process Binding Library],
+AC_ARG_WITH(hydra-bindlib, [  --with-hydra-bindlib       Process Binding Library],
 			   [ hydra_bindlib=$withval ],
 			   [ hydra_bindlib=plpa ])
 AC_MSG_CHECKING(process binding library)
@@ -315,6 +317,7 @@ AC_DEFINE_UNQUOTED(HYDRA_BINDLIB_NAMES,"$hydra_bindlib_names",
 		[Definition of enabled binding libraries])
 
 have_plpa=no
+have_hwloc=no
 for hydra_bindlib_name in ${hydra_bindlib_names}; do
     case "$hydra_bindlib_name" in
     	plpa)
@@ -340,6 +343,18 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		   AC_DEFINE(HAVE_PLPA,1,[Define if plpa is available])
 		fi
 		;;		
+	hwloc)
+		echo
+		echo "===== configuring hwloc ====="
+		subdir="tools/bind/hwloc/hwloc"
+		PAC_MKDIRS($subdir)
+		if (cd $subdir && eval $abs_srcdir/$subdir/configure $ac_configure_args) ; then
+		   have_hwloc=yes
+		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
+		fi
+		echo "===== done with hwloc configure ====="
+		echo
+		;;
 	*)
 		;;
     esac
@@ -347,6 +362,7 @@ done
 AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BINDLIB,"$hydra_default_bindlib",
 	[Default binding library])
 AM_CONDITIONAL([hydra_have_plpa], [test "${have_plpa}" = "yes"])
+AM_CONDITIONAL([hydra_have_hwloc], [test "${have_hwloc}" = "yes"])
 
 
 #########################################################################

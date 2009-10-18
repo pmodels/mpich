@@ -1,0 +1,90 @@
+\hypertarget{group__hwlocality__helper__find__inside}{
+\section{Finding Objects Inside a CPU set}
+\label{group__hwlocality__helper__find__inside}\index{Finding Objects Inside a CPU set@{Finding Objects Inside a CPU set}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+int \hyperlink{group__hwlocality__helper__find__inside_g762bf572ecf691ad812977ce29496ac2}{hwloc\_\-get\_\-largest\_\-objs\_\-inside\_\-cpuset} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} set, \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} $\ast$restrict objs, int max)
+\begin{CompactList}\small\item\em Get the set of largest objects covering exactly a given cpuset {\tt set}. \item\end{CompactList}\item 
+static inline \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} \hyperlink{group__hwlocality__helper__find__inside_g9f0cdb50962d59220a557757278e1919}{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} set, unsigned depth, \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} prev)
+\begin{CompactList}\small\item\em Return the next object at depth {\tt depth} included in CPU set {\tt set}. \item\end{CompactList}\item 
+static inline \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} \hyperlink{group__hwlocality__helper__find__inside_g060d4f60652ef68bc25bf83e5db1fdb9}{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} set, \hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type, \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} prev)
+\begin{CompactList}\small\item\em Return the next object of type {\tt type} included in CPU set {\tt set}. \item\end{CompactList}\item 
+static inline \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} \hyperlink{group__hwlocality__helper__find__inside_ge16043beea2e342c66b762854d95381f}{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} set, unsigned depth, unsigned index)
+\begin{CompactList}\small\item\em Return the {\tt index} -th object at depth {\tt depth} included in CPU set {\tt set}. \item\end{CompactList}\item 
+static inline \hyperlink{structhwloc__obj}{hwloc\_\-obj\_\-t} \hyperlink{group__hwlocality__helper__find__inside_gcd512d31b960cfaf1defee895cb6dfff}{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} set, \hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type, unsigned index)
+\begin{CompactList}\small\item\em Return the {\tt index} -th object of type {\tt type} included in CPU set {\tt set}. \item\end{CompactList}\item 
+static inline unsigned \hyperlink{group__hwlocality__helper__find__inside_gce5af1ea003c8269566b6726fade7b32}{hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-depth} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} set, unsigned depth)
+\begin{CompactList}\small\item\em Return the number of objects at depth {\tt depth} included in CPU set {\tt set}. \item\end{CompactList}\item 
+static inline int \hyperlink{group__hwlocality__helper__find__inside_g7e44cec58c6bdb681400a52d007d2597}{hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-type} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} set, \hyperlink{group__hwlocality__types_gcd37bb612667dc437d66bfb175a8dc55}{hwloc\_\-obj\_\-type\_\-t} type)
+\begin{CompactList}\small\item\em Return the number of objects of type {\tt type} included in CPU set {\tt set}. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__helper__find__inside_g762bf572ecf691ad812977ce29496ac2}{
+\index{hwlocality\_\-helper\_\-find\_\-inside@{hwlocality\_\-helper\_\-find\_\-inside}!hwloc\_\-get\_\-largest\_\-objs\_\-inside\_\-cpuset@{hwloc\_\-get\_\-largest\_\-objs\_\-inside\_\-cpuset}}
+\index{hwloc\_\-get\_\-largest\_\-objs\_\-inside\_\-cpuset@{hwloc\_\-get\_\-largest\_\-objs\_\-inside\_\-cpuset}!hwlocality_helper_find_inside@{hwlocality\_\-helper\_\-find\_\-inside}}
+\subsubsection[{hwloc\_\-get\_\-largest\_\-objs\_\-inside\_\-cpuset}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-get\_\-largest\_\-objs\_\-inside\_\-cpuset ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em set}, \/  {\bf hwloc\_\-obj\_\-t} $\ast$restrict {\em objs}, \/  int {\em max})}}
+\label{group__hwlocality__helper__find__inside_g762bf572ecf691ad812977ce29496ac2}
+
+
+Get the set of largest objects covering exactly a given cpuset {\tt set}. 
+
+\begin{Desc}
+\item[Returns:]the number of objects returned in {\tt objs}. \end{Desc}
+\hypertarget{group__hwlocality__helper__find__inside_gce5af1ea003c8269566b6726fade7b32}{
+\index{hwlocality\_\-helper\_\-find\_\-inside@{hwlocality\_\-helper\_\-find\_\-inside}!hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-depth@{hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-depth}}
+\index{hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-depth@{hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-depth}!hwlocality_helper_find_inside@{hwlocality\_\-helper\_\-find\_\-inside}}
+\subsubsection[{hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-depth}]{\setlength{\rightskip}{0pt plus 5cm}static inline unsigned hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-depth ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em set}, \/  unsigned {\em depth})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__helper__find__inside_gce5af1ea003c8269566b6726fade7b32}
+
+
+Return the number of objects at depth {\tt depth} included in CPU set {\tt set}. 
+
+\hypertarget{group__hwlocality__helper__find__inside_g7e44cec58c6bdb681400a52d007d2597}{
+\index{hwlocality\_\-helper\_\-find\_\-inside@{hwlocality\_\-helper\_\-find\_\-inside}!hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-type@{hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-type}}
+\index{hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-type@{hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-type}!hwlocality_helper_find_inside@{hwlocality\_\-helper\_\-find\_\-inside}}
+\subsubsection[{hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static inline int hwloc\_\-get\_\-nbobjs\_\-inside\_\-cpuset\_\-by\_\-type ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em set}, \/  {\bf hwloc\_\-obj\_\-type\_\-t} {\em type})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__helper__find__inside_g7e44cec58c6bdb681400a52d007d2597}
+
+
+Return the number of objects of type {\tt type} included in CPU set {\tt set}. 
+
+If no object for that type exists inside CPU set {\tt set}, 0 is returned. If there are several levels with objects of that type inside CPU set {\tt set}, -1 is returned. \hypertarget{group__hwlocality__helper__find__inside_g9f0cdb50962d59220a557757278e1919}{
+\index{hwlocality\_\-helper\_\-find\_\-inside@{hwlocality\_\-helper\_\-find\_\-inside}!hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth@{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth}}
+\index{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth@{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth}!hwlocality_helper_find_inside@{hwlocality\_\-helper\_\-find\_\-inside}}
+\subsubsection[{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth}]{\setlength{\rightskip}{0pt plus 5cm}static inline {\bf hwloc\_\-obj\_\-t} hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em set}, \/  unsigned {\em depth}, \/  {\bf hwloc\_\-obj\_\-t} {\em prev})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__helper__find__inside_g9f0cdb50962d59220a557757278e1919}
+
+
+Return the next object at depth {\tt depth} included in CPU set {\tt set}. 
+
+If {\tt prev} is {\tt NULL}, return the first object at depth {\tt depth} included in {\tt set}. The next invokation should pass the previous return value in {\tt prev} so as to obtain the next object in {\tt set}. \hypertarget{group__hwlocality__helper__find__inside_g060d4f60652ef68bc25bf83e5db1fdb9}{
+\index{hwlocality\_\-helper\_\-find\_\-inside@{hwlocality\_\-helper\_\-find\_\-inside}!hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type@{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type}}
+\index{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type@{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type}!hwlocality_helper_find_inside@{hwlocality\_\-helper\_\-find\_\-inside}}
+\subsubsection[{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static inline {\bf hwloc\_\-obj\_\-t} hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em set}, \/  {\bf hwloc\_\-obj\_\-type\_\-t} {\em type}, \/  {\bf hwloc\_\-obj\_\-t} {\em prev})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__helper__find__inside_g060d4f60652ef68bc25bf83e5db1fdb9}
+
+
+Return the next object of type {\tt type} included in CPU set {\tt set}. 
+
+If there are multiple or no depth for given type, return {\tt NULL} and let the caller fallback to \hyperlink{group__hwlocality__helper__find__inside_g9f0cdb50962d59220a557757278e1919}{hwloc\_\-get\_\-next\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth()}. \hypertarget{group__hwlocality__helper__find__inside_ge16043beea2e342c66b762854d95381f}{
+\index{hwlocality\_\-helper\_\-find\_\-inside@{hwlocality\_\-helper\_\-find\_\-inside}!hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth@{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth}}
+\index{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth@{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth}!hwlocality_helper_find_inside@{hwlocality\_\-helper\_\-find\_\-inside}}
+\subsubsection[{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth}]{\setlength{\rightskip}{0pt plus 5cm}static inline {\bf hwloc\_\-obj\_\-t} hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em set}, \/  unsigned {\em depth}, \/  unsigned {\em index})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__helper__find__inside_ge16043beea2e342c66b762854d95381f}
+
+
+Return the {\tt index} -th object at depth {\tt depth} included in CPU set {\tt set}. 
+
+\hypertarget{group__hwlocality__helper__find__inside_gcd512d31b960cfaf1defee895cb6dfff}{
+\index{hwlocality\_\-helper\_\-find\_\-inside@{hwlocality\_\-helper\_\-find\_\-inside}!hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type@{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type}}
+\index{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type@{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type}!hwlocality_helper_find_inside@{hwlocality\_\-helper\_\-find\_\-inside}}
+\subsubsection[{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static inline {\bf hwloc\_\-obj\_\-t} hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-type ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em set}, \/  {\bf hwloc\_\-obj\_\-type\_\-t} {\em type}, \/  unsigned {\em index})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__helper__find__inside_gcd512d31b960cfaf1defee895cb6dfff}
+
+
+Return the {\tt index} -th object of type {\tt type} included in CPU set {\tt set}. 
+
+If there are multiple or no depth for given type, return {\tt NULL} and let the caller fallback to \hyperlink{group__hwlocality__helper__find__inside_ge16043beea2e342c66b762854d95381f}{hwloc\_\-get\_\-obj\_\-inside\_\-cpuset\_\-by\_\-depth()}. 

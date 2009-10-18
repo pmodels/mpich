@@ -1,0 +1,58 @@
+/*
+ * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+ * See COPYING in top-level directory.
+ */
+
+/* The configuration file */
+
+#ifndef HWLOC_CONFIG_H
+#define HWLOC_CONFIG_H
+
+#if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
+# define __hwloc_restrict __restrict
+#else
+# if __STDC_VERSION__ >= 199901L
+#  define __hwloc_restrict restrict
+# else
+#  define __hwloc_restrict
+# endif
+#endif
+
+#undef HWLOC_HAVE_FFS
+
+#undef HWLOC_HAVE_DECL_FFS
+
+#undef HWLOC_HAVE_FFSL
+
+#define HWLOC_NBMAXCPUS	1024
+
+#undef HWLOC_SIZEOF_UNSIGNED_LONG
+#undef HWLOC_SIZEOF_UNSIGNED_INT
+
+#define HWLOC_BITS_PER_LONG (HWLOC_SIZEOF_UNSIGNED_LONG * 8)
+#define HWLOC_BITS_PER_INT (HWLOC_SIZEOF_UNSIGNED_INT * 8)
+
+
+#if (HWLOC_BITS_PER_LONG != 32) && (HWLOC_BITS_PER_LONG != 64)
+#error "unknown size for unsigned long."
+#endif
+
+#if (HWLOC_BITS_PER_INT != 16) && (HWLOC_BITS_PER_INT != 32) && (HWLOC_BITS_PER_INT != 64)
+#error "unknown size for unsigned int."
+#endif
+
+#include <unistd.h>
+
+#undef HWLOC_HAVE_WINDOWS_H
+#undef hwloc_pid_t
+#undef hwloc_thread_t
+
+#ifdef HWLOC_HAVE_WINDOWS_H
+#  include <windows.h>
+#else /* HWLOC_HAVE_WINDOWS_H */
+#  ifdef hwloc_thread_t
+#    include <pthread.h>
+#  endif /* hwloc_thread_t */
+#endif /* HWLOC_HAVE_WINDOWS_H */
+
+#endif /* HWLOC_CONFIG_H */

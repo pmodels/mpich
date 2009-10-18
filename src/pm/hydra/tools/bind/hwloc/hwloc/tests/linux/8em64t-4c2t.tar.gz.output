@@ -1,0 +1,31 @@
+System(992MB HP=0*2048kB  )
+  Socket#1
+    L3Cache(8192KB)
+        L2Cache(256KB)
+          L1Cache(32KB)
+          Core#0
+            P#0
+            P#4
+        L2Cache(256KB)
+          L1Cache(32KB)
+          Core#1
+            P#1
+            P#5
+        L2Cache(256KB)
+          L1Cache(32KB)
+          Core#2
+            P#2
+            P#6
+        L2Cache(256KB)
+          L1Cache(32KB)
+          Core#3
+            P#3
+            P#7
+depth 0:	1 System (type #0)
+ depth 1:	1 Socket (type #3)
+  depth 2:	1 Cache (type #4)
+   depth 3:	4 Caches (type #4)
+    depth 4:	4 Caches (type #4)
+     depth 5:	4 Cores (type #5)
+      depth 6:	8 Procs (type #6)
+Topology not from this system

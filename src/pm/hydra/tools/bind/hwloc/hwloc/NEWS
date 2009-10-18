@@ -1,0 +1,43 @@
+Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
+
+$COPYRIGHT$
+
+Additional copyrights may follow
+
+$HEADER$
+
+===========================================================================
+
+This file contains the main features as well as overviews of specific
+bug fixes (and other actions) for each version of hwloc since version
+0.9 (as initially released as "libtopology", then re-branded to "hwloc"
+in v0.9.1).
+
+
+Version 0.9.1
+-------------
+
+* Re-branded to "hwloc" and moved to the Open MPI project, relicensed under the
+  BSD license.
+* The prefix of all functions and tools is now hwloc, and some public
+  functions were also renamed for real.
+* Group NUMA nodes into Misc objects according to their physical distance
+  that may be reported by the OS/BIOS.
+  May be ignored by setting HWLOC_IGNORE_DISTANCES=1 in the environment.
+* Ignore offline CPUs on Solaris.
+* Improved binding support on AIX.
+* Add HP-UX support.
+* CPU sets are now allocated/freed dynamically.
+* Add command line options to tune the lstopo graphic output, add
+  semi-graphical text output
+* Extend topobind to support multiple cpusets or objects on the command
+  line as topomask does.
+* Add an Infiniband-specific helper hwloc/ibverbs.h to retrieve the physical
+  location of IB devices.
+
+
+Version 0.9 (libtopology)
+-------------------------
+
+* First release.

@@ -12,6 +12,10 @@
 #include "plpa/bind_plpa.h"
 #endif /* HAVE_PLPA */
 
+#if defined HAVE_HWLOC
+#include "hwloc/bind_hwloc.h"
+#endif /* HAVE_HWLOC */
+
 struct HYDT_bind_info HYDT_bind_info;
 
 HYD_status HYDT_bind_init(char *binding, char *bindlib)
@@ -69,6 +73,13 @@ HYD_status HYDT_bind_init(char *binding, char *bindlib)
         HYDU_ERR_POP(status, "unable to initialize plpa\n");
     }
 #endif /* HAVE_PLPA */
+
+#if defined HAVE_HWLOC
+    if (!strcmp(HYDT_bind_info.bindlib, "hwloc")) {
+        status = HYDT_bind_hwloc_init(&HYDT_bind_info.support_level);
+        HYDU_ERR_POP(status, "unable to initialize hwloc\n");
+    }
+#endif /* HAVE_HWLOC */
 
     if (HYDT_bind_info.support_level != HYDT_BIND_NONE) {
         HYDU_MALLOC(HYDT_bind_info.bindmap, int *, HYDT_bind_info.num_procs * sizeof(int),
@@ -157,6 +168,13 @@ HYD_status HYDT_bind_process(int core)
         HYDU_ERR_POP(status, "PLPA failure binding process to core\n");
     }
 #endif /* HAVE_PLPA */
+
+#if defined HAVE_HWLOC
+    if (!strcmp(HYDT_bind_info.bindlib, "hwloc")) {
+        status = HYDT_bind_plpa_process(core);
+        HYDU_ERR_POP(status, "HWLOC failure binding process to core\n");
+    }
+#endif /* HAVE_HWLOC */
 
   fn_exit:
     HYDU_FUNC_EXIT();

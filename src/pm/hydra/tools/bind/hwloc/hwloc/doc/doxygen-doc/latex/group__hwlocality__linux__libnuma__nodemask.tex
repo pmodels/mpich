@@ -1,0 +1,33 @@
+\hypertarget{group__hwlocality__linux__libnuma__nodemask}{
+\section{Helpers for manipulating Linux libnuma nodemask\_\-t}
+\label{group__hwlocality__linux__libnuma__nodemask}\index{Helpers for manipulating Linux libnuma nodemask\_\-t@{Helpers for manipulating Linux libnuma nodemask\_\-t}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+static inline void \hyperlink{group__hwlocality__linux__libnuma__nodemask_gd6c037010e89674b799ed8131d7a632c}{hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-nodemask} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} cpuset, nodemask\_\-t $\ast$nodemask)
+\begin{CompactList}\small\item\em Convert hwloc CPU set {\tt cpuset} into libnuma nodemask {\tt nodemask}. \item\end{CompactList}\item 
+static inline \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} \hyperlink{group__hwlocality__linux__libnuma__nodemask_gc199bbdcd7913ce17bd36a168e00991f}{hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-nodemask} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, const nodemask\_\-t $\ast$nodemask)
+\begin{CompactList}\small\item\em Convert libnuma nodemask {\tt nodemask} into hwloc CPU set {\tt cpuset}. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__linux__libnuma__nodemask_gc199bbdcd7913ce17bd36a168e00991f}{
+\index{hwlocality\_\-linux\_\-libnuma\_\-nodemask@{hwlocality\_\-linux\_\-libnuma\_\-nodemask}!hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-nodemask@{hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-nodemask}}
+\index{hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-nodemask@{hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-nodemask}!hwlocality_linux_libnuma_nodemask@{hwlocality\_\-linux\_\-libnuma\_\-nodemask}}
+\subsubsection[{hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-nodemask}]{\setlength{\rightskip}{0pt plus 5cm}static inline {\bf hwloc\_\-cpuset\_\-t} hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-nodemask ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  const nodemask\_\-t $\ast$ {\em nodemask})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__linux__libnuma__nodemask_gc199bbdcd7913ce17bd36a168e00991f}
+
+
+Convert libnuma nodemask {\tt nodemask} into hwloc CPU set {\tt cpuset}. 
+
+This function may be used before calling some old libnuma functions that use a nodemask\_\-t as an output parameter. \hypertarget{group__hwlocality__linux__libnuma__nodemask_gd6c037010e89674b799ed8131d7a632c}{
+\index{hwlocality\_\-linux\_\-libnuma\_\-nodemask@{hwlocality\_\-linux\_\-libnuma\_\-nodemask}!hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-nodemask@{hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-nodemask}}
+\index{hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-nodemask@{hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-nodemask}!hwlocality_linux_libnuma_nodemask@{hwlocality\_\-linux\_\-libnuma\_\-nodemask}}
+\subsubsection[{hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-nodemask}]{\setlength{\rightskip}{0pt plus 5cm}static inline void hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-nodemask ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em cpuset}, \/  nodemask\_\-t $\ast$ {\em nodemask})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__linux__libnuma__nodemask_gd6c037010e89674b799ed8131d7a632c}
+
+
+Convert hwloc CPU set {\tt cpuset} into libnuma nodemask {\tt nodemask}. 
+
+This function may be used before calling some old libnuma functions that use a nodemask\_\-t as an input parameter. 

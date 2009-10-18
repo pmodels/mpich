@@ -1,0 +1,34 @@
+System(15GB HP=0*2048kB Dell Inc. 0NR282)
+  Socket#0
+    L1Cache(32KB)
+      Core#0
+        P#0
+    L2Cache(4096KB)
+      Core#2
+        P#2
+      L1Cache(32KB)
+        Core#3
+          P#6
+    L1Cache(32KB)
+      Core#1
+        P#4
+  Socket#1
+    L2Cache(4096KB)
+      Core#0
+        P#1
+      Core#1
+        P#5
+    L2Cache(4096KB)
+      L1Cache(32KB)
+        Core#2
+          P#3
+      L1Cache(32KB)
+        Core#3
+          P#7
+depth 0:	1 System (type #0)
+ depth 1:	2 Sockets (type #3)
+  depth 2:	3 Caches (type #4)
+   depth 3:	5 Caches (type #4)
+    depth 4:	8 Cores (type #5)
+     depth 5:	8 Procs (type #6)
+Topology not from this system

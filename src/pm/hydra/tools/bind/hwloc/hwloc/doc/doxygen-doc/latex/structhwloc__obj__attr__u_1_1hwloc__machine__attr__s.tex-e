@@ -1,0 +1,78 @@
+\hypertarget{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s}{
+\section{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s Struct Reference}
+\label{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s}\index{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}}
+}
+Machine-specific Object Attributes.  
+
+
+{\tt \#include $<$hwloc.h$>$}
+
+\subsection*{Data Fields}
+\begin{CompactItemize}
+\item 
+char $\ast$ \hyperlink{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_ae85be0b4ebb86501718c4b460df5167}{dmi\_\-board\_\-vendor}
+\begin{CompactList}\small\item\em DMI board vendor name. \item\end{CompactList}\item 
+char $\ast$ \hyperlink{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_8b99af84fd38753a91c861f0e856b461}{dmi\_\-board\_\-name}
+\begin{CompactList}\small\item\em DMI board model name. \item\end{CompactList}\item 
+unsigned long \hyperlink{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_de283aa936a98b982fdd395d59c3ee32}{memory\_\-kB}
+\begin{CompactList}\small\item\em Size of memory node. \item\end{CompactList}\item 
+unsigned long \hyperlink{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_87ff3de9e181599328be92c932cb7a16}{huge\_\-page\_\-free}
+\begin{CompactList}\small\item\em Number of available huge pages. \item\end{CompactList}\item 
+unsigned long \hyperlink{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_f9d440e06744c23670a7b2e3a060abb9}{huge\_\-page\_\-size\_\-kB}
+\begin{CompactList}\small\item\em Size of huge pages. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+Machine-specific Object Attributes. 
+
+\subsection{Field Documentation}
+\hypertarget{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_8b99af84fd38753a91c861f0e856b461}{
+\index{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}!dmi\_\-board\_\-name@{dmi\_\-board\_\-name}}
+\index{dmi\_\-board\_\-name@{dmi\_\-board\_\-name}!hwloc_obj_attr_u::hwloc_machine_attr_s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}}
+\subsubsection[{dmi\_\-board\_\-name}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ {\bf hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s::dmi\_\-board\_\-name}}}
+\label{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_8b99af84fd38753a91c861f0e856b461}
+
+
+DMI board model name. 
+
+\hypertarget{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_ae85be0b4ebb86501718c4b460df5167}{
+\index{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}!dmi\_\-board\_\-vendor@{dmi\_\-board\_\-vendor}}
+\index{dmi\_\-board\_\-vendor@{dmi\_\-board\_\-vendor}!hwloc_obj_attr_u::hwloc_machine_attr_s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}}
+\subsubsection[{dmi\_\-board\_\-vendor}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ {\bf hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s::dmi\_\-board\_\-vendor}}}
+\label{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_ae85be0b4ebb86501718c4b460df5167}
+
+
+DMI board vendor name. 
+
+\hypertarget{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_87ff3de9e181599328be92c932cb7a16}{
+\index{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}!huge\_\-page\_\-free@{huge\_\-page\_\-free}}
+\index{huge\_\-page\_\-free@{huge\_\-page\_\-free}!hwloc_obj_attr_u::hwloc_machine_attr_s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}}
+\subsubsection[{huge\_\-page\_\-free}]{\setlength{\rightskip}{0pt plus 5cm}unsigned long {\bf hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s::huge\_\-page\_\-free}}}
+\label{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_87ff3de9e181599328be92c932cb7a16}
+
+
+Number of available huge pages. 
+
+\hypertarget{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_f9d440e06744c23670a7b2e3a060abb9}{
+\index{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}!huge\_\-page\_\-size\_\-kB@{huge\_\-page\_\-size\_\-kB}}
+\index{huge\_\-page\_\-size\_\-kB@{huge\_\-page\_\-size\_\-kB}!hwloc_obj_attr_u::hwloc_machine_attr_s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}}
+\subsubsection[{huge\_\-page\_\-size\_\-kB}]{\setlength{\rightskip}{0pt plus 5cm}unsigned long {\bf hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s::huge\_\-page\_\-size\_\-kB}}}
+\label{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_f9d440e06744c23670a7b2e3a060abb9}
+
+
+Size of huge pages. 
+
+\hypertarget{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_de283aa936a98b982fdd395d59c3ee32}{
+\index{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}!memory\_\-kB@{memory\_\-kB}}
+\index{memory\_\-kB@{memory\_\-kB}!hwloc_obj_attr_u::hwloc_machine_attr_s@{hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s}}
+\subsubsection[{memory\_\-kB}]{\setlength{\rightskip}{0pt plus 5cm}unsigned long {\bf hwloc\_\-obj\_\-attr\_\-u::hwloc\_\-machine\_\-attr\_\-s::memory\_\-kB}}}
+\label{structhwloc__obj__attr__u_1_1hwloc__machine__attr__s_de283aa936a98b982fdd395d59c3ee32}
+
+
+Size of memory node. 
+
+
+
+The documentation for this struct was generated from the following file:\begin{CompactItemize}
+\item 
+hwloc.h\end{CompactItemize}

@@ -1,0 +1,82 @@
+\hypertarget{group__hwlocality__creation}{
+\section{Create and Destroy Topologies}
+\label{group__hwlocality__creation}\index{Create and Destroy Topologies@{Create and Destroy Topologies}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+int \hyperlink{group__hwlocality__creation_g03fd4a16d8b9ee1ffc32b25fd2f6bdfa}{hwloc\_\-topology\_\-init} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} $\ast$topologyp)
+\begin{CompactList}\small\item\em Allocate a topology context. \item\end{CompactList}\item 
+int \hyperlink{group__hwlocality__creation_gbdf58d87ad77f6615fccdfe0535ff826}{hwloc\_\-topology\_\-load} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology)
+\begin{CompactList}\small\item\em Build the actual topology. \item\end{CompactList}\item 
+void \hyperlink{group__hwlocality__creation_g9f34a640b6fd28d23699d4d084667b15}{hwloc\_\-topology\_\-destroy} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology)
+\begin{CompactList}\small\item\em Terminate and free a topology context. \item\end{CompactList}\item 
+void \hyperlink{group__hwlocality__creation_gf6746bc3a558ef1ac8348b4491d091b5}{hwloc\_\-topology\_\-check} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology)
+\begin{CompactList}\small\item\em Run internal checks on a topology structure. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__creation_gf6746bc3a558ef1ac8348b4491d091b5}{
+\index{hwlocality\_\-creation@{hwlocality\_\-creation}!hwloc\_\-topology\_\-check@{hwloc\_\-topology\_\-check}}
+\index{hwloc\_\-topology\_\-check@{hwloc\_\-topology\_\-check}!hwlocality_creation@{hwlocality\_\-creation}}
+\subsubsection[{hwloc\_\-topology\_\-check}]{\setlength{\rightskip}{0pt plus 5cm}void hwloc\_\-topology\_\-check ({\bf hwloc\_\-topology\_\-t} {\em topology})}}
+\label{group__hwlocality__creation_gf6746bc3a558ef1ac8348b4491d091b5}
+
+
+Run internal checks on a topology structure. 
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em topology}]is the topology to be checked \end{description}
+\end{Desc}
+\hypertarget{group__hwlocality__creation_g9f34a640b6fd28d23699d4d084667b15}{
+\index{hwlocality\_\-creation@{hwlocality\_\-creation}!hwloc\_\-topology\_\-destroy@{hwloc\_\-topology\_\-destroy}}
+\index{hwloc\_\-topology\_\-destroy@{hwloc\_\-topology\_\-destroy}!hwlocality_creation@{hwlocality\_\-creation}}
+\subsubsection[{hwloc\_\-topology\_\-destroy}]{\setlength{\rightskip}{0pt plus 5cm}void hwloc\_\-topology\_\-destroy ({\bf hwloc\_\-topology\_\-t} {\em topology})}}
+\label{group__hwlocality__creation_g9f34a640b6fd28d23699d4d084667b15}
+
+
+Terminate and free a topology context. 
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em topology}]is the topology to be freed \end{description}
+\end{Desc}
+\hypertarget{group__hwlocality__creation_g03fd4a16d8b9ee1ffc32b25fd2f6bdfa}{
+\index{hwlocality\_\-creation@{hwlocality\_\-creation}!hwloc\_\-topology\_\-init@{hwloc\_\-topology\_\-init}}
+\index{hwloc\_\-topology\_\-init@{hwloc\_\-topology\_\-init}!hwlocality_creation@{hwlocality\_\-creation}}
+\subsubsection[{hwloc\_\-topology\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-topology\_\-init ({\bf hwloc\_\-topology\_\-t} $\ast$ {\em topologyp})}}
+\label{group__hwlocality__creation_g03fd4a16d8b9ee1ffc32b25fd2f6bdfa}
+
+
+Allocate a topology context. 
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[\mbox{$\rightarrow$} {\em topologyp}]is assigned a pointer to the new allocated context.\end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]0 on success, -1 on error. \end{Desc}
+\hypertarget{group__hwlocality__creation_gbdf58d87ad77f6615fccdfe0535ff826}{
+\index{hwlocality\_\-creation@{hwlocality\_\-creation}!hwloc\_\-topology\_\-load@{hwloc\_\-topology\_\-load}}
+\index{hwloc\_\-topology\_\-load@{hwloc\_\-topology\_\-load}!hwlocality_creation@{hwlocality\_\-creation}}
+\subsubsection[{hwloc\_\-topology\_\-load}]{\setlength{\rightskip}{0pt plus 5cm}int hwloc\_\-topology\_\-load ({\bf hwloc\_\-topology\_\-t} {\em topology})}}
+\label{group__hwlocality__creation_gbdf58d87ad77f6615fccdfe0535ff826}
+
+
+Build the actual topology. 
+
+Build the actual topology once initialized with \hyperlink{group__hwlocality__creation_g03fd4a16d8b9ee1ffc32b25fd2f6bdfa}{hwloc\_\-topology\_\-init()} and tuned with hwlocality\_\-configuration routine. No other routine may be called earlier using this topology context.
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em topology}]is the topology to be loaded with objects.\end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]0 on success, -1 on error.\end{Desc}
+\begin{Desc}
+\item[See also:]\hyperlink{group__hwlocality__configuration}{Configure Topology Detection} \end{Desc}

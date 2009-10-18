@@ -1,0 +1,35 @@
+\hypertarget{group__hwlocality__linux__libnuma__bitmask}{
+\section{Helpers for manipulating Linux libnuma bitmask}
+\label{group__hwlocality__linux__libnuma__bitmask}\index{Helpers for manipulating Linux libnuma bitmask@{Helpers for manipulating Linux libnuma bitmask}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+static inline struct bitmask $\ast$ \hyperlink{group__hwlocality__linux__libnuma__bitmask_g66720508d673173aea250095be22822d}{hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-bitmask} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} cpuset)
+\begin{CompactList}\small\item\em Convert hwloc CPU set {\tt cpuset} into the returned libnuma bitmask. \item\end{CompactList}\item 
+static inline \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} \hyperlink{group__hwlocality__linux__libnuma__bitmask_ga7ac171ac41f209bfbc710ca690affe0}{hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-bitmask} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, const struct bitmask $\ast$bitmask)
+\begin{CompactList}\small\item\em Convert libnuma bitmask {\tt bitmask} into hwloc CPU set {\tt cpuset}. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__linux__libnuma__bitmask_ga7ac171ac41f209bfbc710ca690affe0}{
+\index{hwlocality\_\-linux\_\-libnuma\_\-bitmask@{hwlocality\_\-linux\_\-libnuma\_\-bitmask}!hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-bitmask@{hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-bitmask}}
+\index{hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-bitmask@{hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-bitmask}!hwlocality_linux_libnuma_bitmask@{hwlocality\_\-linux\_\-libnuma\_\-bitmask}}
+\subsubsection[{hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-bitmask}]{\setlength{\rightskip}{0pt plus 5cm}static inline {\bf hwloc\_\-cpuset\_\-t} hwloc\_\-cpuset\_\-from\_\-linux\_\-libnuma\_\-bitmask ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  const struct bitmask $\ast$ {\em bitmask})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__linux__libnuma__bitmask_ga7ac171ac41f209bfbc710ca690affe0}
+
+
+Convert libnuma bitmask {\tt bitmask} into hwloc CPU set {\tt cpuset}. 
+
+This function may be used after calling many numa\_\- functions that use a struct bitmask as an output parameter. \hypertarget{group__hwlocality__linux__libnuma__bitmask_g66720508d673173aea250095be22822d}{
+\index{hwlocality\_\-linux\_\-libnuma\_\-bitmask@{hwlocality\_\-linux\_\-libnuma\_\-bitmask}!hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-bitmask@{hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-bitmask}}
+\index{hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-bitmask@{hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-bitmask}!hwlocality_linux_libnuma_bitmask@{hwlocality\_\-linux\_\-libnuma\_\-bitmask}}
+\subsubsection[{hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-bitmask}]{\setlength{\rightskip}{0pt plus 5cm}static inline struct bitmask$\ast$ hwloc\_\-cpuset\_\-to\_\-linux\_\-libnuma\_\-bitmask ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em cpuset})\hspace{0.3cm}{\tt  \mbox{[}static, read\mbox{]}}}}
+\label{group__hwlocality__linux__libnuma__bitmask_g66720508d673173aea250095be22822d}
+
+
+Convert hwloc CPU set {\tt cpuset} into the returned libnuma bitmask. 
+
+The returned bitmask should later be freed with numa\_\-bitmask\_\-free.
+
+This function may be used before calling many numa\_\- functions that use a struct bitmask as an input parameter. 

@@ -1,0 +1,37 @@
+\hypertarget{group__hwlocality__glibc__sched}{
+\section{Helpers for manipulating glibc sched affinity}
+\label{group__hwlocality__glibc__sched}\index{Helpers for manipulating glibc sched affinity@{Helpers for manipulating glibc sched affinity}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+static \_\-\_\-inline void \hyperlink{group__hwlocality__glibc__sched_g8d52ded42a9b3d832672d642798cdd8a}{hwloc\_\-cpuset\_\-to\_\-glibc\_\-sched\_\-affinity} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} hwlocset, cpu\_\-set\_\-t $\ast$schedset, size\_\-t schedsetsize)
+\begin{CompactList}\small\item\em Convert hwloc CPU set {\tt toposet} into glibc sched affinity CPU set {\tt schedset}. \item\end{CompactList}\item 
+static \_\-\_\-inline \hyperlink{group__hwlocality__cpuset_g82e51d695c430832b703dad5ab8d75e4}{hwloc\_\-cpuset\_\-t} \hyperlink{group__hwlocality__glibc__sched_g95a1b94fc109895ee13b17bddac08f5f}{hwloc\_\-cpuset\_\-from\_\-glibc\_\-sched\_\-affinity} (\hyperlink{group__hwlocality__topology_g9d1e76ee15a7dee158b786c30b6a6e38}{hwloc\_\-topology\_\-t} topology, const cpu\_\-set\_\-t $\ast$schedset, size\_\-t schedsetsize)
+\begin{CompactList}\small\item\em Convert glibc sched affinity CPU set {\tt schedset} into hwloc CPU set. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__hwlocality__glibc__sched_g95a1b94fc109895ee13b17bddac08f5f}{
+\index{hwlocality\_\-glibc\_\-sched@{hwlocality\_\-glibc\_\-sched}!hwloc\_\-cpuset\_\-from\_\-glibc\_\-sched\_\-affinity@{hwloc\_\-cpuset\_\-from\_\-glibc\_\-sched\_\-affinity}}
+\index{hwloc\_\-cpuset\_\-from\_\-glibc\_\-sched\_\-affinity@{hwloc\_\-cpuset\_\-from\_\-glibc\_\-sched\_\-affinity}!hwlocality_glibc_sched@{hwlocality\_\-glibc\_\-sched}}
+\subsubsection[{hwloc\_\-cpuset\_\-from\_\-glibc\_\-sched\_\-affinity}]{\setlength{\rightskip}{0pt plus 5cm}static \_\-\_\-inline {\bf hwloc\_\-cpuset\_\-t} hwloc\_\-cpuset\_\-from\_\-glibc\_\-sched\_\-affinity ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  const cpu\_\-set\_\-t $\ast$ {\em schedset}, \/  size\_\-t {\em schedsetsize})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__glibc__sched_g95a1b94fc109895ee13b17bddac08f5f}
+
+
+Convert glibc sched affinity CPU set {\tt schedset} into hwloc CPU set. 
+
+This function may be used before calling sched\_\-setaffinity or any other function that takes a cpu\_\-set\_\-t as input parameter.
+
+{\tt schedsetsize} should be sizeof(cpu\_\-set\_\-t) unless {\tt schedset} was dynamically allocated with CPU\_\-ALLOC \hypertarget{group__hwlocality__glibc__sched_g8d52ded42a9b3d832672d642798cdd8a}{
+\index{hwlocality\_\-glibc\_\-sched@{hwlocality\_\-glibc\_\-sched}!hwloc\_\-cpuset\_\-to\_\-glibc\_\-sched\_\-affinity@{hwloc\_\-cpuset\_\-to\_\-glibc\_\-sched\_\-affinity}}
+\index{hwloc\_\-cpuset\_\-to\_\-glibc\_\-sched\_\-affinity@{hwloc\_\-cpuset\_\-to\_\-glibc\_\-sched\_\-affinity}!hwlocality_glibc_sched@{hwlocality\_\-glibc\_\-sched}}
+\subsubsection[{hwloc\_\-cpuset\_\-to\_\-glibc\_\-sched\_\-affinity}]{\setlength{\rightskip}{0pt plus 5cm}static \_\-\_\-inline void hwloc\_\-cpuset\_\-to\_\-glibc\_\-sched\_\-affinity ({\bf hwloc\_\-topology\_\-t} {\em topology}, \/  {\bf hwloc\_\-cpuset\_\-t} {\em hwlocset}, \/  cpu\_\-set\_\-t $\ast$ {\em schedset}, \/  size\_\-t {\em schedsetsize})\hspace{0.3cm}{\tt  \mbox{[}static\mbox{]}}}}
+\label{group__hwlocality__glibc__sched_g8d52ded42a9b3d832672d642798cdd8a}
+
+
+Convert hwloc CPU set {\tt toposet} into glibc sched affinity CPU set {\tt schedset}. 
+
+This function may be used before calling sched\_\-setaffinity or any other function that takes a cpu\_\-set\_\-t as input parameter.
+
+{\tt schedsetsize} should be sizeof(cpu\_\-set\_\-t) unless {\tt schedset} was dynamically allocated with CPU\_\-ALLOC 
