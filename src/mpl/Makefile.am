@@ -8,4 +8,4 @@ ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include
 
 noinst_LIBRARIES = libmpl.a
-libmpl_a_SOURCES = src/string/mplstr.c
+libmpl_a_SOURCES = src/mplstr.c
