@@ -5,3 +5,5 @@
 #
 
 libhydra_a_SOURCES += $(top_srcdir)/tools/bind/hwloc/bind_hwloc.c
+
+SUBDIRS += tools/bind/hwloc/hwloc

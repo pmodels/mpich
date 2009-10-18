@@ -171,7 +171,7 @@ HYD_status HYDT_bind_process(int core)
 
 #if defined HAVE_HWLOC
     if (!strcmp(HYDT_bind_info.bindlib, "hwloc")) {
-        status = HYDT_bind_plpa_process(core);
+        status = HYDT_bind_hwloc_process(core);
         HYDU_ERR_POP(status, "HWLOC failure binding process to core\n");
     }
 #endif /* HAVE_HWLOC */
