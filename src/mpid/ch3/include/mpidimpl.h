@@ -47,6 +47,8 @@
 int gethostname(char *name, size_t len);
 # endif
 
+extern int MPIDI_Use_pmi2_api;
+
 #define MPIDI_CHANGE_VC_STATE(vc, new_state) do {               \
         MPIU_DBG_VCSTATECHANGE(vc, VC_STATE_##new_state);       \
         (vc)->state = MPIDI_VC_STATE_##new_state;               \

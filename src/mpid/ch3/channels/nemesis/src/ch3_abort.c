@@ -23,7 +23,7 @@ int MPIDI_CH3_Abort(int exit_code, char *error_msg)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ABORT);
 
 #ifdef USE_PMI2_API
-    PMI_Abort(TRUE, error_msg);
+    PMI2_Abort(TRUE, error_msg);
 #else
     PMI_Abort(exit_code, error_msg);
 #endif

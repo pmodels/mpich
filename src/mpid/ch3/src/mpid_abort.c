@@ -130,8 +130,8 @@ static int MPIDI_CH3I_PMI_Abort(int exit_code, const char *error_msg)
        Should PMI_Abort have a parameter for which of these two cases to
        perform? */
 #ifdef USE_PMI2_API
-    PMI_Abort(TRUE, error_msg);
-#else    
+    PMI2_Abort(TRUE, error_msg);
+#else
     PMI_Abort(exit_code, error_msg);
 #endif
 

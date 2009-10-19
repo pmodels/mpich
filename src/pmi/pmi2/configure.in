@@ -52,6 +52,15 @@ PAC_LOAD_BASE_CACHE
 
 PAC_PROG_MAKE
 
+# Check for alloca function.  May set HAVE_ALLOCA_H and HAVE_ALLOCA
+AC_FUNC_ALLOCA
+# We don't use alloca unless USE_ALLOCA is also set.
+AC_ARG_ENABLE(alloca,
+[--enable-alloca - Use alloca to allocate temporary memory if available],,enable_alloca=no)
+if test "$enable_alloca" = yes ; then
+    AC_DEFINE(USE_ALLOCA,1,[Define if alloca should be used if available])
+fi
+
 AC_CHECK_HEADERS(unistd.h string.h stdlib.h sys/socket.h strings.h)
 dnl Use snprintf if possible when creating messages
 AC_CHECK_FUNCS(snprintf)

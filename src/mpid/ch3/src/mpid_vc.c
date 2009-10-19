@@ -1116,7 +1116,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         int found = FALSE;
         MPIU_CHKLMEM_MALLOC(node_ids, int *, pg->size * sizeof(int), mpi_errno, "node_ids");
 
-        mpi_errno = PMI_Info_GetJobAttrIntArray("nodeIDs", node_ids, pg->size, &outlen, &found);
+        mpi_errno = PMI2_Info_GetJobAttrIntArray("nodeIDs", node_ids, pg->size, &outlen, &found);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIU_ERR_CHKANDJUMP1(!found, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "nodeIDs attribute not found");
         MPIU_ERR_CHKANDJUMP1(outlen != pg->size, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "did not receive enough nodeids");
@@ -1133,7 +1133,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     }
 #else
     {
-        char process_mapping[PMI_MAX_VALLEN];
+        char process_mapping[PMI2_MAX_VALLEN];
         int outlen;
         int found = FALSE;
         int i;
@@ -1144,7 +1144,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         int did_map = 0;
         int num_nodes = 0;
 
-        mpi_errno = PMI_Info_GetJobAttr("process-mapping", process_mapping, sizeof(process_mapping), &found);
+        mpi_errno = PMI2_Info_GetJobAttr("process-mapping", process_mapping, sizeof(process_mapping), &found);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIU_ERR_CHKANDJUMP1(!found, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "process-mapping attribute not found");
         /* this code currently assumes pg is comm_world */

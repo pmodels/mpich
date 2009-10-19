@@ -237,16 +237,16 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
              * serializing operation with our peers on the local node this
              * ensures that these initializations have occurred before any peer
              * attempts to use the resources. */
-            mpi_errno = PMI_Info_PutNodeAttr("sharedFilename", serialized_hnd);
+            mpi_errno = PMI2_Info_PutNodeAttr("sharedFilename", serialized_hnd);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         } else {
             int found = FALSE;
 
             /* Allocate space for pmi key and val */
-            MPIU_CHKLMEM_MALLOC(val, char *, PMI_MAX_VALLEN, mpi_errno, "val");
+            MPIU_CHKLMEM_MALLOC(val, char *, PMI2_MAX_VALLEN, mpi_errno, "val");
 
             /* get name of shared file */
-            mpi_errno = PMI_Info_GetNodeAttr("sharedFilename", val, PMI_MAX_VALLEN, &found, TRUE);
+            mpi_errno = PMI2_Info_GetNodeAttr("sharedFilename", val, PMI2_MAX_VALLEN, &found, TRUE);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             MPIU_ERR_CHKANDJUMP1(!found, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "nodeattr not found");
 

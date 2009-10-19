@@ -95,7 +95,7 @@ int MPIDI_PG_Finalize(void)
        PG_Finalize */
     if (pg_world->connData) {
 #ifdef USE_PMI2_API
-        mpi_errno = PMI_Finalize();
+        mpi_errno = PMI2_Finalize();
         if (mpi_errno) MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ch3|pmi_finalize");
 #else
 	int rc;
@@ -590,7 +590,7 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 #ifdef USE_PMI2_API
     int mpi_errno = MPI_SUCCESS;
     int len;
-    char key[PMI_MAX_KEYLEN];
+    char key[PMI2_MAX_KEYLEN];
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_PG_SetConnInfo);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_PG_SetConnInfo);
@@ -598,10 +598,10 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
     len = MPIU_Snprintf(key, sizeof(key), "P%d-businesscard", rank);
     MPIU_ERR_CHKANDJUMP1(len < 0 || len > sizeof(key), mpi_errno, MPI_ERR_OTHER, "**snprintf", "**snprintf %d", len);
 
-    mpi_errno = PMI_KVS_Put(key, connString);
+    mpi_errno = PMI2_KVS_Put(key, connString);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = PMI_KVS_Fence();
+    mpi_errno = PMI2_KVS_Fence();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
  fn_exit:
@@ -687,10 +687,10 @@ static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
     }
 
-    mpi_errno = PMI_KVS_Get(pg->connData, key, buf, bufsize, &vallen);
+    mpi_errno = PMI2_KVS_Get(pg->connData, key, buf, bufsize, &vallen);
     if (mpi_errno) {
 	MPIDI_PG_CheckForSingleton();
-	mpi_errno = PMI_KVS_Get(pg->connData, key, buf, bufsize, &vallen);
+	mpi_errno = PMI2_KVS_Get(pg->connData, key, buf, bufsize, &vallen);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
  fn_exit:
@@ -831,7 +831,7 @@ int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
     }
     
-    mpi_errno = PMI_Job_GetId(pg->connData, MAX_JOBID_LEN);
+    mpi_errno = PMI2_Job_GetId(pg->connData, MAX_JOBID_LEN);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 #else
     int pmi_errno, kvs_name_sz;

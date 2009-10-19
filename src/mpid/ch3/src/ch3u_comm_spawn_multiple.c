@@ -297,7 +297,7 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
         {
             int vallen = 0;
             MPIU_THREAD_CS_ENTER(PMI,);
-            mpi_errno = PMI_KVS_Get(kvsname, PARENT_PORT_KVSKEY, val, sizeof(val), &vallen);
+            mpi_errno = PMI2_KVS_Get(kvsname, PARENT_PORT_KVSKEY, val, sizeof(val), &vallen);
             MPIU_THREAD_CS_EXIT(PMI,);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
