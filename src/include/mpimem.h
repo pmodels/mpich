@@ -311,7 +311,7 @@ extern char *strdup( const char * );
 #define MPIU_CHKLMEM_FREEALL()
 #define MPIU_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
 {pointer_ = (type_)alloca(nbytes_); \
-if (!(pointer_)) { \
+    if (!(pointer_) && (nbytes > 0)) {	   \
     MPIU_CHKMEM_SETERR(rc_,nbytes_,name_); \
     stmt_;\
 }}
@@ -326,7 +326,7 @@ if (!(pointer_)) { \
 if (pointer_) { \
     MPIU_Assert(mpiu_chklmem_stk_sp_<mpiu_chklmem_stk_sz_);\
     mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = pointer_;\
-} else {\
+ } else if (nbytes_ > 0) {				 \
     MPIU_CHKMEM_SETERR(rc_,nbytes_,name_); \
     stmt_;\
 }}
@@ -353,7 +353,7 @@ if (pointer_) { \
 if (pointer_) { \
     MPIU_Assert(mpiu_chklbigmem_stk_sp_<mpiu_chklbigmem_stk_sz_);\
     mpiu_chklbigmem_stk_[mpiu_chklbigmem_stk_sp_++] = pointer_;\
-} else {\
+ } else if (nbytes_ > 0) {				       \
     MPIU_CHKMEM_SETERR(rc_,nbytes_,name_); \
     stmt_;\
 }}
@@ -376,7 +376,7 @@ if (pointer_) { \
 if (pointer_) { \
     MPIU_Assert(mpiu_chkpmem_stk_sp_<mpiu_chkpmem_stk_sz_);\
     mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_;\
-} else {\
+ } else if (nbytes_ > 0) {				 \
     MPIU_CHKMEM_SETERR(rc_,nbytes_,name_); \
     stmt_;\
 }}
@@ -396,7 +396,7 @@ if (pointer_) { \
 /* A special version for routines that only allocate one item */
 #define MPIU_CHKPMEM_MALLOC1(pointer_,type_,nbytes_,rc_,name_,stmt_) \
 {pointer_ = (type_)MPIU_Malloc(nbytes_); \
-if (!(pointer_)) { \
+    if (!(pointer_) && (nbytes_ > 0)) {	   \
     MPIU_CHKMEM_SETERR(rc_,nbytes_,name_); \
     stmt_;\
 }}
