@@ -108,7 +108,7 @@ int main(int argc, char **argv)
     struct HYD_proxy *proxy;
     struct HYD_proxy_exec *exec;
     struct HYD_exec_info *exec_info;
-    int exit_status = 0, timeout, i, process_id, proc_count, num_nodes = 0;
+    int exit_status = 0, timeout, i, process_id, proc_count, num_cores;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -130,10 +130,11 @@ int main(int argc, char **argv)
 
     if (HYD_handle.proxy_list == NULL) {
         /* Proxy list is not created yet. The user might not have
-         * provided the host file. Query the RMK. We pass a zero node
+         * provided the host file. Query the RMK. We pass a zero core
          * count, so the RMK will give us all the nodes it already has
          * and won't try to allocate any more. */
-        status = HYD_rmki_query_node_list(&num_nodes, &HYD_handle.proxy_list);
+        num_cores = 0;
+        status = HYD_rmki_query_node_list(&num_cores, &HYD_handle.proxy_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
         /* We don't have an allocation capability yet, but when we do,
@@ -147,7 +148,7 @@ int main(int argc, char **argv)
         }
         else {
             /* The RMK returned a node list */
-            HYD_handle.global_core_count += num_nodes;
+            HYD_handle.global_core_count += num_cores;
         }
     }
 
@@ -155,10 +156,10 @@ int main(int argc, char **argv)
      * available nodes to each executable */
     for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
         if (exec_info->process_count == 0) {
-            if (num_nodes == 0)
+            if (num_cores == 0)
                 exec_info->process_count = 1;
             else
-                exec_info->process_count = num_nodes;
+                exec_info->process_count = num_cores;
 
             /* If we didn't get anything from the user, take whatever
              * the RMK gave */

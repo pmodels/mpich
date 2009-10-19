@@ -38,7 +38,7 @@ fn_fail:
     goto fn_exit;
 }
 
-HYD_status HYD_rmkd_pbs_query_node_list(int *num_nodes, struct HYD_proxy **proxy_list)
+HYD_status HYD_rmkd_pbs_query_node_list(int *num_cores, struct HYD_proxy **proxy_list)
 {
     char *hostfile;
     HYD_status status = HYD_SUCCESS;
@@ -53,7 +53,7 @@ HYD_status HYD_rmkd_pbs_query_node_list(int *num_nodes, struct HYD_proxy **proxy
         total_num_procs = 0;
         status = HYDU_parse_hostfile(hostfile, process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
-        *num_nodes = total_num_procs;
+        *num_cores = total_num_procs;
     }
 
   fn_exit:

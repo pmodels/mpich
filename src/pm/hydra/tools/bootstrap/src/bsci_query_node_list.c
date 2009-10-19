@@ -8,13 +8,13 @@
 #include "bsci.h"
 #include "bscu.h"
 
-HYD_status HYDT_bsci_query_node_list(int *num_nodes, struct HYD_proxy **proxy_list)
+HYD_status HYDT_bsci_query_node_list(int *num_cores, struct HYD_proxy **proxy_list)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_bsci_fns.query_node_list(num_nodes, proxy_list);
+    status = HYDT_bsci_fns.query_node_list(num_cores, proxy_list);
     HYDU_ERR_POP(status, "bootstrap device returned error while querying node list\n");
 
   fn_exit:

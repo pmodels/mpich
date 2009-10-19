@@ -18,7 +18,7 @@ struct HYDT_bsci_fns {
                                struct HYD_proxy *proxy_list);
     HYD_status(*finalize) (void);
     HYD_status(*wait_for_completion) (struct HYD_proxy *proxy_list);
-    HYD_status(*query_node_list) (int *num_nodes, struct HYD_proxy **proxy_list);
+    HYD_status(*query_node_list) (int *num_cores, struct HYD_proxy **proxy_list);
     HYD_status(*query_usize) (int *size);
     HYD_status(*query_proxy_id) (int *proxy_id);
 };
@@ -30,7 +30,7 @@ HYD_status HYDT_bsci_launch_procs(char **global_args, const char *proxy_id_str,
                                  struct HYD_proxy *proxy_list);
 HYD_status HYDT_bsci_finalize(void);
 HYD_status HYDT_bsci_wait_for_completion(struct HYD_proxy *proxy_list);
-HYD_status HYDT_bsci_query_node_list(int *num_nodes, struct HYD_proxy **proxy_list);
+HYD_status HYDT_bsci_query_node_list(int *num_cores, struct HYD_proxy **proxy_list);
 HYD_status HYDT_bsci_query_usize(int *size);
 HYD_status HYDT_bsci_query_proxy_id(int *proxy_id);
 
