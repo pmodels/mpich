@@ -9,7 +9,6 @@
 
 #include "hydra.h"
 
-HYD_status HYD_uii_mpx_add_to_proxy_list(char *hostname, int num_procs);
 HYD_status HYD_uii_mpx_get_parameters(char **t_argv);
 HYD_status HYD_uii_mpx_stdout_cb(int fd, HYD_event_t events, void *userp);
 HYD_status HYD_uii_mpx_stderr_cb(int fd, HYD_event_t events, void *userp);

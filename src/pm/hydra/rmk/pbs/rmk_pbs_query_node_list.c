@@ -8,61 +8,52 @@
 #include "rmki.h"
 #include "rmk_pbs.h"
 
+static int total_num_procs;
+
+static HYD_status process_mfile_token(char *token, int newline)
+{
+    int num_procs;
+    char *hostname, *procs;
+    HYD_status status = HYD_SUCCESS;
+
+    if (newline) {      /* The first entry gives the hostname and processes */
+        hostname = strtok(token, ":");
+        procs = strtok(NULL, ":");
+        num_procs = procs ? atoi(procs) : 1;
+
+        status = HYDU_add_to_proxy_list(hostname, num_procs, &HYD_handle.proxy_list);
+        HYDU_ERR_POP(status, "unable to initialize proxy\n");
+
+        total_num_procs += num_procs;
+    }
+    else {      /* Not a new line */
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "token %s not supported at this time\n", token);
+    }
+
+fn_exit:
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYD_rmkd_pbs_query_node_list(int *num_nodes, struct HYD_proxy **proxy_list)
 {
-    char *host_file, *hostname, line[HYD_TMP_STRLEN], **arg_list;
-    int num_procs;
-    FILE *fp;
+    char *hostfile;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    host_file = getenv("PBS_NODEFILE");
-
-    if (host_file == NULL || host_file == NULL) {
+    hostfile = getenv("PBS_NODEFILE");
+    if (hostfile == NULL) {
         *proxy_list = NULL;
     }
     else {
-        fp = fopen(host_file, "r");
-        if (!fp)
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                                 "unable to open host file: %s\n", host_file);
-
-        *num_nodes = 0;
-        while (fgets(line, HYD_TMP_STRLEN, fp)) {
-            char *linep = NULL;
-
-            linep = line;
-            strtok(linep, "#");
-
-            while (isspace(*linep))
-                linep++;
-
-            /* Ignore blank lines & comments */
-            if ((*linep == '#') || (*linep == '\0'))
-                continue;
-
-            /* break up the arguments in the line */
-            arg_list = HYDU_str_to_strlist(linep);
-            if (!arg_list)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                    "Unable to convert host file entry to strlist\n");
-
-            hostname = arg_list[0];
-            num_procs = 1;
-
-            /* Try to find an existing proxy with this name and
-             * add this segment in. If there is no existing proxy
-             * with this name, we create a new one. */
-            status = HYDU_merge_proxy_segment(hostname, *num_nodes, num_procs, proxy_list);
-            HYDU_ERR_POP(status, "merge proxy segment failed\n");
-
-            *num_nodes += num_procs;
-
-            HYDU_FREE(arg_list);
-        }
-
-        fclose(fp);
+        total_num_procs = 0;
+        status = HYDU_parse_hostfile(hostfile, process_mfile_token);
+        HYDU_ERR_POP(status, "error parsing hostfile\n");
+        *num_nodes = total_num_procs;
     }
 
   fn_exit:

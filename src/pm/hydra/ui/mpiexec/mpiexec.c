@@ -141,8 +141,13 @@ int main(int argc, char **argv)
 
         if (HYD_handle.proxy_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
-            status = HYD_uii_mpx_add_to_proxy_list((char *) "localhost", 1);
+            status = HYDU_add_to_proxy_list((char *) "localhost", 1, &HYD_handle.proxy_list);
             HYDU_ERR_POP(status, "unable to initialize proxy\n");
+            HYD_handle.global_core_count += 1;
+        }
+        else {
+            /* The RMK returned a node list */
+            HYD_handle.global_core_count += num_nodes;
         }
     }
 
@@ -154,6 +159,10 @@ int main(int argc, char **argv)
                 exec_info->process_count = 1;
             else
                 exec_info->process_count = num_nodes;
+
+            /* If we didn't get anything from the user, take whatever
+             * the RMK gave */
+            HYD_handle.global_process_count += exec_info->process_count;
         }
     }
 
@@ -190,23 +199,22 @@ int main(int argc, char **argv)
 
     if (HYD_handle.print_rank_map) {
         FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
-            HYDU_dump(stdout, "[%s] ", proxy->hostname);
+            HYDU_dump_noprefix(stdout, "(%s:", proxy->hostname);
 
             process_id = 0;
             for (exec = proxy->exec_list; exec; exec = exec->next) {
                 for (i = 0; i < exec->proc_count; i++) {
-                    HYDU_dump(stdout, "%d",
-                              HYDU_local_to_global_id(process_id++,
-                                                      proxy->start_pid,
-                                                      proxy->proxy_core_count,
-                                                      HYD_handle.global_core_count));
-                    if (i < exec->proc_count - 1)
-                        HYDU_dump(stdout, ",");
+                    HYDU_dump_noprefix(stdout, "%d",
+                                       HYDU_local_to_global_id(process_id++,
+                                                               proxy->start_pid,
+                                                               proxy->proxy_core_count,
+                                                               HYD_handle.global_core_count));
+                    if (i < exec->proc_count - 1 || exec->next)
+                        HYDU_dump_noprefix(stdout, ",");
                 }
             }
-            HYDU_dump(stdout, "\n");
+            HYDU_dump_noprefix(stdout, ")\n");
         }
-        HYDU_dump(stdout, "\n");
     }
 
     FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list)

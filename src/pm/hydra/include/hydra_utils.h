@@ -178,6 +178,8 @@ HYD_status HYDU_merge_proxy_segment(char *name, int start_pid, int core_count,
                                     struct HYD_proxy **proxy_list);
 int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,
                             int global_core_count);
+HYD_status HYDU_add_to_proxy_list(char *hostname, int num_procs,
+                                  struct HYD_proxy **proxy_list);
 
 /* signals */
 #ifdef NEEDS_POSIX_FOR_SIGACTION

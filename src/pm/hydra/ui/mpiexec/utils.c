@@ -150,53 +150,6 @@ static HYD_status genvall_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-HYD_status HYD_uii_mpx_add_to_proxy_list(char *hostname, int num_procs)
-{
-    static int pid = 0;
-    struct HYD_proxy *proxy;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (HYD_handle.proxy_list == NULL) {
-        status = HYDU_alloc_proxy(&HYD_handle.proxy_list);
-        HYDU_ERR_POP(status, "unable to allocate proxy\n");
-
-        HYD_handle.proxy_list->hostname = HYDU_strdup(hostname);
-
-        HYD_handle.proxy_list->start_pid = 0;
-        HYD_handle.proxy_list->proxy_core_count = num_procs;
-        HYD_handle.global_core_count += num_procs;
-    }
-    else {
-        for (proxy = HYD_handle.proxy_list; proxy->next; proxy = proxy->next);
-
-        if (strcmp(proxy->hostname, hostname)) {
-            /* If the hostname does not match, create a new proxy */
-            status = HYDU_alloc_proxy(&proxy->next);
-            HYDU_ERR_POP(status, "unable to allocate proxy\n");
-
-            proxy = proxy->next;
-
-            proxy->hostname = HYDU_strdup(hostname);
-
-            proxy->start_pid = pid;
-        }
-
-        proxy->proxy_core_count += num_procs;
-        HYD_handle.global_core_count += num_procs;
-    }
-    pid += num_procs;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
 static HYD_status process_mfile_token(char *token, int newline)
 {
     int num_procs;
@@ -208,8 +161,9 @@ static HYD_status process_mfile_token(char *token, int newline)
         procs = strtok(NULL, ":");
         num_procs = procs ? atoi(procs) : 1;
 
-        status = HYD_uii_mpx_add_to_proxy_list(hostname, num_procs);
+        status = HYDU_add_to_proxy_list(hostname, num_procs, &HYD_handle.proxy_list);
         HYDU_ERR_POP(status, "unable to initialize proxy\n");
+        HYD_handle.global_core_count += num_procs;
     }
     else {      /* Not a new line */
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
@@ -241,8 +195,9 @@ static HYD_status mfile_fn(char *arg, char ***argv)
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
     else {
-        status = HYD_uii_mpx_add_to_proxy_list((char *) "localhost", 1);
+        status = HYDU_add_to_proxy_list((char *) "localhost", 1, &HYD_handle.proxy_list);
         HYDU_ERR_POP(status, "unable to add proxy\n");
+        HYD_handle.global_core_count += 1;
     }
 
     (*argv)++;

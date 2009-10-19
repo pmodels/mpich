@@ -46,3 +46,48 @@ int HYDU_local_to_global_id(int local_id, int start_pid, int core_count, int glo
 {
     return ((local_id / core_count) * global_core_count) + (local_id % core_count) + start_pid;
 }
+
+HYD_status HYDU_add_to_proxy_list(char *hostname, int num_procs,
+                                  struct HYD_proxy **proxy_list)
+{
+    static int pid = 0;
+    struct HYD_proxy *proxy;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (*proxy_list == NULL) {
+        status = HYDU_alloc_proxy(proxy_list);
+        HYDU_ERR_POP(status, "unable to allocate proxy\n");
+
+        (*proxy_list)->hostname = HYDU_strdup(hostname);
+
+        (*proxy_list)->start_pid = 0;
+        (*proxy_list)->proxy_core_count = num_procs;
+    }
+    else {
+        for (proxy = *proxy_list; proxy->next; proxy = proxy->next);
+
+        if (strcmp(proxy->hostname, hostname)) {
+            /* If the hostname does not match, create a new proxy */
+            status = HYDU_alloc_proxy(&proxy->next);
+            HYDU_ERR_POP(status, "unable to allocate proxy\n");
+
+            proxy = proxy->next;
+
+            proxy->hostname = HYDU_strdup(hostname);
+
+            proxy->start_pid = pid;
+        }
+
+        proxy->proxy_core_count += num_procs;
+    }
+    pid += num_procs;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
