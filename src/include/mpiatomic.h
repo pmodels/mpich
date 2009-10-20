@@ -132,7 +132,7 @@ typedef enum MPIDU_Owner_result {
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Owner_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline void MPIDU_Owner_init(MPIDU_Owner_info *info)
 {
     /* It's OK if multiple processes call this on the same bit of shared_info
@@ -144,7 +144,7 @@ static inline void MPIDU_Owner_init(MPIDU_Owner_info *info)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Owner_try_acquire
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline
 MPIDU_Owner_result MPIDU_Owner_try_acquire(MPIDU_Owner_info *info,
                                            int my_id,
@@ -181,7 +181,7 @@ MPIDU_Owner_result MPIDU_Owner_try_acquire(MPIDU_Owner_info *info,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Owner_release
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* 'after_owner' is an OUT value */
 static inline
 MPIDU_Owner_result MPIDU_Owner_release(MPIDU_Owner_info *info,
@@ -228,7 +228,7 @@ MPIDU_Owner_result MPIDU_Owner_release(MPIDU_Owner_info *info,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Owner_peek
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* Has the potential for misuse, but this routine is useful for laying down
    assertions about ownership in the middle of algorithms. */
 static inline
@@ -283,7 +283,7 @@ enum {
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Alloc_by_id
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline
 volatile void * MPIDU_Alloc_by_id(MPIDU_Alloc_pool *pool, int id)
 {
@@ -315,7 +315,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Alloc_free
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline
 int MPIDU_Alloc_free(MPIDU_Alloc_pool *pool, volatile void *element) {
     int mpi_errno = MPI_SUCCESS;
@@ -333,7 +333,7 @@ typedef int (*MPIDU_Alloc_element_init_fp)(volatile void *element);
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Alloc_calc_size
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline
 size_t MPIDU_Alloc_calc_size(size_t nmemb, size_t elt_size)
 {
@@ -380,7 +380,7 @@ size_t MPIDU_Alloc_calc_size(size_t nmemb, size_t elt_size)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Alloc_create_pool
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline
 int MPIDU_Alloc_create_pool(volatile void *buf,
                             size_t buf_size,
@@ -483,7 +483,7 @@ typedef struct {
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Shm_barrier_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline
 int MPIDU_Shm_barrier_init(MPIDU_Shm_barrier_t *barrier)
 {
@@ -509,7 +509,7 @@ int MPIDU_Shm_barrier_init(MPIDU_Shm_barrier_t *barrier)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Shm_barrier_simple
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline
 int MPIDU_Shm_barrier_simple(MPIDU_Shm_barrier_t *barrier, int num_processes, int rank)
 {
@@ -546,7 +546,7 @@ int MPIDU_Shm_barrier_simple(MPIDU_Shm_barrier_t *barrier, int num_processes, in
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Shm_barrier_enter
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline
 int MPIDU_Shm_barrier_enter(MPIDU_Shm_barrier_t *barrier,
                             int num_processes,
@@ -590,7 +590,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Shm_barrier_release
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline
 int MPIDU_Shm_barrier_release(MPIDU_Shm_barrier_t *barrier,
                               int num_processes,
