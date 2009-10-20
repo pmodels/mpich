@@ -575,7 +575,8 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
     pg_list->pg_id = MPIU_Strdup(comm_p->vcr[0]->pg->id);
     pg_list->index = cur_index++;
     pg_list->next = NULL;
-    MPIU_Assert( comm_p->vcr[0]->pg->ref_count);
+    /* XXX DJG FIXME-MT should we be checking this?  the add/release macros already check this */
+    MPIU_Assert( MPIU_Object_get_ref(comm_p->vcr[0]->pg));
     mpi_errno = MPIDI_PG_To_string(comm_p->vcr[0]->pg, &pg_list->str, 
 				   &pg_list->lenStr );
     if (mpi_errno != MPI_SUCCESS) {
@@ -590,7 +591,8 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
 	pg_trailer = pg_list;
 	while (pg_iter != NULL) {
 	    /* Check to ensure pg is (probably) valid */
-	    MPIU_Assert(comm_p->vcr[i]->pg->ref_count != 0);
+            /* XXX DJG FIXME-MT should we be checking this?  the add/release macros already check this */
+	    MPIU_Assert(MPIU_Object_get_ref(comm_p->vcr[i]->pg) != 0);
 	    if (MPIDI_PG_Id_compare(comm_p->vcr[i]->pg->id, pg_iter->pg_id)) {
 		local_translation[i].pg_index = pg_iter->index;
 		local_translation[i].pg_rank  = comm_p->vcr[i]->pg_rank;

@@ -59,8 +59,9 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 		     * FIXME: The VC used in connect accept has a NULL 
 		     * process group
 		     */
-		    if (vc->pg != NULL && vc->ref_count == 0)
-		    { 
+                    /* XXX DJG FIXME-MT should we be checking this ref_count? */
+		    if (vc->pg != NULL && (MPIU_Object_get_ref(vc) == 0))
+		    {
 			/* FIXME: Who increments the reference count that
 			   this is decrementing? */
 			/* When the reference count for a vc becomes zero, 

@@ -117,11 +117,12 @@ int MPIDI_PG_Finalize(void)
 	   the ref count is not zero.  This can happen if the user
 	   fails to use MPI_Comm_disconnect on communicators that
 	   were created with the dynamic process routines.*/
-	if (pg->ref_count == 0 || 1) {
+        /* XXX DJG FIXME-MT should we be checking this? */
+	if (MPIU_Object_get_ref(pg) == 0 || 1) {
 	    if (pg == MPIDI_Process.my_pg)
 		MPIDI_Process.my_pg = NULL;
 
-	    pg->ref_count = 0; /* satisfy assertions in PG_Destroy */
+	    MPIU_Object_set_ref(pg, 0); /* satisfy assertions in PG_Destroy */
 	    MPIDI_PG_Destroy( pg );
 	}
 	pg     = pgNext;
@@ -273,7 +274,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_PG_DESTROY);
 
-    MPIU_Assert(pg->ref_count == 0);
+    MPIU_Assert(MPIU_Object_get_ref(pg) == 0);
 
     pg_prev = NULL;
     pg_cur = MPIDI_PG_list;
@@ -304,7 +305,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 		      counts IS required and missing one is a bug.)
                    2) There is a real bug lurking out there somewhere and we
                       just haven't hit it in the tests yet.  */
-                /*MPIU_Assert(pg->vct[i].ref_count == 0);*/
+                /*MPIU_Assert(MPIU_Object_get_ref(pg->vct[i]) == 0);*/
 
                 MPIU_DBG_MSG_FMT(CH3_DISCONNECT, VERBOSE, (MPIU_DBG_FDEST, "about to free pg->vct=%p which contains vc=%p", pg->vct, &pg->vct[i]));
 
@@ -1120,8 +1121,8 @@ int MPIDI_PG_Dup_vcr( MPIDI_PG_t *pg, int rank, MPIDI_VC_t **vc_p )
        increases from 0 to 1, increase the reference count of the 
        process group *and* the reference count of the vc (this
        allows us to distinquish between Comm_free and Comm_disconnect) */
-    /* FIXME: This should be a fetch and increment for thread-safety */
-    if (vc->ref_count == 0) {
+    /* FIXME-MT: This should be a fetch and increment for thread-safety */
+    if (MPIU_Object_get_ref(vc) == 0) {
 	MPIDI_PG_add_ref(pg);
 	MPIDI_VC_add_ref(vc);
     }
@@ -1165,7 +1166,8 @@ int MPIDI_PG_Close_VCs( void )
 	    MPIDI_VC_t * vc = &pg->vct[i];
 	    /* If the VC is myself then skip the close message */
 	    if (pg == MPIDI_Process.my_pg && i == MPIDI_Process.my_pg_rank) {
-                if (vc->ref_count != 0) {
+                /* XXX DJG FIXME-MT should we be checking this? */
+                if (MPIU_Object_get_ref(vc) != 0) {
                     MPIDI_PG_release_ref(pg, &inuse);
                 }
 		continue;
@@ -1191,7 +1193,8 @@ int MPIDI_PG_Close_VCs( void )
 	    }
 	    else
 	    {
-                if (vc->state == MPIDI_VC_STATE_INACTIVE && vc->ref_count != 0) {
+                /* XXX DJG FIXME-MT should we be checking this? */
+                if (vc->state == MPIDI_VC_STATE_INACTIVE && MPIU_Object_get_ref(vc) != 0) {
 		    /* FIXME: If the reference count for the vc is not 0,
 		       something is wrong */
                     MPIDI_PG_release_ref(pg, &inuse);
@@ -1226,11 +1229,12 @@ int MPIU_PG_Printall( FILE *fp )
 
     fprintf( fp, "Process groups:\n" );
     while (pg) {
+        /* XXX DJG FIXME-MT should we be checking this? */
 	fprintf( fp, "size = %d, refcount = %d, id = %s\n", 
-		 pg->size, pg->ref_count, (char *)pg->id );
+		 pg->size, MPIU_Object_get_ref(pg), (char *)pg->id );
 	for (i=0; i<pg->size; i++) {
 	    fprintf( fp, "\tVCT rank = %d, refcount = %d, lpid = %d, state = %d \n", 
-		     pg->vct[i].pg_rank, pg->vct[i].ref_count,
+		     pg->vct[i].pg_rank, MPIU_Object_get_ref(&pg->vct[i]),
 		     pg->vct[i].lpid, (int)pg->vct[i].state );
 	}
 	fflush(fp);

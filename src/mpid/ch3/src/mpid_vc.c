@@ -35,8 +35,7 @@
  S*/
 typedef struct MPIDI_VCRT
 {
-    int handle;
-    volatile int ref_count;
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     int size;
     MPIDI_VC_t * vcr_table[1];
 }
@@ -110,8 +109,7 @@ int MPID_VCRT_Add_ref(MPID_VCRT vcrt)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCRT_ADD_REF);
     MPIU_Object_add_ref(vcrt);
-    MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,
-         "Incr VCRT %p ref count to %d",vcrt,vcrt->ref_count));
+    MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST, "Incr VCRT %p ref count",vcrt));
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCRT_ADD_REF);
     return MPI_SUCCESS;
 }
@@ -137,8 +135,7 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect )
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCRT_RELEASE);
 
     MPIU_Object_release_ref(vcrt, &in_use);
-    MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,
-         "Decr VCRT %p ref count to %d",vcrt,vcrt->ref_count));
+    MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST, "Decr VCRT %p ref count",vcrt));
     
     /* If this VC reference table is no longer in use, we can
        decrement the reference count of each of the VCs.  If the
@@ -163,7 +160,21 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect )
             /* Dynamic connections start with a refcount of 2 instead of 1.
              * That way we can distinguish between an MPI_Free and an
              * MPI_Comm_disconnect. */
-	    if (isDisconnect && vc->ref_count == 1) {
+            /* XXX DJG FIXME-MT should we be checking this? */
+            /* probably not, need to do something like the following instead: */
+#if 0
+            if (isDisconnect) {
+                MPIU_Assert(in_use);
+                /* FIXME this is still bogus, the VCRT may contain a mix of
+                 * dynamic and non-dynamic VCs, so the ref_count isn't
+                 * guaranteed to have started at 2.  The best thing to do might
+                 * be to avoid overloading the reference counting this way and
+                 * use a separate check for dynamic VCs (another flag? compare
+                 * PGs?) */
+                MPIU_Object_release_ref(vc, &in_use);
+            }
+#endif
+	    if (isDisconnect && MPIU_Object_get_ref(vc) == 1) {
 		MPIDI_VC_release_ref(vc, &in_use);
 	    }
 
@@ -269,7 +280,9 @@ int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr)
     /* We are allowed to create a vc that belongs to no process group 
      as part of the initial connect/accept action, so in that case,
      ignore the pg ref count update */
-    if (orig_vcr->ref_count == 0 && orig_vcr->pg) {
+    /* XXX DJG FIXME-MT should we be checking this? */
+    /* we probably need a test-and-incr operation or equivalent to avoid races */
+    if (MPIU_Object_get_ref(orig_vcr) == 0 && orig_vcr->pg) {
 	MPIDI_VC_add_ref( orig_vcr );
 	MPIDI_VC_add_ref( orig_vcr );
 	MPIDI_PG_add_ref( orig_vcr->pg );
@@ -277,8 +290,7 @@ int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr)
     else {
 	MPIDI_VC_add_ref(orig_vcr);
     }
-    MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Incr VCR %p ref count to %d",orig_vcr,orig_vcr->ref_count));
+    MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,"Incr VCR %p ref count",orig_vcr));
     *new_vcr = orig_vcr;
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCR_DUP);
     return MPI_SUCCESS;

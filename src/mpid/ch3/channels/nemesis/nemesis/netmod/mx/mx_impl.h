@@ -103,8 +103,7 @@ typedef struct
 /* The begining of this structure is the same as MPID_Request */
 struct MPID_nem_mx_internal_req 
 {
-   int                    handle;     /* unused */
-   volatile int           ref_count;  /* unused */
+   MPIU_OBJECT_HEADER; /* adds (unused) handle and ref_count fields */
    MPID_Request_kind_t    kind;       /* used   */
    MPIDI_CH3_PktGeneric_t pending_pkt;
    MPIDI_VC_t            *vc;

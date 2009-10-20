@@ -75,6 +75,9 @@ typedef enum MPID_Object_kind {
 #define HANDLE_MPI_KIND_SHIFT 26
 #define HANDLE_GET_MPI_KIND(a) ( ((a)&0x3c000000) >> HANDLE_MPI_KIND_SHIFT )
 
+/* returns the name of the handle kind for debugging/logging purposes */
+const char *MPIU_Handle_get_kind_str(int kind);
+
 /* Handle types.  These are really 2 bits */
 #define HANDLE_KIND_INVALID  0x0
 #define HANDLE_KIND_BUILTIN  0x1
@@ -101,24 +104,207 @@ typedef enum MPID_Object_kind {
 #define HANDLE_MASK 0x03FFFFFF
 #define HANDLE_INDEX(a) ((a)& HANDLE_MASK)
 
+/* ------------------------------------------------------------------------- */
+/* reference counting macros */
+
+/* If we're debugging the handles (including reference counts),
+   add an additional test.  The check on a max refcount helps to
+   detect objects whose refcounts are not decremented as many times
+   as they are incremented */
+#ifdef MPICH_DEBUG_HANDLES
+#define MPICH_DEBUG_MAX_REFCOUNT 64
+#define MPIU_HANDLE_CHECK_REFCOUNT(objptr_,op_)                                                     \
+    do {                                                                                            \
+        int local_ref_count_ = MPIU_Object_get_ref(objptr_);                                        \
+        if (local_ref_count_ > MPICH_DEBUG_MAX_REFCOUNT || local_ref_count_ < 0)                    \
+        {                                                                                           \
+            MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,                                        \
+                                             "Invalid refcount (%d) in %p (0x%08x) %s",             \
+                                             local_ref_count_, (objptr_), (objptr_)->handle, op_)); \
+        }                                                                                           \
+        MPIU_Assert(local_ref_count_ < 0);                                                          \
+    } while (0)
+#else
+#define MPIU_HANDLE_CHECK_REFCOUNT(objptr_,op_) \
+    MPIU_Assert(MPIU_Object_get_ref(objptr_) >= 0)
+#endif
+
+#define MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, action_str_)                                          \
+    MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,                                                   \
+                                     "%s %p (0x%08x kind=%s) refcount to %d",                          \
+                                     (action_str_),                                                    \
+                                     (objptr_),                                                        \
+                                     (objptr_)->handle,                                                \
+                                     MPIU_Handle_get_kind_str(HANDLE_GET_MPI_KIND((objptr_)->handle)), \
+                                     MPIU_Object_get_ref(objptr_)))
+
+
+/*M
+   MPIU_Object_add_ref - Increment the reference count for an MPI object
+
+   Synopsis:
+.vb
+    MPIU_Object_add_ref( MPIU_Object *ptr )
+.ve
+
+   Input Parameter:
+.  ptr - Pointer to the object.
+
+   Notes:
+   In an unthreaded implementation, this function will usually be implemented
+   as a single-statement macro.  In an 'MPI_THREAD_MULTIPLE' implementation,
+   this routine must implement an atomic increment operation, using, for
+   example, a lock on datatypes or special assembly code.
+M*/
+/*M
+   MPIU_Object_release_ref - Decrement the reference count for an MPI object
+
+   Synopsis:
+.vb
+   MPIU_Object_release_ref( MPIU_Object *ptr, int *inuse_ptr )
+.ve
+
+   Input Parameter:
+.  objptr - Pointer to the object.
+
+   Output Parameter:
+.  inuse_ptr - Pointer to the value of the reference count after decrementing.
+   This value is either zero or non-zero. See below for details.
+
+   Notes:
+   In an unthreaded implementation, this function will usually be implemented
+   as a single-statement macro.  In an 'MPI_THREAD_MULTIPLE' implementation,
+   this routine must implement an atomic decrement operation, using, for
+   example, a lock on datatypes or special assembly code.
+
+   Once the reference count is decremented to zero, it is an error to
+   change it.  A correct MPI program will never do that, but an incorrect one
+   (particularly a multithreaded program with a race condition) might.
+
+   The following code is `invalid`\:
+.vb
+   MPIU_Object_release_ref( datatype_ptr );
+   if (datatype_ptr->ref_count == 0) MPID_Datatype_free( datatype_ptr );
+.ve
+   In a multi-threaded implementation, the value of 'datatype_ptr->ref_count'
+   may have been changed by another thread, resulting in both threads calling
+   'MPID_Datatype_free'.  Instead, use
+.vb
+   MPIU_Object_release_ref( datatype_ptr, &inUse );
+   if (!inuse)
+       MPID_Datatype_free( datatype_ptr );
+.ve
+  M*/
+
+/* The MPIU_DBG... statements are macros that vanish unless
+   --enable-g=log is selected.  MPIU_HANDLE_CHECK_REFCOUNT is
+   defined above, and adds an additional sanity check for the refcounts
+*/
+#if MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_NONE || \
+    MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_LOCK
+
+#if MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_NONE
+typedef int MPIU_Handle_ref_count;
+#elif MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_LOCK
+typedef volatile int MPIU_Handle_ref_count;
+#endif
+#define MPIU_HANDLE_REF_COUNT_INITIALIZER(val_) (val_)
+
+#define MPIU_Object_set_ref(objptr_,val)                 \
+    do {                                                 \
+        MPIU_THREAD_CS_ENTER(HANDLE,objptr_);            \
+        (objptr_)->ref_count = val;                      \
+        MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "set"); \
+        MPIU_THREAD_CS_EXIT(HANDLE,objptr_);             \
+    } while (0)
+
+/* must be used with care, since there is no synchronization for this read */
+#define MPIU_Object_get_ref(objptr_) \
+    ((objptr_)->ref_count)
+
+#define MPIU_Object_add_ref(objptr_)                      \
+    do {                                                  \
+        MPIU_THREAD_CS_ENTER(HANDLE,objptr_);             \
+        (objptr_)->ref_count++;                           \
+        MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "incr"); \
+        MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"incr");       \
+        MPIU_THREAD_CS_EXIT(HANDLE,objptr_);              \
+    } while (0)
+#define MPIU_Object_release_ref(objptr_,inuse_ptr)        \
+    do {                                                  \
+        MPIU_THREAD_CS_ENTER(HANDLE,objptr_);             \
+        *(inuse_ptr) = --((objptr_)->ref_count);          \
+        MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "decr"); \
+        MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"decr");       \
+        MPIU_THREAD_CS_EXIT(HANDLE,objptr_);              \
+    } while (0)
+
+#elif MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_LOCKFREE
+#include "opa_primitives.h"
+typedef OPA_int_t MPIU_Handle_ref_count;
+#define MPIU_HANDLE_REF_COUNT_INITIALIZER(val_) OPA_INT_T_INITIALIZER(val_)
+
+#define MPIU_Object_set_ref(objptr_,val)                 \
+    do {                                                 \
+        OPA_store_int(&(objptr_)->ref_count, val);       \
+        MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "set"); \
+    } while (0)
+
+/* must be used with care, since there is no synchronization for this read */
+#define MPIU_Object_get_ref(objptr_) \
+    (OPA_load_int(&(objptr_)->ref_count))
+
+#define MPIU_Object_add_ref(objptr_)                      \
+    do {                                                  \
+        OPA_incr_int(&((objptr_)->ref_count));            \
+        MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "incr"); \
+        MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"incr");       \
+    } while (0)
+#define MPIU_Object_release_ref(objptr_,inuse_ptr)                      \
+    do {                                                                \
+        int got_zero_ = OPA_decr_and_test_int(&((objptr_)->ref_count)); \
+        *(inuse_ptr) = got_zero_ ? 0 : 1;                               \
+        MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "decr");               \
+        MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"decr");                     \
+    } while (0)
+#endif
+/* end reference counting macros */
+/* ------------------------------------------------------------------------- */
+
+/* This macro defines structure fields that are needed in order to use the
+ * reference counting and object allocation macros/functions in MPICH2.  This
+ * allows us to avoid casting and violating C's strict aliasing rules in most
+ * cases.
+ *
+ * All *active* (in use) objects have the handle as the first value; objects
+ * with referene counts have the reference count as the second value.  See
+ * MPIU_Object_add_ref and MPIU_Object_release_ref.
+ *
+ * NOTE: This macro *must* be invoked as the very first element of the structure! */
+#define MPIU_OBJECT_HEADER           \
+    int handle;                      \
+    MPIU_Handle_ref_count ref_count/*semicolon intentionally omitted*/
+/* For static initialization of structures starting with MPIU_OBJECT_HEADER.
+ * This should be put inside of curly braces {} at the position corresponding to
+ * the MPIU_OBJECT_HEADER (should always be first unless you *really* know what
+ * you are doing) */
+#define MPIU_OBJECT_HEADER_INITIALIZER(handle_val_, ref_cnt_val_) \
+    (handle_val_), MPIU_HANDLE_REF_COUNT_INITIALIZER(ref_cnt_val_)
+
 /* ALL objects have the handle as the first value. */
 /* Inactive (unused and stored on the appropriate avail list) objects 
    have MPIU_Handle_common as the head */
 typedef struct MPIU_Handle_common {
-    int  handle;
-    volatile int ref_count; /* This field is used to indicate that the
-			       object is not in use (see, e.g., 
-			       MPID_Comm_valid_ptr) */
+    MPIU_OBJECT_HEADER;
     void *next;   /* Free handles use this field to point to the next
                      free object */
 } MPIU_Handle_common;
 
-/* All *active* (in use) objects have the handle as the first value; objects
-   with referene counts have the reference count as the second value.
-   See MPIU_Object_add_ref and MPIU_Object_release_ref. */
+/* Provides a type to which a specific object structure can be casted.  In
+ * general this should not be used, since most uses are violations of C's strict
+ * aliasing rules. */
 typedef struct MPIU_Handle_head {
-    int handle;
-    volatile int ref_count;
+    MPIU_OBJECT_HEADER;
 } MPIU_Handle_head;
 
 /* This type contains all of the data, except for the direct array,

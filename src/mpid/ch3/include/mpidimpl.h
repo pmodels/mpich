@@ -67,8 +67,7 @@ typedef struct MPIDI_PG
        MPIU_Object system, but we do use the associated reference counting 
        routines.  Therefore, handle must be present, but is not used 
        except by debugging routines */
-    int handle;
-    volatile int ref_count;
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
 
     /* Next pointer used to maintain a list of all process groups known to 
        this process */
@@ -583,17 +582,13 @@ int MPIDI_PG_CheckForSingleton( void );
 int MPIDI_CH3_PG_Init( MPIDI_PG_t * );
 
 #define MPIDI_PG_add_ref(pg_)			\
-{						\
+do {                                            \
     MPIU_Object_add_ref(pg_);			\
-    MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Incr process group %p ref count to %d",pg_,pg_->ref_count));\
-}
+} while (0)
 #define MPIDI_PG_release_ref(pg_, inuse_)	\
-{						\
+do {                                            \
     MPIU_Object_release_ref(pg_, inuse_);	\
-    MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Decr process group %p ref count to %d",pg_,pg_->ref_count));\
-}
+} while (0)
 
 #define MPIDI_PG_Get_vc_set_active(pg_, rank_, vcp_)  do {              \
         *(vcp_) = &(pg_)->vct[rank_];                                   \
@@ -695,8 +690,7 @@ typedef struct MPIDI_VC
        when debugging objects (the handle kind is used in reporting
        on changes to the object).
     */
-    int handle;
-    volatile int ref_count;
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
 
     /* state of the VC */
     MPIDI_VC_State_t state;
@@ -805,14 +799,10 @@ int MPIDI_VC_Init( MPIDI_VC_t *, MPIDI_PG_t *, int );
 
 
 #define MPIDI_VC_add_ref( _vc )                                 \
-    { MPIU_Object_add_ref( _vc );                               \
-      MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,        \
-         "Incr VC %p ref count to %d",_vc,_vc->ref_count));}
+    do { MPIU_Object_add_ref( _vc ); } while (0)
 
 #define MPIDI_VC_release_ref( _vc, _inuse ) \
-   { MPIU_Object_release_ref( _vc, _inuse ); \
-       MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Decr VC %p ref count to %d",_vc,_vc->ref_count));}
+    do { MPIU_Object_release_ref( _vc, _inuse ); } while (0)
 
 /*------------------------------
   END VIRTUAL CONNECTION SECTION

@@ -353,167 +353,6 @@ typedef enum MPID_Lang_t { MPID_LANG_C
 void MPIR_DatatypeAttrFinalize( void );
 
 /* ------------------------------------------------------------------------- */
-/* mpiobjref.h */
-/* ------------------------------------------------------------------------- */
-/* This isn't quite right, since we need to distinguish between multiple 
-   user threads and multiple implementation threads.
- */
-
-
-/* If we're debugging the handles (including reference counts), 
-   add an additional test.  The check on a max refcount helps to 
-   detect objects whose refcounts are not decremented as many times
-   as they are incremented */
-#ifdef MPICH_DEBUG_HANDLES
-#define MPICH_DEBUG_MAX_REFCOUNT 64
-#define MPIU_HANDLE_CHECK_REFCOUNT(_objptr,_op)           \
-  if (((MPIU_Handle_head*)(_objptr))->ref_count > MPICH_DEBUG_MAX_REFCOUNT){\
-        MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,  \
-         "Invalid refcount in %p (0x%08x) %s",            \
-         (_objptr), (_objptr)->handle, _op)); }	
-#else
-#define MPIU_HANDLE_CHECK_REFCOUNT(_objptr,_op)
-#endif
-
-
-/*M
-   MPIU_Object_add_ref - Increment the reference count for an MPI object
-
-   Synopsis:
-.vb
-    MPIU_Object_add_ref( MPIU_Object *ptr )
-.ve   
-
-   Input Parameter:
-.  ptr - Pointer to the object.
-
-   Notes:
-   In an unthreaded implementation, this function will usually be implemented
-   as a single-statement macro.  In an 'MPI_THREAD_MULTIPLE' implementation,
-   this routine must implement an atomic increment operation, using, for 
-   example, a lock on datatypes or special assembly code such as 
-.vb
-   try-again:
-      load-link          refcount-address to r2
-      add                1 to r2
-      store-conditional  r2 to refcount-address
-      if failed branch to try-again:
-.ve
-   on RISC architectures or
-.vb
-   lock
-   inc                   refcount-address or
-.ve
-   on IA32; "lock" is a special opcode prefix that forces atomicity.  This 
-   is not a separate instruction; however, the GNU assembler expects opcode
-   prefixes on a separate line.
-
-   Module: 
-   MPID_CORE
-
-   Question:
-   This accesses the 'ref_count' member of all MPID objects.  Currently,
-   that member is typed as 'volatile int'.  However, for a purely polling,
-   thread-funnelled application, the 'volatile' is unnecessary.  Should
-   MPID objects use a 'typedef' for the 'ref_count' that can be defined
-   as 'volatile' only when needed?  For now, the answer is no; there isn''t
-   enough to be gained in that case.
-M*/
-
-/*M
-   MPIU_Object_release_ref - Decrement the reference count for an MPI object
-
-   Synopsis:
-.vb
-   MPIU_Object_release_ref( MPIU_Object *ptr, int *inuse_ptr )
-.ve
-
-   Input Parameter:
-.  objptr - Pointer to the object.
-
-   Output Parameter:
-.  inuse_ptr - Pointer to the value of the reference count after decrementing.
-   This value is either zero or non-zero. See below for details.
-   
-   Notes:
-   In an unthreaded implementation, this function will usually be implemented
-   as a single-statement macro.  In an 'MPI_THREAD_MULTIPLE' implementation,
-   this routine must implement an atomic decrement operation, using, for 
-   example, a lock on datatypes or special assembly code such as 
-.vb
-   try-again:
-      load-link          refcount-address to r2
-      sub                1 to r2
-      store-conditional  r2 to refcount-address
-      if failed branch to try-again:
-      store              r2 to newval_ptr
-.ve
-   on RISC architectures or
-.vb
-      lock
-      dec                   refcount-address 
-      if zf store 0 to newval_ptr else store 1 to newval_ptr
-.ve
-   on IA32; "lock" is a special opcode prefix that forces atomicity.  This 
-   is not a separate instruction; however, the GNU assembler expects opcode
-   prefixes on a separate line.  'zf' is the zero flag; this is set if the
-   result of the operation is zero.  Implementing a full decrement-and-fetch
-   would require more code and the compare and swap instruction.
-
-   Once the reference count is decremented to zero, it is an error to 
-   change it.  A correct MPI program will never do that, but an incorrect one 
-   (particularly a multithreaded program with a race condition) might.  
-
-   The following code is `invalid`\:
-.vb
-   MPID_Object_release_ref( datatype_ptr );
-   if (datatype_ptr->ref_count == 0) MPID_Datatype_free( datatype_ptr );
-.ve
-   In a multi-threaded implementation, the value of 'datatype_ptr->ref_count'
-   may have been changed by another thread, resulting in both threads calling
-   'MPID_Datatype_free'.  Instead, use
-.vb
-   MPID_Object_release_ref( datatype_ptr, &inUse );
-   if (!inuse) 
-       MPID_Datatype_free( datatype_ptr );
-.ve
-
-   Module: 
-   MPID_CORE
-  M*/
-
-/* The MPIU_DBG... statements are macros that vanish unless
-   --enable-g=log is selected.  MPIU_HANDLE_CHECK_REFCOUNT is 
-   defined above, and adds an additional sanity check for the refcounts
-*/
-#define MPIU_Object_set_ref(objptr,val)                \
-    {((objptr))->ref_count = val;   \
-    MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,   \
-            "set %p (0x%08x) refcount to %d",          \
-       (objptr), (objptr)->handle, val));              \
-    }
-#define MPIU_Object_add_ref(objptr)                    \
-    {((objptr))->ref_count++;       \
-    MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,   \
-      "incr %p (0x%08x) refcount to %d",	       \
-     (objptr), (objptr)->handle, (objptr)->ref_count));\
-    MPIU_HANDLE_CHECK_REFCOUNT(objptr,"incr");         \
-    }
-#define MPIU_Object_release_ref(objptr,inuse_ptr)             \
-    {*(inuse_ptr)=--((objptr))->ref_count; \
-	MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,      \
-        "decr %p (0x%08x) refcount to %d",                    \
-        (objptr), (objptr)->handle, (objptr)->ref_count));    \
-    MPIU_HANDLE_CHECK_REFCOUNT(objptr,"decr");                \
-    }
-
-
-
-/* ------------------------------------------------------------------------- */
-/* mpiobjref.h */
-/* ------------------------------------------------------------------------- */
-
-/* ------------------------------------------------------------------------- */
 /* Should the following be moved into mpihandlemem.h ?*/
 /* ------------------------------------------------------------------------- */
 
@@ -615,10 +454,13 @@ int MPIU_Handle_free( void *((*)[]), int );
 /* Check not only for a null pointer but for an invalid communicator,
    such as one that has been freed.  Let's try the ref_count as the test
    for now */
-#define MPID_Comm_valid_ptr(ptr,err) {                      \
-     MPID_Valid_ptr_class(Comm,ptr,MPI_ERR_COMM,err);       \
-     if ((ptr) && (ptr)->ref_count == 0) {                      \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_COMM,"**comm", 0);ptr=0;}}
+#define MPID_Comm_valid_ptr(ptr,err) {                \
+     MPID_Valid_ptr_class(Comm,ptr,MPI_ERR_COMM,err); \
+     if ((ptr) && MPIU_Object_get_ref(ptr) == 0) {    \
+         MPIU_ERR_SET(err,MPI_ERR_COMM,"**comm");     \
+         ptr = 0;                                     \
+     }                                                \
+}
 #define MPID_Group_valid_ptr(ptr,err) MPID_Valid_ptr_class(Group,ptr,MPI_ERR_GROUP,err)
 #define MPID_Win_valid_ptr(ptr,err) MPID_Valid_ptr_class(Win,ptr,MPI_ERR_WIN,err)
 #define MPID_Op_valid_ptr(ptr,err) MPID_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
@@ -728,12 +570,7 @@ int MPIU_Handle_free( void *((*)[]), int );
   Info-DS
   S*/
 typedef struct MPID_Info {
-    int                handle;
-    volatile int       ref_count;  /* FIXME: ref_count isn't needed by Info 
-				      objects, but MPIU_Info_free does not 
-				      work correctly unless MPID_Info and 
-				      MPIU_Handle_common have the next 
-				      pointer in the same location */
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     struct MPID_Info   *next;
     char               *key;
     char               *value;
@@ -793,8 +630,7 @@ typedef union MPID_Errhandler_fn {
   ErrHand-DS
   S*/
 typedef struct MPID_Errhandler {
-  int                handle;
-  volatile int       ref_count;
+  MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
   MPID_Lang_t        language;
   MPID_Object_kind   kind;
   MPID_Errhandler_fn errfn;
@@ -809,13 +645,9 @@ extern MPID_Errhandler MPID_Errhandler_builtin[];
 extern MPID_Errhandler MPID_Errhandler_direct[];
 
 #define MPIR_Errhandler_add_ref( _errhand ) \
-    { MPIU_Object_add_ref( _errhand );      \
-      MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Incr errhandler %p ref count to %d",_errhand,_errhand->ref_count));}
+    do { MPIU_Object_add_ref( _errhand ); } while (0)
 #define MPIR_Errhandler_release_ref( _errhand, _inuse ) \
-     { MPIU_Object_release_ref( _errhand, _inuse ); \
-       MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Decr errhandler %p ref count to %d",_errhand,_errhand->ref_count));}
+    do { MPIU_Object_release_ref( _errhand, _inuse ); } while (0)
 /* ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
@@ -995,8 +827,7 @@ typedef struct MPID_Delete_function {
 
   S*/
 typedef struct MPID_Keyval {
-    int                  handle;
-    volatile int         ref_count;
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Object_kind     kind;
     int                  was_freed;
     void                 *extra_state;
@@ -1010,18 +841,12 @@ typedef struct MPID_Keyval {
 
 #define MPIR_Keyval_add_ref( _keyval )                                  \
     do {                                                                \
-        MPIU_Assert((_keyval)->ref_count >= 0);                         \
         MPIU_Object_add_ref( _keyval );                                 \
-        MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,              \
-         "Incr keyval %p ref count to %d",_keyval,_keyval->ref_count)); \
     } while(0)
 
 #define MPIR_Keyval_release_ref( _keyval, _inuse )                      \
     do {                                                                \
         MPIU_Object_release_ref( _keyval, _inuse );                     \
-        MPIU_Assert((_keyval)->ref_count >= 0);                         \
-        MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,              \
-         "Decr keyval %p ref count to %d",_keyval,_keyval->ref_count)); \
     } while(0)
 
 
@@ -1078,10 +903,9 @@ typedef void * MPID_AttrVal_t;
 
  S*/
 typedef struct MPID_Attribute {
-    int          handle;
-    volatile int ref_count;
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Keyval  *keyval;           /* Keyval structure for this attribute */
-    
+
     struct MPID_Attribute *next;    /* Pointer to next in the list */
     MPIR_AttrType attrType;         /* Type of the attribute */
     long        pre_sentinal;       /* Used to detect user errors in accessing
@@ -1145,8 +969,7 @@ typedef struct MPID_Group_pmap_t {
 
  S*/
 typedef struct MPID_Group {
-    int          handle;
-    volatile int ref_count;
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     int          size;           /* Size of a group */
     int          rank;           /* rank of this process relative to this 
 				    group */
@@ -1167,14 +990,10 @@ extern MPID_Group MPID_Group_builtin[MPID_GROUP_N_BUILTIN];
 extern MPID_Group MPID_Group_direct[];
 
 #define MPIR_Group_add_ref( _group ) \
-    { MPIU_Object_add_ref( _group );                    \
-      MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Incr group %p ref count to %d",_group,_group->ref_count));}
+    do { MPIU_Object_add_ref( _group ); } while (0)
 
 #define MPIR_Group_release_ref( _group, _inuse ) \
-     { MPIU_Object_release_ref( _group, _inuse ); \
-       MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Decr group %p ref count to %d",_group,_group->ref_count));}
+     do { MPIU_Object_release_ref( _group, _inuse ); } while (0)
 
 void MPIR_Group_setup_lpid_list( MPID_Group * );
 int MPIR_GroupCheckVCRSubset( MPID_Group *group_ptr, int vsize, MPID_VCR *vcr, int *idx );
@@ -1250,9 +1069,8 @@ typedef enum MPID_Comm_kind_t {
   health?  For example, ok, failure detected, all (live) members of failed 
   communicator have acked.
   S*/
-typedef struct MPID_Comm { 
-    int           handle;        /* value of MPI_Comm for this structure */
-    volatile int  ref_count;
+typedef struct MPID_Comm {
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPIR_Context_id_t context_id; /* Send context id.  See notes */
     MPIR_Context_id_t recvcontext_id; /* Send context id.  See notes */
     int           remote_size;   /* Value of MPI_Comm_(remote)_size */
@@ -1320,14 +1138,10 @@ extern MPIU_Object_alloc_t MPID_Comm_mem;
 int MPIR_Comm_release(MPID_Comm *, int );
 
 #define MPIR_Comm_add_ref(_comm) \
-    { MPIU_Object_add_ref((_comm));                     \
-      MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Incr comm %p ref count to %d",_comm,_comm->ref_count));}
+    do { MPIU_Object_add_ref((_comm)); } while (0)
 
 #define MPIR_Comm_release_ref( _comm, _inuse ) \
-     { MPIU_Object_release_ref( _comm, _inuse );         \
-       MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Decr comm %p ref count to %d",_comm,_comm->ref_count));}
+    do { MPIU_Object_release_ref( _comm, _inuse ); } while (0)
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and 
    a private (non-user accessible) dup of comm world that is provided 
@@ -1470,8 +1284,7 @@ typedef void (MPIR_Grequest_f77_query_function)(void *, MPI_Status *, int *);
   
   S*/
 typedef struct MPID_Request {
-    int          handle;
-    volatile int ref_count;
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Request_kind_t kind;
     /* completion counter */
     volatile int cc;
@@ -1508,14 +1321,10 @@ extern MPIU_Object_alloc_t MPID_Request_mem;
 extern MPID_Request MPID_Request_direct[];
 
 #define MPIR_Request_add_ref( _req ) \
-    { MPIU_Object_add_ref( _req );                      \
-      MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Incr request %p ref count to %d",_req,_req->ref_count));}
+    do { MPIU_Object_add_ref( _req ); } while (0)
 
 #define MPIR_Request_release_ref( _req, _inuse ) \
-     { MPIU_Object_release_ref( _req, _inuse );          \
-       MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Decr request %p ref count to %d",_req,_req->ref_count));}
+    do { MPIU_Object_release_ref( _req, _inuse ); } while (0)
 
 /* These macros allow us to implement a sendq when debugger support is
    selected.  As there is extra overhead for this, we only do this
@@ -1637,8 +1446,7 @@ typedef struct MPIRI_RMA_Ops {
 
   S*/
 typedef struct MPID_Win {
-    int           handle;             /* value of MPI_Win for this structure */
-    volatile int  ref_count;
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     int fence_cnt;     /* 0 = no fence has been called; 
                           1 = fence has been called */ 
     MPID_Errhandler *errhandler;  /* Pointer to the error handler structure */
@@ -1852,8 +1660,7 @@ typedef union MPID_User_function {
   Collective-DS
   S*/
 typedef struct MPID_Op {
-     int                handle;      /* value of MPI_Op for this structure */
-     volatile int       ref_count;
+     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
      MPID_Op_kind       kind;
      MPID_Lang_t        language;
      MPID_User_function function;
@@ -1864,9 +1671,7 @@ extern MPID_Op MPID_Op_direct[];
 extern MPIU_Object_alloc_t MPID_Op_mem;
 
 #define MPIR_Op_release_ref( _op, _inuse ) \
-    { MPIU_Object_release_ref( _op, _inuse ); \
-       MPIU_DBG_MSG_FMT(REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,\
-         "Decr MPI_Op %p ref count to %d",_op,_op->ref_count));}
+    do { MPIU_Object_release_ref( _op, _inuse ); } while (0)
 
 /* ------------------------------------------------------------------------- */
 
@@ -2233,6 +2038,7 @@ void MPIR_Err_print_stack(FILE *, int);
 
 
 /* ------------------------------------------------------------------------- */
+/* XXX DJG FIXME delete this? */
 /* FIXME: Merge these with the object refcount update routines (perhaps as
    part of a general "atomic update" file */
 /*
@@ -3325,9 +3131,7 @@ void MPID_Request_set_completed(MPID_Request *);
 void MPID_Request_release(MPID_Request *);
 
 typedef struct MPID_Grequest_class {
-     int                handle;      /* value of MPIX_Grequest_class for 
-					this structure */
-     volatile int       ref_count;
+     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
      MPI_Grequest_query_function *query_fn;
      MPI_Grequest_free_function *free_fn;
      MPI_Grequest_cancel_function *cancel_fn;

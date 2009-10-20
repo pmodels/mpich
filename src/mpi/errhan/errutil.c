@@ -112,11 +112,12 @@ static int checkForUserErrcode( int errcode );
 #endif
 
 /* Preallocated errorhandler objects */
-MPID_Errhandler MPID_Errhandler_builtin[3] = 
-          { { MPI_ERRORS_ARE_FATAL, 0},
-	    { MPI_ERRORS_RETURN, 0},
-	    { MPIR_ERRORS_THROW_EXCEPTIONS, 0 } }; 
-MPID_Errhandler MPID_Errhandler_direct[MPID_ERRHANDLER_PREALLOC] = { {0} };
+MPID_Errhandler MPID_Errhandler_builtin[3] = {
+        { MPIU_OBJECT_HEADER_INITIALIZER(MPI_ERRORS_ARE_FATAL, 0), },
+        { MPIU_OBJECT_HEADER_INITIALIZER(MPI_ERRORS_RETURN, 0), },
+        { MPIU_OBJECT_HEADER_INITIALIZER(MPIR_ERRORS_THROW_EXCEPTIONS, 0) },
+    };
+MPID_Errhandler MPID_Errhandler_direct[MPID_ERRHANDLER_PREALLOC] = { { MPIU_OBJECT_HEADER_INITIALIZER(0,0) } };
 MPIU_Object_alloc_t MPID_Errhandler_mem = { 0, 0, 0, 0, MPID_ERRHANDLER, 
 					    sizeof(MPID_Errhandler), 
 					    MPID_Errhandler_direct,

@@ -41,65 +41,6 @@
  */
 
 /* ======================================================
-   reference counting routines
-   ====================================================== */
-
-/* Atomically increment a reference count */
-#undef FUNCNAME
-#define FUNCNAME MPIDU_Ref_add
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline void MPIDU_Ref_add(OPA_int_t *ptr)
-{
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_REF_ADD);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_REF_ADD);
-    OPA_incr_int(ptr);
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_REF_ADD);
-}
-
-/* Atomically decrement a reference count and test if the result is equal to
-   zero.  Returns true if this was the final reference released. */
-#undef FUNCNAME
-#define FUNCNAME MPIDU_Ref_release_and_test
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int MPIDU_Ref_release_and_test(OPA_int_t *ptr)
-{
-    int retval;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_REF_RELEASE_AND_TEST);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_REF_RELEASE_AND_TEST);
-
-#if defined(ATOMIC_DECR_AND_TEST_IS_EMULATED) && !defined(ATOMIC_FETCH_AND_DECR_IS_EMULATED)
-    {
-        int prev;
-        prev = OPA_fetch_and_decr_int(ptr);
-        retval = (1 == prev);
-        goto fn_exit;
-    }
-#elif defined(ATOMIC_DECR_AND_TEST_IS_EMULATED) && !defined(ATOMIC_CAS_INT_IS_EMULATED)
-    {
-        int oldv, newv;
-        do {
-            oldv = OPA_load_int(ptr);
-            newv = oldv - 1;
-        } while (oldv != OPA_cas_int(ptr, oldv, newv));
-        retval = (0 == newv);
-        goto fn_exit;
-    }
-#else
-    retval = OPA_decr_and_test_int(ptr);
-    goto fn_exit;
-#endif
-
-fn_exit:
-    MPIU_Assert(OPA_load_int(ptr) >= 0); /* help find add/release mismatches */
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_REF_RELEASE_AND_TEST);
-    return retval;
-}
-
-/* ======================================================
    Ownership Mechanisms
    ======================================================
 
@@ -167,7 +108,7 @@ MPIDU_Owner_result MPIDU_Owner_try_acquire(MPIDU_Owner_info *info,
     MPIU_DBG_MSG_D(ALL, VERBOSE, "... my_id=%d", my_id);
     MPIU_DBG_MSG_P(ALL, VERBOSE, "... &info->id=%p", &info->id);
 
-    prev_id = OPA_cas_int_int(&info->id, MPIDU_OWNER_ID_NONE, my_id);
+    prev_id = OPA_cas_int(&info->id, MPIDU_OWNER_ID_NONE, my_id);
     if (after_owner) *after_owner = my_id;
 
     if (my_id == prev_id) {

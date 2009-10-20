@@ -129,6 +129,7 @@ void MPIDI_CH3_Request_destroy(MPID_Request * req)
                       "**invalid_handle", "**invalid_handle %d", req->handle);
 	MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
     }
+    /* XXX DJG FIXME should we be checking this? */
     /*MPIU_Assert(req->ref_count == 0);*/
     if (req->ref_count != 0)
     {

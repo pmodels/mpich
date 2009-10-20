@@ -14,8 +14,8 @@
 #endif
 
 /* Preallocated comm objects */
-MPID_Comm MPID_Comm_builtin[MPID_COMM_N_BUILTIN] = { {0,0} };
-MPID_Comm MPID_Comm_direct[MPID_COMM_PREALLOC] = { {0,0} };
+MPID_Comm MPID_Comm_builtin[MPID_COMM_N_BUILTIN] = { { MPIU_OBJECT_HEADER_INITIALIZER(0,0) } };
+MPID_Comm MPID_Comm_direct[MPID_COMM_PREALLOC]   = { { MPIU_OBJECT_HEADER_INITIALIZER(0,0) } };
 MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM, 
 				      sizeof(MPID_Comm), MPID_Comm_direct,
                                       MPID_COMM_PREALLOC};

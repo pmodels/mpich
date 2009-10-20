@@ -622,6 +622,9 @@ int MPIDI_CH3I_Progress_handle_sctp_event(MPIDU_Sctp_event_t * event)
             } else {
                 /* not a temporary VC */
 
+                /* FIXME why would the vc ref_count be zero w/o being destroyed yet?
+                 * A check against zero like this is usually not
+                 * thread-safe...*/
                 if(vc->ref_count == 0 && vc->pg != NULL  && vc->pg->ref_count == 1 ) {
                     /* MPIDI_PG_Destroy will be called in the upcall below, so do the
                      *  necessary steps since this VC will be destroyed.

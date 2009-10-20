@@ -45,7 +45,8 @@ PMPI_LOCAL int MPIR_Ibsend_free( void *extra )
 
     /* Release the MPID_Request (there is still another ref pending
      within the bsendutil functions) */
-    if (ibsend_info->req->ref_count > 1) {
+    /* XXX DJG FIXME-MT should we be checking this? */
+    if (MPIU_Object_get_ref(ibsend_info->req) > 1) {
         int inuse;
 	/* Note that this should mean that the request was 
 	   cancelled (that would have decremented the ref count)

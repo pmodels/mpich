@@ -450,7 +450,8 @@ static void MPIR_Bsend_check_active( void )
 	       testing when the user has successfully released
 	       the request (it is a grequest, the free call will do it) */
 	    flag = 0;
-	    if (active->request->ref_count == 1) {
+            /* XXX DJG FIXME-MT should we be checking this? */
+	    if (MPIU_Object_get_ref(active->request) == 1) {
 		NMPI_Test(&r, &flag, MPI_STATUS_IGNORE );
 	    }
 	    else {

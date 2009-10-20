@@ -534,28 +534,34 @@ static int MPIU_CheckHandlesOnFinalize( void *objmem_ptr )
     return 0;
 }
 
+/* returns the name of the handle kind for debugging/logging purposes */
+const char *MPIU_Handle_get_kind_str(int kind)
+{
+#define mpiu_name_case_(name_) case MPID_##name_: return (#name_)
+    switch (kind) {
+        mpiu_name_case_(COMM);
+        mpiu_name_case_(GROUP);
+        mpiu_name_case_(DATATYPE);
+        mpiu_name_case_(FILE);
+        mpiu_name_case_(ERRHANDLER);
+        mpiu_name_case_(OP);
+        mpiu_name_case_(INFO);
+        mpiu_name_case_(WIN);
+        mpiu_name_case_(KEYVAL);
+        mpiu_name_case_(ATTR);
+        mpiu_name_case_(REQUEST);
+        mpiu_name_case_(PROCGROUP);
+        mpiu_name_case_(VCONN);
+        mpiu_name_case_(GREQ_CLASS);
+        default:
+            return "unknown";
+    }
+#undef mpiu_name_case_
+}
+
 static const char *MPIR_ObjectName( MPIU_Object_alloc_t *objmem )
 {
-    const char *name=0;
-    switch (objmem->kind) {
-    case MPID_COMM: name = "COMM"; break;
-    case MPID_GROUP: name = "GROUP"; break;
-    case MPID_DATATYPE: name = "DATATYPE"; break;
-    case MPID_FILE: name = "FILE"; break;
-    case MPID_ERRHANDLER: name = "ERRHANDLER"; break;
-    case MPID_OP: name = "OP"; break;
-    case MPID_INFO: name = "INFO"; break;
-    case MPID_WIN: name = "WIN"; break;
-    case MPID_KEYVAL: name = "ATTRIBUTE KEY"; break;
-    case MPID_ATTR: name = "ATTRIBUTE"; break;
-    case MPID_REQUEST: name = "REQUEST"; break;
-    case MPID_PROCGROUP: name = "PROCGROUP"; break;
-    case MPID_VCONN: name = "VIRTUAL CONNECTION"; break;
-    case MPID_GREQ_CLASS: name = "GENERALIZED REQUEST CLASS"; break;
-    default:
-	name = "UNKNOWN OBJECT TYPE";
-    }
-    return name;
+    return MPIU_Handle_get_kind_str(objmem->kind);
 }
 #endif    
 

@@ -103,12 +103,13 @@ int MPI_Comm_disconnect(MPI_Comm * comm)
      * only for pending communication operations (and decremented when
      * those complete).
      */
-    if (comm_ptr->ref_count > 1)
+    /* FIXME-MT should we be checking this? */
+    if (MPIU_Object_get_ref(comm_ptr) > 1)
     {
 	MPID_Progress_state progress_state;
 	
 	MPID_Progress_start(&progress_state);
-	while (comm_ptr->ref_count > 1)
+	while (MPIU_Object_get_ref(comm_ptr) > 1)
 	{
 	    mpi_errno = MPID_Progress_wait(&progress_state);
 	    /* --BEGIN ERROR HANDLING-- */
