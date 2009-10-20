@@ -8,7 +8,6 @@ AC_INIT([Hydra], [0.1])
 AC_CONFIG_AUX_DIR(mpl/confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
 
-
 # When built as a subconfigure, pull in FLAGS from above
 PAC_SUBCONFIG_INIT()
 
@@ -344,16 +343,9 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		fi
 		;;		
 	hwloc)
-		echo
-		echo "===== configuring hwloc ====="
-		subdir="tools/bind/hwloc/hwloc"
-		PAC_MKDIRS($subdir)
-		if (cd $subdir && eval $abs_srcdir/$subdir/configure $ac_configure_args) ; then
-		   have_hwloc=yes
-		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
-		fi
-		echo "===== done with hwloc configure ====="
-		echo
+		AC_CONFIG_SUBDIRS(tools/bind/hwloc/hwloc)
+		have_hwloc=yes
+		AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
 		;;
 	*)
 		;;
@@ -468,14 +460,12 @@ elif test "$ac_cv_func_signal" = "yes" ; then
     AC_DEFINE(USE_SIGNAL,,[Define if signal should be used to set signals])
 fi
 
-
 # gethostname() returns host name
 AC_CHECK_FUNCS(gethostname)
 if test "$ac_cv_func_gethostname" = "yes" ; then
     # Do we need to declare gethostname?
     PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
 fi
-
 
 # Substitute common variables. Some versions of autoconf have trouble
 # with this.
@@ -494,10 +484,8 @@ AC_PROG_INSTALL
 
 AC_CONFIG_SUBDIRS(mpl)
 
-
 # Place holder macro for finalization
 PAC_SUBCONFIG_FINALIZE()
-
 
 # Final output
 AC_OUTPUT(Makefile

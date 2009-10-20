@@ -1,0 +1,62 @@
+-*- text -*-
+
+Notes to developers:
+
+- Note that the README file is automatically generated from the main
+  page of the doxygen documentation by running "make doc" (or "make
+  readme").
+
+- To check that all the code is working:
+
+  make check
+  make distcheck
+  make check with --enable-debug
+
+  Do this both from inside and outside sources.
+
+- The following tools are necessary to generate all documentation (any
+  flavor of "make dist" will fail if these tools are not available):
+
+  - doxygen with man, pdf and html support
+  - help2man
+  - fig2dev
+  - w3m
+
+- *** BEFORE MAKING AN OFFICIAL RELEASE TARBALL: the release manager
+  MUST update the VERSION file:
+
+  - ensure that the major, minor, and release version numbers are
+    correct.  The greek/svn numbers will automatically be stripped by
+    make_dist_tarball (see below).
+  - ensure that increment the so_version number as appropriate (see
+    the GNU Libtool documentation for a description of what to do).
+
+- Create a distribution tarball by running the following from the
+  top-level source directory:
+
+  shell$ ./contrib/dist/make_dist_tarball
+
+  It will take a few minutes because it runs "make distcheck" and it
+  builds two tarballs (an official release and a greek release).  For
+  example, after "make_dist_tarball" completes, you'll have two
+  tarballs, like this:
+
+  hwloc-0.9.1.tar.gz
+  hwloc-0.9.1rc1.tar.gz
+
+  The "rc1" tarball (or whatever the greek version is) can be
+  distributed for testing and validation.  If it passes, then the
+  non-rc1 tarball can be released (it's identical to the rc1 tarball
+  except for its version).
+
+- Check tarballs by configuring and building them and then running
+  "make check".
+
+- For the windows zipball, make sure you have Microsoft's lib tool in
+  PATH, and remember to copy README at the root of the zip into a
+  README.txt file with CRLF:
+
+  sed -e 's/$/'$'\015'/ < README > $prefix/README.txt
+
+- make maintainer-clean can be used to properly remove the generated
+  documentations.
