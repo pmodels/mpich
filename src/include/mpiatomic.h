@@ -135,15 +135,9 @@ typedef enum MPIDU_Owner_result {
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline void MPIDU_Owner_init(MPIDU_Owner_info *info)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_OWNER_INIT);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_OWNER_INIT);
-
     /* It's OK if multiple processes call this on the same bit of shared_info
        because of the restriction given in the comment above. */
     OPA_store_int(&info->id, MPIDU_OWNER_ID_NONE);
-
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_OWNER_INIT);
 }
 
 /* 'after_owner' is an OUT value */
@@ -160,9 +154,6 @@ MPIDU_Owner_result MPIDU_Owner_try_acquire(MPIDU_Owner_info *info,
        implementation for fairly broad portability. */
     MPIDU_Owner_result retval;
     int prev_id;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_OWNER_TRY_ACQUIRE);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_OWNER_TRY_ACQUIRE);
 
     MPIU_DBG_MSG_D(ALL, VERBOSE, "... my_id=%d", my_id);
     MPIU_DBG_MSG_P(ALL, VERBOSE, "... &info->id=%p", &info->id);
@@ -184,7 +175,6 @@ MPIDU_Owner_result MPIDU_Owner_try_acquire(MPIDU_Owner_info *info,
         MPIU_DBG_MSG_D(ALL, VERBOSE, "... busy, prev_id=%d", prev_id);
     }
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_OWNER_TRY_ACQUIRE);
     return retval;
 }
 
@@ -200,9 +190,6 @@ MPIDU_Owner_result MPIDU_Owner_release(MPIDU_Owner_info *info,
 {
     MPIDU_Owner_result retval;
     int prev_id;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_OWNER_RELEASE);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_OWNER_RELEASE);
 
     MPIU_DBG_MSG_D(ALL, VERBOSE, "... my_id=%d", my_id);
 
@@ -235,7 +222,6 @@ MPIDU_Owner_result MPIDU_Owner_release(MPIDU_Owner_info *info,
         }
     }
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_OWNER_RELEASE);
     return retval;
 }
 
@@ -305,10 +291,7 @@ volatile void * MPIDU_Alloc_by_id(MPIDU_Alloc_pool *pool, int id)
     int i;
     int prev;
     volatile char *ptr;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_ALLOC_BY_ID);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_ALLOC_BY_ID);
-    
     MPIU_Assert(MPIDU_ALLOC_NULL_ID != id);
 
     ptr = pool->buf;
@@ -326,7 +309,6 @@ volatile void * MPIDU_Alloc_by_id(MPIDU_Alloc_pool *pool, int id)
     retval = NULL;
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_ALLOC_BY_ID);
     return retval;
 }
 
@@ -337,13 +319,10 @@ fn_exit:
 static inline
 int MPIDU_Alloc_free(MPIDU_Alloc_pool *pool, volatile void *element) {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_ALLOC_FREE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_ALLOC_FREE);
     /* Do nothing for now... this datastructure isn't safe for deallocation yet.
        Consider replacing with something like
          http://www.research.ibm.com/people/m/michael/spaa-2002.pdf */
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_ALLOC_FREE);
     return mpi_errno;
 }
 
@@ -359,16 +338,12 @@ static inline
 size_t MPIDU_Alloc_calc_size(size_t nmemb, size_t elt_size)
 {
     size_t bytes_needed;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_ALLOC_CALC_SIZE);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_ALLOC_CALC_SIZE);
 
     bytes_needed = 0;
     bytes_needed += sizeof(MPIDU_Alloc_pool);
     /* each elt has the overhead of one MPIDU_Alloc_pool_entry */
     bytes_needed += nmemb * (sizeof(MPIDU_Alloc_pool_entry) + elt_size);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_ALLOC_CALC_SIZE);
     return bytes_needed;
 }
 
@@ -416,9 +391,6 @@ int MPIDU_Alloc_create_pool(volatile void *buf,
     int mpi_errno = MPI_SUCCESS;
     int i;
     volatile char *ptr;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_ALLOC_CREATE_POOL);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_ALLOC_CREATE_POOL);
 
     MPIU_Assert(pool != NULL);
     MPIU_Assert(buf != NULL);
@@ -451,7 +423,6 @@ int MPIDU_Alloc_create_pool(volatile void *buf,
     }
 
 fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_ALLOC_CREATE_POOL);
     return mpi_errno;
 }
 
@@ -517,16 +488,12 @@ static inline
 int MPIDU_Shm_barrier_init(MPIDU_Shm_barrier_t *barrier)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_SHM_BARRIER_INIT);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SHM_BARRIER_INIT);
 
     OPA_store_int(&barrier->num_waiting, 0);
     OPA_store_int(&barrier->sig, 0);
     OPA_store_int(&barrier->sig_boss, 0);
     OPA_write_barrier();
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SHM_BARRIER_INIT);
     return mpi_errno;
 }
 
@@ -549,9 +516,6 @@ int MPIDU_Shm_barrier_simple(MPIDU_Shm_barrier_t *barrier, int num_processes, in
     int mpi_errno = MPI_SUCCESS;
     int cur_sig;
     int prev_waiting;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_SHM_BARRIER_SIMPLE);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SHM_BARRIER_SIMPLE);
 
     MPIU_Assert(barrier != NULL);
     /* not strictly needed, but not checking it is a bug waiting to happen */
@@ -575,7 +539,6 @@ int MPIDU_Shm_barrier_simple(MPIDU_Shm_barrier_t *barrier, int num_processes, in
         }
     }
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SHM_BARRIER_SIMPLE);
     return mpi_errno;
 }
 
@@ -593,9 +556,6 @@ int MPIDU_Shm_barrier_enter(MPIDU_Shm_barrier_t *barrier,
     int mpi_errno = MPI_SUCCESS;
     int prev;
     int cur_sig;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_SHM_BARRIER_ENTER);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SHM_BARRIER_ENTER);
 
     MPIU_Assert(num_processes > 0);
     MPIU_Assert(rank >= 0);
@@ -623,7 +583,6 @@ int MPIDU_Shm_barrier_enter(MPIDU_Shm_barrier_t *barrier,
     }
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SHM_BARRIER_ENTER);
     return mpi_errno;
 }
 
@@ -639,9 +598,6 @@ int MPIDU_Shm_barrier_release(MPIDU_Shm_barrier_t *barrier,
                               int boss_rank)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_SHM_BARRIER_RELEASE);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SHM_BARRIER_RELEASE);
 
     if (1 == num_processes) goto fn_exit; /* trivial barrier */
 
@@ -654,7 +610,6 @@ int MPIDU_Shm_barrier_release(MPIDU_Shm_barrier_t *barrier,
     }
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SHM_BARRIER_RELEASE);
     return mpi_errno;
 }
 
