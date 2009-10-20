@@ -46,6 +46,7 @@ static const char NAMELOOKUPRESP_CMD[]    = "name-lookup-response";
 
 static const char PMIJOBID_KEY[]     = "pmijobid";
 static const char PMIRANK_KEY[]      = "pmirank";
+static const char SRCID_KEY[]        = "srcid";
 static const char THREADED_KEY[]     = "threaded";
 static const char RC_KEY[]           = "rc";
 static const char ERRMSG_KEY[]       = "errmsg";

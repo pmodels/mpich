@@ -665,7 +665,7 @@ fn_fail:
     goto fn_exit;
 }
 
-int PMI2_KVS_Get(const char *jobid, const char key[], char value [], int maxValue, int *valLen)
+int PMI2_KVS_Get(const char *jobid, int src_pmi_id, const char key[], char value [], int maxValue, int *valLen)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int found, keyfound;
@@ -679,7 +679,7 @@ int PMI2_KVS_Get(const char *jobid, const char key[], char value [], int maxValu
     pmi2_errno = PMIi_InitIfSingleton();
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
     
-    pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, KVSGET_CMD, JOBID_KEY, jobid, KEY_KEY, key, NULL);
+    pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, KVSGET_CMD, JOBID_KEY, jobid, SRCID_KEY, src_pmi_id, KEY_KEY, key, NULL);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
     pmi2_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, KVSGETRESP_CMD, &rc, &errmsg);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);

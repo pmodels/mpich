@@ -14,6 +14,7 @@
 #define PMI2_MAX_KEYLEN 64
 #define PMI2_MAX_VALLEN 1024
 #define PMI2_MAX_ATTRVALUE 1024
+#define PMI2_ID_NULL -1
 
 #if defined(__cplusplus)
 extern "C" {
@@ -301,6 +302,9 @@ int PMI2_KVS_Fence(void);
   Input Parameters:
   + jobid - the job id identifying the key-value space in which to look
     for key.  If jobid is NULL, look in the key-value space of this job.
+  . src_pmi_id - the pmi id of the process which put this keypair.  This
+    is just a hint to the server.  PMI2_ID_NULL should be passed if no
+    hint is provided.
   . key - key
   - maxvalue - size of the buffer provided in value
 
@@ -313,7 +317,7 @@ int PMI2_KVS_Fence(void);
   Returns 'MPI_SUCCESS' on success and an MPI error code on failure.
 
 @*/
-int PMI2_KVS_Get(const char *jobid, const char key[], char value [], int maxvalue, int *vallen);
+int PMI2_KVS_Get(const char *jobid, int src_pmi_id, const char key[], char value [], int maxvalue, int *vallen);
 
 /*@
   PMI2_Info_GetNodeAttr - returns the value of the attribute associated
