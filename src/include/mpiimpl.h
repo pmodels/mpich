@@ -1131,11 +1131,9 @@ extern MPIU_Object_alloc_t MPID_Comm_mem;
 /* MPIR_Comm_release is a helper routine that releases references to a comm.
    The second arg is false unless this is called as part of 
    MPI_Comm_disconnect .
-
-   Question: Should this only be called if the ref count on the 
-   comm is zero, thus avoiding a function call in the typical case?
 */
 int MPIR_Comm_release(MPID_Comm *, int );
+int MPIR_Comm_release_always(MPID_Comm *comm_ptr, int isDisconnect);
 
 #define MPIR_Comm_add_ref(_comm) \
     do { MPIU_Object_add_ref((_comm)); } while (0)

@@ -78,6 +78,7 @@ int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
 
     MPIU_CHKPMEM_MALLOC(vcrt, MPIDI_VCRT_t *, sizeof(MPIDI_VCRT_t) + (size - 1) * sizeof(MPIDI_VC_t *),	mpi_errno, "**nomem");
     MPIU_Object_set_ref(vcrt, 1);
+    vcrt->handle = HANDLE_SET_KIND(0, HANDLE_KIND_INVALID);
     vcrt->size = size;
     *vcrt_ptr = vcrt;
 

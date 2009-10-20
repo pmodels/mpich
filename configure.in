@@ -1156,6 +1156,7 @@ if test "$enable_threads" = "multiple" ; then
     ;;
     lock-free|lock_free|lockfree)
     thread_refcount=MPIU_REFCOUNT_LOCKFREE
+    AC_DEFINE([MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS],[1],[define to disable reference counting predefined objects like MPI_COMM_WORLD])
     ;;
     none)
     thread_refcount=MPIU_REFCOUNT_NONE

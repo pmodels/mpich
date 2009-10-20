@@ -91,14 +91,14 @@ int MPID_Finalize(void)
     MPIR_Nest_decr();
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
-    mpi_errno = MPIR_Comm_release(MPIR_Process.icomm_world, 0);
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world, 0);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 #endif
 
-    mpi_errno = MPIR_Comm_release(MPIR_Process.comm_self, 0);
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_self, 0);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Comm_release(MPIR_Process.comm_world, 0);
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_world, 0);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* Re-enabling the close step because many tests are failing

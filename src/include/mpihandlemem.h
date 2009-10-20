@@ -196,6 +196,10 @@ M*/
 .ve
   M*/
 
+/* The "_always" versions of these macros unconditionally manipulate the
+ * reference count of the given object.  They exist to permit an optimization
+ * of not reference counting predefined objects. */
+
 /* The MPIU_DBG... statements are macros that vanish unless
    --enable-g=log is selected.  MPIU_HANDLE_CHECK_REFCOUNT is
    defined above, and adds an additional sanity check for the refcounts
@@ -222,7 +226,7 @@ typedef volatile int MPIU_Handle_ref_count;
 #define MPIU_Object_get_ref(objptr_) \
     ((objptr_)->ref_count)
 
-#define MPIU_Object_add_ref(objptr_)                      \
+#define MPIU_Object_add_ref_always(objptr_)               \
     do {                                                  \
         MPIU_THREAD_CS_ENTER(HANDLE,objptr_);             \
         (objptr_)->ref_count++;                           \
@@ -230,7 +234,7 @@ typedef volatile int MPIU_Handle_ref_count;
         MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"incr");       \
         MPIU_THREAD_CS_EXIT(HANDLE,objptr_);              \
     } while (0)
-#define MPIU_Object_release_ref(objptr_,inuse_ptr)        \
+#define MPIU_Object_release_ref_always(objptr_,inuse_ptr) \
     do {                                                  \
         MPIU_THREAD_CS_ENTER(HANDLE,objptr_);             \
         *(inuse_ptr) = --((objptr_)->ref_count);          \
@@ -254,13 +258,13 @@ typedef OPA_int_t MPIU_Handle_ref_count;
 #define MPIU_Object_get_ref(objptr_) \
     (OPA_load_int(&(objptr_)->ref_count))
 
-#define MPIU_Object_add_ref(objptr_)                      \
+#define MPIU_Object_add_ref_always(objptr_)               \
     do {                                                  \
         OPA_incr_int(&((objptr_)->ref_count));            \
         MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "incr"); \
         MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"incr");       \
     } while (0)
-#define MPIU_Object_release_ref(objptr_,inuse_ptr)                      \
+#define MPIU_Object_release_ref_always(objptr_,inuse_ptr)               \
     do {                                                                \
         int got_zero_ = OPA_decr_and_test_int(&((objptr_)->ref_count)); \
         *(inuse_ptr) = got_zero_ ? 0 : 1;                               \
@@ -268,6 +272,49 @@ typedef OPA_int_t MPIU_Handle_ref_count;
         MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"decr");                     \
     } while (0)
 #endif
+
+/* TODO someday we should probably always suppress predefined object refcounting,
+ * but we don't have total confidence in it yet.  So until we gain sufficient
+ * confidence, this is a configurable option. */
+#if defined(MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS)
+
+/* The assumption here is that objects with handles of type HANDLE_KIND_BUILTIN
+ * will be created/destroyed only at MPI_Init/MPI_Finalize time and don't need
+ * to be reference counted.  This can be a big performance win on some
+ * platforms, such as BG/P.
+ *
+ * It is also assumed that any object being reference counted via these macros
+ * will have a valid value in the handle field, even if it is
+ * HANDLE_SET_KIND(0, HANDLE_KIND_INVALID) */
+#define MPIU_Object_add_ref(objptr_)                           \
+    do {                                                       \
+        int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle); \
+        if (handle_kind_ != HANDLE_KIND_BUILTIN) {             \
+            MPIU_Object_add_ref_always((objptr_));             \
+        }                                                      \
+    } while (0)
+#define MPIU_Object_release_ref(objptr_,inuse_ptr_)                  \
+    do {                                                             \
+        int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle);       \
+        if (handle_kind_ != HANDLE_KIND_BUILTIN) {                   \
+            MPIU_Object_release_ref_always((objptr_), (inuse_ptr_)); \
+        }                                                            \
+        else {                                                       \
+            *(inuse_ptr_) = 1;                                       \
+        }                                                            \
+    } while (0)
+
+#else /* !defined(MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS) */
+
+/* the base case, where we just always manipulate the reference counts */
+#define MPIU_Object_add_ref(objptr_) \
+    MPIU_Object_add_ref_always((objptr_))
+#define MPIU_Object_release_ref(objptr_,inuse_ptr_) \
+    MPIU_Object_release_ref_always((objptr_),(inuse_ptr_))
+
+#endif
+
+
 /* end reference counting macros */
 /* ------------------------------------------------------------------------- */
 
