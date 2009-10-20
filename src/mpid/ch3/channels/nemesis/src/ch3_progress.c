@@ -340,8 +340,9 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                 MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                 MPIDI_CH3U_Request_complete(sreq);
 
-                MPIDI_CH3I_SendQ_dequeue(CH3_NORMAL_QUEUE);
+                /* MT - clear the current active send before dequeuing/destroying the current request */
                 MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE] = NULL;
+                MPIDI_CH3I_SendQ_dequeue(CH3_NORMAL_QUEUE);
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
             }
             else

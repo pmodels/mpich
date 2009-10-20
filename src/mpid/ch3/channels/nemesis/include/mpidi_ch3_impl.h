@@ -28,9 +28,19 @@ extern struct MPID_Request *MPIDI_CH3I_sendq_tail[CH3_NUM_QUEUES];
 extern struct MPID_Request *MPIDI_CH3I_active_send[CH3_NUM_QUEUES];
 
 #define MPIDI_CH3I_SendQ_enqueue(req, queue)					\
-{										\
+do {										\
+    MPIU_Assert(req != NULL);                                                   \
     /* MT - not thread safe! */							\
     MPIDI_DBG_PRINTF((50, FCNAME, "SendQ_enqueue req=0x%08x", req->handle));	\
+    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                     \
+                      "MPIDI_CH3I_SendQ_enqueue(req=0x%x (handle=0x%x), queue=%s (%d))", \
+                      (req),                                                    \
+                      (req)->handle,                                            \
+                      #queue, queue));                                          \
+    /* because an OnDataAvail function might complete this request and cause */ \
+    /* it to be freed before it is dequeued, we have to add a reference */      \
+    /* whenever a req is added to a queue */                                    \
+    MPIR_Request_add_ref(req);                                                  \
     req->dev.next = NULL;							\
     if (MPIDI_CH3I_sendq_tail[queue] != NULL)					\
     {										\
@@ -41,19 +51,30 @@ extern struct MPID_Request *MPIDI_CH3I_active_send[CH3_NUM_QUEUES];
 	MPIDI_CH3I_sendq_head[queue] = req;					\
     }										\
     MPIDI_CH3I_sendq_tail[queue] = req;						\
-}
+} while (0)
 
+/* NOTE: this macro may result in the dequeued request being freed (via
+ * MPID_Request_release) */
 #define MPIDI_CH3I_SendQ_dequeue(queue)						\
-{										\
+do {										\
+    MPID_Request *req_;                                                         \
     /* MT - not thread safe! */							\
     MPIDI_DBG_PRINTF((50, FCNAME, "SendQ_dequeue req=0x%08x",			\
                       MPIDI_CH3I_sendq_head[queue]->handle));			\
+    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                     \
+                      "MPIDI_CH3I_SendQ_dequeue(queue=%s (%d)), head req=0x%x (handle=0x%x)", \
+                      #queue, queue,                                            \
+                      MPIDI_CH3I_sendq_head[queue],                             \
+                      ((MPIDI_CH3I_sendq_head[queue]) ? MPIDI_CH3I_sendq_head[queue]->handle : -1))); \
+    /* see the comment in _enqueue above about refcounts */                     \
+    req_ = MPIDI_CH3I_sendq_head[queue];                                        \
     MPIDI_CH3I_sendq_head[queue] = MPIDI_CH3I_sendq_head[queue]->dev.next;	\
+    MPID_Request_release(req_);                                                 \
     if (MPIDI_CH3I_sendq_head[queue] == NULL)					\
     {										\
 	MPIDI_CH3I_sendq_tail[queue] = NULL;					\
     }										\
-}
+} while (0)
 
 #define MPIDI_CH3I_SendQ_head(queue) (MPIDI_CH3I_sendq_head[queue])
 
