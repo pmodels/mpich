@@ -292,6 +292,14 @@ typedef OPA_int_t MPIU_Handle_ref_count;
         if (handle_kind_ != HANDLE_KIND_BUILTIN) {             \
             MPIU_Object_add_ref_always((objptr_));             \
         }                                                      \
+        else {                                                                                                 \
+            MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,                                                   \
+                                             "skipping add_ref on %p (0x%08x kind=%s) refcount=%d",            \
+                                             (objptr_),                                                        \
+                                             (objptr_)->handle,                                                \
+                                             MPIU_Handle_get_kind_str(HANDLE_GET_MPI_KIND((objptr_)->handle)), \
+                                             MPIU_Object_get_ref(objptr_)))                                    \
+        }                                                                                                      \
     } while (0)
 #define MPIU_Object_release_ref(objptr_,inuse_ptr_)                  \
     do {                                                             \
@@ -301,6 +309,12 @@ typedef OPA_int_t MPIU_Handle_ref_count;
         }                                                            \
         else {                                                       \
             *(inuse_ptr_) = 1;                                       \
+            MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,                                                   \
+                                             "skipping release_ref on %p (0x%08x kind=%s) refcount=%d",        \
+                                             (objptr_),                                                        \
+                                             (objptr_)->handle,                                                \
+                                             MPIU_Handle_get_kind_str(HANDLE_GET_MPI_KIND((objptr_)->handle)), \
+                                             MPIU_Object_get_ref(objptr_)))                                    \
         }                                                            \
     } while (0)
 

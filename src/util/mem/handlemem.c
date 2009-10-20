@@ -387,8 +387,11 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
     MPIU_VG_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
 
     MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
-                                     "Freeing object ptr %p (handle val 0x%08x)",
-                                     obj, obj->handle));
+                                     "Freeing object ptr %p (0x%08x kind=%s) refcount=%d",
+                                     (obj),
+                                     (obj)->handle,
+                                     MPIU_Handle_get_kind_str(HANDLE_GET_MPI_KIND((obj)->handle)),
+                                     MPIU_Object_get_ref(obj)));
 
     obj->next	        = objmem->avail;
     objmem->avail	= obj;
