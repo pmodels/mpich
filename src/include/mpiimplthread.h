@@ -25,6 +25,12 @@
 #include "mpid_thread.h"
 #endif
 
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_INVALID
+#  error Invalid thread granularity option specified (possibly none)
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL
+#  error The BRIEF_GLOBAL thread granularity option is no longer supported
+#endif
+
 /*
  * Define possible thread implementations that could be selected at 
  * configure time.  
@@ -59,7 +65,6 @@ typedef struct MPICH_ThreadInfo_t {
 
     /* Define the mutex values used for each kind of implementation */
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL || \
-    MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL || \
     MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
     /* The global mutex goes here when we eliminate USE_THREAD_IMPL */
     /* We need the handle mutex to avoid problems with lock nesting */
@@ -68,8 +73,7 @@ typedef struct MPICH_ThreadInfo_t {
 #error MPIU_THREAD_GRANULARITY_LOCK_FREE not implemented yet
 #endif
 
-#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL || \
-    MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
     MPID_Thread_tls_t nest_storage;   /* Id for perthread data */
 #endif
 
@@ -376,8 +380,7 @@ M*/
 #define MPIU_THREAD_CHECKDEPTH(_name,_value)
 #define MPIU_THREAD_UPDATEDEPTH(_name,_value)				
 
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL || \
-      MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 /* This structure is used to keep track of where the last change was made
    to the thread cs depth */
 #ifdef MPID_THREAD_DEBUG
@@ -513,48 +516,8 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context)
 #define MPIU_THREAD_CS_ENTER_INITFLAG(_context)
 #define MPIU_THREAD_CS_EXIT_INITFLAG(_context)
-#define MPIU_THREAD_CS_ENTER_PMI(_context) 
-#define MPIU_THREAD_CS_EXIT_PMI(_context) 
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL
-/* There is a single, global lock, held only when needed */
-#define MPIU_THREAD_CS_ENTER_ALLFUNC(_context)
-#define MPIU_THREAD_CS_EXIT_ALLFUNC(_context)
-/* We use the handle mutex to avoid conflicts with the global mutex - 
-   this is a temporary setting until the brief-global option is fully
-   implemented */
-#define MPIU_THREAD_CS_ENTER_HANDLE(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_EXIT_HANDLE(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
-   /* The request handles may be allocated, and many other handles might
-      be deallocated, within the communication routines.  To avoid 
-      problems with lock nesting, for this particular case, we use a
-      separate lock (similar to the per-object lock) */
-#define MPIU_THREAD_CS_ENTER_HANDLEALLOC(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_EXIT_HANDLEALLOC(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(handle_mutex) MPIU_THREAD_CHECK_END
-
-#define MPIU_THREAD_CS_ENTER_MPIDCOMM(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context) \
-    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-
-#define MPIU_THREAD_CS_ENTER_MSGQUEUE(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_EXIT_MSGQUEUE(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_ENTER_INITFLAG(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_EXIT_INITFLAG(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-   /* PMI for spawn needs to be single-threaded - this allows us to add 
-      PMI calls where no other mutex may be active.  This is a temporary
-      fix for brief-global only */
-#define MPIU_THREAD_CS_ENTER_PMI(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_EXIT_PMI(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_ENTER_PMI(_context)
+#define MPIU_THREAD_CS_EXIT_PMI(_context)
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 /* There are multiple locks, one for each (major) object */
@@ -640,9 +603,6 @@ typedef struct MPIU_ThreadDebug {
 # if 0
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
-
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL
-/* There is a single, global lock, held only when needed */
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 /* There are multiple locks, one for each logical class (e.g., each type of 

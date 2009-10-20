@@ -32,9 +32,8 @@ MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM,
 		MPID_Thread_yield();\
 		MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
 
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL || \
-      MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
-/* There is a single, global lock, held only when needed */
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+/* There are multiple locks, one for each (major) object */
 #define MPIU_THREAD_CS_ENTER_CONTEXTID(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
 #define MPIU_THREAD_CS_EXIT_CONTEXTID(_context) \
