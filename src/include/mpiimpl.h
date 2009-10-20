@@ -21,15 +21,10 @@
 /* Include nested mpi (NMPI) definitions */
 #include "nmpi.h"
 
-/* There are a few definitions that must be made *before* the mpichconf.h 
-   file is included.  These include the definitions of the error levels */
-#define MPICH_ERROR_MSG_NONE 0
-#define MPICH_ERROR_MSG_CLASS 1
-#define MPICH_ERROR_MSG_GENERIC 2
-#define MPICH_ERROR_MSG_ALL 8
-
-/* Common definition for the max hostname length to be used by
- * different channels as well as the collectives. */
+/* There are a few definitions that must be made *before* the mpichconf.h
+   file is included.  These include the definitions of the error levels and some
+   thread granularity constants */
+#include "mpichconfconst.h"
 
 /* Data computed by configure.  This is included *after* mpi.h because we
    do not want mpi.h to depend on any other files or configure flags */

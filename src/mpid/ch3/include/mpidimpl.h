@@ -234,10 +234,7 @@ extern MPIDI_Process_t MPIDI_Process;
  *     cancelled state
  */
 
-#define MPIU_HANDLE_ALLOCATION_MUTEX         0
-#define MPIU_HANDLE_ALLOCATION_THREAD_LOCAL  1
-
-/* XXX DJG for TLS hack */
+/* FIXME XXX DJG for TLS hack */
 #define MPID_REQUEST_TLS_MAX 128
 
 #if MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL

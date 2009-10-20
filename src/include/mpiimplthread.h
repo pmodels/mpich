@@ -25,18 +25,6 @@
 #include "mpid_thread.h"
 #endif
 
-/* 
- * Define the four ways that we achieve proper thread-safe updates of 
- * shared structures and services
- * 
- * A configure choice will set MPIU_THREAD_GRANULARITY to one of these values
- */
-#define MPIU_THREAD_GRANULARITY_GLOBAL 1
-#define MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL 2
-#define MPIU_THREAD_GRANULARITY_PER_OBJECT 3
-#define MPIU_THREAD_GRANULARITY_LOCK_FREE 4
-#define MPIU_THREAD_GRANULARITY_SINGLE 5
-
 /*
  * Define possible thread implementations that could be selected at 
  * configure time.  
@@ -50,6 +38,7 @@
  *
  */
 /* FIXME: These are old and deprecated */
+/* FIXME XXX DJG: delete these soon */
 #define MPICH_THREAD_IMPL_NOT_IMPLEMENTED -1
 #define MPICH_THREAD_IMPL_NONE 1
 #define MPICH_THREAD_IMPL_GLOBAL_MUTEX 2

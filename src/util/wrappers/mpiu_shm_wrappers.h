@@ -10,6 +10,7 @@
  */
 /* SHM Wrapper funcs defined in this header file */
 
+#include "mpichconfconst.h"
 #include "mpichconf.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
