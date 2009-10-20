@@ -74,6 +74,7 @@ typedef enum MPID_Object_kind {
 
 #define HANDLE_MPI_KIND_SHIFT 26
 #define HANDLE_GET_MPI_KIND(a) ( ((a)&0x3c000000) >> HANDLE_MPI_KIND_SHIFT )
+#define HANDLE_SET_MPI_KIND(a,kind) ((a) | ((kind) << HANDLE_MPI_KIND_SHIFT))
 
 /* returns the name of the handle kind for debugging/logging purposes */
 const char *MPIU_Handle_get_kind_str(int kind);
