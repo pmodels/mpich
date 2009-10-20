@@ -12,6 +12,9 @@
 typedef struct { volatile int v;    } OPA_int_t;
 typedef struct { void * volatile v; } OPA_ptr_t;
 
+#define OPA_INT_T_INITIALIZER(val_) { (val_) }
+#define OPA_PTR_T_INITIALIZER(val_) { (val_) }
+
 /* Assume that loads/stores are atomic on the current platform, even though this
    may not be true at all. */
 static _opa_inline int OPA_load_int(OPA_int_t *ptr)

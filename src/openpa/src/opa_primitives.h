@@ -74,6 +74,15 @@
    static _opa_inline void *OPA_LL_ptr(OPA_ptr_t *ptr);
    static _opa_inline int OPA_SC_ptr(OPA_ptr_t *ptr, void *val);
 
+
+   Additionally, the following initializer macros must be defined:
+
+   #define OPA_INT_T_INITIALIZER(val_) ...
+   #define OPA_PTR_T_INITIALIZER(val_) ...
+
+   They should be useable as C89 static initializers like so:
+
+   struct { int x; OPA_int_t y; OPA_ptr_t z; } foo = { 35, OPA_INT_T_INITIALIZER(1), OPA_PTR_T_INITIALIZER(NULL) };
 */
 
 /* Include the appropriate header for the architecture */

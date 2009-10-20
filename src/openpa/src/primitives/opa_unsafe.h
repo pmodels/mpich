@@ -14,6 +14,9 @@
 typedef struct { int v;  } OPA_int_t;
 typedef struct { int *v; } OPA_ptr_t;
 
+#define OPA_INT_T_INITIALIZER(val_) { (val_) }
+#define OPA_PTR_T_INITIALIZER(val_) { (val_) }
+
 /*
     Unsafe Primitives
     -----------------

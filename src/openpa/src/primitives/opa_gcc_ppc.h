@@ -13,6 +13,9 @@
 typedef struct { volatile int v    OPA_ATTRIBUTE((aligned (16))); } OPA_int_t;
 typedef struct { void * volatile v OPA_ATTRIBUTE((aligned (16))); } OPA_ptr_t;
 
+#define OPA_INT_T_INITIALIZER(val_) { (val_) }
+#define OPA_PTR_T_INITIALIZER(val_) { (val_) }
+
 /* Aligned loads and stores are atomic. */
 static _opa_inline int OPA_load_int(OPA_int_t *ptr)
 {

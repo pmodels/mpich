@@ -46,9 +46,11 @@ opa_gcc_intel_32_64.h - GCC (and some GCC-like compilers) on x86 and
 opa_gcc_intrinsics.h  - GCC on many other platforms.  These use compiler
                         intrinsics which are not always implemented on
                         every platform
-opa_gcc_ppc.h         - GCC and IBM's XLC on PowerPC 4xx systems.  Specifically,
-                        this supports the modified-PPC440 processor in IBM's
-                        Blue Gene/P supercomputers.
+opa_gcc_ppc.h         - GCC and IBM's XLC on PowerPC 4xx and 970 systems.
+                        Specifically, this supports the modified-PPC440
+                        processor in IBM's Blue Gene/P supercomputers and most
+                        64-bit PPC machines such as BG/P login nodes and G5
+                        Macs.
 opa_gcc_sicortex.h    - GCC on SiCortex machines.  This is a MIPS 5K based
                         architecture, so it may work on similar platforms.
 opa_nt_intrinsics.h   - Windows support.  These use compiler intrinsics
