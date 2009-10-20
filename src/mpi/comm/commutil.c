@@ -932,7 +932,9 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
     /* This is the local size, not the remote size, in the case of
        an intercomm */
     if (comm_ptr->rank >= size) {
-	*outcomm_ptr = 0;
+        *outcomm_ptr = 0;
+        /* always free the recvcontext ID, never the "send" ID */
+        MPIR_Free_contextid(new_recvcontext_id);
 	goto fn_exit;
     }
 
