@@ -561,6 +561,7 @@ void MPIU_trspace( int *space, int *fr )
 void MPIU_trdump( FILE *fp, int minid )
 {
     TRSPACE *head;
+    TRSPACE *old_head;
     char    hexstring[MAX_ADDRESS_CHARS];
 
     /* Synchronization is needed because the TRhead and associated
@@ -570,6 +571,7 @@ void MPIU_trdump( FILE *fp, int minid )
     if (fp == 0) fp = stderr;
     head = TRhead;
     while (head) {
+        MPIU_VG_MAKE_MEM_DEFINED(head, sizeof(*head));
 	if (head->id >= minid) {
 	    addrToHex( (char *)head + sizeof(TrSPACE), hexstring );
 	    FPRINTF( fp, "[%d] %lu at [%s], ", 
@@ -585,7 +587,9 @@ void MPIU_trdump( FILE *fp, int minid )
 		FPRINTF( fp, "%s[%d]\n", head->fname, head->lineno );
 	    }
 	}
+        old_head = head;
 	head = head->next;
+        MPIU_VG_MAKE_MEM_NOACCESS(old_head, sizeof(*old_head));
     }
 /*
     msg_fprintf( fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n", 
