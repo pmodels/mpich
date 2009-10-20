@@ -78,9 +78,9 @@ C
 C
 C Check name of datatype
       subroutine CheckDtype( intype, name, ierr )
+      include 'mpif.h'
       integer intype, ierr
       character *(*) name
-      include 'mpif.h'
       integer ir, rlen
       character *(MPI_MAX_OBJECT_NAME) outname
 C     
@@ -102,9 +102,9 @@ C
 C
 C Check name of datatype (allows alias)
       subroutine CheckDtype2( intype, name, name2, ierr )
+      include 'mpif.h'
       integer intype, ierr
       character *(*) name, name2
-      include 'mpif.h'
       integer ir, rlen
       character *(MPI_MAX_OBJECT_NAME) outname
 C     
