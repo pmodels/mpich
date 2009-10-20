@@ -166,6 +166,7 @@ int MPI_Finalize( void )
 	if (!in_use) {
 	    MPIU_Handle_obj_free( &MPID_Errhandler_mem, 
 				  MPIR_Process.comm_world->errhandler );
+            MPIR_Process.comm_world->errhandler = NULL;
 	}
     }
     if (MPIR_Process.comm_self->errhandler && 
@@ -177,6 +178,7 @@ int MPI_Finalize( void )
 	if (!in_use) {
 	    MPIU_Handle_obj_free( &MPID_Errhandler_mem, 
 				  MPIR_Process.comm_self->errhandler );
+            MPIR_Process.comm_self->errhandler = NULL;
 	}
     }
 
