@@ -38,7 +38,11 @@ MPIU_Object_alloc_t MPID_Attr_mem = { 0, 0, 0, 0, MPID_ATTR,
 /* Provides a way to trap all attribute allocations when debugging leaks. */
 MPID_Attribute *MPID_Attr_alloc(void)
 {
-    return (MPID_Attribute *)MPIU_Handle_obj_alloc(&MPID_Attr_mem);
+    MPID_Attribute *attr = (MPID_Attribute *)MPIU_Handle_obj_alloc(&MPID_Attr_mem);
+    /* attributes don't have refcount semantics, but let's keep valgrind and
+     * the debug logging pacified */
+    MPIU_Object_set_ref(attr, 0);
+    return attr;
 }
 
 void MPID_Attr_free(MPID_Attribute *attr_ptr)

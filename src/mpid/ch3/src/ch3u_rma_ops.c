@@ -40,6 +40,8 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
     *win_ptr = (MPID_Win *)MPIU_Handle_obj_alloc( &MPID_Win_mem );
     MPIU_ERR_CHKANDJUMP(!(*win_ptr),mpi_errno,MPI_ERR_OTHER,"**nomem");
 
+    MPIU_Object_set_ref(*win_ptr, 1);
+
     (*win_ptr)->fence_cnt = 0;
     (*win_ptr)->base = base;
     (*win_ptr)->size = size;
@@ -121,6 +123,7 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
 {
     int mpi_errno=MPI_SUCCESS, total_pt_rma_puts_accs, i, *recvcnts, comm_size;
     MPID_Comm *comm_ptr;
+    int in_use;
     MPIU_CHKLMEM_DECL(1);
     MPIU_THREADPRIV_DECL;
     
@@ -166,15 +169,17 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     }
 
     NMPI_Comm_free(&((*win_ptr)->comm));
-        
+
     MPIU_Free((*win_ptr)->base_addrs);
     MPIU_Free((*win_ptr)->disp_units);
     MPIU_Free((*win_ptr)->all_win_handles);
     MPIU_Free((*win_ptr)->pt_rma_puts_accs);
-        
-    /* check whether refcount needs to be decremented here as in group_free */
+
+    MPIU_Object_release_ref(*win_ptr, &in_use);
+    /* MPI windows don't have reference count semantics, so this should always be true */
+    MPIU_Assert(!in_use);
     MPIU_Handle_obj_free( &MPID_Win_mem, *win_ptr );
-        
+
  fn_exit:
     MPIR_Nest_decr();
     MPIU_CHKLMEM_FREEALL();

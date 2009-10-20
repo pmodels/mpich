@@ -77,8 +77,8 @@ int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCRT_CREATE);
 
     MPIU_CHKPMEM_MALLOC(vcrt, MPIDI_VCRT_t *, sizeof(MPIDI_VCRT_t) + (size - 1) * sizeof(MPIDI_VC_t *),	mpi_errno, "**nomem");
-    MPIU_Object_set_ref(vcrt, 1);
     vcrt->handle = HANDLE_SET_KIND(0, HANDLE_KIND_INVALID);
+    MPIU_Object_set_ref(vcrt, 1);
     vcrt->size = size;
     *vcrt_ptr = vcrt;
 
@@ -703,8 +703,8 @@ static int lpid_counter = 0;
 int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
 {
     vc->state = MPIDI_VC_STATE_INACTIVE;
+    vc->handle  = HANDLE_SET_MPI_KIND(0, MPID_VCONN);
     MPIU_Object_set_ref(vc, 0);
-    vc->handle  = MPID_VCONN;
     vc->pg      = pg;
     vc->pg_rank = rank;
     vc->lpid    = lpid_counter++;
