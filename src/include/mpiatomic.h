@@ -31,6 +31,15 @@
       completeness and implementation of our atomic primitives in the future.
 */
 
+/* FIXME anything labeled MPIDU_ here should really be MPIU_ */
+
+/* TODO need actual yield and an busy wait impls */
+#define MPIDU_Busy_wait() do {} while (0)
+/* conflicts with the "process locks" definition for now, don't enable this or
+ * use it until we delete the process locks code
+#define MPIDU_Yield() do {} while (0)
+ */
+
 /* ======================================================
    reference counting routines
    ====================================================== */
@@ -535,7 +544,7 @@ int MPIDU_Shm_barrier_simple(MPIDU_Shm_barrier_t *barrier, int num_processes, in
     else {
         /* wait for the last arriving process to release us from the barrier */
         while (OPA_load_int(&barrier->sig) == cur_sig) {
-            OPA_busy_wait();
+            MPIDU_Busy_wait();
         }
     }
 
@@ -564,7 +573,7 @@ int MPIDU_Shm_barrier_enter(MPIDU_Shm_barrier_t *barrier,
 
     if (rank == boss_rank) {
         while (0 == OPA_load_int(&barrier->sig_boss))
-            OPA_busy_wait_int();
+            MPIDU_Busy_wait();
     }
     else {
         cur_sig = OPA_load_int(&barrier->sig);
@@ -579,7 +588,7 @@ int MPIDU_Shm_barrier_enter(MPIDU_Shm_barrier_t *barrier,
 
         /* wait to be released by the boss */
         while (OPA_load_int(&barrier->sig) == cur_sig)
-            OPA_busy_wait();
+            MPIDU_Busy_wait();
     }
 
 fn_exit:
