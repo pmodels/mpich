@@ -519,6 +519,15 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_ENTER_PMI(_context)
 #define MPIU_THREAD_CS_EXIT_PMI(_context)
 
+#define MPIU_THREAD_CS_ENTER_CONTEXTID(_context)
+#define MPIU_THREAD_CS_EXIT_CONTEXTID(_context)
+/* FIXME this YIELD macro probably needs to be revisited */
+#define MPIU_THREAD_CS_YIELD_CONTEXTID(_context) \
+    MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);\
+    MPID_Thread_yield();\
+    MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
+
+
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 /* There are multiple locks, one for each (major) object */
 
@@ -580,6 +589,17 @@ typedef struct MPIU_ThreadDebug {
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
 #define MPIU_THREAD_CS_EXIT_PMI(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+
+#define MPIU_THREAD_CS_ENTER_CONTEXTID(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_CONTEXTID(_context) \
+   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
+/* FIXME this YIELD macro probably needs to be revisited */
+#define MPIU_THREAD_CS_YIELD_CONTEXTID(_context) \
+    MPIU_THREAD_CHECKDEPTH(global_mutex,1);\
+    MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);\
+    MPID_Thread_yield();\
+    MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without 

@@ -9,7 +9,7 @@
 
 /* This is the utility file for comm that contains the basic comm items
    and storage management */
-#ifndef MPID_COMM_PREALLOC 
+#ifndef MPID_COMM_PREALLOC
 #define MPID_COMM_PREALLOC 8
 #endif
 
@@ -19,40 +19,6 @@ MPID_Comm MPID_Comm_direct[MPID_COMM_PREALLOC] = { {0,0} };
 MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM, 
 				      sizeof(MPID_Comm), MPID_Comm_direct,
                                       MPID_COMM_PREALLOC};
-
-/* Support for threading */
-
-#ifdef MPICH_IS_THREADED
-#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
-/* There is a single, global lock, held for the duration of an MPI call */
-#define MPIU_THREAD_CS_ENTER_CONTEXTID(_context)
-#define MPIU_THREAD_CS_EXIT_CONTEXTID(_context)
-#define MPIU_THREAD_CS_YIELD_CONTEXTID(_context) \
-		MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);\
-		MPID_Thread_yield();\
-		MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
-
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
-/* There are multiple locks, one for each (major) object */
-#define MPIU_THREAD_CS_ENTER_CONTEXTID(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_EXIT_CONTEXTID(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_YIELD_CONTEXTID(_context) \
-    MPIU_THREAD_CHECKDEPTH(global_mutex,1);\
-		MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);\
-		MPID_Thread_yield();\
-		MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
-
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
-/* Updates to shared data and access to shared services is handled without 
-   locks where ever possible. */
-#error lock-free not yet implemented
-
-#else
-#error Unrecognized thread granularity
-#endif /* MPIU_THREAD_GRANULARITY */
-#endif /* MPICH_IS_THREADED */
 
 /* utility function to pretty print a context ID for debugging purposes, see
  * mpiimpl.h for more info on the various fields */
