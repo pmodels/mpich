@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIIMPLATOMIC_H_INCLUDED
-#define MPIIMPLATOMIC_H_INCLUDED
+#ifndef MPIATOMIC_H_INCLUDED
+#define MPIATOMIC_H_INCLUDED
 
 #include <stddef.h>
 #include <string.h>
@@ -628,4 +628,4 @@ fn_exit:
 #undef FUNCNAME
 #undef FCNAME
 
-#endif /* defined(MPIIMPLATOMIC_H_INCLUDED) */
+#endif /* defined(MPIATOMIC_H_INCLUDED) */
