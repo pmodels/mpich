@@ -64,29 +64,6 @@ for dir in $1 ; do
 done
 ])
 
-dnl Find something to use for mkdir -p.  Eventually, this will 
-dnl have a script for backup
-AC_DEFUN([PAC_PROG_MKDIR_P],[
-AC_CACHE_CHECK([whether mkdir -p works],
-pac_cv_mkdir_p,[
-pac_cv_mkdir_p=no
-rm -rf .tmp
-if mkdir -p .tmp/.foo 1>/dev/null 2>&1 ; then 
-    if test -d .tmp/.foo ; then 
-        pac_cv_mkdir_p=yes
-    fi
-fi
-rm -rf .tmp
-])
-if test "$pac_cv_mkdir_p" = "yes" ; then
-   MKDIR_P="mkdir -p"
-   export MKDIR_P
-else
-   AC_MSG_WARN([mkdir -p does not work; the install step may fail])
-fi
-AC_SUBST(MKDIR_P)
-])
-
 dnl Test for a clean VPATH directory.  Provide this command with the names
 dnl of all of the generated files that might cause problems 
 dnl (Makefiles won't cause problems because there's no VPATH usage for them)
