@@ -1,4 +1,4 @@
-AC_PREREQ(2.62)
+AC_PREREQ(2.63)
 #
 # (C) 2006 by Argonne National Laboratory.
 #     See COPYRIGHT in top-level directory.
@@ -6,7 +6,7 @@ AC_PREREQ(2.62)
 
 AC_INIT([MPL], [0.1])
 AC_CONFIG_AUX_DIR(confdb)
-AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.10])
 
 dnl The MPICH2 top-level configure adds a bunch of flags to the
 dnl user-defined CFLAGS by processing different configure command-line
@@ -19,8 +19,21 @@ PAC_SUBCONFIG_INIT()
 AC_CONFIG_HEADER(include/mplconf.h)
 AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
 
+AC_C_CONST
+AC_C_INLINE
+AC_PROG_MKDIR_P
 PAC_ARG_CACHING
 PAC_ARG_STRICT
+PAC_C_VOLATILE
+PAC_C_RESTRICT
+PAC_CC_FUNCTION_NAME_SYMBOL
+PAC_C_GNU_ATTRIBUTE
+
+AC_PROG_INSTALL
+PAC_PROG_CHECK_INSTALL_WORKS
+
+# On Mac OS/X, install breaks libraries unless used with the -p switch
+PAC_PROG_INSTALL_BREAKS_LIBS
 
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
