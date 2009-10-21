@@ -11,9 +11,6 @@ dnl Notes:
 dnl Currently, only checks for lib mpi and mpi.h.  Later, we will add
 dnl MPI_Pcontrol prototype (const int or not?).  
 dnl
-dnl If PAC_ARG_MPICH_BUILDING is included, this will work correctly 
-dnl when MPICH is being built.
-dnl
 dnl Prerequisites:
 dnl autoconf version 2.13 (for AC_SEARCH_LIBS)
 dnl D*/
@@ -54,30 +51,7 @@ if test "X$pac_lib_mpi_is_building" != "Xyes" ; then
 fi
 ifelse($1,,,[$1])
 ])
-dnl
-dnl
-dnl/*D
-dnl PAC_ARG_MPICH_BUILDING - Add configure command-line argument to indicated
-dnl that MPICH is being built
-dnl
-dnl Output Effect:
-dnl Adds the command-line switch '--with-mpichbuilding' that may be used to
-dnl indicate that MPICH is building.  This allows a configure to work-around
-dnl the fact that during a build of MPICH, certain commands, particularly the
-dnl compilation commands such as 'mpicc', are not yet functional.  The
-dnl variable 'pac_lib_mpi_is_building' is set to 'yes' if in an MPICH build,
-dnl 'no' otherwise.
-dnl
-dnl See Also:
-dnl PAC_LIB_MPI
-dnl D*/
-AC_DEFUN([PAC_ARG_MPICH_BUILDING],[
-AC_ARG_WITH(mpichbuilding,
-[--with-mpichbuilding - Assume that MPICH is being built],
-pac_lib_mpi_is_building=$withval,pac_lib_mpi_is_building="no")
-])
-dnl
-dnl
+
 dnl This should also set MPIRUN.
 dnl
 dnl/*D
