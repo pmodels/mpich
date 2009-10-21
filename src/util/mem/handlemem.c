@@ -473,6 +473,31 @@ void *MPIU_Handle_get_ptr_indirect( int handle, MPIU_Object_alloc_t *objmem )
     }
 }
 
+/* returns the name of the handle kind for debugging/logging purposes */
+const char *MPIU_Handle_get_kind_str(int kind)
+{
+#define mpiu_name_case_(name_) case MPID_##name_: return (#name_)
+    switch (kind) {
+        mpiu_name_case_(COMM);
+        mpiu_name_case_(GROUP);
+        mpiu_name_case_(DATATYPE);
+        mpiu_name_case_(FILE);
+        mpiu_name_case_(ERRHANDLER);
+        mpiu_name_case_(OP);
+        mpiu_name_case_(INFO);
+        mpiu_name_case_(WIN);
+        mpiu_name_case_(KEYVAL);
+        mpiu_name_case_(ATTR);
+        mpiu_name_case_(REQUEST);
+        mpiu_name_case_(PROCGROUP);
+        mpiu_name_case_(VCONN);
+        mpiu_name_case_(GREQ_CLASS);
+        default:
+            return "unknown";
+    }
+#undef mpiu_name_case_
+}
+
 /* style: allow:printf:5 sig:0 */
 #ifdef MPICH_DEBUG_HANDLEALLOC
 /* The following is a handler that may be added to finalize to test whether
@@ -573,31 +598,6 @@ static int MPIU_CheckHandlesOnFinalize( void *objmem_ptr )
     }
 
     return 0;
-}
-
-/* returns the name of the handle kind for debugging/logging purposes */
-const char *MPIU_Handle_get_kind_str(int kind)
-{
-#define mpiu_name_case_(name_) case MPID_##name_: return (#name_)
-    switch (kind) {
-        mpiu_name_case_(COMM);
-        mpiu_name_case_(GROUP);
-        mpiu_name_case_(DATATYPE);
-        mpiu_name_case_(FILE);
-        mpiu_name_case_(ERRHANDLER);
-        mpiu_name_case_(OP);
-        mpiu_name_case_(INFO);
-        mpiu_name_case_(WIN);
-        mpiu_name_case_(KEYVAL);
-        mpiu_name_case_(ATTR);
-        mpiu_name_case_(REQUEST);
-        mpiu_name_case_(PROCGROUP);
-        mpiu_name_case_(VCONN);
-        mpiu_name_case_(GREQ_CLASS);
-        default:
-            return "unknown";
-    }
-#undef mpiu_name_case_
 }
 
 static const char *MPIR_ObjectName( MPIU_Object_alloc_t *objmem )
