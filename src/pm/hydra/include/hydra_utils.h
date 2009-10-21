@@ -105,20 +105,15 @@
         }                                                               \
     }
 
-#if defined ENABLE_WARNINGS
+#if defined ENABLE_WARNINGS || !defined COMPILER_ACCEPTS_VA_ARGS
 #define HYDU_warn_printf HYDU_error_printf
 #else
-#define HYDU_warn_printf(...) {}
+#define HYDU_warn_printf(...)
 #endif /* ENABLE_WARNINGS */
 
-/* We need to add more information in here later */
-#if !defined ENABLE_DEBUG
-#define HYDU_FUNC_ENTER() {}
-#define HYDU_FUNC_EXIT() {}
-#else
-#define HYDU_FUNC_ENTER() {}
-#define HYDU_FUNC_EXIT() {}
-#endif
+/* Disable for now; we might add something here in the future */
+#define HYDU_FUNC_ENTER()   do{}while(0)
+#define HYDU_FUNC_EXIT()    do{}while(0)
 
 
 /* alloc */
