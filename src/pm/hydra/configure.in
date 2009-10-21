@@ -343,9 +343,11 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		fi
 		;;		
 	hwloc)
-		AC_CONFIG_SUBDIRS(tools/bind/hwloc/hwloc)
-		have_hwloc=yes
-		AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
+		PAC_CONFIG_SUBDIR(tools/bind/hwloc/hwloc, $abs_srcdir, $ac_configure_args,
+				have_hwloc=yes,)
+		if test "$have_hwloc" = "yes" ; then
+		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
+		fi
 		;;
 	*)
 		;;
