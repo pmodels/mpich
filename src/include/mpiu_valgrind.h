@@ -66,21 +66,12 @@
 #  define MPIU_VG_CHECK_MEM_IS_ADDRESSABLE(addr_,len_) do{}while(0)
 #  define MPIU_VG_CREATE_BLOCK(addr_,len_,desc_)       do{}while(0)
 #  define MPIU_VG_RUNNING_ON_VALGRIND()                (0)/*always false*/
-#  if defined(HAVE_MACRO_VA_ARGS)
-#    define MPIU_VG_PRINTF_BACKTRACE(...)              do{}while(0)
-#  else
-#    define MPIU_VG_PRINTF_BACKTRACE MPIU_VG_printf_do_nothing_func
-static inline void MPIU_VG_printf_do_nothing_func(char *fmt, ...)
-{
-    /* do nothing */
-}
-
+#  define MPIU_VG_PRINTF_BACKTRACE(...)                do{}while(0)
 #  define MPIU_VG_CREATE_MEMPOOL(pool, rzB, is_zeroed) do{}while(0)
 #  define MPIU_VG_DESTROY_MEMPOOL(pool)                do{}while(0)
 #  define MPIU_VG_MEMPOOL_ALLOC(pool, addr, size)      do{}while(0)
 #  define MPIU_VG_MEMPOOL_FREE(pool, addr)             do{}while(0)
 
-#  endif
 #endif /* defined(MPIU_VG_AVAILABLE) */
 
 
