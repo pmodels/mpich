@@ -45,11 +45,7 @@
 #  define MPIU_VG_CHECK_MEM_IS_ADDRESSABLE(addr_,len_) VALGRIND_CHECK_MEM_IS_ADDRESSABLE((addr_),(len_))
 #  define MPIU_VG_CREATE_BLOCK(addr_,len_,desc_)       VALGRIND_CREATE_BLOCK((addr_),(len_),(desc_))
 #  define MPIU_VG_RUNNING_ON_VALGRIND()                RUNNING_ON_VALGRIND
-#  if defined(HAVE_MACRO_VA_ARGS)
-#    define MPIU_VG_PRINTF_BACKTRACE(...) VALGRIND_PRINTF_BACKTRACE(__VA_ARGS__)
-#  else
-#    define MPIU_VG_PRINTF_BACKTRACE VALGRIND_PRINTF_BACKTRACE
-#  endif
+#  define MPIU_VG_PRINTF_BACKTRACE                     VALGRIND_PRINTF_BACKTRACE
 
 /* custom allocator client requests, you probably shouldn't use these unless you
  * really know what you are doing */
