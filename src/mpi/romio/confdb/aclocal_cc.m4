@@ -162,66 +162,6 @@ AC_DEFUN([PAC_C_OPTIMIZATION],[
 ])
 
 dnl/*D
-dnl PAC_C_VOLATILE - Check if C supports volatile
-dnl
-dnl Synopsis:
-dnl PAC_C_VOLATILE
-dnl
-dnl Output Effect:
-dnl Defines 'volatile' as empty if volatile is not available.
-dnl
-dnl D*/
-AC_DEFUN([PAC_C_VOLATILE],[
-AC_CACHE_CHECK([for volatile],
-pac_cv_c_volatile,[
-AC_TRY_COMPILE(,[volatile int a;],pac_cv_c_volatile="yes",
-pac_cv_c_volatile="no")])
-if test "$pac_cv_c_volatile" = "no" ; then
-    AC_DEFINE(volatile,,[if C does not support volatile])
-fi
-])
-
-dnl/*D
-dnl PAC_C_RESTRICT - Check if C supports restrict
-dnl
-dnl Synopsis:
-dnl PAC_C_RESTRICT
-dnl
-dnl Output Effect:
-dnl Defines 'restrict' if some version of restrict is supported; otherwise
-dnl defines 'restrict' as empty.  This allows you to include 'restrict' in 
-dnl declarations in the same way that 'AC_C_CONST' allows you to use 'const'
-dnl in declarations even when the C compiler does not support 'const'
-dnl
-dnl Note that some compilers accept restrict only with additional options.
-dnl DEC/Compaq/HP Alpha Unix (Tru64 etc.) -accept restrict_keyword
-dnl
-dnl D*/
-AC_DEFUN([PAC_C_RESTRICT],[
-AC_CACHE_CHECK([for restrict],
-pac_cv_c_restrict,[
-AC_TRY_COMPILE(,[int * restrict a;],pac_cv_c_restrict="restrict",
-pac_cv_c_restrict="no")
-if test "$pac_cv_c_restrict" = "no" ; then
-   AC_TRY_COMPILE(,[int * _Restrict a;],pac_cv_c_restrict="_Restrict",
-   pac_cv_c_restrict="no")
-fi
-if test "$pac_cv_c_restrict" = "no" ; then
-   AC_TRY_COMPILE(,[int * __restrict a;],pac_cv_c_restrict="__restrict",
-   pac_cv_c_restrict="no")
-fi
-])
-if test "$pac_cv_c_restrict" = "no" ; then
-  restrict_val=""
-elif test "$pac_cv_c_restrict" != "restrict" ; then
-  restrict_val=$pac_cv_c_restrict
-fi
-if test "$restrict_val" != "restrict" ; then 
-  AC_DEFINE_UNQUOTED(restrict,$restrict_val,[if C does not support restrict])
-fi
-])
-
-dnl/*D
 dnl PAC_PROG_C_UNALIGNED_DOUBLES - Check that the C compiler allows unaligned
 dnl doubles
 dnl

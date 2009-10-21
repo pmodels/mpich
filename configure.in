@@ -3064,8 +3064,8 @@ AC_SUBST(DOCTEXTSTYLE)
 # ----------------------------------------------------------------------------
 # Check for C compiler characteristics
 AC_C_CONST
-PAC_C_VOLATILE
-PAC_C_RESTRICT
+AC_C_VOLATILE
+AC_C_RESTRICT
 AC_C_INLINE
 
 PAC_C_GNU_ATTRIBUTE

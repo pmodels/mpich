@@ -364,7 +364,7 @@ fi
 #
 # Check for const and restrict (used in some of the performance tests)
 AC_C_CONST
-PAC_C_RESTRICT
+AC_C_RESTRICT
 
 # General headers
 AC_CHECK_HEADERS(unistd.h stdarg.h string.h stdlib.h memory.h)

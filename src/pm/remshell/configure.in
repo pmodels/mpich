@@ -106,8 +106,8 @@ AC_SUBST(ENABLE_SHLIB)
 dnl
 dnl     check for compiler characteristics
 AC_C_CONST
-PAC_C_VOLATILE
-PAC_C_RESTRICT
+AC_C_VOLATILE
+AC_C_RESTRICT
 AC_C_INLINE
 dnl
 dnl check for library functions
