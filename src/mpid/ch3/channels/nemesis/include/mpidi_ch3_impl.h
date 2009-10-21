@@ -33,7 +33,7 @@ do {										\
     /* MT - not thread safe! */							\
     MPIDI_DBG_PRINTF((50, FCNAME, "SendQ_enqueue req=0x%08x", req->handle));	\
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                     \
-                      "MPIDI_CH3I_SendQ_enqueue(req=0x%x (handle=0x%x), queue=%s (%d))", \
+                      "MPIDI_CH3I_SendQ_enqueue(req=%p (handle=0x%x), queue=%s (%d))", \
                       (req),                                                    \
                       (req)->handle,                                            \
                       #queue, queue));                                          \
@@ -62,7 +62,7 @@ do {										\
     MPIDI_DBG_PRINTF((50, FCNAME, "SendQ_dequeue req=0x%08x",			\
                       MPIDI_CH3I_sendq_head[queue]->handle));			\
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                     \
-                      "MPIDI_CH3I_SendQ_dequeue(queue=%s (%d)), head req=0x%x (handle=0x%x)", \
+                      "MPIDI_CH3I_SendQ_dequeue(queue=%s (%d)), head req=%p (handle=0x%x)", \
                       #queue, queue,                                            \
                       MPIDI_CH3I_sendq_head[queue],                             \
                       ((MPIDI_CH3I_sendq_head[queue]) ? MPIDI_CH3I_sendq_head[queue]->handle : -1))); \
