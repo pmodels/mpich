@@ -2,6 +2,10 @@
                                Changes in 1.2.1
 ===============================================================================
 
+ # OVERALL: Improved support for fine-grained multithreading.
+
+ # OVERALL: Improved integration with Valgrind for debugging builds of MPICH2.
+
  # PM/PMI: Initial support for hwloc process-core binding library in
    Hydra.
 
