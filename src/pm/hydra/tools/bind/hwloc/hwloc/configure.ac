@@ -19,7 +19,7 @@ AC_CONFIG_MACRO_DIR([config])
 AC_CANONICAL_SYSTEM
 AC_CONFIG_SRCDIR([src/topology.c])
 
-AM_INIT_AUTOMAKE([1.10 foreign -Wall -Werror])
+AM_INIT_AUTOMAKE([1.10 dist-bzip2 foreign tar-ustar -Wall -Werror])
 
 # Make configure depend on the VERSION file, since it's used in AC_INIT
 
@@ -223,6 +223,7 @@ AC_LANG([C])
 AM_PROG_CC_C_O
 AC_PROG_CC_C99
 AC_PROG_LN_S
+AC_PROG_INSTALL
 AC_PROG_MKDIR_P
 AC_PROG_EGREP
 PKG_CHECK_EXISTS
@@ -429,8 +430,6 @@ AC_CHECK_FUNCS([clzl], [
 
 AC_CHECK_FUNCS([openat], [have_openat=yes])
 AM_CONDITIONAL([HAVE_OPENAT], [test "x$have_openat" = "xyes"])
-
-AC_FUNC_ALLOCA
 
 AC_CHECK_DECL([numa_bitmask_alloc], [have_linux_libnuma=yes], [],
 	      [#include <numa.h>])

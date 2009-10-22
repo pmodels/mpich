@@ -1,13 +1,14 @@
 /*
  * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+ * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
 /** \file
  * \brief The hwloc API.
  *
- * See hwloc/cpuset.h for CPU set specific macros
- * See hwloc/helper.h for high-level topology traversal helpers
+ * See hwloc/cpuset.h for CPU set specific macros.
+ * See hwloc/helper.h for high-level topology traversal helpers.
  */
 
 #ifndef HWLOC_H
@@ -413,7 +414,7 @@ extern int hwloc_topology_is_thissystem(hwloc_topology_t  __hwloc_restrict topol
  */
 
 /** \brief Returns the topology object at index \p index from depth \p depth */
-extern hwloc_obj_t hwloc_get_obj_by_depth (hwloc_topology_t topology, unsigned depth, unsigned index);
+extern hwloc_obj_t hwloc_get_obj_by_depth (hwloc_topology_t topology, unsigned depth, unsigned idx);
 
 /** \brief Returns the topology object at index \p index with type \p type
  *
@@ -422,14 +423,14 @@ extern hwloc_obj_t hwloc_get_obj_by_depth (hwloc_topology_t topology, unsigned d
  * and ther caller may fallback to hwloc_get_obj_by_depth().
  */
 static __inline hwloc_obj_t
-hwloc_get_obj_by_type (hwloc_topology_t topology, hwloc_obj_type_t type, unsigned index)
+hwloc_get_obj_by_type (hwloc_topology_t topology, hwloc_obj_type_t type, unsigned idx)
 {
   int depth = hwloc_get_type_depth(topology, type);
   if (depth == HWLOC_TYPE_DEPTH_UNKNOWN)
     return NULL;
   if (depth == HWLOC_TYPE_DEPTH_MULTIPLE)
     return NULL;
-  return hwloc_get_obj_by_depth(topology, depth, index);
+  return hwloc_get_obj_by_depth(topology, depth, idx);
 }
 
 /** @} */
@@ -448,7 +449,17 @@ extern hwloc_obj_type_t hwloc_obj_type_of_string (const char * string);
 
 /** \brief Stringify a given topology object into a human-readable form.
  *
- * \return how many characters were actually written (not including the ending \\0). */
+ * Fill string \p string up to \p size characters with the description
+ * of topology object \p obj in topology \p topology.
+ *
+ * If \p verbose is set, a longer description is used. Otherwise a
+ * short description is used.
+ *
+ * \p indexprefix is used to prefix the \p os_index attribute number of
+ * the object in the description. If \c NULL, the \c # character is used.
+ *
+ * \return how many characters were actually written (not including the ending \\0).
+ */
 extern int hwloc_obj_snprintf(char * __hwloc_restrict string, size_t size,
 			     hwloc_topology_t topology, hwloc_obj_t obj,
 			     const char * __hwloc_restrict indexprefix, int verbose);

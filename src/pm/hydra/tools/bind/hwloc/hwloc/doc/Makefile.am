@@ -36,6 +36,9 @@ EXTRA_DIST = \
         images/hagrid.png \
         images/diagram.fig \
         www.open-mpi.org.cfg \
+        www.open-mpi.org-css.inc \
+        www.open-mpi.org-footer.inc \
+        www.open-mpi.org-header.inc \
         $(image_built_sources) \
         $(DOX_HTML_DIR) $(DOX_MAN_DIR) $(DOX_LATEX_DIR) $(DOX_TAG)
 
@@ -51,8 +54,10 @@ dox_inputs = $(DOX_CONFIG) \
        $(top_srcdir)/include/hwloc.h \
        $(top_srcdir)/include/hwloc/helper.h \
        $(top_srcdir)/include/hwloc/cpuset.h \
+       $(top_srcdir)/include/hwloc/linux.h \
        $(top_srcdir)/include/hwloc/linux-libnuma.h \
-       $(top_srcdir)/include/hwloc/glibc-sched.h
+       $(top_srcdir)/include/hwloc/glibc-sched.h \
+       $(top_srcdir)/include/hwloc/openfabrics-verbs.h
 
 #
 # Create the images that we need for the PDF output and the HTML
@@ -88,7 +93,7 @@ endif
 
 if BUILD_DOXYGEN
 $(DOX_TAG): $(BUILT_SOURCES) $(dox_inputs)
-	$(RM) -r $(DOX_DIR)
+	rm -fr $(DOX_DIR)
 	$(DOXYGEN) $(DOX_CONFIG)
 	-sed -i -e 's/__hwloc_restrict/restrict/g;s/\\_\\-\\_\\-hwloc\\_\\-restrict/restrict/g;s/__inline/inline/g;s/\\_\\-\\_\\-inline/inline/g' $(DOX_DIR)/html/*.html $(DOX_DIR)/latex/*.tex $(DOX_DIR)/man/man3/*.3
 endif
@@ -105,7 +110,7 @@ $(DOX_PDF): $(DOX_TAG)
 # is necessary.
 $(DOX_A4PDF): $(DOX_TAG)
 	cd $(DOX_LATEX_DIR); \
-	$(RM) *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
+	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
 	cp refman.tex a4-refman.tex; \
 	$(PDFLATEX) a4-refman.tex; \
 	$(MAKEINDEX) a4-refman.idx; \
@@ -125,7 +130,7 @@ $(DOX_A4PDF): $(DOX_TAG)
 # to make suitable for US letter.
 $(DOX_LETTERPDF): $(DOX_TAG)
 	cd $(DOX_LATEX_DIR); \
-	$(RM) *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
+	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
 	sed -e 's/a4paper/letterpaper/g' -e 's/\\usepackage{a4wide}//' refman.tex > letter-refman.tex; \
 	$(PDFLATEX) letter-refman.tex; \
 	$(MAKEINDEX) letter-refman.idx; \
@@ -257,13 +262,15 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_inside_cpuset_by_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_by_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_by_depth.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_get_cache_covering_obj.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_shared_cache_covering_obj.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_system_obj.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_type_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_nbobjs_by_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_nbobjs_by_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_type_or_above_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_type_or_below_depth.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_linux_parse_cpumap_file.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u_hwloc_cache_attr_s.3 \
