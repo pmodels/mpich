@@ -674,12 +674,15 @@ int PMI2_KVS_Get(const char *jobid, int src_pmi_id, const char key[], char value
     int ret;
     PMI2_Command cmd = {0};
     int rc;
+    char src_pmi_id_str[256];
     const char *errmsg;
 
+    PMI2U_Snprintf(src_pmi_id_str, sizeof(src_pmi_id_str), "%d", src_pmi_id);
+    
     pmi2_errno = PMIi_InitIfSingleton();
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
     
-    pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, KVSGET_CMD, JOBID_KEY, jobid, SRCID_KEY, src_pmi_id, KEY_KEY, key, NULL);
+    pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, KVSGET_CMD, JOBID_KEY, jobid, SRCID_KEY, src_pmi_id_str, KEY_KEY, key, NULL);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
     pmi2_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, KVSGETRESP_CMD, &rc, &errmsg);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
