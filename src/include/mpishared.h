@@ -21,6 +21,11 @@
 #error 'mpishared.h should not be used if mpiimpl.h is included'
 #endif
 
+/* There are a few definitions that must be made *before* the mpichconf.h
+   file is included.  These include the definitions of the error levels and some
+   thread granularity constants */
+#include "mpichconfconst.h"
+
 /* Make sure that we have the basic definitions */
 #ifndef MPICHCONF_H_INCLUDED
 #include "mpichconf.h"
