@@ -185,6 +185,6 @@ typedef struct MPIDI_nem_tcp_portinfo {
 } MPIDI_nem_tcp_portinfo_t;
 
 
-#define MPID_nem_tcp_vc_is_connected(vc) (VC_FIELD(vc, sc) && VC_FIELD(vc, sc)->state.cstate == CONN_STATE_TS_COMMRDY)
+#define MPID_nem_tcp_vc_is_connected(vc_tcp) (vc_tcp->sc && vc_tcp->sc->state.cstate == CONN_STATE_TS_COMMRDY)
 
 #endif

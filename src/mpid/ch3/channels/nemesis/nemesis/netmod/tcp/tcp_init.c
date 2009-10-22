@@ -292,19 +292,20 @@ int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
     struct in_addr addr;
+    MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(new_vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CONNECT_TO_ROOT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_CONNECT_TO_ROOT);
 
     /* vc is already allocated before reaching this point */
 
-    mpi_errno = MPID_nem_tcp_get_addr_port_from_bc(business_card, &addr, &(VC_FIELD(new_vc, sock_id).sin_port));
-    VC_FIELD(new_vc, sock_id).sin_addr.s_addr = addr.s_addr;
+    mpi_errno = MPID_nem_tcp_get_addr_port_from_bc(business_card, &addr, &vc_tcp->sock_id.sin_port);
+    vc_tcp->sock_id.sin_addr.s_addr = addr.s_addr;
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPID_nem_tcp_connect(new_vc); 
+    MPID_nem_tcp_connect(new_vc);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_CONNECT_TO_ROOT);
@@ -322,6 +323,7 @@ int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_VC_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_VC_INIT);
@@ -331,16 +333,16 @@ int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
     vc->sendNoncontig_fn      = MPID_nem_tcp_SendNoncontig;
     vc_ch->iStartContigMsg    = MPID_nem_tcp_iStartContigMsg;
     vc_ch->iSendContig        = MPID_nem_tcp_iSendContig;
-    memset(&VC_FIELD(vc, sock_id), 0, sizeof(VC_FIELD(vc, sock_id)));
-    VC_FIELD(vc, sock_id).sin_family = AF_INET;
+    memset(&vc_tcp->sock_id, 0, sizeof(vc_tcp->sock_id));
+    vc_tcp->sock_id.sin_family = AF_INET;
 
     vc_ch->next = NULL;
     vc_ch->prev = NULL;
 
-    ASSIGN_SC_TO_VC(vc, NULL);
-    VC_FIELD(vc, send_queue).head = VC_FIELD(vc, send_queue).tail = NULL;
+    ASSIGN_SC_TO_VC(vc_tcp, NULL);
+    vc_tcp->send_queue.head = vc_tcp->send_queue.tail = NULL;
 
-    VC_FIELD(vc, sc_ref_count) = 0;
+    vc_tcp->sc_ref_count = 0;
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_VC_INIT);
     return mpi_errno;

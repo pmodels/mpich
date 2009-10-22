@@ -18,8 +18,9 @@
 int MPID_nem_tcp_get_conninfo (struct MPIDI_VC *vc, struct sockaddr_in *addr, char **pg_id, int *pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
 
-    *addr = VC_FIELD(vc, sock_id);
+    *addr = vc_tcp->sock_id;
     *pg_id = (char *)vc->pg->id;
     *pg_rank = vc->pg_rank;
     
@@ -209,12 +210,13 @@ void MPID_nem_tcp_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc)
     int i;
     MPID_Request *sreq;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
 
-    fprintf(stream, "..   sc=%p fd=%d vc_ch->state=%d\n", VC_FIELD(vc, sc), (VC_FIELD(vc, sc) ? VC_FIELD(vc,sc)->fd : -1), vc_ch->state);
+    fprintf(stream, "..   sc=%p fd=%d vc_ch->state=%d\n", vc_tcp->sc, (vc_tcp->sc ? vc_tcp->sc->fd : -1), vc_ch->state);
 
     /* This function violates any abstraction in the queues, since there's no
        good way to print them without inspecting the internals. */
-    sreq = VC_FIELD(vc, send_queue).head;
+    sreq = vc_tcp->send_queue.head;
     i = 0;
     while (sreq)
     {

@@ -41,12 +41,11 @@ typedef struct
     int sc_ref_count;
 } MPID_nem_tcp_vc_area;
 
-/* accessor macro to private fields in VC */
-#define VC_FIELD(vc, field) (((MPID_nem_tcp_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->field)
+/* macro for tcp private in VC */
+#define VC_TCP(vc) ((MPID_nem_tcp_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)
 
-#define ASSIGN_SC_TO_VC(vc_, sc_) \
-    do { \
-        VC_FIELD((vc_), sc) = (sc_); \
+#define ASSIGN_SC_TO_VC(vc_tcp_, sc_) do {      \
+        (vc_tcp_)->sc = (sc_);                  \
     } while (0)
 
 /* functions */
@@ -134,8 +133,8 @@ int MPID_nem_tcp_socksm_init(void);
 /* VC list macros */
 #define VC_L_EMPTY(q) GENERIC_L_EMPTY (q)
 #define VC_L_HEAD(q) GENERIC_L_HEAD (q)
-#define SET_PLFD(ep)   MPID_nem_tcp_plfd_tbl[VC_FIELD(ep, sc)->index].events |= POLLOUT
-#define UNSET_PLFD(ep) MPID_nem_tcp_plfd_tbl[VC_FIELD(ep, sc)->index].events &= ~POLLOUT
+#define SET_PLFD(vc_tcp)   MPID_nem_tcp_plfd_tbl[(vc_tcp)->sc->index].events |= POLLOUT
+#define UNSET_PLFD(vc_tcp) MPID_nem_tcp_plfd_tbl[(vc_tcp)->sc->index].events &= ~POLLOUT
 
 /* stack macros */
 #define S_EMPTY(s) GENERIC_S_EMPTY (s)
