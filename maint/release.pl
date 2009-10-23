@@ -16,8 +16,8 @@ my $root = $ENV{PWD};
 # This path is the default for the MCS home directory mounts.  Pass
 # --with-autoconf='' and --with-automake='' options to this script to
 # use whatever is in your path.
-my $with_autoconf = "/homes/balaji/projects/autotools/install/bin";
-my $with_automake = "/homes/balaji/projects/autotools/install/bin";
+my $with_autoconf = "";
+my $with_automake = "";
 
 my $logfile = "release.log";
 
