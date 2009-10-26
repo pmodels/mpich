@@ -1126,8 +1126,8 @@ fi
 export MPIU_THREAD_DEFAULT
 
 # Check for value thread_cs choice; set the refcount default if necessary
-thread_granularity=0
-thread_refcount=0
+thread_granularity=MPIU_THREAD_GRANULARITY_SINGLE
+thread_refcount=MPIU_REFCOUNT_NONE
 if test "$enable_threads" = "multiple" ; then
     case $enable_thread_cs in 
     global)
