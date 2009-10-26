@@ -1,8 +1,7 @@
 dnl Sandbox configure
 dnl Usage: PAC_CONFIG_SUBDIR(subdir,abs_srcdir,config_args,action-if-success,action-if-failure)
 AC_DEFUN([PAC_CONFIG_SUBDIR],[
-	echo
-	echo "===== configuring $1 ====="
+        AC_MSG_NOTICE([===== configuring $1 =====])
 
 	PAC_MKDIRS($1)
 	pac_subconfig_args=""
@@ -37,6 +36,5 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 	   :
 	fi
 
-	echo "===== done with $1 configure ====="
-	echo
+        AC_MSG_NOTICE([===== done with $1 configure =====])
 ])
