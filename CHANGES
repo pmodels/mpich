@@ -9,6 +9,9 @@
  # PM/PMI: Initial support for hwloc process-core binding library in
    Hydra.
 
+ # PM/PMI: Updates to the PMI-2 code to match the PMI-2 API and
+   wire-protocol draft.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
 
