@@ -130,7 +130,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
     int ret;
     int ipc_lock_offset;
-    pthread_mutex_t *ipc_lock;
+    OPA_emulation_ipl_t *ipc_lock;
 #endif
     int key_max_sz;
     int val_max_sz;
@@ -182,7 +182,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
     /* offset from memory->base_addr to the start of ipc_lock */
     ipc_lock_offset = MPID_NEM_CACHE_LINE_LEN;
 
-    MPIU_Assert(ipc_lock_offset >= sizeof(pthread_mutex_t));
+    MPIU_Assert(ipc_lock_offset >= sizeof(OPA_emulation_ipl_t));
     segment_len += MPID_NEM_CACHE_LINE_LEN;
 #endif
 
@@ -202,7 +202,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
         /* must come before barrier_init since we use OPA in that function */
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-        ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+        ipc_lock = (OPA_emulation_ipl_t *)((char *)memory->base_addr + ipc_lock_offset);
         ret = OPA_Interprocess_lock_init(ipc_lock, TRUE/*isLeader*/);
         MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
@@ -224,7 +224,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
             /* must come before barrier_init since we use OPA in that function */
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+            ipc_lock = (OPA_emulation_ipl_t *)((char *)memory->base_addr + ipc_lock_offset);
             ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
@@ -258,7 +258,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
             /* must come before barrier_init since we use OPA in that function */
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+            ipc_lock = (OPA_emulation_ipl_t *)((char *)memory->base_addr + ipc_lock_offset);
             ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 
@@ -302,7 +302,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
         /* must come before barrier_init since we use OPA in that function */
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-        ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+        ipc_lock = (OPA_emulation_ipl_t *)((char *)memory->base_addr + ipc_lock_offset);
         ret = OPA_Interprocess_lock_init(ipc_lock, TRUE/*isLeader*/);
         MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
@@ -341,7 +341,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
             /* must come before barrier_init since we use OPA in that function */
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+            ipc_lock = (OPA_emulation_ipl_t *)((char *)memory->base_addr + ipc_lock_offset);
             ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
@@ -370,7 +370,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
             /* must come before barrier_init since we use OPA in that function */
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (pthread_mutex_t *)((char *)memory->base_addr + ipc_lock_offset);
+            ipc_lock = (OPA_emulation_ipl_t *)((char *)memory->base_addr + ipc_lock_offset);
             ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIU_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
