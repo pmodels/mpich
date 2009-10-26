@@ -272,6 +272,8 @@ typedef OPA_int_t MPIU_Handle_ref_count;
         MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "decr");               \
         MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"decr");                     \
     } while (0)
+#else
+#error invalid value for MPIU_THREAD_REFCOUNT
 #endif
 
 /* TODO someday we should probably always suppress predefined object refcounting,
