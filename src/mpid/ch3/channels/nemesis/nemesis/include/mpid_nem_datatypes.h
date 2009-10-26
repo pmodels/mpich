@@ -185,7 +185,7 @@ MPID_nem_cell_rel_ptr_t;
 typedef struct MPID_nem_cell
 {
     MPID_nem_cell_rel_ptr_t next;
-#if MPID_NEM_CELL_HEAD_LEN != SIZEOF_VOID_P
+#if MPID_NEM_CELL_HEAD_LEN != SIZEOF_OPA_PTR_T
     char padding[MPID_NEM_CELL_HEAD_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
 #endif
     volatile MPID_nem_pkt_t pkt;
@@ -222,11 +222,11 @@ typedef struct MPID_nem_queue
 {
     MPID_nem_cell_rel_ptr_t head;
     MPID_nem_cell_rel_ptr_t tail;
-#if MPID_NEM_CACHE_LINE_LEN != (2 * SIZEOF_VOID_P)
+#if MPID_NEM_CACHE_LINE_LEN != (2 * SIZEOF_OPA_PTR_T)
     char padding1[MPID_NEM_CACHE_LINE_LEN - 2 * sizeof(MPID_nem_cell_rel_ptr_t)];
 #endif
     MPID_nem_cell_rel_ptr_t my_head;
-#if MPID_NEM_CACHE_LINE_LEN != SIZEOF_VOID_P
+#if MPID_NEM_CACHE_LINE_LEN != SIZEOF_OPA_PTR_T
     char padding2[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
 #endif
 #if !defined(MPID_NEM_USE_LOCK_FREE_QUEUES)

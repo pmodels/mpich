@@ -6056,7 +6056,11 @@ dnl PAC_SUBDIR_CACHE_CLEANUP
 # Make subsystems available to makefiles.
 subsystems="$devsubsystems $subsystems $bindingsubsystems"
 AC_SUBST(subsystems)
-#
+
+# Find the size of OPA_ptr_t. This step needs to come after the OPA
+# configure above in order to get the size OPA_ptr_t evaluated for
+# this platform.
+AC_CHECK_SIZEOF(OPA_ptr_t,-1,[#include "${master_top_srcdir}/src/openpa/src/opa_primitives.h"])
 
 if test "$enable_f77" != "yes" ; then
     # These are Fortran datatypes ONLY.  Set to null if no Fortran compiler.
