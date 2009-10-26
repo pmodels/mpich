@@ -70,7 +70,9 @@ else {
 }
 # Setup before processing the files
 if ($build_test_pgm && -d "test/mpi/errhan") {
-    open( TESTFD, ">test/mpi/errhan/errcode.c" ) or die "Cannot create test program\n";
+    # Get current directory incase we need it for the error message
+    my $curdir = `pwd`;
+    open( TESTFD, ">test/mpi/errhan/errcode.c" ) or die "Cannot create test program errcode.c in $curdir/test/mpi/errhan\n";
     print TESTFD "/* -*- Mode: C++; c-basic-offset:4 ; -*- */\
 /*  \
  *  (C) 2004 by Argonne National Laboratory.\
