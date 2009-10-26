@@ -126,8 +126,8 @@
 
     Inputs:
       shm_lock - A pointer to an allocated piece of shared memory that can hold
-                 a pthread_mutex_t.  This is not portable to non-pthreads
-                 systems at this time.
+                 a mutex (e.g., pthread_mutex_t).  This is not portable to
+                 non-pthreads systems at this time.
       isLeader - This boolean value should be set to true for exactly one
                  thread/process of the group that calls this function.
 */
@@ -135,7 +135,8 @@
    are hopelessly broken and OPA no longer lives inside of MPICH2. */
 #if defined(OPA_HAVE_PTHREAD_H)
 #  include <pthread.h>
-int OPA_Interprocess_lock_init(pthread_mutex_t *shm_lock, int isLeader);
+typedef pthread_mutex_t OPA_emulation_ipl_t;
+int OPA_Interprocess_lock_init(OPA_emulation_ipl_t *shm_lock, int isLeader);
 #endif
 
 

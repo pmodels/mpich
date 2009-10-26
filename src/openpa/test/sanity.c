@@ -8,16 +8,13 @@
 #include <assert.h>
 #include <stdio.h>
 
-#if defined(OPA_USE_LOCK_BASED_PRIMITIVES) && defined(OPA_HAVE_PTHREAD_H)
-#include <pthread.h>
-#endif
 
 int main(int argc, char **argv)
 {
     OPA_int_t a, b;
     int c;
 #if defined(OPA_USE_LOCK_BASED_PRIMITIVES)
-    pthread_mutex_t shm_lock;
+    OPA_emulation_ipl_t shm_lock;
     OPA_Interprocess_lock_init(&shm_lock, 1/*isLeader*/);
 #endif
 
