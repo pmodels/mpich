@@ -4,7 +4,10 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-SUBDIRS = mpl .
+# Set external subdirs to NULL. They are built first.
+external_subdirs =
+external_ldflags = -static
+external_libs =
 
 ACLOCAL_AMFLAGS = -I mpl/confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/mpl/include \
@@ -27,6 +30,10 @@ include pm/Makefile.mk
 
 # Build the UI
 include ui/Makefile.mk
+
+# The external subdirs need to get built first, as we might depend on
+# them.
+SUBDIRS = $(external_subdirs) mpl .
 
 # Use the mpich2-build-install target to include mpiexec in the build bin
 # directory (all pm's require these targets)

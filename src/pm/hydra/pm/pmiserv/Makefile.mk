@@ -9,7 +9,8 @@ bin_PROGRAMS += pmi_proxy
 pmi_proxy_SOURCES = $(top_srcdir)/pm/pmiserv/pmi_proxy.c \
 	$(top_srcdir)/pm/pmiserv/pmi_proxy_cb.c \
 	$(top_srcdir)/pm/pmiserv/pmi_proxy_utils.c
-pmi_proxy_LDADD = libhydra.a
+pmi_proxy_LDADD = libhydra.a $(external_libs)
+pmi_proxy_LDFLAGS = $(external_ldflags)
 
 libpm_a_SOURCES += $(top_srcdir)/pm/pmiserv/pmi_handle.c \
 	$(top_srcdir)/pm/pmiserv/pmi_handle_common.c \

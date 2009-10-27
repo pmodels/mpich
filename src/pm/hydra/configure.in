@@ -6,6 +6,7 @@ AC_PREREQ(2.62)
 
 AC_INIT([Hydra], [0.1])
 AC_CONFIG_AUX_DIR(mpl/confdb)
+AC_CONFIG_MACRO_DIR(mpl/confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
 
 # When built as a subconfigure, pull in FLAGS from above
@@ -23,8 +24,11 @@ AC_PROG_CC
 AC_TYPE_SIZE_T
 CFLAGS=$save_cflags
 
+# Libtool might be required for third-party packages
+LT_INIT
+
 AM_PROG_MKDIR_P
-AC_PROG_RANLIB
+AC_PROG_INSTALL
 PAC_ARG_CACHING
 PAC_ARG_STRICT
 PAC_C_GNU_ATTRIBUTE
@@ -343,11 +347,9 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		fi
 		;;		
 	hwloc)
-		PAC_CONFIG_SUBDIR(tools/bind/hwloc/hwloc, $abs_srcdir, $ac_configure_args,
-				have_hwloc=yes,)
-		if test "$have_hwloc" = "yes" ; then
-		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
-		fi
+		AC_CONFIG_SUBDIRS(tools/bind/hwloc/hwloc)
+		have_hwloc=yes
+		AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
 		;;
 	*)
 		;;
@@ -468,21 +470,6 @@ if test "$ac_cv_func_gethostname" = "yes" ; then
     # Do we need to declare gethostname?
     PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
 fi
-
-# Substitute common variables. Some versions of autoconf have trouble
-# with this.
-AC_SUBST(CC)
-AC_SUBST(CFLAGS)
-AC_SUBST(LDFLAGS)
-AC_SUBST(CC_SHL)
-AC_SUBST(C_LINK_SHL)
-
-ENABLE_SHLIB=none
-AC_SUBST(ENABLE_SHLIB)
-AC_SUBST(RANLIB)
-AC_SUBST(MAKE_DEPEND_C)
-
-AC_PROG_INSTALL
 
 AC_CONFIG_SUBDIRS(mpl)
 
