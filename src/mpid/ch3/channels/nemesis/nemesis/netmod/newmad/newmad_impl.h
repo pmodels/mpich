@@ -53,10 +53,8 @@ void MPID_nem_newmad_anysource_posted(MPID_Request *rreq);
 int MPID_nem_newmad_anysource_matched(MPID_Request *rreq);
 
 /* Callbacks for events */
-void MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info);
-void MPID_nem_newmad_get_rreq(nm_sr_event_t event, const nm_sr_event_info_t*info);
-void MPID_nem_newmad_handle_sreq(nm_sr_event_t event, const nm_sr_event_info_t*info);
 int MPID_nem_newmad_post_init(void);
+void MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info);
 
 /* Dtype management */
 int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype,  MPID_Datatype * dt_ptr, const void *buf, 
@@ -105,6 +103,34 @@ typedef struct
 } MPID_nem_newmad_req_area;
 /* accessor macro to private fields in REQ */
 #define REQ_FIELD(reqp, field) (((MPID_nem_newmad_req_area *)((reqp)->ch.netmod_area.padding))->field)
+
+/* The begining of this structure is the same as MPID_Request */
+struct MPID_nem_newmad_internal_req
+{
+   int                    handle;     /* unused */
+   volatile int           ref_count;  /* unused */
+   MPID_Request_kind_t    kind;       /* used   */
+   MPIDI_CH3_PktGeneric_t pending_pkt;
+   MPIDI_VC_t            *vc;
+   void                  *tmpbuf;
+   MPIDI_msg_sz_t         tmpbuf_sz;
+   nm_sr_request_t        newmad_req;
+   struct  MPID_nem_mx_internal_req *next;
+};
+
+typedef struct MPID_nem_newmad_internal_req MPID_nem_newmad_internal_req_t;
+
+typedef union
+{   
+   MPID_nem_newmad_internal_req_t nem_newmad_req;
+   MPID_Request                   mpi_req;
+} MPID_nem_newmad_unified_req_t ;
+
+/* Internal Reqs management */
+int MPID_nem_newmad_internal_req_queue_init(void);
+int MPID_nem_newmad_internal_req_queue_destroy(void);
+int MPID_nem_newmad_internal_req_dequeue(MPID_nem_newmad_internal_req_t **req);
+int MPID_nem_newmad_internal_req_enqueue(MPID_nem_newmad_internal_req_t *req);
 
 #if CH3_RANK_BITS == 16
 #define NBITS_TAG  32

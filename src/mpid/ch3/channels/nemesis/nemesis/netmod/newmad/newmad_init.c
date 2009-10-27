@@ -12,7 +12,6 @@
 MPID_nem_netmod_funcs_t MPIDI_nem_newmad_funcs = {
     MPID_nem_newmad_init,
     MPID_nem_newmad_finalize,
-    MPID_nem_newmad_ckpt_shutdown,
     MPID_nem_newmad_poll,
     MPID_nem_newmad_send,
     MPID_nem_newmad_get_business_card,
@@ -135,7 +134,9 @@ static int init_mad( MPIDI_PG_t *pg_p )
     int   mpi_errno = MPI_SUCCESS;
     char *dummy_argv[1] = {NULL};
     int   dummy_argc    = 1;
-    
+
+    MPID_nem_newmad_internal_req_queue_init();
+   
     ret = nm_core_init(&dummy_argc,dummy_argv, &mpid_nem_newmad_pcore);
     if (ret != NM_ESUCCESS){
         fprintf(stdout,"nm_core_init returned err = %d\n", ret);
@@ -457,6 +458,7 @@ int MPID_nem_newmad_post_init(void)
    MPIDI_PG_t *pg_p;
    int         index;
 
+   nm_core_disable_progression(mpid_nem_newmad_pcore);
    pg_p = MPIDI_Process.my_pg;
    for (index = 0; index < pg_p->size ; index++)
    {
@@ -487,14 +489,13 @@ int MPID_nem_newmad_post_init(void)
 	 }
       }
    }
+   nm_core_enable_progression(mpid_nem_newmad_pcore);
    
    while((num_recv_req > 0) || (num_send_req > 0))
      nm_schedule(mpid_nem_newmad_pcore);
    MPIU_Free(init_reqs);
    
    nm_sr_monitor(mpid_nem_newmad_pcore, NM_SR_EVENT_RECV_UNEXPECTED,&MPID_nem_newmad_get_adi_msg);
-   nm_sr_monitor(mpid_nem_newmad_pcore, NM_SR_EVENT_RECV_COMPLETED, &MPID_nem_newmad_get_rreq);
-   nm_sr_monitor(mpid_nem_newmad_pcore, NM_SR_EVENT_SEND_COMPLETED, &MPID_nem_newmad_handle_sreq);
    
    return 0;
 }

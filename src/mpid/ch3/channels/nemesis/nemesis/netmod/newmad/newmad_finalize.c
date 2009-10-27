@@ -18,6 +18,8 @@ MPID_nem_newmad_finalize()
 
     common_exit(NULL);
 
+    MPID_nem_newmad_internal_req_queue_destroy();
+   
    fn_exit:
      return mpi_errno;
    fn_fail:  ATTRIBUTE((unused))

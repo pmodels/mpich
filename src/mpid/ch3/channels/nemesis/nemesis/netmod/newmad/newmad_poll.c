@@ -28,7 +28,8 @@ static mpid_nem_nmad_hash_t *mpid_nem_nmad_asreqs = NULL;
 	if(s){HASH_DELETE(hh, mpid_nem_nmad_asreqs, s); (_nmad_req) = s->nmad_req_ptr; } else {(_nmad_req) = NULL;} \
     }while(0)
 
-static int MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_sr_request_t *nmad_request, nm_tag_t match_info, size_t size);
+static int  MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_sr_request_t *nmad_request, nm_tag_t match_info, size_t size);
+static void MPID_nem_newmad_handle_sreq(MPID_Request *req);
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newmad_get_adi_msg
@@ -47,33 +48,31 @@ MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info)
     NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);
     if(ctxt == NEM_NMAD_INTRA_CTXT)
     {
-	mpid_nem_newmad_p_gate_t from   = info->recv_unexpected.p_gate;
-	int                      length = info->recv_unexpected.len; 
-	MPID_Request *rreq;
-	void         *data;
-
-	rreq = MPID_Request_create();
-	MPIU_Assert (rreq != NULL);
-	MPIU_Object_set_ref (rreq, 1);
-	rreq->kind = MPID_REQUEST_RECV;   
-	rreq->ch.vc = nm_gate_ref_get(from);
-      
-	if(length <=  sizeof(MPIDI_CH3_PktGeneric_t)) {
-	    data = (void *)&(rreq->dev.pending_pkt);
+        MPID_nem_newmad_internal_req_t *rreq;
+	mpid_nem_newmad_p_gate_t        from   = info->recv_unexpected.p_gate;
+	int                             length = info->recv_unexpected.len; 
+	void                           *data;
+       
+        MPID_nem_newmad_internal_req_dequeue(&rreq);
+        rreq->kind = MPID_REQUEST_RECV;   
+        rreq->vc = nm_gate_ref_get(from);
+       
+        if(length <=  sizeof(MPIDI_CH3_PktGeneric_t)) 
+	{
+	  data = (char*)&(rreq->pending_pkt);
 	}
-	else{
-	    rreq->dev.tmpbuf = MPIU_Malloc(length);
-	    MPIU_Assert(rreq->dev.tmpbuf);
-	    rreq->dev.tmpbuf_sz = length;               
-	    data = (void *)(rreq->dev.tmpbuf);
-	}
+       else
+       {
+	  rreq->tmpbuf = MPIU_Malloc(length);
+	  MPIU_Assert(rreq->tmpbuf);
+	  rreq->tmpbuf_sz = length;                   
+	  data = (char*)(rreq->tmpbuf);
+       }
 	
-	nm_sr_irecv_with_ref(mpid_nem_newmad_pcore, from, match_info, data,length, 
-			     &(REQ_FIELD(rreq,newmad_req)),(void *)rreq);	
+       nm_sr_irecv_with_ref(mpid_nem_newmad_pcore, from, match_info, data,length, &(rreq->newmad_req),(void *)rreq);	
     }
     return;
 }
-
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newmad_directRecv
@@ -152,84 +151,115 @@ int MPID_nem_newmad_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_newmad_get_rreq
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-void MPID_nem_newmad_get_rreq(nm_sr_event_t event, const nm_sr_event_info_t*info)
-{
-   nm_sr_request_t  *p_request = info->recv_completed.p_request;
-   MPID_Request     *req = NULL;
-   void             *ref;
-   nm_tag_t          match_info = 0;
-   MPIR_Context_id_t ctxt;
-   size_t            size;
-
-   nm_sr_get_size(mpid_nem_newmad_pcore, p_request, &size);
-   nm_sr_get_tag(mpid_nem_newmad_pcore, p_request, &match_info);
-   nm_sr_get_ref(mpid_nem_newmad_pcore, p_request, &ref);
-   req =  (MPID_Request *)ref;
-   MPIU_Assert(req != NULL);
-#ifdef DEBUG
-   fprintf(stdout,"========> Completing Recv req  %p (match is %lx) \n",req,match_info);
-#endif
-   NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);       
-   if(ctxt == NEM_NMAD_INTRA_CTXT)
-   {
-       if (req->kind == MPID_REQUEST_RECV)
-       {
-	   if (size <= sizeof(MPIDI_CH3_PktGeneric_t))
-	   {
-	       MPID_nem_handle_pkt(req->ch.vc,(char *)&(req->dev.pending_pkt),(MPIDI_msg_sz_t)(size));
-	   }
-	   else
-	   {
-	       MPID_nem_handle_pkt(req->ch.vc,(char *)(req->dev.tmpbuf),(MPIDI_msg_sz_t)(req->dev.tmpbuf_sz));
-	       MPIU_Free(req->dev.tmpbuf);
-	   }
-	   MPIDI_CH3_Request_destroy(req);
-       }
-       else
-       {
-	   MPIU_Assert(0);
-       }
-   }
-   else
-   {
-       if ((req->kind == MPID_REQUEST_RECV) || (req->kind == MPID_PREQUEST_RECV))
-       {
-	   int found = FALSE;
-	   nm_sr_request_t *nmad_request = NULL;	       
-	   MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);
-	   MPIU_THREAD_CS_ENTER(MSGQUEUE,req);
-	   MPID_NEM_NMAD_GET_REQ_FROM_HASH(req,nmad_request);
-	   found = MPIDI_CH3U_Recvq_DP(req);
-	   if(found){
-	       MPID_nem_newmad_handle_rreq(req,nmad_request,match_info,size);
-	   }
-	   if(nmad_request != NULL)
-	   {
-	       MPIU_Assert(req->dev.match.parts.rank == MPI_ANY_SOURCE);
-	       MPIU_Free(nmad_request);
-	   }
-	   MPIU_THREAD_CS_EXIT(MSGQUEUE,req);
-       }
-       else
-       {
-	   MPIU_Assert(0);
-       }
-   }
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPID_nem_newmad_poll
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int 
 MPID_nem_newmad_poll(int in_blocking_poll)
 {
+   nm_sr_request_t *p_request = NULL;
+   nm_tag_t         match_info = 0;
    int mpi_errno = MPI_SUCCESS;   
-
-   nm_schedule(mpid_nem_newmad_pcore);
+   
+   nm_sr_send_success(mpid_nem_newmad_pcore, &p_request);
+   if (p_request != NULL)
+   {
+      MPID_nem_newmad_unified_req_t *ref = NULL;
+      MPID_Request                  *req = NULL;
+      MPID_Request_kind_t            kind;      
+      MPIR_Context_id_t ctxt;
+      
+      nm_sr_get_tag(mpid_nem_newmad_pcore,p_request, &match_info);
+      NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);
+            
+      nm_sr_get_ref(mpid_nem_newmad_pcore,p_request,(void *)&ref);
+      req = &(ref->mpi_req);
+      MPIU_Assert(req != NULL);
+      kind = req->kind;
+	
+      if(ctxt == NEM_NMAD_INTRA_CTXT)
+      {
+	 if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
+	 {
+	    MPID_nem_newmad_handle_sreq(req);	    
+	 }
+      }
+      else
+      {
+	 if ((kind == MPID_REQUEST_SEND) || (kind == MPID_PREQUEST_SEND))
+	 {
+	    MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);                  
+	    MPID_nem_newmad_handle_sreq(req);	    
+	 }
+      }   
+   }
+   
+   nm_sr_recv_success(mpid_nem_newmad_pcore, &p_request);
+   if (p_request != NULL)
+   {
+      MPID_nem_newmad_unified_req_t *ref = NULL;
+      MPID_Request                  *req = NULL;
+      MPID_Request_kind_t            kind;      
+      MPIR_Context_id_t              ctxt;
+      size_t                         size;
+            
+      nm_sr_get_ref(mpid_nem_newmad_pcore,p_request,(void *)&ref);
+      req = &(ref->mpi_req);
+      MPIU_Assert(req != NULL);
+      kind = req->kind;
+      nm_sr_get_size(mpid_nem_newmad_pcore, p_request, &size);
+      nm_sr_get_tag(mpid_nem_newmad_pcore,p_request, &match_info);
+      NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);
+	
+      if(ctxt == NEM_NMAD_INTRA_CTXT)
+      {
+	 MPID_nem_newmad_internal_req_t *adi_req = &(ref->nem_newmad_req);
+	 if (kind == MPID_REQUEST_RECV)
+	 {
+	    if (size <= sizeof(MPIDI_CH3_PktGeneric_t))
+	    {
+	       MPID_nem_handle_pkt(adi_req->vc,(char *)&(adi_req->pending_pkt),(MPIDI_msg_sz_t)(size));
+	    }
+	    else
+	    {
+	       MPID_nem_handle_pkt(adi_req->vc,(char *)(adi_req->tmpbuf),(MPIDI_msg_sz_t)(adi_req->tmpbuf_sz));
+	       MPIU_Free(adi_req->tmpbuf);
+	    }
+	    nm_core_disable_progression(mpid_nem_newmad_pcore);
+	    MPID_nem_newmad_internal_req_enqueue(adi_req);
+	    nm_core_enable_progression(mpid_nem_newmad_pcore);
+	 }
+	 else
+	 {
+	    MPIU_Assert(0);
+	 }	 
+      }
+      else
+      {
+	 if ((kind == MPID_REQUEST_RECV) || (kind == MPID_PREQUEST_RECV))
+	 {
+	    int found = FALSE;
+	    nm_sr_request_t *nmad_request = NULL;	       
+	    MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);
+	    MPIU_THREAD_CS_ENTER(MSGQUEUE,req);
+	    MPID_NEM_NMAD_GET_REQ_FROM_HASH(req,nmad_request);
+	    found = MPIDI_CH3U_Recvq_DP(req);
+	    if(found){
+	       MPID_nem_newmad_handle_rreq(req,nmad_request,match_info,size);
+	    }
+	    if(nmad_request != NULL)
+	    {
+	       MPIU_Assert(req->dev.match.parts.rank == MPI_ANY_SOURCE);
+	       MPIU_Free(nmad_request);
+	    }
+	    MPIU_THREAD_CS_EXIT(MSGQUEUE,req);
+	 }
+	 else
+	 {
+	    MPIU_Assert(0);
+	 }
+      }   
+   }
 
  fn_exit:
    return mpi_errno;
@@ -242,27 +272,12 @@ MPID_nem_newmad_poll(int in_blocking_poll)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 void
-MPID_nem_newmad_handle_sreq(nm_sr_event_t event, const nm_sr_event_info_t*info)
+MPID_nem_newmad_handle_sreq(MPID_Request *req)
 {
-    nm_sr_request_t  *p_request = info->send_completed.p_request;
-    MPID_Request     *req;
-    nm_tag_t          match_info = 0;
-    MPIR_Context_id_t ctxt;
-    void             *ref; 
     int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
-   
-    nm_sr_get_tag(mpid_nem_newmad_pcore,p_request, &match_info);
-    nm_sr_get_ref(mpid_nem_newmad_pcore,p_request,&ref);
-    req = (MPID_Request *)ref;
-    MPIU_Assert(req != NULL);
 #ifdef DEBUG
     fprintf(stdout,"========> Completing Send req  %p (match is %lx) \n",req,match_info);
 #endif
-    NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);
-    if(ctxt != NEM_NMAD_INTRA_CTXT)
-    {
-	MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);                  
-    }
     reqFn = req->dev.OnDataAvail;
     if (!reqFn){
 	MPIDI_CH3U_Request_complete(req);
@@ -272,10 +287,9 @@ MPID_nem_newmad_handle_sreq(nm_sr_event_t event, const nm_sr_event_info_t*info)
 	MPIDI_VC_t *vc = req->ch.vc;
 	int complete   = 0;
 	reqFn(vc, req, &complete);
-	if(complete)
-        {            
-	    MPIDI_CH3U_Request_complete(req);
-	    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+	if(!complete)
+        {   
+	   MPIU_Assert(complete == TRUE);
 	}
     }
     mpid_nem_newmad_pending_send_req--;
@@ -297,6 +311,10 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_sr_request_t *nmad_request, nm
     MPIDI_msg_sz_t data_sz;
     MPIDI_VC_t    *vc = NULL;
 
+#ifdef DEBUG
+   fprintf(stdout,"========> Completing Recv req  %p (match is %lx) \n",req,match_info);
+#endif
+   
     if (req->dev.match.parts.rank == MPI_ANY_SOURCE)
     {
 	mpid_nem_newmad_p_gate_t source;
