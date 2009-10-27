@@ -1228,6 +1228,10 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     do {
         /* Get the mpiexec arguments  */
         while (*argv && **argv == '-') {
+            if (IS_HELP(*argv)) {
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
+            }
+
             status = match_arg(&argv);
             HYDU_ERR_POP(status, "argument matching returned error\n");
         }
