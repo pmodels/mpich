@@ -7,6 +7,9 @@
 #ifndef BIND_HWLOC_H_INCLUDED
 #define BIND_HWLOC_H_INCLUDED
 
+#include <hwloc.h>
+#include <assert.h>
+
 HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level);
 HYD_status HYDT_bind_hwloc_process(int core);
 
