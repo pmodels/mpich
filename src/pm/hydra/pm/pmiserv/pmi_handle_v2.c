@@ -25,35 +25,18 @@ struct token {
     char *val;
 };
 
-static struct attr_reqs {
-    int fd;
-    char *thrid;
-    char **req;
-    enum req_type {
-        GET_NODE_ATTR,
+static struct reqs {
+    enum type {
+        NODE_ATTR_GET,
         KVS_GET
     } type;
-    struct attr_reqs *next;
-} *outstanding_attr_reqs = NULL;
 
-static void print_attr_reqs(void)
-{
-    int i;
-    struct attr_reqs *areq;
+    int fd;
+    char *thrid;
+    char **args;
 
-    dprintf("Outstanding reqs: ");
-    for (areq = outstanding_attr_reqs; areq; areq = areq->next) {
-        dprintf("%d:%d(", areq->fd, areq->type);
-        for (i = 0; areq->req[i]; i++) {
-            dprintf("%s", areq->req[i]);
-            if (areq->req[i + 1]) {
-                dprintf(",");
-            }
-        }
-        dprintf(") ");
-    }
-    dprintf("\n");
-}
+    struct reqs *next;
+} *pending_reqs = NULL;
 
 static HYD_status send_command(int fd, char *cmd)
 {
@@ -100,92 +83,6 @@ static HYD_status args_to_tokens(char *args[], struct token **tokens, int *count
     goto fn_exit;
 }
 
-static int progress_nest_count = 0;
-static int req_complete = 0;
-
-static void free_attr_req(struct attr_reqs *areq)
-{
-    HYDU_free_strlist(areq->req);
-    HYDU_FREE(areq);
-}
-
-static HYD_status queue_outstanding_req(int fd, enum req_type req_type, char *args[])
-{
-    struct attr_reqs *attr_req, *a;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_MALLOC(attr_req, struct attr_reqs *, sizeof(struct attr_reqs), status);
-    attr_req->fd = fd;
-    attr_req->type = req_type;
-    attr_req->next = NULL;
-
-    status = HYDU_strdup_list(args, &attr_req->req);
-    HYDU_ERR_POP(status, "unable to dup args\n");
-
-    if (outstanding_attr_reqs == NULL)
-        outstanding_attr_reqs = attr_req;
-    else {
-        a = outstanding_attr_reqs;
-        while (a->next)
-            a = a->next;
-        a->next = attr_req;
-    }
-    print_attr_reqs();
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status poke_progress(void)
-{
-    struct attr_reqs *areq, *tmp;
-    HYD_status status = HYD_SUCCESS;
-
-    progress_nest_count++;
-
-    if (outstanding_attr_reqs == NULL)
-        goto fn_exit;
-
-    for (areq = outstanding_attr_reqs; areq;) {
-        req_complete = 0;
-
-        if (areq->type == GET_NODE_ATTR) {
-            status = fn_info_getnodeattr(areq->fd, areq->req);
-            HYDU_ERR_POP(status, "getnodeattr returned error\n");
-        }
-        else if (areq->type == KVS_GET) {
-            status = fn_kvs_get(areq->fd, areq->req);
-            HYDU_ERR_POP(status, "kvs_get returned error\n");
-        }
-
-        tmp = areq->next;
-        if (req_complete) {
-            if (areq == outstanding_attr_reqs) {
-                outstanding_attr_reqs = areq->next;
-            }
-            else {
-                for (tmp = outstanding_attr_reqs; tmp->next != areq; tmp = tmp->next);
-                tmp->next = areq->next;
-            }
-            tmp = areq->next;
-            free_attr_req(areq);
-        }
-
-        areq = tmp;
-        print_attr_reqs();
-    }
-
-  fn_exit:
-    progress_nest_count--;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static char *find_token_keyval(struct token *tokens, int count, const char *key)
 {
     int i;
@@ -196,6 +93,90 @@ static char *find_token_keyval(struct token *tokens, int count, const char *key)
     }
 
     return NULL;
+}
+
+static int req_complete = 0;
+
+static void free_req(struct reqs *req)
+{
+    HYDU_free_strlist(req->args);
+    HYDU_FREE(req);
+}
+
+static HYD_status queue_req(int fd, enum type type, char *args[])
+{
+    struct reqs *req, *tmp;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_MALLOC(req, struct reqs *, sizeof(struct reqs), status);
+    req->fd = fd;
+    req->type = type;
+    req->next = NULL;
+
+    status = HYDU_strdup_list(args, &req->args);
+    HYDU_ERR_POP(status, "unable to dup args\n");
+
+    if (pending_reqs == NULL)
+        pending_reqs = req;
+    else {
+        for (tmp = pending_reqs; tmp->next; tmp = tmp->next);
+        tmp->next = req;
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static struct reqs *dequeue_req_head(void)
+{
+    struct reqs *req = pending_reqs;
+
+    if (pending_reqs) {
+        pending_reqs = pending_reqs->next;
+        req->next = NULL;
+    }
+
+    return req;
+}
+
+static HYD_status poke_progress(void)
+{
+    struct reqs *req;
+    int i, count;
+    HYD_status status = HYD_SUCCESS;
+
+    for (count = 0, req = pending_reqs; req; req = req->next)
+        count++;
+
+    for (i = 0; i < count; i++) {
+        req = dequeue_req_head();
+
+        req_complete = 0;
+        if (req->type == NODE_ATTR_GET) {
+            status = fn_info_getnodeattr(req->fd, req->args);
+            HYDU_ERR_POP(status, "getnodeattr returned error\n");
+        }
+        else if (req->type == KVS_GET) {
+            status = fn_kvs_get(req->fd, req->args);
+            HYDU_ERR_POP(status, "kvs_get returned error\n");
+        }
+
+        if (req_complete) {
+            status = queue_req(req->fd, req->type, req->args);
+            HYDU_ERR_POP(status, "error queueing request\n");
+        }
+
+        free_req(req);
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static HYD_status fn_fullinit(int fd, char *args[])
@@ -412,14 +393,10 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     }
 
     if (!found) {       /* We need to decide whether to return not found or queue up */
-        /* If we are already nested, get out of here */
-        if (progress_nest_count)
-            goto fn_exit;
-
         if (waitval && !strcmp(waitval, "TRUE")) {
             /* queue up */
-            status = queue_outstanding_req(fd, GET_NODE_ATTR, args);
-            HYDU_ERR_POP(status, "unable to queue outstanding request\n");
+            status = queue_req(fd, NODE_ATTR_GET, args);
+            HYDU_ERR_POP(status, "unable to queue request\n");
         }
         else {
             /* Tell the client that we can't find the attribute */
@@ -463,8 +440,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
         HYDU_ERR_POP(status, "send command failed\n");
         HYDU_FREE(cmd);
 
-        if (progress_nest_count)
-            req_complete = 1;
+        req_complete = 1;
     }
 
   fn_exit:
@@ -678,10 +654,6 @@ static HYD_status fn_kvs_get(int fd, char *args[])
     }
 
     if (!found) {
-        /* If we are already nested, get out of here */
-        if (progress_nest_count)
-            goto fn_exit;
-
         consistent_epoch = 1;
         node_count = 0;
         for (node = process->node->pg->node_list; node; node = node->next) {
@@ -698,14 +670,14 @@ static HYD_status fn_kvs_get(int fd, char *args[])
         if (consistent_epoch == 0 ||
             ((process->epoch > 0) && (node_count != HYD_pg_list->num_procs))) {
             /* queue up */
-            status = queue_outstanding_req(fd, KVS_GET, args);
-            HYDU_ERR_POP(status, "unable to queue outstanding request\n");
+            status = queue_req(fd, KVS_GET, args);
+            HYDU_ERR_POP(status, "unable to queue request\n");
 
             /* We are done */
             goto fn_exit;
         }
     }
-    else if (progress_nest_count)
+    else
         req_complete = 1;
 
     i = 0;
@@ -790,7 +762,6 @@ static HYD_status fn_kvs_fence(int fd, char *args[])
 
   fn_exit:
     HYDU_FUNC_EXIT();
-    dprintf("[%d] out of fence\n", fd);
     return status;
 
   fn_fail:
