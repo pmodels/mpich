@@ -9,27 +9,8 @@
 #include "bsci.h"
 #include "demux.h"
 #include "pmi_handle.h"
-#include "pmi_handle_v1.h"
 
-/* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
-static struct HYD_pmcd_pmi_handle_fns pmi_v1_handle_fns_foo[] = {
-    {"initack", HYD_pmcd_pmi_handle_v1_initack},
-    {"get_maxes", HYD_pmcd_pmi_handle_v1_get_maxes},
-    {"get_appnum", HYD_pmcd_pmi_handle_v1_get_appnum},
-    {"get_my_kvsname", HYD_pmcd_pmi_handle_v1_get_my_kvsname},
-    {"barrier_in", HYD_pmcd_pmi_handle_v1_barrier_in},
-    {"put", HYD_pmcd_pmi_handle_v1_put},
-    {"get", HYD_pmcd_pmi_handle_v1_get},
-    {"get_universe_size", HYD_pmcd_pmi_handle_v1_get_usize},
-    {"finalize", HYD_pmcd_pmi_handle_v1_finalize},
-    {"\0", NULL}
-};
-
-static struct HYD_pmcd_pmi_handle pmi_v1_foo = { PMI_V1_DELIM, pmi_v1_handle_fns_foo };
-
-struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v1 = &pmi_v1_foo;
-
-HYD_status HYD_pmcd_pmi_handle_v1_initack(int fd, char *args[])
+static HYD_status fn_initack(int fd, char *args[])
 {
     int id, rank, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
@@ -80,8 +61,7 @@ HYD_status HYD_pmcd_pmi_handle_v1_initack(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v1_get_maxes(int fd, char *args[])
+static HYD_status fn_get_maxes(int fd, char *args[])
 {
     int i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
@@ -115,8 +95,7 @@ HYD_status HYD_pmcd_pmi_handle_v1_get_maxes(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v1_get_appnum(int fd, char *args[])
+static HYD_status fn_get_appnum(int fd, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     int i;
@@ -152,8 +131,7 @@ HYD_status HYD_pmcd_pmi_handle_v1_get_appnum(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v1_get_my_kvsname(int fd, char *args[])
+static HYD_status fn_get_my_kvsname(int fd, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     int i;
@@ -190,8 +168,7 @@ HYD_status HYD_pmcd_pmi_handle_v1_get_my_kvsname(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v1_barrier_in(int fd, char *args[])
+static HYD_status fn_barrier_in(int fd, char *args[])
 {
     HYD_pmcd_pmi_process_t *process, *prun;
     HYD_pmcd_pmi_node_t *node;
@@ -230,8 +207,7 @@ HYD_status HYD_pmcd_pmi_handle_v1_barrier_in(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v1_put(int fd, char *args[])
+static HYD_status fn_put(int fd, char *args[])
 {
     int i, ret;
     HYD_pmcd_pmi_process_t *process;
@@ -291,8 +267,7 @@ HYD_status HYD_pmcd_pmi_handle_v1_put(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v1_get(int fd, char *args[])
+static HYD_status fn_get(int fd, char *args[])
 {
     int i, found, ret;
     HYD_pmcd_pmi_process_t *process;
@@ -386,8 +361,7 @@ HYD_status HYD_pmcd_pmi_handle_v1_get(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v1_finalize(int fd, char *args[])
+static HYD_status fn_finalize(int fd, char *args[])
 {
     const char *cmd;
     HYD_status status = HYD_SUCCESS;
@@ -412,8 +386,7 @@ HYD_status HYD_pmcd_pmi_handle_v1_finalize(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v1_get_usize(int fd, char *args[])
+static HYD_status fn_get_usize(int fd, char *args[])
 {
     int usize, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
@@ -445,3 +418,19 @@ HYD_status HYD_pmcd_pmi_handle_v1_get_usize(int fd, char *args[])
   fn_fail:
     goto fn_exit;
 }
+
+/* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
+static struct HYD_pmcd_pmi_handle_fns pmi_v1_handle_fns_foo[] = {
+    {"initack", fn_initack},
+    {"get_maxes", fn_get_maxes},
+    {"get_appnum", fn_get_appnum},
+    {"get_my_kvsname", fn_get_my_kvsname},
+    {"barrier_in", fn_barrier_in},
+    {"put", fn_put},
+    {"get", fn_get},
+    {"get_universe_size", fn_get_usize},
+    {"finalize", fn_finalize},
+    {"\0", NULL}
+};
+
+struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v1 = { PMI_V1_DELIM, pmi_v1_handle_fns_foo };

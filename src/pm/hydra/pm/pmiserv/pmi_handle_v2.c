@@ -9,25 +9,16 @@
 #include "bsci.h"
 #include "demux.h"
 #include "pmi_handle.h"
-#include "pmi_handle_v2.h"
 
-/* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
-static struct HYD_pmcd_pmi_handle_fns pmi_v2_handle_fns_foo[] = {
-    {"fullinit", HYD_pmcd_pmi_handle_v2_fullinit},
-    {"job-getid", HYD_pmcd_pmi_handle_v2_job_getid},
-    {"info-putnodeattr", HYD_pmcd_pmi_handle_v2_info_putnodeattr},
-    {"info-getnodeattr", HYD_pmcd_pmi_handle_v2_info_getnodeattr},
-    {"info-getjobattr", HYD_pmcd_pmi_handle_v2_info_getjobattr},
-    {"kvs-put", HYD_pmcd_pmi_handle_v2_kvs_put},
-    {"kvs-get", HYD_pmcd_pmi_handle_v2_kvs_get},
-    {"kvs-fence", HYD_pmcd_pmi_handle_v2_kvs_fence},
-    {"finalize", HYD_pmcd_pmi_handle_v2_finalize},
-    {"\0", NULL}
-};
-
-static struct HYD_pmcd_pmi_handle pmi_v2_foo = { PMI_V2_DELIM, pmi_v2_handle_fns_foo };
-
-struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v2 = &pmi_v2_foo;
+static HYD_status fn_fullinit(int fd, char *args[]);
+static HYD_status fn_job_getid(int fd, char *args[]);
+static HYD_status fn_info_putnodeattr(int fd, char *args[]);
+static HYD_status fn_info_getnodeattr(int fd, char *args[]);
+static HYD_status fn_info_getjobattr(int fd, char *args[]);
+static HYD_status fn_kvs_put(int fd, char *args[]);
+static HYD_status fn_kvs_get(int fd, char *args[]);
+static HYD_status fn_kvs_fence(int fd, char *args[]);
+static HYD_status fn_finalize(int fd, char *args[]);
 
 struct token {
     char *key;
@@ -85,7 +76,6 @@ static HYD_status send_command(int fd, char *cmd)
   fn_fail:
     goto fn_exit;
 }
-
 
 static HYD_status args_to_tokens(char *args[], struct token **tokens, int *count)
 {
@@ -163,11 +153,11 @@ static HYD_status poke_progress(void)
         req_complete = 0;
 
         if (areq->type == GET_NODE_ATTR) {
-            status = HYD_pmcd_pmi_handle_v2_info_getnodeattr(areq->fd, areq->req);
+            status = fn_info_getnodeattr(areq->fd, areq->req);
             HYDU_ERR_POP(status, "getnodeattr returned error\n");
         }
         else if (areq->type == KVS_GET) {
-            status = HYD_pmcd_pmi_handle_v2_kvs_get(areq->fd, areq->req);
+            status = fn_kvs_get(areq->fd, areq->req);
             HYDU_ERR_POP(status, "kvs_get returned error\n");
         }
 
@@ -196,7 +186,6 @@ static HYD_status poke_progress(void)
     goto fn_exit;
 }
 
-
 static char *find_token_keyval(struct token *tokens, int count, const char *key)
 {
     int i;
@@ -209,8 +198,7 @@ static char *find_token_keyval(struct token *tokens, int count, const char *key)
     return NULL;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v2_fullinit(int fd, char *args[])
+static HYD_status fn_fullinit(int fd, char *args[])
 {
     int id, rank, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *rank_str;
@@ -268,8 +256,7 @@ HYD_status HYD_pmcd_pmi_handle_v2_fullinit(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v2_job_getid(int fd, char *args[])
+static HYD_status fn_job_getid(int fd, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid;
     int i;
@@ -321,8 +308,7 @@ HYD_status HYD_pmcd_pmi_handle_v2_job_getid(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v2_info_putnodeattr(int fd, char *args[])
+static HYD_status fn_info_putnodeattr(int fd, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     char *key, *val, *thrid;
@@ -389,8 +375,7 @@ HYD_status HYD_pmcd_pmi_handle_v2_info_putnodeattr(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
+static HYD_status fn_info_getnodeattr(int fd, char *args[])
 {
     int i, found;
     HYD_pmcd_pmi_process_t *process;
@@ -490,8 +475,7 @@ HYD_status HYD_pmcd_pmi_handle_v2_info_getnodeattr(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v2_info_getjobattr(int fd, char *args[])
+static HYD_status fn_info_getjobattr(int fd, char *args[])
 {
     int i, ret;
     HYD_pmcd_pmi_process_t *process;
@@ -590,8 +574,7 @@ HYD_status HYD_pmcd_pmi_handle_v2_info_getjobattr(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v2_kvs_put(int fd, char *args[])
+static HYD_status fn_kvs_put(int fd, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     char *key, *val, *thrid;
@@ -658,8 +641,7 @@ HYD_status HYD_pmcd_pmi_handle_v2_kvs_put(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v2_kvs_get(int fd, char *args[])
+static HYD_status fn_kvs_get(int fd, char *args[])
 {
     int i, found, node_count;
     HYD_pmcd_pmi_process_t *process, *prun;
@@ -761,8 +743,7 @@ HYD_status HYD_pmcd_pmi_handle_v2_kvs_get(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v2_kvs_fence(int fd, char *args[])
+static HYD_status fn_kvs_fence(int fd, char *args[])
 {
     HYD_pmcd_pmi_process_t *process;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid;
@@ -816,8 +797,7 @@ HYD_status HYD_pmcd_pmi_handle_v2_kvs_fence(int fd, char *args[])
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_handle_v2_finalize(int fd, char *args[])
+static HYD_status fn_finalize(int fd, char *args[])
 {
     char *thrid;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
@@ -863,3 +843,19 @@ HYD_status HYD_pmcd_pmi_handle_v2_finalize(int fd, char *args[])
   fn_fail:
     goto fn_exit;
 }
+
+/* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
+static struct HYD_pmcd_pmi_handle_fns pmi_v2_handle_fns_foo[] = {
+    {"fullinit", fn_fullinit},
+    {"job-getid", fn_job_getid},
+    {"info-putnodeattr", fn_info_putnodeattr},
+    {"info-getnodeattr", fn_info_getnodeattr},
+    {"info-getjobattr", fn_info_getjobattr},
+    {"kvs-put", fn_kvs_put},
+    {"kvs-get", fn_kvs_get},
+    {"kvs-fence", fn_kvs_fence},
+    {"finalize", fn_finalize},
+    {"\0", NULL}
+};
+
+struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v2 = { PMI_V2_DELIM, pmi_v2_handle_fns_foo };

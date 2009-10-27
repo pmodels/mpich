@@ -6,8 +6,6 @@
 
 #include "hydra.h"
 #include "pmi_handle.h"
-#include "pmi_handle_v1.h"
-#include "pmi_handle_v2.h"
 
 HYD_pmcd_pmi_pg_t *HYD_pg_list = NULL;
 struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle = { 0 };

@@ -9,8 +9,17 @@
 
 #include "hydra_base.h"
 
+/* PMI-1 specific definitions */
+#define PMI_V1_DELIM " "
+extern struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v1;
+
+/* PMI-2 specific definitions */
+#define PMI_V2_DELIM ";"
+extern struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v2;
+
+/* Generic definitions */
 #define MAXKEYLEN    64 /* max length of key in keyval space */
-/* PMI-1 uses 256, PMI-2 uses 1024; we use the MAX */
+/* FIXME: PMI-1 uses 256, PMI-2 uses 1024; we use the MAX */
 #define MAXVALLEN  1024 /* max length of value in keyval space */
 #define MAXNAMELEN  256 /* max length of various names */
 #define MAXKVSNAME  MAXNAMELEN  /* max length of a kvsname */

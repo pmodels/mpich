@@ -8,7 +8,6 @@
 #include "hydra_utils.h"
 #include "pmi_handle.h"
 #include "pmi_handle_common.h"
-#include "pmi_handle_v1.h"
 #include "pmci.h"
 #include "bsci.h"
 #include "demux.h"
@@ -67,7 +66,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
      * that commands can arrive out-of-order and this is necessary.
      */
     if (HYD_pmcd_pmi_handle == NULL)
-        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v1;
+        HYD_pmcd_pmi_handle = &HYD_pmcd_pmi_v1;
 
     do {
         status = HYDU_sock_read(fd, bufptr, 6, &linelen, HYDU_SOCK_COMM_MSGWAIT);
@@ -100,9 +99,9 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
              * PMI-2 commands interleaved with regular PMI-2
              * commands. */
             tbuf = HYDU_strdup(buf);
-            cmd = strtok(tbuf, HYD_pmcd_pmi_v1->delim);
+            cmd = strtok(tbuf, HYD_pmcd_pmi_v1.delim);
             for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
-                args[i] = strtok(NULL, HYD_pmcd_pmi_v1->delim);
+                args[i] = strtok(NULL, HYD_pmcd_pmi_v1.delim);
                 if (args[i] == NULL)
                     break;
             }
