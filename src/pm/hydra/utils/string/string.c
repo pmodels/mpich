@@ -31,8 +31,8 @@ HYD_status HYDU_print_strlist(char **strlist)
     HYDU_FUNC_ENTER();
 
     for (arg = 0; strlist[arg]; arg++)
-        printf("%s ", strlist[arg]);
-    printf("\n");
+        HYDU_dump_noprefix(stdout, "%s ", strlist[arg]);
+    HYDU_dump_noprefix(stdout, "\n");
 
     HYDU_FUNC_EXIT();
     return status;

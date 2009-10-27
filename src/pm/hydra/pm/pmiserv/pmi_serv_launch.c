@@ -337,9 +337,9 @@ static HYD_status fill_in_exec_launch_info(void)
         }
 
         if (HYD_handle.user_global.debug) {
-            printf("Arguments being passed to proxy %d:\n", proxy_count++);
+            HYDU_dump_noprefix(stdout, "Arguments being passed to proxy %d:\n", proxy_count++);
             HYDU_print_strlist(proxy->exec_launch_info);
-            printf("\n");
+            HYDU_dump_noprefix(stdout, "\n");
         }
     }
 
