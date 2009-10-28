@@ -102,19 +102,17 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     if (win_ptr->errhandler != NULL) {
-	if (HANDLE_GET_KIND(errhandler) != HANDLE_KIND_BUILTIN) {
-	    MPIR_Errhandler_release_ref(win_ptr->errhandler,&in_use);
-	    if (!in_use) {
-		MPID_Errhandler_free( win_ptr->errhandler );
-	    }
-	}
+        MPIR_Errhandler_release_ref(win_ptr->errhandler,&in_use);
+        if (!in_use) {
+            MPID_Errhandler_free( win_ptr->errhandler );
+        }
     }
-    
+
     MPIR_Errhandler_add_ref(errhan_ptr);
     win_ptr->errhandler = errhan_ptr;
-    
+
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING
