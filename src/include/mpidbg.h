@@ -111,6 +111,7 @@ enum MPIU_DBG_CLASS { MPIU_DBG_PT2PT         = 0x1,
 		      MPIU_DBG_VC            = 0x100000,
 		      MPIU_DBG_REFCOUNT      = 0x200000,
 		      MPIU_DBG_ROMIO         = 0x400000,
+                      MPIU_DBG_ERRHAND       = 0x800000,
 		      MPIU_DBG_ALL           = (~0) };   /* alias for all */
 
 extern int MPIU_DBG_ActiveClasses;
