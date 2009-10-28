@@ -164,13 +164,6 @@ static HYD_status poke_progress(void)
             HYDU_ERR_POP(status, "kvs_get returned error\n");
         }
 
-        /* If the request hasn't completed, queue it back at the end
-         * of the pending list */
-        if (!req_complete) {
-            status = queue_req(req->fd, req->type, req->args);
-            HYDU_ERR_POP(status, "error queueing request\n");
-        }
-
         free_req(req);
     }
 
