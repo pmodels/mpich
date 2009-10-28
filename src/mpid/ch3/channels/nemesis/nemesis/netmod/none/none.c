@@ -69,7 +69,6 @@ static int nm_finalize(void)
 MPID_nem_netmod_funcs_t MPIDI_nem_none_funcs = {
     nm_init,
     nm_finalize,
-    nm_ckpt_shutdown,
     nm_poll,
     nm_send,
     nm_get_business_card,
