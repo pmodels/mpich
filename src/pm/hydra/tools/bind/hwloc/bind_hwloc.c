@@ -26,7 +26,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     hwloc_cpuset_t cpuset_core;
 
     int node,sock,core,proc,thread;
-    int bound,bound2;
+    int bound,bound2,bound3;
 
     HYD_status status = HYD_SUCCESS;    
 
@@ -79,23 +79,24 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     
     HYDT_bind_info.num_threads = (HYDT_bind_info.num_procs/(hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_CORE))); 
 
+    bound = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_NODE);
     for (proc = 0; proc < HYDT_bind_info.num_procs; proc++)
         {
-            for(node = 0, bound = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_NODE); node < bound ; node++)
+            for(node = 0;  node < bound ; node++)
                 {
                     obj_node = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sys,HWLOC_OBJ_NODE,node);
                     cpuset_node = obj_node->cpuset;
 
                     if(hwloc_cpuset_isset (cpuset_node, HYDT_bind_info.topology[proc].processor_id))
                         {
-                            for(sock = 0, bound = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_node->cpuset,HWLOC_OBJ_SOCKET) ; sock < bound ; sock++)
+                            for(sock = 0, bound2 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_node->cpuset,HWLOC_OBJ_SOCKET) ; sock < bound2 ; sock++)
                                 {
                                     obj_sock = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_node,HWLOC_OBJ_SOCKET,sock);
                                     cpuset_sock  = obj_sock->cpuset;
 
                                     if(hwloc_cpuset_isset (cpuset_sock, HYDT_bind_info.topology[proc].processor_id))
                                         {
-                                            for(core = 0, bound2 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_sock->cpuset,HWLOC_OBJ_CORE) ; core < bound2; core+\
+                                            for(core = 0, bound3 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_sock->cpuset,HWLOC_OBJ_CORE) ; core < bound3; core+\
 						    +)
 						{
                                                     obj_core = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sock,HWLOC_OBJ_CORE,core);
