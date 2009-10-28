@@ -67,7 +67,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     obj_sys = hwloc_get_system_obj(topology);
     cpuset_sys = obj_sys->cpuset;
 
-    /* Compute the total number of sockets */
+    /* Compute the number of sockets per NUMA Node */
     /* FIX ME : We assume that the number of sockets is the same for each node (e.g node 0)!*/
     obj_node = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sys,HWLOC_OBJ_NODE,0);
     HYDT_bind_info.num_sockets = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_node->cpuset,HWLOC_OBJ_SOCKET);
