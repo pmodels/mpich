@@ -593,14 +593,15 @@ sub ProcessFile
 	# Match the known routines and macros.
 	# Then check that the arguments match if there is a 
 	# specific string (number of args matches the number present)
-	# (MPIU_ERR_CHKANDJUMP[0-4]?(cond,code,class,gmsg[,smsg,args])
-	# (MPIU_ERR_SETANDJUMP[0-4]?(code,class,gmsg[,smsg,args])
-	# (MPIU_ERR_CHKANDSTMT[0-4]?(cond,code,class,stmt,gmsg[,smsg,args])
-	# (MPIU_ERR_SETANDSTMT[0-4]?(code,class,stmt,gmsg[,smsg,args])
+        # MPIU_ERR_CHK(FATAL)?ANDJUMP[1-4]?(cond,code,class,gmsg[,smsg,args])
+        # MPIU_ERR_SET(FATAL)?ANDJUMP[1-4]?(code,class,gmsg[,smsg,args])
+	# MPIU_ERR_CHK(FATAL)?ANDSTMT[1-4]?(cond,code,class,stmt,gmsg[,smsg,args])
+	# MPIU_ERR_SET(FATAL)?ANDSTMT[1-4]?(code,class,stmt,gmsg[,smsg,args])
 	# Value is a tuple of:
 	#  the count of args where the generic msg begins (starting from 0)
 	#  location of __LINE__ (-1 for none)
 	#  specific msg arg required (0 for no, > 0 for yes)
+	#  is the generic message an indirect from errnames.txt (1=yes 0=no)
 	%KnownErrRoutines = ( 'MPIR_Err_create_code'      => '5:3:1:1', 
 			      'MPIO_Err_create_code'      => '5:3:1:0', 
 			      'MPIU_ERR_SET'              => '2:-1:0:1',
@@ -608,18 +609,10 @@ sub ProcessFile
 			      'MPIU_ERR_SET1'             => '2:-1:1:1',
 			      'MPIU_ERR_SET2'             => '2:-1:2:1',
 			      'MPIU_ERR_SETANDSTMT'       => '3:-1:0:1',
-			      'MPIU_ERR_SETFATALANDSTMT'  => '3:-1:0:1',
-			      'MPIU_ERR_SETFATALANDJUMP'  => '2:-1:0:1',
 			      'MPIU_ERR_SETANDSTMT1'      => '3:-1:1:1', 
-			      'MPIU_ERR_SETFATALANDSTMT1' => '3:-1:1:1', 
-			      'MPIU_ERR_SETFATALANDJUMP1' => '2:-1:1:1',
 			      'MPIU_ERR_SETANDSTMT2'      => '3:-1:1:1', 
-			      'MPIU_ERR_SETFATALANDSTMT2' => '3:-1:1:1',
-			      'MPIU_ERR_SETFATALANDJUMP2' => '2:-1:1:1',
 			      'MPIU_ERR_SETANDSTMT3'      => '3:-1:1:1', 
-			      'MPIU_ERR_SETFATALANDSTMT3' => '3:-1:1:1', 
 			      'MPIU_ERR_SETANDSTMT4'      => '3:-1:1:1', 
-			      'MPIU_ERR_SETFATALANDSTMT4' => '3:-1:1:1', 
 			      'MPIU_ERR_SETANDJUMP'       => '2:-1:0:1',
 			      'MPIU_ERR_SETANDJUMP1'      => '2:-1:1:1', 
 			      'MPIU_ERR_SETANDJUMP2'      => '2:-1:1:1', 
@@ -635,6 +628,30 @@ sub ProcessFile
 			      'MPIU_ERR_CHKANDJUMP2'      => '3:-1:1:1',
 			      'MPIU_ERR_CHKANDJUMP3'      => '3:-1:1:1',
 			      'MPIU_ERR_CHKANDJUMP4'      => '3:-1:1:1',
+			      'MPIU_ERR_SETFATAL'         => '2:-1:0:1',
+			      'MPIU_ERR_SETFATALSIMPLE'   => '2:-1:0:1',
+			      'MPIU_ERR_SETFATAL1'        => '2:-1:1:1',
+			      'MPIU_ERR_SETFATAL2'        => '2:-1:2:1',
+			      'MPIU_ERR_SETFATALANDSTMT'  => '3:-1:0:1',
+			      'MPIU_ERR_SETFATALANDSTMT1' => '3:-1:1:1', 
+			      'MPIU_ERR_SETFATALANDSTMT2' => '3:-1:1:1', 
+			      'MPIU_ERR_SETFATALANDSTMT3' => '3:-1:1:1', 
+			      'MPIU_ERR_SETFATALANDSTMT4' => '3:-1:1:1', 
+			      'MPIU_ERR_SETFATALANDJUMP'  => '2:-1:0:1',
+			      'MPIU_ERR_SETFATALANDJUMP1' => '2:-1:1:1', 
+			      'MPIU_ERR_SETFATALANDJUMP2' => '2:-1:1:1', 
+			      'MPIU_ERR_SETFATALANDJUMP3' => '2:-1:1:1', 
+			      'MPIU_ERR_SETFATALANDJUMP4' => '2:-1:1:1', 
+			      'MPIU_ERR_CHKFATALANDSTMT'  => '4:-1:0:1', 
+			      'MPIU_ERR_CHKFATALANDSTMT1' => '4:-1:1:1', 
+			      'MPIU_ERR_CHKFATALANDSTMT2' => '4:-1:1:1', 
+			      'MPIU_ERR_CHKFATALANDSTMT3' => '4:-1:1:1', 
+			      'MPIU_ERR_CHKFATALANDSTMT4' => '4:-1:1:1', 
+			      'MPIU_ERR_CHKFATALANDJUMP'  => '3:-1:0:1',
+			      'MPIU_ERR_CHKFATALANDJUMP1' => '3:-1:1:1',
+			      'MPIU_ERR_CHKFATALANDJUMP2' => '3:-1:1:1',
+			      'MPIU_ERR_CHKFATALANDJUMP3' => '3:-1:1:1',
+			      'MPIU_ERR_CHKFATALANDJUMP4' => '3:-1:1:1',
 			      'MPIR_ERRTEST_VALID_HANDLE' => '4:-1:0:1',
 			      );
 	while (/(MPI[OUR]_E[A-Za-z0-9_]+)\s*(\(.*)$/) {
