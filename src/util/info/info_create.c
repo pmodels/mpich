@@ -67,18 +67,15 @@ int MPI_Info_create( MPI_Info *info )
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    info_ptr = (MPID_Info *)MPIU_Handle_obj_alloc( &MPID_Info_mem );
-    MPIU_ERR_CHKANDJUMP1((!info_ptr), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPI_Info");
+
+    mpi_errno = MPIU_Info_alloc(&info_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     *info	     = info_ptr->handle;
     /* (info_ptr)->cookie = MPIR_INFO_COOKIE; */
-    info_ptr->key    = 0;
-    info_ptr->value  = 0;
-    info_ptr->next   = 0;
-    /* this is the first structure in this linked list. it is 
+    /* this is the first structure in this linked list. it is
        always kept empty. new (key,value) pairs are added after it. */
-    
+
     /* ... end of body of routine ... */
 
   fn_exit:

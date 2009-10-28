@@ -118,15 +118,13 @@ int MPI_Info_set( MPI_Info info, char *key, char *value )
 
     if (!curr_ptr) {
 	/* Key not present, insert value */
-	curr_ptr         = (MPID_Info *)MPIU_Handle_obj_alloc( &MPID_Info_mem );
-
-	MPIU_ERR_CHKANDJUMP1((!curr_ptr), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPI_Info" );
+        mpi_errno = MPIU_Info_alloc(&curr_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 	/*printf( "Inserting new elm %x at %x\n", curr_ptr->id, prev_ptr->id );*/
 	prev_ptr->next   = curr_ptr;
 	curr_ptr->key    = MPIU_Strdup(key);
 	curr_ptr->value  = MPIU_Strdup(value);
-	curr_ptr->next   = 0;
     }
     
     /* ... end of body of routine ... */
