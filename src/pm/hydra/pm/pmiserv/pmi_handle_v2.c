@@ -174,6 +174,19 @@ static HYD_status poke_progress(void)
     goto fn_exit;
 }
 
+static void print_req_list(void)
+{
+    struct reqs *req;
+
+    if (pending_reqs)
+        HYDU_dump_noprefix(stdout, "( ");
+    for (req = pending_reqs; req; req = req->next)
+        HYDU_dump_noprefix(stdout, "%s ",
+                           (req->type == NODE_ATTR_GET) ? "NODE_ATTR_GET" : "KVS_GET");
+    if (pending_reqs)
+        HYDU_dump_noprefix(stdout, ")\n");
+}
+
 static HYD_status fn_fullinit(int fd, char *args[])
 {
     int id, rank, i;
@@ -387,34 +400,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
         }
     }
 
-    if (!found) {       /* We need to decide whether to return not found or queue up */
-        if (waitval && !strcmp(waitval, "TRUE")) {
-            /* queue up */
-            status = queue_req(fd, NODE_ATTR_GET, args);
-            HYDU_ERR_POP(status, "unable to queue request\n");
-        }
-        else {
-            /* Tell the client that we can't find the attribute */
-            i = 0;
-            tmp[i++] = HYDU_strdup("cmd=info-getnodeattr-response;");
-            if (thrid) {
-                tmp[i++] = HYDU_strdup("thrid=");
-                tmp[i++] = HYDU_strdup(thrid);
-                tmp[i++] = HYDU_strdup(";");
-            }
-            tmp[i++] = HYDU_strdup("found=FALSE;rc=0;");
-            tmp[i++] = NULL;
-
-            status = HYDU_str_alloc_and_join(tmp, &cmd);
-            HYDU_ERR_POP(status, "unable to join strings\n");
-            HYDU_free_strlist(tmp);
-
-            status = send_command(fd, cmd);
-            HYDU_ERR_POP(status, "send command failed\n");
-            HYDU_FREE(cmd);
-        }
-    }
-    else {      /* We found the attribute */
+    if (found) {      /* We found the attribute */
         i = 0;
         tmp[i++] = HYDU_strdup("cmd=info-getnodeattr-response;");
         if (thrid) {
@@ -434,9 +420,42 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
         status = send_command(fd, cmd);
         HYDU_ERR_POP(status, "send command failed\n");
         HYDU_FREE(cmd);
-
-        req_complete = 1;
     }
+    else if (waitval && !strcmp(waitval, "TRUE")) {
+        /* The client wants to wait for a response; queue up the request */
+        status = queue_req(fd, NODE_ATTR_GET, args);
+        HYDU_ERR_POP(status, "unable to queue request\n");
+
+        goto fn_exit;
+    }
+    else {
+        /* Tell the client that we can't find the attribute */
+        i = 0;
+        tmp[i++] = HYDU_strdup("cmd=info-getnodeattr-response;");
+        if (thrid) {
+            tmp[i++] = HYDU_strdup("thrid=");
+            tmp[i++] = HYDU_strdup(thrid);
+            tmp[i++] = HYDU_strdup(";");
+        }
+        tmp[i++] = HYDU_strdup("found=FALSE;rc=0;");
+        tmp[i++] = NULL;
+
+        status = HYDU_str_alloc_and_join(tmp, &cmd);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+        HYDU_free_strlist(tmp);
+
+        status = send_command(fd, cmd);
+        HYDU_ERR_POP(status, "send command failed\n");
+        HYDU_FREE(cmd);
+    }
+
+    /* Mark the global completion variable, in case the progress
+     * engine is monitoring. */
+    /* FIXME: This should be an output parameter. We need to change
+     * the structure of the PMI function table to be able to take
+     * additional arguments, and not just the ones passed on the
+     * wire. */
+    req_complete = 1;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -614,14 +633,14 @@ static HYD_status fn_kvs_put(int fd, char *args[])
 
 static HYD_status fn_kvs_get(int fd, char *args[])
 {
-    int i, found, node_count;
+    int i, found, barrier, process_count;
     HYD_pmcd_pmi_process_t *process, *prun;
     HYD_pmcd_pmi_node_t *node;
     HYD_pmcd_pmi_kvs_pair_t *run;
     char *key, *thrid;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     struct token *tokens;
-    int token_count, consistent_epoch;
+    int token_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -649,22 +668,22 @@ static HYD_status fn_kvs_get(int fd, char *args[])
     }
 
     if (!found) {
-        consistent_epoch = 1;
-        node_count = 0;
+        barrier = 1;
+        process_count = 0;
         for (node = process->node->pg->node_list; node; node = node->next) {
-            node_count++;
             for (prun = node->process_list; prun; prun = prun->next) {
-                if (prun->epoch != process->epoch) {
-                    /* The epochs are not consistent */
-                    consistent_epoch = 0;
+                process_count++;
+                if (prun->epoch < process->epoch) {
+                    barrier = 0;
                     break;
                 }
             }
+            if (!barrier)
+                break;
         }
 
-        if (consistent_epoch == 0 ||
-            ((process->epoch > 0) && (node_count != HYD_pg_list->num_procs))) {
-            /* queue up */
+        if (!barrier || process_count < HYD_pg_list->num_procs) {
+            /* We haven't reached a barrier yet; queue up request */
             status = queue_req(fd, KVS_GET, args);
             HYDU_ERR_POP(status, "unable to queue request\n");
 
@@ -672,8 +691,6 @@ static HYD_status fn_kvs_get(int fd, char *args[])
             goto fn_exit;
         }
     }
-    else
-        req_complete = 1;
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=kvs-get-response;");
@@ -701,6 +718,7 @@ static HYD_status fn_kvs_get(int fd, char *args[])
     HYDU_ERR_POP(status, "send command failed\n");
 
     HYDU_FREE(cmd);
+    req_complete = 1;
 
   fn_exit:
     HYDU_FUNC_EXIT();
