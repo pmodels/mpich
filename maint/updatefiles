@@ -38,6 +38,7 @@ do_smpdversion=yes
 # Allow MAKE to be set from the environment
 MAKE=${MAKE-make}
 
+ltdirs="src/pm/hydra/tools/bind/hwloc/hwloc"
 amdirs="src/openpa src/pm/hydra src/mpl"
 
 # List of steps that we will consider
@@ -45,21 +46,12 @@ amdirs="src/openpa src/pm/hydra src/mpl"
 AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates makefiles smpdversion getparms"
 stepsCleared=no
 
-# Options for some steps
-autoconfdir=""
-automakedir=""
-autotoolsdir=""
 # Extract defaults from the environment
-if [ "x$MPICH2_AUTOCONF_DIR" != "x" ] ; then 
-    autoconfdir=$MPICH2_AUTOCONF_DIR
-fi
-if [ "x$MPICH2_AUTOMAKE_DIR" != "x" ] ; then 
-    automakedir=$MPICH2_AUTOMAKE_DIR
-fi
-if [ "x$MPICH2_AUTOTOOLS_DIR" != "x" ] ; then 
-    autotoolsdir=$MPICH2_AUTOTOOLS_DIR
-fi
-#
+autoconfdir=$MPICH2_AUTOCONF_DIR
+automakedir=$MPICH2_AUTOMAKE_DIR
+libtooldir=$MPICH2_LIBTOOL_DIR
+autotoolsdir=$MPICH2_AUTOTOOLS_DIR
+
 # Extract the arguments intended for updatefiles.  Any others are
 # given to simplemake.  
 temp_args=""
@@ -130,6 +122,9 @@ for arg in "$@" ; do
     -with-automake=*|--with-automake=*)
     automakedir=`echo "A$arg" | sed -e 's/.*=//'`
     ;;
+    -with-libtool=*|--with-libtool=*)
+    libtooldir=`echo "A$arg" | sed -e 's/.*=//'`
+    ;;
     -with-autotools=*|--with-autotools=*)
     autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
     ;;
@@ -143,17 +138,18 @@ for arg in "$@" ; do
     -help|--help|-usage|--usage)
     cat <<EOF
     updatefiles [ --with-autoconf=dir ] [ --with-automake=dir ] \\
-                [ --with-autotools=dir ] [ --do=stepname ]       \\
-                [ args for simplemake ] 
+                [ --with-libtool=dir ] [ --with-autotools=dir ] \\
+                [ --do=stepname ] [ args for simplemake ]
     Update the files in the MPICH2 build tree.  This file builds the 
     configure files, creates the Makefile.in files (using the simplemake
     program), extracts the error messages.
 
-    You can use --with-autoconf=dir to specify a directory that contains
-    an alternate autoconf and autoheader.  Similarly --with-automake can
-    be used to specify the location of automake and aclocal.  If
-    autoconf and automake are installed in the same location, they can
-    be specified by the --with-autotools option.
+    You can use --with-autoconf=dir to specify a directory that
+    contains an alternate autoconf and autoheader.  Similarly
+    --with-automake can be used to specify the location of automake
+    and aclocal and --with-libtool to specify the location of
+    libtoolize. If all the autotools are installed in the same
+    location, they can be specified by the --with-autotools option.
 
     Use --do=stepname to update only a single step.  For example, 
     --do=build_configure only updates the configure scripts.  The available
@@ -172,22 +168,24 @@ EOF
 done
 
 if [ -n "$autotoolsdir" ] ; then
-    if [ -n "$autoconfdir" -o -n "$automakedir" ] ; then
-        # Don't permit --with-autotools together with either --with-autoconf or
-        # --with-automake because which argument takes precedence is not obvious
-        # without immediate explanation.  --with-autotools is really only
-        # present to make life a little easier for those who preferred the old
-        # behavior where --with-autoconf was used to specify the location of
-        # both autoconf and automake.
+    if [ -n "$autoconfdir" -o -n "$automakedir" -o -n "$libtooldir" ] ; then
+        # Don't permit --with-autotools together with --with-autoconf,
+        # --with-automake or --with-libtool because which argument
+        # takes precedence is not obvious without immediate
+        # explanation.  --with-autotools is really only present to
+        # make life a little easier for those who preferred the old
+        # behavior where --with-autoconf was used to specify the
+        # location of both autoconf and automake.
         cat <<EOT
-Error: --with-autotools was specified together with either
---with-autoconf or --with-automake.  --with-autotools is incompatible
-with the other two options.  Please specify only one set or the other.
+Error: --with-autotools was specified together with --with-autoconf,
+--with-automake or --with-libtool.  --with-autotools is incompatible
+with the other options.  Please specify only one set or the other.
 EOT
         exit 1
     else
         autoconfdir=$autotoolsdir
         automakedir=$autotoolsdir
+	libtooldir=$autotoolsdir
     fi
 fi
 
@@ -268,6 +266,18 @@ if [ -n "$automakedir" ] ; then
 else
     automake=${AUTOMAKE:-automake}
     aclocal=${ACLOCAL:-aclocal}
+fi
+if [ -n "$libtooldir" ] ; then
+    if [ -x "$libtooldir/libtoolize" ] ; then
+        libtoolize=$libtooldir/libtoolize
+        LIBTOOLIZE=$libtoolize
+        export LIBTOOLIZE
+    else
+        echo "could not find executable libtoolize in $libtooldir"
+        exit 1
+    fi
+else
+    libtoolize=${LIBTOOLIZE:-libtoolize}
 fi
 
 #
@@ -863,6 +873,14 @@ fi
 if [ "$do_build_configure" = "yes" -o "$do_makefiles" = "yes" ] ; then
     # must come after the above autoreconf-like logic because the above
     # logic will delete the results of this actual autoreconf
+
+    for ltdir in $ltdirs ; do
+	if [ -d "$ltdir" -o -L "$ltdir" ] ; then
+	    echo "running $libtoolize in $ltdir"
+	    (cd $ltdir && $libtoolize) || exit 1
+	fi
+    done
+
     for amdir in $amdirs ; do
 	if [ -d "$amdir" -o -L "$amdir" ] ; then
 	    echo "running $autoreconf in $amdir"
