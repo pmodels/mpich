@@ -16,6 +16,7 @@
 
 #define START_BUF (1)
 #define LARGE_BUF (256 * 1024)
+
 /* FIXME: MAX_BUF is too large */
 #define MAX_BUF   (128 * 1024 * 1024)
 #define LOOPS 10
@@ -48,6 +49,9 @@ int main(int argc, char ** argv)
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
+
+    if (LARGE_BUF * comm_size > MAX_BUF)
+        goto fn_exit;
 
     sbuf = (void *) malloc(MAX_BUF);
     rbuf = (void *) malloc(MAX_BUF);
@@ -106,6 +110,7 @@ int main(int argc, char ** argv)
     free(recvcounts);
     free(displs);
 
+fn_exit:
     MTest_Finalize(errs);
     MPI_Finalize();
 
@@ -175,42 +180,24 @@ double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double * ma
     MPI_Comm_size(comm, &comm_size);
     MPI_Comm_rank(comm, &comm_rank);
 
-    if (test_type == REGULAR) {
-        for (i = 0; i < comm_size; i++) {
+    displs[0] = 0;
+    for (i = 0; i < comm_size; i++) {
+        if (test_type == REGULAR)
             recvcounts[i] = msg_size;
-            displs[i] = 0;
-        }
-    }
-    else if (test_type == BCAST) {
-        for (i = 0; i < comm_size; i++) {
+        else if (test_type == BCAST)
             recvcounts[i] = (!i) ? msg_size : 0;
-            displs[i] = 0;
-        }
-    }
-    else if (test_type == SPIKE) {
-        for (i = 0; i < comm_size; i++) {
+        else if (test_type == SPIKE)
             recvcounts[i] = (!i) ? (msg_size / 2) : (msg_size / (2 * (comm_size - 1)));
-            displs[i] = 0;
-        }
-    }
-    else if (test_type == HALF_FULL) {
-        for (i = 0; i < comm_size; i++) {
+        else if (test_type == HALF_FULL)
             recvcounts[i] = (i < (comm_size / 2)) ? (2 * msg_size) : 0;
-            displs[i] = 0;
-        }
-    }
-    else if (test_type == LINEAR_DECREASE) {
-        for (i = 0; i < comm_size; i++) {
+        else if (test_type == LINEAR_DECREASE) {
             tmp = 2 * msg_size * (comm_size - 1 - i) / (comm_size - 1);
             recvcounts[i] = (int) tmp;
-            displs[i] = 0;
 
             /* If the maximum message size is too large, don't run */
             if (tmp > MAX_BUF) return 0;
         }
-    }
-    else if (test_type == BELL_CURVE) {
-        for (i = 1; i <= comm_size; i *= 2) {
+        else if (test_type == BELL_CURVE) {
             for (j = 0; j < i; j++) {
                 if (i - 1 + j >= comm_size) continue;
                 tmp = msg_size * comm_size / (log(comm_size) * i);
@@ -221,6 +208,9 @@ double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double * ma
                 if (tmp > MAX_BUF) return 0;
             }
         }
+
+        if (i < comm_size - 1)
+            displs[i+1] = displs[i] + recvcounts[i];
     }
 
     MPI_Barrier(comm);
