@@ -38,7 +38,7 @@ do_smpdversion=yes
 # Allow MAKE to be set from the environment
 MAKE=${MAKE-make}
 
-ltdirs="src/pm/hydra/tools/bind/hwloc/hwloc"
+ltdirs="src/pm/hydra src/pm/hydra/tools/bind/hwloc/hwloc"
 amdirs="src/openpa src/pm/hydra src/mpl"
 
 # List of steps that we will consider
