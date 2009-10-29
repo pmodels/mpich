@@ -1160,6 +1160,21 @@ F77_LONG_INT				= HexToInt(dtypes.Item("MPI_LONG_INT"))
 F77_SHORT_INT				= HexToInt(dtypes.Item("MPI_SHORT_INT"))
 F77_2INT					= HexToInt(dtypes.Item("MPI_2INT"))
 F77_LONG_DOUBLE_INT			= HexToInt(dtypes.Item("MPI_LONG_DOUBLE_INT"))
+F77_INT8_T              = HexToInt(dtypes.Item("MPI_INT8_T"))
+F77_INT16_T             = HexToInt(dtypes.Item("MPI_INT16_T"))
+F77_INT32_T             = HexToInt(dtypes.Item("MPI_INT32_T"))
+F77_INT64_T             = HexToInt(dtypes.Item("MPI_INT64_T"))
+F77_UINT8_T             = HexToInt(dtypes.Item("MPI_UINT8_T"))
+F77_UINT16_T            = HexToInt(dtypes.Item("MPI_UINT16_T"))
+F77_UINT32_T            = HexToInt(dtypes.Item("MPI_UINT32_T"))
+F77_UINT64_T            = HexToInt(dtypes.Item("MPI_UINT64_T"))
+F77_C_BOOL              = HexToInt(dtypes.Item("MPI_C_BOOL"))
+F77_C_FLOAT_COMPLEX     = HexToInt(dtypes.Item("MPI_C_FLOAT_COMPLEX"))
+F77_C_COMPLEX           = HexToInt(dtypes.Item("MPI_C_COMPLEX"))
+F77_C_DOUBLE_COMPLEX    = HexToInt(dtypes.Item("MPI_C_DOUBLE_COMPLEX"))
+F77_C_LONG_DOUBLE_COMPLEX      = HexToInt(dtypes.Item("MPI_C_LONG_DOUBLE_COMPLEX"))
+F77_AINT                = HexToInt(dtypes.Item("MPI_AINT"))
+F77_OFFSET              = HexToInt(dtypes.Item("MPI_OFFSET"))
 
 if false then
 foo = ""
@@ -1858,6 +1873,36 @@ Function ReplaceAts( str, use_f77, b64 )
 				str = Replace(str, "@MPI_F77_2INT@", F77_2INT)
 			Case "@MPI_F77_LONG_DOUBLE_INT@"
 				str = Replace(str, "@MPI_F77_LONG_DOUBLE_INT@", F77_LONG_DOUBLE_INT)
+			Case "@MPI_F77_INT8_T@"
+				str = Replace(str, "@MPI_F77_INT8_T@", F77_INT8_T)
+			Case "@MPI_F77_INT16_T@"
+				str = Replace(str, "@MPI_F77_INT16_T@", F77_INT16_T)
+			Case "@MPI_F77_INT32_T@"
+				str = Replace(str, "@MPI_F77_INT32_T@", F77_INT32_T)
+			Case "@MPI_F77_INT64_T@"
+				str = Replace(str, "@MPI_F77_INT64_T@", F77_INT64_T)
+			Case "@MPI_F77_UINT8_T@"
+				str = Replace(str, "@MPI_F77_UINT8_T@", F77_UINT8_T)
+			Case "@MPI_F77_UINT16_T@"
+				str = Replace(str, "@MPI_F77_UINT16_T@", F77_UINT16_T)
+			Case "@MPI_F77_UINT32_T@"
+				str = Replace(str, "@MPI_F77_UINT32_T@", F77_UINT32_T)
+			Case "@MPI_F77_UINT64_T@"
+				str = Replace(str, "@MPI_F77_UINT64_T@", F77_UINT64_T)
+			Case "@MPI_F77_C_BOOL@"
+				str = Replace(str, "@MPI_F77_C_BOOL@", F77_C_BOOL)
+			Case "@MPI_F77_C_FLOAT_COMPLEX@"
+				str = Replace(str, "@MPI_F77_C_FLOAT_COMPLEX@", F77_C_FLOAT_COMPLEX)
+			Case "@MPI_F77_C_COMPLEX@"
+				str = Replace(str, "@MPI_F77_C_COMPLEX@", F77_C_COMPLEX)
+			Case "@MPI_F77_C_DOUBLE_COMPLEX@"
+				str = Replace(str, "@MPI_F77_C_DOUBLE_COMPLEX@", F77_C_DOUBLE_COMPLEX)
+			Case "@MPI_F77_C_LONG_DOUBLE_COMPLEX@"
+				str = Replace(str, "@MPI_F77_C_LONG_DOUBLE_COMPLEX@", F77_C_LONG_DOUBLE_COMPLEX)
+			Case "@MPI_F77_AINT@"
+				str = Replace(str, "@MPI_F77_AINT@", F77_AINT)
+			Case "@MPI_F77_OFFSET@"
+				str = Replace(str, "@MPI_F77_OFFSET@", F77_OFFSET)
 			Case "@MPI_STATUS_SIZE@"
 				str = Replace(str, "@MPI_STATUS_SIZE@", "5")
 			Case "@HAVE_CXX_EXCEPTIONS@"
