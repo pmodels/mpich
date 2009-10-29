@@ -644,10 +644,26 @@ extern MPIU_Object_alloc_t MPID_Errhandler_mem;
 extern MPID_Errhandler MPID_Errhandler_builtin[];
 extern MPID_Errhandler MPID_Errhandler_direct[];
 
-#define MPIR_Errhandler_add_ref( _errhand ) \
-    do { MPIU_Object_add_ref( _errhand ); } while (0)
-#define MPIR_Errhandler_release_ref( _errhand, _inuse ) \
-    do { MPIU_Object_release_ref( _errhand, _inuse ); } while (0)
+/* We never reference count the builtin error handler objects, regardless of how
+ * we decide to reference count the other predefined objects.  If we get to the
+ * point where we never reference count *any* of the builtin objects then we
+ * should probably remove these checks and let them fall through to the checks
+ * for BUILTIN down in the MPIU_Object_* routines. */
+#define MPIR_Errhandler_add_ref( _errhand )                               \
+    do {                                                                  \
+        if (HANDLE_GET_KIND((_errhand)->handle) != HANDLE_KIND_BUILTIN) { \
+            MPIU_Object_add_ref( _errhand );                              \
+        }                                                                 \
+    } while (0)
+#define MPIR_Errhandler_release_ref( _errhand, _inuse )                   \
+    do {                                                                  \
+        if (HANDLE_GET_KIND((_errhand)->handle) != HANDLE_KIND_BUILTIN) { \
+            MPIU_Object_release_ref( (_errhand), (_inuse) );              \
+        }                                                                 \
+        else {                                                            \
+            *(_inuse) = 1;                                                \
+        }                                                                 \
+    } while (0)
 /* ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
