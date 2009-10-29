@@ -82,96 +82,146 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     bound = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_NODE);
     for (proc = 0; proc < HYDT_bind_info.num_procs; proc++)
         {
-            for(node = 0;  node < bound ; node++)
-                {
-                    obj_node = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sys,HWLOC_OBJ_NODE,node);
-                    cpuset_node = obj_node->cpuset;
+	   if (bound == 0)
+	     {
+		for(sock = 0, bound2 = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_SOCKET) ; 
+		    sock < bound2 ; 
+		    sock++)
+		  {
+		     obj_sock = obj_sock = hwloc_get_obj_by_type(topology,HWLOC_OBJ_SOCKET,sock);
+		     cpuset_sock  = obj_sock->cpuset;
+		     
+		     if(hwloc_cpuset_isset (cpuset_sock, HYDT_bind_info.topology[proc].processor_id))
+		       {
+			  for(core = 0, bound3 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_sock->cpuset,HWLOC_OBJ_CORE) ; 
+			      core < bound3; 
+			      core++)
+			    {
+			       obj_core = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sock,HWLOC_OBJ_CORE,core);
+			       cpuset_core  = obj_core->cpuset;
+			       
+			       if (hwloc_cpuset_isset (cpuset_core, HYDT_bind_info.topology[proc].processor_id))
+				 {
+				    int j;
+				    /* HYDT_bind_info.topology[proc].node_id   = obj_node->os_index;*/
+				    HYDT_bind_info.topology[proc].socket_id = obj_sock->os_index;
+				    HYDT_bind_info.topology[proc].core_id   = obj_core->os_index;
+				    
+				    thread = -1;
+				    for (j = 0; j < proc; j++)
+				      {
+					 /*  if ((HYDT_bind_info.topology[j].node_id   == obj_node->os_index) && 
+					  (HYDT_bind_info.topology[j].socket_id == obj_sock->os_index) &&
+					  (HYDT_bind_info.topology[j].core_id   == obj_core->os_index))
+					  */
+					 if ((HYDT_bind_info.topology[j].socket_id == obj_sock->os_index) &&
+					     (HYDT_bind_info.topology[j].core_id   == obj_core->os_index))
+					   thread = HYDT_bind_info.topology[j].thread_id;
+				      }
+				    thread++;
+				    HYDT_bind_info.topology[proc].thread_id   = thread;
+				    HYDT_bind_info.topology[proc].thread_rank = thread;
+				    
+				    break;
+				 }
+			    }
+		       }
+		  }
+	     }
+	   else
+	     {		
+		for(node = 0;  node < bound ; node++)
+		  {
+		     obj_node = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sys,HWLOC_OBJ_NODE,node);
+		     cpuset_node = obj_node->cpuset;
+		     
+		     if(hwloc_cpuset_isset (cpuset_node, HYDT_bind_info.topology[proc].processor_id))
+		       {
+			  for(sock = 0, bound2 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_node->cpuset,HWLOC_OBJ_SOCKET) ; sock < bound2 ; sock++)
+			    {
+			       obj_sock = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_node,HWLOC_OBJ_SOCKET,sock);
+			       cpuset_sock  = obj_sock->cpuset;
+			       
+			       if(hwloc_cpuset_isset (cpuset_sock, HYDT_bind_info.topology[proc].processor_id))
+				 {
+				    for(core = 0, bound3 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_sock->cpuset,HWLOC_OBJ_CORE) ; core < bound3; core+\
++)
+				      {
+					 obj_core = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sock,HWLOC_OBJ_CORE,core);
+					 cpuset_core  = obj_core->cpuset;
+					 
+					 if (hwloc_cpuset_isset (cpuset_core, HYDT_bind_info.topology[proc].processor_id))
+					   {
+					      int j;
+					      /* HYDT_bind_info.topology[proc].node_id   = obj_node->os_index;*/
+					      HYDT_bind_info.topology[proc].socket_id = obj_sock->os_index;
+					      HYDT_bind_info.topology[proc].core_id   = obj_core->os_index;
 
-                    if(hwloc_cpuset_isset (cpuset_node, HYDT_bind_info.topology[proc].processor_id))
-                        {
-                            for(sock = 0, bound2 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_node->cpuset,HWLOC_OBJ_SOCKET) ; sock < bound2 ; sock++)
-                                {
-                                    obj_sock = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_node,HWLOC_OBJ_SOCKET,sock);
-                                    cpuset_sock  = obj_sock->cpuset;
-
-                                    if(hwloc_cpuset_isset (cpuset_sock, HYDT_bind_info.topology[proc].processor_id))
-                                        {
-                                            for(core = 0, bound3 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_sock->cpuset,HWLOC_OBJ_CORE) ; core < bound3; core+\
-						    +)
+					      thread = -1;
+					      for (j = 0; j < proc; j++)
 						{
-                                                    obj_core = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sock,HWLOC_OBJ_CORE,core);
-                                                    cpuset_core  = obj_core->cpuset;
-
-                                                    if (hwloc_cpuset_isset (cpuset_core, HYDT_bind_info.topology[proc].processor_id))
-                                                        {
-							    int j;
-                                                            /* HYDT_bind_info.topology[proc].node_id   = obj_node->os_index;*/
-                                                            HYDT_bind_info.topology[proc].socket_id = obj_sock->os_index;
-                                                            HYDT_bind_info.topology[proc].core_id   = obj_core->os_index;
-
-                                                            thread = -1;
-                                                            for (j = 0; j < proc; j++)
-								{
-								/*  if ((HYDT_bind_info.topology[j].node_id   == obj_node->os_index) && 
-                                                                    (HYDT_bind_info.topology[j].socket_id == obj_sock->os_index) &&
-                                                                    (HYDT_bind_info.topology[j].core_id   == obj_core->os_index))
-								*/
-								  if ((HYDT_bind_info.topology[j].socket_id == obj_sock->os_index) &&
-								      (HYDT_bind_info.topology[j].core_id   == obj_core->os_index))
-								      thread = HYDT_bind_info.topology[j].thread_id;
-								}
-                                                            thread++;
-							    HYDT_bind_info.topology[proc].thread_id   = thread;
-                                                            HYDT_bind_info.topology[proc].thread_rank = thread;
-
-                                                            break;
-                                                        }
-                                                }
-                                        }
-                                }
-
-                        }
-                }
-        }
-
-    /* Get the rank of each node ID */
-    /*
+						   /*  if ((HYDT_bind_info.topology[j].node_id   == obj_node->os_index) && 
+						    (HYDT_bind_info.topology[j].socket_id == obj_sock->os_index) &&
+						    (HYDT_bind_info.topology[j].core_id   == obj_core->os_index))
+						    */
+						   if ((HYDT_bind_info.topology[j].socket_id == obj_sock->os_index) &&
+						       (HYDT_bind_info.topology[j].core_id   == obj_core->os_index))
+						     thread = HYDT_bind_info.topology[j].thread_id;
+						}
+					      thread++;
+					      HYDT_bind_info.topology[proc].thread_id   = thread;
+					      HYDT_bind_info.topology[proc].thread_rank = thread;
+					      
+					      break;
+					   }
+				      }
+				 }
+			    }
+			  
+		       }
+		  }
+	     }
+	}
+   
+   
+   /* Get the rank of each node ID */
+   /*
     for(node = 0, bound  = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_NODE) ; node < bound ; node++)
-        {
-            obj_node  = hwloc_get_obj_by_type(topology,HWLOC_OBJ_NODE,node);
-            for (proc = 0; proc < HYDT_bind_info.num_procs; proc++)
-                if (HYDT_bind_info.topology[proc].node_id == obj_node->os_index)
+    {
+    obj_node  = hwloc_get_obj_by_type(topology,HWLOC_OBJ_NODE,node);
+    for (proc = 0; proc < HYDT_bind_info.num_procs; proc++)
+    if (HYDT_bind_info.topology[proc].node_id == obj_node->os_index)
                     HYDT_bind_info.topology[proc].node_rank = node;
-        }
+    }
     */
-
-    /* Get the rank of each socket ID */
-    for(sock = 0, bound = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_SOCKET) ; sock < bound; sock++)
-	{
-	    obj_sock  = hwloc_get_obj_by_type(topology,HWLOC_OBJ_SOCKET,sock);
-	    for (proc = 0; proc < HYDT_bind_info.num_procs; proc++) 
-		if (HYDT_bind_info.topology[proc].socket_id == obj_sock->os_index)
-		    HYDT_bind_info.topology[proc].socket_rank = sock;
-	}
-
-    /* Find the rank of each core ID */
-    for (core = 0, bound = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_CORE); core < bound ; core++) 
-	{
-	    obj_core  = hwloc_get_obj_by_type(topology,HWLOC_OBJ_CORE,core);
-	    for (proc = 0; proc < HYDT_bind_info.num_procs; proc++) 
-		if (HYDT_bind_info.topology[proc].core_id == obj_core->os_index)
-		    HYDT_bind_info.topology[proc].core_rank = core;
-	}
-
-    /* We have qualified for topology-aware binding support level */
-    *support_level = HYDT_BIND_TOPO;
-
- fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-    
- fn_fail:
-    goto fn_exit;
+   
+   /* Get the rank of each socket ID */
+   for(sock = 0, bound = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_SOCKET) ; sock < bound; sock++)
+     {
+	obj_sock  = hwloc_get_obj_by_type(topology,HWLOC_OBJ_SOCKET,sock);
+	for (proc = 0; proc < HYDT_bind_info.num_procs; proc++) 
+	  if (HYDT_bind_info.topology[proc].socket_id == obj_sock->os_index)
+	    HYDT_bind_info.topology[proc].socket_rank = sock;
+     }
+   
+   /* Find the rank of each core ID */
+   for (core = 0, bound = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_CORE); core < bound ; core++) 
+     {
+	obj_core  = hwloc_get_obj_by_type(topology,HWLOC_OBJ_CORE,core);
+	for (proc = 0; proc < HYDT_bind_info.num_procs; proc++) 
+	  if (HYDT_bind_info.topology[proc].core_id == obj_core->os_index)
+	    HYDT_bind_info.topology[proc].core_rank = core;
+     }
+   
+   /* We have qualified for topology-aware binding support level */
+   *support_level = HYDT_BIND_TOPO;
+   
+   fn_exit:
+   HYDU_FUNC_EXIT();
+   return status;
+   
+   fn_fail:
+   goto fn_exit;
 }
 
 HYD_status HYDT_bind_hwloc_process(int core)
