@@ -48,7 +48,23 @@ int main( int argc, char *argv[] )
     }
 
     rc = MPI_File_create_errhandler( user_handler, &ioerr_handler );
+    if (rc) {
+        errs++;
+        printf("MPI_Errhandler_create returned an error code: %d\n");
+    }
+
     rc = MPI_File_set_errhandler( fh, ioerr_handler );
+    if (rc) {
+        errs++;
+        printf("MPI_File_set_errhandler returned an error code: %d\n");
+    }
+
+    /* avoid leaking the errhandler, safe because they have refcount semantics */
+    rc = MPI_Errhandler_free(&ioerr_handler);
+    if (rc) {
+        errs++;
+        printf("MPI_Errhandler_free returned an error code: %d\n");
+    }
 
     /* This should generate an error because the file mode is WRONLY */
     rc = MPI_File_read_at( fh, 0, inbuf, 80, MPI_BYTE, &status );
@@ -57,8 +73,12 @@ int main( int argc, char *argv[] )
 	printf( "User-defined error handler was not called\n" );
     }
 
-    MPI_File_close( &fh );
-    
+    rc = MPI_File_close( &fh );
+    if (rc) {
+        errs++;
+        printf("MPI_File_close returned an error code: %d\n");
+    }
+
     MTest_Finalize( errs );
     MPI_Finalize( );
     return 0;

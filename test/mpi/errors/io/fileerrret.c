@@ -46,6 +46,7 @@ int main( int argc, char *argv[] )
        the error handler on MPI_FILE_NULL. */
     MPI_File_create_errhandler( efn, &eh );
     MPI_File_set_errhandler( MPI_FILE_NULL, eh );
+    MPI_Errhandler_free(&eh);
 
     rc = MPI_File_open(MPI_COMM_WORLD, filename, 
 		       MPI_MODE_RDWR, MPI_INFO_NULL, &fh );

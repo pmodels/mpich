@@ -66,6 +66,7 @@ int main( int argc, char *argv[] )
     // the error handler on MPI::FILE_NULL.
     eh = MPI::File::Create_errhandler( efn );
     MPI::FILE_NULL.Set_errhandler( eh );
+    eh.Free();
     sawErr = 0;
     try {
 	fh = MPI::File::Open(MPI::COMM_WORLD, filename, 
