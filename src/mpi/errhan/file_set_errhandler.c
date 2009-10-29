@@ -103,21 +103,22 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    if (HANDLE_GET_KIND(errhandler) != HANDLE_KIND_BUILTIN) {
-	MPIR_ROMIO_Get_file_errhand( file, &old_errhandler );
-	if (!old_errhandler) {
-	    MPID_Errhandler_get_ptr( MPI_ERRORS_RETURN, old_errhandler_ptr );
-	}
-	else {
-	    MPID_Errhandler_get_ptr( old_errhandler, old_errhandler_ptr );
-	}
+    MPIR_ROMIO_Get_file_errhand( file, &old_errhandler );
+    if (!old_errhandler) {
+        /* MPI_File objects default to the errhandler set on MPI_FILE_NULL
+         * at file open time, or MPI_ERRORS_RETURN if no errhandler is set
+         * on MPI_FILE_NULL. (MPI-2.2, sec 13.7) */
+        MPID_Errhandler_get_ptr( MPI_ERRORS_RETURN, old_errhandler_ptr );
+    }
+    else {
+        MPID_Errhandler_get_ptr( old_errhandler, old_errhandler_ptr );
+    }
 
-	if (old_errhandler_ptr) {
-	    MPIR_Errhandler_release_ref(old_errhandler_ptr,&in_use);
-	    if (!in_use) {
-		MPID_Errhandler_free( old_errhandler_ptr );
-	    }
-	}
+    if (old_errhandler_ptr) {
+        MPIR_Errhandler_release_ref(old_errhandler_ptr,&in_use);
+        if (!in_use) {
+            MPID_Errhandler_free( old_errhandler_ptr );
+        }
     }
 
     MPIR_Errhandler_add_ref(errhan_ptr);
@@ -129,7 +130,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
     if (0) goto fn_fail; /* quiet compiler warning about unused label */
 #endif
 #endif
-    
+
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING
