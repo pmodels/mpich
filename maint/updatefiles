@@ -865,8 +865,8 @@ if [ "$do_build_configure" = "yes" -o "$do_makefiles" = "yes" ] ; then
     # logic will delete the results of this actual autoreconf
     for amdir in $amdirs ; do
 	if [ -d "$amdir" -o -L "$amdir" ] ; then
-	    echo "running autoreconf in $amdir"
-	    (cd $amdir && autoreconf -vif) || exit 1
+	    echo "running $autoreconf in $amdir"
+	    (cd $amdir && $autoreconf -vif) || exit 1
 	fi
     done
 fi
