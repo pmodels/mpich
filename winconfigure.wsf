@@ -2203,6 +2203,8 @@ Sub AddOPADefinitions( fout, filename, b64 )
                 Else
                     fout.WriteLine("#define OPA_SIZEOF_VOID_P 4")
                 End If
+            Case "SIZEOF_OPA_PTR_T"
+                fout.WriteLine("#define SIZEOF_OPA_PTR_T sizeof(OPA_ptr_t)")
             Case "inline"
                 fout.WriteLine("#define inline __inline")
             Case "restrict"
