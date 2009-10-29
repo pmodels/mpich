@@ -11,6 +11,7 @@
 struct HYDT_bind_info HYDT_bind_info;
 
 static hwloc_topology_t topology;
+static int              topo_initialized = 0;
 
 HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
 {
@@ -34,6 +35,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     
     hwloc_topology_init(&topology);
     hwloc_topology_load(topology);
+    topo_initialized = 1;
 
     /* Get the max number of processing elements */
     HYDT_bind_info.num_procs = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_PROC);   
@@ -232,7 +234,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
 
 HYD_status HYDT_bind_hwloc_process(int core)
 {
-    hwloc_cpuset_t cpuset = 0;
+    hwloc_cpuset_t cpuset = hwloc_cpuset_alloc();
 
     HYD_status status = HYD_SUCCESS;
 
@@ -242,11 +244,18 @@ HYD_status HYDT_bind_hwloc_process(int core)
     if (core < 0)
         goto fn_exit;
        
-    hwloc_cpuset_zero(cpuset); 
     hwloc_cpuset_set (cpuset, core % HYDT_bind_info.num_procs);
+    if (!topo_initialized)
+     {
+	hwloc_topology_init(&topology);
+	hwloc_topology_load(topology);
+	topo_initialized = 1;
+     }
     hwloc_set_cpubind(topology,cpuset,HWLOC_CPUBIND_THREAD);
-    
+
+   
   fn_exit:
+   hwloc_cpuset_free(cpuset);
     HYDU_FUNC_EXIT();
     return status;
 
