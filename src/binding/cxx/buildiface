@@ -2528,16 +2528,32 @@ Errhandler Win::Create_errhandler( Errhandler_function *f )
 // cover the ERRORS_THROW_EXCEPTIONS case.
 void Comm::Call_errhandler( int errorcode ) const
 {
-    if (Get_errhandler() == ERRORS_THROW_EXCEPTIONS) {
+    // we must free the Errhandler object returned from Get_errhandler because
+    // Get_errhandler adds a reference (the MPI Standard says as though a new
+    // object were created)
+    Errhandler current = Get_errhandler();
+    if (current == ERRORS_THROW_EXCEPTIONS) {
+        current.Free();
         throw Exception(errorcode); // throw by value, catch by reference
+    }
+    else {
+        current.Free();
     }
     MPIX_CALL( MPI_Comm_call_errhandler( (MPI_Comm) the_real_comm, errorcode ));
 }
 
 void Win::Call_errhandler( int errorcode ) const
 {
-    if (Get_errhandler() == ERRORS_THROW_EXCEPTIONS) {
+    // we must free the Errhandler object returned from Get_errhandler because
+    // Get_errhandler adds a reference (the MPI Standard says as though a new
+    // object were created)
+    Errhandler current = Get_errhandler();
+    if (current == ERRORS_THROW_EXCEPTIONS) {
+        current.Free();
         throw Exception(errorcode); // throw by value, catch by reference
+    }
+    else {
+        current.Free();
     }
     MPIX_CALL( MPI_Win_call_errhandler( (MPI_Win) the_real_win, errorcode ));
 }
@@ -2545,8 +2561,16 @@ void Win::Call_errhandler( int errorcode ) const
 #ifdef MPI_MODE_RDONLY
 void File::Call_errhandler( int errorcode ) const
 {
-    if (Get_errhandler() == ERRORS_THROW_EXCEPTIONS) {
+    // we must free the Errhandler object returned from Get_errhandler because
+    // Get_errhandler adds a reference (the MPI Standard says as though a new
+    // object were created)
+    Errhandler current = Get_errhandler();
+    if (current == ERRORS_THROW_EXCEPTIONS) {
+        current.Free();
         throw Exception(errorcode); // throw by value, catch by reference
+    }
+    else {
+        current.Free();
     }
     MPIX_CALL( MPI_File_call_errhandler( (MPI_File) the_real_file, errorcode ));
 }
