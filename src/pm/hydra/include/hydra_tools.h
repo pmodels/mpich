@@ -12,8 +12,8 @@
 /* bind */
 HYD_status HYDT_bind_init(char *binding, char *bindlib);
 void HYDT_bind_finalize(void);
-HYD_status HYDT_bind_process(int core);
-int HYDT_bind_get_core_id(int id);
+HYD_status HYDT_bind_process(int proc_unit_id);
+int HYDT_bind_get_proc_unit_id(int process_id);
 
 /* checkpointing */
 HYD_status HYDT_ckpoint_init(char *ckpointlib, char *ckpoint_prefix);

@@ -8,7 +8,7 @@
 #include "hydra_tools.h"
 
 HYD_status HYDU_create_process(char **client_arg, HYD_env_t * env_list,
-                               int *in, int *out, int *err, int *pid, int core)
+                               int *in, int *out, int *err, int *pid, int proc_unit_id)
 {
     int inpipe[2], outpipe[2], errpipe[2], tpid;
     HYD_status status = HYD_SUCCESS;
@@ -59,8 +59,8 @@ HYD_status HYDU_create_process(char **client_arg, HYD_env_t * env_list,
             HYDU_ERR_POP(status, "unable to putenv\n");
         }
 
-        if (core >= 0) {
-            status = HYDT_bind_process(core);
+        if (proc_unit_id >= 0) {
+            status = HYDT_bind_process(proc_unit_id);
             HYDU_ERR_POP(status, "bind process failed\n");
         }
 
@@ -100,7 +100,7 @@ HYD_status HYDU_create_process(char **client_arg, HYD_env_t * env_list,
 }
 
 
-HYD_status HYDU_fork_and_exit(int core)
+HYD_status HYDU_fork_and_exit(int proc_unit_id)
 {
     pid_t tpid;
     HYD_status status = HYD_SUCCESS;
@@ -114,8 +114,8 @@ HYD_status HYDU_fork_and_exit(int core)
         close(1);
         close(2);
 
-        if (core >= 0) {
-            status = HYDT_bind_process(core);
+        if (proc_unit_id >= 0) {
+            status = HYDT_bind_process(proc_unit_id);
             HYDU_ERR_POP(status, "bind process failed\n");
         }
     }

@@ -187,7 +187,7 @@ HYD_status HYDT_bind_process(int core)
 }
 
 
-int HYDT_bind_get_core_id(int id)
+int HYDT_bind_get_proc_unit_id(int id)
 {
     return HYDT_bind_info.bindmap[id % HYDT_bind_info.num_procs];
 }
