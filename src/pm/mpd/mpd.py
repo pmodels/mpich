@@ -864,7 +864,7 @@ class MPD(object):
         # we only handle two cases for now:
         # 1. block regular
         # 2. round-robin regular
-        # we do handle a "remainder node" that might not be full
+        # we do handle "remainder nodes" that might not be full
         delta = -1
         max_ranks_per_node = 0
         for node_id in node_to_ranks.keys():
@@ -887,6 +887,31 @@ class MPD(object):
                         mpd_print(1, "irregular case B detected")
                         return ''
                 last_rank = rank
+
+        # another check (case caught in ticket #905) for layouts like {0:A,1:A,2:B,3:B,4:B}
+        if len(node_to_ranks.keys()) > 1:
+            first_size = len(node_to_ranks[0])
+            last_size  = len(node_to_ranks[len(node_to_ranks.keys())-1])
+            if (last_size > first_size):
+                mpd_print(1, "irregular case C1 detected")
+                return ''
+            in_remainder = False
+            node_ids = node_to_ranks.keys()
+            node_ids.sort()
+            for node_id in node_ids:
+                node_size = len(node_to_ranks[node_id])
+                if not in_remainder:
+                    if node_size == first_size:
+                        pass # OK
+                    elif node_size == last_size:
+                        in_remainder = True
+                    else:
+                        mpd_print(1, "irregular case C2 detected")
+                        return ''
+                else: # in_remainder
+                    if node_size != last_size:
+                        mpd_print(1, "irregular case C3 detected")
+                        return ''
 
         num_nodes = len(node_to_ranks.keys())
         if delta == 1:
