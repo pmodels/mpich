@@ -244,7 +244,7 @@ HYD_status HYDT_bind_hwloc_process(int core)
     if (core < 0)
         goto fn_exit;
        
-    hwloc_cpuset_set (cpuset, core % HYDT_bind_info.num_procs);
+    hwloc_cpuset_set (cpuset, core);
     if (!topo_initialized)
      {
 	hwloc_topology_init(&topology);
