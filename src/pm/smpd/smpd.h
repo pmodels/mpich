@@ -980,7 +980,7 @@ int smpd_handle_delayed_spawn_command(void);
 #ifdef HAVE_WINDOWS_H
 DWORD_PTR smpd_get_next_process_affinity_mask(void );
 DWORD_PTR smpd_get_processor_affinity_mask(int proc_num);
-void smpd_init_affinity_table(void );
+BOOL smpd_init_affinity_table(void );
 #endif
 
 #if defined(__cplusplus)

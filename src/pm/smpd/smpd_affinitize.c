@@ -39,8 +39,10 @@ static DWORD_PTR s_affinity_table[MAX_PROCESSORS];
 DWORD_PTR smpd_get_next_process_affinity_mask()
 {
     DWORD_PTR Mask;
-    if (s_affinity_max == 0)
+    if (s_affinity_max == 0){
+        smpd_dbg_printf("Affinity table not initialized. Returning invalid mask\n");
         return 0;
+    }
 
     Mask = s_affinity_table[s_affinity_idx % s_affinity_max];
     s_affinity_idx++;
@@ -245,45 +247,62 @@ static void update_usage_counts(DWORD_PTR AssignMask, ResourceTableEntry *pTable
     This function initilizes the affinity table.  The processor assignments to processes 
     are distributed so as to balance the use of system resources.
 */
-void smpd_init_affinity_table()
+typedef BOOL (WINAPI *LPFN_GetLogicalProcessorInformation)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
+BOOL smpd_init_affinity_table()
 {
     /*
         Get this process affinity mask (the system mask is unused)
     */
     int count, nTableEntries;
-    BOOL fSucc;
+    BOOL fSucc, retval = TRUE;
     DWORD Length;
     DWORD_PTR SystemMask, ReserveMask, PrimaryMask;
     DWORD_PTR UsableProcessorMask;
     SYSTEM_LOGICAL_PROCESSOR_INFORMATION* pInfo = NULL;
     ResourceTableEntry* pTable = NULL;
+    LPFN_GetLogicalProcessorInformation lpfn_get_logical_proc_info;
 
     fSucc = GetProcessAffinityMask(GetCurrentProcess(), &UsableProcessorMask, &SystemMask);
-    if(!fSucc)
-        return;
+    if(!fSucc){
+        return FALSE;
+    }
 
+    /* Check if GetLogicalProcessorInformation() is available */
+    lpfn_get_logical_proc_info =
+        (LPFN_GetLogicalProcessorInformation ) GetProcAddress(GetModuleHandle(TEXT("kernel32")),
+                                                    "GetLogicalProcessorInformation");
+    if(lpfn_get_logical_proc_info == NULL){
+        smpd_dbg_printf("GetLogicalProcessorInformation() not available\n"); 
+        return FALSE;
+    }
     /*
         Retrieve the length required to store the processor information data
     */
     Length = 0;
-    /* FIXME: Check return val */
-    GetLogicalProcessorInformation(NULL, &Length);
-    if(Length == 0)
-        return;
+    /* This call will fail - however it will return the length reqd to store proc info*/
+    fSucc = lpfn_get_logical_proc_info(NULL, &Length);
+    if(Length == 0){
+        smpd_dbg_printf("GetLogicalProcessorInformation() returned invalid (0 bytes) length to store proc info\n");
+        return FALSE;
+    }
 
     /*
         Allocate the processor information buffer
     */
     pInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION*) malloc(Length);
-    if(pInfo == NULL)
-        return;
+    if(pInfo == NULL){
+        smpd_err_printf("Allocating memory for system logical proc info failed\n");
+        return FALSE;
+    }
 
     /*
         Query for the processors information
     */
-    fSucc = GetLogicalProcessorInformation(pInfo, &Length);
-    if(!fSucc)
-        goto fn_exit;
+    fSucc = lpfn_get_logical_proc_info(pInfo, &Length);
+    if(!fSucc){
+        smpd_err_printf("GetLogicalProcessorInformation() failed (error = %d)\n", GetLastError());
+        goto fn_fail;
+    }
     
     count = Length / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
 
@@ -293,8 +312,10 @@ void smpd_init_affinity_table()
     qsort(pInfo, count, sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION), compare_proc_info);
 
     pTable = (ResourceTableEntry*) malloc(count * sizeof(ResourceTableEntry));
-    if (pTable == NULL)
-        goto fn_exit;
+    if (pTable == NULL){
+        smpd_err_printf("Allocating memory for Resourcetableentry failed\n");
+        goto fn_fail;
+    }
 
     /*
         Initialize resource table from the sorted PROCESSOR_INFORMATION array
@@ -325,8 +346,12 @@ void smpd_init_affinity_table()
     }
 
     free(pTable);
-fn_exit:
+ fn_exit:
     free(pInfo);
+    return retval;
+fn_fail:
+    retval = FALSE;
+    goto fn_exit;
 }
 
 /* This function returns an affinity mask corresponding to the logical processor

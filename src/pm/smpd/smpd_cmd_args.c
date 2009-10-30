@@ -445,8 +445,13 @@ int smpd_parse_command_args(int *argcp, char **argvp[])
 	    smpd_dbg_printf("unable to set the ctrl handler for the smpd manager, error %d.\n", result);
 	}
 #ifdef HAVE_WINDOWS_H
-    /* FIXME: smpd_init_affinity_table() Does not return error codes if it fails */
-    smpd_init_affinity_table();
+    {
+        BOOL ret;
+        ret = smpd_init_affinity_table();
+        if(!ret){
+            smpd_dbg_printf("Initializing smpd affinity table failed\n");
+        }
+    }
 #endif
 
 	smpd_process.bService = SMPD_FALSE;
