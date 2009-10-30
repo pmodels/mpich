@@ -39,34 +39,7 @@ HYD_status HYDT_bind_init(char *binding, char *bindlib)
         goto fn_exit;
     }
 
-    if (!strncmp(binding, "user:", strlen("user:"))) {
-        /* If the user specified the binding, we don't need to
-         * initialize anything */
-        bindstr = HYDU_strdup(binding + strlen("user:"));
-
-        /* Find the number of processing elements */
-        HYDT_bind_info.num_procs = 0;
-        bindentry = strtok(bindstr, ",");
-        while (bindentry) {
-            HYDT_bind_info.num_procs++;
-            bindentry = strtok(NULL, ",");
-        }
-
-        /* Find the actual processing elements */
-        HYDU_MALLOC(HYDT_bind_info.bindmap, int *, HYDT_bind_info.num_procs * sizeof(int),
-                    status);
-        i = 0;
-        bindentry = strtok(bindstr, ",");
-        while (bindentry) {
-            HYDT_bind_info.bindmap[i++] = atoi(bindentry);
-            bindentry = strtok(NULL, ",");
-        }
-
-        goto fn_exit;
-    }
-
-    /* If a real binding is required, we initialize the binding
-     * library requested by the user */
+    /* Initialize the binding library requested by the user */
 #if defined HAVE_PLPA
     if (!strcmp(HYDT_bind_info.bindlib, "plpa")) {
         status = HYDT_bind_plpa_init(&HYDT_bind_info.support_level);
@@ -81,59 +54,88 @@ HYD_status HYDT_bind_init(char *binding, char *bindlib)
     }
 #endif /* HAVE_HWLOC */
 
-    if (HYDT_bind_info.support_level != HYDT_BIND_NONE) {
-        HYDU_MALLOC(HYDT_bind_info.bindmap, int *, HYDT_bind_info.num_procs * sizeof(int),
-                    status);
-
-        for (i = 0; i < HYDT_bind_info.num_procs; i++) {
-
-            /* RR is supported at the basic binding level */
-            if (!strcmp(binding, "rr")) {
-                HYDT_bind_info.bindmap[i] = i;
-                continue;
-            }
-
-            /* If we reached here, the user requested for topology
-             * aware binding. */
-            if (HYDT_bind_info.support_level != HYDT_BIND_TOPO)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                    "topology binding not supported on this platform\n");
-
-            if (!strcmp(binding, "buddy")) {
-                thread = i / (HYDT_bind_info.num_sockets * HYDT_bind_info.num_cores);
-
-                core = i % (HYDT_bind_info.num_sockets * HYDT_bind_info.num_cores);
-                core /= HYDT_bind_info.num_sockets;
-
-                sock = i % HYDT_bind_info.num_sockets;
-            }
-            else if (!strcmp(binding, "pack")) {
-                sock = i / (HYDT_bind_info.num_cores * HYDT_bind_info.num_threads);
-
-                core = i % (HYDT_bind_info.num_cores * HYDT_bind_info.num_threads);
-                core /= HYDT_bind_info.num_threads;
-
-                thread = i % HYDT_bind_info.num_threads;
-            }
-            else {
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unknown binding option\n");
-            }
-
-            for (j = 0; j < HYDT_bind_info.num_procs; j++) {
-                if (HYDT_bind_info.topology[j].socket_rank == sock &&
-                    HYDT_bind_info.topology[j].core_rank == core &&
-                    HYDT_bind_info.topology[j].thread_rank == thread) {
-                    HYDT_bind_info.bindmap[i] = HYDT_bind_info.topology[j].processor_id;
-                    break;
-                }
-            }
-        }
-    }
-    else {
-        /* If no binding is supported, we just set all mappings to -1 */
+    /* If we are not able to initialize the binding library, we set
+     * all mappings to -1 */
+    if (HYDT_bind_info.support_level == HYDT_BIND_NONE) {
         HYDU_MALLOC(HYDT_bind_info.bindmap, int *, sizeof(int), status);
         HYDT_bind_info.num_procs = 1;
         HYDT_bind_info.bindmap[0] = -1;
+
+        goto fn_exit;
+    }
+
+    if (!strncmp(binding, "user:", strlen("user:"))) {
+        /* If the user specified the binding, we don't need to
+         * initialize anything */
+
+        /* Find the number of processing elements */
+        bindstr = HYDU_strdup(binding + strlen("user:"));
+        HYDT_bind_info.num_procs = 0;
+        bindentry = strtok(bindstr, ",");
+        while (bindentry) {
+            HYDT_bind_info.num_procs++;
+            bindentry = strtok(NULL, ",");
+        }
+
+        /* Find the actual processing elements */
+        HYDU_MALLOC(HYDT_bind_info.bindmap, int *, HYDT_bind_info.num_procs * sizeof(int),
+                    status);
+        i = 0;
+        bindstr = HYDU_strdup(binding + strlen("user:"));
+        bindentry = strtok(bindstr, ",");
+        while (bindentry) {
+            HYDT_bind_info.bindmap[i++] = atoi(bindentry);
+            bindentry = strtok(NULL, ",");
+        }
+
+        goto fn_exit;
+    }
+
+    HYDU_MALLOC(HYDT_bind_info.bindmap, int *, HYDT_bind_info.num_procs * sizeof(int),
+                status);
+
+    for (i = 0; i < HYDT_bind_info.num_procs; i++) {
+
+        /* RR is supported at the basic binding level */
+        if (!strcmp(binding, "rr")) {
+            HYDT_bind_info.bindmap[i] = i;
+            continue;
+        }
+
+        /* If we reached here, the user requested for topology aware
+         * binding. */
+        if (HYDT_bind_info.support_level != HYDT_BIND_TOPO)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "topology binding not supported on this platform\n");
+
+        if (!strcmp(binding, "buddy")) {
+            thread = i / (HYDT_bind_info.num_sockets * HYDT_bind_info.num_cores);
+
+            core = i % (HYDT_bind_info.num_sockets * HYDT_bind_info.num_cores);
+            core /= HYDT_bind_info.num_sockets;
+
+            sock = i % HYDT_bind_info.num_sockets;
+        }
+        else if (!strcmp(binding, "pack")) {
+            sock = i / (HYDT_bind_info.num_cores * HYDT_bind_info.num_threads);
+
+            core = i % (HYDT_bind_info.num_cores * HYDT_bind_info.num_threads);
+            core /= HYDT_bind_info.num_threads;
+
+            thread = i % HYDT_bind_info.num_threads;
+        }
+        else {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unknown binding option\n");
+        }
+
+        for (j = 0; j < HYDT_bind_info.num_procs; j++) {
+            if (HYDT_bind_info.topology[j].socket_rank == sock &&
+                HYDT_bind_info.topology[j].core_rank == core &&
+                HYDT_bind_info.topology[j].thread_rank == thread) {
+                HYDT_bind_info.bindmap[i] = HYDT_bind_info.topology[j].processor_id;
+                break;
+            }
+        }
     }
 
   fn_exit:
