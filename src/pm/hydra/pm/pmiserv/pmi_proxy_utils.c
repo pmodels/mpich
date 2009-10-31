@@ -35,6 +35,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.downstream.exit_status = NULL;
 
     HYD_pmcd_pmip.local.id = -1;
+    HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = 0;
     HYD_pmcd_pmip.local.proxy_process_count = 0;
     HYD_pmcd_pmip.local.procs_are_launched = 0;
@@ -169,6 +170,13 @@ static HYD_status parse_params(char **t_argv)
         if (!strcmp(*argv, "--global-core-count")) {
             argv++;
             HYD_pmcd_pmip.system_global.global_core_count = atoi(*argv);
+            continue;
+        }
+
+        /* Hostname (as specified by the user) */
+        if (!strcmp(*argv, "--hostname")) {
+            argv++;
+            HYD_pmcd_pmip.local.hostname = HYDU_strdup(*argv);
             continue;
         }
 
@@ -413,6 +421,9 @@ HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
     if (HYD_pmcd_pmip.downstream.exit_status)
         HYDU_FREE(HYD_pmcd_pmip.downstream.exit_status);
 
+    if (HYD_pmcd_pmip.local.hostname)
+        HYDU_FREE(HYD_pmcd_pmip.local.hostname);
+
     HYDT_bind_finalize();
 
     /* Reinitialize all params to set everything to "NULL" or
@@ -600,6 +611,16 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
         if (HYD_pmcd_pmip.system_global.pmi_port_str) {
             status = HYDU_env_create(&env, "PMI_PORT",
                                      HYD_pmcd_pmip.system_global.pmi_port_str);
+            HYDU_ERR_POP(status, "unable to create env\n");
+
+            status = HYDU_append_env_to_list(*env, &prop_env);
+            HYDU_ERR_POP(status, "unable to add env to list\n");
+        }
+
+        /* Set the MPICH_INTERFACE_HOSTNAME based on what the user provided */
+        if (HYD_pmcd_pmip.local.hostname) {
+            status = HYDU_env_create(&env, "MPICH_INTERFACE_HOSTNAME",
+                                     HYD_pmcd_pmip.local.hostname);
             HYDU_ERR_POP(status, "unable to create env\n");
 
             status = HYDU_append_env_to_list(*env, &prop_env);

@@ -229,6 +229,9 @@ static HYD_status fill_in_exec_launch_info(void)
         HYDU_MALLOC(proxy->exec_launch_info, char **, total_args * sizeof(char *), status);
 
         arg = 0;
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--hostname");
+        proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->hostname);
+
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-core-count");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
 

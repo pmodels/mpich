@@ -46,6 +46,8 @@ struct HYD_pmcd_pmip {
     /* Proxy details */
     struct {
         int id;
+        char *hostname;
+
         int proxy_core_count;
         int proxy_process_count;
 
