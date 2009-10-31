@@ -479,7 +479,7 @@ HYD_status HYD_pmci_launch_procs(void)
 HYD_status HYD_pmci_wait_for_completion(void)
 {
     struct HYD_proxy *proxy;
-    int sockets_open, all_procs_exited;
+    int sockets_open, all_procs_exited, infinite = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -495,11 +495,14 @@ HYD_status HYD_pmci_wait_for_completion(void)
                 HYDT_dmx_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
             HYDU_ERR_POP(status, "error waiting for event\n");
 
-            /* If the timeout expired, raise a SIGINT and kill all the
-             * processes */
+            /* timeout expired */
             if (HYDU_time_left(HYD_handle.start, HYD_handle.timeout) == 0) {
                 status = HYD_pmcd_pmi_serv_cleanup();
                 HYDU_ERR_POP(status, "cleanup of processes failed\n");
+
+                /* Reset timer to infinite */
+                HYDU_time_set(&HYD_handle.timeout, &infinite);
+                continue;
             }
 
             /* Check to see if there's any open read socket left; if
