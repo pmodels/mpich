@@ -497,8 +497,10 @@ HYD_status HYD_pmci_wait_for_completion(void)
 
             /* If the timeout expired, raise a SIGINT and kill all the
              * processes */
-            if (HYDU_time_left(HYD_handle.start, HYD_handle.timeout) == 0)
-                raise(SIGINT);
+            if (HYDU_time_left(HYD_handle.start, HYD_handle.timeout) == 0) {
+                status = HYD_pmcd_pmi_serv_cleanup();
+                HYDU_ERR_POP(status, "cleanup of processes failed\n");
+            }
 
             /* Check to see if there's any open read socket left; if
              * there are, we will just wait for more events. */
