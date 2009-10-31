@@ -38,7 +38,7 @@ int MPID_Get_universe_size(int  * universe_size)
 	*universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
     else {
         *universe_size = strtol(val, &endptr, 0);
-        MPIU_ERR_CHKANDJUMP(endptr - val != strlen(val), mpi_errno, MPI_ERR_OTHER, "**intern");
+        MPIU_ERR_CHKINTERNAL(endptr - val != strlen(val), mpi_errno, "can't parse universe size");
     }
 
 #else

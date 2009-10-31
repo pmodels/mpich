@@ -341,8 +341,7 @@ static inline int MPIU_SHMW_Hnd_deserialize(
     int rc = -1;
 
     MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
-    MPIU_ERR_CHKANDJUMP1(!str_hnd, mpi_errno, MPI_ERR_OTHER, 
-        "**intern", "**intern %s", "ser hnd is null");
+    MPIU_ERR_CHKINTERNAL(!str_hnd, mpi_errno, "ser hnd is null");
     MPIU_ERR_CHKANDJUMP(str_hnd_len>=MPIU_SHMW_GHND_SZ,
         mpi_errno, MPI_ERR_OTHER, "**shmw_deserbufbig");
 
@@ -413,8 +412,7 @@ static inline int MPIU_SHMW_Hnd_deserialize_by_ref(
     MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
     MPIU_Assert(ser_hnd_ptr);
 
-    MPIU_ERR_CHKANDJUMP1(!(*ser_hnd_ptr), mpi_errno, MPI_ERR_OTHER, 
-        "**intern", "**intern %s", "ser hnd is null");
+    MPIU_ERR_CHKINTERNAL(!(*ser_hnd_ptr), mpi_errno, "ser hnd is null");
 
     MPIU_SHMW_Hnd_reset_val(hnd);
     MPIU_SHMW_Ghnd_set_by_ref(hnd, *ser_hnd_ptr);
@@ -566,8 +564,7 @@ static inline int MPIU_SHMW_Seg_detach(
     MPIU_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
         mpi_errno, MPI_ERR_OTHER, "**shmw_badhnd");
     MPIU_Assert(shm_addr_ptr);
-    MPIU_ERR_CHKANDJUMP1(!(*shm_addr_ptr), mpi_errno, MPI_ERR_OTHER, 
-        "**intern", "**intern %s", "shm address is null");
+    MPIU_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
 
     rc = shmdt(*shm_addr_ptr);
     MPIU_ERR_CHKANDJUMP2((rc != 0), mpi_errno, MPI_ERR_OTHER,
@@ -715,8 +712,7 @@ static inline int MPIU_SHMW_Seg_detach(
     int rc = -1;
 
     MPIU_Assert(shm_addr_ptr);
-    MPIU_ERR_CHKANDJUMP1(!(*shm_addr_ptr), mpi_errno, MPI_ERR_OTHER, 
-        "**intern", "**intern %s", "shm address is null");
+    MPIU_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
 
     rc = munmap(*shm_addr_ptr, seg_sz);
     MPIU_ERR_CHKANDJUMP2((rc != 0), mpi_errno, MPI_ERR_OTHER,
@@ -835,8 +831,7 @@ static inline int MPIU_SHMW_Seg_detach(
     MPIU_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
         mpi_errno, MPI_ERR_OTHER, "**shmw_badhnd");
     MPIU_Assert(shm_addr_ptr);
-    MPIU_ERR_CHKANDJUMP1(!(*shm_addr_ptr), mpi_errno, MPI_ERR_OTHER, 
-        "**intern", "**intern %s", "shm address is null");
+    MPIU_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
 
     rc = UnmapViewOfFile(*shm_addr_ptr);
     MPIU_ERR_CHKANDJUMP2((rc == 0), mpi_errno, MPI_ERR_OTHER,

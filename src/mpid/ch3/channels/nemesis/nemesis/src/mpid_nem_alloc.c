@@ -248,7 +248,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
             /* get name of shared file */
             mpi_errno = PMI2_Info_GetNodeAttr("sharedFilename", val, PMI2_MAX_VALLEN, &found, TRUE);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            MPIU_ERR_CHKANDJUMP1(!found, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "nodeattr not found");
+            MPIU_ERR_CHKINTERNAL(!found, mpi_errno, "nodeattr not found");
 
             mpi_errno = MPIU_SHMW_Hnd_deserialize(memory->hnd, val, strlen(val));
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -506,7 +506,7 @@ static int check_alloc(int num_local, int local_rank)
 	MPID_nem_mem_region.memory.symmetrical = 0;
 	MPID_nem_asymm_base_addr = MPID_nem_mem_region.memory.base_addr;
 #ifdef MPID_NEM_SYMMETRIC_QUEUES
-        MPIU_ERR_SETFATALANDJUMP1(mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "queues are not symmetrically allocated as expected");
+        MPIU_ERR_INTERNALANDJUMP(mpi_errno, "queues are not symmetrically allocated as expected");
 #endif
     }
     else

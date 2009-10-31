@@ -906,15 +906,21 @@ static int getConnInfo( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
     MPIU_Strncpy( buf, connInfo->connStrings[rank], bufsize );
     return MPI_SUCCESS;
 }
+
+#undef FUNCNAME
+#define FUNCNAME connToString
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
 {
+    int mpi_errno = MPI_SUCCESS;
     char *str = NULL, *pg_id;
     int  i, len=0;
-    
+    MPIU_CHKPMEM_DECL(1);
     MPIDI_ConnInfo *connInfo = (MPIDI_ConnInfo *)pg->connData;
 
     /* Create this from the string array */
-    str = (char *)MPIU_Malloc( connInfo->toStringLen );
+    MPIU_CHKPMEM_MALLOC(str, char *, connInfo->toStringLen, mpi_errno, "str");
 
 #if defined(MPICH_DEBUG_MEMINIT)
     memset(str, 0, connInfo->toStringLen);
@@ -934,6 +940,7 @@ static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
 	PMI_Get_id( pg->id, 256 );
 #endif
     }
+    
     while (*pg_id) str[len++] = *pg_id++;
     str[len++] = 0;
     
@@ -951,14 +958,19 @@ static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
     if (len > connInfo->toStringLen) {
 	*buf_p = 0;
 	*slen  = 0;
-	return MPIR_Err_create_code(MPI_SUCCESS,MPIR_ERR_FATAL,"connToString",
-			    __LINE__, MPI_ERR_INTERN, "**intern", NULL);
+        MPIU_ERR_INTERNALANDJUMP(mpi_errno, "len > connInfo->toStringLen");
     }
 
     *buf_p = str;
     *slen = len;
 
-    return MPI_SUCCESS;
+fn_exit:
+    MPIU_CHKPMEM_COMMIT();
+    return mpi_errno;
+fn_fail:
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit;
+    
 }
 static int connFromString( const char *buf, MPIDI_PG_t *pg )
 {

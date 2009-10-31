@@ -192,7 +192,7 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
     MPIDI_VC_Init (vc, NULL, 0);
 
     /* init channel portion of vc */
-    MPIU_ERR_CHKANDJUMP (!nemesis_initialized, mpi_errno, MPI_ERR_OTHER, "**intern");
+    MPIU_ERR_CHKINTERNAL(!nemesis_initialized, mpi_errno, "Nemesis not initialized");
     ((MPIDI_CH3I_VC *)vc->channel_private)->recv_active = NULL;
     MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 

@@ -136,7 +136,7 @@ int MPID_nem_ckpt_maybe_take_checkpoint()
 	/* we don't send messages to ourselves, so we pretend we sent and received a marker */
 	--MPID_nem_ckpt_sending_markers;
 	ret = cli_on_marker_receive (&marker, rank);
-        MPIU_ERR_CHKANDJUMP (ret != CLI_CP_MARKED, mpi_errno, MPI_ERR_OTHER, "**intern");
+        MPIU_ERR_CHKINTERNAL(ret != CLI_CP_MARKED, mpi_errno, "expecting CLI_CP_MARKED");
 	--MPID_nem_ckpt_logging_messages;
 	log_msg[rank] = 0;
 	sent_marker[rank] = 1;
@@ -169,7 +169,7 @@ int MPID_nem_ckpt_maybe_take_checkpoint()
     case CLI_NOTHING:
 	break;
     default:
-        MPIU_ERR_CHKANDJUMP (ret != CLI_CP_MARKED, mpi_errno, MPI_ERR_OTHER, "**intern");
+        MPIU_ERR_CHKINTERNAL(ret != CLI_CP_MARKED, mpi_errno, "expecting CLI_CP_MARKED");
     }
 
  fn_exit:
@@ -241,7 +241,7 @@ MPID_nem_ckpt_got_marker (MPID_nem_cell_ptr_t *cell, int *in_fbox)
 	/* we don't send messages to ourselves, so we pretend we sent and received a marker */
 	--MPID_nem_ckpt_sending_markers;
 	ret = cli_on_marker_receive (&marker, rank);
-        MPIU_ERR_CHKANDJUMP (ret != CLI_CP_MARKED, mpi_errno, MPI_ERR_OTHER, "**intern");
+        MPIU_ERR_CHKINTERNAL(ret != CLI_CP_MARKED, mpi_errno, "Expecting CLI_CP_MARKED");
 	--MPID_nem_ckpt_logging_messages;
 	log_msg[rank] = 0;
 	sent_marker[rank] = 1;
@@ -283,7 +283,7 @@ MPID_nem_ckpt_got_marker (MPID_nem_cell_ptr_t *cell, int *in_fbox)
 	    break;
 	}
     default:
-        MPIU_ERR_CHKANDJUMP (ret != CLI_CP_MARKED, mpi_errno, MPI_ERR_OTHER, "**intern");
+        MPIU_ERR_CHKINTERNAL(ret != CLI_CP_MARKED, mpi_errno, "Expecting CLI_CP_MARKED");
 	return;
     }
 

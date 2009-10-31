@@ -49,7 +49,7 @@ int MPID_nem_barrier(void)
     if (MPID_nem_mem_region.num_local == 1)
         goto fn_exit;
 
-    MPIU_ERR_CHKANDJUMP1 (!barrier_init, mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "barrier not initialized");
+    MPIU_ERR_CHKINTERNAL(!barrier_init, mpi_errno, "barrier not initialized");
 
     if (OPA_fetch_and_incr_int(&MPID_nem_mem_region.barrier->val) == MPID_nem_mem_region.num_local - 1)
     {

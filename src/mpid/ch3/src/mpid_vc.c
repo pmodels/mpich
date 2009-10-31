@@ -452,6 +452,7 @@ int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] )
 int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr, 
 			    int size, const int lpids[] )
 {
+    int mpi_errno = MPI_SUCCESS;
     MPID_Comm *commworld_ptr;
     int i;
     MPIDI_PG_iterator iter;
@@ -484,12 +485,7 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
 	    MPIDI_PG_Get_next( &iter, &pg );
 	    do {
 		MPIDI_PG_Get_next( &iter, &pg );
-		if (!pg) {
-		    return MPIR_Err_create_code( MPI_SUCCESS, 
-				     MPIR_ERR_RECOVERABLE,
-				     "MPID_VCR_CommFromLpids", __LINE__,
-				     MPI_ERR_INTERN, "**intern", 0 );
-		}
+                MPIU_ERR_CHKINTERNAL(!pg, mpi_errno, "no pg");
 		/* FIXME: a quick check on the min/max values of the lpid
 		   for this process group could help speed this search */
 		for (j=0; j<pg->size; j++) {
@@ -512,7 +508,10 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
 	   PG if necessary.  */
 	MPID_VCR_Dup( vc, &newcomm_ptr->vcr[i] );
     }
-    return 0;
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 /* The following is a temporary hook to ensure that all processes in 
@@ -811,7 +810,7 @@ fn_fail:
 #endif
 
 
-#define parse_error() MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "parse error")
+#define parse_error() MPIU_ERR_INTERNALANDJUMP(mpi_errno, "parse error")
 /* advance _c until we find a non whitespace character */
 #define skip_space(_c) while (isspace(*(_c))) ++(_c)
 /* return true iff _c points to a character valid as an indentifier, i.e., [-_a-zA-Z0-9] */
@@ -1016,7 +1015,7 @@ static int populate_ids_from_mapping(char *mapping, int *num_nodes, MPIDI_PG_t *
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (NULL_MAPPING == mt) goto fn_fail;
-    MPIU_ERR_CHKANDJUMP1(mt != VECTOR_MAPPING, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unsupported mapping type");
+    MPIU_ERR_CHKINTERNAL(mt != VECTOR_MAPPING, mpi_errno, "unsupported mapping type");
 
     rank = 0;
     /* for a representation like (block,N,(1,1)) this while loop causes us to
@@ -1131,8 +1130,8 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 
         mpi_errno = PMI2_Info_GetJobAttrIntArray("nodeIDs", node_ids, pg->size, &outlen, &found);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP1(!found, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "nodeIDs attribute not found");
-        MPIU_ERR_CHKANDJUMP1(outlen != pg->size, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "did not receive enough nodeids");
+        MPIU_ERR_CHKINTERNAL(!found, mpi_errno, "nodeIDs attribute not found");
+        MPIU_ERR_CHKINTERNAL(outlen != pg->size, mpi_errno, "did not receive enough nodeids");
         g_num_nodes = 0;
         for (i = 0; i < pg->size; ++i) {
             pg->vct[i].node_id = node_ids[i];
@@ -1159,11 +1158,11 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 
         mpi_errno = PMI2_Info_GetJobAttr("process-mapping", process_mapping, sizeof(process_mapping), &found);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP1(!found, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "process-mapping attribute not found");
+        MPIU_ERR_CHKINTERNAL(!found, mpi_errno, "process-mapping attribute not found");
         /* this code currently assumes pg is comm_world */
         mpi_errno = populate_ids_from_mapping(process_mapping, &num_nodes, pg, &did_map);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP1(!did_map, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unable to populate node ids from process-mapping");
+        MPIU_ERR_CHKINTERNAL(!did_map, mpi_errno, "unable to populate node ids from process-mapping");
         g_num_nodes = num_nodes;
     }
 #endif

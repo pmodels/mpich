@@ -836,12 +836,12 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     int ret;
     
     ret = MPIU_Strncpy(temp_filename, filePattern, MAXPATHLEN);
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "logfile path too long");
+    MPIU_ERR_CHKINTERNAL(ret, mpi_errno, "logfile path too long");
 
     MPIU_Basename(temp_filename, &basename);
 
     /* make sure there's enough room in temp_filename to store temp_pattern */
-    MPIU_ERR_CHKANDJUMP1(basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern), mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "logfile path too long");
+    MPIU_ERR_CHKINTERNAL(basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern), mpi_errno, "logfile path too long");
 
     MPIU_Strncpy(basename, temp_pattern, sizeof(temp_pattern));
     

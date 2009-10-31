@@ -325,7 +325,7 @@ int MPID_nem_lmt_vmsplice_progress(void)
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 break;
             default:
-                MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unexpected request type");
+                MPIU_ERR_INTERNALANDJUMP(mpi_errno, "unexpected request type");
                 break;
         }
 

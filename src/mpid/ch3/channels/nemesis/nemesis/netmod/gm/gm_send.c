@@ -89,12 +89,12 @@ MPID_nem_send_from_queue()
                 if (mpi_errno) MPIU_ERR_POP (mpi_errno);
                 break;
 	    default:
-                MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**intern");
+                MPIU_ERR_INTERNALANDJUMP(mpi_errno, "unexpected rdma type");
 		break;
 	    }
 	    break;
 	default:
-            MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**intern");
+            MPIU_ERR_INTERNALANDJUMP(mpi_errno, "unexpected operation type");
 	    break;
 	}
 	MPID_nem_gm_queue_free (send, e);

@@ -370,7 +370,7 @@ static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         break;
     default:
-        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unexpected request type");
+        MPIU_ERR_INTERNALANDJUMP(mpi_errno, "unexpected request type");
         break;
     }
 

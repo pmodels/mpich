@@ -346,7 +346,7 @@ MPID_nem_mx_poll(int in_blocking_poll)
      else
      {
          /* Error : unknown REQ type */
-         MPIU_ERR_CHKANDJUMP1(TRUE, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unknown REQ type");
+         MPIU_ERR_CHKINTERNAL(TRUE, mpi_errno, "unknown REQ type");
      }
    }
    
@@ -387,7 +387,7 @@ MPID_nem_mx_poll(int in_blocking_poll)
      else
      {
          /* Error : unknown REQ type */
-         MPIU_ERR_CHKANDJUMP1(TRUE, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", "unknown REQ type");
+         MPIU_ERR_CHKINTERNAL(TRUE, mpi_errno, "unknown REQ type");
      }
    }   
  fn_exit:

@@ -565,6 +565,16 @@
      MPIU_ERR_CHKANDSTMT4(cond_,err_,class_,goto fn_fail,gmsg_,smsg_,arg1_,arg2_,arg3_,arg4_)
 #define MPIU_ERR_CHKFATALANDJUMP4(cond_,err_,class_,gmsg_,smsg_,arg1_,arg2_,arg3_,arg4_) \
      MPIU_ERR_CHKFATALANDSTMT4(cond_,err_,class_,goto fn_fail,gmsg_,smsg_,arg1_,arg2_,arg3_,arg4_)
+
+#define MPIU_ERR_INTERNAL(err_, msg_)   \
+    MPIU_ERR_SETFATAL1(err_, MPI_ERR_INTERN, "**intern", "**intern %s", msg_)
+#define MPIU_ERR_INTERNALANDSTMT(err_, msg_, stmt_) \
+    MPIU_ERR_SETANDSTMT1(err_, MPI_ERR_INTERN, stmt_, "**intern", "**intern %s", msg_)
+#define MPIU_ERR_INTERNALANDJUMP(err_, msg_) \
+    MPIU_ERR_INTERNALANDSTMT(err_, msg_, goto fn_fail)
+#define MPIU_ERR_CHKINTERNAL(cond_, err_, msg_) \
+    do {if (cond_) MPIU_ERR_INTERNALANDJUMP(err_, msg_);} while(0)
+
 /* --END ERROR MACROS-- */
 
 /* 
