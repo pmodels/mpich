@@ -119,6 +119,7 @@ if (!$source || !$version || !$psource) {
 }
 
 check_package("doctext");
+check_package("txt2man");
 check_package("svn");
 check_package("latex");
 check_package("autoconf");
