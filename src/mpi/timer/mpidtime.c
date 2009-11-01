@@ -218,34 +218,9 @@ void MPID_Wtime_acc( MPID_Time_t *t1,MPID_Time_t *t2, MPID_Time_t *t3 )
     *t3 += (*t2 - *t1);
 }
 
-
-
-
 #elif MPICH_TIMER_KIND == USE_LINUXALPHA_CYCLE
-/* Code from LinuxJournal #42 (Oct-97), p50; 
-   thanks to Dave Covey dnc@gi.alaska.edu
-   Untested
- */
-#error "LinuxAlpha cycle counter not supported"
-/*
-    unsigned long cc;
-    asm volatile( "rpcc %0" : "=r"(cc) : : "memory" );
- */
-    /* Convert to time.  Scale cc by 1024 incase it would overflow a double;
-       consider using long double as well */
-void MPID_Wtime_diff( MPID_Time_t *t1, MPID_Time_t *t2, double *diff )
-    *diff = 1024.0 * ((double)(cc/1024) / (double)CLOCK_FREQ_HZ);
-void MPID_Wtime_todouble( MPID_Time_t *t, double *val )
-{
-}
-void MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
-{
-}
-double MPID_Wtick( void ) 
-{
-    return 1.0;
-}
 
+#error "LinuxAlpha cycle counter not supported"
 
 #elif (MPICH_TIMER_KIND == USE_WIN86_CYCLE) || (MPICH_TIMER_KIND == USE_WIN64_CYCLE)
 double MPID_Seconds_per_tick = 0.0;
