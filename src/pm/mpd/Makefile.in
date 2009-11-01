@@ -246,8 +246,6 @@ dependencies:
 # Empty documentations targets (MPICH2 wants this target)
 htmldoc:
 latexdoc:
-mandoc:
-# Empty tags targets (MPICH2 wants this target)
 tags: TAGS
 TAGS:
 
@@ -255,9 +253,9 @@ TAGS:
 # EXPERIMENTAL TOTALVIEW STUFF
 
 # EXPERIMENTAL MAN STUFF
-man:
+mandoc:
 	-@for cmd in ${PYTHON_SOURCE} ; do \
-	    currdir=`pwd` ; cd ${srcdir} &&  pydoc $$cmd | txt2man -t $$cmd -s 1 -v "mpd cmds" | awk ' !/Help on module/ { print } ' > $$currdir/$$cmd.1 ; \
+	    cd ${srcdir} &&  pydoc $$cmd | txt2man -t $$cmd -s 1 -v "mpd cmds" | awk ' !/Help on module/ { print } ' > ../../../man/man1/$$cmd.1 ; \
 	done
 # (Note to makefile maintainers: not all make programs accept comments in
 # the commands for a target; all Makefile comments must begin in the first
@@ -266,5 +264,5 @@ man:
 
 install-man:
 	-@for cmd in ${PYTHON_SOURCE} ; do \
-		${INSTALL} -m 644 $$cmd.1 $(DESTDIR)${mandir}/$$cmd.1 ; \
+		${INSTALL} -m 644 $$cmd.1 $(DESTDIR)${mandir}/man1/$$cmd.1 ; \
 	done
