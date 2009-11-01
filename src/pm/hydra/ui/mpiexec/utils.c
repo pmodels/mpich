@@ -684,9 +684,21 @@ static HYD_status binding_fn(char *arg, char ***argv)
         printf("  * Usage: -binding [type]; where [type] can be:\n");
         printf("        none -- no binding\n");
         printf("        rr   -- round-robin as OS assigned processor IDs\n");
-        printf("        buddy -- order of least shared resources\n");
-        printf("        pack  -- order of most shared resources\n\n");
         printf("        user:0,1,3,2 -- user specified binding\n");
+        printf("        topo -- CPU topology-aware binding\n");
+        printf("        topomem -- memory topology-aware binding\n\n");
+
+        printf("    CPU options (supported on topology-capable binding libs):\n");
+        printf("        topo (with no options) -- use all CPU resources\n");
+        printf("        topo:sockets,cores,threads -- use all CPU resources\n");
+        printf("        topo:sockets,cores -- avoid using multiple threads on a core\n");
+        printf("        topo:sockets -- avoid using multiple cores on a socket\n");
+
+        printf("    Memory options (supported on memory topology aware binding libs):\n");
+        printf("        topomem:l1,l2,l3,mem -- use all memory resources\n");
+        printf("        topomem:l2,l3,mem -- avoid sharing l1 cache\n");
+        printf("        topomem:l3,mem -- avoid using l2 cache\n");
+        printf("        topomem:mem -- avoid using l3 cache\n");
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 

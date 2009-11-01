@@ -489,7 +489,7 @@ HYD_status HYD_pmcd_pmi_proxy_procinfo(int fd)
 
 HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
 {
-    int i, j, arg, stdin_fd, process_id, proc_unit_id, pmi_id;
+    int i, j, arg, stdin_fd, process_id, os_index, pmi_id;
     char *str, *envstr, *list;
     char *client_args[HYD_NUM_TMP_STRINGS];
     HYD_env_t *env, *prop_env = NULL;
@@ -650,14 +650,14 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                 client_args[arg++] = HYDU_strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
-            proc_unit_id = HYDT_bind_get_proc_unit_id(process_id);
+            os_index = HYDT_bind_get_os_index(process_id);
             if (pmi_id == 0) {
                 status = HYDU_create_process(client_args, prop_env,
                                              &HYD_pmcd_pmip.downstream.in,
                                              &HYD_pmcd_pmip.downstream.out[process_id],
                                              &HYD_pmcd_pmip.downstream.err[process_id],
                                              &HYD_pmcd_pmip.downstream.pid[process_id],
-                                             proc_unit_id);
+                                             os_index);
 
                 HYD_pmcd_pmip.local.stdin_buf_offset = 0;
                 HYD_pmcd_pmip.local.stdin_buf_count = 0;
@@ -675,7 +675,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                              &HYD_pmcd_pmip.downstream.out[process_id],
                                              &HYD_pmcd_pmip.downstream.err[process_id],
                                              &HYD_pmcd_pmip.downstream.pid[process_id],
-                                             proc_unit_id);
+                                             os_index);
             }
             HYDU_ERR_POP(status, "create process returned error\n");
 

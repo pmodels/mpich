@@ -9,35 +9,51 @@
 
 #include "hydra_utils.h"
 
+#define HYDT_TOPO_CHILD_ID(obj) \
+    ((((char *) obj) - ((char *) obj->parent->children)) / sizeof(struct HYDT_topo_obj))
+
 typedef enum {
     HYDT_BIND_NONE = 0,
     HYDT_BIND_BASIC,
-    HYDT_BIND_TOPO
+    HYDT_BIND_TOPO,
+    HYDT_BIND_MEMTOPO
 } HYDT_bind_support_level_t;
+
+typedef enum {
+    HYDT_TOPO_MACHINE = 0, /* Cache-coherent set of processors */
+    HYDT_TOPO_NODE, /* Sockets sharing memory dimms */
+    HYDT_TOPO_SOCKET,
+    HYDT_TOPO_CORE,
+    HYDT_TOPO_THREAD,
+    HYDT_TOPO_END /* The last element */
+} HYDT_topo_obj_type_t;
+
+struct HYDT_topo_obj {
+    HYDT_topo_obj_type_t type;
+
+    int os_index; /* OS index */
+
+    struct HYDT_topo_obj *parent;
+
+    int num_children;
+    struct HYDT_topo_obj *children;
+
+    /* Depth of the shared memory regions. This is a pointer to
+     * accomodate multiple levels of memory shared by this set of
+     * processing units. */
+    int *shared_memory_depth;
+};
 
 struct HYDT_bind_info {
     HYDT_bind_support_level_t support_level;
 
-    int num_procs;
-    int num_sockets;
-    int num_cores;
-    int num_threads;
-
-    int *bindmap;
     char *bindlib;
+    int *bindmap;
 
-    struct HYDT_topology {
-        int processor_id;
+    /* This is needed for all binding levels, except "NONE" */
+    int total_proc_units;
 
-        int socket_rank;
-        int socket_id;
-
-        int core_rank;
-        int core_id;
-
-        int thread_rank;
-        int thread_id;
-    } *topology;
+    struct HYDT_topo_obj machine;
 };
 
 extern struct HYDT_bind_info HYDT_bind_info;

@@ -160,8 +160,8 @@ struct HYD_thread_context {
 #endif /* HAVE_THREAD_SUPPORT */
 
 HYD_status HYDU_create_process(char **client_arg, HYD_env_t * env_list,
-                               int *in, int *out, int *err, int *pid, int proc_unit_id);
-HYD_status HYDU_fork_and_exit(int proc_unit_id);
+                               int *in, int *out, int *err, int *pid, int os_index);
+HYD_status HYDU_fork_and_exit(int os_index);
 #if defined HAVE_THREAD_SUPPORT
 HYD_status HYDU_create_thread(void *(*func) (void *), void *args,
                               struct HYD_thread_context *ctxt);
