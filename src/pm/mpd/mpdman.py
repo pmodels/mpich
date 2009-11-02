@@ -440,7 +440,7 @@ class MPDMan(object):
             if not msg.has_key('process_mapping'):
                 mpd_print(1,'expected msg to contain a process_mapping key')
                 sys.exit(-1)
-            self.KVSs[self.default_kvsname]['process-mapping'] = msg['process_mapping']
+            self.KVSs[self.default_kvsname]['PMI_process_mapping'] = msg['process_mapping']
 
 
         self.tvReady = 0

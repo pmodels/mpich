@@ -306,7 +306,7 @@ static HYD_status fn_get(int fd, char *args[])
     if (found == 0) {
         /* Didn't find the job attribute; see if we know how to
          * generate it */
-        if (strcmp(key, "process-mapping") == 0) {
+        if (strcmp(key, "PMI_process_mapping") == 0) {
             /* Create a vector format */
             status = HYD_pmcd_pmi_process_mapping(process, HYD_pmcd_pmi_vector, &node_list);
             HYDU_ERR_POP(status, "Unable to get process mapping information\n");
@@ -315,7 +315,7 @@ static HYD_status fn_get(int fd, char *args[])
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                     "key value larger than maximum allowed\n");
 
-            status = HYD_pmcd_pmi_add_kvs("process-mapping", node_list,
+            status = HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list,
                                           process->node->pg->kvs, &ret);
             HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
 

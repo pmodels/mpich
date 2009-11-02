@@ -1002,7 +1002,7 @@ done:
 static int populate_ids_from_mapping(char *mapping, int *num_nodes, MPIDI_PG_t *pg, int *did_map)
 {
     int mpi_errno = MPI_SUCCESS;
-    /* process-mapping is available */
+    /* PMI_process_mapping is available */
     mapping_type_t mt = -1;
     map_block_t *mb = NULL;
     int nblocks = 0;
@@ -1156,13 +1156,13 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         int did_map = 0;
         int num_nodes = 0;
 
-        mpi_errno = PMI2_Info_GetJobAttr("process-mapping", process_mapping, sizeof(process_mapping), &found);
+        mpi_errno = PMI2_Info_GetJobAttr("PMI_process_mapping", process_mapping, sizeof(process_mapping), &found);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKINTERNAL(!found, mpi_errno, "process-mapping attribute not found");
+        MPIU_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
         /* this code currently assumes pg is comm_world */
         mpi_errno = populate_ids_from_mapping(process_mapping, &num_nodes, pg, &did_map);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKINTERNAL(!did_map, mpi_errno, "unable to populate node ids from process-mapping");
+        MPIU_ERR_CHKINTERNAL(!did_map, mpi_errno, "unable to populate node ids from PMI_process_mapping");
         g_num_nodes = num_nodes;
     }
 #endif
@@ -1185,10 +1185,10 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     mpi_errno = MPIDI_PG_GetConnKVSname(&kvs_name);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    /* See if process manager supports process-mapping keyval */
+    /* See if process manager supports PMI_process_mapping keyval */
 
-    /* FIXME 'process-mapping' only applies for the original PG (MPI_COMM_WORLD) */
-    pmi_errno = PMI_KVS_Get(kvs_name, "process-mapping", value, val_max_sz);
+    /* FIXME 'PMI_process_mapping' only applies for the original PG (MPI_COMM_WORLD) */
+    pmi_errno = PMI_KVS_Get(kvs_name, "PMI_process_mapping", value, val_max_sz);
     if (pmi_errno == 0) {
         int did_map = 0;
         int num_nodes = 0;
@@ -1205,7 +1205,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         /* else fall through to O(N^2) PMI_KVS_Gets version */
     }
     else {
-        MPIU_DBG_MSG(CH3_OTHER,TERSE,"unable to obtain the 'process-mapping' PMI key");
+        MPIU_DBG_MSG(CH3_OTHER,TERSE,"unable to obtain the 'PMI_process_mapping' PMI key");
     }
 
     mpi_errno = publish_node_id(pg, our_pg_rank);
