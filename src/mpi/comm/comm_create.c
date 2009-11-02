@@ -18,14 +18,6 @@
 #endif
 /* -- End Profiling Symbol Block */
 
-/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
-   the MPI routines */
-#ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Comm_create
-#define MPI_Comm_create PMPI_Comm_create
-
-#endif
-
 /* prototypes to make the compiler happy in the case that PMPI_LOCAL expands to
  * nothing instead of "static" */
 PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
@@ -41,6 +33,13 @@ PMPI_LOCAL int MPIR_Comm_create_create_and_map_vcrt(int n,
 
 PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr, MPI_Comm *newcomm);
 PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr, MPI_Comm *newcomm);
+
+
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Comm_create
+#define MPI_Comm_create PMPI_Comm_create
 
 /* This function allocates and calculates an array (*mapping_out) such that
  * (*mapping_out)[i] is the rank in (*mapping_vcr_out) corresponding to local
@@ -485,6 +484,7 @@ fn_fail:
     goto fn_exit;
 }
 
+#endif /* !defined(MPICH_MPI_FROM_PMPI) */
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_create
