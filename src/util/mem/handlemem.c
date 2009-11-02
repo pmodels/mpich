@@ -353,7 +353,7 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
 	    /* The priority of these callbacks must be greater than
 	       the priority of the callback that frees the objmem direct and 
 	       indirect storage. */
-	    MPIR_Add_finalize(MPIU_CheckHandlesOnFinalize, objmem, 1);
+	    MPIR_Add_finalize(MPIU_CheckHandlesOnFinalize, objmem, MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO);
 #endif
 	    /* ptr points to object to allocate */
 	}

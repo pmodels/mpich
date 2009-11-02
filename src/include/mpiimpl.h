@@ -2167,6 +2167,8 @@ Notes:
 void MPIR_Add_finalize( int (*routine)( void * ), void *extra, int priority );
 
 #define MPIR_FINALIZE_CALLBACK_PRIO 5
+#define MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO 1
+#define MPIR_FINALIZE_CALLBACK_DEFAULT_PRIO 0
 #define MPIR_FINALIZE_CALLBACK_MAX_PRIO 10
 
 /* For no error checking, we could define MPIR_Nest_incr/decr as empty */
@@ -3151,6 +3153,7 @@ typedef struct MPID_Grequest_class {
      MPI_Grequest_cancel_function *cancel_fn;
      MPIX_Grequest_poll_function *poll_fn;
      MPIX_Grequest_wait_function *wait_fn;
+     struct MPID_Grequest_class *next;
 } MPID_Grequest_class;
 
 

@@ -16,6 +16,8 @@
 #endif
 /* -- End Profiling Symbol Block */
 
+PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data);
+
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines.  You can use USE_WEAK_SYMBOLS to see if MPICH is
    using weak symbols to implement the MPI routines. */
@@ -35,13 +37,40 @@ MPIU_Object_alloc_t MPID_Grequest_class_mem = {0, 0, 0, 0, MPID_GREQ_CLASS,
 					       MPID_Grequest_class_direct,
 					       MPID_GREQ_CLASS_PREALLOC, };
 
+/* We jump through some minor hoops to manage the list of classes ourselves and
+ * only register a single finalizer to avoid hitting limitations in the current
+ * finalizer code.  If the finalizer implementation is ever revisited this code
+ * is a good candidate for registering one callback per greq class and trimming
+ * some of this logic. */
+int MPIR_Grequest_registered_finalizer = 0;
+MPID_Grequest_class *MPIR_Grequest_class_list = NULL;
+
 /* Any internal routines can go here.  Make them static if possible.  If they
    are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of 
    static; this macro expands into "static" if weak symbols are supported and
    into nothing otherwise. */
+PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Grequest_class *last = NULL;
+    MPID_Grequest_class *cur = MPIR_Grequest_class_list;
+
+    /* FIXME MT this function is not thread safe when using fine-grained threading */
+    MPIR_Grequest_class_list = NULL;
+    while (cur) {
+        last = cur;
+        cur = last->next;
+        MPIU_Handle_obj_free(&MPID_Grequest_class_mem, last);
+    }
+
+    return mpi_errno;
+}
+
 #else
 extern MPID_Grequest_class MPID_Grequest_class_direct[];
 extern MPIU_Object_alloc_t MPID_Grequest_class_mem;
+extern int MPIR_Grequest_registered_finalizer;
+extern MPID_Grequest_class *MPIR_Grequest_class_list;
 #endif
 
 #undef FUNCNAME
@@ -224,6 +253,22 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
 	class_ptr->wait_fn = wait_fn;
 
 	MPIU_Object_set_ref(class_ptr, 1);
+
+        if (MPIR_Grequest_class_list == NULL) {
+            class_ptr->next = NULL;
+        }
+        else {
+            class_ptr->next = MPIR_Grequest_class_list;
+        }
+        MPIR_Grequest_class_list = class_ptr;
+        if (!MPIR_Grequest_registered_finalizer) {
+            /* must run before (w/ higher priority than) the handle check
+             * finalizer in order avoid being flagged as a leak */
+            MPIR_Add_finalize(&MPIR_Grequest_free_classes_on_finalize,
+                              NULL,
+                              MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO+1);
+            MPIR_Grequest_registered_finalizer = 1;
+        }
 
 	/* ... end of body of routine ... */
 fn_exit:
