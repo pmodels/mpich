@@ -8,6 +8,7 @@ alltoallwf_SOURCES  = alltoallwf.f
 inplacef_SOURCES  = inplacef.f
 allredint8f_SOURCES  = allredint8f.f
 allredopttf_SOURCES = allredopttf.f
+reducelocalf_SOURCES  = reducelocalf.f
 
 testing:
 	../../runtests -srcdir=$(srcdir) -tests=testlist \
