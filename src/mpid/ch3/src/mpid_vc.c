@@ -1085,7 +1085,12 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     char *node_name_buf;
     int no_local = 0;
     int odd_even_cliques = 0;
+    int pmi_version = MPIU_DEFAULT_PMI_VERSION, pmi_subversion = MPIU_DEFAULT_PMI_SUBVERSION;
     MPIU_CHKLMEM_DECL(4);
+
+    /* See if the user wants to override our default values */
+    MPIU_GetEnvInt("PMI_VERSION", &pmi_version);
+    MPIU_GetEnvInt("PMI_SUBVERSION", &pmi_subversion);
 
     if (pg->size == 1) {
         pg->vct[0].node_id = g_num_nodes++;
@@ -1188,24 +1193,26 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     /* See if process manager supports PMI_process_mapping keyval */
 
     /* FIXME 'PMI_process_mapping' only applies for the original PG (MPI_COMM_WORLD) */
-    pmi_errno = PMI_KVS_Get(kvs_name, "PMI_process_mapping", value, val_max_sz);
-    if (pmi_errno == 0) {
-        int did_map = 0;
-        int num_nodes = 0;
-        /* this code currently assumes pg is comm_world */
-        mpi_errno = populate_ids_from_mapping(value, &num_nodes, pg, &did_map);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        g_num_nodes = num_nodes;
-        if (did_map) {
-            goto fn_exit;
+    if (pmi_version == 1 && pmi_subversion == 1) {
+        pmi_errno = PMI_KVS_Get(kvs_name, "PMI_process_mapping", value, val_max_sz);
+        if (pmi_errno == 0) {
+            int did_map = 0;
+            int num_nodes = 0;
+            /* this code currently assumes pg is comm_world */
+            mpi_errno = populate_ids_from_mapping(value, &num_nodes, pg, &did_map);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            g_num_nodes = num_nodes;
+            if (did_map) {
+                goto fn_exit;
+            }
+            else {
+                MPIU_DBG_MSG_S(CH3_OTHER,TERSE,"did_map==0, unable to populate node ids from mapping=%s",value);
+            }
+            /* else fall through to O(N^2) PMI_KVS_Gets version */
         }
         else {
-            MPIU_DBG_MSG_S(CH3_OTHER,TERSE,"did_map==0, unable to populate node ids from mapping=%s",value);
+            MPIU_DBG_MSG(CH3_OTHER,TERSE,"unable to obtain the 'PMI_process_mapping' PMI key");
         }
-        /* else fall through to O(N^2) PMI_KVS_Gets version */
-    }
-    else {
-        MPIU_DBG_MSG(CH3_OTHER,TERSE,"unable to obtain the 'PMI_process_mapping' PMI key");
     }
 
     mpi_errno = publish_node_id(pg, our_pg_rank);
