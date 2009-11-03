@@ -33,8 +33,7 @@ C
       external user_op
       integer ierr, errs
       integer count, myop
-      integer ii, size
-      integer comm
+      integer ii
       
       errs = 0
 
