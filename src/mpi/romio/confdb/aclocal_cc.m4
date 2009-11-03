@@ -482,6 +482,12 @@ if test "$enable_strict_done" != "yes" ; then
     #   -Wpadded -- We catch struct padding with asserts when we need to
     #   -Wredundant-decls -- Having redundant declarations is benign and the 
     #	    code already has some.
+    #   -Waggregate-return -- This seems to be a performance-related warning
+    #       aggregate return values are legal in ANSI C, but they may be returned
+    #	    in memory rather than through a register.  We do use aggregate return
+    #	    values, but they are structs of a single basic type (used to enforce
+    #	    type checking for relative vs. absolute ptrs), and with optimization
+    #	    the aggregate value is converted to a scalar.
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
@@ -506,7 +512,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Wcast-align
         -Wwrite-strings
         -Wno-sign-compare
-        -Waggregate-return
         -Wold-style-definition
         -Wno-multichar
         -Wno-deprecated-declarations
