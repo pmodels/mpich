@@ -137,12 +137,15 @@ int MPI_Reduce_local(void *inbuf, void *inoutbuf, int count, MPI_Datatype dataty
     {
         (*uop)(inbuf, inoutbuf, &count, &datatype);
     }
+
+    /* --BEGIN ERROR HANDLING-- */
+    if (MPIU_THREADPRIV_FIELD(op_errno))
+        mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
+    /* --END ERROR HANDLING-- */
+
     /* ... end of body of routine ... */
 
   fn_exit:
-    if (MPIU_THREADPRIV_FIELD(op_errno))
-        mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
-
     MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_REDUCE_LOCAL);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;

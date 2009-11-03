@@ -7,6 +7,7 @@ reduce 5
 reduce 10
 red3 10
 red4 10
+reduce_local 1
 alltoall1 8
 alltoallv 10
 alltoallv0 10
