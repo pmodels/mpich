@@ -661,7 +661,13 @@ if dtypes.Exists("MPI_WCHAR_T") then
 else
 	'missing_datatypes = missing_datatypes & "MPI_WCHAR_T" & vbCrLf
 	'MPI_WCHAR_T           = "0x" + mpi_datatype_prefix + len_wchar_t     + "0e"
-	MPI_WCHAR_T = dtypes.Item("MPI_WCHAR")
+        if dtypes.Exists("MPI_WCHAR") then
+            MPI_WCHAR_T = dtypes.Item("MPI_WCHAR")
+            dtypes.Add "MPI_WCHAR_T", MPI_WCHAR_T
+        else
+            missing_datatypes = missing_datatypes & "MPI_WCHAR_T" & vbCrLf
+            MPI_WCHAR_T       = "0x" + mpi_datatype_prefix + len_wchar       + "0e"
+        end if
 end if
 if dtypes.Exists("MPI_SHORT") then
 	MPI_SHORT = dtypes.Item("MPI_SHORT")
@@ -692,7 +698,13 @@ if dtypes.Exists("MPI_UNSIGNED") then
 else
 	'missing_datatypes = missing_datatypes & "MPI_UNSIGNED" & vbCrLf
 	'MPI_UNSIGNED          = "0x" + mpi_datatype_prefix + len_int         + "06"
-	MPI_UNSIGNED = dtypes.Item("MPI_UNSIGNED_INT")
+        if dtypes.Exists("MPI_UNSIGNED_INT") then
+            MPI_UNSIGNED = dtypes.Item("MPI_UNSIGNED_INT")
+            dtypes.Add "MPI_UNSIGNED", MPI_UNSIGNED
+        else
+            missing_datatypes = missing_datatypes & "MPI_UNSIGNED" & vbCrLf
+            MPI_UNSIGNED      = "0x" + mpi_datatype_prefix + len_int         + "06"
+        end if
 end if
 if dtypes.Exists("MPI_LONG") then
 	MPI_LONG = dtypes.Item("MPI_LONG")
@@ -717,7 +729,13 @@ if dtypes.Exists("MPI_LONG_LONG_INT") then
 else
 	'missing_datatypes = missing_datatypes & "MPI_LONG_LONG_INT" & vbCrLf
 	'MPI_LONG_LONG_INT     = "0x" + mpi_datatype_prefix + len_long_long   + "09"
-	MPI_LONG_LONG_INT = dtypes.Item("MPI_LONG_LONG")
+        if dtypes.Exists("MPI_LONG_LONG") then
+            MPI_LONG_LONG_INT = dtypes.Item("MPI_LONG_LONG")
+            dtypes.Add "MPI_LONG_LONG_INT", MPI_LONG_LONG_INT
+        else
+            missing_datatypes = missing_datatypes & "MPI_LONG_LONG_INT" & vbCrLf
+            MPI_LONG_LONG_INT = "0x" + mpi_datatype_prefix + len_long_long   + "09"
+        end if
 end if
 if dtypes.Exists("MPI_UNSIGNED_LONG_LONG") then
 	MPI_UNSIGNED_LONG_LONG = dtypes.Item("MPI_UNSIGNED_LONG_LONG")
@@ -833,6 +851,7 @@ else
 	'missing_datatypes = missing_datatypes & "MPI_FLOAT_INT" & vbCrLf
 	'MPI_FLOAT_INT         = "0x" + mpi_datatype_prefix + len_float_int       + "12"
 	MPI_FLOAT_INT         = "0x8c000000"
+        dtypes.Add "MPI_FLOAT_INT", MPI_FLOAT_INT
 end if
 if dtypes.Exists("MPI_DOUBLE_INT") then
 	MPI_DOUBLE_INT = dtypes.Item("MPI_DOUBLE_INT")
@@ -840,6 +859,7 @@ else
 	'missing_datatypes = missing_datatypes & "MPI_DOUBLE_INT" & vbCrLf
 	'MPI_DOUBLE_INT        = "0x" + mpi_datatype_prefix + len_double_int      + "13"
 	MPI_DOUBLE_INT        = "0x8c000001"
+        dtypes.Add "MPI_DOUBLE_INT", MPI_DOUBLE_INT
 end if
 if dtypes.Exists("MPI_LONG_INT") then
 	MPI_LONG_INT = dtypes.Item("MPI_LONG_INT")
@@ -847,6 +867,7 @@ else
 	'missing_datatypes = missing_datatypes & "MPI_LONG_INT" & vbCrLf
 	'MPI_LONG_INT          = "0x" + mpi_datatype_prefix + len_long_int        + "14"
 	MPI_LONG_INT          = "0x8c000002"
+        dtypes.Add "MPI_LONG_INT", MPI_LONG_INT
 end if
 if dtypes.Exists("MPI_SHORT_INT") then
 	MPI_SHORT_INT = dtypes.Item("MPI_SHORT_INT")
@@ -854,6 +875,7 @@ else
 	'missing_datatypes = missing_datatypes & "MPI_SHORT_INT" & vbCrLf
 	'MPI_SHORT_INT         = "0x" + mpi_datatype_prefix + len_short_int       + "15"
 	MPI_SHORT_INT         = "0x8c000003"
+        dtypes.Add "MPI_SHORT_INT", MPI_SHORT_INT
 end if
 if dtypes.Exists("MPI_2INT") then
 	MPI_2INT = dtypes.Item("MPI_2INT")
@@ -867,6 +889,7 @@ else
 	'missing_datatypes = missing_datatypes & "MPI_LONG_DOUBLE_INT" & vbCrLf
 	'MPI_LONG_DOUBLE_INT   = "0x" + mpi_datatype_prefix + len_long_double_int + "17"
 	MPI_LONG_DOUBLE_INT   = "0x8c000004"
+        dtypes.Add "MPI_LONG_DOUBLE_INT", MPI_LONG_DOUBLE_INT
 end if
 if dtypes.Exists("MPI_CHARACTER") then
 	MPI_CHARACTER = dtypes.Item("MPI_CHARACTER")
@@ -1030,6 +1053,17 @@ else
     missing_datatypes = missing_datatypes & "MPI_C_FLOAT_COMPLEX" & vbCrLf
     MPI_C_FLOAT_COMPLEX = "0x" + mpi_datatype_prefix + len_float__Complex + "40"
 end if
+if dtypes.Exists("MPI_C_COMPLEX") then
+    MPI_C_COMPLEX = dtypes.Item("MPI_C_COMPLEX")
+else
+    if dtypes.Exists("MPI_C_FLOAT_COMPLEX") then
+        MPI_C_COMPLEX = dtypes.Item("MPI_C_FLOAT_COMPLEX")
+        dtypes.Add "MPI_C_COMPLEX", MPI_C_COMPLEX
+    else
+        missing_datatypes = missing_datatypes & "MPI_C_COMPLEX" & vbCrLf
+        MPI_C_COMPLEX = "0x" + mpi_datatype_prefix + len_float__Complex + "40"
+    end if
+end if
 if dtypes.Exists("MPI_C_DOUBLE_COMPLEX") then
     MPI_C_DOUBLE_COMPLEX = dtypes.Item("MPI_C_DOUBLE_COMPLEX")
 else
@@ -1049,12 +1083,16 @@ else
     missing_datatypes = missing_datatypes & "MPI_AINT" & vbCrLf
     MPI_AINT_W32 = "0x" + mpi_datatype_prefix + len_mpi_aint32 + "43"
 end if
+dtypes.Add "MPI_AINT_W32", MPI_AINT_W32
+
 if dtypes64.Exists("MPI_AINT_DATATYPE") then
     MPI_AINT_W64 = dtypes64.Item("MPI_AINT_DATATYPE")
 else
     missing_datatypes = missing_datatypes & "MPI_AINT" & vbCrLf
     MPI_AINT_W64 = "0x" + mpi_datatype_prefix + len_mpi_aint64 + "43"
 end if
+dtypes64.Add "MPI_AINT_W64", MPI_AINT_W64
+
 ' Note that in configure.in MPI_OFFSET is named as MPI_OFFSET_DATATYPE - due to name collision
 if dtypes.Exists("MPI_OFFSET_DATATYPE") then
     MPI_OFFSET_W64 = dtypes.Item("MPI_OFFSET_DATATYPE")
@@ -1062,6 +1100,8 @@ else
     missing_datatypes = missing_datatypes & "MPI_OFFSET" & vbCrLf
     MPI_OFFSET_W64 = "0x" + mpi_datatype_prefix + len_mpi_offset + "44"
 end if
+dtypes.Add "MPI_OFFSET_W64", MPI_OFFSET_W64
+dtypes64.Add "MPI_OFFSET_W64", MPI_OFFSET_W64
 
 
 if missing_datatypes <> "" then
@@ -1173,8 +1213,9 @@ F77_C_FLOAT_COMPLEX     = HexToInt(dtypes.Item("MPI_C_FLOAT_COMPLEX"))
 F77_C_COMPLEX           = HexToInt(dtypes.Item("MPI_C_COMPLEX"))
 F77_C_DOUBLE_COMPLEX    = HexToInt(dtypes.Item("MPI_C_DOUBLE_COMPLEX"))
 F77_C_LONG_DOUBLE_COMPLEX      = HexToInt(dtypes.Item("MPI_C_LONG_DOUBLE_COMPLEX"))
-F77_AINT                = HexToInt(dtypes.Item("MPI_AINT"))
-F77_OFFSET              = HexToInt(dtypes.Item("MPI_OFFSET"))
+F77_AINT_W32                = HexToInt(dtypes.Item("MPI_AINT_W32"))
+F77_AINT_W64                = HexToInt(dtypes64.Item("MPI_AINT_W64"))
+F77_OFFSET_W64              = HexToInt(dtypes.Item("MPI_OFFSET_W64"))
 
 if false then
 foo = ""
@@ -1900,9 +1941,13 @@ Function ReplaceAts( str, use_f77, b64 )
 			Case "@MPI_F77_C_LONG_DOUBLE_COMPLEX@"
 				str = Replace(str, "@MPI_F77_C_LONG_DOUBLE_COMPLEX@", F77_C_LONG_DOUBLE_COMPLEX)
 			Case "@MPI_F77_AINT@"
-				str = Replace(str, "@MPI_F77_AINT@", F77_AINT)
+                                If b64 Then
+                                    str = Replace(str, "@MPI_F77_AINT@", F77_AINT_W64)
+                                Else
+                                    str = Replace(str, "@MPI_F77_AINT@", F77_AINT_W32)
+                                End If
 			Case "@MPI_F77_OFFSET@"
-				str = Replace(str, "@MPI_F77_OFFSET@", F77_OFFSET)
+				str = Replace(str, "@MPI_F77_OFFSET@", F77_OFFSET_W64)
 			Case "@MPI_STATUS_SIZE@"
 				str = Replace(str, "@MPI_STATUS_SIZE@", "5")
 			Case "@HAVE_CXX_EXCEPTIONS@"
