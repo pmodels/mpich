@@ -30,6 +30,8 @@
 /* Any internal routines can go here.  Make them static if possible */
 #endif
 
+int MPIR_async_thread_initialized = 0;
+
 #undef FUNCNAME
 #define FUNCNAME MPI_Init
 
@@ -69,7 +71,7 @@ int MPI_Init( int *argc, char ***argv )
     static const char FCNAME[] = "MPI_Init";
     int mpi_errno = MPI_SUCCESS;
     int rc;
-    int threadLevel;
+    int threadLevel, provided;
     MPIU_THREADPRIV_DECL;
     MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
 
@@ -140,9 +142,23 @@ int MPI_Init( int *argc, char ***argv )
 #else 
     threadLevel = MPI_THREAD_SINGLE;
 #endif
-    
-    mpi_errno = MPIR_Init_thread( argc, argv, threadLevel, (int *)0 );
+
+    /* If the user requested for asynchronous progress, request for
+     * THREAD_MULTIPLE. */
+    rc = 0;
+    MPIU_GetEnvBool("MPICH_ASYNC_PROGRESS", &rc);
+    if (rc)
+        threadLevel = MPI_THREAD_MULTIPLE;
+
+    mpi_errno = MPIR_Init_thread( argc, argv, threadLevel, &provided );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+    if (provided == MPI_THREAD_MULTIPLE) {
+        mpi_errno = MPIR_Init_async_thread();
+        if (mpi_errno) goto fn_fail;
+
+        MPIR_async_thread_initialized = 1;
+    }
 
     /* ... end of body of routine ... */
     

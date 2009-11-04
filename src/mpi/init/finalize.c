@@ -6,6 +6,7 @@
 /* style: allow:fprintf:1 sig:0 */
 
 #include "mpiimpl.h"
+#include "mpi_init.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Finalize */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -114,6 +115,7 @@ int MPI_Finalize( void )
 {
     static const char FCNAME[] = "MPI_Finalize";
     int mpi_errno = MPI_SUCCESS;
+    int rc;
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     int rank=0;
 #endif
@@ -128,6 +130,13 @@ int MPI_Finalize( void )
     MPID_MPI_FINALIZE_FUNC_ENTER(MPID_STATE_MPI_FINALIZE);
     
     /* ... body of routine ... */
+
+    /* If the user requested for asynchronous progress, we need to
+     * shutdown the progress thread */
+    if (MPIR_async_thread_initialized) {
+        mpi_errno = MPIR_Finalize_async_thread();
+        if (mpi_errno) goto fn_fail;
+    }
     
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     /* We need to get the rank before freeing MPI_COMM_WORLD */

@@ -1,5 +1,5 @@
 mpi_sources = abort.c init.c initialized.c initthread.c \
- ismain.c finalize.c finalized.c querythread.c 
+ ismain.c finalize.c finalized.c querythread.c async.c
 HEADERS = mpi_init.h
 # Note that initinfo is only in the MPI library, not the profile library
 lib${MPILIBNAME}_a_SOURCES = ${mpi_sources} initinfo.c

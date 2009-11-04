@@ -502,7 +502,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 {
     static const char FCNAME[] = "MPI_Init_thread";
     int mpi_errno = MPI_SUCCESS;
-    int rc;
+    int rc, reqd = required;
     MPIU_THREADPRIV_DECL;
     MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT_THREAD);
 
@@ -553,9 +553,23 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
-    
-    mpi_errno = MPIR_Init_thread( argc, argv, required, provided );
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail; 
+
+    /* If the user requested for asynchronous progress, request for
+     * THREAD_MULTIPLE. */
+    rc = 0;
+    MPIU_GetEnvBool("MPICH_ASYNC_PROGRESS", &rc);
+    if (rc)
+        reqd = MPI_THREAD_MULTIPLE;
+
+    mpi_errno = MPIR_Init_thread( argc, argv, reqd, provided );
+    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+    if (rc && *provided == MPI_THREAD_MULTIPLE) {
+        mpi_errno = MPIR_Init_async_thread();
+        if (mpi_errno) goto fn_fail;
+
+        MPIR_async_thread_initialized = 1;
+    }
 
     /* ... end of body of routine ... */
     
