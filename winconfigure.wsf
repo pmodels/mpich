@@ -2338,6 +2338,22 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "_UINT64_T"
 					' Needed only for SOLARIS machines
 					fout.WriteLine("/* #undef _UINT64_T */")
+				Case "u_char"
+                                        ' Needed only on unix builds where --enable-strict
+                                        ' option removes these types
+                                        fout.WriteLine("/* #undef u_char */")
+				Case "u_int"
+                                        ' Needed only on unix builds where --enable-strict
+                                        ' option removes these types
+                                        fout.WriteLine("/* #undef u_int */")
+				Case "u_long"
+                                        ' Needed only on unix builds where --enable-strict
+                                        ' option removes these types
+                                        fout.WriteLine("/* #undef u_long */")
+				Case "u_short"
+                                        ' Needed only on unix builds where --enable-strict
+                                        ' option removes these types
+                                        fout.WriteLine("/* #undef u_short */")
 				Case "POINTERINT_t"
 					If b64 Then
 						fout.WriteLine("#define POINTERINT_t __int64")
@@ -2504,6 +2520,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_SYS_STAT_H */")
 				Case "HAVE_SYS_TYPES_H"
 					fout.WriteLine("#define HAVE_SYS_TYPES_H 1")
+				Case "HAVE_SYS_ATTR_H"
+					fout.WriteLine("/* #undef HAVE_SYS_ATTR_H */")
 				Case "HAVE_THR_CREATE"
 					fout.WriteLine("/* #undef HAVE_THR_CREATE */")
 				Case "HAVE_TIMING"
