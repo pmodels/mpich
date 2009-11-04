@@ -555,8 +555,8 @@ int smpd_free_context(smpd_context_t *context)
 #define FCNAME "smpd_add_command_arg"
 int smpd_add_command_arg(smpd_command_t *cmd_ptr, char *param, char *value)
 {
-    char *str;
-    int len;
+    char *str=NULL, *tmp_value=NULL;
+    int len, value_len;
     int result;
     int cmd_length;
 
@@ -590,13 +590,35 @@ int smpd_add_command_arg(smpd_command_t *cmd_ptr, char *param, char *value)
 	}
     }
 
+    /* Check if we have a escape character at the end of the
+     * value string
+     * If we do, add a separator character to value string
+     */
+    value_len = (int )strlen(value);
+    tmp_value = NULL;
+    if(value[value_len - 1] == MPIU_STR_ESCAPE_CHAR){
+        tmp_value = (char *)MPIU_Malloc(value_len + 2);
+        if(tmp_value == NULL){
+            smpd_err_printf("Unable to allocate memory for tmp value string\n");
+            smpd_exit_fn(FCNAME);
+            return SMPD_FAIL;
+        }
+        MPIU_Strncpy(tmp_value, value, value_len + 2);
+        tmp_value[value_len] = MPIU_STR_SEPAR_CHAR;
+        tmp_value[value_len + 1] = '\0';
+        value = tmp_value;
+    }
+
     result = MPIU_Str_add_string_arg(&str, &len, param, value);
     if (result != MPIU_STR_SUCCESS)
     {
-	smpd_err_printf("unable to add the command parameter: %s=%s\n", param, value);
-	smpd_exit_fn(FCNAME);
-	return SMPD_FAIL;
+        smpd_err_printf("unable to add the command parameter: %s=%s\n", param, value);
+        if(tmp_value) MPIU_Free(tmp_value);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
     }
+
+    if(tmp_value) MPIU_Free(tmp_value);
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
 }
