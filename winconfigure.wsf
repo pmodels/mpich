@@ -2987,6 +2987,10 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#else")
 					fout.WriteLine("#define MPIU_THREAD_GRANULARITY MPIU_THREAD_GRANULARITY_SINGLE")
 					fout.WriteLine("#endif")
+                                Case "MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS"
+                                        ' Currently we only build MPICH2 with global lock 
+                                        ' -Introduce this option when building lock-free version
+                                        fout.WriteLine("/* #undef MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS */")
 				Case "MPIU_HANDLE_ALLOCATION_METHOD"
 					fout.WriteLine("#define MPIU_HANDLE_ALLOCATION_METHOD MPIU_HANDLE_ALLOCATION_MUTEX")
 				Case "MPIU_MUTEX_WAIT_TIME"
