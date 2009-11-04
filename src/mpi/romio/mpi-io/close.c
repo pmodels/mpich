@@ -90,13 +90,12 @@ int MPI_File_close(MPI_File *mpi_fh)
     HPMP_IO_WEND(fl_xmpi);
 #endif /* MPI_hpux */
 
-    MPIR_Nest_decr();
 fn_exit:
+    MPIR_Nest_decr();
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return error_code;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPIR_Nest_decr();
     error_code = MPIO_Err_return_file(fh, error_code);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
