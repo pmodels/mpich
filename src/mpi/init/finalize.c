@@ -115,7 +115,6 @@ int MPI_Finalize( void )
 {
     static const char FCNAME[] = "MPI_Finalize";
     int mpi_errno = MPI_SUCCESS;
-    int rc;
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     int rank=0;
 #endif
@@ -131,12 +130,14 @@ int MPI_Finalize( void )
     
     /* ... body of routine ... */
 
+#if defined USE_ASYNC_PROGRESS
     /* If the user requested for asynchronous progress, we need to
      * shutdown the progress thread */
     if (MPIR_async_thread_initialized) {
         mpi_errno = MPIR_Finalize_async_thread();
         if (mpi_errno) goto fn_fail;
     }
+#endif /* USE_ASYNC_PROGRESS */
     
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     /* We need to get the rank before freeing MPI_COMM_WORLD */
