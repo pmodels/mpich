@@ -51,8 +51,7 @@ int main( int argc, char *argv[] )
     inbuf = malloc(sizeof(int) * MAX_BUF_ELEMENTS);
     inoutbuf = malloc(sizeof(int) * MAX_BUF_ELEMENTS);
 
-
-    for (count = 1; count < MAX_BUF_ELEMENTS; count *= 2) {
+    for (count = 0; count < MAX_BUF_ELEMENTS; count > 0 ? count*=2 : count++) {
         for (i = 0; i < count; ++i) {
             inbuf[i] = i;
             inoutbuf[i] = i;
@@ -68,7 +67,7 @@ int main( int argc, char *argv[] )
 
     /* make sure that user-define ops work too */
     MPI_Op_create(&user_op, 0/*!commute*/, &uop);
-    for (count = 1; count < MAX_BUF_ELEMENTS; count *= 2) {
+    for (count = 0; count < MAX_BUF_ELEMENTS; count > 0 ? count*=2 : count++) {
         for (i = 0; i < count; ++i) {
             inbuf[i] = i;
             inoutbuf[i] = i;

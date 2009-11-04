@@ -39,7 +39,7 @@ C
 
       call mtest_init(ierr)
 
-      count = 1
+      count = 0
       do while (count .le. max_buf_size )
          do ii = 1,count
             vin(ii) = ii
@@ -56,12 +56,16 @@ C        Check if the result is correct
                errs = errs + 1
             endif
          enddo 
-         count = count + count
+         if ( count .gt. 0 ) then
+            count = count + count
+         else
+            count = 1
+         endif
       enddo
 
       call mpi_op_create( user_op, .false., myop, ierr )
 
-      count = 1
+      count = 0
       do while (count .le. max_buf_size) 
          do ii = 1, count
             vin(ii) = ii
@@ -78,7 +82,11 @@ C        Check if the result is correct
                errs = errs + 1
             endif
          enddo
-         count = count + count
+         if ( count .gt. 0 ) then
+            count = count + count
+         else
+            count = 1
+         endif
       enddo
 
       call mpi_op_free( myop, ierr )
