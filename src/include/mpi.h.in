@@ -301,8 +301,8 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
  * digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER. So,
  * 1.0.7rc1 will have the numeric version 10007201.
  */
-#define MPICH2_VERSION "@VERSION@"
-#define MPICH2_NUMVERSION @NUMVERSION@
+#define MPICH2_VERSION "@MPICH2_VERSION@"
+#define MPICH2_NUMVERSION @MPICH2_NUMVERSION@
 
 #define MPICH2_RELEASE_TYPE_ALPHA  0
 #define MPICH2_RELEASE_TYPE_BETA   1

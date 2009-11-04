@@ -137,7 +137,8 @@ AC_SUBST(RELEASE_DATE)
 
 # Try to find the version
 if test -s "$srcdir/maint/Version" ; then
-    VERSION="`cat $srcdir/maint/Version`"
+    MPICH2_VERSION="`cat $srcdir/maint/Version`"
+    export MPICH2_VERSION
 else
     AC_MSG_ERROR([Version information not found. Configuration aborted.])
 fi
@@ -161,11 +162,11 @@ fi
 # Numeric version will have 1 digit for MAJ, 2 digits for MIN,
 # 2 digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER.
 changequote(<<,>>)
-V1=`expr $VERSION : '\([0-9]*\)\.[0-9]*\.*[0-9]*[a-zA-Z]*[0-9]*'`
-V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)\.*[0-9]*[a-zA-Z]*[0-9]*'`
-V3=`expr $VERSION : '[0-9]*\.[0-9]*\.*\([0-9]*\)[a-zA-Z]*[0-9]*'`
-V4=`expr $VERSION : '[0-9]*\.[0-9]*\.*[0-9]*\([a-zA-Z]*\)[0-9]*'`
-V5=`expr $VERSION : '[0-9]*\.[0-9]*\.*[0-9]*[a-zA-Z]*\([0-9]*\)'`
+V1=`expr $MPICH2_VERSION : '\([0-9]*\)\.[0-9]*\.*[0-9]*[a-zA-Z]*[0-9]*'`
+V2=`expr $MPICH2_VERSION : '[0-9]*\.\([0-9]*\)\.*[0-9]*[a-zA-Z]*[0-9]*'`
+V3=`expr $MPICH2_VERSION : '[0-9]*\.[0-9]*\.*\([0-9]*\)[a-zA-Z]*[0-9]*'`
+V4=`expr $MPICH2_VERSION : '[0-9]*\.[0-9]*\.*[0-9]*\([a-zA-Z]*\)[0-9]*'`
+V5=`expr $MPICH2_VERSION : '[0-9]*\.[0-9]*\.*[0-9]*[a-zA-Z]*\([0-9]*\)'`
 changequote([,])
 
 if test "$V2" -le 9 ; then V2=0$V2 ; fi
@@ -185,9 +186,9 @@ elif test "$V4" = "p" ; then
 fi
 if test "$V5" -le 9 ; then V5=0$V5 ; fi
 
-NUMVERSION=`expr $V1$V2$V3$V4$V5 + 0`
-AC_SUBST(NUMVERSION)
-AC_SUBST(VERSION)
+MPICH2_NUMVERSION=`expr $V1$V2$V3$V4$V5 + 0`
+AC_SUBST(MPICH2_NUMVERSION)
+AC_SUBST(MPICH2_VERSION)
 
 
 # ABIVERSION is incremented when there are changes in the ABI.  This is 
@@ -202,8 +203,8 @@ AC_SUBST(VERSION)
 # We use libtool-style version numbers (see --version-info in the 
 # libtool manual) 
 changequote(<<,>>)
-V1=`expr $VERSION : '\([0-9]*\)\.[0-9]*\.*[0-9]*[a-zA-Z]*[0-9]*'`
-V2=`expr $VERSION : '[0-9]*\.\([0-9]*\)\.*[0-9]*[a-zA-Z]*[0-9]*'`
+V1=`expr $MPICH2_VERSION : '\([0-9]*\)\.[0-9]*\.*[0-9]*[a-zA-Z]*[0-9]*'`
+V2=`expr $MPICH2_VERSION : '[0-9]*\.\([0-9]*\)\.*[0-9]*[a-zA-Z]*[0-9]*'`
 changequote([,])
 ABIVERSION="${V1}:${V2}"
 AC_SUBST(ABIVERSION)
@@ -212,9 +213,9 @@ AC_SUBST(ABIVERSION)
 CONFIGURE_ARGUMENTS="$ac_configure_args"
 AC_SUBST(CONFIGURE_ARGUMENTS)
 if test -n "$ac_configure_args" ; then
-    echo "Configuring MPICH2 version $VERSION with $ac_configure_args"
+    echo "Configuring MPICH2 version $MPICH2_VERSION with $ac_configure_args"
 else 
-    echo "Configuring MPICH2 version $VERSION"
+    echo "Configuring MPICH2 version $MPICH2_VERSION"
 fi
 # Add the information on the system:
 echo "Running on system: `uname -a`"

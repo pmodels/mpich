@@ -4,7 +4,7 @@ AC_PREREQ(2.62)
 #     See COPYRIGHT in top-level directory.
 #
 
-AC_INIT([Hydra], [0.1])
+AC_INIT([Hydra], [0])
 AC_CONFIG_AUX_DIR(mpl/confdb)
 AC_CONFIG_MACRO_DIR(mpl/confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
@@ -33,6 +33,19 @@ PAC_ARG_CACHING
 PAC_ARG_STRICT
 PAC_C_GNU_ATTRIBUTE
 PAC_CC_FUNCTION_NAME_SYMBOL
+
+# Build information
+if test "x$MPICH2_VERSION" = "x" ; then
+   HYDRA_VERSION="unknown"
+else
+   HYDRA_VERSION=$MPICH2_VERSION
+fi
+AC_DEFINE_UNQUOTED(HYDRA_VERSION,"$HYDRA_VERSION",[Hydra version information])
+AC_DEFINE_UNQUOTED(HYDRA_CC,"$CC",[C compiler])
+AC_DEFINE_UNQUOTED(HYDRA_CXX,"$CXX",[C++ compiler])
+AC_DEFINE_UNQUOTED(HYDRA_F77,"$F77",[Fortran 77 compiler])
+AC_DEFINE_UNQUOTED(HYDRA_F90,"$F90",[Fortran 90 compiler])
+AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"$ac_configure_args",[Configure arguments])
 
 # Find the full path of the source dir (for VPATH builds)
 abs_srcdir=`(cd $srcdir && pwd)`
