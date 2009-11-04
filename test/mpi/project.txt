@@ -94,6 +94,14 @@
 				Name="VCMIDLTool"
 				TargetEnvironment="TARGET_ENV"/>
 			<Tool
+				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+				OutputFile=""
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
