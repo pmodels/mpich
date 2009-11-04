@@ -129,13 +129,13 @@ shared memory), MPD process management) of MPICH2 up and running.
 
     This step should succeed if there were no problems with the
     preceding step.  Check file m.txt. If there were problems,
-    do a "make clean" and then run make again with VERBOSE=1 
+    do a "make clean" and then run make again with V=1
 
-      make VERBOSE=1 |& tee m.txt       (for csh and tcsh)
+      make V=1 |& tee m.txt       (for csh and tcsh)
 
       OR
 
-      make VERBOSE=1 2>&1 | tee m.txt   (for bash and sh)
+      make V=1 2>&1 | tee m.txt   (for bash and sh)
 
     and then attach m.txt and c.txt to your bug report.
 

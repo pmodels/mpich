@@ -5064,7 +5064,7 @@ sub PrintVerboseOptionCommand {
     my $escaped_rule = $cmd;
     $escaped_rule =~ s/$newline(\t+)\@*/ ; \\$newline$1echo /g;
 
-    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" ] ; then \\$newline";
+    print FD "\t\@if [ \"x\$(VERBOSE)\" != \"x1\" -a \"x\$(V)\" != \"x1\" ] ; then \\$newline";
     print FD "\t  echo \"$echocmd\" ; \\$newline";
     print FD "\telse \\$newline";
     print FD "\t  echo $escaped_rule ; \\$newline";
