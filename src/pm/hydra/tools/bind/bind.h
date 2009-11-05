@@ -58,4 +58,9 @@ struct HYDT_bind_info {
 
 extern struct HYDT_bind_info HYDT_bind_info;
 
+HYD_status HYDT_bind_init(char *binding, char *bindlib);
+void HYDT_bind_finalize(void);
+HYD_status HYDT_bind_process(int os_index);
+int HYDT_bind_get_os_index(int process_id);
+
 #endif /* BIND_H_INCLUDED */

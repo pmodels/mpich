@@ -5,7 +5,6 @@
  */
 
 #include "hydra_utils.h"
-#include "hydra_tools.h"
 #include "ckpoint.h"
 
 #if defined HAVE_BLCR

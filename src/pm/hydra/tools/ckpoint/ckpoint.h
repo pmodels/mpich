@@ -16,4 +16,9 @@ struct HYDT_ckpoint_info {
 
 extern struct HYDT_ckpoint_info HYDT_ckpoint_info;
 
+HYD_status HYDT_ckpoint_init(char *ckpointlib, char *ckpoint_prefix);
+HYD_status HYDT_ckpoint_suspend(void);
+HYD_status HYDT_ckpoint_restart(HYD_env_t * envlist, int num_ranks, int ranks[], int *in,
+                                int *out, int *err);
+
 #endif /* CKPOINT_H_INCLUDED */

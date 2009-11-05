@@ -7,8 +7,9 @@
 #include "pmi_proxy.h"
 #include "bsci.h"
 #include "demux.h"
+#include "bind.h"
+#include "ckpoint.h"
 #include "hydra_utils.h"
-#include "hydra_tools.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 
