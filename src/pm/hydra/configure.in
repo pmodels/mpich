@@ -40,12 +40,18 @@ if test "x$MPICH2_VERSION" = "x" ; then
 else
    HYDRA_VERSION=$MPICH2_VERSION
 fi
+AC_SUBST(HYDRA_VERSION)
 AC_DEFINE_UNQUOTED(HYDRA_VERSION,"$HYDRA_VERSION",[Hydra version information])
 AC_DEFINE_UNQUOTED(HYDRA_CC,"$CC",[C compiler])
 AC_DEFINE_UNQUOTED(HYDRA_CXX,"$CXX",[C++ compiler])
 AC_DEFINE_UNQUOTED(HYDRA_F77,"$F77",[Fortran 77 compiler])
 AC_DEFINE_UNQUOTED(HYDRA_F90,"$F90",[Fortran 90 compiler])
 AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"$ac_configure_args",[Configure arguments])
+
+# Documentation
+AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
+AC_SUBST(DOXYGEN)
+AC_SUBST(top_srcdir)
 
 # Find the full path of the source dir (for VPATH builds)
 abs_srcdir=`(cd $srcdir && pwd)`
@@ -497,4 +503,5 @@ AC_OUTPUT(Makefile
 	rmk/include/rmki.h
 	css/src/cssi_init.c
 	css/include/cssi.h
+	hydra-doxygen.cfg
 )

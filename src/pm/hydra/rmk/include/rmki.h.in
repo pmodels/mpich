@@ -7,18 +7,48 @@
 #ifndef RMKI_H_INCLUDED
 #define RMKI_H_INCLUDED
 
+/** @file rmki.h.in */
+
 #include "hydra.h"
 
+/*! \addtogroup rmki Resource Management Kernel Interface
+ * @{
+ */
+
+/**
+ * \brief Function pointers for device specific implementations of
+ * different RMK functions
+ */
 struct HYD_rmki_fns {
+    /** \brief Query node list information */
     HYD_status(*query_node_list) (int *num_cores, struct HYD_proxy **proxy_list);
 };
 
+/** \cond */
 extern struct HYD_rmki_fns HYD_rmki_fns;
+/** \endcond */
 
+/**
+ * \brief HYD_rmki_init - Initialize the resource management kernel
+ *
+ * \param[in]   rmk     Resource management kernel to use
+ *
+ * Initializes the resource management kernel
+ */
 HYD_status HYD_rmki_init(char *rmk);
 
-/* Non-zero nodes means that the RMK should allocate the nodes if needed */
+/**
+ * \brief HYD_rmki_query_node_list - Query node list information
+ *
+ * \param[in,out]   num_cores   Number of cores available (non-zero cores means
+ *                              that the RMK should allocate the nodes if needed
+ * \param[out]      proxy_list  List of proxy structures containing the list of hosts
+ */
 HYD_status HYD_rmki_query_node_list(int *num_cores, struct HYD_proxy **proxy_list);
+
+/*!
+ * @}
+ */
 
 /* Each resource management kernel has to expose an initialization function */
 @hydra_rmk_init_decl@

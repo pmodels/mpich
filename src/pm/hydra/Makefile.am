@@ -42,3 +42,6 @@ mpich2-build-uninstall: uninstall
 
 # A special alternate installation target when using multiple process managers
 install-alt: install-alt-ui install-alt-pm
+
+htmldoc:
+	if test "@DOXYGEN@" != "" ; then @DOXYGEN@ hydra-doxygen.cfg ; fi

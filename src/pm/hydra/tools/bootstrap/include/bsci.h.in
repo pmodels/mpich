@@ -7,36 +7,153 @@
 #ifndef BSCI_H_INCLUDED
 #define BSCI_H_INCLUDED
 
+/** @file bsci.h.in */
+
+/*! \addtogroup bootstrap Bootstrap Control Interface
+ * @{
+ */
+
+/**
+ * \brief BSCI internal structure to maintain persistent information.
+ */
 struct HYDT_bsci_info {
+    /** \brief Boostrap executable to use */
     char *bootstrap_exec;
+
+    /** \brief Enable/disable X-forwarding */
     int  enablex;
+
+    /** \brief Enable/disable debugging */
     int  debug;
 };
 
+/**
+ * \brief Function pointers for device specific implementations of
+ * different BSCI functions.
+ */
 struct HYDT_bsci_fns {
+    /** \brief Launch processes */
     HYD_status(*launch_procs) (char **global_args, const char *proxy_id_str,
                                struct HYD_proxy *proxy_list);
+
+    /** \brief Finalize the bootstrap control device */
     HYD_status(*finalize) (void);
+
+    /** \brief Wait for bootstrap launched processes to complete */
     HYD_status(*wait_for_completion) (struct HYD_proxy *proxy_list);
+
+    /** \brief Query for node list information */
     HYD_status(*query_node_list) (int *num_cores, struct HYD_proxy **proxy_list);
+
+    /** \brief Query for the universe size */
     HYD_status(*query_usize) (int *size);
+
+    /** \brief Query the ID of a proxy */
     HYD_status(*query_proxy_id) (int *proxy_id);
 };
 
+/** \cond */
 extern struct HYDT_bsci_fns HYDT_bsci_fns;
+extern struct HYDT_bsci_info HYDT_bsci_info;
+/** \endcond */
 
+/**
+ * \brief HYDT_bsci_init - Initialize the bootstrap control device
+ *
+ * \param[in]   bootstrap       Bootstrap device to use
+ * \param[in]   bootstrap_exec  Bootstrap helper executable to use (optional)
+ * \param[in]   enablex         Enable/disable X-forwarding (hint only)
+ * \param[in]   debug           Enable/disable debugging
+ *
+ * This function initializes the bootstrap control device. This needs
+ * to be called before any other BSCI function. Implementors are
+ * expected to set any bootstrap implementation specific function
+ * pointers in this function to be used by later BSCI calls.
+ */
 HYD_status HYDT_bsci_init(char *bootstrap, char *bootstrap_exec, int enablex, int debug);
+
+
+/**
+ * \brief HYDT_bsci_launch_procs - Launch processes
+ *
+ * \param[in]   global_args     Arguments to be used for the launched processes
+ * \param[in]   proxy_id_str    String to prepend in the arguments for the
+ *                              proxy ID (use -1 if the proxy should query for the ID)
+ * \param[in]   proxy_list      List of proxy structures containing the list of hosts
+ *
+ * This function uses the hosts information in the proxy_list to
+ * launch processes. Bootstrap servers that perform sequential
+ * launches (one process at a time), should set the proxy ID string in
+ * sequential order. Bootstrap servers that perform parallel launches
+ * should set the proxy ID string to "-1", but allow proxies to query
+ * their ID information on each node using the
+ * HYDT_bsci_query_proxy_id function.
+ */
 HYD_status HYDT_bsci_launch_procs(char **global_args, const char *proxy_id_str,
                                  struct HYD_proxy *proxy_list);
+
+
+/**
+ * \brief HYDT_bsci_finalize - Finalize the bootstrap control device
+ *
+ * This function cleans up any relevant state that the bootstrap
+ * device maintained.
+ */
 HYD_status HYDT_bsci_finalize(void);
+
+
+/**
+ * \brief HYDT_bsci_wait_for_completion - Wait for bootstrap launched processes to complete
+ *
+ * \param[in]   proxy_list      List of proxy structures containing the list of hosts
+ *
+ * This function waits for all processes it launched to finish. The
+ * bootstrap control device should keep track of the processes it is
+ * launching and wait for their completion.
+ */
 HYD_status HYDT_bsci_wait_for_completion(struct HYD_proxy *proxy_list);
+
+
+/**
+ * \brief HYDT_bsci_query_node_list - Query for node list information
+ *
+ * \param[in,out] num_cores       Number of cores available (non-zero value refers to
+ *                                a request to allocate nodes/cores)
+ * \param[in]     proxy_list      List of proxy structures containing the list of hosts
+ *
+ * This function allows the upper layers to query the available nodes
+ * or request for nodes to be allocated (non-zero value refers to a
+ * request to allocate nodes/cores).
+ */
 HYD_status HYDT_bsci_query_node_list(int *num_cores, struct HYD_proxy **proxy_list);
+
+
+/**
+ * \brief HYDT_bsci_query_usize - Query for the universe size
+ *
+ * \param[out]  size       Maximum number of processes that can be launched
+ *
+ * If the underlying system allows for multitasking many processes on
+ * a single processing element, the bootstrap server should return
+ * "-1" (representing infinite). If not, it should specify the number
+ * of processes that can be spawned.
+ */
 HYD_status HYDT_bsci_query_usize(int *size);
+
+
+/**
+ * \brief HYDT_bsci_query_proxy_id - Query the ID of a proxy
+ *
+ * \param[out]  proxy_id    My proxy ID
+ *
+ * This function is called by each proxy if the proxy_str_id is
+ * specified as "-1" during launch.
+ */
 HYD_status HYDT_bsci_query_proxy_id(int *proxy_id);
+
+/*! @} */
 
 /* Each bootstrap server has to expose an initialization function */
 @hydra_bss_init_decl@
-
-extern struct HYDT_bsci_info HYDT_bsci_info;
 
 #endif /* BSCI_H_INCLUDED */
