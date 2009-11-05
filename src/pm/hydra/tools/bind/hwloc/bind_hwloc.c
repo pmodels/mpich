@@ -15,19 +15,15 @@ static int              topo_initialized = 0;
 
 HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
 {
+    int node,sock,core,proc,thread;
+
     hwloc_obj_t    obj_sys;
     hwloc_obj_t    obj_node;
     hwloc_obj_t    obj_sock;
     hwloc_obj_t    obj_core;
     hwloc_obj_t    obj_proc;
-    hwloc_obj_t    prev_obj;
-    hwloc_cpuset_t cpuset_sys;
-    hwloc_cpuset_t cpuset_node;
-    hwloc_cpuset_t cpuset_sock;
-    hwloc_cpuset_t cpuset_core;
 
-    int node,sock,core,proc,thread;
-    int bound,bound2,bound3;
+    struct HYDT_topo_obj *node_ptr, *sock_ptr, *core_ptr, *thread_ptr;
 
     HYD_status status = HYD_SUCCESS;    
 
@@ -38,192 +34,112 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     topo_initialized = 1;
 
     /* Get the max number of processing elements */
-    HYDT_bind_info.num_procs = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_PROC);   
+    HYDT_bind_info.total_proc_units = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_PROC);   
 
-    HYDU_MALLOC(HYDT_bind_info.topology, struct HYDT_topology *,
-                HYDT_bind_info.num_procs * sizeof(struct HYDT_topology), status);
-    for (proc = 0; proc < HYDT_bind_info.num_procs; proc++) {
-        HYDT_bind_info.topology[proc].processor_id = -1;
-        HYDT_bind_info.topology[proc].socket_rank  = -1;
-        HYDT_bind_info.topology[proc].socket_id    = -1;
-        HYDT_bind_info.topology[proc].core_rank    = -1;
-        HYDT_bind_info.topology[proc].core_id      = -1;
-        HYDT_bind_info.topology[proc].thread_rank  = -1;
-        HYDT_bind_info.topology[proc].thread_id    = -1;
-    }
-
-    proc     = 0;
-    prev_obj = NULL;
-    while(obj_proc = hwloc_get_next_obj_by_type(topology,HWLOC_OBJ_PROC,prev_obj))
-        {
-            HYDT_bind_info.topology[proc].processor_id = obj_proc->os_index;
-            prev_obj = obj_proc;
-            proc++;
-        }
-    assert(proc == HYDT_bind_info.num_procs);
-    
     /* We have qualified for basic binding support level */
     *support_level = HYDT_BIND_BASIC;
+   
+   /* Setup the machine level */   
+   /* get the System object */
+   obj_sys = hwloc_get_system_obj(topology);
+   /* init Hydra structure */
+   HYDT_bind_info.machine.type         = HYDT_TOPO_MACHINE;
+   HYDT_bind_info.machine.os_index     = -1; /* This is a set, not a single unit */
+   HYDT_bind_info.machine.parent       = NULL;
+   HYDT_bind_info.machine.num_children = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_NODE);
+   /* There is no real node, consider there is one */
+   if (!HYDT_bind_info.machine.num_children)
+     HYDT_bind_info.machine.num_children = 1;
+   HYDU_MALLOC(HYDT_bind_info.machine.children, struct HYDT_topo_obj *,
+	       sizeof(struct HYDT_topo_obj), status);
+   HYDT_bind_info.machine.shared_memory_depth = NULL;
+   
+   /* Setup the nodes levels */
+   for(node = 0 ; node < HYDT_bind_info.machine.num_children ; node++)
+     {	
+	node_ptr         = &HYDT_bind_info.machine.children[node];	
+	node_ptr->type   =  HYDT_TOPO_NODE;   
+	node_ptr->parent = &HYDT_bind_info.machine;
+	obj_node = hwloc_get_obj_inside_cpuset_by_type(topology,obj_sys->cpuset,HWLOC_OBJ_NODE,node);
 
-    /* get the System object */
-    obj_sys = hwloc_get_system_obj(topology);
-    cpuset_sys = obj_sys->cpuset;
+	if(!obj_node)
+	  obj_node = obj_sys;
+	node_ptr->os_index     = obj_node->os_index;;
+	node_ptr->num_children =  hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_node->cpuset,HWLOC_OBJ_SOCKET);
 
-    /* Compute the number of sockets per NUMA Node */
-   /* FIX ME : We assume that the number of sockets is the same for each node (e.g node 0)!*/
-   obj_node = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sys,HWLOC_OBJ_NODE,0);
-   if(obj_node)
-     HYDT_bind_info.num_sockets = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_node->cpuset,HWLOC_OBJ_SOCKET);
-   else
-     HYDT_bind_info.num_sockets = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_SOCKET);
-   
-   /* Compute the number of cores per socket */
-   /* FIX ME : We assume that the number of CORES is the same for each SOCKET (e.g sock 0)!*/
-   obj_sock = hwloc_get_obj_by_type(topology,HWLOC_OBJ_SOCKET,0);      
-   if(obj_node)
-     HYDT_bind_info.num_cores = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_sock->cpuset,HWLOC_OBJ_CORE);    
-   else
-     HYDT_bind_info.num_cores = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_CORE);
-    
-    HYDT_bind_info.num_threads = (HYDT_bind_info.num_procs/(hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_CORE))); 
+	/* In case there is no socket! */
+	if(!node_ptr->num_children)
+	  node_ptr->num_children = 1;
+	
+	HYDU_MALLOC(node_ptr->children, struct HYDT_topo_obj *,
+		    sizeof(struct HYDT_topo_obj) * node_ptr->num_children, status);
+	node_ptr->shared_memory_depth = NULL;
+		
+	/* Setup the socket level */
+	for (sock = 0; sock < node_ptr->num_children ; sock++) 
+	  {
+	     sock_ptr           = &node_ptr->children[sock];
+	     sock_ptr->type     = HYDT_TOPO_SOCKET;	     
+	     sock_ptr->parent   = node_ptr;
+	
+	     obj_sock = hwloc_get_obj_inside_cpuset_by_type(topology,obj_node->cpuset,HWLOC_OBJ_SOCKET,sock);
+	     if(!obj_sock)
+	       obj_sock = obj_node;
+	     
+	     sock_ptr->os_index     = obj_sock->os_index;	  
+	     sock_ptr->num_children = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_sock->cpuset,HWLOC_OBJ_CORE);
+	     
+	     /* In case there is no core! */
+	     if(!sock_ptr->num_children)
+		 sock_ptr->num_children = 1;
 
-    bound = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_NODE);
-    for (proc = 0; proc < HYDT_bind_info.num_procs; proc++)
-        {
-	   if (bound == 0)
-	     {
-		for(sock = 0, bound2 = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_SOCKET) ; 
-		    sock < bound2 ; 
-		    sock++)
-		  {
-		     obj_sock = obj_sock = hwloc_get_obj_by_type(topology,HWLOC_OBJ_SOCKET,sock);
-		     cpuset_sock  = obj_sock->cpuset;
-		     
-		     if(hwloc_cpuset_isset (cpuset_sock, HYDT_bind_info.topology[proc].processor_id))
-		       {
-			  for(core = 0, bound3 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_sock->cpuset,HWLOC_OBJ_CORE) ; 
-			      core < bound3; 
-			      core++)
-			    {
-			       obj_core = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sock,HWLOC_OBJ_CORE,core);
-			       cpuset_core  = obj_core->cpuset;
-			       
-			       if (hwloc_cpuset_isset (cpuset_core, HYDT_bind_info.topology[proc].processor_id))
-				 {
-				    int j;
-				    /* HYDT_bind_info.topology[proc].node_id   = obj_node->os_index;*/
-				    HYDT_bind_info.topology[proc].socket_id = obj_sock->os_index;
-				    HYDT_bind_info.topology[proc].core_id   = obj_core->os_index;
-				    
-				    thread = -1;
-				    for (j = 0; j < proc; j++)
-				      {
-					 /*  if ((HYDT_bind_info.topology[j].node_id   == obj_node->os_index) && 
-					  (HYDT_bind_info.topology[j].socket_id == obj_sock->os_index) &&
-					  (HYDT_bind_info.topology[j].core_id   == obj_core->os_index))
-					  */
-					 if ((HYDT_bind_info.topology[j].socket_id == obj_sock->os_index) &&
-					     (HYDT_bind_info.topology[j].core_id   == obj_core->os_index))
-					   thread = HYDT_bind_info.topology[j].thread_id;
-				      }
-				    thread++;
-				    HYDT_bind_info.topology[proc].thread_id   = thread;
-				    HYDT_bind_info.topology[proc].thread_rank = thread;
-				    
-				    break;
-				 }
-			    }
-		       }
-		  }
-	     }
-	   else
-	     {		
-		for(node = 0;  node < bound ; node++)
-		  {
-		     obj_node = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sys,HWLOC_OBJ_NODE,node);
-		     cpuset_node = obj_node->cpuset;
-		     
-		     if(hwloc_cpuset_isset (cpuset_node, HYDT_bind_info.topology[proc].processor_id))
-		       {
-			  for(sock = 0, bound2 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_node->cpuset,HWLOC_OBJ_SOCKET) ; sock < bound2 ; sock++)
-			    {
-			       obj_sock = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_node,HWLOC_OBJ_SOCKET,sock);
-			       cpuset_sock  = obj_sock->cpuset;
-			       
-			       if(hwloc_cpuset_isset (cpuset_sock, HYDT_bind_info.topology[proc].processor_id))
-				 {
-				    for(core = 0, bound3 = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_sock->cpuset,HWLOC_OBJ_CORE) ; core < bound3; core+\
-+)
-				      {
-					 obj_core = hwloc_get_obj_inside_cpuset_by_type(topology,cpuset_sock,HWLOC_OBJ_CORE,core);
-					 cpuset_core  = obj_core->cpuset;
-					 
-					 if (hwloc_cpuset_isset (cpuset_core, HYDT_bind_info.topology[proc].processor_id))
-					   {
-					      int j;
-					      /* HYDT_bind_info.topology[proc].node_id   = obj_node->os_index;*/
-					      HYDT_bind_info.topology[proc].socket_id = obj_sock->os_index;
-					      HYDT_bind_info.topology[proc].core_id   = obj_core->os_index;
-
-					      thread = -1;
-					      for (j = 0; j < proc; j++)
-						{
-						   /*  if ((HYDT_bind_info.topology[j].node_id   == obj_node->os_index) && 
-						    (HYDT_bind_info.topology[j].socket_id == obj_sock->os_index) &&
-						    (HYDT_bind_info.topology[j].core_id   == obj_core->os_index))
-						    */
-						   if ((HYDT_bind_info.topology[j].socket_id == obj_sock->os_index) &&
-						       (HYDT_bind_info.topology[j].core_id   == obj_core->os_index))
-						     thread = HYDT_bind_info.topology[j].thread_id;
-						}
-					      thread++;
-					      HYDT_bind_info.topology[proc].thread_id   = thread;
-					      HYDT_bind_info.topology[proc].thread_rank = thread;
-					      
-					      break;
-					   }
-				      }
-				 }
-			    }
-			  
-		       }
-		  }
-	     }
-	}
-   
-   
-   /* Get the rank of each node ID */
-   /*
-    for(node = 0, bound  = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_NODE) ; node < bound ; node++)
-    {
-    obj_node  = hwloc_get_obj_by_type(topology,HWLOC_OBJ_NODE,node);
-    for (proc = 0; proc < HYDT_bind_info.num_procs; proc++)
-    if (HYDT_bind_info.topology[proc].node_id == obj_node->os_index)
-                    HYDT_bind_info.topology[proc].node_rank = node;
-    }
-    */
-   
-   /* Get the rank of each socket ID */
-   for(sock = 0, bound = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_SOCKET) ; sock < bound; sock++)
-     {
-	obj_sock  = hwloc_get_obj_by_type(topology,HWLOC_OBJ_SOCKET,sock);
-	for (proc = 0; proc < HYDT_bind_info.num_procs; proc++) 
-	  if (HYDT_bind_info.topology[proc].socket_id == obj_sock->os_index)
-	    HYDT_bind_info.topology[proc].socket_rank = sock;
-     }
-   
-   /* Find the rank of each core ID */
-   for (core = 0, bound = hwloc_get_nbobjs_by_type(topology,HWLOC_OBJ_CORE); core < bound ; core++) 
-     {
-	obj_core  = hwloc_get_obj_by_type(topology,HWLOC_OBJ_CORE,core);
-	for (proc = 0; proc < HYDT_bind_info.num_procs; proc++) 
-	  if (HYDT_bind_info.topology[proc].core_id == obj_core->os_index)
-	    HYDT_bind_info.topology[proc].core_rank = core;
+	     HYDU_MALLOC(sock_ptr->children, struct HYDT_topo_obj *,
+			 sizeof(struct HYDT_topo_obj) * sock_ptr->num_children, status);
+	     sock_ptr->shared_memory_depth = NULL;
+	     
+	     /* setup the core level */
+	     for (core = 0; core < sock_ptr->num_children; core++) 
+	       {	     
+		  core_ptr               = &sock_ptr->children[core];
+		  core_ptr->type         = HYDT_TOPO_CORE;
+		  core_ptr->parent       = sock_ptr;
+		  
+		  obj_core = hwloc_get_obj_inside_cpuset_by_type(topology,obj_sock->cpuset,HWLOC_OBJ_CORE,core);		  
+		  if(!obj_core)
+		    obj_core = obj_sock;
+		  
+		  core_ptr->os_index     = obj_core->os_index;	  
+		  core_ptr->num_children = hwloc_get_nbobjs_inside_cpuset_by_type(topology,obj_core->cpuset,HWLOC_OBJ_PROC);
+		  		  
+		  HYDU_MALLOC(core_ptr->children, struct HYDT_topo_obj *,
+			      sizeof(struct HYDT_topo_obj) * core_ptr->num_children, status);
+		  core_ptr->shared_memory_depth = NULL;
+		  
+		  /* setup the thread level */
+		  for (thread = 0; thread < core_ptr->num_children; thread++) 
+		    {		       
+			obj_proc = hwloc_get_obj_inside_cpuset_by_type(topology,obj_core->cpuset,HWLOC_OBJ_PROC,thread);		  
+			thread_ptr                      = &core_ptr->children[thread];
+			thread_ptr->type                = HYDT_TOPO_THREAD;
+			thread_ptr->os_index            = obj_proc->os_index;
+			thread_ptr->parent              = core_ptr;
+			thread_ptr->num_children        = 0;
+			thread_ptr->children            = NULL;
+			thread_ptr->shared_memory_depth = NULL;
+		       
+		       /*
+			fprintf(stdout," thread id %i | Core id %i | Socket id %i | Node id %i \n",
+			obj_proc->os_index,obj_core->os_index,obj_sock->os_index,obj_node->os_index);
+			*/ 
+		    }
+		  
+	       }
+	  }
      }
    
    /* We have qualified for topology-aware binding support level */
    *support_level = HYDT_BIND_TOPO;
-   
+
    fn_exit:
    HYDU_FUNC_EXIT();
    return status;
@@ -255,7 +171,7 @@ HYD_status HYDT_bind_hwloc_process(int core)
 
    
   fn_exit:
-   hwloc_cpuset_free(cpuset);
+    hwloc_cpuset_free(cpuset);
     HYDU_FUNC_EXIT();
     return status;
 
