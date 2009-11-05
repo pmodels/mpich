@@ -246,6 +246,14 @@ extern void hwloc_topology_check(hwloc_topology_t topology);
  * If none of them is called, the default is to detect all the objects of the
  * machine that the caller is allowed to access.
  *
+ * This default behavior may also be modified through environment variables
+ * if the application did not modify it already.
+ * Setting HWLOC_XMLFILE in the environment enforces the discovery from a XML
+ * file as if hwloc_topology_set_xml() had been called.
+ * HWLOC_FSROOT switches to reading the topology from the specified Linux
+ * filesystem root as if hwloc_topology_set_fsroot() had been called.
+ * Finally, HWLOC_THISSYSTEM enforces the value of the is_thissystem field.
+ *
  * @{
  */
 
@@ -295,6 +303,9 @@ enum hwloc_topology_flags_e {
    * system calls and really do binding, while the XML backend would otherwise
    * provide empty hooks just returning success.
    *
+   * Setting the environment variable HWLOC_THISSYSTEM may also result in the
+   * same behavior.
+   *
    * This can be used for efficiency reasons to first detect the topology once,
    * save it to an XML file, and quickly reload it later through the XML
    * backend, but still having binding functions actually do bind.
@@ -311,7 +322,8 @@ extern int hwloc_topology_set_flags (hwloc_topology_t topology, unsigned long fl
 /** \brief Change the file-system root path when building the topology from sysfs/procfs.
  *
  * On Linux system, use sysfs and procfs files as if they were mounted on the given
- * \p fsroot_path instead of the main file-system root.
+ * \p fsroot_path instead of the main file-system root. Setting the environment
+ * variable HWLOC_FSROOT may also result in this behavior.
  * Not using the main file-system root causes hwloc_topology_is_thissystem field
  * to return 0.
  *
@@ -338,6 +350,7 @@ extern int hwloc_topology_set_synthetic(hwloc_topology_t __hwloc_restrict topolo
 /** \brief Enable XML-file based topology.
  *
  * Gather topology information the XML file given at \p xmlpath.
+ * Setting the environment variable HWLOC_XMLFILE may also result in this behavior.
  * This file may have been generated earlier with lstopo file.xml.
  *
  * \note For conveniency, this backend provides empty binding hooks which just
@@ -513,24 +526,29 @@ extern int hwloc_obj_cpuset_snprintf(char * __hwloc_restrict str, size_t size, s
  * The default (0) is to bind the current process, assumed to be mono-thread,
  * in a non-strict way.  This is the most portable way to bind as all OSes
  * usually provide it.
- *
- * \note Depending on OSes and implementations, strict binding (i.e. the
- * thread/process will really never be scheduled outside of the cpuset) may not
- * be possible, not be allowed, only used as a hint when no load balancing is
- * needed, etc.  If strict binding is required, the strict flag should be set,
- * and the function will fail if strict binding is not possible or allowed.
- *
  */
 typedef enum {
-  HWLOC_CPUBIND_PROCESS = (1<<0),	/**< \brief Bind all threads of the current multithreaded process.
-					  * This may not be supported by some OSes (e.g. Linux). */
-  HWLOC_CPUBIND_THREAD = (1<<1),		/**< \brief Bind current thread of current process */
-  HWLOC_CPUBIND_STRICT = (1<<2),		/**< \brief Request for strict binding from the OS
-					 * Note that strict binding may not be
-					 * allowed for administrative reasons,
-					 * and the binding function will fail
-					 * in that case.
-					 */
+  HWLOC_CPUBIND_PROCESS = (1<<0), /**< \brief Bind all threads of the current multithreaded process.
+                                   * This may not be supported by some OSes (e.g. Linux). */
+  HWLOC_CPUBIND_THREAD = (1<<1),  /**< \brief Bind current thread of current process */
+  HWLOC_CPUBIND_STRICT = (1<<2),  /**< \brief Request for strict binding from the OS
+                                   *
+                                   * By default, when the designated CPUs are
+                                   * all busy while other CPUs are idle, OSes
+                                   * may execute the thread/process on those
+                                   * other CPUs instead of the designated CPUs,
+                                   * to let them progress anyway.  Strict
+                                   * binding means that the thread/process will
+                                   * _never_ execute on other cpus than the
+                                   * designated CPUs, even when those are busy
+                                   * with other tasks and other CPUs are idle.
+                                   *
+                                   * \note Depending on OSes and
+                                   * implementations, strict binding may not be
+                                   * possible (implementation reason) or not
+                                   * allowed (administrative reasons), and the
+                                   * function will fail in that case.
+                                   */
 } hwloc_cpubind_policy_t;
 
 /** \brief Bind current process or thread on cpus given in cpuset \p set

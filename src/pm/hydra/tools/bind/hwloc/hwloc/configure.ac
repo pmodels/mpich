@@ -157,41 +157,59 @@ AM_CONDITIONAL([INSTALL_DOXYGEN], [test "x$install_doxs" = "xyes"])
 # Check OS support
 #
 
+AC_MSG_CHECKING([which OS support to include])
 case ${target} in
   *-*-linux*)
-    AC_DEFINE(LINUX_SYS, 1, Define to 1 on Linux)
+    AC_DEFINE(LINUX_SYS, 1, [Define to 1 on Linux])
+    AC_DEFINE(HWLOC_LINUX_SYS, 1, [Define to 1 on Linux])
     linux=yes
+    AC_MSG_RESULT([Linux])
     ;;
   *-*-irix*)
-    AC_DEFINE(IRIX_SYS, 1, Define to 1 on Irix)
+    AC_DEFINE(IRIX_SYS, 1, [Define to 1 on Irix])
     irix=yes
+    AC_MSG_RESULT([IRIX])
     ;;
   *-*-darwin*)
-    AC_DEFINE(DARWIN_SYS, 1, Define to 1 on Darwin)
+    AC_DEFINE(DARWIN_SYS, 1, [Define to 1 on Darwin])
     darwin=yes
+    AC_MSG_RESULT([Darwin])
     ;;
   *-*-solaris*)
-    AC_DEFINE(SOLARIS_SYS, 1, Define to 1 on Solaris)
+    AC_DEFINE(SOLARIS_SYS, 1, [Define to 1 on Solaris])
     solaris=yes
+    AC_MSG_RESULT([Solaris])
     ;;
   *-*-aix*)
-    AC_DEFINE(AIX_SYS, 1, Define to 1 on AIX)
+    AC_DEFINE(AIX_SYS, 1, [Define to 1 on AIX])
     aix=yes
+    AC_MSG_RESULT([AIX])
     ;;
   *-*-osf*)
-    AC_DEFINE(OSF_SYS, 1, Define to 1 on OSF)
+    AC_DEFINE(OSF_SYS, 1, [Define to 1 on OSF])
     osf=yes
+    AC_MSG_RESULT([OSF])
     ;;
   *-*-hpux*)
-    AC_DEFINE(HPUX_SYS, 1, Define to 1 on HP-UX)
+    AC_DEFINE(HPUX_SYS, 1, [Define to 1 on HP-UX])
     hpux=yes
+    AC_MSG_RESULT([HP-UX])
     ;;
   *-*-mingw*|*-*-cygwin*)
-    AC_DEFINE(WIN_SYS, 1, Define to 1 on WINDOWS)
+    AC_DEFINE(WIN_SYS, 1, [Define to 1 on WINDOWS])
     windows=yes
+    AC_MSG_RESULT([Windows])
     ;;
   *)
-    echo Warning: Host type \"${target}\" not yet supported.
+    AC_MSG_RESULT([Unsupported! ($target)])
+    AC_MSG_WARN([***********************************************************])
+    AC_MSG_WARN([*** hwloc does not support this system.])
+    AC_MSG_WARN([*** hwloc will *attempt* to build (but it may not work).])
+    AC_MSG_WARN([*** hwloc's run-time results may be reduced to showing just one processor.])
+    AC_MSG_WARN([*** You have been warned.])
+    AC_MSG_WARN([*** Pausing to give you time to read this message...])
+    AC_MSG_WARN([***********************************************************])
+    sleep 10
     ;;
 esac
 
@@ -242,7 +260,7 @@ AC_DEFINE_UNQUOTED([HWLOC_SIZEOF_UNSIGNED_INT], $ac_cv_sizeof_unsigned_int, [The
 
 hwloc_strncasecmp=strncmp
 AC_CHECK_FUNCS([strncasecmp], [
-  AC_CHECK_DECL([strncasecmp], [
+  HWLOC_CHECK_DECL([strncasecmp], [
     hwloc_strncasecmp=strncasecmp
   ])
 ])
@@ -321,12 +339,30 @@ if test "x$hwloc_thread_t" != "x" ; then
   AC_DEFINE_UNQUOTED(hwloc_thread_t, $hwloc_thread_t, [Define this to the thread ID type])
 fi
 
-AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[
-#define _GNU_SOURCE
-#include <sched.h>
-static unsigned long mask;
-]], [[ sched_setaffinity(0, (void*) &mask);
-]]), AC_DEFINE([HAVE_OLD_SCHED_SETAFFINITY], [1], [Define to 1 if glibc provides the old prototype of sched_setaffinity()]))
+AC_MSG_CHECKING([for old prototype of sched_setaffinity])
+AC_COMPILE_IFELSE(
+  AC_LANG_PROGRAM([[
+    #define _GNU_SOURCE
+    #include <sched.h>
+    static unsigned long mask;
+    ]], [[ sched_setaffinity(0, (void*) &mask);
+    ]]),
+  AC_DEFINE([HAVE_OLD_SCHED_SETAFFINITY], [1], [Define to 1 if glibc provides the old prototype of sched_setaffinity()])
+  AC_MSG_RESULT([yes]),
+  AC_MSG_RESULT([no])
+)
+
+AC_MSG_CHECKING([for working CPU_SET])
+AC_LINK_IFELSE(
+  AC_LANG_PROGRAM([[
+    #include <sched.h>
+    cpu_set_t set;
+    ]], [[ CPU_ZERO(&set); CPU_SET(0, &set);
+    ]]),
+    AC_DEFINE([HWLOC_HAVE_CPU_SET], [1], [Define to 1 if the CPU_SET macro works])
+    AC_MSG_RESULT([yes]),
+    AC_MSG_RESULT([no])
+)
 
 AC_ARG_ENABLE([cairo],
   [AS_HELP_STRING([--disable-cairo], [disable the Cairo back-end of `lstopo'])],
@@ -351,6 +387,7 @@ fi
 if test "x$enable_cairo" = "xyes"; then
   AC_DEFINE([HAVE_CAIRO], [1], [Define to 1 if you have the `cairo' library.])
 fi
+AM_CONDITIONAL([HAVE_CAIRO], [test "x$enable_cairo" = "xyes"])
 
 AC_ARG_ENABLE([xml],
   [AS_HELP_STRING([--disable-xml], [disable the XML back-end of `lstopo'])],
@@ -399,32 +436,41 @@ fi
 AC_PATH_PROG([BASH], [bash])
 
 AC_CHECK_FUNCS([ffs], [
-  AC_CHECK_DECL([ffs],[
+  HWLOC_CHECK_DECL([ffs],[
     AC_DEFINE([HWLOC_HAVE_DECL_FFS], [1], [Define to 1 if function `ffs' is declared by system headers])
   ])
   AC_DEFINE([HWLOC_HAVE_FFS], [1], [Define to 1 if you have the `ffs' function.])
 ])
 AC_CHECK_FUNCS([ffsl], [
+  HWLOC_CHECK_DECL([ffsl],[
+    AC_DEFINE([HWLOC_HAVE_DECL_FFSL], [1], [Define to 1 if function `ffsl' is declared by system headers])
+  ])
   AC_DEFINE([HWLOC_HAVE_FFSL], [1], [Define to 1 if you have the `ffsl' function.])
 ])
 
 AC_CHECK_FUNCS([fls], [
-  AC_CHECK_DECL([fls],[
+  HWLOC_CHECK_DECL([fls],[
     AC_DEFINE([HWLOC_HAVE_DECL_FLS], [1], [Define to 1 if function `fls' is declared by system headers])
   ])
   AC_DEFINE([HWLOC_HAVE_FLS], [1], [Define to 1 if you have the `fls' function.])
 ])
 AC_CHECK_FUNCS([flsl], [
+  HWLOC_CHECK_DECL([flsl],[
+    AC_DEFINE([HWLOC_HAVE_DECL_FLSL], [1], [Define to 1 if function `flsl' is declared by system headers])
+  ])
   AC_DEFINE([HWLOC_HAVE_FLSL], [1], [Define to 1 if you have the `flsl' function.])
 ])
 
 AC_CHECK_FUNCS([clz], [
-  AC_CHECK_DECL([clz],[
+  HWLOC_CHECK_DECL([clz],[
     AC_DEFINE([HWLOC_HAVE_DECL_CLZ], [1], [Define to 1 if function `clz' is declared by system headers])
   ])
   AC_DEFINE([HWLOC_HAVE_CLZ], [1], [Define to 1 if you have the `clz' function.])
 ])
 AC_CHECK_FUNCS([clzl], [
+  HWLOC_CHECK_DECL([clzl],[
+    AC_DEFINE([HWLOC_HAVE_DECL_CLZL], [1], [Define to 1 if function `clzl' is declared by system headers])
+  ])
   AC_DEFINE([HWLOC_HAVE_CLZL], [1], [Define to 1 if you have the `clzl' function.])
 ])
 

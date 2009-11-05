@@ -21,7 +21,7 @@
 #include <sched.h>
 #include <pthread.h>
 
-#  ifndef CPU_SET
+#ifndef HWLOC_HAVE_CPU_SET
 /* libc doesn't have support for sched_setaffinity, build system call
  * ourselves: */
 #    include <linux/unistd.h>
@@ -32,12 +32,33 @@
 #         define __NR_sched_setaffinity 203
 #       elif defined(__ia64__)
 #         define __NR_sched_setaffinity 1231
+#       elif defined(__hppa__)
+#         define __NR_sched_setaffinity 211
+#       elif defined(__alpha__)
+#         define __NR_sched_setaffinity 395
+#       elif defined(__s390__)
+#         define __NR_sched_setaffinity 239
+#       elif defined(__sparc__)
+#         define __NR_sched_setaffinity 261
+#       elif defined(__m68k__)
+#         define __NR_sched_setaffinity 311
+#       elif defined(__powerpc__) || defined(__ppc__) || defined(__PPC__) || defined(__powerpc64__) || defined(__ppc64__)
+#         define __NR_sched_setaffinity 222
+#       elif defined(__arm__)
+#         define __NR_sched_setaffinity 241
+#       elif defined(__cris__)
+#         define __NR_sched_setaffinity 241
+/*#       elif defined(__mips__)
+  #         define __NR_sched_setaffinity TODO (32/64/nabi) */
 #       else
-#         error "don't know the syscall number for sched_setaffinity on this architecture"
+#         warning "don't know the syscall number for sched_setaffinity on this architecture, will not support binding"
+#         define sched_setaffinity(pid, lg, mask) (errno = ENOSYS, -1)
 #       endif
-_syscall3(int, sched_setaffinity, pid_t, pid, unsigned int, lg, unsigned long *, mask);
+#       ifndef sched_setaffinity
+          _syscall3(int, sched_setaffinity, pid_t, pid, unsigned int, lg, unsigned long *, mask);
+#       endif
 #    endif
-#  endif
+#endif
 
 #ifdef HAVE_OPENAT
 
@@ -112,7 +133,7 @@ hwloc_linux_set_tid_cpubind(hwloc_topology_t topology, pid_t tid, hwloc_cpuset_t
    */
 
 /* TODO: use dynamic size cpusets */
-#ifdef CPU_SET
+#ifdef HWLOC_HAVE_CPU_SET
   cpu_set_t linux_set;
   unsigned cpu;
 
@@ -130,9 +151,9 @@ hwloc_linux_set_tid_cpubind(hwloc_topology_t topology, pid_t tid, hwloc_cpuset_t
   unsigned long mask = hwloc_cpuset_to_ulong(hwloc_set);
 
 #ifdef HAVE_OLD_SCHED_SETAFFINITY
-  return sched_setaffinity(tid, &mask);
+  return sched_setaffinity(tid, (void*) &mask);
 #else /* HAVE_OLD_SCHED_SETAFFINITY */
-  return sched_setaffinity(tid, sizeof(mask), &mask);
+  return sched_setaffinity(tid, sizeof(mask), (void*) &mask);
 #endif /* HAVE_OLD_SCHED_SETAFFINITY */
 #endif /* CPU_SET */
 }
@@ -166,7 +187,7 @@ hwloc_linux_set_thread_cpubind(hwloc_topology_t topology, pthread_t tid, hwloc_c
    * int thread_migrate (int thread_id, int destination_node);
    */
 
-#ifdef CPU_SET
+#ifdef HWLOC_HAVE_CPU_SET
   cpu_set_t linux_set;
   unsigned cpu;
 
@@ -184,9 +205,9 @@ hwloc_linux_set_thread_cpubind(hwloc_topology_t topology, pthread_t tid, hwloc_c
   unsigned long mask = hwloc_cpuset_to_ulong(hwloc_set);
 
 #ifdef HAVE_OLD_SCHED_SETAFFINITY
-  return pthread_setaffinity_np(tid, &mask);
+  return pthread_setaffinity_np(tid, (void*) &mask);
 #else /* HAVE_OLD_SCHED_SETAFFINITY */
-  return pthread_setaffinity_np(tid, sizeof(mask), &mask);
+  return pthread_setaffinity_np(tid, sizeof(mask), (void*) &mask);
 #endif /* HAVE_OLD_SCHED_SETAFFINITY */
 #endif /* CPU_SET */
 }
@@ -235,10 +256,15 @@ hwloc_parse_sysfs_unsigned(const char *mappath, unsigned *value, int fsroot_fd)
   FILE * fd;
 
   fd = hwloc_fopen(mappath, "r", fsroot_fd);
-  if (!fd)
+  if (!fd) {
+    *value = -1;
     return -1;
+  }
 
-  fgets(string, 11, fd);
+  if (!fgets(string, 11, fd)) {
+    *value = -1;
+    return -1;
+  }
   *value = strtoul(string, NULL, 10);
 
   fclose(fd);
@@ -323,8 +349,10 @@ hwloc_read_cpuset_mask(const char *filename, const char *type, char *info, int i
   if (!fd)
     return 0;
 
-  fgets(cpuset_name, sizeof(cpuset_name), fd);
+  tmp = fgets(cpuset_name, sizeof(cpuset_name), fd);
   fclose(fd);
+  if (!tmp)
+    return 0;
 
   tmp = strchr(cpuset_name, '\n');
   if (tmp)
@@ -343,8 +371,10 @@ hwloc_read_cpuset_mask(const char *filename, const char *type, char *info, int i
   if (!fd)
     return 0;
 
-  fgets(info, infomax, fd);
+  tmp = fgets(info, infomax, fd);
   fclose(fd);
+  if (!tmp)
+    return 0;
 
   tmp = strchr(info, '\n');
   if (tmp)
@@ -465,7 +495,7 @@ hwloc_sysfs_node_meminfo_info(struct hwloc_topology *topology,
 }
 
 static void
-hwloc_parse_node_distance(const char *distancepath, unsigned nbnodes, unsigned distances[nbnodes], int fsroot_fd)
+hwloc_parse_node_distance(const char *distancepath, unsigned nbnodes, unsigned *distances, int fsroot_fd)
 {
   char string[4096]; /* enough for hundreds of nodes */
   char *tmp, *next;
@@ -563,7 +593,7 @@ look_sysfsnode(struct hwloc_topology *topology,
           hwloc_parse_node_distance(nodepath, nbnodes, distances[osnode], topology->backend_params.sysfs.root_fd);
       }
       
-      hwloc_setup_misc_level_from_distances(topology, nbnodes, nodes, distances);
+      hwloc_setup_misc_level_from_distances(topology, nbnodes, nodes, (unsigned*) distances);
   }
 }
 
@@ -779,13 +809,12 @@ look_cpuinfo(struct hwloc_topology *topology, const char *path,
   FILE *fd;
   char str[strlen(PHYSID)+1+9+1+1];
   char *endptr;
-  unsigned proc_physids[] = { [0 ... HWLOC_NBMAXCPUS-1] = -1 };
-  unsigned osphysids[] = { [0 ... HWLOC_NBMAXCPUS-1] = -1 };
-  unsigned proc_coreids[] = { [0 ... HWLOC_NBMAXCPUS-1] = -1 };
-  unsigned oscoreids[] = { [0 ... HWLOC_NBMAXCPUS-1] = -1 };
-  unsigned proc_osphysids[] = { [0 ... HWLOC_NBMAXCPUS-1] = -1 };
-  unsigned proc_oscoreids[] = { [0 ... HWLOC_NBMAXCPUS-1] = -1 };
-  unsigned core_osphysids[] = { [0 ... HWLOC_NBMAXCPUS-1] = -1 };
+  unsigned proc_physids[HWLOC_NBMAXCPUS];
+  unsigned osphysids[HWLOC_NBMAXCPUS];
+  unsigned proc_coreids[HWLOC_NBMAXCPUS];
+  unsigned oscoreids[HWLOC_NBMAXCPUS];
+  unsigned proc_osphysids[HWLOC_NBMAXCPUS];
+  unsigned core_osphysids[HWLOC_NBMAXCPUS];
   unsigned procid_max=0;
   unsigned numprocs=0;
   unsigned numsockets=0;
@@ -794,6 +823,15 @@ look_cpuinfo(struct hwloc_topology *topology, const char *path,
   long coreid;
   long processor = -1;
   int i;
+
+  for (i = 0; i < HWLOC_NBMAXCPUS; i++) {
+    proc_physids[i] = -1;
+    osphysids[i] = -1;
+    proc_coreids[i] = -1;
+    oscoreids[i] = -1;
+    proc_osphysids[i] = -1;
+    core_osphysids[i] = -1;
+  }
 
   hwloc_cpuset_zero(online_cpuset);
 
@@ -845,7 +883,6 @@ look_cpuinfo(struct hwloc_topology *topology, const char *path,
 	osphysids[(numsockets)++] = physid;
       getprocnb_end() else
       getprocnb_begin(COREID,coreid);
-      proc_oscoreids[processor]=coreid;
       for (i=0; i<numcores; i++)
 	if (coreid == oscoreids[i] && proc_osphysids[processor] == core_osphysids[i])
 	  break;
@@ -860,7 +897,9 @@ look_cpuinfo(struct hwloc_topology *topology, const char *path,
       getprocnb_end()
 	if (str[strlen(str)-1]!='\n')
 	  {
-	    fscanf(fd,"%*[^\n]");
+            /* ignore end of line */
+	    if (fscanf(fd,"%*[^\n]") == EOF)
+	      break;
 	    getc(fd);
 	  }
     }
@@ -876,7 +915,6 @@ look_cpuinfo(struct hwloc_topology *topology, const char *path,
       hwloc_cpuset_clr(online_cpuset, i);
       proc_osphysids[i] = -1;
       proc_physids[i] = -1;
-      proc_oscoreids[i] = -1;
       proc_coreids[i] = -1;
     }
   } hwloc_cpuset_foreach_end();
@@ -914,9 +952,9 @@ hwloc__get_dmi_info(struct hwloc_topology *topology,
   dmi_line[0] = '\0';
   fd = hwloc_fopen("/sys/class/dmi/id/board_vendor", "r", topology->backend_params.sysfs.root_fd);
   if (fd) {
-    fgets(dmi_line, DMI_BOARD_STRINGS_LEN, fd);
+    tmp = fgets(dmi_line, DMI_BOARD_STRINGS_LEN, fd);
     fclose (fd);
-    if (dmi_line[0] != '\0') {
+    if (tmp && dmi_line[0] != '\0') {
       tmp = strchr(dmi_line, '\n');
       if (tmp)
 	*tmp = '\0';
@@ -928,9 +966,9 @@ hwloc__get_dmi_info(struct hwloc_topology *topology,
   dmi_line[0] = '\0';
   fd = hwloc_fopen("/sys/class/dmi/id/board_name", "r", topology->backend_params.sysfs.root_fd);
   if (fd) {
-    fgets(dmi_line, DMI_BOARD_STRINGS_LEN, fd);
+    tmp = fgets(dmi_line, DMI_BOARD_STRINGS_LEN, fd);
     fclose (fd);
-    if (dmi_line[0] != '\0') {
+    if (tmp && dmi_line[0] != '\0') {
       tmp = strchr(dmi_line, '\n');
       if (tmp)
 	*tmp = '\0';
