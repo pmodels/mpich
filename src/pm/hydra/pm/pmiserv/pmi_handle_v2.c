@@ -180,7 +180,7 @@ static void print_req_list(void)
     struct reqs *req;
 
     if (pending_reqs)
-        HYDU_dump_noprefix(stdout, "( ");
+        HYDU_dump_noprefix(stdout, "(");
     for (req = pending_reqs; req; req = req->next)
         HYDU_dump_noprefix(stdout, "%s ",
                            (req->type == NODE_ATTR_GET) ? "NODE_ATTR_GET" : "KVS_GET");
@@ -401,7 +401,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
         }
     }
 
-    if (found) {      /* We found the attribute */
+    if (found) {        /* We found the attribute */
         i = 0;
         tmp[i++] = HYDU_strdup("cmd=info-getnodeattr-response;");
         if (thrid) {

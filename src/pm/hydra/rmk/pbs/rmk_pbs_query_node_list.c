@@ -31,10 +31,10 @@ static HYD_status process_mfile_token(char *token, int newline)
                              "token %s not supported at this time\n", token);
     }
 
-fn_exit:
+  fn_exit:
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

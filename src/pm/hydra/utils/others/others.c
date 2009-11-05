@@ -48,7 +48,7 @@ int HYDU_local_to_global_id(int local_id, int start_pid, int core_count, int glo
 }
 
 HYD_status HYDU_add_to_proxy_list(char *hostname, int num_procs,
-                                  struct HYD_proxy **proxy_list)
+                                  struct HYD_proxy ** proxy_list)
 {
     static int pid = 0;
     struct HYD_proxy *proxy;

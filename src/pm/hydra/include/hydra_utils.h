@@ -112,8 +112,8 @@
 #endif /* ENABLE_WARNINGS */
 
 /* Disable for now; we might add something here in the future */
-#define HYDU_FUNC_ENTER()   do{}while(0)
-#define HYDU_FUNC_EXIT()    do{}while(0)
+#define HYDU_FUNC_ENTER()   do {} while (0)
+#define HYDU_FUNC_EXIT()    do {} while (0)
 
 
 /* alloc */

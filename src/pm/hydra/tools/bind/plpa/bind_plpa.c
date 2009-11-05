@@ -42,7 +42,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
 
     /* Setup the machine level */
     HYDT_bind_info.machine.type = HYDT_TOPO_MACHINE;
-    HYDT_bind_info.machine.os_index = -1; /* This is a set, not a single unit */
+    HYDT_bind_info.machine.os_index = -1;       /* This is a set, not a single unit */
     HYDT_bind_info.machine.parent = NULL;
     HYDT_bind_info.machine.num_children = 1;
     HYDU_MALLOC(HYDT_bind_info.machine.children, struct HYDT_topo_obj *,
@@ -53,7 +53,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
     node = &HYDT_bind_info.machine.children[0];
     node->type = HYDT_TOPO_NODE;
     node->os_index = -1;
-    node->parent =  &HYDT_bind_info.machine;
+    node->parent = &HYDT_bind_info.machine;
     ret = PLPA_NAME(get_socket_info) (&node->num_children, &max);
     if (ret) {
         HYDU_warn_printf("plpa get socket info failed\n");

@@ -874,28 +874,20 @@ static HYD_status info_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    HYDU_dump_noprefix(stdout,
-                       "HYDRA build details:\n");
+    HYDU_dump_noprefix(stdout, "HYDRA build details:\n");
     HYDU_dump_noprefix(stdout,
                        "    Version:                                 %s\n", HYDRA_VERSION);
-    HYDU_dump_noprefix(stdout,
-                       "    CC:                                      %s\n", HYDRA_CC);
-    HYDU_dump_noprefix(stdout,
-                       "    CXX:                                     %s\n", HYDRA_CXX);
-    HYDU_dump_noprefix(stdout,
-                       "    F77:                                     %s\n", HYDRA_F77);
-    HYDU_dump_noprefix(stdout,
-                       "    F90:                                     %s\n", HYDRA_F90);
+    HYDU_dump_noprefix(stdout, "    CC:                                      %s\n", HYDRA_CC);
+    HYDU_dump_noprefix(stdout, "    CXX:                                     %s\n", HYDRA_CXX);
+    HYDU_dump_noprefix(stdout, "    F77:                                     %s\n", HYDRA_F77);
+    HYDU_dump_noprefix(stdout, "    F90:                                     %s\n", HYDRA_F90);
     HYDU_dump_noprefix(stdout,
                        "    Configure options:                       %s\n",
                        HYDRA_CONFIGURE_ARGS_CLEAN);
+    HYDU_dump_noprefix(stdout, "    Process Manager:                         pmi\n");
     HYDU_dump_noprefix(stdout,
-                       "    Process Manager:                         pmi\n");
-    HYDU_dump_noprefix(stdout,
-                       "    Boot-strap servers available:            %s\n",
-                       HYDRA_BSS_NAMES);
-    HYDU_dump_noprefix(stdout,
-                       "    Communication sub-systems available:     none\n");
+                       "    Boot-strap servers available:            %s\n", HYDRA_BSS_NAMES);
+    HYDU_dump_noprefix(stdout, "    Communication sub-systems available:     none\n");
     HYDU_dump_noprefix(stdout,
                        "    Binding libraries available:             %s\n",
                        HYDRA_BINDLIB_NAMES);
