@@ -174,6 +174,7 @@ static HYD_status poke_progress(void)
     goto fn_exit;
 }
 
+static void print_req_list(void) ATTRIBUTE((unused));
 static void print_req_list(void)
 {
     struct reqs *req;
