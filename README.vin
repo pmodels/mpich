@@ -34,10 +34,11 @@ V.    Alternate Process Managers
 VI.   VPATH Builds
 VII.  Shared Libraries
 VIII. Other Features
-IX.   Developer Builds
-X.    Building ROMIO into MPICH2
-XI.   Testing the MPICH2 installation
-XII.  Installing MPICH2 on windows
+IX.   Environment Variables
+X.    Developer Builds
+XI.   Building ROMIO into MPICH2
+XII.  Testing the MPICH2 installation
+XIII. Installing MPICH2 on windows
 
 
 -------------------------------------------------------------------------
@@ -917,8 +918,72 @@ Compilation options for development:
 
 -------------------------------------------------------------------------
 
-IX. Developer Builds
-====================
+IX. Environment Variables
+=========================
+
+MPICH2 provides several environment variables that have different
+purposes.
+
+Generic Environment Variables
+-----------------------------
+
+  MPICH_NO_LOCAL - Disable shared-memory communication. With this
+         option, even communication within a node will use the network
+         stack.
+
+               ************************************
+
+  MPICH_INTERFACE_HOSTNAME - Network interface to use for
+         communication. By default MPICH2 picks the network interface
+         representing the hostname (gotten by gethostbyname). Consider
+         the following example:
+
+% /sbin/ifconfig
+
+eth0      Link encap:Ethernet  HWaddr 00:14:5E:57:C4:FA
+          inet addr:192.148.3.182  Bcast:192.148.248.255  Mask:255.255.255.0
+          inet6 addr: fe80::214:5eff:fe57:c4fa/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:989925894 errors:0 dropped:7186 overruns:0 frame:0
+          TX packets:1480277023 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:441568994866 (411.2 GiB)  TX bytes:1864173370054 (1.6 TiB)
+          Interrupt:185 Memory:e2000000-e2012100
+
+myri0     Link encap:Ethernet  HWaddr 00:14:5E:57:C4:F8
+          inet addr:10.21.3.182  Bcast:10.21.255.255  Mask:255.255.0.0
+          inet6 addr: fe80::214:5eff:fe57:c4f8/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:3068986439 errors:0 dropped:7841 overruns:0 frame:0
+          TX packets:2288060450 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:3598751494497 (3.2 TiB)  TX bytes:1744058613150 (1.5 TiB)
+          Interrupt:185 Memory:e4000000-e4012100
+
+In the above case the 192.148.x.x IP series refers to the standard
+Ethernet (or Gigabit Ethernet) network, AND the 10.21.x.x series
+refers to Myrinet.
+
+To run over the Myrinet network use:
+
+% mpiexec -np 1 -env MPICH_INTERFACE_HOSTNAME 10.21.3.182 ./foo
+
+               ************************************
+
+  MPICH_INTERFACE_HOSTNAME_R%d - Network interface to use for rank %d.
+
+               ************************************
+
+  MPICH_PORT_RANGE - Port range to use for MPICH2 internal TCP
+         connections. This is useful when some of the host ports are
+         blocked by a firewall. For example, setting MPICH_PORT_RANGE
+         to "2000:3000" will ensure that MPICH2 will internally only
+         uses ports between 2000 and 3000.
+
+-------------------------------------------------------------------------
+
+X. Developer Builds
+===================
 For MPICH2 developers who want to directly work on the svn, there are
 a few additional steps involved (people using the release tarballs do
 not have to follow these steps). Details about these steps can be
@@ -927,8 +992,8 @@ http://wiki.mcs.anl.gov/mpich2/index.php/Getting_And_Building_MPICH2
 
 -------------------------------------------------------------------------
 
-X. Building ROMIO into MPICH2
-=============================
+XI. Building ROMIO into MPICH2
+==============================
 By default, ROMIO, an implementation of the I/O portion of MPI-2 will
 be built as a part of MPICH2. The file systems to be built can be
 speicified by passing them in a '+'-delimited list to the
@@ -944,8 +1009,8 @@ build support for PVFS automatically.
 
 -------------------------------------------------------------------------
 
-XI. Testing the MPICH2 installation
-===================================
+XII. Testing the MPICH2 installation
+====================================
 To test MPICH2, use the following options after installing mpich2.
 These will assume that mpich2 is installed into /usr/local/mpich2.
 
@@ -957,8 +1022,8 @@ The results summary will be placed in test/summary.xml
 
 -------------------------------------------------------------------------
 
-XII. Installing MPICH2 on Windows
-=================================
+XIII. Installing MPICH2 on Windows
+==================================
 
 Here are the instructions for setting up MPICH2 on a Windows machine:
 
