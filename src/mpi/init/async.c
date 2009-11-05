@@ -25,6 +25,8 @@ static void progress_fn(void * data)
     /* Explicitly add CS_ENTER/EXIT since this thread is created from
      * within an internal function and will call NMPI functions
      * directly. */
+    /* FIXME: The CS_ENTER/EXIT code should be abstracted out
+     * correctly, instead of relying on the #if protection here. */
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
     MPID_CS_ENTER();
 #endif
