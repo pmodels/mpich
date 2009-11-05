@@ -38,7 +38,8 @@ do_smpdversion=yes
 # Allow MAKE to be set from the environment
 MAKE=${MAKE-make}
 
-ltdirs="src/pm/hydra src/pm/hydra/tools/bind/hwloc/hwloc"
+externals="src/pm/hydra/tools/bind/hwloc/hwloc"
+ltdirs="src/pm/hydra"
 amdirs="src/openpa src/pm/hydra src/mpl"
 
 # List of steps that we will consider
@@ -873,6 +874,13 @@ fi
 if [ "$do_build_configure" = "yes" -o "$do_makefiles" = "yes" ] ; then
     # must come after the above autoreconf-like logic because the above
     # logic will delete the results of this actual autoreconf
+
+    for external in $externals ; do
+       if [ -d "$external" -o -L "$external" ] ; then
+           echo "running third-party initialization"
+           (cd $external && ./autogen.sh) || exit 1
+       fi
+    done
 
     for ltdir in $ltdirs ; do
 	if [ -d "$ltdir" -o -L "$ltdir" ] ; then
