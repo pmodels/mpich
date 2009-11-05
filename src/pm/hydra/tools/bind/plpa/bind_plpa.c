@@ -105,7 +105,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
             core->parent = sock;
             core->num_children = HYDT_bind_info.total_proc_units / total_cores;
             HYDU_MALLOC(core->children, struct HYDT_topo_obj *,
-                        sizeof(struct HYDT_topo_obj) * sock->num_children, status);
+                        sizeof(struct HYDT_topo_obj) * core->num_children, status);
             core->shared_memory_depth = NULL;
 
             for (k = 0; k < core->num_children; k++) {
