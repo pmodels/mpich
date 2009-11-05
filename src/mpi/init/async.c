@@ -6,6 +6,7 @@
 
 #include "mpiimpl.h"
 #include "mpi_init.h"
+#include "mpiu_thread.h"
 
 static MPI_Comm progress_comm;
 static MPIU_Thread_id_t progress_thread_id;
