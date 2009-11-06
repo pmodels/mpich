@@ -95,11 +95,16 @@ class MPDMan(object):
         # NOTE: this will also close syslog's fd inherited from mpd; re-opened below
         try:     max_fds = os.sysconf('SC_OPEN_MAX')
         except:  max_fds = 1024
-        for fd in range(3,max_fds):
-            if fd == self.mpdSock.fileno()  or  fd == self.listenRingSock.fileno():
-                continue
-            try:    os.close(fd)
-            except: pass
+        # FIXME This snippet causes problems on Fedora Core 12.  FC12's python
+        # opens a file object to /etc/abrt/pyhook.conf.  Closing the fd out from
+        # under the higher level object causes problems at exit time when the
+        # higher level object is garbage collected.  See MPICH2 ticket #902 for
+        # more information.
+        #for fd in range(3,max_fds):
+        #    if fd == self.mpdSock.fileno()  or  fd == self.listenRingSock.fileno():
+        #        continue
+        #    try:    os.close(fd)
+        #    except: pass
         if syslog_module_available:
             syslog.openlog("mpdman",0,syslog.LOG_DAEMON)
             syslog.syslog(syslog.LOG_INFO,"mpdman starting new log; %s" % (self.myId) )
