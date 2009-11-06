@@ -439,24 +439,6 @@
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1EE41EF56BA143788490913B5A71E9C8"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_C63BA0B9501E409EB78C7834178927F3"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_60D2EF188B7448598D171ECA07E6E2DE"
-        "MsmSig" = "8:_UNDEFINED"
-        }
     }
     "Configurations"
     {
@@ -1015,11 +997,6 @@
             "AssemblyAsmDisplayName" = "8:wmpiexec, Version=1.0.3561.18466, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_1EE41EF56BA143788490913B5A71E9C8"
-                    {
-                    "Name" = "8:wmpiexec.exe"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:..\\bin\\wmpiexec.exe"
             "TargetName" = "8:"
@@ -1346,11 +1323,6 @@
             "AssemblyAsmDisplayName" = "8:wmpiregister, Version=1.0.3561.18470, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_60D2EF188B7448598D171ECA07E6E2DE"
-                    {
-                    "Name" = "8:wmpiregister.exe"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:..\\bin\\wmpiregister.exe"
             "TargetName" = "8:"
@@ -1937,11 +1909,6 @@
             "AssemblyAsmDisplayName" = "8:wmpiconfig, Version=1.0.3561.18470, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_C63BA0B9501E409EB78C7834178927F3"
-                    {
-                    "Name" = "8:wmpiconfig.exe"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:..\\bin\\wmpiconfig.exe"
             "TargetName" = "8:"
@@ -2484,7 +2451,7 @@
         "ProductName" = "8:MPICH2"
         "ProductCode" = "8:{77531C63-4A48-4EB7-BCD2-5F3E1EFCC405}"
         "PackageCode" = "8:{DD575BD9-0BC7-4074-9A24-1EF5FB3B0813}"
-        "UpgradeCode" = "8:{7356EDB2-E152-46D3-84E5-10353AEE498E}"
+        "UpgradeCode" = "8:{474D37F8-AE40-41D2-A078-80EF5332FB16}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
