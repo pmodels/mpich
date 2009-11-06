@@ -4562,6 +4562,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\mpi\init\async.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mpi\attr\attr_delete.c"
 				>
 			</File>
