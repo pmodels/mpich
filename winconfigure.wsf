@@ -2974,11 +2974,7 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("#define USE_THREAD_IMPL MPICH_THREAD_IMPL_NONE")
                                         fout.WriteLine("#endif")
                                 Case "MPIU_THREAD_PACKAGE_NAME"
-                                        fout.WriteLine("#ifdef MPICH_MULTITHREADED")
                                         fout.WriteLine("#define MPIU_THREAD_PACKAGE_NAME MPIU_THREAD_PACKAGE_WIN")
-                                        fout.WriteLine("#else")
-                                        fout.WriteLine("#define MPIU_THREAD_PACKAGE_NAME MPIU_THREAD_PACKAGE_NONE")
-                                        fout.WriteLine("#endif")
 				Case "MPIU_THREAD_REFCOUNT"
 					fout.WriteLine("#define MPIU_THREAD_REFCOUNT MPIU_REFCOUNT_NONE")
 				Case "MPIU_THREAD_GRANULARITY"
@@ -3616,6 +3612,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         Else
                                             fout.WriteLine("#define SIZEOF_OPA_PTR_T 4")
                                         End if
+                                Case "USE_ASYNC_PROGRESS"
+                                        fout.WriteLine("/* #undef USE_ASYNC_PROGRESS */")
 				Case Else
 					'MsgBox("Unhandled definition <" & define & ">")
 					If appendUniqueString(unhandled_definitions, macroname) Then
@@ -6499,6 +6497,7 @@ Function GenBuild()
 '	CreateRules f.GetFolder("src\util\timing"), trimlength
 	CreateRules f.GetFolder("src\util\logging\common"), trimlength
 	CreateRules f.GetFolder("src\util\param"), trimlength
+        CreateRules f.GetFolder("src\util\thread"), trimlength
 	' Insert rules for romio manually since romio is not build with Makefile.sm files
 	mfile.WriteLine("{..\src\mpi\romio\adio\ad_ntfs}.c{$(OUTDIR)}.obj:")
 	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" $**")
@@ -6535,6 +6534,7 @@ Function GenBuild()
 '	CreateObjs "mpich2", f.GetFolder("src\util\timing"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\util\logging\common"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\util\param"), trimlength, false, false
+        CreateObjs "mpich2", f.GetFolder("src\util\thread"), trimlength, false, false
 	mfile.WriteLine(" \" & vbCrLf & "	$(OUTDIR)\ad_ntfs.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_ntfs_close.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_ntfs_done.obj \")
@@ -6687,13 +6687,9 @@ Function GenBuild()
 	CreateRules f.GetFolder("src\mpid\ch3\channels\sock"), trimlength
 	CreateRules f.GetFolder("src\mpid\ch3\util\sock"), trimlength
 	'CreateRules f.GetFolder("src\util\events"), trimlength
-	mfile.WriteLine("{..\src\util\thread}.c{$(MT_OUTDIR)}.obj:")
-	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(MT_OUTDIR)\\"" /Fd""$(MT_OUTDIR)\\"" $**")
-	mfile.WriteLine
 	CreateObjs "ch3mt", f.GetFolder("src\mpid\ch3\channels\sock"), trimlength, true, false
-	CreateObjs "ch3mt", f.GetFolder("src\mpid\ch3\util\sock"), trimlength, false, false
+	CreateObjs "ch3mt", f.GetFolder("src\mpid\ch3\util\sock"), trimlength, false, true
 	'CreateObjs "ch3mt", f.GetFolder("src\util\events"), trimlength, false, false
-	mfile.WriteLine(" \" & vbCrLf & "	$(MT_OUTDIR)\mpiu_thread.obj")
 
 	mfile.WriteLine
 	mfile.WriteLine("# ch3nemesis")
@@ -6703,14 +6699,10 @@ Function GenBuild()
 	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength
 '	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength
 	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength
-	mfile.WriteLine("{..\src\util\thread}.c{$(NEMESIS_OUTDIR)}.obj:")
-	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(NEMESIS_OUTDIR)\\"" /Fd""$(NEMESIS_OUTDIR)\\"" $**")
-	mfile.WriteLine
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\src"), trimlength, true, false
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength, false, false
 '	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength, false, false
-	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength, false, false
-	mfile.WriteLine(" \" & vbCrLf & "	$(NEMESIS_OUTDIR)\mpiu_thread.obj")
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength, false, true
 
 	mfile.WriteLine
 	mfile.WriteLine("# ch3ssm")
