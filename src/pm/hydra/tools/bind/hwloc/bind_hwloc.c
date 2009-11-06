@@ -76,8 +76,9 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
 
         HYDU_MALLOC(node_ptr->children, struct HYDT_topo_obj *,
                     sizeof(struct HYDT_topo_obj) * node_ptr->num_children, status);
-        node_ptr->shared_memory_depth = NULL;
-
+       /* GM: Fix me! */
+       /*  node_ptr->shared_memory_depth = NULL; */
+       
         /* Setup the socket level */
         for (sock = 0; sock < node_ptr->num_children; sock++) {
             sock_ptr = &node_ptr->children[sock];
