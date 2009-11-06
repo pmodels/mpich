@@ -313,7 +313,7 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
     (((MAJOR) * 10000000) + ((MINOR) * 100000) + ((REVISION) * 1000) + ((TYPE) * 100) + (PATCH))
 
 /* for the datatype decoders */
-enum MPI_COMBINER_ENUM {
+enum MPIR_Combiner_enum {
     MPI_COMBINER_NAMED            = 1,
     MPI_COMBINER_DUP              = 2,
     MPI_COMBINER_CONTIGUOUS       = 3, 
