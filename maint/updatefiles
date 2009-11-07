@@ -906,7 +906,7 @@ if [ $rm_prepost = yes ] ; then
 fi
 if [ "$do_smpdversion" = yes ] ; then
     echo "Creating src/pm/smpd/smpd_version.h"
-    smpdVersion=`cat maint/Version`
+    smpdVersion=`cat maint/Version | grep ^MPICH2_VERSION | cut -f2 -d' '`
     cat >src/pm/smpd/smpd_version.h <<EOF
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*  
@@ -917,7 +917,7 @@ if [ "$do_smpdversion" = yes ] ; then
 EOF
 fi
 
-VERSION=`cat maint/Version`
+VERSION=`cat maint/Version | grep ^MPICH2_VERSION | cut -f2 -d' '`
 if [ -f README.vin ] ; then
     echo "Updating README's version ID."
     sed -e "s/%VERSION%/${VERSION}/g" README.vin > README
