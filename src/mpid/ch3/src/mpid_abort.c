@@ -79,6 +79,9 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code,
 	    MPIU_Snprintf(error_str, sizeof(error_str), "internal ABORT - process %d", rank);
 	}
     }
+    
+    MPIDU_Ftb_publish(MPIDU_FTB_EV_ABORT, error_str);
+    MPIDU_Ftb_finalize();
 
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIR_DebuggerSetAborting( error_msg );

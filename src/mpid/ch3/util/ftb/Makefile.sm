@@ -1,0 +1,4 @@
+lib${MPILIBNAME}_a_SOURCES = ftb.c
+INCLUDES = -I../../../../include -I${master_top_srcdir}/src/include
+
+

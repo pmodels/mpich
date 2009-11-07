@@ -25,6 +25,8 @@
 #include "mpidpre.h"
 #endif
 
+#include "mpidftb.h"
+
 /* Add the ch3 packet definitions */
 #include "mpidpkt.h"
 

@@ -1,5 +1,6 @@
-SUBDIRS = @ch3subsystems@
+SUBDIRS = @ch3subsystems@ @ftb_dir@
 SUBDIRS_ch3subsystems = shm sock shmbase shmproc
+SUBDIRS_ftb_dir = ftb
 
 distclean-local:
 

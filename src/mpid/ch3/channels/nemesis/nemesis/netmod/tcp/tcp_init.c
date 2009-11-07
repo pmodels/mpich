@@ -23,10 +23,6 @@ MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
     MPID_nem_tcp_vc_terminate
 };
 
-#define MPIDI_CH3I_PORT_KEY "port"
-#define MPIDI_CH3I_HOST_DESCRIPTION_KEY "description"
-#define MPIDI_CH3I_IFNAME_KEY "ifname"
-
 #undef FUNCNAME
 #define FUNCNAME set_up_listener
 #undef FCNAME

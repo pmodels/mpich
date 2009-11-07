@@ -111,7 +111,10 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc)
         iov = &sreq->dev.iov[sreq->dev.iov_offset];
         
         CHECK_EINTR(offset, writev(vc_tcp->sc->fd, iov, sreq->dev.iov_count));
-        MPIU_ERR_CHKANDJUMP(offset == 0, mpi_errno, MPI_ERR_OTHER, "**sock_closed");
+        if (offset == 0) {
+            MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
+        }
         if (offset == -1)
         {
             if (errno == EAGAIN)
@@ -119,9 +122,10 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc)
                 offset = 0;
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "EAGAIN");
                 break;
-            }
-            else
+            } else {
+                MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
                 MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+            }
         }
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
 
@@ -262,13 +266,18 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
             iov[1].MPID_IOV_LEN = data_sz;
         
             CHECK_EINTR(offset, writev(sc->fd, iov, 2));
-            MPIU_ERR_CHKANDJUMP(offset == 0, mpi_errno, MPI_ERR_OTHER, "**sock_closed");
+            if (offset == 0) {
+                MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
+            }
             if (offset == -1)
             {
                 if (errno == EAGAIN)
                     offset = 0;
-                else
+                else {
+                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
                     MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                }
             }
             MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
 
@@ -378,13 +387,18 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
             iov[1].MPID_IOV_LEN = data_sz;
         
             CHECK_EINTR(offset, writev(sc->fd, iov, 2));
-            MPIU_ERR_CHKANDJUMP(offset == 0, mpi_errno, MPI_ERR_OTHER, "**sock_closed");
+            if (offset == 0) {
+                MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
+            }
             if (offset == -1)
             {
                 if (errno == EAGAIN)
                     offset = 0;
-                else
-                    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                else {
+                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+                    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror(errno));
+                }
             }
             MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
 
@@ -513,13 +527,18 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
         if (SENDQ_EMPTY(vc_tcp->send_queue))
         {
             CHECK_EINTR(offset, writev(vc_tcp->sc->fd, iov, iov_n));
-            MPIU_ERR_CHKANDJUMP(offset == 0, mpi_errno, MPI_ERR_OTHER, "**sock_closed");
+            if (offset == 0) {
+                MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
+            }
             if (offset == -1)
             {
                 if (errno == EAGAIN)
                     offset = 0;
-                else
+                else {
+                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
                     MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                }
             }
             MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write noncontig " MPIDI_MSG_SZ_FMT, offset);
         }

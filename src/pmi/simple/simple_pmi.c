@@ -426,10 +426,7 @@ int PMI_KVS_Get_my_name( char kvsname[], int length )
 	/* Return a dummy name */
 	/* FIXME: We need to support a distinct kvsname for each 
 	   process group */
-	/* FIXME: Should the length be length (from the arg list) 
-	   instead of PMIU_MAXLINE? */
-	MPIU_Snprintf( kvsname, PMIU_MAXLINE, "singinit_kvs_%d_0", 
-		       (int)getpid() );
+	MPIU_Snprintf( kvsname, length, "singinit_kvs_%d_0", (int)getpid() );
 	return 0;
     }
     err = GetResponse( "cmd=get_my_kvsname\n", "my_kvsname", 0 );

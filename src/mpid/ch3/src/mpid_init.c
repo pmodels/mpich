@@ -120,6 +120,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     mpi_errno = MPIDI_Populate_vc_node_ids(pg, pg_rank);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+    /* Initialize FTB after PMI init */
+    mpi_errno = MPIDU_Ftb_init();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
     /*
      * Let the channel perform any necessary initialization
      * The channel init should assume that PMI_Init has been called and that

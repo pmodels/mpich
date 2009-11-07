@@ -466,10 +466,11 @@ static int send_id_info(const sockconn_t *const sc)
     }
     
     CHECK_EINTR (offset, writev(sc->fd, iov, iov_cnt));
-    MPIU_ERR_CHKANDJUMP1 (offset == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, 
-                          "**write", "**write %s", strerror (errno));
-    MPIU_ERR_CHKANDJUMP1 (offset != buf_size, mpi_errno, MPI_ERR_OTHER, 
-                          "**write", "**write %s", strerror (errno)); 
+    if (offset == -1 && errno != EAGAIN) {
+        MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", strerror(errno));
+    }
+    MPIU_ERR_CHKANDJUMP1(offset != buf_size, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", strerror(errno));
 /*     FIXME log appropriate error */
 /*     FIXME-Z1  socket is just connected and we are sending a few bytes. So, there should not */
 /*     be a problem of partial data only being written to. If partial data written, */
@@ -517,10 +518,11 @@ static int send_tmpvc_info(const sockconn_t *const sc)
     buf_size = sizeof(hdr) + sizeof(port_info);
     
     CHECK_EINTR (offset, writev(sc->fd, iov, iov_cnt));
-    MPIU_ERR_CHKANDJUMP1 (offset == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, 
-                          "**write", "**write %s", strerror (errno));
-    MPIU_ERR_CHKANDJUMP1 (offset != buf_size, mpi_errno, MPI_ERR_OTHER, 
-                          "**write", "**write %s", strerror (errno)); 
+    if (offset == -1 && errno != EAGAIN) {
+        MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", strerror(errno));
+    }
+    MPIU_ERR_CHKANDJUMP1(offset != buf_size, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", strerror(errno));
 /*     FIXME log appropriate error */
 /*     FIXME-Z1  socket is just connected and we are sending a few bytes. So, there should not */
 /*     be a problem of partial data only being written to. If partial data written, */
@@ -564,10 +566,11 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
         *got_sc_eof = 1;
         goto fn_exit;
     }
-    MPIU_ERR_CHKANDJUMP1 (nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER,
-                          "**read", "**read %s", strerror (errno));
-    MPIU_ERR_CHKANDJUMP1 (nread != hdr_len, mpi_errno, MPI_ERR_OTHER,
-                          "**read", "**read %s", strerror (errno));  /* FIXME-Z1 */
+    if (nread == -1 && errno != EAGAIN) {
+        MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno));
+    }
+    MPIU_ERR_CHKANDJUMP1(nread != hdr_len, mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno));  /* FIXME-Z1 */
     MPIU_Assert(hdr.pkt_type == MPIDI_NEM_TCP_PKT_ID_INFO ||
 		hdr.pkt_type == MPIDI_NEM_TCP_PKT_TMPVC_INFO);
     MPIU_Assert(hdr.datalen != 0);
@@ -583,10 +586,11 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 	    ++iov_cnt;
 	} 
 	CHECK_EINTR (nread, readv(sc->fd, iov, iov_cnt));
-	MPIU_ERR_CHKANDJUMP1 (nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER,
-			      "**read", "**read %s", strerror (errno));
-	MPIU_ERR_CHKANDJUMP1 (nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER,
-			      "**read", "**read %s", strerror (errno)); /* FIXME-Z1 */
+        if (nread == -1 && errno != EAGAIN) {
+            MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno));
+        }
+	MPIU_ERR_CHKANDJUMP1(nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno)); /* FIXME-Z1 */
 	if (pg_id_len == 0) {
 	    sc->is_same_pg = TRUE;
             mpi_errno = MPID_nem_tcp_get_vc_from_conninfo (MPIDI_Process.my_pg->id,
@@ -644,12 +648,11 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
         iov[0].iov_len = sizeof(sc->vc->port_name_tag);
 
         CHECK_EINTR (nread, readv(sc->fd, iov, iov_cnt));
-
-        MPIU_ERR_CHKANDJUMP1 (nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER,
-                              "**read", "**read %s", strerror (errno));
-        
-        MPIU_ERR_CHKANDJUMP1 (nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER,
-                              "**read", "**read %s", strerror (errno)); /* FIXME-Z1 */
+        if (nread == -1 && errno != EAGAIN) {
+            MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno));
+        }
+        MPIU_ERR_CHKANDJUMP1(nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno)); /* FIXME-Z1 */
         sc->is_same_pg = FALSE;
         sc->pg_id = NULL;
         sc->is_tmpvc = TRUE;
@@ -699,10 +702,11 @@ static int send_cmd_pkt_func(int fd, MPIDI_nem_tcp_pkt_type_t pkt_type)
     pkt.datalen = 0;
 
     CHECK_EINTR (offset, write(fd, &pkt, pkt_len));
-    MPIU_ERR_CHKANDJUMP1 (offset == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER,
-                          "**write", "**write %s", strerror (errno));
-    MPIU_ERR_CHKANDJUMP1 (offset != pkt_len, mpi_errno, MPI_ERR_OTHER,
-                          "**write", "**write %s", strerror (errno)); /* FIXME-Z1 */
+    if (offset == -1 && errno != EAGAIN) {
+        MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", strerror(errno));
+    }
+    MPIU_ERR_CHKANDJUMP1(offset != pkt_len, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", strerror(errno)); /* FIXME-Z1 */
  fn_exit:
     return mpi_errno;
  fn_fail:
@@ -729,10 +733,11 @@ static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_pkt_type_t *pkt_type)
     MPIDI_FUNC_ENTER(MPID_STATE_RECV_CMD_PKT);
 
     CHECK_EINTR (nread, read(fd, &pkt, pkt_len));
-    MPIU_ERR_CHKANDJUMP1 (nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER,
-                          "**read", "**read %s", strerror (errno));
-    MPIU_ERR_CHKANDJUMP2 (nread != pkt_len, mpi_errno, MPI_ERR_OTHER,
-                          "**read", "**read %d %s", nread, strerror (errno)); /* FIXME-Z1 */
+    if (nread == -1 && errno != EAGAIN) {
+        MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno));
+    }
+    MPIU_ERR_CHKANDJUMP2(nread != pkt_len, mpi_errno, MPI_ERR_OTHER, "**read", "**read %d %s", nread, strerror(errno)); /* FIXME-Z1 */
     MPIU_Assert(pkt.datalen == 0);
     MPIU_Assert(pkt.pkt_type == MPIDI_NEM_TCP_PKT_ID_ACK ||
                 pkt.pkt_type == MPIDI_NEM_TCP_PKT_ID_NAK ||
@@ -823,8 +828,13 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
         sock_addr = &(vc_tcp->sock_id);
 
         CHECK_EINTR(sc->fd, socket(AF_INET, SOCK_STREAM, 0));
-        MPIU_ERR_CHKANDJUMP2(sc->fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", 
-                             "**sock_create %s %d", strerror(errno), errno);
+        if (sc->fd == -1) {
+            if (errno == ENOBUFS || errno == ENOMEM) {
+                MPIDU_Ftb_publish(MPIDU_FTB_EV_RESOURCES, "socket");
+            }
+            MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+            MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", strerror(errno), errno);
+        }
         plfd->fd = sc->fd;
 	MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "sc->fd=%d, plfd->events=%d, plfd->revents=%d, vc=%p, sc=%p", sc->fd, plfd->events, plfd->revents, vc, sc));
         mpi_errno = MPID_nem_tcp_set_sockopts(sc->fd);
@@ -833,8 +843,10 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "connecting to 0x%08X:%d", sock_addr->sin_addr.s_addr, sock_addr->sin_port));
         rc = connect(sc->fd, (SA*)sock_addr, sizeof(*sock_addr)); 
         /* connect should not be called with CHECK_EINTR macro */
-        MPIU_ERR_CHKANDJUMP2 (rc < 0 && errno != EINPROGRESS, mpi_errno, MPI_ERR_OTHER,
-                              "**sock_connect", "**sock_connect %d %s", errno, strerror (errno));
+        if (rc < 0 && errno != EINPROGRESS) {
+            MPIDU_FTB_COMMERR(rc == ENETUNREACH ? MPIDU_FTB_EV_UNREACHABLE : MPIDU_FTB_EV_COMMUNICATION, vc);
+            MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**sock_connect", "**sock_connect %d %s", errno, strerror(errno));
+        }
         
         if (rc == 0) {
             CHANGE_STATE(sc, CONN_STATE_TC_C_CNTD);
@@ -934,10 +946,14 @@ static int cleanup_sc(sockconn_t *const sc)
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "vc=%p, sc=%p, closing fd=%d", sc_vc, sc, sc->fd));
 
     CHECK_EINTR(rc, close(sc->fd));
-
-    MPIU_ERR_CHKANDJUMP1 (rc == -1 && errno != EAGAIN && errno != EBADF, mpi_errno, MPI_ERR_OTHER, 
-                          "**close", "**close %s", strerror (errno));
-
+    if (rc == -1 && errno != EAGAIN && errno != EBADF) {
+        if (sc_vc)
+            MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, sc_vc);
+        else
+            MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**close", "**close %s", strerror(errno));
+    }
+    
     sc->fd = plfd->fd = CONN_INVALID_FD;
     if (sc_vc && sc_vc_tcp->sc == sc) /* this vc may be connecting/accepting with another sc e.g., this sc lost the tie-breaker */
     {
@@ -1074,28 +1090,17 @@ static int state_tc_c_cntd_handler(struct pollfd *const plfd, sockconn_t *const 
     if (IS_WRITEABLE(plfd)) {
         MPIU_DBG_MSG(NEM_SOCK_DET, VERBOSE, "inside if (IS_WRITEABLE(plfd))");
         if (!sc->is_tmpvc) { /* normal connection */
-            if (send_id_info(sc) == MPI_SUCCESS) {
-                CHANGE_STATE(sc, CONN_STATE_TC_C_RANKSENT);
-            }
-            else {
-                mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME,
-                                                 __LINE__,  MPI_ERR_OTHER, 
-                                                 "**fail", 0);
-                /* FIXME-Danger add error string  actual string : "**cannot send idinfo" */
-                goto fn_fail;
-            }
+            mpi_errno = send_id_info(sc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+            CHANGE_STATE(sc, CONN_STATE_TC_C_RANKSENT);
         }
         else { /* temp VC */
-            if (send_tmpvc_info(sc) == MPI_SUCCESS) {
-                CHANGE_STATE(sc, CONN_STATE_TC_C_TMPVCSENT);
-            }
-            else {
-                mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME,
-                                                 __LINE__, MPI_ERR_OTHER,
-                                                 "**fail", 0);
-                goto fn_fail;
-            }
-        } 
+            mpi_errno = send_tmpvc_info(sc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            
+            CHANGE_STATE(sc, CONN_STATE_TC_C_TMPVCSENT);
+        }
     }
     else {
         /* Remain in the same state */
@@ -1436,12 +1441,14 @@ static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *const sc)
                 }
                 else
                 {
+                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, sc_vc);
                     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "ERROR: sock (fd=%d) is closed: bytes_recvd == 0", sc->fd );
                     MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
                 }
             }
             else
             {
+                MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, sc_vc);
                 MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno));
             }
         }
@@ -1468,13 +1475,13 @@ static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *const sc)
         {
             if (bytes_recvd == -1 && errno == EAGAIN) /* handle this fast */
                 goto fn_exit;
-
-            if (bytes_recvd == 0)
-            {
+            
+            MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, sc_vc);
+            if (bytes_recvd == 0) {
                 MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
-            }
-            else
+            } else {
                 MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno));
+            }
         }
 
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "Cont recv %ld", (long int)bytes_recvd);
@@ -1680,8 +1687,10 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
     num_skipped_polls = 0;
 
     CHECK_EINTR(n, poll(MPID_nem_tcp_plfd_tbl, num_polled, 0));
-    MPIU_ERR_CHKANDJUMP1 (n == -1, mpi_errno, MPI_ERR_OTHER, 
-                          "**poll", "**poll %s", strerror (errno));
+    if (n == -1) {
+        MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**poll", "**poll %s", strerror(errno));
+    }
     /* MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "some sc fd poll event")); */
     for(i = 0; i < num_polled; i++)
     {
@@ -1692,11 +1701,23 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
         {
             /* We could check for POLLHUP here, but HUP/HUP+EOF is not erroneous
              * on many platforms, including modern Linux. */
-            MPIU_ERR_CHKANDJUMP(it_plfd->revents & POLLERR, mpi_errno, MPI_ERR_OTHER, "**comm_fail");
-            MPIU_ERR_CHKANDJUMP(it_sc->state.cstate != CONN_STATE_TS_D_QUIESCENT && (it_plfd->revents & POLLNVAL), mpi_errno, MPI_ERR_OTHER, "**comm_fail");
+            if (it_plfd->revents & POLLERR) {
+                if (it_sc->vc)
+                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, it_sc->vc);
+                else
+                    MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**comm_fail");
+            }
+            if (it_sc->state.cstate != CONN_STATE_TS_D_QUIESCENT && (it_plfd->revents & POLLNVAL)) {
+                if (it_sc->vc)
+                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, it_sc->vc);
+                else
+                    MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**comm_fail");
+            }
             
             mpi_errno = it_sc->handler(it_plfd, it_sc);
-            if (mpi_errno) MPIU_ERR_POP (mpi_errno); 
+            if (mpi_errno) MPIU_ERR_POP (mpi_errno);
         }
     }
     
@@ -1761,8 +1782,9 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
                 continue;
             else if (errno == EWOULDBLOCK)
                 break; /*  no connection in the listen queue. get out of here.(N1) */
-            MPIU_ERR_SETANDJUMP1 (mpi_errno, MPI_ERR_OTHER,
-                                  "**sock_accept", "**sock_accept %s", strerror(errno));
+            if (errno == ENOBUFS || errno == ENOMEM)
+                MPIDU_Ftb_publish(MPIDU_FTB_EV_RESOURCES, "sock_accept");
+            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**sock_accept", "**sock_accept %s", strerror(errno));
         }
         else {
             int index = -1;

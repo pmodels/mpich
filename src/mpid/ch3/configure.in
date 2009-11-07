@@ -66,6 +66,25 @@ fi
 
 PAC_PROG_MAKE
 
+# ----------------------------------------------------------------------------
+# include ftb functionality
+# ----------------------------------------------------------------------------
+
+ftb_dir=
+AC_ARG_ENABLE([ftb],
+  [AS_HELP_STRING([[--enable-ftb]],
+    [Enable FTB support (default is no)])],
+  [AC_DEFINE([ENABLE_FTB], 1, [Define if FTB is enabled])
+  ftb_dir=ftb
+  PAC_SET_HEADER_LIB_PATH(ftb)
+  PAC_CHECK_HEADER_LIB_FATAL(ftb, libftb.h, ftb, FTB_Connect)]
+)
+AC_SUBST(ftb_dir)
+export LDFLAGS
+export LIBS
+export CFLAGS
+export CPPFLAGS
+
 # Some channels will make use of common utility routines (in ch3/src/util)
 # For modularity, the channel can specify these here
 # FIXME: Some utility routines are specified at the top level (devsubsystem)
@@ -136,7 +155,6 @@ if test "$ac_cv_func_gethostname" = "yes" ; then
 fi
 
 AC_CHECK_FUNCS(CFUUIDCreate uuid_generate time)
-AC_SEARCH_LIBS(uuid_generate, uuid)
 
 AC_CACHE_CHECK([whether CPP accepts variable length argument lists],
 pac_cv_have_cpp_varargs,[
@@ -285,6 +303,13 @@ export SHLIB_EXT
 export ENABLE_SHLIB
 export LIBTOOL
 
+# TERRIBLE HACK: For some reason, anything added to LIBS by this
+# configure is lost in the subconfigure.  So we save it in another
+# variable then restore it in the subconfigure.  Note that this
+# doesn't happen with LDFLAGS!
+# FIXME: Figure out what's going on.
+export MY_EXPORTED_LIBS="$LIBS"
+
 # FIXME shouldn't put var in _SUBDIRS
 AC_CONFIG_SUBDIRS(channels/${channel_name})
 
@@ -296,6 +321,6 @@ CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 dnl Place holder macro for finalization
 PAC_SUBCONFIG_FINALIZE()
 
-AC_OUTPUT(Makefile src/Makefile util/Makefile util/shm/Makefile util/shmbase/Makefile channels/Makefile localdefs $MPID_THREAD_OUTPUT_FILES)
+AC_OUTPUT(Makefile src/Makefile util/Makefile util/shm/Makefile util/shmbase/Makefile channels/Makefile util/ftb/Makefile localdefs $MPID_THREAD_OUTPUT_FILES)
 
 PAC_SUBDIR_CACHE_CLEANUP
