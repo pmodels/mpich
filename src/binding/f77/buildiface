@@ -2355,10 +2355,8 @@ if ($write_mpif) {
     }
     
     # predefined constants
-    print MPIFFD "       INTEGER MPI_UNDEFINED, MPI_UNDEFINED_RANK\n";
+    print MPIFFD "       INTEGER MPI_UNDEFINED\n";
     print MPIFFD "       PARAMETER (MPI_UNDEFINED=$mpidef{'MPI_UNDEFINED'})\n";
-    # mpi_undefined_rank is defined as mpi-undefined
-    print MPIFFD "       PARAMETER (MPI_UNDEFINED_RANK=$mpidef{'MPI_UNDEFINED'})\n";
     &print_mpif_int( "MPI_KEYVAL_INVALID" );
     foreach $key ('BSEND_OVERHEAD', 'PROC_NULL', 'ANY_SOURCE', 'ANY_TAG', 'ROOT') {
 	&print_mpif_int( "MPI_$key" );

@@ -1025,9 +1025,6 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    case MPI_ROOT:
 		MPIU_Strncpy(str, "MPI_ROOT", maxlen);
 		break;
-	    case MPI_UNDEFINED_RANK:
-		MPIU_Strncpy(str, "MPI_UNDEFINED_RANK", maxlen);
-		break;
 	    default:
 		MPIU_Snprintf(str, maxlen, "%d", i);
 		break;

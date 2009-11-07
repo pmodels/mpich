@@ -52,7 +52,6 @@ typedef int MPI_Op;
 extern int MPI_WTIME_IS_GLOBAL;
 /* Pre-defined constants */
 #define MPI_UNDEFINED      (-32766)
-#define MPI_UNDEFINED_RANK MPI_UNDEFINED
 #define MPI_KEYVAL_INVALID 0x24000000
 #define MPI_MAX_PROCESSOR_NAME 128
 

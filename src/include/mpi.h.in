@@ -192,7 +192,6 @@ typedef int MPI_Op;
 
 /* Pre-defined constants */
 #define MPI_UNDEFINED      (-32766)
-#define MPI_UNDEFINED_RANK MPI_UNDEFINED
 #define MPI_KEYVAL_INVALID 0x24000000
 
 /* Upper bound on the overhead in bsend for each message buffer */
