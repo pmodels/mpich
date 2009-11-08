@@ -3,8 +3,8 @@ dnl/*D
 dnl AC_CACHE_LOAD - Replacement for autoconf cache load 
 dnl
 dnl Notes:
-dnl Caching in autoconf is broken (through version 2.13).  The problem is 
-dnl that the cache is read
+dnl Caching in autoconf is broken (at least through version 2.13).  
+dnl The problem is that the cache is read
 dnl without any check for whether it makes any sense to read it.
 dnl A common problem is a build on a shared file system; connecting to 
 dnl a different computer and then building within the same directory will
