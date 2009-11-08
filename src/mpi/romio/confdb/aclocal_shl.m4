@@ -88,8 +88,18 @@ case "$enable_sharedlibs" in
     C_LINK_SHL='${CC} -shared'
     # For example, include the libname as ${LIBNAME_SHL}
     #C_LINK_SHL='${CC} -shared -Wl,-h,<finallibname>'
-    # May need -fPIC 
-    CC_SHL='${CC} -fpic'
+    # May need -fPIC .  Test to see which one works.
+    PAC_C_CHECK_COMPILER_OPTION(-fpic,fpic_ok=yes,fpic_ok=no)
+    if test "$fpic_ok" != yes ; then
+        PAC_C_CHECK_COMPILER_OPTION(-fPIC,fPIC_ok=yes,fPIC_ok=no)
+        if test "$fPIC_ok" != yes ; then
+	     AC_MSG_ERROR([Neither -fpic nor -fPIC accepted by $CC])
+        else
+	     CC_SHL='${CC} -fPIC'
+        fi
+    else
+        CC_SHL='${CC} -fpic'
+    fi
     #C_LINKPATH_SHL="-Wl,-rpath -Wl,"
     # More recent versions allow multiple args, separated by commas
     C_LINKPATH_SHL="-Wl,-rpath,"
@@ -121,38 +131,51 @@ case "$enable_sharedlibs" in
     ;;	
 
     libtool)
-    AC_MSG_ERROR([Creating shared libraries using libtool not yet supported])
-dnl     dnl Using libtool requires a heavy-weight process to test for 
-dnl     dnl various stuff that libtool needs.  Without this, you'll get a
-dnl     dnl bizarre error message about libtool being unable to find
-dnl     dnl configure.in or configure.ac (!)
-dnl     AC_PROG_LIBTOOL
-dnl     # Likely to be
-dnl     # either CC or CC_SHL is libtool $cc
-dnl     CC_SHL='${LIBTOOL} --mode=compile ${CC}'
-dnl     # CC_LINK_SHL includes the final installation path
-dnl     # For many systems, the link may need to include *all* libraries
-dnl     # (since many systems don't allow any unsatisfied dependencies)
-dnl     # We need to give libtool the .lo file, not the .o files
-dnl     SHLIB_FROM_LO=yes
-dnl     # We also need to add -no-undefined when the compiler is gcc and
-dnl     # we are building under cygwin
-dnl     sysname=`uname -s | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`
-dnl     isCygwin=no
-dnl     case "$sysname" in 
-dnl 	*CYGWIN*) isCygwin=yes;;
-dnl     esac
-dnl     if test "$isCygwin" = yes ; then
-dnl         C_LINK_SHL='${LIBTOOL} --mode=link ${CC} -no-undefined -rpath ${libdir}'
-dnl     else
-dnl         C_LINK_SHL='${LIBTOOL} --mode=link ${CC} -rpath ${libdir}'
-dnl     fi
-dnl     C_LINKPATH_SHL="-rpath "
-dnl     # We also need a special install process with libtool.  Note that this
-dnl     # will also install the static libraries
-dnl     SHLIB_INSTALL='$(LIBTOOL) --mode=install $(INSTALL_PROGRAM)'
-dnl     # Note we may still need to add
-dnl     #'$(LIBTOOL) --mode=finish $(libdir)'
+    # set TRY_LIBTOOL to yes to experiment with libtool.  You are on your
+    # own - only send fixes, not bug reports.
+    if test "$TRY_LIBTOOL" != yes ; then
+        AC_MSG_ERROR([Creating shared libraries using libtool not yet supported])
+    else
+    # Using libtool requires a heavy-weight process to test for 
+    # various stuff that libtool needs.  Without this, you'll get a
+    # bizarre error message about libtool being unable to find
+    # configure.in or configure.ac (!)
+        # Libtool expects to see at least enable-shared.
+        if test "X$enable_shared" = "X" ; then enable_shared=yes ; fi
+	# Initialize libtool
+	# This works, but libtool version 2 places the object files
+	# in a different place, making it harder to integrate with
+	# our base approach.  Disabling for now
+	dnl LT_PREREQ([2.2.6])
+        dnl LT_INIT([disable-shared])
+	AC_MSG_ERROR([To use this test verison, edit aclocal_shl.m4])
+        # Likely to be
+        # either CC or CC_SHL is libtool $cc
+        CC_SHL='${LIBTOOL} --mode=compile ${CC}'
+        # CC_LINK_SHL includes the final installation path
+        # For many systems, the link may need to include *all* libraries
+        # (since many systems don't allow any unsatisfied dependencies)
+        # We need to give libtool the .lo file, not the .o files
+        SHLIB_FROM_LO=yes
+        # We also need to add -no-undefined when the compiler is gcc and
+        # we are building under cygwin
+        sysname=`uname -s | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`
+        isCygwin=no
+        case "$sysname" in 
+ 	*CYGWIN*) isCygwin=yes ;;
+        esac
+        if test "$isCygwin" = yes ; then
+            C_LINK_SHL='${LIBTOOL} --mode=link ${CC} -no-undefined -rpath ${libdir}'
+        else
+            C_LINK_SHL='${LIBTOOL} --mode=link ${CC} -rpath ${libdir}'
+        fi
+        C_LINKPATH_SHL="-rpath "
+        # We also need a special install process with libtool.  Note that this
+        # will also install the static libraries
+        SHLIB_INSTALL='$(LIBTOOL) --mode=install $(INSTALL_PROGRAM)'
+        # Note we may still need to add
+        #'$(LIBTOOL) --mode=finish $(libdir)'
+    fi
     ;;
 dnl
 dnl Other, such as solaris-cc
@@ -243,7 +266,19 @@ for pac_arg in $pac_kinds ; do
     gcc)
     # For example, include the libname as ${LIBNAME_SHL}
     #C_LINK_SHL='${CC} -shared -Wl,-h,<finallibname>'
-    pac_cc_sharedlibs='gcc -shared -fpic'
+    pac_cc_sharedlibs='gcc -shared'
+    # Make sure we select the correct fpic option
+    PAC_C_CHECK_COMPILER_OPTION(-fpic,fpic_ok=yes,fpic_ok=no)
+    if test "$fpic_ok" != yes ; then
+        PAC_C_CHECK_COMPILER_OPTION(-fPIC,fPIC_ok=yes,fPIC_ok=no)
+        if test "$fPIC_ok" != yes ; then
+	     AC_MSG_ERROR([Neither -fpic nor -fPIC accepted by $CC])
+        else
+	     pac_cc_sharedlibs="$pac_cc_sharedlibs -fPIC"
+        fi
+    else
+        pac_cc_sharedlibs="$pac_cc_sharedlibs -fpic"
+    fi
     pac_clink_sharedlibs='gcc -shared'
     pac_type_sharedlibs=gcc
     ;;
@@ -291,6 +326,11 @@ AC_DEFUN([PAC_CC_SUBDIR_SHLIBS],[
 	    if test -z "$LIBTOOL" ; then
 		AC_MSG_WARN([libtool selected for shared library support but LIBTOOL is not defined])
             fi
+	    # Libtool needs master_top_builddir
+	    if test "X$master_top_builddir" = "X" ; then
+	        AC_MSG_ERROR([Libtool requires master_top_builddir - check configure.in sources])
+	    fi
+	    AC_SUBST(master_top_builddir)
 	fi
 ])
 
