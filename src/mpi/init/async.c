@@ -21,6 +21,7 @@ static volatile int progress_thread_done = 0;
 static void progress_fn(void * data)
 {
     int mpi_errno = MPI_SUCCESS;
+#if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
     MPIU_THREADPRIV_DECL;
 
     /* Explicitly add CS_ENTER/EXIT since this thread is created from
@@ -64,6 +65,7 @@ static void progress_fn(void * data)
     MPID_CS_EXIT();
 #endif
 
+#endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
     return;
 }
 
@@ -74,6 +76,7 @@ static void progress_fn(void * data)
 int MPIR_Init_async_thread(void)
 {
     int mpi_errno = MPI_SUCCESS;
+#if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
@@ -97,6 +100,8 @@ int MPIR_Init_async_thread(void)
     MPIU_Assert(!mpi_errno);
 
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
+
+#endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
     return mpi_errno;
 }
 
@@ -107,6 +112,7 @@ int MPIR_Init_async_thread(void)
 int MPIR_Finalize_async_thread(void)
 {
     int mpi_errno = MPI_SUCCESS;
+#if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
@@ -146,5 +152,6 @@ int MPIR_Finalize_async_thread(void)
 
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
+#endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
     return mpi_errno;
 }
