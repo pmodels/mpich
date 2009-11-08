@@ -20,8 +20,8 @@ static volatile int progress_thread_done = 0;
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static void progress_fn(void * data)
 {
-    int mpi_errno = MPI_SUCCESS;
 #if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
+    int mpi_errno = MPI_SUCCESS;
     MPIU_THREADPRIV_DECL;
 
     /* Explicitly add CS_ENTER/EXIT since this thread is created from
