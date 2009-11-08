@@ -48,6 +48,18 @@ AC_DEFINE_UNQUOTED(HYDRA_F77,"$F77",[Fortran 77 compiler])
 AC_DEFINE_UNQUOTED(HYDRA_F90,"$F90",[Fortran 90 compiler])
 AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"$ac_configure_args",[Configure arguments])
 
+# Dirty hack -- If we are compiling within MPICH2, use the MPL in the
+# src/mpl directory. If not, use the one we checked out separately for
+# Hydra.
+if test "$FROM_MPICH2" = "yes" ; then
+   mpl_srcdir="../../mpl"
+   AC_CONFIG_SUBDIRS(../../mpl)
+else
+   mpl_srcdir="mpl"
+   AC_CONFIG_SUBDIRS(mpl)
+fi
+AC_SUBST(mpl_srcdir)
+
 # Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
 AC_SUBST(DOXYGEN)
@@ -492,8 +504,6 @@ if test "$ac_cv_func_gethostname" = "yes" ; then
     # Do we need to declare gethostname?
     PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
 fi
-
-AC_CONFIG_SUBDIRS(mpl)
 
 # Place holder macro for finalization
 PAC_SUBCONFIG_FINALIZE()

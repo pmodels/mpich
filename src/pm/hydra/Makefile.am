@@ -6,12 +6,12 @@
 
 # Set external subdirs to NULL. They are built first.
 external_subdirs =
-external_ldflags = -L$(top_builddir)/mpl -static
+external_ldflags = -L$(top_builddir)/@mpl_srcdir@ -static
 external_libs = -lmpl
 
 ACLOCAL_AMFLAGS = -I mpl/confdb
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/mpl/include \
-	-I$(top_builddir)/mpl/include
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/@mpl_srcdir@/include \
+	-I$(top_builddir)/@mpl_srcdir@/include
 
 noinst_LIBRARIES = libhydra.a libpm.a libui.a
 bin_PROGRAMS =
@@ -33,7 +33,7 @@ include ui/Makefile.mk
 
 # The external subdirs need to get built first, as we might depend on
 # them.
-SUBDIRS = $(external_subdirs) mpl .
+SUBDIRS = $(external_subdirs) @mpl_srcdir@ .
 
 # Use the mpich2-build-install target to include mpiexec in the build bin
 # directory (all pm's require these targets)
