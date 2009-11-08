@@ -222,8 +222,8 @@ HYD_status HYDU_sock_stdin_cb(int fd, HYD_event_t events, int stdin_fd, char *bu
 #define HYDU_calloc calloc
 #define HYDU_free   free
 
-#define HYDU_snprintf snprintf
-#define HYDU_strdup strdup
+#define HYDU_snprintf MPL_snprintf
+#define HYDU_strdup   MPL_strdup
 
 #define HYDU_MALLOC(p, type, size, status)                              \
     {                                                                   \

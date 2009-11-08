@@ -6,6 +6,7 @@
 
 #include "mpl.h"
 
+#if !defined HAVE_SNPRINTF
 int MPL_snprintf(char *str, size_t size, const char *format, ...)
 {
     int n;
@@ -150,7 +151,7 @@ int MPL_snprintf(char *str, size_t size, const char *format, ...)
     n = (int) (out_str - str);
     return n;
 }
-
+#endif /* HAVE_SNPRINTF */
 
 /*@
   MPL_strdup - Duplicate a string
@@ -170,6 +171,7 @@ int MPL_snprintf(char *str, size_t size, const char *format, ...)
   Module:
   Utility
   @*/
+#if !defined HAVE_STRDUP
 char *MPL_strdup(const char *str)
 {
     char *restrict p = (char *) malloc(strlen(str) + 1);
@@ -185,3 +187,4 @@ char *MPL_strdup(const char *str)
     }
     return save_p;
 }
+#endif /* HAVE_STRDUP */

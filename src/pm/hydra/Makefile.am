@@ -6,8 +6,8 @@
 
 # Set external subdirs to NULL. They are built first.
 external_subdirs =
-external_ldflags = -static
-external_libs =
+external_ldflags = -L$(top_builddir)/mpl -static
+external_libs = -lmpl
 
 ACLOCAL_AMFLAGS = -I mpl/confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/mpl/include \
