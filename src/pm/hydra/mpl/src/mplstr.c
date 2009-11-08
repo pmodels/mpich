@@ -4,11 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mplstr.h"
+#include "mpl.h"
 
-#ifndef MPL_HAVE_SNPRINTF
-/* FIXME: This is an approximate form, which works for most cases, but
- * might not work for all. */
 int MPL_snprintf(char *str, size_t size, const char *format, ...)
 {
     int n;
@@ -153,13 +150,8 @@ int MPL_snprintf(char *str, size_t size, const char *format, ...)
     n = (int) (out_str - str);
     return n;
 }
-#endif /* MPL_HAVE_SNPRINTF */
 
 
-#ifndef MPL_HAVE_STRDUP
-#ifdef MPL_strdup
-#undef MPL_strdup
-#endif
 /*@
   MPL_strdup - Duplicate a string
 
@@ -193,4 +185,3 @@ char *MPL_strdup(const char *str)
     }
     return save_p;
 }
-#endif /* MPL_HAVE_STRDUP */
