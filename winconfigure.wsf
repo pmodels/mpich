@@ -1278,19 +1278,38 @@ Function DecorateMPIFuncs(str)
 End Function
 
 '
-' Get MPICH2 Version
+' Get MPICH2 Version & ABI Version
 '
-Function GetMPICH2Version()
+Function GetMPICH2Versions(ByRef mpich2Version, ByRef mpich2ABIVersion)
+    mpich2Version = "0.0"
+    mpich2ABIVersion = "0.0"
     if f.FileExists("maint\Version") then
-    	Dim fin, ver
-		Set fin = f.OpenTextFile("maint\Version")
-		ver = fin.ReadLine()
-		Trim(ver)
-		fin.Close()
-		GetMPICH2Version = ver
-	else
-		GetMPICH2Version = "0.0.0"
-	end if
+        Dim fin, str
+        Set fin = f.OpenTextFile("maint\Version")
+        Do Until fin.AtEndOfStream
+            Dim strTokenArr
+            str = fin.ReadLine()
+            Trim(str)
+            strTokenArr = Split(str, " ", -1 , 1)
+            If UBound(strTokenArr, 1) = 1 Then
+                If(StrComp(Left(strTokenArr(0), 14), "MPICH2_VERSION") = 0) Then
+                    mpich2Version = strTokenArr(1)
+                ElseIf(StrComp(Left(strTokenArr(0), 17), "MPICH2_ABIVERSION") = 0) Then
+                    mpich2ABIVersion = Replace(strTokenArr(1), ":", ".")
+                Else
+                    printMsg "ERROR", "Invalid String """ & str & """ found in mpich2 Version file"
+                End If
+            Else
+                printMsg "ERROR", "Invalid format in mpich2 Version file. Expected: ""MPICH2_VERSION_NAME MPICH2_VERSION"" format"
+            End If
+        Loop
+        fin.Close()
+    end if
+    If (StrComp(mpich2Version, "0.0") <> 0) AND (StrComp(mpich2ABIVersion, "0.0") <> 0) Then
+        GetMPICH2Versions = True
+    Else
+        GetMPICH2Versions = False
+    End If
 End Function
 
 ' Does the string contain only ints ?
@@ -1506,7 +1525,8 @@ Function GetMPICH2NumVersion(ver)
 	printMsg "VERBOSE", " MPICH2 NUM VERSION " & numVer
 End Function
 
-mpich2Version = GetMPICH2Version()
+GetMPICH2Versions mpich2Version, mpich2ABIVersion
+printMsg "VERBOSE", "MPICH2_VERSION = " & mpich2Version & " MPICH2_ABIVERSION = " & mpich2ABIVersion
 mpich2NumVersion = GetMPICH2NumVersion(mpich2Version)
 
 Function RegExpFind(pattern, str)
