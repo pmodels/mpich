@@ -517,7 +517,13 @@ if test "$buildingF77" = "yes" ; then
         # in dealing with running programs containing MPI headers (e.g.,
         # the IBM MPI changes the main entry point so that MPI 
 	# programs cannot be run on the host node)
+	# Make sure we are using the local C compiler (if the local
+	# machine is different that the system that MPICC is for, then
+	# set the cross-compilation feature)
+	CCsave="$CC"
+	CC="$BASECC"
         AC_CHECK_SIZEOF(void *)
+	CC="$CCsave"
 	MPI_SIZEOF_AINT=$ac_cv_sizeof_void_p
     fi
     if test -z "$MPI_SIZEOF_OFFSET" ; then
@@ -974,11 +980,18 @@ fi
 # specify this - MPI_Aint must be large enough to hold an address-sized
 # integer, but it can be larger.  To get clean compilation in some places,
 # we need a pointer-sized integer.  The following code looks for one.
+
+# Make sure we are using the local C compiler (if the local
+# machine is different that the system that MPICC is for, then
+# set the cross-compilation feature)
+CCsave="$CC"
+CC="$BASECC"
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(long long)
 AC_CHECK_SIZEOF(short)
+CC="$CCsave"
 POINTERINT=MPI_Aint
 AC_MSG_CHECKING([for C integer type of address size])
 for type in int long long_long short ; do
