@@ -3605,6 +3605,11 @@ Sub AddDefinitions( fout, filename, b64 )
                                 ' Not applicable on windows
                                 Case "NO_MINUS_C_MINUS_O"
                                         fout.WriteLine("/* #undef NO_MINUS_C_MINUS_O */")
+                                ' Disable falut tolerance code on windows
+                                Case "ENABLE_FTB"
+                                        fout.WriteLine("/* #undef ENABLE_FTB */")
+                                Case "HAVE_LIBFTB"
+                                        fout.WriteLine("/* #undef HAVE_LIBFTB */")
                                 ' FIXME: The size of openpa ptr should not be hardcoded...
                                 Case "SIZEOF_OPA_PTR_T"
                                         If b64 Then
