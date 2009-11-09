@@ -22,6 +22,9 @@
 #define DPRINTF(arg_list_)
 #endif
 
+/* We need MPI 2.2 to be able to compile the following routines. */
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+
 /* Maybe use a bit vector instead? */
 int **layout, size, rank;
 
@@ -192,6 +195,8 @@ static void verify_comm(MPI_Comm comm)
     if (dupcomm != MPI_COMM_NULL)
         MPI_Comm_free(&dupcomm);
 }
+
+#endif /* At least MPI 2.2 */
 
 int main(int argc, char *argv[])
 {
