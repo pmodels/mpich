@@ -64,7 +64,7 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
     MPI_Request req = ibsend_info->req->handle;
     MPIU_THREADPRIV_DECL;
 
-    /* FIXME: There should be no unreferended args! */
+    /* FIXME: There should be no unreferenced args! */
     /* Note that this value should always be 1 because 
        Grequest_complete is called on this request when it is
        created */
