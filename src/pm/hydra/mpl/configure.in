@@ -11,7 +11,7 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.10])
 PAC_SUBCONFIG_INIT()
 
 AC_CONFIG_HEADER([include/config.h])
-AC_CONFIG_HEADERS([include/mplconfig.h])
+AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
 
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])

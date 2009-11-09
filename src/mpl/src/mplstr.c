@@ -6,11 +6,11 @@
 
 #include "mpl.h"
 
-#if !defined HAVE_SNPRINTF
-int MPL_snprintf(char *str, size_t size, const char *format, ...)
+#if !defined MPL_HAVE_SNPRINTF
+int MPL_snprintf(char *str, size_t size, mpl_const char *format, ...)
 {
     int n;
-    const char *p;
+    mpl_const char *p;
     char *out_str = str;
     va_list list;
 
@@ -151,14 +151,14 @@ int MPL_snprintf(char *str, size_t size, const char *format, ...)
     n = (int) (out_str - str);
     return n;
 }
-#endif /* HAVE_SNPRINTF */
+#endif /* MPL_HAVE_SNPRINTF */
 
 /*@
   MPL_strdup - Duplicate a string
 
   Synopsis:
 .vb
-    char *MPL_strdup(const char *str)
+    char *MPL_strdup(mpl_const char *str)
 .ve
 
   Input Parameter:
@@ -171,11 +171,11 @@ int MPL_snprintf(char *str, size_t size, const char *format, ...)
   Module:
   Utility
   @*/
-#if !defined HAVE_STRDUP
-char *MPL_strdup(const char *str)
+#if !defined MPL_HAVE_STRDUP
+char *MPL_strdup(mpl_const char *str)
 {
-    char *restrict p = (char *) malloc(strlen(str) + 1);
-    const char *restrict in_p = str;
+    char *mpl_restrict p = (char *) malloc(strlen(str) + 1);
+    mpl_const char *mpl_restrict in_p = str;
     char *save_p;
 
     save_p = p;
@@ -187,4 +187,4 @@ char *MPL_strdup(const char *str)
     }
     return save_p;
 }
-#endif /* HAVE_STRDUP */
+#endif /* MPL_HAVE_STRDUP */
