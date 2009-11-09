@@ -38,8 +38,13 @@ do_smpdversion=yes
 # Allow MAKE to be set from the environment
 MAKE=${MAKE-make}
 
+# ltdirs are the directories that make use of libtool and 
+# require libtoolize 
+# externals are the directories for external packages that we have 
+# included into MPICH2
 externals="src/pm/hydra/tools/bind/hwloc/hwloc"
 ltdirs="src/pm/hydra"
+# amdirs are the directories that make use of autoreconf
 amdirs="src/openpa src/pm/hydra src/mpl"
 
 # List of steps that we will consider
@@ -300,7 +305,9 @@ fi
 # -1 is used for unknown
 acSubversion=-1
 acIncDirFlag=-I
-for ver in 64 63 62 61 60 59 ; do
+# Try to keep at least one version ahead of autoconf (e.g., if current is
+# 2.64, include a test for 2.65)
+for ver in 65 64 63 62 61 60 59 ; do
     rm -f .tmp/configure.in .tmp/configure
     cat >.tmp/configure.in <<EOF
 AC_PREREQ(2.$ver)
