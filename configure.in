@@ -2117,7 +2117,7 @@ if test "$enable_f90" = "yes" ; then
     cp $master_top_srcdir/src/binding/f90/mpi_base.f90 $master_top_srcdir/src/binding/f90/mpi_base.f90.orig
   fi
   if test "$has_fort90_real8" = "yes" ; then
-    sed -e 's/DOUBLE PRECISION/REAL*8/g' $master_top_srcdir/src/binding/f90/mpi_base.f90 > $master_top_srcdir/src/binding/f90/mpi_base.f90.new
+    sed -e 's/DOUBLE PRECISION/REAL*8/g' $master_top_srcdir/src/binding/f90/mpi_base.f90.orig > $master_top_srcdir/src/binding/f90/mpi_base.f90.new
     mv -f $master_top_srcdir/src/binding/f90/mpi_base.f90.new $master_top_srcdir/src/binding/f90/mpi_base.f90
   else
     cp -f $master_top_srcdir/src/binding/f90/mpi_base.f90.orig $master_top_srcdir/src/binding/f90/mpi_base.f90
@@ -2381,14 +2381,21 @@ EOF
             F90_SHL="$F90 -xcode=pic32"
             F90_LINKPATH_SHL=-R
          ;;
+
+	 libtool)
+	 F90_SHL='${LIBTOOL} --mode=compile ${F90}'
+	 F90_LINKPATH_SHL="-rpath "
+	 ;;
+
          *)
-           # Unknown, ignore
+         # Unknown, ignore
          ;;
         esac
 	if test -n "$F90_SHL" ; then 
 	    AC_MSG_RESULT([Compile with $F90_SHL and link using path argument $F90_LINKPATH_SHL])
         else
             AC_MSG_WARN([Unable to determine how to link Fortran 90 compiler with shared libraries])
+ 	    F90_SHL=false
 	fi
     fi
 
