@@ -7646,8 +7646,7 @@ End If
 
 Sub UpdateSMPDVersion
         GetMPICH2Versions mpich2VerStr, mpich2ABIVerStr
-	'WScript.Echo "Version = " & version_str
-	printMsg "VERBOSE", "Creating src\pm\smpd\smpd_version.h: " & version_str
+	printMsg "VERBOSE", "Creating src\pm\smpd\smpd_version.h"
 	Set fout = f.CreateTextFile("src\pm\smpd\smpd_version.h", true)
 	fout.WriteLine("#define SMPD_VERSION """ & mpich2VerStr & """")
 	fout.Close()
