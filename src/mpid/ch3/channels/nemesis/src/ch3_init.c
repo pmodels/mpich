@@ -34,11 +34,6 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
 
     MPIU_Assert(sizeof(MPIDI_CH3I_VC) <= sizeof(((MPIDI_VC_t*)0)->channel_private));
 
-    /* There are hard-coded copy routines that depend on the size of the mpich2 header
-       We only handle the 32- and 40-byte cases.
-    */
-    MPIU_Assert (sizeof(MPIDI_CH3_Pkt_t) >= 32 && sizeof(MPIDI_CH3_Pkt_t) <= 40);
-
     mpi_errno = MPID_nem_init (pg_rank, pg_p, has_parent);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
