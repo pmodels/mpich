@@ -2134,9 +2134,9 @@ Function ReplaceAts( str, use_f77, b64 )
 				' FIXME: Not the complete list of F90FLAGS --- only some listed
 				str = Replace(str, "@F90FLAGS@", "/names:lowercase /iface:cref /assume:underscore")
 			Case "@MPICH2_VERSION@"
-				str = Replace(str, "@VERSION@", mpich2Version)
+				str = Replace(str, "@MPICH2_VERSION@", mpich2Version)
 			Case "@MPICH2_NUMVERSION@"
-				str = Replace(str, "@NUMVERSION@", mpich2NumVersion)
+				str = Replace(str, "@MPICH2_NUMVERSION@", mpich2NumVersion)
 			Case "@nemesis_nets_macro_defs@"
 				str = Replace(str, "@nemesis_nets_macro_defs@", "#define MPIDI_NEM_NEWTCP_MODULE 0")
 			Case "@nemesis_nets_func_decl@"
