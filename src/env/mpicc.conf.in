@@ -23,5 +23,5 @@ MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
 MPI_OTHERLIBS="@LIBS@"
 NEEDSPLIB="@NEEDSPLIB@"
-# MPIVERSION is the version of the MPICH2 library that mpicc is intended for
-MPIVERSION="@VERSION@"
+# MPICH2_VERSION is the version of the MPICH2 library that mpicc is intended for
+MPICH2_VERSION="@MPICH2_VERSION@"
