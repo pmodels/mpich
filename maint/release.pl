@@ -126,7 +126,7 @@ check_package("autoconf");
 check_package("automake");
 print("\n");
 
-my $current_ver = `svn cat ${source}/maint/Version`;
+my $current_ver = `svn cat ${source}/maint/Version | grep ^MPICH2_VERSION: | cut -f2 -d' '`;
 if ("$current_ver" ne "$version\n") {
     print("\tWARNING: Version mismatch\n\n");
 }
