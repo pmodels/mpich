@@ -91,16 +91,13 @@ distclean-local:
 	-@rm -f bin/mpich2version
 	-@cd test && $(MAKE) distclean
 
-# MPICH2 version information
-MPICH2_VERSION = @MPICH2_VERSION@
-
 # With PACKAGE set, all mpich2 and mpe2 documentation
 # will go to docdir=$datarootdir/doc/$PACKAGE,
 # and mpe2's exaamples_*/ and logfiles/ go to $datadir/$PACKAGE.
 # Unsetting PACKAGE enables docdir=$datarootdir/doc and mpe2 data in $datadir
 # User can do "make install PACKAGE=mpich2-xxx" enables
 # docdir=$datarootdir/doc/mpich2-xxx and mpe2 data in $datadir/mpich2-xxx.
-# PACKAGE = mpich2-$(VERSION)
+# PACKAGE = mpich2-@MPICH2_VERSION@
 
 # We skip the mpid/mm directories because mm is no longer active
 # mpe2 is an outside project and is tested against the default
