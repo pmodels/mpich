@@ -91,13 +91,9 @@ distclean-local:
 	-@rm -f bin/mpich2version
 	-@cd test && $(MAKE) distclean
 
-# Version < 1 is pre MPI-1 release.
-# Version >= 2 contains MPI-2
-# Version between 1 and 2 contains all of MPI1 and parts of MPI-2
-# Version is now set in the Configure file so that we can easily include the
-# version on the configure output and to match the common practice of
-# current autoconfs
-VERSION = @VERSION@
+# MPICH2 version information
+MPICH2_VERSION = @MPICH2_VERSION@
+
 # With PACKAGE set, all mpich2 and mpe2 documentation
 # will go to docdir=$datarootdir/doc/$PACKAGE,
 # and mpe2's exaamples_*/ and logfiles/ go to $datadir/$PACKAGE.
