@@ -140,7 +140,7 @@ for arg in "$@" ; do
     ;;
     -v)
     # Pass this argument to the compiler as well.
-    echo "mpicxx for $MPICH2_VERSION"
+    echo "mpicxx for MPICH2 version $MPICH2_VERSION"
     # if there is only 1 argument, it must be -v.
     if [ "$#" -eq "1" ] ; then
         linking=no
