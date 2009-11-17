@@ -34,13 +34,3 @@ MPID_nem_mx_finalize()
      goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mx_ckpt_shutdown
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int
-MPID_nem_mx_ckpt_shutdown ()
-{
-      return MPI_SUCCESS;
-}
-
