@@ -174,6 +174,16 @@ static HYD_status parse_params(char **t_argv)
             continue;
         }
 
+        /* Version string comparison */
+        if (!strcmp(*argv, "--version")) {
+            argv++;
+            if (strcmp(*argv, HYDRA_VERSION)) {
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "UI version string does not match proxy version\n");
+            }
+            continue;
+        }
+
         /* Hostname (as specified by the user) */
         if (!strcmp(*argv, "--hostname")) {
             argv++;

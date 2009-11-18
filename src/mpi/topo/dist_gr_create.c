@@ -27,8 +27,11 @@
  * correctly handle weak symbols and the profiling interface */
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Dist_graph_create
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-
 MPI_Dist_graph_create - MPI_DIST_GRAPH_CREATE returns a handle to a new
 communicator to which the distributed graph topology information is
 attached.
@@ -53,10 +56,6 @@ Output Parameter:
 .N Errors
 .N MPI_SUCCESS
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Dist_graph_create
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
                           int degrees[], int destinations[], int weights[],
                           MPI_Info info, int reorder, MPI_Comm *comm_dist_graph)

@@ -175,9 +175,10 @@ dnl set here are redundant; the LOAD_CACHE call relies on the way autoconf
 dnl initially processes ARG_ENABLE commands.
 AC_DEFUN([PAC_ARG_CACHING],[
 AC_ARG_ENABLE(cache,
-	AC_HELP_STRING([--enable-cache], [Turn on configure caching]),,
-	[enable_cache="notgiven"])
+[--enable-cache  - Turn on configure caching],
+enable_cache="$enableval",enable_cache="notgiven")
 ])
+dnl
 
 dnl Clean the cache of extraneous quotes that AC_CACHE_SAVE may add
 dnl
@@ -248,7 +249,7 @@ if test "x$1" = "xalways" -o \( "$cache_file" = "/dev/null" -a "X$real_enable_ca
     ac_cv_env_LDFLAGS_value=$LDFLAGS
     ac_cv_env_LIBS_set=${LIBS+set}
     ac_cv_env_LIBS_value=$LIBS
-    ac_cv_env_FC_set=${FC+set}
+    ac_cv_env_FC_set=${FS+set}
     ac_cv_env_FC_value=$FC
     ac_cv_env_F77_set=${F77+set}
     ac_cv_env_F77_value=$F77
@@ -271,7 +272,7 @@ if test "x$1" = "xalways" -o \( "$cache_file" = "/dev/null" -a "X$real_enable_ca
     ac_env_LDFLAGS_value=$LDFLAGS
     ac_env_LIBS_set=${LIBS+set}
     ac_env_LIBS_value=$LIBS
-    ac_env_FC_set=${FC+set}
+    ac_env_FC_set=${FS+set}
     ac_env_FC_value=$FC
     ac_env_F77_set=${F77+set}
     ac_env_F77_value=$F77
@@ -328,9 +329,8 @@ dnl cause problems.
 dnl
 AC_DEFUN([PAC_CREATE_BASE_CACHE],[
 AC_ARG_ENABLE(base-cache,
-	AC_HELP_STRING([--enable-base-cache],
-		[Enable the use of a simple cache for the subsidiary
-                 configure scripts]),,enable_base_cache=default)
+[--enable-base-cache - Enable the use of a simple cache for the subsidieary
+                       configure scripts.],,enable_base_cache=default)
 # The default case is controlled by the environment variable CONF_USE_CACHEFILE
 if test "$enable_base_cache" = "default" ; then
     if test "$CONF_USE_CACHEFILE" = yes ; then

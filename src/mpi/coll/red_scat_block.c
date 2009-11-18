@@ -31,7 +31,6 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-
 MPI_Reduce_scatter_block - Combines values and scatters the results
 
 Input Parameters:

@@ -25,6 +25,10 @@
 
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Op_commutative
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
   MPI_Op_commute - Queries an MPI reduction operation for its commutativity.
 
@@ -46,10 +50,6 @@
 
 .seealso: MPI_Op_create
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Op_commutative
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Op_commutative(MPI_Op op, int *commute)
 {
     MPID_Op *op_ptr = NULL;

@@ -64,6 +64,31 @@ for dir in $1 ; do
 done
 ])
 
+# Find something to use for mkdir -p.  Eventually, this will have a
+# script for backup. As of autoconf-2.63, AC_PROG_MKDIR_P was broken;
+# it was checking to see if it recognized the "version" of mkdir and
+# was deciding based on that. This should always be a feature test.
+AC_DEFUN([PAC_PROG_MKDIR_P],[
+AC_CACHE_CHECK([whether mkdir -p works],
+pac_cv_mkdir_p,[
+pac_cv_mkdir_p=no
+rm -rf .tmp
+if mkdir -p .tmp/.foo 1>/dev/null 2>&1 ; then
+    if test -d .tmp/.foo ; then
+        pac_cv_mkdir_p=yes
+    fi
+fi
+rm -rf .tmp
+])
+if test "$pac_cv_mkdir_p" = "yes" ; then
+   MKDIR_P="mkdir -p"
+   export MKDIR_P
+else
+   AC_MSG_WARN([mkdir -p does not work; the install step may fail])
+fi
+AC_SUBST(MKDIR_P)
+])
+
 dnl Test for a clean VPATH directory.  Provide this command with the names
 dnl of all of the generated files that might cause problems 
 dnl (Makefiles won't cause problems because there's no VPATH usage for them)

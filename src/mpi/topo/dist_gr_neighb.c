@@ -27,8 +27,11 @@
  * correctly handle weak symbols and the profiling interface */
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Dist_graph_neighbors
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-
 MPI_Dist_graph_neighbors - Provides adjacency information for a distributed graph topology.
 
 Input Parameters:
@@ -49,10 +52,6 @@ Output Parameter:
 .N Errors
 .N MPI_SUCCESS
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Dist_graph_neighbors
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Dist_graph_neighbors(MPI_Comm comm,
                              int maxindegree, int sources[], int sourceweights[],
                              int maxoutdegree, int destinations[], int destweights[])

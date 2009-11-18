@@ -126,7 +126,7 @@ check_package("autoconf");
 check_package("automake");
 print("\n");
 
-my $current_ver = `svn cat ${source}/maint/Version`;
+my $current_ver = `svn cat ${source}/maint/Version | grep ^MPICH2_VERSION: | cut -f2 -d' '`;
 if ("$current_ver" ne "$version\n") {
     print("\tWARNING: Version mismatch\n\n");
 }
@@ -200,7 +200,7 @@ chdir("${root}/${pack}-${version}-tmp");
     $cmd .= " --with-automake=$with_automake" if $with_automake;
     run_cmd($cmd);
 }
-run_cmd("./configure --disable-mpe --disable-romio --disable-f90 --disable-f77 --disable-cxx");
+run_cmd("./configure --disable-mpe --disable-f90 --disable-f77 --disable-cxx");
 run_cmd("(make mandoc && make htmldoc && make latexdoc)");
 print("done\n");
 

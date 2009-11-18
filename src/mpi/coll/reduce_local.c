@@ -26,8 +26,11 @@
  * correctly handle weak symbols and the profiling interface */
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Reduce_local
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-
 MPI_Reduce_local - Applies a reduction operator to local arguments.
 
 Input Parameters:
@@ -51,12 +54,7 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 .N MPI_ERR_BUFFER_ALIAS
-
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Reduce_local
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Reduce_local(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;

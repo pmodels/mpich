@@ -27,8 +27,11 @@
  * correctly handle weak symbols and the profiling interface */
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Dist_graph_create_adjacent
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-
 MPI_Dist_graph_create_adjacent - returns a handle to a new communicator to
 which the distributed graph topology information is attached.
 
@@ -57,12 +60,7 @@ Output Parameter:
 .N MPI_SUCCESS
 .N MPI_ERR_TOPOLOGY
 .N MPI_ERR_ARG
-
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Dist_graph_create_adjacent
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
                                    int indegree, int sources[], int sourceweights[],
                                    int outdegree, int destinations[], int destweights[],
