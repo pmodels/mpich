@@ -1,2 +1,3 @@
 :
+libtoolize
 autoreconf -ivf
