@@ -13,6 +13,10 @@
 #ifndef MPE_NOMPI 
 #include "mpi.h"
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 void MPE_Seq_begin ( MPI_Comm, int );
 void MPE_Seq_end   ( MPI_Comm, int );
 
@@ -26,11 +30,6 @@ void MPE_IO_Stdout_to_file ( char *, int );
 void MPE_GetHostName       ( char *, int );
 
 void MPE_Start_debugger ( void );
-#if (defined(__STDC__) || defined(__cplusplus))
-void MPE_Errors_to_dbx ( MPI_Comm *, int *, ... );
-#else
-void MPE_Errors_to_dbx ( MPI_Comm *, int *, char *, char *, int * );
-#endif
 void MPE_Errors_call_debugger ( char *, char *, char ** );
 void MPE_Errors_call_xdbx     ( char *, char * );
 void MPE_Errors_call_dbx_in_xterm ( char *, char * );
@@ -40,8 +39,26 @@ int  MPE_Decomp1d ( int, int, int, int *, int * );
 
 void MPE_Comm_global_rank ( MPI_Comm, int, int * );
 
+#if defined(__cplusplus)
+}
+#endif
+
+#if (defined(__STDC__) || defined(__cplusplus))
+void MPE_Errors_to_dbx ( MPI_Comm *, int *, ... );
 #else
+void MPE_Errors_to_dbx ( MPI_Comm *, int *, char *, char *, int * );
+#endif
+
+#else
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 void MPE_GetHostName       ( char *, int );
+#if defined(__cplusplus)
+}
+#endif
+
 #endif
 
 #endif

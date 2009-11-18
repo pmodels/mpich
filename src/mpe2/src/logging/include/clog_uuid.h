@@ -26,6 +26,10 @@ typedef struct {
 /* size of string representation of CLOG_Uuit_t */
 #define CLOG_UUID_STR_SIZE   80
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 typedef char  CLOG_Uuid_t[ CLOG_UUID_SIZE ];
 
 void CLOG_Uuid_init( void );
@@ -43,5 +47,9 @@ int  CLOG_Uuid_compare( const void *obj1, const void *obj2 );
 void CLOG_Uuid_copy( const CLOG_Uuid_t src_uuid, CLOG_Uuid_t dest_uuid );
 
 void CLOG_Uuid_swap_bytes( CLOG_Uuid_t uuid );
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /* of _CLOG_UUID */

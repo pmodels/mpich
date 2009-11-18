@@ -122,6 +122,10 @@ typedef struct MPE_Point_ {
   MPE_Color c;
 } MPE_Point;
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #define MPE_GRAPH_INDEPDENT  0
 #define MPE_GRAPH_INDEPENDENT MPE_GRAPH_INDEPDENT
 #define MPE_GRAPH_COLLECTIVE 1
@@ -172,5 +176,9 @@ extern int MPE_Get_drag_region ( MPE_XGraph, int, int,
 				 int *, int *, int *, int * );
 extern int MPE_Get_drag_region_fixratio ( MPE_XGraph, int, double, 
  	  			          int *, int *, int *, int * );
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif

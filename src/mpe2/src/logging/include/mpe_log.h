@@ -60,6 +60,10 @@ typedef int  MPI_Comm;
 
 #include "clog_commset.h"
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /* call before calling any other logging functions */
 int MPE_Init_log( void );
 
@@ -186,6 +190,10 @@ int MPE_Finish_log( const char *filename );
 
 /* get the immutable merged logfile name */
 const char* MPE_Log_merged_logfilename( void );
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif
 

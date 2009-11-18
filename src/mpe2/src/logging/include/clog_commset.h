@@ -79,6 +79,10 @@ typedef struct {
     CLOG_CommIDs_t     *IDs4self;
 } CLOG_CommSet_t;
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 CLOG_CommSet_t* CLOG_CommSet_create( void );
 
 void CLOG_CommSet_free( CLOG_CommSet_t **comm_handle );
@@ -121,6 +125,10 @@ int CLOG_CommSet_read( CLOG_CommSet_t *commset, int fd,
                        CLOG_BOOL_T     do_byte_swap );
 
 void CLOG_CommSet_print( CLOG_CommSet_t *commset, FILE *stream );
+#endif
+
+#if defined(__cplusplus)
+}
 #endif
 
 #endif /* of _CLOG_COMMSET */
