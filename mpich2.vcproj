@@ -3701,7 +3701,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\util\wrappers;src\mpid\ch3\channels\nemesis\nemesis\include;src\mpid\ch3\channels\nemesis\include"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\util\wrappers;src\mpid\ch3\channels\nemesis\nemesis\include;src\mpid\ch3\channels\nemesis\include;src\openpa\src;src\openpa\src\win32"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32;_DEBUG;USE_WINCONF_H;MPICH_DBG_OUTPUT;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN;MPICH_MULTITHREADED;ENABLE_NO_MACRO_VARARG_NAME;_WIN32_WINNT=0x500;USE_DBG_LOGGING"
 				StringPooling="false"
 				BasicRuntimeChecks="3"
@@ -3765,7 +3765,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="copying mpich2shmd.dll to system32 directory"
-				CommandLine="copy lib\mpich2shmd.dll %SystemRoot%\system32\mpich2shmd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2shmd.lib lib\mpich2shmd.lib&#x0D;&#x0A;"
+				CommandLine="copy lib\mpich2nemesisd.dll %SystemRoot%\system32\mpich2nemesisd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2nemesisd.lib lib\mpich2nemesisd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
