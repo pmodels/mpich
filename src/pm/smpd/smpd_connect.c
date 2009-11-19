@@ -229,7 +229,13 @@ int smpd_post_abort_command(char *fmt, ...)
 	smpd_exit_fn(FCNAME);
 	return SMPD_FAIL;
     }
-    smpd_command_destination(0, &context);
+    result = smpd_command_destination(0, &context);
+    if(result != SMPD_SUCCESS){
+        smpd_err_printf("Unable to find destination for command...Aborting: %s\n", error_str);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+
     if (context == NULL)
     {
 	if (smpd_process.left_context == NULL)
