@@ -69,6 +69,7 @@ void MPE_Seq_begin( MPI_Comm comm, int ng )
     }
     MPI_Comm_rank( comm, &lidx );
     MPI_Comm_size( comm, &np );
+    if (np == 1) return;
     if (lidx != 0) {
 	MPI_Recv( NULL, 0, MPI_INT, lidx-1, 0, *local_comm, &status );
     }
@@ -98,6 +99,7 @@ void MPE_Seq_end( MPI_Comm comm, int ng )
 
     MPI_Comm_rank( comm, &lidx );
     MPI_Comm_size( comm, &np );
+    if (np == 1) return;
     MPI_Attr_get( comm, MPE_Seq_keyval, &local_comm, &flag );
     if (!flag) 
 	MPI_Abort( comm, MPI_ERR_UNKNOWN );
