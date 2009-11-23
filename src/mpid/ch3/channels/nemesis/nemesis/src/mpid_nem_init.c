@@ -65,6 +65,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     MPIU_CHKPMEM_DECL(9);
 
+    /* TODO add compile-time asserts (rather than run-time) and convert most of these */
+
     /* Make sure the nemesis packet is no larger than the generic
        packet.  This is needed because we no longer include channel
        packet types in the CH3 packet types to allow dynamic channel

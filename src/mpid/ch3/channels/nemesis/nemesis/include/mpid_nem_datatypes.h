@@ -116,7 +116,15 @@
    
 */
 
-#define MPID_NEM_CELL_HEAD_LEN    8 /* We use this to keep elements 64-bit aligned */
+#if (SIZEOF_OPA_PTR_T > 8)
+#  if (SIZEOF_OPA_PTR_T > 16)
+#    error unexpected size for OPA_ptr_t
+#  endif
+#  define MPID_NEM_CELL_HEAD_LEN  16 /* We use this to keep elements 64-bit aligned */
+#else /* (SIZEOF_OPA_PTR_T <= 8) */
+#  define MPID_NEM_CELL_HEAD_LEN  8 /* We use this to keep elements 64-bit aligned */
+#endif
+
 #define MPID_NEM_CELL_PAYLOAD_LEN (MPID_NEM_CELL_LEN - MPID_NEM_CELL_HEAD_LEN)
 
 #define MPID_NEM_CALC_CELL_LEN(cellp) (MPID_NEM_CELL_HEAD_LEN + MPID_NEM_MPICH2_HEAD_LEN + MPID_NEM_CELL_DLEN (cell))
