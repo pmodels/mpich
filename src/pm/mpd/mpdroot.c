@@ -19,18 +19,41 @@ int main(int argc, char *argv[])
     struct passwd *pwent;
     char input_line[NAME_LEN+1], secretword[NAME_LEN+1];
     FILE *conf_file;
+    char *mpdconf_path = NULL;
 
     if ((pwent = getpwuid(getuid())) == NULL)    /* for real id */
     {
         printf("%s: getpwnam failed",argv[0]);
-        exit(-1);
+        exit(1);
     }
 
-    conf_file = fopen("/etc/mpd.conf","r");
+    /*
+     * We look for a readable mpd.conf in the following order.
+     * - MPD_CONF_FILE set in environment
+     * - .mpd.conf in the user's home directory
+     * - The system wide default in SYSCONFDIR/mpd.conf
+     */
+    mpdconf_path = getenv("MPD_CONF_FILE");
+    if ( ! (mpdconf_path && access( mpdconf_path, R_OK ) == 0) ){
+        /* By far, the largest we'll need */
+        size_t mpdconf_path_len = strlen(pwent->pw_dir) \
+            + strlen(SYSCONFDIR) + strlen("/.mpd.conf");
+
+        mpdconf_path = (char*) malloc( sizeof(char) * mpdconf_path_len );
+        if ( ! mpdconf_path ){
+            fprintf( stderr, "%s:  Failed to allocate a buffer for path to mpd.conf\n", argv[0]);
+            exit(1);
+        }
+        snprintf( mpdconf_path, mpdconf_path_len-1, "%s/.mpd.conf", pwent->pw_dir );
+        if ( access( mpdconf_path, R_OK ) != 0 )
+            snprintf( mpdconf_path, mpdconf_path_len-1, "%s/mpd.conf", SYSCONFDIR );
+    }
+    conf_file = fopen( mpdconf_path, "r");
+
     if (conf_file == NULL)
     {
-        printf("%s: open failed for root's mpd conf file",argv[0]);
-        exit(-1);
+        printf("%s: open failed for root's mpd conf file\n",argv[0]);
+        exit(1);
     }
     secretword[0] = '\0';
     while (fgets(input_line,NAME_LEN,conf_file) != NULL)
@@ -52,7 +75,7 @@ int main(int argc, char *argv[])
     if (secretword[0] == '\0')
     {
         printf("%s: did not find secretword in mpd conf file",argv[0]);
-        exit(-1);
+        exit(1);
     }
 
     /* setup default console */
@@ -68,10 +91,14 @@ int main(int argc, char *argv[])
 	printf("mpdroot: cannot connect to local mpd at: %s\n", console_name);
 	printf("    probable cause:  no mpd daemon on this machine\n");
 	printf("    possible cause:  unix socket %s has been removed\n", console_name);
-	exit(-1);
+	exit(1);
     }
 
     snprintf(cmd,NAME_LEN,"realusername=%s secretword=%s\n",pwent->pw_name,secretword);
     write(sock,cmd,strlen(cmd));
+
+    if (mpdconf_path)
+        free(mpdconf_path);
+
     return(0);
 }
