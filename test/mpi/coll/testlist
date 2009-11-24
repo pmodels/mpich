@@ -6,6 +6,7 @@ allred4 4
 reduce 5
 reduce 10
 reduce_local 2
+op_commutative 2
 red3 10
 red4 10
 alltoall1 8

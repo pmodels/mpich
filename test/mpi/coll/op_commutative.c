@@ -11,6 +11,8 @@
 
 static char MTEST_Descrip[] = "A simple test of MPI_Op_create/commute/free";
 
+static int errs = 0;
+
 /* prototype to keep the compiler happy */
 static void comm_user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype);
 static void noncomm_user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype);
@@ -33,7 +35,7 @@ static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatyp
     int *inoutvec_int = (int *)inoutvec;
 
     if (*datatype != MPI_INT) {
-        ++uop_errs;
+        ++errs;
         printf("invalid datatype passed to user_op");
         return;
     }
@@ -46,7 +48,6 @@ static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatyp
 
 int main( int argc, char *argv[] )
 {
-    int errs = 0;
     MPI_Op c_uop = MPI_OP_NULL;
     MPI_Op nc_uop = MPI_OP_NULL;
     int is_commutative = 0;
@@ -60,10 +61,10 @@ int main( int argc, char *argv[] )
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
     /* this function was added in MPI-2.2 */
 
-#define CHECK_COMMUTATIVE(op_)                     \
-    do {                                           \
-        MPI_Op_commutative(MPI_, &is_commutative); \
-        if (!is_commutative) { ++errs; }           \
+#define CHECK_COMMUTATIVE(op_)                      \
+    do {                                            \
+        MPI_Op_commutative((op_), &is_commutative); \
+        if (!is_commutative) { ++errs; }            \
     } while (0)
 
     /* Check all predefined reduction operations for commutivity.
