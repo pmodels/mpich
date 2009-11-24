@@ -362,13 +362,6 @@ if test $smpcoll = "yes" ; then
    AC_DEFINE(USE_SMP_COLLECTIVES,1,[define to enable SMP/multi-core aware collectives])
 fi
 
-AC_ARG_ENABLE(async-progress,
-	[--enable-async-progress - Enable support for asynchronous communication progress],
-	async_progress=$enableval,async_progress=no)
-if test "$async_progress" = "yes" ; then
-   AC_DEFINE(USE_ASYNC_PROGRESS,1,[define to enable asynchronous communication progress])
-fi
-
 dnl The environment variable MPICH_DEBUGLIBNAME may be used to override the
 dnl default name of the library that the debugger will load to access the
 dnl MPICH2 internal data structures.

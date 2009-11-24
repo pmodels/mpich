@@ -30,9 +30,7 @@
 /* Any internal routines can go here.  Make them static if possible */
 #endif
 
-#if defined USE_ASYNC_PROGRESS
 int MPIR_async_thread_initialized = 0;
-#endif /* USE_ASYNC_PROGRESS */
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Init
@@ -145,26 +143,22 @@ int MPI_Init( int *argc, char ***argv )
     threadLevel = MPI_THREAD_SINGLE;
 #endif
 
-#if defined USE_ASYNC_PROGRESS
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */
     rc = 0;
     MPIU_GetEnvBool("MPICH_ASYNC_PROGRESS", &rc);
     if (rc)
         threadLevel = MPI_THREAD_MULTIPLE;
-#endif /* USE_ASYNC_PROGRESS */
 
     mpi_errno = MPIR_Init_thread( argc, argv, threadLevel, &provided );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-#if defined USE_ASYNC_PROGRESS
     if (rc && provided == MPI_THREAD_MULTIPLE) {
         mpi_errno = MPIR_Init_async_thread();
         if (mpi_errno) goto fn_fail;
 
         MPIR_async_thread_initialized = 1;
     }
-#endif /* USE_ASYNC_PROGRESS */
 
     /* ... end of body of routine ... */
     

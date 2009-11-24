@@ -9,6 +9,4 @@ int MPIR_Init_thread(int *, char ***, int, int *);
 int MPIR_Init_async_thread(void);
 int MPIR_Finalize_async_thread(void);
 
-#if defined USE_ASYNC_PROGRESS
 extern int MPIR_async_thread_initialized;
-#endif /* USE_ASYNC_PROGRESS */
