@@ -71,7 +71,7 @@ mpdroot: ${mpdroot_OBJECTS}
 	$(C_LINK) -o mpdroot ${mpdroot_OBJECTS} $(LIBS)
 
 mpdroot.o: ${srcdir}/mpdroot.c ${srcdir}/mpdroot.h mpdconf.h
-	${C_COMPILE} -DSYSCONFDIR=\"@sysconfdir@\" -c  $<
+	${C_COMPILE} -c  $< 
 
 # The following lines provide the right libraries for all example programs
 .c:
@@ -125,10 +125,7 @@ install: all
 	@echo "copying python files/links into " $(DESTDIR)${bindir}
 	-@for cmd in ${PYTHON_SOURCE} ; do \
 	    if [ ! -s $(srcdir)/$$cmd.py ] ; then continue ; fi ; \
-		sed \
-			-e 's#/usr/bin/env python.*#/usr/bin/env ${PYTHON}#' \
-			-e 's,/etc/mpd.conf,@sysconfdir@/mpd.conf,g' \
-			${srcdir}/$$cmd.py > $(DESTDIR)${bindir}/temp$$cmd.py ; \
+	    sed -e 's#/usr/bin/env python.*#/usr/bin/env ${PYTHON}#' ${srcdir}/$$cmd.py > $(DESTDIR)${bindir}/temp$$cmd.py ; \
 	    ${INSTALL} -m 755 $(DESTDIR)${bindir}/temp$$cmd.py $(DESTDIR)${bindir}/$$cmd.py; \
 	    ( rm -f $(DESTDIR)${bindir}/temp$$cmd.py >/dev/null 2>&1 || exit 0 ) ; \
 	done
@@ -210,7 +207,7 @@ mpich2-mpdroot: mpich2-mpdroot.o
 
 mpich2-mpdroot.o: ${srcdir}/mpdroot.c ${srcdir}/mpdroot.h mpdconf.h
 	${INSTALL} -m 644 ${srcdir}/mpdroot.c mpich2-mpdroot.c
-	${C_COMPILE} -DSYSCONFDIR=\"@sysconfdir@\" -c mpich2-mpdroot.c
+	${C_COMPILE} -c mpich2-mpdroot.c
 	rm -f mpich2-mpdroot.c
 
 # A special alternate installation target when using multiple process managers
