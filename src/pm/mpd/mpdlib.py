@@ -1359,11 +1359,11 @@ class MPDParmDB(dict):
             if os.environ.has_key(k):
                 self[('env',k)] = os.environ[k]
     def get_parms_from_rcfile(self,parmsToOverride,errIfMissingFile=0):
-        if os.environ.has_key('MPD_CONF_FILE'):
+        if os.environ.has_key('MPD_CONF_FILE') and os.access(os.environ['MPD_CONF_FILE'], os.R_OK):
             parmsRCFilename = os.environ['MPD_CONF_FILE']
         elif hasattr(os,'getuid')  and  os.getuid() == 0:    # if ROOT
             parmsRCFilename = os.path.abspath('/etc/mpd.conf')
-        elif os.environ.has_key('HOME'):
+        elif os.environ.has_key('HOME') and os.access(os.path.join(os.environ['HOME'], '.mpd.conf'), os.R_OK):
             parmsRCFilename = os.path.join(os.environ['HOME'],'.mpd.conf')
         elif os.environ.has_key('HOMEPATH'):    # e.g. win32
             parmsRCFilename = os.path.join(os.environ['HOMEPATH'],'.mpd.conf')
