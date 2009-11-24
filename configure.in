@@ -5610,7 +5610,7 @@ case "$MPI_SIZEOF_AINT" in
     16)   len_mpi_aint=10 ;;
     *)    AC_MSG_ERROR([Unable to convert MPI_SIZEOF_AINT to a hex string.  This is either because we are building on a very strange platform or there is a bug somewhere in configure.]) ;;
 esac
-# MPI_AINT and MPI_OFFSET are already taken, appending a _DATATYPE prefix
+# MPI_AINT and MPI_OFFSET are already taken, appending a _DATATYPE suffix
 MPI_AINT_DATATYPE=0x4c00${len_mpi_aint}43
 AC_SUBST(MPI_AINT_DATATYPE)
 export MPI_AINT_DATATYPE
