@@ -42,6 +42,7 @@ int main(int argc, char **argv)
     int threaded;
     int err;
     MPI_Comm comms[NTHREADS];
+    int num_threads_obtained = 1;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &threaded);
     if (threaded != MPI_THREAD_MULTIPLE) {
@@ -54,13 +55,21 @@ int main(int argc, char **argv)
         if (x != 0) {
             err = MTest_Start_thread(do_thread, (void *)&comms[x]);
             if (err) {
-                printf("unable to start thread, err=%d", err);
-                goto fn_fail;
+                /* attempt to continue with fewer threads, we may be on a
+                 * thread-constrained platform like BG/P in DUAL mode */
+                MPI_Comm_free(&comms[x]);
+                break;
             }
+            ++num_threads_obtained;
         }
     }
 
-    do_thread((void *)&comms[0]);
+    if (num_threads_obtained <= 1) {
+        printf("unable to create any additional threads, exiting\n");
+        goto fn_fail;
+    }
+
+    do_thread((void *)&comms[0]); /* we are thread 0 */
 
     err = MTest_Join_threads();
     if (err) {
@@ -68,7 +77,7 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    for (x = 0; x < NTHREADS; ++x) {
+    for (x = 0; x < num_threads_obtained; ++x) {
         MPI_Comm_free(&comms[x]);
     }
 

@@ -7,8 +7,8 @@
 
 #include "mpi.h"
 #include "mpitest.h"
+#include "mpithreadtest.h"
 #include <stdio.h>
-#include <pthread.h>
 
 #define MAX_THREADS 4
 /* #define LOOPS 10000 */
@@ -30,20 +30,32 @@ struct tp {
 int size, rank;
 char sbuf[MAX_MSG_SIZE], rbuf[MAX_MSG_SIZE];
 static int verbose = 0;
-static int num_threads;
+static volatile int num_threads;
+static MTEST_THREAD_LOCK_TYPE num_threads_lock;
 
-void *run_test(void *arg)
+#define ABORT_MSG(msg_) do { printf("%s", (msg_)); MPI_Abort(MPI_COMM_WORLD, 1); } while (0)
+
+MTEST_THREAD_RETURN_TYPE run_test(void *arg)
 {
     int thread_id = (int) arg;
     int i, j, peer;
     MPI_Status status[WINDOW];
     MPI_Request req[WINDOW];
     double start, end;
+    int err;
+    int local_num_threads = -1;
 
     if (tp[thread_id].use_proc_null)
         peer = MPI_PROC_NULL;
     else
         peer = (rank % 2) ? rank - 1 : rank + 1;
+
+    err = MTest_thread_lock(&num_threads_lock);
+    if (err) ABORT_MSG("unable to acquire lock, aborting\n");
+    local_num_threads = num_threads;
+    err = MTest_thread_unlock(&num_threads_lock);
+    if (err) ABORT_MSG("unable to release lock, aborting\n");
+
     MTest_thread_barrier(num_threads);
 
     start = MPI_Wtime();
@@ -86,28 +98,51 @@ void *run_test(void *arg)
 void loops(void)
 {
     int i, nt;
-    pthread_t thread[MAX_THREADS];
-    void *retval[MAX_THREADS];
     double latency, mrate, avg_latency, agg_mrate;
+    int err;
+    
+    err = MTest_thread_lock_create(&num_threads_lock);
+    if (err) ABORT_MSG("unable to create lock, aborting\n");
 
     for (nt = 1; nt <= MAX_THREADS; nt++) {
-        num_threads = nt;
+        err = MTest_thread_lock(&num_threads_lock);
+        if (err) ABORT_MSG("unable to acquire lock, aborting\n");
+
+        num_threads = 1;
         MPI_Barrier(MPI_COMM_WORLD);
         MTest_thread_barrier_init();
 
-        for (i = 1; i < nt; i++)
-            pthread_create(&thread[i], NULL, (void*) run_test, (void *) i);
-        run_test((void *) 0);
-        for (i = 1; i < nt; i++)
-            pthread_join(thread[i], &retval[i]);
+        for (i = 1; i < nt; i++) {
+            err = MTest_Start_thread(run_test, (void *)i);
+            if (err) {
+                /* attempt to continue with fewer threads, we may be on a
+                 * thread-constrained platform like BG/P in DUAL mode */
+                break;
+            }
+            ++num_threads;
+        }
+
+        err = MTest_thread_unlock(&num_threads_lock);
+        if (err) ABORT_MSG("unable to release lock, aborting\n");
+
+        if (nt > 1 && num_threads <= 1) {
+            ABORT_MSG("unable to create any additional threads, aborting\n");
+        }
+
+        run_test((void *) 0); /* we are thread 0 */
+        err = MTest_Join_threads();
+        if (err) {
+            printf("error joining threads, err=%d", err);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
 
         MTest_thread_barrier_free();
 
         latency = 0;
-        for (i = 0; i < nt; i++)
+        for (i = 0; i < num_threads; i++)
             latency += tp[i].latency;
-        latency /= nt; /* Average latency */
-        mrate = nt / latency; /* Message rate */
+        latency /= num_threads; /* Average latency */
+        mrate = num_threads / latency; /* Message rate */
 
         /* Global latency and message rate */
         MPI_Reduce(&latency, &avg_latency, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -116,9 +151,12 @@ void loops(void)
 
         if (!rank && verbose) {
             printf("Threads: %d; Latency: %.3f; Mrate: %.3f\n",
-                   nt, latency, mrate);
+                   num_threads, latency, mrate);
         }
     }
+
+    err = MTest_thread_lock_free(&num_threads_lock);
+    if (err) ABORT_MSG("unable to free lock, aborting\n");
 }
 
 int main(int argc, char ** argv)

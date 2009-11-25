@@ -116,10 +116,6 @@ int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE (*fn)(void *p),void *arg)
     if (!err) {
         nthreads++;
     }
-    else {
-        fprintf(stderr, "Failed to create thread calling func %p with arg %p\n", fn, arg);
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
     pthread_attr_destroy(&attr);
     return err;
 }
