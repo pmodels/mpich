@@ -51,7 +51,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     if (!HYDT_bind_info.machine.num_children)
         HYDT_bind_info.machine.num_children = 1;
     HYDU_MALLOC(HYDT_bind_info.machine.children, struct HYDT_topo_obj *,
-                sizeof(struct HYDT_topo_obj), status);
+                sizeof(struct HYDT_topo_obj)*HYDT_bind_info.machine.num_children, status);
     HYDT_bind_info.machine.shared_memory_depth = NULL;
 
     /* Setup the nodes levels */
