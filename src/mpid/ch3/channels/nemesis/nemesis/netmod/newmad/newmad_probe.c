@@ -30,7 +30,7 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
     }
 
     do {
-	ret = nm_sr_probe(mpid_nem_newmad_pcore,VC_FIELD(vc,p_gate),&out_gate,match_info);        
+	ret = nm_sr_probe(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),&out_gate,match_info);        
     }
     while (ret != NM_ESUCCESS);
 
@@ -67,12 +67,12 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
 	MPIU_Assert(0);
     }
 
-    ret = nm_sr_probe(mpid_nem_newmad_pcore,VC_FIELD(vc,p_gate),&out_gate,match_info);        
+    ret = nm_sr_probe(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),&out_gate,match_info);        
     if (ret == NM_ESUCCESS)
     {   
 	/*
 	size_t size;
-	nm_sr_get_size(mpid_nem_newmad_pcore, p_out_req, &size);
+	nm_sr_get_size(mpid_nem_newmad_session, p_out_req, &size);
 	*/
 
 	status->MPI_SOURCE = source;

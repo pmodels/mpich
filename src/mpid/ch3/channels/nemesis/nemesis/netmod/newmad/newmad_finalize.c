@@ -16,6 +16,7 @@ MPID_nem_newmad_finalize()
 {
     int mpi_errno = MPI_SUCCESS;
 
+    nm_session_destroy(mpid_nem_newmad_session);
     common_exit(NULL);
 
     MPID_nem_newmad_internal_req_queue_destroy();

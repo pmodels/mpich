@@ -69,7 +69,7 @@ MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info)
 	  data = (char*)(rreq->tmpbuf);
        }
 	
-       nm_sr_irecv_with_ref(mpid_nem_newmad_pcore, from, match_info, data,length, &(rreq->newmad_req),(void *)rreq);	
+       nm_sr_irecv_with_ref(mpid_nem_newmad_session, from, match_info, data,length, &(rreq->newmad_req),(void *)rreq);	
     }
     return;
 }
@@ -113,7 +113,7 @@ int MPID_nem_newmad_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 
 	if (dt_contig)
 	{
-	    ret = nm_sr_irecv_with_ref(mpid_nem_newmad_pcore,VC_FIELD(vc,p_gate),match_info,
+	    ret = nm_sr_irecv_with_ref(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),match_info,
 				       (char*)(rreq->dev.user_buf) + dt_true_lb,data_sz,
 				       &(REQ_FIELD(rreq,newmad_req)),(void*)rreq);
 	}
@@ -136,7 +136,7 @@ int MPID_nem_newmad_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 		    }
 	    }
 #endif
-	    ret = nm_sr_irecv_iov_with_ref(mpid_nem_newmad_pcore,VC_FIELD(vc,p_gate),match_info,
+	    ret = nm_sr_irecv_iov_with_ref(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),match_info,
 					   newmad_iov,num_seg,&(REQ_FIELD(rreq,newmad_req)),(void*)rreq);	
 	    REQ_FIELD(rreq,iov) = newmad_iov;
 	}
@@ -161,18 +161,18 @@ MPID_nem_newmad_poll(int in_blocking_poll)
    nm_tag_t         match_info = 0;
    int mpi_errno = MPI_SUCCESS;   
    
-   nm_sr_send_success(mpid_nem_newmad_pcore, &p_request);
+   nm_sr_send_success(mpid_nem_newmad_session, &p_request);
    if (p_request != NULL)
    {
       MPID_nem_newmad_unified_req_t *ref = NULL;
       MPID_Request                  *req = NULL;
       MPID_Request_kind_t            kind;      
-      MPIR_Context_id_t ctxt;
+      MPIR_Context_id_t              ctxt;
       
-      nm_sr_get_tag(mpid_nem_newmad_pcore,p_request, &match_info);
+      nm_sr_get_stag(mpid_nem_newmad_session,p_request, &match_info);
       NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);
             
-      nm_sr_get_ref(mpid_nem_newmad_pcore,p_request,(void *)&ref);
+      nm_sr_get_ref(mpid_nem_newmad_session,p_request,(void *)&ref);
       req = &(ref->mpi_req);
       MPIU_Assert(req != NULL);
       kind = req->kind;
@@ -194,7 +194,7 @@ MPID_nem_newmad_poll(int in_blocking_poll)
       }   
    }
    
-   nm_sr_recv_success(mpid_nem_newmad_pcore, &p_request);
+   nm_sr_recv_success(mpid_nem_newmad_session, &p_request);
    if (p_request != NULL)
    {
       MPID_nem_newmad_unified_req_t *ref = NULL;
@@ -203,12 +203,12 @@ MPID_nem_newmad_poll(int in_blocking_poll)
       MPIR_Context_id_t              ctxt;
       size_t                         size;
             
-      nm_sr_get_ref(mpid_nem_newmad_pcore,p_request,(void *)&ref);
+      nm_sr_get_ref(mpid_nem_newmad_session,p_request,(void *)&ref);
       req = &(ref->mpi_req);
       MPIU_Assert(req != NULL);
       kind = req->kind;
-      nm_sr_get_size(mpid_nem_newmad_pcore, p_request, &size);
-      nm_sr_get_tag(mpid_nem_newmad_pcore,p_request, &match_info);
+      nm_sr_get_size(mpid_nem_newmad_session, p_request, &size);
+      nm_sr_get_rtag(mpid_nem_newmad_session,p_request, &match_info);
       NEM_NMAD_MATCH_GET_CTXT(match_info, ctxt);
 	
       if(ctxt == NEM_NMAD_INTRA_CTXT)
@@ -225,9 +225,9 @@ MPID_nem_newmad_poll(int in_blocking_poll)
 	       MPID_nem_handle_pkt(adi_req->vc,(char *)(adi_req->tmpbuf),(MPIDI_msg_sz_t)(adi_req->tmpbuf_sz));
 	       MPIU_Free(adi_req->tmpbuf);
 	    }
-	    nm_core_disable_progression(mpid_nem_newmad_pcore);
+	    nm_core_disable_progression(mpid_nem_newmad_session);
 	    MPID_nem_newmad_internal_req_enqueue(adi_req);
-	    nm_core_enable_progression(mpid_nem_newmad_pcore);
+	    nm_core_enable_progression(mpid_nem_newmad_session);
 	 }
 	 else
 	 {
@@ -319,7 +319,7 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_sr_request_t *nmad_request, nm
     {
 	mpid_nem_newmad_p_gate_t source;
 	MPIU_Assert(nmad_request != NULL);
-	nm_sr_recv_source(mpid_nem_newmad_pcore,nmad_request,&source);
+	nm_sr_recv_source(mpid_nem_newmad_session,nmad_request,&source);
 	vc = nm_gate_ref_get(source);
 	req->status.MPI_SOURCE = vc->lpid;
     }
@@ -425,7 +425,7 @@ void MPID_nem_newmad_anysource_posted(MPID_Request *rreq)
 	MPID_nem_newmad_process_rdtype(&rreq,dt_ptr,data_sz,&newmad_iov_ptr,&num_seg);
     }
 
-    ret = nm_sr_irecv_iov_with_ref(mpid_nem_newmad_pcore,NM_ANY_GATE,match_info,
+    ret = nm_sr_irecv_iov_with_ref(mpid_nem_newmad_session,NM_ANY_GATE,match_info,
 				   newmad_iov,num_seg,newmad_req,(void*)rreq);	
     MPID_MEM_NMAD_ADD_REQ_IN_HASH(rreq,newmad_req);  
 }
@@ -445,16 +445,16 @@ int MPID_nem_newmad_anysource_matched(MPID_Request *rreq)
     MPID_NEM_NMAD_GET_REQ_FROM_HASH(rreq,nmad_request);
     if(nmad_request != NULL)
     {	
-	ret = nm_sr_rcancel(mpid_nem_newmad_pcore,nmad_request);
+	ret = nm_sr_rcancel(mpid_nem_newmad_session,nmad_request);
 	if (ret ==  NM_ESUCCESS)
 	{
 	    size_t size;
 	    nm_tag_t match_info;
 	    MPIU_Assert(MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_RESP);                  	
-	    ret = nm_sr_rwait(mpid_nem_newmad_pcore,nmad_request);
+	    ret = nm_sr_rwait(mpid_nem_newmad_session,nmad_request);
 	    MPIU_Assert(ret ==  NM_ESUCCESS);
-	    nm_sr_get_tag(mpid_nem_newmad_pcore,nmad_request,&match_info);
-	    nm_sr_get_size(mpid_nem_newmad_pcore,nmad_request,&size);
+	    nm_sr_get_rtag(mpid_nem_newmad_session,nmad_request,&match_info);
+	    nm_sr_get_size(mpid_nem_newmad_session,nmad_request,&size);
 	    MPID_nem_newmad_handle_rreq(rreq, nmad_request,match_info, size);
 	    matched = TRUE;
 	}

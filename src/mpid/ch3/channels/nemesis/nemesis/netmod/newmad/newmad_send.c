@@ -27,7 +27,9 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
 
     NEM_NMAD_ADI_MATCH(match_info);
 
+#ifdef DEBUG
     fprintf(stdout,"iSendContig ========> Sending ADI msg  for req %p (match is %lx) \n",sreq,match_info);
+#endif
 
     MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
     mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
@@ -39,7 +41,7 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
 	num_iov += 1;
     }
 
-    nm_sr_isend_iov_with_ref(mpid_nem_newmad_pcore, VC_FIELD(vc, p_gate), match_info, 
+    nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void *)sreq);    
     mpid_nem_newmad_pending_send_req++;
     sreq->ch.vc = vc;
@@ -91,7 +93,7 @@ int MPID_nem_newmad_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
 	num_iov += 1;
     }
     
-    nm_sr_isend_iov_with_ref(mpid_nem_newmad_pcore, VC_FIELD(vc, p_gate), match_info, 
+    nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void *)sreq);    
     mpid_nem_newmad_pending_send_req++;
     sreq->ch.vc = vc;
@@ -142,7 +144,7 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
     mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
     mad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
 
-    nm_sr_isend_iov_with_ref(mpid_nem_newmad_pcore, VC_FIELD(vc, p_gate), match_info, 
+    nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
     mpid_nem_newmad_pending_send_req++;    
 
@@ -210,14 +212,15 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
 			mad_iov[index].iov_base,mad_iov[index].iov_len);
 	    }
 #endif
-	nm_sr_isend_iov_with_ref(mpid_nem_newmad_pcore, VC_FIELD(vc, p_gate), match_info, 
+	nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 				 mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
     }
     else
     {
-	nm_sr_isend_with_ref(mpid_nem_newmad_pcore, VC_FIELD(vc, p_gate), match_info, 
+	nm_sr_isend_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     NULL, 0, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
     }
+
     mpid_nem_newmad_pending_send_req++;
 
  fn_exit:
@@ -274,13 +277,13 @@ int  MPID_nem_newmad_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MP
 	    MPID_nem_newmad_process_sdtype(&sreq,datatype,dt_ptr,buf,count,data_sz,&mad_iov_ptr,&num_iov,0);	    	    
 	}
 	/* FIXME issend !*/
-	nm_sr_isend_iov(mpid_nem_newmad_pcore, VC_FIELD(vc, p_gate), match_info, 
+	nm_sr_isend_iov(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)));    
     }
     else
     {
 	/* FIXME issend !*/
-	nm_sr_isend(mpid_nem_newmad_pcore, VC_FIELD(vc, p_gate), match_info, 
+	nm_sr_isend(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 		    NULL, 0, &(REQ_FIELD(sreq,newmad_req)));    
     }
     mpid_nem_newmad_pending_send_req++;

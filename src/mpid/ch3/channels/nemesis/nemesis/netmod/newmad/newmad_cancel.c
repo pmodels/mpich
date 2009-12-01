@@ -18,7 +18,7 @@ int MPID_nem_newmad_cancel_send(MPIDI_VC_t *vc, MPID_Request *sreq)
     int ret;
     
     nmad_req = &(REQ_FIELD(sreq,newmad_req));    
-    ret = nm_sr_scancel(mpid_nem_newmad_pcore,nmad_req);
+    ret = nm_sr_scancel(mpid_nem_newmad_session,nmad_req);
 
     if (ret ==  NM_ESUCCESS)
     {
@@ -48,7 +48,7 @@ int MPID_nem_newmad_cancel_recv(MPIDI_VC_t *vc, MPID_Request *rreq)
     int ret;
     
     nmad_req = &(REQ_FIELD(rreq,newmad_req));    
-    ret = nm_sr_rcancel(mpid_nem_newmad_pcore,nmad_req);
+    ret = nm_sr_rcancel(mpid_nem_newmad_session,nmad_req);
 
     if (ret ==  NM_ESUCCESS)
     {	    
