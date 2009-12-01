@@ -79,6 +79,9 @@ static int init_mad( MPIDI_PG_t *pg_p )
 	fprintf(stdout,"nm_sr_init return err = %d\n", ret);
     }
 
+   ret = nm_sr_monitor(mpid_nem_newmad_session, NM_SR_EVENT_RECV_UNEXPECTED,&MPID_nem_newmad_get_adi_msg);
+   MPIU_Assert( ret == NM_ESUCCESS);
+   
  fn_exit:
     return mpi_errno;
  fn_fail: ATTRIBUTE((unused))
@@ -247,6 +250,8 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
    ret = nm_session_connect(mpid_nem_newmad_session, &(VC_FIELD(vc,p_gate)), VC_FIELD(vc, url));
    if (ret != NM_ESUCCESS) fprintf(stdout,"nm_session_connect returned ret = %d\n", ret);
 
+   nm_gate_ref_set(VC_FIELD(vc, p_gate),(void*)vc);
+   
    MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
    
    vc->eager_max_msg_sz = 32768;
