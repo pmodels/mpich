@@ -58,6 +58,22 @@ HYD_status HYDU_alloc_node(struct HYD_node **node)
     goto fn_exit;
 }
 
+void HYDU_free_node_list(struct HYD_node *node_list)
+{
+    struct HYD_node *node, *tnode;
+
+    node = node_list;
+    while (node) {
+        tnode = node->next;
+
+        if (node->hostname)
+            HYDU_FREE(node->hostname);
+        HYDU_FREE(node);
+
+        node = tnode;
+    }
+}
+
 HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy)
 {
     HYD_status status = HYD_SUCCESS;
@@ -91,6 +107,48 @@ HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy)
 
   fn_fail:
     goto fn_exit;
+}
+
+
+void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
+{
+    struct HYD_proxy *proxy, *tproxy;
+    struct HYD_proxy_exec *exec, *texec;
+
+    HYDU_FUNC_ENTER();
+
+    proxy = proxy_list;
+    while (proxy) {
+        tproxy = proxy->next;
+
+        if (proxy->node.hostname)
+            HYDU_FREE(proxy->node.hostname);
+
+        if (proxy->exec_launch_info) {
+            HYDU_free_strlist(proxy->exec_launch_info);
+            HYDU_FREE(proxy->exec_launch_info);
+        }
+
+        if (proxy->exit_status)
+            HYDU_FREE(proxy->exit_status);
+
+        exec = proxy->exec_list;
+        while (exec) {
+            texec = exec->next;
+            HYDU_free_strlist(exec->exec);
+            if (exec->user_env)
+                HYDU_env_free(exec->user_env);
+            if (exec->env_prop)
+                HYDU_FREE(exec->env_prop);
+            HYDU_FREE(exec);
+            exec = texec;
+        }
+
+        HYDU_FREE(proxy);
+        proxy = tproxy;
+    }
+
+    HYDU_FUNC_EXIT();
 }
 
 
@@ -135,48 +193,6 @@ void HYDU_free_exec_info_list(struct HYD_exec_info *exec_info_list)
 
         HYDU_FREE(exec_info);
         exec_info = run;
-    }
-
-    HYDU_FUNC_EXIT();
-}
-
-
-void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
-{
-    struct HYD_proxy *proxy, *tproxy;
-    struct HYD_proxy_exec *exec, *texec;
-
-    HYDU_FUNC_ENTER();
-
-    proxy = proxy_list;
-    while (proxy) {
-        tproxy = proxy->next;
-
-        if (proxy->node.hostname)
-            HYDU_FREE(proxy->node.hostname);
-
-        if (proxy->exec_launch_info) {
-            HYDU_free_strlist(proxy->exec_launch_info);
-            HYDU_FREE(proxy->exec_launch_info);
-        }
-
-        if (proxy->exit_status)
-            HYDU_FREE(proxy->exit_status);
-
-        exec = proxy->exec_list;
-        while (exec) {
-            texec = exec->next;
-            HYDU_free_strlist(exec->exec);
-            if (exec->user_env)
-                HYDU_env_free(exec->user_env);
-            if (exec->env_prop)
-                HYDU_FREE(exec->env_prop);
-            HYDU_FREE(exec);
-            exec = texec;
-        }
-
-        HYDU_FREE(proxy);
-        proxy = tproxy;
     }
 
     HYDU_FUNC_EXIT();

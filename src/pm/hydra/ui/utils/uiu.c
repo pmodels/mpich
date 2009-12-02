@@ -92,6 +92,9 @@ void HYD_uiu_free_params(void)
     if (HYD_handle.user_global.global_env.prop)
         HYDU_FREE(HYD_handle.user_global.global_env.prop);
 
+    if (HYD_handle.node_list)
+        HYDU_free_node_list(HYD_handle.node_list);
+
     if (HYD_handle.exec_info_list)
         HYDU_free_exec_info_list(HYD_handle.exec_info_list);
 

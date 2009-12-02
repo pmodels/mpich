@@ -120,10 +120,11 @@
 void HYDU_init_user_global(struct HYD_user_global *user_global);
 void HYDU_init_global_env(struct HYD_env_global *global_env);
 HYD_status HYDU_alloc_node(struct HYD_node **node);
+void HYDU_free_node_list(struct HYD_node *node_list);
 HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy);
+void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
 HYD_status HYDU_alloc_exec_info(struct HYD_exec_info **exec_info);
 void HYDU_free_exec_info_list(struct HYD_exec_info *exec_info_list);
-void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
 HYD_status HYDU_alloc_proxy_exec(struct HYD_proxy_exec **exec);
 
 /* args */
