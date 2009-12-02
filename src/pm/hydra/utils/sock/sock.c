@@ -6,6 +6,17 @@
 
 #include "hydra_utils.h"
 
+struct fwd_hash {
+    int in;
+    int out;
+
+    char buf[HYD_TMPBUF_SIZE];
+    int buf_offset;
+    int buf_count;
+
+    struct fwd_hash *next;
+};
+
 HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 {
     struct sockaddr_in sa;
@@ -330,18 +341,45 @@ HYD_status HYDU_sock_trywrite(int fd, const void *buf, int maxsize)
 }
 
 
-HYD_status HYDU_sock_set_nonblock(int fd)
+static HYD_status set_nonblock(int fd)
 {
     int flags;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    flags = fcntl(fd, F_GETFL, 0);
-    if (flags < 0)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "fcntl failed on %d\n", fd);
+    if ((flags = fcntl(fd, F_GETFL, 0)) == -1)
+        flags = 0;
+#if defined O_NONBLOCK
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
         HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "fcntl failed on %d\n", fd);
+#endif /* O_NONBLOCK */
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status alloc_fwd_hash(struct fwd_hash **fwd_hash, int in, int out)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(*fwd_hash, struct fwd_hash *, sizeof(struct fwd_hash), status);
+    (*fwd_hash)->in = in;
+    (*fwd_hash)->out = out;
+
+    (*fwd_hash)->buf_offset = 0;
+    (*fwd_hash)->buf_count = 0;
+
+    (*fwd_hash)->next = NULL;
+
+    status = set_nonblock(out);
+    HYDU_ERR_POP(status, "unable to set out-socket to non-blocking\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -352,111 +390,81 @@ HYD_status HYDU_sock_set_nonblock(int fd)
 }
 
 
-HYD_status HYDU_sock_set_cloexec(int fd)
+/* This function does not provide any flow control. We just read from
+ * the incoming socket as much as we can and push out to the outgoing
+ * socket as much as we can. This can result in the process calling it
+ * polling continuously waiting for events, but that's a rare case for
+ * stdio (which is what this function is meant to provide
+ * functionality for). */
+HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
 {
-    int flags;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    flags = fcntl(fd, F_GETFL, 0);
-    if (flags >= 0) {
-        /* Make sure that exec'd processes don't get this fd */
-        flags |= FD_CLOEXEC;
-        fcntl(fd, F_SETFD, flags);
-    }
-
-    HYDU_FUNC_EXIT();
-    return status;
-}
-
-
-HYD_status HYDU_sock_stdout_cb(int fd, HYD_event_t events, int stdout_fd, int *closed)
-{
-    int count, written, ret;
-    char buf[HYD_TMPBUF_SIZE];
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    *closed = 0;
-
-    if (events & HYD_POLLOUT)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
-
-    count = read(fd, buf, HYD_TMPBUF_SIZE);
-    if (count < 0) {
-        HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR, "read error on %d (%s)\n",
-                             fd, HYDU_strerror(errno));
-    }
-    else if (count == 0) {
-        /* The connection has closed */
-        *closed = 1;
-        goto fn_exit;
-    }
-
-    written = 0;
-    while (written != count) {
-        ret = write(stdout_fd, buf + written, count - written);
-        if (ret < 0 && errno != EAGAIN)
-            HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR, "write error on %d (%s)\n",
-                                 stdout_fd, HYDU_strerror(errno));
-        if (ret > 0)
-            written += ret;
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-HYD_status HYDU_sock_stdin_cb(int fd, HYD_event_t events, int stdin_fd, char *buf,
-                              int *buf_count, int *buf_offset, int *closed)
-{
+    static struct fwd_hash *fwd_hash_list = NULL;
+    struct fwd_hash *fwd_hash, *tmp;
     int count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
+    /* find the fwd hash */
+    for (tmp = fwd_hash_list; tmp; tmp = tmp->next)
+        if (out == tmp->out)
+            break;
+
+    if (tmp == NULL) { /* No hash found; create one */
+        alloc_fwd_hash(&fwd_hash, in, out);
+        if (fwd_hash_list == NULL)
+            fwd_hash_list = fwd_hash;
+        else {
+            for (tmp = fwd_hash_list; tmp->next; tmp = tmp->next);
+            tmp->next = fwd_hash;
+        }
+    }
+    else {
+        fwd_hash = tmp;
+    }
+
     *closed = 0;
-
-    if (events & HYD_POLLIN)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdin handler got stdout event\n");
-
-    while (1) {
-        /* If we already have buffered data, send it out */
-        if (*buf_count) {
-            count = write(fd, buf + *buf_offset, *buf_count);
-            if (count < 0)
-                HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR, "write error on %d (%s)\n",
-                                     fd, HYDU_strerror(errno));
-            *buf_offset += count;
-            *buf_count -= count;
-            break;
-        }
-
-        /* If we are still here, we need to refill our temporary buffer */
-        count = read(stdin_fd, buf, HYD_TMPBUF_SIZE);
-        if (count < 0) {
-            if (errno == EINTR || errno == EAGAIN || errno == ENOTCONN) {
-                /* This call was interrupted or there was no data to read; just break out. */
-                *closed = 1;
-                break;
-            }
-
-            HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "read error on 0 (%s)\n",
-                                 HYDU_strerror(errno));
-        }
-        else if (count == 0) {
-            /* The connection has closed */
+    if (fwd_hash->buf_count == 0) {
+        /* there is no data in the buffer, read something into it */
+        count = read(in, fwd_hash->buf, HYD_TMPBUF_SIZE);
+        if (count <= 0) {
             *closed = 1;
-            break;
         }
-        *buf_count += count;
+        else {
+            fwd_hash->buf_offset = 0;
+            fwd_hash->buf_count += count;
+        }
+    }
+
+    if (fwd_hash->buf_count) {
+        /* there is data in the buffer, send it out first */
+        count = write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count);
+        if (count < 0) {
+            if (errno == EPIPE)
+                *closed = 1;
+            else if (errno != EAGAIN)
+                HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                                     "write error on %d; errno: %d\n", out, errno);
+        }
+        else if (count) {
+            fwd_hash->buf_offset += count;
+            fwd_hash->buf_count -= count;
+        }
+    }
+
+    while (*closed && fwd_hash->buf_count) {
+        count = write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count);
+        if (count < 0) {
+            if (errno == EPIPE)
+                *closed = 1;
+            else if (errno != EAGAIN)
+                HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                                     "write error on %d; errno: %d\n", out, errno);
+        }
+        else if (count) {
+            fwd_hash->buf_offset += count;
+            fwd_hash->buf_count -= count;
+        }
     }
 
   fn_exit:

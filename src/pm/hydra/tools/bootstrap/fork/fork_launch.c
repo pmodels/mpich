@@ -9,13 +9,15 @@
 #include "bscu.h"
 #include "fork.h"
 
+static int fd_stdin, fd_stdout, fd_stderr;
+
 HYD_status HYDT_bscd_fork_launch_procs(
     char **args, struct HYD_node *node_list, void *userp,
     HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp),
     HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
     HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp))
 {
-    int num_hosts, idx, i, fd_stdin, fd_stdout, fd_stderr;
+    int num_hosts, idx, i;
     int *pid, *fd_list;
     struct HYD_node *node;
     char *targs[HYD_NUM_TMP_STRINGS];
@@ -66,7 +68,7 @@ HYD_status HYDT_bscd_fork_launch_procs(
 
         /* Register stdio callbacks for the spawned process */
         if (i == 0) {
-            status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_POLLOUT, userp, stdin_cb);
+            status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_POLLIN, userp, stdin_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
 

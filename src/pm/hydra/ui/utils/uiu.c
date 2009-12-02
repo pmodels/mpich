@@ -41,8 +41,6 @@ void HYD_uiu_init_params(void)
     HYD_handle.pg_list.next = NULL;
 
     HYD_handle.func_depth = 0;
-    HYD_handle.stdin_buf_offset = 0;
-    HYD_handle.stdin_buf_count = 0;
 
     HYD_uiu_exec_info_list = NULL;
 }

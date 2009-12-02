@@ -202,11 +202,7 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
                           enum HYDU_sock_comm_flag flag);
 HYD_status HYDU_sock_write(int fd, const void *buf, int maxsize);
 HYD_status HYDU_sock_trywrite(int fd, const void *buf, int maxsize);
-HYD_status HYDU_sock_set_nonblock(int fd);
-HYD_status HYDU_sock_set_cloexec(int fd);
-HYD_status HYDU_sock_stdout_cb(int fd, HYD_event_t events, int stdout_fd, int *closed);
-HYD_status HYDU_sock_stdin_cb(int fd, HYD_event_t events, int stdin_fd, char *buf,
-                              int *buf_count, int *buf_offset, int *closed);
+HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed);
 
 /* Memory utilities */
 #include <ctype.h>

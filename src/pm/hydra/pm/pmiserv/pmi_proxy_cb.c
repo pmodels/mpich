@@ -12,32 +12,6 @@
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 
-HYD_status HYD_pmcd_pmi_proxy_control_connect_cb(int fd, HYD_event_t events, void *userp)
-{
-    int accept_fd = -1;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (events & HYD_POLLOUT)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
-
-    /* We got a connection from upstream */
-    status = HYDU_sock_accept(fd, &accept_fd);
-    HYDU_ERR_POP(status, "accept error\n");
-
-    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, NULL,
-                                  HYD_pmcd_pmi_proxy_control_cmd_cb);
-    HYDU_ERR_POP(status, "unable to register fd\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 HYD_status HYD_pmcd_pmi_proxy_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     int cmd_len;
@@ -45,9 +19,6 @@ HYD_status HYD_pmcd_pmi_proxy_control_cmd_cb(int fd, HYD_event_t events, void *u
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    if (events & HYD_POLLOUT)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
 
     /* We got a command from upstream */
     status = HYDU_sock_read(fd, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds), &cmd_len,
@@ -104,8 +75,8 @@ HYD_status HYD_pmcd_pmi_proxy_stdout_cb(int fd, HYD_event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_stdout_cb(fd, events, STDOUT_FILENO, &closed);
-    HYDU_ERR_POP(status, "stdout callback error\n");
+    status = HYDU_sock_forward_stdio(fd, STDOUT_FILENO, &closed);
+    HYDU_ERR_POP(status, "stdout forwarding error\n");
 
     if (closed) {
         /* The connection has closed */
@@ -135,8 +106,8 @@ HYD_status HYD_pmcd_pmi_proxy_stderr_cb(int fd, HYD_event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_stdout_cb(fd, events, STDERR_FILENO, &closed);
-    HYDU_ERR_POP(status, "stdout callback error\n");
+    status = HYDU_sock_forward_stdio(fd, STDERR_FILENO, &closed);
+    HYDU_ERR_POP(status, "stderr forwarding error\n");
 
     if (closed) {
         /* The connection has closed */
@@ -166,17 +137,14 @@ HYD_status HYD_pmcd_pmi_proxy_stdin_cb(int fd, HYD_event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_stdin_cb(HYD_pmcd_pmip.downstream.in, events,
-                                STDIN_FILENO,
-                                HYD_pmcd_pmip.local.stdin_tmp_buf,
-                                &HYD_pmcd_pmip.local.stdin_buf_count,
-                                &HYD_pmcd_pmip.local.stdin_buf_offset, &closed);
-    HYDU_ERR_POP(status, "stdin callback error\n");
+    status = HYDU_sock_forward_stdio(fd, HYD_pmcd_pmip.downstream.in, &closed);
+    HYDU_ERR_POP(status, "stdin forwarding error\n");
 
     if (closed) {
-        /* The connection has closed */
         status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
+
+        close(fd);
 
         close(HYD_pmcd_pmip.downstream.in);
         HYD_pmcd_pmip.downstream.in = -1;

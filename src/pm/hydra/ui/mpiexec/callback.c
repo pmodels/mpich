@@ -9,27 +9,6 @@
 #include "mpiexec.h"
 #include "demux.h"
 
-static HYD_status close_fd(int fd)
-{
-    struct HYD_proxy *proxy;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* Deregister the FD with the demux engine and close it. */
-    status = HYDT_dmx_deregister_fd(fd);
-    HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
-    close(fd);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
 HYD_status HYD_uii_mpx_stdout_cb(int fd, HYD_event_t events, void *userp)
 {
     int closed;
@@ -37,16 +16,14 @@ HYD_status HYD_uii_mpx_stdout_cb(int fd, HYD_event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    /* Write output to fd 1 */
-    status = HYDU_sock_stdout_cb(fd, events, 1, &closed);
-    HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on fd %d: %s\n",
-                         fd, HYDU_strerror(errno));
+    status = HYDU_sock_forward_stdio(fd, STDOUT_FILENO, &closed);
+    HYDU_ERR_POP(status, "error forwarding to stdout\n");
 
     if (closed) {
-        status = close_fd(fd);
-        HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d: %s\n",
-                             fd, HYDU_strerror(errno));
-        goto fn_exit;
+        status = HYDT_dmx_deregister_fd(fd);
+        HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
+
+        close(fd);
     }
 
   fn_exit:
@@ -64,16 +41,14 @@ HYD_status HYD_uii_mpx_stderr_cb(int fd, HYD_event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    /* Write output to fd 2 */
-    status = HYDU_sock_stdout_cb(fd, events, 2, &closed);
-    HYDU_ERR_SETANDJUMP2(status, status, "stdout callback error on %d (%s)\n",
-                         fd, HYDU_strerror(errno));
+    status = HYDU_sock_forward_stdio(fd, STDERR_FILENO, &closed);
+    HYDU_ERR_POP(status, "error forwarding to stdout\n");
 
     if (closed) {
-        status = close_fd(fd);
-        HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (%s)\n",
-                             fd, HYDU_strerror(errno));
-        goto fn_exit;
+        status = HYDT_dmx_deregister_fd(fd);
+        HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
+
+        close(fd);
     }
 
   fn_exit:
@@ -87,22 +62,21 @@ HYD_status HYD_uii_mpx_stderr_cb(int fd, HYD_event_t events, void *userp)
 
 HYD_status HYD_uii_mpx_stdin_cb(int fd, HYD_event_t events, void *userp)
 {
-    int closed;
+    int closed, in_fd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_stdin_cb(fd, events, 0, HYD_handle.stdin_tmp_buf,
-                                &HYD_handle.stdin_buf_count, &HYD_handle.stdin_buf_offset,
-                                &closed);
-    HYDU_ERR_POP(status, "stdin callback error\n");
+    in_fd = *((int *) userp);
+
+    status = HYDU_sock_forward_stdio(STDIN_FILENO, in_fd, &closed);
+    HYDU_ERR_POP(status, "stdin forwarding error\n");
 
     if (closed) {
-        /* Close the input handler for the process, so it knows that
-         * we got a close event */
-        status = close_fd(fd);
-        HYDU_ERR_SETANDJUMP2(status, status, "socket close error on fd %d (errno: %d)\n",
-                             fd, errno);
+        status = HYDT_dmx_deregister_fd(fd);
+        HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
+
+        close(STDIN_FILENO);
     }
 
   fn_exit:

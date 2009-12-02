@@ -47,11 +47,6 @@ struct HYD_pmcd_pmip {
 
         int proxy_core_count;
         int proxy_process_count;
-
-        /* stdin related variables */
-        int stdin_buf_offset;
-        int stdin_buf_count;
-        char stdin_tmp_buf[HYD_TMPBUF_SIZE];
     } local;
 
     /* Process segmentation information for this proxy */

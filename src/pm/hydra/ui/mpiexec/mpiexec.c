@@ -189,15 +189,6 @@ int main(int argc, char **argv)
     }
 
     /* Add the stdout/stdin/stderr callback handlers */
-    /* FIXME: Make sure stdin is not open before setting it to
-     * non-blocking (in nested launches where mpiexec is called using
-     * another mpiexec this can be the case). */
-    status = HYDU_sock_set_nonblock(STDIN_FILENO);
-    HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
-
-    HYD_handle.stdin_buf_count = 0;
-    HYD_handle.stdin_buf_offset = 0;
-
     HYD_handle.stdout_cb = HYD_uii_mpx_stdout_cb;
     HYD_handle.stderr_cb = HYD_uii_mpx_stderr_cb;
     HYD_handle.stdin_cb = HYD_uii_mpx_stdin_cb;
@@ -249,7 +240,7 @@ int main(int argc, char **argv)
         return -1;
     else {
         if (WIFSIGNALED(exit_status))
-            printf("%s (signal %d)\n", strsignal(WTERMSIG(exit_status)),
+            printf("EXIT STRING: %s (signal %d)\n", strsignal(WTERMSIG(exit_status)),
                    WTERMSIG(exit_status));
         else if (WIFEXITED(exit_status))
             return (WEXITSTATUS(exit_status));

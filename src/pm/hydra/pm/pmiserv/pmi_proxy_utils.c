@@ -37,9 +37,6 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = -1;
     HYD_pmcd_pmip.local.proxy_process_count = -1;
-    HYD_pmcd_pmip.local.stdin_buf_offset = 0;
-    HYD_pmcd_pmip.local.stdin_buf_count = 0;
-    HYD_pmcd_pmip.local.stdin_tmp_buf[0] = '\0';
 
     HYD_pmcd_pmip.start_pid = -1;
     HYD_pmcd_pmip.exec_list = NULL;
@@ -745,14 +742,8 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                              &HYD_pmcd_pmip.downstream.pid[process_id],
                                              os_index);
 
-                HYD_pmcd_pmip.local.stdin_buf_offset = 0;
-                HYD_pmcd_pmip.local.stdin_buf_count = 0;
-
-                status = HYDU_sock_set_nonblock(STDIN_FILENO);
-                HYDU_ERR_POP(status, "unable to set stdin fd to nonblocking\n");
-
-                stdin_fd = HYD_pmcd_pmip.downstream.in;
-                status = HYDT_dmx_register_fd(1, &stdin_fd, HYD_POLLOUT, NULL,
+                stdin_fd = STDIN_FILENO;
+                status = HYDT_dmx_register_fd(1, &stdin_fd, HYD_POLLIN, NULL,
                                               HYD_pmcd_pmi_proxy_stdin_cb);
                 HYDU_ERR_POP(status, "unable to register fd\n");
             }

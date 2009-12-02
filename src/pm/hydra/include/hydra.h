@@ -46,9 +46,6 @@ struct HYD_handle {
 
     /* Random parameters used for internal code */
     int func_depth;
-    char stdin_tmp_buf[HYD_TMPBUF_SIZE];
-    int stdin_buf_offset;
-    int stdin_buf_count;
 };
 
 extern struct HYD_handle HYD_handle;
