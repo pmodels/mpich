@@ -79,7 +79,7 @@ static HYD_status allocate_kvs(HYD_pmcd_pmi_kvs_t ** kvs, int pgid)
 }
 
 
-static HYD_status create_pg(HYD_pmcd_pmi_pg_t ** pg, int pgid)
+HYD_status HYD_pmcd_create_pg(HYD_pmcd_pmi_pg_t ** pg, int pgid)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -464,7 +464,7 @@ HYD_status HYD_pmcd_pmi_init(void)
 
     HYDU_FUNC_ENTER();
 
-    status = create_pg(&HYD_pg_list, 0);
+    status = HYD_pmcd_create_pg(&HYD_pg_list, 0);
     HYDU_ERR_POP(status, "unable to create pg\n");
 
     /* Find the number of processes in the PG */

@@ -339,7 +339,7 @@ static HYD_status fn_get(int fd, char *args[])
             /* Make sure the node list is within the size allowed by
              * PMI. Otherwise, tell the client that we don't know what
              * the key is */
-            if (strlen(node_list) <= MAXVALLEN)
+            if (strlen(node_list) <= MAXVALLEN) {
                 status = HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list,
                                               process->node->pg->kvs, &ret);
                 HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
@@ -448,15 +448,149 @@ static HYD_status fn_get_usize(int fd, char *args[])
 static HYD_status fn_spawn(int fd, char *args[])
 {
     struct HYD_pg *pg;
+    HYD_pmcd_pmi_pg_t *pmi_pg;
+    struct HYD_node *node, *start_node;
+    struct HYD_proxy *proxy;
+    int offset, nprocs, procs_left;
+    struct HYD_pmcd_token *tokens;
+    int token_count, total_nodes, i, start_pid, num_procs;
+    char *val, *execname;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDU_print_strlist(args);
-    /* Create a new process group: proxy group as well as PMI group */
+
+    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+
+    val = HYD_pmcd_find_token_keyval(tokens, token_count, "nprocs");
+    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find token: nprocs\n");
+    nprocs = atoi(val);
+
+    val = HYD_pmcd_find_token_keyval(tokens, token_count, "argcnt");
+    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find token: argcnt\n");
+    if (atoi(val))
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "arguments not supported in spawn\n");
+
+    execname = HYD_pmcd_find_token_keyval(tokens, token_count, "execname");
+    HYDU_ERR_CHKANDJUMP(status, execname == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find token: execname\n");
 
     /* Find the index of the pgid that we need to create */
     for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next);
+    status = HYDU_alloc_pg(&pg->next);
+    HYDU_ERR_POP(status, "unable to allocate process group\n");
+
+    pg->next->pgid = pg->pgid + 1;
+    pg->next->pg_process_count = nprocs;
+
+    /* Find which node we start on */
+    offset = 0;
+    for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next)
+        offset += pg->pg_process_count;
+
+    offset %= HYD_handle.global_core_count;
+    for (node = HYD_handle.node_list; node; node = node->next) {
+        offset -= node->core_count;
+        if (offset < 0)
+            break;
+    }
+    start_node = node;
+
+    /* Check how many total number of nodes we have */
+    for (total_nodes = 0, node = HYD_handle.node_list; node; node = node->next)
+        total_nodes++;
+
+    /* Run to the last PG */
+    for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next);
+
+    /* Create proxies for this group */
+    start_pid = 0;
+    procs_left = nprocs;
+    for (i = 0, node = start_node; i < total_nodes; i++) {
+        /* Make sure we need more proxies */
+        if (nprocs < HYD_handle.global_core_count && nprocs >= start_pid)
+            break;
+
+        if (pg->proxy_list == NULL) {
+            status = HYDU_alloc_proxy(&pg->proxy_list);
+            HYDU_ERR_POP(status, "unable to allocate proxy\n");
+            proxy = pg->proxy_list;
+        }
+        else {
+            status = HYDU_alloc_proxy(&proxy->next);
+            HYDU_ERR_POP(status, "unable to allocate proxy\n");
+            proxy = proxy->next;
+        }
+
+        /* For the first node, use only the remaining cores. For the
+         * last node, we need to make sure its not oversubscribed
+         * since the first proxy we started on might repeat. */
+        if (i == 0)
+            proxy->node.core_count = -(offset); /* offset is negative */
+        else if (i == (total_nodes - 1))
+            proxy->node.core_count = node->core_count + offset;
+        else
+            proxy->node.core_count = node->core_count;
+
+        proxy->proxy_id = i;
+        proxy->start_pid = start_pid;
+        proxy->node.hostname = HYDU_strdup(node->hostname);
+        proxy->node.next = NULL;
+
+        /* Add the executable information in the proxy */
+        status = HYDU_alloc_proxy_exec(&proxy->exec_list);
+        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
+
+        proxy->exec_list->exec[0] = HYDU_strdup(execname);
+        proxy->exec_list->exec[1] = NULL;
+
+        /* Figure out how many processes to set on this proxy */
+        num_procs = (pg->pg_process_count / HYD_handle.global_core_count) *
+            HYD_handle.global_core_count;
+        if (nprocs % HYD_handle.global_core_count >= start_pid) {
+            if (procs_left > proxy->node.core_count)
+                num_procs += proxy->node.core_count;
+            else
+                num_procs += procs_left;
+        }
+
+        proxy->exec_list->proc_count = num_procs;
+        proxy->proxy_process_count += num_procs;
+
+        /* It is not clear what kind of environment needs to get
+         * passed to the spawned process. Don't set anything here, and
+         * let the proxy do whatever it does by default. */
+        proxy->exec_list->env_prop = NULL;
+        proxy->exec_list->user_env = NULL;
+
+        /* If we found enough proxies, break out */
+        start_pid += proxy->node.core_count;
+        procs_left -= proxy->node.core_count;
+        if (procs_left <= 0)
+            break;
+
+        node = node->next;
+        /* Handle the wrap around case for the nodes */
+        if (node == NULL)
+            node = HYD_handle.node_list;
+    }
+
+    /* Create a new PMI process group */
+    for (pmi_pg = HYD_pg_list; pmi_pg->next; pmi_pg = pmi_pg->next);
+    status = HYD_pmcd_create_pg(&pmi_pg->next, pmi_pg->pgid + 1);
+    HYDU_ERR_POP(status, "unable to create PMI pg\n");
+
+    /*
+     * TODO:
+     *   1. Create a PMI port to listen on
+     *   2. Spawn the requested processes
+     *   3. Modify the callback code to point to the appropriate process group
+     */
 
     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "exit\n");
 
@@ -468,7 +602,7 @@ static HYD_status fn_spawn(int fd, char *args[])
     goto fn_exit;
 }
 
-/* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
+/* TODO: abort, create_kvs, destroy_kvs, getbyidx */
 static struct HYD_pmcd_pmi_handle_fns pmi_v1_handle_fns_foo[] = {
     {"initack", fn_initack},
     {"get_maxes", fn_get_maxes},
@@ -479,6 +613,7 @@ static struct HYD_pmcd_pmi_handle_fns pmi_v1_handle_fns_foo[] = {
     {"get", fn_get},
     {"get_universe_size", fn_get_usize},
     {"finalize", fn_finalize},
+    {"spawn", fn_spawn},
     {"\0", NULL}
 };
 

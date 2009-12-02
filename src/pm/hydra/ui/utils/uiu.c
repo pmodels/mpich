@@ -37,9 +37,9 @@ void HYD_uiu_init_params(void)
     HYD_handle.node_list = NULL;
     HYD_handle.global_core_count = 0;
 
+    HYDU_init_pg(&HYD_handle.pg_list);
+    /* Set the default PGID to 0 */
     HYD_handle.pg_list.pgid = 0;
-    HYD_handle.pg_list.proxy_list = NULL;
-    HYD_handle.pg_list.pg_process_count = 0;
     HYD_handle.pg_list.next = NULL;
 
     HYD_handle.func_depth = 0;
@@ -262,27 +262,18 @@ HYD_status HYD_uiu_create_proxy_list(void)
             status = HYDU_alloc_proxy(&HYD_handle.pg_list.proxy_list);
             HYDU_ERR_POP(status, "unable to allocate proxy\n");
             proxy = HYD_handle.pg_list.proxy_list;
-
-            proxy->proxy_id = proxy_id;
-            proxy->start_pid = start_pid;
-
-            proxy->node.hostname = HYDU_strdup(node->hostname);
-            proxy->node.core_count = node->core_count;
-            proxy->node.next = NULL;
         }
         else {
             status = HYDU_alloc_proxy(&proxy->next);
             HYDU_ERR_POP(status, "unable to allocate proxy\n");
-
             proxy = proxy->next;
-
-            proxy->proxy_id = proxy_id;
-            proxy->start_pid = start_pid;
-
-            proxy->node.hostname = HYDU_strdup(node->hostname);
-            proxy->node.core_count = node->core_count;
-            proxy->node.next = NULL;
         }
+        proxy->proxy_id = proxy_id;
+        proxy->start_pid = start_pid;
+
+        proxy->node.hostname = HYDU_strdup(node->hostname);
+        proxy->node.core_count = node->core_count;
+        proxy->node.next = NULL;
 
         start_pid += node->core_count;
         proxy_id++;

@@ -74,6 +74,47 @@ void HYDU_free_node_list(struct HYD_node *node_list)
     }
 }
 
+void HYDU_init_pg(struct HYD_pg *pg)
+{
+    pg->pgid = -1;
+    pg->proxy_list = NULL;
+    pg->pg_process_count = 0;
+    pg->next = NULL;
+}
+
+HYD_status HYDU_alloc_pg(struct HYD_pg **pg)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(*pg, struct HYD_pg *, sizeof(struct HYD_pg), status);
+    HYDU_init_pg(*pg);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+void HYDU_free_pg_list(struct HYD_pg *pg_list)
+{
+    struct HYD_pg *pg, *tpg;
+
+    pg = pg_list;
+    while (pg) {
+        tpg = pg->next;
+
+        if (pg->proxy_list)
+            HYDU_free_proxy_list(pg->proxy_list);
+        HYDU_FREE(pg);
+
+        pg = tpg;
+    }
+}
+
 HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy)
 {
     HYD_status status = HYD_SUCCESS;
