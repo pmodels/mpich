@@ -257,6 +257,7 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
 
     proxy = (struct HYD_proxy *) userp;
 
+    HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
     status = HYDU_sock_read(fd, (void *) proxy->exit_status,
                             proxy->proxy_process_count * sizeof(int),
                             &count, HYDU_SOCK_COMM_MSGWAIT);

@@ -202,9 +202,6 @@ int main(int argc, char **argv)
         }
     }
 
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next)
-        HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
-
     /* Launch the processes */
     status = HYD_pmci_launch_procs();
     HYDU_ERR_POP(status, "process manager returned error launching processes\n");
