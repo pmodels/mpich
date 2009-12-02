@@ -6,7 +6,6 @@
 
 #include "pmi_proxy.h"
 #include "bsci.h"
-#include "demux.h"
 #include "bind.h"
 #include "ckpoint.h"
 #include "hydra_utils.h"
@@ -741,7 +740,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                              os_index);
 
                 stdin_fd = STDIN_FILENO;
-                status = HYDT_dmx_register_fd(1, &stdin_fd, HYD_POLLIN, NULL,
+                status = HYDU_dmx_register_fd(1, &stdin_fd, HYD_POLLIN, NULL,
                                               HYD_pmcd_pmi_proxy_stdin_cb);
                 HYDU_ERR_POP(status, "unable to register fd\n");
             }
@@ -763,12 +762,12 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
 
   fn_spawn_complete:
     /* Everything is spawned, register the required FDs  */
-    status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
+    status = HYDU_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
                                   HYD_pmcd_pmip.downstream.out,
                                   HYD_POLLIN, NULL, HYD_pmcd_pmi_proxy_stdout_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
+    status = HYDU_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
                                   HYD_pmcd_pmip.downstream.err,
                                   HYD_POLLIN, NULL, HYD_pmcd_pmi_proxy_stderr_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");

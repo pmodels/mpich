@@ -7,7 +7,6 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "mpiexec.h"
-#include "demux.h"
 
 HYD_status HYD_uii_mpx_stdout_cb(void *buf, int buflen)
 {

@@ -7,7 +7,6 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "bsci.h"
-#include "demux.h"
 #include "pmi_handle.h"
 
 static HYD_status fn_initack(int fd, char *args[])
@@ -399,7 +398,7 @@ static HYD_status fn_finalize(int fd, char *args[])
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
     if (status == HYD_SUCCESS) {
-        status = HYDT_dmx_deregister_fd(fd);
+        status = HYDU_dmx_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to register fd\n");
         close(fd);
     }

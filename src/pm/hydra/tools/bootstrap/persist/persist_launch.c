@@ -41,7 +41,7 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
         }
     }
     else {
-        status = HYDT_dmx_deregister_fd(fd);
+        status = HYDU_dmx_deregister_fd(fd);
         HYDU_ERR_POP(status, "error deregistering fd\n");
 
         close(fd);
@@ -90,13 +90,13 @@ HYD_status HYDT_bscd_persist_launch_procs(
 
         if (i == 0) {
             tmp_fd = STDIN_FILENO;
-            status = HYDT_dmx_register_fd(1, &tmp_fd, HYD_POLLIN,
+            status = HYDU_dmx_register_fd(1, &tmp_fd, HYD_POLLIN,
                                           &HYDT_bscd_persist_control_fd[i],
                                           HYDT_bscu_stdin_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
 
-        status = HYDT_dmx_register_fd(1, &HYDT_bscd_persist_control_fd[i], HYD_POLLIN, NULL,
+        status = HYDU_dmx_register_fd(1, &HYDT_bscd_persist_control_fd[i], HYD_POLLIN, NULL,
                                       persist_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }

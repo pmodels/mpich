@@ -6,7 +6,6 @@
 
 #include "hydra_base.h"
 #include "hydra_utils.h"
-#include "demux.h"
 #include "persist_server.h"
 
 struct HYDT_persist_handle HYDT_persist_handle;
@@ -79,7 +78,7 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "stdin forwarding error\n");
 
         if (closed) {
-            status = HYDT_dmx_deregister_fd(private.client_fd);
+            status = HYDU_dmx_deregister_fd(private.client_fd);
             HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n",
                                  private.client_fd);
             close(private.client_fd);
@@ -101,7 +100,7 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
             HYDU_ERR_POP(status, "error sending stdout to client\n");
         }
         else {
-            status = HYDT_dmx_deregister_fd(private.stdout_fd);
+            status = HYDU_dmx_deregister_fd(private.stdout_fd);
             HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n",
                                  private.stdout_fd);
             close(private.stdout_fd);
@@ -126,7 +125,7 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
             HYDU_ERR_POP(status, "error sending stdout to client\n");
         }
         else {
-            status = HYDT_dmx_deregister_fd(private.stderr_fd);
+            status = HYDU_dmx_deregister_fd(private.stderr_fd);
             HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n",
                                  private.stderr_fd);
             close(private.stderr_fd);
@@ -170,7 +169,7 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
 
     /* This is the slave process. Close and deregister the listen socket */
     private.type = SLAVE;
-    HYDT_dmx_deregister_fd(private.listen_fd);
+    HYDU_dmx_deregister_fd(private.listen_fd);
     close(private.listen_fd);
 
     /* Get the executable information */
@@ -199,13 +198,13 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ERR_POP(status, "unable to create process\n");
 
     /* use the accepted connection for stdio */
-    status = HYDT_dmx_register_fd(1, &private.client_fd, HYD_POLLIN, NULL, stdio_cb);
+    status = HYDU_dmx_register_fd(1, &private.client_fd, HYD_POLLIN, NULL, stdio_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    status = HYDT_dmx_register_fd(1, &private.stdout_fd, HYD_POLLIN, NULL, stdio_cb);
+    status = HYDU_dmx_register_fd(1, &private.stdout_fd, HYD_POLLIN, NULL, stdio_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    status = HYDT_dmx_register_fd(1, &private.stderr_fd, HYD_POLLIN, NULL, stdio_cb);
+    status = HYDU_dmx_register_fd(1, &private.stderr_fd, HYD_POLLIN, NULL, stdio_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
@@ -264,7 +263,7 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYDT_dmx_register_fd(1, &private.listen_fd, HYD_POLLIN, NULL, listen_cb);
+    status = HYDU_dmx_register_fd(1, &private.listen_fd, HYD_POLLIN, NULL, listen_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* set type to master; when a slave forks out, it'll reset the
@@ -273,23 +272,23 @@ int main(int argc, char **argv)
 
     while (1) {
         /* Wait for some event to occur */
-        status = HYDT_dmx_wait_for_event(-1);
+        status = HYDU_dmx_wait_for_event(-1);
         HYDU_ERR_POP(status, "demux engine error waiting for event\n");
 
         if (private.type == SLAVE) {
             /* check if all stdio fd's have been deregistered */
 
-            status = HYDT_dmx_query_fd_registration(private.stdout_fd, &ret);
+            status = HYDU_dmx_query_fd_registration(private.stdout_fd, &ret);
             HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
             if (ret)
                 continue;
 
-            status = HYDT_dmx_query_fd_registration(private.stderr_fd, &ret);
+            status = HYDU_dmx_query_fd_registration(private.stderr_fd, &ret);
             HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
             if (ret)
                 continue;
 
-            status = HYDT_dmx_query_fd_registration(private.client_fd, &ret);
+            status = HYDU_dmx_query_fd_registration(private.client_fd, &ret);
             HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
             if (ret)
                 continue;

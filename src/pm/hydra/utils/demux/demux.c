@@ -6,27 +6,26 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
-#include "demux.h"
 
 static int num_cb_fds = 0;
 
-typedef struct HYDT_dmxi_callback {
+struct dmx_callback {
     int num_fds;
     int *fd;
     HYD_event_t events;
     void *userp;
-     HYD_status(*callback) (int fd, HYD_event_t events, void *userp);
+    HYD_status(*callback) (int fd, HYD_event_t events, void *userp);
 
-    struct HYDT_dmxi_callback *next;
-} HYDT_dmxi_callback_t;
+    struct dmx_callback *next;
+};
 
-static HYDT_dmxi_callback_t *cb_list = NULL;
+static struct dmx_callback *cb_list = NULL;
 
-HYD_status HYDT_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *userp,
+HYD_status HYDU_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *userp,
                                 HYD_status(*callback) (int fd, HYD_event_t events,
                                                        void *userp))
 {
-    HYDT_dmxi_callback_t *cb_element, *run;
+    struct dmx_callback *cb_element, *run;
     int i;
     HYD_status status = HYD_SUCCESS;
 
@@ -36,7 +35,7 @@ HYD_status HYDT_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *
         if (fd[i] < 0)
             HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "registering bad fd %d\n", fd[i]);
 
-    HYDU_MALLOC(cb_element, HYDT_dmxi_callback_t *, sizeof(HYDT_dmxi_callback_t), status);
+    HYDU_MALLOC(cb_element, struct dmx_callback *, sizeof(struct dmx_callback), status);
     cb_element->num_fds = num_fds;
     HYDU_MALLOC(cb_element->fd, int *, num_fds * sizeof(int), status);
     memcpy(cb_element->fd, fd, num_fds * sizeof(int));
@@ -66,10 +65,10 @@ HYD_status HYDT_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *
 }
 
 
-HYD_status HYDT_dmx_deregister_fd(int fd)
+HYD_status HYDU_dmx_deregister_fd(int fd)
 {
     int i;
-    HYDT_dmxi_callback_t *cb_element;
+    struct dmx_callback *cb_element;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -99,10 +98,10 @@ HYD_status HYDT_dmx_deregister_fd(int fd)
 }
 
 
-HYD_status HYDT_dmx_wait_for_event(int wtime)
+HYD_status HYDU_dmx_wait_for_event(int wtime)
 {
     int total_fds, i, j, events, ret;
-    HYDT_dmxi_callback_t *run;
+    struct dmx_callback *run;
     struct pollfd *pollfds = NULL;
     HYD_status status = HYD_SUCCESS;
 
@@ -190,9 +189,9 @@ HYD_status HYDT_dmx_wait_for_event(int wtime)
 }
 
 
-HYD_status HYDT_dmx_query_fd_registration(int fd, int *ret)
+HYD_status HYDU_dmx_query_fd_registration(int fd, int *ret)
 {
-    HYDT_dmxi_callback_t *run;
+    struct dmx_callback *run;
     int i;
     HYD_status status = HYD_SUCCESS;
 
@@ -219,9 +218,9 @@ HYD_status HYDT_dmx_query_fd_registration(int fd, int *ret)
 }
 
 
-HYD_status HYDT_dmx_finalize(void)
+HYD_status HYDU_dmx_finalize(void)
 {
-    HYDT_dmxi_callback_t *run1, *run2;
+    struct dmx_callback *run1, *run2;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

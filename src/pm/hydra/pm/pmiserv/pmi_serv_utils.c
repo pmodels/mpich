@@ -7,7 +7,6 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "pmi_serv.h"
-#include "demux.h"
 
 HYD_status HYD_pmcd_pmi_send_exec_info(struct HYD_proxy *proxy)
 {

@@ -16,12 +16,12 @@ HYD_status HYDT_bscd_persist_wait_for_completion(int timeout)
     HYDU_FUNC_ENTER();
 
     while (1) {
-        status = HYDT_dmx_wait_for_event(timeout);
+        status = HYDU_dmx_wait_for_event(timeout);
         HYDU_ERR_POP(status, "error waiting for event\n");
 
         all_done = 1;
         for (i = 0; i < HYDT_bscd_persist_node_count; i++) {
-            status = HYDT_dmx_query_fd_registration(HYDT_bscd_persist_control_fd[i], &ret);
+            status = HYDU_dmx_query_fd_registration(HYDT_bscd_persist_control_fd[i], &ret);
             HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
 
             if (ret)

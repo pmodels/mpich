@@ -7,6 +7,7 @@
 include utils/alloc/Makefile.mk
 include utils/args/Makefile.mk
 include utils/dbg/Makefile.mk
+include utils/demux/Makefile.mk
 include utils/env/Makefile.mk
 include utils/launch/Makefile.mk
 include utils/others/Makefile.mk

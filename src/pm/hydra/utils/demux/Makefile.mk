@@ -4,6 +4,6 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-AM_CPPFLAGS += -I$(top_srcdir)/tools/demux
+AM_CPPFLAGS += -I$(top_srcdir)/utils/demux
 
-libhydra_a_SOURCES += $(top_srcdir)/tools/demux/demux.c
+libhydra_a_SOURCES += $(top_srcdir)/utils/demux/demux.c

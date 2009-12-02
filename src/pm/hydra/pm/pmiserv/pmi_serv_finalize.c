@@ -8,7 +8,6 @@
 #include "pmci.h"
 #include "pmi_handle.h"
 #include "bsci.h"
-#include "demux.h"
 #include "pmi_serv.h"
 
 HYD_status HYD_pmci_finalize(void)
@@ -23,7 +22,7 @@ HYD_status HYD_pmci_finalize(void)
     status = HYDT_bsci_finalize();
     HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
 
-    status = HYDT_dmx_finalize();
+    status = HYDU_dmx_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
 
   fn_exit:

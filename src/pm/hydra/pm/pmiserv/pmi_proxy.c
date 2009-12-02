@@ -6,7 +6,6 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
-#include "demux.h"
 #include "pmi_proxy.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
@@ -32,13 +31,13 @@ int main(int argc, char **argv)
                              &HYD_pmcd_pmip.local.id, sizeof(HYD_pmcd_pmip.local.id));
     HYDU_ERR_POP(status, "unable to send the proxy ID to the server\n");
 
-    status = HYDT_dmx_register_fd(1, &HYD_pmcd_pmip.upstream.control,
+    status = HYDU_dmx_register_fd(1, &HYD_pmcd_pmip.upstream.control,
                                   HYD_POLLIN, NULL, HYD_pmcd_pmi_proxy_control_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     while (1) {
         /* Wait for some event to occur */
-        status = HYDT_dmx_wait_for_event(-1);
+        status = HYDU_dmx_wait_for_event(-1);
         HYDU_ERR_POP(status, "demux engine error waiting for event\n");
 
         /* Check to see if there's any open read socket left; if there
@@ -80,7 +79,7 @@ int main(int argc, char **argv)
             break;
 
         /* Check if there are any messages from the launcher */
-        status = HYDT_dmx_wait_for_event(0);
+        status = HYDU_dmx_wait_for_event(0);
         HYDU_ERR_POP(status, "demux engine error waiting for event\n");
     }
 
@@ -90,7 +89,7 @@ int main(int argc, char **argv)
                              HYD_pmcd_pmip.local.proxy_process_count * sizeof(int));
     HYDU_ERR_POP(status, "unable to return exit status upstream\n");
 
-    status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.upstream.control);
+    status = HYDU_dmx_deregister_fd(HYD_pmcd_pmip.upstream.control);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
     close(HYD_pmcd_pmip.upstream.control);
 

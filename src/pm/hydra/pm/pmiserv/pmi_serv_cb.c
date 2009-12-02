@@ -10,7 +10,6 @@
 #include "pmi_handle_common.h"
 #include "pmci.h"
 #include "bsci.h"
-#include "demux.h"
 #include "pmi_serv.h"
 
 HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
@@ -24,7 +23,7 @@ HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
     status = HYDU_sock_accept(fd, &accept_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
-    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, NULL, HYD_pmcd_pmi_cmd_cb);
+    status = HYDU_dmx_register_fd(1, &accept_fd, HYD_POLLIN, NULL, HYD_pmcd_pmi_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
@@ -134,7 +133,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
             goto fn_fail;
         }
 
-        status = HYDT_dmx_deregister_fd(fd);
+        status = HYDU_dmx_deregister_fd(fd);
         if (status != HYD_SUCCESS) {
             HYDU_warn_printf("unable to deregister fd %d\n", fd);
             status = HYD_SUCCESS;
@@ -235,7 +234,7 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
     status = HYD_pmcd_pmi_send_exec_info(proxy);
     HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
 
-    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy,
+    status = HYDU_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy,
                                   HYD_pmcd_pmi_serv_control_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
@@ -264,7 +263,7 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
                             &count, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read status from proxy\n");
 
-    status = HYDT_dmx_deregister_fd(fd);
+    status = HYDU_dmx_deregister_fd(fd);
     HYDU_ERR_POP(status, "error deregistering fd\n");
 
     close(fd);

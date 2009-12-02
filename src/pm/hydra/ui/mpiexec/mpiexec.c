@@ -10,7 +10,6 @@
 #include "rmki.h"
 #include "pmci.h"
 #include "uiu.h"
-#include "demux.h"
 
 struct HYD_handle HYD_handle = { {0} };
 
