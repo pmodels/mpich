@@ -511,13 +511,16 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
             status = HYD_pmcd_pmi_process_mapping(process, HYD_pmcd_pmi_vector, &node_list);
             HYDU_ERR_POP(status, "Unable to get process mapping information\n");
 
-            if (strlen(node_list) > MAXVALLEN)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                    "key value larger than maximum allowed\n");
+            /* Make sure the node list is within the size allowed by
+             * PMI. Otherwise, tell the client that we don't know what
+             * the key is */
+            if (strlen(node_list) <= MAXVALLEN) {
+                status = HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list,
+                                              process->node->pg->kvs, &ret);
+                HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
+            }
 
-            status = HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list,
-                                          process->node->pg->kvs, &ret);
-            HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
+            HYDU_FREE(node_list);
         }
 
         /* Search for the key again */
