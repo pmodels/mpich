@@ -182,7 +182,7 @@ HYD_status HYD_uiu_merge_exec_info_to_proxy(void)
 
     proxy = HYD_handle.pg_list.proxy_list;
     exec_info = HYD_handle.exec_info_list;
-    proxy_rem_procs = proxy->info.core_count;
+    proxy_rem_procs = proxy->node.core_count;
     exec_rem_procs = exec_info ? exec_info->process_count : 0;
     while (exec_info) {
         if (exec_rem_procs <= proxy_rem_procs) {
@@ -194,7 +194,7 @@ HYD_status HYD_uiu_merge_exec_info_to_proxy(void)
                 proxy = proxy->next;
                 if (proxy == NULL)
                     proxy = HYD_handle.pg_list.proxy_list;
-                proxy_rem_procs = proxy->info.core_count;
+                proxy_rem_procs = proxy->node.core_count;
             }
 
             exec_info = exec_info->next;
@@ -209,7 +209,7 @@ HYD_status HYD_uiu_merge_exec_info_to_proxy(void)
             proxy = proxy->next;
             if (proxy == NULL)
                 proxy = HYD_handle.pg_list.proxy_list;
-            proxy_rem_procs = proxy->info.core_count;
+            proxy_rem_procs = proxy->node.core_count;
         }
     }
 
@@ -295,8 +295,8 @@ void HYD_uiu_print_params(void)
     for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
         HYDU_dump_noprefix(stdout, "      Proxy ID: %2d\n", i++);
         HYDU_dump_noprefix(stdout, "      -----------------\n");
-        HYDU_dump_noprefix(stdout, "        Proxy name: %s\n", proxy->info.hostname);
-        HYDU_dump_noprefix(stdout, "        Process count: %d\n", proxy->info.core_count);
+        HYDU_dump_noprefix(stdout, "        Proxy name: %s\n", proxy->node.hostname);
+        HYDU_dump_noprefix(stdout, "        Process count: %d\n", proxy->node.core_count);
         HYDU_dump_noprefix(stdout, "        Start PID: %d\n", proxy->start_pid);
         HYDU_dump_noprefix(stdout, "\n");
         HYDU_dump_noprefix(stdout, "        Proxy exec list:\n");

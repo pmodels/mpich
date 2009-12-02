@@ -43,9 +43,9 @@ HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy)
 
     HYDU_MALLOC(*proxy, struct HYD_proxy *, sizeof(struct HYD_proxy), status);
 
-    (*proxy)->info.hostname = NULL;
-    (*proxy)->info.core_count = 0;
-    (*proxy)->info.next = NULL;
+    (*proxy)->node.hostname = NULL;
+    (*proxy)->node.core_count = 0;
+    (*proxy)->node.next = NULL;
 
     (*proxy)->pid = -1;
     (*proxy)->in = -1;
@@ -132,8 +132,8 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
     while (proxy) {
         tproxy = proxy->next;
 
-        if (proxy->info.hostname)
-            HYDU_FREE(proxy->info.hostname);
+        if (proxy->node.hostname)
+            HYDU_FREE(proxy->node.hostname);
 
         if (proxy->exec_launch_info) {
             HYDU_free_strlist(proxy->exec_launch_info);

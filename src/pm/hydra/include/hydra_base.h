@@ -182,16 +182,16 @@ struct HYD_pg {
 };
 
 /* Information about the node itself */
-struct HYD_node_info {
+struct HYD_node {
     char *hostname;
     int core_count;
 
-    struct HYD_node_info *next;
+    struct HYD_node *next;
 };
 
 /* Proxy information */
 struct HYD_proxy {
-    struct HYD_node_info info;
+    struct HYD_node node;
 
     char **exec_launch_info;
 

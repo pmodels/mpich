@@ -59,7 +59,7 @@ HYD_status HYDT_bscd_rsh_launch_procs(char **global_args, const char *proxy_id_s
         arg = 0;
         client_arg[arg++] = HYDU_strdup(path);
 
-        client_arg[arg++] = HYDU_strdup(proxy->info.hostname);
+        client_arg[arg++] = HYDU_strdup(proxy->node.hostname);
 
         for (i = 0; global_args[i]; i++)
             client_arg[arg++] = HYDU_strdup(global_args[i]);

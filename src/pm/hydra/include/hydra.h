@@ -39,7 +39,7 @@ struct HYD_handle {
     HYD_time timeout;
 
     /* All of the available nodes */
-    struct HYD_node_info *node_list;
+    struct HYD_node *node_list;
     int global_core_count;
 
     /* Process groups */

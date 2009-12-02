@@ -52,14 +52,14 @@ static void *launch_helper(void *args)
      *    work.
      */
 
-    status = HYDU_sock_connect(proxy->info.hostname, HYD_handle.proxy_port, &proxy->control_fd);
+    status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &proxy->control_fd);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
     status = HYD_pmcd_pmi_send_exec_info(proxy);
     HYDU_ERR_POP(status, "error sending executable info\n");
 
     /* Create an stdout socket */
-    status = HYDU_sock_connect(proxy->info.hostname, HYD_handle.proxy_port, &proxy->out);
+    status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &proxy->out);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
     cmd = USE_AS_STDOUT;
@@ -67,7 +67,7 @@ static void *launch_helper(void *args)
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
 
     /* Create an stderr socket */
-    status = HYDU_sock_connect(proxy->info.hostname, HYD_handle.proxy_port, &proxy->err);
+    status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &proxy->err);
     HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
     cmd = USE_AS_STDERR;
@@ -76,7 +76,7 @@ static void *launch_helper(void *args)
 
     /* If rank 0 is here, create an stdin socket */
     if (proxy->proxy_id == 0) {
-        status = HYDU_sock_connect(proxy->info.hostname, HYD_handle.proxy_port, &proxy->in);
+        status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &proxy->in);
         HYDU_ERR_POP(status, "unable to connect to proxy\n");
 
         cmd = USE_AS_STDIN;
@@ -233,7 +233,7 @@ static HYD_status fill_in_exec_launch_info(void)
         proxy->exec_launch_info[arg++] = HYDU_strdup(HYDRA_VERSION);
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--hostname");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->info.hostname);
+        proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->node.hostname);
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-core-count");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
@@ -310,7 +310,7 @@ static HYD_status fill_in_exec_launch_info(void)
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(proxy->start_pid);
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--proxy-core-count");
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(proxy->info.core_count);
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(proxy->node.core_count);
         proxy->exec_launch_info[arg++] = NULL;
 
         /* Now pass the local executable information */
@@ -407,10 +407,10 @@ HYD_status HYD_pmci_launch_procs(void)
     }
     else if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_SHUTDOWN) {
         FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
-            status = HYDU_sock_connect(proxy->info.hostname, HYD_handle.proxy_port, &fd);
+            status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &fd);
             if (status != HYD_SUCCESS) {
                 /* Don't abort. Try to shutdown as many proxies as possible */
-                HYDU_error_printf("Unable to connect to proxy at %s\n", proxy->info.hostname);
+                HYDU_error_printf("Unable to connect to proxy at %s\n", proxy->node.hostname);
                 continue;
             }
 
